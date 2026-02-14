@@ -30,12 +30,13 @@ Current implementation includes:
 ## Quick Setup
 
 1. Create/open a Unity project in this repository root.
-2. Create ScriptableObject assets:
+2. Recommended: run `MOVBattle -> Quick Setup Active Scene` from the Unity top menu to auto-wire a playable test scene.
+3. Create ScriptableObject assets:
    - `BattleConfig`
    - `CombatCatalog` (optional custom overrides)
    - `UnitCatalog` (optional custom overrides)
    - `MapDefinition` for the Ancient Sandbox-like map
-3. In a scene, add:
+4. In a scene, add:
    - `BattleBootstrap`
    - `GameStateMachine`
    - `SimulationSystem`
@@ -46,8 +47,17 @@ Current implementation includes:
    - `TouchCameraController`
    - `ResultScreenController`
    - `AncientSandboxMapBuilder` (optional quick-map generator)
-4. Wire references in the inspector.
-5. Build to iOS and deploy through Xcode/TestFlight.
+5. Wire references in the inspector.
+6. Build to iOS and deploy through Xcode/TestFlight.
+
+### Editor Test Controls
+
+- Left click: place selected unit in the active team zone
+- Right click: remove your team unit under cursor
+- `Tab`: switch active placement team
+- `N` / `B`: select next / previous unit type from roster
+- `Space`: start battle
+- `R`: reset battle
 
 ## Notes
 

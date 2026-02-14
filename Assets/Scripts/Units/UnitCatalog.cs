@@ -112,6 +112,7 @@ namespace MOVBattle.Units
                         continue;
                     }
 
+                    ResolveVisualReferences(unit);
                     _index[unit.Id] = unit;
                 }
             }
@@ -123,6 +124,7 @@ namespace MOVBattle.Units
                     continue;
                 }
 
+                ResolveVisualReferences(unit);
                 _index[unit.Id] = unit;
             }
 
@@ -131,6 +133,19 @@ namespace MOVBattle.Units
                 .ThenBy(unit => unit.Cost)
                 .ThenBy(unit => unit.DisplayName)
                 .ToList();
+        }
+
+        private static void ResolveVisualReferences(UnitDefinition unit)
+        {
+            if (unit.PrefabRef == null)
+            {
+                unit.PrefabRef = Resources.Load<GameObject>(UnitResourcePaths.UnitPrefabResourcePath(unit.Id));
+            }
+
+            if (unit.PrefabRef == null)
+            {
+                unit.PrefabRef = Resources.Load<GameObject>($"Units/Factions/{unit.Faction}");
+            }
         }
     }
 }

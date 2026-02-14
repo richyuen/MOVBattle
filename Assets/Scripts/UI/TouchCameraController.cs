@@ -1,4 +1,7 @@
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace MOVBattle.UI
 {
@@ -33,6 +36,17 @@ namespace MOVBattle.UI
 
         private void HandleTouchControls()
         {
+            bool handled = false;
+#if ENABLE_INPUT_SYSTEM
+            handled = HandleTouchControlsInputSystem();
+#endif
+
+            if (handled)
+            {
+                return;
+            }
+
+#if ENABLE_LEGACY_INPUT_MANAGER
             if (Input.touchCount == 1)
             {
                 Touch touch = Input.GetTouch(0);
@@ -71,11 +85,17 @@ namespace MOVBattle.UI
             }
 
             _lastTwistAngle = twistAngle;
+#else
+            _lastPinchDistance = 0f;
+            _lastTwistAngle = 0f;
+#endif
         }
 
         private void HandleEditorFallbackControls()
         {
-#if UNITY_EDITOR || UNITY_STANDALONE
+#if ENABLE_INPUT_SYSTEM
+            HandleEditorFallbackControlsInputSystem();
+#elif ENABLE_LEGACY_INPUT_MANAGER
             if (Input.GetMouseButton(2))
             {
                 Vector2 drag = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
@@ -98,6 +118,123 @@ namespace MOVBattle.UI
             }
 #endif
         }
+
+#if ENABLE_INPUT_SYSTEM
+        private bool HandleTouchControlsInputSystem()
+        {
+            Touchscreen touchScreen = Touchscreen.current;
+            if (touchScreen == null)
+            {
+                _lastPinchDistance = 0f;
+                _lastTwistAngle = 0f;
+                return false;
+            }
+
+            int activeTouches = 0;
+            Vector2 firstPosition = default;
+            Vector2 firstDelta = default;
+            Vector2 secondPosition = default;
+            Vector2 secondDelta = default;
+
+            foreach (UnityEngine.InputSystem.Controls.TouchControl touch in touchScreen.touches)
+            {
+                if (!touch.press.isPressed)
+                {
+                    continue;
+                }
+
+                if (activeTouches == 0)
+                {
+                    firstPosition = touch.position.ReadValue();
+                    firstDelta = touch.delta.ReadValue();
+                }
+                else if (activeTouches == 1)
+                {
+                    secondPosition = touch.position.ReadValue();
+                    secondDelta = touch.delta.ReadValue();
+                }
+
+                activeTouches++;
+                if (activeTouches >= 2)
+                {
+                    break;
+                }
+            }
+
+            if (activeTouches == 0)
+            {
+                _lastPinchDistance = 0f;
+                _lastTwistAngle = 0f;
+                return false;
+            }
+
+            if (activeTouches == 1)
+            {
+                if (firstDelta.sqrMagnitude > 0.0001f)
+                {
+                    PanByScreenDelta(firstDelta);
+                }
+
+                _lastPinchDistance = 0f;
+                _lastTwistAngle = 0f;
+                return true;
+            }
+
+            float pinchDistance = Vector2.Distance(firstPosition, secondPosition);
+            if (_lastPinchDistance > 0.01f)
+            {
+                float pinchDelta = pinchDistance - _lastPinchDistance;
+                ZoomByDelta(pinchDelta * zoomSpeed);
+            }
+
+            _lastPinchDistance = pinchDistance;
+
+            Vector2 prevFirst = firstPosition - firstDelta;
+            Vector2 prevSecond = secondPosition - secondDelta;
+            float twistAngle = Vector2.SignedAngle(firstPosition - secondPosition, prevFirst - prevSecond);
+            if (_lastTwistAngle != 0f)
+            {
+                float delta = twistAngle - _lastTwistAngle;
+                RotateByDelta(delta * rotationSpeed);
+            }
+
+            _lastTwistAngle = twistAngle;
+            return true;
+        }
+
+        private void HandleEditorFallbackControlsInputSystem()
+        {
+            Mouse mouse = Mouse.current;
+            if (mouse != null)
+            {
+                if (mouse.middleButton.isPressed)
+                {
+                    PanByScreenDelta(mouse.delta.ReadValue() * 0.35f);
+                }
+
+                float mouseWheel = mouse.scroll.ReadValue().y;
+                if (Mathf.Abs(mouseWheel) > Mathf.Epsilon)
+                {
+                    ZoomByDelta(mouseWheel * 0.025f);
+                }
+            }
+
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return;
+            }
+
+            if (keyboard.qKey.isPressed)
+            {
+                RotateByDelta(-rotationSpeed);
+            }
+            else if (keyboard.eKey.isPressed)
+            {
+                RotateByDelta(rotationSpeed);
+            }
+        }
+#endif
 
         private void PanByScreenDelta(Vector2 delta)
         {

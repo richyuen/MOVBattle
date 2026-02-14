@@ -5,6 +5,9 @@ using MOVBattle.Combat;
 using MOVBattle.Map;
 using MOVBattle.Units;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace MOVBattle.Core
 {
@@ -33,6 +36,7 @@ namespace MOVBattle.Core
         private Coroutine _countdownRoutine;
         private string _selectedUnitId;
         private bool _isInitialized;
+        private int _selectedRosterIndex = -1;
 
         public TeamId ActivePlacementTeam => activePlacementTeam;
         public string SelectedUnitId => _selectedUnitId;
@@ -98,6 +102,8 @@ namespace MOVBattle.Core
                 IReadOnlyList<UnitDefinition> roster = unitCatalog.GetAllUnits();
                 _selectedUnitId = roster.Count > 0 ? roster[0].Id : string.Empty;
             }
+
+            _selectedRosterIndex = ResolveSelectedRosterIndex();
             _isInitialized = true;
 
             EmitBudgetEvent();
@@ -116,6 +122,8 @@ namespace MOVBattle.Core
             {
                 return;
             }
+
+            HandleDebugInput();
 
             if (gameStateMachine.CurrentState != GameState.Placement)
             {
@@ -161,6 +169,7 @@ namespace MOVBattle.Core
             }
 
             _selectedUnitId = unitId;
+            _selectedRosterIndex = ResolveSelectedRosterIndex();
             SelectedUnitChanged?.Invoke(_selectedUnitId);
             return true;
         }
@@ -181,7 +190,7 @@ namespace MOVBattle.Core
             int teamBCount = simulationSystem.GetLivingCount(TeamId.TeamB);
             if (teamACount == 0 || teamBCount == 0)
             {
-                PlacementRejected?.Invoke("Both teams need at least one unit.");
+                RejectPlacement("Both teams need at least one unit.");
                 return;
             }
 
@@ -237,6 +246,18 @@ namespace MOVBattle.Core
 
         private void HandlePlacementInput()
         {
+            bool handled = false;
+
+#if ENABLE_INPUT_SYSTEM
+            handled = HandlePlacementInputSystem();
+#endif
+
+            if (handled)
+            {
+                return;
+            }
+
+#if ENABLE_LEGACY_INPUT_MANAGER
             if (Input.touchCount > 0)
             {
                 Touch touch = Input.GetTouch(0);
@@ -258,6 +279,7 @@ namespace MOVBattle.Core
             {
                 TryRemoveUnitAtScreenPoint(Input.mousePosition);
             }
+#endif
 #endif
         }
 
@@ -281,32 +303,32 @@ namespace MOVBattle.Core
 
             if (!unitCatalog.TryGetUnit(_selectedUnitId, out UnitDefinition definition))
             {
-                PlacementRejected?.Invoke("Selected unit is unavailable.");
+                RejectPlacement("Selected unit is unavailable.");
                 return false;
             }
 
             if (!_budgetSystem.CanAddUnit(activePlacementTeam, simulationSystem.GetLivingCount(activePlacementTeam)))
             {
-                PlacementRejected?.Invoke("Team unit cap reached.");
+                RejectPlacement("Team unit cap reached.");
                 return false;
             }
 
             Ray ray = gameplayCamera.ScreenPointToRay(screenPoint);
             if (!mapDefinition.TryGetPlacementPoint(ray, out Vector3 worldPoint))
             {
-                PlacementRejected?.Invoke("Unable to project placement point.");
+                RejectPlacement("Unable to project placement point.");
                 return false;
             }
 
             if (!_placementValidator.ValidatePlacement(activePlacementTeam, worldPoint, definition.CollisionRadius, _placedUnits, out string reason))
             {
-                PlacementRejected?.Invoke(reason);
+                RejectPlacement(reason);
                 return false;
             }
 
             if (!_budgetSystem.TrySpend(activePlacementTeam, definition.Cost))
             {
-                PlacementRejected?.Invoke("Not enough budget.");
+                RejectPlacement("Not enough budget.");
                 return false;
             }
 
@@ -385,6 +407,184 @@ namespace MOVBattle.Core
         private void EmitBudgetEvent()
         {
             BudgetsChanged?.Invoke(_budgetSystem.GetRemaining(TeamId.TeamA), _budgetSystem.GetRemaining(TeamId.TeamB));
+        }
+
+        private void RejectPlacement(string message)
+        {
+            PlacementRejected?.Invoke(message);
+            Debug.LogWarning(message);
+        }
+
+        private void HandleDebugInput()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (HandleDebugInputSystem())
+            {
+                return;
+            }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                StartBattle();
+            }
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                ResetBattle();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                SetActiveTeam(activePlacementTeam == TeamId.TeamA ? TeamId.TeamB : TeamId.TeamA);
+            }
+
+            if (Input.GetKeyDown(KeyCode.N))
+            {
+                SelectRelativeUnit(1);
+            }
+            else if (Input.GetKeyDown(KeyCode.B))
+            {
+                SelectRelativeUnit(-1);
+            }
+#endif
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        private bool HandlePlacementInputSystem()
+        {
+            Touchscreen touchScreen = Touchscreen.current;
+            if (touchScreen != null)
+            {
+                bool hasActiveTouch = false;
+                foreach (UnityEngine.InputSystem.Controls.TouchControl touch in touchScreen.touches)
+                {
+                    if (touch.press.isPressed)
+                    {
+                        hasActiveTouch = true;
+                    }
+
+                    if (touch.press.wasReleasedThisFrame)
+                    {
+                        OnScreenTap(touch.position.ReadValue());
+                        return true;
+                    }
+                }
+
+                if (hasActiveTouch)
+                {
+                    return true;
+                }
+            }
+
+            Mouse mouse = Mouse.current;
+            if (mouse == null)
+            {
+                return false;
+            }
+
+            if (mouse.leftButton.wasPressedThisFrame)
+            {
+                OnScreenTap(mouse.position.ReadValue());
+                return true;
+            }
+
+            if (mouse.rightButton.wasPressedThisFrame)
+            {
+                TryRemoveUnitAtScreenPoint(mouse.position.ReadValue());
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleDebugInputSystem()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return false;
+            }
+
+            if (keyboard.spaceKey.wasPressedThisFrame)
+            {
+                StartBattle();
+                return true;
+            }
+
+            if (keyboard.rKey.wasPressedThisFrame)
+            {
+                ResetBattle();
+                return true;
+            }
+
+            if (keyboard.tabKey.wasPressedThisFrame)
+            {
+                SetActiveTeam(activePlacementTeam == TeamId.TeamA ? TeamId.TeamB : TeamId.TeamA);
+                return true;
+            }
+
+            if (keyboard.nKey.wasPressedThisFrame)
+            {
+                SelectRelativeUnit(1);
+                return true;
+            }
+
+            if (keyboard.bKey.wasPressedThisFrame)
+            {
+                SelectRelativeUnit(-1);
+                return true;
+            }
+
+            return false;
+        }
+#endif
+
+        private void SelectRelativeUnit(int offset)
+        {
+            IReadOnlyList<UnitDefinition> roster = unitCatalog.GetAllUnits();
+            if (roster == null || roster.Count == 0)
+            {
+                return;
+            }
+
+            if (_selectedRosterIndex < 0 || _selectedRosterIndex >= roster.Count)
+            {
+                _selectedRosterIndex = ResolveSelectedRosterIndex();
+            }
+
+            if (_selectedRosterIndex < 0)
+            {
+                _selectedRosterIndex = 0;
+            }
+            else
+            {
+                _selectedRosterIndex = (_selectedRosterIndex + offset + roster.Count) % roster.Count;
+            }
+
+            UnitDefinition target = roster[_selectedRosterIndex];
+            SelectUnit(target.Id);
+            Debug.Log($"Selected unit: {target.DisplayName} ({target.Id})");
+        }
+
+        private int ResolveSelectedRosterIndex()
+        {
+            IReadOnlyList<UnitDefinition> roster = unitCatalog.GetAllUnits();
+            if (roster == null || roster.Count == 0)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < roster.Count; i++)
+            {
+                if (string.Equals(roster[i].Id, _selectedUnitId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
     }
 }

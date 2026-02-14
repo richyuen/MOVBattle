@@ -1,0 +1,38 @@
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+UserSettings/
+MemoryCaptures/
+Recordings/
+
+# Build outputs
+[Bb]uild/
+[Bb]uilds/
+Build/
+Builds/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.sln
+*.csproj
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity package lock cache files
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+.vsconfig
+UpgradeLog.htm
