@@ -36,3 +36,7 @@ Builds/
 Thumbs.db
 .vsconfig
 UpgradeLog.htm
+
+# Web
+web/node_modules/
+web/dist/
