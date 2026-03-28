@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOVBattle Web</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="panel">
+        <h1>MOVBattle (Web Prototype)</h1>
+        <p>
+          Place units for both teams, then run a fast sandbox simulation in your browser.
+        </p>
+      </header>
+
+      <section class="layout">
+        <aside class="panel controls">
+          <h2>Setup</h2>
+
+          <label>
+            Active Team
+            <select id="activeTeam">
+              <option value="red">Red</option>
+              <option value="blue">Blue</option>
+            </select>
+          </label>
+
+          <label>
+            Team Budget
+            <input id="teamBudget" type="number" min="100" step="50" value="1200" />
+          </label>
+
+          <label>
+            Unit Type
+            <select id="unitType"></select>
+          </label>
+
+          <label>
+            Tap Action
+            <select id="tapAction">
+              <option value="place">Place Unit</option>
+              <option value="erase">Remove Unit</option>
+            </select>
+          </label>
+
+          <div class="buttons">
+            <button id="randomFillBtn" type="button">Random Fill Active Team</button>
+            <button id="mirrorBtn" type="button">Mirror Red Team to Blue</button>
+            <button id="clearTeamBtn" type="button">Clear Active Team</button>
+            <button id="clearAllBtn" type="button" class="secondary">Clear All</button>
+          </div>
+
+          <label>
+            Formation Slot
+            <input id="formationSlot" type="text" value="default" maxlength="24" />
+          </label>
+          <div class="buttons">
+            <button id="saveFormationBtn" type="button" class="secondary">Save Formation</button>
+            <button id="loadFormationBtn" type="button" class="secondary">Load Formation</button>
+          </div>
+
+          <h3>Battle</h3>
+          <label>
+            Simulation Speed
+            <select id="speedMultiplier">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+            </select>
+          </label>
+          <div class="buttons">
+            <button id="startBtn" type="button">Start Battle</button>
+            <button id="pauseBtn" type="button" class="secondary">Pause</button>
+            <button id="resetBtn" type="button" class="secondary">Reset</button>
+          </div>
+
+          <p id="status" class="status">Place units, then start battle.</p>
+          <p id="teamStats" class="status">Red: 0/1200 | Blue: 0/1200</p>
+
+          <h3>Roster</h3>
+          <ul id="rosterList" class="roster"></ul>
+
+          <h3>Controls</h3>
+          <ul class="help">
+            <li>Desktop: left click to place, right click to remove.</li>
+            <li>Mobile: choose Tap Action (place/remove), then tap arena.</li>
+            <li>Simulation auto-runs at 30 ticks/second.</li>
+          </ul>
+        </aside>
+
+        <section class="panel arenaPanel">
+          <h2>Arena</h2>
+          <canvas id="arena" width="960" height="540" aria-label="battle arena"></canvas>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
