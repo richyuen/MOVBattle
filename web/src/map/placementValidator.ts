@@ -1,5 +1,6 @@
 import { Vector3 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
+import type { Obstacle } from "./obstacles";
 
 export interface PlacementZone {
   team: number;
@@ -9,9 +10,11 @@ export interface PlacementZone {
 
 export class PlacementValidator {
   private _zones: PlacementZone[];
+  private _obstacles: readonly Obstacle[];
 
-  constructor(zones: PlacementZone[]) {
+  constructor(zones: PlacementZone[], obstacles: readonly Obstacle[] = []) {
     this._zones = zones;
+    this._obstacles = obstacles;
   }
 
   validate(
@@ -30,6 +33,25 @@ export class PlacementValidator {
       Math.abs(rel.z) > half.z
     ) {
       return "Outside placement zone.";
+    }
+
+    // Check overlap with obstacles
+    for (const obs of this._obstacles) {
+      if (obs.type === "box") {
+        const dx = Math.abs(worldPoint.x - obs.center.x);
+        const dz = Math.abs(worldPoint.z - obs.center.z);
+        if (dx < obs.halfX + collisionRadius && dz < obs.halfZ + collisionRadius) {
+          return "Too close to an obstacle.";
+        }
+      } else {
+        const dx = worldPoint.x - obs.center.x;
+        const dz = worldPoint.z - obs.center.z;
+        const distSq = dx * dx + dz * dz;
+        const minDist = obs.radius + collisionRadius;
+        if (distSq < minDist * minDist) {
+          return "Too close to an obstacle.";
+        }
+      }
     }
 
     // Check overlap with existing units

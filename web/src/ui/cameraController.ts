@@ -69,9 +69,9 @@ export class CameraController {
         const cosA = Math.cos(this.camera.alpha);
         const sinA = Math.sin(this.camera.alpha);
 
-        // Move target in the camera's local XZ plane
-        this.camera.target.x += (-dx * cosA - dy * sinA) * speed;
-        this.camera.target.z += (dx * sinA - dy * cosA) * speed;
+        // Map screen drag to world XZ using camera's right and forward vectors
+        this.camera.target.x += (dx * sinA + dy * cosA) * speed;
+        this.camera.target.z += (-dx * cosA + dy * sinA) * speed;
       }, { passive: true });
 
       canvas.addEventListener("touchend", () => {

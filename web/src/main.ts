@@ -18,7 +18,7 @@ import { VisualEffects } from "./combat/visualEffects";
 import { UnitFactory } from "./units/unitFactory";
 import { RuntimeUnit } from "./units/runtimeUnit";
 
-import { AncientSandboxMapBuilder, getPlacementZones } from "./map/mapBuilder";
+import { TribalSandboxMapBuilder, getPlacementZones } from "./map/mapBuilder";
 import { PlacementValidator } from "./map/placementValidator";
 import { CameraController } from "./ui/cameraController";
 
@@ -37,7 +37,7 @@ const resultDetailEl = document.getElementById("resultDetail")!;
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
 const scene = new Scene(engine);
-scene.clearColor = new Color4(0.55, 0.75, 0.92, 1);
+scene.clearColor = new Color4(0.52, 0.72, 0.90, 1);
 
 // Lights
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
@@ -49,8 +49,11 @@ dir.intensity = 0.8;
 const camCtrl = new CameraController(scene, canvas);
 
 // Map
-const mapBuilder = new AncientSandboxMapBuilder(scene);
-const zones = mapBuilder.build();
+const mapBuilder = new TribalSandboxMapBuilder(scene);
+const { zones, obstacles } = mapBuilder.build();
+
+// Share obstacles with unit system for collision
+RuntimeUnit.obstacles = obstacles;
 
 // ─── Game systems ───
 const stateMachine = new GameStateMachine();
@@ -60,7 +63,7 @@ const visualEffects = new VisualEffects(scene);
 simulation.projectileSystem = projectileSystem;
 simulation.visualEffects = visualEffects;
 const unitFactory = new UnitFactory(scene);
-const placementValidator = new PlacementValidator(zones);
+const placementValidator = new PlacementValidator(zones, obstacles);
 
 let budgetSystem = new BudgetSystem(
   BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,

@@ -3,6 +3,7 @@ import type { UnitDefinition } from "../data/unitDefinitions";
 import type { RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
+import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 
 export class RuntimeUnit {
   readonly definition: UnitDefinition;
@@ -38,6 +39,9 @@ export class RuntimeUnit {
 
   // Spawn state for reset
   private _spawnPosition: Vector3;
+
+  /** Shared obstacle list — set once from main.ts after map build */
+  static obstacles: readonly Obstacle[] = [];
 
   // Health bar
   healthBarMesh: Mesh | null = null;
@@ -176,6 +180,9 @@ export class RuntimeUnit {
       if (this._grounded && this._velocity.lengthSquared() < 0.01) {
         this._velocity.setAll(0);
       }
+
+      // Resolve obstacle collisions after knockback
+      resolveObstacleCollisions(pos, this.definition.collisionRadius, RuntimeUnit.obstacles);
     }
 
     // ── Stagger: skip movement while staggered ──
@@ -208,6 +215,9 @@ export class RuntimeUnit {
           const angle = Math.atan2(dir.x, dir.z);
           this.body.root.rotation.y = angle;
         }
+
+        // Resolve obstacle collisions after movement step
+        resolveObstacleCollisions(pos, this.definition.collisionRadius, RuntimeUnit.obstacles);
       }
     }
 
