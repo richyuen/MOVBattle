@@ -33,8 +33,6 @@ const unitGridEl = document.getElementById("unitGrid")!;
 const resultOverlayEl = document.getElementById("resultOverlay")!;
 const resultTitleEl = document.getElementById("resultTitle")!;
 const resultDetailEl = document.getElementById("resultDetail")!;
-const btnTeamA = document.getElementById("btnTeamA")!;
-const btnTeamB = document.getElementById("btnTeamB")!;
 
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -68,7 +66,6 @@ let budgetSystem = new BudgetSystem(
   BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,
 );
 
-let activeTeam = 0;
 let selectedUnitId = "tribal.clubber";
 let selectedRosterIndex = 0;
 const placedUnits: RuntimeUnit[] = [];
@@ -97,12 +94,6 @@ function showStatus(msg: string): void {
   statusTextEl.textContent = msg;
   if (statusTimer) clearTimeout(statusTimer);
   statusTimer = setTimeout(() => { statusTextEl.textContent = ""; }, 2500);
-}
-
-function setTeam(team: number): void {
-  activeTeam = team;
-  btnTeamA.classList.toggle("active", team === 0);
-  btnTeamB.classList.toggle("active", team === 1);
 }
 
 function selectUnit(id: string): void {
@@ -223,11 +214,6 @@ function tryPlaceUnit(screenX: number, screenY: number): void {
     return;
   }
 
-  if (!budgetSystem.canAddUnit(activeTeam, simulation.getLivingCount(activeTeam))) {
-    showStatus("Team unit cap reached.");
-    return;
-  }
-
   // Raycast from screen to ground
   const pickResult = scene.pick(screenX, screenY);
   if (!pickResult || !pickResult.hit || !pickResult.pickedPoint) {
@@ -238,18 +224,26 @@ function tryPlaceUnit(screenX: number, screenY: number): void {
   const worldPoint = pickResult.pickedPoint;
   worldPoint.y = 0;
 
-  const reason = placementValidator.validate(activeTeam, worldPoint, def.collisionRadius, placedUnits);
+  // Auto-detect team from placement position: left half = Team A (0), right half = Team B (1)
+  const team = worldPoint.x < 0 ? 0 : 1;
+
+  if (!budgetSystem.canAddUnit(team, simulation.getLivingCount(team))) {
+    showStatus("Team unit cap reached.");
+    return;
+  }
+
+  const reason = placementValidator.validate(team, worldPoint, def.collisionRadius, placedUnits);
   if (reason) {
     showStatus(reason);
     return;
   }
 
-  if (!budgetSystem.trySpend(activeTeam, def.cost)) {
+  if (!budgetSystem.trySpend(team, def.cost)) {
     showStatus("Not enough budget.");
     return;
   }
 
-  const unit = unitFactory.spawn(def, activeTeam, worldPoint);
+  const unit = unitFactory.spawn(def, team, worldPoint);
   placedUnits.push(unit);
   simulation.registerUnit(unit);
   updateBudgetDisplay();
@@ -265,7 +259,7 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
   if (!meta || !meta.runtimeUnit) return;
 
   const ru = meta.runtimeUnit as RuntimeUnit;
-  if (ru.isDead || ru.team !== activeTeam) return;
+  if (ru.isDead) return;
 
   // Refund and remove
   simulation.unregisterUnit(ru);
@@ -364,11 +358,33 @@ function showResult(result: BattleResult): void {
     `Team A Remaining: ${result.teamALiving}\n` +
     `Team B Remaining: ${result.teamBLiving}`;
   resultOverlayEl.classList.add("visible");
+}
+
+function playAgain(): void {
+  resultOverlayEl.classList.remove("visible");
 
   // Reset all units back to their original positions
   for (const unit of placedUnits) {
     unit.resetToSpawn();
+    simulation.registerUnit(unit);
   }
+
+  // Rebuild budget from scratch, then subtract placed unit costs
+  budgetSystem = new BudgetSystem(
+    BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,
+  );
+  for (const unit of placedUnits) {
+    budgetSystem.trySpend(unit.team, unit.definition.cost);
+  }
+
+  projectileSystem.dispose();
+  visualEffects.dispose();
+
+  removeMode = false;
+  btnRemoveEl.classList.remove("remove-active");
+  stateMachine.setState(GameState.Placement);
+  updateBudgetDisplay();
+  showStatus("Ready for another round!");
 }
 
 // ─── Input ───
@@ -400,10 +416,6 @@ window.addEventListener("keydown", (e) => {
     case "KeyR":
       resetBattle();
       break;
-    case "Tab":
-      e.preventDefault();
-      setTeam(activeTeam === 0 ? 1 : 0);
-      break;
     case "KeyN":
       selectRelativeUnit(1);
       break;
@@ -421,9 +433,9 @@ window.addEventListener("keydown", (e) => {
 
 // Expose to HTML onclick handlers
 (window as any).game = {
-  setTeam,
   startBattle,
   resetBattle,
+  playAgain,
   toggleRemoveMode,
 };
 

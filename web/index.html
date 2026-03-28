@@ -128,12 +128,10 @@
 
   <div id="hud">
     <div class="hud-row">
-      <span class="budget-label budget-a" id="budgetA">Team A: 5000</span>
-      <span class="budget-label budget-b" id="budgetB">Team B: 5000</span>
+      <span class="budget-label budget-a" id="budgetA">Team A: 100000</span>
+      <span class="budget-label budget-b" id="budgetB">Team B: 100000</span>
     </div>
     <div class="hud-row">
-      <button class="btn active" id="btnTeamA" onclick="window.game?.setTeam(0)">Team A</button>
-      <button class="btn" id="btnTeamB" onclick="window.game?.setTeam(1)">Team B</button>
       <button class="btn" id="btnRemove" onclick="window.game?.toggleRemoveMode()">Remove</button>
       <button class="btn" onclick="window.game?.startBattle()">Start</button>
       <button class="btn" onclick="window.game?.resetBattle()">Reset</button>
@@ -150,12 +148,12 @@
   <div id="resultOverlay">
     <div id="resultTitle"></div>
     <div id="resultDetail"></div>
-    <button class="btn" onclick="window.game?.resetBattle()" style="font-size:16px;padding:10px 24px;">Play Again</button>
+    <button class="btn" onclick="window.game?.playAgain()" style="font-size:16px;padding:10px 24px;">Play Again</button>
   </div>
 
   <div id="controls-help">
-    LClick: Place | RClick: Remove<br>
-    Tab: Switch Team | N/B: Cycle Unit<br>
+    LClick: Place (blue zone = blue, red zone = red)<br>
+    RClick: Remove | N/B: Cycle Unit<br>
     Space: Start | R: Reset<br>
     MWheel: Zoom | MMB: Pan | Q/E: Rotate
   </div>
