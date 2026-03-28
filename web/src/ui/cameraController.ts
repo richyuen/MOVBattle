@@ -25,6 +25,10 @@ export class CameraController {
     this.camera.angularSensibilityX = 500;
     this.camera.angularSensibilityY = 500;
 
+    // Touch: pinch to zoom, two-finger drag to pan/rotate
+    this.camera.pinchPrecision = 40;
+    this.camera.useNaturalPinchZoom = true;
+
     // Right-click drag to rotate, middle-click to pan
     this.camera.attachControl(canvas, true);
 

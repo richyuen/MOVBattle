@@ -18,6 +18,7 @@
 
     .hud-row {
       display: flex; gap: 12px; align-items: center; margin-bottom: 6px;
+      flex-wrap: wrap; justify-content: center;
     }
 
     .budget-label { font-weight: bold; font-size: 15px; }
@@ -34,6 +35,7 @@
     }
     .btn:hover { background: rgba(255,255,255,0.15); }
     .btn.active { background: rgba(255,255,255,0.25); border-color: #ffd54f; }
+    .btn.remove-active { background: rgba(239,83,80,0.4); border-color: #ef5350; }
 
     #unitPanel {
       position: absolute; bottom: 0; left: 0; width: 100%;
@@ -43,6 +45,7 @@
     #factionTabs {
       display: flex; gap: 0; border-bottom: 2px solid rgba(255,255,255,0.1);
       overflow-x: auto; scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
     }
     .faction-tab {
       padding: 7px 16px; border: none; border-bottom: 3px solid transparent;
@@ -55,6 +58,7 @@
     #unitGrid {
       padding: 6px 8px;
       display: flex; flex-wrap: wrap; gap: 4px; max-height: 100px; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .unit-btn {
       padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 3px;
@@ -77,6 +81,46 @@
       position: absolute; bottom: 150px; right: 10px; color: rgba(255,255,255,0.4);
       font-size: 11px; line-height: 1.5; text-align: right; pointer-events: none;
     }
+
+    /* ─── Mobile ─── */
+    @media (max-width: 600px) {
+      #hud { padding: 6px 4px; }
+      .hud-row { gap: 6px; margin-bottom: 4px; }
+      .budget-label { font-size: 13px; }
+
+      .btn {
+        padding: 10px 12px; font-size: 12px;
+        min-height: 44px; min-width: 44px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+
+      #selectedUnit { font-size: 12px; }
+      #statusText { font-size: 12px; }
+
+      .faction-tab {
+        padding: 10px 14px; font-size: 11px;
+        min-height: 44px;
+      }
+
+      #unitGrid {
+        gap: 6px; padding: 8px; max-height: 120px;
+      }
+      .unit-btn {
+        padding: 8px 10px; font-size: 12px;
+        min-height: 40px;
+      }
+
+      #controls-help { display: none; }
+
+      #resultTitle { font-size: 28px; }
+      #resultDetail { font-size: 14px; padding: 0 16px; }
+    }
+
+    @media (max-width: 400px) {
+      .hud-row { gap: 4px; }
+      .btn { padding: 8px 8px; font-size: 11px; }
+      .budget-label { font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -90,8 +134,9 @@
     <div class="hud-row">
       <button class="btn active" id="btnTeamA" onclick="window.game?.setTeam(0)">Team A</button>
       <button class="btn" id="btnTeamB" onclick="window.game?.setTeam(1)">Team B</button>
-      <button class="btn" onclick="window.game?.startBattle()">Start (Space)</button>
-      <button class="btn" onclick="window.game?.resetBattle()">Reset (R)</button>
+      <button class="btn" id="btnRemove" onclick="window.game?.toggleRemoveMode()">Remove</button>
+      <button class="btn" onclick="window.game?.startBattle()">Start</button>
+      <button class="btn" onclick="window.game?.resetBattle()">Reset</button>
     </div>
     <div id="selectedUnit">Selected: Clubber (70g)</div>
     <div id="statusText"></div>

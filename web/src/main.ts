@@ -74,6 +74,9 @@ let selectedRosterIndex = 0;
 const placedUnits: RuntimeUnit[] = [];
 let countdownTimer: ReturnType<typeof setTimeout> | null = null;
 let statusTimer: ReturnType<typeof setTimeout> | null = null;
+let removeMode = false;
+
+const btnRemoveEl = document.getElementById("btnRemove")!;
 
 // ─── HUD ───
 function updateBudgetDisplay(): void {
@@ -123,6 +126,16 @@ function selectRelativeUnit(offset: number): void {
   if (ALL_UNITS.length === 0) return;
   selectedRosterIndex = (selectedRosterIndex + offset + ALL_UNITS.length) % ALL_UNITS.length;
   selectUnit(ALL_UNITS[selectedRosterIndex].id);
+}
+
+function toggleRemoveMode(): void {
+  removeMode = !removeMode;
+  btnRemoveEl.classList.toggle("remove-active", removeMode);
+  if (removeMode) {
+    showStatus("Remove mode: tap a unit to remove it.");
+  } else {
+    showStatus("");
+  }
 }
 
 // Faction display names and tab accent colors (CSS-friendly)
@@ -305,6 +318,8 @@ function resetBattle(): void {
     BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,
   );
 
+  removeMode = false;
+  btnRemoveEl.classList.remove("remove-active");
   stateMachine.setState(GameState.Placement);
   updateBudgetDisplay();
   resultOverlayEl.classList.remove("visible");
@@ -357,10 +372,15 @@ scene.onPointerObservable.add((pointerInfo) => {
 
   if (pointerInfo.type === PointerEventTypes.POINTERTAP) {
     const evt = pointerInfo.event as PointerEvent;
-    if (evt.button === 0) {
-      tryPlaceUnit(scene.pointerX, scene.pointerY);
-    } else if (evt.button === 2) {
+    if (evt.button === 2) {
+      // Right-click always removes (desktop)
       tryRemoveUnit(scene.pointerX, scene.pointerY);
+    } else if (evt.button === 0) {
+      if (removeMode) {
+        tryRemoveUnit(scene.pointerX, scene.pointerY);
+      } else {
+        tryPlaceUnit(scene.pointerX, scene.pointerY);
+      }
     }
   }
 });
@@ -399,6 +419,7 @@ window.addEventListener("keydown", (e) => {
   setTeam,
   startBattle,
   resetBattle,
+  toggleRemoveMode,
 };
 
 // ─── Game loop ───
