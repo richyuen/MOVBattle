@@ -11,6 +11,8 @@ export enum AnimState {
  * TABS-style procedural animation: wobbly sine-wave driven joints.
  * All rotation values are in radians.
  */
+export type AttackStyle = "humanoid" | "mammoth";
+
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
   private _state = AnimState.Idle;
@@ -18,6 +20,7 @@ export class ProceduralAnimator {
   private _attackTimer = 0;
   private _attackDuration = 0.4;
   private _wobblePhase: number; // random offset per unit
+  attackStyle: AttackStyle = "humanoid";
 
   // Death ragdoll state
   private _deathAngularVelocities: number[] = [];
@@ -112,9 +115,7 @@ export class ProceduralAnimator {
     b.leftKnee.rotation.x = 0;
     b.rightKnee.rotation.x = 0;
 
-    // Hip bounce
-    const baseY = b.hip.position.y;
-    b.hip.position.y = baseY + Math.sin(t * 2) * 0.005;
+    // (no hip bounce — keeps units grounded)
   }
 
   private _animateWalk(_dt: number): void {
@@ -156,6 +157,14 @@ export class ProceduralAnimator {
   }
 
   private _animateAttack(dt: number): void {
+    if (this.attackStyle === "mammoth") {
+      this._animateAttackMammoth(dt);
+      return;
+    }
+    this._animateAttackHumanoid(dt);
+  }
+
+  private _animateAttackHumanoid(dt: number): void {
     this._attackTimer += dt;
     const b = this._body;
     const t = this._time + this._wobblePhase;
@@ -195,6 +204,54 @@ export class ProceduralAnimator {
     b.neck.rotation.z = Math.sin(t * 5) * 0.05;
 
     if (progress >= 1) {
+      this._state = AnimState.Idle;
+    }
+  }
+
+  /** Mammoth stomp/charge: rear up, slam down, shake on impact. */
+  private _animateAttackMammoth(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+
+    if (progress < 0.3) {
+      // Rear up: tilt whole body backward, raise front
+      const rearUp = progress / 0.3;
+      const eased = 1 - Math.pow(1 - rearUp, 2);
+      b.torso.rotation.x = -0.35 * eased;
+      b.neck.rotation.x = -0.25 * eased;
+      // Front legs lift
+      b.leftShoulder.rotation.x = -0.5 * eased;
+      b.rightShoulder.rotation.x = -0.5 * eased;
+    } else if (progress < 0.5) {
+      // Slam down: fast forward tilt
+      const slam = (progress - 0.3) / 0.2;
+      const eased = 1 - Math.pow(1 - slam, 3);
+      b.torso.rotation.x = -0.35 + 0.7 * eased;
+      b.neck.rotation.x = -0.25 + 0.6 * eased;
+      // Front legs slam down
+      b.leftShoulder.rotation.x = -0.5 + 0.7 * eased;
+      b.rightShoulder.rotation.x = -0.5 + 0.7 * eased;
+    } else {
+      // Recovery: shake and settle back to neutral
+      const recover = (progress - 0.5) / 0.5;
+      const shake = Math.sin(recover * Math.PI * 6) * 0.12 * (1 - recover);
+      b.torso.rotation.x = 0.35 * (1 - recover) + shake;
+      b.torso.rotation.z = shake * 0.8;
+      b.neck.rotation.x = 0.35 * (1 - recover);
+      b.neck.rotation.z = -shake;
+      b.leftShoulder.rotation.x = 0.2 * (1 - recover);
+      b.rightShoulder.rotation.x = 0.2 * (1 - recover);
+    }
+
+    if (progress >= 1) {
+      // Reset rotations
+      b.torso.rotation.x = 0;
+      b.torso.rotation.z = 0;
+      b.neck.rotation.x = 0;
+      b.neck.rotation.z = 0;
+      b.leftShoulder.rotation.x = 0;
+      b.rightShoulder.rotation.x = 0;
       this._state = AnimState.Idle;
     }
   }

@@ -364,6 +364,11 @@ function showResult(result: BattleResult): void {
     `Team A Remaining: ${result.teamALiving}\n` +
     `Team B Remaining: ${result.teamBLiving}`;
   resultOverlayEl.classList.add("visible");
+
+  // Reset all units back to their original positions
+  for (const unit of placedUnits) {
+    unit.resetToSpawn();
+  }
 }
 
 // ─── Input ───

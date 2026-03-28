@@ -397,9 +397,13 @@ export class SimulationSystem {
       const unit = this._units[i];
       if (!unit.isDead || now < unit.deathCleanupAt) continue;
 
+      // Hide corpse visuals but keep unit alive for post-battle reset
       this._nextDecisionAt.delete(unit);
-      this._units.splice(i, 1);
-      unit.dispose();
+      for (const mesh of unit.body.allMeshes) {
+        mesh.isVisible = false;
+      }
+      if (unit.healthBarMesh) unit.healthBarMesh.isVisible = false;
+      if (unit.healthBarBg) unit.healthBarBg.isVisible = false;
     }
   }
 }

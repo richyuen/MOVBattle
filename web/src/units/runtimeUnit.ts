@@ -36,6 +36,9 @@ export class RuntimeUnit {
   // Special: spinning (berserker)
   private _spinning = false;
 
+  // Spawn state for reset
+  private _spawnPosition: Vector3;
+
   // Health bar
   healthBarMesh: Mesh | null = null;
   healthBarBg: Mesh | null = null;
@@ -59,6 +62,7 @@ export class RuntimeUnit {
     this._ragdollProfile = ragdollProfile;
     this._currentHealth = definition.maxHealth;
     this.animator = new ProceduralAnimator(body);
+    this._spawnPosition = body.root.position.clone();
   }
 
   canAttack(now: number): boolean {
@@ -298,6 +302,47 @@ export class RuntimeUnit {
     const ratio = this._currentHealth / this.definition.maxHealth;
     this.healthBarMesh.scaling.x = Math.max(0.01, ratio);
     this.healthBarMesh.position.x = -(1 - ratio) * 0.5 * 0.5;
+  }
+
+  /** Reset unit to its original spawn state (position, health, alive). */
+  resetToSpawn(): void {
+    this._isDead = false;
+    this._currentHealth = this.definition.maxHealth;
+    this._moveTarget = null;
+    this._isMoving = false;
+    this._velocity.setAll(0);
+    this._grounded = true;
+    this._staggerTimer = 0;
+    this._spinning = false;
+    this._physicsActive = false;
+    this._bounceCount = 0;
+    this._deathSpinX = 0;
+    this._deathSpinY = 0;
+    this._nextAttackAt = 0;
+
+    // Restore position and clear rotation
+    this.body.root.position.copyFrom(this._spawnPosition);
+    this.body.root.rotation.set(0, 0, 0);
+
+    // Reset all joint rotations
+    for (const joint of this.body.allJoints) {
+      joint.rotation.set(0, 0, 0);
+    }
+
+    // Restore mesh visibility (corpses may have been hidden)
+    for (const mesh of this.body.allMeshes) {
+      mesh.isVisible = true;
+    }
+
+    // Restore health bar
+    if (this.healthBarMesh) {
+      this.healthBarMesh.isVisible = true;
+      this.healthBarMesh.scaling.x = 1;
+      this.healthBarMesh.position.x = 0;
+    }
+    if (this.healthBarBg) this.healthBarBg.isVisible = true;
+
+    this.animator.setState(AnimState.Idle);
   }
 
   dispose(): void {
