@@ -24,7 +24,7 @@ export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
   | "barrel_body" | "cart" | "longship_body" | "tank_body"
   | "catapult_arm" | "cannon_base" | "hwacha_rack" | "ballista_frame"
-  | "balloon" | "dragon_wings" | "scarecrow_post";
+  | "balloon" | "dragon_wings" | "scarecrow_post" | "monk_robe";
 
 export interface UnitVisualConfig {
   proportions: Partial<BodyProportions>;
@@ -176,19 +176,19 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.95, armLength: 1.05 }, "bow", "conical_hat", "none", "none", "#FF4500",
   ),
   "dynasty.monk": vis(
-    { scale: 1.1, bulk: 1.15 }, "bo_staff", "monk_headband", "none", "none", "#FF8C00",
+    { scale: 1.1, bulk: 1.15 }, "none", "none", "none", "monk_robe", "#FF8C00",
   ),
   "dynasty.ninja": vis(
-    { scale: 0.9, bulk: 0.85, armLength: 1.05 }, "shuriken_hand", "ninja_mask", "none", "none", "#1C1C1C",
+    { scale: 0.9, bulk: 0.85, armLength: 1.05 }, "shuriken_hand", "ninja_mask", "none", "none", "#4A1A2A",
   ),
   "dynasty.dragon": vis(
-    { scale: 1.6, bulk: 1.3, headSize: 1.4 }, "torch", "none", "none", "dragon_wings", "#FF4500",
+    { scale: 1.6, bulk: 1.3, headSize: 1.5 }, "none", "none", "none", "dragon_wings", "#1A1A1A",
   ),
   "dynasty.hwacha": vis(
     { scale: 1.5, bulk: 1.6, legLength: 0.7 }, "none", "conical_hat", "none", "hwacha_rack", "#8B4513",
   ),
   "dynasty.monkey_king": vis(
-    { scale: 1.6, bulk: 1.2, headSize: 1.2, armLength: 1.15 }, "bo_staff", "crown", "none", "cape", "#FFD700",
+    { scale: 1.6, bulk: 1.2, headSize: 1.4, armLength: 1.3 }, "bo_staff", "crown", "none", "cape", "#8B5A2B",
   ),
 
   // ═══════════════════════ RENAISSANCE ═══════════════════════
@@ -216,22 +216,22 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ PIRATE ═══════════════════════
   "pirate.flintlock": vis(
-    { scale: 0.95, bulk: 0.95 }, "flintlock", "bandana", "none", "none", "#8B4513",
+    { scale: 0.95, bulk: 0.95 }, "flintlock", "tricorn", "none", "none", "#8B4513",
   ),
   "pirate.blunderbuss": vis(
     { scale: 1.05, bulk: 1.1 }, "blunderbuss", "tricorn", "none", "none", "#696969",
   ),
   "pirate.bomb_thrower": vis(
-    { scale: 1.0, bulk: 1.0 }, "bomb", "bandana", "none", "none", "#2F4F4F",
+    { scale: 1.0, bulk: 1.0 }, "bomb", "tricorn", "none", "none", "#2F4F4F",
   ),
   "pirate.harpooner": vis(
-    { scale: 1.05, armLength: 1.15 }, "harpoon", "bandana", "none", "none", "#708090",
+    { scale: 1.05, armLength: 1.15 }, "harpoon", "tricorn", "none", "none", "#708090",
   ),
   "pirate.captain": vis(
     { scale: 1.35, bulk: 1.3 }, "cutlass", "captain_hat", "none", "cape", "#DAA520",
   ),
   "pirate.cannon": vis(
-    { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "bandana", "none", "cannon_base", "#2F4F4F",
+    { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "tricorn", "none", "cannon_base", "#2F4F4F",
   ),
   "pirate.pirate_queen": vis(
     { scale: 1.6, bulk: 1.2, headSize: 1.1 }, "cutlass", "pirate_hat", "none", "cape", "#FF1493",

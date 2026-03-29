@@ -281,6 +281,66 @@ export class SimulationSystem {
       return;
     }
 
+    // ─── Hwacha: volley of rocket arrows ───
+    if (attacker.definition.id === "dynasty.hwacha") {
+      if (this.projectileSystem) {
+        const volleyCount = 8;
+        for (let i = 0; i < volleyCount; i++) {
+          // Slight random offset for each arrow in the volley
+          const offsetX = (Math.random() - 0.5) * 2;
+          const offsetZ = (Math.random() - 0.5) * 2;
+          const adjustedTarget = target.position.add(new Vector3(offsetX, 0, offsetZ));
+
+          // Find nearest enemy to adjusted target for tracking
+          this.projectileSystem.spawnProjectile(
+            "rocket_arrow",
+            attacker.position,
+            target,
+            Math.ceil(attackProfile.damage / volleyCount),
+            knockback.scale(0.4),
+            0.8,  // small splash per arrow
+            attacker.team,
+            this._units,
+          );
+        }
+      }
+      return;
+    }
+
+    // ─── Scarecrow: launch crows ───
+    if (attacker.definition.id === "farmer.scarecrow") {
+      if (this.projectileSystem) {
+        this.projectileSystem.spawnProjectile(
+          "crow",
+          attacker.position,
+          target,
+          attackProfile.damage,
+          knockback,
+          0,
+          attacker.team,
+          this._units,
+        );
+      }
+      return;
+    }
+
+    // ─── Dragon: breathe fire ───
+    if (attacker.definition.id === "dynasty.dragon") {
+      if (this.projectileSystem) {
+        this.projectileSystem.spawnProjectile(
+          "fireball",
+          attacker.position,
+          target,
+          attackProfile.damage,
+          knockback,
+          attackProfile.splashRadius,
+          attacker.team,
+          this._units,
+        );
+      }
+      return;
+    }
+
     // ─── Ranged / Siege: spawn projectile ───
     if (attackProfile.type === AttackType.Ranged || attackProfile.type === AttackType.Siege) {
       if (this.projectileSystem) {

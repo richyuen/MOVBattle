@@ -3,7 +3,7 @@ import {
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -66,6 +66,9 @@ export class ProjectileSystem {
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
       case "firework": speed = 22; arcHeight = dist * 0.25; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
+      case "rocket_arrow": speed = 25; arcHeight = dist * 0.12; break;
+      case "crow": speed = 18; arcHeight = dist * 0.15; break;
+      case "fireball": speed = 20; arcHeight = dist * 0.1; break;
     }
 
     const flightTime = Math.max(0.1, dist / speed);
@@ -144,6 +147,18 @@ export class ProjectileSystem {
       // Shuriken spin
       if (p.shape === "shuriken") {
         p.mesh.rotation.z += dt * 25;
+      }
+      // Crow wing flapping
+      if (p.shape === "crow") {
+        const flapAngle = Math.sin(p.elapsed * 15) * 0.5;
+        const children = p.mesh.getChildren();
+        for (const child of children) {
+          if ((child as any).name?.startsWith("wing")) {
+            const wing = child as Mesh;
+            const side = wing.position.x > 0 ? 1 : -1;
+            wing.rotation.z = side * (-0.3 + flapAngle);
+          }
+        }
       }
 
       // Collision-based early hit detection (check against enemy collision spheres)
@@ -312,6 +327,71 @@ export class ProjectileSystem {
         hub.rotation.x = Math.PI / 2;
         hub.material = mat;
         hub.parent = root;
+        break;
+      }
+      case "rocket_arrow": {
+        // Arrow shaft with rocket flame trail
+        const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.4, diameter: 0.025, tessellation: 4 }, this._scene);
+        shaft.rotation.x = Math.PI / 2;
+        shaft.material = this._getMat("rocket_shaft", new Color3(0.5, 0.3, 0.15));
+        shaft.parent = root;
+        const tip = MeshBuilder.CreateCylinder("tip", { height: 0.08, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, this._scene);
+        tip.rotation.x = Math.PI / 2;
+        tip.position.z = 0.22;
+        tip.material = this._getMat("rocket_tip", new Color3(0.6, 0.6, 0.65));
+        tip.parent = root;
+        // Rocket flame at tail
+        const flame = MeshBuilder.CreateSphere("flame", { diameter: 0.1, segments: 4 }, this._scene);
+        flame.position.z = -0.22;
+        flame.material = this._getMat("rocket_flame", new Color3(1, 0.5, 0.1), 0.7);
+        flame.parent = root;
+        // Smoke trail
+        const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.07, segments: 4 }, this._scene);
+        smoke.position.z = -0.3;
+        const smokeMat = new StandardMaterial("rsmoke", this._scene);
+        smokeMat.diffuseColor = new Color3(0.6, 0.6, 0.6);
+        smokeMat.alpha = 0.4;
+        smokeMat.disableLighting = true;
+        smoke.material = smokeMat;
+        smoke.parent = root;
+        break;
+      }
+      case "crow": {
+        // Black crow shape - body + wings
+        const body = MeshBuilder.CreateSphere("crowbody", { diameter: 0.15, segments: 6 }, this._scene);
+        body.scaling.set(1, 0.7, 1.4);
+        body.material = this._getMat("crow_body", new Color3(0.08, 0.08, 0.1));
+        body.parent = root;
+        // Wings (flapping handled by rotation update)
+        for (const side of [-1, 1]) {
+          const wing = MeshBuilder.CreateBox("wing", { width: 0.2, height: 0.01, depth: 0.1 }, this._scene);
+          wing.position.set(side * 0.12, 0.02, 0);
+          wing.rotation.z = side * -0.3;
+          wing.material = this._getMat("crow_wing", new Color3(0.05, 0.05, 0.08));
+          wing.parent = root;
+        }
+        // Beak
+        const beak = MeshBuilder.CreateCylinder("beak", { height: 0.06, diameterTop: 0, diameterBottom: 0.03, tessellation: 4 }, this._scene);
+        beak.rotation.x = Math.PI / 2;
+        beak.position.z = 0.1;
+        beak.material = this._getMat("crow_beak", new Color3(0.4, 0.35, 0.1));
+        beak.parent = root;
+        break;
+      }
+      case "fireball": {
+        // Glowing orange fireball
+        const ball = MeshBuilder.CreateSphere("fireball", { diameter: 0.25, segments: 8 }, this._scene);
+        ball.material = this._getMat("fireball_body", new Color3(1, 0.4, 0.05), 0.6);
+        ball.parent = root;
+        // Outer glow
+        const glow = MeshBuilder.CreateSphere("glow", { diameter: 0.4, segments: 6 }, this._scene);
+        const glowMat = new StandardMaterial("fireball_glow", this._scene);
+        glowMat.diffuseColor = new Color3(1, 0.3, 0);
+        glowMat.emissiveColor = new Color3(1, 0.3, 0).scale(0.5);
+        glowMat.alpha = 0.3;
+        glowMat.disableLighting = true;
+        glow.material = glowMat;
+        glow.parent = root;
         break;
       }
     }

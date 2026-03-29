@@ -202,12 +202,31 @@ function buildWeapon(scene: Scene, type: WeaponType, s: number, accent: Color3):
       bowMesh.position.y = 0.1 * s;
       return bowMesh;
     }
+    case "blunderbuss": {
+      // Short barrel with flared bell muzzle
+      const barrel = MeshBuilder.CreateCylinder("barrel", { height: 0.35 * s, diameter: 0.04 * s, tessellation: 8 }, scene);
+      barrel.material = mat(scene, new Color3(0.3, 0.3, 0.35));
+      // Flared muzzle bell
+      const bell = MeshBuilder.CreateCylinder("bell", {
+        height: 0.1 * s, diameterTop: 0.12 * s, diameterBottom: 0.04 * s, tessellation: 10,
+      }, scene);
+      bell.position.y = 0.22 * s;
+      bell.parent = barrel;
+      bell.material = mat(scene, new Color3(0.35, 0.35, 0.4));
+      // Wood stock
+      const stock = MeshBuilder.CreateBox("stock", { width: 0.05 * s, height: 0.18 * s, depth: 0.035 * s }, scene);
+      stock.position.y = -0.2 * s;
+      stock.parent = barrel;
+      stock.material = mat(scene, new Color3(0.45, 0.3, 0.15));
+      barrel.rotation.x = -0.2;
+      barrel.position.y = 0.12 * s;
+      return barrel;
+    }
     case "musket":
     case "flintlock":
-    case "blunderbuss":
     case "cannon_hand": {
-      const len = type === "cannon_hand" ? 0.7 : type === "musket" ? 0.65 : type === "blunderbuss" ? 0.45 : 0.35;
-      const diam = type === "cannon_hand" ? 0.08 : type === "blunderbuss" ? 0.05 : 0.03;
+      const len = type === "cannon_hand" ? 0.7 : type === "musket" ? 0.65 : 0.35;
+      const diam = type === "cannon_hand" ? 0.08 : 0.03;
       const barrel = MeshBuilder.CreateCylinder("barrel", { height: len * s, diameter: diam * s, tessellation: 8 }, scene);
       barrel.material = mat(scene, new Color3(0.3, 0.3, 0.35));
       const stock = MeshBuilder.CreateBox("stock", { width: 0.04 * s, height: 0.15 * s, depth: 0.03 * s }, scene);
@@ -398,11 +417,26 @@ function buildHat(scene: Scene, type: HatType, s: number, accent: Color3): Mesh 
       return helm;
     }
     case "ninja_mask": {
-      const mask = MeshBuilder.CreateSphere("nmask", { diameter: 0.25 * s, segments: 8 }, scene);
-      mask.scaling.set(1, 0.8, 1);
-      mask.material = mat(scene, new Color3(0.1, 0.1, 0.1));
-      mask.position.y = -0.01 * s;
-      return mask;
+      // Hood covering head
+      const hood = MeshBuilder.CreateSphere("hood", { diameter: 0.27 * s, segments: 8 }, scene);
+      hood.material = mat(scene, new Color3(0.15, 0.15, 0.18));
+      hood.position.y = 0.02 * s;
+      // Metal headband/plate
+      const plate = MeshBuilder.CreateBox("plate", { width: 0.2 * s, height: 0.035 * s, depth: 0.01 * s }, scene);
+      plate.position.set(0, 0.02 * s, 0.12 * s);
+      plate.parent = hood;
+      plate.material = mat(scene, new Color3(0.55, 0.55, 0.6), 0.15);
+      // Face wrap (covers lower face)
+      const wrap = MeshBuilder.CreateBox("wrap", { width: 0.18 * s, height: 0.08 * s, depth: 0.14 * s }, scene);
+      wrap.position.set(0, -0.06 * s, 0.04 * s);
+      wrap.parent = hood;
+      wrap.material = mat(scene, new Color3(0.15, 0.15, 0.18));
+      // Trailing cloth (bandana tail)
+      const trail = MeshBuilder.CreateBox("trail", { width: 0.06 * s, height: 0.04 * s, depth: 0.18 * s }, scene);
+      trail.position.set(0, 0.0, -0.16 * s);
+      trail.parent = hood;
+      trail.material = mat(scene, new Color3(0.15, 0.15, 0.18));
+      return hood;
     }
     case "monk_headband": {
       const band = MeshBuilder.CreateTorus("band", { diameter: 0.22 * s, thickness: 0.025 * s, tessellation: 16 }, scene);
@@ -544,7 +578,7 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
     }
     case "wings":
     case "dragon_wings": {
-      const color = type === "dragon_wings" ? new Color3(0.6, 0.15, 0.05) : new Color3(0.9, 0.9, 0.95);
+      const color = type === "dragon_wings" ? new Color3(0.12, 0.12, 0.15) : new Color3(0.9, 0.9, 0.95);
       const wingS = type === "dragon_wings" ? 1.3 : 1.0;
       for (const side of [-1, 1]) {
         const wing = MeshBuilder.CreateBox("wing", { width: 0.35 * s * wingS, height: 0.25 * s * wingS, depth: 0.01 * s }, scene);
@@ -679,6 +713,20 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       post.parent = body.hip;
       post.material = mat(scene, new Color3(0.5, 0.35, 0.2));
       return post;
+    }
+    case "monk_robe": {
+      // Orange robe draped over left shoulder, wrapped around body
+      const robe = MeshBuilder.CreateBox("robe", { width: 0.32 * s, height: 0.4 * s, depth: 0.22 * s }, scene);
+      robe.position.set(0, 0.05 * s, 0);
+      robe.parent = body.torso;
+      robe.material = mat(scene, new Color3(0.9, 0.55, 0.1), 0.05);
+      // Shoulder drape (over left shoulder diagonally)
+      const drape = MeshBuilder.CreateBox("drape", { width: 0.08 * s, height: 0.35 * s, depth: 0.16 * s }, scene);
+      drape.position.set(-0.12 * s, 0.2 * s, 0);
+      drape.rotation.z = 0.3;
+      drape.parent = body.torso;
+      drape.material = mat(scene, new Color3(0.9, 0.55, 0.1), 0.05);
+      return robe;
     }
     case "cart":
     case "barrel_body":
