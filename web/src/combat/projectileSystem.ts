@@ -51,9 +51,12 @@ export class ProjectileSystem {
     splashRadius: number,
     attackerTeam: number,
     allUnits: readonly RuntimeUnit[],
+    originOffset?: Vector3,
+    delay = 0,
   ): void {
     const targetPos = target.position.clone();
-    const dist = Vector3.Distance(origin, targetPos);
+    const launchOrigin = originOffset ? origin.add(originOffset) : origin;
+    const dist = Vector3.Distance(launchOrigin, targetPos);
 
     // Speed and arc vary by projectile type
     let speed: number;
@@ -73,13 +76,13 @@ export class ProjectileSystem {
 
     const flightTime = Math.max(0.1, dist / speed);
     const mesh = this._buildProjectileMesh(shape);
-    mesh.position = origin.clone();
+    mesh.position = launchOrigin.clone();
     mesh.position.y += 1.0; // launch from chest height
 
     this._active.push({
       mesh, origin: mesh.position.clone(), target, targetPos,
       speed, damage, knockback, splashRadius, attackerTeam,
-      elapsed: 0, flightTime, arcHeight, allUnits, shape,
+      elapsed: -delay, flightTime, arcHeight, allUnits, shape,
     });
   }
 
@@ -115,6 +118,17 @@ export class ProjectileSystem {
     for (let i = this._active.length - 1; i >= 0; i--) {
       const p = this._active[i];
       p.elapsed += dt;
+
+      // Delayed projectile: hide until delay expires
+      if (p.elapsed < 0) {
+        if (p.mesh instanceof Mesh) p.mesh.isVisible = false;
+        for (const child of p.mesh.getChildMeshes()) child.isVisible = false;
+        continue;
+      }
+      // Show on first frame after delay
+      if (p.mesh instanceof Mesh) p.mesh.isVisible = true;
+      for (const child of p.mesh.getChildMeshes()) child.isVisible = true;
+
       const t = Math.min(p.elapsed / p.flightTime, 1);
 
       // Update target position if target is alive (track moving targets)

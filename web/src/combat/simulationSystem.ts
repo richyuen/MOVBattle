@@ -286,21 +286,24 @@ export class SimulationSystem {
       if (this.projectileSystem) {
         const volleyCount = 8;
         for (let i = 0; i < volleyCount; i++) {
-          // Slight random offset for each arrow in the volley
-          const offsetX = (Math.random() - 0.5) * 2;
-          const offsetZ = (Math.random() - 0.5) * 2;
-          const adjustedTarget = target.position.add(new Vector3(offsetX, 0, offsetZ));
-
-          // Find nearest enemy to adjusted target for tracking
+          // Stagger each arrow with a small delay and random launch offset
+          const originOffset = new Vector3(
+            (Math.random() - 0.5) * 0.8,
+            Math.random() * 0.3,
+            (Math.random() - 0.5) * 0.4,
+          );
+          const delay = i * 0.06; // stagger fire over ~0.5s
           this.projectileSystem.spawnProjectile(
             "rocket_arrow",
             attacker.position,
             target,
             Math.ceil(attackProfile.damage / volleyCount),
             knockback.scale(0.4),
-            0.8,  // small splash per arrow
+            0.8,
             attacker.team,
             this._units,
+            originOffset,
+            delay,
           );
         }
       }
