@@ -424,128 +424,216 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   return wrapAsBody(scene, root, tray, allMeshes, opHead);
 }
 
-// ═══════════════════════ MINOTAUR (BULL) ═══════════════════════
-// Quadruped bull body. Faces +Z. Large horns, muscular torso, four legs, tail.
-function buildMinotaur(scene: Scene, color: Color3): ArticulatedBody {
+// ═══════════════════════ MINOTAUR ═══════════════════════
+// Cute, upright, squat minotaur with big bull head, curved horns,
+// pointed ears, lighter belly, stubby limbs with hooves, tufted tail.
+function buildMinotaur(scene: Scene, _color: Color3): ArticulatedBody {
   const root = new TransformNode("minotaur_root", scene);
   const allMeshes: Mesh[] = [];
-  const fur = makeMat(scene, new Color3(0.4, 0.22, 0.12));
-  const darkFur = makeMat(scene, new Color3(0.28, 0.15, 0.08));
-  const hornMat = makeMat(scene, new Color3(0.85, 0.8, 0.65));
-  const noseMat = makeMat(scene, new Color3(0.55, 0.3, 0.25));
+  const darkBrown = makeMat(scene, new Color3(0.32, 0.20, 0.13));
+  const medBrown = makeMat(scene, new Color3(0.42, 0.28, 0.16));
+  const lightBelly = makeMat(scene, new Color3(0.65, 0.52, 0.38));
+  const hornMat = makeMat(scene, new Color3(0.88, 0.82, 0.68));
+  const hoofMat = makeMat(scene, new Color3(0.22, 0.15, 0.10));
+  const eyeWhite = makeMat(scene, new Color3(0.95, 0.95, 0.95));
+  const pupilMat = makeMat(scene, new Color3(0.1, 0.1, 0.1));
+  const noseMat = makeMat(scene, new Color3(0.50, 0.30, 0.22));
 
-  // Main torso (large barrel shape, elongated along Z)
-  const torso = MeshBuilder.CreateCylinder("torso", {
-    height: 1.4, diameter: 0.9, tessellation: 12,
-  }, scene);
-  torso.position.set(0, 0.85, 0);
-  torso.rotation.x = Math.PI / 2; // elongated along Z
-  torso.parent = root; torso.material = fur; allMeshes.push(torso);
+  // ── Joint hierarchy ──
+  const hip = dummyJoint("mino_hip", root, scene);
+  hip.position.set(0, 0.55, 0);
+  const torsoJoint = dummyJoint("mino_torso", hip, scene);
+  const neckJoint = dummyJoint("mino_neck", torsoJoint, scene);
+  neckJoint.position.set(0, 0.55, 0.05);
 
-  // Shoulder hump (muscular)
-  const hump = MeshBuilder.CreateSphere("hump", { diameter: 0.7, segments: 8 }, scene);
-  hump.position.set(0, 1.1, 0.35);
-  hump.scaling.set(0.9, 0.7, 0.8);
-  hump.parent = root; hump.material = fur; allMeshes.push(hump);
+  // Arm joints (stubby)
+  const lShoulder = dummyJoint("mino_ls", torsoJoint, scene);
+  lShoulder.position.set(-0.38, 0.35, 0);
+  const lElbow = dummyJoint("mino_le", lShoulder, scene);
+  lElbow.position.set(0, -0.22, 0);
+  const rShoulder = dummyJoint("mino_rs", torsoJoint, scene);
+  rShoulder.position.set(0.38, 0.35, 0);
+  const rElbow = dummyJoint("mino_re", rShoulder, scene);
+  rElbow.position.set(0, -0.22, 0);
 
-  // Head (forward, at +Z)
-  const head = MeshBuilder.CreateBox("head", { width: 0.45, height: 0.4, depth: 0.5 }, scene);
-  head.position.set(0, 1.0, 0.95);
-  head.parent = root; head.material = fur; allMeshes.push(head);
+  // Leg joints
+  const lHip = dummyJoint("mino_lh", hip, scene);
+  lHip.position.set(-0.18, -0.05, 0);
+  const lKnee = dummyJoint("mino_lk", lHip, scene);
+  lKnee.position.set(0, -0.28, 0);
+  const rHip = dummyJoint("mino_rh", hip, scene);
+  rHip.position.set(0.18, -0.05, 0);
+  const rKnee = dummyJoint("mino_rk", rHip, scene);
+  rKnee.position.set(0, -0.28, 0);
 
-  // Snout
-  const snout = MeshBuilder.CreateBox("snout", { width: 0.3, height: 0.22, depth: 0.25 }, scene);
-  snout.position.set(0, 0.85, 1.2);
-  snout.parent = root; snout.material = noseMat; allMeshes.push(snout);
+  // ── Body — big round belly (parented to torso joint) ──
+  const bodyMesh = MeshBuilder.CreateSphere("body", { diameter: 0.85, segments: 10 }, scene);
+  bodyMesh.position.set(0, 0.1, 0);
+  bodyMesh.scaling.set(1.0, 0.95, 0.85);
+  bodyMesh.parent = torsoJoint; bodyMesh.material = darkBrown; allMeshes.push(bodyMesh);
 
-  // Nostrils (two small dark spheres)
+  // Lighter belly patch (front)
+  const bellyPatch = MeshBuilder.CreateSphere("belly", { diameter: 0.6, segments: 8 }, scene);
+  bellyPatch.position.set(0, -0.02, 0.18);
+  bellyPatch.scaling.set(0.75, 0.8, 0.5);
+  bellyPatch.parent = torsoJoint; bellyPatch.material = lightBelly; allMeshes.push(bellyPatch);
+
+  // ── Head — oversized bull head (parented to neck joint) ──
+  const headMesh = MeshBuilder.CreateSphere("head", { diameter: 0.7, segments: 8 }, scene);
+  headMesh.position.set(0, 0.15, 0.05);
+  headMesh.scaling.set(1.0, 0.9, 0.85);
+  headMesh.parent = neckJoint; headMesh.material = darkBrown; allMeshes.push(headMesh);
+
+  // Brow ridge (heavy, overhanging)
+  const brow = MeshBuilder.CreateSphere("brow", { diameter: 0.45, segments: 6 }, scene);
+  brow.position.set(0, 0.28, 0.12);
+  brow.scaling.set(1.2, 0.4, 0.8);
+  brow.parent = neckJoint; brow.material = darkBrown; allMeshes.push(brow);
+
+  // Snout / muzzle (wide, protruding)
+  const snout = MeshBuilder.CreateSphere("snout", { diameter: 0.38, segments: 6 }, scene);
+  snout.position.set(0, -0.02, 0.3);
+  snout.scaling.set(1.0, 0.7, 0.8);
+  snout.parent = neckJoint; snout.material = noseMat; allMeshes.push(snout);
+
+  // Nostrils
   for (const xOff of [-0.08, 0.08]) {
     const nostril = MeshBuilder.CreateSphere("nostril", { diameter: 0.06, segments: 4 }, scene);
-    nostril.position.set(xOff, 0.82, 1.33);
-    nostril.parent = root; nostril.material = darkFur; allMeshes.push(nostril);
+    nostril.position.set(xOff, -0.05, 0.46);
+    nostril.parent = neckJoint; nostril.material = hoofMat; allMeshes.push(nostril);
   }
 
-  // Eyes
-  const eyeMat = makeMat(scene, new Color3(0.9, 0.15, 0.1)); // red eyes
-  for (const xOff of [-0.15, 0.15]) {
-    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.08, segments: 6 }, scene);
-    eye.position.set(xOff, 1.08, 1.1);
-    eye.parent = root; eye.material = eyeMat; allMeshes.push(eye);
-  }
-
-  // Horns (large, curving outward and forward)
+  // Eyes (cute, with white sclera and dark pupils — peeking under brow)
   for (const side of [-1, 1]) {
-    // Base segment (goes up and out)
+    const sclera = MeshBuilder.CreateSphere("eye", { diameter: 0.1, segments: 6 }, scene);
+    sclera.position.set(side * 0.18, 0.18, 0.28);
+    sclera.parent = neckJoint; sclera.material = eyeWhite; allMeshes.push(sclera);
+
+    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.06, segments: 4 }, scene);
+    pupil.position.set(side * 0.18, 0.17, 0.33);
+    pupil.parent = neckJoint; pupil.material = pupilMat; allMeshes.push(pupil);
+  }
+
+  // ── Horns — large, curving upward and outward then inward ──
+  for (const side of [-1, 1]) {
+    // Base (thick, goes up and out from top of head)
     const hornBase = MeshBuilder.CreateCylinder("hornBase", {
-      height: 0.35, diameterTop: 0.06, diameterBottom: 0.1, tessellation: 8,
+      height: 0.3, diameterTop: 0.07, diameterBottom: 0.11, tessellation: 8,
     }, scene);
-    hornBase.position.set(side * 0.25, 1.25, 0.85);
-    hornBase.rotation.z = side * -0.8;
-    hornBase.rotation.x = -0.2;
-    hornBase.parent = root; hornBase.material = hornMat; allMeshes.push(hornBase);
+    hornBase.position.set(side * 0.22, 0.42, 0.0);
+    hornBase.rotation.z = side * -0.6;
+    hornBase.parent = neckJoint; hornBase.material = hornMat; allMeshes.push(hornBase);
 
-    // Tip segment (curves forward)
+    // Mid (curves outward)
+    const hornMid = MeshBuilder.CreateCylinder("hornMid", {
+      height: 0.22, diameterTop: 0.05, diameterBottom: 0.07, tessellation: 8,
+    }, scene);
+    hornMid.position.set(side * 0.38, 0.55, -0.02);
+    hornMid.rotation.z = side * -1.1;
+    hornMid.rotation.x = -0.3;
+    hornMid.parent = neckJoint; hornMid.material = hornMat; allMeshes.push(hornMid);
+
+    // Tip (curves forward/inward — the classic minotaur hook)
     const hornTip = MeshBuilder.CreateCylinder("hornTip", {
-      height: 0.25, diameterTop: 0.02, diameterBottom: 0.06, tessellation: 6,
+      height: 0.18, diameterTop: 0.02, diameterBottom: 0.05, tessellation: 6,
     }, scene);
-    hornTip.position.set(side * 0.42, 1.42, 0.92);
-    hornTip.rotation.z = side * -1.2;
-    hornTip.rotation.x = 0.4;
-    hornTip.parent = root; hornTip.material = hornMat; allMeshes.push(hornTip);
+    hornTip.position.set(side * 0.46, 0.62, 0.06);
+    hornTip.rotation.z = side * -1.6;
+    hornTip.rotation.x = 0.5;
+    hornTip.parent = neckJoint; hornTip.material = hornMat; allMeshes.push(hornTip);
   }
 
-  // Ears
+  // ── Pointed ears (large, drooping outward like the reference) ──
   for (const side of [-1, 1]) {
-    const ear = MeshBuilder.CreateBox("ear", { width: 0.12, height: 0.06, depth: 0.08 }, scene);
-    ear.position.set(side * 0.28, 1.15, 0.82);
-    ear.rotation.z = side * 0.3;
-    ear.parent = root; ear.material = fur; allMeshes.push(ear);
+    const ear = MeshBuilder.CreateCylinder("ear", {
+      diameterTop: 0, diameterBottom: 0.14, height: 0.2, tessellation: 4,
+    }, scene);
+    ear.position.set(side * 0.32, 0.15, -0.02);
+    ear.rotation.z = side * 1.3; // point outward/down
+    ear.rotation.x = -0.2;
+    ear.parent = neckJoint; ear.material = medBrown; allMeshes.push(ear);
   }
 
-  // Four legs
-  const legPositions = [
-    { x: -0.25, z: 0.4 },  // front left
-    { x: 0.25, z: 0.4 },   // front right
-    { x: -0.25, z: -0.4 }, // back left
-    { x: 0.25, z: -0.4 },  // back right
-  ];
-  for (const lp of legPositions) {
+  // ── Arms (stubby, with hoof-like hands) ──
+  for (const [shoulder, elbow] of [[lShoulder, lElbow], [rShoulder, rElbow]] as [TransformNode, TransformNode][]) {
+    // Upper arm
+    const upper = MeshBuilder.CreateCylinder("uarm", {
+      height: 0.22, diameterTop: 0.12, diameterBottom: 0.1, tessellation: 8,
+    }, scene);
+    upper.position.set(0, -0.1, 0);
+    upper.parent = shoulder; upper.material = darkBrown; allMeshes.push(upper);
+
+    // Lower arm / hand (hoof-like)
+    const lower = MeshBuilder.CreateCylinder("larm", {
+      height: 0.18, diameterTop: 0.09, diameterBottom: 0.07, tessellation: 8,
+    }, scene);
+    lower.position.set(0, -0.08, 0);
+    lower.parent = elbow; lower.material = medBrown; allMeshes.push(lower);
+
+    // Hoof hand
+    const hoof = MeshBuilder.CreateCylinder("hoof", {
+      height: 0.05, diameter: 0.09, tessellation: 6,
+    }, scene);
+    hoof.position.set(0, -0.2, 0);
+    hoof.parent = elbow; hoof.material = hoofMat; allMeshes.push(hoof);
+  }
+
+  // ── Legs (thick, sturdy with hooves) ──
+  for (const [hipJoint, kneeJoint] of [[lHip, lKnee], [rHip, rKnee]] as [TransformNode, TransformNode][]) {
     // Upper leg
     const upper = MeshBuilder.CreateCylinder("uleg", {
-      height: 0.45, diameterTop: 0.14, diameterBottom: 0.12, tessellation: 8,
+      height: 0.28, diameterTop: 0.14, diameterBottom: 0.12, tessellation: 8,
     }, scene);
-    upper.position.set(lp.x, 0.5, lp.z);
-    upper.parent = root; upper.material = fur; allMeshes.push(upper);
+    upper.position.set(0, -0.14, 0);
+    upper.parent = hipJoint; upper.material = darkBrown; allMeshes.push(upper);
 
     // Lower leg
     const lower = MeshBuilder.CreateCylinder("lleg", {
-      height: 0.3, diameterTop: 0.11, diameterBottom: 0.08, tessellation: 8,
+      height: 0.22, diameterTop: 0.11, diameterBottom: 0.09, tessellation: 8,
     }, scene);
-    lower.position.set(lp.x, 0.15, lp.z);
-    lower.parent = root; lower.material = darkFur; allMeshes.push(lower);
+    lower.position.set(0, -0.1, 0);
+    lower.parent = kneeJoint; lower.material = medBrown; allMeshes.push(lower);
 
     // Hoof
     const hoof = MeshBuilder.CreateCylinder("hoof", {
-      height: 0.06, diameter: 0.1, tessellation: 6,
+      height: 0.06, diameter: 0.12, tessellation: 6,
     }, scene);
-    hoof.position.set(lp.x, 0.03, lp.z);
-    hoof.parent = root; hoof.material = darkFur; allMeshes.push(hoof);
+    hoof.position.set(0, -0.23, 0);
+    hoof.parent = kneeJoint; hoof.material = hoofMat; allMeshes.push(hoof);
   }
 
-  // Tail (extends back from -Z)
+  // ── Tail (thin, with arrow-shaped tuft) ──
   const tail = MeshBuilder.CreateCylinder("tail", {
-    height: 0.5, diameterTop: 0.02, diameterBottom: 0.06, tessellation: 6,
+    height: 0.4, diameterTop: 0.02, diameterBottom: 0.05, tessellation: 6,
   }, scene);
-  tail.position.set(0, 0.75, -0.8);
-  tail.rotation.x = -0.6;
-  tail.parent = root; tail.material = darkFur; allMeshes.push(tail);
+  tail.position.set(0, 0.0, -0.38);
+  tail.rotation.x = -0.8;
+  tail.parent = torsoJoint; tail.material = darkBrown; allMeshes.push(tail);
 
-  // Tail tuft
-  const tuft = MeshBuilder.CreateSphere("tuft", { diameter: 0.1, segments: 4 }, scene);
-  tuft.position.set(0, 0.55, -1.0);
-  tuft.parent = root; tuft.material = darkFur; allMeshes.push(tuft);
+  // Arrow-shaped tail tuft
+  const tuft = MeshBuilder.CreateCylinder("tuft", {
+    diameterTop: 0, diameterBottom: 0.12, height: 0.1, tessellation: 4,
+  }, scene);
+  tuft.position.set(0, -0.2, -0.55);
+  tuft.rotation.x = -0.8;
+  tuft.parent = torsoJoint; tuft.material = hoofMat; allMeshes.push(tuft);
 
-  return wrapAsBody(scene, root, torso, allMeshes, head);
+  // ── Map to ArticulatedBody ──
+  const rHand = dummyJoint("mino_rhand", rElbow, scene);
+  const lHand = dummyJoint("mino_lhand", lElbow, scene);
+  const headTop = dummyJoint("mino_headtop", neckJoint, scene);
+
+  const allJoints = [hip, torsoJoint, neckJoint, lShoulder, lElbow, rShoulder, rElbow, lHip, lKnee, rHip, rKnee];
+
+  return {
+    root, hip, torso: torsoJoint, torsoMesh: bodyMesh, neck: neckJoint, headMesh,
+    leftShoulder: lShoulder, leftUpperArm: bodyMesh, leftElbow: lElbow, leftLowerArm: bodyMesh,
+    rightShoulder: rShoulder, rightUpperArm: bodyMesh, rightElbow: rElbow, rightLowerArm: bodyMesh,
+    leftHip: lHip, leftUpperLeg: bodyMesh, leftKnee: lKnee, leftLowerLeg: bodyMesh,
+    rightHip: rHip, rightUpperLeg: bodyMesh, rightKnee: rKnee, rightLowerLeg: bodyMesh,
+    rightHand: rHand, leftHand: lHand, headTop,
+    allMeshes, allJoints,
+  };
 }
 
 function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
