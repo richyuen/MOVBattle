@@ -324,6 +324,48 @@ function buildWeapon(scene: Scene, type: WeaponType, s: number, accent: Color3):
     case "wheelbarrow_weapon":
     case "shield_sword":
       return buildWeapon(scene, "sword", s, accent);
+    case "stone": {
+      const rock = MeshBuilder.CreateSphere("stone", { diameter: 0.12 * s, segments: 6 }, scene);
+      rock.material = mat(scene, new Color3(0.55, 0.55, 0.5));
+      rock.position.y = 0.06 * s;
+      return rock;
+    }
+    case "hay_bale": {
+      const bale = MeshBuilder.CreateBox("bale", { width: 0.25 * s, height: 0.18 * s, depth: 0.2 * s }, scene);
+      bale.material = mat(scene, new Color3(0.82, 0.72, 0.28));
+      // Twine bands
+      const band = MeshBuilder.CreateBox("band", { width: 0.26 * s, height: 0.015 * s, depth: 0.21 * s }, scene);
+      band.position.y = 0.03 * s; band.parent = bale;
+      band.material = mat(scene, new Color3(0.6, 0.45, 0.2));
+      bale.position.y = 0.1 * s;
+      return bale;
+    }
+    case "potion": {
+      const flask = MeshBuilder.CreateCylinder("flask", { height: 0.12 * s, diameterTop: 0.04 * s, diameterBottom: 0.07 * s, tessellation: 8 }, scene);
+      flask.material = mat(scene, accent, 0.2);
+      const stopper = MeshBuilder.CreateSphere("stopper", { diameter: 0.04 * s, segments: 6 }, scene);
+      stopper.position.y = 0.08 * s; stopper.parent = flask;
+      stopper.material = mat(scene, new Color3(0.55, 0.3, 0.15));
+      const neck = MeshBuilder.CreateCylinder("neck", { height: 0.04 * s, diameter: 0.025 * s, tessellation: 6 }, scene);
+      neck.position.y = 0.06 * s; neck.parent = flask;
+      neck.material = mat(scene, accent, 0.15);
+      flask.position.y = 0.08 * s;
+      return flask;
+    }
+    case "lightning_bolt": {
+      const bolt = new TransformNode("bolt", scene) as unknown as Mesh;
+      const yellow = new Color3(1, 0.9, 0.2);
+      const seg1 = MeshBuilder.CreateBox("seg1", { width: 0.06 * s, height: 0.2 * s, depth: 0.02 * s }, scene);
+      seg1.material = mat(scene, yellow, 0.6);
+      seg1.position.set(0.02 * s, 0.3 * s, 0); seg1.rotation.z = 0.3; seg1.parent = bolt;
+      const seg2 = MeshBuilder.CreateBox("seg2", { width: 0.06 * s, height: 0.2 * s, depth: 0.02 * s }, scene);
+      seg2.material = mat(scene, yellow, 0.6);
+      seg2.position.set(-0.02 * s, 0.12 * s, 0); seg2.rotation.z = -0.3; seg2.parent = bolt;
+      const seg3 = MeshBuilder.CreateBox("seg3", { width: 0.05 * s, height: 0.15 * s, depth: 0.02 * s }, scene);
+      seg3.material = mat(scene, yellow, 0.6);
+      seg3.position.set(0.01 * s, -0.04 * s, 0); seg3.rotation.z = 0.2; seg3.parent = bolt;
+      return bolt;
+    }
     default:
       return null;
   }
@@ -524,6 +566,31 @@ function buildHat(scene: Scene, type: HatType, s: number, accent: Color3): Mesh 
       head.material = mat(scene, new Color3(0.8, 0.7, 0.3), 0.1);
       head.position.y = 0.06 * s;
       return head;
+    }
+    case "great_helm": {
+      // Flat-topped barrel helm with eye slit
+      const helm = MeshBuilder.CreateCylinder("ghelm", { height: 0.22 * s, diameter: 0.22 * s, tessellation: 8 }, scene);
+      helm.material = mat(scene, new Color3(0.7, 0.7, 0.72));
+      helm.position.y = 0.04 * s;
+      // Eye slit (dark horizontal bar)
+      const slit = MeshBuilder.CreateBox("slit", { width: 0.18 * s, height: 0.015 * s, depth: 0.01 * s }, scene);
+      slit.position.set(0, -0.01 * s, 0.11 * s); slit.parent = helm;
+      slit.material = mat(scene, new Color3(0.08, 0.08, 0.08));
+      return helm;
+    }
+    case "hood_liripipe": {
+      // Cone hood with trailing cloth tail
+      const hood = MeshBuilder.CreateCylinder("hood", {
+        height: 0.18 * s, diameterTop: 0, diameterBottom: 0.22 * s, tessellation: 10,
+      }, scene);
+      hood.material = mat(scene, accent);
+      hood.position.y = 0.06 * s;
+      // Liripipe tail hanging behind
+      const tail = MeshBuilder.CreateBox("liripipe", { width: 0.03 * s, height: 0.22 * s, depth: 0.02 * s }, scene);
+      tail.position.set(0, -0.06 * s, -0.08 * s); tail.parent = hood;
+      tail.rotation.x = 0.4;
+      tail.material = mat(scene, accent);
+      return hood;
     }
     default:
       return null;
