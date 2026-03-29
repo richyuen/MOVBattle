@@ -12,6 +12,7 @@ export enum AnimState {
  * All rotation values are in radians.
  */
 export type AttackStyle = "humanoid" | "mammoth";
+export type WalkStyle = "humanoid" | "quadruped";
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -21,6 +22,7 @@ export class ProceduralAnimator {
   private _attackDuration = 0.4;
   private _wobblePhase: number; // random offset per unit
   attackStyle: AttackStyle = "humanoid";
+  walkStyle: WalkStyle = "humanoid";
 
   // Death ragdoll state
   private _deathAngularVelocities: number[] = [];
@@ -91,6 +93,14 @@ export class ProceduralAnimator {
   }
 
   private _animateIdle(_dt: number): void {
+    if (this.walkStyle === "quadruped") {
+      this._animateIdleQuadruped();
+      return;
+    }
+    this._animateIdleHumanoid();
+  }
+
+  private _animateIdleHumanoid(): void {
     const t = this._time + this._wobblePhase;
     const b = this._body;
     const wobble = 0.03; // subtle idle sway
@@ -118,7 +128,39 @@ export class ProceduralAnimator {
     // (no hip bounce — keeps units grounded)
   }
 
+  private _animateIdleQuadruped(): void {
+    const t = this._time + this._wobblePhase;
+    const b = this._body;
+    const wobble = 0.02;
+
+    // Gentle body breathing sway
+    b.torso.rotation.z = Math.sin(t * 1.2) * wobble;
+    b.torso.rotation.x = Math.sin(t * 0.9 + 1) * wobble * 0.5;
+
+    // Head sways gently
+    b.neck.rotation.x = Math.sin(t * 1.0 + 0.5) * wobble * 1.5;
+    b.neck.rotation.z = Math.sin(t * 1.4 + 2) * wobble;
+
+    // All four legs nearly still — just micro-shifts
+    b.leftShoulder.rotation.x = Math.sin(t * 0.8) * wobble;
+    b.rightShoulder.rotation.x = Math.sin(t * 0.8 + Math.PI) * wobble;
+    b.leftHip.rotation.x = Math.sin(t * 0.7 + 1) * wobble;
+    b.rightHip.rotation.x = Math.sin(t * 0.7 + 1 + Math.PI) * wobble;
+    b.leftElbow.rotation.x = 0;
+    b.rightElbow.rotation.x = 0;
+    b.leftKnee.rotation.x = 0;
+    b.rightKnee.rotation.x = 0;
+  }
+
   private _animateWalk(_dt: number): void {
+    if (this.walkStyle === "quadruped") {
+      this._animateWalkQuadruped();
+      return;
+    }
+    this._animateWalkHumanoid();
+  }
+
+  private _animateWalkHumanoid(): void {
     const t = this._time + this._wobblePhase;
     const b = this._body;
     const speed = 8; // cycle speed
@@ -154,6 +196,41 @@ export class ProceduralAnimator {
 
     // Hip bounce
     b.hip.rotation.z = Math.sin(t * speed) * 0.04;
+  }
+
+  /** Quadruped walk: diagonal pairs move together (trot gait). */
+  private _animateWalkQuadruped(): void {
+    const t = this._time + this._wobblePhase;
+    const b = this._body;
+    const speed = 5; // slower, heavier cycle
+    const legSwing = 0.3; // shorter swing for thick legs
+
+    // Diagonal trot: front-left + back-right, then front-right + back-left
+    // Front legs (mapped to shoulders)
+    b.leftShoulder.rotation.x = Math.sin(t * speed) * legSwing;
+    b.rightShoulder.rotation.x = Math.sin(t * speed + Math.PI) * legSwing;
+    // Front knees bend on back-swing
+    b.leftElbow.rotation.x = Math.max(0, -Math.sin(t * speed)) * 0.25;
+    b.rightElbow.rotation.x = Math.max(0, -Math.sin(t * speed + Math.PI)) * 0.25;
+
+    // Back legs (mapped to hips)
+    b.leftHip.rotation.x = Math.sin(t * speed + Math.PI) * legSwing;
+    b.rightHip.rotation.x = Math.sin(t * speed) * legSwing;
+    // Back knees
+    b.leftKnee.rotation.x = Math.max(0, -Math.sin(t * speed + Math.PI)) * 0.25;
+    b.rightKnee.rotation.x = Math.max(0, -Math.sin(t * speed)) * 0.25;
+
+    // Body sway — subtle side-to-side rock synced with gait
+    b.torso.rotation.z = Math.sin(t * speed) * 0.03;
+    // Slight forward lean
+    b.torso.rotation.x = 0.04 + Math.sin(t * speed * 2) * 0.015;
+
+    // Head bobs gently — slightly out of phase for natural feel
+    b.neck.rotation.x = Math.sin(t * speed * 2 + 1) * 0.06;
+    b.neck.rotation.z = Math.sin(t * speed + 0.5) * 0.04;
+
+    // Hip slight vertical bounce
+    b.hip.rotation.x = Math.sin(t * speed * 2) * 0.02;
   }
 
   private _animateAttack(dt: number): void {

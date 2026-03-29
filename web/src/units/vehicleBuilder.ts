@@ -557,144 +557,185 @@ function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
   const earMat = makeMat(scene, new Color3(0.5, 0.32, 0.2));
 
-  // ── Main body (massive barrel along Z) ──
-  const torso = MeshBuilder.CreateCylinder("torso", {
+  // ── Joint hierarchy for animation ──
+  // hip sits at body center; torso pivots on hip; neck pivots on torso
+  const hip = dummyJoint("m_hip", root, scene);
+  hip.position.set(0, 1.4, 0);
+  const torso = dummyJoint("m_torso", hip, scene);
+  const neck = dummyJoint("m_neck", torso, scene);
+  neck.position.set(0, 0.2, 1.0);
+
+  // Front-left leg joints
+  const flHip = dummyJoint("m_fl_hip", hip, scene);
+  flHip.position.set(-0.4, -0.35, 0.55);
+  const flKnee = dummyJoint("m_fl_knee", flHip, scene);
+  flKnee.position.set(0, -0.45, 0);
+
+  // Front-right leg joints
+  const frHip = dummyJoint("m_fr_hip", hip, scene);
+  frHip.position.set(0.4, -0.35, 0.55);
+  const frKnee = dummyJoint("m_fr_knee", frHip, scene);
+  frKnee.position.set(0, -0.45, 0);
+
+  // Back-left leg joints
+  const blHip = dummyJoint("m_bl_hip", hip, scene);
+  blHip.position.set(-0.4, -0.35, -0.55);
+  const blKnee = dummyJoint("m_bl_knee", blHip, scene);
+  blKnee.position.set(0, -0.45, 0);
+
+  // Back-right leg joints
+  const brHip = dummyJoint("m_br_hip", hip, scene);
+  brHip.position.set(0.4, -0.35, -0.55);
+  const brKnee = dummyJoint("m_br_knee", brHip, scene);
+  brKnee.position.set(0, -0.45, 0);
+
+  // ── Main body (parented to torso joint) ──
+  const torsoMesh = MeshBuilder.CreateCylinder("torso", {
     height: 2.2, diameter: 1.5, tessellation: 14,
   }, scene);
-  torso.position.set(0, 1.4, 0);
-  torso.rotation.x = Math.PI / 2;
-  torso.parent = root; torso.material = fur; allMeshes.push(torso);
+  torsoMesh.position.set(0, 0, 0);
+  torsoMesh.rotation.x = Math.PI / 2;
+  torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
 
-  // Shoulder hump (mammoths have a prominent back hump)
+  // Shoulder hump
   const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.2, segments: 8 }, scene);
-  hump.position.set(0, 1.85, 0.3);
+  hump.position.set(0, 0.45, 0.3);
   hump.scaling.set(0.8, 0.6, 0.7);
-  hump.parent = root; hump.material = fur; allMeshes.push(hump);
+  hump.parent = torso; hump.material = fur; allMeshes.push(hump);
 
   // Shaggy fur underbelly
   const belly = MeshBuilder.CreateBox("belly", { width: 1.1, height: 0.35, depth: 1.6 }, scene);
-  belly.position.set(0, 0.9, 0);
-  belly.parent = root; belly.material = shaggyFur; allMeshes.push(belly);
+  belly.position.set(0, -0.5, 0);
+  belly.parent = torso; belly.material = shaggyFur; allMeshes.push(belly);
 
-  // ── Head ──
-  const head = MeshBuilder.CreateSphere("head", { diameter: 0.9, segments: 8 }, scene);
-  head.position.set(0, 1.6, 1.25);
-  head.scaling.set(0.85, 1, 0.8);
-  head.parent = root; head.material = fur; allMeshes.push(head);
+  // ── Head (parented to neck joint) ──
+  const headMesh = MeshBuilder.CreateSphere("head", { diameter: 0.9, segments: 8 }, scene);
+  headMesh.position.set(0, 0, 0.25);
+  headMesh.scaling.set(0.85, 1, 0.8);
+  headMesh.parent = neck; headMesh.material = fur; allMeshes.push(headMesh);
 
   // Forehead dome
   const dome = MeshBuilder.CreateSphere("dome", { diameter: 0.6, segments: 6 }, scene);
-  dome.position.set(0, 1.85, 1.2);
-  dome.parent = root; dome.material = fur; allMeshes.push(dome);
+  dome.position.set(0, 0.25, 0.2);
+  dome.parent = neck; dome.material = fur; allMeshes.push(dome);
 
-  // Eyes (small, dark)
+  // Eyes
   for (const xOff of [-0.22, 0.22]) {
     const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.08, segments: 6 }, scene);
-    eye.position.set(xOff, 1.65, 1.55);
-    eye.parent = root; eye.material = darkMat; allMeshes.push(eye);
+    eye.position.set(xOff, 0.05, 0.55);
+    eye.parent = neck; eye.material = darkMat; allMeshes.push(eye);
   }
 
-  // ── Trunk (segmented, curving downward and forward) ──
+  // ── Trunk (parented to neck) ──
   const trunkSegments = 5;
   for (let i = 0; i < trunkSegments; i++) {
     const t = i / (trunkSegments - 1);
-    const diam = 0.28 - t * 0.14; // tapers from thick to thin
+    const diam = 0.28 - t * 0.14;
     const seg = MeshBuilder.CreateCylinder("trunk", {
       height: 0.28, diameterTop: diam * 0.85, diameterBottom: diam, tessellation: 8,
     }, scene);
-    // Trunk curves downward then slightly forward
-    const zOff = 1.55 + t * 0.3;
-    const yOff = 1.3 - t * 0.35;
+    const zOff = 0.55 + t * 0.3;
+    const yOff = -0.3 - t * 0.35;
     seg.position.set(0, yOff, zOff);
-    seg.rotation.x = -0.3 + t * 0.5; // progressively tilts forward/down
-    seg.parent = root; seg.material = fur; allMeshes.push(seg);
+    seg.rotation.x = -0.3 + t * 0.5;
+    seg.parent = neck; seg.material = fur; allMeshes.push(seg);
   }
 
-  // Trunk tip curl (small sphere)
+  // Trunk tip
   const trunkTip = MeshBuilder.CreateSphere("trunkTip", { diameter: 0.12, segments: 4 }, scene);
-  trunkTip.position.set(0, 0.15, 1.85);
-  trunkTip.parent = root; trunkTip.material = darkMat; allMeshes.push(trunkTip);
+  trunkTip.position.set(0, -1.25, 0.85);
+  trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
 
-  // ── Tusks (large, curving outward and forward then inward) ──
+  // ── Tusks (parented to neck) ──
   for (const side of [-1, 1]) {
-    // Base (goes down and out from jaw)
     const tuskBase = MeshBuilder.CreateCylinder("tuskBase", {
       height: 0.6, diameterTop: 0.08, diameterBottom: 0.12, tessellation: 8,
     }, scene);
-    tuskBase.position.set(side * 0.25, 1.1, 1.4);
+    tuskBase.position.set(side * 0.25, -0.5, 0.4);
     tuskBase.rotation.z = side * 0.3;
     tuskBase.rotation.x = 0.4;
-    tuskBase.parent = root; tuskBase.material = tuskMat; allMeshes.push(tuskBase);
+    tuskBase.parent = neck; tuskBase.material = tuskMat; allMeshes.push(tuskBase);
 
-    // Mid (curves forward and outward)
     const tuskMid = MeshBuilder.CreateCylinder("tuskMid", {
       height: 0.5, diameterTop: 0.05, diameterBottom: 0.08, tessellation: 8,
     }, scene);
-    tuskMid.position.set(side * 0.38, 0.72, 1.65);
+    tuskMid.position.set(side * 0.38, -0.88, 0.65);
     tuskMid.rotation.z = side * 0.1;
     tuskMid.rotation.x = 1.0;
-    tuskMid.parent = root; tuskMid.material = tuskMat; allMeshes.push(tuskMid);
+    tuskMid.parent = neck; tuskMid.material = tuskMat; allMeshes.push(tuskMid);
 
-    // Tip (curves upward)
-    const tuskTip = MeshBuilder.CreateCylinder("tuskTip", {
+    const tuskTipMesh = MeshBuilder.CreateCylinder("tuskTip", {
       height: 0.35, diameterTop: 0.02, diameterBottom: 0.05, tessellation: 6,
     }, scene);
-    tuskTip.position.set(side * 0.35, 0.6, 2.0);
-    tuskTip.rotation.z = side * -0.2;
-    tuskTip.rotation.x = 1.4;
-    tuskTip.parent = root; tuskTip.material = tuskMat; allMeshes.push(tuskTip);
+    tuskTipMesh.position.set(side * 0.35, -1.0, 1.0);
+    tuskTipMesh.rotation.z = side * -0.2;
+    tuskTipMesh.rotation.x = 1.4;
+    tuskTipMesh.parent = neck; tuskTipMesh.material = tuskMat; allMeshes.push(tuskTipMesh);
   }
 
-  // ── Ears (large, flat, hanging down from sides of head) ──
+  // ── Ears (parented to neck) ──
   for (const side of [-1, 1]) {
     const ear = MeshBuilder.CreateBox("ear", { width: 0.5, height: 0.6, depth: 0.06 }, scene);
-    ear.position.set(side * 0.52, 1.45, 1.1);
+    ear.position.set(side * 0.52, 0.05, 0.1);
     ear.rotation.z = side * 0.4;
     ear.rotation.y = side * 0.2;
-    ear.parent = root; ear.material = earMat; allMeshes.push(ear);
+    ear.parent = neck; ear.material = earMat; allMeshes.push(ear);
   }
 
-  // ── Four thick legs ──
-  const legPositions = [
-    { x: -0.4, z: 0.55 },  // front left
-    { x: 0.4, z: 0.55 },   // front right
-    { x: -0.4, z: -0.55 }, // back left
-    { x: 0.4, z: -0.55 },  // back right
+  // ── Legs (parented to leg joints) ──
+  const legJoints: [TransformNode, TransformNode][] = [
+    [flHip, flKnee], [frHip, frKnee], [blHip, blKnee], [brHip, brKnee],
   ];
-  for (const lp of legPositions) {
-    // Upper leg (thick, pillar-like)
+
+  for (const [hipJoint, kneeJoint] of legJoints) {
+    // Upper leg
     const upper = MeshBuilder.CreateCylinder("uleg", {
-      height: 0.65, diameterTop: 0.28, diameterBottom: 0.24, tessellation: 10,
+      height: 0.55, diameterTop: 0.28, diameterBottom: 0.24, tessellation: 10,
     }, scene);
-    upper.position.set(lp.x, 0.75, lp.z);
-    upper.parent = root; upper.material = fur; allMeshes.push(upper);
+    upper.position.set(0, -0.22, 0);
+    upper.parent = hipJoint; upper.material = fur; allMeshes.push(upper);
 
     // Lower leg
     const lower = MeshBuilder.CreateCylinder("lleg", {
       height: 0.45, diameterTop: 0.22, diameterBottom: 0.18, tessellation: 10,
     }, scene);
-    lower.position.set(lp.x, 0.3, lp.z);
-    lower.parent = root; lower.material = shaggyFur; allMeshes.push(lower);
+    lower.position.set(0, -0.18, 0);
+    lower.parent = kneeJoint; lower.material = shaggyFur; allMeshes.push(lower);
 
-    // Foot (flat, wide)
+    // Foot
     const foot = MeshBuilder.CreateCylinder("foot", {
       height: 0.08, diameter: 0.24, tessellation: 8,
     }, scene);
-    foot.position.set(lp.x, 0.04, lp.z);
-    foot.parent = root; foot.material = darkMat; allMeshes.push(foot);
+    foot.position.set(0, -0.4, 0);
+    foot.parent = kneeJoint; foot.material = darkMat; allMeshes.push(foot);
   }
 
-  // ── Tail (short, thin, with tuft) ──
+  // ── Tail (parented to torso) ──
   const tail = MeshBuilder.CreateCylinder("tail", {
     height: 0.5, diameterTop: 0.03, diameterBottom: 0.06, tessellation: 6,
   }, scene);
-  tail.position.set(0, 1.2, -1.15);
+  tail.position.set(0, -0.2, -1.15);
   tail.rotation.x = -0.7;
-  tail.parent = root; tail.material = darkMat; allMeshes.push(tail);
+  tail.parent = torso; tail.material = darkMat; allMeshes.push(tail);
 
   const tuft = MeshBuilder.CreateSphere("tuft", { diameter: 0.1, segments: 4 }, scene);
-  tuft.position.set(0, 0.95, -1.35);
-  tuft.parent = root; tuft.material = darkMat; allMeshes.push(tuft);
+  tuft.position.set(0, -0.45, -1.35);
+  tuft.parent = torso; tuft.material = darkMat; allMeshes.push(tuft);
 
-  return wrapAsBody(scene, root, torso, allMeshes, head);
+  // Map to ArticulatedBody: front legs = arms, back legs = legs
+  const rHand = dummyJoint("m_rhand", frKnee, scene);
+  const lHand = dummyJoint("m_lhand", flKnee, scene);
+  const headTop = dummyJoint("m_headtop", neck, scene);
+
+  const allJoints = [hip, torso, neck, flHip, flKnee, frHip, frKnee, blHip, blKnee, brHip, brKnee];
+
+  return {
+    root, hip, torso, torsoMesh, neck, headMesh,
+    leftShoulder: flHip, leftUpperArm: torsoMesh, leftElbow: flKnee, leftLowerArm: torsoMesh,
+    rightShoulder: frHip, rightUpperArm: torsoMesh, rightElbow: frKnee, rightLowerArm: torsoMesh,
+    leftHip: blHip, leftUpperLeg: torsoMesh, leftKnee: blKnee, leftLowerLeg: torsoMesh,
+    rightHip: brHip, rightUpperLeg: torsoMesh, rightKnee: brKnee, rightLowerLeg: torsoMesh,
+    rightHand: rHand, leftHand: lHand, headTop,
+    allMeshes, allJoints,
+  };
 }

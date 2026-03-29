@@ -49,9 +49,10 @@ export class UnitFactory {
     // Tag all meshes for raycasting
     const unit = new RuntimeUnit(definition, team, body, propMeshes, ragdoll);
 
-    // Set attack animation style for special units
+    // Set animation style for special units
     if (definition.id === "tribal.mammoth") {
       unit.animator.attackStyle = "mammoth";
+      unit.animator.walkStyle = "quadruped";
     }
     for (const mesh of body.allMeshes) {
       mesh.metadata = { runtimeUnit: unit };
