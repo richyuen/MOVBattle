@@ -205,6 +205,7 @@ export class SimulationSystem {
 
     if (distance <= engageDistance) {
       unit.stopMoving();
+      unit.faceTarget(enemy.position);
       this._tryAttack(unit, enemy, attackProfile, now);
     } else {
       unit.moveTo(enemy.position);
@@ -224,6 +225,7 @@ export class SimulationSystem {
     }
 
     supporter.stopMoving();
+    supporter.faceTarget(ally.position);
     if (!supporter.canAttack(now)) return;
 
     supporter.setAttackCooldown(now, attackProfile.cooldown);

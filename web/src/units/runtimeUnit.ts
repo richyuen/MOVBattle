@@ -103,6 +103,14 @@ export class RuntimeUnit {
     this.body.root.position.copyFrom(pos);
   }
 
+  faceTarget(target: Vector3): void {
+    const dx = target.x - this.body.root.position.x;
+    const dz = target.z - this.body.root.position.z;
+    if (dx * dx + dz * dz > 0.001) {
+      this.body.root.rotation.y = Math.atan2(dx, dz);
+    }
+  }
+
   setSpinning(spinning: boolean): void {
     this._spinning = spinning;
   }
