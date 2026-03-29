@@ -222,86 +222,115 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
 }
 
 // ═══════════════════════ HWACHA ═══════════════════════
-// TABS-style hwacha: wide wooden cart with large tilted rack of many rocket arrows.
+// TABS-style hwacha: wide wooden cart with large, steeply-tilted rack of tube holes
+// filled with rocket arrows pointing upward. Big spoked wheels, cart handles behind.
 function buildHwacha(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("hwacha_root", scene);
   const allMeshes: Mesh[] = [];
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
   const darkWood = makeMat(scene, new Color3(0.35, 0.22, 0.1));
-  const red = makeMat(scene, new Color3(0.7, 0.15, 0.1));
+  const red = makeMat(scene, new Color3(0.72, 0.18, 0.12));
   const shaft = makeMat(scene, new Color3(0.6, 0.5, 0.3));
+  const tubeMat = makeMat(scene, new Color3(0.42, 0.28, 0.14));
 
-  // Cart base - wider and sturdier
-  const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.12, depth: 1.1 }, scene);
-  base.position.y = 0.32; base.parent = root; base.material = wood; allMeshes.push(base);
+  // ─── Cart base ───
+  const base = MeshBuilder.CreateBox("base", { width: 1.3, height: 0.1, depth: 1.2 }, scene);
+  base.position.y = 0.4; base.parent = root; base.material = wood; allMeshes.push(base);
 
-  // Cross beam under base
-  const crossBeam = MeshBuilder.CreateBox("xbeam", { width: 1.1, height: 0.06, depth: 0.08 }, scene);
-  crossBeam.position.set(0, 0.22, 0); crossBeam.parent = root; crossBeam.material = darkWood; allMeshes.push(crossBeam);
+  // Side rails along the cart
+  for (const xOff of [-0.6, 0.6]) {
+    const sideRail = MeshBuilder.CreateBox("srail", { width: 0.06, height: 0.08, depth: 1.2 }, scene);
+    sideRail.position.set(xOff, 0.45, 0);
+    sideRail.parent = root; sideRail.material = darkWood; allMeshes.push(sideRail);
+  }
 
-  // Wheels (larger, with spokes)
-  for (const xOff of [-0.45, 0.45]) {
-    const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.07, diameter: 0.5, tessellation: 14 }, scene);
-    wheel.position.set(xOff, 0.25, -0.15);
+  // ─── Large spoked wheels ───
+  for (const xOff of [-0.6, 0.6]) {
+    const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.7, tessellation: 16 }, scene);
+    wheel.position.set(xOff, 0.35, -0.1);
     wheel.rotation.z = Math.PI / 2;
     wheel.parent = root; wheel.material = darkWood; allMeshes.push(wheel);
+    // Hub
+    const hub = MeshBuilder.CreateCylinder("hub", { height: 0.1, diameter: 0.12, tessellation: 8 }, scene);
+    hub.position.set(xOff, 0.35, -0.1);
+    hub.rotation.z = Math.PI / 2;
+    hub.parent = root; hub.material = wood; allMeshes.push(hub);
     // Spokes
-    for (let s = 0; s < 6; s++) {
-      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.02, height: 0.22, depth: 0.02 }, scene);
-      spoke.position.set(xOff, 0.25, -0.15);
-      spoke.rotation.set(0, 0, s * Math.PI / 6);
+    for (let s = 0; s < 8; s++) {
+      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.025, height: 0.3, depth: 0.025 }, scene);
+      spoke.position.set(xOff, 0.35, -0.1);
+      spoke.rotation.set(0, 0, s * Math.PI / 8);
       spoke.parent = root; spoke.material = wood; allMeshes.push(spoke);
     }
   }
 
-  // Rack frame - open wooden frame tilted ~35° forward
+  // ─── Cart handles extending behind (-Z) ───
+  for (const xOff of [-0.2, 0.2]) {
+    const handle = MeshBuilder.CreateBox("handle", { width: 0.05, height: 0.05, depth: 0.7 }, scene);
+    handle.position.set(xOff, 0.38, -0.85);
+    handle.parent = root; handle.material = darkWood; allMeshes.push(handle);
+  }
+
+  // ─── Arrow rack - steeply tilted (~65° from horizontal) ───
   const rackPivot = new TransformNode("rackPivot", scene);
-  rackPivot.position.set(0, 0.4, 0.05);
-  rackPivot.rotation.x = 0.6; // ~35° tilt forward
+  rackPivot.position.set(0, 0.45, 0.15);
+  rackPivot.rotation.x = 1.15; // ~65° tilt — front points steeply upward
   rackPivot.parent = root;
 
-  // Side rails of the rack
-  for (const xOff of [-0.38, 0.38]) {
-    const rail = MeshBuilder.CreateBox("rail", { width: 0.05, height: 0.7, depth: 0.06 }, scene);
-    rail.position.set(xOff, 0.35, 0);
-    rail.parent = rackPivot; rail.material = darkWood; allMeshes.push(rail);
-  }
-  // Top and bottom cross bars
-  for (const yOff of [0.02, 0.68]) {
-    const bar = MeshBuilder.CreateBox("bar", { width: 0.76, height: 0.04, depth: 0.06 }, scene);
-    bar.position.set(0, yOff, 0);
-    bar.parent = rackPivot; bar.material = darkWood; allMeshes.push(bar);
-  }
-  // Middle shelf
-  const shelf = MeshBuilder.CreateBox("shelf", { width: 0.72, height: 0.03, depth: 0.12 }, scene);
-  shelf.position.set(0, 0.35, 0);
-  shelf.parent = rackPivot; shelf.material = wood; allMeshes.push(shelf);
+  // Main rack box (wide, tall front face with depth for tubes)
+  const rackBody = MeshBuilder.CreateBox("rackBody", { width: 1.1, height: 0.9, depth: 0.45 }, scene);
+  rackBody.position.set(0, 0.45, 0);
+  rackBody.parent = rackPivot; rackBody.material = wood; allMeshes.push(rackBody);
 
-  // Rocket arrows in rack (5 columns × 4 rows = 20 arrows)
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 5; col++) {
-      const arrowShaft = MeshBuilder.CreateCylinder("arr", { height: 0.6, diameter: 0.025, tessellation: 4 }, scene);
-      arrowShaft.position.set(-0.28 + col * 0.14, 0.08 + row * 0.17, 0.1);
-      arrowShaft.rotation.x = Math.PI / 2; // point forward out of rack
-      arrowShaft.parent = rackPivot; arrowShaft.material = shaft; allMeshes.push(arrowShaft);
-      // Red tip
-      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.08, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, scene);
-      tip.position.set(-0.28 + col * 0.14, 0.08 + row * 0.17, 0.42);
+  // Frame edges around the rack face
+  for (const xOff of [-0.55, 0.55]) {
+    const vFrame = MeshBuilder.CreateBox("vf", { width: 0.06, height: 0.95, depth: 0.5 }, scene);
+    vFrame.position.set(xOff, 0.45, 0);
+    vFrame.parent = rackPivot; vFrame.material = darkWood; allMeshes.push(vFrame);
+  }
+  for (const yOff of [0.0, 0.9]) {
+    const hFrame = MeshBuilder.CreateBox("hf", { width: 1.16, height: 0.06, depth: 0.5 }, scene);
+    hFrame.position.set(0, yOff, 0);
+    hFrame.parent = rackPivot; hFrame.material = darkWood; allMeshes.push(hFrame);
+  }
+
+  // ─── Tube holes + arrows (6 cols × 5 rows = 30) ───
+  const cols = 6, rows = 5;
+  const spacingX = 0.15, spacingY = 0.14;
+  const startX = -(cols - 1) * spacingX / 2;
+  const startY = 0.12;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = startX + col * spacingX;
+      const cy = startY + row * spacingY;
+      // Tube hole (dark cylinder recessed into rack face)
+      const tube = MeshBuilder.CreateCylinder("tube", { height: 0.46, diameter: 0.07, tessellation: 8 }, scene);
+      tube.position.set(cx, cy, 0);
+      tube.rotation.x = Math.PI / 2;
+      tube.parent = rackPivot; tube.material = tubeMat; allMeshes.push(tube);
+      // Arrow shaft poking out
+      const arr = MeshBuilder.CreateCylinder("arr", { height: 0.5, diameter: 0.02, tessellation: 4 }, scene);
+      arr.position.set(cx, cy, 0.35);
+      arr.rotation.x = Math.PI / 2;
+      arr.parent = rackPivot; arr.material = shaft; allMeshes.push(arr);
+      // Red arrowhead
+      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.07, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, scene);
+      tip.position.set(cx, cy, 0.62);
       tip.rotation.x = Math.PI / 2;
       tip.parent = rackPivot; tip.material = red; allMeshes.push(tip);
     }
   }
 
-  // Rear support legs (A-frame bracing)
-  for (const xOff of [-0.25, 0.25]) {
-    const leg = MeshBuilder.CreateBox("leg", { width: 0.04, height: 0.5, depth: 0.04 }, scene);
-    leg.position.set(xOff, 0.5, -0.35);
-    leg.rotation.x = -0.3;
-    leg.parent = root; leg.material = darkWood; allMeshes.push(leg);
+  // ─── Rear support struts (angled braces from base to rack back) ───
+  for (const xOff of [-0.35, 0.35]) {
+    const strut = MeshBuilder.CreateBox("strut", { width: 0.05, height: 0.6, depth: 0.05 }, scene);
+    strut.position.set(xOff, 0.6, -0.3);
+    strut.rotation.x = -0.4;
+    strut.parent = root; strut.material = darkWood; allMeshes.push(strut);
   }
 
-  // Operator behind (-Z)
-  const opHead = addOperator(scene, root, allMeshes, 0.2, 0.68, -0.65, color);
+  // ─── Operator behind (-Z) ───
+  const opHead = addOperator(scene, root, allMeshes, 0.22, 0.7, -0.75, color);
 
   return wrapAsBody(scene, root, base, allMeshes, opHead);
 }
