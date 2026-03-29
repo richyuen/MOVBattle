@@ -45,6 +45,8 @@ export class UnitFactory {
     }
 
     body.root.position = position.clone();
+    // Face the border: blue (team 0) faces right (+X), red (team 1) faces left (-X)
+    body.root.rotation.y = team === 0 ? Math.PI / 2 : -Math.PI / 2;
 
     // Tag all meshes for raycasting
     const unit = new RuntimeUnit(definition, team, body, propMeshes, ragdoll);

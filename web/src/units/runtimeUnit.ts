@@ -39,6 +39,7 @@ export class RuntimeUnit {
 
   // Spawn state for reset
   private _spawnPosition: Vector3;
+  private _spawnRotationY: number;
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
@@ -67,6 +68,7 @@ export class RuntimeUnit {
     this._currentHealth = definition.maxHealth;
     this.animator = new ProceduralAnimator(body);
     this._spawnPosition = body.root.position.clone();
+    this._spawnRotationY = body.root.rotation.y;
   }
 
   canAttack(now: number): boolean {
@@ -340,7 +342,7 @@ export class RuntimeUnit {
 
     // Restore position and clear rotation
     this.body.root.position.copyFrom(this._spawnPosition);
-    this.body.root.rotation.set(0, 0, 0);
+    this.body.root.rotation.set(0, this._spawnRotationY, 0);
 
     // Reset all joint rotations
     for (const joint of this.body.allJoints) {
