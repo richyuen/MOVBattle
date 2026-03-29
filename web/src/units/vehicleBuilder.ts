@@ -274,7 +274,7 @@ function buildHwacha(scene: Scene, color: Color3): ArticulatedBody {
   // ─── Arrow rack - steeply tilted (~65° from horizontal) ───
   const rackPivot = new TransformNode("rackPivot", scene);
   rackPivot.position.set(0, 0.45, 0.15);
-  rackPivot.rotation.x = 1.15; // ~65° tilt — front points steeply upward
+  rackPivot.rotation.x = -1.15; // ~65° tilt — arrows point upward and forward
   rackPivot.parent = root;
 
   // Main rack box (wide, tall front face with depth for tubes)
