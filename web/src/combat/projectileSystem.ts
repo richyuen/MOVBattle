@@ -69,7 +69,7 @@ export class ProjectileSystem {
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
       case "firework": speed = 22; arcHeight = dist * 0.25; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
-      case "rocket_arrow": speed = 25; arcHeight = dist * 0.12; break;
+      case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
       case "crow": speed = 18; arcHeight = dist * 0.15; break;
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
     }

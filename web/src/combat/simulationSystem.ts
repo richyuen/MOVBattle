@@ -289,7 +289,7 @@ export class SimulationSystem {
           // Stagger each arrow with a small delay and random launch offset
           const originOffset = new Vector3(
             (Math.random() - 0.5) * 0.8,
-            Math.random() * 0.3,
+            0.4 + Math.random() * 0.5,  // launch from rack height
             (Math.random() - 0.5) * 0.4,
           );
           const delay = i * 0.06; // stagger fire over ~0.5s
