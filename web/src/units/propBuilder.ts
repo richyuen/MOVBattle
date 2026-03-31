@@ -93,6 +93,108 @@ function buildAttachmentPreset(
   switch (preset) {
     case "none":
       return meshes;
+    case "storm_halo": {
+      const crown = MeshBuilder.CreateTorus("stormHalo", { diameter: 0.42 * s, thickness: 0.028 * s, tessellation: 26 }, scene);
+      crown.parent = body.headTop;
+      crown.position.y = 0.18 * s;
+      crown.material = mat(scene, accent, 0.45);
+      tagVisualState(crown, "storm_flare");
+      crown.isVisible = false;
+      meshes.push(crown);
+
+      for (const side of [-1, 1]) {
+        const spark = MeshBuilder.CreateBox("stormSpark", { width: 0.04 * s, height: 0.12 * s, depth: 0.04 * s }, scene);
+        spark.parent = body.headTop;
+        spark.position.set(side * 0.12 * s, 0.18 * s, 0.04 * s);
+        spark.rotation.z = side * 0.45;
+        spark.material = mat(scene, new Color3(0.9, 0.95, 1.0), 0.55);
+        tagVisualState(spark, "storm_flare");
+        spark.isVisible = false;
+        meshes.push(spark);
+      }
+      return meshes;
+    }
+    case "crow_swarm": {
+      for (const side of [-1, 1]) {
+        const wing = MeshBuilder.CreatePlane("crowWing", { width: 0.18 * s, height: 0.1 * s }, scene);
+        wing.parent = body.headTop;
+        wing.position.set(side * 0.16 * s, 0.12 * s, 0.04 * s);
+        wing.rotation.z = side * 0.55;
+        wing.material = mat(scene, new Color3(0.12, 0.12, 0.14), 0.18);
+        tagVisualState(wing, "crow_swarm");
+        wing.isVisible = false;
+        meshes.push(wing);
+      }
+      return meshes;
+    }
+    case "chrono_ring": {
+      const ring = MeshBuilder.CreateTorus("chronoRing", { diameter: 0.55 * s, thickness: 0.022 * s, tessellation: 30 }, scene);
+      ring.parent = body.torso;
+      ring.position.set(0, 0.28 * s, 0.14 * s);
+      ring.rotation.y = Math.PI / 2;
+      ring.material = mat(scene, accent, 0.45);
+      tagVisualState(ring, "chrono_ring");
+      ring.isVisible = false;
+      meshes.push(ring);
+      return meshes;
+    }
+    case "shadow_orbit": {
+      for (const side of [-1, 1]) {
+        const shard = MeshBuilder.CreatePlane("shadowOrbit", { width: 0.16 * s, height: 0.2 * s }, scene);
+        shard.parent = body.torso;
+        shard.position.set(side * 0.24 * s, 0.2 * s, -0.06 * s);
+        shard.rotation.y = side * 0.45;
+        shard.material = mat(scene, new Color3(0.35, 0.28, 0.55), 0.38);
+        tagVisualState(shard, "shadow_orbit");
+        shard.isVisible = false;
+        meshes.push(shard);
+      }
+      return meshes;
+    }
+    case "quickdraw_smoke": {
+      const puff = MeshBuilder.CreateSphere("quickdrawSmoke", { diameter: 0.12 * s, segments: 6 }, scene);
+      puff.parent = body.rightHand;
+      puff.position.set(0.03 * s, 0.18 * s, 0.02 * s);
+      puff.material = mat(scene, new Color3(0.88, 0.78, 0.52), 0.3);
+      tagVisualState(puff, "quickdraw_smoke");
+      puff.isVisible = false;
+      meshes.push(puff);
+      return meshes;
+    }
+    case "reaper_aura": {
+      const arc = MeshBuilder.CreateDisc("reaperArc", { radius: 0.34 * s, tessellation: 24, arc: 0.45 }, scene);
+      arc.parent = body.rightHand;
+      arc.position.set(0.02 * s, 0.18 * s, 0.12 * s);
+      arc.rotation.x = Math.PI / 2;
+      arc.rotation.z = Math.PI * 0.55;
+      arc.material = mat(scene, accent, 0.42);
+      tagVisualState(arc, "reaper_arc");
+      arc.isVisible = false;
+      meshes.push(arc);
+
+      for (const side of [-1, 1]) {
+        const trail = MeshBuilder.CreatePlane("reaperTrail", { width: 0.18 * s, height: 0.28 * s }, scene);
+        trail.parent = body.torso;
+        trail.position.set(side * 0.22 * s, 0.18 * s, -0.12 * s);
+        trail.rotation.y = side * 0.28;
+        trail.material = mat(scene, accent, 0.22);
+        tagVisualState(trail, "reaper_trail");
+        trail.isVisible = false;
+        meshes.push(trail);
+      }
+      return meshes;
+    }
+    case "super_aura": {
+      const aura = MeshBuilder.CreateTorus("superAura", { diameter: 0.5 * s, thickness: 0.04 * s, tessellation: 28 }, scene);
+      aura.parent = body.torso;
+      aura.position.set(0, 0.26 * s, 0.06 * s);
+      aura.rotation.y = Math.PI / 2;
+      aura.material = mat(scene, accent, 0.5);
+      tagVisualState(aura, "super_aura");
+      aura.isVisible = false;
+      meshes.push(aura);
+      return meshes;
+    }
     case "fan_bearer": {
       const openFan = MeshBuilder.CreateDisc("openFan", { radius: 0.22 * s, tessellation: 18, arc: 0.55 }, scene);
       openFan.parent = body.rightHand;

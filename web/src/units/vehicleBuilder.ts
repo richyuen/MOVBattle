@@ -49,7 +49,7 @@ export function buildVehicleBody(
     case "ancient.minotaur": return buildMinotaur(scene, bodyColor);
     case "tribal.mammoth": return buildMammoth(scene, bodyColor);
     case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor);
-    case "legacy.tank": return buildDaVinciTank(scene, bodyColor);
+    case "legacy.tank": return buildLegacyTank(scene, bodyColor);
     case "secret.bomb_cannon": return buildBombCannon(scene, bodyColor);
     case "secret.gatling_gun": return buildGatlingGun(scene, bodyColor);
     case "good.sacred_elephant": return buildMammoth(scene, bodyColor);
@@ -564,6 +564,66 @@ function buildDaVinciTank(scene: Scene, _color: Color3): ArticulatedBody {
   }
 
   return wrapAsBody(scene, root, hull, allMeshes, undefined, makeBodyMetrics(1.8, 0.8, 0.5, 0.7));
+}
+
+function buildLegacyTank(scene: Scene, color: Color3): ArticulatedBody {
+  const root = new TransformNode("legacy_tank_root", scene);
+  const allMeshes: Mesh[] = [];
+  const hullMat = makeMat(scene, new Color3(0.42, 0.52, 0.34));
+  const trackMat = makeMat(scene, new Color3(0.24, 0.26, 0.22));
+  const metal = makeMat(scene, new Color3(0.38, 0.4, 0.42));
+
+  const body = MeshBuilder.CreateBox("tankBody", { width: 1.8, height: 0.62, depth: 2.4 }, scene);
+  body.position.y = 0.62;
+  body.parent = root;
+  body.material = hullMat;
+  allMeshes.push(body);
+
+  const upperHull = MeshBuilder.CreateBox("tankUpper", { width: 1.25, height: 0.45, depth: 1.3 }, scene);
+  upperHull.position.set(0, 1.0, -0.05);
+  upperHull.parent = root;
+  upperHull.material = hullMat;
+  allMeshes.push(upperHull);
+
+  const turret = MeshBuilder.CreateCylinder("tankTurret", { height: 0.36, diameter: 0.82, tessellation: 14 }, scene);
+  turret.position.set(0, 1.15, 0.18);
+  turret.parent = root;
+  turret.material = metal;
+  allMeshes.push(turret);
+
+  const barrel = MeshBuilder.CreateCylinder("tankBarrel", { height: 1.7, diameter: 0.18, tessellation: 14 }, scene);
+  barrel.position.set(0, 1.12, 1.25);
+  barrel.rotation.x = Math.PI / 2;
+  barrel.parent = root;
+  barrel.material = metal;
+  allMeshes.push(barrel);
+
+  const muzzle = MeshBuilder.CreateCylinder("tankMuzzle", { height: 0.12, diameterTop: 0.24, diameterBottom: 0.18, tessellation: 14 }, scene);
+  muzzle.position.set(0, 1.12, 2.04);
+  muzzle.rotation.x = Math.PI / 2;
+  muzzle.parent = root;
+  muzzle.material = metal;
+  allMeshes.push(muzzle);
+
+  for (const side of [-1, 1]) {
+    const track = MeshBuilder.CreateBox("tankTrack", { width: 0.32, height: 0.48, depth: 2.65 }, scene);
+    track.position.set(side * 0.92, 0.38, 0);
+    track.parent = root;
+    track.material = trackMat;
+    allMeshes.push(track);
+
+    for (const z of [-0.9, -0.3, 0.3, 0.9]) {
+      const wheel = MeshBuilder.CreateCylinder("tankWheel", { height: 0.12, diameter: 0.34, tessellation: 12 }, scene);
+      wheel.position.set(side * 0.92, 0.2, z);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.parent = root;
+      wheel.material = metal;
+      allMeshes.push(wheel);
+    }
+  }
+
+  const operator = addOperator(scene, root, allMeshes, 0, 0.98, -0.28, color);
+  return wrapAsBody(scene, root, body, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 1.2, 0.9, 0.95));
 }
 
 // ═══════════════════════ WHEELBARROW ═══════════════════════

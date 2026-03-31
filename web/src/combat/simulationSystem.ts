@@ -7,6 +7,14 @@ import {
 } from "../data/combatProfiles";
 import { ProjectileSystem, type ProjectileShape } from "./projectileSystem";
 import { VisualEffects } from "./visualEffects";
+import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
+
+export interface SpawnUnitOptions {
+  role?: RuntimeSpawnRole;
+  countsTowardVictory?: boolean;
+  linkedParent?: RuntimeUnit;
+  linkedRelation?: LinkedRelation;
+}
 
 function hasAbility(unit: RuntimeUnit, ability: string): boolean {
   return (unit.definition.abilities ?? []).includes(ability as never);
@@ -61,17 +69,18 @@ export class SimulationSystem {
 
   projectileSystem: ProjectileSystem | null = null;
   visualEffects: VisualEffects | null = null;
-  spawnUnitById: ((unitId: string, team: number, position: Vector3) => RuntimeUnit | null) | null = null;
+  spawnUnitById: ((unitId: string, team: number, position: Vector3, options?: SpawnUnitOptions) => RuntimeUnit | null) | null = null;
 
   readonly minimumDecisionInterval = 0.08;
   readonly attackRangePadding = 0.2;
   readonly cleanupSweepInterval = 0.75;
   readonly summonLivingCap = 55;
+  private _now = 0;
 
   get isRunning(): boolean { return this._isRunning; }
 
   get battleDuration(): number {
-    if (this._isRunning) return performance.now() / 1000 - this._battleStartedAt;
+    if (this._isRunning) return this._now - this._battleStartedAt;
     return this._lastBattleDuration;
   }
 
@@ -89,17 +98,17 @@ export class SimulationSystem {
     this._nextDecisionAt.delete(unit);
   }
 
-  beginSimulation(): void {
+  beginSimulation(now: number): void {
     this._isRunning = true;
-    const now = performance.now() / 1000;
+    this._now = now;
     this._battleStartedAt = now;
     this._nextCleanupSweepAt = now + this.cleanupSweepInterval;
     this._lastBattleDuration = 0;
   }
 
-  endSimulation(): void {
+  endSimulation(now = this._now): void {
     if (this._isRunning) {
-      this._lastBattleDuration = performance.now() / 1000 - this._battleStartedAt;
+      this._lastBattleDuration = now - this._battleStartedAt;
     }
     this._isRunning = false;
     for (const unit of this._units) {
@@ -108,10 +117,9 @@ export class SimulationSystem {
     }
   }
 
-  update(dt: number): void {
+  update(dt: number, now: number): void {
     if (!this._isRunning) return;
-
-    const now = performance.now() / 1000;
+    this._now = now;
 
     for (const unit of this._units) {
       unit.update(dt, now);
@@ -144,6 +152,7 @@ export class SimulationSystem {
 
   private _processUnitDecision(unit: RuntimeUnit, aiProfile: AIProfile, now: number): void {
     const attackProfile = getAttackProfile(unit.definition.attackProfileId);
+    const preset = getBehaviorPreset(unit);
 
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
@@ -171,6 +180,18 @@ export class SimulationSystem {
       unit.teleportTo(newPos);
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(newPos);
       unit.setAttackCooldown(now, attackProfile.cooldown * 0.5);
+      return;
+    }
+
+    if ((preset === "iconic_super_peasant" || preset === "iconic_thor") && distance > engageDistance && distance < engageDistance * (preset === "iconic_super_peasant" ? 5.5 : 3.0) && unit.canAttack(now)) {
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position);
+      const dir = enemy.position.subtract(unit.position).normalize();
+      const teleportDist = Math.min(distance - engageDistance * 0.45, preset === "iconic_super_peasant" ? 9.5 : 4.6);
+      const newPos = unit.position.add(dir.scale(teleportDist));
+      newPos.y = 0;
+      unit.teleportTo(newPos);
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(newPos);
+      unit.setAttackCooldown(now, attackProfile.cooldown * (preset === "iconic_super_peasant" ? 0.18 : 0.32));
       return;
     }
 
@@ -321,14 +342,69 @@ export class SimulationSystem {
         knockback = knockback.scale(1.6 * controlStrength);
         damage *= 1.16;
         break;
+      case "iconic_mammoth":
+        splashRadius = Math.max(splashRadius, 4.4);
+        knockback = knockback.scale(2.15 * controlStrength);
+        knockback.y = Math.max(knockback.y, 1.35);
+        damage *= 1.28;
+        break;
+      case "iconic_reaper":
+        splashRadius = Math.max(splashRadius, 4.2);
+        knockback = knockback.scale(-2.0 * controlStrength);
+        knockback.y = Math.max(knockback.y, 0.7);
+        damage *= 1.08;
+        break;
+      case "iconic_pirate_queen":
+        splashRadius = Math.max(splashRadius, 2.25);
+        knockback = knockback.scale(1.65 * controlStrength);
+        damage *= 1.18;
+        break;
+      case "iconic_super_peasant":
+        splashRadius = Math.max(splashRadius, 2.4);
+        knockback = knockback.scale(2.35 * controlStrength);
+        knockback.y = Math.max(knockback.y, 1.3);
+        damage *= 1.42;
+        break;
       default:
         break;
+    }
+
+    if (preset === "iconic_dark_peasant") {
+      this._summonUnits(attacker);
+      this._applyAreaControl(target.position, Math.max(4.3, splashRadius + 1.2), attacker.team, damage * 0.95, knockback.scale(-1.6 * controlStrength), now, 0.55, attacker.definition.statusDurationSeconds ?? 2.6);
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(target.position);
+      return;
+    }
+
+    if (preset === "iconic_chronomancer") {
+      this._applyAreaControl(target.position, Math.max(3.6, splashRadius + 1.1), attacker.team, damage * 0.72, knockback.scale(0.55 * controlStrength), now, 0.34, attacker.definition.statusDurationSeconds ?? 3.8);
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(target.position);
+      return;
     }
 
     if ((abilities.has("summon") || abilities.has("clone") || abilities.has("revive")) && this._summonUnits(attacker)) {
       if (attacker.definition.archetype === "summoner" || attacker.definition.archetype === "support_buff") {
         return;
       }
+    }
+
+    if (preset === "iconic_zeus") {
+      if (this.visualEffects) {
+        this.visualEffects.spawnLightning(attacker.position, target.position);
+        this.visualEffects.spawnLightning(attacker.position, target.position.add(new Vector3(0.8, 0, 0.6)));
+        this.visualEffects.spawnLightning(attacker.position, target.position.add(new Vector3(-0.8, 0, -0.6)));
+      }
+      this._applyDirectOrSplash(target, damage * 1.12, Math.max(3.3, splashRadius + 1.1), attacker.team, knockback.scale(1.95 * controlStrength));
+      return;
+    }
+
+    if (preset === "iconic_thor") {
+      if (this.visualEffects) {
+        this.visualEffects.spawnLightning(attacker.position, target.position);
+        this.visualEffects.spawnSmokePuff(attacker.position);
+      }
+      this._applyDirectOrSplash(target, damage * 1.22, Math.max(2.4, splashRadius + 0.5), attacker.team, knockback.scale(2.15 * controlStrength));
+      return;
     }
 
     if (abilities.has("lightning_strike")) {
@@ -339,6 +415,63 @@ export class SimulationSystem {
       if (abilities.has("freeze")) {
         target.applySlow(0.55, attacker.definition.statusDurationSeconds ?? 2.4, now);
       }
+      return;
+    }
+
+    if (preset === "iconic_scarecrow") {
+      this._fireCustomVolley(attacker, target, damage, knockback, Math.max(6, attacker.definition.volleyCount ?? 8), {
+        projectileShape: "crow",
+        splashRadius: 0,
+        spreadX: 0.9,
+        spreadY: 0.7,
+        spreadZ: 0.5,
+        delayStep: 0.04,
+      });
+      return;
+    }
+
+    if (preset === "iconic_hwacha") {
+      this._fireCustomVolley(attacker, target, damage, knockback, Math.max(10, attacker.definition.volleyCount ?? 14), {
+        projectileShape: "rocket_arrow",
+        splashRadius: 0.4,
+        spreadX: 1.2,
+        spreadY: 0.85,
+        spreadZ: 0.65,
+        delayStep: 0.03,
+      });
+      return;
+    }
+
+    if (preset === "iconic_da_vinci_tank") {
+      this._fireCustomVolley(attacker, target, damage, knockback, Math.max(6, attacker.definition.burstCount ?? 8), {
+        projectileShape: "bolt",
+        splashRadius: 0.45,
+        spreadX: 1.0,
+        spreadY: 0.5,
+        spreadZ: 0.75,
+        delayStep: 0.04,
+      });
+      return;
+    }
+
+    if (preset === "iconic_legacy_tank") {
+      this._fireCustomVolley(attacker, target, damage * 1.1, knockback.scale(1.25), Math.max(3, attacker.definition.burstCount ?? 4), {
+        projectileShape: "bolt",
+        splashRadius: 1.1,
+        spreadX: 0.45,
+        spreadY: 0.18,
+        spreadZ: 0.25,
+        delayStep: 0.08,
+      });
+      return;
+    }
+
+    if (preset === "iconic_quick_draw") {
+      this._fireBurst(attacker, target, damage * 1.18, knockback.scale(1.2), splashRadius, Math.max(4, attacker.definition.burstCount ?? 6));
+      return;
+    }
+
+    if (preset === "iconic_monkey_king" && this._summonUnits(attacker)) {
       return;
     }
 
@@ -416,7 +549,11 @@ export class SimulationSystem {
       const angle = (Math.PI * 2 * i) / summonCount;
       const spacing = attacker.definition.behaviorPreset === "secret_present_spawn" ? 1.9 : 1.5;
       const pos = attacker.position.add(new Vector3(Math.cos(angle) * spacing, 0, Math.sin(angle) * spacing));
-      const unit = this.spawnUnitById(summonId, attacker.team, pos);
+      const unit = this.spawnUnitById(summonId, attacker.team, pos, {
+        role: "summoned",
+        linkedParent: attacker,
+        linkedRelation: "spawned-child",
+      });
       if (unit) summoned = true;
     }
     return summoned;
@@ -490,6 +627,69 @@ export class SimulationSystem {
         spread,
         i * 0.05,
       );
+    }
+  }
+
+  private _fireCustomVolley(
+    attacker: RuntimeUnit,
+    target: RuntimeUnit,
+    damage: number,
+    knockback: Vector3,
+    count: number,
+    options: {
+      projectileShape: ProjectileShape;
+      splashRadius: number;
+      spreadX: number;
+      spreadY: number;
+      spreadZ: number;
+      delayStep: number;
+    },
+  ): void {
+    if (!this.projectileSystem) {
+      this._applyDirectOrSplash(target, damage, Math.max(0, options.splashRadius), attacker.team, knockback);
+      return;
+    }
+
+    const perProjectile = Math.max(1, Math.ceil(damage / count));
+    for (let i = 0; i < count; i++) {
+      const spread = new Vector3(
+        (Math.random() - 0.5) * options.spreadX,
+        Math.random() * options.spreadY,
+        (Math.random() - 0.5) * options.spreadZ,
+      );
+      this.projectileSystem.spawnProjectile(
+        options.projectileShape,
+        attacker.position,
+        target,
+        perProjectile,
+        knockback.scale(0.42),
+        options.splashRadius,
+        attacker.team,
+        this._units,
+        spread,
+        i * options.delayStep,
+      );
+    }
+  }
+
+  private _applyAreaControl(
+    center: Vector3,
+    radius: number,
+    attackerTeam: number,
+    damage: number,
+    impulse: Vector3,
+    now: number,
+    slowMultiplier?: number,
+    slowDuration?: number,
+  ): void {
+    const radiusSq = radius * radius;
+    for (const unit of this._units) {
+      if (unit.isDead || unit.team === attackerTeam) continue;
+      if (unit.position.subtract(center).lengthSquared() > radiusSq) continue;
+      unit.applyDamage(damage, impulse);
+      if (slowMultiplier !== undefined && slowDuration !== undefined) {
+        unit.applySlow(slowMultiplier, slowDuration, now);
+      }
     }
   }
 

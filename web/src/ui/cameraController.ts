@@ -12,8 +12,8 @@ export class CameraController {
     this.camera = new ArcRotateCamera(
       "camera",
       -Math.PI / 2,   // alpha (yaw)
-      Math.PI / 3.5,   // beta (pitch)
-      50,              // radius (zoom)
+      Math.PI / 3.35,  // beta (pitch)
+      43,              // radius (zoom)
       Vector3.Zero(),  // target
       scene,
     );

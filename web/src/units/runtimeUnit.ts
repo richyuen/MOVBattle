@@ -6,7 +6,21 @@ import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 import type { FxPreset, UnitVisualConfig, VisualStateTag } from "./unitVisuals";
 
+export type RuntimeSpawnRole = "placed" | "summoned" | "crew" | "mount";
+export type LinkedRelation = "crew" | "mount" | "attachment" | "spawned-child";
+
+export interface LinkedEntityDescriptor {
+  relation: LinkedRelation;
+  label: string;
+  persistent: boolean;
+  runtimeUnitId?: number;
+}
+
 export class RuntimeUnit {
+  private static _nextRuntimeId = 1;
+  static timeNowSeconds: () => number = () => performance.now() / 1000;
+
+  readonly runtimeId: number;
   readonly definition: UnitDefinition;
   readonly team: number;
   readonly body: ArticulatedBody;
@@ -44,8 +58,12 @@ export class RuntimeUnit {
   // Spawn state for reset
   private _spawnPosition: Vector3;
   private _spawnRotationY: number;
-  private _spawnRole: "placed" | "summoned" | "crew" = "placed";
+  private _spawnRole: RuntimeSpawnRole = "placed";
   private _countsTowardVictory = true;
+  private _linkedParent: RuntimeUnit | null = null;
+  private _linkedRelation: LinkedRelation | null = null;
+  private _linkedDescriptors: LinkedEntityDescriptor[] = [];
+  private _linkedChildren = new Set<RuntimeUnit>();
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
@@ -58,8 +76,12 @@ export class RuntimeUnit {
   get isDead(): boolean { return this._isDead; }
   get deathCleanupAt(): number { return this._deathCleanupAt; }
   get position(): Vector3 { return this.body.root.position; }
-  get spawnRole(): "placed" | "summoned" | "crew" { return this._spawnRole; }
+  get spawnRole(): RuntimeSpawnRole { return this._spawnRole; }
   get countsTowardVictory(): boolean { return this._countsTowardVictory; }
+  get linkedParent(): RuntimeUnit | null { return this._linkedParent; }
+  get linkedRelation(): LinkedRelation | null { return this._linkedRelation; }
+  get linkedEntities(): readonly LinkedEntityDescriptor[] { return this._linkedDescriptors; }
+  get linkedChildren(): readonly RuntimeUnit[] { return [...this._linkedChildren]; }
 
   constructor(
     definition: UnitDefinition,
@@ -69,6 +91,7 @@ export class RuntimeUnit {
     visualConfig: UnitVisualConfig,
     ragdollProfile: RagdollProfile,
   ) {
+    this.runtimeId = RuntimeUnit._nextRuntimeId++;
     this.definition = definition;
     this.team = team;
     this.body = body;
@@ -85,9 +108,29 @@ export class RuntimeUnit {
     return !this._isDead && now >= this._nextAttackAt;
   }
 
-  setSpawnRole(role: "placed" | "summoned" | "crew", countsTowardVictory = true): void {
+  setSpawnRole(role: RuntimeSpawnRole, countsTowardVictory = true): void {
     this._spawnRole = role;
     this._countsTowardVictory = countsTowardVictory;
+  }
+
+  addLinkedDescriptor(relation: LinkedRelation, label: string, persistent = true, runtimeUnitId?: number): void {
+    this._linkedDescriptors.push({ relation, label, persistent, runtimeUnitId });
+  }
+
+  attachLinkedChild(child: RuntimeUnit, relation: LinkedRelation): void {
+    this._linkedChildren.add(child);
+    child._linkedParent = this;
+    child._linkedRelation = relation;
+    this.addLinkedDescriptor(relation, child.definition.displayName, relation !== "spawned-child", child.runtimeId);
+  }
+
+  detachLinkedChild(child: RuntimeUnit): void {
+    if (!this._linkedChildren.delete(child)) return;
+    this._linkedDescriptors = this._linkedDescriptors.filter((descriptor) => descriptor.runtimeUnitId !== child.runtimeId);
+    if (child._linkedParent === this) {
+      child._linkedParent = null;
+      child._linkedRelation = null;
+    }
   }
 
   setAttackCooldown(now: number, cooldown: number): void {
@@ -264,7 +307,7 @@ export class RuntimeUnit {
     this._currentHealth = 0;
     this._moveTarget = null;
     this._isMoving = false;
-    this._deathTime = performance.now() / 1000;
+    this._deathTime = RuntimeUnit.timeNowSeconds();
     this._deathCleanupAt = this._deathTime + this._ragdollProfile.cleanupDelaySeconds;
     this._physicsActive = true;
 
@@ -498,6 +541,10 @@ export class RuntimeUnit {
     this._nextAttackAt = 0;
     this._spawnRole = "placed";
     this._countsTowardVictory = true;
+    this._linkedParent = null;
+    this._linkedRelation = null;
+    this._linkedChildren.clear();
+    this._linkedDescriptors = this._linkedDescriptors.filter((descriptor) => descriptor.persistent);
 
     // Restore position and clear rotation
     this.body.root.position.copyFrom(this._spawnPosition);
@@ -525,6 +572,12 @@ export class RuntimeUnit {
   }
 
   dispose(): void {
+    if (this._linkedParent) {
+      this._linkedParent.detachLinkedChild(this);
+    }
+    for (const child of [...this._linkedChildren]) {
+      this.detachLinkedChild(child);
+    }
     if (this.healthBarMesh) this.healthBarMesh.dispose();
     if (this.healthBarBg) this.healthBarBg.dispose();
     for (const m of this.propMeshes) {

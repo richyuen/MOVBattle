@@ -13,10 +13,12 @@ import type { UnitDefinition } from "./data/unitDefinitions";
 import { FactionId, FACTION_NAMES } from "./data/factionColors";
 
 import { SimulationSystem } from "./combat/simulationSystem";
+import type { SpawnUnitOptions } from "./combat/simulationSystem";
 import { ProjectileSystem } from "./combat/projectileSystem";
 import { VisualEffects } from "./combat/visualEffects";
 import { UnitFactory } from "./units/unitFactory";
 import { RuntimeUnit } from "./units/runtimeUnit";
+import { getScenario, listScenarioNames, type ScenarioSpec } from "./testing/scenarios";
 
 import { TribalSandboxMapBuilder, getPlacementZones } from "./map/mapBuilder";
 import { PlacementValidator } from "./map/placementValidator";
@@ -76,16 +78,31 @@ const placedUnits: RuntimeUnit[] = [];
 let countdownTimer: ReturnType<typeof setTimeout> | null = null;
 let statusTimer: ReturnType<typeof setTimeout> | null = null;
 let removeMode = false;
+let worldTimeSeconds = 0;
+let activeScenario: ScenarioSpec | null = null;
+RuntimeUnit.timeNowSeconds = () => worldTimeSeconds;
 
-simulation.spawnUnitById = (unitId, team, position) => {
+function spawnRuntimeUnit(
+  unitId: string,
+  team: number,
+  position: Vector3,
+  options: SpawnUnitOptions = {},
+): RuntimeUnit | null {
   const def = getUnit(unitId);
   if (!def) return null;
   const unit = unitFactory.spawn(def, team, position);
-  unit.setSpawnRole("summoned");
+  const role = options.role ?? "placed";
+  const countsTowardVictory = options.countsTowardVictory ?? (role === "placed" || role === "summoned");
+  unit.setSpawnRole(role, countsTowardVictory);
+  if (options.linkedParent && options.linkedRelation) {
+    options.linkedParent.attachLinkedChild(unit, options.linkedRelation);
+  }
   placedUnits.push(unit);
   simulation.registerUnit(unit);
   return unit;
-};
+}
+
+simulation.spawnUnitById = spawnRuntimeUnit;
 
 const btnRemoveEl = document.getElementById("btnRemove")!;
 
@@ -270,9 +287,7 @@ function tryPlaceUnit(screenX: number, screenY: number): void {
     return;
   }
 
-  const unit = unitFactory.spawn(def, team, worldPoint);
-  placedUnits.push(unit);
-  simulation.registerUnit(unit);
+  spawnRuntimeUnit(def.id, team, worldPoint);
   updateBudgetDisplay();
 }
 
@@ -298,7 +313,7 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
 }
 
 // ─── Battle lifecycle ───
-function startBattle(): void {
+function startBattle(immediate = false): void {
   if (stateMachine.currentState !== GameState.Placement) return;
 
   const teamACount = simulation.getLivingCount(0);
@@ -311,8 +326,15 @@ function startBattle(): void {
   stateMachine.setState(GameState.Countdown);
   showStatus("Battle starting...");
 
+  if (immediate) {
+    simulation.beginSimulation(worldTimeSeconds);
+    stateMachine.setState(GameState.Simulation);
+    showStatus("Fight!");
+    return;
+  }
+
   countdownTimer = setTimeout(() => {
-    simulation.beginSimulation();
+    simulation.beginSimulation(worldTimeSeconds);
     stateMachine.setState(GameState.Simulation);
     showStatus("Fight!");
     countdownTimer = null;
@@ -325,7 +347,7 @@ function resetBattle(): void {
     countdownTimer = null;
   }
 
-  simulation.endSimulation();
+  simulation.endSimulation(worldTimeSeconds);
   projectileSystem.dispose();
   visualEffects.dispose();
 
@@ -342,6 +364,7 @@ function resetBattle(): void {
   removeMode = false;
   btnRemoveEl.classList.remove("remove-active");
   stateMachine.setState(GameState.Placement);
+  activeScenario = null;
   updateBudgetDisplay();
   resultOverlayEl.classList.remove("visible");
   showStatus("Battle reset.");
@@ -364,7 +387,7 @@ function checkVictory(): void {
   else if (teamBLiving > teamALiving) winner = 1;
   else isDraw = true;
 
-  simulation.endSimulation();
+  simulation.endSimulation(worldTimeSeconds);
   stateMachine.setState(GameState.Result);
 
   const result: BattleResult = {
@@ -422,6 +445,45 @@ function playAgain(): void {
   showStatus("Ready for another round!");
 }
 
+function spawnHarnessUnit(
+  unitId: string,
+  team: number,
+  position: { x: number; y?: number; z: number },
+  options: SpawnUnitOptions = {},
+): RuntimeUnit | null {
+  if (stateMachine.currentState !== GameState.Placement) return null;
+  return spawnRuntimeUnit(unitId, team, new Vector3(position.x, position.y ?? 0, position.z), options);
+}
+
+function advanceSimulationTime(ms: number): void {
+  const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+  for (let i = 0; i < steps; i++) {
+    worldTimeSeconds += 1 / 60;
+    tick(1 / 60, worldTimeSeconds);
+  }
+  scene.render();
+}
+
+function runScenario(name: string): ScenarioSpec | null {
+  const scenario = getScenario(name);
+  if (!scenario) {
+    showStatus(`Unknown scenario: ${name}`);
+    return null;
+  }
+
+  resetBattle();
+  activeScenario = scenario;
+  for (const unit of scenario.units) {
+    spawnHarnessUnit(unit.unitId, unit.team, unit.position);
+  }
+
+  if (scenario.autoStart) startBattle(true);
+  if (scenario.advanceMs && scenario.advanceMs > 0) {
+    advanceSimulationTime(scenario.advanceMs);
+  }
+  return scenario;
+}
+
 // ─── Input ───
 scene.onPointerObservable.add((pointerInfo) => {
   if (stateMachine.currentState !== GameState.Placement) return;
@@ -469,27 +531,33 @@ window.addEventListener("keydown", (e) => {
 // Expose to HTML onclick handlers
 (window as any).game = {
   startBattle,
+  startBattleImmediate: () => startBattle(true),
   resetBattle,
   playAgain,
   toggleRemoveMode,
+  spawnUnit: spawnHarnessUnit,
+  runScenario,
+  listScenarios: listScenarioNames,
 };
 
 // ─── Game loop ───
 engine.runRenderLoop(() => {
-  tick(engine.getDeltaTime() / 1000);
+  const dt = engine.getDeltaTime() / 1000;
+  worldTimeSeconds += dt;
+  tick(dt, worldTimeSeconds);
   scene.render();
 });
 
-function tick(dt: number): void {
+function tick(dt: number, nowSeconds: number): void {
   if (stateMachine.currentState === GameState.Simulation) {
-    simulation.update(dt);
+    simulation.update(dt, nowSeconds);
     projectileSystem.update(dt);
     visualEffects.update(dt);
     checkVictory();
   } else if (stateMachine.currentState === GameState.Placement) {
     // Still update units for idle animation if needed
     for (const unit of placedUnits) {
-      unit.update(dt, performance.now() / 1000);
+      unit.update(dt, nowSeconds);
     }
   }
 }
@@ -500,6 +568,7 @@ function renderGameToText(): string {
   const payload = {
     coordinateSystem: "x:right, z:forward, y:up, origin:center line",
     mode: GameState[stateMachine.currentState],
+    scenario: activeScenario?.name ?? null,
     activeFaction: FACTION_NAMES[activeFaction],
     selectedUnitId,
     budgets: {
@@ -507,10 +576,14 @@ function renderGameToText(): string {
       teamB: budgetSystem.getRemaining(1),
     },
     units: placedUnits.map((unit) => ({
+        runtimeId: unit.runtimeId,
         id: unit.definition.id,
         name: unit.definition.displayName,
         team: unit.team,
         role: unit.spawnRole,
+        linkedParentId: unit.linkedParent?.runtimeId ?? null,
+        linkedRelation: unit.linkedRelation,
+        linkedEntities: unit.linkedEntities,
         alive: !unit.isDead,
         hp: Math.round(unit.currentHealth),
         x: Number(unit.position.x.toFixed(2)),
@@ -522,10 +595,4 @@ function renderGameToText(): string {
 }
 
 (window as any).render_game_to_text = renderGameToText;
-(window as any).advanceTime = (ms: number) => {
-  const steps = Math.max(1, Math.round(ms / (1000 / 60)));
-  for (let i = 0; i < steps; i++) {
-    tick(1 / 60);
-  }
-  scene.render();
-};
+(window as any).advanceTime = advanceSimulationTime;

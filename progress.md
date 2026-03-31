@@ -55,3 +55,37 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Remaining gaps after the body-style pass:
 - The default gameplay camera is still far enough away that the improved silhouette reads better than the small limb details; a camera/readability pass would make the new geometry more visible in normal play.
 - Vehicle operator figures now share the rounded humanoid body language, but some vehicles still obscure most of the operator body at gameplay distance.
+- 2026-03-31: Iconic non-Secret fidelity pass implemented.
+- Added explicit iconic `visualPreset` / `behaviorPreset` routing for `ancient.zeus`, `legacy.thor`, `tribal.mammoth`, `farmer.scarecrow`, `spooky.reaper`, `wild_west.quick_draw`, `good.chronomancer`, `legacy.dark_peasant`, `legacy.super_peasant`, `dynasty.hwacha`, `renaissance.da_vinci_tank`, `legacy.tank`, `dynasty.monkey_king`, and `pirate.pirate_queen`.
+- Changed `web/src/units/unitVisuals.ts` so explicit manifest presets resolve before legacy `UNIT_VISUALS` entries; this prevents curated iconic units from silently staying on older visuals.
+- Added iconic visual attachments for storm halos, crow swarms, chrono rings, shadow orbit, reaper aura, quick-draw smoke, and super aura in `web/src/units/propBuilder.ts`.
+- Added iconic preset logic in `web/src/combat/simulationSystem.ts` for differentiated Zeus vs Thor lightning, Scarecrow crow volleys, Chronomancer control bursts, Dark Peasant area control, Super Peasant mobility/impact, Quick Draw burst cadence, Monkey King cloning, Reaper pull sweep, Mammoth disruption, and distinct artillery behavior for Hwacha / Da Vinci Tank / Legacy Tank.
+- Tightened the default gameplay camera in `web/src/ui/cameraController.ts` to improve placement/battle readability of the newer silhouettes.
+- Split `legacy.tank` onto a distinct vehicle body in `web/src/units/vehicleBuilder.ts` so it no longer aliases the Da Vinci tank silhouette.
+- Added `web/ICONIC_PARITY_MATRIX.md` and `web/ICONIC_ACCEPTANCE_BATTLES.md` as the curated-slice tracking and validation artifacts.
+- Validation:
+- `npm run build` passes in `web/`.
+- Browser validation confirmed the tighter gameplay framing, visible iconic Zeus/Thor-style hero read, and a clear visual distinction between the new Legacy Tank and Da Vinci Tank placement silhouettes.
+- Browser console still only showed the existing `favicon.ico` 404.
+- Remaining gaps after the iconic pass:
+- Some behavior validation is still limited by placement automation on the right-side zone; placement screenshots and text-state checks passed, but more deterministic two-team scripted battles would strengthen acceptance coverage.
+- `dark_peasant` and `super_peasant` are still approximations of TABS’ most extreme units rather than exact 1:1 reproductions.
+- 2026-03-31: Deterministic scenario harness and first composite-fidelity slice implemented.
+- Added a deterministic `window.game` runtime API in `web/src/main.ts` for explicit `spawnUnit`, `runScenario`, `listScenarios`, `startBattleImmediate`, `resetBattle`, `playAgain`, and deterministic `advanceTime(ms)` stepping without click placement.
+- Replaced the remaining sim timing dependency on `performance.now()` with a shared world clock for battle start, decision timing, and deterministic scenario stepping in `web/src/main.ts`, `web/src/combat/simulationSystem.ts`, and `web/src/units/runtimeUnit.ts`.
+- Added `web/src/testing/scenarios.ts` as the executable scenario source of truth for iconic comparison battles and the first composite/crew validation cases.
+- Extended `web/src/units/runtimeUnit.ts` with runtime ids, linked parent/child relationships, and persistent linked-entity descriptors, then exposed those links in `render_game_to_text()`.
+- Added manifest-driven `compositionParts` metadata in `web/src/data/rosterManifest.ts` and applied it through `web/src/units/unitFactory.ts` for `bank_robbers`, `bomb_cannon`, `gatling_gun`, `cavalry`, `raptor_rider`, `wheelbarrow_dragon`, `clams`, `legacy.tank`, `renaissance.da_vinci_tank`, and `dynasty.hwacha`.
+- Validation:
+- `npm run build` passes in `web/`.
+- Browser validation via the existing web-game client plus direct Playwright scripts confirmed:
+- deterministic scenario enumeration and execution
+- composite text-state output for `Bank Robbers`
+- linked spawned-child output for `Dark Peasant`
+- replay cleanup removing summoned children cleanly after `playAgain()`
+- executable artillery comparison coverage for `Legacy Tank`, `Da Vinci Tank`, and `Hwacha`
+- No browser console errors during the direct scenario runs; the only legacy console issue still observed elsewhere remains the `favicon.ico` 404.
+- Remaining gaps after the harness/composite slice:
+- Composite units now expose persistent crew/mount/attachment identity in text state, but they are still primarily single combat actors with linked metadata rather than fully independent persistent crew AI.
+- `ICONIC_ACCEPTANCE_BATTLES.md` remains prose-first; the actual executable source of truth is now `web/src/testing/scenarios.ts`.
+- `dark_peasant` and `super_peasant` are now deterministic to validate, but still remain approximations rather than exact TABS reproductions.

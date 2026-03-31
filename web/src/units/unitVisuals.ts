@@ -65,6 +65,13 @@ export type MaterialPreset =
 
 export type AttachmentPreset =
   | "none"
+  | "storm_halo"
+  | "crow_swarm"
+  | "chrono_ring"
+  | "shadow_orbit"
+  | "quickdraw_smoke"
+  | "reaper_aura"
+  | "super_aura"
   | "fan_bearer"
   | "bow_ready"
   | "crossbow_ready"
@@ -314,9 +321,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 };
 
 export function getUnitVisual(id: string): UnitVisualConfig {
-  if (UNIT_VISUALS[id]) return UNIT_VISUALS[id];
   const presetVisual = getPresetVisual(id);
   if (presetVisual) return presetVisual;
+  if (UNIT_VISUALS[id]) return UNIT_VISUALS[id];
 
   const def = getUnit(id);
   if (def?.faction === FactionId.Secret) {
@@ -332,6 +339,72 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
   if (!preset) return null;
 
   switch (preset) {
+    case "iconic_zeus":
+      return vis({ scale: 1.7, bulk: 1.08, headSize: 1.16, armLength: 1.16 }, "lightning_bolt", "laurel", "none", "cape", "#f7dd6f", undefined, {
+        posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "storm_halo", fxPreset: "solar",
+        stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },
+      });
+    case "iconic_thor":
+      return vis({ scale: 1.68, bulk: 1.18, headSize: 1.1, armLength: 1.12 }, "hammer", "horned_helmet", "none", "cape", "#8ec7ff", undefined, {
+        posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "storm_halo", fxPreset: "wind",
+        stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },
+      });
+    case "iconic_mammoth":
+      return vis({ scale: 2.9, bulk: 2.1, headSize: 1.5, legLength: 0.82 }, "none", "none", "none", "mount_mammoth", "#8b7355", undefined, {
+        posePreset: "vehicle", materialPreset: "secret_beast",
+      });
+    case "iconic_scarecrow":
+      return vis({ scale: 1.34, bulk: 0.76, armLength: 1.34, legLength: 1.05 }, "crossbow", "straw_hat", "none", "scarecrow_post", "#d5a743", undefined, {
+        posePreset: "archer", materialPreset: "secret_festive", attachmentPreset: "crow_swarm", fxPreset: "wind",
+        stateVariants: { attacking: ["crow_swarm"], "ability-active": ["crow_swarm"] },
+      });
+    case "iconic_reaper":
+      return vis({ scale: 1.92, bulk: 1.5, headSize: 1.12, armLength: 1.18 }, "scythe", "hood", "none", "cape", "#6f6d86", undefined, {
+        posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "reaper_aura", fxPreset: "spectral",
+        stateVariants: { moving: ["reaper_trail"], attacking: ["reaper_trail", "reaper_arc"], "ability-active": ["reaper_trail", "reaper_arc"] },
+      });
+    case "iconic_quick_draw":
+      return vis({ scale: 1.08, bulk: 0.94, armLength: 1.12 }, "flintlock", "captain_hat", "none", "cape", "#a56c34", "flintlock", {
+        posePreset: "duelist", materialPreset: "secret_bandit", attachmentPreset: "quickdraw_smoke",
+        stateVariants: { attacking: ["quickdraw_smoke"] },
+      });
+    case "iconic_chronomancer":
+      return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "staff", "laurel", "none", "halo", "#b8e6ff", undefined, {
+        posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "chrono_ring", fxPreset: "wind",
+        stateVariants: { attacking: ["chrono_ring"], "ability-active": ["chrono_ring"] },
+      });
+    case "iconic_dark_peasant":
+      return vis({ scale: 1.98, bulk: 1.52, headSize: 1.14, armLength: 1.18 }, "none", "hood", "none", "cape", "#3b2b59", undefined, {
+        posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
+        stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
+      });
+    case "iconic_super_peasant":
+      return vis({ scale: 1.92, bulk: 1.22, headSize: 1.06, armLength: 1.16, legLength: 1.02 }, "none", "laurel", "none", "cape", "#f3d45a", undefined, {
+        posePreset: "giant", materialPreset: "secret_hero", attachmentPreset: "super_aura", fxPreset: "solar",
+        stateVariants: { moving: ["super_aura"], attacking: ["super_aura"], "ability-active": ["super_aura"] },
+      });
+    case "iconic_hwacha":
+      return vis({ scale: 1.55, bulk: 1.7, legLength: 0.72 }, "none", "conical_hat", "none", "hwacha_rack", "#8b4513", undefined, {
+        posePreset: "vehicle", materialPreset: "secret_bandit",
+      });
+    case "iconic_da_vinci_tank":
+      return vis({ scale: 2.0, bulk: 2.2, legLength: 0.52 }, "none", "none", "none", "tank_body", "#8b7355", undefined, {
+        posePreset: "vehicle", materialPreset: "secret_holy",
+      });
+    case "iconic_legacy_tank":
+      return vis({ scale: 2.2, bulk: 2.4, legLength: 0.48 }, "none", "none", "none", "tank_body", "#5f6f52", undefined, {
+        posePreset: "vehicle", materialPreset: "secret_bandit",
+      });
+    case "iconic_monkey_king":
+      return vis({ scale: 1.66, bulk: 1.16, headSize: 1.12, armLength: 1.24 }, "bo_staff", "crown", "none", "cape", "#9a6a2d", undefined, {
+        posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "hero_halo", fxPreset: "royal",
+        stateVariants: { attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
+      });
+    case "iconic_pirate_queen":
+      return vis({ scale: 1.64, bulk: 1.2, headSize: 1.08 }, "cutlass", "pirate_hat", "none", "cape", "#ff4f8a", "flintlock", {
+        posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
+        stateVariants: { attacking: ["quickdraw_smoke"] },
+      });
     case "secret_ballooner":
       return vis({ scale: 1.0, bulk: 0.9, armLength: 1.1 }, "dagger", "none", "none", "balloon", "#ff9db5", undefined, {
         posePreset: "support", materialPreset: "secret_festive", fxPreset: "wind", attachmentPreset: "ghost_trail",

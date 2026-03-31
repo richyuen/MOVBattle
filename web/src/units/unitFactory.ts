@@ -52,6 +52,9 @@ export class UnitFactory {
 
     // Tag all meshes for raycasting
     const unit = new RuntimeUnit(definition, team, body, propMeshes, visual, ragdoll);
+    for (const part of definition.compositionParts ?? []) {
+      unit.addLinkedDescriptor(part.relation, part.label, true);
+    }
 
     // Set animation style for special units
     if (definition.id === "tribal.mammoth") {
