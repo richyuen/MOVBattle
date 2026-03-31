@@ -13,6 +13,7 @@ export interface ScenarioAssertion {
     | "linked-relation-count"
     | "victory-semantics"
     | "emitter-owner"
+    | "impact-owner"
     | "damage-owner"
     | "cleanup-policy"
     | "no-duplicate-standins";
@@ -58,6 +59,66 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "comparison-focus", value: "Legacy Tank, Da Vinci Tank, and Hwacha should produce distinct artillery rhythms and projectile patterns." },
+      { kind: "linked-relation-count", value: "legacy.tank:crew=2" },
+      { kind: "linked-relation-count", value: "renaissance.da_vinci_tank:crew=1" },
+      { kind: "linked-relation-count", value: "dynasty.hwacha:crew=2" },
+      { kind: "emitter-owner", value: "legacy.tank:gunner, renaissance.da_vinci_tank:pilot, dynasty.hwacha:rocketeer" },
+      { kind: "impact-owner", value: "legacy.tank:gunner, renaissance.da_vinci_tank:pilot, dynasty.hwacha:rocketeer" },
+      { kind: "no-duplicate-standins", value: "legacy.tank+renaissance.da_vinci_tank+dynasty.hwacha" },
+    ],
+  },
+  nonsecret_legacy_tank_roles: {
+    name: "nonsecret_legacy_tank_roles",
+    description: "Linked-role structure check for Legacy Tank.",
+    autoStart: false,
+    units: [
+      { unitId: "legacy.tank", team: 0, position: { x: -8, z: 0 } },
+    ],
+    assertions: [
+      { kind: "linked-relation-count", value: "legacy.tank:crew=2" },
+      { kind: "victory-semantics", value: "legacy.tank crew should not count as separate victory actors." },
+      { kind: "emitter-owner", value: "legacy.tank:gunner" },
+      { kind: "impact-owner", value: "legacy.tank:gunner" },
+      { kind: "damage-owner", value: "legacy.tank:driver=parent,gunner=parent" },
+      { kind: "cleanup-policy", value: "legacy.tank:all linked roles remove with parent" },
+      { kind: "no-duplicate-standins", value: "legacy.tank" },
+      { kind: "units-present", value: "legacy.tank" },
+    ],
+  },
+  nonsecret_da_vinci_tank_roles: {
+    name: "nonsecret_da_vinci_tank_roles",
+    description: "Linked-role structure check for Da Vinci Tank.",
+    autoStart: false,
+    units: [
+      { unitId: "renaissance.da_vinci_tank", team: 0, position: { x: -8, z: 0 } },
+    ],
+    assertions: [
+      { kind: "linked-relation-count", value: "renaissance.da_vinci_tank:crew=1" },
+      { kind: "victory-semantics", value: "renaissance.da_vinci_tank pilot should not count as a separate victory actor." },
+      { kind: "emitter-owner", value: "renaissance.da_vinci_tank:pilot" },
+      { kind: "impact-owner", value: "renaissance.da_vinci_tank:pilot" },
+      { kind: "damage-owner", value: "renaissance.da_vinci_tank:pilot=parent" },
+      { kind: "cleanup-policy", value: "renaissance.da_vinci_tank:all linked roles remove with parent" },
+      { kind: "no-duplicate-standins", value: "renaissance.da_vinci_tank" },
+      { kind: "units-present", value: "renaissance.da_vinci_tank" },
+    ],
+  },
+  nonsecret_hwacha_roles: {
+    name: "nonsecret_hwacha_roles",
+    description: "Linked-role structure check for Hwacha.",
+    autoStart: false,
+    units: [
+      { unitId: "dynasty.hwacha", team: 0, position: { x: -8, z: 0 } },
+    ],
+    assertions: [
+      { kind: "linked-relation-count", value: "dynasty.hwacha:crew=2" },
+      { kind: "victory-semantics", value: "dynasty.hwacha crew should not count as separate victory actors." },
+      { kind: "emitter-owner", value: "dynasty.hwacha:rocketeer" },
+      { kind: "impact-owner", value: "dynasty.hwacha:rocketeer" },
+      { kind: "damage-owner", value: "dynasty.hwacha:rocketeer=parent,loader=parent" },
+      { kind: "cleanup-policy", value: "dynasty.hwacha:all linked roles remove with parent" },
+      { kind: "no-duplicate-standins", value: "dynasty.hwacha" },
+      { kind: "units-present", value: "dynasty.hwacha" },
     ],
   },
   composite_bank_robbers: {

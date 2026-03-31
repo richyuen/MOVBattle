@@ -43,14 +43,14 @@ export function buildVehicleBody(
   switch (unitId) {
     case "medieval.catapult": return buildCatapult(scene, bodyColor);
     case "ancient.ballista": return buildBallista(scene, bodyColor);
-    case "dynasty.hwacha": return buildHwacha(scene, bodyColor);
+    case "dynasty.hwacha": return buildHwacha(scene, bodyColor, options);
     case "pirate.cannon": return buildCannon(scene, bodyColor);
-    case "renaissance.da_vinci_tank": return buildDaVinciTank(scene, bodyColor);
+    case "renaissance.da_vinci_tank": return buildDaVinciTank(scene, bodyColor, options);
     case "farmer.wheelbarrow": return buildWheelbarrow(scene, bodyColor);
     case "ancient.minotaur": return buildMinotaur(scene, bodyColor);
     case "tribal.mammoth": return buildMammoth(scene, bodyColor);
     case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor);
-    case "legacy.tank": return buildLegacyTank(scene, bodyColor);
+    case "legacy.tank": return buildLegacyTank(scene, bodyColor, options);
     case "secret.bomb_cannon": return buildBombCannon(scene, bodyColor, options);
     case "secret.gatling_gun": return buildGatlingGun(scene, bodyColor, options);
     case "good.sacred_elephant": return buildMammoth(scene, bodyColor);
@@ -367,7 +367,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
 // ═══════════════════════ HWACHA ═══════════════════════
 // TABS-style hwacha: wide wooden cart with large, steeply-tilted rack of tube holes
 // filled with rocket arrows pointing upward. Big spoked wheels, cart handles behind.
-function buildHwacha(scene: Scene, color: Color3): ArticulatedBody {
+function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("hwacha_root", scene);
   const allMeshes: Mesh[] = [];
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
@@ -473,9 +473,18 @@ function buildHwacha(scene: Scene, color: Color3): ArticulatedBody {
   }
 
   // ─── Operator behind (-Z) ───
-  const operator = addOperator(scene, root, allMeshes, 0.22, 0.7, -0.75, color);
+  const operator = options.showOperators !== false
+    ? addOperator(scene, root, allMeshes, 0.22, 0.7, -0.75, color)
+    : null;
 
-  return wrapAsBody(scene, root, base, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.95, 0.52, 0.76));
+  return wrapAsBody(
+    scene,
+    root,
+    base,
+    allMeshes,
+    operator?.headMesh,
+    makeBodyMetrics(operator?.headTopY ?? 1.58, 0.95, 0.52, 0.76),
+  );
 }
 
 // ═══════════════════════ CANNON ═══════════════════════
@@ -541,7 +550,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 
 // ═══════════════════════ DA VINCI TANK ═══════════════════════
 // Symmetrical design, fires in all directions, so orientation matters less.
-function buildDaVinciTank(scene: Scene, _color: Color3): ArticulatedBody {
+function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("tank_root", scene);
   const allMeshes: Mesh[] = [];
   const wood = makeMat(scene, new Color3(0.55, 0.42, 0.25));
@@ -584,10 +593,22 @@ function buildDaVinciTank(scene: Scene, _color: Color3): ArticulatedBody {
     }
   }
 
-  return wrapAsBody(scene, root, hull, allMeshes, undefined, makeBodyMetrics(1.8, 0.8, 0.5, 0.7));
+  let operator: VehicleOperator | null = null;
+  if (options.showOperators !== false) {
+    operator = addOperator(scene, root, allMeshes, 0, 1.08, -0.02, color);
+  }
+
+  return wrapAsBody(
+    scene,
+    root,
+    hull,
+    allMeshes,
+    operator?.headMesh,
+    makeBodyMetrics(operator?.headTopY ?? 1.8, 0.8, 0.5, 0.7),
+  );
 }
 
-function buildLegacyTank(scene: Scene, color: Color3): ArticulatedBody {
+function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
   const hullMat = makeMat(scene, new Color3(0.42, 0.52, 0.34));
@@ -643,8 +664,18 @@ function buildLegacyTank(scene: Scene, color: Color3): ArticulatedBody {
     }
   }
 
-  const operator = addOperator(scene, root, allMeshes, 0, 0.98, -0.28, color);
-  return wrapAsBody(scene, root, body, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 1.2, 0.9, 0.95));
+  let operator: VehicleOperator | null = null;
+  if (options.showOperators !== false) {
+    operator = addOperator(scene, root, allMeshes, 0, 0.98, -0.28, color);
+  }
+  return wrapAsBody(
+    scene,
+    root,
+    body,
+    allMeshes,
+    operator?.headMesh,
+    makeBodyMetrics(operator?.headTopY ?? 1.82, 1.2, 0.9, 0.95),
+  );
 }
 
 // ═══════════════════════ WHEELBARROW ═══════════════════════

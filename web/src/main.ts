@@ -139,6 +139,15 @@ function spawnLinkedActorsForParent(parent: RuntimeUnit): void {
   }
 }
 
+function applyLinkedParentSemantics(unit: RuntimeUnit): void {
+  const preset = getLinkedActorPreset(unit.definition.id);
+  if (!preset || unit.linkedParent) return;
+  unit.setDecorativeStandinsSuppressed(true);
+  if (preset.disableParentEmitter) {
+    unit.setPrimaryEmitterEnabled(false);
+  }
+}
+
 function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRoleLabel?: string): RuntimeUnit | null {
   const initialPosition = parent.position.add(rotateOffsetByYaw(actor.offset, parent.body.root.rotation.y));
   const child = spawnRuntimeUnit(parent.definition.id, parent.team, initialPosition, {
@@ -203,9 +212,7 @@ function spawnRuntimeUnit(
   placedUnits.push(unit);
   simulation.registerUnit(unit);
   if (preset && !options.linkedParent) {
-    if (preset.disableParentEmitter) {
-      unit.setPrimaryEmitterEnabled(false);
-    }
+    applyLinkedParentSemantics(unit);
     spawnLinkedActorsForParent(unit);
   }
   return unit;
@@ -530,6 +537,7 @@ function playAgain(): void {
     if (unit.linkedParent) continue;
     unit.resetToSpawn();
     simulation.registerUnit(unit);
+    applyLinkedParentSemantics(unit);
     spawnLinkedActorsForParent(unit);
   }
 
@@ -682,7 +690,10 @@ function renderGameToText(): string {
       teamA: budgetSystem.getRemaining(0),
       teamB: budgetSystem.getRemaining(1),
     },
-    units: placedUnits.map((unit) => ({
+    units: placedUnits.map((unit) => {
+        const attackEmitter = unit.getAttackEmitter();
+        const impactEmitter = unit.getImpactEmitter();
+        return ({
         runtimeId: unit.runtimeId,
         id: unit.definition.id,
         name: unit.definition.displayName,
@@ -700,6 +711,10 @@ function renderGameToText(): string {
         cleanupPolicy: unit.cleanupPolicy,
         detachOnParentDeath: unit.detachOnParentDeath,
         actionPreset: unit.actionPreset,
+        attackEmitterRole: attackEmitter === unit ? "parent" : (attackEmitter.linkedRoleLabel ?? attackEmitter.definition.displayName),
+        attackEmitterId: attackEmitter.runtimeId,
+        impactEmitterRole: impactEmitter === unit ? "parent" : (impactEmitter.linkedRoleLabel ?? impactEmitter.definition.displayName),
+        impactEmitterId: impactEmitter.runtimeId,
         decorativeStandinsSuppressed: unit.decorativeStandinsSuppressed,
         countsTowardVictory: unit.countsTowardVictory,
         linkedParentId: unit.linkedParent?.runtimeId ?? null,
@@ -709,7 +724,8 @@ function renderGameToText(): string {
         hp: Math.round(unit.currentHealth),
         x: Number(unit.position.x.toFixed(2)),
         z: Number(unit.position.z.toFixed(2)),
-      })),
+      });
+    }),
     projectiles: projectileSystem.activeCount,
   };
   return JSON.stringify(payload);

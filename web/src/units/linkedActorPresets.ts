@@ -116,6 +116,101 @@ const emittingCrew: LinkedActorSemantics = {
 };
 
 export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
+  "legacy.tank": {
+    parentRoleLabel: "tank chassis",
+    disableParentEmitter: true,
+    actors: [
+      {
+        key: "driver",
+        label: "driver",
+        relation: "crew",
+        offset: new Vector3(-0.18, 0, -0.3),
+        syncFacing: true,
+        semantics: { ...parentDamage, actionPreset: "cart-brace" },
+        visual: visual("none", "helmet", "none", "none", {
+          proportions: { scale: 0.72, bulk: 0.84, headSize: 1.02 },
+          posePreset: "vehicle",
+          accentColor: "#55674a",
+        }),
+      },
+      {
+        key: "gunner",
+        label: "gunner",
+        relation: "crew",
+        offset: new Vector3(0.18, 0, 0.08),
+        syncFacing: true,
+        semantics: {
+          ...emittingCrew,
+          actionPreset: "reload",
+          impactOrigin: true,
+        },
+        visual: visual("none", "helmet", "none", "none", {
+          proportions: { scale: 0.74, bulk: 0.86, headSize: 1.04 },
+          posePreset: "vehicle",
+          accentColor: "#6b7a58",
+        }),
+      },
+    ],
+  },
+  "renaissance.da_vinci_tank": {
+    parentRoleLabel: "tank shell",
+    disableParentEmitter: true,
+    actors: [
+      {
+        key: "pilot",
+        label: "pilot",
+        relation: "crew",
+        offset: new Vector3(0, 0, -0.02),
+        syncFacing: true,
+        semantics: {
+          ...emittingCrew,
+          actionPreset: "crank",
+          impactOrigin: true,
+        },
+        visual: visual("none", "beret", "none", "none", {
+          proportions: { scale: 0.72, bulk: 0.8, headSize: 1.0 },
+          posePreset: "vehicle",
+          accentColor: "#8a6b43",
+        }),
+      },
+    ],
+  },
+  "dynasty.hwacha": {
+    parentRoleLabel: "rocket cart",
+    disableParentEmitter: true,
+    actors: [
+      {
+        key: "rocketeer",
+        label: "rocketeer",
+        relation: "crew",
+        offset: new Vector3(0.24, 0, -0.72),
+        syncFacing: true,
+        semantics: {
+          ...emittingCrew,
+          actionPreset: "reload",
+          impactOrigin: true,
+        },
+        visual: visual("none", "conical_hat", "none", "none", {
+          proportions: { scale: 0.7, bulk: 0.8, headSize: 1.0 },
+          posePreset: "vehicle",
+          accentColor: "#8b4513",
+        }),
+      },
+      {
+        key: "loader",
+        label: "loader",
+        relation: "crew",
+        offset: new Vector3(-0.24, 0, -0.72),
+        syncFacing: true,
+        semantics: { ...parentDamage, actionPreset: "reload" },
+        visual: visual("none", "conical_hat", "none", "none", {
+          proportions: { scale: 0.68, bulk: 0.78, headSize: 0.98 },
+          posePreset: "support",
+          accentColor: "#7a3b14",
+        }),
+      },
+    ],
+  },
   "secret.cavalry": {
     parentRoleLabel: "rider",
     suppressParentSpecial: true,

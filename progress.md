@@ -120,3 +120,16 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Remaining gaps after the persistent-role pass:
 - Secret linked roles are now better specified and more active, but they still use parent-owned movement and parent-routed damage by default rather than full independent crew AI.
 - Scenario assertions are now richer data, but there is still no built-in automatic assertion evaluator that fails the scenario run inside the browser runtime itself.
+- 2026-03-31: Non-Secret artillery composite adoption implemented.
+- Added linked-role presets in `web/src/units/linkedActorPresets.ts` for `legacy.tank`, `renaissance.da_vinci_tank`, and `dynasty.hwacha`, reusing the existing anchored-role contract with no new routing or cleanup semantics.
+- Updated `web/src/units/vehicleBuilder.ts` so `Hwacha`, `Da Vinci Tank`, and `Legacy Tank` respect `showOperators: false`, preventing doubled decorative operators once real linked crew are active.
+- Extended `web/src/main.ts` text-state output with `attackEmitterRole`, `attackEmitterId`, `impactEmitterRole`, and `impactEmitterId`, and fixed `playAgain()` so linked-role parents reapply suppression/emitter semantics before respawning crew.
+- Expanded `web/src/testing/scenarios.ts` with `nonsecret_legacy_tank_roles`, `nonsecret_da_vinci_tank_roles`, `nonsecret_hwacha_roles`, richer artillery comparison assertions, and the new `impact-owner` assertion category.
+- Added `web/NON_SECRET_COMPOSITE_ROLE_MATRIX.md` and `web/NON_SECRET_COMPOSITE_ACCEPTANCE_BATTLES.md` as the non-Secret artillery role/acceptance artifacts.
+- Validation:
+- `npm run build` passes in `web/`.
+- Required web-game client run completed against the local Vite server and produced fresh screenshots/state dumps in `web/output/web-game-nonsecret-artillery/`.
+- Direct Playwright scenario runs confirmed correct linked crew structure, emitter ownership, impact ownership, stand-in suppression, and clean `playAgain()` rebuild for `Legacy Tank`, `Da Vinci Tank`, and `Hwacha`, with no browser console/page errors.
+- Remaining gaps after this pass:
+- The non-Secret artillery units now use the shared linked-role model, but they still keep parent-owned movement and parent-routed damage by default.
+- Broader non-Secret composite adoption beyond this artillery slice remains for a later phase.
