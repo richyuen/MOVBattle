@@ -1,65 +1,45 @@
 # MOVBattle
 
-MOVBattle is a Unity iOS battle sandbox inspired by Totally Accurate Battle Simulator.
+MOVBattle is a browser-based battle sandbox inspired by Totally Accurate Battle Simulator.
 
-Current implementation includes:
-- Offline sandbox battle loop (placement -> countdown -> simulation -> result)
-- One-map workflow intended for an Ancient Sandbox style environment
-- Core faction roster definitions (standard base-faction style units)
-- Data-driven unit/combat catalogs
-- Hybrid simulation architecture (AI + simplified physics impacts + ragdoll hooks)
-- Touch-first camera and placement controllers for iPhone landscape play
+The active implementation lives in `web/` and currently includes:
+- Full 139-unit roster data across 14 factions
+- Searchable faction/unit sandbox UI
+- Deterministic battle stepping and text-state inspection hooks
+- Procedural unit visuals and vehicle builders
+- Secret-faction fidelity work, iconic-unit parity work, and anchored composite actors
 
-## Project Layout
+## Active Project Layout
 
-- `Assets/Scripts/Core`: game states, bootstrap, budget, and victory logic
-- `Assets/Scripts/Combat`: attack/AI/ragdoll profile definitions and combat catalog
-- `Assets/Scripts/Units`: unit definitions, runtime unit logic, factory, roster defaults
-- `Assets/Scripts/Map`: map definition and placement validation
-- `Assets/Scripts/UI`: touch camera and basic HUD/result controllers
-- `Assets/Scripts/Pooling`: lightweight reusable object pool utility
-- `Assets/Tests/EditMode`: edit-mode unit tests for key systems
+- `web/src/data`: generated roster data, faction metadata, and combat tuning
+- `web/src/combat`: simulation, projectiles, effects, and battle logic
+- `web/src/units`: procedural body, prop, vehicle, and runtime unit systems
+- `web/src/map`: sandbox map geometry and placement validation
+- `web/src/ui`: camera and interface behavior
+- `web/src/testing`: deterministic scenario specs used for browser validation
 
-## Unity Requirements
+## Run The Web Game
 
-- Unity 2022 LTS or newer
-- iOS build support module installed
-- iOS target: 17.0+
-- Orientation: Landscape
+1. Install dependencies in `web/`:
+   - `npm install`
+2. Start the dev server:
+   - `npm run dev`
+3. Build production output:
+   - `npm run build`
 
-## Quick Setup
+## Deterministic Test Hooks
 
-1. Create/open a Unity project in this repository root.
-2. Recommended: run `MOVBattle -> Quick Setup Active Scene` from the Unity top menu to auto-wire a playable test scene.
-3. Create ScriptableObject assets:
-   - `BattleConfig`
-   - `CombatCatalog` (optional custom overrides)
-   - `UnitCatalog` (optional custom overrides)
-   - `MapDefinition` for the Ancient Sandbox-like map
-4. In a scene, add:
-   - `BattleBootstrap`
-   - `GameStateMachine`
-   - `SimulationSystem`
-   - `VictorySystem`
-   - `UnitFactory`
-   - `PlacementHUDController`
-   - `UnitCardListBuilder` (optional dynamic card generation)
-   - `TouchCameraController`
-   - `ResultScreenController`
-   - `AncientSandboxMapBuilder` (optional quick-map generator)
-5. Wire references in the inspector.
-6. Build to iOS and deploy through Xcode/TestFlight.
+The browser runtime exposes helpers used by scenario validation:
+- `window.game.spawnUnit(...)`
+- `window.game.runScenario(...)`
+- `window.game.resetBattle()`
+- `window.game.playAgain()`
+- `window.advanceTime(ms)`
+- `window.render_game_to_text()`
 
-### Editor Test Controls
-
-- Left click: place selected unit in the active team zone
-- Right click: remove your team unit under cursor
-- `Tab`: switch active placement team
-- `N` / `B`: select next / previous unit type from roster
-- `Space`: start battle
-- `R`: reset battle
+Scenario definitions live in `web/src/testing/scenarios.ts`.
 
 ## Notes
 
-- All assets should be original lookalike content; do not copy proprietary assets.
-- Roster defaults are code-defined to speed iteration while assets are still in progress.
+- Keep visuals original and procedural; do not import proprietary TABS assets.
+- Current implementation priority is gameplay readability and battlefield-role fidelity over exact one-to-one physics quirks.
