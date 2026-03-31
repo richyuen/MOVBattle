@@ -102,3 +102,21 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Remaining gaps after the anchored linked-actor pass:
 - These Secret composites now have real anchored runtime actors, but most crew and mounts still route damage and victory semantics through the parent instead of acting as fully independent AI bodies.
 - Non-Secret composites such as `legacy.tank`, `renaissance.da_vinci_tank`, and `dynasty.hwacha` still remain on the earlier metadata-oriented composition path.
+- 2026-03-31: Persistent Secret composite role semantics pass implemented.
+- Extended `web/src/units/linkedActorPresets.ts` from simple anchored-actor flags to an explicit role contract: `damageRouting`, `victoryRouting`, `moveMode`, `cleanupPolicy`, `detachOnParentDeath`, `actionPreset`, and optional `impactOrigin`.
+- Added runtime storage and text-state exposure for those semantics in `web/src/units/runtimeUnit.ts` and `web/src/main.ts`, including parent-vs-linked movement/cleanup read, decorative-stand-in suppression flags, and linked-role action presets.
+- Added linked-role action timing in `web/src/units/runtimeUnit.ts` so loaders, crank gunners, mounts, carts, shells, and dragon heads no longer sit fully static while the parent attacks.
+- Updated `web/src/combat/simulationSystem.ts` so melee impact can originate from linked mounts/dragon heads while projectile emission still routes through the correct linked emitter when applicable.
+- Added `web/SECRET_COMPOSITE_ROLE_MATRIX.md` as the source-of-truth matrix for Secret persistent linked roles.
+- Expanded `web/src/testing/scenarios.ts` with structural assertion categories for emitter owner, damage owner, cleanup policy, and no-duplicate-standins on the Secret composite scenarios.
+- Validation:
+- `npm run build` passes in `web/`.
+- Playwright client was run against the local Vite server, and direct deterministic scenario scripts confirmed:
+- articulated role semantics in `render_game_to_text()`
+- parent units reporting `moveMode: "self"` while linked roles report `moveMode: "anchored-parent"`
+- correct emitter/impact ownership for `Bomb Cannon`, `Gatling Gun`, mounted pairs, `Bank Robbers`, `Wheelbarrow Dragon`, and `CLAMS`
+- clean `playAgain()` rebuild without orphaned linked actors in the checked composite scenario
+- no browser console/page errors during the direct validation runs
+- Remaining gaps after the persistent-role pass:
+- Secret linked roles are now better specified and more active, but they still use parent-owned movement and parent-routed damage by default rather than full independent crew AI.
+- Scenario assertions are now richer data, but there is still no built-in automatic assertion evaluator that fails the scenario run inside the browser runtime itself.

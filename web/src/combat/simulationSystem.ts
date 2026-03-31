@@ -259,13 +259,15 @@ export class SimulationSystem {
     const preset = getBehaviorPreset(attacker);
     const cooldownMultiplier = attacker.definition.cooldownMultiplier ?? 1;
     attacker.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
+    attacker.triggerLinkedRoleActions(attackProfile.cooldown * cooldownMultiplier);
     const emitter = attacker.getAttackEmitter();
     const attackOrigin = emitter.position;
+    const impactOrigin = attacker.getImpactEmitter().position;
     if (emitter !== attacker) {
       emitter.triggerAttackVisual(Math.max(0.08, attackProfile.cooldown * cooldownMultiplier * 0.28));
     }
 
-    let impulseDir = target.position.subtract(attackOrigin);
+    let impulseDir = target.position.subtract(impactOrigin);
     if (impulseDir.lengthSquared() > 0.0001) {
       impulseDir.normalize();
     } else {
@@ -485,19 +487,19 @@ export class SimulationSystem {
 
     if (preset === "secret_artemis" || preset === "secret_ullr" || preset === "secret_flying_archer") {
       this._fireVolley(attacker, target, damage, knockback, Math.max(2, attacker.definition.volleyCount ?? 3));
-      this._applyOnHitStatuses(attacker, target, now);
+      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
       return;
     }
 
     if (preset === "secret_bomb_cannon") {
       this._fireVolley(attacker, target, damage, knockback, Math.max(2, attacker.definition.volleyCount ?? 2));
-      this._applyOnHitStatuses(attacker, target, now);
+      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
       return;
     }
 
     if (abilities.has("rapid_fire") || preset === "secret_burst_crossbow" || preset === "secret_bank_robbers" || preset === "secret_sensei" || preset === "secret_gatling") {
       this._fireBurst(attacker, target, damage, knockback, splashRadius, Math.max(3, attacker.definition.burstCount ?? 3));
-      this._applyOnHitStatuses(attacker, target, now);
+      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
       return;
     }
 
@@ -508,7 +510,7 @@ export class SimulationSystem {
 
     if (abilities.has("volley_fire")) {
       this._fireVolley(attacker, target, damage, knockback, Math.max(4, attacker.definition.summonCount ?? 6));
-      this._applyOnHitStatuses(attacker, target, now);
+      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
       return;
     }
 
@@ -532,12 +534,12 @@ export class SimulationSystem {
       } else {
         this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
       }
-      this._applyOnHitStatuses(attacker, target, now);
+      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
       return;
     }
 
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
-    this._applyOnHitStatuses(attacker, target, now);
+    this._applyOnHitStatuses(attacker, target, now, impactOrigin);
   }
 
   private _summonUnits(attacker: RuntimeUnit): boolean {
@@ -706,7 +708,7 @@ export class SimulationSystem {
     }
   }
 
-  private _applyOnHitStatuses(attacker: RuntimeUnit, target: RuntimeUnit, now: number): void {
+  private _applyOnHitStatuses(attacker: RuntimeUnit, target: RuntimeUnit, now: number, impactOrigin?: Vector3): void {
     const abilities = new Set(attacker.definition.abilities ?? []);
     const preset = getBehaviorPreset(attacker);
     const statusDuration = attacker.definition.statusDurationSeconds ?? 2.5;
@@ -716,7 +718,8 @@ export class SimulationSystem {
     }
     if (abilities.has("fire_dot")) {
       const fireDamage = preset === "secret_fire_whip" || preset === "secret_dragon_cart" ? 14 : 10;
-      target.applyDamage(fireDamage, target.position.subtract(attacker.position).normalize().scale(0.3));
+      const source = impactOrigin ?? attacker.position;
+      target.applyDamage(fireDamage, target.position.subtract(source).normalize().scale(0.3));
     }
     if (abilities.has("poison")) {
       target.applyDamage(6, Vector3.Zero());

@@ -5,7 +5,9 @@ import type { ArticulatedBody } from "./bodyBuilder";
 import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 import type { FxPreset, UnitVisualConfig, VisualStateTag } from "./unitVisuals";
-import type { LinkedDamageRouting } from "./linkedActorPresets";
+import type {
+  LinkedActionPreset, LinkedCleanupPolicy, LinkedDamageRouting, LinkedMoveMode, LinkedVictoryRouting,
+} from "./linkedActorPresets";
 
 export type RuntimeSpawnRole = "placed" | "summoned" | "crew" | "mount" | "attachment";
 export type LinkedRelation = "crew" | "mount" | "attachment" | "spawned-child";
@@ -73,8 +75,15 @@ export class RuntimeUnit {
   private _isTargetable = true;
   private _isCombatEmitter = true;
   private _damageRouting: LinkedDamageRouting = "self";
+  private _victoryRouting: LinkedVictoryRouting = "self";
+  private _moveMode: LinkedMoveMode = "self";
+  private _cleanupPolicy: LinkedCleanupPolicy = "self";
+  private _detachOnParentDeath = false;
+  private _actionPreset: LinkedActionPreset = "none";
+  private _isImpactOrigin = false;
   private _primaryEmitterEnabled = true;
   private _emitterCursor = 0;
+  private _decorativeStandinsSuppressed = false;
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
@@ -98,6 +107,14 @@ export class RuntimeUnit {
   get isCombatEmitter(): boolean { return this._isAnchoredActor ? this._isCombatEmitter : this._primaryEmitterEnabled; }
   get linkedRoleLabel(): string | null { return this._linkedRoleLabel; }
   get linkedParentRoleLabel(): string | null { return this._linkedParentRoleLabel; }
+  get damageRouting(): LinkedDamageRouting { return this._damageRouting; }
+  get victoryRouting(): LinkedVictoryRouting { return this._victoryRouting; }
+  get moveMode(): LinkedMoveMode { return this._moveMode; }
+  get cleanupPolicy(): LinkedCleanupPolicy { return this._cleanupPolicy; }
+  get detachOnParentDeath(): boolean { return this._detachOnParentDeath; }
+  get actionPreset(): LinkedActionPreset { return this._actionPreset; }
+  get isImpactOrigin(): boolean { return this._isImpactOrigin; }
+  get decorativeStandinsSuppressed(): boolean { return this._decorativeStandinsSuppressed; }
 
   constructor(
     definition: UnitDefinition,
@@ -141,6 +158,12 @@ export class RuntimeUnit {
     targetable: boolean;
     combatEmitter: boolean;
     damageRouting: LinkedDamageRouting;
+    victoryRouting: LinkedVictoryRouting;
+    moveMode: LinkedMoveMode;
+    cleanupPolicy: LinkedCleanupPolicy;
+    detachOnParentDeath: boolean;
+    actionPreset: LinkedActionPreset;
+    impactOrigin?: boolean;
   }): void {
     this._isAnchoredActor = true;
     this._linkedRoleLabel = options.roleLabel;
@@ -150,6 +173,16 @@ export class RuntimeUnit {
     this._isTargetable = options.targetable;
     this._isCombatEmitter = options.combatEmitter;
     this._damageRouting = options.damageRouting;
+    this._victoryRouting = options.victoryRouting;
+    this._moveMode = options.moveMode;
+    this._cleanupPolicy = options.cleanupPolicy;
+    this._detachOnParentDeath = options.detachOnParentDeath;
+    this._actionPreset = options.actionPreset;
+    this._isImpactOrigin = options.impactOrigin ?? false;
+  }
+
+  setDecorativeStandinsSuppressed(suppressed: boolean): void {
+    this._decorativeStandinsSuppressed = suppressed;
   }
 
   setBaseBodyVisible(visible: boolean): void {
@@ -660,8 +693,15 @@ export class RuntimeUnit {
     this._isTargetable = true;
     this._isCombatEmitter = true;
     this._damageRouting = "self";
+    this._victoryRouting = "self";
+    this._moveMode = "self";
+    this._cleanupPolicy = "self";
+    this._detachOnParentDeath = false;
+    this._actionPreset = "none";
+    this._isImpactOrigin = false;
     this._primaryEmitterEnabled = true;
     this._emitterCursor = 0;
+    this._decorativeStandinsSuppressed = false;
     this._linkedDescriptors = this._linkedDescriptors.filter((descriptor) => descriptor.persistent);
 
     // Restore position and clear rotation
@@ -722,6 +762,40 @@ export class RuntimeUnit {
     const emitter = emitters[this._emitterCursor % emitters.length];
     this._emitterCursor += 1;
     return emitter;
+  }
+
+  getImpactEmitter(): RuntimeUnit {
+    for (const child of this._linkedChildren) {
+      if (!child.isDead && child._isImpactOrigin) {
+        return child;
+      }
+    }
+    return this.getAttackEmitter();
+  }
+
+  triggerLinkedRoleActions(durationSeconds: number): void {
+    for (const child of this._linkedChildren) {
+      if (child.isDead || child._actionPreset === "none") continue;
+      switch (child._actionPreset) {
+        case "reload":
+          child.animator.triggerAttack(Math.max(0.12, durationSeconds * 0.18));
+          break;
+        case "crank":
+          child.animator.triggerAttack(Math.max(0.16, durationSeconds * 0.28));
+          break;
+        case "charge-mount":
+        case "dragon-breath":
+          child.animator.triggerAttack(Math.max(0.18, durationSeconds * 0.26));
+          break;
+        case "cart-brace":
+        case "carry-safe":
+        case "shell-guard":
+          child.animator.triggerAttack(Math.max(0.1, durationSeconds * 0.16));
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   triggerAttackVisual(durationSeconds: number): void {

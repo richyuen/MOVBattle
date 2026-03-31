@@ -143,7 +143,7 @@ function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRol
   const initialPosition = parent.position.add(rotateOffsetByYaw(actor.offset, parent.body.root.rotation.y));
   const child = spawnRuntimeUnit(parent.definition.id, parent.team, initialPosition, {
     role: actor.relation === "attachment" ? "attachment" : actor.relation,
-    countsTowardVictory: actor.semantics.countsTowardVictory,
+    countsTowardVictory: actor.semantics.victoryRouting === "self",
     linkedParent: parent,
     linkedRelation: actor.relation,
     visualOverride: actor.visual,
@@ -159,6 +159,12 @@ function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRol
     targetable: actor.semantics.targetable,
     combatEmitter: actor.semantics.combatEmitter,
     damageRouting: actor.semantics.damageRouting,
+    victoryRouting: actor.semantics.victoryRouting,
+    moveMode: actor.semantics.moveMode,
+    cleanupPolicy: actor.semantics.cleanupPolicy,
+    detachOnParentDeath: actor.semantics.detachOnParentDeath,
+    actionPreset: actor.semantics.actionPreset,
+    impactOrigin: actor.semantics.impactOrigin,
   });
   parent.detachLinkedChild(child);
   parent.attachLinkedChild(child, actor.relation);
@@ -190,6 +196,7 @@ function spawnRuntimeUnit(
   const role = options.role ?? "placed";
   const countsTowardVictory = options.countsTowardVictory ?? (role === "placed" || role === "summoned");
   unit.setSpawnRole(role, countsTowardVictory);
+  unit.setDecorativeStandinsSuppressed(options.suppressDecorativeOperators ?? Boolean(preset));
   if (options.linkedParent && options.linkedRelation) {
     options.linkedParent.attachLinkedChild(unit, options.linkedRelation);
   }
@@ -686,6 +693,14 @@ function renderGameToText(): string {
         anchored: unit.isAnchoredActor,
         targetable: unit.isTargetable,
         combatEmitter: unit.isCombatEmitter,
+        impactOrigin: unit.isImpactOrigin,
+        damageRouting: unit.damageRouting,
+        victoryRouting: unit.victoryRouting,
+        moveMode: unit.moveMode,
+        cleanupPolicy: unit.cleanupPolicy,
+        detachOnParentDeath: unit.detachOnParentDeath,
+        actionPreset: unit.actionPreset,
+        decorativeStandinsSuppressed: unit.decorativeStandinsSuppressed,
         countsTowardVictory: unit.countsTowardVictory,
         linkedParentId: unit.linkedParent?.runtimeId ?? null,
         linkedRelation: unit.linkedRelation,

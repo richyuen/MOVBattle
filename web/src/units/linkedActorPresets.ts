@@ -5,13 +5,30 @@ import type {
 } from "./unitVisuals";
 
 export type LinkedDamageRouting = "parent" | "self";
+export type LinkedVictoryRouting = "parent" | "self" | "none";
+export type LinkedMoveMode = "self" | "anchored-parent";
+export type LinkedCleanupPolicy = "self" | "remove-with-parent";
+export type LinkedActionPreset =
+  | "none"
+  | "reload"
+  | "crank"
+  | "charge-mount"
+  | "carry-safe"
+  | "cart-brace"
+  | "dragon-breath"
+  | "shell-guard";
 
 export interface LinkedActorSemantics {
   visibleActor: boolean;
   combatEmitter: boolean;
   damageRouting: LinkedDamageRouting;
+  victoryRouting: LinkedVictoryRouting;
+  moveMode: LinkedMoveMode;
+  cleanupPolicy: LinkedCleanupPolicy;
+  detachOnParentDeath: boolean;
   targetable: boolean;
-  countsTowardVictory: boolean;
+  actionPreset: LinkedActionPreset;
+  impactOrigin?: boolean;
 }
 
 export interface LinkedActorSpec {
@@ -66,24 +83,36 @@ const parentDamage: LinkedActorSemantics = {
   visibleActor: true,
   combatEmitter: false,
   damageRouting: "parent",
+  victoryRouting: "parent",
+  moveMode: "anchored-parent",
+  cleanupPolicy: "remove-with-parent",
+  detachOnParentDeath: false,
   targetable: false,
-  countsTowardVictory: false,
+  actionPreset: "none",
 };
 
 const attachmentOnly: LinkedActorSemantics = {
   visibleActor: true,
   combatEmitter: false,
   damageRouting: "parent",
+  victoryRouting: "parent",
+  moveMode: "anchored-parent",
+  cleanupPolicy: "remove-with-parent",
+  detachOnParentDeath: false,
   targetable: false,
-  countsTowardVictory: false,
+  actionPreset: "none",
 };
 
 const emittingCrew: LinkedActorSemantics = {
   visibleActor: true,
   combatEmitter: true,
   damageRouting: "parent",
+  victoryRouting: "parent",
+  moveMode: "anchored-parent",
+  cleanupPolicy: "remove-with-parent",
+  detachOnParentDeath: false,
   targetable: false,
-  countsTowardVictory: false,
+  actionPreset: "none",
 };
 
 export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
@@ -97,7 +126,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "mount",
         offset: new Vector3(0, 0, 0),
         syncFacing: true,
-        semantics: parentDamage,
+        semantics: { ...parentDamage, actionPreset: "charge-mount", impactOrigin: true },
         visual: visual("none", "none", "none", "mount_horse", {
           proportions: { scale: 1.3, bulk: 1.05, legLength: 0.78 },
           materialPreset: "secret_royal",
@@ -118,7 +147,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "mount",
         offset: new Vector3(0, 0, 0),
         syncFacing: true,
-        semantics: parentDamage,
+        semantics: { ...parentDamage, actionPreset: "charge-mount", impactOrigin: true },
         visual: visual("none", "none", "none", "raptor_mount", {
           proportions: { scale: 1.18, bulk: 0.9, legLength: 0.82 },
           materialPreset: "secret_beast",
@@ -139,7 +168,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "crew",
         offset: new Vector3(0.18, 0, -0.5),
         syncFacing: true,
-        semantics: emittingCrew,
+        semantics: { ...emittingCrew, actionPreset: "cart-brace" },
         visual: visual("none", "hood", "none", "none", {
           proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_bandit",
@@ -153,7 +182,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "crew",
         offset: new Vector3(-0.2, 0, -0.48),
         syncFacing: true,
-        semantics: parentDamage,
+        semantics: { ...parentDamage, actionPreset: "reload" },
         visual: visual("bomb", "bandana", "none", "none", {
           proportions: { scale: 0.66, bulk: 0.78, headSize: 1.0 },
           materialPreset: "secret_bandit",
@@ -173,7 +202,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "crew",
         offset: new Vector3(-0.22, 0, -0.18),
         syncFacing: true,
-        semantics: emittingCrew,
+        semantics: { ...emittingCrew, actionPreset: "crank" },
         visual: visual("none", "captain_hat", "none", "none", {
           proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_pirate",
@@ -187,7 +216,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "crew",
         offset: new Vector3(0.22, 0, -0.18),
         syncFacing: true,
-        semantics: parentDamage,
+        semantics: { ...parentDamage, actionPreset: "reload" },
         visual: visual("none", "bandana", "none", "none", {
           proportions: { scale: 0.66, bulk: 0.78, headSize: 1.0 },
           materialPreset: "secret_pirate",
@@ -207,7 +236,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "attachment",
         offset: new Vector3(0, 0, 0),
         syncFacing: true,
-        semantics: attachmentOnly,
+        semantics: { ...attachmentOnly, actionPreset: "carry-safe" },
         visual: visual("none", "none", "none", "safe_bundle", {
           proportions: { scale: 0.95, bulk: 0.95 },
           materialPreset: "secret_bandit",
@@ -222,7 +251,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "crew",
         offset: new Vector3(-0.46, 0, -0.08),
         syncFacing: true,
-        semantics: emittingCrew,
+        semantics: { ...emittingCrew, actionPreset: "cart-brace" },
         visual: visual("flintlock", "bandana", "none", "none", {
           proportions: { scale: 0.78, bulk: 0.82, headSize: 1.0 },
           materialPreset: "secret_bandit",
@@ -243,7 +272,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "attachment",
         offset: new Vector3(0, 0, 0),
         syncFacing: true,
-        semantics: attachmentOnly,
+        semantics: { ...attachmentOnly, actionPreset: "cart-brace" },
         visual: visual("none", "none", "none", "dragon_cart", {
           proportions: { scale: 1.18, bulk: 1.0 },
           materialPreset: "secret_beast",
@@ -262,6 +291,8 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         semantics: {
           ...attachmentOnly,
           combatEmitter: true,
+          actionPreset: "dragon-breath",
+          impactOrigin: true,
         },
         visual: visual("none", "none", "none", "dragon_cart", {
           proportions: { scale: 0.7, bulk: 0.65 },
@@ -283,7 +314,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "attachment",
         offset: new Vector3(0, 0, 0),
         syncFacing: true,
-        semantics: attachmentOnly,
+        semantics: { ...attachmentOnly, actionPreset: "shell-guard" },
         visual: visual("none", "none", "none", "clam_shell", {
           proportions: { scale: 1.0, bulk: 1.0 },
           materialPreset: "secret_holy",

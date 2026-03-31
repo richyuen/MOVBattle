@@ -11,7 +11,11 @@ export interface ScenarioAssertion {
     | "comparison-focus"
     | "linked-role-count"
     | "linked-relation-count"
-    | "victory-semantics";
+    | "victory-semantics"
+    | "emitter-owner"
+    | "damage-owner"
+    | "cleanup-policy"
+    | "no-duplicate-standins";
   value: string;
 }
 
@@ -66,6 +70,10 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "linked-relation-count", value: "secret.bank_robbers:attachment=1" },
       { kind: "linked-relation-count", value: "secret.bank_robbers:crew=1" },
+      { kind: "emitter-owner", value: "secret.bank_robbers:parent+flank robber" },
+      { kind: "damage-owner", value: "secret.bank_robbers:safe=parent,flank robber=parent" },
+      { kind: "cleanup-policy", value: "secret.bank_robbers:all linked roles remove with parent" },
+      { kind: "no-duplicate-standins", value: "secret.bank_robbers" },
       { kind: "units-present", value: "secret.bank_robbers" },
       { kind: "comparison-focus", value: "Text state should expose safe and robber crew composition." },
     ],
@@ -80,6 +88,10 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "linked-relation-count", value: "secret.bomb_cannon:crew=2" },
       { kind: "victory-semantics", value: "secret.bomb_cannon crew should not count as separate victory actors." },
+      { kind: "emitter-owner", value: "secret.bomb_cannon:gunner" },
+      { kind: "damage-owner", value: "secret.bomb_cannon:gunner=parent,loader=parent" },
+      { kind: "cleanup-policy", value: "secret.bomb_cannon:all linked roles remove with parent" },
+      { kind: "no-duplicate-standins", value: "secret.bomb_cannon" },
       { kind: "units-present", value: "secret.bomb_cannon" },
       { kind: "comparison-focus", value: "Text state should expose gunner and loader composition." },
     ],
@@ -94,6 +106,10 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "linked-relation-count", value: "secret.gatling_gun:crew=2" },
       { kind: "victory-semantics", value: "secret.gatling_gun crew should not count as separate victory actors." },
+      { kind: "emitter-owner", value: "secret.gatling_gun:crank gunner" },
+      { kind: "damage-owner", value: "secret.gatling_gun:crank gunner=parent,loader=parent" },
+      { kind: "cleanup-policy", value: "secret.gatling_gun:all linked roles remove with parent" },
+      { kind: "no-duplicate-standins", value: "secret.gatling_gun" },
       { kind: "units-present", value: "secret.gatling_gun" },
       { kind: "comparison-focus", value: "Text state should expose crank gunner and loader composition." },
     ],
@@ -110,6 +126,10 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "linked-relation-count", value: "secret.cavalry:mount=1" },
       { kind: "linked-relation-count", value: "secret.raptor_rider:mount=1" },
+      { kind: "emitter-owner", value: "secret.cavalry:parent impact via horse, secret.raptor_rider:parent impact via raptor" },
+      { kind: "damage-owner", value: "secret.cavalry:horse=parent, secret.raptor_rider:raptor=parent" },
+      { kind: "cleanup-policy", value: "secret.cavalry+secret.raptor_rider:mount removes with parent" },
+      { kind: "no-duplicate-standins", value: "secret.cavalry+secret.raptor_rider" },
       { kind: "comparison-focus", value: "Mounted units should expose rider and mount links instead of reading like plain single bodies." },
     ],
   },
@@ -125,6 +145,10 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "linked-relation-count", value: "secret.wheelbarrow_dragon:attachment=1" },
       { kind: "linked-relation-count", value: "secret.wheelbarrow_dragon:mount=1" },
+      { kind: "emitter-owner", value: "secret.wheelbarrow_dragon:dragon head" },
+      { kind: "damage-owner", value: "secret.wheelbarrow_dragon:cart=parent,dragon head=parent" },
+      { kind: "cleanup-policy", value: "secret.wheelbarrow_dragon:all linked roles remove with parent" },
+      { kind: "no-duplicate-standins", value: "secret.wheelbarrow_dragon" },
       { kind: "comparison-focus", value: "Wheelbarrow Dragon should expose cart, driver, and dragon-head composition." },
     ],
   },
@@ -139,6 +163,10 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "linked-relation-count", value: "secret.clams:attachment=1" },
+      { kind: "emitter-owner", value: "secret.clams:parent only; summoned bomb divers remain separate spawned children" },
+      { kind: "damage-owner", value: "secret.clams:clam shell=parent" },
+      { kind: "cleanup-policy", value: "secret.clams:clam shell removes with parent, summons remain spawned children" },
+      { kind: "no-duplicate-standins", value: "secret.clams" },
       { kind: "comparison-focus", value: "CLAMS should expose an anchored shell attachment that remains distinct from summoned bomb divers." },
     ],
   },
