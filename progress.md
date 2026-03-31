@@ -89,3 +89,16 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Composite units now expose persistent crew/mount/attachment identity in text state, but they are still primarily single combat actors with linked metadata rather than fully independent persistent crew AI.
 - `ICONIC_ACCEPTANCE_BATTLES.md` remains prose-first; the actual executable source of truth is now `web/src/testing/scenarios.ts`.
 - `dark_peasant` and `super_peasant` are now deterministic to validate, but still remain approximations rather than exact TABS reproductions.
+- 2026-03-31: Anchored linked-actor Secret composite pass implemented.
+- Added `web/src/units/linkedActorPresets.ts` as the Secret-first anchored composition source of truth for `cavalry`, `raptor_rider`, `bomb_cannon`, `gatling_gun`, `bank_robbers`, `wheelbarrow_dragon`, and `clams`, including role labels, offsets, damage routing, combat-emitter semantics, and duplication-suppression rules.
+- Extended `web/src/units/runtimeUnit.ts` with anchored linked-actor state, parent-routed damage, targetability flags, combat-emitter selection, role labels, and parent-synced offsets/facing so composite children are now real runtime actors instead of metadata-only descriptors.
+- Updated `web/src/main.ts` and `web/src/units/unitFactory.ts` so Secret composite parents spawn anchored linked actors automatically, suppress duplicated parent specials or decorative vehicle operators where needed, remove correctly as a tree in placement mode, rebuild correctly on `playAgain()`, and expose richer composite structure in `render_game_to_text()`.
+- Updated `web/src/combat/simulationSystem.ts` so anchored linked actors do not run independent AI, cannot be targeted when marked non-targetable, and can act as the visual/combat emission origin for parent attacks such as `Bomb Cannon`, `Gatling Gun`, `Bank Robbers`, and `Wheelbarrow Dragon`.
+- Updated `web/src/units/vehicleBuilder.ts` with optional operator suppression for Secret artillery so real linked gunners/loaders do not render on top of the old decorative stand-ins.
+- Expanded `web/src/testing/scenarios.ts` and `web/COMPOSITE_ACCEPTANCE_BATTLES.md` with structural composite assertions and a dedicated `composite_clams` scenario.
+- Validation:
+- `npm run build` passes in `web/`.
+- Direct Playwright scenario runs against the local Vite server confirmed anchored `mount` / `crew` / `attachment` units in text state for `Cavalry`, `Raptor Rider`, `Bomb Cannon`, `Gatling Gun`, `Bank Robbers`, and `Wheelbarrow Dragon`, with child actors marked non-targetable and combat-emitter roles appearing where expected.
+- Remaining gaps after the anchored linked-actor pass:
+- These Secret composites now have real anchored runtime actors, but most crew and mounts still route damage and victory semantics through the parent instead of acting as fully independent AI bodies.
+- Non-Secret composites such as `legacy.tank`, `renaissance.da_vinci_tank`, and `dynasty.hwacha` still remain on the earlier metadata-oriented composition path.

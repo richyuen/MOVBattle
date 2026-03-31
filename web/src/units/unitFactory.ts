@@ -9,6 +9,12 @@ import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./uni
 import { attachProps } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
+import { getLinkedActorPreset } from "./linkedActorPresets";
+
+export interface SpawnVisualOptions {
+  visualOverride?: UnitVisualConfig;
+  suppressDecorativeOperators?: boolean;
+}
 
 export class UnitFactory {
   private _scene: Scene;
@@ -17,9 +23,15 @@ export class UnitFactory {
     this._scene = scene;
   }
 
-  spawn(definition: UnitDefinition, team: number, position: Vector3): RuntimeUnit {
+  spawn(
+    definition: UnitDefinition,
+    team: number,
+    position: Vector3,
+    options: SpawnVisualOptions = {},
+  ): RuntimeUnit {
     const ragdoll = getRagdollProfile(definition.ragdollProfileId);
-    const visual = getUnitVisual(definition.id);
+    const visual = options.visualOverride ?? getUnitVisual(definition.id);
+    const linkedPreset = getLinkedActorPreset(definition.id);
 
     // Compute body color: blend faction + team
     const factionColor = FACTION_COLORS[definition.faction] ?? new Color3(0.5, 0.5, 0.5);
@@ -31,7 +43,9 @@ export class UnitFactory {
 
     if (isVehicleUnit(definition.id)) {
       // Build as vehicle/equipment instead of humanoid
-      body = buildVehicleBody(this._scene, definition.id, bodyColor);
+      body = buildVehicleBody(this._scene, definition.id, bodyColor, {
+        showOperators: options.suppressDecorativeOperators ? false : true,
+      });
     } else {
       // Build articulated humanoid body
       body = buildArticulatedBody(
@@ -52,8 +66,10 @@ export class UnitFactory {
 
     // Tag all meshes for raycasting
     const unit = new RuntimeUnit(definition, team, body, propMeshes, visual, ragdoll);
-    for (const part of definition.compositionParts ?? []) {
-      unit.addLinkedDescriptor(part.relation, part.label, true);
+    if (!linkedPreset) {
+      for (const part of definition.compositionParts ?? []) {
+        unit.addLinkedDescriptor(part.relation, part.label, true);
+      }
     }
 
     // Set animation style for special units
@@ -61,7 +77,7 @@ export class UnitFactory {
       unit.animator.attackStyle = "mammoth";
       unit.animator.walkStyle = "quadruped";
     }
-    for (const mesh of body.allMeshes) {
+    for (const mesh of [...body.allMeshes, ...propMeshes]) {
       mesh.metadata = { runtimeUnit: unit };
     }
 

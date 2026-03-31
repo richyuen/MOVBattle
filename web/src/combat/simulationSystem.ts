@@ -8,12 +8,15 @@ import {
 import { ProjectileSystem, type ProjectileShape } from "./projectileSystem";
 import { VisualEffects } from "./visualEffects";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
+import type { UnitVisualConfig } from "../units/unitVisuals";
 
 export interface SpawnUnitOptions {
   role?: RuntimeSpawnRole;
   countsTowardVictory?: boolean;
   linkedParent?: RuntimeUnit;
   linkedRelation?: LinkedRelation;
+  visualOverride?: UnitVisualConfig;
+  suppressDecorativeOperators?: boolean;
 }
 
 function hasAbility(unit: RuntimeUnit, ability: string): boolean {
@@ -126,7 +129,7 @@ export class SimulationSystem {
     }
 
     for (const unit of this._units) {
-      if (unit.isDead) continue;
+      if (unit.isDead || unit.isAnchoredActor) continue;
 
       const nextDecision = this._nextDecisionAt.get(unit) ?? 0;
       if (now < nextDecision) continue;
@@ -256,8 +259,13 @@ export class SimulationSystem {
     const preset = getBehaviorPreset(attacker);
     const cooldownMultiplier = attacker.definition.cooldownMultiplier ?? 1;
     attacker.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
+    const emitter = attacker.getAttackEmitter();
+    const attackOrigin = emitter.position;
+    if (emitter !== attacker) {
+      emitter.triggerAttackVisual(Math.max(0.08, attackProfile.cooldown * cooldownMultiplier * 0.28));
+    }
 
-    let impulseDir = target.position.subtract(attacker.position);
+    let impulseDir = target.position.subtract(attackOrigin);
     if (impulseDir.lengthSquared() > 0.0001) {
       impulseDir.normalize();
     } else {
@@ -390,9 +398,9 @@ export class SimulationSystem {
 
     if (preset === "iconic_zeus") {
       if (this.visualEffects) {
-        this.visualEffects.spawnLightning(attacker.position, target.position);
-        this.visualEffects.spawnLightning(attacker.position, target.position.add(new Vector3(0.8, 0, 0.6)));
-        this.visualEffects.spawnLightning(attacker.position, target.position.add(new Vector3(-0.8, 0, -0.6)));
+        this.visualEffects.spawnLightning(attackOrigin, target.position);
+        this.visualEffects.spawnLightning(attackOrigin, target.position.add(new Vector3(0.8, 0, 0.6)));
+        this.visualEffects.spawnLightning(attackOrigin, target.position.add(new Vector3(-0.8, 0, -0.6)));
       }
       this._applyDirectOrSplash(target, damage * 1.12, Math.max(3.3, splashRadius + 1.1), attacker.team, knockback.scale(1.95 * controlStrength));
       return;
@@ -400,8 +408,8 @@ export class SimulationSystem {
 
     if (preset === "iconic_thor") {
       if (this.visualEffects) {
-        this.visualEffects.spawnLightning(attacker.position, target.position);
-        this.visualEffects.spawnSmokePuff(attacker.position);
+        this.visualEffects.spawnLightning(attackOrigin, target.position);
+        this.visualEffects.spawnSmokePuff(attackOrigin);
       }
       this._applyDirectOrSplash(target, damage * 1.22, Math.max(2.4, splashRadius + 0.5), attacker.team, knockback.scale(2.15 * controlStrength));
       return;
@@ -409,7 +417,7 @@ export class SimulationSystem {
 
     if (abilities.has("lightning_strike")) {
       if (this.visualEffects) {
-        this.visualEffects.spawnLightning(attacker.position, target.position);
+        this.visualEffects.spawnLightning(attackOrigin, target.position);
       }
       this._applyDirectOrSplash(target, damage, splashRadius > 0 ? splashRadius : 2.2, attacker.team, knockback.scale(1.4));
       if (abilities.has("freeze")) {
@@ -507,12 +515,12 @@ export class SimulationSystem {
     if (attackProfile.type === AttackType.Ranged || attackProfile.type === AttackType.Siege) {
       if (this.projectileSystem) {
         if (isFirearmUnit(attacker)) {
-          this.projectileSystem.spawnMuzzleFlash(attacker.position, impulseDir);
+          this.projectileSystem.spawnMuzzleFlash(attackOrigin, impulseDir);
           this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
         } else {
           this.projectileSystem.spawnProjectile(
             resolveProjectileShape(attacker, attackProfile) ?? "arrow",
-            attacker.position,
+            attackOrigin,
             target,
             damage,
             knockback,
@@ -562,12 +570,14 @@ export class SimulationSystem {
   private _fireBurst(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, splashRadius: number, shots: number): void {
     const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
     const perShotDamage = Math.max(1, Math.ceil(damage / shots));
+    const emitter = attacker.getAttackEmitter();
+    const attackOrigin = emitter.position;
     for (let i = 0; i < shots; i++) {
       if (this.projectileSystem && !isFirearmUnit(attacker)) {
         const offset = new Vector3((Math.random() - 0.5) * 0.25, Math.random() * 0.2, (Math.random() - 0.5) * 0.15);
         this.projectileSystem.spawnProjectile(
           projectileShape,
-          attacker.position,
+          attackOrigin,
           target,
           perShotDamage,
           knockback.scale(0.4),
@@ -579,8 +589,8 @@ export class SimulationSystem {
         );
       } else {
         if (this.projectileSystem && isFirearmUnit(attacker)) {
-          const dir = target.position.subtract(attacker.position).normalize();
-          this.projectileSystem.spawnMuzzleFlash(attacker.position, dir);
+          const dir = target.position.subtract(attackOrigin).normalize();
+          this.projectileSystem.spawnMuzzleFlash(attackOrigin, dir);
         }
         target.applyDamage(perShotDamage, knockback.scale(0.35));
       }
@@ -590,9 +600,10 @@ export class SimulationSystem {
   private _fireShotgun(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3): void {
     const pellets = 6;
     const perPellet = Math.max(1, Math.ceil(damage / pellets));
+    const attackOrigin = attacker.getAttackEmitter().position;
     if (this.projectileSystem) {
-      const dir = target.position.subtract(attacker.position).normalize();
-      this.projectileSystem.spawnMuzzleFlash(attacker.position, dir);
+      const dir = target.position.subtract(attackOrigin).normalize();
+      this.projectileSystem.spawnMuzzleFlash(attackOrigin, dir);
     }
 
     for (const unit of this._units) {
@@ -607,6 +618,7 @@ export class SimulationSystem {
   private _fireVolley(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, count: number): void {
     const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
     const perProjectile = Math.max(1, Math.ceil(damage / count));
+    const attackOrigin = attacker.getAttackEmitter().position;
 
     if (!this.projectileSystem) {
       this._applyDirectOrSplash(target, damage, 1.8, attacker.team, knockback.scale(0.65));
@@ -617,7 +629,7 @@ export class SimulationSystem {
       const spread = new Vector3((Math.random() - 0.5) * 0.9, Math.random() * 0.5, (Math.random() - 0.5) * 0.45);
       this.projectileSystem.spawnProjectile(
         projectileShape,
-        attacker.position,
+        attackOrigin,
         target,
         perProjectile,
         knockback.scale(0.35),
@@ -645,6 +657,7 @@ export class SimulationSystem {
       delayStep: number;
     },
   ): void {
+    const attackOrigin = attacker.getAttackEmitter().position;
     if (!this.projectileSystem) {
       this._applyDirectOrSplash(target, damage, Math.max(0, options.splashRadius), attacker.team, knockback);
       return;
@@ -659,7 +672,7 @@ export class SimulationSystem {
       );
       this.projectileSystem.spawnProjectile(
         options.projectileShape,
-        attacker.position,
+        attackOrigin,
         target,
         perProjectile,
         knockback.scale(0.42),
@@ -684,7 +697,7 @@ export class SimulationSystem {
   ): void {
     const radiusSq = radius * radius;
     for (const unit of this._units) {
-      if (unit.isDead || unit.team === attackerTeam) continue;
+      if (unit.isDead || unit.team === attackerTeam || !unit.isTargetable) continue;
       if (unit.position.subtract(center).lengthSquared() > radiusSq) continue;
       unit.applyDamage(damage, impulse);
       if (slowMultiplier !== undefined && slowDuration !== undefined) {
@@ -724,7 +737,7 @@ export class SimulationSystem {
   private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3): void {
     const radiusSq = radius * radius;
     for (const unit of this._units) {
-      if (unit.isDead || unit.team === attackerTeam) continue;
+      if (unit.isDead || unit.team === attackerTeam || !unit.isTargetable) continue;
       if (unit.position.subtract(center).lengthSquared() > radiusSq) continue;
       unit.applyDamage(damage, impulse);
     }
@@ -735,7 +748,7 @@ export class SimulationSystem {
     let bestScore = Infinity;
 
     for (const candidate of this._units) {
-      if (candidate.isDead || candidate.team === requester.team) continue;
+      if (candidate.isDead || candidate.team === requester.team || !candidate.isTargetable) continue;
       const score = this._scoreCandidate(requester, candidate, aiProfile.targetPriority);
       if (score < bestScore) {
         bestScore = score;
@@ -751,7 +764,7 @@ export class SimulationSystem {
     let bestScore = Infinity;
 
     for (const candidate of this._units) {
-      if (candidate.isDead || candidate.team !== requester.team || candidate === requester) continue;
+      if (candidate.isDead || candidate.team !== requester.team || candidate === requester || !candidate.isTargetable) continue;
       if (candidate.currentHealth >= candidate.definition.maxHealth) continue;
       const score = this._scoreCandidate(requester, candidate, aiProfile.targetPriority);
       if (score < bestScore) {

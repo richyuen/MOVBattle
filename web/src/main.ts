@@ -18,6 +18,8 @@ import { ProjectileSystem } from "./combat/projectileSystem";
 import { VisualEffects } from "./combat/visualEffects";
 import { UnitFactory } from "./units/unitFactory";
 import { RuntimeUnit } from "./units/runtimeUnit";
+import { getLinkedActorPreset, type LinkedActorSpec } from "./units/linkedActorPresets";
+import { getUnitVisual } from "./units/unitVisuals";
 import { getScenario, listScenarioNames, type ScenarioSpec } from "./testing/scenarios";
 
 import { TribalSandboxMapBuilder, getPlacementZones } from "./map/mapBuilder";
@@ -82,6 +84,93 @@ let worldTimeSeconds = 0;
 let activeScenario: ScenarioSpec | null = null;
 RuntimeUnit.timeNowSeconds = () => worldTimeSeconds;
 
+function rotateOffsetByYaw(offset: Vector3, yaw: number): Vector3 {
+  const sin = Math.sin(yaw);
+  const cos = Math.cos(yaw);
+  return new Vector3(
+    offset.x * cos + offset.z * sin,
+    offset.y,
+    -offset.x * sin + offset.z * cos,
+  );
+}
+
+function getCompositeRoot(unit: RuntimeUnit): RuntimeUnit {
+  let current = unit;
+  while (current.linkedParent) {
+    current = current.linkedParent;
+  }
+  return current;
+}
+
+function collectCompositeUnits(root: RuntimeUnit, bucket = new Set<RuntimeUnit>()): Set<RuntimeUnit> {
+  if (bucket.has(root)) return bucket;
+  bucket.add(root);
+  for (const child of root.linkedChildren) {
+    collectCompositeUnits(child, bucket);
+  }
+  return bucket;
+}
+
+function removeRuntimeUnitTree(rootUnit: RuntimeUnit, refund = false): void {
+  const root = getCompositeRoot(rootUnit);
+  const units = [...collectCompositeUnits(root)];
+  for (const unit of units) {
+    simulation.unregisterUnit(unit);
+  }
+  for (const unit of units) {
+    const idx = placedUnits.indexOf(unit);
+    if (idx >= 0) placedUnits.splice(idx, 1);
+  }
+  for (const unit of [...units].reverse()) {
+    unit.dispose();
+  }
+  if (refund) {
+    budgetSystem.refund(root.team, root.definition.cost);
+    updateBudgetDisplay();
+  }
+}
+
+function spawnLinkedActorsForParent(parent: RuntimeUnit): void {
+  const preset = getLinkedActorPreset(parent.definition.id);
+  if (!preset) return;
+
+  for (const actor of preset.actors) {
+    spawnLinkedActor(parent, actor, preset.parentRoleLabel);
+  }
+}
+
+function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRoleLabel?: string): RuntimeUnit | null {
+  const initialPosition = parent.position.add(rotateOffsetByYaw(actor.offset, parent.body.root.rotation.y));
+  const child = spawnRuntimeUnit(parent.definition.id, parent.team, initialPosition, {
+    role: actor.relation === "attachment" ? "attachment" : actor.relation,
+    countsTowardVictory: actor.semantics.countsTowardVictory,
+    linkedParent: parent,
+    linkedRelation: actor.relation,
+    visualOverride: actor.visual,
+    suppressDecorativeOperators: true,
+  });
+  if (!child) return null;
+
+  child.configureAnchoredLink({
+    roleLabel: actor.label,
+    parentRoleLabel,
+    offset: actor.offset,
+    syncFacing: actor.syncFacing,
+    targetable: actor.semantics.targetable,
+    combatEmitter: actor.semantics.combatEmitter,
+    damageRouting: actor.semantics.damageRouting,
+  });
+  parent.detachLinkedChild(child);
+  parent.attachLinkedChild(child, actor.relation);
+  if (actor.hideBaseBody) {
+    child.setBaseBodyVisible(false);
+  }
+  if (!actor.semantics.targetable) {
+    child.setHealthBarVisible(false);
+  }
+  return child;
+}
+
 function spawnRuntimeUnit(
   unitId: string,
   team: number,
@@ -90,7 +179,14 @@ function spawnRuntimeUnit(
 ): RuntimeUnit | null {
   const def = getUnit(unitId);
   if (!def) return null;
-  const unit = unitFactory.spawn(def, team, position);
+  const preset = !options.linkedParent ? getLinkedActorPreset(def.id) : undefined;
+  const visualOverride = options.visualOverride ?? (
+    preset?.suppressParentSpecial ? { ...getUnitVisual(def.id), special: "none" as const } : undefined
+  );
+  const unit = unitFactory.spawn(def, team, position, {
+    visualOverride,
+    suppressDecorativeOperators: options.suppressDecorativeOperators ?? Boolean(preset),
+  });
   const role = options.role ?? "placed";
   const countsTowardVictory = options.countsTowardVictory ?? (role === "placed" || role === "summoned");
   unit.setSpawnRole(role, countsTowardVictory);
@@ -99,6 +195,12 @@ function spawnRuntimeUnit(
   }
   placedUnits.push(unit);
   simulation.registerUnit(unit);
+  if (preset && !options.linkedParent) {
+    if (preset.disableParentEmitter) {
+      unit.setPrimaryEmitterEnabled(false);
+    }
+    spawnLinkedActorsForParent(unit);
+  }
   return unit;
 }
 
@@ -301,15 +403,10 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
   if (!meta || !meta.runtimeUnit) return;
 
   const ru = meta.runtimeUnit as RuntimeUnit;
-  if (ru.isDead) return;
+  const root = getCompositeRoot(ru);
+  if (root.isDead) return;
 
-  // Refund and remove
-  simulation.unregisterUnit(ru);
-  const idx = placedUnits.indexOf(ru);
-  if (idx >= 0) placedUnits.splice(idx, 1);
-  budgetSystem.refund(ru.team, ru.definition.cost);
-  ru.dispose();
-  updateBudgetDisplay();
+  removeRuntimeUnitTree(root, true);
 }
 
 // ─── Battle lifecycle ───
@@ -351,9 +448,9 @@ function resetBattle(): void {
   projectileSystem.dispose();
   visualEffects.dispose();
 
-  for (const unit of placedUnits) {
-    simulation.unregisterUnit(unit);
-    unit.dispose();
+  const roots = placedUnits.filter((unit) => !unit.linkedParent);
+  for (const unit of roots) {
+    removeRuntimeUnitTree(unit);
   }
   placedUnits.length = 0;
 
@@ -415,7 +512,7 @@ function playAgain(): void {
 
   for (let i = placedUnits.length - 1; i >= 0; i--) {
     const unit = placedUnits[i];
-    if (unit.spawnRole !== "summoned") continue;
+    if (unit.spawnRole !== "summoned" && !unit.linkedParent) continue;
     simulation.unregisterUnit(unit);
     unit.dispose();
     placedUnits.splice(i, 1);
@@ -423,8 +520,10 @@ function playAgain(): void {
 
   // Reset all units back to their original positions
   for (const unit of placedUnits) {
+    if (unit.linkedParent) continue;
     unit.resetToSpawn();
     simulation.registerUnit(unit);
+    spawnLinkedActorsForParent(unit);
   }
 
   // Rebuild budget from scratch, then subtract placed unit costs
@@ -432,6 +531,7 @@ function playAgain(): void {
     BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,
   );
   for (const unit of placedUnits) {
+    if (unit.linkedParent) continue;
     budgetSystem.trySpend(unit.team, unit.definition.cost);
   }
 
@@ -581,6 +681,12 @@ function renderGameToText(): string {
         name: unit.definition.displayName,
         team: unit.team,
         role: unit.spawnRole,
+        compositeRole: unit.linkedRoleLabel,
+        linkedParentRole: unit.linkedParentRoleLabel,
+        anchored: unit.isAnchoredActor,
+        targetable: unit.isTargetable,
+        combatEmitter: unit.isCombatEmitter,
+        countsTowardVictory: unit.countsTowardVictory,
         linkedParentId: unit.linkedParent?.runtimeId ?? null,
         linkedRelation: unit.linkedRelation,
         linkedEntities: unit.linkedEntities,

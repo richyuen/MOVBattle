@@ -38,6 +38,7 @@ export function buildVehicleBody(
   scene: Scene,
   unitId: string,
   bodyColor: Color3,
+  options: { showOperators?: boolean } = {},
 ): ArticulatedBody {
   switch (unitId) {
     case "medieval.catapult": return buildCatapult(scene, bodyColor);
@@ -50,8 +51,8 @@ export function buildVehicleBody(
     case "tribal.mammoth": return buildMammoth(scene, bodyColor);
     case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor);
     case "legacy.tank": return buildLegacyTank(scene, bodyColor);
-    case "secret.bomb_cannon": return buildBombCannon(scene, bodyColor);
-    case "secret.gatling_gun": return buildGatlingGun(scene, bodyColor);
+    case "secret.bomb_cannon": return buildBombCannon(scene, bodyColor, options);
+    case "secret.gatling_gun": return buildGatlingGun(scene, bodyColor, options);
     case "good.sacred_elephant": return buildMammoth(scene, bodyColor);
     default: return buildCatapult(scene, bodyColor);
   }
@@ -234,8 +235,8 @@ function buildCatapult(scene: Scene, color: Color3): ArticulatedBody {
   return wrapAsBody(scene, root, base, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.8, 0.45, 0.8));
 }
 
-function buildBombCannon(scene: Scene, color: Color3): ArticulatedBody {
-  const body = buildCannon(scene, color);
+function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
+  const body = buildCannon(scene, color, options);
   const root = body.root;
   const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 1.0, diameter: 0.26, tessellation: 16 }, scene);
   barrel.position.set(0, 0.86, 0.4);
@@ -251,7 +252,7 @@ function buildBombCannon(scene: Scene, color: Color3): ArticulatedBody {
   return body;
 }
 
-function buildGatlingGun(scene: Scene, color: Color3): ArticulatedBody {
+function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("gatling_root", scene);
   const allMeshes: Mesh[] = [];
   const wood = makeMat(scene, new Color3(0.45, 0.32, 0.18));
@@ -297,9 +298,19 @@ function buildGatlingGun(scene: Scene, color: Color3): ArticulatedBody {
   crank.material = metal;
   allMeshes.push(crank);
 
-  const operator = addOperator(scene, root, allMeshes, -0.22, 0.78, -0.18, color);
-  addOperator(scene, root, allMeshes, 0.22, 0.78, -0.18, color);
-  return wrapAsBody(scene, root, chassis, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.8, 0.48, 0.84));
+  let operator: VehicleOperator | null = null;
+  if (options.showOperators !== false) {
+    operator = addOperator(scene, root, allMeshes, -0.22, 0.78, -0.18, color);
+    addOperator(scene, root, allMeshes, 0.22, 0.78, -0.18, color);
+  }
+  return wrapAsBody(
+    scene,
+    root,
+    chassis,
+    allMeshes,
+    operator?.headMesh,
+    makeBodyMetrics(operator?.headTopY ?? 1.62, 0.8, 0.48, 0.84),
+  );
 }
 
 // ═══════════════════════ BALLISTA ═══════════════════════
@@ -469,7 +480,7 @@ function buildHwacha(scene: Scene, color: Color3): ArticulatedBody {
 
 // ═══════════════════════ CANNON ═══════════════════════
 // Fires FORWARD (+Z). Barrel points along +Z. Trail extends back (-Z).
-function buildCannon(scene: Scene, color: Color3): ArticulatedBody {
+function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
   const wood = makeMat(scene, new Color3(0.45, 0.3, 0.15));
@@ -513,9 +524,19 @@ function buildCannon(scene: Scene, color: Color3): ArticulatedBody {
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
 
   // Operator behind cannon (-Z)
-  const operator = addOperator(scene, root, allMeshes, 0.2, 0.57, -0.6, color);
+  let operator: VehicleOperator | null = null;
+  if (options.showOperators !== false) {
+    operator = addOperator(scene, root, allMeshes, 0.2, 0.57, -0.6, color);
+  }
 
-  return wrapAsBody(scene, root, barrel, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.7, 0.4, 0.68));
+  return wrapAsBody(
+    scene,
+    root,
+    barrel,
+    allMeshes,
+    operator?.headMesh,
+    makeBodyMetrics(operator?.headTopY ?? 1.34, 0.7, 0.4, 0.68),
+  );
 }
 
 // ═══════════════════════ DA VINCI TANK ═══════════════════════

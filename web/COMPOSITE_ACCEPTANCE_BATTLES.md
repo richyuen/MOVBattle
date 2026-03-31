@@ -5,3 +5,4 @@
 | Gatling Gun crew check | `composite_gatling_gun` | Text state should expose crank gunner and loader composition for the rapid-fire chassis |
 | Cavalry and Raptor Rider mount check | `composite_mounts` | Mounted units should expose rider and mount links rather than reading like single humanoid bodies |
 | Wheelbarrow Dragon composition check | `composite_wheelbarrow_dragon` | The unit should expose cart, driver, and dragon-head composition while preserving charge/fire identity |
+| CLAMS shell check | `composite_clams` | The unit should expose an anchored shell attachment that stays distinct from its summoned bomb divers |

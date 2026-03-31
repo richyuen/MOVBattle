@@ -5,7 +5,13 @@ export interface ScenarioUnitSpec {
 }
 
 export interface ScenarioAssertion {
-  kind: "units-present" | "mode-is" | "comparison-focus";
+  kind:
+    | "units-present"
+    | "mode-is"
+    | "comparison-focus"
+    | "linked-role-count"
+    | "linked-relation-count"
+    | "victory-semantics";
   value: string;
 }
 
@@ -58,6 +64,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { unitId: "secret.bank_robbers", team: 0, position: { x: -8, z: 0 } },
     ],
     assertions: [
+      { kind: "linked-relation-count", value: "secret.bank_robbers:attachment=1" },
+      { kind: "linked-relation-count", value: "secret.bank_robbers:crew=1" },
       { kind: "units-present", value: "secret.bank_robbers" },
       { kind: "comparison-focus", value: "Text state should expose safe and robber crew composition." },
     ],
@@ -70,6 +78,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { unitId: "secret.bomb_cannon", team: 0, position: { x: -8, z: 0 } },
     ],
     assertions: [
+      { kind: "linked-relation-count", value: "secret.bomb_cannon:crew=2" },
+      { kind: "victory-semantics", value: "secret.bomb_cannon crew should not count as separate victory actors." },
       { kind: "units-present", value: "secret.bomb_cannon" },
       { kind: "comparison-focus", value: "Text state should expose gunner and loader composition." },
     ],
@@ -82,6 +92,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { unitId: "secret.gatling_gun", team: 0, position: { x: -8, z: 0 } },
     ],
     assertions: [
+      { kind: "linked-relation-count", value: "secret.gatling_gun:crew=2" },
+      { kind: "victory-semantics", value: "secret.gatling_gun crew should not count as separate victory actors." },
       { kind: "units-present", value: "secret.gatling_gun" },
       { kind: "comparison-focus", value: "Text state should expose crank gunner and loader composition." },
     ],
@@ -96,6 +108,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { unitId: "wild_west.miner", team: 1, position: { x: 9, z: 0 } },
     ],
     assertions: [
+      { kind: "linked-relation-count", value: "secret.cavalry:mount=1" },
+      { kind: "linked-relation-count", value: "secret.raptor_rider:mount=1" },
       { kind: "comparison-focus", value: "Mounted units should expose rider and mount links instead of reading like plain single bodies." },
     ],
   },
@@ -109,7 +123,23 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { unitId: "medieval.squire", team: 1, position: { x: 7, z: 0 } },
     ],
     assertions: [
+      { kind: "linked-relation-count", value: "secret.wheelbarrow_dragon:attachment=1" },
+      { kind: "linked-relation-count", value: "secret.wheelbarrow_dragon:mount=1" },
       { kind: "comparison-focus", value: "Wheelbarrow Dragon should expose cart, driver, and dragon-head composition." },
+    ],
+  },
+  composite_clams: {
+    name: "composite_clams",
+    description: "Shell attachment and summon identity check for CLAMS.",
+    autoStart: true,
+    advanceMs: 2000,
+    units: [
+      { unitId: "secret.clams", team: 0, position: { x: -10, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 8, z: 0 } },
+    ],
+    assertions: [
+      { kind: "linked-relation-count", value: "secret.clams:attachment=1" },
+      { kind: "comparison-focus", value: "CLAMS should expose an anchored shell attachment that remains distinct from summoned bomb divers." },
     ],
   },
   bosses_dark_vs_super: {

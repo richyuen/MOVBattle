@@ -5,8 +5,9 @@ import type { ArticulatedBody } from "./bodyBuilder";
 import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 import type { FxPreset, UnitVisualConfig, VisualStateTag } from "./unitVisuals";
+import type { LinkedDamageRouting } from "./linkedActorPresets";
 
-export type RuntimeSpawnRole = "placed" | "summoned" | "crew" | "mount";
+export type RuntimeSpawnRole = "placed" | "summoned" | "crew" | "mount" | "attachment";
 export type LinkedRelation = "crew" | "mount" | "attachment" | "spawned-child";
 
 export interface LinkedEntityDescriptor {
@@ -64,6 +65,16 @@ export class RuntimeUnit {
   private _linkedRelation: LinkedRelation | null = null;
   private _linkedDescriptors: LinkedEntityDescriptor[] = [];
   private _linkedChildren = new Set<RuntimeUnit>();
+  private _anchoredOffset: Vector3 | null = null;
+  private _syncLinkedFacing = true;
+  private _linkedRoleLabel: string | null = null;
+  private _linkedParentRoleLabel: string | null = null;
+  private _isAnchoredActor = false;
+  private _isTargetable = true;
+  private _isCombatEmitter = true;
+  private _damageRouting: LinkedDamageRouting = "self";
+  private _primaryEmitterEnabled = true;
+  private _emitterCursor = 0;
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
@@ -82,6 +93,11 @@ export class RuntimeUnit {
   get linkedRelation(): LinkedRelation | null { return this._linkedRelation; }
   get linkedEntities(): readonly LinkedEntityDescriptor[] { return this._linkedDescriptors; }
   get linkedChildren(): readonly RuntimeUnit[] { return [...this._linkedChildren]; }
+  get isAnchoredActor(): boolean { return this._isAnchoredActor; }
+  get isTargetable(): boolean { return this._isTargetable; }
+  get isCombatEmitter(): boolean { return this._isAnchoredActor ? this._isCombatEmitter : this._primaryEmitterEnabled; }
+  get linkedRoleLabel(): string | null { return this._linkedRoleLabel; }
+  get linkedParentRoleLabel(): string | null { return this._linkedParentRoleLabel; }
 
   constructor(
     definition: UnitDefinition,
@@ -113,6 +129,40 @@ export class RuntimeUnit {
     this._countsTowardVictory = countsTowardVictory;
   }
 
+  setPrimaryEmitterEnabled(enabled: boolean): void {
+    this._primaryEmitterEnabled = enabled;
+  }
+
+  configureAnchoredLink(options: {
+    roleLabel: string;
+    parentRoleLabel?: string;
+    offset: Vector3;
+    syncFacing?: boolean;
+    targetable: boolean;
+    combatEmitter: boolean;
+    damageRouting: LinkedDamageRouting;
+  }): void {
+    this._isAnchoredActor = true;
+    this._linkedRoleLabel = options.roleLabel;
+    this._linkedParentRoleLabel = options.parentRoleLabel ?? null;
+    this._anchoredOffset = options.offset.clone();
+    this._syncLinkedFacing = options.syncFacing ?? true;
+    this._isTargetable = options.targetable;
+    this._isCombatEmitter = options.combatEmitter;
+    this._damageRouting = options.damageRouting;
+  }
+
+  setBaseBodyVisible(visible: boolean): void {
+    for (const mesh of this.body.allMeshes) {
+      mesh.isVisible = visible;
+    }
+  }
+
+  setHealthBarVisible(visible: boolean): void {
+    if (this.healthBarMesh) this.healthBarMesh.isVisible = visible;
+    if (this.healthBarBg) this.healthBarBg.isVisible = visible;
+  }
+
   addLinkedDescriptor(relation: LinkedRelation, label: string, persistent = true, runtimeUnitId?: number): void {
     this._linkedDescriptors.push({ relation, label, persistent, runtimeUnitId });
   }
@@ -121,7 +171,12 @@ export class RuntimeUnit {
     this._linkedChildren.add(child);
     child._linkedParent = this;
     child._linkedRelation = relation;
-    this.addLinkedDescriptor(relation, child.definition.displayName, relation !== "spawned-child", child.runtimeId);
+    this.addLinkedDescriptor(
+      relation,
+      child._linkedRoleLabel ?? child.definition.displayName,
+      relation !== "spawned-child",
+      child.runtimeId,
+    );
   }
 
   detachLinkedChild(child: RuntimeUnit): void {
@@ -178,6 +233,10 @@ export class RuntimeUnit {
   get isSpinning(): boolean { return this._spinning; }
 
   applyDamage(damage: number, impulse: Vector3): void {
+    if (this._linkedParent && this._isAnchoredActor && this._damageRouting === "parent") {
+      this._linkedParent.applyDamage(damage, impulse);
+      return;
+    }
     if (this._isDead || damage <= 0) return;
     this._currentHealth -= damage;
 
@@ -217,6 +276,11 @@ export class RuntimeUnit {
     // Animate
     this.animator.update(dt);
     this._applyVisualPresentation(now);
+
+    if (this._linkedParent && this._isAnchoredActor) {
+      this._updateAnchoredActor(now);
+      return;
+    }
 
     if (this._isDead) {
       this._updateDead(dt, now);
@@ -300,6 +364,45 @@ export class RuntimeUnit {
     }
 
     this._updateHealthBar();
+  }
+
+  private _updateAnchoredActor(now: number): void {
+    const parent = this._linkedParent;
+    if (!parent) return;
+
+    if (parent.isDead) {
+      this._isDead = true;
+      this._currentHealth = 0;
+      this._deathCleanupAt = now;
+      this.setBaseBodyVisible(false);
+      for (const mesh of this.propMeshes) {
+        mesh.isVisible = false;
+      }
+      this.setHealthBarVisible(false);
+      return;
+    }
+
+    const offset = this._anchoredOffset ?? Vector3.Zero();
+    const yaw = parent.body.root.rotation.y;
+    const sin = Math.sin(yaw);
+    const cos = Math.cos(yaw);
+    const rotatedOffset = new Vector3(
+      offset.x * cos + offset.z * sin,
+      offset.y,
+      -offset.x * sin + offset.z * cos,
+    );
+    this.body.root.position.copyFrom(parent.position.add(rotatedOffset));
+    if (this._syncLinkedFacing) {
+      this.body.root.rotation.y = parent.body.root.rotation.y;
+    }
+
+    if (parent.animator.state === AnimState.Walking) {
+      this.animator.setState(AnimState.Walking);
+    } else if (this.animator.state !== AnimState.Attacking) {
+      this.animator.setState(AnimState.Idle);
+    }
+
+    this.setHealthBarVisible(false);
   }
 
   private _die(impulse: Vector3): void {
@@ -387,6 +490,11 @@ export class RuntimeUnit {
 
   private _updateHealthBar(): void {
     if (!this.healthBarMesh || !this.healthBarBg) return;
+    if (this._isAnchoredActor && !this._isTargetable) {
+      this.healthBarMesh.isVisible = false;
+      this.healthBarBg.isVisible = false;
+      return;
+    }
     const ratio = this._currentHealth / this.definition.maxHealth;
     this.healthBarMesh.scaling.x = Math.max(0.01, ratio);
     this.healthBarMesh.position.x = -(1 - ratio) * 0.5 * 0.5;
@@ -544,6 +652,16 @@ export class RuntimeUnit {
     this._linkedParent = null;
     this._linkedRelation = null;
     this._linkedChildren.clear();
+    this._anchoredOffset = null;
+    this._syncLinkedFacing = true;
+    this._linkedRoleLabel = null;
+    this._linkedParentRoleLabel = null;
+    this._isAnchoredActor = false;
+    this._isTargetable = true;
+    this._isCombatEmitter = true;
+    this._damageRouting = "self";
+    this._primaryEmitterEnabled = true;
+    this._emitterCursor = 0;
     this._linkedDescriptors = this._linkedDescriptors.filter((descriptor) => descriptor.persistent);
 
     // Restore position and clear rotation
@@ -588,5 +706,25 @@ export class RuntimeUnit {
       m.dispose();
     }
     this.body.root.dispose();
+  }
+
+  getAttackEmitter(): RuntimeUnit {
+    const emitters: RuntimeUnit[] = [];
+    if (this._primaryEmitterEnabled) {
+      emitters.push(this);
+    }
+    for (const child of this._linkedChildren) {
+      if (!child.isDead && child._isCombatEmitter) {
+        emitters.push(child);
+      }
+    }
+    if (emitters.length === 0) return this;
+    const emitter = emitters[this._emitterCursor % emitters.length];
+    this._emitterCursor += 1;
+    return emitter;
+  }
+
+  triggerAttackVisual(durationSeconds: number): void {
+    this.animator.triggerAttack(durationSeconds);
   }
 }
