@@ -5,7 +5,7 @@ import type { UnitDefinition } from "../data/unitDefinitions";
 import { getRagdollProfile } from "../data/combatProfiles";
 import { FACTION_COLORS, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody } from "./bodyBuilder";
-import { getUnitVisual } from "./unitVisuals";
+import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
 import { attachProps } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
@@ -44,12 +44,14 @@ export class UnitFactory {
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0);
     }
 
+    applyMaterialPreset(body, visual, bodyColor);
+
     body.root.position = position.clone();
     // Face the border: blue (team 0) faces right (+X), red (team 1) faces left (-X)
     body.root.rotation.y = team === 0 ? Math.PI / 2 : -Math.PI / 2;
 
     // Tag all meshes for raycasting
-    const unit = new RuntimeUnit(definition, team, body, propMeshes, ragdoll);
+    const unit = new RuntimeUnit(definition, team, body, propMeshes, visual, ragdoll);
 
     // Set animation style for special units
     if (definition.id === "tribal.mammoth") {
@@ -61,10 +63,7 @@ export class UnitFactory {
     }
 
     // Health bar
-    const scale = visual.proportions.scale ?? 1.0;
-    const barY = isVehicleUnit(definition.id)
-      ? 1.8  // vehicle units: fixed height above
-      : (0.55 + 0.35 * (visual.proportions.legLength ?? 1) + 0.45 + 0.25 * (visual.proportions.headSize ?? 1) + 0.15) * scale;
+    const barY = body.metrics.headTopY + Math.max(0.14, definition.collisionRadius * 0.32);
     const barWidth = Math.max(0.4, definition.collisionRadius * 2.2);
 
     const barBg = MeshBuilder.CreatePlane(`hpbg`, { width: barWidth, height: 0.06 }, this._scene);
@@ -92,5 +91,54 @@ export class UnitFactory {
     unit.healthBarBg = barBg;
 
     return unit;
+  }
+}
+
+function applyMaterialPreset(body: ReturnType<typeof buildArticulatedBody>, visual: UnitVisualConfig, bodyColor: Color3): void {
+  const bodyTint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor);
+  body.bodyMaterial.diffuseColor = bodyTint.bodyDiffuse;
+  body.bodyMaterial.emissiveColor = bodyTint.bodyEmissive;
+  body.bodyMaterial.alpha = bodyTint.alpha;
+  body.skinMaterial.diffuseColor = bodyTint.skinDiffuse;
+  body.skinMaterial.emissiveColor = bodyTint.skinEmissive;
+}
+
+function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3): {
+  bodyDiffuse: Color3;
+  bodyEmissive: Color3;
+  skinDiffuse: Color3;
+  skinEmissive: Color3;
+  alpha: number;
+} {
+  const skinBase = new Color3(0.85, 0.72, 0.6);
+  const zero = new Color3(0, 0, 0);
+  const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount);
+  switch (materialPreset) {
+    case "secret_hero":
+      return { bodyDiffuse: blend(new Color3(0.92, 0.84, 0.45), 0.45), bodyEmissive: new Color3(0.08, 0.06, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.92, 0.82), 0.25), skinEmissive: zero, alpha: 1 };
+    case "secret_ghost":
+      return { bodyDiffuse: blend(new Color3(0.82, 0.78, 0.96), 0.55), bodyEmissive: new Color3(0.06, 0.04, 0.08), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.9, 1.0), 0.4), skinEmissive: new Color3(0.02, 0.02, 0.04), alpha: 0.94 };
+    case "secret_ice":
+      return { bodyDiffuse: blend(new Color3(0.62, 0.88, 0.98), 0.6), bodyEmissive: new Color3(0.03, 0.06, 0.08), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.96, 1.0), 0.45), skinEmissive: zero, alpha: 1 };
+    case "secret_nature":
+      return { bodyDiffuse: blend(new Color3(0.4, 0.54, 0.28), 0.6), bodyEmissive: new Color3(0.02, 0.04, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.68, 0.58, 0.46), 0.35), skinEmissive: zero, alpha: 1 };
+    case "secret_bone":
+      return { bodyDiffuse: blend(new Color3(0.88, 0.84, 0.76), 0.58), bodyEmissive: new Color3(0.03, 0.03, 0.02), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.88, 0.8), 0.3), skinEmissive: zero, alpha: 1 };
+    case "secret_demon":
+      return { bodyDiffuse: blend(new Color3(0.56, 0.16, 0.12), 0.62), bodyEmissive: new Color3(0.06, 0.02, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.66, 0.58), 0.15), skinEmissive: zero, alpha: 1 };
+    case "secret_holy":
+      return { bodyDiffuse: blend(new Color3(0.94, 0.9, 0.72), 0.42), bodyEmissive: new Color3(0.05, 0.04, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.9, 0.8), 0.22), skinEmissive: zero, alpha: 1 };
+    case "secret_bandit":
+      return { bodyDiffuse: blend(new Color3(0.24, 0.24, 0.28), 0.55), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.8, 0.66, 0.56), 0.12), skinEmissive: zero, alpha: 1 };
+    case "secret_beast":
+      return { bodyDiffuse: blend(new Color3(0.48, 0.52, 0.24), 0.55), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.78, 0.68, 0.5), 0.2), skinEmissive: zero, alpha: 1 };
+    case "secret_pirate":
+      return { bodyDiffuse: blend(new Color3(0.3, 0.18, 0.14), 0.58), bodyEmissive: new Color3(0.02, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.68, 0.55), 0.14), skinEmissive: zero, alpha: 1 };
+    case "secret_festive":
+      return { bodyDiffuse: blend(new Color3(0.34, 0.6, 0.28), 0.46), bodyEmissive: new Color3(0.02, 0.03, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.94, 0.82, 0.72), 0.12), skinEmissive: zero, alpha: 1 };
+    case "secret_royal":
+      return { bodyDiffuse: blend(new Color3(0.62, 0.18, 0.18), 0.52), bodyEmissive: new Color3(0.03, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.82, 0.74), 0.15), skinEmissive: zero, alpha: 1 };
+    default:
+      return { bodyDiffuse: bodyColor, bodyEmissive: zero, skinDiffuse: skinBase, skinEmissive: zero, alpha: 1 };
   }
 }

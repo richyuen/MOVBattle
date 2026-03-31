@@ -9,6 +9,12 @@ export enum FactionId {
   Dynasty,
   Renaissance,
   Pirate,
+  Spooky,
+  WildWest,
+  Legacy,
+  Good,
+  Evil,
+  Secret,
 }
 
 export const FACTION_COLORS: Record<FactionId, Color3> = {
@@ -20,6 +26,29 @@ export const FACTION_COLORS: Record<FactionId, Color3> = {
   [FactionId.Dynasty]: new Color3(0.85, 0.2, 0.2),    // red
   [FactionId.Renaissance]: new Color3(0.15, 0.2, 0.45),// navy
   [FactionId.Pirate]: new Color3(0.5, 0.5, 0.5),      // grey
+  [FactionId.Spooky]: new Color3(0.48, 0.32, 0.62),   // muted violet
+  [FactionId.WildWest]: new Color3(0.72, 0.46, 0.18), // dusty orange
+  [FactionId.Legacy]: new Color3(0.62, 0.62, 0.62),   // silver
+  [FactionId.Good]: new Color3(0.94, 0.85, 0.52),     // gold
+  [FactionId.Evil]: new Color3(0.38, 0.18, 0.18),     // crimson-brown
+  [FactionId.Secret]: new Color3(0.72, 0.72, 0.72),   // light gray
+};
+
+export const FACTION_NAMES: Record<FactionId, string> = {
+  [FactionId.Tribal]: "Tribal",
+  [FactionId.Farmer]: "Farmer",
+  [FactionId.Medieval]: "Medieval",
+  [FactionId.Ancient]: "Ancient",
+  [FactionId.Viking]: "Viking",
+  [FactionId.Dynasty]: "Dynasty",
+  [FactionId.Renaissance]: "Renaissance",
+  [FactionId.Pirate]: "Pirate",
+  [FactionId.Spooky]: "Spooky",
+  [FactionId.WildWest]: "Wild West",
+  [FactionId.Legacy]: "Legacy",
+  [FactionId.Good]: "Good",
+  [FactionId.Evil]: "Evil",
+  [FactionId.Secret]: "Secret",
 };
 
 export const TEAM_COLORS = {

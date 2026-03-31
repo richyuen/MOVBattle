@@ -10,7 +10,7 @@ import type { BattleResult } from "./core/battleResult";
 
 import { ALL_UNITS, getUnit } from "./data/unitDefinitions";
 import type { UnitDefinition } from "./data/unitDefinitions";
-import { FactionId } from "./data/factionColors";
+import { FactionId, FACTION_NAMES } from "./data/factionColors";
 
 import { SimulationSystem } from "./combat/simulationSystem";
 import { ProjectileSystem } from "./combat/projectileSystem";
@@ -30,6 +30,7 @@ const selectedUnitEl = document.getElementById("selectedUnit")!;
 const statusTextEl = document.getElementById("statusText")!;
 const factionTabsEl = document.getElementById("factionTabs")!;
 const unitGridEl = document.getElementById("unitGrid")!;
+const unitSearchEl = document.getElementById("unitSearch") as HTMLInputElement;
 const resultOverlayEl = document.getElementById("resultOverlay")!;
 const resultTitleEl = document.getElementById("resultTitle")!;
 const resultDetailEl = document.getElementById("resultDetail")!;
@@ -76,6 +77,16 @@ let countdownTimer: ReturnType<typeof setTimeout> | null = null;
 let statusTimer: ReturnType<typeof setTimeout> | null = null;
 let removeMode = false;
 
+simulation.spawnUnitById = (unitId, team, position) => {
+  const def = getUnit(unitId);
+  if (!def) return null;
+  const unit = unitFactory.spawn(def, team, position);
+  unit.setSpawnRole("summoned");
+  placedUnits.push(unit);
+  simulation.registerUnit(unit);
+  return unit;
+};
+
 const btnRemoveEl = document.getElementById("btnRemove")!;
 
 // ─── HUD ───
@@ -117,9 +128,11 @@ function selectUnit(id: string): void {
 }
 
 function selectRelativeUnit(offset: number): void {
-  if (ALL_UNITS.length === 0) return;
-  selectedRosterIndex = (selectedRosterIndex + offset + ALL_UNITS.length) % ALL_UNITS.length;
-  selectUnit(ALL_UNITS[selectedRosterIndex].id);
+  const factionUnits = getFilteredFactionUnits();
+  if (factionUnits.length === 0) return;
+  const currentIndex = Math.max(0, factionUnits.findIndex((u) => u.id === selectedUnitId));
+  const nextIndex = (currentIndex + offset + factionUnits.length) % factionUnits.length;
+  selectUnit(factionUnits[nextIndex].id);
 }
 
 function toggleRemoveMode(): void {
@@ -132,18 +145,6 @@ function toggleRemoveMode(): void {
   }
 }
 
-// Faction display names and tab accent colors (CSS-friendly)
-const FACTION_NAMES: Record<number, string> = {
-  [FactionId.Tribal]: "Tribal",
-  [FactionId.Farmer]: "Farmer",
-  [FactionId.Medieval]: "Medieval",
-  [FactionId.Ancient]: "Ancient",
-  [FactionId.Viking]: "Viking",
-  [FactionId.Dynasty]: "Dynasty",
-  [FactionId.Renaissance]: "Renaissance",
-  [FactionId.Pirate]: "Pirate",
-};
-
 const FACTION_TAB_COLORS: Record<number, string> = {
   [FactionId.Tribal]: "#8d5a33",
   [FactionId.Farmer]: "#d9c73e",
@@ -153,6 +154,12 @@ const FACTION_TAB_COLORS: Record<number, string> = {
   [FactionId.Dynasty]: "#d93333",
   [FactionId.Renaissance]: "#2a3570",
   [FactionId.Pirate]: "#808080",
+  [FactionId.Spooky]: "#9c7fcc",
+  [FactionId.WildWest]: "#b7722c",
+  [FactionId.Legacy]: "#b9b9b9",
+  [FactionId.Good]: "#e6c75a",
+  [FactionId.Evil]: "#7d3434",
+  [FactionId.Secret]: "#c8c8c8",
 };
 
 let activeFaction = ALL_UNITS[0]?.faction ?? FactionId.Tribal;
@@ -169,9 +176,18 @@ function setFaction(faction: FactionId): void {
   });
 }
 
+function getFilteredFactionUnits(): UnitDefinition[] {
+  const query = unitSearchEl.value.trim().toLowerCase();
+  return ALL_UNITS.filter((u) => {
+    if (u.faction !== activeFaction) return false;
+    if (!query) return true;
+    return u.displayName.toLowerCase().includes(query) || u.id.toLowerCase().includes(query);
+  });
+}
+
 function populateUnitGrid(): void {
   unitGridEl.innerHTML = "";
-  const factionUnits = ALL_UNITS.filter((u) => u.faction === activeFaction);
+  const factionUnits = getFilteredFactionUnits();
   for (const def of factionUnits) {
     const btn = document.createElement("button");
     btn.className = "unit-btn";
@@ -180,6 +196,13 @@ function populateUnitGrid(): void {
     if (def.id === selectedUnitId) btn.classList.add("selected");
     btn.addEventListener("click", () => selectUnit(def.id));
     unitGridEl.appendChild(btn);
+  }
+
+  if (factionUnits.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "unit-empty";
+    empty.textContent = "No units match this search.";
+    unitGridEl.appendChild(empty);
   }
 }
 
@@ -205,6 +228,7 @@ function buildUnitPanel(): void {
 buildUnitPanel();
 updateBudgetDisplay();
 updateSelectedUnitDisplay();
+unitSearchEl.addEventListener("input", () => populateUnitGrid());
 
 // ─── Placement ───
 function tryPlaceUnit(screenX: number, screenY: number): void {
@@ -366,6 +390,14 @@ function showResult(result: BattleResult): void {
 function playAgain(): void {
   resultOverlayEl.classList.remove("visible");
 
+  for (let i = placedUnits.length - 1; i >= 0; i--) {
+    const unit = placedUnits[i];
+    if (unit.spawnRole !== "summoned") continue;
+    simulation.unregisterUnit(unit);
+    unit.dispose();
+    placedUnits.splice(i, 1);
+  }
+
   // Reset all units back to their original positions
   for (const unit of placedUnits) {
     unit.resetToSpawn();
@@ -444,8 +476,11 @@ window.addEventListener("keydown", (e) => {
 
 // ─── Game loop ───
 engine.runRenderLoop(() => {
-  const dt = engine.getDeltaTime() / 1000;
+  tick(engine.getDeltaTime() / 1000);
+  scene.render();
+});
 
+function tick(dt: number): void {
   if (stateMachine.currentState === GameState.Simulation) {
     simulation.update(dt);
     projectileSystem.update(dt);
@@ -457,8 +492,40 @@ engine.runRenderLoop(() => {
       unit.update(dt, performance.now() / 1000);
     }
   }
-
-  scene.render();
-});
+}
 
 window.addEventListener("resize", () => engine.resize());
+
+function renderGameToText(): string {
+  const payload = {
+    coordinateSystem: "x:right, z:forward, y:up, origin:center line",
+    mode: GameState[stateMachine.currentState],
+    activeFaction: FACTION_NAMES[activeFaction],
+    selectedUnitId,
+    budgets: {
+      teamA: budgetSystem.getRemaining(0),
+      teamB: budgetSystem.getRemaining(1),
+    },
+    units: placedUnits.map((unit) => ({
+        id: unit.definition.id,
+        name: unit.definition.displayName,
+        team: unit.team,
+        role: unit.spawnRole,
+        alive: !unit.isDead,
+        hp: Math.round(unit.currentHealth),
+        x: Number(unit.position.x.toFixed(2)),
+        z: Number(unit.position.z.toFixed(2)),
+      })),
+    projectiles: projectileSystem.activeCount,
+  };
+  return JSON.stringify(payload);
+}
+
+(window as any).render_game_to_text = renderGameToText;
+(window as any).advanceTime = (ms: number) => {
+  const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+  for (let i = 0; i < steps; i++) {
+    tick(1 / 60);
+  }
+  scene.render();
+};

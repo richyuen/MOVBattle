@@ -2,7 +2,7 @@ import {
   Scene, Mesh, MeshBuilder, StandardMaterial, Color3, Vector3, TransformNode,
 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
-import type { UnitVisualConfig, WeaponType, HatType, ShieldType, SpecialType } from "./unitVisuals";
+import type { AttachmentPreset, UnitVisualConfig, WeaponType, HatType, ShieldType, SpecialType } from "./unitVisuals";
 
 export function attachProps(
   scene: Scene,
@@ -16,6 +16,9 @@ export function attachProps(
   const weapon = buildWeapon(scene, config.weapon, scale, accent);
   if (weapon) {
     weapon.parent = body.rightHand;
+    if (config.attachmentPreset === "fan_bearer") {
+      tagVisualState(weapon, "fan_closed");
+    }
     props.push(weapon);
   }
 
@@ -44,7 +47,20 @@ export function attachProps(
     props.push(special);
   }
 
+  const extraAttachments = buildAttachmentPreset(scene, body, config.attachmentPreset ?? "none", scale, accent);
+  props.push(...extraAttachments);
+
   return props;
+}
+
+function tagVisualState(mesh: Mesh, key: string): void {
+  mesh.metadata = { ...(mesh.metadata ?? {}), visualKey: key };
+}
+
+function setTaggedVisibility(meshes: Mesh[], visible: boolean): void {
+  for (const mesh of meshes) {
+    mesh.isVisible = visible;
+  }
 }
 
 function mat(scene: Scene, color: Color3, emissive = 0): StandardMaterial {
@@ -53,6 +69,178 @@ function mat(scene: Scene, color: Color3, emissive = 0): StandardMaterial {
   if (emissive > 0) m.emissiveColor = color.scale(emissive);
   m.specularColor = new Color3(0.2, 0.2, 0.2);
   return m;
+}
+
+function buildAttachmentPreset(
+  scene: Scene,
+  body: ArticulatedBody,
+  preset: AttachmentPreset,
+  s: number,
+  accent: Color3,
+): Mesh[] {
+  const meshes: Mesh[] = [];
+  const makeGlow = (name: string, diameter: number, color: Color3, parent: TransformNode, pos: Vector3, key: string): Mesh => {
+    const glow = MeshBuilder.CreateSphere(name, { diameter, segments: 6 }, scene);
+    glow.parent = parent;
+    glow.position.copyFrom(pos);
+    glow.material = mat(scene, color, 0.25);
+    tagVisualState(glow, key);
+    glow.isVisible = false;
+    meshes.push(glow);
+    return glow;
+  };
+
+  switch (preset) {
+    case "none":
+      return meshes;
+    case "fan_bearer": {
+      const openFan = MeshBuilder.CreateDisc("openFan", { radius: 0.22 * s, tessellation: 18, arc: 0.55 }, scene);
+      openFan.parent = body.rightHand;
+      openFan.rotation.z = Math.PI * 0.5;
+      openFan.position.y = 0.12 * s;
+      openFan.material = mat(scene, accent, 0.1);
+      tagVisualState(openFan, "fan_open");
+      openFan.isVisible = false;
+      meshes.push(openFan);
+
+      const gust = MeshBuilder.CreateTorus("gustRing", { diameter: 0.52 * s, thickness: 0.02 * s, tessellation: 24 }, scene);
+      gust.parent = body.torso;
+      gust.position.set(0, 0.26 * s, 0.28 * s);
+      gust.rotation.y = Math.PI / 2;
+      gust.material = mat(scene, accent, 0.3);
+      tagVisualState(gust, "gust_ring");
+      gust.isVisible = false;
+      meshes.push(gust);
+      return meshes;
+    }
+    case "bow_ready": {
+      makeGlow("drawnArrow", 0.06 * s, accent.scale(1.05), body.rightHand, new Vector3(0, 0.18 * s, 0.04 * s), "drawn_arrow");
+      return meshes;
+    }
+    case "crossbow_ready": {
+      const bolt = MeshBuilder.CreateBox("readyBolt", { width: 0.018 * s, height: 0.18 * s, depth: 0.018 * s }, scene);
+      bolt.parent = body.rightHand;
+      bolt.position.set(0, 0.18 * s, 0.04 * s);
+      bolt.rotation.z = Math.PI / 2;
+      bolt.material = mat(scene, new Color3(0.82, 0.82, 0.88));
+      tagVisualState(bolt, "crossbow_bolt");
+      bolt.isVisible = false;
+      meshes.push(bolt);
+      return meshes;
+    }
+    case "shouter": {
+      const ring = MeshBuilder.CreateTorus("shoutRing", { diameter: 0.7 * s, thickness: 0.025 * s, tessellation: 20 }, scene);
+      ring.parent = body.neck;
+      ring.position.set(0, 0.08 * s, 0.18 * s);
+      ring.rotation.y = Math.PI / 2;
+      ring.material = mat(scene, accent, 0.35);
+      tagVisualState(ring, "shout_ring");
+      ring.isVisible = false;
+      meshes.push(ring);
+      return meshes;
+    }
+    case "cheerleader": {
+      for (const hand of [body.leftHand, body.rightHand]) {
+        const ribbon = MeshBuilder.CreateBox("streamer", { width: 0.04 * s, height: 0.12 * s, depth: 0.02 * s }, scene);
+        ribbon.parent = hand;
+        ribbon.position.set(0, 0.08 * s, -0.05 * s);
+        ribbon.material = mat(scene, accent, 0.2);
+        tagVisualState(ribbon, "pom_streamers");
+        ribbon.isVisible = false;
+        meshes.push(ribbon);
+      }
+      return meshes;
+    }
+    case "summoner": {
+      for (const side of [-1, 1]) {
+        makeGlow("summonOrb", 0.09 * s, accent, body.torso, new Vector3(side * 0.18 * s, 0.24 * s, 0.08 * s), "summon_orbs");
+      }
+      return meshes;
+    }
+    case "infernal_whip": {
+      const lash = MeshBuilder.CreateCylinder("flameLash", { height: 0.28 * s, diameterTop: 0.01 * s, diameterBottom: 0.05 * s, tessellation: 6 }, scene);
+      lash.parent = body.rightHand;
+      lash.position.set(0.08 * s, 0.22 * s, 0);
+      lash.rotation.z = -0.7;
+      lash.material = mat(scene, new Color3(1, 0.45, 0.12), 0.5);
+      tagVisualState(lash, "flame_lash");
+      lash.isVisible = false;
+      meshes.push(lash);
+      return meshes;
+    }
+    case "hero_halo": {
+      const flare = MeshBuilder.CreateTorus("haloFlare", { diameter: 0.38 * s, thickness: 0.03 * s, tessellation: 28 }, scene);
+      flare.parent = body.headTop;
+      flare.position.y = 0.22 * s;
+      flare.material = mat(scene, accent, 0.45);
+      tagVisualState(flare, "halo_flare");
+      flare.isVisible = false;
+      meshes.push(flare);
+      return meshes;
+    }
+    case "ghost_trail": {
+      for (const side of [-1, 1]) {
+        const trail = MeshBuilder.CreatePlane("ghostTrail", { width: 0.18 * s, height: 0.26 * s }, scene);
+        trail.parent = body.torso;
+        trail.position.set(side * 0.22 * s, 0.18 * s, -0.16 * s);
+        trail.rotation.y = side * 0.3;
+        trail.material = mat(scene, accent, 0.22);
+        tagVisualState(trail, "ghost_stream");
+        trail.isVisible = false;
+        meshes.push(trail);
+      }
+      return meshes;
+    }
+    case "giant_aura": {
+      for (const side of [-1, 1]) {
+        const shard = MeshBuilder.CreateBox("giantShard", { width: 0.08 * s, height: 0.18 * s, depth: 0.05 * s }, scene);
+        shard.parent = body.torso;
+        shard.position.set(side * 0.28 * s, 0.24 * s, -0.04 * s);
+        shard.rotation.z = side * 0.35;
+        shard.material = mat(scene, accent, 0.2);
+        tagVisualState(shard, "giant_shards");
+        shard.isVisible = false;
+        meshes.push(shard);
+      }
+      return meshes;
+    }
+    case "present_elf": {
+      const sparkle = MeshBuilder.CreateSphere("presentSpark", { diameter: 0.08 * s, segments: 6 }, scene);
+      sparkle.parent = body.rightHand;
+      sparkle.position.set(0, 0.16 * s, 0);
+      sparkle.material = mat(scene, new Color3(1, 1, 1), 0.4);
+      tagVisualState(sparkle, "present_spark");
+      sparkle.isVisible = false;
+      meshes.push(sparkle);
+      return meshes;
+    }
+    case "bank_robbers": {
+      const loot = MeshBuilder.CreateBox("lootFlash", { width: 0.06 * s, height: 0.03 * s, depth: 0.1 * s }, scene);
+      loot.parent = body.hip;
+      loot.position.set(0.02 * s, 0.02 * s, -0.02 * s);
+      loot.material = mat(scene, new Color3(1, 0.85, 0.35), 0.35);
+      tagVisualState(loot, "loot_flash");
+      loot.isVisible = false;
+      meshes.push(loot);
+      return meshes;
+    }
+    case "bomb_lit": {
+      makeGlow("litFuse", 0.04 * s, new Color3(1, 0.75, 0.2), body.rightHand, new Vector3(0.02 * s, 0.18 * s, 0), "lit_fuse");
+      return meshes;
+    }
+    case "dragon_cart_fx": {
+      const glow = MeshBuilder.CreateSphere("dragonGlow", { diameter: 0.1 * s, segments: 6 }, scene);
+      glow.parent = body.hip;
+      glow.position.set(0, 0.02 * s, 0.28 * s);
+      glow.material = mat(scene, accent, 0.35);
+      tagVisualState(glow, "dragon_glow");
+      glow.isVisible = false;
+      meshes.push(glow);
+      return meshes;
+    }
+    default:
+      return meshes;
+  }
 }
 
 // ─── Weapons ───
@@ -366,6 +554,72 @@ function buildWeapon(scene: Scene, type: WeaponType, s: number, accent: Color3):
       seg3.position.set(0.01 * s, -0.04 * s, 0); seg3.rotation.z = 0.2; seg3.parent = bolt;
       return bolt;
     }
+    case "fan": {
+      const root = new TransformNode("fan", scene) as unknown as Mesh;
+      const handle = MeshBuilder.CreateCylinder("fanHandle", { height: 0.2 * s, diameter: 0.02 * s, tessellation: 6 }, scene);
+      handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
+      handle.position.y = -0.04 * s;
+      handle.parent = root;
+      for (let i = -3; i <= 3; i++) {
+        const rib = MeshBuilder.CreateBox("fanRib", { width: 0.018 * s, height: 0.22 * s, depth: 0.01 * s }, scene);
+        rib.position.set(i * 0.03 * s, 0.1 * s, 0);
+        rib.rotation.z = i * 0.18;
+        rib.parent = root;
+        rib.material = mat(scene, accent, 0.1);
+      }
+      return root;
+    }
+    case "flail": {
+      const handle = MeshBuilder.CreateCylinder("flailHandle", { height: 0.35 * s, diameter: 0.03 * s, tessellation: 6 }, scene);
+      handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
+      const chain = MeshBuilder.CreateCylinder("flailChain", { height: 0.18 * s, diameter: 0.01 * s, tessellation: 4 }, scene);
+      chain.position.y = 0.18 * s;
+      chain.parent = handle;
+      chain.material = mat(scene, new Color3(0.45, 0.45, 0.5));
+      const ball = MeshBuilder.CreateSphere("flailBall", { diameter: 0.12 * s, segments: 6 }, scene);
+      ball.position.y = 0.3 * s;
+      ball.parent = handle;
+      ball.material = mat(scene, accent);
+      handle.position.y = 0.08 * s;
+      return handle;
+    }
+    case "whip": {
+      const root = new TransformNode("whip", scene) as unknown as Mesh;
+      const handle = MeshBuilder.CreateCylinder("whipHandle", { height: 0.18 * s, diameter: 0.025 * s, tessellation: 6 }, scene);
+      handle.material = mat(scene, new Color3(0.25, 0.15, 0.1));
+      handle.parent = root;
+      for (let i = 0; i < 4; i++) {
+        const seg = MeshBuilder.CreateCylinder("whipSeg", { height: 0.1 * s, diameter: Math.max(0.008, 0.018 - i * 0.002) * s, tessellation: 4 }, scene);
+        seg.position.set(0.02 * s * i, 0.08 * s + i * 0.07 * s, 0);
+        seg.rotation.z = 0.2 + i * 0.15;
+        seg.parent = root;
+        seg.material = mat(scene, accent, 0.08);
+      }
+      return root;
+    }
+    case "present_box": {
+      const box = MeshBuilder.CreateBox("present", { width: 0.16 * s, height: 0.16 * s, depth: 0.16 * s }, scene);
+      box.material = mat(scene, accent, 0.08);
+      const ribbonA = MeshBuilder.CreateBox("ribbonA", { width: 0.03 * s, height: 0.17 * s, depth: 0.17 * s }, scene);
+      ribbonA.parent = box;
+      ribbonA.material = mat(scene, new Color3(0.95, 0.95, 0.95));
+      const ribbonB = MeshBuilder.CreateBox("ribbonB", { width: 0.17 * s, height: 0.17 * s, depth: 0.03 * s }, scene);
+      ribbonB.parent = box;
+      ribbonB.material = mat(scene, new Color3(0.95, 0.95, 0.95));
+      box.position.y = 0.08 * s;
+      return box;
+    }
+    case "pom_pom": {
+      const root = new TransformNode("pompom", scene) as unknown as Mesh;
+      for (let i = 0; i < 6; i++) {
+        const puff = MeshBuilder.CreateSphere("puff", { diameter: 0.07 * s, segments: 4 }, scene);
+        const angle = (Math.PI * 2 * i) / 6;
+        puff.position.set(Math.cos(angle) * 0.04 * s, Math.sin(angle) * 0.04 * s + 0.08 * s, 0);
+        puff.parent = root;
+        puff.material = mat(scene, accent, 0.15);
+      }
+      return root;
+    }
     default:
       return null;
   }
@@ -592,6 +846,24 @@ function buildHat(scene: Scene, type: HatType, s: number, accent: Color3): Mesh 
       tail.material = mat(scene, accent);
       return hood;
     }
+    case "jester_cap": {
+      const base = MeshBuilder.CreateSphere("jesterCap", { diameter: 0.22 * s, segments: 6 }, scene);
+      base.scaling.y = 0.55;
+      base.material = mat(scene, accent, 0.05);
+      base.position.y = 0.08 * s;
+      for (const side of [-1, 1]) {
+        const horn = MeshBuilder.CreateCylinder("jesterHorn", { height: 0.18 * s, diameterTop: 0.015 * s, diameterBottom: 0.045 * s, tessellation: 6 }, scene);
+        horn.position.set(side * 0.08 * s, 0.1 * s, 0);
+        horn.rotation.z = -side * 0.7;
+        horn.parent = base;
+        horn.material = mat(scene, accent.scale(0.8));
+        const bell = MeshBuilder.CreateSphere("jesterBell", { diameter: 0.03 * s, segments: 4 }, scene);
+        bell.position.y = 0.1 * s;
+        bell.parent = horn;
+        bell.material = mat(scene, new Color3(1, 0.84, 0), 0.2);
+      }
+      return base;
+    }
     default:
       return null;
   }
@@ -794,6 +1066,157 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       drape.parent = body.torso;
       drape.material = mat(scene, new Color3(0.9, 0.55, 0.1), 0.05);
       return robe;
+    }
+    case "raptor_mount": {
+      const bodyMesh = MeshBuilder.CreateBox("raptorBody", { width: 0.22 * s, height: 0.42 * s, depth: 0.85 * s }, scene);
+      bodyMesh.position.y = -0.38 * s;
+      bodyMesh.parent = body.hip;
+      bodyMesh.material = mat(scene, new Color3(0.45, 0.55, 0.28));
+      const neck = MeshBuilder.CreateCylinder("raptorNeck", { height: 0.28 * s, diameter: 0.08 * s, tessellation: 6 }, scene);
+      neck.position.set(0, -0.08 * s, 0.38 * s);
+      neck.rotation.x = -0.7;
+      neck.parent = bodyMesh;
+      neck.material = mat(scene, new Color3(0.45, 0.55, 0.28));
+      const head = MeshBuilder.CreateSphere("raptorHead", { diameter: 0.16 * s, segments: 6 }, scene);
+      head.position.set(0, 0.08 * s, 0.52 * s);
+      head.parent = bodyMesh;
+      head.material = mat(scene, new Color3(0.5, 0.62, 0.3));
+      const tail = MeshBuilder.CreateCylinder("raptorTail", { height: 0.45 * s, diameterTop: 0, diameterBottom: 0.05 * s, tessellation: 6 }, scene);
+      tail.position.set(0, -0.02 * s, -0.5 * s);
+      tail.rotation.x = 1.05;
+      tail.parent = bodyMesh;
+      tail.material = mat(scene, new Color3(0.4, 0.5, 0.24));
+      for (const side of [-1, 1]) {
+        const leg = MeshBuilder.CreateCylinder("raptorLeg", { height: 0.32 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
+        leg.position.set(side * 0.12 * s, -0.32 * s, side > 0 ? -0.18 * s : 0.18 * s);
+        leg.parent = bodyMesh;
+        leg.material = mat(scene, new Color3(0.4, 0.5, 0.24));
+      }
+      const crest = MeshBuilder.CreateBox("raptorCrest", { width: 0.04 * s, height: 0.14 * s, depth: 0.03 * s }, scene);
+      crest.position.set(0, 0.16 * s, 0.54 * s);
+      crest.parent = bodyMesh;
+      crest.material = mat(scene, accent, 0.1);
+      return bodyMesh;
+    }
+    case "clam_shell": {
+      const shell = MeshBuilder.CreateSphere("clamShell", { diameter: 0.7 * s, segments: 8 }, scene);
+      shell.scaling.y = 0.45;
+      shell.position.y = -0.15 * s;
+      shell.parent = body.hip;
+      shell.material = mat(scene, new Color3(0.5, 0.72, 0.78));
+      const lowerShell = MeshBuilder.CreateSphere("lowerShell", { diameter: 0.68 * s, segments: 8 }, scene);
+      lowerShell.scaling.y = 0.28;
+      lowerShell.position.set(0, -0.08 * s, 0);
+      lowerShell.parent = shell;
+      lowerShell.material = mat(scene, new Color3(0.42, 0.62, 0.68));
+      const pearl = MeshBuilder.CreateSphere("pearl", { diameter: 0.14 * s, segments: 6 }, scene);
+      pearl.position.set(0, 0.08 * s, 0.08 * s);
+      pearl.parent = shell;
+      pearl.material = mat(scene, new Color3(0.95, 0.98, 1), 0.15);
+      return shell;
+    }
+    case "safe_bundle": {
+      const safe = MeshBuilder.CreateBox("safe", { width: 0.32 * s, height: 0.26 * s, depth: 0.22 * s }, scene);
+      safe.position.set(0, -0.1 * s, -0.15 * s);
+      safe.parent = body.hip;
+      safe.material = mat(scene, new Color3(0.3, 0.32, 0.35));
+      const dial = MeshBuilder.CreateCylinder("dial", { height: 0.03 * s, diameter: 0.08 * s, tessellation: 12 }, scene);
+      dial.position.set(0, 0, 0.12 * s);
+      dial.rotation.x = Math.PI / 2;
+      dial.parent = safe;
+      dial.material = mat(scene, new Color3(0.85, 0.75, 0.35));
+      const handle = MeshBuilder.CreateBox("safeHandle", { width: 0.08 * s, height: 0.02 * s, depth: 0.02 * s }, scene);
+      handle.position.set(0.08 * s, 0, 0.12 * s);
+      handle.parent = safe;
+      handle.material = mat(scene, new Color3(0.82, 0.72, 0.3));
+      return safe;
+    }
+    case "dragon_cart": {
+      const cart = MeshBuilder.CreateBox("dragonCart", { width: 0.4 * s, height: 0.2 * s, depth: 0.55 * s }, scene);
+      cart.position.set(0, -0.18 * s, -0.08 * s);
+      cart.parent = body.hip;
+      cart.material = mat(scene, new Color3(0.5, 0.34, 0.2));
+      const head = MeshBuilder.CreateBox("dragonHead", { width: 0.18 * s, height: 0.16 * s, depth: 0.18 * s }, scene);
+      head.position.set(0, 0.08 * s, 0.34 * s);
+      head.parent = cart;
+      head.material = mat(scene, accent, 0.08);
+      for (const side of [-1, 1]) {
+        const wing = MeshBuilder.CreateBox("dragonWing", { width: 0.24 * s, height: 0.12 * s, depth: 0.01 * s }, scene);
+        wing.position.set(side * 0.24 * s, 0.1 * s, 0.05 * s);
+        wing.rotation.y = side * 0.55;
+        wing.parent = cart;
+        wing.material = mat(scene, accent.scale(0.9), 0.05);
+      }
+      const horn = MeshBuilder.CreateCylinder("dragonHorn", { height: 0.12 * s, diameterTop: 0, diameterBottom: 0.025 * s, tessellation: 6 }, scene);
+      horn.position.set(0, 0.17 * s, 0.4 * s);
+      horn.parent = cart;
+      horn.material = mat(scene, new Color3(0.92, 0.85, 0.68));
+      return cart;
+    }
+    case "giant_bones":
+    case "giant_tree":
+    case "giant_ice": {
+      const color = type === "giant_bones"
+        ? new Color3(0.88, 0.85, 0.78)
+        : type === "giant_tree"
+          ? new Color3(0.42, 0.58, 0.26)
+          : new Color3(0.62, 0.9, 1.0);
+      const shoulder = MeshBuilder.CreateBox("giantShoulder", { width: 0.55 * s, height: 0.22 * s, depth: 0.16 * s }, scene);
+      shoulder.position.set(0, 0.18 * s, -0.06 * s);
+      shoulder.parent = body.torso;
+      shoulder.material = mat(scene, color, 0.06);
+      const crown = MeshBuilder.CreateSphere("giantCrown", { diameter: 0.26 * s, segments: 6 }, scene);
+      crown.position.y = 0.05 * s;
+      crown.parent = body.headTop;
+      crown.material = mat(scene, color, 0.08);
+      for (const side of [-1, 1]) {
+        const pauldron = MeshBuilder.CreateBox("giantPauldron", { width: 0.18 * s, height: 0.24 * s, depth: 0.14 * s }, scene);
+        pauldron.position.set(side * 0.22 * s, 0.14 * s, 0);
+        pauldron.rotation.z = side * 0.2;
+        pauldron.parent = body.torso;
+        pauldron.material = mat(scene, color, 0.08);
+      }
+      if (type === "giant_bones") {
+        for (const side of [-1, 1]) {
+          const horn = MeshBuilder.CreateCylinder("boneHorn", { height: 0.18 * s, diameterTop: 0, diameterBottom: 0.05 * s, tessellation: 6 }, scene);
+          horn.position.set(side * 0.08 * s, 0.06 * s, 0);
+          horn.rotation.z = -side * 0.45;
+          horn.parent = crown;
+          horn.material = mat(scene, new Color3(0.94, 0.9, 0.82));
+        }
+      } else if (type === "giant_tree") {
+        for (const side of [-1, 1]) {
+          const branch = MeshBuilder.CreateCylinder("branch", { height: 0.22 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
+          branch.position.set(side * 0.12 * s, 0.1 * s, 0);
+          branch.rotation.z = -side * 0.65;
+          branch.parent = crown;
+          branch.material = mat(scene, new Color3(0.38, 0.24, 0.15));
+          const leaf = MeshBuilder.CreateSphere("leaf", { diameter: 0.1 * s, segments: 6 }, scene);
+          leaf.position.set(side * 0.09 * s, 0.18 * s, 0);
+          leaf.parent = crown;
+          leaf.material = mat(scene, new Color3(0.42, 0.62, 0.3), 0.08);
+        }
+      } else {
+        for (const side of [-1, 1]) {
+          const shard = MeshBuilder.CreateBox("iceHorn", { width: 0.04 * s, height: 0.18 * s, depth: 0.05 * s }, scene);
+          shard.position.set(side * 0.08 * s, 0.12 * s, 0);
+          shard.rotation.z = side * 0.35;
+          shard.parent = crown;
+          shard.material = mat(scene, new Color3(0.82, 0.98, 1), 0.18);
+        }
+      }
+      return shoulder;
+    }
+    case "halo": {
+      const halo = MeshBuilder.CreateTorus("halo", { diameter: 0.28 * s, thickness: 0.02 * s, tessellation: 20 }, scene);
+      halo.position.y = 0.18 * s;
+      halo.parent = body.headTop;
+      halo.material = mat(scene, new Color3(1, 0.88, 0.35), 0.25);
+      const gem = MeshBuilder.CreateSphere("haloGem", { diameter: 0.05 * s, segments: 6 }, scene);
+      gem.position.set(0, 0.02 * s, 0.14 * s);
+      gem.parent = halo;
+      gem.material = mat(scene, accent, 0.22);
+      return halo;
     }
     case "cart":
     case "barrel_body":

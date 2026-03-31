@@ -1,10 +1,13 @@
 import { FactionId } from "./factionColors";
+import {
+  ROSTER_MANIFEST,
+  type AbilityKind,
+  type RosterManifestEntry,
+  type UnitArchetype,
+  type UnitSize,
+} from "./rosterManifest";
 
-export interface UnitDefinition {
-  id: string;
-  displayName: string;
-  faction: FactionId;
-  cost: number;
+export interface UnitDefinition extends RosterManifestEntry {
   maxHealth: number;
   mass: number;
   moveSpeed: number;
@@ -15,93 +18,137 @@ export interface UnitDefinition {
   ragdollProfileId: string;
 }
 
-function u(
-  id: string, displayName: string, faction: FactionId,
-  cost: number, maxHealth: number, mass: number, moveSpeed: number,
-  engageRange: number, collisionRadius: number,
-  attackProfileId: string, aiProfileId: string, ragdollProfileId: string,
-): UnitDefinition {
-  return { id, displayName, faction, cost, maxHealth, mass, moveSpeed, engageRange, collisionRadius, attackProfileId, aiProfileId, ragdollProfileId };
+interface ArchetypeTemplate {
+  attackProfileId: string;
+  aiProfileId: string;
+  ragdollProfileId: string;
+  healthScale: number;
+  healthBase: number;
+  mass: number;
+  moveSpeed: number;
+  engageRange: number;
+  collisionRadius: number;
 }
 
-const F = FactionId;
+const ARCHETYPES: Record<UnitArchetype, ArchetypeTemplate> = {
+  tiny_melee: { attackProfileId: "melee.light", aiProfileId: "ai.rush", ragdollProfileId: "ragdoll.light", healthScale: 0.9, healthBase: 25, mass: 0.5, moveSpeed: 4.8, engageRange: 1.4, collisionRadius: 0.32 },
+  light_melee: { attackProfileId: "melee.light", aiProfileId: "ai.rush", ragdollProfileId: "ragdoll.light", healthScale: 1.15, healthBase: 35, mass: 0.9, moveSpeed: 4.2, engageRange: 1.7, collisionRadius: 0.42 },
+  shield_melee: { attackProfileId: "melee.medium", aiProfileId: "ai.brace", ragdollProfileId: "ragdoll.medium", healthScale: 1.45, healthBase: 50, mass: 1.15, moveSpeed: 3.8, engageRange: 1.9, collisionRadius: 0.48 },
+  polearm_melee: { attackProfileId: "melee.medium", aiProfileId: "ai.brace", ragdollProfileId: "ragdoll.medium", healthScale: 1.3, healthBase: 40, mass: 1.1, moveSpeed: 3.9, engageRange: 2.5, collisionRadius: 0.46 },
+  heavy_melee: { attackProfileId: "melee.heavy", aiProfileId: "ai.rush", ragdollProfileId: "ragdoll.medium", healthScale: 1.65, healthBase: 65, mass: 1.45, moveSpeed: 4.0, engageRange: 2.1, collisionRadius: 0.56 },
+  boss_melee: { attackProfileId: "boss.legendary", aiProfileId: "ai.boss", ragdollProfileId: "ragdoll.boss", healthScale: 2.1, healthBase: 120, mass: 2.1, moveSpeed: 4.2, engageRange: 2.4, collisionRadius: 0.72 },
+  giant_melee: { attackProfileId: "boss.legendary", aiProfileId: "ai.boss", ragdollProfileId: "ragdoll.boss", healthScale: 2.5, healthBase: 220, mass: 3.8, moveSpeed: 3.2, engageRange: 2.8, collisionRadius: 0.95 },
+  archer: { attackProfileId: "ranged.light", aiProfileId: "ai.ranged", ragdollProfileId: "ragdoll.light", healthScale: 0.78, healthBase: 35, mass: 0.85, moveSpeed: 3.7, engageRange: 12.0, collisionRadius: 0.42 },
+  gunner: { attackProfileId: "ranged.heavy", aiProfileId: "ai.ranged", ragdollProfileId: "ragdoll.light", healthScale: 0.8, healthBase: 40, mass: 0.95, moveSpeed: 3.6, engageRange: 12.5, collisionRadius: 0.44 },
+  shotgunner: { attackProfileId: "ranged.heavy", aiProfileId: "ai.ranged", ragdollProfileId: "ragdoll.light", healthScale: 0.9, healthBase: 45, mass: 1.0, moveSpeed: 3.5, engageRange: 7.5, collisionRadius: 0.45 },
+  rapid_ranged: { attackProfileId: "ranged.light", aiProfileId: "ai.ranged", ragdollProfileId: "ragdoll.light", healthScale: 0.75, healthBase: 30, mass: 0.85, moveSpeed: 4.0, engageRange: 10.5, collisionRadius: 0.42 },
+  thrower: { attackProfileId: "throw.explosive", aiProfileId: "ai.ranged", ragdollProfileId: "ragdoll.light", healthScale: 0.92, healthBase: 40, mass: 1.0, moveSpeed: 3.5, engageRange: 10.0, collisionRadius: 0.45 },
+  artillery: { attackProfileId: "siege.catapult", aiProfileId: "ai.ranged", ragdollProfileId: "ragdoll.heavy", healthScale: 0.35, healthBase: 60, mass: 2.8, moveSpeed: 2.3, engageRange: 17.0, collisionRadius: 0.82 },
+  support_heal: { attackProfileId: "support.heal", aiProfileId: "ai.support", ragdollProfileId: "ragdoll.light", healthScale: 0.85, healthBase: 35, mass: 0.9, moveSpeed: 3.7, engageRange: 8.0, collisionRadius: 0.4 },
+  support_buff: { attackProfileId: "support.heal", aiProfileId: "ai.support", ragdollProfileId: "ragdoll.light", healthScale: 1.0, healthBase: 60, mass: 0.95, moveSpeed: 3.8, engageRange: 8.0, collisionRadius: 0.42 },
+  special_magic: { attackProfileId: "ranged.heavy", aiProfileId: "ai.boss", ragdollProfileId: "ragdoll.heavy", healthScale: 1.3, healthBase: 70, mass: 1.3, moveSpeed: 3.8, engageRange: 13.0, collisionRadius: 0.58 },
+  charge_melee: { attackProfileId: "melee.heavy", aiProfileId: "ai.rush", ragdollProfileId: "ragdoll.heavy", healthScale: 1.45, healthBase: 65, mass: 1.8, moveSpeed: 4.9, engageRange: 2.4, collisionRadius: 0.68 },
+  flying_melee: { attackProfileId: "melee.heavy", aiProfileId: "ai.rush", ragdollProfileId: "ragdoll.medium", healthScale: 1.1, healthBase: 50, mass: 1.0, moveSpeed: 4.8, engageRange: 2.0, collisionRadius: 0.5 },
+  flying_ranged: { attackProfileId: "ranged.light", aiProfileId: "ai.ranged", ragdollProfileId: "ragdoll.light", healthScale: 0.9, healthBase: 45, mass: 0.85, moveSpeed: 4.4, engageRange: 12.5, collisionRadius: 0.44 },
+  summoner: { attackProfileId: "ranged.heavy", aiProfileId: "ai.support", ragdollProfileId: "ragdoll.heavy", healthScale: 1.15, healthBase: 75, mass: 1.4, moveSpeed: 3.4, engageRange: 12.0, collisionRadius: 0.6 },
+};
 
-export const ALL_UNITS: UnitDefinition[] = [
-  // Tribal
-  u("tribal.clubber", "Clubber", F.Tribal, 70, 95, 0.9, 4.2, 0.9, 0.42, "melee.light", "ai.rush", "ragdoll.light"),
-  u("tribal.protector", "Protector", F.Tribal, 90, 120, 1.1, 3.8, 1.0, 0.46, "melee.light", "ai.brace", "ragdoll.medium"),
-  u("tribal.spear_thrower", "Spear Thrower", F.Tribal, 140, 95, 0.9, 3.9, 10.0, 0.42, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("tribal.stoner", "Stoner", F.Tribal, 160, 120, 1.2, 3.6, 11.5, 0.5, "throw.explosive", "ai.ranged", "ragdoll.medium"),
-  u("tribal.bone_mage", "Bone Mage", F.Tribal, 220, 150, 1.2, 3.3, 8.0, 0.52, "melee.heavy", "ai.rush", "ragdoll.medium"),
-  u("tribal.chieftain", "Chieftain", F.Tribal, 400, 420, 1.9, 4.4, 1.3, 0.62, "melee.heavy", "ai.boss", "ragdoll.heavy"),
-  u("tribal.mammoth", "Mammoth", F.Tribal, 1200, 1600, 5.2, 3.0, 1.8, 1.15, "boss.legendary", "ai.boss", "ragdoll.boss"),
+const SIZE_MULTIPLIERS: Record<UnitSize, { health: number; mass: number; radius: number }> = {
+  tiny: { health: 0.72, mass: 0.7, radius: 0.8 },
+  small: { health: 0.9, mass: 0.85, radius: 0.92 },
+  medium: { health: 1.0, mass: 1.0, radius: 1.0 },
+  large: { health: 1.35, mass: 1.4, radius: 1.18 },
+  giant: { health: 1.9, mass: 2.2, radius: 1.45 },
+  colossal: { health: 2.8, mass: 3.3, radius: 1.75 },
+};
 
-  // Farmer
-  u("farmer.halfling", "Halfling", F.Farmer, 65, 70, 0.6, 4.5, 0.8, 0.35, "melee.light", "ai.rush", "ragdoll.light"),
-  u("farmer.farmer", "Farmer", F.Farmer, 80, 95, 0.9, 4.0, 0.9, 0.42, "melee.light", "ai.rush", "ragdoll.light"),
-  u("farmer.hay_baler", "Hay Baler", F.Farmer, 110, 145, 1.3, 3.4, 1.0, 0.5, "melee.medium", "ai.brace", "ragdoll.medium"),
-  u("farmer.potion_seller", "Potion Seller", F.Farmer, 180, 115, 1.0, 3.4, 9.0, 0.42, "throw.explosive", "ai.ranged", "ragdoll.light"),
-  u("farmer.harvester", "Harvester", F.Farmer, 260, 240, 1.6, 3.8, 1.2, 0.56, "melee.heavy", "ai.rush", "ragdoll.medium"),
-  u("farmer.wheelbarrow", "Wheelbarrow", F.Farmer, 520, 480, 2.4, 5.0, 1.4, 0.72, "melee.heavy", "ai.rush", "ragdoll.heavy"),
-  u("farmer.scarecrow", "Scarecrow", F.Farmer, 1000, 540, 1.7, 3.3, 13.0, 0.66, "ranged.heavy", "ai.ranged", "ragdoll.heavy"),
+function inferSize(entry: RosterManifestEntry): UnitSize {
+  return entry.size ?? "medium";
+}
 
-  // Medieval
-  u("medieval.bard", "Bard", F.Medieval, 65, 70, 0.7, 4.8, 0.8, 0.36, "melee.light", "ai.rush", "ragdoll.light"),
-  u("medieval.squire", "Squire", F.Medieval, 100, 125, 1.0, 4.0, 1.0, 0.46, "melee.medium", "ai.rush", "ragdoll.medium"),
-  u("medieval.archer", "Archer", F.Medieval, 140, 95, 0.8, 3.7, 12.0, 0.42, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("medieval.healer", "Healer", F.Medieval, 180, 100, 0.9, 3.6, 8.0, 0.4, "support.heal", "ai.support", "ragdoll.light"),
-  u("medieval.knight", "Knight", F.Medieval, 320, 320, 1.8, 3.9, 1.2, 0.58, "melee.heavy", "ai.brace", "ragdoll.heavy"),
-  u("medieval.catapult", "Catapult", F.Medieval, 1000, 380, 3.1, 2.2, 18.0, 0.8, "siege.catapult", "ai.ranged", "ragdoll.heavy"),
-  u("medieval.king", "King", F.Medieval, 1200, 900, 2.3, 4.2, 1.5, 0.72, "boss.legendary", "ai.boss", "ragdoll.boss"),
+function usesBossPhysics(entry: RosterManifestEntry): boolean {
+  const size = inferSize(entry);
+  return entry.archetype === "boss_melee" || entry.archetype === "giant_melee" || size === "giant" || size === "colossal";
+}
 
-  // Ancient
-  u("ancient.shield_bearer", "Shield Bearer", F.Ancient, 80, 135, 1.1, 3.8, 1.0, 0.5, "melee.light", "ai.brace", "ragdoll.medium"),
-  u("ancient.sarissa", "Sarissa", F.Ancient, 100, 120, 1.1, 3.6, 1.5, 0.48, "melee.medium", "ai.brace", "ragdoll.medium"),
-  u("ancient.hoplite", "Hoplite", F.Ancient, 140, 185, 1.4, 3.8, 1.2, 0.54, "melee.medium", "ai.brace", "ragdoll.medium"),
-  u("ancient.ballista", "Ballista", F.Ancient, 900, 300, 2.4, 2.4, 17.0, 0.78, "ranged.heavy", "ai.ranged", "ragdoll.heavy"),
-  u("ancient.snake_archer", "Snake Archer", F.Ancient, 220, 105, 0.9, 3.7, 11.5, 0.42, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("ancient.minotaur", "Minotaur", F.Ancient, 700, 780, 2.7, 4.3, 1.6, 0.84, "melee.heavy", "ai.boss", "ragdoll.heavy"),
-  u("ancient.zeus", "Zeus", F.Ancient, 2000, 1200, 2.2, 3.7, 13.0, 0.76, "boss.legendary", "ai.boss", "ragdoll.boss"),
+function prefersRagdoll(entry: RosterManifestEntry): string {
+  if (usesBossPhysics(entry)) return "ragdoll.boss";
+  if (entry.archetype === "artillery" || entry.archetype === "summoner" || inferSize(entry) === "large") return "ragdoll.heavy";
+  if (entry.archetype === "tiny_melee" || entry.archetype === "light_melee" || entry.archetype === "archer" || entry.archetype === "rapid_ranged") return "ragdoll.light";
+  return "ragdoll.medium";
+}
 
-  // Viking
-  u("viking.headbutter", "Headbutter", F.Viking, 90, 125, 1.0, 4.1, 0.9, 0.46, "melee.medium", "ai.rush", "ragdoll.medium"),
-  u("viking.ice_archer", "Ice Archer", F.Viking, 160, 100, 0.9, 3.6, 12.0, 0.42, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("viking.brawler", "Brawler", F.Viking, 140, 170, 1.3, 4.0, 1.0, 0.5, "melee.medium", "ai.rush", "ragdoll.medium"),
-  u("viking.berserker", "Berserker", F.Viking, 220, 220, 1.2, 5.0, 1.0, 0.52, "melee.heavy", "ai.rush", "ragdoll.medium"),
-  u("viking.valkyrie", "Valkyrie", F.Viking, 420, 300, 1.4, 4.8, 1.1, 0.56, "melee.heavy", "ai.rush", "ragdoll.heavy"),
-  u("viking.longship", "Longship", F.Viking, 500, 520, 2.8, 3.3, 1.6, 0.92, "melee.heavy", "ai.brace", "ragdoll.heavy"),
-  u("viking.jarl", "Jarl", F.Viking, 1200, 920, 2.4, 4.1, 1.5, 0.74, "boss.legendary", "ai.boss", "ragdoll.boss"),
+function applyAbilityOverrides(
+  entry: RosterManifestEntry,
+  base: ArchetypeTemplate,
+): Pick<UnitDefinition, "attackProfileId" | "aiProfileId" | "engageRange" | "moveSpeed"> {
+  const abilities = new Set<AbilityKind>(entry.abilities ?? []);
 
-  // Dynasty
-  u("dynasty.samurai", "Samurai", F.Dynasty, 140, 180, 1.2, 4.1, 1.1, 0.5, "melee.medium", "ai.brace", "ragdoll.medium"),
-  u("dynasty.firework_archer", "Firework Archer", F.Dynasty, 180, 100, 0.9, 3.7, 12.5, 0.42, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("dynasty.monk", "Monk", F.Dynasty, 220, 240, 1.2, 4.6, 1.0, 0.5, "melee.heavy", "ai.rush", "ragdoll.medium"),
-  u("dynasty.ninja", "Ninja", F.Dynasty, 160, 90, 0.8, 4.9, 10.0, 0.4, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("dynasty.dragon", "Dragon", F.Dynasty, 1000, 500, 2.0, 3.9, 11.0, 0.75, "throw.explosive", "ai.ranged", "ragdoll.heavy"),
-  u("dynasty.hwacha", "Hwacha", F.Dynasty, 900, 320, 2.8, 2.4, 16.0, 0.8, "ranged.heavy", "ai.ranged", "ragdoll.heavy"),
-  u("dynasty.monkey_king", "Monkey King", F.Dynasty, 2000, 1500, 2.3, 4.3, 1.6, 0.8, "boss.legendary", "ai.boss", "ragdoll.boss"),
+  let attackProfileId = base.attackProfileId;
+  let aiProfileId = base.aiProfileId;
+  let engageRange = entry.engageRangeOverride ?? base.engageRange;
+  let moveSpeed = entry.moveSpeedOverride ?? base.moveSpeed;
 
-  // Renaissance
-  u("renaissance.painter", "Painter", F.Renaissance, 80, 95, 0.9, 3.9, 0.9, 0.44, "melee.light", "ai.rush", "ragdoll.light"),
-  u("renaissance.fencer", "Fencer", F.Renaissance, 160, 150, 1.0, 4.5, 1.1, 0.46, "melee.medium", "ai.rush", "ragdoll.medium"),
-  u("renaissance.balloon_archer", "Balloon Archer", F.Renaissance, 180, 95, 0.8, 3.8, 11.5, 0.42, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("renaissance.musketeer", "Musketeer", F.Renaissance, 220, 110, 1.0, 3.5, 12.5, 0.46, "ranged.heavy", "ai.ranged", "ragdoll.light"),
-  u("renaissance.halberd", "Halberd", F.Renaissance, 200, 230, 1.4, 3.7, 1.3, 0.54, "melee.heavy", "ai.brace", "ragdoll.medium"),
-  u("renaissance.jouster", "Jouster", F.Renaissance, 500, 460, 2.2, 4.7, 1.5, 0.74, "melee.heavy", "ai.rush", "ragdoll.heavy"),
-  u("renaissance.da_vinci_tank", "Da Vinci Tank", F.Renaissance, 1800, 1100, 3.5, 2.7, 14.0, 1.05, "siege.catapult", "ai.ranged", "ragdoll.boss"),
+  if (abilities.has("rapid_fire")) {
+    attackProfileId = base.attackProfileId === "ranged.heavy" ? "ranged.heavy" : "ranged.light";
+  }
+  if (abilities.has("push_force")) {
+    attackProfileId = "boss.legendary";
+    engageRange = Math.max(engageRange, 10);
+  }
+  if (abilities.has("lightning_strike")) {
+    attackProfileId = "ranged.heavy";
+    aiProfileId = "ai.boss";
+    engageRange = Math.max(engageRange, 13);
+  }
+  if (abilities.has("summon") || abilities.has("revive")) {
+    aiProfileId = "ai.support";
+  }
+  if (abilities.has("teleport") || abilities.has("jump_charge") || abilities.has("leap_attack")) {
+    moveSpeed = Math.max(moveSpeed, 4.9);
+  }
+  if (abilities.has("flying_hover")) {
+    moveSpeed = Math.max(moveSpeed, 4.8);
+  }
 
-  // Pirate
-  u("pirate.flintlock", "Flintlock", F.Pirate, 120, 95, 0.9, 3.9, 10.0, 0.42, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("pirate.blunderbuss", "Blunderbuss", F.Pirate, 160, 110, 1.0, 3.5, 7.0, 0.45, "ranged.heavy", "ai.ranged", "ragdoll.light"),
-  u("pirate.bomb_thrower", "Bomb Thrower", F.Pirate, 220, 110, 1.0, 3.5, 10.0, 0.45, "throw.explosive", "ai.ranged", "ragdoll.light"),
-  u("pirate.harpooner", "Harpooner", F.Pirate, 140, 125, 1.0, 3.8, 10.5, 0.44, "ranged.light", "ai.ranged", "ragdoll.light"),
-  u("pirate.captain", "Captain", F.Pirate, 500, 520, 2.0, 4.0, 1.4, 0.7, "melee.heavy", "ai.boss", "ragdoll.heavy"),
-  u("pirate.cannon", "Cannon", F.Pirate, 1000, 340, 3.0, 2.3, 16.0, 0.86, "siege.catapult", "ai.ranged", "ragdoll.heavy"),
-  u("pirate.pirate_queen", "Pirate Queen", F.Pirate, 2500, 1700, 2.7, 4.4, 1.6, 0.85, "boss.legendary", "ai.boss", "ragdoll.boss"),
-];
+  return { attackProfileId, aiProfileId, engageRange, moveSpeed };
+}
 
-const unitMap = new Map(ALL_UNITS.map((u) => [u.id, u]));
+function buildDefinition(entry: RosterManifestEntry): UnitDefinition {
+  const base = ARCHETYPES[entry.archetype];
+  const size = inferSize(entry);
+  const sizeMultiplier = SIZE_MULTIPLIERS[size];
+  const { attackProfileId, aiProfileId, engageRange, moveSpeed } = applyAbilityOverrides(entry, base);
+  const healthMultiplier = entry.healthMultiplier ?? 1;
+
+  return {
+    ...entry,
+    maxHealth: Math.round((entry.cost * base.healthScale + base.healthBase) * sizeMultiplier.health * healthMultiplier),
+    mass: Number((base.mass * sizeMultiplier.mass).toFixed(2)),
+    moveSpeed,
+    engageRange,
+    collisionRadius: Number((base.collisionRadius * sizeMultiplier.radius).toFixed(2)),
+    attackProfileId,
+    aiProfileId,
+    ragdollProfileId: prefersRagdoll(entry),
+  };
+}
+
+export const ALL_UNITS: UnitDefinition[] = ROSTER_MANIFEST.map(buildDefinition);
+
+const unitMap = new Map(ALL_UNITS.map((unit) => [unit.id, unit]));
 
 export function getUnit(id: string): UnitDefinition | undefined {
   return unitMap.get(id);
+}
+
+export function getUnitsByFaction(faction: FactionId): UnitDefinition[] {
+  return ALL_UNITS.filter((unit) => unit.faction === faction);
+}
+
+export function getFactionCounts(): Record<FactionId, number> {
+  return ALL_UNITS.reduce<Record<FactionId, number>>((counts, unit) => {
+    counts[unit.faction] = (counts[unit.faction] ?? 0) + 1;
+    return counts;
+  }, {} as Record<FactionId, number>);
 }

@@ -4,6 +4,7 @@ import type { RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
+import type { FxPreset, UnitVisualConfig, VisualStateTag } from "./unitVisuals";
 
 export class RuntimeUnit {
   readonly definition: UnitDefinition;
@@ -11,6 +12,7 @@ export class RuntimeUnit {
   readonly body: ArticulatedBody;
   readonly animator: ProceduralAnimator;
   readonly propMeshes: Mesh[];
+  readonly visualConfig: UnitVisualConfig;
 
   private _ragdollProfile: RagdollProfile;
   private _currentHealth: number;
@@ -36,10 +38,14 @@ export class RuntimeUnit {
 
   // Special: spinning (berserker)
   private _spinning = false;
+  private _slowMultiplier = 1;
+  private _slowUntil = 0;
 
   // Spawn state for reset
   private _spawnPosition: Vector3;
   private _spawnRotationY: number;
+  private _spawnRole: "placed" | "summoned" | "crew" = "placed";
+  private _countsTowardVictory = true;
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
@@ -52,18 +58,22 @@ export class RuntimeUnit {
   get isDead(): boolean { return this._isDead; }
   get deathCleanupAt(): number { return this._deathCleanupAt; }
   get position(): Vector3 { return this.body.root.position; }
+  get spawnRole(): "placed" | "summoned" | "crew" { return this._spawnRole; }
+  get countsTowardVictory(): boolean { return this._countsTowardVictory; }
 
   constructor(
     definition: UnitDefinition,
     team: number,
     body: ArticulatedBody,
     propMeshes: Mesh[],
+    visualConfig: UnitVisualConfig,
     ragdollProfile: RagdollProfile,
   ) {
     this.definition = definition;
     this.team = team;
     this.body = body;
     this.propMeshes = propMeshes;
+    this.visualConfig = visualConfig;
     this._ragdollProfile = ragdollProfile;
     this._currentHealth = definition.maxHealth;
     this.animator = new ProceduralAnimator(body);
@@ -73,6 +83,11 @@ export class RuntimeUnit {
 
   canAttack(now: number): boolean {
     return !this._isDead && now >= this._nextAttackAt;
+  }
+
+  setSpawnRole(role: "placed" | "summoned" | "crew", countsTowardVictory = true): void {
+    this._spawnRole = role;
+    this._countsTowardVictory = countsTowardVictory;
   }
 
   setAttackCooldown(now: number, cooldown: number): void {
@@ -149,9 +164,16 @@ export class RuntimeUnit {
     this._currentHealth = Math.min(this.definition.maxHealth, this._currentHealth + amount);
   }
 
+  applySlow(multiplier: number, durationSeconds: number, now: number): void {
+    if (this._isDead) return;
+    this._slowMultiplier = Math.min(this._slowMultiplier, Math.max(0.2, multiplier));
+    this._slowUntil = Math.max(this._slowUntil, now + Math.max(0.1, durationSeconds));
+  }
+
   update(dt: number, now: number): void {
     // Animate
     this.animator.update(dt);
+    this._applyVisualPresentation(now);
 
     if (this._isDead) {
       this._updateDead(dt, now);
@@ -159,6 +181,9 @@ export class RuntimeUnit {
     }
 
     const pos = this.body.root.position;
+    if (now >= this._slowUntil) {
+      this._slowMultiplier = 1;
+    }
 
     // ── Physics: gravity + velocity for knockback ──
     if (!this._grounded || this._velocity.lengthSquared() > 0.001) {
@@ -215,7 +240,7 @@ export class RuntimeUnit {
         }
       } else {
         const dir = offset.normalize();
-        const step = this.definition.moveSpeed * dt;
+        const step = this.definition.moveSpeed * this._slowMultiplier * dt;
         pos.addInPlace(dir.scale(Math.min(step, Math.sqrt(distSq))));
 
         // Face movement direction
@@ -324,6 +349,136 @@ export class RuntimeUnit {
     this.healthBarMesh.position.x = -(1 - ratio) * 0.5 * 0.5;
   }
 
+  private _applyVisualPresentation(now: number): void {
+    const activeStates = new Set<VisualStateTag>();
+    activeStates.add(this._isMoving ? "moving" : "idle");
+    const isAttacking = this.animator.state === AnimState.Attacking;
+    if (isAttacking) activeStates.add("attacking");
+    if (isAttacking || this._spinning) activeStates.add("ability-active");
+
+    const activeKeys = new Set<string>();
+    for (const state of activeStates) {
+      for (const key of this.visualConfig.stateVariants?.[state] ?? []) {
+        activeKeys.add(key);
+      }
+    }
+
+    for (const mesh of this.propMeshes) {
+      const key = mesh.metadata?.visualKey as string | undefined;
+      if (!key) continue;
+      mesh.isVisible = activeKeys.has(key);
+    }
+
+    this._applyPoseOverlay(isAttacking);
+    this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
+  }
+
+  private _applyPoseOverlay(isAttacking: boolean): void {
+    const body = this.body;
+    switch (this.visualConfig.posePreset) {
+      case "archer":
+        body.leftShoulder.rotation.z -= 0.18;
+        body.rightShoulder.rotation.z += 0.1;
+        if (isAttacking) {
+          body.leftShoulder.rotation.x -= 0.35;
+          body.rightShoulder.rotation.x += 0.22;
+          body.torso.rotation.z -= 0.05;
+        }
+        break;
+      case "caster":
+        body.leftShoulder.rotation.z -= 0.22;
+        body.rightShoulder.rotation.z += 0.22;
+        body.leftElbow.rotation.x -= 0.15;
+        body.rightElbow.rotation.x -= 0.15;
+        if (isAttacking) {
+          body.torso.rotation.x -= 0.08;
+          body.neck.rotation.x += 0.1;
+        }
+        break;
+      case "shouter":
+        body.torso.rotation.x -= isAttacking ? 0.18 : 0.06;
+        body.neck.rotation.x += isAttacking ? 0.26 : 0.08;
+        body.leftShoulder.rotation.z -= 0.28;
+        body.rightShoulder.rotation.z += 0.28;
+        break;
+      case "duelist":
+        body.torso.rotation.z += 0.04;
+        body.leftShoulder.rotation.z -= 0.12;
+        body.rightShoulder.rotation.z += 0.04;
+        if (isAttacking) {
+          body.torso.rotation.x -= 0.1;
+          body.neck.rotation.z += 0.08;
+        }
+        break;
+      case "spinner":
+        body.leftShoulder.rotation.z -= 0.42;
+        body.rightShoulder.rotation.z += 0.42;
+        body.leftElbow.rotation.x -= 0.24;
+        body.rightElbow.rotation.x -= 0.24;
+        break;
+      case "giant":
+        body.leftShoulder.rotation.z -= 0.24;
+        body.rightShoulder.rotation.z += 0.24;
+        body.torso.rotation.x += isAttacking ? 0.12 : 0.05;
+        body.neck.rotation.x -= 0.04;
+        break;
+      case "mounted":
+        body.torso.rotation.x += 0.12;
+        body.leftHip.rotation.x += 0.08;
+        body.rightHip.rotation.x += 0.08;
+        break;
+      case "support":
+        body.leftShoulder.rotation.z -= 0.18;
+        body.rightShoulder.rotation.z += 0.18;
+        body.leftElbow.rotation.x -= 0.1;
+        body.rightElbow.rotation.x -= 0.1;
+        break;
+      case "beast":
+        body.neck.rotation.x += 0.12;
+        body.leftShoulder.rotation.x += 0.12;
+        body.rightShoulder.rotation.x += 0.12;
+        break;
+      default:
+        break;
+    }
+  }
+
+  private _applyFxPreset(fxPreset: FxPreset, isAttacking: boolean, now: number): void {
+    const pulse = 0.08 + (isAttacking ? 0.14 : 0.04) * (0.5 + 0.5 * Math.sin(now * 8));
+    let color: Color3 | null = null;
+    switch (fxPreset) {
+      case "frost":
+        color = new Color3(0.6, 0.9, 1.0);
+        break;
+      case "ember":
+        color = new Color3(1.0, 0.45, 0.12);
+        break;
+      case "spectral":
+        color = new Color3(0.75, 0.7, 1.0);
+        break;
+      case "solar":
+        color = new Color3(1.0, 0.88, 0.35);
+        break;
+      case "royal":
+        color = new Color3(0.95, 0.78, 0.3);
+        break;
+      case "wind":
+        color = new Color3(0.75, 0.95, 1.0);
+        break;
+      default:
+        break;
+    }
+
+    if (!color) {
+      this.body.bodyMaterial.emissiveColor.set(0, 0, 0);
+      this.body.skinMaterial.emissiveColor.set(0, 0, 0);
+      return;
+    }
+
+    this.body.bodyMaterial.emissiveColor = color.scale(pulse);
+    this.body.skinMaterial.emissiveColor = color.scale(pulse * 0.25);
+  }
+
   /** Reset unit to its original spawn state (position, health, alive). */
   resetToSpawn(): void {
     this._isDead = false;
@@ -334,11 +489,15 @@ export class RuntimeUnit {
     this._grounded = true;
     this._staggerTimer = 0;
     this._spinning = false;
+    this._slowMultiplier = 1;
+    this._slowUntil = 0;
     this._physicsActive = false;
     this._bounceCount = 0;
     this._deathSpinX = 0;
     this._deathSpinY = 0;
     this._nextAttackAt = 0;
+    this._spawnRole = "placed";
+    this._countsTowardVictory = true;
 
     // Restore position and clear rotation
     this.body.root.position.copyFrom(this._spawnPosition);

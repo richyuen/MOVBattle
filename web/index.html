@@ -60,6 +60,17 @@
       display: flex; flex-wrap: wrap; gap: 4px; max-height: 100px; overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
+    #unitSearch {
+      width: calc(100% - 16px);
+      margin: 8px 8px 0;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      outline: none;
+    }
+    #unitSearch::placeholder { color: rgba(255,255,255,0.55); }
     .unit-btn {
       padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 3px;
       background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; font-size: 11px;
@@ -67,6 +78,7 @@
     }
     .unit-btn:hover { background: rgba(255,255,255,0.15); }
     .unit-btn.selected { border-color: #ffd54f; background: rgba(255,215,0,0.2); }
+    .unit-empty { color: rgba(255,255,255,0.7); font-size: 12px; padding: 8px 4px; }
 
     #resultOverlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -140,10 +152,11 @@
     <div id="statusText"></div>
   </div>
 
-  <div id="unitPanel">
-    <div id="factionTabs"></div>
-    <div id="unitGrid"></div>
-  </div>
+    <div id="unitPanel">
+      <div id="factionTabs"></div>
+      <input id="unitSearch" type="search" placeholder="Search units" />
+      <div id="unitGrid"></div>
+    </div>
 
   <div id="resultOverlay">
     <div id="resultTitle"></div>

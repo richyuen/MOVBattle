@@ -1,4 +1,6 @@
 import type { BodyProportions } from "./bodyBuilder";
+import { FactionId } from "../data/factionColors";
+import { getUnit } from "../data/unitDefinitions";
 
 export type WeaponType =
   | "none" | "club" | "sword" | "greatsword" | "spear" | "javelin"
@@ -9,7 +11,8 @@ export type WeaponType =
   | "bone_staff" | "lute" | "paintbrush" | "rapier"
   | "harpoon" | "cutlass" | "bomb" | "torch"
   | "katana" | "nunchaku" | "shuriken_hand" | "bo_staff"
-  | "stone" | "hay_bale" | "potion" | "lightning_bolt";
+  | "stone" | "hay_bale" | "potion" | "lightning_bolt"
+  | "fan" | "flail" | "whip" | "present_box" | "pom_pom";
 
 export type HatType =
   | "none" | "crown" | "helmet" | "viking_helmet" | "horned_helmet"
@@ -18,7 +21,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "monk_headband"
   | "pharaoh" | "feather_headdress" | "bone_mask"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe";
+  | "great_helm" | "hood_liripipe" | "jester_cap";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler";
 
@@ -26,7 +29,58 @@ export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
   | "barrel_body" | "cart" | "longship_body" | "tank_body"
   | "catapult_arm" | "cannon_base" | "hwacha_rack" | "ballista_frame"
-  | "balloon" | "dragon_wings" | "scarecrow_post" | "monk_robe";
+  | "balloon" | "dragon_wings" | "scarecrow_post" | "monk_robe"
+  | "raptor_mount" | "clam_shell" | "safe_bundle" | "dragon_cart"
+  | "giant_bones" | "giant_tree" | "giant_ice" | "halo";
+
+export type VisualStateTag = "idle" | "moving" | "attacking" | "ability-active";
+
+export type PosePreset =
+  | "default"
+  | "archer"
+  | "caster"
+  | "shouter"
+  | "duelist"
+  | "spinner"
+  | "giant"
+  | "mounted"
+  | "support"
+  | "beast"
+  | "vehicle";
+
+export type MaterialPreset =
+  | "default"
+  | "secret_hero"
+  | "secret_ghost"
+  | "secret_ice"
+  | "secret_nature"
+  | "secret_bone"
+  | "secret_demon"
+  | "secret_holy"
+  | "secret_bandit"
+  | "secret_beast"
+  | "secret_pirate"
+  | "secret_festive"
+  | "secret_royal";
+
+export type AttachmentPreset =
+  | "none"
+  | "fan_bearer"
+  | "bow_ready"
+  | "crossbow_ready"
+  | "shouter"
+  | "cheerleader"
+  | "summoner"
+  | "infernal_whip"
+  | "hero_halo"
+  | "ghost_trail"
+  | "giant_aura"
+  | "present_elf"
+  | "bank_robbers"
+  | "bomb_lit"
+  | "dragon_cart_fx";
+
+export type FxPreset = "none" | "frost" | "ember" | "spectral" | "solar" | "royal" | "wind";
 
 export interface UnitVisualConfig {
   proportions: Partial<BodyProportions>;
@@ -37,6 +91,11 @@ export interface UnitVisualConfig {
   special: SpecialType;
   /** Extra color accent for weapon/props (hex) */
   accentColor?: string;
+  posePreset?: PosePreset;
+  materialPreset?: MaterialPreset;
+  attachmentPreset?: AttachmentPreset;
+  fxPreset?: FxPreset;
+  stateVariants?: Partial<Record<VisualStateTag, string[]>>;
 }
 
 function vis(
@@ -47,8 +106,22 @@ function vis(
   special: SpecialType = "none",
   accentColor?: string,
   offhandWeapon?: WeaponType,
+  extras: Partial<Omit<UnitVisualConfig, "proportions" | "weapon" | "offhandWeapon" | "hat" | "shield" | "special" | "accentColor">> = {},
 ): UnitVisualConfig {
-  return { proportions, weapon, offhandWeapon, hat, shield, special, accentColor };
+  return {
+    proportions,
+    weapon,
+    offhandWeapon,
+    hat,
+    shield,
+    special,
+    accentColor,
+    posePreset: "default",
+    materialPreset: "default",
+    attachmentPreset: "none",
+    fxPreset: "none",
+    ...extras,
+  };
 }
 
 /**
@@ -241,5 +314,451 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 };
 
 export function getUnitVisual(id: string): UnitVisualConfig {
-  return UNIT_VISUALS[id] ?? vis({ scale: 1.0 }, "club", "none");
+  if (UNIT_VISUALS[id]) return UNIT_VISUALS[id];
+  const presetVisual = getPresetVisual(id);
+  if (presetVisual) return presetVisual;
+
+  const def = getUnit(id);
+  if (def?.faction === FactionId.Secret) {
+    throw new Error(`Missing explicit Secret visual preset for ${id}`);
+  }
+
+  return inferUnitVisual(id);
+}
+
+function getPresetVisual(id: string): UnitVisualConfig | null {
+  const def = getUnit(id);
+  const preset = def?.visualPreset;
+  if (!preset) return null;
+
+  switch (preset) {
+    case "secret_ballooner":
+      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.1 }, "dagger", "none", "none", "balloon", "#ff9db5", undefined, {
+        posePreset: "support", materialPreset: "secret_festive", fxPreset: "wind", attachmentPreset: "ghost_trail",
+        stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
+      });
+    case "secret_bomb_on_a_stick":
+      return vis({ scale: 1.0, bulk: 1.0, armLength: 1.1 }, "bomb", "none", "none", "none", "#3a3a3a", undefined, {
+        materialPreset: "secret_bandit", attachmentPreset: "bomb_lit",
+        stateVariants: { attacking: ["lit_fuse"], "ability-active": ["lit_fuse"] },
+      });
+    case "secret_fan_bearer":
+      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.15 }, "fan", "conical_hat", "none", "none", "#ead8a6", undefined, {
+        posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "fan_bearer", fxPreset: "wind",
+        stateVariants: { idle: ["fan_closed"], moving: ["fan_closed"], attacking: ["fan_open"], "ability-active": ["fan_open", "gust_ring"] },
+      });
+    case "secret_raptor":
+      return vis({ scale: 1.2, bulk: 0.95, headSize: 0.95, armLength: 0.7, legLength: 1.2 }, "none", "none", "none", "raptor_mount", "#7c8a4b", undefined, {
+        posePreset: "beast", materialPreset: "secret_beast",
+      });
+    case "secret_teacher":
+      return vis({ scale: 1.12, bulk: 0.95, armLength: 1.15 }, "katana", "none", "none", "none", "#3b3b3b", undefined, {
+        posePreset: "duelist", materialPreset: "secret_bandit",
+      });
+    case "secret_jester":
+      return vis({ scale: 1.0, bulk: 0.88, headSize: 1.08 }, "dagger", "jester_cap", "none", "none", "#d43d3d", "dagger", {
+        posePreset: "duelist", materialPreset: "secret_festive",
+      });
+    case "secret_ball_n_chain":
+      return vis({ scale: 1.22, bulk: 1.25 }, "flail", "hood", "none", "none", "#5d5d5d", undefined, {
+        posePreset: "spinner", materialPreset: "secret_bandit",
+      });
+    case "secret_chu_ko_nu":
+      return vis({ scale: 1.0, bulk: 0.95, armLength: 1.05 }, "crossbow", "conical_hat", "none", "none", "#7e4b2d", undefined, {
+        posePreset: "archer", materialPreset: "secret_bandit", attachmentPreset: "crossbow_ready",
+        stateVariants: { attacking: ["crossbow_bolt"] },
+      });
+    case "secret_executioner":
+      return vis({ scale: 1.42, bulk: 1.4, headSize: 1.05 }, "axe", "hood", "none", "cape", "#4a1f1f", undefined, {
+        posePreset: "duelist", materialPreset: "secret_demon",
+      });
+    case "secret_shouter":
+      return vis({ scale: 1.35, bulk: 1.25, headSize: 1.18 }, "none", "none", "none", "cape", "#92d7ff", undefined, {
+        posePreset: "shouter", materialPreset: "secret_holy", attachmentPreset: "shouter", fxPreset: "wind",
+        stateVariants: { attacking: ["shout_ring"], "ability-active": ["shout_ring"] },
+      });
+    case "secret_taekwondo":
+      return vis({ scale: 1.05, bulk: 0.9, legLength: 1.1 }, "none", "bandana", "none", "none", "#f6f6f6", undefined, {
+        posePreset: "duelist", materialPreset: "secret_holy",
+      });
+    case "secret_raptor_rider":
+      return vis({ scale: 1.24, bulk: 1.1 }, "spear", "bone_mask", "none", "raptor_mount", "#8c6b45", undefined, {
+        posePreset: "mounted", materialPreset: "secret_beast",
+      });
+    case "secret_cheerleader":
+      return vis({ scale: 0.95, bulk: 0.88 }, "pom_pom", "bandana", "none", "none", "#f0d66a", "pom_pom", {
+        posePreset: "support", materialPreset: "secret_festive", attachmentPreset: "cheerleader",
+        stateVariants: { moving: ["pom_streamers"], attacking: ["pom_streamers"], "ability-active": ["pom_streamers"] },
+      });
+    case "secret_cupid":
+      return vis({ scale: 0.9, bulk: 0.85, armLength: 1.08 }, "bow", "none", "none", "wings", "#ffbfd1", undefined, {
+        posePreset: "archer", materialPreset: "secret_holy", attachmentPreset: "bow_ready",
+        stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
+      });
+    case "secret_mace_spinner":
+      return vis({ scale: 1.3, bulk: 1.2 }, "mace", "helmet", "none", "none", "#8e8e8e", "mace", {
+        posePreset: "spinner", materialPreset: "secret_bandit",
+      });
+    case "secret_clams":
+      return vis({ scale: 1.18, bulk: 1.55, legLength: 0.8 }, "none", "none", "none", "clam_shell", "#8db4be", undefined, {
+        posePreset: "support", materialPreset: "secret_holy", attachmentPreset: "summoner",
+        stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
+      });
+    case "secret_present_elf":
+      return vis({ scale: 0.95, bulk: 0.88 }, "present_box", "hood_liripipe", "none", "none", "#7ad957", undefined, {
+        posePreset: "support", materialPreset: "secret_festive", attachmentPreset: "present_elf",
+        stateVariants: { attacking: ["present_spark"], "ability-active": ["present_spark"] },
+      });
+    case "secret_ice_mage":
+      return vis({ scale: 1.08, bulk: 0.95 }, "staff", "hood", "none", "none", "#87d8ff", undefined, {
+        posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "summoner", fxPreset: "frost",
+        stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
+      });
+    case "secret_infernal_whip":
+      return vis({ scale: 1.12, bulk: 1.0, armLength: 1.15 }, "whip", "hood", "none", "none", "#ff7a2f", undefined, {
+        posePreset: "duelist", materialPreset: "secret_demon", attachmentPreset: "infernal_whip", fxPreset: "ember",
+        stateVariants: { attacking: ["flame_lash"], "ability-active": ["flame_lash"] },
+      });
+    case "secret_bank_robbers":
+      return vis({ scale: 1.08, bulk: 1.08 }, "flintlock", "bandana", "none", "safe_bundle", "#5b5b5b", "flintlock", {
+        posePreset: "support", materialPreset: "secret_bandit", attachmentPreset: "bank_robbers",
+        stateVariants: { attacking: ["loot_flash"] },
+      });
+    case "secret_witch":
+      return vis({ scale: 1.05, bulk: 0.95, headSize: 1.08 }, "staff", "hood", "none", "cape", "#7d5ba6", undefined, {
+        posePreset: "caster", materialPreset: "secret_ghost", attachmentPreset: "summoner", fxPreset: "spectral",
+        stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
+      });
+    case "secret_banshee":
+      return vis({ scale: 1.12, bulk: 0.88, armLength: 1.08 }, "none", "hood", "none", "wings", "#e8ecff", undefined, {
+        posePreset: "support", materialPreset: "secret_ghost", attachmentPreset: "ghost_trail", fxPreset: "spectral",
+        stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
+      });
+    case "secret_necromancer":
+      return vis({ scale: 1.12, bulk: 0.95, headSize: 1.08 }, "bone_staff", "hood", "none", "cape", "#ddd4bf", undefined, {
+        posePreset: "caster", materialPreset: "secret_bone", attachmentPreset: "summoner", fxPreset: "spectral",
+        stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
+      });
+    case "secret_solar_architect":
+      return vis({ scale: 1.18, bulk: 0.98 }, "staff", "laurel", "none", "halo", "#f7dd6f", undefined, {
+        posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "hero_halo", fxPreset: "solar",
+        stateVariants: { attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
+      });
+    case "secret_wheelbarrow_dragon":
+      return vis({ scale: 1.42, bulk: 1.35 }, "none", "straw_hat", "none", "dragon_cart", "#7f4c2c", undefined, {
+        posePreset: "mounted", materialPreset: "secret_beast", attachmentPreset: "dragon_cart_fx", fxPreset: "ember",
+        stateVariants: { attacking: ["dragon_glow"], "ability-active": ["dragon_glow"] },
+      });
+    case "secret_skeleton_giant":
+      return vis({ scale: 2.35, bulk: 1.7, headSize: 1.15, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_bones", "#e5ddd0", undefined, {
+        posePreset: "giant", materialPreset: "secret_bone", attachmentPreset: "giant_aura", fxPreset: "spectral",
+        stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
+      });
+    case "secret_bomb_cannon":
+      return vis({ scale: 1.55, bulk: 1.65, legLength: 0.7 }, "none", "none", "none", "none", "#4a4a4a", undefined, {
+        posePreset: "vehicle", materialPreset: "secret_bandit",
+      });
+    case "secret_cavalry":
+      return vis({ scale: 1.32, bulk: 1.15 }, "lance", "plume_helmet", "kite", "mount_horse", "#c4b28a", undefined, {
+        posePreset: "mounted", materialPreset: "secret_royal",
+      });
+    case "secret_vlad":
+      return vis({ scale: 1.4, bulk: 1.22, headSize: 1.08 }, "spear", "captain_hat", "none", "cape", "#822f2f", undefined, {
+        posePreset: "duelist", materialPreset: "secret_pirate",
+      });
+    case "secret_gatling_gun":
+      return vis({ scale: 1.6, bulk: 1.75, legLength: 0.7 }, "none", "none", "none", "none", "#6f5f48", undefined, {
+        posePreset: "vehicle", materialPreset: "secret_pirate",
+      });
+    case "secret_blackbeard":
+      return vis({ scale: 1.58, bulk: 1.28, headSize: 1.08 }, "cutlass", "captain_hat", "none", "cape", "#5d3a1f", "flintlock", {
+        posePreset: "duelist", materialPreset: "secret_pirate",
+      });
+    case "secret_samurai_giant":
+      return vis({ scale: 2.3, bulk: 1.75, headSize: 1.16, armLength: 1.1, legLength: 0.95 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
+        posePreset: "giant", materialPreset: "secret_royal", attachmentPreset: "giant_aura", fxPreset: "royal",
+        stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
+      });
+    case "secret_ullr":
+      return vis({ scale: 1.28, bulk: 1.05, armLength: 1.08 }, "bow", "viking_helmet", "none", "cape", "#9cd5ff", "axe", {
+        posePreset: "archer", materialPreset: "secret_ice", attachmentPreset: "bow_ready", fxPreset: "frost",
+        stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
+      });
+    case "secret_lady_red_jade":
+      return vis({ scale: 1.52, bulk: 1.18, headSize: 1.05 }, "sword", "crown", "none", "cape", "#cf2f2f", undefined, {
+        posePreset: "duelist", materialPreset: "secret_royal", fxPreset: "royal",
+      });
+    case "secret_sensei":
+      return vis({ scale: 1.32, bulk: 1.0, armLength: 1.1 }, "shuriken_hand", "conical_hat", "none", "cape", "#f5e4b4", "shuriken_hand", {
+        posePreset: "duelist", materialPreset: "secret_holy",
+      });
+    case "secret_shogun":
+      return vis({ scale: 1.58, bulk: 1.3, headSize: 1.08 }, "katana", "samurai_helmet", "none", "cape", "#a42323", undefined, {
+        posePreset: "duelist", materialPreset: "secret_royal", fxPreset: "royal",
+      });
+    case "secret_tree_giant":
+      return vis({ scale: 2.45, bulk: 1.85, headSize: 1.1, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_tree", "#6f8a42", undefined, {
+        posePreset: "giant", materialPreset: "secret_nature", attachmentPreset: "giant_aura",
+        stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
+      });
+    case "secret_artemis":
+      return vis({ scale: 1.45, bulk: 1.02, armLength: 1.12 }, "bow", "laurel", "none", "halo", "#f5d566", undefined, {
+        posePreset: "archer", materialPreset: "secret_hero", attachmentPreset: "hero_halo", fxPreset: "solar",
+        stateVariants: { attacking: ["drawn_arrow", "halo_flare"], "ability-active": ["drawn_arrow", "halo_flare"] },
+      });
+    case "secret_ice_giant":
+      return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_ice", "#9fe9ff", undefined, {
+        posePreset: "giant", materialPreset: "secret_ice", attachmentPreset: "giant_aura", fxPreset: "frost",
+        stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
+      });
+    default:
+      return null;
+  }
+}
+
+function inferUnitVisual(id: string): UnitVisualConfig {
+  const def = getUnit(id);
+  if (!def) return vis({ scale: 1.0 }, "club", "none");
+
+  return vis(
+    inferProportions(def.size, def.archetype),
+    inferWeapon(def.weaponHint, def.displayName),
+    inferHat(def.hatHint, def.faction, def.displayName),
+    inferShield(def.shieldHint, def.displayName),
+    inferSpecial(def.specialHint, def.displayName),
+    inferAccent(def.faction),
+  );
+}
+
+function inferProportions(size: string | undefined, archetype: string): Partial<BodyProportions> {
+  switch (size) {
+    case "tiny":
+      return { scale: 0.68, headSize: 1.25, legLength: 0.72, bulk: 0.8 };
+    case "large":
+      return { scale: 1.25, bulk: 1.22, headSize: 1.05 };
+    case "giant":
+      return { scale: 1.7, bulk: 1.45, headSize: 1.15, armLength: 1.1 };
+    case "colossal":
+      return { scale: 2.25, bulk: 1.85, headSize: 1.25, armLength: 1.15, legLength: 0.9 };
+    default:
+      break;
+  }
+
+  if (archetype === "flying_melee" || archetype === "flying_ranged") {
+    return { scale: 1.05, armLength: 1.08 };
+  }
+  if (archetype === "boss_melee") {
+    return { scale: 1.45, bulk: 1.3, headSize: 1.08 };
+  }
+  if (archetype === "artillery") {
+    return { scale: 1.45, bulk: 1.6, legLength: 0.7 };
+  }
+  if (archetype === "shield_melee") {
+    return { scale: 1.05, bulk: 1.1 };
+  }
+  return { scale: 1.0 };
+}
+
+function inferWeapon(hint: string | undefined, name: string): WeaponType {
+  switch (hint) {
+    case "club":
+    case "sword":
+    case "greatsword":
+    case "spear":
+    case "javelin":
+    case "axe":
+    case "hammer":
+    case "mace":
+    case "staff":
+    case "dagger":
+    case "bow":
+    case "crossbow":
+    case "musket":
+    case "flintlock":
+    case "blunderbuss":
+    case "cannon_hand":
+    case "halberd":
+    case "lance":
+    case "scythe":
+    case "pitchfork":
+    case "frying_pan":
+    case "broom":
+    case "bone_staff":
+    case "lute":
+    case "paintbrush":
+    case "rapier":
+    case "harpoon":
+    case "cutlass":
+    case "bomb":
+    case "torch":
+    case "katana":
+    case "nunchaku":
+    case "bo_staff":
+    case "stone":
+    case "hay_bale":
+    case "potion":
+    case "lightning_bolt":
+      return hint;
+    default:
+      break;
+  }
+
+  const lower = name.toLowerCase();
+  if (lower.includes("archer") || lower.includes("cupid") || lower.includes("poacher")) return "bow";
+  if (lower.includes("musketeer") || lower.includes("deadeye")) return "musket";
+  if (lower.includes("flintlock") || lower.includes("gunslinger") || lower.includes("quick draw") || lower.includes("bank robbers")) return "flintlock";
+  if (lower.includes("blunderbuss")) return "blunderbuss";
+  if (lower.includes("bomb")) return "bomb";
+  if (lower.includes("harpoon")) return "harpoon";
+  if (lower.includes("wizard") || lower.includes("mage") || lower.includes("cultist") || lower.includes("lich") || lower.includes("monarch") || lower.includes("architect")) return "staff";
+  if (lower.includes("samurai") || lower.includes("shogun") || lower.includes("teacher")) return "katana";
+  if (lower.includes("fencer")) return "rapier";
+  if (lower.includes("halberd") || lower.includes("glaive")) return "halberd";
+  if (lower.includes("lasso") || lower.includes("cavalry") || lower.includes("jouster")) return "lance";
+  if (lower.includes("scythe") || lower.includes("harvester") || lower.includes("reaper")) return "scythe";
+  if (lower.includes("bard")) return "lute";
+  if (lower.includes("painter")) return "paintbrush";
+  if (lower.includes("samurai") || lower.includes("ninja")) return "katana";
+  return "club";
+}
+
+function inferHat(hint: string | undefined, faction: FactionId, name: string): HatType {
+  switch (hint) {
+    case "crown":
+    case "helmet":
+    case "viking_helmet":
+    case "horned_helmet":
+    case "hood":
+    case "turban":
+    case "conical_hat":
+    case "tricorn":
+    case "bandana":
+    case "laurel":
+    case "plume_helmet":
+    case "straw_hat":
+    case "beret":
+    case "samurai_helmet":
+    case "ninja_mask":
+    case "monk_headband":
+    case "pharaoh":
+    case "feather_headdress":
+    case "bone_mask":
+    case "pirate_hat":
+    case "captain_hat":
+    case "great_helm":
+    case "hood_liripipe":
+      return hint;
+    default:
+      break;
+  }
+
+  const lower = name.toLowerCase();
+  if (lower.includes("king") || lower.includes("queen")) return "crown";
+  if (lower.includes("samurai") || lower.includes("shogun")) return "samurai_helmet";
+  if (lower.includes("ninja")) return "ninja_mask";
+  if (lower.includes("captain") || lower.includes("blackbeard")) return "captain_hat";
+  if (lower.includes("pirate")) return "pirate_hat";
+  if (lower.includes("pharaoh")) return "pharaoh";
+
+  switch (faction) {
+    case FactionId.Farmer:
+      return "straw_hat";
+    case FactionId.Medieval:
+      return "helmet";
+    case FactionId.Viking:
+      return "viking_helmet";
+    case FactionId.Dynasty:
+      return "conical_hat";
+    case FactionId.Renaissance:
+      return "beret";
+    case FactionId.Pirate:
+      return "tricorn";
+    case FactionId.Spooky:
+      return "hood";
+    case FactionId.WildWest:
+      return "bandana";
+    case FactionId.Good:
+      return "laurel";
+    case FactionId.Evil:
+      return "hood";
+    case FactionId.Secret:
+      return "none";
+    default:
+      return "none";
+  }
+}
+
+function inferShield(hint: string | undefined, name: string): ShieldType {
+  switch (hint) {
+    case "round":
+    case "kite":
+    case "tower":
+    case "buckler":
+      return hint;
+    default:
+      break;
+  }
+
+  if (name.toLowerCase().includes("shield")) return "tower";
+  return "none";
+}
+
+function inferSpecial(hint: string | undefined, name: string): SpecialType {
+  switch (hint) {
+    case "mammoth":
+      return "mount_mammoth";
+    case "horse":
+      return "mount_horse";
+    case "wings":
+      return "wings";
+    case "cart":
+      return "cart";
+    case "longship":
+      return "longship_body";
+    case "tank":
+      return "tank_body";
+    case "catapult":
+      return "catapult_arm";
+    case "cannon":
+      return "cannon_base";
+    case "hwacha":
+      return "hwacha_rack";
+    case "ballista":
+      return "ballista_frame";
+    case "balloon":
+      return "balloon";
+    case "dragon":
+      return "dragon_wings";
+    case "scarecrow":
+      return "scarecrow_post";
+    case "monk":
+      return "monk_robe";
+    default:
+      break;
+  }
+
+  const lower = name.toLowerCase();
+  if (lower.includes("balloon")) return "balloon";
+  if (lower.includes("dragon")) return "dragon_wings";
+  if (lower.includes("valkyrie") || lower.includes("cupid") || lower.includes("banshee")) return "wings";
+  return "none";
+}
+
+function inferAccent(faction: FactionId): string {
+  switch (faction) {
+    case FactionId.Tribal: return "#8B5A2B";
+    case FactionId.Farmer: return "#C8A24A";
+    case FactionId.Medieval: return "#8FA4D8";
+    case FactionId.Ancient: return "#C5A24B";
+    case FactionId.Viking: return "#C8DDF5";
+    case FactionId.Dynasty: return "#C73131";
+    case FactionId.Renaissance: return "#5777BE";
+    case FactionId.Pirate: return "#6E6E6E";
+    case FactionId.Spooky: return "#9C7FCC";
+    case FactionId.WildWest: return "#B7722C";
+    case FactionId.Legacy: return "#B9B9B9";
+    case FactionId.Good: return "#E6C75A";
+    case FactionId.Evil: return "#7D3434";
+    case FactionId.Secret: return "#B8B8B8";
+  }
 }

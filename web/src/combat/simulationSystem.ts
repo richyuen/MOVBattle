@@ -8,8 +8,26 @@ import {
 import { ProjectileSystem, type ProjectileShape } from "./projectileSystem";
 import { VisualEffects } from "./visualEffects";
 
-/** Map projectileId / attackProfileId to a visible projectile shape. */
-function resolveProjectileShape(profile: AttackProfile): ProjectileShape | null {
+function hasAbility(unit: RuntimeUnit, ability: string): boolean {
+  return (unit.definition.abilities ?? []).includes(ability as never);
+}
+
+function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): ProjectileShape | null {
+  switch (unit.definition.projectileHint) {
+    case "arrow": return "arrow";
+    case "bolt": return "bolt";
+    case "bomb": return "bomb";
+    case "stone": return "stone";
+    case "spear": return "spear";
+    case "firework": return "firework";
+    case "shuriken": return "shuriken";
+    case "rocket_arrow": return "rocket_arrow";
+    case "crow": return "crow";
+    case "fireball": return "fireball";
+    default:
+      break;
+  }
+
   const pid = profile.projectileId ?? "";
   switch (pid) {
     case "projectile.arrow": return "arrow";
@@ -18,43 +36,19 @@ function resolveProjectileShape(profile: AttackProfile): ProjectileShape | null 
     case "projectile.stone": return "stone";
     default: break;
   }
-  // Fallback by attack type
+
   if (profile.type === AttackType.Ranged) return "arrow";
   if (profile.type === AttackType.Siege) return "stone";
   return null;
 }
 
-/** Is this a firearm that should produce muzzle flash instead of a visible projectile? */
-function isFirearm(attackProfileId: string): boolean {
-  // Firearms: flintlock, blunderbuss, musketeer, cannon_hand all use ranged.heavy or ranged.light
-  // We detect by unit attack profile + projectile combo
-  return false; // handled per-unit below
+function isFirearmUnit(unit: RuntimeUnit): boolean {
+  const hint = unit.definition.weaponHint ?? "";
+  return hint === "flintlock" || hint === "musket" || hint === "blunderbuss" || hint === "cannon_hand";
 }
 
-const FIREARM_UNIT_PREFIXES = [
-  "pirate.flintlock", "pirate.blunderbuss", "pirate.cannon",
-  "renaissance.musketeer", "renaissance.da_vinci_tank",
-];
-
-function isFirearmUnit(unitId: string): boolean {
-  return FIREARM_UNIT_PREFIXES.some((p) => unitId === p);
-}
-
-/** Firework archer gets a special projectile */
-function isFireworkUnit(unitId: string): boolean {
-  return unitId === "dynasty.firework_archer";
-}
-
-function isZeusUnit(unitId: string): boolean {
-  return unitId === "ancient.zeus";
-}
-
-function isNinjaUnit(unitId: string): boolean {
-  return unitId === "dynasty.ninja";
-}
-
-function isBerserkerUnit(unitId: string): boolean {
-  return unitId === "viking.berserker";
+function getBehaviorPreset(unit: RuntimeUnit): string {
+  return unit.definition.behaviorPreset ?? "default";
 }
 
 export class SimulationSystem {
@@ -65,14 +59,14 @@ export class SimulationSystem {
   private _lastBattleDuration = 0;
   private _nextCleanupSweepAt = 0;
 
-  /** External projectile system -- set by main.ts */
   projectileSystem: ProjectileSystem | null = null;
-  /** External visual effects system -- set by main.ts */
   visualEffects: VisualEffects | null = null;
+  spawnUnitById: ((unitId: string, team: number, position: Vector3) => RuntimeUnit | null) | null = null;
 
   readonly minimumDecisionInterval = 0.08;
   readonly attackRangePadding = 0.2;
   readonly cleanupSweepInterval = 0.75;
+  readonly summonLivingCap = 55;
 
   get isRunning(): boolean { return this._isRunning; }
 
@@ -110,6 +104,7 @@ export class SimulationSystem {
     this._isRunning = false;
     for (const unit of this._units) {
       unit.stopMoving();
+      unit.setSpinning(false);
     }
   }
 
@@ -118,12 +113,10 @@ export class SimulationSystem {
 
     const now = performance.now() / 1000;
 
-    // Update all unit positions
     for (const unit of this._units) {
       unit.update(dt, now);
     }
 
-    // AI decisions
     for (const unit of this._units) {
       if (unit.isDead) continue;
 
@@ -135,7 +128,6 @@ export class SimulationSystem {
       this._nextDecisionAt.set(unit, now + Math.max(this.minimumDecisionInterval, aiProfile.retargetInterval));
     }
 
-    // Cleanup corpses
     if (now >= this._nextCleanupSweepAt) {
       this._cleanupExpiredCorpses(now);
       this._nextCleanupSweepAt = now + this.cleanupSweepInterval;
@@ -145,7 +137,7 @@ export class SimulationSystem {
   getLivingCount(team: number): number {
     let count = 0;
     for (const unit of this._units) {
-      if (!unit.isDead && unit.team === team) count++;
+      if (!unit.isDead && unit.team === team && unit.countsTowardVictory) count++;
     }
     return count;
   }
@@ -163,45 +155,44 @@ export class SimulationSystem {
     const enemy = this._selectEnemyTarget(unit, aiProfile);
     if (!enemy) {
       unit.stopMoving();
+      unit.setSpinning(false);
       return;
     }
 
     const engageDistance = unit.definition.engageRange + this.attackRangePadding;
     const distance = Vector3.Distance(unit.position, enemy.position);
 
-    // ─── Ninja: teleport toward enemy when far, throw shuriken when close ───
-    if (isNinjaUnit(unit.definition.id)) {
-      if (distance > engageDistance && distance < engageDistance * 3 && unit.canAttack(now)) {
-        // Teleport: smoke at origin, blink closer, smoke at destination
-        if (this.visualEffects) {
-          this.visualEffects.spawnSmokePuff(unit.position);
-        }
-        const dir = enemy.position.subtract(unit.position).normalize();
-        const teleportDist = Math.min(distance - engageDistance * 0.5, 8);
-        const newPos = unit.position.add(dir.scale(teleportDist));
-        newPos.y = 0;
-        unit.teleportTo(newPos);
-        if (this.visualEffects) {
-          this.visualEffects.spawnSmokePuff(newPos);
-        }
-        unit.setAttackCooldown(now, attackProfile.cooldown * 0.5);
-        return;
-      }
+    if (hasAbility(unit, "teleport") && distance > engageDistance && distance < engageDistance * 3 && unit.canAttack(now)) {
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position);
+      const dir = enemy.position.subtract(unit.position).normalize();
+      const teleportDist = Math.min(distance - engageDistance * 0.65, 8);
+      const newPos = unit.position.add(dir.scale(teleportDist));
+      newPos.y = 0;
+      unit.teleportTo(newPos);
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(newPos);
+      unit.setAttackCooldown(now, attackProfile.cooldown * 0.5);
+      return;
     }
 
-    // ─── Berserker: spin while moving ───
-    if (isBerserkerUnit(unit.definition.id) && distance > engageDistance) {
+    if ((hasAbility(unit, "jump_charge") || hasAbility(unit, "leap_attack")) && distance > engageDistance && distance < engageDistance * 2.5 && unit.canAttack(now)) {
+      const dir = enemy.position.subtract(unit.position).normalize();
+      const leapDist = Math.min(distance - engageDistance * 0.4, 4.5);
+      const newPos = unit.position.add(dir.scale(leapDist));
+      newPos.y = 0;
+      unit.teleportTo(newPos);
+      unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
+      return;
+    }
+
+    if (hasAbility(unit, "spin_move") && distance > engageDistance) {
       unit.moveTo(enemy.position);
       unit.setSpinning(true);
-      // Spawn tornado dust periodically
-      if (this.visualEffects && Math.random() < 0.4) {
+      if (this.visualEffects && Math.random() < 0.35) {
         this.visualEffects.spawnTornadoDust(unit.position);
       }
       return;
     }
-    if (isBerserkerUnit(unit.definition.id)) {
-      unit.setSpinning(false);
-    }
+    unit.setSpinning(false);
 
     if (distance <= engageDistance) {
       unit.stopMoving();
@@ -228,18 +219,22 @@ export class SimulationSystem {
     supporter.faceTarget(ally.position);
     if (!supporter.canAttack(now)) return;
 
-    supporter.setAttackCooldown(now, attackProfile.cooldown);
-    const healAmount = Math.max(20, attackProfile.damage);
+    const cooldownMultiplier = supporter.definition.cooldownMultiplier ?? 1;
+    supporter.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
+    let healAmount = Math.max(20, attackProfile.damage);
+    if (getBehaviorPreset(supporter) === "secret_cheerleader") {
+      healAmount = Math.max(healAmount, 45);
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(ally.position);
+    }
     ally.heal(healAmount);
   }
 
-  private _tryAttack(
-    attacker: RuntimeUnit, target: RuntimeUnit,
-    attackProfile: AttackProfile, now: number,
-  ): void {
+  private _tryAttack(attacker: RuntimeUnit, target: RuntimeUnit, attackProfile: AttackProfile, now: number): void {
     if (!attacker.canAttack(now)) return;
 
-    attacker.setAttackCooldown(now, attackProfile.cooldown);
+    const preset = getBehaviorPreset(attacker);
+    const cooldownMultiplier = attacker.definition.cooldownMultiplier ?? 1;
+    attacker.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
 
     let impulseDir = target.position.subtract(attacker.position);
     if (impulseDir.lengthSquared() > 0.0001) {
@@ -248,161 +243,285 @@ export class SimulationSystem {
       impulseDir = Vector3.Up();
     }
 
-    const knockback = impulseDir.scale(attackProfile.knockback);
+    const abilities = new Set(attacker.definition.abilities ?? []);
+    let damage = attackProfile.damage;
+    let splashRadius = attackProfile.splashRadius;
+    let knockback = impulseDir.scale(attackProfile.knockback);
+    const controlStrength = attacker.definition.controlStrength ?? 1;
 
-    // ─── Zeus: lightning bolt ───
-    if (isZeusUnit(attacker.definition.id)) {
+    if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
+    if (abilities.has("push_force")) {
+      splashRadius = Math.max(splashRadius, 3.0);
+      knockback = knockback.scale(1.7);
+      damage *= 0.85;
+    }
+    if (abilities.has("giant_slam")) {
+      splashRadius = Math.max(splashRadius, 2.8);
+      knockback = knockback.scale(1.35);
+      damage *= 1.15;
+    }
+    if (abilities.has("fire_dot")) damage *= 1.1;
+    if (abilities.has("poison")) damage *= 1.05;
+
+    switch (preset) {
+      case "secret_balloon_lift":
+        knockback = knockback.scale(-1.3 * controlStrength);
+        knockback.y = Math.max(knockback.y, 2.1 * controlStrength);
+        splashRadius = Math.max(splashRadius, 1.4);
+        damage *= 0.8;
+        break;
+      case "secret_push_fan":
+        splashRadius = Math.max(splashRadius, 3.6);
+        knockback = knockback.scale(2.35 * controlStrength);
+        damage *= 0.72;
+        break;
+      case "secret_shout_push":
+        splashRadius = Math.max(splashRadius, 5.0);
+        knockback = knockback.scale(3.2 * controlStrength);
+        damage *= 0.78;
+        break;
+      case "secret_vlad_hook":
+        knockback = knockback.scale(-1.9 * controlStrength);
+        knockback.y = Math.max(knockback.y, 0.8);
+        damage *= 1.15;
+        splashRadius = Math.max(splashRadius, 1.6);
+        break;
+      case "secret_charge_beast":
+      case "secret_mounted_charge":
+      case "secret_jump_kicker":
+      case "secret_lady_red_jade":
+      case "secret_dragon_cart":
+        knockback = knockback.scale(1.35 * controlStrength);
+        splashRadius = Math.max(splashRadius, 1.25);
+        damage *= 1.15;
+        break;
+      case "secret_spin_flail":
+      case "secret_mace_spinner":
+        splashRadius = Math.max(splashRadius, 1.8);
+        knockback = knockback.scale(1.3 * controlStrength);
+        damage *= 1.08;
+        break;
+      case "secret_executioner":
+        splashRadius = Math.max(splashRadius, 1.9);
+        knockback = knockback.scale(1.35 * controlStrength);
+        damage *= 1.12;
+        break;
+      case "secret_blackbeard":
+        splashRadius = Math.max(splashRadius, 2.8);
+        knockback = knockback.scale(2.2 * controlStrength);
+        damage *= 1.15;
+        break;
+      case "secret_giant_slam":
+        splashRadius = Math.max(splashRadius, 3.6);
+        knockback = knockback.scale(1.55 * controlStrength);
+        damage *= 1.18;
+        break;
+      case "secret_ice_giant":
+        splashRadius = Math.max(splashRadius, 3.8);
+        knockback = knockback.scale(1.6 * controlStrength);
+        damage *= 1.16;
+        break;
+      default:
+        break;
+    }
+
+    if ((abilities.has("summon") || abilities.has("clone") || abilities.has("revive")) && this._summonUnits(attacker)) {
+      if (attacker.definition.archetype === "summoner" || attacker.definition.archetype === "support_buff") {
+        return;
+      }
+    }
+
+    if (abilities.has("lightning_strike")) {
       if (this.visualEffects) {
         this.visualEffects.spawnLightning(attacker.position, target.position);
       }
-      // Instant damage + heavy knockback
-      if (attackProfile.splashRadius > 0) {
-        this._applySplashDamage(target.position, attackProfile.splashRadius, attacker.team, attackProfile.damage, knockback.scale(1.5));
-      } else {
-        target.applyDamage(attackProfile.damage, knockback.scale(1.5));
+      this._applyDirectOrSplash(target, damage, splashRadius > 0 ? splashRadius : 2.2, attacker.team, knockback.scale(1.4));
+      if (abilities.has("freeze")) {
+        target.applySlow(0.55, attacker.definition.statusDurationSeconds ?? 2.4, now);
       }
       return;
     }
 
-    // ─── Ninja: throw shuriken ───
-    if (isNinjaUnit(attacker.definition.id)) {
-      if (this.projectileSystem) {
-        this.projectileSystem.spawnProjectile(
-          "shuriken",
-          attacker.position,
-          target,
-          attackProfile.damage,
-          knockback,
-          0,
-          attacker.team,
-          this._units,
-        );
-      } else {
-        target.applyDamage(attackProfile.damage, knockback);
-      }
+    if (preset === "secret_artemis" || preset === "secret_ullr" || preset === "secret_flying_archer") {
+      this._fireVolley(attacker, target, damage, knockback, Math.max(2, attacker.definition.volleyCount ?? 3));
+      this._applyOnHitStatuses(attacker, target, now);
       return;
     }
 
-    // ─── Hwacha: volley of rocket arrows ───
-    if (attacker.definition.id === "dynasty.hwacha") {
-      if (this.projectileSystem) {
-        const volleyCount = 8;
-        for (let i = 0; i < volleyCount; i++) {
-          // Stagger each arrow with a small delay and random launch offset
-          const originOffset = new Vector3(
-            (Math.random() - 0.5) * 0.8,
-            0.4 + Math.random() * 0.5,  // launch from rack height
-            (Math.random() - 0.5) * 0.4,
-          );
-          const delay = i * 0.06; // stagger fire over ~0.5s
-          this.projectileSystem.spawnProjectile(
-            "rocket_arrow",
-            attacker.position,
-            target,
-            Math.ceil(attackProfile.damage / volleyCount),
-            knockback.scale(0.4),
-            0.8,
-            attacker.team,
-            this._units,
-            originOffset,
-            delay,
-          );
-        }
-      }
+    if (preset === "secret_bomb_cannon") {
+      this._fireVolley(attacker, target, damage, knockback, Math.max(2, attacker.definition.volleyCount ?? 2));
+      this._applyOnHitStatuses(attacker, target, now);
       return;
     }
 
-    // ─── Scarecrow: launch crows ───
-    if (attacker.definition.id === "farmer.scarecrow") {
-      if (this.projectileSystem) {
-        this.projectileSystem.spawnProjectile(
-          "crow",
-          attacker.position,
-          target,
-          attackProfile.damage,
-          knockback,
-          0,
-          attacker.team,
-          this._units,
-        );
-      }
+    if (abilities.has("rapid_fire") || preset === "secret_burst_crossbow" || preset === "secret_bank_robbers" || preset === "secret_sensei" || preset === "secret_gatling") {
+      this._fireBurst(attacker, target, damage, knockback, splashRadius, Math.max(3, attacker.definition.burstCount ?? 3));
+      this._applyOnHitStatuses(attacker, target, now);
       return;
     }
 
-    // ─── Dragon: breathe fire ───
-    if (attacker.definition.id === "dynasty.dragon") {
-      if (this.projectileSystem) {
-        this.projectileSystem.spawnProjectile(
-          "fireball",
-          attacker.position,
-          target,
-          attackProfile.damage,
-          knockback,
-          attackProfile.splashRadius,
-          attacker.team,
-          this._units,
-        );
-      }
+    if (abilities.has("shotgun_blast")) {
+      this._fireShotgun(attacker, target, damage, knockback);
       return;
     }
 
-    // ─── Ranged / Siege: spawn projectile ───
+    if (abilities.has("volley_fire")) {
+      this._fireVolley(attacker, target, damage, knockback, Math.max(4, attacker.definition.summonCount ?? 6));
+      this._applyOnHitStatuses(attacker, target, now);
+      return;
+    }
+
     if (attackProfile.type === AttackType.Ranged || attackProfile.type === AttackType.Siege) {
       if (this.projectileSystem) {
-        if (isFirearmUnit(attacker.definition.id)) {
-          // Guns: muzzle flash + instant hit (bullets are too fast to see)
+        if (isFirearmUnit(attacker)) {
           this.projectileSystem.spawnMuzzleFlash(attacker.position, impulseDir);
-          if (attackProfile.splashRadius > 0) {
-            this._applySplashDamage(target.position, attackProfile.splashRadius, attacker.team, attackProfile.damage, knockback);
-          } else {
-            target.applyDamage(attackProfile.damage, knockback);
-          }
+          this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
         } else {
-          // Visible projectile
-          let shape = resolveProjectileShape(attackProfile);
-          if (isFireworkUnit(attacker.definition.id)) shape = "firework";
-          // Javelin/spear throwers
-          if (attacker.definition.id.includes("spear") || attacker.definition.id.includes("harpooner")) {
-            shape = "spear";
-          }
-
           this.projectileSystem.spawnProjectile(
-            shape ?? "arrow",
+            resolveProjectileShape(attacker, attackProfile) ?? "arrow",
             attacker.position,
             target,
-            attackProfile.damage,
+            damage,
             knockback,
-            attackProfile.splashRadius,
+            splashRadius,
             attacker.team,
             this._units,
           );
         }
       } else {
-        // Fallback: instant damage if no projectile system
-        this._applyDirectOrSplash(target, attackProfile, attacker.team, knockback);
+        this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
       }
+      this._applyOnHitStatuses(attacker, target, now);
       return;
     }
 
-    // ─── Melee: instant damage ───
-    this._applyDirectOrSplash(target, attackProfile, attacker.team, knockback);
+    this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
+    this._applyOnHitStatuses(attacker, target, now);
   }
 
-  private _applyDirectOrSplash(
-    target: RuntimeUnit, attackProfile: AttackProfile,
-    attackerTeam: number, knockback: Vector3,
-  ): void {
-    if (attackProfile.splashRadius > 0) {
-      this._applySplashDamage(target.position, attackProfile.splashRadius, attackerTeam, attackProfile.damage, knockback);
-    } else {
-      target.applyDamage(attackProfile.damage, knockback);
+  private _summonUnits(attacker: RuntimeUnit): boolean {
+    if (!this.spawnUnitById) return false;
+    if (this.getLivingCount(attacker.team) >= this.summonLivingCap) return false;
+
+    const summonIds = attacker.definition.summonUnitIds
+      ?? (hasAbility(attacker, "clone") ? [attacker.definition.id] : undefined)
+      ?? (hasAbility(attacker, "revive") ? ["spooky.skeleton_warrior"] : undefined);
+    if (!summonIds || summonIds.length === 0) return false;
+
+    const summonCount = Math.max(1, attacker.definition.summonCount ?? 1);
+    let summoned = false;
+    for (let i = 0; i < summonCount; i++) {
+      if (this.getLivingCount(attacker.team) >= this.summonLivingCap) break;
+      const summonId = summonIds[i % summonIds.length];
+      const angle = (Math.PI * 2 * i) / summonCount;
+      const spacing = attacker.definition.behaviorPreset === "secret_present_spawn" ? 1.9 : 1.5;
+      const pos = attacker.position.add(new Vector3(Math.cos(angle) * spacing, 0, Math.sin(angle) * spacing));
+      const unit = this.spawnUnitById(summonId, attacker.team, pos);
+      if (unit) summoned = true;
+    }
+    return summoned;
+  }
+
+  private _fireBurst(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, splashRadius: number, shots: number): void {
+    const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
+    const perShotDamage = Math.max(1, Math.ceil(damage / shots));
+    for (let i = 0; i < shots; i++) {
+      if (this.projectileSystem && !isFirearmUnit(attacker)) {
+        const offset = new Vector3((Math.random() - 0.5) * 0.25, Math.random() * 0.2, (Math.random() - 0.5) * 0.15);
+        this.projectileSystem.spawnProjectile(
+          projectileShape,
+          attacker.position,
+          target,
+          perShotDamage,
+          knockback.scale(0.4),
+          splashRadius > 0 ? splashRadius * 0.5 : 0,
+          attacker.team,
+          this._units,
+          offset,
+          i * 0.04,
+        );
+      } else {
+        if (this.projectileSystem && isFirearmUnit(attacker)) {
+          const dir = target.position.subtract(attacker.position).normalize();
+          this.projectileSystem.spawnMuzzleFlash(attacker.position, dir);
+        }
+        target.applyDamage(perShotDamage, knockback.scale(0.35));
+      }
     }
   }
 
-  private _applySplashDamage(
-    center: Vector3, radius: number, attackerTeam: number,
-    damage: number, impulse: Vector3,
-  ): void {
+  private _fireShotgun(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3): void {
+    const pellets = 6;
+    const perPellet = Math.max(1, Math.ceil(damage / pellets));
+    if (this.projectileSystem) {
+      const dir = target.position.subtract(attacker.position).normalize();
+      this.projectileSystem.spawnMuzzleFlash(attacker.position, dir);
+    }
+
+    for (const unit of this._units) {
+      if (unit.isDead || unit.team === attacker.team) continue;
+      const distSq = unit.position.subtract(target.position).lengthSquared();
+      if (distSq > 2.2 * 2.2) continue;
+      const pelletHits = unit === target ? pellets : Math.max(1, Math.floor(pellets / 3));
+      unit.applyDamage(perPellet * pelletHits, knockback.scale(0.5));
+    }
+  }
+
+  private _fireVolley(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, count: number): void {
+    const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
+    const perProjectile = Math.max(1, Math.ceil(damage / count));
+
+    if (!this.projectileSystem) {
+      this._applyDirectOrSplash(target, damage, 1.8, attacker.team, knockback.scale(0.65));
+      return;
+    }
+
+    for (let i = 0; i < count; i++) {
+      const spread = new Vector3((Math.random() - 0.5) * 0.9, Math.random() * 0.5, (Math.random() - 0.5) * 0.45);
+      this.projectileSystem.spawnProjectile(
+        projectileShape,
+        attacker.position,
+        target,
+        perProjectile,
+        knockback.scale(0.35),
+        projectileShape === "bomb" || projectileShape === "fireball" ? 0.8 : 0,
+        attacker.team,
+        this._units,
+        spread,
+        i * 0.05,
+      );
+    }
+  }
+
+  private _applyOnHitStatuses(attacker: RuntimeUnit, target: RuntimeUnit, now: number): void {
+    const abilities = new Set(attacker.definition.abilities ?? []);
+    const preset = getBehaviorPreset(attacker);
+    const statusDuration = attacker.definition.statusDurationSeconds ?? 2.5;
+    if (abilities.has("freeze")) {
+      const freezeStrength = preset === "secret_ice_giant" ? 0.4 : 0.55;
+      target.applySlow(freezeStrength, statusDuration, now);
+    }
+    if (abilities.has("fire_dot")) {
+      const fireDamage = preset === "secret_fire_whip" || preset === "secret_dragon_cart" ? 14 : 10;
+      target.applyDamage(fireDamage, target.position.subtract(attacker.position).normalize().scale(0.3));
+    }
+    if (abilities.has("poison")) {
+      target.applyDamage(6, Vector3.Zero());
+    }
+    if (abilities.has("fear") && this.visualEffects) {
+      this.visualEffects.spawnSmokePuff(target.position);
+    }
+  }
+
+  private _applyDirectOrSplash(target: RuntimeUnit, damage: number, splashRadius: number, attackerTeam: number, knockback: Vector3): void {
+    if (splashRadius > 0) {
+      this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback);
+    } else {
+      target.applyDamage(damage, knockback);
+    }
+  }
+
+  private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3): void {
     const radiusSq = radius * radius;
     for (const unit of this._units) {
       if (unit.isDead || unit.team === attackerTeam) continue;
@@ -417,7 +536,6 @@ export class SimulationSystem {
 
     for (const candidate of this._units) {
       if (candidate.isDead || candidate.team === requester.team) continue;
-
       const score = this._scoreCandidate(requester, candidate, aiProfile.targetPriority);
       if (score < bestScore) {
         bestScore = score;
@@ -435,7 +553,6 @@ export class SimulationSystem {
     for (const candidate of this._units) {
       if (candidate.isDead || candidate.team !== requester.team || candidate === requester) continue;
       if (candidate.currentHealth >= candidate.definition.maxHealth) continue;
-
       const score = this._scoreCandidate(requester, candidate, aiProfile.targetPriority);
       if (score < bestScore) {
         bestScore = score;
@@ -452,7 +569,7 @@ export class SimulationSystem {
         return candidate.currentHealth;
       case TargetPriority.HighestCost:
         return -candidate.definition.cost;
-      default: // Nearest
+      default:
         return candidate.position.subtract(requester.position).lengthSquared();
     }
   }
@@ -462,7 +579,6 @@ export class SimulationSystem {
       const unit = this._units[i];
       if (!unit.isDead || now < unit.deathCleanupAt) continue;
 
-      // Hide corpse visuals but keep unit alive for post-battle reset
       this._nextDecisionAt.delete(unit);
       for (const mesh of unit.body.allMeshes) {
         mesh.isVisible = false;

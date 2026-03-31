@@ -1,0 +1,57 @@
+Original prompt: Do a pass of every unit in the game against https://totally-accurate-battle-simulator.fandom.com/wiki/Units. Make all units look and function as close as possile to the TABS units. Add any missing units.
+
+- 2026-03-30: Started web-only parity implementation.
+- Focus order: canonical roster manifest -> generated unit registry -> 14-faction UI/search -> simulation hooks -> behavior expansion -> visual inference.
+- Constraint: current web sim is still prototype-grade; full parity requires data-driven abilities rather than more id-based special cases.
+- Implemented:
+- `web/src/data/rosterManifest.ts` now defines the full 139-unit official roster across 14 factions.
+- `web/src/data/unitDefinitions.ts` is generated from the manifest with derived combat stats and ability tags.
+- `web/src/data/factionColors.ts` and `web/src/main.ts` now support all 14 factions plus searchable roster browsing.
+- `web/src/combat/simulationSystem.ts` now uses ability tags for teleport, burst fire, shotgun, volley, summon, push, pull, freeze, fire, giant slam, and lightning behaviors.
+- `web/src/units/unitVisuals.ts` now infers visuals for units outside the original 56 overrides.
+- `web/src/units/vehicleBuilder.ts` now aliases several new artillery/giant units to non-humanoid builders.
+- Added `window.render_game_to_text()` and `window.advanceTime(ms)` hooks for deterministic browser testing.
+- Validation:
+- `npm run build` passes in `web/`.
+- Browser smoke pass confirmed 14 faction tabs, Secret roster search, placement, battle start, no console errors, and live text hook output.
+- Remaining parity gaps:
+- Many newly added units still use inferred procedural silhouettes rather than hand-authored close-match looks.
+- Several iconic units still map to generic archetype behavior rather than bespoke TABS-accurate mechanics.
+- Sub-units/crew are approximated through summon or shared vehicle aliases, not exact 1:1 compositions yet.
+- 2026-03-30: Secret-focused fidelity pass started.
+- Added explicit `visualPreset` and `behaviorPreset` metadata plus tuning fields for all 39 Secret units in `web/src/data/rosterManifest.ts`.
+- Added runtime `spawnRole` tracking in `web/src/units/runtimeUnit.ts` and switched `render_game_to_text` / replay cleanup in `web/src/main.ts` to use roles instead of the temporary summoned set.
+- Added Secret behavior preset tuning in `web/src/combat/simulationSystem.ts` for control, burst fire, volley fire, freeze duration, giant slam strength, mounted charges, and summon spacing.
+- Added explicit Secret visual presets in `web/src/units/unitVisuals.ts` and Secret-specific props/special silhouettes in `web/src/units/propBuilder.ts`.
+- Removed Secret giants from vehicle fallback handling and added more distinct `secret.bomb_cannon` / `secret.gatling_gun` vehicle bodies in `web/src/units/vehicleBuilder.ts`.
+- Added `web/SECRET_PARITY_MATRIX.md` as the unit-by-unit Secret acceptance checklist.
+- Remaining gaps after this pass:
+- Crew/composite behavior is still mostly visual/runtime-role level rather than true persistent linked crew AI.
+- Secret units should no longer use inferred visuals, but some presets still share underlying humanoid animation/body logic.
+- Need browser validation for Secret search, placement, summon cleanup, artillery, and giant scenarios after the preset pass.
+- 2026-03-30: Secret visual fidelity pass implemented.
+- Extended `UnitVisualConfig` with pose/material/attachment/fx/state-variant fields and added a hard error if any Secret unit ever falls back to inferred visuals.
+- Added richer Secret visual metadata in `web/src/units/unitVisuals.ts` for all Secret presets, including combat-state attachment keys for fans, halos, bows, summon glows, whip fire, giant aura shards, and support streamers.
+- Added runtime pose and emissive overlays in `web/src/units/runtimeUnit.ts` so Secret units read differently while moving/attacking without replacing the procedural animator.
+- Added material-preset tinting in `web/src/units/unitFactory.ts` and exposed body/skin materials from `web/src/units/bodyBuilder.ts` and `web/src/units/vehicleBuilder.ts`.
+- Expanded `web/src/units/propBuilder.ts` with state-tagged attachments and fuller silhouettes for raptors, clams, safe bundles, dragon carts, giant armor/bone/tree/ice shapes, and halos.
+- Validation:
+- `npm run build` passes in `web/`.
+- Browser pass confirmed Secret roster browse/search still works and placement screenshots showed stronger reads for `Fan Bearer`, `Gatling Gun`, and `Ice Giant`.
+- Browser console still only showed the existing `favicon.ico` 404.
+- Remaining gaps after the visual pass:
+- Some combat-state overlays are subtle at the default camera height and could use stronger scale/emissive tuning in a follow-up pass.
+- Secret vehicles still rely on their bespoke chassis plus material tinting; they do not yet use the new state-tagged overlay system.
+- 2026-03-30: Shared humanoid body-style pass implemented.
+- Rebuilt `web/src/units/bodyBuilder.ts` around rounded/tapered humanoid geometry with elongated ellipsoid heads, narrower torsos, tapered limbs, explicit hand bulges, and shaped feet while keeping the existing joint hierarchy for procedural animation.
+- Extended the shared body contract with derived metrics (`overallHeight`, `headTopY`, shoulder/hip width, hand reach) and switched `web/src/units/unitFactory.ts` health-bar placement to use builder-derived height instead of the old hardcoded body formula.
+- Extended `BodyProportions` with optional detailed shaping controls while keeping existing coarse fields (`scale`, `bulk`, `headSize`, `armLength`, `legLength`) backward-compatible for the full roster.
+- Switched visible vehicle operators in `web/src/units/vehicleBuilder.ts` from ad hoc sphere/box figures to a lightweight articulated mini-humanoid built from the same rounded body path.
+- Added rough body metrics to vehicle/custom builders (`wrapAsBody`, mammoth, minotaur) so mixed humanoid/vehicle units still align health bars correctly.
+- Validation:
+- `npm run build` passes in `web/`.
+- Automated Playwright client runs completed against the local Vite server and produced placement/state screenshots without new console errors beyond the existing `favicon.ico` 404.
+- Manual browser screenshots confirmed the new shared body silhouette on a humanoid Secret giant and the updated mini-humanoid operator path on `Gatling Gun`, with health bars staying above the units.
+- Remaining gaps after the body-style pass:
+- The default gameplay camera is still far enough away that the improved silhouette reads better than the small limb details; a camera/readability pass would make the new geometry more visible in normal play.
+- Vehicle operator figures now share the rounded humanoid body language, but some vehicles still obscure most of the operator body at gameplay distance.

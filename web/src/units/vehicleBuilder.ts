@@ -1,7 +1,8 @@
 import {
   Scene, TransformNode, Mesh, MeshBuilder, StandardMaterial, Color3, Vector3,
 } from "@babylonjs/core";
-import type { ArticulatedBody } from "./bodyBuilder";
+import { buildArticulatedBody } from "./bodyBuilder";
+import type { ArticulatedBody, BodyMetrics } from "./bodyBuilder";
 
 /**
  * IDs of units that should be built as vehicles/equipment rather than humanoids.
@@ -15,6 +16,11 @@ export const VEHICLE_UNIT_IDS = new Set([
   "farmer.wheelbarrow",
   "ancient.minotaur",
   "tribal.mammoth",
+  "spooky.pumpkin_catapult",
+  "legacy.tank",
+  "secret.bomb_cannon",
+  "secret.gatling_gun",
+  "good.sacred_elephant",
 ]);
 
 export function isVehicleUnit(id: string): boolean {
@@ -42,6 +48,11 @@ export function buildVehicleBody(
     case "farmer.wheelbarrow": return buildWheelbarrow(scene, bodyColor);
     case "ancient.minotaur": return buildMinotaur(scene, bodyColor);
     case "tribal.mammoth": return buildMammoth(scene, bodyColor);
+    case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor);
+    case "legacy.tank": return buildDaVinciTank(scene, bodyColor);
+    case "secret.bomb_cannon": return buildBombCannon(scene, bodyColor);
+    case "secret.gatling_gun": return buildGatlingGun(scene, bodyColor);
+    case "good.sacred_elephant": return buildMammoth(scene, bodyColor);
     default: return buildCatapult(scene, bodyColor);
   }
 }
@@ -59,6 +70,22 @@ function dummyJoint(name: string, parent: TransformNode, scene: Scene): Transfor
   return t;
 }
 
+function makeBodyMetrics(
+  headTopY: number,
+  shoulderWidth: number,
+  hipWidth: number,
+  handReachY: number,
+): BodyMetrics {
+  return {
+    overallHeight: headTopY,
+    headTopY,
+    shoulderWidth,
+    hipWidth,
+    handReachY,
+    footBottomY: 0,
+  };
+}
+
 /**
  * Create a stub ArticulatedBody from vehicle parts.
  * All "limb" joints point to dummy nodes so the animator doesn't crash.
@@ -69,11 +96,16 @@ function wrapAsBody(
   mainMesh: Mesh,
   allMeshes: Mesh[],
   headMesh?: Mesh,
+  metrics: BodyMetrics = makeBodyMetrics(1.8, 0.8, 0.5, 0.7),
 ): ArticulatedBody {
+  const bodyMaterial = (mainMesh.material as StandardMaterial) ?? makeMat(scene, new Color3(0.55, 0.45, 0.35));
+  const skinMaterial = (headMesh?.material as StandardMaterial) ?? bodyMaterial;
   const hip = dummyJoint("v_hip", root, scene);
-  hip.position.y = 0.5;
+  hip.position.y = Math.max(0.45, metrics.overallHeight * 0.28);
   const torso = dummyJoint("v_torso", hip, scene);
+  torso.position.y = Math.max(0.02, metrics.overallHeight * 0.05);
   const neck = dummyJoint("v_neck", torso, scene);
+  neck.position.y = Math.max(0.18, metrics.headTopY - hip.position.y - torso.position.y - 0.22);
 
   const lShoulder = dummyJoint("v_ls", torso, scene);
   const lElbow = dummyJoint("v_le", lShoulder, scene);
@@ -86,12 +118,13 @@ function wrapAsBody(
   const rHand = dummyJoint("v_rhand", rElbow, scene);
   const lHand = dummyJoint("v_lhand", lElbow, scene);
   const headTop = dummyJoint("v_headtop", neck, scene);
+  headTop.position.y = Math.max(0.12, metrics.headTopY - hip.position.y - torso.position.y - neck.position.y);
 
   const hd = headMesh ?? mainMesh;
   const allJoints = [hip, torso, neck, lShoulder, lElbow, rShoulder, rElbow, lHip, lKnee, rHip, rKnee];
 
   return {
-    root, hip, torso, torsoMesh: mainMesh, neck, headMesh: hd,
+    root, bodyMaterial, skinMaterial, metrics, hip, torso, torsoMesh: mainMesh, neck, headMesh: hd,
     leftShoulder: lShoulder, leftUpperArm: mainMesh, leftElbow: lElbow, leftLowerArm: mainMesh,
     rightShoulder: rShoulder, rightUpperArm: mainMesh, rightElbow: rElbow, rightLowerArm: mainMesh,
     leftHip: lHip, leftUpperLeg: mainMesh, leftKnee: lKnee, leftLowerLeg: mainMesh,
@@ -101,19 +134,50 @@ function wrapAsBody(
   };
 }
 
+interface VehicleOperator {
+  headMesh: Mesh;
+  headTopY: number;
+}
+
 // Helper to add an operator (small person) at a given position
 function addOperator(
   scene: Scene, root: TransformNode, allMeshes: Mesh[],
   x: number, y: number, z: number, color: Color3,
-): Mesh {
-  const skinMat = makeMat(scene, new Color3(0.85, 0.72, 0.6));
-  const opHead = MeshBuilder.CreateSphere("ophead", { diameter: 0.18, segments: 6 }, scene);
-  opHead.position.set(x, y + 0.23, z);
-  opHead.parent = root; opHead.material = skinMat; allMeshes.push(opHead);
-  const opBody = MeshBuilder.CreateBox("opbody", { width: 0.18, height: 0.25, depth: 0.12 }, scene);
-  opBody.position.set(x, y, z);
-  opBody.parent = root; opBody.material = makeMat(scene, color); allMeshes.push(opBody);
-  return opHead;
+): VehicleOperator {
+  const operator = buildArticulatedBody(
+    scene,
+    `vehicle_operator_${Math.random().toString(36).slice(2, 6)}`,
+    {
+      scale: 0.46,
+      bulk: 0.72,
+      headSize: 1.04,
+      armLength: 0.9,
+      legLength: 0.92,
+      headLength: 1.28,
+      headWidth: 0.82,
+      torsoWidth: 0.82,
+      torsoDepth: 0.78,
+      torsoRoundness: 1.1,
+      upperArmWidth: 0.82,
+      lowerArmWidth: 0.74,
+      upperLegWidth: 0.9,
+      lowerLegWidth: 0.76,
+      limbTaper: 1.08,
+      handSize: 1.06,
+      footLength: 1.1,
+      footWidth: 0.94,
+      footHeight: 0.86,
+    },
+    color,
+    { detailLevel: "operator" },
+  );
+  operator.root.parent = root;
+  operator.root.position.set(x, y, z);
+  allMeshes.push(...operator.allMeshes);
+  return {
+    headMesh: operator.headMesh,
+    headTopY: operator.root.position.y + operator.metrics.headTopY,
+  };
 }
 
 // ═══════════════════════ CATAPULT ═══════════════════════
@@ -165,9 +229,77 @@ function buildCatapult(scene: Scene, color: Color3): ArticulatedBody {
   cw.parent = root; cw.material = metal; allMeshes.push(cw);
 
   // Operator sitting beside, behind the frame
-  const opHead = addOperator(scene, root, allMeshes, 0.4, 0.72, -0.5, color);
+  const operator = addOperator(scene, root, allMeshes, 0.4, 0.72, -0.5, color);
 
-  return wrapAsBody(scene, root, base, allMeshes, opHead);
+  return wrapAsBody(scene, root, base, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.8, 0.45, 0.8));
+}
+
+function buildBombCannon(scene: Scene, color: Color3): ArticulatedBody {
+  const body = buildCannon(scene, color);
+  const root = body.root;
+  const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 1.0, diameter: 0.26, tessellation: 16 }, scene);
+  barrel.position.set(0, 0.86, 0.4);
+  barrel.rotation.x = Math.PI / 2 - 0.18;
+  barrel.parent = root;
+  barrel.material = makeMat(scene, new Color3(0.22, 0.22, 0.26));
+  body.allMeshes.push(barrel);
+  const bomb = MeshBuilder.CreateSphere("bombRound", { diameter: 0.22, segments: 8 }, scene);
+  bomb.position.set(0, 0.92, 0.75);
+  bomb.parent = root;
+  bomb.material = makeMat(scene, new Color3(0.12, 0.12, 0.12));
+  body.allMeshes.push(bomb);
+  return body;
+}
+
+function buildGatlingGun(scene: Scene, color: Color3): ArticulatedBody {
+  const root = new TransformNode("gatling_root", scene);
+  const allMeshes: Mesh[] = [];
+  const wood = makeMat(scene, new Color3(0.45, 0.32, 0.18));
+  const metal = makeMat(scene, new Color3(0.32, 0.34, 0.38));
+
+  const chassis = MeshBuilder.CreateBox("gatlingChassis", { width: 0.9, height: 0.18, depth: 1.2 }, scene);
+  chassis.position.y = 0.45;
+  chassis.parent = root;
+  chassis.material = wood;
+  allMeshes.push(chassis);
+
+  for (const xOff of [-0.38, 0.38]) {
+    for (const zOff of [-0.32, 0.32]) {
+      const wheel = MeshBuilder.CreateCylinder("gatlingWheel", { height: 0.08, diameter: 0.44, tessellation: 12 }, scene);
+      wheel.position.set(xOff, 0.24, zOff);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.parent = root;
+      wheel.material = wood;
+      allMeshes.push(wheel);
+    }
+  }
+
+  const carriage = MeshBuilder.CreateBox("gatlingCarriage", { width: 0.35, height: 0.18, depth: 0.45 }, scene);
+  carriage.position.set(0, 0.72, 0.2);
+  carriage.parent = root;
+  carriage.material = metal;
+  allMeshes.push(carriage);
+
+  for (let i = 0; i < 5; i++) {
+    const barrel = MeshBuilder.CreateCylinder("gatlingBarrel", { height: 0.95, diameter: 0.06, tessellation: 10 }, scene);
+    const angle = (Math.PI * 2 * i) / 5;
+    barrel.position.set(Math.cos(angle) * 0.1, 0.76 + Math.sin(angle) * 0.1, 0.55);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.parent = root;
+    barrel.material = metal;
+    allMeshes.push(barrel);
+  }
+
+  const crank = MeshBuilder.CreateCylinder("gatlingCrank", { height: 0.25, diameter: 0.03, tessellation: 6 }, scene);
+  crank.position.set(0.2, 0.72, -0.05);
+  crank.rotation.z = Math.PI / 2;
+  crank.parent = root;
+  crank.material = metal;
+  allMeshes.push(crank);
+
+  const operator = addOperator(scene, root, allMeshes, -0.22, 0.78, -0.18, color);
+  addOperator(scene, root, allMeshes, 0.22, 0.78, -0.18, color);
+  return wrapAsBody(scene, root, chassis, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.8, 0.48, 0.84));
 }
 
 // ═══════════════════════ BALLISTA ═══════════════════════
@@ -216,9 +348,9 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   bolt.parent = root; bolt.material = metal; allMeshes.push(bolt);
 
   // Operator behind (-Z)
-  const opHead = addOperator(scene, root, allMeshes, 0.25, 0.72, -0.5, color);
+  const operator = addOperator(scene, root, allMeshes, 0.25, 0.72, -0.5, color);
 
-  return wrapAsBody(scene, root, base, allMeshes, opHead);
+  return wrapAsBody(scene, root, base, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.72, 0.4, 0.78));
 }
 
 // ═══════════════════════ HWACHA ═══════════════════════
@@ -330,9 +462,9 @@ function buildHwacha(scene: Scene, color: Color3): ArticulatedBody {
   }
 
   // ─── Operator behind (-Z) ───
-  const opHead = addOperator(scene, root, allMeshes, 0.22, 0.7, -0.75, color);
+  const operator = addOperator(scene, root, allMeshes, 0.22, 0.7, -0.75, color);
 
-  return wrapAsBody(scene, root, base, allMeshes, opHead);
+  return wrapAsBody(scene, root, base, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.95, 0.52, 0.76));
 }
 
 // ═══════════════════════ CANNON ═══════════════════════
@@ -381,9 +513,9 @@ function buildCannon(scene: Scene, color: Color3): ArticulatedBody {
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
 
   // Operator behind cannon (-Z)
-  const opHead = addOperator(scene, root, allMeshes, 0.2, 0.57, -0.6, color);
+  const operator = addOperator(scene, root, allMeshes, 0.2, 0.57, -0.6, color);
 
-  return wrapAsBody(scene, root, barrel, allMeshes, opHead);
+  return wrapAsBody(scene, root, barrel, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.7, 0.4, 0.68));
 }
 
 // ═══════════════════════ DA VINCI TANK ═══════════════════════
@@ -431,7 +563,7 @@ function buildDaVinciTank(scene: Scene, _color: Color3): ArticulatedBody {
     }
   }
 
-  return wrapAsBody(scene, root, hull, allMeshes);
+  return wrapAsBody(scene, root, hull, allMeshes, undefined, makeBodyMetrics(1.8, 0.8, 0.5, 0.7));
 }
 
 // ═══════════════════════ WHEELBARROW ═══════════════════════
@@ -472,28 +604,9 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   }
 
   // Pusher (the farmer, at -Z)
-  const skinMat = makeMat(scene, new Color3(0.85, 0.72, 0.6));
-  const opHead = MeshBuilder.CreateSphere("ophead", { diameter: 0.2, segments: 6 }, scene);
-  opHead.position.set(0, 1.2, -0.55);
-  opHead.parent = root; opHead.material = skinMat; allMeshes.push(opHead);
-  const opTorso = MeshBuilder.CreateBox("optorso", { width: 0.22, height: 0.3, depth: 0.14 }, scene);
-  opTorso.position.set(0, 0.95, -0.55);
-  opTorso.parent = root; opTorso.material = makeMat(scene, color); allMeshes.push(opTorso);
-  // Arms reaching forward to handles
-  for (const xOff of [-0.12, 0.12]) {
-    const arm = MeshBuilder.CreateCylinder("arm", { height: 0.3, diameter: 0.05, tessellation: 6 }, scene);
-    arm.position.set(xOff, 0.85, -0.4);
-    arm.rotation.x = -0.6; // reaching forward
-    arm.parent = root; arm.material = skinMat; allMeshes.push(arm);
-  }
-  // Legs
-  for (const xOff of [-0.08, 0.08]) {
-    const leg = MeshBuilder.CreateCylinder("leg", { height: 0.35, diameter: 0.06, tessellation: 6 }, scene);
-    leg.position.set(xOff, 0.57, -0.55);
-    leg.parent = root; leg.material = makeMat(scene, color); allMeshes.push(leg);
-  }
+  const operator = addOperator(scene, root, allMeshes, 0, 0.72, -0.55, color);
 
-  return wrapAsBody(scene, root, tray, allMeshes, opHead);
+  return wrapAsBody(scene, root, tray, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.55, 0.34, 0.8));
 }
 
 // ═══════════════════════ MINOTAUR ═══════════════════════
@@ -698,7 +811,7 @@ function buildMinotaur(scene: Scene, _color: Color3): ArticulatedBody {
   const allJoints = [hip, torsoJoint, neckJoint, lShoulder, lElbow, rShoulder, rElbow, lHip, lKnee, rHip, rKnee];
 
   return {
-    root, hip, torso: torsoJoint, torsoMesh: bodyMesh, neck: neckJoint, headMesh,
+    root, bodyMaterial: darkBrown, skinMaterial: medBrown, metrics: makeBodyMetrics(1.4, 0.76, 0.36, 0.48), hip, torso: torsoJoint, torsoMesh: bodyMesh, neck: neckJoint, headMesh,
     leftShoulder: lShoulder, leftUpperArm: bodyMesh, leftElbow: lElbow, leftLowerArm: bodyMesh,
     rightShoulder: rShoulder, rightUpperArm: bodyMesh, rightElbow: rElbow, rightLowerArm: bodyMesh,
     leftHip: lHip, leftUpperLeg: bodyMesh, leftKnee: lKnee, leftLowerLeg: bodyMesh,
@@ -890,7 +1003,7 @@ function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
   const allJoints = [hip, torso, neck, flHip, flKnee, frHip, frKnee, blHip, blKnee, brHip, brKnee];
 
   return {
-    root, hip, torso, torsoMesh, neck, headMesh,
+    root, bodyMaterial: fur, skinMaterial: earMat, metrics: makeBodyMetrics(2.35, 0.8, 0.8, 0.62), hip, torso, torsoMesh, neck, headMesh,
     leftShoulder: flHip, leftUpperArm: torsoMesh, leftElbow: flKnee, leftLowerArm: torsoMesh,
     rightShoulder: frHip, rightUpperArm: torsoMesh, rightElbow: frKnee, rightLowerArm: torsoMesh,
     leftHip: blHip, leftUpperLeg: torsoMesh, leftKnee: blKnee, leftLowerLeg: torsoMesh,
