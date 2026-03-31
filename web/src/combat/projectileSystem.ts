@@ -3,7 +3,7 @@ import {
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -66,6 +66,7 @@ export class ProjectileSystem {
       case "bolt":    speed = 30; arcHeight = dist * 0.06; break;
       case "spear":   speed = 18; arcHeight = dist * 0.15; break;
       case "bomb":    speed = 12; arcHeight = dist * 0.35; break;
+      case "shell":   speed = 46; arcHeight = dist * 0.015; break;
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
       case "firework": speed = 22; arcHeight = dist * 0.25; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
@@ -89,19 +90,19 @@ export class ProjectileSystem {
   /**
    * Spawn a muzzle flash at the given position (for guns).
    */
-  spawnMuzzleFlash(origin: Vector3, direction: Vector3): void {
-    const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4, segments: 6 }, this._scene);
+  spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1): void {
+    const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4 * scale, segments: 6 }, this._scene);
     flash.position = origin.clone();
     flash.position.y += 1.0;
-    flash.position.addInPlace(direction.scale(0.3));
+    flash.position.addInPlace(direction.scale(0.3 * scale));
 
     const m = this._getMat("flash", new Color3(1, 0.85, 0.3), 0.8);
     flash.material = m;
 
     // Smoke puff
-    const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.6, segments: 6 }, this._scene);
+    const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.6 * scale, segments: 6 }, this._scene);
     smoke.position = flash.position.clone();
-    smoke.position.addInPlace(direction.scale(0.15));
+    smoke.position.addInPlace(direction.scale(0.15 * scale));
     const sm = new StandardMaterial("smoke_mat", this._scene);
     sm.diffuseColor = new Color3(0.6, 0.6, 0.6);
     sm.emissiveColor = new Color3(0.3, 0.3, 0.3);
@@ -109,8 +110,8 @@ export class ProjectileSystem {
     sm.disableLighting = true;
     smoke.material = sm;
 
-    this._flashes.push({ mesh: flash, remaining: 0.12 });
-    this._flashes.push({ mesh: smoke, remaining: 0.35 });
+    this._flashes.push({ mesh: flash, remaining: 0.12 + 0.04 * Math.max(0, scale - 1) });
+    this._flashes.push({ mesh: smoke, remaining: 0.35 + 0.1 * Math.max(0, scale - 1) });
   }
 
   update(dt: number): void {
@@ -227,7 +228,7 @@ export class ProjectileSystem {
         unit.applyDamage(p.damage, p.knockback);
       }
       // Spawn impact effect for explosive
-      this._spawnExplosion(p.targetPos);
+      this._spawnExplosion(p.targetPos, p.shape === "shell" ? 1.8 : 1);
     } else {
       // Direct hit
       if (!p.target.isDead) {
@@ -236,8 +237,8 @@ export class ProjectileSystem {
     }
   }
 
-  private _spawnExplosion(pos: Vector3): void {
-    const boom = MeshBuilder.CreateSphere("boom", { diameter: 0.3, segments: 6 }, this._scene);
+  private _spawnExplosion(pos: Vector3, scale = 1): void {
+    const boom = MeshBuilder.CreateSphere("boom", { diameter: 0.3 * scale, segments: 6 }, this._scene);
     boom.position = pos.clone();
     boom.position.y += 0.3;
     const m = new StandardMaterial("boom_mat", this._scene);
@@ -246,7 +247,7 @@ export class ProjectileSystem {
     m.alpha = 0.8;
     m.disableLighting = true;
     boom.material = m;
-    this._flashes.push({ mesh: boom, remaining: 0.4 });
+    this._flashes.push({ mesh: boom, remaining: 0.4 + 0.12 * Math.max(0, scale - 1) });
   }
 
   private _buildProjectileMesh(shape: ProjectileShape): TransformNode {
@@ -307,6 +308,18 @@ export class ProjectileSystem {
         spark.position.y = 0.18;
         spark.material = this._getMat("spark", new Color3(1, 0.8, 0.2), 0.7);
         spark.parent = root;
+        break;
+      }
+      case "shell": {
+        const shell = MeshBuilder.CreateCylinder("shell", { height: 0.46, diameter: 0.22, tessellation: 14 }, this._scene);
+        shell.rotation.x = Math.PI / 2;
+        shell.material = this._getMat("shell_body", new Color3(0.22, 0.22, 0.24), 0.04);
+        shell.parent = root;
+        const cap = MeshBuilder.CreateCylinder("shell_cap", { height: 0.18, diameterTop: 0, diameterBottom: 0.22, tessellation: 14 }, this._scene);
+        cap.rotation.x = Math.PI / 2;
+        cap.position.z = 0.28;
+        cap.material = this._getMat("shell_cap_mat", new Color3(0.28, 0.28, 0.3), 0.06);
+        cap.parent = root;
         break;
       }
       case "stone": {

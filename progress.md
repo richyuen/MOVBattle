@@ -133,3 +133,10 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Remaining gaps after this pass:
 - The non-Secret artillery units now use the shared linked-role model, but they still keep parent-owned movement and parent-routed damage by default.
 - Broader non-Secret composite adoption beyond this artillery slice remains for a later phase.
+- 2026-03-31: Non-Secret artillery regression fix implemented after user review.
+- Root cause: linked crew for `legacy.tank`, `renaissance.da_vinci_tank`, and `dynasty.hwacha` were still being spawned through the vehicle-body path because linked actors reuse the parent unit id. That caused stacked chassis/racks/turrets instead of crew figures.
+- Fixed `web/src/units/unitFactory.ts`, `web/src/main.ts`, and `web/src/combat/simulationSystem.ts` so linked actors can force the articulated-body path while the parent remains a vehicle. This restores humanoid crew visuals for the linked-role system.
+- Updated `web/src/data/rosterManifest.ts` and `web/src/combat/simulationSystem.ts` so `legacy.tank` now fires a single large explosive round at a time instead of a multi-bolt volley.
+- Validation:
+- `npm run build` passes in `web/`.
+- Direct Playwright scenario rerun for `iconic_artillery_compare` confirmed no duplicated tank turrets or hwacha racks in the screenshot, and no browser console/page errors.

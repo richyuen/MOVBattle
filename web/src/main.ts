@@ -157,6 +157,7 @@ function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRol
     linkedRelation: actor.relation,
     visualOverride: actor.visual,
     suppressDecorativeOperators: true,
+    forceArticulatedBody: true,
   });
   if (!child) return null;
 

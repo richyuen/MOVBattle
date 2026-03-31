@@ -611,58 +611,166 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
-  const hullMat = makeMat(scene, new Color3(0.42, 0.52, 0.34));
-  const trackMat = makeMat(scene, new Color3(0.24, 0.26, 0.22));
-  const metal = makeMat(scene, new Color3(0.38, 0.4, 0.42));
+  const hullMat = makeMat(scene, new Color3(0.45, 0.52, 0.38));
+  const hullDark = makeMat(scene, new Color3(0.34, 0.4, 0.29));
+  const trackMat = makeMat(scene, new Color3(0.2, 0.22, 0.2));
+  const metal = makeMat(scene, new Color3(0.34, 0.36, 0.38));
 
-  const body = MeshBuilder.CreateBox("tankBody", { width: 1.8, height: 0.62, depth: 2.4 }, scene);
-  body.position.y = 0.62;
-  body.parent = root;
-  body.material = hullMat;
-  allMeshes.push(body);
+  const lowerHull = MeshBuilder.CreateBox("tankLowerHull", { width: 2.02, height: 0.42, depth: 2.95 }, scene);
+  lowerHull.position.set(0, 0.38, 0.02);
+  lowerHull.parent = root;
+  lowerHull.material = hullDark;
+  allMeshes.push(lowerHull);
 
-  const upperHull = MeshBuilder.CreateBox("tankUpper", { width: 1.25, height: 0.45, depth: 1.3 }, scene);
-  upperHull.position.set(0, 1.0, -0.05);
-  upperHull.parent = root;
-  upperHull.material = hullMat;
-  allMeshes.push(upperHull);
+  const hullDeck = MeshBuilder.CreateBox("tankHullDeck", { width: 1.9, height: 0.26, depth: 2.28 }, scene);
+  hullDeck.position.set(0, 0.72, -0.08);
+  hullDeck.parent = root;
+  hullDeck.material = hullMat;
+  allMeshes.push(hullDeck);
 
-  const turret = MeshBuilder.CreateCylinder("tankTurret", { height: 0.36, diameter: 0.82, tessellation: 14 }, scene);
-  turret.position.set(0, 1.15, 0.18);
-  turret.parent = root;
-  turret.material = metal;
-  allMeshes.push(turret);
+  const glacis = MeshBuilder.CreateBox("tankGlacis", { width: 1.84, height: 0.3, depth: 0.86 }, scene);
+  glacis.position.set(0, 0.78, 0.98);
+  glacis.rotation.x = -0.5;
+  glacis.parent = root;
+  glacis.material = hullMat;
+  allMeshes.push(glacis);
 
-  const barrel = MeshBuilder.CreateCylinder("tankBarrel", { height: 1.7, diameter: 0.18, tessellation: 14 }, scene);
-  barrel.position.set(0, 1.12, 1.25);
-  barrel.rotation.x = Math.PI / 2;
-  barrel.parent = root;
-  barrel.material = metal;
-  allMeshes.push(barrel);
+  const nose = MeshBuilder.CreateBox("tankNose", { width: 1.68, height: 0.18, depth: 0.52 }, scene);
+  nose.position.set(0, 0.56, 1.36);
+  nose.rotation.x = -0.2;
+  nose.parent = root;
+  nose.material = hullMat;
+  allMeshes.push(nose);
 
-  const muzzle = MeshBuilder.CreateCylinder("tankMuzzle", { height: 0.12, diameterTop: 0.24, diameterBottom: 0.18, tessellation: 14 }, scene);
-  muzzle.position.set(0, 1.12, 2.04);
-  muzzle.rotation.x = Math.PI / 2;
-  muzzle.parent = root;
-  muzzle.material = metal;
-  allMeshes.push(muzzle);
+  const rearDeck = MeshBuilder.CreateBox("tankRearDeck", { width: 1.76, height: 0.14, depth: 0.72 }, scene);
+  rearDeck.position.set(0, 0.72, -1.12);
+  rearDeck.parent = root;
+  rearDeck.material = hullMat;
+  allMeshes.push(rearDeck);
 
   for (const side of [-1, 1]) {
-    const track = MeshBuilder.CreateBox("tankTrack", { width: 0.32, height: 0.48, depth: 2.65 }, scene);
-    track.position.set(side * 0.92, 0.38, 0);
+    const skirt = MeshBuilder.CreateBox("tankSideSkirt", { width: 0.16, height: 0.42, depth: 2.52 }, scene);
+    skirt.position.set(side * 0.98, 0.46, -0.08);
+    skirt.parent = root;
+    skirt.material = hullMat;
+    allMeshes.push(skirt);
+
+    const frontCheek = MeshBuilder.CreateBox("tankFrontCheek", { width: 0.16, height: 0.3, depth: 0.78 }, scene);
+    frontCheek.position.set(side * 0.82, 0.72, 0.95);
+    frontCheek.rotation.x = -0.48;
+    frontCheek.parent = root;
+    frontCheek.material = hullMat;
+    allMeshes.push(frontCheek);
+
+    const track = MeshBuilder.CreateBox("tankTrack", { width: 0.22, height: 0.26, depth: 2.82 }, scene);
+    track.position.set(side * 1.02, 0.18, -0.02);
     track.parent = root;
     track.material = trackMat;
     allMeshes.push(track);
 
-    for (const z of [-0.9, -0.3, 0.3, 0.9]) {
-      const wheel = MeshBuilder.CreateCylinder("tankWheel", { height: 0.12, diameter: 0.34, tessellation: 12 }, scene);
-      wheel.position.set(side * 0.92, 0.2, z);
+    for (let i = 0; i < 7; i++) {
+      const z = -1.12 + i * 0.38;
+      const wheel = MeshBuilder.CreateCylinder("tankWheel", { height: 0.1, diameter: 0.34, tessellation: 18 }, scene);
+      wheel.position.set(side * 0.98, 0.14, z);
       wheel.rotation.z = Math.PI / 2;
       wheel.parent = root;
       wheel.material = metal;
       allMeshes.push(wheel);
     }
+
+    for (const z of [-0.78, -0.18, 0.42]) {
+      const returnRoller = MeshBuilder.CreateCylinder("tankReturnRoller", { height: 0.06, diameter: 0.12, tessellation: 12 }, scene);
+      returnRoller.position.set(side * 1.0, 0.52, z);
+      returnRoller.rotation.z = Math.PI / 2;
+      returnRoller.parent = root;
+      returnRoller.material = metal;
+      allMeshes.push(returnRoller);
+    }
   }
+
+  const turretBase = new TransformNode("tankTurretBase", scene);
+  turretBase.parent = root;
+  turretBase.position.set(0, 0.96, 0.02);
+
+  const turretMain = MeshBuilder.CreateBox("tankTurretMain", { width: 1.28, height: 0.42, depth: 1.16 }, scene);
+  turretMain.position.set(0, 0.12, 0.08);
+  turretMain.parent = turretBase;
+  turretMain.material = hullMat;
+  allMeshes.push(turretMain);
+
+  const turretBustle = MeshBuilder.CreateBox("tankTurretBustle", { width: 1.08, height: 0.26, depth: 0.56 }, scene);
+  turretBustle.position.set(0, 0.08, -0.72);
+  turretBustle.parent = turretBase;
+  turretBustle.material = hullMat;
+  allMeshes.push(turretBustle);
+
+  const turretFront = MeshBuilder.CreateBox("tankTurretFront", { width: 1.06, height: 0.28, depth: 0.52 }, scene);
+  turretFront.position.set(0, 0.04, 0.76);
+  turretFront.rotation.x = -0.16;
+  turretFront.parent = turretBase;
+  turretFront.material = hullMat;
+  allMeshes.push(turretFront);
+
+  for (const side of [-1, 1]) {
+    const cheek = MeshBuilder.CreateBox("tankTurretCheek", { width: 0.28, height: 0.34, depth: 0.62 }, scene);
+    cheek.position.set(side * 0.6, 0.08, 0.36);
+    cheek.rotation.y = side * 0.18;
+    cheek.parent = turretBase;
+    cheek.material = hullMat;
+    allMeshes.push(cheek);
+  }
+
+  const turretRoof = MeshBuilder.CreateBox("tankTurretRoof", { width: 1.0, height: 0.08, depth: 0.74 }, scene);
+  turretRoof.position.set(0, 0.34, 0.02);
+  turretRoof.parent = turretBase;
+  turretRoof.material = hullDark;
+  allMeshes.push(turretRoof);
+
+  const gunMantlet = MeshBuilder.CreateCylinder("tankGunMantlet", { height: 0.34, diameter: 0.34, tessellation: 16 }, scene);
+  gunMantlet.position.set(0, 0.08, 0.72);
+  gunMantlet.rotation.x = Math.PI / 2;
+  gunMantlet.parent = turretBase;
+  gunMantlet.material = metal;
+  allMeshes.push(gunMantlet);
+
+  const barrel = MeshBuilder.CreateCylinder("tankBarrel", { height: 2.25, diameter: 0.12, tessellation: 16 }, scene);
+  barrel.position.set(0, 0.1, 1.82);
+  barrel.rotation.x = Math.PI / 2;
+  barrel.parent = turretBase;
+  barrel.material = metal;
+  allMeshes.push(barrel);
+
+  const fumeExtractor = MeshBuilder.CreateCylinder("tankFumeExtractor", { height: 0.34, diameter: 0.18, tessellation: 16 }, scene);
+  fumeExtractor.position.set(0, 0.1, 1.2);
+  fumeExtractor.rotation.x = Math.PI / 2;
+  fumeExtractor.parent = turretBase;
+  fumeExtractor.material = metal;
+  allMeshes.push(fumeExtractor);
+
+  const muzzle = MeshBuilder.CreateCylinder("tankMuzzle", { height: 0.12, diameterTop: 0.14, diameterBottom: 0.12, tessellation: 16 }, scene);
+  muzzle.position.set(0, 0.1, 2.94);
+  muzzle.rotation.x = Math.PI / 2;
+  muzzle.parent = turretBase;
+  muzzle.material = metal;
+  allMeshes.push(muzzle);
+
+  const commanderCupola = MeshBuilder.CreateCylinder("tankCupola", { height: 0.12, diameter: 0.26, tessellation: 14 }, scene);
+  commanderCupola.position.set(-0.18, 0.44, -0.08);
+  commanderCupola.parent = turretBase;
+  commanderCupola.material = hullDark;
+  allMeshes.push(commanderCupola);
+
+  const loaderHatch = MeshBuilder.CreateCylinder("tankLoaderHatch", { height: 0.05, diameter: 0.2, tessellation: 14 }, scene);
+  loaderHatch.position.set(0.2, 0.42, 0.08);
+  loaderHatch.parent = turretBase;
+  loaderHatch.material = hullDark;
+  allMeshes.push(loaderHatch);
+
+  const sightBlock = MeshBuilder.CreateBox("tankSight", { width: 0.08, height: 0.08, depth: 0.16 }, scene);
+  sightBlock.position.set(0.3, 0.26, 0.44);
+  sightBlock.parent = turretBase;
+  sightBlock.material = metal;
+  allMeshes.push(sightBlock);
 
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
@@ -671,10 +779,10 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   return wrapAsBody(
     scene,
     root,
-    body,
+    lowerHull,
     allMeshes,
     operator?.headMesh,
-    makeBodyMetrics(operator?.headTopY ?? 1.82, 1.2, 0.9, 0.95),
+    makeBodyMetrics(operator?.headTopY ?? 1.92, 1.28, 1.0, 1.12),
   );
 }
 

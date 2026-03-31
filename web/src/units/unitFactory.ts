@@ -14,6 +14,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
   suppressDecorativeOperators?: boolean;
+  forceArticulatedBody?: boolean;
 }
 
 export class UnitFactory {
@@ -40,8 +41,9 @@ export class UnitFactory {
 
     let body;
     let propMeshes: Mesh[] = [];
+    const shouldUseVehicleBody = isVehicleUnit(definition.id) && !options.forceArticulatedBody;
 
-    if (isVehicleUnit(definition.id)) {
+    if (shouldUseVehicleBody) {
       // Build as vehicle/equipment instead of humanoid
       body = buildVehicleBody(this._scene, definition.id, bodyColor, {
         showOperators: options.suppressDecorativeOperators ? false : true,

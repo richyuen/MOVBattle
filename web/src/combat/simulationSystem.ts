@@ -17,6 +17,7 @@ export interface SpawnUnitOptions {
   linkedRelation?: LinkedRelation;
   visualOverride?: UnitVisualConfig;
   suppressDecorativeOperators?: boolean;
+  forceArticulatedBody?: boolean;
 }
 
 function hasAbility(unit: RuntimeUnit, ability: string): boolean {
@@ -465,14 +466,19 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_legacy_tank") {
-      this._fireCustomVolley(attacker, target, damage * 1.1, knockback.scale(1.25), Math.max(3, attacker.definition.burstCount ?? 4), {
-        projectileShape: "bolt",
-        splashRadius: 1.1,
-        spreadX: 0.45,
-        spreadY: 0.18,
-        spreadZ: 0.25,
-        delayStep: 0.08,
+      this._fireCustomVolley(attacker, target, damage * 1.25, knockback.scale(1.35), 1, {
+        projectileShape: "shell",
+        splashRadius: 1.5,
+        spreadX: 0,
+        spreadY: 0,
+        spreadZ: 0,
+        delayStep: 0,
       });
+      if (this.projectileSystem) {
+        const attackOrigin = attacker.getAttackEmitter().position;
+        const dir = target.position.subtract(attackOrigin).normalize();
+        this.projectileSystem.spawnMuzzleFlash(attackOrigin, dir, 1.8);
+      }
       return;
     }
 
