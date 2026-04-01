@@ -210,6 +210,9 @@ function spawnRuntimeUnit(
   const countsTowardVictory = options.countsTowardVictory ?? (role === "placed" || role === "summoned");
   unit.setSpawnRole(role, countsTowardVictory);
   unit.setDecorativeStandinsSuppressed(options.suppressDecorativeOperators ?? Boolean(preset));
+  if (options.expireAfterSeconds !== undefined) {
+    unit.setLifetime(options.expireAfterSeconds, worldTimeSeconds);
+  }
   if (options.linkedParent && options.linkedRelation) {
     options.linkedParent.attachLinkedChild(unit, options.linkedRelation);
   }
@@ -622,6 +625,11 @@ interface ScenarioCheckResult {
   state: GameTextState;
 }
 
+interface NumericExpectation {
+  operator: "=" | ">=" | "<=";
+  expected: number;
+}
+
 function buildGameStatePayload() {
   return {
     coordinateSystem: "x:right, z:forward, y:up, origin:center line",
@@ -710,6 +718,55 @@ function getLinkedChildrenForRoot(state: GameTextState, root: GameTextUnitState)
   return state.units.filter((unit) => unit.linkedParentId === root.runtimeId);
 }
 
+function parseNumericExpectation(clause: string): NumericExpectation | null {
+  const match = clause.match(/(>=|<=|=)(-?\d+(?:\.\d+)?)$/);
+  if (!match) return null;
+  return {
+    operator: match[1] as NumericExpectation["operator"],
+    expected: Number(match[2]),
+  };
+}
+
+function compareNumeric(actual: number, expectation: NumericExpectation): boolean {
+  switch (expectation.operator) {
+    case "=":
+      return actual === expectation.expected;
+    case ">=":
+      return actual >= expectation.expected;
+    case "<=":
+      return actual <= expectation.expected;
+  }
+}
+
+function getInitialUnitSpec(scenario: ScenarioSpec, unitId: string): { x: number; y?: number; z: number } | null {
+  return scenario.units.find((unit) => unit.unitId === unitId)?.position ?? null;
+}
+
+function evaluateSpawnedChildCountClauses(state: GameTextState, value: string): string[] {
+  const clauses = parseUnitClauses(value);
+  const failures: string[] = [];
+  for (const { unitId, clause } of clauses) {
+    const expectation = parseNumericExpectation(clause);
+    const relation = clause.replace(/(>=|<=|=)-?\d+(?:\.\d+)?$/, "").trim();
+    if (!expectation || relation !== "spawned-child") {
+      failures.push(`Unsupported spawned-child clause: ${unitId}:${clause}`);
+      continue;
+    }
+    const root = getScenarioRoot(state, unitId);
+    if (!root) {
+      failures.push(`Missing root unit ${unitId}`);
+      continue;
+    }
+    const actual = getLinkedChildrenForRoot(state, root)
+      .filter((child) => child.linkedRelation === "spawned-child" && child.alive)
+      .length;
+    if (!compareNumeric(actual, expectation)) {
+      failures.push(`${unitId}:${relation} expected ${expectation.operator}${expectation.expected}, got ${actual}`);
+    }
+  }
+  return failures;
+}
+
 function getEmitterRoleSet(state: GameTextState, root: GameTextUnitState): Set<string> {
   const roles = new Set<string>();
   if (root.combatEmitter) roles.add("parent");
@@ -730,7 +787,7 @@ function getImpactRoleSet(state: GameTextState, root: GameTextUnitState): Set<st
   return roles;
 }
 
-function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: string; value: string }): ScenarioAssertionResult {
+function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: string; value: string }, scenario?: ScenarioSpec): ScenarioAssertionResult {
   const pass = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: true, details });
   const fail = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: false, details });
   const skip = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: true, skipped: true, details });
@@ -764,6 +821,55 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       }
       return failures.length === 0 ? pass("Linked relation counts matched.") : fail(failures.join("; "));
     }
+    case "spawned-child-count": {
+      const failures = evaluateSpawnedChildCountClauses(state, assertion.value);
+      return failures.length === 0 ? pass("Spawned child counts matched.") : fail(failures.join("; "));
+    }
+    case "unit-hp-at-most": {
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(<=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return skip(`Unsupported hp clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        if (root.hp > expected) {
+          failures.push(`${unitId} expected hp <= ${expected}, got ${root.hp}`);
+        }
+      }
+      return failures.length === 0 ? pass("Unit HP thresholds matched.") : fail(failures.join("; "));
+    }
+    case "position-shift-at-least": {
+      if (!scenario) return skip("No scenario context for position-shift assertion.");
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(>=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return skip(`Unsupported movement clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        const initial = getInitialUnitSpec(scenario, unitId);
+        if (!root || !initial) {
+          failures.push(`Missing movement context for ${unitId}`);
+          continue;
+        }
+        const dx = root.x - initial.x;
+        const dz = root.z - initial.z;
+        const actual = Math.sqrt(dx * dx + dz * dz);
+        if (actual < expected) {
+          failures.push(`${unitId} expected movement >= ${expected}, got ${actual.toFixed(2)}`);
+        }
+      }
+      return failures.length === 0 ? pass("Position shift matched.") : fail(failures.join("; "));
+    }
+    case "replay-stability":
+      return skip("Replay stability is evaluated in runScenarioCheck.");
     case "emitter-owner": {
       const clauses = parseUnitClauses(assertion.value);
       const failures: string[] = [];
@@ -940,8 +1046,52 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
 function runScenarioCheck(name: string): ScenarioCheckResult | null {
   const scenario = runScenario(name);
   if (!scenario) return null;
-  const state = buildGameStatePayload();
-  const results = scenario.assertions.map((assertion) => evaluateScenarioAssertion(state, assertion));
+  let state = buildGameStatePayload();
+  const replayAssertions = scenario.assertions.filter((assertion) => assertion.kind === "replay-stability");
+  const directAssertions = scenario.assertions.filter((assertion) => assertion.kind !== "replay-stability");
+  const results = directAssertions.map((assertion) => evaluateScenarioAssertion(state, assertion, scenario));
+
+  if (replayAssertions.length > 0) {
+    playAgain();
+    const postReplayPlacement = buildGameStatePayload();
+    const orphanedSpawned = postReplayPlacement.units.filter((unit) => unit.role === "summoned" || unit.linkedRelation === "spawned-child");
+    const expectedRoots = scenario.units.length;
+    const actualRoots = postReplayPlacement.units.filter((unit) => unit.linkedParentId === null).length;
+    for (const assertion of replayAssertions) {
+      if (orphanedSpawned.length > 0) {
+        results.push({
+          kind: assertion.kind,
+          value: assertion.value,
+          passed: false,
+          details: `playAgain() left orphaned spawned units: ${orphanedSpawned.map((unit) => `${unit.id}#${unit.runtimeId}`).join(", ")}`,
+        });
+        continue;
+      }
+      if (actualRoots !== expectedRoots) {
+        results.push({
+          kind: assertion.kind,
+          value: assertion.value,
+          passed: false,
+          details: `playAgain() expected ${expectedRoots} root units, found ${actualRoots}.`,
+        });
+        continue;
+      }
+      startBattle(true);
+      if (scenario.advanceMs && scenario.advanceMs > 0) {
+        advanceSimulationTime(scenario.advanceMs);
+      }
+      const replayState = buildGameStatePayload();
+      const failures = evaluateSpawnedChildCountClauses(replayState, assertion.value);
+      results.push({
+        kind: assertion.kind,
+        value: assertion.value,
+        passed: failures.length === 0,
+        details: failures.length === 0 ? "Replay cleanup and rerun child counts matched." : failures.join("; "),
+      });
+      state = replayState;
+    }
+  }
+
   const failures = results.filter((result) => !result.passed).map((result) => `${result.kind}: ${result.details}`);
   return {
     scenario: scenario.name,

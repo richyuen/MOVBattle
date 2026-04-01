@@ -7,6 +7,6 @@
 | Scarecrow vs melee pack | Pending | Scarecrow should attack through a visible crow-volley presentation rather than placeholder summoning |
 | Reaper vs melee pack | Pending | Reaper should pull or collapse enemies inward with a terror sweep feel |
 | Chronomancer vs melee pack | Pending | Chronomancer should visibly control enemy tempo through push plus slow |
-| Monkey King vs boss melee | Pending | Monkey King should create clones that materially change the engagement |
+| Monkey King vs boss melee | `boss_monkey_king_clones` | Monkey King should create clones that materially change the engagement and replay cleanly |
 | Dark Peasant vs Super Peasant | `bosses_dark_vs_super` | Both should feel exceptional, but Dark Peasant should read as control/summon oppression while Super Peasant reads as mobility/impact power |
-| Pirate Queen vs Captain | Pending | Pirate Queen should read as a boss hero rather than an upscaled pirate captain |
+| Pirate Queen vs Captain | `boss_pirate_queen_duel` | Pirate Queen should read as a boss hero rather than an upscaled pirate captain |

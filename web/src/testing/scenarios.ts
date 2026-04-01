@@ -11,6 +11,10 @@ export interface ScenarioAssertion {
     | "comparison-focus"
     | "linked-role-count"
     | "linked-relation-count"
+    | "spawned-child-count"
+    | "unit-hp-at-most"
+    | "position-shift-at-least"
+    | "replay-stability"
     | "victory-semantics"
     | "emitter-owner"
     | "impact-owner"
@@ -321,6 +325,70 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "comparison-focus", value: "CLAMS should expose an anchored shell attachment that remains distinct from summoned bomb divers." },
     ],
   },
+  boss_dark_peasant_pressure: {
+    name: "boss_dark_peasant_pressure",
+    description: "Dark Peasant control-and-summon pressure check.",
+    autoStart: true,
+    advanceMs: 3400,
+    units: [
+      { unitId: "legacy.dark_peasant", team: 0, position: { x: -6.5, z: 0 } },
+      { unitId: "pirate.captain", team: 1, position: { x: 4.5, z: 0 } },
+    ],
+    assertions: [
+      { kind: "comparison-focus", value: "Dark Peasant should read as oppressive control plus dark summon pressure, not generic ranged magic." },
+      { kind: "units-present", value: "legacy.dark_peasant,evil.shadow_walker" },
+      { kind: "spawned-child-count", value: "legacy.dark_peasant:spawned-child>=2" },
+      { kind: "unit-hp-at-most", value: "pirate.captain<=820" },
+      { kind: "replay-stability", value: "legacy.dark_peasant:spawned-child>=2" },
+    ],
+  },
+  boss_monkey_king_clones: {
+    name: "boss_monkey_king_clones",
+    description: "Monkey King clone pressure and replay cleanup check.",
+    autoStart: true,
+    advanceMs: 3200,
+    units: [
+      { unitId: "dynasty.monkey_king", team: 0, position: { x: -6, z: 0 } },
+      { unitId: "pirate.captain", team: 1, position: { x: 4.8, z: 0 } },
+    ],
+    assertions: [
+      { kind: "comparison-focus", value: "Monkey King should create visible clone pressure that materially changes the duel." },
+      { kind: "units-present", value: "dynasty.monkey_king" },
+      { kind: "spawned-child-count", value: "dynasty.monkey_king:spawned-child>=2" },
+      { kind: "unit-hp-at-most", value: "pirate.captain<=820" },
+      { kind: "replay-stability", value: "dynasty.monkey_king:spawned-child>=2" },
+    ],
+  },
+  boss_super_peasant_pursuit: {
+    name: "boss_super_peasant_pursuit",
+    description: "Super Peasant pursuit and impact check.",
+    autoStart: true,
+    advanceMs: 1900,
+    units: [
+      { unitId: "legacy.super_peasant", team: 0, position: { x: -6.5, z: 0 } },
+      { unitId: "pirate.captain", team: 1, position: { x: 5.5, z: 0 } },
+    ],
+    assertions: [
+      { kind: "comparison-focus", value: "Super Peasant should read as extreme speed, pursuit, and impact dominance." },
+      { kind: "position-shift-at-least", value: "legacy.super_peasant>=5.5" },
+      { kind: "unit-hp-at-most", value: "pirate.captain<=820" },
+    ],
+  },
+  boss_pirate_queen_duel: {
+    name: "boss_pirate_queen_duel",
+    description: "Pirate Queen versus Captain boss-presence check.",
+    autoStart: true,
+    advanceMs: 2800,
+    units: [
+      { unitId: "pirate.pirate_queen", team: 0, position: { x: -5.5, z: 0 } },
+      { unitId: "pirate.captain", team: 1, position: { x: 4.5, z: 0 } },
+    ],
+    assertions: [
+      { kind: "comparison-focus", value: "Pirate Queen should read as a grounded pirate boss rather than an upscaled Captain." },
+      { kind: "position-shift-at-least", value: "pirate.pirate_queen>=3.5" },
+      { kind: "unit-hp-at-most", value: "pirate.captain<=760" },
+    ],
+  },
   bosses_dark_vs_super: {
     name: "bosses_dark_vs_super",
     description: "High-risk boss comparison for deterministic validation.",
@@ -332,6 +400,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "comparison-focus", value: "Dark Peasant should read as control/summon oppression; Super Peasant as mobility and impact." },
+      { kind: "spawned-child-count", value: "legacy.dark_peasant:spawned-child>=2" },
+      { kind: "position-shift-at-least", value: "legacy.super_peasant>=4.5" },
     ],
   },
 };

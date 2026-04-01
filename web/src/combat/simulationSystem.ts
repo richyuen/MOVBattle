@@ -1,4 +1,4 @@
-import { Vector3 } from "@babylonjs/core";
+import { Color3, Vector3 } from "@babylonjs/core";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import {
   AttackType, TargetPriority,
@@ -18,6 +18,7 @@ export interface SpawnUnitOptions {
   visualOverride?: UnitVisualConfig;
   suppressDecorativeOperators?: boolean;
   forceArticulatedBody?: boolean;
+  expireAfterSeconds?: number;
 }
 
 function hasAbility(unit: RuntimeUnit, ability: string): boolean {
@@ -79,6 +80,10 @@ function muzzleScaleForProjectile(shape: ProjectileShape): number {
 
 function shouldSpawnProjectileMuzzleFx(shape: ProjectileShape): boolean {
   return shape === "shell" || shape === "bomb" || shape === "rocket_arrow" || shape === "bolt";
+}
+
+function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
+  return attacker.linkedChildren.filter((child) => !child.isDead && child.linkedRelation === "spawned-child").length;
 }
 
 export class SimulationSystem {
@@ -206,13 +211,23 @@ export class SimulationSystem {
     }
 
     if ((preset === "iconic_super_peasant" || preset === "iconic_thor") && distance > engageDistance && distance < engageDistance * (preset === "iconic_super_peasant" ? 5.5 : 3.0) && unit.canAttack(now)) {
-      if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position);
+      if (this.visualEffects) {
+        this.visualEffects.spawnSmokePuff(
+          unit.position,
+          preset === "iconic_super_peasant" ? new Color3(1.0, 0.88, 0.35) : undefined,
+        );
+      }
       const dir = enemy.position.subtract(unit.position).normalize();
       const teleportDist = Math.min(distance - engageDistance * 0.45, preset === "iconic_super_peasant" ? 9.5 : 4.6);
       const newPos = unit.position.add(dir.scale(teleportDist));
       newPos.y = 0;
       unit.teleportTo(newPos);
-      if (this.visualEffects) this.visualEffects.spawnSmokePuff(newPos);
+      if (this.visualEffects) {
+        this.visualEffects.spawnSmokePuff(
+          newPos,
+          preset === "iconic_super_peasant" ? new Color3(1.0, 0.9, 0.45) : undefined,
+        );
+      }
       unit.setAttackCooldown(now, attackProfile.cooldown * (preset === "iconic_super_peasant" ? 0.18 : 0.32));
       return;
     }
@@ -403,8 +418,17 @@ export class SimulationSystem {
 
     if (preset === "iconic_dark_peasant") {
       this._summonUnits(attacker);
-      this._applyAreaControl(target.position, Math.max(4.3, splashRadius + 1.2), attacker.team, damage * 0.95, knockback.scale(-1.6 * controlStrength), now, 0.55, attacker.definition.statusDurationSeconds ?? 2.6);
-      if (this.visualEffects) this.visualEffects.spawnSmokePuff(target.position);
+      const controlRadius = Math.max(5.2, splashRadius + 1.6);
+      const controlDuration = attacker.definition.statusDurationSeconds ?? 3.2;
+      const pullForce = knockback.scale(-2.15 * controlStrength);
+      const secondaryCenter = target.position.add(impulseDir.scale(-1.2));
+      this._applyAreaControl(target.position, controlRadius, attacker.team, damage * 0.9, pullForce, now, 0.28, controlDuration);
+      this._applyAreaControl(secondaryCenter, Math.max(3.6, controlRadius * 0.7), attacker.team, damage * 0.55, pullForce.scale(0.78), now, 0.34, Math.max(2.4, controlDuration - 0.4));
+      if (this.visualEffects) {
+        this.visualEffects.spawnSmokePuff(target.position, new Color3(0.35, 0.24, 0.52));
+        this.visualEffects.spawnSmokePuff(secondaryCenter, new Color3(0.28, 0.2, 0.42));
+        this.visualEffects.spawnSmokePuff(attacker.position.add(impulseDir.scale(1.2)), new Color3(0.24, 0.18, 0.38));
+      }
       return;
     }
 
@@ -503,7 +527,30 @@ export class SimulationSystem {
       return;
     }
 
-    if (preset === "iconic_monkey_king" && this._summonUnits(attacker)) {
+    if (preset === "iconic_monkey_king") {
+      const summoned = this._summonUnits(attacker);
+      if (summoned) {
+        if (this.visualEffects) {
+          this.visualEffects.spawnSmokePuff(attacker.position, new Color3(0.94, 0.78, 0.34));
+        }
+        this._applyDirectOrSplash(target, damage * 0.62, Math.max(1.1, splashRadius * 0.55), attacker.team, knockback.scale(0.72));
+        return;
+      }
+    }
+
+    if (preset === "iconic_super_peasant") {
+      if (this.visualEffects) {
+        this.visualEffects.spawnSmokePuff(impactOrigin, new Color3(1.0, 0.9, 0.42));
+      }
+      this._applyAreaControl(target.position, Math.max(3.1, splashRadius + 0.9), attacker.team, damage * 1.08, knockback.scale(1.12), now);
+      return;
+    }
+
+    if (preset === "iconic_pirate_queen") {
+      if (this.visualEffects) {
+        this.visualEffects.spawnSmokePuff(target.position, new Color3(0.92, 0.56, 0.38));
+      }
+      this._applyDirectOrSplash(target, damage * 1.2, Math.max(2.6, splashRadius + 0.5), attacker.team, knockback.scale(1.2));
       return;
     }
 
@@ -575,26 +622,64 @@ export class SimulationSystem {
   private _summonUnits(attacker: RuntimeUnit): boolean {
     if (!this.spawnUnitById) return false;
     if (this.getLivingCount(attacker.team) >= this.summonLivingCap) return false;
+    if (attacker.spawnRole === "summoned" && getBehaviorPreset(attacker) === "iconic_monkey_king") return false;
 
     const summonIds = attacker.definition.summonUnitIds
       ?? (hasAbility(attacker, "clone") ? [attacker.definition.id] : undefined)
       ?? (hasAbility(attacker, "revive") ? ["spooky.skeleton_warrior"] : undefined);
     if (!summonIds || summonIds.length === 0) return false;
 
+    const activeChildren = countAliveSpawnedChildren(attacker);
+    const maxActive = attacker.definition.maxActiveSummons;
+    if (maxActive !== undefined && activeChildren >= maxActive) return false;
+
     const summonCount = Math.max(1, attacker.definition.summonCount ?? 1);
+    const remainingSlots = maxActive === undefined ? summonCount : Math.max(0, maxActive - activeChildren);
+    const actualSummonCount = Math.min(summonCount, remainingSlots || summonCount);
+    if (actualSummonCount <= 0) return false;
     let summoned = false;
-    for (let i = 0; i < summonCount; i++) {
+    const preset = getBehaviorPreset(attacker);
+    const summonLifetime = attacker.definition.summonLifetimeSeconds;
+    for (let i = 0; i < actualSummonCount; i++) {
       if (this.getLivingCount(attacker.team) >= this.summonLivingCap) break;
       const summonId = summonIds[i % summonIds.length];
-      const angle = (Math.PI * 2 * i) / summonCount;
-      const spacing = attacker.definition.behaviorPreset === "secret_present_spawn" ? 1.9 : 1.5;
+      const angle = (Math.PI * 2 * i) / actualSummonCount;
+      const spacing = attacker.definition.behaviorPreset === "secret_present_spawn"
+        ? 1.9
+        : preset === "iconic_monkey_king"
+          ? 2.1
+          : 1.5;
       const pos = attacker.position.add(new Vector3(Math.cos(angle) * spacing, 0, Math.sin(angle) * spacing));
+      const visualOverride = preset === "iconic_monkey_king"
+        ? {
+            ...attacker.visualConfig,
+            proportions: {
+              ...attacker.visualConfig.proportions,
+              scale: (attacker.visualConfig.proportions.scale ?? 1) * 0.9,
+              bulk: (attacker.visualConfig.proportions.bulk ?? 1) * 0.92,
+            },
+          }
+        : undefined;
       const unit = this.spawnUnitById(summonId, attacker.team, pos, {
         role: "summoned",
         linkedParent: attacker,
         linkedRelation: "spawned-child",
+        expireAfterSeconds: summonLifetime,
+        visualOverride,
       });
-      if (unit) summoned = true;
+      if (unit) {
+        summoned = true;
+        if (this.visualEffects) {
+          this.visualEffects.spawnSmokePuff(
+            pos,
+            preset === "iconic_dark_peasant"
+              ? new Color3(0.34, 0.22, 0.5)
+              : preset === "iconic_monkey_king"
+                ? new Color3(0.95, 0.8, 0.35)
+                : undefined,
+          );
+        }
+      }
     }
     return summoned;
   }

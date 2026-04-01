@@ -180,3 +180,34 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Remaining gaps after the assertion/origin pass:
 - Some older structural assertions still contain narrative text and are treated as informational/skipped by the built-in checker rather than hard failures.
 - The assertion engine currently validates against live text state, not against image-based visual diffs or automatic in-browser replay sequences like death/reset/playAgain cleanup chains.
+- 2026-03-31: Boss identity and lifecycle pass implemented.
+- Added boss-wave scenario coverage in `web/src/testing/scenarios.ts` for `boss_dark_peasant_pressure`, `boss_monkey_king_clones`, `boss_super_peasant_pursuit`, `boss_pirate_queen_duel`, and stricter `bosses_dark_vs_super` assertions.
+- Extended the built-in scenario checker in `web/src/main.ts` with executable boss-oriented assertions: `spawned-child-count`, `unit-hp-at-most`, `position-shift-at-least`, and `replay-stability`.
+- `replay-stability` now uses `playAgain()` inside `runScenarioCheck()` to verify spawned-child cleanup and rerun consistency for lifecycle-heavy boss scenarios.
+- Extended `web/src/data/rosterManifest.ts` with summon lifecycle tuning (`maxActiveSummons`, `summonLifetimeSeconds`) and applied it to `legacy.dark_peasant` and `dynasty.monkey_king`.
+- Extended `web/src/units/runtimeUnit.ts` and `web/src/main.ts` so summoned runtime actors can expire cleanly without lingering through deterministic lifecycle validation.
+- Deepened iconic boss behavior in `web/src/combat/simulationSystem.ts`:
+- `Dark Peasant` now applies wider multi-pulse control pressure and stronger dark summon orchestration.
+- `Monkey King` clones now have controlled spawn caps, timed lifetime, non-recursive cloning, and direct boss-pressure follow-through while summoning.
+- `Super Peasant` now has stronger golden reposition read and impact-area dominance.
+- `Pirate Queen` now has a stronger grounded duel hit branch instead of only inheriting generic boss melee tuning.
+- Tightened boss silhouettes in `web/src/units/unitVisuals.ts` for `Dark Peasant`, `Super Peasant`, `Monkey King`, and `Pirate Queen`.
+- Added the phase artifacts:
+- `web/BOSS_STATE_MATRIX.md`
+- `web/BOSS_WAVE_PARITY_MATRIX.md`
+- `web/BOSS_WAVE_ACCEPTANCE_BATTLES.md`
+- Updated `web/ICONIC_ACCEPTANCE_BATTLES.md` so Monkey King and Pirate Queen no longer remain pending.
+- Validation:
+- `npm run build` passes in `web/`.
+- Required web-game client run completed against the local Vite server via the bundled `web_game_playwright_client.js`.
+- Direct Playwright browser checks confirmed all boss-wave scenario checks pass:
+- `boss_dark_peasant_pressure`
+- `boss_monkey_king_clones`
+- `boss_super_peasant_pursuit`
+- `boss_pirate_queen_duel`
+- `bosses_dark_vs_super`
+- Validation artifacts were written under `web/output/boss-wave-validation/`.
+- Remaining gaps after the boss pass:
+- Some older non-boss narrative assertions are still informational/skipped rather than strict hard failures.
+- Boss visual verification at the default gameplay camera is still weaker than ideal because the current screenshot path is wide and top-down; text-state validation is stronger than screenshot-level close-up proof.
+- Exact TABS edge-case physics for `Dark Peasant` and `Super Peasant` remain approximated even though their core identities are now much stronger and deterministically covered.

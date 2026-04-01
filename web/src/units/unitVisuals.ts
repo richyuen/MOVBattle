@@ -374,12 +374,12 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["chrono_ring"], "ability-active": ["chrono_ring"] },
       });
     case "iconic_dark_peasant":
-      return vis({ scale: 1.98, bulk: 1.52, headSize: 1.14, armLength: 1.18 }, "none", "hood", "none", "cape", "#3b2b59", undefined, {
+      return vis({ scale: 2.08, bulk: 1.64, headSize: 1.16, armLength: 1.22 }, "none", "hood", "none", "cape", "#3b2b59", undefined, {
         posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
         stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
       });
     case "iconic_super_peasant":
-      return vis({ scale: 1.92, bulk: 1.22, headSize: 1.06, armLength: 1.16, legLength: 1.02 }, "none", "laurel", "none", "cape", "#f3d45a", undefined, {
+      return vis({ scale: 2.02, bulk: 1.18, headSize: 1.08, armLength: 1.2, legLength: 1.08 }, "none", "laurel", "none", "cape", "#f3d45a", undefined, {
         posePreset: "giant", materialPreset: "secret_hero", attachmentPreset: "super_aura", fxPreset: "solar",
         stateVariants: { moving: ["super_aura"], attacking: ["super_aura"], "ability-active": ["super_aura"] },
       });
@@ -396,12 +396,12 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "vehicle", materialPreset: "secret_bandit",
       });
     case "iconic_monkey_king":
-      return vis({ scale: 1.66, bulk: 1.16, headSize: 1.12, armLength: 1.24 }, "bo_staff", "crown", "none", "cape", "#9a6a2d", undefined, {
+      return vis({ scale: 1.72, bulk: 1.18, headSize: 1.14, armLength: 1.28 }, "bo_staff", "crown", "none", "cape", "#9a6a2d", undefined, {
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "hero_halo", fxPreset: "royal",
-        stateVariants: { attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
+        stateVariants: { moving: ["halo_flare"], attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
       });
     case "iconic_pirate_queen":
-      return vis({ scale: 1.64, bulk: 1.2, headSize: 1.08 }, "cutlass", "pirate_hat", "none", "cape", "#ff4f8a", "flintlock", {
+      return vis({ scale: 1.72, bulk: 1.24, headSize: 1.08, armLength: 1.08 }, "cutlass", "pirate_hat", "none", "cape", "#ff4f8a", "flintlock", {
         posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });

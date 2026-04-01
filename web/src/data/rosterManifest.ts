@@ -179,6 +179,8 @@ export interface RosterManifestEntry {
   specialHint?: string;
   summonUnitIds?: string[];
   summonCount?: number;
+  maxActiveSummons?: number;
+  summonLifetimeSeconds?: number;
   burstCount?: number;
   volleyCount?: number;
   controlStrength?: number;
@@ -270,7 +272,7 @@ const dynasty = makeFaction(FactionId.Dynasty, "dynasty", [
   ["ninja", "Ninja", 160, "rapid_ranged", { abilities: ["teleport", "rapid_fire"], projectileHint: "shuriken", hatHint: "ninja_mask" }],
   ["dragon", "Dragon", 1000, "special_magic", { abilities: ["fire_dot"], projectileHint: "fireball", specialHint: "dragon" }],
   ["hwacha", "Hwacha", 900, "artillery", { abilities: ["volley_fire"], projectileHint: "rocket_arrow", specialHint: "hwacha", size: "large", visualPreset: "iconic_hwacha", behaviorPreset: "iconic_hwacha", volleyCount: 14, cooldownMultiplier: 0.9, compositionParts: [{ relation: "crew", label: "rocketeer" }, { relation: "crew", label: "loader" }] }],
-  ["monkey_king", "Monkey King", 2000, "boss_melee", { abilities: ["clone"], weaponHint: "bo_staff", visualPreset: "iconic_monkey_king", behaviorPreset: "iconic_monkey_king", summonCount: 2, cooldownMultiplier: 0.86 }],
+  ["monkey_king", "Monkey King", 2000, "boss_melee", { abilities: ["clone"], weaponHint: "bo_staff", visualPreset: "iconic_monkey_king", behaviorPreset: "iconic_monkey_king", summonCount: 2, maxActiveSummons: 4, summonLifetimeSeconds: 6.5, cooldownMultiplier: 0.8 }],
 ]);
 
 const renaissance = makeFaction(FactionId.Renaissance, "renaissance", [
@@ -290,7 +292,7 @@ const pirate = makeFaction(FactionId.Pirate, "pirate", [
   ["harpooner", "Harpooner", 140, "gunner", { abilities: ["pull_hook"], projectileHint: "spear", weaponHint: "harpoon" }],
   ["cannon", "Cannon", 1000, "artillery", { specialHint: "cannon", size: "large", projectileHint: "stone" }],
   ["captain", "Captain", 500, "heavy_melee", { weaponHint: "cutlass", hatHint: "captain_hat" }],
-  ["pirate_queen", "Pirate Queen", 2500, "boss_melee", { weaponHint: "cutlass", hatHint: "pirate_hat", visualPreset: "iconic_pirate_queen", behaviorPreset: "iconic_pirate_queen", controlStrength: 1.25, cooldownMultiplier: 0.82 }],
+  ["pirate_queen", "Pirate Queen", 2500, "boss_melee", { weaponHint: "cutlass", hatHint: "pirate_hat", visualPreset: "iconic_pirate_queen", behaviorPreset: "iconic_pirate_queen", controlStrength: 1.38, cooldownMultiplier: 0.78 }],
 ]);
 
 const spooky = makeFaction(FactionId.Spooky, "spooky", [
@@ -328,8 +330,8 @@ const legacy = makeFaction(FactionId.Legacy, "legacy", [
   ["thor", "Thor", 2200, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt", visualPreset: "iconic_thor", behaviorPreset: "iconic_thor", controlStrength: 1.35, cooldownMultiplier: 0.8 }],
   ["tank", "Tank", 5000, "artillery", { abilities: ["rapid_fire"], specialHint: "tank", size: "colossal", projectileHint: "bomb", visualPreset: "iconic_legacy_tank", behaviorPreset: "iconic_legacy_tank", burstCount: 1, cooldownMultiplier: 0.72, healthMultiplier: 1.2, compositionParts: [{ relation: "crew", label: "driver" }, { relation: "crew", label: "gunner" }] }],
   ["super_boxer", "Super Boxer", 100000, "boss_melee", { moveSpeedOverride: 5.2, size: "large" }],
-  ["dark_peasant", "Dark Peasant", 500000, "special_magic", { abilities: ["summon", "fear", "push_force"], summonUnitIds: ["evil.shadow_walker"], summonCount: 2, size: "giant", visualPreset: "iconic_dark_peasant", behaviorPreset: "iconic_dark_peasant", controlStrength: 2.4, cooldownMultiplier: 0.75, healthMultiplier: 1.15 }],
-  ["super_peasant", "Super Peasant", 500000, "boss_melee", { abilities: ["flying_hover", "charge_impact"], size: "giant", moveSpeedOverride: 6.6, visualPreset: "iconic_super_peasant", behaviorPreset: "iconic_super_peasant", controlStrength: 1.8, cooldownMultiplier: 0.58, healthMultiplier: 1.1 }],
+  ["dark_peasant", "Dark Peasant", 500000, "special_magic", { abilities: ["summon", "fear", "push_force"], summonUnitIds: ["evil.shadow_walker"], summonCount: 3, maxActiveSummons: 5, summonLifetimeSeconds: 7.5, size: "giant", visualPreset: "iconic_dark_peasant", behaviorPreset: "iconic_dark_peasant", controlStrength: 2.7, statusDurationSeconds: 3.4, cooldownMultiplier: 0.7, healthMultiplier: 1.18 }],
+  ["super_peasant", "Super Peasant", 500000, "boss_melee", { abilities: ["flying_hover", "charge_impact"], size: "giant", moveSpeedOverride: 7.1, visualPreset: "iconic_super_peasant", behaviorPreset: "iconic_super_peasant", controlStrength: 2.05, cooldownMultiplier: 0.5, healthMultiplier: 1.12 }],
 ]);
 
 const good = makeFaction(FactionId.Good, "good", [
