@@ -3,6 +3,7 @@ import { ArcRotateCamera, Vector3, Scene } from "@babylonjs/core";
 export class CameraController {
   readonly camera: ArcRotateCamera;
   private _scene: Scene;
+  private _shakeOffset = Vector3.Zero();
 
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
     this._scene = scene;
@@ -105,10 +106,15 @@ export class CameraController {
   }
 
   update(_dt: number): void {
+    if (this._shakeOffset.lengthSquared() > 0) {
+      this.camera.target.subtractInPlace(this._shakeOffset);
+      this._shakeOffset.setAll(0);
+    }
+
     if (this._shakeIntensity > 0.001) {
-      const t = this.camera.target;
-      t.x += (Math.random() - 0.5) * this._shakeIntensity;
-      t.y += (Math.random() - 0.5) * this._shakeIntensity * 0.5;
+      this._shakeOffset.x = (Math.random() - 0.5) * this._shakeIntensity;
+      this._shakeOffset.y = (Math.random() - 0.5) * this._shakeIntensity * 0.5;
+      this.camera.target.addInPlace(this._shakeOffset);
       this._shakeIntensity *= this._shakeDamping;
     } else {
       this._shakeIntensity = 0;

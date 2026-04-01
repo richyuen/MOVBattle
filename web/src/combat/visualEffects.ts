@@ -6,6 +6,7 @@ interface TimedEffect {
   root: TransformNode;
   remaining: number;
   update?: (dt: number, elapsed: number) => void;
+  dispose?: () => void;
 }
 
 /**
@@ -26,6 +27,7 @@ export class VisualEffects {
       if (e.update) e.update(dt, e.remaining);
       if (e.remaining <= 0) {
         e.root.dispose();
+        e.dispose?.();
         this._effects.splice(i, 1);
       }
     }
@@ -263,6 +265,7 @@ export class VisualEffects {
           children[i].scaling.setAll(s);
         }
       },
+      dispose: () => mat.dispose(),
     });
   }
 
@@ -308,6 +311,7 @@ export class VisualEffects {
           children[i].scaling.setAll(s);
         }
       },
+      dispose: () => mat.dispose(),
     });
   }
 
@@ -336,6 +340,7 @@ export class VisualEffects {
         flash.scaling.setAll(s);
         mat.alpha = t < 0.53 ? 1 : Math.max(0, 1 - (t - 0.53) * 2.1);
       },
+      dispose: () => mat.dispose(),
     });
   }
 
@@ -379,6 +384,9 @@ export class VisualEffects {
         root.scaling.setAll(s);
         root.position.y += 2.0 * dt;
       },
+      dispose: () => {
+        for (const material of mats) material.dispose();
+      },
     });
   }
 
@@ -413,6 +421,7 @@ export class VisualEffects {
         root.scaling.setAll(s);
         root.position.y += 1.0 * dt;
       },
+      dispose: () => mat.dispose(),
     });
   }
 
@@ -437,11 +446,15 @@ export class VisualEffects {
       update: (_dt, remaining) => {
         mat.alpha = Math.max(0, 0.4 * (remaining / totalDuration));
       },
+      dispose: () => mat.dispose(),
     });
   }
 
   dispose(): void {
-    for (const e of this._effects) e.root.dispose();
+    for (const e of this._effects) {
+      e.root.dispose();
+      e.dispose?.();
+    }
     this._effects.length = 0;
   }
 }

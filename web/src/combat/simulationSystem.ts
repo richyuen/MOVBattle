@@ -727,7 +727,7 @@ export class SimulationSystem {
             { originLift: originLiftForSource(smokeOriginInfo.source) },
           );
         }
-        target.applyDamage(perShotDamage, knockback.scale(0.35));
+        this._applyDirectOrSplash(target, perShotDamage, splashRadius, attacker.team, knockback.scale(0.35));
       }
     }
   }
@@ -753,7 +753,7 @@ export class SimulationSystem {
       const distSq = unit.position.subtract(target.position).lengthSquared();
       if (distSq > 2.2 * 2.2) continue;
       const pelletHits = unit === target ? pellets : Math.max(1, Math.floor(pellets / 3));
-      unit.applyDamage(perPellet * pelletHits, knockback.scale(0.5));
+      this._applyDirectOrSplash(unit, perPellet * pelletHits, 0, attacker.team, knockback.scale(0.5));
     }
   }
 
