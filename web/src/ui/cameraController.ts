@@ -1,5 +1,26 @@
 import { ArcRotateCamera, Vector3, Scene } from "@babylonjs/core";
 
+export type GalleryCameraPresetId =
+  | "faction_lineup_close"
+  | "heroes_bosses_close"
+  | "war_machine_wide_close"
+  | "giants_wide_close"
+  | "state_read_duel";
+
+export interface CameraViewState {
+  alpha: number;
+  beta: number;
+  radius: number;
+  target: { x: number; y: number; z: number };
+}
+
+export interface GalleryCameraOverride {
+  alpha?: number;
+  beta?: number;
+  radius?: number;
+  target?: { x: number; y: number; z: number };
+}
+
 export class CameraController {
   readonly camera: ArcRotateCamera;
   private _scene: Scene;
@@ -97,6 +118,40 @@ export class CameraController {
     this.camera.alpha += delta * 0.02;
   }
 
+  captureViewState(): CameraViewState {
+    return {
+      alpha: this.camera.alpha,
+      beta: this.camera.beta,
+      radius: this.camera.radius,
+      target: {
+        x: this.camera.target.x,
+        y: this.camera.target.y,
+        z: this.camera.target.z,
+      },
+    };
+  }
+
+  restoreViewState(view: CameraViewState): void {
+    this.camera.alpha = view.alpha;
+    this.camera.beta = view.beta;
+    this.camera.radius = view.radius;
+    this.camera.target.set(view.target.x, view.target.y, view.target.z);
+    this._shakeOffset.setAll(0);
+    this._shakeIntensity = 0;
+  }
+
+  applyGalleryPreset(presetId: GalleryCameraPresetId, override?: GalleryCameraOverride): CameraViewState {
+    const preset = this._getGalleryPreset(presetId);
+    const view: CameraViewState = {
+      alpha: override?.alpha ?? preset.alpha,
+      beta: override?.beta ?? preset.beta,
+      radius: override?.radius ?? preset.radius,
+      target: override?.target ?? preset.target,
+    };
+    this.restoreViewState(view);
+    return view;
+  }
+
   // ─── Screen Shake ───
   private _shakeIntensity = 0;
   private _shakeDamping = 0.92;
@@ -118,6 +173,46 @@ export class CameraController {
       this._shakeIntensity *= this._shakeDamping;
     } else {
       this._shakeIntensity = 0;
+    }
+  }
+
+  private _getGalleryPreset(presetId: GalleryCameraPresetId): CameraViewState {
+    switch (presetId) {
+      case "faction_lineup_close":
+        return {
+          alpha: -Math.PI / 2.75,
+          beta: Math.PI / 3.9,
+          radius: 22,
+          target: { x: 0, y: 1.35, z: 0 },
+        };
+      case "heroes_bosses_close":
+        return {
+          alpha: -Math.PI / 2.7,
+          beta: Math.PI / 3.95,
+          radius: 21,
+          target: { x: 0, y: 1.75, z: 0 },
+        };
+      case "war_machine_wide_close":
+        return {
+          alpha: -Math.PI / 2.78,
+          beta: Math.PI / 3.8,
+          radius: 27,
+          target: { x: 0, y: 1.8, z: 0 },
+        };
+      case "giants_wide_close":
+        return {
+          alpha: -Math.PI / 2.7,
+          beta: Math.PI / 3.75,
+          radius: 31,
+          target: { x: 0, y: 2.6, z: 0 },
+        };
+      case "state_read_duel":
+        return {
+          alpha: -Math.PI / 2.85,
+          beta: Math.PI / 3.9,
+          radius: 22,
+          target: { x: -1, y: 1.6, z: 0 },
+        };
     }
   }
 }

@@ -21,11 +21,20 @@ import { UnitFactory } from "./units/unitFactory";
 import { RuntimeUnit } from "./units/runtimeUnit";
 import { getLinkedActorPreset, type LinkedActorSpec } from "./units/linkedActorPresets";
 import { getUnitVisual } from "./units/unitVisuals";
-import { getScenario, listScenarioNames, type ScenarioSpec } from "./testing/scenarios";
+import {
+  getScenario,
+  listScenarioNames,
+  type ScenarioCapturePhase,
+  type ScenarioGallerySpec,
+  type ScenarioSpec,
+} from "./testing/scenarios";
 
 import { TribalSandboxMapBuilder, getPlacementZones } from "./map/mapBuilder";
 import { PlacementValidator } from "./map/placementValidator";
-import { CameraController } from "./ui/cameraController";
+import {
+  CameraController,
+  type CameraViewState,
+} from "./ui/cameraController";
 
 // ─── DOM references ───
 const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
@@ -39,6 +48,7 @@ const unitSearchEl = document.getElementById("unitSearch") as HTMLInputElement;
 const resultOverlayEl = document.getElementById("resultOverlay")!;
 const resultTitleEl = document.getElementById("resultTitle")!;
 const resultDetailEl = document.getElementById("resultDetail")!;
+const bodyEl = document.body;
 
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -107,6 +117,10 @@ let statusTimer: ReturnType<typeof setTimeout> | null = null;
 let removeMode = false;
 let worldTimeSeconds = 0;
 let activeScenario: ScenarioSpec | null = null;
+let galleryCaptureSession: {
+  scenarioId: string;
+  cameraBeforeGallery: CameraViewState;
+} | null = null;
 RuntimeUnit.timeNowSeconds = () => worldTimeSeconds;
 
 function rotateOffsetByYaw(offset: Vector3, yaw: number): Vector3 {
@@ -273,6 +287,36 @@ function showStatus(msg: string): void {
   statusTextEl.textContent = msg;
   if (statusTimer) clearTimeout(statusTimer);
   statusTimer = setTimeout(() => { statusTextEl.textContent = ""; }, 2500);
+}
+
+function setGalleryCaptureMode(enabled: boolean): void {
+  bodyEl.classList.toggle("capture-mode", enabled);
+}
+
+function renderStaticFrames(frameCount = 2): void {
+  for (let i = 0; i < frameCount; i++) {
+    camCtrl.update(0);
+    scene.render();
+  }
+}
+
+function closeGalleryCaptureSession(restoreCamera = true): void {
+  setGalleryCaptureMode(false);
+  if (restoreCamera && galleryCaptureSession) {
+    camCtrl.restoreViewState(galleryCaptureSession.cameraBeforeGallery);
+  }
+  galleryCaptureSession = null;
+}
+
+function openGalleryCaptureSession(scenario: ScenarioSpec): void {
+  if (!galleryCaptureSession) {
+    galleryCaptureSession = {
+      scenarioId: scenario.name,
+      cameraBeforeGallery: camCtrl.captureViewState(),
+    };
+  } else {
+    galleryCaptureSession.scenarioId = scenario.name;
+  }
 }
 
 function selectUnit(id: string): void {
@@ -484,7 +528,7 @@ function startBattle(immediate = false): void {
   }, BATTLE_CONFIG.countdownSeconds * 1000);
 }
 
-function resetBattle(): void {
+function resetBattle(options: { preserveGallerySession?: boolean } = {}): void {
   if (countdownTimer) {
     clearTimeout(countdownTimer);
     countdownTimer = null;
@@ -510,6 +554,9 @@ function resetBattle(): void {
   activeScenario = null;
   updateBudgetDisplay();
   resultOverlayEl.classList.remove("visible");
+  if (!options.preserveGallerySession) {
+    closeGalleryCaptureSession(true);
+  }
   showStatus("Battle reset.");
 }
 
@@ -611,24 +658,40 @@ function advanceSimulationTime(ms: number): void {
   scene.render();
 }
 
+function hydrateScenario(scenario: ScenarioSpec, options: { preserveGallerySession?: boolean } = {}): void {
+  resetBattle(options);
+  activeScenario = scenario;
+  for (const unit of scenario.units) {
+    spawnHarnessUnit(unit.unitId, unit.team, unit.position);
+  }
+}
+
+function runScenarioSpec(
+  scenario: ScenarioSpec,
+  options: {
+    autoStart?: boolean;
+    advanceMs?: number;
+    preserveGallerySession?: boolean;
+  } = {},
+): ScenarioSpec {
+  hydrateScenario(scenario, { preserveGallerySession: options.preserveGallerySession });
+  const autoStart = options.autoStart ?? scenario.autoStart ?? false;
+  const advanceMs = options.advanceMs ?? scenario.advanceMs ?? 0;
+
+  if (autoStart) startBattle(true);
+  if (advanceMs > 0) {
+    advanceSimulationTime(advanceMs);
+  }
+  return scenario;
+}
+
 function runScenario(name: string): ScenarioSpec | null {
   const scenario = getScenario(name);
   if (!scenario) {
     showStatus(`Unknown scenario: ${name}`);
     return null;
   }
-
-  resetBattle();
-  activeScenario = scenario;
-  for (const unit of scenario.units) {
-    spawnHarnessUnit(unit.unitId, unit.team, unit.position);
-  }
-
-  if (scenario.autoStart) startBattle(true);
-  if (scenario.advanceMs && scenario.advanceMs > 0) {
-    advanceSimulationTime(scenario.advanceMs);
-  }
-  return scenario;
+  return runScenarioSpec(scenario);
 }
 
 type GameTextState = ReturnType<typeof buildGameStatePayload>;
@@ -650,10 +713,32 @@ interface ScenarioCheckResult {
   state: GameTextState;
 }
 
+interface GalleryCaptureManifestEntry {
+  scenario: string;
+  presetId: string;
+  capturePhase: ScenarioCapturePhase;
+  artifactDirectory: string;
+  artifactBaseName: string;
+  expectedScreenshotPath: string;
+  expectedManifestPath: string;
+  hideUiDuringCapture: boolean;
+  settledFrames: number;
+  captureAdvanceMs: number;
+  status: "passed" | "failed";
+}
+
+interface GalleryValidationResult extends ScenarioCheckResult {
+  capture: GalleryCaptureManifestEntry & {
+    camera: CameraViewState;
+  };
+}
+
 interface NumericExpectation {
   operator: "=" | ">=" | "<=";
   expected: number;
 }
+
+const galleryManifest = new Map<string, GalleryCaptureManifestEntry>();
 
 function buildGameStatePayload() {
   return {
@@ -712,6 +797,28 @@ function buildGameStatePayload() {
       };
     }),
     projectiles: projectileSystem.activeCount,
+  };
+}
+
+function buildGalleryManifestEntry(
+  scenario: ScenarioSpec,
+  gallery: ScenarioGallerySpec,
+  passed: boolean,
+): GalleryCaptureManifestEntry {
+  const artifactDirectory = "output/gallery-validation";
+  const artifactBaseName = gallery.artifactBaseName ?? scenario.name;
+  return {
+    scenario: scenario.name,
+    presetId: gallery.presetId,
+    capturePhase: gallery.capturePhase,
+    artifactDirectory,
+    artifactBaseName,
+    expectedScreenshotPath: `${artifactDirectory}/${artifactBaseName}.png`,
+    expectedManifestPath: `${artifactDirectory}/gallery-manifest.json`,
+    hideUiDuringCapture: gallery.hideUiDuringCapture ?? true,
+    settledFrames: gallery.settleFrames ?? 2,
+    captureAdvanceMs: gallery.captureAdvanceMs ?? 0,
+    status: passed ? "passed" : "failed",
   };
 }
 
@@ -838,7 +945,7 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       const failures: string[] = [];
       for (const { unitId, clause } of clauses) {
         const match = clause.match(/^([^=]+)=(\d+)$/);
-        if (!match) return skip(`Unsupported relation-count clause: ${clause}`);
+        if (!match) return fail(`Unsupported relation-count clause: ${clause}`);
         const relation = match[1].trim();
         const expected = Number(match[2]);
         const actual = state.units.filter((unit) => unit.id === unitId && unit.linkedRelation === relation).length;
@@ -855,7 +962,7 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       const failures: string[] = [];
       for (const part of parts) {
         const match = part.match(/^([^<>=]+)(<=)(-?\d+(?:\.\d+)?)$/);
-        if (!match) return skip(`Unsupported hp clause: ${part}`);
+        if (!match) return fail(`Unsupported hp clause: ${part}`);
         const unitId = match[1].trim();
         const expected = Number(match[3]);
         const root = getScenarioRoot(state, unitId);
@@ -870,12 +977,12 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       return failures.length === 0 ? pass("Unit HP thresholds matched.") : fail(failures.join("; "));
     }
     case "position-shift-at-least": {
-      if (!scenario) return skip("No scenario context for position-shift assertion.");
+      if (!scenario) return fail("No scenario context for position-shift assertion.");
       const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
       const failures: string[] = [];
       for (const part of parts) {
         const match = part.match(/^([^<>=]+)(>=)(-?\d+(?:\.\d+)?)$/);
-        if (!match) return skip(`Unsupported movement clause: ${part}`);
+        if (!match) return fail(`Unsupported movement clause: ${part}`);
         const unitId = match[1].trim();
         const expected = Number(match[3]);
         const root = getScenarioRoot(state, unitId);
@@ -899,9 +1006,6 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       const clauses = parseUnitClauses(assertion.value);
       const failures: string[] = [];
       for (const { unitId, clause } of clauses) {
-        if (clause.includes("impact via") || clause.includes("only;")) {
-          return skip(`Narrative emitter-owner clause left informational: ${clause}`);
-        }
         const root = getScenarioRoot(state, unitId);
         if (!root) {
           failures.push(`Missing root unit ${unitId}`);
@@ -918,9 +1022,6 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       const clauses = parseUnitClauses(assertion.value);
       const failures: string[] = [];
       for (const { unitId, clause } of clauses) {
-        if (clause.includes("impact via")) {
-          return skip(`Narrative impact-owner clause left informational: ${clause}`);
-        }
         const root = getScenarioRoot(state, unitId);
         if (!root) {
           failures.push(`Missing root unit ${unitId}`);
@@ -938,7 +1039,7 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       const failures: string[] = [];
       for (const { unitId, clause } of clauses) {
         const match = clause.match(/^([^=]+)=([a-z-]+)$/);
-        if (!match) return skip(`Unsupported damage-owner clause: ${clause}`);
+        if (!match) return fail(`Unsupported damage-owner clause: ${clause}`);
         const role = match[1].trim();
         const expectedRouting = match[2].trim();
         const root = getScenarioRoot(state, unitId);
@@ -963,9 +1064,6 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       const clauses = parseUnitClauses(assertion.value);
       const failures: string[] = [];
       for (const { unitId, clause } of clauses) {
-        if (clause.includes("remain spawned children")) {
-          return skip(`Narrative cleanup clause left informational: ${clause}`);
-        }
         const root = getScenarioRoot(state, unitId);
         if (!root) {
           failures.push(`Missing root unit ${unitId}`);
@@ -1048,7 +1146,7 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
         const pairs = clause.split("+").map((entry) => entry.trim()).filter(Boolean);
         for (const pair of pairs) {
           const match = pair.match(/^(attack|smoke|impact)=([A-Za-z-]+)$/);
-          if (!match) return skip(`Unsupported origin clause: ${pair}`);
+          if (!match) return fail(`Unsupported origin clause: ${pair}`);
           const originKind = match[1];
           const expected = match[2];
           const actual = assertion.kind === "origin-source"
@@ -1064,19 +1162,21 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
         : fail(failures.join("; "));
     }
     default:
-      return skip(`Unsupported assertion kind ${assertion.kind}.`);
+      return fail(`Unsupported assertion kind ${assertion.kind}.`);
   }
 }
 
-function runScenarioCheck(name: string): ScenarioCheckResult | null {
-  const scenario = runScenario(name);
-  if (!scenario) return null;
-  let state = buildGameStatePayload();
+function evaluateScenarioResults(
+  scenario: ScenarioSpec,
+  initialState: GameTextState,
+  options: { includeReplayAssertions?: boolean } = {},
+): ScenarioCheckResult {
+  let state = initialState;
   const replayAssertions = scenario.assertions.filter((assertion) => assertion.kind === "replay-stability");
   const directAssertions = scenario.assertions.filter((assertion) => assertion.kind !== "replay-stability");
   const results = directAssertions.map((assertion) => evaluateScenarioAssertion(state, assertion, scenario));
 
-  if (replayAssertions.length > 0) {
+  if (options.includeReplayAssertions !== false && replayAssertions.length > 0) {
     playAgain();
     const postReplayPlacement = buildGameStatePayload();
     const orphanedSpawned = postReplayPlacement.units.filter((unit) => unit.role === "summoned" || unit.linkedRelation === "spawned-child");
@@ -1125,6 +1225,78 @@ function runScenarioCheck(name: string): ScenarioCheckResult | null {
     results,
     state,
   };
+}
+
+function runScenarioCheck(name: string): ScenarioCheckResult | null {
+  const scenario = getScenario(name);
+  if (!scenario) {
+    showStatus(`Unknown scenario: ${name}`);
+    return null;
+  }
+  runScenarioSpec(scenario);
+  return evaluateScenarioResults(scenario, buildGameStatePayload());
+}
+
+function runScenarioGalleryValidation(name: string): GalleryValidationResult | null {
+  const scenario = getScenario(name);
+  if (!scenario) {
+    showStatus(`Unknown scenario: ${name}`);
+    return null;
+  }
+  if (!scenario.gallery) {
+    showStatus(`Scenario ${name} has no gallery metadata.`);
+    return null;
+  }
+
+  const gallery = scenario.gallery;
+  runScenarioSpec(scenario, { autoStart: false, advanceMs: 0 });
+  openGalleryCaptureSession(scenario);
+  setGalleryCaptureMode(gallery.hideUiDuringCapture ?? true);
+  let appliedCamera = camCtrl.applyGalleryPreset(gallery.presetId, gallery.cameraOverride);
+  renderStaticFrames(gallery.settleFrames ?? 2);
+
+  if (gallery.capturePhase === "simulation-mid") {
+    startBattle(true);
+    const captureAdvanceMs = gallery.captureAdvanceMs ?? scenario.advanceMs ?? 0;
+    if (captureAdvanceMs > 0) {
+      advanceSimulationTime(captureAdvanceMs);
+    }
+  } else if (gallery.capturePhase === "replay") {
+    if (scenario.autoStart) {
+      startBattle(true);
+    }
+    if ((scenario.advanceMs ?? 0) > 0) {
+      advanceSimulationTime(scenario.advanceMs ?? 0);
+    }
+    playAgain();
+    const replayAdvanceMs = gallery.captureAdvanceMs ?? 0;
+    if (replayAdvanceMs > 0) {
+      startBattle(true);
+      advanceSimulationTime(replayAdvanceMs);
+    }
+  } else if (gallery.capturePhase === "post-reset") {
+    runScenarioSpec(scenario, { autoStart: false, advanceMs: 0, preserveGallerySession: true });
+    setGalleryCaptureMode(gallery.hideUiDuringCapture ?? true);
+    appliedCamera = camCtrl.applyGalleryPreset(gallery.presetId, gallery.cameraOverride);
+    renderStaticFrames(gallery.settleFrames ?? 2);
+  }
+
+  const checkResult = evaluateScenarioResults(scenario, buildGameStatePayload(), {
+    includeReplayAssertions: false,
+  });
+  const manifestEntry = buildGalleryManifestEntry(scenario, gallery, checkResult.passed);
+  galleryManifest.set(scenario.name, manifestEntry);
+  return {
+    ...checkResult,
+    capture: {
+      ...manifestEntry,
+      camera: appliedCamera,
+    },
+  };
+}
+
+function getGalleryManifest(): GalleryCaptureManifestEntry[] {
+  return [...galleryManifest.values()];
 }
 
 // ─── Input ───
@@ -1181,6 +1353,8 @@ window.addEventListener("keydown", (e) => {
   spawnUnit: spawnHarnessUnit,
   runScenario,
   runScenarioCheck,
+  runScenarioGalleryValidation,
+  getGalleryManifest,
   listScenarios: listScenarioNames,
 };
 

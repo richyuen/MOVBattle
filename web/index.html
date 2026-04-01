@@ -94,6 +94,13 @@
       font-size: 11px; line-height: 1.5; text-align: right; pointer-events: none;
     }
 
+    body.capture-mode #hud,
+    body.capture-mode #unitPanel,
+    body.capture-mode #resultOverlay,
+    body.capture-mode #controls-help {
+      display: none !important;
+    }
+
     /* ─── Mobile ─── */
     @media (max-width: 600px) {
       #hud { padding: 6px 4px; }

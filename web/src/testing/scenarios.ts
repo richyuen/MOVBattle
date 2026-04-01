@@ -1,3 +1,7 @@
+import { FACTION_NAMES, FactionId } from "../data/factionColors";
+import { getUnitsByFaction } from "../data/unitDefinitions";
+import type { GalleryCameraOverride, GalleryCameraPresetId } from "../ui/cameraController";
+
 export interface ScenarioUnitSpec {
   unitId: string;
   team: number;
@@ -33,6 +37,19 @@ export interface ScenarioSpec {
   advanceMs?: number;
   units: ScenarioUnitSpec[];
   assertions: ScenarioAssertion[];
+  gallery?: ScenarioGallerySpec;
+}
+
+export type ScenarioCapturePhase = "placement" | "simulation-mid" | "replay" | "post-reset";
+
+export interface ScenarioGallerySpec {
+  presetId: GalleryCameraPresetId;
+  capturePhase: ScenarioCapturePhase;
+  captureAdvanceMs?: number;
+  settleFrames?: number;
+  hideUiDuringCapture?: boolean;
+  artifactBaseName?: string;
+  cameraOverride?: GalleryCameraOverride;
 }
 
 export const SCENARIOS: Record<string, ScenarioSpec> = {
@@ -262,7 +279,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "linked-relation-count", value: "secret.cavalry:mount=1" },
       { kind: "linked-relation-count", value: "secret.raptor_rider:mount=1" },
-      { kind: "emitter-owner", value: "secret.cavalry:parent impact via horse, secret.raptor_rider:parent impact via raptor" },
+      { kind: "emitter-owner", value: "secret.cavalry:parent, secret.raptor_rider:parent" },
+      { kind: "impact-owner", value: "secret.cavalry:horse, secret.raptor_rider:raptor" },
       { kind: "damage-owner", value: "secret.cavalry:horse=parent, secret.raptor_rider:raptor=parent" },
       { kind: "cleanup-policy", value: "secret.cavalry+secret.raptor_rider:mount removes with parent" },
       { kind: "no-duplicate-standins", value: "secret.cavalry+secret.raptor_rider" },
@@ -318,9 +336,9 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "linked-relation-count", value: "secret.clams:attachment=1" },
-      { kind: "emitter-owner", value: "secret.clams:parent only; summoned bomb divers remain separate spawned children" },
+      { kind: "emitter-owner", value: "secret.clams:parent" },
       { kind: "damage-owner", value: "secret.clams:clam shell=parent" },
-      { kind: "cleanup-policy", value: "secret.clams:clam shell removes with parent, summons remain spawned children" },
+      { kind: "cleanup-policy", value: "secret.clams:clam shell removes with parent" },
       { kind: "no-duplicate-standins", value: "secret.clams" },
       { kind: "comparison-focus", value: "CLAMS should expose an anchored shell attachment that remains distinct from summoned bomb divers." },
     ],
@@ -405,6 +423,291 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
   },
 };
+
+function buildGalleryUnits(
+  unitIds: string[],
+  options: {
+    team?: number;
+    columns?: number;
+    centerX?: number;
+    centerZ?: number;
+    spacingX?: number;
+    spacingZ?: number;
+  } = {},
+): ScenarioUnitSpec[] {
+  const team = options.team ?? 0;
+  const columns = Math.max(1, options.columns ?? 7);
+  const centerX = options.centerX ?? 0;
+  const centerZ = options.centerZ ?? 0;
+  const spacingX = options.spacingX ?? 4.2;
+  const spacingZ = options.spacingZ ?? 2.4;
+  const rows = Math.ceil(unitIds.length / columns);
+
+  return unitIds.map((unitId, index) => {
+    const row = Math.floor(index / columns);
+    const rowItems = Math.min(columns, unitIds.length - row * columns);
+    const col = index % columns;
+    return {
+      unitId,
+      team,
+      position: {
+        x: centerX + (row - (rows - 1) / 2) * spacingX,
+        z: centerZ + (col - (rowItems - 1) / 2) * spacingZ,
+      },
+    };
+  });
+}
+
+function makeGalleryScenario(
+  name: string,
+  description: string,
+  unitIds: string[],
+  options: {
+    autoStart?: boolean;
+    advanceMs?: number;
+    columns?: number;
+    centerX?: number;
+    centerZ?: number;
+    spacingX?: number;
+    spacingZ?: number;
+    extraUnits?: ScenarioUnitSpec[];
+    focus?: string;
+    galleryPresetId?: GalleryCameraPresetId;
+    capturePhase?: ScenarioCapturePhase;
+    captureAdvanceMs?: number;
+    settleFrames?: number;
+    hideUiDuringCapture?: boolean;
+    artifactBaseName?: string;
+    cameraOverride?: GalleryCameraOverride;
+  } = {},
+): ScenarioSpec {
+  const units = [
+    ...buildGalleryUnits(unitIds, options),
+    ...(options.extraUnits ?? []),
+  ];
+  return {
+    name,
+    description,
+    autoStart: options.autoStart ?? false,
+    advanceMs: options.advanceMs,
+    units,
+    assertions: [
+      { kind: "units-present", value: unitIds.join(",") },
+      { kind: "mode-is", value: options.autoStart ? "Simulation" : "Placement" },
+      { kind: "comparison-focus", value: options.focus ?? description },
+    ],
+    gallery: {
+      presetId: options.galleryPresetId ?? "faction_lineup_close",
+      capturePhase: options.capturePhase ?? (options.autoStart ? "simulation-mid" : "placement"),
+      captureAdvanceMs: options.captureAdvanceMs ?? options.advanceMs,
+      settleFrames: options.settleFrames ?? 2,
+      hideUiDuringCapture: options.hideUiDuringCapture ?? true,
+      artifactBaseName: options.artifactBaseName ?? name,
+      cameraOverride: options.cameraOverride,
+    },
+  };
+}
+
+function makeFactionGalleryScenario(
+  name: string,
+  faction: FactionId,
+  description: string,
+  options: {
+    columns?: number;
+    centerX?: number;
+    centerZ?: number;
+    spacingX?: number;
+    spacingZ?: number;
+  } = {},
+): ScenarioSpec {
+  const unitIds = getUnitsByFaction(faction).map((unit) => unit.id);
+  return makeGalleryScenario(name, description, unitIds, {
+    ...options,
+    focus: `${description} Every ${FACTION_NAMES[faction]} unit should be distinguishable at lineup distance without falling back to a generic silhouette read.`,
+  });
+}
+
+const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
+  gallery_faction_tribal: makeFactionGalleryScenario(
+    "gallery_faction_tribal",
+    FactionId.Tribal,
+    "Close-read faction lineup for Tribal.",
+  ),
+  gallery_faction_farmer: makeFactionGalleryScenario(
+    "gallery_faction_farmer",
+    FactionId.Farmer,
+    "Close-read faction lineup for Farmer.",
+  ),
+  gallery_faction_medieval: makeFactionGalleryScenario(
+    "gallery_faction_medieval",
+    FactionId.Medieval,
+    "Close-read faction lineup for Medieval.",
+  ),
+  gallery_faction_ancient: makeFactionGalleryScenario(
+    "gallery_faction_ancient",
+    FactionId.Ancient,
+    "Close-read faction lineup for Ancient.",
+  ),
+  gallery_faction_viking: makeFactionGalleryScenario(
+    "gallery_faction_viking",
+    FactionId.Viking,
+    "Close-read faction lineup for Viking.",
+  ),
+  gallery_faction_dynasty: makeFactionGalleryScenario(
+    "gallery_faction_dynasty",
+    FactionId.Dynasty,
+    "Close-read faction lineup for Dynasty.",
+  ),
+  gallery_faction_renaissance: makeFactionGalleryScenario(
+    "gallery_faction_renaissance",
+    FactionId.Renaissance,
+    "Close-read faction lineup for Renaissance.",
+  ),
+  gallery_faction_pirate: makeFactionGalleryScenario(
+    "gallery_faction_pirate",
+    FactionId.Pirate,
+    "Close-read faction lineup for Pirate.",
+  ),
+  gallery_faction_spooky: makeFactionGalleryScenario(
+    "gallery_faction_spooky",
+    FactionId.Spooky,
+    "Close-read faction lineup for Spooky.",
+  ),
+  gallery_faction_wild_west: makeFactionGalleryScenario(
+    "gallery_faction_wild_west",
+    FactionId.WildWest,
+    "Close-read faction lineup for Wild West.",
+  ),
+  gallery_faction_legacy: makeFactionGalleryScenario(
+    "gallery_faction_legacy",
+    FactionId.Legacy,
+    "Close-read faction lineup for Legacy.",
+    { columns: 6, spacingX: 4.6, spacingZ: 2.35 },
+  ),
+  gallery_faction_good: makeFactionGalleryScenario(
+    "gallery_faction_good",
+    FactionId.Good,
+    "Close-read faction lineup for Good.",
+  ),
+  gallery_faction_evil: makeFactionGalleryScenario(
+    "gallery_faction_evil",
+    FactionId.Evil,
+    "Close-read faction lineup for Evil.",
+  ),
+  gallery_faction_secret: makeFactionGalleryScenario(
+    "gallery_faction_secret",
+    FactionId.Secret,
+    "Close-read faction lineup for Secret.",
+    { columns: 8, spacingX: 4.8, spacingZ: 2.2 },
+  ),
+  gallery_iconic_heroes_bosses: makeGalleryScenario(
+    "gallery_iconic_heroes_bosses",
+    "Curated iconic heroes and bosses gallery.",
+    [
+      "ancient.zeus",
+      "legacy.thor",
+      "spooky.reaper",
+      "wild_west.quick_draw",
+      "good.chronomancer",
+      "dynasty.monkey_king",
+      "pirate.pirate_queen",
+      "legacy.dark_peasant",
+      "legacy.super_peasant",
+      "evil.void_monarch",
+    ],
+    {
+      columns: 5,
+      spacingX: 5.0,
+      spacingZ: 2.6,
+      galleryPresetId: "heroes_bosses_close",
+      focus: "Iconic heroes and bosses should each carry at least one unmistakable silhouette cue beyond color alone.",
+    },
+  ),
+  gallery_war_machines_composites: makeGalleryScenario(
+    "gallery_war_machines_composites",
+    "Curated artillery, vehicle, and composite gallery.",
+    [
+      "medieval.catapult",
+      "ancient.ballista",
+      "dynasty.hwacha",
+      "pirate.cannon",
+      "renaissance.da_vinci_tank",
+      "legacy.tank",
+      "secret.bomb_cannon",
+      "secret.gatling_gun",
+      "secret.bank_robbers",
+      "secret.wheelbarrow_dragon",
+      "secret.clams",
+      "good.sacred_elephant",
+    ],
+    {
+      columns: 4,
+      spacingX: 5.0,
+      spacingZ: 2.8,
+      galleryPresetId: "war_machine_wide_close",
+      focus: "Vehicles and composites should read as intentional grouped silhouettes rather than duplicated humanoid stand-ins.",
+    },
+  ),
+  gallery_giants_colossals: makeGalleryScenario(
+    "gallery_giants_colossals",
+    "Curated giants and colossal-unit gallery.",
+    [
+      "tribal.mammoth",
+      "ancient.minotaur",
+      "good.sacred_elephant",
+      "legacy.dark_peasant",
+      "legacy.super_peasant",
+      "evil.void_monarch",
+      "secret.tree_giant",
+      "secret.ice_giant",
+    ],
+    {
+      columns: 4,
+      spacingX: 5.4,
+      spacingZ: 3.0,
+      galleryPresetId: "giants_wide_close",
+      focus: "Large units should stay readable as distinct colossal silhouettes instead of oversized defaults.",
+    },
+  ),
+  gallery_state_reads: makeGalleryScenario(
+    "gallery_state_reads",
+    "Attack and ability state-read validation gallery.",
+    [
+      "spooky.skeleton_archer",
+      "wild_west.gunslinger",
+      "legacy.wizard",
+      "good.divine_arbiter",
+      "evil.void_cultist",
+      "spooky.swordcaster",
+    ],
+    {
+      autoStart: true,
+      advanceMs: 2200,
+      captureAdvanceMs: 2200,
+      capturePhase: "simulation-mid",
+      columns: 6,
+      centerX: -8.5,
+      centerZ: 0,
+      spacingX: 0,
+      spacingZ: 2.8,
+      galleryPresetId: "state_read_duel",
+      cameraOverride: {
+        target: { x: -1, y: 1.7, z: 0 },
+      },
+      extraUnits: [
+        { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: -7.0 } },
+        { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: -4.2 } },
+        { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: -1.4 } },
+        { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: 1.4 } },
+        { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: 4.2 } },
+        { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: 7.0 } },
+      ],
+      focus: "Attack/ability-state units should expose their firing, summoning, lightning, or spectral overlays in deterministic close combat.",
+    },
+  ),
+};
+
+Object.assign(SCENARIOS, GALLERY_SCENARIOS);
 
 export function listScenarioNames(): string[] {
   return Object.keys(SCENARIOS);

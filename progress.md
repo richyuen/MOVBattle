@@ -118,6 +118,20 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - clean `playAgain()` rebuild without orphaned linked actors in the checked composite scenario
 - no browser console/page errors during the direct validation runs
 - Remaining gaps after the persistent-role pass:
+- 2026-04-01: Comprehensive visual pass tranche implemented.
+- Added explicit visual configs in `web/src/units/unitVisuals.ts` for the remaining inferred non-Secret factions: Spooky, Wild West, Legacy, Good, and Evil.
+- Added reusable procedural silhouette support in `web/src/units/propBuilder.ts` for `blowgun`, `cowboy_hat`, `candle_flame`, `cactus_body`, `banner_back`, `barrel_body`, and `chariot_cart`.
+- Added a dedicated `good.sacred_elephant` vehicle read in `web/src/units/vehicleBuilder.ts` instead of leaving it as a plain mammoth alias.
+- Added deterministic gallery scenarios in `web/src/testing/scenarios.ts` for all 14 faction lineups plus curated heroes/bosses, war-machines/composites, giants/colossals, and state-read validation scenes.
+- Added `web/COMPREHENSIVE_VISUAL_PARITY_MATRIX.md` and `web/VISUAL_ACCEPTANCE_GALLERY.md` as the roster-wide visual source-of-truth artifacts for this tranche.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Required browser client run completed against the local Vite server using the bundled `web_game_playwright_client.js` with `node --experimental-default-type=module`.
+- Direct Playwright browser validation confirmed gallery scenario enumeration plus successful scenario checks for `gallery_faction_spooky`, `gallery_state_reads`, and `gallery_war_machines_composites`.
+- Browser console remained clean apart from the pre-existing `favicon.ico` 404.
+- Residual caveat:
+- Screenshot proof is now materially better because the gallery scenes exist, but close-read captures still depend on manual camera zoom/rotation in the browser; the default gameplay camera remains tuned for play rather than gallery framing.
 - Secret linked roles are now better specified and more active, but they still use parent-owned movement and parent-routed damage by default rather than full independent crew AI.
 - Scenario assertions are now richer data, but there is still no built-in automatic assertion evaluator that fails the scenario run inside the browser runtime itself.
 - 2026-03-31: Non-Secret artillery composite adoption implemented.
@@ -237,3 +251,23 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Remaining gaps after pass 3:
 - Dynamic close-up screenshot proof of the transient hit/explosion effects is still weaker than ideal because the current camera + end-of-battle overlay can race fast combat captures in the browser harness.
 - The new prop details are implemented and typechecked, but a future close-camera validation pass would make shield/helmet acceptance easier to inspect visually than the current gameplay framing.
+- 2026-04-01: Automated gallery-validation pass implemented.
+- Extended `web/src/testing/scenarios.ts` with gallery metadata on the deterministic lineup/state scenarios: preset id, capture phase, capture timing, UI suppression, and stable artifact base names.
+- Added preset-based gallery camera control in `web/src/ui/cameraController.ts`, including reusable gallery presets plus capture/restore of the gameplay camera state.
+- Updated `web/src/main.ts` with a single runtime gallery-validation entrypoint: `window.game.runScenarioGalleryValidation(name)`, plus in-memory manifest reporting via `window.game.getGalleryManifest()`.
+- Added runtime capture-mode suppression in `web/index.html` / `web/src/main.ts` so gallery screenshots hide the HUD, unit panel, result overlay, and controls-help.
+- Tightened the built-in assertion evaluator in `web/src/main.ts` so unsupported structural clauses now fail instead of silently passing, and cleaned the remaining scenario prose clauses in `web/src/testing/scenarios.ts` for mounted and CLAMS composite checks.
+- Updated `web/VISUAL_ACCEPTANCE_GALLERY.md` to document the new runtime flow, preset ids, and deterministic artifact naming under `web/output/gallery-validation/`.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Required bundled `web_game_playwright_client.js` run completed against the local Vite server after the runtime changes.
+- Direct Playwright browser validation confirmed passing gallery-runner checks and clean capture-mode screenshots for:
+- `gallery_faction_spooky`
+- `gallery_state_reads`
+- `gallery_war_machines_composites`
+- `gallery_giants_colossals`
+- A runtime manifest was produced for the checked scenarios under `web/output/gallery-validation/gallery-manifest.json`.
+- Browser console remained clean apart from the existing `favicon.ico` 404.
+- Residual caveat:
+- The new gallery captures are deterministic and no longer require manual zoom/pan, but the current preset angles still favor a slightly elevated tactical view rather than extreme close-up hero framing.
