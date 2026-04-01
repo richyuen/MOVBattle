@@ -159,3 +159,24 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Remaining gaps after the war-machine pass:
 - `secret.wheelbarrow_dragon` still remains on the linked composite path rather than the new vehicle socket path because it is not built through the shared vehicle builder.
 - The current deterministic scenario system still records structural expectations in data/docs rather than evaluating them automatically inside the browser runtime.
+- 2026-03-31: Executable scenario assertion pass and dragon-cart origin fidelity implemented.
+- Added a built-in deterministic checker in `web/src/main.ts` via `window.game.runScenarioCheck(name)`, which runs a scenario, evaluates its assertion list against live text state, and returns structured `{ passed, failures, results, state }` output.
+- Refactored `render_game_to_text()` to build from a shared state payload function so the browser runtime and scenario checker read the same state model.
+- Converted parseable structural scenario kinds from metadata-only notes into executable checks in `web/src/main.ts`: `mode-is`, `units-present`, `linked-relation-count`, `emitter-owner`, `impact-owner`, `damage-owner`, `cleanup-policy`, `victory-semantics`, `no-duplicate-standins`, plus the new origin checks below.
+- Extended `web/src/testing/scenarios.ts` with executable `origin-source` and `origin-socket` assertion kinds, and applied them to artillery and wheelbarrow scenarios.
+- Extended `web/src/units/linkedActorPresets.ts` and `web/src/units/runtimeUnit.ts` so anchored linked actors can define `attackOriginOffset`, `smokeOriginOffset`, and `impactOriginOffset`.
+- Applied those linked-origin offsets to `secret.wheelbarrow_dragon` so the dragon head now owns the linked-role attack/impact origin instead of falling back to the parent/root position.
+- Added `composite_wheelbarrow_dragon_origin` as the dedicated proving scenario for the dragon-head origin path, and updated `web/COMPOSITE_ACCEPTANCE_BATTLES.md` and `web/WAR_MACHINE_ACCEPTANCE_BATTLES.md` to point at the executable checks.
+- Validation:
+- `npm run build` passes in `web/`.
+- Required web-game client run completed against the local Vite server.
+- Direct Playwright validation artifacts were captured in `web/output/scenario-check-validation/`, including successful `runScenarioCheck()` output for:
+- `iconic_artillery_compare`
+- `war_machine_tank_origin`
+- `war_machine_wheelbarrow_compare`
+- `composite_wheelbarrow_dragon`
+- `composite_wheelbarrow_dragon_origin`
+- Console review again showed no new page errors; only Vite/Babylon startup logs and WebGL readback warnings during screenshots.
+- Remaining gaps after the assertion/origin pass:
+- Some older structural assertions still contain narrative text and are treated as informational/skipped by the built-in checker rather than hard failures.
+- The assertion engine currently validates against live text state, not against image-based visual diffs or automatic in-browser replay sequences like death/reset/playAgain cleanup chains.

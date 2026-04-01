@@ -12,3 +12,4 @@ Primary scenarios for this phase:
   - `ancient.ballista` should launch from the bolt track; `medieval.catapult` and `spooky.pumpkin_catapult` should launch from the bucket.
 - `war_machine_wheelbarrow_compare`
   - `farmer.wheelbarrow` should retain cart/charge read while `secret.wheelbarrow_dragon` remains a composite cart plus dragon-head unit.
+  - `runScenarioCheck()` should pass `origin-source` assertions proving the plain wheelbarrow uses a vehicle-socket impact origin while the dragon cart uses linked-role attack/impact origins.

@@ -91,6 +91,9 @@ export class RuntimeUnit {
   private _primaryEmitterEnabled = true;
   private _emitterCursor = 0;
   private _vehicleSocketCursor = 0;
+  private _attackOriginOffset: Vector3 | null = null;
+  private _smokeOriginOffset: Vector3 | null = null;
+  private _impactOriginOffset: Vector3 | null = null;
   private _decorativeStandinsSuppressed = false;
 
   /** Shared obstacle list — set once from main.ts after map build */
@@ -172,6 +175,9 @@ export class RuntimeUnit {
     detachOnParentDeath: boolean;
     actionPreset: LinkedActionPreset;
     impactOrigin?: boolean;
+    attackOriginOffset?: Vector3;
+    smokeOriginOffset?: Vector3;
+    impactOriginOffset?: Vector3;
   }): void {
     this._isAnchoredActor = true;
     this._linkedRoleLabel = options.roleLabel;
@@ -187,6 +193,9 @@ export class RuntimeUnit {
     this._detachOnParentDeath = options.detachOnParentDeath;
     this._actionPreset = options.actionPreset;
     this._isImpactOrigin = options.impactOrigin ?? false;
+    this._attackOriginOffset = options.attackOriginOffset?.clone() ?? null;
+    this._smokeOriginOffset = options.smokeOriginOffset?.clone() ?? null;
+    this._impactOriginOffset = options.impactOriginOffset?.clone() ?? null;
   }
 
   setDecorativeStandinsSuppressed(suppressed: boolean): void {
@@ -710,6 +719,9 @@ export class RuntimeUnit {
     this._primaryEmitterEnabled = true;
     this._emitterCursor = 0;
     this._vehicleSocketCursor = 0;
+    this._attackOriginOffset = null;
+    this._smokeOriginOffset = null;
+    this._impactOriginOffset = null;
     this._decorativeStandinsSuppressed = false;
     this._linkedDescriptors = this._linkedDescriptors.filter((descriptor) => descriptor.persistent);
 
@@ -804,8 +816,9 @@ export class RuntimeUnit {
       };
     }
     const emitter = this.getAttackEmitter();
+    const position = emitter._resolveCustomOrigin(emitter._attackOriginOffset);
     return {
-      position: emitter.position.clone(),
+      position,
       source: emitter === this ? "parent" : "linked-role",
       emitter,
     };
@@ -820,7 +833,12 @@ export class RuntimeUnit {
         socket: "smokeSocket",
       };
     }
-    return this.getAttackOrigin(advanceSequence);
+    const emitter = this.getAttackEmitter();
+    return {
+      position: emitter._resolveCustomOrigin(emitter._smokeOriginOffset ?? emitter._attackOriginOffset),
+      source: emitter === this ? "parent" : "linked-role",
+      emitter,
+    };
   }
 
   getImpactOrigin(advanceSequence = true): OriginInfo {
@@ -834,10 +852,22 @@ export class RuntimeUnit {
     }
     const emitter = this.getImpactEmitter();
     return {
-      position: emitter.position.clone(),
+      position: emitter._resolveCustomOrigin(emitter._impactOriginOffset),
       source: emitter === this ? "parent" : "linked-role",
       emitter,
     };
+  }
+
+  private _resolveCustomOrigin(offset: Vector3 | null): Vector3 {
+    if (!offset) return this.position.clone();
+    const yaw = this.body.root.rotation.y;
+    const sin = Math.sin(yaw);
+    const cos = Math.cos(yaw);
+    return this.position.add(new Vector3(
+      offset.x * cos + offset.z * sin,
+      offset.y,
+      -offset.x * sin + offset.z * cos,
+    ));
   }
 
   triggerLinkedRoleActions(durationSeconds: number): void {

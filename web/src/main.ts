@@ -165,6 +165,9 @@ function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRol
     roleLabel: actor.label,
     parentRoleLabel,
     offset: actor.offset,
+    attackOriginOffset: actor.attackOriginOffset,
+    smokeOriginOffset: actor.smokeOriginOffset,
+    impactOriginOffset: actor.impactOriginOffset,
     syncFacing: actor.syncFacing,
     targetable: actor.semantics.targetable,
     combatEmitter: actor.semantics.combatEmitter,
@@ -600,6 +603,355 @@ function runScenario(name: string): ScenarioSpec | null {
   return scenario;
 }
 
+type GameTextState = ReturnType<typeof buildGameStatePayload>;
+type GameTextUnitState = GameTextState["units"][number];
+
+interface ScenarioAssertionResult {
+  kind: string;
+  value: string;
+  passed: boolean;
+  skipped?: boolean;
+  details: string;
+}
+
+interface ScenarioCheckResult {
+  scenario: string;
+  passed: boolean;
+  failures: string[];
+  results: ScenarioAssertionResult[];
+  state: GameTextState;
+}
+
+function buildGameStatePayload() {
+  return {
+    coordinateSystem: "x:right, z:forward, y:up, origin:center line",
+    mode: GameState[stateMachine.currentState],
+    scenario: activeScenario?.name ?? null,
+    activeFaction: FACTION_NAMES[activeFaction],
+    selectedUnitId,
+    budgets: {
+      teamA: budgetSystem.getRemaining(0),
+      teamB: budgetSystem.getRemaining(1),
+    },
+    units: placedUnits.map((unit) => {
+      const attackEmitter = unit.getAttackEmitter();
+      const impactEmitter = unit.getImpactEmitter();
+      const attackOrigin = unit.getAttackOrigin(false);
+      const smokeOrigin = unit.getSmokeOrigin(false);
+      const impactOrigin = unit.getImpactOrigin(false);
+      return {
+        runtimeId: unit.runtimeId,
+        id: unit.definition.id,
+        name: unit.definition.displayName,
+        team: unit.team,
+        role: unit.spawnRole,
+        compositeRole: unit.linkedRoleLabel,
+        linkedParentRole: unit.linkedParentRoleLabel,
+        anchored: unit.isAnchoredActor,
+        targetable: unit.isTargetable,
+        combatEmitter: unit.isCombatEmitter,
+        impactOrigin: unit.isImpactOrigin,
+        damageRouting: unit.damageRouting,
+        victoryRouting: unit.victoryRouting,
+        moveMode: unit.moveMode,
+        cleanupPolicy: unit.cleanupPolicy,
+        detachOnParentDeath: unit.detachOnParentDeath,
+        actionPreset: unit.actionPreset,
+        attackEmitterRole: attackEmitter === unit ? "parent" : (attackEmitter.linkedRoleLabel ?? attackEmitter.definition.displayName),
+        attackEmitterId: attackEmitter.runtimeId,
+        attackOriginSource: attackOrigin.source,
+        attackOriginSocket: attackOrigin.socket ?? null,
+        impactEmitterRole: impactEmitter === unit ? "parent" : (impactEmitter.linkedRoleLabel ?? impactEmitter.definition.displayName),
+        impactEmitterId: impactEmitter.runtimeId,
+        impactOriginSource: impactOrigin.source,
+        impactOriginSocket: impactOrigin.socket ?? null,
+        smokeOriginSource: smokeOrigin.source,
+        smokeOriginSocket: smokeOrigin.socket ?? null,
+        decorativeStandinsSuppressed: unit.decorativeStandinsSuppressed,
+        countsTowardVictory: unit.countsTowardVictory,
+        linkedParentId: unit.linkedParent?.runtimeId ?? null,
+        linkedRelation: unit.linkedRelation,
+        linkedEntities: unit.linkedEntities,
+        alive: !unit.isDead,
+        hp: Math.round(unit.currentHealth),
+        x: Number(unit.position.x.toFixed(2)),
+        z: Number(unit.position.z.toFixed(2)),
+      };
+    }),
+    projectiles: projectileSystem.activeCount,
+  };
+}
+
+function parseUnitClauses(value: string): Array<{ unitId: string; clause: string }> {
+  const parts = value.split(",").map((part) => part.trim()).filter(Boolean);
+  const clauses: Array<{ unitId: string; clause: string }> = [];
+  let currentUnitId: string | null = null;
+  for (const part of parts) {
+    const colonIndex = part.indexOf(":");
+    if (colonIndex >= 0) {
+      currentUnitId = part.slice(0, colonIndex).trim();
+      clauses.push({ unitId: currentUnitId, clause: part.slice(colonIndex + 1).trim() });
+    } else if (currentUnitId) {
+      clauses.push({ unitId: currentUnitId, clause: part });
+    }
+  }
+  return clauses;
+}
+
+function getScenarioRootUnits(state: GameTextState, unitId: string): GameTextUnitState[] {
+  return state.units.filter((unit) => unit.id === unitId && unit.linkedParentId === null);
+}
+
+function getScenarioRoot(state: GameTextState, unitId: string): GameTextUnitState | null {
+  return getScenarioRootUnits(state, unitId)[0] ?? null;
+}
+
+function getLinkedChildrenForRoot(state: GameTextState, root: GameTextUnitState): GameTextUnitState[] {
+  return state.units.filter((unit) => unit.linkedParentId === root.runtimeId);
+}
+
+function getEmitterRoleSet(state: GameTextState, root: GameTextUnitState): Set<string> {
+  const roles = new Set<string>();
+  if (root.combatEmitter) roles.add("parent");
+  for (const child of getLinkedChildrenForRoot(state, root)) {
+    if (child.combatEmitter && child.compositeRole) roles.add(child.compositeRole);
+  }
+  if (roles.size === 0) roles.add(root.attackEmitterRole);
+  return roles;
+}
+
+function getImpactRoleSet(state: GameTextState, root: GameTextUnitState): Set<string> {
+  const roles = new Set<string>();
+  if (root.impactOrigin) roles.add("parent");
+  for (const child of getLinkedChildrenForRoot(state, root)) {
+    if (child.impactOrigin && child.compositeRole) roles.add(child.compositeRole);
+  }
+  if (roles.size === 0) roles.add(root.impactEmitterRole);
+  return roles;
+}
+
+function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: string; value: string }): ScenarioAssertionResult {
+  const pass = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: true, details });
+  const fail = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: false, details });
+  const skip = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: true, skipped: true, details });
+
+  switch (assertion.kind) {
+    case "comparison-focus":
+      return skip("Informational comparison note.");
+    case "mode-is":
+      return state.mode === assertion.value
+        ? pass(`Mode matched ${assertion.value}.`)
+        : fail(`Expected mode ${assertion.value}, got ${state.mode}.`);
+    case "units-present": {
+      const ids = assertion.value.split(",").map((id) => id.trim()).filter(Boolean);
+      const present = new Set(state.units.map((unit) => unit.id));
+      const missing = ids.filter((id) => !present.has(id));
+      return missing.length === 0
+        ? pass(`Found all units: ${ids.join(", ")}.`)
+        : fail(`Missing units: ${missing.join(", ")}.`);
+    }
+    case "linked-role-count":
+    case "linked-relation-count": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const match = clause.match(/^([^=]+)=(\d+)$/);
+        if (!match) return skip(`Unsupported relation-count clause: ${clause}`);
+        const relation = match[1].trim();
+        const expected = Number(match[2]);
+        const actual = state.units.filter((unit) => unit.id === unitId && unit.linkedRelation === relation).length;
+        if (actual !== expected) failures.push(`${unitId}:${relation} expected ${expected}, got ${actual}`);
+      }
+      return failures.length === 0 ? pass("Linked relation counts matched.") : fail(failures.join("; "));
+    }
+    case "emitter-owner": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        if (clause.includes("impact via") || clause.includes("only;")) {
+          return skip(`Narrative emitter-owner clause left informational: ${clause}`);
+        }
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const expected = new Set(clause.split("+").map((entry) => entry.trim()).filter(Boolean));
+        const actual = getEmitterRoleSet(state, root);
+        const mismatch = expected.size !== actual.size || [...expected].some((role) => !actual.has(role));
+        if (mismatch) failures.push(`${unitId} expected emitters ${[...expected].join("+")}, got ${[...actual].join("+")}`);
+      }
+      return failures.length === 0 ? pass("Emitter ownership matched.") : fail(failures.join("; "));
+    }
+    case "impact-owner": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        if (clause.includes("impact via")) {
+          return skip(`Narrative impact-owner clause left informational: ${clause}`);
+        }
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const expected = new Set(clause.split("+").map((entry) => entry.trim()).filter(Boolean));
+        const actual = getImpactRoleSet(state, root);
+        const mismatch = expected.size !== actual.size || [...expected].some((role) => !actual.has(role));
+        if (mismatch) failures.push(`${unitId} expected impact roles ${[...expected].join("+")}, got ${[...actual].join("+")}`);
+      }
+      return failures.length === 0 ? pass("Impact ownership matched.") : fail(failures.join("; "));
+    }
+    case "damage-owner": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const match = clause.match(/^([^=]+)=([a-z-]+)$/);
+        if (!match) return skip(`Unsupported damage-owner clause: ${clause}`);
+        const role = match[1].trim();
+        const expectedRouting = match[2].trim();
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const target = role === "parent"
+          ? root
+          : getLinkedChildrenForRoot(state, root).find((child) => child.compositeRole === role);
+        if (!target) {
+          failures.push(`Missing role ${role} on ${unitId}`);
+          continue;
+        }
+        if (target.damageRouting !== expectedRouting) {
+          failures.push(`${unitId}:${role} expected ${expectedRouting}, got ${target.damageRouting}`);
+        }
+      }
+      return failures.length === 0 ? pass("Damage routing matched.") : fail(failures.join("; "));
+    }
+    case "cleanup-policy": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        if (clause.includes("remain spawned children")) {
+          return skip(`Narrative cleanup clause left informational: ${clause}`);
+        }
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const children = getLinkedChildrenForRoot(state, root);
+        let targets: GameTextUnitState[] = [];
+        if (clause.includes("all linked roles")) {
+          targets = children;
+        } else if (clause.includes("mount removes with parent")) {
+          targets = children.filter((child) => child.linkedRelation === "mount");
+        } else {
+          const label = clause.split(" removes")[0].trim();
+          targets = children.filter((child) => child.compositeRole === label);
+        }
+        if (targets.length === 0) {
+          failures.push(`No cleanup targets matched for ${unitId}:${clause}`);
+          continue;
+        }
+        const wrong = targets.filter((target) => target.cleanupPolicy !== "remove-with-parent");
+        if (wrong.length > 0) {
+          failures.push(`${unitId} cleanup mismatch on ${wrong.map((target) => target.compositeRole ?? target.role).join(", ")}`);
+        }
+      }
+      return failures.length === 0 ? pass("Cleanup policy matched.") : fail(failures.join("; "));
+    }
+    case "victory-semantics": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const children = getLinkedChildrenForRoot(state, root);
+        let targets: GameTextUnitState[] = [];
+        if (clause.includes("crew should not count")) {
+          targets = children.filter((child) => child.linkedRelation === "crew");
+        } else {
+          const role = clause.split(" should")[0].trim();
+          targets = children.filter((child) => child.compositeRole === role);
+        }
+        if (targets.length === 0) {
+          failures.push(`No victory targets matched for ${unitId}:${clause}`);
+          continue;
+        }
+        const wrong = targets.filter((target) => target.countsTowardVictory || target.victoryRouting === "self");
+        if (wrong.length > 0) {
+          failures.push(`${unitId} victory mismatch on ${wrong.map((target) => target.compositeRole ?? target.role).join(", ")}`);
+        }
+      }
+      return failures.length === 0 ? pass("Victory semantics matched.") : fail(failures.join("; "));
+    }
+    case "no-duplicate-standins": {
+      const ids = assertion.value.split("+").map((id) => id.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const unitId of ids) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        if (!root.decorativeStandinsSuppressed) {
+          failures.push(`${unitId} still reports decorative stand-ins enabled.`);
+        }
+      }
+      return failures.length === 0 ? pass("Decorative stand-ins suppressed.") : fail(failures.join("; "));
+    }
+    case "origin-source":
+    case "origin-socket": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const pairs = clause.split("+").map((entry) => entry.trim()).filter(Boolean);
+        for (const pair of pairs) {
+          const match = pair.match(/^(attack|smoke|impact)=([A-Za-z-]+)$/);
+          if (!match) return skip(`Unsupported origin clause: ${pair}`);
+          const originKind = match[1];
+          const expected = match[2];
+          const actual = assertion.kind === "origin-source"
+            ? (originKind === "attack" ? root.attackOriginSource : originKind === "smoke" ? root.smokeOriginSource : root.impactOriginSource)
+            : (originKind === "attack" ? root.attackOriginSocket : originKind === "smoke" ? root.smokeOriginSocket : root.impactOriginSocket);
+          if ((actual ?? "none") !== expected) {
+            failures.push(`${unitId}:${originKind} expected ${expected}, got ${actual ?? "none"}`);
+          }
+        }
+      }
+      return failures.length === 0
+        ? pass(`${assertion.kind} matched.`)
+        : fail(failures.join("; "));
+    }
+    default:
+      return skip(`Unsupported assertion kind ${assertion.kind}.`);
+  }
+}
+
+function runScenarioCheck(name: string): ScenarioCheckResult | null {
+  const scenario = runScenario(name);
+  if (!scenario) return null;
+  const state = buildGameStatePayload();
+  const results = scenario.assertions.map((assertion) => evaluateScenarioAssertion(state, assertion));
+  const failures = results.filter((result) => !result.passed).map((result) => `${result.kind}: ${result.details}`);
+  return {
+    scenario: scenario.name,
+    passed: failures.length === 0,
+    failures,
+    results,
+    state,
+  };
+}
+
 // ─── Input ───
 scene.onPointerObservable.add((pointerInfo) => {
   if (stateMachine.currentState !== GameState.Placement) return;
@@ -653,6 +1005,7 @@ window.addEventListener("keydown", (e) => {
   toggleRemoveMode,
   spawnUnit: spawnHarnessUnit,
   runScenario,
+  runScenarioCheck,
   listScenarios: listScenarioNames,
 };
 
@@ -681,64 +1034,7 @@ function tick(dt: number, nowSeconds: number): void {
 window.addEventListener("resize", () => engine.resize());
 
 function renderGameToText(): string {
-  const payload = {
-    coordinateSystem: "x:right, z:forward, y:up, origin:center line",
-    mode: GameState[stateMachine.currentState],
-    scenario: activeScenario?.name ?? null,
-    activeFaction: FACTION_NAMES[activeFaction],
-    selectedUnitId,
-    budgets: {
-      teamA: budgetSystem.getRemaining(0),
-      teamB: budgetSystem.getRemaining(1),
-    },
-    units: placedUnits.map((unit) => {
-        const attackEmitter = unit.getAttackEmitter();
-        const impactEmitter = unit.getImpactEmitter();
-        const attackOrigin = unit.getAttackOrigin(false);
-        const smokeOrigin = unit.getSmokeOrigin(false);
-        const impactOrigin = unit.getImpactOrigin(false);
-        return ({
-        runtimeId: unit.runtimeId,
-        id: unit.definition.id,
-        name: unit.definition.displayName,
-        team: unit.team,
-        role: unit.spawnRole,
-        compositeRole: unit.linkedRoleLabel,
-        linkedParentRole: unit.linkedParentRoleLabel,
-        anchored: unit.isAnchoredActor,
-        targetable: unit.isTargetable,
-        combatEmitter: unit.isCombatEmitter,
-        impactOrigin: unit.isImpactOrigin,
-        damageRouting: unit.damageRouting,
-        victoryRouting: unit.victoryRouting,
-        moveMode: unit.moveMode,
-        cleanupPolicy: unit.cleanupPolicy,
-        detachOnParentDeath: unit.detachOnParentDeath,
-        actionPreset: unit.actionPreset,
-        attackEmitterRole: attackEmitter === unit ? "parent" : (attackEmitter.linkedRoleLabel ?? attackEmitter.definition.displayName),
-        attackEmitterId: attackEmitter.runtimeId,
-        attackOriginSource: attackOrigin.source,
-        attackOriginSocket: attackOrigin.socket ?? null,
-        impactEmitterRole: impactEmitter === unit ? "parent" : (impactEmitter.linkedRoleLabel ?? impactEmitter.definition.displayName),
-        impactEmitterId: impactEmitter.runtimeId,
-        impactOriginSource: impactOrigin.source,
-        impactOriginSocket: impactOrigin.socket ?? null,
-        smokeOriginSource: smokeOrigin.source,
-        smokeOriginSocket: smokeOrigin.socket ?? null,
-        decorativeStandinsSuppressed: unit.decorativeStandinsSuppressed,
-        countsTowardVictory: unit.countsTowardVictory,
-        linkedParentId: unit.linkedParent?.runtimeId ?? null,
-        linkedRelation: unit.linkedRelation,
-        linkedEntities: unit.linkedEntities,
-        alive: !unit.isDead,
-        hp: Math.round(unit.currentHealth),
-        x: Number(unit.position.x.toFixed(2)),
-        z: Number(unit.position.z.toFixed(2)),
-      });
-    }),
-    projectiles: projectileSystem.activeCount,
-  };
-  return JSON.stringify(payload);
+  return JSON.stringify(buildGameStatePayload());
 }
 
 (window as any).render_game_to_text = renderGameToText;

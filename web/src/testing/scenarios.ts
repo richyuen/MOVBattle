@@ -16,7 +16,9 @@ export interface ScenarioAssertion {
     | "impact-owner"
     | "damage-owner"
     | "cleanup-policy"
-    | "no-duplicate-standins";
+    | "no-duplicate-standins"
+    | "origin-source"
+    | "origin-socket";
   value: string;
 }
 
@@ -64,6 +66,7 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "linked-relation-count", value: "dynasty.hwacha:crew=2" },
       { kind: "emitter-owner", value: "legacy.tank:gunner, renaissance.da_vinci_tank:pilot, dynasty.hwacha:rocketeer" },
       { kind: "impact-owner", value: "legacy.tank:gunner, renaissance.da_vinci_tank:pilot, dynasty.hwacha:rocketeer" },
+      { kind: "origin-source", value: "legacy.tank:attack=vehicle-socket+impact=vehicle-socket, renaissance.da_vinci_tank:attack=vehicle-socket+impact=vehicle-socket, dynasty.hwacha:attack=vehicle-socket+impact=vehicle-socket" },
       { kind: "no-duplicate-standins", value: "legacy.tank+renaissance.da_vinci_tank+dynasty.hwacha" },
     ],
   },
@@ -133,6 +136,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "emitter-owner", value: "legacy.tank:gunner" },
       { kind: "impact-owner", value: "legacy.tank:gunner" },
+      { kind: "origin-source", value: "legacy.tank:attack=vehicle-socket+smoke=vehicle-socket+impact=vehicle-socket" },
+      { kind: "origin-socket", value: "legacy.tank:attack=primaryMuzzle+smoke=smokeSocket+impact=impactOrigin" },
       { kind: "comparison-focus", value: "Legacy Tank should fire one shell from the barrel muzzle with visible muzzle smoke and explosive impact." },
     ],
   },
@@ -184,6 +189,7 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "comparison-focus", value: "Wheelbarrow should read as a charge cart; Wheelbarrow Dragon should retain cart plus dragon-head identity." },
       { kind: "units-present", value: "farmer.wheelbarrow,secret.wheelbarrow_dragon" },
+      { kind: "origin-source", value: "farmer.wheelbarrow:impact=vehicle-socket, secret.wheelbarrow_dragon:attack=linked-role+impact=linked-role" },
     ],
   },
   composite_bank_robbers: {
@@ -272,10 +278,29 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "linked-relation-count", value: "secret.wheelbarrow_dragon:attachment=1" },
       { kind: "linked-relation-count", value: "secret.wheelbarrow_dragon:mount=1" },
       { kind: "emitter-owner", value: "secret.wheelbarrow_dragon:dragon head" },
-      { kind: "damage-owner", value: "secret.wheelbarrow_dragon:cart=parent,dragon head=parent" },
+      { kind: "impact-owner", value: "secret.wheelbarrow_dragon:dragon head" },
+      { kind: "origin-source", value: "secret.wheelbarrow_dragon:attack=linked-role+impact=linked-role" },
+      { kind: "damage-owner", value: "secret.wheelbarrow_dragon:wheelbarrow cart=parent,dragon head=parent" },
       { kind: "cleanup-policy", value: "secret.wheelbarrow_dragon:all linked roles remove with parent" },
       { kind: "no-duplicate-standins", value: "secret.wheelbarrow_dragon" },
       { kind: "comparison-focus", value: "Wheelbarrow Dragon should expose cart, driver, and dragon-head composition." },
+    ],
+  },
+  composite_wheelbarrow_dragon_origin: {
+    name: "composite_wheelbarrow_dragon_origin",
+    description: "Direct linked-origin check for Wheelbarrow Dragon fire and impact.",
+    autoStart: true,
+    advanceMs: 1200,
+    units: [
+      { unitId: "secret.wheelbarrow_dragon", team: 0, position: { x: -10, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: 0 } },
+    ],
+    assertions: [
+      { kind: "linked-relation-count", value: "secret.wheelbarrow_dragon:attachment=1, mount=1" },
+      { kind: "emitter-owner", value: "secret.wheelbarrow_dragon:dragon head" },
+      { kind: "impact-owner", value: "secret.wheelbarrow_dragon:dragon head" },
+      { kind: "origin-source", value: "secret.wheelbarrow_dragon:attack=linked-role+impact=linked-role" },
+      { kind: "units-present", value: "secret.wheelbarrow_dragon" },
     ],
   },
   composite_clams: {

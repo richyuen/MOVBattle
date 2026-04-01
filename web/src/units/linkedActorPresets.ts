@@ -36,6 +36,9 @@ export interface LinkedActorSpec {
   label: string;
   relation: CompositionPartRelation;
   offset: Vector3;
+  attackOriginOffset?: Vector3;
+  smokeOriginOffset?: Vector3;
+  impactOriginOffset?: Vector3;
   syncFacing?: boolean;
   semantics: LinkedActorSemantics;
   visual: UnitVisualConfig;
@@ -387,6 +390,9 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         label: "dragon head",
         relation: "mount",
         offset: new Vector3(0, 0.05, 0.42),
+        attackOriginOffset: new Vector3(0, 0.12, 0.42),
+        smokeOriginOffset: new Vector3(0, 0.12, 0.42),
+        impactOriginOffset: new Vector3(0, 0.04, 0.34),
         syncFacing: true,
         semantics: {
           ...attachmentOnly,
