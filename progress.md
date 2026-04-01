@@ -211,3 +211,29 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Some older non-boss narrative assertions are still informational/skipped rather than strict hard failures.
 - Boss visual verification at the default gameplay camera is still weaker than ideal because the current screenshot path is wide and top-down; text-state validation is stronger than screenshot-level close-up proof.
 - Exact TABS edge-case physics for `Dark Peasant` and `Super Peasant` remain approximated even though their core identities are now much stronger and deterministically covered.
+- 2026-04-01: TABS visual accuracy pass 3 implemented.
+- Added impact dust, hit sparks, hit flashes, fire bursts, persistent smoke, and ground scorch effects in `web/src/combat/visualEffects.ts`.
+- Wired the new combat VFX through `web/src/combat/simulationSystem.ts`, `web/src/combat/projectileSystem.ts`, and `web/src/main.ts` so melee, direct hits, fire-dot hits, and explosive impacts all trigger the new feedback paths.
+- Increased flinch duration/intensity and added torso squash-and-stretch hit reactions in `web/src/units/proceduralAnimation.ts`.
+- Applied the scene polish pass in `web/src/main.ts`: warmer hemispheric underlight, tighter fog, stronger bloom, FXAA, and higher-quality blurred shadows.
+- Reworked terrain dressing in `web/src/map/mapBuilder.ts`:
+- layered mountain silhouettes
+- dome-based hills
+- fuller double-canopy trees
+- deterministic grass tufts
+- scattered flower dots and pebbles
+- Added remaining prop detail pass in `web/src/units/propBuilder.ts`:
+- tower shield boss + reinforcement bands
+- buckler boss + rim
+- grip wraps on sword, axe, hammer/mace, halberd, and scythe handles
+- samurai helmet neck guard / face guard / curved crest
+- pharaoh side flaps / cobra / stripe bands
+- Validation:
+- `npx tsc --noEmit` passes in `web/`.
+- Required web-game client run completed against the local Vite dev server via `web_game_playwright_client.js`; artifacts were written to `web/output/tabs-pass3-client/`.
+- Screenshot review confirmed the new terrain scatter reads on the map and the tightened fog/bloom look is active in placement captures.
+- Live Playwright browser checks showed no new console errors beyond the existing `favicon.ico` 404.
+- Deterministic browser scenario/state validation confirmed representative combat flow still works after the pass, including `war_machine_cannon_compare`.
+- Remaining gaps after pass 3:
+- Dynamic close-up screenshot proof of the transient hit/explosion effects is still weaker than ideal because the current camera + end-of-battle overlay can race fast combat captures in the browser harness.
+- The new prop details are implemented and typechecked, but a future close-camera validation pass would make shield/helmet acceptance easier to inspect visually than the current gameplay framing.

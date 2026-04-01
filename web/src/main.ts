@@ -48,19 +48,20 @@ scene.clearColor = new Color4(0.52, 0.72, 0.90, 1);
 // Lights
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
 hemi.intensity = 0.7;
+hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
 dir.intensity = 0.8;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
 scene.fogColor = new Color3(0.52, 0.72, 0.90);
-scene.fogStart = 40;
-scene.fogEnd = 120;
+scene.fogStart = 50;
+scene.fogEnd = 100;
 
 // Shadows
-const shadowGen = new ShadowGenerator(1024, dir);
+const shadowGen = new ShadowGenerator(2048, dir);
 shadowGen.useBlurExponentialShadowMap = true;
-shadowGen.blurKernel = 32;
+shadowGen.blurKernel = 48;
 
 // Camera
 const camCtrl = new CameraController(scene, canvas);
@@ -68,10 +69,11 @@ const camCtrl = new CameraController(scene, canvas);
 // Bloom post-processing
 const pipeline = new DefaultRenderingPipeline("default", true, scene, [camCtrl.camera]);
 pipeline.bloomEnabled = true;
-pipeline.bloomThreshold = 0.8;
-pipeline.bloomWeight = 0.3;
+pipeline.bloomThreshold = 0.65;
+pipeline.bloomWeight = 0.4;
 pipeline.bloomKernel = 64;
 pipeline.bloomScale = 0.5;
+pipeline.fxaaEnabled = true;
 
 // Map
 const mapBuilder = new TribalSandboxMapBuilder(scene);
@@ -88,6 +90,7 @@ const visualEffects = new VisualEffects(scene);
 simulation.projectileSystem = projectileSystem;
 simulation.visualEffects = visualEffects;
 projectileSystem.onShake = (intensity) => camCtrl.shake(intensity);
+projectileSystem.visualEffects = visualEffects;
 const unitFactory = new UnitFactory(scene);
 unitFactory.shadowGenerator = shadowGen;
 const placementValidator = new PlacementValidator(zones, obstacles);

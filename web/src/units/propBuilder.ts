@@ -80,6 +80,24 @@ function mat(scene: Scene, color: Color3, emissive = 0): StandardMaterial {
   return m;
 }
 
+function addGripWraps(
+  scene: Scene,
+  parent: Mesh,
+  positions: number[],
+  diameter: number,
+): void {
+  for (const posY of positions) {
+    const wrap = MeshBuilder.CreateTorus("gripWrap", {
+      diameter,
+      thickness: diameter * 0.23,
+      tessellation: 12,
+    }, scene);
+    wrap.position.y = posY;
+    wrap.parent = parent;
+    wrap.material = mat(scene, new Color3(0.3, 0.18, 0.08));
+  }
+}
+
 function buildAttachmentPreset(
   scene: Scene,
   body: ArticulatedBody,
@@ -382,6 +400,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       grip.position.y = -0.22 * s;
       grip.parent = blade;
       grip.material = mat(scene, new Color3(0.35, 0.2, 0.1));
+      addGripWraps(scene, grip, [-0.03 * s, 0, 0.03 * s], 0.03 * s);
       blade.position.y = 0.15 * s;
       return blade;
     }
@@ -428,6 +447,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "axe": {
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.03 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
+      addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.035 * s);
       const head = MeshBuilder.CreateBox("axehead", { width: 0.15 * s, height: 0.12 * s, depth: 0.02 * s }, scene);
       head.position.y = 0.22 * s;
       head.position.x = 0.04 * s;
@@ -440,6 +460,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "mace": {
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.035 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
+      addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.04 * s);
       const head = MeshBuilder.CreateBox("hammerhead", { width: 0.14 * s, height: 0.1 * s, depth: 0.1 * s }, scene);
       head.position.y = 0.28 * s;
       head.parent = handle;
@@ -450,6 +471,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "halberd": {
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.03 * s }, scene);
       shaft.material = mat(scene, new Color3(0.5, 0.35, 0.2));
+      addGripWraps(scene, shaft, [-0.26 * s, -0.14 * s, -0.02 * s], 0.035 * s);
       const blade = MeshBuilder.CreateBox("hblade", { width: 0.12 * s, height: 0.18 * s, depth: 0.01 * s }, scene);
       blade.position.y = 0.45 * s; blade.position.x = 0.04 * s;
       blade.parent = shaft;
@@ -564,6 +586,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "scythe": {
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.8 * s, diameter: 0.025 * s }, scene);
       shaft.material = mat(scene, new Color3(0.45, 0.3, 0.15));
+      addGripWraps(scene, shaft, [-0.18 * s, -0.08 * s, 0.02 * s], 0.03 * s);
       const blade = MeshBuilder.CreateBox("scyblade", { width: 0.2 * s, height: 0.04 * s, depth: 0.005 * s }, scene);
       blade.position.y = 0.38 * s; blade.position.x = 0.08 * s;
       blade.rotation.z = -0.3;
@@ -831,9 +854,18 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       helm.material = mat(scene, accent.scale(0.7));
       helm.rotation.x = Math.PI;
       helm.position.y = 0.05 * s;
-      const crest = MeshBuilder.CreateBox("crest", { width: 0.2 * s, height: 0.1 * s, depth: 0.01 * s }, scene);
-      crest.position.y = 0.1 * s;
+      const neckGuard = MeshBuilder.CreateBox("samuraiNeckGuard", { width: 0.24 * s, height: 0.08 * s, depth: 0.03 * s }, scene);
+      neckGuard.position.set(0, -0.04 * s, -0.1 * s);
+      neckGuard.parent = helm;
+      neckGuard.material = mat(scene, accent.scale(0.55));
+      const faceGuard = MeshBuilder.CreateBox("samuraiFaceGuard", { width: 0.08 * s, height: 0.07 * s, depth: 0.03 * s }, scene);
+      faceGuard.position.set(0, -0.03 * s, 0.11 * s);
+      faceGuard.parent = helm;
+      faceGuard.material = mat(scene, accent.scale(0.6));
+      const crest = MeshBuilder.CreateDisc("crest", { radius: 0.14 * s, tessellation: 18, arc: 0.5 }, scene);
+      crest.position.y = 0.13 * s;
       crest.parent = helm;
+      crest.rotation.z = Math.PI;
       crest.material = mat(scene, new Color3(1, 0.84, 0), 0.1);
       return helm;
     }
@@ -944,6 +976,24 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       const head = MeshBuilder.CreateBox("pharaoh", { width: 0.2 * s, height: 0.22 * s, depth: 0.15 * s }, scene);
       head.material = mat(scene, new Color3(0.8, 0.7, 0.3), 0.1);
       head.position.y = 0.06 * s;
+      const flapColor = mat(scene, new Color3(0.1, 0.18, 0.45));
+      for (const side of [-1, 1]) {
+        const flap = MeshBuilder.CreateBox("pharaohFlap", { width: 0.06 * s, height: 0.2 * s, depth: 0.02 * s }, scene);
+        flap.position.set(side * 0.12 * s, -0.01 * s, 0.03 * s);
+        flap.rotation.z = -side * 0.15;
+        flap.parent = head;
+        flap.material = flapColor;
+      }
+      const cobra = MeshBuilder.CreateCylinder("pharaohCobra", { height: 0.08 * s, diameterTop: 0, diameterBottom: 0.04 * s, tessellation: 6 }, scene);
+      cobra.position.set(0, 0.14 * s, 0.08 * s);
+      cobra.parent = head;
+      cobra.material = mat(scene, new Color3(0.9, 0.78, 0.28), 0.08);
+      for (const stripeY of [0.04 * s, -0.03 * s]) {
+        const stripe = MeshBuilder.CreateBox("pharaohStripe", { width: 0.18 * s, height: 0.018 * s, depth: 0.012 * s }, scene);
+        stripe.position.set(0, stripeY, 0.082 * s);
+        stripe.parent = head;
+        stripe.material = flapColor;
+      }
       return head;
     }
     case "great_helm": {
@@ -1020,12 +1070,29 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3):
     case "tower": {
       const shield = MeshBuilder.CreateBox("tshield", { width: 0.22 * s, height: 0.4 * s, depth: 0.03 * s }, scene);
       shield.material = mat(scene, accent);
+      const boss = MeshBuilder.CreateSphere("towerBoss", { diameter: 0.06 * s, segments: 6 }, scene);
+      boss.position.z = -0.02 * s;
+      boss.parent = shield;
+      boss.material = mat(scene, new Color3(0.7, 0.7, 0.75));
+      for (const bandY of [-0.09 * s, 0.09 * s]) {
+        const band = MeshBuilder.CreateBox("towerBand", { width: 0.21 * s, height: 0.02 * s, depth: 0.01 * s }, scene);
+        band.position.set(0, bandY, -0.016 * s);
+        band.parent = shield;
+        band.material = mat(scene, new Color3(0.56, 0.42, 0.22));
+      }
       return shield;
     }
     case "buckler": {
       const shield = MeshBuilder.CreateCylinder("buckler", { height: 0.02 * s, diameter: 0.18 * s, tessellation: 12 }, scene);
       shield.rotation.x = Math.PI / 2;
       shield.material = mat(scene, new Color3(0.5, 0.5, 0.55));
+      const boss = MeshBuilder.CreateSphere("bucklerBoss", { diameter: 0.05 * s, segments: 6 }, scene);
+      boss.position.z = -0.015 * s;
+      boss.parent = shield;
+      boss.material = mat(scene, new Color3(0.7, 0.7, 0.75));
+      const rim = MeshBuilder.CreateTorus("bucklerRim", { diameter: 0.18 * s, thickness: 0.012 * s, tessellation: 14 }, scene);
+      rim.parent = shield;
+      rim.material = mat(scene, new Color3(0.65, 0.65, 0.7));
       return shield;
     }
     default:

@@ -616,6 +616,8 @@ export class SimulationSystem {
     }
 
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
+    // Melee sparks
+    if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
   }
 
@@ -882,6 +884,7 @@ export class SimulationSystem {
       const fireDamage = preset === "secret_fire_whip" || preset === "secret_dragon_cart" ? 14 : 10;
       const source = impactOrigin ?? attacker.position;
       target.applyDamage(fireDamage, target.position.subtract(source).normalize().scale(0.3));
+      if (this.visualEffects) this.visualEffects.spawnFireBurst(target.position);
     }
     if (abilities.has("poison")) {
       target.applyDamage(6, Vector3.Zero());
@@ -896,6 +899,11 @@ export class SimulationSystem {
       this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback);
     } else {
       target.applyDamage(damage, knockback);
+    }
+    // Impact visual feedback
+    if (this.visualEffects) {
+      this.visualEffects.spawnImpactDust(target.position);
+      this.visualEffects.spawnHitFlash(target.position);
     }
   }
 

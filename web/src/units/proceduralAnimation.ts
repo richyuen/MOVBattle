@@ -56,10 +56,12 @@ export class ProceduralAnimator {
   /** Brief flinch on hit — snaps torso/head back then recovers. */
   triggerFlinch(): void {
     if (this._state === AnimState.Dead) return;
-    this._flinchTimer = 0.2;
+    this._flinchTimer = 0.35;
+    this._squashTimer = 0.15;
   }
 
   private _flinchTimer = 0;
+  private _squashTimer = 0;
 
   // Pupil wobble state (googly eyes)
   private _pupilOffX = 0;
@@ -90,16 +92,28 @@ export class ProceduralAnimator {
     // Flinch overlay (additive on top of current pose)
     if (this._flinchTimer > 0) {
       this._flinchTimer -= dt;
-      const intensity = Math.max(0, this._flinchTimer / 0.2);
+      const intensity = Math.max(0, this._flinchTimer / 0.35);
       const b = this._body;
       // Snap torso backward and to the side
-      b.torso.rotation.x -= 0.35 * intensity;
-      b.torso.rotation.z += 0.15 * intensity;
+      b.torso.rotation.x -= 0.55 * intensity;
+      b.torso.rotation.z += 0.3 * intensity;
       // Head whips back
-      b.neck.rotation.x -= 0.4 * intensity;
+      b.neck.rotation.x -= 0.65 * intensity;
       // Arms flail out
-      b.leftShoulder.rotation.z -= 0.3 * intensity;
-      b.rightShoulder.rotation.z += 0.3 * intensity;
+      b.leftShoulder.rotation.z -= 0.5 * intensity;
+      b.rightShoulder.rotation.z += 0.5 * intensity;
+    }
+    // Squash-and-stretch on hit
+    if (this._squashTimer > 0) {
+      this._squashTimer -= dt;
+      const t = Math.max(0, this._squashTimer / 0.15);
+      const squash = Math.sin(t * Math.PI);
+      const b = this._body;
+      b.torso.scaling.y = 1 - 0.15 * squash;
+      b.torso.scaling.x = 1 + 0.08 * squash;
+      b.torso.scaling.z = 1 + 0.08 * squash;
+    } else if (this._body.torso.scaling.y !== 1) {
+      this._body.torso.scaling.setAll(1);
     }
 
     // ─── Googly-eye pupil wobble ───

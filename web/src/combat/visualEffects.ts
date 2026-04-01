@@ -219,6 +219,227 @@ export class VisualEffects {
     });
   }
 
+  // ══════════════════ IMPACT DUST ══════════════════
+  /** Burst of tan dust spheres on every hit. */
+  spawnImpactDust(position: Vector3): void {
+    const root = new TransformNode("impactDust", this._scene);
+    const mat = new StandardMaterial("idust_mat", this._scene);
+    mat.diffuseColor = new Color3(0.75, 0.68, 0.5);
+    mat.emissiveColor = new Color3(0.11, 0.10, 0.075);
+    mat.alpha = 0.6;
+    mat.disableLighting = true;
+
+    const count = 3 + Math.floor(Math.random() * 2); // 3-4
+    const velocities: Vector3[] = [];
+    for (let i = 0; i < count; i++) {
+      const diam = 0.08 + Math.random() * 0.07;
+      const puff = MeshBuilder.CreateSphere("dp", { diameter: diam, segments: 4 }, this._scene);
+      puff.position = position.clone();
+      puff.position.y += 0.3 + Math.random() * 0.3;
+      puff.material = mat;
+      puff.parent = root;
+      velocities.push(new Vector3(
+        (Math.random() - 0.5) * 0.6,
+        1.5 + Math.random() * 0.5,
+        (Math.random() - 0.5) * 0.6,
+      ));
+    }
+
+    const totalDuration = 0.35;
+    this._effects.push({
+      root,
+      remaining: totalDuration,
+      update: (dt, remaining) => {
+        const t = 1 - remaining / totalDuration;
+        mat.alpha = Math.max(0, 0.6 * (1 - t));
+        const children = root.getChildMeshes();
+        for (let i = 0; i < children.length; i++) {
+          const v = velocities[i];
+          if (!v) continue;
+          children[i].position.x += v.x * dt;
+          children[i].position.y += v.y * dt;
+          children[i].position.z += v.z * dt;
+          const s = 0.5 + t * 0.7;
+          children[i].scaling.setAll(s);
+        }
+      },
+    });
+  }
+
+  // ══════════════════ HIT SPARKS ══════════════════
+  /** Bright sparks that fly outward on melee hit. */
+  spawnHitSparks(position: Vector3): void {
+    const root = new TransformNode("hitSparks", this._scene);
+    const mat = new StandardMaterial("spark_mat", this._scene);
+    mat.diffuseColor = new Color3(1, 0.95, 0.7);
+    mat.emissiveColor = new Color3(0.8, 0.76, 0.56);
+    mat.disableLighting = true;
+
+    const count = 5 + Math.floor(Math.random() * 2);
+    const velocities: Vector3[] = [];
+    for (let i = 0; i < count; i++) {
+      const spark = MeshBuilder.CreateBox("sp", { width: 0.015, height: 0.06, depth: 0.015 }, this._scene);
+      spark.position = position.clone();
+      spark.position.y += 0.5 + Math.random() * 0.3;
+      spark.material = mat;
+      spark.parent = root;
+      velocities.push(new Vector3(
+        (Math.random() - 0.5) * 3,
+        1 + Math.random() * 3,
+        (Math.random() - 0.5) * 3,
+      ));
+    }
+
+    const totalDuration = 0.2;
+    this._effects.push({
+      root,
+      remaining: totalDuration,
+      update: (dt, remaining) => {
+        const t = 1 - remaining / totalDuration;
+        const children = root.getChildMeshes();
+        for (let i = 0; i < children.length; i++) {
+          const v = velocities[i];
+          if (!v) continue;
+          children[i].position.x += v.x * dt;
+          children[i].position.y += v.y * dt;
+          children[i].position.z += v.z * dt;
+          v.y -= 9.8 * dt; // gravity
+          const s = 1 - t;
+          children[i].scaling.setAll(s);
+        }
+      },
+    });
+  }
+
+  // ══════════════════ HIT FLASH ══════════════════
+  /** Bright white pop on every hit. */
+  spawnHitFlash(position: Vector3): void {
+    const flash = MeshBuilder.CreateSphere("hflash", { diameter: 0.1, segments: 4 }, this._scene);
+    flash.position = position.clone();
+    flash.position.y += 0.5;
+    const mat = new StandardMaterial("hflash_mat", this._scene);
+    mat.diffuseColor = new Color3(1, 1, 1);
+    mat.emissiveColor = new Color3(1, 1, 1);
+    mat.disableLighting = true;
+
+    flash.material = mat;
+    const root = flash as unknown as TransformNode;
+
+    const totalDuration = 0.15;
+    this._effects.push({
+      root,
+      remaining: totalDuration,
+      update: (_dt, remaining) => {
+        const t = 1 - remaining / totalDuration;
+        // Scale up quickly, then fade
+        const s = t < 0.53 ? 1 + t * 6 : 4;
+        flash.scaling.setAll(s);
+        mat.alpha = t < 0.53 ? 1 : Math.max(0, 1 - (t - 0.53) * 2.1);
+      },
+    });
+  }
+
+  // ══════════════════ FIRE BURST ══════════════════
+  /** Cluster of orange-red flame spheres. */
+  spawnFireBurst(position: Vector3): void {
+    const root = new TransformNode("fireBurst", this._scene);
+    const count = 4 + Math.floor(Math.random() * 2);
+    const mats: StandardMaterial[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const innerT = i / (count - 1); // 0=inner, 1=outer
+      const mat = new StandardMaterial(`fire_m${i}`, this._scene);
+      const r = 1;
+      const g = 0.55 - innerT * 0.35;
+      const b = 0.08 - innerT * 0.03;
+      mat.diffuseColor = new Color3(r, g, b);
+      mat.emissiveColor = new Color3(r * (0.7 - innerT * 0.4), g * 0.8, b);
+      mat.alpha = 0.8;
+      mat.disableLighting = true;
+      mats.push(mat);
+
+      const diam = 0.15 + Math.random() * 0.15;
+      const flame = MeshBuilder.CreateSphere("fl", { diameter: diam, segments: 4 }, this._scene);
+      flame.position = position.clone();
+      flame.position.x += (Math.random() - 0.5) * 0.3;
+      flame.position.y += 0.3 + Math.random() * 0.4;
+      flame.position.z += (Math.random() - 0.5) * 0.3;
+      flame.material = mat;
+      flame.parent = root;
+    }
+
+    const totalDuration = 0.5;
+    this._effects.push({
+      root,
+      remaining: totalDuration,
+      update: (dt, remaining) => {
+        const t = 1 - remaining / totalDuration;
+        for (const m of mats) m.alpha = Math.max(0, 0.8 * (1 - t));
+        const s = 0.5 + t * 1.0;
+        root.scaling.setAll(s);
+        root.position.y += 2.0 * dt;
+      },
+    });
+  }
+
+  // ══════════════════ PERSISTENT SMOKE ══════════════════
+  /** Dark smoke cloud that lingers after explosions. */
+  spawnPersistentSmoke(position: Vector3): void {
+    const root = new TransformNode("pSmoke", this._scene);
+    const mat = new StandardMaterial("psmoke_mat", this._scene);
+    mat.diffuseColor = new Color3(0.3, 0.3, 0.32);
+    mat.emissiveColor = new Color3(0.06, 0.06, 0.064);
+    mat.alpha = 0.5;
+    mat.disableLighting = true;
+
+    for (let i = 0; i < 3; i++) {
+      const puff = MeshBuilder.CreateSphere("ps", { diameter: 0.4 + Math.random() * 0.2, segments: 5 }, this._scene);
+      puff.position = position.clone();
+      puff.position.x += (Math.random() - 0.5) * 0.3;
+      puff.position.y += 0.4 + Math.random() * 0.3;
+      puff.position.z += (Math.random() - 0.5) * 0.3;
+      puff.material = mat;
+      puff.parent = root;
+    }
+
+    const totalDuration = 0.8;
+    this._effects.push({
+      root,
+      remaining: totalDuration,
+      update: (dt, remaining) => {
+        const t = 1 - remaining / totalDuration;
+        mat.alpha = Math.max(0, 0.5 * (1 - t));
+        const s = 1 + t * 1.5;
+        root.scaling.setAll(s);
+        root.position.y += 1.0 * dt;
+      },
+    });
+  }
+
+  // ══════════════════ GROUND SCORCH ══════════════════
+  /** Flat dark disc left on the ground by explosions. */
+  spawnGroundScorch(position: Vector3): void {
+    const disc = MeshBuilder.CreateDisc("scorch", { radius: 0.5, tessellation: 12 }, this._scene);
+    disc.position = position.clone();
+    disc.position.y = 0.04;
+    disc.rotation.x = Math.PI / 2;
+    const mat = new StandardMaterial("scorch_mat", this._scene);
+    mat.diffuseColor = new Color3(0.15, 0.12, 0.08);
+    mat.emissiveColor = new Color3(0.03, 0.024, 0.016);
+    mat.alpha = 0.4;
+    mat.disableLighting = true;
+    disc.material = mat;
+
+    const totalDuration = 3.0;
+    this._effects.push({
+      root: disc as unknown as TransformNode,
+      remaining: totalDuration,
+      update: (_dt, remaining) => {
+        mat.alpha = Math.max(0, 0.4 * (remaining / totalDuration));
+      },
+    });
+  }
+
   dispose(): void {
     for (const e of this._effects) e.root.dispose();
     this._effects.length = 0;

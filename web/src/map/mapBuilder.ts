@@ -26,9 +26,16 @@ export class TribalSandboxMapBuilder {
     this._createMountains();
     this._createRocks();
     this._createTrees();
+    this._createGrassPatches();
+    this._createScatterProps();
     this._createZoneOverlays();
     this._createZoneBorders();
     return { zones: getPlacementZones(), obstacles: this._obstacles };
+  }
+
+  private _seededValue(index: number, seed: number): number {
+    const raw = Math.sin(index * 12.9898 + seed * 78.233) * 43758.5453;
+    return raw - Math.floor(raw);
   }
 
   private _createMaterials(): void {
@@ -126,14 +133,27 @@ export class TribalSandboxMapBuilder {
     pos: Vector3, diameterX: number, height: number, diameterZ: number,
     mat: StandardMaterial,
   ): void {
-    // Use a cone for the main mountain shape
-    const cone = MeshBuilder.CreateCylinder("mountain", {
-      diameterTop: 0, diameterBottom: 1, height: 1, tessellation: 8,
+    const base = MeshBuilder.CreateCylinder("mountainBase", {
+      diameterTop: 0.3, diameterBottom: 1, height: 1, tessellation: 8,
     }, this._scene);
-    cone.scaling.set(diameterX, height, diameterZ);
-    cone.position.set(pos.x, height / 2, pos.z);
-    cone.material = mat;
-    cone.receiveShadows = true;
+    base.scaling.set(diameterX, height, diameterZ);
+    base.position.set(pos.x, height / 2, pos.z);
+    base.material = mat;
+    base.receiveShadows = true;
+
+    const mid = MeshBuilder.CreateCylinder("mountainMid", {
+      diameterTop: 0.28, diameterBottom: 1, height: 1, tessellation: 8,
+    }, this._scene);
+    mid.scaling.set(diameterX * 0.6, height * 0.7, diameterZ * 0.6);
+    mid.position.set(pos.x, height * 0.72, pos.z);
+    mid.material = mat;
+    mid.receiveShadows = true;
+
+    const cap = MeshBuilder.CreateSphere("mountainCap", { diameter: 1, segments: 8 }, this._scene);
+    cap.scaling.set(diameterX * 0.25, height * 0.18, diameterZ * 0.25);
+    cap.position.set(pos.x, height * 1.02, pos.z);
+    cap.material = mat;
+    cap.receiveShadows = true;
 
     // Add collision — approximate as a cylinder covering the base
     const collisionRadius = Math.min(diameterX, diameterZ) * 0.35;
@@ -148,12 +168,9 @@ export class TribalSandboxMapBuilder {
     pos: Vector3, diameterX: number, height: number, diameterZ: number,
     mat: StandardMaterial,
   ): void {
-    // Wider, flatter mound — units can walk close but not through
-    const mound = MeshBuilder.CreateCylinder("hill", {
-      diameterTop: 0.3, diameterBottom: 1, height: 1, tessellation: 12,
-    }, this._scene);
-    mound.scaling.set(diameterX, height, diameterZ);
-    mound.position.set(pos.x, height / 2, pos.z);
+    const mound = MeshBuilder.CreateSphere("hill", { diameter: 1, segments: 10 }, this._scene);
+    mound.scaling.set(diameterX, height * 0.6, diameterZ);
+    mound.position.set(pos.x, height * 0.3, pos.z);
     mound.material = mat;
     mound.receiveShadows = true;
 
@@ -245,13 +262,19 @@ export class TribalSandboxMapBuilder {
     ];
 
     for (const t of trees) {
-      this._createTree(t.pos, t.height, trunk, t.leafMat);
+      this._createTree(
+        t.pos,
+        t.height,
+        trunk,
+        t.leafMat,
+        t.leafMat === leaves ? darkLeaves : leaves,
+      );
     }
   }
 
   private _createTree(
     pos: Vector3, height: number,
-    trunkMat: StandardMaterial, leafMat: StandardMaterial,
+    trunkMat: StandardMaterial, leafMat: StandardMaterial, upperLeafMat: StandardMaterial,
   ): void {
     const trunkHeight = height * 0.45;
     const trunkRadius = height * 0.06;
@@ -280,12 +303,100 @@ export class TribalSandboxMapBuilder {
     canopy.material = leafMat;
     canopy.receiveShadows = true;
 
+    const upperCanopy = MeshBuilder.CreateCylinder("canopyUpper", {
+      diameterTop: 0,
+      diameterBottom: canopyRadius * 1.4,
+      height: canopyHeight * 0.5,
+      tessellation: 8,
+    }, this._scene);
+    upperCanopy.position.set(pos.x, trunkHeight + canopyHeight * 0.78, pos.z);
+    upperCanopy.material = upperLeafMat;
+    upperCanopy.receiveShadows = true;
+
     // Collision for tree trunk
     this._obstacles.push({
       type: "cylinder",
       center: new Vector3(pos.x, 0, pos.z),
       radius: trunkRadius + 0.3,
     });
+  }
+
+  private _createGrassPatches(): void {
+    const leaves = this._scene.getMaterialByName("leaves") as StandardMaterial;
+
+    for (let i = 0; i < 36; i++) {
+      const x = -45 + this._seededValue(i, 1) * 90;
+      const z = -35 + this._seededValue(i, 2) * 70;
+      const blades = 3 + Math.floor(this._seededValue(i, 3) * 2);
+
+      for (let j = 0; j < blades; j++) {
+        const blade = MeshBuilder.CreateCylinder("grassTuft", {
+          height: 0.15 + this._seededValue(i * 10 + j, 4) * 0.15,
+          diameterTop: 0,
+          diameterBottom: 0.05 + this._seededValue(i * 10 + j, 5) * 0.03,
+          tessellation: 4,
+        }, this._scene);
+        blade.position.set(
+          x + (this._seededValue(i * 10 + j, 6) - 0.5) * 0.45,
+          blade.getBoundingInfo().boundingBox.extendSize.y,
+          z + (this._seededValue(i * 10 + j, 7) - 0.5) * 0.45,
+        );
+        blade.rotation.z = (this._seededValue(i * 10 + j, 8) - 0.5) * 0.4;
+        blade.rotation.x = (this._seededValue(i * 10 + j, 9) - 0.5) * 0.25;
+        blade.material = leaves;
+        blade.receiveShadows = true;
+      }
+    }
+  }
+
+  private _createScatterProps(): void {
+    const flowerColors = [
+      new Color3(0.88, 0.24, 0.2),
+      new Color3(0.96, 0.82, 0.28),
+      new Color3(0.95, 0.95, 0.9),
+    ];
+    const flowerMats = flowerColors.map((color, index) => {
+      const material = new StandardMaterial(`flower${index}`, this._scene);
+      material.diffuseColor = color;
+      material.specularColor = new Color3(0.03, 0.03, 0.03);
+      return material;
+    });
+    const pebbleMat = new StandardMaterial("pebble", this._scene);
+    pebbleMat.diffuseColor = new Color3(0.22, 0.2, 0.18);
+    pebbleMat.specularColor = new Color3(0.03, 0.03, 0.03);
+
+    for (let i = 0; i < 18; i++) {
+      const flower = MeshBuilder.CreateSphere("flowerDot", {
+        diameter: 0.08 + this._seededValue(i, 10) * 0.04,
+        segments: 4,
+      }, this._scene);
+      flower.position.set(
+        -45 + this._seededValue(i, 11) * 90,
+        0.03,
+        -35 + this._seededValue(i, 12) * 70,
+      );
+      flower.material = flowerMats[i % flowerMats.length];
+    }
+
+    for (let i = 0; i < 11; i++) {
+      const pebbleSize = 0.1 + this._seededValue(i, 13) * 0.1;
+      const pebble = MeshBuilder.CreateSphere("pebble", {
+        diameter: pebbleSize,
+        segments: 5,
+      }, this._scene);
+      pebble.scaling.set(
+        1 + this._seededValue(i, 14) * 0.3,
+        0.45 + this._seededValue(i, 15) * 0.2,
+        0.8 + this._seededValue(i, 16) * 0.3,
+      );
+      pebble.position.set(
+        -45 + this._seededValue(i, 17) * 90,
+        0.03,
+        -35 + this._seededValue(i, 18) * 70,
+      );
+      pebble.material = pebbleMat;
+      pebble.receiveShadows = true;
+    }
   }
 
   /** Tinted ground overlays so each half is clearly blue / red */

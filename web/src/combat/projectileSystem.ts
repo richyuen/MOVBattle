@@ -2,6 +2,7 @@ import {
   Scene, Vector3, MeshBuilder, StandardMaterial, Color3, Mesh, TransformNode,
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
+import type { VisualEffects } from "./visualEffects";
 
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell";
 
@@ -43,6 +44,7 @@ export class ProjectileSystem {
   private _flashes: MuzzleFlash[] = [];
   private _matCache = new Map<string, StandardMaterial>();
   onShake?: (intensity: number) => void;
+  visualEffects?: VisualEffects;
 
   constructor(scene: Scene) {
     this._scene = scene;
@@ -247,6 +249,8 @@ export class ProjectileSystem {
       if (!p.target.isDead) {
         p.target.applyDamage(p.damage, p.knockback);
       }
+      this.visualEffects?.spawnImpactDust(p.targetPos);
+      this.visualEffects?.spawnHitFlash(p.targetPos);
     }
   }
 
@@ -262,6 +266,8 @@ export class ProjectileSystem {
     boom.material = m;
     this._flashes.push({ mesh: boom, remaining: 0.4 + 0.12 * Math.max(0, scale - 1) });
     this.onShake?.(0.12 * scale);
+    this.visualEffects?.spawnPersistentSmoke(pos);
+    this.visualEffects?.spawnGroundScorch(pos);
   }
 
   private _buildProjectileMesh(shape: ProjectileShape): TransformNode {
