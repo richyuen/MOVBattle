@@ -2,7 +2,7 @@ import {
   Scene, TransformNode, Mesh, MeshBuilder, StandardMaterial, Color3, Vector3,
 } from "@babylonjs/core";
 import { buildArticulatedBody } from "./bodyBuilder";
-import type { ArticulatedBody, BodyMetrics } from "./bodyBuilder";
+import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
 
 /**
  * IDs of units that should be built as vehicles/equipment rather than humanoids.
@@ -49,7 +49,7 @@ export function buildVehicleBody(
     case "farmer.wheelbarrow": return buildWheelbarrow(scene, bodyColor);
     case "ancient.minotaur": return buildMinotaur(scene, bodyColor);
     case "tribal.mammoth": return buildMammoth(scene, bodyColor);
-    case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor);
+    case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor, { spooky: true });
     case "legacy.tank": return buildLegacyTank(scene, bodyColor, options);
     case "secret.bomb_cannon": return buildBombCannon(scene, bodyColor, options);
     case "secret.gatling_gun": return buildGatlingGun(scene, bodyColor, options);
@@ -87,6 +87,18 @@ function makeBodyMetrics(
   };
 }
 
+function makeSocket(
+  scene: Scene,
+  parent: TransformNode,
+  name: string,
+  position: Vector3,
+): TransformNode {
+  const socket = new TransformNode(name, scene);
+  socket.parent = parent;
+  socket.position.copyFrom(position);
+  return socket;
+}
+
 /**
  * Create a stub ArticulatedBody from vehicle parts.
  * All "limb" joints point to dummy nodes so the animator doesn't crash.
@@ -98,6 +110,7 @@ function wrapAsBody(
   allMeshes: Mesh[],
   headMesh?: Mesh,
   metrics: BodyMetrics = makeBodyMetrics(1.8, 0.8, 0.5, 0.7),
+  vehicleSockets?: VehicleSocketSet,
 ): ArticulatedBody {
   const bodyMaterial = (mainMesh.material as StandardMaterial) ?? makeMat(scene, new Color3(0.55, 0.45, 0.35));
   const skinMaterial = (headMesh?.material as StandardMaterial) ?? bodyMaterial;
@@ -131,7 +144,7 @@ function wrapAsBody(
     leftHip: lHip, leftUpperLeg: mainMesh, leftKnee: lKnee, leftLowerLeg: mainMesh,
     rightHip: rHip, rightUpperLeg: mainMesh, rightKnee: rKnee, rightLowerLeg: mainMesh,
     rightHand: rHand, leftHand: lHand, headTop,
-    allMeshes, allJoints,
+    allMeshes, allJoints, vehicleSockets,
   };
 }
 
@@ -183,11 +196,12 @@ function addOperator(
 
 // ═══════════════════════ CATAPULT ═══════════════════════
 // Fires FORWARD (+Z). Arm swings over the top toward +Z.
-function buildCatapult(scene: Scene, color: Color3): ArticulatedBody {
+function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const allMeshes: Mesh[] = [];
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
+  const pumpkinMat = makeMat(scene, new Color3(0.88, 0.42, 0.12));
 
   // Base platform (longer along Z = firing axis)
   const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.2, depth: 1.6 }, scene);
@@ -224,6 +238,14 @@ function buildCatapult(scene: Scene, color: Color3): ArticulatedBody {
   bucket.position.set(0, 2.0, 0.7);
   bucket.parent = root; bucket.material = metal; allMeshes.push(bucket);
 
+  if (options.spooky) {
+    const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.22, segments: 8 }, scene);
+    pumpkin.position.set(0, 2.08, 0.7);
+    pumpkin.parent = root;
+    pumpkin.material = pumpkinMat;
+    allMeshes.push(pumpkin);
+  }
+
   // Counterweight at back end (-Z)
   const cw = MeshBuilder.CreateBox("cw", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
   cw.position.set(0, 1.0, -0.5);
@@ -232,7 +254,20 @@ function buildCatapult(scene: Scene, color: Color3): ArticulatedBody {
   // Operator sitting beside, behind the frame
   const operator = addOperator(scene, root, allMeshes, 0.4, 0.72, -0.5, color);
 
-  return wrapAsBody(scene, root, base, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.8, 0.45, 0.8));
+  const vehicleSockets: VehicleSocketSet = {
+    primaryMuzzle: makeSocket(scene, root, "catapult_bucket_socket", new Vector3(0, 2.08, 0.82)),
+    impactOrigin: makeSocket(scene, root, "catapult_impact_socket", new Vector3(0, 2.0, 0.7)),
+  };
+
+  return wrapAsBody(
+    scene,
+    root,
+    base,
+    allMeshes,
+    operator.headMesh,
+    makeBodyMetrics(operator.headTopY, 0.8, 0.45, 0.8),
+    vehicleSockets,
+  );
 }
 
 function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
@@ -249,6 +284,11 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
   bomb.parent = root;
   bomb.material = makeMat(scene, new Color3(0.12, 0.12, 0.12));
   body.allMeshes.push(bomb);
+  body.vehicleSockets = {
+    primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", new Vector3(0, 0.98, 0.96)),
+    smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", new Vector3(0, 0.96, 0.9)),
+    impactOrigin: makeSocket(scene, root, "bomb_cannon_impact_socket", new Vector3(0, 0.92, 0.78)),
+  };
   return body;
 }
 
@@ -303,6 +343,11 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
     operator = addOperator(scene, root, allMeshes, -0.22, 0.78, -0.18, color);
     addOperator(scene, root, allMeshes, 0.22, 0.78, -0.18, color);
   }
+  const vehicleSockets: VehicleSocketSet = {
+    primaryMuzzle: makeSocket(scene, root, "gatling_muzzle_socket", new Vector3(0, 0.76, 1.08)),
+    smokeSocket: makeSocket(scene, root, "gatling_smoke_socket", new Vector3(0, 0.76, 1.02)),
+    impactOrigin: makeSocket(scene, root, "gatling_impact_socket", new Vector3(0, 0.76, 0.98)),
+  };
   return wrapAsBody(
     scene,
     root,
@@ -310,6 +355,7 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
     allMeshes,
     operator?.headMesh,
     makeBodyMetrics(operator?.headTopY ?? 1.62, 0.8, 0.48, 0.84),
+    vehicleSockets,
   );
 }
 
@@ -361,7 +407,20 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   // Operator behind (-Z)
   const operator = addOperator(scene, root, allMeshes, 0.25, 0.72, -0.5, color);
 
-  return wrapAsBody(scene, root, base, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.72, 0.4, 0.78));
+  const vehicleSockets: VehicleSocketSet = {
+    primaryMuzzle: makeSocket(scene, root, "ballista_bolt_socket", new Vector3(0, 0.58, 0.54)),
+    impactOrigin: makeSocket(scene, root, "ballista_impact_socket", new Vector3(0, 0.58, 0.3)),
+  };
+
+  return wrapAsBody(
+    scene,
+    root,
+    base,
+    allMeshes,
+    operator.headMesh,
+    makeBodyMetrics(operator.headTopY, 0.72, 0.4, 0.78),
+    vehicleSockets,
+  );
 }
 
 // ═══════════════════════ HWACHA ═══════════════════════
@@ -442,6 +501,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
   const spacingX = 0.15, spacingY = 0.14;
   const startX = -(cols - 1) * spacingX / 2;
   const startY = 0.12;
+  const muzzleSequence: TransformNode[] = [];
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const cx = startX + col * spacingX;
@@ -461,6 +521,9 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
       tip.position.set(cx, cy, 0.62);
       tip.rotation.x = Math.PI / 2;
       tip.parent = rackPivot; tip.material = red; allMeshes.push(tip);
+      if (muzzleSequence.length < 14) {
+        muzzleSequence.push(makeSocket(scene, rackPivot, `hwacha_muzzle_${row}_${col}`, new Vector3(cx, cy, 0.72)));
+      }
     }
   }
 
@@ -477,6 +540,12 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
     ? addOperator(scene, root, allMeshes, 0.22, 0.7, -0.75, color)
     : null;
 
+  const vehicleSockets: VehicleSocketSet = {
+    primaryMuzzle: muzzleSequence[0],
+    muzzleSequence,
+    impactOrigin: makeSocket(scene, rackPivot, "hwacha_impact_socket", new Vector3(0, 0.42, 0.68)),
+  };
+
   return wrapAsBody(
     scene,
     root,
@@ -484,6 +553,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
     allMeshes,
     operator?.headMesh,
     makeBodyMetrics(operator?.headTopY ?? 1.58, 0.95, 0.52, 0.76),
+    vehicleSockets,
   );
 }
 
@@ -538,6 +608,12 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
     operator = addOperator(scene, root, allMeshes, 0.2, 0.57, -0.6, color);
   }
 
+  const vehicleSockets: VehicleSocketSet = {
+    primaryMuzzle: makeSocket(scene, root, "cannon_muzzle_socket", new Vector3(0, 0.52, 0.86)),
+    smokeSocket: makeSocket(scene, root, "cannon_smoke_socket", new Vector3(0, 0.52, 0.78)),
+    impactOrigin: makeSocket(scene, root, "cannon_impact_socket", new Vector3(0, 0.52, 0.7)),
+  };
+
   return wrapAsBody(
     scene,
     root,
@@ -545,6 +621,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
     allMeshes,
     operator?.headMesh,
     makeBodyMetrics(operator?.headTopY ?? 1.34, 0.7, 0.4, 0.68),
+    vehicleSockets,
   );
 }
 
@@ -566,6 +643,7 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   const basePlate = MeshBuilder.CreateCylinder("basePlate", { height: 0.1, diameter: 2.1, tessellation: 16 }, scene);
   basePlate.position.y = 0.15; basePlate.parent = root; basePlate.material = wood; allMeshes.push(basePlate);
 
+  const muzzleSequence: TransformNode[] = [];
   // Cannons poking out from sides (8 around the perimeter)
   for (let i = 0; i < 8; i++) {
     const angle = i * Math.PI * 2 / 8;
@@ -577,6 +655,7 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
     barrel.rotation.x = Math.PI / 2;
     barrel.rotation.y = -angle + Math.PI / 2;
     barrel.parent = root; barrel.material = metal; allMeshes.push(barrel);
+    muzzleSequence.push(makeSocket(scene, root, `davinci_muzzle_${i}`, new Vector3(Math.cos(angle) * 1.08, 0.3, Math.sin(angle) * 1.08)));
   }
 
   // Top viewport
@@ -598,6 +677,13 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
     operator = addOperator(scene, root, allMeshes, 0, 1.08, -0.02, color);
   }
 
+  const vehicleSockets: VehicleSocketSet = {
+    primaryMuzzle: muzzleSequence[0],
+    muzzleSequence,
+    smokeSocket: makeSocket(scene, root, "davinci_smoke_socket", new Vector3(0, 0.32, 1.02)),
+    impactOrigin: makeSocket(scene, root, "davinci_impact_socket", new Vector3(0, 0.3, 0.92)),
+  };
+
   return wrapAsBody(
     scene,
     root,
@@ -605,6 +691,7 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
     allMeshes,
     operator?.headMesh,
     makeBodyMetrics(operator?.headTopY ?? 1.8, 0.8, 0.5, 0.7),
+    vehicleSockets,
   );
 }
 
@@ -776,6 +863,11 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   if (options.showOperators !== false) {
     operator = addOperator(scene, root, allMeshes, 0, 0.98, -0.28, color);
   }
+  const vehicleSockets: VehicleSocketSet = {
+    primaryMuzzle: makeSocket(scene, turretBase, "legacy_tank_muzzle_socket", new Vector3(0, 0.1, 3.06)),
+    smokeSocket: makeSocket(scene, turretBase, "legacy_tank_smoke_socket", new Vector3(0, 0.1, 2.9)),
+    impactOrigin: makeSocket(scene, turretBase, "legacy_tank_impact_socket", new Vector3(0, 0.08, 0.72)),
+  };
   return wrapAsBody(
     scene,
     root,
@@ -783,6 +875,7 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
     allMeshes,
     operator?.headMesh,
     makeBodyMetrics(operator?.headTopY ?? 1.92, 1.28, 1.0, 1.12),
+    vehicleSockets,
   );
 }
 
@@ -826,7 +919,19 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   // Pusher (the farmer, at -Z)
   const operator = addOperator(scene, root, allMeshes, 0, 0.72, -0.55, color);
 
-  return wrapAsBody(scene, root, tray, allMeshes, operator.headMesh, makeBodyMetrics(operator.headTopY, 0.55, 0.34, 0.8));
+  const vehicleSockets: VehicleSocketSet = {
+    impactOrigin: makeSocket(scene, root, "wheelbarrow_impact_socket", new Vector3(0, 0.45, 0.38)),
+  };
+
+  return wrapAsBody(
+    scene,
+    root,
+    tray,
+    allMeshes,
+    operator.headMesh,
+    makeBodyMetrics(operator.headTopY, 0.55, 0.34, 0.8),
+    vehicleSockets,
+  );
 }
 
 // ═══════════════════════ MINOTAUR ═══════════════════════

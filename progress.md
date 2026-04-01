@@ -140,3 +140,22 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Validation:
 - `npm run build` passes in `web/`.
 - Direct Playwright scenario rerun for `iconic_artillery_compare` confirmed no duplicated tank turrets or hwacha racks in the screenshot, and no browser console/page errors.
+- 2026-03-31: Vehicle socket and war-machine fidelity pass implemented.
+- Added narrow vehicle socket support (`primaryMuzzle`, `muzzleSequence[]`, `smokeSocket`, `impactOrigin`) to the shared `ArticulatedBody` contract in `web/src/units/bodyBuilder.ts` and propagated it through `web/src/units/vehicleBuilder.ts`.
+- Vehicle builders now define explicit firing/effect sockets for `legacy.tank`, `renaissance.da_vinci_tank`, `dynasty.hwacha`, `pirate.cannon`, `secret.bomb_cannon`, `secret.gatling_gun`, `ancient.ballista`, `medieval.catapult`, `spooky.pumpkin_catapult`, and `farmer.wheelbarrow`.
+- `spooky.pumpkin_catapult` now has a visible pumpkin payload instead of reusing the plain catapult silhouette unchanged.
+- Updated `web/src/units/runtimeUnit.ts` and `web/src/main.ts` so runtime state and `render_game_to_text()` expose socket-driven origin info (`attackOriginSource`, `attackOriginSocket`, `impactOriginSource`, `smokeOriginSource`) without mutating the active muzzle sequence during inspection.
+- Updated `web/src/combat/projectileSystem.ts` and `web/src/combat/simulationSystem.ts` so scoped war machines emit projectiles and smoke from explicit chassis sockets instead of humanoid-style lifted origins or linked-role offsets.
+- Added `web/WAR_MACHINE_SOCKET_MATRIX.md` and `web/WAR_MACHINE_ACCEPTANCE_BATTLES.md`, plus deterministic scenario coverage in `web/src/testing/scenarios.ts` for tank origin, cannon comparison, ballista/catapult launch points, and wheelbarrow comparison.
+- Validation:
+- `npm run build` passes in `web/`.
+- Required web-game client run completed against the local Vite server.
+- Direct Playwright validation artifacts were captured in `web/output/war-machine-validation/`, including:
+- `war_machine_tank_shell_mid.png` showing the shell and smoke spawning from the tank barrel line
+- `iconic_artillery_compare.png` showing distinct tank / Da Vinci tank / Hwacha chassis and socket-driven fire
+- `war_machine_ballista_catapult_mid.png` showing ballista and catapult payloads launching from the chassis instead of a generic body origin
+- `war_machine_cannon_compare_mid.png` showing cannon and bomb cannon muzzle-origin shots
+- Console review showed no new page errors; only Vite/Babylon startup logs and WebGL readback performance warnings during screenshots.
+- Remaining gaps after the war-machine pass:
+- `secret.wheelbarrow_dragon` still remains on the linked composite path rather than the new vehicle socket path because it is not built through the shared vehicle builder.
+- The current deterministic scenario system still records structural expectations in data/docs rather than evaluating them automatically inside the browser runtime.

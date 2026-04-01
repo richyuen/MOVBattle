@@ -63,6 +63,24 @@ function getBehaviorPreset(unit: RuntimeUnit): string {
   return unit.definition.behaviorPreset ?? "default";
 }
 
+function originLiftForSource(source: "vehicle-socket" | "linked-role" | "parent"): number {
+  return source === "vehicle-socket" ? 0 : 1;
+}
+
+function muzzleScaleForProjectile(shape: ProjectileShape): number {
+  switch (shape) {
+    case "shell": return 1.8;
+    case "bomb": return 1.4;
+    case "rocket_arrow": return 0.65;
+    case "bolt": return 0.7;
+    default: return 1;
+  }
+}
+
+function shouldSpawnProjectileMuzzleFx(shape: ProjectileShape): boolean {
+  return shape === "shell" || shape === "bomb" || shape === "rocket_arrow" || shape === "bolt";
+}
+
 export class SimulationSystem {
   private _units: RuntimeUnit[] = [];
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
@@ -262,8 +280,11 @@ export class SimulationSystem {
     attacker.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
     attacker.triggerLinkedRoleActions(attackProfile.cooldown * cooldownMultiplier);
     const emitter = attacker.getAttackEmitter();
-    const attackOrigin = emitter.position;
-    const impactOrigin = attacker.getImpactEmitter().position;
+    const attackOriginInfo = attacker.getAttackOrigin();
+    const smokeOriginInfo = attacker.getSmokeOrigin();
+    const impactOriginInfo = attacker.getImpactOrigin();
+    const attackOrigin = attackOriginInfo.position;
+    const impactOrigin = impactOriginInfo.position;
     if (emitter !== attacker) {
       emitter.triggerAttackVisual(Math.max(0.08, attackProfile.cooldown * cooldownMultiplier * 0.28));
     }
@@ -474,11 +495,6 @@ export class SimulationSystem {
         spreadZ: 0,
         delayStep: 0,
       });
-      if (this.projectileSystem) {
-        const attackOrigin = attacker.getAttackEmitter().position;
-        const dir = target.position.subtract(attackOrigin).normalize();
-        this.projectileSystem.spawnMuzzleFlash(attackOrigin, dir, 1.8);
-      }
       return;
     }
 
@@ -523,7 +539,12 @@ export class SimulationSystem {
     if (attackProfile.type === AttackType.Ranged || attackProfile.type === AttackType.Siege) {
       if (this.projectileSystem) {
         if (isFirearmUnit(attacker)) {
-          this.projectileSystem.spawnMuzzleFlash(attackOrigin, impulseDir);
+          this.projectileSystem.spawnMuzzleFlash(
+            smokeOriginInfo.position,
+            impulseDir,
+            1,
+            { originLift: originLiftForSource(smokeOriginInfo.source) },
+          );
           this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
         } else {
           this.projectileSystem.spawnProjectile(
@@ -535,6 +556,9 @@ export class SimulationSystem {
             splashRadius,
             attacker.team,
             this._units,
+            undefined,
+            0,
+            { originLift: originLiftForSource(attackOriginInfo.source) },
           );
         }
       } else {
@@ -578,10 +602,20 @@ export class SimulationSystem {
   private _fireBurst(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, splashRadius: number, shots: number): void {
     const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
     const perShotDamage = Math.max(1, Math.ceil(damage / shots));
-    const emitter = attacker.getAttackEmitter();
-    const attackOrigin = emitter.position;
     for (let i = 0; i < shots; i++) {
+      const attackOriginInfo = attacker.getAttackOrigin();
+      const smokeOriginInfo = attacker.getSmokeOrigin();
+      const attackOrigin = attackOriginInfo.position;
       if (this.projectileSystem && !isFirearmUnit(attacker)) {
+        if (shouldSpawnProjectileMuzzleFx(projectileShape) && smokeOriginInfo.source === "vehicle-socket") {
+          const dir = target.position.subtract(attackOrigin).normalize();
+          this.projectileSystem.spawnMuzzleFlash(
+            smokeOriginInfo.position,
+            dir,
+            muzzleScaleForProjectile(projectileShape),
+            { originLift: originLiftForSource(smokeOriginInfo.source) },
+          );
+        }
         const offset = new Vector3((Math.random() - 0.5) * 0.25, Math.random() * 0.2, (Math.random() - 0.5) * 0.15);
         this.projectileSystem.spawnProjectile(
           projectileShape,
@@ -594,11 +628,17 @@ export class SimulationSystem {
           this._units,
           offset,
           i * 0.04,
+          { originLift: originLiftForSource(attackOriginInfo.source) },
         );
       } else {
         if (this.projectileSystem && isFirearmUnit(attacker)) {
           const dir = target.position.subtract(attackOrigin).normalize();
-          this.projectileSystem.spawnMuzzleFlash(attackOrigin, dir);
+          this.projectileSystem.spawnMuzzleFlash(
+            smokeOriginInfo.position,
+            dir,
+            1,
+            { originLift: originLiftForSource(smokeOriginInfo.source) },
+          );
         }
         target.applyDamage(perShotDamage, knockback.scale(0.35));
       }
@@ -608,10 +648,17 @@ export class SimulationSystem {
   private _fireShotgun(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3): void {
     const pellets = 6;
     const perPellet = Math.max(1, Math.ceil(damage / pellets));
-    const attackOrigin = attacker.getAttackEmitter().position;
+    const attackOriginInfo = attacker.getAttackOrigin();
+    const smokeOriginInfo = attacker.getSmokeOrigin();
+    const attackOrigin = attackOriginInfo.position;
     if (this.projectileSystem) {
       const dir = target.position.subtract(attackOrigin).normalize();
-      this.projectileSystem.spawnMuzzleFlash(attackOrigin, dir);
+      this.projectileSystem.spawnMuzzleFlash(
+        smokeOriginInfo.position,
+        dir,
+        1,
+        { originLift: originLiftForSource(smokeOriginInfo.source) },
+      );
     }
 
     for (const unit of this._units) {
@@ -626,7 +673,6 @@ export class SimulationSystem {
   private _fireVolley(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, count: number): void {
     const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
     const perProjectile = Math.max(1, Math.ceil(damage / count));
-    const attackOrigin = attacker.getAttackEmitter().position;
 
     if (!this.projectileSystem) {
       this._applyDirectOrSplash(target, damage, 1.8, attacker.team, knockback.scale(0.65));
@@ -634,6 +680,18 @@ export class SimulationSystem {
     }
 
     for (let i = 0; i < count; i++) {
+      const attackOriginInfo = attacker.getAttackOrigin();
+      const smokeOriginInfo = attacker.getSmokeOrigin();
+      const attackOrigin = attackOriginInfo.position;
+      if (shouldSpawnProjectileMuzzleFx(projectileShape) && smokeOriginInfo.source === "vehicle-socket") {
+        const dir = target.position.subtract(attackOrigin).normalize();
+        this.projectileSystem.spawnMuzzleFlash(
+          smokeOriginInfo.position,
+          dir,
+          muzzleScaleForProjectile(projectileShape),
+          { originLift: originLiftForSource(smokeOriginInfo.source) },
+        );
+      }
       const spread = new Vector3((Math.random() - 0.5) * 0.9, Math.random() * 0.5, (Math.random() - 0.5) * 0.45);
       this.projectileSystem.spawnProjectile(
         projectileShape,
@@ -646,6 +704,7 @@ export class SimulationSystem {
         this._units,
         spread,
         i * 0.05,
+        { originLift: originLiftForSource(attackOriginInfo.source) },
       );
     }
   }
@@ -665,7 +724,6 @@ export class SimulationSystem {
       delayStep: number;
     },
   ): void {
-    const attackOrigin = attacker.getAttackEmitter().position;
     if (!this.projectileSystem) {
       this._applyDirectOrSplash(target, damage, Math.max(0, options.splashRadius), attacker.team, knockback);
       return;
@@ -673,6 +731,18 @@ export class SimulationSystem {
 
     const perProjectile = Math.max(1, Math.ceil(damage / count));
     for (let i = 0; i < count; i++) {
+      const attackOriginInfo = attacker.getAttackOrigin();
+      const smokeOriginInfo = attacker.getSmokeOrigin();
+      const attackOrigin = attackOriginInfo.position;
+      if (shouldSpawnProjectileMuzzleFx(options.projectileShape) && smokeOriginInfo.source === "vehicle-socket") {
+        const dir = target.position.subtract(attackOrigin).normalize();
+        this.projectileSystem.spawnMuzzleFlash(
+          smokeOriginInfo.position,
+          dir,
+          muzzleScaleForProjectile(options.projectileShape),
+          { originLift: originLiftForSource(smokeOriginInfo.source) },
+        );
+      }
       const spread = new Vector3(
         (Math.random() - 0.5) * options.spreadX,
         Math.random() * options.spreadY,
@@ -689,6 +759,7 @@ export class SimulationSystem {
         this._units,
         spread,
         i * options.delayStep,
+        { originLift: originLiftForSource(attackOriginInfo.source) },
       );
     }
   }

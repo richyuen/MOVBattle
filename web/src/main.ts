@@ -694,6 +694,9 @@ function renderGameToText(): string {
     units: placedUnits.map((unit) => {
         const attackEmitter = unit.getAttackEmitter();
         const impactEmitter = unit.getImpactEmitter();
+        const attackOrigin = unit.getAttackOrigin(false);
+        const smokeOrigin = unit.getSmokeOrigin(false);
+        const impactOrigin = unit.getImpactOrigin(false);
         return ({
         runtimeId: unit.runtimeId,
         id: unit.definition.id,
@@ -714,8 +717,14 @@ function renderGameToText(): string {
         actionPreset: unit.actionPreset,
         attackEmitterRole: attackEmitter === unit ? "parent" : (attackEmitter.linkedRoleLabel ?? attackEmitter.definition.displayName),
         attackEmitterId: attackEmitter.runtimeId,
+        attackOriginSource: attackOrigin.source,
+        attackOriginSocket: attackOrigin.socket ?? null,
         impactEmitterRole: impactEmitter === unit ? "parent" : (impactEmitter.linkedRoleLabel ?? impactEmitter.definition.displayName),
         impactEmitterId: impactEmitter.runtimeId,
+        impactOriginSource: impactOrigin.source,
+        impactOriginSocket: impactOrigin.socket ?? null,
+        smokeOriginSource: smokeOrigin.source,
+        smokeOriginSocket: smokeOrigin.socket ?? null,
         decorativeStandinsSuppressed: unit.decorativeStandinsSuppressed,
         countsTowardVictory: unit.countsTowardVictory,
         linkedParentId: unit.linkedParent?.runtimeId ?? null,

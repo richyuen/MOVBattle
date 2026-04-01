@@ -19,6 +19,13 @@ export interface LinkedEntityDescriptor {
   runtimeUnitId?: number;
 }
 
+export interface OriginInfo {
+  position: Vector3;
+  source: "vehicle-socket" | "linked-role" | "parent";
+  socket?: "primaryMuzzle" | "muzzleSequence" | "smokeSocket" | "impactOrigin";
+  emitter?: RuntimeUnit;
+}
+
 export class RuntimeUnit {
   private static _nextRuntimeId = 1;
   static timeNowSeconds: () => number = () => performance.now() / 1000;
@@ -83,6 +90,7 @@ export class RuntimeUnit {
   private _isImpactOrigin = false;
   private _primaryEmitterEnabled = true;
   private _emitterCursor = 0;
+  private _vehicleSocketCursor = 0;
   private _decorativeStandinsSuppressed = false;
 
   /** Shared obstacle list — set once from main.ts after map build */
@@ -701,6 +709,7 @@ export class RuntimeUnit {
     this._isImpactOrigin = false;
     this._primaryEmitterEnabled = true;
     this._emitterCursor = 0;
+    this._vehicleSocketCursor = 0;
     this._decorativeStandinsSuppressed = false;
     this._linkedDescriptors = this._linkedDescriptors.filter((descriptor) => descriptor.persistent);
 
@@ -771,6 +780,64 @@ export class RuntimeUnit {
       }
     }
     return this.getAttackEmitter();
+  }
+
+  getAttackOrigin(advanceSequence = true): OriginInfo {
+    const sockets = this.body.vehicleSockets;
+    if (sockets?.muzzleSequence && sockets.muzzleSequence.length > 0) {
+      const cursor = this._vehicleSocketCursor % sockets.muzzleSequence.length;
+      const socket = sockets.muzzleSequence[cursor];
+      if (advanceSequence) {
+        this._vehicleSocketCursor += 1;
+      }
+      return {
+        position: socket.getAbsolutePosition(),
+        source: "vehicle-socket",
+        socket: "muzzleSequence",
+      };
+    }
+    if (sockets?.primaryMuzzle) {
+      return {
+        position: sockets.primaryMuzzle.getAbsolutePosition(),
+        source: "vehicle-socket",
+        socket: "primaryMuzzle",
+      };
+    }
+    const emitter = this.getAttackEmitter();
+    return {
+      position: emitter.position.clone(),
+      source: emitter === this ? "parent" : "linked-role",
+      emitter,
+    };
+  }
+
+  getSmokeOrigin(advanceSequence = true): OriginInfo {
+    const sockets = this.body.vehicleSockets;
+    if (sockets?.smokeSocket) {
+      return {
+        position: sockets.smokeSocket.getAbsolutePosition(),
+        source: "vehicle-socket",
+        socket: "smokeSocket",
+      };
+    }
+    return this.getAttackOrigin(advanceSequence);
+  }
+
+  getImpactOrigin(advanceSequence = true): OriginInfo {
+    const sockets = this.body.vehicleSockets;
+    if (sockets?.impactOrigin) {
+      return {
+        position: sockets.impactOrigin.getAbsolutePosition(),
+        source: "vehicle-socket",
+        socket: "impactOrigin",
+      };
+    }
+    const emitter = this.getImpactEmitter();
+    return {
+      position: emitter.position.clone(),
+      source: emitter === this ? "parent" : "linked-role",
+      emitter,
+    };
   }
 
   triggerLinkedRoleActions(durationSeconds: number): void {

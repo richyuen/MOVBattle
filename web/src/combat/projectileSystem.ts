@@ -20,11 +20,21 @@ interface ActiveProjectile {
   arcHeight: number;        // parabolic arc peak (0 = flat)
   allUnits: readonly RuntimeUnit[];
   shape: ProjectileShape;
+  targetLift: number;
 }
 
 interface MuzzleFlash {
   mesh: Mesh;
   remaining: number;
+}
+
+interface ProjectileSpawnOptions {
+  originLift?: number;
+  targetLift?: number;
+}
+
+interface MuzzleFlashOptions {
+  originLift?: number;
 }
 
 export class ProjectileSystem {
@@ -53,6 +63,7 @@ export class ProjectileSystem {
     allUnits: readonly RuntimeUnit[],
     originOffset?: Vector3,
     delay = 0,
+    options: ProjectileSpawnOptions = {},
   ): void {
     const targetPos = target.position.clone();
     const launchOrigin = originOffset ? origin.add(originOffset) : origin;
@@ -78,22 +89,23 @@ export class ProjectileSystem {
     const flightTime = Math.max(0.1, dist / speed);
     const mesh = this._buildProjectileMesh(shape);
     mesh.position = launchOrigin.clone();
-    mesh.position.y += 1.0; // launch from chest height
+    mesh.position.y += options.originLift ?? 1.0;
 
     this._active.push({
       mesh, origin: mesh.position.clone(), target, targetPos,
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
+      targetLift: options.targetLift ?? 0.5,
     });
   }
 
   /**
    * Spawn a muzzle flash at the given position (for guns).
    */
-  spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1): void {
+  spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1, options: MuzzleFlashOptions = {}): void {
     const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4 * scale, segments: 6 }, this._scene);
     flash.position = origin.clone();
-    flash.position.y += 1.0;
+    flash.position.y += options.originLift ?? 1.0;
     flash.position.addInPlace(direction.scale(0.3 * scale));
 
     const m = this._getMat("flash", new Color3(1, 0.85, 0.3), 0.8);
@@ -139,7 +151,7 @@ export class ProjectileSystem {
 
       // Lerp position with parabolic arc
       const dest = p.targetPos.clone();
-      dest.y += 0.5; // aim at chest height
+      dest.y += p.targetLift;
       Vector3.LerpToRef(p.origin, dest, t, p.mesh.position);
       // Add arc
       const arc = 4 * p.arcHeight * t * (1 - t);

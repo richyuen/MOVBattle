@@ -121,6 +121,71 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "units-present", value: "dynasty.hwacha" },
     ],
   },
+  war_machine_tank_origin: {
+    name: "war_machine_tank_origin",
+    description: "Legacy Tank socket-driven shell and smoke origin check.",
+    autoStart: true,
+    advanceMs: 2200,
+    units: [
+      { unitId: "legacy.tank", team: 0, position: { x: -10, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 9, z: 0 } },
+    ],
+    assertions: [
+      { kind: "emitter-owner", value: "legacy.tank:gunner" },
+      { kind: "impact-owner", value: "legacy.tank:gunner" },
+      { kind: "comparison-focus", value: "Legacy Tank should fire one shell from the barrel muzzle with visible muzzle smoke and explosive impact." },
+    ],
+  },
+  war_machine_cannon_compare: {
+    name: "war_machine_cannon_compare",
+    description: "Compare muzzle identity for Pirate Cannon and Bomb Cannon.",
+    autoStart: true,
+    advanceMs: 2400,
+    units: [
+      { unitId: "pirate.cannon", team: 0, position: { x: -12, z: -1.5 } },
+      { unitId: "secret.bomb_cannon", team: 0, position: { x: -12, z: 1.5 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 10, z: -1.5 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 10, z: 1.5 } },
+    ],
+    assertions: [
+      { kind: "comparison-focus", value: "Pirate Cannon and Bomb Cannon should fire from explicit barrel muzzles, with Bomb Cannon reading heavier and more explosive." },
+      { kind: "units-present", value: "pirate.cannon,secret.bomb_cannon" },
+    ],
+  },
+  war_machine_ballista_catapult: {
+    name: "war_machine_ballista_catapult",
+    description: "Check bolt and payload launch points on ballista and catapults.",
+    autoStart: true,
+    advanceMs: 2600,
+    units: [
+      { unitId: "ancient.ballista", team: 0, position: { x: -14, z: -2.2 } },
+      { unitId: "medieval.catapult", team: 0, position: { x: -11, z: 0 } },
+      { unitId: "spooky.pumpkin_catapult", team: 0, position: { x: -14, z: 2.2 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 10, z: -2.2 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 10, z: 0 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 10, z: 2.2 } },
+    ],
+    assertions: [
+      { kind: "comparison-focus", value: "Ballista bolts should leave the track, while catapult and pumpkin catapult payloads should launch from the bucket." },
+      { kind: "units-present", value: "ancient.ballista,medieval.catapult,spooky.pumpkin_catapult" },
+    ],
+  },
+  war_machine_wheelbarrow_compare: {
+    name: "war_machine_wheelbarrow_compare",
+    description: "Cart/readability check for Wheelbarrow and Wheelbarrow Dragon.",
+    autoStart: true,
+    advanceMs: 1800,
+    units: [
+      { unitId: "farmer.wheelbarrow", team: 0, position: { x: -10, z: -1.5 } },
+      { unitId: "secret.wheelbarrow_dragon", team: 0, position: { x: -10, z: 1.5 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 7, z: -1.5 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 7, z: 1.5 } },
+    ],
+    assertions: [
+      { kind: "comparison-focus", value: "Wheelbarrow should read as a charge cart; Wheelbarrow Dragon should retain cart plus dragon-head identity." },
+      { kind: "units-present", value: "farmer.wheelbarrow,secret.wheelbarrow_dragon" },
+    ],
+  },
   composite_bank_robbers: {
     name: "composite_bank_robbers",
     description: "Composite identity check for Bank Robbers.",

@@ -11,6 +11,7 @@ export interface ArticulatedBody {
   bodyMaterial: StandardMaterial;
   skinMaterial: StandardMaterial;
   metrics: BodyMetrics;
+  vehicleSockets?: VehicleSocketSet;
 
   // Torso
   hip: TransformNode;
@@ -50,6 +51,13 @@ export interface ArticulatedBody {
   allMeshes: Mesh[];
   // All joints for animation
   allJoints: TransformNode[];
+}
+
+export interface VehicleSocketSet {
+  primaryMuzzle?: TransformNode;
+  muzzleSequence?: TransformNode[];
+  smokeSocket?: TransformNode;
+  impactOrigin?: TransformNode;
 }
 
 export interface BodyMetrics {
