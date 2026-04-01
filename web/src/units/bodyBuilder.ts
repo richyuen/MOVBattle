@@ -47,6 +47,12 @@ export interface ArticulatedBody {
   leftHand: TransformNode;
   headTop: TransformNode;
 
+  // Googly eyes (optional — absent on vehicles)
+  leftEye?: Mesh;
+  rightEye?: Mesh;
+  leftPupil?: Mesh;
+  rightPupil?: Mesh;
+
   // All meshes for material assignment
   allMeshes: Mesh[];
   // All joints for animation
@@ -108,22 +114,22 @@ export interface BodyBuildOptions {
 const DEFAULT_PROPORTIONS: BodyProportions = {
   scale: 1.0,
   bulk: 1.0,
-  headSize: 1.0,
+  headSize: 1.15,
   armLength: 1.0,
-  legLength: 1.0,
-  headLength: 1.22,
-  headWidth: 0.86,
-  headDepth: 0.82,
-  torsoWidth: 0.92,
-  torsoDepth: 0.9,
-  torsoRoundness: 1.0,
+  legLength: 0.92,
+  headLength: 1.08,
+  headWidth: 0.98,
+  headDepth: 0.95,
+  torsoWidth: 1.05,
+  torsoDepth: 1.0,
+  torsoRoundness: 1.1,
   upperArmWidth: 0.95,
   lowerArmWidth: 0.82,
   upperLegWidth: 1.0,
   lowerLegWidth: 0.82,
-  limbTaper: 1.0,
-  handSize: 1.0,
-  footLength: 1.0,
+  limbTaper: 0.75,
+  handSize: 1.12,
+  footLength: 1.1,
   footWidth: 1.0,
   footHeight: 1.0,
 };
@@ -147,12 +153,20 @@ export function buildArticulatedBody(
   // Shared body material
   const bodyMat = new StandardMaterial(`${name}_body`, scene);
   bodyMat.diffuseColor = bodyColor;
-  bodyMat.specularColor = new Color3(0.15, 0.15, 0.15);
+  bodyMat.specularColor = new Color3(0.04, 0.04, 0.04);
 
   // Skin material (slightly lighter for head/hands)
   const skinMat = new StandardMaterial(`${name}_skin`, scene);
-  skinMat.diffuseColor = new Color3(0.85, 0.72, 0.6);
-  skinMat.specularColor = new Color3(0.1, 0.1, 0.1);
+  skinMat.diffuseColor = new Color3(0.94, 0.90, 0.86);
+  skinMat.specularColor = new Color3(0.03, 0.03, 0.03);
+
+  // Eye materials (googly eyes)
+  const eyeMat = new StandardMaterial(`${name}_eye`, scene);
+  eyeMat.diffuseColor = new Color3(1, 1, 1);
+  eyeMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const pupilMat = new StandardMaterial(`${name}_pupil`, scene);
+  pupilMat.diffuseColor = new Color3(0.05, 0.05, 0.05);
+  pupilMat.specularColor = new Color3(0, 0, 0);
 
   function sphere(
     n: string,
@@ -265,6 +279,40 @@ export function buildArticulatedBody(
 
   const headTop = joint(`${name}_headTop`, neck);
   headTop.position.y = headHeight * s;
+
+  // ─── Googly Eyes ───
+  const eyeDiam = headBase * 0.34;
+  const pupilDiam = headBase * 0.17;
+  const eyeSegs = Math.max(6, sphereSegments - 2);
+  const eyeY = headHeight * s * 0.55;
+  const eyeZ = headDepth * s * 0.4;
+  const eyeSpread = headWidth * s * 0.22;
+
+  const leftEye = MeshBuilder.CreateSphere(`${name}_lEye`, { diameter: eyeDiam * s, segments: eyeSegs }, scene);
+  leftEye.material = eyeMat;
+  leftEye.position.set(-eyeSpread, eyeY, eyeZ);
+  leftEye.parent = neck;
+  allMeshes.push(leftEye);
+
+  const rightEye = MeshBuilder.CreateSphere(`${name}_rEye`, { diameter: eyeDiam * s, segments: eyeSegs }, scene);
+  rightEye.material = eyeMat;
+  rightEye.position.set(eyeSpread, eyeY, eyeZ);
+  rightEye.parent = neck;
+  allMeshes.push(rightEye);
+
+  const leftPupil = MeshBuilder.CreateSphere(`${name}_lPupil`, { diameter: pupilDiam * s, segments: eyeSegs }, scene);
+  leftPupil.material = pupilMat;
+  leftPupil.scaling = new Vector3(1, 1, 0.5);
+  leftPupil.position.z = eyeDiam * s * 0.14;
+  leftPupil.parent = leftEye;
+  allMeshes.push(leftPupil);
+
+  const rightPupil = MeshBuilder.CreateSphere(`${name}_rPupil`, { diameter: pupilDiam * s, segments: eyeSegs }, scene);
+  rightPupil.material = pupilMat;
+  rightPupil.scaling = new Vector3(1, 1, 0.5);
+  rightPupil.position.z = eyeDiam * s * 0.14;
+  rightPupil.parent = rightEye;
+  allMeshes.push(rightPupil);
 
   // ─── Arms ───
   const armDepthScale = 0.88;
@@ -444,6 +492,7 @@ export function buildArticulatedBody(
     leftHip: leftHipJ, leftUpperLeg, leftKnee, leftLowerLeg,
     rightHip: rightHipJ, rightUpperLeg, rightKnee, rightLowerLeg,
     rightHand, leftHand, headTop,
+    leftEye, rightEye, leftPupil, rightPupil,
     allMeshes, allJoints,
   };
 }

@@ -61,7 +61,7 @@ export function buildVehicleBody(
 function makeMat(scene: Scene, color: Color3): StandardMaterial {
   const m = new StandardMaterial("vmat", scene);
   m.diffuseColor = color;
-  m.specularColor = new Color3(0.15, 0.15, 0.15);
+  m.specularColor = new Color3(0.05, 0.05, 0.05);
   return m;
 }
 

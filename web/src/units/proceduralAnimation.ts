@@ -61,6 +61,14 @@ export class ProceduralAnimator {
 
   private _flinchTimer = 0;
 
+  // Pupil wobble state (googly eyes)
+  private _pupilOffX = 0;
+  private _pupilOffY = 0;
+  private _pupilVelX = 0;
+  private _pupilVelY = 0;
+  private _prevNeckRotX = 0;
+  private _prevNeckRotZ = 0;
+
   update(dt: number): void {
     this._time += dt;
 
@@ -93,6 +101,57 @@ export class ProceduralAnimator {
       b.leftShoulder.rotation.z -= 0.3 * intensity;
       b.rightShoulder.rotation.z += 0.3 * intensity;
     }
+
+    // ─── Googly-eye pupil wobble ───
+    this._updatePupilWobble(dt);
+  }
+
+  private _updatePupilWobble(dt: number): void {
+    const b = this._body;
+    if (!b.leftPupil || !b.rightPupil) return;
+
+    const neckRotX = b.neck.rotation.x;
+    const neckRotZ = b.neck.rotation.z;
+
+    // Head angular velocity drives pupil inertia (pupils lag behind)
+    const angVelX = (neckRotX - this._prevNeckRotX) / Math.max(dt, 0.001);
+    const angVelZ = (neckRotZ - this._prevNeckRotZ) / Math.max(dt, 0.001);
+    this._prevNeckRotX = neckRotX;
+    this._prevNeckRotZ = neckRotZ;
+
+    // Impulse: pupils drift opposite to head rotation
+    this._pupilVelX += -angVelZ * 0.012;
+    this._pupilVelY += -angVelX * 0.012;
+
+    // Spring back to center
+    const spring = 18;
+    const damping = 6;
+    this._pupilVelX += (-spring * this._pupilOffX - damping * this._pupilVelX) * dt;
+    this._pupilVelY += (-spring * this._pupilOffY - damping * this._pupilVelY) * dt;
+
+    this._pupilOffX += this._pupilVelX * dt;
+    this._pupilOffY += this._pupilVelY * dt;
+
+    // Clamp within eye radius
+    const maxOff = 0.025 * (b.metrics.overallHeight / 1.4);
+    const dist = Math.sqrt(this._pupilOffX * this._pupilOffX + this._pupilOffY * this._pupilOffY);
+    if (dist > maxOff) {
+      const ratio = maxOff / dist;
+      this._pupilOffX *= ratio;
+      this._pupilOffY *= ratio;
+    }
+
+    // On death, drift pupils outward for "knocked out" look
+    if (this._state === AnimState.Dead) {
+      const drift = 0.6;
+      this._pupilOffX += (-maxOff * drift - this._pupilOffX) * dt * 2;
+      this._pupilOffY += (maxOff * drift - this._pupilOffY) * dt * 2;
+    }
+
+    b.leftPupil.position.x = this._pupilOffX;
+    b.leftPupil.position.y = this._pupilOffY;
+    b.rightPupil.position.x = this._pupilOffX;
+    b.rightPupil.position.y = this._pupilOffY;
   }
 
   private _animateIdle(_dt: number): void {

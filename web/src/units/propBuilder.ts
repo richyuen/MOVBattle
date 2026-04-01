@@ -36,6 +36,15 @@ export function attachProps(
     props.push(hat);
   }
 
+  // Hide eyes behind face-covering headgear
+  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bone_mask"];
+  if (faceCoveringHats.includes(config.hat)) {
+    body.leftEye?.setEnabled(false);
+    body.rightEye?.setEnabled(false);
+    body.leftPupil?.setEnabled(false);
+    body.rightPupil?.setEnabled(false);
+  }
+
   const shield = buildShield(scene, config.shield, scale, accent);
   if (shield) {
     shield.parent = body.leftHand;
@@ -67,7 +76,7 @@ function mat(scene: Scene, color: Color3, emissive = 0): StandardMaterial {
   const m = new StandardMaterial("prop", scene);
   m.diffuseColor = color;
   if (emissive > 0) m.emissiveColor = color.scale(emissive);
-  m.specularColor = new Color3(0.2, 0.2, 0.2);
+  m.specularColor = new Color3(0.06, 0.06, 0.06);
   return m;
 }
 
@@ -346,7 +355,8 @@ function buildAttachmentPreset(
 }
 
 // ─── Weapons ───
-function buildWeapon(scene: Scene, type: WeaponType, s: number, accent: Color3): Mesh | null {
+function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3): Mesh | null {
+  const s = _s * 1.25; // TABS-style weapon exaggeration
   switch (type) {
     case "none": return null;
 
@@ -728,7 +738,8 @@ function buildWeapon(scene: Scene, type: WeaponType, s: number, accent: Color3):
 }
 
 // ─── Hats ───
-function buildHat(scene: Scene, type: HatType, s: number, accent: Color3): Mesh | null {
+function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh | null {
+  const s = _s * 1.1; // TABS-style hat exaggeration
   switch (type) {
     case "none": return null;
     case "crown": {

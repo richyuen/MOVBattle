@@ -37,7 +37,7 @@ export class UnitFactory {
     // Compute body color: blend faction + team
     const factionColor = FACTION_COLORS[definition.faction] ?? new Color3(0.5, 0.5, 0.5);
     const teamColor = TEAM_COLORS[team] ?? new Color3(0.5, 0.5, 0.5);
-    const bodyColor = Color3.Lerp(factionColor, teamColor, 0.35);
+    const bodyColor = Color3.Lerp(factionColor, teamColor, 0.25);
 
     let body;
     let propMeshes: Mesh[] = [];
@@ -131,7 +131,7 @@ function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3):
   skinEmissive: Color3;
   alpha: number;
 } {
-  const skinBase = new Color3(0.85, 0.72, 0.6);
+  const skinBase = new Color3(0.94, 0.90, 0.86);
   const zero = new Color3(0, 0, 0);
   const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount);
   switch (materialPreset) {
