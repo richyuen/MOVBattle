@@ -281,8 +281,8 @@ export function buildArticulatedBody(
   headTop.position.y = headHeight * s;
 
   // ─── Googly Eyes ───
-  const eyeDiam = headBase * 0.34;
-  const pupilDiam = headBase * 0.17;
+  const eyeDiam = headBase * 0.38;
+  const pupilDiam = headBase * 0.19;
   const eyeSegs = Math.max(6, sphereSegments - 2);
   const eyeY = headHeight * s * 0.55;
   const eyeZ = headDepth * s * 0.4;
@@ -393,6 +393,13 @@ export function buildArticulatedBody(
   rightHandMesh.position.set(0.01 * s, -handDiameter * s * 0.08, handDiameter * s * 0.08);
   rightHandMesh.parent = rightHand;
 
+  // ─── Shoulder Caps (hide joint seams) ───
+  const shoulderCapDiam = upperArmTop * 1.1;
+  const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  lShoulderCap.parent = leftShoulder;
+  const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  rShoulderCap.parent = rightShoulder;
+
   // ─── Legs ───
   const legDepthScale = 0.92;
   const hipOffX = (Math.max(torsoTop, torsoBottom) * 0.22) * s;
@@ -474,6 +481,13 @@ export function buildArticulatedBody(
   );
   rightFoot.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.18);
   rightFoot.parent = rightKnee;
+
+  // ─── Hip Caps (hide joint seams) ───
+  const hipCapDiam = upperLegTop * 1.1;
+  const lHipCap = sphere(`${name}_lHipCap`, hipCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  lHipCap.parent = leftHipJ;
+  const rHipCap = sphere(`${name}_rHipCap`, hipCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  rHipCap.parent = rightHipJ;
 
   const metrics: BodyMetrics = {
     overallHeight: hip.position.y + torsoH * s + headHeight * s,

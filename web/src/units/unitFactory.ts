@@ -1,5 +1,6 @@
 import {
   Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh,
+  type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import { getRagdollProfile } from "../data/combatProfiles";
@@ -19,6 +20,7 @@ export interface SpawnVisualOptions {
 
 export class UnitFactory {
   private _scene: Scene;
+  shadowGenerator?: ShadowGenerator;
 
   constructor(scene: Scene) {
     this._scene = scene;
@@ -81,6 +83,13 @@ export class UnitFactory {
     }
     for (const mesh of [...body.allMeshes, ...propMeshes]) {
       mesh.metadata = { runtimeUnit: unit };
+    }
+
+    // Register shadow casters
+    if (this.shadowGenerator) {
+      for (const mesh of body.allMeshes) {
+        this.shadowGenerator.addShadowCaster(mesh);
+      }
     }
 
     // Health bar

@@ -1207,7 +1207,7 @@ function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
   belly.parent = torso; belly.material = shaggyFur; allMeshes.push(belly);
 
   // ── Head (parented to neck joint) ──
-  const headMesh = MeshBuilder.CreateSphere("head", { diameter: 0.9, segments: 8 }, scene);
+  const headMesh = MeshBuilder.CreateSphere("head", { diameter: 1.15, segments: 8 }, scene);
   headMesh.position.set(0, 0, 0.25);
   headMesh.scaling.set(0.85, 1, 0.8);
   headMesh.parent = neck; headMesh.material = fur; allMeshes.push(headMesh);
@@ -1247,25 +1247,25 @@ function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
   // ── Tusks (parented to neck) ──
   for (const side of [-1, 1]) {
     const tuskBase = MeshBuilder.CreateCylinder("tuskBase", {
-      height: 0.6, diameterTop: 0.08, diameterBottom: 0.12, tessellation: 8,
+      height: 0.75, diameterTop: 0.10, diameterBottom: 0.16, tessellation: 8,
     }, scene);
-    tuskBase.position.set(side * 0.25, -0.5, 0.4);
+    tuskBase.position.set(side * 0.25, -0.55, 0.45);
     tuskBase.rotation.z = side * 0.3;
     tuskBase.rotation.x = 0.4;
     tuskBase.parent = neck; tuskBase.material = tuskMat; allMeshes.push(tuskBase);
 
     const tuskMid = MeshBuilder.CreateCylinder("tuskMid", {
-      height: 0.5, diameterTop: 0.05, diameterBottom: 0.08, tessellation: 8,
+      height: 0.62, diameterTop: 0.065, diameterBottom: 0.10, tessellation: 8,
     }, scene);
-    tuskMid.position.set(side * 0.38, -0.88, 0.65);
+    tuskMid.position.set(side * 0.38, -1.0, 0.72);
     tuskMid.rotation.z = side * 0.1;
     tuskMid.rotation.x = 1.0;
     tuskMid.parent = neck; tuskMid.material = tuskMat; allMeshes.push(tuskMid);
 
     const tuskTipMesh = MeshBuilder.CreateCylinder("tuskTip", {
-      height: 0.35, diameterTop: 0.02, diameterBottom: 0.05, tessellation: 6,
+      height: 0.48, diameterTop: 0.025, diameterBottom: 0.065, tessellation: 6,
     }, scene);
-    tuskTipMesh.position.set(side * 0.35, -1.0, 1.0);
+    tuskTipMesh.position.set(side * 0.35, -1.18, 1.15);
     tuskTipMesh.rotation.z = side * -0.2;
     tuskTipMesh.rotation.x = 1.4;
     tuskTipMesh.parent = neck; tuskTipMesh.material = tuskMat; allMeshes.push(tuskTipMesh);

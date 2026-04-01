@@ -1,7 +1,8 @@
 import {
   Engine, Scene, HemisphericLight, DirectionalLight, Vector3, Color3, Color4,
-  PointerEventTypes,
+  PointerEventTypes, ShadowGenerator,
 } from "@babylonjs/core";
+import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline";
 
 import { GameStateMachine, GameState } from "./core/gameState";
 import { BudgetSystem } from "./core/budgetSystem";
@@ -50,8 +51,27 @@ hemi.intensity = 0.7;
 const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
 dir.intensity = 0.8;
 
+// Fog — depth fade to sky color
+scene.fogMode = Scene.FOGMODE_LINEAR;
+scene.fogColor = new Color3(0.52, 0.72, 0.90);
+scene.fogStart = 40;
+scene.fogEnd = 120;
+
+// Shadows
+const shadowGen = new ShadowGenerator(1024, dir);
+shadowGen.useBlurExponentialShadowMap = true;
+shadowGen.blurKernel = 32;
+
 // Camera
 const camCtrl = new CameraController(scene, canvas);
+
+// Bloom post-processing
+const pipeline = new DefaultRenderingPipeline("default", true, scene, [camCtrl.camera]);
+pipeline.bloomEnabled = true;
+pipeline.bloomThreshold = 0.8;
+pipeline.bloomWeight = 0.3;
+pipeline.bloomKernel = 64;
+pipeline.bloomScale = 0.5;
 
 // Map
 const mapBuilder = new TribalSandboxMapBuilder(scene);
@@ -67,7 +87,9 @@ const projectileSystem = new ProjectileSystem(scene);
 const visualEffects = new VisualEffects(scene);
 simulation.projectileSystem = projectileSystem;
 simulation.visualEffects = visualEffects;
+projectileSystem.onShake = (intensity) => camCtrl.shake(intensity);
 const unitFactory = new UnitFactory(scene);
+unitFactory.shadowGenerator = shadowGen;
 const placementValidator = new PlacementValidator(zones, obstacles);
 
 let budgetSystem = new BudgetSystem(
@@ -1163,6 +1185,7 @@ window.addEventListener("keydown", (e) => {
 engine.runRenderLoop(() => {
   const dt = engine.getDeltaTime() / 1000;
   worldTimeSeconds += dt;
+  camCtrl.update(dt);
   tick(dt, worldTimeSeconds);
   scene.render();
 });

@@ -748,10 +748,14 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       // Points
       for (let i = 0; i < 5; i++) {
         const a = i * Math.PI * 2 / 5;
-        const pt = MeshBuilder.CreateCylinder("crpt", { height: 0.06 * s, diameterTop: 0, diameterBottom: 0.03 * s, tessellation: 4 }, scene);
+        const pt = MeshBuilder.CreateCylinder("crpt", { height: 0.12 * s, diameterTop: 0, diameterBottom: 0.04 * s, tessellation: 4 }, scene);
         pt.position.set(Math.cos(a) * 0.08 * s, 0.03 * s, Math.sin(a) * 0.08 * s);
         pt.parent = crown;
         pt.material = mat(scene, new Color3(1, 0.84, 0), 0.15);
+        const jewel = MeshBuilder.CreateSphere("crjewel", { diameter: 0.025 * s, segments: 4 }, scene);
+        jewel.position.y = 0.06 * s;
+        jewel.parent = pt;
+        jewel.material = mat(scene, new Color3(0.8, 0.1, 0.1), 0.3);
       }
       crown.position.y = 0.02 * s;
       return crown;
@@ -779,6 +783,14 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       noseGuard.position.set(0, -0.02 * s, 0.1 * s);
       noseGuard.parent = helm;
       noseGuard.material = mat(scene, new Color3(0.5, 0.5, 0.55));
+      // Iconic viking horns
+      for (const side of [-1, 1]) {
+        const horn = MeshBuilder.CreateCylinder("vhorn", { height: 0.22 * s, diameterTop: 0, diameterBottom: 0.055 * s, tessellation: 6 }, scene);
+        horn.position.set(side * 0.1 * s, 0.08 * s, 0);
+        horn.rotation.z = -side * 0.4;
+        horn.parent = helm;
+        horn.material = mat(scene, new Color3(0.9, 0.85, 0.7));
+      }
       return helm;
     }
     case "horned_helmet": {
@@ -787,7 +799,7 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       helm.rotation.x = Math.PI;
       helm.position.y = 0.05 * s;
       for (const side of [-1, 1]) {
-        const horn = MeshBuilder.CreateCylinder("horn", { height: 0.18 * s, diameterTop: 0, diameterBottom: 0.04 * s, tessellation: 6 }, scene);
+        const horn = MeshBuilder.CreateCylinder("horn", { height: 0.28 * s, diameterTop: 0, diameterBottom: 0.07 * s, tessellation: 6 }, scene);
         horn.position.set(side * 0.1 * s, 0.08 * s, 0);
         horn.rotation.z = -side * 0.5;
         horn.parent = helm;
@@ -937,7 +949,7 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
     case "great_helm": {
       // Flat-topped barrel helm with eye slit
       const helm = MeshBuilder.CreateCylinder("ghelm", { height: 0.22 * s, diameter: 0.22 * s, tessellation: 8 }, scene);
-      helm.material = mat(scene, new Color3(0.7, 0.7, 0.72));
+      helm.material = mat(scene, new Color3(0.78, 0.78, 0.80));
       helm.position.y = 0.04 * s;
       // Eye slit (dark horizontal bar)
       const slit = MeshBuilder.CreateBox("slit", { width: 0.18 * s, height: 0.015 * s, depth: 0.01 * s }, scene);
@@ -960,12 +972,12 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       return hood;
     }
     case "jester_cap": {
-      const base = MeshBuilder.CreateSphere("jesterCap", { diameter: 0.22 * s, segments: 6 }, scene);
+      const base = MeshBuilder.CreateSphere("jesterCap", { diameter: 0.28 * s, segments: 6 }, scene);
       base.scaling.y = 0.55;
       base.material = mat(scene, accent, 0.05);
       base.position.y = 0.08 * s;
       for (const side of [-1, 1]) {
-        const horn = MeshBuilder.CreateCylinder("jesterHorn", { height: 0.18 * s, diameterTop: 0.015 * s, diameterBottom: 0.045 * s, tessellation: 6 }, scene);
+        const horn = MeshBuilder.CreateCylinder("jesterHorn", { height: 0.24 * s, diameterTop: 0.015 * s, diameterBottom: 0.06 * s, tessellation: 6 }, scene);
         horn.position.set(side * 0.08 * s, 0.1 * s, 0);
         horn.rotation.z = -side * 0.7;
         horn.parent = base;
@@ -987,7 +999,8 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3):
   switch (type) {
     case "none": return null;
     case "round": {
-      const shield = MeshBuilder.CreateCylinder("rshield", { height: 0.025 * s, diameter: 0.28 * s, tessellation: 16 }, scene);
+      const shield = MeshBuilder.CreateSphere("rshield", { diameter: 0.28 * s, segments: 10 }, scene);
+      shield.scaling.z = 0.15;
       shield.rotation.x = Math.PI / 2;
       shield.material = mat(scene, accent);
       const boss = MeshBuilder.CreateSphere("boss", { diameter: 0.06 * s }, scene);
@@ -998,6 +1011,10 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3):
     case "kite": {
       const shield = MeshBuilder.CreateBox("kshield", { width: 0.18 * s, height: 0.32 * s, depth: 0.025 * s }, scene);
       shield.material = mat(scene, accent);
+      const point = MeshBuilder.CreateCylinder("kpoint", { height: 0.08 * s, diameterTop: 0.18 * s, diameterBottom: 0, tessellation: 4 }, scene);
+      point.position.y = -0.2 * s;
+      point.parent = shield;
+      point.material = mat(scene, accent);
       return shield;
     }
     case "tower": {

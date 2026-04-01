@@ -95,4 +95,23 @@ export class CameraController {
   rotateBy(delta: number): void {
     this.camera.alpha += delta * 0.02;
   }
+
+  // ─── Screen Shake ───
+  private _shakeIntensity = 0;
+  private _shakeDamping = 0.92;
+
+  shake(intensity: number): void {
+    this._shakeIntensity = Math.max(this._shakeIntensity, intensity);
+  }
+
+  update(_dt: number): void {
+    if (this._shakeIntensity > 0.001) {
+      const t = this.camera.target;
+      t.x += (Math.random() - 0.5) * this._shakeIntensity;
+      t.y += (Math.random() - 0.5) * this._shakeIntensity * 0.5;
+      this._shakeIntensity *= this._shakeDamping;
+    } else {
+      this._shakeIntensity = 0;
+    }
+  }
 }

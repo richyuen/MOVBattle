@@ -42,6 +42,7 @@ export class ProjectileSystem {
   private _active: ActiveProjectile[] = [];
   private _flashes: MuzzleFlash[] = [];
   private _matCache = new Map<string, StandardMaterial>();
+  onShake?: (intensity: number) => void;
 
   constructor(scene: Scene) {
     this._scene = scene;
@@ -260,6 +261,7 @@ export class ProjectileSystem {
     m.disableLighting = true;
     boom.material = m;
     this._flashes.push({ mesh: boom, remaining: 0.4 + 0.12 * Math.max(0, scale - 1) });
+    this.onShake?.(0.12 * scale);
   }
 
   private _buildProjectileMesh(shape: ProjectileShape): TransformNode {

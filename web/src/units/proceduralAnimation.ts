@@ -165,7 +165,7 @@ export class ProceduralAnimator {
   private _animateIdleHumanoid(): void {
     const t = this._time + this._wobblePhase;
     const b = this._body;
-    const wobble = 0.03; // subtle idle sway
+    const wobble = 0.07; // TABS-style pronounced sway
 
     // Gentle torso sway
     b.torso.rotation.z = Math.sin(t * 1.5) * wobble;
@@ -246,15 +246,15 @@ export class ProceduralAnimator {
     b.rightKnee.rotation.x = Math.max(0, -Math.sin(t * speed + Math.PI)) * 0.6;
 
     // Arms swing opposite to legs
-    const armSwing = 0.5;
+    const armSwing = 0.75;
     b.leftShoulder.rotation.x = Math.sin(t * speed + Math.PI) * armSwing;
     b.rightShoulder.rotation.x = Math.sin(t * speed) * armSwing;
     b.leftElbow.rotation.x = -0.3 + Math.sin(t * speed + Math.PI) * 0.2;
     b.rightElbow.rotation.x = -0.3 + Math.sin(t * speed) * 0.2;
 
     // Floppy arm Z rotation (TABS signature wobble)
-    b.leftShoulder.rotation.z = Math.sin(t * speed * 1.3) * wobble * 2;
-    b.rightShoulder.rotation.z = Math.sin(t * speed * 1.3 + 1) * wobble * 2;
+    b.leftShoulder.rotation.z = Math.sin(t * speed * 1.3) * wobble * 3.5;
+    b.rightShoulder.rotation.z = Math.sin(t * speed * 1.3 + 1) * wobble * 3.5;
 
     // Hip bounce
     b.hip.rotation.z = Math.sin(t * speed) * 0.04;
@@ -382,20 +382,20 @@ export class ProceduralAnimator {
     if (progress < 0.5) {
       // Wind-up: pull arm back
       const windUp = progress * 2; // 0 to 1
-      b.rightShoulder.rotation.x = -1.5 * windUp;
+      b.rightShoulder.rotation.x = -2.0 * windUp;
       b.rightShoulder.rotation.z = 0.3 * windUp;
       b.rightElbow.rotation.x = -0.8 * windUp;
       // Lean back
-      b.torso.rotation.x = -0.15 * windUp;
+      b.torso.rotation.x = -0.25 * windUp;
     } else {
       // Swing forward
       const swing = (progress - 0.5) * 2; // 0 to 1
       const eased = 1 - Math.pow(1 - swing, 3); // ease-out cubic
-      b.rightShoulder.rotation.x = -1.5 + 2.8 * eased;
+      b.rightShoulder.rotation.x = -2.0 + 3.6 * eased;
       b.rightShoulder.rotation.z = 0.3 - 0.3 * eased;
       b.rightElbow.rotation.x = -0.8 + 0.8 * eased;
       // Lean forward with swing
-      b.torso.rotation.x = -0.15 + 0.35 * eased;
+      b.torso.rotation.x = -0.25 + 0.65 * eased;
     }
 
     // Left arm floppy reaction
@@ -479,9 +479,9 @@ export class ProceduralAnimator {
       );
       // Random angular velocity (TABS-style floppy)
       this._deathAngularVelocities.push(
+        (Math.random() - 0.5) * 12,
         (Math.random() - 0.5) * 8,
-        (Math.random() - 0.5) * 4,
-        (Math.random() - 0.5) * 8,
+        (Math.random() - 0.5) * 12,
       );
     }
   }
