@@ -13,6 +13,7 @@ export enum AnimState {
  */
 export type AttackStyle = "humanoid" | "mammoth";
 export type WalkStyle = "humanoid" | "quadruped";
+export type AttackMotion = "strike" | "reload" | "crank" | "brace" | "carry" | "breath";
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -20,6 +21,7 @@ export class ProceduralAnimator {
   private _time = 0;
   private _attackTimer = 0;
   private _attackDuration = 0.4;
+  private _attackMotion: AttackMotion = "strike";
   private _wobblePhase: number; // random offset per unit
   attackStyle: AttackStyle = "humanoid";
   walkStyle: WalkStyle = "humanoid";
@@ -44,10 +46,11 @@ export class ProceduralAnimator {
     }
   }
 
-  triggerAttack(windupTime: number): void {
+  triggerAttack(windupTime: number, motion: AttackMotion = "strike"): void {
     this._state = AnimState.Attacking;
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
+    this._attackMotion = motion;
   }
 
   /** Brief flinch on hit — snaps torso/head back then recovers. */
@@ -234,11 +237,81 @@ export class ProceduralAnimator {
   }
 
   private _animateAttack(dt: number): void {
+    if (this._attackMotion !== "strike") {
+      this._animateUtilityAction(dt);
+      return;
+    }
     if (this.attackStyle === "mammoth") {
       this._animateAttackMammoth(dt);
       return;
     }
     this._animateAttackHumanoid(dt);
+  }
+
+  private _animateUtilityAction(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const t = this._time + this._wobblePhase;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const pulse = Math.sin(progress * Math.PI);
+    const settle = 1 - progress;
+
+    switch (this._attackMotion) {
+      case "reload":
+        b.torso.rotation.x = -0.05 + pulse * 0.08;
+        b.rightShoulder.rotation.x = -0.18 + pulse * 0.28;
+        b.rightElbow.rotation.x = -0.42 + pulse * 0.22;
+        b.leftShoulder.rotation.x = -0.1 + pulse * 0.12;
+        b.leftElbow.rotation.x = -0.24 + pulse * 0.1;
+        b.neck.rotation.x = pulse * 0.05;
+        break;
+      case "crank": {
+        const cycle = progress * Math.PI * 2.0;
+        b.torso.rotation.z = Math.sin(cycle) * 0.06;
+        b.rightShoulder.rotation.x = -0.2 + Math.sin(cycle) * 0.22;
+        b.rightElbow.rotation.x = -0.38 + Math.cos(cycle) * 0.18;
+        b.leftShoulder.rotation.x = -0.16 + Math.sin(cycle + Math.PI) * 0.12;
+        b.leftElbow.rotation.x = -0.3 + Math.cos(cycle + Math.PI) * 0.1;
+        b.neck.rotation.z = Math.sin(cycle * 0.5) * 0.04;
+        break;
+      }
+      case "brace":
+        b.torso.rotation.x = 0.1 + pulse * 0.08;
+        b.leftShoulder.rotation.x = -0.12 + pulse * 0.08;
+        b.rightShoulder.rotation.x = -0.12 + pulse * 0.08;
+        b.leftElbow.rotation.x = -0.22;
+        b.rightElbow.rotation.x = -0.22;
+        b.leftHip.rotation.x = 0.08 * pulse;
+        b.rightHip.rotation.x = 0.08 * pulse;
+        break;
+      case "carry":
+        b.torso.rotation.x = 0.06 + pulse * 0.04;
+        b.leftShoulder.rotation.x = -0.18;
+        b.rightShoulder.rotation.x = -0.18;
+        b.leftElbow.rotation.x = -0.34 + pulse * 0.08;
+        b.rightElbow.rotation.x = -0.34 + pulse * 0.08;
+        b.torso.rotation.z = Math.sin(t * 6) * 0.04 * settle;
+        break;
+      case "breath":
+        b.torso.rotation.x = 0.08 + pulse * 0.12;
+        b.neck.rotation.x = 0.14 + pulse * 0.18;
+        b.leftShoulder.rotation.x = -0.08;
+        b.rightShoulder.rotation.x = -0.08;
+        b.leftElbow.rotation.x = -0.16;
+        b.rightElbow.rotation.x = -0.16;
+        break;
+      default:
+        break;
+    }
+
+    b.leftShoulder.rotation.z += Math.sin(t * 4.5) * 0.04 * settle;
+    b.rightShoulder.rotation.z += Math.sin(t * 4.5 + 1.2) * 0.04 * settle;
+    b.neck.rotation.z += Math.sin(t * 3.8) * 0.03 * settle;
+
+    if (progress >= 1) {
+      this._attackMotion = "strike";
+      this._state = AnimState.Idle;
+    }
   }
 
   private _animateAttackHumanoid(dt: number): void {

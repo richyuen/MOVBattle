@@ -95,6 +95,7 @@ export class RuntimeUnit {
   private _smokeOriginOffset: Vector3 | null = null;
   private _impactOriginOffset: Vector3 | null = null;
   private _decorativeStandinsSuppressed = false;
+  private _expiresAt = Infinity;
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
@@ -155,6 +156,10 @@ export class RuntimeUnit {
   setSpawnRole(role: RuntimeSpawnRole, countsTowardVictory = true): void {
     this._spawnRole = role;
     this._countsTowardVictory = countsTowardVictory;
+  }
+
+  setLifetime(seconds: number, now = RuntimeUnit.timeNowSeconds()): void {
+    this._expiresAt = now + Math.max(0.1, seconds);
   }
 
   setPrimaryEmitterEnabled(enabled: boolean): void {
@@ -337,6 +342,11 @@ export class RuntimeUnit {
       return;
     }
 
+    if (now >= this._expiresAt) {
+      this._expire(now);
+      return;
+    }
+
     const pos = this.body.root.position;
     if (now >= this._slowUntil) {
       this._slowMultiplier = 1;
@@ -483,6 +493,22 @@ export class RuntimeUnit {
     // Hide health bar
     if (this.healthBarMesh) this.healthBarMesh.isVisible = false;
     if (this.healthBarBg) this.healthBarBg.isVisible = false;
+  }
+
+  private _expire(now: number): void {
+    this._isDead = true;
+    this._currentHealth = 0;
+    this._moveTarget = null;
+    this._isMoving = false;
+    this._physicsActive = false;
+    this._velocity.setAll(0);
+    this._deathTime = now;
+    this._deathCleanupAt = now;
+    this.setBaseBodyVisible(false);
+    for (const mesh of this.propMeshes) {
+      mesh.isVisible = false;
+    }
+    this.setHealthBarVisible(false);
   }
 
   private _deathSpinX = 0;
@@ -723,6 +749,7 @@ export class RuntimeUnit {
     this._smokeOriginOffset = null;
     this._impactOriginOffset = null;
     this._decorativeStandinsSuppressed = false;
+    this._expiresAt = Infinity;
     this._linkedDescriptors = this._linkedDescriptors.filter((descriptor) => descriptor.persistent);
 
     // Restore position and clear rotation
@@ -875,19 +902,21 @@ export class RuntimeUnit {
       if (child.isDead || child._actionPreset === "none") continue;
       switch (child._actionPreset) {
         case "reload":
-          child.animator.triggerAttack(Math.max(0.12, durationSeconds * 0.18));
+          child.animator.triggerAttack(Math.max(0.12, durationSeconds * 0.18), "reload");
           break;
         case "crank":
-          child.animator.triggerAttack(Math.max(0.16, durationSeconds * 0.28));
+          child.animator.triggerAttack(Math.max(0.16, durationSeconds * 0.28), "crank");
           break;
         case "charge-mount":
         case "dragon-breath":
-          child.animator.triggerAttack(Math.max(0.18, durationSeconds * 0.26));
+          child.animator.triggerAttack(Math.max(0.18, durationSeconds * 0.26), "breath");
           break;
         case "cart-brace":
-        case "carry-safe":
         case "shell-guard":
-          child.animator.triggerAttack(Math.max(0.1, durationSeconds * 0.16));
+          child.animator.triggerAttack(Math.max(0.1, durationSeconds * 0.16), "brace");
+          break;
+        case "carry-safe":
+          child.animator.triggerAttack(Math.max(0.1, durationSeconds * 0.16), "carry");
           break;
         default:
           break;
@@ -896,6 +925,28 @@ export class RuntimeUnit {
   }
 
   triggerAttackVisual(durationSeconds: number): void {
-    this.animator.triggerAttack(durationSeconds);
+    let motion: "strike" | "reload" | "crank" | "brace" | "carry" | "breath" = "strike";
+    switch (this._actionPreset) {
+      case "reload":
+        motion = "reload";
+        break;
+      case "crank":
+        motion = "crank";
+        break;
+      case "cart-brace":
+      case "shell-guard":
+        motion = "brace";
+        break;
+      case "carry-safe":
+        motion = "carry";
+        break;
+      case "charge-mount":
+      case "dragon-breath":
+        motion = "breath";
+        break;
+      default:
+        break;
+    }
+    this.animator.triggerAttack(durationSeconds, motion);
   }
 }
