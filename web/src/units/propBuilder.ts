@@ -583,6 +583,18 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       blade.position.y = 0.05 * s;
       return blade;
     }
+    case "blowgun": {
+      const tube = MeshBuilder.CreateCylinder("blowgun", { height: 0.38 * s, diameter: 0.026 * s, tessellation: 8 }, scene);
+      tube.rotation.z = Math.PI / 2;
+      tube.position.y = 0.14 * s;
+      tube.material = mat(scene, new Color3(0.36, 0.22, 0.08));
+      const dart = MeshBuilder.CreateCylinder("blowdart", { height: 0.1 * s, diameterTop: 0, diameterBottom: 0.016 * s, tessellation: 6 }, scene);
+      dart.position.set(0.16 * s, 0.14 * s, 0);
+      dart.rotation.z = -Math.PI / 2;
+      dart.parent = tube;
+      dart.material = mat(scene, new Color3(0.72, 0.82, 0.48));
+      return tube;
+    }
     case "scythe": {
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.8 * s, diameter: 0.025 * s }, scene);
       shaft.material = mat(scene, new Color3(0.45, 0.3, 0.15));
@@ -849,6 +861,21 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       hat.position.y = 0.08 * s;
       return hat;
     }
+    case "witch_hat": {
+      const brim = MeshBuilder.CreateCylinder("witchBrim", { height: 0.02 * s, diameter: 0.34 * s, tessellation: 18 }, scene);
+      brim.material = mat(scene, new Color3(0.14, 0.12, 0.18));
+      brim.position.y = 0.04 * s;
+      const cone = MeshBuilder.CreateCylinder("witchCone", { height: 0.24 * s, diameterTop: 0.02 * s, diameterBottom: 0.18 * s, tessellation: 12 }, scene);
+      cone.parent = brim;
+      cone.position.set(-0.03 * s, 0.14 * s, 0);
+      cone.rotation.z = 0.08;
+      cone.material = mat(scene, new Color3(0.15, 0.13, 0.2));
+      const band = MeshBuilder.CreateTorus("witchBand", { diameter: 0.16 * s, thickness: 0.012 * s, tessellation: 18 }, scene);
+      band.parent = cone;
+      band.position.y = -0.04 * s;
+      band.material = mat(scene, accent, 0.08);
+      return brim;
+    }
     case "samurai_helmet": {
       const helm = MeshBuilder.CreateSphere("shelm", { diameter: 0.26 * s, segments: 8, slice: 0.55 }, scene);
       helm.material = mat(scene, accent.scale(0.7));
@@ -926,6 +953,20 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       band.material = mat(scene, accent);
       band.position.y = 0.01 * s;
       return band;
+    }
+    case "cowboy_hat": {
+      const brim = MeshBuilder.CreateCylinder("cowboyBrim", { height: 0.02 * s, diameter: 0.34 * s, tessellation: 18 }, scene);
+      brim.material = mat(scene, new Color3(0.22, 0.15, 0.1));
+      brim.position.y = 0.04 * s;
+      const crown = MeshBuilder.CreateCylinder("cowboyCrown", { height: 0.12 * s, diameterTop: 0.14 * s, diameterBottom: 0.18 * s, tessellation: 14 }, scene);
+      crown.position.y = 0.08 * s;
+      crown.parent = brim;
+      crown.material = mat(scene, new Color3(0.24, 0.17, 0.11));
+      const band = MeshBuilder.CreateTorus("cowboyBand", { diameter: 0.17 * s, thickness: 0.012 * s, tessellation: 16 }, scene);
+      band.position.y = 0.01 * s;
+      band.parent = crown;
+      band.material = mat(scene, accent, 0.05);
+      return brim;
     }
     case "straw_hat": {
       const brim = MeshBuilder.CreateCylinder("sbrim", { height: 0.015 * s, diameter: 0.35 * s, tessellation: 16 }, scene);
@@ -1111,6 +1152,45 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       cape.parent = body.torso;
       cape.material = mat(scene, accent, 0.05);
       return cape;
+    }
+    case "candle_flame": {
+      const wick = MeshBuilder.CreateCylinder("candleWick", { height: 0.1 * s, diameter: 0.018 * s, tessellation: 6 }, scene);
+      wick.parent = body.headTop;
+      wick.position.y = 0.04 * s;
+      wick.material = mat(scene, new Color3(0.18, 0.12, 0.08));
+      const flame = MeshBuilder.CreateSphere("candleFlame", { diameter: 0.12 * s, segments: 6 }, scene);
+      flame.parent = body.headTop;
+      flame.position.y = 0.12 * s;
+      flame.scaling.y = 1.4;
+      flame.material = mat(scene, new Color3(1.0, 0.7, 0.18), 0.5);
+      return flame;
+    }
+    case "cactus_body": {
+      const trunk = MeshBuilder.CreateCylinder("cactusBody", { height: 0.7 * s, diameterTop: 0.26 * s, diameterBottom: 0.34 * s, tessellation: 10 }, scene);
+      trunk.parent = body.torso;
+      trunk.position.set(0, -0.02 * s, 0);
+      trunk.material = mat(scene, new Color3(0.38, 0.62, 0.3), 0.04);
+      for (const side of [-1, 1]) {
+        const arm = MeshBuilder.CreateCylinder("cactusArm", { height: 0.26 * s, diameter: 0.09 * s, tessellation: 8 }, scene);
+        arm.parent = trunk;
+        arm.position.set(side * 0.19 * s, 0.12 * s, 0);
+        arm.rotation.z = side * 1.1;
+        arm.material = mat(scene, new Color3(0.38, 0.62, 0.3), 0.04);
+        const forearm = MeshBuilder.CreateCylinder("cactusForearm", { height: 0.18 * s, diameter: 0.07 * s, tessellation: 8 }, scene);
+        forearm.parent = trunk;
+        forearm.position.set(side * 0.28 * s, 0.24 * s, 0);
+        forearm.material = mat(scene, new Color3(0.38, 0.62, 0.3), 0.04);
+      }
+      for (let i = 0; i < 10; i++) {
+        const spine = MeshBuilder.CreateCylinder("cactusSpine", { height: 0.05 * s, diameterTop: 0, diameterBottom: 0.01 * s, tessellation: 4 }, scene);
+        const angle = (Math.PI * 2 * i) / 10;
+        spine.parent = trunk;
+        spine.position.set(Math.cos(angle) * 0.14 * s, -0.18 * s + (i % 5) * 0.09 * s, Math.sin(angle) * 0.14 * s);
+        spine.rotation.x = Math.PI / 2;
+        spine.rotation.z = angle;
+        spine.material = mat(scene, new Color3(0.85, 0.9, 0.72));
+      }
+      return trunk;
     }
     case "wings":
     case "dragon_wings": {
@@ -1415,9 +1495,104 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       gem.material = mat(scene, accent, 0.22);
       return halo;
     }
+    case "vampire_collar": {
+      const collar = MeshBuilder.CreateDisc("vampireCollar", { radius: 0.24 * s, tessellation: 18, arc: 0.62 }, scene);
+      collar.parent = body.neck;
+      collar.position.set(0, -0.03 * s, -0.08 * s);
+      collar.rotation.x = Math.PI * 0.62;
+      collar.material = mat(scene, accent.scale(0.72), 0.04);
+      for (const side of [-1, 1]) {
+        const panel = MeshBuilder.CreatePlane("vampireCollarWing", { width: 0.18 * s, height: 0.22 * s }, scene);
+        panel.parent = body.neck;
+        panel.position.set(side * 0.16 * s, 0.06 * s, -0.02 * s);
+        panel.rotation.y = side * 0.36;
+        panel.rotation.z = -side * 0.18;
+        panel.material = mat(scene, accent.scale(0.85), 0.05);
+      }
+      return collar;
+    }
+    case "quiver_back": {
+      const quiver = MeshBuilder.CreateCylinder("quiver", { height: 0.3 * s, diameterTop: 0.08 * s, diameterBottom: 0.1 * s, tessellation: 10 }, scene);
+      quiver.parent = body.torso;
+      quiver.position.set(-0.16 * s, 0.12 * s, -0.12 * s);
+      quiver.rotation.z = 0.34;
+      quiver.rotation.x = 0.28;
+      quiver.material = mat(scene, new Color3(0.34, 0.22, 0.12));
+      const strap = MeshBuilder.CreateBox("quiverStrap", { width: 0.04 * s, height: 0.46 * s, depth: 0.03 * s }, scene);
+      strap.parent = body.torso;
+      strap.position.set(0.09 * s, 0.06 * s, 0.08 * s);
+      strap.rotation.z = -0.72;
+      strap.material = mat(scene, new Color3(0.24, 0.14, 0.08));
+      for (const zOff of [-0.02, 0.02, 0.06]) {
+        const shaft = MeshBuilder.CreateCylinder("quiverArrow", { height: 0.24 * s, diameter: 0.012 * s, tessellation: 6 }, scene);
+        shaft.parent = quiver;
+        shaft.position.set(0, 0.17 * s, zOff * s);
+        shaft.material = mat(scene, new Color3(0.78, 0.72, 0.58));
+        const fletch = MeshBuilder.CreateBox("quiverFletch", { width: 0.04 * s, height: 0.028 * s, depth: 0.012 * s }, scene);
+        fletch.parent = shaft;
+        fletch.position.y = 0.11 * s;
+        fletch.material = mat(scene, accent, 0.06);
+      }
+      return quiver;
+    }
+    case "banner_back": {
+      const pole = MeshBuilder.CreateCylinder("bannerPole", { height: 0.82 * s, diameter: 0.028 * s, tessellation: 6 }, scene);
+      pole.parent = body.torso;
+      pole.position.set(-0.05 * s, 0.34 * s, -0.08 * s);
+      pole.rotation.z = -0.08;
+      pole.material = mat(scene, new Color3(0.44, 0.28, 0.16));
+      const crossbar = MeshBuilder.CreateCylinder("bannerCross", { height: 0.24 * s, diameter: 0.02 * s, tessellation: 6 }, scene);
+      crossbar.parent = pole;
+      crossbar.position.set(0.12 * s, 0.28 * s, 0);
+      crossbar.rotation.z = Math.PI / 2;
+      crossbar.material = mat(scene, new Color3(0.44, 0.28, 0.16));
+      const cloth = MeshBuilder.CreatePlane("bannerCloth", { width: 0.2 * s, height: 0.28 * s }, scene);
+      cloth.parent = pole;
+      cloth.position.set(0.12 * s, 0.14 * s, 0.02 * s);
+      cloth.material = mat(scene, accent, 0.08);
+      return pole;
+    }
+    case "chariot_cart": {
+      const cart = MeshBuilder.CreateBox("chariotBody", { width: 0.46 * s, height: 0.18 * s, depth: 0.34 * s }, scene);
+      cart.parent = body.hip;
+      cart.position.set(0, -0.18 * s, -0.14 * s);
+      cart.material = mat(scene, new Color3(0.56, 0.39, 0.18));
+      for (const side of [-1, 1]) {
+        const wheel = MeshBuilder.CreateCylinder("chariotWheel", { height: 0.04 * s, diameter: 0.24 * s, tessellation: 12 }, scene);
+        wheel.parent = cart;
+        wheel.position.set(side * 0.24 * s, -0.02 * s, 0);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.material = mat(scene, new Color3(0.44, 0.28, 0.16));
+      }
+      const yoke = MeshBuilder.CreateBox("chariotYoke", { width: 0.06 * s, height: 0.04 * s, depth: 0.46 * s }, scene);
+      yoke.parent = cart;
+      yoke.position.set(0, 0.02 * s, 0.28 * s);
+      yoke.material = mat(scene, new Color3(0.44, 0.28, 0.16));
+      for (const side of [-1, 1]) {
+        const horse = MeshBuilder.CreateBox("chariotHorse", { width: 0.12 * s, height: 0.26 * s, depth: 0.42 * s }, scene);
+        horse.parent = cart;
+        horse.position.set(side * 0.12 * s, -0.02 * s, 0.56 * s);
+        horse.material = mat(scene, new Color3(0.72, 0.66, 0.54));
+      }
+      return cart;
+    }
     case "cart":
-    case "barrel_body":
       return null;
+    case "barrel_body": {
+      const barrel = MeshBuilder.CreateCylinder("barrelBody", { height: 0.48 * s, diameter: 0.4 * s, tessellation: 12 }, scene);
+      barrel.parent = body.hip;
+      barrel.position.set(0, -0.12 * s, 0);
+      barrel.rotation.z = Math.PI / 2;
+      barrel.material = mat(scene, new Color3(0.44, 0.28, 0.16));
+      for (const zOff of [-0.14, 0, 0.14]) {
+        const hoop = MeshBuilder.CreateTorus("barrelHoop", { diameter: 0.34 * s, thickness: 0.02 * s, tessellation: 18 }, scene);
+        hoop.parent = barrel;
+        hoop.position.z = zOff * s;
+        hoop.rotation.y = Math.PI / 2;
+        hoop.material = mat(scene, new Color3(0.28, 0.28, 0.3));
+      }
+      return barrel;
+    }
     default:
       return null;
   }

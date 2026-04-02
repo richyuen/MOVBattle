@@ -634,6 +634,36 @@ function makeFactionGalleryScenario(
   });
 }
 
+function makePairGalleryScenario(
+  name: string,
+  description: string,
+  unitIds: [string, string],
+  focus: string,
+  options: {
+    galleryPresetId?: GalleryCameraPresetId;
+    spacingZ?: number;
+    cameraOverride?: GalleryCameraOverride;
+  } = {},
+): ScenarioSpec {
+  const pairCamera: GalleryCameraOverride = {
+    alpha: -Math.PI / 2.72,
+    beta: Math.PI / 3.72,
+    radius: 13.5,
+    target: { x: -0.2, y: 1.55, z: 0 },
+    ...(options.cameraOverride ?? {}),
+  };
+  return makeGalleryScenario(name, description, unitIds, {
+    columns: 2,
+    centerX: -0.2,
+    centerZ: 0,
+    spacingX: 0,
+    spacingZ: options.spacingZ ?? 4.2,
+    galleryPresetId: options.galleryPresetId ?? "heroes_bosses_close",
+    cameraOverride: pairCamera,
+    focus,
+  });
+}
+
 const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
   gallery_faction_tribal: makeFactionGalleryScenario(
     "gallery_faction_tribal",
@@ -811,6 +841,42 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       ],
       focus: "Attack/ability-state units should expose their firing, summoning, lightning, or spectral overlays in deterministic close combat.",
     },
+  ),
+  gallery_pair_wild_west_gunslinger_vs_quick_draw: makePairGalleryScenario(
+    "gallery_pair_wild_west_gunslinger_vs_quick_draw",
+    "Pairwise hero comparison for Wild West sidearms.",
+    ["wild_west.gunslinger", "wild_west.quick_draw"],
+    "Gunslinger should read as a lean dual-pistol cowboy, while Quick Draw should read as the larger hero duelist with stronger smoke-and-hat silhouette.",
+  ),
+  gallery_pair_legacy_boxer_vs_super_boxer: makePairGalleryScenario(
+    "gallery_pair_legacy_boxer_vs_super_boxer",
+    "Pairwise hero comparison for Legacy boxing silhouettes.",
+    ["legacy.boxer", "legacy.super_boxer"],
+    "Boxer should stay squat and stripped-down, while Super Boxer should read as a larger golden champion with a clearly stronger torso-and-arms silhouette.",
+  ),
+  gallery_pair_good_chronomancer_vs_divine_arbiter: makePairGalleryScenario(
+    "gallery_pair_good_chronomancer_vs_divine_arbiter",
+    "Pairwise hero comparison for Good magic heroes.",
+    ["good.chronomancer", "good.divine_arbiter"],
+    "Chronomancer should read as a slimmer time mage with orbiting ring language, while Divine Arbiter should read as the taller thunder hero with heavier halo/lightning presence.",
+  ),
+  gallery_pair_secret_vlad_vs_blackbeard: makePairGalleryScenario(
+    "gallery_pair_secret_vlad_vs_blackbeard",
+    "Pairwise boss comparison for Secret pirate-vs-vampire bosses.",
+    ["secret.vlad", "secret.blackbeard"],
+    "Vlad should read as regal spear-and-collar nobility, while Blackbeard should read as a broader pirate captain with hat, pistol, and cutlass identity.",
+  ),
+  gallery_pair_secret_sensei_vs_shogun: makePairGalleryScenario(
+    "gallery_pair_secret_sensei_vs_shogun",
+    "Pairwise boss comparison for Secret Dynasty masters.",
+    ["secret.sensei", "secret.shogun"],
+    "Sensei should read as the lighter throwing-master in robes and hat, while Shogun should read as the heavier bannered samurai commander.",
+  ),
+  gallery_pair_secret_witch_vs_necromancer: makePairGalleryScenario(
+    "gallery_pair_secret_witch_vs_necromancer",
+    "Pairwise summoner comparison for Secret dark casters.",
+    ["secret.witch", "secret.necromancer"],
+    "Witch should read as the pointed-hat spectral summoner, while Necromancer should read as the bone-staff revival caster with a paler skeletal silhouette.",
   ),
 };
 

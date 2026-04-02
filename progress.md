@@ -1,5 +1,36 @@
 Original prompt: Do a pass of every unit in the game against https://totally-accurate-battle-simulator.fandom.com/wiki/Units. Make all units look and function as close as possile to the TABS units. Add any missing units.
 
+- 2026-04-01: Bespoke visual-fidelity tranche implemented with Secret/hero differentiation and pairwise gallery coverage.
+- Added `web/BESPOKE_VISUAL_TARGETS.md` as the new must-match cue sheet for the bespoke tranche, with no-regression rules, faction cue families, priority Secret/vehicle/giant targets, and high-confusion pair targets.
+- Extended `web/src/units/unitVisuals.ts` with stronger bespoke cue routing:
+- new reusable silhouette families: `witch_hat`, `vampire_collar`, `quiver_back`
+- archer/readability upgrades for `medieval.archer`, `ancient.snake_archer`, `viking.ice_archer`, `spooky.skeleton_archer`, and `secret.chu_ko_nu`
+- stronger hero/Secret differentiation for `spooky.vampire`, `legacy.wizard`, `secret.the_teacher`, `secret.witch`, `secret.vlad`, `secret.blackbeard`, `secret.lady_red_jade`, `secret.sensei`, and `secret.shogun`
+- Extended `web/src/units/propBuilder.ts` with actual procedural geometry for the new bespoke silhouettes: pointed witch hats, back quivers, and vampire collars.
+- Expanded `web/src/testing/scenarios.ts` and `web/VISUAL_ACCEPTANCE_GALLERY.md` with pairwise gallery scenarios for:
+- `gallery_pair_wild_west_gunslinger_vs_quick_draw`
+- `gallery_pair_legacy_boxer_vs_super_boxer`
+- `gallery_pair_good_chronomancer_vs_divine_arbiter`
+- `gallery_pair_secret_vlad_vs_blackbeard`
+- `gallery_pair_secret_sensei_vs_shogun`
+- `gallery_pair_secret_witch_vs_necromancer`
+- Tightened pairwise gallery framing with a dedicated close camera override so those screenshots are actually useful as acceptance artifacts without changing gameplay framing.
+- Updated `web/COMPREHENSIVE_VISUAL_PARITY_MATRIX.md` to point at the new bespoke target sheet.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Required bundled `web_game_playwright_client.js` run completed against the local Vite server (`http://127.0.0.1:4173/MOVBattle/`); baseline artifacts landed in `output/web-game/`.
+- Direct browser validation via Playwright confirmed passing `runScenarioGalleryValidation(...)` results for:
+- `gallery_faction_secret`
+- `gallery_pair_secret_vlad_vs_blackbeard`
+- `gallery_pair_secret_sensei_vs_shogun`
+- `gallery_pair_secret_witch_vs_necromancer`
+- `gallery_pair_good_chronomancer_vs_divine_arbiter`
+- Fresh visual artifacts were captured under `web/output/bespoke-visual-validation/`, and spot inspection confirmed the new blackbeard/vlad, sensei/shogun, and witch/necromancer reads are materially more distinct than before.
+- Console review showed only Vite connect logs, Babylon startup logs, and expected headless WebGL readback performance warnings during screenshots; no new runtime/page errors were introduced.
+- Residual caveat:
+- The pairwise validation shots are now materially closer, but the roster still has room for another bespoke tranche on remaining standard same-faction pairs that are not yet covered by dedicated pair scenes.
+
 - 2026-04-01: Incremental operator-autonomy pass implemented for exposed war-machine crew.
 - Extended `web/src/units/linkedActorPresets.ts` so `legacy.tank.gunner`, `renaissance.da_vinci_tank.pilot`, `dynasty.hwacha.rocketeer`, `secret.bomb_cannon.gunner`, and `secret.gatling_gun.crank gunner` are now targetable self-damaged linked operators with explicit contribution channels and reduced linked-role health pools.
 - Extended `web/src/units/runtimeUnit.ts` and `web/src/main.ts` so linked operators expose `contributionChannels`, per-role max HP, derived parent `attackCapability` / `moveCapability`, deterministic scenario actions, and replay-restore checks in the built-in scenario checker.
