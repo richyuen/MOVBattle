@@ -26,8 +26,19 @@ export interface ScenarioAssertion {
     | "cleanup-policy"
     | "no-duplicate-standins"
     | "origin-source"
-    | "origin-socket";
+    | "origin-socket"
+    | "linked-role-targetable"
+    | "linked-role-state"
+    | "parent-capability"
+    | "replay-restore";
   value: string;
+}
+
+export interface ScenarioAction {
+  kind: "damage-linked-role";
+  parentUnitId: string;
+  role: string;
+  damage: number;
 }
 
 export interface ScenarioSpec {
@@ -37,6 +48,7 @@ export interface ScenarioSpec {
   advanceMs?: number;
   units: ScenarioUnitSpec[];
   assertions: ScenarioAssertion[];
+  actions?: ScenarioAction[];
   gallery?: ScenarioGallerySpec;
 }
 
@@ -100,10 +112,12 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "linked-relation-count", value: "legacy.tank:crew=2" },
+      { kind: "linked-role-targetable", value: "legacy.tank:driver=false, gunner=false" },
       { kind: "victory-semantics", value: "legacy.tank crew should not count as separate victory actors." },
       { kind: "emitter-owner", value: "legacy.tank:gunner" },
       { kind: "impact-owner", value: "legacy.tank:gunner" },
       { kind: "damage-owner", value: "legacy.tank:driver=parent,gunner=parent" },
+      { kind: "parent-capability", value: "legacy.tank:attack=enabled+move=enabled" },
       { kind: "cleanup-policy", value: "legacy.tank:all linked roles remove with parent" },
       { kind: "no-duplicate-standins", value: "legacy.tank" },
       { kind: "units-present", value: "legacy.tank" },
@@ -118,10 +132,12 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "linked-relation-count", value: "renaissance.da_vinci_tank:crew=1" },
+      { kind: "linked-role-targetable", value: "renaissance.da_vinci_tank:pilot=false" },
       { kind: "victory-semantics", value: "renaissance.da_vinci_tank pilot should not count as a separate victory actor." },
       { kind: "emitter-owner", value: "renaissance.da_vinci_tank:pilot" },
       { kind: "impact-owner", value: "renaissance.da_vinci_tank:pilot" },
       { kind: "damage-owner", value: "renaissance.da_vinci_tank:pilot=parent" },
+      { kind: "parent-capability", value: "renaissance.da_vinci_tank:attack=enabled+move=enabled" },
       { kind: "cleanup-policy", value: "renaissance.da_vinci_tank:all linked roles remove with parent" },
       { kind: "no-duplicate-standins", value: "renaissance.da_vinci_tank" },
       { kind: "units-present", value: "renaissance.da_vinci_tank" },
@@ -135,13 +151,66 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { unitId: "dynasty.hwacha", team: 0, position: { x: -8, z: 0 } },
     ],
     assertions: [
-      { kind: "linked-relation-count", value: "dynasty.hwacha:crew=2" },
+      { kind: "linked-relation-count", value: "dynasty.hwacha:crew=1" },
+      { kind: "linked-role-targetable", value: "dynasty.hwacha:rocketeer=true" },
       { kind: "victory-semantics", value: "dynasty.hwacha crew should not count as separate victory actors." },
       { kind: "emitter-owner", value: "dynasty.hwacha:rocketeer" },
       { kind: "impact-owner", value: "dynasty.hwacha:rocketeer" },
-      { kind: "damage-owner", value: "dynasty.hwacha:rocketeer=parent,loader=parent" },
+      { kind: "damage-owner", value: "dynasty.hwacha:rocketeer=self" },
+      { kind: "parent-capability", value: "dynasty.hwacha:attack=enabled+move=enabled" },
       { kind: "cleanup-policy", value: "dynasty.hwacha:all linked roles remove with parent" },
       { kind: "no-duplicate-standins", value: "dynasty.hwacha" },
+      { kind: "units-present", value: "dynasty.hwacha" },
+    ],
+  },
+  operator_legacy_tank_gunner_loss: {
+    name: "operator_legacy_tank_gunner_loss",
+    description: "Internal crew damage should route to the Legacy Tank body.",
+    units: [
+      { unitId: "legacy.tank", team: 0, position: { x: -8, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-linked-role", parentUnitId: "legacy.tank", role: "gunner", damage: 9999 },
+    ],
+    assertions: [
+      { kind: "linked-role-targetable", value: "legacy.tank:driver=false, gunner=false" },
+      { kind: "damage-owner", value: "legacy.tank:driver=parent,gunner=parent" },
+      { kind: "unit-hp-at-most", value: "legacy.tank<=0" },
+      { kind: "replay-restore", value: "legacy.tank:gunner=alive+attack=enabled+move=enabled" },
+      { kind: "units-present", value: "legacy.tank" },
+    ],
+  },
+  operator_da_vinci_tank_pilot_loss: {
+    name: "operator_da_vinci_tank_pilot_loss",
+    description: "Internal crew damage should route to the Da Vinci Tank body.",
+    units: [
+      { unitId: "renaissance.da_vinci_tank", team: 0, position: { x: -8, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-linked-role", parentUnitId: "renaissance.da_vinci_tank", role: "pilot", damage: 9999 },
+    ],
+    assertions: [
+      { kind: "linked-role-targetable", value: "renaissance.da_vinci_tank:pilot=false" },
+      { kind: "damage-owner", value: "renaissance.da_vinci_tank:pilot=parent" },
+      { kind: "unit-hp-at-most", value: "renaissance.da_vinci_tank<=0" },
+      { kind: "replay-restore", value: "renaissance.da_vinci_tank:pilot=alive+attack=enabled+move=enabled" },
+      { kind: "units-present", value: "renaissance.da_vinci_tank" },
+    ],
+  },
+  operator_hwacha_rocketeer_loss: {
+    name: "operator_hwacha_rocketeer_loss",
+    description: "Deterministic rocketeer-loss capability check for Hwacha.",
+    units: [
+      { unitId: "dynasty.hwacha", team: 0, position: { x: -8, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-linked-role", parentUnitId: "dynasty.hwacha", role: "rocketeer", damage: 9999 },
+    ],
+    assertions: [
+      { kind: "linked-role-targetable", value: "dynasty.hwacha:rocketeer=true" },
+      { kind: "linked-role-state", value: "dynasty.hwacha:rocketeer=dead" },
+      { kind: "parent-capability", value: "dynasty.hwacha:attack=disabled+move=disabled" },
+      { kind: "replay-restore", value: "dynasty.hwacha:rocketeer=alive+attack=enabled+move=enabled" },
       { kind: "units-present", value: "dynasty.hwacha" },
     ],
   },
@@ -240,9 +309,11 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "linked-relation-count", value: "secret.bomb_cannon:crew=2" },
+      { kind: "linked-role-targetable", value: "secret.bomb_cannon:gunner=true, loader=false" },
       { kind: "victory-semantics", value: "secret.bomb_cannon crew should not count as separate victory actors." },
       { kind: "emitter-owner", value: "secret.bomb_cannon:gunner" },
-      { kind: "damage-owner", value: "secret.bomb_cannon:gunner=parent,loader=parent" },
+      { kind: "damage-owner", value: "secret.bomb_cannon:gunner=self,loader=parent" },
+      { kind: "parent-capability", value: "secret.bomb_cannon:attack=enabled+move=enabled" },
       { kind: "cleanup-policy", value: "secret.bomb_cannon:all linked roles remove with parent" },
       { kind: "no-duplicate-standins", value: "secret.bomb_cannon" },
       { kind: "units-present", value: "secret.bomb_cannon" },
@@ -258,13 +329,49 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "linked-relation-count", value: "secret.gatling_gun:crew=2" },
+      { kind: "linked-role-targetable", value: "secret.gatling_gun:crank gunner=true, loader=false" },
       { kind: "victory-semantics", value: "secret.gatling_gun crew should not count as separate victory actors." },
       { kind: "emitter-owner", value: "secret.gatling_gun:crank gunner" },
-      { kind: "damage-owner", value: "secret.gatling_gun:crank gunner=parent,loader=parent" },
+      { kind: "damage-owner", value: "secret.gatling_gun:crank gunner=self,loader=parent" },
+      { kind: "parent-capability", value: "secret.gatling_gun:attack=enabled+move=enabled" },
       { kind: "cleanup-policy", value: "secret.gatling_gun:all linked roles remove with parent" },
       { kind: "no-duplicate-standins", value: "secret.gatling_gun" },
       { kind: "units-present", value: "secret.gatling_gun" },
       { kind: "comparison-focus", value: "Text state should expose crank gunner and loader composition." },
+    ],
+  },
+  operator_bomb_cannon_gunner_loss: {
+    name: "operator_bomb_cannon_gunner_loss",
+    description: "Deterministic gunner-loss capability check for Bomb Cannon.",
+    units: [
+      { unitId: "secret.bomb_cannon", team: 0, position: { x: -8, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-linked-role", parentUnitId: "secret.bomb_cannon", role: "gunner", damage: 9999 },
+    ],
+    assertions: [
+      { kind: "linked-role-targetable", value: "secret.bomb_cannon:gunner=true, loader=false" },
+      { kind: "linked-role-state", value: "secret.bomb_cannon:gunner=dead, loader=alive" },
+      { kind: "parent-capability", value: "secret.bomb_cannon:attack=disabled+move=enabled" },
+      { kind: "replay-restore", value: "secret.bomb_cannon:gunner=alive+attack=enabled+move=enabled" },
+      { kind: "units-present", value: "secret.bomb_cannon" },
+    ],
+  },
+  operator_gatling_gun_crank_loss: {
+    name: "operator_gatling_gun_crank_loss",
+    description: "Deterministic crank-gunner-loss capability check for Gatling Gun.",
+    units: [
+      { unitId: "secret.gatling_gun", team: 0, position: { x: -8, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-linked-role", parentUnitId: "secret.gatling_gun", role: "crank gunner", damage: 9999 },
+    ],
+    assertions: [
+      { kind: "linked-role-targetable", value: "secret.gatling_gun:crank gunner=true, loader=false" },
+      { kind: "linked-role-state", value: "secret.gatling_gun:crank gunner=dead, loader=alive" },
+      { kind: "parent-capability", value: "secret.gatling_gun:attack=disabled+move=enabled" },
+      { kind: "replay-restore", value: "secret.gatling_gun:crank gunner=alive+attack=enabled+move=enabled" },
+      { kind: "units-present", value: "secret.gatling_gun" },
     ],
   },
   composite_mounts: {

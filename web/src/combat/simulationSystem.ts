@@ -180,10 +180,16 @@ export class SimulationSystem {
   private _processUnitDecision(unit: RuntimeUnit, aiProfile: AIProfile, now: number): void {
     const attackProfile = getAttackProfile(unit.definition.attackProfileId);
     const preset = getBehaviorPreset(unit);
+    const canAttack = unit.hasContribution("attack");
+    const canMove = unit.hasContribution("move");
 
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
       if (!ally) return;
+      if (!canMove && Vector3.Distance(unit.position, ally.position) > unit.definition.engageRange + this.attackRangePadding) {
+        unit.stopMoving();
+        return;
+      }
       this._handleSupportAction(unit, ally, attackProfile, now);
       return;
     }
@@ -243,6 +249,11 @@ export class SimulationSystem {
     }
 
     if (hasAbility(unit, "spin_move") && distance > engageDistance) {
+      if (!canMove) {
+        unit.stopMoving();
+        unit.setSpinning(false);
+        return;
+      }
       unit.moveTo(enemy.position);
       unit.setSpinning(true);
       if (this.visualEffects && Math.random() < 0.35) {
@@ -255,9 +266,15 @@ export class SimulationSystem {
     if (distance <= engageDistance) {
       unit.stopMoving();
       unit.faceTarget(enemy.position);
-      this._tryAttack(unit, enemy, attackProfile, now);
+      if (canAttack) {
+        this._tryAttack(unit, enemy, attackProfile, now);
+      }
     } else {
-      unit.moveTo(enemy.position);
+      if (canMove) {
+        unit.moveTo(enemy.position);
+      } else {
+        unit.stopMoving();
+      }
     }
   }
 
@@ -938,7 +955,7 @@ export class SimulationSystem {
 
     for (const candidate of this._units) {
       if (candidate.isDead || candidate.team !== requester.team || candidate === requester || !candidate.isTargetable) continue;
-      if (candidate.currentHealth >= candidate.definition.maxHealth) continue;
+      if (candidate.currentHealth >= candidate.maxHealth) continue;
       const score = this._scoreCandidate(requester, candidate, aiProfile.targetPriority);
       if (score < bestScore) {
         bestScore = score;
@@ -950,13 +967,16 @@ export class SimulationSystem {
   }
 
   private _scoreCandidate(requester: RuntimeUnit, candidate: RuntimeUnit, priority: TargetPriority): number {
+    const baseDistanceScore = candidate.position.subtract(requester.position).lengthSquared();
+    const linkedRolePenalty = candidate.linkedParent ? 9 : 0;
+
     switch (priority) {
       case TargetPriority.LowestHealth:
-        return candidate.currentHealth;
+        return candidate.currentHealth + baseDistanceScore * 0.01 + linkedRolePenalty * 0.1;
       case TargetPriority.HighestCost:
-        return -candidate.definition.cost;
+        return -candidate.definition.cost + baseDistanceScore * 0.001 + linkedRolePenalty * 0.1;
       default:
-        return candidate.position.subtract(requester.position).lengthSquared();
+        return baseDistanceScore + linkedRolePenalty;
     }
   }
 

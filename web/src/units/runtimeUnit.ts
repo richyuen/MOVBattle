@@ -6,7 +6,7 @@ import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 import type { FxPreset, UnitVisualConfig, VisualStateTag } from "./unitVisuals";
 import type {
-  LinkedActionPreset, LinkedCleanupPolicy, LinkedDamageRouting, LinkedMoveMode, LinkedVictoryRouting,
+  LinkedActionPreset, LinkedCleanupPolicy, LinkedContributionChannel, LinkedDamageRouting, LinkedMoveMode, LinkedVictoryRouting,
 } from "./linkedActorPresets";
 
 export type RuntimeSpawnRole = "placed" | "summoned" | "crew" | "mount" | "attachment";
@@ -39,6 +39,7 @@ export class RuntimeUnit {
   readonly visualConfig: UnitVisualConfig;
 
   private _ragdollProfile: RagdollProfile;
+  private _maxHealth: number;
   private _currentHealth: number;
   private _isDead = false;
   private _nextAttackAt = 0;
@@ -87,6 +88,7 @@ export class RuntimeUnit {
   private _cleanupPolicy: LinkedCleanupPolicy = "self";
   private _detachOnParentDeath = false;
   private _actionPreset: LinkedActionPreset = "none";
+  private _contributionChannels: LinkedContributionChannel[] = [];
   private _isImpactOrigin = false;
   private _primaryEmitterEnabled = true;
   private _emitterCursor = 0;
@@ -105,6 +107,7 @@ export class RuntimeUnit {
   healthBarBg: Mesh | null = null;
 
   get currentHealth(): number { return this._currentHealth; }
+  get maxHealth(): number { return this._maxHealth; }
   get isDead(): boolean { return this._isDead; }
   get deathCleanupAt(): number { return this._deathCleanupAt; }
   get position(): Vector3 { return this.body.root.position; }
@@ -125,6 +128,7 @@ export class RuntimeUnit {
   get cleanupPolicy(): LinkedCleanupPolicy { return this._cleanupPolicy; }
   get detachOnParentDeath(): boolean { return this._detachOnParentDeath; }
   get actionPreset(): LinkedActionPreset { return this._actionPreset; }
+  get contributionChannels(): readonly LinkedContributionChannel[] { return this._contributionChannels; }
   get isImpactOrigin(): boolean { return this._isImpactOrigin; }
   get decorativeStandinsSuppressed(): boolean { return this._decorativeStandinsSuppressed; }
 
@@ -143,7 +147,8 @@ export class RuntimeUnit {
     this.propMeshes = propMeshes;
     this.visualConfig = visualConfig;
     this._ragdollProfile = ragdollProfile;
-    this._currentHealth = definition.maxHealth;
+    this._maxHealth = definition.maxHealth;
+    this._currentHealth = this._maxHealth;
     this.animator = new ProceduralAnimator(body);
     this._spawnPosition = body.root.position.clone();
     this._spawnRotationY = body.root.rotation.y;
@@ -179,6 +184,8 @@ export class RuntimeUnit {
     cleanupPolicy: LinkedCleanupPolicy;
     detachOnParentDeath: boolean;
     actionPreset: LinkedActionPreset;
+    contributionChannels?: LinkedContributionChannel[];
+    healthOverride?: number;
     impactOrigin?: boolean;
     attackOriginOffset?: Vector3;
     smokeOriginOffset?: Vector3;
@@ -197,6 +204,9 @@ export class RuntimeUnit {
     this._cleanupPolicy = options.cleanupPolicy;
     this._detachOnParentDeath = options.detachOnParentDeath;
     this._actionPreset = options.actionPreset;
+    this._contributionChannels = [...(options.contributionChannels ?? [])];
+    this._maxHealth = options.healthOverride ?? this.definition.maxHealth;
+    this._currentHealth = Math.min(this._currentHealth, this._maxHealth);
     this._isImpactOrigin = options.impactOrigin ?? false;
     this._attackOriginOffset = options.attackOriginOffset?.clone() ?? null;
     this._smokeOriginOffset = options.smokeOriginOffset?.clone() ?? null;
@@ -318,7 +328,7 @@ export class RuntimeUnit {
 
   heal(amount: number): void {
     if (this._isDead || amount <= 0) return;
-    this._currentHealth = Math.min(this.definition.maxHealth, this._currentHealth + amount);
+    this._currentHealth = Math.min(this._maxHealth, this._currentHealth + amount);
   }
 
   applySlow(multiplier: number, durationSeconds: number, now: number): void {
@@ -430,6 +440,15 @@ export class RuntimeUnit {
     const parent = this._linkedParent;
     if (!parent) return;
 
+    if (this._isDead) {
+      this.setBaseBodyVisible(false);
+      for (const mesh of this.propMeshes) {
+        mesh.isVisible = false;
+      }
+      this.setHealthBarVisible(false);
+      return;
+    }
+
     if (parent.isDead) {
       this._isDead = true;
       this._currentHealth = 0;
@@ -456,13 +475,18 @@ export class RuntimeUnit {
       this.body.root.rotation.y = parent.body.root.rotation.y;
     }
 
-    if (parent.animator.state === AnimState.Walking) {
+    const shouldMirrorWalking =
+      this._linkedRelation === "mount" ||
+      this._actionPreset === "charge-mount";
+
+    if (parent.animator.state === AnimState.Walking && shouldMirrorWalking) {
       this.animator.setState(AnimState.Walking);
     } else if (this.animator.state !== AnimState.Attacking) {
       this.animator.setState(AnimState.Idle);
     }
 
     this.setHealthBarVisible(false);
+    this._updateHealthBar();
   }
 
   private _die(impulse: Vector3): void {
@@ -566,12 +590,12 @@ export class RuntimeUnit {
 
   private _updateHealthBar(): void {
     if (!this.healthBarMesh || !this.healthBarBg) return;
-    if (this._isAnchoredActor && !this._isTargetable) {
+    if (this._isAnchoredActor) {
       this.healthBarMesh.isVisible = false;
       this.healthBarBg.isVisible = false;
       return;
     }
-    const ratio = this._currentHealth / this.definition.maxHealth;
+    const ratio = this._currentHealth / Math.max(1, this._maxHealth);
     this.healthBarMesh.scaling.x = Math.max(0.01, ratio);
     this.healthBarMesh.position.x = -(1 - ratio) * 0.5 * 0.5;
   }
@@ -709,7 +733,8 @@ export class RuntimeUnit {
   /** Reset unit to its original spawn state (position, health, alive). */
   resetToSpawn(): void {
     this._isDead = false;
-    this._currentHealth = this.definition.maxHealth;
+    this._maxHealth = this.definition.maxHealth;
+    this._currentHealth = this._maxHealth;
     this._moveTarget = null;
     this._isMoving = false;
     this._velocity.setAll(0);
@@ -741,6 +766,7 @@ export class RuntimeUnit {
     this._cleanupPolicy = "self";
     this._detachOnParentDeath = false;
     this._actionPreset = "none";
+    this._contributionChannels = [];
     this._isImpactOrigin = false;
     this._primaryEmitterEnabled = true;
     this._emitterCursor = 0;
@@ -819,6 +845,28 @@ export class RuntimeUnit {
       }
     }
     return this.getAttackEmitter();
+  }
+
+  requiresContribution(channel: LinkedContributionChannel): boolean {
+    for (const child of this._linkedChildren) {
+      if (child._contributionChannels.includes(channel)) return true;
+    }
+    return false;
+  }
+
+  hasContribution(channel: LinkedContributionChannel): boolean {
+    if (!this.requiresContribution(channel)) return true;
+    for (const child of this._linkedChildren) {
+      if (!child.isDead && child._contributionChannels.includes(channel)) return true;
+    }
+    return false;
+  }
+
+  getMissingContributionRoles(channel: LinkedContributionChannel): string[] {
+    if (!this.requiresContribution(channel)) return [];
+    return Array.from(this._linkedChildren)
+      .filter((child) => child.isDead && child._contributionChannels.includes(channel))
+      .map((child) => `${child._linkedRoleLabel ?? child.definition.displayName}:${channel}`);
   }
 
   getAttackOrigin(advanceSequence = true): OriginInfo {

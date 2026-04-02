@@ -8,6 +8,7 @@ export type LinkedDamageRouting = "parent" | "self";
 export type LinkedVictoryRouting = "parent" | "self" | "none";
 export type LinkedMoveMode = "self" | "anchored-parent";
 export type LinkedCleanupPolicy = "self" | "remove-with-parent";
+export type LinkedContributionChannel = "attack" | "move";
 export type LinkedActionPreset =
   | "none"
   | "reload"
@@ -28,6 +29,8 @@ export interface LinkedActorSemantics {
   detachOnParentDeath: boolean;
   targetable: boolean;
   actionPreset: LinkedActionPreset;
+  contributionChannels?: LinkedContributionChannel[];
+  healthOverride?: number;
   impactOrigin?: boolean;
 }
 
@@ -92,6 +95,7 @@ const parentDamage: LinkedActorSemantics = {
   detachOnParentDeath: false,
   targetable: false,
   actionPreset: "none",
+  contributionChannels: [],
 };
 
 const attachmentOnly: LinkedActorSemantics = {
@@ -104,6 +108,7 @@ const attachmentOnly: LinkedActorSemantics = {
   detachOnParentDeath: false,
   targetable: false,
   actionPreset: "none",
+  contributionChannels: [],
 };
 
 const emittingCrew: LinkedActorSemantics = {
@@ -116,6 +121,7 @@ const emittingCrew: LinkedActorSemantics = {
   detachOnParentDeath: false,
   targetable: false,
   actionPreset: "none",
+  contributionChannels: ["attack"],
 };
 
 export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
@@ -130,7 +136,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         offset: new Vector3(-0.24, 0.86, -0.42),
         syncFacing: true,
         semantics: { ...parentDamage, actionPreset: "cart-brace" },
-        visual: visual("none", "helmet", "none", "none", {
+        visual: visual("none", "none", "none", "none", {
           proportions: { scale: 0.62, bulk: 0.76, headSize: 0.98 },
           posePreset: "vehicle",
           accentColor: "#55674a",
@@ -146,9 +152,11 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         semantics: {
           ...emittingCrew,
           actionPreset: "reload",
+          damageRouting: "parent",
+          targetable: false,
           impactOrigin: true,
         },
-        visual: visual("none", "helmet", "none", "none", {
+        visual: visual("none", "none", "none", "none", {
           proportions: { scale: 0.64, bulk: 0.78, headSize: 1.0 },
           posePreset: "vehicle",
           accentColor: "#6b7a58",
@@ -170,9 +178,12 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         semantics: {
           ...emittingCrew,
           actionPreset: "crank",
+          damageRouting: "parent",
+          targetable: false,
+          contributionChannels: [],
           impactOrigin: true,
         },
-        visual: visual("none", "beret", "none", "none", {
+        visual: visual("none", "none", "none", "none", {
           proportions: { scale: 0.72, bulk: 0.8, headSize: 1.0 },
           posePreset: "vehicle",
           accentColor: "#8a6b43",
@@ -189,11 +200,15 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         key: "rocketeer",
         label: "rocketeer",
         relation: "crew",
-        offset: new Vector3(0, 0.74, 0.52),
+        offset: new Vector3(-0.34, 0.24, -0.92),
         syncFacing: true,
         semantics: {
           ...emittingCrew,
           actionPreset: "reload",
+          damageRouting: "self",
+          targetable: true,
+          contributionChannels: ["attack", "move"],
+          healthOverride: 180,
           impactOrigin: true,
         },
         visual: visual("none", "conical_hat", "none", "none", {
@@ -201,21 +216,6 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
           posePreset: "vehicle",
           accentColor: "#8b4513",
         }),
-        hideBaseBody: true,
-      },
-      {
-        key: "loader",
-        label: "loader",
-        relation: "crew",
-        offset: new Vector3(-0.42, 0.22, -0.96),
-        syncFacing: true,
-        semantics: { ...parentDamage, actionPreset: "reload" },
-        visual: visual("none", "conical_hat", "none", "none", {
-          proportions: { scale: 0.6, bulk: 0.72, headSize: 0.96 },
-          posePreset: "support",
-          accentColor: "#7a3b14",
-        }),
-        hideBaseBody: true,
       },
     ],
   },
@@ -271,7 +271,13 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "crew",
         offset: new Vector3(0.18, 0, -0.5),
         syncFacing: true,
-        semantics: { ...emittingCrew, actionPreset: "cart-brace" },
+        semantics: {
+          ...emittingCrew,
+          actionPreset: "cart-brace",
+          damageRouting: "self",
+          targetable: true,
+          healthOverride: 240,
+        },
         visual: visual("none", "hood", "none", "none", {
           proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_bandit",
@@ -305,7 +311,13 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         relation: "crew",
         offset: new Vector3(-0.22, 0, -0.18),
         syncFacing: true,
-        semantics: { ...emittingCrew, actionPreset: "crank" },
+        semantics: {
+          ...emittingCrew,
+          actionPreset: "crank",
+          damageRouting: "self",
+          targetable: true,
+          healthOverride: 240,
+        },
         visual: visual("none", "captain_hat", "none", "none", {
           proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_pirate",

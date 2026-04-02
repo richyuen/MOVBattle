@@ -24,6 +24,7 @@ import { getUnitVisual } from "./units/unitVisuals";
 import {
   getScenario,
   listScenarioNames,
+  type ScenarioAction,
   type ScenarioCapturePhase,
   type ScenarioGallerySpec,
   type ScenarioSpec,
@@ -216,6 +217,8 @@ function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRol
     cleanupPolicy: actor.semantics.cleanupPolicy,
     detachOnParentDeath: actor.semantics.detachOnParentDeath,
     actionPreset: actor.semantics.actionPreset,
+    contributionChannels: actor.semantics.contributionChannels,
+    healthOverride: actor.semantics.healthOverride,
     impactOrigin: actor.semantics.impactOrigin,
   });
   parent.detachLinkedChild(child);
@@ -223,9 +226,7 @@ function spawnLinkedActor(parent: RuntimeUnit, actor: LinkedActorSpec, parentRol
   if (actor.hideBaseBody) {
     child.setBaseBodyVisible(false);
   }
-  if (!actor.semantics.targetable) {
-    child.setHealthBarVisible(false);
-  }
+  child.setHealthBarVisible(false);
   return child;
 }
 
@@ -244,6 +245,7 @@ function spawnRuntimeUnit(
   const unit = unitFactory.spawn(def, team, position, {
     visualOverride,
     suppressDecorativeOperators: options.suppressDecorativeOperators ?? Boolean(preset),
+    forceArticulatedBody: options.forceArticulatedBody,
   });
   const role = options.role ?? "placed";
   const countsTowardVictory = options.countsTowardVictory ?? (role === "placed" || role === "summoned");
@@ -658,12 +660,38 @@ function advanceSimulationTime(ms: number): void {
   scene.render();
 }
 
+function findScenarioRootRuntime(unitId: string): RuntimeUnit | null {
+  return placedUnits.find((unit) => unit.definition.id === unitId && !unit.linkedParent) ?? null;
+}
+
+function applyScenarioAction(action: ScenarioAction): void {
+  if (action.kind !== "damage-linked-role") return;
+  const root = findScenarioRootRuntime(action.parentUnitId);
+  if (!root) {
+    showStatus(`Scenario action missing root ${action.parentUnitId}.`);
+    return;
+  }
+  const child = root.linkedChildren.find((candidate) => candidate.linkedRoleLabel === action.role);
+  if (!child) {
+    showStatus(`Scenario action missing role ${action.parentUnitId}:${action.role}.`);
+    return;
+  }
+  child.applyDamage(action.damage, Vector3.Zero());
+}
+
+function applyScenarioActions(scenario: ScenarioSpec): void {
+  for (const action of scenario.actions ?? []) {
+    applyScenarioAction(action);
+  }
+}
+
 function hydrateScenario(scenario: ScenarioSpec, options: { preserveGallerySession?: boolean } = {}): void {
   resetBattle(options);
   activeScenario = scenario;
   for (const unit of scenario.units) {
     spawnHarnessUnit(unit.unitId, unit.team, unit.position);
   }
+  applyScenarioActions(scenario);
 }
 
 function runScenarioSpec(
@@ -775,6 +803,13 @@ function buildGameStatePayload() {
         cleanupPolicy: unit.cleanupPolicy,
         detachOnParentDeath: unit.detachOnParentDeath,
         actionPreset: unit.actionPreset,
+        contributionChannels: unit.contributionChannels,
+        attackCapability: unit.hasContribution("attack") ? "enabled" : "disabled",
+        moveCapability: unit.hasContribution("move") ? "enabled" : "disabled",
+        disabledByRole: [
+          ...unit.getMissingContributionRoles("attack"),
+          ...unit.getMissingContributionRoles("move"),
+        ],
         attackEmitterRole: attackEmitter === unit ? "parent" : (attackEmitter.linkedRoleLabel ?? attackEmitter.definition.displayName),
         attackEmitterId: attackEmitter.runtimeId,
         attackOriginSource: attackOrigin.source,
@@ -792,6 +827,7 @@ function buildGameStatePayload() {
         linkedEntities: unit.linkedEntities,
         alive: !unit.isDead,
         hp: Math.round(unit.currentHealth),
+        maxHp: Math.round(unit.maxHealth),
         x: Number(unit.position.x.toFixed(2)),
         z: Number(unit.position.z.toFixed(2)),
       };
@@ -848,6 +884,57 @@ function getScenarioRoot(state: GameTextState, unitId: string): GameTextUnitStat
 
 function getLinkedChildrenForRoot(state: GameTextState, root: GameTextUnitState): GameTextUnitState[] {
   return state.units.filter((unit) => unit.linkedParentId === root.runtimeId);
+}
+
+function getLinkedRoleForRoot(
+  state: GameTextState,
+  root: GameTextUnitState,
+  role: string,
+): GameTextUnitState | null {
+  return getLinkedChildrenForRoot(state, root).find((unit) => unit.compositeRole === role) ?? null;
+}
+
+function evaluateReplayRestoreClauses(state: GameTextState, value: string): string[] {
+  const clauses = parseUnitClauses(value);
+  const failures: string[] = [];
+  for (const { unitId, clause } of clauses) {
+    const root = getScenarioRoot(state, unitId);
+    if (!root) {
+      failures.push(`Missing root unit ${unitId}`);
+      continue;
+    }
+    const pairs = clause.split("+").map((entry) => entry.trim()).filter(Boolean);
+    for (const pair of pairs) {
+      const roleMatch = pair.match(/^([^=]+)=(alive|dead)$/);
+      if (roleMatch) {
+        const role = roleMatch[1].trim();
+        const expectedAlive = roleMatch[2] === "alive";
+        const linkedRole = getLinkedRoleForRoot(state, root, role);
+        if (!linkedRole) {
+          failures.push(`Missing role ${role} on ${unitId}`);
+          continue;
+        }
+        if (linkedRole.alive !== expectedAlive) {
+          failures.push(`${unitId}:${role} expected ${expectedAlive ? "alive" : "dead"} after replay, got ${linkedRole.alive ? "alive" : "dead"}`);
+        }
+        continue;
+      }
+
+      const capabilityMatch = pair.match(/^(attack|move)=(enabled|disabled)$/);
+      if (capabilityMatch) {
+        const capability = capabilityMatch[1];
+        const expected = capabilityMatch[2];
+        const actual = capability === "attack" ? root.attackCapability : root.moveCapability;
+        if (actual !== expected) {
+          failures.push(`${unitId}:${capability} expected ${expected} after replay, got ${actual}`);
+        }
+        continue;
+      }
+
+      failures.push(`Unsupported replay-restore clause: ${unitId}:${pair}`);
+    }
+  }
+  return failures;
 }
 
 function parseNumericExpectation(clause: string): NumericExpectation | null {
@@ -953,6 +1040,77 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       }
       return failures.length === 0 ? pass("Linked relation counts matched.") : fail(failures.join("; "));
     }
+    case "linked-role-targetable": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const match = clause.match(/^([^=]+)=(true|false)$/);
+        if (!match) return fail(`Unsupported targetable clause: ${clause}`);
+        const role = match[1].trim();
+        const expected = match[2] === "true";
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const linkedRole = getLinkedRoleForRoot(state, root, role);
+        if (!linkedRole) {
+          failures.push(`Missing role ${role} on ${unitId}`);
+          continue;
+        }
+        if (linkedRole.targetable !== expected) {
+          failures.push(`${unitId}:${role} expected targetable=${expected}, got ${linkedRole.targetable}`);
+        }
+      }
+      return failures.length === 0 ? pass("Linked-role targetability matched.") : fail(failures.join("; "));
+    }
+    case "linked-role-state": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const match = clause.match(/^([^=]+)=(alive|dead)$/);
+        if (!match) return fail(`Unsupported linked-role-state clause: ${clause}`);
+        const role = match[1].trim();
+        const expectedAlive = match[2] === "alive";
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const linkedRole = getLinkedRoleForRoot(state, root, role);
+        if (!linkedRole) {
+          failures.push(`Missing role ${role} on ${unitId}`);
+          continue;
+        }
+        if (linkedRole.alive !== expectedAlive) {
+          failures.push(`${unitId}:${role} expected ${expectedAlive ? "alive" : "dead"}, got ${linkedRole.alive ? "alive" : "dead"}`);
+        }
+      }
+      return failures.length === 0 ? pass("Linked-role liveness matched.") : fail(failures.join("; "));
+    }
+    case "parent-capability": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing root unit ${unitId}`);
+          continue;
+        }
+        const pairs = clause.split("+").map((entry) => entry.trim()).filter(Boolean);
+        for (const pair of pairs) {
+          const match = pair.match(/^(attack|move)=(enabled|disabled)$/);
+          if (!match) return fail(`Unsupported parent-capability clause: ${pair}`);
+          const capability = match[1];
+          const expected = match[2];
+          const actual = capability === "attack" ? root.attackCapability : root.moveCapability;
+          if (actual !== expected) {
+            failures.push(`${unitId}:${capability} expected ${expected}, got ${actual}`);
+          }
+        }
+      }
+      return failures.length === 0 ? pass("Parent capability matched.") : fail(failures.join("; "));
+    }
     case "spawned-child-count": {
       const failures = evaluateSpawnedChildCountClauses(state, assertion.value);
       return failures.length === 0 ? pass("Spawned child counts matched.") : fail(failures.join("; "));
@@ -1001,6 +1159,7 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       return failures.length === 0 ? pass("Position shift matched.") : fail(failures.join("; "));
     }
     case "replay-stability":
+    case "replay-restore":
       return skip("Replay stability is evaluated in runScenarioCheck.");
     case "emitter-owner": {
       const clauses = parseUnitClauses(assertion.value);
@@ -1172,48 +1331,73 @@ function evaluateScenarioResults(
   options: { includeReplayAssertions?: boolean } = {},
 ): ScenarioCheckResult {
   let state = initialState;
-  const replayAssertions = scenario.assertions.filter((assertion) => assertion.kind === "replay-stability");
-  const directAssertions = scenario.assertions.filter((assertion) => assertion.kind !== "replay-stability");
+  const replayStabilityAssertions = scenario.assertions.filter((assertion) => assertion.kind === "replay-stability");
+  const replayRestoreAssertions = scenario.assertions.filter((assertion) => assertion.kind === "replay-restore");
+  const directAssertions = scenario.assertions.filter(
+    (assertion) => assertion.kind !== "replay-stability" && assertion.kind !== "replay-restore",
+  );
   const results = directAssertions.map((assertion) => evaluateScenarioAssertion(state, assertion, scenario));
 
-  if (options.includeReplayAssertions !== false && replayAssertions.length > 0) {
+  if (options.includeReplayAssertions !== false && (replayStabilityAssertions.length > 0 || replayRestoreAssertions.length > 0)) {
     playAgain();
     const postReplayPlacement = buildGameStatePayload();
     const orphanedSpawned = postReplayPlacement.units.filter((unit) => unit.role === "summoned" || unit.linkedRelation === "spawned-child");
     const expectedRoots = scenario.units.length;
     const actualRoots = postReplayPlacement.units.filter((unit) => unit.linkedParentId === null).length;
-    for (const assertion of replayAssertions) {
-      if (orphanedSpawned.length > 0) {
+    const replayPreconditionFailure = orphanedSpawned.length > 0
+      ? `playAgain() left orphaned spawned units: ${orphanedSpawned.map((unit) => `${unit.id}#${unit.runtimeId}`).join(", ")}`
+      : actualRoots !== expectedRoots
+        ? `playAgain() expected ${expectedRoots} root units, found ${actualRoots}.`
+        : null;
+
+    for (const assertion of replayRestoreAssertions) {
+      if (replayPreconditionFailure) {
         results.push({
           kind: assertion.kind,
           value: assertion.value,
           passed: false,
-          details: `playAgain() left orphaned spawned units: ${orphanedSpawned.map((unit) => `${unit.id}#${unit.runtimeId}`).join(", ")}`,
+          details: replayPreconditionFailure,
         });
         continue;
       }
-      if (actualRoots !== expectedRoots) {
-        results.push({
-          kind: assertion.kind,
-          value: assertion.value,
-          passed: false,
-          details: `playAgain() expected ${expectedRoots} root units, found ${actualRoots}.`,
-        });
-        continue;
-      }
+      const failures = evaluateReplayRestoreClauses(postReplayPlacement, assertion.value);
+      results.push({
+        kind: assertion.kind,
+        value: assertion.value,
+        passed: failures.length === 0,
+        details: failures.length === 0 ? "Replay restored linked-role liveness and parent capabilities." : failures.join("; "),
+      });
+      state = postReplayPlacement;
+    }
+
+    if (replayStabilityAssertions.length > 0) {
+      if (replayPreconditionFailure) {
+        for (const assertion of replayStabilityAssertions) {
+          results.push({
+            kind: assertion.kind,
+            value: assertion.value,
+            passed: false,
+            details: replayPreconditionFailure,
+          });
+        }
+        state = postReplayPlacement;
+      } else {
       startBattle(true);
       if (scenario.advanceMs && scenario.advanceMs > 0) {
         advanceSimulationTime(scenario.advanceMs);
       }
       const replayState = buildGameStatePayload();
-      const failures = evaluateSpawnedChildCountClauses(replayState, assertion.value);
-      results.push({
-        kind: assertion.kind,
-        value: assertion.value,
-        passed: failures.length === 0,
-        details: failures.length === 0 ? "Replay cleanup and rerun child counts matched." : failures.join("; "),
-      });
+      for (const assertion of replayStabilityAssertions) {
+        const failures = evaluateSpawnedChildCountClauses(replayState, assertion.value);
+        results.push({
+          kind: assertion.kind,
+          value: assertion.value,
+          passed: failures.length === 0,
+          details: failures.length === 0 ? "Replay cleanup and rerun child counts matched." : failures.join("; "),
+        });
+      }
       state = replayState;
+      }
     }
   }
 

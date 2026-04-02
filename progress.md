@@ -1,5 +1,36 @@
 Original prompt: Do a pass of every unit in the game against https://totally-accurate-battle-simulator.fandom.com/wiki/Units. Make all units look and function as close as possile to the TABS units. Add any missing units.
 
+- 2026-04-01: Incremental operator-autonomy pass implemented for exposed war-machine crew.
+- Extended `web/src/units/linkedActorPresets.ts` so `legacy.tank.gunner`, `renaissance.da_vinci_tank.pilot`, `dynasty.hwacha.rocketeer`, `secret.bomb_cannon.gunner`, and `secret.gatling_gun.crank gunner` are now targetable self-damaged linked operators with explicit contribution channels and reduced linked-role health pools.
+- Extended `web/src/units/runtimeUnit.ts` and `web/src/main.ts` so linked operators expose `contributionChannels`, per-role max HP, derived parent `attackCapability` / `moveCapability`, deterministic scenario actions, and replay-restore checks in the built-in scenario checker.
+- Updated `web/src/combat/simulationSystem.ts` so support healing respects linked-role max HP, dead operator channels disable parent attack/move behavior as required, and live linked operators are valid but slightly de-prioritized targets relative to root chassis bodies.
+- Expanded `web/src/testing/scenarios.ts` with executable targetability/capability assertions plus deterministic operator-loss scenarios for `legacy.tank`, `renaissance.da_vinci_tank`, `dynasty.hwacha`, `secret.bomb_cannon`, and `secret.gatling_gun`.
+- Updated `web/NON_SECRET_COMPOSITE_ROLE_MATRIX.md`, `web/SECRET_COMPOSITE_ROLE_MATRIX.md`, and `web/NON_SECRET_COMPOSITE_ACCEPTANCE_BATTLES.md` to record the new operator-autonomy semantics and acceptance scenarios.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Required bundled `web_game_playwright_client.js` run completed against the local Vite server; baseline placement screenshots/state dumps were captured in `web/output/operator-autonomy-client/`.
+- Direct Playwright browser validation confirmed passing `runScenarioCheck()` results for:
+- `nonsecret_legacy_tank_roles`
+- `nonsecret_da_vinci_tank_roles`
+- `nonsecret_hwacha_roles`
+- `composite_bomb_cannon`
+- `composite_gatling_gun`
+- `operator_legacy_tank_gunner_loss`
+- `operator_da_vinci_tank_pilot_loss`
+- `operator_hwacha_rocketeer_loss`
+- `operator_bomb_cannon_gunner_loss`
+- `operator_gatling_gun_crank_loss`
+- Live behavior spot checks also passed:
+- pilotless `renaissance.da_vinci_tank` stayed fixed at its spawn position with `attackCapability=disabled`, `moveCapability=disabled`, and `projectiles=0` after battle start
+- crankless `secret.gatling_gun` still repositioned slightly but left enemy HP unchanged and emitted `projectiles=0`
+- Browser console remained clean apart from the pre-existing `favicon.ico` 404.
+- Residual caveat:
+- This tranche still keeps crew anchored to the parent chassis. Mounted detach semantics, independent crew AI, and asymmetric composites such as `bank_robbers` remain deferred.
+- 2026-04-01 follow-up: tank crew visibility/autonomy narrowed after live feedback.
+- Reverted `legacy.tank` gunner and `renaissance.da_vinci_tank` pilot to hidden internal crew semantics in `web/src/units/linkedActorPresets.ts`.
+- Tanks now keep linked crew only for emission/origin structure; those crew are no longer visible or targetable and route damage through the parent chassis.
+- `dynasty.hwacha` remains on the exposed-operator model, but now uses a single rear rocketeer who owns both movement and firing.
 - 2026-03-30: Started web-only parity implementation.
 - Focus order: canonical roster manifest -> generated unit registry -> 14-faction UI/search -> simulation hooks -> behavior expansion -> visual inference.
 - Constraint: current web sim is still prototype-grade; full parity requires data-driven abilities rather than more id-based special cases.
