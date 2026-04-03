@@ -3,6 +3,7 @@ import {
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
+import type { HazardKind, HazardRegion } from "./hazards";
 
 const MAP_WIDTH = 160;  // full X extent
 const MAP_DEPTH = 120;  // full Z extent
@@ -10,15 +11,18 @@ const MAP_DEPTH = 120;  // full Z extent
 export interface MapBuildResult {
   zones: PlacementZone[];
   obstacles: Obstacle[];
+  hazards: HazardRegion[];
   dispose?: () => void;
 }
 
 export class TribalSandboxMapBuilder {
   private _scene: Scene;
   private _obstacles: Obstacle[] = [];
+  private _renderPlacementGuides: boolean;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, renderPlacementGuides = true) {
     this._scene = scene;
+    this._renderPlacementGuides = renderPlacementGuides;
   }
 
   build(): MapBuildResult {
@@ -29,9 +33,11 @@ export class TribalSandboxMapBuilder {
     this._createTrees();
     this._createGrassPatches();
     this._createScatterProps();
-    this._createZoneOverlays();
-    this._createZoneBorders();
-    return { zones: getPlacementZones(), obstacles: this._obstacles };
+    if (this._renderPlacementGuides) {
+      this._createZoneOverlays();
+      this._createZoneBorders();
+    }
+    return { zones: getPlacementZones(), obstacles: this._obstacles, hazards: [] };
   }
 
   private _seededValue(index: number, seed: number): number {
@@ -510,7 +516,23 @@ export type BattleMapId =
   | "campaign.fantasy_evil";
 
 interface CampaignPropSpec {
-  kind: "tree" | "ruin" | "lantern" | "column" | "bones" | "crystal" | "cactus" | "ship" | "totem" | "barricade";
+  kind:
+    | "tree"
+    | "ruin"
+    | "lantern"
+    | "column"
+    | "bones"
+    | "crystal"
+    | "cactus"
+    | "ship"
+    | "totem"
+    | "barricade"
+    | "bridge"
+    | "house"
+    | "gravestone"
+    | "church"
+    | "temple"
+    | "waterfall";
   x: number;
   z: number;
   scale?: number;
@@ -525,7 +547,21 @@ interface CampaignMapTheme {
   ground: Color3;
   grass: Color3;
   accent: Color3;
+  zones: PlacementZone[];
+  hazards: HazardRegion[];
   props: CampaignPropSpec[];
+}
+
+function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
+  return { team, center: new Vector3(x, 0, z), size: new Vector3(width, 100, depth) };
+}
+
+function boxHazard(kind: HazardKind, x: number, z: number, halfX: number, halfZ: number): HazardRegion {
+  return { shape: "box", kind, center: new Vector3(x, 0, z), halfX, halfZ };
+}
+
+function cylinderHazard(kind: HazardKind, x: number, z: number, radius: number): HazardRegion {
+  return { shape: "cylinder", kind, center: new Vector3(x, 0, z), radius };
 }
 
 function trackMapBuild(scene: Scene, id: BattleMapId, displayName: string, build: () => MapBuildResult): BattleMapInstance {
@@ -561,6 +597,72 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (dryGrassMat) dryGrassMat.diffuseColor = Color3.Lerp(theme.ground, theme.grass, 0.45);
 }
 
+function createPlacementGuides(scene: Scene, zones: readonly PlacementZone[]): void {
+  const teamColors = [new Color3(0.24, 0.55, 1.0), new Color3(0.96, 0.30, 0.26)];
+  for (const zone of zones) {
+    const overlay = MeshBuilder.CreateGround(`campaign_zone_overlay_${zone.team}_${zone.center.x}_${zone.center.z}`, {
+      width: zone.size.x,
+      height: zone.size.z,
+    }, scene);
+    overlay.position.copyFrom(zone.center);
+    overlay.position.y = 0.03;
+    const mat = new StandardMaterial(`campaign_zone_overlay_mat_${zone.team}_${zone.center.x}_${zone.center.z}`, scene);
+    mat.diffuseColor = teamColors[zone.team].scale(0.8);
+    mat.emissiveColor = teamColors[zone.team].scale(0.15);
+    mat.alpha = 0.08;
+    mat.disableLighting = true;
+    overlay.material = mat;
+
+    const border = MeshBuilder.CreateGround(`campaign_zone_border_${zone.team}_${zone.center.x}_${zone.center.z}`, {
+      width: zone.size.x + 0.4,
+      height: zone.size.z + 0.4,
+    }, scene);
+    border.position.copyFrom(zone.center);
+    border.position.y = 0.05;
+    const borderMat = new StandardMaterial(`campaign_zone_border_mat_${zone.team}_${zone.center.x}_${zone.center.z}`, scene);
+    borderMat.diffuseColor = teamColors[zone.team];
+    borderMat.emissiveColor = teamColors[zone.team].scale(0.45);
+    borderMat.alpha = 0.16;
+    borderMat.disableLighting = true;
+    border.material = borderMat;
+  }
+}
+
+function createHazardVisuals(scene: Scene, hazards: readonly HazardRegion[]): void {
+  const hazardColor = (kind: HazardKind): Color3 => {
+    switch (kind) {
+      case "water": return new Color3(0.18, 0.46, 0.78);
+      case "pit": return new Color3(0.16, 0.10, 0.08);
+      case "void": return new Color3(0.36, 0.16, 0.44);
+    }
+  };
+  for (const hazard of hazards) {
+    const mat = new StandardMaterial(`campaign_hazard_${hazard.kind}_${hazard.center.x}_${hazard.center.z}`, scene);
+    mat.diffuseColor = hazardColor(hazard.kind);
+    mat.emissiveColor = hazardColor(hazard.kind).scale(hazard.kind === "water" ? 0.22 : 0.12);
+    mat.alpha = hazard.kind === "water" ? 0.42 : 0.35;
+    mat.disableLighting = true;
+    if (hazard.shape === "box") {
+      const mesh = MeshBuilder.CreateGround(`campaign_hazard_box_${hazard.kind}`, {
+        width: hazard.halfX * 2,
+        height: hazard.halfZ * 2,
+      }, scene);
+      mesh.position.copyFrom(hazard.center);
+      mesh.position.y = 0.04;
+      mesh.material = mat;
+    } else {
+      const mesh = MeshBuilder.CreateCylinder(`campaign_hazard_cyl_${hazard.kind}`, {
+        diameter: hazard.radius * 2,
+        height: 0.14,
+        tessellation: 18,
+      }, scene);
+      mesh.position.copyFrom(hazard.center);
+      mesh.position.y = 0.07;
+      mesh.material = mat;
+    }
+  }
+}
+
 function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obstacle[]): void {
   const accentMat = new StandardMaterial(`${theme.displayName}_accent`, scene);
   accentMat.diffuseColor = theme.accent;
@@ -574,6 +676,13 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
   const canopyMat = new StandardMaterial(`${theme.displayName}_canopy`, scene);
   canopyMat.diffuseColor = theme.grass.scale(0.8);
   canopyMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const paleMat = new StandardMaterial(`${theme.displayName}_pale`, scene);
+  paleMat.diffuseColor = Color3.Lerp(theme.ground, new Color3(0.90, 0.88, 0.82), 0.55);
+  paleMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const waterMat = new StandardMaterial(`${theme.displayName}_waterfall`, scene);
+  waterMat.diffuseColor = new Color3(0.46, 0.7, 0.95);
+  waterMat.emissiveColor = new Color3(0.16, 0.24, 0.3);
+  waterMat.alpha = 0.65;
 
   const addCylinderObstacle = (
     x: number,
@@ -619,14 +728,7 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     }
   };
   const addTree = (x: number, z: number, scale = 1, blocking = true) => {
-    const trunk = MeshBuilder.CreateCylinder(`${theme.displayName}_tree_trunk`, {
-      height: 5 * scale,
-      diameterTop: 0.7 * scale,
-      diameterBottom: 0.9 * scale,
-    }, scene);
-    trunk.position = new Vector3(x, 2.5 * scale, z);
-    trunk.material = trunkMat;
-    trunk.receiveShadows = true;
+    addCylinderObstacle(x, z, 0.55 * scale, 5 * scale, trunkMat, blocking);
     const canopy = MeshBuilder.CreateSphere(`${theme.displayName}_tree_canopy`, { diameter: 4.5 * scale, segments: 6 }, scene);
     canopy.position = new Vector3(x, 5.7 * scale, z);
     canopy.scaling.y = 0.8;
@@ -700,10 +802,36 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
   const addBarricade = (x: number, z: number, scale = 1, rotationY = 0, blocking = true) => {
     addBoxObstacle(x, z, 7 * scale, 1.8 * scale, 2 * scale, darkMat, blocking, rotationY);
   };
+  const addBridge = (x: number, z: number, scale = 1, rotationY = 0) => {
+    addBoxObstacle(x, z, 12 * scale, 3.2 * scale, 0.45 * scale, trunkMat, false, rotationY);
+  };
+  const addHouse = (x: number, z: number, scale = 1, rotationY = 0, blocking = true) => {
+    addBoxObstacle(x, z, 8 * scale, 7 * scale, 4.8 * scale, paleMat, blocking, rotationY);
+    addBoxObstacle(x, z, 8.8 * scale, 7.8 * scale, 1.6 * scale, darkMat, false, rotationY);
+  };
+  const addGravestone = (x: number, z: number, scale = 1) => {
+    addBoxObstacle(x, z, 1.4 * scale, 0.5 * scale, 2.1 * scale, paleMat, false);
+  };
+  const addChurch = (x: number, z: number, scale = 1, blocking = true) => {
+    addBoxObstacle(x, z, 10 * scale, 6 * scale, 6 * scale, paleMat, blocking);
+    addCylinderObstacle(x - 3 * scale, z, 1.2 * scale, 10 * scale, darkMat, false);
+  };
+  const addTemple = (x: number, z: number, scale = 1, blocking = true) => {
+    addBoxObstacle(x, z, 10 * scale, 8 * scale, 3.5 * scale, paleMat, blocking);
+    addBoxObstacle(x, z, 12 * scale, 10 * scale, 1.2 * scale, accentMat, false);
+  };
+  const addWaterfall = (x: number, z: number, scale = 1) => {
+    const fall = MeshBuilder.CreatePlane(`${theme.displayName}_waterfall`, { width: 6 * scale, height: 14 * scale }, scene);
+    fall.position = new Vector3(x, 8 * scale, z);
+    fall.material = waterMat;
+  };
   const addShip = (x: number, z: number, scale = 1, rotationY = 0, blocking = false) => {
     addBoxObstacle(x, z, 16 * scale, 4.5 * scale, 2.8 * scale, darkMat, blocking, rotationY);
     addBoxObstacle(x, z, 13 * scale, 3.4 * scale, 0.6 * scale, accentMat, false, rotationY);
-    addCylinderObstacle(x, z, 0.25 * scale, 9 * scale, trunkMat, false);
+    const mast = MeshBuilder.CreateCylinder(`${theme.displayName}_ship_mast`, { height: 9 * scale, diameter: 0.25 * scale }, scene);
+    mast.position = new Vector3(x, 4.8 * scale, z);
+    mast.material = trunkMat;
+    mast.receiveShadows = true;
     const sail = MeshBuilder.CreateBox(`${theme.displayName}_ship_sail`, {
       width: 0.25 * scale,
       height: 5.4 * scale,
@@ -711,7 +839,7 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     }, scene);
     sail.position = new Vector3(x + Math.sin(rotationY) * 1.2 * scale, 5.6 * scale, z + Math.cos(rotationY) * 1.2 * scale);
     sail.rotation.y = rotationY;
-    sail.material = accentMat;
+    sail.material = paleMat;
     sail.receiveShadows = true;
   };
 
@@ -720,49 +848,45 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     const blocking = prop.blocking ?? true;
     const rotationY = prop.rotationY ?? 0;
     switch (prop.kind) {
-      case "tree":
-        addTree(prop.x, prop.z, scale, blocking);
-        break;
-      case "ruin":
-        addRuin(prop.x, prop.z, scale, blocking);
-        break;
-      case "lantern":
-        addLantern(prop.x, prop.z, scale, blocking);
-        break;
-      case "column":
-        addColumn(prop.x, prop.z, scale, blocking);
-        break;
-      case "bones":
-        addBonePile(prop.x, prop.z, scale, blocking);
-        break;
-      case "crystal":
-        addCrystal(prop.x, prop.z, scale, blocking);
-        break;
-      case "cactus":
-        addCactus(prop.x, prop.z, scale, blocking);
-        break;
-      case "ship":
-        addShip(prop.x, prop.z, scale, rotationY, blocking);
-        break;
-      case "totem":
-        addTotem(prop.x, prop.z, scale, blocking);
-        break;
-      case "barricade":
-        addBarricade(prop.x, prop.z, scale, rotationY, blocking);
-        break;
+      case "tree": addTree(prop.x, prop.z, scale, blocking); break;
+      case "ruin": addRuin(prop.x, prop.z, scale, blocking); break;
+      case "lantern": addLantern(prop.x, prop.z, scale, blocking); break;
+      case "column": addColumn(prop.x, prop.z, scale, blocking); break;
+      case "bones": addBonePile(prop.x, prop.z, scale, blocking); break;
+      case "crystal": addCrystal(prop.x, prop.z, scale, blocking); break;
+      case "cactus": addCactus(prop.x, prop.z, scale, blocking); break;
+      case "ship": addShip(prop.x, prop.z, scale, rotationY, blocking); break;
+      case "totem": addTotem(prop.x, prop.z, scale, blocking); break;
+      case "barricade": addBarricade(prop.x, prop.z, scale, rotationY, blocking); break;
+      case "bridge": addBridge(prop.x, prop.z, scale, rotationY); break;
+      case "house": addHouse(prop.x, prop.z, scale, rotationY, blocking); break;
+      case "gravestone": addGravestone(prop.x, prop.z, scale); break;
+      case "church": addChurch(prop.x, prop.z, scale, blocking); break;
+      case "temple": addTemple(prop.x, prop.z, scale, blocking); break;
+      case "waterfall": addWaterfall(prop.x, prop.z, scale); break;
     }
   }
 }
 
-
 function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBuildResult {
-  const base = new TribalSandboxMapBuilder(scene).build();
+  const base = new TribalSandboxMapBuilder(scene, false).build();
   const obstacles = [...base.obstacles];
+  const hazards = theme.hazards.map((hazard) => hazard.shape === "box"
+    ? { ...hazard, center: hazard.center.clone() }
+    : { ...hazard, center: hazard.center.clone() },
+  );
   recolorBaseTerrain(scene, theme);
   addCampaignProps(scene, theme, obstacles);
+  createHazardVisuals(scene, hazards);
+  createPlacementGuides(scene, theme.zones);
   return {
-    zones: base.zones,
+    zones: theme.zones.map((zoneDef) => ({
+      team: zoneDef.team,
+      center: zoneDef.center.clone(),
+      size: zoneDef.size.clone(),
+    })),
     obstacles,
+    hazards,
   };
 }
 
@@ -771,6 +895,11 @@ function restoreSandboxSceneLook(scene: Scene): void {
   scene.fogColor = new Color3(0.52, 0.72, 0.90);
 }
 
+const defaultHalfZones = (): PlacementZone[] => [
+  zone(0, -40, 0, 70, 80),
+  zone(1, 40, 0, 70, 80),
+];
+
 const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMapTheme> = {
   "campaign.introduction": {
     displayName: "Introduction Grounds",
@@ -778,6 +907,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.64, 0.79, 0.94),
     ground: new Color3(0.62, 0.59, 0.32),
     grass: new Color3(0.52, 0.67, 0.29),
+    zones: defaultHalfZones(),
+    hazards: [],
     accent: new Color3(0.92, 0.82, 0.38),
     props: [
       { kind: "tree", x: -26, z: -26, scale: 1.1 },
@@ -792,13 +923,22 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.52, 0.76, 0.72),
     ground: new Color3(0.42, 0.46, 0.24),
     grass: new Color3(0.28, 0.43, 0.18),
+    zones: [
+      zone(0, -46, -16, 40, 28),
+      zone(0, -46, 16, 40, 28),
+      zone(1, 46, -16, 40, 28),
+      zone(1, 46, 16, 40, 28),
+    ],
+    hazards: [
+      boxHazard("water", 0, 0, 18, 10),
+    ],
     accent: new Color3(0.78, 0.68, 0.34),
     props: [
       { kind: "tree", x: -28, z: -24, scale: 1.15 },
       { kind: "tree", x: -22, z: 22, scale: 1.1 },
       { kind: "tree", x: 18, z: -10, scale: 1.05 },
       { kind: "ruin", x: 22, z: 20, scale: 1.0 },
-      { kind: "totem", x: 0, z: -24, scale: 1.0 },
+      { kind: "bridge", x: 0, z: 0, scale: 0.9 },
     ],
   },
   "campaign.challenge": {
@@ -807,6 +947,14 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.74, 0.68, 0.52),
     ground: new Color3(0.56, 0.44, 0.29),
     grass: new Color3(0.47, 0.36, 0.23),
+    zones: [
+      zone(0, -44, 0, 34, 40),
+      zone(1, 44, 0, 34, 40),
+    ],
+    hazards: [
+      boxHazard("pit", 0, -16, 16, 6),
+      boxHazard("pit", 0, 16, 16, 6),
+    ],
     accent: new Color3(0.95, 0.79, 0.37),
     props: [
       { kind: "barricade", x: -6, z: -20, scale: 1.1, rotationY: 0.2 },
@@ -821,13 +969,30 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.72, 0.76, 0.66),
     ground: new Color3(0.46, 0.42, 0.2),
     grass: new Color3(0.34, 0.41, 0.2),
+    zones: [
+      zone(0, -46, -24, 34, 16),
+      zone(0, -46, 0, 34, 18),
+      zone(0, -46, 24, 34, 16),
+      zone(1, 46, -24, 34, 16),
+      zone(1, 46, 0, 34, 18),
+      zone(1, 46, 24, 34, 16),
+    ],
+    hazards: [
+      boxHazard("water", 0, -12, 46, 5),
+      boxHazard("water", 0, 12, 46, 5),
+      cylinderHazard("pit", 0, 0, 5),
+    ],
     accent: new Color3(0.72, 0.18, 0.18),
     props: [
       { kind: "lantern", x: -20, z: -18, scale: 1.0 },
       { kind: "lantern", x: -20, z: 18, scale: 1.0 },
-      { kind: "column", x: 18, z: -10, scale: 0.95 },
-      { kind: "column", x: 18, z: 10, scale: 0.95 },
-      { kind: "tree", x: 0, z: 24, scale: 1.0 },
+      { kind: "temple", x: 0, z: 0, scale: 0.8, blocking: false },
+      { kind: "bridge", x: -44, z: -12, scale: 0.7 },
+      { kind: "bridge", x: -44, z: 12, scale: 0.7 },
+      { kind: "bridge", x: 44, z: -12, scale: 0.7 },
+      { kind: "bridge", x: 44, z: 12, scale: 0.7 },
+      { kind: "bridge", x: 0, z: -12, scale: 0.55 },
+      { kind: "bridge", x: 0, z: 12, scale: 0.55 },
     ],
   },
   "campaign.renaissance": {
@@ -836,13 +1001,20 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.82, 0.84, 0.9),
     ground: new Color3(0.66, 0.56, 0.34),
     grass: new Color3(0.5, 0.56, 0.33),
+    zones: [
+      zone(0, -42, 12, 46, 34),
+      zone(1, 42, 12, 46, 34),
+    ],
+    hazards: [
+      boxHazard("water", 0, -24, 52, 10),
+    ],
     accent: new Color3(0.95, 0.87, 0.52),
     props: [
-      { kind: "column", x: -22, z: -18, scale: 1.0 },
-      { kind: "column", x: -22, z: 18, scale: 1.0 },
-      { kind: "column", x: 18, z: -10, scale: 0.9 },
-      { kind: "column", x: 18, z: 10, scale: 0.9 },
-      { kind: "ruin", x: 0, z: 24, scale: 0.9 },
+      { kind: "column", x: -22, z: -4, scale: 1.0 },
+      { kind: "column", x: -22, z: 20, scale: 1.0 },
+      { kind: "house", x: 18, z: -2, scale: 0.9 },
+      { kind: "house", x: 20, z: 18, scale: 0.9 },
+      { kind: "bridge", x: 0, z: -24, scale: 0.9 },
     ],
   },
   "campaign.pirate": {
@@ -851,13 +1023,25 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.58, 0.76, 0.88),
     ground: new Color3(0.73, 0.63, 0.42),
     grass: new Color3(0.54, 0.58, 0.34),
+    zones: [
+      zone(0, -44, 0, 34, 34),
+      zone(0, -18, -24, 16, 10),
+      zone(0, -18, 24, 16, 10),
+      zone(1, 44, 0, 34, 34),
+      zone(1, 18, -24, 16, 10),
+      zone(1, 18, 24, 16, 10),
+    ],
+    hazards: [
+      boxHazard("water", 0, -24, 44, 8),
+      boxHazard("water", 0, 24, 44, 8),
+    ],
     accent: new Color3(0.94, 0.82, 0.38),
     props: [
-      { kind: "ship", x: -14, z: -24, scale: 0.98, rotationY: 0.34, blocking: false },
-      { kind: "ship", x: 20, z: 20, scale: 1.02, rotationY: -2.8, blocking: false },
-      { kind: "ruin", x: 24, z: -14, scale: 1.0 },
-      { kind: "lantern", x: 20, z: 18, scale: 1.0 },
-      { kind: "barricade", x: 4, z: 0, scale: 1.1, rotationY: 0.1 },
+      { kind: "ship", x: -20, z: 20, scale: 1.0, rotationY: 0.28, blocking: false },
+      { kind: "ship", x: 20, z: 20, scale: 1.0, rotationY: -0.28, blocking: false },
+      { kind: "bridge", x: -6, z: 20, scale: 0.7 },
+      { kind: "bridge", x: 6, z: 20, scale: 0.7 },
+      { kind: "waterfall", x: 58, z: 0, scale: 1.0 },
     ],
   },
   "campaign.spooky": {
@@ -866,13 +1050,17 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.3, 0.32, 0.42),
     ground: new Color3(0.23, 0.26, 0.23),
     grass: new Color3(0.18, 0.2, 0.18),
+    zones: defaultHalfZones(),
+    hazards: [
+      boxHazard("void", 0, -26, 40, 8),
+    ],
     accent: new Color3(0.82, 0.7, 0.38),
     props: [
-      { kind: "bones", x: -22, z: -16, scale: 1.0 },
-      { kind: "bones", x: -20, z: 16, scale: 1.0 },
-      { kind: "totem", x: 20, z: -8, scale: 1.0 },
-      { kind: "lantern", x: 18, z: 18, scale: 1.0 },
-      { kind: "tree", x: 0, z: 24, scale: 0.95 },
+      { kind: "gravestone", x: -22, z: -16, scale: 1.0 },
+      { kind: "gravestone", x: -20, z: 16, scale: 1.0 },
+      { kind: "bones", x: 18, z: -12, scale: 1.0 },
+      { kind: "tree", x: 18, z: 18, scale: 0.95 },
+      { kind: "totem", x: 0, z: 24, scale: 1.0 },
     ],
   },
   "campaign.simulation": {
@@ -881,13 +1069,17 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.62, 0.67, 0.75),
     ground: new Color3(0.44, 0.44, 0.47),
     grass: new Color3(0.32, 0.34, 0.38),
+    zones: defaultHalfZones(),
+    hazards: [
+      cylinderHazard("void", 0, 0, 8),
+    ],
     accent: new Color3(0.96, 0.84, 0.4),
     props: [
       { kind: "crystal", x: -20, z: -18, scale: 1.05 },
       { kind: "crystal", x: -20, z: 18, scale: 1.05 },
       { kind: "column", x: 18, z: -10, scale: 0.9 },
       { kind: "column", x: 18, z: 10, scale: 0.9 },
-      { kind: "barricade", x: 0, z: 0, scale: 1.0 },
+      { kind: "bridge", x: 0, z: 0, scale: 0.65 },
     ],
   },
   "campaign.wild_west": {
@@ -896,13 +1088,20 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.9, 0.76, 0.58),
     ground: new Color3(0.78, 0.62, 0.3),
     grass: new Color3(0.67, 0.55, 0.28),
+    zones: [
+      zone(0, -44, -18, 34, 18),
+      zone(0, -44, 18, 34, 18),
+      zone(1, 44, -18, 34, 18),
+      zone(1, 44, 18, 34, 18),
+    ],
+    hazards: [],
     accent: new Color3(0.92, 0.82, 0.34),
     props: [
       { kind: "cactus", x: -24, z: -18, scale: 1.0 },
       { kind: "cactus", x: -24, z: 18, scale: 1.0 },
-      { kind: "barricade", x: 16, z: -10, scale: 1.0, rotationY: 0.35 },
-      { kind: "barricade", x: 18, z: 12, scale: 1.0, rotationY: -0.28 },
-      { kind: "totem", x: 0, z: 22, scale: 0.95 },
+      { kind: "house", x: 4, z: -16, scale: 0.9 },
+      { kind: "house", x: 6, z: 16, scale: 0.9 },
+      { kind: "barricade", x: 0, z: 0, scale: 1.1, rotationY: 0 },
     ],
   },
   "campaign.legacy": {
@@ -911,12 +1110,14 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.78, 0.8, 0.84),
     ground: new Color3(0.64, 0.63, 0.54),
     grass: new Color3(0.56, 0.58, 0.46),
+    zones: defaultHalfZones(),
+    hazards: [],
     accent: new Color3(0.94, 0.84, 0.4),
     props: [
-      { kind: "column", x: -22, z: -18, scale: 1.0 },
-      { kind: "column", x: -22, z: 18, scale: 1.0 },
-      { kind: "totem", x: 20, z: -10, scale: 1.0 },
-      { kind: "totem", x: 20, z: 10, scale: 1.0 },
+      { kind: "church", x: -20, z: 20, scale: 0.8 },
+      { kind: "gravestone", x: -8, z: 18, scale: 0.9 },
+      { kind: "gravestone", x: -4, z: 24, scale: 0.9 },
+      { kind: "barricade", x: 22, z: 0, scale: 1.0, rotationY: 0.2 },
       { kind: "tree", x: 0, z: 24, scale: 0.95 },
     ],
   },
@@ -926,13 +1127,22 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.86, 0.9, 0.96),
     ground: new Color3(0.74, 0.7, 0.47),
     grass: new Color3(0.6, 0.66, 0.42),
+    zones: [
+      zone(0, -44, 0, 30, 40),
+      zone(1, 44, 0, 30, 40),
+    ],
+    hazards: [
+      boxHazard("water", 0, -18, 18, 7),
+      boxHazard("water", 0, 18, 18, 7),
+    ],
     accent: new Color3(0.98, 0.95, 0.74),
     props: [
       { kind: "crystal", x: -22, z: -16, scale: 1.0 },
       { kind: "crystal", x: -22, z: 16, scale: 1.0 },
-      { kind: "column", x: 18, z: -10, scale: 0.95 },
-      { kind: "column", x: 18, z: 10, scale: 0.95 },
-      { kind: "lantern", x: 0, z: 24, scale: 0.9 },
+      { kind: "temple", x: 0, z: 0, scale: 0.8, blocking: false },
+      { kind: "bridge", x: 0, z: -18, scale: 0.75 },
+      { kind: "bridge", x: 0, z: 18, scale: 0.75 },
+      { kind: "waterfall", x: 54, z: 0, scale: 0.9 },
     ],
   },
   "campaign.fantasy_evil": {
@@ -941,13 +1151,21 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     fogColor: new Color3(0.26, 0.18, 0.2),
     ground: new Color3(0.2, 0.18, 0.19),
     grass: new Color3(0.16, 0.14, 0.16),
+    zones: [
+      zone(0, -44, 0, 34, 38),
+      zone(1, 44, 0, 34, 38),
+    ],
+    hazards: [
+      cylinderHazard("void", 0, 0, 10),
+      boxHazard("void", 0, 24, 16, 5),
+    ],
     accent: new Color3(0.86, 0.32, 0.34),
     props: [
       { kind: "bones", x: -22, z: -16, scale: 1.0 },
       { kind: "bones", x: -22, z: 16, scale: 1.0 },
       { kind: "crystal", x: 18, z: -10, scale: 0.95 },
       { kind: "crystal", x: 18, z: 10, scale: 0.95 },
-      { kind: "totem", x: 0, z: 24, scale: 1.0 },
+      { kind: "bridge", x: 0, z: 0, scale: 0.55 },
     ],
   },
 };
@@ -972,7 +1190,6 @@ const battleMapEntries: Array<[BattleMapId, BattleMapDefinition]> = [
     },
   ] as [BattleMapId, BattleMapDefinition]),
 ];
-
 const mapRegistry = new Map<BattleMapId, BattleMapDefinition>(battleMapEntries);
 
 export function loadBattleMap(scene: Scene, id: string): BattleMapInstance {

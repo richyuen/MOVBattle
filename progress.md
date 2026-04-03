@@ -461,3 +461,15 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - `cd web && npm run build`
 - LSP diagnostics clean for `web/src/main.ts`
 - Architect verification approved the final campaign CTA contract.
+- 2026-04-03 geometry-system upgrade pass completed.
+- Added `web/src/map/hazards.ts` and extended map outputs to carry `hazards` alongside `zones` and `obstacles`.
+- `web/src/map/placementValidator.ts` now supports multiple placement zones per team and rejects placements inside hazards.
+- `web/src/combat/simulationSystem.ts` now applies fatal hazard resolution during battle updates.
+- `web/src/main.ts` now rebinds hazard state on map load and exposes map hazard counts in `render_game_to_text()`.
+- `web/src/map/mapBuilder.ts` now defines campaign maps with authored placement zones, hazard regions, and more structural route geometry; Pirate migration checkpoint now includes two ships and active water hazards.
+- Fresh verification:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for changed files
+- Browser smoke confirmed Pirate hazards kill a spawned unit in simulation and campaign maps now report hazard counts through the text payload.
+- Architect verification approved the geometry-system upgrade pass.

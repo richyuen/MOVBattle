@@ -9,6 +9,8 @@ import { ProjectileSystem, type ProjectileShape } from "./projectileSystem";
 import { VisualEffects } from "./visualEffects";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
+import type { HazardRegion } from "../map/hazards";
+import { isPointInsideHazard } from "../map/hazards";
 
 export interface SpawnUnitOptions {
   role?: RuntimeSpawnRole;
@@ -97,6 +99,7 @@ export class SimulationSystem {
   projectileSystem: ProjectileSystem | null = null;
   visualEffects: VisualEffects | null = null;
   spawnUnitById: ((unitId: string, team: number, position: Vector3, options?: SpawnUnitOptions) => RuntimeUnit | null) | null = null;
+  hazards: readonly HazardRegion[] = [];
 
   readonly minimumDecisionInterval = 0.08;
   readonly attackRangePadding = 0.2;
@@ -150,6 +153,19 @@ export class SimulationSystem {
 
     for (const unit of this._units) {
       unit.update(dt, now);
+    }
+
+    if (this.hazards.length > 0) {
+      for (const unit of this._units) {
+        if (unit.isDead || unit.linkedParent) continue;
+        const inHazard = this.hazards.some((hazard) => isPointInsideHazard(
+          unit.position,
+          hazard,
+          Math.max(0.15, unit.definition.collisionRadius * 0.2),
+        ));
+        if (!inHazard) continue;
+        unit.applyDamage(unit.maxHealth + 9999, Vector3.Zero());
+      }
     }
 
     for (const unit of this._units) {

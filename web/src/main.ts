@@ -158,7 +158,8 @@ const unitFactory = new UnitFactory(scene);
 unitFactory.shadowGenerator = shadowGen;
 let activeMapInstance: BattleMapInstance = loadBattleMap(scene, DEFAULT_BATTLE_MAP_ID);
 RuntimeUnit.obstacles = activeMapInstance.obstacles;
-let placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles);
+let placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
+simulation.hazards = activeMapInstance.hazards;
 
 let budgetSystem = new BudgetSystem(
   BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,
@@ -388,7 +389,8 @@ function loadMapById(mapId: BattleMapId): void {
   activeMapInstance.dispose?.();
   activeMapInstance = loadBattleMap(scene, mapId);
   RuntimeUnit.obstacles = activeMapInstance.obstacles;
-  placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles);
+  placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
+  simulation.hazards = activeMapInstance.hazards;
 }
 
 function getActiveCampaignDefinition(): CampaignDefinition | null {
@@ -1194,6 +1196,13 @@ function buildGameStatePayload() {
     budgets: {
       teamA: budgetSystem.getRemaining(0),
       teamB: budgetSystem.getRemaining(1),
+    },
+    map: {
+      id: activeMapInstance.id,
+      displayName: activeMapInstance.displayName,
+      zones: activeMapInstance.zones.length,
+      hazards: activeMapInstance.hazards.length,
+      obstacles: activeMapInstance.obstacles.length,
     },
     units: placedUnits.map((unit) => {
       const attackEmitter = unit.getAttackEmitter();

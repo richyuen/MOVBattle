@@ -1,6 +1,8 @@
 import { Vector3 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { Obstacle } from "./obstacles";
+import type { HazardRegion } from "./hazards";
+import { isPointInsideHazard } from "./hazards";
 
 export interface PlacementZone {
   team: number;
@@ -11,10 +13,12 @@ export interface PlacementZone {
 export class PlacementValidator {
   private _zones: PlacementZone[];
   private _obstacles: readonly Obstacle[];
+  private _hazards: readonly HazardRegion[];
 
-  constructor(zones: PlacementZone[], obstacles: readonly Obstacle[] = []) {
+  constructor(zones: PlacementZone[], obstacles: readonly Obstacle[] = [], hazards: readonly HazardRegion[] = []) {
     this._zones = zones;
     this._obstacles = obstacles;
+    this._hazards = hazards;
   }
 
   validate(
@@ -22,17 +26,26 @@ export class PlacementValidator {
     placedUnits: RuntimeUnit[],
   ): string | null {
     // Check zone membership
-    const zone = this._zones.find((z) => z.team === team);
-    if (!zone) return "No placement zone for team.";
+    const zones = this._zones.filter((z) => z.team === team);
+    if (zones.length === 0) return "No placement zone for team.";
 
-    const half = zone.size.scale(0.5);
-    const rel = worldPoint.subtract(zone.center);
-    if (
-      Math.abs(rel.x) > half.x ||
-      Math.abs(rel.y) > half.y ||
-      Math.abs(rel.z) > half.z
-    ) {
+    const insideZone = zones.some((zone) => {
+      const half = zone.size.scale(0.5);
+      const rel = worldPoint.subtract(zone.center);
+      return (
+        Math.abs(rel.x) <= half.x &&
+        Math.abs(rel.y) <= half.y &&
+        Math.abs(rel.z) <= half.z
+      );
+    });
+    if (!insideZone) {
       return "Outside placement zone.";
+    }
+
+    for (const hazard of this._hazards) {
+      if (isPointInsideHazard(worldPoint, hazard, collisionRadius * 0.35)) {
+        return "Cannot place inside a hazard.";
+      }
     }
 
     // Check overlap with obstacles
