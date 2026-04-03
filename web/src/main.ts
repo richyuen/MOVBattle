@@ -912,21 +912,13 @@ function showResult(result: BattleResult): void {
     `Team B Remaining: ${result.teamBLiving}`;
   resultOverlayEl.classList.add("visible");
   if (campaignSession) {
-    pendingCampaignResultAction = !result.isDraw && result.winner === 0 ? "advance" : "retry";
-    const outcomeText = !result.isDraw && result.winner === 0
-      ? "Advancing to the next campaign battle..."
-      : "Reloading the current campaign battle...";
+    const isPlayerVictory = !result.isDraw && result.winner === 0;
+    pendingCampaignResultAction = isPlayerVictory ? "advance" : "retry";
+    const outcomeText = isPlayerVictory
+      ? "Click Next Scenario to continue the campaign."
+      : "Click Retry to replay this campaign battle.";
     resultDetailEl.textContent += `\n${outcomeText}`;
     clearPendingCampaignResolution();
-    pendingCampaignResolutionTimer = setTimeout(() => {
-      pendingCampaignResolutionTimer = null;
-      if (!campaignSession) return;
-      if (!result.isDraw && result.winner === 0) {
-        advanceCampaignAfterVictory();
-        return;
-      }
-      reloadCurrentCampaignScenario("Campaign battle reloaded.");
-    }, 1500);
   }
 }
 

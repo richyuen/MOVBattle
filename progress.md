@@ -440,3 +440,17 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - `cd web && npm run build`
 - LSP diagnostics clean for `web/src/map/mapBuilder.ts` and `web/src/main.ts`
 - Browser smoke screenshots captured for Pirate and Dynasty bespoke maps.
+- 2026-04-03 bug fix: campaign failure overlay no longer auto-clears/reloads.
+- `web/src/main.ts` now only auto-resolves campaign result overlays on player victory; loss/draw/timeout remain visible until the player clicks Retry or Sandbox.
+- Regression checks rerun:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for `web/src/main.ts`
+- Architect verification approved the narrowed result-flow fix.
+- 2026-04-03 follow-up bug fix: campaign finished screen now always waits for user input.
+- `web/src/main.ts` no longer auto-resolves campaign result overlays for wins or losses; the player must click Next Scenario / Retry / Sandbox.
+- Regression checks rerun:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for `web/src/main.ts`
+- Architect verification approved the explicit user-driven result flow.

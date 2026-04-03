@@ -38,6 +38,7 @@ Thumbs.db
 UpgradeLog.htm
 
 # Web
+.omx/
 node_modules/
 .playwright-mcp/
 output/
