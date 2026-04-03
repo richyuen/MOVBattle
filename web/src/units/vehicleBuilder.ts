@@ -1,8 +1,10 @@
 import {
-  Scene, TransformNode, Mesh, MeshBuilder, StandardMaterial, Color3, Vector3,
+  Scene, TransformNode, Mesh, MeshBuilder, Color3, Vector3,
+  PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core";
 import { buildArticulatedBody } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
+import { getMaterialFactory } from "./materialFactory";
 
 /**
  * IDs of units that should be built as vehicles/equipment rather than humanoids.
@@ -62,11 +64,8 @@ export function buildVehicleBody(
   }
 }
 
-function makeMat(scene: Scene, color: Color3): StandardMaterial {
-  const m = new StandardMaterial("vmat", scene);
-  m.diffuseColor = color;
-  m.specularColor = new Color3(0.05, 0.05, 0.05);
-  return m;
+function makeMat(_scene: Scene, color: Color3): PBRMetallicRoughnessMaterial {
+  return getMaterialFactory().getWood(color);
 }
 
 function dummyJoint(name: string, parent: TransformNode, scene: Scene): TransformNode {
@@ -116,8 +115,12 @@ function wrapAsBody(
   metrics: BodyMetrics = makeBodyMetrics(1.8, 0.8, 0.5, 0.7),
   vehicleSockets?: VehicleSocketSet,
 ): ArticulatedBody {
-  const bodyMaterial = (mainMesh.material as StandardMaterial) ?? makeMat(scene, new Color3(0.55, 0.45, 0.35));
-  const skinMaterial = (headMesh?.material as StandardMaterial) ?? bodyMaterial;
+  // Clone so applyMaterialPreset() can mutate per-unit without affecting the cached original
+  const srcBody = (mainMesh.material as PBRMetallicRoughnessMaterial) ?? makeMat(scene, new Color3(0.55, 0.45, 0.35));
+  const bodyMaterial = getMaterialFactory().createUnique("wood", srcBody.baseColor);
+  const skinMaterial = headMesh?.material
+    ? getMaterialFactory().createUnique("skin", (headMesh.material as PBRMetallicRoughnessMaterial).baseColor)
+    : bodyMaterial;
   const hip = dummyJoint("v_hip", root, scene);
   hip.position.y = Math.max(0.45, metrics.overallHeight * 0.28);
   const torso = dummyJoint("v_torso", hip, scene);

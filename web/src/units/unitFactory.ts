@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh,
+  Scene, MeshBuilder, Vector3, Color3, Mesh,
   type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -11,6 +11,7 @@ import { attachProps } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
 import { getLinkedActorPreset } from "./linkedActorPresets";
+import { getMaterialFactory } from "./materialFactory";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -52,12 +53,20 @@ export class UnitFactory {
       });
     } else {
       // Build articulated humanoid body
+      const preset = visual.materialPreset ?? "default";
+      const isArmored = preset === "medieval_steel" || preset === "ancient_bronze"
+        || preset === "good_gold" || preset === "secret_hero" || preset === "secret_holy";
       body = buildArticulatedBody(
         this._scene,
         `${team}_${definition.id}_${Math.random().toString(36).slice(2, 6)}`,
         visual.proportions,
         bodyColor,
-        { detailLevel: visual.bodyDetailLevel ?? "standard" },
+        {
+          detailLevel: visual.bodyDetailLevel ?? "standard",
+          showNeck: true,
+          showShoulderPads: isArmored,
+          showBelt: isArmored,
+        },
       );
       // Attach weapon, hat, shield, special props
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0);
@@ -71,6 +80,7 @@ export class UnitFactory {
 
     // Tag all meshes for raycasting
     const unit = new RuntimeUnit(definition, team, body, propMeshes, visual, ragdoll);
+    unit.initFxParticles(this._scene);
     if (!linkedPreset) {
       for (const part of definition.compositionParts ?? []) {
         unit.addLinkedDescriptor(part.relation, part.label, true);
@@ -97,26 +107,19 @@ export class UnitFactory {
     const barY = body.metrics.headTopY + Math.max(0.14, definition.collisionRadius * 0.32);
     const barWidth = Math.max(0.4, definition.collisionRadius * 2.2);
 
+    const mf = getMaterialFactory();
     const barBg = MeshBuilder.CreatePlane(`hpbg`, { width: barWidth, height: 0.06 }, this._scene);
     barBg.position.y = barY;
     barBg.billboardMode = Mesh.BILLBOARDMODE_ALL;
     barBg.parent = body.root;
-    const bgMat = new StandardMaterial(`hpbg_mat`, this._scene);
-    bgMat.diffuseColor = new Color3(0.15, 0.15, 0.15);
-    bgMat.emissiveColor = new Color3(0.1, 0.1, 0.1);
-    bgMat.disableLighting = true;
-    barBg.material = bgMat;
+    barBg.material = mf.get("unlit", new Color3(0.15, 0.15, 0.15), { emissive: new Color3(0.1, 0.1, 0.1) });
 
     const barFill = MeshBuilder.CreatePlane(`hpfill`, { width: barWidth, height: 0.045 }, this._scene);
     barFill.position.y = barY;
     barFill.position.z = -0.001;
     barFill.billboardMode = Mesh.BILLBOARDMODE_ALL;
     barFill.parent = body.root;
-    const fillMat = new StandardMaterial(`hpfill_mat`, this._scene);
-    fillMat.diffuseColor = new Color3(0.2, 0.9, 0.2);
-    fillMat.emissiveColor = new Color3(0.1, 0.5, 0.1);
-    fillMat.disableLighting = true;
-    barFill.material = fillMat;
+    barFill.material = mf.get("unlit", new Color3(0.2, 0.9, 0.2), { emissive: new Color3(0.1, 0.5, 0.1) });
 
     unit.healthBarMesh = barFill;
     unit.healthBarBg = barBg;
@@ -126,72 +129,80 @@ export class UnitFactory {
 }
 
 function applyMaterialPreset(body: ReturnType<typeof buildArticulatedBody>, visual: UnitVisualConfig, bodyColor: Color3): void {
-  const bodyTint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor);
-  body.bodyMaterial.diffuseColor = bodyTint.bodyDiffuse;
-  body.bodyMaterial.emissiveColor = bodyTint.bodyEmissive;
-  body.bodyMaterial.alpha = bodyTint.alpha;
-  body.skinMaterial.diffuseColor = bodyTint.skinDiffuse;
-  body.skinMaterial.emissiveColor = bodyTint.skinEmissive;
+  const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor);
+  body.bodyMaterial.baseColor = tint.bodyDiffuse;
+  body.bodyMaterial.emissiveColor = tint.bodyEmissive;
+  body.bodyMaterial.metallic = tint.metallic;
+  body.bodyMaterial.roughness = tint.roughness;
+  body.bodyMaterial.alpha = tint.alpha;
+  body.skinMaterial.baseColor = tint.skinDiffuse;
+  body.skinMaterial.emissiveColor = tint.skinEmissive;
 }
 
-function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3): {
+interface MaterialTint {
   bodyDiffuse: Color3;
   bodyEmissive: Color3;
   skinDiffuse: Color3;
   skinEmissive: Color3;
   alpha: number;
-} {
+  metallic: number;
+  roughness: number;
+}
+
+function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3): MaterialTint {
   const skinBase = new Color3(0.94, 0.90, 0.86);
   const zero = new Color3(0, 0, 0);
   const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount);
+  // Defaults: cloth-like (non-metallic, fairly rough)
+  const base = { metallic: 0.0, roughness: 0.9 };
   switch (materialPreset) {
     case "tribal_hide":
-      return { bodyDiffuse: blend(new Color3(0.46, 0.32, 0.2), 0.58), bodyEmissive: new Color3(0.01, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.74, 0.62), 0.16), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.85, bodyDiffuse: blend(new Color3(0.46, 0.32, 0.2), 0.58), bodyEmissive: new Color3(0.01, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.74, 0.62), 0.16), skinEmissive: zero, alpha: 1 };
     case "medieval_steel":
-      return { bodyDiffuse: blend(new Color3(0.62, 0.64, 0.68), 0.46), bodyEmissive: new Color3(0.01, 0.01, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.84, 0.76), 0.12), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.8, roughness: 0.3, bodyDiffuse: blend(new Color3(0.62, 0.64, 0.68), 0.46), bodyEmissive: new Color3(0.01, 0.01, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.84, 0.76), 0.12), skinEmissive: zero, alpha: 1 };
     case "ancient_bronze":
-      return { bodyDiffuse: blend(new Color3(0.72, 0.56, 0.28), 0.5), bodyEmissive: new Color3(0.02, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.8, 0.68), 0.16), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.7, roughness: 0.35, bodyDiffuse: blend(new Color3(0.72, 0.56, 0.28), 0.5), bodyEmissive: new Color3(0.02, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.8, 0.68), 0.16), skinEmissive: zero, alpha: 1 };
     case "viking_fur":
-      return { bodyDiffuse: blend(new Color3(0.5, 0.4, 0.28), 0.54), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.78, 0.68), 0.14), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.85, bodyDiffuse: blend(new Color3(0.5, 0.4, 0.28), 0.54), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.78, 0.68), 0.14), skinEmissive: zero, alpha: 1 };
     case "dynasty_lacquer":
-      return { bodyDiffuse: blend(new Color3(0.62, 0.16, 0.14), 0.5), bodyEmissive: new Color3(0.02, 0.0, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.84, 0.72), 0.12), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.15, roughness: 0.35, bodyDiffuse: blend(new Color3(0.62, 0.16, 0.14), 0.5), bodyEmissive: new Color3(0.02, 0.0, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.84, 0.72), 0.12), skinEmissive: zero, alpha: 1 };
     case "renaissance_velvet":
-      return { bodyDiffuse: blend(new Color3(0.38, 0.32, 0.52), 0.48), bodyEmissive: new Color3(0.01, 0.01, 0.02), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.82, 0.74), 0.12), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.92, bodyDiffuse: blend(new Color3(0.38, 0.32, 0.52), 0.48), bodyEmissive: new Color3(0.01, 0.01, 0.02), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.82, 0.74), 0.12), skinEmissive: zero, alpha: 1 };
     case "pirate_tar":
-      return { bodyDiffuse: blend(new Color3(0.24, 0.18, 0.14), 0.62), bodyEmissive: new Color3(0.01, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.68, 0.55), 0.14), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.05, roughness: 0.7, bodyDiffuse: blend(new Color3(0.24, 0.18, 0.14), 0.62), bodyEmissive: new Color3(0.01, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.68, 0.55), 0.14), skinEmissive: zero, alpha: 1 };
     case "wildwest_leather":
-      return { bodyDiffuse: blend(new Color3(0.46, 0.3, 0.18), 0.54), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.86, 0.72, 0.6), 0.14), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.8, bodyDiffuse: blend(new Color3(0.46, 0.3, 0.18), 0.54), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.86, 0.72, 0.6), 0.14), skinEmissive: zero, alpha: 1 };
     case "legacy_toy":
-      return { bodyDiffuse: blend(new Color3(0.74, 0.74, 0.74), 0.4), bodyEmissive: new Color3(0.01, 0.01, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.86, 0.8), 0.08), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.1, roughness: 0.5, bodyDiffuse: blend(new Color3(0.74, 0.74, 0.74), 0.4), bodyEmissive: new Color3(0.01, 0.01, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.86, 0.8), 0.08), skinEmissive: zero, alpha: 1 };
     case "good_gold":
-      return { bodyDiffuse: blend(new Color3(0.92, 0.82, 0.56), 0.48), bodyEmissive: new Color3(0.04, 0.03, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.9, 0.8), 0.2), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.85, roughness: 0.2, bodyDiffuse: blend(new Color3(0.92, 0.82, 0.56), 0.48), bodyEmissive: new Color3(0.04, 0.03, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.9, 0.8), 0.2), skinEmissive: zero, alpha: 1 };
     case "evil_void":
-      return { bodyDiffuse: blend(new Color3(0.3, 0.22, 0.42), 0.62), bodyEmissive: new Color3(0.03, 0.01, 0.05), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.82, 0.72, 0.84), 0.14), skinEmissive: zero, alpha: 0.98 };
+      return { metallic: 0.2, roughness: 0.6, bodyDiffuse: blend(new Color3(0.3, 0.22, 0.42), 0.62), bodyEmissive: new Color3(0.03, 0.01, 0.05), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.82, 0.72, 0.84), 0.14), skinEmissive: zero, alpha: 0.98 };
     case "secret_hero":
-      return { bodyDiffuse: blend(new Color3(0.92, 0.84, 0.45), 0.45), bodyEmissive: new Color3(0.08, 0.06, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.92, 0.82), 0.25), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.6, roughness: 0.3, bodyDiffuse: blend(new Color3(0.92, 0.84, 0.45), 0.45), bodyEmissive: new Color3(0.08, 0.06, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.92, 0.82), 0.25), skinEmissive: zero, alpha: 1 };
     case "secret_ghost":
-      return { bodyDiffuse: blend(new Color3(0.82, 0.78, 0.96), 0.55), bodyEmissive: new Color3(0.06, 0.04, 0.08), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.9, 1.0), 0.4), skinEmissive: new Color3(0.02, 0.02, 0.04), alpha: 0.94 };
+      return { metallic: 0.1, roughness: 0.3, bodyDiffuse: blend(new Color3(0.82, 0.78, 0.96), 0.55), bodyEmissive: new Color3(0.06, 0.04, 0.08), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.9, 1.0), 0.4), skinEmissive: new Color3(0.02, 0.02, 0.04), alpha: 0.94 };
     case "secret_ice":
-      return { bodyDiffuse: blend(new Color3(0.62, 0.88, 0.98), 0.6), bodyEmissive: new Color3(0.03, 0.06, 0.08), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.96, 1.0), 0.45), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.15, roughness: 0.2, bodyDiffuse: blend(new Color3(0.62, 0.88, 0.98), 0.6), bodyEmissive: new Color3(0.03, 0.06, 0.08), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.96, 1.0), 0.45), skinEmissive: zero, alpha: 1 };
     case "secret_nature":
-      return { bodyDiffuse: blend(new Color3(0.4, 0.54, 0.28), 0.6), bodyEmissive: new Color3(0.02, 0.04, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.68, 0.58, 0.46), 0.35), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.85, bodyDiffuse: blend(new Color3(0.4, 0.54, 0.28), 0.6), bodyEmissive: new Color3(0.02, 0.04, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.68, 0.58, 0.46), 0.35), skinEmissive: zero, alpha: 1 };
     case "secret_bone":
-      return { bodyDiffuse: blend(new Color3(0.88, 0.84, 0.76), 0.58), bodyEmissive: new Color3(0.03, 0.03, 0.02), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.88, 0.8), 0.3), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.5, bodyDiffuse: blend(new Color3(0.88, 0.84, 0.76), 0.58), bodyEmissive: new Color3(0.03, 0.03, 0.02), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.88, 0.8), 0.3), skinEmissive: zero, alpha: 1 };
     case "secret_demon":
-      return { bodyDiffuse: blend(new Color3(0.56, 0.16, 0.12), 0.62), bodyEmissive: new Color3(0.06, 0.02, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.66, 0.58), 0.15), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.3, roughness: 0.5, bodyDiffuse: blend(new Color3(0.56, 0.16, 0.12), 0.62), bodyEmissive: new Color3(0.06, 0.02, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.66, 0.58), 0.15), skinEmissive: zero, alpha: 1 };
     case "secret_holy":
-      return { bodyDiffuse: blend(new Color3(0.94, 0.9, 0.72), 0.42), bodyEmissive: new Color3(0.05, 0.04, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.9, 0.8), 0.22), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.5, roughness: 0.25, bodyDiffuse: blend(new Color3(0.94, 0.9, 0.72), 0.42), bodyEmissive: new Color3(0.05, 0.04, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.9, 0.8), 0.22), skinEmissive: zero, alpha: 1 };
     case "secret_bandit":
-      return { bodyDiffuse: blend(new Color3(0.24, 0.24, 0.28), 0.55), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.8, 0.66, 0.56), 0.12), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.75, bodyDiffuse: blend(new Color3(0.24, 0.24, 0.28), 0.55), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.8, 0.66, 0.56), 0.12), skinEmissive: zero, alpha: 1 };
     case "secret_beast":
-      return { bodyDiffuse: blend(new Color3(0.48, 0.52, 0.24), 0.55), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.78, 0.68, 0.5), 0.2), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.85, bodyDiffuse: blend(new Color3(0.48, 0.52, 0.24), 0.55), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.78, 0.68, 0.5), 0.2), skinEmissive: zero, alpha: 1 };
     case "secret_pirate":
-      return { bodyDiffuse: blend(new Color3(0.3, 0.18, 0.14), 0.58), bodyEmissive: new Color3(0.02, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.68, 0.55), 0.14), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.05, roughness: 0.7, bodyDiffuse: blend(new Color3(0.3, 0.18, 0.14), 0.58), bodyEmissive: new Color3(0.02, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.68, 0.55), 0.14), skinEmissive: zero, alpha: 1 };
     case "secret_festive":
-      return { bodyDiffuse: blend(new Color3(0.34, 0.6, 0.28), 0.46), bodyEmissive: new Color3(0.02, 0.03, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.94, 0.82, 0.72), 0.12), skinEmissive: zero, alpha: 1 };
+      return { ...base, roughness: 0.8, bodyDiffuse: blend(new Color3(0.34, 0.6, 0.28), 0.46), bodyEmissive: new Color3(0.02, 0.03, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.94, 0.82, 0.72), 0.12), skinEmissive: zero, alpha: 1 };
     case "secret_royal":
-      return { bodyDiffuse: blend(new Color3(0.62, 0.18, 0.18), 0.52), bodyEmissive: new Color3(0.03, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.82, 0.74), 0.15), skinEmissive: zero, alpha: 1 };
+      return { metallic: 0.4, roughness: 0.4, bodyDiffuse: blend(new Color3(0.62, 0.18, 0.18), 0.52), bodyEmissive: new Color3(0.03, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.82, 0.74), 0.15), skinEmissive: zero, alpha: 1 };
     default:
-      return { bodyDiffuse: bodyColor, bodyEmissive: zero, skinDiffuse: skinBase, skinEmissive: zero, alpha: 1 };
+      return { ...base, bodyDiffuse: bodyColor, bodyEmissive: zero, skinDiffuse: skinBase, skinEmissive: zero, alpha: 1 };
   }
 }

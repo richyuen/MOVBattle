@@ -1,6 +1,8 @@
 import {
-  Scene, TransformNode, Mesh, MeshBuilder, StandardMaterial, Color3, Vector3,
+  Scene, TransformNode, Mesh, MeshBuilder, Color3, Vector3,
+  PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core";
+import { getMaterialFactory } from "./materialFactory";
 
 /**
  * All the joint TransformNodes and meshes that make up a TABS-style articulated body.
@@ -8,8 +10,8 @@ import {
  */
 export interface ArticulatedBody {
   root: TransformNode;
-  bodyMaterial: StandardMaterial;
-  skinMaterial: StandardMaterial;
+  bodyMaterial: PBRMetallicRoughnessMaterial;
+  skinMaterial: PBRMetallicRoughnessMaterial;
   metrics: BodyMetrics;
   vehicleSockets?: VehicleSocketSet;
 
@@ -109,6 +111,9 @@ export interface BodyProportions {
 
 export interface BodyBuildOptions {
   detailLevel?: "standard" | "hero" | "operator";
+  showNeck?: boolean;
+  showShoulderPads?: boolean;
+  showBelt?: boolean;
 }
 
 const DEFAULT_PROPORTIONS: BodyProportions = {
@@ -144,34 +149,25 @@ export function buildArticulatedBody(
   const p = { ...DEFAULT_PROPORTIONS, ...proportions };
   const s = p.scale;
   const detailLevel = options.detailLevel ?? (s >= 1.7 ? "hero" : "standard");
-  const radialSegments = detailLevel === "hero" ? 14 : detailLevel === "operator" ? 8 : 10;
-  const sphereSegments = detailLevel === "hero" ? 14 : detailLevel === "operator" ? 8 : 12;
+  const radialSegments = detailLevel === "hero" ? 16 : detailLevel === "operator" ? 8 : 12;
+  const sphereSegments = detailLevel === "hero" ? 16 : detailLevel === "operator" ? 8 : 14;
 
   const allMeshes: Mesh[] = [];
   const allJoints: TransformNode[] = [];
 
-  // Shared body material
-  const bodyMat = new StandardMaterial(`${name}_body`, scene);
-  bodyMat.diffuseColor = bodyColor;
-  bodyMat.specularColor = new Color3(0.04, 0.04, 0.04);
-
-  // Skin material (slightly lighter for head/hands)
-  const skinMat = new StandardMaterial(`${name}_skin`, scene);
-  skinMat.diffuseColor = new Color3(0.94, 0.90, 0.86);
-  skinMat.specularColor = new Color3(0.03, 0.03, 0.03);
-
-  // Eye materials (googly eyes)
-  const eyeMat = new StandardMaterial(`${name}_eye`, scene);
-  eyeMat.diffuseColor = new Color3(1, 1, 1);
-  eyeMat.specularColor = new Color3(0.03, 0.03, 0.03);
-  const pupilMat = new StandardMaterial(`${name}_pupil`, scene);
-  pupilMat.diffuseColor = new Color3(0.05, 0.05, 0.05);
-  pupilMat.specularColor = new Color3(0, 0, 0);
+  // PBR materials via factory
+  // Body & skin are unique per unit (mutated by presets/FxPresets at runtime)
+  // Eyes & pupils are cached (never mutated)
+  const mf = getMaterialFactory();
+  const bodyMat = mf.createUnique("cloth", bodyColor);
+  const skinMat = mf.createUnique("skin", new Color3(0.94, 0.90, 0.86));
+  const eyeMat = mf.get("skin", new Color3(1, 1, 1), { roughness: 0.3 });
+  const pupilMat = mf.get("skin", new Color3(0.05, 0.05, 0.05), { roughness: 0.4 });
 
   function sphere(
     n: string,
     diameter: number,
-    mat: StandardMaterial,
+    mat: PBRMetallicRoughnessMaterial,
     scaling: Vector3 = Vector3.One(),
     segments = sphereSegments,
   ): Mesh {
@@ -186,7 +182,7 @@ export function buildArticulatedBody(
     height: number,
     diameterTop: number,
     diameterBottom: number,
-    mat: StandardMaterial,
+    mat: PBRMetallicRoughnessMaterial,
     scaling: Vector3 = Vector3.One(),
     tessellation = radialSegments,
   ): Mesh {
@@ -264,6 +260,24 @@ export function buildArticulatedBody(
   // ─── Neck / Head ───
   const neck = joint(`${name}_neck`, torso);
   neck.position.y = torsoH * s;
+
+  // Visible neck cylinder connecting torso to head
+  if (options.showNeck !== false) {
+    const neckH = 0.06 * s;
+    const neckDTop = headWidth * 0.55 * s;
+    const neckDBot = Math.max(torsoTop, torsoBottom) * 0.42 * s;
+    const neckMesh = MeshBuilder.CreateCylinder(`${name}_neckM`, {
+      height: neckH,
+      diameterTop: neckDTop,
+      diameterBottom: neckDBot,
+      tessellation: radialSegments,
+    }, scene);
+    neckMesh.material = skinMat;
+    neckMesh.position.y = neckH * 0.1;
+    neckMesh.parent = neck;
+    allMeshes.push(neckMesh);
+  }
+
   const headMesh = sphere(
     `${name}_headM`,
     headBase,
@@ -400,6 +414,38 @@ export function buildArticulatedBody(
   const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
   rShoulderCap.parent = rightShoulder;
 
+  // ─── Shoulder Pads (armored presets) ───
+  if (options.showShoulderPads) {
+    const padW = upperArmTop * 1.6;
+    const padH = 0.06;
+    const padD = upperArmTop * 1.4;
+    const padMat = bodyMat; // colored same as body, preset tints it metallic
+
+    const lPad = MeshBuilder.CreateCylinder(`${name}_lPad`, {
+      height: padH * s,
+      diameterTop: padW * 0.7 * s,
+      diameterBottom: padW * s,
+      tessellation: radialSegments,
+    }, scene);
+    lPad.scaling.z = padD / padW;
+    lPad.material = padMat;
+    lPad.position.y = upperArmH * s * 0.05;
+    lPad.parent = leftShoulder;
+    allMeshes.push(lPad);
+
+    const rPad = MeshBuilder.CreateCylinder(`${name}_rPad`, {
+      height: padH * s,
+      diameterTop: padW * 0.7 * s,
+      diameterBottom: padW * s,
+      tessellation: radialSegments,
+    }, scene);
+    rPad.scaling.z = padD / padW;
+    rPad.material = padMat;
+    rPad.position.y = upperArmH * s * 0.05;
+    rPad.parent = rightShoulder;
+    allMeshes.push(rPad);
+  }
+
   // ─── Legs ───
   const legDepthScale = 0.92;
   const hipOffX = (Math.max(torsoTop, torsoBottom) * 0.22) * s;
@@ -488,6 +534,21 @@ export function buildArticulatedBody(
   lHipCap.parent = leftHipJ;
   const rHipCap = sphere(`${name}_rHipCap`, hipCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
   rHipCap.parent = rightHipJ;
+
+  // ─── Belt (at torso base / hip level) ───
+  if (options.showBelt) {
+    const beltRadius = Math.max(torsoTop, torsoBottom) * 0.54;
+    const beltTube = beltRadius * 0.12;
+    const belt = MeshBuilder.CreateTorus(`${name}_belt`, {
+      diameter: beltRadius * 2 * s,
+      thickness: beltTube * 2 * s,
+      tessellation: radialSegments,
+    }, scene);
+    belt.material = bodyMat;
+    belt.position.y = torsoH * s * 0.02; // just above hip joint
+    belt.parent = torso;
+    allMeshes.push(belt);
+  }
 
   const metrics: BodyMetrics = {
     overallHeight: hip.position.y + torsoH * s + headHeight * s,

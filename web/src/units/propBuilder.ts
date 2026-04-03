@@ -1,8 +1,10 @@
 import {
-  Scene, Mesh, MeshBuilder, StandardMaterial, Color3, Vector3, TransformNode,
+  Scene, Mesh, MeshBuilder, Color3, Vector3, TransformNode,
+  PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import type { AttachmentPreset, UnitVisualConfig, WeaponType, HatType, ShieldType, SpecialType } from "./unitVisuals";
+import { getMaterialFactory, type MatCategory } from "./materialFactory";
 
 export function attachProps(
   scene: Scene,
@@ -72,12 +74,12 @@ function setTaggedVisibility(meshes: Mesh[], visible: boolean): void {
   }
 }
 
-function mat(scene: Scene, color: Color3, emissive = 0): StandardMaterial {
-  const m = new StandardMaterial("prop", scene);
-  m.diffuseColor = color;
-  if (emissive > 0) m.emissiveColor = color.scale(emissive);
-  m.specularColor = new Color3(0.06, 0.06, 0.06);
-  return m;
+function mat(scene: Scene, color: Color3, emissive = 0, category: MatCategory = "wood"): PBRMetallicRoughnessMaterial {
+  const mf = getMaterialFactory();
+  if (emissive > 0) {
+    return mf.get(category, color, { emissiveIntensity: emissive });
+  }
+  return mf.get(category, color);
 }
 
 function addGripWraps(
@@ -391,26 +393,55 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "sword":
     case "cutlass": {
       const blade = MeshBuilder.CreateBox("blade", { width: 0.03 * s, height: 0.5 * s, depth: 0.008 * s }, scene);
-      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85));
+      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "metal");
+      // Fuller (channel groove on blade)
+      const fuller = MeshBuilder.CreateBox("fuller", { width: 0.012 * s, height: 0.32 * s, depth: 0.01 * s }, scene);
+      fuller.position.y = 0.03 * s;
+      fuller.parent = blade;
+      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "metal");
       const guard = MeshBuilder.CreateBox("guard", { width: 0.12 * s, height: 0.02 * s, depth: 0.02 * s }, scene);
       guard.position.y = -0.15 * s;
       guard.parent = blade;
-      guard.material = mat(scene, accent);
+      guard.material = mat(scene, accent, 0, "metal");
       const grip = MeshBuilder.CreateCylinder("grip", { height: 0.1 * s, diameter: 0.025 * s }, scene);
       grip.position.y = -0.22 * s;
       grip.parent = blade;
       grip.material = mat(scene, new Color3(0.35, 0.2, 0.1));
       addGripWraps(scene, grip, [-0.03 * s, 0, 0.03 * s], 0.03 * s);
+      // Pommel
+      const pommel = MeshBuilder.CreateSphere("pommel", { diameter: 0.035 * s, segments: 6 }, scene);
+      pommel.position.y = -0.28 * s;
+      pommel.parent = blade;
+      pommel.material = mat(scene, accent, 0, "metal");
       blade.position.y = 0.15 * s;
       return blade;
     }
     case "greatsword": {
       const blade = MeshBuilder.CreateBox("gsblade", { width: 0.04 * s, height: 0.75 * s, depth: 0.01 * s }, scene);
-      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85));
+      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "metal");
+      // Fuller
+      const fuller = MeshBuilder.CreateBox("gfuller", { width: 0.015 * s, height: 0.45 * s, depth: 0.012 * s }, scene);
+      fuller.position.y = 0.05 * s;
+      fuller.parent = blade;
+      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "metal");
+      // Ricasso (unsharpened section above guard)
+      const ricasso = MeshBuilder.CreateBox("ricasso", { width: 0.035 * s, height: 0.08 * s, depth: 0.015 * s }, scene);
+      ricasso.position.y = -0.18 * s;
+      ricasso.parent = blade;
+      ricasso.material = mat(scene, new Color3(0.7, 0.7, 0.75), 0, "metal");
       const guard = MeshBuilder.CreateBox("gsguard", { width: 0.16 * s, height: 0.025 * s, depth: 0.025 * s }, scene);
       guard.position.y = -0.22 * s;
       guard.parent = blade;
-      guard.material = mat(scene, accent);
+      guard.material = mat(scene, accent, 0, "metal");
+      // Grip + pommel
+      const grip = MeshBuilder.CreateCylinder("gsgrip", { height: 0.14 * s, diameter: 0.03 * s }, scene);
+      grip.position.y = -0.32 * s;
+      grip.parent = blade;
+      grip.material = mat(scene, new Color3(0.35, 0.2, 0.1));
+      const pommel = MeshBuilder.CreateSphere("gspommel", { diameter: 0.04 * s, segments: 6 }, scene);
+      pommel.position.y = -0.4 * s;
+      pommel.parent = blade;
+      pommel.material = mat(scene, accent, 0, "metal");
       blade.position.y = 0.2 * s;
       return blade;
     }
@@ -427,7 +458,24 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     }
     case "katana": {
       const blade = MeshBuilder.CreateBox("katana", { width: 0.025 * s, height: 0.6 * s, depth: 0.006 * s }, scene);
-      blade.material = mat(scene, new Color3(0.9, 0.9, 0.95));
+      blade.material = mat(scene, new Color3(0.9, 0.9, 0.95), 0, "metal");
+      // Tsuba (circular hand guard)
+      const tsuba = MeshBuilder.CreateDisc("tsuba", { radius: 0.04 * s, tessellation: 12 }, scene);
+      tsuba.position.y = -0.15 * s;
+      tsuba.rotation.x = Math.PI / 2;
+      tsuba.parent = blade;
+      tsuba.material = mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
+      // Grip wrap
+      const grip = MeshBuilder.CreateCylinder("kgrip", { height: 0.12 * s, diameter: 0.022 * s }, scene);
+      grip.position.y = -0.22 * s;
+      grip.parent = blade;
+      grip.material = mat(scene, new Color3(0.15, 0.1, 0.08));
+      addGripWraps(scene, grip, [-0.03 * s, 0, 0.03 * s], 0.026 * s);
+      // Kashira (pommel cap)
+      const kashira = MeshBuilder.CreateCylinder("kashira", { height: 0.015 * s, diameter: 0.028 * s, tessellation: 8 }, scene);
+      kashira.position.y = -0.29 * s;
+      kashira.parent = blade;
+      kashira.material = mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
       blade.position.y = 0.15 * s;
       blade.rotation.z = 0.05;
       return blade;
@@ -448,11 +496,27 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.03 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
       addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.035 * s);
+      const metalMat = mat(scene, new Color3(0.6, 0.6, 0.65), 0, "metal");
       const head = MeshBuilder.CreateBox("axehead", { width: 0.15 * s, height: 0.12 * s, depth: 0.02 * s }, scene);
       head.position.y = 0.22 * s;
       head.position.x = 0.04 * s;
       head.parent = handle;
-      head.material = mat(scene, new Color3(0.6, 0.6, 0.65));
+      head.material = metalMat;
+      // Cutting edge (tapered wedge)
+      const edge = MeshBuilder.CreateCylinder("axeedge", {
+        height: 0.12 * s, diameterTop: 0.003 * s, diameterBottom: 0.02 * s, tessellation: 4,
+      }, scene);
+      edge.position.set(0.12 * s, 0.22 * s, 0);
+      edge.rotation.z = Math.PI / 2;
+      edge.parent = handle;
+      edge.material = mat(scene, new Color3(0.75, 0.75, 0.8), 0, "metal");
+      // Rivets at head-handle junction
+      for (const dy of [-0.03, 0.03]) {
+        const rivet = MeshBuilder.CreateSphere("rivet", { diameter: 0.012 * s, segments: 4 }, scene);
+        rivet.position.set(0, 0.22 * s + dy * s, 0.012 * s);
+        rivet.parent = handle;
+        rivet.material = metalMat;
+      }
       handle.position.y = 0.1 * s;
       return handle;
     }
@@ -479,10 +543,37 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.035 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
       addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.04 * s);
-      const head = MeshBuilder.CreateBox("hammerhead", { width: 0.14 * s, height: 0.1 * s, depth: 0.1 * s }, scene);
-      head.position.y = 0.28 * s;
-      head.parent = handle;
-      head.material = mat(scene, accent);
+      const headMat = mat(scene, accent, 0, "metal");
+      if (type === "mace") {
+        // Mace: sphere head with flanges
+        const head = MeshBuilder.CreateSphere("macehead", { diameter: 0.12 * s, segments: 8 }, scene);
+        head.position.y = 0.28 * s;
+        head.parent = handle;
+        head.material = headMat;
+        // 6 flanges around the head
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          const flange = MeshBuilder.CreateBox("flange", { width: 0.06 * s, height: 0.04 * s, depth: 0.008 * s }, scene);
+          flange.position.set(Math.cos(angle) * 0.04 * s, 0.28 * s, Math.sin(angle) * 0.04 * s);
+          flange.rotation.y = -angle;
+          flange.parent = handle;
+          flange.material = headMat;
+        }
+      } else {
+        // Hammer: box head with flat face vs peen distinction
+        const head = MeshBuilder.CreateBox("hammerhead", { width: 0.14 * s, height: 0.1 * s, depth: 0.1 * s }, scene);
+        head.position.y = 0.28 * s;
+        head.parent = handle;
+        head.material = headMat;
+        // Peen (wedge side)
+        const peen = MeshBuilder.CreateCylinder("peen", {
+          height: 0.04 * s, diameterTop: 0.01 * s, diameterBottom: 0.05 * s, tessellation: 4,
+        }, scene);
+        peen.position.set(-0.09 * s, 0.28 * s, 0);
+        peen.rotation.z = Math.PI / 2;
+        peen.parent = handle;
+        peen.material = headMat;
+      }
       handle.position.y = 0.1 * s;
       return handle;
     }

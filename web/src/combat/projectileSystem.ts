@@ -1,8 +1,11 @@
 import {
-  Scene, Vector3, MeshBuilder, StandardMaterial, Color3, Mesh, TransformNode,
+  Scene, Vector3, MeshBuilder, Color3, Mesh, TransformNode,
+  PBRMetallicRoughnessMaterial, ParticleSystem,
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { VisualEffects } from "./visualEffects";
+import { getMaterialFactory } from "../units/materialFactory";
+import { createTrail, createFire } from "./particleFactory";
 
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell";
 
@@ -22,6 +25,7 @@ interface ActiveProjectile {
   allUnits: readonly RuntimeUnit[];
   shape: ProjectileShape;
   targetLift: number;
+  trailSystem?: ParticleSystem;
 }
 
 interface MuzzleFlash {
@@ -42,7 +46,7 @@ export class ProjectileSystem {
   private _scene: Scene;
   private _active: ActiveProjectile[] = [];
   private _flashes: MuzzleFlash[] = [];
-  private _matCache = new Map<string, StandardMaterial>();
+  private _matCache = new Map<string, PBRMetallicRoughnessMaterial>();
   onShake?: (intensity: number) => void;
   visualEffects?: VisualEffects;
 
@@ -94,11 +98,40 @@ export class ProjectileSystem {
     mesh.position = launchOrigin.clone();
     mesh.position.y += options.originLift ?? 1.0;
 
+    // Add particle trail for specific projectile types
+    let trailSystem: ParticleSystem | undefined;
+    const trailMesh = mesh.getChildMeshes()[0] as Mesh | undefined;
+    if (trailMesh) {
+      switch (shape) {
+        case "fireball":
+          trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.4, 0.05), 10);
+          trailSystem.start();
+          break;
+        case "rocket_arrow":
+          trailSystem = createTrail(this._scene, trailMesh, new Color3(0.6, 0.6, 0.6), 15);
+          trailSystem.minSize = 0.03;
+          trailSystem.maxSize = 0.08;
+          trailSystem.start();
+          break;
+        case "firework":
+          trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.8, 0.2), 10);
+          trailSystem.start();
+          break;
+        case "bomb":
+          trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.9, 0.3), 5);
+          trailSystem.minSize = 0.01;
+          trailSystem.maxSize = 0.03;
+          trailSystem.start();
+          break;
+      }
+    }
+
     this._active.push({
       mesh, origin: mesh.position.clone(), target, targetPos,
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
+      trailSystem,
     });
   }
 
@@ -118,11 +151,11 @@ export class ProjectileSystem {
     const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.6 * scale, segments: 6 }, this._scene);
     smoke.position = flash.position.clone();
     smoke.position.addInPlace(direction.scale(0.15 * scale));
-    const sm = new StandardMaterial("smoke_mat", this._scene);
-    sm.diffuseColor = new Color3(0.6, 0.6, 0.6);
+    const sm = getMaterialFactory().createUnique("unlit", new Color3(0.6, 0.6, 0.6));
+    sm.disableLighting = true;
     sm.emissiveColor = new Color3(0.3, 0.3, 0.3);
     sm.alpha = 0.5;
-    sm.disableLighting = true;
+    sm.transparencyMode = 2;
     smoke.material = sm;
 
     this._flashes.push({ mesh: flash, remaining: 0.12 + 0.04 * Math.max(0, scale - 1) });
@@ -211,6 +244,7 @@ export class ProjectileSystem {
       // Arrival
       if (t >= 1 || earlyHit) {
         this._onImpact(p);
+        if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(); }
         p.mesh.dispose();
         this._active.splice(i, 1);
       }
@@ -224,7 +258,7 @@ export class ProjectileSystem {
       const ratio = Math.max(0, f.remaining / 0.35);
       f.mesh.scaling.setAll(1 + (1 - ratio) * 1.5);
       if (f.mesh.material && "alpha" in f.mesh.material) {
-        (f.mesh.material as StandardMaterial).alpha = ratio * 0.7;
+        (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = ratio * 0.7;
       }
       if (f.remaining <= 0) {
         f.mesh.dispose();
@@ -258,11 +292,11 @@ export class ProjectileSystem {
     const boom = MeshBuilder.CreateSphere("boom", { diameter: 0.3 * scale, segments: 6 }, this._scene);
     boom.position = pos.clone();
     boom.position.y += 0.3;
-    const m = new StandardMaterial("boom_mat", this._scene);
-    m.diffuseColor = new Color3(1, 0.6, 0.1);
+    const m = getMaterialFactory().createUnique("unlit", new Color3(1, 0.6, 0.1));
+    m.disableLighting = true;
     m.emissiveColor = new Color3(1, 0.5, 0.1);
     m.alpha = 0.8;
-    m.disableLighting = true;
+    m.transparencyMode = 2;
     boom.material = m;
     this._flashes.push({ mesh: boom, remaining: 0.4 + 0.12 * Math.max(0, scale - 1) });
     this.onShake?.(0.12 * scale);
@@ -395,10 +429,7 @@ export class ProjectileSystem {
         // Smoke trail
         const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.07, segments: 4 }, this._scene);
         smoke.position.z = -0.3;
-        const smokeMat = new StandardMaterial("rsmoke", this._scene);
-        smokeMat.diffuseColor = new Color3(0.6, 0.6, 0.6);
-        smokeMat.alpha = 0.4;
-        smokeMat.disableLighting = true;
+        const smokeMat = getMaterialFactory().get("unlit", new Color3(0.6, 0.6, 0.6), { alpha: 0.4 });
         smoke.material = smokeMat;
         smoke.parent = root;
         break;
@@ -432,12 +463,9 @@ export class ProjectileSystem {
         ball.parent = root;
         // Outer glow
         const glow = MeshBuilder.CreateSphere("glow", { diameter: 0.4, segments: 6 }, this._scene);
-        const glowMat = new StandardMaterial("fireball_glow", this._scene);
-        glowMat.diffuseColor = new Color3(1, 0.3, 0);
-        glowMat.emissiveColor = new Color3(1, 0.3, 0).scale(0.5);
-        glowMat.alpha = 0.3;
-        glowMat.disableLighting = true;
-        glow.material = glowMat;
+        glow.material = getMaterialFactory().get("unlit", new Color3(1, 0.3, 0), {
+          emissive: new Color3(1, 0.3, 0).scale(0.5), alpha: 0.3,
+        });
         glow.parent = root;
         break;
       }
@@ -446,19 +474,22 @@ export class ProjectileSystem {
     return root;
   }
 
-  private _getMat(key: string, color: Color3, emissive = 0): StandardMaterial {
+  private _getMat(key: string, color: Color3, emissive = 0): PBRMetallicRoughnessMaterial {
     let m = this._matCache.get(key);
     if (m) return m;
-    m = new StandardMaterial(key, this._scene);
-    m.diffuseColor = color;
-    if (emissive > 0) m.emissiveColor = color.scale(emissive);
-    m.specularColor = new Color3(0.15, 0.15, 0.15);
+    const mf = getMaterialFactory();
+    m = emissive > 0
+      ? mf.get("wood", color, { emissiveIntensity: emissive })
+      : mf.get("wood", color);
     this._matCache.set(key, m);
     return m;
   }
 
   dispose(): void {
-    for (const p of this._active) p.mesh.dispose();
+    for (const p of this._active) {
+      if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(); }
+      p.mesh.dispose();
+    }
     for (const f of this._flashes) f.mesh.dispose();
     this._active.length = 0;
     this._flashes.length = 0;

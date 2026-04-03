@@ -1,12 +1,16 @@
 import {
-  Scene, Vector3, MeshBuilder, StandardMaterial, Color3, Mesh, TransformNode,
+  Scene, Vector3, MeshBuilder, Color3, TransformNode,
+  PBRMetallicRoughnessMaterial, ParticleSystem,
 } from "@babylonjs/core";
+import { getMaterialFactory } from "../units/materialFactory";
+import { createSmoke, createSparks, createFire, createDust } from "./particleFactory";
 
 interface TimedEffect {
   root: TransformNode;
   remaining: number;
   update?: (dt: number, elapsed: number) => void;
   dispose?: () => void;
+  particles?: ParticleSystem[];
 }
 
 /**
@@ -20,12 +24,22 @@ export class VisualEffects {
     this._scene = scene;
   }
 
+  /** Create a unique unlit PBR material for transient effects (alpha-mutated per frame). */
+  private _fxMat(color: Color3, emissive?: Color3, alpha = 1): PBRMetallicRoughnessMaterial {
+    const m = getMaterialFactory().createUnique("unlit", color);
+    m.disableLighting = true;
+    if (emissive) m.emissiveColor = emissive;
+    if (alpha < 1) { m.alpha = alpha; m.transparencyMode = 2; }
+    return m;
+  }
+
   update(dt: number): void {
     for (let i = this._effects.length - 1; i >= 0; i--) {
       const e = this._effects[i];
       e.remaining -= dt;
       if (e.update) e.update(dt, e.remaining);
       if (e.remaining <= 0) {
+        if (e.particles) for (const ps of e.particles) { ps.stop(); ps.dispose(); }
         e.root.dispose();
         e.dispose?.();
         this._effects.splice(i, 1);
@@ -44,16 +58,8 @@ export class VisualEffects {
     const dir = target.subtract(origin);
     const len = dir.length();
 
-    const boltMat = new StandardMaterial("bolt_mat", this._scene);
-    boltMat.diffuseColor = new Color3(0.6, 0.8, 1.0);
-    boltMat.emissiveColor = new Color3(0.5, 0.7, 1.0);
-    boltMat.disableLighting = true;
-    boltMat.alpha = 0.9;
-
-    const coreMat = new StandardMaterial("core_mat", this._scene);
-    coreMat.diffuseColor = new Color3(1, 1, 1);
-    coreMat.emissiveColor = new Color3(1, 1, 1);
-    coreMat.disableLighting = true;
+    const boltMat = this._fxMat(new Color3(0.6, 0.8, 1.0), new Color3(0.5, 0.7, 1.0), 0.9);
+    const coreMat = this._fxMat(new Color3(1, 1, 1), new Color3(1, 1, 1));
 
     // Build jagged path
     const points: Vector3[] = [origin.clone()];
@@ -145,36 +151,19 @@ export class VisualEffects {
    */
   spawnSmokePuff(position: Vector3, color?: Color3): void {
     const root = new TransformNode("smoke", this._scene);
+    const pos = position.clone();
+    root.position = pos;
     const clr = color ?? new Color3(0.4, 0.4, 0.45);
 
-    const smokeMat = new StandardMaterial("smoke_mat", this._scene);
-    smokeMat.diffuseColor = clr;
-    smokeMat.emissiveColor = clr.scale(0.3);
-    smokeMat.alpha = 0.7;
-    smokeMat.disableLighting = true;
-
-    // Several overlapping spheres for volume
-    for (let i = 0; i < 5; i++) {
-      const puff = MeshBuilder.CreateSphere("puff", { diameter: 0.5 + Math.random() * 0.3, segments: 6 }, this._scene);
-      puff.position = position.clone();
-      puff.position.x += (Math.random() - 0.5) * 0.4;
-      puff.position.y += 0.3 + Math.random() * 0.5;
-      puff.position.z += (Math.random() - 0.5) * 0.4;
-      puff.material = smokeMat;
-      puff.parent = root;
-    }
+    const ps = createSmoke(this._scene, pos, clr, 20);
+    ps.targetStopDuration = 0.15;
+    ps.start();
 
     const totalDuration = 0.6;
     this._effects.push({
       root,
       remaining: totalDuration,
-      update: (_dt, remaining) => {
-        const t = 1 - remaining / totalDuration;
-        const scale = 1 + t * 2;
-        root.scaling.setAll(scale);
-        smokeMat.alpha = Math.max(0, 0.7 * (1 - t));
-        root.position.y += _dt * 1.5; // drift up
-      },
+      particles: [ps],
     });
   }
 
@@ -190,34 +179,24 @@ export class VisualEffects {
    */
   spawnTornadoDust(position: Vector3): void {
     const root = new TransformNode("tornado", this._scene);
-    root.position = position.clone();
+    const pos = position.clone();
+    root.position = pos;
 
-    const dustMat = new StandardMaterial("dust_mat", this._scene);
-    dustMat.diffuseColor = new Color3(0.7, 0.65, 0.5);
-    dustMat.emissiveColor = new Color3(0.3, 0.28, 0.2);
-    dustMat.alpha = 0.4;
-    dustMat.disableLighting = true;
+    const ps = createDust(this._scene, pos, new Color3(0.7, 0.65, 0.5), 25);
+    // Swirl upward with wider spread
+    ps.direction1 = new Vector3(-1, 0.5, -1);
+    ps.direction2 = new Vector3(1, 2.5, 1);
+    ps.minEmitPower = 1;
+    ps.maxEmitPower = 2;
+    ps.minLifeTime = 0.3;
+    ps.maxLifeTime = 0.6;
+    ps.targetStopDuration = 0.2;
+    ps.start();
 
-    for (let i = 0; i < 6; i++) {
-      const ring = MeshBuilder.CreateTorus("ring", {
-        diameter: 0.6 + i * 0.15, thickness: 0.03, tessellation: 12,
-      }, this._scene);
-      ring.position.y = i * 0.15;
-      ring.rotation.x = (Math.random() - 0.5) * 0.3;
-      ring.material = dustMat;
-      ring.parent = root;
-    }
-
-    const totalDuration = 0.6;
     this._effects.push({
       root,
-      remaining: totalDuration,
-      update: (_dt, remaining) => {
-        const fade = remaining / totalDuration;
-        dustMat.alpha = fade * 0.5;
-        root.rotation.y += _dt * 18;
-        root.scaling.setAll(1 + (1 - fade) * 0.5);
-      },
+      remaining: 0.7,
+      particles: [ps],
     });
   }
 
@@ -225,47 +204,18 @@ export class VisualEffects {
   /** Burst of tan dust spheres on every hit. */
   spawnImpactDust(position: Vector3): void {
     const root = new TransformNode("impactDust", this._scene);
-    const mat = new StandardMaterial("idust_mat", this._scene);
-    mat.diffuseColor = new Color3(0.75, 0.68, 0.5);
-    mat.emissiveColor = new Color3(0.11, 0.10, 0.075);
-    mat.alpha = 0.6;
-    mat.disableLighting = true;
+    const pos = position.clone();
+    pos.y += 0.3;
+    root.position = pos;
 
-    const count = 3 + Math.floor(Math.random() * 2); // 3-4
-    const velocities: Vector3[] = [];
-    for (let i = 0; i < count; i++) {
-      const diam = 0.08 + Math.random() * 0.07;
-      const puff = MeshBuilder.CreateSphere("dp", { diameter: diam, segments: 4 }, this._scene);
-      puff.position = position.clone();
-      puff.position.y += 0.3 + Math.random() * 0.3;
-      puff.material = mat;
-      puff.parent = root;
-      velocities.push(new Vector3(
-        (Math.random() - 0.5) * 0.6,
-        1.5 + Math.random() * 0.5,
-        (Math.random() - 0.5) * 0.6,
-      ));
-    }
+    const ps = createDust(this._scene, pos, new Color3(0.75, 0.68, 0.5), 12);
+    ps.targetStopDuration = 0.1;
+    ps.start();
 
-    const totalDuration = 0.35;
     this._effects.push({
       root,
-      remaining: totalDuration,
-      update: (dt, remaining) => {
-        const t = 1 - remaining / totalDuration;
-        mat.alpha = Math.max(0, 0.6 * (1 - t));
-        const children = root.getChildMeshes();
-        for (let i = 0; i < children.length; i++) {
-          const v = velocities[i];
-          if (!v) continue;
-          children[i].position.x += v.x * dt;
-          children[i].position.y += v.y * dt;
-          children[i].position.z += v.z * dt;
-          const s = 0.5 + t * 0.7;
-          children[i].scaling.setAll(s);
-        }
-      },
-      dispose: () => mat.dispose(),
+      remaining: 0.45,
+      particles: [ps],
     });
   }
 
@@ -273,45 +223,18 @@ export class VisualEffects {
   /** Bright sparks that fly outward on melee hit. */
   spawnHitSparks(position: Vector3): void {
     const root = new TransformNode("hitSparks", this._scene);
-    const mat = new StandardMaterial("spark_mat", this._scene);
-    mat.diffuseColor = new Color3(1, 0.95, 0.7);
-    mat.emissiveColor = new Color3(0.8, 0.76, 0.56);
-    mat.disableLighting = true;
+    const pos = position.clone();
+    pos.y += 0.5;
+    root.position = pos;
 
-    const count = 5 + Math.floor(Math.random() * 2);
-    const velocities: Vector3[] = [];
-    for (let i = 0; i < count; i++) {
-      const spark = MeshBuilder.CreateBox("sp", { width: 0.015, height: 0.06, depth: 0.015 }, this._scene);
-      spark.position = position.clone();
-      spark.position.y += 0.5 + Math.random() * 0.3;
-      spark.material = mat;
-      spark.parent = root;
-      velocities.push(new Vector3(
-        (Math.random() - 0.5) * 3,
-        1 + Math.random() * 3,
-        (Math.random() - 0.5) * 3,
-      ));
-    }
+    const ps = createSparks(this._scene, pos, new Color3(1, 0.95, 0.7), 15);
+    ps.targetStopDuration = 0.05;
+    ps.start();
 
-    const totalDuration = 0.2;
     this._effects.push({
       root,
-      remaining: totalDuration,
-      update: (dt, remaining) => {
-        const t = 1 - remaining / totalDuration;
-        const children = root.getChildMeshes();
-        for (let i = 0; i < children.length; i++) {
-          const v = velocities[i];
-          if (!v) continue;
-          children[i].position.x += v.x * dt;
-          children[i].position.y += v.y * dt;
-          children[i].position.z += v.z * dt;
-          v.y -= 9.8 * dt; // gravity
-          const s = 1 - t;
-          children[i].scaling.setAll(s);
-        }
-      },
-      dispose: () => mat.dispose(),
+      remaining: 0.3,
+      particles: [ps],
     });
   }
 
@@ -321,10 +244,7 @@ export class VisualEffects {
     const flash = MeshBuilder.CreateSphere("hflash", { diameter: 0.1, segments: 4 }, this._scene);
     flash.position = position.clone();
     flash.position.y += 0.5;
-    const mat = new StandardMaterial("hflash_mat", this._scene);
-    mat.diffuseColor = new Color3(1, 1, 1);
-    mat.emissiveColor = new Color3(1, 1, 1);
-    mat.disableLighting = true;
+    const mat = this._fxMat(new Color3(1, 1, 1), new Color3(1, 1, 1));
 
     flash.material = mat;
     const root = flash as unknown as TransformNode;
@@ -348,45 +268,18 @@ export class VisualEffects {
   /** Cluster of orange-red flame spheres. */
   spawnFireBurst(position: Vector3): void {
     const root = new TransformNode("fireBurst", this._scene);
-    const count = 4 + Math.floor(Math.random() * 2);
-    const mats: StandardMaterial[] = [];
+    const pos = position.clone();
+    pos.y += 0.3;
+    root.position = pos;
 
-    for (let i = 0; i < count; i++) {
-      const innerT = i / (count - 1); // 0=inner, 1=outer
-      const mat = new StandardMaterial(`fire_m${i}`, this._scene);
-      const r = 1;
-      const g = 0.55 - innerT * 0.35;
-      const b = 0.08 - innerT * 0.03;
-      mat.diffuseColor = new Color3(r, g, b);
-      mat.emissiveColor = new Color3(r * (0.7 - innerT * 0.4), g * 0.8, b);
-      mat.alpha = 0.8;
-      mat.disableLighting = true;
-      mats.push(mat);
+    const ps = createFire(this._scene, pos, 20);
+    ps.targetStopDuration = 0.15;
+    ps.start();
 
-      const diam = 0.15 + Math.random() * 0.15;
-      const flame = MeshBuilder.CreateSphere("fl", { diameter: diam, segments: 4 }, this._scene);
-      flame.position = position.clone();
-      flame.position.x += (Math.random() - 0.5) * 0.3;
-      flame.position.y += 0.3 + Math.random() * 0.4;
-      flame.position.z += (Math.random() - 0.5) * 0.3;
-      flame.material = mat;
-      flame.parent = root;
-    }
-
-    const totalDuration = 0.5;
     this._effects.push({
       root,
-      remaining: totalDuration,
-      update: (dt, remaining) => {
-        const t = 1 - remaining / totalDuration;
-        for (const m of mats) m.alpha = Math.max(0, 0.8 * (1 - t));
-        const s = 0.5 + t * 1.0;
-        root.scaling.setAll(s);
-        root.position.y += 2.0 * dt;
-      },
-      dispose: () => {
-        for (const material of mats) material.dispose();
-      },
+      remaining: 0.6,
+      particles: [ps],
     });
   }
 
@@ -394,34 +287,20 @@ export class VisualEffects {
   /** Dark smoke cloud that lingers after explosions. */
   spawnPersistentSmoke(position: Vector3): void {
     const root = new TransformNode("pSmoke", this._scene);
-    const mat = new StandardMaterial("psmoke_mat", this._scene);
-    mat.diffuseColor = new Color3(0.3, 0.3, 0.32);
-    mat.emissiveColor = new Color3(0.06, 0.06, 0.064);
-    mat.alpha = 0.5;
-    mat.disableLighting = true;
+    const pos = position.clone();
+    pos.y += 0.4;
+    root.position = pos;
 
-    for (let i = 0; i < 3; i++) {
-      const puff = MeshBuilder.CreateSphere("ps", { diameter: 0.4 + Math.random() * 0.2, segments: 5 }, this._scene);
-      puff.position = position.clone();
-      puff.position.x += (Math.random() - 0.5) * 0.3;
-      puff.position.y += 0.4 + Math.random() * 0.3;
-      puff.position.z += (Math.random() - 0.5) * 0.3;
-      puff.material = mat;
-      puff.parent = root;
-    }
+    const ps = createSmoke(this._scene, pos, new Color3(0.3, 0.3, 0.32), 15);
+    ps.minLifeTime = 0.4;
+    ps.maxLifeTime = 0.8;
+    ps.targetStopDuration = 0.3;
+    ps.start();
 
-    const totalDuration = 0.8;
     this._effects.push({
       root,
-      remaining: totalDuration,
-      update: (dt, remaining) => {
-        const t = 1 - remaining / totalDuration;
-        mat.alpha = Math.max(0, 0.5 * (1 - t));
-        const s = 1 + t * 1.5;
-        root.scaling.setAll(s);
-        root.position.y += 1.0 * dt;
-      },
-      dispose: () => mat.dispose(),
+      remaining: 1.0,
+      particles: [ps],
     });
   }
 
@@ -432,11 +311,7 @@ export class VisualEffects {
     disc.position = position.clone();
     disc.position.y = 0.04;
     disc.rotation.x = Math.PI / 2;
-    const mat = new StandardMaterial("scorch_mat", this._scene);
-    mat.diffuseColor = new Color3(0.15, 0.12, 0.08);
-    mat.emissiveColor = new Color3(0.03, 0.024, 0.016);
-    mat.alpha = 0.4;
-    mat.disableLighting = true;
+    const mat = this._fxMat(new Color3(0.15, 0.12, 0.08), new Color3(0.03, 0.024, 0.016), 0.4);
     disc.material = mat;
 
     const totalDuration = 3.0;

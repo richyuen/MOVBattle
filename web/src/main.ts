@@ -3,6 +3,9 @@ import {
   PointerEventTypes, ShadowGenerator,
 } from "@babylonjs/core";
 import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline";
+import { SSAO2RenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline";
+import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
+import { ImageProcessingConfiguration } from "@babylonjs/core/Materials/imageProcessingConfiguration";
 
 import { GameStateMachine, GameState } from "./core/gameState";
 import { BudgetSystem } from "./core/budgetSystem";
@@ -30,6 +33,7 @@ import {
   type ScenarioSpec,
 } from "./testing/scenarios";
 
+import { initMaterialFactory } from "./units/materialFactory";
 import { TribalSandboxMapBuilder, getPlacementZones } from "./map/mapBuilder";
 import { PlacementValidator } from "./map/placementValidator";
 import {
@@ -55,6 +59,9 @@ const bodyEl = document.body;
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
 const scene = new Scene(engine);
 scene.clearColor = new Color4(0.52, 0.72, 0.90, 1);
+
+// Material factory (PBR cache — must init before any unit/map creation)
+initMaterialFactory(scene);
 
 // Lights
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
@@ -85,6 +92,34 @@ pipeline.bloomWeight = 0.4;
 pipeline.bloomKernel = 64;
 pipeline.bloomScale = 0.5;
 pipeline.fxaaEnabled = true;
+
+// Color grading / tone mapping
+pipeline.imageProcessingEnabled = true;
+pipeline.imageProcessing.toneMappingEnabled = true;
+pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
+pipeline.imageProcessing.vignetteEnabled = true;
+pipeline.imageProcessing.vignetteWeight = 0.3;
+pipeline.imageProcessing.vignetteStretch = 0.5;
+pipeline.imageProcessing.exposure = 1.05;
+pipeline.imageProcessing.contrast = 1.1;
+
+// SSAO — soft contact shadows in crevices
+const ssao = new SSAO2RenderingPipeline("ssao", scene, {
+  ssaoRatio: 0.5,
+  blurRatio: 0.5,
+});
+ssao.radius = 1.5;
+ssao.totalStrength = 0.8;
+ssao.samples = 16;
+ssao.maxZ = 100;
+scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline("ssao", camCtrl.camera);
+
+// Glow layer — FxPreset units with emissive glow
+const glowLayer = new GlowLayer("glow", scene, {
+  mainTextureFixedSize: 512,
+  blurKernelSize: 32,
+});
+glowLayer.intensity = 0.6;
 
 // Map
 const mapBuilder = new TribalSandboxMapBuilder(scene);

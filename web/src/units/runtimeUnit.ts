@@ -1,4 +1,5 @@
-import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene } from "@babylonjs/core";
+import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem } from "@babylonjs/core";
+import { createFxAmbient } from "../combat/particleFactory";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
@@ -60,6 +61,9 @@ export class RuntimeUnit {
 
   // Hit stagger
   private _staggerTimer = 0;
+
+  // Ambient FxPreset particle system
+  private _fxParticleSystem: ParticleSystem | null = null;
 
   // Special: spinning (berserker)
   private _spinning = false;
@@ -152,6 +156,19 @@ export class RuntimeUnit {
     this.animator = new ProceduralAnimator(body);
     this._spawnPosition = body.root.position.clone();
     this._spawnRotationY = body.root.rotation.y;
+  }
+
+  /** Initialize ambient particles for FxPreset units. Call after spawn. */
+  initFxParticles(scene: Scene): void {
+    const preset = this.visualConfig.fxPreset;
+    if (!preset || preset === "none") return;
+    const emitter = this.body.torsoMesh;
+    if (!emitter) return;
+    const ps = createFxAmbient(scene, emitter, preset, 8);
+    if (ps) {
+      ps.start();
+      this._fxParticleSystem = ps;
+    }
   }
 
   canAttack(now: number): boolean {
@@ -836,6 +853,11 @@ export class RuntimeUnit {
   }
 
   dispose(): void {
+    if (this._fxParticleSystem) {
+      this._fxParticleSystem.stop();
+      this._fxParticleSystem.dispose();
+      this._fxParticleSystem = null;
+    }
     if (this._linkedParent) {
       this._linkedParent.detachLinkedChild(this);
     }
