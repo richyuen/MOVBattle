@@ -38,5 +38,11 @@ Thumbs.db
 UpgradeLog.htm
 
 # Web
+node_modules/
+.playwright-mcp/
+output/
 web/node_modules/
+web/output/
 web/dist/
+web/*.out
+web/*.err
