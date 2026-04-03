@@ -4,7 +4,9 @@
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
       "Bash(npx vite:*)",
-      "Bash(cat web/*.html)"
+      "Bash(cat web/*.html)",
+      "Bash(grep -n \"merge\\\\|CSG\\\\|Merge\\\\|solid\\\\|Combined\\\\|combined\" \"/c/Git/MOVBattle/web/src/units\"/*.ts)",
+      "Bash(grep:*)"
     ]
   }
 }
