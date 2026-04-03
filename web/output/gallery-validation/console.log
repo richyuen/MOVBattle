@@ -1,0 +1,6 @@
+Total messages: 1 (Errors: 0, Warnings: 0)
+Returning 3 messages for level "info"
+
+[LOG] BJS - [19:48:31]: Babylon.js v7.54.3 - WebGL2 - Parallel shader compilation @ http://127.0.0.1:4173/MOVBattle/assets/index-DwKGEXAZ.js:3
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:4173/favicon.ico:0
+[LOG] BJS - [19:50:36]: Babylon.js v7.54.3 - WebGL2 - Parallel shader compilation @ http://127.0.0.1:4173/MOVBattle/assets/index-YPPeWi3o.js:3

@@ -5,7 +5,10 @@ export type GalleryCameraPresetId =
   | "heroes_bosses_close"
   | "war_machine_wide_close"
   | "giants_wide_close"
-  | "state_read_duel";
+  | "state_read_duel"
+  | "vehicle_detail_close"
+  | "crew_mount_readability"
+  | "silhouette_lineup";
 
 export interface CameraViewState {
   alpha: number;
@@ -212,6 +215,27 @@ export class CameraController {
           beta: Math.PI / 3.9,
           radius: 22,
           target: { x: -1, y: 1.6, z: 0 },
+        };
+      case "vehicle_detail_close":
+        return {
+          alpha: -Math.PI / 2.74,
+          beta: Math.PI / 3.7,
+          radius: 18,
+          target: { x: 0, y: 1.7, z: 0 },
+        };
+      case "crew_mount_readability":
+        return {
+          alpha: -Math.PI / 2.7,
+          beta: Math.PI / 3.82,
+          radius: 19,
+          target: { x: 0, y: 1.75, z: 0 },
+        };
+      case "silhouette_lineup":
+        return {
+          alpha: -Math.PI / 2.8,
+          beta: Math.PI / 4.15,
+          radius: 20,
+          target: { x: 0, y: 1.55, z: 0 },
         };
     }
   }

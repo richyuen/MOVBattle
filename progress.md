@@ -333,3 +333,32 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Browser console remained clean apart from the existing `favicon.ico` 404.
 - Residual caveat:
 - The new gallery captures are deterministic and no longer require manual zoom/pan, but the current preset angles still favor a slightly elevated tactical view rather than extreme close-up hero framing.
+- 2026-04-02: TABS fidelity execution pass extended the authored-visual surface and completed the expanded gallery suite.
+- Added full-roster reference/status artifacts:
+- `web/TABS_REFERENCE_MATRIX.md` with per-unit must-match cues and collision targets.
+- `web/TABS_VISUAL_TRACKER.md` with per-unit `reference-locked | implemented | validated` status.
+- Tightened `web/src/units/unitVisuals.ts` so roster units now require authored explicit/preset visuals; build-time coverage validation now throws if any roster unit would fall back.
+- Expanded the shared visual contract with:
+- `bodyDetailLevel`
+- new pose presets: `gunner`, `brute`, `boxer`, `monarch`
+- new material presets for stronger faction-specific reads
+- new authored primitives: `pickaxe`, `boxing_glove`, `miner_hat`, `elephant_shrine`
+- Updated runtime/body/material application in `web/src/units/unitFactory.ts`, `web/src/units/runtimeUnit.ts`, and `web/src/units/propBuilder.ts` so the new presets actually change silhouette/pose/read.
+- Extended `web/src/units/vehicleBuilder.ts` with new heavy/composite reads:
+- `viking.longship` now uses a true ship body instead of a humanoid-with-boat read
+- `legacy.chariot` now uses a true cart/horse composite body
+- `good.sacred_elephant` now uses a shrine/canopy elephant body instead of a plain mammoth alias
+- Expanded deterministic gallery coverage in `web/src/testing/scenarios.ts` and `web/src/ui/cameraController.ts`:
+- new curated galleries: `gallery_vehicle_close_reads`, `gallery_exposed_crew_mounts`, `gallery_silhouette_heroes`
+- new pairwise galleries for Zeus/Thor, tank-vs-tank, wheelbarrow-vs-wheelbarrow-dragon, pirate captain-vs-blackbeard, vampire-vs-vlad, samurai-vs-shogun, musketeer-vs-deadeye, wizard-vs-divine-arbiter, reaper-vs-void-monarch, artemis-vs-ullr, banner-bearer-vs-flag-bearer
+- gallery manifest entries now include `reviewModes` and `reviewOrder` metadata for default/silhouette/grayscale review
+- Updated `web/COMPREHENSIVE_VISUAL_PARITY_MATRIX.md` and `web/VISUAL_ACCEPTANCE_GALLERY.md` to point at the new reference/tracker artifacts and the expanded gallery set.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Local Vite preview was served at `http://127.0.0.1:4173/MOVBattle/`
+- Direct Playwright validation reran every `gallery_*` scenario and produced fresh screenshots under `web/output/gallery-validation/`
+- fresh `web/output/gallery-validation/gallery-manifest.json`
+- fresh `web/output/gallery-validation/results.json`
+- fresh `web/output/gallery-validation/console.log`
+- Browser console remained clean apart from the existing `favicon.ico` 404.

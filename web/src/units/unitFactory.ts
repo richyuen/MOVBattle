@@ -57,6 +57,7 @@ export class UnitFactory {
         `${team}_${definition.id}_${Math.random().toString(36).slice(2, 6)}`,
         visual.proportions,
         bodyColor,
+        { detailLevel: visual.bodyDetailLevel ?? "standard" },
       );
       // Attach weapon, hat, shield, special props
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0);
@@ -77,7 +78,7 @@ export class UnitFactory {
     }
 
     // Set animation style for special units
-    if (definition.id === "tribal.mammoth") {
+    if (definition.id === "tribal.mammoth" || definition.id === "good.sacred_elephant") {
       unit.animator.attackStyle = "mammoth";
       unit.animator.walkStyle = "quadruped";
     }
@@ -144,6 +145,28 @@ function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3):
   const zero = new Color3(0, 0, 0);
   const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount);
   switch (materialPreset) {
+    case "tribal_hide":
+      return { bodyDiffuse: blend(new Color3(0.46, 0.32, 0.2), 0.58), bodyEmissive: new Color3(0.01, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.74, 0.62), 0.16), skinEmissive: zero, alpha: 1 };
+    case "medieval_steel":
+      return { bodyDiffuse: blend(new Color3(0.62, 0.64, 0.68), 0.46), bodyEmissive: new Color3(0.01, 0.01, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.84, 0.76), 0.12), skinEmissive: zero, alpha: 1 };
+    case "ancient_bronze":
+      return { bodyDiffuse: blend(new Color3(0.72, 0.56, 0.28), 0.5), bodyEmissive: new Color3(0.02, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.8, 0.68), 0.16), skinEmissive: zero, alpha: 1 };
+    case "viking_fur":
+      return { bodyDiffuse: blend(new Color3(0.5, 0.4, 0.28), 0.54), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.88, 0.78, 0.68), 0.14), skinEmissive: zero, alpha: 1 };
+    case "dynasty_lacquer":
+      return { bodyDiffuse: blend(new Color3(0.62, 0.16, 0.14), 0.5), bodyEmissive: new Color3(0.02, 0.0, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.84, 0.72), 0.12), skinEmissive: zero, alpha: 1 };
+    case "renaissance_velvet":
+      return { bodyDiffuse: blend(new Color3(0.38, 0.32, 0.52), 0.48), bodyEmissive: new Color3(0.01, 0.01, 0.02), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.9, 0.82, 0.74), 0.12), skinEmissive: zero, alpha: 1 };
+    case "pirate_tar":
+      return { bodyDiffuse: blend(new Color3(0.24, 0.18, 0.14), 0.62), bodyEmissive: new Color3(0.01, 0.01, 0.0), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.84, 0.68, 0.55), 0.14), skinEmissive: zero, alpha: 1 };
+    case "wildwest_leather":
+      return { bodyDiffuse: blend(new Color3(0.46, 0.3, 0.18), 0.54), bodyEmissive: zero, skinDiffuse: Color3.Lerp(skinBase, new Color3(0.86, 0.72, 0.6), 0.14), skinEmissive: zero, alpha: 1 };
+    case "legacy_toy":
+      return { bodyDiffuse: blend(new Color3(0.74, 0.74, 0.74), 0.4), bodyEmissive: new Color3(0.01, 0.01, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.92, 0.86, 0.8), 0.08), skinEmissive: zero, alpha: 1 };
+    case "good_gold":
+      return { bodyDiffuse: blend(new Color3(0.92, 0.82, 0.56), 0.48), bodyEmissive: new Color3(0.04, 0.03, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.9, 0.8), 0.2), skinEmissive: zero, alpha: 1 };
+    case "evil_void":
+      return { bodyDiffuse: blend(new Color3(0.3, 0.22, 0.42), 0.62), bodyEmissive: new Color3(0.03, 0.01, 0.05), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.82, 0.72, 0.84), 0.14), skinEmissive: zero, alpha: 0.98 };
     case "secret_hero":
       return { bodyDiffuse: blend(new Color3(0.92, 0.84, 0.45), 0.45), bodyEmissive: new Color3(0.08, 0.06, 0.01), skinDiffuse: Color3.Lerp(skinBase, new Color3(0.98, 0.92, 0.82), 0.25), skinEmissive: zero, alpha: 1 };
     case "secret_ghost":

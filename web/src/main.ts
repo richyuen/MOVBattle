@@ -752,6 +752,8 @@ interface GalleryCaptureManifestEntry {
   hideUiDuringCapture: boolean;
   settledFrames: number;
   captureAdvanceMs: number;
+  reviewModes: string[];
+  reviewOrder: string[];
   status: "passed" | "failed";
 }
 
@@ -854,6 +856,8 @@ function buildGalleryManifestEntry(
     hideUiDuringCapture: gallery.hideUiDuringCapture ?? true,
     settledFrames: gallery.settleFrames ?? 2,
     captureAdvanceMs: gallery.captureAdvanceMs ?? 0,
+    reviewModes: gallery.reviewModes ?? ["default"],
+    reviewOrder: gallery.reviewOrder ?? ["default"],
     status: passed ? "passed" : "failed",
   };
 }

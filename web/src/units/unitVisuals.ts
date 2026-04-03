@@ -1,10 +1,12 @@
 import type { BodyProportions } from "./bodyBuilder";
 import { FactionId } from "../data/factionColors";
 import { getUnit } from "../data/unitDefinitions";
+import { ROSTER_MANIFEST } from "../data/rosterManifest";
 
 export type WeaponType =
   | "none" | "club" | "sword" | "greatsword" | "spear" | "javelin"
   | "axe" | "hammer" | "mace" | "staff" | "dagger"
+  | "pickaxe" | "boxing_glove"
   | "blowgun"
   | "bow" | "crossbow" | "musket" | "flintlock" | "blunderbuss" | "cannon_hand"
   | "shield_sword" | "halberd" | "lance"
@@ -19,6 +21,7 @@ export type HatType =
   | "none" | "crown" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat"
+  | "miner_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "monk_headband"
   | "pharaoh" | "feather_headdress" | "bone_mask"
@@ -35,7 +38,7 @@ export type SpecialType =
   | "raptor_mount" | "clam_shell" | "safe_bundle" | "dragon_cart"
   | "giant_bones" | "giant_tree" | "giant_ice" | "halo"
   | "candle_flame" | "cactus_body" | "banner_back" | "chariot_cart"
-  | "vampire_collar" | "quiver_back";
+  | "vampire_collar" | "quiver_back" | "elephant_shrine";
 
 export type VisualStateTag = "idle" | "moving" | "attacking" | "ability-active";
 
@@ -45,6 +48,10 @@ export type PosePreset =
   | "caster"
   | "shouter"
   | "duelist"
+  | "gunner"
+  | "brute"
+  | "boxer"
+  | "monarch"
   | "spinner"
   | "giant"
   | "mounted"
@@ -54,6 +61,17 @@ export type PosePreset =
 
 export type MaterialPreset =
   | "default"
+  | "tribal_hide"
+  | "medieval_steel"
+  | "ancient_bronze"
+  | "viking_fur"
+  | "dynasty_lacquer"
+  | "renaissance_velvet"
+  | "pirate_tar"
+  | "wildwest_leather"
+  | "legacy_toy"
+  | "good_gold"
+  | "evil_void"
   | "secret_hero"
   | "secret_ghost"
   | "secret_ice"
@@ -106,6 +124,7 @@ export interface UnitVisualConfig {
   materialPreset?: MaterialPreset;
   attachmentPreset?: AttachmentPreset;
   fxPreset?: FxPreset;
+  bodyDetailLevel?: "standard" | "hero" | "operator";
   stateVariants?: Partial<Record<VisualStateTag, string[]>>;
 }
 
@@ -131,6 +150,7 @@ function vis(
     materialPreset: "default",
     attachmentPreset: "none",
     fxPreset: "none",
+    bodyDetailLevel: "standard",
     ...extras,
   };
 }
@@ -211,12 +231,18 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ ANCIENT ═══════════════════════
   "ancient.shield_bearer": vis(
     { scale: 1.0, bulk: 1.1 }, "sword", "helmet", "tower", "none", "#CD853F",
+    undefined,
+    { materialPreset: "ancient_bronze" },
   ),
   "ancient.sarissa": vis(
     { scale: 1.05, armLength: 1.3 }, "spear", "helmet", "buckler", "none", "#B8860B",
+    undefined,
+    { materialPreset: "ancient_bronze" },
   ),
   "ancient.hoplite": vis(
     { scale: 1.15, bulk: 1.2 }, "spear", "plume_helmet", "round", "none", "#DAA520",
+    undefined,
+    { materialPreset: "ancient_bronze" },
   ),
   "ancient.ballista": vis(
     { scale: 1.5, bulk: 1.6, legLength: 0.7 }, "none", "helmet", "none", "ballista_frame", "#8B7355",
@@ -234,12 +260,16 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ VIKING ═══════════════════════
   "viking.headbutter": vis(
     { scale: 1.0, headSize: 1.8, bulk: 1.1 }, "none", "viking_helmet", "none", "none", "#808080",
+    undefined,
+    { posePreset: "brute", materialPreset: "viking_fur" },
   ),
   "viking.ice_archer": vis(
     { scale: 0.95, armLength: 1.05 }, "bow", "hood", "none", "quiver_back", "#ADD8E6",
   ),
   "viking.brawler": vis(
     { scale: 1.1, bulk: 1.2 }, "axe", "viking_helmet", "round", "none", "#A0522D",
+    undefined,
+    { materialPreset: "viking_fur" },
   ),
   "viking.berserker": vis(
     { scale: 1.15, bulk: 1.2, armLength: 1.1 }, "axe", "horned_helmet", "none", "none", "#8B0000", "axe",
@@ -252,17 +282,25 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "viking.jarl": vis(
     { scale: 1.55, bulk: 1.4, headSize: 1.1 }, "greatsword", "horned_helmet", "none", "cape", "#FFD700",
+    undefined,
+    { posePreset: "monarch", materialPreset: "viking_fur", bodyDetailLevel: "hero" },
   ),
 
   // ═══════════════════════ DYNASTY ═══════════════════════
   "dynasty.samurai": vis(
     { scale: 1.1, bulk: 1.1 }, "katana", "samurai_helmet", "none", "none", "#C41E3A",
+    undefined,
+    { materialPreset: "dynasty_lacquer" },
   ),
   "dynasty.firework_archer": vis(
     { scale: 0.95, armLength: 1.05 }, "bow", "conical_hat", "none", "none", "#FF4500",
+    undefined,
+    { posePreset: "archer", materialPreset: "dynasty_lacquer" },
   ),
   "dynasty.monk": vis(
     { scale: 1.1, bulk: 1.15, headSize: 1.15 }, "none", "monk_headband", "none", "monk_robe", "#FF8C00",
+    undefined,
+    { materialPreset: "dynasty_lacquer" },
   ),
   "dynasty.ninja": vis(
     { scale: 0.85, bulk: 0.85, armLength: 1.05 }, "shuriken_hand", "ninja_mask", "none", "none", "#1A1A1A",
@@ -280,15 +318,21 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ RENAISSANCE ═══════════════════════
   "renaissance.painter": vis(
     { scale: 0.9, bulk: 0.9 }, "paintbrush", "beret", "none", "none", "#FF69B4",
+    undefined,
+    { materialPreset: "renaissance_velvet" },
   ),
   "renaissance.fencer": vis(
     { scale: 1.05, bulk: 0.9, armLength: 1.1 }, "rapier", "plume_helmet", "none", "cape", "#FFFFFF",
+    undefined,
+    { posePreset: "duelist", materialPreset: "renaissance_velvet" },
   ),
   "renaissance.balloon_archer": vis(
     { scale: 0.9, armLength: 1.05 }, "bow", "beret", "none", "balloon", "#FFB6C1",
   ),
   "renaissance.musketeer": vis(
     { scale: 1.05, bulk: 1.0 }, "musket", "plume_helmet", "none", "none", "#191970",
+    undefined,
+    { posePreset: "gunner", materialPreset: "renaissance_velvet" },
   ),
   "renaissance.halberd": vis(
     { scale: 1.25, bulk: 1.25 }, "halberd", "helmet", "none", "none", "#4682B4",
@@ -303,18 +347,26 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ PIRATE ═══════════════════════
   "pirate.flintlock": vis(
     { scale: 0.95, bulk: 0.95 }, "flintlock", "tricorn", "none", "none", "#8B4513",
+    undefined,
+    { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
   "pirate.blunderbuss": vis(
     { scale: 1.05, bulk: 1.1 }, "blunderbuss", "tricorn", "none", "none", "#696969",
+    undefined,
+    { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
   "pirate.bomb_thrower": vis(
     { scale: 1.0, bulk: 1.0 }, "bomb", "tricorn", "none", "none", "#2F4F4F",
   ),
   "pirate.harpooner": vis(
     { scale: 1.05, armLength: 1.15 }, "harpoon", "bandana", "none", "none", "#708090",
+    undefined,
+    { materialPreset: "pirate_tar" },
   ),
   "pirate.captain": vis(
     { scale: 1.35, bulk: 1.3 }, "cutlass", "captain_hat", "none", "cape", "#DAA520",
+    undefined,
+    { posePreset: "monarch", materialPreset: "pirate_tar", bodyDetailLevel: "hero" },
   ),
   "pirate.cannon": vis(
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "tricorn", "none", "cannon_base", "#2F4F4F",
@@ -381,9 +433,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "wild_west.miner": vis(
-    { scale: 1.12, bulk: 1.22, headSize: 1.04 }, "hammer", "hood", "none", "none", "#6B4A2F", undefined, {
-      posePreset: "duelist",
-      materialPreset: "secret_bandit",
+    { scale: 1.12, bulk: 1.22, headSize: 1.04 }, "pickaxe", "miner_hat", "none", "none", "#6B4A2F", undefined, {
+      posePreset: "brute",
+      materialPreset: "wildwest_leather",
     },
   ),
   "wild_west.cactus": vis(
@@ -394,8 +446,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "wild_west.gunslinger": vis(
     { scale: 1.0, bulk: 0.9, armLength: 1.08 }, "flintlock", "cowboy_hat", "none", "none", "#7F4B24", "flintlock", {
-      posePreset: "duelist",
-      materialPreset: "secret_bandit",
+      posePreset: "gunner",
+      materialPreset: "wildwest_leather",
       attachmentPreset: "quickdraw_smoke",
       stateVariants: { attacking: ["quickdraw_smoke"] },
     },
@@ -403,28 +455,32 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "wild_west.lasso": vis(
     { scale: 1.28, bulk: 1.02, armLength: 1.06 }, "whip", "cowboy_hat", "none", "mount_horse", "#8B6A3D", undefined, {
       posePreset: "mounted",
-      materialPreset: "secret_bandit",
+      materialPreset: "wildwest_leather",
     },
   ),
   "wild_west.deadeye": vis(
     { scale: 1.02, bulk: 0.92, armLength: 1.12 }, "musket", "cowboy_hat", "none", "none", "#6C5136", undefined, {
-      posePreset: "archer",
-      materialPreset: "secret_bandit",
+      posePreset: "gunner",
+      materialPreset: "wildwest_leather",
     },
   ),
 
   // ═══════════════════════ LEGACY ═══════════════════════
   "legacy.peasant": vis(
     { scale: 0.62, bulk: 0.78, headSize: 1.44, legLength: 0.74 }, "none", "none", "none", "none", "#D8D8D8",
+    undefined,
+    { materialPreset: "legacy_toy" },
   ),
   "legacy.banner_bearer": vis(
     { scale: 1.0, bulk: 0.9 }, "staff", "none", "none", "banner_back", "#D74A4A", undefined, {
       posePreset: "support",
+      materialPreset: "legacy_toy",
     },
   ),
   "legacy.poacher": vis(
     { scale: 0.94, bulk: 0.84, armLength: 1.1 }, "bow", "hood", "none", "none", "#6F7D43", undefined, {
       posePreset: "archer",
+      materialPreset: "legacy_toy",
       attachmentPreset: "bow_ready",
       stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
     },
@@ -437,6 +493,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "legacy.pike": vis(
     { scale: 1.14, bulk: 1.12, armLength: 1.3 }, "spear", "great_helm", "none", "none", "#B5B5B5",
+    undefined,
+    { materialPreset: "legacy_toy" },
   ),
   "legacy.barrel_roller": vis(
     { scale: 1.24, bulk: 1.48, headSize: 0.98 }, "none", "none", "none", "barrel_body", "#704726", undefined, {
@@ -445,14 +503,15 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.boxer": vis(
-    { scale: 0.68, bulk: 0.94, headSize: 1.32, armLength: 1.08 }, "none", "none", "none", "none", "#B4B4B4", undefined, {
-      posePreset: "duelist",
+    { scale: 0.68, bulk: 0.94, headSize: 1.32, armLength: 1.08 }, "boxing_glove", "none", "none", "none", "#C54A4A", "boxing_glove", {
+      posePreset: "boxer",
+      materialPreset: "legacy_toy",
     },
   ),
   "legacy.flag_bearer": vis(
     { scale: 1.34, bulk: 1.08, headSize: 1.05 }, "staff", "none", "none", "banner_back", "#5C79D4", undefined, {
       posePreset: "support",
-      materialPreset: "secret_royal",
+      materialPreset: "legacy_toy",
     },
   ),
   "legacy.pharaoh": vis(
@@ -478,9 +537,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.super_boxer": vis(
-    { scale: 1.48, bulk: 1.38, headSize: 1.08, armLength: 1.18 }, "none", "none", "none", "none", "#F0C24D", undefined, {
-      posePreset: "duelist",
+    { scale: 1.48, bulk: 1.38, headSize: 1.08, armLength: 1.18 }, "boxing_glove", "none", "none", "none", "#F0C24D", "boxing_glove", {
+      posePreset: "boxer",
       materialPreset: "secret_hero",
+      bodyDetailLevel: "hero",
     },
   ),
 
@@ -488,22 +548,23 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "good.devout_gauntlet": vis(
     { scale: 1.02, bulk: 1.12, armLength: 1.08 }, "mace", "laurel", "none", "none", "#E3C76A", undefined, {
       posePreset: "duelist",
-      materialPreset: "secret_holy",
+      materialPreset: "good_gold",
     },
   ),
   "good.celestial_aegis": vis(
     { scale: 1.12, bulk: 1.2 }, "sword", "plume_helmet", "tower", "none", "#F0D87A", undefined, {
-      materialPreset: "secret_holy",
+      materialPreset: "good_gold",
     },
   ),
   "good.radiant_glaive": vis(
     { scale: 1.24, bulk: 1.16, armLength: 1.16 }, "halberd", "laurel", "none", "none", "#F2D55D", undefined, {
-      materialPreset: "secret_holy",
+      materialPreset: "good_gold",
     },
   ),
   "good.righteous_paladin": vis(
     { scale: 1.34, bulk: 1.36 }, "greatsword", "great_helm", "kite", "cape", "#E8D89B", undefined, {
-      materialPreset: "secret_holy",
+      posePreset: "monarch",
+      materialPreset: "good_gold",
     },
   ),
   "good.divine_arbiter": vis(
@@ -516,9 +577,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.sacred_elephant": vis(
-    { scale: 2.56, bulk: 1.98, headSize: 1.42, legLength: 0.84 }, "none", "none", "none", "mount_mammoth", "#F3D88C", undefined, {
+    { scale: 2.56, bulk: 1.98, headSize: 1.42, legLength: 0.84 }, "none", "none", "none", "elephant_shrine", "#F3D88C", undefined, {
       posePreset: "vehicle",
-      materialPreset: "secret_holy",
+      materialPreset: "good_gold",
+      bodyDetailLevel: "hero",
     },
   ),
 
@@ -534,7 +596,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "evil.exiled_sentinel": vis(
     { scale: 1.14, bulk: 1.2 }, "sword", "great_helm", "tower", "cape", "#7B3434", undefined, {
-      materialPreset: "secret_demon",
+      materialPreset: "evil_void",
     },
   ),
   "evil.mad_mechanic": vis(
@@ -548,7 +610,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "evil.void_cultist": vis(
     { scale: 1.08, bulk: 0.96, headSize: 1.08 }, "staff", "hood", "none", "cape", "#6B52A8", undefined, {
       posePreset: "caster",
-      materialPreset: "secret_ghost",
+      materialPreset: "evil_void",
       attachmentPreset: "summoner",
       fxPreset: "spectral",
       stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
@@ -557,7 +619,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "evil.tempest_lich": vis(
     { scale: 1.42, bulk: 1.04, headSize: 1.14 }, "staff", "hood", "none", "none", "#86A7FF", undefined, {
       posePreset: "caster",
-      materialPreset: "secret_bone",
+      materialPreset: "evil_void",
       attachmentPreset: "storm_halo",
       fxPreset: "spectral",
       stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },
@@ -574,10 +636,11 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "evil.void_monarch": vis(
     { scale: 2.08, bulk: 1.46, headSize: 1.14, armLength: 1.16 }, "staff", "crown", "none", "cape", "#5A4A8E", undefined, {
-      posePreset: "giant",
-      materialPreset: "secret_ghost",
+      posePreset: "monarch",
+      materialPreset: "evil_void",
       attachmentPreset: "shadow_orbit",
       fxPreset: "spectral",
+      bodyDetailLevel: "hero",
       stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
     },
   ),
@@ -589,11 +652,21 @@ export function getUnitVisual(id: string): UnitVisualConfig {
   if (UNIT_VISUALS[id]) return UNIT_VISUALS[id];
 
   const def = getUnit(id);
-  if (def?.faction === FactionId.Secret) {
-    throw new Error(`Missing explicit Secret visual preset for ${id}`);
+  if (def) {
+    throw new Error(`Missing authored visual config for ${id}`);
   }
 
   return inferUnitVisual(id);
+}
+
+function validateVisualCoverage(): void {
+  const missing = ROSTER_MANIFEST
+    .map((unit) => unit.id)
+    .filter((id) => !UNIT_VISUALS[id] && !getPresetVisual(id));
+
+  if (missing.length > 0) {
+    throw new Error(`Roster units missing authored visuals: ${missing.join(", ")}`);
+  }
 }
 
 function getPresetVisual(id: string): UnitVisualConfig | null {
@@ -605,11 +678,13 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "iconic_zeus":
       return vis({ scale: 1.7, bulk: 1.08, headSize: 1.16, armLength: 1.16 }, "lightning_bolt", "laurel", "none", "cape", "#f7dd6f", undefined, {
         posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "storm_halo", fxPreset: "solar",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },
       });
     case "iconic_thor":
       return vis({ scale: 1.68, bulk: 1.18, headSize: 1.1, armLength: 1.12 }, "hammer", "horned_helmet", "none", "cape", "#8ec7ff", undefined, {
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "storm_halo", fxPreset: "wind",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },
       });
     case "iconic_mammoth":
@@ -624,6 +699,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "iconic_reaper":
       return vis({ scale: 1.92, bulk: 1.5, headSize: 1.12, armLength: 1.18 }, "scythe", "hood", "none", "cape", "#6f6d86", undefined, {
         posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "reaper_aura", fxPreset: "spectral",
+        bodyDetailLevel: "hero",
         stateVariants: { moving: ["reaper_trail"], attacking: ["reaper_trail", "reaper_arc"], "ability-active": ["reaper_trail", "reaper_arc"] },
       });
     case "iconic_quick_draw":
@@ -639,11 +715,13 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "iconic_dark_peasant":
       return vis({ scale: 2.08, bulk: 1.64, headSize: 1.16, armLength: 1.22 }, "none", "hood", "none", "cape", "#3b2b59", undefined, {
         posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
+        bodyDetailLevel: "hero",
         stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
       });
     case "iconic_super_peasant":
       return vis({ scale: 2.02, bulk: 1.18, headSize: 1.08, armLength: 1.2, legLength: 1.08 }, "none", "laurel", "none", "cape", "#f3d45a", undefined, {
         posePreset: "giant", materialPreset: "secret_hero", attachmentPreset: "super_aura", fxPreset: "solar",
+        bodyDetailLevel: "hero",
         stateVariants: { moving: ["super_aura"], attacking: ["super_aura"], "ability-active": ["super_aura"] },
       });
     case "iconic_hwacha":
@@ -661,11 +739,13 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "iconic_monkey_king":
       return vis({ scale: 1.72, bulk: 1.18, headSize: 1.14, armLength: 1.28 }, "bo_staff", "crown", "none", "cape", "#9a6a2d", undefined, {
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "hero_halo", fxPreset: "royal",
+        bodyDetailLevel: "hero",
         stateVariants: { moving: ["halo_flare"], attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
       });
     case "iconic_pirate_queen":
       return vis({ scale: 1.72, bulk: 1.24, headSize: 1.08, armLength: 1.08 }, "cutlass", "pirate_hat", "none", "cape", "#ff4f8a", "flintlock", {
         posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });
     case "secret_ballooner":
@@ -788,6 +868,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_skeleton_giant":
       return vis({ scale: 2.35, bulk: 1.7, headSize: 1.15, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_bones", "#e5ddd0", undefined, {
         posePreset: "giant", materialPreset: "secret_bone", attachmentPreset: "giant_aura", fxPreset: "spectral",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });
     case "secret_bomb_cannon":
@@ -809,11 +890,13 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_blackbeard":
       return vis({ scale: 1.58, bulk: 1.28, headSize: 1.08 }, "cutlass", "captain_hat", "none", "cape", "#5d3a1f", "flintlock", {
         posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });
     case "secret_samurai_giant":
       return vis({ scale: 2.3, bulk: 1.75, headSize: 1.16, armLength: 1.1, legLength: 0.95 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
         posePreset: "giant", materialPreset: "secret_royal", attachmentPreset: "giant_aura", fxPreset: "royal",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });
     case "secret_ullr":
@@ -824,6 +907,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_lady_red_jade":
       return vis({ scale: 1.52, bulk: 1.18, headSize: 1.05 }, "sword", "crown", "none", "cape", "#cf2f2f", "sword", {
         posePreset: "duelist", materialPreset: "secret_royal", fxPreset: "royal",
+        bodyDetailLevel: "hero",
       });
     case "secret_sensei":
       return vis({ scale: 1.32, bulk: 1.0, armLength: 1.1 }, "shuriken_hand", "conical_hat", "none", "monk_robe", "#f5e4b4", "shuriken_hand", {
@@ -832,20 +916,24 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_shogun":
       return vis({ scale: 1.58, bulk: 1.3, headSize: 1.08 }, "katana", "samurai_helmet", "none", "banner_back", "#a42323", undefined, {
         posePreset: "duelist", materialPreset: "secret_royal", fxPreset: "royal",
+        bodyDetailLevel: "hero",
       });
     case "secret_tree_giant":
       return vis({ scale: 2.45, bulk: 1.85, headSize: 1.1, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_tree", "#6f8a42", undefined, {
         posePreset: "giant", materialPreset: "secret_nature", attachmentPreset: "giant_aura",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });
     case "secret_artemis":
       return vis({ scale: 1.45, bulk: 1.02, armLength: 1.12 }, "bow", "laurel", "none", "halo", "#f5d566", undefined, {
         posePreset: "archer", materialPreset: "secret_hero", attachmentPreset: "hero_halo", fxPreset: "solar",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["drawn_arrow", "halo_flare"], "ability-active": ["drawn_arrow", "halo_flare"] },
       });
     case "secret_ice_giant":
       return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_ice", "#9fe9ff", undefined, {
         posePreset: "giant", materialPreset: "secret_ice", attachmentPreset: "giant_aura", fxPreset: "frost",
+        bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });
     default:
@@ -866,6 +954,8 @@ function inferUnitVisual(id: string): UnitVisualConfig {
     inferAccent(def.faction),
   );
 }
+
+validateVisualCoverage();
 
 function inferProportions(size: string | undefined, archetype: string): Partial<BodyProportions> {
   switch (size) {

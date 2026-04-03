@@ -1,0 +1,382 @@
+[
+  {
+    "scenario": "gallery_vehicle_close_reads",
+    "status": "passed",
+    "presetId": "vehicle_detail_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_exposed_crew_mounts",
+    "status": "passed",
+    "presetId": "crew_mount_readability",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_legacy_tank_vs_renaissance_da_vinci_tank",
+    "status": "passed",
+    "presetId": "vehicle_detail_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_tribal",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_farmer",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_medieval",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_ancient",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_viking",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_dynasty",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_renaissance",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_pirate",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_spooky",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_wild_west",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_legacy",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_good",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_evil",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_faction_secret",
+    "status": "passed",
+    "presetId": "faction_lineup_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_iconic_heroes_bosses",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_war_machines_composites",
+    "status": "passed",
+    "presetId": "war_machine_wide_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_giants_colossals",
+    "status": "passed",
+    "presetId": "giants_wide_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_state_reads",
+    "status": "passed",
+    "presetId": "state_read_duel",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_silhouette_heroes",
+    "status": "passed",
+    "presetId": "silhouette_lineup",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_wild_west_gunslinger_vs_quick_draw",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_legacy_boxer_vs_super_boxer",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_good_chronomancer_vs_divine_arbiter",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_secret_vlad_vs_blackbeard",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_secret_sensei_vs_shogun",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_secret_witch_vs_necromancer",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_ancient_zeus_vs_legacy_thor",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_farmer_wheelbarrow_vs_secret_wheelbarrow_dragon",
+    "status": "passed",
+    "presetId": "crew_mount_readability",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_pirate_captain_vs_secret_blackbeard",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_spooky_vampire_vs_secret_vlad",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_dynasty_samurai_vs_secret_shogun",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_renaissance_musketeer_vs_wild_west_deadeye",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_legacy_wizard_vs_good_divine_arbiter",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_spooky_reaper_vs_evil_void_monarch",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_secret_artemis_vs_secret_ullr",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  },
+  {
+    "scenario": "gallery_pair_legacy_banner_bearer_vs_flag_bearer",
+    "status": "passed",
+    "presetId": "heroes_bosses_close",
+    "reviewOrder": [
+      "default",
+      "silhouette",
+      "grayscale"
+    ]
+  }
+]

@@ -661,6 +661,38 @@ export class RuntimeUnit {
           body.neck.rotation.z += 0.08;
         }
         break;
+      case "gunner":
+        body.torso.rotation.z += 0.02;
+        body.leftShoulder.rotation.z -= 0.1;
+        body.rightShoulder.rotation.z += 0.18;
+        body.leftElbow.rotation.x -= 0.14;
+        body.rightElbow.rotation.x -= 0.18;
+        if (isAttacking) {
+          body.torso.rotation.x -= 0.06;
+          body.neck.rotation.x += 0.06;
+        }
+        break;
+      case "brute":
+        body.torso.rotation.x += isAttacking ? 0.12 : 0.06;
+        body.leftShoulder.rotation.z -= 0.16;
+        body.rightShoulder.rotation.z += 0.16;
+        body.leftElbow.rotation.x -= 0.08;
+        body.rightElbow.rotation.x -= 0.08;
+        break;
+      case "boxer":
+        body.leftShoulder.rotation.z -= 0.24;
+        body.rightShoulder.rotation.z += 0.24;
+        body.leftElbow.rotation.x -= 0.32;
+        body.rightElbow.rotation.x -= 0.32;
+        body.torso.rotation.x -= isAttacking ? 0.14 : 0.05;
+        break;
+      case "monarch":
+        body.torso.rotation.x += isAttacking ? 0.02 : 0.06;
+        body.torso.rotation.z += 0.02;
+        body.leftShoulder.rotation.z -= 0.08;
+        body.rightShoulder.rotation.z += 0.08;
+        body.neck.rotation.x -= 0.04;
+        break;
       case "spinner":
         body.leftShoulder.rotation.z -= 0.42;
         body.rightShoulder.rotation.z += 0.42;

@@ -53,6 +53,7 @@ export interface ScenarioSpec {
 }
 
 export type ScenarioCapturePhase = "placement" | "simulation-mid" | "replay" | "post-reset";
+export type GalleryReviewMode = "default" | "silhouette" | "grayscale";
 
 export interface ScenarioGallerySpec {
   presetId: GalleryCameraPresetId;
@@ -62,6 +63,8 @@ export interface ScenarioGallerySpec {
   hideUiDuringCapture?: boolean;
   artifactBaseName?: string;
   cameraOverride?: GalleryCameraOverride;
+  reviewModes?: GalleryReviewMode[];
+  reviewOrder?: string[];
 }
 
 export const SCENARIOS: Record<string, ScenarioSpec> = {
@@ -611,6 +614,8 @@ function makeGalleryScenario(
       hideUiDuringCapture: options.hideUiDuringCapture ?? true,
       artifactBaseName: options.artifactBaseName ?? name,
       cameraOverride: options.cameraOverride,
+      reviewModes: ["default", "silhouette", "grayscale"],
+      reviewOrder: ["default", "silhouette", "grayscale"],
     },
   };
 }
@@ -842,6 +847,84 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       focus: "Attack/ability-state units should expose their firing, summoning, lightning, or spectral overlays in deterministic close combat.",
     },
   ),
+  gallery_vehicle_close_reads: makeGalleryScenario(
+    "gallery_vehicle_close_reads",
+    "Close-read detail gallery for the heaviest vehicles and artillery.",
+    [
+      "dynasty.hwacha",
+      "pirate.cannon",
+      "renaissance.da_vinci_tank",
+      "legacy.tank",
+      "secret.bomb_cannon",
+      "secret.gatling_gun",
+      "good.sacred_elephant",
+      "viking.longship",
+      "legacy.chariot",
+    ],
+    {
+      columns: 3,
+      centerX: -0.8,
+      spacingX: 4.8,
+      spacingZ: 2.6,
+      galleryPresetId: "vehicle_detail_close",
+      cameraOverride: {
+        target: { x: 0.4, y: 1.82, z: 0.1 },
+        radius: 20,
+      },
+      focus: "Heavy units should each read as their own chassis family with visible crew, hull, or shrine cues instead of shared generic mass.",
+    },
+  ),
+  gallery_exposed_crew_mounts: makeGalleryScenario(
+    "gallery_exposed_crew_mounts",
+    "Crew, rider, and mount readability gallery.",
+    [
+      "farmer.wheelbarrow",
+      "renaissance.jouster",
+      "wild_west.lasso",
+      "legacy.chariot",
+      "secret.cavalry",
+      "secret.raptor_rider",
+      "secret.bank_robbers",
+      "secret.wheelbarrow_dragon",
+    ],
+    {
+      columns: 3,
+      centerX: -0.4,
+      spacingX: 4.6,
+      spacingZ: 2.7,
+      galleryPresetId: "crew_mount_readability",
+      cameraOverride: {
+        target: { x: 0.2, y: 1.75, z: 0 },
+        radius: 20,
+      },
+      focus: "Crew, riders, mounts, and carried structures must stay readable at gameplay distance rather than collapsing into a single blob.",
+    },
+  ),
+  gallery_silhouette_heroes: makeGalleryScenario(
+    "gallery_silhouette_heroes",
+    "Silhouette-first hero lineup review.",
+    [
+      "ancient.zeus",
+      "legacy.thor",
+      "wild_west.quick_draw",
+      "good.chronomancer",
+      "good.divine_arbiter",
+      "spooky.reaper",
+      "legacy.dark_peasant",
+      "legacy.super_peasant",
+      "secret.vlad",
+      "secret.blackbeard",
+      "secret.shogun",
+      "secret.artemis",
+    ],
+    {
+      columns: 4,
+      spacingX: 5.0,
+      spacingZ: 2.8,
+      galleryPresetId: "silhouette_lineup",
+      focus: "Hero and boss silhouettes should remain identifiable when ornament and faction color are mentally ignored.",
+    },
+  ),
   gallery_pair_wild_west_gunslinger_vs_quick_draw: makePairGalleryScenario(
     "gallery_pair_wild_west_gunslinger_vs_quick_draw",
     "Pairwise hero comparison for Wild West sidearms.",
@@ -877,6 +960,81 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     "Pairwise summoner comparison for Secret dark casters.",
     ["secret.witch", "secret.necromancer"],
     "Witch should read as the pointed-hat spectral summoner, while Necromancer should read as the bone-staff revival caster with a paler skeletal silhouette.",
+  ),
+  gallery_pair_ancient_zeus_vs_legacy_thor: makePairGalleryScenario(
+    "gallery_pair_ancient_zeus_vs_legacy_thor",
+    "Pairwise lightning hero comparison.",
+    ["ancient.zeus", "legacy.thor"],
+    "Zeus should stay laurel-and-bolt divine caster, while Thor should stay hammer-forward storm bruiser with a heavier northern silhouette.",
+  ),
+  gallery_pair_legacy_tank_vs_renaissance_da_vinci_tank: makePairGalleryScenario(
+    "gallery_pair_legacy_tank_vs_renaissance_da_vinci_tank",
+    "Pairwise tank silhouette comparison.",
+    ["legacy.tank", "renaissance.da_vinci_tank"],
+    "Legacy Tank should read as a heavy modern armored hull, while Da Vinci Tank should read as a squat enclosed renaissance dome.",
+    {
+      galleryPresetId: "vehicle_detail_close",
+      spacingZ: 5.2,
+      cameraOverride: {
+        target: { x: 0.1, y: 1.52, z: 0 },
+        radius: 15.5,
+      },
+    },
+  ),
+  gallery_pair_farmer_wheelbarrow_vs_secret_wheelbarrow_dragon: makePairGalleryScenario(
+    "gallery_pair_farmer_wheelbarrow_vs_secret_wheelbarrow_dragon",
+    "Pairwise wheelbarrow comparison.",
+    ["farmer.wheelbarrow", "secret.wheelbarrow_dragon"],
+    "Wheelbarrow should read as a simple peasant push-cart, while Wheelbarrow Dragon should read as the hybrid cart with dragon head and heavier fantasy silhouette.",
+    { galleryPresetId: "crew_mount_readability", spacingZ: 5.2 },
+  ),
+  gallery_pair_pirate_captain_vs_secret_blackbeard: makePairGalleryScenario(
+    "gallery_pair_pirate_captain_vs_secret_blackbeard",
+    "Pairwise pirate captain comparison.",
+    ["pirate.captain", "secret.blackbeard"],
+    "Captain should stay the lean faction leader, while Blackbeard should read as the larger boss pirate with pistol-and-cutlass hero mass.",
+  ),
+  gallery_pair_spooky_vampire_vs_secret_vlad: makePairGalleryScenario(
+    "gallery_pair_spooky_vampire_vs_secret_vlad",
+    "Pairwise vampire comparison.",
+    ["spooky.vampire", "secret.vlad"],
+    "Vampire should read as a lighter bat-like leaper, while Vlad should read as the regal spear lord with noble collar and broader frame.",
+  ),
+  gallery_pair_dynasty_samurai_vs_secret_shogun: makePairGalleryScenario(
+    "gallery_pair_dynasty_samurai_vs_secret_shogun",
+    "Pairwise samurai comparison.",
+    ["dynasty.samurai", "secret.shogun"],
+    "Samurai should remain a disciplined troop silhouette, while Shogun should read as the larger bannered commander.",
+  ),
+  gallery_pair_renaissance_musketeer_vs_wild_west_deadeye: makePairGalleryScenario(
+    "gallery_pair_renaissance_musketeer_vs_wild_west_deadeye",
+    "Pairwise long-gun comparison.",
+    ["renaissance.musketeer", "wild_west.deadeye"],
+    "Musketeer should read as plume-and-uniform renaissance gunner, while Deadeye should read as the western rifle specialist in leather and cowboy hat.",
+  ),
+  gallery_pair_legacy_wizard_vs_good_divine_arbiter: makePairGalleryScenario(
+    "gallery_pair_legacy_wizard_vs_good_divine_arbiter",
+    "Pairwise ranged magic comparison.",
+    ["legacy.wizard", "good.divine_arbiter"],
+    "Wizard should read as a tall classic caster silhouette, while Divine Arbiter should read as the brighter halo-and-lightning hero.",
+  ),
+  gallery_pair_spooky_reaper_vs_evil_void_monarch: makePairGalleryScenario(
+    "gallery_pair_spooky_reaper_vs_evil_void_monarch",
+    "Pairwise dark boss comparison.",
+    ["spooky.reaper", "evil.void_monarch"],
+    "Reaper should read as the scythe-driven sweeping specter, while Void Monarch should read as the crowned void summoner with orbiting darkness.",
+  ),
+  gallery_pair_secret_artemis_vs_secret_ullr: makePairGalleryScenario(
+    "gallery_pair_secret_artemis_vs_secret_ullr",
+    "Pairwise elite archer comparison.",
+    ["secret.artemis", "secret.ullr"],
+    "Artemis should read as the radiant halo archer hero, while Ullr should read as the colder hunter with bow-and-axe identity.",
+  ),
+  gallery_pair_legacy_banner_bearer_vs_flag_bearer: makePairGalleryScenario(
+    "gallery_pair_legacy_banner_bearer_vs_flag_bearer",
+    "Pairwise Legacy banner comparison.",
+    ["legacy.banner_bearer", "legacy.flag_bearer"],
+    "Banner Bearer should stay the smaller support standard-bearer, while Flag Bearer should read as the larger empowered counterpart.",
   ),
 };
 

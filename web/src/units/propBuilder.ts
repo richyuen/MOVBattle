@@ -456,6 +456,24 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       handle.position.y = 0.1 * s;
       return handle;
     }
+    case "pickaxe": {
+      const handle = MeshBuilder.CreateCylinder("pickaxeHandle", { height: 0.56 * s, diameter: 0.032 * s, tessellation: 6 }, scene);
+      handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
+      addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.035 * s);
+      const head = MeshBuilder.CreateBox("pickaxeHead", { width: 0.2 * s, height: 0.04 * s, depth: 0.04 * s }, scene);
+      head.position.y = 0.22 * s;
+      head.parent = handle;
+      head.material = mat(scene, new Color3(0.52, 0.52, 0.56));
+      for (const side of [-1, 1]) {
+        const spike = MeshBuilder.CreateCylinder("pickaxeSpike", { height: 0.12 * s, diameterTop: 0, diameterBottom: 0.03 * s, tessellation: 6 }, scene);
+        spike.position.set(side * 0.11 * s, 0.22 * s, 0);
+        spike.rotation.z = side * Math.PI / 2;
+        spike.parent = handle;
+        spike.material = mat(scene, new Color3(0.56, 0.56, 0.6));
+      }
+      handle.position.y = 0.1 * s;
+      return handle;
+    }
     case "hammer":
     case "mace": {
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.035 * s }, scene);
@@ -467,6 +485,17 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       head.material = mat(scene, accent);
       handle.position.y = 0.1 * s;
       return handle;
+    }
+    case "boxing_glove": {
+      const cuff = MeshBuilder.CreateCylinder("boxingCuff", { height: 0.08 * s, diameter: 0.06 * s, tessellation: 10 }, scene);
+      cuff.position.y = 0.04 * s;
+      cuff.material = mat(scene, accent.scale(0.75), 0.04);
+      const glove = MeshBuilder.CreateSphere("boxingGlove", { diameter: 0.14 * s, segments: 8 }, scene);
+      glove.position.set(0, 0.13 * s, 0.03 * s);
+      glove.parent = cuff;
+      glove.scaling.set(1.0, 0.84, 1.15);
+      glove.material = mat(scene, accent, 0.08);
+      return cuff;
     }
     case "halberd": {
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.03 * s }, scene);
@@ -968,6 +997,24 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       band.material = mat(scene, accent, 0.05);
       return brim;
     }
+    case "miner_hat": {
+      const brim = MeshBuilder.CreateCylinder("minerBrim", { height: 0.025 * s, diameter: 0.28 * s, tessellation: 16 }, scene);
+      brim.material = mat(scene, new Color3(0.2, 0.14, 0.1));
+      const crown = MeshBuilder.CreateCylinder("minerCrown", { height: 0.12 * s, diameterTop: 0.18 * s, diameterBottom: 0.22 * s, tessellation: 12 }, scene);
+      crown.parent = brim;
+      crown.position.y = 0.07 * s;
+      crown.material = mat(scene, new Color3(0.22, 0.16, 0.12));
+      const lamp = MeshBuilder.CreateCylinder("minerLamp", { height: 0.03 * s, diameter: 0.08 * s, tessellation: 12 }, scene);
+      lamp.parent = brim;
+      lamp.position.set(0, 0.04 * s, 0.12 * s);
+      lamp.rotation.x = Math.PI / 2;
+      lamp.material = mat(scene, new Color3(0.7, 0.7, 0.74));
+      const glow = MeshBuilder.CreateSphere("minerLampGlow", { diameter: 0.04 * s, segments: 6 }, scene);
+      glow.parent = lamp;
+      glow.position.z = 0.02 * s;
+      glow.material = mat(scene, new Color3(1, 0.8, 0.25), 0.4);
+      return brim;
+    }
     case "straw_hat": {
       const brim = MeshBuilder.CreateCylinder("sbrim", { height: 0.015 * s, diameter: 0.35 * s, tessellation: 16 }, scene);
       brim.material = mat(scene, new Color3(0.85, 0.78, 0.45));
@@ -1429,6 +1476,30 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       horn.parent = cart;
       horn.material = mat(scene, new Color3(0.92, 0.85, 0.68));
       return cart;
+    }
+    case "elephant_shrine": {
+      const platform = MeshBuilder.CreateBox("elephantShrinePlatform", { width: 0.48 * s, height: 0.1 * s, depth: 0.36 * s }, scene);
+      platform.parent = body.torso;
+      platform.position.set(0, 0.18 * s, -0.06 * s);
+      platform.material = mat(scene, new Color3(0.82, 0.72, 0.46));
+      for (const xOff of [-0.16, 0.16]) {
+        for (const zOff of [-0.1, 0.1]) {
+          const post = MeshBuilder.CreateCylinder("elephantShrinePost", { height: 0.22 * s, diameter: 0.03 * s, tessellation: 8 }, scene);
+          post.parent = platform;
+          post.position.set(xOff * s, 0.14 * s, zOff * s);
+          post.material = mat(scene, new Color3(0.72, 0.58, 0.28));
+        }
+      }
+      const roof = MeshBuilder.CreateCylinder("elephantShrineRoof", { height: 0.08 * s, diameterTop: 0.18 * s, diameterBottom: 0.46 * s, tessellation: 10 }, scene);
+      roof.parent = platform;
+      roof.position.y = 0.28 * s;
+      roof.material = mat(scene, accent, 0.12);
+      const halo = MeshBuilder.CreateTorus("elephantShrineHalo", { diameter: 0.34 * s, thickness: 0.018 * s, tessellation: 18 }, scene);
+      halo.parent = roof;
+      halo.position.y = 0.07 * s;
+      halo.rotation.x = Math.PI / 2;
+      halo.material = mat(scene, new Color3(1, 0.92, 0.5), 0.3);
+      return platform;
     }
     case "giant_bones":
     case "giant_tree":

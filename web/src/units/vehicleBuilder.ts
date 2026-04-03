@@ -10,6 +10,7 @@ import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuild
 export const VEHICLE_UNIT_IDS = new Set([
   "medieval.catapult",
   "ancient.ballista",
+  "viking.longship",
   "dynasty.hwacha",
   "pirate.cannon",
   "renaissance.da_vinci_tank",
@@ -17,6 +18,7 @@ export const VEHICLE_UNIT_IDS = new Set([
   "ancient.minotaur",
   "tribal.mammoth",
   "spooky.pumpkin_catapult",
+  "legacy.chariot",
   "legacy.tank",
   "secret.bomb_cannon",
   "secret.gatling_gun",
@@ -43,6 +45,7 @@ export function buildVehicleBody(
   switch (unitId) {
     case "medieval.catapult": return buildCatapult(scene, bodyColor);
     case "ancient.ballista": return buildBallista(scene, bodyColor);
+    case "viking.longship": return buildLongship(scene, bodyColor);
     case "dynasty.hwacha": return buildHwacha(scene, bodyColor, options);
     case "pirate.cannon": return buildCannon(scene, bodyColor);
     case "renaissance.da_vinci_tank": return buildDaVinciTank(scene, bodyColor, options);
@@ -50,10 +53,11 @@ export function buildVehicleBody(
     case "ancient.minotaur": return buildMinotaur(scene, bodyColor);
     case "tribal.mammoth": return buildMammoth(scene, bodyColor);
     case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor, { spooky: true });
+    case "legacy.chariot": return buildChariot(scene, bodyColor);
     case "legacy.tank": return buildLegacyTank(scene, bodyColor, options);
     case "secret.bomb_cannon": return buildBombCannon(scene, bodyColor, options);
     case "secret.gatling_gun": return buildGatlingGun(scene, bodyColor, options);
-    case "good.sacred_elephant": return buildMammoth(scene, bodyColor);
+    case "good.sacred_elephant": return buildSacredElephant(scene, bodyColor);
     default: return buildCatapult(scene, bodyColor);
   }
 }
@@ -934,6 +938,162 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   );
 }
 
+function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
+  const root = new TransformNode("longship_root", scene);
+  const allMeshes: Mesh[] = [];
+  const wood = makeMat(scene, new Color3(0.46, 0.3, 0.16));
+  const darkWood = makeMat(scene, new Color3(0.3, 0.18, 0.1));
+  const shieldMat = makeMat(scene, new Color3(0.68, 0.18, 0.14));
+  const sailMat = makeMat(scene, new Color3(0.86, 0.82, 0.7));
+
+  const hull = MeshBuilder.CreateBox("longshipHull", { width: 1.05, height: 0.34, depth: 2.7 }, scene);
+  hull.position.set(0, 0.4, 0);
+  hull.parent = root;
+  hull.material = wood;
+  allMeshes.push(hull);
+
+  const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.9, height: 0.05, depth: 2.4 }, scene);
+  deck.position.set(0, 0.6, 0);
+  deck.parent = root;
+  deck.material = darkWood;
+  allMeshes.push(deck);
+
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 4; i++) {
+      const shield = MeshBuilder.CreateCylinder("longshipShield", { height: 0.05, diameter: 0.28, tessellation: 14 }, scene);
+      shield.position.set(side * 0.58, 0.56, -0.84 + i * 0.56);
+      shield.rotation.z = Math.PI / 2;
+      shield.parent = root;
+      shield.material = i % 2 === 0 ? shieldMat : makeMat(scene, new Color3(0.56, 0.44, 0.2));
+      allMeshes.push(shield);
+    }
+  }
+
+  const mast = MeshBuilder.CreateCylinder("longshipMast", { height: 1.65, diameter: 0.08, tessellation: 10 }, scene);
+  mast.position.set(0, 1.28, -0.05);
+  mast.parent = root;
+  mast.material = darkWood;
+  allMeshes.push(mast);
+
+  const sail = MeshBuilder.CreatePlane("longshipSail", { width: 1.2, height: 1.0 }, scene);
+  sail.position.set(0, 1.22, 0.08);
+  sail.rotation.y = Math.PI;
+  sail.parent = root;
+  sail.material = sailMat;
+  allMeshes.push(sail);
+
+  for (const zOff of [-1.32, 1.34]) {
+    const post = MeshBuilder.CreateCylinder("longshipPost", { height: 0.7, diameter: 0.1, tessellation: 8 }, scene);
+    post.position.set(0, 0.78, zOff);
+    post.rotation.x = zOff > 0 ? -0.45 : 0.32;
+    post.parent = root;
+    post.material = darkWood;
+    allMeshes.push(post);
+  }
+
+  const prow = MeshBuilder.CreateCylinder("longshipProw", { height: 0.48, diameterTop: 0, diameterBottom: 0.12, tessellation: 8 }, scene);
+  prow.position.set(0, 1.0, 1.48);
+  prow.rotation.x = -0.58;
+  prow.parent = root;
+  prow.material = darkWood;
+  allMeshes.push(prow);
+
+  const stern = MeshBuilder.CreateCylinder("longshipStern", { height: 0.36, diameterTop: 0, diameterBottom: 0.1, tessellation: 8 }, scene);
+  stern.position.set(0, 0.96, -1.46);
+  stern.rotation.x = 0.42;
+  stern.parent = root;
+  stern.material = darkWood;
+  allMeshes.push(stern);
+
+  const operator = addOperator(scene, root, allMeshes, 0, 0.76, -0.42, color);
+
+  return wrapAsBody(
+    scene,
+    root,
+    hull,
+    allMeshes,
+    operator.headMesh,
+    makeBodyMetrics(operator.headTopY, 0.92, 0.56, 0.84),
+    { impactOrigin: makeSocket(scene, root, "longship_impact_socket", new Vector3(0, 0.72, 1.28)) },
+  );
+}
+
+function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
+  const root = new TransformNode("chariot_root", scene);
+  const allMeshes: Mesh[] = [];
+  const wood = makeMat(scene, new Color3(0.54, 0.36, 0.18));
+  const metal = makeMat(scene, new Color3(0.62, 0.58, 0.48));
+  const horseMat = makeMat(scene, new Color3(0.58, 0.4, 0.22));
+
+  const cart = MeshBuilder.CreateBox("chariotCart", { width: 0.78, height: 0.22, depth: 0.68 }, scene);
+  cart.position.set(0, 0.56, -0.16);
+  cart.parent = root;
+  cart.material = wood;
+  allMeshes.push(cart);
+
+  for (const side of [-1, 1]) {
+    const wheel = MeshBuilder.CreateCylinder("chariotWheel", { height: 0.08, diameter: 0.74, tessellation: 16 }, scene);
+    wheel.position.set(side * 0.5, 0.36, -0.12);
+    wheel.rotation.z = Math.PI / 2;
+    wheel.parent = root;
+    wheel.material = wood;
+    allMeshes.push(wheel);
+  }
+
+  const yoke = MeshBuilder.CreateBox("chariotYoke", { width: 0.12, height: 0.08, depth: 1.3 }, scene);
+  yoke.position.set(0, 0.5, 0.52);
+  yoke.parent = root;
+  yoke.material = wood;
+  allMeshes.push(yoke);
+
+  const horseBody = MeshBuilder.CreateBox("chariotHorseBody", { width: 0.48, height: 0.52, depth: 0.98 }, scene);
+  horseBody.position.set(0, 0.6, 1.24);
+  horseBody.parent = root;
+  horseBody.material = horseMat;
+  allMeshes.push(horseBody);
+
+  const horseNeck = MeshBuilder.CreateCylinder("chariotHorseNeck", { height: 0.42, diameter: 0.16, tessellation: 8 }, scene);
+  horseNeck.position.set(0, 0.82, 1.72);
+  horseNeck.rotation.x = -0.88;
+  horseNeck.parent = root;
+  horseNeck.material = horseMat;
+  allMeshes.push(horseNeck);
+
+  const horseHead = MeshBuilder.CreateBox("chariotHorseHead", { width: 0.2, height: 0.24, depth: 0.34 }, scene);
+  horseHead.position.set(0, 0.94, 1.94);
+  horseHead.parent = root;
+  horseHead.material = horseMat;
+  allMeshes.push(horseHead);
+
+  for (const side of [-1, 1]) {
+    for (const zOff of [0.92, 1.46]) {
+      const leg = MeshBuilder.CreateCylinder("chariotHorseLeg", { height: 0.48, diameter: 0.1, tessellation: 8 }, scene);
+      leg.position.set(side * 0.16, 0.24, zOff);
+      leg.parent = root;
+      leg.material = horseMat;
+      allMeshes.push(leg);
+    }
+  }
+
+  const plume = MeshBuilder.CreateBox("chariotPlume", { width: 0.08, height: 0.28, depth: 0.14 }, scene);
+  plume.position.set(0, 1.16, 1.92);
+  plume.parent = root;
+  plume.material = metal;
+  allMeshes.push(plume);
+
+  const operator = addOperator(scene, root, allMeshes, 0, 0.88, -0.18, color);
+
+  return wrapAsBody(
+    scene,
+    root,
+    cart,
+    allMeshes,
+    operator.headMesh,
+    makeBodyMetrics(operator.headTopY, 0.84, 0.5, 0.86),
+    { impactOrigin: makeSocket(scene, root, "chariot_impact_socket", new Vector3(0, 0.82, 1.66)) },
+  );
+}
+
 // ═══════════════════════ MINOTAUR ═══════════════════════
 // Cute, upright, squat minotaur with big bull head, curved horns,
 // pointed ears, lighter belly, stubby limbs with hooves, tufted tail.
@@ -1336,4 +1496,49 @@ function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
     rightHand: rHand, leftHand: lHand, headTop,
     allMeshes, allJoints,
   };
+}
+
+function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
+  const body = buildMammoth(scene, color);
+  const shrineWood = makeMat(scene, new Color3(0.82, 0.72, 0.46));
+  const shrineGold = makeMat(scene, new Color3(0.94, 0.84, 0.46));
+  const cloth = makeMat(scene, new Color3(0.9, 0.88, 0.74));
+
+  const platform = MeshBuilder.CreateBox("sacredElephantPlatform", { width: 0.9, height: 0.12, depth: 0.68 }, scene);
+  platform.parent = body.torso;
+  platform.position.set(0, 0.62, -0.02);
+  platform.material = shrineWood;
+  body.allMeshes.push(platform);
+
+  for (const xOff of [-0.32, 0.32]) {
+    for (const zOff of [-0.2, 0.2]) {
+      const post = MeshBuilder.CreateCylinder("sacredElephantPost", { height: 0.42, diameter: 0.06, tessellation: 10 }, scene);
+      post.parent = body.torso;
+      post.position.set(xOff, 0.86, zOff);
+      post.material = shrineGold;
+      body.allMeshes.push(post);
+    }
+  }
+
+  const canopy = MeshBuilder.CreateCylinder("sacredElephantCanopy", { height: 0.24, diameterTop: 0.42, diameterBottom: 1.02, tessellation: 12 }, scene);
+  canopy.parent = body.torso;
+  canopy.position.set(0, 1.18, -0.02);
+  canopy.material = cloth;
+  body.allMeshes.push(canopy);
+
+  const halo = MeshBuilder.CreateTorus("sacredElephantHalo", { diameter: 0.84, thickness: 0.04, tessellation: 24 }, scene);
+  halo.parent = body.torso;
+  halo.position.set(0, 1.36, -0.02);
+  halo.rotation.x = Math.PI / 2;
+  halo.material = shrineGold;
+  body.allMeshes.push(halo);
+
+  const frontalCloth = MeshBuilder.CreatePlane("sacredElephantFrontalCloth", { width: 0.64, height: 0.82 }, scene);
+  frontalCloth.parent = body.neck;
+  frontalCloth.position.set(0, -0.06, 0.22);
+  frontalCloth.rotation.x = -0.18;
+  frontalCloth.material = cloth;
+  body.allMeshes.push(frontalCloth);
+
+  return body;
 }
