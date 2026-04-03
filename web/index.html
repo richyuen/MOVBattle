@@ -169,6 +169,9 @@
     #resultOverlay.visible { display: flex; }
     #resultTitle { font-size: 36px; font-weight: bold; margin-bottom: 12px; }
     #resultDetail { font-size: 16px; text-align: center; line-height: 1.6; margin-bottom: 20px; }
+    .result-actions {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    }
 
     #controls-help {
       position: absolute; bottom: 150px; right: 10px; color: rgba(255,255,255,0.4);
@@ -260,7 +263,10 @@
   <div id="resultOverlay">
     <div id="resultTitle"></div>
     <div id="resultDetail"></div>
-    <button class="btn" onclick="window.game?.playAgain()" style="font-size:16px;padding:10px 24px;">Play Again</button>
+    <div class="result-actions">
+      <button class="btn" onclick="window.game?.playAgain()" style="font-size:16px;padding:10px 24px;">Play Again</button>
+      <button class="btn" onclick="window.game?.resetBattle()" style="font-size:16px;padding:10px 24px;">Reset</button>
+    </div>
   </div>
 
   <div id="controls-help">
