@@ -327,6 +327,7 @@ export class VisualEffects {
 
   dispose(): void {
     for (const e of this._effects) {
+      if (e.particles) for (const ps of e.particles) { ps.stop(); ps.dispose(); }
       e.root.dispose();
       e.dispose?.();
     }

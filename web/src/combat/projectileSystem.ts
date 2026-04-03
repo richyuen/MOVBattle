@@ -26,6 +26,7 @@ interface ActiveProjectile {
   shape: ProjectileShape;
   targetLift: number;
   trailSystem?: ParticleSystem;
+  trailStarted?: boolean;
 }
 
 interface MuzzleFlash {
@@ -100,30 +101,31 @@ export class ProjectileSystem {
 
     // Add particle trail for specific projectile types
     let trailSystem: ParticleSystem | undefined;
+    let trailStarted = false;
     const trailMesh = mesh.getChildMeshes()[0] as Mesh | undefined;
     if (trailMesh) {
       switch (shape) {
         case "fireball":
           trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.4, 0.05), 10);
-          trailSystem.start();
           break;
         case "rocket_arrow":
           trailSystem = createTrail(this._scene, trailMesh, new Color3(0.6, 0.6, 0.6), 15);
           trailSystem.minSize = 0.03;
           trailSystem.maxSize = 0.08;
-          trailSystem.start();
           break;
         case "firework":
           trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.8, 0.2), 10);
-          trailSystem.start();
           break;
         case "bomb":
           trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.9, 0.3), 5);
           trailSystem.minSize = 0.01;
           trailSystem.maxSize = 0.03;
-          trailSystem.start();
           break;
       }
+    }
+    if (trailSystem && delay <= 0) {
+      trailSystem.start();
+      trailStarted = true;
     }
 
     this._active.push({
@@ -131,7 +133,7 @@ export class ProjectileSystem {
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
-      trailSystem,
+      trailSystem, trailStarted,
     });
   }
 
@@ -173,6 +175,10 @@ export class ProjectileSystem {
         if (p.mesh instanceof Mesh) p.mesh.isVisible = false;
         for (const child of p.mesh.getChildMeshes()) child.isVisible = false;
         continue;
+      }
+      if (p.trailSystem && !p.trailStarted) {
+        p.trailSystem.start();
+        p.trailStarted = true;
       }
       // Show on first frame after delay
       if (p.mesh instanceof Mesh) p.mesh.isVisible = true;

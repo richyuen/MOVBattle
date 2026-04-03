@@ -115,12 +115,22 @@ function wrapAsBody(
   metrics: BodyMetrics = makeBodyMetrics(1.8, 0.8, 0.5, 0.7),
   vehicleSockets?: VehicleSocketSet,
 ): ArticulatedBody {
-  // Clone so applyMaterialPreset() can mutate per-unit without affecting the cached original
+  // Clone visible source materials so applyMaterialPreset() mutates the actual vehicle meshes.
   const srcBody = (mainMesh.material as PBRMetallicRoughnessMaterial) ?? makeMat(scene, new Color3(0.55, 0.45, 0.35));
-  const bodyMaterial = getMaterialFactory().createUnique("wood", srcBody.baseColor);
-  const skinMaterial = headMesh?.material
-    ? getMaterialFactory().createUnique("skin", (headMesh.material as PBRMetallicRoughnessMaterial).baseColor)
+  const bodyMaterial = srcBody.clone(`${srcBody.name}_vehicle_body`) as PBRMetallicRoughnessMaterial;
+  const srcSkin = headMesh?.material as PBRMetallicRoughnessMaterial | undefined;
+  const skinMaterial = srcSkin
+    ? srcSkin.clone(`${srcSkin.name}_vehicle_skin`) as PBRMetallicRoughnessMaterial
     : bodyMaterial;
+
+  for (const mesh of allMeshes) {
+    if (mesh.material === srcBody) mesh.material = bodyMaterial;
+    if (srcSkin && mesh.material === srcSkin) mesh.material = skinMaterial;
+  }
+
+  if (mainMesh.material !== bodyMaterial) mainMesh.material = bodyMaterial;
+  if (headMesh && headMesh.material !== skinMaterial) headMesh.material = skinMaterial;
+
   const hip = dummyJoint("v_hip", root, scene);
   hip.position.y = Math.max(0.45, metrics.overallHeight * 0.28);
   const torso = dummyJoint("v_torso", hip, scene);
