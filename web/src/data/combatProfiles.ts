@@ -46,6 +46,16 @@ export interface CrowdPhysicsProfile {
   staggerResponse: number;
   leanResponse: number;
   recoveryRate: number;
+  balanceCapacity: number;
+  pressureLoadedThreshold: number;
+  compressionToppleScale: number;
+  impactToppleScale: number;
+  forwardToppleBias: number;
+  pressureMovePenalty: number;
+  recoveryMovePenalty: number;
+  topplePitchStrength: number;
+  toppleRollStrength: number;
+  toppleCarry: number;
   toppleThreshold: number;
   launchThreshold: number;
   toppleSeconds: number;
@@ -80,11 +90,121 @@ export const RAGDOLL_PROFILES: RagdollProfile[] = [
 ];
 
 export const CROWD_PHYSICS_PROFILES: CrowdPhysicsProfile[] = [
-  { id: "crowd.light", separationStrength: 1.15, crowdResistance: 0.8, shoveResponse: 1.1, staggerResponse: 1.2, leanResponse: 1.2, recoveryRate: 2.8, toppleThreshold: 0.42, launchThreshold: 0.82, toppleSeconds: 0.82, recoverySeconds: 0.55 },
-  { id: "crowd.medium", separationStrength: 1.0, crowdResistance: 1.0, shoveResponse: 1.0, staggerResponse: 1.0, leanResponse: 1.0, recoveryRate: 2.4, toppleThreshold: 0.58, launchThreshold: 1.0, toppleSeconds: 0.94, recoverySeconds: 0.62 },
-  { id: "crowd.braced", separationStrength: 0.82, crowdResistance: 1.35, shoveResponse: 0.82, staggerResponse: 0.72, leanResponse: 0.7, recoveryRate: 2.1, toppleThreshold: 0.74, launchThreshold: 1.16, toppleSeconds: 1.02, recoverySeconds: 0.72 },
-  { id: "crowd.heavy", separationStrength: 0.74, crowdResistance: 1.65, shoveResponse: 0.72, staggerResponse: 0.62, leanResponse: 0.68, recoveryRate: 1.8, toppleThreshold: 0.9, launchThreshold: 1.36, toppleSeconds: 1.08, recoverySeconds: 0.82 },
-  { id: "crowd.boss", separationStrength: 0.58, crowdResistance: 2.35, shoveResponse: 0.55, staggerResponse: 0.45, leanResponse: 0.55, recoveryRate: 1.45, toppleThreshold: 1.08, launchThreshold: 1.72, toppleSeconds: 1.18, recoverySeconds: 0.95 },
+  {
+    id: "crowd.light",
+    separationStrength: 1.15,
+    crowdResistance: 0.8,
+    shoveResponse: 1.1,
+    staggerResponse: 1.2,
+    leanResponse: 1.2,
+    recoveryRate: 2.8,
+    balanceCapacity: 0.92,
+    pressureLoadedThreshold: 0.22,
+    compressionToppleScale: 1.15,
+    impactToppleScale: 1.18,
+    forwardToppleBias: 1.22,
+    pressureMovePenalty: 0.34,
+    recoveryMovePenalty: 0.54,
+    topplePitchStrength: 1.14,
+    toppleRollStrength: 0.48,
+    toppleCarry: 0.22,
+    toppleThreshold: 0.42,
+    launchThreshold: 0.82,
+    toppleSeconds: 0.82,
+    recoverySeconds: 0.55,
+  },
+  {
+    id: "crowd.medium",
+    separationStrength: 1.0,
+    crowdResistance: 1.0,
+    shoveResponse: 1.0,
+    staggerResponse: 1.0,
+    leanResponse: 1.0,
+    recoveryRate: 2.4,
+    balanceCapacity: 1.05,
+    pressureLoadedThreshold: 0.26,
+    compressionToppleScale: 1.0,
+    impactToppleScale: 1.05,
+    forwardToppleBias: 1.18,
+    pressureMovePenalty: 0.3,
+    recoveryMovePenalty: 0.58,
+    topplePitchStrength: 1.08,
+    toppleRollStrength: 0.44,
+    toppleCarry: 0.2,
+    toppleThreshold: 0.58,
+    launchThreshold: 1.0,
+    toppleSeconds: 0.94,
+    recoverySeconds: 0.62,
+  },
+  {
+    id: "crowd.braced",
+    separationStrength: 0.82,
+    crowdResistance: 1.35,
+    shoveResponse: 0.82,
+    staggerResponse: 0.72,
+    leanResponse: 0.7,
+    recoveryRate: 2.1,
+    balanceCapacity: 1.36,
+    pressureLoadedThreshold: 0.3,
+    compressionToppleScale: 0.82,
+    impactToppleScale: 0.9,
+    forwardToppleBias: 1.08,
+    pressureMovePenalty: 0.24,
+    recoveryMovePenalty: 0.64,
+    topplePitchStrength: 0.98,
+    toppleRollStrength: 0.38,
+    toppleCarry: 0.18,
+    toppleThreshold: 0.74,
+    launchThreshold: 1.16,
+    toppleSeconds: 1.02,
+    recoverySeconds: 0.72,
+  },
+  {
+    id: "crowd.heavy",
+    separationStrength: 0.74,
+    crowdResistance: 1.65,
+    shoveResponse: 0.72,
+    staggerResponse: 0.62,
+    leanResponse: 0.68,
+    recoveryRate: 1.8,
+    balanceCapacity: 1.7,
+    pressureLoadedThreshold: 0.34,
+    compressionToppleScale: 0.74,
+    impactToppleScale: 0.86,
+    forwardToppleBias: 1.05,
+    pressureMovePenalty: 0.22,
+    recoveryMovePenalty: 0.68,
+    topplePitchStrength: 0.92,
+    toppleRollStrength: 0.34,
+    toppleCarry: 0.16,
+    toppleThreshold: 0.9,
+    launchThreshold: 1.36,
+    toppleSeconds: 1.08,
+    recoverySeconds: 0.82,
+  },
+  {
+    id: "crowd.boss",
+    separationStrength: 0.58,
+    crowdResistance: 2.35,
+    shoveResponse: 0.55,
+    staggerResponse: 0.45,
+    leanResponse: 0.55,
+    recoveryRate: 1.45,
+    balanceCapacity: 2.28,
+    pressureLoadedThreshold: 0.42,
+    compressionToppleScale: 0.62,
+    impactToppleScale: 0.74,
+    forwardToppleBias: 0.96,
+    pressureMovePenalty: 0.16,
+    recoveryMovePenalty: 0.78,
+    topplePitchStrength: 0.84,
+    toppleRollStrength: 0.28,
+    toppleCarry: 0.12,
+    toppleThreshold: 1.08,
+    launchThreshold: 1.72,
+    toppleSeconds: 1.18,
+    recoverySeconds: 0.95,
+  },
 ];
 
 const attackMap = new Map(ATTACK_PROFILES.map((p) => [p.id, p]));

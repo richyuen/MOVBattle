@@ -536,3 +536,42 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - `physics_topple_thresholds`
 - regression guard `boss_super_peasant_pursuit`
 - Browser console only reported the existing `favicon.ico` 404 alongside Babylon startup logging.
+- 2026-04-03: Forward-topple physics refinement landed for the current living-crowd stack.
+- Extended `web/src/data/combatProfiles.ts` crowd profiles with balance/topple tuning fields for directional forward-topple bias, pressure-loaded movement penalties, impact/compression topple scaling, and topple presentation strength.
+- Updated `web/src/units/runtimeUnit.ts` to accumulate directional balance pressure, expose pressure-loaded/topple-direction observability, bias topple presentation/carry into the incoming line of contact, and slow locomotion while pressure-loaded/recovering.
+- Updated `web/src/combat/simulationSystem.ts` to feed directional contact pressure into the topple model, with softer same-team compression and stronger enemy/charge momentum amplification.
+- Expanded `web/src/main.ts` scenario/text-state payload and assertion evaluation with balance/topple metrics used by deterministic checks.
+- Added deterministic forward-topple scenarios in `web/src/testing/scenarios.ts` for melee contrast, wheelbarrow charge, mammoth pressure, recovery reset, plus linked-regression verification.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Headless browser scenario suite passed for `crowd_topple_clubber_vs_protector`, `crowd_topple_halfling_vs_knight`, `crowd_topple_wheelbarrow_charge`, `crowd_topple_mammoth_pressure`, `crowd_topple_recovery_state`, and `composite_bomb_cannon`
+  - Verification artifacts saved to `output/forward-topple-results.json` and `output/forward-topple-wheelbarrow.png`
+- Residual caveat:
+  - The visual smoke shot confirms a toppled front-line read, but the default sandbox camera is still fairly distant; if later tranches need stronger visual acceptance, add explicit gallery metadata or a closer validation camera for crowd-topple scenes.
+- 2026-04-03: Follow-up regression fix for hit launches after the forward-topple pass.
+- Reduced living-hit vertical lift in `web/src/units/runtimeUnit.ts` so ordinary hits no longer balloon units skyward.
+- Clamped topple launch lift to keep forward-topple reads grounded while preserving disruption.
+- Reused the scenario/assertion infrastructure by exposing unit `y` in text state and keeping `physics_hit_launch_guard` green.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Browser scenario suite passed for `physics_hit_launch_guard`, `crowd_topple_clubber_vs_protector`, `crowd_topple_halfling_vs_knight`, `crowd_topple_wheelbarrow_charge`, `crowd_topple_mammoth_pressure`, `crowd_topple_recovery_state`, and `composite_bomb_cannon`
+  - Artifacts saved to `output/hit-launch-results.json` and `output/hit-launch-guard.png`
+- 2026-04-03: Second follow-up fixed repeated topple relaunch during live combat.
+- Added a one-shot topple/relaunch guard in `web/src/units/runtimeUnit.ts` so ongoing hits/collisions cannot keep reapplying airborne lift while a unit is already toppled/airborne.
+- Tightened live-combat height assertions in `web/src/testing/scenarios.ts` while keeping the forward-topple suite green.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Browser scenario suite passed for `physics_hit_launch_guard`, `physics_death_launch_guard`, `crowd_topple_clubber_vs_protector`, `crowd_topple_halfling_vs_knight`, `crowd_topple_wheelbarrow_charge`, `crowd_topple_mammoth_pressure`, `crowd_topple_recovery_state`, and `composite_bomb_cannon`
+  - Live hover probe saved to `output/live-hover-probe.json` with `maxY = 0` for the core crowd-topple scenarios
+- 2026-04-03: Follow-up regression fix for the same topple pass.
+- `web/src/units/runtimeUnit.ts` now caps ordinary living-hit vertical lift and clamps topple launch lift so hits no longer balloon units skyward.
+- `web/src/main.ts` now exposes unit `y` height in the text-state payload, and scenario assertion plumbing supports `unit-height-at-most`.
+- `web/src/testing/scenarios.ts` includes `physics_hit_launch_guard` to keep horizontal hits from launching units unrealistically high while preserving the forward-topple scenarios.
+- Follow-up validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Headless browser scenario suite passed for `physics_hit_launch_guard`, `crowd_topple_clubber_vs_protector`, `crowd_topple_halfling_vs_knight`, `crowd_topple_wheelbarrow_charge`, `crowd_topple_mammoth_pressure`, `crowd_topple_recovery_state`, and `composite_bomb_cannon`
+  - Verification artifacts saved to `output/hit-launch-results.json` and `output/hit-launch-guard.png`

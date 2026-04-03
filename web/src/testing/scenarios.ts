@@ -17,6 +17,7 @@ export interface ScenarioAssertion {
     | "linked-relation-count"
     | "spawned-child-count"
     | "unit-hp-at-most"
+    | "unit-height-at-most"
     | "position-shift-at-least"
     | "position-shift-at-most"
     | "unit-distance-at-least"
@@ -35,6 +36,8 @@ export interface ScenarioAssertion {
     | "parent-capability"
     | "replay-restore"
     | "crowd-metric-at-least"
+    | "balance-state"
+    | "topple-direction"
     | "physics-state";
   value: string;
 }
@@ -131,6 +134,40 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "position-shift-at-least", value: "medieval.knight>=1.1" },
       { kind: "unit-distance-at-least", value: "medieval.knight<->medieval.archer>=16" },
       { kind: "crowd-metric-at-least", value: "medieval.knight:crowdPressure<=0.25" },
+    ],
+  },
+  physics_hit_launch_guard: {
+    name: "physics_hit_launch_guard",
+    description: "A normal horizontal hit may pop a unit briefly, but it must not balloon far into the air.",
+    autoStart: true,
+    advanceMs: 120,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -8, z: 0 } },
+      { unitId: "medieval.archer", team: 1, position: { x: 24, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "tribal.clubber", damage: 1, impulse: { x: -14, z: 0 } },
+    ],
+    assertions: [
+      { kind: "unit-height-at-most", value: "tribal.clubber<=1.1" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=0.2" },
+    ],
+  },
+  physics_death_launch_guard: {
+    name: "physics_death_launch_guard",
+    description: "A killing hit may throw a body, but it must not rocket it unrealistically high.",
+    autoStart: true,
+    advanceMs: 260,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -8, z: 0 } },
+      { unitId: "medieval.archer", team: 1, position: { x: 24, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "tribal.clubber", damage: 9999, impulse: { x: -14, z: 0 } },
+    ],
+    assertions: [
+      { kind: "unit-height-at-most", value: "tribal.clubber<=1.6" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=0.3" },
     ],
   },
   nonsecret_legacy_tank_roles: {
@@ -272,6 +309,100 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "mode-is", value: "Simulation" },
       { kind: "crowd-metric-at-least", value: "farmer.halfling:collisionContactCount>=1+collisionPushPeak>=0.28, medieval.knight:collisionContactCount>=1" },
       { kind: "position-shift-at-least", value: "farmer.halfling>=0.25" },
+    ],
+  },
+  crowd_topple_clubber_vs_protector: {
+    name: "crowd_topple_clubber_vs_protector",
+    description: "Frontal melee contact should pitch a light clubber into a forward topple faster than a braced protector.",
+    autoStart: true,
+    advanceMs: 900,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -1.15, z: 0 } },
+      { unitId: "tribal.protector", team: 1, position: { x: 1.15, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "physics-state", value: "tribal.clubber:toppled|recovering" },
+      { kind: "topple-direction", value: "tribal.clubber:forward" },
+      { kind: "crowd-metric-at-least", value: "tribal.clubber:collisionPushPeak>=1.4, tribal.protector:balancePressure<=0.8" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=0.3" },
+      { kind: "comparison-focus", value: "The lighter clubber should pitch forward under dense frontal contact before the braced protector does." },
+    ],
+  },
+  crowd_topple_halfling_vs_knight: {
+    name: "crowd_topple_halfling_vs_knight",
+    description: "The same shove should topple the halfling forward while the knight resists or only loads pressure.",
+    autoStart: false,
+    units: [
+      { unitId: "farmer.halfling", team: 0, position: { x: -8, z: -0.9 } },
+      { unitId: "medieval.knight", team: 0, position: { x: -8, z: 0.9 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "farmer.halfling", damage: 1, impulse: { x: -12, y: 1.4, z: 0 } },
+      { kind: "damage-root-unit", unitId: "medieval.knight", damage: 1, impulse: { x: -12, y: 1.4, z: 0 } },
+    ],
+    assertions: [
+      { kind: "physics-state", value: "farmer.halfling:toppled|airborne, medieval.knight:steady|recovering|airborne" },
+      { kind: "crowd-metric-at-least", value: "farmer.halfling:crowdPressure>=0.5, medieval.knight:crowdPressure<=0.35" },
+    ],
+  },
+  crowd_topple_wheelbarrow_charge: {
+    name: "crowd_topple_wheelbarrow_charge",
+    description: "Wheelbarrow charge pressure should force a readable forward topple on the first light defender it hits.",
+    autoStart: true,
+    advanceMs: 1750,
+    units: [
+      { unitId: "farmer.wheelbarrow", team: 0, position: { x: -8, z: 0 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 0.55, z: -0.5 } },
+      { unitId: "tribal.protector", team: 1, position: { x: 0.95, z: 0.7 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "physics-state", value: "tribal.clubber:toppled|recovering" },
+      { kind: "topple-direction", value: "tribal.clubber:forward" },
+      { kind: "unit-height-at-most", value: "tribal.clubber<=1.1" },
+      { kind: "crowd-metric-at-least", value: "tribal.clubber:collisionPushPeak>=3.4+toppleForwardness>=0.24" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=1.1, tribal.protector>=0.6" },
+    ],
+  },
+  crowd_topple_mammoth_pressure: {
+    name: "crowd_topple_mammoth_pressure",
+    description: "Mammoth pressure should create broader forward-topple disruption across a mixed infantry line.",
+    autoStart: true,
+    advanceMs: 2150,
+    units: [
+      { unitId: "tribal.mammoth", team: 0, position: { x: -6.2, z: 0 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 0.2, z: -1.05 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 0.85, z: 0 } },
+      { unitId: "ancient.hoplite", team: 1, position: { x: 1.55, z: 1.05 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "physics-state", value: "farmer.farmer:airborne|recovering|toppled, medieval.squire:airborne|recovering|toppled" },
+      { kind: "unit-height-at-most", value: "farmer.farmer<=1.2, medieval.squire<=1.1" },
+      { kind: "crowd-metric-at-least", value: "farmer.farmer:collisionPushPeak>=3.4, medieval.squire:collisionPushPeak>=1.1, ancient.hoplite:collisionPushPeak>=0.5" },
+      { kind: "position-shift-at-least", value: "farmer.farmer>=1.3, medieval.squire>=1.2, ancient.hoplite>=0.75" },
+    ],
+  },
+  crowd_topple_recovery_state: {
+    name: "crowd_topple_recovery_state",
+    description: "After a forward topple resolves, the unit should return to steady capability without lingering pressure lockups.",
+    autoStart: true,
+    advanceMs: 2400,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -8, z: 0 } },
+      { unitId: "medieval.archer", team: 1, position: { x: 24, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "tribal.clubber", damage: 1, impulse: { x: -14, y: 1.6, z: 0 } },
+    ],
+    assertions: [
+      { kind: "physics-state", value: "tribal.clubber:steady" },
+      { kind: "balance-state", value: "tribal.clubber:steady" },
+      { kind: "parent-capability", value: "tribal.clubber:attack=enabled+move=enabled" },
+      { kind: "crowd-metric-at-least", value: "tribal.clubber:balancePressure<=0.2+pressureLoad<=0.25" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=0.7" },
+      { kind: "unit-distance-at-least", value: "tribal.clubber<->medieval.archer>=14" },
     ],
   },
   war_machine_tank_origin: {

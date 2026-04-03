@@ -221,7 +221,8 @@ export class SimulationSystem {
           const overlap = minDistance - distance + this.collisionResolutionPadding;
           if (overlap <= 0) continue;
 
-          const contactBias = a.team === b.team ? 0.82 : 1.0;
+          const sameTeam = a.team === b.team;
+          const contactBias = sameTeam ? 0.82 : 1.0;
           const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance);
           const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance);
           const inverseMassA = 1 / resistanceA;
@@ -232,14 +233,28 @@ export class SimulationSystem {
 
           const relativeVelocity = b.collisionVelocity.subtract(a.collisionVelocity);
           const impactSpeed = Math.max(0, -Vector3.Dot(relativeVelocity, normal));
-          const impulseStrength = Math.min(4.5, overlap * 4.2 * contactBias + impactSpeed * (a.team === b.team ? 0.55 : 0.9));
+          const impulseStrength = Math.min(4.5, overlap * 4.2 * contactBias + impactSpeed * (sameTeam ? 0.55 : 0.9));
           if (impulseStrength <= 0.08) continue;
 
           const weightedMassA = resistanceA * this._collisionMomentumMultiplier(a);
           const weightedMassB = resistanceB * this._collisionMomentumMultiplier(b);
           const weightedMassTotal = weightedMassA + weightedMassB;
-          a.applyCollisionImpulse(normal.scale(-impulseStrength * (weightedMassB / weightedMassTotal)));
-          b.applyCollisionImpulse(normal.scale(impulseStrength * (weightedMassA / weightedMassTotal)));
+          const compressionRatio = overlap / Math.max(0.05, minDistance);
+          const sameTeamPressureScale = 0.56 + compressionRatio * 0.18;
+          const enemyPressureScale = 0.92 + compressionRatio * 0.46 + impactSpeed * 0.08;
+          const contactPressureScale = sameTeam ? sameTeamPressureScale : enemyPressureScale;
+          const pressureScaleA = contactPressureScale * this._collisionMomentumMultiplier(b);
+          const pressureScaleB = contactPressureScale * this._collisionMomentumMultiplier(a);
+          a.applyCollisionImpulse(
+            normal.scale(-impulseStrength * (weightedMassB / weightedMassTotal)),
+            normal,
+            pressureScaleA,
+          );
+          b.applyCollisionImpulse(
+            normal.scale(impulseStrength * (weightedMassA / weightedMassTotal)),
+            normal.scale(-1),
+            pressureScaleB,
+          );
         }
       }
     }
@@ -1044,7 +1059,7 @@ export class SimulationSystem {
       const direction = delta.scale(1 / distance);
       const displacement = direction.scale(baseMagnitude * 0.05 * falloff);
       const pressure = baseMagnitude * 0.7 * falloff;
-      unit.applyCrowdDisplacement(displacement, pressure);
+      unit.applyCrowdDisplacement(displacement, pressure, direction.scale(-1), 1 + falloff * 0.35);
     }
   }
 

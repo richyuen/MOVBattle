@@ -1249,6 +1249,7 @@ function buildGameStatePayload() {
         actionPreset: unit.actionPreset,
         contributionChannels: unit.contributionChannels,
         physicsState: unit.physicsState,
+        balanceState: unit.balanceState,
         attackCapability: unit.hasCapability("attack") ? "enabled" : "disabled",
         moveCapability: unit.hasCapability("move") ? "enabled" : "disabled",
         disabledByRole: [
@@ -1276,12 +1277,18 @@ function buildGameStatePayload() {
         maxHp: Math.round(unit.maxHealth),
         staggered: unit.isStaggered,
         crowdPressure: Number(unit.crowdPressure.toFixed(2)),
+        balancePressure: Number(unit.balancePressure.toFixed(2)),
+        pressureLoad: Number(unit.pressureLoad.toFixed(2)),
+        pressureLoaded: unit.isPressureLoaded,
+        toppleDirection: unit.toppleDirectionTag,
+        toppleForwardness: Number(unit.toppleForwardness.toFixed(2)),
         crowdPhysicsProfileId: unit.crowdPhysicsProfileId,
         horizontalSpeed: Number(unit.horizontalSpeed.toFixed(2)),
         airborne: unit.isAirborne,
         collisionPushTotal: Number(unit.collisionPushTotal.toFixed(2)),
         collisionPushPeak: Number(unit.collisionPushPeak.toFixed(2)),
         collisionContacts: unit.collisionContactCount,
+        y: Number(unit.position.y.toFixed(2)),
         x: Number(unit.position.x.toFixed(2)),
         z: Number(unit.position.z.toFixed(2)),
       };
@@ -1481,6 +1488,18 @@ function evaluateCrowdMetricClauses(state: GameTextState, value: string): string
         case "crowdPressure":
           actual = Number((root as { crowdPressure?: number }).crowdPressure ?? 0);
           break;
+        case "balancePressure":
+          actual = Number((root as { balancePressure?: number }).balancePressure ?? 0);
+          break;
+        case "pressureLoad":
+          actual = Number((root as { pressureLoad?: number }).pressureLoad ?? 0);
+          break;
+        case "toppleForwardness":
+          actual = Number((root as { toppleForwardness?: number }).toppleForwardness ?? 0);
+          break;
+        case "y":
+          actual = Number((root as { y?: number }).y ?? 0);
+          break;
         case "horizontalSpeed":
           actual = root.horizontalSpeed;
           break;
@@ -1646,6 +1665,26 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
       }
       return failures.length === 0 ? pass("Unit HP thresholds matched.") : fail(failures.join("; "));
     }
+    case "unit-height-at-most": {
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(<=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return fail(`Unsupported height clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing height context for ${unitId}`);
+          continue;
+        }
+        const actual = Number((root as { y?: number }).y ?? 0);
+        if (actual > expected) {
+          failures.push(`${unitId} expected height <= ${expected}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Unit heights matched.") : fail(failures.join("; "));
+    }
     case "position-shift-at-least": {
       if (!scenario) return fail("No scenario context for position-shift assertion.");
       const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
@@ -1760,6 +1799,40 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
         }
       }
       return failures.length === 0 ? pass("Physics states matched.") : fail(failures.join("; "));
+    }
+    case "balance-state": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing balance-state context for ${unitId}`);
+          continue;
+        }
+        const expectedStates = new Set(clause.split("|").map((entry) => entry.trim()).filter(Boolean));
+        const actual = (root as { balanceState?: string }).balanceState ?? "steady";
+        if (!expectedStates.has(actual)) {
+          failures.push(`${unitId} expected balance state ${[...expectedStates].join("|")}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Balance states matched.") : fail(failures.join("; "));
+    }
+    case "topple-direction": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing topple-direction context for ${unitId}`);
+          continue;
+        }
+        const expectedDirections = new Set(clause.split("|").map((entry) => entry.trim()).filter(Boolean));
+        const actual = (root as { toppleDirection?: string }).toppleDirection ?? "none";
+        if (!expectedDirections.has(actual)) {
+          failures.push(`${unitId} expected topple direction ${[...expectedDirections].join("|")}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Topple directions matched.") : fail(failures.join("; "));
     }
     case "replay-stability":
     case "replay-restore":
