@@ -1139,7 +1139,7 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     props: [
       { kind: "crystal", x: -22, z: -16, scale: 1.0 },
       { kind: "crystal", x: -22, z: 16, scale: 1.0 },
-      { kind: "temple", x: 0, z: 0, scale: 0.8, blocking: false },
+      { kind: "temple", x: 0, z: 0, scale: 0.8 },
       { kind: "bridge", x: 0, z: -18, scale: 0.75 },
       { kind: "bridge", x: 0, z: 18, scale: 0.75 },
       { kind: "waterfall", x: 54, z: 0, scale: 0.9 },

@@ -473,3 +473,11 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - LSP diagnostics clean for changed files
 - Browser smoke confirmed Pirate hazards kill a spawned unit in simulation and campaign maps now report hazard counts through the text payload.
 - Architect verification approved the geometry-system upgrade pass.
+- 2026-04-03 Fantasy Good collision follow-up: restored blocking on the center temple landmark.
+- Root cause: `campaign.fantasy_good` authored the `temple` prop with `blocking: false`, so it never entered the obstacle set.
+- Verification:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for `web/src/map/mapBuilder.ts`
+- Browser/text-state smoke confirmed `campaign.fantasy_good` obstacle count increased from 53 to 54 after the fix.
+- Architect verification approved the narrow collision fix.
