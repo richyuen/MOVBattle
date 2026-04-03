@@ -708,6 +708,10 @@ btnResultPrimaryEl?.addEventListener("click", () => {
 });
 btnResultSecondaryEl?.addEventListener("click", () => {
   if (campaignSession) {
+    if (pendingCampaignResultAction === "advance") {
+      playAgain();
+      return;
+    }
     leaveCampaignMode();
     return;
   }
@@ -903,7 +907,9 @@ function showResult(result: BattleResult): void {
       : "Play Again";
   }
   if (btnResultSecondaryEl) {
-    btnResultSecondaryEl.textContent = campaignSession ? "Sandbox" : "Reset";
+    btnResultSecondaryEl.textContent = campaignSession
+      ? (!result.isDraw && result.winner === 0 ? "Replay" : "Sandbox")
+      : "Reset";
   }
   resultTitleEl.textContent = result.isDraw ? "Draw" : `Team ${result.winner === 0 ? "A" : "B"} Wins!`;
   resultDetailEl.textContent =
@@ -915,7 +921,7 @@ function showResult(result: BattleResult): void {
     const isPlayerVictory = !result.isDraw && result.winner === 0;
     pendingCampaignResultAction = isPlayerVictory ? "advance" : "retry";
     const outcomeText = isPlayerVictory
-      ? "Click Next Scenario to continue the campaign."
+      ? "Click Next Scenario to continue, or Replay to run this battle again."
       : "Click Retry to replay this campaign battle.";
     resultDetailEl.textContent += `\n${outcomeText}`;
     clearPendingCampaignResolution();

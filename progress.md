@@ -454,3 +454,10 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - `cd web && npm run build`
 - LSP diagnostics clean for `web/src/main.ts`
 - Architect verification approved the explicit user-driven result flow.
+- 2026-04-03 CTA follow-up: campaign win screen now uses `Next Scenario` + `Replay` while non-win uses `Retry` + `Sandbox`.
+- `web/src/main.ts` result-button handlers now match the visible CTA labels with no campaign auto-resolution.
+- Regression checks rerun:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for `web/src/main.ts`
+- Architect verification approved the final campaign CTA contract.
