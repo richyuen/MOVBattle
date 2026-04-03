@@ -3,7 +3,7 @@ import {
   type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
-import { getRagdollProfile } from "../data/combatProfiles";
+import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfiles";
 import { FACTION_COLORS, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
@@ -34,6 +34,7 @@ export class UnitFactory {
     options: SpawnVisualOptions = {},
   ): RuntimeUnit {
     const ragdoll = getRagdollProfile(definition.ragdollProfileId);
+    const crowdPhysics = getCrowdPhysicsProfile(definition.crowdPhysicsProfileId);
     const visual = options.visualOverride ?? getUnitVisual(definition.id);
     const linkedPreset = getLinkedActorPreset(definition.id);
 
@@ -79,7 +80,7 @@ export class UnitFactory {
     body.root.rotation.y = team === 0 ? Math.PI / 2 : -Math.PI / 2;
 
     // Tag all meshes for raycasting
-    const unit = new RuntimeUnit(definition, team, body, propMeshes, visual, ragdoll);
+    const unit = new RuntimeUnit(definition, team, body, propMeshes, visual, ragdoll, crowdPhysics);
     unit.initFxParticles(this._scene);
     if (!linkedPreset) {
       for (const part of definition.compositionParts ?? []) {

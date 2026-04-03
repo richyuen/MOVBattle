@@ -481,3 +481,58 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - LSP diagnostics clean for `web/src/map/mapBuilder.ts`
 - Browser/text-state smoke confirmed `campaign.fantasy_good` obstacle count increased from 53 to 54 after the fix.
 - Architect verification approved the narrow collision fix.
+- 2026-04-03 docs-first crowd-physics/topple pass completed.
+- Documentation cleanup:
+- Removed obsolete duplicate docs `web/BOSS_STATE_MATRIX.md` and `web/TABS_VISUAL_TRACKER.md`.
+- Updated `README.md`, `CLAUDE.md`, `web/COMPREHENSIVE_VISUAL_PARITY_MATRIX.md`, `web/VISUAL_ACCEPTANCE_GALLERY.md`, `web/BOSS_WAVE_PARITY_MATRIX.md`, and `web/ICONIC_ACCEPTANCE_BATTLES.md` so the kept docs match the current source-of-truth/runtime coverage.
+- Crowd-physics/emergence implementation:
+- Added crowd-physics profiles in `web/src/data/combatProfiles.ts` and crowd-profile assignment in `web/src/data/unitDefinitions.ts`.
+- Wired live crowd collision resolution into `web/src/combat/simulationSystem.ts`.
+- Extended `web/src/units/runtimeUnit.ts` with collision metrics, crowd pressure, topple / recovering states, physics-driven capability gating, and crowd-lean presentation.
+- Updated `web/src/units/unitFactory.ts` to pass crowd-physics profiles into runtime units.
+- Extended `web/src/main.ts` state payload and assertion evaluation with crowd metrics / physics-state validation.
+- Expanded `web/src/testing/scenarios.ts` with crowd-separation, mammoth shove, topple-threshold coverage, and fixed stale `iconic_artillery_compare` Hwacha crew expectations to the current single-rocketeer model.
+- Verification:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for `C:\Git\MOVBattle\web`
+- Browser scenario checks passed for:
+- `physics_crowd_separation`
+- `physics_mammoth_shove_line`
+- `physics_topple_thresholds`
+- `boss_super_peasant_pursuit`
+- `iconic_artillery_compare`
+- Browser console remained clean apart from the pre-existing `favicon.ico` 404 on the preview server.
+- 2026-04-03: Documentation cleanup + crowd-physics/topple pass completed.
+- Documentation cleanup:
+- Updated `README.md` so the root project summary reflects campaign mode, hazards, deterministic scenario/gallery validation, and the current battle-feel gap.
+- Updated `CLAUDE.md` so the architecture notes match the live campaign/testing/map/runtime structure and current crowd-physics direction.
+- Deleted redundant docs:
+- `web/TABS_VISUAL_TRACKER.md` (its status was fully implied by the retained reference matrix + deterministic gallery acceptance docs)
+- `web/BOSS_STATE_MATRIX.md` (its boss-state summary was redundant with the retained boss parity/acceptance docs)
+- Tightened surviving acceptance docs:
+- `web/COMPREHENSIVE_VISUAL_PARITY_MATRIX.md`
+- `web/VISUAL_ACCEPTANCE_GALLERY.md`
+- `web/BOSS_WAVE_PARITY_MATRIX.md`
+- `web/ICONIC_ACCEPTANCE_BATTLES.md`
+- Physics/emergence pass:
+- Added crowd-physics profiles in `web/src/data/combatProfiles.ts` and mapped every unit into a crowd-physics bucket in `web/src/data/unitDefinitions.ts`.
+- Extended `web/src/units/runtimeUnit.ts` with live collision metrics, crowd pressure, topple/recovery state, crowd-lean presentation, and physics-aware move/attack capability gating.
+- Updated `web/src/combat/simulationSystem.ts` with deterministic living-body collision resolution so root units separate/push instead of phasing through each other.
+- Extended `web/src/main.ts` text-state/scenario payloads with collision metrics, crowd state, and physics-disabled channels, and expanded the assertion engine for crowd/spacing checks.
+- Added deterministic coverage in `web/src/testing/scenarios.ts` for:
+- `crowd_physics_clubber_vs_protector`
+- `crowd_physics_halfling_vs_knight`
+- `physics_crowd_separation`
+- `physics_mammoth_shove_line`
+- `physics_topple_thresholds`
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Project diagnostics: 0 errors / 0 warnings from `npx tsc --noEmit --project web/tsconfig.json`
+- Browser/runtime scenario checks passed via Playwright preview session for:
+- `physics_crowd_separation`
+- `physics_mammoth_shove_line`
+- `physics_topple_thresholds`
+- regression guard `boss_super_peasant_pursuit`
+- Browser console only reported the existing `favicon.ico` 404 alongside Babylon startup logging.

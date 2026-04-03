@@ -3,7 +3,7 @@
 ## Scope
 This gallery is the deterministic acceptance layer for the comprehensive visual pass. The executable source of truth is [`web/src/testing/scenarios.ts`](C:/Git/MOVBattle/web/src/testing/scenarios.ts).
 The bespoke target definitions for the current tranche live in [`web/BESPOKE_VISUAL_TARGETS.md`](C:/Git/MOVBattle/web/BESPOKE_VISUAL_TARGETS.md).
-Per-unit locked references live in [`web/TABS_REFERENCE_MATRIX.md`](C:/Git/MOVBattle/web/TABS_REFERENCE_MATRIX.md), and per-unit status tracking lives in [`web/TABS_VISUAL_TRACKER.md`](C:/Git/MOVBattle/web/TABS_VISUAL_TRACKER.md).
+Per-unit locked references live in [`web/TABS_REFERENCE_MATRIX.md`](C:/Git/MOVBattle/web/TABS_REFERENCE_MATRIX.md). Validation status is carried by the deterministic gallery scenarios and their runtime results.
 
 ## Runtime Flow
 - Use `window.game.runScenarioGalleryValidation("<scenario-id>")` to run the scenario, apply the gallery camera preset, suppress capture-noise UI, and return structured assertion plus capture metadata.

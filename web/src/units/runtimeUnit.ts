@@ -1,7 +1,7 @@
 import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import type { UnitDefinition } from "../data/unitDefinitions";
-import type { RagdollProfile } from "../data/combatProfiles";
+import type { CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
@@ -40,6 +40,7 @@ export class RuntimeUnit {
   readonly visualConfig: UnitVisualConfig;
 
   private _ragdollProfile: RagdollProfile;
+  private _crowdPhysicsProfile: CrowdPhysicsProfile;
   private _maxHealth: number;
   private _currentHealth: number;
   private _isDead = false;
@@ -50,17 +51,20 @@ export class RuntimeUnit {
   // Movement
   private _moveTarget: Vector3 | null = null;
   private _isMoving = false;
+  private _movementVelocity = Vector3.Zero();
 
   // Physics velocity (used for knockback while alive AND death slide)
   private _velocity = Vector3.Zero();
   private _grounded = true;
 
   // Death physics
-  private _deathImpulse = Vector3.Zero();
   private _physicsActive = false;
 
   // Hit stagger
   private _staggerTimer = 0;
+  private _crowdPressure = 0;
+  private _toppledUntil = 0;
+  private _recoveringUntil = 0;
 
   // Ambient FxPreset particle system
   private _fxParticleSystem: ParticleSystem | null = null;
@@ -102,6 +106,9 @@ export class RuntimeUnit {
   private _impactOriginOffset: Vector3 | null = null;
   private _decorativeStandinsSuppressed = false;
   private _expiresAt = Infinity;
+  private _collisionPushTotal = 0;
+  private _collisionPushPeak = 0;
+  private _collisionContactCount = 0;
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
@@ -135,6 +142,36 @@ export class RuntimeUnit {
   get contributionChannels(): readonly LinkedContributionChannel[] { return this._contributionChannels; }
   get isImpactOrigin(): boolean { return this._isImpactOrigin; }
   get decorativeStandinsSuppressed(): boolean { return this._decorativeStandinsSuppressed; }
+  get collisionVelocity(): Vector3 {
+    return new Vector3(
+      this._movementVelocity.x + this._velocity.x,
+      0,
+      this._movementVelocity.z + this._velocity.z,
+    );
+  }
+  get collisionPushTotal(): number { return this._collisionPushTotal; }
+  get collisionPushPeak(): number { return this._collisionPushPeak; }
+  get collisionContactCount(): number { return this._collisionContactCount; }
+  get isAirborne(): boolean { return !this._grounded || this.position.y > 0.01; }
+  get crowdPressure(): number { return this._crowdPressure; }
+  get crowdPhysicsProfileId(): string { return this._crowdPhysicsProfile.id; }
+  get crowdResistance(): number { return this._crowdPhysicsProfile.crowdResistance; }
+  get crowdSeparationStrength(): number { return this._crowdPhysicsProfile.separationStrength; }
+  get horizontalSpeed(): number { return Math.sqrt(this._velocity.x * this._velocity.x + this._velocity.z * this._velocity.z); }
+  get isStaggered(): boolean { return this._staggerTimer > 0.02; }
+  get isToppled(): boolean { return !this._isDead && RuntimeUnit.timeNowSeconds() < this._toppledUntil; }
+  get isRecovering(): boolean {
+    const now = RuntimeUnit.timeNowSeconds();
+    return !this._isDead && now >= this._toppledUntil && now < this._recoveringUntil;
+  }
+  get physicsState(): "steady" | "airborne" | "toppled" | "recovering" | "dead" {
+    if (this._isDead) return "dead";
+    const now = RuntimeUnit.timeNowSeconds();
+    if (now < this._toppledUntil) return "toppled";
+    if (!this._grounded || this.position.y > 0.04) return "airborne";
+    if (now < this._recoveringUntil) return "recovering";
+    return "steady";
+  }
 
   constructor(
     definition: UnitDefinition,
@@ -143,6 +180,7 @@ export class RuntimeUnit {
     propMeshes: Mesh[],
     visualConfig: UnitVisualConfig,
     ragdollProfile: RagdollProfile,
+    crowdPhysicsProfile: CrowdPhysicsProfile,
   ) {
     this.runtimeId = RuntimeUnit._nextRuntimeId++;
     this.definition = definition;
@@ -151,6 +189,7 @@ export class RuntimeUnit {
     this.propMeshes = propMeshes;
     this.visualConfig = visualConfig;
     this._ragdollProfile = ragdollProfile;
+    this._crowdPhysicsProfile = crowdPhysicsProfile;
     this._maxHealth = definition.maxHealth;
     this._currentHealth = this._maxHealth;
     this.animator = new ProceduralAnimator(body);
@@ -172,7 +211,7 @@ export class RuntimeUnit {
   }
 
   canAttack(now: number): boolean {
-    return !this._isDead && now >= this._nextAttackAt;
+    return !this._isDead && this._staggerTimer <= 0.05 && now >= this._nextAttackAt && this.hasCapability("attack", now);
   }
 
   setSpawnRole(role: RuntimeSpawnRole, countsTowardVictory = true): void {
@@ -338,9 +377,89 @@ export class RuntimeUnit {
 
     // Stagger: briefly interrupt movement
     this._staggerTimer = Math.min(0.3, knockScale * 0.15);
+    this._crowdPressure = Math.min(
+      1.6,
+      Math.max(
+        this._crowdPressure,
+        (impulse.length() * 0.04 * this._crowdPhysicsProfile.staggerResponse) / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance),
+      ),
+    );
+    this._updateCrowdPhysicsState(
+      (impulse.length() * 0.04 * this._crowdPhysicsProfile.staggerResponse) / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance),
+      impulse,
+    );
 
     // Flinch: tilt body toward impact
     this.animator.triggerFlinch();
+  }
+
+  applyCollisionImpulse(impulse: Vector3): void {
+    if (this._isDead || (this._linkedParent && this._isAnchoredActor)) return;
+    const horizontalImpulse = new Vector3(impulse.x, 0, impulse.z);
+    const magnitude = horizontalImpulse.length();
+    if (magnitude <= 0.0001) return;
+
+    this._collisionContactCount += 1;
+    this._collisionPushTotal += magnitude;
+    this._collisionPushPeak = Math.max(this._collisionPushPeak, magnitude);
+
+    const pushScale = 0.42 / Math.max(0.55, this.definition.mass);
+    this._velocity.addInPlace(horizontalImpulse.scale(pushScale));
+    this._staggerTimer = Math.max(this._staggerTimer, Math.min(0.22, 0.04 + magnitude * 0.025));
+    this._crowdPressure = Math.min(
+      1.8,
+      Math.max(this._crowdPressure, magnitude * 0.18 * this._crowdPhysicsProfile.staggerResponse),
+    );
+    this._updateCrowdPhysicsState(
+      Math.min(
+        1.8,
+        (magnitude * 0.18 * this._crowdPhysicsProfile.staggerResponse) / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance),
+      ),
+      horizontalImpulse,
+    );
+    if (magnitude >= 0.9) {
+      this.animator.triggerFlinch();
+    }
+  }
+
+  applyCollisionSeparation(offset: Vector3): void {
+    if (this._isDead || (this._linkedParent && this._isAnchoredActor)) return;
+    this.body.root.position.addInPlace(offset);
+    if (this.body.root.position.y < 0) {
+      this.body.root.position.y = 0;
+    }
+    resolveObstacleCollisions(this.body.root.position, this.definition.collisionRadius, RuntimeUnit.obstacles);
+  }
+
+  applyCrowdDisplacement(offset: Vector3, pressure: number): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    if (offset.lengthSquared() <= 0.000001) return;
+
+    this.body.root.position.addInPlace(offset);
+    if (this.body.root.position.y < 0) {
+      this.body.root.position.y = 0;
+    }
+    resolveObstacleCollisions(this.body.root.position, this.definition.collisionRadius, RuntimeUnit.obstacles);
+    this._velocity.x += offset.x * 5.2 * this._crowdPhysicsProfile.shoveResponse;
+    this._velocity.z += offset.z * 5.2 * this._crowdPhysicsProfile.shoveResponse;
+
+    const adjustedPressure = pressure / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance);
+    this._crowdPressure = Math.min(
+      1.8,
+      Math.max(this._crowdPressure, adjustedPressure * this._crowdPhysicsProfile.staggerResponse),
+    );
+    this._staggerTimer = Math.max(
+      this._staggerTimer,
+      Math.min(0.52, adjustedPressure * 0.11 * this._crowdPhysicsProfile.staggerResponse),
+    );
+    this._updateCrowdPhysicsState(
+      adjustedPressure,
+      new Vector3(
+        offset.x * 6.5 * this._crowdPhysicsProfile.shoveResponse,
+        0,
+        offset.z * 6.5 * this._crowdPhysicsProfile.shoveResponse,
+      ),
+    );
   }
 
   heal(amount: number): void {
@@ -358,6 +477,7 @@ export class RuntimeUnit {
     // Animate
     this.animator.update(dt);
     this._applyVisualPresentation(now);
+    this._movementVelocity.setAll(0);
 
     if (this._linkedParent && this._isAnchoredActor) {
       this._updateAnchoredActor(now);
@@ -375,9 +495,11 @@ export class RuntimeUnit {
     }
 
     const pos = this.body.root.position;
+    this._crowdPressure = Math.max(0, this._crowdPressure - dt * this._crowdPhysicsProfile.recoveryRate);
     if (now >= this._slowUntil) {
       this._slowMultiplier = 1;
     }
+    const physicsState = this.physicsState;
 
     // ── Physics: gravity + velocity for knockback ──
     if (!this._grounded || this._velocity.lengthSquared() > 0.001) {
@@ -417,6 +539,14 @@ export class RuntimeUnit {
     // ── Stagger: skip movement while staggered ──
     if (this._staggerTimer > 0) {
       this._staggerTimer -= dt;
+      this._applyCrowdLean(dt);
+      this._updateHealthBar();
+      return;
+    }
+
+    if (physicsState === "toppled" || physicsState === "airborne") {
+      this.stopMoving();
+      this._applyCrowdLean(dt);
       this._updateHealthBar();
       return;
     }
@@ -434,8 +564,10 @@ export class RuntimeUnit {
         }
       } else {
         const dir = offset.normalize();
-        const step = this.definition.moveSpeed * this._slowMultiplier * dt;
-        pos.addInPlace(dir.scale(Math.min(step, Math.sqrt(distSq))));
+        const recoveryMoveMultiplier = physicsState === "recovering" ? 0.55 : 1;
+        const appliedDistance = Math.min(this.definition.moveSpeed * this._slowMultiplier * recoveryMoveMultiplier * dt, Math.sqrt(distSq));
+        pos.addInPlace(dir.scale(appliedDistance));
+        this._movementVelocity.copyFrom(dir.scale(appliedDistance / Math.max(dt, 0.0001)));
 
         // Face movement direction
         if (this._spinning) {
@@ -450,6 +582,7 @@ export class RuntimeUnit {
       }
     }
 
+    this._applyCrowdLean(dt);
     this._updateHealthBar();
   }
 
@@ -602,6 +735,74 @@ export class RuntimeUnit {
     if (pos.y <= 0.01 && this._velocity.lengthSquared() < 0.02) {
       this._physicsActive = false;
       this._velocity.setAll(0);
+    }
+  }
+
+  private _applyCrowdLean(dt: number): void {
+    const horizontalSpeed = this.horizontalSpeed;
+    if (this.physicsState === "toppled") {
+      const settle = Math.min(1, dt * 12);
+      this.body.root.rotation.x += (-1.05 - this.body.root.rotation.x) * settle;
+      this.body.root.rotation.z += ((this._velocity.x * 0.04) - this.body.root.rotation.z) * settle;
+      return;
+    }
+    const targetLeanX = Math.max(
+      -0.28,
+      Math.min(
+        0.28,
+        (-this._velocity.z * 0.025 - this._crowdPressure * 0.08) * this._crowdPhysicsProfile.leanResponse,
+      ),
+    );
+    const targetLeanZ = Math.max(
+      -0.32,
+      Math.min(
+        0.32,
+        (this._velocity.x * 0.03) * this._crowdPhysicsProfile.leanResponse,
+      ),
+    );
+    const settle = Math.min(1, dt * (8 + this._crowdPhysicsProfile.recoveryRate * 2 + horizontalSpeed));
+    this.body.root.rotation.x += (targetLeanX - this.body.root.rotation.x) * settle;
+    this.body.root.rotation.z += (targetLeanZ - this.body.root.rotation.z) * settle;
+  }
+
+  hasCapability(channel: LinkedContributionChannel, now = RuntimeUnit.timeNowSeconds()): boolean {
+    if (!this.hasContribution(channel)) return false;
+    if (this._isDead) return false;
+    if (now < this._toppledUntil) return false;
+    if (!this._grounded || this.position.y > 0.04) return false;
+    if (channel === "attack" && now < this._recoveringUntil) return false;
+    return true;
+  }
+
+  getPhysicsDisabledChannels(now = RuntimeUnit.timeNowSeconds()): LinkedContributionChannel[] {
+    const disabled: LinkedContributionChannel[] = [];
+    if (!this.hasCapability("move", now)) disabled.push("move");
+    if (!this.hasCapability("attack", now)) disabled.push("attack");
+    return disabled;
+  }
+
+  private _updateCrowdPhysicsState(pressure: number, impulse: Vector3): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    const now = RuntimeUnit.timeNowSeconds();
+    if (pressure >= this._crowdPhysicsProfile.launchThreshold) {
+      this._toppledUntil = Math.max(this._toppledUntil, now + this._crowdPhysicsProfile.toppleSeconds);
+      this._recoveringUntil = Math.max(this._recoveringUntil, this._toppledUntil + this._crowdPhysicsProfile.recoverySeconds);
+      this._grounded = false;
+      this._velocity.y = Math.max(this._velocity.y, 0.85 + pressure * 1.2);
+      this._staggerTimer = Math.max(this._staggerTimer, this._crowdPhysicsProfile.toppleSeconds * 0.45);
+      this.stopMoving();
+      return;
+    }
+    if (pressure >= this._crowdPhysicsProfile.toppleThreshold) {
+      this._toppledUntil = Math.max(this._toppledUntil, now + this._crowdPhysicsProfile.toppleSeconds);
+      this._recoveringUntil = Math.max(this._recoveringUntil, this._toppledUntil + this._crowdPhysicsProfile.recoverySeconds);
+      this._velocity.y = Math.max(this._velocity.y, 0.35 + pressure * 0.45);
+      this._grounded = false;
+      this._staggerTimer = Math.max(this._staggerTimer, this._crowdPhysicsProfile.toppleSeconds * 0.35);
+      this.stopMoving();
+      if (impulse.lengthSquared() > 0.01) {
+        this.animator.triggerFlinch();
+      }
     }
   }
 
@@ -787,8 +988,15 @@ export class RuntimeUnit {
     this._moveTarget = null;
     this._isMoving = false;
     this._velocity.setAll(0);
+    this._movementVelocity.setAll(0);
     this._grounded = true;
     this._staggerTimer = 0;
+    this._crowdPressure = 0;
+    this._toppledUntil = 0;
+    this._recoveringUntil = 0;
+    this._collisionPushTotal = 0;
+    this._collisionPushPeak = 0;
+    this._collisionContactCount = 0;
     this._spinning = false;
     this._slowMultiplier = 1;
     this._slowUntil = 0;

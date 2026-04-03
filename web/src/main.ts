@@ -1073,18 +1073,37 @@ function findScenarioRootRuntime(unitId: string): RuntimeUnit | null {
 }
 
 function applyScenarioAction(action: ScenarioAction): void {
-  if (action.kind !== "damage-linked-role") return;
-  const root = findScenarioRootRuntime(action.parentUnitId);
-  if (!root) {
-    showStatus(`Scenario action missing root ${action.parentUnitId}.`);
+  if (action.kind === "damage-linked-role") {
+    const parentUnitId = action.parentUnitId;
+    const role = action.role;
+    if (!parentUnitId || !role) {
+      showStatus("Scenario action is missing parentUnitId or role.");
+      return;
+    }
+    const root = findScenarioRootRuntime(parentUnitId);
+    if (!root) {
+      showStatus(`Scenario action missing root ${parentUnitId}.`);
+      return;
+    }
+    const child = root.linkedChildren.find((candidate) => candidate.linkedRoleLabel === role);
+    if (!child) {
+      showStatus(`Scenario action missing role ${parentUnitId}:${role}.`);
+      return;
+    }
+    child.applyDamage(action.damage, Vector3.Zero());
     return;
   }
-  const child = root.linkedChildren.find((candidate) => candidate.linkedRoleLabel === action.role);
-  if (!child) {
-    showStatus(`Scenario action missing role ${action.parentUnitId}:${action.role}.`);
-    return;
+  if (action.kind === "damage-root-unit") {
+    const root = findScenarioRootRuntime(action.unitId ?? "");
+    if (!root) {
+      showStatus(`Scenario action missing root ${action.unitId}.`);
+      return;
+    }
+    const impulse = action.impulse
+      ? new Vector3(action.impulse.x, action.impulse.y ?? 0, action.impulse.z)
+      : Vector3.Zero();
+    root.applyDamage(action.damage, impulse);
   }
-  child.applyDamage(action.damage, Vector3.Zero());
 }
 
 function applyScenarioActions(scenario: ScenarioSpec): void {
@@ -1229,12 +1248,14 @@ function buildGameStatePayload() {
         detachOnParentDeath: unit.detachOnParentDeath,
         actionPreset: unit.actionPreset,
         contributionChannels: unit.contributionChannels,
-        attackCapability: unit.hasContribution("attack") ? "enabled" : "disabled",
-        moveCapability: unit.hasContribution("move") ? "enabled" : "disabled",
+        physicsState: unit.physicsState,
+        attackCapability: unit.hasCapability("attack") ? "enabled" : "disabled",
+        moveCapability: unit.hasCapability("move") ? "enabled" : "disabled",
         disabledByRole: [
           ...unit.getMissingContributionRoles("attack"),
           ...unit.getMissingContributionRoles("move"),
         ],
+        physicsDisabled: unit.getPhysicsDisabledChannels(),
         attackEmitterRole: attackEmitter === unit ? "parent" : (attackEmitter.linkedRoleLabel ?? attackEmitter.definition.displayName),
         attackEmitterId: attackEmitter.runtimeId,
         attackOriginSource: attackOrigin.source,
@@ -1253,6 +1274,14 @@ function buildGameStatePayload() {
         alive: !unit.isDead,
         hp: Math.round(unit.currentHealth),
         maxHp: Math.round(unit.maxHealth),
+        staggered: unit.isStaggered,
+        crowdPressure: Number(unit.crowdPressure.toFixed(2)),
+        crowdPhysicsProfileId: unit.crowdPhysicsProfileId,
+        horizontalSpeed: Number(unit.horizontalSpeed.toFixed(2)),
+        airborne: unit.isAirborne,
+        collisionPushTotal: Number(unit.collisionPushTotal.toFixed(2)),
+        collisionPushPeak: Number(unit.collisionPushPeak.toFixed(2)),
+        collisionContacts: unit.collisionContactCount,
         x: Number(unit.position.x.toFixed(2)),
         z: Number(unit.position.z.toFixed(2)),
       };
@@ -1408,6 +1437,62 @@ function evaluateSpawnedChildCountClauses(state: GameTextState, value: string): 
       .length;
     if (!compareNumeric(actual, expectation)) {
       failures.push(`${unitId}:${relation} expected ${expectation.operator}${expectation.expected}, got ${actual}`);
+    }
+  }
+  return failures;
+}
+
+function evaluateCrowdMetricClauses(state: GameTextState, value: string): string[] {
+  const clauses = parseUnitClauses(value);
+  const failures: string[] = [];
+  for (const { unitId, clause } of clauses) {
+    const root = getScenarioRoot(state, unitId);
+    if (!root) {
+      failures.push(`Missing root unit ${unitId}`);
+      continue;
+    }
+
+    const checks = clause.split("+").map((entry) => entry.trim()).filter(Boolean);
+    for (const check of checks) {
+      const match = check.match(/^([A-Za-z]+)(>=|<=|=)(-?\d+(?:\.\d+)?)$/);
+      if (!match) {
+        failures.push(`Unsupported crowd-metric clause: ${unitId}:${check}`);
+        continue;
+      }
+
+      const metric = match[1];
+      const expectation: NumericExpectation = {
+        operator: match[2] as NumericExpectation["operator"],
+        expected: Number(match[3]),
+      };
+
+      let actual: number | null = null;
+      switch (metric) {
+        case "collisionContactCount":
+        case "collisionContacts":
+          actual = root.collisionContacts;
+          break;
+        case "collisionPushPeak":
+          actual = root.collisionPushPeak;
+          break;
+        case "collisionPushTotal":
+          actual = root.collisionPushTotal;
+          break;
+        case "crowdPressure":
+          actual = Number((root as { crowdPressure?: number }).crowdPressure ?? 0);
+          break;
+        case "horizontalSpeed":
+          actual = root.horizontalSpeed;
+          break;
+        default:
+          failures.push(`Unsupported crowd metric ${metric} on ${unitId}`);
+          break;
+      }
+
+      if (actual === null) continue;
+      if (!compareNumeric(actual, expectation)) {
+        failures.push(`${unitId}:${metric} expected ${expectation.operator}${expectation.expected}, got ${actual}`);
+      }
     }
   }
   return failures;
@@ -1584,6 +1669,97 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
         }
       }
       return failures.length === 0 ? pass("Position shift matched.") : fail(failures.join("; "));
+    }
+    case "position-shift-at-most": {
+      if (!scenario) return fail("No scenario context for position-shift assertion.");
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(<=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return fail(`Unsupported movement clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        const initial = getInitialUnitSpec(scenario, unitId);
+        if (!root || !initial) {
+          failures.push(`Missing movement context for ${unitId}`);
+          continue;
+        }
+        const dx = root.x - initial.x;
+        const dz = root.z - initial.z;
+        const actual = Math.sqrt(dx * dx + dz * dz);
+        if (actual > expected) {
+          failures.push(`${unitId} expected movement <= ${expected}, got ${actual.toFixed(2)}`);
+        }
+      }
+      return failures.length === 0 ? pass("Position shift upper bounds matched.") : fail(failures.join("; "));
+    }
+    case "unit-distance-at-least": {
+      const clauses = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const clause of clauses) {
+        const pairMatch = clause.match(/^([^<>=]+)<->([^<>=]+)(>=)(-?\d+(?:\.\d+)?)$/);
+        if (!pairMatch) return fail(`Unsupported unit-distance clause: ${clause}`);
+        const left = pairMatch[1].trim();
+        const right = pairMatch[2].trim();
+        const expected = Number(pairMatch[4]);
+        const leftRoot = getScenarioRoot(state, left);
+        const rightRoot = getScenarioRoot(state, right);
+        if (!leftRoot || !rightRoot) {
+          failures.push(`Missing unit-distance context for ${left}<->${right}`);
+          continue;
+        }
+        const dx = rightRoot.x - leftRoot.x;
+        const dz = rightRoot.z - leftRoot.z;
+        const actual = Math.sqrt(dx * dx + dz * dz);
+        if (actual < expected) {
+          failures.push(`${left}<->${right} expected distance >= ${expected}, got ${actual.toFixed(2)}`);
+        }
+      }
+      return failures.length === 0 ? pass("Unit distances matched.") : fail(failures.join("; "));
+    }
+    case "collision-push-at-least": {
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(>=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return fail(`Unsupported collision-push clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing collision-push context for ${unitId}`);
+          continue;
+        }
+        if (root.collisionPushPeak < expected) {
+          failures.push(`${unitId} expected collision push >= ${expected}, got ${root.collisionPushPeak}`);
+        }
+      }
+      return failures.length === 0 ? pass("Collision push matched.") : fail(failures.join("; "));
+    }
+    case "crowd-metric-at-least": {
+      const failures = evaluateCrowdMetricClauses(state, assertion.value);
+      return failures.length === 0 ? pass("Crowd metrics matched.") : fail(failures.join("; "));
+    }
+    case "physics-state": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing physics-state context for ${unitId}`);
+          continue;
+        }
+        const expectedStates = new Set(clause.split("|").map((entry) => entry.trim()).filter(Boolean));
+        if (expectedStates.size === 0) {
+          failures.push(`No expected states provided for ${unitId}`);
+          continue;
+        }
+        if (!expectedStates.has(root.physicsState)) {
+          failures.push(`${unitId} expected physics state ${[...expectedStates].join("|")}, got ${root.physicsState}`);
+        }
+      }
+      return failures.length === 0 ? pass("Physics states matched.") : fail(failures.join("; "));
     }
     case "replay-stability":
     case "replay-restore":

@@ -18,6 +18,9 @@ export interface ScenarioAssertion {
     | "spawned-child-count"
     | "unit-hp-at-most"
     | "position-shift-at-least"
+    | "position-shift-at-most"
+    | "unit-distance-at-least"
+    | "collision-push-at-least"
     | "replay-stability"
     | "victory-semantics"
     | "emitter-owner"
@@ -30,15 +33,19 @@ export interface ScenarioAssertion {
     | "linked-role-targetable"
     | "linked-role-state"
     | "parent-capability"
-    | "replay-restore";
+    | "replay-restore"
+    | "crowd-metric-at-least"
+    | "physics-state";
   value: string;
 }
 
 export interface ScenarioAction {
-  kind: "damage-linked-role";
-  parentUnitId: string;
-  role: string;
+  kind: "damage-linked-role" | "damage-root-unit";
+  parentUnitId?: string;
+  unitId?: string;
+  role?: string;
   damage: number;
+  impulse?: { x: number; y?: number; z: number };
 }
 
 export interface ScenarioSpec {
@@ -99,11 +106,31 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "comparison-focus", value: "Legacy Tank, Da Vinci Tank, and Hwacha should produce distinct artillery rhythms and projectile patterns." },
       { kind: "linked-relation-count", value: "legacy.tank:crew=2" },
       { kind: "linked-relation-count", value: "renaissance.da_vinci_tank:crew=1" },
-      { kind: "linked-relation-count", value: "dynasty.hwacha:crew=2" },
+      { kind: "linked-relation-count", value: "dynasty.hwacha:crew=1" },
       { kind: "emitter-owner", value: "legacy.tank:gunner, renaissance.da_vinci_tank:pilot, dynasty.hwacha:rocketeer" },
       { kind: "impact-owner", value: "legacy.tank:gunner, renaissance.da_vinci_tank:pilot, dynasty.hwacha:rocketeer" },
       { kind: "origin-source", value: "legacy.tank:attack=vehicle-socket+impact=vehicle-socket, renaissance.da_vinci_tank:attack=vehicle-socket+impact=vehicle-socket, dynasty.hwacha:attack=vehicle-socket+impact=vehicle-socket" },
       { kind: "no-duplicate-standins", value: "legacy.tank+renaissance.da_vinci_tank+dynasty.hwacha" },
+    ],
+  },
+  physics_injected_recovery_state: {
+    name: "physics_injected_recovery_state",
+    description: "After a topple window, the unit should recover its normal capability state if no new hits arrive.",
+    autoStart: true,
+    advanceMs: 2200,
+    units: [
+      { unitId: "medieval.knight", team: 0, position: { x: -8, z: 0 } },
+      { unitId: "medieval.archer", team: 1, position: { x: 26, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "medieval.knight", damage: 1, impulse: { x: 15, y: 2.4, z: 0 } },
+    ],
+    assertions: [
+      { kind: "physics-state", value: "medieval.knight:steady" },
+      { kind: "parent-capability", value: "medieval.knight:attack=enabled+move=enabled" },
+      { kind: "position-shift-at-least", value: "medieval.knight>=1.1" },
+      { kind: "unit-distance-at-least", value: "medieval.knight<->medieval.archer>=16" },
+      { kind: "crowd-metric-at-least", value: "medieval.knight:crowdPressure<=0.25" },
     ],
   },
   nonsecret_legacy_tank_roles: {
@@ -215,6 +242,36 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "parent-capability", value: "dynasty.hwacha:attack=disabled+move=disabled" },
       { kind: "replay-restore", value: "dynasty.hwacha:rocketeer=alive+attack=enabled+move=enabled" },
       { kind: "units-present", value: "dynasty.hwacha" },
+    ],
+  },
+  crowd_physics_clubber_vs_protector: {
+    name: "crowd_physics_clubber_vs_protector",
+    description: "A light rusher should register stronger crowd shove response than a braced defender.",
+    autoStart: true,
+    advanceMs: 500,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -0.35, z: 0 } },
+      { unitId: "tribal.protector", team: 1, position: { x: 0.35, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "crowd-metric-at-least", value: "tribal.clubber:collisionContactCount>=1+collisionPushPeak>=0.18, tribal.protector:collisionContactCount>=1" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=0.15" },
+    ],
+  },
+  crowd_physics_halfling_vs_knight: {
+    name: "crowd_physics_halfling_vs_knight",
+    description: "A tiny unit should be displaced harder than a heavy knight during first contact.",
+    autoStart: true,
+    advanceMs: 550,
+    units: [
+      { unitId: "farmer.halfling", team: 0, position: { x: -0.2, z: 0 } },
+      { unitId: "medieval.knight", team: 1, position: { x: 0.25, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "crowd-metric-at-least", value: "farmer.halfling:collisionContactCount>=1+collisionPushPeak>=0.28, medieval.knight:collisionContactCount>=1" },
+      { kind: "position-shift-at-least", value: "farmer.halfling>=0.25" },
     ],
   },
   war_machine_tank_origin: {
@@ -530,6 +587,59 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "comparison-focus", value: "Dark Peasant should read as control/summon oppression; Super Peasant as mobility and impact." },
       { kind: "spawned-child-count", value: "legacy.dark_peasant:spawned-child>=2" },
       { kind: "position-shift-at-least", value: "legacy.super_peasant>=4.5" },
+    ],
+  },
+  physics_crowd_separation: {
+    name: "physics_crowd_separation",
+    description: "A tight allied melee clump should spread into distinct live bodies once collision resolution is active.",
+    autoStart: true,
+    advanceMs: 900,
+    units: [
+      { unitId: "farmer.farmer", team: 0, position: { x: -9.5, z: 0 } },
+      { unitId: "medieval.squire", team: 0, position: { x: -9.45, z: 0.04 } },
+      { unitId: "ancient.hoplite", team: 0, position: { x: -9.45, z: -0.04 } },
+      { unitId: "tribal.chieftain", team: 1, position: { x: 10.5, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "unit-distance-at-least", value: "farmer.farmer<->medieval.squire>=0.7, farmer.farmer<->ancient.hoplite>=0.7, medieval.squire<->ancient.hoplite>=0.8" },
+      { kind: "collision-push-at-least", value: "farmer.farmer>=0.3, medieval.squire>=0.3, ancient.hoplite>=0.3" },
+    ],
+  },
+  physics_mammoth_shove_line: {
+    name: "physics_mammoth_shove_line",
+    description: "A mammoth charge should create measurable live-body shove on a mixed infantry line.",
+    autoStart: true,
+    advanceMs: 2200,
+    units: [
+      { unitId: "tribal.mammoth", team: 0, position: { x: -6.2, z: 0 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 0.2, z: -1.15 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 0.9, z: 0 } },
+      { unitId: "ancient.hoplite", team: 1, position: { x: 1.6, z: 1.15 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "collision-push-at-least", value: "farmer.farmer>=0.9, medieval.squire>=0.9, ancient.hoplite>=0.6" },
+      { kind: "position-shift-at-least", value: "farmer.farmer>=1.2, medieval.squire>=1.2, ancient.hoplite>=1.2" },
+      { kind: "comparison-focus", value: "Mammoth contact should displace the infantry line as live bodies instead of simply phasing through it." },
+    ],
+  },
+  physics_topple_thresholds: {
+    name: "physics_topple_thresholds",
+    description: "The same shove impulse should topple a medium infantry body while a colossal beast stays steady.",
+    autoStart: false,
+    units: [
+      { unitId: "medieval.squire", team: 0, position: { x: -8, z: -1.1 } },
+      { unitId: "tribal.mammoth", team: 0, position: { x: -8, z: 1.1 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "medieval.squire", damage: 1, impulse: { x: 16, z: 0 } },
+      { kind: "damage-root-unit", unitId: "tribal.mammoth", damage: 1, impulse: { x: 16, z: 0 } },
+    ],
+    assertions: [
+      { kind: "physics-state", value: "medieval.squire:toppled|airborne, tribal.mammoth:airborne|steady" },
+      { kind: "parent-capability", value: "medieval.squire:attack=disabled+move=disabled" },
+      { kind: "crowd-metric-at-least", value: "medieval.squire:crowdPressure>=0.5, tribal.mammoth:crowdPressure<=0.2" },
     ],
   },
 };

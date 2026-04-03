@@ -105,6 +105,8 @@ export class SimulationSystem {
   readonly attackRangePadding = 0.2;
   readonly cleanupSweepInterval = 0.75;
   readonly summonLivingCap = 55;
+  readonly collisionResolutionPadding = 0.03;
+  readonly collisionResolutionPasses = 2;
   private _now = 0;
 
   get isRunning(): boolean { return this._isRunning; }
@@ -168,6 +170,8 @@ export class SimulationSystem {
       }
     }
 
+    this._resolveLivingCollisions();
+
     for (const unit of this._units) {
       if (unit.isDead || unit.isAnchoredActor) continue;
 
@@ -193,11 +197,77 @@ export class SimulationSystem {
     return count;
   }
 
+  private _resolveLivingCollisions(): void {
+    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent);
+    if (roots.length < 2) return;
+
+    for (let pass = 0; pass < this.collisionResolutionPasses; pass++) {
+      for (let i = 0; i < roots.length; i++) {
+        const a = roots[i];
+        for (let j = i + 1; j < roots.length; j++) {
+          const b = roots[j];
+          if (b.isDead) continue;
+
+          const delta = b.position.subtract(a.position);
+          delta.y = 0;
+          const minDistance = a.definition.collisionRadius + b.definition.collisionRadius;
+          const distanceSq = delta.lengthSquared();
+          if (distanceSq > minDistance * minDistance) continue;
+
+          const distance = Math.sqrt(Math.max(distanceSq, 0.000001));
+          const normal = distanceSq > 0.000001
+            ? delta.scale(1 / distance)
+            : new Vector3(((a.runtimeId + b.runtimeId) % 2 === 0) ? 1 : -1, 0, 0);
+          const overlap = minDistance - distance + this.collisionResolutionPadding;
+          if (overlap <= 0) continue;
+
+          const contactBias = a.team === b.team ? 0.82 : 1.0;
+          const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance);
+          const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance);
+          const inverseMassA = 1 / resistanceA;
+          const inverseMassB = 1 / resistanceB;
+          const inverseMassTotal = inverseMassA + inverseMassB;
+          a.applyCollisionSeparation(normal.scale(-overlap * (inverseMassA / inverseMassTotal) * a.crowdSeparationStrength * contactBias));
+          b.applyCollisionSeparation(normal.scale(overlap * (inverseMassB / inverseMassTotal) * b.crowdSeparationStrength * contactBias));
+
+          const relativeVelocity = b.collisionVelocity.subtract(a.collisionVelocity);
+          const impactSpeed = Math.max(0, -Vector3.Dot(relativeVelocity, normal));
+          const impulseStrength = Math.min(4.5, overlap * 4.2 * contactBias + impactSpeed * (a.team === b.team ? 0.55 : 0.9));
+          if (impulseStrength <= 0.08) continue;
+
+          const weightedMassA = resistanceA * this._collisionMomentumMultiplier(a);
+          const weightedMassB = resistanceB * this._collisionMomentumMultiplier(b);
+          const weightedMassTotal = weightedMassA + weightedMassB;
+          a.applyCollisionImpulse(normal.scale(-impulseStrength * (weightedMassB / weightedMassTotal)));
+          b.applyCollisionImpulse(normal.scale(impulseStrength * (weightedMassA / weightedMassTotal)));
+        }
+      }
+    }
+  }
+
+  private _collisionMomentumMultiplier(unit: RuntimeUnit): number {
+    let multiplier = 1;
+    const abilities = new Set(unit.definition.abilities ?? []);
+    const size = unit.definition.size ?? "medium";
+
+    if (size === "large") multiplier += 0.08;
+    if (size === "giant") multiplier += 0.18;
+    if (size === "colossal") multiplier += 0.28;
+    if (unit.definition.archetype === "charge_melee") multiplier += 0.18;
+    if (unit.definition.archetype === "giant_melee") multiplier += 0.12;
+    if (abilities.has("push_force")) multiplier += 0.25;
+    if (abilities.has("giant_slam")) multiplier += 0.18;
+    if (abilities.has("jump_charge") || abilities.has("leap_attack")) multiplier += 0.12;
+    if (unit.isSpinning) multiplier += 0.1;
+
+    return multiplier;
+  }
+
   private _processUnitDecision(unit: RuntimeUnit, aiProfile: AIProfile, now: number): void {
     const attackProfile = getAttackProfile(unit.definition.attackProfileId);
     const preset = getBehaviorPreset(unit);
-    const canAttack = unit.hasContribution("attack");
-    const canMove = unit.hasContribution("move");
+    const canAttack = unit.hasCapability("attack", now);
+    const canMove = unit.hasCapability("move", now);
 
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
@@ -903,6 +973,7 @@ export class SimulationSystem {
         unit.applySlow(slowMultiplier, slowDuration, now);
       }
     }
+    this._applyCrowdShockwave(center, Math.max(1.8, radius + 0.8), attackerTeam, impulse.scale(0.28));
   }
 
   private _applyOnHitStatuses(attacker: RuntimeUnit, target: RuntimeUnit, now: number, impactOrigin?: Vector3): void {
@@ -938,6 +1009,8 @@ export class SimulationSystem {
       this.visualEffects.spawnImpactDust(target.position);
       this.visualEffects.spawnHitFlash(target.position);
     }
+    const shockRadius = splashRadius > 0 ? splashRadius + 0.85 : 1.55;
+    this._applyCrowdShockwave(target.position, shockRadius, attackerTeam, knockback.scale(splashRadius > 0 ? 0.3 : 0.2), target);
   }
 
   private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3): void {
@@ -946,6 +1019,32 @@ export class SimulationSystem {
       if (unit.isDead || unit.team === attackerTeam || !unit.isTargetable) continue;
       if (unit.position.subtract(center).lengthSquared() > radiusSq) continue;
       unit.applyDamage(damage, impulse);
+    }
+  }
+
+  private _applyCrowdShockwave(
+    center: Vector3,
+    radius: number,
+    attackerTeam: number,
+    impulse: Vector3,
+    primaryTarget?: RuntimeUnit,
+  ): void {
+    const baseMagnitude = impulse.length();
+    if (baseMagnitude < 0.55 || radius <= 0.5) return;
+    const radiusSq = radius * radius;
+    for (const unit of this._units) {
+      if (unit === primaryTarget || unit.isDead || unit.team === attackerTeam || !unit.isTargetable || unit.linkedParent) continue;
+      const delta = unit.position.subtract(center);
+      delta.y = 0;
+      const distanceSq = delta.lengthSquared();
+      if (distanceSq <= 0.00001 || distanceSq > radiusSq) continue;
+      const distance = Math.sqrt(distanceSq);
+      const falloff = 1 - distance / radius;
+      if (falloff <= 0) continue;
+      const direction = delta.scale(1 / distance);
+      const displacement = direction.scale(baseMagnitude * 0.05 * falloff);
+      const pressure = baseMagnitude * 0.7 * falloff;
+      unit.applyCrowdDisplacement(displacement, pressure);
     }
   }
 

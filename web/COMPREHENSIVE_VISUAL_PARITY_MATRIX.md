@@ -6,7 +6,7 @@
 - Validation source of truth is the deterministic gallery suite in [`web/src/testing/scenarios.ts`](C:/Git/MOVBattle/web/src/testing/scenarios.ts).
 - Bespoke must-match cues for the current tranche are tracked in [`web/BESPOKE_VISUAL_TARGETS.md`](C:/Git/MOVBattle/web/BESPOKE_VISUAL_TARGETS.md).
 - Full per-unit reference rows are tracked in [`web/TABS_REFERENCE_MATRIX.md`](C:/Git/MOVBattle/web/TABS_REFERENCE_MATRIX.md).
-- Per-unit status tracking is recorded in [`web/TABS_VISUAL_TRACKER.md`](C:/Git/MOVBattle/web/TABS_VISUAL_TRACKER.md).
+- Validation status is carried by the gallery scenarios below plus passing type/build verification; there is no separate per-unit tracker anymore.
 
 ## Matrix
 ### Tribal

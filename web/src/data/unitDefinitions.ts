@@ -16,6 +16,7 @@ export interface UnitDefinition extends RosterManifestEntry {
   attackProfileId: string;
   aiProfileId: string;
   ragdollProfileId: string;
+  crowdPhysicsProfileId: string;
 }
 
 interface ArchetypeTemplate {
@@ -78,6 +79,24 @@ function prefersRagdoll(entry: RosterManifestEntry): string {
   return "ragdoll.medium";
 }
 
+function prefersCrowdPhysics(entry: RosterManifestEntry): string {
+  const size = inferSize(entry);
+  if (usesBossPhysics(entry)) return "crowd.boss";
+  if (entry.archetype === "artillery" || size === "large") return "crowd.heavy";
+  if (entry.archetype === "shield_melee" || entry.archetype === "polearm_melee") return "crowd.braced";
+  if (
+    entry.archetype === "tiny_melee" ||
+    entry.archetype === "light_melee" ||
+    entry.archetype === "archer" ||
+    entry.archetype === "rapid_ranged" ||
+    entry.archetype === "flying_ranged"
+  ) {
+    return "crowd.light";
+  }
+  if (entry.archetype === "heavy_melee" || entry.archetype === "charge_melee" || size === "giant") return "crowd.heavy";
+  return "crowd.medium";
+}
+
 function applyAbilityOverrides(
   entry: RosterManifestEntry,
   base: ArchetypeTemplate,
@@ -131,6 +150,7 @@ function buildDefinition(entry: RosterManifestEntry): UnitDefinition {
     attackProfileId,
     aiProfileId,
     ragdollProfileId: prefersRagdoll(entry),
+    crowdPhysicsProfileId: prefersCrowdPhysics(entry),
   };
 }
 
