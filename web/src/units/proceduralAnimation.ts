@@ -74,6 +74,10 @@ export class ProceduralAnimator {
   update(dt: number): void {
     this._time += dt;
 
+    if (this._state !== AnimState.Dead) {
+      this._resetPose();
+    }
+
     switch (this._state) {
       case AnimState.Idle:
         this._animateIdle(dt);
@@ -118,6 +122,13 @@ export class ProceduralAnimator {
 
     // ─── Googly-eye pupil wobble ───
     this._updatePupilWobble(dt);
+  }
+
+  private _resetPose(): void {
+    for (const joint of this._body.allJoints) {
+      joint.rotation.setAll(0);
+    }
+    this._body.torso.scaling.setAll(1);
   }
 
   private _updatePupilWobble(dt: number): void {
