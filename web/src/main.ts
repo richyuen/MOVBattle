@@ -53,6 +53,7 @@ const unitSearchEl = document.getElementById("unitSearch") as HTMLInputElement;
 const resultOverlayEl = document.getElementById("resultOverlay")!;
 const resultTitleEl = document.getElementById("resultTitle")!;
 const resultDetailEl = document.getElementById("resultDetail")!;
+const titleIntroEl = document.getElementById("titleIntro");
 const bodyEl = document.body;
 
 // ─── Engine & Scene ───
@@ -158,6 +159,28 @@ let galleryCaptureSession: {
   cameraBeforeGallery: CameraViewState;
 } | null = null;
 RuntimeUnit.timeNowSeconds = () => worldTimeSeconds;
+
+interface TitleIntroState {
+  active: boolean;
+  cleanupTimer: ReturnType<typeof setTimeout> | null;
+}
+
+let titleIntro: TitleIntroState | null = titleIntroEl
+  ? {
+      active: true,
+      cleanupTimer: setTimeout(() => dismissTitleIntro(), 3200),
+    }
+  : null;
+
+function dismissTitleIntro(): void {
+  if (!titleIntro) return;
+  titleIntro.active = false;
+  if (titleIntro.cleanupTimer) {
+    clearTimeout(titleIntro.cleanupTimer);
+  }
+  titleIntroEl?.remove();
+  titleIntro = null;
+}
 
 function rotateOffsetByYaw(offset: Vector3, yaw: number): Vector3 {
   const sin = Math.sin(yaw);
@@ -538,6 +561,7 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
 
 // ─── Battle lifecycle ───
 function startBattle(immediate = false): void {
+  dismissTitleIntro();
   if (stateMachine.currentState !== GameState.Placement) return;
 
   const teamACount = simulation.getLivingCount(0);
@@ -566,6 +590,7 @@ function startBattle(immediate = false): void {
 }
 
 function resetBattle(options: { preserveGallerySession?: boolean } = {}): void {
+  dismissTitleIntro();
   if (countdownTimer) {
     clearTimeout(countdownTimer);
     countdownTimer = null;
@@ -682,6 +707,7 @@ function spawnHarnessUnit(
   position: { x: number; y?: number; z: number },
   options: SpawnUnitOptions = {},
 ): RuntimeUnit | null {
+  dismissTitleIntro();
   if (stateMachine.currentState !== GameState.Placement) return null;
   return spawnRuntimeUnit(unitId, team, new Vector3(position.x, position.y ?? 0, position.z), options);
 }
@@ -737,6 +763,7 @@ function runScenarioSpec(
     preserveGallerySession?: boolean;
   } = {},
 ): ScenarioSpec {
+  dismissTitleIntro();
   hydrateScenario(scenario, { preserveGallerySession: options.preserveGallerySession });
   const autoStart = options.autoStart ?? scenario.autoStart ?? false;
   const advanceMs = options.advanceMs ?? scenario.advanceMs ?? 0;
@@ -1573,6 +1600,7 @@ window.addEventListener("keydown", (e) => {
   resetBattle,
   playAgain,
   toggleRemoveMode,
+  skipTitleIntro: dismissTitleIntro,
   spawnUnit: spawnHarnessUnit,
   runScenario,
   runScenarioCheck,
