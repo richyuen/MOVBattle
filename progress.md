@@ -362,3 +362,81 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - fresh `web/output/gallery-validation/results.json`
 - fresh `web/output/gallery-validation/console.log`
 - Browser console remained clean apart from the existing `favicon.ico` 404.
+- 2026-04-03: Implemented TABS campaign mode scaffold and runtime integration.
+- Added campaign HUD controls, campaign picker overlay, campaign status row, and result-overlay action buttons in `web/index.html`.
+- Added `web/src/campaign/` data + controller + types for 12 campaigns with one featured scenario each.
+- Extended `web/src/map/mapBuilder.ts` with battle-map registry support and campaign-themed map variants.
+- Updated `web/src/main.ts` with campaign session state, roster restriction logic, Team B lockout, unlimited toggle behavior, map swapping, campaign reload/advance logic, leave-campaign sandbox restoration, and debug hooks (`listCampaigns`, `loadCampaignScenario`, `setCampaignUnlimited`, `getCampaignState`).
+- Validation so far:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Playwright MCP smoke confirmed campaign picker opens and selecting `The Introduction -> The Start` sets campaign state with `mapId = campaign.introduction`, budget `700`, and locked Team B authored placements via `window.game.getCampaignState()` / `window.render_game_to_text()`.
+- Known caveat:
+- Browser automation in this session reported only the existing `favicon.ico` 404, but the bundled `web_game_playwright_client.js` is not directly runnable here without additional Playwright package wiring.
+
+- 2026-04-03: Added TABS-inspired campaign mode shell with one iconic scenario per campaign and one map per campaign.
+- New top-HUD controls: Campaign picker + Unlimited toggle, plus campaign status text and Sandbox/Leave Campaign flow.
+- Added `web/src/campaign/campaignTypes.ts`, `campaignData.ts`, and `campaignController.ts` for 12 campaign definitions, one featured scenario each, progression order, budgets, placements, and allowed rosters.
+- Extended `web/src/map/mapBuilder.ts` with runtime-loadable battle-map registry support and campaign-themed maps keyed by campaign.
+- Updated `web/src/main.ts` to support campaign session state, runtime map swapping, Team B authored-unit lockout, restricted roster filtering, unlimited toggle reload semantics, campaign progression on win, retry-on-loss, and debug hooks/state payloads.
+- Updated `web/index.html` HUD/overlay/result controls for campaign flow.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Playwright/browser smoke confirmed campaign picker renders all 12 campaigns and campaign load switches HUD state/roster/budget for Introduction.
+- Additional verification lanes reported passing runtime smoke for unlimited-off reload, Introduction->Adventure win progression, Adventure loss reload, and sandbox fallback.
+- Known residuals:
+- Team B lockout and final-scenario self-replay are implemented and code-reviewed, but only partially runtime-smoked in this session due flaky Playwright browser-profile reuse.
+- 2026-04-03: Implemented TABS-inspired campaign mode scaffold with 12 campaigns, 1 iconic scenario per campaign, and themed campaign map variants.
+- Added top-HUD campaign controls in `web/index.html`: `Campaign`, `Unlimited`, campaign status, campaign selector overlay, and result-action buttons suitable for sandbox/campaign flows.
+- Added campaign data/runtime modules under `web/src/campaign/`:
+- `campaignTypes.ts`
+- `campaignData.ts`
+- `campaignController.ts`
+- Added campaign runtime integration in `web/src/main.ts`:
+- campaign session state and picker wiring
+- restricted roster filtering + disabled faction tabs when unlimited is off
+- locked authored Team B units
+- campaign reload on reset/loss/draw/timeout
+- campaign advance on Team A win
+- sandbox/leave-campaign fallback
+- debug hooks via `window.game.listCampaigns`, `loadCampaignScenario`, `setCampaignUnlimited`, `getCampaignState`
+- campaign state in `render_game_to_text()`
+- Extended `web/src/map/mapBuilder.ts` with a battle-map registry (`DEFAULT_BATTLE_MAP_ID`, `loadBattleMap`) and themed campaign map variants keyed by campaign id.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for `web/src/main.ts`, `web/src/map/mapBuilder.ts`, and all `web/src/campaign/*` files.
+- Browser smoke via Playwright MCP confirmed:
+- Campaign picker opens from HUD
+- all 12 campaigns render in the selector
+- selecting `The Introduction -> The Start` loads campaign state with `mapId = campaign.introduction`
+- Team A budget switched to `700`, Team B shows locked, and non-allowed faction tabs are disabled
+- Caveats / follow-ups:
+- The campaign maps are themed variants on top of the shared battlefield system, not fully bespoke terrain architectures yet.
+- Browser automation was unstable for longer end-to-end battle simulations in this session, so win/loss progression logic was code-reviewed and architect-approved, but not exhaustively browser-smoked end-to-end here.
+- The external `web_game_playwright_client.js` workflow was blocked locally because the required `playwright` package is not installed in this repo; used Playwright MCP browser validation instead.
+- 2026-04-03 follow-up: deslop + architect re-review completed for campaign mode.
+- Tightened campaign map typing so scenario map ids now flow through `BattleMapId` instead of loose strings.
+- Fixed sandbox fallback by explicitly restoring sandbox sky/fog colors before rebuilding the sandbox map on leave-campaign.
+- Post-cleanup regression checks rerun:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics on changed files remained at 0 errors.
+- Fresh architect verification passed after the sandbox restore fix.
+- 2026-04-03 bespoke-map follow-up completed.
+- Reworked campaign-map theming from shared prop presets into explicit per-campaign bespoke landmark layouts in `web/src/map/mapBuilder.ts`.
+- Pirate now carries two ship landmarks, and bespoke browser smoke captured Pirate + Dynasty screenshots confirming distinct silhouettes.
+- Regression rerun after the bespoke pass:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics stayed at 0 errors for `web/src/map/mapBuilder.ts` and `web/src/main.ts`.
+- Architect verification approved the bespoke-map pass.
+- 2026-04-03 bespoke-map follow-up: campaign maps moved from single-prop themes to explicit per-campaign landmark layouts.
+- `web/src/map/mapBuilder.ts` now uses authored `props` arrays per campaign so each campaign map has a bespoke landmark mix/layout instead of one shared prop family.
+- Pirate now explicitly includes two ship landmarks and browser smoke screenshots confirmed both silhouettes are visible after loading `Black Flag Bay`.
+- Fresh verification:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics clean for `web/src/map/mapBuilder.ts` and `web/src/main.ts`
+- Browser smoke screenshots captured for Pirate and Dynasty bespoke maps.

@@ -10,6 +10,7 @@ const MAP_DEPTH = 120;  // full Z extent
 export interface MapBuildResult {
   zones: PlacementZone[];
   obstacles: Obstacle[];
+  dispose?: () => void;
 }
 
 export class TribalSandboxMapBuilder {
@@ -480,3 +481,502 @@ export function getPlacementZones(): PlacementZone[] {
     { team: 1, center: new Vector3(MAP_WIDTH / 2, 0, 0), size: new Vector3(MAP_WIDTH, 100, MAP_DEPTH * 2) },
   ];
 }
+
+export interface BattleMapInstance extends MapBuildResult {
+  id: BattleMapId;
+  displayName: string;
+  dispose: () => void;
+}
+
+export interface BattleMapDefinition {
+  id: BattleMapId;
+  displayName: string;
+  build: (scene: Scene) => BattleMapInstance;
+}
+
+export type BattleMapId =
+  | "sandbox.tribal"
+  | "campaign.introduction"
+  | "campaign.adventure"
+  | "campaign.challenge"
+  | "campaign.dynasty"
+  | "campaign.renaissance"
+  | "campaign.pirate"
+  | "campaign.spooky"
+  | "campaign.simulation"
+  | "campaign.wild_west"
+  | "campaign.legacy"
+  | "campaign.fantasy_good"
+  | "campaign.fantasy_evil";
+
+interface CampaignPropSpec {
+  kind: "tree" | "ruin" | "lantern" | "column" | "bones" | "crystal" | "cactus" | "ship" | "totem" | "barricade";
+  x: number;
+  z: number;
+  scale?: number;
+  rotationY?: number;
+  blocking?: boolean;
+}
+
+interface CampaignMapTheme {
+  displayName: string;
+  clearColor: Color3;
+  fogColor: Color3;
+  ground: Color3;
+  grass: Color3;
+  accent: Color3;
+  props: CampaignPropSpec[];
+}
+
+function trackMapBuild(scene: Scene, id: BattleMapId, displayName: string, build: () => MapBuildResult): BattleMapInstance {
+  const priorMeshes = new Set(scene.meshes);
+  const priorMaterials = new Set(scene.materials);
+  const result = build();
+  const createdMeshes = scene.meshes.filter((mesh) => !priorMeshes.has(mesh));
+  const createdMaterials = scene.materials.filter((material) => !priorMaterials.has(material));
+  return {
+    ...result,
+    id,
+    displayName,
+    dispose: () => {
+      result.dispose?.();
+      for (const mesh of createdMeshes) {
+        if (!mesh.isDisposed()) mesh.dispose(false, true);
+      }
+      for (const material of createdMaterials) {
+        material.dispose(true, true);
+      }
+    },
+  };
+}
+
+function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
+  scene.clearColor.set(theme.clearColor.r, theme.clearColor.g, theme.clearColor.b, 1);
+  scene.fogColor = theme.fogColor;
+  const groundMat = scene.getMaterialByName("groundMat") as StandardMaterial | null;
+  if (groundMat) groundMat.diffuseColor = theme.ground;
+  const grassMat = scene.getMaterialByName("grass") as StandardMaterial | null;
+  if (grassMat) grassMat.diffuseColor = theme.grass;
+  const dryGrassMat = scene.getMaterialByName("dryGrass") as StandardMaterial | null;
+  if (dryGrassMat) dryGrassMat.diffuseColor = Color3.Lerp(theme.ground, theme.grass, 0.45);
+}
+
+function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obstacle[]): void {
+  const accentMat = new StandardMaterial(`${theme.displayName}_accent`, scene);
+  accentMat.diffuseColor = theme.accent;
+  accentMat.specularColor = new Color3(0.04, 0.04, 0.04);
+  const darkMat = new StandardMaterial(`${theme.displayName}_dark`, scene);
+  darkMat.diffuseColor = theme.accent.scale(0.45);
+  darkMat.specularColor = new Color3(0.04, 0.04, 0.04);
+  const trunkMat = new StandardMaterial(`${theme.displayName}_trunk`, scene);
+  trunkMat.diffuseColor = new Color3(0.43, 0.28, 0.14);
+  trunkMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const canopyMat = new StandardMaterial(`${theme.displayName}_canopy`, scene);
+  canopyMat.diffuseColor = theme.grass.scale(0.8);
+  canopyMat.specularColor = new Color3(0.03, 0.03, 0.03);
+
+  const addCylinderObstacle = (
+    x: number,
+    z: number,
+    radius: number,
+    height: number,
+    material = accentMat,
+    blocking = true,
+  ) => {
+    const mesh = MeshBuilder.CreateCylinder(`${theme.displayName}_cyl`, {
+      height,
+      diameter: radius * 2,
+      tessellation: 8,
+    }, scene);
+    mesh.position = new Vector3(x, height / 2, z);
+    mesh.material = material;
+    mesh.receiveShadows = true;
+    if (blocking) {
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: radius * 0.8 });
+    }
+  };
+  const addBoxObstacle = (
+    x: number,
+    z: number,
+    width: number,
+    depth: number,
+    height: number,
+    material = darkMat,
+    blocking = true,
+    rotationY = 0,
+  ) => {
+    const mesh = MeshBuilder.CreateBox(`${theme.displayName}_box`, {
+      width,
+      depth,
+      height,
+    }, scene);
+    mesh.position = new Vector3(x, height / 2, z);
+    mesh.rotation.y = rotationY;
+    mesh.material = material;
+    mesh.receiveShadows = true;
+    if (blocking) {
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: width / 2, halfZ: depth / 2 });
+    }
+  };
+  const addTree = (x: number, z: number, scale = 1, blocking = true) => {
+    const trunk = MeshBuilder.CreateCylinder(`${theme.displayName}_tree_trunk`, {
+      height: 5 * scale,
+      diameterTop: 0.7 * scale,
+      diameterBottom: 0.9 * scale,
+    }, scene);
+    trunk.position = new Vector3(x, 2.5 * scale, z);
+    trunk.material = trunkMat;
+    trunk.receiveShadows = true;
+    const canopy = MeshBuilder.CreateSphere(`${theme.displayName}_tree_canopy`, { diameter: 4.5 * scale, segments: 6 }, scene);
+    canopy.position = new Vector3(x, 5.7 * scale, z);
+    canopy.scaling.y = 0.8;
+    canopy.material = canopyMat;
+    canopy.receiveShadows = true;
+    if (blocking) {
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.4 * scale });
+    }
+  };
+  const addLantern = (x: number, z: number, scale = 1, blocking = true) => {
+    addCylinderObstacle(x, z, 0.35 * scale, 5 * scale, trunkMat, blocking);
+    const glow = MeshBuilder.CreateSphere(`${theme.displayName}_lantern_glow`, { diameter: 1.1 * scale, segments: 6 }, scene);
+    glow.position = new Vector3(x, 5.4 * scale, z);
+    glow.material = accentMat;
+    glow.receiveShadows = true;
+  };
+  const addColumn = (x: number, z: number, scale = 1, blocking = true) => {
+    addCylinderObstacle(x, z, 0.9 * scale, 7.5 * scale, accentMat, blocking);
+    addBoxObstacle(x, z, 2.2 * scale, 2.2 * scale, 0.55 * scale, accentMat, false);
+  };
+  const addCrystal = (x: number, z: number, scale = 1, blocking = true) => {
+    const crystal = MeshBuilder.CreateCylinder(`${theme.displayName}_crystal`, {
+      height: 6 * scale,
+      diameterTop: 0.2 * scale,
+      diameterBottom: 2.2 * scale,
+      tessellation: 6,
+    }, scene);
+    crystal.position = new Vector3(x, 3 * scale, z);
+    crystal.rotation.z = 0.35;
+    crystal.material = accentMat;
+    crystal.receiveShadows = true;
+    if (blocking) {
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.1 * scale });
+    }
+  };
+  const addCactus = (x: number, z: number, scale = 1, blocking = true) => {
+    const body = MeshBuilder.CreateCylinder(`${theme.displayName}_cactus_body`, { height: 7 * scale, diameter: 1.3 * scale }, scene);
+    body.position = new Vector3(x, 3.5 * scale, z);
+    body.material = accentMat;
+    body.receiveShadows = true;
+    const arm = MeshBuilder.CreateCylinder(`${theme.displayName}_cactus_arm`, { height: 3.2 * scale, diameter: 0.7 * scale }, scene);
+    arm.position = new Vector3(x + 1.4 * scale, 4.4 * scale, z);
+    arm.rotation.z = Math.PI / 2.6;
+    arm.material = accentMat;
+    arm.receiveShadows = true;
+    if (blocking) {
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.1 * scale });
+    }
+  };
+  const addRuin = (x: number, z: number, scale = 1, blocking = true) => {
+    addBoxObstacle(x, z, 5 * scale, 3 * scale, 2 * scale, darkMat, blocking);
+    addBoxObstacle(x - 1.4 * scale, z + 0.8 * scale, 1.2 * scale, 1.2 * scale, 6 * scale, accentMat, false);
+  };
+  const addBonePile = (x: number, z: number, scale = 1, blocking = true) => {
+    const pile = MeshBuilder.CreateTorus(`${theme.displayName}_bones`, { diameter: 3.6 * scale, thickness: 0.5 * scale, tessellation: 8 }, scene);
+    pile.position = new Vector3(x, 0.5 * scale, z);
+    pile.rotation.x = Math.PI / 2.3;
+    pile.material = accentMat;
+    pile.receiveShadows = true;
+    if (blocking) {
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.4 * scale });
+    }
+  };
+  const addTotem = (x: number, z: number, scale = 1, blocking = true) => {
+    addCylinderObstacle(x, z, 0.6 * scale, 5.4 * scale, darkMat, blocking);
+    const topper = MeshBuilder.CreateSphere(`${theme.displayName}_totem_top`, { diameter: 1.8 * scale, segments: 6 }, scene);
+    topper.position = new Vector3(x, 5.2 * scale, z);
+    topper.material = accentMat;
+    topper.receiveShadows = true;
+  };
+  const addBarricade = (x: number, z: number, scale = 1, rotationY = 0, blocking = true) => {
+    addBoxObstacle(x, z, 7 * scale, 1.8 * scale, 2 * scale, darkMat, blocking, rotationY);
+  };
+  const addShip = (x: number, z: number, scale = 1, rotationY = 0, blocking = false) => {
+    addBoxObstacle(x, z, 16 * scale, 4.5 * scale, 2.8 * scale, darkMat, blocking, rotationY);
+    addBoxObstacle(x, z, 13 * scale, 3.4 * scale, 0.6 * scale, accentMat, false, rotationY);
+    addCylinderObstacle(x, z, 0.25 * scale, 9 * scale, trunkMat, false);
+    const sail = MeshBuilder.CreateBox(`${theme.displayName}_ship_sail`, {
+      width: 0.25 * scale,
+      height: 5.4 * scale,
+      depth: 3.8 * scale,
+    }, scene);
+    sail.position = new Vector3(x + Math.sin(rotationY) * 1.2 * scale, 5.6 * scale, z + Math.cos(rotationY) * 1.2 * scale);
+    sail.rotation.y = rotationY;
+    sail.material = accentMat;
+    sail.receiveShadows = true;
+  };
+
+  for (const prop of theme.props) {
+    const scale = prop.scale ?? 1;
+    const blocking = prop.blocking ?? true;
+    const rotationY = prop.rotationY ?? 0;
+    switch (prop.kind) {
+      case "tree":
+        addTree(prop.x, prop.z, scale, blocking);
+        break;
+      case "ruin":
+        addRuin(prop.x, prop.z, scale, blocking);
+        break;
+      case "lantern":
+        addLantern(prop.x, prop.z, scale, blocking);
+        break;
+      case "column":
+        addColumn(prop.x, prop.z, scale, blocking);
+        break;
+      case "bones":
+        addBonePile(prop.x, prop.z, scale, blocking);
+        break;
+      case "crystal":
+        addCrystal(prop.x, prop.z, scale, blocking);
+        break;
+      case "cactus":
+        addCactus(prop.x, prop.z, scale, blocking);
+        break;
+      case "ship":
+        addShip(prop.x, prop.z, scale, rotationY, blocking);
+        break;
+      case "totem":
+        addTotem(prop.x, prop.z, scale, blocking);
+        break;
+      case "barricade":
+        addBarricade(prop.x, prop.z, scale, rotationY, blocking);
+        break;
+    }
+  }
+}
+
+
+function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBuildResult {
+  const base = new TribalSandboxMapBuilder(scene).build();
+  const obstacles = [...base.obstacles];
+  recolorBaseTerrain(scene, theme);
+  addCampaignProps(scene, theme, obstacles);
+  return {
+    zones: base.zones,
+    obstacles,
+  };
+}
+
+function restoreSandboxSceneLook(scene: Scene): void {
+  scene.clearColor.set(0.52, 0.72, 0.90, 1);
+  scene.fogColor = new Color3(0.52, 0.72, 0.90);
+}
+
+const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMapTheme> = {
+  "campaign.introduction": {
+    displayName: "Introduction Grounds",
+    clearColor: new Color3(0.64, 0.79, 0.94),
+    fogColor: new Color3(0.64, 0.79, 0.94),
+    ground: new Color3(0.62, 0.59, 0.32),
+    grass: new Color3(0.52, 0.67, 0.29),
+    accent: new Color3(0.92, 0.82, 0.38),
+    props: [
+      { kind: "tree", x: -26, z: -26, scale: 1.1 },
+      { kind: "tree", x: -24, z: 24, scale: 1.1 },
+      { kind: "totem", x: 22, z: 0, scale: 1.15 },
+      { kind: "barricade", x: 10, z: 16, scale: 0.9, rotationY: 0.18 },
+    ],
+  },
+  "campaign.adventure": {
+    displayName: "Adventure Wilds",
+    clearColor: new Color3(0.52, 0.76, 0.72),
+    fogColor: new Color3(0.52, 0.76, 0.72),
+    ground: new Color3(0.42, 0.46, 0.24),
+    grass: new Color3(0.28, 0.43, 0.18),
+    accent: new Color3(0.78, 0.68, 0.34),
+    props: [
+      { kind: "tree", x: -28, z: -24, scale: 1.15 },
+      { kind: "tree", x: -22, z: 22, scale: 1.1 },
+      { kind: "tree", x: 18, z: -10, scale: 1.05 },
+      { kind: "ruin", x: 22, z: 20, scale: 1.0 },
+      { kind: "totem", x: 0, z: -24, scale: 1.0 },
+    ],
+  },
+  "campaign.challenge": {
+    displayName: "Challenge Bluffs",
+    clearColor: new Color3(0.74, 0.68, 0.52),
+    fogColor: new Color3(0.74, 0.68, 0.52),
+    ground: new Color3(0.56, 0.44, 0.29),
+    grass: new Color3(0.47, 0.36, 0.23),
+    accent: new Color3(0.95, 0.79, 0.37),
+    props: [
+      { kind: "barricade", x: -6, z: -20, scale: 1.1, rotationY: 0.2 },
+      { kind: "barricade", x: -4, z: 20, scale: 1.1, rotationY: -0.2 },
+      { kind: "ruin", x: 22, z: 0, scale: 1.1 },
+      { kind: "totem", x: -24, z: 0, scale: 1.0 },
+    ],
+  },
+  "campaign.dynasty": {
+    displayName: "Dynasty Garden",
+    clearColor: new Color3(0.72, 0.76, 0.66),
+    fogColor: new Color3(0.72, 0.76, 0.66),
+    ground: new Color3(0.46, 0.42, 0.2),
+    grass: new Color3(0.34, 0.41, 0.2),
+    accent: new Color3(0.72, 0.18, 0.18),
+    props: [
+      { kind: "lantern", x: -20, z: -18, scale: 1.0 },
+      { kind: "lantern", x: -20, z: 18, scale: 1.0 },
+      { kind: "column", x: 18, z: -10, scale: 0.95 },
+      { kind: "column", x: 18, z: 10, scale: 0.95 },
+      { kind: "tree", x: 0, z: 24, scale: 1.0 },
+    ],
+  },
+  "campaign.renaissance": {
+    displayName: "Renaissance Terrace",
+    clearColor: new Color3(0.82, 0.84, 0.9),
+    fogColor: new Color3(0.82, 0.84, 0.9),
+    ground: new Color3(0.66, 0.56, 0.34),
+    grass: new Color3(0.5, 0.56, 0.33),
+    accent: new Color3(0.95, 0.87, 0.52),
+    props: [
+      { kind: "column", x: -22, z: -18, scale: 1.0 },
+      { kind: "column", x: -22, z: 18, scale: 1.0 },
+      { kind: "column", x: 18, z: -10, scale: 0.9 },
+      { kind: "column", x: 18, z: 10, scale: 0.9 },
+      { kind: "ruin", x: 0, z: 24, scale: 0.9 },
+    ],
+  },
+  "campaign.pirate": {
+    displayName: "Pirate Cove",
+    clearColor: new Color3(0.58, 0.76, 0.88),
+    fogColor: new Color3(0.58, 0.76, 0.88),
+    ground: new Color3(0.73, 0.63, 0.42),
+    grass: new Color3(0.54, 0.58, 0.34),
+    accent: new Color3(0.94, 0.82, 0.38),
+    props: [
+      { kind: "ship", x: -14, z: -24, scale: 0.98, rotationY: 0.34, blocking: false },
+      { kind: "ship", x: 20, z: 20, scale: 1.02, rotationY: -2.8, blocking: false },
+      { kind: "ruin", x: 24, z: -14, scale: 1.0 },
+      { kind: "lantern", x: 20, z: 18, scale: 1.0 },
+      { kind: "barricade", x: 4, z: 0, scale: 1.1, rotationY: 0.1 },
+    ],
+  },
+  "campaign.spooky": {
+    displayName: "Spooky Graveyard",
+    clearColor: new Color3(0.3, 0.32, 0.42),
+    fogColor: new Color3(0.3, 0.32, 0.42),
+    ground: new Color3(0.23, 0.26, 0.23),
+    grass: new Color3(0.18, 0.2, 0.18),
+    accent: new Color3(0.82, 0.7, 0.38),
+    props: [
+      { kind: "bones", x: -22, z: -16, scale: 1.0 },
+      { kind: "bones", x: -20, z: 16, scale: 1.0 },
+      { kind: "totem", x: 20, z: -8, scale: 1.0 },
+      { kind: "lantern", x: 18, z: 18, scale: 1.0 },
+      { kind: "tree", x: 0, z: 24, scale: 0.95 },
+    ],
+  },
+  "campaign.simulation": {
+    displayName: "Simulation Arena",
+    clearColor: new Color3(0.62, 0.67, 0.75),
+    fogColor: new Color3(0.62, 0.67, 0.75),
+    ground: new Color3(0.44, 0.44, 0.47),
+    grass: new Color3(0.32, 0.34, 0.38),
+    accent: new Color3(0.96, 0.84, 0.4),
+    props: [
+      { kind: "crystal", x: -20, z: -18, scale: 1.05 },
+      { kind: "crystal", x: -20, z: 18, scale: 1.05 },
+      { kind: "column", x: 18, z: -10, scale: 0.9 },
+      { kind: "column", x: 18, z: 10, scale: 0.9 },
+      { kind: "barricade", x: 0, z: 0, scale: 1.0 },
+    ],
+  },
+  "campaign.wild_west": {
+    displayName: "Wild West Flats",
+    clearColor: new Color3(0.9, 0.76, 0.58),
+    fogColor: new Color3(0.9, 0.76, 0.58),
+    ground: new Color3(0.78, 0.62, 0.3),
+    grass: new Color3(0.67, 0.55, 0.28),
+    accent: new Color3(0.92, 0.82, 0.34),
+    props: [
+      { kind: "cactus", x: -24, z: -18, scale: 1.0 },
+      { kind: "cactus", x: -24, z: 18, scale: 1.0 },
+      { kind: "barricade", x: 16, z: -10, scale: 1.0, rotationY: 0.35 },
+      { kind: "barricade", x: 18, z: 12, scale: 1.0, rotationY: -0.28 },
+      { kind: "totem", x: 0, z: 22, scale: 0.95 },
+    ],
+  },
+  "campaign.legacy": {
+    displayName: "Legacy Parade Grounds",
+    clearColor: new Color3(0.78, 0.8, 0.84),
+    fogColor: new Color3(0.78, 0.8, 0.84),
+    ground: new Color3(0.64, 0.63, 0.54),
+    grass: new Color3(0.56, 0.58, 0.46),
+    accent: new Color3(0.94, 0.84, 0.4),
+    props: [
+      { kind: "column", x: -22, z: -18, scale: 1.0 },
+      { kind: "column", x: -22, z: 18, scale: 1.0 },
+      { kind: "totem", x: 20, z: -10, scale: 1.0 },
+      { kind: "totem", x: 20, z: 10, scale: 1.0 },
+      { kind: "tree", x: 0, z: 24, scale: 0.95 },
+    ],
+  },
+  "campaign.fantasy_good": {
+    displayName: "Fantasy Good Sanctum",
+    clearColor: new Color3(0.86, 0.9, 0.96),
+    fogColor: new Color3(0.86, 0.9, 0.96),
+    ground: new Color3(0.74, 0.7, 0.47),
+    grass: new Color3(0.6, 0.66, 0.42),
+    accent: new Color3(0.98, 0.95, 0.74),
+    props: [
+      { kind: "crystal", x: -22, z: -16, scale: 1.0 },
+      { kind: "crystal", x: -22, z: 16, scale: 1.0 },
+      { kind: "column", x: 18, z: -10, scale: 0.95 },
+      { kind: "column", x: 18, z: 10, scale: 0.95 },
+      { kind: "lantern", x: 0, z: 24, scale: 0.9 },
+    ],
+  },
+  "campaign.fantasy_evil": {
+    displayName: "Fantasy Evil Rift",
+    clearColor: new Color3(0.26, 0.18, 0.2),
+    fogColor: new Color3(0.26, 0.18, 0.2),
+    ground: new Color3(0.2, 0.18, 0.19),
+    grass: new Color3(0.16, 0.14, 0.16),
+    accent: new Color3(0.86, 0.32, 0.34),
+    props: [
+      { kind: "bones", x: -22, z: -16, scale: 1.0 },
+      { kind: "bones", x: -22, z: 16, scale: 1.0 },
+      { kind: "crystal", x: 18, z: -10, scale: 0.95 },
+      { kind: "crystal", x: 18, z: 10, scale: 0.95 },
+      { kind: "totem", x: 0, z: 24, scale: 1.0 },
+    ],
+  },
+};
+
+export const DEFAULT_BATTLE_MAP_ID: BattleMapId = "sandbox.tribal";
+
+const battleMapEntries: Array<[BattleMapId, BattleMapDefinition]> = [
+  [DEFAULT_BATTLE_MAP_ID, {
+    id: DEFAULT_BATTLE_MAP_ID,
+    displayName: "Sandbox",
+    build: (scene) => trackMapBuild(scene, DEFAULT_BATTLE_MAP_ID, "Sandbox", () => {
+      restoreSandboxSceneLook(scene);
+      return new TribalSandboxMapBuilder(scene).build();
+    }),
+  }],
+  ...Object.entries(campaignThemes).map(([id, theme]) => [
+    id as BattleMapId,
+    {
+      id: id as BattleMapId,
+      displayName: theme.displayName,
+      build: (scene: Scene) => trackMapBuild(scene, id as BattleMapId, theme.displayName, () => buildCampaignBattlefield(scene, theme)),
+    },
+  ] as [BattleMapId, BattleMapDefinition]),
+];
+
+const mapRegistry = new Map<BattleMapId, BattleMapDefinition>(battleMapEntries);
+
+export function loadBattleMap(scene: Scene, id: string): BattleMapInstance {
+  const definition = mapRegistry.get(id as BattleMapId) ?? mapRegistry.get(DEFAULT_BATTLE_MAP_ID)!;
+  return definition.build(scene);
+}
+

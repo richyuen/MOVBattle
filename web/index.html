@@ -117,6 +117,102 @@
     .btn:hover { background: rgba(255,255,255,0.15); }
     .btn.active { background: rgba(255,255,255,0.25); border-color: #ffd54f; }
     .btn.remove-active { background: rgba(239,83,80,0.4); border-color: #ef5350; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+
+    #campaignStatus {
+      font-size: 12px;
+      color: #9fe3ff;
+      min-height: 18px;
+    }
+
+    #campaignOverlay {
+      position: absolute; inset: 0; z-index: 30; display: none;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.62);
+      padding: 20px;
+    }
+    #campaignOverlay.visible { display: flex; }
+    .campaign-panel {
+      width: min(860px, 96vw);
+      height: min(620px, 88vh);
+      max-height: min(620px, 88vh);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(220px, 0.9fr) minmax(300px, 1.1fr);
+      background: rgba(15,19,25,0.95);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.4);
+    }
+    .campaign-column {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .campaign-column + .campaign-column {
+      border-left: 1px solid rgba(255,255,255,0.08);
+    }
+    .campaign-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .campaign-subtitle {
+      margin-top: 6px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.68);
+      font-weight: 400;
+      line-height: 1.5;
+    }
+    .campaign-list,
+    .campaign-scenario-list {
+      padding: 10px;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      min-height: 0;
+    }
+    .campaign-item,
+    .campaign-scenario-item {
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      cursor: pointer;
+      text-align: left;
+    }
+    .campaign-item.active,
+    .campaign-scenario-item.active {
+      border-color: rgba(159, 227, 255, 0.8);
+      background: rgba(71, 145, 196, 0.18);
+    }
+    .campaign-item-title,
+    .campaign-scenario-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .campaign-item-desc,
+    .campaign-scenario-desc {
+      font-size: 12px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.72);
+    }
+    .campaign-actions {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
 
     #unitPanel {
       position: absolute; bottom: 0; left: 0; width: 100%;
@@ -181,6 +277,7 @@
     body.capture-mode #hud,
     body.capture-mode #unitPanel,
     body.capture-mode #resultOverlay,
+    body.capture-mode #campaignOverlay,
     body.capture-mode #controls-help,
     body.capture-mode #titleIntro {
       display: none !important;
@@ -218,6 +315,14 @@
 
       #resultTitle { font-size: 28px; }
       #resultDetail { font-size: 14px; padding: 0 16px; }
+
+      .campaign-panel {
+        grid-template-columns: 1fr;
+      }
+      .campaign-column + .campaign-column {
+        border-left: none;
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
     }
 
     @media (max-width: 400px) {
@@ -246,10 +351,13 @@
       <span class="budget-label budget-b" id="budgetB">Team B: 1000000</span>
     </div>
     <div class="hud-row">
+      <button class="btn" id="btnCampaign">Campaign</button>
+      <button class="btn" id="btnUnlimited" disabled>Unlimited: Off</button>
       <button class="btn" id="btnRemove" onclick="window.game?.toggleRemoveMode()">Remove</button>
       <button class="btn" onclick="window.game?.startBattle()">Start</button>
       <button class="btn" onclick="window.game?.resetBattle()">Reset</button>
     </div>
+    <div id="campaignStatus">Mode: Sandbox</div>
     <div id="selectedUnit">Selected: Clubber (70g)</div>
     <div id="statusText"></div>
   </div>
@@ -264,8 +372,31 @@
     <div id="resultTitle"></div>
     <div id="resultDetail"></div>
     <div class="result-actions">
-      <button class="btn" onclick="window.game?.playAgain()" style="font-size:16px;padding:10px 24px;">Play Again</button>
-      <button class="btn" onclick="window.game?.resetBattle()" style="font-size:16px;padding:10px 24px;">Reset</button>
+      <button class="btn" id="btnResultPrimary" style="font-size:16px;padding:10px 24px;">Play Again</button>
+      <button class="btn" id="btnResultSecondary" style="font-size:16px;padding:10px 24px;">Reset</button>
+    </div>
+  </div>
+
+  <div id="campaignOverlay" aria-hidden="true">
+    <div class="campaign-panel">
+      <div class="campaign-column">
+        <div class="campaign-header">
+          Campaign
+          <div class="campaign-subtitle">Choose a TABS campaign first, then select its featured scenario.</div>
+        </div>
+        <div class="campaign-list" id="campaignList"></div>
+      </div>
+      <div class="campaign-column">
+        <div class="campaign-header">
+          Scenario
+          <div class="campaign-subtitle" id="campaignScenarioSubtitle">Select a campaign to see its featured scenario.</div>
+        </div>
+        <div class="campaign-scenario-list" id="campaignScenarioList"></div>
+        <div class="campaign-actions">
+          <button class="btn" id="btnLeaveCampaign">Sandbox</button>
+          <button class="btn" id="btnCloseCampaign">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -15,6 +15,13 @@ import type { BattleResult } from "./core/battleResult";
 import { ALL_UNITS, getUnit } from "./data/unitDefinitions";
 import type { UnitDefinition } from "./data/unitDefinitions";
 import { FactionId, FACTION_NAMES } from "./data/factionColors";
+import {
+  advanceCampaignSession,
+  createCampaignSession,
+  getCurrentCampaignDefinition,
+  listCampaigns as listCampaignDefinitions,
+} from "./campaign/campaignController";
+import type { CampaignDefinition, CampaignId, CampaignPlacementSpec, CampaignSessionState } from "./campaign/campaignTypes";
 
 import { SimulationSystem } from "./combat/simulationSystem";
 import type { SpawnUnitOptions } from "./combat/simulationSystem";
@@ -34,7 +41,12 @@ import {
 } from "./testing/scenarios";
 
 import { initMaterialFactory } from "./units/materialFactory";
-import { TribalSandboxMapBuilder, getPlacementZones } from "./map/mapBuilder";
+import {
+  DEFAULT_BATTLE_MAP_ID,
+  loadBattleMap,
+  type BattleMapId,
+  type BattleMapInstance,
+} from "./map/mapBuilder";
 import { PlacementValidator } from "./map/placementValidator";
 import {
   CameraController,
@@ -47,14 +59,25 @@ const budgetAEl = document.getElementById("budgetA")!;
 const budgetBEl = document.getElementById("budgetB")!;
 const selectedUnitEl = document.getElementById("selectedUnit")!;
 const statusTextEl = document.getElementById("statusText")!;
+const campaignStatusEl = document.getElementById("campaignStatus")!;
 const factionTabsEl = document.getElementById("factionTabs")!;
 const unitGridEl = document.getElementById("unitGrid")!;
 const unitSearchEl = document.getElementById("unitSearch") as HTMLInputElement;
+const campaignOverlayEl = document.getElementById("campaignOverlay")!;
+const campaignListEl = document.getElementById("campaignList")!;
+const campaignScenarioListEl = document.getElementById("campaignScenarioList")!;
+const campaignScenarioSubtitleEl = document.getElementById("campaignScenarioSubtitle")!;
 const resultOverlayEl = document.getElementById("resultOverlay")!;
 const resultTitleEl = document.getElementById("resultTitle")!;
 const resultDetailEl = document.getElementById("resultDetail")!;
 const titleIntroEl = document.getElementById("titleIntro");
 const bodyEl = document.body;
+const btnCampaignEl = document.getElementById("btnCampaign") as HTMLButtonElement | null;
+const btnUnlimitedEl = document.getElementById("btnUnlimited") as HTMLButtonElement | null;
+const btnResultPrimaryEl = document.getElementById("btnResultPrimary") as HTMLButtonElement | null;
+const btnResultSecondaryEl = document.getElementById("btnResultSecondary") as HTMLButtonElement | null;
+const btnLeaveCampaignEl = document.getElementById("btnLeaveCampaign") as HTMLButtonElement | null;
+const btnCloseCampaignEl = document.getElementById("btnCloseCampaign") as HTMLButtonElement | null;
 
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -122,13 +145,6 @@ const glowLayer = new GlowLayer("glow", scene, {
 });
 glowLayer.intensity = 0.6;
 
-// Map
-const mapBuilder = new TribalSandboxMapBuilder(scene);
-const { zones, obstacles } = mapBuilder.build();
-
-// Share obstacles with unit system for collision
-RuntimeUnit.obstacles = obstacles;
-
 // ─── Game systems ───
 const stateMachine = new GameStateMachine();
 const simulation = new SimulationSystem();
@@ -140,7 +156,9 @@ projectileSystem.onShake = (intensity) => camCtrl.shake(intensity);
 projectileSystem.visualEffects = visualEffects;
 const unitFactory = new UnitFactory(scene);
 unitFactory.shadowGenerator = shadowGen;
-const placementValidator = new PlacementValidator(zones, obstacles);
+let activeMapInstance: BattleMapInstance = loadBattleMap(scene, DEFAULT_BATTLE_MAP_ID);
+RuntimeUnit.obstacles = activeMapInstance.obstacles;
+let placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles);
 
 let budgetSystem = new BudgetSystem(
   BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,
@@ -154,6 +172,11 @@ let statusTimer: ReturnType<typeof setTimeout> | null = null;
 let removeMode = false;
 let worldTimeSeconds = 0;
 let activeScenario: ScenarioSpec | null = null;
+let campaignSession: CampaignSessionState | null = null;
+let selectedCampaignId: CampaignId | null = null;
+const lockedCampaignRootIds = new Set<number>();
+let pendingCampaignResolutionTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingCampaignResultAction: "retry" | "advance" = "retry";
 let galleryCaptureSession: {
   scenarioId: string;
   cameraBeforeGallery: CameraViewState;
@@ -330,8 +353,13 @@ const btnRemoveEl = document.getElementById("btnRemove")!;
 
 // ─── HUD ───
 function updateBudgetDisplay(): void {
-  budgetAEl.textContent = `Team A: ${budgetSystem.getRemaining(0)}`;
-  budgetBEl.textContent = `Team B: ${budgetSystem.getRemaining(1)}`;
+  budgetAEl.textContent = campaignSession?.unlimited
+    ? "Team A: ∞"
+    : `Team A: ${budgetSystem.getRemaining(0)}`;
+  budgetBEl.textContent = isCampaignModeActive()
+    ? "Team B: Locked"
+    : `Team B: ${budgetSystem.getRemaining(1)}`;
+  updateCampaignStatusDisplay();
 }
 
 function updateSelectedUnitDisplay(): void {
@@ -347,6 +375,163 @@ function showStatus(msg: string): void {
   statusTextEl.textContent = msg;
   if (statusTimer) clearTimeout(statusTimer);
   statusTimer = setTimeout(() => { statusTextEl.textContent = ""; }, 2500);
+}
+
+function clearPendingCampaignResolution(): void {
+  if (!pendingCampaignResolutionTimer) return;
+  clearTimeout(pendingCampaignResolutionTimer);
+  pendingCampaignResolutionTimer = null;
+}
+
+function loadMapById(mapId: BattleMapId): void {
+  if (activeMapInstance.id === mapId) return;
+  activeMapInstance.dispose?.();
+  activeMapInstance = loadBattleMap(scene, mapId);
+  RuntimeUnit.obstacles = activeMapInstance.obstacles;
+  placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles);
+}
+
+function getActiveCampaignDefinition(): CampaignDefinition | null {
+  return getCurrentCampaignDefinition(campaignSession);
+}
+
+function isCampaignModeActive(): boolean {
+  return campaignSession !== null;
+}
+
+function isCampaignUnitLocked(unit: RuntimeUnit): boolean {
+  return lockedCampaignRootIds.has(getCompositeRoot(unit).runtimeId);
+}
+
+function getAllowedUnitIds(): Set<string> | null {
+  if (!campaignSession || campaignSession.unlimited) return null;
+  const activeCampaign = getActiveCampaignDefinition();
+  if (!activeCampaign) return null;
+  return new Set(activeCampaign.scenario.restrictions.allowedUnitIds);
+}
+
+function getSelectableFactionUnits(faction: FactionId): UnitDefinition[] {
+  const query = unitSearchEl.value.trim().toLowerCase();
+  const allowed = getAllowedUnitIds();
+  return ALL_UNITS.filter((unit) => {
+    if (unit.faction !== faction) return false;
+    if (allowed && !allowed.has(unit.id)) return false;
+    if (!query) return true;
+    return unit.displayName.toLowerCase().includes(query) || unit.id.toLowerCase().includes(query);
+  });
+}
+
+function syncSelectedUnitToRoster(): void {
+  const allowed = getAllowedUnitIds();
+  if (allowed && !allowed.has(selectedUnitId)) {
+    const next = ALL_UNITS.find((unit) => allowed.has(unit.id));
+    if (next) {
+      selectedUnitId = next.id;
+      activeFaction = next.faction;
+    }
+  }
+}
+
+function updateCampaignStatusDisplay(): void {
+  const activeCampaign = getActiveCampaignDefinition();
+  btnCampaignEl?.classList.toggle("active", campaignOverlayEl.classList.contains("visible"));
+  if (btnUnlimitedEl) {
+    btnUnlimitedEl.classList.toggle("active", Boolean(campaignSession?.unlimited));
+    btnUnlimitedEl.disabled = !campaignSession;
+    btnUnlimitedEl.textContent = campaignSession?.unlimited ? "Unlimited: On" : "Unlimited: Off";
+  }
+  if (!activeCampaign) {
+    campaignStatusEl.textContent = "Mode: Sandbox";
+    return;
+  }
+  const scenario = activeCampaign.scenario;
+  const modeLabel = campaignSession?.unlimited ? "Unlimited" : `Budget ${scenario.restrictions.budget}`;
+  campaignStatusEl.textContent = `${activeCampaign.displayName} — ${scenario.displayName} (${modeLabel})`;
+}
+
+function populateCampaignScenarioList(campaignId: CampaignId | null): void {
+  campaignScenarioListEl.innerHTML = "";
+  if (!campaignId) {
+    campaignScenarioSubtitleEl.textContent = "Select a campaign to see its featured scenario.";
+    return;
+  }
+  const campaign = listCampaignDefinitions().find((entry) => entry.id === campaignId);
+  if (!campaign) {
+    campaignScenarioSubtitleEl.textContent = "Select a campaign to see its featured scenario.";
+    return;
+  }
+  campaignScenarioSubtitleEl.textContent = campaign.description;
+  const btn = document.createElement("button");
+  btn.className = "campaign-scenario-item active";
+  btn.innerHTML = `
+    <div class="campaign-scenario-title">${campaign.scenario.displayName}</div>
+    <div class="campaign-scenario-desc">${campaign.scenario.description}</div>
+  `;
+  btn.addEventListener("click", () => {
+    const nextSession = createCampaignSession(campaign.id, campaignSession?.unlimited ?? false);
+    if (!nextSession) return;
+    campaignSession = nextSession;
+    toggleCampaignOverlay(false);
+    loadCampaignScenario("Campaign ready.");
+  });
+  campaignScenarioListEl.appendChild(btn);
+}
+
+function populateCampaignList(): void {
+  campaignListEl.innerHTML = "";
+  const campaigns = listCampaignDefinitions();
+  if (!selectedCampaignId && campaigns.length > 0) {
+    selectedCampaignId = campaigns[0].id;
+  }
+  for (const campaign of campaigns) {
+    const btn = document.createElement("button");
+    btn.className = "campaign-item";
+    btn.classList.toggle("active", selectedCampaignId === campaign.id);
+    btn.innerHTML = `
+      <div class="campaign-item-title">${campaign.displayName}</div>
+      <div class="campaign-item-desc">${campaign.description}</div>
+    `;
+    btn.addEventListener("click", () => {
+      selectedCampaignId = campaign.id;
+      populateCampaignList();
+      populateCampaignScenarioList(campaign.id);
+    });
+    campaignListEl.appendChild(btn);
+  }
+  populateCampaignScenarioList(selectedCampaignId);
+}
+
+function toggleCampaignOverlay(visible: boolean): void {
+  campaignOverlayEl.classList.toggle("visible", visible);
+  campaignOverlayEl.setAttribute("aria-hidden", visible ? "false" : "true");
+  if (visible) {
+    selectedCampaignId = campaignSession?.campaignId ?? selectedCampaignId;
+    populateCampaignList();
+  }
+  updateCampaignStatusDisplay();
+}
+
+function clearLockedCampaignUnits(): void {
+  lockedCampaignRootIds.clear();
+}
+
+function applyCampaignPlacements(placements: CampaignPlacementSpec[]): void {
+  clearLockedCampaignUnits();
+  for (const placement of placements) {
+    const spawned = spawnHarnessUnit(
+      placement.unitId,
+      placement.team,
+      placement.position,
+      {
+        role: "placed",
+        countsTowardVictory: true,
+      },
+    );
+    if (!spawned) continue;
+    if (placement.locked) {
+      lockedCampaignRootIds.add(spawned.runtimeId);
+    }
+  }
 }
 
 function setGalleryCaptureMode(enabled: boolean): void {
@@ -446,12 +631,7 @@ function setFaction(faction: FactionId): void {
 }
 
 function getFilteredFactionUnits(): UnitDefinition[] {
-  const query = unitSearchEl.value.trim().toLowerCase();
-  return ALL_UNITS.filter((u) => {
-    if (u.faction !== activeFaction) return false;
-    if (!query) return true;
-    return u.displayName.toLowerCase().includes(query) || u.id.toLowerCase().includes(query);
-  });
+  return getSelectableFactionUnits(activeFaction);
 }
 
 function populateUnitGrid(): void {
@@ -478,18 +658,29 @@ function populateUnitGrid(): void {
 // Build faction tabs + unit grid
 function buildUnitPanel(): void {
   factionTabsEl.innerHTML = "";
+  syncSelectedUnitToRoster();
   // Collect unique factions in order they appear
   const seen = new Set<FactionId>();
   for (const def of ALL_UNITS) {
     if (seen.has(def.faction)) continue;
     seen.add(def.faction);
+    const factionUnits = getSelectableFactionUnits(def.faction);
+    const hasUnits = factionUnits.length > 0;
 
     const tab = document.createElement("button");
     tab.className = "faction-tab";
     tab.dataset.faction = String(def.faction);
     tab.textContent = FACTION_NAMES[def.faction] ?? `Faction ${def.faction}`;
+    tab.disabled = !hasUnits;
+    if (!hasUnits) tab.style.opacity = "0.35";
     tab.addEventListener("click", () => setFaction(def.faction));
     factionTabsEl.appendChild(tab);
+  }
+  if (getSelectableFactionUnits(activeFaction).length === 0) {
+    const fallback = ALL_UNITS.find((unit) => getSelectableFactionUnits(unit.faction).length > 0);
+    if (fallback) {
+      activeFaction = fallback.faction;
+    }
   }
   setFaction(activeFaction);
 }
@@ -497,7 +688,33 @@ function buildUnitPanel(): void {
 buildUnitPanel();
 updateBudgetDisplay();
 updateSelectedUnitDisplay();
+updateCampaignStatusDisplay();
 unitSearchEl.addEventListener("input", () => populateUnitGrid());
+btnCampaignEl?.addEventListener("click", () => toggleCampaignOverlay(true));
+btnUnlimitedEl?.addEventListener("click", () => {
+  if (!campaignSession) {
+    showStatus("Load a campaign scenario first.");
+    return;
+  }
+  setCampaignUnlimited(!campaignSession.unlimited);
+});
+btnResultPrimaryEl?.addEventListener("click", () => {
+  if (campaignSession && pendingCampaignResultAction === "advance") {
+    clearPendingCampaignResolution();
+    advanceCampaignAfterVictory();
+    return;
+  }
+  playAgain();
+});
+btnResultSecondaryEl?.addEventListener("click", () => {
+  if (campaignSession) {
+    leaveCampaignMode();
+    return;
+  }
+  resetBattle();
+});
+btnLeaveCampaignEl?.addEventListener("click", () => leaveCampaignMode());
+btnCloseCampaignEl?.addEventListener("click", () => toggleCampaignOverlay(false));
 
 // ─── Placement ───
 function tryPlaceUnit(screenX: number, screenY: number): void {
@@ -522,8 +739,12 @@ function tryPlaceUnit(screenX: number, screenY: number): void {
 
   // Auto-detect team from placement position: left half = Team A (0), right half = Team B (1)
   const team = worldPoint.x < 0 ? 0 : 1;
+  if (campaignSession && team === 1) {
+    showStatus("Campaign enemies are locked.");
+    return;
+  }
 
-  if (!budgetSystem.canAddUnit(team, simulation.getLivingCount(team))) {
+  if (!campaignSession?.unlimited && !budgetSystem.canAddUnit(team, simulation.getLivingCount(team))) {
     showStatus("Team unit cap reached.");
     return;
   }
@@ -534,7 +755,7 @@ function tryPlaceUnit(screenX: number, screenY: number): void {
     return;
   }
 
-  if (!budgetSystem.trySpend(team, def.cost)) {
+  if (!campaignSession?.unlimited && !budgetSystem.trySpend(team, def.cost)) {
     showStatus("Not enough budget.");
     return;
   }
@@ -555,6 +776,10 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
   const ru = meta.runtimeUnit as RuntimeUnit;
   const root = getCompositeRoot(ru);
   if (root.isDead) return;
+  if (campaignSession && isCampaignUnitLocked(root)) {
+    showStatus("Campaign units cannot be removed.");
+    return;
+  }
 
   removeRuntimeUnitTree(root, true);
 }
@@ -589,8 +814,18 @@ function startBattle(immediate = false): void {
   }, BATTLE_CONFIG.countdownSeconds * 1000);
 }
 
-function resetBattle(options: { preserveGallerySession?: boolean } = {}): void {
+function resetBattle(options: {
+  preserveGallerySession?: boolean;
+  preserveCampaignSession?: boolean;
+  restoreSandboxMap?: boolean;
+  suppressStatus?: boolean;
+} = {}): void {
   dismissTitleIntro();
+  clearPendingCampaignResolution();
+  if (campaignSession && !options.preserveCampaignSession) {
+    reloadCurrentCampaignScenario("Scenario reset.");
+    return;
+  }
   if (countdownTimer) {
     clearTimeout(countdownTimer);
     countdownTimer = null;
@@ -614,12 +849,20 @@ function resetBattle(options: { preserveGallerySession?: boolean } = {}): void {
   btnRemoveEl.classList.remove("remove-active");
   stateMachine.setState(GameState.Placement);
   activeScenario = null;
+  if (!options.preserveCampaignSession) {
+    clearLockedCampaignUnits();
+  }
+  if (options.restoreSandboxMap && activeMapInstance.id !== DEFAULT_BATTLE_MAP_ID) {
+    loadMapById(DEFAULT_BATTLE_MAP_ID);
+  }
   updateBudgetDisplay();
   resultOverlayEl.classList.remove("visible");
   if (!options.preserveGallerySession) {
     closeGalleryCaptureSession(true);
   }
-  showStatus("Battle reset.");
+  if (!options.suppressStatus) {
+    showStatus("Battle reset.");
+  }
 }
 
 function checkVictory(): void {
@@ -654,15 +897,44 @@ function checkVictory(): void {
 }
 
 function showResult(result: BattleResult): void {
+  if (btnResultPrimaryEl) {
+    btnResultPrimaryEl.textContent = campaignSession
+      ? (!result.isDraw && result.winner === 0 ? "Next Scenario" : "Retry")
+      : "Play Again";
+  }
+  if (btnResultSecondaryEl) {
+    btnResultSecondaryEl.textContent = campaignSession ? "Sandbox" : "Reset";
+  }
   resultTitleEl.textContent = result.isDraw ? "Draw" : `Team ${result.winner === 0 ? "A" : "B"} Wins!`;
   resultDetailEl.textContent =
     `Time: ${result.durationSeconds.toFixed(1)}s\n` +
     `Team A Remaining: ${result.teamALiving}\n` +
     `Team B Remaining: ${result.teamBLiving}`;
   resultOverlayEl.classList.add("visible");
+  if (campaignSession) {
+    pendingCampaignResultAction = !result.isDraw && result.winner === 0 ? "advance" : "retry";
+    const outcomeText = !result.isDraw && result.winner === 0
+      ? "Advancing to the next campaign battle..."
+      : "Reloading the current campaign battle...";
+    resultDetailEl.textContent += `\n${outcomeText}`;
+    clearPendingCampaignResolution();
+    pendingCampaignResolutionTimer = setTimeout(() => {
+      pendingCampaignResolutionTimer = null;
+      if (!campaignSession) return;
+      if (!result.isDraw && result.winner === 0) {
+        advanceCampaignAfterVictory();
+        return;
+      }
+      reloadCurrentCampaignScenario("Campaign battle reloaded.");
+    }, 1500);
+  }
 }
 
 function playAgain(): void {
+  if (campaignSession) {
+    reloadCurrentCampaignScenario("Campaign battle reloaded.");
+    return;
+  }
   resultOverlayEl.classList.remove("visible");
 
   for (let i = placedUnits.length - 1; i >= 0; i--) {
@@ -699,6 +971,81 @@ function playAgain(): void {
   stateMachine.setState(GameState.Placement);
   updateBudgetDisplay();
   showStatus("Ready for another round!");
+}
+
+function loadCampaignScenario(statusMessage?: string): void {
+  const activeCampaign = getActiveCampaignDefinition();
+  if (!campaignSession || !activeCampaign) return;
+  selectedCampaignId = activeCampaign.id;
+  clearPendingCampaignResolution();
+  resetBattle({
+    preserveCampaignSession: true,
+    suppressStatus: true,
+  });
+  loadMapById(activeCampaign.scenario.mapId);
+  budgetSystem = new BudgetSystem(
+    campaignSession.unlimited ? Number.MAX_SAFE_INTEGER : activeCampaign.scenario.restrictions.budget,
+    0,
+    BATTLE_CONFIG.maxUnitsPerTeam,
+  );
+  applyCampaignPlacements(activeCampaign.scenario.placements);
+  buildUnitPanel();
+  updateBudgetDisplay();
+  updateSelectedUnitDisplay();
+  resultOverlayEl.classList.remove("visible");
+  showStatus(statusMessage ?? `${activeCampaign.displayName}: ${activeCampaign.scenario.displayName}`);
+}
+
+function reloadCurrentCampaignScenario(statusMessage?: string): void {
+  if (!campaignSession) return;
+  loadCampaignScenario(statusMessage);
+}
+
+function advanceCampaignAfterVictory(): void {
+  if (!campaignSession) return;
+  const nextSession = advanceCampaignSession(campaignSession);
+  const advanced = nextSession.campaignIndex !== campaignSession.campaignIndex;
+  campaignSession = nextSession;
+  loadCampaignScenario(
+    advanced
+      ? `Advanced to ${getActiveCampaignDefinition()?.displayName}.`
+      : "Final campaign cleared. Replaying the final battle.",
+  );
+}
+
+function setCampaignUnlimited(enabled: boolean): void {
+  if (!campaignSession) return;
+  if (campaignSession.unlimited === enabled) return;
+  campaignSession = { ...campaignSession, unlimited: enabled };
+  buildUnitPanel();
+  updateBudgetDisplay();
+  if (!enabled) {
+    reloadCurrentCampaignScenario("Unlimited disabled. Scenario reloaded.");
+    return;
+  }
+  showStatus("Unlimited enabled.");
+}
+
+function leaveCampaignMode(): void {
+  clearPendingCampaignResolution();
+  toggleCampaignOverlay(false);
+  campaignSession = null;
+  clearLockedCampaignUnits();
+  selectedCampaignId = null;
+  resetBattle({
+    preserveCampaignSession: true,
+    restoreSandboxMap: true,
+    suppressStatus: true,
+  });
+  budgetSystem = new BudgetSystem(
+    BATTLE_CONFIG.teamABudget,
+    BATTLE_CONFIG.teamBBudget,
+    BATTLE_CONFIG.maxUnitsPerTeam,
+  );
+  buildUnitPanel();
+  updateBudgetDisplay();
+  updateSelectedUnitDisplay();
+  showStatus("Returned to sandbox.");
 }
 
 function spawnHarnessUnit(
@@ -837,6 +1184,13 @@ function buildGameStatePayload() {
     coordinateSystem: "x:right, z:forward, y:up, origin:center line",
     mode: GameState[stateMachine.currentState],
     scenario: activeScenario?.name ?? null,
+    campaign: campaignSession ? {
+      campaignId: campaignSession.campaignId,
+      scenarioId: campaignSession.scenarioId,
+      campaignIndex: campaignSession.campaignIndex,
+      unlimited: campaignSession.unlimited,
+      mapId: activeMapInstance.id,
+    } : null,
     activeFaction: FACTION_NAMES[activeFaction],
     selectedUnitId,
     budgets: {
@@ -1599,6 +1953,31 @@ window.addEventListener("keydown", (e) => {
   startBattleImmediate: () => startBattle(true),
   resetBattle,
   playAgain,
+  openCampaignPicker: () => toggleCampaignOverlay(true),
+  closeCampaignPicker: () => toggleCampaignOverlay(false),
+  leaveCampaignMode,
+  toggleCampaignUnlimited: () => {
+    if (!campaignSession) {
+      showStatus("Load a campaign scenario first.");
+      return;
+    }
+    setCampaignUnlimited(!campaignSession.unlimited);
+  },
+  listCampaigns: () => listCampaignDefinitions().map((campaign) => ({
+    id: campaign.id,
+    displayName: campaign.displayName,
+    scenarioId: campaign.scenario.id,
+    scenarioName: campaign.scenario.displayName,
+  })),
+  loadCampaignScenario: (campaignId: CampaignId, _scenarioId?: string) => {
+    const nextSession = createCampaignSession(campaignId, campaignSession?.unlimited ?? false);
+    if (!nextSession) return null;
+    campaignSession = nextSession;
+    loadCampaignScenario("Campaign loaded.");
+    return getActiveCampaignDefinition();
+  },
+  setCampaignUnlimited: (enabled: boolean) => setCampaignUnlimited(Boolean(enabled)),
+  getCampaignState: () => buildGameStatePayload().campaign,
   toggleRemoveMode,
   skipTitleIntro: dismissTitleIntro,
   spawnUnit: spawnHarnessUnit,
