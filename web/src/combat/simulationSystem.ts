@@ -355,7 +355,7 @@ export class SimulationSystem {
         unit.setSpinning(false);
         return;
       }
-      unit.moveTo(enemy.position);
+      unit.moveTo(this._resolveHazardAwareMoveTarget(unit, enemy.position));
       unit.setSpinning(true);
       if (this.visualEffects && Math.random() < 0.35) {
         this.visualEffects.spawnTornadoDust(unit.position);
@@ -372,7 +372,7 @@ export class SimulationSystem {
       }
     } else {
       if (canMove) {
-        unit.moveTo(enemy.position);
+        unit.moveTo(this._resolveHazardAwareMoveTarget(unit, enemy.position));
       } else {
         unit.stopMoving();
       }
@@ -387,7 +387,7 @@ export class SimulationSystem {
     const distance = Vector3.Distance(supporter.position, ally.position);
 
     if (distance > engageDistance) {
-      supporter.moveTo(ally.position);
+      supporter.moveTo(this._resolveHazardAwareMoveTarget(supporter, ally.position));
       return;
     }
 
@@ -1122,5 +1122,71 @@ export class SimulationSystem {
       if (unit.healthBarMesh) unit.healthBarMesh.isVisible = false;
       if (unit.healthBarBg) unit.healthBarBg.isVisible = false;
     }
+  }
+
+  private _resolveHazardAwareMoveTarget(unit: RuntimeUnit, desired: Vector3): Vector3 {
+    if (this.hazards.length === 0) return desired;
+
+    const start = unit.position;
+    for (const hazard of this.hazards) {
+      if (hazard.shape !== "box") continue;
+
+      const padding = Math.max(2.4, unit.definition.collisionRadius + 1.8);
+      const left = hazard.center.x - hazard.halfX - padding;
+      const right = hazard.center.x + hazard.halfX + padding;
+      const top = hazard.center.z - hazard.halfZ - padding;
+      const bottom = hazard.center.z + hazard.halfZ + padding;
+      if (!this._segmentIntersectsBox(start, desired, left, right, top, bottom)) continue;
+
+      const topCost = Math.abs(start.z - top) + Math.abs(desired.z - top);
+      const bottomCost = Math.abs(start.z - bottom) + Math.abs(desired.z - bottom);
+      const bypassZ = topCost <= bottomCost ? top : bottom;
+      const sameSideX = start.x <= hazard.center.x ? left : right;
+      return new Vector3(sameSideX, desired.y, bypassZ);
+    }
+
+    return desired;
+  }
+
+  private _segmentIntersectsBox(
+    start: Vector3,
+    end: Vector3,
+    left: number,
+    right: number,
+    top: number,
+    bottom: number,
+  ): boolean {
+    const pointInside = (point: Vector3) => (
+      point.x >= left && point.x <= right && point.z >= top && point.z <= bottom
+    );
+    if (pointInside(start) || pointInside(end)) return true;
+
+    const dx = end.x - start.x;
+    const dz = end.z - start.z;
+    let tMin = 0;
+    let tMax = 1;
+
+    const clipAxis = (p: number, q: number): boolean => {
+      if (Math.abs(p) < 0.000001) {
+        return q >= 0;
+      }
+      const ratio = q / p;
+      if (p < 0) {
+        if (ratio > tMax) return false;
+        if (ratio > tMin) tMin = ratio;
+      } else {
+        if (ratio < tMin) return false;
+        if (ratio < tMax) tMax = ratio;
+      }
+      return true;
+    };
+
+    return (
+      clipAxis(-dx, start.x - left)
+      && clipAxis(dx, right - start.x)
+      && clipAxis(-dz, start.z - top)
+      && clipAxis(dz, bottom - start.z)
+      && tMin <= tMax
+    );
   }
 }

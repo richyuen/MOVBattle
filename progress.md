@@ -566,6 +566,20 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
   - `cd web && npm run build`
   - Browser scenario suite passed for `physics_hit_launch_guard`, `physics_death_launch_guard`, `crowd_topple_clubber_vs_protector`, `crowd_topple_halfling_vs_knight`, `crowd_topple_wheelbarrow_charge`, `crowd_topple_mammoth_pressure`, `crowd_topple_recovery_state`, and `composite_bomb_cannon`
   - Live hover probe saved to `output/live-hover-probe.json` with `maxY = 0` for the core crowd-topple scenarios
+- 2026-04-03: Tree Tribe campaign lake-loss fix.
+- Moved the `campaign.adventure` / `tree_tribe` Team B locked placements onto valid upper/lower banks inside the authored Team B zones, away from the central water hazard.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Browser verification via `window.game.loadCampaignScenario('adventure')` showed Team B alive = 10, dead = 0, lake-overlap = 0 immediately after spawn/start and after a 3s battle run with Team A targets
+  - Artifacts saved to `output/tree-tribe-campaign-results.json` and `output/tree-tribe-campaign.png`
+- 2026-04-03: Tree Tribe water-pathing fix.
+- `web/src/combat/simulationSystem.ts` now routes movement around boxed hazards by picking a same-bank bypass waypoint when a direct path would cross a lake/pit rectangle.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Browser verification with the Tree Tribe campaign plus manually added Team A units showed `anyLakeOverlap = false` over a 10s battle probe
+  - Artifacts saved to `output/tree-tribe-water-path-results.json` and `output/tree-tribe-water-path.png`
 - 2026-04-03: Follow-up regression fix for the same topple pass.
 - `web/src/units/runtimeUnit.ts` now caps ordinary living-hit vertical lift and clamps topple launch lift so hits no longer balloon units skyward.
 - `web/src/main.ts` now exposes unit `y` height in the text-state payload, and scenario assertion plumbing supports `unit-height-at-most`.
