@@ -1,6 +1,7 @@
 import { FACTION_NAMES, FactionId } from "../data/factionColors";
 import { getUnitsByFaction } from "../data/unitDefinitions";
 import type { GalleryCameraOverride, GalleryCameraPresetId } from "../ui/cameraController";
+import type { BattleMapId } from "../map/mapBuilder";
 
 export interface ScenarioUnitSpec {
   unitId: string;
@@ -54,6 +55,7 @@ export interface ScenarioAction {
 export interface ScenarioSpec {
   name: string;
   description: string;
+  mapId?: BattleMapId;
   autoStart?: boolean;
   advanceMs?: number;
   units: ScenarioUnitSpec[];
@@ -771,6 +773,55 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "physics-state", value: "medieval.squire:toppled|airborne, tribal.mammoth:airborne|steady" },
       { kind: "parent-capability", value: "medieval.squire:attack=disabled+move=disabled" },
       { kind: "crowd-metric-at-least", value: "medieval.squire:crowdPressure>=0.5, tribal.mammoth:crowdPressure<=0.2" },
+    ],
+  },
+  adventure_obstacle_bypass: {
+    name: "adventure_obstacle_bypass",
+    description: "Adventure props should no longer pin advancing melee units near the ruin and forest choke points.",
+    mapId: "campaign.adventure",
+    autoStart: true,
+    advanceMs: 3600,
+    units: [
+      { unitId: "medieval.squire", team: 1, position: { x: 26, z: 20 } },
+      { unitId: "tribal.protector", team: 0, position: { x: 1, z: 20 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 20, z: -10 } },
+      { unitId: "ancient.hoplite", team: 0, position: { x: -1, z: -10 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "position-shift-at-least", value: "medieval.squire>=7.5, farmer.farmer>=6.5" },
+    ],
+  },
+  adventure_hazard_safe_routing: {
+    name: "adventure_hazard_safe_routing",
+    description: "Adventure units should find a safe crossing lane instead of stalling at the central water hazards.",
+    mapId: "campaign.adventure",
+    autoStart: true,
+    advanceMs: 4200,
+    units: [
+      { unitId: "medieval.knight", team: 0, position: { x: -30, z: 0 } },
+      { unitId: "tribal.chieftain", team: 1, position: { x: 30, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "position-shift-at-least", value: "medieval.knight>=10, tribal.chieftain>=10" },
+    ],
+  },
+  adventure_congestion_escape: {
+    name: "adventure_congestion_escape",
+    description: "A crowded Adventure choke should repath and keep advancing instead of idling in a local jam.",
+    mapId: "campaign.adventure",
+    autoStart: true,
+    advanceMs: 3200,
+    units: [
+      { unitId: "medieval.squire", team: 1, position: { x: 25.5, z: 18.5 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 24.8, z: 20.2 } },
+      { unitId: "ancient.hoplite", team: 1, position: { x: 25.7, z: 21.9 } },
+      { unitId: "tribal.protector", team: 0, position: { x: 0, z: 20 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "position-shift-at-least", value: "medieval.squire>=5.5, farmer.farmer>=5.5, ancient.hoplite>=5.5" },
     ],
   },
 };

@@ -5,6 +5,7 @@ import type { CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles
 import type { ArticulatedBody } from "./bodyBuilder";
 import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
+import { isPointInsideHazard, type HazardRegion } from "../map/hazards";
 import type { FxPreset, UnitVisualConfig, VisualStateTag } from "./unitVisuals";
 import type {
   LinkedActionPreset, LinkedCleanupPolicy, LinkedContributionChannel, LinkedDamageRouting, LinkedMoveMode, LinkedVictoryRouting,
@@ -117,6 +118,7 @@ export class RuntimeUnit {
 
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
+  static hazards: readonly HazardRegion[] = [];
 
   // Health bar
   healthBarMesh: Mesh | null = null;
@@ -612,7 +614,19 @@ export class RuntimeUnit {
           this.definition.moveSpeed * this._slowMultiplier * recoveryMoveMultiplier * pressureMoveMultiplier * dt,
           Math.sqrt(distSq),
         );
-        pos.addInPlace(dir.scale(appliedDistance));
+        const proposedPosition = pos.add(dir.scale(appliedDistance));
+        const wouldEnterHazard = RuntimeUnit.hazards.some((hazard) => isPointInsideHazard(
+          proposedPosition,
+          hazard,
+          Math.max(0.15, this.definition.collisionRadius * 0.2),
+        ));
+        if (wouldEnterHazard) {
+          this._movementVelocity.setAll(0);
+          this._applyCrowdLean(dt);
+          this._updateHealthBar();
+          return;
+        }
+        pos.copyFrom(proposedPosition);
         this._movementVelocity.copyFrom(dir.scale(appliedDistance / Math.max(dt, 0.0001)));
 
         // Face movement direction

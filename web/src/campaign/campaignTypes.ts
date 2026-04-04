@@ -31,19 +31,25 @@ export interface CampaignScenarioDefinition {
   displayName: string;
   description: string;
   mapId: BattleMapId;
+  ladderRole: "opener" | "pressure" | "gimmick" | "elite" | "finale";
   restrictions: CampaignRestrictions;
   placements: CampaignPlacementSpec[];
+  validationTier?: "smoke" | "core";
+  validationNote?: string;
+  smokeAdvanceMs?: number;
+  validationTags?: Array<"hazard" | "gimmick" | "finale">;
 }
 
 export interface CampaignDefinition {
   id: CampaignId;
   displayName: string;
   description: string;
-  scenario: CampaignScenarioDefinition;
+  scenarios: CampaignScenarioDefinition[];
 }
 
 export interface CampaignSessionState {
   campaignId: CampaignId;
+  scenarioIndex: number;
   scenarioId: string;
   campaignIndex: number;
   unlimited: boolean;

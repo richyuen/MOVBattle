@@ -19,9 +19,17 @@ import {
   advanceCampaignSession,
   createCampaignSession,
   getCurrentCampaignDefinition,
+  getCurrentCampaignScenario,
   listCampaigns as listCampaignDefinitions,
 } from "./campaign/campaignController";
-import type { CampaignDefinition, CampaignId, CampaignPlacementSpec, CampaignSessionState } from "./campaign/campaignTypes";
+import { validateCampaignDefinitionsStructure } from "./campaign/campaignData";
+import type {
+  CampaignDefinition,
+  CampaignId,
+  CampaignPlacementSpec,
+  CampaignScenarioDefinition,
+  CampaignSessionState,
+} from "./campaign/campaignTypes";
 
 import { SimulationSystem } from "./combat/simulationSystem";
 import type { SpawnUnitOptions } from "./combat/simulationSystem";
@@ -47,6 +55,8 @@ import {
   type BattleMapId,
   type BattleMapInstance,
 } from "./map/mapBuilder";
+import type { Obstacle } from "./map/obstacles";
+import { isPointInsideHazard } from "./map/hazards";
 import { PlacementValidator } from "./map/placementValidator";
 import {
   CameraController,
@@ -157,9 +167,14 @@ projectileSystem.visualEffects = visualEffects;
 const unitFactory = new UnitFactory(scene);
 unitFactory.shadowGenerator = shadowGen;
 let activeMapInstance: BattleMapInstance = loadBattleMap(scene, DEFAULT_BATTLE_MAP_ID);
-RuntimeUnit.obstacles = activeMapInstance.obstacles;
+RuntimeUnit.obstacles = buildRuntimeObstacles(activeMapInstance);
+RuntimeUnit.hazards = activeMapInstance.hazards;
 let placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
-simulation.hazards = activeMapInstance.hazards;
+simulation.configureNavigation(
+  activeMapInstance.zones,
+  activeMapInstance.obstacles,
+  activeMapInstance.hazards,
+);
 
 let budgetSystem = new BudgetSystem(
   BATTLE_CONFIG.teamABudget, BATTLE_CONFIG.teamBBudget, BATTLE_CONFIG.maxUnitsPerTeam,
@@ -175,6 +190,7 @@ let worldTimeSeconds = 0;
 let activeScenario: ScenarioSpec | null = null;
 let campaignSession: CampaignSessionState | null = null;
 let selectedCampaignId: CampaignId | null = null;
+let selectedCampaignScenarioId: string | null = null;
 const lockedCampaignRootIds = new Set<number>();
 let pendingCampaignResolutionTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingCampaignResultAction: "retry" | "advance" = "retry";
@@ -388,9 +404,35 @@ function loadMapById(mapId: BattleMapId): void {
   if (activeMapInstance.id === mapId) return;
   activeMapInstance.dispose?.();
   activeMapInstance = loadBattleMap(scene, mapId);
-  RuntimeUnit.obstacles = activeMapInstance.obstacles;
+  RuntimeUnit.obstacles = buildRuntimeObstacles(activeMapInstance);
+  RuntimeUnit.hazards = activeMapInstance.hazards;
   placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
-  simulation.hazards = activeMapInstance.hazards;
+  simulation.configureNavigation(
+    activeMapInstance.zones,
+    activeMapInstance.obstacles,
+    activeMapInstance.hazards,
+  );
+}
+
+function buildRuntimeObstacles(mapInstance: BattleMapInstance): Obstacle[] {
+  const hazardObstacles: Obstacle[] = mapInstance.hazards.map((hazard) => (
+    hazard.shape === "box"
+      ? {
+          type: "box",
+          center: hazard.center.clone(),
+          halfX: hazard.halfX,
+          halfZ: hazard.halfZ,
+        }
+      : {
+          type: "cylinder",
+          center: hazard.center.clone(),
+          radius: hazard.radius,
+        }
+  ));
+  return [
+    ...mapInstance.obstacles,
+    ...hazardObstacles,
+  ];
 }
 
 function getActiveCampaignDefinition(): CampaignDefinition | null {
@@ -405,11 +447,15 @@ function isCampaignUnitLocked(unit: RuntimeUnit): boolean {
   return lockedCampaignRootIds.has(getCompositeRoot(unit).runtimeId);
 }
 
+function getActiveCampaignScenarioDefinition(): CampaignScenarioDefinition | null {
+  return getCurrentCampaignScenario(campaignSession);
+}
+
 function getAllowedUnitIds(): Set<string> | null {
   if (!campaignSession || campaignSession.unlimited) return null;
-  const activeCampaign = getActiveCampaignDefinition();
-  if (!activeCampaign) return null;
-  return new Set(activeCampaign.scenario.restrictions.allowedUnitIds);
+  const activeScenario = getActiveCampaignScenarioDefinition();
+  if (!activeScenario) return null;
+  return new Set(activeScenario.restrictions.allowedUnitIds);
 }
 
 function getSelectableFactionUnits(faction: FactionId): UnitDefinition[] {
@@ -436,47 +482,60 @@ function syncSelectedUnitToRoster(): void {
 
 function updateCampaignStatusDisplay(): void {
   const activeCampaign = getActiveCampaignDefinition();
+  const activeScenario = getActiveCampaignScenarioDefinition();
   btnCampaignEl?.classList.toggle("active", campaignOverlayEl.classList.contains("visible"));
   if (btnUnlimitedEl) {
     btnUnlimitedEl.classList.toggle("active", Boolean(campaignSession?.unlimited));
     btnUnlimitedEl.disabled = !campaignSession;
     btnUnlimitedEl.textContent = campaignSession?.unlimited ? "Unlimited: On" : "Unlimited: Off";
   }
-  if (!activeCampaign) {
+  if (!activeCampaign || !activeScenario) {
     campaignStatusEl.textContent = "Mode: Sandbox";
     return;
   }
-  const scenario = activeCampaign.scenario;
-  const modeLabel = campaignSession?.unlimited ? "Unlimited" : `Budget ${scenario.restrictions.budget}`;
-  campaignStatusEl.textContent = `${activeCampaign.displayName} — ${scenario.displayName} (${modeLabel})`;
+  const modeLabel = campaignSession?.unlimited ? "Unlimited" : `Budget ${activeScenario.restrictions.budget}`;
+  const ordinal = (campaignSession?.scenarioIndex ?? 0) + 1;
+  campaignStatusEl.textContent = `${activeCampaign.displayName} — ${ordinal}/${activeCampaign.scenarios.length}: ${activeScenario.displayName} (${modeLabel})`;
 }
 
 function populateCampaignScenarioList(campaignId: CampaignId | null): void {
   campaignScenarioListEl.innerHTML = "";
   if (!campaignId) {
-    campaignScenarioSubtitleEl.textContent = "Select a campaign to see its featured scenario.";
+    campaignScenarioSubtitleEl.textContent = "Select a campaign to see its scenario ladder.";
     return;
   }
   const campaign = listCampaignDefinitions().find((entry) => entry.id === campaignId);
   if (!campaign) {
-    campaignScenarioSubtitleEl.textContent = "Select a campaign to see its featured scenario.";
+    campaignScenarioSubtitleEl.textContent = "Select a campaign to see its scenario ladder.";
     return;
   }
   campaignScenarioSubtitleEl.textContent = campaign.description;
-  const btn = document.createElement("button");
-  btn.className = "campaign-scenario-item active";
-  btn.innerHTML = `
-    <div class="campaign-scenario-title">${campaign.scenario.displayName}</div>
-    <div class="campaign-scenario-desc">${campaign.scenario.description}</div>
-  `;
-  btn.addEventListener("click", () => {
-    const nextSession = createCampaignSession(campaign.id, campaignSession?.unlimited ?? false);
-    if (!nextSession) return;
-    campaignSession = nextSession;
-    toggleCampaignOverlay(false);
-    loadCampaignScenario("Campaign ready.");
-  });
-  campaignScenarioListEl.appendChild(btn);
+  const defaultScenarioId = selectedCampaignScenarioId
+    ?? (campaignSession?.campaignId === campaign.id
+      ? campaignSession?.scenarioId
+      : campaign.scenarios[0]?.id);
+  if (defaultScenarioId) {
+    selectedCampaignScenarioId = defaultScenarioId;
+  }
+
+  for (const scenario of campaign.scenarios) {
+    const btn = document.createElement("button");
+    btn.className = "campaign-scenario-item";
+    btn.classList.toggle("active", selectedCampaignScenarioId === scenario.id);
+    btn.innerHTML = `
+      <div class="campaign-scenario-title">${scenario.displayName}</div>
+      <div class="campaign-scenario-desc">${scenario.description}</div>
+    `;
+    btn.addEventListener("click", () => {
+      const nextSession = createCampaignSession(campaign.id, campaignSession?.unlimited ?? false, scenario.id);
+      if (!nextSession) return;
+      campaignSession = nextSession;
+      selectedCampaignScenarioId = scenario.id;
+      toggleCampaignOverlay(false);
+      loadCampaignScenario("Campaign ready.");
+    });
+    campaignScenarioListEl.appendChild(btn);
+  }
 }
 
 function populateCampaignList(): void {
@@ -484,6 +543,7 @@ function populateCampaignList(): void {
   const campaigns = listCampaignDefinitions();
   if (!selectedCampaignId && campaigns.length > 0) {
     selectedCampaignId = campaigns[0].id;
+    selectedCampaignScenarioId = campaigns[0].scenarios[0]?.id ?? null;
   }
   for (const campaign of campaigns) {
     const btn = document.createElement("button");
@@ -495,6 +555,7 @@ function populateCampaignList(): void {
     `;
     btn.addEventListener("click", () => {
       selectedCampaignId = campaign.id;
+      selectedCampaignScenarioId = campaign.scenarios[0]?.id ?? null;
       populateCampaignList();
       populateCampaignScenarioList(campaign.id);
     });
@@ -508,6 +569,7 @@ function toggleCampaignOverlay(visible: boolean): void {
   campaignOverlayEl.setAttribute("aria-hidden", visible ? "false" : "true");
   if (visible) {
     selectedCampaignId = campaignSession?.campaignId ?? selectedCampaignId;
+    selectedCampaignScenarioId = campaignSession?.scenarioId ?? selectedCampaignScenarioId;
     populateCampaignList();
   }
   updateCampaignStatusDisplay();
@@ -975,25 +1037,27 @@ function playAgain(): void {
 
 function loadCampaignScenario(statusMessage?: string): void {
   const activeCampaign = getActiveCampaignDefinition();
-  if (!campaignSession || !activeCampaign) return;
+  const activeScenario = getActiveCampaignScenarioDefinition();
+  if (!campaignSession || !activeCampaign || !activeScenario) return;
   selectedCampaignId = activeCampaign.id;
+  selectedCampaignScenarioId = activeScenario.id;
   clearPendingCampaignResolution();
   resetBattle({
     preserveCampaignSession: true,
     suppressStatus: true,
   });
-  loadMapById(activeCampaign.scenario.mapId);
+  loadMapById(activeScenario.mapId);
   budgetSystem = new BudgetSystem(
-    campaignSession.unlimited ? Number.MAX_SAFE_INTEGER : activeCampaign.scenario.restrictions.budget,
+    campaignSession.unlimited ? Number.MAX_SAFE_INTEGER : activeScenario.restrictions.budget,
     0,
     BATTLE_CONFIG.maxUnitsPerTeam,
   );
-  applyCampaignPlacements(activeCampaign.scenario.placements);
+  applyCampaignPlacements(activeScenario.placements);
   buildUnitPanel();
   updateBudgetDisplay();
   updateSelectedUnitDisplay();
   resultOverlayEl.classList.remove("visible");
-  showStatus(statusMessage ?? `${activeCampaign.displayName}: ${activeCampaign.scenario.displayName}`);
+  showStatus(statusMessage ?? `${activeCampaign.displayName}: ${activeScenario.displayName}`);
 }
 
 function reloadCurrentCampaignScenario(statusMessage?: string): void {
@@ -1005,11 +1069,15 @@ function advanceCampaignAfterVictory(): void {
   if (!campaignSession) return;
   const nextSession = advanceCampaignSession(campaignSession);
   const advanced = nextSession.campaignIndex !== campaignSession.campaignIndex;
+  const sameCampaignAdvance = nextSession.campaignId === campaignSession.campaignId
+    && nextSession.scenarioIndex !== campaignSession.scenarioIndex;
   campaignSession = nextSession;
   loadCampaignScenario(
     advanced
       ? `Advanced to ${getActiveCampaignDefinition()?.displayName}.`
-      : "Final campaign cleared. Replaying the final battle.",
+      : sameCampaignAdvance
+        ? `Advanced to ${getActiveCampaignScenarioDefinition()?.displayName}.`
+        : "Final campaign cleared. Replaying the final battle.",
   );
 }
 
@@ -1032,6 +1100,7 @@ function leaveCampaignMode(): void {
   campaignSession = null;
   clearLockedCampaignUnits();
   selectedCampaignId = null;
+  selectedCampaignScenarioId = null;
   resetBattle({
     preserveCampaignSession: true,
     restoreSandboxMap: true,
@@ -1046,6 +1115,236 @@ function leaveCampaignMode(): void {
   updateBudgetDisplay();
   updateSelectedUnitDisplay();
   showStatus("Returned to sandbox.");
+}
+
+function buildSuggestedCampaignPlayerPlacements(scenario: CampaignScenarioDefinition): CampaignPlacementSpec[] {
+  const candidateUnits = scenario.restrictions.allowedUnitIds
+    .map((unitId) => getUnit(unitId))
+    .filter((unit): unit is UnitDefinition => unit !== undefined)
+    .sort((a, b) => a.cost - b.cost);
+  if (candidateUnits.length === 0) return [];
+
+  const uniqueCandidates: UnitDefinition[] = [];
+  for (const unit of candidateUnits) {
+    if (uniqueCandidates.some((candidate) => candidate.id === unit.id)) continue;
+    uniqueCandidates.push(unit);
+    if (uniqueCandidates.length >= 3) break;
+  }
+
+  const teamZones = activeMapInstance.zones
+    .filter((zone) => zone.team === 0)
+    .sort((a, b) => a.center.z - b.center.z);
+  if (teamZones.length === 0) return [];
+
+  const targetBudget = Math.max(240, Math.min(scenario.restrictions.budget, 1200));
+  const placementsOut: CampaignPlacementSpec[] = [];
+  let spent = 0;
+  let placementIndex = 0;
+
+  for (const zone of teamZones) {
+    const unit = uniqueCandidates[placementIndex % uniqueCandidates.length];
+    if (spent + unit.cost > targetBudget && placementsOut.length > 0) break;
+    placementsOut.push({
+      unitId: unit.id,
+      team: 0,
+      position: {
+        x: zone.center.x + zone.size.x * 0.18,
+        z: zone.center.z,
+      },
+      locked: false,
+    });
+    spent += unit.cost;
+    placementIndex += 1;
+  }
+
+  const primaryZone = teamZones[Math.floor(teamZones.length / 2)] ?? teamZones[0];
+  const offsets = [-10, -5, 0, 5, 10];
+  let offsetIndex = 0;
+  while (spent < targetBudget && placementsOut.length < 7) {
+    const unit = uniqueCandidates[placementIndex % uniqueCandidates.length];
+    if (spent + unit.cost > targetBudget && placementsOut.length >= 3) break;
+    placementsOut.push({
+      unitId: unit.id,
+      team: 0,
+      position: {
+        x: primaryZone.center.x + primaryZone.size.x * 0.1,
+        z: primaryZone.center.z + offsets[offsetIndex % offsets.length],
+      },
+      locked: false,
+    });
+    spent += unit.cost;
+    placementIndex += 1;
+    offsetIndex += 1;
+  }
+
+  return placementsOut;
+}
+
+function getCampaignScenarioHazardOverlaps(scenario: CampaignScenarioDefinition): string[] {
+  const failures: string[] = [];
+  for (const placement of scenario.placements) {
+    const unit = getUnit(placement.unitId);
+    if (!unit) {
+      failures.push(`Unknown unit in placement: ${placement.unitId}`);
+      continue;
+    }
+    const point = new Vector3(placement.position.x, placement.position.y ?? 0, placement.position.z);
+    const inHazard = activeMapInstance.hazards.find((hazard) => isPointInsideHazard(point, hazard, unit.collisionRadius * 0.35));
+    if (inHazard) {
+      failures.push(`${scenario.id}:${placement.unitId} overlaps ${inHazard.kind} at spawn`);
+    }
+  }
+  return failures;
+}
+
+function validateCurrentCampaignScenario() {
+  const campaign = getActiveCampaignDefinition();
+  const scenario = getActiveCampaignScenarioDefinition();
+  if (!campaign || !scenario || !campaignSession) {
+    return {
+      valid: false,
+      reason: "No active campaign scenario loaded.",
+    };
+  }
+
+  const hazardOverlaps = getCampaignScenarioHazardOverlaps(scenario);
+  return {
+    valid: hazardOverlaps.length === 0,
+    campaignId: campaign.id,
+    campaignName: campaign.displayName,
+    scenarioId: scenario.id,
+    scenarioName: scenario.displayName,
+    scenarioIndex: campaignSession.scenarioIndex,
+    scenarioCount: campaign.scenarios.length,
+    budget: scenario.restrictions.budget,
+    allowedUnitCount: scenario.restrictions.allowedUnitIds.length,
+    lockedPlacementCount: scenario.placements.length,
+    validationTier: scenario.validationTier ?? "smoke",
+    validationTags: scenario.validationTags ?? [],
+    hazardOverlaps,
+  };
+}
+
+function countAliveUnitsInHazards(team: number): number {
+  if (activeMapInstance.hazards.length === 0) return 0;
+  return placedUnits.filter((unit) => (
+    !unit.linkedParent
+    && !unit.isDead
+    && unit.team === team
+    && activeMapInstance.hazards.some((hazard) => isPointInsideHazard(unit.position, hazard, Math.max(0.15, unit.definition.collisionRadius * 0.2)))
+  )).length;
+}
+
+function runCampaignSmokeCheck(
+  campaignId: CampaignId,
+  scenarioId?: string,
+  options: { advanceMs?: number; spawnPlayerSeed?: boolean } = {},
+) {
+  const nextSession = createCampaignSession(campaignId, campaignSession?.unlimited ?? false, scenarioId);
+  if (!nextSession) {
+    return { valid: false, reason: `Unknown campaign ${campaignId}` };
+  }
+  campaignSession = nextSession;
+  loadCampaignScenario("Campaign loaded for smoke check.");
+  const activeScenario = getActiveCampaignScenarioDefinition();
+  if (!activeScenario) {
+    return { valid: false, reason: "No active campaign scenario after load." };
+  }
+
+  const preflight = validateCurrentCampaignScenario();
+  const seededPlacements = options.spawnPlayerSeed === false
+    ? []
+    : buildSuggestedCampaignPlayerPlacements(activeScenario);
+  for (const placement of seededPlacements) {
+    spawnHarnessUnit(placement.unitId, placement.team, placement.position, {
+      role: "placed",
+      countsTowardVictory: true,
+    });
+  }
+
+  const before = buildGameStatePayload();
+  if (seededPlacements.length > 0) {
+    startBattle(true);
+  }
+  const advanceMs = options.advanceMs ?? activeScenario.smokeAdvanceMs ?? 3000;
+  if (advanceMs > 0) {
+    advanceSimulationTime(advanceMs);
+  }
+  const after = buildGameStatePayload();
+  const aliveA = after.units.filter((unit) => unit.team === 0 && unit.alive && unit.linkedParentId === null).length;
+  const aliveB = after.units.filter((unit) => unit.team === 1 && unit.alive && unit.linkedParentId === null).length;
+  const lakeOverlapA = countAliveUnitsInHazards(0);
+  const lakeOverlapB = countAliveUnitsInHazards(1);
+
+  return {
+    valid: preflight.valid && lakeOverlapA === 0 && lakeOverlapB === 0,
+    preflight,
+    seededPlacements,
+    before: {
+      mode: before.mode,
+      livingA: before.units.filter((unit) => unit.team === 0 && unit.alive && unit.linkedParentId === null).length,
+      livingB: before.units.filter((unit) => unit.team === 1 && unit.alive && unit.linkedParentId === null).length,
+    },
+    after: {
+      mode: after.mode,
+      livingA: aliveA,
+      livingB: aliveB,
+      hazardOverlapA: lakeOverlapA,
+      hazardOverlapB: lakeOverlapB,
+    },
+  };
+}
+
+function runCampaignScenarioDeterministicCheck(campaignId: CampaignId, scenarioId?: string) {
+  return runCampaignSmokeCheck(campaignId, scenarioId, { spawnPlayerSeed: true });
+}
+
+function runCampaignProgressionCheck(campaignId: CampaignId) {
+  const campaign = listCampaignDefinitions().find((entry) => entry.id === campaignId);
+  if (!campaign) {
+    return { valid: false, reason: `Unknown campaign ${campaignId}` };
+  }
+
+  const initialSession = createCampaignSession(campaignId, false);
+  if (!initialSession) {
+    return { valid: false, reason: `Failed to create campaign session for ${campaignId}` };
+  }
+
+  const progression: Array<{ campaignId: string; scenarioId: string; scenarioIndex: number }> = [];
+  let session = initialSession;
+  progression.push({
+    campaignId: session.campaignId,
+    scenarioId: session.scenarioId,
+    scenarioIndex: session.scenarioIndex,
+  });
+
+  for (let i = 0; i < campaign.scenarios.length; i++) {
+    const next = advanceCampaignSession(session);
+    progression.push({
+      campaignId: next.campaignId,
+      scenarioId: next.scenarioId,
+      scenarioIndex: next.scenarioIndex,
+    });
+    session = next;
+  }
+
+  const replaySession = createCampaignSession(campaignId, false, campaign.scenarios[Math.min(1, campaign.scenarios.length - 1)].id);
+  const replayStable = Boolean(replaySession && replaySession.scenarioId === campaign.scenarios[Math.min(1, campaign.scenarios.length - 1)].id);
+  const firstAdvance = progression[1];
+  const finalAdvance = progression[progression.length - 1];
+
+  return {
+    valid: initialSession.scenarioIndex === 0
+      && firstAdvance?.campaignId === campaignId
+      && firstAdvance?.scenarioIndex === 1
+      && replayStable
+      && Boolean(finalAdvance),
+    initial: progression[0],
+    firstAdvance,
+    finalAdvance,
+    replayStable,
+    progression,
+  };
 }
 
 function spawnHarnessUnit(
@@ -1114,6 +1413,12 @@ function applyScenarioActions(scenario: ScenarioSpec): void {
 
 function hydrateScenario(scenario: ScenarioSpec, options: { preserveGallerySession?: boolean } = {}): void {
   resetBattle(options);
+  clearPendingCampaignResolution();
+  campaignSession = null;
+  clearLockedCampaignUnits();
+  selectedCampaignId = null;
+  selectedCampaignScenarioId = null;
+  loadMapById(scenario.mapId ?? DEFAULT_BATTLE_MAP_ID);
   activeScenario = scenario;
   for (const unit of scenario.units) {
     spawnHarnessUnit(unit.unitId, unit.team, unit.position);
@@ -1199,6 +1504,8 @@ interface NumericExpectation {
 const galleryManifest = new Map<string, GalleryCaptureManifestEntry>();
 
 function buildGameStatePayload() {
+  const activeCampaign = getActiveCampaignDefinition();
+  const activeCampaignScenario = getActiveCampaignScenarioDefinition();
   return {
     coordinateSystem: "x:right, z:forward, y:up, origin:center line",
     mode: GameState[stateMachine.currentState],
@@ -1206,7 +1513,10 @@ function buildGameStatePayload() {
     campaign: campaignSession ? {
       campaignId: campaignSession.campaignId,
       scenarioId: campaignSession.scenarioId,
+      scenarioIndex: campaignSession.scenarioIndex,
       campaignIndex: campaignSession.campaignIndex,
+      scenarioCount: activeCampaign?.scenarios.length ?? 0,
+      scenarioName: activeCampaignScenario?.displayName ?? null,
       unlimited: campaignSession.unlimited,
       mapId: activeMapInstance.id,
     } : null,
@@ -2222,16 +2532,41 @@ window.addEventListener("keydown", (e) => {
   listCampaigns: () => listCampaignDefinitions().map((campaign) => ({
     id: campaign.id,
     displayName: campaign.displayName,
-    scenarioId: campaign.scenario.id,
-    scenarioName: campaign.scenario.displayName,
+    scenarioCount: campaign.scenarios.length,
+    scenarios: campaign.scenarios.map((scenario, index) => ({
+      id: scenario.id,
+      displayName: scenario.displayName,
+      ladderRole: scenario.ladderRole,
+      index,
+    })),
   })),
-  loadCampaignScenario: (campaignId: CampaignId, _scenarioId?: string) => {
-    const nextSession = createCampaignSession(campaignId, campaignSession?.unlimited ?? false);
+  listCampaignScenarios: (campaignId: CampaignId) => {
+    const campaign = listCampaignDefinitions().find((entry) => entry.id === campaignId);
+    if (!campaign) return [];
+    return campaign.scenarios.map((scenario, index) => ({
+      id: scenario.id,
+      displayName: scenario.displayName,
+      description: scenario.description,
+      ladderRole: scenario.ladderRole,
+      validationTier: scenario.validationTier ?? "smoke",
+      index,
+    }));
+  },
+  loadCampaignScenario: (campaignId: CampaignId, scenarioId?: string) => {
+    const nextSession = createCampaignSession(campaignId, campaignSession?.unlimited ?? false, scenarioId);
     if (!nextSession) return null;
     campaignSession = nextSession;
     loadCampaignScenario("Campaign loaded.");
-    return getActiveCampaignDefinition();
+    return {
+      campaign: getActiveCampaignDefinition(),
+      scenario: getActiveCampaignScenarioDefinition(),
+    };
   },
+  validateCampaignDefinitions: () => validateCampaignDefinitionsStructure(),
+  validateCurrentCampaignScenario,
+  runCampaignSmokeCheck,
+  runCampaignScenarioDeterministicCheck,
+  runCampaignProgressionCheck,
   setCampaignUnlimited: (enabled: boolean) => setCampaignUnlimited(Boolean(enabled)),
   getCampaignState: () => buildGameStatePayload().campaign,
   toggleRemoveMode,

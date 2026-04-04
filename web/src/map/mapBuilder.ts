@@ -930,7 +930,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       zone(1, 46, 16, 40, 28),
     ],
     hazards: [
-      boxHazard("water", 0, 0, 18, 10),
+      boxHazard("water", 0, -10, 18, 6),
+      boxHazard("water", 0, 10, 18, 6),
     ],
     accent: new Color3(0.78, 0.68, 0.34),
     props: [

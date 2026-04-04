@@ -11,6 +11,9 @@ import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
+import type { PlacementZone } from "../map/placementValidator";
+import type { Obstacle } from "../map/obstacles";
+import { NavigationGrid } from "../map/navigation";
 
 export interface SpawnUnitOptions {
   role?: RuntimeSpawnRole;
@@ -88,9 +91,22 @@ function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
   return attacker.linkedChildren.filter((child) => !child.isDead && child.linkedRelation === "spawned-child").length;
 }
 
+interface UnitPathState {
+  waypoints: Vector3[];
+  waypointIndex: number;
+  desiredGoal: Vector3 | null;
+  bypassGoal: Vector3 | null;
+  bypassExpiresAt: number;
+  lastPositionSample: Vector3;
+  lastCollisionContacts: number;
+  lastProgressAt: number;
+  repathBlockedUntil: number;
+}
+
 export class SimulationSystem {
   private _units: RuntimeUnit[] = [];
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
+  private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
   private _battleStartedAt = 0;
   private _lastBattleDuration = 0;
@@ -100,6 +116,7 @@ export class SimulationSystem {
   visualEffects: VisualEffects | null = null;
   spawnUnitById: ((unitId: string, team: number, position: Vector3, options?: SpawnUnitOptions) => RuntimeUnit | null) | null = null;
   hazards: readonly HazardRegion[] = [];
+  navigationGrid: NavigationGrid | null = null;
 
   readonly minimumDecisionInterval = 0.08;
   readonly attackRangePadding = 0.2;
@@ -107,6 +124,13 @@ export class SimulationSystem {
   readonly summonLivingCap = 55;
   readonly collisionResolutionPadding = 0.03;
   readonly collisionResolutionPasses = 2;
+  readonly waypointReachDistance = 1.1;
+  readonly progressSampleDistance = 0.6;
+  readonly stuckTimeout = 0.75;
+  readonly repathCooldown = 0.35;
+  readonly localAvoidanceRadius = 2.6;
+  readonly localAvoidanceStrength = 1.45;
+  readonly congestionBypassDistance = 2.2;
   private _now = 0;
 
   get isRunning(): boolean { return this._isRunning; }
@@ -118,16 +142,28 @@ export class SimulationSystem {
 
   get units(): readonly RuntimeUnit[] { return this._units; }
 
+  configureNavigation(
+    zones: readonly PlacementZone[],
+    obstacles: readonly Obstacle[],
+    hazards: readonly HazardRegion[],
+  ): void {
+    this.hazards = hazards;
+    this.navigationGrid = new NavigationGrid(zones, obstacles, hazards);
+    this._pathStates.clear();
+  }
+
   registerUnit(unit: RuntimeUnit): void {
     if (this._units.includes(unit)) return;
     this._units.push(unit);
     this._nextDecisionAt.set(unit, 0);
+    this._pathStates.delete(unit);
   }
 
   unregisterUnit(unit: RuntimeUnit): void {
     const idx = this._units.indexOf(unit);
     if (idx >= 0) this._units.splice(idx, 1);
     this._nextDecisionAt.delete(unit);
+    this._pathStates.delete(unit);
   }
 
   beginSimulation(now: number): void {
@@ -147,6 +183,7 @@ export class SimulationSystem {
       unit.stopMoving();
       unit.setSpinning(false);
     }
+    this._pathStates.clear();
   }
 
   update(dt: number, now: number): void {
@@ -286,9 +323,13 @@ export class SimulationSystem {
 
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
-      if (!ally) return;
+      if (!ally) {
+        this._clearPathState(unit);
+        return;
+      }
       if (!canMove && Vector3.Distance(unit.position, ally.position) > unit.definition.engageRange + this.attackRangePadding) {
         unit.stopMoving();
+        this._clearPathState(unit);
         return;
       }
       this._handleSupportAction(unit, ally, attackProfile, now);
@@ -299,6 +340,7 @@ export class SimulationSystem {
     if (!enemy) {
       unit.stopMoving();
       unit.setSpinning(false);
+      this._clearPathState(unit);
       return;
     }
 
@@ -312,6 +354,7 @@ export class SimulationSystem {
       const newPos = unit.position.add(dir.scale(teleportDist));
       newPos.y = 0;
       unit.teleportTo(newPos);
+      this._clearPathState(unit);
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(newPos);
       unit.setAttackCooldown(now, attackProfile.cooldown * 0.5);
       return;
@@ -329,6 +372,7 @@ export class SimulationSystem {
       const newPos = unit.position.add(dir.scale(teleportDist));
       newPos.y = 0;
       unit.teleportTo(newPos);
+      this._clearPathState(unit);
       if (this.visualEffects) {
         this.visualEffects.spawnSmokePuff(
           newPos,
@@ -345,6 +389,7 @@ export class SimulationSystem {
       const newPos = unit.position.add(dir.scale(leapDist));
       newPos.y = 0;
       unit.teleportTo(newPos);
+      this._clearPathState(unit);
       unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
       return;
     }
@@ -353,9 +398,10 @@ export class SimulationSystem {
       if (!canMove) {
         unit.stopMoving();
         unit.setSpinning(false);
+        this._clearPathState(unit);
         return;
       }
-      unit.moveTo(this._resolveHazardAwareMoveTarget(unit, enemy.position));
+      this._moveUnitToward(unit, enemy.position, engageDistance, now);
       unit.setSpinning(true);
       if (this.visualEffects && Math.random() < 0.35) {
         this.visualEffects.spawnTornadoDust(unit.position);
@@ -366,15 +412,17 @@ export class SimulationSystem {
 
     if (distance <= engageDistance) {
       unit.stopMoving();
+      this._clearPathState(unit);
       unit.faceTarget(enemy.position);
       if (canAttack) {
         this._tryAttack(unit, enemy, attackProfile, now);
       }
     } else {
       if (canMove) {
-        unit.moveTo(this._resolveHazardAwareMoveTarget(unit, enemy.position));
+        this._moveUnitToward(unit, enemy.position, engageDistance, now);
       } else {
         unit.stopMoving();
+        this._clearPathState(unit);
       }
     }
   }
@@ -387,11 +435,12 @@ export class SimulationSystem {
     const distance = Vector3.Distance(supporter.position, ally.position);
 
     if (distance > engageDistance) {
-      supporter.moveTo(this._resolveHazardAwareMoveTarget(supporter, ally.position));
+      this._moveUnitToward(supporter, ally.position, engageDistance, now);
       return;
     }
 
     supporter.stopMoving();
+    this._clearPathState(supporter);
     supporter.faceTarget(ally.position);
     if (!supporter.canAttack(now)) return;
 
@@ -403,6 +452,195 @@ export class SimulationSystem {
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(ally.position);
     }
     ally.heal(healAmount);
+  }
+
+  private _moveUnitToward(unit: RuntimeUnit, desired: Vector3, engageDistance: number, now: number): void {
+    const navigationGrid = this.navigationGrid;
+    if (!navigationGrid) {
+      unit.moveTo(this._resolveHazardAwareMoveTarget(unit, desired));
+      return;
+    }
+
+    const state = this._getPathState(unit, now);
+    this._updatePathProgress(unit, desired, engageDistance, state, now);
+
+    if (state.bypassGoal && now >= state.bypassExpiresAt) {
+      state.bypassGoal = null;
+    }
+
+    const activeGoal = state.bypassGoal ?? desired;
+    const desiredGoalMoved = !state.desiredGoal
+      || Vector3.DistanceSquared(state.desiredGoal, activeGoal) > 4;
+    const routeMissing = state.waypoints.length === 0 || state.waypointIndex >= state.waypoints.length;
+    const needsFreshRoute = (desiredGoalMoved || routeMissing) && now >= state.repathBlockedUntil;
+
+    if (needsFreshRoute) {
+      state.desiredGoal = activeGoal.clone();
+      state.waypoints = this._buildNavigationWaypoints(unit, activeGoal);
+      state.waypointIndex = 0;
+      state.repathBlockedUntil = now + this.repathCooldown;
+    }
+
+    while (state.waypointIndex < state.waypoints.length) {
+      const waypoint = state.waypoints[state.waypointIndex];
+      const reachDistance = Math.max(this.waypointReachDistance, unit.definition.collisionRadius * 1.6);
+      if (Vector3.DistanceSquared(unit.position, waypoint) > reachDistance * reachDistance) break;
+      state.waypointIndex += 1;
+      if (state.bypassGoal && Vector3.DistanceSquared(unit.position, waypoint) <= reachDistance * reachDistance) {
+        state.bypassGoal = null;
+      }
+    }
+
+    const nextWaypoint = state.waypoints[state.waypointIndex] ?? this._resolveHazardAwareMoveTarget(unit, activeGoal);
+    unit.moveTo(this._applyCrowdAvoidance(unit, nextWaypoint));
+  }
+
+  private _buildNavigationWaypoints(unit: RuntimeUnit, desired: Vector3): Vector3[] {
+    const navigationGrid = this.navigationGrid;
+    if (!navigationGrid) return [];
+
+    const route = navigationGrid.findRoute(unit.position, desired, unit.definition.collisionRadius);
+    if (route) {
+      return route.waypoints.map((waypoint) => waypoint.clone());
+    }
+
+    const preferredDirection = desired.subtract(unit.position);
+    preferredDirection.y = 0;
+    const reachableGoal = navigationGrid.findOpenPositionNear(
+      desired,
+      unit.definition.collisionRadius,
+      preferredDirection.lengthSquared() > 0.0001 ? preferredDirection : undefined,
+    );
+    if (!reachableGoal) return [];
+
+    const fallbackRoute = navigationGrid.findRoute(unit.position, reachableGoal, unit.definition.collisionRadius);
+    return fallbackRoute?.waypoints.map((waypoint) => waypoint.clone()) ?? [reachableGoal];
+  }
+
+  private _applyCrowdAvoidance(unit: RuntimeUnit, waypoint: Vector3): Vector3 {
+    const desired = waypoint.subtract(unit.position);
+    desired.y = 0;
+    if (desired.lengthSquared() <= 0.0001) {
+      return waypoint;
+    }
+
+    const desiredDirection = desired.normalize();
+    const avoidance = new Vector3(0, 0, 0);
+
+    for (const other of this._units) {
+      if (other === unit || other.isDead || other.linkedParent) continue;
+      const delta = unit.position.subtract(other.position);
+      delta.y = 0;
+      const distanceSq = delta.lengthSquared();
+      const separation = unit.definition.collisionRadius + other.definition.collisionRadius + this.localAvoidanceRadius;
+      if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
+
+      const distance = Math.sqrt(distanceSq);
+      const away = delta.scale(1 / distance);
+      const aheadBias = Math.max(0.15, Vector3.Dot(away, desiredDirection.scale(-1)) + 0.45);
+      const weight = ((separation - distance) / separation) * aheadBias * this.localAvoidanceStrength;
+      avoidance.addInPlace(away.scale(weight));
+    }
+
+    if (avoidance.lengthSquared() <= 0.0001) {
+      return waypoint;
+    }
+
+    avoidance.normalize().scaleInPlace(Math.min(this.navigationGrid?.cellSize ?? 1, 0.9));
+    return waypoint.add(avoidance);
+  }
+
+  private _updatePathProgress(
+    unit: RuntimeUnit,
+    desired: Vector3,
+    engageDistance: number,
+    state: UnitPathState,
+    now: number,
+  ): void {
+    if (now - state.lastProgressAt < this.stuckTimeout) {
+      return;
+    }
+
+    const movement = Vector3.Distance(unit.position, state.lastPositionSample);
+    const collisionDelta = unit.collisionContactCount - state.lastCollisionContacts;
+    const distanceToGoal = Vector3.Distance(unit.position, desired);
+    const stalled = distanceToGoal > engageDistance + 1
+      && movement < this.progressSampleDistance
+      && collisionDelta >= 2;
+
+    if (stalled) {
+      const bypass = this._findBypassGoal(unit, desired);
+      if (bypass) {
+        state.bypassGoal = bypass;
+        state.bypassExpiresAt = now + 1.4;
+      }
+      state.repathBlockedUntil = now;
+    }
+
+    state.lastPositionSample = unit.position.clone();
+    state.lastCollisionContacts = unit.collisionContactCount;
+    state.lastProgressAt = now;
+  }
+
+  private _findBypassGoal(unit: RuntimeUnit, desired: Vector3): Vector3 | null {
+    const navigationGrid = this.navigationGrid;
+    if (!navigationGrid) return null;
+
+    const toGoal = desired.subtract(unit.position);
+    toGoal.y = 0;
+    if (toGoal.lengthSquared() <= 0.0001) {
+      return null;
+    }
+
+    const forward = toGoal.normalize();
+    const right = new Vector3(forward.z, 0, -forward.x);
+    const lateralDistance = Math.max(this.congestionBypassDistance, unit.definition.collisionRadius * 6);
+    const candidates = [
+      unit.position.add(right.scale(lateralDistance)),
+      unit.position.add(right.scale(-lateralDistance)),
+      unit.position.add(forward.scale(-Math.max(this.congestionBypassDistance, unit.definition.collisionRadius * 4))),
+    ];
+
+    let bestCandidate: Vector3 | null = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (const candidate of candidates) {
+      const reachable = navigationGrid.findOpenPositionNear(
+        candidate,
+        unit.definition.collisionRadius,
+        desired.subtract(unit.position),
+      );
+      if (!reachable) continue;
+      const score = Vector3.DistanceSquared(reachable, candidate) + Vector3.DistanceSquared(reachable, desired) * 0.08;
+      if (score < bestScore) {
+        bestScore = score;
+        bestCandidate = reachable;
+      }
+    }
+
+    return bestCandidate;
+  }
+
+  private _getPathState(unit: RuntimeUnit, now: number): UnitPathState {
+    const existing = this._pathStates.get(unit);
+    if (existing) return existing;
+
+    const created: UnitPathState = {
+      waypoints: [],
+      waypointIndex: 0,
+      desiredGoal: null,
+      bypassGoal: null,
+      bypassExpiresAt: 0,
+      lastPositionSample: unit.position.clone(),
+      lastCollisionContacts: unit.collisionContactCount,
+      lastProgressAt: now,
+      repathBlockedUntil: 0,
+    };
+    this._pathStates.set(unit, created);
+    return created;
+  }
+
+  private _clearPathState(unit: RuntimeUnit): void {
+    this._pathStates.delete(unit);
   }
 
   private _tryAttack(attacker: RuntimeUnit, target: RuntimeUnit, attackProfile: AttackProfile, now: number): void {
@@ -1131,7 +1369,7 @@ export class SimulationSystem {
     for (const hazard of this.hazards) {
       if (hazard.shape !== "box") continue;
 
-      const padding = Math.max(2.4, unit.definition.collisionRadius + 1.8);
+      const padding = Math.max(4.5, unit.definition.collisionRadius + 3.5);
       const left = hazard.center.x - hazard.halfX - padding;
       const right = hazard.center.x + hazard.halfX + padding;
       const top = hazard.center.z - hazard.halfZ - padding;
@@ -1141,8 +1379,18 @@ export class SimulationSystem {
       const topCost = Math.abs(start.z - top) + Math.abs(desired.z - top);
       const bottomCost = Math.abs(start.z - bottom) + Math.abs(desired.z - bottom);
       const bypassZ = topCost <= bottomCost ? top : bottom;
-      const sameSideX = start.x <= hazard.center.x ? left : right;
-      return new Vector3(sameSideX, desired.y, bypassZ);
+      const startOnLeft = start.x <= hazard.center.x;
+      const desiredOnLeft = desired.x <= hazard.center.x;
+      const crossingHazard = startOnLeft !== desiredOnLeft;
+      const nearX = startOnLeft ? left : right;
+      const farX = startOnLeft ? right : left;
+      const alignedToBypassLane = Math.abs(start.z - bypassZ) <= 2.5;
+
+      if (crossingHazard) {
+        return new Vector3(alignedToBypassLane ? farX : nearX, desired.y, bypassZ);
+      }
+
+      return new Vector3(nearX, desired.y, bypassZ);
     }
 
     return desired;
