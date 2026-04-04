@@ -5,7 +5,8 @@ import {
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { VisualEffects } from "./visualEffects";
 import { getMaterialFactory } from "../units/materialFactory";
-import { createTrail, createFire } from "./particleFactory";
+import { TEAM_COLORS } from "../data/factionColors";
+import { createTrail } from "./particleFactory";
 
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell";
 
@@ -43,6 +44,14 @@ interface MuzzleFlashOptions {
   originLift?: number;
 }
 
+function brighten(color: Color3, amount: number): Color3 {
+  return Color3.Lerp(color, new Color3(0.95, 0.95, 0.98), amount);
+}
+
+function darken(color: Color3, amount: number): Color3 {
+  return Color3.Lerp(color, new Color3(0.12, 0.12, 0.14), amount);
+}
+
 export class ProjectileSystem {
   private _scene: Scene;
   private _active: ActiveProjectile[] = [];
@@ -56,6 +65,15 @@ export class ProjectileSystem {
   }
 
   get activeCount(): number { return this._active.length; }
+
+  private _getTeamProjectilePalette(team: number): { primary: Color3; bright: Color3; dark: Color3 } {
+    const primary = (TEAM_COLORS[team] ?? new Color3(0.7, 0.7, 0.7)).clone();
+    return {
+      primary,
+      bright: brighten(primary, 0.24),
+      dark: darken(primary, 0.32),
+    };
+  }
 
   /**
    * Spawn a visible projectile that flies from origin to target.
@@ -95,7 +113,8 @@ export class ProjectileSystem {
     }
 
     const flightTime = Math.max(0.1, dist / speed);
-    const mesh = this._buildProjectileMesh(shape);
+    const palette = this._getTeamProjectilePalette(attackerTeam);
+    const mesh = this._buildProjectileMesh(shape, palette, attackerTeam);
     mesh.position = launchOrigin.clone();
     mesh.position.y += options.originLift ?? 1.0;
 
@@ -106,18 +125,18 @@ export class ProjectileSystem {
     if (trailMesh) {
       switch (shape) {
         case "fireball":
-          trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.4, 0.05), 10);
+          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 10);
           break;
         case "rocket_arrow":
-          trailSystem = createTrail(this._scene, trailMesh, new Color3(0.6, 0.6, 0.6), 15);
+          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 15);
           trailSystem.minSize = 0.03;
           trailSystem.maxSize = 0.08;
           break;
         case "firework":
-          trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.8, 0.2), 10);
+          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 10);
           break;
         case "bomb":
-          trailSystem = createTrail(this._scene, trailMesh, new Color3(1, 0.9, 0.3), 5);
+          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 5);
           trailSystem.minSize = 0.01;
           trailSystem.maxSize = 0.03;
           break;
@@ -310,54 +329,58 @@ export class ProjectileSystem {
     this.visualEffects?.spawnGroundScorch(pos);
   }
 
-  private _buildProjectileMesh(shape: ProjectileShape): TransformNode {
+  private _buildProjectileMesh(
+    shape: ProjectileShape,
+    palette: { primary: Color3; bright: Color3; dark: Color3 },
+    attackerTeam: number,
+  ): TransformNode {
     const root = new TransformNode("proj", this._scene);
 
     switch (shape) {
       case "arrow": {
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.5, diameter: 0.025, tessellation: 4 }, this._scene);
         shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat("arrow_shaft", new Color3(0.55, 0.35, 0.15));
+        shaft.material = this._getMat(`arrow_shaft_${attackerTeam}`, palette.dark);
         shaft.parent = root;
         const tip = MeshBuilder.CreateCylinder("tip", { height: 0.08, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
         tip.position.z = 0.28;
-        tip.material = this._getMat("arrow_tip", new Color3(0.6, 0.6, 0.65));
+        tip.material = this._getMat(`arrow_tip_${attackerTeam}`, palette.bright);
         tip.parent = root;
         // Fletching
         const fletch = MeshBuilder.CreateBox("fletch", { width: 0.08, height: 0.005, depth: 0.06 }, this._scene);
         fletch.position.z = -0.2;
-        fletch.material = this._getMat("fletch", new Color3(0.8, 0.8, 0.8));
+        fletch.material = this._getMat(`fletch_${attackerTeam}`, palette.primary);
         fletch.parent = root;
         break;
       }
       case "bolt": {
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.4, diameter: 0.04, tessellation: 4 }, this._scene);
         shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat("bolt_shaft", new Color3(0.4, 0.3, 0.15));
+        shaft.material = this._getMat(`bolt_shaft_${attackerTeam}`, palette.dark);
         shaft.parent = root;
         const tip = MeshBuilder.CreateCylinder("tip", { height: 0.1, diameterTop: 0, diameterBottom: 0.06, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
         tip.position.z = 0.24;
-        tip.material = this._getMat("bolt_tip", new Color3(0.5, 0.5, 0.55));
+        tip.material = this._getMat(`bolt_tip_${attackerTeam}`, palette.primary);
         tip.parent = root;
         break;
       }
       case "spear": {
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.9, diameter: 0.03, tessellation: 6 }, this._scene);
         shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat("spear_shaft", new Color3(0.55, 0.38, 0.2));
+        shaft.material = this._getMat(`spear_shaft_${attackerTeam}`, palette.dark);
         shaft.parent = root;
         const tip = MeshBuilder.CreateCylinder("tip", { height: 0.14, diameterTop: 0, diameterBottom: 0.05, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
         tip.position.z = 0.5;
-        tip.material = this._getMat("spear_tip", new Color3(0.7, 0.7, 0.75));
+        tip.material = this._getMat(`spear_tip_${attackerTeam}`, palette.primary);
         tip.parent = root;
         break;
       }
       case "bomb": {
         const body = MeshBuilder.CreateSphere("bomb", { diameter: 0.2, segments: 8 }, this._scene);
-        body.material = this._getMat("bomb_body", new Color3(0.15, 0.15, 0.15));
+        body.material = this._getMat(`bomb_body_${attackerTeam}`, palette.dark);
         body.parent = root;
         const fuse = MeshBuilder.CreateCylinder("fuse", { height: 0.1, diameter: 0.015, tessellation: 4 }, this._scene);
         fuse.position.y = 0.12;
@@ -373,36 +396,36 @@ export class ProjectileSystem {
       case "shell": {
         const shell = MeshBuilder.CreateCylinder("shell", { height: 0.46, diameter: 0.22, tessellation: 14 }, this._scene);
         shell.rotation.x = Math.PI / 2;
-        shell.material = this._getMat("shell_body", new Color3(0.22, 0.22, 0.24), 0.04);
+        shell.material = this._getMat(`shell_body_${attackerTeam}`, palette.dark, 0.04);
         shell.parent = root;
         const cap = MeshBuilder.CreateCylinder("shell_cap", { height: 0.18, diameterTop: 0, diameterBottom: 0.22, tessellation: 14 }, this._scene);
         cap.rotation.x = Math.PI / 2;
         cap.position.z = 0.28;
-        cap.material = this._getMat("shell_cap_mat", new Color3(0.28, 0.28, 0.3), 0.06);
+        cap.material = this._getMat(`shell_cap_mat_${attackerTeam}`, palette.primary, 0.06);
         cap.parent = root;
         break;
       }
       case "stone": {
         const stone = MeshBuilder.CreateSphere("stone", { diameter: 0.35, segments: 6 }, this._scene);
-        stone.material = this._getMat("stone_body", new Color3(0.5, 0.48, 0.42));
+        stone.material = this._getMat(`stone_body_${attackerTeam}`, Color3.Lerp(palette.primary, new Color3(0.5, 0.48, 0.42), 0.4));
         stone.parent = root;
         break;
       }
       case "firework": {
         const body = MeshBuilder.CreateCylinder("rocket", { height: 0.3, diameter: 0.04, tessellation: 6 }, this._scene);
         body.rotation.x = Math.PI / 2;
-        body.material = this._getMat("rocket_body", new Color3(0.8, 0.15, 0.1));
+        body.material = this._getMat(`rocket_body_${attackerTeam}`, palette.primary);
         body.parent = root;
         // Trail spark
         const trail = MeshBuilder.CreateSphere("trail", { diameter: 0.08, segments: 4 }, this._scene);
         trail.position.z = -0.18;
-        trail.material = this._getMat("trail", new Color3(1, 0.7, 0.2), 0.6);
+        trail.material = this._getMat(`trail_${attackerTeam}`, palette.bright, 0.6);
         trail.parent = root;
         break;
       }
       case "shuriken": {
         // Flat 4-pointed star that spins
-        const mat = this._getMat("shuriken_body", new Color3(0.5, 0.5, 0.55), 0.2);
+        const mat = this._getMat(`shuriken_body_${attackerTeam}`, palette.primary, 0.2);
         for (let i = 0; i < 4; i++) {
           const blade = MeshBuilder.CreateBox("blade", { width: 0.18, height: 0.015, depth: 0.04 }, this._scene);
           blade.rotation.y = (Math.PI / 4) * i;
@@ -420,17 +443,17 @@ export class ProjectileSystem {
         // Arrow shaft with rocket flame trail
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.4, diameter: 0.025, tessellation: 4 }, this._scene);
         shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat("rocket_shaft", new Color3(0.5, 0.3, 0.15));
+        shaft.material = this._getMat(`rocket_shaft_${attackerTeam}`, palette.dark);
         shaft.parent = root;
         const tip = MeshBuilder.CreateCylinder("tip", { height: 0.08, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
         tip.position.z = 0.22;
-        tip.material = this._getMat("rocket_tip", new Color3(0.6, 0.6, 0.65));
+        tip.material = this._getMat(`rocket_tip_${attackerTeam}`, palette.primary);
         tip.parent = root;
         // Rocket flame at tail
         const flame = MeshBuilder.CreateSphere("flame", { diameter: 0.1, segments: 4 }, this._scene);
         flame.position.z = -0.22;
-        flame.material = this._getMat("rocket_flame", new Color3(1, 0.5, 0.1), 0.7);
+        flame.material = this._getMat(`rocket_flame_${attackerTeam}`, palette.bright, 0.7);
         flame.parent = root;
         // Smoke trail
         const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.07, segments: 4 }, this._scene);
@@ -444,14 +467,14 @@ export class ProjectileSystem {
         // Black crow shape - body + wings
         const body = MeshBuilder.CreateSphere("crowbody", { diameter: 0.15, segments: 6 }, this._scene);
         body.scaling.set(1, 0.7, 1.4);
-        body.material = this._getMat("crow_body", new Color3(0.08, 0.08, 0.1));
+        body.material = this._getMat(`crow_body_${attackerTeam}`, palette.dark);
         body.parent = root;
         // Wings (flapping handled by rotation update)
         for (const side of [-1, 1]) {
           const wing = MeshBuilder.CreateBox("wing", { width: 0.2, height: 0.01, depth: 0.1 }, this._scene);
           wing.position.set(side * 0.12, 0.02, 0);
           wing.rotation.z = side * -0.3;
-          wing.material = this._getMat("crow_wing", new Color3(0.05, 0.05, 0.08));
+          wing.material = this._getMat(`crow_wing_${attackerTeam}`, palette.primary);
           wing.parent = root;
         }
         // Beak
@@ -463,14 +486,14 @@ export class ProjectileSystem {
         break;
       }
       case "fireball": {
-        // Glowing orange fireball
+        // Team-owned fireball; impact/explosion VFX remain unchanged elsewhere.
         const ball = MeshBuilder.CreateSphere("fireball", { diameter: 0.25, segments: 8 }, this._scene);
-        ball.material = this._getMat("fireball_body", new Color3(1, 0.4, 0.05), 0.6);
+        ball.material = this._getMat(`fireball_body_${attackerTeam}`, palette.primary, 0.6);
         ball.parent = root;
         // Outer glow
         const glow = MeshBuilder.CreateSphere("glow", { diameter: 0.4, segments: 6 }, this._scene);
-        glow.material = getMaterialFactory().get("unlit", new Color3(1, 0.3, 0), {
-          emissive: new Color3(1, 0.3, 0).scale(0.5), alpha: 0.3,
+        glow.material = getMaterialFactory().get("unlit", palette.bright, {
+          emissive: palette.primary.scale(0.5), alpha: 0.3,
         });
         glow.parent = root;
         break;

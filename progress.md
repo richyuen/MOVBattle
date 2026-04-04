@@ -680,3 +680,16 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Visual/state artifacts captured under `output/battlefeel-broader-tranche/`.
 - Residual caveat:
 - This tranche keeps spillover single-hop only and downed obstruction local-collision-only; persistent corpse hazards, linked-body physics expansion, and full ragdoll simulation remain deferred.
+- 2026-04-04: Ralph team-color blue/red readability pass implemented from the approved PRD.
+- Updated `web/src/units/unitFactory.ts` to split faction-vs-team color precedence, team-color humanoid skin, and team-colored health bar fills.
+- Updated `web/src/units/vehicleBuilder.ts` so major readable vehicle/beast surfaces lean blue/red more strongly for team ownership.
+- Updated `web/src/combat/projectileSystem.ts` to team-tint projectile ownership signals while keeping broader explosion/impact VFX untouched.
+- Added `gallery_team_color_blue_red_validation` to `web/src/testing/scenarios.ts` for mirrored blue/red combat validation covering humanoids, low-skin units, vehicles, projectiles, and health bars.
+- Verification 2026-04-04:
+- `cd web && npx tsc --noEmit` ✅
+- `cd web && npm run build` ✅
+- Playwright client run via `node --experimental-default-type=module C:/Users/ryuen/.codex/skills/develop-web-game/scripts/web_game_playwright_client.js --url http://127.0.0.1:4173/MOVBattle/ --actions-file C:/Users/ryuen/.codex/skills/develop-web-game/references/action_payloads.json --iterations 2 --pause-ms 250 --screenshot-dir C:/Git/MOVBattle/web/output/team-color-client` ✅
+- Targeted scenario validation `gallery_team_color_blue_red_validation` passed with screenshot/state evidence showing blue/red tanks, blue/red projectiles, team-colored health bars, and preserved faction clothing cues.
+- Residual note: broader combat VFX were intentionally left unchanged; the visible glow/smoke around tanks remains neutral/ability-themed by design.
+- LSP diagnostics reported 0 errors for `unitFactory.ts`, `vehicleBuilder.ts`, `projectileSystem.ts`, and `scenarios.ts`.
+- Architect verification: APPROVED after review of the uncommitted diff; remaining follow-up is only narrow per-unit tuning if any future outliers still read too neutral.

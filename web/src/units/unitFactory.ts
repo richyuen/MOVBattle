@@ -19,6 +19,20 @@ export interface SpawnVisualOptions {
   forceArticulatedBody?: boolean;
 }
 
+const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
+  "evil_void",
+  "secret_beast",
+  "secret_bone",
+  "secret_demon",
+  "secret_ghost",
+  "secret_ice",
+  "secret_nature",
+]);
+
+function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
+  return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
+}
+
 export class UnitFactory {
   private _scene: Scene;
   shadowGenerator?: ShadowGenerator;
@@ -37,15 +51,22 @@ export class UnitFactory {
     const crowdPhysics = getCrowdPhysicsProfile(definition.crowdPhysicsProfileId);
     const visual = options.visualOverride ?? getUnitVisual(definition.id);
     const linkedPreset = getLinkedActorPreset(definition.id);
+    const materialPreset = visual.materialPreset ?? "default";
 
-    // Compute body color: blend faction + team
+    // Preserve faction-driven body reads by default, but bias low-skin/non-skin units
+    // toward stronger team ownership on their dominant visible surfaces.
     const factionColor = FACTION_COLORS[definition.faction] ?? new Color3(0.5, 0.5, 0.5);
     const teamColor = TEAM_COLORS[team] ?? new Color3(0.5, 0.5, 0.5);
-    const bodyColor = Color3.Lerp(factionColor, teamColor, 0.25);
+    const shouldUseVehicleBody = isVehicleUnit(definition.id) && !options.forceArticulatedBody;
+    const bodyColor = Color3.Lerp(
+      factionColor,
+      teamColor,
+      shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.82 : 0.12,
+    );
+    const skinColor = Color3.Lerp(teamColor, new Color3(0.96, 0.96, 0.96), 0.08);
 
     let body;
     let propMeshes: Mesh[] = [];
-    const shouldUseVehicleBody = isVehicleUnit(definition.id) && !options.forceArticulatedBody;
 
     if (shouldUseVehicleBody) {
       // Build as vehicle/equipment instead of humanoid
@@ -54,9 +75,8 @@ export class UnitFactory {
       });
     } else {
       // Build articulated humanoid body
-      const preset = visual.materialPreset ?? "default";
-      const isArmored = preset === "medieval_steel" || preset === "ancient_bronze"
-        || preset === "good_gold" || preset === "secret_hero" || preset === "secret_holy";
+      const isArmored = materialPreset === "medieval_steel" || materialPreset === "ancient_bronze"
+        || materialPreset === "good_gold" || materialPreset === "secret_hero" || materialPreset === "secret_holy";
       body = buildArticulatedBody(
         this._scene,
         `${team}_${definition.id}_${Math.random().toString(36).slice(2, 6)}`,
@@ -73,7 +93,7 @@ export class UnitFactory {
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0);
     }
 
-    applyMaterialPreset(body, visual, bodyColor);
+    applyMaterialPreset(body, visual, bodyColor, skinColor);
 
     body.root.position = position.clone();
     // Face the border: blue (team 0) faces right (+X), red (team 1) faces left (-X)
@@ -120,7 +140,7 @@ export class UnitFactory {
     barFill.position.z = -0.001;
     barFill.billboardMode = Mesh.BILLBOARDMODE_ALL;
     barFill.parent = body.root;
-    barFill.material = mf.get("unlit", new Color3(0.2, 0.9, 0.2), { emissive: new Color3(0.1, 0.5, 0.1) });
+    barFill.material = mf.get("unlit", teamColor, { emissive: teamColor.scale(0.45) });
 
     unit.healthBarMesh = barFill;
     unit.healthBarBg = barBg;
@@ -129,8 +149,13 @@ export class UnitFactory {
   }
 }
 
-function applyMaterialPreset(body: ReturnType<typeof buildArticulatedBody>, visual: UnitVisualConfig, bodyColor: Color3): void {
-  const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor);
+function applyMaterialPreset(
+  body: ReturnType<typeof buildArticulatedBody>,
+  visual: UnitVisualConfig,
+  bodyColor: Color3,
+  skinColor: Color3,
+): void {
+  const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor, skinColor);
   body.bodyMaterial.baseColor = tint.bodyDiffuse;
   body.bodyMaterial.emissiveColor = tint.bodyEmissive;
   body.bodyMaterial.metallic = tint.metallic;
@@ -150,8 +175,8 @@ interface MaterialTint {
   roughness: number;
 }
 
-function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3): MaterialTint {
-  const skinBase = new Color3(0.94, 0.90, 0.86);
+function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3, skinColor: Color3): MaterialTint {
+  const skinBase = skinColor;
   const zero = new Color3(0, 0, 0);
   const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount);
   // Defaults: cloth-like (non-metallic, fairly rough)

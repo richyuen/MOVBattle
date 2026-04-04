@@ -68,6 +68,14 @@ function makeMat(_scene: Scene, color: Color3): PBRMetallicRoughnessMaterial {
   return getMaterialFactory().getWood(color);
 }
 
+function brighten(color: Color3, amount: number): Color3 {
+  return Color3.Lerp(color, new Color3(0.95, 0.95, 0.95), amount);
+}
+
+function darken(color: Color3, amount: number): Color3 {
+  return Color3.Lerp(color, new Color3(0.12, 0.12, 0.12), amount);
+}
+
 function dummyJoint(name: string, parent: TransformNode, scene: Scene): TransformNode {
   const t = new TransformNode(name, scene);
   t.parent = parent;
@@ -216,13 +224,14 @@ function addOperator(
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
   const pumpkinMat = makeMat(scene, new Color3(0.88, 0.42, 0.12));
 
   // Base platform (longer along Z = firing axis)
   const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.2, depth: 1.6 }, scene);
-  base.position.y = 0.4; base.parent = root; base.material = wood; allMeshes.push(base);
+  base.position.y = 0.4; base.parent = root; base.material = teamPrimary; allMeshes.push(base);
 
   // Wheels (on the sides, X axis)
   for (const xOff of [-0.45, 0.45]) {
@@ -312,13 +321,14 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
 function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("gatling_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.45, 0.32, 0.18));
   const metal = makeMat(scene, new Color3(0.32, 0.34, 0.38));
 
   const chassis = MeshBuilder.CreateBox("gatlingChassis", { width: 0.9, height: 0.18, depth: 1.2 }, scene);
   chassis.position.y = 0.45;
   chassis.parent = root;
-  chassis.material = wood;
+  chassis.material = teamPrimary;
   allMeshes.push(chassis);
 
   for (const xOff of [-0.38, 0.38]) {
@@ -381,12 +391,13 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
 function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("ballista_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
 
   // Base (longer along Z)
   const base = MeshBuilder.CreateBox("base", { width: 0.8, height: 0.15, depth: 1.2 }, scene);
-  base.position.y = 0.35; base.parent = root; base.material = wood; allMeshes.push(base);
+  base.position.y = 0.35; base.parent = root; base.material = teamPrimary; allMeshes.push(base);
 
   // Wheels (on sides, X axis)
   for (const xOff of [-0.35, 0.35]) {
@@ -446,6 +457,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
 function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("hwacha_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
   const darkWood = makeMat(scene, new Color3(0.35, 0.22, 0.1));
   const red = makeMat(scene, new Color3(0.72, 0.18, 0.12));
@@ -454,7 +466,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // ─── Cart base ───
   const base = MeshBuilder.CreateBox("base", { width: 1.3, height: 0.1, depth: 1.2 }, scene);
-  base.position.y = 0.4; base.parent = root; base.material = wood; allMeshes.push(base);
+  base.position.y = 0.4; base.parent = root; base.material = teamPrimary; allMeshes.push(base);
 
   // Side rails along the cart
   for (const xOff of [-0.6, 0.6]) {
@@ -499,7 +511,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
   // Main rack box (wide, tall front face with depth for tubes)
   const rackBody = MeshBuilder.CreateBox("rackBody", { width: 1.1, height: 0.9, depth: 0.45 }, scene);
   rackBody.position.set(0, 0.45, 0);
-  rackBody.parent = rackPivot; rackBody.material = wood; allMeshes.push(rackBody);
+  rackBody.parent = rackPivot; rackBody.material = teamPrimary; allMeshes.push(rackBody);
 
   // Frame edges around the rack face
   for (const xOff of [-0.55, 0.55]) {
@@ -579,12 +591,13 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.45, 0.3, 0.15));
   const metal = makeMat(scene, new Color3(0.3, 0.3, 0.35));
 
   // Carriage (longer along Z)
   const carriage = MeshBuilder.CreateBox("carriage", { width: 0.5, height: 0.12, depth: 0.9 }, scene);
-  carriage.position.y = 0.3; carriage.parent = root; carriage.material = wood; allMeshes.push(carriage);
+  carriage.position.y = 0.3; carriage.parent = root; carriage.material = teamPrimary; allMeshes.push(carriage);
 
   // Wheels (on sides, X axis)
   for (const xOff of [-0.3, 0.3]) {
@@ -647,6 +660,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("tank_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.55, 0.42, 0.25));
   const metal = makeMat(scene, new Color3(0.4, 0.4, 0.45));
 
@@ -654,11 +668,11 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   const hull = MeshBuilder.CreateCylinder("hull", {
     height: 0.9, diameterTop: 0.15, diameterBottom: 2.0, tessellation: 16,
   }, scene);
-  hull.position.y = 0.6; hull.parent = root; hull.material = wood; allMeshes.push(hull);
+  hull.position.y = 0.6; hull.parent = root; hull.material = teamPrimary; allMeshes.push(hull);
 
   // Base plate
   const basePlate = MeshBuilder.CreateCylinder("basePlate", { height: 0.1, diameter: 2.1, tessellation: 16 }, scene);
-  basePlate.position.y = 0.15; basePlate.parent = root; basePlate.material = wood; allMeshes.push(basePlate);
+  basePlate.position.y = 0.15; basePlate.parent = root; basePlate.material = teamPrimary; allMeshes.push(basePlate);
 
   const muzzleSequence: TransformNode[] = [];
   // Cannons poking out from sides (8 around the perimeter)
@@ -715,8 +729,8 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
-  const hullMat = makeMat(scene, new Color3(0.45, 0.52, 0.38));
-  const hullDark = makeMat(scene, new Color3(0.34, 0.4, 0.29));
+  const hullMat = makeMat(scene, brighten(color, 0.12));
+  const hullDark = makeMat(scene, darken(color, 0.28));
   const trackMat = makeMat(scene, new Color3(0.2, 0.22, 0.2));
   const metal = makeMat(scene, new Color3(0.34, 0.36, 0.38));
 
@@ -901,13 +915,13 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
 function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("wheelbarrow_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
-  const metalMat = makeMat(scene, new Color3(0.45, 0.45, 0.5));
 
   // Tray
   const tray = MeshBuilder.CreateBox("tray", { width: 0.4, height: 0.15, depth: 0.5 }, scene);
   tray.position.set(0, 0.45, 0.15);
-  tray.parent = root; tray.material = metalMat; allMeshes.push(tray);
+  tray.parent = root; tray.material = teamPrimary; allMeshes.push(tray);
 
   // Sides of tray
   for (const xOff of [-0.18, 0.18]) {
@@ -954,15 +968,16 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
 function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("longship_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.46, 0.3, 0.16));
   const darkWood = makeMat(scene, new Color3(0.3, 0.18, 0.1));
-  const shieldMat = makeMat(scene, new Color3(0.68, 0.18, 0.14));
+  const shieldMat = makeMat(scene, brighten(color, 0.08));
   const sailMat = makeMat(scene, new Color3(0.86, 0.82, 0.7));
 
   const hull = MeshBuilder.CreateBox("longshipHull", { width: 1.05, height: 0.34, depth: 2.7 }, scene);
   hull.position.set(0, 0.4, 0);
   hull.parent = root;
-  hull.material = wood;
+  hull.material = teamPrimary;
   allMeshes.push(hull);
 
   const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.9, height: 0.05, depth: 2.4 }, scene);
@@ -1034,14 +1049,15 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
 function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("chariot_root", scene);
   const allMeshes: Mesh[] = [];
+  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.54, 0.36, 0.18));
   const metal = makeMat(scene, new Color3(0.62, 0.58, 0.48));
-  const horseMat = makeMat(scene, new Color3(0.58, 0.4, 0.22));
+  const horseMat = makeMat(scene, darken(color, 0.26));
 
   const cart = MeshBuilder.CreateBox("chariotCart", { width: 0.78, height: 0.22, depth: 0.68 }, scene);
   cart.position.set(0, 0.56, -0.16);
   cart.parent = root;
-  cart.material = wood;
+  cart.material = teamPrimary;
   allMeshes.push(cart);
 
   for (const side of [-1, 1]) {
@@ -1110,11 +1126,11 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
 // ═══════════════════════ MINOTAUR ═══════════════════════
 // Cute, upright, squat minotaur with big bull head, curved horns,
 // pointed ears, lighter belly, stubby limbs with hooves, tufted tail.
-function buildMinotaur(scene: Scene, _color: Color3): ArticulatedBody {
+function buildMinotaur(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("minotaur_root", scene);
   const allMeshes: Mesh[] = [];
-  const darkBrown = makeMat(scene, new Color3(0.32, 0.20, 0.13));
-  const medBrown = makeMat(scene, new Color3(0.42, 0.28, 0.16));
+  const darkBrown = makeMat(scene, darken(color, 0.24));
+  const medBrown = makeMat(scene, darken(color, 0.12));
   const lightBelly = makeMat(scene, new Color3(0.65, 0.52, 0.38));
   const hornMat = makeMat(scene, new Color3(0.88, 0.82, 0.68));
   const hoofMat = makeMat(scene, new Color3(0.22, 0.15, 0.10));
@@ -1319,11 +1335,11 @@ function buildMinotaur(scene: Scene, _color: Color3): ArticulatedBody {
   };
 }
 
-function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
+function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("mammoth_root", scene);
   const allMeshes: Mesh[] = [];
-  const fur = makeMat(scene, new Color3(0.45, 0.3, 0.18));
-  const shaggyFur = makeMat(scene, new Color3(0.38, 0.24, 0.14));
+  const fur = makeMat(scene, darken(color, 0.22));
+  const shaggyFur = makeMat(scene, darken(color, 0.34));
   const tuskMat = makeMat(scene, new Color3(0.92, 0.88, 0.78));
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
   const earMat = makeMat(scene, new Color3(0.5, 0.32, 0.2));
@@ -1513,9 +1529,9 @@ function buildMammoth(scene: Scene, _color: Color3): ArticulatedBody {
 
 function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
   const body = buildMammoth(scene, color);
-  const shrineWood = makeMat(scene, new Color3(0.82, 0.72, 0.46));
-  const shrineGold = makeMat(scene, new Color3(0.94, 0.84, 0.46));
-  const cloth = makeMat(scene, new Color3(0.9, 0.88, 0.74));
+  const shrineWood = makeMat(scene, brighten(color, 0.22));
+  const shrineGold = makeMat(scene, brighten(color, 0.34));
+  const cloth = makeMat(scene, brighten(color, 0.42));
 
   const platform = MeshBuilder.CreateBox("sacredElephantPlatform", { width: 0.9, height: 0.12, depth: 0.68 }, scene);
   platform.parent = body.torso;
