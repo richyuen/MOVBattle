@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MOVBattle</title>
+  <link rel="icon" href="data:," />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -259,6 +260,7 @@
 
     #resultOverlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 30;
       background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center;
       flex-direction: column; color: #fff;
     }
@@ -274,13 +276,52 @@
       font-size: 11px; line-height: 1.5; text-align: right; pointer-events: none;
     }
 
+    #touchCameraControls {
+      position: absolute;
+      right: 12px;
+      bottom: 150px;
+      display: none;
+      grid-template-columns: repeat(2, minmax(52px, 58px));
+      gap: 8px;
+      pointer-events: none;
+      z-index: 12;
+    }
+    .touch-camera-btn {
+      min-height: 52px;
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.22);
+      pointer-events: auto;
+      touch-action: none;
+      user-select: none;
+    }
+    .touch-camera-btn:active {
+      background: rgba(255,255,255,0.18);
+      border-color: rgba(255,255,255,0.46);
+    }
+    .touch-camera-btn.is-active {
+      background: rgba(255,255,255,0.18);
+      border-color: rgba(255,255,255,0.46);
+    }
+
     body.capture-mode #hud,
     body.capture-mode #unitPanel,
     body.capture-mode #resultOverlay,
     body.capture-mode #campaignOverlay,
+    body.capture-mode #touchCameraControls,
     body.capture-mode #controls-help,
     body.capture-mode #titleIntro {
       display: none !important;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      body.touch-device #touchCameraControls.enabled {
+        display: grid;
+      }
     }
 
     /* ─── Mobile ─── */
@@ -329,6 +370,16 @@
       .hud-row { gap: 4px; }
       .btn { padding: 8px 8px; font-size: 11px; }
       .budget-label { font-size: 12px; }
+      #touchCameraControls {
+        right: 8px;
+        bottom: 138px;
+        gap: 6px;
+        grid-template-columns: repeat(2, minmax(48px, 52px));
+      }
+      .touch-camera-btn {
+        min-height: 48px;
+        font-size: 18px;
+      }
     }
   </style>
 </head>
@@ -400,11 +451,19 @@
     </div>
   </div>
 
+  <div id="touchCameraControls" aria-label="Camera controls">
+    <button class="touch-camera-btn" id="btnTouchRotateLeft" type="button" aria-label="Rotate camera left">↺</button>
+    <button class="touch-camera-btn" id="btnTouchRotateRight" type="button" aria-label="Rotate camera right">↻</button>
+    <button class="touch-camera-btn" id="btnTouchCameraDown" type="button" aria-label="Lower camera">↓</button>
+    <button class="touch-camera-btn" id="btnTouchCameraUp" type="button" aria-label="Raise camera">↑</button>
+  </div>
+
   <div id="controls-help">
     LClick: Place (blue zone = blue, red zone = red)<br>
     RClick: Remove | N/B: Cycle Unit<br>
     Space: Start | R: Reset<br>
-    MWheel: Zoom | MMB: Pan | Q/E: Rotate
+    MWheel: Zoom | MMB: Pan | WASD: Pan<br>
+    Q/E: Rotate | Z/C: Lower/Raise
   </div>
 
   <script type="module" src="/src/main.ts"></script>

@@ -88,6 +88,11 @@ const btnResultPrimaryEl = document.getElementById("btnResultPrimary") as HTMLBu
 const btnResultSecondaryEl = document.getElementById("btnResultSecondary") as HTMLButtonElement | null;
 const btnLeaveCampaignEl = document.getElementById("btnLeaveCampaign") as HTMLButtonElement | null;
 const btnCloseCampaignEl = document.getElementById("btnCloseCampaign") as HTMLButtonElement | null;
+const touchCameraControlsEl = document.getElementById("touchCameraControls");
+const btnTouchRotateLeftEl = document.getElementById("btnTouchRotateLeft") as HTMLButtonElement | null;
+const btnTouchRotateRightEl = document.getElementById("btnTouchRotateRight") as HTMLButtonElement | null;
+const btnTouchCameraDownEl = document.getElementById("btnTouchCameraDown") as HTMLButtonElement | null;
+const btnTouchCameraUpEl = document.getElementById("btnTouchCameraUp") as HTMLButtonElement | null;
 
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -117,6 +122,95 @@ shadowGen.blurKernel = 48;
 
 // Camera
 const camCtrl = new CameraController(scene, canvas);
+bodyEl.classList.toggle("touch-device", camCtrl.isTouchDevice);
+
+type CameraMotionAction =
+  | "rotateLeft"
+  | "rotateRight"
+  | "moveUp"
+  | "moveDown";
+
+const heldCameraKeys = new Set<string>();
+const heldCameraActions = new Set<CameraMotionAction>();
+const CAMERA_MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE", "KeyZ", "KeyC"]);
+
+function isTextEntryTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target instanceof HTMLInputElement
+    || target instanceof HTMLTextAreaElement
+    || target instanceof HTMLSelectElement
+    || target.isContentEditable;
+}
+
+function syncCameraMotionIntent(): void {
+  const panX = (heldCameraKeys.has("KeyA") ? 1 : 0)
+    - (heldCameraKeys.has("KeyD") ? 1 : 0);
+  const panY = (heldCameraKeys.has("KeyS") ? 1 : 0)
+    - (heldCameraKeys.has("KeyW") ? 1 : 0);
+  const rotate = (heldCameraKeys.has("KeyQ") ? 1 : 0)
+    - (heldCameraKeys.has("KeyE") ? 1 : 0)
+    + (heldCameraActions.has("rotateRight") ? 1 : 0)
+    - (heldCameraActions.has("rotateLeft") ? 1 : 0);
+  const vertical = (heldCameraKeys.has("KeyC") ? 1 : 0)
+    - (heldCameraKeys.has("KeyZ") ? 1 : 0)
+    + (heldCameraActions.has("moveUp") ? 1 : 0)
+    - (heldCameraActions.has("moveDown") ? 1 : 0);
+
+  camCtrl.setMotionIntent({
+    panX: Math.max(-1, Math.min(1, panX)),
+    panY: Math.max(-1, Math.min(1, panY)),
+    rotate: Math.max(-1, Math.min(1, rotate)),
+    vertical: Math.max(-1, Math.min(1, vertical)),
+  });
+}
+
+function setCameraActionActive(action: CameraMotionAction, active: boolean): void {
+  if (active) {
+    heldCameraActions.add(action);
+  } else {
+    heldCameraActions.delete(action);
+  }
+  syncCameraMotionIntent();
+}
+
+function clearHeldCameraMotion(): void {
+  heldCameraKeys.clear();
+  heldCameraActions.clear();
+  btnTouchRotateLeftEl?.classList.remove("is-active");
+  btnTouchRotateRightEl?.classList.remove("is-active");
+  btnTouchCameraDownEl?.classList.remove("is-active");
+  btnTouchCameraUpEl?.classList.remove("is-active");
+  camCtrl.clearMotionIntent();
+}
+
+function bindHeldCameraButton(button: HTMLButtonElement | null, action: CameraMotionAction): void {
+  if (!button) return;
+  const setPressed = (active: boolean) => {
+    button.classList.toggle("is-active", active);
+    setCameraActionActive(action, active);
+  };
+  const activate = (event: PointerEvent) => {
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+    setPressed(true);
+  };
+  const deactivate = (event: Event) => {
+    event.preventDefault();
+    setPressed(false);
+  };
+
+  button.addEventListener("pointerdown", activate);
+  button.addEventListener("pointerup", deactivate);
+  button.addEventListener("pointercancel", deactivate);
+  button.addEventListener("lostpointercapture", deactivate);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+}
+
+touchCameraControlsEl?.classList.toggle("enabled", camCtrl.isTouchDevice);
+bindHeldCameraButton(btnTouchRotateLeftEl, "rotateLeft");
+bindHeldCameraButton(btnTouchRotateRightEl, "rotateRight");
+bindHeldCameraButton(btnTouchCameraDownEl, "moveDown");
+bindHeldCameraButton(btnTouchCameraUpEl, "moveUp");
 
 // Bloom post-processing
 const pipeline = new DefaultRenderingPipeline("default", true, scene, [camCtrl.camera]);
@@ -2611,6 +2705,16 @@ scene.onPointerObservable.add((pointerInfo) => {
 
 // Keyboard
 window.addEventListener("keydown", (e) => {
+  if (CAMERA_MOVEMENT_KEYS.has(e.code)) {
+    if (isTextEntryTarget(e.target)) return;
+    e.preventDefault();
+    heldCameraKeys.add(e.code);
+    syncCameraMotionIntent();
+    return;
+  }
+
+  if (e.repeat) return;
+
   switch (e.code) {
     case "Space":
       e.preventDefault();
@@ -2625,13 +2729,16 @@ window.addEventListener("keydown", (e) => {
     case "KeyB":
       selectRelativeUnit(-1);
       break;
-    case "KeyQ":
-      camCtrl.rotateBy(-1);
-      break;
-    case "KeyE":
-      camCtrl.rotateBy(1);
-      break;
   }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (!heldCameraKeys.delete(e.code)) return;
+  syncCameraMotionIntent();
+});
+
+window.addEventListener("blur", () => {
+  clearHeldCameraMotion();
 });
 
 // Expose to HTML onclick handlers

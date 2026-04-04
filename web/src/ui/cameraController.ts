@@ -26,13 +26,23 @@ export interface GalleryCameraOverride {
 
 export class CameraController {
   readonly camera: ArcRotateCamera;
-  private _scene: Scene;
+  readonly isTouchDevice: boolean;
   private _shakeOffset = Vector3.Zero();
+  private _motionIntent = {
+    panX: 0,
+    panY: 0,
+    rotate: 0,
+    vertical: 0,
+  };
+  private readonly _panSpeed = 0.42;
+  private readonly _rotationSpeed = 1.25;
+  private readonly _verticalSpeed = 4.5;
+  private readonly _minTargetY = -2.5;
+  private readonly _maxTargetY = 8;
 
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
-    this._scene = scene;
-
     const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    this.isTouchDevice = isMobile;
 
     this.camera = new ArcRotateCamera(
       "camera",
@@ -89,14 +99,7 @@ export class CameraController {
         lastTouchX = e.touches[0].clientX;
         lastTouchY = e.touches[0].clientY;
 
-        // Pan the camera target based on camera orientation
-        const speed = this.camera.radius * 0.003;
-        const cosA = Math.cos(this.camera.alpha);
-        const sinA = Math.sin(this.camera.alpha);
-
-        // Map screen drag to world XZ using camera's right and forward vectors
-        this.camera.target.x += (dx * sinA + dy * cosA) * speed;
-        this.camera.target.z += (-dx * cosA + dy * sinA) * speed;
+        this.panByScreenDelta(dx, dy);
       }, { passive: true });
 
       canvas.addEventListener("touchend", () => {
@@ -116,9 +119,31 @@ export class CameraController {
 
     // Keyboard rotation (Q/E) handled via game input
   }
+  private _applyPanOffsets(offsetX: number, offsetY: number): void {
+    const cosA = Math.cos(this.camera.alpha);
+    const sinA = Math.sin(this.camera.alpha);
 
-  rotateBy(delta: number): void {
-    this.camera.alpha += delta * 0.02;
+    this.camera.target.x += offsetX * sinA + offsetY * cosA;
+    this.camera.target.z += -offsetX * cosA + offsetY * sinA;
+  }
+
+  panByScreenDelta(dx: number, dy: number): void {
+    const speed = this.camera.radius * 0.003;
+    this._applyPanOffsets(dx * speed, dy * speed);
+  }
+
+  setMotionIntent(intent: Partial<{ panX: number; panY: number; rotate: number; vertical: number }>): void {
+    if (intent.panX !== undefined) this._motionIntent.panX = intent.panX;
+    if (intent.panY !== undefined) this._motionIntent.panY = intent.panY;
+    if (intent.rotate !== undefined) this._motionIntent.rotate = intent.rotate;
+    if (intent.vertical !== undefined) this._motionIntent.vertical = intent.vertical;
+  }
+
+  clearMotionIntent(): void {
+    this._motionIntent.panX = 0;
+    this._motionIntent.panY = 0;
+    this._motionIntent.rotate = 0;
+    this._motionIntent.vertical = 0;
   }
 
   captureViewState(): CameraViewState {
@@ -167,6 +192,23 @@ export class CameraController {
     if (this._shakeOffset.lengthSquared() > 0) {
       this.camera.target.subtractInPlace(this._shakeOffset);
       this._shakeOffset.setAll(0);
+    }
+
+    if (this._motionIntent.rotate !== 0) {
+      this.camera.alpha += this._motionIntent.rotate * this._rotationSpeed * _dt;
+    }
+
+    if (this._motionIntent.panX !== 0 || this._motionIntent.panY !== 0) {
+      const heldPanScale = this.camera.radius * this._panSpeed * _dt;
+      this._applyPanOffsets(
+        this._motionIntent.panX * heldPanScale,
+        this._motionIntent.panY * heldPanScale,
+      );
+    }
+
+    if (this._motionIntent.vertical !== 0) {
+      const nextY = this.camera.target.y + this._motionIntent.vertical * this._verticalSpeed * _dt;
+      this.camera.target.y = Math.min(this._maxTargetY, Math.max(this._minTargetY, nextY));
     }
 
     if (this._shakeIntensity > 0.001) {
