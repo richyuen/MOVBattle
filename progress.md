@@ -580,6 +580,30 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
   - `cd web && npm run build`
   - Browser verification with the Tree Tribe campaign plus manually added Team A units showed `anyLakeOverlap = false` over a 10s battle probe
   - Artifacts saved to `output/tree-tribe-water-path-results.json` and `output/tree-tribe-water-path.png`
+- 2026-04-04: Full multi-scenario campaign expansion landed.
+- Refactored campaigns from single-scenario entries to true `scenarios[]` ladders with scenario-aware session progression, UI/runtime loading, and browser validation helpers.
+- Expanded the campaign slate to 12 campaigns x 5 scenarios = 60 total scenarios, with 33 marked as core validation targets.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Browser campaign validation suite passed with 12 campaigns, 60 scenarios, and zero definition/smoke/deterministic/progression failures
+  - Artifacts saved to `output/campaign-expansion-validation.json` and `output/campaign-expansion-overlay.png`
+- 2026-04-04: Full multi-scenario campaign expansion landed.
+- Refactored campaigns from one `scenario` per campaign to `scenarios[]` with `scenarioIndex` session progression.
+- Expanded the campaign slate to 12 campaigns × 5 scenarios = 60 total scenarios with reusable ladder metadata and validation tiers.
+- Added browser-facing campaign validation helpers for definition shape, smoke checks, deterministic subset checks, and progression checks.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Browser validation helper suite passed with `{ campaignCount: 12, totalScenarioCount: 60, definitionFailures: [], smokeFailures: [], deterministicFailures: [], progressionFailures: [], coreScenarioCount: 33 }`
+  - Artifacts saved to `output/campaign-expansion-validation.json` and `output/campaign-expansion-overlay.png`
+- 2026-04-04: Campaign mode expanded from 12 single-battle entries into 12 true multi-scenario campaigns.
+- Refactored campaign data/session/progression to support `scenarios[]` plus `scenarioIndex`, added browser-exposed campaign validation/progression helpers, and generated a full 60-scenario slate (5 per campaign) with reusable validation tiers/tags.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Browser validation via `window.game.validateCampaignDefinitions()`, `runCampaignSmokeCheck(...)`, `runCampaignScenarioDeterministicCheck(...)`, and `runCampaignProgressionCheck(...)`
+  - Validation summary saved to `output/campaign-expansion-validation.json`
 - 2026-04-03: Follow-up regression fix for the same topple pass.
 - `web/src/units/runtimeUnit.ts` now caps ordinary living-hit vertical lift and clamps topple launch lift so hits no longer balloon units skyward.
 - `web/src/main.ts` now exposes unit `y` height in the text-state payload, and scenario assertion plumbing supports `unit-height-at-most`.
@@ -589,3 +613,70 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
   - `cd web && npm run build`
   - Headless browser scenario suite passed for `physics_hit_launch_guard`, `crowd_topple_clubber_vs_protector`, `crowd_topple_halfling_vs_knight`, `crowd_topple_wheelbarrow_charge`, `crowd_topple_mammoth_pressure`, `crowd_topple_recovery_state`, and `composite_bomb_cannon`
   - Verification artifacts saved to `output/hit-launch-results.json` and `output/hit-launch-guard.png`
+- 2026-04-04: Multi-scenario campaign expansion landed.
+- Campaign architecture now supports `scenarios[]` per campaign plus scenario-aware session progression.
+- Authored 12 campaigns x 5 scenarios = 60 total scenarios with validation tiers and reusable smoke/progression hooks.
+- Browser validation suite passed with 12 campaigns, 60 scenarios, 33 core validation targets, and zero definition/smoke/deterministic/progression failures.
+- Artifacts saved to `output/campaign-expansion-validation.json` and `output/campaign-expansion-overlay.png`
+- 2026-04-04: Adventure lake corner-stall fix.
+- `web/src/combat/simulationSystem.ts` now avoids same-side corner pinning when detouring around boxed hazards.
+- `web/src/map/mapBuilder.ts` now splits the Adventure lake into upper/lower water hazards with a central bridge gap, giving units a safe crossing corridor.
+- Validation:
+  - `cd web && npx tsc --noEmit`
+  - `cd web && npm run build`
+  - Focused browser probe on `tree_tribe` with added Team A units showed `stallEvents = []` over a 12s run
+  - Artifacts saved to `output/adventure-corner-stall-check.json` and `output/adventure-corner-stall.png`
+- 2026-04-04: Static-map pathfinding tranche landed for Adventure stuck-path fixes.
+- Added `web/src/map/navigation.ts` with shared nav-grid pathfinding, nearest-reachable fallback goals, and line-of-sight smoothing.
+- Wired existing `SimulationSystem` route-state + congestion-repath flow into the new navigator and kept route ownership in simulation rather than `RuntimeUnit`.
+- Extended deterministic scenarios with Adventure-specific pathfinding regressions:
+- `adventure_obstacle_bypass`
+- `adventure_hazard_safe_routing`
+- `adventure_congestion_escape`
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- `runScenarioCheck()` passed for the three new Adventure pathfinding scenarios.
+- `runCampaignScenarioDeterministicCheck()` passed for `adventure_opening_clash`, `adventure_hazard_pressure`, `tree_tribe`, and `challenge/bridge_too_far`.
+- Visual Adventure Wilds smoke pass captured in `output/playwright/adventure-tree-tribe-pathfinding-12s.png`, showing units now route off the former top-right ruin/tree stall into active engagement lanes.
+- Residual caveat:
+- V1 pathfinding intentionally matches the existing obstacle abstraction (including axis-aligned box blockers) rather than adding rotated-box planning fidelity in this tranche.
+- 2026-04-04: Static-map pathfinding tranche landed for Adventure stuck-pathing.
+- Added `web/src/map/navigation.ts` nav-grid routing with clearance classes, nearest-open fallback, A* search, and path smoothing.
+- Wired `web/src/combat/simulationSystem.ts` to own per-unit route state, crowd-avoidance steering, congestion bypass goals, and route resets.
+- Updated `web/src/main.ts` to rebuild runtime obstacle/hazard navigation context on map load and let scenarios force campaign maps via `mapId`.
+- Expanded `web/src/testing/scenarios.ts` with Adventure pathfinding regressions: `adventure_obstacle_bypass`, `adventure_hazard_safe_routing`, and `adventure_congestion_escape`.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Browser checks passed for `runScenarioCheck('adventure_obstacle_bypass')`, `runScenarioCheck('adventure_hazard_safe_routing')`, `runScenarioCheck('adventure_congestion_escape')`, Adventure deterministic campaign checks (`adventure_opening_clash`, `adventure_hazard_pressure`, `tree_tribe`), and non-Adventure `challenge/bridge_too_far`.
+- Visual artifact: `output/playwright/adventure-tree-tribe-pathfinding-12s.png`.
+- Residual caveat: pathfinding still uses the current axis-aligned obstacle abstraction; rotated blocker fidelity remains deferred.
+- 2026-04-04: Static-map pathfinding tranche implemented for unit navigation.
+- Added `web/src/map/navigation.ts` nav-grid routing around hazards/props using the existing obstacle abstraction, plus nearest-open fallback and path smoothing.
+- Wired `web/src/combat/simulationSystem.ts` to own route state, crowd-avoidance steering, and congestion bypass/repath behavior while keeping combat targeting intact.
+- Updated scenario hydration and map wiring in `web/src/main.ts` so deterministic scenarios can target campaign maps and navigation refreshes with map changes.
+- Added Adventure-focused regression scenarios in `web/src/testing/scenarios.ts`: `adventure_obstacle_bypass`, `adventure_hazard_safe_routing`, and `adventure_congestion_escape`.
+- Added Ralph planning artifacts: `.omx/plans/prd-pathfinding-system-upgrade.md` and `.omx/plans/test-spec-pathfinding-system-upgrade.md`.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Browser checks passed for `runScenarioCheck(''adventure_obstacle_bypass'')`, `runScenarioCheck(''adventure_hazard_safe_routing'')`, `runScenarioCheck(''adventure_congestion_escape'')`
+- Browser checks passed for `runCampaignScenarioDeterministicCheck(''adventure'', ''adventure_opening_clash'')`, `(''adventure'', ''adventure_hazard_pressure'')`, `(''adventure'', ''tree_tribe'')`, and `(''challenge'', ''bridge_too_far'')`
+- Visual artifact captured: `output/playwright/adventure-tree-tribe-pathfinding-12s.png`
+- Residual caveat:
+- Pathfinding still follows the current axis-aligned blocker abstraction; rotated blocker fidelity remains deferred.
+- 2026-04-04: Broader deterministic battle-feel tranche landed for the remaining TABS battle-feel gap.
+- Extended `web/src/data/combatProfiles.ts` and `web/src/data/unitDefinitions.ts` with contact-role-aware battle-feel tuning (`contactRole`, brace absorption, pressure transfer, stagger / interrupt / downed tuning) while keeping full ragdoll physics out of scope.
+- Extended `web/src/units/runtimeUnit.ts` with explicit broader battle-feel state support (`staggered`, `toppled`, `downed`, `recovering`), interruption counters, downed-block timing, pressure-transfer tracking, and collision-body radius scaling for bounded local obstruction.
+- Extended `web/src/combat/simulationSystem.ts` with single-hop spillover pressure, role-aware contact scaling, and local-collision-only downed obstruction while explicitly avoiding navigation/pathfinding mutation.
+- Extended `web/src/main.ts` deterministic text-state/assertion support with `battle-feel-state`, `pressure-transfer-at-least`, `attack-interrupted-at-least`, `downed-block-active`, `downed-block-seconds-at-most`, and `chain-topple-count-at-least`.
+- Added broader-tranche benchmark scenarios in `web/src/testing/scenarios.ts`: `battlefeel_shield_wall_vs_light_swarm`, `battlefeel_attack_interrupt_charge`, `battlefeel_downed_lane_block`, and `battlefeel_spillover_chain`.
+- Added Ralph planning artifacts: `.omx/plans/prd-tabs-battle-feel-broader-tranche.md` and `.omx/plans/test-spec-tabs-battle-feel-broader-tranche.md`.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- Browser verification passed for `battlefeel_shield_wall_vs_light_swarm`, `battlefeel_attack_interrupt_charge`, `battlefeel_downed_lane_block`, `battlefeel_spillover_chain`, `physics_hit_launch_guard`, `physics_death_launch_guard`, and `composite_bomb_cannon` via `output/verify-battlefeel-broader-tranche.cjs`.
+- Visual/state artifacts captured under `output/battlefeel-broader-tranche/`.
+- Residual caveat:
+- This tranche keeps spillover single-hop only and downed obstruction local-collision-only; persistent corpse hazards, linked-body physics expansion, and full ragdoll simulation remain deferred.

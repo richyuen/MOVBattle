@@ -247,7 +247,7 @@ export class SimulationSystem {
 
           const delta = b.position.subtract(a.position);
           delta.y = 0;
-          const minDistance = a.definition.collisionRadius + b.definition.collisionRadius;
+          const minDistance = a.collisionBodyRadius + b.collisionBodyRadius;
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
@@ -260,8 +260,8 @@ export class SimulationSystem {
 
           const sameTeam = a.team === b.team;
           const contactBias = sameTeam ? 0.82 : 1.0;
-          const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance);
-          const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance);
+          const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance * (1 + a.braceAbsorption));
+          const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance * (1 + b.braceAbsorption));
           const inverseMassA = 1 / resistanceA;
           const inverseMassB = 1 / resistanceB;
           const inverseMassTotal = inverseMassA + inverseMassB;
@@ -286,15 +286,48 @@ export class SimulationSystem {
             normal.scale(-impulseStrength * (weightedMassB / weightedMassTotal)),
             normal,
             pressureScaleA,
+            b.contactRole,
           );
           b.applyCollisionImpulse(
             normal.scale(impulseStrength * (weightedMassA / weightedMassTotal)),
             normal.scale(-1),
             pressureScaleB,
+            a.contactRole,
           );
+          if (!sameTeam && impulseStrength >= 0.9) {
+            this._applySingleHopSpillover(a, normal.scale(-1), impulseStrength * a.pressureTransferScale, b.contactRole);
+            this._applySingleHopSpillover(b, normal, impulseStrength * b.pressureTransferScale, a.contactRole);
+          }
         }
       }
     }
+  }
+
+  private _applySingleHopSpillover(
+    source: RuntimeUnit,
+    awayDirection: Vector3,
+    basePressure: number,
+    contactRole: RuntimeUnit["contactRole"],
+  ): void {
+    if (basePressure <= 0.12) return;
+    let candidate: RuntimeUnit | null = null;
+    let bestDistanceSq = Number.POSITIVE_INFINITY;
+    const radius = Math.max(2.2, source.collisionBodyRadius * 4.2);
+    for (const other of this._units) {
+      if (other === source || other.isDead || other.linkedParent || other.team !== source.team) continue;
+      const delta = other.position.subtract(source.position);
+      delta.y = 0;
+      const distanceSq = delta.lengthSquared();
+      if (distanceSq <= 0.0001 || distanceSq > radius * radius || distanceSq >= bestDistanceSq) continue;
+      bestDistanceSq = distanceSq;
+      candidate = other;
+    }
+    if (!candidate) return;
+
+    const pressure = Math.min(1.45, basePressure);
+    const push = awayDirection.scale(Math.min(0.18, pressure * 0.06));
+    candidate.applyCrowdDisplacement(push, pressure, awayDirection, 0.58, contactRole);
+    candidate.registerPressureTransfer(pressure, contactRole);
   }
 
   private _collisionMomentumMultiplier(unit: RuntimeUnit): number {
@@ -532,7 +565,7 @@ export class SimulationSystem {
       const delta = unit.position.subtract(other.position);
       delta.y = 0;
       const distanceSq = delta.lengthSquared();
-      const separation = unit.definition.collisionRadius + other.definition.collisionRadius + this.localAvoidanceRadius;
+      const separation = unit.collisionBodyRadius + other.collisionBodyRadius + this.localAvoidanceRadius;
       if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
 
       const distance = Math.sqrt(distanceSq);

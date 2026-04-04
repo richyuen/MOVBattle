@@ -1559,7 +1559,9 @@ function buildGameStatePayload() {
         actionPreset: unit.actionPreset,
         contributionChannels: unit.contributionChannels,
         physicsState: unit.physicsState,
+        battleFeelState: unit.battleFeelState,
         balanceState: unit.balanceState,
+        contactRole: unit.contactRole,
         attackCapability: unit.hasCapability("attack") ? "enabled" : "disabled",
         moveCapability: unit.hasCapability("move") ? "enabled" : "disabled",
         disabledByRole: [
@@ -1590,6 +1592,12 @@ function buildGameStatePayload() {
         balancePressure: Number(unit.balancePressure.toFixed(2)),
         pressureLoad: Number(unit.pressureLoad.toFixed(2)),
         pressureLoaded: unit.isPressureLoaded,
+        pressureTransferred: Number(unit.pressureTransferred.toFixed(2)),
+        attackInterrupted: unit.attackInterrupted,
+        attackInterruptedCount: unit.attackInterruptedCount,
+        downedBlockActive: unit.downedBlockActive,
+        downedSecondsRemaining: Number(unit.downedSecondsRemaining.toFixed(2)),
+        lastContactRole: unit.lastContactRole,
         toppleDirection: unit.toppleDirectionTag,
         toppleForwardness: Number(unit.toppleForwardness.toFixed(2)),
         crowdPhysicsProfileId: unit.crowdPhysicsProfileId,
@@ -2126,6 +2134,119 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
         }
       }
       return failures.length === 0 ? pass("Balance states matched.") : fail(failures.join("; "));
+    }
+    case "battle-feel-state": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing battle-feel-state context for ${unitId}`);
+          continue;
+        }
+        const expectedStates = new Set(clause.split("|").map((entry) => entry.trim()).filter(Boolean));
+        const actual = (root as { battleFeelState?: string }).battleFeelState ?? "steady";
+        if (!expectedStates.has(actual)) {
+          failures.push(`${unitId} expected battle-feel state ${[...expectedStates].join("|")}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Battle-feel states matched.") : fail(failures.join("; "));
+    }
+    case "pressure-transfer-at-least": {
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(>=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return fail(`Unsupported pressure-transfer clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing pressure-transfer context for ${unitId}`);
+          continue;
+        }
+        const actual = Number((root as { pressureTransferred?: number }).pressureTransferred ?? 0);
+        if (actual < expected) {
+          failures.push(`${unitId} expected pressure transfer >= ${expected}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Pressure transfer matched.") : fail(failures.join("; "));
+    }
+    case "attack-interrupted-at-least": {
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(>=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return fail(`Unsupported attack-interrupted clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing attack interruption context for ${unitId}`);
+          continue;
+        }
+        const actual = Number((root as { attackInterruptedCount?: number }).attackInterruptedCount ?? 0);
+        if (actual < expected) {
+          failures.push(`${unitId} expected attack interruptions >= ${expected}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Attack interruption counts matched.") : fail(failures.join("; "));
+    }
+    case "downed-block-active": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const match = clause.match(/^(true|false)$/);
+        if (!match) return fail(`Unsupported downed-block-active clause: ${clause}`);
+        const expected = match[1] === "true";
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing downed-block context for ${unitId}`);
+          continue;
+        }
+        const actual = Boolean((root as { downedBlockActive?: boolean }).downedBlockActive);
+        if (actual !== expected) {
+          failures.push(`${unitId} expected downedBlockActive=${expected}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Downed block activity matched.") : fail(failures.join("; "));
+    }
+    case "downed-block-seconds-at-most": {
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(<=)(-?\d+(?:\.\d+)?)$/);
+        if (!match) return fail(`Unsupported downed-block-seconds clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing downed-block duration context for ${unitId}`);
+          continue;
+        }
+        const actual = Number((root as { downedSecondsRemaining?: number }).downedSecondsRemaining ?? 0);
+        if (actual > expected) {
+          failures.push(`${unitId} expected downed seconds <= ${expected}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Downed block timing matched.") : fail(failures.join("; "));
+    }
+    case "chain-topple-count-at-least": {
+      const match = assertion.value.match(/^(.+?)(>=)(\d+)$/);
+      if (!match) return fail(`Unsupported chain-topple-count clause: ${assertion.value}`);
+      const unitIds = match[1].split("+").map((entry) => entry.trim()).filter(Boolean);
+      const expected = Number(match[3]);
+      const activeStates = new Set(["toppled", "downed", "recovering"]);
+      let actual = 0;
+      for (const unitId of unitIds) {
+        const root = getScenarioRoot(state, unitId);
+        if (!root) continue;
+        const battleFeelState = (root as { battleFeelState?: string }).battleFeelState ?? "steady";
+        if (activeStates.has(battleFeelState)) actual += 1;
+      }
+      return actual >= expected
+        ? pass(`Chain topple count matched (${actual} >= ${expected}).`)
+        : fail(`Expected chain topple count >= ${expected}, got ${actual}.`);
     }
     case "topple-direction": {
       const clauses = parseUnitClauses(assertion.value);

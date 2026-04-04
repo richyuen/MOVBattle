@@ -38,12 +38,20 @@ export interface RagdollProfile {
   cleanupDelaySeconds: number;
 }
 
+export type ContactRole = "skirmisher" | "lineholder" | "charger" | "brute" | "colossus";
+
 export interface CrowdPhysicsProfile {
   id: string;
   separationStrength: number;
   crowdResistance: number;
   shoveResponse: number;
   staggerResponse: number;
+  braceAbsorption: number;
+  pressureTransferScale: number;
+  staggerThreshold: number;
+  attackInterruptThreshold: number;
+  downedSeconds: number;
+  downedBlockRadiusScale: number;
   leanResponse: number;
   recoveryRate: number;
   balanceCapacity: number;
@@ -96,6 +104,12 @@ export const CROWD_PHYSICS_PROFILES: CrowdPhysicsProfile[] = [
     crowdResistance: 0.8,
     shoveResponse: 1.1,
     staggerResponse: 1.2,
+    braceAbsorption: 0.08,
+    pressureTransferScale: 0.34,
+    staggerThreshold: 0.18,
+    attackInterruptThreshold: 0.28,
+    downedSeconds: 0.46,
+    downedBlockRadiusScale: 0.78,
     leanResponse: 1.2,
     recoveryRate: 2.8,
     balanceCapacity: 0.92,
@@ -119,6 +133,12 @@ export const CROWD_PHYSICS_PROFILES: CrowdPhysicsProfile[] = [
     crowdResistance: 1.0,
     shoveResponse: 1.0,
     staggerResponse: 1.0,
+    braceAbsorption: 0.18,
+    pressureTransferScale: 0.28,
+    staggerThreshold: 0.24,
+    attackInterruptThreshold: 0.38,
+    downedSeconds: 0.52,
+    downedBlockRadiusScale: 0.86,
     leanResponse: 1.0,
     recoveryRate: 2.4,
     balanceCapacity: 1.05,
@@ -142,6 +162,12 @@ export const CROWD_PHYSICS_PROFILES: CrowdPhysicsProfile[] = [
     crowdResistance: 1.35,
     shoveResponse: 0.82,
     staggerResponse: 0.72,
+    braceAbsorption: 0.42,
+    pressureTransferScale: 0.16,
+    staggerThreshold: 0.34,
+    attackInterruptThreshold: 0.56,
+    downedSeconds: 0.58,
+    downedBlockRadiusScale: 0.94,
     leanResponse: 0.7,
     recoveryRate: 2.1,
     balanceCapacity: 1.36,
@@ -165,6 +191,12 @@ export const CROWD_PHYSICS_PROFILES: CrowdPhysicsProfile[] = [
     crowdResistance: 1.65,
     shoveResponse: 0.72,
     staggerResponse: 0.62,
+    braceAbsorption: 0.36,
+    pressureTransferScale: 0.22,
+    staggerThreshold: 0.4,
+    attackInterruptThreshold: 0.62,
+    downedSeconds: 0.64,
+    downedBlockRadiusScale: 1.0,
     leanResponse: 0.68,
     recoveryRate: 1.8,
     balanceCapacity: 1.7,
@@ -188,6 +220,12 @@ export const CROWD_PHYSICS_PROFILES: CrowdPhysicsProfile[] = [
     crowdResistance: 2.35,
     shoveResponse: 0.55,
     staggerResponse: 0.45,
+    braceAbsorption: 0.5,
+    pressureTransferScale: 0.18,
+    staggerThreshold: 0.52,
+    attackInterruptThreshold: 0.78,
+    downedSeconds: 0.72,
+    downedBlockRadiusScale: 1.12,
     leanResponse: 0.55,
     recoveryRate: 1.45,
     balanceCapacity: 2.28,

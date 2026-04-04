@@ -1,5 +1,9 @@
 import { FactionId } from "./factionColors";
 import {
+  getCrowdPhysicsProfile,
+  type ContactRole,
+} from "./combatProfiles";
+import {
   ROSTER_MANIFEST,
   type AbilityKind,
   type RosterManifestEntry,
@@ -17,6 +21,13 @@ export interface UnitDefinition extends RosterManifestEntry {
   aiProfileId: string;
   ragdollProfileId: string;
   crowdPhysicsProfileId: string;
+  contactRole: ContactRole;
+  braceAbsorption: number;
+  pressureTransferScale: number;
+  staggerThreshold: number;
+  attackInterruptThreshold: number;
+  downedSeconds: number;
+  downedBlockRadiusScale: number;
 }
 
 interface ArchetypeTemplate {
@@ -97,6 +108,118 @@ function prefersCrowdPhysics(entry: RosterManifestEntry): string {
   return "crowd.medium";
 }
 
+function prefersContactRole(entry: RosterManifestEntry): ContactRole {
+  const size = inferSize(entry);
+  const abilities = new Set<AbilityKind>(entry.abilities ?? []);
+
+  if (usesBossPhysics(entry) || size === "colossal") return "colossus";
+  if (entry.archetype === "shield_melee" || entry.archetype === "polearm_melee") return "lineholder";
+  if (
+    entry.archetype === "charge_melee"
+    || abilities.has("charge_impact")
+    || abilities.has("jump_charge")
+    || abilities.has("leap_attack")
+  ) {
+    return "charger";
+  }
+  if (
+    entry.archetype === "heavy_melee"
+    || entry.archetype === "artillery"
+    || entry.archetype === "summoner"
+    || entry.archetype === "special_magic"
+    || size === "large"
+    || size === "giant"
+  ) {
+    return "brute";
+  }
+  return "skirmisher";
+}
+
+function deriveBattleFeelTuning(
+  entry: RosterManifestEntry,
+  crowdPhysicsProfileId: string,
+): Pick<
+  UnitDefinition,
+  | "contactRole"
+  | "braceAbsorption"
+  | "pressureTransferScale"
+  | "staggerThreshold"
+  | "attackInterruptThreshold"
+  | "downedSeconds"
+  | "downedBlockRadiusScale"
+> {
+  const profile = getCrowdPhysicsProfile(crowdPhysicsProfileId);
+  const contactRole = prefersContactRole(entry);
+  const abilities = new Set<AbilityKind>(entry.abilities ?? []);
+
+  let braceAbsorption = profile.braceAbsorption;
+  let pressureTransferScale = profile.pressureTransferScale;
+  let staggerThreshold = profile.staggerThreshold;
+  let attackInterruptThreshold = profile.attackInterruptThreshold;
+  let downedSeconds = profile.downedSeconds;
+  let downedBlockRadiusScale = profile.downedBlockRadiusScale;
+
+  switch (contactRole) {
+    case "skirmisher":
+      staggerThreshold *= 0.88;
+      attackInterruptThreshold *= 0.86;
+      downedSeconds *= 0.9;
+      downedBlockRadiusScale *= 0.92;
+      break;
+    case "lineholder":
+      braceAbsorption += 0.18;
+      pressureTransferScale *= 0.78;
+      staggerThreshold *= 1.08;
+      attackInterruptThreshold *= 1.14;
+      downedSeconds *= 1.04;
+      downedBlockRadiusScale *= 1.05;
+      break;
+    case "charger":
+      pressureTransferScale *= 1.12;
+      attackInterruptThreshold *= 0.94;
+      downedSeconds *= 0.96;
+      break;
+    case "brute":
+      braceAbsorption += 0.08;
+      pressureTransferScale *= 0.9;
+      staggerThreshold *= 1.16;
+      attackInterruptThreshold *= 1.18;
+      downedSeconds *= 1.08;
+      downedBlockRadiusScale *= 1.06;
+      break;
+    case "colossus":
+      braceAbsorption += 0.14;
+      pressureTransferScale *= 0.84;
+      staggerThreshold *= 1.26;
+      attackInterruptThreshold *= 1.32;
+      downedSeconds *= 1.14;
+      downedBlockRadiusScale *= 1.1;
+      break;
+  }
+
+  if (abilities.has("push_force")) {
+    braceAbsorption += 0.06;
+    pressureTransferScale *= 1.08;
+  }
+  if (abilities.has("giant_slam")) {
+    pressureTransferScale *= 1.1;
+    attackInterruptThreshold *= 1.04;
+  }
+  if (abilities.has("spin_move")) {
+    attackInterruptThreshold *= 0.92;
+  }
+
+  return {
+    contactRole,
+    braceAbsorption: Number(braceAbsorption.toFixed(2)),
+    pressureTransferScale: Number(pressureTransferScale.toFixed(2)),
+    staggerThreshold: Number(staggerThreshold.toFixed(2)),
+    attackInterruptThreshold: Number(attackInterruptThreshold.toFixed(2)),
+    downedSeconds: Number(downedSeconds.toFixed(2)),
+    downedBlockRadiusScale: Number(downedBlockRadiusScale.toFixed(2)),
+  };
+}
+
 function applyAbilityOverrides(
   entry: RosterManifestEntry,
   base: ArchetypeTemplate,
@@ -139,6 +262,8 @@ function buildDefinition(entry: RosterManifestEntry): UnitDefinition {
   const sizeMultiplier = SIZE_MULTIPLIERS[size];
   const { attackProfileId, aiProfileId, engageRange, moveSpeed } = applyAbilityOverrides(entry, base);
   const healthMultiplier = entry.healthMultiplier ?? 1;
+  const crowdPhysicsProfileId = prefersCrowdPhysics(entry);
+  const battleFeel = deriveBattleFeelTuning(entry, crowdPhysicsProfileId);
 
   return {
     ...entry,
@@ -150,7 +275,8 @@ function buildDefinition(entry: RosterManifestEntry): UnitDefinition {
     attackProfileId,
     aiProfileId,
     ragdollProfileId: prefersRagdoll(entry),
-    crowdPhysicsProfileId: prefersCrowdPhysics(entry),
+    crowdPhysicsProfileId,
+    ...battleFeel,
   };
 }
 

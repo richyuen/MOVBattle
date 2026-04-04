@@ -39,7 +39,13 @@ export interface ScenarioAssertion {
     | "crowd-metric-at-least"
     | "balance-state"
     | "topple-direction"
-    | "physics-state";
+    | "physics-state"
+    | "battle-feel-state"
+    | "pressure-transfer-at-least"
+    | "attack-interrupted-at-least"
+    | "downed-block-active"
+    | "downed-block-seconds-at-most"
+    | "chain-topple-count-at-least";
   value: string;
 }
 
@@ -405,6 +411,87 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "crowd-metric-at-least", value: "tribal.clubber:balancePressure<=0.2+pressureLoad<=0.25" },
       { kind: "position-shift-at-least", value: "tribal.clubber>=0.7" },
       { kind: "unit-distance-at-least", value: "tribal.clubber<->medieval.archer>=14" },
+    ],
+  },
+  battlefeel_shield_wall_vs_light_swarm: {
+    name: "battlefeel_shield_wall_vs_light_swarm",
+    description: "Brace-style defenders should hold longer than fragile attackers while nearby light bodies still show disruption.",
+    autoStart: true,
+    advanceMs: 1700,
+    units: [
+      { unitId: "tribal.protector", team: 0, position: { x: -2.2, z: -0.6 } },
+      { unitId: "ancient.hoplite", team: 0, position: { x: -2.1, z: 0.7 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 2.1, z: -0.6 } },
+      { unitId: "farmer.halfling", team: 1, position: { x: 2.3, z: 0.15 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 2.05, z: 0.95 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "battle-feel-state", value: "tribal.protector:steady|pressure-loaded|staggered" },
+      { kind: "attack-interrupted-at-least", value: "tribal.clubber>=1, farmer.halfling>=1" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=0.65, farmer.halfling>=0.45" },
+      { kind: "position-shift-at-most", value: "tribal.protector<=1.35" },
+      { kind: "comparison-focus", value: "The shield wall should hold formation better than the light swarm while the attackers show clearer disruption states." },
+    ],
+  },
+  battlefeel_attack_interrupt_charge: {
+    name: "battlefeel_attack_interrupt_charge",
+    description: "High-pressure charge contact should deterministically interrupt at least one defender attack window.",
+    autoStart: true,
+    advanceMs: 1600,
+    units: [
+      { unitId: "farmer.wheelbarrow", team: 0, position: { x: -8.5, z: 0 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 0.25, z: -0.35 } },
+      { unitId: "farmer.halfling", team: 1, position: { x: 0.9, z: 0.5 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "attack-interrupted-at-least", value: "tribal.clubber>=1" },
+      { kind: "battle-feel-state", value: "tribal.clubber:staggered|toppled|downed|recovering" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=0.85" },
+      { kind: "comparison-focus", value: "Wheelbarrow impact should cancel or delay a defender attack, not merely slide bodies sideways." },
+    ],
+  },
+  battlefeel_downed_lane_block: {
+    name: "battlefeel_downed_lane_block",
+    description: "A freshly downed body should briefly act as a local collision obstruction without becoming a persistent corpse hazard.",
+    autoStart: true,
+    advanceMs: 950,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -7.3, z: 0 } },
+      { unitId: "medieval.squire", team: 0, position: { x: -9.1, z: 0 } },
+      { unitId: "medieval.archer", team: 1, position: { x: 18, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "tribal.clubber", damage: 1, impulse: { x: -15, y: 1.5, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "battle-feel-state", value: "tribal.clubber:downed|recovering" },
+      { kind: "downed-block-active", value: "tribal.clubber:true" },
+      { kind: "downed-block-seconds-at-most", value: "tribal.clubber<=1.2" },
+      { kind: "position-shift-at-most", value: "medieval.squire<=1.8" },
+      { kind: "comparison-focus", value: "The fallen front unit should briefly impede the follower locally, then expire without turning into persistent corpse gameplay." },
+    ],
+  },
+  battlefeel_spillover_chain: {
+    name: "battlefeel_spillover_chain",
+    description: "A heavy frontal impact should create bounded single-hop spillover pressure into nearby allies.",
+    autoStart: true,
+    advanceMs: 2100,
+    units: [
+      { unitId: "tribal.mammoth", team: 0, position: { x: -6.3, z: 0 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 0.15, z: -1.0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 0.85, z: 0 } },
+      { unitId: "ancient.hoplite", team: 1, position: { x: 1.55, z: 1.0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "chain-topple-count-at-least", value: "farmer.farmer+medieval.squire+ancient.hoplite>=2" },
+      { kind: "battle-feel-state", value: "farmer.farmer:toppled|downed|recovering, medieval.squire:staggered|toppled|downed|recovering" },
+      { kind: "attack-interrupted-at-least", value: "medieval.squire>=1" },
+      { kind: "position-shift-at-least", value: "medieval.squire>=0.55, ancient.hoplite>=0.3" },
+      { kind: "comparison-focus", value: "Mammoth contact should disrupt more than the primary target only once, not cascade into uncontrolled pinball behavior." },
     ],
   },
   war_machine_tank_origin: {

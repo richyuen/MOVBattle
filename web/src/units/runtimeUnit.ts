@@ -1,7 +1,7 @@
 import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import type { UnitDefinition } from "../data/unitDefinitions";
-import type { CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
+import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
@@ -13,6 +13,7 @@ import type {
 
 export type RuntimeSpawnRole = "placed" | "summoned" | "crew" | "mount" | "attachment";
 export type LinkedRelation = "crew" | "mount" | "attachment" | "spawned-child";
+export type BattleFeelState = "steady" | "pressure-loaded" | "staggered" | "toppled" | "downed" | "recovering" | "dead";
 
 export interface LinkedEntityDescriptor {
   relation: LinkedRelation;
@@ -70,7 +71,12 @@ export class RuntimeUnit {
   private _toppleDirectionTag: "none" | "forward" | "backward" | "sideways" = "none";
   private _toppleForwardness = 0;
   private _toppledUntil = 0;
+  private _downedUntil = 0;
   private _recoveringUntil = 0;
+  private _pressureTransferred = 0;
+  private _attackInterruptedCount = 0;
+  private _attackInterruptedUntil = 0;
+  private _lastContactRole: ContactRole | null = null;
 
   // Ambient FxPreset particle system
   private _fxParticleSystem: ParticleSystem | null = null;
@@ -165,11 +171,37 @@ export class RuntimeUnit {
   get pressureLoad(): number {
     return Math.min(1.8, this._balancePressure / Math.max(0.0001, this._crowdPhysicsProfile.balanceCapacity));
   }
+  get contactRole(): ContactRole { return this.definition.contactRole; }
+  get braceAbsorption(): number { return this.definition.braceAbsorption; }
+  get pressureTransferScale(): number { return this.definition.pressureTransferScale; }
+  get attackInterruptThreshold(): number { return this.definition.attackInterruptThreshold; }
+  get pressureTransferred(): number { return this._pressureTransferred; }
+  get attackInterruptedCount(): number { return this._attackInterruptedCount; }
+  get attackInterrupted(): boolean { return RuntimeUnit.timeNowSeconds() < this._attackInterruptedUntil; }
+  get downedSecondsRemaining(): number {
+    return Math.max(0, this._downedUntil - RuntimeUnit.timeNowSeconds());
+  }
+  get downedBlockActive(): boolean { return this.isDowned && this._grounded; }
+  get lastContactRole(): ContactRole | null { return this._lastContactRole; }
   get isPressureLoaded(): boolean {
     return this.pressureLoad >= this._crowdPhysicsProfile.pressureLoadedThreshold;
   }
-  get balanceState(): "steady" | "pressure-loaded" | "toppled" | "recovering" {
+  get isDowned(): boolean {
+    const now = RuntimeUnit.timeNowSeconds();
+    return !this._isDead && now >= this._toppledUntil && now < this._downedUntil && this._grounded && this.position.y <= 0.05;
+  }
+  get battleFeelState(): "steady" | "pressure-loaded" | "staggered" | "toppled" | "downed" | "recovering" | "dead" {
+    if (this._isDead) return "dead";
     if (this.isToppled) return "toppled";
+    if (this.isDowned) return "downed";
+    if (this.isRecovering) return "recovering";
+    if (this.isStaggered) return "staggered";
+    if (this.isPressureLoaded) return "pressure-loaded";
+    return "steady";
+  }
+  get balanceState(): "steady" | "pressure-loaded" | "toppled" | "downed" | "recovering" {
+    if (this.isToppled) return "toppled";
+    if (this.isDowned) return "downed";
     if (this.isRecovering) return "recovering";
     if (this.isPressureLoaded) return "pressure-loaded";
     return "steady";
@@ -184,12 +216,17 @@ export class RuntimeUnit {
   get isToppled(): boolean { return !this._isDead && RuntimeUnit.timeNowSeconds() < this._toppledUntil; }
   get isRecovering(): boolean {
     const now = RuntimeUnit.timeNowSeconds();
-    return !this._isDead && now >= this._toppledUntil && now < this._recoveringUntil;
+    return !this._isDead && now >= this._downedUntil && now < this._recoveringUntil;
   }
-  get physicsState(): "steady" | "airborne" | "toppled" | "recovering" | "dead" {
+  get collisionBodyRadius(): number {
+    const radiusScale = this.isDowned ? this.definition.downedBlockRadiusScale : 1;
+    return this.definition.collisionRadius * radiusScale;
+  }
+  get physicsState(): "steady" | "airborne" | "toppled" | "downed" | "recovering" | "dead" {
     if (this._isDead) return "dead";
     const now = RuntimeUnit.timeNowSeconds();
     if (now < this._toppledUntil) return "toppled";
+    if (now < this._downedUntil && this._grounded && this.position.y <= 0.05) return "downed";
     if (!this._grounded || this.position.y > 0.04) return "airborne";
     if (now < this._recoveringUntil) return "recovering";
     return "steady";
@@ -414,23 +451,32 @@ export class RuntimeUnit {
         (impulse.length() * 0.04 * this._crowdPhysicsProfile.staggerResponse) / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance),
       ),
     );
+    const impactPressure = (impulse.length() * 0.04 * this._crowdPhysicsProfile.staggerResponse)
+      / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance);
     this._updateCrowdPhysicsState(
-      (impulse.length() * 0.04 * this._crowdPhysicsProfile.staggerResponse) / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance),
+      impactPressure,
       impulse,
       this._crowdPhysicsProfile.impactToppleScale,
     );
+    this._maybeInterruptAttack(impactPressure * this._crowdPhysicsProfile.impactToppleScale, RuntimeUnit.timeNowSeconds());
 
     // Flinch: tilt body toward impact
     this.animator.triggerFlinch();
   }
 
-  applyCollisionImpulse(impulse: Vector3, contactDirection?: Vector3, pressureScale = 1): void {
+  applyCollisionImpulse(
+    impulse: Vector3,
+    contactDirection?: Vector3,
+    pressureScale = 1,
+    contactRole?: ContactRole,
+  ): void {
     if (this._isDead || (this._linkedParent && this._isAnchoredActor)) return;
     const horizontalImpulse = new Vector3(impulse.x, 0, impulse.z);
     const magnitude = horizontalImpulse.length();
     if (magnitude <= 0.0001) return;
 
     this._collisionContactCount += 1;
+    if (contactRole) this._lastContactRole = contactRole;
     this._collisionPushTotal += magnitude;
     this._collisionPushPeak = Math.max(this._collisionPushPeak, magnitude);
 
@@ -441,14 +487,16 @@ export class RuntimeUnit {
       1.8,
       Math.max(this._crowdPressure, magnitude * 0.18 * this._crowdPhysicsProfile.staggerResponse),
     );
+    const adjustedPressure = Math.min(
+      1.8,
+      (magnitude * 0.18 * this._crowdPhysicsProfile.staggerResponse) / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance),
+    );
     this._updateCrowdPhysicsState(
-      Math.min(
-        1.8,
-        (magnitude * 0.18 * this._crowdPhysicsProfile.staggerResponse) / Math.max(0.45, this._crowdPhysicsProfile.crowdResistance),
-      ),
+      adjustedPressure,
       contactDirection ?? horizontalImpulse.scale(-1),
       pressureScale * this._crowdPhysicsProfile.compressionToppleScale,
     );
+    this._maybeInterruptAttack(adjustedPressure * pressureScale, RuntimeUnit.timeNowSeconds(), contactRole);
     if (magnitude >= 0.9) {
       this.animator.triggerFlinch();
     }
@@ -460,18 +508,25 @@ export class RuntimeUnit {
     if (this.body.root.position.y < 0) {
       this.body.root.position.y = 0;
     }
-    resolveObstacleCollisions(this.body.root.position, this.definition.collisionRadius, RuntimeUnit.obstacles);
+    resolveObstacleCollisions(this.body.root.position, this.collisionBodyRadius, RuntimeUnit.obstacles);
   }
 
-  applyCrowdDisplacement(offset: Vector3, pressure: number, contactDirection?: Vector3, pressureScale = 1): void {
+  applyCrowdDisplacement(
+    offset: Vector3,
+    pressure: number,
+    contactDirection?: Vector3,
+    pressureScale = 1,
+    contactRole?: ContactRole,
+  ): void {
     if (this._isDead || this._isAnchoredActor) return;
     if (offset.lengthSquared() <= 0.000001) return;
+    if (contactRole) this._lastContactRole = contactRole;
 
     this.body.root.position.addInPlace(offset);
     if (this.body.root.position.y < 0) {
       this.body.root.position.y = 0;
     }
-    resolveObstacleCollisions(this.body.root.position, this.definition.collisionRadius, RuntimeUnit.obstacles);
+    resolveObstacleCollisions(this.body.root.position, this.collisionBodyRadius, RuntimeUnit.obstacles);
     this._velocity.x += offset.x * 5.2 * this._crowdPhysicsProfile.shoveResponse;
     this._velocity.z += offset.z * 5.2 * this._crowdPhysicsProfile.shoveResponse;
 
@@ -493,6 +548,13 @@ export class RuntimeUnit {
       ),
       pressureScale * this._crowdPhysicsProfile.compressionToppleScale,
     );
+    this._maybeInterruptAttack(adjustedPressure * pressureScale, RuntimeUnit.timeNowSeconds(), contactRole);
+  }
+
+  registerPressureTransfer(amount: number, contactRole?: ContactRole): void {
+    if (this._isDead || amount <= 0) return;
+    this._pressureTransferred = Math.max(this._pressureTransferred, amount);
+    if (contactRole) this._lastContactRole = contactRole;
   }
 
   heal(amount: number): void {
@@ -530,7 +592,8 @@ export class RuntimeUnit {
     const pos = this.body.root.position;
     this._crowdPressure = Math.max(0, this._crowdPressure - dt * this._crowdPhysicsProfile.recoveryRate);
     this._balancePressure = Math.max(0, this._balancePressure - dt * this._crowdPhysicsProfile.recoveryRate * 0.68);
-    if (this._balancePressure <= 0.001 && !this.isToppled && !this.isRecovering) {
+    this._pressureTransferred = Math.max(0, this._pressureTransferred - dt * this._crowdPhysicsProfile.recoveryRate * 0.8);
+    if (this._balancePressure <= 0.001 && !this.isToppled && !this.isDowned && !this.isRecovering) {
       this._balancePressure = 0;
       this._toppleForwardness = 0;
       this._toppleDirectionTag = "none";
@@ -573,7 +636,7 @@ export class RuntimeUnit {
       }
 
       // Resolve obstacle collisions after knockback
-      resolveObstacleCollisions(pos, this.definition.collisionRadius, RuntimeUnit.obstacles);
+      resolveObstacleCollisions(pos, this.collisionBodyRadius, RuntimeUnit.obstacles);
     }
 
     // ── Stagger: skip movement while staggered ──
@@ -584,7 +647,7 @@ export class RuntimeUnit {
       return;
     }
 
-    if (physicsState === "toppled" || physicsState === "airborne") {
+    if (physicsState === "toppled" || physicsState === "airborne" || physicsState === "downed") {
       this.stopMoving();
       this._applyCrowdLean(dt);
       this._updateHealthBar();
@@ -618,7 +681,7 @@ export class RuntimeUnit {
         const wouldEnterHazard = RuntimeUnit.hazards.some((hazard) => isPointInsideHazard(
           proposedPosition,
           hazard,
-          Math.max(0.15, this.definition.collisionRadius * 0.2),
+          Math.max(0.15, this.collisionBodyRadius * 0.2),
         ));
         if (wouldEnterHazard) {
           this._movementVelocity.setAll(0);
@@ -638,7 +701,7 @@ export class RuntimeUnit {
         }
 
         // Resolve obstacle collisions after movement step
-        resolveObstacleCollisions(pos, this.definition.collisionRadius, RuntimeUnit.obstacles);
+        resolveObstacleCollisions(pos, this.collisionBodyRadius, RuntimeUnit.obstacles);
       }
     }
 
@@ -812,15 +875,15 @@ export class RuntimeUnit {
       : facing;
     const forwardLoad = Vector3.Dot(balanceDirection, facing);
     const sideLoad = Vector3.Dot(balanceDirection, right);
-    if (this.physicsState === "toppled") {
+    if (this.physicsState === "toppled" || this.isDowned) {
       const settle = Math.min(1, dt * 12);
       const targetLeanX = Math.max(
         -1.22,
-        Math.min(0.92, -forwardLoad * this._crowdPhysicsProfile.topplePitchStrength),
+        Math.min(0.92, -forwardLoad * this._crowdPhysicsProfile.topplePitchStrength * (this.isDowned ? 0.78 : 1)),
       );
       const targetLeanZ = Math.max(
         -0.98,
-        Math.min(0.98, sideLoad * this._crowdPhysicsProfile.toppleRollStrength * 2),
+        Math.min(0.98, sideLoad * this._crowdPhysicsProfile.toppleRollStrength * 2 * (this.isDowned ? 0.72 : 1)),
       );
       this.body.root.rotation.x += (targetLeanX - this.body.root.rotation.x) * settle;
       this.body.root.rotation.z += (targetLeanZ - this.body.root.rotation.z) * settle;
@@ -855,8 +918,11 @@ export class RuntimeUnit {
   hasCapability(channel: LinkedContributionChannel, now = RuntimeUnit.timeNowSeconds()): boolean {
     if (!this.hasContribution(channel)) return false;
     if (this._isDead) return false;
+    if (this.isStaggered) return false;
     if (now < this._toppledUntil) return false;
+    if (now < this._downedUntil) return false;
     if (!this._grounded || this.position.y > 0.04) return false;
+    if (channel === "attack" && now < this._attackInterruptedUntil) return false;
     if (channel === "attack" && now < this._recoveringUntil) return false;
     return true;
   }
@@ -894,7 +960,7 @@ export class RuntimeUnit {
       this._balancePressure + appliedPressure,
     );
 
-    const alreadyToppled = now < this._toppledUntil;
+    const alreadyToppled = now < this._downedUntil;
     const stillAirborneFromTopple = this._toppleDirectionTag !== "none" && (!this._grounded || this.position.y > 0.05);
     if (alreadyToppled || stillAirborneFromTopple) {
       return;
@@ -926,7 +992,9 @@ export class RuntimeUnit {
       this._toppleDirectionTag = "sideways";
     }
     this._toppledUntil = Math.max(this._toppledUntil, now + this._crowdPhysicsProfile.toppleSeconds);
-    this._recoveringUntil = Math.max(this._recoveringUntil, this._toppledUntil + this._crowdPhysicsProfile.recoverySeconds);
+    const downedSeconds = this.definition.downedSeconds;
+    this._downedUntil = Math.max(this._downedUntil, this._toppledUntil + downedSeconds);
+    this._recoveringUntil = Math.max(this._recoveringUntil, this._downedUntil + this._crowdPhysicsProfile.recoverySeconds);
     this._grounded = false;
     const carry = toppleDirection.scale(Math.max(0.22, pressure * this._crowdPhysicsProfile.shoveResponse * this._crowdPhysicsProfile.topplePitchStrength));
     this._velocity.x = this._velocity.x * 0.35 + carry.x;
@@ -937,6 +1005,10 @@ export class RuntimeUnit {
       this._staggerTimer,
       this._crowdPhysicsProfile.toppleSeconds * (launched ? 0.45 : 0.35),
     );
+    if (this._attackInterruptedUntil < now + 0.05) {
+      this._attackInterruptedUntil = now + Math.min(0.52, 0.2 + pressure * 0.1);
+      this._attackInterruptedCount += 1;
+    }
     this.stopMoving();
     const rollInfluence = Vector3.Dot(toppleDirection, right);
     this.body.root.rotation.z = Math.max(
@@ -944,6 +1016,20 @@ export class RuntimeUnit {
       Math.min(0.92, rollInfluence * this._crowdPhysicsProfile.toppleRollStrength * 2),
     );
     this.animator.triggerFlinch();
+  }
+
+  private _maybeInterruptAttack(pressure: number, now: number, contactRole?: ContactRole): void {
+    if (pressure < this.attackInterruptThreshold) return;
+    if (this.isDowned) return;
+    if (now < this._attackInterruptedUntil - 0.05) return;
+    this._attackInterruptedUntil = now + Math.min(0.48, 0.18 + pressure * 0.12);
+    this._nextAttackAt = Math.max(this._nextAttackAt, now + Math.min(0.52, 0.22 + pressure * 0.14));
+    this._staggerTimer = Math.max(this._staggerTimer, Math.min(0.28, 0.08 + pressure * 0.05));
+    this._attackInterruptedCount += 1;
+    if (contactRole) this._lastContactRole = contactRole;
+    if (this.animator.state === AnimState.Attacking) {
+      this.animator.setState(AnimState.Idle);
+    }
   }
 
   private _getFacingVector(): Vector3 {
@@ -1154,10 +1240,15 @@ export class RuntimeUnit {
     this._toppleDirectionTag = "none";
     this._toppleForwardness = 0;
     this._toppledUntil = 0;
+    this._downedUntil = 0;
     this._recoveringUntil = 0;
     this._collisionPushTotal = 0;
     this._collisionPushPeak = 0;
     this._collisionContactCount = 0;
+    this._pressureTransferred = 0;
+    this._attackInterruptedCount = 0;
+    this._attackInterruptedUntil = 0;
+    this._lastContactRole = null;
     this._spinning = false;
     this._slowMultiplier = 1;
     this._slowUntil = 0;
