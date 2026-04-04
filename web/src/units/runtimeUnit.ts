@@ -3,10 +3,12 @@ import { createFxAmbient } from "../combat/particleFactory";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
-import { ProceduralAnimator, AnimState } from "./proceduralAnimation";
+import { ProceduralAnimator, AnimState, type AttackMotion, type LocomotionBias } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 import { isPointInsideHazard, type HazardRegion } from "../map/hazards";
-import type { FxPreset, UnitVisualConfig, VisualStateTag } from "./unitVisuals";
+import type {
+  FxPreset, UnitVisualConfig, VisualStateTag, WeaponPresentationFamily,
+} from "./unitVisuals";
 import type {
   LinkedActionPreset, LinkedCleanupPolicy, LinkedContributionChannel, LinkedDamageRouting, LinkedMoveMode, LinkedVictoryRouting,
 } from "./linkedActorPresets";
@@ -252,6 +254,8 @@ export class RuntimeUnit {
     this._maxHealth = definition.maxHealth;
     this._currentHealth = this._maxHealth;
     this.animator = new ProceduralAnimator(body);
+    this.animator.defaultAttackMotion = this._resolvePrimaryAttackMotion();
+    this.animator.locomotionBias = this._resolveLocomotionBias();
     this._spawnPosition = body.root.position.clone();
     this._spawnRotationY = body.root.rotation.y;
   }
@@ -371,7 +375,7 @@ export class RuntimeUnit {
   setAttackCooldown(now: number, cooldown: number): void {
     this._nextAttackAt = now + Math.max(0.05, cooldown);
     // Trigger attack animation
-    this.animator.triggerAttack(cooldown * 0.3);
+    this.animator.triggerAttack(this._resolvePrimaryAttackWindup(cooldown), this._resolvePrimaryAttackMotion());
   }
 
   moveTo(target: Vector3): void {
@@ -1487,7 +1491,7 @@ export class RuntimeUnit {
   }
 
   triggerAttackVisual(durationSeconds: number): void {
-    let motion: "strike" | "reload" | "crank" | "brace" | "carry" | "breath" = "strike";
+    let motion = this._resolvePrimaryAttackMotion();
     switch (this._actionPreset) {
       case "reload":
         motion = "reload";
@@ -1510,5 +1514,63 @@ export class RuntimeUnit {
         break;
     }
     this.animator.triggerAttack(durationSeconds, motion);
+  }
+
+  private _resolvePresentationFamily(): WeaponPresentationFamily {
+    return this.visualConfig.weaponPresentationFamily ?? "default";
+  }
+
+  private _resolvePrimaryAttackMotion(): AttackMotion {
+    switch (this._resolvePresentationFamily()) {
+      case "heavy_swing":
+        return "heavy_swing";
+      case "blade_slash":
+        return "blade_slash";
+      case "thrust":
+        return "thrust";
+      case "throw":
+        return "throw";
+      case "bow_draw_release":
+        return "bow_draw_release";
+      case "crossbow_snap":
+        return "crossbow_snap";
+      case "firearm_recoil":
+        return "firearm_recoil";
+      default:
+        return "strike";
+    }
+  }
+
+  private _resolveLocomotionBias(): LocomotionBias {
+    const bias = this.visualConfig.locomotionBiasPreset ?? "none";
+    switch (bias) {
+      case "heavy_carry":
+      case "aimed":
+      case "braced":
+        return bias;
+      default:
+        return "none";
+    }
+  }
+
+  private _resolvePrimaryAttackWindup(cooldown: number): number {
+    const base = cooldown * 0.3;
+    const timing = this.visualConfig.releaseTimingPreset ?? "default";
+    switch (timing) {
+      case "bow_release":
+        return Math.max(0.2, cooldown * 0.46);
+      case "crossbow_release":
+        return Math.max(0.18, cooldown * 0.4);
+      case "firearm_recoil":
+        return Math.max(0.16, cooldown * 0.34);
+      case "thrust_extend":
+        return Math.max(0.14, cooldown * 0.32);
+      case "throw_release":
+        return Math.max(0.16, cooldown * 0.36);
+      case "melee_commit":
+        return Math.max(0.12, cooldown * 0.3);
+      default:
+        return Math.max(0.12, base);
+    }
   }
 }

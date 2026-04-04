@@ -693,3 +693,17 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Residual note: broader combat VFX were intentionally left unchanged; the visible glow/smoke around tanks remains neutral/ability-themed by design.
 - LSP diagnostics reported 0 errors for `unitFactory.ts`, `vehicleBuilder.ts`, `projectileSystem.ts`, and `scenarios.ts`.
 - Architect verification: APPROVED after review of the uncommitted diff; remaining follow-up is only narrow per-unit tuning if any future outliers still read too neutral.
+- 2026-04-04: Weapon-animation realism pass implemented.
+- Added shared weapon-family motion routing across humanoid attackers in `web/src/units/runtimeUnit.ts` and `web/src/units/proceduralAnimation.ts`.
+- Added authored presentation metadata in `web/src/units/unitVisuals.ts` for weapon family, grip, locomotion bias, release timing, and targeted weapon offsets.
+- Updated `web/src/units/propBuilder.ts` to own family grip/orientation defaults plus presentation offsets, including club heavy-end-forward and improved bow/crossbow ready-state placement.
+- Added `gallery_weapon_reads` plus gallery-doc coverage in `web/src/testing/scenarios.ts` and `web/VISUAL_ACCEPTANCE_GALLERY.md`.
+- Validation:
+- `cd web && npx tsc --noEmit`
+- `cd web && npm run build`
+- LSP diagnostics: 0 errors on affected files
+- Deterministic gallery validation passed for `gallery_weapon_reads`, `gallery_state_reads`, `gallery_pair_renaissance_musketeer_vs_wild_west_deadeye`, and `gallery_pair_secret_artemis_vs_secret_ullr`.
+- Browser verification used local preview `http://127.0.0.1:4176/MOVBattle/`; console only showed Babylon startup and the pre-existing 404 resource error.
+- Deslop follow-up: removed no functionality, but tightened the changed-file review and corrected presentation-offset rotation handling so authored rotation offsets actually apply.
+- Remaining caveat:
+- The verification screenshots are correct and green, but the close-read value still depends on the current gallery camera presets; any future animation-read pass should keep using simulation-mid gallery captures rather than placement-only stills.

@@ -3,7 +3,10 @@ import {
   PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
-import type { AttachmentPreset, UnitVisualConfig, WeaponType, HatType, ShieldType, SpecialType } from "./unitVisuals";
+import type {
+  AttachmentPreset, UnitVisualConfig, WeaponType, HatType, ShieldType, SpecialType, WeaponGripPreset,
+} from "./unitVisuals";
+import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisuals";
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
 
 export function attachProps(
@@ -18,6 +21,8 @@ export function attachProps(
   const weapon = buildWeapon(scene, config.weapon, scale, accent);
   if (weapon) {
     weapon.parent = body.rightHand;
+    applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
+    applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.attachmentPreset === "fan_bearer") {
       tagVisualState(weapon, "fan_closed");
     }
@@ -28,6 +33,7 @@ export function attachProps(
     const offhand = buildWeapon(scene, config.offhandWeapon, scale, accent);
     if (offhand) {
       offhand.parent = body.leftHand;
+      applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       props.push(offhand);
     }
   }
@@ -97,6 +103,68 @@ function addGripWraps(
     wrap.position.y = posY;
     wrap.parent = parent;
     wrap.material = mat(scene, new Color3(0.3, 0.18, 0.08));
+  }
+}
+
+function applyWeaponGripPreset(mesh: Mesh, preset: WeaponGripPreset, scale: number): void {
+  const s = scale;
+  switch (preset) {
+    case "heavy_swing":
+      mesh.position.addInPlace(new Vector3(0.02 * s, 0.1 * s, 0.12 * s));
+      mesh.rotation.x += 0.46;
+      mesh.rotation.z -= 1.08;
+      break;
+    case "blade_slash":
+      mesh.position.addInPlace(new Vector3(0.02 * s, 0.12 * s, 0.08 * s));
+      mesh.rotation.x += 0.22;
+      mesh.rotation.z -= 0.24;
+      break;
+    case "thrust":
+      mesh.position.addInPlace(new Vector3(0.01 * s, 0.14 * s, 0.22 * s));
+      mesh.rotation.x += 1.24;
+      mesh.rotation.z += 0.06;
+      break;
+    case "throw":
+      mesh.position.addInPlace(new Vector3(0.02 * s, 0.12 * s, 0.14 * s));
+      mesh.rotation.x += 0.58;
+      mesh.rotation.z -= 0.26;
+      break;
+    case "bow":
+      mesh.position.addInPlace(new Vector3(0.05 * s, 0.14 * s, 0.16 * s));
+      mesh.rotation.x += 0.3;
+      mesh.rotation.z += 0.18;
+      break;
+    case "crossbow":
+      mesh.position.addInPlace(new Vector3(0.05 * s, 0.12 * s, 0.18 * s));
+      mesh.rotation.x += 0.76;
+      mesh.rotation.z += 0.08;
+      break;
+    case "firearm":
+      mesh.position.addInPlace(new Vector3(0.04 * s, 0.12 * s, 0.24 * s));
+      mesh.rotation.x += 1.16;
+      mesh.rotation.z -= 0.08;
+      break;
+    default:
+      break;
+  }
+}
+
+function applyPresentationOffsets(
+  mesh: Mesh,
+  positionOffset: UnitVisualConfig["weaponPositionOffset"],
+  rotationOffset: UnitVisualConfig["weaponRotationOffset"],
+  scale: number,
+): void {
+  if (positionOffset) {
+    mesh.position.x += (positionOffset.x ?? 0) * scale;
+    mesh.position.y += (positionOffset.y ?? 0) * scale;
+    mesh.position.z += (positionOffset.z ?? 0) * scale;
+  }
+  const rotation = rotationOffset;
+  if (rotation) {
+    mesh.rotation.x += rotation.rx ?? rotation.x ?? 0;
+    mesh.rotation.y += rotation.ry ?? rotation.y ?? 0;
+    mesh.rotation.z += rotation.rz ?? rotation.z ?? 0;
   }
 }
 
@@ -245,14 +313,15 @@ function buildAttachmentPreset(
       return meshes;
     }
     case "bow_ready": {
-      makeGlow("drawnArrow", 0.06 * s, accent.scale(1.05), body.rightHand, new Vector3(0, 0.18 * s, 0.04 * s), "drawn_arrow");
+      makeGlow("drawnArrow", 0.06 * s, accent.scale(1.05), body.rightHand, new Vector3(0.06 * s, 0.18 * s, 0.16 * s), "drawn_arrow");
       return meshes;
     }
     case "crossbow_ready": {
       const bolt = MeshBuilder.CreateBox("readyBolt", { width: 0.018 * s, height: 0.18 * s, depth: 0.018 * s }, scene);
       bolt.parent = body.rightHand;
-      bolt.position.set(0, 0.18 * s, 0.04 * s);
+      bolt.position.set(0.09 * s, 0.16 * s, 0.18 * s);
       bolt.rotation.z = Math.PI / 2;
+      bolt.rotation.x = Math.PI / 2 + 0.12;
       bolt.material = mat(scene, new Color3(0.82, 0.82, 0.88));
       tagVisualState(bolt, "crossbow_bolt");
       bolt.isVisible = false;
@@ -387,7 +456,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       head.parent = m;
       head.material = mat(scene, accent);
       m.material = mat(scene, new Color3(0.45, 0.3, 0.15));
-      m.rotation.x = Math.PI * 0.1;
+      m.position.y = 0.04 * s;
+      m.rotation.x = Math.PI * 0.14;
       return m;
     }
     case "sword":

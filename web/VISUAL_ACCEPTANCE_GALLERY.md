@@ -42,6 +42,8 @@ Per-unit locked references live in [`web/TABS_REFERENCE_MATRIX.md`](C:/Git/MOVBa
   Covers hero and boss differentiation when silhouette matters more than ornament.
 - `gallery_state_reads`
   Covers attack and ability-state overlays in deterministic combat.
+- `gallery_weapon_reads`
+  Covers representative heavy-swing, slash, thrust, throw, bow, crossbow, and firearm reads in simulation-mid combat.
 
 ## Pairwise Galleries
 - `gallery_pair_wild_west_gunslinger_vs_quick_draw`
@@ -71,6 +73,7 @@ Per-unit locked references live in [`web/TABS_REFERENCE_MATRIX.md`](C:/Git/MOVBa
 - `gallery_giants_colossals` uses `giants_wide_close`.
 - `gallery_silhouette_heroes` uses `silhouette_lineup`.
 - `gallery_state_reads` uses `state_read_duel` and must be captured after its configured simulation advance so the ability overlays are visible before result UI can appear.
+- `gallery_weapon_reads` uses `state_read_duel` and must be captured after its configured simulation advance so attack/release frames are visible across the required weapon-family representatives.
 - Pairwise galleries use `heroes_bosses_close` unless a scenario overrides it.
 - Gallery capture mode hides the HUD, unit panel, result overlay, and control help during screenshots.
 - Screenshot names should follow the scenario id, for example `web/output/gallery-validation/gallery_state_reads.png`.
@@ -82,4 +85,5 @@ Per-unit locked references live in [`web/TABS_REFERENCE_MATRIX.md`](C:/Git/MOVBa
 - Vehicle and composite scenes do not read as duplicated humanoids with decorative extras.
 - Giant and colossal scenes preserve scale hierarchy without collapsing into the same silhouette family.
 - State-read scenes visibly expose the intended bow, smoke, summon, lightning, or spectral overlays.
+- Weapon-read scenes visibly expose correct striking/release behavior for at least one representative of each touched weapon family, including `tribal.clubber`, `ancient.sarissa`, `tribal.spear_thrower`, `pirate.bomb_thrower`, `medieval.archer`, `ancient.snake_archer`, `viking.ice_archer`, `spooky.skeleton_archer`, `secret.chu_ko_nu`, `renaissance.musketeer`, `secret.artemis`, and `secret.ullr`.
 - Pairwise scenes must make the compared units read as intentionally different even when color is ignored.

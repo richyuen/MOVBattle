@@ -111,6 +111,39 @@ export type AttachmentPreset =
 
 export type FxPreset = "none" | "frost" | "ember" | "spectral" | "solar" | "royal" | "wind";
 
+export type WeaponPresentationFamily =
+  | "default"
+  | "heavy_swing"
+  | "blade_slash"
+  | "thrust"
+  | "throw"
+  | "bow_draw_release"
+  | "crossbow_snap"
+  | "firearm_recoil";
+
+export type WeaponGripPreset =
+  | "default"
+  | "heavy_swing"
+  | "blade_slash"
+  | "thrust"
+  | "throw"
+  | "bow"
+  | "crossbow"
+  | "firearm";
+
+export type LocomotionBiasPreset = "none" | "heavy_carry" | "aimed" | "braced";
+
+export type ReleaseTimingPreset = "default" | "melee_commit" | "thrust_extend" | "bow_release" | "crossbow_release" | "firearm_recoil" | "throw_release";
+
+export interface PresentationOffset3 {
+  x?: number;
+  y?: number;
+  z?: number;
+  rx?: number;
+  ry?: number;
+  rz?: number;
+}
+
 export interface UnitVisualConfig {
   proportions: Partial<BodyProportions>;
   weapon: WeaponType;
@@ -126,6 +159,12 @@ export interface UnitVisualConfig {
   fxPreset?: FxPreset;
   bodyDetailLevel?: "standard" | "hero" | "operator";
   stateVariants?: Partial<Record<VisualStateTag, string[]>>;
+  weaponPresentationFamily?: WeaponPresentationFamily;
+  weaponGripPreset?: WeaponGripPreset;
+  locomotionBiasPreset?: LocomotionBiasPreset;
+  releaseTimingPreset?: ReleaseTimingPreset;
+  weaponPositionOffset?: PresentationOffset3;
+  weaponRotationOffset?: PresentationOffset3;
 }
 
 function vis(
@@ -138,7 +177,9 @@ function vis(
   offhandWeapon?: WeaponType,
   extras: Partial<Omit<UnitVisualConfig, "proportions" | "weapon" | "offhandWeapon" | "hat" | "shield" | "special" | "accentColor">> = {},
 ): UnitVisualConfig {
-  return {
+  const weaponPresentationFamily = extras.weaponPresentationFamily ?? inferWeaponPresentationFamily(weapon);
+  const defaultAttachmentPreset = inferAttachmentPreset(weaponPresentationFamily);
+  const config: UnitVisualConfig = {
     proportions,
     weapon,
     offhandWeapon,
@@ -146,13 +187,21 @@ function vis(
     shield,
     special,
     accentColor,
-    posePreset: "default",
+    posePreset: inferPosePreset(weaponPresentationFamily),
     materialPreset: "default",
-    attachmentPreset: "none",
+    attachmentPreset: defaultAttachmentPreset,
     fxPreset: "none",
     bodyDetailLevel: "standard",
+    weaponPresentationFamily,
+    weaponGripPreset: extras.weaponGripPreset ?? inferWeaponGripPreset(weaponPresentationFamily),
+    locomotionBiasPreset: extras.locomotionBiasPreset ?? inferLocomotionBiasPreset(weaponPresentationFamily),
+    releaseTimingPreset: extras.releaseTimingPreset ?? inferReleaseTimingPreset(weaponPresentationFamily),
     ...extras,
   };
+  config.posePreset = extras.posePreset ?? config.posePreset;
+  config.attachmentPreset = extras.attachmentPreset ?? config.attachmentPreset;
+  config.stateVariants = extras.stateVariants ?? inferStateVariants(config.attachmentPreset ?? "none");
+  return config;
 }
 
 /**
@@ -162,6 +211,15 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ TRIBAL ═══════════════════════
   "tribal.clubber": vis(
     { scale: 0.9, bulk: 0.9, headSize: 1.1 }, "club", "none", "none", "none", "#8B4513",
+    undefined,
+    {
+      posePreset: "brute",
+      weaponGripPreset: "heavy_swing",
+      locomotionBiasPreset: "heavy_carry",
+      releaseTimingPreset: "melee_commit",
+      weaponPositionOffset: { x: 0.015, y: 0.03, z: 0.03 },
+      weaponRotationOffset: { rx: 0.18, rz: -0.18 },
+    },
   ),
   "tribal.protector": vis(
     { scale: 1.0, bulk: 1.1 }, "spear", "bone_mask", "round", "none", "#D2B48C",
@@ -211,9 +269,25 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "medieval.squire": vis(
     { scale: 1.0, bulk: 1.0 }, "sword", "great_helm", "none", "none", "#C0C0C0",
+    undefined,
+    {
+      posePreset: "duelist",
+      materialPreset: "medieval_steel",
+      weaponGripPreset: "blade_slash",
+      locomotionBiasPreset: "braced",
+      releaseTimingPreset: "melee_commit",
+    },
   ),
   "medieval.archer": vis(
     { scale: 0.95, armLength: 1.05 }, "bow", "hood_liripipe", "none", "quiver_back", "#228B22",
+    undefined,
+    {
+      posePreset: "archer",
+      attachmentPreset: "bow_ready",
+      locomotionBiasPreset: "aimed",
+      releaseTimingPreset: "bow_release",
+      stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
+    },
   ),
   "medieval.healer": vis(
     { scale: 0.95, headSize: 1.05 }, "staff", "hood", "none", "none", "#FFD700",
@@ -237,7 +311,15 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "ancient.sarissa": vis(
     { scale: 1.05, armLength: 1.3 }, "spear", "helmet", "buckler", "none", "#B8860B",
     undefined,
-    { materialPreset: "ancient_bronze" },
+    {
+      posePreset: "support",
+      materialPreset: "ancient_bronze",
+      weaponGripPreset: "thrust",
+      locomotionBiasPreset: "braced",
+      releaseTimingPreset: "thrust_extend",
+      weaponPositionOffset: { y: 0.04, z: 0.08 },
+      weaponRotationOffset: { rx: 0.08 },
+    },
   ),
   "ancient.hoplite": vis(
     { scale: 1.15, bulk: 1.2 }, "spear", "plume_helmet", "round", "none", "#DAA520",
@@ -249,6 +331,14 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "ancient.snake_archer": vis(
     { scale: 1.0, armLength: 1.1 }, "bow", "pharaoh", "none", "quiver_back", "#2E8B57",
+    undefined,
+    {
+      posePreset: "archer",
+      attachmentPreset: "bow_ready",
+      locomotionBiasPreset: "aimed",
+      releaseTimingPreset: "bow_release",
+      stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
+    },
   ),
   "ancient.minotaur": vis(
     { scale: 1.7, bulk: 1.6, headSize: 1.4 }, "axe", "horned_helmet", "none", "none", "#8B0000",
@@ -265,6 +355,15 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "viking.ice_archer": vis(
     { scale: 0.95, armLength: 1.05 }, "bow", "hood", "none", "quiver_back", "#ADD8E6",
+    undefined,
+    {
+      posePreset: "archer",
+      attachmentPreset: "bow_ready",
+      materialPreset: "viking_fur",
+      locomotionBiasPreset: "aimed",
+      releaseTimingPreset: "bow_release",
+      stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
+    },
   ),
   "viking.brawler": vis(
     { scale: 1.1, bulk: 1.2 }, "axe", "viking_helmet", "round", "none", "#A0522D",
@@ -295,7 +394,14 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "dynasty.firework_archer": vis(
     { scale: 0.95, armLength: 1.05 }, "bow", "conical_hat", "none", "none", "#FF4500",
     undefined,
-    { posePreset: "archer", materialPreset: "dynasty_lacquer" },
+    {
+      posePreset: "archer",
+      materialPreset: "dynasty_lacquer",
+      attachmentPreset: "bow_ready",
+      locomotionBiasPreset: "aimed",
+      releaseTimingPreset: "bow_release",
+      stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
+    },
   ),
   "dynasty.monk": vis(
     { scale: 1.1, bulk: 1.15, headSize: 1.15 }, "none", "monk_headband", "none", "monk_robe", "#FF8C00",
@@ -328,11 +434,26 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "renaissance.balloon_archer": vis(
     { scale: 0.9, armLength: 1.05 }, "bow", "beret", "none", "balloon", "#FFB6C1",
+    undefined,
+    {
+      posePreset: "archer",
+      materialPreset: "renaissance_velvet",
+      attachmentPreset: "bow_ready",
+      locomotionBiasPreset: "aimed",
+      releaseTimingPreset: "bow_release",
+      stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
+    },
   ),
   "renaissance.musketeer": vis(
     { scale: 1.05, bulk: 1.0 }, "musket", "plume_helmet", "none", "none", "#191970",
     undefined,
-    { posePreset: "gunner", materialPreset: "renaissance_velvet" },
+    {
+      posePreset: "gunner",
+      materialPreset: "renaissance_velvet",
+      weaponGripPreset: "firearm",
+      locomotionBiasPreset: "aimed",
+      releaseTimingPreset: "firearm_recoil",
+    },
   ),
   "renaissance.halberd": vis(
     { scale: 1.25, bulk: 1.25 }, "halberd", "helmet", "none", "none", "#4682B4",
@@ -357,6 +478,17 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "pirate.bomb_thrower": vis(
     { scale: 1.0, bulk: 1.0 }, "bomb", "tricorn", "none", "none", "#2F4F4F",
+    undefined,
+    {
+      posePreset: "support",
+      materialPreset: "pirate_tar",
+      attachmentPreset: "bomb_lit",
+      weaponGripPreset: "throw",
+      locomotionBiasPreset: "aimed",
+      releaseTimingPreset: "throw_release",
+      weaponPositionOffset: { y: 0.03, z: 0.03 },
+      stateVariants: { attacking: ["lit_fuse"], "ability-active": ["lit_fuse"] },
+    },
   ),
   "pirate.harpooner": vis(
     { scale: 1.05, armLength: 1.15 }, "harpoon", "bandana", "none", "none", "#708090",
@@ -1047,6 +1179,149 @@ function inferWeapon(hint: string | undefined, name: string): WeaponType {
   if (lower.includes("painter")) return "paintbrush";
   if (lower.includes("samurai") || lower.includes("ninja")) return "katana";
   return "club";
+}
+
+export function inferWeaponPresentationFamily(weapon: WeaponType): WeaponPresentationFamily {
+  switch (weapon) {
+    case "club":
+    case "mace":
+    case "hammer":
+    case "pickaxe":
+    case "frying_pan":
+    case "hay_bale":
+      return "heavy_swing";
+    case "sword":
+    case "greatsword":
+    case "axe":
+    case "dagger":
+    case "shield_sword":
+    case "scythe":
+    case "cutlass":
+    case "katana":
+    case "nunchaku":
+    case "bo_staff":
+    case "rapier":
+    case "boxing_glove":
+    case "broom":
+    case "flail":
+    case "whip":
+    case "torch":
+      return "blade_slash";
+    case "spear":
+    case "halberd":
+    case "lance":
+    case "pitchfork":
+    case "harpoon":
+      return "thrust";
+    case "javelin":
+    case "bomb":
+    case "stone":
+    case "potion":
+    case "shuriken_hand":
+      return "throw";
+    case "bow":
+      return "bow_draw_release";
+    case "crossbow":
+    case "blowgun":
+      return "crossbow_snap";
+    case "musket":
+    case "flintlock":
+    case "blunderbuss":
+    case "cannon_hand":
+      return "firearm_recoil";
+    default:
+      return "default";
+  }
+}
+
+export function inferWeaponGripPreset(family: WeaponPresentationFamily): WeaponGripPreset {
+  switch (family) {
+    case "heavy_swing":
+      return "heavy_swing";
+    case "blade_slash":
+      return "blade_slash";
+    case "thrust":
+      return "thrust";
+    case "throw":
+      return "throw";
+    case "bow_draw_release":
+      return "bow";
+    case "crossbow_snap":
+      return "crossbow";
+    case "firearm_recoil":
+      return "firearm";
+    default:
+      return "default";
+  }
+}
+
+export function inferPosePreset(family: WeaponPresentationFamily): PosePreset {
+  switch (family) {
+    case "bow_draw_release":
+    case "crossbow_snap":
+      return "archer";
+    case "firearm_recoil":
+      return "gunner";
+    default:
+      return "default";
+  }
+}
+
+export function inferLocomotionBiasPreset(family: WeaponPresentationFamily): LocomotionBiasPreset {
+  switch (family) {
+    case "heavy_swing":
+      return "heavy_carry";
+    case "bow_draw_release":
+    case "crossbow_snap":
+      return "aimed";
+    case "firearm_recoil":
+    case "thrust":
+      return "braced";
+    default:
+      return "none";
+  }
+}
+
+export function inferReleaseTimingPreset(family: WeaponPresentationFamily): ReleaseTimingPreset {
+  switch (family) {
+    case "thrust":
+      return "thrust_extend";
+    case "bow_draw_release":
+      return "bow_release";
+    case "crossbow_snap":
+      return "crossbow_release";
+    case "firearm_recoil":
+      return "firearm_recoil";
+    case "throw":
+      return "throw_release";
+    case "heavy_swing":
+    case "blade_slash":
+      return "melee_commit";
+    default:
+      return "default";
+  }
+}
+
+export function inferAttachmentPreset(family: WeaponPresentationFamily): AttachmentPreset {
+  switch (family) {
+    case "bow_draw_release":
+      return "bow_ready";
+    case "crossbow_snap":
+      return "crossbow_ready";
+    default:
+      return "none";
+  }
+}
+
+export function inferStateVariants(attachmentPreset: AttachmentPreset): Partial<Record<VisualStateTag, string[]>> {
+  switch (attachmentPreset) {
+    case "bow_ready":
+      return { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] };
+    case "crossbow_ready":
+      return { attacking: ["crossbow_bolt"], "ability-active": ["crossbow_bolt"] };
+    default:
+      return {};
+  }
 }
 
 function inferHat(hint: string | undefined, faction: FactionId, name: string): HatType {

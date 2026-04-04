@@ -13,7 +13,29 @@ export enum AnimState {
  */
 export type AttackStyle = "humanoid" | "mammoth";
 export type WalkStyle = "humanoid" | "quadruped";
-export type AttackMotion = "strike" | "reload" | "crank" | "brace" | "carry" | "breath";
+export type AttackMotion =
+  | "strike"
+  | "heavy_swing"
+  | "blade_slash"
+  | "thrust"
+  | "throw"
+  | "bow_draw_release"
+  | "crossbow_snap"
+  | "firearm_recoil"
+  | "reload"
+  | "crank"
+  | "brace"
+  | "carry"
+  | "breath";
+export type LocomotionBias = "none" | "heavy_carry" | "aimed" | "braced";
+export type ReleaseTimingProfile =
+  | "default"
+  | "melee_commit"
+  | "thrust_extend"
+  | "bow_release"
+  | "crossbow_release"
+  | "firearm_recoil"
+  | "throw_release";
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -25,6 +47,9 @@ export class ProceduralAnimator {
   private _wobblePhase: number; // random offset per unit
   attackStyle: AttackStyle = "humanoid";
   walkStyle: WalkStyle = "humanoid";
+  defaultAttackMotion: AttackMotion = "strike";
+  locomotionBias: LocomotionBias = "none";
+  releaseTimingProfile: ReleaseTimingProfile = "default";
 
   // Death ragdoll state
   private _deathAngularVelocities: number[] = [];
@@ -46,11 +71,11 @@ export class ProceduralAnimator {
     }
   }
 
-  triggerAttack(windupTime: number, motion: AttackMotion = "strike"): void {
+  triggerAttack(windupTime: number, motion?: AttackMotion): void {
     this._state = AnimState.Attacking;
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
-    this._attackMotion = motion;
+    this._attackMotion = motion ?? this.defaultAttackMotion;
   }
 
   /** Brief flinch on hit — snaps torso/head back then recovers. */
@@ -283,6 +308,7 @@ export class ProceduralAnimator {
 
     // Hip bounce
     b.hip.rotation.z = Math.sin(t * speed) * 0.04;
+    this._applyWalkBias(t);
   }
 
   /** Quadruped walk: diagonal pairs move together (trot gait). */
@@ -320,14 +346,87 @@ export class ProceduralAnimator {
     b.hip.rotation.x = Math.sin(t * speed * 2) * 0.02;
   }
 
+  private _applyWalkBias(t: number): void {
+    const b = this._body;
+    switch (this.locomotionBias) {
+      case "heavy_carry":
+        b.torso.rotation.x += 0.06;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.45 - 0.28;
+        b.leftShoulder.rotation.x *= 0.82;
+        b.rightElbow.rotation.x -= 0.16;
+        break;
+      case "aimed":
+        b.torso.rotation.x += 0.04;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.32 + 0.16;
+        b.leftShoulder.rotation.x = b.leftShoulder.rotation.x * 0.28 - 0.18;
+        b.leftElbow.rotation.x -= 0.12;
+        b.rightElbow.rotation.x -= 0.06;
+        b.torso.rotation.z += Math.sin(t * 4) * 0.02;
+        break;
+      case "braced":
+        b.torso.rotation.x += 0.05;
+        b.leftShoulder.rotation.x = b.leftShoulder.rotation.x * 0.4 - 0.08;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.4 + 0.08;
+        b.leftElbow.rotation.x -= 0.08;
+        b.rightElbow.rotation.x -= 0.12;
+        break;
+      default:
+        break;
+    }
+  }
+
+  private _resolveReleasePoint(defaultPoint: number): number {
+    switch (this.releaseTimingProfile) {
+      case "melee_commit":
+        return 0.44;
+      case "thrust_extend":
+        return 0.5;
+      case "bow_release":
+        return 0.72;
+      case "crossbow_release":
+        return 0.55;
+      case "firearm_recoil":
+        return 0.5;
+      case "throw_release":
+        return 0.45;
+      default:
+        return defaultPoint;
+    }
+  }
+
   private _animateAttack(dt: number): void {
-    if (this._attackMotion !== "strike") {
+    if (this._attackMotion === "reload" || this._attackMotion === "crank" || this._attackMotion === "brace" || this._attackMotion === "carry" || this._attackMotion === "breath") {
       this._animateUtilityAction(dt);
       return;
     }
     if (this.attackStyle === "mammoth") {
       this._animateAttackMammoth(dt);
       return;
+    }
+    switch (this._attackMotion) {
+      case "heavy_swing":
+        this._animateHeavySwing(dt);
+        return;
+      case "blade_slash":
+        this._animateBladeSlash(dt);
+        return;
+      case "thrust":
+        this._animateThrust(dt);
+        return;
+      case "throw":
+        this._animateThrow(dt);
+        return;
+      case "bow_draw_release":
+        this._animateBowDrawRelease(dt);
+        return;
+      case "crossbow_snap":
+        this._animateCrossbowSnap(dt);
+        return;
+      case "firearm_recoil":
+        this._animateFirearmRecoil(dt);
+        return;
+      default:
+        break;
     }
     this._animateAttackHumanoid(dt);
   }
@@ -403,43 +502,276 @@ export class ProceduralAnimator {
     const b = this._body;
     const t = this._time + this._wobblePhase;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const pulse = Math.sin(progress * Math.PI);
+    const settle = 1 - progress;
 
     if (progress < 0.5) {
-      // Wind-up: pull arm back
-      const windUp = progress * 2; // 0 to 1
+      const windUp = progress * 2;
       b.rightShoulder.rotation.x = -2.0 * windUp;
       b.rightShoulder.rotation.z = 0.3 * windUp;
       b.rightElbow.rotation.x = -0.8 * windUp;
-      // Lean back
       b.torso.rotation.x = -0.25 * windUp;
     } else {
-      // Swing forward
-      const swing = (progress - 0.5) * 2; // 0 to 1
-      const eased = 1 - Math.pow(1 - swing, 3); // ease-out cubic
+      const swing = (progress - 0.5) * 2;
+      const eased = 1 - Math.pow(1 - swing, 3);
       b.rightShoulder.rotation.x = -2.0 + 3.6 * eased;
       b.rightShoulder.rotation.z = 0.3 - 0.3 * eased;
       b.rightElbow.rotation.x = -0.8 + 0.8 * eased;
-      // Lean forward with swing
       b.torso.rotation.x = -0.25 + 0.65 * eased;
     }
 
-    // Left arm floppy reaction
-    b.leftShoulder.rotation.x = Math.sin(t * 6) * 0.15;
-    b.leftShoulder.rotation.z = Math.sin(t * 7 + 1) * 0.1;
+    b.leftShoulder.rotation.x += Math.sin(t * 6) * 0.08 * settle;
+    b.leftShoulder.rotation.z += Math.sin(t * 7 + 1) * 0.06 * settle;
 
-    // Legs planted with wobble
     b.leftHip.rotation.x = Math.sin(t * 4) * 0.05;
-    b.rightHip.rotation.x = 0.15; // step forward
-    b.leftKnee.rotation.x = 0;
-    b.rightKnee.rotation.x = 0.1;
+    b.rightHip.rotation.x = 0.12 + pulse * 0.06;
+    b.leftKnee.rotation.x = pulse * 0.04;
+    b.rightKnee.rotation.x = 0.08 + pulse * 0.06;
 
-    // Head tracks forward
-    b.neck.rotation.x = 0.1;
-    b.neck.rotation.z = Math.sin(t * 5) * 0.05;
+    b.neck.rotation.x += 0.08 + pulse * 0.03;
+    b.neck.rotation.z += Math.sin(t * 5) * 0.05 * settle;
 
     if (progress >= 1) {
       this._state = AnimState.Idle;
     }
+  }
+
+  private _animateHeavySwing(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const commit = this._resolveReleasePoint(0.45);
+    if (progress < commit) {
+      const windUp = progress / Math.max(commit, 0.001);
+      b.rightShoulder.rotation.x = -1.55 * windUp;
+      b.rightShoulder.rotation.z = 0.52 * windUp;
+      b.rightElbow.rotation.x = -0.95 * windUp;
+      b.leftShoulder.rotation.x = -0.18 * windUp;
+      b.leftShoulder.rotation.z = -0.16 * windUp;
+      b.torso.rotation.x = -0.14 * windUp;
+      b.torso.rotation.z = 0.14 * windUp;
+      b.rightHip.rotation.x = 0.14 * windUp;
+      b.leftHip.rotation.x = -0.06 * windUp;
+      b.neck.rotation.z = 0.05 * windUp;
+    } else {
+      const swing = (progress - commit) / Math.max(1 - commit, 0.001);
+      const eased = 1 - Math.pow(1 - swing, 3);
+      b.rightShoulder.rotation.x = -1.55 + 2.45 * eased;
+      b.rightShoulder.rotation.z = 0.52 - 0.78 * eased;
+      b.rightElbow.rotation.x = -0.95 + 1.15 * eased;
+      b.leftShoulder.rotation.x = -0.18 + 0.24 * eased;
+      b.leftShoulder.rotation.z = -0.16 + 0.18 * eased;
+      b.torso.rotation.x = -0.14 + 0.48 * eased;
+      b.torso.rotation.z = 0.14 - 0.28 * eased;
+      b.rightHip.rotation.x = 0.14 + 0.1 * eased;
+      b.leftHip.rotation.x = -0.06 + 0.08 * eased;
+      b.neck.rotation.x = 0.08 * eased;
+      b.neck.rotation.z = 0.05 - 0.12 * eased;
+    }
+    b.leftElbow.rotation.x = -0.22;
+    b.rightKnee.rotation.x = 0.12;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateBladeSlash(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const commit = this._resolveReleasePoint(0.4);
+    if (progress < commit) {
+      const windUp = progress / Math.max(commit, 0.001);
+      b.rightShoulder.rotation.x = -0.85 * windUp;
+      b.rightShoulder.rotation.z = -0.55 * windUp;
+      b.rightElbow.rotation.x = -0.48 * windUp;
+      b.leftShoulder.rotation.x = 0.18 * windUp;
+      b.leftShoulder.rotation.z = 0.12 * windUp;
+      b.torso.rotation.z = 0.24 * windUp;
+      b.torso.rotation.x = -0.08 * windUp;
+      b.rightHip.rotation.x = 0.08 * windUp;
+      b.leftHip.rotation.x = -0.04 * windUp;
+    } else {
+      const swing = (progress - commit) / Math.max(1 - commit, 0.001);
+      const eased = 1 - Math.pow(1 - swing, 2.6);
+      b.rightShoulder.rotation.x = -0.85 + 1.2 * eased;
+      b.rightShoulder.rotation.z = -0.55 + 1.05 * eased;
+      b.rightElbow.rotation.x = -0.48 + 0.62 * eased;
+      b.leftShoulder.rotation.x = 0.18 - 0.32 * eased;
+      b.leftShoulder.rotation.z = 0.12 - 0.24 * eased;
+      b.torso.rotation.z = 0.24 - 0.44 * eased;
+      b.torso.rotation.x = -0.08 + 0.24 * eased;
+      b.neck.rotation.z = -0.08 * eased;
+    }
+    b.leftElbow.rotation.x = -0.18;
+    b.rightKnee.rotation.x = 0.08;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateThrust(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const extend = this._resolveReleasePoint(0.5);
+    if (progress < extend) {
+      const windUp = progress / Math.max(extend, 0.001);
+      b.rightShoulder.rotation.x = -0.42 * windUp;
+      b.rightShoulder.rotation.z = 0.08 * windUp;
+      b.rightElbow.rotation.x = -0.3 * windUp;
+      b.leftShoulder.rotation.x = -0.3 * windUp;
+      b.leftElbow.rotation.x = -0.12 * windUp;
+      b.torso.rotation.x = 0.04 * windUp;
+      b.torso.rotation.z = 0.1 * windUp;
+      b.rightHip.rotation.x = 0.16 * windUp;
+      b.rightKnee.rotation.x = 0.08 * windUp;
+    } else {
+      const thrust = (progress - extend) / Math.max(1 - extend, 0.001);
+      const eased = 1 - Math.pow(1 - thrust, 3);
+      b.rightShoulder.rotation.x = -0.42 + 1.18 * eased;
+      b.rightShoulder.rotation.z = 0.08 - 0.18 * eased;
+      b.rightElbow.rotation.x = -0.3 + 0.52 * eased;
+      b.leftShoulder.rotation.x = -0.3 + 0.56 * eased;
+      b.leftElbow.rotation.x = -0.12 - 0.12 * eased;
+      b.torso.rotation.x = 0.04 + 0.26 * eased;
+      b.torso.rotation.z = 0.1 - 0.12 * eased;
+      b.rightHip.rotation.x = 0.16 + 0.08 * eased;
+      b.neck.rotation.x = 0.06 * eased;
+    }
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateThrow(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const releasePoint = this._resolveReleasePoint(0.45);
+    if (progress < releasePoint) {
+      const windUp = progress / Math.max(releasePoint, 0.001);
+      b.rightShoulder.rotation.x = -1.2 * windUp;
+      b.rightShoulder.rotation.z = 0.35 * windUp;
+      b.rightElbow.rotation.x = -0.65 * windUp;
+      b.leftShoulder.rotation.x = -0.08 * windUp;
+      b.torso.rotation.x = -0.12 * windUp;
+      b.torso.rotation.z = 0.1 * windUp;
+      b.rightHip.rotation.x = 0.12 * windUp;
+    } else {
+      const release = (progress - releasePoint) / Math.max(1 - releasePoint, 0.001);
+      const eased = 1 - Math.pow(1 - release, 3);
+      b.rightShoulder.rotation.x = -1.2 + 1.9 * eased;
+      b.rightShoulder.rotation.z = 0.35 - 0.45 * eased;
+      b.rightElbow.rotation.x = -0.65 + 0.9 * eased;
+      b.leftShoulder.rotation.x = -0.08 + 0.24 * eased;
+      b.torso.rotation.x = -0.12 + 0.34 * eased;
+      b.torso.rotation.z = 0.1 - 0.16 * eased;
+      b.neck.rotation.x = 0.06 * eased;
+    }
+    b.leftElbow.rotation.x = -0.12;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateBowDrawRelease(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const releasePoint = this._resolveReleasePoint(0.72);
+    const drawPoint = Math.max(0.28, releasePoint - 0.32);
+    if (progress < drawPoint) {
+      const draw = progress / Math.max(drawPoint, 0.001);
+      b.leftShoulder.rotation.x = -0.42 * draw;
+      b.leftShoulder.rotation.z = -0.22 * draw;
+      b.leftElbow.rotation.x = -0.08 * draw;
+      b.rightShoulder.rotation.x = -0.18 - 0.24 * draw;
+      b.rightShoulder.rotation.z = 0.28 + 0.26 * draw;
+      b.rightElbow.rotation.x = -0.25 - 0.72 * draw;
+      b.torso.rotation.z = -0.12 * draw;
+      b.torso.rotation.x = 0.04 * draw;
+      b.neck.rotation.z = -0.06 * draw;
+    } else if (progress < releasePoint) {
+      b.leftShoulder.rotation.x = -0.42;
+      b.leftShoulder.rotation.z = -0.22;
+      b.leftElbow.rotation.x = -0.08;
+      b.rightShoulder.rotation.x = -0.42;
+      b.rightShoulder.rotation.z = 0.54;
+      b.rightElbow.rotation.x = -0.97;
+      b.torso.rotation.z = -0.12;
+      b.torso.rotation.x = 0.08;
+      b.neck.rotation.z = -0.08;
+      b.rightHip.rotation.x = 0.08;
+    } else {
+      const release = (progress - releasePoint) / Math.max(1 - releasePoint, 0.001);
+      const eased = 1 - Math.pow(1 - release, 3);
+      b.leftShoulder.rotation.x = -0.42 + 0.12 * eased;
+      b.leftShoulder.rotation.z = -0.22 + 0.1 * eased;
+      b.rightShoulder.rotation.x = -0.42 + 0.78 * eased;
+      b.rightShoulder.rotation.z = 0.54 - 0.52 * eased;
+      b.rightElbow.rotation.x = -0.97 + 0.92 * eased;
+      b.torso.rotation.z = -0.12 + 0.16 * eased;
+      b.torso.rotation.x = 0.08 - 0.02 * eased;
+      b.neck.rotation.z = -0.08 + 0.08 * eased;
+    }
+    b.leftHip.rotation.x = 0.03;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateCrossbowSnap(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const releasePoint = this._resolveReleasePoint(0.55);
+    if (progress < releasePoint) {
+      const brace = progress / Math.max(releasePoint, 0.001);
+      b.leftShoulder.rotation.x = -0.28 - 0.08 * brace;
+      b.leftShoulder.rotation.z = -0.12;
+      b.leftElbow.rotation.x = -0.22 - 0.06 * brace;
+      b.rightShoulder.rotation.x = -0.26 - 0.1 * brace;
+      b.rightShoulder.rotation.z = 0.16 + 0.06 * brace;
+      b.rightElbow.rotation.x = -0.45 - 0.1 * brace;
+      b.torso.rotation.x = 0.05 + 0.03 * brace;
+      b.torso.rotation.z = -0.04 * brace;
+    } else {
+      const snap = (progress - releasePoint) / Math.max(1 - releasePoint, 0.001);
+      const eased = 1 - Math.pow(1 - snap, 2.5);
+      b.leftShoulder.rotation.x = -0.36 + 0.18 * eased;
+      b.leftShoulder.rotation.z = -0.12 + 0.06 * eased;
+      b.leftElbow.rotation.x = -0.28 + 0.14 * eased;
+      b.rightShoulder.rotation.x = -0.36 + 0.34 * eased;
+      b.rightShoulder.rotation.z = 0.22 - 0.16 * eased;
+      b.rightElbow.rotation.x = -0.55 + 0.32 * eased;
+      b.torso.rotation.x = 0.08 - 0.02 * eased;
+      b.torso.rotation.z = -0.04 + 0.06 * eased;
+    }
+    b.rightHip.rotation.x = 0.04;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateFirearmRecoil(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const recoilPoint = this._resolveReleasePoint(0.5);
+    if (progress < recoilPoint) {
+      const aim = progress / Math.max(recoilPoint, 0.001);
+      b.leftShoulder.rotation.x = -0.24 - 0.08 * aim;
+      b.leftShoulder.rotation.z = -0.12;
+      b.leftElbow.rotation.x = -0.22 - 0.06 * aim;
+      b.rightShoulder.rotation.x = -0.22 - 0.1 * aim;
+      b.rightShoulder.rotation.z = 0.2 + 0.04 * aim;
+      b.rightElbow.rotation.x = -0.5 - 0.08 * aim;
+      b.torso.rotation.x = 0.06 + 0.03 * aim;
+      b.neck.rotation.x = 0.04 * aim;
+    } else {
+      const recoil = (progress - recoilPoint) / Math.max(1 - recoilPoint, 0.001);
+      const eased = 1 - Math.pow(1 - recoil, 2.8);
+      b.leftShoulder.rotation.x = -0.32 + 0.12 * eased;
+      b.leftShoulder.rotation.z = -0.12 + 0.04 * eased;
+      b.leftElbow.rotation.x = -0.28 + 0.1 * eased;
+      b.rightShoulder.rotation.x = -0.32 + 0.26 * eased;
+      b.rightShoulder.rotation.z = 0.24 - 0.08 * eased;
+      b.rightElbow.rotation.x = -0.58 + 0.2 * eased;
+      b.torso.rotation.x = 0.09 - 0.05 * eased;
+      b.torso.rotation.z = -0.08 * Math.sin(recoil * Math.PI) * (1 - recoil * 0.2);
+      b.neck.rotation.x = 0.04 + 0.04 * eased;
+    }
+    b.rightHip.rotation.x = 0.08;
+    if (progress >= 1) this._state = AnimState.Idle;
   }
 
   /** Mammoth stomp/charge: rear up, slam down, shake on impact. */
