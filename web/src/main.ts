@@ -460,7 +460,7 @@ function spawnRuntimeUnit(
 
 simulation.spawnUnitById = spawnRuntimeUnit;
 
-const btnRemoveEl = document.getElementById("btnRemove")!;
+const btnRemoveEl = document.getElementById("btnRemove") as HTMLButtonElement | null;
 
 // ─── HUD ───
 function updateBudgetDisplay(): void {
@@ -749,7 +749,7 @@ function selectRelativeUnit(offset: number): void {
 
 function toggleRemoveMode(): void {
   removeMode = !removeMode;
-  btnRemoveEl.classList.toggle("remove-active", removeMode);
+  btnRemoveEl?.classList.toggle("remove-active", removeMode);
   if (removeMode) {
     showStatus("Remove mode: tap a unit to remove it.");
   } else {
@@ -877,6 +877,11 @@ btnResultSecondaryEl?.addEventListener("click", () => {
 });
 btnLeaveCampaignEl?.addEventListener("click", () => leaveCampaignMode());
 btnCloseCampaignEl?.addEventListener("click", () => toggleCampaignOverlay(false));
+campaignOverlayEl.addEventListener("click", (event) => {
+  if (event.target === campaignOverlayEl) {
+    toggleCampaignOverlay(false);
+  }
+});
 
 // ─── Placement ───
 function tryPlaceUnit(screenX: number, screenY: number): void {
@@ -1008,7 +1013,7 @@ function resetBattle(options: {
   );
 
   removeMode = false;
-  btnRemoveEl.classList.remove("remove-active");
+  btnRemoveEl?.classList.remove("remove-active");
   stateMachine.setState(GameState.Placement);
   activeScenario = null;
   if (!options.preserveCampaignSession) {
@@ -1123,7 +1128,7 @@ function playAgain(): void {
   visualEffects.dispose();
 
   removeMode = false;
-  btnRemoveEl.classList.remove("remove-active");
+  btnRemoveEl?.classList.remove("remove-active");
   stateMachine.setState(GameState.Placement);
   updateBudgetDisplay();
   showStatus("Ready for another round!");

@@ -93,37 +93,115 @@
 
     #hud {
       position: absolute; top: 0; left: 0; width: 100%; pointer-events: none;
-      display: flex; flex-direction: column; align-items: center; padding: 8px;
+      display: flex; flex-direction: column; align-items: center; padding: 0 12px 0;
       color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 14px;
+      z-index: 16;
     }
     #hud > * { pointer-events: auto; }
 
-    .hud-row {
-      display: flex; gap: 12px; align-items: center; margin-bottom: 6px;
-      flex-wrap: wrap; justify-content: center;
+    .hud-topbar {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
+      gap: 0;
+    }
+    .hud-side {
+      display: flex;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .hud-side.right {
+      justify-content: flex-end;
+    }
+    .hud-center {
+      display: flex;
+      justify-content: center;
+    }
+    .hud-start-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    #hudInfo {
+      width: 100%;
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+    #hudInfo > * {
+      pointer-events: none;
     }
 
     .budget-label { font-weight: bold; font-size: 15px; }
     .budget-a { color: #4fc3f7; }
-    .budget-b { color: #ef5350; }
+    .budget-b { color: #ef5350; text-align: right; }
 
-    #selectedUnit { font-size: 13px; color: #ffd54f; }
-    #statusText { font-size: 14px; color: #fff; margin-top: 4px; min-height: 20px; }
+    #selectedUnit {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #ffd54f;
+      text-align: center;
+    }
+    #statusText {
+      font-size: 14px;
+      color: #fff;
+      margin-top: 4px;
+      min-height: 20px;
+      text-align: center;
+    }
 
     .btn {
-      padding: 6px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px;
-      background: rgba(0,0,0,0.5); color: #fff; cursor: pointer; font-size: 13px;
-      transition: background 0.15s;
+      padding: 8px 16px;
+      border: 2px solid rgba(255,255,255,0.72);
+      border-top: none;
+      border-radius: 0 0 20px 20px;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      transition: border-color 0.15s, color 0.15s, transform 0.15s;
+      box-shadow: none;
     }
-    .btn:hover { background: rgba(255,255,255,0.15); }
-    .btn.active { background: rgba(255,255,255,0.25); border-color: #ffd54f; }
-    .btn.remove-active { background: rgba(239,83,80,0.4); border-color: #ef5350; }
+    .btn:hover {
+      background: transparent;
+      border-color: rgba(255,255,255,0.95);
+    }
+    .btn.active {
+      border-color: #ffd54f;
+      color: #fff0b0;
+    }
+    .btn.remove-active { border-color: #ef5350; }
     .btn:disabled { opacity: 0.5; cursor: default; }
+    .btn-start {
+      min-width: 136px;
+      padding: 14px 30px 18px;
+      font-size: 26px;
+      line-height: 1;
+      border-radius: 0 0 72px 72px;
+    }
+    .btn-clear {
+      padding: 6px 12px 10px;
+      font-size: 12px;
+      min-width: 70px;
+      align-self: flex-start;
+      opacity: 0.92;
+    }
+    .btn-corner {
+      min-width: 108px;
+      padding-bottom: 12px;
+    }
 
     #campaignStatus {
       font-size: 12px;
       color: #9fe3ff;
       min-height: 18px;
+      text-align: center;
     }
 
     #campaignOverlay {
@@ -279,17 +357,16 @@
     #touchCameraControls {
       position: absolute;
       right: 12px;
-      bottom: 150px;
+      bottom: 236px;
       display: none;
-      grid-template-columns: repeat(2, minmax(52px, 58px));
-      gap: 8px;
+      grid-template-columns: auto auto auto;
+      align-items: center;
+      gap: 10px;
       pointer-events: none;
       z-index: 12;
     }
     .touch-camera-btn {
-      min-height: 52px;
       border: 1px solid rgba(255,255,255,0.28);
-      border-radius: 12px;
       background: rgba(0,0,0,0.55);
       color: #fff;
       font-size: 20px;
@@ -299,13 +376,54 @@
       touch-action: none;
       user-select: none;
     }
-    .touch-camera-btn:active {
-      background: rgba(255,255,255,0.18);
-      border-color: rgba(255,255,255,0.46);
-    }
+    .touch-camera-btn:active,
     .touch-camera-btn.is-active {
       background: rgba(255,255,255,0.18);
       border-color: rgba(255,255,255,0.46);
+    }
+    .touch-rotate-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      font-size: 24px;
+      line-height: 1;
+    }
+    .touch-arrow-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+    .touch-arrow-btn {
+      width: 38px;
+      height: 30px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      position: relative;
+    }
+    .touch-arrow-btn::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      border-left: 13px solid transparent;
+      border-right: 13px solid transparent;
+      border-bottom: 18px solid rgba(255,255,255,0.9);
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.35));
+    }
+    .touch-arrow-btn.down::before {
+      border-bottom: none;
+      border-top: 18px solid rgba(255,255,255,0.9);
+    }
+    .touch-arrow-btn:active::before,
+    .touch-arrow-btn.is-active::before {
+      border-bottom-color: #ffd54f;
+      border-top-color: #ffd54f;
     }
 
     body.capture-mode #hud,
@@ -326,8 +444,12 @@
 
     /* ─── Mobile ─── */
     @media (max-width: 600px) {
-      #hud { padding: 6px 4px; }
-      .hud-row { gap: 6px; margin-bottom: 4px; }
+      #hud { padding: 0 6px 0; }
+      .hud-topbar {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        gap: 6px;
+      }
+      .hud-start-group { gap: 6px; }
       .budget-label { font-size: 13px; }
 
       .btn {
@@ -335,9 +457,26 @@
         min-height: 44px; min-width: 44px;
         display: inline-flex; align-items: center; justify-content: center;
       }
+      .btn-start {
+        min-width: 94px;
+        padding: 12px 18px 16px;
+        font-size: 22px;
+      }
+      .btn-clear {
+        min-width: 58px;
+        padding: 6px 10px 10px;
+        font-size: 11px;
+      }
+      .btn-corner {
+        min-width: 90px;
+      }
 
       #selectedUnit { font-size: 12px; }
       #statusText { font-size: 12px; }
+      #hudInfo {
+        margin-top: 8px;
+        gap: 8px;
+      }
 
       .faction-tab {
         padding: 10px 14px; font-size: 11px;
@@ -367,18 +506,23 @@
     }
 
     @media (max-width: 400px) {
-      .hud-row { gap: 4px; }
       .btn { padding: 8px 8px; font-size: 11px; }
+      .btn-start { min-width: 82px; font-size: 20px; padding: 10px 14px; }
+      .btn-corner { min-width: 74px; }
       .budget-label { font-size: 12px; }
       #touchCameraControls {
         right: 8px;
-        bottom: 138px;
+        bottom: 208px;
         gap: 6px;
-        grid-template-columns: repeat(2, minmax(48px, 52px));
       }
-      .touch-camera-btn {
-        min-height: 48px;
-        font-size: 18px;
+      .touch-rotate-btn {
+        width: 46px;
+        height: 46px;
+        font-size: 21px;
+      }
+      .touch-arrow-btn {
+        width: 34px;
+        height: 26px;
       }
     }
   </style>
@@ -397,18 +541,25 @@
   </div>
 
   <div id="hud">
-    <div class="hud-row">
+    <div class="hud-topbar">
+      <div class="hud-side left">
+        <button class="btn btn-corner" id="btnUnlimited" disabled>Unlimited: Off</button>
+      </div>
+      <div class="hud-center">
+        <div class="hud-start-group">
+          <button class="btn btn-clear" onclick="window.game?.resetBattle()">Clear</button>
+          <button class="btn btn-start" onclick="window.game?.startBattle()">Start</button>
+        </div>
+      </div>
+      <div class="hud-side right">
+        <button class="btn btn-corner" id="btnCampaign">Levels</button>
+      </div>
+    </div>
+    <div id="hudInfo">
       <span class="budget-label budget-a" id="budgetA">Team A: 1000000</span>
+      <div id="campaignStatus">Mode: Sandbox</div>
       <span class="budget-label budget-b" id="budgetB">Team B: 1000000</span>
     </div>
-    <div class="hud-row">
-      <button class="btn" id="btnCampaign">Campaign</button>
-      <button class="btn" id="btnUnlimited" disabled>Unlimited: Off</button>
-      <button class="btn" id="btnRemove" onclick="window.game?.toggleRemoveMode()">Remove</button>
-      <button class="btn" onclick="window.game?.startBattle()">Start</button>
-      <button class="btn" onclick="window.game?.resetBattle()">Reset</button>
-    </div>
-    <div id="campaignStatus">Mode: Sandbox</div>
     <div id="selectedUnit">Selected: Clubber (70g)</div>
     <div id="statusText"></div>
   </div>
@@ -452,10 +603,12 @@
   </div>
 
   <div id="touchCameraControls" aria-label="Camera controls">
-    <button class="touch-camera-btn" id="btnTouchRotateLeft" type="button" aria-label="Rotate camera left">↺</button>
-    <button class="touch-camera-btn" id="btnTouchRotateRight" type="button" aria-label="Rotate camera right">↻</button>
-    <button class="touch-camera-btn" id="btnTouchCameraDown" type="button" aria-label="Lower camera">↓</button>
-    <button class="touch-camera-btn" id="btnTouchCameraUp" type="button" aria-label="Raise camera">↑</button>
+    <button class="touch-camera-btn touch-rotate-btn" id="btnTouchRotateLeft" type="button" aria-label="Rotate camera left">↺</button>
+    <div class="touch-arrow-stack">
+      <button class="touch-camera-btn touch-arrow-btn up" id="btnTouchCameraUp" type="button" aria-label="Raise camera"></button>
+      <button class="touch-camera-btn touch-arrow-btn down" id="btnTouchCameraDown" type="button" aria-label="Lower camera"></button>
+    </div>
+    <button class="touch-camera-btn touch-rotate-btn" id="btnTouchRotateRight" type="button" aria-label="Rotate camera right">↻</button>
   </div>
 
   <div id="controls-help">
