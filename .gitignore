@@ -50,3 +50,6 @@ web/*.err
 
 # Reference media (downloaded TABS screenshots/videos, personal reference only)
 reference/
+
+# Improvement loop halt marker (loop/ITERATE.md)
+STOP

@@ -1,0 +1,9 @@
+{
+  "name": "movbattle-loop-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Capture and budget scripts for the TABS-fidelity improvement loop",
+  "dependencies": {
+    "playwright": "^1.59.1"
+  }
+}
