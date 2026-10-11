@@ -1359,7 +1359,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   hip.position.set(0, 1.4, 0);
   const torso = dummyJoint("m_torso", hip, scene);
   const neck = dummyJoint("m_neck", torso, scene);
-  neck.position.set(0, 0.2, 1.0);
+  neck.position.set(0, 0.2, 0.88);
 
   // Front-left leg joints
   const flHip = dummyJoint("m_fl_hip", hip, scene);
@@ -1388,14 +1388,14 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   // ── Main body (parented to torso joint) ──
   // Tapered barrel: deep chest and shoulders, lower narrower rump.
   const torsoMesh = MeshBuilder.CreateCylinder("torso", {
-    height: 2.2, diameterTop: 1.6, diameterBottom: 1.25, tessellation: 8,
+    height: 1.9, diameterTop: 1.6, diameterBottom: 1.25, tessellation: 8,
   }, scene);
   torsoMesh.position.set(0, 0, 0);
   torsoMesh.rotation.x = Math.PI / 2;
   torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
 
   // Rounded rump and chest close the barrel, so neither end reads as a flat plate
-  for (const [z, diameter] of [[-1.08, 1.27], [1.06, 1.6]]) {
+  for (const [z, diameter] of [[-0.93, 1.27], [0.91, 1.6]]) {
     const cap = MeshBuilder.CreateSphere("barrelCap", { diameter, segments: 3 }, scene);
     cap.position.set(0, 0, z);
     cap.scaling.z = 0.7;
@@ -1404,7 +1404,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
 
   // War paint: team-coloured bands around the barrel
   for (const z of [0.5, -0.1, -0.7]) {
-    const girth = 1.425 + 0.159 * z + 0.04;
+    const girth = 1.425 + 0.184 * z + 0.04;
     const band = MeshBuilder.CreateCylinder("paintBand", {
       height: 0.16, diameterTop: girth + 0.013, diameterBottom: girth - 0.013, tessellation: 8,
     }, scene);
@@ -1415,25 +1415,43 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
 
   // Shaggy shoulder hump, standing well above the back line
   const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.6, segments: 4 }, scene);
-  hump.position.set(0, 0.5, 0.42);
-  hump.scaling.set(0.82, 0.78, 0.8);
+  hump.position.set(0, 0.6, 0.4);
+  hump.scaling.set(0.82, 0.82, 0.8);
   hump.parent = torso; hump.material = shaggyFur; allMeshes.push(hump);
+
+  // Back ridge falling from the hump to the rump, so the top line slopes instead of running flat
+  const ridge = MeshBuilder.CreateSphere("backRidge", { diameter: 1, segments: 3 }, scene);
+  ridge.position.set(0, 0.4, -0.3);
+  ridge.rotation.x = -0.32;
+  ridge.scaling.set(1.15, 0.8, 1.7);
+  ridge.parent = torso; ridge.material = shaggyFur; allMeshes.push(ridge);
 
   // Shaggy fur underbelly
   const belly = MeshBuilder.CreateSphere("belly", { diameter: 1, segments: 3 }, scene);
   belly.position.set(0, -0.42, -0.05);
-  belly.scaling.set(1.2, 0.8, 2.1);
+  belly.scaling.set(1.2, 0.8, 1.85);
   belly.parent = torso; belly.material = shaggyFur; allMeshes.push(belly);
 
   // Fur skirts hanging off the flanks: faceted lobes, thick at the shoulder and thinning to the rump
   for (const side of [-1, 1]) {
     const skirt = MeshBuilder.CreateCylinder("furSkirt", {
-      height: 1.9, diameterTop: 0.85, diameterBottom: 0.55, tessellation: 5,
+      height: 1.65, diameterTop: 0.85, diameterBottom: 0.55, tessellation: 5,
     }, scene);
     skirt.position.set(side * 0.62, -0.3, 0);
     skirt.rotation.x = Math.PI / 2;
     skirt.scaling.x = 0.45;
     skirt.parent = torso; skirt.material = shaggyFur; allMeshes.push(skirt);
+
+    // Belly fringe: a row of fur points hanging below the skirt, longest under the chest
+    for (let i = 0; i < 5; i++) {
+      const drop = 0.4 + i * 0.05;
+      const lock = MeshBuilder.CreateCylinder("furFringe", {
+        height: drop, diameterTop: 0.38, diameterBottom: 0, tessellation: 4,
+      }, scene);
+      lock.position.set(side * 0.5, -0.62 - drop / 2, -0.72 + i * 0.36);
+      lock.scaling.x = 0.6;
+      lock.parent = torso; lock.material = shaggyFur; allMeshes.push(lock);
+    }
   }
 
   // ── Head (parented to neck joint) ──
@@ -1485,10 +1503,10 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   // Each segment starts where the last one ended, so the curve has no gaps.
   const tuskPitches = [0.35, 0.9, 1.5, 2.1, 2.7, 3.2];
   const tuskLengths = [0.6, 0.55, 0.5, 0.5, 0.45, 0.4];
-  const tuskGirths = [0.27, 0.24, 0.2, 0.16, 0.12, 0.08, 0.03];
+  const tuskGirths = [0.4, 0.36, 0.3, 0.24, 0.18, 0.12, 0.04];
   const tuskSplay = [0.14, 0.14, 0.08, 0, -0.1, -0.14];
   for (const side of [-1, 1]) {
-    const start = new Vector3(side * 0.32, -0.3, 0.5);
+    const start = new Vector3(side * 0.42, -0.3, 0.5);
     for (let i = 0; i < tuskPitches.length; i++) {
       const pitch = tuskPitches[i];
       const length = tuskLengths[i];
@@ -1504,8 +1522,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
     }
 
     // Painted ring where the tusk leaves the jaw
-    const ring = MeshBuilder.CreateCylinder("tuskPaint", { height: 0.14, diameter: 0.32, tessellation: 6 }, scene);
-    ring.position.set(side * 0.34, -0.42, 0.56);
+    const ring = MeshBuilder.CreateCylinder("tuskPaint", { height: 0.14, diameter: 0.48, tessellation: 6 }, scene);
+    ring.position.set(side * 0.44, -0.42, 0.56);
     ring.rotation.x = Math.PI - 0.5;
     ring.parent = neck; ring.material = paintMat; allMeshes.push(ring);
   }
@@ -1533,6 +1551,13 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
     upper.position.set(0, -0.22, 0);
     upper.parent = hipJoint; upper.material = fur; allMeshes.push(upper);
 
+    // Shaggy cuff over the thigh, so the leg leaves the body through fur rather than as a bare post
+    const cuff = MeshBuilder.CreateCylinder("legCuff", {
+      height: 0.42, diameterTop: 0.62, diameterBottom: 0.5, tessellation: 6,
+    }, scene);
+    cuff.position.set(0, -0.14, 0);
+    cuff.parent = hipJoint; cuff.material = shaggyFur; allMeshes.push(cuff);
+
     // Lower leg
     const lower = MeshBuilder.CreateCylinder("lleg", {
       height: 0.45, diameterTop: 0.36, diameterBottom: 0.34, tessellation: 6,
@@ -1552,12 +1577,12 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   const tail = MeshBuilder.CreateCylinder("tail", {
     height: 0.5, diameterTop: 0.03, diameterBottom: 0.06, tessellation: 6,
   }, scene);
-  tail.position.set(0, -0.2, -1.15);
+  tail.position.set(0, -0.2, -1.0);
   tail.rotation.x = -0.7;
   tail.parent = torso; tail.material = darkMat; allMeshes.push(tail);
 
   const tuft = MeshBuilder.CreateSphere("tuft", { diameter: 0.1, segments: 4 }, scene);
-  tuft.position.set(0, -0.45, -1.35);
+  tuft.position.set(0, -0.45, -1.2);
   tuft.parent = torso; tuft.material = darkMat; allMeshes.push(tuft);
 
   // Map to ArticulatedBody: front legs = arms, back legs = legs
