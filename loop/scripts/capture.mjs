@@ -44,27 +44,35 @@ const REGRESSION_SCENARIOS = [
   "gallery_team_color_blue_red_validation",
 ];
 
-// 16 v 16 sandbox melee: the closest analogue to the reference screenshots.
+// 30 v 31 sandbox melee in 3 tight ranks: the closest analogue to the reference screenshots.
 const BIG_MELEE = [];
+const RANK_Z = [-2.7, -2.1, -1.5, -0.9, -0.3, 0.3, 0.9, 1.5, 2.1, 2.7];
 function line(team, ids, xs) {
   let i = 0;
   for (const x of xs) {
-    for (const z of [-6, -3.6, -1.2, 1.2, 3.6, 6]) {
+    for (const z of RANK_Z) {
       if (i >= ids.length) return;
       BIG_MELEE.push({ unitId: ids[i++], team, position: { x, z } });
     }
   }
 }
 line(0, [
-  "medieval.knight", "medieval.squire", "medieval.squire", "ancient.hoplite", "medieval.squire", "medieval.knight",
-  "ancient.hoplite", "medieval.squire", "ancient.hoplite", "medieval.squire", "ancient.hoplite", "medieval.knight",
-  "medieval.archer", "medieval.archer", "medieval.archer", "medieval.archer",
-], [-7, -9, -11]);
+  "medieval.knight", "medieval.squire", "ancient.hoplite", "medieval.squire", "medieval.knight",
+  "medieval.knight", "medieval.squire", "ancient.hoplite", "medieval.squire", "medieval.knight",
+  "ancient.hoplite", "medieval.squire", "ancient.hoplite", "medieval.squire", "ancient.hoplite",
+  "ancient.hoplite", "medieval.squire", "ancient.hoplite", "medieval.squire", "ancient.hoplite",
+  "medieval.archer", "medieval.squire", "medieval.archer", "medieval.squire", "medieval.archer",
+  "medieval.archer", "medieval.squire", "medieval.archer", "medieval.squire", "medieval.archer",
+], [-6, -6.9, -7.8]);
 line(1, [
-  "tribal.protector", "tribal.clubber", "tribal.clubber", "tribal.protector", "tribal.clubber", "tribal.protector",
-  "tribal.clubber", "farmer.halfling", "tribal.clubber", "farmer.halfling", "tribal.clubber", "farmer.halfling",
-  "tribal.chieftain", "farmer.farmer", "farmer.farmer", "tribal.mammoth",
-], [7, 9, 11]);
+  "tribal.protector", "tribal.clubber", "tribal.protector", "tribal.clubber", "tribal.protector",
+  "tribal.protector", "tribal.clubber", "tribal.protector", "tribal.clubber", "tribal.protector",
+  "tribal.clubber", "farmer.halfling", "tribal.clubber", "farmer.halfling", "tribal.clubber",
+  "tribal.clubber", "farmer.halfling", "tribal.clubber", "farmer.halfling", "tribal.clubber",
+  "farmer.farmer", "tribal.clubber", "farmer.farmer", "tribal.clubber", "tribal.chieftain",
+  "tribal.clubber", "farmer.farmer", "tribal.clubber", "farmer.farmer", "tribal.clubber",
+], [6, 6.9, 7.8]);
+BIG_MELEE.push({ unitId: "tribal.mammoth", team: 1, position: { x: 11, z: 0 } });
 
 function log(msg) {
   process.stdout.write(`[capture] ${msg}\n`);
