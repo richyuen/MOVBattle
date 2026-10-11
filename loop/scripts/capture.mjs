@@ -238,13 +238,16 @@ async function main() {
           if (window.game.spawnUnit(u.unitId, u.team, u.position)) ok++;
         }
         window.game.startBattleImmediate();
-        window.advanceTime(1200);
+        window.advanceTime(1050);
         return ok;
       }, WAR_MACHINES);
       summary.notes.push(`war_machines placed ${machinesPlaced}/${WAR_MACHINES.length} units`);
-      // The cannon fires near 0.8 s and 3.1 s: both stills land a few tenths after a shot.
-      await shot(page, "war_machines_1200ms");
-      await page.evaluate(() => window.advanceTime(2200));
+      // The cannon fires near 0.8 s and 3.1 s and the ball flies ~0.5 s: two stills catch the ball
+      // in the air, the middle one the burst a few tenths after the first hit.
+      await shot(page, "war_machines_1050ms");
+      await page.evaluate(() => window.advanceTime(750));
+      await shot(page, "war_machines_1800ms");
+      await page.evaluate(() => window.advanceTime(1600));
       await shot(page, "war_machines_3400ms");
 
       // Gallery-camera reads (UI hidden by design): a lineup, two mid-swing close-ups, one hero pair.

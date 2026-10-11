@@ -290,7 +290,7 @@ const pirate = makeFaction(FactionId.Pirate, "pirate", [
   ["blunderbuss", "Blunderbuss", 160, "shotgunner", { abilities: ["shotgun_blast"], weaponHint: "blunderbuss", hatHint: "tricorn" }],
   ["bomb_thrower", "Bomb Thrower", 220, "thrower", { weaponHint: "bomb", projectileHint: "bomb" }],
   ["harpooner", "Harpooner", 140, "gunner", { abilities: ["pull_hook"], projectileHint: "spear", weaponHint: "harpoon" }],
-  ["cannon", "Cannon", 1000, "artillery", { specialHint: "cannon", size: "large", projectileHint: "stone" }],
+  ["cannon", "Cannon", 1000, "artillery", { specialHint: "cannon", size: "large", projectileHint: "cannonball" }],
   ["captain", "Captain", 500, "heavy_melee", { weaponHint: "cutlass", hatHint: "captain_hat" }],
   ["pirate_queen", "Pirate Queen", 2500, "boss_melee", { weaponHint: "cutlass", hatHint: "pirate_hat", visualPreset: "iconic_pirate_queen", behaviorPreset: "iconic_pirate_queen", controlStrength: 1.38, cooldownMultiplier: 0.78 }],
 ]);
