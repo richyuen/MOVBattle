@@ -91,29 +91,6 @@ export class ProceduralAnimator {
     this._limpTarget = limp ? 1 : 0;
   }
 
-  /** Melee contact: called every decision while in reach, the lean decays on its own once it stops. */
-  leanIntoShove(): void {
-    this._shoveTimer = 0.5;
-  }
-
-  private _shoveTimer = 0;
-  private _shove = 0;
-  // Per-unit shove stance so a rank in contact does not share one pose. Hashed from the wobble
-  // phase rather than drawn fresh, so spawning consumes no extra random numbers.
-  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number } | null = null;
-  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number } {
-    const h = (n: number): number => {
-      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
-      return v - Math.floor(v);
-    };
-    return {
-      pitch: 0.22 + h(1) * 0.16,
-      roll: (h(2) - 0.5) * 0.3,
-      stance: (h(3) < 0.5 ? -1 : 1) * (0.2 + h(4) * 0.2),
-      knee: 0.2 + h(5) * 0.25,
-      rate: 2.2 + h(6) * 1.6,
-    };
-  }
   private _flinchTimer = 0;
   private _squashTimer = 0;
   private _limpTarget = 0;
@@ -178,22 +155,6 @@ export class ProceduralAnimator {
       // Arms flail out
       b.leftShoulder.rotation.z -= 0.5 * intensity;
       b.rightShoulder.rotation.z += 0.5 * intensity;
-    }
-    // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving
-    this._shoveTimer -= dt;
-    this._shove += ((this._shoveTimer > 0 ? 1 : 0) - this._shove) * Math.min(1, dt * 6);
-    if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
-      const b = this._body;
-      const p = (this._shovePose ??= this._buildShovePose());
-      const k = this._shove;
-      const heave = Math.sin((this._time + this._wobblePhase) * p.rate);
-      b.torso.rotation.x += (p.pitch + heave * 0.07) * k;
-      b.torso.rotation.z += (p.roll + Math.cos((this._time + this._wobblePhase) * p.rate * 0.7) * 0.06) * k;
-      b.neck.rotation.x -= p.pitch * 0.6 * k;
-      b.leftHip.rotation.x += p.stance * k;
-      b.rightHip.rotation.x -= p.stance * k;
-      b.leftKnee.rotation.x += p.knee * k;
-      b.rightKnee.rotation.x += p.knee * k;
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
     this._limp += (this._limpTarget - this._limp) * Math.min(1, dt * 9);
