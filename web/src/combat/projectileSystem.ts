@@ -130,17 +130,13 @@ export class ProjectileSystem {
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 10);
           break;
         case "rocket_arrow":
-          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 15);
-          trailSystem.minSize = 0.03;
-          trailSystem.maxSize = 0.08;
+          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 15, [0.05, 0.1]);
           break;
         case "firework":
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 10);
           break;
         case "bomb":
-          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 5);
-          trailSystem.minSize = 0.01;
-          trailSystem.maxSize = 0.03;
+          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 5, [0.02, 0.05]);
           break;
       }
     }
@@ -524,15 +520,9 @@ export class ProjectileSystem {
       }
       case "fireball": {
         // Team-owned fireball; impact/explosion VFX remain unchanged elsewhere.
-        const ball = MeshBuilder.CreateSphere("fireball", { diameter: 0.25, segments: 8 }, this._scene);
+        const ball = MeshBuilder.CreateIcoSphere("fireball", { radius: 0.2, subdivisions: 1, flat: true }, this._scene);
         ball.material = this._getMat(`fireball_body_${attackerTeam}`, palette.primary, 0.6);
         ball.parent = root;
-        // Outer glow
-        const glow = MeshBuilder.CreateSphere("glow", { diameter: 0.4, segments: 6 }, this._scene);
-        glow.material = getMaterialFactory().get("unlit", palette.bright, {
-          emissive: palette.primary.scale(0.5), alpha: 0.3,
-        });
-        glow.parent = root;
         break;
       }
     }
