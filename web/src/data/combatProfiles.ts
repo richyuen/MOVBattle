@@ -91,8 +91,8 @@ export const AI_PROFILES: AIProfile[] = [
 ];
 
 export const RAGDOLL_PROFILES: RagdollProfile[] = [
-  { id: "ragdoll.light", impactMultiplier: 1.2, deathImpulseMultiplier: 1.4, cleanupDelaySeconds: 5 },
-  { id: "ragdoll.medium", impactMultiplier: 1.0, deathImpulseMultiplier: 1.2, cleanupDelaySeconds: 6 },
+  { id: "ragdoll.light", impactMultiplier: 1.2, deathImpulseMultiplier: 1.4, cleanupDelaySeconds: 90 },
+  { id: "ragdoll.medium", impactMultiplier: 1.0, deathImpulseMultiplier: 1.2, cleanupDelaySeconds: 90 },
   { id: "ragdoll.heavy", impactMultiplier: 0.7, deathImpulseMultiplier: 0.9, cleanupDelaySeconds: 7 },
   { id: "ragdoll.boss", impactMultiplier: 0.45, deathImpulseMultiplier: 0.7, cleanupDelaySeconds: 8 },
 ];

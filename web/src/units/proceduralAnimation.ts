@@ -54,6 +54,7 @@ export class ProceduralAnimator {
   // Death ragdoll state
   private _deathAngularVelocities: number[] = [];
   private _deathJointAngles: number[] = [];
+  private _deathRestAngles: number[] = [];
   private _deathDamping = 0.97;
 
   constructor(body: ArticulatedBody) {
@@ -869,6 +870,28 @@ export class ProceduralAnimator {
     const joints = this._body.allJoints;
     this._deathJointAngles = [];
     this._deathAngularVelocities = [];
+    // Corpses come to rest crumpled in the same per-unit limp pose a downed body uses.
+    this._deathRestAngles = new Array(joints.length * 3).fill(0);
+    if (this.walkStyle !== "quadruped") {
+      const b = this._body;
+      const p = this._limpPose;
+      const rest = (joint: unknown, x: number, z = 0): void => {
+        const index = joints.indexOf(joint as (typeof joints)[number]);
+        if (index < 0) return;
+        this._deathRestAngles[index * 3] = x;
+        this._deathRestAngles[index * 3 + 2] = z;
+      };
+      rest(b.torso, p.torsoX, p.torsoZ);
+      rest(b.neck, p.neckX);
+      rest(b.leftShoulder, p.leftArmX, p.leftArmZ);
+      rest(b.rightShoulder, p.rightArmX, p.rightArmZ);
+      rest(b.leftElbow, p.leftElbowX);
+      rest(b.rightElbow, p.rightElbowX);
+      rest(b.leftHip, p.leftHipX);
+      rest(b.rightHip, p.rightHipX);
+      rest(b.leftKnee, p.leftKneeX);
+      rest(b.rightKnee, p.rightKneeX);
+    }
 
     for (let i = 0; i < joints.length; i++) {
       // Current angle + random spin
@@ -902,10 +925,11 @@ export class ProceduralAnimator {
       this._deathAngularVelocities[base + 1] *= this._deathDamping;
       this._deathAngularVelocities[base + 2] *= this._deathDamping;
 
-      // Gravity pull on limbs (joints below hip tend to droop)
-      if (i > 0) { // skip root
-        this._deathAngularVelocities[base] += 2.0 * dt; // gravity effect on X
-      }
+      // Flop first, then sag into the crumpled rest pose and stay there
+      const sag = Math.min(1, dt * 3.5);
+      this._deathJointAngles[base] += (this._deathRestAngles[base] - this._deathJointAngles[base]) * sag;
+      this._deathJointAngles[base + 1] += (this._deathRestAngles[base + 1] - this._deathJointAngles[base + 1]) * sag;
+      this._deathJointAngles[base + 2] += (this._deathRestAngles[base + 2] - this._deathJointAngles[base + 2]) * sag;
 
       // Apply to joint
       joints[i].rotation.x = this._deathJointAngles[base];

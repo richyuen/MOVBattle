@@ -1521,6 +1521,10 @@ export class SimulationSystem {
       for (const mesh of unit.body.allMeshes) {
         mesh.isVisible = false;
       }
+      // Gear leaves with the body: a field of loose hats and weapons with no corpses reads as a bug.
+      for (const mesh of unit.propMeshes) {
+        mesh.isVisible = false;
+      }
       if (unit.healthBarMesh) unit.healthBarMesh.isVisible = false;
       if (unit.healthBarBg) unit.healthBarBg.isVisible = false;
     }

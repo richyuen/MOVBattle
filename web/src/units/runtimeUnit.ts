@@ -4,6 +4,7 @@ import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
+import { isVehicleUnit } from "./vehicleBuilder";
 import { ProceduralAnimator, AnimState, type AttackMotion, type LocomotionBias } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 import { isPointInsideHazard, type HazardRegion } from "../map/hazards";
@@ -882,6 +883,7 @@ export class RuntimeUnit {
     this.body.root.rotation.y += this._deathSpinY * dt;
 
     // Ground collision with bounce
+    let flatError = 0;
     if (pos.y <= 0) {
       pos.y = 0;
       if (this._velocity.y < -1.5 && this._bounceCount < 3) {
@@ -901,6 +903,7 @@ export class RuntimeUnit {
         this._velocity.z *= decay;
         this._deathSpinX *= decay;
         this._deathSpinY *= decay;
+        flatError = this._layCorpseFlat(dt);
       }
     } else {
       // Air drag (very light)
@@ -909,10 +912,25 @@ export class RuntimeUnit {
     }
 
     // Settle
-    if (pos.y <= 0.01 && this._velocity.lengthSquared() < 0.02) {
+    if (pos.y <= 0.01 && this._velocity.lengthSquared() < 0.02 && flatError < 0.02) {
       this._physicsActive = false;
       this._velocity.setAll(0);
     }
+  }
+
+  /** A grounded humanoid corpse rolls onto its back, front or side rather than resting at a lean. */
+  private _layCorpseFlat(dt: number): number {
+    if (isVehicleUnit(this.definition.id) || this.animator.walkStyle === "quadruped") return 0;
+    const rot = this.body.root.rotation;
+    const nearestFlat = (angle: number): number =>
+      Math.round((angle - Math.PI / 2) / Math.PI) * Math.PI + Math.PI / 2;
+    const onSide = Math.abs(Math.sin(rot.z)) > 0.8;
+    const targetX = onSide ? rot.x : nearestFlat(rot.x);
+    const targetZ = onSide ? nearestFlat(rot.z) : Math.round(rot.z / Math.PI) * Math.PI;
+    const settle = Math.min(1, dt * 9);
+    rot.x += (targetX - rot.x) * settle;
+    rot.z += (targetZ - rot.z) * settle;
+    return Math.abs(targetX - rot.x) + Math.abs(targetZ - rot.z);
   }
 
   private _applyCrowdLean(dt: number): void {
