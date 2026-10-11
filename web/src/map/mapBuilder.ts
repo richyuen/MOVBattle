@@ -514,21 +514,22 @@ export class TribalSandboxMapBuilder {
         new Vector3(cx, borderHeight, cz - hz),
         zone.size.x + borderThick, borderThick, color,
       );
+      // Outer side edge only; the inner edge at x = 0 is the center divider
+      const outerX = zone.team === 0 ? cx - hx : cx + hx;
       this._createBorderStrip(
-        new Vector3(cx - hx, borderHeight, cz),
-        borderThick, zone.size.z, color,
-      );
-      this._createBorderStrip(
-        new Vector3(cx + hx, borderHeight, cz),
+        new Vector3(outerX, borderHeight, cz),
         borderThick, zone.size.z, color,
       );
     }
 
-    // Center divider line
-    this._createBorderStrip(
-      new Vector3(0, borderHeight + 0.01, 0),
-      0.6, MAP_DEPTH * 2, new Color3(1.0, 0.85, 0.3),
-    );
+    // Center divider: thin flat pink line, no glow
+    const divider = MeshBuilder.CreateGround("border", { width: 0.12, height: MAP_DEPTH * 2 }, this._scene);
+    divider.position = new Vector3(0, borderHeight + 0.01, 0);
+    const dividerMat = new StandardMaterial("center_divider_mat", this._scene);
+    dividerMat.diffuseColor = Color3.Black();
+    dividerMat.emissiveColor = new Color3(0.92, 0.36, 0.62);
+    dividerMat.disableLighting = true;
+    divider.material = dividerMat;
   }
 
   private _createBorderStrip(pos: Vector3, width: number, depth: number, color: Color3): void {
@@ -540,6 +541,13 @@ export class TribalSandboxMapBuilder {
     mat.alpha = 0.7;
     mat.disableLighting = true;
     strip.material = mat;
+  }
+}
+
+/** Show or hide the sandbox zone borders and center divider (placement-only guides) */
+export function setPlacementGuidesVisible(scene: Scene, visible: boolean): void {
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "border") mesh.setEnabled(visible);
   }
 }
 
