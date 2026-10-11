@@ -122,6 +122,9 @@ export class SimulationSystem {
 
   readonly minimumDecisionInterval = 0.08;
   readonly attackRangePadding = 0.2;
+  /** Short-reach melee (reach under this) keeps closing after it can swing, until bodies touch. */
+  readonly meleePressMaxReach = 2.3;
+  readonly meleePressGap = 0.1;
   readonly cleanupSweepInterval = 0.75;
   readonly summonLivingCap = 55;
   readonly collisionResolutionPadding = 0.03;
@@ -479,7 +482,16 @@ export class SimulationSystem {
     unit.setSpinning(false);
 
     if (distance <= engageDistance) {
-      unit.stopMoving();
+      // Reach decides who may swing, not where the rank stops: short weapons shove in to
+      // shoulder contact so the two front lines meet instead of fencing across a gap.
+      const contactDistance = unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap;
+      if (canMove && unit.definition.engageRange < this.meleePressMaxReach && distance > contactDistance + 0.05) {
+        const back = unit.position.subtract(enemy.position);
+        back.y = 0;
+        unit.moveTo(enemy.position.add(back.normalize().scale(contactDistance)));
+      } else {
+        unit.stopMoving();
+      }
       this._clearPathState(unit);
       unit.faceTarget(enemy.position);
       if (canAttack) {
