@@ -74,7 +74,10 @@ import {
 // ─── DOM references ───
 const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 const budgetAEl = document.getElementById("budgetA")!;
-const budgetBEl = document.getElementById("budgetB")!;
+const budgetAmountEl = document.getElementById("budgetAmount")!;
+const budgetUnitsEl = document.getElementById("budgetUnits")!;
+// Side the budget counter shows: the half the player last placed on.
+let budgetHudTeam = 0;
 const selectedUnitEl = document.getElementById("selectedUnit")!;
 const statusTextEl = document.getElementById("statusText")!;
 const campaignStatusEl = document.getElementById("campaignStatus")!;
@@ -523,12 +526,10 @@ const btnRemoveEl = document.getElementById("btnRemove") as HTMLButtonElement | 
 
 // ─── HUD ───
 function updateBudgetDisplay(): void {
-  budgetAEl.textContent = campaignSession?.unlimited
-    ? "Team A: ∞"
-    : `Team A: ${budgetSystem.getRemaining(0)}`;
-  budgetBEl.textContent = isCampaignModeActive()
-    ? "Team B: Locked"
-    : `Team B: ${budgetSystem.getRemaining(1)}`;
+  const team = isCampaignModeActive() ? 0 : budgetHudTeam;
+  budgetAEl.classList.toggle("team-b", team === 1);
+  budgetAmountEl.textContent = campaignSession?.unlimited ? "∞" : `${budgetSystem.getRemaining(team)}`;
+  budgetUnitsEl.textContent = `${placedUnits.filter((unit) => !unit.linkedParent && unit.team === team).length}`;
   updateCampaignStatusDisplay();
 }
 
@@ -965,6 +966,10 @@ function tryPlaceUnit(screenX: number, screenY: number): void {
 
   // Auto-detect team from placement position: left half = Team A (0), right half = Team B (1)
   const team = worldPoint.x < 0 ? 0 : 1;
+  if (budgetHudTeam !== team) {
+    budgetHudTeam = team;
+    updateBudgetDisplay();
+  }
   if (campaignSession && team === 1) {
     showStatus("Campaign enemies are locked.");
     return;
@@ -1650,7 +1655,9 @@ function spawnHarnessUnit(
 ): RuntimeUnit | null {
   dismissTitleIntro();
   if (stateMachine.currentState !== GameState.Placement) return null;
-  return spawnRuntimeUnit(unitId, team, new Vector3(position.x, position.y ?? 0, position.z), options);
+  const unit = spawnRuntimeUnit(unitId, team, new Vector3(position.x, position.y ?? 0, position.z), options);
+  updateBudgetDisplay();
+  return unit;
 }
 
 function advanceSimulationTime(ms: number): void {

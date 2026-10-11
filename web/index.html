@@ -141,12 +141,17 @@
       pointer-events: none;
     }
 
-    /* Budgets sit bottom-left just above the unit tray, thin and small. */
+    /* One budget counter bottom-left just above the unit tray: bare number plus unit count, active side only. */
     .budget-label {
-      position: fixed; left: 14px; font-weight: 400; font-size: 13px; letter-spacing: 0.03em;
+      position: fixed; left: 14px; bottom: 118px; font-weight: 300; font-size: 22px; letter-spacing: 0.02em;
+      color: #bfe6fb;
     }
-    .budget-a { color: #bfe6fb; bottom: 136px; }
-    .budget-b { color: #f7c1bf; bottom: 116px; }
+    .budget-label.team-b { color: #f7c1bf; }
+    .budget-label .budget-units { margin-left: 14px; font-size: 13px; opacity: 0.85; }
+    .budget-label .budget-units::before {
+      content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 5px;
+      border-radius: 50%; background: currentColor; vertical-align: 1px;
+    }
 
     #selectedUnit {
       margin-top: 8px;
@@ -476,7 +481,7 @@
         gap: 6px;
       }
       .hud-start-group { gap: 6px; }
-      .budget-label { font-size: 13px; }
+      .budget-label { font-size: 20px; }
 
       .btn {
         padding: 10px 12px; font-size: 12px;
@@ -535,7 +540,7 @@
       .btn { padding: 8px 8px; font-size: 11px; }
       .btn-start { min-width: 82px; font-size: 20px; padding: 10px 14px; }
       .btn-corner { min-width: 74px; }
-      .budget-label { font-size: 12px; }
+      .budget-label { font-size: 18px; }
       #touchCameraControls {
         right: 8px;
         bottom: 208px;
@@ -582,9 +587,8 @@
       </div>
     </div>
     <div id="hudInfo">
-      <span class="budget-label budget-a" id="budgetA">Team A: 1000000</span>
+      <span class="budget-label" id="budgetA"><span id="budgetAmount">1000000</span><span class="budget-units" id="budgetUnits">0</span></span>
       <div id="campaignStatus">Mode: Sandbox</div>
-      <span class="budget-label budget-b" id="budgetB">Team B: 1000000</span>
     </div>
     <div id="selectedUnit">Selected: Clubber (70g)</div>
     <div id="statusText"></div>
