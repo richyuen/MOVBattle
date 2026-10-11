@@ -617,9 +617,9 @@ export class SimulationSystem {
       const delta = unit.position.subtract(other.position);
       delta.y = 0;
       const distanceSq = delta.lengthSquared();
-      const marchingAlly = other.team === unit.team && other.isMoving;
+      const ally = other.team === unit.team;
       const separation = unit.collisionBodyRadius + other.collisionBodyRadius
-        + (marchingAlly ? this.formationAvoidanceRadius : this.localAvoidanceRadius);
+        + (ally ? this.formationAvoidanceRadius : this.localAvoidanceRadius);
       if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
 
       const distance = Math.sqrt(distanceSq);
