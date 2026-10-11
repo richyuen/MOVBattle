@@ -59,9 +59,10 @@ export function attachProps(
     shield.parent = body.leftHand;
     // TABS shields cover neck to knee and overlap along a line; bucklers stay small on purpose
     if (config.shield !== "buckler") {
-      shield.scaling.scaleInPlace(config.shield === "round" ? 2.4 : 1.9);
+      const round = config.shield === "round";
+      shield.scaling.scaleInPlace(round ? 2.0 : 1.9);
       // Strapped up the forearm and carried across the chest, not dangling at the hip
-      shield.position.set(0.1 * scale, 0.14 * scale, 0.2 * scale);
+      shield.position.set(0.1 * scale, (round ? 0.22 : 0.14) * scale, 0.2 * scale);
     }
     props.push(shield);
   }
@@ -1319,6 +1320,13 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       rim.position.z = -0.006 * s;
       rim.parent = shield;
       rim.material = mat(scene, teamColor.scale(0.45));
+      // Plank seams: dark lines down the board, each cut to the disc's chord at that offset
+      for (const [x, chord] of [[-0.085, 0.23], [0, 0.28], [0.085, 0.23]]) {
+        const seam = MeshBuilder.CreateBox("rshieldSeam", { width: 0.008 * s, height: chord * s, depth: 0.006 * s }, scene);
+        seam.position.set(x * s, 0, 0.015 * s);
+        seam.parent = shield;
+        seam.material = rim.material;
+      }
       const boss = MeshBuilder.CreateSphere("boss", { diameter: 0.09 * s, segments: 4 }, scene);
       boss.position.z = 0.016 * s; boss.parent = shield;
       boss.material = mat(scene, new Color3(0.45, 0.45, 0.5));
