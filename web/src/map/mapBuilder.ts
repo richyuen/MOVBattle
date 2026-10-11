@@ -32,7 +32,9 @@ export class TribalSandboxMapBuilder {
     this._createRocks();
     this._createTrees();
     this._createGrassPatches();
+    this._createFieldClumps();
     this._createScatterProps();
+    this._createClouds();
     if (this._renderPlacementGuides) {
       this._createZoneOverlays();
       this._createZoneBorders();
@@ -58,12 +60,12 @@ export class TribalSandboxMapBuilder {
 
     // Mountain rock
     const rock = new StandardMaterial("rock", this._scene);
-    rock.diffuseColor = new Color3(0.50, 0.45, 0.38);
+    rock.diffuseColor = new Color3(0.74, 0.52, 0.34);
     rock.specularColor = new Color3(0.08, 0.08, 0.08);
 
     // Dark rock
     const darkRock = new StandardMaterial("darkRock", this._scene);
-    darkRock.diffuseColor = new Color3(0.38, 0.35, 0.30);
+    darkRock.diffuseColor = new Color3(0.60, 0.40, 0.28);
     darkRock.specularColor = new Color3(0.06, 0.06, 0.06);
 
     // Tree trunk
@@ -141,7 +143,7 @@ export class TribalSandboxMapBuilder {
     mat: StandardMaterial,
   ): void {
     const base = MeshBuilder.CreateCylinder("mountainBase", {
-      diameterTop: 0.3, diameterBottom: 1, height: 1, tessellation: 8,
+      diameterTop: 0.3, diameterBottom: 1, height: 1, tessellation: 6,
     }, this._scene);
     base.scaling.set(diameterX, height, diameterZ);
     base.position.set(pos.x, height / 2, pos.z);
@@ -149,18 +151,21 @@ export class TribalSandboxMapBuilder {
     base.receiveShadows = true;
 
     const mid = MeshBuilder.CreateCylinder("mountainMid", {
-      diameterTop: 0.28, diameterBottom: 1, height: 1, tessellation: 8,
+      diameterTop: 0.28, diameterBottom: 1, height: 1, tessellation: 5,
     }, this._scene);
     mid.scaling.set(diameterX * 0.6, height * 0.7, diameterZ * 0.6);
     mid.position.set(pos.x, height * 0.72, pos.z);
     mid.material = mat;
     mid.receiveShadows = true;
 
-    const cap = MeshBuilder.CreateSphere("mountainCap", { diameter: 1, segments: 8 }, this._scene);
+    const cap = MeshBuilder.CreateSphere("mountainCap", { diameter: 1, segments: 3 }, this._scene);
     cap.scaling.set(diameterX * 0.25, height * 0.18, diameterZ * 0.25);
     cap.position.set(pos.x, height * 1.02, pos.z);
     cap.material = mat;
     cap.receiveShadows = true;
+    // Faceted low-poly read, with the tiers twisted so the silhouette is not a clean cone
+    mid.rotation.y = pos.x * 0.37;
+    for (const tier of [base, mid, cap]) tier.convertToFlatShadedMesh();
 
     // Add collision — approximate as a cylinder covering the base
     const collisionRadius = Math.min(diameterX, diameterZ) * 0.35;
@@ -353,6 +358,66 @@ export class TribalSandboxMapBuilder {
         blade.material = leaves;
         blade.receiveShadows = true;
       }
+    }
+  }
+
+  /** Chunky grass clumps across the fighting field, merged into one mesh */
+  private _createFieldClumps(): void {
+    const blades: Mesh[] = [];
+    for (let i = 0; i < 70; i++) {
+      const x = -26 + this._seededValue(i, 31) * 52;
+      const z = -16 + this._seededValue(i, 32) * 32;
+      for (let j = 0; j < 3; j++) {
+        const h = 0.28 + this._seededValue(i * 10 + j, 33) * 0.3;
+        const blade = MeshBuilder.CreateCylinder("fieldClump", {
+          height: h, diameterTop: 0, diameterBottom: 0.16, tessellation: 3,
+        }, this._scene);
+        blade.position.set(
+          x + (this._seededValue(i * 10 + j, 34) - 0.5) * 0.4,
+          h / 2,
+          z + (this._seededValue(i * 10 + j, 35) - 0.5) * 0.4,
+        );
+        blade.rotation.z = (this._seededValue(i * 10 + j, 36) - 0.5) * 0.6;
+        blade.rotation.y = this._seededValue(i * 10 + j, 37) * Math.PI;
+        blades.push(blade);
+      }
+    }
+    const clumps = Mesh.MergeMeshes(blades, true);
+    if (!clumps) return;
+    clumps.name = "fieldClumps";
+    clumps.convertToFlatShadedMesh();
+    clumps.material = this._scene.getMaterialByName("darkLeaves");
+    clumps.isPickable = false;
+  }
+
+  /** Puffy low-poly clouds ringing the island; unlit and fog-free so they stay white */
+  private _createClouds(): void {
+    const cloudMat = new StandardMaterial("cloud", this._scene);
+    cloudMat.diffuseColor = new Color3(1, 1, 1);
+    cloudMat.emissiveColor = new Color3(0.82, 0.84, 0.82);
+    cloudMat.specularColor = new Color3(0, 0, 0);
+
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + this._seededValue(i, 41) * 0.35;
+      const radius = 70 + this._seededValue(i, 42) * 30;
+      const size = 9 + this._seededValue(i, 43) * 8;
+      const puffs: Mesh[] = [];
+      for (let j = 0; j < 4; j++) {
+        const puff = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
+        const d = size * (0.55 + this._seededValue(i * 10 + j, 44) * 0.45);
+        puff.scaling.set(d, d * 0.5, d * 0.7);
+        puff.position.set((j - 1.5) * size * 0.42, (this._seededValue(i * 10 + j, 45) - 0.3) * size * 0.18, 0);
+        puffs.push(puff);
+      }
+      const cloud = Mesh.MergeMeshes(puffs, true);
+      if (!cloud) continue;
+      cloud.name = "cloud";
+      cloud.convertToFlatShadedMesh();
+      cloud.position.set(Math.cos(angle) * radius, 24 + this._seededValue(i, 46) * 16, Math.sin(angle) * radius);
+      cloud.rotation.y = -angle + Math.PI / 2;
+      cloud.material = cloudMat;
+      cloud.applyFog = false;
+      cloud.isPickable = false;
     }
   }
 
@@ -891,8 +956,8 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
 }
 
 function restoreSandboxSceneLook(scene: Scene): void {
-  scene.clearColor.set(0.52, 0.72, 0.90, 1);
-  scene.fogColor = new Color3(0.52, 0.72, 0.90);
+  scene.clearColor.set(0.36, 0.74, 0.78, 1);
+  scene.fogColor = new Color3(0.36, 0.74, 0.78);
 }
 
 const defaultHalfZones = (): PlacementZone[] => [

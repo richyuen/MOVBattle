@@ -104,7 +104,7 @@ const btnTouchCameraUpEl = document.getElementById("btnTouchCameraUp") as HTMLBu
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
 const scene = new Scene(engine);
-scene.clearColor = new Color4(0.52, 0.72, 0.90, 1);
+scene.clearColor = new Color4(0.36, 0.74, 0.78, 1);
 
 // Material factory (PBR cache — must init before any unit/map creation)
 initMaterialFactory(scene);
@@ -118,9 +118,9 @@ dir.intensity = 0.8;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
-scene.fogColor = new Color3(0.52, 0.72, 0.90);
-scene.fogStart = 50;
-scene.fogEnd = 100;
+scene.fogColor = new Color3(0.36, 0.74, 0.78);
+scene.fogStart = 70;
+scene.fogEnd = 170;
 
 // Shadows
 const shadowGen = new ShadowGenerator(2048, dir);
