@@ -14,6 +14,8 @@ const TREE_RING_Z = 36;
 
 export interface MapBuildResult {
   zones: PlacementZone[];
+  /** Where the player may place units, when tighter than `zones` (which also size the nav grid). */
+  placementZones?: PlacementZone[];
   obstacles: Obstacle[];
   hazards: HazardRegion[];
   dispose?: () => void;
@@ -43,7 +45,7 @@ export class TribalSandboxMapBuilder {
       this._createZoneOverlays();
       this._createZoneBorders();
     }
-    return { zones: getPlacementZones(), obstacles: this._obstacles, hazards: [] };
+    return { zones: getPlacementZones(), placementZones: getIslandGuideZones(), obstacles: this._obstacles, hazards: [] };
   }
 
   private _seededValue(index: number, seed: number): number {
@@ -574,7 +576,7 @@ export function getPlacementZones(): PlacementZone[] {
   ];
 }
 
-/** Placement zones clipped to the island slab, for drawing guides only. */
+/** Placement zones clipped to the island slab: drawn guides and player placement, not navigation. */
 function getIslandGuideZones(): PlacementZone[] {
   return [
     { team: 0, center: new Vector3(-ISLAND_WIDTH / 4, 0, 0), size: new Vector3(ISLAND_WIDTH / 2, 100, ISLAND_DEPTH) },

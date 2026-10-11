@@ -276,7 +276,7 @@ unitFactory.shadowGenerator = shadowGen;
 let activeMapInstance: BattleMapInstance = loadBattleMap(scene, DEFAULT_BATTLE_MAP_ID);
 RuntimeUnit.obstacles = buildRuntimeObstacles(activeMapInstance);
 RuntimeUnit.hazards = activeMapInstance.hazards;
-let placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
+let placementValidator = new PlacementValidator(activeMapInstance.placementZones ?? activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
 simulation.configureNavigation(
   activeMapInstance.zones,
   activeMapInstance.obstacles,
@@ -559,7 +559,7 @@ function loadMapById(mapId: BattleMapId): void {
   activeMapInstance = loadBattleMap(scene, mapId);
   RuntimeUnit.obstacles = buildRuntimeObstacles(activeMapInstance);
   RuntimeUnit.hazards = activeMapInstance.hazards;
-  placementValidator = new PlacementValidator(activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
+  placementValidator = new PlacementValidator(activeMapInstance.placementZones ?? activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
   simulation.configureNavigation(
     activeMapInstance.zones,
     activeMapInstance.obstacles,
