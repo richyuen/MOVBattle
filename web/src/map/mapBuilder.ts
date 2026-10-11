@@ -5,6 +5,8 @@ import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
 import type { HazardKind, HazardRegion } from "./hazards";
 
+const MAP_WIDTH = 160;  // full X extent (placement/navigation bounds)
+const MAP_DEPTH = 120;  // full Z extent (placement/navigation bounds)
 const ISLAND_WIDTH = 184;  // floating island slab, X extent
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
@@ -484,7 +486,7 @@ export class TribalSandboxMapBuilder {
 
   /** Tinted ground overlays so each half is clearly blue / red */
   private _createZoneOverlays(): void {
-    const zones = getPlacementZones();
+    const zones = getIslandGuideZones();
     const colors = [new Color3(0.2, 0.5, 1.0), new Color3(1.0, 0.25, 0.25)];
 
     for (const zone of zones) {
@@ -504,7 +506,7 @@ export class TribalSandboxMapBuilder {
 
   /** Draw clear border lines: outer rectangle for each zone + center divider */
   private _createZoneBorders(): void {
-    const zones = getPlacementZones();
+    const zones = getIslandGuideZones();
     const colors = [new Color3(0.3, 0.65, 1.0), new Color3(1.0, 0.35, 0.35)];
     const borderHeight = 0.06;
     const borderThick = 0.4;
@@ -566,8 +568,16 @@ export function setPlacementGuidesVisible(scene: Scene, visible: boolean): void 
 export function getPlacementZones(): PlacementZone[] {
   return [
     // Team A: entire left half
-    { team: 0, center: new Vector3(-ISLAND_WIDTH / 4, 0, 0), size: new Vector3(ISLAND_WIDTH / 2, 100, ISLAND_DEPTH) },
+    { team: 0, center: new Vector3(-MAP_WIDTH / 2, 0, 0), size: new Vector3(MAP_WIDTH, 100, MAP_DEPTH * 2) },
     // Team B: entire right half
+    { team: 1, center: new Vector3(MAP_WIDTH / 2, 0, 0), size: new Vector3(MAP_WIDTH, 100, MAP_DEPTH * 2) },
+  ];
+}
+
+/** Placement zones clipped to the island slab, for drawing guides only. */
+function getIslandGuideZones(): PlacementZone[] {
+  return [
+    { team: 0, center: new Vector3(-ISLAND_WIDTH / 4, 0, 0), size: new Vector3(ISLAND_WIDTH / 2, 100, ISLAND_DEPTH) },
     { team: 1, center: new Vector3(ISLAND_WIDTH / 4, 0, 0), size: new Vector3(ISLAND_WIDTH / 2, 100, ISLAND_DEPTH) },
   ];
 }
