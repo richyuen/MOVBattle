@@ -535,9 +535,9 @@ function updateBudgetDisplay(): void {
 function updateSelectedUnitDisplay(): void {
   const def = getUnit(selectedUnitId);
   if (def) {
-    selectedUnitEl.textContent = `Selected: ${def.displayName} (${def.cost}g)`;
+    selectedUnitEl.textContent = "";
   } else {
-    selectedUnitEl.textContent = "Selected: Remove Mode";
+    selectedUnitEl.textContent = "Remove Mode";
   }
 }
 
@@ -643,7 +643,7 @@ function updateCampaignStatusDisplay(): void {
     btnUnlimitedEl.textContent = campaignSession?.unlimited ? "Unlimited: On" : "Unlimited: Off";
   }
   if (!activeCampaign || !activeScenario) {
-    campaignStatusEl.textContent = "Mode: Sandbox";
+    campaignStatusEl.textContent = "";
     return;
   }
   const modeLabel = campaignSession?.unlimited ? "Unlimited" : `Budget ${activeScenario.restrictions.budget}`;
@@ -1113,7 +1113,7 @@ function resetBattle(options: {
     closeGalleryCaptureSession(true);
   }
   if (!options.suppressStatus) {
-    showStatus("Battle reset.");
+    showStatus("");
   }
 }
 

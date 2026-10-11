@@ -141,9 +141,12 @@
       pointer-events: none;
     }
 
-    .budget-label { font-weight: bold; font-size: 15px; }
-    .budget-a { color: #4fc3f7; }
-    .budget-b { color: #ef5350; text-align: right; }
+    /* Budgets sit bottom-left just above the unit tray, thin and small. */
+    .budget-label {
+      position: fixed; left: 14px; font-weight: 400; font-size: 13px; letter-spacing: 0.03em;
+    }
+    .budget-a { color: #bfe6fb; bottom: 136px; }
+    .budget-b { color: #f7c1bf; bottom: 116px; }
 
     #selectedUnit {
       margin-top: 8px;
@@ -367,6 +370,7 @@
     #controls-help {
       position: absolute; bottom: 150px; right: 10px; color: rgba(255,255,255,0.4);
       font-size: 11px; line-height: 1.5; text-align: right; pointer-events: none;
+      display: none;
     }
 
     #touchCameraControls {
