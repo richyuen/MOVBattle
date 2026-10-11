@@ -1038,6 +1038,7 @@ function startBattle(immediate = false): void {
 function enterSimulation(): void {
   simulation.beginSimulation(worldTimeSeconds);
   stateMachine.setState(GameState.Simulation);
+  bodyEl.classList.add("in-battle");
   // Countdown -> Simulation: swoop from the oblique placement view down to the clash line.
   if (!galleryCaptureSession) camCtrl.swoopToBattle(computeBattleFocus());
   showStatus("Fight!");
@@ -1094,6 +1095,7 @@ function resetBattle(options: {
   removeMode = false;
   btnRemoveEl?.classList.remove("remove-active");
   camCtrl.returnToPlacementView();
+  bodyEl.classList.remove("in-battle");
   stateMachine.setState(GameState.Placement);
   activeScenario = null;
   if (!options.preserveCampaignSession) {
@@ -1317,6 +1319,7 @@ function playAgain(): void {
   removeMode = false;
   btnRemoveEl?.classList.remove("remove-active");
   camCtrl.returnToPlacementView();
+  bodyEl.classList.remove("in-battle");
   stateMachine.setState(GameState.Placement);
   updateBudgetDisplay();
   showStatus("Ready for another round!");

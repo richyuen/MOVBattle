@@ -350,7 +350,7 @@
     }
     #resultOverlay.visible { display: flex; }
     .result-band {
-      width: 100%; background: rgba(8, 10, 18, 0.82); text-align: center;
+      width: 100%; background: rgb(8, 10, 18); text-align: center;
       padding: 22px 16px; box-sizing: border-box; pointer-events: auto;
     }
     #resultTitle {
@@ -448,6 +448,13 @@
     body.capture-mode #touchCameraControls,
     body.capture-mode #controls-help,
     body.capture-mode #titleIntro {
+      display: none !important;
+    }
+
+    /* Placement HUD is hidden for the fight and the result bands, as in TABS. */
+    body.in-battle #hud,
+    body.in-battle #unitPanel,
+    body.in-battle #controls-help {
       display: none !important;
     }
 
