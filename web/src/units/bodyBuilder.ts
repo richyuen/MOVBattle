@@ -161,7 +161,7 @@ export function buildArticulatedBody(
   const mf = getMaterialFactory();
   const bodyMat = mf.createUnique("cloth", bodyColor);
   const skinMat = mf.createUnique("skin", new Color3(0.94, 0.90, 0.86));
-  const eyeMat = mf.get("skin", new Color3(1, 1, 1), { roughness: 0.3 });
+  const eyeMat = mf.get("skin", new Color3(0.05, 0.05, 0.05), { roughness: 0.4 });
   const pupilMat = mf.get("skin", new Color3(0.05, 0.05, 0.05), { roughness: 0.4 });
 
   function sphere(
@@ -294,12 +294,12 @@ export function buildArticulatedBody(
   const headTop = joint(`${name}_headTop`, neck);
   headTop.position.y = headHeight * s;
 
-  // ─── Googly Eyes ───
-  const eyeDiam = headBase * 0.38;
-  const pupilDiam = headBase * 0.19;
+  // ─── Bead Eyes (small black beads, no sclera) ───
+  const eyeDiam = headBase * 0.11;
+  const pupilDiam = headBase * 0.02;
   const eyeSegs = Math.max(6, sphereSegments - 2);
   const eyeY = headHeight * s * 0.55;
-  const eyeZ = headDepth * s * 0.4;
+  const eyeZ = headDepth * s * 0.44;
   const eyeSpread = headWidth * s * 0.22;
 
   const leftEye = MeshBuilder.CreateSphere(`${name}_lEye`, { diameter: eyeDiam * s, segments: eyeSegs }, scene);
@@ -319,6 +319,7 @@ export function buildArticulatedBody(
   leftPupil.scaling = new Vector3(1, 1, 0.5);
   leftPupil.position.z = eyeDiam * s * 0.14;
   leftPupil.parent = leftEye;
+  leftPupil.setEnabled(false);
   allMeshes.push(leftPupil);
 
   const rightPupil = MeshBuilder.CreateSphere(`${name}_rPupil`, { diameter: pupilDiam * s, segments: eyeSegs }, scene);
@@ -326,6 +327,7 @@ export function buildArticulatedBody(
   rightPupil.scaling = new Vector3(1, 1, 0.5);
   rightPupil.position.z = eyeDiam * s * 0.14;
   rightPupil.parent = rightEye;
+  rightPupil.setEnabled(false);
   allMeshes.push(rightPupil);
 
   // ─── Arms ───
