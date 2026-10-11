@@ -341,17 +341,24 @@
     .unit-btn.selected { border-color: #ffd54f; background: rgba(255,215,0,0.2); }
     .unit-empty { color: rgba(255,255,255,0.7); font-size: 12px; padding: 8px 4px; }
 
+    /* Result: TABS-style full-width dark bands top and bottom, no dim over the scene. */
     #resultOverlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       z-index: 30;
-      background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center;
-      flex-direction: column; color: #fff;
+      background: none; display: none; justify-content: space-between; align-items: stretch;
+      flex-direction: column; color: #fff; pointer-events: none;
     }
     #resultOverlay.visible { display: flex; }
-    #resultTitle { font-size: 36px; font-weight: bold; margin-bottom: 12px; }
+    .result-band {
+      width: 100%; background: rgba(8, 10, 18, 0.82); text-align: center;
+      padding: 22px 16px; box-sizing: border-box; pointer-events: auto;
+    }
+    #resultTitle {
+      font-size: 56px; font-weight: bold; letter-spacing: 0.14em; text-transform: uppercase;
+    }
     #resultDetail {
-      font-size: 16px; text-align: center; line-height: 1.6; margin-bottom: 20px;
-      white-space: pre-line;
+      font-size: 14px; text-align: center; line-height: 1.6; margin-bottom: 14px;
+      white-space: pre-line; opacity: 0.85;
     }
     .result-actions {
       display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
@@ -501,7 +508,7 @@
 
       #controls-help { display: none; }
 
-      #resultTitle { font-size: 28px; }
+      #resultTitle { font-size: 32px; }
       #resultDetail { font-size: 14px; padding: 0 16px; }
 
       .campaign-panel {
@@ -579,11 +586,15 @@
     </div>
 
   <div id="resultOverlay">
-    <div id="resultTitle"></div>
-    <div id="resultDetail"></div>
-    <div class="result-actions">
-      <button class="btn" id="btnResultPrimary" style="font-size:16px;padding:10px 24px;">Play Again</button>
-      <button class="btn" id="btnResultSecondary" style="font-size:16px;padding:10px 24px;">Reset</button>
+    <div class="result-band result-band-top">
+      <div id="resultTitle"></div>
+    </div>
+    <div class="result-band result-band-bottom">
+      <div id="resultDetail"></div>
+      <div class="result-actions">
+        <button class="btn" id="btnResultPrimary" style="font-size:16px;padding:10px 24px;">Play Again</button>
+        <button class="btn" id="btnResultSecondary" style="font-size:16px;padding:10px 24px;">Reset</button>
+      </div>
     </div>
   </div>
 
