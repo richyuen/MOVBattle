@@ -9,7 +9,7 @@ import { getMaterialFactory } from "../units/materialFactory";
 import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell" | "cannonball";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -110,7 +110,6 @@ export class ProjectileSystem {
       case "bomb":    speed = 12; arcHeight = dist * 0.35; break;
       case "shell":   speed = 46; arcHeight = dist * 0.015; break;
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
-      case "cannonball": speed = 12; arcHeight = dist * 0.1; break;
       case "firework": speed = 22; arcHeight = dist * 0.25; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
       case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
@@ -339,7 +338,6 @@ export class ProjectileSystem {
       }
       // Spawn impact effect for explosive
       const explosionScale = p.shape === "shell" ? 1.8 : 1;
-      if (p.shape === "cannonball") this._spawnImpactBurst(p.targetPos);
       if (this.impactPresentation) {
         this.impactPresentation.presentExplosion(p.targetPos, explosionScale);
       } else {
@@ -382,36 +380,6 @@ export class ProjectileSystem {
     if (includeShake) this.onShake?.(0.12 * scale);
     this.visualEffects?.spawnPersistentSmoke(pos);
     this.visualEffects?.spawnGroundScorch(pos);
-  }
-
-  /** Cannonball hit: a fireball core inside a ring of chunky dust blobs that hangs for about a second. */
-  private _spawnImpactBurst(pos: Vector3): void {
-    const fire = MeshBuilder.CreateSphere("burstFire", { diameter: 1.1, segments: 4 }, this._scene);
-    fire.position = pos.clone();
-    fire.position.y += 0.5;
-    const fm = getMaterialFactory().createUnique("unlit", new Color3(1, 0.55, 0.1));
-    fm.disableLighting = true;
-    fm.emissiveColor = new Color3(1, 0.55, 0.1);
-    fm.transparencyMode = 2;
-    fire.material = fm;
-    this._flashes.push({ mesh: fire, remaining: 0.55, smokeLife: 0.55, ownsMaterial: true });
-
-    const dm = getMaterialFactory().createUnique("unlit", new Color3(0.72, 0.6, 0.4));
-    dm.disableLighting = true;
-    dm.emissiveColor = new Color3(0.72, 0.6, 0.4);
-    dm.transparencyMode = 2;
-    const dustLife = 1.3;
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.6;
-      const reach = 0.7 + Math.random() * 0.5;
-      const dust = MeshBuilder.CreateSphere("burstDust", { diameter: 0.7 + Math.random() * 0.4, segments: 4 }, this._scene);
-      dust.position = pos.clone();
-      dust.position.x += Math.cos(angle) * reach;
-      dust.position.y += 0.25 + Math.random() * 0.5;
-      dust.position.z += Math.sin(angle) * reach;
-      dust.material = dm;
-      this._flashes.push({ mesh: dust, remaining: dustLife, smokeLife: dustLife, ownsMaterial: i === 0 });
-    }
   }
 
   private _buildProjectileMesh(
@@ -488,12 +456,6 @@ export class ProjectileSystem {
         cap.position.z = 0.28;
         cap.material = this._getMat(`shell_cap_mat_${attackerTeam}`, palette.primary, 0.06);
         cap.parent = root;
-        break;
-      }
-      case "cannonball": {
-        const ball = MeshBuilder.CreateSphere("cannonball", { diameter: 0.5, segments: 6 }, this._scene);
-        ball.material = this._getMat("cannonball_body", new Color3(0.07, 0.07, 0.08));
-        ball.parent = root;
         break;
       }
       case "stone": {

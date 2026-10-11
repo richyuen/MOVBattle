@@ -37,7 +37,6 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "bolt": return "bolt";
     case "bomb": return "bomb";
     case "stone": return "stone";
-    case "cannonball": return "cannonball";
     case "spear": return "spear";
     case "firework": return "firework";
     case "shuriken": return "shuriken";
@@ -78,7 +77,6 @@ function originLiftForSource(source: "vehicle-socket" | "linked-role" | "parent"
 function muzzleScaleForProjectile(shape: ProjectileShape): number {
   switch (shape) {
     case "shell": return 1.8;
-    case "cannonball": return 1.6;
     case "bomb": return 1.4;
     case "rocket_arrow": return 0.65;
     case "bolt": return 0.7;
@@ -87,7 +85,7 @@ function muzzleScaleForProjectile(shape: ProjectileShape): number {
 }
 
 function shouldSpawnProjectileMuzzleFx(shape: ProjectileShape): boolean {
-  return shape === "shell" || shape === "cannonball" || shape === "bomb" || shape === "rocket_arrow" || shape === "bolt";
+  return shape === "shell" || shape === "bomb" || shape === "rocket_arrow" || shape === "bolt";
 }
 
 function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
@@ -1044,17 +1042,8 @@ export class SimulationSystem {
           );
           this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
         } else {
-          const projectileShape = resolveProjectileShape(attacker, attackProfile) ?? "arrow";
-          if (projectileShape === "cannonball") {
-            this.projectileSystem.spawnMuzzleFlash(
-              smokeOriginInfo.position,
-              impulseDir,
-              muzzleScaleForProjectile(projectileShape),
-              { originLift: originLiftForSource(smokeOriginInfo.source) },
-            );
-          }
           this.projectileSystem.spawnProjectile(
-            projectileShape,
+            resolveProjectileShape(attacker, attackProfile) ?? "arrow",
             attackOrigin,
             target,
             damage,
