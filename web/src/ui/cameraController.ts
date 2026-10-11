@@ -193,9 +193,9 @@ export class CameraController {
     }
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
-      beta: Math.PI / 2.12,   // eye just above unit head height
-      radius: 14,             // roughly six body lengths back from the front line
-      target: { x: center.x, y: 1.2, z: center.z },
+      beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
+      radius: 10,             // roughly four body lengths back from the front line
+      target: { x: center.x, y: 1.8, z: center.z },
     };
     // The battle view sits below the placement pitch limits; widen them for the fight.
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
