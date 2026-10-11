@@ -1335,6 +1335,8 @@ function buildMinotaur(scene: Scene, color: Color3): ArticulatedBody {
   };
 }
 
+const MAMMOTH_SCALE = 1.8;
+
 function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("mammoth_root", scene);
   const allMeshes: Mesh[] = [];
@@ -1346,7 +1348,10 @@ function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
 
   // ── Joint hierarchy for animation ──
   // hip sits at body center; torso pivots on hip; neck pivots on torso
-  const hip = dummyJoint("m_hip", root, scene);
+  // Giants are several human heights tall: scale the whole rig under the root
+  const bulk = dummyJoint("m_bulk", root, scene);
+  bulk.scaling.setAll(MAMMOTH_SCALE);
+  const hip = dummyJoint("m_hip", bulk, scene);
   hip.position.set(0, 1.4, 0);
   const torso = dummyJoint("m_torso", hip, scene);
   const neck = dummyJoint("m_neck", torso, scene);
@@ -1378,14 +1383,14 @@ function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
 
   // ── Main body (parented to torso joint) ──
   const torsoMesh = MeshBuilder.CreateCylinder("torso", {
-    height: 2.2, diameter: 1.5, tessellation: 14,
+    height: 2.2, diameter: 1.5, tessellation: 8,
   }, scene);
   torsoMesh.position.set(0, 0, 0);
   torsoMesh.rotation.x = Math.PI / 2;
   torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
 
   // Shoulder hump
-  const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.2, segments: 8 }, scene);
+  const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.2, segments: 4 }, scene);
   hump.position.set(0, 0.45, 0.3);
   hump.scaling.set(0.8, 0.6, 0.7);
   hump.parent = torso; hump.material = fur; allMeshes.push(hump);
@@ -1396,20 +1401,20 @@ function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
   belly.parent = torso; belly.material = shaggyFur; allMeshes.push(belly);
 
   // ── Head (parented to neck joint) ──
-  const headMesh = MeshBuilder.CreateSphere("head", { diameter: 1.15, segments: 8 }, scene);
+  const headMesh = MeshBuilder.CreateSphere("head", { diameter: 1.4, segments: 4 }, scene);
   headMesh.position.set(0, 0, 0.25);
   headMesh.scaling.set(0.85, 1, 0.8);
   headMesh.parent = neck; headMesh.material = fur; allMeshes.push(headMesh);
 
   // Forehead dome
-  const dome = MeshBuilder.CreateSphere("dome", { diameter: 0.6, segments: 6 }, scene);
-  dome.position.set(0, 0.25, 0.2);
+  const dome = MeshBuilder.CreateSphere("dome", { diameter: 0.75, segments: 3 }, scene);
+  dome.position.set(0, 0.36, 0.2);
   dome.parent = neck; dome.material = fur; allMeshes.push(dome);
 
   // Eyes
-  for (const xOff of [-0.22, 0.22]) {
-    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.08, segments: 6 }, scene);
-    eye.position.set(xOff, 0.05, 0.55);
+  for (const xOff of [-0.3, 0.3]) {
+    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.13, segments: 6 }, scene);
+    eye.position.set(xOff, 0.08, 0.7);
     eye.parent = neck; eye.material = darkMat; allMeshes.push(eye);
   }
 
@@ -1436,25 +1441,25 @@ function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
   // ── Tusks (parented to neck) ──
   for (const side of [-1, 1]) {
     const tuskBase = MeshBuilder.CreateCylinder("tuskBase", {
-      height: 0.75, diameterTop: 0.10, diameterBottom: 0.16, tessellation: 8,
+      height: 0.75, diameterTop: 0.18, diameterBottom: 0.26, tessellation: 6,
     }, scene);
-    tuskBase.position.set(side * 0.25, -0.55, 0.45);
+    tuskBase.position.set(side * 0.34, -0.55, 0.45);
     tuskBase.rotation.z = side * 0.3;
     tuskBase.rotation.x = 0.4;
     tuskBase.parent = neck; tuskBase.material = tuskMat; allMeshes.push(tuskBase);
 
     const tuskMid = MeshBuilder.CreateCylinder("tuskMid", {
-      height: 0.62, diameterTop: 0.065, diameterBottom: 0.10, tessellation: 8,
+      height: 0.62, diameterTop: 0.12, diameterBottom: 0.18, tessellation: 6,
     }, scene);
-    tuskMid.position.set(side * 0.38, -1.0, 0.72);
+    tuskMid.position.set(side * 0.47, -1.0, 0.72);
     tuskMid.rotation.z = side * 0.1;
     tuskMid.rotation.x = 1.0;
     tuskMid.parent = neck; tuskMid.material = tuskMat; allMeshes.push(tuskMid);
 
     const tuskTipMesh = MeshBuilder.CreateCylinder("tuskTip", {
-      height: 0.48, diameterTop: 0.025, diameterBottom: 0.065, tessellation: 6,
+      height: 0.48, diameterTop: 0.03, diameterBottom: 0.12, tessellation: 6,
     }, scene);
-    tuskTipMesh.position.set(side * 0.35, -1.18, 1.15);
+    tuskTipMesh.position.set(side * 0.44, -1.18, 1.15);
     tuskTipMesh.rotation.z = side * -0.2;
     tuskTipMesh.rotation.x = 1.4;
     tuskTipMesh.parent = neck; tuskTipMesh.material = tuskMat; allMeshes.push(tuskTipMesh);
@@ -1462,8 +1467,8 @@ function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
 
   // ── Ears (parented to neck) ──
   for (const side of [-1, 1]) {
-    const ear = MeshBuilder.CreateBox("ear", { width: 0.5, height: 0.6, depth: 0.06 }, scene);
-    ear.position.set(side * 0.52, 0.05, 0.1);
+    const ear = MeshBuilder.CreateBox("ear", { width: 0.6, height: 0.75, depth: 0.08 }, scene);
+    ear.position.set(side * 0.66, 0.05, 0.1);
     ear.rotation.z = side * 0.4;
     ear.rotation.y = side * 0.2;
     ear.parent = neck; ear.material = earMat; allMeshes.push(ear);
@@ -1477,21 +1482,21 @@ function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
   for (const [hipJoint, kneeJoint] of legJoints) {
     // Upper leg
     const upper = MeshBuilder.CreateCylinder("uleg", {
-      height: 0.55, diameterTop: 0.28, diameterBottom: 0.24, tessellation: 10,
+      height: 0.55, diameterTop: 0.44, diameterBottom: 0.38, tessellation: 6,
     }, scene);
     upper.position.set(0, -0.22, 0);
     upper.parent = hipJoint; upper.material = fur; allMeshes.push(upper);
 
     // Lower leg
     const lower = MeshBuilder.CreateCylinder("lleg", {
-      height: 0.45, diameterTop: 0.22, diameterBottom: 0.18, tessellation: 10,
+      height: 0.45, diameterTop: 0.36, diameterBottom: 0.34, tessellation: 6,
     }, scene);
     lower.position.set(0, -0.18, 0);
     lower.parent = kneeJoint; lower.material = shaggyFur; allMeshes.push(lower);
 
     // Foot
     const foot = MeshBuilder.CreateCylinder("foot", {
-      height: 0.08, diameter: 0.24, tessellation: 8,
+      height: 0.08, diameter: 0.4, tessellation: 6,
     }, scene);
     foot.position.set(0, -0.4, 0);
     foot.parent = kneeJoint; foot.material = darkMat; allMeshes.push(foot);
@@ -1514,10 +1519,13 @@ function buildMammoth(scene: Scene, color: Color3): ArticulatedBody {
   const lHand = dummyJoint("m_lhand", flKnee, scene);
   const headTop = dummyJoint("m_headtop", neck, scene);
 
+  // Faceted low-poly read instead of smooth cylinders
+  for (const mesh of allMeshes) mesh.convertToFlatShadedMesh();
+
   const allJoints = [hip, torso, neck, flHip, flKnee, frHip, frKnee, blHip, blKnee, brHip, brKnee];
 
   return {
-    root, bodyMaterial: fur, skinMaterial: earMat, metrics: makeBodyMetrics(2.35, 0.8, 0.8, 0.62), hip, torso, torsoMesh, neck, headMesh,
+    root, bodyMaterial: fur, skinMaterial: earMat, metrics: makeBodyMetrics(2.35 * MAMMOTH_SCALE, 0.8 * MAMMOTH_SCALE, 0.8 * MAMMOTH_SCALE, 0.62 * MAMMOTH_SCALE), hip, torso, torsoMesh, neck, headMesh,
     leftShoulder: flHip, leftUpperArm: torsoMesh, leftElbow: flKnee, leftLowerArm: torsoMesh,
     rightShoulder: frHip, rightUpperArm: torsoMesh, rightElbow: frKnee, rightLowerArm: torsoMesh,
     leftHip: blHip, leftUpperLeg: torsoMesh, leftKnee: blKnee, leftLowerLeg: torsoMesh,
