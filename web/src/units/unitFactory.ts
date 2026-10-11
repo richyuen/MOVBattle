@@ -93,7 +93,7 @@ export class UnitFactory {
         },
       );
       // Attach weapon, hat, shield, special props
-      propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0);
+      propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0, teamColor);
     }
 
     applyMaterialPreset(body, visual, bodyColor, skinColor);

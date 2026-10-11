@@ -14,6 +14,7 @@ export function attachProps(
   body: ArticulatedBody,
   config: UnitVisualConfig,
   scale: number,
+  teamColor?: Color3,
 ): Mesh[] {
   const props: Mesh[] = [];
   const accent = config.accentColor ? Color3.FromHexString(config.accentColor) : new Color3(0.5, 0.5, 0.5);
@@ -53,11 +54,15 @@ export function attachProps(
     body.rightPupil?.setEnabled(false);
   }
 
-  const shield = buildShield(scene, config.shield, scale, accent);
+  const shield = buildShield(scene, config.shield, scale, accent, teamColor ?? accent);
   if (shield) {
     shield.parent = body.leftHand;
     // TABS shields read shoulder-wide at distance; bucklers stay small on purpose
-    if (config.shield !== "buckler") shield.scaling.scaleInPlace(1.6);
+    if (config.shield !== "buckler") {
+      shield.scaling.scaleInPlace(1.6);
+      // Strapped up the forearm and carried across the chest, not dangling at the hip
+      shield.position.set(0.1 * scale, 0.2 * scale, 0.15 * scale);
+    }
     props.push(shield);
   }
 
@@ -1297,17 +1302,26 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
 }
 
 // ─── Shields ───
-function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3): Mesh | null {
+function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {
   switch (type) {
     case "none": return null;
     case "round": {
-      const shield = MeshBuilder.CreateSphere("rshield", { diameter: 0.28 * s, segments: 10 }, scene);
-      shield.scaling.z = 0.15;
-      shield.rotation.x = Math.PI / 2;
-      shield.material = mat(scene, accent);
-      const boss = MeshBuilder.CreateSphere("boss", { diameter: 0.06 * s }, scene);
-      boss.position.z = -0.02 * s; boss.parent = shield;
-      boss.material = mat(scene, new Color3(0.7, 0.7, 0.75));
+      // Faceted disc standing upright, face toward +Z: team-colored board, dark rim, metal boss
+      const disc = (name: string, diameter: number, depth: number): Mesh => {
+        const m = MeshBuilder.CreateCylinder(name, { height: depth * s, diameter: diameter * s, tessellation: 10 }, scene);
+        m.rotation.x = Math.PI / 2;
+        m.bakeCurrentTransformIntoVertices();
+        return m;
+      };
+      const shield = disc("rshield", 0.3, 0.03);
+      shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
+      const rim = disc("rshieldRim", 0.34, 0.022);
+      rim.position.z = -0.006 * s;
+      rim.parent = shield;
+      rim.material = mat(scene, teamColor.scale(0.45));
+      const boss = MeshBuilder.CreateSphere("boss", { diameter: 0.09 * s, segments: 4 }, scene);
+      boss.position.z = 0.016 * s; boss.parent = shield;
+      boss.material = mat(scene, new Color3(0.45, 0.45, 0.5));
       return shield;
     }
     case "kite": {
