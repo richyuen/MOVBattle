@@ -56,6 +56,8 @@ export function attachProps(
   const shield = buildShield(scene, config.shield, scale, accent);
   if (shield) {
     shield.parent = body.leftHand;
+    // TABS shields read shoulder-wide at distance; bucklers stay small on purpose
+    if (config.shield !== "buckler") shield.scaling.scaleInPlace(1.6);
     props.push(shield);
   }
 
@@ -450,9 +452,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "none": return null;
 
     case "club": {
-      const m = MeshBuilder.CreateCylinder("club", { height: 0.5 * s, diameter: 0.06 * s, tessellation: 6 }, scene);
-      const head = MeshBuilder.CreateSphere("clubHead", { diameter: 0.14 * s, segments: 6 }, scene);
-      head.position.y = 0.25 * s;
+      const m = MeshBuilder.CreateCylinder("club", { height: 0.6 * s, diameterTop: 0.11 * s, diameterBottom: 0.07 * s, tessellation: 6 }, scene);
+      const head = MeshBuilder.CreateSphere("clubHead", { diameter: 0.26 * s, segments: 4 }, scene);
+      head.position.y = 0.32 * s;
       head.parent = m;
       head.material = mat(scene, accent);
       m.material = mat(scene, new Color3(0.45, 0.3, 0.15));
@@ -553,13 +555,14 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "spear":
     case "javelin":
     case "harpoon": {
-      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.9 * s, diameter: 0.03 * s, tessellation: 6 }, scene);
+      // Taller than the unit: body height is ~1.3 at scale 1, s already carries the 1.25 exaggeration
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.3 * s, diameter: 0.045 * s, tessellation: 6 }, scene);
       shaft.material = mat(scene, new Color3(0.5, 0.35, 0.2));
-      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.12 * s, diameterTop: 0, diameterBottom: 0.05 * s, tessellation: 4 }, scene);
-      tip.position.y = 0.5 * s;
+      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.22 * s, diameterTop: 0, diameterBottom: 0.09 * s, tessellation: 4 }, scene);
+      tip.position.y = 0.76 * s;
       tip.parent = shaft;
       tip.material = mat(scene, type === "harpoon" ? new Color3(0.6, 0.6, 0.65) : accent);
-      shaft.position.y = 0.2 * s;
+      shaft.position.y = 0.3 * s;
       return shaft;
     }
     case "axe": {
