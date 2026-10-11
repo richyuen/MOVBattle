@@ -125,8 +125,6 @@ export class SimulationSystem {
   /** Short-reach melee (reach under this) keeps closing after it can swing, until bodies touch. */
   readonly meleePressMaxReach = 2.3;
   readonly meleePressGap = 0.1;
-  /** Braced polearms stop this far short of body contact: the second rank of a shield wall. */
-  readonly polearmRankGap = 0.6;
   readonly cleanupSweepInterval = 0.75;
   readonly summonLivingCap = 55;
   readonly collisionResolutionPadding = 0.03;
@@ -486,18 +484,13 @@ export class SimulationSystem {
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
       // shoulder contact so the two front lines meet instead of fencing across a gap.
-      // Bracers hold their ground and let the rush come onto the shields, but two braced
-      // lines would wait on each other forever: against another bracer the shields walk in
-      // to contact and the polearms close up one rank behind them.
+      // Bracers hold their ground and let the rush come onto the shields.
       const contactDistance = unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap;
-      const shortReach = unit.definition.engageRange < this.meleePressMaxReach;
-      const braceOnBrace = aiProfile.id === "ai.brace" && enemy.definition.aiProfileId === "ai.brace";
-      const presses = aiProfile.id === "ai.brace" ? braceOnBrace : shortReach;
-      const pressDistance = contactDistance + (shortReach ? 0 : this.polearmRankGap);
-      if (canMove && presses && distance > pressDistance + 0.05) {
+      const presses = aiProfile.id !== "ai.brace" && unit.definition.engageRange < this.meleePressMaxReach;
+      if (canMove && presses && distance > contactDistance + 0.05) {
         const back = unit.position.subtract(enemy.position);
         back.y = 0;
-        unit.moveTo(enemy.position.add(back.normalize().scale(pressDistance)));
+        unit.moveTo(enemy.position.add(back.normalize().scale(contactDistance)));
       } else {
         unit.stopMoving();
       }
