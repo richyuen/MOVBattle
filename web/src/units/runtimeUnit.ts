@@ -495,13 +495,42 @@ export class RuntimeUnit {
     // One launch per flight: rapid shells must not juggle a body across the map.
     if (!this._grounded && this.position.y > 0.2) return;
     const scale = this._ragdollProfile.impactMultiplier / Math.max(0.8, this.definition.mass);
+    // Per-body spread keyed on the runtime id (deterministic): each body gets its own height,
+    // heading and tumble rate, so a blast scatters a group instead of lifting it as one plane.
+    const spread = (salt: number): number => {
+      const v = Math.sin(this.runtimeId * 12.9898 + salt * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const swing = (spread(2) - 0.5) * 1.1;
+    const cos = Math.cos(swing);
+    const sin = Math.sin(swing);
+    const dirX = outward.x * cos - outward.z * sin;
+    const dirZ = outward.x * sin + outward.z * cos;
+    // Never faster sideways than the base throw: rapid shells have to keep finding the body.
+    const throwSpeed = speed * (0.7 + 0.3 * spread(3)) * scale;
     if (!this._isDead) {
       this._enterTopple(RuntimeUnit.timeNowSeconds(), this._crowdPhysicsProfile.launchThreshold, outward, true);
     }
-    this._velocity.x += outward.x * speed * scale;
-    this._velocity.z += outward.z * speed * scale;
-    this._velocity.y = Math.max(this._velocity.y, lift * scale);
+    this._velocity.x += dirX * throwSpeed;
+    this._velocity.z += dirZ * throwSpeed;
+    this._velocity.y = Math.max(this._velocity.y, lift * (0.65 + 0.7 * spread(1)) * scale);
     this._grounded = false;
+
+    // End-over-end tumble about the axis across the throw, in the body's own pitch/roll frame.
+    const spinRate = 6 + 6 * spread(4);
+    const spinX = -(dirX * this._getFacingVector().x + dirZ * this._getFacingVector().z) * spinRate;
+    const spinZ = (dirX * this._getRightVector().x + dirZ * this._getRightVector().z) * spinRate;
+    if (this._isDead) {
+      // A settled corpse is asleep: wake it so the throw and the spin both play.
+      this._physicsActive = true;
+      this._bounceCount = 0;
+      this._deathSpinX = spinX;
+      this._deathSpinY = (spread(5) - 0.5) * 6;
+    } else {
+      this._blastSpinX = spinX;
+      this._blastSpinZ = spinZ;
+      this._blastTumbling = true;
+    }
   }
 
   private _buildImpactDelta(
@@ -951,7 +980,24 @@ export class RuntimeUnit {
     return Math.abs(targetX - rot.x) + Math.abs(targetZ - rot.z);
   }
 
+  private _blastTumbling = false;
+  private _blastSpinX = 0;
+  private _blastSpinZ = 0;
+
   private _applyCrowdLean(dt: number): void {
+    if (this._blastTumbling) {
+      const rot = this.body.root.rotation;
+      if (!this._grounded && (this._velocity.y > 0 || this.position.y > 0.02)) {
+        // Blast flight: spin freely instead of settling toward the topple lean.
+        rot.x += this._blastSpinX * dt;
+        rot.z += this._blastSpinZ * dt;
+        return;
+      }
+      // Landed: drop whole turns so the lay-flat settle below takes the short way round.
+      this._blastTumbling = false;
+      rot.x = Math.atan2(Math.sin(rot.x), Math.cos(rot.x));
+      rot.z = Math.atan2(Math.sin(rot.z), Math.cos(rot.z));
+    }
     const horizontalSpeed = this.horizontalSpeed;
     const facing = this._getFacingVector();
     const right = this._getRightVector();
@@ -1342,6 +1388,7 @@ export class RuntimeUnit {
     this._bounceCount = 0;
     this._deathSpinX = 0;
     this._deathSpinY = 0;
+    this._blastTumbling = false;
     this._nextAttackAt = 0;
     this._spawnRole = "placed";
     this._countsTowardVictory = true;
