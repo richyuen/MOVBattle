@@ -925,15 +925,13 @@ export class RuntimeUnit {
     const forwardLoad = Vector3.Dot(balanceDirection, facing);
     const sideLoad = Vector3.Dot(balanceDirection, right);
     if (this.physicsState === "toppled" || this.isDowned) {
-      const settle = Math.min(1, dt * 12);
-      const targetLeanX = Math.max(
-        -1.22,
-        Math.min(0.92, -forwardLoad * this._crowdPhysicsProfile.topplePitchStrength * (this.isDowned ? 0.78 : 1)),
-      );
-      const targetLeanZ = Math.max(
-        -0.98,
-        Math.min(0.98, sideLoad * this._crowdPhysicsProfile.toppleRollStrength * 2 * (this.isDowned ? 0.72 : 1)),
-      );
+      // Fall all the way over along the dominant push axis: toppled bodies tip past 70 deg,
+      // downed ones lie flat on the ground instead of hanging at a lean with their feet planted.
+      const settle = Math.min(1, dt * (this.isDowned ? 10 : 7));
+      const flat = this.isDowned ? 1.5 : 1.3;
+      const pitchDominant = Math.abs(forwardLoad) >= Math.abs(sideLoad);
+      const targetLeanX = pitchDominant ? (forwardLoad >= 0 ? -flat : flat) : -forwardLoad * 0.5;
+      const targetLeanZ = pitchDominant ? sideLoad * 0.5 : (sideLoad >= 0 ? flat : -flat);
       this.body.root.rotation.x += (targetLeanX - this.body.root.rotation.x) * settle;
       this.body.root.rotation.z += (targetLeanZ - this.body.root.rotation.z) * settle;
       return;
