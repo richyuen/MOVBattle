@@ -4,6 +4,7 @@ import {
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { VisualEffects } from "./visualEffects";
+import type { ImpactPresentation } from "./impactPresentation";
 import { getMaterialFactory } from "../units/materialFactory";
 import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
@@ -59,6 +60,7 @@ export class ProjectileSystem {
   private _matCache = new Map<string, PBRMetallicRoughnessMaterial>();
   onShake?: (intensity: number) => void;
   visualEffects?: VisualEffects;
+  impactPresentation?: ImpactPresentation;
 
   constructor(scene: Scene) {
     this._scene = scene;
@@ -298,22 +300,57 @@ export class ProjectileSystem {
       const radiusSq = p.splashRadius * p.splashRadius;
       for (const unit of p.allUnits) {
         if (unit.isDead || unit.team === p.attackerTeam) continue;
-        if (unit.position.subtract(p.targetPos).lengthSquared() > radiusSq) continue;
-        unit.applyDamage(p.damage, p.knockback);
+        const distanceSq = unit.position.subtract(p.targetPos).lengthSquared();
+        if (distanceSq > radiusSq) continue;
+        const distance = Math.sqrt(distanceSq);
+        const falloff = p.splashRadius > 0 ? Math.max(0, 1 - distance / p.splashRadius) : 1;
+        const delta = unit.applyDamage(p.damage, p.knockback);
+        if (this.impactPresentation) {
+          this.impactPresentation.recordImpact({
+            source: "projectile",
+            path: "projectile-splash",
+            position: unit.position,
+            target: unit,
+            impactDelta: delta,
+            damage: p.damage,
+            impulse: p.knockback,
+            radius: p.splashRadius,
+            falloff,
+            attackerTeam: p.attackerTeam,
+          });
+        }
       }
       // Spawn impact effect for explosive
-      this._spawnExplosion(p.targetPos, p.shape === "shell" ? 1.8 : 1);
+      const explosionScale = p.shape === "shell" ? 1.8 : 1;
+      if (this.impactPresentation) {
+        this.impactPresentation.presentExplosion(p.targetPos, explosionScale);
+      } else {
+        this._spawnExplosion(p.targetPos, explosionScale);
+      }
     } else {
       // Direct hit
       if (!p.target.isDead) {
-        p.target.applyDamage(p.damage, p.knockback);
+        const delta = p.target.applyDamage(p.damage, p.knockback);
+        if (this.impactPresentation) {
+          this.impactPresentation.recordImpact({
+            source: "projectile",
+            path: "projectile-direct",
+            position: p.target.position,
+            target: p.target,
+            impactDelta: delta,
+            damage: p.damage,
+            impulse: p.knockback,
+            attackerTeam: p.attackerTeam,
+          });
+        } else {
+          this.visualEffects?.spawnImpactDust(p.targetPos);
+          this.visualEffects?.spawnHitFlash(p.targetPos);
+        }
       }
-      this.visualEffects?.spawnImpactDust(p.targetPos);
-      this.visualEffects?.spawnHitFlash(p.targetPos);
     }
   }
 
-  private _spawnExplosion(pos: Vector3, scale = 1): void {
+  private _spawnExplosion(pos: Vector3, scale = 1, includeShake = true): void {
     const boom = MeshBuilder.CreateSphere("boom", { diameter: 0.3 * scale, segments: 6 }, this._scene);
     boom.position = pos.clone();
     boom.position.y += 0.3;
@@ -324,7 +361,7 @@ export class ProjectileSystem {
     m.transparencyMode = 2;
     boom.material = m;
     this._flashes.push({ mesh: boom, remaining: 0.4 + 0.12 * Math.max(0, scale - 1) });
-    this.onShake?.(0.12 * scale);
+    if (includeShake) this.onShake?.(0.12 * scale);
     this.visualEffects?.spawnPersistentSmoke(pos);
     this.visualEffects?.spawnGroundScorch(pos);
   }

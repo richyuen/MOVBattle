@@ -133,17 +133,26 @@ export class UnitFactory {
     barBg.position.y = barY;
     barBg.billboardMode = Mesh.BILLBOARDMODE_ALL;
     barBg.parent = body.root;
-    barBg.material = mf.get("unlit", new Color3(0.15, 0.15, 0.15), { emissive: new Color3(0.1, 0.1, 0.1) });
+    const barBgMat = mf.createUnique("unlit", new Color3(0.15, 0.15, 0.15));
+    barBgMat.emissiveColor = new Color3(0.1, 0.1, 0.1);
+    barBgMat.disableDepthWrite = true;
+    barBg.material = barBgMat;
+    barBg.renderingGroupId = 1;
 
     const barFill = MeshBuilder.CreatePlane(`hpfill`, { width: barWidth, height: 0.045 }, this._scene);
     barFill.position.y = barY;
     barFill.position.z = -0.001;
     barFill.billboardMode = Mesh.BILLBOARDMODE_ALL;
     barFill.parent = body.root;
-    barFill.material = mf.get("unlit", teamColor, { emissive: teamColor.scale(0.45) });
+    const barFillMat = mf.createUnique("unlit", teamColor);
+    barFillMat.emissiveColor = teamColor.scale(0.45);
+    barFillMat.disableDepthWrite = true;
+    barFill.material = barFillMat;
+    barFill.renderingGroupId = 2;
 
     unit.healthBarMesh = barFill;
     unit.healthBarBg = barBg;
+    unit.healthBarWidth = barWidth;
 
     return unit;
   }

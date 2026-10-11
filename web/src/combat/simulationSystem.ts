@@ -7,6 +7,7 @@ import {
 } from "../data/combatProfiles";
 import { ProjectileSystem, type ProjectileShape } from "./projectileSystem";
 import { VisualEffects } from "./visualEffects";
+import type { ImpactPresentation } from "./impactPresentation";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
 import type { HazardRegion } from "../map/hazards";
@@ -114,6 +115,7 @@ export class SimulationSystem {
 
   projectileSystem: ProjectileSystem | null = null;
   visualEffects: VisualEffects | null = null;
+  impactPresentation: ImpactPresentation | null = null;
   spawnUnitById: ((unitId: string, team: number, position: Vector3, options?: SpawnUnitOptions) => RuntimeUnit | null) | null = null;
   hazards: readonly HazardRegion[] = [];
   navigationGrid: NavigationGrid | null = null;
@@ -295,6 +297,33 @@ export class SimulationSystem {
             a.contactRole,
           );
           if (!sameTeam && impulseStrength >= 0.9) {
+            const contactCenter = a.position.add(b.position).scale(0.5);
+            this.impactPresentation?.recordImpact({
+              source: "simulation",
+              path: "crowd-shock",
+              position: contactCenter,
+              target: a,
+              impulse: normal.scale(-impulseStrength),
+              crowdMetrics: {
+                pressure: impulseStrength * pressureScaleA,
+                displacementMagnitude: overlap,
+                impulseMagnitude: impulseStrength,
+              },
+              attackerTeam: b.team,
+            });
+            this.impactPresentation?.recordImpact({
+              source: "simulation",
+              path: "crowd-shock",
+              position: contactCenter,
+              target: b,
+              impulse: normal.scale(impulseStrength),
+              crowdMetrics: {
+                pressure: impulseStrength * pressureScaleB,
+                displacementMagnitude: overlap,
+                impulseMagnitude: impulseStrength,
+              },
+              attackerTeam: a.team,
+            });
             this._applySingleHopSpillover(a, normal.scale(-1), impulseStrength * a.pressureTransferScale, b.contactRole);
             this._applySingleHopSpillover(b, normal, impulseStrength * b.pressureTransferScale, a.contactRole);
           }
@@ -1253,8 +1282,23 @@ export class SimulationSystem {
     const radiusSq = radius * radius;
     for (const unit of this._units) {
       if (unit.isDead || unit.team === attackerTeam || !unit.isTargetable) continue;
-      if (unit.position.subtract(center).lengthSquared() > radiusSq) continue;
-      unit.applyDamage(damage, impulse);
+      const distanceSq = unit.position.subtract(center).lengthSquared();
+      if (distanceSq > radiusSq) continue;
+      const distance = Math.sqrt(distanceSq);
+      const falloff = radius > 0 ? Math.max(0, 1 - distance / radius) : 1;
+      const delta = unit.applyDamage(damage, impulse);
+      this.impactPresentation?.recordImpact({
+        source: "simulation",
+        path: "splash-secondary",
+        position: unit.position,
+        target: unit,
+        impactDelta: delta,
+        damage,
+        impulse,
+        radius,
+        falloff,
+        attackerTeam,
+      });
       if (slowMultiplier !== undefined && slowDuration !== undefined) {
         unit.applySlow(slowMultiplier, slowDuration, now);
       }
@@ -1286,25 +1330,56 @@ export class SimulationSystem {
 
   private _applyDirectOrSplash(target: RuntimeUnit, damage: number, splashRadius: number, attackerTeam: number, knockback: Vector3): void {
     if (splashRadius > 0) {
-      this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback);
+      this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback, target);
     } else {
-      target.applyDamage(damage, knockback);
-    }
-    // Impact visual feedback
-    if (this.visualEffects) {
-      this.visualEffects.spawnImpactDust(target.position);
-      this.visualEffects.spawnHitFlash(target.position);
+      const delta = target.applyDamage(damage, knockback);
+      if (this.impactPresentation) {
+        this.impactPresentation.recordImpact({
+          source: "simulation",
+          path: "direct",
+          position: target.position,
+          target,
+          impactDelta: delta,
+          damage,
+          impulse: knockback,
+          attackerTeam,
+        });
+      } else if (this.visualEffects) {
+        this.visualEffects.spawnImpactDust(target.position);
+        this.visualEffects.spawnHitFlash(target.position);
+      }
     }
     const shockRadius = splashRadius > 0 ? splashRadius + 0.85 : 1.55;
     this._applyCrowdShockwave(target.position, shockRadius, attackerTeam, knockback.scale(splashRadius > 0 ? 0.3 : 0.2), target);
   }
 
-  private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3): void {
+  private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3, primaryTarget?: RuntimeUnit): void {
     const radiusSq = radius * radius;
     for (const unit of this._units) {
       if (unit.isDead || unit.team === attackerTeam || !unit.isTargetable) continue;
-      if (unit.position.subtract(center).lengthSquared() > radiusSq) continue;
-      unit.applyDamage(damage, impulse);
+      const distanceSq = unit.position.subtract(center).lengthSquared();
+      if (distanceSq > radiusSq) continue;
+      const distance = Math.sqrt(distanceSq);
+      const falloff = radius > 0 ? Math.max(0, 1 - distance / radius) : 1;
+      const delta = unit.applyDamage(damage, impulse);
+      const path = unit === primaryTarget ? "splash-primary" : "splash-secondary";
+      if (this.impactPresentation) {
+        this.impactPresentation.recordImpact({
+          source: "simulation",
+          path,
+          position: unit.position,
+          target: unit,
+          impactDelta: delta,
+          damage,
+          impulse,
+          radius,
+          falloff,
+          attackerTeam,
+        });
+      } else if (this.visualEffects) {
+        this.visualEffects.spawnImpactDust(unit.position);
+        this.visualEffects.spawnHitFlash(unit.position);
+      }
     }
   }
 
@@ -1331,6 +1406,21 @@ export class SimulationSystem {
       const displacement = direction.scale(baseMagnitude * 0.05 * falloff);
       const pressure = baseMagnitude * 0.7 * falloff;
       unit.applyCrowdDisplacement(displacement, pressure, direction.scale(-1), 1 + falloff * 0.35);
+      this.impactPresentation?.recordImpact({
+        source: "simulation",
+        path: "crowd-shock",
+        position: unit.position,
+        target: unit,
+        impulse,
+        radius,
+        falloff,
+        attackerTeam,
+        crowdMetrics: {
+          pressure,
+          displacementMagnitude: displacement.length(),
+          impulseMagnitude: baseMagnitude,
+        },
+      });
     }
   }
 

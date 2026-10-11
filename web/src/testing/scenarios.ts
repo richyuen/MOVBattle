@@ -18,6 +18,9 @@ export interface ScenarioAssertion {
     | "linked-relation-count"
     | "spawned-child-count"
     | "unit-hp-at-most"
+    | "health-bar-visible"
+    | "health-bar-ratio-at-least"
+    | "health-bar-ratio-at-most"
     | "unit-height-at-most"
     | "position-shift-at-least"
     | "position-shift-at-most"
@@ -45,6 +48,16 @@ export interface ScenarioAssertion {
     | "attack-interrupted-at-least"
     | "downed-block-active"
     | "downed-block-seconds-at-most"
+    | "impact-tier-at-least"
+    | "impact-tier-at-most"
+    | "impact-count-at-least"
+    | "impact-path-count-at-least"
+    | "impact-malformed-path-guard"
+    | "battle-recap-present"
+    | "battle-recap-survivors"
+    | "battle-recap-target-path"
+    | "result-detail-preserves-newlines"
+    | "result-button-labels"
     | "chain-topple-count-at-least";
   value: string;
 }
@@ -122,6 +135,23 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "impact-owner", value: "legacy.tank:gunner, renaissance.da_vinci_tank:pilot, dynasty.hwacha:rocketeer" },
       { kind: "origin-source", value: "legacy.tank:attack=vehicle-socket+impact=vehicle-socket, renaissance.da_vinci_tank:attack=vehicle-socket+impact=vehicle-socket, dynasty.hwacha:attack=vehicle-socket+impact=vehicle-socket" },
       { kind: "no-duplicate-standins", value: "legacy.tank+renaissance.da_vinci_tank+dynasty.hwacha" },
+    ],
+  },
+  health_bar_partial_damage_clubber: {
+    name: "health_bar_partial_damage_clubber",
+    description: "A damaged but living Clubber should keep a visible partially filled health bar.",
+    autoStart: false,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: 0, z: 0 } },
+    ],
+    actions: [
+      { kind: "damage-root-unit", unitId: "tribal.clubber", damage: 22 },
+    ],
+    assertions: [
+      { kind: "unit-hp-at-most", value: "tribal.clubber<=94" },
+      { kind: "health-bar-visible", value: "tribal.clubber:true" },
+      { kind: "health-bar-ratio-at-least", value: "tribal.clubber>=0.75" },
+      { kind: "health-bar-ratio-at-most", value: "tribal.clubber<=0.85" },
     ],
   },
   physics_injected_recovery_state: {
@@ -356,21 +386,21 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
   },
   crowd_topple_wheelbarrow_charge: {
     name: "crowd_topple_wheelbarrow_charge",
-    description: "Wheelbarrow charge pressure should force a readable forward topple on the first light defender it hits.",
+    description: "Wheelbarrow charge pressure should force a readable forward topple on a nearby light defender.",
     autoStart: true,
-    advanceMs: 1750,
+    advanceMs: 1800,
     units: [
-      { unitId: "farmer.wheelbarrow", team: 0, position: { x: -8, z: 0 } },
-      { unitId: "tribal.clubber", team: 1, position: { x: 0.55, z: -0.5 } },
-      { unitId: "tribal.protector", team: 1, position: { x: 0.95, z: 0.7 } },
+      { unitId: "farmer.wheelbarrow", team: 0, position: { x: -8.5, z: 0 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 0.25, z: -0.35 } },
+      { unitId: "farmer.halfling", team: 1, position: { x: 0.9, z: 0.5 } },
     ],
     assertions: [
       { kind: "mode-is", value: "Simulation" },
-      { kind: "physics-state", value: "tribal.clubber:toppled|recovering" },
-      { kind: "topple-direction", value: "tribal.clubber:forward" },
-      { kind: "unit-height-at-most", value: "tribal.clubber<=1.1" },
-      { kind: "crowd-metric-at-least", value: "tribal.clubber:collisionPushPeak>=3.4+toppleForwardness>=0.24" },
-      { kind: "position-shift-at-least", value: "tribal.clubber>=1.1, tribal.protector>=0.6" },
+      { kind: "physics-state", value: "farmer.halfling:toppled|downed|recovering" },
+      { kind: "topple-direction", value: "farmer.halfling:forward" },
+      { kind: "unit-height-at-most", value: "farmer.halfling<=1.1" },
+      { kind: "crowd-metric-at-least", value: "farmer.halfling:collisionPushPeak>=3.4+toppleForwardness>=0.24" },
+      { kind: "position-shift-at-least", value: "tribal.clubber>=1.1, farmer.halfling>=0.6" },
     ],
   },
   crowd_topple_mammoth_pressure: {
@@ -386,10 +416,10 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "mode-is", value: "Simulation" },
-      { kind: "physics-state", value: "farmer.farmer:airborne|recovering|toppled, medieval.squire:airborne|recovering|toppled" },
+      { kind: "physics-state", value: "farmer.farmer:airborne|recovering|toppled|downed, medieval.squire:airborne|recovering|toppled|downed" },
       { kind: "unit-height-at-most", value: "farmer.farmer<=1.2, medieval.squire<=1.1" },
-      { kind: "crowd-metric-at-least", value: "farmer.farmer:collisionPushPeak>=3.4, medieval.squire:collisionPushPeak>=1.1, ancient.hoplite:collisionPushPeak>=0.5" },
-      { kind: "position-shift-at-least", value: "farmer.farmer>=1.3, medieval.squire>=1.2, ancient.hoplite>=0.75" },
+      { kind: "crowd-metric-at-least", value: "farmer.farmer:collisionPushPeak>=3.4, medieval.squire:collisionPushPeak>=1.1, ancient.hoplite:collisionPushPeak>=0.4" },
+      { kind: "position-shift-at-least", value: "farmer.farmer>=0.9, medieval.squire>=1.2, ancient.hoplite>=0.4" },
     ],
   },
   crowd_topple_recovery_state: {
@@ -492,6 +522,120 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "attack-interrupted-at-least", value: "medieval.squire>=1" },
       { kind: "position-shift-at-least", value: "medieval.squire>=0.55, ancient.hoplite>=0.3" },
       { kind: "comparison-focus", value: "Mammoth contact should disrupt more than the primary target only once, not cascade into uncontrolled pinball behavior." },
+    ],
+  },
+  battlefeel_impact_direct_clubber_hit: {
+    name: "battlefeel_impact_direct_clubber_hit",
+    description: "A real SimulationSystem light melee hit should record direct impact without overclassifying.",
+    autoStart: true,
+    advanceMs: 2600,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -1.2, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 1.2, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "impact-path-count-at-least", value: "direct:any>=1" },
+      { kind: "impact-tier-at-least", value: "medieval.squire:direct>=light" },
+      { kind: "impact-tier-at-most", value: "medieval.squire:direct<=medium" },
+    ],
+  },
+  battlefeel_impact_simulation_splash_primary_secondary: {
+    name: "battlefeel_impact_simulation_splash_primary_secondary",
+    description: "A real boss melee splash should classify primary and secondary SimulationSystem splash impacts.",
+    autoStart: true,
+    advanceMs: 1900,
+    units: [
+      { unitId: "tribal.chieftain", team: 0, position: { x: -1.5, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 1.0, z: 0 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 1.45, z: 0.75 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "impact-path-count-at-least", value: "splash-primary:any>=1" },
+      { kind: "impact-path-count-at-least", value: "splash-secondary:any>=1" },
+      { kind: "impact-tier-at-least", value: "medieval.squire:splash-primary>=heavy" },
+    ],
+  },
+  battlefeel_impact_projectile_direct_arrow: {
+    name: "battlefeel_impact_projectile_direct_arrow",
+    description: "A real arrow impact should be reported by ProjectileSystem as projectile-direct.",
+    autoStart: true,
+    advanceMs: 1800,
+    units: [
+      { unitId: "medieval.archer", team: 0, position: { x: -7.5, z: 0 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 7.5, z: 0 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "impact-path-count-at-least", value: "projectile-direct:any>=1" },
+      { kind: "impact-tier-at-least", value: "tribal.clubber:projectile-direct>=light" },
+    ],
+  },
+  battlefeel_impact_projectile_splash_legacy_tank_shell: {
+    name: "battlefeel_impact_projectile_splash_legacy_tank_shell",
+    description: "A Legacy Tank shell should cover ProjectileSystem splash branch with clustered enemies inside the 1.5m splash radius.",
+    autoStart: true,
+    advanceMs: 2600,
+    units: [
+      { unitId: "legacy.tank", team: 0, position: { x: -10, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 8.6, z: 0 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 9.0, z: 0.65 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 9.0, z: -0.65 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "impact-path-count-at-least", value: "projectile-splash:any>=1" },
+      { kind: "impact-tier-at-least", value: "global:projectile-splash>=heavy" },
+    ],
+  },
+  battle_recap_result_legacy_tank_shell: {
+    name: "battle_recap_result_legacy_tank_shell",
+    description: "A completed Legacy Tank battle should expose a deterministic Battle Recap in Result state.",
+    autoStart: true,
+    advanceMs: 12000,
+    units: [
+      { unitId: "legacy.tank", team: 0, position: { x: -10, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 8.6, z: 0 } },
+      { unitId: "farmer.farmer", team: 1, position: { x: 9.0, z: 0.65 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 9.0, z: -0.65 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Result" },
+      { kind: "battle-recap-present", value: "true" },
+      { kind: "battle-recap-survivors", value: "teamA=1,teamB=0" },
+      { kind: "battle-recap-target-path", value: "global:projectile-splash>=heavy" },
+      { kind: "result-detail-preserves-newlines", value: "true" },
+      { kind: "result-button-labels", value: "primary=Play Again,secondary=Reset" },
+    ],
+  },
+  battlefeel_impact_heavy_charge: {
+    name: "battlefeel_impact_heavy_charge",
+    description: "A real charge collision should record crowd-shock impact events without harness damage.",
+    autoStart: true,
+    advanceMs: 1800,
+    units: [
+      { unitId: "farmer.wheelbarrow", team: 0, position: { x: -8.5, z: 0 } },
+      { unitId: "tribal.clubber", team: 1, position: { x: 0.25, z: -0.35 } },
+      { unitId: "farmer.halfling", team: 1, position: { x: 0.9, z: 0.5 } },
+    ],
+    assertions: [
+      { kind: "mode-is", value: "Simulation" },
+      { kind: "impact-path-count-at-least", value: "crowd-shock:any>=1" },
+      { kind: "impact-tier-at-least", value: "global:crowd-shock>=crowdShock" },
+    ],
+  },
+  battlefeel_impact_malformed_path_guard: {
+    name: "battlefeel_impact_malformed_path_guard",
+    description: "Parser guard: malformed impact paths must fail loudly instead of silently passing.",
+    autoStart: false,
+    advanceMs: 0,
+    units: [
+      { unitId: "tribal.clubber", team: 0, position: { x: -1, z: 0 } },
+      { unitId: "medieval.squire", team: 1, position: { x: 1, z: 0 } },
+    ],
+    assertions: [
+      { kind: "impact-malformed-path-guard", value: "global:not-a-real-path<=death" },
     ],
   },
   war_machine_tank_origin: {

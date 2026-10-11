@@ -35,6 +35,13 @@ import { SimulationSystem } from "./combat/simulationSystem";
 import type { SpawnUnitOptions } from "./combat/simulationSystem";
 import { ProjectileSystem } from "./combat/projectileSystem";
 import { VisualEffects } from "./combat/visualEffects";
+import {
+  IMPACT_PATHS,
+  IMPACT_TIER_RANK,
+  ImpactPresentation,
+  type ImpactPath,
+  type ImpactTier,
+} from "./combat/impactPresentation";
 import { UnitFactory } from "./units/unitFactory";
 import { RuntimeUnit } from "./units/runtimeUnit";
 import { getLinkedActorPreset, type LinkedActorSpec } from "./units/linkedActorPresets";
@@ -254,10 +261,15 @@ const stateMachine = new GameStateMachine();
 const simulation = new SimulationSystem();
 const projectileSystem = new ProjectileSystem(scene);
 const visualEffects = new VisualEffects(scene);
+const impactPresentation = new ImpactPresentation();
+impactPresentation.visualEffects = visualEffects;
+impactPresentation.onShake = (intensity) => camCtrl.shake(intensity);
 simulation.projectileSystem = projectileSystem;
 simulation.visualEffects = visualEffects;
+simulation.impactPresentation = impactPresentation;
 projectileSystem.onShake = (intensity) => camCtrl.shake(intensity);
 projectileSystem.visualEffects = visualEffects;
+projectileSystem.impactPresentation = impactPresentation;
 const unitFactory = new UnitFactory(scene);
 unitFactory.shadowGenerator = shadowGen;
 let activeMapInstance: BattleMapInstance = loadBattleMap(scene, DEFAULT_BATTLE_MAP_ID);
@@ -288,6 +300,7 @@ let selectedCampaignScenarioId: string | null = null;
 const lockedCampaignRootIds = new Set<number>();
 let pendingCampaignResolutionTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingCampaignResultAction: "retry" | "advance" = "retry";
+let lastBattleRecap: BattleRecap | null = null;
 let galleryCaptureSession: {
   scenarioId: string;
   cameraBeforeGallery: CameraViewState;
@@ -988,6 +1001,7 @@ function resetBattle(options: {
   suppressStatus?: boolean;
 } = {}): void {
   dismissTitleIntro();
+  lastBattleRecap = null;
   clearPendingCampaignResolution();
   if (campaignSession && !options.preserveCampaignSession) {
     reloadCurrentCampaignScenario("Scenario reset.");
@@ -1001,6 +1015,7 @@ function resetBattle(options: {
   simulation.endSimulation(worldTimeSeconds);
   projectileSystem.dispose();
   visualEffects.dispose();
+  impactPresentation.reset();
 
   const roots = placedUnits.filter((unit) => !unit.linkedParent);
   for (const unit of roots) {
@@ -1063,7 +1078,115 @@ function checkVictory(): void {
   showResult(result);
 }
 
+function formatTeamLabel(team: number | null): string {
+  if (team === 0) return "Team A";
+  if (team === 1) return "Team B";
+  return "Draw";
+}
+
+function getRootRuntimeUnit(unit: RuntimeUnit): RuntimeUnit {
+  let current = unit;
+  while (current.linkedParent) current = current.linkedParent;
+  return current;
+}
+
+function getRootPlacementIndex(root: RuntimeUnit): number {
+  const roots = placedUnits.filter((unit) => !unit.linkedParent);
+  const index = roots.indexOf(root);
+  return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
+}
+
+function selectPeakImpactPath(unitDebug: {
+  peakByPath: Partial<Record<ImpactPath, ImpactTier>>;
+  countsByPath: Partial<Record<ImpactPath, number>>;
+}): { path: ImpactPath; tier: ImpactTier; eventCount: number } | null {
+  let best: { path: ImpactPath; tier: ImpactTier; eventCount: number } | null = null;
+  for (const path of IMPACT_PATHS) {
+    const tier = unitDebug.peakByPath[path];
+    if (!tier || tier === "none") continue;
+    const eventCount = unitDebug.countsByPath[path] ?? 0;
+    if (
+      !best
+      || IMPACT_TIER_RANK[tier] > IMPACT_TIER_RANK[best.tier]
+      || (IMPACT_TIER_RANK[tier] === IMPACT_TIER_RANK[best.tier] && eventCount > best.eventCount)
+    ) {
+      best = { path, tier, eventCount };
+    }
+  }
+  return best;
+}
+
+function buildBattleRecap(result: BattleResult): BattleRecap {
+  const outcomeLabel = result.isDraw ? "Draw" : `${formatTeamLabel(result.winner)} Wins`;
+  const impactDebug = impactPresentation.getDebugSnapshot();
+  const runtimeUnits = new Map(placedUnits.map((unit) => [unit.runtimeId, unit]));
+  const candidates = impactDebug.units
+    .map((debug) => {
+      const unit = runtimeUnits.get(debug.runtimeId);
+      if (!unit) return null;
+      const path = selectPeakImpactPath(debug);
+      if (!path) return null;
+      const root = getRootRuntimeUnit(unit);
+      return {
+        debug,
+        unit,
+        root,
+        rootIndex: getRootPlacementIndex(root),
+        path,
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+  candidates.sort((a, b) => (
+    IMPACT_TIER_RANK[b.debug.peakImpactTier] - IMPACT_TIER_RANK[a.debug.peakImpactTier]
+    || b.debug.impactEventCount - a.debug.impactEventCount
+    || a.rootIndex - b.rootIndex
+    || a.unit.runtimeId - b.unit.runtimeId
+  ));
+
+  const best = candidates[0] ?? null;
+  const mostImpactedTarget = best ? {
+    unitId: best.unit.definition.id,
+    displayName: best.unit.definition.displayName,
+    runtimeId: best.unit.runtimeId,
+    team: best.unit.team as 0 | 1,
+    alive: !best.unit.isDead,
+    linkedParentId: best.unit.linkedParent?.runtimeId ?? null,
+    rootRuntimeId: best.root.runtimeId,
+    rootUnitId: best.root.definition.id,
+    path: best.path.path,
+    tier: best.path.tier,
+    eventCount: best.path.eventCount,
+  } : null;
+
+  const summaryLines = [
+    `Time: ${result.durationSeconds.toFixed(1)}s`,
+    `Recap: ${outcomeLabel}.`,
+    `Remaining: Team A ${result.teamALiving}, Team B ${result.teamBLiving}`,
+    mostImpactedTarget
+      ? `Most impacted: ${mostImpactedTarget.displayName} (${formatTeamLabel(mostImpactedTarget.team)}) took ${mostImpactedTarget.eventCount} ${mostImpactedTarget.path} ${mostImpactedTarget.eventCount === 1 ? "event" : "events"} peaking at ${mostImpactedTarget.tier}.`
+      : "Most impacted: No major impact was recorded.",
+  ];
+
+  return {
+    outcome: {
+      label: outcomeLabel,
+      winner: result.isDraw ? null : result.winner,
+      isDraw: result.isDraw,
+      durationSeconds: result.durationSeconds,
+    },
+    survivors: {
+      teamA: result.teamALiving,
+      teamB: result.teamBLiving,
+      source: "BattleResult.teamLivingFields",
+    },
+    mostImpactedTarget,
+    summaryLines,
+  };
+}
+
 function showResult(result: BattleResult): void {
+  lastBattleRecap = buildBattleRecap(result);
   if (btnResultPrimaryEl) {
     btnResultPrimaryEl.textContent = campaignSession
       ? (!result.isDraw && result.winner === 0 ? "Next Scenario" : "Retry")
@@ -1075,10 +1198,7 @@ function showResult(result: BattleResult): void {
       : "Reset";
   }
   resultTitleEl.textContent = result.isDraw ? "Draw" : `Team ${result.winner === 0 ? "A" : "B"} Wins!`;
-  resultDetailEl.textContent =
-    `Time: ${result.durationSeconds.toFixed(1)}s\n` +
-    `Team A Remaining: ${result.teamALiving}\n` +
-    `Team B Remaining: ${result.teamBLiving}`;
+  resultDetailEl.textContent = lastBattleRecap.summaryLines.join("\n");
   resultOverlayEl.classList.add("visible");
   if (campaignSession) {
     const isPlayerVictory = !result.isDraw && result.winner === 0;
@@ -1092,6 +1212,7 @@ function showResult(result: BattleResult): void {
 }
 
 function playAgain(): void {
+  lastBattleRecap = null;
   if (campaignSession) {
     reloadCurrentCampaignScenario("Campaign battle reloaded.");
     return;
@@ -1126,6 +1247,7 @@ function playAgain(): void {
 
   projectileSystem.dispose();
   visualEffects.dispose();
+  impactPresentation.reset();
 
   removeMode = false;
   btnRemoveEl?.classList.remove("remove-active");
@@ -1138,6 +1260,7 @@ function loadCampaignScenario(statusMessage?: string): void {
   const activeCampaign = getActiveCampaignDefinition();
   const activeScenario = getActiveCampaignScenarioDefinition();
   if (!campaignSession || !activeCampaign || !activeScenario) return;
+  lastBattleRecap = null;
   selectedCampaignId = activeCampaign.id;
   selectedCampaignScenarioId = activeScenario.id;
   clearPendingCampaignResolution();
@@ -1600,11 +1723,42 @@ interface NumericExpectation {
   expected: number;
 }
 
+interface BattleRecap {
+  outcome: {
+    label: string;
+    winner: number | null;
+    isDraw: boolean;
+    durationSeconds: number;
+  };
+  survivors: {
+    teamA: number;
+    teamB: number;
+    source: "BattleResult.teamLivingFields";
+  };
+  mostImpactedTarget: null | {
+    unitId: string;
+    displayName: string;
+    runtimeId: number;
+    team: 0 | 1;
+    alive: boolean;
+    linkedParentId: number | null;
+    rootRuntimeId: number;
+    rootUnitId: string;
+    path: ImpactPath;
+    tier: ImpactTier;
+    eventCount: number;
+  };
+  summaryLines: string[];
+}
+
+const impactPaths = new Set<ImpactPath>(IMPACT_PATHS);
+
 const galleryManifest = new Map<string, GalleryCaptureManifestEntry>();
 
 function buildGameStatePayload() {
   const activeCampaign = getActiveCampaignDefinition();
   const activeCampaignScenario = getActiveCampaignScenarioDefinition();
+  const impactDebug = impactPresentation.getDebugSnapshot();
   return {
     coordinateSystem: "x:right, z:forward, y:up, origin:center line",
     mode: GameState[stateMachine.currentState],
@@ -1625,6 +1779,15 @@ function buildGameStatePayload() {
       teamA: budgetSystem.getRemaining(0),
       teamB: budgetSystem.getRemaining(1),
     },
+    resultOverlay: {
+      visible: resultOverlayEl.classList.contains("visible"),
+      title: resultTitleEl.textContent ?? "",
+      detail: resultDetailEl.textContent ?? "",
+      detailWhiteSpace: getComputedStyle(resultDetailEl).whiteSpace,
+      primaryLabel: btnResultPrimaryEl?.textContent ?? "",
+      secondaryLabel: btnResultSecondaryEl?.textContent ?? "",
+      pendingCampaignResultAction,
+    },
     map: {
       id: activeMapInstance.id,
       displayName: activeMapInstance.displayName,
@@ -1633,6 +1796,7 @@ function buildGameStatePayload() {
       obstacles: activeMapInstance.obstacles.length,
     },
     units: placedUnits.map((unit) => {
+      const unitImpactDebug = impactPresentation.getUnitDebug(unit);
       const attackEmitter = unit.getAttackEmitter();
       const impactEmitter = unit.getImpactEmitter();
       const attackOrigin = unit.getAttackOrigin(false);
@@ -1686,6 +1850,8 @@ function buildGameStatePayload() {
         alive: !unit.isDead,
         hp: Math.round(unit.currentHealth),
         maxHp: Math.round(unit.maxHealth),
+        healthBarVisible: Boolean(unit.healthBarMesh?.isVisible && unit.healthBarBg?.isVisible),
+        healthBarFillRatio: Number((unit.healthBarMesh?.scaling.x ?? 0).toFixed(2)),
         staggered: unit.isStaggered,
         crowdPressure: Number(unit.crowdPressure.toFixed(2)),
         balancePressure: Number(unit.balancePressure.toFixed(2)),
@@ -1705,12 +1871,20 @@ function buildGameStatePayload() {
         collisionPushTotal: Number(unit.collisionPushTotal.toFixed(2)),
         collisionPushPeak: Number(unit.collisionPushPeak.toFixed(2)),
         collisionContacts: unit.collisionContactCount,
+        lastImpactTier: unitImpactDebug?.lastImpactTier ?? "none",
+        peakImpactTier: unitImpactDebug?.peakImpactTier ?? "none",
+        impactEventCount: unitImpactDebug?.impactEventCount ?? 0,
+        lastImpactPath: unitImpactDebug?.lastImpactPath ?? null,
+        impactPeakByPath: unitImpactDebug?.peakByPath ?? {},
+        impactCountsByPath: unitImpactDebug?.countsByPath ?? {},
         y: Number(unit.position.y.toFixed(2)),
         x: Number(unit.position.x.toFixed(2)),
         z: Number(unit.position.z.toFixed(2)),
       };
     }),
     projectiles: projectileSystem.activeCount,
+    impactDebug,
+    battleRecap: lastBattleRecap,
   };
 }
 
@@ -1954,6 +2128,171 @@ function getImpactRoleSet(state: GameTextState, root: GameTextUnitState): Set<st
   return roles;
 }
 
+function isImpactTier(value: string): value is ImpactTier {
+  return Object.prototype.hasOwnProperty.call(IMPACT_TIER_RANK, value);
+}
+
+function isImpactPath(value: string): value is ImpactPath {
+  return impactPaths.has(value as ImpactPath);
+}
+
+function compareImpactTier(actual: ImpactTier, operator: ">=" | "<=", expected: ImpactTier): boolean {
+  return operator === ">="
+    ? IMPACT_TIER_RANK[actual] >= IMPACT_TIER_RANK[expected]
+    : IMPACT_TIER_RANK[actual] <= IMPACT_TIER_RANK[expected];
+}
+
+function getUnitImpactTier(root: GameTextUnitState, path: string): ImpactTier {
+  if (path === "any") return ((root as { peakImpactTier?: ImpactTier }).peakImpactTier ?? "none");
+  const byPath = (root as { impactPeakByPath?: Partial<Record<ImpactPath, ImpactTier>> }).impactPeakByPath ?? {};
+  return byPath[path as ImpactPath] ?? "none";
+}
+
+function getGlobalImpactTier(state: GameTextState, path: string): ImpactTier {
+  if (path === "any") return state.impactDebug.peakTier;
+  let peak: ImpactTier = "none";
+  for (const unit of state.impactDebug.units) {
+    const tier = unit.peakByPath[path as ImpactPath] ?? "none";
+    if (IMPACT_TIER_RANK[tier] > IMPACT_TIER_RANK[peak]) peak = tier;
+  }
+  return peak;
+}
+
+function evaluateImpactTierAssertion(
+  state: GameTextState,
+  value: string,
+  operator: ">=" | "<=",
+): string[] {
+  const match = value.match(/^([^:]+):([^<>=]+)(>=|<=)([A-Za-z]+)$/);
+  if (!match || match[3] !== operator) return [`Unsupported impact-tier clause: ${value}`];
+  const scope = match[1].trim();
+  const path = match[2].trim();
+  const expected = match[4].trim();
+  if (!isImpactTier(expected)) return [`Unsupported impact tier: ${expected}`];
+  if (path !== "any" && !isImpactPath(path)) return [`Unsupported impact path: ${path}`];
+  const actual = scope === "global"
+    ? getGlobalImpactTier(state, path)
+    : (() => {
+      const root = getScenarioRoot(state, scope);
+      return root ? getUnitImpactTier(root, path) : null;
+    })();
+  if (actual === null) return [`Missing impact context for ${scope}`];
+  return compareImpactTier(actual, operator, expected)
+    ? []
+    : [`${scope}:${path} expected impact tier ${operator} ${expected}, got ${actual}`];
+}
+
+function evaluateImpactCountAssertion(state: GameTextState, value: string): string[] {
+  const match = value.match(/^([^:]+):([^<>=]+)>=(\d+)$/);
+  if (!match) return [`Unsupported impact-count clause: ${value}`];
+  const scope = match[1].trim();
+  const tier = match[2].trim();
+  const expected = Number(match[3]);
+  let actual = 0;
+  if (scope === "global") {
+    if (tier === "any") actual = state.impactDebug.eventCount;
+    else if (isImpactTier(tier)) actual = state.impactDebug.countsByTier[tier] ?? 0;
+    else return [`Unsupported impact tier: ${tier}`];
+  } else {
+    const root = getScenarioRoot(state, scope);
+    if (!root) return [`Missing impact count context for ${scope}`];
+    actual = Number((root as { impactEventCount?: number }).impactEventCount ?? 0);
+    if (tier !== "any") {
+      const peakTier = (root as { peakImpactTier?: ImpactTier }).peakImpactTier ?? "none";
+      actual = isImpactTier(tier) && IMPACT_TIER_RANK[peakTier] >= IMPACT_TIER_RANK[tier] ? actual : 0;
+    }
+  }
+  return actual >= expected ? [] : [`${scope}:${tier} expected impact count >= ${expected}, got ${actual}`];
+}
+
+function evaluateImpactPathCountAssertion(state: GameTextState, value: string): string[] {
+  const match = value.match(/^([^:]+):([^<>=]+)>=(\d+)$/);
+  if (!match) return [`Unsupported impact-path-count clause: ${value}`];
+  const pathText = match[1].trim();
+  const tier = match[2].trim();
+  const expected = Number(match[3]);
+  if (!isImpactPath(pathText)) return [`Unsupported impact path: ${pathText}`];
+  const path = pathText as ImpactPath;
+  if (tier !== "any" && !isImpactTier(tier)) return [`Unsupported impact tier: ${tier}`];
+  let actual = 0;
+  for (const unit of state.impactDebug.units) {
+    const count = unit.countsByPath[path] ?? 0;
+    if (tier === "any") {
+      actual += count;
+      continue;
+    }
+    const peak = unit.peakByPath[path] ?? "none";
+    if (IMPACT_TIER_RANK[peak] >= IMPACT_TIER_RANK[tier]) actual += count;
+  }
+  return actual >= expected ? [] : [`${path}:${tier} expected impact path count >= ${expected}, got ${actual}`];
+}
+
+function evaluateBattleRecapPresentAssertion(state: GameTextState, value: string): string[] {
+  const expected = value.trim();
+  if (expected !== "true" && expected !== "false") return [`Unsupported battle-recap-present value: ${value}`];
+  const actual = state.battleRecap !== null;
+  const expectedBool = expected === "true";
+  return actual === expectedBool ? [] : [`Expected battleRecap present=${expectedBool}, got ${actual}`];
+}
+
+function evaluateBattleRecapSurvivorsAssertion(state: GameTextState, value: string): string[] {
+  const match = value.match(/^teamA=(\d+),teamB=(\d+)$/);
+  if (!match) return [`Unsupported battle-recap-survivors clause: ${value}`];
+  if (!state.battleRecap) return ["Missing battleRecap for survivor assertion"];
+  const expectedA = Number(match[1]);
+  const expectedB = Number(match[2]);
+  const actual = state.battleRecap.survivors;
+  const failures: string[] = [];
+  if (actual.teamA !== expectedA) failures.push(`teamA expected ${expectedA}, got ${actual.teamA}`);
+  if (actual.teamB !== expectedB) failures.push(`teamB expected ${expectedB}, got ${actual.teamB}`);
+  return failures;
+}
+
+function evaluateBattleRecapTargetPathAssertion(state: GameTextState, value: string): string[] {
+  const match = value.match(/^([^:]+):([^<>=]+)>=(\w+)$/);
+  if (!match) return [`Unsupported battle-recap-target-path clause: ${value}`];
+  if (!state.battleRecap) return ["Missing battleRecap for target-path assertion"];
+  const scope = match[1].trim();
+  const path = match[2].trim();
+  const tier = match[3].trim();
+  if (!isImpactPath(path)) return [`Unsupported impact path: ${path}`];
+  if (!isImpactTier(tier)) return [`Unsupported impact tier: ${tier}`];
+  const target = state.battleRecap.mostImpactedTarget;
+  if (!target) return ["Expected recap target, got null"];
+  const scopeMatches = scope === "global" || target.unitId === scope || target.rootUnitId === scope;
+  if (!scopeMatches) return [`Expected recap target scope ${scope}, got ${target.unitId} rooted at ${target.rootUnitId}`];
+  if (target.path !== path) return [`Expected recap path ${path}, got ${target.path}`];
+  return compareImpactTier(target.tier, ">=", tier)
+    ? []
+    : [`Expected recap tier >= ${tier}, got ${target.tier}`];
+}
+
+function evaluateResultButtonLabelsAssertion(state: GameTextState, value: string): string[] {
+  const match = value.match(/^primary=(.+),secondary=(.+)$/);
+  if (!match) return [`Unsupported result-button-labels clause: ${value}`];
+  const expectedPrimary = match[1].trim();
+  const expectedSecondary = match[2].trim();
+  const failures: string[] = [];
+  if (state.resultOverlay.primaryLabel !== expectedPrimary) {
+    failures.push(`primary expected ${expectedPrimary}, got ${state.resultOverlay.primaryLabel}`);
+  }
+  if (state.resultOverlay.secondaryLabel !== expectedSecondary) {
+    failures.push(`secondary expected ${expectedSecondary}, got ${state.resultOverlay.secondaryLabel}`);
+  }
+  return failures;
+}
+
+function evaluateResultDetailPreservesNewlinesAssertion(state: GameTextState, value: string): string[] {
+  const expected = value.trim();
+  if (expected !== "true" && expected !== "false") return [`Unsupported result-detail-preserves-newlines value: ${value}`];
+  const preservingWhiteSpaceValues = new Set(["pre", "pre-line", "pre-wrap", "break-spaces"]);
+  const actual = preservingWhiteSpaceValues.has(state.resultOverlay.detailWhiteSpace);
+  const expectedBool = expected === "true";
+  return actual === expectedBool
+    ? []
+    : [`Expected result detail newline preservation=${expectedBool}, got white-space: ${state.resultOverlay.detailWhiteSpace}`];
+}
+
 function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: string; value: string }, scenario?: ScenarioSpec): ScenarioAssertionResult {
   const pass = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: true, details });
   const fail = (details: string): ScenarioAssertionResult => ({ kind: assertion.kind, value: assertion.value, passed: false, details });
@@ -2081,6 +2420,45 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
         }
       }
       return failures.length === 0 ? pass("Unit HP thresholds matched.") : fail(failures.join("; "));
+    }
+    case "health-bar-visible": {
+      const clauses = parseUnitClauses(assertion.value);
+      const failures: string[] = [];
+      for (const { unitId, clause } of clauses) {
+        const match = clause.match(/^(true|false)$/);
+        if (!match) return fail(`Unsupported health-bar-visible clause: ${clause}`);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing health-bar context for ${unitId}`);
+          continue;
+        }
+        const expected = match[1] === "true";
+        const actual = Boolean((root as { healthBarVisible?: boolean }).healthBarVisible);
+        if (actual !== expected) failures.push(`${unitId} expected healthBarVisible=${expected}, got ${actual}`);
+      }
+      return failures.length === 0 ? pass("Health bar visibility matched.") : fail(failures.join("; "));
+    }
+    case "health-bar-ratio-at-least":
+    case "health-bar-ratio-at-most": {
+      const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
+      const failures: string[] = [];
+      const operator = assertion.kind === "health-bar-ratio-at-least" ? ">=" : "<=";
+      for (const part of parts) {
+        const match = part.match(/^([^<>=]+)(>=|<=)(-?\d+(?:\.\d+)?)$/);
+        if (!match || match[2] !== operator) return fail(`Unsupported health-bar-ratio clause: ${part}`);
+        const unitId = match[1].trim();
+        const expected = Number(match[3]);
+        const root = getScenarioRoot(state, unitId);
+        if (!root) {
+          failures.push(`Missing health-bar ratio context for ${unitId}`);
+          continue;
+        }
+        const actual = Number((root as { healthBarFillRatio?: number }).healthBarFillRatio ?? 0);
+        if (operator === ">=" ? actual < expected : actual > expected) {
+          failures.push(`${unitId} expected health bar ratio ${operator} ${expected}, got ${actual}`);
+        }
+      }
+      return failures.length === 0 ? pass("Health bar ratios matched.") : fail(failures.join("; "));
     }
     case "unit-height-at-most": {
       const parts = assertion.value.split(",").map((part) => part.trim()).filter(Boolean);
@@ -2329,6 +2707,49 @@ function evaluateScenarioAssertion(state: GameTextState, assertion: { kind: stri
         }
       }
       return failures.length === 0 ? pass("Downed block timing matched.") : fail(failures.join("; "));
+    }
+    case "impact-tier-at-least": {
+      const failures = evaluateImpactTierAssertion(state, assertion.value, ">=");
+      return failures.length === 0 ? pass("Impact tier lower bound matched.") : fail(failures.join("; "));
+    }
+    case "impact-tier-at-most": {
+      const failures = evaluateImpactTierAssertion(state, assertion.value, "<=");
+      return failures.length === 0 ? pass("Impact tier upper bound matched.") : fail(failures.join("; "));
+    }
+    case "impact-count-at-least": {
+      const failures = evaluateImpactCountAssertion(state, assertion.value);
+      return failures.length === 0 ? pass("Impact count matched.") : fail(failures.join("; "));
+    }
+    case "impact-path-count-at-least": {
+      const failures = evaluateImpactPathCountAssertion(state, assertion.value);
+      return failures.length === 0 ? pass("Impact path count matched.") : fail(failures.join("; "));
+    }
+    case "impact-malformed-path-guard": {
+      const failures = evaluateImpactTierAssertion(state, assertion.value, "<=");
+      const hasUnsupportedPathFailure = failures.some((failure) => failure.includes("Unsupported impact path"));
+      return hasUnsupportedPathFailure
+        ? pass(`Malformed path failed loudly: ${failures.join("; ")}`)
+        : fail(`Malformed impact path did not fail loudly; result was: ${failures.join("; ") || "no failure"}`);
+    }
+    case "battle-recap-present": {
+      const failures = evaluateBattleRecapPresentAssertion(state, assertion.value);
+      return failures.length === 0 ? pass("Battle recap presence matched.") : fail(failures.join("; "));
+    }
+    case "battle-recap-survivors": {
+      const failures = evaluateBattleRecapSurvivorsAssertion(state, assertion.value);
+      return failures.length === 0 ? pass("Battle recap survivors matched.") : fail(failures.join("; "));
+    }
+    case "battle-recap-target-path": {
+      const failures = evaluateBattleRecapTargetPathAssertion(state, assertion.value);
+      return failures.length === 0 ? pass("Battle recap target path matched.") : fail(failures.join("; "));
+    }
+    case "result-detail-preserves-newlines": {
+      const failures = evaluateResultDetailPreservesNewlinesAssertion(state, assertion.value);
+      return failures.length === 0 ? pass("Result detail preserves newlines.") : fail(failures.join("; "));
+    }
+    case "result-button-labels": {
+      const failures = evaluateResultButtonLabelsAssertion(state, assertion.value);
+      return failures.length === 0 ? pass("Result button labels matched.") : fail(failures.join("; "));
     }
     case "chain-topple-count-at-least": {
       const match = assertion.value.match(/^(.+?)(>=)(\d+)$/);
@@ -2747,7 +3168,7 @@ window.addEventListener("blur", () => {
 });
 
 // Expose to HTML onclick handlers
-(window as any).game = {
+const gameApi = {
   startBattle,
   startBattleImmediate: () => startBattle(true),
   resetBattle,
@@ -2811,6 +3232,8 @@ window.addEventListener("blur", () => {
   getGalleryManifest,
   listScenarios: listScenarioNames,
 };
+(window as any).game = gameApi;
+(window as any).MOVBattle = gameApi;
 
 // ─── Game loop ───
 engine.runRenderLoop(() => {

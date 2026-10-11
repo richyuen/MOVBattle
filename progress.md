@@ -707,3 +707,9 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Deslop follow-up: removed no functionality, but tightened the changed-file review and corrected presentation-offset rotation handling so authored rotation offsets actually apply.
 - Remaining caveat:
 - The verification screenshots are correct and green, but the close-read value still depends on the current gallery camera presets; any future animation-read pass should keep using simulation-mid gallery captures rather than placement-only stills.
+
+- 2026-04-24: Fixed game-over Battle Recap newline rendering.
+  - Root cause: #resultDetail used default white-space: normal, so textContent newlines were collapsed into one visual line.
+  - Added deterministic scenario assertion result-detail-preserves-newlines to battle_recap_result_legacy_tank_shell, covering computed white-space and preventing regression.
+  - Updated web/index.html #resultDetail to white-space: pre-line so Time/Recap/Remaining/Most impacted render on separate lines while retaining textContent.
+  - Validation: RED browser scenario failed with white-space: normal; GREEN passed on Vite dev and production preview with detailWhiteSpace=pre-line and multiline screenshot artifacts under web/output/result-newline-preview-verification/. Ran cd web && npm run build and bundled web_game_playwright_client.js against preview; screenshots inspected.

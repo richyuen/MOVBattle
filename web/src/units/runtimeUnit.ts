@@ -1,5 +1,6 @@
 import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
+import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
@@ -131,6 +132,7 @@ export class RuntimeUnit {
   // Health bar
   healthBarMesh: Mesh | null = null;
   healthBarBg: Mesh | null = null;
+  healthBarWidth = 1;
 
   get currentHealth(): number { return this._currentHealth; }
   get maxHealth(): number { return this._maxHealth; }
@@ -416,17 +418,19 @@ export class RuntimeUnit {
 
   get isSpinning(): boolean { return this._spinning; }
 
-  applyDamage(damage: number, impulse: Vector3): void {
+  applyDamage(damage: number, impulse: Vector3): ImpactDelta | null {
     if (this._linkedParent && this._isAnchoredActor && this._damageRouting === "parent") {
-      this._linkedParent.applyDamage(damage, impulse);
-      return;
+      return this._linkedParent.applyDamage(damage, impulse);
     }
-    if (this._isDead || damage <= 0) return;
+    if (this._isDead || damage <= 0) return null;
+    const healthBefore = this._currentHealth;
+    const wasDead = this._isDead;
+    const stateBefore = this.battleFeelState;
     this._currentHealth -= damage;
 
     if (this._currentHealth <= 0) {
       this._die(impulse);
-      return;
+      return this._buildImpactDelta(damage, healthBefore, wasDead, stateBefore, impulse);
     }
 
     // Velocity-based knockback for living units
@@ -466,6 +470,34 @@ export class RuntimeUnit {
 
     // Flinch: tilt body toward impact
     this.animator.triggerFlinch();
+    this._updateHealthBar();
+    return this._buildImpactDelta(damage, healthBefore, wasDead, stateBefore, impulse);
+  }
+
+  private _buildImpactDelta(
+    damageApplied: number,
+    healthBefore: number,
+    wasDead: boolean,
+    stateBefore: BattleFeelState,
+    impulse: Vector3,
+  ): ImpactDelta {
+    const stateAfter = this.battleFeelState;
+    return {
+      targetRuntimeId: this.runtimeId,
+      targetUnitId: this.definition.id,
+      damageApplied,
+      healthBefore,
+      healthAfter: this._currentHealth,
+      wasDead,
+      isDead: this._isDead,
+      stateBefore,
+      stateAfter,
+      impulseMagnitude: impulse.length(),
+      killed: !wasDead && this._isDead,
+      toppled: stateBefore !== "toppled" && stateAfter === "toppled",
+      downed: stateBefore !== "downed" && stateAfter === "downed",
+      staggered: stateBefore !== "staggered" && stateAfter === "staggered",
+    };
   }
 
   applyCollisionImpulse(
@@ -564,6 +596,7 @@ export class RuntimeUnit {
   heal(amount: number): void {
     if (this._isDead || amount <= 0) return;
     this._currentHealth = Math.min(this._maxHealth, this._currentHealth + amount);
+    this._updateHealthBar();
   }
 
   applySlow(multiplier: number, durationSeconds: number, now: number): void {
@@ -1060,8 +1093,11 @@ export class RuntimeUnit {
       return;
     }
     const ratio = this._currentHealth / Math.max(1, this._maxHealth);
-    this.healthBarMesh.scaling.x = Math.max(0.01, ratio);
-    this.healthBarMesh.position.x = -(1 - ratio) * 0.5 * 0.5;
+    const clampedRatio = Math.max(0, Math.min(1, ratio));
+    this.healthBarMesh.isVisible = clampedRatio > 0;
+    this.healthBarBg.isVisible = !this._isDead;
+    this.healthBarMesh.scaling.x = Math.max(0.01, clampedRatio);
+    this.healthBarMesh.position.x = -(1 - clampedRatio) * this.healthBarWidth * 0.5;
   }
 
   private _applyVisualPresentation(now: number): void {

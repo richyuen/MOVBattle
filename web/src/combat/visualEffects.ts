@@ -202,45 +202,51 @@ export class VisualEffects {
 
   // ══════════════════ IMPACT DUST ══════════════════
   /** Burst of tan dust spheres on every hit. */
-  spawnImpactDust(position: Vector3): void {
+  spawnImpactDust(position: Vector3, intensity = 1, color = new Color3(0.75, 0.68, 0.5)): void {
     const root = new TransformNode("impactDust", this._scene);
     const pos = position.clone();
     pos.y += 0.3;
     root.position = pos;
 
-    const ps = createDust(this._scene, pos, new Color3(0.75, 0.68, 0.5), 12);
+    const ps = createDust(this._scene, pos, color, Math.max(6, Math.round(12 * intensity)));
+    ps.minSize *= Math.max(0.65, intensity * 0.8);
+    ps.maxSize *= Math.max(0.75, intensity);
+    ps.minEmitPower *= Math.max(0.8, intensity * 0.9);
+    ps.maxEmitPower *= Math.max(0.9, intensity);
     ps.targetStopDuration = 0.1;
     ps.start();
 
     this._effects.push({
       root,
-      remaining: 0.45,
+      remaining: 0.45 + Math.max(0, intensity - 1) * 0.12,
       particles: [ps],
     });
   }
 
   // ══════════════════ HIT SPARKS ══════════════════
   /** Bright sparks that fly outward on melee hit. */
-  spawnHitSparks(position: Vector3): void {
+  spawnHitSparks(position: Vector3, intensity = 1): void {
     const root = new TransformNode("hitSparks", this._scene);
     const pos = position.clone();
     pos.y += 0.5;
     root.position = pos;
 
-    const ps = createSparks(this._scene, pos, new Color3(1, 0.95, 0.7), 15);
+    const ps = createSparks(this._scene, pos, new Color3(1, 0.95, 0.7), Math.max(8, Math.round(15 * intensity)));
+    ps.minEmitPower *= Math.max(0.85, intensity * 0.9);
+    ps.maxEmitPower *= Math.max(0.9, intensity);
     ps.targetStopDuration = 0.05;
     ps.start();
 
     this._effects.push({
       root,
-      remaining: 0.3,
+      remaining: 0.3 + Math.max(0, intensity - 1) * 0.08,
       particles: [ps],
     });
   }
 
   // ══════════════════ HIT FLASH ══════════════════
   /** Bright white pop on every hit. */
-  spawnHitFlash(position: Vector3): void {
+  spawnHitFlash(position: Vector3, intensity = 1): void {
     const flash = MeshBuilder.CreateSphere("hflash", { diameter: 0.1, segments: 4 }, this._scene);
     flash.position = position.clone();
     flash.position.y += 0.5;
@@ -256,7 +262,7 @@ export class VisualEffects {
       update: (_dt, remaining) => {
         const t = 1 - remaining / totalDuration;
         // Scale up quickly, then fade
-        const s = t < 0.53 ? 1 + t * 6 : 4;
+        const s = (t < 0.53 ? 1 + t * 6 : 4) * intensity;
         flash.scaling.setAll(s);
         mat.alpha = t < 0.53 ? 1 : Math.max(0, 1 - (t - 0.53) * 2.1);
       },
