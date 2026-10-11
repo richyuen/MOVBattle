@@ -87,6 +87,7 @@ export class RuntimeUnit {
   // Special: spinning (berserker)
   private _spinning = false;
   private _slowMultiplier = 1;
+  private _cohesionMoveMultiplier = 1;
   private _slowUntil = 0;
 
   // Spawn state for reset
@@ -389,8 +390,18 @@ export class RuntimeUnit {
     }
   }
 
+  get isMoving(): boolean {
+    return this._isMoving;
+  }
+
+  /** Formation pacing: scales approach speed so a rank advances with its slowest neighbour. */
+  setCohesionMoveMultiplier(multiplier: number): void {
+    this._cohesionMoveMultiplier = Math.max(0.5, Math.min(1, multiplier));
+  }
+
   stopMoving(): void {
     this._moveTarget = null;
+    this._cohesionMoveMultiplier = 1;
     if (this._isMoving) {
       this._isMoving = false;
       if (this.animator.state === AnimState.Walking) {
@@ -711,7 +722,7 @@ export class RuntimeUnit {
           ? Math.max(0.22, 1 - this.pressureLoad * this._crowdPhysicsProfile.pressureMovePenalty)
           : 1;
         const appliedDistance = Math.min(
-          this.definition.moveSpeed * this._slowMultiplier * recoveryMoveMultiplier * pressureMoveMultiplier * dt,
+          this.definition.moveSpeed * this._slowMultiplier * this._cohesionMoveMultiplier * recoveryMoveMultiplier * pressureMoveMultiplier * dt,
           Math.sqrt(distSq),
         );
         const proposedPosition = pos.add(dir.scale(appliedDistance));

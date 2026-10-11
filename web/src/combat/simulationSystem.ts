@@ -132,6 +132,9 @@ export class SimulationSystem {
   readonly repathCooldown = 0.35;
   readonly localAvoidanceRadius = 2.6;
   readonly localAvoidanceStrength = 1.45;
+  /** Marching allies only steer apart when nearly touching, so ranks stay closed up. */
+  readonly formationAvoidanceRadius = 0.3;
+  readonly cohesionRadius = 1.5;
   readonly congestionBypassDistance = 2.2;
   private _now = 0;
 
@@ -517,6 +520,7 @@ export class SimulationSystem {
   }
 
   private _moveUnitToward(unit: RuntimeUnit, desired: Vector3, engageDistance: number, now: number): void {
+    unit.setCohesionMoveMultiplier(this._resolveCohesionMoveMultiplier(unit));
     const navigationGrid = this.navigationGrid;
     if (!navigationGrid) {
       unit.moveTo(this._resolveHazardAwareMoveTarget(unit, desired));
@@ -579,6 +583,25 @@ export class SimulationSystem {
     return fallbackRoute?.waypoints.map((waypoint) => waypoint.clone()) ?? [reachableGoal];
   }
 
+  /** Caps approach speed to the slowest marching ally within cohesionRadius. */
+  private _resolveCohesionMoveMultiplier(unit: RuntimeUnit): number {
+    const ownSpeed = unit.definition.moveSpeed;
+    if (ownSpeed <= 0.01) return 1;
+    let slowest = ownSpeed;
+    const radiusSq = this.cohesionRadius * this.cohesionRadius;
+    for (const other of this._units) {
+      if (other === unit || other.isDead || other.linkedParent) continue;
+      if (other.team !== unit.team || !other.isMoving) continue;
+      const otherSpeed = other.definition.moveSpeed;
+      if (otherSpeed <= 0.01 || otherSpeed >= slowest) continue;
+      const dx = other.position.x - unit.position.x;
+      const dz = other.position.z - unit.position.z;
+      if (dx * dx + dz * dz > radiusSq) continue;
+      slowest = otherSpeed;
+    }
+    return slowest / ownSpeed;
+  }
+
   private _applyCrowdAvoidance(unit: RuntimeUnit, waypoint: Vector3): Vector3 {
     const desired = waypoint.subtract(unit.position);
     desired.y = 0;
@@ -594,7 +617,9 @@ export class SimulationSystem {
       const delta = unit.position.subtract(other.position);
       delta.y = 0;
       const distanceSq = delta.lengthSquared();
-      const separation = unit.collisionBodyRadius + other.collisionBodyRadius + this.localAvoidanceRadius;
+      const marchingAlly = other.team === unit.team && other.isMoving;
+      const separation = unit.collisionBodyRadius + other.collisionBodyRadius
+        + (marchingAlly ? this.formationAvoidanceRadius : this.localAvoidanceRadius);
       if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
 
       const distance = Math.sqrt(distanceSq);
