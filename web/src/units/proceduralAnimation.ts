@@ -279,12 +279,12 @@ export class ProceduralAnimator {
     const wobble = 0.08; // constant wobble overlay
 
     // Torso leans forward and sways side to side
-    b.torso.rotation.x = 0.08 + Math.sin(t * speed * 0.5) * wobble * 0.5;
+    b.torso.rotation.x = 0.26 + Math.sin(t * speed * 0.5) * wobble * 0.5;
     b.torso.rotation.z = Math.sin(t * speed * 0.5) * 0.06;
 
     // Head wobbles
     b.neck.rotation.z = Math.sin(t * speed * 0.7 + 1) * 0.08;
-    b.neck.rotation.x = Math.sin(t * speed * 0.5 + 2) * 0.04;
+    b.neck.rotation.x = -0.1 + Math.sin(t * speed * 0.5 + 2) * 0.04;
 
     // Alternating leg swing (TABS-style exaggerated)
     const legSwing = 0.55;
@@ -351,22 +351,22 @@ export class ProceduralAnimator {
     switch (this.locomotionBias) {
       case "heavy_carry":
         b.torso.rotation.x += 0.06;
-        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.45 - 0.28;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.7 - 0.28;
         b.leftShoulder.rotation.x *= 0.82;
         b.rightElbow.rotation.x -= 0.16;
         break;
       case "aimed":
         b.torso.rotation.x += 0.04;
-        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.32 + 0.16;
-        b.leftShoulder.rotation.x = b.leftShoulder.rotation.x * 0.28 - 0.18;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.65 + 0.16;
+        b.leftShoulder.rotation.x = b.leftShoulder.rotation.x * 0.6 - 0.18;
         b.leftElbow.rotation.x -= 0.12;
         b.rightElbow.rotation.x -= 0.06;
         b.torso.rotation.z += Math.sin(t * 4) * 0.02;
         break;
       case "braced":
         b.torso.rotation.x += 0.05;
-        b.leftShoulder.rotation.x = b.leftShoulder.rotation.x * 0.4 - 0.08;
-        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.4 + 0.08;
+        b.leftShoulder.rotation.x = b.leftShoulder.rotation.x * 0.65 - 0.08;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.65 + 0.08;
         b.leftElbow.rotation.x -= 0.08;
         b.rightElbow.rotation.x -= 0.12;
         break;
