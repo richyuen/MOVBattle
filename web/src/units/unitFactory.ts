@@ -31,17 +31,6 @@ const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
 // How much of each preset's flesh tone / cloth tone survives over the team color.
 const SKIN_FLESH_WEIGHT = 0.25;
 const BODY_PRESET_WEIGHT = 0.7;
-// Cloth is a darker second tone of the team color so it reads apart from the skin; dark presets
-// are lifted back to a floor so they never collapse to black.
-const CLOTH_TONE = 0.62;
-const CLOTH_MIN_VALUE = 0.24;
-
-function liftDarkCloth(color: Color3): Color3 {
-  const value = Math.max(color.r, color.g, color.b);
-  if (value >= CLOTH_MIN_VALUE) return color;
-  if (value < 0.001) return new Color3(CLOTH_MIN_VALUE, CLOTH_MIN_VALUE, CLOTH_MIN_VALUE);
-  return color.scale(CLOTH_MIN_VALUE / value);
-}
 
 function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
   return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
@@ -72,12 +61,11 @@ export class UnitFactory {
     const factionColor = FACTION_COLORS[definition.faction] ?? new Color3(0.5, 0.5, 0.5);
     const teamColor = TEAM_COLORS[team] ?? new Color3(0.5, 0.5, 0.5);
     const shouldUseVehicleBody = isVehicleUnit(definition.id) && !options.forceArticulatedBody;
-    const teamBodyColor = Color3.Lerp(
+    const bodyColor = Color3.Lerp(
       factionColor,
       teamColor,
       shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.82 : 0.7,
     );
-    const bodyColor = shouldUseVehicleBody ? teamBodyColor : teamBodyColor.scale(CLOTH_TONE);
     const skinColor = teamColor.scale(0.9);
 
     let body;
@@ -152,7 +140,7 @@ function applyMaterialPreset(
   skinColor: Color3,
 ): void {
   const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor, skinColor);
-  body.bodyMaterial.baseColor = liftDarkCloth(tint.bodyDiffuse);
+  body.bodyMaterial.baseColor = tint.bodyDiffuse;
   body.bodyMaterial.emissiveColor = tint.bodyEmissive;
   body.bodyMaterial.metallic = tint.metallic;
   body.bodyMaterial.roughness = tint.roughness;
