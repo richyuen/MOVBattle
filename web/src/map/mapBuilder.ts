@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh,
+  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData,
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
@@ -11,6 +11,9 @@ const ISLAND_WIDTH = 184;  // floating island slab, X extent
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
+const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
+const BLADE_LIGHT = 0.2;
+const HAZE_MIX = 0.5;      // how far the far treeline is mixed toward the fog color
 
 export interface MapBuildResult {
   zones: PlacementZone[];
@@ -38,7 +41,8 @@ export class TribalSandboxMapBuilder {
     this._createRocks();
     this._createTrees();
     this._createGrassPatches();
-    this._createFieldClumps();
+    this._createFieldBlades();
+    this._createHazeTreeline();
     this._createScatterProps();
     this._createClouds();
     if (this._renderPlacementGuides) {
@@ -88,6 +92,21 @@ export class TribalSandboxMapBuilder {
     const darkLeaves = new StandardMaterial("darkLeaves", this._scene);
     darkLeaves.diffuseColor = new Color3(0.25, 0.42, 0.12);
     darkLeaves.specularColor = new Color3(0.03, 0.03, 0.03);
+
+    // Grass blades: one shade under and one over the field color, so the carpet reads as texture
+    const bladeDark = new StandardMaterial("grassBladeDark", this._scene);
+    bladeDark.diffuseColor = grass.diffuseColor.scale(BLADE_DARK);
+    const bladeLight = new StandardMaterial("grassBladeLight", this._scene);
+    bladeLight.diffuseColor = Color3.Lerp(grass.diffuseColor, Color3.White(), BLADE_LIGHT);
+    for (const blade of [bladeDark, bladeLight]) {
+      blade.specularColor = Color3.Black();
+      blade.backFaceCulling = false;
+    }
+
+    // Far treeline: canopy color pre-mixed toward the sky so it sits back in the haze
+    const hazeTrees = new StandardMaterial("hazeTrees", this._scene);
+    hazeTrees.diffuseColor = Color3.Lerp(darkLeaves.diffuseColor, this._scene.fogColor, HAZE_MIX);
+    hazeTrees.specularColor = Color3.Black();
   }
 
   private _createGround(): void {
@@ -376,33 +395,67 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Chunky grass clumps across the fighting field, merged into one mesh */
-  private _createFieldClumps(): void {
-    const blades: Mesh[] = [];
-    for (let i = 0; i < 70; i++) {
-      const x = -26 + this._seededValue(i, 31) * 52;
-      const z = -16 + this._seededValue(i, 32) * 32;
-      for (let j = 0; j < 3; j++) {
-        const h = 0.28 + this._seededValue(i * 10 + j, 33) * 0.3;
-        const blade = MeshBuilder.CreateCylinder("fieldClump", {
-          height: h, diameterTop: 0, diameterBottom: 0.16, tessellation: 3,
+  /** Dense carpet of small flat grass cards across the fighting field: two meshes, no per-blade nodes */
+  private _createFieldBlades(): void {
+    const BLADES = 9000;
+    for (const [pass, matName] of ["grassBladeDark", "grassBladeLight"].entries()) {
+      const positions: number[] = [];
+      const normals: number[] = [];
+      const indices: number[] = [];
+      for (let i = pass; i < BLADES; i += 2) {
+        // Three blades share a tuft center so the carpet clumps instead of reading as noise.
+        const tuft = Math.floor(i / 3);
+        const x = -34 + this._seededValue(tuft, 31) * 68 + (this._seededValue(i, 34) - 0.5) * 0.5;
+        const z = -24 + this._seededValue(tuft, 32) * 48 + (this._seededValue(i, 35) - 0.5) * 0.5;
+        const h = 0.16 + this._seededValue(i, 33) * 0.22;
+        const yaw = this._seededValue(i, 37) * Math.PI;
+        const half = 0.045 + this._seededValue(i, 38) * 0.03;
+        const dx = Math.cos(yaw) * half;
+        const dz = Math.sin(yaw) * half;
+        const lean = (this._seededValue(i, 36) - 0.5) * 0.16;
+        const base = positions.length / 3;
+        positions.push(x - dx, 0.02, z - dz, x + dx, 0.02, z + dz, x + lean, 0.02 + h, z + lean);
+        // Up-facing normals: blades take the same light as the ground and never go black edge-on.
+        normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
+        indices.push(base, base + 1, base + 2);
+      }
+      const blades = new Mesh(`fieldBlades_${pass}`, this._scene);
+      const data = new VertexData();
+      data.positions = positions;
+      data.normals = normals;
+      data.indices = indices;
+      data.applyToMesh(blades);
+      blades.material = this._scene.getMaterialByName(matName);
+      blades.isPickable = false;
+    }
+  }
+
+  /** Band of many small conifers along the long island edges, behind the big tree ring */
+  private _createHazeTreeline(): void {
+    const cones: Mesh[] = [];
+    const perSide = 150;
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < perSide; i++) {
+        const k = side > 0 ? i : i + perSide;
+        const height = 3.2 + this._seededValue(k, 71) * 3.2;
+        const cone = MeshBuilder.CreateCylinder("hazeTree", {
+          height, diameterTop: 0, diameterBottom: height * 0.5, tessellation: 5,
         }, this._scene);
-        blade.position.set(
-          x + (this._seededValue(i * 10 + j, 34) - 0.5) * 0.4,
-          h / 2,
-          z + (this._seededValue(i * 10 + j, 35) - 0.5) * 0.4,
+        cone.position.set(
+          -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH,
+          height / 2,
+          side * (40 + this._seededValue(k, 73) * 7),
         );
-        blade.rotation.z = (this._seededValue(i * 10 + j, 36) - 0.5) * 0.6;
-        blade.rotation.y = this._seededValue(i * 10 + j, 37) * Math.PI;
-        blades.push(blade);
+        cone.rotation.y = this._seededValue(k, 74) * Math.PI;
+        cones.push(cone);
       }
     }
-    const clumps = Mesh.MergeMeshes(blades, true);
-    if (!clumps) return;
-    clumps.name = "fieldClumps";
-    clumps.convertToFlatShadedMesh();
-    clumps.material = this._scene.getMaterialByName("darkLeaves");
-    clumps.isPickable = false;
+    const treeline = Mesh.MergeMeshes(cones, true);
+    if (!treeline) return;
+    treeline.name = "hazeTreeline";
+    treeline.convertToFlatShadedMesh();
+    treeline.material = this._scene.getMaterialByName("hazeTrees");
+    treeline.isPickable = false;
   }
 
   /** Puffy low-poly clouds ringing the island; unlit and fog-free so they stay white */
@@ -691,6 +744,12 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (grassMat) grassMat.diffuseColor = theme.grass;
   const dryGrassMat = scene.getMaterialByName("dryGrass") as StandardMaterial | null;
   if (dryGrassMat) dryGrassMat.diffuseColor = Color3.Lerp(theme.ground, theme.grass, 0.45);
+  const bladeDark = scene.getMaterialByName("grassBladeDark") as StandardMaterial | null;
+  if (bladeDark) bladeDark.diffuseColor = theme.grass.scale(BLADE_DARK);
+  const bladeLight = scene.getMaterialByName("grassBladeLight") as StandardMaterial | null;
+  if (bladeLight) bladeLight.diffuseColor = Color3.Lerp(theme.grass, Color3.White(), BLADE_LIGHT);
+  const hazeTrees = scene.getMaterialByName("hazeTrees") as StandardMaterial | null;
+  if (hazeTrees) hazeTrees.diffuseColor = Color3.Lerp(theme.grass.scale(0.7), theme.fogColor, HAZE_MIX);
 }
 
 function createPlacementGuides(scene: Scene, zones: readonly PlacementZone[]): void {
