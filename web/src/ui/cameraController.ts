@@ -39,6 +39,9 @@ export class CameraController {
   private readonly _verticalSpeed = 4.5;
   private readonly _minTargetY = -2.5;
   private readonly _maxTargetY = 8;
+  private _transition: { from: CameraViewState; to: CameraViewState; elapsed: number; duration: number } | null = null;
+  private _prebattleView: CameraViewState | null = null;
+  private _prebattleBetaLimits: { lower: number | null; upper: number | null } | null = null;
 
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
     const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -160,6 +163,7 @@ export class CameraController {
   }
 
   restoreViewState(view: CameraViewState): void {
+    this._transition = null;
     this.camera.alpha = view.alpha;
     this.camera.beta = view.beta;
     this.camera.radius = view.radius;
@@ -180,6 +184,57 @@ export class CameraController {
     return view;
   }
 
+  // ─── Battle swoop ───
+  /** Swoop from the placement view down to a low, close TABS-style battle view on the clash line. */
+  swoopToBattle(center: { x: number; z: number }, durationSeconds = 1.1): CameraViewState {
+    if (!this._prebattleView) {
+      this._prebattleView = this.captureViewState();
+      this._prebattleBetaLimits = { lower: this.camera.lowerBetaLimit, upper: this.camera.upperBetaLimit };
+    }
+    const to: CameraViewState = {
+      alpha: -Math.PI / 2,
+      beta: Math.PI / 2.12,   // eye just above unit head height
+      radius: 14,             // roughly six body lengths back from the front line
+      target: { x: center.x, y: 1.2, z: center.z },
+    };
+    // The battle view sits below the placement pitch limits; widen them for the fight.
+    this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
+    this.camera.lowerBetaLimit = Math.min(this.camera.lowerBetaLimit ?? to.beta, to.beta);
+    this._transition = { from: this.captureViewState(), to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
+    return to;
+  }
+
+  /** Undo the battle swoop: restore the placement view and its pitch limits. */
+  returnToPlacementView(): void {
+    this._transition = null;
+    if (this._prebattleBetaLimits) {
+      this.camera.lowerBetaLimit = this._prebattleBetaLimits.lower;
+      this.camera.upperBetaLimit = this._prebattleBetaLimits.upper;
+    }
+    if (this._prebattleView) this.restoreViewState(this._prebattleView);
+    this._prebattleView = null;
+    this._prebattleBetaLimits = null;
+  }
+
+  /** Advance the swoop tween; called from update() and from the deterministic time stepper. */
+  advanceTransition(dt: number): void {
+    const t = this._transition;
+    if (!t) return;
+    t.elapsed += dt;
+    const u = Math.min(1, t.elapsed / t.duration);
+    const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    const lerp = (a: number, b: number) => a + (b - a) * e;
+    this.camera.alpha = lerp(t.from.alpha, t.to.alpha);
+    this.camera.beta = lerp(t.from.beta, t.to.beta);
+    this.camera.radius = lerp(t.from.radius, t.to.radius);
+    this.camera.target.set(
+      lerp(t.from.target.x, t.to.target.x),
+      lerp(t.from.target.y, t.to.target.y),
+      lerp(t.from.target.z, t.to.target.z),
+    );
+    if (u >= 1) this._transition = null;
+  }
+
   // ─── Screen Shake ───
   private _shakeIntensity = 0;
   private _shakeDamping = 0.92;
@@ -193,6 +248,7 @@ export class CameraController {
       this.camera.target.subtractInPlace(this._shakeOffset);
       this._shakeOffset.setAll(0);
     }
+    this.advanceTransition(_dt);
 
     if (this._motionIntent.rotate !== 0) {
       this.camera.alpha += this._motionIntent.rotate * this._rotationSpeed * _dt;

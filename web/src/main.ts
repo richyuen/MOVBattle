@@ -1025,18 +1025,37 @@ function startBattle(immediate = false): void {
   showStatus("Battle starting...");
 
   if (immediate) {
-    simulation.beginSimulation(worldTimeSeconds);
-    stateMachine.setState(GameState.Simulation);
-    showStatus("Fight!");
+    enterSimulation();
     return;
   }
 
   countdownTimer = setTimeout(() => {
-    simulation.beginSimulation(worldTimeSeconds);
-    stateMachine.setState(GameState.Simulation);
-    showStatus("Fight!");
+    enterSimulation();
     countdownTimer = null;
   }, BATTLE_CONFIG.countdownSeconds * 1000);
+}
+
+function enterSimulation(): void {
+  simulation.beginSimulation(worldTimeSeconds);
+  stateMachine.setState(GameState.Simulation);
+  // Countdown -> Simulation: swoop from the oblique placement view down to the clash line.
+  if (!galleryCaptureSession) camCtrl.swoopToBattle(computeBattleFocus());
+  showStatus("Fight!");
+}
+
+/** Midpoint between the two teams' living formations, where the front lines will meet. */
+function computeBattleFocus(): { x: number; z: number } {
+  const sums = [{ x: 0, z: 0, n: 0 }, { x: 0, z: 0, n: 0 }];
+  for (const unit of placedUnits) {
+    if (unit.linkedParent || unit.isDead) continue;
+    const s = sums[unit.team === 0 ? 0 : 1];
+    s.x += unit.position.x;
+    s.z += unit.position.z;
+    s.n += 1;
+  }
+  const a = sums[0].n ? { x: sums[0].x / sums[0].n, z: sums[0].z / sums[0].n } : { x: 0, z: 0 };
+  const b = sums[1].n ? { x: sums[1].x / sums[1].n, z: sums[1].z / sums[1].n } : { x: 0, z: 0 };
+  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
 }
 
 function resetBattle(options: {
@@ -1074,6 +1093,7 @@ function resetBattle(options: {
 
   removeMode = false;
   btnRemoveEl?.classList.remove("remove-active");
+  camCtrl.returnToPlacementView();
   stateMachine.setState(GameState.Placement);
   activeScenario = null;
   if (!options.preserveCampaignSession) {
@@ -1296,6 +1316,7 @@ function playAgain(): void {
 
   removeMode = false;
   btnRemoveEl?.classList.remove("remove-active");
+  camCtrl.returnToPlacementView();
   stateMachine.setState(GameState.Placement);
   updateBudgetDisplay();
   showStatus("Ready for another round!");
@@ -1629,6 +1650,7 @@ function advanceSimulationTime(ms: number): void {
   const steps = Math.max(1, Math.round(ms / (1000 / 60)));
   for (let i = 0; i < steps; i++) {
     worldTimeSeconds += 1 / 60;
+    camCtrl.advanceTransition(1 / 60);
     tick(1 / 60, worldTimeSeconds);
   }
   scene.render();
