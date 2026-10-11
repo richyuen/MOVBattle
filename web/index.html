@@ -20,6 +20,11 @@
     }
     .title-intro-stage {
       transform-style: preserve-3d;
+      opacity: 1;
+      transform: translateZ(-900px) scale(0.36) rotateX(18deg) rotateY(-8deg);
+      filter: blur(2px);
+    }
+    #titleIntro.title-intro-playing .title-intro-stage {
       animation: titleFlyThrough 3s cubic-bezier(0.18, 0.82, 0.2, 1) forwards;
     }
     .title-intro-word {

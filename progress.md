@@ -713,3 +713,9 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
   - Added deterministic scenario assertion result-detail-preserves-newlines to battle_recap_result_legacy_tank_shell, covering computed white-space and preventing regression.
   - Updated web/index.html #resultDetail to white-space: pre-line so Time/Recap/Remaining/Most impacted render on separate lines while retaining textContent.
   - Validation: RED browser scenario failed with white-space: normal; GREEN passed on Vite dev and production preview with detailWhiteSpace=pre-line and multiline screenshot artifacts under web/output/result-newline-preview-verification/. Ran cd web && npm run build and bundled web_game_playwright_client.js against preview; screenshots inspected.
+
+## 2026-04-24 - MOV intro load gate
+- Executed approved `.omx/plans/mov-intro-load-gate-plan.md`.
+- Changed startup intro so CSS no longer autoplays `titleFlyThrough`; playback now starts from JS after `window.load` and a one-shot Babylon post-render callback.
+- Added active/started/loadReady/renderReady state plus DOM connectivity guard to prevent late playback after dismissal.
+- Verification so far: static intro gate RED/green check, `npm run build`, custom Playwright startup/skip/capture check, and required `develop-web-game` client smoke run.

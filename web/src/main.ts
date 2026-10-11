@@ -309,25 +309,70 @@ RuntimeUnit.timeNowSeconds = () => worldTimeSeconds;
 
 interface TitleIntroState {
   active: boolean;
+  started: boolean;
+  loadReady: boolean;
+  renderReady: boolean;
   cleanupTimer: ReturnType<typeof setTimeout> | null;
 }
+
+const TITLE_INTRO_DURATION_MS = 3200;
 
 let titleIntro: TitleIntroState | null = titleIntroEl
   ? {
       active: true,
-      cleanupTimer: setTimeout(() => dismissTitleIntro(), 3200),
+      started: false,
+      loadReady: false,
+      renderReady: false,
+      cleanupTimer: null,
     }
   : null;
+
+function tryStartTitleIntro(): void {
+  if (!titleIntro?.active || titleIntro.started) return;
+  if (!titleIntro.loadReady || !titleIntro.renderReady) return;
+  if (!titleIntroEl?.isConnected) {
+    dismissTitleIntro();
+    return;
+  }
+
+  titleIntro.started = true;
+  titleIntroEl.classList.add("title-intro-playing");
+  titleIntro.cleanupTimer = setTimeout(() => dismissTitleIntro(), TITLE_INTRO_DURATION_MS);
+}
+
+function markTitleIntroRenderReady(): void {
+  if (!titleIntro?.active) return;
+  titleIntro.renderReady = true;
+  tryStartTitleIntro();
+}
+
+function markTitleIntroLoadReady(): void {
+  if (!titleIntro?.active) return;
+  titleIntro.loadReady = true;
+  scene.onAfterRenderObservable.addOnce(markTitleIntroRenderReady);
+}
+
+function scheduleTitleIntroStart(): void {
+  if (!titleIntro) return;
+  if (document.readyState === "complete") {
+    markTitleIntroLoadReady();
+  } else {
+    window.addEventListener("load", markTitleIntroLoadReady, { once: true });
+  }
+}
 
 function dismissTitleIntro(): void {
   if (!titleIntro) return;
   titleIntro.active = false;
+  window.removeEventListener("load", markTitleIntroLoadReady);
   if (titleIntro.cleanupTimer) {
     clearTimeout(titleIntro.cleanupTimer);
   }
   titleIntroEl?.remove();
   titleIntro = null;
 }
+
+scheduleTitleIntroStart();
 
 function rotateOffsetByYaw(offset: Vector3, yaw: number): Vector3 {
   const sin = Math.sin(yaw);
