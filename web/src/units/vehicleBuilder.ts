@@ -1394,6 +1394,14 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   torsoMesh.rotation.x = Math.PI / 2;
   torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
 
+  // Rounded rump and chest close the barrel, so neither end reads as a flat plate
+  for (const [z, diameter] of [[-1.08, 1.27], [1.06, 1.6]]) {
+    const cap = MeshBuilder.CreateSphere("barrelCap", { diameter, segments: 3 }, scene);
+    cap.position.set(0, 0, z);
+    cap.scaling.z = 0.7;
+    cap.parent = torso; cap.material = fur; allMeshes.push(cap);
+  }
+
   // War paint: team-coloured bands around the barrel
   for (const z of [0.5, -0.1, -0.7]) {
     const girth = 1.425 + 0.159 * z + 0.04;
@@ -1406,21 +1414,25 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   }
 
   // Shaggy shoulder hump, standing well above the back line
-  const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.6, segments: 3 }, scene);
+  const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.6, segments: 4 }, scene);
   hump.position.set(0, 0.5, 0.42);
   hump.scaling.set(0.82, 0.78, 0.8);
   hump.parent = torso; hump.material = shaggyFur; allMeshes.push(hump);
 
   // Shaggy fur underbelly
-  const belly = MeshBuilder.CreateBox("belly", { width: 1.1, height: 0.35, depth: 1.6 }, scene);
-  belly.position.set(0, -0.5, 0);
+  const belly = MeshBuilder.CreateSphere("belly", { diameter: 1, segments: 3 }, scene);
+  belly.position.set(0, -0.42, -0.05);
+  belly.scaling.set(1.2, 0.8, 2.1);
   belly.parent = torso; belly.material = shaggyFur; allMeshes.push(belly);
 
-  // Fur skirts hanging off the flanks
+  // Fur skirts hanging off the flanks: faceted lobes, thick at the shoulder and thinning to the rump
   for (const side of [-1, 1]) {
-    const skirt = MeshBuilder.CreateBox("furSkirt", { width: 0.16, height: 0.6, depth: 1.7 }, scene);
-    skirt.position.set(side * 0.66, -0.42, 0);
-    skirt.rotation.z = side * 0.22;
+    const skirt = MeshBuilder.CreateCylinder("furSkirt", {
+      height: 1.9, diameterTop: 0.85, diameterBottom: 0.55, tessellation: 5,
+    }, scene);
+    skirt.position.set(side * 0.62, -0.3, 0);
+    skirt.rotation.x = Math.PI / 2;
+    skirt.scaling.x = 0.45;
     skirt.parent = torso; skirt.material = shaggyFur; allMeshes.push(skirt);
   }
 
@@ -1468,12 +1480,13 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
 
   // ── Tusks (parented to neck) ──
-  // One long sweep per side: down out of the jaw, forward along the ground, then up at the tip.
+  // One long curl per side: down and out of the jaw, forward along the ground, then up and back in
+  // until the tip stands above where the tusk left the jaw.
   // Each segment starts where the last one ended, so the curve has no gaps.
-  const tuskPitches = [0.5, 1.1, 1.7, 2.3];
-  const tuskLengths = [0.6, 0.55, 0.5, 0.45];
-  const tuskGirths = [0.27, 0.22, 0.17, 0.11, 0.03];
-  const tuskSplay = [0.1, 0.07, 0, -0.07];
+  const tuskPitches = [0.35, 0.9, 1.5, 2.1, 2.7, 3.2];
+  const tuskLengths = [0.6, 0.55, 0.5, 0.5, 0.45, 0.4];
+  const tuskGirths = [0.27, 0.24, 0.2, 0.16, 0.12, 0.08, 0.03];
+  const tuskSplay = [0.14, 0.14, 0.08, 0, -0.1, -0.14];
   for (const side of [-1, 1]) {
     const start = new Vector3(side * 0.32, -0.3, 0.5);
     for (let i = 0; i < tuskPitches.length; i++) {
@@ -1497,12 +1510,13 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
     ring.parent = neck; ring.material = paintMat; allMeshes.push(ring);
   }
 
-  // ── Ears (parented to neck): small fur flaps, not team slabs ──
+  // ── Ears (parented to neck): faceted fur fans flaring off the skull, not team slabs ──
   for (const side of [-1, 1]) {
-    const ear = MeshBuilder.CreateBox("ear", { width: 0.42, height: 0.55, depth: 0.08 }, scene);
-    ear.position.set(side * 0.6, 0.02, 0.08);
-    ear.rotation.z = side * 0.4;
-    ear.rotation.y = side * 0.35;
+    const ear = MeshBuilder.CreateCylinder("ear", { height: 0.1, diameter: 0.95, tessellation: 7 }, scene);
+    ear.position.set(side * 0.74, 0.0, 0.0);
+    ear.scaling.set(0.8, 1, 1.1);
+    ear.rotation.x = Math.PI / 2;
+    ear.rotation.y = side * 0.55;
     ear.parent = neck; ear.material = shaggyFur; allMeshes.push(ear);
   }
 
