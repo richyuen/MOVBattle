@@ -47,3 +47,6 @@ web/output/
 web/dist/
 web/*.out
 web/*.err
+
+# Reference media (downloaded TABS screenshots/videos, personal reference only)
+reference/
