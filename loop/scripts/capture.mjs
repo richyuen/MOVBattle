@@ -147,6 +147,13 @@ const full = { scenarios: [] };
 
 async function shot(page, name) {
   const file = path.join(outDir, `${name}.png`);
+  // A cold frame draws props and shadows but no bodies: redraw until every shader is compiled.
+  // No sim time passes.
+  const ready = await page.evaluate(() => Promise.race([
+    window.game.renderWhenReady().then(() => true),
+    new Promise((r) => setTimeout(() => r(false), 30_000)),
+  ]));
+  if (!ready) summary.notes.push(`${name}: scene not ready after 30 s, shot may miss meshes`);
   await page.screenshot({ path: file });
   summary.screenshots.push(`${name}.png`);
   log(`shot ${name}.png`);

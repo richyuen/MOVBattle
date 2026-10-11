@@ -3300,6 +3300,15 @@ const gameApi = {
   toggleRemoveMode,
   skipTitleIntro: dismissTitleIntro,
   spawnUnit: spawnHarnessUnit,
+  // Capture harness: a first draw skips meshes whose shaders are still compiling, so wait and redraw.
+  renderWhenReady: async () => {
+    for (let i = 0; i < 40; i++) {
+      scene.render();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      if (i >= 5 && scene.isReady() && engine.areAllEffectsReady()) break;
+    }
+    scene.render();
+  },
   runScenario,
   runScenarioCheck,
   runScenarioGalleryValidation,
