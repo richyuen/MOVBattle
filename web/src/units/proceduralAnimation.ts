@@ -85,8 +85,31 @@ export class ProceduralAnimator {
     this._squashTimer = 0.15;
   }
 
+  /** Toppled/downed living bodies go limp: 1 crumples the joints, 0 returns to the animated pose. */
+  setLimp(limp: boolean): void {
+    this._limpTarget = limp ? 1 : 0;
+  }
+
   private _flinchTimer = 0;
   private _squashTimer = 0;
+  private _limpTarget = 0;
+  private _limp = 0;
+  // Per-unit crumple shape so a pile of fallen bodies does not share one pose.
+  private readonly _limpPose = {
+    torsoX: 0.25 + Math.random() * 0.45,
+    torsoZ: (Math.random() - 0.5) * 0.7,
+    neckX: (Math.random() - 0.5) * 1.1,
+    leftArmX: -1.5 + Math.random() * 2.1,
+    rightArmX: -1.5 + Math.random() * 2.1,
+    leftArmZ: -(0.25 + Math.random() * 0.9),
+    rightArmZ: 0.25 + Math.random() * 0.9,
+    leftElbowX: -(0.4 + Math.random() * 1.1),
+    rightElbowX: -(0.4 + Math.random() * 1.1),
+    leftHipX: -1.0 + Math.random() * 1.4,
+    rightHipX: -1.0 + Math.random() * 1.4,
+    leftKneeX: 0.35 + Math.random() * 1.1,
+    rightKneeX: 0.35 + Math.random() * 1.1,
+  };
 
   // Pupil wobble state (googly eyes)
   private _pupilOffX = 0;
@@ -131,6 +154,26 @@ export class ProceduralAnimator {
       // Arms flail out
       b.leftShoulder.rotation.z -= 0.5 * intensity;
       b.rightShoulder.rotation.z += 0.5 * intensity;
+    }
+    // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
+    this._limp += (this._limpTarget - this._limp) * Math.min(1, dt * 9);
+    if (this._limp > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+      const b = this._body;
+      const p = this._limpPose;
+      const k = this._limp;
+      b.torso.rotation.x += p.torsoX * k;
+      b.torso.rotation.z += p.torsoZ * k;
+      b.neck.rotation.x += p.neckX * k;
+      b.leftShoulder.rotation.x += p.leftArmX * k;
+      b.rightShoulder.rotation.x += p.rightArmX * k;
+      b.leftShoulder.rotation.z += p.leftArmZ * k;
+      b.rightShoulder.rotation.z += p.rightArmZ * k;
+      b.leftElbow.rotation.x += p.leftElbowX * k;
+      b.rightElbow.rotation.x += p.rightElbowX * k;
+      b.leftHip.rotation.x += p.leftHipX * k;
+      b.rightHip.rotation.x += p.rightHipX * k;
+      b.leftKnee.rotation.x += p.leftKneeX * k;
+      b.rightKnee.rotation.x += p.rightKneeX * k;
     }
     // Squash-and-stretch on hit
     if (this._squashTimer > 0) {

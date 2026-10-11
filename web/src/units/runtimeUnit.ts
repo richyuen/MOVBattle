@@ -618,6 +618,7 @@ export class RuntimeUnit {
 
   update(dt: number, now: number): void {
     // Animate
+    this.animator.setLimp(this.isToppled || this.isDowned);
     this.animator.update(dt);
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
