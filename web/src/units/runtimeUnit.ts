@@ -486,6 +486,22 @@ export class RuntimeUnit {
     return this._buildImpactDelta(damage, healthBefore, wasDead, stateBefore, impulse);
   }
 
+  /**
+   * Explosion fling: throws the body up and outward from a blast centre. Bypasses the shallow
+   * living-hit and death lift caps, which exist to keep ordinary melee hits from ballooning.
+   */
+  applyBlastLaunch(outward: Vector3, speed: number, lift: number): void {
+    if (this._isAnchoredActor) return;
+    const scale = this._ragdollProfile.impactMultiplier / Math.max(0.8, this.definition.mass);
+    if (!this._isDead) {
+      this._enterTopple(RuntimeUnit.timeNowSeconds(), this._crowdPhysicsProfile.launchThreshold, outward, true);
+    }
+    this._velocity.x += outward.x * speed * scale;
+    this._velocity.z += outward.z * speed * scale;
+    this._velocity.y = Math.max(this._velocity.y, lift * scale);
+    this._grounded = false;
+  }
+
   private _buildImpactDelta(
     damageApplied: number,
     healthBefore: number,

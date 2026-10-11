@@ -336,6 +336,7 @@ export class ProjectileSystem {
           });
         }
       }
+      this._flingFromBlast(p);
       // Spawn impact effect for explosive
       const explosionScale = p.shape === "shell" ? 1.8 : 1;
       if (this.impactPresentation) {
@@ -363,6 +364,27 @@ export class ProjectileSystem {
           this.visualEffects?.spawnHitFlash(p.targetPos);
         }
       }
+    }
+  }
+
+  /** Throw every enemy body near the blast up and away from its centre, the dead ones included. */
+  private _flingFromBlast(p: ActiveProjectile): void {
+    // Rocket arrows and tank bolts carry a token splash; only real explosions throw bodies.
+    if (p.splashRadius < 1.5) return;
+    const radius = p.splashRadius + 1.2;
+    const shotDir = new Vector3(p.knockback.x, 0, p.knockback.z);
+    if (shotDir.lengthSquared() < 0.0001) shotDir.set(1, 0, 0);
+    shotDir.normalize();
+    for (const unit of p.allUnits) {
+      if (unit.team === p.attackerTeam) continue;
+      const delta = unit.position.subtract(p.targetPos);
+      delta.y = 0;
+      const distance = delta.length();
+      if (distance > radius) continue;
+      const falloff = 1 - distance / radius;
+      // A body standing on the centre goes the way the shot was travelling.
+      const outward = distance > 0.05 ? delta.scale(1 / distance) : shotDir;
+      unit.applyBlastLaunch(outward, 2 + 3.5 * falloff, 3.5 + 3 * falloff);
     }
   }
 

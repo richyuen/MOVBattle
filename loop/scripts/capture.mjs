@@ -238,14 +238,14 @@ async function main() {
           if (window.game.spawnUnit(u.unitId, u.team, u.position)) ok++;
         }
         window.game.startBattleImmediate();
-        window.advanceTime(1200);
+        window.advanceTime(1100);
         return ok;
       }, WAR_MACHINES);
       summary.notes.push(`war_machines placed ${machinesPlaced}/${WAR_MACHINES.length} units`);
-      // The cannon fires near 0.8 s and 3.1 s: both stills land a few tenths after a shot.
-      await shot(page, "war_machines_1200ms");
-      await page.evaluate(() => window.advanceTime(2200));
-      await shot(page, "war_machines_3400ms");
+      // Probed in 50 ms steps: blasts land at ~0.83 s and ~3.58 s and bodies peak ~0.3 s later.
+      await shot(page, "war_machines_1100ms");
+      await page.evaluate(() => window.advanceTime(2700));
+      await shot(page, "war_machines_3800ms");
 
       // Gallery-camera reads (UI hidden by design): a lineup, two mid-swing close-ups, one hero pair.
       const galleryShots = [
