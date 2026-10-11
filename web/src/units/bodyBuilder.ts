@@ -139,7 +139,7 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
   footHeight: 1.0,
 };
 
-/** TABS silhouette: small head on long thin limbs. Applied on top of every unit's own proportions. */
+/** TABS silhouette: small head, limbs thick at the shoulder and thigh thinning to wrist and ankle. Applied on top of every unit's own proportions. */
 const HEAD_SHRINK = 0.88;
 const LIMB_THIN = 0.8;
 
@@ -203,9 +203,9 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Mitt hand: a flat slab, thumbless, a little longer than it is wide. */
+  /** Mitt hand: a flat paddle, thumbless, palm toward the body. */
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
-    const m = MeshBuilder.CreateBox(n, { width: size * 0.78 * s, height: size * 1.2 * s, depth: size * 0.95 * s }, scene);
+    const m = MeshBuilder.CreateBox(n, { width: size * 0.4 * s, height: size * 1.3 * s, depth: size * 1.0 * s }, scene);
     m.material = mat;
     allMeshes.push(m);
     return m;
@@ -235,18 +235,18 @@ export function buildArticulatedBody(
 
   const upperArmH = 0.24 * p.armLength;
   const lowerArmH = 0.22 * p.armLength;
-  const upperArmTop = 0.09 * LIMB_THIN * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
-  const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
+  const upperArmTop = 0.09 * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
+  const upperArmBottom = upperArmTop * LIMB_THIN * Math.max(0.62, 0.82 - limbTaper * 0.12);
   const lowerArmTop = upperArmBottom * 0.92;
-  const lowerArmBottom = lowerArmTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
+  const lowerArmBottom = lowerArmTop * LIMB_THIN * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
   const handDiameter = 0.1 * Math.max(0.8, p.headSize * 0.9) * (p.handSize ?? 1.0);
 
   const upperLegH = 0.28 * p.legLength;
   const lowerLegH = 0.25 * p.legLength;
-  const upperLegTop = 0.12 * LIMB_THIN * p.bulk * (p.upperLegWidth ?? 1.0);
-  const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
+  const upperLegTop = 0.12 * p.bulk * (p.upperLegWidth ?? 1.0);
+  const upperLegBottom = upperLegTop * LIMB_THIN * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom * 0.96;
-  const lowerLegBottom = lowerLegTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
+  const lowerLegBottom = lowerLegTop * LIMB_THIN * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
   const footLength = 0.18 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
   const footWidth = 0.11 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
   const footHeight = 0.07 * (p.footHeight ?? 1.0);
