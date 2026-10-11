@@ -4,7 +4,7 @@ You are the worker. Close gaps between MOVBattle and TABS. An adversarial critic
 work against reference media; you never judge it yourself. Follow these steps in order.
 
 ## 0. Preflight
-- `git branch --show-current` must print `loop/tabs-fidelity`. `git status --porcelain` must be empty. No file named `STOP` in the repo root. `node loop/scripts/budget.mjs` must pass.
+- `git branch --show-current` must print `main`. `git status --porcelain` must be empty. No file named `STOP` in the repo root. `node loop/scripts/budget.mjs` must pass.
 - On any failure: append `iter ? | preflight failed: <reason>` to `loop/LOG.md`, do not commit, end the turn.
 
 ## 1. Load memory (and nothing else)

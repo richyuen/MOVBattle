@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 0   Last re-audit: 0   Consecutive rejects: 0   Branch: loop/tabs-fidelity
+Iteration: 0   Last re-audit: 0   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 2 | unit-look 2 | maps-light 2 | ui-flow 2 | camera 1 | vfx 1
