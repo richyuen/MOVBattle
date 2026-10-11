@@ -840,7 +840,8 @@ export class SimulationSystem {
       case "iconic_mammoth":
         splashRadius = Math.max(splashRadius, 4.4);
         knockback = knockback.scale(2.15 * controlStrength);
-        knockback.y = Math.max(knockback.y, 1.35);
+        // Above RuntimeUnit.launchImpulseThreshold: everyone in the slam radius goes airborne
+        knockback.y = Math.max(knockback.y, 14);
         damage *= 1.28;
         break;
       case "iconic_reaper":

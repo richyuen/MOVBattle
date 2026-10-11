@@ -129,6 +129,10 @@ export class RuntimeUnit {
   /** Shared obstacle list — set once from main.ts after map build */
   static obstacles: readonly Obstacle[] = [];
   static hazards: readonly HazardRegion[] = [];
+  /** Impulses with at least this much upward component are deliberate launches (mammoth toss). */
+  static readonly launchImpulseThreshold = 6;
+  static readonly launchLiftCap = 12;
+  static readonly launchDriftCap = 8;
 
   // Health bar
   healthBarMesh: Mesh | null = null;
@@ -478,6 +482,9 @@ export class RuntimeUnit {
       this._crowdPhysicsProfile.impactToppleScale,
     );
     this._maybeInterruptAttack(impactPressure * this._crowdPhysicsProfile.impactToppleScale, RuntimeUnit.timeNowSeconds());
+    if (impulse.y >= RuntimeUnit.launchImpulseThreshold) {
+      this._applyLaunchArc(impulse.y * knockScale * 0.8);
+    }
 
     // Flinch: tilt body toward impact
     this.animator.triggerFlinch();
@@ -832,6 +839,9 @@ export class RuntimeUnit {
     launchDir.y = Math.min(1.35, Math.max(0.16, deathLift));
     // Add any existing knockback velocity
     this._velocity.addInPlace(launchDir);
+    if (impulse.y >= RuntimeUnit.launchImpulseThreshold) {
+      this._applyLaunchArc(impulse.y * deathMult * massInv * 1.2);
+    }
 
     // Random spin on death
     this._deathSpinX = (Math.random() - 0.3) * 6 * massInv;
@@ -843,6 +853,18 @@ export class RuntimeUnit {
     // Hide health bar
     if (this.healthBarMesh) this.healthBarMesh.isVisible = false;
     if (this.healthBarBg) this.healthBarBg.isVisible = false;
+  }
+
+  /** Deliberate launch: a real airborne arc past the shallow knockdown lift caps, with capped drift. */
+  private _applyLaunchArc(lift: number): void {
+    this._velocity.y = Math.max(this._velocity.y, Math.min(RuntimeUnit.launchLiftCap, lift));
+    const drift = Math.sqrt(this._velocity.x * this._velocity.x + this._velocity.z * this._velocity.z);
+    if (drift > RuntimeUnit.launchDriftCap) {
+      const scale = RuntimeUnit.launchDriftCap / drift;
+      this._velocity.x *= scale;
+      this._velocity.z *= scale;
+    }
+    this._grounded = false;
   }
 
   private _expire(now: number): void {
