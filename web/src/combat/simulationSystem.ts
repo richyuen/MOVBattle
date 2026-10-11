@@ -14,7 +14,7 @@ import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
 import type { PlacementZone } from "../map/placementValidator";
 import type { Obstacle } from "../map/obstacles";
-import { NavigationGrid } from "../map/navigation";
+import { NavigationGrid, type NavBounds } from "../map/navigation";
 
 export interface SpawnUnitOptions {
   role?: RuntimeSpawnRole;
@@ -154,9 +154,10 @@ export class SimulationSystem {
     zones: readonly PlacementZone[],
     obstacles: readonly Obstacle[],
     hazards: readonly HazardRegion[],
+    clip?: NavBounds,
   ): void {
     this.hazards = hazards;
-    this.navigationGrid = new NavigationGrid(zones, obstacles, hazards);
+    this.navigationGrid = new NavigationGrid(zones, obstacles, hazards, undefined, clip);
     this._pathStates.clear();
   }
 

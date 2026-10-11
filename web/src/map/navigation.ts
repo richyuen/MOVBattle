@@ -11,7 +11,7 @@ interface GridPoint {
   row: number;
 }
 
-interface NavBounds {
+export interface NavBounds {
   minX: number;
   maxX: number;
   minZ: number;
@@ -125,6 +125,17 @@ function computeBounds(
   };
 }
 
+/** Clips bounds to a rectangle; min edges snap outward to whole cells so cell centers keep their alignment. */
+function clipBounds(full: NavBounds, clip: NavBounds, cellSize: number): NavBounds {
+  const snapMin = (origin: number, edge: number) => origin + Math.max(0, Math.floor((edge - origin) / cellSize)) * cellSize;
+  return {
+    minX: snapMin(full.minX, clip.minX),
+    maxX: Math.min(full.maxX, clip.maxX),
+    minZ: snapMin(full.minZ, clip.minZ),
+    maxZ: Math.min(full.maxZ, clip.maxZ),
+  };
+}
+
 function isPointBlockedByObstacle(point: Vector3, padding: number, obstacle: Obstacle): boolean {
   if (obstacle.type === "box") {
     const dx = Math.abs(point.x - obstacle.center.x);
@@ -152,9 +163,11 @@ export class NavigationGrid {
     obstacles: readonly Obstacle[],
     hazards: readonly HazardRegion[],
     cellSize = 1.25,
+    clip?: NavBounds,
   ) {
     this.cellSize = cellSize;
-    this.bounds = computeBounds(zones, obstacles, hazards);
+    const fullBounds = computeBounds(zones, obstacles, hazards);
+    this.bounds = clip ? clipBounds(fullBounds, clip, cellSize) : fullBounds;
     this.columns = Math.max(1, Math.ceil((this.bounds.maxX - this.bounds.minX) / this.cellSize));
     this.rows = Math.max(1, Math.ceil((this.bounds.maxZ - this.bounds.minZ) / this.cellSize));
     this._cellCount = this.columns * this.rows;

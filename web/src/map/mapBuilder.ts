@@ -2,6 +2,7 @@ import {
   Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh,
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
+import type { NavBounds } from "./navigation";
 import type { Obstacle } from "./obstacles";
 import type { HazardKind, HazardRegion } from "./hazards";
 
@@ -16,6 +17,8 @@ export interface MapBuildResult {
   zones: PlacementZone[];
   /** Where the player may place units, when tighter than `zones` (which also size the nav grid). */
   placementZones?: PlacementZone[];
+  /** Rectangle the nav grid is clipped to, when the walkable ground is smaller than `zones` plus margin. */
+  navBounds?: NavBounds;
   obstacles: Obstacle[];
   hazards: HazardRegion[];
   dispose?: () => void;
@@ -45,7 +48,13 @@ export class TribalSandboxMapBuilder {
       this._createZoneOverlays();
       this._createZoneBorders();
     }
-    return { zones: getPlacementZones(), placementZones: getIslandGuideZones(), obstacles: this._obstacles, hazards: [] };
+    return {
+      zones: getPlacementZones(),
+      placementZones: getIslandGuideZones(),
+      navBounds: { minX: -ISLAND_WIDTH / 2, maxX: ISLAND_WIDTH / 2, minZ: -ISLAND_DEPTH / 2, maxZ: ISLAND_DEPTH / 2 },
+      obstacles: this._obstacles,
+      hazards: [],
+    };
   }
 
   private _seededValue(index: number, seed: number): number {
