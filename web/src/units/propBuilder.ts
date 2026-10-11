@@ -57,11 +57,11 @@ export function attachProps(
   const shield = buildShield(scene, config.shield, scale, accent, teamColor ?? accent);
   if (shield) {
     shield.parent = body.leftHand;
-    // TABS shields read shoulder-wide at distance; bucklers stay small on purpose
+    // TABS shields cover neck to knee and overlap along a line; bucklers stay small on purpose
     if (config.shield !== "buckler") {
-      shield.scaling.scaleInPlace(1.6);
+      shield.scaling.scaleInPlace(config.shield === "round" ? 2.4 : 1.9);
       // Strapped up the forearm and carried across the chest, not dangling at the hip
-      shield.position.set(0.1 * scale, 0.2 * scale, 0.15 * scale);
+      shield.position.set(0.1 * scale, 0.14 * scale, 0.2 * scale);
     }
     props.push(shield);
   }
@@ -1326,16 +1326,16 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
     }
     case "kite": {
       const shield = MeshBuilder.CreateBox("kshield", { width: 0.18 * s, height: 0.32 * s, depth: 0.025 * s }, scene);
-      shield.material = mat(scene, accent);
+      shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
       const point = MeshBuilder.CreateCylinder("kpoint", { height: 0.08 * s, diameterTop: 0.18 * s, diameterBottom: 0, tessellation: 4 }, scene);
       point.position.y = -0.2 * s;
       point.parent = shield;
-      point.material = mat(scene, accent);
+      point.material = shield.material;
       return shield;
     }
     case "tower": {
       const shield = MeshBuilder.CreateBox("tshield", { width: 0.22 * s, height: 0.4 * s, depth: 0.03 * s }, scene);
-      shield.material = mat(scene, accent);
+      shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
       const boss = MeshBuilder.CreateSphere("towerBoss", { diameter: 0.06 * s, segments: 6 }, scene);
       boss.position.z = -0.02 * s;
       boss.parent = shield;
