@@ -2,9 +2,8 @@ import {
   Scene, Vector3, MeshBuilder, Color3, TransformNode,
   PBRMetallicRoughnessMaterial, ParticleSystem,
 } from "@babylonjs/core";
-import type { GlowLayer, Mesh } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
-import { createSparks, createFire, createDust } from "./particleFactory";
+import { createSmoke, createSparks, createFire, createDust } from "./particleFactory";
 
 interface TimedEffect {
   root: TransformNode;
@@ -34,56 +33,6 @@ export class VisualEffects {
     return m;
   }
 
-  /** Opaque unlit colour that the GlowLayer must not bloom into a soft halo. */
-  private _solidMat(color: Color3): PBRMetallicRoughnessMaterial {
-    return this._fxMat(color, color);
-  }
-
-  private _glowLayer(): GlowLayer | undefined {
-    return this._scene.effectLayers?.find((layer) => layer.name === "glow") as GlowLayer | undefined;
-  }
-
-  /** Burst of opaque faceted chunks that swell, drift outward and shrink away. */
-  private _spawnChunkPuff(position: Vector3, color: Color3, count: number, size: number, duration: number): void {
-    const root = new TransformNode("puff", this._scene);
-    root.position = position.clone();
-    const mat = getMaterialFactory().createUnique("cloth", color);
-    const chunks: { mesh: Mesh; drift: Vector3; spin: number }[] = [];
-    for (let i = 0; i < count; i++) {
-      const mesh = MeshBuilder.CreateIcoSphere("puffChunk", {
-        radius: size * (0.6 + Math.random() * 0.6), subdivisions: 1, flat: true,
-      }, this._scene);
-      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.8;
-      const reach = size * (1.2 + Math.random() * 1.2);
-      mesh.material = mat;
-      mesh.parent = root;
-      mesh.isPickable = false;
-      mesh.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
-      mesh.scaling.setAll(0.01);
-      chunks.push({
-        mesh,
-        drift: new Vector3(Math.cos(angle) * reach, size * (1 + Math.random() * 2), Math.sin(angle) * reach),
-        spin: (Math.random() - 0.5) * 3,
-      });
-    }
-
-    this._effects.push({
-      root,
-      remaining: duration,
-      update: (dt, remaining) => {
-        const t = Math.min(1, Math.max(0, 1 - remaining / duration));
-        const out = 1 - (1 - t) * (1 - t);
-        const scale = Math.max(0.01, t < 0.2 ? t / 0.2 : 1 - (t - 0.2) / 0.8);
-        for (const chunk of chunks) {
-          chunk.mesh.position.copyFrom(chunk.drift).scaleInPlace(out);
-          chunk.mesh.rotation.y += chunk.spin * dt;
-          chunk.mesh.scaling.setAll(scale);
-        }
-      },
-      dispose: () => mat.dispose(),
-    });
-  }
-
   update(dt: number): void {
     for (let i = this._effects.length - 1; i >= 0; i--) {
       const e = this._effects[i];
@@ -109,11 +58,8 @@ export class VisualEffects {
     const dir = target.subtract(origin);
     const len = dir.length();
 
-    // Opaque jagged prisms: one solid pale colour, no alpha, no glow halo
-    const boltMat = this._solidMat(new Color3(0.93, 0.97, 1.0));
-    const flashMat = this._solidMat(new Color3(0.62, 0.84, 1.0));
-    const glow = this._glowLayer();
-    const parts: Mesh[] = [];
+    const boltMat = this._fxMat(new Color3(0.6, 0.8, 1.0), new Color3(0.5, 0.7, 1.0), 0.9);
+    const coreMat = this._fxMat(new Color3(1, 1, 1), new Color3(1, 1, 1));
 
     // Build jagged path
     const points: Vector3[] = [origin.clone()];
@@ -125,7 +71,7 @@ export class VisualEffects {
       const t = i / segments;
       const base = Vector3.Lerp(points[0], endPoint, t);
       // Random jag perpendicular to bolt direction
-      const jag = len * 0.2 * (1 - Math.abs(t - 0.5) * 2); // most jag in middle
+      const jag = len * 0.12 * (1 - Math.abs(t - 0.5) * 2); // most jag in middle
       base.x += (Math.random() - 0.5) * jag;
       base.y += (Math.random() - 0.5) * jag * 0.5;
       base.z += (Math.random() - 0.5) * jag;
@@ -133,23 +79,30 @@ export class VisualEffects {
     }
     points.push(endPoint);
 
-    const addPrism = (a: Vector3, b: Vector3, thickness: number) => {
-      const prism = MeshBuilder.CreateCylinder("lseg", {
-        height: Vector3.Distance(a, b) * 1.06, diameter: thickness, tessellation: 3,
-      }, this._scene);
-      prism.rotation.x = Math.PI / 2;
-      prism.bakeCurrentTransformIntoVertices();
-      prism.position = Vector3.Center(a, b);
-      prism.lookAt(b);
-      prism.material = boltMat;
-      prism.parent = root;
-      prism.isPickable = false;
-      parts.push(prism);
-    };
-
-    // Thick triangular prisms connecting each pair
+    // Draw segments as thin boxes connecting each pair
     for (let i = 0; i < points.length - 1; i++) {
-      addPrism(points[i], points[i + 1], 0.3);
+      const a = points[i];
+      const b = points[i + 1];
+      const mid = Vector3.Center(a, b);
+      const segLen = Vector3.Distance(a, b);
+
+      // Outer glow
+      const glow = MeshBuilder.CreateBox("lseg", {
+        width: 0.12, height: 0.12, depth: segLen,
+      }, this._scene);
+      glow.position = mid;
+      glow.lookAt(b);
+      glow.material = boltMat;
+      glow.parent = root;
+
+      // Inner bright core
+      const core = MeshBuilder.CreateBox("lcore", {
+        width: 0.04, height: 0.04, depth: segLen,
+      }, this._scene);
+      core.position = mid;
+      core.lookAt(b);
+      core.material = coreMat;
+      core.parent = root;
     }
 
     // Branch bolt (smaller fork)
@@ -161,49 +114,57 @@ export class VisualEffects {
         (Math.random() - 0.3) * len * 0.2,
         (Math.random() - 0.5) * len * 0.4,
       );
-      addPrism(forkOrigin, forkOrigin.add(forkDir), 0.18);
+      const forkEnd = forkOrigin.add(forkDir);
+      const forkMid = Vector3.Center(forkOrigin, forkEnd);
+      const forkLen = Vector3.Distance(forkOrigin, forkEnd);
+      const fork = MeshBuilder.CreateBox("fork", {
+        width: 0.06, height: 0.06, depth: forkLen,
+      }, this._scene);
+      fork.position = forkMid;
+      fork.lookAt(forkEnd);
+      fork.material = boltMat;
+      fork.parent = root;
     }
 
-    // Faceted burst at impact
-    const flash = MeshBuilder.CreateIcoSphere("lflash", { radius: 0.45, subdivisions: 1, flat: true }, this._scene);
+    // Flash at impact
+    const flash = MeshBuilder.CreateSphere("lflash", { diameter: 0.8, segments: 6 }, this._scene);
     flash.position = endPoint;
-    flash.material = flashMat;
+    flash.material = coreMat;
     flash.parent = root;
-    flash.isPickable = false;
-    parts.push(flash);
-    for (const part of parts) glow?.addExcludedMesh(part);
 
-    const totalDuration = 0.35;
+    const totalDuration = 0.25;
     this._effects.push({
       root,
       remaining: totalDuration,
       update: (_dt, remaining) => {
-        // Hold solid, then thin out to nothing instead of fading
-        const life = Math.max(0, remaining / totalDuration);
-        const width = Math.max(0.01, Math.min(1, life * 2.5));
-        for (const part of parts) {
-          if (part === flash) continue;
-          part.scaling.x = width;
-          part.scaling.y = width;
-        }
-        flash.scaling.setAll(Math.max(0.01, (1 + (1 - life) * 1.6) * Math.min(1, life * 3)));
-      },
-      dispose: () => {
-        for (const part of parts) glow?.removeExcludedMesh(part);
-        boltMat.dispose();
-        flashMat.dispose();
+        const fade = Math.max(0, remaining / totalDuration);
+        boltMat.alpha = fade * 0.9;
+        coreMat.alpha = fade;
+        flash.scaling.setAll(1 + (1 - fade) * 2);
       },
     });
   }
 
   // ══════════════════ SMOKE PUFF ══════════════════
   /**
-   * Spawn an expanding cloud of solid faceted chunks. Used for ninja teleport and spell casts.
+   * Spawn an expanding smoke cloud at position. Used for ninja teleport.
    */
   spawnSmokePuff(position: Vector3, color?: Color3): void {
+    const root = new TransformNode("smoke", this._scene);
     const pos = position.clone();
-    pos.y += 0.5;
-    this._spawnChunkPuff(pos, color ?? new Color3(0.4, 0.4, 0.45), 7, 0.38, 0.7);
+    root.position = pos;
+    const clr = color ?? new Color3(0.4, 0.4, 0.45);
+
+    const ps = createSmoke(this._scene, pos, clr, 20);
+    ps.targetStopDuration = 0.15;
+    ps.start();
+
+    const totalDuration = 0.6;
+    this._effects.push({
+      root,
+      remaining: totalDuration,
+      particles: [ps],
+    });
   }
 
   // ══════════════════ SHURIKEN (thrown) ══════════════════
@@ -284,15 +245,12 @@ export class VisualEffects {
   }
 
   // ══════════════════ HIT FLASH ══════════════════
-  /** Small solid faceted pop on every hit. */
+  /** Bright white pop on every hit. */
   spawnHitFlash(position: Vector3, intensity = 1): void {
-    const flash = MeshBuilder.CreateIcoSphere("hflash", { radius: 0.05, subdivisions: 1, flat: true }, this._scene);
+    const flash = MeshBuilder.CreateSphere("hflash", { diameter: 0.1, segments: 4 }, this._scene);
     flash.position = position.clone();
     flash.position.y += 0.5;
-    flash.isPickable = false;
-    const mat = this._solidMat(new Color3(1, 0.95, 0.8));
-    const glow = this._glowLayer();
-    glow?.addExcludedMesh(flash);
+    const mat = this._fxMat(new Color3(1, 1, 1), new Color3(1, 1, 1));
 
     flash.material = mat;
     const root = flash as unknown as TransformNode;
@@ -303,14 +261,12 @@ export class VisualEffects {
       remaining: totalDuration,
       update: (_dt, remaining) => {
         const t = 1 - remaining / totalDuration;
-        // Pop up quickly, then shrink away (no alpha fade)
-        const s = (t < 0.53 ? 1 + t * 6 : Math.max(0.05, 4 * (1 - (t - 0.53) * 2.1))) * intensity;
+        // Scale up quickly, then fade
+        const s = (t < 0.53 ? 1 + t * 6 : 4) * intensity;
         flash.scaling.setAll(s);
+        mat.alpha = t < 0.53 ? 1 : Math.max(0, 1 - (t - 0.53) * 2.1);
       },
-      dispose: () => {
-        glow?.removeExcludedMesh(flash);
-        mat.dispose();
-      },
+      dispose: () => mat.dispose(),
     });
   }
 
@@ -336,9 +292,22 @@ export class VisualEffects {
   // ══════════════════ PERSISTENT SMOKE ══════════════════
   /** Dark smoke cloud that lingers after explosions. */
   spawnPersistentSmoke(position: Vector3): void {
+    const root = new TransformNode("pSmoke", this._scene);
     const pos = position.clone();
     pos.y += 0.4;
-    this._spawnChunkPuff(pos, new Color3(0.3, 0.3, 0.32), 6, 0.42, 1.0);
+    root.position = pos;
+
+    const ps = createSmoke(this._scene, pos, new Color3(0.3, 0.3, 0.32), 15);
+    ps.minLifeTime = 0.4;
+    ps.maxLifeTime = 0.8;
+    ps.targetStopDuration = 0.3;
+    ps.start();
+
+    this._effects.push({
+      root,
+      remaining: 1.0,
+      particles: [ps],
+    });
   }
 
   // ══════════════════ GROUND SCORCH ══════════════════

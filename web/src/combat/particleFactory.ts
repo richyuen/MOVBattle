@@ -23,42 +23,6 @@ function getParticleTexture(scene: Scene): Texture {
   return dyn;
 }
 
-let _solidParticleTex: Texture | undefined;
-
-/** Shared hard-edged hexagon texture: magic particles read as solid chips, not soft blobs. */
-function getSolidParticleTexture(scene: Scene): Texture {
-  if (_solidParticleTex) return _solidParticleTex;
-  const dyn = new DynamicTexture("solidParticleTex", 32, scene, false);
-  const ctx = dyn.getContext();
-  ctx.clearRect(0, 0, 32, 32);
-  ctx.fillStyle = "rgba(255,255,255,1)";
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    const x = 16 + Math.cos(a) * 15;
-    const y = 16 + Math.sin(a) * 15;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fill();
-  dyn.hasAlpha = true;
-  dyn.update();
-  _solidParticleTex = dyn;
-  return dyn;
-}
-
-/** Opaque single-colour particles that shrink out instead of fading. */
-function applySolidLook(ps: ParticleSystem, scene: Scene, color: Color3, size: [number, number]): void {
-  ps.particleTexture = getSolidParticleTexture(scene);
-  ps.color1 = c4(color.r, color.g, color.b, 1);
-  ps.color2 = c4(color.r * 0.85, color.g * 0.85, color.b * 0.85, 1);
-  ps.colorDead = c4(color.r * 0.85, color.g * 0.85, color.b * 0.85, 1);
-  ps.addSizeGradient(0, size[0], size[1]);
-  ps.addSizeGradient(0.5, size[0], size[1]);
-  ps.addSizeGradient(1, 0);
-  ps.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-}
-
 function c4(r: number, g: number, b: number, a = 1): Color4 {
   return new Color4(r, g, b, a);
 }
@@ -197,11 +161,17 @@ export function createTrail(
   emitter: AbstractMesh,
   color: Color3,
   capacity = 10,
-  size: [number, number] = [0.1, 0.2],
 ): ParticleSystem {
   const ps = new ParticleSystem("trail", capacity, scene);
+  ps.particleTexture = getParticleTexture(scene);
   ps.emitter = emitter;
 
+  ps.color1 = c4(color.r, color.g, color.b, 0.8);
+  ps.color2 = c4(color.r * 0.7, color.g * 0.7, color.b * 0.7, 0.4);
+  ps.colorDead = c4(color.r * 0.4, color.g * 0.4, color.b * 0.4, 0);
+
+  ps.minSize = 0.04;
+  ps.maxSize = 0.12;
   ps.minLifeTime = 0.1;
   ps.maxLifeTime = 0.3;
   ps.emitRate = capacity / 0.2;
@@ -211,7 +181,7 @@ export function createTrail(
   ps.minEmitPower = 0.1;
   ps.maxEmitPower = 0.3;
   ps.updateSpeed = 0.02;
-  applySolidLook(ps, scene, color, size);
+  ps.blendMode = ParticleSystem.BLENDMODE_ADD;
 
   return ps;
 }
@@ -295,8 +265,15 @@ export function createFxAmbient(
   if (!cfg) return null;
 
   const ps = new ParticleSystem(`fx_${fxPreset}`, capacity, scene);
+  ps.particleTexture = getParticleTexture(scene);
   ps.emitter = emitter;
 
+  ps.color1 = c4(cfg.color.r, cfg.color.g, cfg.color.b, 0.7);
+  ps.color2 = c4(cfg.color.r * 0.8, cfg.color.g * 0.8, cfg.color.b * 0.8, 0.4);
+  ps.colorDead = c4(cfg.color.r * 0.5, cfg.color.g * 0.5, cfg.color.b * 0.5, 0);
+
+  ps.minSize = cfg.size[0];
+  ps.maxSize = cfg.size[1];
   ps.minLifeTime = cfg.lifeTime[0];
   ps.maxLifeTime = cfg.lifeTime[1];
   ps.emitRate = capacity / ((cfg.lifeTime[0] + cfg.lifeTime[1]) / 2);
@@ -306,7 +283,7 @@ export function createFxAmbient(
   ps.minEmitPower = cfg.speed[0];
   ps.maxEmitPower = cfg.speed[1];
   ps.updateSpeed = 0.02;
-  applySolidLook(ps, scene, cfg.color, [cfg.size[0] * 2.4, cfg.size[1] * 2.4]);
+  ps.blendMode = ParticleSystem.BLENDMODE_ADD;
 
   return ps;
 }
