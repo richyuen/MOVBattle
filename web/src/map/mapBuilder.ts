@@ -12,8 +12,31 @@ const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
 const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
-const BLADE_LIGHT = 0.2;
-const HAZE_MIX = 0.5;      // how far the far treeline is mixed toward the fog color
+const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
+const HAZE_MIX = 0.6;      // how far the far treeline is mixed toward the lightened fog color
+const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
+const FAR_ROCK = new Color3(0.84, 0.86, 0.9);
+const FAR_ROCK_SHADE = new Color3(0.72, 0.76, 0.84);
+const FAR_ROCK_MIX = 0.25;
+
+/** Distance haze by color: far props are mixed toward a lightened sky, so they sit paler than near ones */
+function hazed(color: Color3, fogColor: Color3, mix: number): Color3 {
+  return Color3.Lerp(color, Color3.Lerp(fogColor, Color3.White(), HAZE_LIFT), mix);
+}
+
+function paintFarProps(scene: Scene, canopy: Color3): void {
+  const hazeTrees = scene.getMaterialByName("hazeTrees") as StandardMaterial | null;
+  if (hazeTrees) {
+    hazeTrees.diffuseColor = hazed(canopy, scene.fogColor, HAZE_MIX);
+    hazeTrees.emissiveColor = hazeTrees.diffuseColor.scale(0.2);
+  }
+  for (const [name, base] of [["farRock", FAR_ROCK], ["farRockShade", FAR_ROCK_SHADE]] as const) {
+    const farRock = scene.getMaterialByName(name) as StandardMaterial | null;
+    if (!farRock) continue;
+    farRock.diffuseColor = hazed(base, scene.fogColor, FAR_ROCK_MIX);
+    farRock.emissiveColor = farRock.diffuseColor.scale(0.2);
+  }
+}
 
 export interface MapBuildResult {
   zones: PlacementZone[];
@@ -97,16 +120,17 @@ export class TribalSandboxMapBuilder {
     const bladeDark = new StandardMaterial("grassBladeDark", this._scene);
     bladeDark.diffuseColor = grass.diffuseColor.scale(BLADE_DARK);
     const bladeLight = new StandardMaterial("grassBladeLight", this._scene);
-    bladeLight.diffuseColor = Color3.Lerp(grass.diffuseColor, Color3.White(), BLADE_LIGHT);
+    bladeLight.diffuseColor = grass.diffuseColor.scale(BLADE_LIGHT);
     for (const blade of [bladeDark, bladeLight]) {
       blade.specularColor = Color3.Black();
       blade.backFaceCulling = false;
     }
 
-    // Far treeline: canopy color pre-mixed toward the sky so it sits back in the haze
-    const hazeTrees = new StandardMaterial("hazeTrees", this._scene);
-    hazeTrees.diffuseColor = Color3.Lerp(darkLeaves.diffuseColor, this._scene.fogColor, HAZE_MIX);
-    hazeTrees.specularColor = Color3.Black();
+    // Far treeline and off-island mountains: colors pre-mixed toward the sky so they sit back in the haze
+    for (const name of ["hazeTrees", "farRock", "farRockShade"]) {
+      new StandardMaterial(name, this._scene).specularColor = Color3.Black();
+    }
+    paintFarProps(this._scene, leaves.diffuseColor);
   }
 
   private _createGround(): void {
@@ -142,8 +166,8 @@ export class TribalSandboxMapBuilder {
   }
 
   private _createMountains(): void {
-    const rock = this._scene.getMaterialByName("rock") as StandardMaterial;
-    const darkRock = this._scene.getMaterialByName("darkRock") as StandardMaterial;
+    const rock = this._scene.getMaterialByName("farRock") as StandardMaterial;
+    const darkRock = this._scene.getMaterialByName("farRockShade") as StandardMaterial;
     const dryGrass = this._scene.getMaterialByName("dryGrass") as StandardMaterial;
 
     // ── Back mountains (positive Z, floating beyond the island edge) ──
@@ -747,9 +771,8 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   const bladeDark = scene.getMaterialByName("grassBladeDark") as StandardMaterial | null;
   if (bladeDark) bladeDark.diffuseColor = theme.grass.scale(BLADE_DARK);
   const bladeLight = scene.getMaterialByName("grassBladeLight") as StandardMaterial | null;
-  if (bladeLight) bladeLight.diffuseColor = Color3.Lerp(theme.grass, Color3.White(), BLADE_LIGHT);
-  const hazeTrees = scene.getMaterialByName("hazeTrees") as StandardMaterial | null;
-  if (hazeTrees) hazeTrees.diffuseColor = Color3.Lerp(theme.grass.scale(0.7), theme.fogColor, HAZE_MIX);
+  if (bladeLight) bladeLight.diffuseColor = theme.grass.scale(BLADE_LIGHT);
+  paintFarProps(scene, theme.grass.scale(0.85));
 }
 
 function createPlacementGuides(scene: Scene, zones: readonly PlacementZone[]): void {
