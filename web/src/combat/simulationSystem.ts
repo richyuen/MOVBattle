@@ -419,6 +419,9 @@ export class SimulationSystem {
 
     const engageDistance = unit.definition.engageRange + this.attackRangePadding;
     const distance = Vector3.Distance(unit.position, enemy.position);
+    if (attackProfile.type === AttackType.Melee && distance <= engageDistance) {
+      unit.leanIntoShove();
+    }
 
     if (hasAbility(unit, "teleport") && distance > engageDistance && distance < engageDistance * 3 && unit.canAttack(now)) {
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position);

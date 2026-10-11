@@ -391,6 +391,12 @@ export class RuntimeUnit {
     }
   }
 
+  /** In melee reach of its target: humanoids pitch into the shove instead of standing upright. */
+  leanIntoShove(): void {
+    if (isVehicleUnit(this.definition.id)) return;
+    this.animator.leanIntoShove();
+  }
+
   get isMoving(): boolean {
     return this._isMoving;
   }
