@@ -185,20 +185,17 @@ export class CameraController {
   }
 
   // ─── Battle swoop ───
-  /**
-   * Swoop from the placement view down to a low TABS-style battle view on the clash line,
-   * backing off with the armies' spread so both a duel and a full field fill the frame.
-   */
-  swoopToBattle(focus: { x: number; z: number; spread: number }, durationSeconds = 1.1): CameraViewState {
+  /** Swoop from the placement view down to a low, close TABS-style battle view on the clash line. */
+  swoopToBattle(center: { x: number; z: number }, durationSeconds = 1.1): CameraViewState {
     if (!this._prebattleView) {
       this._prebattleView = this.captureViewState();
       this._prebattleBetaLimits = { lower: this.camera.lowerBetaLimit, upper: this.camera.upperBetaLimit };
     }
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
-      beta: Math.PI / 2.05,   // eye just above unit head height, near level so sky fills the top third
-      radius: Math.min(18, Math.max(10, 4 + focus.spread * 0.6)),
-      target: { x: focus.x, y: 1.8, z: focus.z },
+      beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
+      radius: 10,             // roughly four body lengths back from the front line
+      target: { x: center.x, y: 1.8, z: center.z },
     };
     // The battle view sits below the placement pitch limits; widen them for the fight.
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
