@@ -34,6 +34,9 @@ interface ActiveProjectile {
 interface MuzzleFlash {
   mesh: Mesh;
   remaining: number;
+  /** Smoke blobs only: total life, used to swell, rise and hold opaque before fading. */
+  smokeLife?: number;
+  ownsMaterial?: boolean;
 }
 
 interface ProjectileSpawnOptions {
@@ -170,19 +173,24 @@ export class ProjectileSystem {
     const m = this._getMat("flash", new Color3(1, 0.85, 0.3), 0.8);
     flash.material = m;
 
-    // Smoke puff
-    const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.6 * scale, segments: 6 }, this._scene);
-    smoke.position = flash.position.clone();
-    smoke.position.addInPlace(direction.scale(0.15 * scale));
-    const sm = getMaterialFactory().createUnique("unlit", new Color3(0.6, 0.6, 0.6));
-    sm.disableLighting = true;
-    sm.emissiveColor = new Color3(0.3, 0.3, 0.3);
-    sm.alpha = 0.5;
-    sm.transparencyMode = 2;
-    smoke.material = sm;
-
     this._flashes.push({ mesh: flash, remaining: 0.12 + 0.04 * Math.max(0, scale - 1) });
-    this._flashes.push({ mesh: smoke, remaining: 0.35 + 0.1 * Math.max(0, scale - 1) });
+
+    // Smoke puff: a fat white clump of chunky blobs thrown out of the muzzle that hangs and drifts up
+    const sm = getMaterialFactory().createUnique("unlit", new Color3(0.95, 0.95, 0.93));
+    sm.disableLighting = true;
+    sm.emissiveColor = new Color3(0.93, 0.93, 0.91);
+    sm.transparencyMode = 2;
+    const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
+    for (let i = 0; i < 4; i++) {
+      const diameter = (0.55 + Math.random() * 0.3 - 0.07 * i) * scale;
+      const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 4 }, this._scene);
+      smoke.position = flash.position.add(direction.scale((0.15 + 0.3 * i) * scale));
+      smoke.position.x += (Math.random() - 0.5) * 0.3 * scale;
+      smoke.position.y += (Math.random() - 0.3) * 0.3 * scale;
+      smoke.position.z += (Math.random() - 0.5) * 0.3 * scale;
+      smoke.material = sm;
+      this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 });
+    }
   }
 
   update(dt: number): void {
@@ -281,14 +289,22 @@ export class ProjectileSystem {
     for (let i = this._flashes.length - 1; i >= 0; i--) {
       const f = this._flashes[i];
       f.remaining -= dt;
-      // Fade and expand
-      const ratio = Math.max(0, f.remaining / 0.35);
-      f.mesh.scaling.setAll(1 + (1 - ratio) * 1.5);
-      if (f.mesh.material && "alpha" in f.mesh.material) {
-        (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = ratio * 0.7;
+      if (f.smokeLife) {
+        // Pop out fast, keep swelling slowly, stay opaque for most of the life, then thin out
+        const ratio = Math.max(0, f.remaining / f.smokeLife);
+        f.mesh.scaling.setAll(0.55 + (1 - ratio * ratio * ratio) * 1.05);
+        f.mesh.position.y += 0.3 * dt;
+        (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = Math.min(1, ratio * 2.5);
+      } else {
+        // Fade and expand
+        const ratio = Math.max(0, f.remaining / 0.35);
+        f.mesh.scaling.setAll(1 + (1 - ratio) * 1.5);
+        if (f.mesh.material && "alpha" in f.mesh.material) {
+          (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = ratio * 0.7;
+        }
       }
       if (f.remaining <= 0) {
-        f.mesh.dispose();
+        f.mesh.dispose(false, f.ownsMaterial === true);
         this._flashes.splice(i, 1);
       }
     }

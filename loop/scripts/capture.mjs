@@ -231,13 +231,14 @@ async function main() {
           if (window.game.spawnUnit(u.unitId, u.team, u.position)) ok++;
         }
         window.game.startBattleImmediate();
-        window.advanceTime(2400);
+        window.advanceTime(1200);
         return ok;
       }, WAR_MACHINES);
       summary.notes.push(`war_machines placed ${machinesPlaced}/${WAR_MACHINES.length} units`);
-      await shot(page, "war_machines_2400ms");
-      await page.evaluate(() => window.advanceTime(1600));
-      await shot(page, "war_machines_4000ms");
+      // The cannon fires near 0.8 s and 3.1 s: both stills land a few tenths after a shot.
+      await shot(page, "war_machines_1200ms");
+      await page.evaluate(() => window.advanceTime(2200));
+      await shot(page, "war_machines_3400ms");
 
       // Gallery-camera reads (UI hidden by design): a lineup, two mid-swing close-ups, one hero pair.
       const galleryShots = [
