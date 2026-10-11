@@ -384,7 +384,7 @@ export class ProjectileSystem {
       const falloff = 1 - distance / radius;
       // A body standing on the centre goes the way the shot was travelling.
       const outward = distance > 0.05 ? delta.scale(1 / distance) : shotDir;
-      unit.applyBlastLaunch(outward, 2 + 3.5 * falloff, 3.5 + 3 * falloff);
+      unit.applyBlastLaunch(outward, 1 + 2 * falloff, 3.5 + 3 * falloff);
     }
   }
 

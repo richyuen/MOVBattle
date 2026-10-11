@@ -492,6 +492,8 @@ export class RuntimeUnit {
    */
   applyBlastLaunch(outward: Vector3, speed: number, lift: number): void {
     if (this._isAnchoredActor) return;
+    // One launch per flight: rapid shells must not juggle a body across the map.
+    if (!this._grounded && this.position.y > 0.2) return;
     const scale = this._ragdollProfile.impactMultiplier / Math.max(0.8, this.definition.mass);
     if (!this._isDead) {
       this._enterTopple(RuntimeUnit.timeNowSeconds(), this._crowdPhysicsProfile.launchThreshold, outward, true);
