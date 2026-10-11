@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, Mesh, MeshBuilder, Color3, TransformNode,
+  Scene, Vector3, MeshBuilder, Color3, TransformNode,
   PBRMetallicRoughnessMaterial, ParticleSystem,
 } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
@@ -290,7 +290,7 @@ export class VisualEffects {
   }
 
   // ══════════════════ EXPLOSION BURST ══════════════════
-  /** Ragged fire flash that breaks up into solid dark smoke lobes, with dust chunks thrown out on arcs. No particles. */
+  /** Opaque low-poly fireball with solid dust chunks thrown out on arcs. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
@@ -298,59 +298,35 @@ export class VisualEffects {
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
+    // Yellow-white heart with saturated orange and yellow lobes poking out of it.
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.9, 0.5));
     coreMat.emissiveColor = new Color3(0.45, 0.38, 0.14);
     const lobeMat = mats.createUnique("cloth", new Color3(1, 0.4, 0.03));
     lobeMat.emissiveColor = new Color3(0.45, 0.13, 0);
     const hotMat = mats.createUnique("cloth", new Color3(1, 0.7, 0.08));
     hotMat.emissiveColor = new Color3(0.42, 0.27, 0.02);
-    const smokeMat = mats.createUnique("stone", new Color3(0.2, 0.19, 0.19));
-    const darkSmokeMat = mats.createUnique("stone", new Color3(0.11, 0.1, 0.1));
     const dustMat = mats.createUnique("stone", new Color3(0.5, 0.39, 0.25));
     const sootMat = mats.createUnique("stone", new Color3(0.16, 0.13, 0.11));
 
-    const shard = (name: string, segments: number, mat: typeof coreMat): Mesh => {
-      const mesh = MeshBuilder.CreateSphere(name, { diameter: 1, segments }, this._scene);
-      mesh.convertToFlatShadedMesh();
-      mesh.material = mat;
-      mesh.parent = root;
-      return mesh;
+    // Core plus offset lobes so the silhouette is a lumpy ball, not a perfect sphere.
+    const lobes: { mesh: TransformNode; size: number }[] = [];
+    const addLobe = (size: number, offset: Vector3, mat: typeof coreMat): void => {
+      const lobe = MeshBuilder.CreateSphere("burstLobe", { diameter: 1, segments: 3 }, this._scene);
+      lobe.material = mat;
+      lobe.parent = root;
+      lobe.position = offset;
+      lobes.push({ mesh: lobe, size });
     };
-
-    // Small squashed heart plus long thin tongues stabbing outward: a spiky flash, not a ball.
-    const core = shard("burstCore", 2, coreMat);
-    core.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
-    const coreSize = new Vector3(1.9, 1.3, 1.6).scale(scale);
-    const tongues: { mesh: Mesh; dir: Vector3; size: Vector3; reach: number }[] = [];
-    for (let i = 0; i < 14; i++) {
-      const angle = (i / 14) * Math.PI * 2 + Math.random() * 0.5;
-      const lift = -0.15 + Math.random() * 1.1;
-      const dir = new Vector3(Math.cos(angle), lift, Math.sin(angle)).normalize();
-      const mesh = shard("burstTongue", 2, i % 2 === 0 ? hotMat : lobeMat);
-      // Local Z is the long axis; aim it along dir.
-      mesh.rotation.y = Math.atan2(dir.x, dir.z);
-      mesh.rotation.x = -Math.asin(dir.y);
-      const width = (0.4 + Math.random() * 0.35) * scale;
-      tongues.push({
-        mesh, dir,
-        size: new Vector3(width, width, (1.6 + Math.random() * 1.4) * scale),
-        reach: (0.5 + Math.random() * 0.3) * scale,
-      });
-    }
-
-    // Dark smoke lobes born inside the flash; they swell, drift out and climb as the fire dies.
-    const smokes: { mesh: Mesh; dir: Vector3; size: Vector3; rise: number }[] = [];
-    for (let i = 0; i < 11; i++) {
-      const angle = (i / 11) * Math.PI * 2 + Math.random() * 0.6;
-      const dir = new Vector3(Math.cos(angle), 0.1 + Math.random() * 0.9, Math.sin(angle)).normalize();
-      const mesh = shard("burstSmoke", 3, i % 3 === 0 ? darkSmokeMat : smokeMat);
-      mesh.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
-      const size = (0.9 + Math.random() * 0.8) * scale;
-      smokes.push({
-        mesh, dir,
-        size: new Vector3(size, size * (0.7 + Math.random() * 0.3), size * (0.75 + Math.random() * 0.4)),
-        rise: (0.9 + Math.random() * 0.9) * scale,
-      });
+    // Two to three bodies across at scale 1.
+    addLobe(2.7 * scale, Vector3.Zero(), coreMat);
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.6;
+      const reach = (0.85 + Math.random() * 0.3) * scale;
+      addLobe(
+        (1.1 + Math.random() * 0.5) * scale,
+        new Vector3(Math.cos(angle) * reach, (Math.random() - 0.2) * 0.8 * scale, Math.sin(angle) * reach),
+        i % 2 === 0 ? hotMat : lobeMat,
+      );
     }
 
     const chunks: { mesh: TransformNode; velocity: Vector3; spin: Vector3 }[] = [];
@@ -368,32 +344,19 @@ export class VisualEffects {
       });
     }
 
-    const fireDuration = 0.4;
-    const totalDuration = 1.6;
+    const fireDuration = 0.55;
+    const totalDuration = 1.1;
     const floorY = -root.position.y + 0.08;
     this._effects.push({
       root,
       remaining: totalDuration,
       update: (dt, remaining) => {
         const elapsed = totalDuration - remaining;
-        // Flash peaks in 0.08 s and is already tearing apart by 0.15 s; all opaque, no fades.
-        const grow = Math.min(1, elapsed / 0.08);
-        const collapse = Math.max(0, Math.min(1, (fireDuration - elapsed) / 0.25));
+        // Pop to full size in 0.1 s, hold, then collapse; stays opaque throughout.
+        const grow = Math.min(1, elapsed / 0.1);
+        const collapse = Math.max(0, Math.min(1, (fireDuration - elapsed) / 0.2));
         const fire = Math.max(0.001, (0.35 + 0.65 * grow) * collapse);
-        core.scaling.copyFrom(coreSize).scaleInPlace(fire);
-        for (const t of tongues) {
-          // Tongues thin faster than they shorten, so the dying flash reads as streaks.
-          t.mesh.scaling.set(t.size.x * fire * collapse, t.size.y * fire * collapse, t.size.z * Math.sqrt(fire));
-          t.mesh.position.copyFrom(t.dir).scaleInPlace(t.reach + elapsed * 2.2 * scale);
-        }
-        const swell = Math.max(0, Math.min(1, (elapsed - 0.06) / 0.22));
-        const thin = Math.max(0, Math.min(1, remaining / 0.6));
-        const smoke = Math.max(0.001, swell * (0.45 + 0.55 * thin) * Math.min(1, remaining / 0.15));
-        for (const s of smokes) {
-          s.mesh.scaling.copyFrom(s.size).scaleInPlace(smoke);
-          s.mesh.position.copyFrom(s.dir).scaleInPlace((0.7 + swell * 0.6 + elapsed * 0.5) * scale);
-          s.mesh.position.y += s.rise * elapsed;
-        }
+        for (const lobe of lobes) lobe.mesh.scaling.setAll(lobe.size * fire);
         const chunkScale = Math.max(0.001, Math.min(1, remaining / 0.25));
         for (const chunk of chunks) {
           chunk.velocity.y -= 14 * dt;
@@ -411,8 +374,6 @@ export class VisualEffects {
         coreMat.dispose();
         lobeMat.dispose();
         hotMat.dispose();
-        smokeMat.dispose();
-        darkSmokeMat.dispose();
         dustMat.dispose();
         sootMat.dispose();
       },
