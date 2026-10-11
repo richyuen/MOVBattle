@@ -1044,11 +1044,16 @@ function enterSimulation(): void {
   showStatus("Fight!");
 }
 
-/** Midpoint between the two teams' living formations, where the front lines will meet. */
-function computeBattleFocus(): { x: number; z: number } {
+/** Midpoint between the two teams' living formations, where the front lines will meet, plus their overall extent. */
+function computeBattleFocus(): { x: number; z: number; spread: number } {
   const sums = [{ x: 0, z: 0, n: 0 }, { x: 0, z: 0, n: 0 }];
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
+    minX = Math.min(minX, unit.position.x);
+    maxX = Math.max(maxX, unit.position.x);
+    minZ = Math.min(minZ, unit.position.z);
+    maxZ = Math.max(maxZ, unit.position.z);
     const s = sums[unit.team === 0 ? 0 : 1];
     s.x += unit.position.x;
     s.z += unit.position.z;
@@ -1056,7 +1061,8 @@ function computeBattleFocus(): { x: number; z: number } {
   }
   const a = sums[0].n ? { x: sums[0].x / sums[0].n, z: sums[0].z / sums[0].n } : { x: 0, z: 0 };
   const b = sums[1].n ? { x: sums[1].x / sums[1].n, z: sums[1].z / sums[1].n } : { x: 0, z: 0 };
-  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
+  const spread = maxX >= minX ? Math.max(maxX - minX, maxZ - minZ) : 0;
+  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, spread };
 }
 
 function resetBattle(options: {
