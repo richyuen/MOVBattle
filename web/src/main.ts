@@ -281,7 +281,6 @@ simulation.configureNavigation(
   activeMapInstance.zones,
   activeMapInstance.obstacles,
   activeMapInstance.hazards,
-  activeMapInstance.navBounds,
 );
 
 let budgetSystem = new BudgetSystem(
@@ -565,7 +564,6 @@ function loadMapById(mapId: BattleMapId): void {
     activeMapInstance.zones,
     activeMapInstance.obstacles,
     activeMapInstance.hazards,
-    activeMapInstance.navBounds,
   );
 }
 
