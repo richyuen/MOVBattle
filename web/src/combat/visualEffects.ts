@@ -294,45 +294,49 @@ export class VisualEffects {
   spawnExplosionBurst(position: Vector3, scale = 1): void {
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
-    root.position.y += 0.55 * scale;
+    root.position.y += 0.9 * scale;
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
-    const coreMat = mats.createUnique("cloth", new Color3(0.95, 0.36, 0.05));
-    coreMat.emissiveColor = new Color3(0.42, 0.13, 0.01);
-    const hotMat = mats.createUnique("cloth", new Color3(1, 0.72, 0.12));
-    hotMat.emissiveColor = new Color3(0.4, 0.26, 0.03);
+    // Yellow-white heart with saturated orange and yellow lobes poking out of it.
+    const coreMat = mats.createUnique("cloth", new Color3(1, 0.9, 0.5));
+    coreMat.emissiveColor = new Color3(0.45, 0.38, 0.14);
+    const lobeMat = mats.createUnique("cloth", new Color3(1, 0.4, 0.03));
+    lobeMat.emissiveColor = new Color3(0.45, 0.13, 0);
+    const hotMat = mats.createUnique("cloth", new Color3(1, 0.7, 0.08));
+    hotMat.emissiveColor = new Color3(0.42, 0.27, 0.02);
     const dustMat = mats.createUnique("stone", new Color3(0.5, 0.39, 0.25));
     const sootMat = mats.createUnique("stone", new Color3(0.16, 0.13, 0.11));
 
     // Core plus offset lobes so the silhouette is a lumpy ball, not a perfect sphere.
     const lobes: { mesh: TransformNode; size: number }[] = [];
-    const addLobe = (size: number, offset: Vector3, hot: boolean): void => {
+    const addLobe = (size: number, offset: Vector3, mat: typeof coreMat): void => {
       const lobe = MeshBuilder.CreateSphere("burstLobe", { diameter: 1, segments: 3 }, this._scene);
-      lobe.material = hot ? hotMat : coreMat;
+      lobe.material = mat;
       lobe.parent = root;
       lobe.position = offset;
       lobes.push({ mesh: lobe, size });
     };
-    addLobe(1.7 * scale, Vector3.Zero(), false);
-    for (let i = 0; i < 5; i++) {
-      const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
-      const reach = (0.45 + Math.random() * 0.25) * scale;
+    // Two to three bodies across at scale 1.
+    addLobe(2.7 * scale, Vector3.Zero(), coreMat);
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.6;
+      const reach = (0.85 + Math.random() * 0.3) * scale;
       addLobe(
-        (0.75 + Math.random() * 0.35) * scale,
-        new Vector3(Math.cos(angle) * reach, (Math.random() - 0.2) * 0.5 * scale, Math.sin(angle) * reach),
-        i % 2 === 0,
+        (1.1 + Math.random() * 0.5) * scale,
+        new Vector3(Math.cos(angle) * reach, (Math.random() - 0.2) * 0.8 * scale, Math.sin(angle) * reach),
+        i % 2 === 0 ? hotMat : lobeMat,
       );
     }
 
     const chunks: { mesh: TransformNode; velocity: Vector3; spin: Vector3 }[] = [];
-    for (let i = 0; i < 10; i++) {
-      const size = (0.16 + Math.random() * 0.2) * scale;
+    for (let i = 0; i < 20; i++) {
+      const size = (0.08 + Math.random() * 0.1) * scale;
       const chunk = MeshBuilder.CreateBox("burstChunk", { size }, this._scene);
       chunk.material = i % 3 === 0 ? sootMat : dustMat;
       chunk.parent = root;
-      const angle = (i / 10) * Math.PI * 2 + Math.random() * 0.5;
-      const speed = (2.6 + Math.random() * 2.2) * scale;
+      const angle = (i / 20) * Math.PI * 2 + Math.random() * 0.5;
+      const speed = (3.2 + Math.random() * 3) * scale;
       chunks.push({
         mesh: chunk,
         velocity: new Vector3(Math.cos(angle) * speed, 3.2 + Math.random() * 3, Math.sin(angle) * speed),
@@ -368,6 +372,7 @@ export class VisualEffects {
       },
       dispose: () => {
         coreMat.dispose();
+        lobeMat.dispose();
         hotMat.dispose();
         dustMat.dispose();
         sootMat.dispose();
