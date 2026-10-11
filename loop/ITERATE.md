@@ -34,5 +34,6 @@ Spawn a fresh `Agent` (general-purpose). Its prompt lists, by path: `loop/CRITIC
 ## 8. Write memory and commit
 - Rewrite `loop/STATE.md` fully: Iteration N, Scores, Focus with verdicts, Last verdicts (critic header lines verbatim), Ranked open gaps (critic's list, max 8), Rejected attempts (last 5), Notes (max 5 lines).
 - Append to `loop/LOG.md`: `iter N | <gap ids> | <approved>/<total> approved | scores <before> -> <after>`.
-- `node loop/scripts/budget.mjs` must pass. Commit the docs: subject `loop(N): <approved>/<total> gaps approved`. Never push.
+- `node loop/scripts/budget.mjs` must pass. Commit the docs: subject `loop(N): <approved>/<total> gaps approved`.
+- `git push` (bare, no arguments). If it fails, note it in LOG.md and carry on; the commit is what counts.
 - End the turn with a two-line summary. Do not ask questions.
