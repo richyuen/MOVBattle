@@ -289,6 +289,92 @@ export class VisualEffects {
     });
   }
 
+  // ══════════════════ EXPLOSION BURST ══════════════════
+  /** Opaque low-poly fireball with solid dust chunks thrown out on arcs. No particles. */
+  spawnExplosionBurst(position: Vector3, scale = 1): void {
+    const root = new TransformNode("explosionBurst", this._scene);
+    root.position = position.clone();
+    root.position.y += 0.55 * scale;
+
+    // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
+    const mats = getMaterialFactory();
+    const coreMat = mats.createUnique("cloth", new Color3(0.95, 0.36, 0.05));
+    coreMat.emissiveColor = new Color3(0.42, 0.13, 0.01);
+    const hotMat = mats.createUnique("cloth", new Color3(1, 0.72, 0.12));
+    hotMat.emissiveColor = new Color3(0.4, 0.26, 0.03);
+    const dustMat = mats.createUnique("stone", new Color3(0.5, 0.39, 0.25));
+    const sootMat = mats.createUnique("stone", new Color3(0.16, 0.13, 0.11));
+
+    // Core plus offset lobes so the silhouette is a lumpy ball, not a perfect sphere.
+    const lobes: { mesh: TransformNode; size: number }[] = [];
+    const addLobe = (size: number, offset: Vector3, hot: boolean): void => {
+      const lobe = MeshBuilder.CreateSphere("burstLobe", { diameter: 1, segments: 3 }, this._scene);
+      lobe.material = hot ? hotMat : coreMat;
+      lobe.parent = root;
+      lobe.position = offset;
+      lobes.push({ mesh: lobe, size });
+    };
+    addLobe(1.7 * scale, Vector3.Zero(), false);
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
+      const reach = (0.45 + Math.random() * 0.25) * scale;
+      addLobe(
+        (0.75 + Math.random() * 0.35) * scale,
+        new Vector3(Math.cos(angle) * reach, (Math.random() - 0.2) * 0.5 * scale, Math.sin(angle) * reach),
+        i % 2 === 0,
+      );
+    }
+
+    const chunks: { mesh: TransformNode; velocity: Vector3; spin: Vector3 }[] = [];
+    for (let i = 0; i < 10; i++) {
+      const size = (0.16 + Math.random() * 0.2) * scale;
+      const chunk = MeshBuilder.CreateBox("burstChunk", { size }, this._scene);
+      chunk.material = i % 3 === 0 ? sootMat : dustMat;
+      chunk.parent = root;
+      const angle = (i / 10) * Math.PI * 2 + Math.random() * 0.5;
+      const speed = (2.6 + Math.random() * 2.2) * scale;
+      chunks.push({
+        mesh: chunk,
+        velocity: new Vector3(Math.cos(angle) * speed, 3.2 + Math.random() * 3, Math.sin(angle) * speed),
+        spin: new Vector3(Math.random() * 8, Math.random() * 8, Math.random() * 8),
+      });
+    }
+
+    const fireDuration = 0.55;
+    const totalDuration = 1.1;
+    const floorY = -root.position.y + 0.08;
+    this._effects.push({
+      root,
+      remaining: totalDuration,
+      update: (dt, remaining) => {
+        const elapsed = totalDuration - remaining;
+        // Pop to full size in 0.1 s, hold, then collapse; stays opaque throughout.
+        const grow = Math.min(1, elapsed / 0.1);
+        const collapse = Math.max(0, Math.min(1, (fireDuration - elapsed) / 0.2));
+        const fire = Math.max(0.001, (0.35 + 0.65 * grow) * collapse);
+        for (const lobe of lobes) lobe.mesh.scaling.setAll(lobe.size * fire);
+        const chunkScale = Math.max(0.001, Math.min(1, remaining / 0.25));
+        for (const chunk of chunks) {
+          chunk.velocity.y -= 14 * dt;
+          chunk.mesh.position.addInPlace(chunk.velocity.scale(dt));
+          if (chunk.mesh.position.y < floorY) {
+            chunk.mesh.position.y = floorY;
+            chunk.velocity.setAll(0);
+          } else {
+            chunk.mesh.rotation.addInPlace(chunk.spin.scale(dt));
+          }
+          chunk.mesh.scaling.setAll(chunkScale);
+        }
+      },
+      dispose: () => {
+        coreMat.dispose();
+        hotMat.dispose();
+        dustMat.dispose();
+        sootMat.dispose();
+      },
+    });
+  }
+
   // ══════════════════ PERSISTENT SMOKE ══════════════════
   /** Dark smoke cloud that lingers after explosions. */
   spawnPersistentSmoke(position: Vector3): void {

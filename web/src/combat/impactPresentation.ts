@@ -169,9 +169,7 @@ export class ImpactPresentation {
 
   presentExplosion(position: Vector3, scale = 1): void {
     if (!this.visualEffects) return;
-    this.visualEffects.spawnImpactDust(position, Math.max(1.25, scale), new Color3(0.82, 0.62, 0.36));
-    this.visualEffects.spawnHitFlash(position, Math.max(1, scale * 0.9));
-    this.visualEffects.spawnPersistentSmoke(position);
+    this.visualEffects.spawnExplosionBurst(position, scale);
     this.visualEffects.spawnGroundScorch(position);
     this._shake(0.075 * scale);
   }
@@ -229,6 +227,8 @@ export class ImpactPresentation {
 
   private _present(event: ImpactEventInput, tier: ImpactTier): void {
     if (!this.visualEffects) return;
+    // The blast draws its own fireball; a dust cloud per caught body would bury it in fog.
+    if (event.path === "projectile-splash") return;
     const position = event.position;
     switch (tier) {
       case "light":
