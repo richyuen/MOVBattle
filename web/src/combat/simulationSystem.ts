@@ -130,12 +130,13 @@ export class SimulationSystem {
   readonly progressSampleDistance = 0.6;
   readonly stuckTimeout = 0.75;
   readonly repathCooldown = 0.35;
-  readonly localAvoidanceRadius = 2.6;
+  /** Enemies are only sidestepped at arm's length, so opposing lines close and shove. */
+  readonly localAvoidanceRadius = 0.7;
   readonly localAvoidanceStrength = 1.45;
   /** Marching allies only steer apart when nearly touching, so ranks stay closed up. */
   readonly formationAvoidanceRadius = 0.3;
-  /** Fallen allies are stepped around closely so the press stays shut over bodies. */
-  readonly fallenAllyAvoidanceRadius = 0.9;
+  /** Fallen units of either team are stepped around closely so the press stays shut over bodies. */
+  readonly fallenAvoidanceRadius = 0.9;
   readonly cohesionRadius = 1.5;
   readonly congestionBypassDistance = 2.2;
   private _now = 0;
@@ -619,11 +620,11 @@ export class SimulationSystem {
       const delta = unit.position.subtract(other.position);
       delta.y = 0;
       const distanceSq = delta.lengthSquared();
-      // Press up against standing allies; step closely around fallen ones
+      // Press up against standing allies; step closely around fallen bodies of either team
       const ally = other.team === unit.team;
       const fallen = other.isToppled || other.isDowned;
       const separation = unit.collisionBodyRadius + other.collisionBodyRadius
-        + (!ally ? this.localAvoidanceRadius : fallen ? this.fallenAllyAvoidanceRadius : this.formationAvoidanceRadius);
+        + (fallen ? this.fallenAvoidanceRadius : !ally ? this.localAvoidanceRadius : this.formationAvoidanceRadius);
       if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
 
       const distance = Math.sqrt(distanceSq);
