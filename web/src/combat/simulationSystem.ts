@@ -134,6 +134,8 @@ export class SimulationSystem {
   readonly localAvoidanceStrength = 1.45;
   /** Marching allies only steer apart when nearly touching, so ranks stay closed up. */
   readonly formationAvoidanceRadius = 0.3;
+  /** Fallen allies are stepped around closely so the press stays shut over bodies. */
+  readonly fallenAllyAvoidanceRadius = 0.9;
   readonly cohesionRadius = 1.5;
   readonly congestionBypassDistance = 2.2;
   private _now = 0;
@@ -617,10 +619,11 @@ export class SimulationSystem {
       const delta = unit.position.subtract(other.position);
       delta.y = 0;
       const distanceSq = delta.lengthSquared();
-      // Press up against standing allies; still give fallen ones a wide berth
-      const ally = other.team === unit.team && !other.isToppled && !other.isDowned;
+      // Press up against standing allies; step closely around fallen ones
+      const ally = other.team === unit.team;
+      const fallen = other.isToppled || other.isDowned;
       const separation = unit.collisionBodyRadius + other.collisionBodyRadius
-        + (ally ? this.formationAvoidanceRadius : this.localAvoidanceRadius);
+        + (!ally ? this.localAvoidanceRadius : fallen ? this.fallenAllyAvoidanceRadius : this.formationAvoidanceRadius);
       if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
 
       const distance = Math.sqrt(distanceSq);
