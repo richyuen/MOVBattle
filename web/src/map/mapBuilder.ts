@@ -15,8 +15,9 @@ const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.6;      // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
-const FAR_ROCK = new Color3(0.84, 0.86, 0.9);
-const FAR_ROCK_SHADE = new Color3(0.72, 0.76, 0.84);
+const FAR_ROCK = new Color3(0.66, 0.69, 0.76);
+const FAR_ROCK_SHADE = new Color3(0.55, 0.6, 0.7);
+const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
 const FAR_ROCK_MIX = 0.25;
 
 /** Distance haze by color: far props are mixed toward a lightened sky, so they sit paler than near ones */
@@ -34,7 +35,7 @@ function paintFarProps(scene: Scene, canopy: Color3): void {
     const farRock = scene.getMaterialByName(name) as StandardMaterial | null;
     if (!farRock) continue;
     farRock.diffuseColor = hazed(base, scene.fogColor, FAR_ROCK_MIX);
-    farRock.emissiveColor = farRock.diffuseColor.scale(0.2);
+    farRock.emissiveColor = farRock.diffuseColor.scale(FAR_ROCK_GLOW);
   }
 }
 
@@ -204,7 +205,7 @@ export class TribalSandboxMapBuilder {
     mat: StandardMaterial,
   ): void {
     const base = MeshBuilder.CreateCylinder("mountainBase", {
-      diameterTop: 0.3, diameterBottom: 1, height: 1, tessellation: 6,
+      diameterTop: 0.12, diameterBottom: 1, height: 1, tessellation: 6,
     }, this._scene);
     base.scaling.set(diameterX, height, diameterZ);
     base.position.set(pos.x, height / 2, pos.z);
@@ -212,20 +213,36 @@ export class TribalSandboxMapBuilder {
     base.receiveShadows = true;
 
     const mid = MeshBuilder.CreateCylinder("mountainMid", {
-      diameterTop: 0.28, diameterBottom: 1, height: 1, tessellation: 5,
+      diameterTop: 0.08, diameterBottom: 1, height: 1, tessellation: 5,
     }, this._scene);
     mid.scaling.set(diameterX * 0.6, height * 0.7, diameterZ * 0.6);
     mid.position.set(pos.x, height * 0.72, pos.z);
     mid.material = mat;
     mid.receiveShadows = true;
 
-    const cap = MeshBuilder.CreateSphere("mountainCap", { diameter: 1, segments: 3 }, this._scene);
-    cap.scaling.set(diameterX * 0.25, height * 0.18, diameterZ * 0.25);
-    cap.position.set(pos.x, height * 1.02, pos.z);
+    // Pointed summit instead of a rounded cap: four faces, so one side always falls in shade
+    const cap = MeshBuilder.CreateCylinder("mountainCap", {
+      diameterTop: 0, diameterBottom: 1, height: 1, tessellation: 4,
+    }, this._scene);
+    cap.scaling.set(diameterX * 0.3, height * 0.4, diameterZ * 0.3);
+    cap.position.set(pos.x, height, pos.z);
     cap.material = mat;
     cap.receiveShadows = true;
     // Faceted low-poly read, with the tiers twisted so the silhouette is not a clean cone
-    mid.rotation.y = pos.x * 0.37;
+    const twist = pos.x * 0.37;
+    mid.rotation.y = twist;
+    cap.rotation.y = twist * 1.7;
+    // Lower second peak off to one side, so the outline is a ridge with a notch rather than one cone
+    const shoulder = MeshBuilder.CreateCylinder("mountainShoulder", {
+      diameterTop: 0, diameterBottom: 1, height: 1, tessellation: 5,
+    }, this._scene);
+    shoulder.scaling.set(diameterX * 0.5, height * 0.78, diameterZ * 0.5);
+    shoulder.position.set(
+      pos.x + Math.cos(twist) * diameterX * 0.24, height * 0.39, pos.z + Math.sin(twist) * diameterZ * 0.2,
+    );
+    shoulder.rotation.y = -twist;
+    shoulder.material = mat;
+    shoulder.receiveShadows = true;
     // Rock root below ground level so off-island mountains read as their own floating rocks
     const root = MeshBuilder.CreateCylinder("mountainRoot", {
       diameterTop: 1, diameterBottom: 0.35, height: 1, tessellation: 6,
@@ -233,7 +250,7 @@ export class TribalSandboxMapBuilder {
     root.scaling.set(diameterX, 16, diameterZ);
     root.position.set(pos.x, -8, pos.z);
     root.material = mat;
-    for (const tier of [base, mid, cap, root]) tier.convertToFlatShadedMesh();
+    for (const tier of [base, mid, cap, shoulder, root]) tier.convertToFlatShadedMesh();
 
     // Add collision — approximate as a cylinder covering the base
     const collisionRadius = Math.min(diameterX, diameterZ) * 0.35;
