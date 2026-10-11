@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, Color3, Mesh,
+  Scene, Vector3, Color3, Mesh,
   type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -11,7 +11,6 @@ import { attachProps } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { getMaterialFactory } from "./materialFactory";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -124,35 +123,7 @@ export class UnitFactory {
       }
     }
 
-    // Health bar
-    const barY = body.metrics.headTopY + Math.max(0.14, definition.collisionRadius * 0.32);
-    const barWidth = Math.max(0.4, definition.collisionRadius * 2.2);
-
-    const mf = getMaterialFactory();
-    const barBg = MeshBuilder.CreatePlane(`hpbg`, { width: barWidth, height: 0.06 }, this._scene);
-    barBg.position.y = barY;
-    barBg.billboardMode = Mesh.BILLBOARDMODE_ALL;
-    barBg.parent = body.root;
-    const barBgMat = mf.createUnique("unlit", new Color3(0.15, 0.15, 0.15));
-    barBgMat.emissiveColor = new Color3(0.1, 0.1, 0.1);
-    barBgMat.disableDepthWrite = true;
-    barBg.material = barBgMat;
-    barBg.renderingGroupId = 1;
-
-    const barFill = MeshBuilder.CreatePlane(`hpfill`, { width: barWidth, height: 0.045 }, this._scene);
-    barFill.position.y = barY;
-    barFill.position.z = -0.001;
-    barFill.billboardMode = Mesh.BILLBOARDMODE_ALL;
-    barFill.parent = body.root;
-    const barFillMat = mf.createUnique("unlit", teamColor);
-    barFillMat.emissiveColor = teamColor.scale(0.45);
-    barFillMat.disableDepthWrite = true;
-    barFill.material = barFillMat;
-    barFill.renderingGroupId = 2;
-
-    unit.healthBarMesh = barFill;
-    unit.healthBarBg = barBg;
-    unit.healthBarWidth = barWidth;
+    // No per-unit health bars: TABS never draws them; damage reads from the body alone.
 
     return unit;
   }
