@@ -215,9 +215,9 @@ export function buildArticulatedBody(
   const torsoTop = torsoW * (0.86 + torsoRoundness * 0.04);
   const torsoBottom = torsoW * (0.96 + torsoRoundness * 0.08);
 
-  const headHeight = 0.27 * p.headSize * (p.headLength ?? 1.0);
-  const headWidth = 0.24 * p.headSize * (p.headWidth ?? 1.0);
-  const headDepth = 0.22 * p.headSize * (p.headDepth ?? 1.0);
+  const headHeight = 0.216 * p.headSize * (p.headLength ?? 1.0);
+  const headWidth = 0.192 * p.headSize * (p.headWidth ?? 1.0);
+  const headDepth = 0.176 * p.headSize * (p.headDepth ?? 1.0);
   const headBase = Math.max(headHeight, headWidth, headDepth);
 
   const upperArmH = 0.24 * p.armLength;
@@ -287,6 +287,7 @@ export function buildArticulatedBody(
       headHeight / Math.max(headBase, 0.001),
       headDepth / Math.max(headBase, 0.001),
     ),
+    6,
   );
   headMesh.position.y = headHeight * s * 0.5;
   headMesh.parent = neck;
