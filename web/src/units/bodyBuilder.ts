@@ -139,6 +139,10 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
   footHeight: 1.0,
 };
 
+/** TABS silhouette: small head on long thin limbs. Applied on top of every unit's own proportions. */
+const HEAD_SHRINK = 0.88;
+const LIMB_THIN = 0.8;
+
 export function buildArticulatedBody(
   scene: Scene,
   name: string,
@@ -149,8 +153,10 @@ export function buildArticulatedBody(
   const p = { ...DEFAULT_PROPORTIONS, ...proportions };
   const s = p.scale;
   const detailLevel = options.detailLevel ?? (s >= 1.7 ? "hero" : "standard");
-  const radialSegments = detailLevel === "hero" ? 16 : detailLevel === "operator" ? 8 : 12;
-  const sphereSegments = detailLevel === "hero" ? 16 : detailLevel === "operator" ? 8 : 14;
+  // Few sides, flat shaded below: bodies read as faceted low-poly, not smooth tubes.
+  const radialSegments = detailLevel === "hero" ? 8 : 6;
+  const sphereSegments = detailLevel === "hero" ? 5 : 4;
+  const capSegments = 3;
 
   const allMeshes: Mesh[] = [];
   const allJoints: TransformNode[] = [];
@@ -197,6 +203,13 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
+  /** Mitt hand: a flat slab, thumbless, a little longer than it is wide. */
+  function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
+    const m = MeshBuilder.CreateBox(n, { width: size * 0.78 * s, height: size * 1.2 * s, depth: size * 0.95 * s }, scene);
+    m.material = mat;
+    allMeshes.push(m);
+    return m;
+  }
   function joint(n: string, parent: TransformNode): TransformNode {
     const t = new TransformNode(n, scene);
     t.parent = parent;
@@ -215,14 +228,14 @@ export function buildArticulatedBody(
   const torsoTop = torsoW * (0.86 + torsoRoundness * 0.04);
   const torsoBottom = torsoW * (0.96 + torsoRoundness * 0.08);
 
-  const headHeight = 0.216 * p.headSize * (p.headLength ?? 1.0);
-  const headWidth = 0.192 * p.headSize * (p.headWidth ?? 1.0);
-  const headDepth = 0.176 * p.headSize * (p.headDepth ?? 1.0);
+  const headHeight = 0.216 * HEAD_SHRINK * p.headSize * (p.headLength ?? 1.0);
+  const headWidth = 0.192 * HEAD_SHRINK * p.headSize * (p.headWidth ?? 1.0);
+  const headDepth = 0.176 * HEAD_SHRINK * p.headSize * (p.headDepth ?? 1.0);
   const headBase = Math.max(headHeight, headWidth, headDepth);
 
   const upperArmH = 0.24 * p.armLength;
   const lowerArmH = 0.22 * p.armLength;
-  const upperArmTop = 0.09 * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
+  const upperArmTop = 0.09 * LIMB_THIN * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
   const lowerArmTop = upperArmBottom * 0.92;
   const lowerArmBottom = lowerArmTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
@@ -230,7 +243,7 @@ export function buildArticulatedBody(
 
   const upperLegH = 0.28 * p.legLength;
   const lowerLegH = 0.25 * p.legLength;
-  const upperLegTop = 0.12 * p.bulk * (p.upperLegWidth ?? 1.0);
+  const upperLegTop = 0.12 * LIMB_THIN * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom * 0.96;
   const lowerLegBottom = lowerLegTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
@@ -298,7 +311,7 @@ export function buildArticulatedBody(
   // ─── Bead Eyes (small black beads, no sclera) ───
   const eyeDiam = headBase * 0.11;
   const pupilDiam = headBase * 0.02;
-  const eyeSegs = Math.max(6, sphereSegments - 2);
+  const eyeSegs = 6;
   const eyeY = headHeight * s * 0.55;
   const eyeZ = headDepth * s * 0.44;
   const eyeSpread = headWidth * s * 0.22;
@@ -363,14 +376,8 @@ export function buildArticulatedBody(
   leftLowerArm.parent = leftElbow;
   const leftHand = joint(`${name}_lHand`, leftElbow);
   leftHand.position.y = -lowerArmH * s;
-  const leftHandMesh = sphere(
-    `${name}_lHandM`,
-    handDiameter,
-    skinMat,
-    new Vector3(0.88, 0.78, 1.08),
-    Math.max(6, sphereSegments - 2),
-  );
-  leftHandMesh.position.set(-0.01 * s, -handDiameter * s * 0.08, handDiameter * s * 0.08);
+  const leftHandMesh = mitt(`${name}_lHandM`, handDiameter, skinMat);
+  leftHandMesh.position.set(-0.01 * s, -handDiameter * s * 0.3, handDiameter * s * 0.08);
   leftHandMesh.parent = leftHand;
 
   // Right arm
@@ -400,21 +407,15 @@ export function buildArticulatedBody(
   rightLowerArm.parent = rightElbow;
   const rightHand = joint(`${name}_rHand`, rightElbow);
   rightHand.position.y = -lowerArmH * s;
-  const rightHandMesh = sphere(
-    `${name}_rHandM`,
-    handDiameter,
-    skinMat,
-    new Vector3(0.88, 0.78, 1.08),
-    Math.max(6, sphereSegments - 2),
-  );
-  rightHandMesh.position.set(0.01 * s, -handDiameter * s * 0.08, handDiameter * s * 0.08);
+  const rightHandMesh = mitt(`${name}_rHandM`, handDiameter, skinMat);
+  rightHandMesh.position.set(0.01 * s, -handDiameter * s * 0.3, handDiameter * s * 0.08);
   rightHandMesh.parent = rightHand;
 
   // ─── Shoulder Caps (hide joint seams) ───
   const shoulderCapDiam = upperArmTop * 1.1;
-  const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), capSegments);
   lShoulderCap.parent = leftShoulder;
-  const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), capSegments);
   rShoulderCap.parent = rightShoulder;
 
   // ─── Shoulder Pads (armored presets) ───
@@ -487,7 +488,7 @@ export function buildArticulatedBody(
       footHeight / Math.max(footBase, 0.001),
       footLength / Math.max(footBase, 0.001),
     ),
-    Math.max(6, sphereSegments - 2),
+    sphereSegments,
   );
   leftFoot.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.18);
   leftFoot.parent = leftKnee;
@@ -526,16 +527,16 @@ export function buildArticulatedBody(
       footHeight / Math.max(footBase, 0.001),
       footLength / Math.max(footBase, 0.001),
     ),
-    Math.max(6, sphereSegments - 2),
+    sphereSegments,
   );
   rightFoot.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.18);
   rightFoot.parent = rightKnee;
 
   // ─── Hip Caps (hide joint seams) ───
   const hipCapDiam = upperLegTop * 1.1;
-  const lHipCap = sphere(`${name}_lHipCap`, hipCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  const lHipCap = sphere(`${name}_lHipCap`, hipCapDiam, bodyMat, Vector3.One(), capSegments);
   lHipCap.parent = leftHipJ;
-  const rHipCap = sphere(`${name}_rHipCap`, hipCapDiam, bodyMat, Vector3.One(), Math.max(6, sphereSegments - 2));
+  const rHipCap = sphere(`${name}_rHipCap`, hipCapDiam, bodyMat, Vector3.One(), capSegments);
   rHipCap.parent = rightHipJ;
 
   // ─── Belt (at torso base / hip level) ───
@@ -551,6 +552,12 @@ export function buildArticulatedBody(
     belt.position.y = torsoH * s * 0.02; // just above hip joint
     belt.parent = torso;
     allMeshes.push(belt);
+  }
+
+  // Faceted matte read: hard edges on everything but the bead eyes.
+  const beads = new Set<Mesh>([leftEye, rightEye, leftPupil, rightPupil]);
+  for (const mesh of allMeshes) {
+    if (!beads.has(mesh)) mesh.convertToFlatShadedMesh();
   }
 
   const metrics: BodyMetrics = {
