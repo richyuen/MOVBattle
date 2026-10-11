@@ -5,8 +5,10 @@ import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
 import type { HazardKind, HazardRegion } from "./hazards";
 
-const MAP_WIDTH = 160;  // full X extent
-const MAP_DEPTH = 120;  // full Z extent
+const ISLAND_WIDTH = 184;  // floating island slab, X extent
+const ISLAND_DEPTH = 96;   // floating island slab, Z extent
+const TREE_RING_X = 42;    // tree ring radii around the fighting field
+const TREE_RING_Z = 36;
 
 export interface MapBuildResult {
   zones: PlacementZone[];
@@ -87,7 +89,7 @@ export class TribalSandboxMapBuilder {
   private _createGround(): void {
     // Main ground — warm green-orange grass
     const ground = MeshBuilder.CreateGround("ground", {
-      width: MAP_WIDTH * 2, height: MAP_DEPTH * 2,
+      width: ISLAND_WIDTH, height: ISLAND_DEPTH,
     }, this._scene);
     const mat = new StandardMaterial("groundMat", this._scene);
     mat.diffuseColor = new Color3(0.60, 0.58, 0.30);
@@ -102,6 +104,18 @@ export class TribalSandboxMapBuilder {
     centerGrass.position.y = 0.02;
     centerGrass.material = this._scene.getMaterialByName("grass")!;
     centerGrass.receiveShadows = true;
+
+    // Island underside — tapered rock slab so the field ends at a visible edge against the sky
+    const under = MeshBuilder.CreateCylinder("islandUnder", {
+      diameterTop: Math.SQRT2, diameterBottom: Math.SQRT2 * 0.55, height: 1, tessellation: 4,
+    }, this._scene);
+    under.rotation.y = Math.PI / 4;
+    under.bakeCurrentTransformIntoVertices();
+    under.scaling.set(ISLAND_WIDTH, 20, ISLAND_DEPTH);
+    under.position.y = -10.02;
+    under.convertToFlatShadedMesh();
+    under.material = this._scene.getMaterialByName("darkRock")!;
+    under.isPickable = false;
   }
 
   private _createMountains(): void {
@@ -109,17 +123,17 @@ export class TribalSandboxMapBuilder {
     const darkRock = this._scene.getMaterialByName("darkRock") as StandardMaterial;
     const dryGrass = this._scene.getMaterialByName("dryGrass") as StandardMaterial;
 
-    // ── Back mountains (positive Z, far edge) ──
-    this._createMountain(new Vector3(-50, 0, 55), 35, 22, 20, rock);
-    this._createMountain(new Vector3(-20, 0, 60), 28, 18, 18, darkRock);
-    this._createMountain(new Vector3(15, 0, 58), 32, 25, 22, rock);
-    this._createMountain(new Vector3(50, 0, 55), 30, 20, 18, darkRock);
+    // ── Back mountains (positive Z, floating beyond the island edge) ──
+    this._createMountain(new Vector3(-50, 0, 67), 35, 22, 20, rock);
+    this._createMountain(new Vector3(-20, 0, 72), 28, 18, 18, darkRock);
+    this._createMountain(new Vector3(15, 0, 70), 32, 25, 22, rock);
+    this._createMountain(new Vector3(50, 0, 67), 30, 20, 18, darkRock);
 
-    // ── Front mountains (negative Z, near edge) ──
-    this._createMountain(new Vector3(-55, 0, -55), 30, 18, 20, rock);
-    this._createMountain(new Vector3(-20, 0, -60), 25, 16, 16, darkRock);
-    this._createMountain(new Vector3(20, 0, -58), 28, 20, 18, rock);
-    this._createMountain(new Vector3(55, 0, -55), 32, 22, 20, darkRock);
+    // ── Front mountains (negative Z, floating beyond the island edge) ──
+    this._createMountain(new Vector3(-55, 0, -67), 30, 18, 20, rock);
+    this._createMountain(new Vector3(-20, 0, -72), 25, 16, 16, darkRock);
+    this._createMountain(new Vector3(20, 0, -70), 28, 20, 18, rock);
+    this._createMountain(new Vector3(55, 0, -67), 32, 22, 20, darkRock);
 
     // ── Side mountains (left edge) ──
     this._createMountain(new Vector3(-75, 0, -20), 25, 20, 22, rock);
@@ -165,7 +179,14 @@ export class TribalSandboxMapBuilder {
     cap.receiveShadows = true;
     // Faceted low-poly read, with the tiers twisted so the silhouette is not a clean cone
     mid.rotation.y = pos.x * 0.37;
-    for (const tier of [base, mid, cap]) tier.convertToFlatShadedMesh();
+    // Rock root below ground level so off-island mountains read as their own floating rocks
+    const root = MeshBuilder.CreateCylinder("mountainRoot", {
+      diameterTop: 1, diameterBottom: 0.35, height: 1, tessellation: 6,
+    }, this._scene);
+    root.scaling.set(diameterX, 16, diameterZ);
+    root.position.set(pos.x, -8, pos.z);
+    root.material = mat;
+    for (const tier of [base, mid, cap, root]) tier.convertToFlatShadedMesh();
 
     // Add collision — approximate as a cylinder covering the base
     const collisionRadius = Math.min(diameterX, diameterZ) * 0.35;
@@ -243,35 +264,25 @@ export class TribalSandboxMapBuilder {
     const leaves = this._scene.getMaterialByName("leaves") as StandardMaterial;
     const darkLeaves = this._scene.getMaterialByName("darkLeaves") as StandardMaterial;
 
-    // Trees scattered around edges and some in the play area
+    // A ring of trees around the fighting field plus a few inside it
     const trees: { pos: Vector3; height: number; leafMat: StandardMaterial }[] = [
-      // Left side cluster
-      { pos: new Vector3(-65, 0, -5), height: 10, leafMat: leaves },
-      { pos: new Vector3(-62, 0, 5), height: 8, leafMat: darkLeaves },
-      { pos: new Vector3(-68, 0, -12), height: 12, leafMat: leaves },
-      { pos: new Vector3(-60, 0, 25), height: 9, leafMat: darkLeaves },
-      { pos: new Vector3(-66, 0, 32), height: 11, leafMat: leaves },
-      // Right side cluster
-      { pos: new Vector3(65, 0, 5), height: 10, leafMat: leaves },
-      { pos: new Vector3(62, 0, -5), height: 8, leafMat: darkLeaves },
-      { pos: new Vector3(68, 0, 12), height: 12, leafMat: leaves },
-      { pos: new Vector3(60, 0, -25), height: 9, leafMat: darkLeaves },
-      { pos: new Vector3(66, 0, -32), height: 11, leafMat: leaves },
-      // Back edge
-      { pos: new Vector3(-35, 0, 50), height: 10, leafMat: leaves },
-      { pos: new Vector3(-10, 0, 52), height: 8, leafMat: darkLeaves },
-      { pos: new Vector3(30, 0, 48), height: 11, leafMat: leaves },
-      { pos: new Vector3(45, 0, 50), height: 9, leafMat: darkLeaves },
-      // Front edge
-      { pos: new Vector3(-35, 0, -48), height: 10, leafMat: darkLeaves },
-      { pos: new Vector3(10, 0, -50), height: 9, leafMat: leaves },
-      { pos: new Vector3(35, 0, -48), height: 11, leafMat: darkLeaves },
       // Sparse trees in play area
       { pos: new Vector3(-30, 0, 18), height: 7, leafMat: leaves },
       { pos: new Vector3(30, 0, -18), height: 7, leafMat: darkLeaves },
       { pos: new Vector3(-20, 0, -30), height: 6, leafMat: leaves },
       { pos: new Vector3(20, 0, 30), height: 6, leafMat: darkLeaves },
     ];
+
+    const ringCount = 40;
+    for (let i = 0; i < ringCount; i++) {
+      const angle = ((i + this._seededValue(i, 61) * 0.6) / ringCount) * Math.PI * 2;
+      const spread = 1 + (this._seededValue(i, 62) - 0.5) * 0.14;
+      trees.push({
+        pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
+        height: 7 + this._seededValue(i, 63) * 5,
+        leafMat: this._seededValue(i, 64) > 0.5 ? leaves : darkLeaves,
+      });
+    }
 
     for (const t of trees) {
       this._createTree(
@@ -523,7 +534,7 @@ export class TribalSandboxMapBuilder {
     }
 
     // Center divider: thin flat pink line, no glow
-    const divider = MeshBuilder.CreateGround("border", { width: 0.12, height: MAP_DEPTH * 2 }, this._scene);
+    const divider = MeshBuilder.CreateGround("border", { width: 0.12, height: ISLAND_DEPTH }, this._scene);
     divider.position = new Vector3(0, borderHeight + 0.01, 0);
     const dividerMat = new StandardMaterial("center_divider_mat", this._scene);
     dividerMat.diffuseColor = Color3.Black();
@@ -555,9 +566,9 @@ export function setPlacementGuidesVisible(scene: Scene, visible: boolean): void 
 export function getPlacementZones(): PlacementZone[] {
   return [
     // Team A: entire left half
-    { team: 0, center: new Vector3(-MAP_WIDTH / 2, 0, 0), size: new Vector3(MAP_WIDTH, 100, MAP_DEPTH * 2) },
+    { team: 0, center: new Vector3(-ISLAND_WIDTH / 4, 0, 0), size: new Vector3(ISLAND_WIDTH / 2, 100, ISLAND_DEPTH) },
     // Team B: entire right half
-    { team: 1, center: new Vector3(MAP_WIDTH / 2, 0, 0), size: new Vector3(MAP_WIDTH, 100, MAP_DEPTH * 2) },
+    { team: 1, center: new Vector3(ISLAND_WIDTH / 4, 0, 0), size: new Vector3(ISLAND_WIDTH / 2, 100, ISLAND_DEPTH) },
   ];
 }
 
