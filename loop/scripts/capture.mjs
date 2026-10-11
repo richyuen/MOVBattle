@@ -74,6 +74,17 @@ line(1, [
 ], [6, 6.9, 7.8]);
 BIG_MELEE.push({ unitId: "tribal.mammoth", team: 1, position: { x: 11, z: 0 } });
 
+// Two cannons against a squire block, close enough that muzzle, shot and impact share one frame.
+const WAR_MACHINES = [
+  { unitId: "pirate.cannon", team: 0, position: { x: -5, z: -1.5 } },
+  { unitId: "secret.bomb_cannon", team: 0, position: { x: -5, z: 1.5 } },
+];
+for (const x of [4, 5]) {
+  for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
+    WAR_MACHINES.push({ unitId: "medieval.squire", team: 1, position: { x, z } });
+  }
+}
+
 function log(msg) {
   process.stdout.write(`[capture] ${msg}\n`);
 }
@@ -211,10 +222,19 @@ async function main() {
 
     if (doShowcase) {
       // War machines mid-fire.
-      await page.evaluate(() => {
+      // Spawned inside the battle camera's ~12 m wide frame: the cannon_compare scenario's
+      // 22 m gap puts both ends off screen.
+      const machinesPlaced = await page.evaluate((units) => {
         window.game.resetBattle();
-        window.game.runScenario("war_machine_cannon_compare");
-      });
+        let ok = 0;
+        for (const u of units) {
+          if (window.game.spawnUnit(u.unitId, u.team, u.position)) ok++;
+        }
+        window.game.startBattleImmediate();
+        window.advanceTime(2400);
+        return ok;
+      }, WAR_MACHINES);
+      summary.notes.push(`war_machines placed ${machinesPlaced}/${WAR_MACHINES.length} units`);
       await shot(page, "war_machines_2400ms");
       await page.evaluate(() => window.advanceTime(1600));
       await shot(page, "war_machines_4000ms");
