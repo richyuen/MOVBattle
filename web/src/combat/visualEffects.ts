@@ -96,13 +96,14 @@ export class VisualEffects {
     points.push(endPoint);
 
     const addShard = (a: Vector3, b: Vector3, thickness: number): void => {
-      const shard = MeshBuilder.CreateBox("lseg", {
-        width: thickness, height: thickness, depth: Vector3.Distance(a, b) + thickness * 0.5,
+      // A four-sided spike, not a parallel-sided beam: fat where it leaves the last joint and pinched almost to a point
+      // at the next, so the bolt is a chain of wedges that steps in width at every kink
+      const shard = MeshBuilder.CreateCylinder("lseg", {
+        height: Vector3.Distance(a, b) + thickness * 0.5, diameterBottom: thickness * 2.2, diameterTop: thickness * 0.3, tessellation: 4,
       }, this._scene);
       shard.position = Vector3.Center(a, b);
-      shard.lookAt(b);
-      // Quarter roll: an edge faces the camera rather than a flat side, so a shard is as wide as it gets from any angle
-      shard.rotation.z = Math.PI / 4;
+      // The spike's length is its own Y: the quarter pitch lays that along the aim, thin end at b
+      shard.lookAt(b, 0, Math.PI / 2, 0);
       shard.material = boltMat;
       shard.parent = root;
       glow?.addExcludedMesh(shard);
