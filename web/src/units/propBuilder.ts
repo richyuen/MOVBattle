@@ -1219,13 +1219,13 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
     case "laurel": {
       // A cap of brown hair over the crown and the back of the head, with the wreath resting on it tipped up at the back,
       // so the head is not bald under a sweatband.
-      const hair = MeshBuilder.CreateIcoSphere("laurelHair", { radiusX: 0.068 * s, radiusY: 0.04 * s, radiusZ: 0.065 * s, subdivisions: 1, flat: true }, scene);
+      const hair = MeshBuilder.CreateIcoSphere("laurelHair", { radiusX: 0.068 * s, radiusY: 0.075 * s, radiusZ: 0.08 * s, subdivisions: 1, flat: true }, scene);
       hair.material = mat(scene, new Color3(0.36, 0.22, 0.1));
-      hair.position.set(0, -0.02 * s, -0.015 * s);
+      hair.position.set(0, -0.05 * s, -0.03 * s);
       const laurel = MeshBuilder.CreateTorus("laurel", { diameter: 0.125 * s, thickness: 0.022 * s, tessellation: 6 }, scene);
       laurel.material = mat(scene, new Color3(0.35, 0.45, 0.18), 0.1);
       laurel.parent = hair;
-      laurel.position.set(0, -0.025 * s, 0.015 * s);
+      laurel.position.set(0, 0.005 * s, 0.015 * s);
       laurel.rotation.x = 0.25;
       return hair;
     }

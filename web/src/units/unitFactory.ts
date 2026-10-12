@@ -65,6 +65,9 @@ const TABARD_SHADE = 0.9;
 const TABARD_WIDTH = 1.02;
 const TABARD_LENGTH = 1.35;
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
+// Zeus wears a plain off-white tunic with a red sash from one shoulder to the other hip, not a breastplate.
+const ZEUS_TUNIC_COLOR = new Color3(0.94, 0.92, 0.86);
+const ZEUS_SASH_COLOR = new Color3(0.8, 0.2, 0.2);
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
@@ -107,6 +110,7 @@ export class UnitFactory {
       isArmored ? 0.95 : shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.9 : 0.85,
     );
     const skinColor = teamColor.scale(0.9);
+    const isZeus = definition.id === "ancient.zeus";
     const bareSkinned = definition.faction === FactionId.Tribal && !shouldFavorTeamBodyColor(materialPreset);
 
     let body;
@@ -127,7 +131,7 @@ export class UnitFactory {
         {
           detailLevel: visual.bodyDetailLevel ?? "standard",
           showNeck: true,
-          showShoulderPads: isArmored,
+          showShoulderPads: isArmored && !isZeus,
           showBelt: isArmored,
         },
       );
@@ -185,6 +189,20 @@ export class UnitFactory {
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
+    }
+
+    if (isZeus && !shouldUseVehicleBody) {
+      body.bodyMaterial.baseColor = ZEUS_TUNIC_COLOR;
+      body.bodyMaterial.metallic = 0;
+      const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+      const sash = MeshBuilder.CreateBox("zeusSash", {
+        width: chest.x * body.torsoMesh.scaling.x * 2.3, height: chest.y * 0.3, depth: chest.z * body.torsoMesh.scaling.z * 2.12,
+      }, this._scene);
+      sash.parent = body.torsoMesh.parent;
+      sash.position.y = body.torsoMesh.position.y;
+      sash.rotation.z = 0.75;
+      sash.material = getMaterialFactory().getCloth(ZEUS_SASH_COLOR);
+      propMeshes.push(sash);
     }
 
     // Helmed medieval men-at-arms wear a tabard: team-coloured cloth down the chest and back with a pale cross on the front.
