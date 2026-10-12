@@ -179,7 +179,7 @@ export class ProceduralAnimator {
   private _air = 0;
   // Per-unit flight shape as [joint, x, y, z]: a third of the bodies jackknife at the waist, a third bow backward
   // with the arms past the head, a third sit in an L with the legs straight out. Arms stay in line with the trunk
-  // while the legs scissor wide apart on nearly straight knees, so a launched body is a bent plank that forks at
+  // while the legs scissor wide apart on loosely bent knees, so a launched body is a bent plank that forks at
   // the hips and not a four-pointed star. Hashed from the wobble phase like the shove pose, so it consumes no
   // random numbers.
   private _airPose: Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> | null = null;
@@ -192,14 +192,14 @@ export class ProceduralAnimator {
     const twist = (h(23) - 0.5) * 0.5;
     const roll = (h(24) - 0.5) * 0.35;
     const variant = Math.floor(h(21) * 3);
-    // One arm leads the other by about 0.6 rad and each knee gives by its own small amount, so the two sides of a
+    // One arm leads the other by about 0.6 rad and each knee hangs bent by its own amount, so the two sides of a
     // body in flight never mirror each other and neither leg folds into a loop.
     const lead = h(40) < 0.5 ? 0 : 1;
     const armGap = 0.5 + h(41) * 0.3;
     const leftArm = lead === 0 ? armGap : 0;
     const rightArm = lead === 0 ? 0 : armGap;
-    const leftKnee = 0.15 + h(42) * 0.35;
-    const rightKnee = 0.15 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.35;
+    const leftKnee = 0.45 + h(42) * 0.35;
+    const rightKnee = 0.45 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.35;
     // The legs scissor: one swings up to a radian ahead of or behind the other, and one kicks wide out to the side.
     const hipGap = (h(44) < 0.5 ? -1 : 1) * (0.6 + h(45) * 0.4);
     const leftKick = h(46) < 0.5 ? -(0.4 + h(47) * 0.3) : 0;
