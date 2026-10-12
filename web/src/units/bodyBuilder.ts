@@ -228,6 +228,9 @@ export function buildArticulatedBody(
   const torsoRoundness = Math.max(0.6, p.torsoRoundness ?? 1.0);
   const torsoTop = torsoW * (1.0 + torsoRoundness * 0.08);
   const torsoBottom = torsoW * (0.76 + torsoRoundness * 0.04);
+  // A breastplate flares to the shoulders: the chest top widens while the shoulder joints stay put, so the shoulder
+  // caps sink into its corners and the chest is broader than the helm above it.
+  const chestTop = torsoTop * (options.showShoulderPads ? 1.24 : 1);
 
   const headHeight = 0.216 * HEAD_SHRINK * p.headSize * (p.headLength ?? 1.0);
   const headWidth = 0.192 * HEAD_SHRINK * p.headSize * (p.headWidth ?? 1.0);
@@ -263,10 +266,10 @@ export function buildArticulatedBody(
   const torsoMesh = tapered(
     `${name}_torsoM`,
     torsoH,
-    torsoTop,
+    chestTop,
     torsoBottom,
     bodyMat,
-    new Vector3(1, 1, torsoD / Math.max(torsoTop, torsoBottom, 0.001)),
+    new Vector3(1, 1, torsoD / Math.max(chestTop, torsoBottom, 0.001)),
   );
   torsoMesh.position.y = torsoH * s * 0.5;
   torsoMesh.parent = torso;
@@ -415,9 +418,11 @@ export function buildArticulatedBody(
   // ─── Shoulder Caps (hide joint seams) ───
   // Wider than the sleeve top, so the cap shows as a rounded shoulder on the torso corner and not only a seam filler
   const shoulderCapDiam = upperArmTop * 1.55;
-  const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), capSegments);
+  // On a breastplate the cap is flattened into its corner: a full ball there reads as a separate bead
+  const capScale = options.showShoulderPads ? new Vector3(1, 0.7, 1) : Vector3.One();
+  const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, capScale, capSegments);
   lShoulderCap.parent = leftShoulder;
-  const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), capSegments);
+  const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, capScale, capSegments);
   rShoulderCap.parent = rightShoulder;
 
   // ─── Shoulder Pads (armored presets) ───
