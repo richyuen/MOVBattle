@@ -59,3 +59,4 @@ iter 57 | helm-tall-grey-tube, cannon-blast-yellow-ball, tray-sides-vertical | 3
 iter 58 | flame-tongues-needle-cones, helm-torso-wide-pale, tabs-filled-round-tiles | 2/3 approved | scores battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3 -> battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 iter 59 | helm-stovepipe-pale, fire-orange-not-fringe, budget-separate-disc | 2/3 approved | scores battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3 -> battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 iter 60 | torso-box-no-shoulders, placement-haze-washes-teams, cannon-barrel-team-blue | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3 (re-audit)
+iter 61 | red-armour-muddy-maroon, placement-haze-washes-teams, torso-box-no-shoulders | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
