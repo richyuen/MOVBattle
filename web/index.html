@@ -141,32 +141,41 @@
       pointer-events: none;
     }
 
-    /* Budget block flaring out of the unit tray's left end: unit count stacked over cost, each number followed by its icon, active side only. */
+    /* Budget block in the bottom-left corner: two stacked outlined boxes, unit count over cost, each number on the left and its icon on the right, active side only. A thin arc sweeps from above the boxes down to the unit tray's left end. */
     .budget-label {
-      position: fixed; bottom: 0; left: calc(50% - 380px - 150px); width: 150px; height: 100px; box-sizing: border-box;
-      display: flex; flex-direction: column-reverse; justify-content: flex-start; align-items: flex-end; gap: 2px;
-      padding: 0 12px 14px 0; font-weight: 300; font-size: 24px; letter-spacing: 0.02em; line-height: 1.1; white-space: nowrap;
-      color: #bfe6fb; background: rgba(10,14,20,0.3); text-shadow: 0 1px 3px rgba(0,0,0,0.85);
-      border: 1px solid rgba(255,255,255,0.6); border-right: none; border-bottom: none; border-radius: 100% 0 0 0;
+      position: fixed; bottom: 0; left: 0; width: calc(50% - 358px); height: 88px; box-sizing: border-box;
+      display: flex; flex-direction: column-reverse; justify-content: flex-start; align-items: flex-start;
+      font-weight: 300; font-size: 24px; letter-spacing: 0.02em; line-height: 1.1; white-space: nowrap;
+      color: #bfe6fb; text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+    }
+    .budget-label::before {
+      content: ""; position: absolute; z-index: -1; inset: 0; box-sizing: border-box; pointer-events: none;
+      background: rgba(10,14,20,0.3);
+      border: 1px solid rgba(255,255,255,0.6); border-left: none; border-bottom: none; border-radius: 0 100% 0 0;
     }
     .budget-label.team-b { color: #f7c1bf; }
-    .budget-label #budgetAmount::after {
-      content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 7px; box-sizing: border-box;
-      border: 2px solid currentColor; border-radius: 50%; vertical-align: 1px;
+    .budget-label > span {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; box-sizing: border-box;
+      min-width: 138px; height: 37px; padding: 0 10px 1px 12px; margin-top: -1px;
+      background: rgba(10,14,20,0.45); border: 1px solid rgba(255,255,255,0.6); border-left: none;
     }
-    .budget-label .budget-units { opacity: 0.9; }
+    .budget-label #budgetAmount { border-bottom: none; }
+    .budget-label #budgetAmount::after {
+      content: ""; flex: none; width: 12px; height: 12px; box-sizing: border-box;
+      border: 2px solid currentColor; border-radius: 50%;
+    }
+    .budget-label .budget-units { min-width: 100px; }
     .budget-label .budget-units::after {
-      content: ""; display: inline-block; width: 10px; height: 13px; margin-left: 8px; vertical-align: -1px;
+      content: ""; flex: none; width: 10px; height: 13px;
       background: radial-gradient(circle at 50% 3px, currentColor 3px, transparent 3.5px),
         linear-gradient(currentColor, currentColor) 50% 100% / 10px 6px no-repeat;
       border-radius: 0 0 2px 2px;
     }
-    /* Tray spans the viewport: no room beside it, so the block sits as a badge above its left end */
+    /* Tray spans the viewport: no room beside it, so the boxes sit as a badge above its left end */
     @media (max-width: 968px) {
-      .budget-label {
-        left: 8px; bottom: 118px; width: auto; height: auto; padding: 4px 10px 5px;
-        border: 1px solid rgba(255,255,255,0.6); border-radius: 4px;
-      }
+      .budget-label { left: 8px; bottom: 118px; width: auto; height: auto; }
+      .budget-label::before { display: none; }
+      .budget-label > span, .budget-label #budgetAmount { border: 1px solid rgba(255,255,255,0.6); }
     }
 
     #selectedUnit {
