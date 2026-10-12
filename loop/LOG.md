@@ -72,3 +72,4 @@ iter 70 | boot-plinth-slabs, hill-saucer-undercut, blast-launch-too-high-and-sti
 iter 71 | foot-box-wider-than-ankle, hill-bald-oval-rim, grass-tufts-oversized | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 72 | hill-cap-too-steep-and-pale, grass-cards-large-sparse, foot-slab-too-long, boulders-orange-loaves, red-team-maroon-not-coral, blast-stacked-balls, island-square-plateau, props-undersized-at-range | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 73 | island-square-outline, red-cloth-brick-maroon, grass-dark-tufts-short-of-rim, thin-weapons-hairline, boulders-single-pebbles, foot-square-toe | 6/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 74 | cliff-crags-cog-teeth, red-cloth-dusty-brick, grass-blades-no-shadow, sword-black-bow-straight, boulder-heaps-pebble-scale, knights-one-flat-colour | 5/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
