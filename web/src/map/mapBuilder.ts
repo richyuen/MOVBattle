@@ -600,6 +600,8 @@ export class TribalSandboxMapBuilder {
       data.applyToMesh(blades);
       blades.material = this._scene.getMaterialByName(matName);
       blades.isPickable = false;
+      // Shaded with the lawn under them, so a tree's shadow is not peppered with sunlit flecks
+      blades.receiveShadows = true;
     }
   }
 
