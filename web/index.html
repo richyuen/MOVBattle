@@ -216,6 +216,8 @@
     }
     .btn.remove-active { border-color: #ef5350; }
     .btn:disabled { opacity: 0.5; cursor: default; }
+    /* Sandbox has no unlimited toggle: the top-left corner stays bare, keeping its place in the row */
+    #btnUnlimited:disabled { visibility: hidden; }
     .btn-start {
       min-width: 136px;
       padding: 14px 30px 18px;
