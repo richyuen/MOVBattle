@@ -157,7 +157,11 @@ export class ProceduralAnimator {
     const splayKneeZ = 0.9 + (pick * 64 - Math.floor(pick * 64)) * 0.7;
     // That leg's knee also stands up off the ground: the thigh lifts and the shin drops back to the foot.
     const tent = 0.45 + (pick * 256 - Math.floor(pick * 256)) * 0.35;
+    // Half the bodies whose flung arm and splayed leg are on one side come to rest on that side, with those limbs
+    // under them: +1 lies on its left, -1 on its right, 0 on its back or front. From `pick` again.
+    const restSide = leftFlung === leftSplayed && Math.floor(pick * 512) % 2 === 0 ? (leftFlung ? 1 : -1) : 0;
     return {
+      restSide,
       torsoX: Math.random() * 0.2,
       torsoZ: (Math.random() - 0.5) * 0.7,
       neckX: (Math.random() - 0.5) * 1.1,
@@ -170,17 +174,22 @@ export class ProceduralAnimator {
       rightElbowX: -0.12,
       leftElbowZ: -(leftFlung ? flungElbowZ : lowElbowZ),
       rightElbowZ: leftFlung ? lowElbowZ : flungElbowZ,
-      // The straight leg's thigh stays near the body's line and its knee barely folds, so it lies flat; only the
-      // splayed leg tents.
+      // The straight leg's thigh stays near the body's line and its knee folds 25 to 70 degrees, so no corpse lies
+      // with a leg as a straight plank; the splayed leg tents as well.
       leftHipX: -0.25 + Math.random() * 0.5 - (leftSplayed ? tent : 0),
       rightHipX: -0.25 + Math.random() * 0.5 - (leftSplayed ? 0 : tent),
-      leftKneeX: 0.05 + Math.random() * 0.55 + (leftSplayed ? tent * 1.6 : 0),
-      rightKneeX: 0.05 + Math.random() * 0.55 + (leftSplayed ? 0 : tent * 1.6),
+      leftKneeX: leftSplayed ? 0.05 + Math.random() * 0.55 + tent * 1.6 : 0.4 + Math.random() * 0.8,
+      rightKneeX: leftSplayed ? 0.4 + Math.random() * 0.8 : 0.05 + Math.random() * 0.55 + tent * 1.6,
       leftHipZ: leftSplayed ? -splayZ : -0.05,
       rightHipZ: leftSplayed ? 0.05 : splayZ,
       leftKneeZ: leftSplayed ? splayKneeZ : 0,
       rightKneeZ: leftSplayed ? 0 : -splayKneeZ,
     };
+  }
+
+  /** Which side this unit's corpse comes to rest on: +1 its left, -1 its right, 0 its back or front. */
+  get corpseRestSide(): number {
+    return this._limpPose.restSide;
   }
 
   private _airTarget = 0;
