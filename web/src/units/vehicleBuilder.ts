@@ -1534,7 +1534,9 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   const tuskPitches = [0.4, 0.8, 1.2, 1.6, 2.0, 2.35];
   // The two steep segments off the jaw are short, so the curve turns forward high instead of kinking low at the knees
   const tuskLengths = [0.4, 0.4, 0.51, 0.48, 0.45, 0.42];
-  const tuskGirths = [0.24, 0.22, 0.19, 0.155, 0.12, 0.075, 0.03];
+  const tuskGirths = [0.24, 0.22, 0.19, 0.155, 0.14, 0.11, 0.06];
+  // The tips keep the flat team colour: the material preset repaints paintMat, and would dull them with the rest of the war paint
+  const tuskTipMat = getMaterialFactory().getCloth(color);
   const tuskSplay = [0.08, 0.08, 0.05, 0.02, -0.03, -0.06];
   for (const side of [-1, 1]) {
     const start = new Vector3(side * 0.42, -0.3, 0.5);
@@ -1548,8 +1550,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
       seg.position = Vector3.Center(start, end);
       seg.rotation.x = Math.PI - pitch;
       seg.rotation.z = -side * tuskSplay[i] / length;
-      // The last two segments are painted: team-coloured tusk tips
-      seg.parent = neck; seg.material = i >= tuskPitches.length - 2 ? paintMat : tuskMat; allMeshes.push(seg);
+      // The last two segments are painted: fat team-coloured tusk tips
+      seg.parent = neck; seg.material = i >= tuskPitches.length - 2 ? tuskTipMat : tuskMat; allMeshes.push(seg);
       start.copyFrom(end);
     }
   }
