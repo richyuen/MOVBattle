@@ -673,7 +673,8 @@ export class RuntimeUnit {
 
   update(dt: number, now: number): void {
     // Animate
-    this.animator.setLimp(this.isToppled || this.isDowned);
+    // A blasted body stays limp for its whole flight, not just until the topple clock runs out mid-air.
+    this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
     this.animator.update(dt);
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
