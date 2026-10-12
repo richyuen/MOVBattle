@@ -165,8 +165,10 @@ export class UnitFactory {
       const hsv = body.bodyMaterial.baseColor.toHSV();
       const cool = hsv.r > 150 && hsv.r < 300;
       const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
-      const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
+      // Red itself is not rotated or washed: any turn toward orange goes amber and any loss of saturation goes brick.
+      const red = hsv.r < 20 || hsv.r > 340;
+      const hue = isArmored || red ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored || red ? 1 : CLOTH_SATURATION), hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
       const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(shade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
