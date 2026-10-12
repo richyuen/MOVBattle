@@ -425,13 +425,13 @@ export class TribalSandboxMapBuilder {
       { pos: new Vector3(20, 0, 30), height: 6, leafMat: darkLeaves },
     ];
 
-    const ringCount = 90;
+    const ringCount = 140;
     for (let i = 0; i < ringCount; i++) {
       const angle = ((i + this._seededValue(i, 61) * 0.6) / ringCount) * Math.PI * 2;
-      const spread = 1 + (this._seededValue(i, 62) - 0.5) * 0.34;
+      const spread = 1 + (this._seededValue(i, 62) - 0.3) * 0.34;
       trees.push({
         pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
-        height: 4 + this._seededValue(i, 63) * 5,
+        height: 3 + this._seededValue(i, 63) * 3,
         leafMat: this._seededValue(i, 64) > 0.5 ? leaves : darkLeaves,
       });
     }
