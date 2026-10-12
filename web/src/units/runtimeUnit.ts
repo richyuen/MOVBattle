@@ -536,6 +536,7 @@ export class RuntimeUnit {
       this._blastSpinX = spinX;
       this._blastSpinZ = spinZ;
       this._blastTumbling = true;
+      this._pendingBlastSprawlSeconds = 3;
     }
   }
 
@@ -724,6 +725,13 @@ export class RuntimeUnit {
         } else {
           this._velocity.y = 0;
           this._grounded = true;
+          if (this._pendingBlastSprawlSeconds > 0 && !this._isDead) {
+            // The topple clocks ran out mid-flight: restart the downed window where the body comes to rest.
+            const now = RuntimeUnit.timeNowSeconds();
+            this._downedUntil = Math.max(this._downedUntil, now + this._pendingBlastSprawlSeconds);
+            this._recoveringUntil = Math.max(this._recoveringUntil, this._downedUntil + this._crowdPhysicsProfile.recoverySeconds);
+          }
+          this._pendingBlastSprawlSeconds = 0;
         }
       }
 
@@ -988,6 +996,8 @@ export class RuntimeUnit {
 
   private _blastTumbling = false;
   private _blastSpinX = 0;
+  /** Seconds a blast survivor lies sprawled, counted from the landing and not from the launch. */
+  private _pendingBlastSprawlSeconds = 0;
   private _blastSpinZ = 0;
 
   private _applyCrowdLean(dt: number): void {
@@ -1380,6 +1390,7 @@ export class RuntimeUnit {
     this._toppledUntil = 0;
     this._downedUntil = 0;
     this._recoveringUntil = 0;
+    this._pendingBlastSprawlSeconds = 0;
     this._collisionPushTotal = 0;
     this._collisionPushPeak = 0;
     this._collisionContactCount = 0;
