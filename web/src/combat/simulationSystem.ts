@@ -777,6 +777,7 @@ export class SimulationSystem {
     let damage = attackProfile.damage;
     let splashRadius = attackProfile.splashRadius;
     let knockback = impulseDir.scale(attackProfile.knockback);
+    let splashLaunch = false;
     const controlStrength = attacker.definition.controlStrength ?? 1;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
@@ -856,6 +857,7 @@ export class SimulationSystem {
         knockback = knockback.scale(2.15 * controlStrength);
         knockback.y = Math.max(knockback.y, 1.35);
         damage *= 1.28;
+        splashLaunch = true;
         break;
       case "iconic_reaper":
         splashRadius = Math.max(splashRadius, 4.2);
@@ -1077,7 +1079,7 @@ export class SimulationSystem {
       return;
     }
 
-    this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
+    this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback, splashLaunch);
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
@@ -1372,9 +1374,9 @@ export class SimulationSystem {
     }
   }
 
-  private _applyDirectOrSplash(target: RuntimeUnit, damage: number, splashRadius: number, attackerTeam: number, knockback: Vector3): void {
+  private _applyDirectOrSplash(target: RuntimeUnit, damage: number, splashRadius: number, attackerTeam: number, knockback: Vector3, launch = false): void {
     if (splashRadius > 0) {
-      this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback, target);
+      this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback, target, launch);
     } else {
       const delta = target.applyDamage(damage, knockback);
       if (this.impactPresentation) {
@@ -1397,8 +1399,12 @@ export class SimulationSystem {
     this._applyCrowdShockwave(target.position, shockRadius, attackerTeam, knockback.scale(splashRadius > 0 ? 0.3 : 0.2), target);
   }
 
-  private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3, primaryTarget?: RuntimeUnit): void {
+  private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3, primaryTarget?: RuntimeUnit, launch = false): void {
     const radiusSq = radius * radius;
+    // Heavy sweep: victims leave the ground along the blow instead of toppling in place.
+    const launchDir = new Vector3(impulse.x, 0, impulse.z);
+    const canLaunch = launch && launchDir.lengthSquared() > 0.0001;
+    if (canLaunch) launchDir.normalize();
     for (const unit of this._units) {
       if (unit.isDead || unit.team === attackerTeam || !unit.isTargetable) continue;
       const distanceSq = unit.position.subtract(center).lengthSquared();
@@ -1406,6 +1412,7 @@ export class SimulationSystem {
       const distance = Math.sqrt(distanceSq);
       const falloff = radius > 0 ? Math.max(0, 1 - distance / radius) : 1;
       const delta = unit.applyDamage(damage, impulse);
+      if (canLaunch) unit.applyBlastLaunch(launchDir, 1 + 1.5 * falloff, 3 + 3 * falloff);
       const path = unit === primaryTarget ? "splash-primary" : "splash-secondary";
       if (this.impactPresentation) {
         this.impactPresentation.recordImpact({
