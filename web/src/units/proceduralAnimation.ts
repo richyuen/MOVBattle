@@ -86,9 +86,13 @@ export class ProceduralAnimator {
     this._squashTimer = 0.15;
   }
 
-  /** Toppled/downed living bodies go limp: 1 crumples the joints, 0 returns to the animated pose. */
-  setLimp(limp: boolean): void {
+  /**
+   * Toppled/downed living bodies go limp: 1 crumples the joints, 0 returns to the animated pose.
+   * A sprawled body (thrown by a blast) lies straight with its limbs flung out instead of crumpling.
+   */
+  setLimp(limp: boolean, sprawl = false): void {
     this._limpTarget = limp ? 1 : 0;
+    this._sprawlTarget = sprawl ? 1 : 0;
   }
 
   /** Melee contact: called every decision while in reach; the shove pose decays on its own once the calls stop. */
@@ -120,6 +124,23 @@ export class ProceduralAnimator {
   private _squashTimer = 0;
   private _limpTarget = 0;
   private _limp = 0;
+  private _sprawlTarget = 0;
+  private _sprawl = 0;
+  // Per-unit spread-eagle shape for blast victims: arms flung wide, legs loose and nearly straight.
+  private readonly _sprawlPose = {
+    leftArmX: (Math.random() - 0.5) * 0.7,
+    rightArmX: (Math.random() - 0.5) * 0.7,
+    leftArmZ: -(0.9 + Math.random() * 0.7),
+    rightArmZ: 0.9 + Math.random() * 0.7,
+    leftElbowX: -Math.random() * 0.4,
+    rightElbowX: -Math.random() * 0.4,
+    leftHipX: (Math.random() - 0.5) * 0.4,
+    rightHipX: (Math.random() - 0.5) * 0.4,
+    leftHipZ: -(0.1 + Math.random() * 0.35),
+    rightHipZ: 0.1 + Math.random() * 0.35,
+    leftKneeX: Math.random() * 0.3,
+    rightKneeX: Math.random() * 0.3,
+  };
   // Per-unit crumple shape so a pile of fallen bodies does not share one pose.
   private readonly _limpPose = {
     torsoX: 0.25 + Math.random() * 0.45,
@@ -218,19 +239,26 @@ export class ProceduralAnimator {
       const b = this._body;
       const p = this._limpPose;
       const k = this._limp;
-      b.torso.rotation.x += p.torsoX * k;
-      b.torso.rotation.z += p.torsoZ * k;
+      this._sprawl += (this._sprawlTarget - this._sprawl) * Math.min(1, dt * 9);
+      const g = this._sprawl;
+      const q = this._sprawlPose;
+      const mix = (crumple: number, sprawl: number): number => (crumple + (sprawl - crumple) * g) * k;
+      // Sprawled: the spine stays straight so the body lies flat rather than folding up to a sit.
+      b.torso.rotation.x += mix(p.torsoX, 0.05);
+      b.torso.rotation.z += mix(p.torsoZ, p.torsoZ * 0.3);
       b.neck.rotation.x += p.neckX * k;
-      b.leftShoulder.rotation.x += p.leftArmX * k;
-      b.rightShoulder.rotation.x += p.rightArmX * k;
-      b.leftShoulder.rotation.z += p.leftArmZ * k;
-      b.rightShoulder.rotation.z += p.rightArmZ * k;
-      b.leftElbow.rotation.x += p.leftElbowX * k;
-      b.rightElbow.rotation.x += p.rightElbowX * k;
-      b.leftHip.rotation.x += p.leftHipX * k;
-      b.rightHip.rotation.x += p.rightHipX * k;
-      b.leftKnee.rotation.x += p.leftKneeX * k;
-      b.rightKnee.rotation.x += p.rightKneeX * k;
+      b.leftShoulder.rotation.x += mix(p.leftArmX, q.leftArmX);
+      b.rightShoulder.rotation.x += mix(p.rightArmX, q.rightArmX);
+      b.leftShoulder.rotation.z += mix(p.leftArmZ, q.leftArmZ);
+      b.rightShoulder.rotation.z += mix(p.rightArmZ, q.rightArmZ);
+      b.leftElbow.rotation.x += mix(p.leftElbowX, q.leftElbowX);
+      b.rightElbow.rotation.x += mix(p.rightElbowX, q.rightElbowX);
+      b.leftHip.rotation.x += mix(p.leftHipX, q.leftHipX);
+      b.rightHip.rotation.x += mix(p.rightHipX, q.rightHipX);
+      b.leftHip.rotation.z += mix(0, q.leftHipZ);
+      b.rightHip.rotation.z += mix(0, q.rightHipZ);
+      b.leftKnee.rotation.x += mix(p.leftKneeX, q.leftKneeX);
+      b.rightKnee.rotation.x += mix(p.rightKneeX, q.rightKneeX);
     }
     // Waist break (additive): the legs carry the body's lean while the torso bends part-way back against it and
     // the head hangs the way the body is going, so a pressed, running or toppling body is an S, not one plank.

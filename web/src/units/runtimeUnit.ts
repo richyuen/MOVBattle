@@ -536,7 +536,9 @@ export class RuntimeUnit {
       this._blastSpinX = spinX;
       this._blastSpinZ = spinZ;
       this._blastTumbling = true;
-      this._pendingBlastSprawlSeconds = 3;
+      // 2-4 s per body, so a blasted group gets back up one by one and not in unison.
+      this._pendingBlastSprawlSeconds = 2 + 2 * spread(6);
+      this._blastSprawled = true;
     }
   }
 
@@ -673,7 +675,9 @@ export class RuntimeUnit {
 
   update(dt: number, now: number): void {
     // Animate
-    this.animator.setLimp(this.isToppled || this.isDowned);
+    // A blast victim stays spread-eagled from the launch until its downed window on the ground runs out.
+    if (this._blastSprawled && this._grounded && now >= this._downedUntil) this._blastSprawled = false;
+    this.animator.setLimp(this.isToppled || this.isDowned || this._blastSprawled, this._blastSprawled);
     this.animator.update(dt);
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
@@ -998,6 +1002,7 @@ export class RuntimeUnit {
   private _blastSpinX = 0;
   /** Seconds a blast survivor lies sprawled, counted from the landing and not from the launch. */
   private _pendingBlastSprawlSeconds = 0;
+  private _blastSprawled = false;
   private _blastSpinZ = 0;
 
   private _applyCrowdLean(dt: number): void {
@@ -1391,6 +1396,7 @@ export class RuntimeUnit {
     this._downedUntil = 0;
     this._recoveringUntil = 0;
     this._pendingBlastSprawlSeconds = 0;
+    this._blastSprawled = false;
     this._collisionPushTotal = 0;
     this._collisionPushPeak = 0;
     this._collisionContactCount = 0;
