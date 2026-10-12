@@ -427,10 +427,10 @@ export class ProceduralAnimator {
     this._animateIdleHumanoid();
   }
 
-  // Per-unit standing slouch: forward lean, which arm hangs ahead, how far the arms sit off the ribs, each
-  // elbow's fold, how far the leading foot is planted ahead of the other, and how wide the feet sit. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
-  private _idlePose: { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number; splay: number } | null = null;
-  private _buildIdlePose(): { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number; splay: number } {
+  // Per-unit standing slouch: forward lean, which leg leads, how far the arms sit off the ribs, how far the
+  // weapon arm is raised ahead of the body, each elbow's fold, how far the leading foot is planted ahead of the other, and how wide the feet sit. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  private _idlePose: { lean: number; side: number; spread: number; raise: number; leftElbow: number; rightElbow: number; stride: number; splay: number } | null = null;
+  private _buildIdlePose(): { lean: number; side: number; spread: number; raise: number; leftElbow: number; rightElbow: number; stride: number; splay: number } {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
@@ -439,8 +439,9 @@ export class ProceduralAnimator {
       lean: 0.1 + h(41) * 0.1,
       side: h(42) < 0.5 ? -1 : 1,
       spread: 0.2 + h(43) * 0.16,
-      leftElbow: 0.45 + h(44) * 0.5,
-      rightElbow: 0.45 + h(45) * 0.5,
+      raise: 0.4 + h(48) * 0.25,
+      leftElbow: 0.2 + h(44) * 0.3,
+      rightElbow: 0.85 + h(45) * 0.4,
       stride: 0.2 + h(46) * 0.14,
       splay: 0.08 + h(47) * 0.04,
     };
@@ -460,15 +461,16 @@ export class ProceduralAnimator {
     b.neck.rotation.z = Math.sin(t * 1.8 + 0.5) * wobble * 1.2;
     b.neck.rotation.x = Math.sin(t * 1.3 + 2) * wobble * 0.8;
 
-    // Arms hang off the ribs, one ahead of the body and one behind, each elbow folded its own amount
-    b.leftShoulder.rotation.x = -p.side * 0.22 + Math.sin(t * 1.1) * wobble * 2;
-    b.rightShoulder.rotation.x = p.side * 0.22 + Math.sin(t * 1.1 + Math.PI) * wobble * 2;
-    b.leftShoulder.rotation.z = -p.spread;
-    b.rightShoulder.rotation.z = p.spread;
+    // The weapon arm is held up ahead of the body with the elbow folded, close to the ribs; the off arm
+    // hangs loose behind it and further out, so the two never mirror each other
+    b.leftShoulder.rotation.x = 0.16 + Math.sin(t * 1.1) * wobble * 2;
+    b.rightShoulder.rotation.x = -p.raise + Math.sin(t * 1.1 + Math.PI) * wobble * 2;
+    b.leftShoulder.rotation.z = -p.spread * 1.3;
+    b.rightShoulder.rotation.z = p.spread * 0.6;
     b.leftElbow.rotation.x = -p.leftElbow + Math.sin(t * 1.4) * wobble;
     b.rightElbow.rotation.x = -p.rightElbow + Math.sin(t * 1.4 + Math.PI) * wobble;
 
-    // Staggered stance: the leg opposite the leading arm is planted ahead with its knee bent (twice the hip
+    // Staggered stance: one leg, picked per unit, is planted ahead with its knee bent (twice the hip
     // angle, which keeps that foot on the ground); the other trails slightly behind, nearly straight.
     const leftLeads = p.side < 0;
     const lead = -p.stride;

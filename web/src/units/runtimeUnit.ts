@@ -1326,6 +1326,23 @@ export class RuntimeUnit {
         body.leftElbow.rotation.x -= 0.1;
         body.rightElbow.rotation.x -= 0.1;
         break;
+      case "crew":
+        // Bent to the gun at the waist, one arm out to the breech and the other cocked back at the elbow
+        body.torso.rotation.x += 0.26;
+        body.neck.rotation.x -= 0.2;
+        body.leftShoulder.rotation.x -= 1.2;
+        body.leftElbow.rotation.x += 0.1;
+        body.rightShoulder.rotation.x += 0.5;
+        body.rightElbow.rotation.x -= 0.3;
+        break;
+      case "loader":
+        // Stooped over the round, both forearms folded up to carry it at the chest
+        body.torso.rotation.x += 0.4;
+        body.neck.rotation.x -= 0.3;
+        body.leftShoulder.rotation.x -= 0.75;
+        body.leftElbow.rotation.x -= 0.9;
+        body.rightShoulder.rotation.x -= 0.2;
+        break;
       case "beast":
         body.neck.rotation.x += 0.12;
         body.leftShoulder.rotation.x += 0.12;

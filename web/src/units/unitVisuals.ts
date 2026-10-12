@@ -57,6 +57,8 @@ export type PosePreset =
   | "mounted"
   | "support"
   | "beast"
+  | "crew"
+  | "loader"
   | "vehicle";
 
 export type MaterialPreset =
