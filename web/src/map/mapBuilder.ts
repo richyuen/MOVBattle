@@ -147,12 +147,12 @@ export class TribalSandboxMapBuilder {
 
     // Tree leaves: autumn red
     const leaves = new StandardMaterial("leaves", this._scene);
-    leaves.diffuseColor = new Color3(0.86, 0.32, 0.24);
+    leaves.diffuseColor = new Color3(0.9, 0.42, 0.3);
     leaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Second canopy colour: yellow-orange among the red
     const darkLeaves = new StandardMaterial("darkLeaves", this._scene);
-    darkLeaves.diffuseColor = new Color3(0.93, 0.62, 0.22);
+    darkLeaves.diffuseColor = new Color3(0.95, 0.66, 0.36);
     darkLeaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Grass blades: one shade under and one over the field color, so the carpet reads as texture
