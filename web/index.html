@@ -157,18 +157,18 @@
     .budget-label > span {
       display: flex; justify-content: space-between; align-items: center; gap: 10px; box-sizing: border-box;
       min-width: 138px; height: 37px; padding: 0 10px 1px 12px; margin-top: -1px;
-      background: rgba(10,14,20,0.45); border: 1px solid rgba(255,255,255,0.6); border-left: none;
+      background: rgba(10,14,20,0.45); border: 1px solid rgba(255,255,255,0.6); border-left: none; border-radius: 0 19px 19px 0;
     }
     .budget-label #budgetAmount { border-bottom: none; }
     .budget-label #budgetAmount::after {
-      content: ""; flex: none; width: 12px; height: 12px; box-sizing: border-box;
+      content: ""; flex: none; width: 15px; height: 15px; box-sizing: border-box;
       border: 2px solid currentColor; border-radius: 50%;
     }
     .budget-label .budget-units { min-width: 100px; }
     .budget-label .budget-units::after {
-      content: ""; flex: none; width: 10px; height: 13px;
-      background: radial-gradient(circle at 50% 3px, currentColor 3px, transparent 3.5px),
-        linear-gradient(currentColor, currentColor) 50% 100% / 10px 6px no-repeat;
+      content: ""; flex: none; width: 12px; height: 16px;
+      background: radial-gradient(circle at 50% 3.5px, currentColor 3.5px, transparent 4px),
+        linear-gradient(currentColor, currentColor) 50% 100% / 12px 8px no-repeat;
       border-radius: 0 0 2px 2px;
     }
     /* Tray spans the viewport: no room beside it, so the boxes sit as a badge above its left end */
