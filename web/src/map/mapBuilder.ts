@@ -341,40 +341,48 @@ export class TribalSandboxMapBuilder {
     const darkRock = this._scene.getMaterialByName("darkRock") as StandardMaterial;
 
     // Scattered boulders in the play area
-    const boulders: { pos: Vector3; size: number; mat: StandardMaterial }[] = [
-      { pos: new Vector3(-15, 0, 15), size: 2.5, mat: rock },
-      { pos: new Vector3(18, 0, -12), size: 3.0, mat: darkRock },
-      { pos: new Vector3(-25, 0, -8), size: 2.0, mat: rock },
-      { pos: new Vector3(28, 0, 10), size: 2.8, mat: darkRock },
-      { pos: new Vector3(0, 0, 20), size: 2.2, mat: rock },
-      { pos: new Vector3(5, 0, -18), size: 1.8, mat: darkRock },
-      { pos: new Vector3(-45, 0, 5), size: 3.0, mat: rock },
-      { pos: new Vector3(45, 0, -5), size: 3.0, mat: darkRock },
+    const boulders: { pos: Vector3; size: number }[] = [
+      { pos: new Vector3(-15, 0, 15), size: 2.5 },
+      { pos: new Vector3(18, 0, -12), size: 3.0 },
+      { pos: new Vector3(-25, 0, -8), size: 2.0 },
+      { pos: new Vector3(28, 0, 10), size: 2.8 },
+      { pos: new Vector3(0, 0, 20), size: 2.2 },
+      { pos: new Vector3(5, 0, -18), size: 1.8 },
+      { pos: new Vector3(-45, 0, 5), size: 3.0 },
+      { pos: new Vector3(45, 0, -5), size: 3.0 },
       // Near edges
-      { pos: new Vector3(-45, 0, 31), size: 4.0, mat: rock },
-      { pos: new Vector3(45, 0, -31), size: 4.0, mat: darkRock },
-      { pos: new Vector3(-43, 0, -34), size: 3.5, mat: darkRock },
-      { pos: new Vector3(43, 0, 34), size: 3.5, mat: rock },
+      { pos: new Vector3(-45, 0, 31), size: 4.0 },
+      { pos: new Vector3(45, 0, -31), size: 4.0 },
+      { pos: new Vector3(-43, 0, -34), size: 3.5 },
+      { pos: new Vector3(43, 0, 34), size: 3.5 },
     ];
 
-    for (const b of boulders) {
-      this._createBoulder(b.pos, b.size, b.mat);
-    }
+    // Tan and grey stone are mixed over the whole field by place, not one colour to each team's half.
+    boulders.forEach((b, i) => {
+      this._createBoulder(b.pos, b.size, this._seededValue(i, 102) > 0.5 ? rock : darkRock);
+    });
   }
 
   private _createBoulder(pos: Vector3, size: number, mat: StandardMaterial): void {
     // A coarse ball of a few dozen flat faces, squashed and turned by its place on the map, so each
     // boulder is a chunky faceted lump of its own shape and not a smooth loaf.
-    const rock = MeshBuilder.CreateSphere("boulder", {
-      diameter: size, segments: 2,
-    }, this._scene);
-    const k = pos.x * 7 + pos.z * 13;
-    rock.scaling.set(0.85 + this._seededValue(k, 96) * 0.3, 0.6 + this._seededValue(k, 97) * 0.25, 0.9 + this._seededValue(k, 98) * 0.3);
-    rock.rotation.set((this._seededValue(k, 99) - 0.5) * 0.5, this._seededValue(k, 100) * Math.PI, (this._seededValue(k, 101) - 0.5) * 0.5);
-    rock.position.set(pos.x, size * 0.22, pos.z);
-    rock.convertToFlatShadedMesh();
-    rock.material = mat;
-    rock.receiveShadows = true;
+    // It is a heap and not a lone stone: two lumps about half its size lean on its flanks, a third of a turn apart.
+    const seed = pos.x * 7 + pos.z * 13;
+    for (let j = 0; j < 3; j++) {
+      const k = seed + j * 31;
+      const lump = j === 0 ? size : size * (0.5 + this._seededValue(k, 103) * 0.15);
+      const turn = this._seededValue(seed, 104) * Math.PI * 2 + j * 2.4;
+      const reach = j === 0 ? 0 : size * 0.42;
+      const rock = MeshBuilder.CreateSphere("boulder", {
+        diameter: lump, segments: 2,
+      }, this._scene);
+      rock.scaling.set(0.85 + this._seededValue(k, 96) * 0.3, 0.6 + this._seededValue(k, 97) * 0.25, 0.9 + this._seededValue(k, 98) * 0.3);
+      rock.rotation.set((this._seededValue(k, 99) - 0.5) * 0.5, this._seededValue(k, 100) * Math.PI, (this._seededValue(k, 101) - 0.5) * 0.5);
+      rock.position.set(pos.x + Math.cos(turn) * reach, lump * 0.22, pos.z + Math.sin(turn) * reach);
+      rock.convertToFlatShadedMesh();
+      rock.material = mat;
+      rock.receiveShadows = true;
+    }
 
     this._obstacles.push({
       type: "cylinder",
