@@ -314,14 +314,14 @@ export class VisualEffects {
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
-    // The fireball is mostly self-lit and graded from the inside out: a small near-white heart, yellow inner
-    // flame and a deep orange fringe. Only the heart carries any blue, so the flames around it never pale to cream.
-    const coreMat = mats.createUnique("cloth", new Color3(1, 0.95, 0.76));
-    coreMat.emissiveColor = new Color3(0.62, 0.56, 0.36);
-    const flashMat = mats.createUnique("cloth", new Color3(1, 0.82, 0.03));
-    flashMat.emissiveColor = new Color3(0.6, 0.46, 0);
-    const flameMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(0.6, 0.2, 0);
+    // The fireball is mostly self-lit and one orange-yellow throughout: heart, lobes and tongues share a hue, with no
+    // white heart and no second colour, so a hit is a single ball of flame and not a stack of three.
+    const coreMat = mats.createUnique("cloth", new Color3(1, 0.6, 0.04));
+    coreMat.emissiveColor = new Color3(0.6, 0.33, 0);
+    const flashMat = mats.createUnique("cloth", new Color3(1, 0.6, 0.04));
+    flashMat.emissiveColor = new Color3(0.6, 0.33, 0);
+    const flameMat = mats.createUnique("cloth", new Color3(1, 0.6, 0.04));
+    flameMat.emissiveColor = new Color3(0.6, 0.33, 0);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
