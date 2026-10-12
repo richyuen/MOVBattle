@@ -1147,8 +1147,7 @@ export class ProceduralAnimator {
       this._deathAngularVelocities[base + 2] *= this._deathDamping;
 
       // Flop first, then sag into the crumpled rest pose and stay there
-      // A body still in flight folds into its air shape within a few frames instead of holding its last stance
-      const sag = Math.min(1, dt * (3.5 + air * 10));
+      const sag = Math.min(1, dt * 3.5);
       this._deathJointAngles[base] += (restAt(base) - this._deathJointAngles[base]) * sag;
       this._deathJointAngles[base + 1] += (restAt(base + 1) - this._deathJointAngles[base + 1]) * sag;
       this._deathJointAngles[base + 2] += (restAt(base + 2) - this._deathJointAngles[base + 2]) * sag;
