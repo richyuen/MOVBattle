@@ -708,9 +708,9 @@ export class TribalSandboxMapBuilder {
       const cloud = Mesh.MergeMeshes(puffs, true);
       if (!cloud) continue;
       cloud.name = "cloud";
-      // Soft underside: the puffs keep a shallow rounded belly below the base line, and only what hangs lower is pressed up
+      // Level underside: everything below the base line is pressed up onto it
       const positions = cloud.getVerticesData("position")!;
-      for (let v = 1; v < positions.length; v += 3) positions[v] = Math.max(-0.12 * size, positions[v]);
+      for (let v = 1; v < positions.length; v += 3) positions[v] = Math.max(0, positions[v]);
       cloud.setVerticesData("position", positions);
       cloud.convertToFlatShadedMesh();
       if (low) {
