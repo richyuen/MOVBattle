@@ -324,14 +324,17 @@ export class VisualEffects {
     const ballAngle = Math.random() * Math.PI * 2;
     const ballVelocity = new Vector3(Math.cos(ballAngle) * 1.6 * scale, 3.4, Math.sin(ballAngle) * 1.6 * scale);
 
-    // Smoke: a clump of faceted off-white lobes about one body across that swells and drifts up.
+    // Smoke: a clump of faceted off-white lobes that swells and drifts up. A shell's puff is capped near a
+    // musket ball's and sits at chest height, so it stays below the heads of the bodies it throws.
+    const smokeScale = Math.min(scale, 1.3);
+    const smokeY = 0.6 * smokeScale - 0.6 * scale;
     const lobes: { mesh: TransformNode; size: number; rise: number }[] = [];
     for (let i = 0; i < 5; i++) {
       const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
-      const reach = (i === 0 ? 0 : 0.3 + Math.random() * 0.2) * scale;
+      const reach = (i === 0 ? 0 : 0.22 + Math.random() * 0.16) * smokeScale;
       const lobe = blob("burstSmoke", 2, smokeMat);
-      lobe.position.set(Math.cos(angle) * reach, (Math.random() - 0.3) * 0.5 * scale, Math.sin(angle) * reach);
-      lobes.push({ mesh: lobe, size: (i === 0 ? 0.85 : 0.45 + Math.random() * 0.25) * scale, rise: 0.5 + Math.random() * 0.5 });
+      lobe.position.set(Math.cos(angle) * reach, smokeY + (Math.random() - 0.5) * 0.3 * smokeScale, Math.sin(angle) * reach);
+      lobes.push({ mesh: lobe, size: (i === 0 ? 0.55 : 0.3 + Math.random() * 0.15) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
     }
 
     // Dust: flattened tan clods kicked out low along the ground.
