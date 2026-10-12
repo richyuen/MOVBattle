@@ -446,11 +446,12 @@ export class VisualEffects {
           lobe.mesh.position.y += lobe.rise * dt;
           lobe.mesh.scaling.setAll(lobe.size * swell * smokeFade);
         }
-        // The mound heaves up fast, then sags flat as it settles.
+        // The mound heaves up fast, sags as it settles, and has shrunk away 40% of the way through, well before the clods stop.
         const heave = 0.35 + 0.65 * Math.min(1, elapsed / 0.14);
         const sag = 0.42 - 0.17 * Math.min(1, elapsed / totalDuration);
+        const settle = Math.max(0.001, Math.min(1, (totalDuration * 0.4 - elapsed) / 0.4));
         for (const lobe of mound) {
-          const size = lobe.size * heave * fade;
+          const size = lobe.size * heave * settle;
           lobe.mesh.scaling.set(size, size * sag, size);
         }
         ballVelocity.y -= 14 * dt;
