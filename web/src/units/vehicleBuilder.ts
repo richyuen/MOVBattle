@@ -648,7 +648,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
-  const wood = makeMat(scene, new Color3(0.62, 0.32, 0.22));
+  const wood = makeMat(scene, new Color3(0.56, 0.30, 0.33));
   const metal = makeMat(scene, new Color3(0.3, 0.3, 0.35));
   const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09));
 
