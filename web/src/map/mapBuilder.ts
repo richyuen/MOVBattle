@@ -504,14 +504,14 @@ export class TribalSandboxMapBuilder {
     };
 
     // A round crown has facets that face the ground and catch only the dim bounce light. Mostly self-lit, so its
-    // shaded side stays nearly as bright as its sunlit side and the sunlit tops do not wash out; kept out of the glow layer.
+    // shaded side stays nearly as bright as its sunlit side and the sunlit tops do not wash out; kept out of the glow layer. The self-light leans to red and blue over green, so the shade of an autumn crown is crimson and not brick.
     const crownMat = (mat: StandardMaterial): StandardMaterial => {
       const name = `${mat.name}Crown`;
       const existing = this._scene.getMaterialByName(name) as StandardMaterial | null;
       if (existing) return existing;
       const crown = mat.clone(name);
       crown.diffuseColor = mat.diffuseColor.scale(0.38);
-      crown.emissiveColor = mat.diffuseColor.scale(0.62);
+      crown.emissiveColor = mat.diffuseColor.multiply(new Color3(0.72, 0.45, 0.8));
       return crown;
     };
     const glow = this._scene.getGlowLayerByName("glow");
@@ -1021,7 +1021,7 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (leaves) leaves.diffuseColor = new Color3(0.58, 0.7, 0.34);
   const darkLeaves = scene.getMaterialByName("darkLeaves") as StandardMaterial | null;
   if (darkLeaves) darkLeaves.diffuseColor = new Color3(0.48, 0.62, 0.3);
-  // The round crowns wear mostly self-lit clones of the two leaf materials, shaded as _createTree shades them
+  // The round crowns wear mostly self-lit clones of the two leaf materials, evenly self-lit so their shade stays green
   for (const mat of [leaves, darkLeaves]) {
     const crown = mat && scene.getMaterialByName(`${mat.name}Crown`) as StandardMaterial | null;
     if (!mat || !crown) continue;
