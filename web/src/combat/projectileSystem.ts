@@ -60,6 +60,8 @@ export class ProjectileSystem {
   private _scene: Scene;
   private _active: ActiveProjectile[] = [];
   private _flashes: MuzzleFlash[] = [];
+  /** Spent arrows, bolts and spears left standing in the bodies they hit or in the ground, oldest first. */
+  private _litter: { mesh: TransformNode; owner: RuntimeUnit | null }[] = [];
   private _matCache = new Map<string, PBRMetallicRoughnessMaterial>();
   onShake?: (intensity: number) => void;
   visualEffects?: VisualEffects;
@@ -278,10 +280,20 @@ export class ProjectileSystem {
 
       // Arrival
       if (t >= 1 || earlyHit) {
+        const struck = !p.target.isDead;
         this._onImpact(p);
         if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(); }
-        p.mesh.dispose();
+        if (!this._leaveAsLitter(p, struck)) p.mesh.dispose();
         this._active.splice(i, 1);
+      }
+    }
+
+    // A shaft goes when the corpse it stands in is cleared away, so none is left hanging in the air.
+    for (let i = this._litter.length - 1; i >= 0; i--) {
+      const { mesh, owner } = this._litter[i];
+      if (mesh.isDisposed() || (owner && owner.body.allMeshes[0]?.isVisible === false)) {
+        mesh.dispose();
+        this._litter.splice(i, 1);
       }
     }
 
@@ -308,6 +320,26 @@ export class ProjectileSystem {
         this._flashes.splice(i, 1);
       }
     }
+  }
+
+  /** Shafts stay where they land: in the body they struck, or slanted into the ground if it was already down. */
+  private _leaveAsLitter(p: ActiveProjectile, struck: boolean): boolean {
+    if (p.shape !== "arrow" && p.shape !== "bolt" && p.shape !== "spear") return false;
+    const mesh = p.mesh;
+    if (struck) {
+      // Driven most of the way in to the point it was aimed at, then carried by the torso.
+      const aim = p.target.position.clone();
+      aim.y += p.targetLift;
+      Vector3.LerpToRef(mesh.position, aim, 0.6, mesh.position);
+      mesh.setParent(p.target.body.torso ?? p.target.body.root);
+    } else {
+      const vary = Math.abs(p.origin.x * 7.31 + p.origin.z * 3.17) % 1;
+      mesh.position.set(p.targetPos.x + (vary - 0.5) * 0.8, 0.14, p.targetPos.z + ((vary * 7) % 1 - 0.5) * 0.8);
+      mesh.rotation.x = 0.35 + vary * 0.35;
+    }
+    this._litter.push({ mesh, owner: struck ? p.target : null });
+    if (this._litter.length > 60) this._litter.shift()!.mesh.dispose();
+    return true;
   }
 
   private _onImpact(p: ActiveProjectile): void {
@@ -596,6 +628,8 @@ export class ProjectileSystem {
       p.mesh.dispose();
     }
     for (const f of this._flashes) f.mesh.dispose();
+    for (const l of this._litter) l.mesh.dispose();
+    this._litter.length = 0;
     this._active.length = 0;
     this._flashes.length = 0;
   }
