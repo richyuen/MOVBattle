@@ -142,6 +142,8 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
 /** TABS silhouette: small head on long thin limbs. Applied on top of every unit's own proportions. */
 const HEAD_SHRINK = 0.88;
 const LIMB_THIN = 0.8;
+/** Sleeves and thighs are chunky next to the thin forearms and shins they end in. */
+const SLEEVE_BULK = 1.35;
 
 export function buildArticulatedBody(
   scene: Scene,
@@ -222,8 +224,8 @@ export function buildArticulatedBody(
   const torsoH = 0.46;
   const torsoD = 0.21 * Math.max(0.75, p.bulk * 0.92) * (p.torsoDepth ?? 1.0);
   const torsoRoundness = Math.max(0.6, p.torsoRoundness ?? 1.0);
-  const torsoTop = torsoW * (0.86 + torsoRoundness * 0.04);
-  const torsoBottom = torsoW * (0.96 + torsoRoundness * 0.08);
+  const torsoTop = torsoW * (1.0 + torsoRoundness * 0.08);
+  const torsoBottom = torsoW * (0.76 + torsoRoundness * 0.04);
 
   const headHeight = 0.216 * HEAD_SHRINK * p.headSize * (p.headLength ?? 1.0);
   const headWidth = 0.192 * HEAD_SHRINK * p.headSize * (p.headWidth ?? 1.0);
@@ -232,17 +234,17 @@ export function buildArticulatedBody(
 
   const upperArmH = 0.24 * p.armLength;
   const lowerArmH = 0.22 * p.armLength;
-  const upperArmTop = 0.09 * LIMB_THIN * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
+  const upperArmTop = 0.09 * LIMB_THIN * SLEEVE_BULK * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
-  const lowerArmTop = upperArmBottom * 0.92;
+  const lowerArmTop = upperArmBottom * 0.92 / SLEEVE_BULK;
   const lowerArmBottom = lowerArmTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
   const handDiameter = 0.1 * Math.max(0.8, p.headSize * 0.9) * (p.handSize ?? 1.0);
 
   const upperLegH = 0.28 * p.legLength;
   const lowerLegH = 0.25 * p.legLength;
-  const upperLegTop = 0.12 * LIMB_THIN * p.bulk * (p.upperLegWidth ?? 1.0);
+  const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
-  const lowerLegTop = upperLegBottom * 0.96;
+  const lowerLegTop = upperLegBottom * 0.96 / SLEEVE_BULK;
   const lowerLegBottom = lowerLegTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
   const footLength = 0.18 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
   const footWidth = 0.11 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
@@ -449,7 +451,7 @@ export function buildArticulatedBody(
 
   // ─── Legs ───
   const legDepthScale = 0.92;
-  const hipOffX = (Math.max(torsoTop, torsoBottom) * 0.22) * s;
+  const hipOffX = (torsoBottom * 0.28) * s;
 
   // Left leg
   const leftHipJ = joint(`${name}_lHip`, hip);
@@ -538,7 +540,7 @@ export function buildArticulatedBody(
 
   // ─── Belt (at torso base / hip level) ───
   if (options.showBelt) {
-    const beltRadius = Math.max(torsoTop, torsoBottom) * 0.54;
+    const beltRadius = torsoBottom * 0.54;
     const beltTube = beltRadius * 0.12;
     const belt = MeshBuilder.CreateTorus(`${name}_belt`, {
       diameter: beltRadius * 2 * s,
