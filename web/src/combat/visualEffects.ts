@@ -121,7 +121,6 @@ export class VisualEffects {
       }
       shard.material = boltMat;
       shard.parent = root;
-      glow?.addExcludedMesh(shard);
       shards.push(shard);
       // Cyan rim: the same blade 1.6 times as broad, a hair behind the white one as the camera sees it
       const rim = shard.clone("lrim");
