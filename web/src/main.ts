@@ -121,6 +121,10 @@ hemi.intensity = 0.7;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
 dir.intensity = 0.8;
+// The sun hangs over the island and its shadow depth is fitted to the casters. Left at the origin on the camera's
+// clip range, the exponential shadow map spans the whole view distance and every tree and unit shadow fades to nothing.
+dir.position = new Vector3(40, 100, -60);
+dir.autoCalcShadowZBounds = true;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
@@ -138,7 +142,8 @@ scene.onBeforeRenderObservable.add(() => {
 // Shadows
 const shadowGen = new ShadowGenerator(2048, dir);
 shadowGen.useBlurExponentialShadowMap = true;
-shadowGen.blurKernel = 48;
+// The map covers the whole tree ring, so a wide blur smears a unit's shadow away: keep it to a soft edge
+shadowGen.blurKernel = 16;
 
 // Camera
 const camCtrl = new CameraController(scene, canvas);
