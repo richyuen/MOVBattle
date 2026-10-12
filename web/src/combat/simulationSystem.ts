@@ -125,6 +125,8 @@ export class SimulationSystem {
   /** Short-reach melee (reach under this) keeps closing after it can swing, until bodies touch. */
   readonly meleePressMaxReach = 2.3;
   readonly meleePressGap = 0.1;
+  /** Opposing bodies may sink this far into each other (share of their summed radii), so two front lines pack chest to chest instead of standing a body apart. */
+  readonly enemyContactScale = 0.7;
   readonly cleanupSweepInterval = 0.75;
   readonly summonLivingCap = 55;
   readonly collisionResolutionPadding = 0.03;
@@ -258,7 +260,7 @@ export class SimulationSystem {
 
           const delta = b.position.subtract(a.position);
           delta.y = 0;
-          const minDistance = a.collisionBodyRadius + b.collisionBodyRadius;
+          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (a.team === b.team ? 1 : this.enemyContactScale);
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
@@ -485,7 +487,7 @@ export class SimulationSystem {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
       // shoulder contact so the two front lines meet instead of fencing across a gap.
       // Bracers hold their ground and let the rush come onto the shields.
-      const contactDistance = unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap;
+      const contactDistance = (unit.collisionBodyRadius + enemy.collisionBodyRadius) * this.enemyContactScale + this.meleePressGap;
       const presses = aiProfile.id !== "ai.brace" && unit.definition.engageRange < this.meleePressMaxReach;
       if (canMove && presses && distance > contactDistance + 0.05) {
         const back = unit.position.subtract(enemy.position);
