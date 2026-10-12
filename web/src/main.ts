@@ -1073,7 +1073,7 @@ function enterSimulation(): void {
 const STANDOFF_ENGAGE_RANGE = 7;
 
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
-function computeBattleFocus(): { x: number; z: number; halfSpan: number; near?: { x: number; z: number; halfWidth: number } } {
+function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; near?: { x: number; z: number; halfWidth: number } } {
   const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
@@ -1100,7 +1100,14 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number; near?: 
     halfWidth = Math.max(halfWidth, Math.abs(across));
   }
   const near = standoff ? { ...nearCentre, halfWidth } : undefined;
-  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, near };
+  // How far the formations reach toward the side-on battle camera (-z) from the clash point.
+  const focusZ = (a.z + b.z) / 2;
+  let depth = 0;
+  for (const unit of placedUnits) {
+    if (unit.linkedParent || unit.isDead) continue;
+    depth = Math.max(depth, focusZ - unit.position.z);
+  }
+  return { x: (a.x + b.x) / 2, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, near };
 }
 
 function resetBattle(options: {

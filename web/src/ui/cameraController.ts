@@ -190,7 +190,7 @@ export class CameraController {
   // ─── Battle swoop ───
   /** Swoop from the placement view down to a low, close TABS-style battle view on the clash line. */
   swoopToBattle(
-    center: { x: number; z: number; halfSpan?: number; near?: { x: number; z: number; halfWidth?: number } },
+    center: { x: number; z: number; halfSpan?: number; depth?: number; near?: { x: number; z: number; halfWidth?: number } },
     durationSeconds = 1.1,
   ): CameraViewState {
     if (!this._prebattleView) {
@@ -203,10 +203,12 @@ export class CameraController {
     }
     // Armies that hold their ground (halfSpan > 0) must both fit: the frame is ~0.63 radius wide each side of the target.
     const spanRadius = ((center.halfSpan ?? 0) + 1.5) / 0.6;
+    // The eye stands clear of the rank nearest to it, so the fight spreading sideways does not swallow the camera.
+    const clearRadius = (center.depth ?? 0) + 6.5;
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
       beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
-      radius: Math.min(14, Math.max(6.5, spanRadius)), // two to three body lengths back, so the nearest rank stands ~0.4 of the frame tall
+      radius: Math.min(14, Math.max(8, spanRadius, clearRadius)), // three body lengths back from the nearest rank, which stands ~0.4 of the frame tall
       target: { x: center.x, y: 1.5, z: center.z },   // eye near 1 m, so the grass in front of the nearest rank stays a thin strip
     };
     // The battle view sits below the placement pitch limits and inside the zoom floor; widen them for the fight.
