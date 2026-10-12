@@ -56,8 +56,8 @@ export class VisualEffects {
   spawnLightning(origin: Vector3, target: Vector3): void {
     const root = new TransformNode("lightning", this._scene);
     // Unlit: one flat blue-white on every face, in sun and in shade, so the bolt is a cut-out shape and not shaded bars
-    const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.6, 0.78, 1));
-    boltMat.emissiveColor = new Color3(0.78, 0.9, 1);
+    const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.96, 0.99, 1));
+    boltMat.emissiveColor = new Color3(1, 1, 1);
     boltMat.disableLighting = true;
     boltMat.backFaceCulling = false;
     boltMat.transparencyMode = 0;
