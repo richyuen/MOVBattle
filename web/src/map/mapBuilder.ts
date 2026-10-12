@@ -671,9 +671,9 @@ export class TribalSandboxMapBuilder {
   /** Flat, stretched low-poly clouds ringing the island; sunlit, fog-free and kept out of the glow layer so each facet reads hard-edged */
   private _createClouds(): void {
     const cloudMat = new StandardMaterial("cloud", this._scene);
-    cloudMat.diffuseColor = new Color3(1, 1, 1);
-    // Enough self-light that the undersides stay a pale grey-white; the sun does the rest
-    cloudMat.emissiveColor = new Color3(0.6, 0.63, 0.66);
+    cloudMat.diffuseColor = new Color3(0.35, 0.40, 0.36);
+    // Mostly self-lit a faint green-white, on a dim diffuse: the sunlit tops stay under white and keep the tint, the undersides a pale grey-green
+    cloudMat.emissiveColor = new Color3(0.55, 0.62, 0.57);
     cloudMat.specularColor = new Color3(0, 0, 0);
     const glow = this._scene.getGlowLayerByName("glow");
 
