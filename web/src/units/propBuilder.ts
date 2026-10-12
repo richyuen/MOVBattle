@@ -1255,26 +1255,26 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       return head;
     }
     case "great_helm": {
-      // Fitted barrel helm: a faceted, slightly tapered bucket pulled down over the whole head, skin-tight to it
-      const helm = MeshBuilder.CreateCylinder("ghelm", { height: 0.21 * s, diameterTop: 0.175 * s, diameterBottom: 0.21 * s, tessellation: 8 }, scene);
+      // Fitted barrel helm: a short, faceted, slightly tapered bucket pulled down over the head, skin-tight to it
+      const helm = MeshBuilder.CreateCylinder("ghelm", { height: 0.17 * s, diameterTop: 0.18 * s, diameterBottom: 0.21 * s, tessellation: 8 }, scene);
       // Turn a flat facet to the front so the eye slit lies on a face, not across an edge
       helm.rotation.y = Math.PI / 8;
       helm.bakeCurrentTransformIntoVertices();
       helm.convertToFlatShadedMesh();
-      // Darker steel washed with the team colour, so the helm belongs to its side like the skin under it
-      const steel = new Color3(0.5, 0.51, 0.55);
-      helm.material = mat(scene, teamColor ? Color3.Lerp(steel, teamColor, 0.3) : steel);
-      helm.position.y = -0.085 * s;
-      // Eye slit: a dark bar across the front facet that wraps onto the two facets beside it
+      // Dark charcoal steel with a light wash of the team colour, so the helm stays metal but belongs to its side
+      const steel = new Color3(0.28, 0.29, 0.32);
+      helm.material = mat(scene, teamColor ? Color3.Lerp(steel, teamColor, 0.2) : steel);
+      helm.position.y = -0.065 * s;
+      // Eye slit: a bold dark bar across the front facet that wraps onto the two facets beside it
       const slitMat = mat(scene, new Color3(0.08, 0.08, 0.08));
-      const slitY = 0.005 * s;
-      const faceR = 0.0885 * s;
-      const slit = MeshBuilder.CreateBox("slit", { width: 0.074 * s, height: 0.02 * s, depth: 0.012 * s }, scene);
+      const slitY = -0.015 * s;
+      const faceR = 0.091 * s;
+      const slit = MeshBuilder.CreateBox("slit", { width: 0.076 * s, height: 0.03 * s, depth: 0.012 * s }, scene);
       slit.position.set(0, slitY, faceR); slit.parent = helm;
       slit.material = slitMat;
       for (const side of [-1, 1]) {
-        const wrap = MeshBuilder.CreateBox("slitWrap", { width: 0.036 * s, height: 0.02 * s, depth: 0.012 * s }, scene);
-        const along = 0.019 * s;
+        const wrap = MeshBuilder.CreateBox("slitWrap", { width: 0.037 * s, height: 0.03 * s, depth: 0.012 * s }, scene);
+        const along = 0.0195 * s;
         wrap.position.set(side * Math.SQRT1_2 * (faceR - along), slitY, Math.SQRT1_2 * (faceR + along));
         wrap.rotation.y = side * Math.PI / 4;
         wrap.parent = helm;
