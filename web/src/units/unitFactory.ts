@@ -53,10 +53,12 @@ const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only half of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.5;
-// A tabard is cream cloth with a wash of the team colour, three fifths the width of the chest it hangs on.
+// A tabard is cream cloth tinted a third of the way to the team colour, three quarters the width of the chest it
+// hangs on and four fifths its length.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
-const TABARD_PALE = 0.72;
-const TABARD_WIDTH = 0.6;
+const TABARD_PALE = 0.65;
+const TABARD_WIDTH = 0.75;
+const TABARD_LENGTH = 0.8;
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
@@ -181,14 +183,12 @@ export class UnitFactory {
 
     // Helmed medieval men-at-arms wear a tabard: a pale slab of cloth down the chest and back, so they are two colours and not one.
     if (!shouldUseVehicleBody && definition.faction === FactionId.Medieval && (visual.hat === "great_helm" || visual.hat === "plume_helmet")) {
+      // It is the torso's own tapered shape, a skin thicker front and back, so it hugs the chest, narrows with the
+      // waist and ends above the hip instead of standing off the body as a board.
       const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
-      const tabard = MeshBuilder.CreateBox("tabard", {
-        width: chest.x * 2 * TABARD_WIDTH,
-        height: chest.y * 2 * 0.94,
-        depth: chest.z * 2 * body.torsoMesh.scaling.z * 1.1,
-      }, this._scene);
-      tabard.position.y = body.torsoMesh.position.y;
-      tabard.parent = body.torso;
+      const tabard = body.torsoMesh.clone("tabard");
+      tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * 1.06);
+      tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
       tabard.material = getMaterialFactory().getCloth(Color3.Lerp(teamColor, TABARD_COLOR, TABARD_PALE));
       propMeshes.push(tabard);
     }
