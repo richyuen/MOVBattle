@@ -1603,20 +1603,29 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   // The tips keep the flat team colour: the material preset repaints paintMat, and would dull them with the rest of the war paint
   const tuskTipMat = getMaterialFactory().getCloth(color);
   const tuskSplay = [0.14, 0.16, 0.12, 0.04, -0.08, -0.14];
+  // Each of those six is laid as two half-length pieces with the pitch and girth eased between neighbours, at 0.85 of
+  // the length: twelve small turns read as one smooth curve that clears the ground, not a few straight beams with elbows
+  const tuskAt = (values: number[], u: number): number => {
+    const c = Math.max(0, Math.min(values.length - 1, u));
+    const lo = Math.min(values.length - 2, Math.floor(c));
+    return values[lo] + (values[lo + 1] - values[lo]) * (c - lo);
+  };
+  const tuskPieces = tuskPitches.length * 2;
   for (const side of [-1, 1]) {
     const start = new Vector3(side * 0.42, -0.3, 0.5);
-    for (let i = 0; i < tuskPitches.length; i++) {
-      const pitch = tuskPitches[i];
-      const length = tuskLengths[i];
-      const end = start.add(new Vector3(side * tuskSplay[i], -Math.cos(pitch) * length, Math.sin(pitch) * length));
+    for (let i = 0; i < tuskPieces; i++) {
+      const pitch = tuskAt(tuskPitches, (i + 0.5) / 2 - 0.5);
+      const length = tuskLengths[i >> 1] * 0.5 * 0.85;
+      const splay = tuskSplay[i >> 1] * 0.5 * 0.85;
+      const end = start.add(new Vector3(side * splay, -Math.cos(pitch) * length, Math.sin(pitch) * length));
       const seg = MeshBuilder.CreateCylinder("tusk", {
-        height: length * 1.14, diameterTop: tuskGirths[i + 1], diameterBottom: tuskGirths[i], tessellation: 6,
+        height: length * 1.14, diameterTop: tuskAt(tuskGirths, (i + 1) / 2), diameterBottom: tuskAt(tuskGirths, i / 2), tessellation: 8,
       }, scene);
       seg.position = Vector3.Center(start, end);
       seg.rotation.x = Math.PI - pitch;
-      seg.rotation.z = -side * tuskSplay[i] / length;
-      // The last two segments are painted: fat team-coloured tusk tips
-      seg.parent = neck; seg.material = i >= tuskPitches.length - 2 ? tuskTipMat : tuskMat; allMeshes.push(seg);
+      seg.rotation.z = -side * splay / length;
+      // The last two pieces are painted: a short team-coloured tusk tip
+      seg.parent = neck; seg.material = i >= tuskPieces - 2 ? tuskTipMat : tuskMat; allMeshes.push(seg);
       start.copyFrom(end);
     }
   }
