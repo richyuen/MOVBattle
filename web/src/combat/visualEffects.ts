@@ -314,11 +314,11 @@ export class VisualEffects {
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
-    // The fireball is mostly self-lit but keeps its blue low, so it stays yellow-orange in sun and in shade.
-    const flashMat = mats.createUnique("cloth", new Color3(1, 0.6, 0.08));
-    flashMat.emissiveColor = new Color3(0.75, 0.45, 0.04);
-    const flameMat = mats.createUnique("cloth", new Color3(1, 0.32, 0.04));
-    flameMat.emissiveColor = new Color3(0.65, 0.2, 0.02);
+    // The fireball is mostly self-lit: a pale cream body that only turns orange at its fringe, in sun and in shade.
+    const flashMat = mats.createUnique("cloth", new Color3(1, 0.92, 0.6));
+    flashMat.emissiveColor = new Color3(0.62, 0.55, 0.3);
+    const flameMat = mats.createUnique("cloth", new Color3(1, 0.65, 0.2));
+    flameMat.emissiveColor = new Color3(0.6, 0.36, 0.08);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -332,18 +332,20 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a yellow core with deeper orange lobes crowded round it, about as tall as the bodies it throws,
-    // which are already above it by the time it is full size.
-    const fireScale = Math.min(scale, 1.5);
+    // Fireball: one big cream mass about two bodies tall, with smaller orange lobes of mixed size half sunk into
+    // its flanks, so it is a single lumpy silhouette and not a ring of equal balls.
+    const fireScale = Math.min(scale, 2.5);
     const fire: { mesh: TransformNode; size: number }[] = [];
-    for (let i = 0; i < 5; i++) {
+    const lobeSizes = [2.2, 1.05, 0.6, 0.9, 0.5, 0.75];
+    const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
+    for (let i = 0; i < lobeSizes.length; i++) {
       const lobe = blob("burstFlash", 2, i === 0 ? flashMat : flameMat);
-      const angle = (i / 4) * Math.PI * 2 + 0.6;
-      const reach = (i === 0 ? 0 : 0.55) * fireScale;
-      lobe.position.set(Math.cos(angle) * reach, (i === 0 ? 0.25 : (i % 2) * 0.45 - 0.1) * fireScale, Math.sin(angle) * reach);
+      const angle = i * 2.4 + 0.6;
+      const reach = (i === 0 ? 0 : 1.1 - lobeSizes[i] * 0.3) * fireScale;
+      lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
       lobe.rotation.set(i * 1.3, i * 2.1, 0);
       glow?.addExcludedMesh(lobe as Mesh);
-      fire.push({ mesh: lobe, size: (i === 0 ? 1.7 : 0.95 + (i % 3) * 0.15) * fireScale });
+      fire.push({ mesh: lobe, size: lobeSizes[i] * fireScale });
     }
 
     // The shot itself: a dark ball that hops out of the puff and comes to rest.
