@@ -262,8 +262,8 @@ export class ProceduralAnimator {
         [b.rightKnee, rightKnee, 0, 0],
       ];
     }
-    // Sit: thighs angled forward of the trunk with the legs held out straight, arms trailing back along the sides
-    const hip = 0.5 + h(25) * 0.4;
+    // Sit: thighs folded square to the trunk with the legs held out straight, arms trailing back along the sides
+    const hip = 1.2 + h(25) * 0.3;
     return [
       [b.torso, fold(0.2 + h(26) * 0.3 + pitch), twist, roll],
       [b.neck, (h(27) - 0.5) * 0.6, 0, 0],
