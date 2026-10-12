@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData,
+  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
@@ -22,6 +22,11 @@ const FAR_SNOW_MIX = 0.4;
 const FAR_SNOW_GLOW = 0.05; // matte: snow tips shade with the sun like the rock under them
 const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
 const FAR_ROCK_MIX = 0.5;   // far ridge sits half-way into the sky haze
+
+/** The sun's shadow generator, when the scene has one: trees register with it so they throw ground shadows like units do */
+function sunShadows(scene: Scene): ShadowGenerator | null {
+  return (scene.getLightByName("dir")?.getShadowGenerator() as ShadowGenerator | null | undefined) ?? null;
+}
 
 /** Distance haze by color: far props are mixed toward a lightened sky, so they sit paler than near ones */
 function hazed(color: Color3, fogColor: Color3, mix: number): Color3 {
@@ -385,6 +390,8 @@ export class TribalSandboxMapBuilder {
     trunkMesh.rotation.z = (this._seededValue(index, 67) - 0.5) * 0.3;
     trunkMesh.material = trunkMat;
     trunkMesh.receiveShadows = true;
+    // Canopy pieces are children of the trunk, so they cast with it
+    sunShadows(this._scene)?.addShadowCaster(trunkMesh);
 
     // Canopy pieces hang off the trunk (local y measured from the trunk top) so they lean with it.
     const addCanopy = (mesh: Mesh, x: number, y: number, z: number, mat: StandardMaterial): void => {
@@ -958,6 +965,7 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     if (blocking) {
       obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: radius * 0.8 });
     }
+    return mesh;
   };
   const addBoxObstacle = (
     x: number,
@@ -983,12 +991,14 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     }
   };
   const addTree = (x: number, z: number, scale = 1, blocking = true) => {
-    addCylinderObstacle(x, z, 0.55 * scale, 5 * scale, trunkMat, blocking);
+    const trunk = addCylinderObstacle(x, z, 0.55 * scale, 5 * scale, trunkMat, blocking);
     const canopy = MeshBuilder.CreateSphere(`${theme.displayName}_tree_canopy`, { diameter: 4.5 * scale, segments: 6 }, scene);
     canopy.position = new Vector3(x, 5.7 * scale, z);
     canopy.scaling.y = 0.8;
     canopy.material = canopyMat;
     canopy.receiveShadows = true;
+    sunShadows(scene)?.addShadowCaster(trunk);
+    sunShadows(scene)?.addShadowCaster(canopy);
     if (blocking) {
       obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.4 * scale });
     }
