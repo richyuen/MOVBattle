@@ -263,11 +263,11 @@ export function buildArticulatedBody(
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom / LOWER_LIMB_STEP;
   const lowerLegBottom = lowerLegTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
-  // Feet are flat-sided slabs barely wider than the ankle, half as long again as they are wide and a third of
-  // the shin tall, so a leg ends in a foot pointing forward and not in a point.
+  // Feet are low flat-sided stubs a tenth wider than the ankle they sit under and a quarter of the shin tall,
+  // so a leg ends in a foot pointing forward and not in a point, and the shin never stands on a plinth.
   const footLength = 0.24 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
-  const footWidth = 0.16 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
-  const footHeight = 0.1 * (p.footHeight ?? 1.0);
+  const footWidth = lowerLegBottom * 1.1 * (p.footWidth ?? 1.0);
+  const footHeight = 0.07 * (p.footHeight ?? 1.0);
   const footBottomOffset = footHeight * 0.82;
 
   // ─── Hip (root pivot for body) ───
