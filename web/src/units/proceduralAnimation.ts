@@ -1230,5 +1230,10 @@ export class ProceduralAnimator {
     b.rightHip.rotation.x += Math.sin(t * 8.3 + 4.0) * 0.45 * amount;
     b.leftKnee.rotation.x += 0.5 * Math.sin(t * 9.7 + 2.6) * amount;
     b.rightKnee.rotation.x += 0.5 * Math.sin(t * 12.1 + 5.2) * amount;
+    // The waist breaks too, slowly and either way: each body has its own lean, forward or back, and rocks about it,
+    // so a flung line is some jack-knifed, some arched and some straight, never a row of the same flat plank
+    const fold = (Math.sin(this._wobblePhase * 3.7) * 0.5 + Math.sin(t * 3.1) * 0.45) * amount;
+    b.torso.rotation.x += fold;
+    b.neck.rotation.x -= fold * 0.4;
   }
 }
