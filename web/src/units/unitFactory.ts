@@ -53,6 +53,10 @@ const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only a quarter of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.25;
+// ...but trousers and boots keep half of theirs, so red legs still step down from the tunic, and warm cloth and
+// plate are pushed more saturated instead of washing out to salmon.
+const WARM_LEG_SHADE_KEEP = 0.5;
+const WARM_SATURATION = 1.18;
 // A surcoat is the team colour a shade lighter (a third of the way to cream), the full width of the chest it
 // covers and long enough to hang a third of the torso's height below it as a short skirt, cinched by a dark belt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
@@ -168,13 +172,15 @@ export class UnitFactory {
       const hsv = body.bodyMaterial.baseColor.toHSV();
       const cool = hsv.r > 150 && hsv.r < 300;
       const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
+      const legShade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_LEG_SHADE_KEEP;
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
-      const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(shade(TROUSER_SHADE)));
+      const saturation = cool ? hsv.g * (isArmored ? 1 : CLOTH_SATURATION) : Math.min(1, hsv.g * WARM_SATURATION);
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
+      const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(legShade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
       }
-      const bootMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(shade(TROUSER_SHADE) * shade(BOOT_SHADE)));
+      const bootMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(legShade(TROUSER_SHADE) * legShade(BOOT_SHADE)));
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
