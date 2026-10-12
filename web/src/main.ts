@@ -131,7 +131,7 @@ dir.shadowMaxZ = 220;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
-scene.fogColor = new Color3(0.43, 0.78, 0.68);
+scene.fogColor = new Color3(0.62, 0.86, 0.76);
 scene.fogStart = 70;
 scene.fogEnd = 170;
 // The haze starts behind the fight, not at a fixed distance from the eye: pulled back to the placement view,
@@ -292,7 +292,10 @@ const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 2000, segments: 
   for (let i = 0; i < positions.length; i += 3) {
     // Fully deep by about 44 degrees up, so the top of the frame from the low battle camera is still mid-grade teal
     const t = Math.min(1, Math.max(0, positions[i + 1] / 700));
-    colors.push(0.43 - 0.29 * t, 0.78 - 0.16 * t, 0.68 - 0.10 * t, 1);
+    // Horizon haze: below about 25 degrees up the teal pales toward mint cream, so the sky lightens behind the treeline
+    const haze = 0.6 * Math.max(0, 1 - Math.max(0, positions[i + 1]) / 420);
+    const mint = [0.74, 0.92, 0.82];
+    colors.push(...[0.43 - 0.29 * t, 0.78 - 0.16 * t, 0.68 - 0.10 * t].map((c, k) => c + (mint[k] - c) * haze), 1);
   }
   skyDome.setVerticesData(VertexBuffer.ColorKind, colors);
   const skyMat = new StandardMaterial("skyDome", scene);
