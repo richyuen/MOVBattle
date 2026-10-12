@@ -115,3 +115,4 @@ iter 113 | fireball-flame-lit-clips, mammoth-no-launch, orange-crown-shade-brick
 iter 114 | mammoth-no-launch, shove-attack-fold, shade-warm-rust, orange-crown-shade-red, red-crown-shade-blue, mammoth-hide-green, fireball-lobes-mustard, mammoth-mop-hat | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 115 | re-audit; ground-salmon-not-ochre, trunks-navy-not-cream, fireball-discs-flame, charge-lean-shallow, crown-lit-pink, tusk-grey-not-ivory, crown-no-orange, cannon-carriage-lavender | 8/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 116 | fireball-discs-separate, tusk-white-not-ivory, charge-lean-half, trunk-top-haze, carriage-bed-taupe, trunks-grey-not-cream, mammoth-mop-hat, ground-ochre-overshoot | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 117 | fireball-lobes-cream, presser-lean-capped, lean-waist-fold, field-dark, carriage-top-tan | 2/5 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
