@@ -323,8 +323,8 @@ export class VisualEffects {
     const flameMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
     flameMat.emissiveColor = new Color3(0.6, 0.2, 0);
     const glow = this._scene.getGlowLayerByName("glow");
-    const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
-    smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
+    const smokeMat = mats.createUnique("cloth", new Color3(0.68, 0.67, 0.65));
+    smokeMat.emissiveColor = new Color3(0.06, 0.06, 0.06);
     const dustMat = mats.createUnique("stone", new Color3(0.74, 0.64, 0.45));
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const floorY = -root.position.y + 0.08;
@@ -351,7 +351,8 @@ export class VisualEffects {
       fire.push({ mesh: lobe, size: lobeSizes[i] * fireScale });
     }
     // Tongues: fat blunt-tipped lobes rooted in the heart, one nearly straight up and the rest fanned out at
-    // mixed lengths and leans, none lying flat. Fixed layout, so every blast has the same flame shape.
+    // mixed lengths and leans, none lying flat. The upright ones are yellow inner flame and the outward-leaning
+    // ones the orange fringe. Fixed layout, so every blast has the same flame shape.
     const tongueLengths = [1.5, 1.15, 1.35, 1.0, 1.3, 0.95, 1.15];
     const tongueWidths = [0.95, 0.8, 0.85, 0.7, 0.8, 0.65, 0.75];
     const tongueLeans = [0.1, 0.7, 0.9, 0.5, 0.9, 0.8, 0.85];
@@ -360,7 +361,7 @@ export class VisualEffects {
       tongue.position.y = 0.5;
       tongue.bakeCurrentTransformIntoVertices();
       tongue.convertToFlatShadedMesh();
-      tongue.material = i % 2 === 0 ? flashMat : flameMat;
+      tongue.material = tongueLeans[i] >= 0.8 ? flameMat : flashMat;
       tongue.parent = root;
       tongue.position.y = 0.3 * fireScale;
       tongue.rotation.set(0, i * 2.4 + 0.3, tongueLeans[i]);
@@ -376,7 +377,7 @@ export class VisualEffects {
     const ballAngle = Math.random() * Math.PI * 2;
     const ballVelocity = new Vector3(Math.cos(ballAngle) * 1.6 * scale, 3.4, Math.sin(ballAngle) * 1.6 * scale);
 
-    // Smoke: a small clump of faceted off-white lobes that swells and drifts up. A shell's puff is capped at a
+    // Smoke: a small clump of faceted pale grey lobes, duller than the heart, that swells and drifts up. A shell's puff is capped at a
     // musket ball's and sits at chest height, so it stays below the heads of the bodies it throws.
     const smokeScale = Math.min(scale, 1);
     const smokeY = 0.6 * smokeScale - 0.6 * scale;
