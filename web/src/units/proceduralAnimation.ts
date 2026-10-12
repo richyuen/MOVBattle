@@ -506,17 +506,15 @@ export class ProceduralAnimator {
     // Staggered stance: the leg opposite the leading arm is planted ahead with its knee bent (twice the hip
     // angle, which keeps that foot on the ground); the other trails slightly behind, nearly straight.
     const leftLeads = p.side < 0;
-    // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs
-    const sag = p.lean * 0.4;
-    const lead = -p.stride - sag;
-    const trail = p.stride * 0.45 - sag;
+    const lead = -p.stride;
+    const trail = p.stride * 0.45;
     b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
     b.rightHip.rotation.x = (leftLeads ? trail : lead) + Math.sin(t * 0.9 + Math.PI) * wobble;
     // Feet planted wider than the hips, so the stance reads as a braced A from the front rather than a post
     b.leftHip.rotation.z = -p.splay;
     b.rightHip.rotation.z = p.splay;
-    b.leftKnee.rotation.x = leftLeads ? (p.stride + sag) * 2 : 0.1 + sag * 2;
-    b.rightKnee.rotation.x = leftLeads ? 0.1 + sag * 2 : (p.stride + sag) * 2;
+    b.leftKnee.rotation.x = leftLeads ? p.stride * 2 : 0.1;
+    b.rightKnee.rotation.x = leftLeads ? 0.1 : p.stride * 2;
 
     // (no hip bounce — keeps units grounded)
   }
