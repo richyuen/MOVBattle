@@ -307,12 +307,22 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
       if (body.allMeshes[i].name === name) body.allMeshes.splice(i, 1)[0].dispose();
     }
   }
-  const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 1.0, diameterTop: 0.3, diameterBottom: 0.38, tessellation: 8 }, scene);
-  barrel.position.set(0, 0.66, 0.4);
+  // Short and stubby, 0.7 long with the muzzle where it was, and hooped by two raised bands
+  const barrelMat = makeMat(scene, new Color3(0.22, 0.22, 0.26));
+  const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 0.7, diameterTop: 0.3, diameterBottom: 0.38, tessellation: 8 }, scene);
+  barrel.position.set(0, 0.69, 0.55);
   barrel.rotation.x = Math.PI / 2 - 0.18;
   barrel.parent = root;
-  barrel.material = makeMat(scene, new Color3(0.22, 0.22, 0.26));
+  barrel.material = barrelMat;
   body.allMeshes.push(barrel);
+  for (const [along, d] of [[-0.2, 0.43], [0.16, 0.39]]) {
+    const band = MeshBuilder.CreateCylinder("bombBand", { height: 0.08, diameter: d, tessellation: 8 }, scene);
+    band.position.set(0, 0.69 + Math.sin(0.18) * along, 0.55 + Math.cos(0.18) * along);
+    band.rotation.x = Math.PI / 2 - 0.18;
+    band.parent = root;
+    band.material = barrelMat;
+    body.allMeshes.push(band);
+  }
   const bomb = MeshBuilder.CreateSphere("bombRound", { diameter: 0.22, segments: 8 }, scene);
   bomb.position.set(0, 0.72, 0.75);
   bomb.parent = root;
@@ -640,6 +650,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.45, 0.3, 0.15));
   const metal = makeMat(scene, new Color3(0.3, 0.3, 0.35));
+  const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09));
 
   // Carriage (longer along Z)
   const carriage = MeshBuilder.CreateBox("carriage", { width: 0.5, height: 0.12, depth: 0.9 }, scene);
@@ -647,23 +658,23 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // Axle under the bed: the body mesh that takes the team tint, so the iron barrel and the wooden carriage keep their own colours
   const axle = MeshBuilder.CreateCylinder("axle", { height: 0.56, diameter: 0.06, tessellation: 6 }, scene);
-  axle.position.y = 0.28;
+  axle.position.y = 0.29;
   axle.rotation.z = Math.PI / 2;
   axle.parent = root; axle.material = teamPrimary; allMeshes.push(axle);
 
-  // Wheels (on sides, X axis)
+  // Wheels (on sides, X axis): dark, and 0.58 across, so the rims stand as tall as the gun they carry
   for (const xOff of [-0.3, 0.3]) {
-    const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.55, tessellation: 14 }, scene);
-    wheel.position.set(xOff, 0.28, 0);
+    const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.58, tessellation: 14 }, scene);
+    wheel.position.set(xOff, 0.29, 0);
     wheel.rotation.z = Math.PI / 2;
-    wheel.parent = root; wheel.material = wood; allMeshes.push(wheel);
+    wheel.parent = root; wheel.material = wheelWood; allMeshes.push(wheel);
 
     // Spokes
     for (let i = 0; i < 6; i++) {
-      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.02, height: 0.24, depth: 0.02 }, scene);
-      spoke.position.set(xOff, 0.28, 0);
+      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.02, height: 0.26, depth: 0.02 }, scene);
+      spoke.position.set(xOff, 0.29, 0);
       spoke.rotation.set(0, 0, i * Math.PI / 6);
-      spoke.parent = root; spoke.material = wood; allMeshes.push(spoke);
+      spoke.parent = root; spoke.material = wheelWood; allMeshes.push(spoke);
     }
   }
 
@@ -673,23 +684,24 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   trail.parent = root; trail.material = wood; allMeshes.push(trail);
 
   // Barrel (along +Z)
-  // Tapers from a fat breech to a slim muzzle, faceted, with two raised bands and a knob on the back end
-  const barrel = MeshBuilder.CreateCylinder("barrel", { height: 1.1, diameterTop: 0.17, diameterBottom: 0.28, tessellation: 8 }, scene);
-  barrel.position.set(0, 0.52, 0.2);
+  // A short stout tube, 0.8 long with the muzzle where it was, tapering a little from breech to muzzle, faceted, with
+  // two raised bands and a knob on the back end
+  const barrel = MeshBuilder.CreateCylinder("barrel", { height: 0.8, diameterTop: 0.22, diameterBottom: 0.28, tessellation: 8 }, scene);
+  barrel.position.set(0, 0.52, 0.35);
   barrel.rotation.x = Math.PI / 2; // along Z
   barrel.parent = root; barrel.material = metal; allMeshes.push(barrel);
-  for (const [z, d] of [[-0.24, 0.33], [0.2, 0.27]]) {
+  for (const [z, d] of [[0.08, 0.33], [0.45, 0.29]]) {
     const band = MeshBuilder.CreateCylinder("barrelBand", { height: 0.07, diameter: d, tessellation: 8 }, scene);
     band.position.set(0, 0.52, z);
     band.rotation.x = Math.PI / 2;
     band.parent = root; band.material = metal; allMeshes.push(band);
   }
   const knob = MeshBuilder.CreateSphere("breechKnob", { diameter: 0.14, segments: 3 }, scene);
-  knob.position.set(0, 0.52, -0.4);
+  knob.position.set(0, 0.52, -0.1);
   knob.parent = root; knob.material = metal; allMeshes.push(knob);
 
   // Muzzle flare at front (+Z end)
-  const muzzle = MeshBuilder.CreateCylinder("muzzle", { height: 0.08, diameterTop: 0.26, diameterBottom: 0.17, tessellation: 8 }, scene);
+  const muzzle = MeshBuilder.CreateCylinder("muzzle", { height: 0.08, diameterTop: 0.3, diameterBottom: 0.22, tessellation: 8 }, scene);
   muzzle.position.set(0, 0.52, 0.75);
   muzzle.rotation.x = Math.PI / 2;
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
