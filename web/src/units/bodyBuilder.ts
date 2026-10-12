@@ -142,7 +142,7 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
 
 /** TABS silhouette: small head on long limbs a good quarter as thick as the torso is wide, so the torso is the wide block. Applied on top of every unit's own proportions. */
 const HEAD_SHRINK = 0.88;
-const LIMB_THIN = 1.02;
+const LIMB_THIN = 1.12;
 /** Sleeves and thighs are a little fuller than the forearms and shins they end in: more made them square puffed blocks. */
 const SLEEVE_BULK = 1.15;
 // Forearms and shins step in from the sleeve and thigh by a quarter of the bulk: more left them as sticks.
