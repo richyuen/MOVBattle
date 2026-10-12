@@ -323,12 +323,13 @@ export class TribalSandboxMapBuilder {
         glow?.addExcludedMesh(tier); // no glow rim on a far ridge, same as the clouds
       }
     }
-    // Rock root below ground level so off-island mountains read as their own floating rocks
+    // Rock root below ground level so off-island mountains read as their own floating rocks. Its top sits well under
+    // the lawn line: level with it, the low battle camera saw the flat top edge-on as a black strip along the horizon
     const root = MeshBuilder.CreateCylinder("mountainRoot", {
       diameterTop: 1, diameterBottom: 0.35, height: 1, tessellation: 8,
     }, this._scene);
     root.scaling.set((alongX ? long * 1.4 : short), 16, (alongX ? short : long * 1.4));
-    root.position.set(pos.x, -8, pos.z);
+    root.position.set(pos.x, -14, pos.z);
     root.material = mat;
     root.convertToFlatShadedMesh();
     glow?.addExcludedMesh(root);
