@@ -308,9 +308,9 @@
 
     #unitPanel {
       position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-      width: min(100%, 1100px); box-sizing: border-box; overflow: hidden;
-      background: rgba(0,0,0,0.75);
-      border: 1px solid rgba(255,255,255,0.35); border-bottom: none;
+      width: min(100%, 760px); box-sizing: border-box; overflow: hidden;
+      background: none; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.6); border-bottom: none;
       border-radius: 50% 50% 0 0 / 26px 26px 0 0;
       display: flex; flex-direction: column;
     }
@@ -319,23 +319,24 @@
       font-size: 12px; font-weight: 300; letter-spacing: 3px; text-transform: uppercase;
     }
     #factionTabs {
-      display: flex; gap: 0; border-bottom: 2px solid rgba(255,255,255,0.1);
+      display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.25);
       justify-content: safe center;
       overflow-x: auto; scrollbar-width: thin;
       -webkit-overflow-scrolling: touch;
     }
     .faction-tab {
-      padding: 5px 14px; border: none; border-bottom: 3px solid transparent;
-      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6);
+      padding: 5px 14px; border: none; border-bottom: 2px solid transparent;
+      background: none; color: rgba(255,255,255,0.7);
       cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase;
       letter-spacing: 0.5px; white-space: nowrap; transition: all 0.15s;
     }
+    .faction-tab svg, .unit-btn svg { filter: drop-shadow(0 1px 1px rgba(0,0,0,0.55)); }
     .faction-tab svg {
       display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6;
       stroke-linecap: round; stroke-linejoin: round;
     }
-    .faction-tab:hover { background: rgba(255,255,255,0.1); color: #fff; }
-    .faction-tab.active { color: #fff; background: rgba(255,255,255,0.12); }
+    .faction-tab:hover { color: #fff; }
+    .faction-tab.active { color: #fff; border-bottom-color: #fff; }
     #unitGrid {
       padding: 6px 8px;
       display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-height: 100px; overflow-y: auto;
@@ -356,9 +357,9 @@
     .unit-btn {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
       width: 66px; padding: 5px 2px 4px;
-      border: 1px solid transparent; border-radius: 4px;
-      background: rgba(10,12,18,0.85); color: #fff; cursor: pointer; font-size: 9px;
-      transition: background 0.15s;
+      border: none; border-bottom: 2px solid transparent;
+      background: none; color: #fff; cursor: pointer; font-size: 9px; text-shadow: inherit;
+      transition: opacity 0.15s; opacity: 0.85;
     }
     .unit-btn svg {
       width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.6;
@@ -366,8 +367,8 @@
     }
     .unit-btn svg path.solid { fill: #fff; fill-rule: evenodd; }
     .unit-btn span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .unit-btn:hover { background: rgba(255,255,255,0.15); }
-    .unit-btn.selected { border-color: #ffd54f; background: rgba(255,215,0,0.2); }
+    .unit-btn:hover { opacity: 1; }
+    .unit-btn.selected { opacity: 1; border-bottom-color: #fff; }
     .unit-empty { color: rgba(255,255,255,0.7); font-size: 12px; padding: 8px 4px; }
 
     /* Result: TABS-style thin full-width dark bands top and bottom, no dim over the scene. */
