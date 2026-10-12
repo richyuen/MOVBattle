@@ -125,6 +125,10 @@ export class SimulationSystem {
   /** Short-reach melee (reach under this) keeps closing after it can swing, until bodies touch. */
   readonly meleePressMaxReach = 2.3;
   readonly meleePressGap = 0.1;
+  /** Standing foot soldiers pack tighter than their full radii: enemies press chest to chest, allies shoulder to shoulder. */
+  readonly enemyPackScale = 0.72;
+  readonly allyPackScale = 0.86;
+  readonly packMaxRadius = 0.7;
   readonly cleanupSweepInterval = 0.75;
   readonly summonLivingCap = 55;
   readonly collisionResolutionPadding = 0.03;
@@ -245,6 +249,13 @@ export class SimulationSystem {
     return count;
   }
 
+  /** How far two bodies may overlap: only upright foot soldiers squeeze together; fallen bodies and big units keep their full radius. */
+  private _packScale(a: RuntimeUnit, b: RuntimeUnit): number {
+    if (a.isToppled || a.isDowned || b.isToppled || b.isDowned) return 1;
+    if (a.definition.collisionRadius > this.packMaxRadius || b.definition.collisionRadius > this.packMaxRadius) return 1;
+    return a.team === b.team ? this.allyPackScale : this.enemyPackScale;
+  }
+
   private _resolveLivingCollisions(): void {
     const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent);
     if (roots.length < 2) return;
@@ -258,7 +269,7 @@ export class SimulationSystem {
 
           const delta = b.position.subtract(a.position);
           delta.y = 0;
-          const minDistance = a.collisionBodyRadius + b.collisionBodyRadius;
+          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * this._packScale(a, b);
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
@@ -485,7 +496,7 @@ export class SimulationSystem {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
       // shoulder contact so the two front lines meet instead of fencing across a gap.
       // Bracers hold their ground and let the rush come onto the shields.
-      const contactDistance = unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap;
+      const contactDistance = (unit.collisionBodyRadius + enemy.collisionBodyRadius) * this._packScale(unit, enemy) + this.meleePressGap;
       const presses = aiProfile.id !== "ai.brace" && unit.definition.engageRange < this.meleePressMaxReach;
       if (canMove && presses && distance > contactDistance + 0.05) {
         const back = unit.position.subtract(enemy.position);
