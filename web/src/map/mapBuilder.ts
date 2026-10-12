@@ -753,11 +753,11 @@ export class TribalSandboxMapBuilder {
   private _createSetDressing(): void {
     const rock = this._scene.getMaterialByName("rock") as StandardMaterial;
     const trunk = this._scene.getMaterialByName("trunk") as StandardMaterial;
-    // Wall stone is the pale boulder rock with a quarter of its own colour as glow, so a face turned from the sun
-    // is a mid tan and not black.
+    // Wall stone is the boulder rock a shade greyer with a trace of its own colour as glow, so a face turned from the sun
+    // is not black and a lit one is grey stone, not a white glow.
     const wallStone = new StandardMaterial("wallStone", this._scene);
-    wallStone.diffuseColor = rock.diffuseColor.clone();
-    wallStone.emissiveColor = rock.diffuseColor.scale(0.25);
+    wallStone.diffuseColor = rock.diffuseColor.scale(0.7);
+    wallStone.emissiveColor = rock.diffuseColor.scale(0.08);
     wallStone.specularColor = rock.specularColor.clone();
     const straw = new StandardMaterial("straw", this._scene);
     straw.diffuseColor = new Color3(0.86, 0.72, 0.36);
