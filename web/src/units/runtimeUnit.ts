@@ -1332,6 +1332,15 @@ export class RuntimeUnit {
         body.leftHip.rotation.x += 0.08;
         body.rightHip.rotation.x += 0.08;
         break;
+      case "crew":
+        // Gun crew work bent to the carriage with both hands on it, not standing to attention behind it
+        body.torso.rotation.x += 0.3;
+        body.neck.rotation.x -= 0.2;
+        body.leftShoulder.rotation.x -= 0.9;
+        body.rightShoulder.rotation.x -= 0.9;
+        body.leftElbow.rotation.x -= 0.3;
+        body.rightElbow.rotation.x -= 0.3;
+        break;
       case "support":
         body.leftShoulder.rotation.z -= 0.18;
         body.rightShoulder.rotation.z += 0.18;
