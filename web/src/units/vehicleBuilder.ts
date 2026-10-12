@@ -1542,7 +1542,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
 
     // Belly fringe: a row of fur points hanging below the skirt, longest under the chest
     for (let i = 0; i < 5; i++) {
-      const drop = 0.4 + i * 0.05;
+      const drop = 0.2 + i * 0.03;
       const lock = MeshBuilder.CreateCylinder("furFringe", {
         height: drop, diameterTop: 0.38, diameterBottom: 0, tessellation: 4,
       }, scene);
