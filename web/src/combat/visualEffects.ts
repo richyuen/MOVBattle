@@ -339,8 +339,7 @@ export class VisualEffects {
     root.position = position.clone();
     root.position.y += 0.6 * scale;
 
-    // Lit matte materials, bar the fringe: fully emissive ones trip the bloom threshold and wash out to white. The fringe is unlit and shows its
-    // own orange alone, since sunlight on top of its self-light clipped it to cream.
+    // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
     // The fireball is mostly self-lit and graded from the inside out: a small yellow heart, amber inner
     // flame and a deep orange fringe. The inner flame sits between heart and fringe in hue, so it is a step of the grade and not a lemon patch.
@@ -348,8 +347,8 @@ export class VisualEffects {
     coreMat.emissiveColor = new Color3(0.95, 0.88, 0.5);
     const flashMat = mats.createUnique("cloth", new Color3(1, 0.7, 0.2));
     flashMat.emissiveColor = new Color3(0.9, 0.75, 0.35);
-    const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(0.93, 0.55, 0.3);
+    const flameMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
+    flameMat.emissiveColor = new Color3(0.85, 0.6, 0.25);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
