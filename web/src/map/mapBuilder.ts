@@ -673,7 +673,7 @@ export class TribalSandboxMapBuilder {
     const cloudMat = new StandardMaterial("cloud", this._scene);
     cloudMat.diffuseColor = new Color3(1, 1, 1);
     // Enough self-light that the undersides stay a pale grey-white; the sun does the rest
-    cloudMat.emissiveColor = new Color3(0.6, 0.63, 0.66);
+    cloudMat.emissiveColor = new Color3(0.66, 0.74, 0.70);
     cloudMat.specularColor = new Color3(0, 0, 0);
     const glow = this._scene.getGlowLayerByName("glow");
 
@@ -686,7 +686,7 @@ export class TribalSandboxMapBuilder {
       const angle = (i / 12) * Math.PI * 2 + this._seededValue(i, 41) * 0.35;
       const radius = 70 + this._seededValue(i, 42) * 30;
       // One ring cloud in three is a big bank 1.2 times the size of its neighbours, so the sky is not a row of equals
-      const size = low ? low[3] : (9 + this._seededValue(i, 43) * 8) * (i % 3 === 0 ? 1.2 : 1);
+      const size = low ? low[3] : (8 + this._seededValue(i, 43) * 6) * (i % 3 === 0 ? 1.2 : 1);
       const puffs: Mesh[] = [];
       // A fifth puff stands on the two middle ones, nearly as tall as it is wide: a rounded head rising off the bank
       const crown = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
