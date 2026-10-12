@@ -208,8 +208,8 @@ export class ProceduralAnimator {
     const pitch = (h(48) - 0.5) * 2.4; // and up to 1.2 rad nose-up or nose-down, so they do not all fly flat like planks
     const variant = Math.floor(h(21) * 3);
     // The pitch may not cancel a variant's own bend: a trunk left within 0.4 rad of straight on the hips is folded
-    // 0.4 to 0.9 rad the way it already leaned, so every body in flight is bent at the waist and none is a plank.
-    const fold = (x: number): number => (Math.abs(x) < 0.4 ? (x < 0 ? -1 : 1) * (0.4 + h(49) * 0.5) : x);
+    // 0.2 to 0.5 rad the way it already leaned, so every body in flight is bent at the waist and none is a plank.
+    const fold = (x: number): number => (Math.abs(x) < 0.4 ? (x < 0 ? -1 : 1) * (0.2 + h(49) * 0.3) : x);
     // One arm leads the other by about 0.6 rad and each knee bends by its own 0.4 to 1.2 rad, so the two sides of a
     // body in flight never mirror each other and no leg flies straight as a plank.
     const lead = h(40) < 0.5 ? 0 : 1;
