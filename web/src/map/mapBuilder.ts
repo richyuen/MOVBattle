@@ -685,8 +685,8 @@ export class TribalSandboxMapBuilder {
       const low = lowClouds[i - 12];
       const angle = (i / 12) * Math.PI * 2 + this._seededValue(i, 41) * 0.35;
       const radius = 70 + this._seededValue(i, 42) * 30;
-      // One ring cloud in three is a big bank 1.5 times the size of its neighbours, so the sky is not a row of equals
-      const size = low ? low[3] : (9 + this._seededValue(i, 43) * 8) * (i % 3 === 0 ? 1.5 : 1);
+      // One ring cloud in three is a big bank 1.2 times the size of its neighbours, so the sky is not a row of equals
+      const size = low ? low[3] : (9 + this._seededValue(i, 43) * 8) * (i % 3 === 0 ? 1.2 : 1);
       const puffs: Mesh[] = [];
       // A fifth puff stands on the two middle ones, nearly as tall as it is wide: a rounded head rising off the bank
       const crown = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
