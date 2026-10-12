@@ -245,7 +245,7 @@ export function buildArticulatedBody(
   const lowerArmH = 0.22 * p.armLength;
   const upperArmTop = 0.09 * LIMB_THIN * SLEEVE_BULK * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
-  const lowerArmTop = upperArmBottom * 0.92 / LOWER_LIMB_STEP;
+  const lowerArmTop = upperArmBottom / LOWER_LIMB_STEP;
   const lowerArmBottom = lowerArmTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
   const handDiameter = 0.13 * Math.max(0.8, p.headSize * 0.9) * (p.handSize ?? 1.0);
 
@@ -253,11 +253,12 @@ export function buildArticulatedBody(
   const lowerLegH = 0.25 * p.legLength;
   const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
-  const lowerLegTop = upperLegBottom * 0.96 / LOWER_LIMB_STEP;
+  const lowerLegTop = upperLegBottom / LOWER_LIMB_STEP;
   const lowerLegBottom = lowerLegTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
-  const footLength = 0.18 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
-  const footWidth = 0.11 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
-  const footHeight = 0.07 * (p.footHeight ?? 1.0);
+  // Feet are blunt boots wider than the ankle and a third of the shin tall, so a leg ends in a block and not a point.
+  const footLength = 0.2 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
+  const footWidth = 0.145 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
+  const footHeight = 0.1 * (p.footHeight ?? 1.0);
   const footBase = Math.max(footLength, footWidth, footHeight);
   const footBottomOffset = footHeight * 0.82;
 
