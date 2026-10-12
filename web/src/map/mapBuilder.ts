@@ -539,12 +539,14 @@ export class TribalSandboxMapBuilder {
     treeline.isPickable = false;
   }
 
-  /** Puffy low-poly clouds ringing the island; unlit and fog-free so they stay white */
+  /** Puffy low-poly clouds ringing the island; sunlit, fog-free and kept out of the glow layer so each facet reads hard-edged */
   private _createClouds(): void {
     const cloudMat = new StandardMaterial("cloud", this._scene);
     cloudMat.diffuseColor = new Color3(1, 1, 1);
-    cloudMat.emissiveColor = new Color3(0.82, 0.84, 0.82);
+    // Just enough self-light to lift the undersides to a cool grey; the sun does the rest
+    cloudMat.emissiveColor = new Color3(0.3, 0.33, 0.38);
     cloudMat.specularColor = new Color3(0, 0, 0);
+    const glow = this._scene.getGlowLayerByName("glow");
 
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2 + this._seededValue(i, 41) * 0.35;
@@ -567,6 +569,7 @@ export class TribalSandboxMapBuilder {
       cloud.material = cloudMat;
       cloud.applyFog = false;
       cloud.isPickable = false;
+      glow?.addExcludedMesh(cloud);
     }
   }
 
