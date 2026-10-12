@@ -685,12 +685,13 @@ export class TribalSandboxMapBuilder {
       const low = lowClouds[i - 12];
       const angle = (i / 12) * Math.PI * 2 + this._seededValue(i, 41) * 0.35;
       const radius = 70 + this._seededValue(i, 42) * 30;
-      const size = low ? low[3] : 9 + this._seededValue(i, 43) * 8;
+      // One ring cloud in three is a big bank 2.2 times the size of its neighbours, so the sky is not a row of equals
+      const size = low ? low[3] : (9 + this._seededValue(i, 43) * 8) * (i % 3 === 0 ? 2.2 : 1);
       const puffs: Mesh[] = [];
-      // A fifth puff rides low on the two middle ones: a shallow swell on a long flat bank, not a stacked heap
+      // A fifth puff stands on the two middle ones, nearly as tall as it is wide: a rounded head rising off the bank
       const crown = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
       const crownD = size * (0.6 + this._seededValue(i, 47) * 0.2);
-      crown.scaling.set(crownD, crownD * 0.55, crownD * 0.7);
+      crown.scaling.set(crownD, crownD * 0.9, crownD * 0.7);
       // Well off centre to one side or the other, so the top outline is unequal bumps and not a centred dome
       crown.position.set((this._seededValue(i, 48) < 0.5 ? -1 : 1) * size * 0.3, size * 0.3, 0);
       puffs.push(crown);
