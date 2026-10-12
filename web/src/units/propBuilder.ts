@@ -1303,8 +1303,9 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
         wrap.parent = helm;
         wrap.material = slitMat;
       }
-      // Narrow enough to sit on the head as a bucket and not overhang the shoulders as a drum
-      helm.scaling.set(0.88, 1, 0.88);
+      // Head-tight: after the hat and prop oversize the rim is about 1.15 heads across and the crown just clears the
+      // skull, so it sits on the head as a bucket and is not a block as wide as the waist
+      helm.scaling.set(0.78, 0.92, 0.78);
       return helm;
     }
     case "hood_liripipe": {
