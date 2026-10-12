@@ -179,27 +179,19 @@ export class TribalSandboxMapBuilder {
     const darkRock = this._scene.getMaterialByName("farRockShade") as StandardMaterial;
     const dryGrass = this._scene.getMaterialByName("dryGrass") as StandardMaterial;
 
-    // ── Back mountains (positive Z, floating beyond the island edge) ──
-    this._createMountain(new Vector3(-50, 0, 67), 35, 22, 20, rock);
-    this._createMountain(new Vector3(-20, 0, 72), 28, 18, 18, darkRock);
-    this._createMountain(new Vector3(15, 0, 70), 32, 25, 22, rock);
-    this._createMountain(new Vector3(50, 0, 67), 30, 20, 18, darkRock);
+    // Far ridges stand well off the two long edges only, so the placement view shows open sky past
+    // the treeline and off both ends instead of a wall of rock boxing the field in.
+    // ── Back mountains (positive Z) ──
+    this._createMountain(new Vector3(-50, 0, 96), 35, 22, 20, rock);
+    this._createMountain(new Vector3(-20, 0, 101), 28, 18, 18, darkRock);
+    this._createMountain(new Vector3(15, 0, 99), 32, 25, 22, rock);
+    this._createMountain(new Vector3(50, 0, 96), 30, 20, 18, darkRock);
 
-    // ── Front mountains (negative Z, floating beyond the island edge) ──
-    this._createMountain(new Vector3(-55, 0, -67), 30, 18, 20, rock);
-    this._createMountain(new Vector3(-20, 0, -72), 25, 16, 16, darkRock);
-    this._createMountain(new Vector3(20, 0, -70), 28, 20, 18, rock);
-    this._createMountain(new Vector3(55, 0, -67), 32, 22, 20, darkRock);
-
-    // ── Side mountains (left edge) ──
-    this._createMountain(new Vector3(-75, 0, -20), 25, 20, 22, rock);
-    this._createMountain(new Vector3(-78, 0, 15), 22, 18, 20, darkRock);
-    this._createMountain(new Vector3(-72, 0, 40), 20, 15, 18, rock);
-
-    // ── Side mountains (right edge) ──
-    this._createMountain(new Vector3(75, 0, -20), 25, 20, 22, darkRock);
-    this._createMountain(new Vector3(78, 0, 15), 22, 18, 20, rock);
-    this._createMountain(new Vector3(72, 0, 40), 20, 15, 18, darkRock);
+    // ── Front mountains (negative Z) ──
+    this._createMountain(new Vector3(-55, 0, -96), 30, 18, 20, rock);
+    this._createMountain(new Vector3(-20, 0, -101), 25, 16, 16, darkRock);
+    this._createMountain(new Vector3(20, 0, -99), 28, 20, 18, rock);
+    this._createMountain(new Vector3(55, 0, -96), 32, 22, 20, darkRock);
 
     // ── Grassy hills (smaller, in play area for variety) ──
     this._createHill(new Vector3(-40, 0, 30), 12, 4, 10, dryGrass);
