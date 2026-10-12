@@ -216,7 +216,7 @@ export class CameraController {
       // foreground and the enemy it shoots at sits across the field as the background.
       const behind = Math.atan2(center.near.z - center.z, center.near.x - center.x);
       const toSide = wrap(to.alpha - behind);
-      to.alpha = behind + Math.sign(toSide) * Math.min(Math.abs(toSide), 0.6);
+      to.alpha = behind + Math.sign(toSide) * Math.min(Math.abs(toSide), 0.3);
       to.radius = Math.min(12, Math.max(6.5, (center.halfSpan ?? 0) * 1.5));
       to.target.x = center.x + (center.near.x - center.x) * 0.6;
       to.target.z = center.z + (center.near.z - center.z) * 0.6;
