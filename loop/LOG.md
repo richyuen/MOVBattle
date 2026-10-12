@@ -69,3 +69,4 @@ iter 67 | grass-unbroken-carpet-buries, legs-dark-points-no-boot, battle-cam-ins
 iter 68 | fight-band-grass-buries, boot-same-tint-as-shin, explosion-crystal-blocks | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 69 | fireball-balloon-cluster, gun-line-grass-tall-clumps, foot-small-blob | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 70 | boot-plinth-slabs, hill-saucer-undercut, blast-launch-too-high-and-stiff | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 71 | foot-box-wider-than-ankle, hill-bald-oval-rim, grass-tufts-oversized | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
