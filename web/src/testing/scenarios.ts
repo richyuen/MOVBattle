@@ -1182,9 +1182,9 @@ function makePairGalleryScenario(
     cameraOverride?: GalleryCameraOverride;
   } = {},
 ): ScenarioSpec {
-  // Eye level and close, from the front quarter, so the pair stands side by side and fills the frame
+  // Eye level and close, from the three-quarter side, so each stance shows its forward lean and bent knees
   const pairCamera: GalleryCameraOverride = {
-    alpha: -0.4,
+    alpha: -0.8,
     beta: Math.PI / 2.2,
     radius: 5.5,
     target: { x: -0.2, y: 1.1, z: 0 },
