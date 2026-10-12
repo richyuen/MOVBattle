@@ -632,10 +632,10 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   muzzle.rotation.x = Math.PI / 2;
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
 
-  // Operator behind cannon (-Z)
+  // Operator stands on the ground beside the breech, clear of the wheel
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
-    operator = addOperator(scene, root, allMeshes, 0.2, 0.57, -0.6, color);
+    operator = addOperator(scene, root, allMeshes, 0.56, 0, -0.42, color);
   }
 
   const vehicleSockets: VehicleSocketSet = {
@@ -650,7 +650,8 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
     barrel,
     allMeshes,
     operator?.headMesh,
-    makeBodyMetrics(operator?.headTopY ?? 1.34, 0.7, 0.4, 0.68),
+    // Height stays the gun's old reach (operator plus the 0.57 he used to stand on), so targeting is unchanged
+    makeBodyMetrics(operator ? operator.headTopY + 0.57 : 1.34, 0.7, 0.4, 0.68),
     vehicleSockets,
   );
 }
