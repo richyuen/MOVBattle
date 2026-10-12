@@ -117,12 +117,12 @@ export class TribalSandboxMapBuilder {
   private _createMaterials(): void {
     // Grass: autumn orange
     const grass = new StandardMaterial("grass", this._scene);
-    grass.diffuseColor = new Color3(0.93, 0.52, 0.3);
+    grass.diffuseColor = new Color3(0.98, 0.48, 0.27);
     grass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Warm orange-grass for edges
     const dryGrass = new StandardMaterial("dryGrass", this._scene);
-    dryGrass.diffuseColor = new Color3(0.87, 0.47, 0.29);
+    dryGrass.diffuseColor = new Color3(0.92, 0.43, 0.26);
     dryGrass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Boulder stone: pale sandy tan
