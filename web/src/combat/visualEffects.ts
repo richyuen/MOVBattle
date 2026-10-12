@@ -366,12 +366,12 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a modest yellow heart with smaller orange lobes sunk deep into its flanks, and short round
+    // Fireball: a small pale heart with orange lobes standing out of its flanks to make the rim, and short round
     // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
     // enough to show no facets, and a shell's can grow to about three men tall.
     const fireScale = Math.min(scale * 2.0, 3.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
-    const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
+    const lobeSizes = [1.0, 0.8, 0.5, 0.7, 0.45, 0.6];
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe, so the ball is orange and not cream
     const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
