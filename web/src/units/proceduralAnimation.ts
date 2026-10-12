@@ -124,25 +124,31 @@ export class ProceduralAnimator {
   private readonly _limpPose = this._buildLimpPose();
 
   private _buildLimpPose() {
-    // One arm is thrown up past the head, nearly straight; the other stays low with a folded elbow, so no
-    // downed body lies in a straight-armed T.
-    const leftOverhead = Math.random() < 0.5;
-    const overX = -(2.1 + Math.random() * 0.8);
-    const overZ = 0.1 + Math.random() * 0.5;
-    const overElbow = -(0.05 + Math.random() * 0.35);
-    const lowX = -0.3 + Math.random() * 0.6;
-    const lowZ = 0.3 + Math.random() * 0.7;
-    const lowElbow = -(0.5 + Math.random() * 0.9);
+    // Half the bodies throw one arm up past the head, the rest fling it out wide; the other arm stays near the
+    // side. Every arm lies in the plane of the torso and its elbow folds sideways within that plane, so a body
+    // on its back or front rests its arms and fists on the ground instead of holding a forearm up in the air.
+    const pick = Math.random();
+    const overhead = pick < 0.5;
+    const leftFlung = Math.floor(pick * 4) % 2 === 0;
+    const flungX = overhead ? -(2.95 + Math.random() * 0.4) : (Math.random() - 0.5) * 0.3;
+    const flungZ = overhead ? 0.1 + Math.random() * 0.6 : 0.9 + Math.random() * 0.6;
+    const flungElbowZ = overhead ? (Math.random() - 0.3) * 1.2 : 0.4 + Math.random() * 0.9;
+    const lowX = (Math.random() - 0.5) * 0.3;
+    const lowZ = 0.12 + Math.random() * 0.4;
+    const lowElbowZ = 0.3 + Math.random() * 0.9;
     return {
-      torsoX: 0.25 + Math.random() * 0.45,
+      torsoX: Math.random() * 0.2,
       torsoZ: (Math.random() - 0.5) * 0.7,
       neckX: (Math.random() - 0.5) * 1.1,
-      leftArmX: leftOverhead ? overX : lowX,
-      rightArmX: leftOverhead ? lowX : overX,
-      leftArmZ: -(leftOverhead ? overZ : lowZ),
-      rightArmZ: leftOverhead ? lowZ : overZ,
-      leftElbowX: leftOverhead ? overElbow : lowElbow,
-      rightElbowX: leftOverhead ? lowElbow : overElbow,
+      leftArmX: leftFlung ? flungX : lowX,
+      rightArmX: leftFlung ? lowX : flungX,
+      leftArmZ: -(leftFlung ? flungZ : lowZ),
+      rightArmZ: leftFlung ? lowZ : flungZ,
+      // Elbow angles are the resting angles themselves, not offsets: barely any forward fold.
+      leftElbowX: -0.12,
+      rightElbowX: -0.12,
+      leftElbowZ: -(leftFlung ? flungElbowZ : lowElbowZ),
+      rightElbowZ: leftFlung ? lowElbowZ : flungElbowZ,
       // Thighs stay near the body's line and the knees barely fold, so the legs lie flat instead of tenting up.
       leftHipX: -0.25 + Math.random() * 0.5,
       rightHipX: -0.25 + Math.random() * 0.5,
@@ -239,8 +245,11 @@ export class ProceduralAnimator {
       b.rightShoulder.rotation.x += p.rightArmX * k;
       b.leftShoulder.rotation.z += p.leftArmZ * k;
       b.rightShoulder.rotation.z += p.rightArmZ * k;
-      b.leftElbow.rotation.x += p.leftElbowX * k;
-      b.rightElbow.rotation.x += p.rightElbowX * k;
+      // Elbows blend to their resting fold rather than adding to the idle or walk bend already there.
+      b.leftElbow.rotation.x += (p.leftElbowX - b.leftElbow.rotation.x) * k;
+      b.rightElbow.rotation.x += (p.rightElbowX - b.rightElbow.rotation.x) * k;
+      b.leftElbow.rotation.z += p.leftElbowZ * k;
+      b.rightElbow.rotation.z += p.rightElbowZ * k;
       b.leftHip.rotation.x += p.leftHipX * k;
       b.rightHip.rotation.x += p.rightHipX * k;
       b.leftKnee.rotation.x += p.leftKneeX * k;
@@ -971,8 +980,8 @@ export class ProceduralAnimator {
       rest(b.neck, p.neckX);
       rest(b.leftShoulder, p.leftArmX, p.leftArmZ);
       rest(b.rightShoulder, p.rightArmX, p.rightArmZ);
-      rest(b.leftElbow, p.leftElbowX);
-      rest(b.rightElbow, p.rightElbowX);
+      rest(b.leftElbow, p.leftElbowX, p.leftElbowZ);
+      rest(b.rightElbow, p.rightElbowX, p.rightElbowZ);
       rest(b.leftHip, p.leftHipX);
       rest(b.rightHip, p.rightHipX);
       rest(b.leftKnee, p.leftKneeX);
