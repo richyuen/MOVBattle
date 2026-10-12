@@ -96,6 +96,13 @@ export class UnitFactory {
       );
       // Attach weapon, hat, shield, special props
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0, teamColor);
+      // Limbs are bare team-coloured skin (TABS); the torso keeps the cloth or armour colour. Whole-body
+      // presets (ghost, bone, void...) stay one material.
+      if (!shouldFavorTeamBodyColor(materialPreset)) {
+        for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+          limb.material = body.skinMaterial;
+        }
+      }
     }
 
     applyMaterialPreset(body, visual, bodyColor, skinColor);
