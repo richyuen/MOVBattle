@@ -47,6 +47,8 @@ export class ProceduralAnimator {
   private _wobblePhase: number; // random offset per unit
   attackStyle: AttackStyle = "humanoid";
   walkStyle: WalkStyle = "humanoid";
+  /** Set before death: the corpse comes to rest on a side, so it curls up instead of lying spread flat. */
+  corpseOnSide = false;
   defaultAttackMotion: AttackMotion = "strike";
   locomotionBias: LocomotionBias = "none";
   releaseTimingProfile: ReleaseTimingProfile = "default";
@@ -1148,6 +1150,19 @@ export class ProceduralAnimator {
       rest(b.rightHip, p.rightHipX, p.rightHipZ);
       rest(b.leftKnee, p.leftKneeX, p.leftKneeZ);
       rest(b.rightKnee, p.rightKneeX, p.rightKneeZ);
+      if (this.corpseOnSide) {
+        // A body on its side curls: thighs drawn forward with both knees folded about 0.9 rad and the legs
+        // together, and both arms dropped forward of the chest on bent elbows, so it reads as a curled sleeper
+        // from above and not as a plank on edge. Offsets come from the limp pose, so no random numbers are drawn.
+        rest(b.leftHip, -(0.5 + p.torsoX), -0.05);
+        rest(b.rightHip, -(0.75 - p.torsoX), 0.05);
+        rest(b.leftKnee, 0.9 + p.torsoX);
+        rest(b.rightKnee, 1.1 - p.torsoX);
+        rest(b.leftShoulder, -(0.9 + p.torsoX * 2), -0.1);
+        rest(b.rightShoulder, -(1.3 - p.torsoX * 2), 0.1);
+        rest(b.leftElbow, -0.7);
+        rest(b.rightElbow, -0.5);
+      }
       // A corpse still in the air sags toward its flight shape and only crumples once it lands.
       this._deathAirAngles = this._deathRestAngles.slice();
       for (const [joint, x, y, z] of (this._airPose ??= this._buildAirPose())) {
