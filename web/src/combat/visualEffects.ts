@@ -314,11 +314,14 @@ export class VisualEffects {
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
-    // The flash is mostly self-lit and two-toned: a near-white heart and yellow flame around it, no orange.
+    // The fireball is mostly self-lit and graded from the inside out: a small near-white heart, yellow inner
+    // flame and a deep orange fringe. Only the heart carries any blue, so the flames around it never pale to cream.
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.95, 0.76));
     coreMat.emissiveColor = new Color3(0.62, 0.56, 0.36);
     const flashMat = mats.createUnique("cloth", new Color3(1, 0.82, 0.03));
     flashMat.emissiveColor = new Color3(0.6, 0.46, 0);
+    const flameMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
+    flameMat.emissiveColor = new Color3(0.6, 0.2, 0);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -332,32 +335,32 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Flash: a modest near-white heart with two yellow lobes sunk well into it, and thin streaks shooting
-    // out of it, so the silhouette is one bright burst with spikes and not a pile of balls. A shell's stays
-    // about a man tall, well under the trees.
+    // Fireball: a modest near-white heart with smaller orange lobes half sunk into its flanks, and short round
+    // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
+    // enough to show no facets, and a shell's stays about a man tall, well under the trees.
     const fireScale = Math.min(scale, 1.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
-    const lobeSizes = [1.1, 0.7, 0.6];
-    const lobeHeights = [0.4, 0.25, 0.55];
+    const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
+    const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flameMat);
       const angle = i * 2.4 + 0.6;
-      const reach = (i === 0 ? 0 : 0.3) * fireScale;
+      const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
       lobe.rotation.set(i * 1.3, i * 2.1, 0);
       glow?.addExcludedMesh(lobe as Mesh);
       fire.push({ mesh: lobe, size: lobeSizes[i] * fireScale });
     }
-    // Streaks: thin spikes of flame shot out of the heart, one nearly straight up and the rest fanned out at
-    // mixed lengths and leans, some almost flat. Fixed layout, so every blast has the same starburst shape.
-    const tongueLengths = [1.2, 1.0, 1.25, 0.9, 1.15, 0.95, 1.1];
-    const tongueWidths = [0.24, 0.18, 0.22, 0.16, 0.2, 0.16, 0.2];
-    const tongueLeans = [0.1, 0.8, 1.25, 0.5, 1.1, 1.35, 0.9];
+    // Tongues: fat egg-shaped lobes rooted in the heart, one nearly straight up and the rest fanned out at
+    // mixed lengths and leans, none lying flat. Fixed layout, so every blast has the same flame shape.
+    const tongueLengths = [0.95, 0.75, 0.85, 0.7, 0.85, 0.65, 0.75];
+    const tongueWidths = [0.95, 0.8, 0.85, 0.7, 0.8, 0.65, 0.75];
+    const tongueLeans = [0.1, 0.7, 0.9, 0.5, 0.9, 0.8, 0.85];
     for (let i = 0; i < tongueLengths.length; i++) {
       const tongue = MeshBuilder.CreateSphere("burstFlash", { diameter: 1, segments: 6 }, this._scene);
       tongue.position.y = 0.5;
       tongue.bakeCurrentTransformIntoVertices();
-      tongue.material = i % 2 === 0 ? flashMat : coreMat;
+      tongue.material = i % 2 === 0 ? flashMat : flameMat;
       tongue.parent = root;
       tongue.position.y = 0.3 * fireScale;
       tongue.rotation.set(0, i * 2.4 + 0.3, tongueLeans[i]);
@@ -464,6 +467,7 @@ export class VisualEffects {
       dispose: () => {
         coreMat.dispose();
         flashMat.dispose();
+        flameMat.dispose();
         smokeMat.dispose();
         dustMat.dispose();
         ballMat.dispose();
