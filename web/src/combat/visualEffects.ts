@@ -49,16 +49,16 @@ export class VisualEffects {
 
   // ══════════════════ LIGHTNING ══════════════════
   /**
-   * Spawn a jagged lightning bolt from origin to target: a chain of short thin shards that kink hard
-   * at every joint and taper toward the strike. Flat white and kept out of the glow layer, so it reads
+   * Spawn a jagged lightning bolt from origin to target: a chain of short thick shards that kink hard
+   * at every joint and taper toward the strike. Flat blue-white, opaque until it fades, and kept out of the glow layer, so it reads
    * as a solid cut-out shape instead of a blooming beam.
    */
   spawnLightning(origin: Vector3, target: Vector3): void {
     const root = new TransformNode("lightning", this._scene);
-    // Mostly self-lit: the same white in sun and in shade, just under the bloom threshold
-    const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.95, 0.96, 1));
-    boltMat.emissiveColor = new Color3(0.55, 0.56, 0.6);
-    boltMat.transparencyMode = 2;
+    // Mostly self-lit: the same blue-white in sun and in shade, just under the bloom threshold
+    const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.6, 0.78, 1));
+    boltMat.emissiveColor = new Color3(0.55, 0.66, 0.85);
+    boltMat.transparencyMode = 0;
     const glow = this._scene.getGlowLayerByName("glow");
     const shards: Mesh[] = [];
 
@@ -105,7 +105,7 @@ export class VisualEffects {
 
     // Thick at the caster, thin at the strike
     for (let i = 0; i < points.length - 1; i++) {
-      addShard(points[i], points[i + 1], 0.07 - 0.04 * (i / (points.length - 2)));
+      addShard(points[i], points[i + 1], 0.16 - 0.09 * (i / (points.length - 2)));
     }
 
     // Branch bolt (smaller fork) kicking off the second joint
@@ -115,8 +115,8 @@ export class VisualEffects {
     forkKnee.y += 0.2;
     const forkEnd = forkKnee.add(dir.scale(0.35 / len)).add(side.scale(forkSide * 0.1));
     forkEnd.y -= 0.3;
-    addShard(forkOrigin, forkKnee, 0.035);
-    addShard(forkKnee, forkEnd, 0.025);
+    addShard(forkOrigin, forkKnee, 0.08);
+    addShard(forkKnee, forkEnd, 0.055);
 
     const totalDuration = 0.25;
     this._effects.push({
@@ -125,6 +125,7 @@ export class VisualEffects {
       update: (_dt, remaining) => {
         // Holds solid, then cuts out over the last third
         boltMat.alpha = Math.min(1, Math.max(0, remaining / (totalDuration * 0.35)));
+        boltMat.transparencyMode = boltMat.alpha < 1 ? 2 : 0;
       },
       dispose: () => {
         for (const shard of shards) glow?.removeExcludedMesh(shard);
