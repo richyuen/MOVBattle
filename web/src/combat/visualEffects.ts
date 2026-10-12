@@ -62,8 +62,8 @@ export class VisualEffects {
     boltMat.backFaceCulling = false;
     boltMat.transparencyMode = 0;
     // Flat cyan, for the wider shard that backs each white one and shows round it as a rim
-    const rimMat = getMaterialFactory().createUnique("cloth", new Color3(0.3, 0.9, 1));
-    rimMat.emissiveColor = new Color3(0.3, 0.9, 1);
+    const rimMat = getMaterialFactory().createUnique("cloth", new Color3(0, 0.55, 0.9));
+    rimMat.emissiveColor = new Color3(0, 0.55, 0.9);
     rimMat.disableLighting = true;
     rimMat.backFaceCulling = false;
     const glow = this._scene.getGlowLayerByName("glow");
