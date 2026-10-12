@@ -87,3 +87,4 @@ iter 85 | red-team-salmon-pink, tribal-trunks-dark-and-fat, fight-zone-bare-grou
 iter 86 | lightning-ruler-straight-bars, flung-bodies-open-stars, tribal-ring-single-file, grass-needles-not-cards, red-knight-tabard-pink, far-band-level-berry-hedge, laurel-hoop-on-crown, crowns-read-as-dice | 5/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 87 | red-knight-tabard-pink, tribal-ring-big-clumps, flung-bodies-one-facing, grass-knee-high-carpet, far-band-level-berry-hedge, crowns-blood-red, laurel-lime-hat-brim | 4/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 88 | crowns-blood-red, flung-bodies-all-horizontal, grass-knee-high-carpet, tabard-back-salmon-fat-cross, zeus-bald-sweatband, tribal-ring-one-deep | 4/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 89 | tribal-ring-one-deep, zeus-grey-breastplate, downed-one-prone-pose, knight-limbs-team-colour, flung-bodies-wide-v, crowns-second-hue-lemon | 5/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
