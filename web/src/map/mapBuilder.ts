@@ -390,8 +390,6 @@ export class TribalSandboxMapBuilder {
     trunkMesh.rotation.z = (this._seededValue(index, 67) - 0.5) * 0.3;
     trunkMesh.material = trunkMat;
     trunkMesh.receiveShadows = true;
-    // Canopy pieces are children of the trunk, so they cast with it
-    sunShadows(this._scene)?.addShadowCaster(trunkMesh);
 
     // Canopy pieces hang off the trunk (local y measured from the trunk top) so they lean with it.
     const addCanopy = (mesh: Mesh, x: number, y: number, z: number, mat: StandardMaterial): void => {
@@ -447,6 +445,9 @@ export class TribalSandboxMapBuilder {
         addCanopy(tier, 0, tierHeight * 0.3 + j * tierHeight * 0.5, 0, j === 1 ? upperLeafMat : leafMat);
       }
     }
+
+    // Registered once the crown hangs off the trunk: the caster list takes the children the trunk has at this moment
+    sunShadows(this._scene)?.addShadowCaster(trunkMesh);
 
     // Collision for tree trunk
     this._obstacles.push({
