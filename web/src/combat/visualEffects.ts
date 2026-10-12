@@ -290,7 +290,7 @@ export class VisualEffects {
   }
 
   // ══════════════════ EXPLOSION BURST ══════════════════
-  /** Brief flash, a body-sized white smoke puff, the dark ball and a low ring of tan dust clods. No particles. */
+  /** Brief flash, a head-sized white smoke puff, the dark ball and a burst of tan dust clods that outlasts the smoke. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
@@ -324,9 +324,9 @@ export class VisualEffects {
     const ballAngle = Math.random() * Math.PI * 2;
     const ballVelocity = new Vector3(Math.cos(ballAngle) * 1.6 * scale, 3.4, Math.sin(ballAngle) * 1.6 * scale);
 
-    // Smoke: a clump of faceted off-white lobes that swells and drifts up. A shell's puff is capped near a
+    // Smoke: a small clump of faceted off-white lobes that swells and drifts up. A shell's puff is capped at a
     // musket ball's and sits at chest height, so it stays below the heads of the bodies it throws.
-    const smokeScale = Math.min(scale, 1.3);
+    const smokeScale = Math.min(scale, 1);
     const smokeY = 0.6 * smokeScale - 0.6 * scale;
     const lobes: { mesh: TransformNode; size: number; rise: number }[] = [];
     for (let i = 0; i < 5; i++) {
@@ -334,25 +334,26 @@ export class VisualEffects {
       const reach = (i === 0 ? 0 : 0.22 + Math.random() * 0.16) * smokeScale;
       const lobe = blob("burstSmoke", 2, smokeMat);
       lobe.position.set(Math.cos(angle) * reach, smokeY + (Math.random() - 0.5) * 0.3 * smokeScale, Math.sin(angle) * reach);
-      lobes.push({ mesh: lobe, size: (i === 0 ? 0.55 : 0.3 + Math.random() * 0.15) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
+      lobes.push({ mesh: lobe, size: (i === 0 ? 0.42 : 0.22 + Math.random() * 0.12) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
     }
 
-    // Dust: flattened tan clods kicked out low along the ground.
+    // Dust: flattened tan clods thrown up out of the ground above the grass tops, landing in a ring and lying there.
     const chunks: { mesh: TransformNode; size: number; velocity: Vector3 }[] = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 16; i++) {
       const chunk = blob("burstDust", 2, dustMat);
-      const angle = (i / 14) * Math.PI * 2 + Math.random() * 0.5;
-      const speed = (2.6 + Math.random() * 2.4) * scale;
-      chunk.position.y = floorY + 0.1;
+      const angle = (i / 16) * Math.PI * 2 + Math.random() * 0.5;
+      const speed = (2.2 + Math.random() * 2.4) * scale;
+      chunk.position.y = floorY + 0.35;
       chunks.push({
         mesh: chunk,
-        size: (0.16 + Math.random() * 0.16) * scale,
-        velocity: new Vector3(Math.cos(angle) * speed, 1 + Math.random() * 1.6, Math.sin(angle) * speed),
+        size: (0.24 + Math.random() * 0.22) * scale,
+        velocity: new Vector3(Math.cos(angle) * speed, 3 + Math.random() * 2.4, Math.sin(angle) * speed),
       });
     }
 
     const flashDuration = 0.16;
-    const totalDuration = 1.1;
+    const smokeDuration = 1.1;
+    const totalDuration = 1.9;
     this._effects.push({
       root,
       remaining: totalDuration,
@@ -363,9 +364,11 @@ export class VisualEffects {
         const flashLife = Math.max(0, 1 - elapsed / flashDuration);
         flash.scaling.setAll(Math.max(0.001, flashSize * Math.min(1, elapsed / 0.05 + 0.4) * flashLife));
         const swell = 0.45 + 0.55 * Math.min(1, elapsed / 0.2);
+        // The puff is gone while the clods it kicked up are still settling.
+        const smokeFade = Math.max(0.001, Math.min(1, (smokeDuration - elapsed) / 0.35));
         for (const lobe of lobes) {
           lobe.mesh.position.y += lobe.rise * dt;
-          lobe.mesh.scaling.setAll(lobe.size * swell * fade);
+          lobe.mesh.scaling.setAll(lobe.size * swell * smokeFade);
         }
         ballVelocity.y -= 14 * dt;
         ball.position.addInPlace(ballVelocity.scale(dt));
@@ -376,8 +379,10 @@ export class VisualEffects {
         for (const chunk of chunks) {
           chunk.velocity.y -= 14 * dt;
           chunk.mesh.position.addInPlace(chunk.velocity.scale(dt));
-          if (chunk.mesh.position.y < floorY) {
-            chunk.mesh.position.y = floorY;
+          // Landed clods sit proud of the ground instead of sinking into the grass.
+          const rest = floorY + chunk.size * 0.3;
+          if (chunk.mesh.position.y < rest) {
+            chunk.mesh.position.y = rest;
             chunk.velocity.setAll(0);
           }
           const size = chunk.size * fade;
