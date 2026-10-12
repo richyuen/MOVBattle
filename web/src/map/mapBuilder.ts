@@ -117,7 +117,7 @@ export class TribalSandboxMapBuilder {
   private _createMaterials(): void {
     // Grass: autumn orange
     const grass = new StandardMaterial("grass", this._scene);
-    grass.diffuseColor = new Color3(0.98, 0.42, 0.27);
+    grass.diffuseColor = new Color3(0.98, 0.52, 0.24);
     grass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Warm orange-grass for edges
