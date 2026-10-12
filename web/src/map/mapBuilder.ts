@@ -549,7 +549,8 @@ export class TribalSandboxMapBuilder {
 
     // Three low clouds drift just past the far rim (x, base y, z, size): the high placement camera looks down too
     // steeply to see the ring above, so these sit low enough to show over the far treeline in that view
-    const lowClouds = [[-40, 1.5, 57, 9], [22, 1, 59, 8], [49, 2, 56, 7.5]];
+    // Small, medium and large at three heights and depths, so they do not read as one matched row on the horizon
+    const lowClouds = [[-44, 4.5, 56, 6], [20, 1.5, 61, 9], [50, 8, 54, 13]];
     for (let i = 0; i < 12 + lowClouds.length; i++) {
       const low = lowClouds[i - 12];
       const angle = (i / 12) * Math.PI * 2 + this._seededValue(i, 41) * 0.35;
