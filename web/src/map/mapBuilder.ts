@@ -504,14 +504,14 @@ export class TribalSandboxMapBuilder {
     };
 
     // A round crown has facets that face the ground and catch only the dim bounce light. Mostly self-lit, so its
-    // shaded side stays nearly as bright as its sunlit side and the sunlit tops do not wash out; kept out of the glow layer. The self-light leans to red and blue over green, so the shade of an autumn crown is crimson and not brick.
+    // shaded side stays nearly as bright as its sunlit side and the sunlit tops do not wash out; kept out of the glow layer. The self-light leans to red and blue over green, so the shade of an autumn crown is crimson and not brick; the yellow-orange crown takes more of its red and green, so its shade is orange and not dark brown.
     const crownMat = (mat: StandardMaterial): StandardMaterial => {
       const name = `${mat.name}Crown`;
       const existing = this._scene.getMaterialByName(name) as StandardMaterial | null;
       if (existing) return existing;
       const crown = mat.clone(name);
       crown.diffuseColor = mat.diffuseColor.scale(0.38);
-      crown.emissiveColor = mat.diffuseColor.multiply(new Color3(0.72, 0.45, 0.8));
+      crown.emissiveColor = mat.diffuseColor.multiply(mat.name === "darkLeaves" ? new Color3(0.9, 0.55, 0.8) : new Color3(0.72, 0.45, 0.8));
       return crown;
     };
     const glow = this._scene.getGlowLayerByName("glow");
