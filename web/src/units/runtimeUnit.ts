@@ -521,6 +521,12 @@ export class RuntimeUnit {
     this._velocity.z += dirZ * throwSpeed;
     this._velocity.y = Math.max(this._velocity.y, lift * (0.7 + 0.3 * spread(1)) * scale);
     this._grounded = false;
+    if (!this._isDead) {
+      // A flung body reads as toppled until it lands: the flight under 22 m/s2 gravity can outlast the profile's topple time.
+      this._toppledUntil = Math.max(this._toppledUntil, RuntimeUnit.timeNowSeconds() + (2 * this._velocity.y) / 22);
+      this._downedUntil = Math.max(this._downedUntil, this._toppledUntil + this.definition.downedSeconds);
+      this._recoveringUntil = Math.max(this._recoveringUntil, this._downedUntil + this._crowdPhysicsProfile.recoverySeconds);
+    }
 
     // End-over-end tumble about the axis across the throw, in the body's own pitch/roll frame.
     const spinRate = 6 + 6 * spread(4);
