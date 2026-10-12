@@ -30,7 +30,9 @@ const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
 
 // How much of each preset's flesh tone / cloth tone survives over the team color.
 const SKIN_FLESH_WEIGHT = 0.25;
-const BODY_PRESET_WEIGHT = 0.7;
+const BODY_PRESET_WEIGHT = 0.45;
+// Preset metal is halved: an unlit-environment metal body goes grey or near-black and loses its team colour.
+const BODY_METAL_WEIGHT = 0.5;
 
 function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
   return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
@@ -64,7 +66,7 @@ export class UnitFactory {
     const bodyColor = Color3.Lerp(
       factionColor,
       teamColor,
-      shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.82 : 0.7,
+      shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.9 : 0.85,
     );
     const skinColor = teamColor.scale(0.9);
 
@@ -142,7 +144,7 @@ function applyMaterialPreset(
   const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor, skinColor);
   body.bodyMaterial.baseColor = tint.bodyDiffuse;
   body.bodyMaterial.emissiveColor = tint.bodyEmissive;
-  body.bodyMaterial.metallic = tint.metallic;
+  body.bodyMaterial.metallic = tint.metallic * BODY_METAL_WEIGHT;
   body.bodyMaterial.roughness = tint.roughness;
   body.bodyMaterial.alpha = tint.alpha;
   body.skinMaterial.baseColor = tint.skinDiffuse;
