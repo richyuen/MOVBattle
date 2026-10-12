@@ -6,6 +6,7 @@ import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPi
 import { SSAO2RenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { ImageProcessingConfiguration } from "@babylonjs/core/Materials/imageProcessingConfiguration";
+import { ColorCurves } from "@babylonjs/core/Materials/colorCurves";
 
 import { GameStateMachine, GameState } from "./core/gameState";
 import { BudgetSystem } from "./core/budgetSystem";
@@ -110,7 +111,7 @@ const btnTouchCameraUpEl = document.getElementById("btnTouchCameraUp") as HTMLBu
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
 const scene = new Scene(engine);
-scene.clearColor = new Color4(0.36, 0.74, 0.78, 1);
+scene.clearColor = new Color4(0.56, 0.79, 0.78, 1); // pastel teal
 
 // Material factory (PBR cache — must init before any unit/map creation)
 initMaterialFactory(scene);
@@ -121,10 +122,11 @@ hemi.intensity = 0.7;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
 dir.intensity = 0.8;
+dir.diffuse = new Color3(1, 0.9, 0.72); // warm late-afternoon sun
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
-scene.fogColor = new Color3(0.36, 0.74, 0.78);
+scene.fogColor = new Color3(0.56, 0.79, 0.78);
 scene.fogStart = 70;
 scene.fogEnd = 170;
 
@@ -239,8 +241,13 @@ pipeline.imageProcessingEnabled = true;
 pipeline.imageProcessing.toneMappingEnabled = true;
 pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
 pipeline.imageProcessing.vignetteEnabled = true;
-pipeline.imageProcessing.vignetteWeight = 0.3;
+pipeline.imageProcessing.vignetteWeight = 1.4;
 pipeline.imageProcessing.vignetteStretch = 0.5;
+pipeline.imageProcessing.vignetteColor = new Color4(0.16, 0.1, 0.06, 0); // corners darken warm, not grey
+// Pastel grade: pull saturation down a notch across the frame
+pipeline.imageProcessing.colorCurvesEnabled = true;
+pipeline.imageProcessing.colorCurves = new ColorCurves();
+pipeline.imageProcessing.colorCurves.globalSaturation = -18;
 pipeline.imageProcessing.exposure = 1.05;
 pipeline.imageProcessing.contrast = 1.1;
 
