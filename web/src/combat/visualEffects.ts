@@ -363,15 +363,19 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a modest near-white heart with smaller orange lobes half sunk into its flanks, and short round
-    // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
-    // enough to show no facets, and a shell's stays about a man tall, well under the trees.
+    // Fireball: a modest near-white heart with smaller orange lobes half sunk into its flanks, and short
+    // tongues of flame swelling up and out of it, so the silhouette is one lumpy mass. Every lobe is a coarse
+    // faceted chunk, the whole fire is half as wide again as it is tall, and a shell's stays about a man tall, well under the trees.
     const fireScale = Math.min(scale, 1.6);
+    const fireRoot = new TransformNode("burstFire", this._scene);
+    fireRoot.parent = root;
+    fireRoot.scaling.set(1.5, 1, 1.5);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
     const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flameMat);
+      const lobe = blob("burstFlash", 3, i === 0 ? coreMat : flameMat);
+      lobe.parent = fireRoot;
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
@@ -385,11 +389,11 @@ export class VisualEffects {
     const tongueWidths = [0.95, 0.8, 0.85, 0.7, 0.8, 0.65, 0.75];
     const tongueLeans = [0.1, 0.7, 0.9, 0.5, 0.9, 0.8, 0.85];
     for (let i = 0; i < tongueLengths.length; i++) {
-      const tongue = MeshBuilder.CreateSphere("burstFlash", { diameter: 1, segments: 6 }, this._scene);
+      const tongue = MeshBuilder.CreateSphere("burstFlash", { diameter: 1, segments: 3 }, this._scene);
       tongue.position.y = 0.5;
       tongue.bakeCurrentTransformIntoVertices();
       tongue.material = i % 2 === 0 ? flashMat : flameMat;
-      tongue.parent = root;
+      tongue.parent = fireRoot;
       tongue.position.y = 0.3 * fireScale;
       tongue.rotation.set(0, i * 2.4 + 0.3, tongueLeans[i]);
       glow?.addExcludedMesh(tongue);
