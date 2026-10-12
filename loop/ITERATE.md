@@ -15,8 +15,8 @@ work against reference media; you never judge it yourself. Follow these steps in
 ## 2. Re-audit when due
 If N is a multiple of 5, or the ranked list has fewer than 3 pickable gaps: run `node loop/scripts/capture.mjs --iter N --showcase-only`, spawn the critic in RE-AUDIT mode (see step 6, give it the whole digest, all `reference/small/*.jpg`, all `reference/frames/gameplay_sheet_*.jpg`, and the new PNGs), and rewrite Scores and Ranked open gaps from its answer before continuing.
 
-## 3. Pick 2-3 gaps
-- Pickable: attempts < 2 and not listed under Rejected attempts. Take the top 2-3, preferring gaps that touch different files. Write them into Focus. Record `BASE=$(git rev-parse HEAD)`.
+## 3. Pick every pickable gap
+- Pickable: attempts < 2 and not listed under Rejected attempts. Take all of them, in ranked order. Write them into Focus. Record `BASE=$(git rev-parse HEAD)`.
 
 ## 4. Implement, one commit per gap
 For each focus gap: make the smallest change that moves it, touching only what it needs. Type-check with `node web/node_modules/typescript/bin/tsc --noEmit -p web/tsconfig.json`. Commit only that gap: subject `loop(N.k): <gap>` plus the attribution lines. Write the sha next to the gap in Focus.
