@@ -50,7 +50,7 @@ export class VisualEffects {
   // ══════════════════ LIGHTNING ══════════════════
   /**
    * Spawn a jagged lightning bolt from origin to target: a chain of short thick shards that kink hard
-   * at every joint and taper toward the strike. Flat blue-white, opaque until it fades, and kept out of the glow layer, so it reads
+   * at every joint and taper toward the strike. Flat blue-white on a cyan rim, opaque for its whole life, and kept out of the glow layer, so it reads
    * as a solid cut-out shape instead of a blooming beam.
    */
   spawnLightning(origin: Vector3, target: Vector3): void {
@@ -61,6 +61,11 @@ export class VisualEffects {
     boltMat.disableLighting = true;
     boltMat.backFaceCulling = false;
     boltMat.transparencyMode = 0;
+    // Flat cyan, for the wider shard that backs each white one and shows round it as a rim
+    const rimMat = getMaterialFactory().createUnique("cloth", new Color3(0.3, 0.9, 1));
+    rimMat.emissiveColor = new Color3(0.3, 0.9, 1);
+    rimMat.disableLighting = true;
+    rimMat.backFaceCulling = false;
     const glow = this._scene.getGlowLayerByName("glow");
     const shards: Mesh[] = [];
 
@@ -118,6 +123,13 @@ export class VisualEffects {
       shard.parent = root;
       glow?.addExcludedMesh(shard);
       shards.push(shard);
+      // Cyan rim: the same blade 1.3 times as broad, a hair behind the white one as the camera sees it
+      const rim = shard.clone("lrim");
+      rim.scaling.set(shard.scaling.x === 0.25 ? 0.25 : 1.3, 1.05, shard.scaling.z === 0.25 ? 0.25 : 1.3);
+      if (eye) rim.position.subtractInPlace(toEye.normalize().scale(0.04));
+      rim.material = rimMat;
+      glow?.addExcludedMesh(rim);
+      shards.push(rim);
     };
 
     // Thick at the caster, thin at the strike, each shard anywhere from half to twice that
@@ -135,35 +147,15 @@ export class VisualEffects {
     addShard(forkOrigin, forkKnee, 0.08);
     addShard(forkKnee, forkEnd, 0.055);
 
-    // Strike burst: a flat six-point star at the target, facing the camera, that snaps out wide and cuts off with the bolt
-    const burst = new TransformNode("lburst", this._scene);
-    // Half a metre toward the camera, in front of the body it strikes, so the star is whole and not half sunk in a torso
-    burst.position = eye ? endPoint.add(eye.subtract(endPoint).normalize().scale(0.5)) : endPoint;
-    burst.billboardMode = TransformNode.BILLBOARDMODE_ALL;
-    burst.parent = root;
-    for (const turn of [0, Math.PI / 3]) {
-      const point = MeshBuilder.CreateDisc("lburstPoint", { radius: 0.3, tessellation: 3 }, this._scene);
-      point.rotation.z = turn;
-      point.material = boltMat;
-      point.parent = burst;
-      glow?.addExcludedMesh(point);
-      shards.push(point);
-    }
-
-    const totalDuration = 0.25;
+    // No strike flash and no fade: the bolt is solid for its whole life and then gone, so it is never a see-through shape
     this._effects.push({
       root,
-      remaining: totalDuration,
-      update: (_dt, remaining) => {
-        // The star grows from 0.7 to 1.3 of its size over the bolt's life
-        burst.scaling.setAll(1.3 - 0.6 * (remaining / totalDuration));
-        // Holds solid, then cuts out over the last third
-        boltMat.alpha = Math.min(1, Math.max(0, remaining / (totalDuration * 0.35)));
-        boltMat.transparencyMode = boltMat.alpha < 1 ? 2 : 0;
-      },
+      remaining: 0.25,
+      update: () => {},
       dispose: () => {
         for (const shard of shards) glow?.removeExcludedMesh(shard);
         boltMat.dispose();
+        rimMat.dispose();
       },
     });
   }
