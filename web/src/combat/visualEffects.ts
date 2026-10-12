@@ -349,6 +349,9 @@ export class VisualEffects {
     flashMat.emissiveColor = new Color3(0.9, 0.75, 0.35);
     const flameMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
     flameMat.emissiveColor = new Color3(0.85, 0.6, 0.25);
+    // The two smallest lobes glow a plain orange, so the ball has an orange base under the cream
+    const emberMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
+    emberMat.emissiveColor = new Color3(0.93, 0.55, 0.35);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -374,7 +377,7 @@ export class VisualEffects {
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe, so the ball is orange and not cream
     const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? flameMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? flameMat : i === 2 || i === 4 ? emberMat : flashMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
@@ -505,6 +508,7 @@ export class VisualEffects {
         coreMat.dispose();
         flashMat.dispose();
         flameMat.dispose();
+        emberMat.dispose();
         smokeMat.dispose();
         dustMat.dispose();
         ballMat.dispose();
