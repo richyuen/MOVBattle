@@ -478,18 +478,18 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     }
     case "sword":
     case "cutlass": {
-      const blade = MeshBuilder.CreateBox("blade", { width: 0.03 * s, height: 0.5 * s, depth: 0.008 * s }, scene);
+      const blade = MeshBuilder.CreateBox("blade", { width: 0.055 * s, height: 0.5 * s, depth: 0.02 * s }, scene);
       blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "metal");
       // Fuller (channel groove on blade)
-      const fuller = MeshBuilder.CreateBox("fuller", { width: 0.012 * s, height: 0.32 * s, depth: 0.01 * s }, scene);
+      const fuller = MeshBuilder.CreateBox("fuller", { width: 0.02 * s, height: 0.32 * s, depth: 0.024 * s }, scene);
       fuller.position.y = 0.03 * s;
       fuller.parent = blade;
       fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "metal");
-      const guard = MeshBuilder.CreateBox("guard", { width: 0.12 * s, height: 0.02 * s, depth: 0.02 * s }, scene);
+      const guard = MeshBuilder.CreateBox("guard", { width: 0.14 * s, height: 0.025 * s, depth: 0.035 * s }, scene);
       guard.position.y = -0.15 * s;
       guard.parent = blade;
       guard.material = mat(scene, accent, 0, "metal");
-      const grip = MeshBuilder.CreateCylinder("grip", { height: 0.1 * s, diameter: 0.025 * s }, scene);
+      const grip = MeshBuilder.CreateCylinder("grip", { height: 0.1 * s, diameter: 0.035 * s }, scene);
       grip.position.y = -0.22 * s;
       grip.parent = blade;
       grip.material = mat(scene, new Color3(0.35, 0.2, 0.1));
@@ -717,12 +717,12 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       // Approximate bow with a curved cylinder
       const bowHeight = type === "crossbow" ? 0.25 : 0.4;
       const bowMesh = MeshBuilder.CreateCylinder("bow", {
-        height: bowHeight * s, diameter: 0.025 * s, tessellation: 8,
+        height: bowHeight * s, diameter: 0.045 * s, tessellation: 8,
       }, scene);
       bowMesh.material = mat(scene, new Color3(0.5, 0.35, 0.15));
       // String
       const string = MeshBuilder.CreateCylinder("string", {
-        height: bowHeight * s * 0.9, diameter: 0.006 * s, tessellation: 4,
+        height: bowHeight * s * 0.9, diameter: 0.014 * s, tessellation: 4,
       }, scene);
       string.position.z = 0.04 * s;
       string.parent = bowMesh;
