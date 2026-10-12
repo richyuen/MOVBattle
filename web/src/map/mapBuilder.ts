@@ -439,7 +439,7 @@ export class TribalSandboxMapBuilder {
       trees.push({
         pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
         height: 3 + this._seededValue(i, 63) * 3,
-        leafMat: this._seededValue(i, 64) > 0.5 ? leaves : darkLeaves,
+        leafMat: this._seededValue(i, 64) > 0.2 ? leaves : darkLeaves,
       });
     }
 
@@ -452,7 +452,7 @@ export class TribalSandboxMapBuilder {
       trees.push({
         pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
         height: 4 + this._seededValue(i, 123) * 3,
-        leafMat: this._seededValue(i, 124) > 0.5 ? leaves : darkLeaves,
+        leafMat: this._seededValue(i, 124) > 0.2 ? leaves : darkLeaves,
       });
     }
 
@@ -462,7 +462,7 @@ export class TribalSandboxMapBuilder {
         t.height,
         trunk,
         t.leafMat,
-        t.leafMat === leaves ? darkLeaves : leaves,
+        t.leafMat,
         i,
       );
     });
