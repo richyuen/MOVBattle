@@ -9,7 +9,8 @@ const MAP_WIDTH = 160;  // full X extent (placement/navigation bounds)
 const MAP_DEPTH = 120;  // full Z extent (placement/navigation bounds)
 const ISLAND_WIDTH = 108;  // floating island slab, X extent: just outside the tree ring so the placement view shows both end rims
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
-const TREE_RING_X = 42;    // tree ring radii around the fighting field
+const ISLAND_ROUND = 3;    // rim is a superellipse of this power: the slab's rectangle with its four corners cut round
+const TREE_RING_X = 42;   // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
 const BLADE_DARK = 0.84;   // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
@@ -26,6 +27,19 @@ const FAR_ROCK_MIX = 0.5;   // far ridge sits half-way into the sky haze
 /** The sun's shadow generator, when the scene has one: trees register with it so they throw ground shadows like units do */
 function sunShadows(scene: Scene): ShadowGenerator | null {
   return (scene.getLightByName("dir")?.getShadowGenerator() as ShadowGenerator | null | undefined) ?? null;
+}
+
+/** Where the island's rim lies in the direction of angle `a` from its centre */
+function islandRim(a: number): [number, number] {
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  const r = (Math.abs(c / (ISLAND_WIDTH / 2)) ** ISLAND_ROUND + Math.abs(s / (ISLAND_DEPTH / 2)) ** ISLAND_ROUND) ** (-1 / ISLAND_ROUND);
+  return [c * r, s * r];
+}
+
+/** Whether a spot is on the island, at least `inset` metres in from the rim */
+function onIsland(x: number, z: number, inset = 0): boolean {
+  return Math.abs(x / (ISLAND_WIDTH / 2 - inset)) ** ISLAND_ROUND + Math.abs(z / (ISLAND_DEPTH / 2 - inset)) ** ISLAND_ROUND <= 1;
 }
 
 /** Distance haze by color: far props are mixed toward a lightened sky, so they sit paler than near ones */
@@ -154,9 +168,7 @@ export class TribalSandboxMapBuilder {
 
   private _createGround(): void {
     // Main ground — warm green-orange grass
-    const ground = MeshBuilder.CreateGround("ground", {
-      width: ISLAND_WIDTH, height: ISLAND_DEPTH,
-    }, this._scene);
+    const ground = this._islandSlab("ground", 0, 0.04);
     const mat = new StandardMaterial("groundMat", this._scene);
     mat.diffuseColor = new Color3(0.60, 0.58, 0.30);
     mat.specularColor = new Color3(0.05, 0.05, 0.05);
@@ -164,47 +176,31 @@ export class TribalSandboxMapBuilder {
     ground.receiveShadows = true;
 
     // Lawn: the same green from rim to rim, so no band of another colour frames the field
-    const centerGrass = MeshBuilder.CreateGround("centerGrass", {
-      width: ISLAND_WIDTH, height: ISLAND_DEPTH,
-    }, this._scene);
-    centerGrass.position.y = 0.02;
+    const centerGrass = this._islandSlab("centerGrass", 0.02, 0.04);
     centerGrass.material = this._scene.getMaterialByName("grass")!;
     centerGrass.receiveShadows = true;
 
     // Island underside — tapered rock slab so the field ends at a visible edge against the sky
-    const under = MeshBuilder.CreateCylinder("islandUnder", {
-      diameterTop: Math.SQRT2, diameterBottom: Math.SQRT2 * 0.55, height: 1, tessellation: 4,
-    }, this._scene);
-    under.rotation.y = Math.PI / 4;
-    under.bakeCurrentTransformIntoVertices();
-    under.scaling.set(ISLAND_WIDTH, 20, ISLAND_DEPTH);
-    under.position.y = -10.02;
-    under.convertToFlatShadedMesh();
+    const under = this._islandSlab("islandUnder", -0.02, 20, 0.55);
     under.material = this._scene.getMaterialByName("cliffRock")!;
     under.isPickable = false;
 
-    // Cliff face: rock buttresses hang along all four edges, each jutting a little past the grass and tapering
-    // down, so the island ends in a ragged cliff and not a ruled rectangle.
+    // Cliff face: rock buttresses hang all the way round the rim, each jutting a little past the grass and tapering
+    // down, so the island ends in a ragged cliff and not a ruled outline.
     const crags: Mesh[] = [];
-    for (let e = 0; e < 4; e++) {
-      const alongX = e < 2;
-      const along = alongX ? ISLAND_WIDTH : ISLAND_DEPTH;
-      const out = (alongX ? ISLAND_DEPTH : ISLAND_WIDTH) / 2 * (e % 2 ? -1 : 1);
-      const count = Math.round(along / 8);
-      for (let i = 0; i < count; i++) {
-        const k = e * 40 + i;
-        const width = 6 + this._seededValue(k, 91) * 6;
-        const height = 7 + this._seededValue(k, 92) * 9;
-        const crag = MeshBuilder.CreateCylinder("islandCrag", {
-          diameterTop: width, diameterBottom: width * 0.35, height, tessellation: 5,
-        }, this._scene);
-        const t = -along / 2 + ((i + 0.2 + this._seededValue(k, 93) * 0.6) / count) * along;
-        // Centred up to a third of its width inside the edge, so between a fifth and a half of it stands proud
-        const d = out - Math.sign(out) * width * this._seededValue(k, 94) * 0.3;
-        crag.position.set(alongX ? t : d, -height / 2 - 0.03, alongX ? d : t);
-        crag.rotation.y = this._seededValue(k, 95) * Math.PI;
-        crags.push(crag);
-      }
+    const count = 48;
+    for (let k = 0; k < count; k++) {
+      const width = 6 + this._seededValue(k, 91) * 6;
+      const height = 7 + this._seededValue(k, 92) * 9;
+      const crag = MeshBuilder.CreateCylinder("islandCrag", {
+        diameterTop: width, diameterBottom: width * 0.35, height, tessellation: 5,
+      }, this._scene);
+      const [x, z] = islandRim(((k + 0.2 + this._seededValue(k, 93) * 0.6) / count) * Math.PI * 2);
+      // Centred up to a third of its width inside the rim, so between a fifth and a half of it stands proud
+      const pull = 1 - width * this._seededValue(k, 94) * 0.3 / Math.hypot(x, z);
+      crag.position.set(x * pull, -height / 2 - 0.03, z * pull);
+      crag.rotation.y = this._seededValue(k, 95) * Math.PI;
+      crags.push(crag);
     }
     const cliff = Mesh.MergeMeshes(crags, true);
     if (cliff) {
@@ -213,6 +209,24 @@ export class TribalSandboxMapBuilder {
       cliff.material = this._scene.getMaterialByName("cliffRock")!;
       cliff.isPickable = false;
     }
+  }
+
+  /** A slab in the island's outline: a round drum with every vertex pushed out to the rim, its top face at `top` */
+  private _islandSlab(name: string, top: number, height: number, taper = 1): Mesh {
+    const slab = MeshBuilder.CreateCylinder(name, {
+      diameterTop: 1, diameterBottom: taper, height, tessellation: 48,
+    }, this._scene);
+    const positions = slab.getVerticesData("position")!;
+    for (let i = 0; i < positions.length; i += 3) {
+      const reach = Math.hypot(positions[i], positions[i + 2]) * 2;
+      const [x, z] = islandRim(Math.atan2(positions[i + 2], positions[i]));
+      positions[i] = x * reach;
+      positions[i + 2] = z * reach;
+    }
+    slab.setVerticesData("position", positions);
+    slab.position.y = top - height / 2;
+    slab.convertToFlatShadedMesh();
+    return slab;
   }
 
   private _createMountains(): void {
@@ -337,10 +351,10 @@ export class TribalSandboxMapBuilder {
       { pos: new Vector3(-45, 0, 5), size: 3.0, mat: rock },
       { pos: new Vector3(45, 0, -5), size: 3.0, mat: darkRock },
       // Near edges
-      { pos: new Vector3(-49, 0, 35), size: 4.0, mat: rock },
-      { pos: new Vector3(49, 0, -35), size: 4.0, mat: darkRock },
-      { pos: new Vector3(-48, 0, -40), size: 3.5, mat: darkRock },
-      { pos: new Vector3(48, 0, 40), size: 3.5, mat: rock },
+      { pos: new Vector3(-45, 0, 31), size: 4.0, mat: rock },
+      { pos: new Vector3(45, 0, -31), size: 4.0, mat: darkRock },
+      { pos: new Vector3(-43, 0, -34), size: 3.5, mat: darkRock },
+      { pos: new Vector3(43, 0, 34), size: 3.5, mat: rock },
     ];
 
     for (const b of boulders) {
@@ -586,14 +600,13 @@ export class TribalSandboxMapBuilder {
       for (let i = 0; i < perSide; i++) {
         const k = side > 0 ? i : i + perSide;
         const height = 3.2 + this._seededValue(k, 71) * 3.2;
+        const x = -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH;
+        const z = side * (40 + this._seededValue(k, 73) * 7);
+        if (!onIsland(x, z, 1)) continue; // none left standing on air past the rounded corners
         const cone = MeshBuilder.CreateCylinder("hazeTree", {
           height, diameterTop: 0, diameterBottom: height * 0.75, tessellation: 5,
         }, this._scene);
-        cone.position.set(
-          -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH,
-          height / 2,
-          side * (40 + this._seededValue(k, 73) * 7),
-        );
+        cone.position.set(x, height / 2, z);
         cone.rotation.y = this._seededValue(k, 74) * Math.PI;
         cones.push(cone);
       }
@@ -714,11 +727,13 @@ export class TribalSandboxMapBuilder {
     const colors = [new Color3(0.2, 0.5, 1.0), new Color3(1.0, 0.25, 0.25)];
 
     for (const zone of zones) {
-      const overlay = MeshBuilder.CreateGround(`zone_overlay_${zone.team}`, {
-        width: zone.size.x, height: zone.size.z,
-      }, this._scene);
-      overlay.position = zone.center.clone();
-      overlay.position.y = 0.03;
+      // The team's half of the island's own outline: the lawn slab with the other half folded onto the centre line
+      const overlay = this._islandSlab(`zone_overlay_${zone.team}`, 0.03, 0.01);
+      const positions = overlay.getVerticesData("position")!;
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i] = zone.team === 0 ? Math.min(positions[i], 0) : Math.max(positions[i], 0);
+      }
+      overlay.setVerticesData("position", positions);
       const mat = new StandardMaterial(`zone_overlay_mat_${zone.team}`, this._scene);
       mat.diffuseColor = colors[zone.team];
       mat.alpha = 0.08;
