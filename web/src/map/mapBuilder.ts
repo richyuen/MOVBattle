@@ -542,8 +542,8 @@ export class TribalSandboxMapBuilder {
   private _createClouds(): void {
     const cloudMat = new StandardMaterial("cloud", this._scene);
     cloudMat.diffuseColor = new Color3(1, 1, 1);
-    // Just enough self-light to lift the undersides to a cool grey; the sun does the rest
-    cloudMat.emissiveColor = new Color3(0.3, 0.33, 0.38);
+    // Enough self-light that the undersides stay a pale grey-white; the sun does the rest
+    cloudMat.emissiveColor = new Color3(0.6, 0.63, 0.66);
     cloudMat.specularColor = new Color3(0, 0, 0);
     const glow = this._scene.getGlowLayerByName("glow");
 
@@ -554,9 +554,12 @@ export class TribalSandboxMapBuilder {
       const puffs: Mesh[] = [];
       for (let j = 0; j < 4; j++) {
         const puff = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
-        const d = size * (0.55 + this._seededValue(i * 10 + j, 44) * 0.45);
-        puff.scaling.set(d, d * 0.5, d * 0.7);
-        puff.position.set((j - 1.5) * size * 0.42, (this._seededValue(i * 10 + j, 45) - 0.3) * size * 0.18, 0);
+        // The two middle puffs are bigger and taller than the end ones and every puff sits on one flat base,
+        // so the cloud heaps up in the middle instead of reading as four beads on a string
+        const middle = j === 1 || j === 2;
+        const d = size * ((middle ? 0.85 : 0.5) + this._seededValue(i * 10 + j, 44) * 0.3);
+        puff.scaling.set(d, d * (middle ? 0.75 : 0.5), d * 0.7);
+        puff.position.set((j - 1.5) * size * 0.36, puff.scaling.y * 0.5, (this._seededValue(i * 10 + j, 45) - 0.5) * size * 0.2);
         puffs.push(puff);
       }
       const cloud = Mesh.MergeMeshes(puffs, true);
