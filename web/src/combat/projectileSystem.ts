@@ -175,19 +175,19 @@ export class ProjectileSystem {
 
     this._flashes.push({ mesh: flash, remaining: 0.12 + 0.04 * Math.max(0, scale - 1) });
 
-    // Smoke puff: a fat white clump of chunky blobs thrown out of the muzzle that hangs and drifts up
-    const sm = getMaterialFactory().createUnique("unlit", new Color3(0.95, 0.95, 0.93));
-    sm.disableLighting = true;
-    sm.emissiveColor = new Color3(0.93, 0.93, 0.91);
+    // Smoke puff: a head-sized clump of faceted off-white lobes thrown out of the muzzle that hangs and drifts up.
+    // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball.
+    const sm = getMaterialFactory().createUnique("cloth", new Color3(0.86, 0.85, 0.82));
+    sm.emissiveColor = new Color3(0.14, 0.14, 0.13);
     sm.transparencyMode = 2;
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
     for (let i = 0; i < 4; i++) {
-      const diameter = (0.55 + Math.random() * 0.3 - 0.07 * i) * scale;
-      const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 4 }, this._scene);
-      smoke.position = flash.position.add(direction.scale((0.15 + 0.3 * i) * scale));
-      smoke.position.x += (Math.random() - 0.5) * 0.3 * scale;
-      smoke.position.y += (Math.random() - 0.3) * 0.3 * scale;
-      smoke.position.z += (Math.random() - 0.5) * 0.3 * scale;
+      const diameter = (0.26 + Math.random() * 0.12 - 0.03 * i) * scale;
+      const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
+      smoke.position = flash.position.add(direction.scale((0.08 + 0.14 * i) * scale));
+      smoke.position.x += (Math.random() - 0.5) * 0.14 * scale;
+      smoke.position.y += (Math.random() - 0.3) * 0.14 * scale;
+      smoke.position.z += (Math.random() - 0.5) * 0.14 * scale;
       smoke.material = sm;
       this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 });
     }
