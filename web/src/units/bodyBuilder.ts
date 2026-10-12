@@ -140,9 +140,9 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
   footHeight: 1.0,
 };
 
-/** TABS silhouette: small head on long limbs a third as thick as the torso is wide, not sticks. Applied on top of every unit's own proportions. */
+/** TABS silhouette: small head on long limbs a good quarter as thick as the torso is wide, so the torso is the wide block. Applied on top of every unit's own proportions. */
 const HEAD_SHRINK = 0.88;
-const LIMB_THIN = 1.2;
+const LIMB_THIN = 1.02;
 /** Sleeves and thighs are chunky next to the thin forearms and shins they end in. */
 const SLEEVE_BULK = 1.35;
 // Forearms and shins step in from the sleeve and thigh by a quarter of the bulk: more left them as sticks.
@@ -258,16 +258,17 @@ export function buildArticulatedBody(
   const headDepth = 0.176 * HEAD_SHRINK * p.headSize * (p.headDepth ?? 1.0);
   const headBase = Math.max(headHeight, headWidth, headDepth);
 
-  const upperArmH = 0.24 * p.armLength;
-  const lowerArmH = 0.22 * p.armLength;
+  // Arms and legs are a tenth longer than the old 0.24/0.22 and 0.28/0.25
+  const upperArmH = 0.264 * p.armLength;
+  const lowerArmH = 0.242 * p.armLength;
   const upperArmTop = 0.09 * LIMB_THIN * SLEEVE_BULK * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
   const lowerArmTop = upperArmBottom / LOWER_LIMB_STEP;
   const lowerArmBottom = lowerArmTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
   const handDiameter = 0.13 * Math.max(0.8, p.headSize * 0.9) * (p.handSize ?? 1.0);
 
-  const upperLegH = 0.28 * p.legLength;
-  const lowerLegH = 0.25 * p.legLength;
+  const upperLegH = 0.308 * p.legLength;
+  const lowerLegH = 0.275 * p.legLength;
   const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom / LOWER_LIMB_STEP;
