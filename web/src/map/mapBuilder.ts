@@ -530,14 +530,14 @@ export class TribalSandboxMapBuilder {
 
   /** Patches of tall grass clumps between short turf and open ground: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
-    const BLADES = 120000;
+    const BLADES = 200000;
     const PER_TUFT = 4;
     for (const [pass, matName] of ["grassBladeDark", "grassBladeLight"].entries()) {
       const positions: number[] = [];
       const normals: number[] = [];
       const indices: number[] = [];
       for (let i = 0; i < BLADES; i++) {
-        // Four crossed blades share a tuft center and a shade, so each clump reads as one overlapping tussock.
+        // Four narrow blades share a tuft center and a shade, fanned around it, so a clump is a wisp of grass and not a star.
         const tuft = Math.floor(i / PER_TUFT);
         if (tuft % 2 !== pass) continue;
         const tuftX = -34 + this._seededValue(tuft, 31) * 68;
@@ -555,10 +555,10 @@ export class TribalSandboxMapBuilder {
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.16;
         const h = (0.2 + this._seededValue(i, 33) * 0.25) * patchHeight; // shin to knee in the tall patches on the flanks
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
-        const half = 0.07 + this._seededValue(i, 38) * 0.03; // broad, so the crossed blades of a clump overlap
+        const half = 0.022 + this._seededValue(i, 38) * 0.014; // a blade is a finger wide; the carpet comes from their number
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
-        const lean = (this._seededValue(i, 36) - 0.5) * 0.3; // up to 0.15 m either way, so no two blades stand alike
+        const lean = (this._seededValue(i, 36) - 0.5) * 0.12; // up to 0.06 m either way, so no two blades stand alike
         const base = positions.length / 3;
         // Top edge 0.4 of the base width, so each card is a flat blade and not a spike.
         positions.push(
