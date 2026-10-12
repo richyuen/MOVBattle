@@ -1389,25 +1389,25 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
 
   // Front-left leg joints
   const flHip = dummyJoint("m_fl_hip", hip, scene);
-  flHip.position.set(-0.4, -0.35, 0.55);
+  flHip.position.set(-0.46, -0.35, 0.55);
   const flKnee = dummyJoint("m_fl_knee", flHip, scene);
   flKnee.position.set(0, -0.45, 0);
 
   // Front-right leg joints
   const frHip = dummyJoint("m_fr_hip", hip, scene);
-  frHip.position.set(0.4, -0.35, 0.55);
+  frHip.position.set(0.46, -0.35, 0.55);
   const frKnee = dummyJoint("m_fr_knee", frHip, scene);
   frKnee.position.set(0, -0.45, 0);
 
   // Back-left leg joints
   const blHip = dummyJoint("m_bl_hip", hip, scene);
-  blHip.position.set(-0.4, -0.35, -0.55);
+  blHip.position.set(-0.46, -0.35, -0.55);
   const blKnee = dummyJoint("m_bl_knee", blHip, scene);
   blKnee.position.set(0, -0.45, 0);
 
   // Back-right leg joints
   const brHip = dummyJoint("m_br_hip", hip, scene);
-  brHip.position.set(0.4, -0.35, -0.55);
+  brHip.position.set(0.46, -0.35, -0.55);
   const brKnee = dummyJoint("m_br_knee", brHip, scene);
   brKnee.position.set(0, -0.45, 0);
 
@@ -1574,28 +1574,28 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   for (const [hipJoint, kneeJoint] of legJoints) {
     // Upper leg
     const upper = MeshBuilder.CreateCylinder("uleg", {
-      height: 0.55, diameterTop: 0.44, diameterBottom: 0.38, tessellation: 6,
+      height: 0.55, diameterTop: 0.76, diameterBottom: 0.66, tessellation: 6,
     }, scene);
     upper.position.set(0, -0.22, 0);
     upper.parent = hipJoint; upper.material = fur; allMeshes.push(upper);
 
     // Shaggy cuff over the thigh, so the leg leaves the body through fur rather than as a bare post
     const cuff = MeshBuilder.CreateCylinder("legCuff", {
-      height: 0.42, diameterTop: 0.62, diameterBottom: 0.5, tessellation: 6,
+      height: 0.42, diameterTop: 0.9, diameterBottom: 0.78, tessellation: 6,
     }, scene);
     cuff.position.set(0, -0.14, 0);
     cuff.parent = hipJoint; cuff.material = shaggyFur; allMeshes.push(cuff);
 
     // Lower leg
     const lower = MeshBuilder.CreateCylinder("lleg", {
-      height: 0.45, diameterTop: 0.36, diameterBottom: 0.34, tessellation: 6,
+      height: 0.45, diameterTop: 0.62, diameterBottom: 0.6, tessellation: 6,
     }, scene);
     lower.position.set(0, -0.18, 0);
     lower.parent = kneeJoint; lower.material = shaggyFur; allMeshes.push(lower);
 
     // Foot
     const foot = MeshBuilder.CreateCylinder("foot", {
-      height: 0.08, diameter: 0.4, tessellation: 6,
+      height: 0.08, diameter: 0.68, tessellation: 6,
     }, scene);
     foot.position.set(0, -0.4, 0);
     foot.parent = kneeJoint; foot.material = darkMat; allMeshes.push(foot);
