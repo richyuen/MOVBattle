@@ -186,10 +186,12 @@ export class ProjectileSystem {
     sm.emissiveColor = new Color3(0.14, 0.14, 0.13);
     sm.transparencyMode = 2;
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
+    // Each lobe is about three quarters the size of the one behind it and stands 0.4 further out along the barrel,
+    // so the puff is a ragged string of lumps tapering away from the muzzle and not one ball sitting on it.
     for (let i = 0; i < 4; i++) {
-      const diameter = (0.26 + Math.random() * 0.12 - 0.03 * i) * scale;
+      const diameter = (0.3 + Math.random() * 0.1) * [1, 0.72, 0.52, 0.38][i] * scale;
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
-      smoke.position = flash.position.add(direction.scale((0.08 + 0.14 * i) * scale));
+      smoke.position = flash.position.add(direction.scale((0.08 + 0.4 * i) * scale));
       smoke.position.x += (Math.random() - 0.5) * 0.14 * scale;
       smoke.position.y += (Math.random() - 0.3) * 0.14 * scale;
       smoke.position.z += (Math.random() - 0.5) * 0.14 * scale;
