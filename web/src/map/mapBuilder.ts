@@ -11,8 +11,8 @@ const ISLAND_WIDTH = 108;  // floating island slab, X extent: just outside the t
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
-const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
-const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
+const BLADE_DARK = 0.86;   // grass-blade shades relative to the field color
+const BLADE_LIGHT = 1.06;  // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
 const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
@@ -444,7 +444,7 @@ export class TribalSandboxMapBuilder {
   }
 
   private _createGrassPatches(): void {
-    const leaves = this._scene.getMaterialByName("leaves") as StandardMaterial;
+    const tuftMat = this._scene.getMaterialByName("grassBladeDark") as StandardMaterial;
 
     for (let i = 0; i < 36; i++) {
       const x = -45 + this._seededValue(i, 1) * 90;
@@ -453,9 +453,9 @@ export class TribalSandboxMapBuilder {
 
       for (let j = 0; j < blades; j++) {
         const blade = MeshBuilder.CreateCylinder("grassTuft", {
-          height: 0.15 + this._seededValue(i * 10 + j, 4) * 0.15,
-          diameterTop: 0,
-          diameterBottom: 0.05 + this._seededValue(i * 10 + j, 5) * 0.03,
+          height: 0.1 + this._seededValue(i * 10 + j, 4) * 0.08,
+          diameterTop: 0.05,
+          diameterBottom: 0.1 + this._seededValue(i * 10 + j, 5) * 0.05,
           tessellation: 4,
         }, this._scene);
         blade.position.set(
@@ -465,15 +465,15 @@ export class TribalSandboxMapBuilder {
         );
         blade.rotation.z = (this._seededValue(i * 10 + j, 8) - 0.5) * 0.4;
         blade.rotation.x = (this._seededValue(i * 10 + j, 9) - 0.5) * 0.25;
-        blade.material = leaves;
+        blade.material = tuftMat;
         blade.receiveShadows = true;
       }
     }
   }
 
-  /** Dense carpet of small flat grass cards across the fighting field: two meshes, no per-blade nodes */
+  /** Dense carpet of short blunt grass cards across the fighting field: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
-    const BLADES = 9000;
+    const BLADES = 18000;
     for (const [pass, matName] of ["grassBladeDark", "grassBladeLight"].entries()) {
       const positions: number[] = [];
       const normals: number[] = [];
@@ -483,17 +483,21 @@ export class TribalSandboxMapBuilder {
         const tuft = Math.floor(i / 3);
         const x = -34 + this._seededValue(tuft, 31) * 68 + (this._seededValue(i, 34) - 0.5) * 0.5;
         const z = -24 + this._seededValue(tuft, 32) * 48 + (this._seededValue(i, 35) - 0.5) * 0.5;
-        const h = 0.16 + this._seededValue(i, 33) * 0.22;
+        const h = 0.07 + this._seededValue(i, 33) * 0.1;
         const yaw = this._seededValue(i, 37) * Math.PI;
-        const half = 0.045 + this._seededValue(i, 38) * 0.03;
+        const half = 0.07 + this._seededValue(i, 38) * 0.05; // wider than tall: tufts, not spikes
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
         const lean = (this._seededValue(i, 36) - 0.5) * 0.16;
         const base = positions.length / 3;
-        positions.push(x - dx, 0.02, z - dz, x + dx, 0.02, z + dz, x + lean, 0.02 + h, z + lean);
+        // Blunt top edge half the base width, so a card reads as a tuft and not a pointed spike.
+        positions.push(
+          x - dx, 0.02, z - dz, x + dx, 0.02, z + dz,
+          x + lean + dx * 0.5, 0.02 + h, z + lean + dz * 0.5, x + lean - dx * 0.5, 0.02 + h, z + lean - dz * 0.5,
+        );
         // Up-facing normals: blades take the same light as the ground and never go black edge-on.
-        normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
-        indices.push(base, base + 1, base + 2);
+        normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0);
+        indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
       }
       const blades = new Mesh(`fieldBlades_${pass}`, this._scene);
       const data = new VertexData();
