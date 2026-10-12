@@ -333,20 +333,37 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: one big cream mass about two bodies tall, with smaller orange lobes of mixed size half sunk into
-    // its flanks, so it is a single lumpy silhouette and not a ring of equal balls.
+    // Fireball: a modest yellow heart with smaller orange lobes half sunk into its flanks, and long faceted
+    // tongues of flame thrown up and out of it, so the silhouette is a ragged burst and not a ball.
     const fireScale = Math.min(scale, 2.5);
-    const fire: { mesh: TransformNode; size: number }[] = [];
-    const lobeSizes = [2.2, 1.05, 0.6, 0.9, 0.5, 0.75];
+    const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
+    const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
     const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
       const lobe = blob("burstFlash", 2, i === 0 ? flashMat : flameMat);
       const angle = i * 2.4 + 0.6;
-      const reach = (i === 0 ? 0 : 1.1 - lobeSizes[i] * 0.3) * fireScale;
+      const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
       lobe.rotation.set(i * 1.3, i * 2.1, 0);
       glow?.addExcludedMesh(lobe as Mesh);
       fire.push({ mesh: lobe, size: lobeSizes[i] * fireScale });
+    }
+    // Tongues: tapered spikes rooted in the heart, one nearly straight up and the rest fanned out at mixed
+    // lengths and leans. Fixed layout, so every blast has the same flame shape.
+    const tongueLengths = [2.0, 1.5, 1.8, 1.3, 1.7, 1.2, 1.5];
+    const tongueWidths = [0.8, 0.65, 0.7, 0.55, 0.65, 0.5, 0.6];
+    const tongueLeans = [0.1, 0.75, 1.15, 0.5, 1.3, 0.9, 1.0];
+    for (let i = 0; i < tongueLengths.length; i++) {
+      const tongue = MeshBuilder.CreateCylinder("burstFlash", { height: 1, diameterTop: 0, diameterBottom: 1, tessellation: 5 }, this._scene);
+      tongue.position.y = 0.5;
+      tongue.bakeCurrentTransformIntoVertices();
+      tongue.convertToFlatShadedMesh();
+      tongue.material = i % 2 === 0 ? flashMat : flameMat;
+      tongue.parent = root;
+      tongue.position.y = 0.3 * fireScale;
+      tongue.rotation.set(0, i * 2.4 + 0.3, tongueLeans[i]);
+      glow?.addExcludedMesh(tongue);
+      fire.push({ mesh: tongue, size: tongueWidths[i] * fireScale, length: tongueLengths[i] * fireScale });
     }
 
     // The shot itself: a dark ball that hops out of the puff and comes to rest.
@@ -409,7 +426,8 @@ export class VisualEffects {
         const burn = Math.min(1, elapsed / 0.08 + 0.3) * Math.max(0, Math.min(1, (flashDuration - elapsed) / 0.18));
         for (const lobe of fire) {
           lobe.mesh.position.y += 0.9 * dt;
-          lobe.mesh.scaling.setAll(Math.max(0.001, lobe.size * burn));
+          const girth = Math.max(0.001, lobe.size * burn);
+          lobe.mesh.scaling.set(girth, Math.max(0.001, (lobe.length ?? lobe.size) * burn), girth);
         }
         const swell = 0.45 + 0.55 * Math.min(1, elapsed / 0.2);
         // The puff is gone while the clods it kicked up are still settling.
