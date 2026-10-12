@@ -8,7 +8,8 @@ import type { HazardKind, HazardRegion } from "./hazards";
 const MAP_WIDTH = 160;  // full X extent (placement/navigation bounds)
 const MAP_DEPTH = 120;  // full Z extent (placement/navigation bounds)
 const ISLAND_WIDTH = 108;  // floating island slab, X extent: just outside the tree ring so the placement view shows both end rims
-const ISLAND_DEPTH = 96;   // floating island slab, Z extent
+const ISLAND_DEPTH = 90;   // floating island slab, Z extent
+const ISLAND_RIM_SEGMENTS = 20; // rim vertices of the island outline
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
 const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
@@ -142,11 +143,39 @@ export class TribalSandboxMapBuilder {
     paintFarProps(this._scene, leaves.diffuseColor);
   }
 
+  /** Island outline vertex k: a rounded-off rectangle with every rim vertex pushed in or out a little, so the edge is uneven. */
+  private _islandRim(k: number, scale = 1, seed = 81): { x: number; z: number } {
+    const angle = (k / ISLAND_RIM_SEGMENTS) * Math.PI * 2;
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    const radius = Math.pow(Math.pow(Math.abs(c) / (ISLAND_WIDTH / 2), 4) + Math.pow(Math.abs(s) / (ISLAND_DEPTH / 2), 4), -0.25)
+      * (0.97 + this._seededValue(k % ISLAND_RIM_SEGMENTS, seed) * 0.08) * scale;
+    return { x: c * radius, z: s * radius };
+  }
+
+  /** Flat upward-facing fan from the island center out to rim vertices kStart..kEnd. */
+  private _createIslandFan(name: string, scale: number, kStart = 0, kEnd = ISLAND_RIM_SEGMENTS): Mesh {
+    const positions = [0, 0, 0];
+    const normals = [0, 1, 0];
+    const indices: number[] = [];
+    for (let k = kStart; k <= kEnd; k++) {
+      const rim = this._islandRim(k, scale);
+      positions.push(rim.x, 0, rim.z);
+      normals.push(0, 1, 0);
+      if (k < kEnd) indices.push(0, k - kStart + 1, k - kStart + 2);
+    }
+    const fan = new Mesh(name, this._scene);
+    const data = new VertexData();
+    data.positions = positions;
+    data.normals = normals;
+    data.indices = indices;
+    data.applyToMesh(fan);
+    return fan;
+  }
+
   private _createGround(): void {
     // Main ground — warm green-orange grass
-    const ground = MeshBuilder.CreateGround("ground", {
-      width: ISLAND_WIDTH, height: ISLAND_DEPTH,
-    }, this._scene);
+    const ground = this._createIslandFan("ground", 1);
     const mat = new StandardMaterial("groundMat", this._scene);
     mat.diffuseColor = new Color3(0.60, 0.58, 0.30);
     mat.specularColor = new Color3(0.05, 0.05, 0.05);
@@ -154,23 +183,40 @@ export class TribalSandboxMapBuilder {
     ground.receiveShadows = true;
 
     // Center grass patch — greener in the middle
-    const centerGrass = MeshBuilder.CreateGround("centerGrass", {
-      width: 100, height: 80,
-    }, this._scene);
+    const centerGrass = this._createIslandFan("centerGrass", 0.9);
     centerGrass.position.y = 0.02;
     centerGrass.material = this._scene.getMaterialByName("grass")!;
     centerGrass.receiveShadows = true;
 
-    // Island underside — tapered rock slab so the field ends at a visible edge against the sky
-    const under = MeshBuilder.CreateCylinder("islandUnder", {
-      diameterTop: Math.SQRT2, diameterBottom: Math.SQRT2 * 0.55, height: 1, tessellation: 4,
-    }, this._scene);
-    under.rotation.y = Math.PI / 4;
-    under.bakeCurrentTransformIntoVertices();
-    under.scaling.set(ISLAND_WIDTH, 20, ISLAND_DEPTH);
-    under.position.y = -10.02;
+    // Island underside — a near-vertical pale cliff band under the rim, then a taper, so the field ends at a rock face against the sky
+    const rings = [{ y: -0.02, scale: 1, seed: 81 }, { y: -9, scale: 0.95, seed: 82 }, { y: -24, scale: 0.5, seed: 83 }];
+    const positions: number[] = [];
+    const indices: number[] = [];
+    for (const ring of rings) {
+      for (let k = 0; k < ISLAND_RIM_SEGMENTS; k++) {
+        const rim = this._islandRim(k, ring.scale, ring.seed);
+        positions.push(rim.x, ring.y, rim.z);
+      }
+    }
+    for (let r = 0; r + 1 < rings.length; r++) {
+      for (let k = 0; k < ISLAND_RIM_SEGMENTS; k++) {
+        const top = r * ISLAND_RIM_SEGMENTS + k;
+        const topNext = r * ISLAND_RIM_SEGMENTS + ((k + 1) % ISLAND_RIM_SEGMENTS);
+        const low = top + ISLAND_RIM_SEGMENTS;
+        const lowNext = topNext + ISLAND_RIM_SEGMENTS;
+        indices.push(top, low, lowNext, top, lowNext, topNext);
+      }
+    }
+    const under = new Mesh("islandUnder", this._scene);
+    const data = new VertexData();
+    data.positions = positions;
+    data.indices = indices;
+    data.applyToMesh(under);
     under.convertToFlatShadedMesh();
-    under.material = this._scene.getMaterialByName("darkRock")!;
+    const cliff = new StandardMaterial("cliffRock", this._scene);
+    cliff.diffuseColor = new Color3(0.74, 0.74, 0.76);
+    cliff.specularColor = Color3.Black();
+    under.material = cliff;
     under.isPickable = false;
   }
 
@@ -517,11 +563,10 @@ export class TribalSandboxMapBuilder {
         const cone = MeshBuilder.CreateCylinder("hazeTree", {
           height, diameterTop: 0, diameterBottom: height * 0.75, tessellation: 5,
         }, this._scene);
-        cone.position.set(
-          -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH,
-          height / 2,
-          side * (40 + this._seededValue(k, 73) * 7),
-        );
+        // Along the long edges, set in from the rim so the band bends with the island outline
+        const x = (-0.5 + (i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH * 0.86;
+        const rimZ = (ISLAND_DEPTH / 2) * Math.pow(1 - Math.pow((2 * x) / ISLAND_WIDTH, 4), 0.25);
+        cone.position.set(x, height / 2, side * rimZ * (0.82 + this._seededValue(k, 73) * 0.12));
         cone.rotation.y = this._seededValue(k, 74) * Math.PI;
         cones.push(cone);
       }
@@ -619,12 +664,12 @@ export class TribalSandboxMapBuilder {
   private _createZoneOverlays(): void {
     const zones = getIslandGuideZones();
     const colors = [new Color3(0.2, 0.5, 1.0), new Color3(1.0, 0.25, 0.25)];
+    const quarter = ISLAND_RIM_SEGMENTS / 4;
 
     for (const zone of zones) {
-      const overlay = MeshBuilder.CreateGround(`zone_overlay_${zone.team}`, {
-        width: zone.size.x, height: zone.size.z,
-      }, this._scene);
-      overlay.position = zone.center.clone();
+      // Half of the island outline: team 0 the -X half, team 1 the +X half
+      const kStart = zone.team === 0 ? quarter : quarter * 3;
+      const overlay = this._createIslandFan(`zone_overlay_${zone.team}`, 1, kStart, kStart + quarter * 2);
       overlay.position.y = 0.03;
       const mat = new StandardMaterial(`zone_overlay_mat_${zone.team}`, this._scene);
       mat.diffuseColor = colors[zone.team];
@@ -635,56 +680,18 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Draw clear border lines: outer rectangle for each zone + center divider */
+  /** Center divider only: the island rim itself bounds each half */
   private _createZoneBorders(): void {
-    const zones = getIslandGuideZones();
-    const colors = [new Color3(0.3, 0.65, 1.0), new Color3(1.0, 0.35, 0.35)];
     const borderHeight = 0.06;
-    const borderThick = 0.4;
-
-    for (const zone of zones) {
-      const color = colors[zone.team];
-      const hx = zone.size.x / 2;
-      const hz = zone.size.z / 2;
-      const cx = zone.center.x;
-      const cz = zone.center.z;
-
-      // 4 edges of the zone rectangle
-      this._createBorderStrip(
-        new Vector3(cx, borderHeight, cz + hz),
-        zone.size.x + borderThick, borderThick, color,
-      );
-      this._createBorderStrip(
-        new Vector3(cx, borderHeight, cz - hz),
-        zone.size.x + borderThick, borderThick, color,
-      );
-      // Outer side edge only; the inner edge at x = 0 is the center divider
-      const outerX = zone.team === 0 ? cx - hx : cx + hx;
-      this._createBorderStrip(
-        new Vector3(outerX, borderHeight, cz),
-        borderThick, zone.size.z, color,
-      );
-    }
 
     // Center divider: thin flat pink line, no glow
-    const divider = MeshBuilder.CreateGround("border", { width: 0.12, height: ISLAND_DEPTH }, this._scene);
+    const divider = MeshBuilder.CreateGround("border", { width: 0.12, height: ISLAND_DEPTH * 0.96 }, this._scene);
     divider.position = new Vector3(0, borderHeight + 0.01, 0);
     const dividerMat = new StandardMaterial("center_divider_mat", this._scene);
     dividerMat.diffuseColor = Color3.Black();
     dividerMat.emissiveColor = new Color3(0.92, 0.36, 0.62);
     dividerMat.disableLighting = true;
     divider.material = dividerMat;
-  }
-
-  private _createBorderStrip(pos: Vector3, width: number, depth: number, color: Color3): void {
-    const strip = MeshBuilder.CreateGround("border", { width, height: depth }, this._scene);
-    strip.position = pos;
-    const mat = new StandardMaterial("border_mat", this._scene);
-    mat.diffuseColor = color;
-    mat.emissiveColor = color.scale(0.6);
-    mat.alpha = 0.7;
-    mat.disableLighting = true;
-    strip.material = mat;
   }
 }
 
