@@ -1,28 +1,28 @@
 # Loop state
-Iteration: 53   Last re-audit: 50   Consecutive rejects: 0   Branch: main
+Iteration: 54   Last re-audit: 50   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 
 ## Focus (2-3 gaps this iteration)
-- fireball-cream-not-fire 7e0ffa7 — REJECT (reverted 035cd97)
-- corpses-still-T-and-paired-legs ab78ff2 — APPROVE
-- grass-foreground-and-drift 0a46f92 — REJECT (reverted 4103db1)
+- bare-grass-bottom-quarter 4954102 — APPROVE
+- fireball-translucent-cream fb319ca — APPROVE
+- flyer-legs-barely-part c93f114 — APPROVE
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: fireball-cream-not-fire (7e0ffa7) VERDICT: REJECT SCORE: vfx 3/5 (previous: 3/5)
-- GAP: corpses-still-T-and-paired-legs (ab78ff2) VERDICT: APPROVE SCORE: battle-feel 3/5 (previous: 3/5)
-- GAP: grass-foreground-and-drift (0a46f92) VERDICT: REJECT SCORE: camera 4/5 (previous: 4/5)
+- GAP: bare-grass-bottom-quarter (4954102) VERDICT: APPROVE SCORE: camera 4/5 (previous: 4/5)
+- GAP: fireball-translucent-cream (fb319ca) VERDICT: APPROVE SCORE: vfx 3/5 (previous: 3/5)
+- GAP: flyer-legs-barely-part (c93f114) VERDICT: APPROVE SCORE: battle-feel 3/5 (previous: 3/5)
 
 ## Ranked open gaps (max 8, attempts count in brackets)
-1. [camera] bare-grass-bottom-quarter: near rank's feet should reach the bottom edge [attempts: 1] — ref: tabs_screenshot_06 — ours: big_melee_9s.png
-2. [vfx] fireball-translucent-cream: duller than the clouds; needs opaque bright yellow body [attempts: 1] — ref: trailer_3_sheet_03 r1c1 — ours: war_machines_1100ms.png
-3. [battle-feel] flyer-legs-barely-part: knees fold into loops; need wide scissor on straight legs [attempts: 0] — ref: trailer_3_sheet_03 r1c2 — ours: war_machines_1100ms.png
-4. [camera] mammoth-cropped: cut by top and right edges while clash sits low [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_9s.png
-5. [battle-feel] no-foreground-bodies-no-pile: dead lie far back and small [attempts: 1] — ref: tabs_screenshot_01 — ours: big_melee_9s.png
-6. [unit-look] box-torsos-stick-limbs-cube-hands [attempts: 2] — ref: tabs_screenshot_06 — ours: closeup_weapon_reads.png
-7. [maps-light] flat-green-weak-shadows-no-warm-sun [attempts: 2] — ref: tabs_screenshot_01 — ours: big_melee_2s.png
-8. [vfx] orange-lobes-hard-separate-balls: want one soft skirt fused into the blast [attempts: 0] — ref: trailer_3_sheet_03 r2c1 — ours: war_machines_3800ms.png
+1. [vfx] fireball-uniform-lemon-ball: needs paler hot core, orange only in bottom fringe [attempts: 0] — ref: trailer_3_sheet_03 r1c1 — ours: war_machines_3800ms.png
+2. [battle-feel] flyers-four-pointed-stars: want fore-aft scissor, one bent knee, limbs along trunk [attempts: 0] — ref: trailer_3_sheet_03 r1c2 — ours: war_machines_1100ms.png
+3. [camera] near-rank-26pct-empty-flanks: should be ~40% of frame, edge to edge [attempts: 0] — ref: tabs_screenshot_06 — ours: big_melee_2s.png
+4. [battle-feel] blast-lofts-5-separate: should throw an overlapping clump of 6-10 [attempts: 0] — ref: trailer_3_sheet_03 r1c3 — ours: war_machines_1100ms.png
+5. [unit-look] box-torsos-stick-limbs-cube-hands [attempts: 2] — ref: tabs_screenshot_06 — ours: closeup_weapon_reads.png
+6. [camera] result-shot-bare-bottom-fifth: mammoth rear fills centre [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_result.png
+7. [maps-light] placement-flat-slab-teal-haze: want rounded island, saturated ground [attempts: 0] — ref: gameplay_sheet_01 r3c2 — ours: hud_placement.png
+8. [vfx] muzzle-smoke-single-ball: want fat multi-puff trail along barrel [attempts: 0] — ref: trailer_2_sheet_02 r1c1 — ours: war_machines_3800ms.png
 
 ## Rejected attempts (last 5, newest first; `rejected-kept` when the revert conflicted)
 - grass-foreground-and-drift [attempts: 1] — clearance 5, eye 1.1, x-follow: bottom 27% still bare grass
@@ -32,7 +32,7 @@ battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 - tree-crowns-cast-no-shadow [attempts: 1] — crowns and rocks shade themselves near-black
 
 ## Notes for next iteration (max 5 lines)
-- Gap 1: swoopToBattle clearRadius depth+3, radius floor 5; change nothing else.
-- Gap 2: flashMat diffuse ~(1,0.85,0.12), emissive blue ~0.02; find why body is see-through, hold alpha 1 until late.
-- Gap 3: _buildAirPose hipGap 0.6-1.0, kick 0.4-0.7, cap flight knees ~0.5.
-- Pickable next: 1, 2, 3, 4, 8, 5 (not 6, 7). No new Math.random calls in VFX or poses.
+- Gap 1: add a smaller pale core mesh (~1,.97,.75, high emissive) in the blast; flame lobes only below the equator.
+- Gap 2: _buildAirPose kicks ~0.15-0.3; trailing leg knee up to ~0.9, lead leg straight.
+- Gap 3: swoopToBattle melee radius floor 8 -> ~6.5. Pitch (not a lower eye) is what moved feet to the edge.
+- Iter 55 is a re-audit. Pickable: 1, 2, 3, 4, 6, 7, 8 (not 5). No new Math.random in VFX or poses.
