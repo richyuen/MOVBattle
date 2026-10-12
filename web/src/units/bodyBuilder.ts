@@ -213,6 +213,14 @@ export function buildArticulatedBody(
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
     return sphere(n, size, mat, new Vector3(0.6, 0.8, 0.4), 2);
   }
+  /** Foot: a slab under the ankle with the heel just behind the shin and the rest of it out in front. */
+  function foot(n: string): Mesh {
+    const m = MeshBuilder.CreateBox(n, { width: footWidth * s, height: footHeight * s, depth: footLength * s }, scene);
+    m.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.25);
+    m.material = bodyMat;
+    allMeshes.push(m);
+    return m;
+  }
   function joint(n: string, parent: TransformNode): TransformNode {
     const t = new TransformNode(n, scene);
     t.parent = parent;
@@ -255,11 +263,11 @@ export function buildArticulatedBody(
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom / LOWER_LIMB_STEP;
   const lowerLegBottom = lowerLegTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
-  // Feet are blunt boots wider than the ankle and a third of the shin tall, so a leg ends in a block and not a point.
-  const footLength = 0.2 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
-  const footWidth = 0.145 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
+  // Feet are flat-sided slabs a third wider than the ankle, half as long again as they are wide and a third of
+  // the shin tall, so a leg ends in a foot pointing forward and not in a point.
+  const footLength = 0.3 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
+  const footWidth = 0.19 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
   const footHeight = 0.1 * (p.footHeight ?? 1.0);
-  const footBase = Math.max(footLength, footWidth, footHeight);
   const footBottomOffset = footHeight * 0.82;
 
   // ─── Hip (root pivot for body) ───
@@ -491,18 +499,7 @@ export function buildArticulatedBody(
   );
   leftLowerLeg.position.y = -lowerLegH * s * 0.5;
   leftLowerLeg.parent = leftKnee;
-  const leftFoot = sphere(
-    `${name}_lFootM`,
-    footBase,
-    bodyMat,
-    new Vector3(
-      footWidth / Math.max(footBase, 0.001),
-      footHeight / Math.max(footBase, 0.001),
-      footLength / Math.max(footBase, 0.001),
-    ),
-    sphereSegments,
-  );
-  leftFoot.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.18);
+  const leftFoot = foot(`${name}_lFootM`);
   leftFoot.parent = leftKnee;
 
   // Right leg
@@ -530,18 +527,7 @@ export function buildArticulatedBody(
   );
   rightLowerLeg.position.y = -lowerLegH * s * 0.5;
   rightLowerLeg.parent = rightKnee;
-  const rightFoot = sphere(
-    `${name}_rFootM`,
-    footBase,
-    bodyMat,
-    new Vector3(
-      footWidth / Math.max(footBase, 0.001),
-      footHeight / Math.max(footBase, 0.001),
-      footLength / Math.max(footBase, 0.001),
-    ),
-    sphereSegments,
-  );
-  rightFoot.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.18);
+  const rightFoot = foot(`${name}_rFootM`);
   rightFoot.parent = rightKnee;
 
   // ─── Hip Caps (hide joint seams) ───
