@@ -53,9 +53,9 @@ const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only a quarter of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.25;
-// ...but trousers and boots keep half of theirs, so red legs still step down from the tunic, and warm cloth and
+// ...but trousers and boots keep four fifths of theirs, so red legs step clearly down from the tunic, and warm cloth and
 // plate are pushed more saturated instead of washing out to salmon.
-const WARM_LEG_SHADE_KEEP = 0.5;
+const WARM_LEG_SHADE_KEEP = 0.8;
 const WARM_SATURATION = 1.18;
 // A surcoat is the team colour a shade lighter (a third of the way to cream), the full width of the chest it
 // covers and long enough to hang a third of the torso's height below it as a short skirt, cinched by a dark belt.
