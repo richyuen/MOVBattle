@@ -38,6 +38,8 @@ const BODY_METAL_WEIGHT = 0.25;
 // rotated away from the skin hue and a little darker, but nearly as saturated so it still reads as the team's.
 const CLOTH_HUE_SHIFT = 18;
 const CLOTH_SATURATION = 0.92;
+// Warm cloth is pushed the other way: red washed toward grey goes dusty brick, so it gains saturation and stays a clear warm red.
+const WARM_CLOTH_SATURATION = 1.25;
 const CLOTH_SHADE = 0.8;
 // Trousers are a darker shade of the tunic cloth, so the legs break from the torso at the waist and from the boot at the ankle.
 const TROUSER_SHADE = 0.68;
@@ -162,7 +164,7 @@ export class UnitFactory {
       const cool = hsv.r > 150 && hsv.r < 300;
       const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, Math.min(1, hsv.g * (isArmored ? 1 : cool ? CLOTH_SATURATION : WARM_CLOTH_SATURATION)), hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
       const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(shade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
