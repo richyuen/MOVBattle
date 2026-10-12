@@ -117,10 +117,12 @@ initMaterialFactory(scene);
 
 // Lights
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
-hemi.intensity = 0.7;
+hemi.intensity = 0.58;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
-dir.intensity = 0.8;
+dir.intensity = 0.95;
+// Depth range fitted to the casters each frame, so the exponential shadow map keeps its contrast
+dir.autoCalcShadowZBounds = true;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
@@ -131,7 +133,7 @@ scene.fogEnd = 170;
 // Shadows
 const shadowGen = new ShadowGenerator(2048, dir);
 shadowGen.useBlurExponentialShadowMap = true;
-shadowGen.blurKernel = 48;
+shadowGen.blurKernel = 12;
 
 // Camera
 const camCtrl = new CameraController(scene, canvas);
