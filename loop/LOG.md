@@ -61,3 +61,4 @@ iter 59 | helm-stovepipe-pale, fire-orange-not-fringe, budget-separate-disc | 2/
 iter 60 | torso-box-no-shoulders, placement-haze-washes-teams, cannon-barrel-team-blue | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3 (re-audit)
 iter 61 | red-armour-muddy-maroon, placement-haze-washes-teams, torso-box-no-shoulders | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 62 | units-cast-no-shadow, tree-canopies-cast-nothing, torso-column-narrower-than-helm | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 63 | shadows-short-and-faint, shoulder-caps-still-beads, knight-single-value-red | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
