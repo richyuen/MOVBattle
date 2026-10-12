@@ -140,9 +140,9 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
   footHeight: 1.0,
 };
 
-/** TABS silhouette: small head on long thin limbs. Applied on top of every unit's own proportions. */
+/** TABS silhouette: small head on long limbs a third as thick as the torso is wide, not sticks. Applied on top of every unit's own proportions. */
 const HEAD_SHRINK = 0.88;
-const LIMB_THIN = 0.9;
+const LIMB_THIN = 1.2;
 /** Sleeves and thighs are chunky next to the thin forearms and shins they end in. */
 const SLEEVE_BULK = 1.35;
 // Forearms and shins step in from the sleeve and thigh by a quarter of the bulk: more left them as sticks.
