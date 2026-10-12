@@ -591,8 +591,10 @@ export class ProceduralAnimator {
 
     // Alternating leg swing (TABS-style exaggerated)
     const legSwing = 0.55;
-    b.leftHip.rotation.x = Math.sin(t * speed) * legSwing;
-    b.rightHip.rotation.x = Math.sin(t * speed + Math.PI) * legSwing;
+    // Both legs trail 0.22 rad behind the hips, so the body tilts into the run from the feet up and the torso does not fold over upright legs.
+    const trail = 0.22;
+    b.leftHip.rotation.x = trail + Math.sin(t * speed) * legSwing;
+    b.rightHip.rotation.x = trail + Math.sin(t * speed + Math.PI) * legSwing;
     // Half the standing splay carries into the march, so the legs do not snap together on the first step
     const splay = (this._idlePose ??= this._buildIdlePose()).splay * 0.5;
     b.leftHip.rotation.z = -splay;
