@@ -51,6 +51,8 @@ const ARMOUR_SHADE = 0.65;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
 const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
+// Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only half of each darkening and stay coral.
+const WARM_SHADE_KEEP = 0.5;
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
@@ -158,13 +160,14 @@ export class UnitFactory {
       // Warm cloth rotates toward orange and tan, cool cloth toward teal, so neither drifts into the other team's colour.
       const hsv = body.bodyMaterial.baseColor.toHSV();
       const cool = hsv.r > 150 && hsv.r < 300;
+      const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * CLOTH_SHADE * (isArmored ? ARMOUR_SHADE : 1), new Color3());
-      const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(TROUSER_SHADE));
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
+      const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(shade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
       }
-      const bootMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(TROUSER_SHADE * BOOT_SHADE));
+      const bootMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(shade(TROUSER_SHADE) * shade(BOOT_SHADE)));
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
