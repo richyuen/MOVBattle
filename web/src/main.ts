@@ -1100,14 +1100,28 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: 
     halfWidth = Math.max(halfWidth, Math.abs(across));
   }
   const near = standoff ? { ...nearCentre, halfWidth } : undefined;
-  // How far the formations reach toward the side-on battle camera (-z) from the clash point.
+  // How far the ranks that close in reach toward the side-on battle camera (-z) from the clash point. Shooters
+  // hang back from the clash, so they do not push the camera away from it.
   const focusZ = (a.z + b.z) / 2;
   let depth = 0;
   for (const unit of placedUnits) {
-    if (unit.linkedParent || unit.isDead) continue;
+    if (unit.linkedParent || unit.isDead || unit.definition.engageRange >= STANDOFF_ENGAGE_RANGE) continue;
     depth = Math.max(depth, focusZ - unit.position.z);
   }
   return { x: (a.x + b.x) / 2, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, near };
+}
+
+/** Where along the line the fight is now: midway between the two armies' living bodies. */
+function followClashWithCamera(dt: number): void {
+  const sums = [{ x: 0, n: 0 }, { x: 0, n: 0 }];
+  for (const unit of placedUnits) {
+    if (unit.linkedParent || unit.isDead) continue;
+    const s = sums[unit.team === 0 ? 0 : 1];
+    s.x += unit.position.x;
+    s.n += 1;
+  }
+  if (!sums[0].n || !sums[1].n) return;
+  camCtrl.followClash((sums[0].x / sums[0].n + sums[1].x / sums[1].n) / 2, dt);
 }
 
 function resetBattle(options: {
@@ -3409,6 +3423,7 @@ function tick(dt: number, nowSeconds: number): void {
     simulation.update(dt, nowSeconds);
     projectileSystem.update(dt);
     visualEffects.update(dt);
+    if (!galleryCaptureSession) followClashWithCamera(dt);
     checkVictory();
   } else if (stateMachine.currentState === GameState.Placement) {
     // Still update units for idle animation if needed

@@ -131,6 +131,7 @@ export class CameraController {
   }
 
   panByScreenDelta(dx: number, dy: number): void {
+    this._followsClash = false;
     const speed = this.camera.radius * 0.003;
     this._applyPanOffsets(dx * speed, dy * speed);
   }
@@ -204,12 +205,12 @@ export class CameraController {
     // Armies that hold their ground (halfSpan > 0) must both fit: the frame is ~0.63 radius wide each side of the target.
     const spanRadius = ((center.halfSpan ?? 0) + 1.5) / 0.6;
     // The eye stands clear of the rank nearest to it, so the fight spreading sideways does not swallow the camera.
-    const clearRadius = (center.depth ?? 0) + 6.5;
+    const clearRadius = (center.depth ?? 0) + 5;
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
       beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
-      radius: Math.min(14, Math.max(8, spanRadius, clearRadius)), // three body lengths back from the nearest rank, which stands ~0.4 of the frame tall
-      target: { x: center.x, y: 1.5, z: center.z },   // eye near 1 m, so the grass in front of the nearest rank stays a thin strip
+      radius: Math.min(14, Math.max(7, spanRadius, clearRadius)), // two and a half body lengths back from the nearest rank, which stands about half the frame tall
+      target: { x: center.x, y: 1.1, z: center.z },   // eye near 0.6 m, so the grass in front of the nearest rank stays a thin strip
     };
     // The battle view sits below the placement pitch limits and inside the zoom floor; widen them for the fight.
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
@@ -217,6 +218,8 @@ export class CameraController {
     this.camera.lowerBetaLimit = Math.min(this.camera.lowerBetaLimit ?? to.beta, to.beta);
     const from = this.captureViewState();
     const wrap = (angle: number) => Math.atan2(Math.sin(angle), Math.cos(angle));
+    // A melee clash wanders along the line as one flank wins; a standoff frame is fitted to lines that hold still.
+    this._followsClash = !center.near;
     if (center.near) {
       // Standoff: stand close behind the holding formation and well off its firing axis, so the line recedes
       // across the foreground and the enemy it shoots at sits across the field as the background.
@@ -240,6 +243,13 @@ export class CameraController {
     return to;
   }
 
+  private _followsClash = false;
+  /** Ease the battle view sideways after the clash, so the fight stays mid-frame. Stops once the player pans. */
+  followClash(x: number, dt: number): void {
+    if (!this._followsClash || this._transition) return;
+    this.camera.target.x += (x - this.camera.target.x) * Math.min(1, dt * 0.8);
+  }
+
   // ─── Victory shot ───
   /** Drift from the battle view onto the survivors: a slow close shot, a human winner about half the height between the result bands. */
   frameSurvivors(
@@ -247,6 +257,7 @@ export class CameraController {
     durationSeconds = 2,
   ): CameraViewState | null {
     if (!this._prebattleView) return null;
+    this._followsClash = false;
     const from = this.captureViewState();
     const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
     // The bands cover the top and bottom of the frame, so a survivor gets ~0.28 radius of height either side of
@@ -277,6 +288,7 @@ export class CameraController {
   /** Undo the battle swoop: restore the placement view, its pitch limits and its zoom floor. */
   returnToPlacementView(): void {
     this._transition = null;
+    this._followsClash = false;
     if (this._prebattleBetaLimits) {
       this.camera.lowerBetaLimit = this._prebattleBetaLimits.lower;
       this.camera.upperBetaLimit = this._prebattleBetaLimits.upper;
