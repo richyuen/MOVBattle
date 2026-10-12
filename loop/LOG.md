@@ -99,3 +99,4 @@ iter 97 | red-team-maroon, victory-title-thin, cannon-crew-plank-lean, lightning
 iter 98 | grass-thin-scatter, lightning-long-bands, bucket-helm-tall, cannon-crew-upright, far-ridge-lit-faces-white, victory-hint-font | 4/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 99 | lightning-band-edge-on, cannon-operator-hands-air, cannon-crew-bare, clouds-cauliflower, far-ridge-cones, mammoth-plain | 5/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 100 | clouds-saucer, horizon-black-strip, lightning-even-sawtooth, far-ridge-cones, cannon-plain-tube, mammoth-tusk-kinked, launched-rigid-planks, bomb-crew-bent-bare | 7/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 101 | lightning-square-beams, mammoth-tusk-overlong, launched-cloud-height-starfish, bomb-crew-overlap, cannon-disc-wheels-long-barrel, clouds-one-size, mammoth-bald-dome-head | 6/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
