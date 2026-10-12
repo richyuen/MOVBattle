@@ -496,6 +496,7 @@ export class SimulationSystem {
       }
       this._clearPathState(unit);
       unit.faceTarget(enemy.position);
+      if (attackProfile.type === AttackType.Melee) unit.leanIntoShove();
       if (canAttack) {
         this._tryAttack(unit, enemy, attackProfile, now);
       }

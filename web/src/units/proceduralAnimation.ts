@@ -91,6 +91,30 @@ export class ProceduralAnimator {
     this._limpTarget = limp ? 1 : 0;
   }
 
+  /** Melee contact: called every decision while in reach; the shove pose decays on its own once the calls stop. */
+  leanIntoShove(): void {
+    this._shoveTimer = 0.5;
+  }
+
+  private _shoveTimer = 0;
+  private _shove = 0;
+  // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
+  // phase rather than drawn fresh, so spawning consumes no extra random numbers.
+  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number } | null = null;
+  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number } {
+    const h = (n: number): number => {
+      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    return {
+      pitch: 0.4 + h(1) * 0.25,
+      roll: (h(2) - 0.5) * 0.4,
+      stance: (h(3) < 0.5 ? -1 : 1) * (0.25 + h(4) * 0.25),
+      knee: 0.3 + h(5) * 0.3,
+      rate: 5 + h(6) * 4,
+      spread: 0.35 + h(7) * 0.4,
+    };
+  }
   private _flinchTimer = 0;
   private _squashTimer = 0;
   private _limpTarget = 0;
@@ -155,6 +179,32 @@ export class ProceduralAnimator {
       // Arms flail out
       b.leftShoulder.rotation.z -= 0.5 * intensity;
       b.rightShoulder.rotation.z += 0.5 * intensity;
+    }
+    // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving;
+    // between swings the arms windmill out from the shoulders instead of hanging at the sides.
+    this._shoveTimer -= dt;
+    this._shove += ((this._shoveTimer > 0 ? 1 : 0) - this._shove) * Math.min(1, dt * 6);
+    if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+      const b = this._body;
+      const p = (this._shovePose ??= this._buildShovePose());
+      const k = this._shove;
+      const phase = (this._time + this._wobblePhase) * p.rate;
+      // The walk already leans 0.26 rad; a presser still stepping in takes half the extra pitch.
+      b.torso.rotation.x += (p.pitch * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
+      b.torso.rotation.z += (p.roll + Math.cos(phase * 0.35) * 0.08) * k;
+      b.neck.rotation.x -= p.pitch * 0.6 * k;
+      b.leftHip.rotation.x += p.stance * k;
+      b.rightHip.rotation.x -= p.stance * k;
+      b.leftKnee.rotation.x += p.knee * k;
+      b.rightKnee.rotation.x += p.knee * k;
+      if (this._state === AnimState.Idle) {
+        b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
+        b.rightShoulder.rotation.x += (-0.9 + Math.sin(phase + Math.PI) * 1.1) * k;
+        b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
+        b.rightShoulder.rotation.z += (p.spread + Math.cos(phase + Math.PI) * 0.25) * k;
+        b.leftElbow.rotation.x -= 0.5 * k;
+        b.rightElbow.rotation.x -= 0.5 * k;
+      }
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
     this._limp += (this._limpTarget - this._limp) * Math.min(1, dt * 9);

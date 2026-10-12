@@ -391,6 +391,12 @@ export class RuntimeUnit {
     }
   }
 
+  /** In melee reach of its target, pressing or bracing: humanoids pitch into the shove and flail instead of standing upright. */
+  leanIntoShove(): void {
+    if (isVehicleUnit(this.definition.id)) return;
+    this.animator.leanIntoShove();
+  }
+
   get isMoving(): boolean {
     return this._isMoving;
   }
