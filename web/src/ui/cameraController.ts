@@ -218,8 +218,8 @@ export class CameraController {
       const toSide = wrap(to.alpha - behind);
       to.alpha = behind + Math.sign(toSide) * Math.min(Math.abs(toSide), 0.3);
       to.radius = Math.min(12, Math.max(6.5, (center.halfSpan ?? 0) * 1.5));
-      to.target.x = center.x + (center.near.x - center.x) * 0.6;
-      to.target.z = center.z + (center.near.z - center.z) * 0.6;
+      to.target.x = center.x + (center.near.x - center.x) * 0.3;
+      to.target.z = center.z + (center.near.z - center.z) * 0.3;
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
