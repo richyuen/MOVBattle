@@ -105,14 +105,14 @@ export class TribalSandboxMapBuilder {
     dryGrass.diffuseColor = new Color3(0.72, 0.62, 0.30);
     dryGrass.specularColor = new Color3(0.05, 0.05, 0.05);
 
-    // Mountain rock
+    // Boulder stone: pale sandy tan
     const rock = new StandardMaterial("rock", this._scene);
-    rock.diffuseColor = new Color3(0.74, 0.52, 0.34);
+    rock.diffuseColor = new Color3(0.78, 0.72, 0.58);
     rock.specularColor = new Color3(0.08, 0.08, 0.08);
 
-    // Dark rock
+    // Dark boulder stone: cool grey
     const darkRock = new StandardMaterial("darkRock", this._scene);
-    darkRock.diffuseColor = new Color3(0.60, 0.40, 0.28);
+    darkRock.diffuseColor = new Color3(0.55, 0.56, 0.58);
     darkRock.specularColor = new Color3(0.06, 0.06, 0.06);
 
     // Cliff rock: the island's sides are grey stone, a different stuff from the warm earth and boulders on top
@@ -355,12 +355,16 @@ export class TribalSandboxMapBuilder {
   }
 
   private _createBoulder(pos: Vector3, size: number, mat: StandardMaterial): void {
+    // A coarse ball of a few dozen flat faces, squashed and turned by its place on the map, so each
+    // boulder is a chunky faceted lump of its own shape and not a smooth loaf.
     const rock = MeshBuilder.CreateSphere("boulder", {
-      diameter: size, segments: 6,
+      diameter: size, segments: 2,
     }, this._scene);
-    // Slightly squished to look more natural
-    rock.scaling.set(1.0, 0.7, 1.1);
-    rock.position.set(pos.x, size * 0.25, pos.z);
+    const k = pos.x * 7 + pos.z * 13;
+    rock.scaling.set(0.85 + this._seededValue(k, 96) * 0.3, 0.6 + this._seededValue(k, 97) * 0.25, 0.9 + this._seededValue(k, 98) * 0.3);
+    rock.rotation.set((this._seededValue(k, 99) - 0.5) * 0.5, this._seededValue(k, 100) * Math.PI, (this._seededValue(k, 101) - 0.5) * 0.5);
+    rock.position.set(pos.x, size * 0.22, pos.z);
+    rock.convertToFlatShadedMesh();
     rock.material = mat;
     rock.receiveShadows = true;
 
