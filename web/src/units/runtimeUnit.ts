@@ -1332,15 +1332,24 @@ export class RuntimeUnit {
         body.leftHip.rotation.x += 0.08;
         body.rightHip.rotation.x += 0.08;
         break;
-      case "crew":
-        // Gun crew work bent to the carriage with both hands on it, not standing to attention behind it
-        body.torso.rotation.x += 0.3;
-        body.neck.rotation.x -= 0.2;
-        body.leftShoulder.rotation.x -= 0.9;
-        body.rightShoulder.rotation.x -= 0.9;
+      case "crew": {
+        // Gun crew lunge at the carriage: bent well over it with both hands on it, one leg stepped forward on a bent
+        // knee and the other braced back. The loader leads with the other leg and bends less, so the two are not twins.
+        const loader = this._linkedRoleLabel === "loader";
+        const lead = loader ? body.leftHip : body.rightHip;
+        const leadKnee = loader ? body.leftKnee : body.rightKnee;
+        const brace = loader ? body.rightHip : body.leftHip;
+        body.torso.rotation.x += loader ? 0.42 : 0.55;
+        body.neck.rotation.x -= loader ? 0.25 : 0.35;
+        lead.rotation.x -= 0.6;
+        leadKnee.rotation.x += 0.55;
+        brace.rotation.x += 0.4;
+        body.leftShoulder.rotation.x -= loader ? 0.7 : 0.9;
+        body.rightShoulder.rotation.x -= loader ? 1.1 : 0.9;
         body.leftElbow.rotation.x -= 0.3;
         body.rightElbow.rotation.x -= 0.3;
         break;
+      }
       case "support":
         body.leftShoulder.rotation.z -= 0.18;
         body.rightShoulder.rotation.z += 0.18;
