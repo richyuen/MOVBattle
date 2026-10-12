@@ -124,7 +124,7 @@ hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 hemi.diffuse = new Color3(0.7, 0.9, 1.6);
 // The sun stands about 55 degrees up, so a tree's shadow is shorter than the tree and does not reach across the field.
 const dir = new DirectionalLight("dir", new Vector3(-0.305, -0.762, 0.457), scene);
-dir.intensity = 0.9;
+dir.intensity = 1.0;
 // The sun stands off beyond the tree ring with its own depth range. Left at its default spot just above the field,
 // everything taller than a trunk base sits behind the shadow camera and never reaches the shadow map.
 dir.position = dir.direction.scale(-100);
