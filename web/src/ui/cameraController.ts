@@ -39,13 +39,7 @@ export class CameraController {
   private readonly _verticalSpeed = 4.5;
   private readonly _minTargetY = -2.5;
   private readonly _maxTargetY = 8;
-  private _transition: {
-    from: CameraViewState; to: CameraViewState; elapsed: number; duration: number;
-    /** A second, slower move that starts when this one lands. */
-    then?: { to: CameraViewState; duration: number };
-    /** Set on that second move: the view it last wrote, so it gives way as soon as the player moves the camera. */
-    wrote?: CameraViewState;
-  } | null = null;
+  private _transition: { from: CameraViewState; to: CameraViewState; elapsed: number; duration: number } | null = null;
   private _prebattleView: CameraViewState | null = null;
   private _prebattleBetaLimits: { lower: number | null; upper: number | null; radius: number | null } | null = null;
 
@@ -223,7 +217,6 @@ export class CameraController {
     this.camera.lowerBetaLimit = Math.min(this.camera.lowerBetaLimit ?? to.beta, to.beta);
     const from = this.captureViewState();
     const wrap = (angle: number) => Math.atan2(Math.sin(angle), Math.cos(angle));
-    let then: { to: CameraViewState; duration: number } | undefined;
     if (center.near) {
       // Standoff: stand close behind the holding formation and well off its firing axis, so the line recedes
       // across the foreground and the enemy it shoots at sits across the field as the background.
@@ -248,17 +241,9 @@ export class CameraController {
       to.beta = Math.PI / 2 + pitchUp;
       to.target.y = 1.1 + to.radius * Math.sin(pitchUp);
       this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
-      // Once the lines meet the fight spreads toward the eye: back off slowly at the same eye height and pitch,
-      // so the rank that spills forward keeps its legs in frame instead of being cropped at the knee.
-      const backRadius = Math.min(14, to.radius + 1.5);
-      then = {
-        to: { ...to, radius: backRadius, target: { ...to.target, y: 1.1 + backRadius * Math.sin(pitchUp) } },
-        duration: 6,
-      };
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
-    if (then) then.to.alpha = to.alpha;
-    this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds), then };
+    this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
   }
 
@@ -313,16 +298,6 @@ export class CameraController {
   advanceTransition(dt: number): void {
     const t = this._transition;
     if (!t) return;
-    if (t.wrote) {
-      const w = t.wrote;
-      const c = this.camera;
-      const moved = Math.abs(c.alpha - w.alpha) + Math.abs(c.beta - w.beta) + Math.abs(c.radius - w.radius)
-        + Math.abs(c.target.x - w.target.x) + Math.abs(c.target.z - w.target.z);
-      if (moved > 1e-3) {
-        this._transition = null;
-        return;
-      }
-    }
     t.elapsed += dt;
     const u = Math.min(1, t.elapsed / t.duration);
     const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
@@ -335,12 +310,7 @@ export class CameraController {
       lerp(t.from.target.y, t.to.target.y),
       lerp(t.from.target.z, t.to.target.z),
     );
-    if (t.wrote) t.wrote = this.captureViewState();
-    if (u >= 1) {
-      this._transition = t.then
-        ? { from: t.to, to: t.then.to, elapsed: 0, duration: t.then.duration, wrote: this.captureViewState() }
-        : null;
-    }
+    if (u >= 1) this._transition = null;
   }
 
   // ─── Screen Shake ───
