@@ -112,7 +112,8 @@ export class UnitFactory {
       teamColor,
       isArmored ? 0.95 : shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.9 : 0.85,
     );
-    const skinColor = teamColor.scale(0.9);
+    // Red skin is coral, not wine: the red team colour is lifted toward a warm white instead of darkened
+    const skinColor = team === 1 ? Color3.Lerp(teamColor, new Color3(1, 0.9, 0.75), 0.27) : teamColor.scale(0.9);
     const isZeus = definition.id === "ancient.zeus";
     const bareSkinned = definition.faction === FactionId.Tribal && !shouldFavorTeamBodyColor(materialPreset);
 
