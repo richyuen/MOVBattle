@@ -54,11 +54,12 @@ const BARE_FOOT_SHADE = 0.85;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only a quarter of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.25;
 // A surcoat is the team colour a shade lighter (a third of the way to cream), the full width of the chest it
-// covers and long enough to hang past the waist as a short skirt.
+// covers and long enough to hang a third of the torso's height below it as a short skirt, cinched by a dark belt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
 const TABARD_PALE = 0.3;
 const TABARD_WIDTH = 1.02;
-const TABARD_LENGTH = 1.15;
+const TABARD_LENGTH = 1.35;
+const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
@@ -189,6 +190,14 @@ export class UnitFactory {
       tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
       tabard.material = getMaterialFactory().getCloth(Color3.Lerp(teamColor, TABARD_COLOR, TABARD_PALE));
       propMeshes.push(tabard);
+      // The belt is a thin dark band round the waist, just proud of the cloth, so the skirt below it reads as a hem.
+      const belt = MeshBuilder.CreateBox("tabardBelt", {
+        width: chest.x * 2 * body.torsoMesh.scaling.x * 0.84, height: chest.y * 0.26, depth: chest.z * 2 * body.torsoMesh.scaling.z * 0.84,
+      }, this._scene);
+      belt.parent = body.torsoMesh.parent;
+      belt.position.y = body.torsoMesh.position.y - chest.y * 0.85;
+      belt.material = getMaterialFactory().getCloth(BELT_COLOR);
+      propMeshes.push(belt);
     }
 
     body.root.position = position.clone();
