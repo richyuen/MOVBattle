@@ -121,6 +121,11 @@ hemi.intensity = 0.7;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
 dir.intensity = 0.8;
+// The sun stands off beyond the tree ring with its own depth range. Left at its default spot just above the field,
+// everything taller than a trunk base sits behind the shadow camera and never reaches the shadow map.
+dir.position = dir.direction.scale(-100);
+dir.shadowMinZ = 40;
+dir.shadowMaxZ = 220;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
@@ -137,8 +142,12 @@ scene.onBeforeRenderObservable.add(() => {
 
 // Shadows
 const shadowGen = new ShadowGenerator(2048, dir);
-shadowGen.useBlurExponentialShadowMap = true;
-shadowGen.blurKernel = 48;
+// Depth-compared and lightly filtered: the map spans the whole tree ring, and a blurred exponential map over that
+// span smears a unit-sized shadow away to nothing.
+shadowGen.usePercentageCloserFiltering = true;
+shadowGen.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
+shadowGen.bias = 0.0004;
+shadowGen.normalBias = 0.02;
 
 // Camera
 const camCtrl = new CameraController(scene, canvas);

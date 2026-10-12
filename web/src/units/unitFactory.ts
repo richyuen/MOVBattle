@@ -190,6 +190,10 @@ export class UnitFactory {
       for (const mesh of body.allMeshes) {
         this.shadowGenerator.addShadowCaster(mesh);
       }
+      // Solid props cast too, so a shield or a spear shows in the shadow; see-through effect props do not
+      for (const mesh of propMeshes) {
+        if ((mesh.material?.alpha ?? 1) >= 1 && mesh.visibility >= 1) this.shadowGenerator.addShadowCaster(mesh, false);
+      }
     }
 
     // No per-unit health bars: TABS never draws them; damage reads from the body alone.
