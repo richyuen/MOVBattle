@@ -185,8 +185,8 @@ export class TribalSandboxMapBuilder {
     under.material = this._scene.getMaterialByName("cliffRock")!;
     under.isPickable = false;
 
-    // Cliff face: rock buttresses hang all the way round the rim, each jutting a little past the grass and tapering
-    // down, so the island ends in a ragged cliff and not a ruled outline.
+    // Cliff face: rock buttresses hang all the way round under the rim and taper down slower than the slab does, so
+    // the cliff below the lawn is ragged while the lawn's own edge stays clean.
     const crags: Mesh[] = [];
     const count = 48;
     for (let k = 0; k < count; k++) {
@@ -196,8 +196,8 @@ export class TribalSandboxMapBuilder {
         diameterTop: width, diameterBottom: width * 0.35, height, tessellation: 5,
       }, this._scene);
       const [x, z] = islandRim(((k + 0.2 + this._seededValue(k, 93) * 0.6) / count) * Math.PI * 2);
-      // Centred up to a third of its width inside the rim, so between a fifth and a half of it stands proud
-      const pull = 1 - width * this._seededValue(k, 94) * 0.3 / Math.hypot(x, z);
+      // Centred at least half its width inside the rim, so its top never juts sideways past the lawn as a tab
+      const pull = 1 - width * (0.5 + this._seededValue(k, 94) * 0.3) / Math.hypot(x, z);
       crag.position.set(x * pull, -height / 2 - 0.03, z * pull);
       crag.rotation.y = this._seededValue(k, 95) * Math.PI;
       crags.push(crag);
