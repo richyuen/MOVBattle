@@ -314,12 +314,14 @@ export class VisualEffects {
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
-    // The fireball is mostly self-lit: a bright yellow body that only turns orange at its fringe, in sun and in
-    // shade. Neither colour carries any blue, so however bright it gets it stays yellow and never pales to cream.
+    // The fireball is mostly self-lit and graded from the inside out: a small near-white heart, yellow inner
+    // flame and a deep orange fringe. Only the heart carries any blue, so the flames around it never pale to cream.
+    const coreMat = mats.createUnique("cloth", new Color3(1, 0.95, 0.76));
+    coreMat.emissiveColor = new Color3(0.62, 0.56, 0.36);
     const flashMat = mats.createUnique("cloth", new Color3(1, 0.82, 0.03));
     flashMat.emissiveColor = new Color3(0.6, 0.46, 0);
-    const flameMat = mats.createUnique("cloth", new Color3(1, 0.45, 0.02));
-    flameMat.emissiveColor = new Color3(0.6, 0.25, 0);
+    const flameMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
+    flameMat.emissiveColor = new Color3(0.6, 0.2, 0);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -333,14 +335,14 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a modest yellow heart with smaller orange lobes half sunk into its flanks, and long faceted
+    // Fireball: a modest near-white heart with smaller orange lobes half sunk into its flanks, and fat blunt
     // tongues of flame thrown up and out of it, so the silhouette is a ragged burst and not a ball.
     const fireScale = Math.min(scale, 2.5);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
     const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 2, i === 0 ? flashMat : flameMat);
+      const lobe = blob("burstFlash", 2, i === 0 ? coreMat : flameMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
@@ -348,13 +350,13 @@ export class VisualEffects {
       glow?.addExcludedMesh(lobe as Mesh);
       fire.push({ mesh: lobe, size: lobeSizes[i] * fireScale });
     }
-    // Tongues: tapered spikes rooted in the heart, one nearly straight up and the rest fanned out at mixed
-    // lengths and leans. Fixed layout, so every blast has the same flame shape.
-    const tongueLengths = [2.0, 1.5, 1.8, 1.3, 1.7, 1.2, 1.5];
-    const tongueWidths = [0.8, 0.65, 0.7, 0.55, 0.65, 0.5, 0.6];
-    const tongueLeans = [0.1, 0.75, 1.15, 0.5, 1.3, 0.9, 1.0];
+    // Tongues: fat blunt-tipped lobes rooted in the heart, one nearly straight up and the rest fanned out at
+    // mixed lengths and leans, none lying flat. Fixed layout, so every blast has the same flame shape.
+    const tongueLengths = [1.5, 1.15, 1.35, 1.0, 1.3, 0.95, 1.15];
+    const tongueWidths = [0.95, 0.8, 0.85, 0.7, 0.8, 0.65, 0.75];
+    const tongueLeans = [0.1, 0.7, 0.9, 0.5, 0.9, 0.8, 0.85];
     for (let i = 0; i < tongueLengths.length; i++) {
-      const tongue = MeshBuilder.CreateCylinder("burstFlash", { height: 1, diameterTop: 0, diameterBottom: 1, tessellation: 5 }, this._scene);
+      const tongue = MeshBuilder.CreateCylinder("burstFlash", { height: 1, diameterTop: 0.38, diameterBottom: 1, tessellation: 5 }, this._scene);
       tongue.position.y = 0.5;
       tongue.bakeCurrentTransformIntoVertices();
       tongue.convertToFlatShadedMesh();
@@ -463,6 +465,7 @@ export class VisualEffects {
         }
       },
       dispose: () => {
+        coreMat.dispose();
         flashMat.dispose();
         flameMat.dispose();
         smokeMat.dispose();
