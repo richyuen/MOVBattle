@@ -73,11 +73,11 @@ export class VisualEffects {
     if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
     side.normalize();
 
-    // Build the zigzag: short shards, each joint swinging to the opposite side of the last by about
+    // Build the zigzag: short shards, each joint swinging to the opposite side of the last by about half
     // a shard's length, so even a short bolt is all corners
-    const segments = Math.max(5, Math.min(14, Math.round(len / 0.45)));
+    const segments = Math.max(5, Math.min(14, Math.round(len / 0.7)));
     const points: Vector3[] = [start];
-    const amp = Math.max(0.5, Math.min(0.9, (len / segments) * 1.1));
+    const amp = Math.max(0.28, Math.min(0.5, (len / segments) * 0.6));
     let sign = Math.random() < 0.5 ? -1 : 1;
     for (let i = 1; i < segments; i++) {
       // Joints sit unevenly along the bolt: long and short shards alternate
