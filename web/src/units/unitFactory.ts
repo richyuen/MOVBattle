@@ -55,6 +55,10 @@ const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only half of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.5;
+// A tabard is cream cloth with a wash of the team colour, three fifths the width of the chest it hangs on.
+const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
+const TABARD_PALE = 0.72;
+const TABARD_WIDTH = 0.6;
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
@@ -173,6 +177,20 @@ export class UnitFactory {
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
+    }
+
+    // Helmed medieval men-at-arms wear a tabard: a pale slab of cloth down the chest and back, so they are two colours and not one.
+    if (!shouldUseVehicleBody && definition.faction === FactionId.Medieval && (visual.hat === "great_helm" || visual.hat === "plume_helmet")) {
+      const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+      const tabard = MeshBuilder.CreateBox("tabard", {
+        width: chest.x * 2 * TABARD_WIDTH,
+        height: chest.y * 2 * 0.94,
+        depth: chest.z * 2 * body.torsoMesh.scaling.z * 1.1,
+      }, this._scene);
+      tabard.position.y = body.torsoMesh.position.y;
+      tabard.parent = body.torso;
+      tabard.material = getMaterialFactory().getCloth(Color3.Lerp(teamColor, TABARD_COLOR, TABARD_PALE));
+      propMeshes.push(tabard);
     }
 
     body.root.position = position.clone();
