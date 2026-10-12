@@ -218,7 +218,7 @@ export class TribalSandboxMapBuilder {
   private _createMountains(): void {
     const rock = this._scene.getMaterialByName("farRock") as StandardMaterial;
     const darkRock = this._scene.getMaterialByName("farRockShade") as StandardMaterial;
-    const dryGrass = this._scene.getMaterialByName("dryGrass") as StandardMaterial;
+    const grass = this._scene.getMaterialByName("grass") as StandardMaterial;
 
     // Far ridges stand well off the two long edges only, so the placement view shows open sky past
     // the treeline and off both ends instead of a wall of rock boxing the field in.
@@ -235,10 +235,10 @@ export class TribalSandboxMapBuilder {
     this._createMountain(new Vector3(55, 0, -96), 32, 22, 20, darkRock);
 
     // ── Grassy hills (smaller, in play area for variety) ──
-    this._createHill(new Vector3(-40, 0, 30), 12, 4, 10, dryGrass);
-    this._createHill(new Vector3(40, 0, -30), 12, 4, 10, dryGrass);
-    this._createHill(new Vector3(-35, 0, -25), 10, 3, 8, dryGrass);
-    this._createHill(new Vector3(35, 0, 25), 10, 3, 8, dryGrass);
+    this._createHill(new Vector3(-40, 0, 30), 12, 4, 10, grass);
+    this._createHill(new Vector3(40, 0, -30), 12, 4, 10, grass);
+    this._createHill(new Vector3(-35, 0, -25), 10, 3, 8, grass);
+    this._createHill(new Vector3(35, 0, 25), 10, 3, 8, grass);
   }
 
   /** Low hazed ridge: three closely overlapping peaks strung along the island edge, two to three treelines tall, each snow-tipped. */
@@ -308,7 +308,8 @@ export class TribalSandboxMapBuilder {
   ): void {
     const mound = MeshBuilder.CreateSphere("hill", { diameter: 1, segments: 10 }, this._scene);
     mound.scaling.set(diameterX, height * 0.6, diameterZ);
-    mound.position.set(pos.x, height * 0.3, pos.z);
+    // Centred on the ground, so only the upper dome shows and the rise has no underside.
+    mound.position.set(pos.x, 0, pos.z);
     mound.material = mat;
     mound.receiveShadows = true;
 
