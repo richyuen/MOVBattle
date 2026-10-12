@@ -366,7 +366,7 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a modest yellow heart with smaller orange lobes half sunk into its flanks, and short round
+    // Fireball: a modest yellow heart with smaller orange lobes sunk deep into its flanks, and short round
     // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
     // enough to show no facets, and a shell's can grow to about three men tall.
     const fireScale = Math.min(scale * 2.0, 3.6);
@@ -377,7 +377,7 @@ export class VisualEffects {
     for (let i = 0; i < lobeSizes.length; i++) {
       const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? flameMat : flashMat);
       const angle = i * 2.4 + 0.6;
-      const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
+      const reach = (i === 0 ? 0 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
       lobe.rotation.set(i * 1.3, i * 2.1, 0);
       if (i !== 0) glow?.addExcludedMesh(lobe as Mesh); // the heart alone blooms: a burnt-out core with a halo
