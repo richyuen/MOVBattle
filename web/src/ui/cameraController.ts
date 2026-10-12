@@ -197,10 +197,11 @@ export class CameraController {
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
       beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
-      radius: 10,             // roughly four body lengths back from the front line
-      target: { x: center.x, y: 1.8, z: center.z },
+      radius: 6.5,            // two to three body lengths back, so the nearest rank stands ~0.4 of the frame tall
+      target: { x: center.x, y: 1.3, z: center.z },
     };
-    // The battle view sits below the placement pitch limits; widen them for the fight.
+    // The battle view sits below the placement pitch limits and inside the zoom floor; widen them for the fight.
+    this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     this.camera.lowerBetaLimit = Math.min(this.camera.lowerBetaLimit ?? to.beta, to.beta);
     this._transition = { from: this.captureViewState(), to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
