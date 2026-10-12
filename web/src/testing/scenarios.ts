@@ -1173,11 +1173,12 @@ function makePairGalleryScenario(
     cameraOverride?: GalleryCameraOverride;
   } = {},
 ): ScenarioSpec {
+  // Eye level and close, from the front quarter, so the pair stands side by side and fills the frame
   const pairCamera: GalleryCameraOverride = {
-    alpha: -Math.PI / 2.72,
-    beta: Math.PI / 3.72,
-    radius: 13.5,
-    target: { x: -0.2, y: 1.55, z: 0 },
+    alpha: -0.4,
+    beta: Math.PI / 2.2,
+    radius: 8,
+    target: { x: -0.2, y: 1.4, z: 0 },
     ...(options.cameraOverride ?? {}),
   };
   return makeGalleryScenario(name, description, unitIds, {
@@ -1356,8 +1357,12 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       spacingX: 0,
       spacingZ: 2.8,
       galleryPresetId: "state_read_duel",
+      // Low battle camera on the clash: eye level, sky in the top third
       cameraOverride: {
-        target: { x: -1, y: 1.7, z: 0 },
+        alpha: -Math.PI / 3.4,
+        beta: Math.PI / 2.2,
+        radius: 14,
+        target: { x: -3, y: 1.3, z: 0 },
       },
       extraUnits: [
         { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: -7.0 } },
@@ -1401,10 +1406,10 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       galleryPresetId: "state_read_duel",
       artifactBaseName: "gallery_weapon_reads",
       cameraOverride: {
-        alpha: -Math.PI / 2.3,
-        beta: Math.PI / 3.22,
-        radius: 24,
-        target: { x: -0.6, y: 1.72, z: 0 },
+        alpha: -Math.PI / 3.4,
+        beta: Math.PI / 2.2,
+        radius: 14,
+        target: { x: -3.5, y: 1.3, z: 0 },
       },
       extraUnits: buildGalleryUnits(
         [
