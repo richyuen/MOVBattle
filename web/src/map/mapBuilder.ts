@@ -583,13 +583,13 @@ export class TribalSandboxMapBuilder {
   /** Patches of tall grass clumps between short turf and open ground: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
     const BLADES = 480000;
-    const PER_TUFT = 7;
+    const PER_TUFT = 4;
     for (const [pass, matName] of ["grassBladeDark", "grassBladeLight"].entries()) {
       const positions: number[] = [];
       const normals: number[] = [];
       const indices: number[] = [];
       for (let i = 0; i < BLADES; i++) {
-        // Seven narrow blades share a tuft center and a shade, fanned around it, so a clump is a thick wisp of grass and not a star.
+        // Four narrow blades share a tuft center and a shade, fanned around it, so a clump is a wisp of grass and not a star.
         const tuft = Math.floor(i / PER_TUFT);
         if (tuft % 2 !== pass) continue;
         // Grass runs out to the island's rim; past the fighting field it is a little under half as thick.
@@ -597,11 +597,11 @@ export class TribalSandboxMapBuilder {
         const tuftZ = -44 + this._seededValue(tuft, 32) * 88;
         if (!onIsland(tuftX, tuftZ, 0.5)) continue;
         if ((Math.abs(tuftX) > 34 || Math.abs(tuftZ) > 24) && this._seededValue(tuft, 43) > 0.45) continue;
-        // Low-frequency mask: two fifths of the 4 m cells stay open ground, with a ragged edge from per-tuft jitter.
+        // Low-frequency mask: a quarter of the 4 m cells stay open ground, with a ragged edge from per-tuft jitter.
         // Across the middle where the lines meet it is a little more, so the fight still stands in grass.
         const cellX = Math.floor((tuftX + 50 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
         const cellZ = Math.floor((tuftZ + 44 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
-        if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.45 : 0.4)) continue;
+        if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.3 : 0.25)) continue;
         // Each patch has its own height, from ankle turf to full clumps, so the field is not one level carpet.
         // Where the armies stand and fight no patch tops the shin, easing back to full height by the flanks.
         const heightCap = 0.6 + 0.4 * Math.min(1, Math.max(0, (Math.abs(tuftX) - 24) / 6));
