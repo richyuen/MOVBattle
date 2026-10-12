@@ -18,10 +18,10 @@ const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far prop
 const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
 const FAR_ROCK_SHADE = new Color3(0.5, 0.52, 0.57);
 const FAR_SNOW = new Color3(0.97, 0.98, 1);
-const FAR_SNOW_MIX = 0.25;
+const FAR_SNOW_MIX = 0.4;
 const FAR_SNOW_GLOW = 0.05; // matte: snow tips shade with the sun like the rock under them
 const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
-const FAR_ROCK_MIX = 0.25;
+const FAR_ROCK_MIX = 0.5;   // far ridge sits half-way into the sky haze
 
 /** Distance haze by color: far props are mixed toward a lightened sky, so they sit paler than near ones */
 function hazed(color: Color3, fogColor: Color3, mix: number): Color3 {
@@ -208,7 +208,7 @@ export class TribalSandboxMapBuilder {
     this._createHill(new Vector3(35, 0, 25), 10, 3, 8, dryGrass);
   }
 
-  /** Tall pointed ridge: three overlapping peaks strung along the island edge, standing well over the treeline, each snow-tipped. */
+  /** Low hazed ridge: three closely overlapping peaks strung along the island edge, two to three treelines tall, each snow-tipped. */
   private _createMountain(
     pos: Vector3, diameterX: number, height: number, diameterZ: number,
     mat: StandardMaterial,
@@ -219,12 +219,12 @@ export class TribalSandboxMapBuilder {
     const long = Math.max(diameterX, diameterZ) * 1.5;
     const short = Math.min(diameterX, diameterZ) * 1.4;
     const seed = pos.x * 0.37 + pos.z * 0.11;
-    // [offset along the ridge, footprint scale, rock height]: a main peak and two lower shoulders,
-    // so the skyline rises and dips through saddles instead of repeating one cone
+    // [offset along the ridge, footprint scale, rock height]: a main peak and two close shoulders,
+    // so the three merge into one ridge with shallow saddles instead of separate cones
     const humps = [
-      [0, 1, height * 1.25],
-      [-0.34, 0.72, height * (0.8 + 0.15 * Math.sin(seed))],
-      [0.36, 0.62, height * (0.65 + 0.15 * Math.cos(seed * 1.7))],
+      [0, 1, height * 0.6],
+      [-0.22, 0.8, height * (0.48 + 0.06 * Math.sin(seed))],
+      [0.22, 0.74, height * (0.42 + 0.06 * Math.cos(seed * 1.7))],
     ];
     for (const [offset, size, rockHeight] of humps) {
       const x = pos.x + (alongX ? offset * long : 0);
