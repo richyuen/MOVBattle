@@ -1522,15 +1522,28 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   headMesh.scaling.set(0.85, 1, 0.8);
   headMesh.parent = neck; headMesh.material = fur; allMeshes.push(headMesh);
 
-  // Forehead dome
+  // Forehead dome and the crest behind it: one near-black fur cap from the brow back over the skull to the hump
+  const crestMat = makeMat(scene, Color3.Lerp(hide, new Color3(0.04, 0.03, 0.03), 0.8));
   const dome = MeshBuilder.CreateSphere("dome", { diameter: 0.75, segments: 3 }, scene);
   dome.position.set(0, 0.36, 0.2);
-  dome.parent = neck; dome.material = shaggyFur; allMeshes.push(dome);
+  dome.parent = neck; dome.material = crestMat; allMeshes.push(dome);
+  const crest = MeshBuilder.CreateSphere("crest", { diameter: 1, segments: 3 }, scene);
+  crest.position.set(0, 0.5, -0.18);
+  crest.scaling.set(0.72, 0.62, 0.95);
+  crest.parent = neck; crest.material = crestMat; allMeshes.push(crest);
 
   // War paint stripe across the brow
   const browPaint = MeshBuilder.CreateBox("browPaint", { width: 0.62, height: 0.13, depth: 0.2 }, scene);
   browPaint.position.set(0, 0.3, 0.68);
   browPaint.parent = neck; browPaint.material = paintMat; allMeshes.push(browPaint);
+
+  // Face paint: a slab down each cheek under the eye, turned to lie on the skull
+  for (const side of [-1, 1]) {
+    const cheekPaint = MeshBuilder.CreateBox("cheekPaint", { width: 0.2, height: 0.34, depth: 0.14 }, scene);
+    cheekPaint.position.set(side * 0.37, -0.2, 0.615);
+    cheekPaint.rotation.y = side * 0.55;
+    cheekPaint.parent = neck; cheekPaint.material = paintMat; allMeshes.push(cheekPaint);
+  }
 
   // Eyes: small white beads with black pupils set back into the brow, still showing against the dark fur
   const eyeWhite = makeMat(scene, new Color3(0.95, 0.95, 0.95));
@@ -1565,15 +1578,15 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
 
   // ── Tusks (parented to neck) ──
-  // One long slim curve per side: down and out of the jaw, forward, then up to a tip about level with the eye.
+  // One long thick curve per side: down and well out of the jaw, forward past the trunk, then up and back in to a tip about level with the eye.
   // Each segment starts where the last one ended, so the curve has no gaps.
-  const tuskPitches = [0.4, 0.8, 1.2, 1.6, 2.0, 2.35];
+  const tuskPitches = [0.4, 0.8, 1.3, 1.9, 2.4, 2.8];
   // The two steep segments off the jaw are short, so the curve turns forward high instead of kinking low at the knees
-  const tuskLengths = [0.4, 0.4, 0.51, 0.48, 0.45, 0.42];
-  const tuskGirths = [0.24, 0.22, 0.19, 0.155, 0.14, 0.11, 0.06];
+  const tuskLengths = [0.5, 0.5, 0.66, 0.66, 0.62, 0.58];
+  const tuskGirths = [0.28, 0.26, 0.23, 0.19, 0.16, 0.12, 0.05];
   // The tips keep the flat team colour: the material preset repaints paintMat, and would dull them with the rest of the war paint
   const tuskTipMat = getMaterialFactory().getCloth(color);
-  const tuskSplay = [0.08, 0.08, 0.05, 0.02, -0.03, -0.06];
+  const tuskSplay = [0.14, 0.16, 0.12, 0.04, -0.08, -0.14];
   for (const side of [-1, 1]) {
     const start = new Vector3(side * 0.42, -0.3, 0.5);
     for (let i = 0; i < tuskPitches.length; i++) {
