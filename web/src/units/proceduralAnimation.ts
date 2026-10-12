@@ -1222,8 +1222,10 @@ export class ProceduralAnimator {
   private _flailInAir(amount: number): void {
     const b = this._body;
     const t = this._time * 1.6 + this._wobblePhase;
-    b.leftShoulder.rotation.x += Math.sin(t * 9.1) * 0.7 * amount;
-    b.rightShoulder.rotation.x += Math.sin(t * 7.3 + 2.1) * 0.7 * amount;
+    // One arm is thrown ahead and the other trails, which one differing per body, so a flyer is lopsided and not a spread-eagle star
+    const lead = Math.sin(this._wobblePhase * 5.3) < 0 ? -0.6 : 0.6;
+    b.leftShoulder.rotation.x += (Math.sin(t * 9.1) * 0.7 + lead) * amount;
+    b.rightShoulder.rotation.x += (Math.sin(t * 7.3 + 2.1) * 0.7 - lead) * amount;
     b.leftElbow.rotation.x -= 0.45 * Math.sin(t * 11.7 + 0.8) * amount;
     b.rightElbow.rotation.x -= 0.45 * Math.sin(t * 10.3 + 3.4) * amount;
     b.leftHip.rotation.x += Math.sin(t * 6.7 + 1.2) * 0.45 * amount;
@@ -1232,7 +1234,7 @@ export class ProceduralAnimator {
     b.rightKnee.rotation.x += 0.5 * Math.sin(t * 12.1 + 5.2) * amount;
     // The waist breaks too, slowly and either way: each body has its own lean, forward or back, and rocks about it,
     // so a flung line is some jack-knifed, some arched and some straight, never a row of the same flat plank
-    const fold = (Math.sin(this._wobblePhase * 3.7) * 0.5 + Math.sin(t * 3.1) * 0.45) * amount;
+    const fold = (Math.sin(this._wobblePhase * 3.7) * 0.8 + Math.sin(t * 3.1) * 0.45) * amount;
     b.torso.rotation.x += fold;
     b.neck.rotation.x -= fold * 0.4;
   }
