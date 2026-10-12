@@ -235,8 +235,8 @@ export class ImpactPresentation {
         this.visualEffects.spawnImpactDust(position, 0.65);
         break;
       case "medium":
+        // Dust only: chunks are kept for heavy hits and deaths, so a long melee does not hang a curtain of them
         this.visualEffects.spawnImpactDust(position, 1);
-        this.visualEffects.spawnHitDebris(position, 0.75);
         break;
       case "heavy":
         this.visualEffects.spawnImpactDust(position, 1.35);

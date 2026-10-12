@@ -229,26 +229,35 @@ export class VisualEffects {
   }
 
   // ══════════════════ HIT DEBRIS ══════════════════
-  /** A few dark faceted chunks knocked loose by a hit: they arc out, drop and shrink away. Lit and matte, so nothing glows. */
+  /** A few dark faceted chunks of mixed shape and size knocked loose by a hit: they tumble out, drop and shrink away. Lit and matte, so nothing glows. */
   spawnHitDebris(position: Vector3, intensity = 1): void {
     const root = new TransformNode("hitDebris", this._scene);
     root.position = position.clone();
     root.position.y += 0.9;
-    const mat = getMaterialFactory().createUnique("stone", new Color3(0.34, 0.1, 0.09));
+    const mats = [
+      getMaterialFactory().createUnique("stone", new Color3(0.34, 0.1, 0.09)),
+      getMaterialFactory().createUnique("stone", new Color3(0.2, 0.08, 0.07)),
+    ];
     const floorY = -root.position.y + 0.05;
 
-    const chunks: { mesh: TransformNode; size: number; velocity: Vector3 }[] = [];
-    const count = Math.max(3, Math.round(4 * intensity));
+    const chunks: { mesh: TransformNode; size: number; velocity: Vector3; spin: Vector3 }[] = [];
+    const count = Math.max(2, Math.round(3 * intensity));
     for (let i = 0; i < count; i++) {
-      const mesh = MeshBuilder.CreateSphere("hitChunk", { diameter: 1, segments: 2 }, this._scene);
-      mesh.material = mat;
+      // Wedge, gem or slab: no two chunks of a hit share a shape
+      const mesh = i % 3 === 2
+        ? MeshBuilder.CreateBox("hitChunk", { width: 1, height: 0.45, depth: 0.7 }, this._scene)
+        : MeshBuilder.CreatePolyhedron("hitChunk", { type: i % 3, size: 0.5 }, this._scene);
+      mesh.material = mats[i % 2];
       mesh.parent = root;
+      mesh.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
       const angle = (i / count) * Math.PI * 2 + Math.random() * 0.9;
       const speed = (1.3 + Math.random() * 1.5) * Math.min(1.3, intensity);
       chunks.push({
         mesh,
-        size: 0.07 + Math.random() * 0.06,
+        // One big lump and the rest progressively smaller
+        size: (0.16 - 0.035 * i) * (0.75 + Math.random() * 0.35),
         velocity: new Vector3(Math.cos(angle) * speed, 1.6 + Math.random() * 1.6, Math.sin(angle) * speed),
+        spin: new Vector3(4 + Math.random() * 6, Math.random() * 4, 4 + Math.random() * 6),
       });
     }
 
@@ -263,12 +272,13 @@ export class VisualEffects {
           if (chunk.mesh.position.y < floorY) {
             chunk.mesh.position.y = floorY;
             chunk.velocity.setAll(0);
+            chunk.spin.setAll(0);
           }
-          const size = Math.max(0.001, chunk.size * fade);
-          chunk.mesh.scaling.set(size, size * 0.7, size);
+          chunk.mesh.rotation.addInPlace(chunk.spin.scale(dt));
+          chunk.mesh.scaling.setAll(Math.max(0.001, chunk.size * fade));
         }
       },
-      dispose: () => mat.dispose(),
+      dispose: () => { for (const m of mats) m.dispose(); },
     });
   }
 
