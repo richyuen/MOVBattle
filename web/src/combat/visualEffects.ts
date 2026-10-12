@@ -70,8 +70,11 @@ export class VisualEffects {
     endPoint.y += 0.8;
     const dir = endPoint.subtract(start);
     const len = dir.length();
-    // Sideways axis of the zigzag: level and square to the bolt (any level axis when the bolt is vertical)
-    const side = Vector3.Cross(dir, Vector3.Up());
+    // Sideways axis of the zigzag: square to the bolt and to the camera's line of sight, so the corners lie flat
+    // to the screen and never edge-on (level and square to the bolt when there is no camera or it looks down the bolt)
+    const eye = this._scene.activeCamera?.globalPosition;
+    const side = Vector3.Cross(dir, eye ? eye.subtract(Vector3.Center(start, endPoint)) : Vector3.Up());
+    if (side.lengthSquared() < 1e-6) side.copyFrom(Vector3.Cross(dir, Vector3.Up()));
     if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
     side.normalize();
 
@@ -79,13 +82,12 @@ export class VisualEffects {
     // a shard's length, so even a short bolt is all corners
     const segments = Math.max(8, Math.min(20, Math.round(len / 0.4)));
     const points: Vector3[] = [start];
-    const amp = Math.max(0.28, Math.min(0.5, (len / segments) * 0.6));
+    const amp = Math.max(0.45, Math.min(0.6, (len / segments) * 0.6));
     let sign = Math.random() < 0.5 ? -1 : 1;
     for (let i = 1; i < segments; i++) {
       // Joints sit unevenly along the bolt: long and short shards alternate
       const base = Vector3.Lerp(start, endPoint, (i + (Math.random() - 0.5) * 0.5) / segments);
       base.addInPlace(side.scale(sign * amp * (0.6 + Math.random() * 0.4)));
-      base.y += sign * amp * (0.4 + Math.random() * 0.5);
       points.push(base);
       sign = -sign;
     }
@@ -123,12 +125,11 @@ export class VisualEffects {
     // Strike burst: a flat six-point star at the target, facing the camera, that snaps out wide and cuts off with the bolt
     const burst = new TransformNode("lburst", this._scene);
     // Half a metre toward the camera, in front of the body it strikes, so the star is whole and not half sunk in a torso
-    const eye = this._scene.activeCamera?.globalPosition;
     burst.position = eye ? endPoint.add(eye.subtract(endPoint).normalize().scale(0.5)) : endPoint;
     burst.billboardMode = TransformNode.BILLBOARDMODE_ALL;
     burst.parent = root;
     for (const turn of [0, Math.PI / 3]) {
-      const point = MeshBuilder.CreateDisc("lburstPoint", { radius: 0.5, tessellation: 3 }, this._scene);
+      const point = MeshBuilder.CreateDisc("lburstPoint", { radius: 0.3, tessellation: 3 }, this._scene);
       point.rotation.z = turn;
       point.material = boltMat;
       point.parent = burst;
