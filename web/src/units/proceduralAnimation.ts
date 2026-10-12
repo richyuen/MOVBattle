@@ -193,17 +193,22 @@ export class ProceduralAnimator {
       b.torso.rotation.x += (p.pitch * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
       b.torso.rotation.z += (p.roll + Math.cos(phase * 0.35) * 0.08) * k;
       b.neck.rotation.x -= p.pitch * 0.6 * k;
-      b.leftHip.rotation.x += p.stance * k;
-      b.rightHip.rotation.x -= p.stance * k;
-      b.leftKnee.rotation.x += p.knee * k;
-      b.rightKnee.rotation.x += p.knee * k;
+      // Thighs come forward under the pitched torso and the knees fold, so the body breaks at waist and knee.
+      b.leftHip.rotation.x += (p.stance - 0.15) * k;
+      b.rightHip.rotation.x -= (p.stance + 0.15) * k;
+      b.leftKnee.rotation.x += (p.knee + 0.3) * k;
+      b.rightKnee.rotation.x += (p.knee + 0.3) * k;
       if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
         b.rightShoulder.rotation.x += (-0.9 + Math.sin(phase + Math.PI) * 1.1) * k;
         b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
         b.rightShoulder.rotation.z += (p.spread + Math.cos(phase + Math.PI) * 0.25) * k;
-        b.leftElbow.rotation.x -= 0.5 * k;
-        b.rightElbow.rotation.x -= 0.5 * k;
+        b.leftElbow.rotation.x -= (1.0 + Math.sin(phase) * 0.6) * k;
+        b.rightElbow.rotation.x -= (1.0 + Math.sin(phase + Math.PI) * 0.6) * k;
+      } else {
+        // Stepping in or swinging: the elbows stay bent, so no arm is a straight rod.
+        b.leftElbow.rotation.x -= 0.7 * k;
+        b.rightElbow.rotation.x -= 0.7 * k;
       }
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
