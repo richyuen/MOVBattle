@@ -177,11 +177,10 @@ export class ProjectileSystem {
 
     // Smoke puff: a head-sized clump of faceted off-white lobes thrown out of the muzzle that hangs and drifts up.
     // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball.
-    const sm = getMaterialFactory().createUnique("cloth", new Color3(0.8, 0.79, 0.76));
-    sm.emissiveColor = new Color3(0.06, 0.06, 0.055);
+    const sm = getMaterialFactory().createUnique("cloth", new Color3(0.86, 0.85, 0.82));
+    sm.emissiveColor = new Color3(0.14, 0.14, 0.13);
     sm.transparencyMode = 2;
-    // A bigger gun throws a bigger puff, not a longer-lived one: it clears before the next shot can stack on it.
-    const smokeLife = 1.5 - 0.4 * Math.max(0, scale - 1);
+    const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
     for (let i = 0; i < 4; i++) {
       const diameter = (0.26 + Math.random() * 0.12 - 0.03 * i) * scale;
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
@@ -291,9 +290,9 @@ export class ProjectileSystem {
       const f = this._flashes[i];
       f.remaining -= dt;
       if (f.smokeLife) {
-        // Pop out near full size, swell only a little so neighbouring puffs stay separate, then thin out
+        // Pop out fast, keep swelling slowly, stay opaque for most of the life, then thin out
         const ratio = Math.max(0, f.remaining / f.smokeLife);
-        f.mesh.scaling.setAll(0.7 + (1 - ratio * ratio * ratio) * 0.4);
+        f.mesh.scaling.setAll(0.55 + (1 - ratio * ratio * ratio) * 1.05);
         f.mesh.position.y += 0.3 * dt;
         (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = Math.min(1, ratio * 2.5);
       } else {
