@@ -511,7 +511,7 @@ export class TribalSandboxMapBuilder {
       if (existing) return existing;
       const crown = mat.clone(name);
       crown.diffuseColor = mat.diffuseColor.scale(0.38);
-      crown.emissiveColor = mat.diffuseColor.multiply(mat.name === "darkLeaves" ? new Color3(0.9, 0.55, 0.8) : new Color3(0.72, 0.45, 0.8));
+      crown.emissiveColor = mat.diffuseColor.multiply(mat.name === "darkLeaves" ? new Color3(0.78, 0.68, 0.9) : new Color3(0.72, 0.45, 0.8));
       return crown;
     };
     const glow = this._scene.getGlowLayerByName("glow");
