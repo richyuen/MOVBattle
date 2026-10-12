@@ -142,7 +142,7 @@ export class TribalSandboxMapBuilder {
 
     // Tree trunk: part self-lit, so the side turned from the sun stays pale wood and not navy
     const trunk = new StandardMaterial("trunk", this._scene);
-    trunk.diffuseColor = new Color3(0.80, 0.74, 0.66);
+    trunk.diffuseColor = new Color3(0.86, 0.74, 0.56);
     trunk.emissiveColor = trunk.diffuseColor.scale(0.4);
     trunk.specularColor = new Color3(0.03, 0.03, 0.03);
 
