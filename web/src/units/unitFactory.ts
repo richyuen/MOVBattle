@@ -57,10 +57,11 @@ const WARM_SHADE_KEEP = 0.25;
 // plate are pushed more saturated instead of washing out to salmon.
 const WARM_LEG_SHADE_KEEP = 0.8;
 const WARM_SATURATION = 1.18;
-// A surcoat is the team colour a shade lighter (a third of the way to cream), the full width of the chest it
-// covers and long enough to hang a third of the torso's height below it as a short skirt, cinched by a dark belt.
+// A surcoat is the team colour barely lightened (an eighth of the way to cream) with a cream cross on the chest, the
+// full width of the chest it covers and long enough to hang a third of the torso's height below it as a short skirt,
+// cinched by a dark belt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
-const TABARD_PALE = 0.3;
+const TABARD_PALE = 0.12;
 const TABARD_WIDTH = 1.02;
 const TABARD_LENGTH = 1.35;
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
@@ -186,7 +187,7 @@ export class UnitFactory {
       }
     }
 
-    // Helmed medieval men-at-arms wear a tabard: a pale slab of cloth down the chest and back, so they are two colours and not one.
+    // Helmed medieval men-at-arms wear a tabard: team-coloured cloth down the chest and back with a pale cross on the front.
     if (!shouldUseVehicleBody && definition.faction === FactionId.Medieval && (visual.hat === "great_helm" || visual.hat === "plume_helmet")) {
       // It is the torso's own tapered shape, a skin thicker front and back, so it hugs the chest, narrows with the
       // waist and ends above the hip instead of standing off the body as a board.
@@ -196,6 +197,19 @@ export class UnitFactory {
       tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
       tabard.material = getMaterialFactory().getCloth(Color3.Lerp(teamColor, TABARD_COLOR, TABARD_PALE));
       propMeshes.push(tabard);
+      // The cross is two thin cream bars sunk into the front of the cloth, so only their faces show on the chest.
+      const crossDepth = chest.z * body.torsoMesh.scaling.z * 0.3;
+      const crossMaterial = getMaterialFactory().getCloth(TABARD_COLOR);
+      for (const [width, height] of [[0.36, 1.1], [1.15, 0.3]]) {
+        const bar = MeshBuilder.CreateBox("tabardCross", {
+          width: chest.x * body.torsoMesh.scaling.x * width, height: chest.y * height, depth: crossDepth,
+        }, this._scene);
+        bar.parent = body.torsoMesh.parent;
+        bar.position.y = body.torsoMesh.position.y + chest.y * 0.25;
+        bar.position.z = chest.z * body.torsoMesh.scaling.z * 1.1 - crossDepth / 2;
+        bar.material = crossMaterial;
+        propMeshes.push(bar);
+      }
       // The belt is a thin dark band round the waist, just proud of the cloth, so the skirt below it reads as a hem.
       // It is a faceted ring of the torso's own section and not a box, whose corners stood out of the waist as a plate.
       const belt = MeshBuilder.CreateCylinder("tabardBelt", {
