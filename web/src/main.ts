@@ -119,9 +119,7 @@ initMaterialFactory(scene);
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
 hemi.intensity = 0.7;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
-// Low sun (about 35 degrees up) raking across the field from the right, so every body and tree throws a shadow
-// longer than it is tall, up and to the left of its feet from the battle and gallery cameras
-const dir = new DirectionalLight("dir", new Vector3(-1.1, -1, 0.9), scene);
+const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
 dir.intensity = 0.8;
 
 // Fog — depth fade to sky color
