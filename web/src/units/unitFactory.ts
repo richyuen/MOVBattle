@@ -60,7 +60,7 @@ const WARM_SATURATION = 1.18;
 // A surcoat is the team colour a shade lighter (a third of the way to cream), the full width of the chest it
 // covers and long enough to hang a third of the torso's height below it as a short skirt, cinched by a dark belt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
-const TABARD_PALE = 0.3;
+const TABARD_PALE = 0.75;
 const TABARD_WIDTH = 1.02;
 const TABARD_LENGTH = 1.35;
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
