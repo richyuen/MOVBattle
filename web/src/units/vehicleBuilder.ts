@@ -1560,8 +1560,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   headMesh.scaling.set(0.85, 1, 0.8);
   headMesh.parent = neck; headMesh.material = fur; allMeshes.push(headMesh);
 
-  // Forehead mop and the crest behind it: one dark fur cap, a low wide pad overhanging the brow above the war paint and running back over the skull to the hump
-  const crestMat = makeMat(scene, Color3.Lerp(hide, new Color3(0.04, 0.04, 0.30), 0.45));
+  // Forehead mop and the crest behind it: one dark indigo fur cap, a low wide pad overhanging the brow above the war paint and running back over the skull to the hump
+  const crestMat = makeMat(scene, Color3.Lerp(hide, new Color3(0.03, 0.04, 0.36), 0.75));
   const dome = MeshBuilder.CreateSphere("dome", { diameter: 0.75, segments: 3 }, scene);
   dome.position.set(0, 0.58, 0.42);
   dome.scaling.set(1.2, 0.6, 1);
