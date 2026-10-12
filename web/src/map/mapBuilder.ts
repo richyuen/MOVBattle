@@ -716,7 +716,9 @@ export class TribalSandboxMapBuilder {
       if (low) {
         cloud.position.set(low[0], low[1], low[2]);
       } else {
-        cloud.position.set(Math.cos(angle) * radius, 24 + this._seededValue(i, 46) * 16, Math.sin(angle) * radius);
+        // The big banks sit down on the treeline, their flat undersides hidden behind the canopy; the small ones ride high
+        const big = i % 3 === 0;
+        cloud.position.set(Math.cos(angle) * radius, (big ? 12 : 24) + this._seededValue(i, 46) * (big ? 5 : 16), Math.sin(angle) * radius);
         cloud.rotation.y = -angle + Math.PI / 2;
       }
       cloud.material = cloudMat;
