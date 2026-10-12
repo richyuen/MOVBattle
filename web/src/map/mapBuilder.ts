@@ -343,30 +343,35 @@ export class TribalSandboxMapBuilder {
       const spread = 1 + (this._seededValue(i, 62) - 0.5) * 0.14;
       trees.push({
         pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
-        height: 7 + this._seededValue(i, 63) * 5,
+        height: 4.5 + this._seededValue(i, 63) * 8.5,
         leafMat: this._seededValue(i, 64) > 0.5 ? leaves : darkLeaves,
       });
     }
 
-    for (const t of trees) {
+    trees.forEach((t, i) => {
       this._createTree(
         t.pos,
         t.height,
         trunk,
         t.leafMat,
         t.leafMat === leaves ? darkLeaves : leaves,
+        i,
       );
-    }
+    });
   }
 
   private _createTree(
     pos: Vector3, height: number,
     trunkMat: StandardMaterial, leafMat: StandardMaterial, upperLeafMat: StandardMaterial,
+    index: number,
   ): void {
-    const trunkHeight = height * 0.45;
+    // Every third tree is a lumpy broadleaf; the rest are pines of varied girth. All lean a little.
+    const broadleaf = index % 3 === 1;
+    const girth = 0.75 + this._seededValue(index, 65) * 0.6;
+    const trunkHeight = height * (broadleaf ? 0.5 : 0.32);
     const trunkRadius = height * 0.06;
-    const canopyHeight = height * 0.65;
-    const canopyRadius = height * 0.3;
+    const canopyHeight = height * 0.78;
+    const canopyRadius = height * 0.3 * girth;
 
     // Trunk
     const trunkMesh = MeshBuilder.CreateCylinder("trunk", {
@@ -375,30 +380,52 @@ export class TribalSandboxMapBuilder {
       height: trunkHeight,
       tessellation: 8,
     }, this._scene);
-    trunkMesh.position.set(pos.x, trunkHeight / 2, pos.z);
+    trunkMesh.position.set(pos.x, trunkHeight / 2 - 0.15, pos.z);
+    trunkMesh.rotation.x = (this._seededValue(index, 66) - 0.5) * 0.3;
+    trunkMesh.rotation.z = (this._seededValue(index, 67) - 0.5) * 0.3;
     trunkMesh.material = trunkMat;
     trunkMesh.receiveShadows = true;
 
-    // Canopy — cone shape
-    const canopy = MeshBuilder.CreateCylinder("canopy", {
-      diameterTop: 0,
-      diameterBottom: canopyRadius * 2,
-      height: canopyHeight,
-      tessellation: 8,
-    }, this._scene);
-    canopy.position.set(pos.x, trunkHeight + canopyHeight * 0.4, pos.z);
-    canopy.material = leafMat;
-    canopy.receiveShadows = true;
+    // Canopy pieces hang off the trunk (local y measured from the trunk top) so they lean with it.
+    const addCanopy = (mesh: Mesh, x: number, y: number, z: number, mat: StandardMaterial): void => {
+      mesh.parent = trunkMesh;
+      mesh.position.set(x, trunkHeight / 2 + y, z);
+      mesh.material = mat;
+      mesh.receiveShadows = true;
+      mesh.convertToFlatShadedMesh();
+    };
 
-    const upperCanopy = MeshBuilder.CreateCylinder("canopyUpper", {
-      diameterTop: 0,
-      diameterBottom: canopyRadius * 1.4,
-      height: canopyHeight * 0.5,
-      tessellation: 8,
-    }, this._scene);
-    upperCanopy.position.set(pos.x, trunkHeight + canopyHeight * 0.78, pos.z);
-    upperCanopy.material = upperLeafMat;
-    upperCanopy.receiveShadows = true;
+    if (broadleaf) {
+      // Lumpy crown: three squashed faceted blobs of different size
+      const lobe = canopyRadius * 1.25;
+      for (let j = 0; j < 3; j++) {
+        const size = lobe * (1 - j * 0.2);
+        const blob = MeshBuilder.CreateIcoSphere("canopy", { radius: size, subdivisions: 1 }, this._scene);
+        blob.scaling.y = 0.72;
+        blob.rotation.y = this._seededValue(index * 10 + j, 68) * Math.PI;
+        const around = this._seededValue(index, 69) * Math.PI * 2 + j * 2.1;
+        addCanopy(
+          blob,
+          j === 0 ? 0 : Math.cos(around) * lobe * 0.6,
+          size * 0.45 + j * lobe * 0.38,
+          j === 0 ? 0 : Math.sin(around) * lobe * 0.6,
+          j === 1 ? upperLeafMat : leafMat,
+        );
+      }
+    } else {
+      // Bushy pine: three overlapping skirts, each narrower and higher than the last
+      const tierHeight = canopyHeight * 0.5;
+      for (let j = 0; j < 3; j++) {
+        const tier = MeshBuilder.CreateCylinder("canopy", {
+          diameterTop: 0,
+          diameterBottom: canopyRadius * 2 * (1 - j * 0.26),
+          height: tierHeight,
+          tessellation: 6,
+        }, this._scene);
+        tier.rotation.y = this._seededValue(index * 10 + j, 68) * Math.PI;
+        addCanopy(tier, 0, tierHeight * 0.3 + j * tierHeight * 0.5, 0, j === 1 ? upperLeafMat : leafMat);
+      }
+    }
 
     // Collision for tree trunk
     this._obstacles.push({
