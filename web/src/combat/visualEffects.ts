@@ -336,15 +336,15 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a modest near-white heart with smaller orange lobes half sunk into its flanks, and short round
+    // Fireball: a small yellow heart with orange lobes of its own size half sunk into its flanks, and short round
     // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
     // enough to show no facets, and a shell's stays about a man tall, well under the trees.
     const fireScale = Math.min(scale, 1.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
-    const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
+    const lobeSizes = [0.8, 0.8, 0.5, 0.7, 0.45, 0.6];
     const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flameMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? flashMat : flameMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
