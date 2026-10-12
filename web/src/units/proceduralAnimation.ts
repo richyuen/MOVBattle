@@ -471,7 +471,7 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     return {
-      lean: 0.1 + h(41) * 0.1,
+      lean: 0.22 + h(41) * 0.16,
       side: h(42) < 0.5 ? -1 : 1,
       spread: 0.2 + h(43) * 0.16,
       leftElbow: 0.45 + h(44) * 0.5,
