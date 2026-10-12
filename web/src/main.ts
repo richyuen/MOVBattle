@@ -1191,9 +1191,11 @@ function checkVictory(): void {
 
 /** Victory shot: turn the battle camera onto the winner's living units (both teams' on a draw). */
 function frameSurvivorsForResult(winner: number | null): void {
-  const box = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0 };
+  const box = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0, focus: { x: 0, z: 0 } };
+  const spots: { x: number; z: number }[] = [];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead || (winner !== null && unit.team !== winner)) continue;
+    spots.push({ x: unit.position.x, z: unit.position.z });
     const bounds = unit.body.root.getHierarchyBoundingVectors();
     box.minX = Math.min(box.minX, unit.position.x);
     box.maxX = Math.max(box.maxX, unit.position.x);
@@ -1202,7 +1204,12 @@ function frameSurvivorsForResult(winner: number | null): void {
     box.baseY = Math.min(box.baseY, unit.position.y);
     box.height = Math.max(box.height, bounds.max.y - unit.position.y);
   }
-  if (box.height > 0) camCtrl.frameSurvivors(box);
+  if (box.height <= 0) return;
+  // Focus: the survivor standing nearest the middle of the group, for when the group is too spread to frame whole.
+  const midX = spots.reduce((sum, s) => sum + s.x, 0) / spots.length;
+  const midZ = spots.reduce((sum, s) => sum + s.z, 0) / spots.length;
+  box.focus = spots.reduce((best, s) => (Math.hypot(s.x - midX, s.z - midZ) < Math.hypot(best.x - midX, best.z - midZ) ? s : best));
+  camCtrl.frameSurvivors(box);
 }
 
 function formatTeamLabel(team: number | null): string {

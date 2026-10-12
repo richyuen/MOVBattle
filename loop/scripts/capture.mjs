@@ -298,7 +298,7 @@ async function main() {
         if (mode !== "Simulation") break;
       }
       summary.notes.push(`big_melee ended in mode ${mode} at ${simMs} ms`);
-      await page.evaluate(() => window.advanceTime(300));
+      await page.evaluate(() => window.advanceTime(2500)); // past the 2 s victory-shot drift
       await shot(page, "big_melee_result");
       const finalState = await page.evaluate(() => window.render_game_to_text());
       fs.writeFileSync(path.join(outDir, "big_melee_final_state.json"), finalState);

@@ -41,7 +41,7 @@ export class CameraController {
   private readonly _maxTargetY = 8;
   private _transition: { from: CameraViewState; to: CameraViewState; elapsed: number; duration: number } | null = null;
   private _prebattleView: CameraViewState | null = null;
-  private _prebattleBetaLimits: { lower: number | null; upper: number | null } | null = null;
+  private _prebattleBetaLimits: { lower: number | null; upper: number | null; radius: number | null } | null = null;
 
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
     const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -195,7 +195,11 @@ export class CameraController {
   ): CameraViewState {
     if (!this._prebattleView) {
       this._prebattleView = this.captureViewState();
-      this._prebattleBetaLimits = { lower: this.camera.lowerBetaLimit, upper: this.camera.upperBetaLimit };
+      this._prebattleBetaLimits = {
+        lower: this.camera.lowerBetaLimit,
+        upper: this.camera.upperBetaLimit,
+        radius: this.camera.lowerRadiusLimit,
+      };
     }
     // Armies that hold their ground (halfSpan > 0) must both fit: the frame is ~0.63 radius wide each side of the target.
     const spanRadius = ((center.halfSpan ?? 0) + 1.5) / 0.6;
@@ -235,22 +239,32 @@ export class CameraController {
   }
 
   // ─── Victory shot ───
-  /** Settle from the battle view onto the survivors: centred on them, whole from feet to head between the result bands. */
+  /** Drift from the battle view onto the survivors: a slow close shot, a human winner about half the height between the result bands. */
   frameSurvivors(
-    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number },
-    durationSeconds = 0.25,
+    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number; focus: { x: number; z: number } },
+    durationSeconds = 2,
   ): CameraViewState | null {
     if (!this._prebattleView) return null;
     const from = this.captureViewState();
     const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
-    // The bands cover the top and bottom of the frame, so the tallest survivor gets ~0.28 radius of height either
-    // side of the target; the group gets the same ~0.6 radius of half-width the battle view allows.
-    const radius = Math.min(26, Math.max(5, (box.height * 0.5 + 0.7) / 0.28, (halfSpan + 1.5) / 0.6));
+    // The bands cover the top and bottom of the frame, so a survivor gets ~0.28 radius of height either side of
+    // the target. Giants count as two humans tall at most: the shot stays close and lets their tops crop.
+    const tall = Math.min(box.height, 4.2);
+    const fitHeight = (tall * 0.5 + 0.7) / 0.28;
+    const fitSpan = (halfSpan + 1.5) / 0.6;
+    // A group too spread out for a close shot is not fitted: the camera goes to the survivor nearest its middle.
+    const MAX_RADIUS = 11;
+    const spread = fitSpan > MAX_RADIUS;
+    const radius = Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     const to: CameraViewState = {
       alpha: from.alpha,
       beta: Math.PI / 1.9,
       radius,
-      target: { x: (box.minX + box.maxX) / 2, y: box.baseY + Math.max(1, box.height * 0.5), z: (box.minZ + box.maxZ) / 2 },
+      target: {
+        x: spread ? box.focus.x : (box.minX + box.maxX) / 2,
+        y: box.baseY + Math.max(1, tall * 0.5),
+        z: spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
+      },
     };
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
@@ -258,12 +272,13 @@ export class CameraController {
     return to;
   }
 
-  /** Undo the battle swoop: restore the placement view and its pitch limits. */
+  /** Undo the battle swoop: restore the placement view, its pitch limits and its zoom floor. */
   returnToPlacementView(): void {
     this._transition = null;
     if (this._prebattleBetaLimits) {
       this.camera.lowerBetaLimit = this._prebattleBetaLimits.lower;
       this.camera.upperBetaLimit = this._prebattleBetaLimits.upper;
+      this.camera.lowerRadiusLimit = this._prebattleBetaLimits.radius;
     }
     if (this._prebattleView) this.restoreViewState(this._prebattleView);
     this._prebattleView = null;
