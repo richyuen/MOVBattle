@@ -379,7 +379,7 @@ export class VisualEffects {
       const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
       lobe.rotation.set(i * 1.3, i * 2.1, 0);
-      glow?.addExcludedMesh(lobe as Mesh);
+      if (i !== 0) glow?.addExcludedMesh(lobe as Mesh); // the heart alone blooms: a burnt-out core with a halo
       fire.push({ mesh: lobe, size: lobeSizes[i] * fireScale });
     }
     // Tongues: fat egg-shaped lobes rooted in the heart, one nearly straight up and the rest fanned out at
