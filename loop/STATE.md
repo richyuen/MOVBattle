@@ -1,27 +1,27 @@
 # Loop state
-Iteration: 67   Last re-audit: 65   Consecutive rejects: 0   Branch: main
+Iteration: 68   Last re-audit: 65   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 
 ## Focus (2-3 gaps this iteration)
-- grass-unbroken-carpet-buries 5fd4c02 — APPROVE
-- legs-dark-points-no-boot 2529e87 — APPROVE
-- battle-cam-inside-near-rank 30d5e17 — REJECT (reverted 170b901)
+- fight-band-grass-buries fdb7eba — APPROVE
+- boot-same-tint-as-shin 2b4ccdd — APPROVE
+- explosion-crystal-blocks 2ded20a — APPROVE
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: grass-unbroken-carpet-buries (5fd4c02) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: legs-dark-points-no-boot (2529e87) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: battle-cam-inside-near-rank (30d5e17) VERDICT: REJECT SCORE: camera 4/5 (previous: 4/5)
+- GAP: fight-band-grass-buries (fdb7eba) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: boot-same-tint-as-shin (2b4ccdd) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: explosion-crystal-blocks (2ded20a) VERDICT: APPROVE SCORE: vfx 3/5 (previous: 3/5)
 
 ## Ranked open gaps (max 8, attempts count in brackets)
 1. [camera] battle-cam-inside-near-rank: by 9s near rank cut at the shin, spear across frame, mammoth cut by edge [attempts: 1] — ref: tabs_screenshot_06 — ours: big_melee_9s.png
-2. [maps-light] fight-band-grass-buries: corpses and cannon carriages still sink into grass; central band should be mostly bare [attempts: 0] — ref: tabs_screenshot_01 — ours: war_machines_3800ms.png
-3. [unit-look] boot-same-tint-as-shin: boot is the shin's dark tint; barefoot units still end in points [attempts: 0] — ref: tabs_screenshot_08 — ours: closeup_pair_zeus_thor.png
-4. [vfx] explosion-crystal-blocks: impact is huge yellow/orange blocks taller than a tree; TABS soft bright fireball [attempts: 0] — ref: trailer_3_sheet_02 r2c1 — ours: war_machines_1100ms.png
+2. [vfx] fireball-balloon-cluster: separate opaque white/yellow/orange balls two men tall; TABS one fused glowing mass at man height [attempts: 0] — ref: trailer_3_sheet_03 r1c1 — ours: war_machines_1100ms.png
+3. [maps-light] gun-line-grass-tall-clumps: carriages and melee dead stand in knee-high clumps outside the bare band [attempts: 0] — ref: tabs_screenshot_08 — ours: war_machines_3800ms.png
+4. [unit-look] foot-small-blob: foot is an ankle-wide oval so legs still taper to a point; bare feet not legible [attempts: 0] — ref: tabs_screenshot_06 — ours: closeup_pair_zeus_thor.png
 5. [unit-look] bare-mannequin-torsos: flat grey torso slab, no cloth layers, tiny hats [attempts: 0] — ref: tabs_screenshot_06 — ours: closeup_pair_zeus_thor.png
-6. [maps-light] field-flat-no-dressing: flat plane, straight horizon, no hills or ruins in the tree ring [attempts: 0] — ref: tabs_screenshot_02 — ours: lineup_medieval.png
-7. [battle-feel] stiff-flyers-flat-dead: victims fly spread-eagled, dead lie as flat streaks, no limp piles [attempts: 0] — ref: tabs_screenshot_02 — ours: war_machines_1100ms.png
+6. [battle-feel] stiff-flyers-flat-dead: victims fly spread-eagled, dead lie as flat streaks, no limp piles [attempts: 0] — ref: tabs_screenshot_02 — ours: war_machines_1100ms.png
+7. [maps-light] field-flat-no-dressing: flat plane, straight horizon, no hills or ruins in the tree ring [attempts: 0] — ref: tabs_screenshot_02 — ours: lineup_medieval.png
 8. [ui-flow] result-band-space-reset: says PRESS [SPACE] TO PLAY AGAIN with RESET label, mammoth's back to camera [attempts: 0] — ref: gameplay_sheet_02 r1c2 — ours: big_melee_result.png
 
 ## Rejected attempts (last 5, newest first; `rejected-kept` when the revert conflicted)
@@ -32,6 +32,7 @@ battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 - grass-foreground-and-drift [attempts: 1] — clearance 5, eye 1.1, x-follow: bottom 27% still bare grass
 
 ## Notes for next iteration (max 5 lines)
-- Gap 1: back-off needs ~+4 (cap 18) and must subtract _shakeOffset before any moved-by-player test; leave pitchUp 0.17 and clearRadius.
-- Gap 2: _createFieldBlades open-ground cut 0.25 -> ~0.5 where |x| < 14 only. BLADE_DARK 0.84 still does not read.
-- Gap 3: bodyBuilder give the foot mesh its own color (shin lightened ~25% or accent), not bodyMat.
+- Gap 1 is under Rejected attempts, so not pickable (skipped in 68). If retried: subtract _shakeOffset before any moved-by-player test.
+- Gap 2: drop glow.addExcludedMesh on fire lobes so they bloom into one mass; fireScale cap 1.6 -> ~1.1.
+- Gap 3: _createFieldBlades cap patchHeight ~0.6 inside |x| < 24; leave the open-ground cut alone.
+- Gap 4: bodyBuilder foot ~1.5x longer forward, ~1.3x ankle width. No capture shows a tribal unit's bare feet.
