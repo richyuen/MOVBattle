@@ -77,7 +77,7 @@ export class VisualEffects {
 
     // Build the zigzag: short shards, each joint swinging to the opposite side of the last by about half
     // a shard's length, so even a short bolt is all corners
-    const segments = Math.max(5, Math.min(14, Math.round(len / 0.7)));
+    const segments = Math.max(8, Math.min(20, Math.round(len / 0.4)));
     const points: Vector3[] = [start];
     const amp = Math.max(0.28, Math.min(0.5, (len / segments) * 0.6));
     let sign = Math.random() < 0.5 ? -1 : 1;
@@ -122,7 +122,9 @@ export class VisualEffects {
 
     // Strike burst: a flat six-point star at the target, facing the camera, that snaps out wide and cuts off with the bolt
     const burst = new TransformNode("lburst", this._scene);
-    burst.position = endPoint;
+    // Half a metre toward the camera, in front of the body it strikes, so the star is whole and not half sunk in a torso
+    const eye = this._scene.activeCamera?.globalPosition;
+    burst.position = eye ? endPoint.add(eye.subtract(endPoint).normalize().scale(0.5)) : endPoint;
     burst.billboardMode = TransformNode.BILLBOARDMODE_ALL;
     burst.parent = root;
     for (const turn of [0, Math.PI / 3]) {
