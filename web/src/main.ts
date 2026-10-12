@@ -117,14 +117,14 @@ initMaterialFactory(scene);
 
 // Lights
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
-hemi.intensity = 0.7;
+hemi.intensity = 0.6;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
-const dir = new DirectionalLight("dir", new Vector3(-0.4, -1, 0.6), scene);
-dir.intensity = 0.8;
+const dir = new DirectionalLight("dir", new Vector3(-0.4, -0.6, 0.6), scene);
+dir.intensity = 0.9;
 // The sun stands off beyond the tree ring with its own depth range. Left at its default spot just above the field,
 // everything taller than a trunk base sits behind the shadow camera and never reaches the shadow map.
 dir.position = dir.direction.scale(-100);
-dir.shadowMinZ = 40;
+dir.shadowMinZ = 10;
 dir.shadowMaxZ = 220;
 
 // Fog — depth fade to sky color
