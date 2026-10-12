@@ -994,13 +994,8 @@ export class RuntimeUnit {
     const nearestFlat = (angle: number): number =>
       Math.round((angle - Math.PI / 2) / Math.PI) * Math.PI + Math.PI / 2;
     const onSide = Math.abs(Math.sin(rot.z)) > 0.8;
-    // Some roll over onto the side their flung arm and splayed leg are on, and lie in profile on top of them.
-    const side = this.animator.corpseRestSide;
-    const turn = Math.PI * 2;
-    const targetX = side !== 0 ? Math.round(rot.x / turn) * turn : onSide ? rot.x : nearestFlat(rot.x);
-    const targetZ = side !== 0
-      ? Math.round((rot.z - side * Math.PI / 2) / turn) * turn + side * Math.PI / 2
-      : onSide ? nearestFlat(rot.z) : Math.round(rot.z / Math.PI) * Math.PI;
+    const targetX = onSide ? rot.x : nearestFlat(rot.x);
+    const targetZ = onSide ? nearestFlat(rot.z) : Math.round(rot.z / Math.PI) * Math.PI;
     const settle = Math.min(1, dt * 9);
     rot.x += (targetX - rot.x) * settle;
     rot.z += (targetZ - rot.z) * settle;
