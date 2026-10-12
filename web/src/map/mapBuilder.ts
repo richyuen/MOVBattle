@@ -547,11 +547,21 @@ export class TribalSandboxMapBuilder {
     cloudMat.specularColor = new Color3(0, 0, 0);
     const glow = this._scene.getGlowLayerByName("glow");
 
-    for (let i = 0; i < 12; i++) {
+    // Three low clouds drift just past the far rim (x, base y, z, size): the high placement camera looks down too
+    // steeply to see the ring above, so these sit low enough to show over the far treeline in that view
+    const lowClouds = [[-40, 1.5, 57, 9], [22, 1, 59, 8], [49, 2, 56, 7.5]];
+    for (let i = 0; i < 12 + lowClouds.length; i++) {
+      const low = lowClouds[i - 12];
       const angle = (i / 12) * Math.PI * 2 + this._seededValue(i, 41) * 0.35;
       const radius = 70 + this._seededValue(i, 42) * 30;
-      const size = 9 + this._seededValue(i, 43) * 8;
+      const size = low ? low[3] : 9 + this._seededValue(i, 43) * 8;
       const puffs: Mesh[] = [];
+      // A fifth puff rides on top of the two middle ones, so the cloud is a heap and not a row
+      const crown = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
+      const crownD = size * (0.6 + this._seededValue(i, 47) * 0.2);
+      crown.scaling.set(crownD, crownD * 0.7, crownD * 0.7);
+      crown.position.set((this._seededValue(i, 48) - 0.5) * size * 0.2, size * 0.62, 0);
+      puffs.push(crown);
       for (let j = 0; j < 4; j++) {
         const puff = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
         // The two middle puffs are bigger and taller than the end ones and every puff sits on one flat base,
@@ -566,8 +576,12 @@ export class TribalSandboxMapBuilder {
       if (!cloud) continue;
       cloud.name = "cloud";
       cloud.convertToFlatShadedMesh();
-      cloud.position.set(Math.cos(angle) * radius, 24 + this._seededValue(i, 46) * 16, Math.sin(angle) * radius);
-      cloud.rotation.y = -angle + Math.PI / 2;
+      if (low) {
+        cloud.position.set(low[0], low[1], low[2]);
+      } else {
+        cloud.position.set(Math.cos(angle) * radius, 24 + this._seededValue(i, 46) * 16, Math.sin(angle) * radius);
+        cloud.rotation.y = -angle + Math.PI / 2;
+      }
       cloud.material = cloudMat;
       cloud.applyFog = false;
       cloud.isPickable = false;
