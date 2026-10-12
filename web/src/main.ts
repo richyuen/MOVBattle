@@ -150,9 +150,9 @@ const shadowGen = new ShadowGenerator(2048, dir);
 // span smears a unit-sized shadow away to nothing.
 shadowGen.usePercentageCloserFiltering = true;
 shadowGen.filteringQuality = ShadowGenerator.QUALITY_HIGH;
-// Shadows keep under half of the ground's light (darkness is the light left in them): at full strength the tree ring's shade fuses into one black mass
+// Shadows keep about a third of the ground's light (darkness is the light left in them): at full strength the tree ring's shade fuses into one black mass
 // over the placement half beneath it.
-shadowGen.darkness = 0.45;
+shadowGen.darkness = 0.35;
 shadowGen.bias = 0.0004;
 shadowGen.normalBias = 0.02;
 
