@@ -53,6 +53,11 @@ function paintFarProps(scene: Scene, canopy: Color3): void {
     hazeTrees.diffuseColor = hazed(canopy, scene.fogColor, HAZE_MIX);
     hazeTrees.emissiveColor = hazeTrees.diffuseColor.scale(0.05);
   }
+  const hazeTreesShade = scene.getMaterialByName("hazeTreesShade") as StandardMaterial | null;
+  if (hazeTrees && hazeTreesShade) {
+    hazeTreesShade.diffuseColor = hazeTrees.diffuseColor.scale(0.8);
+    hazeTreesShade.emissiveColor = hazeTreesShade.diffuseColor.scale(0.05);
+  }
   for (const [name, base] of [["farRock", FAR_ROCK], ["farRockShade", FAR_ROCK_SHADE]] as const) {
     const farRock = scene.getMaterialByName(name) as StandardMaterial | null;
     if (!farRock) continue;
@@ -161,7 +166,7 @@ export class TribalSandboxMapBuilder {
     }
 
     // Far treeline and off-island mountains: colors pre-mixed toward the sky so they sit back in the haze
-    for (const name of ["hazeTrees", "farRock", "farRockShade", "farSnow"]) {
+    for (const name of ["hazeTrees", "hazeTreesShade", "farRock", "farRockShade", "farSnow"]) {
       new StandardMaterial(name, this._scene).specularColor = Color3.Black();
     }
     paintFarProps(this._scene, leaves.diffuseColor);
@@ -620,13 +625,16 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Ragged band of small conifers along the long island edges, behind the big tree ring: mixed heights, several rows deep */
+  /** Ragged band of small conifers along the long island edges, behind the big tree ring: mixed heights, several rows deep, broken by gaps and mixed light and dark */
   private _createHazeTreeline(): void {
     const cones: Mesh[] = [];
+    const shadeCones: Mesh[] = [];
     const perSide = 150;
     for (const side of [-1, 1]) {
       for (let i = 0; i < perSide; i++) {
         const k = side > 0 ? i : i + perSide;
+        // About one run of six in four is left out, so sky shows through the band in clumps
+        if (this._seededValue(Math.floor(k / 6), 75) < 0.25) continue;
         const height = 2.2 + this._seededValue(k, 71) * 5.2;
         const x = -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH;
         const z = side * (37.5 + this._seededValue(k, 73) * 9.5);
@@ -636,15 +644,17 @@ export class TribalSandboxMapBuilder {
         }, this._scene);
         cone.position.set(x, height / 2, z);
         cone.rotation.y = this._seededValue(k, 74) * Math.PI;
-        cones.push(cone);
+        (this._seededValue(k, 76) < 0.4 ? shadeCones : cones).push(cone);
       }
     }
-    const treeline = Mesh.MergeMeshes(cones, true);
-    if (!treeline) return;
-    treeline.name = "hazeTreeline";
-    treeline.convertToFlatShadedMesh();
-    treeline.material = this._scene.getMaterialByName("hazeTrees");
-    treeline.isPickable = false;
+    for (const [group, matName] of [[cones, "hazeTrees"], [shadeCones, "hazeTreesShade"]] as const) {
+      const treeline = Mesh.MergeMeshes(group, true);
+      if (!treeline) continue;
+      treeline.name = "hazeTreeline";
+      treeline.convertToFlatShadedMesh();
+      treeline.material = this._scene.getMaterialByName(matName);
+      treeline.isPickable = false;
+    }
   }
 
   /** Puffy low-poly clouds ringing the island; sunlit, fog-free and kept out of the glow layer so each facet reads hard-edged */
