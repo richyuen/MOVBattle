@@ -327,8 +327,8 @@ export class ProceduralAnimator {
     // Arms hang with slight sway
     b.leftShoulder.rotation.x = Math.sin(t * 1.1) * wobble * 2;
     b.rightShoulder.rotation.x = Math.sin(t * 1.1 + Math.PI) * wobble * 2;
-    b.leftElbow.rotation.x = -0.15 + Math.sin(t * 1.4) * wobble;
-    b.rightElbow.rotation.x = -0.15 + Math.sin(t * 1.4 + Math.PI) * wobble;
+    b.leftElbow.rotation.x = -0.55 + Math.sin(t * 1.4) * wobble;
+    b.rightElbow.rotation.x = -0.55 + Math.sin(t * 1.4 + Math.PI) * wobble;
 
     // Legs straight with micro wobble
     b.leftHip.rotation.x = Math.sin(t * 0.9) * wobble;
@@ -398,8 +398,8 @@ export class ProceduralAnimator {
     const armSwing = 0.75;
     b.leftShoulder.rotation.x = Math.sin(t * speed + Math.PI) * armSwing;
     b.rightShoulder.rotation.x = Math.sin(t * speed) * armSwing;
-    b.leftElbow.rotation.x = -0.3 + Math.sin(t * speed + Math.PI) * 0.2;
-    b.rightElbow.rotation.x = -0.3 + Math.sin(t * speed) * 0.2;
+    b.leftElbow.rotation.x = -0.75 + Math.sin(t * speed + Math.PI) * 0.2;
+    b.rightElbow.rotation.x = -0.75 + Math.sin(t * speed) * 0.2;
 
     // Floppy arm Z rotation (TABS signature wobble)
     b.leftShoulder.rotation.z = Math.sin(t * speed * 1.3) * wobble * 3.5;
