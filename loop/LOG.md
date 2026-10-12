@@ -67,3 +67,4 @@ iter 65 | re-audit; grass-sparse-cone-spikes, limbs-pencil-thin, battle-cam-too-
 iter 66 | grass-ankle-high-tombstones, battle-cam-dead-sky-half, shins-spike-pegs-no-boot | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 67 | grass-unbroken-carpet-buries, legs-dark-points-no-boot, battle-cam-inside-near-rank | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 68 | fight-band-grass-buries, boot-same-tint-as-shin, explosion-crystal-blocks | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 69 | fireball-balloon-cluster, gun-line-grass-tall-clumps, foot-small-blob | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
