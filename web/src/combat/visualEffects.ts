@@ -314,11 +314,12 @@ export class VisualEffects {
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
-    // The fireball is mostly self-lit: a pale cream body that only turns orange at its fringe, in sun and in shade.
-    const flashMat = mats.createUnique("cloth", new Color3(1, 0.92, 0.6));
-    flashMat.emissiveColor = new Color3(0.62, 0.55, 0.3);
-    const flameMat = mats.createUnique("cloth", new Color3(1, 0.65, 0.2));
-    flameMat.emissiveColor = new Color3(0.6, 0.36, 0.08);
+    // The fireball is mostly self-lit: a bright yellow body that only turns orange at its fringe, in sun and in
+    // shade. Neither colour carries any blue, so however bright it gets it stays yellow and never pales to cream.
+    const flashMat = mats.createUnique("cloth", new Color3(1, 0.82, 0.03));
+    flashMat.emissiveColor = new Color3(0.6, 0.46, 0);
+    const flameMat = mats.createUnique("cloth", new Color3(1, 0.45, 0.02));
+    flameMat.emissiveColor = new Color3(0.6, 0.25, 0);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
