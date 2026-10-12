@@ -331,7 +331,7 @@ export class ProceduralAnimator {
       const p = (this._shovePose ??= this._buildShovePose());
       const k = this._shove;
       const phase = (this._time + this._wobblePhase) * p.rate;
-      // The walk already leans 0.40 rad; a presser still stepping in takes half the extra pitch.
+      // The walk already leans 0.55 rad; a presser still stepping in takes half the extra pitch.
       b.torso.rotation.x += (p.pitch * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
       // A swing pitches the torso itself; with the shove on top the lean stops at 0.6 rad, short of a fold at the waist.
       b.torso.rotation.x = Math.min(b.torso.rotation.x, 0.6);
@@ -581,7 +581,7 @@ export class ProceduralAnimator {
     const wobble = 0.08; // constant wobble overlay
 
     // Torso leans forward and sways side to side
-    b.torso.rotation.x = 0.40 + Math.sin(t * speed * 0.5) * wobble * 0.5;
+    b.torso.rotation.x = 0.55 + Math.sin(t * speed * 0.5) * wobble * 0.5;
     b.torso.rotation.z = Math.sin(t * speed * 0.5) * 0.06;
 
     // Head wobbles
