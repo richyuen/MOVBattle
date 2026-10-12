@@ -1078,20 +1078,7 @@ export class SimulationSystem {
       return;
     }
 
-    // A mammoth's gore throws the bodies round its target up and away from it; taken before the damage, so one it kills flies too.
-    const gored = preset === "iconic_mammoth"
-      ? this._units.filter((unit) => !unit.isDead && unit.team !== attacker.team && Vector3.Distance(unit.position, target.position) <= 2.6)
-      : [];
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
-    for (const unit of gored) {
-      const away = unit.position.subtract(attacker.position);
-      away.y = 0;
-      if (away.lengthSquared() < 0.0001) away.set(impulseDir.x, 0, impulseDir.z);
-      away.normalize();
-      // Lift of 7-10 m/s under 22 m/s2 gravity clears head height; the body nearest the tusks goes highest.
-      const near = 1 - Vector3.Distance(unit.position, target.position) / 2.6;
-      unit.applyBlastLaunch(away, 2.5 + 1.5 * near, 7 + 3 * near);
-    }
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
