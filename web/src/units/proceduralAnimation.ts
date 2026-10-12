@@ -656,12 +656,20 @@ export class ProceduralAnimator {
   private _applyWalkBias(t: number): void {
     const b = this._body;
     switch (this.locomotionBias) {
-      case "heavy_carry":
+      case "heavy_carry": {
+        // Per-unit carry: each body holds its weapon arm at its own height, fold and angle off the ribs, hashed from
+        // the wobble phase like the idle pose, so a rank on the march is a ragged line of clubs and not one repeated pose
+        const h = (n: number): number => {
+          const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+          return v - Math.floor(v);
+        };
         b.torso.rotation.x += 0.06;
-        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.7 - 0.28;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.7 - 0.28 + (h(61) - 0.5) * 0.9;
+        b.rightShoulder.rotation.z += (h(62) - 0.5) * 0.7;
         b.leftShoulder.rotation.x *= 0.82;
-        b.rightElbow.rotation.x -= 0.16;
+        b.rightElbow.rotation.x -= 0.16 + (h(63) - 0.5) * 0.8;
         break;
+      }
       case "aimed":
         b.torso.rotation.x += 0.04;
         b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.65 + 0.16;
