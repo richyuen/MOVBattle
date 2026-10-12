@@ -127,6 +127,13 @@ scene.fogMode = Scene.FOGMODE_LINEAR;
 scene.fogColor = new Color3(0.36, 0.74, 0.78);
 scene.fogStart = 70;
 scene.fogEnd = 170;
+// The haze starts behind the fight, not at a fixed distance from the eye: pulled back to the placement view,
+// the board would otherwise sit a third of the way into the fog and both teams wash out to its colour.
+scene.onBeforeRenderObservable.add(() => {
+  const pullBack = Math.max(0, ((scene.activeCamera as { radius?: number } | null)?.radius ?? 0) - 14);
+  scene.fogStart = 70 + pullBack;
+  scene.fogEnd = 170 + pullBack;
+});
 
 // Shadows
 const shadowGen = new ShadowGenerator(2048, dir);
