@@ -136,13 +136,13 @@ export class ProceduralAnimator {
     const pick = Math.random();
     const overhead = pick < 0.5;
     const leftFlung = Math.floor(pick * 4) % 2 === 0;
-    // A flung-wide arm is half the time only a diagonal with the forearm folded back toward the head, and the
-    // low arm lies straight along the side, so no body rests as a T with both arms out square. Derived from
+    // A flung-wide arm is never more than a diagonal and its forearm always folds back toward the head, hard
+    // half the time, and the low arm lies straight along the side, so no body rests as a T. Derived from
     // `pick`, so the pose draws no more random numbers than before.
     const folded = Math.floor(pick * 8) % 2 === 0;
     const flungX = overhead ? -(2.95 + Math.random() * 0.4) : (Math.random() - 0.5) * 0.3;
-    const flungZ = overhead ? 0.1 + Math.random() * 0.6 : folded ? 0.45 + Math.random() * 0.35 : 0.9 + Math.random() * 0.6;
-    const flungElbowZ = overhead ? (Math.random() - 0.3) * 1.2 : folded ? 1.3 + Math.random() * 0.6 : 0.4 + Math.random() * 0.9;
+    const flungZ = overhead ? 0.1 + Math.random() * 0.6 : folded ? 0.45 + Math.random() * 0.35 : 0.5 + Math.random() * 0.3;
+    const flungElbowZ = overhead ? (Math.random() - 0.3) * 1.2 : folded ? 1.3 + Math.random() * 0.6 : 1.0 + Math.random() * 0.6;
     const lowX = (Math.random() - 0.5) * 0.3;
     const lowZ = 0.05 + Math.random() * 0.2;
     const lowElbowZ = Math.random() * 0.3;
@@ -178,7 +178,7 @@ export class ProceduralAnimator {
   private _airTarget = 0;
   private _air = 0;
   // Per-unit flight shape as [joint, x, y, z]: a third of the bodies jackknife at the waist, a third bow backward
-  // with the arms past the head, a third sit in an L with the legs straight out. Legs stay together and arms stay
+  // with the arms past the head, a third sit in an L with the legs straight out. Legs stay close and arms stay
   // in line with the trunk, so a launched body is one bent plank and not a four-pointed star. Hashed from the
   // wobble phase like the shove pose, so it consumes no random numbers.
   private _airPose: Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> | null = null;
@@ -199,6 +199,10 @@ export class ProceduralAnimator {
     const rightArm = lead === 0 ? 0 : armGap;
     const leftKnee = 0.3 + h(42) * 0.9;
     const rightKnee = 0.3 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.9;
+    // The legs part: one swings up to half a radian ahead of or behind the other, and one kicks out to the side.
+    const hipGap = (h(44) < 0.5 ? -1 : 1) * (0.3 + h(45) * 0.2);
+    const leftKick = h(46) < 0.5 ? -(0.18 + h(47) * 0.17) : 0;
+    const rightKick = h(46) < 0.5 ? 0 : 0.18 + h(47) * 0.17;
     if (variant === 0) {
       // Jackknife: folded hard at the waist, straight legs swung up to meet the arms reaching for the toes
       const hip = 0.7 + h(30) * 0.4;
@@ -209,8 +213,8 @@ export class ProceduralAnimator {
         [b.rightShoulder, -(1.0 + h(27) * 0.3 + rightArm), 0, 0.1],
         [b.leftElbow, -(0.15 + h(28) * 0.25 + rightArm), 0, 0],
         [b.rightElbow, -(0.15 + h(29) * 0.25 + leftArm), 0, 0],
-        [b.leftHip, -hip, 0, 0],
-        [b.rightHip, -(hip + (h(31) - 0.5) * 0.5), 0, 0],
+        [b.leftHip, -hip, 0, leftKick],
+        [b.rightHip, -(hip + hipGap), 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
         [b.rightKnee, rightKnee, 0, 0],
       ];
@@ -225,8 +229,8 @@ export class ProceduralAnimator {
         [b.rightShoulder, -(2.9 + h(28) * 0.2 - rightArm), 0, 0.1 + h(29) * 0.15],
         [b.leftElbow, -(0.1 + h(30) * 0.3 + leftArm), 0, 0],
         [b.rightElbow, -(0.1 + h(31) * 0.3 + rightArm), 0, 0],
-        [b.leftHip, hip, 0, 0],
-        [b.rightHip, hip + (h(33) - 0.5) * 0.5, 0, 0],
+        [b.leftHip, hip, 0, leftKick],
+        [b.rightHip, hip + hipGap, 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
         [b.rightKnee, rightKnee, 0, 0],
       ];
@@ -240,8 +244,8 @@ export class ProceduralAnimator {
       [b.rightShoulder, 0.2 + h(29) * 0.2 + rightArm, 0, 0.12],
       [b.leftElbow, -(0.2 + h(31) * 0.3 + rightArm), 0, 0],
       [b.rightElbow, -(0.2 + h(32) * 0.3 + leftArm), 0, 0],
-      [b.leftHip, -hip, 0, 0],
-      [b.rightHip, -(hip + (h(30) - 0.5) * 0.5), 0, 0],
+      [b.leftHip, -hip, 0, leftKick],
+      [b.rightHip, -(hip + hipGap), 0, rightKick],
       [b.leftKnee, leftKnee, 0, 0],
       [b.rightKnee, rightKnee, 0, 0],
     ];
