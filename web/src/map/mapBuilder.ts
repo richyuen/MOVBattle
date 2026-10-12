@@ -436,11 +436,11 @@ export class TribalSandboxMapBuilder {
       });
     }
 
-    // A further row of twelve stands behind the far arc (the top of the placement view), where the ring is at its
+    // A further row of sixteen stands behind the far arc and both upper flanks (the top of the placement view), where the ring is at its
     // thinnest, so it is as deep there as on the flanks and covers the bare apron to the rim.
-    const backRowCount = 12;
+    const backRowCount = 16;
     for (let i = 0; i < backRowCount; i++) {
-      const angle = Math.PI / 2 + ((i + this._seededValue(i, 121) * 0.6) / backRowCount - 0.5) * 2.2;
+      const angle = Math.PI / 2 + ((i + this._seededValue(i, 121) * 0.6) / backRowCount - 0.5) * 3.0;
       const spread = 1.24 + this._seededValue(i, 122) * 0.06;
       trees.push({
         pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
