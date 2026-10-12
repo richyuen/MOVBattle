@@ -1558,6 +1558,15 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   crest.position.set(0, 0.5, -0.18);
   crest.scaling.set(0.72, 0.62, 0.95);
   crest.parent = neck; crest.material = crestMat; allMeshes.push(crest);
+  // Shaggy topknot: three faceted fur tufts standing off the crown, the middle one tallest and tipped forward, so the
+  // skull line is a ragged peak and not a smooth dome
+  for (const [x, y, z, h, lean] of [[0, 0.82, 0.12, 0.55, 0.35], [-0.22, 0.72, 0.0, 0.42, 0.1], [0.22, 0.72, 0.0, 0.42, 0.1]]) {
+    const tuft = MeshBuilder.CreateCylinder("topknot", { height: h, diameterTop: h * 0.2, diameterBottom: h * 0.95, tessellation: 5 }, scene);
+    tuft.position.set(x, y, z);
+    tuft.rotation.x = lean;
+    tuft.rotation.z = -x * 1.6;
+    tuft.parent = neck; tuft.material = crestMat; allMeshes.push(tuft);
+  }
 
   // War paint stripe across the brow
   const browPaint = MeshBuilder.CreateBox("browPaint", { width: 0.62, height: 0.13, depth: 0.2 }, scene);
@@ -1588,7 +1597,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   const trunkSegments = 5;
   for (let i = 0; i < trunkSegments; i++) {
     const t = i / (trunkSegments - 1);
-    const diam = 0.28 - t * 0.14;
+    // A thick trunk, 0.4 across at the face and still half that at the tip
+    const diam = 0.4 - t * 0.2;
     const seg = MeshBuilder.CreateCylinder("trunk", {
       height: 0.28, diameterTop: diam * 0.85, diameterBottom: diam, tessellation: 8,
     }, scene);
