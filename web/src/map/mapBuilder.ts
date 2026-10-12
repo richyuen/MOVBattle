@@ -591,7 +591,7 @@ export class TribalSandboxMapBuilder {
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.16;
         const h = (0.2 + this._seededValue(i, 33) * 0.25) * patchHeight; // shin to knee in the tall patches on the flanks
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
-        const half = 0.022 + this._seededValue(i, 38) * 0.014; // a blade is a finger wide; the carpet comes from their number
+        const half = 0.04 + this._seededValue(i, 38) * 0.03; // a blade is a hand wide: a flat card, not a needle
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
         const lean = (this._seededValue(i, 36) - 0.5) * 0.12; // up to 0.06 m either way, so no two blades stand alike
