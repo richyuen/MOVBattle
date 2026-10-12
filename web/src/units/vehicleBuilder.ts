@@ -599,7 +599,13 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // Carriage (longer along Z)
   const carriage = MeshBuilder.CreateBox("carriage", { width: 0.5, height: 0.12, depth: 0.9 }, scene);
-  carriage.position.y = 0.3; carriage.parent = root; carriage.material = teamPrimary; allMeshes.push(carriage);
+  carriage.position.y = 0.3; carriage.parent = root; carriage.material = wood; allMeshes.push(carriage);
+
+  // Axle under the bed: the body mesh that takes the team tint, so the iron barrel and the wooden carriage keep their own colours
+  const axle = MeshBuilder.CreateCylinder("axle", { height: 0.56, diameter: 0.06, tessellation: 6 }, scene);
+  axle.position.y = 0.28;
+  axle.rotation.z = Math.PI / 2;
+  axle.parent = root; axle.material = teamPrimary; allMeshes.push(axle);
 
   // Wheels (on sides, X axis)
   for (const xOff of [-0.3, 0.3]) {
@@ -666,7 +672,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   return wrapAsBody(
     scene,
     root,
-    barrel,
+    axle,
     allMeshes,
     operator?.headMesh,
     // Height stays the gun's old reach (operator plus the 0.57 he used to stand on), so targeting is unchanged
