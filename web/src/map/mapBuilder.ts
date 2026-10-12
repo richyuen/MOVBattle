@@ -167,7 +167,10 @@ export class TribalSandboxMapBuilder {
 
     // Far treeline and off-island mountains: colors pre-mixed toward the sky so they sit back in the haze
     for (const name of ["hazeTrees", "hazeTreesShade", "farRock", "farRockShade", "farSnow"]) {
-      new StandardMaterial(name, this._scene).specularColor = Color3.Black();
+      const far = new StandardMaterial(name, this._scene);
+      far.specularColor = Color3.Black();
+      // The ridges stand past the fog's far end: scene fog would paint them flat fog-green, so they keep their own pre-hazed rock colour
+      far.fogEnabled = !name.startsWith("far");
     }
     paintFarProps(this._scene, leaves.diffuseColor);
   }
