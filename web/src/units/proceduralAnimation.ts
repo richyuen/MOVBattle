@@ -224,9 +224,9 @@ export class ProceduralAnimator {
     const kick = 0.3 + h(47) * 0.25;
     const leftKick = -(h(46) < 0.5 ? kick : kick * 0.5);
     const rightKick = h(46) < 0.5 ? kick * 0.5 : kick;
-    // The arms fling 0.7 to 1.2 rad out from the sides, each by its own amount, on elbows that give by half a
+    // The right arm flings 0.7 to 1.2 rad out from the side and the left 0.3 to 1.2, so the two rarely match, on elbows that give by half a
     // radian at most, so they splay near full stretch and do not tuck in against the trunk.
-    const leftOut = 0.7 + h(51) * 0.5;
+    const leftOut = 0.3 + h(51) * 0.9;
     const rightOut = 0.7 + h(52) * 0.5;
     const leftBend = -(0.1 + h(53) * 0.3 + rightArm * 0.4);
     const rightBend = -(0.1 + h(54) * 0.3 + leftArm * 0.4);
