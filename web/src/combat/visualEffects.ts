@@ -371,8 +371,8 @@ export class VisualEffects {
     // enough to show no facets, and a shell's can grow to about three men tall.
     const fireScale = Math.min(scale * 2.0, 3.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
-    const lobeSizes = [1.0, 0.8, 0.5, 0.7, 0.45, 0.6];
-    // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe, so the ball is orange and not cream
+    const lobeSizes = [1.0, 1.0, 0.5, 0.9, 0.45, 0.6];
+    // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe and the largest of the flank lobes, so the foot of the ball is orange and not cream
     const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
       const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? flameMat : flashMat);
