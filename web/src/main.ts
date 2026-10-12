@@ -1067,19 +1067,25 @@ function enterSimulation(): void {
   showStatus("Fight!");
 }
 
+/** Engage range from which a unit shoots from where it stands rather than closing to melee. */
+const STANDOFF_ENGAGE_RANGE = 7;
+
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
-function computeBattleFocus(): { x: number; z: number } {
-  const sums = [{ x: 0, z: 0, n: 0 }, { x: 0, z: 0, n: 0 }];
+function computeBattleFocus(): { x: number; z: number; halfSpan: number } {
+  const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
     const s = sums[unit.team === 0 ? 0 : 1];
     s.x += unit.position.x;
     s.z += unit.position.z;
     s.n += 1;
+    if (unit.definition.engageRange >= STANDOFF_ENGAGE_RANGE) s.ranged += 1;
   }
   const a = sums[0].n ? { x: sums[0].x / sums[0].n, z: sums[0].z / sums[0].n } : { x: 0, z: 0 };
   const b = sums[1].n ? { x: sums[1].x / sums[1].n, z: sums[1].z / sums[1].n } : { x: 0, z: 0 };
-  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
+  // A mostly-ranged army holds its ground instead of closing, so the frame has to span both formations.
+  const standoff = sums.some((s) => s.n > 0 && s.ranged * 2 > s.n);
+  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0 };
 }
 
 function resetBattle(options: {
