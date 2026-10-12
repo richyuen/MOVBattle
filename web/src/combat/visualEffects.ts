@@ -325,9 +325,9 @@ export class VisualEffects {
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
-    // Pale tan and part self-lit, so the dust stays a light puff in shade instead of greying into boulders
-    const dustMat = mats.createUnique("stone", new Color3(0.88, 0.8, 0.62));
-    dustMat.emissiveColor = new Color3(0.14, 0.12, 0.08);
+    // The fireball heart's pale yellow and part self-lit, so the dust is the foot of the blast and not a grey boulder under it
+    const dustMat = mats.createUnique("stone", new Color3(1, 0.93, 0.7));
+    dustMat.emissiveColor = new Color3(0.32, 0.28, 0.17);
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
     const floorY = -root.position.y + 0.08;
@@ -392,14 +392,14 @@ export class VisualEffects {
       lobes.push({ mesh: lobe, size: (i === 0 ? 0.42 : 0.22 + Math.random() * 0.12) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
     }
 
-    // Dust: one fat mound of overlapping tan lobes heaved up out of the crater, a big one in the middle and
+    // Dust: one fat mound of pale lobes sunk into each other, heaved up out of the crater, a big one in the middle and
     // smaller ones crowded against it, so the hit reads as a single burst from any side.
     const dustScale = Math.min(scale, 1.4);
     const mound: { mesh: TransformNode; size: number }[] = [];
     for (let i = 0; i < 6; i++) {
       const lobe = blob("burstDust", 2, dustMat);
       const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
-      const reach = (i === 0 ? 0 : 0.3 + Math.random() * 0.2) * dustScale;
+      const reach = (i === 0 ? 0 : 0.14 + Math.random() * 0.1) * dustScale;
       const size = (i === 0 ? 0.85 : 0.4 + Math.random() * 0.25) * dustScale;
       lobe.position.set(Math.cos(angle) * reach, floorY + size * 0.12, Math.sin(angle) * reach);
       mound.push({ mesh: lobe, size });
@@ -448,7 +448,7 @@ export class VisualEffects {
         }
         // The mound heaves up fast, sags as it settles, and has shrunk away 40% of the way through, well before the clods stop.
         const heave = 0.35 + 0.65 * Math.min(1, elapsed / 0.14);
-        const sag = 0.42 - 0.17 * Math.min(1, elapsed / totalDuration);
+        const sag = 0.7 - 0.2 * Math.min(1, elapsed / totalDuration);
         const settle = Math.max(0.001, Math.min(1, (totalDuration * 0.4 - elapsed) / 0.4));
         for (const lobe of mound) {
           const size = lobe.size * heave * settle;
