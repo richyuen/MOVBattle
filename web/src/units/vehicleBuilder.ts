@@ -1553,7 +1553,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   headMesh.parent = neck; headMesh.material = fur; allMeshes.push(headMesh);
 
   // Forehead dome and the crest behind it: one near-black fur cap from the brow back over the skull to the hump
-  const crestMat = makeMat(scene, Color3.Lerp(hide, new Color3(0.04, 0.03, 0.03), 0.8));
+  const crestMat = makeMat(scene, Color3.Lerp(hide, new Color3(0.04, 0.03, 0.03), 0.45));
   const dome = MeshBuilder.CreateSphere("dome", { diameter: 0.75, segments: 3 }, scene);
   dome.position.set(0, 0.36, 0.2);
   dome.parent = neck; dome.material = crestMat; allMeshes.push(dome);
@@ -1564,7 +1564,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   // Shaggy topknot: three fat blunt fur tufts standing off the crown, wider than tall and flat-topped, the middle one
   // tallest and tipped forward, so the skull line is a lumpy mop and not a smooth dome or a row of spikes
   for (const [x, y, z, h, lean] of [[0, 0.82, 0.12, 0.55, 0.35], [-0.22, 0.72, 0.0, 0.42, 0.1], [0.22, 0.72, 0.0, 0.42, 0.1]]) {
-    const tuft = MeshBuilder.CreateCylinder("topknot", { height: h, diameterTop: h * 0.7, diameterBottom: h * 1.5, tessellation: 5 }, scene);
+    const tuft = MeshBuilder.CreateSphere("topknot", { diameter: 1, segments: 3 }, scene);
+    tuft.scaling.set(h * 1.5, h * 0.8, h * 1.5);
     tuft.position.set(x, y, z);
     tuft.rotation.x = lean;
     tuft.rotation.z = -x * 1.6;
