@@ -204,11 +204,12 @@ export class CameraController {
     // Armies that hold their ground (halfSpan > 0) must both fit: the frame is ~0.63 radius wide each side of the target.
     const spanRadius = ((center.halfSpan ?? 0) + 1.5) / 0.6;
     // The eye stands clear of the rank nearest to it, so the fight spreading sideways does not swallow the camera.
-    const clearRadius = (center.depth ?? 0) + 4.5;
+    // Eight metres off its feet: the rank comes on toward the eye as the fight spreads, and must not reach it.
+    const clearRadius = (center.depth ?? 0) + 8;
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
       beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
-      radius: Math.min(14, Math.max(6, spanRadius, clearRadius)), // two and a half body lengths back from the nearest rank, which stands ~0.45 of the frame tall
+      radius: Math.min(18, Math.max(6, spanRadius, clearRadius)), // four body lengths back from the nearest rank
       target: { x: center.x, y: 1.5, z: center.z },   // eye near 1 m, so the grass in front of the nearest rank stays a thin strip
     };
     // The battle view sits below the placement pitch limits and inside the zoom floor; widen them for the fight.
@@ -235,11 +236,11 @@ export class CameraController {
       to.radius = Math.min(14, Math.max(4.5, fit(halfWidth), fit(-halfWidth)));
       this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     } else {
-      // Melee: the eye sits at chest height and looks a little up, so the horizon lies around 0.7 down the frame,
-      // sky takes the top third, and the bottom edge meets the ground at the nearest rank's feet.
-      const pitchUp = 0.17;
+      // Melee: the eye sits just over head height and looks a little up, so it sees over the nearest rank's
+      // shoulders to the clash, and sky still takes the top third.
+      const pitchUp = 0.1;
       to.beta = Math.PI / 2 + pitchUp;
-      to.target.y = 1.1 + to.radius * Math.sin(pitchUp);
+      to.target.y = 2.1 + to.radius * Math.sin(pitchUp);
       this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
