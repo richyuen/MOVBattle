@@ -15,8 +15,11 @@ const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.6;      // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
-const FAR_ROCK = new Color3(0.66, 0.69, 0.76);
-const FAR_ROCK_SHADE = new Color3(0.55, 0.6, 0.7);
+const FAR_ROCK = new Color3(0.5, 0.55, 0.66);   // dark enough that the snow caps read against it
+const FAR_ROCK_SHADE = new Color3(0.42, 0.48, 0.6);
+const FAR_SNOW = new Color3(0.97, 0.98, 1);
+const FAR_SNOW_MIX = 0.1;
+const FAR_SNOW_GLOW = 0.3;  // snow stays bright on faces turned from the sun
 const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
 const FAR_ROCK_MIX = 0.25;
 
@@ -36,6 +39,11 @@ function paintFarProps(scene: Scene, canopy: Color3): void {
     if (!farRock) continue;
     farRock.diffuseColor = hazed(base, scene.fogColor, FAR_ROCK_MIX);
     farRock.emissiveColor = farRock.diffuseColor.scale(FAR_ROCK_GLOW);
+  }
+  const farSnow = scene.getMaterialByName("farSnow") as StandardMaterial | null;
+  if (farSnow) {
+    farSnow.diffuseColor = hazed(FAR_SNOW, scene.fogColor, FAR_SNOW_MIX);
+    farSnow.emissiveColor = farSnow.diffuseColor.scale(FAR_SNOW_GLOW);
   }
 }
 
@@ -128,7 +136,7 @@ export class TribalSandboxMapBuilder {
     }
 
     // Far treeline and off-island mountains: colors pre-mixed toward the sky so they sit back in the haze
-    for (const name of ["hazeTrees", "farRock", "farRockShade"]) {
+    for (const name of ["hazeTrees", "farRock", "farRockShade", "farSnow"]) {
       new StandardMaterial(name, this._scene).specularColor = Color3.Black();
     }
     paintFarProps(this._scene, leaves.diffuseColor);
@@ -200,57 +208,57 @@ export class TribalSandboxMapBuilder {
     this._createHill(new Vector3(35, 0, 25), 10, 3, 8, dryGrass);
   }
 
+  /** Low wide ridge: three blunt overlapping humps strung along the island edge, each snow-capped. */
   private _createMountain(
     pos: Vector3, diameterX: number, height: number, diameterZ: number,
     mat: StandardMaterial,
   ): void {
-    const base = MeshBuilder.CreateCylinder("mountainBase", {
-      diameterTop: 0.12, diameterBottom: 1, height: 1, tessellation: 6,
-    }, this._scene);
-    base.scaling.set(diameterX, height, diameterZ);
-    base.position.set(pos.x, height / 2, pos.z);
-    base.material = mat;
-    base.receiveShadows = true;
-
-    const mid = MeshBuilder.CreateCylinder("mountainMid", {
-      diameterTop: 0.08, diameterBottom: 1, height: 1, tessellation: 5,
-    }, this._scene);
-    mid.scaling.set(diameterX * 0.6, height * 0.7, diameterZ * 0.6);
-    mid.position.set(pos.x, height * 0.72, pos.z);
-    mid.material = mat;
-    mid.receiveShadows = true;
-
-    // Pointed summit instead of a rounded cap: four faces, so one side always falls in shade
-    const cap = MeshBuilder.CreateCylinder("mountainCap", {
-      diameterTop: 0, diameterBottom: 1, height: 1, tessellation: 4,
-    }, this._scene);
-    cap.scaling.set(diameterX * 0.3, height * 0.4, diameterZ * 0.3);
-    cap.position.set(pos.x, height, pos.z);
-    cap.material = mat;
-    cap.receiveShadows = true;
-    // Faceted low-poly read, with the tiers twisted so the silhouette is not a clean cone
-    const twist = pos.x * 0.37;
-    mid.rotation.y = twist;
-    cap.rotation.y = twist * 1.7;
-    // Lower second peak off to one side, so the outline is a ridge with a notch rather than one cone
-    const shoulder = MeshBuilder.CreateCylinder("mountainShoulder", {
-      diameterTop: 0, diameterBottom: 1, height: 1, tessellation: 5,
-    }, this._scene);
-    shoulder.scaling.set(diameterX * 0.5, height * 0.78, diameterZ * 0.5);
-    shoulder.position.set(
-      pos.x + Math.cos(twist) * diameterX * 0.24, height * 0.39, pos.z + Math.sin(twist) * diameterZ * 0.2,
-    );
-    shoulder.rotation.y = -twist;
-    shoulder.material = mat;
-    shoulder.receiveShadows = true;
+    const snow = this._scene.getMaterialByName("farSnow")!;
+    // Ridges run along the island edge: x-long behind the long sides, z-long off the two ends
+    const alongX = Math.abs(pos.x) < 70;
+    const long = Math.max(diameterX, diameterZ) * 1.5;
+    const short = Math.min(diameterX, diameterZ) * 0.9;
+    const seed = pos.x * 0.37 + pos.z * 0.11;
+    // [offset along the ridge, footprint scale, rock height]: a main hump and two lower shoulders,
+    // so the skyline rises and dips through saddles instead of repeating one cone
+    const humps = [
+      [0, 1, height * 0.36],
+      [-0.34, 0.72, height * (0.24 + 0.05 * Math.sin(seed))],
+      [0.36, 0.62, height * (0.2 + 0.05 * Math.cos(seed * 1.7))],
+    ];
+    for (const [offset, size, rockHeight] of humps) {
+      const x = pos.x + (alongX ? offset * long : 0);
+      const z = pos.z + (alongX ? 0 : offset * long);
+      const sizeX = (alongX ? long : short) * size;
+      const sizeZ = (alongX ? short : long) * size;
+      const body = MeshBuilder.CreateCylinder("mountainBase", {
+        diameterTop: 0.42, diameterBottom: 1, height: 1, tessellation: 7,
+      }, this._scene);
+      body.material = mat;
+      // Snow cap carries the slope on up to a blunt flat top
+      const capHeight = rockHeight * 0.45;
+      const cap = MeshBuilder.CreateCylinder("mountainCap", {
+        diameterTop: 0.3, diameterBottom: 1, height: 1, tessellation: 7,
+      }, this._scene);
+      cap.material = snow;
+      for (const [tier, width, tall] of [[body, 1, rockHeight], [cap, 0.42, capHeight]] as const) {
+        // Twist the facets before stretching, so every hump turns different faces to the sun
+        tier.rotation.y = seed + offset * 3;
+        tier.bakeCurrentTransformIntoVertices();
+        tier.position.set(x, tier === body ? rockHeight / 2 : rockHeight + capHeight / 2, z);
+        tier.scaling.set(sizeX * width, tall, sizeZ * width);
+        tier.receiveShadows = true;
+        tier.convertToFlatShadedMesh();
+      }
+    }
     // Rock root below ground level so off-island mountains read as their own floating rocks
     const root = MeshBuilder.CreateCylinder("mountainRoot", {
-      diameterTop: 1, diameterBottom: 0.35, height: 1, tessellation: 6,
+      diameterTop: 1, diameterBottom: 0.35, height: 1, tessellation: 8,
     }, this._scene);
-    root.scaling.set(diameterX, 16, diameterZ);
+    root.scaling.set((alongX ? long * 1.4 : short), 16, (alongX ? short : long * 1.4));
     root.position.set(pos.x, -8, pos.z);
     root.material = mat;
-    for (const tier of [base, mid, cap, shoulder, root]) tier.convertToFlatShadedMesh();
+    root.convertToFlatShadedMesh();
 
     // Add collision — approximate as a cylinder covering the base
     const collisionRadius = Math.min(diameterX, diameterZ) * 0.35;
