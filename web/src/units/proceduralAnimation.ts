@@ -210,14 +210,14 @@ export class ProceduralAnimator {
     // The pitch may not cancel a variant's own bend: a trunk left within 0.4 rad of straight on the hips is folded
     // 0.4 to 0.9 rad the way it already leaned, so every body in flight is bent at the waist and none is a plank.
     const fold = (x: number): number => (Math.abs(x) < 0.4 ? (x < 0 ? -1 : 1) * (0.4 + h(49) * 0.5) : x);
-    // One arm leads the other by about 0.6 rad and each knee gives by its own small amount, so the two sides of a
-    // body in flight never mirror each other and neither leg folds into a loop.
+    // One arm leads the other by about 0.6 rad and each knee bends by its own 0.4 to 1.2 rad, so the two sides of a
+    // body in flight never mirror each other and no leg flies straight as a plank.
     const lead = h(40) < 0.5 ? 0 : 1;
     const armGap = 0.5 + h(41) * 0.3;
     const leftArm = lead === 0 ? armGap : 0;
     const rightArm = lead === 0 ? 0 : armGap;
-    const leftKnee = 0.1 + h(42) * 0.5;
-    const rightKnee = 0.1 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.5;
+    const leftKnee = 0.4 + h(42) * 0.8;
+    const rightKnee = 0.4 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.8;
     // One leg swings 0.25 to 0.6 rad ahead of or behind the other and both kick out to the side, one by 0.3 to 0.55 rad
     // and the other by half that, so the legs splay open without making a wide V.
     const hipGap = (h(44) < 0.5 ? -1 : 1) * (0.25 + h(45) * 0.35);
