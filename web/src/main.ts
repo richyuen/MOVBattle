@@ -283,19 +283,19 @@ const glowLayer = new GlowLayer("glow", scene, {
 });
 glowLayer.intensity = 0.6;
 
-// Sky dome: the sandbox backdrop grades from deep teal overhead to a pale horizon, the fog's colour, so the far
+// Sky dome: the sandbox backdrop grades from a light pastel teal overhead to a pale horizon, the fog's colour, so the far
 // trees fade into what is behind them. Unlit, fog-free and out of the glow layer; campaign themes switch it off.
 const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 2000, segments: 24, sideOrientation: Mesh.BACKSIDE }, scene);
 {
   const positions = skyDome.getVerticesData(VertexBuffer.PositionKind) ?? [];
   const colors: number[] = [];
   for (let i = 0; i < positions.length; i += 3) {
-    // Fully deep by about 44 degrees up, so the top of the frame from the low battle camera is still mid-grade teal
+    // Fully deep, (0.33, 0.74, 0.65), by about 44 degrees up: a pastel teal, only a shade under the horizon side
     const t = Math.min(1, Math.max(0, positions[i + 1] / 700));
     // Horizon haze: below about 25 degrees up the teal pales toward mint cream, so the sky lightens behind the treeline
     const haze = 0.6 * Math.max(0, 1 - Math.max(0, positions[i + 1]) / 420);
     const mint = [0.74, 0.92, 0.82];
-    colors.push(...[0.43 - 0.29 * t, 0.78 - 0.16 * t, 0.68 - 0.10 * t].map((c, k) => c + (mint[k] - c) * haze), 1);
+    colors.push(...[0.43 - 0.10 * t, 0.78 - 0.04 * t, 0.68 - 0.03 * t].map((c, k) => c + (mint[k] - c) * haze), 1);
   }
   skyDome.setVerticesData(VertexBuffer.ColorKind, colors);
   const skyMat = new StandardMaterial("skyDome", scene);
