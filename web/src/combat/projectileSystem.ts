@@ -56,6 +56,9 @@ function darken(color: Color3, amount: number): Color3 {
   return Color3.Lerp(color, new Color3(0.12, 0.12, 0.14), amount);
 }
 
+// Arrow, bolt and spear shafts are dark wood for both teams; only the head and the fletching carry the team colour.
+const WOOD_SHAFT_COLOR = new Color3(0.3, 0.2, 0.11);
+
 export class ProjectileSystem {
   private _scene: Scene;
   private _active: ActiveProjectile[] = [];
@@ -327,10 +330,21 @@ export class ProjectileSystem {
     if (p.shape !== "arrow" && p.shape !== "bolt" && p.shape !== "spear") return false;
     const mesh = p.mesh;
     if (struck) {
-      // Driven most of the way in to the point it was aimed at, then carried by the torso.
+      // Driven a quarter of the way in toward the point it was aimed at, each shaft at its own height and its own
+      // step across the body, so a body hit many times bristles instead of carrying one bundle; then carried by the torso.
+      const vary = (salt: number): number => {
+        const v = Math.sin((p.origin.x + p.origin.z * 1.7 + this._litter.length) * 12.9898 + salt * 78.233) * 43758.5453;
+        return v - Math.floor(v);
+      };
       const aim = p.target.position.clone();
-      aim.y += p.targetLift;
-      Vector3.LerpToRef(mesh.position, aim, 0.6, mesh.position);
+      aim.y += p.targetLift + (vary(1) - 0.5) * 0.6;
+      const across = (vary(2) - 0.5) * 0.36;
+      const flight = aim.subtract(p.origin);
+      const span = Math.hypot(flight.x, flight.z) || 1;
+      aim.x += (-flight.z / span) * across;
+      aim.z += (flight.x / span) * across;
+      Vector3.LerpToRef(mesh.position, aim, 0.25, mesh.position);
+      mesh.position.y = aim.y;
       mesh.setParent(p.target.body.torso ?? p.target.body.root);
     } else {
       const vary = Math.abs(p.origin.x * 7.31 + p.origin.z * 3.17) % 1;
@@ -448,7 +462,7 @@ export class ProjectileSystem {
       case "arrow": {
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.5, diameter: 0.025, tessellation: 4 }, this._scene);
         shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat(`arrow_shaft_${attackerTeam}`, palette.dark);
+        shaft.material = this._getMat("wood_shaft", WOOD_SHAFT_COLOR);
         shaft.parent = root;
         const tip = MeshBuilder.CreateCylinder("tip", { height: 0.08, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
@@ -465,7 +479,7 @@ export class ProjectileSystem {
       case "bolt": {
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.4, diameter: 0.04, tessellation: 4 }, this._scene);
         shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat(`bolt_shaft_${attackerTeam}`, palette.dark);
+        shaft.material = this._getMat("wood_shaft", WOOD_SHAFT_COLOR);
         shaft.parent = root;
         const tip = MeshBuilder.CreateCylinder("tip", { height: 0.1, diameterTop: 0, diameterBottom: 0.06, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
@@ -477,7 +491,7 @@ export class ProjectileSystem {
       case "spear": {
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.9, diameter: 0.03, tessellation: 6 }, this._scene);
         shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat(`spear_shaft_${attackerTeam}`, palette.dark);
+        shaft.material = this._getMat("wood_shaft", WOOD_SHAFT_COLOR);
         shaft.parent = root;
         const tip = MeshBuilder.CreateCylinder("tip", { height: 0.14, diameterTop: 0, diameterBottom: 0.05, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
