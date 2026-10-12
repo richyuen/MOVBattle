@@ -213,9 +213,17 @@ export function buildArticulatedBody(
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
     return sphere(n, size, mat, new Vector3(0.6, 0.8, 0.4), 2);
   }
-  /** Foot: a slab under the ankle with the heel just behind the shin and the rest of it out in front. */
+  /** Foot: a wedge under the ankle with the heel just behind the shin and the rest of it out in front, narrowing and thinning to the toe. */
   function foot(n: string): Mesh {
     const m = MeshBuilder.CreateBox(n, { width: footWidth * s, height: footHeight * s, depth: footLength * s }, scene);
+    const positions = m.getVerticesData("position")!;
+    for (let i = 0; i < positions.length; i += 3) {
+      if (positions[i + 2] <= 0) continue;
+      positions[i] *= 0.5;
+      if (positions[i + 1] > 0) positions[i + 1] *= 0.2;
+    }
+    m.setVerticesData("position", positions);
+    m.convertToFlatShadedMesh();
     m.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.25);
     m.material = bodyMat;
     allMeshes.push(m);
