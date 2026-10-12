@@ -667,7 +667,7 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Puffy low-poly clouds ringing the island; sunlit, fog-free and kept out of the glow layer so each facet reads hard-edged */
+  /** Flat, stretched low-poly clouds ringing the island; sunlit, fog-free and kept out of the glow layer so each facet reads hard-edged */
   private _createClouds(): void {
     const cloudMat = new StandardMaterial("cloud", this._scene);
     cloudMat.diffuseColor = new Color3(1, 1, 1);
@@ -686,25 +686,29 @@ export class TribalSandboxMapBuilder {
       const radius = 70 + this._seededValue(i, 42) * 30;
       const size = low ? low[3] : 9 + this._seededValue(i, 43) * 8;
       const puffs: Mesh[] = [];
-      // A fifth puff rides on top of the two middle ones, so the cloud is a heap and not a row
+      // A fifth puff rides low on the two middle ones: a shallow swell on a long flat bank, not a stacked heap
       const crown = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
       const crownD = size * (0.6 + this._seededValue(i, 47) * 0.2);
-      crown.scaling.set(crownD, crownD * 0.7, crownD * 0.7);
-      crown.position.set((this._seededValue(i, 48) - 0.5) * size * 0.2, size * 0.62, 0);
+      crown.scaling.set(crownD * 1.3, crownD * 0.36, crownD * 0.7);
+      crown.position.set((this._seededValue(i, 48) - 0.5) * size * 0.2, size * 0.24, 0);
       puffs.push(crown);
       for (let j = 0; j < 4; j++) {
         const puff = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
-        // The two middle puffs are bigger and taller than the end ones and every puff sits on one flat base,
-        // so the cloud heaps up in the middle instead of reading as four beads on a string
+        // Every puff is about three times as wide as tall, spaced half a size apart, the middle two a little bigger:
+        // the cloud is one long low bank. Each sinks a third below the base line, where the underside is cut level below
         const middle = j === 1 || j === 2;
         const d = size * ((middle ? 0.85 : 0.5) + this._seededValue(i * 10 + j, 44) * 0.3);
-        puff.scaling.set(d, d * (middle ? 0.75 : 0.5), d * 0.7);
-        puff.position.set((j - 1.5) * size * 0.36, puff.scaling.y * 0.5, (this._seededValue(i * 10 + j, 45) - 0.5) * size * 0.2);
+        puff.scaling.set(d * 1.3, d * (middle ? 0.4 : 0.3), d * 0.7);
+        puff.position.set((j - 1.5) * size * 0.5, puff.scaling.y * 0.17, (this._seededValue(i * 10 + j, 45) - 0.5) * size * 0.2);
         puffs.push(puff);
       }
       const cloud = Mesh.MergeMeshes(puffs, true);
       if (!cloud) continue;
       cloud.name = "cloud";
+      // Level underside: everything below the base line is pressed up onto it
+      const positions = cloud.getVerticesData("position")!;
+      for (let v = 1; v < positions.length; v += 3) positions[v] = Math.max(0, positions[v]);
+      cloud.setVerticesData("position", positions);
       cloud.convertToFlatShadedMesh();
       if (low) {
         cloud.position.set(low[0], low[1], low[2]);
