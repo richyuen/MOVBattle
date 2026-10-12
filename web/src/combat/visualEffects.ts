@@ -123,9 +123,9 @@ export class VisualEffects {
       shard.parent = root;
       glow?.addExcludedMesh(shard);
       shards.push(shard);
-      // Cyan rim: the same blade 1.3 times as broad, a hair behind the white one as the camera sees it
+      // Cyan rim: the same blade 1.6 times as broad, a hair behind the white one as the camera sees it
       const rim = shard.clone("lrim");
-      rim.scaling.set(shard.scaling.x === 0.25 ? 0.25 : 1.3, 1.05, shard.scaling.z === 0.25 ? 0.25 : 1.3);
+      rim.scaling.set(shard.scaling.x === 0.25 ? 0.25 : 1.6, 1.05, shard.scaling.z === 0.25 ? 0.25 : 1.6);
       if (eye) rim.position.subtractInPlace(toEye.normalize().scale(0.04));
       rim.material = rimMat;
       glow?.addExcludedMesh(rim);
@@ -134,7 +134,7 @@ export class VisualEffects {
 
     // Thick at the caster, thin at the strike, each shard anywhere from half to twice that
     for (let i = 0; i < points.length - 1; i++) {
-      addShard(points[i], points[i + 1], (0.16 - 0.09 * (i / (points.length - 2))) * (0.5 + Math.random() * 1.7));
+      addShard(points[i], points[i + 1], (0.08 - 0.045 * (i / (points.length - 2))) * (0.5 + Math.random() * 1.7));
     }
 
     // Branch bolt (smaller fork) kicking off the second joint
@@ -144,8 +144,8 @@ export class VisualEffects {
     forkKnee.y += 0.2;
     const forkEnd = forkKnee.add(dir.scale(0.35 / len)).add(side.scale(forkSide * 0.1));
     forkEnd.y -= 0.3;
-    addShard(forkOrigin, forkKnee, 0.08);
-    addShard(forkKnee, forkEnd, 0.055);
+    addShard(forkOrigin, forkKnee, 0.04);
+    addShard(forkKnee, forkEnd, 0.0275);
 
     // No strike flash and no fade: the bolt is solid for its whole life and then gone, so it is never a see-through shape
     this._effects.push({
