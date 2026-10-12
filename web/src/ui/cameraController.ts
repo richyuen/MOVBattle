@@ -189,7 +189,10 @@ export class CameraController {
 
   // ─── Battle swoop ───
   /** Swoop from the placement view down to a low, close TABS-style battle view on the clash line. */
-  swoopToBattle(center: { x: number; z: number; halfSpan?: number }, durationSeconds = 1.1): CameraViewState {
+  swoopToBattle(
+    center: { x: number; z: number; halfSpan?: number; near?: { x: number; z: number } },
+    durationSeconds = 1.1,
+  ): CameraViewState {
     if (!this._prebattleView) {
       this._prebattleView = this.captureViewState();
       this._prebattleBetaLimits = { lower: this.camera.lowerBetaLimit, upper: this.camera.upperBetaLimit };
@@ -206,7 +209,20 @@ export class CameraController {
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     this.camera.lowerBetaLimit = Math.min(this.camera.lowerBetaLimit ?? to.beta, to.beta);
-    this._transition = { from: this.captureViewState(), to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
+    const from = this.captureViewState();
+    const wrap = (angle: number) => Math.atan2(Math.sin(angle), Math.cos(angle));
+    if (center.near) {
+      // Standoff: stand behind and beside the holding formation, three-quarter on, so it fills the
+      // foreground and the enemy it shoots at sits across the field as the background.
+      const behind = Math.atan2(center.near.z - center.z, center.near.x - center.x);
+      const toSide = wrap(to.alpha - behind);
+      to.alpha = behind + Math.sign(toSide) * Math.min(Math.abs(toSide), 0.6);
+      to.radius = Math.min(12, Math.max(6.5, (center.halfSpan ?? 0) * 1.5));
+      to.target.x = center.x + (center.near.x - center.x) * 0.6;
+      to.target.z = center.z + (center.near.z - center.z) * 0.6;
+    }
+    to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
+    this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
   }
 

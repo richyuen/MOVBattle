@@ -1071,7 +1071,7 @@ function enterSimulation(): void {
 const STANDOFF_ENGAGE_RANGE = 7;
 
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
-function computeBattleFocus(): { x: number; z: number; halfSpan: number } {
+function computeBattleFocus(): { x: number; z: number; halfSpan: number; near?: { x: number; z: number } } {
   const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
@@ -1085,7 +1085,10 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number } {
   const b = sums[1].n ? { x: sums[1].x / sums[1].n, z: sums[1].z / sums[1].n } : { x: 0, z: 0 };
   // A mostly-ranged army holds its ground instead of closing, so the frame has to span both formations.
   const standoff = sums.some((s) => s.n > 0 && s.ranged * 2 > s.n);
-  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0 };
+  // The camera stands behind the more ranged army, so its line is the foreground and the enemy the background.
+  const ratio = (s: { n: number; ranged: number }) => (s.n ? s.ranged / s.n : 0);
+  const near = standoff ? (ratio(sums[1]) > ratio(sums[0]) ? b : a) : undefined;
+  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, near };
 }
 
 function resetBattle(options: {
