@@ -16,13 +16,13 @@ const BLADE_DARK = 0.9;    // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.08;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
-const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
-const FAR_ROCK_SHADE = new Color3(0.5, 0.52, 0.57);
-const FAR_SNOW = new Color3(0.97, 0.98, 1);
-const FAR_SNOW_MIX = 0.4;
+const FAR_ROCK = new Color3(0.66, 0.58, 0.5);   // warm grey-brown, dark enough that the snow tips read against it
+const FAR_ROCK_SHADE = new Color3(0.55, 0.47, 0.4);
+const FAR_SNOW = new Color3(0.98, 0.94, 0.86);
+const FAR_SNOW_MIX = 0.25;
 const FAR_SNOW_GLOW = 0.05; // matte: snow tips shade with the sun like the rock under them
 const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
-const FAR_ROCK_MIX = 0.5;   // far ridge sits half-way into the sky haze
+const FAR_ROCK_MIX = 0.25;  // far ridge sits a quarter of the way into the sky haze, so it keeps its warm brown
 
 /** The sun's shadow generator, when the scene has one: trees register with it so they throw ground shadows like units do */
 function sunShadows(scene: Scene): ShadowGenerator | null {
