@@ -325,7 +325,9 @@ export class VisualEffects {
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
-    const dustMat = mats.createUnique("stone", new Color3(0.74, 0.64, 0.45));
+    // Pale tan and part self-lit, so the dust stays a light puff in shade instead of greying into boulders
+    const dustMat = mats.createUnique("stone", new Color3(0.88, 0.8, 0.62));
+    dustMat.emissiveColor = new Color3(0.14, 0.12, 0.08);
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
     const floorY = -root.position.y + 0.08;
@@ -399,7 +401,7 @@ export class VisualEffects {
       const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
       const reach = (i === 0 ? 0 : 0.3 + Math.random() * 0.2) * dustScale;
       const size = (i === 0 ? 0.85 : 0.4 + Math.random() * 0.25) * dustScale;
-      lobe.position.set(Math.cos(angle) * reach, floorY + size * 0.3, Math.sin(angle) * reach);
+      lobe.position.set(Math.cos(angle) * reach, floorY + size * 0.12, Math.sin(angle) * reach);
       mound.push({ mesh: lobe, size });
     }
     // Six dark faceted clods of mixed shape and size thrown clear of it, landing close by and lying there.
@@ -446,7 +448,7 @@ export class VisualEffects {
         }
         // The mound heaves up fast, then sags flat as it settles.
         const heave = 0.35 + 0.65 * Math.min(1, elapsed / 0.14);
-        const sag = 0.75 - 0.3 * Math.min(1, elapsed / totalDuration);
+        const sag = 0.42 - 0.17 * Math.min(1, elapsed / totalDuration);
         for (const lobe of mound) {
           const size = lobe.size * heave * fade;
           lobe.mesh.scaling.set(size, size * sag, size);
