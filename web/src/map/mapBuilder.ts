@@ -122,12 +122,12 @@ export class TribalSandboxMapBuilder {
 
     // Tree leaves
     const leaves = new StandardMaterial("leaves", this._scene);
-    leaves.diffuseColor = new Color3(0.35, 0.55, 0.18);
+    leaves.diffuseColor = new Color3(0.58, 0.70, 0.34);
     leaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Dark leaves
     const darkLeaves = new StandardMaterial("darkLeaves", this._scene);
-    darkLeaves.diffuseColor = new Color3(0.25, 0.42, 0.12);
+    darkLeaves.diffuseColor = new Color3(0.48, 0.62, 0.30);
     darkLeaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Grass blades: one shade under and one over the field color, so the carpet reads as texture
@@ -398,7 +398,8 @@ export class TribalSandboxMapBuilder {
       mesh.parent = trunkMesh;
       mesh.position.set(x, trunkHeight / 2 + y, z);
       mesh.material = mat;
-      mesh.receiveShadows = true;
+      // Crowns take no cast shadow: a neighbour's or their own trunk's would land as a black blotch on the leaves
+      mesh.receiveShadows = false;
       mesh.convertToFlatShadedMesh();
     };
 
