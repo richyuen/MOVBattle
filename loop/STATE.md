@@ -1,28 +1,28 @@
 # Loop state
-Iteration: 64   Last re-audit: 60   Consecutive rejects: 0   Branch: main
+Iteration: 65   Last re-audit: 65   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 
 ## Focus (2-3 gaps this iteration)
-- great-helm-team-red 6626851 — APPROVE
-- shadows-hard-black-fused 80e6295 — APPROVE
-- flat-rectangle-map 98e3d96 — APPROVE
+- grass-sparse-cone-spikes e073152 — APPROVE
+- limbs-pencil-thin cdf0284 — APPROVE
+- battle-cam-too-far-back 30ccf14 — APPROVE
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: great-helm-team-red (6626851) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: shadows-hard-black-fused (80e6295) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: flat-rectangle-map (98e3d96) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: grass-sparse-cone-spikes (e073152) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: limbs-pencil-thin (cdf0284) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: battle-cam-too-far-back (30ccf14) VERDICT: APPROVE SCORE: camera 4/5 (previous: 4/5)
 
 ## Ranked open gaps (max 8, attempts count in brackets)
-1. [unit-look] knight-chest-helm-wide: chest only helm-wide, armoured arms bare skin colour, Thor shoulders still balls [attempts: 0] — ref: trailer_1_sheet_01 r2c1 — ours: closeup_pair_zeus_thor.png
-2. [vfx] cannon-impact-crystal-shards: yellow/orange shards over grey lumps, not white puff, black ball, dust [attempts: 0] — ref: trailer_3_sheet_03 r3c1 — ours: war_machines_1100ms.png
-3. [maps-light] island-ruled-edge-flat-sky: grass an exact rectangle, regular crag picket, tan border strip, one-tone sky [attempts: 0] — ref: trailer_1_sheet_01 r1c1 — ours: hud_placement.png
-4. [battle-feel] upright-idle-thin-front: standing units bolt upright, arms hanging; front has gaps, single-layer pile [attempts: 0] — ref: tabs_screenshot_06 — ours: big_melee_5s.png
-5. [maps-light] tree-shadow-ribbon-red-half: long tree shadows join into one band across the red half; sun too low [attempts: 0] — ref: gameplay_sheet_01 r3c2 — ours: hud_placement.png
-6. [unit-look] no-neutral-accents: no tabard, emblem, fur or trim on armoured units; torsos plain tubes [attempts: 0] — ref: tabs_screenshot_06 — ours: lineup_medieval.png
-7. [ui-flow] placed-units-no-blob: at placement altitude units have no ground shadow, one smudge per team [attempts: 0] — ref: gameplay_sheet_02 r1c3 — ours: big_melee_placement.png
-8. [unit-look] great-helm-too-pale: helm brightest, nearly untinted, blank face plate; no cross/grille [attempts: 0] — ref: trailer_1_sheet_01 r2c1 — ours: closeup_weapon_reads.png
+1. [maps-light] grass-ankle-high-tombstones: ankle-high identical upright trapezoids, bare patches near camera; TABS knee-high, leaning, hides feet [attempts: 0] — ref: tabs_screenshot_02 — ours: closeup_pair_zeus_thor.png
+2. [camera] battle-cam-dead-sky-half: front rank 33% of frame, horizon at 80%, top 45% empty; TABS 43%, horizon 70% [attempts: 0] — ref: tabs_screenshot_06 — ours: big_melee_5s.png
+3. [unit-look] shins-spike-pegs-no-boot: shins taper to dark points, sleeves step in to thin forearms, hands small balls [attempts: 0] — ref: tabs_screenshot_08 — ours: closeup_weapon_reads.png
+4. [unit-look] torso-flat-box-no-cloth: torsos plain one-colour boxes; no belts, stripes, fur chunks [attempts: 0] — ref: tabs_screenshot_06 — ours: lineup_medieval.png
+5. [vfx] cannon-burst-yellow-crystals: tall yellow-orange prisms on a white blob, not white puff, black ball, dust [attempts: 0] — ref: trailer_3_sheet_02 — ours: war_machines_1100ms.png
+6. [maps-light] arena-square-slab-flat-sky: ruled rectangle island, straight tan side strips, one-tone sky [attempts: 0] — ref: gameplay_sheet_01 — ours: hud_placement.png
+7. [battle-feel] launched-bodies-stiff-star: airborne units hold a rigid spread-eagle; TABS ragdolls fold and tumble [attempts: 0] — ref: tabs_screenshot_01 — ours: war_machines_1100ms.png
+8. [ui-flow] victory-shot-backs-to-camera: result shot frames the mammoth's rump over empty grass [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_result.png
 
 ## Rejected attempts (last 5, newest first; `rejected-kept` when the revert conflicted)
 - placement-haze-washes-teams [attempts: 2] — sun pos + autoCalcShadowZBounds + blur 16: unit shadows vanished, trunk strips only
@@ -32,8 +32,8 @@ battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 - fireball-cream-not-fire [attempts: 1] — (1,.85,.32) still renders cream, translucent; crown knob grey
 
 ## Notes for next iteration (max 5 lines)
-- Gap 1: unitFactory swaps upper arms to skin unless shouldFavorTeamBodyColor; skip that for isArmored. chestTop is 1.24.
-- Gap 3: mapBuilder crag loop: d from 0.5 width inside to 0.6 outside, width 4-16. Sky gradient is its own job.
-- Gap 5: critic wants a higher sun, but 63.1 lowered it (-0.4,-0.6,0.6) for longer shadows: change little.
-- Gap 8: propBuilder great_helm steel to (0.45,0.45,0.5), team lerp 0.25; gold cross on the front facet.
+- Gap 1: _createFieldBlades h to 0.2+rand*0.25, lean 0.06 to 0.15, bare-cell threshold 0.25 to 0.1. Grass has flip-flopped (35.1-39.1).
+- Gap 2: cameraController pitchUp back to 0.17; clearRadius depth+4.5, floor 6, or spanRadius /0.7. Eye stays 1.1 m.
+- Gap 3: bodyBuilder LOWER_LIMB_STEP toward 1.0, handDiameter base 0.1 to 0.13. LIMB_THIN is now 0.9.
+- Gap 7: 50.2 tried folding launched bodies and was reverted; read that diff first.
 - shadowGen.darkness is 0.45; unit shadows are faint already, do not raise it.
