@@ -507,7 +507,7 @@ export class ProceduralAnimator {
     // angle, which keeps that foot on the ground); the other trails slightly behind, nearly straight.
     const leftLeads = p.side < 0;
     // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs
-    const sag = 0.06 + p.lean * 0.4; // floored, so the most upright stance still breaks at the knee
+    const sag = p.lean * 0.4;
     const lead = -p.stride - sag;
     const trail = p.stride * 0.45 - sag;
     b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
