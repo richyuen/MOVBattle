@@ -444,8 +444,8 @@ export class ProjectileSystem {
       const falloff = 1 - distance / radius;
       // A body standing on the centre goes the way the shot was travelling.
       const outward = distance > 0.05 ? delta.scale(1 / distance) : shotDir;
-      // Lift of 8-12 m/s under 22 m/s2 gravity: bodies near the centre clear head height.
-      unit.applyBlastLaunch(outward, 1.5 + 2.5 * falloff, 8 + 4 * falloff);
+      // Lift of 4-6 m/s under 22 m/s2 gravity: bodies near the centre are tossed about a body height, not up to the clouds.
+      unit.applyBlastLaunch(outward, 1.5 + 2.5 * falloff, 4 + 2 * falloff);
     }
   }
 
