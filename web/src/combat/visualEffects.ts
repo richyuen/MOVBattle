@@ -327,6 +327,7 @@ export class VisualEffects {
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
     const dustMat = mats.createUnique("stone", new Color3(0.74, 0.64, 0.45));
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
+    const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
     const floorY = -root.position.y + 0.08;
 
     const blob = (name: string, segments: number, mat: typeof flashMat): TransformNode => {
@@ -401,16 +402,21 @@ export class VisualEffects {
       lobe.position.set(Math.cos(angle) * reach, floorY + size * 0.3, Math.sin(angle) * reach);
       mound.push({ mesh: lobe, size });
     }
-    // A few clods of mixed size thrown clear of it, landing close by and lying there.
+    // Six dark faceted clods of mixed shape and size thrown clear of it, landing close by and lying there.
     const chunks: { mesh: TransformNode; size: number; velocity: Vector3 }[] = [];
-    for (let i = 0; i < 5; i++) {
-      const chunk = blob("burstDust", 2, dustMat);
-      const angle = (i / 5) * Math.PI * 2 + Math.random() * 1.1;
+    for (let i = 0; i < 6; i++) {
+      const chunk = i % 3 === 2
+        ? MeshBuilder.CreateBox("burstClod", { width: 1, height: 0.6, depth: 0.75 }, this._scene)
+        : MeshBuilder.CreatePolyhedron("burstClod", { type: i % 3, size: 0.5 }, this._scene);
+      chunk.material = clodMat;
+      chunk.parent = root;
+      chunk.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
+      const angle = (i / 6) * Math.PI * 2 + Math.random() * 1.1;
       const speed = (0.9 + Math.random() * 1.3) * scale;
       chunk.position.y = floorY + 0.35;
       chunks.push({
         mesh: chunk,
-        size: (0.09 + Math.random() * Math.random() * 0.2) * scale,
+        size: (0.16 + Math.random() * Math.random() * 0.2) * scale,
         velocity: new Vector3(Math.cos(angle) * speed, 3 + Math.random() * 2.4, Math.sin(angle) * speed),
       });
     }
@@ -461,7 +467,7 @@ export class VisualEffects {
             chunk.velocity.setAll(0);
           }
           const size = chunk.size * fade;
-          chunk.mesh.scaling.set(size, size * 0.6, size);
+          chunk.mesh.scaling.setAll(size);
         }
       },
       dispose: () => {
@@ -471,6 +477,7 @@ export class VisualEffects {
         smokeMat.dispose();
         dustMat.dispose();
         ballMat.dispose();
+        clodMat.dispose();
       },
     });
   }
