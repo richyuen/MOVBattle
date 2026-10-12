@@ -419,15 +419,15 @@
     }
     #resultOverlay.visible { display: flex; }
     .result-band {
-      width: 100%; background: rgb(8, 10, 18); text-align: center;
+      width: 100%; background: rgb(22, 27, 34); text-align: center;
       padding: 3.2vh 16px; box-sizing: border-box; pointer-events: auto;
     }
     #resultTitle {
-      font-size: clamp(30px, 5vh, 52px); font-weight: bold; letter-spacing: 0.04em; text-transform: uppercase;
+      font-size: clamp(30px, 5vh, 52px); font-weight: normal; letter-spacing: 0.04em; text-transform: uppercase;
     }
     /* The recap stays in the DOM for state checks; the band shows only the continue hint. */
     #resultDetail { display: none; white-space: pre-line; }
-    /* One centred continue prompt; the other action is a small dim link at the band's right edge. */
+    /* One centred continue prompt; the other action is a small dim link at the band's right edge, shown in campaign only. */
     .result-actions {
       position: relative; display: flex; justify-content: center;
     }
@@ -438,7 +438,7 @@
     }
     .result-actions .btn {
       border: none; border-radius: 0; padding: 6px 4px;
-      font-size: clamp(15px, 2.4vh, 24px); font-weight: bold; letter-spacing: 0.04em; text-transform: uppercase;
+      font-size: clamp(15px, 2.4vh, 24px); font-weight: normal; letter-spacing: 0.04em; text-transform: uppercase;
     }
     .result-actions .btn:hover { color: #ffd54f; }
 

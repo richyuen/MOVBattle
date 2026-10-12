@@ -1390,6 +1390,8 @@ function showResult(result: BattleResult): void {
     btnResultSecondaryEl.textContent = campaignSession
       ? (!result.isDraw && result.winner === 0 ? "Replay" : "Sandbox")
       : "Reset";
+    // Sandbox shows the one continue prompt, as TABS does; R still resets
+    btnResultSecondaryEl.style.display = campaignSession ? "" : "none";
   }
   // TABS shows one word; only a lost campaign battle reads as a defeat
   resultTitleEl.textContent = result.isDraw ? "Draw" : (campaignSession && result.winner !== 0 ? "Defeat!" : "Victory!");
