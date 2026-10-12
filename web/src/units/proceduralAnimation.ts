@@ -427,24 +427,44 @@ export class ProceduralAnimator {
     this._animateIdleHumanoid();
   }
 
+  // Per-unit standing slouch: forward lean, which arm hangs ahead, how far the arms sit off the ribs and each
+  // elbow's fold. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  private _idlePose: { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number } | null = null;
+  private _buildIdlePose(): { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number } {
+    const h = (n: number): number => {
+      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    return {
+      lean: 0.06 + h(41) * 0.08,
+      side: h(42) < 0.5 ? -1 : 1,
+      spread: 0.1 + h(43) * 0.12,
+      leftElbow: 0.45 + h(44) * 0.5,
+      rightElbow: 0.45 + h(45) * 0.5,
+    };
+  }
+
   private _animateIdleHumanoid(): void {
     const t = this._time + this._wobblePhase;
     const b = this._body;
     const wobble = 0.07; // TABS-style pronounced sway
+    const p = (this._idlePose ??= this._buildIdlePose());
 
-    // Gentle torso sway
+    // Gentle torso sway around a slight forward slouch
     b.torso.rotation.z = Math.sin(t * 1.5) * wobble;
-    b.torso.rotation.x = Math.sin(t * 1.2 + 1) * wobble * 0.5;
+    b.torso.rotation.x = p.lean + Math.sin(t * 1.2 + 1) * wobble * 0.5;
 
     // Head bob
     b.neck.rotation.z = Math.sin(t * 1.8 + 0.5) * wobble * 1.2;
     b.neck.rotation.x = Math.sin(t * 1.3 + 2) * wobble * 0.8;
 
-    // Arms hang with slight sway
-    b.leftShoulder.rotation.x = Math.sin(t * 1.1) * wobble * 2;
-    b.rightShoulder.rotation.x = Math.sin(t * 1.1 + Math.PI) * wobble * 2;
-    b.leftElbow.rotation.x = -0.55 + Math.sin(t * 1.4) * wobble;
-    b.rightElbow.rotation.x = -0.55 + Math.sin(t * 1.4 + Math.PI) * wobble;
+    // Arms hang off the ribs, one ahead of the body and one behind, each elbow folded its own amount
+    b.leftShoulder.rotation.x = -p.side * 0.22 + Math.sin(t * 1.1) * wobble * 2;
+    b.rightShoulder.rotation.x = p.side * 0.22 + Math.sin(t * 1.1 + Math.PI) * wobble * 2;
+    b.leftShoulder.rotation.z = -p.spread;
+    b.rightShoulder.rotation.z = p.spread;
+    b.leftElbow.rotation.x = -p.leftElbow + Math.sin(t * 1.4) * wobble;
+    b.rightElbow.rotation.x = -p.rightElbow + Math.sin(t * 1.4 + Math.PI) * wobble;
 
     // Legs straight with micro wobble
     b.leftHip.rotation.x = Math.sin(t * 0.9) * wobble;

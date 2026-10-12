@@ -761,6 +761,8 @@ function setGalleryCaptureMode(enabled: boolean): void {
 }
 
 function renderStaticFrames(frameCount = 2): void {
+  // Freshly spawned units have never been stepped and would render in the zeroed rest pose; settle them into idle
+  for (const unit of placedUnits) unit.animator.update(0);
   for (let i = 0; i < frameCount; i++) {
     camCtrl.update(0);
     scene.render();
