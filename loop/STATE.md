@@ -1,37 +1,42 @@
 # Loop state
-Iteration: 74   Last re-audit: 70   Consecutive rejects: 0   Branch: main
+Iteration: 75   Last re-audit: 75   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 
 ## Focus (every pickable gap this iteration)
-- cliff-crags-cog-teeth 32a6267 — APPROVE
-- red-cloth-dusty-brick a9e0c8b — REJECT (reverted b99c34e)
-- grass-blades-no-shadow a01f2a2 — APPROVE
-- sword-black-bow-straight ddfd7b3 — APPROVE
-- boulder-heaps-pebble-scale 6f920f9 — APPROVE
-- knights-one-flat-colour 7c15035 — APPROVE
+- red-cloth-dusty-brick 5c32f19 — REJECT (reverted d8f8522)
+- field-no-set-dressing 6b18a6c — APPROVE
+- corpses-rest-as-flat-planks 5feb2d6 — APPROVE
+- tabard-pale-board a250f54 — APPROVE
+- island-no-cliff-ruled-rim 88ed7d8 — REJECT (reverted d56f6e2)
+- mammoth-girder-tusks-dark-eyes 3cdbc27 — APPROVE
+- tree-shadows-hard-dark cf61f0e — APPROVE
+- projectiles-leave-no-litter b3b2ccd — APPROVE
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: cliff-crags-cog-teeth (32a6267) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: red-cloth-dusty-brick (a9e0c8b) VERDICT: REJECT SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: grass-blades-no-shadow (a01f2a2) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: sword-black-bow-straight (ddfd7b3) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: boulder-heaps-pebble-scale (6f920f9) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: knights-one-flat-colour (7c15035) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: red-cloth-dusty-brick (5c32f19) VERDICT: REJECT SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: field-no-set-dressing (6b18a6c) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: corpses-rest-as-flat-planks (5feb2d6) VERDICT: APPROVE SCORE: battle-feel 3/5 (previous: 3/5)
+- GAP: tabard-pale-board (a250f54) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: island-no-cliff-ruled-rim (88ed7d8) VERDICT: REJECT SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: mammoth-girder-tusks-dark-eyes (3cdbc27) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: tree-shadows-hard-dark (cf61f0e) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: projectiles-leave-no-litter (b3b2ccd) VERDICT: APPROVE SCORE: vfx 3/5 (previous: 3/5)
 
 ## Ranked open gaps (max 8, attempts count in brackets)
-1. [unit-look] red-cloth-dusty-brick: red is dusty brick (S 0.45 vs 0.8) on armoured units and amber on cloth units [attempts: 1] — ref: trailer_3_sheet_01 r1c2 — ours: closeup_weapon_reads.png
-2. [unit-look] tabard-pale-board: knight tabard is a pale protruding board the colour of the helm; team-coloured, body-tight, cream cross strip [attempts: 0] — ref: trailer_1_sheet_01 r2c1 — ours: closeup_weapon_reads.png
-3. [maps-light] island-no-cliff-ruled-rim: no cliff shows from placement and the rim is a ruled polygon; let rock show under the lip [attempts: 0] — ref: trailer_1_sheet_01 r1c1 — ours: hud_placement.png
-4. [maps-light] boulder-heaps-knee-high: heaps knee-high, collision 0.75 vs 0.925 reach; scale field heaps 1.5x [attempts: 0] — ref: tabs_screenshot_02 — ours: lineup_medieval.png
-5. [maps-light] field-no-set-dressing: flat green with only trees and pebbles, no ruins, fences, logs or hills [attempts: 0] — ref: tabs_screenshot_03 — ours: hud_placement.png
-6. [unit-look] bow-forearm-sword-short: bows forearm-size, swords short and mid-grey; bow 0.7 tall, blades longer, near-white [attempts: 0] — ref: trailer_3_sheet_01 r1c1 — ours: closeup_weapon_reads.png
-7. [maps-light] tree-shadows-hard-dark: tree shadows hard, long and very dark; soften and lighten [attempts: 0] — ref: gameplay_sheet_01 r3c2 — ours: hud_placement.png
-8. [battle-feel] front-lines-loose-upright: lines stand upright in loose ranks, ground between units, no two-deep shove [attempts: 0] — ref: tabs_screenshot_06 — ours: big_melee_2s.png
+1. [unit-look] armoured-red-still-brick: armoured reds sample #914546 lit, #58201d shaded; skip ARMOUR_SHADE for red so value stays >= 0.8 [attempts: 0] — ref: tabs_screenshot_06 — ours: closeup_weapon_reads.png
+2. [maps-light] island-no-cliff-ruled-rim: rim is a ruled lawn edge with no rock; ragged flat-shaded shelf, tessellation 20, top about -2.5 [attempts: 1] — ref: gameplay_sheet_04 r3c1 — ours: hud_placement.png
+3. [battle-feel] blast-launch-too-high-and-stiff: cannon victims hang above the treetops in rigid poses; apex about 2 body heights, limb flail [attempts: 1] — ref: trailer_3_sheet_03 r1c2 — ours: war_machines_1100ms.png
+4. [camera] battle-cam-inside-near-rank: camera sits inside the blue rank; pull back 3-4 body lengths, raise about 1 [attempts: 1] — ref: tabs_screenshot_06 — ours: big_melee_5s.png
+5. [maps-light] wall-stones-black-in-shade: wall stones are near-black piano-key boxes from the battle camera; pale rock only, ~0.25 emissive, varied sizes [attempts: 0] — ref: gameplay_sheet_05 r3c2 — ours: war_machines_1100ms.png
+6. [unit-look] knight-surcoat-thin-stripe: tabard is a pale strip a third of the back wide; full torso width, team colour a shade lighter, short skirt [attempts: 0] — ref: trailer_1_sheet_01 r2c1 — ours: closeup_weapon_reads.png
+7. [vfx] litter-shafts-bundled-blue: stuck arrows gather at one hip point, horizontal, thick blue; scatter entry points, keep arrival pitch, dark wood [attempts: 0] — ref: tabs_screenshot_02 — ours: closeup_weapon_reads.png
+8. [battle-feel] corpses-flat-no-elbow: dead lie flat with straight arms; bend one elbow 40-90 deg, lift one knee off the ground [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_result.png
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
-- red-cloth-dusty-brick [attempts: 1] — warm cloth sat x1.25: skipped the armoured branch, and after the +18 deg hue shift it saturated to amber
+- island-no-cliff-ruled-rim [attempts: 1] — 1.055x shelf at -0.9, 1-2% sine ragged: a flat constant-width lavender ribbon level with the lawn, no facets
+- red-cloth-dusty-brick [attempts: 2] — TEAM_COLORS red to (0.93,0.2,0.17), no hue shift on red cloth: bare reds clean, armoured still brick, hue pure red not rose
 - hill-cap-too-steep-and-pale [attempts: 2] — shallow 20 degree sliced cap: low in side view, but still a pale bare crisp oval from above
 - blast-stacked-balls [attempts: 2] — white core + 2 yellow lobes + 7 streaks: horned sphere, streaks fat cones, dust-ball base untouched
 - blast-launch-too-high-and-stiff [attempts: 1] — knee bend only (lift cut stalled a scenario): bodies still over the trees, legs forked
@@ -39,8 +44,8 @@ battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 - placement-haze-washes-teams [attempts: 2] — sun pos + autoCalcShadowZBounds + blur 16: unit shadows vanished
 
 ## Notes for next iteration (max 5 lines)
-- Iter 75 is a re-audit. 8 pickable. Gap 1: unitFactory cloth branch, saturate warm on the armoured branch too and set the warm hue shift to 0.
-- Gap 2: unitFactory tabard block: TABARD_PALE ~0.15, depth 1.02, one cream strip 0.2 chest wide. Gap 6: propBuilder bowHeight 0.4 -> 0.7.
-- Gap 3: _createGround crag loop: tops stay inside the rim but drop ~1 below the lawn with pull 0.35-0.45, or bulge below the lip.
-- Gap 4: _createBoulder radius size*0.93, b.size*1.5 at the call site. Gap 7: shadow darkness ~0.4; blur 16 once made unit shadows vanish.
-- Any cut to blast lift (projectileSystem.ts:388, 3rd arg) fails battle_recap_result_legacy_tank_shell.
+- Gap 1: unitFactory cloth block, the armoured branch multiplies shade(CLOTH_SHADE)*shade(ARMOUR_SHADE); critic also wants red hue ~345-350 and skin pinker than cloth.
+- Gap 2: _islandSlab takes one tessellation (48); shelf needs its own, sine amplitudes ~5x. Gap 5: _createSetDressing `place` helper.
+- Gap 6: TABARD_WIDTH 0.75 -> 1.02, TABARD_PALE 0.65 -> 0.3. Gap 7: projectileSystem _leaveAsLitter, 0.25 lerp + per-shaft offset.
+- Gap 8: proceduralAnimation _buildLimpPose elbows/knees. Critic asides: unit shadows faint (darkness 0.62 -> 0.5), tusks box-section (tessellation 8, girth x0.6).
+- Any cut to blast lift (projectileSystem.ts, _flingFromBlast 3rd arg) fails battle_recap_result_legacy_tank_shell.
