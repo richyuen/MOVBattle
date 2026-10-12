@@ -281,7 +281,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         visual: visual("none", "hood", "none", "none", {
           proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_bandit",
-          posePreset: "crew",
+          posePreset: "vehicle",
           accentColor: "#4a4a4a",
         }),
       },
@@ -295,7 +295,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         visual: visual("bomb", "bandana", "none", "none", {
           proportions: { scale: 0.66, bulk: 0.78, headSize: 1.0 },
           materialPreset: "secret_bandit",
-          posePreset: "loader",
+          posePreset: "support",
           accentColor: "#5b5b5b",
         }),
       },
