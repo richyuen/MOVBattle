@@ -404,6 +404,18 @@ export class TribalSandboxMapBuilder {
     };
 
     if (broadleaf) {
+      // A round crown has facets that face the ground and catch only the dim bounce light. Part self-lit, so its
+      // shaded side is a deeper green like a pine's and not near-black; kept out of the glow layer.
+      const crownMat = (mat: StandardMaterial): StandardMaterial => {
+        const name = `${mat.name}Crown`;
+        const existing = this._scene.getMaterialByName(name) as StandardMaterial | null;
+        if (existing) return existing;
+        const crown = mat.clone(name);
+        crown.diffuseColor = mat.diffuseColor.scale(0.88);
+        crown.emissiveColor = mat.diffuseColor.scale(0.26);
+        return crown;
+      };
+      const glow = this._scene.getGlowLayerByName("glow");
       // Lumpy crown: three squashed faceted blobs of different size
       const lobe = canopyRadius * 1.25;
       for (let j = 0; j < 3; j++) {
@@ -417,8 +429,9 @@ export class TribalSandboxMapBuilder {
           j === 0 ? 0 : Math.cos(around) * lobe * 0.6,
           size * 0.45 + j * lobe * 0.38,
           j === 0 ? 0 : Math.sin(around) * lobe * 0.6,
-          j === 1 ? upperLeafMat : leafMat,
+          crownMat(j === 1 ? upperLeafMat : leafMat),
         );
+        glow?.addExcludedMesh(blob);
       }
     } else {
       // Bushy pine: three overlapping skirts, each narrower and higher than the last
