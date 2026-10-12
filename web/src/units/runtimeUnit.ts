@@ -536,8 +536,6 @@ export class RuntimeUnit {
     } else {
       this._blastSpinX = spinX;
       this._blastSpinZ = spinZ;
-      // ...and turns about the upright as it flies, so the survivors of one shell do not all land on the heading they stood in.
-      this._blastSpinY = (spread(5) - 0.5) * 3.6;
       this._blastTumbling = true;
       this._pendingBlastSprawlSeconds = 3;
     }
@@ -1015,7 +1013,6 @@ export class RuntimeUnit {
   /** Seconds a blast survivor lies sprawled, counted from the landing and not from the launch. */
   private _pendingBlastSprawlSeconds = 0;
   private _blastSpinZ = 0;
-  private _blastSpinY = 0;
 
   private _applyCrowdLean(dt: number): void {
     if (this._blastTumbling) {
@@ -1024,7 +1021,6 @@ export class RuntimeUnit {
         // Blast flight: spin freely instead of settling toward the topple lean.
         rot.x += this._blastSpinX * dt;
         rot.z += this._blastSpinZ * dt;
-        rot.y += this._blastSpinY * dt;
         return;
       }
       // Landed: drop whole turns so the lay-flat settle below takes the short way round.
