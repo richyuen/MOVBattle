@@ -136,12 +136,20 @@ export class ProceduralAnimator {
     const pick = Math.random();
     const overhead = pick < 0.5;
     const leftFlung = Math.floor(pick * 4) % 2 === 0;
+    // A flung-wide arm is half the time only a diagonal with the forearm folded back toward the head, and the
+    // low arm lies straight along the side, so no body rests as a T with both arms out square. Derived from
+    // `pick`, so the pose draws no more random numbers than before.
+    const folded = Math.floor(pick * 8) % 2 === 0;
     const flungX = overhead ? -(2.95 + Math.random() * 0.4) : (Math.random() - 0.5) * 0.3;
-    const flungZ = overhead ? 0.1 + Math.random() * 0.6 : 0.9 + Math.random() * 0.6;
-    const flungElbowZ = overhead ? (Math.random() - 0.3) * 1.2 : 0.4 + Math.random() * 0.9;
+    const flungZ = overhead ? 0.1 + Math.random() * 0.6 : folded ? 0.45 + Math.random() * 0.35 : 0.9 + Math.random() * 0.6;
+    const flungElbowZ = overhead ? (Math.random() - 0.3) * 1.2 : folded ? 1.3 + Math.random() * 0.6 : 0.4 + Math.random() * 0.9;
     const lowX = (Math.random() - 0.5) * 0.3;
-    const lowZ = 0.12 + Math.random() * 0.4;
-    const lowElbowZ = 0.3 + Math.random() * 0.9;
+    const lowZ = 0.05 + Math.random() * 0.2;
+    const lowElbowZ = Math.random() * 0.3;
+    // One leg lies splayed out to the side and bent at the knee within the ground plane; the other stays straight.
+    const leftSplayed = Math.floor(pick * 16) % 2 === 0;
+    const splayZ = 0.3 + (pick * 32 - Math.floor(pick * 32)) * 0.45;
+    const splayKneeZ = 0.5 + (pick * 64 - Math.floor(pick * 64)) * 0.7;
     return {
       torsoX: Math.random() * 0.2,
       torsoZ: (Math.random() - 0.5) * 0.7,
@@ -160,6 +168,10 @@ export class ProceduralAnimator {
       rightHipX: -0.25 + Math.random() * 0.5,
       leftKneeX: 0.05 + Math.random() * 0.55,
       rightKneeX: 0.05 + Math.random() * 0.55,
+      leftHipZ: leftSplayed ? -splayZ : -0.05,
+      rightHipZ: leftSplayed ? 0.05 : splayZ,
+      leftKneeZ: leftSplayed ? splayKneeZ : 0,
+      rightKneeZ: leftSplayed ? 0 : -splayKneeZ,
     };
   }
 
@@ -179,20 +191,28 @@ export class ProceduralAnimator {
     const twist = (h(23) - 0.5) * 0.5;
     const roll = (h(24) - 0.5) * 0.35;
     const variant = Math.floor(h(21) * 3);
+    // One arm leads the other by about 0.6 rad and each knee folds by its own amount, so the two sides of a body
+    // in flight never mirror each other and neither leg is a locked rod.
+    const lead = h(40) < 0.5 ? 0 : 1;
+    const armGap = 0.5 + h(41) * 0.3;
+    const leftArm = lead === 0 ? armGap : 0;
+    const rightArm = lead === 0 ? 0 : armGap;
+    const leftKnee = 0.3 + h(42) * 0.9;
+    const rightKnee = 0.3 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.9;
     if (variant === 0) {
       // Jackknife: folded hard at the waist, straight legs swung up to meet the arms reaching for the toes
       const hip = 0.7 + h(30) * 0.4;
       return [
         [b.torso, 0.9 + h(25) * 0.5, twist, roll],
         [b.neck, 0.4, 0, 0],
-        [b.leftShoulder, -(1.1 + h(26) * 0.5), 0, -0.1],
-        [b.rightShoulder, -(1.1 + h(27) * 0.5), 0, 0.1],
-        [b.leftElbow, -(0.15 + h(28) * 0.25), 0, 0],
-        [b.rightElbow, -(0.15 + h(29) * 0.25), 0, 0],
+        [b.leftShoulder, -(1.0 + h(26) * 0.3 + leftArm), 0, -0.1],
+        [b.rightShoulder, -(1.0 + h(27) * 0.3 + rightArm), 0, 0.1],
+        [b.leftElbow, -(0.15 + h(28) * 0.25 + rightArm), 0, 0],
+        [b.rightElbow, -(0.15 + h(29) * 0.25 + leftArm), 0, 0],
         [b.leftHip, -hip, 0, 0],
-        [b.rightHip, -(hip + (h(31) - 0.5) * 0.25), 0, 0],
-        [b.leftKnee, 0.1 + h(32) * 0.25, 0, 0],
-        [b.rightKnee, 0.1 + h(33) * 0.25, 0, 0],
+        [b.rightHip, -(hip + (h(31) - 0.5) * 0.5), 0, 0],
+        [b.leftKnee, leftKnee, 0, 0],
+        [b.rightKnee, rightKnee, 0, 0],
       ];
     }
     if (variant === 1) {
@@ -201,14 +221,14 @@ export class ProceduralAnimator {
       return [
         [b.torso, -(0.45 + h(25) * 0.3), twist, roll],
         [b.neck, -0.5, 0, 0],
-        [b.leftShoulder, -(2.7 + h(26) * 0.4), 0, -(0.1 + h(27) * 0.15)],
-        [b.rightShoulder, -(2.7 + h(28) * 0.4), 0, 0.1 + h(29) * 0.15],
-        [b.leftElbow, -(0.1 + h(30) * 0.3), 0, 0],
-        [b.rightElbow, -(0.1 + h(31) * 0.3), 0, 0],
+        [b.leftShoulder, -(2.9 + h(26) * 0.2 - leftArm), 0, -(0.1 + h(27) * 0.15)],
+        [b.rightShoulder, -(2.9 + h(28) * 0.2 - rightArm), 0, 0.1 + h(29) * 0.15],
+        [b.leftElbow, -(0.1 + h(30) * 0.3 + leftArm), 0, 0],
+        [b.rightElbow, -(0.1 + h(31) * 0.3 + rightArm), 0, 0],
         [b.leftHip, hip, 0, 0],
-        [b.rightHip, hip + (h(33) - 0.5) * 0.25, 0, 0],
-        [b.leftKnee, 0.4 + h(34) * 0.5, 0, 0],
-        [b.rightKnee, 0.4 + h(35) * 0.5, 0, 0],
+        [b.rightHip, hip + (h(33) - 0.5) * 0.5, 0, 0],
+        [b.leftKnee, leftKnee, 0, 0],
+        [b.rightKnee, rightKnee, 0, 0],
       ];
     }
     // Sit: thighs folded square to the trunk with the legs held out straight, arms trailing back along the sides
@@ -216,14 +236,14 @@ export class ProceduralAnimator {
     return [
       [b.torso, 0.2 + h(26) * 0.3, twist, roll],
       [b.neck, (h(27) - 0.5) * 0.6, 0, 0],
-      [b.leftShoulder, 0.2 + h(28) * 0.4, 0, -0.12],
-      [b.rightShoulder, 0.2 + h(29) * 0.4, 0, 0.12],
-      [b.leftElbow, -(0.2 + h(31) * 0.3), 0, 0],
-      [b.rightElbow, -(0.2 + h(32) * 0.3), 0, 0],
+      [b.leftShoulder, 0.2 + h(28) * 0.2 + leftArm, 0, -0.12],
+      [b.rightShoulder, 0.2 + h(29) * 0.2 + rightArm, 0, 0.12],
+      [b.leftElbow, -(0.2 + h(31) * 0.3 + rightArm), 0, 0],
+      [b.rightElbow, -(0.2 + h(32) * 0.3 + leftArm), 0, 0],
       [b.leftHip, -hip, 0, 0],
-      [b.rightHip, -(hip + (h(30) - 0.5) * 0.25), 0, 0],
-      [b.leftKnee, 0.15 + h(33) * 0.3, 0, 0],
-      [b.rightKnee, 0.15 + h(34) * 0.6, 0, 0],
+      [b.rightHip, -(hip + (h(30) - 0.5) * 0.5), 0, 0],
+      [b.leftKnee, leftKnee, 0, 0],
+      [b.rightKnee, rightKnee, 0, 0],
     ];
   }
 
@@ -1095,10 +1115,10 @@ export class ProceduralAnimator {
       rest(b.rightShoulder, p.rightArmX, p.rightArmZ);
       rest(b.leftElbow, p.leftElbowX, p.leftElbowZ);
       rest(b.rightElbow, p.rightElbowX, p.rightElbowZ);
-      rest(b.leftHip, p.leftHipX);
-      rest(b.rightHip, p.rightHipX);
-      rest(b.leftKnee, p.leftKneeX);
-      rest(b.rightKnee, p.rightKneeX);
+      rest(b.leftHip, p.leftHipX, p.leftHipZ);
+      rest(b.rightHip, p.rightHipX, p.rightHipZ);
+      rest(b.leftKnee, p.leftKneeX, p.leftKneeZ);
+      rest(b.rightKnee, p.rightKneeX, p.rightKneeZ);
       // A corpse still in the air sags toward its flight shape and only crumples once it lands.
       this._deathAirAngles = this._deathRestAngles.slice();
       for (const [joint, x, y, z] of (this._airPose ??= this._buildAirPose())) {
