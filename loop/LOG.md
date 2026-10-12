@@ -96,3 +96,4 @@ iter 94 | front-lines-body-apart, tribal-apron-outside-ring, sky-top-emerald, fi
 iter 95 | sky-no-horizon-haze, red-team-tan-bodies, victory-bands-thin, backdrop-peaks-ice-blue, grass-spikes-bury-bodies, mammoth-pole-legs, lightning-hollow-outline, cannon-crew-stand-idle | 7/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 96 | far-ridges-fogged-out, cannon-crew-no-lunge, red-team-maroon, lightning-shaded-bars, sky-zenith-too-dark, bucket-helm-oversized, grass-cone-carpet, victory-title-bold | 7/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 97 | red-team-maroon, victory-title-thin, cannon-crew-plank-lean, lightning-straight-blade, glow-halo-rims, far-ridges-all-white, bucket-helm-pale-slab, grass-even-sprigs | 4/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 98 | grass-thin-scatter, lightning-long-bands, bucket-helm-tall, cannon-crew-upright, far-ridge-lit-faces-white, victory-hint-font | 4/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
