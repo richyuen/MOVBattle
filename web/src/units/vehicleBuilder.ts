@@ -1529,11 +1529,11 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
 
   // ── Tusks (parented to neck) ──
-  // One short smooth curve per side: down and out of the jaw, forward, then up to a tip about level with the eye.
+  // One long slim curve per side: down and out of the jaw, forward, then up to a tip about level with the eye.
   // Each segment starts where the last one ended, so the curve has no gaps.
   const tuskPitches = [0.4, 0.8, 1.2, 1.6, 2.0, 2.35];
-  const tuskLengths = [0.36, 0.34, 0.32, 0.3, 0.28, 0.26];
-  const tuskGirths = [0.34, 0.31, 0.27, 0.22, 0.17, 0.11, 0.04];
+  const tuskLengths = [0.58, 0.54, 0.51, 0.48, 0.45, 0.42];
+  const tuskGirths = [0.24, 0.22, 0.19, 0.155, 0.12, 0.075, 0.03];
   const tuskSplay = [0.08, 0.08, 0.05, 0.02, -0.03, -0.06];
   for (const side of [-1, 1]) {
     const start = new Vector3(side * 0.42, -0.3, 0.5);
