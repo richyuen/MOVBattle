@@ -10,6 +10,7 @@ import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./uni
 import { attachProps } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
+import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 
 export interface SpawnVisualOptions {
@@ -35,6 +36,9 @@ const BODY_PRESET_WEIGHT = 0.45;
 const BODY_METAL_WEIGHT = 0.5;
 // Cloth and armour sit a clear step darker than the team-coloured skin they are worn over.
 const CLOTH_SHADE = 0.68;
+// Clothed humanoids take more of their preset's cloth tone, so the torso is a different hue from the skin.
+const CLOTHED_PRESET_WEIGHT = 0.75;
+const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
 
 function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
   return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
@@ -98,17 +102,24 @@ export class UnitFactory {
       );
       // Attach weapon, hat, shield, special props
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0, teamColor);
-      // Limbs are bare team-coloured skin (TABS); the torso keeps the cloth or armour colour. Whole-body
-      // presets (ghost, bone, void...) stay one material.
+      // Arms and thighs are bare team-coloured skin (TABS); the torso keeps the cloth or armour colour and
+      // the shins and feet are dark boots. Whole-body presets (ghost, bone, void...) stay one material.
       if (!shouldFavorTeamBodyColor(materialPreset)) {
-        for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+        for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftUpperLeg, body.rightUpperLeg]) {
           limb.material = body.skinMaterial;
+        }
+        const bootMaterial = getMaterialFactory().getCloth(BOOT_COLOR);
+        for (const knee of [body.leftKnee, body.rightKnee]) {
+          for (const mesh of knee.getChildMeshes(true)) {
+            if (/_[lr](LowerLeg|FootM)$/.test(mesh.name)) mesh.material = bootMaterial;
+          }
         }
       }
     }
 
-    applyMaterialPreset(body, visual, bodyColor, skinColor);
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset)) {
+    const clothed = !shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset);
+    applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? CLOTHED_PRESET_WEIGHT : BODY_PRESET_WEIGHT);
+    if (clothed) {
       body.bodyMaterial.baseColor = body.bodyMaterial.baseColor.scale(CLOTH_SHADE);
     }
 
@@ -152,8 +163,9 @@ function applyMaterialPreset(
   visual: UnitVisualConfig,
   bodyColor: Color3,
   skinColor: Color3,
+  presetWeight: number,
 ): void {
-  const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor, skinColor);
+  const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor, skinColor, presetWeight);
   body.bodyMaterial.baseColor = tint.bodyDiffuse;
   body.bodyMaterial.emissiveColor = tint.bodyEmissive;
   body.bodyMaterial.metallic = tint.metallic * BODY_METAL_WEIGHT;
@@ -173,12 +185,12 @@ interface MaterialTint {
   roughness: number;
 }
 
-function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3, skinColor: Color3): MaterialTint {
+function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3, skinColor: Color3, presetWeight: number): MaterialTint {
   const skinBase = skinColor;
   // Skin is the team color (TABS); presets only nudge it a little toward their flesh tone.
   const flesh = (target: Color3, amount: number) => Color3.Lerp(skinBase, target, amount * SKIN_FLESH_WEIGHT);
   const zero = new Color3(0, 0, 0);
-  const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount * BODY_PRESET_WEIGHT);
+  const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount * presetWeight);
   // Defaults: cloth-like (non-metallic, fairly rough)
   const base = { metallic: 0.0, roughness: 0.9 };
   switch (materialPreset) {
