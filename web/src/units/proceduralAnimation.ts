@@ -106,8 +106,8 @@ export class ProceduralAnimator {
   private _shove = 0;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
-  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number } | null = null;
-  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number } {
+  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number; trail: number } | null = null;
+  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number; trail: number } {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
@@ -120,6 +120,7 @@ export class ProceduralAnimator {
       rate: 5 + h(6) * 4,
       spread: 0.35 + h(7) * 0.4,
       elbow: 0.7 + h(8) * 0.5,
+      trail: 0.12 + h(9) * 0.2,
     };
   }
   private _flinchTimer = 0;
@@ -591,8 +592,8 @@ export class ProceduralAnimator {
 
     // Alternating leg swing (TABS-style exaggerated)
     const legSwing = 0.55;
-    // Both legs trail 0.22 rad behind the hips, so the body tilts into the run from the feet up and the torso does not fold over upright legs.
-    const trail = 0.22;
+    // Both legs trail behind the hips, so the body tilts into the run from the feet up and the torso does not fold over upright legs. Per-unit (0.12-0.32 rad), so a charge does not share one lean.
+    const trail = (this._shovePose ??= this._buildShovePose()).trail;
     b.leftHip.rotation.x = trail + Math.sin(t * speed) * legSwing;
     b.rightHip.rotation.x = trail + Math.sin(t * speed + Math.PI) * legSwing;
     // Half the standing splay carries into the march, so the legs do not snap together on the first step
