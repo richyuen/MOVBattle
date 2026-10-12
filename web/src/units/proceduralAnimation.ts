@@ -335,11 +335,11 @@ export class ProceduralAnimator {
       b.torso.rotation.x += (p.pitch * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
       b.torso.rotation.z += (p.roll + Math.cos(phase * 0.35) * 0.08) * k;
       b.neck.rotation.x -= p.pitch * 0.6 * k;
-      // Thighs come forward under the pitched torso and the knees fold, so the body breaks at waist and knee.
+      // Thighs come forward under the pitched torso and the knees give a little, so the body breaks at the waist and stays tall on its legs.
       b.leftHip.rotation.x += (p.stance - 0.15) * k;
       b.rightHip.rotation.x -= (p.stance + 0.15) * k;
-      b.leftKnee.rotation.x += (p.knee + 0.3) * k;
-      b.rightKnee.rotation.x += (p.knee + 0.3) * k;
+      b.leftKnee.rotation.x += (p.knee + 0.05) * k;
+      b.rightKnee.rotation.x += (p.knee + 0.05) * k;
       if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
         b.rightShoulder.rotation.x += (-0.9 + Math.sin(phase + Math.PI) * 1.1) * k;
