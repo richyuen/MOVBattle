@@ -294,7 +294,7 @@ const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 2000, segments: 
     const t = Math.min(1, Math.max(0, positions[i + 1] / 700));
     // Horizon haze: below about 25 degrees up the teal pales toward mint cream, so the sky lightens behind the treeline
     const haze = 0.6 * Math.max(0, 1 - Math.max(0, positions[i + 1]) / 420);
-    const mint = [0.74, 0.92, 0.82];
+    const mint = [0.74, 0.98, 0.87];
     colors.push(...[0.43 - 0.20 * t, 0.86 - 0.04 * t, 0.74 - 0.04 * t].map((c, k) => c + (mint[k] - c) * haze), 1);
   }
   skyDome.setVerticesData(VertexBuffer.ColorKind, colors);
