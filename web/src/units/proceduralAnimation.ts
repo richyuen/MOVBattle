@@ -115,7 +115,7 @@ export class ProceduralAnimator {
     return {
       pitch: 0.4 + h(1) * 0.25,
       roll: (h(2) - 0.5) * 0.4,
-      stance: (h(3) < 0.5 ? -1 : 1) * (0.25 + h(4) * 0.25),
+      stance: (h(3) < 0.5 ? -1 : 1) * (0.12 + h(4) * 0.15),
       knee: 0.3 + h(5) * 0.3,
       rate: 5 + h(6) * 4,
       spread: 0.35 + h(7) * 0.4,
