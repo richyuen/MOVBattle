@@ -258,7 +258,10 @@ export class SimulationSystem {
 
           const delta = b.position.subtract(a.position);
           delta.y = 0;
-          const minDistance = a.collisionBodyRadius + b.collisionBodyRadius;
+          const sameTeam = a.team === b.team;
+          // Two bracers of one team stand a fifth closer than their body widths, so a shield line closes up shoulder to shoulder. Enemy contact keeps the full distance.
+          const bracedRank = sameTeam && a.definition.aiProfileId === "ai.brace" && b.definition.aiProfileId === "ai.brace";
+          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (bracedRank ? 0.8 : 1);
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
@@ -269,7 +272,6 @@ export class SimulationSystem {
           const overlap = minDistance - distance + this.collisionResolutionPadding;
           if (overlap <= 0) continue;
 
-          const sameTeam = a.team === b.team;
           const contactBias = sameTeam ? 0.82 : 1.0;
           const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance * (1 + a.braceAbsorption));
           const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance * (1 + b.braceAbsorption));
