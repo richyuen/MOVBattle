@@ -12,7 +12,7 @@ const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const ISLAND_ROUND = 3;    // rim is a superellipse of this power: the slab's rectangle with its four corners cut round
 const TREE_RING_X = 42;   // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
-const BLADE_DARK = 0.84;   // grass-blade shades relative to the field color
+const BLADE_DARK = 0.9;    // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
@@ -542,7 +542,7 @@ export class TribalSandboxMapBuilder {
 
   /** Patches of tall grass clumps between short turf and open ground: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
-    const BLADES = 200000;
+    const BLADES = 480000;
     const PER_TUFT = 4;
     for (const [pass, matName] of ["grassBladeDark", "grassBladeLight"].entries()) {
       const positions: number[] = [];
@@ -552,12 +552,15 @@ export class TribalSandboxMapBuilder {
         // Four narrow blades share a tuft center and a shade, fanned around it, so a clump is a wisp of grass and not a star.
         const tuft = Math.floor(i / PER_TUFT);
         if (tuft % 2 !== pass) continue;
-        const tuftX = -34 + this._seededValue(tuft, 31) * 68;
-        const tuftZ = -24 + this._seededValue(tuft, 32) * 48;
+        // Grass runs out to the island's rim; past the fighting field it is a little under half as thick.
+        const tuftX = -50 + this._seededValue(tuft, 31) * 100;
+        const tuftZ = -44 + this._seededValue(tuft, 32) * 88;
+        if (!onIsland(tuftX, tuftZ, 0.5)) continue;
+        if ((Math.abs(tuftX) > 34 || Math.abs(tuftZ) > 24) && this._seededValue(tuft, 43) > 0.45) continue;
         // Low-frequency mask: a quarter of the 4 m cells stay open ground, with a ragged edge from per-tuft jitter.
         // Across the middle where the lines meet it is well over half, so the dead and the gun carriages lie on bare earth.
-        const cellX = Math.floor((tuftX + 34 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
-        const cellZ = Math.floor((tuftZ + 24 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
+        const cellX = Math.floor((tuftX + 50 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
+        const cellZ = Math.floor((tuftZ + 44 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
         if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.6 : 0.25)) continue;
         // Each patch has its own height, from ankle turf to full clumps, so the field is not one level carpet.
         // Where the armies stand and fight no patch tops the ankle, easing back to full height by the flanks.
