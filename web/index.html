@@ -370,7 +370,7 @@
     .unit-btn.selected { border-color: #ffd54f; background: rgba(255,215,0,0.2); }
     .unit-empty { color: rgba(255,255,255,0.7); font-size: 12px; padding: 8px 4px; }
 
-    /* Result: TABS-style full-width dark bands top and bottom, no dim over the scene. */
+    /* Result: TABS-style thin full-width dark bands top and bottom, no dim over the scene. */
     #resultOverlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       z-index: 30;
@@ -380,18 +380,21 @@
     #resultOverlay.visible { display: flex; }
     .result-band {
       width: 100%; background: rgb(8, 10, 18); text-align: center;
-      padding: 22px 16px; box-sizing: border-box; pointer-events: auto;
+      padding: 8px 16px; box-sizing: border-box; pointer-events: auto;
     }
     #resultTitle {
-      font-size: 56px; font-weight: bold; letter-spacing: 0.14em; text-transform: uppercase;
+      font-size: 30px; font-weight: bold; letter-spacing: 0.04em; text-transform: uppercase;
     }
-    #resultDetail {
-      font-size: 14px; text-align: center; line-height: 1.6; margin-bottom: 14px;
-      white-space: pre-line; opacity: 0.85;
-    }
+    /* The recap stays in the DOM for state checks; the band shows only the continue hint. */
+    #resultDetail { display: none; white-space: pre-line; }
     .result-actions {
-      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+      display: flex; gap: 28px; flex-wrap: wrap; justify-content: center;
     }
+    .result-actions .btn {
+      border: none; border-radius: 0; padding: 6px 4px;
+      font-size: 15px; font-weight: bold; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .result-actions .btn:hover { color: #ffd54f; }
 
     #controls-help {
       position: absolute; bottom: 150px; right: 10px; color: rgba(255,255,255,0.4);
@@ -545,8 +548,7 @@
 
       #controls-help { display: none; }
 
-      #resultTitle { font-size: 32px; }
-      #resultDetail { font-size: 14px; padding: 0 16px; }
+      #resultTitle { font-size: 24px; }
 
       .campaign-panel {
         grid-template-columns: 1fr;
@@ -629,8 +631,8 @@
     <div class="result-band result-band-bottom">
       <div id="resultDetail"></div>
       <div class="result-actions">
-        <button class="btn" id="btnResultPrimary" style="font-size:16px;padding:10px 24px;">Play Again</button>
-        <button class="btn" id="btnResultSecondary" style="font-size:16px;padding:10px 24px;">Reset</button>
+        <button class="btn" id="btnResultPrimary">Play Again</button>
+        <button class="btn" id="btnResultSecondary">Reset</button>
       </div>
     </div>
   </div>

@@ -1288,7 +1288,8 @@ function showResult(result: BattleResult): void {
       ? (!result.isDraw && result.winner === 0 ? "Replay" : "Sandbox")
       : "Reset";
   }
-  resultTitleEl.textContent = result.isDraw ? "Draw" : `Team ${result.winner === 0 ? "A" : "B"} Wins!`;
+  // TABS shows one word; only a lost campaign battle reads as a defeat
+  resultTitleEl.textContent = result.isDraw ? "Draw" : (campaignSession && result.winner !== 0 ? "Defeat!" : "Victory!");
   resultDetailEl.textContent = lastBattleRecap.summaryLines.join("\n");
   resultOverlayEl.classList.add("visible");
   if (campaignSession) {
