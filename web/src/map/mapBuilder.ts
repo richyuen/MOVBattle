@@ -515,7 +515,7 @@ export class TribalSandboxMapBuilder {
       }
     } else {
       // Lollipop: one faceted ball sat on the top of the stalk
-      const ball = MeshBuilder.CreateIcoSphere("canopy", { radius: canopyRadius, subdivisions: 1 }, this._scene);
+      const ball = MeshBuilder.CreateIcoSphere("canopy", { radius: canopyRadius, subdivisions: 2 }, this._scene);
       ball.scaling.y = 0.9;
       ball.rotation.y = this._seededValue(index * 10, 68) * Math.PI;
       addCanopy(ball, 0, canopyRadius * 0.7, 0, crownMat(leafMat));
