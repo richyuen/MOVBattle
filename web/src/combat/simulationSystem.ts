@@ -129,8 +129,6 @@ export class SimulationSystem {
   readonly summonLivingCap = 55;
   readonly collisionResolutionPadding = 0.03;
   readonly collisionResolutionPasses = 2;
-  /** Standing allies pack to this share of their combined radius, so a rank's shoulders and shields overlap. */
-  readonly allyRankOverlap = 0.76;
   readonly waypointReachDistance = 1.1;
   readonly progressSampleDistance = 0.6;
   readonly stuckTimeout = 0.75;
@@ -260,9 +258,7 @@ export class SimulationSystem {
 
           const delta = b.position.subtract(a.position);
           delta.y = 0;
-          const sameTeam = a.team === b.team;
-          const standing = !a.isToppled && !a.isDowned && !b.isToppled && !b.isDowned;
-          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (sameTeam && standing ? this.allyRankOverlap : 1);
+          const minDistance = a.collisionBodyRadius + b.collisionBodyRadius;
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
@@ -273,6 +269,7 @@ export class SimulationSystem {
           const overlap = minDistance - distance + this.collisionResolutionPadding;
           if (overlap <= 0) continue;
 
+          const sameTeam = a.team === b.team;
           const contactBias = sameTeam ? 0.82 : 1.0;
           const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance * (1 + a.braceAbsorption));
           const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance * (1 + b.braceAbsorption));
