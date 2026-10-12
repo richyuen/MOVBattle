@@ -618,7 +618,7 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Ragged band of tall ball crowns along the long island edges, behind the tree ring and standing over it: close to the canopy colour, a thin row, broken by gaps and mixed light and dark */
+  /** Ragged band of small ball crowns along the long island edges, behind the big tree ring: low and close to the canopy colour, a thin row, broken by gaps and mixed light and dark */
   private _createHazeTreeline(): void {
     const cones: Mesh[] = [];
     const shadeCones: Mesh[] = [];
@@ -628,12 +628,12 @@ export class TribalSandboxMapBuilder {
         const k = side > 0 ? i : i + perSide;
         // About one run of fifteen in four is left out, so sky shows through the band in clumps
         if (this._seededValue(Math.floor(k / 15), 75) < 0.25) continue;
-        const height = 5.0 + this._seededValue(k, 71) * 6.0;
+        const height = 2.0 + this._seededValue(k, 71) * 2.2;
         const x = -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH;
         const z = side * (37.5 + this._seededValue(k, 73) * 3);
         if (!onIsland(x, z, 1)) continue; // none left standing on air past the rounded corners
-        const cone = MeshBuilder.CreateIcoSphere("hazeTree", { radius: height * 0.4, subdivisions: 2 }, this._scene);
-        cone.position.set(x, height * 0.85, z);
+        const cone = MeshBuilder.CreateIcoSphere("hazeTree", { radius: height * 0.4, subdivisions: 1 }, this._scene);
+        cone.position.set(x, height * 0.7, z);
         cone.rotation.y = this._seededValue(k, 74) * Math.PI;
         (this._seededValue(k, 76) < 0.4 ? shadeCones : cones).push(cone);
       }
