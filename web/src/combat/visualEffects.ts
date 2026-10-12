@@ -352,8 +352,8 @@ export class VisualEffects {
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
-    // The fireball heart's pale yellow and part self-lit, so the dust is the foot of the blast and not a grey boulder under it
-    const dustMat = mats.createUnique("stone", new Color3(1, 0.93, 0.7));
+    // A yellow-tan under the fireball heart's pale yellow and part self-lit, so the dust is the foot of the blast and not a grey boulder under it
+    const dustMat = mats.createUnique("stone", new Color3(1, 0.88, 0.58));
     dustMat.emissiveColor = new Color3(0.32, 0.28, 0.17);
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
@@ -367,8 +367,8 @@ export class VisualEffects {
     };
     // Fireball: a modest yellow heart with smaller orange lobes half sunk into its flanks, and short round
     // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
-    // enough to show no facets, and a shell's can grow to about two men tall.
-    const fireScale = Math.min(scale, 2.4);
+    // enough to show no facets, and a shell's can grow to about three men tall.
+    const fireScale = Math.min(scale * 1.5, 3.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe, so the ball is orange and not cream
