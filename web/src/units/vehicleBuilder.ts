@@ -1560,10 +1560,10 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   crest.position.set(0, 0.5, -0.18);
   crest.scaling.set(0.72, 0.62, 0.95);
   crest.parent = neck; crest.material = crestMat; allMeshes.push(crest);
-  // Shaggy topknot: three faceted fur tufts standing off the crown, the middle one tallest and tipped forward, so the
-  // skull line is a ragged peak and not a smooth dome
+  // Shaggy topknot: three fat blunt fur tufts standing off the crown, wider than tall and flat-topped, the middle one
+  // tallest and tipped forward, so the skull line is a lumpy mop and not a smooth dome or a row of spikes
   for (const [x, y, z, h, lean] of [[0, 0.82, 0.12, 0.55, 0.35], [-0.22, 0.72, 0.0, 0.42, 0.1], [0.22, 0.72, 0.0, 0.42, 0.1]]) {
-    const tuft = MeshBuilder.CreateCylinder("topknot", { height: h, diameterTop: h * 0.2, diameterBottom: h * 0.95, tessellation: 5 }, scene);
+    const tuft = MeshBuilder.CreateCylinder("topknot", { height: h, diameterTop: h * 0.7, diameterBottom: h * 1.5, tessellation: 5 }, scene);
     tuft.position.set(x, y, z);
     tuft.rotation.x = lean;
     tuft.rotation.z = -x * 1.6;
@@ -1583,29 +1583,29 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
     cheekPaint.parent = neck; cheekPaint.material = paintMat; allMeshes.push(cheekPaint);
   }
 
-  // Eyes: small white beads with black pupils set back into the brow, still showing against the dark fur
+  // Eyes: big white beads with black pupils set back into the brow, plain to see against the dark fur
   const eyeWhite = makeMat(scene, new Color3(0.95, 0.95, 0.95));
   const pupilMat = makeMat(scene, new Color3(0.03, 0.03, 0.03));
   for (const xOff of [-0.3, 0.3]) {
-    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.13, segments: 6 }, scene);
+    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.2, segments: 6 }, scene);
     eye.position.set(xOff, 0.08, 0.67);
     eye.parent = neck; eye.material = eyeWhite; allMeshes.push(eye);
-    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.07, segments: 4 }, scene);
-    pupil.position.set(xOff * 1.04, 0.07, 0.715);
+    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.11, segments: 4 }, scene);
+    pupil.position.set(xOff * 1.04, 0.07, 0.75);
     pupil.parent = neck; pupil.material = pupilMat; allMeshes.push(pupil);
   }
 
   // ── Trunk (parented to neck) ──
-  const trunkSegments = 5;
+  const trunkSegments = 7;
   for (let i = 0; i < trunkSegments; i++) {
     const t = i / (trunkSegments - 1);
-    // A thick trunk, 0.4 across at the face and still half that at the tip
+    // A thick trunk half as long again as it was, 0.4 across at the face and still half that at the tip
     const diam = 0.4 - t * 0.2;
     const seg = MeshBuilder.CreateCylinder("trunk", {
       height: 0.28, diameterTop: diam * 0.85, diameterBottom: diam, tessellation: 8,
     }, scene);
-    const zOff = 0.55 + t * 0.3;
-    const yOff = -0.3 - t * 0.35;
+    const zOff = 0.55 + t * 0.42;
+    const yOff = -0.3 - t * 0.53;
     seg.position.set(0, yOff, zOff);
     seg.rotation.x = -0.3 + t * 0.5;
     seg.parent = neck; seg.material = fur; allMeshes.push(seg);
@@ -1613,7 +1613,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
 
   // Trunk tip
   const trunkTip = MeshBuilder.CreateSphere("trunkTip", { diameter: 0.12, segments: 4 }, scene);
-  trunkTip.position.set(0, -1.25, 0.85);
+  trunkTip.position.set(0, -0.98, 0.94);
   trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
 
   // ── Tusks (parented to neck) ──
