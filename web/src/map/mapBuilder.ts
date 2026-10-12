@@ -11,8 +11,8 @@ const ISLAND_WIDTH = 108;  // floating island slab, X extent: just outside the t
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
-const BLADE_DARK = 0.84;   // grass-blade shades relative to the field color
-const BLADE_LIGHT = 1.06;  // in-hue: scaled, never mixed toward white
+const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
+const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
 const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
@@ -92,7 +92,7 @@ export class TribalSandboxMapBuilder {
   private _createMaterials(): void {
     // Grass
     const grass = new StandardMaterial("grass", this._scene);
-    grass.diffuseColor = new Color3(0.60, 0.60, 0.31); // sun-dried olive-gold, not lime
+    grass.diffuseColor = new Color3(0.55, 0.65, 0.25);
     grass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Warm orange-grass for edges
@@ -483,9 +483,9 @@ export class TribalSandboxMapBuilder {
         const tuft = Math.floor(i / 3);
         const x = -34 + this._seededValue(tuft, 31) * 68 + (this._seededValue(i, 34) - 0.5) * 0.5;
         const z = -24 + this._seededValue(tuft, 32) * 48 + (this._seededValue(i, 35) - 0.5) * 0.5;
-        const h = 0.1 + this._seededValue(i, 33) * 0.12;
+        const h = 0.16 + this._seededValue(i, 33) * 0.22;
         const yaw = this._seededValue(i, 37) * Math.PI;
-        const half = 0.07 + this._seededValue(i, 38) * 0.05; // wider than tall: flat cards, not spikes
+        const half = 0.045 + this._seededValue(i, 38) * 0.03;
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
         const lean = (this._seededValue(i, 36) - 0.5) * 0.16;
@@ -1121,8 +1121,8 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
 }
 
 function restoreSandboxSceneLook(scene: Scene): void {
-  scene.clearColor.set(0.56, 0.79, 0.78, 1);
-  scene.fogColor = new Color3(0.56, 0.79, 0.78);
+  scene.clearColor.set(0.36, 0.74, 0.78, 1);
+  scene.fogColor = new Color3(0.36, 0.74, 0.78);
 }
 
 const defaultHalfZones = (): PlacementZone[] => [
