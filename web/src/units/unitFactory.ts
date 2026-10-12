@@ -32,8 +32,8 @@ const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
 // How much of each preset's flesh tone / cloth tone survives over the team color.
 const SKIN_FLESH_WEIGHT = 0.25;
 const BODY_PRESET_WEIGHT = 0.45;
-// Preset metal is halved: an unlit-environment metal body goes grey or near-black and loses its team colour.
-const BODY_METAL_WEIGHT = 0.5;
+// Preset metal is quartered: an unlit-environment metal body goes grey or near-black and loses its team colour.
+const BODY_METAL_WEIGHT = 0.25;
 // Cloth and armour are a different hue from the team-coloured skin they are worn over, not just a darker one:
 // rotated away from the skin hue and a little darker, but nearly as saturated so it still reads as the team's.
 const CLOTH_HUE_SHIFT = 18;
@@ -43,6 +43,9 @@ const CLOTH_SHADE = 0.8;
 const TROUSER_SHADE = 0.68;
 // Clothed humanoids take more of their preset's cloth tone, so the torso is a different hue from the skin.
 const CLOTHED_PRESET_WEIGHT = 0.75;
+// Armour is the team colour itself, only darker (TABS): a light wash of its metal, no hue rotation. More grey or a
+// turn toward orange and red plate goes brown-maroon.
+const ARMOUR_PRESET_WEIGHT = 0.2;
 const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
@@ -78,10 +81,12 @@ export class UnitFactory {
     const factionColor = FACTION_COLORS[definition.faction] ?? new Color3(0.5, 0.5, 0.5);
     const teamColor = TEAM_COLORS[team] ?? new Color3(0.5, 0.5, 0.5);
     const shouldUseVehicleBody = isVehicleUnit(definition.id) && !options.forceArticulatedBody;
+    const isArmored = materialPreset === "medieval_steel" || materialPreset === "ancient_bronze"
+      || materialPreset === "good_gold" || materialPreset === "secret_hero" || materialPreset === "secret_holy";
     const bodyColor = Color3.Lerp(
       factionColor,
       teamColor,
-      shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.9 : 0.85,
+      isArmored ? 0.95 : shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.9 : 0.85,
     );
     const skinColor = teamColor.scale(0.9);
     const bareSkinned = definition.faction === FactionId.Tribal && !shouldFavorTeamBodyColor(materialPreset);
@@ -96,8 +101,6 @@ export class UnitFactory {
       });
     } else {
       // Build articulated humanoid body
-      const isArmored = materialPreset === "medieval_steel" || materialPreset === "ancient_bronze"
-        || materialPreset === "good_gold" || materialPreset === "secret_hero" || materialPreset === "secret_holy";
       body = buildArticulatedBody(
         this._scene,
         `${team}_${definition.id}_${Math.random().toString(36).slice(2, 6)}`,
@@ -145,15 +148,15 @@ export class UnitFactory {
     }
 
     const clothed = !shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset);
-    applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? CLOTHED_PRESET_WEIGHT : BODY_PRESET_WEIGHT);
+    applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? (isArmored ? ARMOUR_PRESET_WEIGHT : CLOTHED_PRESET_WEIGHT) : BODY_PRESET_WEIGHT);
     if (bareSkinned && clothed) {
       body.bodyMaterial.baseColor = LOINCLOTH_COLOR;
     } else if (clothed) {
       // Warm cloth rotates toward orange and tan, cool cloth toward teal, so neither drifts into the other team's colour.
       const hsv = body.bodyMaterial.baseColor.toHSV();
       const cool = hsv.r > 150 && hsv.r < 300;
-      const hue = (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * CLOTH_SATURATION, hsv.b * CLOTH_SHADE, new Color3());
+      const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * CLOTH_SHADE, new Color3());
       const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(TROUSER_SHADE));
       for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
         thigh.material = trouserMaterial;
