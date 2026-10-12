@@ -236,11 +236,11 @@ export class CameraController {
       to.radius = Math.min(14, Math.max(4.5, fit(halfWidth), fit(-halfWidth)));
       this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     } else {
-      // Melee: the eye sits at head height and looks a touch down, so it sees past the nearest rank's
+      // Melee: the eye sits at chest height and looks a touch down, so it sees past the nearest rank's
       // shoulders to the clash, and the horizon lies just above the middle of the frame with sky over it.
       const pitchUp = -0.04;
       to.beta = Math.PI / 2 + pitchUp;
-      to.target.y = 1.6 + to.radius * Math.sin(pitchUp);
+      to.target.y = 1.2 + to.radius * Math.sin(pitchUp);
       this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
       this.camera.lowerBetaLimit = Math.min(this.camera.lowerBetaLimit ?? to.beta, to.beta);
     }
