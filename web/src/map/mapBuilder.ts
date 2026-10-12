@@ -13,7 +13,7 @@ const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
 const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
-const HAZE_MIX = 0.6;      // how far the far treeline is mixed toward the lightened fog color
+const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
 const FAR_ROCK = new Color3(0.5, 0.55, 0.66);   // dark enough that the snow caps read against it
 const FAR_ROCK_SHADE = new Color3(0.42, 0.48, 0.6);
@@ -32,7 +32,7 @@ function paintFarProps(scene: Scene, canopy: Color3): void {
   const hazeTrees = scene.getMaterialByName("hazeTrees") as StandardMaterial | null;
   if (hazeTrees) {
     hazeTrees.diffuseColor = hazed(canopy, scene.fogColor, HAZE_MIX);
-    hazeTrees.emissiveColor = hazeTrees.diffuseColor.scale(0.2);
+    hazeTrees.emissiveColor = hazeTrees.diffuseColor.scale(0.05);
   }
   for (const [name, base] of [["farRock", FAR_ROCK], ["farRockShade", FAR_ROCK_SHADE]] as const) {
     const farRock = scene.getMaterialByName(name) as StandardMaterial | null;
@@ -515,7 +515,7 @@ export class TribalSandboxMapBuilder {
         const k = side > 0 ? i : i + perSide;
         const height = 3.2 + this._seededValue(k, 71) * 3.2;
         const cone = MeshBuilder.CreateCylinder("hazeTree", {
-          height, diameterTop: 0, diameterBottom: height * 0.5, tessellation: 5,
+          height, diameterTop: 0, diameterBottom: height * 0.75, tessellation: 5,
         }, this._scene);
         cone.position.set(
           -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH,
