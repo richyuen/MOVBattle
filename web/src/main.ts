@@ -1185,7 +1185,24 @@ function checkVictory(): void {
     teamBLiving,
   };
 
+  if (!galleryCaptureSession) frameSurvivorsForResult(isDraw ? null : winner);
   showResult(result);
+}
+
+/** Victory shot: turn the battle camera onto the winner's living units (both teams' on a draw). */
+function frameSurvivorsForResult(winner: number | null): void {
+  const box = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0 };
+  for (const unit of placedUnits) {
+    if (unit.linkedParent || unit.isDead || (winner !== null && unit.team !== winner)) continue;
+    const bounds = unit.body.root.getHierarchyBoundingVectors();
+    box.minX = Math.min(box.minX, unit.position.x);
+    box.maxX = Math.max(box.maxX, unit.position.x);
+    box.minZ = Math.min(box.minZ, unit.position.z);
+    box.maxZ = Math.max(box.maxZ, unit.position.z);
+    box.baseY = Math.min(box.baseY, unit.position.y);
+    box.height = Math.max(box.height, bounds.max.y - unit.position.y);
+  }
+  if (box.height > 0) camCtrl.frameSurvivors(box);
 }
 
 function formatTeamLabel(team: number | null): string {

@@ -234,6 +234,30 @@ export class CameraController {
     return to;
   }
 
+  // ─── Victory shot ───
+  /** Settle from the battle view onto the survivors: centred on them, whole from feet to head between the result bands. */
+  frameSurvivors(
+    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number },
+    durationSeconds = 0.25,
+  ): CameraViewState | null {
+    if (!this._prebattleView) return null;
+    const from = this.captureViewState();
+    const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
+    // The bands cover the top and bottom of the frame, so the tallest survivor gets ~0.28 radius of height either
+    // side of the target; the group gets the same ~0.6 radius of half-width the battle view allows.
+    const radius = Math.min(26, Math.max(5, (box.height * 0.5 + 0.7) / 0.28, (halfSpan + 1.5) / 0.6));
+    const to: CameraViewState = {
+      alpha: from.alpha,
+      beta: Math.PI / 1.9,
+      radius,
+      target: { x: (box.minX + box.maxX) / 2, y: box.baseY + Math.max(1, box.height * 0.5), z: (box.minZ + box.maxZ) / 2 },
+    };
+    this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
+    this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
+    this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
+    return to;
+  }
+
   /** Undo the battle swoop: restore the placement view and its pitch limits. */
   returnToPlacementView(): void {
     this._transition = null;
