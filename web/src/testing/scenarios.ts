@@ -1156,7 +1156,16 @@ function makeFactionGalleryScenario(
   } = {},
 ): ScenarioSpec {
   const unitIds = getUnitsByFaction(faction).map((unit) => unit.id);
+  // Eye level from the front, one rank wide where the faction fits, so the group fills the frame under a sky third
+  const singleRank = unitIds.length <= 9;
   return makeGalleryScenario(name, description, unitIds, {
+    columns: singleRank ? unitIds.length : undefined,
+    cameraOverride: {
+      alpha: -0.2,
+      beta: Math.PI / 2.15,
+      radius: singleRank ? 15 : 19,
+      target: { x: 0, y: 1.3, z: 0 },
+    },
     ...options,
     focus: `${description} Every ${FACTION_NAMES[faction]} unit should be distinguishable at lineup distance without falling back to a generic silhouette read.`,
   });
