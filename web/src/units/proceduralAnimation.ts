@@ -506,8 +506,8 @@ export class ProceduralAnimator {
     // Staggered stance: the leg opposite the leading arm is planted ahead with its knee bent (twice the hip
     // angle, which keeps that foot on the ground); the other trails slightly behind, nearly straight.
     const leftLeads = p.side < 0;
-    // Both knees give under the forward lean (knee twice the hip, so the feet stay put), and by enough that the knee shows ahead of the shin on the most upright unit: nobody stands on locked legs
-    const sag = 0.2 + p.lean * 0.4;
+    // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs
+    const sag = p.lean * 0.4;
     const lead = -p.stride - sag;
     const trail = p.stride * 0.45 - sag;
     b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
