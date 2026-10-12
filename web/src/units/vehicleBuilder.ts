@@ -1496,15 +1496,15 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   browPaint.position.set(0, 0.3, 0.68);
   browPaint.parent = neck; browPaint.material = paintMat; allMeshes.push(browPaint);
 
-  // Eyes: white balls with black pupils, so they show against the dark fur
+  // Eyes: small white beads with black pupils set back into the brow, still showing against the dark fur
   const eyeWhite = makeMat(scene, new Color3(0.95, 0.95, 0.95));
   const pupilMat = makeMat(scene, new Color3(0.03, 0.03, 0.03));
   for (const xOff of [-0.3, 0.3]) {
-    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.2, segments: 6 }, scene);
-    eye.position.set(xOff, 0.08, 0.68);
+    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.13, segments: 6 }, scene);
+    eye.position.set(xOff, 0.08, 0.67);
     eye.parent = neck; eye.material = eyeWhite; allMeshes.push(eye);
-    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.1, segments: 4 }, scene);
-    pupil.position.set(xOff * 1.04, 0.07, 0.76);
+    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.07, segments: 4 }, scene);
+    pupil.position.set(xOff * 1.04, 0.07, 0.715);
     pupil.parent = neck; pupil.material = pupilMat; allMeshes.push(pupil);
   }
 
