@@ -145,9 +145,9 @@ export class TribalSandboxMapBuilder {
     trunk.diffuseColor = new Color3(0.80, 0.74, 0.66);
     trunk.specularColor = new Color3(0.03, 0.03, 0.03);
 
-    // Tree leaves: autumn red
+    // Tree leaves: autumn red-orange, not blood red
     const leaves = new StandardMaterial("leaves", this._scene);
-    leaves.diffuseColor = new Color3(0.8, 0.27, 0.2);
+    leaves.diffuseColor = new Color3(0.88, 0.42, 0.22);
     leaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Second canopy colour: orange among the red
