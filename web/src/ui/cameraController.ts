@@ -51,7 +51,7 @@ export class CameraController {
       "camera",
       -Math.PI / 2,   // alpha (yaw)
       Math.PI / 4.4,   // beta (pitch): high oblique placement view
-      82,              // radius (zoom): whole arena out to the tree ring
+      100,             // radius (zoom): whole island, with sky past both end rims
       Vector3.Zero(),  // target
       scene,
     );

@@ -7,7 +7,7 @@ import type { HazardKind, HazardRegion } from "./hazards";
 
 const MAP_WIDTH = 160;  // full X extent (placement/navigation bounds)
 const MAP_DEPTH = 120;  // full Z extent (placement/navigation bounds)
-const ISLAND_WIDTH = 184;  // floating island slab, X extent
+const ISLAND_WIDTH = 108;  // floating island slab, X extent: just outside the tree ring so the placement view shows both end rims
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
@@ -303,10 +303,10 @@ export class TribalSandboxMapBuilder {
       { pos: new Vector3(-45, 0, 5), size: 3.0, mat: rock },
       { pos: new Vector3(45, 0, -5), size: 3.0, mat: darkRock },
       // Near edges
-      { pos: new Vector3(-60, 0, 35), size: 4.0, mat: rock },
-      { pos: new Vector3(60, 0, -35), size: 4.0, mat: darkRock },
-      { pos: new Vector3(-55, 0, -40), size: 3.5, mat: darkRock },
-      { pos: new Vector3(55, 0, 40), size: 3.5, mat: rock },
+      { pos: new Vector3(-49, 0, 35), size: 4.0, mat: rock },
+      { pos: new Vector3(49, 0, -35), size: 4.0, mat: darkRock },
+      { pos: new Vector3(-48, 0, -40), size: 3.5, mat: darkRock },
+      { pos: new Vector3(48, 0, 40), size: 3.5, mat: rock },
     ];
 
     for (const b of boulders) {
