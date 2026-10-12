@@ -471,7 +471,7 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Dense carpet of upright grass clumps across the fighting field: two meshes, no per-blade nodes */
+  /** Patches of thin tapered grass blades across the fighting field with bare ground between: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
     const BLADES = 80000;
     const PER_TUFT = 4;
@@ -483,19 +483,25 @@ export class TribalSandboxMapBuilder {
         // Four crossed blades share a tuft center and a shade, so each clump reads as one overlapping tussock.
         const tuft = Math.floor(i / PER_TUFT);
         if (tuft % 2 !== pass) continue;
-        const x = -34 + this._seededValue(tuft, 31) * 68 + (this._seededValue(i, 34) - 0.5) * 0.16;
-        const z = -24 + this._seededValue(tuft, 32) * 48 + (this._seededValue(i, 35) - 0.5) * 0.16;
+        const tuftX = -34 + this._seededValue(tuft, 31) * 68;
+        const tuftZ = -24 + this._seededValue(tuft, 32) * 48;
+        // Low-frequency mask: about a third of the 4 m cells stay bare, with a ragged edge from per-tuft jitter.
+        const cellX = Math.floor((tuftX + 34 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
+        const cellZ = Math.floor((tuftZ + 24 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
+        if (this._seededValue(cellX * 32 + cellZ, 39) < 0.35) continue;
+        const x = tuftX + (this._seededValue(i, 34) - 0.5) * 0.16;
+        const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.16;
         const h = 0.25 + this._seededValue(i, 33) * 0.2;
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
-        const half = 0.08 + this._seededValue(i, 38) * 0.04; // knee-high and wide enough that neighbouring clumps overlap
+        const half = 0.04 + this._seededValue(i, 38) * 0.02; // knee-high but thin, so ground shows between blades
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
         const lean = (this._seededValue(i, 36) - 0.5) * 0.06;
         const base = positions.length / 3;
-        // Blunt top edge 0.6 of the base width, so a card reads as a tuft and not a pointed spike.
+        // Top edge 0.18 of the base width, so each card tapers to a blade tip.
         positions.push(
           x - dx, 0.02, z - dz, x + dx, 0.02, z + dz,
-          x + lean + dx * 0.6, 0.02 + h, z + lean + dz * 0.6, x + lean - dx * 0.6, 0.02 + h, z + lean - dz * 0.6,
+          x + lean + dx * 0.18, 0.02 + h, z + lean + dz * 0.18, x + lean - dx * 0.18, 0.02 + h, z + lean - dz * 0.18,
         );
         // Up-facing normals: blades take the same light as the ground and never go black edge-on.
         normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0);
