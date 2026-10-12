@@ -65,3 +65,4 @@ iter 63 | shadows-short-and-faint, shoulder-caps-still-beads, knight-single-valu
 iter 64 | great-helm-team-red, shadows-hard-black-fused, flat-rectangle-map | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 65 | re-audit; grass-sparse-cone-spikes, limbs-pencil-thin, battle-cam-too-far-back | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 66 | grass-ankle-high-tombstones, battle-cam-dead-sky-half, shins-spike-pegs-no-boot | 3/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 67 | grass-unbroken-carpet-buries, legs-dark-points-no-boot, battle-cam-inside-near-rank | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
