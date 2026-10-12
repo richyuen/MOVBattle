@@ -620,16 +620,16 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Band of many small conifers along the long island edges, behind the big tree ring */
+  /** Ragged band of small conifers along the long island edges, behind the big tree ring: mixed heights, several rows deep */
   private _createHazeTreeline(): void {
     const cones: Mesh[] = [];
     const perSide = 150;
     for (const side of [-1, 1]) {
       for (let i = 0; i < perSide; i++) {
         const k = side > 0 ? i : i + perSide;
-        const height = 3.2 + this._seededValue(k, 71) * 3.2;
+        const height = 2.2 + this._seededValue(k, 71) * 5.2;
         const x = -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH;
-        const z = side * (40 + this._seededValue(k, 73) * 7);
+        const z = side * (37.5 + this._seededValue(k, 73) * 9.5);
         if (!onIsland(x, z, 1)) continue; // none left standing on air past the rounded corners
         const cone = MeshBuilder.CreateCylinder("hazeTree", {
           height, diameterTop: 0, diameterBottom: height * 0.75, tessellation: 5,
