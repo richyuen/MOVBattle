@@ -467,8 +467,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
 
     case "club": {
       const m = MeshBuilder.CreateCylinder("club", { height: 0.6 * s, diameterTop: 0.11 * s, diameterBottom: 0.07 * s, tessellation: 6 }, scene);
-      const head = MeshBuilder.CreateSphere("clubHead", { diameter: 0.26 * s, segments: 4 }, scene);
-      head.position.y = 0.32 * s;
+      // Head: a thick tapered log continuing the handle, not a ball on a stick
+      const head = MeshBuilder.CreateCylinder("clubHead", { height: 0.45 * s, diameterTop: 0.2 * s, diameterBottom: 0.1 * s, tessellation: 6 }, scene);
+      head.position.y = 0.5 * s;
       head.parent = m;
       head.material = mat(scene, accent);
       m.material = mat(scene, new Color3(0.45, 0.3, 0.15));
