@@ -73,17 +73,17 @@ export class VisualEffects {
     if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
     side.normalize();
 
-    // Build the zigzag: short shards, each joint swinging to the opposite side of the last by about 0.7 of
+    // Build the zigzag: short shards, each joint swinging to the opposite side of the last by about half
     // a shard's length, so even a short bolt is all corners
-    const segments = Math.max(5, Math.min(14, Math.round(len / 0.45)));
+    const segments = Math.max(5, Math.min(14, Math.round(len / 0.7)));
     const points: Vector3[] = [start];
-    const amp = Math.max(0.3, Math.min(0.6, (len / segments) * 0.7));
+    const amp = Math.max(0.28, Math.min(0.5, (len / segments) * 0.6));
     let sign = Math.random() < 0.5 ? -1 : 1;
     for (let i = 1; i < segments; i++) {
       // Joints sit unevenly along the bolt: long and short shards alternate
       const base = Vector3.Lerp(start, endPoint, (i + (Math.random() - 0.5) * 0.5) / segments);
       base.addInPlace(side.scale(sign * amp * (0.6 + Math.random() * 0.4)));
-      base.y += (Math.random() < 0.5 ? -1 : 1) * amp * (0.2 + Math.random() * 0.5); // up or down on its own coin, so shards are not parallel
+      base.y += sign * amp * (0.4 + Math.random() * 0.5);
       points.push(base);
       sign = -sign;
     }
