@@ -184,11 +184,13 @@ export class UnitFactory {
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
       const saturation = cool ? hsv.g * (isArmored ? 1 : CLOTH_SATURATION) : Math.min(1, hsv.g * WARM_SATURATION);
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
-      const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(legShade(TROUSER_SHADE)));
+      // Warm trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass.
+      const legBase = cool || isArmored ? body.bodyMaterial.baseColor : body.skinMaterial.baseColor;
+      const trouserMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
       }
-      const bootMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(legShade(TROUSER_SHADE) * legShade(BOOT_SHADE)));
+      const bootMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE) * legShade(BOOT_SHADE)));
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
