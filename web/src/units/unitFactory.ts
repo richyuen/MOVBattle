@@ -4,7 +4,7 @@ import {
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfiles";
-import { FACTION_COLORS, TEAM_COLORS } from "../data/factionColors";
+import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
 import { attachProps } from "./propBuilder";
@@ -44,6 +44,8 @@ const TROUSER_SHADE = 0.68;
 // Clothed humanoids take more of their preset's cloth tone, so the torso is a different hue from the skin.
 const CLOTHED_PRESET_WEIGHT = 0.75;
 const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
+// Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
+const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 
 function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
   return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
@@ -80,6 +82,7 @@ export class UnitFactory {
       shouldUseVehicleBody || shouldFavorTeamBodyColor(materialPreset) ? 0.9 : 0.85,
     );
     const skinColor = teamColor.scale(0.9);
+    const bareSkinned = definition.faction === FactionId.Tribal && !shouldFavorTeamBodyColor(materialPreset);
 
     let body;
     let propMeshes: Mesh[] = [];
@@ -110,7 +113,15 @@ export class UnitFactory {
       // Arms are bare team-coloured skin (TABS); the torso and thighs keep the cloth or armour colour as a
       // tunic and trousers, and the shins and feet are dark boots. Whole-body presets (ghost, bone, void...)
       // stay one material.
-      if (!shouldFavorTeamBodyColor(materialPreset)) {
+      if (bareSkinned) {
+        // Bare from head to foot (TABS tribal): only the hips keep the body material, as the loincloth.
+        // The hip caps are swollen so the two meet across the pelvis as one brief wrap.
+        for (const mesh of body.root.getChildMeshes(false)) {
+          if (mesh.material !== body.bodyMaterial || propMeshes.includes(mesh as Mesh)) continue;
+          if (/_[lr]HipCap$/.test(mesh.name)) mesh.scaling.set(1.7, 1.4, 1.7);
+          else mesh.material = body.skinMaterial;
+        }
+      } else if (!shouldFavorTeamBodyColor(materialPreset)) {
         for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
         }
@@ -125,7 +136,9 @@ export class UnitFactory {
 
     const clothed = !shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset);
     applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? CLOTHED_PRESET_WEIGHT : BODY_PRESET_WEIGHT);
-    if (clothed) {
+    if (bareSkinned && clothed) {
+      body.bodyMaterial.baseColor = LOINCLOTH_COLOR;
+    } else if (clothed) {
       // Warm cloth rotates toward orange and tan, cool cloth toward teal, so neither drifts into the other team's colour.
       const hsv = body.bodyMaterial.baseColor.toHSV();
       const cool = hsv.r > 150 && hsv.r < 300;
