@@ -366,13 +366,13 @@ export class TribalSandboxMapBuilder {
   private _createBoulder(pos: Vector3, size: number, mat: StandardMaterial): void {
     // A coarse ball of a few dozen flat faces, squashed and turned by its place on the map, so each
     // boulder is a chunky faceted lump of its own shape and not a smooth loaf.
-    // It is a heap and not a lone stone: two lumps about half its size lean on its flanks, a third of a turn apart.
+    // It is a heap and not a lone stone: two lumps about three quarters its size lean on its flanks, a third of a turn apart.
     const seed = pos.x * 7 + pos.z * 13;
     for (let j = 0; j < 3; j++) {
       const k = seed + j * 31;
-      const lump = j === 0 ? size : size * (0.5 + this._seededValue(k, 103) * 0.15);
+      const lump = j === 0 ? size : size * (0.7 + this._seededValue(k, 103) * 0.15);
       const turn = this._seededValue(seed, 104) * Math.PI * 2 + j * 2.4;
-      const reach = j === 0 ? 0 : size * 0.42;
+      const reach = j === 0 ? 0 : size * 0.5;
       const rock = MeshBuilder.CreateSphere("boulder", {
         diameter: lump, segments: 2,
       }, this._scene);
@@ -387,7 +387,7 @@ export class TribalSandboxMapBuilder {
     this._obstacles.push({
       type: "cylinder",
       center: new Vector3(pos.x, 0, pos.z),
-      radius: size * 0.5,
+      radius: size * 0.75, // the heap, not only its middle stone
     });
   }
 
