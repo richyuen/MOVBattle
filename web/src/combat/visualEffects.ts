@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, MeshBuilder, Color3, TransformNode,
+  Scene, Vector3, MeshBuilder, Color3, TransformNode, Mesh,
   PBRMetallicRoughnessMaterial, ParticleSystem,
 } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
@@ -49,98 +49,83 @@ export class VisualEffects {
 
   // ══════════════════ LIGHTNING ══════════════════
   /**
-   * Spawn a jagged lightning bolt from origin to target.
-   * Made of multiple connected segments with random offsets.
+   * Spawn a jagged lightning bolt from origin to target: a few hard-edged white wedges that zigzag
+   * side to side, with a cyan fork. Opaque and kept out of the glow layer so it reads as flat
+   * polygons instead of a soft beam.
    */
   spawnLightning(origin: Vector3, target: Vector3): void {
     const root = new TransformNode("lightning", this._scene);
-    const segments = 10;
-    const dir = target.subtract(origin);
-    const len = dir.length();
-
-    const boltMat = this._fxMat(new Color3(0.6, 0.8, 1.0), new Color3(0.5, 0.7, 1.0), 0.9);
+    const segments = 4;
+    const boltMat = this._fxMat(new Color3(0.45, 0.85, 1.0), new Color3(0.45, 0.85, 1.0));
     const coreMat = this._fxMat(new Color3(1, 1, 1), new Color3(1, 1, 1));
+    const glow = this._scene.getGlowLayerByName("glow");
+    const parts: Mesh[] = [];
+    const addPart = (mesh: Mesh, material: PBRMetallicRoughnessMaterial): void => {
+      mesh.material = material;
+      mesh.parent = root;
+      glow?.addExcludedMesh(mesh);
+      parts.push(mesh);
+    };
+    // Three-sided wedge from a to b, thick at a and tapering to b, so joined segments step like a saw edge
+    const wedge = (a: Vector3, b: Vector3, thick: number, material: PBRMetallicRoughnessMaterial): void => {
+      const seg = MeshBuilder.CreateCylinder("lseg", {
+        height: Vector3.Distance(a, b), diameterBottom: thick, diameterTop: thick * 0.3, tessellation: 3,
+      }, this._scene);
+      seg.rotation.x = Math.PI / 2;
+      seg.bakeCurrentTransformIntoVertices();
+      seg.position = Vector3.Center(a, b);
+      seg.lookAt(b);
+      addPart(seg, material);
+    };
 
-    // Build jagged path
-    const points: Vector3[] = [origin.clone()];
-    points[0].y += 1.5; // start from head height
+    const start = origin.clone();
+    start.y += 1.5; // start from head height
     const endPoint = target.clone();
     endPoint.y += 0.8;
+    const dir = endPoint.subtract(start);
+    const len = dir.length();
+    const side = Vector3.Cross(dir, Vector3.Up());
+    if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
+    side.normalize();
 
+    // Zigzag path: each corner is thrown to the opposite side of the last
+    const points: Vector3[] = [start];
+    const flip = Math.random() < 0.5 ? -1 : 1;
     for (let i = 1; i < segments; i++) {
-      const t = i / segments;
-      const base = Vector3.Lerp(points[0], endPoint, t);
-      // Random jag perpendicular to bolt direction
-      const jag = len * 0.12 * (1 - Math.abs(t - 0.5) * 2); // most jag in middle
-      base.x += (Math.random() - 0.5) * jag;
-      base.y += (Math.random() - 0.5) * jag * 0.5;
-      base.z += (Math.random() - 0.5) * jag;
+      const base = Vector3.Lerp(start, endPoint, i / segments + (Math.random() - 0.5) * 0.12);
+      const swing = (i % 2 === 0 ? -flip : flip) * len * (0.1 + Math.random() * 0.08);
+      base.addInPlace(side.scale(swing));
+      base.y += (Math.random() - 0.5) * len * 0.12;
       points.push(base);
     }
     points.push(endPoint);
-
-    // Draw segments as thin boxes connecting each pair
+    const thick = Math.min(0.5, Math.max(0.22, len * 0.035));
     for (let i = 0; i < points.length - 1; i++) {
-      const a = points[i];
-      const b = points[i + 1];
-      const mid = Vector3.Center(a, b);
-      const segLen = Vector3.Distance(a, b);
-
-      // Outer glow
-      const glow = MeshBuilder.CreateBox("lseg", {
-        width: 0.12, height: 0.12, depth: segLen,
-      }, this._scene);
-      glow.position = mid;
-      glow.lookAt(b);
-      glow.material = boltMat;
-      glow.parent = root;
-
-      // Inner bright core
-      const core = MeshBuilder.CreateBox("lcore", {
-        width: 0.04, height: 0.04, depth: segLen,
-      }, this._scene);
-      core.position = mid;
-      core.lookAt(b);
-      core.material = coreMat;
-      core.parent = root;
+      wedge(points[i], points[i + 1], thick, coreMat);
     }
 
-    // Branch bolt (smaller fork)
-    const branchStart = Math.floor(segments * 0.4);
-    if (branchStart < points.length - 1) {
-      const forkOrigin = points[branchStart];
-      const forkDir = new Vector3(
-        (Math.random() - 0.5) * len * 0.4,
-        (Math.random() - 0.3) * len * 0.2,
-        (Math.random() - 0.5) * len * 0.4,
-      );
-      const forkEnd = forkOrigin.add(forkDir);
-      const forkMid = Vector3.Center(forkOrigin, forkEnd);
-      const forkLen = Vector3.Distance(forkOrigin, forkEnd);
-      const fork = MeshBuilder.CreateBox("fork", {
-        width: 0.06, height: 0.06, depth: forkLen,
-      }, this._scene);
-      fork.position = forkMid;
-      fork.lookAt(forkEnd);
-      fork.material = boltMat;
-      fork.parent = root;
-    }
+    // Cyan fork off the first corner: two short wedges with their own kink
+    const forkDir = dir.scale(0.22).add(side.scale(-flip * len * 0.2));
+    forkDir.y += len * 0.06;
+    const forkMid = points[1].add(forkDir.scale(0.5)).add(side.scale(flip * len * 0.07));
+    wedge(points[1], forkMid, thick * 0.7, boltMat);
+    wedge(forkMid, points[1].add(forkDir), thick * 0.5, boltMat);
 
-    // Flash at impact
-    const flash = MeshBuilder.CreateSphere("lflash", { diameter: 0.8, segments: 6 }, this._scene);
+    // Small faceted flash at impact
+    const flash = MeshBuilder.CreateSphere("lflash", { diameter: 0.4, segments: 2 }, this._scene);
     flash.position = endPoint;
-    flash.material = coreMat;
-    flash.parent = root;
+    flash.convertToFlatShadedMesh();
+    addPart(flash, boltMat);
 
     const totalDuration = 0.25;
     this._effects.push({
       root,
       remaining: totalDuration,
       update: (_dt, remaining) => {
-        const fade = Math.max(0, remaining / totalDuration);
-        boltMat.alpha = fade * 0.9;
-        coreMat.alpha = fade;
-        flash.scaling.setAll(1 + (1 - fade) * 2);
+        flash.scaling.setAll(1 + (1 - Math.max(0, remaining / totalDuration)) * 0.6);
+      },
+      dispose: () => {
+        for (const part of parts) glow?.removeExcludedMesh(part);
       },
     });
   }
