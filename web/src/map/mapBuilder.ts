@@ -130,9 +130,9 @@ export class TribalSandboxMapBuilder {
     darkRock.diffuseColor = new Color3(0.55, 0.56, 0.58);
     darkRock.specularColor = new Color3(0.06, 0.06, 0.06);
 
-    // Cliff rock: the island's sides are grey stone, a different stuff from the warm earth and boulders on top
+    // Cliff rock: the island's sides are grey-purple stone, a different stuff from the warm earth and boulders on top
     const cliffRock = new StandardMaterial("cliffRock", this._scene);
-    cliffRock.diffuseColor = new Color3(0.50, 0.47, 0.44);
+    cliffRock.diffuseColor = new Color3(0.50, 0.46, 0.53);
     cliffRock.specularColor = new Color3(0.04, 0.04, 0.04);
 
     // Tree trunk
@@ -186,6 +186,13 @@ export class TribalSandboxMapBuilder {
     under.material = this._scene.getMaterialByName("cliffRock")!;
     under.isPickable = false;
 
+    // Rock shelf: a ragged ledge of the cliff's stone stands out past the lawn a little below it, so from above the
+    // grass ends at a lip with rock under it and not at the sky.
+    const shelf = this._islandSlab("islandShelf", -0.9, 9, 0.8, 1.055);
+    shelf.material = this._scene.getMaterialByName("cliffRock")!;
+    shelf.receiveShadows = true;
+    shelf.isPickable = false;
+
     // Cliff face: rock buttresses hang all the way round under the rim and taper down slower than the slab does, so
     // the cliff below the lawn is ragged while the lawn's own edge stays clean.
     const crags: Mesh[] = [];
@@ -213,16 +220,19 @@ export class TribalSandboxMapBuilder {
   }
 
   /** A slab in the island's outline: a round drum with every vertex pushed out to the rim, its top face at `top` */
-  private _islandSlab(name: string, top: number, height: number, taper = 1): Mesh {
+  private _islandSlab(name: string, top: number, height: number, taper = 1, ragged = 0): Mesh {
     const slab = MeshBuilder.CreateCylinder(name, {
       diameterTop: 1, diameterBottom: taper, height, tessellation: 48,
     }, this._scene);
     const positions = slab.getVerticesData("position")!;
     for (let i = 0; i < positions.length; i += 3) {
       const reach = Math.hypot(positions[i], positions[i + 2]) * 2;
-      const [x, z] = islandRim(Math.atan2(positions[i + 2], positions[i]));
-      positions[i] = x * reach;
-      positions[i + 2] = z * reach;
+      const a = Math.atan2(positions[i + 2], positions[i]);
+      // A ragged slab stands `ragged` times wider than the rim on average, further out at some bearings than others
+      const out = ragged ? ragged + 0.02 * Math.sin(a * 7 + 1) + 0.015 * Math.sin(a * 13 + 2.5) + 0.01 * Math.sin(a * 29) : 1;
+      const [x, z] = islandRim(a);
+      positions[i] = x * reach * out;
+      positions[i + 2] = z * reach * out;
     }
     slab.setVerticesData("position", positions);
     slab.position.y = top - height / 2;
