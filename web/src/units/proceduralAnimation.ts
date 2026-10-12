@@ -428,9 +428,9 @@ export class ProceduralAnimator {
   }
 
   // Per-unit standing slouch: forward lean, which arm hangs ahead, how far the arms sit off the ribs, each
-  // elbow's fold, and how far the leading foot is planted ahead of the other. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
-  private _idlePose: { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number } | null = null;
-  private _buildIdlePose(): { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number } {
+  // elbow's fold, how far the leading foot is planted ahead of the other, and how wide the feet sit. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  private _idlePose: { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number; splay: number } | null = null;
+  private _buildIdlePose(): { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number; splay: number } {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
@@ -438,10 +438,11 @@ export class ProceduralAnimator {
     return {
       lean: 0.1 + h(41) * 0.1,
       side: h(42) < 0.5 ? -1 : 1,
-      spread: 0.1 + h(43) * 0.12,
+      spread: 0.2 + h(43) * 0.16,
       leftElbow: 0.45 + h(44) * 0.5,
       rightElbow: 0.45 + h(45) * 0.5,
       stride: 0.2 + h(46) * 0.14,
+      splay: 0.08 + h(47) * 0.04,
     };
   }
 
@@ -474,6 +475,9 @@ export class ProceduralAnimator {
     const trail = p.stride * 0.45;
     b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
     b.rightHip.rotation.x = (leftLeads ? trail : lead) + Math.sin(t * 0.9 + Math.PI) * wobble;
+    // Feet planted wider than the hips, so the stance reads as a braced A from the front rather than a post
+    b.leftHip.rotation.z = -p.splay;
+    b.rightHip.rotation.z = p.splay;
     b.leftKnee.rotation.x = leftLeads ? p.stride * 2 : 0.1;
     b.rightKnee.rotation.x = leftLeads ? 0.1 : p.stride * 2;
 
@@ -531,6 +535,10 @@ export class ProceduralAnimator {
     const legSwing = 0.55;
     b.leftHip.rotation.x = Math.sin(t * speed) * legSwing;
     b.rightHip.rotation.x = Math.sin(t * speed + Math.PI) * legSwing;
+    // Half the standing splay carries into the march, so the legs do not snap together on the first step
+    const splay = (this._idlePose ??= this._buildIdlePose()).splay * 0.5;
+    b.leftHip.rotation.z = -splay;
+    b.rightHip.rotation.z = splay;
 
     // Knees bend on back-swing
     b.leftKnee.rotation.x = Math.max(0, -Math.sin(t * speed)) * 0.6;
