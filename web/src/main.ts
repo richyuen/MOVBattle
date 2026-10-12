@@ -1,6 +1,6 @@
 import {
   Engine, Scene, HemisphericLight, DirectionalLight, Vector3, Color3, Color4,
-  PointerEventTypes, ShadowGenerator,
+  PointerEventTypes, ShadowGenerator, MeshBuilder, Mesh, StandardMaterial, VertexBuffer,
 } from "@babylonjs/core";
 import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline";
 import { SSAO2RenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline";
@@ -131,7 +131,7 @@ dir.shadowMaxZ = 220;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
-scene.fogColor = new Color3(0.14, 0.62, 0.46);
+scene.fogColor = new Color3(0.43, 0.78, 0.68);
 scene.fogStart = 70;
 scene.fogEnd = 170;
 // The haze starts behind the fight, not at a fixed distance from the eye: pulled back to the placement view,
@@ -282,6 +282,31 @@ const glowLayer = new GlowLayer("glow", scene, {
   blurKernelSize: 32,
 });
 glowLayer.intensity = 0.6;
+
+// Sky dome: the sandbox backdrop grades from deep teal overhead to a pale horizon, the fog's colour, so the far
+// trees fade into what is behind them. Unlit, fog-free and out of the glow layer; campaign themes switch it off.
+const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 2000, segments: 24, sideOrientation: Mesh.BACKSIDE }, scene);
+{
+  const positions = skyDome.getVerticesData(VertexBuffer.PositionKind) ?? [];
+  const colors: number[] = [];
+  for (let i = 0; i < positions.length; i += 3) {
+    // Fully deep by about 27 degrees up, which is the top of the frame from the low battle camera
+    const t = Math.min(1, Math.max(0, positions[i + 1] / 450));
+    colors.push(0.43 - 0.29 * t, 0.78 - 0.16 * t, 0.68 - 0.22 * t, 1);
+  }
+  skyDome.setVerticesData(VertexBuffer.ColorKind, colors);
+  const skyMat = new StandardMaterial("skyDome", scene);
+  skyMat.diffuseColor = Color3.Black();
+  skyMat.specularColor = Color3.Black();
+  skyMat.emissiveColor = Color3.White();
+  skyMat.disableLighting = true;
+  skyMat.fogEnabled = false;
+  skyDome.material = skyMat;
+  skyDome.infiniteDistance = true;
+  skyDome.applyFog = false;
+  skyDome.isPickable = false;
+  glowLayer.addExcludedMesh(skyDome);
+}
 
 // ─── Game systems ───
 const stateMachine = new GameStateMachine();

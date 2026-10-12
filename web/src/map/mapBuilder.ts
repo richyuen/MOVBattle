@@ -990,6 +990,7 @@ function trackMapBuild(scene: Scene, id: BattleMapId, displayName: string, build
 function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   scene.clearColor.set(theme.clearColor.r, theme.clearColor.g, theme.clearColor.b, 1);
   scene.fogColor = theme.fogColor;
+  scene.getMeshByName("skyDome")?.setEnabled(false);
   const groundMat = scene.getMaterialByName("groundMat") as StandardMaterial | null;
   if (groundMat) groundMat.diffuseColor = theme.ground;
   const grassMat = scene.getMaterialByName("grass") as StandardMaterial | null;
@@ -1313,7 +1314,8 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
 
 function restoreSandboxSceneLook(scene: Scene): void {
   scene.clearColor.set(0.14, 0.62, 0.46, 1);
-  scene.fogColor = new Color3(0.14, 0.62, 0.46);
+  scene.fogColor = new Color3(0.43, 0.78, 0.68);
+  scene.getMeshByName("skyDome")?.setEnabled(true);
 }
 
 const defaultHalfZones = (): PlacementZone[] => [
