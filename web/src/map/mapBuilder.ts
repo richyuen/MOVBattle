@@ -516,6 +516,7 @@ export class TribalSandboxMapBuilder {
       return crown;
     };
     const glow = this._scene.getGlowLayerByName("glow");
+    glow?.addExcludedMesh(trunkMesh); // the trunk is part self-lit: left in, its glow smears a pale haze over the crown at the trunk top
     if (broadleaf) {
       // Lumpy crown: three squashed faceted blobs of different size
       const lobe = canopyRadius * 1.25;
