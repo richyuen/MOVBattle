@@ -1435,7 +1435,7 @@ function buildMinotaur(scene: Scene, color: Color3): ArticulatedBody {
 
 const MAMMOTH_SCALE = 1.8;
 
-const MAMMOTH_HIDE = new Color3(0.48, 0.23, 0.36);
+const MAMMOTH_HIDE = new Color3(0.48, 0.19, 0.36);
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE): ArticulatedBody {
   const root = new TransformNode("mammoth_root", scene);
