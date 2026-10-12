@@ -33,6 +33,8 @@ const SKIN_FLESH_WEIGHT = 0.25;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is halved: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.5;
+// Cloth and armour sit a clear step darker than the team-coloured skin they are worn over.
+const CLOTH_SHADE = 0.68;
 
 function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
   return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
@@ -106,6 +108,9 @@ export class UnitFactory {
     }
 
     applyMaterialPreset(body, visual, bodyColor, skinColor);
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset)) {
+      body.bodyMaterial.baseColor = body.bodyMaterial.baseColor.scale(CLOTH_SHADE);
+    }
 
     body.root.position = position.clone();
     // Face the border: blue (team 0) faces right (+X), red (team 1) faces left (-X)
