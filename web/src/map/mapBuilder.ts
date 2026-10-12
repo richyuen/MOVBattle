@@ -306,16 +306,10 @@ export class TribalSandboxMapBuilder {
     pos: Vector3, diameterX: number, height: number, diameterZ: number,
     mat: StandardMaterial,
   ): void {
-    // The shallow cap of a ball many times wider than the mound, sunk until only its crown clears the lawn:
-    // the rise meets the grass at about 20 degrees and its top faces the sky like the field around it.
-    const halfWidth = diameterX / 2;
-    const rise = height * 0.3;
-    const radius = (halfWidth * halfWidth + rise * rise) / (2 * rise);
-    // Only the crown and a skirt just under the lawn are built, so the rest of the ball never shows through the cliffs.
-    const slice = Math.atan2(halfWidth, radius - rise) / Math.PI * 1.2;
-    const mound = MeshBuilder.CreateSphere("hill", { diameter: 2, segments: 8, slice }, this._scene);
-    mound.scaling.set(radius, radius, radius * diameterZ / diameterX);
-    mound.position.set(pos.x, rise - radius, pos.z);
+    const mound = MeshBuilder.CreateSphere("hill", { diameter: 1, segments: 10 }, this._scene);
+    mound.scaling.set(diameterX, height * 0.6, diameterZ);
+    // Centred on the ground, so only the upper dome shows and the rise has no underside.
+    mound.position.set(pos.x, 0, pos.z);
     mound.material = mat;
     mound.receiveShadows = true;
 
