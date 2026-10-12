@@ -317,11 +317,12 @@ export class VisualEffects {
     // The fireball is mostly self-lit and graded from the inside out: a small near-white heart, yellow inner
     // flame and a deep orange fringe. Only the heart carries any blue, so the flames around it never pale to cream.
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.95, 0.76));
-    coreMat.emissiveColor = new Color3(0.5, 0.45, 0.28);
+    coreMat.emissiveColor = new Color3(0.62, 0.56, 0.36);
     const flashMat = mats.createUnique("cloth", new Color3(1, 0.82, 0.03));
-    flashMat.emissiveColor = new Color3(0.5, 0.38, 0);
+    flashMat.emissiveColor = new Color3(0.6, 0.46, 0);
     const flameMat = mats.createUnique("cloth", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(0.5, 0.17, 0);
+    flameMat.emissiveColor = new Color3(0.6, 0.2, 0);
+    const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
     const dustMat = mats.createUnique("stone", new Color3(0.74, 0.64, 0.45));
@@ -334,36 +335,36 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a modest near-white heart with smaller orange lobes sunk past their middles into its flanks, and
-    // short round tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it
-    // is round enough to show no facets and is left in the glow layer, whose halo fuses the lobes into one mass.
-    // A shell's sits on the crater and tops out about a man tall.
-    const fireScale = Math.min(scale, 1.1);
-    const fireY = 0.6 * fireScale - 0.6 * scale;
+    // Fireball: a modest near-white heart with smaller orange lobes half sunk into its flanks, and short round
+    // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
+    // enough to show no facets, and a shell's stays about a man tall, well under the trees.
+    const fireScale = Math.min(scale, 1.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
-    const lobeHeights = [0.4, 0.05, 0.6, -0.1, 0.8, 0.3];
+    const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
       const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flameMat);
       const angle = i * 2.4 + 0.6;
-      const reach = (i === 0 ? 0 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
-      lobe.position.set(Math.cos(angle) * reach, fireY + lobeHeights[i] * fireScale, Math.sin(angle) * reach);
+      const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
+      lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
       lobe.rotation.set(i * 1.3, i * 2.1, 0);
+      glow?.addExcludedMesh(lobe as Mesh);
       fire.push({ mesh: lobe, size: lobeSizes[i] * fireScale });
     }
-    // Tongues: fat egg-shaped lobes rooted in the heart, one nearly straight up and the rest leaning out no
-    // further than its flanks, at mixed lengths. Fixed layout, so every blast has the same flame shape.
-    const tongueLengths = [0.95, 0.7, 0.75, 0.65, 0.75, 0.6, 0.7];
+    // Tongues: fat egg-shaped lobes rooted in the heart, one nearly straight up and the rest fanned out at
+    // mixed lengths and leans, none lying flat. Fixed layout, so every blast has the same flame shape.
+    const tongueLengths = [0.95, 0.75, 0.85, 0.7, 0.85, 0.65, 0.75];
     const tongueWidths = [0.95, 0.8, 0.85, 0.7, 0.8, 0.65, 0.75];
-    const tongueLeans = [0.1, 0.5, 0.6, 0.4, 0.6, 0.55, 0.6];
+    const tongueLeans = [0.1, 0.7, 0.9, 0.5, 0.9, 0.8, 0.85];
     for (let i = 0; i < tongueLengths.length; i++) {
       const tongue = MeshBuilder.CreateSphere("burstFlash", { diameter: 1, segments: 6 }, this._scene);
       tongue.position.y = 0.5;
       tongue.bakeCurrentTransformIntoVertices();
-      tongue.material = i % 3 === 2 ? flameMat : flashMat;
+      tongue.material = i % 2 === 0 ? flashMat : flameMat;
       tongue.parent = root;
-      tongue.position.y = fireY + 0.3 * fireScale;
+      tongue.position.y = 0.3 * fireScale;
       tongue.rotation.set(0, i * 2.4 + 0.3, tongueLeans[i]);
+      glow?.addExcludedMesh(tongue);
       fire.push({ mesh: tongue, size: tongueWidths[i] * fireScale, length: tongueLengths[i] * fireScale });
     }
 
@@ -426,7 +427,7 @@ export class VisualEffects {
         // The fireball swells fast, holds, and has burnt out before the bodies it threw have peaked.
         const burn = Math.min(1, elapsed / 0.08 + 0.3) * Math.max(0, Math.min(1, (flashDuration - elapsed) / 0.18));
         for (const lobe of fire) {
-          lobe.mesh.position.y += 0.5 * dt;
+          lobe.mesh.position.y += 0.9 * dt;
           const girth = Math.max(0.001, lobe.size * burn);
           lobe.mesh.scaling.set(girth, Math.max(0.001, (lobe.length ?? lobe.size) * burn), girth);
         }
