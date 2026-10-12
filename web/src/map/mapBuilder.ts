@@ -11,7 +11,7 @@ const ISLAND_WIDTH = 108;  // floating island slab, X extent: just outside the t
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
-const BLADE_DARK = 0.92;   // grass-blade shades relative to the field color
+const BLADE_DARK = 0.84;   // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
@@ -521,7 +521,7 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Dense clumps of short broad grass blades with a few bare gaps in the lawn: two meshes, no per-blade nodes */
+  /** Patches of tall grass clumps between short turf and open ground: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
     const BLADES = 120000;
     const PER_TUFT = 4;
@@ -535,13 +535,15 @@ export class TribalSandboxMapBuilder {
         if (tuft % 2 !== pass) continue;
         const tuftX = -34 + this._seededValue(tuft, 31) * 68;
         const tuftZ = -24 + this._seededValue(tuft, 32) * 48;
-        // Low-frequency mask: a tenth of the 4 m cells stay bare lawn, with a ragged edge from per-tuft jitter.
+        // Low-frequency mask: a quarter of the 4 m cells stay open ground, with a ragged edge from per-tuft jitter.
         const cellX = Math.floor((tuftX + 34 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
         const cellZ = Math.floor((tuftZ + 24 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
-        if (this._seededValue(cellX * 32 + cellZ, 39) < 0.1) continue;
+        if (this._seededValue(cellX * 32 + cellZ, 39) < 0.25) continue;
+        // Each patch has its own height, from ankle turf to full clumps, so the field is not one level carpet.
+        const patchHeight = 0.45 + this._seededValue(cellX * 32 + cellZ, 42) * 0.55;
         const x = tuftX + (this._seededValue(i, 34) - 0.5) * 0.16;
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.16;
-        const h = 0.2 + this._seededValue(i, 33) * 0.25; // shin to knee: standing feet sink into the grass
+        const h = (0.2 + this._seededValue(i, 33) * 0.25) * patchHeight; // shin to knee in the tall patches
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
         const half = 0.07 + this._seededValue(i, 38) * 0.03; // broad, so the crossed blades of a clump overlap
         const dx = Math.cos(yaw) * half;
