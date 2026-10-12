@@ -48,8 +48,9 @@ const CLOTHED_PRESET_WEIGHT = 0.75;
 const ARMOUR_PRESET_WEIGHT = 0.2;
 // Plate is a clearly darker value than the skin of the head and hands beside it, on top of the cloth shade.
 const ARMOUR_SHADE = 0.65;
-const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
-const BARE_FOOT_SHADE = 0.6;
+// Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
+const BOOT_SHADE = 0.7;
+const BARE_FOOT_SHADE = 0.85;
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
@@ -119,7 +120,7 @@ export class UnitFactory {
       // Attach weapon, hat, shield, special props
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0, teamColor);
       // Arms are bare team-coloured skin (TABS); the torso and thighs keep the cloth or armour colour as a
-      // tunic and trousers down to the ankle, and the feet are dark boots. Whole-body presets (ghost, bone, void...)
+      // tunic and trousers down to the ankle, and the feet are boots a shade darker than the trousers. Whole-body presets (ghost, bone, void...)
       // stay one material.
       if (bareSkinned) {
         // Bare from head to foot (TABS tribal): only the hips keep the body material, as the loincloth.
@@ -141,12 +142,6 @@ export class UnitFactory {
         for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
         }
-        const bootMaterial = getMaterialFactory().getCloth(BOOT_COLOR);
-        for (const knee of [body.leftKnee, body.rightKnee]) {
-          for (const mesh of knee.getChildMeshes(true)) {
-            if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
-          }
-        }
       }
     }
 
@@ -154,7 +149,7 @@ export class UnitFactory {
     applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? (isArmored ? ARMOUR_PRESET_WEIGHT : CLOTHED_PRESET_WEIGHT) : BODY_PRESET_WEIGHT);
     if (bareSkinned && clothed) {
       body.bodyMaterial.baseColor = LOINCLOTH_COLOR;
-      // Bare feet are a darker shade of the skin, so a bare leg still ends in a foot and not a point.
+      // Bare feet are a slightly darker shade of the skin, so a bare leg still ends in a foot and not a point.
       const soleMaterial = getMaterialFactory().getCloth(body.skinMaterial.baseColor.scale(BARE_FOOT_SHADE));
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = soleMaterial;
@@ -168,6 +163,10 @@ export class UnitFactory {
       const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(TROUSER_SHADE));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
+      }
+      const bootMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(TROUSER_SHADE * BOOT_SHADE));
+      for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
+        if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
     }
 
