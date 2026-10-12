@@ -120,6 +120,7 @@ export class VisualEffects {
         shard.scaling.z = 0.25;
       }
       shard.material = boltMat;
+      glow?.addExcludedMesh(shard); // no halo off the white blade: it would wash the cyan rim beside it out to white
       shard.parent = root;
       shards.push(shard);
       // Cyan rim: the same blade 1.6 times as broad, a hair behind the white one as the camera sees it
