@@ -35,10 +35,12 @@ const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is halved: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.5;
 // Cloth and armour are a different hue from the team-coloured skin they are worn over, not just a darker one:
-// rotated away from the skin hue, washed out and a little darker.
-const CLOTH_HUE_SHIFT = 25;
-const CLOTH_SATURATION = 0.7;
-const CLOTH_SHADE = 0.88;
+// rotated away from the skin hue and a little darker, but nearly as saturated so it still reads as the team's.
+const CLOTH_HUE_SHIFT = 18;
+const CLOTH_SATURATION = 0.92;
+const CLOTH_SHADE = 0.8;
+// Trousers are a darker shade of the tunic cloth, so the legs break from the torso at the waist.
+const TROUSER_SHADE = 0.68;
 // Clothed humanoids take more of their preset's cloth tone, so the torso is a different hue from the skin.
 const CLOTHED_PRESET_WEIGHT = 0.75;
 const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
@@ -129,6 +131,10 @@ export class UnitFactory {
       const cool = hsv.r > 150 && hsv.r < 300;
       const hue = (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * CLOTH_SATURATION, hsv.b * CLOTH_SHADE, new Color3());
+      const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(TROUSER_SHADE));
+      for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+        thigh.material = trouserMaterial;
+      }
     }
 
     body.root.position = position.clone();
