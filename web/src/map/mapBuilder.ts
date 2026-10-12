@@ -428,7 +428,7 @@ export class TribalSandboxMapBuilder {
     const ringCount = 140;
     for (let i = 0; i < ringCount; i++) {
       const angle = ((i + this._seededValue(i, 61) * 0.6) / ringCount) * Math.PI * 2;
-      const spread = 1 + (this._seededValue(i, 62) - 0.3) * 0.22;
+      const spread = 1 + (this._seededValue(i, 62) - 0.3) * 0.34;
       trees.push({
         pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
         height: 3 + this._seededValue(i, 63) * 3,
