@@ -157,14 +157,20 @@ export class ProceduralAnimator {
     const splayKneeZ = 0.9 + (pick * 64 - Math.floor(pick * 64)) * 0.7;
     // That leg's knee also stands up off the ground: the thigh lifts and the shin drops back to the foot.
     const tent = 0.45 + (pick * 256 - Math.floor(pick * 256)) * 0.35;
+    // Each arm swings up to 0.6 rad further out or in and the trunk twists up to 0.5 rad about the spine, so the
+    // fallen do not all lie square in one prone shape. From `pick` again, so no further random numbers are drawn.
+    const bit = (n: number): number => pick * n - Math.floor(pick * n) - 0.5;
+    const leftSwing = bit(512) * 1.2;
+    const rightSwing = bit(1024) * 1.2;
     return {
       torsoX: Math.random() * 0.2,
+      torsoY: bit(2048),
       torsoZ: (Math.random() - 0.5) * 0.7,
       neckX: (Math.random() - 0.5) * 1.1,
       leftArmX: leftFlung ? flungX : lowX,
       rightArmX: leftFlung ? lowX : flungX,
-      leftArmZ: -(leftFlung ? flungZ : lowZ),
-      rightArmZ: leftFlung ? lowZ : flungZ,
+      leftArmZ: -Math.max(0.02, (leftFlung ? flungZ : lowZ) + leftSwing),
+      rightArmZ: Math.max(0.02, (leftFlung ? lowZ : flungZ) + rightSwing),
       // Elbow angles are the resting angles themselves, not offsets: barely any forward fold.
       leftElbowX: -0.12,
       rightElbowX: -0.12,
@@ -343,6 +349,7 @@ export class ProceduralAnimator {
       const p = this._limpPose;
       const k = this._limp;
       b.torso.rotation.x += p.torsoX * k;
+      b.torso.rotation.y += p.torsoY * k;
       b.torso.rotation.z += p.torsoZ * k;
       b.neck.rotation.x += p.neckX * k;
       b.leftShoulder.rotation.x += p.leftArmX * k;
@@ -1120,13 +1127,14 @@ export class ProceduralAnimator {
     if (this.walkStyle !== "quadruped") {
       const b = this._body;
       const p = this._limpPose;
-      const rest = (joint: unknown, x: number, z = 0): void => {
+      const rest = (joint: unknown, x: number, z = 0, y = 0): void => {
         const index = joints.indexOf(joint as (typeof joints)[number]);
         if (index < 0) return;
         this._deathRestAngles[index * 3] = x;
+        this._deathRestAngles[index * 3 + 1] = y;
         this._deathRestAngles[index * 3 + 2] = z;
       };
-      rest(b.torso, p.torsoX, p.torsoZ);
+      rest(b.torso, p.torsoX, p.torsoZ, p.torsoY);
       rest(b.neck, p.neckX);
       rest(b.leftShoulder, p.leftArmX, p.leftArmZ);
       rest(b.rightShoulder, p.rightArmX, p.rightArmZ);
