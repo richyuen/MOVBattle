@@ -479,12 +479,13 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "sword":
     case "cutlass": {
       const blade = MeshBuilder.CreateBox("blade", { width: 0.055 * s, height: 0.5 * s, depth: 0.02 * s }, scene);
-      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "metal");
+      // Matte pale steel: a mirror-metal blade reflects the dark sky and ground and renders near-black
+      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
       // Fuller (channel groove on blade)
       const fuller = MeshBuilder.CreateBox("fuller", { width: 0.02 * s, height: 0.32 * s, depth: 0.024 * s }, scene);
       fuller.position.y = 0.03 * s;
       fuller.parent = blade;
-      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "metal");
+      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "stone");
       const guard = MeshBuilder.CreateBox("guard", { width: 0.14 * s, height: 0.025 * s, depth: 0.035 * s }, scene);
       guard.position.y = -0.15 * s;
       guard.parent = blade;
@@ -504,12 +505,12 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     }
     case "greatsword": {
       const blade = MeshBuilder.CreateBox("gsblade", { width: 0.04 * s, height: 0.75 * s, depth: 0.01 * s }, scene);
-      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "metal");
+      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
       // Fuller
       const fuller = MeshBuilder.CreateBox("gfuller", { width: 0.015 * s, height: 0.45 * s, depth: 0.012 * s }, scene);
       fuller.position.y = 0.05 * s;
       fuller.parent = blade;
-      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "metal");
+      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "stone");
       // Ricasso (unsharpened section above guard)
       const ricasso = MeshBuilder.CreateBox("ricasso", { width: 0.035 * s, height: 0.08 * s, depth: 0.015 * s }, scene);
       ricasso.position.y = -0.18 * s;
@@ -714,15 +715,20 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     }
     case "bow":
     case "crossbow": {
-      // Approximate bow with a curved cylinder
+      // The stave is an arc: its tips meet the string and its belly bows a third of its length away from it
       const bowHeight = type === "crossbow" ? 0.25 : 0.4;
-      const bowMesh = MeshBuilder.CreateCylinder("bow", {
-        height: bowHeight * s, diameter: 0.045 * s, tessellation: 8,
+      const stavePath: Vector3[] = [];
+      for (let i = 0; i <= 8; i++) {
+        const t = i / 4 - 1;
+        stavePath.push(new Vector3(0, t * bowHeight * s * 0.5, (0.04 - bowHeight * 0.33 * (1 - t * t)) * s));
+      }
+      const bowMesh = MeshBuilder.CreateTube("bow", {
+        path: stavePath, radius: 0.0225 * s, tessellation: 6, cap: Mesh.CAP_ALL,
       }, scene);
       bowMesh.material = mat(scene, new Color3(0.5, 0.35, 0.15));
       // String
       const string = MeshBuilder.CreateCylinder("string", {
-        height: bowHeight * s * 0.9, diameter: 0.014 * s, tessellation: 4,
+        height: bowHeight * s, diameter: 0.014 * s, tessellation: 4,
       }, scene);
       string.position.z = 0.04 * s;
       string.parent = bowMesh;
