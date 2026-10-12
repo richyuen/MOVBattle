@@ -49,16 +49,15 @@ export class VisualEffects {
 
   // ══════════════════ LIGHTNING ══════════════════
   /**
-   * Spawn a jagged lightning bolt from origin to target: a few thick faceted shards that zigzag hard
-   * side to side and taper toward the strike. Lit and matte and kept out of the glow layer, so it reads
-   * as a solid pale shape instead of a blooming beam.
+   * Spawn a jagged lightning bolt from origin to target: a chain of short thin shards that kink hard
+   * at every joint and taper toward the strike. Flat white and kept out of the glow layer, so it reads
+   * as a solid cut-out shape instead of a blooming beam.
    */
   spawnLightning(origin: Vector3, target: Vector3): void {
     const root = new TransformNode("lightning", this._scene);
-    const segments = 6;
-
-    const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.84, 0.89, 0.96));
-    boltMat.emissiveColor = new Color3(0.2, 0.22, 0.25);
+    // Mostly self-lit: the same white in sun and in shade, just under the bloom threshold
+    const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.95, 0.96, 1));
+    boltMat.emissiveColor = new Color3(0.55, 0.56, 0.6);
     boltMat.transparencyMode = 2;
     const glow = this._scene.getGlowLayerByName("glow");
     const shards: Mesh[] = [];
@@ -74,14 +73,17 @@ export class VisualEffects {
     if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
     side.normalize();
 
-    // Build the zigzag: each joint swings to the opposite side of the last
+    // Build the zigzag: short shards, each joint swinging to the opposite side of the last by about half
+    // a shard's length, so even a short bolt is all corners
+    const segments = Math.max(5, Math.min(14, Math.round(len / 0.7)));
     const points: Vector3[] = [start];
-    const amp = Math.min(0.9, len * 0.14);
+    const amp = Math.max(0.28, Math.min(0.5, (len / segments) * 0.6));
     let sign = Math.random() < 0.5 ? -1 : 1;
     for (let i = 1; i < segments; i++) {
-      const base = Vector3.Lerp(start, endPoint, i / segments);
-      base.addInPlace(side.scale(sign * amp * (0.65 + Math.random() * 0.35)));
-      base.y += sign * amp * (0.3 + Math.random() * 0.4);
+      // Joints sit unevenly along the bolt: long and short shards alternate
+      const base = Vector3.Lerp(start, endPoint, (i + (Math.random() - 0.5) * 0.5) / segments);
+      base.addInPlace(side.scale(sign * amp * (0.6 + Math.random() * 0.4)));
+      base.y += sign * amp * (0.4 + Math.random() * 0.5);
       points.push(base);
       sign = -sign;
     }
@@ -103,16 +105,18 @@ export class VisualEffects {
 
     // Thick at the caster, thin at the strike
     for (let i = 0; i < points.length - 1; i++) {
-      addShard(points[i], points[i + 1], 0.15 - 0.08 * (i / (points.length - 2)));
+      addShard(points[i], points[i + 1], 0.07 - 0.04 * (i / (points.length - 2)));
     }
 
     // Branch bolt (smaller fork) kicking off the second joint
     const forkOrigin = points[2];
-    const forkEnd = forkOrigin
-      .add(dir.scale(0.16))
-      .add(side.scale((Math.random() < 0.5 ? -1 : 1) * len * 0.16));
-    forkEnd.y += (Math.random() - 0.3) * len * 0.12;
-    addShard(forkOrigin, forkEnd, 0.06);
+    const forkSide = Math.random() < 0.5 ? -1 : 1;
+    const forkKnee = forkOrigin.add(dir.scale(0.4 / len)).add(side.scale(forkSide * 0.3));
+    forkKnee.y += 0.2;
+    const forkEnd = forkKnee.add(dir.scale(0.35 / len)).add(side.scale(forkSide * 0.1));
+    forkEnd.y -= 0.3;
+    addShard(forkOrigin, forkKnee, 0.035);
+    addShard(forkKnee, forkEnd, 0.025);
 
     const totalDuration = 0.25;
     this._effects.push({
