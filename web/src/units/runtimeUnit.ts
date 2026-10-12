@@ -1335,17 +1335,19 @@ export class RuntimeUnit {
       case "crew": {
         // Gun crew lunge at the carriage: bent well over it with both hands on it, one leg stepped forward on a bent
         // knee and the other braced back. The loader leads with the other leg and bends less, so the two are not twins.
+        // The lead thigh is raised near level with the shin dropped back under it and the arms reach out to the gun, a
+        // deep lunge and not a straight-legged plank lean with hanging arms.
         const loader = this._linkedRoleLabel === "loader";
         const lead = loader ? body.leftHip : body.rightHip;
         const leadKnee = loader ? body.leftKnee : body.rightKnee;
         const brace = loader ? body.rightHip : body.leftHip;
         body.torso.rotation.x += loader ? 0.42 : 0.55;
         body.neck.rotation.x -= loader ? 0.25 : 0.35;
-        lead.rotation.x -= 0.6;
-        leadKnee.rotation.x += 0.55;
+        lead.rotation.x -= loader ? 0.85 : 1.0;
+        leadKnee.rotation.x += loader ? 0.85 : 1.0;
         brace.rotation.x += 0.4;
-        body.leftShoulder.rotation.x -= loader ? 0.7 : 0.9;
-        body.rightShoulder.rotation.x -= loader ? 1.1 : 0.9;
+        body.leftShoulder.rotation.x -= loader ? 1.15 : 1.3;
+        body.rightShoulder.rotation.x -= loader ? 1.4 : 1.3;
         body.leftElbow.rotation.x -= 0.3;
         body.rightElbow.rotation.x -= 0.3;
         break;
