@@ -53,10 +53,10 @@ const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only a quarter of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.25;
-// A surcoat is the team colour half way to cream, plainly paler than the plate, the full width of the chest it
+// A surcoat is the team colour a shade lighter (a third of the way to cream), the full width of the chest it
 // covers and long enough to hang past the waist as a short skirt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
-const TABARD_PALE = 0.5;
+const TABARD_PALE = 0.3;
 const TABARD_WIDTH = 1.02;
 const TABARD_LENGTH = 1.15;
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
@@ -181,11 +181,11 @@ export class UnitFactory {
 
     // Helmed medieval men-at-arms wear a tabard: a pale slab of cloth down the chest and back, so they are two colours and not one.
     if (!shouldUseVehicleBody && definition.faction === FactionId.Medieval && (visual.hat === "great_helm" || visual.hat === "plume_helmet")) {
-      // It is the torso's own tapered shape, a fifth thicker front and back so its hem stands off the hips, narrows with the
-      // waist and ends as a short skirt below it.
+      // It is the torso's own tapered shape, a skin thicker front and back, so it hugs the chest, narrows with the
+      // waist and ends above the hip instead of standing off the body as a board.
       const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
       const tabard = body.torsoMesh.clone("tabard");
-      tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * 1.2);
+      tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * 1.06);
       tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
       tabard.material = getMaterialFactory().getCloth(Color3.Lerp(teamColor, TABARD_COLOR, TABARD_PALE));
       propMeshes.push(tabard);
