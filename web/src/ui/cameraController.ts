@@ -50,7 +50,7 @@ export class CameraController {
     this.camera = new ArcRotateCamera(
       "camera",
       -Math.PI / 2,   // alpha (yaw)
-      Math.PI / 4.4,   // beta (pitch): high oblique placement view
+      Math.PI / 6,     // beta (pitch): steep, near top-down placement view with the far rim at the top of the frame
       100,             // radius (zoom): whole island, with sky past both end rims
       Vector3.Zero(),  // target
       scene,
