@@ -186,9 +186,9 @@ export class TribalSandboxMapBuilder {
     under.material = this._scene.getMaterialByName("cliffRock")!;
     under.isPickable = false;
 
-    // Rock shelf: a coarse ledge of the cliff standing out past the lawn just under its lip, a very different width at
+    // Rock shelf: a coarse ledge of the cliff standing out past the lawn well below its lip, a different width at
     // every corner, so from above the grass ends on broken rock and not on a ruled line against the sky.
-    const shelf = this._islandSlab("islandShelf", -0.8, 5, 0.8, 20, 0.3);
+    const shelf = this._islandSlab("islandShelf", -2.5, 5, 0.8, 20, 0.14);
     shelf.material = this._scene.getMaterialByName("cliffRock")!;
     shelf.isPickable = false;
 
