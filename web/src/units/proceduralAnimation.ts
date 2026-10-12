@@ -427,20 +427,21 @@ export class ProceduralAnimator {
     this._animateIdleHumanoid();
   }
 
-  // Per-unit standing slouch: forward lean, which arm hangs ahead, how far the arms sit off the ribs and each
-  // elbow's fold. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
-  private _idlePose: { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number } | null = null;
-  private _buildIdlePose(): { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number } {
+  // Per-unit standing slouch: forward lean, which arm hangs ahead, how far the arms sit off the ribs, each
+  // elbow's fold, and how far the leading foot is planted ahead of the other. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  private _idlePose: { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number } | null = null;
+  private _buildIdlePose(): { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number } {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
     };
     return {
-      lean: 0.06 + h(41) * 0.08,
+      lean: 0.1 + h(41) * 0.1,
       side: h(42) < 0.5 ? -1 : 1,
       spread: 0.1 + h(43) * 0.12,
       leftElbow: 0.45 + h(44) * 0.5,
       rightElbow: 0.45 + h(45) * 0.5,
+      stride: 0.2 + h(46) * 0.14,
     };
   }
 
@@ -466,11 +467,15 @@ export class ProceduralAnimator {
     b.leftElbow.rotation.x = -p.leftElbow + Math.sin(t * 1.4) * wobble;
     b.rightElbow.rotation.x = -p.rightElbow + Math.sin(t * 1.4 + Math.PI) * wobble;
 
-    // Legs straight with micro wobble
-    b.leftHip.rotation.x = Math.sin(t * 0.9) * wobble;
-    b.rightHip.rotation.x = Math.sin(t * 0.9 + Math.PI) * wobble;
-    b.leftKnee.rotation.x = 0;
-    b.rightKnee.rotation.x = 0;
+    // Staggered stance: the leg opposite the leading arm is planted ahead with its knee bent (twice the hip
+    // angle, which keeps that foot on the ground); the other trails slightly behind, nearly straight.
+    const leftLeads = p.side < 0;
+    const lead = -p.stride;
+    const trail = p.stride * 0.45;
+    b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
+    b.rightHip.rotation.x = (leftLeads ? trail : lead) + Math.sin(t * 0.9 + Math.PI) * wobble;
+    b.leftKnee.rotation.x = leftLeads ? p.stride * 2 : 0.1;
+    b.rightKnee.rotation.x = leftLeads ? 0.1 : p.stride * 2;
 
     // (no hip bounce — keeps units grounded)
   }
