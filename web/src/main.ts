@@ -3261,7 +3261,8 @@ window.addEventListener("keydown", (e) => {
   switch (e.code) {
     case "Space":
       e.preventDefault();
-      startBattle();
+      if (stateMachine.currentState === GameState.Result) btnResultPrimaryEl?.click();
+      else startBattle();
       break;
     case "KeyR":
       resetBattle();

@@ -404,8 +404,14 @@
     }
     /* The recap stays in the DOM for state checks; the band shows only the continue hint. */
     #resultDetail { display: none; white-space: pre-line; }
+    /* One centred continue prompt; the other action is a small dim link at the band's right edge. */
     .result-actions {
-      display: flex; gap: 28px; flex-wrap: wrap; justify-content: center;
+      position: relative; display: flex; justify-content: center;
+    }
+    #btnResultPrimary::before { content: "Press [Space] to "; }
+    .result-actions #btnResultSecondary {
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      font-size: 11px; font-weight: normal; opacity: 0.45;
     }
     .result-actions .btn {
       border: none; border-radius: 0; padding: 6px 4px;
