@@ -207,6 +207,9 @@ export class ProceduralAnimator {
     const roll = (h(24) - 0.5) * 0.35;
     const pitch = (h(48) - 0.5) * 2.4; // and up to 1.2 rad nose-up or nose-down, so they do not all fly flat like planks
     const variant = Math.floor(h(21) * 3);
+    // The pitch may not cancel a variant's own bend: a trunk left within 0.4 rad of straight on the hips is folded
+    // 0.4 to 0.9 rad the way it already leaned, so every body in flight is bent at the waist and none is a plank.
+    const fold = (x: number): number => (Math.abs(x) < 0.4 ? (x < 0 ? -1 : 1) * (0.4 + h(49) * 0.5) : x);
     // One arm leads the other by about 0.6 rad and each knee gives by its own small amount, so the two sides of a
     // body in flight never mirror each other and neither leg folds into a loop.
     const lead = h(40) < 0.5 ? 0 : 1;
@@ -224,7 +227,7 @@ export class ProceduralAnimator {
       // Jackknife: folded hard at the waist, straight legs swung up to meet the arms reaching for the toes
       const hip = 0.7 + h(30) * 0.4;
       return [
-        [b.torso, 0.9 + h(25) * 0.5 + pitch, twist, roll],
+        [b.torso, fold(0.9 + h(25) * 0.5 + pitch), twist, roll],
         [b.neck, 0.4, 0, 0],
         [b.leftShoulder, -(1.0 + h(26) * 0.3 + leftArm), 0, -0.1],
         [b.rightShoulder, -(1.0 + h(27) * 0.3 + rightArm), 0, 0.1],
@@ -240,7 +243,7 @@ export class ProceduralAnimator {
       // Bow: spine bent backward, head thrown back, arms trailing straight past the head, heels kicked up behind
       const hip = 0.35 + h(32) * 0.3;
       return [
-        [b.torso, -(0.45 + h(25) * 0.3) + pitch, twist, roll],
+        [b.torso, fold(-(0.45 + h(25) * 0.3) + pitch), twist, roll],
         [b.neck, -0.5, 0, 0],
         [b.leftShoulder, -(2.9 + h(26) * 0.2 - leftArm), 0, -(0.1 + h(27) * 0.15)],
         [b.rightShoulder, -(2.9 + h(28) * 0.2 - rightArm), 0, 0.1 + h(29) * 0.15],
@@ -255,7 +258,7 @@ export class ProceduralAnimator {
     // Sit: thighs folded square to the trunk with the legs held out straight, arms trailing back along the sides
     const hip = 1.2 + h(25) * 0.3;
     return [
-      [b.torso, 0.2 + h(26) * 0.3 + pitch, twist, roll],
+      [b.torso, fold(0.2 + h(26) * 0.3 + pitch), twist, roll],
       [b.neck, (h(27) - 0.5) * 0.6, 0, 0],
       [b.leftShoulder, 0.2 + h(28) * 0.2 + leftArm, 0, -0.12],
       [b.rightShoulder, 0.2 + h(29) * 0.2 + rightArm, 0, 0.12],
