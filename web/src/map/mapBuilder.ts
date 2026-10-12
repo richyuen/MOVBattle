@@ -441,7 +441,7 @@ export class TribalSandboxMapBuilder {
     const backRowCount = 16;
     for (let i = 0; i < backRowCount; i++) {
       const angle = Math.PI / 2 + ((i + this._seededValue(i, 121) * 0.6) / backRowCount - 0.5) * 3.0;
-      const spread = 1.24 + this._seededValue(i, 122) * 0.06;
+      const spread = 1.24 + this._seededValue(i, 122) * 0.14;
       trees.push({
         pos: new Vector3(Math.cos(angle) * TREE_RING_X * spread, 0, Math.sin(angle) * TREE_RING_Z * spread),
         height: 4 + this._seededValue(i, 123) * 3,
