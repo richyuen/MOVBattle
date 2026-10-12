@@ -203,9 +203,9 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Mitt hand: a flat slab, thumbless, a little longer than it is wide. */
+  /** Mitt hand: a thin thumbless slab, edge-on from the side, a little longer than it is wide. */
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
-    const m = MeshBuilder.CreateBox(n, { width: size * 0.78 * s, height: size * 1.2 * s, depth: size * 0.95 * s }, scene);
+    const m = MeshBuilder.CreateBox(n, { width: size * 0.78 * s, height: size * 1.2 * s, depth: size * 0.45 * s }, scene);
     m.material = mat;
     allMeshes.push(m);
     return m;
