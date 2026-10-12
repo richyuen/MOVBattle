@@ -1446,8 +1446,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   const hideLight = { emissive: hide.scale(0.16) };
   const fur = getMaterialFactory().get("wood", Color3.Lerp(hide, color, 0.12), hideLight);
   const shaggyFur = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), 0.45), hideLight);
-  // Tusks are warm ivory and part self-lit, so the blue ambient does not grey them
-  const tuskMat = getMaterialFactory().get("bone", new Color3(1.0, 0.82, 0.58), { emissive: new Color3(0.22, 0.16, 0.09) });
+  // Tusks are a deep warm ivory and part self-lit, so the blue ambient does not grey them
+  const tuskMat = getMaterialFactory().get("bone", new Color3(0.80, 0.60, 0.40), { emissive: new Color3(0.22, 0.16, 0.09) });
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
   const paintMat = getMaterialFactory().createUnique("cloth", color);
 
