@@ -628,11 +628,11 @@ export class TribalSandboxMapBuilder {
         const k = side > 0 ? i : i + perSide;
         // About one run of fifteen in four is left out, so sky shows through the band in clumps
         if (this._seededValue(Math.floor(k / 15), 75) < 0.25) continue;
-        const height = 2.0 + this._seededValue(k, 71) * 4.5;
+        const height = 2.0 + this._seededValue(k, 71) * 2.2;
         const x = -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH;
         const z = side * (37.5 + this._seededValue(k, 73) * 3);
         if (!onIsland(x, z, 1)) continue; // none left standing on air past the rounded corners
-        const cone = MeshBuilder.CreateIcoSphere("hazeTree", { radius: height * (0.28 + this._seededValue(k, 77) * 0.3), subdivisions: 1 }, this._scene);
+        const cone = MeshBuilder.CreateIcoSphere("hazeTree", { radius: height * 0.4, subdivisions: 1 }, this._scene);
         cone.position.set(x, height * 0.7, z);
         cone.rotation.y = this._seededValue(k, 74) * Math.PI;
         (this._seededValue(k, 76) < 0.4 ? shadeCones : cones).push(cone);
