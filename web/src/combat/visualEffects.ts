@@ -379,9 +379,10 @@ export class VisualEffects {
     const fireScale = Math.min(scale, 1.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
-    const lobeHeights = [0.5, 0.05, 0.75, -0.15, 1.1, 0.35];
+    // None sits above the heart's shoulder, and all are the amber of the inner flame: lumps on one ball, not caps over it
+    const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flameMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flashMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
