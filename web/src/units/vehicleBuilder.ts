@@ -1442,8 +1442,10 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   const allMeshes: Mesh[] = [];
   // The hide keeps its own colour: only the war paint is the team's. applyMaterialPreset()
   // repaints bodyMaterial/skinMaterial with the team tint, so those point at the paint.
-  const fur = makeMat(scene, Color3.Lerp(hide, color, 0.12));
-  const shaggyFur = makeMat(scene, Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), 0.45));
+  // Part self-lit, so the faces turned from the sun stay a plum hide and not near-black; asked of the factory, whose plain wood is shared
+  const hideLight = { emissive: hide.scale(0.16) };
+  const fur = getMaterialFactory().get("wood", Color3.Lerp(hide, color, 0.12), hideLight);
+  const shaggyFur = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), 0.45), hideLight);
   const tuskMat = makeMat(scene, new Color3(1.0, 0.9, 0.68));
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
   const paintMat = getMaterialFactory().createUnique("cloth", color);
