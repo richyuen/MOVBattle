@@ -204,7 +204,7 @@ export class ProceduralAnimator {
     };
     const b = this._body;
     const twist = (h(23) - 0.5) * 2.4; // up to 1.2 rad either way about the spine, so flung bodies do not all face one way
-    const roll = (h(24) - 0.5) * 0.35;
+    const roll = (h(24) < 0.5 ? -1 : 1) * (0.4 + h(50) * 0.3); // and 0.4 to 0.7 rad over to one side at the waist, so the bend shows chest-on too
     const pitch = (h(48) - 0.5) * 2.4; // and up to 1.2 rad nose-up or nose-down, so they do not all fly flat like planks
     const variant = Math.floor(h(21) * 3);
     // The pitch may not cancel a variant's own bend: a trunk left within 0.4 rad of straight on the hips is folded
