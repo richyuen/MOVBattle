@@ -187,7 +187,7 @@ export class ProceduralAnimator {
   private _air = 0;
   // Per-unit flight shape as [joint, x, y, z]: a third of the bodies jackknife at the waist, a third bow backward
   // with the arms past the head, a third sit in an L with the legs straight out. Arms stay in line with the trunk
-  // while the legs scissor wide apart on nearly straight knees, so a launched body is a bent plank that forks at
+  // while the legs scissor wide apart on knees that each give by up to a radian, so a launched body is a bent plank that forks at
   // the hips and not a four-pointed star. Hashed from the wobble phase like the shove pose, so it consumes no
   // random numbers.
   private _airPose: Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> | null = null;
@@ -197,7 +197,7 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     const b = this._body;
-    const twist = (h(23) - 0.5) * 0.5;
+    const twist = (h(23) - 0.5) * 2.4; // up to 1.2 rad either way about the spine, so flung bodies do not all face one way
     const roll = (h(24) - 0.5) * 0.35;
     const variant = Math.floor(h(21) * 3);
     // One arm leads the other by about 0.6 rad and each knee gives by its own small amount, so the two sides of a
@@ -220,8 +220,8 @@ export class ProceduralAnimator {
         [b.neck, 0.4, 0, 0],
         [b.leftShoulder, -(1.0 + h(26) * 0.3 + leftArm), 0, -0.1],
         [b.rightShoulder, -(1.0 + h(27) * 0.3 + rightArm), 0, 0.1],
-        [b.leftElbow, -(0.2 + h(28) * 0.7 + rightArm), 0, 0],
-        [b.rightElbow, -(0.2 + h(29) * 0.7 + leftArm), 0, 0],
+        [b.leftElbow, -(0.2 + h(28) * 0.4 + rightArm), 0, 0],
+        [b.rightElbow, -(0.2 + h(29) * 0.4 + leftArm), 0, 0],
         [b.leftHip, -hip, 0, leftKick],
         [b.rightHip, -(hip + hipGap), 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
@@ -236,8 +236,8 @@ export class ProceduralAnimator {
         [b.neck, -0.5, 0, 0],
         [b.leftShoulder, -(2.9 + h(26) * 0.2 - leftArm), 0, -(0.1 + h(27) * 0.15)],
         [b.rightShoulder, -(2.9 + h(28) * 0.2 - rightArm), 0, 0.1 + h(29) * 0.15],
-        [b.leftElbow, -(0.2 + h(30) * 0.7 + leftArm), 0, 0],
-        [b.rightElbow, -(0.2 + h(31) * 0.7 + rightArm), 0, 0],
+        [b.leftElbow, -(0.2 + h(30) * 0.4 + leftArm), 0, 0],
+        [b.rightElbow, -(0.2 + h(31) * 0.4 + rightArm), 0, 0],
         [b.leftHip, hip, 0, leftKick],
         [b.rightHip, hip + hipGap, 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
@@ -251,8 +251,8 @@ export class ProceduralAnimator {
       [b.neck, (h(27) - 0.5) * 0.6, 0, 0],
       [b.leftShoulder, 0.2 + h(28) * 0.2 + leftArm, 0, -0.12],
       [b.rightShoulder, 0.2 + h(29) * 0.2 + rightArm, 0, 0.12],
-      [b.leftElbow, -(0.2 + h(31) * 0.7 + rightArm), 0, 0],
-      [b.rightElbow, -(0.2 + h(32) * 0.7 + leftArm), 0, 0],
+      [b.leftElbow, -(0.2 + h(31) * 0.4 + rightArm), 0, 0],
+      [b.rightElbow, -(0.2 + h(32) * 0.4 + leftArm), 0, 0],
       [b.leftHip, -hip, 0, leftKick],
       [b.rightHip, -(hip + hipGap), 0, rightKick],
       [b.leftKnee, leftKnee, 0, 0],
