@@ -80,7 +80,8 @@ export class VisualEffects {
 
     // Build the zigzag: a few long shards of very unequal length and width, each joint thrown a different distance
     // off the line: a handful of irregular slabs, not an even sawtooth
-    const segments = Math.max(4, Math.min(9, Math.round(len / 1.1)));
+    // No shard longer than about 1.2: a long bolt gets more kinks, not longer straight arms
+    const segments = Math.max(4, Math.min(24, Math.ceil(len / 1.2)));
     const points: Vector3[] = [start];
     const amp = Math.max(0.45, Math.min(0.6, (len / segments) * 0.6));
     let sign = Math.random() < 0.5 ? -1 : 1;
@@ -96,14 +97,23 @@ export class VisualEffects {
     points.push(endPoint);
 
     const addShard = (a: Vector3, b: Vector3, thickness: number): void => {
-      // A four-sided spike, not a parallel-sided beam: fat where it leaves the last joint and pinched almost to a point
+      // A flat four-sided blade, not a parallel-sided beam: broad where it leaves the last joint and pinched almost to a point
       // at the next, so the bolt is a chain of wedges that steps in width at every kink
       const shard = MeshBuilder.CreateCylinder("lseg", {
-        height: Vector3.Distance(a, b) + thickness * 0.5, diameterBottom: thickness * 2.2, diameterTop: thickness * 0.3, tessellation: 4,
+        height: Vector3.Distance(a, b) + thickness * 0.5, diameterBottom: thickness * 3.2, diameterTop: thickness * 0.3, tessellation: 4,
       }, this._scene);
       shard.position = Vector3.Center(a, b);
       // The spike's length is its own Y: the quarter pitch lays that along the aim, thin end at b
       shard.lookAt(b, 0, Math.PI / 2, 0);
+      // Pressed to a quarter of its depth across whichever of its two cross axes points more at the camera, so
+      // it shows its broad face and is one flat cut-out polygon with no shaded rim
+      shard.computeWorldMatrix(true);
+      const toEye = eye ? eye.subtract(shard.position) : Vector3.Zero();
+      if (Math.abs(Vector3.Dot(shard.getDirection(Vector3.Right()), toEye)) > Math.abs(Vector3.Dot(shard.getDirection(Vector3.Forward()), toEye))) {
+        shard.scaling.x = 0.25;
+      } else {
+        shard.scaling.z = 0.25;
+      }
       shard.material = boltMat;
       shard.parent = root;
       glow?.addExcludedMesh(shard);
