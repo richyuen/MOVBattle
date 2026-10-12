@@ -9,6 +9,9 @@ import type {
 import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisuals";
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
 
+/** Weapons and hats are built a quarter over life size (TABS), so they still read as shapes from across the field */
+const PROP_OVERSIZE = 1.25;
+
 export function attachProps(
   scene: Scene,
   body: ArticulatedBody,
@@ -22,6 +25,7 @@ export function attachProps(
   const weapon = buildWeapon(scene, config.weapon, scale, accent);
   if (weapon) {
     weapon.parent = body.rightHand;
+    weapon.scaling.scaleInPlace(PROP_OVERSIZE);
     applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.attachmentPreset === "fan_bearer") {
@@ -34,6 +38,7 @@ export function attachProps(
     const offhand = buildWeapon(scene, config.offhandWeapon, scale, accent);
     if (offhand) {
       offhand.parent = body.leftHand;
+      offhand.scaling.scaleInPlace(PROP_OVERSIZE);
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       props.push(offhand);
     }
@@ -42,6 +47,7 @@ export function attachProps(
   const hat = buildHat(scene, config.hat, scale, accent, teamColor);
   if (hat) {
     hat.parent = body.headTop;
+    hat.scaling.scaleInPlace(PROP_OVERSIZE);
     props.push(hat);
   }
 
@@ -61,6 +67,8 @@ export function attachProps(
     if (config.shield !== "buckler") {
       const round = config.shield === "round";
       shield.scaling.scaleInPlace(round ? 2.0 : 1.9);
+      // A kite is shoulder-wide at the top, not a plank
+      if (config.shield === "kite") shield.scaling.x *= 1.4;
       // Strapped up the forearm and carried across the chest, not dangling at the hip
       shield.position.set(0.1 * scale, (round ? 0.22 : 0.14) * scale, 0.2 * scale);
     }
