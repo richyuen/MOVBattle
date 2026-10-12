@@ -197,9 +197,12 @@ export class UnitFactory {
       tabard.material = getMaterialFactory().getCloth(Color3.Lerp(teamColor, TABARD_COLOR, TABARD_PALE));
       propMeshes.push(tabard);
       // The belt is a thin dark band round the waist, just proud of the cloth, so the skirt below it reads as a hem.
-      const belt = MeshBuilder.CreateBox("tabardBelt", {
-        width: chest.x * 2 * body.torsoMesh.scaling.x * 0.84, height: chest.y * 0.26, depth: chest.z * 2 * body.torsoMesh.scaling.z * 0.84,
+      // It is a faceted ring of the torso's own section and not a box, whose corners stood out of the waist as a plate.
+      const belt = MeshBuilder.CreateCylinder("tabardBelt", {
+        diameter: Math.max(chest.x, chest.z) * 2 * body.torsoMesh.scaling.x * 0.88, height: chest.y * 0.14,
+        tessellation: visual.bodyDetailLevel === "hero" ? 8 : 6,
       }, this._scene);
+      belt.scaling.z = body.torsoMesh.scaling.z / body.torsoMesh.scaling.x;
       belt.parent = body.torsoMesh.parent;
       belt.position.y = body.torsoMesh.position.y - chest.y * 0.85;
       belt.material = getMaterialFactory().getCloth(BELT_COLOR);
