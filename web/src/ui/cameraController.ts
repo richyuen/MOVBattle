@@ -51,7 +51,7 @@ export class CameraController {
       "camera",
       -Math.PI / 2,   // alpha (yaw)
       Math.PI / 6,     // beta (pitch): steep, near top-down placement view with the far rim at the top of the frame
-      70,              // radius (zoom): close enough that placed armies read as figures; the end rims run just off the frame
+      88,              // radius (zoom): the island fills the frame, its end rims at the left and right edges
       Vector3.Zero(),  // target
       scene,
     );
