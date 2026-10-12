@@ -16,13 +16,13 @@ const BLADE_DARK = 0.9;    // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.08;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
-const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
-const FAR_ROCK_SHADE = new Color3(0.5, 0.52, 0.57);
+const FAR_ROCK = new Color3(0.51, 0.52, 0.55);  // neutral grey, dark enough that the snow tips read against it
+const FAR_ROCK_SHADE = new Color3(0.42, 0.44, 0.48);
 const FAR_SNOW = new Color3(0.97, 0.98, 1);
 const FAR_SNOW_MIX = 0.4;
 const FAR_SNOW_GLOW = 0.05; // matte: snow tips shade with the sun like the rock under them
 const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
-const FAR_ROCK_MIX = 0.5;   // far ridge sits half-way into the sky haze
+const FAR_ROCK_MIX = 0.4;   // far ridge sits two fifths into the sky haze: grey rock under white crests, not a white iceberg
 
 /** The sun's shadow generator, when the scene has one: trees register with it so they throw ground shadows like units do */
 function sunShadows(scene: Scene): ShadowGenerator | null {
@@ -169,7 +169,7 @@ export class TribalSandboxMapBuilder {
     for (const name of ["hazeTrees", "hazeTreesShade", "farRock", "farRockShade", "farSnow"]) {
       const far = new StandardMaterial(name, this._scene);
       far.specularColor = Color3.Black();
-      // The ridges stand past the fog's far end: scene fog would paint them flat fog-green, so they keep their own pre-hazed rock colour
+      // The ridges are fog-free: scene fog would paint them flat fog-green, so they keep their own pre-hazed rock colour
       far.fogEnabled = !name.startsWith("far");
     }
     paintFarProps(this._scene, leaves.diffuseColor);
