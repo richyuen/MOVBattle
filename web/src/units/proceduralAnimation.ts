@@ -137,12 +137,13 @@ export class ProceduralAnimator {
     const overhead = pick < 0.5;
     const leftFlung = Math.floor(pick * 4) % 2 === 0;
     // A flung-wide arm is never more than a diagonal and its forearm always folds back toward the head, hard
-    // half the time, and the low arm lies along the side, so no body rests as a T. Derived from
+    // half the time, the arm thrown past the head folds 40 to 90 degrees at the elbow as well, and the low arm
+    // lies along the side, so no body rests as a T or with a straight arm. Derived from
     // `pick`, so the pose draws no more random numbers than before.
     const folded = Math.floor(pick * 8) % 2 === 0;
     const flungX = overhead ? -(2.95 + Math.random() * 0.4) : (Math.random() - 0.5) * 0.3;
     const flungZ = overhead ? 0.1 + Math.random() * 0.6 : folded ? 0.45 + Math.random() * 0.35 : 0.5 + Math.random() * 0.3;
-    const flungElbowZ = overhead ? (Math.random() - 0.3) * 1.2 : folded ? 1.3 + Math.random() * 0.6 : 1.0 + Math.random() * 0.6;
+    const flungElbowZ = overhead ? 0.7 + Math.random() * 0.87 : folded ? 1.3 + Math.random() * 0.6 : 1.0 + Math.random() * 0.6;
     const lowX = (Math.random() - 0.5) * 0.3;
     const lowZ = 0.05 + Math.random() * 0.2;
     // The arm at the side is crooked too: its elbow folds outward 40 to 90 degrees, so no corpse lies with a
