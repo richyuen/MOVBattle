@@ -1,52 +1,50 @@
 # Loop state
-Iteration: 91   Last re-audit: 90   Consecutive rejects: 0   Branch: main
+Iteration: 92   Last re-audit: 90   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 
 ## Focus (every pickable gap this iteration)
-- sky-teal-greyed be08750 — APPROVE
-- corpses-all-flat 99e8218 — REJECT (reverted 29ae269)
-- tray-filled-trapezoid 1869762 — APPROVE
-- zeus-no-robe-skirt be5a1bf — REJECT (reverted 06550e3)
-- flung-torsos-rigid-planks 56ee53c — REJECT (reverted 8169d58)
-- faction-tabs-rounded-squares 26bbb2e — APPROVE
-- muzzle-smoke-one-ball 71418e1 — REJECT (reverted 3fd0d58)
-- tribal-rim-grey-slab-exposed bbb855d — APPROVE
+- zeus-no-robe-skirt 46fa600 — REJECT (reverted 8c82e26)
+- flung-torsos-rigid-planks d923355 — APPROVE
+- muzzle-smoke-one-ball f9b0345 — REJECT (reverted a1110f7)
+- impact-burst-tricolour 50262ac — REJECT (reverted 1095567)
+- tribal-rim-flanks-bare 78be176 — APPROVE
+- budget-plain-boxes 5b63f82 — APPROVE
+- sky-flat-one-teal 39a9abd — REJECT (reverted bb07732)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: sky-teal-greyed (be08750) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: corpses-all-flat (99e8218) VERDICT: REJECT SCORE: battle-feel 3/5 (previous: 3/5)
-- GAP: tray-filled-trapezoid (1869762) VERDICT: APPROVE SCORE: ui-flow 4/5 (previous: 4/5)
-- GAP: zeus-no-robe-skirt (be5a1bf) VERDICT: REJECT SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: flung-torsos-rigid-planks (56ee53c) VERDICT: REJECT SCORE: battle-feel 3/5 (previous: 3/5)
-- GAP: faction-tabs-rounded-squares (26bbb2e) VERDICT: APPROVE SCORE: ui-flow 4/5 (previous: 4/5)
-- GAP: muzzle-smoke-one-ball (71418e1) VERDICT: REJECT SCORE: vfx 3/5 (previous: 3/5)
-- GAP: tribal-rim-grey-slab-exposed (bbb855d) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: zeus-no-robe-skirt (46fa600) VERDICT: REJECT SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: flung-torsos-rigid-planks (d923355) VERDICT: APPROVE SCORE: battle-feel 3/5 (previous: 3/5)
+- GAP: muzzle-smoke-one-ball (f9b0345) VERDICT: REJECT SCORE: vfx 3/5 (previous: 3/5)
+- GAP: impact-burst-tricolour (50262ac) VERDICT: REJECT SCORE: vfx 3/5 (previous: 3/5)
+- GAP: tribal-rim-flanks-bare (78be176) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: budget-plain-boxes (5b63f82) VERDICT: APPROVE SCORE: ui-flow 4/5 (previous: 4/5)
+- GAP: sky-flat-one-teal (39a9abd) VERDICT: REJECT SCORE: maps-light 3/5 (previous: 3/5)
 
 ## Ranked open gaps (max 8, attempts count in brackets)
-1. [unit-look] zeus-no-robe-skirt: legs punch through the skirt front; skirt x scale 1.08 -> 1.45, z 1.15 -> 2.2, length 0.9 -> 1.6 [attempts: 1] — ref: gameplay_sheet_06 r3c1 — ours: closeup_pair_zeus_thor.png
-2. [battle-feel] corpses-all-flat: corpses share one pose and sink into grass [attempts: 2] — ref: tabs_screenshot_01 — ours: war_machines_3800ms.png
-3. [battle-feel] flung-torsos-rigid-planks: chest-on flung bodies read as planks; add a sideways (z) waist lean of at least 0.4 rad in _buildAirPose [attempts: 1] — ref: trailer_3_sheet_03 r1c2 — ours: war_machines_1100ms.png
-4. [vfx] muzzle-smoke-one-ball: keep smokeLife 1.5, only shrink lobe base 0.3 -> 0.2 [attempts: 1] — ref: trailer_2_sheet_02 r1c1 — ours: war_machines_1100ms.png
-5. [vfx] impact-burst-tricolour: burst is white, yellow and orange balls; make it one orange-yellow, no white lobe [attempts: 0] — ref: trailer_3_sheet_03 r1c1 — ours: war_machines_1100ms.png
-6. [maps-light] tribal-rim-flanks-bare: grey rim bare on both upper flanks; back row arc 2.2 -> 3.0 rad, 12 -> 16 trees [attempts: 0] — ref: gameplay_sheet_01 r1c3 — ours: hud_placement.png
-7. [ui-flow] budget-plain-boxes: budget and unit count are square boxes; curved right edge and icons on #budget panels [attempts: 0] — ref: gameplay_sheet_02 r1c3 — ours: hud_placement.png
-8. [maps-light] sky-flat-one-teal: fogColor paler (0.30, 0.74, 0.60) than clearColor, in main.ts and restoreSandboxSceneLook [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_2s.png
+1. [vfx] impact-burst-tricolour: keep the cream heart; only cut flameMat emissive to about (0.5, 0.18, 0) so the fringe renders orange, not lemon [attempts: 1] — ref: trailer_3_sheet_03 r1c1 — ours: war_machines_1100ms.png
+2. [maps-light] sky-flat-one-teal: backdrop is clearColor, fog cannot tint it; clearColor alpha 0 plus a canvas CSS gradient (0.14, 0.62, 0.46) top to (0.43, 0.78, 0.68) horizon, fogColor = horizon end [attempts: 1] — ref: tabs_screenshot_01 — ours: big_melee_2s.png
+3. [unit-look] zeus-no-robe-skirt: leg clips through a barrel-wide robe; wants a slim body-width robe [attempts: 2] — ref: gameplay_sheet_06 r3c1 — ours: closeup_pair_zeus_thor.png
+4. [vfx] muzzle-smoke-one-ball: one white sphere plus pellets; wants equal grey faceted lumps in a bank [attempts: 2] — ref: trailer_2_sheet_02 r1c1 — ours: war_machines_1100ms.png
+5. [battle-feel] flung-limbs-tucked: widen shoulder and hip abduction in the air-pose variants so arms and legs splay near full extension [attempts: 0] — ref: trailer_3_sheet_03 r1c2 — ours: war_machines_1100ms.png
+6. [ui-flow] budget-icons-small-pale: colour the two ::after icons pink (about #f4b8b0), about 24px tall [attempts: 0] — ref: gameplay_sheet_02 r1c3 — ours: hud_placement.png
+7. [maps-light] tribal-apron-outside-ring: grey apron shows at upper left and right; back row spread upper bound 1.30 -> 1.38 [attempts: 0] — ref: gameplay_sheet_01 r1c3 — ours: hud_placement.png
+8. [battle-feel] front-lines-body-apart: lines stay a body apart at 2 s, no two-deep pile underfoot [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_2s.png
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
-- muzzle-smoke-one-ball [attempts: 1] — smokeLife 0.9: smoke gone inside a second, TABS smoke hangs over the line; tabs_screenshot_08 shows no smoke
-- flung-torsos-rigid-planks [attempts: 1] — fold floor 0.7: a forward bend is hidden chest-on, 2 of 6 still planks
-- zeus-no-robe-skirt [attempts: 1] — length 1.6, z 1.7: length right, but both thighs clip through the front like an apron
-- corpses-all-flat [attempts: 2] — side roll plus curl (hips 0.5/0.75, knees 0.9): curl hidden in grass, six bodies in one pose; before that roll only
+- sky-flat-one-teal [attempts: 1] — fog (0.30, 0.74, 0.60) only: sky still one flat colour, far meshes fade to a tint not behind them
+- impact-burst-tricolour [attempts: 1] — all three mats (1, 0.6, 0.04): TABS has a cream-white heart; renders lemon balloons
+- muzzle-smoke-one-ball [attempts: 2] — lobe base 0.2: TABS puffs are fat and bigger than a head; before that smokeLife 0.9
+- zeus-no-robe-skirt [attempts: 2] — x 1.45, z 2.2, length 1.6: a barrel and a leg still pokes through; before that z 1.7 apron
+- corpses-all-flat [attempts: 2] — side roll plus curl: curl hidden in grass, six bodies in one pose; before that roll only
 - crowns-second-hue-lemon [attempts: 1] — leaves (0.90, 0.38, 0.30) and emissive 0.30: the yellow material was untouched and still lemon
 - grass-knee-high-carpet [attempts: 2] — half 0.025+s*0.02: needles, cards must be wide; before that patchHeight cut
 - far-band-level-berry-hedge [attempts: 2] — height 5-11: giant trunkless balls; before that 2-6.5: hidden below the ring
-- lightning-ruler-straight-bars [attempts: 2] — strict alternation still an even thin sawtooth; before that parallel bars
 
 ## Notes for next iteration (max 5 lines)
-- Spent (2 attempts, never retry): corpses-all-flat, upright-idle-locked-legs, placement-armies-specks, fireball-balloon-stack. Blast-lift cuts stall battle_recap_result_legacy_tank_shell. Air-pose edits stay pose-only.
-- Ring is 210 trees 3-6 tall, plus a 12-tree back row at +Z spanning 2.2 rad, 4-7 tall (seeds 121-124). Sky and fog are (0.14, 0.62, 0.46), in main.ts and mapBuilder restoreSandboxSceneLook. trailer_3_sheet_03 r3c1 is not TABS.
-- _buildLimpPose and death must draw no new Math.random(): use `pick`/`fall` bits (512, 1024, 2048 taken). No side-roll code exists now.
-- TEAM_COLORS[1] is (0.8, 0.16, 0.2); do not mutate. getCloth materials are shared: no emissive. Zeus edits gate on `isZeus`. LIMB_THIN is 1.2. Faction tabs use clip-path, which cuts their top border.
-- EOLs are mixed (index.html and mapBuilder.ts LF, projectileSystem.ts CRLF): check with `file`. sed -i by line number works; `rgba(10,14,20,0.45)` occurs twice in index.html.
+- Spent (never retry): corpses-all-flat, zeus-no-robe-skirt, muzzle-smoke-one-ball, upright-idle-locked-legs, placement-armies-specks, fireball-balloon-stack. Blast-lift cuts stall battle_recap_result_legacy_tank_shell.
+- Ring is 210 trees, plus a 16-tree back row at +Z over 3.0 rad, spread 1.24-1.30 (seeds 121-124). Sky and fog are (0.14, 0.62, 0.46), in main.ts and mapBuilder restoreSandboxSceneLook. trailer_3_sheet_03 r3c1 is not TABS.
+- Air pose: roll is 0.4-0.7 rad signed (hash 50; 21, 23-32, 40-50 taken); iter 89 narrowed a wide leg V, so splay arms first. Pose-only, no Math.random(); limp pose uses `pick`/`fall` bits.
+- TEAM_COLORS[1] is (0.8, 0.16, 0.2); do not mutate. getCloth materials are shared: no emissive. Faction tabs use clip-path. Budget spans have radius 0 19px 19px 0.
+- EOLs: git warns LF->CRLF on every file; sed -i mid-line edits are safe, never append `\r`. Edit index.html by line number.
