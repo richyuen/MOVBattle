@@ -341,9 +341,9 @@ export class VisualEffects {
 
     // Lit matte materials: fully emissive ones trip the bloom threshold and wash out to white.
     const mats = getMaterialFactory();
-    // The fireball is mostly self-lit and graded from the inside out: a small near-white heart, amber inner
+    // The fireball is mostly self-lit and graded from the inside out: a small yellow heart, amber inner
     // flame and a deep orange fringe. The inner flame sits between heart and fringe in hue, so it is a step of the grade and not a lemon patch.
-    const coreMat = mats.createUnique("cloth", new Color3(1, 0.95, 0.76));
+    const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
     coreMat.emissiveColor = new Color3(0.62, 0.56, 0.36);
     const flashMat = mats.createUnique("cloth", new Color3(1, 0.7, 0.2));
     flashMat.emissiveColor = new Color3(0.6, 0.4, 0.1);
@@ -365,16 +365,16 @@ export class VisualEffects {
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: a modest near-white heart with smaller orange lobes half sunk into its flanks, and short round
+    // Fireball: a modest yellow heart with smaller orange lobes half sunk into its flanks, and short round
     // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
-    // enough to show no facets, and a shell's stays about a man tall, well under the trees.
-    const fireScale = Math.min(scale, 1.6);
+    // enough to show no facets, and a shell's can grow to about two men tall.
+    const fireScale = Math.min(scale, 2.4);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.3, 0.8, 0.5, 0.7, 0.45, 0.6];
-    // None sits above the heart's shoulder, and all are the amber of the inner flame: lumps on one ball, not caps over it
+    // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe, so the ball is orange and not cream
     const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? flameMat : flashMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.65 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
