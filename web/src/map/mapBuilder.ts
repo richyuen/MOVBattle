@@ -672,8 +672,8 @@ export class TribalSandboxMapBuilder {
   private _createClouds(): void {
     const cloudMat = new StandardMaterial("cloud", this._scene);
     cloudMat.diffuseColor = new Color3(1, 1, 1);
-    // Enough self-light that the undersides stay a pale grey-white; the sun does the rest
-    cloudMat.emissiveColor = new Color3(0.6, 0.63, 0.66);
+    // Enough sky-tinted self-light that the undersides stay nearly as pale as the tops; the sun does the rest
+    cloudMat.emissiveColor = new Color3(0.80, 0.86, 0.83);
     cloudMat.specularColor = new Color3(0, 0, 0);
     const glow = this._scene.getGlowLayerByName("glow");
 
