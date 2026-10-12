@@ -57,11 +57,11 @@ const WARM_SHADE_KEEP = 0.25;
 // plate are pushed more saturated instead of washing out to salmon.
 const WARM_LEG_SHADE_KEEP = 0.8;
 const WARM_SATURATION = 1.18;
-// A surcoat is the team colour barely lightened (an eighth of the way to cream) with a cream cross on the chest, the
+// A surcoat is the team colour a shade deeper (nine tenths of it, never paled toward cream) with a cream cross on the chest, the
 // full width of the chest it covers and long enough to hang a third of the torso's height below it as a short skirt,
 // cinched by a dark belt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
-const TABARD_PALE = 0.12;
+const TABARD_SHADE = 0.9;
 const TABARD_WIDTH = 1.02;
 const TABARD_LENGTH = 1.35;
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
@@ -195,12 +195,12 @@ export class UnitFactory {
       const tabard = body.torsoMesh.clone("tabard");
       tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * 1.06);
       tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
-      tabard.material = getMaterialFactory().getCloth(Color3.Lerp(teamColor, TABARD_COLOR, TABARD_PALE));
+      tabard.material = getMaterialFactory().getCloth(teamColor.scale(TABARD_SHADE));
       propMeshes.push(tabard);
       // The cross is two thin cream bars sunk into the front of the cloth, so only their faces show on the chest.
       const crossDepth = chest.z * body.torsoMesh.scaling.z * 0.3;
       const crossMaterial = getMaterialFactory().getCloth(TABARD_COLOR);
-      for (const [width, height] of [[0.36, 1.1], [1.15, 0.3]]) {
+      for (const [width, height] of [[0.2, 1.3], [1.0, 0.18]]) {
         const bar = MeshBuilder.CreateBox("tabardCross", {
           width: chest.x * body.torsoMesh.scaling.x * width, height: chest.y * height, depth: crossDepth,
         }, this._scene);
