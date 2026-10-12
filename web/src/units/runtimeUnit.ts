@@ -519,7 +519,7 @@ export class RuntimeUnit {
     }
     this._velocity.x += dirX * throwSpeed;
     this._velocity.z += dirZ * throwSpeed;
-    this._velocity.y = Math.max(this._velocity.y, lift * (0.65 + 0.7 * spread(1)) * scale);
+    this._velocity.y = Math.max(this._velocity.y, lift * (0.7 + 0.3 * spread(1)) * scale);
     this._grounded = false;
 
     // End-over-end tumble about the axis across the throw, in the body's own pitch/roll frame.
