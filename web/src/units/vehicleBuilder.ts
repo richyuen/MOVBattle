@@ -597,7 +597,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 // ═══════════════════════ CANNON ═══════════════════════
 // Fires FORWARD (+Z). Barrel points along +Z. Trail extends back (-Z).
 /** Pirate gun crew clothes on an operator body: mauve hoops round the team-coloured shirt, brown trousers and shoes, a dark peaked cap */
-function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Color3): void {
+export function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Color3, cap = true): void {
   const hoopMat = makeMat(scene, new Color3(0.5, 0.42, 0.52));
   const trouserMat = makeMat(scene, new Color3(0.42, 0.24, 0.14));
   const capMat = makeMat(scene, darken(color, 0.45));
@@ -623,6 +623,7 @@ function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Color3): vo
     add(hoop, body.torso, hoopMat);
   }
 
+  if (!cap) return;
   // Cap: a low crown pulled down over the top of the head and a flat peak out over the eyes
   const w = body.headMesh.getBoundingInfo().boundingBox.extendSize.x * 2 * body.headMesh.scaling.x;
   const crown = MeshBuilder.CreateCylinder("crewCap", { height: w * 0.5, diameterTop: w * 0.9, diameterBottom: w * 1.12, tessellation: 6 }, scene);

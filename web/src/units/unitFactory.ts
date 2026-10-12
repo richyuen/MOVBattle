@@ -8,7 +8,7 @@ import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
 import { attachProps } from "./propBuilder";
-import { isVehicleUnit, buildVehicleBody } from "./vehicleBuilder";
+import { isVehicleUnit, buildVehicleBody, dressCannonCrew } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
@@ -258,6 +258,9 @@ export class UnitFactory {
       belt.material = getMaterialFactory().getCloth(BELT_COLOR);
       propMeshes.push(belt);
     }
+
+    // Linked gun crew wear the same hooped shirt and brown trousers as the cannon's own operator, under their own headgear
+    if (visual.posePreset === "crew" && !shouldUseVehicleBody) dressCannonCrew(this._scene, body, bodyColor, false);
 
     body.root.position = position.clone();
     // Face the border: blue (team 0) faces right (+X), red (team 1) faces left (-X)
