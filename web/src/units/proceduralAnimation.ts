@@ -360,6 +360,7 @@ export class ProceduralAnimator {
         joint.rotation.y += (y - joint.rotation.y) * a;
         joint.rotation.z += (z - joint.rotation.z) * a;
       }
+      this._flailInAir(a);
     }
     // Waist break (additive): the legs carry the body's lean while the torso bends part-way back against it and
     // the head hangs the way the body is going, so a pressed, running or toppling body is an S, not one plank.
@@ -1184,5 +1185,20 @@ export class ProceduralAnimator {
       joints[i].rotation.y = this._deathJointAngles[base + 1];
       joints[i].rotation.z = this._deathJointAngles[base + 2];
     }
+    if (air > 0.01 && this.walkStyle !== "quadruped") this._flailInAir(air);
+  }
+
+  /** A body in flight never holds its shape: arms and legs thrash about the flight pose, each limb at its own rate. */
+  private _flailInAir(amount: number): void {
+    const b = this._body;
+    const t = this._time * 1.6 + this._wobblePhase;
+    b.leftShoulder.rotation.x += Math.sin(t * 9.1) * 0.7 * amount;
+    b.rightShoulder.rotation.x += Math.sin(t * 7.3 + 2.1) * 0.7 * amount;
+    b.leftElbow.rotation.x -= (0.45 + 0.45 * Math.sin(t * 11.7 + 0.8)) * amount;
+    b.rightElbow.rotation.x -= (0.45 + 0.45 * Math.sin(t * 10.3 + 3.4)) * amount;
+    b.leftHip.rotation.x += Math.sin(t * 6.7 + 1.2) * 0.45 * amount;
+    b.rightHip.rotation.x += Math.sin(t * 8.3 + 4.0) * 0.45 * amount;
+    b.leftKnee.rotation.x += (0.5 + 0.5 * Math.sin(t * 9.7 + 2.6)) * amount;
+    b.rightKnee.rotation.x += (0.5 + 0.5 * Math.sin(t * 12.1 + 5.2)) * amount;
   }
 }
