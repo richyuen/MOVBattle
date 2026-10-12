@@ -11,8 +11,8 @@ const ISLAND_WIDTH = 184;  // floating island slab, X extent
 const ISLAND_DEPTH = 96;   // floating island slab, Z extent
 const TREE_RING_X = 42;    // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
-const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
-const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
+const BLADE_DARK = 0.9;    // grass-blade shades relative to the field color
+const BLADE_LIGHT = 1.06;  // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
 const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
@@ -444,7 +444,7 @@ export class TribalSandboxMapBuilder {
   }
 
   private _createGrassPatches(): void {
-    const leaves = this._scene.getMaterialByName("leaves") as StandardMaterial;
+    const tuft = this._scene.getMaterialByName("grassBladeDark") as StandardMaterial;
 
     for (let i = 0; i < 36; i++) {
       const x = -45 + this._seededValue(i, 1) * 90;
@@ -453,9 +453,9 @@ export class TribalSandboxMapBuilder {
 
       for (let j = 0; j < blades; j++) {
         const blade = MeshBuilder.CreateCylinder("grassTuft", {
-          height: 0.15 + this._seededValue(i * 10 + j, 4) * 0.15,
+          height: 0.08 + this._seededValue(i * 10 + j, 4) * 0.08,
           diameterTop: 0,
-          diameterBottom: 0.05 + this._seededValue(i * 10 + j, 5) * 0.03,
+          diameterBottom: 0.08 + this._seededValue(i * 10 + j, 5) * 0.04,
           tessellation: 4,
         }, this._scene);
         blade.position.set(
@@ -465,7 +465,7 @@ export class TribalSandboxMapBuilder {
         );
         blade.rotation.z = (this._seededValue(i * 10 + j, 8) - 0.5) * 0.4;
         blade.rotation.x = (this._seededValue(i * 10 + j, 9) - 0.5) * 0.25;
-        blade.material = leaves;
+        blade.material = tuft;
         blade.receiveShadows = true;
       }
     }
@@ -483,12 +483,12 @@ export class TribalSandboxMapBuilder {
         const tuft = Math.floor(i / 3);
         const x = -34 + this._seededValue(tuft, 31) * 68 + (this._seededValue(i, 34) - 0.5) * 0.5;
         const z = -24 + this._seededValue(tuft, 32) * 48 + (this._seededValue(i, 35) - 0.5) * 0.5;
-        const h = 0.16 + this._seededValue(i, 33) * 0.22;
+        const h = 0.06 + this._seededValue(i, 33) * 0.1;
         const yaw = this._seededValue(i, 37) * Math.PI;
-        const half = 0.045 + this._seededValue(i, 38) * 0.03;
+        const half = 0.06 + this._seededValue(i, 38) * 0.04;
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
-        const lean = (this._seededValue(i, 36) - 0.5) * 0.16;
+        const lean = (this._seededValue(i, 36) - 0.5) * 0.08;
         const base = positions.length / 3;
         positions.push(x - dx, 0.02, z - dz, x + dx, 0.02, z + dz, x + lean, 0.02 + h, z + lean);
         // Up-facing normals: blades take the same light as the ground and never go black edge-on.
@@ -534,11 +534,11 @@ export class TribalSandboxMapBuilder {
     treeline.isPickable = false;
   }
 
-  /** Puffy low-poly clouds ringing the island; unlit and fog-free so they stay white */
+  /** Puffy low-poly clouds ringing the island; sun-shaded facets, fog-free, kept under the bloom threshold so they get no halo */
   private _createClouds(): void {
     const cloudMat = new StandardMaterial("cloud", this._scene);
-    cloudMat.diffuseColor = new Color3(1, 1, 1);
-    cloudMat.emissiveColor = new Color3(0.82, 0.84, 0.82);
+    cloudMat.diffuseColor = new Color3(0.2, 0.2, 0.2);
+    cloudMat.emissiveColor = new Color3(0.56, 0.58, 0.6);
     cloudMat.specularColor = new Color3(0, 0, 0);
 
     for (let i = 0; i < 12; i++) {
