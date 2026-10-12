@@ -15,11 +15,11 @@ const BLADE_DARK = 0.72;   // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.1;   // in-hue: scaled, never mixed toward white
 const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
-const FAR_ROCK = new Color3(0.5, 0.55, 0.66);   // dark enough that the snow caps read against it
-const FAR_ROCK_SHADE = new Color3(0.42, 0.48, 0.6);
+const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
+const FAR_ROCK_SHADE = new Color3(0.5, 0.52, 0.57);
 const FAR_SNOW = new Color3(0.97, 0.98, 1);
-const FAR_SNOW_MIX = 0.1;
-const FAR_SNOW_GLOW = 0.3;  // snow stays bright on faces turned from the sun
+const FAR_SNOW_MIX = 0.25;
+const FAR_SNOW_GLOW = 0.05; // matte: snow tips shade with the sun like the rock under them
 const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
 const FAR_ROCK_MIX = 0.25;
 
@@ -208,7 +208,7 @@ export class TribalSandboxMapBuilder {
     this._createHill(new Vector3(35, 0, 25), 10, 3, 8, dryGrass);
   }
 
-  /** Low wide ridge: three blunt overlapping humps strung along the island edge, each snow-capped. */
+  /** Tall pointed ridge: three overlapping peaks strung along the island edge, standing well over the treeline, each snow-tipped. */
   private _createMountain(
     pos: Vector3, diameterX: number, height: number, diameterZ: number,
     mat: StandardMaterial,
@@ -217,14 +217,14 @@ export class TribalSandboxMapBuilder {
     // Ridges run along the island edge: x-long behind the long sides, z-long off the two ends
     const alongX = Math.abs(pos.x) < 70;
     const long = Math.max(diameterX, diameterZ) * 1.5;
-    const short = Math.min(diameterX, diameterZ) * 0.9;
+    const short = Math.min(diameterX, diameterZ) * 1.4;
     const seed = pos.x * 0.37 + pos.z * 0.11;
-    // [offset along the ridge, footprint scale, rock height]: a main hump and two lower shoulders,
+    // [offset along the ridge, footprint scale, rock height]: a main peak and two lower shoulders,
     // so the skyline rises and dips through saddles instead of repeating one cone
     const humps = [
-      [0, 1, height * 0.36],
-      [-0.34, 0.72, height * (0.24 + 0.05 * Math.sin(seed))],
-      [0.36, 0.62, height * (0.2 + 0.05 * Math.cos(seed * 1.7))],
+      [0, 1, height * 1.25],
+      [-0.34, 0.72, height * (0.8 + 0.15 * Math.sin(seed))],
+      [0.36, 0.62, height * (0.65 + 0.15 * Math.cos(seed * 1.7))],
     ];
     for (const [offset, size, rockHeight] of humps) {
       const x = pos.x + (alongX ? offset * long : 0);
@@ -232,16 +232,16 @@ export class TribalSandboxMapBuilder {
       const sizeX = (alongX ? long : short) * size;
       const sizeZ = (alongX ? short : long) * size;
       const body = MeshBuilder.CreateCylinder("mountainBase", {
-        diameterTop: 0.42, diameterBottom: 1, height: 1, tessellation: 7,
+        diameterTop: 0.25, diameterBottom: 1, height: 1, tessellation: 7,
       }, this._scene);
       body.material = mat;
-      // Snow cap carries the slope on up to a blunt flat top
-      const capHeight = rockHeight * 0.45;
+      // Snow tip carries the slope on up to a point
+      const capHeight = rockHeight * 0.3;
       const cap = MeshBuilder.CreateCylinder("mountainCap", {
-        diameterTop: 0.3, diameterBottom: 1, height: 1, tessellation: 7,
+        diameterTop: 0.03, diameterBottom: 1, height: 1, tessellation: 7,
       }, this._scene);
       cap.material = snow;
-      for (const [tier, width, tall] of [[body, 1, rockHeight], [cap, 0.42, capHeight]] as const) {
+      for (const [tier, width, tall] of [[body, 1, rockHeight], [cap, 0.25, capHeight]] as const) {
         // Twist the facets before stretching, so every hump turns different faces to the sun
         tier.rotation.y = seed + offset * 3;
         tier.bakeCurrentTransformIntoVertices();
