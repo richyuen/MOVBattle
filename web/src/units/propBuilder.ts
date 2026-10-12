@@ -1370,8 +1370,10 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
     case "kite": {
       const shield = MeshBuilder.CreateBox("kshield", { width: 0.18 * s, height: 0.32 * s, depth: 0.025 * s }, scene);
       shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
-      const point = MeshBuilder.CreateCylinder("kpoint", { height: 0.08 * s, diameterTop: 0.18 * s, diameterBottom: 0, tessellation: 4 }, scene);
-      point.position.y = -0.2 * s;
+      // Long point pressed as flat as the board, so the lower half is a flat triangle and not a pyramid
+      const point = MeshBuilder.CreateCylinder("kpoint", { height: 0.2 * s, diameterTop: 0.18 * s, diameterBottom: 0, tessellation: 4 }, scene);
+      point.position.y = -0.26 * s;
+      point.scaling.z = 0.14;
       point.parent = shield;
       point.material = shield.material;
       // Dark rim showing round the board and its point, and a metal boss on the face, as on the round shield
@@ -1379,9 +1381,9 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       rim.position.z = -0.006 * s;
       rim.parent = shield;
       rim.material = mat(scene, teamColor.scale(0.45));
-      const rimPoint = MeshBuilder.CreateCylinder("kpointRim", { height: 0.1 * s, diameterTop: 0.22 * s, diameterBottom: 0, tessellation: 4 }, scene);
-      rimPoint.position.set(0, -0.23 * s, -0.006 * s);
-      rimPoint.scaling.z = 0.6;
+      const rimPoint = MeshBuilder.CreateCylinder("kpointRim", { height: 0.24 * s, diameterTop: 0.22 * s, diameterBottom: 0, tessellation: 4 }, scene);
+      rimPoint.position.set(0, -0.3 * s, -0.006 * s);
+      rimPoint.scaling.z = 0.08;
       rimPoint.parent = shield;
       rimPoint.material = rim.material;
       const boss = MeshBuilder.CreateSphere("kboss", { diameter: 0.07 * s, segments: 4 }, scene);
