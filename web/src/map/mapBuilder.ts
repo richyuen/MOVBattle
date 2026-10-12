@@ -294,8 +294,8 @@ export class TribalSandboxMapBuilder {
     // so the three merge into one ridge with shallow saddles instead of separate cones
     const humps = [
       [0, 1, height * 0.6],
-      [-0.35, 0.9, height * (0.48 + 0.06 * Math.sin(seed))],
-      [0.35, 0.9, height * (0.42 + 0.06 * Math.cos(seed * 1.7))],
+      [-0.22, 0.8, height * (0.48 + 0.06 * Math.sin(seed))],
+      [0.22, 0.74, height * (0.42 + 0.06 * Math.cos(seed * 1.7))],
     ];
     for (const [offset, size, rockHeight] of humps) {
       const x = pos.x + (alongX ? offset * long : 0);
@@ -303,16 +303,16 @@ export class TribalSandboxMapBuilder {
       const sizeX = (alongX ? long : short) * size;
       const sizeZ = (alongX ? short : long) * size;
       const body = MeshBuilder.CreateCylinder("mountainBase", {
-        diameterTop: 0.5, diameterBottom: 1, height: 1, tessellation: 7,
+        diameterTop: 0.25, diameterBottom: 1, height: 1, tessellation: 7,
       }, this._scene);
       body.material = mat;
-      // Low snow tip on a broad shoulder: a long hazed ridge with small white tops, not a row of pointed tents
-      const capHeight = rockHeight * 0.12;
+      // Snow tip carries the slope on up to a point
+      const capHeight = rockHeight * 0.3;
       const cap = MeshBuilder.CreateCylinder("mountainCap", {
         diameterTop: 0.03, diameterBottom: 1, height: 1, tessellation: 7,
       }, this._scene);
       cap.material = snow;
-      for (const [tier, width, tall] of [[body, 1, rockHeight], [cap, 0.5, capHeight]] as const) {
+      for (const [tier, width, tall] of [[body, 1, rockHeight], [cap, 0.25, capHeight]] as const) {
         // Twist the facets before stretching, so every hump turns different faces to the sun
         tier.rotation.y = seed + offset * 3;
         tier.bakeCurrentTransformIntoVertices();
