@@ -348,6 +348,15 @@ export class ProjectileSystem {
       mesh.position.y = aim.y;
       mesh.rotation.x += (vary(3) - 0.5) * 0.7;
       mesh.rotation.y += (vary(4) - 0.5) * 0.7;
+      // A stuck shaft is half as thick as one in flight and stands back along its own line until only the head is
+      // inside the body, so it juts out of the side it came in by and not out of both.
+      mesh.scaling.x *= 0.5;
+      mesh.scaling.y *= 0.5;
+      const back = (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.28 : 0.24) - 0.07;
+      const level = Math.cos(mesh.rotation.x);
+      mesh.position.x -= Math.sin(mesh.rotation.y) * level * back;
+      mesh.position.y += Math.sin(mesh.rotation.x) * back;
+      mesh.position.z -= Math.cos(mesh.rotation.y) * level * back;
       mesh.setParent(p.target.body.torso ?? p.target.body.root);
     } else {
       const vary = Math.abs(p.origin.x * 7.31 + p.origin.z * 3.17) % 1;
