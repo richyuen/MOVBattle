@@ -536,8 +536,8 @@ export class RuntimeUnit {
       this._blastSpinX = spinX;
       this._blastSpinZ = spinZ;
       this._blastTumbling = true;
-      // 2-3 s per body, so a blasted group gets back up one by one and not in unison.
-      this._pendingBlastSprawlSeconds = 2 + spread(6);
+      // 2-4 s per body, so a blasted group gets back up one by one and not in unison.
+      this._pendingBlastSprawlSeconds = 2 + 2 * spread(6);
       this._blastSprawled = true;
     }
   }
