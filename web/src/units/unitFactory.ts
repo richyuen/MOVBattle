@@ -63,7 +63,10 @@ const WARM_SATURATION = 1.18;
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
 const TABARD_SHADE = 0.9;
 const TABARD_WIDTH = 1.02;
-const TABARD_LENGTH = 1.35;
+const TABARD_LENGTH = 1.6;
+const TABARD_DEPTH = 1.18;
+// Under the tabard the arms are sleeves of pale grey mail, not bare team-coloured skin.
+const MAIL_COLOR = new Color3(0.78, 0.8, 0.84);
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
 // Zeus wears a plain off-white tunic with a red sash from one shoulder to the other hip, not a breastplate.
 const ZEUS_TUNIC_COLOR = new Color3(0.94, 0.92, 0.86);
@@ -211,10 +214,14 @@ export class UnitFactory {
       // waist and ends above the hip instead of standing off the body as a board.
       const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
       const tabard = body.torsoMesh.clone("tabard");
-      tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * 1.06);
+      tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * TABARD_DEPTH);
       tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
       tabard.material = getMaterialFactory().getCloth(teamColor.scale(TABARD_SHADE));
       propMeshes.push(tabard);
+      const mailMaterial = getMaterialFactory().getCloth(MAIL_COLOR);
+      for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+        limb.material = mailMaterial;
+      }
       // The cross is two thin cream bars sunk into the front of the cloth, so only their faces show on the chest.
       const crossDepth = chest.z * body.torsoMesh.scaling.z * 0.3;
       const crossMaterial = getMaterialFactory().getCloth(TABARD_COLOR);
@@ -224,7 +231,7 @@ export class UnitFactory {
         }, this._scene);
         bar.parent = body.torsoMesh.parent;
         bar.position.y = body.torsoMesh.position.y + chest.y * 0.25;
-        bar.position.z = chest.z * body.torsoMesh.scaling.z * 1.1 - crossDepth / 2;
+        bar.position.z = chest.z * body.torsoMesh.scaling.z * (TABARD_DEPTH + 0.04) - crossDepth / 2;
         bar.material = crossMaterial;
         propMeshes.push(bar);
       }
@@ -234,7 +241,7 @@ export class UnitFactory {
         diameter: Math.max(chest.x, chest.z) * 2 * body.torsoMesh.scaling.x * 0.88, height: chest.y * 0.14,
         tessellation: visual.bodyDetailLevel === "hero" ? 8 : 6,
       }, this._scene);
-      belt.scaling.z = body.torsoMesh.scaling.z / body.torsoMesh.scaling.x;
+      belt.scaling.z = body.torsoMesh.scaling.z / body.torsoMesh.scaling.x * (TABARD_DEPTH / 1.06);
       belt.parent = body.torsoMesh.parent;
       belt.position.y = body.torsoMesh.position.y - chest.y * 0.85;
       belt.material = getMaterialFactory().getCloth(BELT_COLOR);
