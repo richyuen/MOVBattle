@@ -582,14 +582,14 @@ export class TribalSandboxMapBuilder {
 
   /** Patches of tall grass clumps between short turf and open ground: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
-    const BLADES = 840000;
-    const PER_TUFT = 7;
+    const BLADES = 480000;
+    const PER_TUFT = 4;
     for (const [pass, matName] of ["grassBladeDark", "grassBladeLight"].entries()) {
       const positions: number[] = [];
       const normals: number[] = [];
       const indices: number[] = [];
       for (let i = 0; i < BLADES; i++) {
-        // Seven narrow blades share a tuft center and a shade, fanned around it, so a clump is a wisp of grass and not a star.
+        // Four narrow blades share a tuft center and a shade, fanned around it, so a clump is a wisp of grass and not a star.
         const tuft = Math.floor(i / PER_TUFT);
         if (tuft % 2 !== pass) continue;
         // Grass runs out to the island's rim; past the fighting field it is a little under half as thick.
@@ -597,10 +597,10 @@ export class TribalSandboxMapBuilder {
         const tuftZ = -44 + this._seededValue(tuft, 32) * 88;
         if (!onIsland(tuftX, tuftZ, 0.5)) continue;
         if ((Math.abs(tuftX) > 34 || Math.abs(tuftZ) > 24) && this._seededValue(tuft, 43) > 0.45) continue;
-        // Low-frequency mask: a quarter of the 4 m cells stay open ground, with a tight half-metre ragged edge, so a patch ends at a line and does not thin out into strays.
+        // Low-frequency mask: a quarter of the 4 m cells stay open ground, with a ragged edge from per-tuft jitter.
         // Across the middle where the lines meet it is a little more, so the fight still stands in grass.
-        const cellX = Math.floor((tuftX + 50 + (this._seededValue(tuft, 40) - 0.5) * 1) / 4);
-        const cellZ = Math.floor((tuftZ + 44 + (this._seededValue(tuft, 41) - 0.5) * 1) / 4);
+        const cellX = Math.floor((tuftX + 50 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
+        const cellZ = Math.floor((tuftZ + 44 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
         if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.3 : 0.25)) continue;
         // Each patch has its own height, from ankle turf to full clumps, so the field is not one level carpet.
         // Where the armies stand and fight no patch tops the shin, easing back to full height by the flanks.
@@ -610,7 +610,7 @@ export class TribalSandboxMapBuilder {
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.08;
         const h = (0.12 + this._seededValue(i, 33) * 0.15) * patchHeight; // ankle to shin, so feet and fallen bodies show above the grass
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
-        const half = 0.02 + this._seededValue(i, 38) * 0.015; // a blade is two fingers wide and a tuft's seven stand within a hand: thin wisps with ground between, not a carpet of fat cones
+        const half = 0.02 + this._seededValue(i, 38) * 0.015; // a blade is two fingers wide and a tuft's four stand within a hand: thin wisps with ground between, not a carpet of fat cones
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
         const lean = (this._seededValue(i, 36) - 0.5) * 0.12; // up to 0.06 m either way, so no two blades stand alike
