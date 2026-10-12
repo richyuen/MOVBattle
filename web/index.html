@@ -146,14 +146,13 @@
       position: fixed; bottom: 0; left: 0; width: calc(50% - 358px); height: 88px; box-sizing: border-box;
       display: flex; flex-direction: column-reverse; justify-content: flex-start; align-items: flex-start;
       font-weight: 300; font-size: 24px; letter-spacing: 0.02em; line-height: 1.1; white-space: nowrap;
-      color: #bfe6fb; text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.85);
     }
     .budget-label::before {
       content: ""; position: absolute; z-index: -1; inset: 0; box-sizing: border-box; pointer-events: none;
       background: rgba(10,14,20,0.3);
       border: 1px solid rgba(255,255,255,0.6); border-left: none; border-bottom: none; border-radius: 0 100% 0 0;
     }
-    .budget-label.team-b { color: #f7c1bf; }
     .budget-label > span {
       display: flex; justify-content: space-between; align-items: center; gap: 10px; box-sizing: border-box;
       min-width: 138px; height: 37px; padding: 0 10px 1px 12px; margin-top: -1px;
@@ -162,7 +161,7 @@
     .budget-label #budgetAmount { border-bottom: none; }
     .budget-label #budgetAmount::after {
       content: ""; flex: none; width: 24px; height: 24px; color: #f4b8b0; box-sizing: border-box;
-      border: 3px solid currentColor; border-radius: 50%;
+      background: currentColor; border-radius: 50%;
     }
     .budget-label .budget-units { min-width: 100px; }
     .budget-label .budget-units::after {
