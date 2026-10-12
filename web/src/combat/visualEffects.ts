@@ -78,18 +78,20 @@ export class VisualEffects {
     if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
     side.normalize();
 
-    // Build the zigzag: short shards, each joint swinging to the opposite side of the last by about half
-    // a shard's length, so even a short bolt is all corners
-    const segments = Math.max(8, Math.min(20, Math.round(len / 0.4)));
+    // Build the zigzag: a few long shards of very unequal length and width, each joint thrown a different distance
+    // off the line: a handful of irregular slabs, not an even sawtooth
+    const segments = Math.max(4, Math.min(9, Math.round(len / 1.1)));
     const points: Vector3[] = [start];
     const amp = Math.max(0.45, Math.min(0.6, (len / segments) * 0.6));
     let sign = Math.random() < 0.5 ? -1 : 1;
     for (let i = 1; i < segments; i++) {
       // Joints sit unevenly along the bolt: long and short shards alternate
-      const base = Vector3.Lerp(start, endPoint, (i + (Math.random() - 0.5) * 0.5) / segments);
-      base.addInPlace(side.scale(sign * amp * (0.6 + Math.random() * 0.4)));
+      const base = Vector3.Lerp(start, endPoint, (i + (Math.random() - 0.5) * 0.8) / segments);
+      // Thrown anywhere from barely to well off the line
+      base.addInPlace(side.scale(sign * amp * (0.15 + Math.random() * 1.1)));
       points.push(base);
-      sign = -sign;
+      // Usually, not always, to the other side of the last joint
+      if (Math.random() < 0.65) sign = -sign;
     }
     points.push(endPoint);
 
@@ -107,9 +109,9 @@ export class VisualEffects {
       shards.push(shard);
     };
 
-    // Thick at the caster, thin at the strike
+    // Thick at the caster, thin at the strike, each shard anywhere from half to twice that
     for (let i = 0; i < points.length - 1; i++) {
-      addShard(points[i], points[i + 1], 0.16 - 0.09 * (i / (points.length - 2)));
+      addShard(points[i], points[i + 1], (0.16 - 0.09 * (i / (points.length - 2))) * (0.5 + Math.random() * 1.7));
     }
 
     // Branch bolt (smaller fork) kicking off the second joint
