@@ -100,8 +100,8 @@ export class ProceduralAnimator {
   private _shove = 0;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
-  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; crouch: number } | null = null;
-  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; crouch: number } {
+  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number } | null = null;
+  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number } {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
@@ -113,7 +113,6 @@ export class ProceduralAnimator {
       knee: 0.3 + h(5) * 0.3,
       rate: 5 + h(6) * 4,
       spread: 0.35 + h(7) * 0.4,
-      crouch: 0.6 + h(8) * 0.8,
     };
   }
   private _flinchTimer = 0;
@@ -195,10 +194,10 @@ export class ProceduralAnimator {
       b.torso.rotation.z += (p.roll + Math.cos(phase * 0.35) * 0.08) * k;
       b.neck.rotation.x -= p.pitch * 0.6 * k;
       // Thighs come forward under the pitched torso and the knees fold, so the body breaks at waist and knee.
-      b.leftHip.rotation.x += (p.stance - 0.15 * p.crouch) * k;
-      b.rightHip.rotation.x -= (p.stance + 0.15 * p.crouch) * k;
-      b.leftKnee.rotation.x += (p.knee + 0.3 * p.crouch) * k;
-      b.rightKnee.rotation.x += (p.knee + 0.3 * p.crouch) * k;
+      b.leftHip.rotation.x += (p.stance - 0.15) * k;
+      b.rightHip.rotation.x -= (p.stance + 0.15) * k;
+      b.leftKnee.rotation.x += (p.knee + 0.3) * k;
+      b.rightKnee.rotation.x += (p.knee + 0.3) * k;
       if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
         b.rightShoulder.rotation.x += (-0.9 + Math.sin(phase + Math.PI) * 1.1) * k;
@@ -231,13 +230,6 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x += p.rightHipX * k;
       b.leftKnee.rotation.x += p.leftKneeX * k;
       b.rightKnee.rotation.x += p.rightKneeX * k;
-    }
-    // A melee swing never locks out: the follow-through poses straighten the elbow to a rod, so hold a bend in both arms.
-    const aimed = this._attackMotion === "bow_draw_release" || this._attackMotion === "crossbow_snap" || this._attackMotion === "firearm_recoil";
-    if (this._state === AnimState.Attacking && !aimed && this.walkStyle !== "quadruped") {
-      const b = this._body;
-      b.leftElbow.rotation.x = Math.min(b.leftElbow.rotation.x, -0.5);
-      b.rightElbow.rotation.x = Math.min(b.rightElbow.rotation.x, -0.5);
     }
     // Squash-and-stretch on hit
     if (this._squashTimer > 0) {
