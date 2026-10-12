@@ -640,26 +640,24 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   muzzle.rotation.x = Math.PI / 2;
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
 
-  // Operator stands on the ground beside the breech, clear of the wheel, turned in toward the gun and
-  // bent well over it in a lunge: feet apart, lead knee bent, one arm reaching for the breech and the other cocked back at the elbow
+  // Operator stands on the ground beside the wheel, turned in to it, and shoves it: both hands flat on the wheel's
+  // outer face, back straight in one line with the braced rear leg, lead knee bent. Sunk 0.03 so both feet are on the ground
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
-    operator = addOperator(scene, root, allMeshes, 0.56, 0, -0.42, color, (body) => {
-      body.root.rotation.y = -0.95;
-      body.torso.rotation.x = 0.85;
-      body.neck.rotation.x = -0.45;
-      body.leftShoulder.rotation.x = -1.25;
-      body.leftShoulder.rotation.z = -0.2;
-      body.leftElbow.rotation.x = -0.25;
-      body.rightShoulder.rotation.x = -0.55;
-      body.rightShoulder.rotation.z = 0.3;
-      body.rightElbow.rotation.x = -1.1;
+    operator = addOperator(scene, root, allMeshes, 0.6, -0.03, -0.2, color, (body) => {
+      body.root.rotation.y = -1.2;
+      body.torso.rotation.x = 0.5;
+      body.neck.rotation.x = -0.3;
+      body.leftShoulder.rotation.x = -1.9;
+      body.leftElbow.rotation.x = -0.1;
+      body.rightShoulder.rotation.x = -1.9;
+      body.rightElbow.rotation.x = -0.1;
       body.leftHip.rotation.x = -0.75;
       body.leftHip.rotation.z = -0.16;
       body.leftKnee.rotation.x = 0.9;
-      body.rightHip.rotation.x = 0.35;
+      body.rightHip.rotation.x = 0.5;
       body.rightHip.rotation.z = 0.16;
-      body.rightKnee.rotation.x = 0.1;
+      body.rightKnee.rotation.x = 0;
     });
   }
 
@@ -676,7 +674,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
     allMeshes,
     operator?.headMesh,
     // Height stays the gun's old reach (operator plus the 0.57 he used to stand on), so targeting is unchanged
-    makeBodyMetrics(operator ? operator.headTopY + 0.57 : 1.34, 0.7, 0.4, 0.68),
+    makeBodyMetrics(operator ? operator.headTopY + 0.6 : 1.34, 0.7, 0.4, 0.68),
     vehicleSockets,
   );
 }
