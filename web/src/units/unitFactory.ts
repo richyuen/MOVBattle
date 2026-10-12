@@ -51,8 +51,8 @@ const ARMOUR_SHADE = 0.65;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
 const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
-// Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only half of each darkening and stay coral.
-const WARM_SHADE_KEEP = 0.5;
+// Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only a quarter of each darkening and stay coral.
+const WARM_SHADE_KEEP = 0.25;
 // A surcoat is the team colour a shade lighter (a third of the way to cream), the full width of the chest it
 // covers and long enough to hang past the waist as a short skirt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
