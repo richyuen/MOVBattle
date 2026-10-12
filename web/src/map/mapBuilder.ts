@@ -115,6 +115,11 @@ export class TribalSandboxMapBuilder {
     darkRock.diffuseColor = new Color3(0.60, 0.40, 0.28);
     darkRock.specularColor = new Color3(0.06, 0.06, 0.06);
 
+    // Cliff rock: the island's sides are grey stone, a different stuff from the warm earth and boulders on top
+    const cliffRock = new StandardMaterial("cliffRock", this._scene);
+    cliffRock.diffuseColor = new Color3(0.50, 0.47, 0.44);
+    cliffRock.specularColor = new Color3(0.04, 0.04, 0.04);
+
     // Tree trunk
     const trunk = new StandardMaterial("trunk", this._scene);
     trunk.diffuseColor = new Color3(0.45, 0.30, 0.15);
@@ -175,8 +180,39 @@ export class TribalSandboxMapBuilder {
     under.scaling.set(ISLAND_WIDTH, 20, ISLAND_DEPTH);
     under.position.y = -10.02;
     under.convertToFlatShadedMesh();
-    under.material = this._scene.getMaterialByName("darkRock")!;
+    under.material = this._scene.getMaterialByName("cliffRock")!;
     under.isPickable = false;
+
+    // Cliff face: rock buttresses hang along all four edges, each jutting a little past the grass and tapering
+    // down, so the island ends in a ragged cliff and not a ruled rectangle.
+    const crags: Mesh[] = [];
+    for (let e = 0; e < 4; e++) {
+      const alongX = e < 2;
+      const along = alongX ? ISLAND_WIDTH : ISLAND_DEPTH;
+      const out = (alongX ? ISLAND_DEPTH : ISLAND_WIDTH) / 2 * (e % 2 ? -1 : 1);
+      const count = Math.round(along / 8);
+      for (let i = 0; i < count; i++) {
+        const k = e * 40 + i;
+        const width = 6 + this._seededValue(k, 91) * 6;
+        const height = 7 + this._seededValue(k, 92) * 9;
+        const crag = MeshBuilder.CreateCylinder("islandCrag", {
+          diameterTop: width, diameterBottom: width * 0.35, height, tessellation: 5,
+        }, this._scene);
+        const t = -along / 2 + ((i + 0.2 + this._seededValue(k, 93) * 0.6) / count) * along;
+        // Centred up to a third of its width inside the edge, so between a fifth and a half of it stands proud
+        const d = out - Math.sign(out) * width * this._seededValue(k, 94) * 0.3;
+        crag.position.set(alongX ? t : d, -height / 2 - 0.03, alongX ? d : t);
+        crag.rotation.y = this._seededValue(k, 95) * Math.PI;
+        crags.push(crag);
+      }
+    }
+    const cliff = Mesh.MergeMeshes(crags, true);
+    if (cliff) {
+      cliff.name = "islandCliff";
+      cliff.convertToFlatShadedMesh();
+      cliff.material = this._scene.getMaterialByName("cliffRock")!;
+      cliff.isPickable = false;
+    }
   }
 
   private _createMountains(): void {
