@@ -14,7 +14,7 @@ const TREE_RING_X = 42;   // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
 const BLADE_DARK = 0.9;    // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
-const HAZE_MIX = 0.25;     // how far the far treeline is mixed toward the lightened fog color
+const HAZE_MIX = 0.08;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
 const FAR_ROCK = new Color3(0.6, 0.61, 0.65);   // neutral grey, dark enough that the snow tips read against it
 const FAR_ROCK_SHADE = new Color3(0.5, 0.52, 0.57);
@@ -625,7 +625,7 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Ragged band of small conifers along the long island edges, behind the big tree ring: mixed heights, a thin row, broken by gaps and mixed light and dark */
+  /** Ragged band of small conifers along the long island edges, behind the big tree ring: low and close to the canopy colour, a thin row, broken by gaps and mixed light and dark */
   private _createHazeTreeline(): void {
     const cones: Mesh[] = [];
     const shadeCones: Mesh[] = [];
@@ -635,7 +635,7 @@ export class TribalSandboxMapBuilder {
         const k = side > 0 ? i : i + perSide;
         // About one run of fifteen in four is left out, so sky shows through the band in clumps
         if (this._seededValue(Math.floor(k / 15), 75) < 0.25) continue;
-        const height = 2.2 + this._seededValue(k, 71) * 5.2;
+        const height = 2.0 + this._seededValue(k, 71) * 2.2;
         const x = -ISLAND_WIDTH / 2 + ((i + this._seededValue(k, 72)) / perSide) * ISLAND_WIDTH;
         const z = side * (37.5 + this._seededValue(k, 73) * 3);
         if (!onIsland(x, z, 1)) continue; // none left standing on air past the rounded corners
