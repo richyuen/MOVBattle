@@ -203,12 +203,9 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Mitt hand: a flat slab, thumbless, a little longer than it is wide. */
+  /** Mitt hand: a small rounded, thumbless lump about as wide as the forearm it ends, a little longer than wide. */
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
-    const m = MeshBuilder.CreateBox(n, { width: size * 0.78 * s, height: size * 1.2 * s, depth: size * 0.95 * s }, scene);
-    m.material = mat;
-    allMeshes.push(m);
-    return m;
+    return sphere(n, size, mat, new Vector3(0.45, 0.7, 0.52), 3);
   }
   function joint(n: string, parent: TransformNode): TransformNode {
     const t = new TransformNode(n, scene);
