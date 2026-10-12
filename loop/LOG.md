@@ -70,3 +70,4 @@ iter 68 | fight-band-grass-buries, boot-same-tint-as-shin, explosion-crystal-blo
 iter 69 | fireball-balloon-cluster, gun-line-grass-tall-clumps, foot-small-blob | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 70 | boot-plinth-slabs, hill-saucer-undercut, blast-launch-too-high-and-stiff | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 71 | foot-box-wider-than-ankle, hill-bald-oval-rim, grass-tufts-oversized | 2/3 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 72 | hill-cap-too-steep-and-pale, grass-cards-large-sparse, foot-slab-too-long, boulders-orange-loaves, red-team-maroon-not-coral, blast-stacked-balls, island-square-plateau, props-undersized-at-range | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
