@@ -532,6 +532,7 @@ export class RuntimeUnit {
       this._bounceCount = 0;
       this._deathSpinX = spinX;
       this._deathSpinY = (spread(5) - 0.5) * 6;
+      this._corpseYaw = this.body.root.rotation.y + (spread(5) - 0.5) * Math.PI * 2;
     } else {
       this._blastSpinX = spinX;
       this._blastSpinZ = spinZ;
@@ -899,8 +900,13 @@ export class RuntimeUnit {
     this._velocity.addInPlace(launchDir);
 
     // Random spin on death
-    this._deathSpinX = (Math.random() - 0.3) * 6 * massInv;
-    this._deathSpinY = (Math.random() - 0.5) * 4 * massInv;
+    // Half fall on their faces and half on their backs, and each comes to rest on a heading of its own, so a
+    // row of the dead is a litter of bodies and not a rank of planks.
+    const fall = Math.random();
+    const turn = Math.random();
+    this._deathSpinX = (fall < 0.5 ? -1 : 1) * (1.5 + (fall * 2 % 1) * 3) * massInv;
+    this._deathSpinY = (turn - 0.5) * 4 * massInv;
+    this._corpseYaw = this.body.root.rotation.y + (turn - 0.5) * Math.PI * 2;
 
     // Switch to death animation (ragdoll joints)
     this.animator.setState(AnimState.Dead);
@@ -993,8 +999,14 @@ export class RuntimeUnit {
     const settle = Math.min(1, dt * 9);
     rot.x += (targetX - rot.x) * settle;
     rot.z += (targetZ - rot.z) * settle;
-    return Math.abs(targetX - rot.x) + Math.abs(targetZ - rot.z);
+    // It slews round to its own resting heading as it goes down, slower than it falls.
+    const yawLeft = this._corpseYaw === null ? 0 : this._corpseYaw - rot.y;
+    rot.y += yawLeft * Math.min(1, dt * 4);
+    return Math.abs(targetX - rot.x) + Math.abs(targetZ - rot.z) + Math.abs(yawLeft) * 0.2;
   }
+
+  /** Heading a corpse turns to as it comes to rest; null until the unit dies. */
+  private _corpseYaw: number | null = null;
 
   private _blastTumbling = false;
   private _blastSpinX = 0;
@@ -1405,6 +1417,7 @@ export class RuntimeUnit {
     this._slowUntil = 0;
     this._physicsActive = false;
     this._bounceCount = 0;
+    this._corpseYaw = null;
     this._deathSpinX = 0;
     this._deathSpinY = 0;
     this._blastTumbling = false;

@@ -148,8 +148,9 @@ export class ProceduralAnimator {
     const lowElbowZ = Math.random() * 0.3;
     // One leg lies splayed out to the side and bent at the knee within the ground plane; the other stays straight.
     const leftSplayed = Math.floor(pick * 16) % 2 === 0;
-    const splayZ = 0.3 + (pick * 32 - Math.floor(pick * 32)) * 0.45;
-    const splayKneeZ = 0.5 + (pick * 64 - Math.floor(pick * 64)) * 0.7;
+    // The knee folds between 50 and 90 degrees, so the leg is plainly crooked and not a slightly parted straight one.
+    const splayZ = 0.5 + (pick * 32 - Math.floor(pick * 32)) * 0.5;
+    const splayKneeZ = 0.9 + (pick * 64 - Math.floor(pick * 64)) * 0.7;
     return {
       torsoX: Math.random() * 0.2,
       torsoZ: (Math.random() - 0.5) * 0.7,
