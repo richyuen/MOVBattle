@@ -453,12 +453,11 @@ export class TribalSandboxMapBuilder {
     trunkMat: StandardMaterial, leafMat: StandardMaterial, upperLeafMat: StandardMaterial,
     index: number,
   ): void {
-    // Every third tree is a lumpy broadleaf; the rest are pines of varied girth. All lean a little.
+    // Every third tree is a lumpy broadleaf; the rest are a single ball on a thin stalk, of varied girth. All lean a little.
     const broadleaf = index % 3 === 1;
     const girth = 0.75 + this._seededValue(index, 65) * 0.6;
-    const trunkHeight = height * (broadleaf ? 0.5 : 0.32);
-    const trunkRadius = height * 0.06;
-    const canopyHeight = height * 0.78;
+    const trunkHeight = height * (broadleaf ? 0.5 : 0.6);
+    const trunkRadius = height * (broadleaf ? 0.06 : 0.035);
     const canopyRadius = height * 0.3 * girth;
 
     // Trunk
@@ -484,19 +483,19 @@ export class TribalSandboxMapBuilder {
       mesh.convertToFlatShadedMesh();
     };
 
+    // A round crown has facets that face the ground and catch only the dim bounce light. Part self-lit, so its
+    // shaded side is a deeper shade of the leaf and not near-black; kept out of the glow layer.
+    const crownMat = (mat: StandardMaterial): StandardMaterial => {
+      const name = `${mat.name}Crown`;
+      const existing = this._scene.getMaterialByName(name) as StandardMaterial | null;
+      if (existing) return existing;
+      const crown = mat.clone(name);
+      crown.diffuseColor = mat.diffuseColor.scale(0.88);
+      crown.emissiveColor = mat.diffuseColor.scale(0.26);
+      return crown;
+    };
+    const glow = this._scene.getGlowLayerByName("glow");
     if (broadleaf) {
-      // A round crown has facets that face the ground and catch only the dim bounce light. Part self-lit, so its
-      // shaded side is a deeper green like a pine's and not near-black; kept out of the glow layer.
-      const crownMat = (mat: StandardMaterial): StandardMaterial => {
-        const name = `${mat.name}Crown`;
-        const existing = this._scene.getMaterialByName(name) as StandardMaterial | null;
-        if (existing) return existing;
-        const crown = mat.clone(name);
-        crown.diffuseColor = mat.diffuseColor.scale(0.88);
-        crown.emissiveColor = mat.diffuseColor.scale(0.26);
-        return crown;
-      };
-      const glow = this._scene.getGlowLayerByName("glow");
       // Lumpy crown: three squashed faceted blobs of different size
       const lobe = canopyRadius * 1.25;
       for (let j = 0; j < 3; j++) {
@@ -515,18 +514,12 @@ export class TribalSandboxMapBuilder {
         glow?.addExcludedMesh(blob);
       }
     } else {
-      // Bushy pine: three overlapping skirts, each narrower and higher than the last
-      const tierHeight = canopyHeight * 0.5;
-      for (let j = 0; j < 3; j++) {
-        const tier = MeshBuilder.CreateCylinder("canopy", {
-          diameterTop: 0,
-          diameterBottom: canopyRadius * 2 * (1 - j * 0.26),
-          height: tierHeight,
-          tessellation: 6,
-        }, this._scene);
-        tier.rotation.y = this._seededValue(index * 10 + j, 68) * Math.PI;
-        addCanopy(tier, 0, tierHeight * 0.3 + j * tierHeight * 0.5, 0, j === 1 ? upperLeafMat : leafMat);
-      }
+      // Lollipop: one faceted ball sat on the top of the stalk
+      const ball = MeshBuilder.CreateIcoSphere("canopy", { radius: canopyRadius, subdivisions: 1 }, this._scene);
+      ball.scaling.y = 0.9;
+      ball.rotation.y = this._seededValue(index * 10, 68) * Math.PI;
+      addCanopy(ball, 0, canopyRadius * 0.7, 0, crownMat(leafMat));
+      glow?.addExcludedMesh(ball);
     }
 
     // Registered once the crown hangs off the trunk: the caster list takes the children the trunk has at this moment
@@ -1001,6 +994,13 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (leaves) leaves.diffuseColor = new Color3(0.58, 0.7, 0.34);
   const darkLeaves = scene.getMaterialByName("darkLeaves") as StandardMaterial | null;
   if (darkLeaves) darkLeaves.diffuseColor = new Color3(0.48, 0.62, 0.3);
+  // The round crowns wear part self-lit clones of the two leaf materials, shaded as _createTree shades them
+  for (const mat of [leaves, darkLeaves]) {
+    const crown = mat && scene.getMaterialByName(`${mat.name}Crown`) as StandardMaterial | null;
+    if (!mat || !crown) continue;
+    crown.diffuseColor = mat.diffuseColor.scale(0.88);
+    crown.emissiveColor = mat.diffuseColor.scale(0.26);
+  }
   paintFarProps(scene, theme.grass.scale(0.85));
 }
 
