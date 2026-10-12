@@ -112,3 +112,4 @@ iter 110 | crown-shade-brick, mammoth-hide-dark, airborne-sit-square, cloud-dark
 iter 111 | fireball-half-size, shadow-red-stain, mammoth-lit-pink, fireball-no-orange, crown-shade-crimson, shove-lunge-split, mammoth-mop-beret | 4/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 112 | fireball-flame-lit-clips, shade-fill-warm, mammoth-mop-split, shove-torso-fold, mammoth-head-pale, orange-crown-shade-brick, shove-knee-sag, crown-top-pink | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 113 | fireball-flame-lit-clips, mammoth-no-launch, orange-crown-shade-brick, mammoth-flank-mauve, mammoth-mop-royal-blue, shove-attack-fold, shade-light-rust, red-crown-top-green | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 114 | mammoth-no-launch, shove-attack-fold, shade-warm-rust, orange-crown-shade-red, red-crown-shade-blue, mammoth-hide-green, fireball-lobes-mustard, mammoth-mop-hat | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
