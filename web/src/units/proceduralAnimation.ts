@@ -100,8 +100,8 @@ export class ProceduralAnimator {
   private _shove = 0;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
-  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number } | null = null;
-  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number } {
+  private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number } | null = null;
+  private _buildShovePose(): { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number } {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
@@ -113,6 +113,7 @@ export class ProceduralAnimator {
       knee: 0.3 + h(5) * 0.3,
       rate: 5 + h(6) * 4,
       spread: 0.35 + h(7) * 0.4,
+      elbow: 0.7 + h(8) * 0.5,
     };
   }
   private _flinchTimer = 0;
@@ -207,8 +208,8 @@ export class ProceduralAnimator {
         b.rightElbow.rotation.x -= (1.0 + Math.sin(phase + Math.PI) * 0.6) * k;
       } else {
         // Stepping in or swinging: the elbows stay bent, so no arm is a straight rod.
-        b.leftElbow.rotation.x -= 0.7 * k;
-        b.rightElbow.rotation.x -= 0.7 * k;
+        b.leftElbow.rotation.x -= (p.elbow + 0.1) * k;
+        b.rightElbow.rotation.x -= (p.elbow - 0.1) * k;
       }
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
@@ -230,6 +231,18 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x += p.rightHipX * k;
       b.leftKnee.rotation.x += p.leftKneeX * k;
       b.rightKnee.rotation.x += p.rightKneeX * k;
+    }
+    // Waist break (additive): the legs carry the body's lean while the torso bends back past upright against
+    // it and the head tips back the other way, so a pressed or running body is an S, not one straight plank.
+    if (this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+      const b = this._body;
+      const k = 1 - Math.min(1, this._limp);
+      const leanX = Math.max(-0.4, Math.min(0.4, b.root.rotation.x)) * k;
+      const leanZ = Math.max(-0.4, Math.min(0.4, b.root.rotation.z)) * k;
+      b.torso.rotation.x -= leanX * 1.4;
+      b.torso.rotation.z -= leanZ * 1.4;
+      b.neck.rotation.x += leanX * 0.6;
+      b.neck.rotation.z += leanZ * 0.6;
     }
     // Squash-and-stretch on hit
     if (this._squashTimer > 0) {
@@ -383,7 +396,8 @@ export class ProceduralAnimator {
 
     // Head wobbles
     b.neck.rotation.z = Math.sin(t * speed * 0.7 + 1) * 0.08;
-    b.neck.rotation.x = -0.1 + Math.sin(t * speed * 0.5 + 2) * 0.04;
+    // Chin up against the forward lean, so head and torso are not one line.
+    b.neck.rotation.x = -0.3 + Math.sin(t * speed * 0.5 + 2) * 0.04;
 
     // Alternating leg swing (TABS-style exaggerated)
     const legSwing = 0.55;
@@ -398,8 +412,10 @@ export class ProceduralAnimator {
     const armSwing = 0.75;
     b.leftShoulder.rotation.x = Math.sin(t * speed + Math.PI) * armSwing;
     b.rightShoulder.rotation.x = Math.sin(t * speed) * armSwing;
-    b.leftElbow.rotation.x = -0.75 + Math.sin(t * speed + Math.PI) * 0.2;
-    b.rightElbow.rotation.x = -0.75 + Math.sin(t * speed) * 0.2;
+    // Per-unit elbow bend (0.7-1.2 rad), so a rank on the move does not share one arm shape.
+    const elbow = (this._shovePose ??= this._buildShovePose()).elbow;
+    b.leftElbow.rotation.x = -elbow + Math.sin(t * speed + Math.PI) * 0.2;
+    b.rightElbow.rotation.x = -elbow + Math.sin(t * speed) * 0.2;
 
     // Floppy arm Z rotation (TABS signature wobble)
     b.leftShoulder.rotation.z = Math.sin(t * speed * 1.3) * wobble * 3.5;
