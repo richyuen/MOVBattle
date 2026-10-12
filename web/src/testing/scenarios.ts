@@ -1357,12 +1357,12 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       spacingX: 0,
       spacingZ: 2.8,
       galleryPresetId: "state_read_duel",
-      // Low battle camera on the clash: eye level, sky in the top third
+      // Eye-level battle camera inside the clash: horizon mid-frame, nearest units cut off at the feet
       cameraOverride: {
         alpha: -Math.PI / 3.4,
-        beta: Math.PI / 2.2,
-        radius: 9,
-        target: { x: -3, y: 1.3, z: 0 },
+        beta: Math.PI / 2.02,
+        radius: 6.5,
+        target: { x: -3, y: 1.4, z: 0 },
       },
       extraUnits: [
         { unitId: "medieval.squire", team: 1, position: { x: 6.5, z: -7.0 } },
@@ -1407,9 +1407,9 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       artifactBaseName: "gallery_weapon_reads",
       cameraOverride: {
         alpha: -Math.PI / 3.4,
-        beta: Math.PI / 2.2,
-        radius: 9,
-        target: { x: -3.5, y: 1.3, z: 0 },
+        beta: Math.PI / 2.02,
+        radius: 6.5,
+        target: { x: -3.5, y: 1.4, z: 0 },
       },
       extraUnits: buildGalleryUnits(
         [
