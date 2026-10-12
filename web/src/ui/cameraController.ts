@@ -204,11 +204,11 @@ export class CameraController {
     // Armies that hold their ground (halfSpan > 0) must both fit: the frame is ~0.63 radius wide each side of the target.
     const spanRadius = ((center.halfSpan ?? 0) + 1.5) / 0.6;
     // The eye stands clear of the rank nearest to it, so the fight spreading sideways does not swallow the camera.
-    const clearRadius = (center.depth ?? 0) + 6.5;
+    const clearRadius = (center.depth ?? 0) + 5.5;
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
       beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
-      radius: Math.min(14, Math.max(8, spanRadius, clearRadius)), // three body lengths back from the nearest rank, which stands ~0.4 of the frame tall
+      radius: Math.min(14, Math.max(7, spanRadius, clearRadius)), // under three body lengths back from the nearest rank, which stands ~0.45 of the frame tall
       target: { x: center.x, y: 1.5, z: center.z },   // eye near 1 m, so the grass in front of the nearest rank stays a thin strip
     };
     // The battle view sits below the placement pitch limits and inside the zoom floor; widen them for the fight.
@@ -237,7 +237,7 @@ export class CameraController {
     } else {
       // Melee: the eye sits at chest height and looks further up, so the horizon lies low in the frame and the
       // bottom edge meets the ground just short of the nearest rank's feet instead of a wide strip of bare grass.
-      const pitchUp = 0.17;
+      const pitchUp = 0.21;
       to.beta = Math.PI / 2 + pitchUp;
       to.target.y = 1.1 + to.radius * Math.sin(pitchUp);
       this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
