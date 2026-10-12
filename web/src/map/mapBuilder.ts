@@ -182,10 +182,11 @@ export class TribalSandboxMapBuilder {
     // Far ridges stand well off the two long edges only, so the placement view shows open sky past
     // the treeline and off both ends instead of a wall of rock boxing the field in.
     // ── Back mountains (positive Z) ──
-    this._createMountain(new Vector3(-50, 0, 96), 35, 22, 20, rock);
-    this._createMountain(new Vector3(-20, 0, 101), 28, 18, 18, darkRock);
-    this._createMountain(new Vector3(15, 0, 99), 32, 25, 22, rock);
-    this._createMountain(new Vector3(50, 0, 96), 30, 20, 18, darkRock);
+    // Kept low: their peaks stay about level with the treeline tops, so no pale band of rock crosses the screen above it.
+    this._createMountain(new Vector3(-50, 0, 96), 35, 9, 20, rock);
+    this._createMountain(new Vector3(-20, 0, 101), 28, 7, 18, darkRock);
+    this._createMountain(new Vector3(15, 0, 99), 32, 10, 22, rock);
+    this._createMountain(new Vector3(50, 0, 96), 30, 8, 18, darkRock);
 
     // ── Front mountains (negative Z) ──
     this._createMountain(new Vector3(-55, 0, -96), 30, 18, 20, rock);
@@ -200,7 +201,7 @@ export class TribalSandboxMapBuilder {
     this._createHill(new Vector3(35, 0, 25), 10, 3, 8, dryGrass);
   }
 
-  /** Low hazed ridge: three closely overlapping peaks strung along the island edge, two to three treelines tall, each snow-tipped. */
+  /** Low hazed ridge: three closely overlapping peaks strung along the island edge, up to three treelines tall, each snow-tipped. */
   private _createMountain(
     pos: Vector3, diameterX: number, height: number, diameterZ: number,
     mat: StandardMaterial,
