@@ -117,12 +117,12 @@ export class TribalSandboxMapBuilder {
   private _createMaterials(): void {
     // Grass: autumn orange
     const grass = new StandardMaterial("grass", this._scene);
-    grass.diffuseColor = new Color3(0.86, 0.6, 0.24);
+    grass.diffuseColor = new Color3(0.86, 0.45, 0.2);
     grass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Warm orange-grass for edges
     const dryGrass = new StandardMaterial("dryGrass", this._scene);
-    dryGrass.diffuseColor = new Color3(0.8, 0.52, 0.22);
+    dryGrass.diffuseColor = new Color3(0.8, 0.4, 0.19);
     dryGrass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Boulder stone: pale sandy tan
@@ -150,9 +150,9 @@ export class TribalSandboxMapBuilder {
     leaves.diffuseColor = new Color3(0.8, 0.27, 0.2);
     leaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
-    // Dark leaves
+    // Second canopy colour: orange among the red
     const darkLeaves = new StandardMaterial("darkLeaves", this._scene);
-    darkLeaves.diffuseColor = new Color3(0.66, 0.2, 0.18);
+    darkLeaves.diffuseColor = new Color3(0.9, 0.5, 0.2);
     darkLeaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Grass blades: one shade under and one over the field color, so the carpet reads as texture
@@ -176,7 +176,7 @@ export class TribalSandboxMapBuilder {
     // Main ground — warm orange earth
     const ground = this._islandSlab("ground", 0, 0.04);
     const mat = new StandardMaterial("groundMat", this._scene);
-    mat.diffuseColor = new Color3(0.74, 0.52, 0.24);
+    mat.diffuseColor = new Color3(0.74, 0.4, 0.2);
     mat.specularColor = new Color3(0.05, 0.05, 0.05);
     ground.material = mat;
     ground.receiveShadows = true;
