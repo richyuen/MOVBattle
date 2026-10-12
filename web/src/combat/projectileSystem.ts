@@ -180,14 +180,16 @@ export class ProjectileSystem {
     const sm = getMaterialFactory().createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     sm.emissiveColor = new Color3(0.14, 0.14, 0.13);
     sm.transparencyMode = 2;
-    const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
+    // A big gun's puff is capped near a musket's and gone before the next shot, so a battery leaves separate puffs.
+    const puff = Math.min(scale, 1.3);
+    const smokeLife = 0.9;
     for (let i = 0; i < 4; i++) {
-      const diameter = (0.26 + Math.random() * 0.12 - 0.03 * i) * scale;
+      const diameter = (0.18 + Math.random() * 0.06 - 0.02 * i) * puff;
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
-      smoke.position = flash.position.add(direction.scale((0.08 + 0.14 * i) * scale));
-      smoke.position.x += (Math.random() - 0.5) * 0.14 * scale;
-      smoke.position.y += (Math.random() - 0.3) * 0.14 * scale;
-      smoke.position.z += (Math.random() - 0.5) * 0.14 * scale;
+      smoke.position = flash.position.add(direction.scale((0.06 + 0.08 * i) * puff));
+      smoke.position.x += (Math.random() - 0.5) * 0.1 * puff;
+      smoke.position.y += (Math.random() - 0.3) * 0.1 * puff;
+      smoke.position.z += (Math.random() - 0.5) * 0.1 * puff;
       smoke.material = sm;
       this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 });
     }
