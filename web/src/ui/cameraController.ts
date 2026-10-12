@@ -234,6 +234,13 @@ export class CameraController {
       const halfWidth = center.near.halfWidth ?? 0;
       to.radius = Math.min(14, Math.max(4.5, fit(halfWidth), fit(-halfWidth)));
       this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
+    } else {
+      // Melee: the eye sits at chest height and looks further up, so the horizon lies low in the frame and the
+      // bottom edge meets the ground just short of the nearest rank's feet instead of a wide strip of bare grass.
+      const pitchUp = 0.17;
+      to.beta = Math.PI / 2 + pitchUp;
+      to.target.y = 1.1 + to.radius * Math.sin(pitchUp);
+      this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
