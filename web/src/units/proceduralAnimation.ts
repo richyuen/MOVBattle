@@ -200,28 +200,28 @@ export class ProceduralAnimator {
     const twist = (h(23) - 0.5) * 0.5;
     const roll = (h(24) - 0.5) * 0.35;
     const variant = Math.floor(h(21) * 3);
-    // One arm leads the other by about 0.6 rad and each knee folds by its own amount, so the two sides of a
-    // body in flight never mirror each other and no limb is a straight spoke.
+    // One arm leads the other by about 0.6 rad and each knee gives by its own small amount, so the two sides of a
+    // body in flight never mirror each other and neither leg folds into a loop.
     const lead = h(40) < 0.5 ? 0 : 1;
     const armGap = 0.5 + h(41) * 0.3;
     const leftArm = lead === 0 ? armGap : 0;
     const rightArm = lead === 0 ? 0 : armGap;
-    const leftKnee = 0.6 + h(42) * 0.7;
-    const rightKnee = 0.6 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.7;
+    const leftKnee = 0.15 + h(42) * 0.35;
+    const rightKnee = 0.15 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.35;
     // The legs scissor: one swings up to a radian ahead of or behind the other, and one kicks wide out to the side.
     const hipGap = (h(44) < 0.5 ? -1 : 1) * (0.6 + h(45) * 0.4);
     const leftKick = h(46) < 0.5 ? -(0.4 + h(47) * 0.3) : 0;
     const rightKick = h(46) < 0.5 ? 0 : 0.4 + h(47) * 0.3;
     if (variant === 0) {
-      // Jackknife: folded hard at the waist, legs swung up to meet the arms reaching for the toes
+      // Jackknife: folded hard at the waist, straight legs swung up to meet the arms reaching for the toes
       const hip = 0.7 + h(30) * 0.4;
       return [
         [b.torso, 0.9 + h(25) * 0.5, twist, roll],
         [b.neck, 0.4, 0, 0],
         [b.leftShoulder, -(1.0 + h(26) * 0.3 + leftArm), 0, -0.1],
         [b.rightShoulder, -(1.0 + h(27) * 0.3 + rightArm), 0, 0.1],
-        [b.leftElbow, -(0.5 + h(28) * 0.6 + rightArm), 0, 0],
-        [b.rightElbow, -(0.5 + h(29) * 0.6 + leftArm), 0, 0],
+        [b.leftElbow, -(0.15 + h(28) * 0.25 + rightArm), 0, 0],
+        [b.rightElbow, -(0.15 + h(29) * 0.25 + leftArm), 0, 0],
         [b.leftHip, -hip, 0, leftKick],
         [b.rightHip, -(hip + hipGap), 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
@@ -229,30 +229,30 @@ export class ProceduralAnimator {
       ];
     }
     if (variant === 1) {
-      // Bow: spine bent backward, head thrown back, arms trailing bent past the head, heels kicked up behind
+      // Bow: spine bent backward, head thrown back, arms trailing straight past the head, heels kicked up behind
       const hip = 0.35 + h(32) * 0.3;
       return [
         [b.torso, -(0.45 + h(25) * 0.3), twist, roll],
         [b.neck, -0.5, 0, 0],
         [b.leftShoulder, -(2.9 + h(26) * 0.2 - leftArm), 0, -(0.1 + h(27) * 0.15)],
         [b.rightShoulder, -(2.9 + h(28) * 0.2 - rightArm), 0, 0.1 + h(29) * 0.15],
-        [b.leftElbow, -(0.5 + h(30) * 0.6 + leftArm), 0, 0],
-        [b.rightElbow, -(0.5 + h(31) * 0.6 + rightArm), 0, 0],
+        [b.leftElbow, -(0.1 + h(30) * 0.3 + leftArm), 0, 0],
+        [b.rightElbow, -(0.1 + h(31) * 0.3 + rightArm), 0, 0],
         [b.leftHip, hip, 0, leftKick],
         [b.rightHip, hip + hipGap, 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
         [b.rightKnee, rightKnee, 0, 0],
       ];
     }
-    // Sit: thighs folded square to the trunk with the shins hanging, arms trailing back along the sides
+    // Sit: thighs folded square to the trunk with the legs held out straight, arms trailing back along the sides
     const hip = 1.2 + h(25) * 0.3;
     return [
       [b.torso, 0.2 + h(26) * 0.3, twist, roll],
       [b.neck, (h(27) - 0.5) * 0.6, 0, 0],
       [b.leftShoulder, 0.2 + h(28) * 0.2 + leftArm, 0, -0.12],
       [b.rightShoulder, 0.2 + h(29) * 0.2 + rightArm, 0, 0.12],
-      [b.leftElbow, -(0.5 + h(31) * 0.6 + rightArm), 0, 0],
-      [b.rightElbow, -(0.5 + h(32) * 0.6 + leftArm), 0, 0],
+      [b.leftElbow, -(0.2 + h(31) * 0.3 + rightArm), 0, 0],
+      [b.rightElbow, -(0.2 + h(32) * 0.3 + leftArm), 0, 0],
       [b.leftHip, -hip, 0, leftKick],
       [b.rightHip, -(hip + hipGap), 0, rightKick],
       [b.leftKnee, leftKnee, 0, 0],
