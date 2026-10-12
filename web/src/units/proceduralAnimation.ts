@@ -165,9 +165,10 @@ export class ProceduralAnimator {
 
   private _airTarget = 0;
   private _air = 0;
-  // Per-unit flight shape as [joint, x, y, z]: a third of the bodies ball up, a third arch backward with the arms
-  // trailing past the head, a third scissor the legs with the torso twisted, so a launched group is not one
-  // repeated star. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  // Per-unit flight shape as [joint, x, y, z]: a third of the bodies jackknife at the waist, a third bow backward
+  // with the arms past the head, a third sit in an L with the legs straight out. Legs stay together and arms stay
+  // in line with the trunk, so a launched body is one bent plank and not a four-pointed star. Hashed from the
+  // wobble phase like the shove pose, so it consumes no random numbers.
   private _airPose: Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> | null = null;
   private _buildAirPose(): Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> {
     const h = (n: number): number => {
@@ -175,54 +176,54 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     const b = this._body;
-    const side = h(22) < 0.5 ? -1 : 1;
-    const twist = (h(23) - 0.5) * 1.2;
-    const roll = (h(24) - 0.5) * 0.9;
+    const twist = (h(23) - 0.5) * 0.5;
+    const roll = (h(24) - 0.5) * 0.35;
     const variant = Math.floor(h(21) * 3);
     if (variant === 0) {
-      // Ball: folded at the waist, knees drawn up to the chest, arms hugging in
+      // Jackknife: folded hard at the waist, straight legs swung up to meet the arms reaching for the toes
+      const hip = 0.7 + h(30) * 0.4;
       return [
-        [b.torso, 0.7 + h(25) * 0.4, twist * 0.5, roll],
-        [b.neck, 0.5, 0, 0],
-        [b.leftShoulder, -(0.5 + h(26) * 0.7), 0, -0.25],
-        [b.rightShoulder, -(0.5 + h(27) * 0.7), 0, 0.25],
-        [b.leftElbow, -(1.0 + h(28) * 0.6), 0, 0],
-        [b.rightElbow, -(1.0 + h(29) * 0.6), 0, 0],
-        [b.leftHip, -(1.0 + h(30) * 0.6), 0, 0],
-        [b.rightHip, -(1.0 + h(31) * 0.6), 0, 0],
-        [b.leftKnee, 1.2 + h(32) * 0.7, 0, 0],
-        [b.rightKnee, 1.2 + h(33) * 0.7, 0, 0],
+        [b.torso, 0.9 + h(25) * 0.5, twist, roll],
+        [b.neck, 0.4, 0, 0],
+        [b.leftShoulder, -(1.1 + h(26) * 0.5), 0, -0.1],
+        [b.rightShoulder, -(1.1 + h(27) * 0.5), 0, 0.1],
+        [b.leftElbow, -(0.15 + h(28) * 0.25), 0, 0],
+        [b.rightElbow, -(0.15 + h(29) * 0.25), 0, 0],
+        [b.leftHip, -hip, 0, 0],
+        [b.rightHip, -(hip + (h(31) - 0.5) * 0.25), 0, 0],
+        [b.leftKnee, 0.1 + h(32) * 0.25, 0, 0],
+        [b.rightKnee, 0.1 + h(33) * 0.25, 0, 0],
       ];
     }
     if (variant === 1) {
-      // Arch: spine bowed backward, head thrown back, arms trailing past the head, heels kicked up behind
+      // Bow: spine bent backward, head thrown back, arms trailing straight past the head, heels kicked up behind
+      const hip = 0.35 + h(32) * 0.3;
       return [
-        [b.torso, -(0.5 + h(25) * 0.35), twist * 0.5, roll],
-        [b.neck, -0.6, 0, 0],
-        [b.leftShoulder, -(2.3 + h(26) * 0.7), 0, -(0.3 + h(27) * 0.6)],
-        [b.rightShoulder, -(2.3 + h(28) * 0.7), 0, 0.3 + h(29) * 0.6],
-        [b.leftElbow, -(0.2 + h(30) * 0.6), 0, 0],
-        [b.rightElbow, -(0.2 + h(31) * 0.6), 0, 0],
-        [b.leftHip, 0.3 + h(32) * 0.5, 0, 0],
-        [b.rightHip, 0.3 + h(33) * 0.5, 0, 0],
-        [b.leftKnee, 0.7 + h(34) * 0.9, 0, 0],
-        [b.rightKnee, 0.7 + h(35) * 0.9, 0, 0],
+        [b.torso, -(0.45 + h(25) * 0.3), twist, roll],
+        [b.neck, -0.5, 0, 0],
+        [b.leftShoulder, -(2.7 + h(26) * 0.4), 0, -(0.1 + h(27) * 0.15)],
+        [b.rightShoulder, -(2.7 + h(28) * 0.4), 0, 0.1 + h(29) * 0.15],
+        [b.leftElbow, -(0.1 + h(30) * 0.3), 0, 0],
+        [b.rightElbow, -(0.1 + h(31) * 0.3), 0, 0],
+        [b.leftHip, hip, 0, 0],
+        [b.rightHip, hip + (h(33) - 0.5) * 0.25, 0, 0],
+        [b.leftKnee, 0.4 + h(34) * 0.5, 0, 0],
+        [b.rightKnee, 0.4 + h(35) * 0.5, 0, 0],
       ];
     }
-    // Scissor: one leg kicked forward and one trailing bent, torso twisted, one arm reaching and one thrown back
-    const lead = 1.0 + h(25) * 0.5;
-    const trail = 0.5 + h(26) * 0.4;
+    // Sit: thighs folded square to the trunk with the legs held out straight, arms trailing back along the sides
+    const hip = 1.2 + h(25) * 0.3;
     return [
-      [b.torso, 0.25, twist + side * 0.4, roll],
-      [b.neck, (h(27) - 0.5) * 0.8, 0, 0],
-      [b.leftShoulder, side < 0 ? -(1.3 + h(28) * 0.6) : 0.9, 0, -(0.3 + h(29) * 0.5)],
-      [b.rightShoulder, side < 0 ? 0.9 : -(1.3 + h(28) * 0.6), 0, 0.3 + h(30) * 0.5],
-      [b.leftElbow, -(0.5 + h(31) * 0.7), 0, 0],
-      [b.rightElbow, -(0.5 + h(32) * 0.7), 0, 0],
-      [b.leftHip, side < 0 ? -lead : trail, 0, 0],
-      [b.rightHip, side < 0 ? trail : -lead, 0, 0],
-      [b.leftKnee, side < 0 ? 0.25 : 1.3, 0, 0],
-      [b.rightKnee, side < 0 ? 1.3 : 0.25, 0, 0],
+      [b.torso, 0.2 + h(26) * 0.3, twist, roll],
+      [b.neck, (h(27) - 0.5) * 0.6, 0, 0],
+      [b.leftShoulder, 0.2 + h(28) * 0.4, 0, -0.12],
+      [b.rightShoulder, 0.2 + h(29) * 0.4, 0, 0.12],
+      [b.leftElbow, -(0.2 + h(31) * 0.3), 0, 0],
+      [b.rightElbow, -(0.2 + h(32) * 0.3), 0, 0],
+      [b.leftHip, -hip, 0, 0],
+      [b.rightHip, -(hip + (h(30) - 0.5) * 0.25), 0, 0],
+      [b.leftKnee, 0.15 + h(33) * 0.3, 0, 0],
+      [b.rightKnee, 0.15 + h(34) * 0.6, 0, 0],
     ];
   }
 
@@ -1146,8 +1147,8 @@ export class ProceduralAnimator {
       this._deathAngularVelocities[base + 1] *= this._deathDamping;
       this._deathAngularVelocities[base + 2] *= this._deathDamping;
 
-      // Flop first, then sag into the crumpled rest pose and stay there
-      const sag = Math.min(1, dt * 3.5);
+      // Flop first, then sag into the crumpled rest pose and stay there; a corpse in flight takes its shape at once
+      const sag = Math.min(1, dt * (3.5 + 8 * air));
       this._deathJointAngles[base] += (restAt(base) - this._deathJointAngles[base]) * sag;
       this._deathJointAngles[base + 1] += (restAt(base + 1) - this._deathJointAngles[base + 1]) * sag;
       this._deathJointAngles[base + 2] += (restAt(base + 2) - this._deathJointAngles[base + 2]) * sag;
