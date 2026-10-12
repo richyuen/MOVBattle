@@ -95,6 +95,7 @@ export class TribalSandboxMapBuilder {
     this._createFieldBlades();
     this._createHazeTreeline();
     this._createScatterProps();
+    this._createSetDressing();
     this._createClouds();
     if (this._renderPlacementGuides) {
       this._createZoneOverlays();
@@ -732,6 +733,64 @@ export class TribalSandboxMapBuilder {
       pebble.material = pebbleMat;
       pebble.receiveShadows = true;
     }
+  }
+
+  /** Farm clutter between the open field and the tree ring: tumbled dry-stone walls, hay bales and stumps. */
+  private _createSetDressing(): void {
+    const rock = this._scene.getMaterialByName("rock") as StandardMaterial;
+    const darkRock = this._scene.getMaterialByName("darkRock") as StandardMaterial;
+    const trunk = this._scene.getMaterialByName("trunk") as StandardMaterial;
+    const straw = new StandardMaterial("straw", this._scene);
+    straw.diffuseColor = new Color3(0.86, 0.72, 0.36);
+    straw.specularColor = new Color3(0.03, 0.03, 0.03);
+    const place = (mesh: Mesh, mat: StandardMaterial, radius: number) => {
+      mesh.convertToFlatShadedMesh();
+      mesh.material = mat;
+      mesh.receiveShadows = true;
+      mesh.isPickable = false;
+      sunShadows(this._scene)?.addShadowCaster(mesh);
+      this._obstacles.push({ type: "cylinder", center: new Vector3(mesh.position.x, 0, mesh.position.z), radius });
+    };
+
+    // Each wall is a run of rough blocks along a heading, with one stretch fallen in. All sit off the centre line.
+    const walls = [
+      { x: -36, z: -4, heading: 1.4, stones: 11 },
+      { x: 36, z: 4, heading: 1.4, stones: 11 },
+      { x: 13, z: -27, heading: 0.1, stones: 9 },
+      { x: -13, z: 27, heading: 0.1, stones: 9 },
+    ];
+    walls.forEach((wall, w) => {
+      const gap = 2 + Math.floor(this._seededValue(w, 111) * (wall.stones - 4));
+      for (let i = 0; i < wall.stones; i++) {
+        if (i === gap) continue;
+        const k = w * 20 + i;
+        const along = (i - (wall.stones - 1) / 2) * 1.15;
+        const height = i === gap - 1 || i === gap + 1 ? 0.5 : 0.8 + this._seededValue(k, 112) * 0.35;
+        const stone = MeshBuilder.CreateBox("wallStone", {
+          width: 1.2 + this._seededValue(k, 113) * 0.2, height, depth: 0.65 + this._seededValue(k, 114) * 0.2,
+        }, this._scene);
+        stone.position.set(wall.x + Math.cos(wall.heading) * along, height / 2 - 0.04, wall.z + Math.sin(wall.heading) * along);
+        stone.rotation.set((this._seededValue(k, 115) - 0.5) * 0.12, -wall.heading + (this._seededValue(k, 116) - 0.5) * 0.3, (this._seededValue(k, 117) - 0.5) * 0.12);
+        place(stone, this._seededValue(k, 118) > 0.4 ? darkRock : rock, 0.62);
+      }
+    });
+
+    const bales: [number, number][] = [[24, -27], [26.6, -25.6], [-25, 27.5], [-27.6, 26], [38, -14], [-38, 14]];
+    bales.forEach(([x, z], i) => {
+      const bale = MeshBuilder.CreateCylinder("hayBale", { diameter: 1.7, height: 1.4, tessellation: 10 }, this._scene);
+      bale.position.set(x, 0.82, z);
+      bale.rotation.set(Math.PI / 2, this._seededValue(i, 119) * Math.PI, 0);
+      place(bale, straw, 0.9);
+    });
+
+    const stumps: [number, number][] = [[-33, 9], [33, -9], [-9, -30], [9, 31]];
+    stumps.forEach(([x, z], i) => {
+      const stump = MeshBuilder.CreateCylinder("stump", {
+        diameterTop: 0.9, diameterBottom: 1.15, height: 0.55 + this._seededValue(i, 120) * 0.25, tessellation: 7,
+      }, this._scene);
+      stump.position.set(x, 0.3, z);
+      place(stump, trunk, 0.6);
+    });
   }
 
   /** Tinted ground overlays so each half is clearly blue / red */
