@@ -290,9 +290,9 @@ const skyDome = MeshBuilder.CreateSphere("skyDome", { diameter: 2000, segments: 
   const positions = skyDome.getVerticesData(VertexBuffer.PositionKind) ?? [];
   const colors: number[] = [];
   for (let i = 0; i < positions.length; i += 3) {
-    // Fully deep by about 27 degrees up, which is the top of the frame from the low battle camera
-    const t = Math.min(1, Math.max(0, positions[i + 1] / 450));
-    colors.push(0.43 - 0.29 * t, 0.78 - 0.16 * t, 0.68 - 0.22 * t, 1);
+    // Fully deep by about 44 degrees up, so the top of the frame from the low battle camera is still mid-grade teal
+    const t = Math.min(1, Math.max(0, positions[i + 1] / 700));
+    colors.push(0.43 - 0.29 * t, 0.78 - 0.16 * t, 0.68 - 0.10 * t, 1);
   }
   skyDome.setVerticesData(VertexBuffer.ColorKind, colors);
   const skyMat = new StandardMaterial("skyDome", scene);
