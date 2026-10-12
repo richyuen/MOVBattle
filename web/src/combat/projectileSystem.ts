@@ -338,7 +338,7 @@ export class ProjectileSystem {
         return v - Math.floor(v);
       };
       const aim = p.target.position.clone();
-      aim.y += p.targetLift + (vary(1) - 0.5) * 0.35 + (vary(5) - 0.5) * 0.5;
+      aim.y += p.targetLift + (vary(1) - 0.5) * 0.35;
       const across = (vary(2) - 0.5) * 0.36;
       const flight = aim.subtract(p.origin);
       const span = Math.hypot(flight.x, flight.z) || 1;
@@ -352,7 +352,7 @@ export class ProjectileSystem {
       // inside the body, so it juts out of the side it came in by and not out of both.
       mesh.scaling.x *= 0.5;
       mesh.scaling.y *= 0.5;
-      const back = (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.28 : 0.24) - 0.19;
+      const back = (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.28 : 0.24) - 0.07;
       const level = Math.cos(mesh.rotation.x);
       mesh.position.x -= Math.sin(mesh.rotation.y) * level * back;
       mesh.position.y += Math.sin(mesh.rotation.x) * back;
