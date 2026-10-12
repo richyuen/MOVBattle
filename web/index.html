@@ -161,15 +161,15 @@
     }
     .budget-label #budgetAmount { border-bottom: none; }
     .budget-label #budgetAmount::after {
-      content: ""; flex: none; width: 15px; height: 15px; box-sizing: border-box;
-      border: 2px solid currentColor; border-radius: 50%;
+      content: ""; flex: none; width: 24px; height: 24px; color: #f4b8b0; box-sizing: border-box;
+      border: 3px solid currentColor; border-radius: 50%;
     }
     .budget-label .budget-units { min-width: 100px; }
     .budget-label .budget-units::after {
-      content: ""; flex: none; width: 12px; height: 16px;
-      background: radial-gradient(circle at 50% 3.5px, currentColor 3.5px, transparent 4px),
-        linear-gradient(currentColor, currentColor) 50% 100% / 12px 8px no-repeat;
-      border-radius: 0 0 2px 2px;
+      content: ""; flex: none; width: 18px; height: 24px; color: #f4b8b0;
+      background: radial-gradient(circle at 50% 5.25px, currentColor 5.25px, transparent 6px),
+        linear-gradient(currentColor, currentColor) 50% 100% / 18px 12px no-repeat;
+      border-radius: 0 0 3px 3px;
     }
     /* Tray spans the viewport: no room beside it, so the boxes sit as a badge above its left end */
     @media (max-width: 968px) {
