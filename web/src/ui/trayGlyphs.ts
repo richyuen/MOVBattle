@@ -7,7 +7,7 @@ function ring(cx: number, cy: number, r: number): string {
   return `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
 }
 
-const MAMMOTH = "M4 19v-7a6 6 0 0 1 6-6h4a5 5 0 0 1 5 5v5a2 2 0 0 0 2 2M4 15h4v4M12 19v-4h4v4M15 11c0 3 2 4 5 3.5";
+const MAMMOTH = "M3 19v-7a6 6 0 0 1 6-6h5a5 5 0 0 1 5 5v5a2 2 0 0 0 2 2h-3a2 2 0 0 1-2-2v-3h-2v6h-4v-4H8v4z";
 const ROCK = "M6 18L3 12l4-6 8-1 5 5-2 7zM7 6l4 5h9M11 11l-1 7";
 const SKULL_STAFF = `M7 21l6-11${ring(16, 6, 3.5)}M14.8 5.5v.6M17.2 5.5v.6M14.5 9v2h3V9`;
 const CART = `M3 8h13l-2 7H5zM16 9l5-3${ring(10.5, 18, 2.5)}`;
@@ -96,6 +96,21 @@ const BY_FAMILY: Record<string, string> = {
   crossbow_snap: BY_WEAPON.crossbow,
   firearm_recoil: BY_WEAPON.musket,
 };
+
+// Closed shapes that read as solid silhouettes when filled; the rest stay line art.
+const SOLID = new Set<string>([
+  ...Object.values(BY_UNIT),
+  ...["mount_horse", "cannon_base", "tank_body", "longship_body", "balloon", "cart", "giant_tree"].map((k) => BY_SPECIAL[k]),
+  ...[
+    "club", "spear", "axe", "hammer", "mace", "staff", "musket", "flintlock", "blunderbuss", "cannon_hand",
+    "shield_sword", "halberd", "lance", "scythe", "frying_pan", "cutlass", "pickaxe", "bomb", "stone", "potion",
+    "lightning_bolt", "flail", "fan", "shuriken_hand", "boxing_glove", "torch",
+  ].map((k) => BY_WEAPON[k]),
+]);
+
+export function isSolidGlyph(path: string): boolean {
+  return SOLID.has(path);
+}
 
 const FIGURE = `${ring(12, 6, 3)}M12 9v7M7 12h10M12 16l-4 5M12 16l4 5`;
 

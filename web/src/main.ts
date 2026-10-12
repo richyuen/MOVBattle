@@ -15,7 +15,7 @@ import type { BattleResult } from "./core/battleResult";
 import { ALL_UNITS, getUnit } from "./data/unitDefinitions";
 import type { UnitDefinition } from "./data/unitDefinitions";
 import { FactionId, FACTION_NAMES } from "./data/factionColors";
-import { FACTION_GLYPH_PATHS, unitGlyphPath } from "./ui/trayGlyphs";
+import { FACTION_GLYPH_PATHS, isSolidGlyph, unitGlyphPath } from "./ui/trayGlyphs";
 import {
   advanceCampaignSession,
   createCampaignSession,
@@ -84,6 +84,7 @@ const statusTextEl = document.getElementById("statusText")!;
 const campaignStatusEl = document.getElementById("campaignStatus")!;
 const factionTabsEl = document.getElementById("factionTabs")!;
 const unitGridEl = document.getElementById("unitGrid")!;
+const factionLabelEl = document.getElementById("factionLabel")!;
 const unitSearchEl = document.getElementById("unitSearch") as HTMLInputElement;
 const campaignOverlayEl = document.getElementById("campaignOverlay")!;
 const campaignListEl = document.getElementById("campaignList")!;
@@ -839,6 +840,7 @@ let activeFaction = ALL_UNITS[0]?.faction ?? FactionId.Tribal;
 
 function setFaction(faction: FactionId): void {
   activeFaction = faction;
+  factionLabelEl.textContent = FACTION_NAMES[faction] ?? "";
   populateUnitGrid();
   // Update tab highlight
   document.querySelectorAll(".faction-tab").forEach((el) => {
@@ -860,7 +862,8 @@ function populateUnitGrid(): void {
     const btn = document.createElement("button");
     btn.className = "unit-btn";
     btn.dataset.id = def.id;
-    btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${unitGlyphPath(def.id, getUnitVisual(def.id))}"/></svg>`;
+    const glyph = unitGlyphPath(def.id, getUnitVisual(def.id));
+    btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path${isSolidGlyph(glyph) ? ' class="solid"' : ""} d="${glyph}"/></svg>`;
     const label = document.createElement("span");
     label.textContent = def.displayName;
     btn.appendChild(label);
