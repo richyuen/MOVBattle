@@ -129,7 +129,7 @@ export class SimulationSystem {
   readonly summonLivingCap = 55;
   readonly collisionResolutionPadding = 0.03;
   readonly collisionResolutionPasses = 2;
-  /** Standing allies pack to this share of their combined radius, so a rank's shoulders and shields overlap. */
+  /** Steady allies pack to this share of their combined radius, so a rank's shoulders and shields overlap. */
   readonly allyRankOverlap = 0.76;
   readonly waypointReachDistance = 1.1;
   readonly progressSampleDistance = 0.6;
@@ -261,8 +261,9 @@ export class SimulationSystem {
           const delta = b.position.subtract(a.position);
           delta.y = 0;
           const sameTeam = a.team === b.team;
-          const standing = !a.isToppled && !a.isDowned && !b.isToppled && !b.isDowned;
-          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (sameTeam && standing ? this.allyRankOverlap : 1);
+          // A body that is staggered, thrown or down still hits its allies at full width.
+          const standing = sameTeam && a.physicsState === "steady" && b.physicsState === "steady" && !a.isStaggered && !b.isStaggered;
+          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (standing ? this.allyRankOverlap : 1);
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
