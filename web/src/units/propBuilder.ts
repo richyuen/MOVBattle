@@ -1368,23 +1368,23 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       return shield;
     }
     case "kite": {
-      const shield = MeshBuilder.CreateBox("kshield", { width: 0.14 * s, height: 0.32 * s, depth: 0.025 * s }, scene);
+      const shield = MeshBuilder.CreateBox("kshield", { width: 0.18 * s, height: 0.32 * s, depth: 0.025 * s }, scene);
       shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
       // Short point pressed as flat as the board and turned a quarter (diameter is corner to corner, hence SQRT2), so a flat
       // triangle faces forward and not a ridge
-      const point = MeshBuilder.CreateCylinder("kpoint", { height: 0.13 * s, diameterTop: 0.14 * Math.SQRT2 * s, diameterBottom: 0, tessellation: 4 }, scene);
+      const point = MeshBuilder.CreateCylinder("kpoint", { height: 0.13 * s, diameterTop: 0.18 * Math.SQRT2 * s, diameterBottom: 0, tessellation: 4 }, scene);
       point.rotation.y = Math.PI / 4;
       point.bakeCurrentTransformIntoVertices();
       point.position.y = -0.225 * s;
       point.scaling.z = 0.14;
       point.parent = shield;
       point.material = shield.material;
-      // Pale rim showing round the board and its point, and a metal boss on the face, as on the round shield
-      const rim = MeshBuilder.CreateBox("kshieldRim", { width: 0.18 * s, height: 0.36 * s, depth: 0.018 * s }, scene);
+      // Dark rim showing round the board and its point, and a metal boss on the face, as on the round shield
+      const rim = MeshBuilder.CreateBox("kshieldRim", { width: 0.22 * s, height: 0.36 * s, depth: 0.018 * s }, scene);
       rim.position.z = -0.006 * s;
       rim.parent = shield;
-      rim.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.6));
-      const rimPoint = MeshBuilder.CreateCylinder("kpointRim", { height: 0.17 * s, diameterTop: 0.18 * Math.SQRT2 * s, diameterBottom: 0, tessellation: 4 }, scene);
+      rim.material = mat(scene, teamColor.scale(0.45));
+      const rimPoint = MeshBuilder.CreateCylinder("kpointRim", { height: 0.17 * s, diameterTop: 0.22 * Math.SQRT2 * s, diameterBottom: 0, tessellation: 4 }, scene);
       rimPoint.rotation.y = Math.PI / 4;
       rimPoint.bakeCurrentTransformIntoVertices();
       rimPoint.position.set(0, -0.265 * s, -0.006 * s);
