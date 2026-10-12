@@ -284,6 +284,7 @@ export class TribalSandboxMapBuilder {
     mat: StandardMaterial,
   ): void {
     const snow = this._scene.getMaterialByName("farSnow")!;
+    const glow = this._scene.getGlowLayerByName("glow");
     // Ridges run along the island edge: x-long behind the long sides, z-long off the two ends
     const alongX = Math.abs(pos.x) < 70;
     const long = Math.max(diameterX, diameterZ) * 1.5;
@@ -319,6 +320,7 @@ export class TribalSandboxMapBuilder {
         tier.scaling.set(sizeX * width, tall, sizeZ * width);
         tier.receiveShadows = true;
         tier.convertToFlatShadedMesh();
+        glow?.addExcludedMesh(tier); // no glow rim on a far ridge, same as the clouds
       }
     }
     // Rock root below ground level so off-island mountains read as their own floating rocks
@@ -329,6 +331,7 @@ export class TribalSandboxMapBuilder {
     root.position.set(pos.x, -8, pos.z);
     root.material = mat;
     root.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(root);
 
     // Add collision — approximate as a cylinder covering the base
     const collisionRadius = Math.min(diameterX, diameterZ) * 0.35;

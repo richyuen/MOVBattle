@@ -250,7 +250,7 @@ bindHeldCameraButton(btnTouchCameraUpEl, "moveUp");
 const pipeline = new DefaultRenderingPipeline("default", true, scene, [camCtrl.camera]);
 pipeline.bloomEnabled = true;
 pipeline.bloomThreshold = 0.65;
-pipeline.bloomWeight = 0.4;
+pipeline.bloomWeight = 0.15; // slight: at 0.4 every sunlit white, clouds and snow crests first, carried a wide white rim
 pipeline.bloomKernel = 64;
 pipeline.bloomScale = 0.5;
 pipeline.fxaaEnabled = true;
