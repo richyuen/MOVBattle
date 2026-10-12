@@ -1283,11 +1283,11 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       helm.rotation.y = Math.PI / 8;
       helm.bakeCurrentTransformIntoVertices();
       helm.convertToFlatShadedMesh();
-      // Bare steel like the open helmet, with only a breath of team colour: the helm is gear, not skin, and any heavier
+      // Pale blue-grey steel, with only a breath of team colour: the helm is gear, not skin, and any heavier
       // wash turns it into the lightest team-coloured block on the unit
-      const steel = new Color3(0.6, 0.6, 0.65);
+      const steel = new Color3(0.6, 0.66, 0.72);
       helm.material = mat(scene, teamColor ? Color3.Lerp(steel, teamColor, 0.12) : steel);
-      helm.position.y = -0.065 * s;
+      helm.position.y = -0.055 * s;
       // Eye slit: a bold dark bar across the front facet that wraps onto the two facets beside it
       const slitMat = mat(scene, new Color3(0.08, 0.08, 0.08));
       const slitY = -0.015 * s;
@@ -1303,9 +1303,9 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
         wrap.parent = helm;
         wrap.material = slitMat;
       }
-      // Head-tight: after the hat and prop oversize the rim is about 1.15 heads across and the crown just clears the
+      // Squat: wider than it is tall. After the hat and prop oversize the rim is about 1.3 heads across and the crown just clears the
       // skull, so it sits on the head as a bucket and is not a block as wide as the waist
-      helm.scaling.set(0.78, 0.92, 0.78);
+      helm.scaling.set(0.9, 0.8, 0.9);
       return helm;
     }
     case "hood_liripipe": {
