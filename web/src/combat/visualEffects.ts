@@ -306,7 +306,7 @@ export class VisualEffects {
   }
 
   // ══════════════════ EXPLOSION BURST ══════════════════
-  /** Brief flash, a head-sized white smoke puff, the dark ball and a burst of tan dust clods that outlasts the smoke. No particles. */
+  /** Brief flash, a head-sized white smoke puff, the dark ball and one fat tan dust burst at the crater, with a few small clods, that outlasts the smoke. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
@@ -353,16 +353,28 @@ export class VisualEffects {
       lobes.push({ mesh: lobe, size: (i === 0 ? 0.42 : 0.22 + Math.random() * 0.12) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
     }
 
-    // Dust: flattened tan clods thrown up out of the ground above the grass tops, landing in a ring and lying there.
+    // Dust: one fat mound of overlapping tan lobes heaved up out of the crater, a big one in the middle and
+    // smaller ones crowded against it, so the hit reads as a single burst from any side.
+    const dustScale = Math.min(scale, 1.4);
+    const mound: { mesh: TransformNode; size: number }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const lobe = blob("burstDust", 2, dustMat);
+      const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
+      const reach = (i === 0 ? 0 : 0.3 + Math.random() * 0.2) * dustScale;
+      const size = (i === 0 ? 0.85 : 0.4 + Math.random() * 0.25) * dustScale;
+      lobe.position.set(Math.cos(angle) * reach, floorY + size * 0.3, Math.sin(angle) * reach);
+      mound.push({ mesh: lobe, size });
+    }
+    // A few clods of mixed size thrown clear of it, landing close by and lying there.
     const chunks: { mesh: TransformNode; size: number; velocity: Vector3 }[] = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 5; i++) {
       const chunk = blob("burstDust", 2, dustMat);
-      const angle = (i / 16) * Math.PI * 2 + Math.random() * 0.5;
-      const speed = (2.2 + Math.random() * 2.4) * scale;
+      const angle = (i / 5) * Math.PI * 2 + Math.random() * 1.1;
+      const speed = (0.9 + Math.random() * 1.3) * scale;
       chunk.position.y = floorY + 0.35;
       chunks.push({
         mesh: chunk,
-        size: (0.24 + Math.random() * 0.22) * scale,
+        size: (0.09 + Math.random() * Math.random() * 0.2) * scale,
         velocity: new Vector3(Math.cos(angle) * speed, 3 + Math.random() * 2.4, Math.sin(angle) * speed),
       });
     }
@@ -385,6 +397,13 @@ export class VisualEffects {
         for (const lobe of lobes) {
           lobe.mesh.position.y += lobe.rise * dt;
           lobe.mesh.scaling.setAll(lobe.size * swell * smokeFade);
+        }
+        // The mound heaves up fast, then sags flat as it settles.
+        const heave = 0.35 + 0.65 * Math.min(1, elapsed / 0.14);
+        const sag = 0.75 - 0.3 * Math.min(1, elapsed / totalDuration);
+        for (const lobe of mound) {
+          const size = lobe.size * heave * fade;
+          lobe.mesh.scaling.set(size, size * sag, size);
         }
         ballVelocity.y -= 14 * dt;
         ball.position.addInPlace(ballVelocity.scale(dt));
