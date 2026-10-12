@@ -675,6 +675,7 @@ export class RuntimeUnit {
     // Animate
     // A blasted body stays limp for its whole flight, not just until the topple clock runs out mid-air.
     this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
+    this.animator.setAirborne(!this._grounded && this.position.y > 0.35);
     this.animator.update(dt);
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
