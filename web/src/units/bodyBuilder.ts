@@ -231,6 +231,8 @@ export function buildArticulatedBody(
   // A breastplate flares to the shoulders: the chest top widens while the shoulder joints stay put, so the shoulder
   // caps sink into its corners and the chest is broader than the helm above it.
   const chestTop = torsoTop * (options.showShoulderPads ? 1.24 : 1);
+  // ...and its waist widens by half that flare, so the plate is a broad slab and not a funnel down to the belt.
+  const waist = torsoBottom * (options.showShoulderPads ? 1.12 : 1);
 
   const headHeight = 0.216 * HEAD_SHRINK * p.headSize * (p.headLength ?? 1.0);
   const headWidth = 0.192 * HEAD_SHRINK * p.headSize * (p.headWidth ?? 1.0);
@@ -267,9 +269,9 @@ export function buildArticulatedBody(
     `${name}_torsoM`,
     torsoH,
     chestTop,
-    torsoBottom,
+    waist,
     bodyMat,
-    new Vector3(1, 1, torsoD / Math.max(chestTop, torsoBottom, 0.001)),
+    new Vector3(1, 1, torsoD / Math.max(chestTop, waist, 0.001)),
   );
   torsoMesh.position.y = torsoH * s * 0.5;
   torsoMesh.parent = torso;
@@ -417,8 +419,8 @@ export function buildArticulatedBody(
 
   // ─── Shoulder Caps (hide joint seams) ───
   // Wider than the sleeve top, so the cap shows as a rounded shoulder on the torso corner and not only a seam filler
-  const shoulderCapDiam = upperArmTop * 1.55;
-  // On a breastplate the cap is flattened into its corner: a full ball there reads as a separate bead
+  // On a breastplate the cap is small and flattened into its corner: a full ball there reads as a separate bead
+  const shoulderCapDiam = upperArmTop * (options.showShoulderPads ? 1.1 : 1.55);
   const capScale = options.showShoulderPads ? new Vector3(1, 0.7, 1) : Vector3.One();
   const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, capScale, capSegments);
   lShoulderCap.parent = leftShoulder;
@@ -548,7 +550,7 @@ export function buildArticulatedBody(
 
   // ─── Belt (at torso base / hip level) ───
   if (options.showBelt) {
-    const beltRadius = torsoBottom * 0.54;
+    const beltRadius = waist * 0.54;
     const beltTube = beltRadius * 0.12;
     const belt = MeshBuilder.CreateTorus(`${name}_belt`, {
       diameter: beltRadius * 2 * s,
