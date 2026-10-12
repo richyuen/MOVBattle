@@ -307,9 +307,9 @@ export class TribalSandboxMapBuilder {
     mat: StandardMaterial,
   ): void {
     const mound = MeshBuilder.CreateSphere("hill", { diameter: 1, segments: 10 }, this._scene);
-    mound.scaling.set(diameterX, height * 0.6, diameterZ);
-    // Centred on the ground, so only the upper dome shows and the rise has no underside.
-    mound.position.set(pos.x, 0, pos.z);
+    mound.scaling.set(diameterX, height * 1.2, diameterZ);
+    // Sunk past its middle, so only a shallow cap shows: the rise meets the lawn on a slope, with no upright rim.
+    mound.position.set(pos.x, -height * 0.3, pos.z);
     mound.material = mat;
     mound.receiveShadows = true;
 
