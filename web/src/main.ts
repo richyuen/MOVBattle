@@ -131,7 +131,7 @@ dir.shadowMaxZ = 220;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
-scene.fogColor = new Color3(0.30, 0.74, 0.60);
+scene.fogColor = new Color3(0.14, 0.62, 0.46);
 scene.fogStart = 70;
 scene.fogEnd = 170;
 // The haze starts behind the fight, not at a fixed distance from the eye: pulled back to the placement view,
