@@ -1217,8 +1217,8 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       return beret;
     }
     case "laurel": {
-      const laurel = MeshBuilder.CreateTorus("laurel", { diameter: 0.15 * s, thickness: 0.03 * s, tessellation: 8 }, scene);
-      laurel.material = mat(scene, new Color3(0.3, 0.6, 0.15), 0.1);
+      const laurel = MeshBuilder.CreateTorus("laurel", { diameter: 0.125 * s, thickness: 0.022 * s, tessellation: 6 }, scene);
+      laurel.material = mat(scene, new Color3(0.35, 0.45, 0.18), 0.1);
       laurel.position.y = -0.07 * s;
       return laurel;
     }
