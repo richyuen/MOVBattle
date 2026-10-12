@@ -29,6 +29,10 @@ const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
   "secret_nature",
 ]);
 
+// TABS red is a saturated coral, about (235, 99, 109) on screen. The team red is mixed most of the way to this before
+// anything is tinted with it, so skin (x0.9) lands near (0.87, 0.37, 0.35) and cloth, plate and props lift with it.
+const RED_CORAL = new Color3(1, 0.45, 0.42);
+const RED_CORAL_MIX = 0.85;
 // How much of each preset's flesh tone / cloth tone survives over the team color.
 const SKIN_FLESH_WEIGHT = 0.25;
 const BODY_PRESET_WEIGHT = 0.45;
@@ -103,7 +107,9 @@ export class UnitFactory {
     // Team color is the skin and dominates the body; faction color and material preset only tint it,
     // with low-skin/non-skin units biased even further toward team ownership.
     const factionColor = FACTION_COLORS[definition.faction] ?? new Color3(0.5, 0.5, 0.5);
-    const teamColor = TEAM_COLORS[team] ?? new Color3(0.5, 0.5, 0.5);
+    // Red is lifted to a saturated coral here, for skin, cloth and props alike, so the whole unit is one red and not wine
+    const baseTeamColor = TEAM_COLORS[team] ?? new Color3(0.5, 0.5, 0.5);
+    const teamColor = team === 1 ? Color3.Lerp(baseTeamColor, RED_CORAL, RED_CORAL_MIX) : baseTeamColor;
     const shouldUseVehicleBody = isVehicleUnit(definition.id) && !options.forceArticulatedBody;
     const isArmored = materialPreset === "medieval_steel" || materialPreset === "ancient_bronze"
       || materialPreset === "good_gold" || materialPreset === "secret_hero" || materialPreset === "secret_holy";
