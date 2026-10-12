@@ -212,17 +212,22 @@ export class CameraController {
     const from = this.captureViewState();
     const wrap = (angle: number) => Math.atan2(Math.sin(angle), Math.cos(angle));
     if (center.near) {
-      // Standoff: stand behind and beside the holding formation, three-quarter on, so it fills the
-      // foreground and the enemy it shoots at sits across the field as the background.
+      // Standoff: stand close behind the holding formation and well off its firing axis, so the line recedes
+      // across the foreground and the enemy it shoots at sits across the field as the background.
       const behind = Math.atan2(center.near.z - center.z, center.near.x - center.x);
       const toSide = wrap(to.alpha - behind);
-      to.alpha = behind + Math.sign(toSide) * Math.min(Math.abs(toSide), 0.3);
-      to.radius = Math.min(12, Math.max(6.5, (center.halfSpan ?? 0) * 1.5));
-      to.target.x = center.x + (center.near.x - center.x) * 0.3;
-      to.target.z = center.z + (center.near.z - center.z) * 0.3;
-      // Stand far enough behind the holding line that its outermost units are whole in frame.
-      const toLine = Math.hypot(center.near.x - to.target.x, center.near.z - to.target.z);
-      to.radius = Math.max(to.radius, Math.min(20, toLine + ((center.near.halfWidth ?? 0) + 1.5) / 0.6));
+      const side = Math.sign(toSide) * Math.min(Math.abs(toSide), 0.55);
+      to.alpha = behind + side;
+      to.target.x = center.x + (center.near.x - center.x) * 0.75;
+      to.target.z = center.z + (center.near.z - center.z) * 0.75;
+      // Eye distance at which a line end `across` the axis is whole in frame: its depth along the view must be
+      // at least its sideways offset from the view axis (plus a body of margin) over the frame half-width.
+      const ahead = Math.hypot(center.near.x - to.target.x, center.near.z - to.target.z);
+      const fit = (across: number): number =>
+        ahead * Math.cos(side) + across * Math.sin(side) + (Math.abs(across * Math.cos(side) - ahead * Math.sin(side)) + 1.2) / 0.6;
+      const halfWidth = center.near.halfWidth ?? 0;
+      to.radius = Math.min(14, Math.max(4.5, fit(halfWidth), fit(-halfWidth)));
+      this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
