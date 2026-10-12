@@ -535,18 +535,18 @@ export class TribalSandboxMapBuilder {
         if (tuft % 2 !== pass) continue;
         const tuftX = -34 + this._seededValue(tuft, 31) * 68;
         const tuftZ = -24 + this._seededValue(tuft, 32) * 48;
-        // Low-frequency mask: a quarter of the 4 m cells stay bare lawn, with a ragged edge from per-tuft jitter.
+        // Low-frequency mask: a tenth of the 4 m cells stay bare lawn, with a ragged edge from per-tuft jitter.
         const cellX = Math.floor((tuftX + 34 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
         const cellZ = Math.floor((tuftZ + 24 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
-        if (this._seededValue(cellX * 32 + cellZ, 39) < 0.25) continue;
+        if (this._seededValue(cellX * 32 + cellZ, 39) < 0.1) continue;
         const x = tuftX + (this._seededValue(i, 34) - 0.5) * 0.16;
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.16;
-        const h = 0.12 + this._seededValue(i, 33) * 0.13; // ankle to shin: feet and fallen bodies stay in view
+        const h = 0.2 + this._seededValue(i, 33) * 0.25; // shin to knee: standing feet sink into the grass
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
         const half = 0.07 + this._seededValue(i, 38) * 0.03; // broad, so the crossed blades of a clump overlap
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
-        const lean = (this._seededValue(i, 36) - 0.5) * 0.06;
+        const lean = (this._seededValue(i, 36) - 0.5) * 0.3; // up to 0.15 m either way, so no two blades stand alike
         const base = positions.length / 3;
         // Top edge 0.4 of the base width, so each card is a flat blade and not a spike.
         positions.push(
