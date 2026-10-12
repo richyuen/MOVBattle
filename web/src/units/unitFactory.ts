@@ -46,7 +46,8 @@ const CLOTHED_PRESET_WEIGHT = 0.75;
 // Armour is the team colour itself, only darker (TABS): a light wash of its metal, no hue rotation. More grey or a
 // turn toward orange and red plate goes brown-maroon.
 const ARMOUR_PRESET_WEIGHT = 0.2;
-// Plate is a clearly darker value than the skin of the head and hands beside it, on top of the cloth shade.
+// Blue plate is a clearly darker value than the skin of the head and hands beside it, on top of the cloth shade.
+// Red plate takes none of it: any darker than its cloth and it is brick.
 const ARMOUR_SHADE = 0.65;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
 const BOOT_SHADE = 0.7;
@@ -168,7 +169,7 @@ export class UnitFactory {
       const cool = hsv.r > 150 && hsv.r < 300;
       const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * shade(CLOTH_SHADE) * (isArmored && cool ? ARMOUR_SHADE : 1), new Color3());
       const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(shade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
