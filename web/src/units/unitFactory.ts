@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, Color3, Mesh,
+  Scene, Vector3, Color3, Mesh, MeshBuilder,
   type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -46,6 +46,8 @@ const CLOTHED_PRESET_WEIGHT = 0.75;
 const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
+// ...and a dark shaggy mop of hair over the crown and the back of the head.
+const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
 
 function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
   return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
@@ -121,6 +123,14 @@ export class UnitFactory {
           if (/_[lr]HipCap$/.test(mesh.name)) mesh.scaling.set(1.7, 1.4, 1.7);
           else mesh.material = body.skinMaterial;
         }
+        // Hair mop: a coarse faceted lump a little bigger than the head, set up and back so the face stays bare.
+        const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+        const hair = MeshBuilder.CreateSphere(`${body.headMesh.name}_hair`, { diameter: headSize * 1.14, segments: 3 }, this._scene);
+        hair.position.set(0, headSize * 0.16, -headSize * 0.14);
+        hair.material = getMaterialFactory().getCloth(TRIBAL_HAIR_COLOR);
+        hair.convertToFlatShadedMesh();
+        hair.parent = body.headMesh;
+        propMeshes.push(hair);
       } else if (!shouldFavorTeamBodyColor(materialPreset)) {
         for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
