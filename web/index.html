@@ -218,6 +218,9 @@
     .btn:disabled { opacity: 0.5; cursor: default; }
     /* Sandbox has no unlimited toggle: the top-left corner stays bare, keeping its place in the row */
     #btnUnlimited:disabled { visibility: hidden; }
+    /* Sandbox names its map there instead, as small plain text */
+    #mapName { padding: 10px 2px 0; font-size: 13px; letter-spacing: 0.03em; white-space: nowrap; pointer-events: none; }
+    #mapName:empty { display: none; }
     .btn-start {
       min-width: 136px;
       padding: 14px 30px 18px;
@@ -641,6 +644,7 @@
   <div id="hud">
     <div class="hud-topbar">
       <div class="hud-side left">
+        <span id="mapName"></span>
         <button class="btn btn-corner" id="btnUnlimited" disabled>Unlimited: Off</button>
       </div>
       <div class="hud-center">

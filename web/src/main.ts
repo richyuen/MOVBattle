@@ -97,6 +97,7 @@ const titleIntroEl = document.getElementById("titleIntro");
 const bodyEl = document.body;
 const btnCampaignEl = document.getElementById("btnCampaign") as HTMLButtonElement | null;
 const btnUnlimitedEl = document.getElementById("btnUnlimited") as HTMLButtonElement | null;
+const mapNameEl = document.getElementById("mapName");
 const btnResultPrimaryEl = document.getElementById("btnResultPrimary") as HTMLButtonElement | null;
 const btnResultSecondaryEl = document.getElementById("btnResultSecondary") as HTMLButtonElement | null;
 const btnLeaveCampaignEl = document.getElementById("btnLeaveCampaign") as HTMLButtonElement | null;
@@ -588,6 +589,7 @@ function loadMapById(mapId: BattleMapId): void {
     activeMapInstance.obstacles,
     activeMapInstance.hazards,
   );
+  updateCampaignStatusDisplay();
 }
 
 function buildRuntimeObstacles(mapInstance: BattleMapInstance): Obstacle[] {
@@ -665,6 +667,7 @@ function updateCampaignStatusDisplay(): void {
     btnUnlimitedEl.disabled = !campaignSession;
     btnUnlimitedEl.textContent = campaignSession?.unlimited ? "Unlimited: On" : "Unlimited: Off";
   }
+  if (mapNameEl) mapNameEl.textContent = campaignSession ? "" : activeMapInstance.displayName;
   if (!activeCampaign || !activeScenario) {
     campaignStatusEl.textContent = "";
     return;
