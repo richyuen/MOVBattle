@@ -536,9 +536,10 @@ export class TribalSandboxMapBuilder {
         const tuftX = -34 + this._seededValue(tuft, 31) * 68;
         const tuftZ = -24 + this._seededValue(tuft, 32) * 48;
         // Low-frequency mask: a quarter of the 4 m cells stay open ground, with a ragged edge from per-tuft jitter.
+        // Across the middle where the lines meet it is well over half, so the dead and the gun carriages lie on bare earth.
         const cellX = Math.floor((tuftX + 34 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
         const cellZ = Math.floor((tuftZ + 24 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
-        if (this._seededValue(cellX * 32 + cellZ, 39) < 0.25) continue;
+        if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.6 : 0.25)) continue;
         // Each patch has its own height, from ankle turf to full clumps, so the field is not one level carpet.
         const patchHeight = 0.45 + this._seededValue(cellX * 32 + cellZ, 42) * 0.55;
         const x = tuftX + (this._seededValue(i, 34) - 0.5) * 0.16;
