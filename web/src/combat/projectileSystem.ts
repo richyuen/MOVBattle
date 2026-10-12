@@ -361,7 +361,7 @@ export class ProjectileSystem {
           });
         } else {
           this.visualEffects?.spawnImpactDust(p.targetPos);
-          this.visualEffects?.spawnHitFlash(p.targetPos);
+          this.visualEffects?.spawnHitDebris(p.targetPos);
         }
       }
     }

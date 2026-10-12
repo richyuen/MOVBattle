@@ -236,11 +236,11 @@ export class ImpactPresentation {
         break;
       case "medium":
         this.visualEffects.spawnImpactDust(position, 1);
-        this.visualEffects.spawnHitFlash(position, 0.75);
+        this.visualEffects.spawnHitDebris(position, 0.75);
         break;
       case "heavy":
         this.visualEffects.spawnImpactDust(position, 1.35);
-        this.visualEffects.spawnHitFlash(position, 1.05);
+        this.visualEffects.spawnHitDebris(position, 1.05);
         this.visualEffects.spawnHitSparks(position, 1.1);
         this._shake(0.055);
         break;
@@ -256,7 +256,7 @@ export class ImpactPresentation {
         break;
       case "death":
         this.visualEffects.spawnImpactDust(position, 1.75, new Color3(0.78, 0.68, 0.52));
-        this.visualEffects.spawnHitFlash(position, 1.25);
+        this.visualEffects.spawnHitDebris(position, 1.25);
         this.visualEffects.spawnHitSparks(position, 1.35);
         this._shake(0.095);
         break;

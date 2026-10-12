@@ -244,27 +244,45 @@ export class VisualEffects {
     });
   }
 
-  // ══════════════════ HIT FLASH ══════════════════
-  /** Bright white pop on every hit. */
-  spawnHitFlash(position: Vector3, intensity = 1): void {
-    const flash = MeshBuilder.CreateSphere("hflash", { diameter: 0.1, segments: 4 }, this._scene);
-    flash.position = position.clone();
-    flash.position.y += 0.5;
-    const mat = this._fxMat(new Color3(1, 1, 1), new Color3(1, 1, 1));
+  // ══════════════════ HIT DEBRIS ══════════════════
+  /** A few dark faceted chunks knocked loose by a hit: they arc out, drop and shrink away. Lit and matte, so nothing glows. */
+  spawnHitDebris(position: Vector3, intensity = 1): void {
+    const root = new TransformNode("hitDebris", this._scene);
+    root.position = position.clone();
+    root.position.y += 0.9;
+    const mat = getMaterialFactory().createUnique("stone", new Color3(0.34, 0.1, 0.09));
+    const floorY = -root.position.y + 0.05;
 
-    flash.material = mat;
-    const root = flash as unknown as TransformNode;
+    const chunks: { mesh: TransformNode; size: number; velocity: Vector3 }[] = [];
+    const count = Math.max(3, Math.round(4 * intensity));
+    for (let i = 0; i < count; i++) {
+      const mesh = MeshBuilder.CreateSphere("hitChunk", { diameter: 1, segments: 2 }, this._scene);
+      mesh.material = mat;
+      mesh.parent = root;
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.9;
+      const speed = (1.3 + Math.random() * 1.5) * Math.min(1.3, intensity);
+      chunks.push({
+        mesh,
+        size: 0.07 + Math.random() * 0.06,
+        velocity: new Vector3(Math.cos(angle) * speed, 1.6 + Math.random() * 1.6, Math.sin(angle) * speed),
+      });
+    }
 
-    const totalDuration = 0.15;
     this._effects.push({
       root,
-      remaining: totalDuration,
-      update: (_dt, remaining) => {
-        const t = 1 - remaining / totalDuration;
-        // Scale up quickly, then fade
-        const s = (t < 0.53 ? 1 + t * 6 : 4) * intensity;
-        flash.scaling.setAll(s);
-        mat.alpha = t < 0.53 ? 1 : Math.max(0, 1 - (t - 0.53) * 2.1);
+      remaining: 0.7,
+      update: (dt, remaining) => {
+        const fade = Math.min(1, remaining / 0.2);
+        for (const chunk of chunks) {
+          chunk.velocity.y -= 14 * dt;
+          chunk.mesh.position.addInPlace(chunk.velocity.scale(dt));
+          if (chunk.mesh.position.y < floorY) {
+            chunk.mesh.position.y = floorY;
+            chunk.velocity.setAll(0);
+          }
+          const size = Math.max(0.001, chunk.size * fade);
+          chunk.mesh.scaling.set(size, size * 0.7, size);
+        }
       },
       dispose: () => mat.dispose(),
     });

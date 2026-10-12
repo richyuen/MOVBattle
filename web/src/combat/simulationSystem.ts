@@ -1391,7 +1391,7 @@ export class SimulationSystem {
         });
       } else if (this.visualEffects) {
         this.visualEffects.spawnImpactDust(target.position);
-        this.visualEffects.spawnHitFlash(target.position);
+        this.visualEffects.spawnHitDebris(target.position);
       }
     }
     const shockRadius = splashRadius > 0 ? splashRadius + 0.85 : 1.55;
@@ -1423,7 +1423,7 @@ export class SimulationSystem {
         });
       } else if (this.visualEffects) {
         this.visualEffects.spawnImpactDust(unit.position);
-        this.visualEffects.spawnHitFlash(unit.position);
+        this.visualEffects.spawnHitDebris(unit.position);
       }
     }
   }
