@@ -34,8 +34,11 @@ const SKIN_FLESH_WEIGHT = 0.25;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is halved: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.5;
-// Cloth and armour sit a clear step darker than the team-coloured skin they are worn over.
-const CLOTH_SHADE = 0.68;
+// Cloth and armour are a different hue from the team-coloured skin they are worn over, not just a darker one:
+// rotated away from the skin hue, washed out and a little darker.
+const CLOTH_HUE_SHIFT = 25;
+const CLOTH_SATURATION = 0.7;
+const CLOTH_SHADE = 0.88;
 // Clothed humanoids take more of their preset's cloth tone, so the torso is a different hue from the skin.
 const CLOTHED_PRESET_WEIGHT = 0.75;
 const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
@@ -102,10 +105,11 @@ export class UnitFactory {
       );
       // Attach weapon, hat, shield, special props
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0, teamColor);
-      // Arms and thighs are bare team-coloured skin (TABS); the torso keeps the cloth or armour colour and
-      // the shins and feet are dark boots. Whole-body presets (ghost, bone, void...) stay one material.
+      // Arms are bare team-coloured skin (TABS); the torso and thighs keep the cloth or armour colour as a
+      // tunic and trousers, and the shins and feet are dark boots. Whole-body presets (ghost, bone, void...)
+      // stay one material.
       if (!shouldFavorTeamBodyColor(materialPreset)) {
-        for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftUpperLeg, body.rightUpperLeg]) {
+        for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
         }
         const bootMaterial = getMaterialFactory().getCloth(BOOT_COLOR);
@@ -120,7 +124,11 @@ export class UnitFactory {
     const clothed = !shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset);
     applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? CLOTHED_PRESET_WEIGHT : BODY_PRESET_WEIGHT);
     if (clothed) {
-      body.bodyMaterial.baseColor = body.bodyMaterial.baseColor.scale(CLOTH_SHADE);
+      // Warm cloth rotates toward orange and tan, cool cloth toward teal, so neither drifts into the other team's colour.
+      const hsv = body.bodyMaterial.baseColor.toHSV();
+      const cool = hsv.r > 150 && hsv.r < 300;
+      const hue = (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * CLOTH_SATURATION, hsv.b * CLOTH_SHADE, new Color3());
     }
 
     body.root.position = position.clone();
