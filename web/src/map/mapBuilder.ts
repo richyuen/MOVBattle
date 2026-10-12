@@ -752,8 +752,13 @@ export class TribalSandboxMapBuilder {
   /** Farm clutter between the open field and the tree ring: tumbled dry-stone walls, hay bales and stumps. */
   private _createSetDressing(): void {
     const rock = this._scene.getMaterialByName("rock") as StandardMaterial;
-    const darkRock = this._scene.getMaterialByName("darkRock") as StandardMaterial;
     const trunk = this._scene.getMaterialByName("trunk") as StandardMaterial;
+    // Wall stone is the pale boulder rock with a quarter of its own colour as glow, so a face turned from the sun
+    // is a mid tan and not black.
+    const wallStone = new StandardMaterial("wallStone", this._scene);
+    wallStone.diffuseColor = rock.diffuseColor.clone();
+    wallStone.emissiveColor = rock.diffuseColor.scale(0.25);
+    wallStone.specularColor = rock.specularColor.clone();
     const straw = new StandardMaterial("straw", this._scene);
     straw.diffuseColor = new Color3(0.86, 0.72, 0.36);
     straw.specularColor = new Color3(0.03, 0.03, 0.03);
@@ -779,13 +784,14 @@ export class TribalSandboxMapBuilder {
         if (i === gap) continue;
         const k = w * 20 + i;
         const along = (i - (wall.stones - 1) / 2) * 1.15;
-        const height = i === gap - 1 || i === gap + 1 ? 0.5 : 0.8 + this._seededValue(k, 112) * 0.35;
+        // No two stones alike: some half the height and width of their neighbours, so the top is a broken line.
+        const height = i === gap - 1 || i === gap + 1 ? 0.45 : 0.6 + this._seededValue(k, 112) * 0.65;
         const stone = MeshBuilder.CreateBox("wallStone", {
-          width: 1.2 + this._seededValue(k, 113) * 0.2, height, depth: 0.65 + this._seededValue(k, 114) * 0.2,
+          width: 0.85 + this._seededValue(k, 113) * 0.8, height, depth: 0.55 + this._seededValue(k, 114) * 0.4,
         }, this._scene);
         stone.position.set(wall.x + Math.cos(wall.heading) * along, height / 2 - 0.04, wall.z + Math.sin(wall.heading) * along);
         stone.rotation.set((this._seededValue(k, 115) - 0.5) * 0.12, -wall.heading + (this._seededValue(k, 116) - 0.5) * 0.3, (this._seededValue(k, 117) - 0.5) * 0.12);
-        place(stone, this._seededValue(k, 118) > 0.4 ? darkRock : rock, 0.62);
+        place(stone, wallStone, 0.62);
       }
     });
 
