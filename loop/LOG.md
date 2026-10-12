@@ -93,3 +93,4 @@ iter 91 | sky-teal-greyed, corpses-all-flat, tray-filled-trapezoid, zeus-no-robe
 iter 92 | zeus-no-robe-skirt, flung-torsos-rigid-planks, muzzle-smoke-one-ball, impact-burst-tricolour, tribal-rim-flanks-bare, budget-plain-boxes, sky-flat-one-teal | 3/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 93 | impact-burst-tricolour, sky-flat-one-teal, flung-limbs-tucked, budget-icons-small-pale, tribal-apron-outside-ring, front-lines-body-apart | 4/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 94 | front-lines-body-apart, tribal-apron-outside-ring, sky-top-emerald, fireball-lemon-band, flung-bodies-starfish, budget-coin-hollow-blue-digits | 6/6 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 95 | sky-no-horizon-haze, red-team-tan-bodies, victory-bands-thin, backdrop-peaks-ice-blue, grass-spikes-bury-bodies, mammoth-pole-legs, lightning-hollow-outline, cannon-crew-stand-idle | 7/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
