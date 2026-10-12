@@ -95,6 +95,7 @@ export interface BodyProportions {
   /** Optional torso shaping controls */
   torsoWidth?: number;
   torsoDepth?: number;
+  torsoLength?: number;
   torsoRoundness?: number;
   /** Optional limb shaping controls */
   upperArmWidth?: number;
@@ -241,7 +242,7 @@ export function buildArticulatedBody(
 
   const limbTaper = Math.max(0.15, p.limbTaper ?? 1.0);
   const torsoW = 0.33 * p.bulk * (p.torsoWidth ?? 1.0);
-  const torsoH = 0.46;
+  const torsoH = 0.46 * (p.torsoLength ?? 1.0);
   const torsoD = 0.21 * Math.max(0.75, p.bulk * 0.92) * (p.torsoDepth ?? 1.0);
   const torsoRoundness = Math.max(0.6, p.torsoRoundness ?? 1.0);
   const torsoTop = torsoW * (1.0 + torsoRoundness * 0.08);

@@ -268,7 +268,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.85, bulk: 0.8 }, "lute", "beret", "none", "none", "#9B30FF",
   ),
   "medieval.squire": vis(
-    { scale: 1.0, bulk: 1.0 }, "sword", "great_helm", "none", "none", "#C0C0C0",
+    { scale: 1.0, bulk: 1.0, torsoLength: 0.86 }, "sword", "great_helm", "none", "none", "#C0C0C0",
     undefined,
     {
       posePreset: "duelist",

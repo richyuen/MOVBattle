@@ -1295,6 +1295,8 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
         wrap.parent = helm;
         wrap.material = slitMat;
       }
+      // Narrow enough to sit on the head as a bucket and not overhang the shoulders as a drum
+      helm.scaling.set(0.88, 1, 0.88);
       return helm;
     }
     case "hood_liripipe": {
