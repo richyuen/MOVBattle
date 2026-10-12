@@ -29,9 +29,6 @@ function sunShadows(scene: Scene): ShadowGenerator | null {
   return (scene.getLightByName("dir")?.getShadowGenerator() as ShadowGenerator | null | undefined) ?? null;
 }
 
-// The lawn's corners stop up to this fraction of their reach short of the rim, so its edge is notched and not a ruled arc.
-const LAWN_NOTCH = -0.045;
-
 /** Where the island's rim lies in the direction of angle `a` from its centre */
 function islandRim(a: number): [number, number] {
   const c = Math.cos(a);
@@ -172,16 +169,15 @@ export class TribalSandboxMapBuilder {
 
   private _createGround(): void {
     // Main ground — warm green-orange grass
-    const ground = this._islandSlab("ground", 0, 0.04, 1, 48, LAWN_NOTCH);
+    const ground = this._islandSlab("ground", 0, 0.04);
     const mat = new StandardMaterial("groundMat", this._scene);
     mat.diffuseColor = new Color3(0.60, 0.58, 0.30);
     mat.specularColor = new Color3(0.05, 0.05, 0.05);
     ground.material = mat;
     ground.receiveShadows = true;
 
-    // Lawn: the same green from rim to rim, so no band of another colour frames the field. Its corners stop a
-    // different step short of the rim, so the grass line is notched and bare rock shows in the bites.
-    const centerGrass = this._islandSlab("centerGrass", 0.02, 0.04, 1, 48, LAWN_NOTCH);
+    // Lawn: the same green from rim to rim, so no band of another colour frames the field
+    const centerGrass = this._islandSlab("centerGrass", 0.02, 0.04);
     centerGrass.material = this._scene.getMaterialByName("grass")!;
     centerGrass.receiveShadows = true;
 
@@ -224,8 +220,7 @@ export class TribalSandboxMapBuilder {
 
   /**
    * A slab in the island's outline: a round drum with every vertex pushed out to the rim, its top face at `top`.
-   * `ragged` pushes each corner a further, seeded fraction of its reach out past the rim and drops its top edge;
-   * a negative `ragged` pulls each corner in short of the rim by up to that fraction instead and leaves the top flat.
+   * `ragged` pushes each corner a further, seeded fraction of its reach out past the rim and drops its top edge.
    */
   private _islandSlab(name: string, top: number, height: number, taper = 1, tessellation = 48, ragged = 0): Mesh {
     const slab = MeshBuilder.CreateCylinder(name, {
@@ -236,7 +231,7 @@ export class TribalSandboxMapBuilder {
       const angle = Math.atan2(positions[i + 2], positions[i]);
       // Every vertex at one corner shares the corner's seed, so side faces stay whole.
       const corner = (Math.round(angle / (Math.PI * 2) * tessellation) + tessellation) % tessellation;
-      const out = ragged > 0 ? 0.03 + ragged * this._seededValue(corner, 96) : ragged * this._seededValue(corner, 96);
+      const out = ragged > 0 ? 0.03 + ragged * this._seededValue(corner, 96) : 0;
       const reach = Math.hypot(positions[i], positions[i + 2]) * 2 * (1 + out);
       if (ragged > 0 && positions[i + 1] > 0 && reach > 0.5) positions[i + 1] -= this._seededValue(corner, 97) * 1.6;
       const [x, z] = islandRim(angle);
@@ -825,7 +820,7 @@ export class TribalSandboxMapBuilder {
 
     for (const zone of zones) {
       // The team's half of the island's own outline: the lawn slab with the other half folded onto the centre line
-      const overlay = this._islandSlab(`zone_overlay_${zone.team}`, 0.03, 0.01, 1, 48, LAWN_NOTCH);
+      const overlay = this._islandSlab(`zone_overlay_${zone.team}`, 0.03, 0.01);
       const positions = overlay.getVerticesData("position")!;
       for (let i = 0; i < positions.length; i += 3) {
         positions[i] = zone.team === 0 ? Math.min(positions[i], 0) : Math.max(positions[i], 0);
