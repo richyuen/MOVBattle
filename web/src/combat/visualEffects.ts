@@ -55,9 +55,11 @@ export class VisualEffects {
    */
   spawnLightning(origin: Vector3, target: Vector3): void {
     const root = new TransformNode("lightning", this._scene);
-    // Mostly self-lit: the same blue-white in sun and in shade, just under the bloom threshold
+    // Unlit: one flat blue-white on every face, in sun and in shade, so the bolt is a cut-out shape and not shaded bars
     const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.6, 0.78, 1));
-    boltMat.emissiveColor = new Color3(0.55, 0.66, 0.85);
+    boltMat.emissiveColor = new Color3(0.78, 0.9, 1);
+    boltMat.disableLighting = true;
+    boltMat.backFaceCulling = false;
     boltMat.transparencyMode = 0;
     const glow = this._scene.getGlowLayerByName("glow");
     const shards: Mesh[] = [];
@@ -95,7 +97,7 @@ export class VisualEffects {
       }, this._scene);
       shard.position = Vector3.Center(a, b);
       shard.lookAt(b);
-      // Quarter roll: an edge faces the camera rather than a flat side, so each shard shows two shaded facets
+      // Quarter roll: an edge faces the camera rather than a flat side, so a shard is as wide as it gets from any angle
       shard.rotation.z = Math.PI / 4;
       shard.material = boltMat;
       shard.parent = root;
@@ -118,11 +120,27 @@ export class VisualEffects {
     addShard(forkOrigin, forkKnee, 0.08);
     addShard(forkKnee, forkEnd, 0.055);
 
+    // Strike burst: a flat six-point star at the target, facing the camera, that snaps out wide and cuts off with the bolt
+    const burst = new TransformNode("lburst", this._scene);
+    burst.position = endPoint;
+    burst.billboardMode = TransformNode.BILLBOARDMODE_ALL;
+    burst.parent = root;
+    for (const turn of [0, Math.PI / 3]) {
+      const point = MeshBuilder.CreateDisc("lburstPoint", { radius: 0.5, tessellation: 3 }, this._scene);
+      point.rotation.z = turn;
+      point.material = boltMat;
+      point.parent = burst;
+      glow?.addExcludedMesh(point);
+      shards.push(point);
+    }
+
     const totalDuration = 0.25;
     this._effects.push({
       root,
       remaining: totalDuration,
       update: (_dt, remaining) => {
+        // The star grows from 0.7 to 1.3 of its size over the bolt's life
+        burst.scaling.setAll(1.3 - 0.6 * (remaining / totalDuration));
         // Holds solid, then cuts out over the last third
         boltMat.alpha = Math.min(1, Math.max(0, remaining / (totalDuration * 0.35)));
         boltMat.transparencyMode = boltMat.alpha < 1 ? 2 : 0;
