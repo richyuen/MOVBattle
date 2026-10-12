@@ -301,21 +301,27 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const body = buildCannon(scene, color, options);
   const root = body.root;
-  const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 1.0, diameter: 0.26, tessellation: 16 }, scene);
-  barrel.position.set(0, 0.86, 0.4);
+  // One fat tapered mortar barrel: the field gun's own barrel comes off, so there are not two tubes stacked
+  for (const name of ["barrel", "barrelBand", "breechKnob", "muzzle"]) {
+    for (let i = body.allMeshes.length - 1; i >= 0; i--) {
+      if (body.allMeshes[i].name === name) body.allMeshes.splice(i, 1)[0].dispose();
+    }
+  }
+  const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 1.0, diameterTop: 0.3, diameterBottom: 0.38, tessellation: 8 }, scene);
+  barrel.position.set(0, 0.66, 0.4);
   barrel.rotation.x = Math.PI / 2 - 0.18;
   barrel.parent = root;
   barrel.material = makeMat(scene, new Color3(0.22, 0.22, 0.26));
   body.allMeshes.push(barrel);
   const bomb = MeshBuilder.CreateSphere("bombRound", { diameter: 0.22, segments: 8 }, scene);
-  bomb.position.set(0, 0.92, 0.75);
+  bomb.position.set(0, 0.72, 0.75);
   bomb.parent = root;
   bomb.material = makeMat(scene, new Color3(0.12, 0.12, 0.12));
   body.allMeshes.push(bomb);
   body.vehicleSockets = {
-    primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", new Vector3(0, 0.98, 0.96)),
-    smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", new Vector3(0, 0.96, 0.9)),
-    impactOrigin: makeSocket(scene, root, "bomb_cannon_impact_socket", new Vector3(0, 0.92, 0.78)),
+    primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", new Vector3(0, 0.78, 0.96)),
+    smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", new Vector3(0, 0.76, 0.9)),
+    impactOrigin: makeSocket(scene, root, "bomb_cannon_impact_socket", new Vector3(0, 0.72, 0.78)),
   };
   return body;
 }
@@ -666,13 +672,23 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   trail.parent = root; trail.material = wood; allMeshes.push(trail);
 
   // Barrel (along +Z)
-  const barrel = MeshBuilder.CreateCylinder("barrel", { height: 1.1, diameter: 0.2, tessellation: 14 }, scene);
+  // Tapers from a fat breech to a slim muzzle, faceted, with two raised bands and a knob on the back end
+  const barrel = MeshBuilder.CreateCylinder("barrel", { height: 1.1, diameterTop: 0.17, diameterBottom: 0.28, tessellation: 8 }, scene);
   barrel.position.set(0, 0.52, 0.2);
   barrel.rotation.x = Math.PI / 2; // along Z
   barrel.parent = root; barrel.material = metal; allMeshes.push(barrel);
+  for (const [z, d] of [[-0.24, 0.33], [0.2, 0.27]]) {
+    const band = MeshBuilder.CreateCylinder("barrelBand", { height: 0.07, diameter: d, tessellation: 8 }, scene);
+    band.position.set(0, 0.52, z);
+    band.rotation.x = Math.PI / 2;
+    band.parent = root; band.material = metal; allMeshes.push(band);
+  }
+  const knob = MeshBuilder.CreateSphere("breechKnob", { diameter: 0.14, segments: 3 }, scene);
+  knob.position.set(0, 0.52, -0.4);
+  knob.parent = root; knob.material = metal; allMeshes.push(knob);
 
   // Muzzle flare at front (+Z end)
-  const muzzle = MeshBuilder.CreateCylinder("muzzle", { height: 0.08, diameterTop: 0.26, diameterBottom: 0.2, tessellation: 14 }, scene);
+  const muzzle = MeshBuilder.CreateCylinder("muzzle", { height: 0.08, diameterTop: 0.26, diameterBottom: 0.17, tessellation: 8 }, scene);
   muzzle.position.set(0, 0.52, 0.75);
   muzzle.rotation.x = Math.PI / 2;
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
