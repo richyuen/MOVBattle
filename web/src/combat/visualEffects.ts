@@ -122,9 +122,9 @@ export class VisualEffects {
       shard.material = boltMat;
       shard.parent = root;
       shards.push(shard);
-      // Cyan rim: the same blade 2.2 times as broad, a hair behind the white one as the camera sees it
+      // Cyan rim: the same blade 1.6 times as broad, a hair behind the white one as the camera sees it
       const rim = shard.clone("lrim");
-      rim.scaling.set(shard.scaling.x === 0.25 ? 0.25 : 2.2, 1.05, shard.scaling.z === 0.25 ? 0.25 : 2.2);
+      rim.scaling.set(shard.scaling.x === 0.25 ? 0.25 : 1.6, 1.05, shard.scaling.z === 0.25 ? 0.25 : 1.6);
       if (eye) rim.position.subtractInPlace(toEye.normalize().scale(0.04));
       rim.material = rimMat;
       glow?.addExcludedMesh(rim);
