@@ -1255,13 +1255,17 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3): Mesh
       return head;
     }
     case "great_helm": {
-      // Flat-topped barrel helm with eye slit
-      const helm = MeshBuilder.CreateCylinder("ghelm", { height: 0.22 * s, diameter: 0.22 * s, tessellation: 8 }, scene);
-      helm.material = mat(scene, new Color3(0.78, 0.78, 0.80));
-      helm.position.y = 0.04 * s;
+      // Fitted barrel helm: a faceted, slightly tapered bucket pulled down over the whole head, barely larger than it
+      const helm = MeshBuilder.CreateCylinder("ghelm", { height: 0.21 * s, diameterTop: 0.19 * s, diameterBottom: 0.235 * s, tessellation: 8 }, scene);
+      // Turn a flat facet to the front so the eye slit lies on a face, not across an edge
+      helm.rotation.y = Math.PI / 8;
+      helm.bakeCurrentTransformIntoVertices();
+      helm.convertToFlatShadedMesh();
+      helm.material = mat(scene, new Color3(0.66, 0.67, 0.71));
+      helm.position.y = -0.085 * s;
       // Eye slit (dark horizontal bar)
-      const slit = MeshBuilder.CreateBox("slit", { width: 0.18 * s, height: 0.015 * s, depth: 0.01 * s }, scene);
-      slit.position.set(0, -0.01 * s, 0.11 * s); slit.parent = helm;
+      const slit = MeshBuilder.CreateBox("slit", { width: 0.075 * s, height: 0.016 * s, depth: 0.012 * s }, scene);
+      slit.position.set(0, 0.005 * s, 0.098 * s); slit.parent = helm;
       slit.material = mat(scene, new Color3(0.08, 0.08, 0.08));
       return helm;
     }
