@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, MeshBuilder, Color3, TransformNode,
+  Scene, Vector3, Mesh, MeshBuilder, Color3, TransformNode,
   PBRMetallicRoughnessMaterial, ParticleSystem,
 } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
@@ -49,98 +49,82 @@ export class VisualEffects {
 
   // ══════════════════ LIGHTNING ══════════════════
   /**
-   * Spawn a jagged lightning bolt from origin to target.
-   * Made of multiple connected segments with random offsets.
+   * Spawn a jagged lightning bolt from origin to target: a few thick faceted shards that zigzag hard
+   * side to side and taper toward the strike. Lit and matte and kept out of the glow layer, so it reads
+   * as a solid pale shape instead of a blooming beam.
    */
   spawnLightning(origin: Vector3, target: Vector3): void {
     const root = new TransformNode("lightning", this._scene);
-    const segments = 10;
-    const dir = target.subtract(origin);
-    const len = dir.length();
+    const segments = 6;
 
-    const boltMat = this._fxMat(new Color3(0.6, 0.8, 1.0), new Color3(0.5, 0.7, 1.0), 0.9);
-    const coreMat = this._fxMat(new Color3(1, 1, 1), new Color3(1, 1, 1));
+    const boltMat = getMaterialFactory().createUnique("cloth", new Color3(0.84, 0.89, 0.96));
+    boltMat.emissiveColor = new Color3(0.2, 0.22, 0.25);
+    boltMat.transparencyMode = 2;
+    const glow = this._scene.getGlowLayerByName("glow");
+    const shards: Mesh[] = [];
 
-    // Build jagged path
-    const points: Vector3[] = [origin.clone()];
-    points[0].y += 1.5; // start from head height
+    const start = origin.clone();
+    start.y += 1.5; // start from head height
     const endPoint = target.clone();
     endPoint.y += 0.8;
+    const dir = endPoint.subtract(start);
+    const len = dir.length();
+    // Sideways axis of the zigzag: level and square to the bolt (any level axis when the bolt is vertical)
+    const side = Vector3.Cross(dir, Vector3.Up());
+    if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
+    side.normalize();
 
+    // Build the zigzag: each joint swings to the opposite side of the last
+    const points: Vector3[] = [start];
+    const amp = Math.min(0.9, len * 0.14);
+    let sign = Math.random() < 0.5 ? -1 : 1;
     for (let i = 1; i < segments; i++) {
-      const t = i / segments;
-      const base = Vector3.Lerp(points[0], endPoint, t);
-      // Random jag perpendicular to bolt direction
-      const jag = len * 0.12 * (1 - Math.abs(t - 0.5) * 2); // most jag in middle
-      base.x += (Math.random() - 0.5) * jag;
-      base.y += (Math.random() - 0.5) * jag * 0.5;
-      base.z += (Math.random() - 0.5) * jag;
+      const base = Vector3.Lerp(start, endPoint, i / segments);
+      base.addInPlace(side.scale(sign * amp * (0.65 + Math.random() * 0.35)));
+      base.y += sign * amp * (0.3 + Math.random() * 0.4);
       points.push(base);
+      sign = -sign;
     }
     points.push(endPoint);
 
-    // Draw segments as thin boxes connecting each pair
+    const addShard = (a: Vector3, b: Vector3, thickness: number): void => {
+      const shard = MeshBuilder.CreateBox("lseg", {
+        width: thickness, height: thickness, depth: Vector3.Distance(a, b) + thickness * 0.5,
+      }, this._scene);
+      shard.position = Vector3.Center(a, b);
+      shard.lookAt(b);
+      // Quarter roll: an edge faces the camera rather than a flat side, so each shard shows two shaded facets
+      shard.rotation.z = Math.PI / 4;
+      shard.material = boltMat;
+      shard.parent = root;
+      glow?.addExcludedMesh(shard);
+      shards.push(shard);
+    };
+
+    // Thick at the caster, thin at the strike
     for (let i = 0; i < points.length - 1; i++) {
-      const a = points[i];
-      const b = points[i + 1];
-      const mid = Vector3.Center(a, b);
-      const segLen = Vector3.Distance(a, b);
-
-      // Outer glow
-      const glow = MeshBuilder.CreateBox("lseg", {
-        width: 0.12, height: 0.12, depth: segLen,
-      }, this._scene);
-      glow.position = mid;
-      glow.lookAt(b);
-      glow.material = boltMat;
-      glow.parent = root;
-
-      // Inner bright core
-      const core = MeshBuilder.CreateBox("lcore", {
-        width: 0.04, height: 0.04, depth: segLen,
-      }, this._scene);
-      core.position = mid;
-      core.lookAt(b);
-      core.material = coreMat;
-      core.parent = root;
+      addShard(points[i], points[i + 1], 0.15 - 0.08 * (i / (points.length - 2)));
     }
 
-    // Branch bolt (smaller fork)
-    const branchStart = Math.floor(segments * 0.4);
-    if (branchStart < points.length - 1) {
-      const forkOrigin = points[branchStart];
-      const forkDir = new Vector3(
-        (Math.random() - 0.5) * len * 0.4,
-        (Math.random() - 0.3) * len * 0.2,
-        (Math.random() - 0.5) * len * 0.4,
-      );
-      const forkEnd = forkOrigin.add(forkDir);
-      const forkMid = Vector3.Center(forkOrigin, forkEnd);
-      const forkLen = Vector3.Distance(forkOrigin, forkEnd);
-      const fork = MeshBuilder.CreateBox("fork", {
-        width: 0.06, height: 0.06, depth: forkLen,
-      }, this._scene);
-      fork.position = forkMid;
-      fork.lookAt(forkEnd);
-      fork.material = boltMat;
-      fork.parent = root;
-    }
-
-    // Flash at impact
-    const flash = MeshBuilder.CreateSphere("lflash", { diameter: 0.8, segments: 6 }, this._scene);
-    flash.position = endPoint;
-    flash.material = coreMat;
-    flash.parent = root;
+    // Branch bolt (smaller fork) kicking off the second joint
+    const forkOrigin = points[2];
+    const forkEnd = forkOrigin
+      .add(dir.scale(0.16))
+      .add(side.scale((Math.random() < 0.5 ? -1 : 1) * len * 0.16));
+    forkEnd.y += (Math.random() - 0.3) * len * 0.12;
+    addShard(forkOrigin, forkEnd, 0.06);
 
     const totalDuration = 0.25;
     this._effects.push({
       root,
       remaining: totalDuration,
       update: (_dt, remaining) => {
-        const fade = Math.max(0, remaining / totalDuration);
-        boltMat.alpha = fade * 0.9;
-        coreMat.alpha = fade;
-        flash.scaling.setAll(1 + (1 - fade) * 2);
+        // Holds solid, then cuts out over the last third
+        boltMat.alpha = Math.min(1, Math.max(0, remaining / (totalDuration * 0.35)));
+      },
+      dispose: () => {
+        for (const shard of shards) glow?.removeExcludedMesh(shard);
+        boltMat.dispose();
       },
     });
   }
