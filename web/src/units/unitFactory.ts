@@ -206,11 +206,11 @@ export class UnitFactory {
       sash.rotation.z = 0.75;
       sash.material = getMaterialFactory().getCloth(ZEUS_SASH_COLOR);
       propMeshes.push(sash);
-      // The tunic hangs on below the waist as a skirt to just above the knee: the torso's own shape turned over,
+      // The tunic hangs on below the waist as a deep skirt to mid-shin: the torso's own shape turned over,
       // so it is narrow at the waist and flares to the hem.
-      const skirtLength = Math.abs(body.leftKnee.position.y) * 0.9;
+      const skirtLength = Math.abs(body.leftKnee.position.y) * 1.6;
       const skirt = body.torsoMesh.clone("zeusSkirt");
-      skirt.scaling.set(body.torsoMesh.scaling.x * 1.08, skirtLength / (chest.y * 2), body.torsoMesh.scaling.z * 1.15);
+      skirt.scaling.set(body.torsoMesh.scaling.x * 1.08, skirtLength / (chest.y * 2), body.torsoMesh.scaling.z * 1.7);
       skirt.rotation.z = Math.PI;
       skirt.position.y = body.torsoMesh.position.y - chest.y * 0.92 - skirtLength / 2;
       skirt.material = getMaterialFactory().getCloth(ZEUS_TUNIC_COLOR);
