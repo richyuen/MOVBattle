@@ -232,15 +232,16 @@ export class ProceduralAnimator {
       b.leftKnee.rotation.x += p.leftKneeX * k;
       b.rightKnee.rotation.x += p.rightKneeX * k;
     }
-    // Waist break (additive): the legs carry the body's lean while the torso bends back past upright against
-    // it and the head tips back the other way, so a pressed or running body is an S, not one straight plank.
+    // Waist break (additive): the legs carry the body's lean while the torso bends part-way back against it and
+    // the head hangs the way the body is going, so a pressed, running or toppling body is an S, not one plank.
     if (this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
       const b = this._body;
-      const k = 1 - Math.min(1, this._limp);
-      const leanX = Math.max(-0.4, Math.min(0.4, b.root.rotation.x)) * k;
-      const leanZ = Math.max(-0.4, Math.min(0.4, b.root.rotation.z)) * k;
-      b.torso.rotation.x -= leanX * 1.4;
-      b.torso.rotation.z -= leanZ * 1.4;
+      // A limp body keeps half the counter-bend, so its crumple still folds it forward at the waist.
+      const k = 1 - 0.5 * Math.min(1, this._limp);
+      const leanX = Math.max(-0.4, Math.min(0.4, b.root.rotation.x));
+      const leanZ = Math.max(-0.4, Math.min(0.4, b.root.rotation.z));
+      b.torso.rotation.x -= leanX * 0.8 * k;
+      b.torso.rotation.z -= leanZ * 0.8 * k;
       b.neck.rotation.x += leanX * 0.6;
       b.neck.rotation.z += leanZ * 0.6;
     }
@@ -396,8 +397,8 @@ export class ProceduralAnimator {
 
     // Head wobbles
     b.neck.rotation.z = Math.sin(t * speed * 0.7 + 1) * 0.08;
-    // Chin up against the forward lean, so head and torso are not one line.
-    b.neck.rotation.x = -0.3 + Math.sin(t * speed * 0.5 + 2) * 0.04;
+    // Chin only slightly up against the forward lean, so the head pitches into the march with the torso.
+    b.neck.rotation.x = -0.1 + Math.sin(t * speed * 0.5 + 2) * 0.04;
 
     // Alternating leg swing (TABS-style exaggerated)
     const legSwing = 0.55;
