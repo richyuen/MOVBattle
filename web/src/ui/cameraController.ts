@@ -180,6 +180,8 @@ export class CameraController {
       radius: override?.radius ?? preset.radius,
       target: override?.target ?? preset.target,
     };
+    // Gallery close-ups sit nearer than the free camera's zoom floor
+    this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? view.radius, view.radius);
     this.restoreViewState(view);
     return view;
   }
