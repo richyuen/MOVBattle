@@ -471,7 +471,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       const head = MeshBuilder.CreateCylinder("clubHead", { height: 0.45 * s, diameterTop: 0.2 * s, diameterBottom: 0.1 * s, tessellation: 6 }, scene);
       head.position.y = 0.5 * s;
       head.parent = m;
-      head.material = mat(scene, accent);
+      head.material = mat(scene, new Color3(0.36, 0.22, 0.12));
       m.material = mat(scene, new Color3(0.45, 0.3, 0.15));
       m.position.y = 0.04 * s;
       m.rotation.x = Math.PI * 0.14;
