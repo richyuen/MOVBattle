@@ -541,10 +541,12 @@ export class TribalSandboxMapBuilder {
         const cellZ = Math.floor((tuftZ + 24 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
         if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.6 : 0.25)) continue;
         // Each patch has its own height, from ankle turf to full clumps, so the field is not one level carpet.
-        const patchHeight = 0.45 + this._seededValue(cellX * 32 + cellZ, 42) * 0.55;
+        // Where the armies stand and fight no patch tops the shin, easing back to full height by the flanks.
+        const heightCap = 0.5 + 0.5 * Math.min(1, Math.max(0, (Math.abs(tuftX) - 24) / 6));
+        const patchHeight = Math.min(heightCap, 0.45 + this._seededValue(cellX * 32 + cellZ, 42) * 0.55);
         const x = tuftX + (this._seededValue(i, 34) - 0.5) * 0.16;
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.16;
-        const h = (0.2 + this._seededValue(i, 33) * 0.25) * patchHeight; // shin to knee in the tall patches
+        const h = (0.2 + this._seededValue(i, 33) * 0.25) * patchHeight; // shin to knee in the tall patches on the flanks
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
         const half = 0.07 + this._seededValue(i, 38) * 0.03; // broad, so the crossed blades of a clump overlap
         const dx = Math.cos(yaw) * half;
