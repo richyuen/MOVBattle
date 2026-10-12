@@ -907,6 +907,8 @@ export class RuntimeUnit {
     this._deathSpinX = (fall < 0.5 ? -1 : 1) * (1.5 + (fall * 2 % 1) * 3) * massInv;
     this._deathSpinY = (turn - 0.5) * 4 * massInv;
     this._corpseYaw = this.body.root.rotation.y + (turn - 0.5) * Math.PI * 2;
+    // A third of them end up on a side instead. From `fall`, so death draws no more random numbers than before.
+    this._corpseOnSide = fall * 16 % 1 < 0.34;
 
     // Switch to death animation (ragdoll joints)
     this.animator.setState(AnimState.Dead);
@@ -993,8 +995,8 @@ export class RuntimeUnit {
     const rot = this.body.root.rotation;
     const nearestFlat = (angle: number): number =>
       Math.round((angle - Math.PI / 2) / Math.PI) * Math.PI + Math.PI / 2;
-    const onSide = Math.abs(Math.sin(rot.z)) > 0.8;
-    const targetX = onSide ? rot.x : nearestFlat(rot.x);
+    const onSide = this._corpseOnSide || Math.abs(Math.sin(rot.z)) > 0.8;
+    const targetX = this._corpseOnSide ? Math.round(rot.x / Math.PI) * Math.PI : onSide ? rot.x : nearestFlat(rot.x);
     const targetZ = onSide ? nearestFlat(rot.z) : Math.round(rot.z / Math.PI) * Math.PI;
     const settle = Math.min(1, dt * 9);
     rot.x += (targetX - rot.x) * settle;
@@ -1007,6 +1009,8 @@ export class RuntimeUnit {
 
   /** Heading a corpse turns to as it comes to rest; null until the unit dies. */
   private _corpseYaw: number | null = null;
+  /** Whether this corpse rolls over to rest on its side rather than on its back or front. */
+  private _corpseOnSide = false;
 
   private _blastTumbling = false;
   private _blastSpinX = 0;
@@ -1418,6 +1422,7 @@ export class RuntimeUnit {
     this._physicsActive = false;
     this._bounceCount = 0;
     this._corpseYaw = null;
+    this._corpseOnSide = false;
     this._deathSpinX = 0;
     this._deathSpinY = 0;
     this._blastTumbling = false;
