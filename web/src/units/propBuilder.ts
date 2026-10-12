@@ -1374,6 +1374,19 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       point.position.y = -0.2 * s;
       point.parent = shield;
       point.material = shield.material;
+      // Dark rim showing round the board and its point, and a metal boss on the face, as on the round shield
+      const rim = MeshBuilder.CreateBox("kshieldRim", { width: 0.22 * s, height: 0.36 * s, depth: 0.018 * s }, scene);
+      rim.position.z = -0.006 * s;
+      rim.parent = shield;
+      rim.material = mat(scene, teamColor.scale(0.45));
+      const rimPoint = MeshBuilder.CreateCylinder("kpointRim", { height: 0.1 * s, diameterTop: 0.22 * s, diameterBottom: 0, tessellation: 4 }, scene);
+      rimPoint.position.set(0, -0.23 * s, -0.006 * s);
+      rimPoint.scaling.z = 0.6;
+      rimPoint.parent = shield;
+      rimPoint.material = rim.material;
+      const boss = MeshBuilder.CreateSphere("kboss", { diameter: 0.07 * s, segments: 4 }, scene);
+      boss.position.z = 0.014 * s; boss.parent = shield;
+      boss.material = mat(scene, new Color3(0.45, 0.45, 0.5));
       return shield;
     }
     case "tower": {
