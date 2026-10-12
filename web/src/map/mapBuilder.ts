@@ -602,7 +602,7 @@ export class TribalSandboxMapBuilder {
         const patchHeight = Math.min(heightCap, 0.45 + this._seededValue(cellX * 32 + cellZ, 42) * 0.55);
         const x = tuftX + (this._seededValue(i, 34) - 0.5) * 0.16;
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.16;
-        const h = (0.2 + this._seededValue(i, 33) * 0.25) * patchHeight; // shin to knee in the tall patches on the flanks
+        const h = (0.12 + this._seededValue(i, 33) * 0.15) * patchHeight; // ankle to shin, so feet and fallen bodies show above the grass
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
         const half = 0.04 + this._seededValue(i, 38) * 0.03; // a blade is a hand wide: a flat card, not a needle
         const dx = Math.cos(yaw) * half;
