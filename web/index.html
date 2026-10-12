@@ -313,14 +313,19 @@
     }
     #factionTabs {
       display: flex; gap: 0; border-bottom: 2px solid rgba(255,255,255,0.1);
+      justify-content: safe center;
       overflow-x: auto; scrollbar-width: thin;
       -webkit-overflow-scrolling: touch;
     }
     .faction-tab {
-      padding: 7px 16px; border: none; border-bottom: 3px solid transparent;
+      padding: 5px 14px; border: none; border-bottom: 3px solid transparent;
       background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6);
       cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase;
       letter-spacing: 0.5px; white-space: nowrap; transition: all 0.15s;
+    }
+    .faction-tab svg {
+      display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6;
+      stroke-linecap: round; stroke-linejoin: round;
     }
     .faction-tab:hover { background: rgba(255,255,255,0.1); color: #fff; }
     .faction-tab.active { color: #fff; background: rgba(255,255,255,0.12); }

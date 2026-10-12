@@ -15,6 +15,7 @@ import type { BattleResult } from "./core/battleResult";
 import { ALL_UNITS, getUnit } from "./data/unitDefinitions";
 import type { UnitDefinition } from "./data/unitDefinitions";
 import { FactionId, FACTION_NAMES } from "./data/factionColors";
+import { FACTION_GLYPH_PATHS, unitGlyphPath } from "./ui/trayGlyphs";
 import {
   advanceCampaignSession,
   createCampaignSession,
@@ -852,18 +853,6 @@ function getFilteredFactionUnits(): UnitDefinition[] {
   return getSelectableFactionUnits(activeFaction);
 }
 
-// White line-art tray glyphs, one per weapon family (24x24 viewBox path data).
-const UNIT_GLYPH_PATHS: Record<string, string> = {
-  default: "M12 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 9v7M7 12h10M12 16l-4 5M12 16l4 5",
-  heavy_swing: "M5 20l6-7M11 13l4-6 5 4-6 5z",
-  blade_slash: "M5 19l4-4M6 13l5 5M9 15L20 4v3L11 17",
-  thrust: "M4 20L16 8M14 6l6-2-2 6z",
-  throw: "M4 18L18 6M15 5l5-1-1 5M5 13l2 2M8 10l2 2",
-  bow_draw_release: "M7 3c9 3 9 15 0 18M7 3v18M4 12h15M16 9l3 3-3 3",
-  crossbow_snap: "M12 4v16M4 10c4-5 12-5 16 0M4 10l8 5 8-5",
-  firearm_recoil: "M3 9h15v3H9l-2 6H4l1-6H3zM18 10h3",
-};
-
 function populateUnitGrid(): void {
   unitGridEl.innerHTML = "";
   const factionUnits = getFilteredFactionUnits();
@@ -871,8 +860,7 @@ function populateUnitGrid(): void {
     const btn = document.createElement("button");
     btn.className = "unit-btn";
     btn.dataset.id = def.id;
-    const family = getUnitVisual(def.id).weaponPresentationFamily ?? "default";
-    btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${UNIT_GLYPH_PATHS[family] ?? UNIT_GLYPH_PATHS.default}"/></svg>`;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${unitGlyphPath(def.id, getUnitVisual(def.id))}"/></svg>`;
     const label = document.createElement("span");
     label.textContent = def.displayName;
     btn.appendChild(label);
@@ -905,7 +893,15 @@ function buildUnitPanel(): void {
     const tab = document.createElement("button");
     tab.className = "faction-tab";
     tab.dataset.faction = String(def.faction);
-    tab.textContent = FACTION_NAMES[def.faction] ?? `Faction ${def.faction}`;
+    const factionName = FACTION_NAMES[def.faction] ?? `Faction ${def.faction}`;
+    const factionGlyph = FACTION_GLYPH_PATHS[def.faction];
+    if (factionGlyph) {
+      tab.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${factionGlyph}"/></svg>`;
+      tab.title = factionName;
+      tab.setAttribute("aria-label", factionName);
+    } else {
+      tab.textContent = factionName;
+    }
     tab.disabled = !hasUnits;
     if (!hasUnits) tab.style.opacity = "0.35";
     tab.addEventListener("click", () => setFaction(def.faction));
