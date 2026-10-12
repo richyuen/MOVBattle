@@ -144,6 +144,8 @@ const HEAD_SHRINK = 0.88;
 const LIMB_THIN = 0.8;
 /** Sleeves and thighs are chunky next to the thin forearms and shins they end in. */
 const SLEEVE_BULK = 1.35;
+// Forearms and shins step in from the sleeve and thigh by half the bulk: the full step left them as sticks.
+const LOWER_LIMB_STEP = 1 + (SLEEVE_BULK - 1) / 2;
 
 export function buildArticulatedBody(
   scene: Scene,
@@ -236,7 +238,7 @@ export function buildArticulatedBody(
   const lowerArmH = 0.22 * p.armLength;
   const upperArmTop = 0.09 * LIMB_THIN * SLEEVE_BULK * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
-  const lowerArmTop = upperArmBottom * 0.92 / SLEEVE_BULK;
+  const lowerArmTop = upperArmBottom * 0.92 / LOWER_LIMB_STEP;
   const lowerArmBottom = lowerArmTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
   const handDiameter = 0.1 * Math.max(0.8, p.headSize * 0.9) * (p.handSize ?? 1.0);
 
@@ -244,7 +246,7 @@ export function buildArticulatedBody(
   const lowerLegH = 0.25 * p.legLength;
   const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
-  const lowerLegTop = upperLegBottom * 0.96 / SLEEVE_BULK;
+  const lowerLegTop = upperLegBottom * 0.96 / LOWER_LIMB_STEP;
   const lowerLegBottom = lowerLegTop * Math.max(0.58, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
   const footLength = 0.18 * Math.max(0.85, p.bulk * 0.92) * (p.footLength ?? 1.0);
   const footWidth = 0.11 * Math.max(0.85, p.bulk * 0.95) * (p.footWidth ?? 1.0);
@@ -411,7 +413,8 @@ export function buildArticulatedBody(
   rightHandMesh.parent = rightHand;
 
   // ─── Shoulder Caps (hide joint seams) ───
-  const shoulderCapDiam = upperArmTop * 1.1;
+  // Wider than the sleeve top, so the cap shows as a rounded shoulder on the torso corner and not only a seam filler
+  const shoulderCapDiam = upperArmTop * 1.55;
   const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), capSegments);
   lShoulderCap.parent = leftShoulder;
   const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, Vector3.One(), capSegments);
