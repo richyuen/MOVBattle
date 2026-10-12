@@ -1581,8 +1581,8 @@ export const DEFAULT_BATTLE_MAP_ID: BattleMapId = "sandbox.tribal";
 const battleMapEntries: Array<[BattleMapId, BattleMapDefinition]> = [
   [DEFAULT_BATTLE_MAP_ID, {
     id: DEFAULT_BATTLE_MAP_ID,
-    displayName: "Sandbox",
-    build: (scene) => trackMapBuild(scene, DEFAULT_BATTLE_MAP_ID, "Sandbox", () => {
+    displayName: "Tribal Hills",
+    build: (scene) => trackMapBuild(scene, DEFAULT_BATTLE_MAP_ID, "Tribal Hills", () => {
       restoreSandboxSceneLook(scene);
       return new TribalSandboxMapBuilder(scene).build();
     }),
