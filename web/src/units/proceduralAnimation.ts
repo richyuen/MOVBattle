@@ -231,8 +231,8 @@ export class ProceduralAnimator {
     const leftBend = -(0.1 + h(53) * 0.3 + rightArm * 0.4);
     const rightBend = -(0.1 + h(54) * 0.3 + leftArm * 0.4);
     if (variant === 0) {
-      // Jackknife: folded hard at the waist, straight legs swung up to meet the arms reaching for the toes
-      const hip = 0.7 + h(30) * 0.4;
+      // Jackknife: folded hard at the waist, straight legs swung only a little way up toward the arms reaching for the toes
+      const hip = 0.2 + h(30) * 0.3;
       return [
         [b.torso, fold(0.9 + h(25) * 0.5 + pitch), twist, roll],
         [b.neck, 0.4, 0, 0],
