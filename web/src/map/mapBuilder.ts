@@ -163,9 +163,9 @@ export class TribalSandboxMapBuilder {
     ground.material = mat;
     ground.receiveShadows = true;
 
-    // Center grass patch — greener in the middle
+    // Lawn: the same green from rim to rim, so no band of another colour frames the field
     const centerGrass = MeshBuilder.CreateGround("centerGrass", {
-      width: 100, height: 80,
+      width: ISLAND_WIDTH, height: ISLAND_DEPTH,
     }, this._scene);
     centerGrass.position.y = 0.02;
     centerGrass.material = this._scene.getMaterialByName("grass")!;
@@ -734,36 +734,9 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** Draw clear border lines: outer rectangle for each zone + center divider */
+  /** The center divider is the only line drawn on the field: the island's own rim marks the outer edge of each half */
   private _createZoneBorders(): void {
-    const zones = getIslandGuideZones();
-    const colors = [new Color3(0.3, 0.65, 1.0), new Color3(1.0, 0.35, 0.35)];
     const borderHeight = 0.06;
-    const borderThick = 0.4;
-
-    for (const zone of zones) {
-      const color = colors[zone.team];
-      const hx = zone.size.x / 2;
-      const hz = zone.size.z / 2;
-      const cx = zone.center.x;
-      const cz = zone.center.z;
-
-      // 4 edges of the zone rectangle
-      this._createBorderStrip(
-        new Vector3(cx, borderHeight, cz + hz),
-        zone.size.x + borderThick, borderThick, color,
-      );
-      this._createBorderStrip(
-        new Vector3(cx, borderHeight, cz - hz),
-        zone.size.x + borderThick, borderThick, color,
-      );
-      // Outer side edge only; the inner edge at x = 0 is the center divider
-      const outerX = zone.team === 0 ? cx - hx : cx + hx;
-      this._createBorderStrip(
-        new Vector3(outerX, borderHeight, cz),
-        borderThick, zone.size.z, color,
-      );
-    }
 
     // Center divider: thin flat pink line, no glow
     const divider = MeshBuilder.CreateGround("border", { width: 0.12, height: ISLAND_DEPTH }, this._scene);
@@ -773,17 +746,6 @@ export class TribalSandboxMapBuilder {
     dividerMat.emissiveColor = new Color3(0.92, 0.36, 0.62);
     dividerMat.disableLighting = true;
     divider.material = dividerMat;
-  }
-
-  private _createBorderStrip(pos: Vector3, width: number, depth: number, color: Color3): void {
-    const strip = MeshBuilder.CreateGround("border", { width, height: depth }, this._scene);
-    strip.position = pos;
-    const mat = new StandardMaterial("border_mat", this._scene);
-    mat.diffuseColor = color;
-    mat.emissiveColor = color.scale(0.6);
-    mat.alpha = 0.7;
-    mat.disableLighting = true;
-    strip.material = mat;
   }
 }
 
