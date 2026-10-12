@@ -590,6 +590,43 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 
 // ═══════════════════════ CANNON ═══════════════════════
 // Fires FORWARD (+Z). Barrel points along +Z. Trail extends back (-Z).
+/** Pirate gun crew clothes on an operator body: mauve hoops round the team-coloured shirt, brown trousers and shoes, a dark peaked cap */
+function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Color3): void {
+  const hoopMat = makeMat(scene, new Color3(0.5, 0.42, 0.52));
+  const trouserMat = makeMat(scene, new Color3(0.42, 0.24, 0.14));
+  const capMat = makeMat(scene, darken(color, 0.45));
+  const add = (mesh: Mesh, parent: TransformNode, material: PBRMetallicRoughnessMaterial): void => {
+    mesh.parent = parent; mesh.material = material; body.allMeshes.push(mesh);
+  };
+
+  // Trousers: everything hung off the hip and knee joints, feet included
+  const legJoints = new Set<unknown>([body.leftHip, body.leftKnee, body.rightHip, body.rightKnee]);
+  for (const mesh of body.allMeshes) {
+    if (legJoints.has(mesh.parent)) mesh.material = trouserMat;
+  }
+
+  // Shirt hoops: three bands a little proud of the torso, following its taper from waist to chest
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const girth = (t: number): number => Math.max(chest.x, chest.z) * 2 * (0.76 + 0.26 * t) * 1.1;
+  for (const t of [0.12, 0.4, 0.68]) {
+    const hoop = MeshBuilder.CreateCylinder("crewHoop", {
+      height: chest.y * 0.28, diameterTop: girth(t + 0.14), diameterBottom: girth(t), tessellation: 6,
+    }, scene);
+    hoop.position.y = chest.y * 2 * (t + 0.07);
+    hoop.scaling.z = body.torsoMesh.scaling.z;
+    add(hoop, body.torso, hoopMat);
+  }
+
+  // Cap: a low crown pulled down over the top of the head and a flat peak out over the eyes
+  const w = body.headMesh.getBoundingInfo().boundingBox.extendSize.x * 2 * body.headMesh.scaling.x;
+  const crown = MeshBuilder.CreateCylinder("crewCap", { height: w * 0.5, diameterTop: w * 0.9, diameterBottom: w * 1.12, tessellation: 6 }, scene);
+  crown.position.y = -w * 0.12;
+  add(crown, body.headTop, capMat);
+  const peak = MeshBuilder.CreateBox("crewCapPeak", { width: w * 0.9, height: w * 0.07, depth: w * 0.6 }, scene);
+  peak.position.set(0, -w * 0.34, w * 0.6);
+  add(peak, body.headTop, capMat);
+}
+
 function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
@@ -658,6 +695,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
       body.rightHip.rotation.x = 0.5;
       body.rightHip.rotation.z = 0.16;
       body.rightKnee.rotation.x = 0;
+      dressCannonCrew(scene, body, color);
     });
   }
 
