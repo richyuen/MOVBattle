@@ -333,8 +333,8 @@ export class ProceduralAnimator {
       const phase = (this._time + this._wobblePhase) * p.rate;
       // The walk already leans 0.55 rad; a presser still stepping in takes half the extra pitch.
       b.torso.rotation.x += (p.pitch * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
-      // A swing pitches the torso itself; with the shove on top the lean stops at 0.6 rad, short of a fold at the waist. A presser still stepping in may lean to 0.75.
-      b.torso.rotation.x = Math.min(b.torso.rotation.x, this._state === AnimState.Walking ? 0.75 : 0.6);
+      // A swing pitches the torso itself; with the shove on top the lean stops at 0.6 rad, short of a fold at the waist.
+      b.torso.rotation.x = Math.min(b.torso.rotation.x, 0.6);
       b.torso.rotation.z += (p.roll + Math.cos(phase * 0.35) * 0.08) * k;
       b.neck.rotation.x -= p.pitch * 0.6 * k;
       // Thighs come forward under the pitched torso and the knees give a little, so the body breaks at the waist and stays tall on its legs.
