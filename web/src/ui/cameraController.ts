@@ -190,7 +190,7 @@ export class CameraController {
   // ─── Battle swoop ───
   /** Swoop from the placement view down to a low, close TABS-style battle view on the clash line. */
   swoopToBattle(
-    center: { x: number; z: number; halfSpan?: number; near?: { x: number; z: number } },
+    center: { x: number; z: number; halfSpan?: number; near?: { x: number; z: number; halfWidth?: number } },
     durationSeconds = 1.1,
   ): CameraViewState {
     if (!this._prebattleView) {
@@ -220,6 +220,9 @@ export class CameraController {
       to.radius = Math.min(12, Math.max(6.5, (center.halfSpan ?? 0) * 1.5));
       to.target.x = center.x + (center.near.x - center.x) * 0.3;
       to.target.z = center.z + (center.near.z - center.z) * 0.3;
+      // Stand far enough behind the holding line that its outermost units are whole in frame.
+      const toLine = Math.hypot(center.near.x - to.target.x, center.near.z - to.target.z);
+      to.radius = Math.max(to.radius, Math.min(20, toLine + ((center.near.halfWidth ?? 0) + 1.5) / 0.6));
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };

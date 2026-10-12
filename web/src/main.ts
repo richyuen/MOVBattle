@@ -1071,7 +1071,7 @@ function enterSimulation(): void {
 const STANDOFF_ENGAGE_RANGE = 7;
 
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
-function computeBattleFocus(): { x: number; z: number; halfSpan: number; near?: { x: number; z: number } } {
+function computeBattleFocus(): { x: number; z: number; halfSpan: number; near?: { x: number; z: number; halfWidth: number } } {
   const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
@@ -1087,7 +1087,17 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number; near?: 
   const standoff = sums.some((s) => s.n > 0 && s.ranged * 2 > s.n);
   // The camera stands behind the more ranged army, so its line is the foreground and the enemy the background.
   const ratio = (s: { n: number; ranged: number }) => (s.n ? s.ranged / s.n : 0);
-  const near = standoff ? (ratio(sums[1]) > ratio(sums[0]) ? b : a) : undefined;
+  const nearTeam = ratio(sums[1]) > ratio(sums[0]) ? 1 : 0;
+  const nearCentre = nearTeam === 1 ? b : a;
+  // How far the holding line reaches either side of its centre, across the axis between the armies.
+  const axisLength = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+  let halfWidth = 0;
+  for (const unit of placedUnits) {
+    if (unit.linkedParent || unit.isDead || (unit.team === 0 ? 0 : 1) !== nearTeam) continue;
+    const across = ((unit.position.x - nearCentre.x) * (b.z - a.z) - (unit.position.z - nearCentre.z) * (b.x - a.x)) / axisLength;
+    halfWidth = Math.max(halfWidth, Math.abs(across));
+  }
+  const near = standoff ? { ...nearCentre, halfWidth } : undefined;
   return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, near };
 }
 
