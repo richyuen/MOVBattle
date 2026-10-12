@@ -121,23 +121,35 @@ export class ProceduralAnimator {
   private _limpTarget = 0;
   private _limp = 0;
   // Per-unit crumple shape so a pile of fallen bodies does not share one pose.
-  private readonly _limpPose = {
-    torsoX: 0.25 + Math.random() * 0.45,
-    torsoZ: (Math.random() - 0.5) * 0.7,
-    neckX: (Math.random() - 0.5) * 1.1,
-    // Arms swing little out of the body's plane and splay wide to the sides with a shallow elbow, so a body
-    // on its back lies with its arms slack on the ground instead of holding its forearms up.
-    leftArmX: -0.6 + Math.random() * 1.2,
-    rightArmX: -0.6 + Math.random() * 1.2,
-    leftArmZ: -(0.5 + Math.random() * 1.3),
-    rightArmZ: 0.5 + Math.random() * 1.3,
-    leftElbowX: -(0.1 + Math.random() * 0.7),
-    rightElbowX: -(0.1 + Math.random() * 0.7),
-    leftHipX: -1.0 + Math.random() * 1.4,
-    rightHipX: -1.0 + Math.random() * 1.4,
-    leftKneeX: 0.35 + Math.random() * 1.1,
-    rightKneeX: 0.35 + Math.random() * 1.1,
-  };
+  private readonly _limpPose = this._buildLimpPose();
+
+  private _buildLimpPose() {
+    // One arm is thrown up past the head, nearly straight; the other stays low with a folded elbow, so no
+    // downed body lies in a straight-armed T.
+    const leftOverhead = Math.random() < 0.5;
+    const overX = -(2.1 + Math.random() * 0.8);
+    const overZ = 0.1 + Math.random() * 0.5;
+    const overElbow = -(0.05 + Math.random() * 0.35);
+    const lowX = -0.3 + Math.random() * 0.6;
+    const lowZ = 0.3 + Math.random() * 0.7;
+    const lowElbow = -(0.5 + Math.random() * 0.9);
+    return {
+      torsoX: 0.25 + Math.random() * 0.45,
+      torsoZ: (Math.random() - 0.5) * 0.7,
+      neckX: (Math.random() - 0.5) * 1.1,
+      leftArmX: leftOverhead ? overX : lowX,
+      rightArmX: leftOverhead ? lowX : overX,
+      leftArmZ: -(leftOverhead ? overZ : lowZ),
+      rightArmZ: leftOverhead ? lowZ : overZ,
+      leftElbowX: leftOverhead ? overElbow : lowElbow,
+      rightElbowX: leftOverhead ? lowElbow : overElbow,
+      // Thighs stay near the body's line and the knees barely fold, so the legs lie flat instead of tenting up.
+      leftHipX: -0.25 + Math.random() * 0.5,
+      rightHipX: -0.25 + Math.random() * 0.5,
+      leftKneeX: 0.05 + Math.random() * 0.55,
+      rightKneeX: 0.05 + Math.random() * 0.55,
+    };
+  }
 
   // Pupil wobble state (googly eyes)
   private _pupilOffX = 0;
