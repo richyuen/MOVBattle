@@ -186,6 +186,12 @@ export class TribalSandboxMapBuilder {
     under.material = this._scene.getMaterialByName("cliffRock")!;
     under.isPickable = false;
 
+    // Rock shelf: a coarse ledge of the cliff standing out past the lawn well below its lip, a different width at
+    // every corner, so from above the grass ends on broken rock and not on a ruled line against the sky.
+    const shelf = this._islandSlab("islandShelf", -2.5, 5, 0.8, 20, 0.14);
+    shelf.material = this._scene.getMaterialByName("cliffRock")!;
+    shelf.isPickable = false;
+
     // Cliff face: rock buttresses hang all the way round under the rim and taper down slower than the slab does, so
     // the cliff below the lawn is ragged while the lawn's own edge stays clean.
     const crags: Mesh[] = [];
@@ -212,15 +218,23 @@ export class TribalSandboxMapBuilder {
     }
   }
 
-  /** A slab in the island's outline: a round drum with every vertex pushed out to the rim, its top face at `top` */
-  private _islandSlab(name: string, top: number, height: number, taper = 1): Mesh {
+  /**
+   * A slab in the island's outline: a round drum with every vertex pushed out to the rim, its top face at `top`.
+   * `ragged` pushes each corner a further, seeded fraction of its reach out past the rim and drops its top edge.
+   */
+  private _islandSlab(name: string, top: number, height: number, taper = 1, tessellation = 48, ragged = 0): Mesh {
     const slab = MeshBuilder.CreateCylinder(name, {
-      diameterTop: 1, diameterBottom: taper, height, tessellation: 48,
+      diameterTop: 1, diameterBottom: taper, height, tessellation,
     }, this._scene);
     const positions = slab.getVerticesData("position")!;
     for (let i = 0; i < positions.length; i += 3) {
-      const reach = Math.hypot(positions[i], positions[i + 2]) * 2;
-      const [x, z] = islandRim(Math.atan2(positions[i + 2], positions[i]));
+      const angle = Math.atan2(positions[i + 2], positions[i]);
+      // Every vertex at one corner shares the corner's seed, so side faces stay whole.
+      const corner = (Math.round(angle / (Math.PI * 2) * tessellation) + tessellation) % tessellation;
+      const out = ragged > 0 ? 0.03 + ragged * this._seededValue(corner, 96) : 0;
+      const reach = Math.hypot(positions[i], positions[i + 2]) * 2 * (1 + out);
+      if (ragged > 0 && positions[i + 1] > 0 && reach > 0.5) positions[i + 1] -= this._seededValue(corner, 97) * 1.6;
+      const [x, z] = islandRim(angle);
       positions[i] = x * reach;
       positions[i + 2] = z * reach;
     }
