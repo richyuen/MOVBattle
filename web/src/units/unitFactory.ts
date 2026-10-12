@@ -46,6 +46,8 @@ const CLOTHED_PRESET_WEIGHT = 0.75;
 // Armour is the team colour itself, only darker (TABS): a light wash of its metal, no hue rotation. More grey or a
 // turn toward orange and red plate goes brown-maroon.
 const ARMOUR_PRESET_WEIGHT = 0.2;
+// Plate is a clearly darker value than the skin of the head and hands beside it, on top of the cloth shade.
+const ARMOUR_SHADE = 0.65;
 const BOOT_COLOR = new Color3(0.17, 0.14, 0.12);
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
@@ -156,7 +158,7 @@ export class UnitFactory {
       const hsv = body.bodyMaterial.baseColor.toHSV();
       const cool = hsv.r > 150 && hsv.r < 300;
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * CLOTH_SHADE, new Color3());
+      body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, hsv.g * (isArmored ? 1 : CLOTH_SATURATION), hsv.b * CLOTH_SHADE * (isArmored ? ARMOUR_SHADE : 1), new Color3());
       const trouserMaterial = getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(TROUSER_SHADE));
       for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
         thigh.material = trouserMaterial;
