@@ -269,7 +269,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         key: "gunner",
         label: "gunner",
         relation: "crew",
-        offset: new Vector3(0.18, 0, -0.5),
+        offset: new Vector3(0.45, 0, -0.5),
         syncFacing: true,
         semantics: {
           ...emittingCrew,
@@ -289,7 +289,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         key: "loader",
         label: "loader",
         relation: "crew",
-        offset: new Vector3(-0.2, 0, -0.48),
+        offset: new Vector3(-0.45, 0, -0.48),
         syncFacing: true,
         semantics: { ...parentDamage, actionPreset: "reload" },
         visual: visual("bomb", "bandana", "none", "none", {
