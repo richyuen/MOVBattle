@@ -1372,7 +1372,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   // repaints bodyMaterial/skinMaterial with the team tint, so those point at the paint.
   const fur = makeMat(scene, Color3.Lerp(hide, color, 0.12));
   const shaggyFur = makeMat(scene, Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), 0.45));
-  const tuskMat = makeMat(scene, new Color3(0.92, 0.88, 0.78));
+  const tuskMat = makeMat(scene, new Color3(1.0, 0.9, 0.68));
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
   const paintMat = getMaterialFactory().createUnique("cloth", color);
 
@@ -1496,11 +1496,16 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   browPaint.position.set(0, 0.3, 0.68);
   browPaint.parent = neck; browPaint.material = paintMat; allMeshes.push(browPaint);
 
-  // Eyes
+  // Eyes: white balls with black pupils, so they show against the dark fur
+  const eyeWhite = makeMat(scene, new Color3(0.95, 0.95, 0.95));
+  const pupilMat = makeMat(scene, new Color3(0.03, 0.03, 0.03));
   for (const xOff of [-0.3, 0.3]) {
-    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.13, segments: 6 }, scene);
-    eye.position.set(xOff, 0.08, 0.7);
-    eye.parent = neck; eye.material = darkMat; allMeshes.push(eye);
+    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.2, segments: 6 }, scene);
+    eye.position.set(xOff, 0.08, 0.68);
+    eye.parent = neck; eye.material = eyeWhite; allMeshes.push(eye);
+    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.1, segments: 4 }, scene);
+    pupil.position.set(xOff * 1.04, 0.07, 0.76);
+    pupil.parent = neck; pupil.material = pupilMat; allMeshes.push(pupil);
   }
 
   // ── Trunk (parented to neck) ──
@@ -1524,13 +1529,12 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
 
   // ── Tusks (parented to neck) ──
-  // One long curl per side: down and out of the jaw, forward along the ground, then up and back in
-  // until the tip stands above where the tusk left the jaw.
+  // One short smooth curve per side: down and out of the jaw, forward, then up to a tip about level with the eye.
   // Each segment starts where the last one ended, so the curve has no gaps.
-  const tuskPitches = [0.35, 0.9, 1.5, 2.1, 2.7, 3.2];
-  const tuskLengths = [0.6, 0.55, 0.5, 0.5, 0.45, 0.4];
-  const tuskGirths = [0.4, 0.36, 0.3, 0.24, 0.18, 0.12, 0.04];
-  const tuskSplay = [0.14, 0.14, 0.08, 0, -0.1, -0.14];
+  const tuskPitches = [0.4, 0.8, 1.2, 1.6, 2.0, 2.35];
+  const tuskLengths = [0.36, 0.34, 0.32, 0.3, 0.28, 0.26];
+  const tuskGirths = [0.34, 0.31, 0.27, 0.22, 0.17, 0.11, 0.04];
+  const tuskSplay = [0.08, 0.08, 0.05, 0.02, -0.03, -0.06];
   for (const side of [-1, 1]) {
     const start = new Vector3(side * 0.42, -0.3, 0.5);
     for (let i = 0; i < tuskPitches.length; i++) {
@@ -1546,12 +1550,6 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
       seg.parent = neck; seg.material = tuskMat; allMeshes.push(seg);
       start.copyFrom(end);
     }
-
-    // Painted ring where the tusk leaves the jaw
-    const ring = MeshBuilder.CreateCylinder("tuskPaint", { height: 0.14, diameter: 0.48, tessellation: 6 }, scene);
-    ring.position.set(side * 0.44, -0.42, 0.56);
-    ring.rotation.x = Math.PI - 0.5;
-    ring.parent = neck; ring.material = paintMat; allMeshes.push(ring);
   }
 
   // ── Ears (parented to neck): faceted fur fans flaring off the skull, not team slabs ──
