@@ -145,7 +145,10 @@ const shadowGen = new ShadowGenerator(2048, dir);
 // Depth-compared and lightly filtered: the map spans the whole tree ring, and a blurred exponential map over that
 // span smears a unit-sized shadow away to nothing.
 shadowGen.usePercentageCloserFiltering = true;
-shadowGen.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
+shadowGen.filteringQuality = ShadowGenerator.QUALITY_HIGH;
+// Shadows keep some of the ground's colour: at full strength the tree ring's shade fuses into one black mass
+// over the placement half beneath it.
+shadowGen.darkness = 0.45;
 shadowGen.bias = 0.0004;
 shadowGen.normalBias = 0.02;
 
