@@ -1531,7 +1531,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
   // ── Tusks (parented to neck) ──
   // One long slim curve per side: down and out of the jaw, forward, then up to a tip about level with the eye.
   // Each segment starts where the last one ended, so the curve has no gaps.
-  const tuskPitches = [0.4, 0.8, 1.2, 1.6, 2.0, 2.35];
+  const tuskPitches = [0.4, 0.8, 1.2, 1.5, 2.1, 2.7];
   // The two steep segments off the jaw are short, so the curve turns forward high instead of kinking low at the knees
   const tuskLengths = [0.4, 0.4, 0.51, 0.48, 0.45, 0.42];
   const tuskGirths = [0.24, 0.22, 0.19, 0.155, 0.12, 0.075, 0.03];
@@ -1548,8 +1548,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
       seg.position = Vector3.Center(start, end);
       seg.rotation.x = Math.PI - pitch;
       seg.rotation.z = -side * tuskSplay[i] / length;
-      // The last two segments are painted: team-coloured tusk tips
-      seg.parent = neck; seg.material = i >= tuskPitches.length - 2 ? paintMat : tuskMat; allMeshes.push(seg);
+      // Only the last segment is painted: a team-coloured tusk tip
+      seg.parent = neck; seg.material = i >= tuskPitches.length - 1 ? paintMat : tuskMat; allMeshes.push(seg);
       start.copyFrom(end);
     }
   }
