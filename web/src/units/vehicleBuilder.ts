@@ -662,18 +662,19 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   axle.rotation.z = Math.PI / 2;
   axle.parent = root; axle.material = teamPrimary; allMeshes.push(axle);
 
-  // Wheels (on sides, X axis): dark, and 0.58 across, so the rims stand as tall as the gun they carry
+  // Wheels (on sides, X axis): dark, and 0.58 across, so the rims stand as tall as the gun they carry.
+  // An open rim on eight thick spokes, with daylight between them, not a solid slab
   for (const xOff of [-0.3, 0.3]) {
-    const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.58, tessellation: 14 }, scene);
+    const wheel = MeshBuilder.CreateTorus("wheel", { diameter: 0.58, thickness: 0.06, tessellation: 14 }, scene);
     wheel.position.set(xOff, 0.29, 0);
     wheel.rotation.z = Math.PI / 2;
     wheel.parent = root; wheel.material = wheelWood; allMeshes.push(wheel);
 
-    // Spokes
-    for (let i = 0; i < 6; i++) {
-      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.02, height: 0.26, depth: 0.02 }, scene);
+    // Spokes: four bars across the full rim, turned about the axle
+    for (let i = 0; i < 4; i++) {
+      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.05, height: 0.54, depth: 0.05 }, scene);
       spoke.position.set(xOff, 0.29, 0);
-      spoke.rotation.set(0, 0, i * Math.PI / 6);
+      spoke.rotation.set(i * Math.PI / 4, 0, 0);
       spoke.parent = root; spoke.material = wheelWood; allMeshes.push(spoke);
     }
   }
