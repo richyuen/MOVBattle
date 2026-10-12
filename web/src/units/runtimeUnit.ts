@@ -1341,7 +1341,7 @@ export class RuntimeUnit {
         const lead = loader ? body.leftHip : body.rightHip;
         const leadKnee = loader ? body.leftKnee : body.rightKnee;
         const brace = loader ? body.rightHip : body.leftHip;
-        body.torso.rotation.x += loader ? 0.42 : 0.55;
+        body.torso.rotation.x += loader ? 0.75 : 0.9;
         body.neck.rotation.x -= loader ? 0.25 : 0.35;
         lead.rotation.x -= loader ? 0.85 : 1.0;
         leadKnee.rotation.x += loader ? 0.85 : 1.0;

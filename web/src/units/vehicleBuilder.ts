@@ -641,23 +641,23 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
 
   // Operator stands on the ground beside the breech, clear of the wheel, turned in toward the gun and
-  // bent to it: feet apart, one arm reaching for the breech and the other cocked back at the elbow
+  // bent well over it in a lunge: feet apart, lead knee bent, one arm reaching for the breech and the other cocked back at the elbow
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
     operator = addOperator(scene, root, allMeshes, 0.56, 0, -0.42, color, (body) => {
       body.root.rotation.y = -0.95;
-      body.torso.rotation.x = 0.3;
-      body.neck.rotation.x = -0.2;
+      body.torso.rotation.x = 0.85;
+      body.neck.rotation.x = -0.45;
       body.leftShoulder.rotation.x = -1.25;
       body.leftShoulder.rotation.z = -0.2;
       body.leftElbow.rotation.x = -0.25;
       body.rightShoulder.rotation.x = -0.55;
       body.rightShoulder.rotation.z = 0.3;
       body.rightElbow.rotation.x = -1.1;
-      body.leftHip.rotation.x = -0.3;
+      body.leftHip.rotation.x = -0.75;
       body.leftHip.rotation.z = -0.16;
-      body.leftKnee.rotation.x = 0.6;
-      body.rightHip.rotation.x = 0.14;
+      body.leftKnee.rotation.x = 0.9;
+      body.rightHip.rotation.x = 0.35;
       body.rightHip.rotation.z = 0.16;
       body.rightKnee.rotation.x = 0.1;
     });
