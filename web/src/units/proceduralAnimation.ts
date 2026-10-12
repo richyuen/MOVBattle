@@ -215,10 +215,11 @@ export class ProceduralAnimator {
     const rightArm = lead === 0 ? 0 : armGap;
     const leftKnee = 0.1 + h(42) * 0.5;
     const rightKnee = 0.1 + ((h(42) + 0.35 + h(43) * 0.3) % 1) * 0.5;
-    // The legs scissor: one swings up to a radian ahead of or behind the other, and one kicks wide out to the side.
-    const hipGap = (h(44) < 0.5 ? -1 : 1) * (0.6 + h(45) * 0.4);
-    const leftKick = h(46) < 0.5 ? -(0.4 + h(47) * 0.3) : 0;
-    const rightKick = h(46) < 0.5 ? 0 : 0.4 + h(47) * 0.3;
+    // The legs part only a little: one swings 0.25 to 0.6 rad ahead of or behind the other and one kicks slightly out
+    // to the side, so they trail as a loose pair and not a wide V. The elbows fold by up to a radian instead.
+    const hipGap = (h(44) < 0.5 ? -1 : 1) * (0.25 + h(45) * 0.35);
+    const leftKick = h(46) < 0.5 ? -(0.15 + h(47) * 0.25) : 0;
+    const rightKick = h(46) < 0.5 ? 0 : 0.15 + h(47) * 0.25;
     if (variant === 0) {
       // Jackknife: folded hard at the waist, straight legs swung up to meet the arms reaching for the toes
       const hip = 0.7 + h(30) * 0.4;
@@ -227,8 +228,8 @@ export class ProceduralAnimator {
         [b.neck, 0.4, 0, 0],
         [b.leftShoulder, -(1.0 + h(26) * 0.3 + leftArm), 0, -0.1],
         [b.rightShoulder, -(1.0 + h(27) * 0.3 + rightArm), 0, 0.1],
-        [b.leftElbow, -(0.2 + h(28) * 0.4 + rightArm), 0, 0],
-        [b.rightElbow, -(0.2 + h(29) * 0.4 + leftArm), 0, 0],
+        [b.leftElbow, -(0.2 + h(28) * 0.8 + rightArm), 0, 0],
+        [b.rightElbow, -(0.2 + h(29) * 0.8 + leftArm), 0, 0],
         [b.leftHip, -hip, 0, leftKick],
         [b.rightHip, -(hip + hipGap), 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
@@ -243,8 +244,8 @@ export class ProceduralAnimator {
         [b.neck, -0.5, 0, 0],
         [b.leftShoulder, -(2.9 + h(26) * 0.2 - leftArm), 0, -(0.1 + h(27) * 0.15)],
         [b.rightShoulder, -(2.9 + h(28) * 0.2 - rightArm), 0, 0.1 + h(29) * 0.15],
-        [b.leftElbow, -(0.2 + h(30) * 0.4 + leftArm), 0, 0],
-        [b.rightElbow, -(0.2 + h(31) * 0.4 + rightArm), 0, 0],
+        [b.leftElbow, -(0.2 + h(30) * 0.8 + leftArm), 0, 0],
+        [b.rightElbow, -(0.2 + h(31) * 0.8 + rightArm), 0, 0],
         [b.leftHip, hip, 0, leftKick],
         [b.rightHip, hip + hipGap, 0, rightKick],
         [b.leftKnee, leftKnee, 0, 0],
@@ -258,8 +259,8 @@ export class ProceduralAnimator {
       [b.neck, (h(27) - 0.5) * 0.6, 0, 0],
       [b.leftShoulder, 0.2 + h(28) * 0.2 + leftArm, 0, -0.12],
       [b.rightShoulder, 0.2 + h(29) * 0.2 + rightArm, 0, 0.12],
-      [b.leftElbow, -(0.2 + h(31) * 0.4 + rightArm), 0, 0],
-      [b.rightElbow, -(0.2 + h(32) * 0.4 + leftArm), 0, 0],
+      [b.leftElbow, -(0.2 + h(31) * 0.8 + rightArm), 0, 0],
+      [b.rightElbow, -(0.2 + h(32) * 0.8 + leftArm), 0, 0],
       [b.leftHip, -hip, 0, leftKick],
       [b.rightHip, -(hip + hipGap), 0, rightKick],
       [b.leftKnee, leftKnee, 0, 0],
