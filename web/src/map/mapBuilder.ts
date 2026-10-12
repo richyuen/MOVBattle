@@ -115,14 +115,14 @@ export class TribalSandboxMapBuilder {
   }
 
   private _createMaterials(): void {
-    // Grass
+    // Grass: autumn orange
     const grass = new StandardMaterial("grass", this._scene);
-    grass.diffuseColor = new Color3(0.55, 0.65, 0.25);
+    grass.diffuseColor = new Color3(0.86, 0.6, 0.24);
     grass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Warm orange-grass for edges
     const dryGrass = new StandardMaterial("dryGrass", this._scene);
-    dryGrass.diffuseColor = new Color3(0.72, 0.62, 0.30);
+    dryGrass.diffuseColor = new Color3(0.8, 0.52, 0.22);
     dryGrass.specularColor = new Color3(0.05, 0.05, 0.05);
 
     // Boulder stone: pale sandy tan
@@ -145,14 +145,14 @@ export class TribalSandboxMapBuilder {
     trunk.diffuseColor = new Color3(0.45, 0.30, 0.15);
     trunk.specularColor = new Color3(0.03, 0.03, 0.03);
 
-    // Tree leaves
+    // Tree leaves: autumn red
     const leaves = new StandardMaterial("leaves", this._scene);
-    leaves.diffuseColor = new Color3(0.58, 0.70, 0.34);
+    leaves.diffuseColor = new Color3(0.8, 0.27, 0.2);
     leaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Dark leaves
     const darkLeaves = new StandardMaterial("darkLeaves", this._scene);
-    darkLeaves.diffuseColor = new Color3(0.48, 0.62, 0.30);
+    darkLeaves.diffuseColor = new Color3(0.66, 0.2, 0.18);
     darkLeaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Grass blades: one shade under and one over the field color, so the carpet reads as texture
@@ -173,15 +173,15 @@ export class TribalSandboxMapBuilder {
   }
 
   private _createGround(): void {
-    // Main ground — warm green-orange grass
+    // Main ground — warm orange earth
     const ground = this._islandSlab("ground", 0, 0.04);
     const mat = new StandardMaterial("groundMat", this._scene);
-    mat.diffuseColor = new Color3(0.60, 0.58, 0.30);
+    mat.diffuseColor = new Color3(0.74, 0.52, 0.24);
     mat.specularColor = new Color3(0.05, 0.05, 0.05);
     ground.material = mat;
     ground.receiveShadows = true;
 
-    // Lawn: the same green from rim to rim, so no band of another colour frames the field
+    // Lawn: the same orange from rim to rim, so no band of another colour frames the field
     const centerGrass = this._islandSlab("centerGrass", 0.02, 0.04);
     centerGrass.material = this._scene.getMaterialByName("grass")!;
     centerGrass.receiveShadows = true;
@@ -996,6 +996,11 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (bladeDark) bladeDark.diffuseColor = theme.grass.scale(BLADE_DARK);
   const bladeLight = scene.getMaterialByName("grassBladeLight") as StandardMaterial | null;
   if (bladeLight) bladeLight.diffuseColor = theme.grass.scale(BLADE_LIGHT);
+  // Campaign trees keep green canopies; only the tribal sandbox is autumn red
+  const leaves = scene.getMaterialByName("leaves") as StandardMaterial | null;
+  if (leaves) leaves.diffuseColor = new Color3(0.58, 0.7, 0.34);
+  const darkLeaves = scene.getMaterialByName("darkLeaves") as StandardMaterial | null;
+  if (darkLeaves) darkLeaves.diffuseColor = new Color3(0.48, 0.62, 0.3);
   paintFarProps(scene, theme.grass.scale(0.85));
 }
 
