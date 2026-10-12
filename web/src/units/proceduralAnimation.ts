@@ -137,7 +137,7 @@ export class ProceduralAnimator {
     const overhead = pick < 0.5;
     const leftFlung = Math.floor(pick * 4) % 2 === 0;
     // A flung-wide arm is never more than a diagonal and its forearm always folds back toward the head, hard
-    // half the time, and the low arm lies straight along the side, so no body rests as a T. Derived from
+    // half the time, and the low arm lies along the side, so no body rests as a T. Derived from
     // `pick`, so the pose draws no more random numbers than before.
     const folded = Math.floor(pick * 8) % 2 === 0;
     const flungX = overhead ? -(2.95 + Math.random() * 0.4) : (Math.random() - 0.5) * 0.3;
@@ -145,12 +145,17 @@ export class ProceduralAnimator {
     const flungElbowZ = overhead ? (Math.random() - 0.3) * 1.2 : folded ? 1.3 + Math.random() * 0.6 : 1.0 + Math.random() * 0.6;
     const lowX = (Math.random() - 0.5) * 0.3;
     const lowZ = 0.05 + Math.random() * 0.2;
-    const lowElbowZ = Math.random() * 0.3;
+    // The arm at the side is crooked too: its elbow folds outward 40 to 90 degrees, so no corpse lies with a
+    // straight arm. From `pick`; the draw it replaces is still taken, so the pose uses as many random numbers.
+    Math.random();
+    const lowElbowZ = 0.7 + (pick * 128 - Math.floor(pick * 128)) * 0.87;
     // One leg lies splayed out to the side and bent at the knee within the ground plane; the other stays straight.
     const leftSplayed = Math.floor(pick * 16) % 2 === 0;
     // The knee folds between 50 and 90 degrees, so the leg is plainly crooked and not a slightly parted straight one.
     const splayZ = 0.5 + (pick * 32 - Math.floor(pick * 32)) * 0.5;
     const splayKneeZ = 0.9 + (pick * 64 - Math.floor(pick * 64)) * 0.7;
+    // That leg's knee also stands up off the ground: the thigh lifts and the shin drops back to the foot.
+    const tent = 0.45 + (pick * 256 - Math.floor(pick * 256)) * 0.35;
     return {
       torsoX: Math.random() * 0.2,
       torsoZ: (Math.random() - 0.5) * 0.7,
@@ -164,11 +169,12 @@ export class ProceduralAnimator {
       rightElbowX: -0.12,
       leftElbowZ: -(leftFlung ? flungElbowZ : lowElbowZ),
       rightElbowZ: leftFlung ? lowElbowZ : flungElbowZ,
-      // Thighs stay near the body's line and the knees barely fold, so the legs lie flat instead of tenting up.
-      leftHipX: -0.25 + Math.random() * 0.5,
-      rightHipX: -0.25 + Math.random() * 0.5,
-      leftKneeX: 0.05 + Math.random() * 0.55,
-      rightKneeX: 0.05 + Math.random() * 0.55,
+      // The straight leg's thigh stays near the body's line and its knee barely folds, so it lies flat; only the
+      // splayed leg tents.
+      leftHipX: -0.25 + Math.random() * 0.5 - (leftSplayed ? tent : 0),
+      rightHipX: -0.25 + Math.random() * 0.5 - (leftSplayed ? 0 : tent),
+      leftKneeX: 0.05 + Math.random() * 0.55 + (leftSplayed ? tent * 1.6 : 0),
+      rightKneeX: 0.05 + Math.random() * 0.55 + (leftSplayed ? 0 : tent * 1.6),
       leftHipZ: leftSplayed ? -splayZ : -0.05,
       rightHipZ: leftSplayed ? 0.05 : splayZ,
       leftKneeZ: leftSplayed ? splayKneeZ : 0,
