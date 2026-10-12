@@ -484,9 +484,9 @@ export class SimulationSystem {
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
       // shoulder contact so the two front lines meet instead of fencing across a gap.
-      // Bracers hold their ground and let the rush come onto the shields.
+      // Bracers hold their ground and let the rush come onto the shields, but two shield lines facing each other both close.
       const contactDistance = unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap;
-      const presses = aiProfile.id !== "ai.brace" && unit.definition.engageRange < this.meleePressMaxReach;
+      const presses = (aiProfile.id !== "ai.brace" || enemy.definition.aiProfileId === "ai.brace") && unit.definition.engageRange < this.meleePressMaxReach;
       if (canMove && presses && distance > contactDistance + 0.05) {
         const back = unit.position.subtract(enemy.position);
         back.y = 0;
