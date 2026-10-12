@@ -1285,7 +1285,7 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       helm.convertToFlatShadedMesh();
       // Bare steel like the open helmet, with only a breath of team colour: the helm is gear, not skin, and any heavier
       // wash turns it into the lightest team-coloured block on the unit
-      const steel = new Color3(0.38, 0.38, 0.42); // dark steel (TABS), not a pale grey slab
+      const steel = new Color3(0.6, 0.6, 0.65);
       helm.material = mat(scene, teamColor ? Color3.Lerp(steel, teamColor, 0.12) : steel);
       helm.position.y = -0.065 * s;
       // Eye slit: a bold dark bar across the front facet that wraps onto the two facets beside it
