@@ -1312,8 +1312,8 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
 }
 
 function restoreSandboxSceneLook(scene: Scene): void {
-  scene.clearColor.set(0.36, 0.74, 0.78, 1);
-  scene.fogColor = new Color3(0.36, 0.74, 0.78);
+  scene.clearColor.set(0.14, 0.62, 0.46, 1);
+  scene.fogColor = new Color3(0.14, 0.62, 0.46);
 }
 
 const defaultHalfZones = (): PlacementZone[] => [

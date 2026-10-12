@@ -111,7 +111,7 @@ const btnTouchCameraUpEl = document.getElementById("btnTouchCameraUp") as HTMLBu
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
 const scene = new Scene(engine);
-scene.clearColor = new Color4(0.36, 0.74, 0.78, 1);
+scene.clearColor = new Color4(0.14, 0.62, 0.46, 1);
 
 // Material factory (PBR cache — must init before any unit/map creation)
 initMaterialFactory(scene);
@@ -131,7 +131,7 @@ dir.shadowMaxZ = 220;
 
 // Fog — depth fade to sky color
 scene.fogMode = Scene.FOGMODE_LINEAR;
-scene.fogColor = new Color3(0.36, 0.74, 0.78);
+scene.fogColor = new Color3(0.14, 0.62, 0.46);
 scene.fogStart = 70;
 scene.fogEnd = 170;
 // The haze starts behind the fight, not at a fixed distance from the eye: pulled back to the placement view,
