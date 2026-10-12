@@ -142,7 +142,7 @@ export class TribalSandboxMapBuilder {
 
     // Tree trunk
     const trunk = new StandardMaterial("trunk", this._scene);
-    trunk.diffuseColor = new Color3(0.45, 0.30, 0.15);
+    trunk.diffuseColor = new Color3(0.80, 0.74, 0.66);
     trunk.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Tree leaves: autumn red
@@ -457,7 +457,7 @@ export class TribalSandboxMapBuilder {
     const broadleaf = index % 3 === 1;
     const girth = 0.75 + this._seededValue(index, 65) * 0.6;
     const trunkHeight = height * (broadleaf ? 0.5 : 0.6);
-    const trunkRadius = height * (broadleaf ? 0.06 : 0.035);
+    const trunkRadius = height * 0.035;
     const canopyRadius = height * 0.3 * girth;
 
     // Trunk
