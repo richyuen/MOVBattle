@@ -147,12 +147,12 @@ export class TribalSandboxMapBuilder {
 
     // Tree leaves: autumn red
     const leaves = new StandardMaterial("leaves", this._scene);
-    leaves.diffuseColor = new Color3(0.8, 0.27, 0.2);
+    leaves.diffuseColor = new Color3(0.86, 0.32, 0.24);
     leaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
-    // Second canopy colour: orange among the red
+    // Second canopy colour: yellow-orange among the red
     const darkLeaves = new StandardMaterial("darkLeaves", this._scene);
-    darkLeaves.diffuseColor = new Color3(0.9, 0.5, 0.2);
+    darkLeaves.diffuseColor = new Color3(0.93, 0.62, 0.22);
     darkLeaves.specularColor = new Color3(0.03, 0.03, 0.03);
 
     // Grass blades: one shade under and one over the field color, so the carpet reads as texture
@@ -491,7 +491,7 @@ export class TribalSandboxMapBuilder {
       if (existing) return existing;
       const crown = mat.clone(name);
       crown.diffuseColor = mat.diffuseColor.scale(0.88);
-      crown.emissiveColor = mat.diffuseColor.scale(0.26);
+      crown.emissiveColor = mat.diffuseColor.scale(0.38);
       return crown;
     };
     const glow = this._scene.getGlowLayerByName("glow");
@@ -997,7 +997,7 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
     const crown = mat && scene.getMaterialByName(`${mat.name}Crown`) as StandardMaterial | null;
     if (!mat || !crown) continue;
     crown.diffuseColor = mat.diffuseColor.scale(0.88);
-    crown.emissiveColor = mat.diffuseColor.scale(0.26);
+    crown.emissiveColor = mat.diffuseColor.scale(0.38);
   }
   paintFarProps(scene, theme.grass.scale(0.85));
 }
