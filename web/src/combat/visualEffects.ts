@@ -347,7 +347,7 @@ export class VisualEffects {
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
     coreMat.emissiveColor = new Color3(0.95, 0.88, 0.5);
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
-    flashMat.emissiveColor = new Color3(0.95, 0.55, 0.07);
+    flashMat.emissiveColor = new Color3(1.0, 0.72, 0.30);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
     flameMat.emissiveColor = new Color3(0.95, 0.24, 0.02);
     const glow = this._scene.getGlowLayerByName("glow");
