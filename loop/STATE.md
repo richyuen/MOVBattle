@@ -24,7 +24,7 @@ battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 7. [maps-light] island-square-plateau: square slab, straight edges, coloured side strips; TABS rounded irregular island [attempts: 0] — ref: trailer_1_sheet_01 r1c1 — ours: hud_placement.png
 8. [unit-look] props-undersized-at-range: lineup weapons and hats are slivers, shield a narrow kite [attempts: 0] — ref: tabs_screenshot_06 — ours: lineup_medieval.png
 
-## Rejected attempts (last 5, newest first; `rejected-kept` when the revert conflicted)
+## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - hill-cap-too-steep-and-pale (was hill-bald-oval-rim) [attempts: 1] — scaleY 1.2h sunk 0.3h: edge still ~60 degrees, still pale with a dark crescent
 - blast-launch-too-high-and-stiff [attempts: 1] — knee bend only (lift cut stalled a scenario): bodies still over the trees, legs forked
 - blast-stacked-balls (was fireball-balloon-cluster) [attempts: 1] — glow un-excluded + cap 1.1: white egg, still ~2 men tall
@@ -32,7 +32,7 @@ battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 - placement-haze-washes-teams [attempts: 2] — sun pos + autoCalcShadowZBounds + blur 16: unit shadows vanished
 
 ## Notes for next iteration (max 5 lines)
-- Gaps 1 and 6 are under Rejected, not pickable. Gap 1 next edit: _createHill scaleY ~8-10x height, position.y = 0.3*height - 0.5*scaleY.
+- Gaps 1 and 6 are on their second and last attempt. Gap 1 next edit: _createHill scaleY ~8-10x height, position.y = 0.3*height - 0.5*scaleY.
 - Gap 2: mapBuilder _createFieldBlades, halve patch footprint (4 m cells) and double count inside |x| < 24.
 - Gap 3: bodyBuilder footLength from lowerLegBottom * 1.6-1.8 instead of 0.24 * bulk.
 - Any cut to blast lift (projectileSystem.ts:388, 3rd arg) fails battle_recap_result_legacy_tank_shell.

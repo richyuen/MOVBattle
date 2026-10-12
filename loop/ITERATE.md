@@ -16,7 +16,7 @@ work against reference media; you never judge it yourself. Follow these steps in
 If N is a multiple of 5, or the ranked list has fewer than 3 pickable gaps: run `node loop/scripts/capture.mjs --iter N --showcase-only`, spawn the critic in RE-AUDIT mode (see step 6, give it the whole digest, all `reference/small/*.jpg`, all `reference/frames/gameplay_sheet_*.jpg`, and the new PNGs), and rewrite Scores and Ranked open gaps from its answer before continuing.
 
 ## 3. Pick every pickable gap
-- Pickable: attempts < 2 and not listed under Rejected attempts. Take all of them, in ranked order. Write them into Focus. Record `BASE=$(git rev-parse HEAD)`.
+- Pickable: attempts < 2. Read Rejected attempts before retrying one. Take all of them, in ranked order. Write them into Focus. Record `BASE=$(git rev-parse HEAD)`.
 
 ## 4. Implement, one commit per gap
 For each focus gap: make the smallest change that moves it, touching only what it needs. Type-check with `node web/node_modules/typescript/bin/tsc --noEmit -p web/tsconfig.json`. Commit only that gap: subject `loop(N.k): <gap>` plus the attribution lines. Write the sha next to the gap in Focus.
@@ -32,7 +32,7 @@ Spawn a fresh `Agent` (general-purpose). Its prompt lists, by path: `loop/CRITIC
 - Consecutive rejects: reset to 0 if any gap was approved, else +1. At 3, write the reason into a file named `STOP`.
 
 ## 8. Write memory and commit
-- Rewrite `loop/STATE.md` fully: Iteration N, Scores, Focus with verdicts, Last verdicts (critic header lines verbatim), Ranked open gaps (critic's list, max 8), Rejected attempts (last 5), Notes (max 5 lines).
+- Rewrite `loop/STATE.md` fully: Iteration N, Scores, Focus with verdicts, Last verdicts (critic header lines verbatim), Ranked open gaps (critic's list, max 8), Rejected attempts (last 8), Notes (max 5 lines).
 - Append to `loop/LOG.md`: `iter N | <gap ids> | <approved>/<total> approved | scores <before> -> <after>`.
 - `node loop/scripts/budget.mjs` must pass. Commit the docs: subject `loop(N): <approved>/<total> gaps approved`.
 - `git push` (bare, no arguments). If it fails, note it in LOG.md and carry on; the commit is what counts.
