@@ -689,17 +689,18 @@ export class TribalSandboxMapBuilder {
       // A fifth puff rides low on the two middle ones: a shallow swell on a long flat bank, not a stacked heap
       const crown = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
       const crownD = size * (0.6 + this._seededValue(i, 47) * 0.2);
-      crown.scaling.set(crownD * 1.3, crownD * 0.36, crownD * 0.7);
-      crown.position.set((this._seededValue(i, 48) - 0.5) * size * 0.2, size * 0.24, 0);
+      crown.scaling.set(crownD, crownD * 0.55, crownD * 0.7);
+      // Well off centre to one side or the other, so the top outline is unequal bumps and not a centred dome
+      crown.position.set((this._seededValue(i, 48) < 0.5 ? -1 : 1) * size * 0.3, size * 0.3, 0);
       puffs.push(crown);
       for (let j = 0; j < 4; j++) {
         const puff = MeshBuilder.CreateSphere("cloudPuff", { diameter: 1, segments: 3 }, this._scene);
-        // Every puff is about three times as wide as tall, spaced half a size apart, the middle two a little bigger:
-        // the cloud is one long low bank. Each sinks a third below the base line, where the underside is cut level below
+        // Every puff is a round lobe a little under twice as wide as tall, spaced a good third of a size apart, the
+        // middle two bigger: a lumpy cumulus bank. Each sinks a third below the base line, where the underside is cut level below
         const middle = j === 1 || j === 2;
         const d = size * ((middle ? 0.85 : 0.5) + this._seededValue(i * 10 + j, 44) * 0.3);
-        puff.scaling.set(d * 1.3, d * (middle ? 0.4 : 0.3), d * 0.7);
-        puff.position.set((j - 1.5) * size * 0.5, puff.scaling.y * 0.17, (this._seededValue(i * 10 + j, 45) - 0.5) * size * 0.2);
+        puff.scaling.set(d * 1.05, d * (middle ? 0.62 : 0.5), d * 0.7);
+        puff.position.set((j - 1.5) * size * 0.38, puff.scaling.y * 0.17, (this._seededValue(i * 10 + j, 45) - 0.5) * size * 0.2);
         puffs.push(puff);
       }
       const cloud = Mesh.MergeMeshes(puffs, true);
