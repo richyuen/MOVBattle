@@ -38,6 +38,12 @@ const SKIN_GLOW = 0.4;
 const SKIN_GLOW_BLUE = 1.5;
 // Red skin keeps three quarters of its blue: the blue sky light on the whole of it turned the lit faces pink.
 const WARM_SKIN_BLUE = 0.75;
+// ...and is greyed a step: red a fifth down, green and blue lifted, so it is a dusty rose red and not a scarlet. Darkening the whole colour only deepened it.
+const WARM_SKIN_RED = 0.8;
+const WARM_SKIN_GREEN_LIFT = 0.14;
+const WARM_SKIN_BLUE_LIFT = 0.12;
+// Its glow is three quarters of the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed.
+const WARM_SKIN_GLOW = 0.75;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is quartered: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.25;
@@ -332,11 +338,11 @@ function applyMaterialPreset(
   body.bodyMaterial.roughness = tint.roughness;
   body.bodyMaterial.alpha = tint.alpha;
   const warmSkin = skinColor.r > skinColor.g && skinColor.r > skinColor.b;
-  body.skinMaterial.baseColor = warmSkin ? new Color3(tint.skinDiffuse.r, tint.skinDiffuse.g, tint.skinDiffuse.b * WARM_SKIN_BLUE) : tint.skinDiffuse;
+  body.skinMaterial.baseColor = warmSkin ? new Color3(tint.skinDiffuse.r * WARM_SKIN_RED, tint.skinDiffuse.g + WARM_SKIN_GREEN_LIFT, tint.skinDiffuse.b * WARM_SKIN_BLUE + WARM_SKIN_BLUE_LIFT) : tint.skinDiffuse;
   // Only the part of the team colour above its weakest channel glows: the whole colour would wash the skin toward white.
   // Blue glows half again as strongly, so blue skin is a clear sky blue and not a teal grey; red skin has next to no blue above its weakest channel and is unchanged.
   const grey = Math.min(skinColor.r, skinColor.g, skinColor.b);
-  body.skinMaterial.emissiveColor = tint.skinEmissive.add(new Color3(skinColor.r - grey, skinColor.g - grey, (skinColor.b - grey) * SKIN_GLOW_BLUE).scale(skinGlow));
+  body.skinMaterial.emissiveColor = tint.skinEmissive.add(new Color3(skinColor.r - grey, skinColor.g - grey, (skinColor.b - grey) * SKIN_GLOW_BLUE).scale(skinGlow * (warmSkin ? WARM_SKIN_GLOW : 1)));
 }
 
 interface MaterialTint {
