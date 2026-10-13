@@ -272,7 +272,7 @@ export class CameraController {
     const from = this.captureViewState();
     const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
     // The bands cover the top and bottom of the frame, so a survivor gets ~0.28 radius of height either side of
-    // the target. A giant among the survivors is not fitted: the shot stands 3 off the human-sized survivor nearest the middle of the group and aims 1.5 above the ground, so the giant crops and the humans are not specks under it.
+    // the target. A giant among the survivors is not fitted: the shot stands 3 off the human-sized survivor nearest the middle of the group and aims 1 above the ground, so the giant crops and the humans are not specks under it.
     const giant = box.height > 4.2;
     const tall = Math.min(box.height, 4.2);
     const fitHeight = (tall * 0.5 + 0.7) / 0.28;
@@ -296,7 +296,7 @@ export class CameraController {
       radius,
       target: {
         x: giant ? (box.group ?? box.focus).x : spread ? box.focus.x : (box.minX + box.maxX) / 2,
-        y: box.baseY + (giant ? 1.5 - (giantRadius - 3) / 3 : Math.max(1, tall * 0.5)),
+        y: box.baseY + (giant ? 1 - (giantRadius - 3) / 3 : Math.max(1, tall * 0.5)),
         z: giant ? (box.group ?? box.focus).z : spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
