@@ -655,11 +655,12 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
           flange.material = headMat;
         }
       } else {
-        // Hammer: box head with flat face vs peen distinction
+        // Hammer: box head with flat face vs peen distinction. Stone, not metal: a pale accent on metal has nothing to reflect and goes black
+        const stoneMat = mat(scene, accent, 0, "stone");
         const head = MeshBuilder.CreateBox("hammerhead", { width: 0.14 * s, height: 0.1 * s, depth: 0.1 * s }, scene);
         head.position.y = 0.28 * s;
         head.parent = handle;
-        head.material = headMat;
+        head.material = stoneMat;
         // Peen (wedge side)
         const peen = MeshBuilder.CreateCylinder("peen", {
           height: 0.04 * s, diameterTop: 0.01 * s, diameterBottom: 0.05 * s, tessellation: 4,
@@ -667,7 +668,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
         peen.position.set(-0.09 * s, 0.28 * s, 0);
         peen.rotation.z = Math.PI / 2;
         peen.parent = handle;
-        peen.material = headMat;
+        peen.material = stoneMat;
       }
       handle.position.y = 0.1 * s;
       return handle;
