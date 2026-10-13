@@ -1118,28 +1118,8 @@ function enterSimulation(): void {
   bodyEl.classList.add("in-battle");
   setPlacementGuidesVisible(scene, false);
   // Countdown -> Simulation: swoop from the oblique placement view down to the clash line.
-  battleSwoopView = galleryCaptureSession ? null : camCtrl.swoopToBattle(computeBattleFocus());
-  lastBattleReaimSeconds = worldTimeSeconds;
+  if (!galleryCaptureSession) camCtrl.swoopToBattle(computeBattleFocus());
   showStatus("Fight!");
-}
-
-/** Where the last battle swoop left the camera; null once the player has moved it, and then it is theirs. */
-let battleSwoopView: ReturnType<typeof camCtrl.swoopToBattle> | null = null;
-let lastBattleReaimSeconds = 0;
-
-/** The fight walks off from where the lines first met: once its middle is over 4 from where the camera looks, swoop onto it again. */
-function reaimBattleCamera(nowSeconds: number): void {
-  if (!battleSwoopView || camCtrl.isTransitioning || nowSeconds - lastBattleReaimSeconds < 2) return;
-  const view = camCtrl.captureViewState();
-  const aim = battleSwoopView;
-  if (Math.abs(view.alpha - aim.alpha) > 0.01 || Math.abs(view.radius - aim.radius) > 0.05 || Math.hypot(view.target.x - aim.target.x, view.target.z - aim.target.z) > 1) {
-    battleSwoopView = null;
-    return;
-  }
-  const focus = computeBattleFocus();
-  if (focus.near || Math.hypot(focus.x - aim.target.x, focus.z - aim.target.z) <= 4) return;
-  lastBattleReaimSeconds = nowSeconds;
-  battleSwoopView = camCtrl.swoopToBattle(focus);
 }
 
 /** Engage range from which a unit shoots from where it stands rather than closing to melee. */
@@ -3496,7 +3476,6 @@ function tick(dt: number, nowSeconds: number): void {
     simulation.update(dt, nowSeconds);
     projectileSystem.update(dt);
     visualEffects.update(dt);
-    reaimBattleCamera(nowSeconds);
     checkVictory();
   } else if (stateMachine.currentState === GameState.Placement) {
     // Still update units for idle animation if needed
