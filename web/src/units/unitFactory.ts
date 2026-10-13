@@ -58,8 +58,8 @@ const CLOTH_SATURATION = 0.92;
 const CLOTH_SHADE = 0.8;
 // Cool cloth is at least this saturated: at the pale team blue’s own it was the grey-blue of the skin beside it, and every tunic in a lineup was one tone.
 const COOL_CLOTH_SATURATION = 0.55;
-// A tunic takes a fifth of its unit’s accent colour before it is shaded, so a bard’s, an archer’s and a healer’s are three blues and not one.
-const CLOTH_ACCENT_WEIGHT = 0.2;
+// A tunic takes a third of its unit’s accent colour before it is shaded, so a bard’s, an archer’s and a healer’s are three blues and not one: at a fifth an archer’s and a healer’s were five degrees of hue apart.
+const CLOTH_ACCENT_WEIGHT = 0.35;
 // Trousers are a darker shade of the tunic cloth, so the legs break from the torso at the waist and from the boot at the ankle.
 const TROUSER_SHADE = 0.68;
 // Clothed humanoids take more of their preset's cloth tone, so the torso is a different hue from the skin.
