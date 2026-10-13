@@ -342,6 +342,7 @@ export class ProceduralAnimator {
       this._resetPose();
     }
 
+    this._idleSink = 0;
     switch (this._state) {
       case AnimState.Idle:
         this._animateIdle(dt);
@@ -438,7 +439,7 @@ export class ProceduralAnimator {
         }
       }
     }
-    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink;
+    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink;
     // Spear carry: a shield man on the march does not pump his spear arm. It hangs at his side with the elbow a little bent, the shaft stood up in the fist.
     if (this._state === AnimState.Walking && this._spearShaft()) {
       const b = this._body;
@@ -614,7 +615,7 @@ export class ProceduralAnimator {
     const weapon = this._carry?.weapon;
     if (!weapon?.prop) return;
     const { node, rest, grip } = weapon.prop;
-    const marching = this._state === AnimState.Walking ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0;
+    const marching = this._state === AnimState.Walking || this._state === AnimState.Idle ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0;
     this._carryTurn = this._state === AnimState.Dead ? 0 : this._carryTurn + (marching - this._carryTurn) * Math.min(1, dt * 10);
     const k = this._carryTurn;
     if (k <= 0.01) {
@@ -739,21 +740,32 @@ export class ProceduralAnimator {
     this._animateIdleHumanoid();
   }
 
-  // Per-unit standing rest: forward lean, which leg is the free one planted ahead, how far the pelvis drops on that side, where the head
-  // is turned, and for each arm its hang off the ribs, its elbow's give and the reach, pace and phase of its swing. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
-  private _idlePose: { lean: number; side: number; stride: number; tilt: number; turn: number; arms: Array<{ out: number; elbow: number; swing: number; rate: number; phase: number }> } | null = null;
+  // Per-unit standing rest. A man does not stand to attention: he takes one of three stances of his own (hip-shot on one straight leg with a hand at the hip, sunk on both
+  // bent knees with the hips let down and the free hand out in front, or at ease on easy knees with the free arm hung back), and on top of it his lean, which leg is the free one,
+  // where the head is turned, and for an arm with nothing to hold its hang off the ribs and the reach, pace and phase of its swing. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  private _idlePose: {
+    lean: number; side: number; stride: number; tilt: number; turn: number; crouch: number; chin: number; cock: number;
+    off: { raise: number; out: number; elbow: number };
+    arms: Array<{ out: number; elbow: number; swing: number; rate: number; phase: number }>;
+  } | null = null;
+  private _idleSink = 0;
   private _buildIdlePose(): NonNullable<ProceduralAnimator["_idlePose"]> {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
     };
     const arm = (n: number) => ({ out: 0.08 + h(n) * 0.1, elbow: 0.4 + h(n + 1) * 0.4, swing: 0.14 + h(n + 2) * 0.18, rate: 0.9 + h(n + 3) * 0.7, phase: h(n + 4) * Math.PI * 2 });
+    const pick = h(121);
+    const stance = pick < 0.35
+      ? { tilt: 0.17 + h(43) * 0.1, stride: 0.24 + h(46) * 0.14, crouch: 0.02 + h(122) * 0.08, chin: 0.05, cock: 0.14 + h(126) * 0.1, off: { raise: 0.3 + h(123) * 0.2, out: 0.5 + h(124) * 0.2, elbow: -1.5 - h(125) * 0.4 } }
+      : pick < 0.7
+        ? { tilt: 0.05 + h(43) * 0.06, stride: 0.1 + h(46) * 0.1, crouch: 0.45 + h(122) * 0.35, chin: -0.22, cock: 0.02 + h(126) * 0.06, off: { raise: -0.45 - h(123) * 0.3, out: 0.12 + h(124) * 0.2, elbow: -0.8 - h(125) * 0.5 } }
+        : { tilt: 0.1 + h(43) * 0.07, stride: 0.14 + h(46) * 0.1, crouch: 0.16 + h(122) * 0.16, chin: -0.08, cock: -0.08 - h(126) * 0.08, off: { raise: 0.28 + h(123) * 0.22, out: 0.06 + h(124) * 0.12, elbow: -0.2 - h(125) * 0.3 } };
     return {
       lean: 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
-      stride: 0.2 + h(46) * 0.14,
-      tilt: 0.11 + h(43) * 0.08,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
+      ...stance,
       arms: [arm(70), arm(80)],
     };
   }
@@ -764,6 +776,8 @@ export class ProceduralAnimator {
     const wobble = 0.07; // TABS-style pronounced sway
     const p = (this._idlePose ??= this._buildIdlePose());
     const leftLeads = p.side < 0;
+    // The stance is a man's own while nobody is on him: in a press the shove and the brace take the arms and legs over
+    const ease = 1 - Math.min(1, this._shove);
 
     // Weight on one leg: the pelvis drops on the side of the free leg and the chest rolls back the other way over the standing one, swaying about a slight forward slouch
     const tilt = (leftLeads ? 1 : -1) * p.tilt + Math.sin(t * 0.7) * 0.03;
@@ -772,13 +786,13 @@ export class ProceduralAnimator {
     b.torso.rotation.z = -tilt * 1.5 + sway;
     b.torso.rotation.x = p.lean + Math.sin(t * 1.2 + 1) * wobble * 0.5;
 
-    // The head rides back toward level a quarter of a sway behind the chest, turned off to its own side
-    b.neck.rotation.z = tilt * 0.5 + Math.sin(t * 1.5 - Math.PI / 2) * wobble * 1.2;
+    // The head rides back toward level a quarter of a sway behind the chest, turned off to its own side, cocked over one shoulder or carried up off a sunk chest as the stance has it
+    b.neck.rotation.z = tilt * 0.5 + (leftLeads ? -1 : 1) * p.cock + Math.sin(t * 1.5 - Math.PI / 2) * wobble * 1.2;
     b.neck.rotation.y = p.turn + Math.sin(t * 0.6 + p.turn * 9) * 0.12;
-    b.neck.rotation.x = Math.sin(t * 1.3 + 2) * wobble * 0.8;
+    b.neck.rotation.x = p.chin * ease + Math.sin(t * 1.3 + 2) * wobble * 0.8;
 
-    // Arms hang from the shoulders under their own weight, plumb whatever the chest above them is doing, each a little
-    // off the ribs on an elbow bent enough to keep the hand at the thigh, and each swings as its own pendulum with the forearm trailing the upper arm
+    // An arm with nothing to do hangs from the shoulder under its own weight, plumb whatever the chest above it is doing, a little
+    // off the ribs on an elbow bent enough to keep the hand at the thigh, and swings as its own pendulum with the forearm trailing the upper arm
     const roll = b.hip.rotation.z + b.torso.rotation.z;
     const [left, right] = p.arms;
     const leftSwing = Math.sin(t * left.rate + left.phase);
@@ -789,11 +803,29 @@ export class ProceduralAnimator {
     b.rightShoulder.rotation.z = -roll + right.out;
     b.leftElbow.rotation.x = -left.elbow - (0.5 + 0.5 * Math.sin(t * left.rate + left.phase - 0.9)) * left.swing;
     b.rightElbow.rotation.x = -right.elbow - (0.5 + 0.5 * Math.sin(t * right.rate + right.phase - 0.9)) * right.swing;
+    // ...but neither arm of a standing man is left to hang plumb beside the other. The weapon hand keeps the hold he marches with (shouldered, stood up, slanted across the chest or
+    // trailed), a board arm stays folded across the body, and an empty hand goes where his stance puts it; each still breathes on its own pendulum. An aimed weapon takes both hands and keeps the hang.
+    const c = (this._carry ??= this._buildCarry());
+    const hold = ease * (1 - Math.min(1, this._limp));
+    this._carryDip = 0;
+    if (c.weapon) {
+      b.rightShoulder.rotation.x += (c.weapon.raise + rightSwing * right.swing * 0.3 - b.rightShoulder.rotation.x) * hold;
+      b.rightShoulder.rotation.z += (c.weapon.out - b.rightShoulder.rotation.z) * hold;
+      b.rightElbow.rotation.x += (c.weapon.elbow - b.rightElbow.rotation.x) * hold;
+    }
+    const off = c.board ?? (this.locomotionBias !== "aimed" ? p.off : null);
+    if (off) {
+      b.leftShoulder.rotation.x += (off.raise + leftSwing * left.swing * 0.3 - b.leftShoulder.rotation.x) * hold;
+      b.leftShoulder.rotation.z += (-off.out - b.leftShoulder.rotation.z) * hold;
+      b.leftElbow.rotation.x += (off.elbow - (0.5 + 0.5 * leftSwing) * left.swing * 0.3 - b.leftElbow.rotation.x) * hold;
+    }
 
     // Staggered stance: the free leg is planted ahead with its knee bent (twice the hip angle, which keeps that foot
     // on the ground under its dropped hip); the standing leg trails slightly behind, nearly straight.
-    // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs
-    const sag = p.lean * 0.2;
+    // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs.
+    // A sunk stance folds both knees further, the thighs coming forward by half of it, and lets the hips down by what that takes off the legs' height.
+    const crouch = p.crouch * ease;
+    const sag = p.lean * 0.2 + crouch * 0.5;
     const lead = -p.stride - sag;
     const trail = p.stride * 0.45 - sag;
     b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
@@ -803,6 +835,8 @@ export class ProceduralAnimator {
     b.rightHip.rotation.z = -tilt + (leftLeads ? -0.06 : 0.08);
     b.leftKnee.rotation.x = leftLeads ? (p.stride + sag) * 2 : 0.1 + sag * 2;
     b.rightKnee.rotation.x = leftLeads ? 0.1 + sag * 2 : (p.stride + sag) * 2;
+    this._hipRest ??= b.hip.position.y;
+    this._idleSink = this._hipRest * (1 - Math.cos(crouch * 0.5));
   }
 
   private _animateIdleQuadruped(): void {
