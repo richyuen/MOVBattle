@@ -302,6 +302,17 @@ export class SimulationSystem {
           a.applyCollisionSeparation(sideways(a, normal.scale(-1)).scale(overlap * (inverseMassA / inverseMassTotal) * a.crowdSeparationStrength * contactBias));
           b.applyCollisionSeparation(sideways(b, normal).scale(overlap * (inverseMassB / inverseMassTotal) * b.crowdSeparationStrength * contactBias));
 
+          // Trample: an enemy on its feet that a colossus walks into is thrown up and off it, so the beast leaves bodies in the air and underfoot and not men standing under its tusks.
+          if (!sameTeam) {
+            const trample = (beast: RuntimeUnit, victim: RuntimeUnit, away: Vector3) => {
+              if (beast.definition.size !== "colossal" || victim.definition.size === "colossal") return;
+              if (victim.physicsState !== "steady" || beast.collisionVelocity.lengthSquared() < 0.25) return;
+              victim.applyBlastLaunch(away, 2, 7);
+            };
+            trample(a, b, normal);
+            trample(b, a, normal.scale(-1));
+          }
+
           const relativeVelocity = b.collisionVelocity.subtract(a.collisionVelocity);
           const impactSpeed = Math.max(0, -Vector3.Dot(relativeVelocity, normal));
           const impulseStrength = Math.min(4.5, overlap * 4.2 * contactBias + impactSpeed * (sameTeam ? 0.55 : 0.9));
