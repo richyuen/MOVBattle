@@ -234,6 +234,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   const teamPrimary = makeMat(scene, color);
   const wood = getMaterialFactory().get("wood", new Color3(0.36, 0.13, 0.09), { emissive: new Color3(0.08, 0.04, 0.035) }); // the cannon carriage's dark red-brown timber: the old tan went khaki-olive under the sky light
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
+  const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09)); // the cannon's dark wheel timber, so the wheels stand off the frame
   const pumpkinMat = makeMat(scene, new Color3(0.88, 0.42, 0.12));
 
   // Base platform (longer along Z = firing axis)
@@ -246,7 +247,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
       const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.14, diameter: 0.7, tessellation: 12 }, scene);
       wheel.position.set(xOff, 0.35, zOff);
       wheel.rotation.z = Math.PI / 2;
-      wheel.parent = rig; wheel.material = wood; allMeshes.push(wheel);
+      wheel.parent = rig; wheel.material = wheelWood; allMeshes.push(wheel);
     }
   }
 
