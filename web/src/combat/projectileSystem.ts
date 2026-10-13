@@ -202,7 +202,8 @@ export class ProjectileSystem {
       const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
       const tones: number[] = [];
       for (let n = 0; n < normals.length; n += 3) {
-        const tone = 0.3 + 0.7 * Math.min(1, Math.max(0, normals[n + 1] + 0.6));
+        // A fifth of shade at most, falling off evenly round a slanted axis: no two rows of facets share a tone, and none drops to a dark belly under a hard equator.
+        const tone = 0.9 + 0.1 * (normals[n + 1] * 0.8 + normals[n] * 0.35 - normals[n + 2] * 0.45);
         tones.push(tone, tone, tone, 1);
       }
       smoke.setVerticesData(VertexBuffer.ColorKind, tones);
