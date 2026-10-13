@@ -50,7 +50,7 @@ export class CameraController {
   private _battleAim: CameraViewState | null = null;
   private _battleDrop = 0;
   private _prebattleView: CameraViewState | null = null;
-  private _prebattleBetaLimits: { lower: number | null; upper: number | null; radius: number | null } | null = null;
+  private _prebattleBetaLimits: { lower: number | null; upper: number | null; radius: number | null; fov: number } | null = null;
 
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
     const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -209,6 +209,7 @@ export class CameraController {
         lower: this.camera.lowerBetaLimit,
         upper: this.camera.upperBetaLimit,
         radius: this.camera.lowerRadiusLimit,
+        fov: this.camera.fov,
       };
     }
     // Armies that hold their ground (halfSpan > 0) must both fit: the frame is ~0.63 radius wide each side of the target.
@@ -248,6 +249,7 @@ export class CameraController {
     } else {
       // Melee: the eye sits at head height and looks a touch up, so the ground is the bottom third of the
       // frame under the nearest rank's feet, and the fight and the giants over it stand against the sky.
+      this.camera.fov = 0.65; // at the placement 0.8 the front rank was a quarter of the frame high under half a frame of sky
       const pitchUp = 0.2; // at 0.12 the horizon sat above the middle of the frame, the bottom fifth was bare grass and a giant rearing over the line ran out of the top
       to.beta = Math.PI / 2 + pitchUp;
       to.target.y = 1.6 + to.radius * Math.sin(pitchUp);
@@ -268,6 +270,7 @@ export class CameraController {
     durationSeconds = 2,
   ): CameraViewState | null {
     if (!this._prebattleView) return null;
+    if (this._prebattleBetaLimits) this.camera.fov = this._prebattleBetaLimits.fov; // the fits below are for the placement lens
     this._battleAim = null;
     const from = this.captureViewState();
     const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
@@ -352,6 +355,7 @@ export class CameraController {
       this.camera.lowerBetaLimit = this._prebattleBetaLimits.lower;
       this.camera.upperBetaLimit = this._prebattleBetaLimits.upper;
       this.camera.lowerRadiusLimit = this._prebattleBetaLimits.radius;
+      this.camera.fov = this._prebattleBetaLimits.fov;
     }
     if (this._prebattleView) this.restoreViewState(this._prebattleView);
     this._prebattleView = null;
