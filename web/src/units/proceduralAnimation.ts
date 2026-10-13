@@ -739,7 +739,9 @@ export class ProceduralAnimator {
   // Per-unit gait, so a column on the march is not one walk cycle caught at different moments: each man steps at his own cadence, brings the free leg through with the knee
   // folded and lifted to his own height (0.6-1.1 rad: to 1.5 the deep end was a crouched scuttle), steps longer on one side than the other, sinks to his own depth on the standing leg and swings his arms to his own reach, a beat off his legs.
   // Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
-  private _gait: { rate: number; lift: number; limp: number; sink: number; armLag: number; armSwing: number } | null = null;
+  // The trunk is his own too: one shoulder carried lower than the other, the shoulders rolled over each standing leg by his own amount, the chest dipped on each footfall
+  // and heaved back up, and the head set chin up or chin down on the neck and nodding behind the chest, a beat late.
+  private _gait: { rate: number; lift: number; limp: number; sink: number; armLag: number; armSwing: number; slump: number; roll: number; nod: number; nodLag: number; chin: number; head: number; headLag: number } | null = null;
   private _buildGait(): NonNullable<ProceduralAnimator["_gait"]> {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
@@ -752,6 +754,13 @@ export class ProceduralAnimator {
       sink: 0.05 + h(74) * 0.22,
       armLag: (h(75) - 0.5) * 1.4,
       armSwing: 0.5 + h(76) * 0.45,
+      slump: (h(77) - 0.5) * 0.16,
+      roll: 0.04 + h(78) * 0.1,
+      nod: 0.03 + h(79) * 0.05,
+      nodLag: h(80) * Math.PI,
+      chin: -0.28 + h(89) * 0.32,
+      head: 0.04 + h(90) * 0.1,
+      headLag: 0.4 + h(91) * 1.2,
     };
   }
 
@@ -764,13 +773,17 @@ export class ProceduralAnimator {
 
     // Torso leans forward and sways side to side. Each man runs at his own lean, 0.28-0.54 (at 0.16-0.46 the shallow end ran near upright), hashed from the wobble phase like the idle slouch: at one 0.38 a charging rank was the same man stamped down its length
     const leanHash = Math.sin(this._wobblePhase * 12.9898 + 51 * 78.233) * 43758.5453;
-    b.torso.rotation.x = 0.28 + (leanHash - Math.floor(leanHash)) * 0.26 + Math.sin(t * speed * 0.5) * wobble * 0.5;
-    b.torso.rotation.z = Math.sin(t * speed * 0.5) * 0.06;
+    // The trunk moves on the step, not on a clock of its own: the chest dips twice a stride, on the footfalls, and the shoulders roll once a stride over the standing leg, about the man's own dropped shoulder.
+    const stride = t * speed;
+    const dip = Math.cos(stride * 2 + gait.nodLag);
+    const shoulderRoll = gait.slump + Math.sin(stride) * gait.roll;
+    b.torso.rotation.x = 0.28 + (leanHash - Math.floor(leanHash)) * 0.26 + dip * gait.nod;
+    b.torso.rotation.z = shoulderRoll;
 
-    // Head wobbles
-    b.neck.rotation.z = Math.sin(t * speed * 0.7 + 1) * 0.08;
-    // Chin only slightly up against the forward lean, so the head pitches into the march with the torso.
-    b.neck.rotation.x = -0.1 + Math.sin(t * speed * 0.5 + 2) * 0.04;
+    // The head rides the roll part of the way back to level and wobbles on top of it
+    b.neck.rotation.z = -shoulderRoll * 0.6 + Math.sin(t * speed * 0.7 + 1) * 0.05;
+    // Each man carries his chin at his own height against the forward lean (0.28 up to 0.04 down), and the head nods after the chest.
+    b.neck.rotation.x = gait.chin + Math.cos(stride * 2 + gait.nodLag - gait.headLag) * gait.head;
 
     // Alternating leg swing (TABS-style exaggerated)
     const legSwing = (this._shovePose ??= this._buildShovePose()).stride; // per-unit (0.6-0.85 rad), so a charge does not share one stride length
