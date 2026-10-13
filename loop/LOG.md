@@ -163,3 +163,4 @@ iter 161 | re-audit; [S] impact-globe-stack, [S] result-shot-occluded | 1/2 appr
 iter 162 | [S] result-shot-occluded, [S] burst-heart-round-ball, [P] dust-ring-grey | 2/3 approved | passes 18 -> 19
 iter 163 | [S] dust-burst-unread, [S] plank-corpses, [P] heart-lobe-dome | 1/3 approved | passes 19 -> 19
 iter 164 | [S] burst-white-not-fire, [S] plank-corpses, [P] dust-bank-slab | 3/3 approved | passes 19 -> 19
+iter 165 | [S] result-giant-headless, [S] shield-wall-brace (re-audit) | 2/2 approved | passes 19 -> 20
