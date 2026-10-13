@@ -1445,14 +1445,14 @@ function buildMinotaur(scene: Scene, color: Color3): ArticulatedBody {
 
 const MAMMOTH_SCALE = 1.8;
 
-const MAMMOTH_HIDE = new Color3(0.45, 0.25, 0.13);
+const MAMMOTH_HIDE = new Color3(0.43, 0.20, 0.25);
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0): ArticulatedBody {
   const root = new TransformNode("mammoth_root", scene);
   const allMeshes: Mesh[] = [];
   // The hide keeps its own colour: only the war paint is the team's. applyMaterialPreset()
   // repaints bodyMaterial/skinMaterial with the team tint, so those point at the paint.
-  // Part self-lit, so the faces turned from the sun stay a brown hide and not near-black; the mammoth half as much as the sacred elephant, its chestnut brown going grey with more; asked of the factory, whose plain wood is shared
+  // Part self-lit, so the faces turned from the sun stay a brown hide and not near-black; the mammoth half as much as the sacred elephant, its plum-brown going grey with more; asked of the factory, whose plain wood is shared
   const hideLight = { emissive: hide.scale(hide === MAMMOTH_HIDE ? 0.08 : 0.16) };
   const fur = getMaterialFactory().get("wood", Color3.Lerp(hide, color, teamTint), hideLight);
   const shaggyFur = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), 0.45), hideLight);
