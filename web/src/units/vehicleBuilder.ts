@@ -253,43 +253,43 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 
   // Upright frame (straddles the base, perpendicular to firing direction)
   for (const xOff of [-0.35, 0.35]) {
-    const post = MeshBuilder.CreateBox("post", { width: 0.16, height: 0.75, depth: 0.16 }, scene); // a squat frame, shoulder high to its crew: at a metre it was a bare goalpost over the deck
-    post.position.set(xOff, 0.875, 0);
+    const post = MeshBuilder.CreateBox("post", { width: 0.16, height: 1.0, depth: 0.16 }, scene);
+    post.position.set(xOff, 1.0, 0);
     post.parent = rig; post.material = wood; allMeshes.push(post);
   }
   const crossbar = MeshBuilder.CreateBox("crossbar", { width: 0.86, height: 0.16, depth: 0.16 }, scene); // as thick as the posts it caps
-  crossbar.position.set(0, 1.25, 0);
+  crossbar.position.set(0, 1.5, 0);
   crossbar.parent = rig; crossbar.material = wood; allMeshes.push(crossbar);
 
   // Throwing arm (pivots at crossbar, extends along Z)
   const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: 1.8 }, scene);
-  arm.position.set(0, 1.4, 0.2);
+  arm.position.set(0, 1.65, 0.2);
   arm.rotation.x = -0.4; // tilted: bucket end up toward +Z (a positive turn about X drops the +Z end), lying on the crossbar and running up under the bucket
   arm.parent = rig; arm.material = wood; allMeshes.push(arm);
 
   // Bucket on the tip of the arm (+Z): a wide tray three arms across with the shot lying in it, not a small empty box partway down
   const bucket = MeshBuilder.CreateBox("bucket", { width: 0.5, height: 0.16, depth: 0.45 }, scene);
-  bucket.position.set(0, 1.8, 0.95);
+  bucket.position.set(0, 2.05, 0.95);
   bucket.rotation.x = -0.4;
   bucket.parent = rig; bucket.material = metal; allMeshes.push(bucket);
 
   if (options.spooky) {
     const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.45, segments: 8 }, scene);
-    pumpkin.position.set(0, 2.05, 0.86);
+    pumpkin.position.set(0, 2.3, 0.86);
     pumpkin.parent = rig;
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
   } else {
     const boulder = MeshBuilder.CreateSphere("boulderPayload", { diameter: 0.45, segments: 2 }, scene);
-    boulder.position.set(0, 2.05, 0.86);
+    boulder.position.set(0, 2.3, 0.86);
     boulder.parent = rig;
     boulder.material = makeMat(scene, new Color3(0.2, 0.19, 0.2));
     allMeshes.push(boulder);
   }
 
-  // Counterweight at back end (-Z), hung under the tail of the arm behind the posts, not a card floating between them: a team-coloured block and the tinted main mesh, so the deck is plain timber and not a team-coloured table
-  const cw = MeshBuilder.CreateBox("cw", { width: 0.3, height: 0.3, depth: 0.3 }, scene);
-  cw.position.set(0, 0.87, -0.62);
+  // Counterweight at back end (-Z), hung under the arm: a big team-coloured block and the tinted main mesh, so the deck is plain timber and not a team-coloured table
+  const cw = MeshBuilder.CreateBox("cw", { width: 0.36, height: 0.44, depth: 0.4 }, scene);
+  cw.position.set(0, 1.05, -0.5);
   cw.parent = rig; cw.material = teamPrimary; allMeshes.push(cw);
 
   // Operator sitting beside, behind the frame
@@ -299,8 +299,8 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   });
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.05, 0.86)),
-    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 1.8, 0.95)),
+    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.3, 0.86)),
+    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 2.05, 0.95)),
   };
 
   return wrapAsBody(
