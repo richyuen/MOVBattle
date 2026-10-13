@@ -27,14 +27,16 @@ propBuilder.ts:rshield disc/rim | 0.36 / 0.4 | 160 | approved | 0.3/0.33 154
 mapBuilder.ts:BLADES | 720000 | 159 | approved | 480000 before
 mapBuilder.ts:blade width (`half`) | x1.0 | 160 | spent | x1.5 rejected: squat cones
 projectileSystem.ts:muzzle smoke lobes (size, count, drift, tint, glow) | lead 0.6, seven small | 154 | spent | 35 attempts over iters 11-154, lead lobe 0.6 -> 0.48 -> 0.6: every value tried
-projectileSystem.ts:fireball emissives/lobeSizes | cream heart | 160 | spent | lemon rejected twice; cream heart IS the TABS look
 projectileSystem.ts:cannonball colour | near-black | 160 | spent | no shot in flight in any still until the 1250ms pair exists
-vfx:impact dust fireScale | cap 1.35 | 152 | spent | still a 2.5-man snowman after 5 attempts
+visualEffects.ts:explosion burst shards (count, reach, size, length, life) | 22: 5 heart, 9 spikes, 8 skirt; fireScale cap 1.6 | 161 | approved | sphere stack: lobeSizes [1,1,.5,.9,.45,.6] + 7 tongues (spent; cream grade kept, emissives untouched)
+visualEffects.ts:explosion dust ring (lumps, reach, size, colour) | 10 lumps, reach 1.1-1.8, size 0.26-0.46, matte tan | 161 | approved | one self-lit mound 0.85 (spent: fireScale cap 1.35 snowman)
+visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved | 6, speed 0.9-2.2, up 3-5.4
 vehicleBuilder.ts:catapult arm/posts/bucket/wheels | see 155-158 | 158 | spent | goalpost rejected-kept twice
 vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 | spent | ~30 attempts
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- none yet: the rebuilt loop starts at iteration 161
+- 161 | impact-globe-stack | vfx.b | approved
+- 161 | result-shot-occluded | camera.d | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

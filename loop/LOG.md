@@ -159,3 +159,4 @@ iter 157 | melee-giant-crop, kite-board-flat-blue, catapult-bucket-tiny, catapul
 iter 158 | catapult-wheel-black, thor-hammer-plain-box, catapult-goalpost, catapult-tray-slab, giant-rump-off-right, battle-flat-profile, kite-no-rim, result-foreground-club | 5/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 159 | battle-flat-profile, result-foreground-club, mammoth-legs-spikes, club-log-pile, cannon-impact-balls, grass-sparse, giant-lean-cuts-blue | 4/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 160 | re-audit; fireball-burns-cream, cannonball-team-navy, press-arms-level, tribal-hair-skullcap, grass-bare-raised-eye, shoulder-bead, shields-never-lap | 4/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
+iter 161 | re-audit; [S] impact-globe-stack, [S] result-shot-occluded | 1/2 approved | passes 18 -> 18
