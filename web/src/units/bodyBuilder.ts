@@ -147,7 +147,7 @@ const HEAD_OF_BODY = 0.18;
 /** The head block's bevelled corners sit this share of the way out to its flat sides: 1 is a plain box, 0.41 a regular octagon. */
 const HEAD_CORNER = 0.55;
 /** Hats, crowns and halos were cut for a round head this many head units across, less the corners a block has: the hat anchor scales them up to the head they now sit on. */
-const HAT_CUT_FOR_HEAD = 0.7;
+const HAT_CUT_FOR_HEAD = 0.85;
 /** The head stands clear of the shoulders on a neck this long, a third of its own height: head, eyes and hat anchor all ride on top of it. */
 const NECK_LENGTH = 0.07;
 /** Arms and legs are stretched by this much over their old segment lengths, so the body is some six and a half heads tall and the hands hang to mid thigh. */
