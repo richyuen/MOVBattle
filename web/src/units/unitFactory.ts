@@ -36,14 +36,14 @@ const WARM_SKIN_FLESH_WEIGHT = 1.0;
 // Bare skin is part self-lit with the hue of its team colour, so the faces lit by the sun are a bright team colour and not a dull one.
 const SKIN_GLOW = 0.4;
 const SKIN_GLOW_BLUE = 1.5;
-// Red skin keeps two thirds of its blue: the blue sky light on the whole of it turned the lit faces pink.
-const WARM_SKIN_BLUE = 0.65;
+// Red skin keeps three quarters of its blue: the blue sky light on the whole of it turned the lit faces pink.
+const WARM_SKIN_BLUE = 0.75;
 // ...and is greyed a step: red a twelfth down, green and blue lifted, so it is a dusty rose red and not a scarlet. Darkening the whole colour only deepened it.
 const WARM_SKIN_RED = 0.92;
 const WARM_SKIN_GREEN_LIFT = 0.14;
 const WARM_SKIN_BLUE_LIFT = 0.12;
-// Its glow is just short of the cool skin's: at three quarters the sunlit faces stood some forty levels of red under the reference.
-const WARM_SKIN_GLOW = 0.95;
+// Its glow is three quarters of the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed.
+const WARM_SKIN_GLOW = 0.75;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is quartered: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.25;
