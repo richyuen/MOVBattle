@@ -42,8 +42,8 @@ const WARM_SKIN_BLUE = 0.75;
 const WARM_SKIN_RED = 2.5;
 const WARM_SKIN_GREEN_LIFT = 0.10;
 const WARM_SKIN_BLUE_LIFT = 0.06; // at 0.12 the lit skin still carried a blue cast, a rose pink beside the crimson of TABS red
-// Its glow is a quarter of the cool skin's, so its shaded side is a deep crimson: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one. At 0.35 its lit side was a bubblegum pink, and at 0.25 its shaded side was still nine tenths of its lit one.
-const WARM_SKIN_GLOW = 0.18;
+// Its glow is a quarter of the cool skin's, so its shaded side is a deep crimson: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one. At 0.35 its lit side was a bubblegum pink.
+const WARM_SKIN_GLOW = 0.25;
 // Red has next to no blue above its weakest channel to glow with, so its shaded side was a brick: this much blue glows on it flat, and the shade is a crimson toward plum.
 const WARM_SKIN_GLOW_BLUE = 0.03;
 // The head is kept out of the glow layer for its eyes' sake, and so glows this much more in its own material to stay the tone of the arms.
