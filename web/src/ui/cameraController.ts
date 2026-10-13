@@ -302,6 +302,11 @@ export class CameraController {
     this._prebattleBetaLimits = null;
   }
 
+  /** True while a swoop or the victory drift is still moving the camera. */
+  get isTransitioning(): boolean {
+    return this._transition !== null;
+  }
+
   /** Advance the swoop tween; called from update() and from the deterministic time stepper. */
   advanceTransition(dt: number): void {
     const t = this._transition;
