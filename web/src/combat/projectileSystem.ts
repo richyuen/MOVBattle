@@ -301,6 +301,7 @@ export class ProjectileSystem {
         const struck = !p.target.isDead;
         this._onImpact(p);
         if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(); }
+        p.mesh.getChildMeshes().find((m) => m.name === "streak")?.dispose(); // the streak is of the flight: a shaft left standing has none
         if (!this._leaveAsLitter(p, struck)) p.mesh.dispose();
         this._active.splice(i, 1);
       }
@@ -502,6 +503,7 @@ export class ProjectileSystem {
         fletch.position.z = -0.2;
         fletch.material = this._getMat(`fletch_${attackerTeam}`, palette.primary);
         fletch.parent = root;
+        this._addStreak(root, 0.25, 1.6);
         break;
       }
       case "bolt": {
@@ -526,6 +528,7 @@ export class ProjectileSystem {
         tip.position.z = 0.5;
         tip.material = this._getMat(`spear_tip_${attackerTeam}`, palette.primary);
         tip.parent = root;
+        this._addStreak(root, 0.45, 1.4);
         break;
       }
       case "bomb": {
@@ -651,6 +654,15 @@ export class ProjectileSystem {
     }
 
     return root;
+  }
+
+  // A brief white streak off the back of a thrown shaft: a thin spike of its own, tapering to nothing behind it. Particles left along the path were lost against the pale sky.
+  private _addStreak(root: TransformNode, shaftHalf: number, length: number): void {
+    const streak = MeshBuilder.CreateCylinder("streak", { height: length, diameterTop: 0.05, diameterBottom: 0, tessellation: 4 }, this._scene);
+    streak.rotation.x = Math.PI / 2;
+    streak.position.z = -(shaftHalf + length / 2);
+    streak.material = this._getMat("streak", new Color3(1, 1, 1), 1);
+    streak.parent = root;
   }
 
   private _getMat(key: string, color: Color3, emissive = 0): PBRMetallicRoughnessMaterial {
