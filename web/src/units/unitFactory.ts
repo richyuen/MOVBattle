@@ -185,10 +185,10 @@ export class UnitFactory {
           if (/_[lr]HipCap$/.test(mesh.name)) mesh.scaling.set(1.7, 1.4, 1.7);
           else mesh.material = body.skinMaterial;
         }
-        // Hair mop: a coarse faceted lump a little bigger than the head, set up and back so the face stays bare.
+        // Hair mop: a coarse faceted lump half as big again as the head, set up and back so the face stays bare.
         const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
-        const hair = MeshBuilder.CreateSphere(`${body.headMesh.name}_hair`, { diameter: headSize * 1.14, segments: 3 }, this._scene);
-        hair.position.set(0, headSize * 0.16, -headSize * 0.14);
+        const hair = MeshBuilder.CreateSphere(`${body.headMesh.name}_hair`, { diameter: headSize * 1.5, segments: 3 }, this._scene);
+        hair.position.set(0, headSize * 0.24, -headSize * 0.14);
         hair.material = getMaterialFactory().getCloth(TRIBAL_HAIR_COLOR);
         hair.convertToFlatShadedMesh();
         hair.parent = body.headMesh;
