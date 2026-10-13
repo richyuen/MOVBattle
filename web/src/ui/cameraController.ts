@@ -293,13 +293,10 @@ export class CameraController {
     // from the 4.5 at which a man is whole between the bands up to 6, and aimed a little under his middle: at 3 the eye stood inside the crowd and one back filled the frame.
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
     const giantRadius = Math.min(6, Math.max(4.5, giantOff - 2.5));
-    const fitRadius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
+    const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     // A giant too near the focus to stand 4.5 clear behind the eye is not behind it at all: its tusks and legs came round into the frame. The eye goes a quarter turn round the focus and stands side-on to the giant,
     // and aims GIANT_SHY past the men on the side away from it, so its near leg and tusk are off the edge of the frame and not the near third of it. Turning further round, either way, only brought more of it in.
     const sideOn = giant && giantOff > 0.01 && giantOff - 4.5 < 3;
-    // Side-on the shot is taken through the battle lens from a quarter further off: the men at the focus stay the size they were, and the clubs and bodies nearest the eye do not fill the foreground
-    if (sideOn) this.camera.fov = 0.65;
-    const radius = sideOn ? fitRadius * 1.23 : fitRadius;
     const farSide = sideOn ? 0.5 * Math.PI : 0;
     const GIANT_SHY = 1.0; // at 1.5 the giant was gone but the men stood in the near third of the frame beside an empty field
     const shy = sideOn && box.giant ? { x: (box.focus.x - box.giant.x) / giantOff * GIANT_SHY, z: (box.focus.z - box.giant.z) / giantOff * GIANT_SHY } : { x: 0, z: 0 };
