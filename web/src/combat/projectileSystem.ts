@@ -202,7 +202,7 @@ export class ProjectileSystem {
       const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
       const tones: number[] = [];
       for (let n = 0; n < normals.length; n += 3) {
-        const tone = 0.3 + 0.7 * Math.min(1, Math.max(0, normals[n + 1] + 0.6));
+        const tone = 0.6 + 0.4 * Math.min(1, Math.max(0, normals[n + 1] * 0.7 + normals[n] * 0.3 + 0.6));
         tones.push(tone, tone, tone, 1);
       }
       smoke.setVerticesData(VertexBuffer.ColorKind, tones);
