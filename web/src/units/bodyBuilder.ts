@@ -280,9 +280,21 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Mitt hand: a flat faceted, thumbless slab a little wider than the wrist it ends, longer than wide and thin through the palm. */
+  /** Mitt hand: a flat thumbless paddle cut from a box and not a ball. Square across the fingertips, wider there than the wrist it hangs from, drawn in to the wrist at its top and thin through the palm. */
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
-    return sphere(n, size, mat, new Vector3(0.6, 0.8, 0.4), 2);
+    const m = MeshBuilder.CreateBox(n, { width: size * s * 0.66, height: size * s * 0.84, depth: size * s * 0.24 }, scene);
+    const positions = m.getVerticesData("position")!;
+    for (let i = 0; i < positions.length; i += 3) {
+      // The wrist end narrows to the forearm; the fingertip end keeps its full width and thins to a blunt edge.
+      if (positions[i + 1] > 0) positions[i] *= 0.6;
+      else positions[i + 2] *= 0.7;
+    }
+    m.setVerticesData("position", positions);
+    m.convertToFlatShadedMesh();
+    m.refreshBoundingInfo();
+    m.material = mat;
+    allMeshes.push(m);
+    return m;
   }
   /** Foot: a wedge under the ankle with the heel just behind the shin and the rest of it out in front, narrowing and thinning to the toe. */
   function foot(n: string): Mesh {
