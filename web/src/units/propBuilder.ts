@@ -574,10 +574,11 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "javelin":
     case "harpoon": {
       // Taller than the unit: body height is ~1.3 at scale 1, s already carries the 1.25 exaggeration
-      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.3 * s, diameter: 0.045 * s, tessellation: 6 }, scene);
+      // A stick with a small point: a head 0.09 across and 0.22 long was as big as a torso once oversized, and a 0.045 shaft a pole.
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.3 * s, diameter: 0.036 * s, tessellation: 6 }, scene);
       shaft.material = mat(scene, new Color3(0.5, 0.35, 0.2));
-      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.22 * s, diameterTop: 0, diameterBottom: 0.09 * s, tessellation: 4 }, scene);
-      tip.position.y = 0.76 * s;
+      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.16 * s, diameterTop: 0, diameterBottom: 0.055 * s, tessellation: 4 }, scene);
+      tip.position.y = 0.73 * s;
       tip.parent = shaft;
       tip.material = mat(scene, type === "harpoon" ? new Color3(0.6, 0.6, 0.65) : accent);
       shaft.position.y = 0.3 * s;
