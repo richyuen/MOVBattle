@@ -57,7 +57,8 @@ const CLOTH_HUE_SHIFT = 18;
 // Cool cloth turns less far: at 18 a tunic was teal beside the navy tabards and periwinkle skin in the same rank, three hues on one team.
 const COOL_CLOTH_HUE_SHIFT = 8;
 const CLOTH_SATURATION = 0.92;
-const CLOTH_SHADE = 1.0;
+// Cloth is a fifth darker than the skin it is worn over: at the same value a tunic and the arms out of it were one tone.
+const CLOTH_SHADE = 0.8;
 // Cool cloth is at least this saturated: at the pale team blue’s own it was the grey-blue of the skin beside it, and every tunic in a lineup was one tone.
 const COOL_CLOTH_SATURATION = 0.7; // at 0.55 a tunic was a washed pale cyan beside the 0.75 tabards in the same rank
 // A tunic takes a twentieth of its unit’s accent colour before it is shaded, so a bard’s, an archer’s and a healer’s are three blues and not one: at a fifth a green or gold accent turned the tunic teal beside the navy tabards.
