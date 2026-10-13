@@ -256,7 +256,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     post.position.set(xOff, 1.0, 0);
     post.parent = rig; post.material = wood; allMeshes.push(post);
   }
-  const crossbar = MeshBuilder.CreateBox("crossbar", { width: 0.8, height: 0.1, depth: 0.1 }, scene);
+  const crossbar = MeshBuilder.CreateBox("crossbar", { width: 0.86, height: 0.16, depth: 0.16 }, scene); // as thick as the posts it caps
   crossbar.position.set(0, 1.5, 0);
   crossbar.parent = rig; crossbar.material = wood; allMeshes.push(crossbar);
 
