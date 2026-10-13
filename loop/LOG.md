@@ -122,3 +122,4 @@ iter 120 | field-shadows-faint, blue-skin-navy, boulders-periwinkle, mammoth-hid
 iter 121 | boulders-indigo, muzzle-smoke-beaded-line, field-shadows-red, blue-skin-dark, mammoth-eyes-googly, cannon-carriage-plank, victory-giant-dwarfs-survivors | 5/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 122 | shade-brick-not-plum, victory-fits-giant-not-humans, blue-skin-slate, muzzle-smoke-two-tone, mammoth-eyes-stalked, boulders-lit-violet, cannon-cheeks-unstepped, melee-lines-stand-apart | 5/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 123 | red-skin-plum, blue-skin-dark, boulders-indigo, victory-centres-giant, reds-arrive-as-singles, mammoth-eyes-beads, muzzle-smoke-bead-row | 5/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 124 | skin-highlights-dull, muzzle-smoke-bead-row, reds-arrive-as-singles, mammoth-hide-plum, boulders-navy-at-eye-level, mammoth-eye-white-grey, victory-subject-loose | 6/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
