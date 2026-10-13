@@ -42,8 +42,8 @@ const WARM_SKIN_BLUE = 0.75;
 const WARM_SKIN_RED = 2.5;
 const WARM_SKIN_GREEN_LIFT = 0.26;
 const WARM_SKIN_BLUE_LIFT = 0.18;
-// Its glow is three quarters of the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed.
-const WARM_SKIN_GLOW = 0.75;
+// Its glow is half the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one.
+const WARM_SKIN_GLOW = 0.5;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is quartered: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.25;
