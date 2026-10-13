@@ -31,7 +31,7 @@ const FOLLOW_DROP = 0.9;
 const FOLLOW_DROP_SPEED = 0.8;
 
 /** A body on the field as the result shot sees it: where it stands or lies, its footprint radius, its base and height, and whether it is one of the winners. */
-export interface ShotBody { x: number; z: number; y: number; r: number; h: number; standing: boolean; survivor: boolean; giant: boolean }
+export interface ShotBody { x: number; z: number; y: number; r: number; h: number; standing: boolean; survivor: boolean; giant: boolean; /** Unit vector along the ground the body's front points down. */ fx: number; fz: number }
 
 export class CameraController {
   readonly camera: ArcRotateCamera;
@@ -330,11 +330,16 @@ export class CameraController {
    * The shot fitted above is only the first subject tried. Every knot of surviving men is one the shot could take instead, and so is every surviving giant, fitted whole
    * between the bands. Each is tried from twelve places round it, and a place is scored by every body on the field, at any depth, that its frame would cut:
    * one partly inside the side edges and the result bands and partly out, weighed by how big it stands there. The subject and place that cut least win;
-   * the fitted shot is kept unless another is plainly cleaner.
+   * the fitted shot is kept unless another is plainly cleaner. A winner counts for the shot by the face he shows it: whole from the front, less side-on, and
+   * against it from behind, so of two clean places the one the survivors and the giant's head look toward wins. A winning giant cut by a band or an edge is a
+   * headless wall and costs more than any other cut body.
    */
   private _pickSubject(to: CameraViewState, bodies: ShotBody[]): void {
     const BAND = 0.28; // the height either side of the aim that the result bands leave, per unit of distance
     const STEPS = 12;
+    const FACE_SIDE = 0.4; // what a winner seen side-on counts for, of the 1 he counts face-on; his back counts 0.2 against
+    const HEADLESS = 2; // added to the cut of a winning giant
+    const CORPSE_CUT = 0.15; // what a cut corpse counts for, of a cut standing body
     const halfWidth = Math.tan(this.camera.fov / 2) * this.camera.getEngine().getAspectRatio(this.camera);
     const score = (view: CameraViewState): number => {
       const reach = view.radius * Math.sin(view.beta);
@@ -344,6 +349,7 @@ export class CameraController {
       const pitch = (view.target.y - eyeY) / reach;
       let cuts = 0;
       let shown = 0;
+      let giants = 0;
       for (const b of bodies) {
         const dx = b.x - eyeX;
         const dz = b.z - eyeZ;
@@ -362,13 +368,18 @@ export class CameraController {
         const size = Math.min(1, Math.max(b.h, b.r * 2) / depth / (BAND * 2)); // its share of the height between the bands
         if ((aside + b.r) / depth <= halfWidth && top <= BAND && foot >= -BAND) {
           // Whole in the frame: a winner is what the shot is of, and anyone else standing this side of the subject is in its way
-          if (b.survivor) shown += Math.min(0.25, size);
+          // front: 1 looking straight at the lens, -1 with his back to it
+          const front = ((eyeX - b.x) * b.fx + (eyeZ - b.z) * b.fz) / Math.max(0.01, Math.hypot(dx, dz));
+          // The men together count for 1.5 at most; a giant counts on top of them, so a crowd round its feet does not drown out which way its head points
+          if (b.survivor && b.giant) giants += Math.min(1.5, size * 2) * (FACE_SIDE + (1 - FACE_SIDE) * front);
+          else if (b.survivor) shown += Math.min(0.25, size) * (FACE_SIDE + (1 - FACE_SIDE) * front);
           else if (b.standing && along < reach * 0.6) cuts += size;
           continue;
         }
-        cuts += 0.3 + 3 * size;
+        // A corpse run off by an edge or the lower band is ground litter and counts little; at full weight the dead heaped before a giant kept every place in front of it out
+        cuts += (0.3 + 3 * size) * (b.standing ? 1 : CORPSE_CUT) + (b.survivor && b.giant ? HEADLESS : 0);
       }
-      return cuts - Math.min(1.5, shown);
+      return cuts - Math.max(-1.5, Math.min(1.5, shown)) - giants;
     };
     const subjects: { x: number; y: number; z: number; radius: number; beta: number }[] = [];
     const men = bodies.filter((b) => b.survivor && !b.giant);
@@ -382,8 +393,13 @@ export class CameraController {
       subjects.push({ x, y: to.target.y, z, radius: Math.max(4.5, (half + 1.5) / 0.6), beta: to.beta });
     }
     for (const g of bodies) {
-      // A giant is a subject too: aimed at its middle from where its whole height stands between the bands and its whole length inside the edges
-      if (g.survivor && g.giant) subjects.push({ x: g.x, y: g.y + g.h * 0.5, z: g.z, radius: Math.max((g.h * 0.5 + 0.7) / BAND, (g.r + 1.5) / 0.6), beta: Math.PI / 1.9 });
+      // A giant is a subject too, shot from a man's waist looking up at it: the eye stands 1 off the ground, far enough back that the giant's top is just under
+      // the upper band and its whole length inside the edges, and aims GIANT_PITCH above level. From mid-height, level, the lower band cut the feet off every
+      // man and corpse standing this side of the giant; from down here the ground is in the frame from 6 in front of the lens.
+      if (!g.survivor || !g.giant) continue;
+      const GIANT_PITCH = 0.12;
+      const back = Math.max((g.h - 1) / (BAND - 0.04 + GIANT_PITCH), (g.r + 1.5) / 0.6);
+      subjects.push({ x: g.x, y: g.y + 1 + GIANT_PITCH * back, z: g.z, radius: back * Math.hypot(1, GIANT_PITCH), beta: Math.PI / 2 + Math.atan(GIANT_PITCH) });
     }
     let best = to;
     let bestScore = score(to) - 0.2;

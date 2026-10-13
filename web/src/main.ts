@@ -1285,12 +1285,14 @@ function frameSurvivorsForResult(winner: number | null): void {
     bodies.push({
       x: unit.position.x,
       z: unit.position.z,
-      y: bounds.min.y,
+      y: Math.max(0, bounds.min.y), // a corpse's folded limbs reach under the ground, where no band can cut them
       r: unit.isDead || giant ? Math.max(0.4, footprint) : 0.5, // a standing man is his body, not the reach of his spear
-      h: Math.max(0.3, bounds.max.y - bounds.min.y),
+      h: Math.max(0.3, bounds.max.y - Math.max(0, bounds.min.y)),
       standing: !unit.isDead,
       survivor,
       giant,
+      fx: Math.sin(unit.body.root.rotation.y),
+      fz: Math.cos(unit.body.root.rotation.y),
     });
     if (!survivor) continue;
     // A survivor over 4.2 tall is not somewhere to point the shot: the focus is picked among the human-sized ones.
