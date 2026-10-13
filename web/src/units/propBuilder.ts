@@ -1401,7 +1401,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       const rim = MeshBuilder.CreateBox("kshieldRim", { width: 0.22 * s, height: 0.36 * s, depth: 0.018 * s }, scene);
       rim.position.z = -0.006 * s;
       rim.parent = shield;
-      rim.material = mat(scene, teamColor.scale(0.45));
+      rim.material = mat(scene, new Color3(0.85, 0.83, 0.78), 0, "stone"); // a pale band: in the darkened team colour it did not show against the board
       const rimPoint = MeshBuilder.CreateCylinder("kpointRim", { height: 0.17 * s, diameterTop: 0.22 * Math.SQRT2 * s, diameterBottom: 0, tessellation: 4 }, scene);
       rimPoint.rotation.y = Math.PI / 4;
       rimPoint.bakeCurrentTransformIntoVertices();
