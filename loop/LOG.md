@@ -176,3 +176,4 @@ iter 174 | [S] knight-sword-sliver, [S] clubs-level-parallel, [P] helm-too-tall,
 iter 175 | [S] units-cast-no-ground-shadow, [S] knob-joint-stick-limbs (re-audit: 18/24) | 2/2 approved | passes 18 -> 18
 iter 176 | [S] shadow-shredded-by-grass, [S] ball-shoulders-on-stick-arms, [P] shadows-fall-away-from-lens, [P] shadow-rust-black | 4/4 approved | passes 18 -> 18
 iter 177 | [S] shadow-sawtooth-hard-edge, [S] wire-legs | 2/2 approved | passes 18 -> 18
+iter 178 | [S] shadow-hard-heavy-maroon, [S] crew-stick-body, [P] blade-fringe-at-contact | 3/3 approved | passes 18 -> 18
