@@ -279,7 +279,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   const bucket = MeshBuilder.CreateBox("bucket", { width: 0.5, height: 0.16, depth: 0.45 }, scene);
   bucket.position.set(0, 1.78, 0.99);
   bucket.rotation.x = -0.1;
-  bucket.parent = rig; bucket.material = metal; allMeshes.push(bucket);
+  bucket.parent = rig; bucket.material = wood; allMeshes.push(bucket); // the arm's own timber: in iron it was a blue-grey slab
 
   if (options.spooky) {
     const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.45, segments: 8 }, scene);
@@ -288,8 +288,8 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
   } else {
-    const boulder = MeshBuilder.CreateSphere("boulderPayload", { diameter: 0.45, segments: 2 }, scene);
-    boulder.position.set(0, 2.03, 0.965);
+    const boulder = MeshBuilder.CreateSphere("boulderPayload", { diameter: 0.65, segments: 2 }, scene); // wider than the tray it lies in: at 0.45 it was a small ball on a slab
+    boulder.position.set(0, 2.13, 0.955);
     boulder.parent = rig;
     boulder.material = makeMat(scene, new Color3(0.2, 0.19, 0.2));
     allMeshes.push(boulder);
