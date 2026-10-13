@@ -264,7 +264,7 @@ export class CameraController {
   // ─── Victory shot ───
   /** Drift from the battle view onto the survivors: a slow close shot, a human winner about half the height between the result bands. */
   frameSurvivors(
-    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number; focus: { x: number; z: number }; giant?: { x: number; z: number } },
+    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number; focus: { x: number; z: number }; giant?: { x: number; z: number }; group?: { x: number; z: number } },
     durationSeconds = 2,
   ): CameraViewState | null {
     if (!this._prebattleView) return null;
@@ -290,13 +290,14 @@ export class CameraController {
     const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) + farSide : from.alpha;
     const to: CameraViewState = {
       alpha: from.alpha + Math.atan2(Math.sin(awayFromGiant - from.alpha), Math.cos(awayFromGiant - from.alpha)), // swing the short way round
-      // Beside a giant the eye stands a little above the men and looks down on them, so the ranks behind the nearest man show over him: from below, his torso covered them.
-      beta: giant ? Math.PI / 2.25 : Math.PI / 1.9,
+      // Beside a giant the eye stands a little above the men and looks down on them, so the ranks behind the nearest man show over him: from below, his torso covered them. Only a little: steeper, the grass filled the frame and left no sky over them.
+      // And it aims at the middle of the men standing round the focus, not at the one man, who put the rest of them off to one side and cut by the edge.
+      beta: giant ? Math.PI / 2.1 : Math.PI / 1.9,
       radius,
       target: {
-        x: spread || giant ? box.focus.x : (box.minX + box.maxX) / 2,
+        x: giant ? (box.group ?? box.focus).x : spread ? box.focus.x : (box.minX + box.maxX) / 2,
         y: box.baseY + (giant ? 1.5 - (giantRadius - 3) / 3 : Math.max(1, tall * 0.5)),
-        z: spread || giant ? box.focus.z : (box.minZ + box.maxZ) / 2,
+        z: giant ? (box.group ?? box.focus).z : spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);

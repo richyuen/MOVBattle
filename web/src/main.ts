@@ -1282,6 +1282,9 @@ function frameSurvivorsForResult(winner: number | null): void {
     // The shot is taken from the giant's side of that survivor, looking away from it: the nearest giant is behind the eye and not across the frame.
     const focus = box.focus;
     box.giant = giantSpots.reduce((best, g) => (Math.hypot(g.x - focus.x, g.z - focus.z) < Math.hypot(best.x - focus.x, best.z - focus.z) ? g : best));
+    // The men within 3 of that survivor are the group the shot is centred on.
+    const near = spots.filter((s) => Math.hypot(s.x - focus.x, s.z - focus.z) <= 3);
+    box.group = { x: near.reduce((sum, s) => sum + s.x, 0) / near.length, z: near.reduce((sum, s) => sum + s.z, 0) / near.length };
   }
   camCtrl.frameSurvivors(box);
 }
