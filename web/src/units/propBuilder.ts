@@ -583,7 +583,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       const tip = MeshBuilder.CreateCylinder("tip", { height: 0.16 * s, diameterTop: 0, diameterBottom: 0.055 * s, tessellation: 4 }, scene);
       tip.position.y = 0.73 * s;
       tip.parent = shaft;
-      tip.material = mat(scene, type === "harpoon" ? new Color3(0.6, 0.6, 0.65) : accent);
+      tip.material = mat(scene, type === "harpoon" ? new Color3(0.6, 0.6, 0.65) : new Color3(0.35, 0.35, 0.4));
       shaft.position.y = 0.3 * s;
       return shaft;
     }
