@@ -331,6 +331,7 @@ export function buildArticulatedBody(
   );
   headMesh.position.y = headHeight * s * 0.5;
   headMesh.parent = neck;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(headMesh); // no halo off the self-lit head: it lay over the bead eyes and turned their black to the skin's navy
 
   const headTop = joint(`${name}_headTop`, neck);
   headTop.position.y = headHeight * s;
