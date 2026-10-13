@@ -349,7 +349,7 @@ export class VisualEffects {
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
     flashMat.emissiveColor = new Color3(1.7, 1.5, 0.85);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(1.0, 0.38, 0.18);
+    flameMat.emissiveColor = new Color3(1.7, 1.25, 0.6);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -372,10 +372,10 @@ export class VisualEffects {
     const fireScale = Math.min(scale * 2.0, 3.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.0, 1.0, 0.5, 0.9, 0.45, 0.6];
-    // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe and the largest of the flank lobes, so the foot of the ball is orange and not cream
+    // None sits above the heart's shoulder: lumps on one ball, not caps over it. All the flank lobes are the pale inner flame: the fringe on the two largest made the lower half of the ball peach, and only every other tongue is fringe now
     const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? flameMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flashMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
