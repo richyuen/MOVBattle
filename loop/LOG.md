@@ -174,3 +174,4 @@ iter 172 | [S] paddle-hands, [S] prop-arm-no-carry, [P] boot-shade, [P] gait-lif
 iter 173 | [S] march-torsos-one-pitch, [S] bucket-helm-drum, [P] mitt-width, [P] carry-bob | 3/4 approved | passes 20 -> 20
 iter 174 | [S] knight-sword-sliver, [S] clubs-level-parallel, [P] helm-too-tall, [P] shoulder-roll-faint | 3/4 approved | passes 20 -> 20
 iter 175 | [S] units-cast-no-ground-shadow, [S] knob-joint-stick-limbs (re-audit: 18/24) | 2/2 approved | passes 18 -> 18
+iter 176 | [S] shadow-shredded-by-grass, [S] ball-shoulders-on-stick-arms, [P] shadows-fall-away-from-lens, [P] shadow-rust-black | 4/4 approved | passes 18 -> 18
