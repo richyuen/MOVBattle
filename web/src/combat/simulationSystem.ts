@@ -894,7 +894,7 @@ export class SimulationSystem {
         break;
       case "iconic_mammoth":
         splashRadius = Math.max(splashRadius, 4.4);
-        knockback = knockback.scale(2.15 * controlStrength);
+        knockback = knockback.scale(1.0 * controlStrength);
         knockback.y = Math.max(knockback.y, 1.35);
         damage *= 1.28;
         break;
