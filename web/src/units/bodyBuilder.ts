@@ -77,6 +77,8 @@ export interface BodyMetrics {
   footBottomY: number;
   /** The head block and the neck under it, in the body's own units, for headgear that is fitted to the head and not only stood on it */
   head?: { width: number; height: number; neck: number };
+  /** The fist's width across the knuckles, in the body's own units, for props that are cut to the hand that holds them */
+  hand?: { width: number };
 }
 
 export interface BodyProportions {
@@ -726,6 +728,7 @@ export function buildArticulatedBody(
     handReachY: hip.position.y + shoulderOffY - upperArmH * s - lowerArmH * s,
     footBottomY: 0,
     head: { width: headWidth * s, height: headHeight * s, neck: neckLength },
+    hand: { width: handWidth * s },
   };
 
   return {

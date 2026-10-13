@@ -27,7 +27,9 @@ export function attachProps(
   const props: Mesh[] = [];
   const accent = config.accentColor ? Color3.FromHexString(config.accentColor) : new Color3(0.5, 0.5, 0.5);
 
-  const weapon = buildWeapon(scene, config.weapon, scale, accent);
+  // A sword is cut to the man who carries it: his fist and his standing height, handed over in the weapon's own units, under the oversize.
+  const bladeFit: BladeFit = { fist: (body.metrics.hand?.width ?? 0.058 * scale) / PROP_OVERSIZE, stand: body.metrics.overallHeight / PROP_OVERSIZE };
+  const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit);
   if (weapon) {
     weapon.parent = body.rightHand;
     weapon.scaling.scaleInPlace(PROP_OVERSIZE);
@@ -40,7 +42,7 @@ export function attachProps(
   }
 
   if (config.offhandWeapon) {
-    const offhand = buildWeapon(scene, config.offhandWeapon, scale, accent);
+    const offhand = buildWeapon(scene, config.offhandWeapon, scale, accent, bladeFit);
     if (offhand) {
       offhand.parent = body.leftHand;
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
@@ -481,8 +483,58 @@ function buildAttachmentPreset(
 }
 
 // ─── Weapons ───
-function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3): Mesh | null {
+/** A sword is cut to the man who carries it and not to the weapon scale: his fist's width and his standing height, in the weapon's own units, under the oversize. */
+interface BladeFit { fist: number; stand: number }
+
+/**
+ * A sword as a broad slab and not a sliver: the blade is a share of the man's standing height long (under half for a sword, two thirds for a greatsword), some three fists
+ * across but never under a fifth nor over a quarter of its length, and a third as thick as it is wide, drawn in to a blunt point over its last fifth. The hilt is cut from
+ * the fist: a bar guard twice the blade across, a grip the fist closes round, and a pommel block. Returns the blade and how far under its middle the guard sits.
+ */
+function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color3, great: boolean): { blade: Mesh; hilt: number } {
+  const length = fit.stand * (great ? 0.68 : 0.46);
+  const width = Math.min(length / (great ? 5 : 4), Math.max(length / (great ? 6.5 : 5), fit.fist * 2.8));
+  const depth = width * 0.3;
+  const flat = length * 0.78;
+  // Matte pale steel: a mirror-metal blade reflects the dark sky and ground and renders near-black
+  const steel = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
+  const blade = MeshBuilder.CreateBox(name, { width, height: flat, depth }, scene);
+  blade.material = steel;
+  const point = MeshBuilder.CreateCylinder(`${name}Point`, { height: length - flat, diameterBottom: width * Math.SQRT2, diameterTop: width * 0.35 * Math.SQRT2, tessellation: 4 }, scene);
+  point.rotation.y = Math.PI / 4;
+  point.bakeCurrentTransformIntoVertices();
+  point.scaling.z = depth / width;
+  point.convertToFlatShadedMesh();
+  point.position.y = length * 0.5;
+  point.parent = blade;
+  point.material = steel;
+  // Fuller (channel groove on blade)
+  const fuller = MeshBuilder.CreateBox("fuller", { width: width * 0.3, height: flat * 0.7, depth: depth * 1.15 }, scene);
+  fuller.position.y = -flat * 0.08;
+  fuller.parent = blade;
+  fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "stone");
+  const guardHeight = fit.fist * 0.7;
+  const hilt = flat * 0.5 + guardHeight * 0.5;
+  const guard = MeshBuilder.CreateBox("guard", { width: Math.max(width * 2, fit.fist * 5), height: guardHeight, depth: Math.max(depth * 1.5, fit.fist) }, scene);
+  guard.position.y = -hilt;
+  guard.parent = blade;
+  guard.material = mat(scene, accent, 0, "metal");
+  const gripLength = fit.fist * (great ? 3.2 : 1.7);
+  const grip = MeshBuilder.CreateCylinder("grip", { height: gripLength, diameter: fit.fist * 0.6, tessellation: 6 }, scene);
+  grip.position.y = -hilt - guardHeight * 0.5 - gripLength * 0.5;
+  grip.parent = blade;
+  grip.material = mat(scene, new Color3(0.35, 0.2, 0.1));
+  const pommel = MeshBuilder.CreateBox("pommel", { size: fit.fist }, scene);
+  pommel.rotation.y = Math.PI / 4;
+  pommel.position.y = grip.position.y - gripLength * 0.5 - fit.fist * 0.4;
+  pommel.parent = blade;
+  pommel.material = mat(scene, accent, 0, "metal");
+  return { blade, hilt };
+}
+
+function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
+  const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
   switch (type) {
     case "none": return null;
 
@@ -500,58 +552,14 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     }
     case "sword":
     case "cutlass": {
-      const blade = MeshBuilder.CreateBox("blade", { width: 0.055 * s, height: 0.5 * s, depth: 0.02 * s }, scene);
-      // Matte pale steel: a mirror-metal blade reflects the dark sky and ground and renders near-black
-      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
-      // Fuller (channel groove on blade)
-      const fuller = MeshBuilder.CreateBox("fuller", { width: 0.02 * s, height: 0.32 * s, depth: 0.024 * s }, scene);
-      fuller.position.y = 0.03 * s;
-      fuller.parent = blade;
-      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "stone");
-      const guard = MeshBuilder.CreateBox("guard", { width: 0.14 * s, height: 0.025 * s, depth: 0.035 * s }, scene);
-      guard.position.y = -0.15 * s;
-      guard.parent = blade;
-      guard.material = mat(scene, accent, 0, "metal");
-      const grip = MeshBuilder.CreateCylinder("grip", { height: 0.1 * s, diameter: 0.035 * s }, scene);
-      grip.position.y = -0.22 * s;
-      grip.parent = blade;
-      grip.material = mat(scene, new Color3(0.35, 0.2, 0.1));
-      addGripWraps(scene, grip, [-0.03 * s, 0, 0.03 * s], 0.03 * s);
-      // Pommel
-      const pommel = MeshBuilder.CreateSphere("pommel", { diameter: 0.035 * s, segments: 6 }, scene);
-      pommel.position.y = -0.28 * s;
-      pommel.parent = blade;
-      pommel.material = mat(scene, accent, 0, "metal");
-      blade.position.y = 0.15 * s;
+      const { blade, hilt } = buildSlabSword(scene, "blade", fit, accent, false);
+      // The guard stays where the old one sat on the fist, whatever the blade above it is cut to
+      blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
       return blade;
     }
     case "greatsword": {
-      const blade = MeshBuilder.CreateBox("gsblade", { width: 0.04 * s, height: 0.75 * s, depth: 0.01 * s }, scene);
-      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
-      // Fuller
-      const fuller = MeshBuilder.CreateBox("gfuller", { width: 0.015 * s, height: 0.45 * s, depth: 0.012 * s }, scene);
-      fuller.position.y = 0.05 * s;
-      fuller.parent = blade;
-      fuller.material = mat(scene, new Color3(0.65, 0.65, 0.7), 0, "stone");
-      // Ricasso (unsharpened section above guard)
-      const ricasso = MeshBuilder.CreateBox("ricasso", { width: 0.035 * s, height: 0.08 * s, depth: 0.015 * s }, scene);
-      ricasso.position.y = -0.18 * s;
-      ricasso.parent = blade;
-      ricasso.material = mat(scene, new Color3(0.7, 0.7, 0.75), 0, "metal");
-      const guard = MeshBuilder.CreateBox("gsguard", { width: 0.16 * s, height: 0.025 * s, depth: 0.025 * s }, scene);
-      guard.position.y = -0.22 * s;
-      guard.parent = blade;
-      guard.material = mat(scene, accent, 0, "metal");
-      // Grip + pommel
-      const grip = MeshBuilder.CreateCylinder("gsgrip", { height: 0.14 * s, diameter: 0.03 * s }, scene);
-      grip.position.y = -0.32 * s;
-      grip.parent = blade;
-      grip.material = mat(scene, new Color3(0.35, 0.2, 0.1));
-      const pommel = MeshBuilder.CreateSphere("gspommel", { diameter: 0.04 * s, segments: 6 }, scene);
-      pommel.position.y = -0.4 * s;
-      pommel.parent = blade;
-      pommel.material = mat(scene, accent, 0, "metal");
-      blade.position.y = 0.2 * s;
+      const { blade, hilt } = buildSlabSword(scene, "gsblade", fit, accent, true);
+      blade.position.y = hilt * PROP_OVERSIZE - 0.19 * _s;
       return blade;
     }
     case "rapier": {
@@ -892,7 +900,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "broom":
     case "wheelbarrow_weapon":
     case "shield_sword":
-      return buildWeapon(scene, "sword", s, accent);
+      return buildWeapon(scene, "sword", s, accent, bladeFit);
     case "stone": {
       const rock = MeshBuilder.CreateSphere("stone", { diameter: 0.12 * s, segments: 6 }, scene);
       rock.material = mat(scene, new Color3(0.55, 0.55, 0.5));
