@@ -118,3 +118,4 @@ iter 116 | fireball-discs-separate, tusk-white-not-ivory, charge-lean-half, trun
 iter 117 | fireball-lobes-cream, presser-lean-capped, lean-waist-fold, field-dark, carriage-top-tan | 2/5 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 118 | fireball-no-rim, field-dark, fireball-foot-peach, runner-lean-uniform, carriage-shade-warm, muzzle-smoke-grey, red-line-loose | 6/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 119 | carriage-shade-warm, field-pale, fireball-core-dull, fireball-foot-dull, muzzle-smoke-unfaceted, red-rank-knot, runner-stride-uniform, mammoth-flat-purple | 5/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 120 | field-shadows-faint, blue-skin-navy, boulders-periwinkle, mammoth-hide-taupe, fireball-foot-dull, victory-giant-blocks-frame, carriage-side-light, muzzle-smoke-no-dark | 7/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
