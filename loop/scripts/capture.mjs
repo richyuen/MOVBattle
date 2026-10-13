@@ -6,6 +6,7 @@
 //   output/loop/iter-N/summary.json    compact: per-scenario pass/fail, console errors, png list
 //   output/loop/iter-N/full-state.json complete scenario results (debugging only)
 // Exit code 1 on any scenario failure, page error, or capture failure.
+// Iterations older than KEEP_ITERS are pruned down to summary.json after each run.
 import fs from "node:fs";
 import path from "node:path";
 import { spawn, execSync } from "node:child_process";
@@ -29,6 +30,7 @@ const doShowcase = !flag("--regression-only");
 const outDir = path.join(root, "output", "loop", `iter-${iter}`);
 const baseUrl = `http://127.0.0.1:${port}/MOVBattle/`;
 const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const KEEP_ITERS = 10;
 
 const REGRESSION_SCENARIOS = [
   "physics_hit_launch_guard",
@@ -83,6 +85,25 @@ for (const x of [4, 5]) {
   for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
     WAR_MACHINES.push({ unitId: "medieval.squire", team: 1, position: { x, z } });
   }
+}
+
+// Keep only summary.json for iterations older than KEEP_ITERS: the PNGs run to ~10 MB a turn.
+function pruneOld() {
+  if (iter <= 0) return;
+  const parent = path.dirname(outDir);
+  if (!fs.existsSync(parent)) return;
+  let pruned = 0;
+  for (const name of fs.readdirSync(parent)) {
+    const m = /^iter-(\d+)$/.exec(name);
+    if (!m || Number(m[1]) >= iter - KEEP_ITERS) continue;
+    const dir = path.join(parent, name);
+    for (const f of fs.readdirSync(dir)) {
+      if (f === "summary.json") continue;
+      fs.rmSync(path.join(dir, f), { recursive: true, force: true });
+      pruned++;
+    }
+  }
+  if (pruned > 0) log(`pruned ${pruned} file(s) from iterations before ${iter - KEEP_ITERS}`);
 }
 
 function log(msg) {
@@ -244,7 +265,10 @@ async function main() {
       summary.notes.push(`war_machines placed ${machinesPlaced}/${WAR_MACHINES.length} units`);
       // Probed in 50 ms steps: blasts land at ~0.83 s and ~3.58 s and bodies peak ~0.3 s later.
       await shot(page, "war_machines_1100ms");
-      await page.evaluate(() => window.advanceTime(2700));
+      // Motion pair: 150 ms later, so flung bodies and shots in flight can be judged as arcs.
+      await page.evaluate(() => window.advanceTime(150));
+      await shot(page, "war_machines_1250ms");
+      await page.evaluate(() => window.advanceTime(2550));
       await shot(page, "war_machines_3800ms");
 
       // Gallery-camera reads (UI hidden by design): a lineup, two mid-swing close-ups, one hero pair.
@@ -283,7 +307,10 @@ async function main() {
         window.advanceTime(2000);
       });
       await shot(page, "big_melee_2s");
-      await page.evaluate(() => window.advanceTime(3000));
+      // Motion pair for the shove: arm swing, lean and topple read from the two frames.
+      await page.evaluate(() => window.advanceTime(150));
+      await shot(page, "big_melee_2150ms");
+      await page.evaluate(() => window.advanceTime(2850));
       await shot(page, "big_melee_5s");
       await page.evaluate(() => window.advanceTime(4000));
       await shot(page, "big_melee_9s");
@@ -317,6 +344,7 @@ async function main() {
   const verdict = summary.passed ? "GREEN" : "RED";
   log(`${verdict}: ${summary.scenarios.length - failed.length}/${summary.scenarios.length} scenarios passed, ${summary.pageErrors.length} page errors, ${summary.screenshots.length} screenshots -> ${path.relative(root, outDir)}`);
   if (!summary.passed) process.exitCode = 1;
+  pruneOld();
 }
 
 main().catch((err) => {
