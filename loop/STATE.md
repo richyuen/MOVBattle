@@ -1,38 +1,40 @@
 # Loop state
-Iteration: 178   Last re-audit: 175   Consecutive rejects: 0   Branch: main
+Iteration: 179   Last re-audit: 175   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion, from last audit; see CRITIC.md for the letters)
-battle-feel: a PASS b PASS c FAIL d PASS (3/4) — c: a shield rank is one pose stamped out (same pitch, same leg phase, spears level at one height), idle men stand bolt upright and symmetric, gun crews hold one stiff pose
-unit-look: a PASS b PASS c FAIL d FAIL (2/4) — c: crew now have a torso wider than their limbs, but their legs are still thin dark sticks, the calf and forearm belly shows in no still, the catapult operator and small units are thin-legged under a large head; d: clothes are paint (a belt band, a recoloured torso), no fur collar, skirt or tabard chunk
-maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: shadows are soft-edged and lean mauve, but the shade is still a near-opaque dark plum, a man casts a short blob with no limb or spear in it, and it fuses into a mat under a crowd
+battle-feel: a PASS b PASS c FAIL d PASS (3/4) — c: wall spears are level and parallel, backs are straight, gun crews hold one stiff pose
+unit-look: a PASS b PASS c FAIL d FAIL (2/4) — c: crew arms are thin bare rods, the limb belly reads only in close-up, the catapult operator is thin-legged; d: garment solids exist only as hip skirts and breeches; upper garments, robe and crew cap are still paint or absent; kilts form one level band
+maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: the shade is a near-opaque plum, a man casts a blob with no limb or spear in it; lightened by constants it was too faint to read
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a FAIL b PASS c PASS d PASS (3/4) — a: horizon about 80% down, the fight in the bottom third under empty sky
 vfx: a FAIL b PASS c PASS d PASS (3/4) — a: no spent spear or arrow stands in the ground or a body after the fight
 Total 18/24.
 
 ## Focus (every gap this iteration)
-BASE 2bb52a7
-- [S] maps-light.b shadow-hard-heavy-maroon (399e586) — APPROVE, criterion still FAIL
-- [S] unit-look.c crew-stick-body (d87a43f) — APPROVE, criterion still FAIL
-- [P] maps-light.b blade-fringe-at-contact (e94d579) — APPROVE, criterion still FAIL
-- [P] unit-look.c thigh-floor-too-low — not attempted: at infantry widths the 0.2 floor no longer binds for crew, and 0.26 would thicken every unit's thigh
+BASE 7832670
+- [S] battle-feel.c shield-rank-one-pose (e3dffc5) — APPROVE, criterion still FAIL
+- [S] unit-look.d clothes-are-paint (7ef888d) — APPROVE, criterion still FAIL
+- [P] maps-light.b shade-density (68f86a1, reverted ef6dfca) — REJECT
+- [P] unit-look.c limb-belly-invisible (3463bd2) — APPROVE, criterion still FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] shadow-hard-heavy-maroon (399e586) VERDICT: APPROVE CRITERION: maps-light.b FAIL (previous: FAIL)
-- GAP: [S] crew-stick-body (d87a43f) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
-- GAP: [P] blade-fringe-at-contact (e94d579) VERDICT: APPROVE CRITERION: maps-light.b FAIL (previous: FAIL)
+- GAP: [S] shield-rank-one-pose (e3dffc5) VERDICT: APPROVE CRITERION: battle-feel.c FAIL (previous: FAIL)
+- GAP: [S] clothes-are-paint (7ef888d) VERDICT: APPROVE CRITERION: unit-look.d FAIL (previous: FAIL)
+- GAP: [P] shade-density (68f86a1) VERDICT: REJECT CRITERION: maps-light.b FAIL (previous: FAIL)
+- GAP: [P] limb-belly-invisible (3463bd2) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets)
-1. [S] battle-feel.c shield-rank-one-pose [0] — per-man brace variation in the wall (own pitch, knee depth, shield height and yaw, spear elevation, leg phase) — ref tabs_screenshot_06 — ours shield_wall_2500ms
-2. [S] unit-look.d clothes-are-paint [0] — solid garment chunks: fur collar ring, skirt/tabard wedge, crew trousers and cap as separate faceted meshes — ref tabs_screenshot_06 — ours war_machines_1250ms
-3. [S] camera.a horizon-80-percent-down [0] — battle camera rule: eye at unit head height, pitched up so the ground line sits near 60-65% and the front line fills the frame — ref tabs_screenshot_06 — ours big_melee_5s
-4. [S] vfx.a no-stuck-projectiles [0] — spent spears/arrows stand planted at an angle in ground and bodies and persist to the result shot (they lie flat now) — ref tabs_screenshot_02 — ours closeup_weapon_reads
-5. [P] maps-light.b shade-density [0] — LAWN_BAND_WEIGHT about 0.6/0.5/0.4, LAWN_SHADE_LIFT about (0.04,0.08,0.14); fallout of [S] shadow-hard-heavy-maroon (178) — ref tabs_screenshot_05 — ours war_machines_3800ms
-6. [S] maps-light.b shadow-blob-no-figure [0] — high band keeps the caster's outline (blur by caster width) and a lower sun-length rule so shadows run long — ref tabs_screenshot_05 — ours closeup_pair_zeus_thor
-7. [S] unit-look.c crew-wire-legs [0] — trouser tube mesh on crew and small units so legs are not sticks under a large head — ref tabs_screenshot_08 — ours lineup_medieval
-8. [P] unit-look.c limb-belly-invisible [0] — FOREARM_SWELL 1.18 to about 1.35, CALF_SWELL 1.22 to about 1.4; fallout of [S] crew-stick-body (178) — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
+1. [S] maps-light.b shade-washed-out [0] — hue-preserving ground-multiply shade (saturation kept) with a dark contact core under the feet, only the far band lightened, in LawnShadePlugin — ref trailer_3_sheet_02 r1c1 — ours lineup_medieval
+2. [S] camera.a fight-in-bottom-third [0] — battle framing rule: horizon at the top third, push in until the front line fills the frame — ref tabs_screenshot_06 — ours big_melee_5s
+3. [S] battle-feel.c gun-crew-one-stiff-pose [0] — crew work cycle: haul, ram, recoil flinch, each man on his own beat — ref tabs_screenshot_08 — ours war_machines_1100ms / 1250ms
+4. [S] unit-look.d garments-stop-at-hip [0] — robe wedge to the ankle for casters, sleeve cuffs, crew cap — ref trailer_3_sheet_02 r1c2 — ours lineup_medieval
+5. [S] unit-look.c crew-arms-bare-rods [0] — striped sleeve tubes on crew upper and lower arms (dressCannonCrew) — ref tabs_screenshot_08 — ours war_machines_1250ms
+6. [S] vfx.a spent-missiles-do-not-stand [0] — spears and arrows that miss or kill stay planted upright in ground and bodies through the result shot — ref tabs_screenshot_01 — ours big_melee_result
+7. [P] battle-feel.c wall-spears-parallel [0] — _buildBracePose spearDip span 0.36 to 0.9; fallout of [S] shield-rank-one-pose (179) — ref tabs_screenshot_06 — ours shield_wall_2650ms
+8. [P] unit-look.d crew-breeches-block [0] — crewBreeches diameterTop 1.75 to 1.45 thighs; fallout of [S] clothes-are-paint (179) — ref tabs_screenshot_08 — ours war_machines_3800ms
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
+- shade-density [attempts: 1, lawn shade row spent for [P]] — weight 0.6/0.5/0.4 + lift: shadow contrast fell from 28% to 6%, figures float; needs a mechanism
 - helm-too-tall [attempts: 1, crown spent for [P]] — crown 0.75: the head block pokes through the narrowed helm wall
 - carry-bob [attempts: 1, bob spent for [P]] — 0.15-0.30: a bob on a level carry still reads level and parallel
 - bucket-helm-torso-sized [attempts: 1, [P] spent] — HAT_CUT_FOR_HEAD 0.85: shrank every hat, Zeus's hair and wreath fell off
@@ -40,11 +42,10 @@ BASE 2bb52a7
 - plank-corpses [attempts: 2, 1 approved 164] — 163: flank landing + sagittal curl lay flat in the ground plane
 - dust-ring-grey [attempts: 1, spent] — stone tan still rendered neutral grey; colour is not the cause
 - grass-bare-raised-eye [attempts: 1] — half x1.5: squat cones, still bare
-- cannonball-team-navy [attempts: 1] — near-black stone: no shot in flight in either frame
 
 ## Notes for next iteration (max 5 lines)
-- LEDGER.md sits at its byte cap: trim prose before adding, run budget.mjs after each edit. Patch sources with an EOL-aware node script (scratchpad, each find asserted to match once); commit per gap with `git commit <paths> -F -`. No [P] on sun azimuth, hemi.groundColor, shadow darkness, BLADE_SIGHT_REACH, helm crown, gait roll, carry bob, MITT_OF_WRIST.
-- Shadows: main.ts `CascadedShadowGenerator` (4 cascades, PCF high). mapBuilder `LawnShadePlugin` (grass + blades) swaps the engine's `computeShadowWithCSMPCF5` by macro for a 3-band filter (map re-read with depth lifted by LAWN_BAND_RISE, per-band blur and weight) and tints shade at CUSTOM_FRAGMENT_BEFORE_FOG; the engine's PCSS drops thin shadows, do not use it. `RootShadowPlugin` moves each blade's lookup to the lawn behind it.
-- Limbs: `tapered(..., jointEnd, stubMat, headDiameter, bellyDiameter)` in bodyBuilder; bellyDiameter pushes a mid ring out on forearms and shins. Crew: `crewProportions` (bodyBuilder) gives `addOperator` (vehicleBuilder) and linked crew (unitFactory, posePreset "crew") infantry widths; `dressCannonCrew` recolours legs as trousers.
-- Walk: `_animateWalkHumanoid` (`_buildGait`, base lean hash 51) then `_applyWalkBias`, shove overlay, spear carry, prop carry (`_buildCarry`), `_carryProp` last. Never add walk torso yaw. Idle: `_buildIdlePose`; do not grow the free-foot 0.08 offset.
-- Hats: `attachProps` builds a `HelmFit` for the great helm; other hats ride `headTop` and HAT_OVERSIZE. Swords: `buildSlabSword` fed a `BladeFit` by `attachProps`.
+- LEDGER.md sits at its byte cap: trim prose before adding, run budget.mjs after each edit. Patch sources with an EOL-aware node script (scratchpad, each find asserted once; vehicleBuilder is CRLF); commit per gap with `git commit <paths> -F -`. No [P] on sun azimuth, hemi.groundColor, shadow darkness, LAWN_BAND_WEIGHT/LIFT, BLADE_SIGHT_REACH, helm crown, gait roll, carry bob, MITT_OF_WRIST, FOREARM/CALF_SWELL.
+- Shadows: main.ts `CascadedShadowGenerator` (4 cascades, PCF high). mapBuilder `LawnShadePlugin` swaps `computeShadowWithCSMPCF5` by macro for a 3-band filter and tints shade at CUSTOM_FRAGMENT_BEFORE_FOG; the engine's PCSS drops thin shadows, do not use it. `RootShadowPlugin` moves each blade's lookup to the lawn behind it.
+- Garments: unitFactory `hangSkirt` (hex bell on `body.hip`, pushed to propMeshes) and `furCollar` (torso joint), dressed after the tabard block; crew are dressed by `dressCannonCrew` (vehicleBuilder: hoops, `crewBreeches` on the hip joints, cap only for operators). Limbs: `tapered(..., bellyDiameter)`; crew widths from `crewProportions`.
+- Wall: `_buildBracePose` (hash 101-117) feeds the shove overlay (stand, board arm, crouch with `hip.position.y` let down from `_hipRest`, weight shift), `_squareShield` (board yaw/tilt/roll) and `_carrySpear` (dip only, never yaw: spears must not cross).
+- Walk: `_animateWalkHumanoid` (`_buildGait`) then `_applyWalkBias`, shove overlay, spear carry, prop carry, `_carryProp` last. Never add walk torso yaw. Idle: `_buildIdlePose`; do not grow the free-foot 0.08 offset. Hats ride `headTop`; great helm uses `HelmFit`.
