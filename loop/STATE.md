@@ -1,36 +1,38 @@
 # Loop state
-Iteration: 161   Last re-audit: 161   Consecutive rejects: 0   Branch: main
+Iteration: 162   Last re-audit: 161   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion, from last audit; see CRITIC.md for the letters)
 battle-feel: a PASS b PASS c FAIL d FAIL (2/4) — c: lineup units are vertical posts, arms hung symmetric; d: corpses and airborne bodies are straight planks
 unit-look: a PASS b PASS c FAIL d PASS (3/4) — c: sphere joint caps between square sticks read as a mannequin
 maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: no long cast shadows under the crowd or mammoth
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
-camera: a PASS b PASS c PASS d FAIL (3/4) — d: result shot cuts the mammoth and near bodies at the frame edge
-vfx: a PASS b FAIL c PASS d PASS (3/4) — b: burst is ragged now, but the heart is still a round white ball and no dust reads
-Total 18/24.
+camera: a PASS b PASS c PASS d PASS (4/4)
+vfx: a PASS b FAIL c PASS d PASS (3/4) — b: heart is lobed now but cream-white, not fire; dust lumps render grey and read as rocks; no ball in flight
+Total 19/24.
 
 ## Focus (every gap this iteration)
-BASE bba353e
-- [S] vfx.b impact-globe-stack (2b206c3) — APPROVE, criterion still FAIL
-- [S] camera.d result-shot-occluded (ed01aef) — REJECT, reverted by 435a154
+BASE bb2c72f
+- [S] camera.d result-shot-occluded (4d3c275) — APPROVE, criterion PASS
+- [S] vfx.b burst-heart-round-ball (099c7de) — APPROVE, criterion still FAIL
+- [P] vfx.b dust-ring-grey (cb39a22) — REJECT, reverted by ce6b113
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] impact-globe-stack (2b206c3) VERDICT: APPROVE CRITERION: vfx.b FAIL (previous: FAIL)
-- GAP: [S] result-shot-occluded (ed01aef) VERDICT: REJECT CRITERION: camera.d FAIL (previous: FAIL)
+- GAP: [S] result-shot-occluded (4d3c275) VERDICT: APPROVE CRITERION: camera.d PASS (previous: FAIL)
+- GAP: [S] burst-heart-round-ball (099c7de) VERDICT: APPROVE CRITERION: vfx.b FAIL (previous: FAIL)
+- GAP: [P] dust-ring-grey (cb39a22) VERDICT: REJECT CRITERION: vfx.b FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets)
-1. [S] camera.d result-shot-occluded [1] — re-pick the subject when no orbit place is clear (cluster farthest from giant/corpses, or the giant fitted whole) and score frame-edge cuts at any depth — ref gameplay_sheet_02 r1c2 — ours big_melee_result
-2. [S] vfx.b burst-heart-round-ball [0] — 3-4 fat squashed lobes of unequal size leaning different ways, none centred; fat lobes before points — ref trailer_3_sheet_03 r1c1 — ours war_machines_1100ms
-3. [S] vfx.b dust-burst-unread [0] — a low wide tan dust mesh that hugs the ground and reads in the still — ref trailer_3_sheet_03 r2c1 — ours war_machines_1250ms
-4. [S] battle-feel.c statue-idle [0] — idle pose state: weight on one leg, arms out, torso sway (not the spent idle lean) — ref tabs_screenshot_06 — ours lineup_medieval
-5. [S] battle-feel.d plank-corpses [0] — downed bodies draped limp and visible under the fight — ref tabs_screenshot_01 — ours big_melee_9s, war_machines_3800ms
-6. [S] unit-look.c ball-joint-mannequin [0] — longer thinner tapered limb segments, smaller head, no sphere caps (bodyBuilder.ts) — ref tabs_screenshot_06/08 — ours closeup_pair_zeus_thor
-7. [S] maps-light.b no-battle-shadows [0] — long soft cast-shadow mechanism from a low sun — ref tabs_screenshot_08 — ours lineup_medieval
-8. [P] vfx.b dust-ring-grey [0] — visualEffects.ts dustMat to a warm tan that survives lighting, e.g. (0.92, 0.8, 0.55); fallout of [S] impact-globe-stack (161)
+1. [S] vfx.b dust-burst-unread [0] — unlit tan ground-hugging puff bank wider than the fireball, replacing the grey ring lumps (find why "stone" goes grey and bypass it; not the spent self-lit mound) — ref trailer_3_sheet_03 r2c1 — ours war_machines_1100ms
+2. [S] vfx.b burst-white-not-fire [0] — two-tone fire material split: yellow core lobes, orange outer shards and skirt (a new split, not a re-tune of the spent emissives) — ref trailer_3_sheet_03 r1c1 — ours war_machines_3800ms
+3. [S] battle-feel.d plank-corpses [0] — limp landed pose state: folded knees, arms flopped, torso twisted — ref tabs_screenshot_01 — ours war_machines_3800ms
+4. [S] battle-feel.c statue-idle [0] — ready-stance pose state: bent knees, forward torso, weapon arm raised (not the spent idle lean) — ref tabs_screenshot_06 — ours lineup_medieval
+5. [S] unit-look.c ball-joint-mannequin [0] — thinner longer forearms ending in oversized mitts, no tube arms (bodyBuilder.ts) — ref tabs_screenshot_01 — ours closeup_pair_zeus_thor
+6. [S] vfx.b no-ball-in-flight [0] — larger black ball with a short dark trail so the shot reads mid-air — ref trailer_3_sheet_03 r2c1 — ours war_machines_1250ms
+7. [S] maps-light.b no-battle-shadows [0] — lower sun, longer shadow frustum over the battle area — ref tabs_screenshot_08 — ours big_melee_result
+8. [P] vfx.b heart-lobe-dome [0] — visualEffects.ts LOBES[0] size 0.95 -> 0.75; fallout of [S] burst-heart-round-ball (162)
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
-- result-shot-occluded [attempts: 1] — azimuth/radius walk round one fitted target: least-bad place still had mammoth top-left, a cut body, a corpse at the eye's feet; giant only ever a blocker
+- dust-ring-grey [attempts: 1, spent] — stone (0.92,0.8,0.55) still rendered neutral grey; colour is not the cause
 - grass-bare-raised-eye [attempts: 1] — half x1.5: squat cones, still bare
 - cannonball-team-navy [attempts: 1] — near-black stone: no shot in flight in either frame, claim not visible
 - fireball-burns-cream (= cannon-impact-balls) [attempts: 2] — emissives under white: lemon paint
@@ -41,7 +43,7 @@ BASE bba353e
 
 ## Notes for next iteration (max 5 lines)
 - Tuned values and spent gaps live in LEDGER.md: read it before touching any constant. Structural gaps are the point now; a [P] gap is only fallout of an approved [S].
-- ACES: emissive 0.25 shows ~140, 0.65 ~190, 1.0 ~210; diffuse over 1 does not show. Bloom threshold 0.65. Pale accent on "metal" renders black: use "stone"; matte tan "stone" (0.75,0.68,0.5) rendered neutral grey in the burst.
-- Commit per gap with `git commit <path> -F -`; revert rejects newest first. The big_melee outcome and result shot change run to run: do not attribute them to one patch.
-- Burst (visualEffects.ts spawnExplosionBurst): the critic's reference read is a fat lumpy cream fire mass several men wide, not spikes; the 5 heart polyhedra merge into a globe, the clods read as big black tetrahedra. Result shot: a draw-like mixed crowd also failed it, check who is framed.
-- wrapAsBody's 3rd arg is recoloured to the team colour (unitFactory:359). Mammoth hips at x +-0.46. Motion pairs at 1100/1250 ms and 2 s/2150 ms; add shots via a `loop(N.0): evidence` commit.
+- ACES: emissive 0.25 shows ~140, 0.65 ~190, 1.0 ~210; diffuse over 1 does not show. Bloom threshold 0.65. Pale accent on "metal" renders black; "stone" renders any tan as neutral grey (two values tried): dust must be an "unlit"-category material.
+- Commit per gap with `git commit <path> -m`; bash heredocs break here, write scripts with the Write tool; sed -i turns CRLF files to LF. The big_melee outcome and result shot change run to run.
+- Result shot (cameraController `_pickSubject`): subject chosen by fewest frame cuts; passed with the mammoth whole. If camera.d reopens, add a facing/fill term, do not re-tune BAND, knot or cut weight.
+- Burst heart is the LOBES table in spawnExplosionBurst; fire died out by 1250 ms with two stray white tiles left. wrapAsBody's 3rd arg is recoloured to the team colour (unitFactory:359). Mammoth hips at x +-0.46.
