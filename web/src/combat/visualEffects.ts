@@ -347,7 +347,7 @@ export class VisualEffects {
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
     coreMat.emissiveColor = new Color3(2.0, 1.95, 1.6);
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
-    flashMat.emissiveColor = new Color3(1.7, 1.5, 0.85);
+    flashMat.emissiveColor = new Color3(3.4, 3.4, 1.2);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
     flameMat.emissiveColor = new Color3(1.7, 1.25, 0.6);
     // The foot of the ball is a deeper orange than the fringe, whose own colour burns out to peach beside the heart.
