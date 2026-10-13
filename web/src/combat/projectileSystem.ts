@@ -190,9 +190,9 @@ export class ProjectileSystem {
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.25 any way off one point 0.3 out from the
-    // muzzle, the first the biggest and the rest anything from a third of its width up.
+    // muzzle, the first the biggest by far and the rest two fifths to seven tenths of its width: one big lobe with lumps on it, not four alike.
     for (let i = 0; i < 4; i++) {
-      const diameter = (i === 0 ? 0.45 : 0.15 + Math.random() * 0.3) * scale;
+      const diameter = (i === 0 ? 0.54 : 0.22 + Math.random() * 0.16) * scale;
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
       smoke.position = flash.position.add(direction.scale(0.3 * scale));
       smoke.position.x += (Math.random() - 0.5) * 0.5 * scale;
@@ -205,7 +205,7 @@ export class ProjectileSystem {
         // Shade falls off evenly round a slanted axis, from none on top to all of it underneath: no two rows of facets share a tone, and there is no hard equator.
         const shade = 0.5 - 0.5 * (normals[n + 1] * 0.8 + normals[n] * 0.35 - normals[n + 2] * 0.45);
         // The shade is cool: red and green fall away and blue holds, so the belly is a slate and not the brown the warm base goes when it is only darkened.
-        tones.push(1 - 0.66 * shade, 1 - 0.54 * shade, 1 - 0.18 * shade, 1);
+        tones.push(1 - 0.78 * shade, 1 - 0.68 * shade, 1 - 0.32 * shade, 1);
       }
       smoke.setVerticesData(VertexBuffer.ColorKind, tones);
       smoke.material = sm;
