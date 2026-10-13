@@ -182,3 +182,4 @@ iter 180 | [S] nothing-sticks, [S] pinched-link-limbs, [P] spears-one-parallel-b
 iter 181 | [S] lineup-stands-to-attention, [S] arm-is-a-detached-pillar | 2/2 approved | passes 20 -> 20
 iter 182 | [S] aimed-men-stand-to-attention, [S] shoulder-shelf-armpit-gap, [P] YOKE_REACH, [P] sunk-stance-half-squat | 4/4 approved | passes 20 -> 20
 iter 183 | [S] casters-stand-to-attention, [S] head-is-a-tall-square-box, [P] bow ready stagger/yaw, [P] YOKE_RISE+HULL_WAIST | 4/4 approved | passes 20 -> 20
+iter 184 | [S] torso-top-is-a-plate-with-eaves, [S] wall-spears-pitch-over-heads, [P] HEAD_RINGS chin/cheek, [P] bolt hold off arm | 3/4 approved | passes 20 -> 20
