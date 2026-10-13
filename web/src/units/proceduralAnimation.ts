@@ -699,10 +699,30 @@ export class ProceduralAnimator {
     this._animateWalkHumanoid();
   }
 
+  // Per-unit gait, so a column on the march is not one walk cycle caught at different moments: each man steps at his own cadence, brings the free leg through with the knee
+  // folded and lifted to his own height, steps longer on one side than the other, sinks to his own depth on the standing leg and swings his arms to his own reach, a beat off his legs.
+  // Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  private _gait: { rate: number; lift: number; limp: number; sink: number; armLag: number; armSwing: number } | null = null;
+  private _buildGait(): NonNullable<ProceduralAnimator["_gait"]> {
+    const h = (n: number): number => {
+      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    return {
+      rate: 6.8 + h(71) * 2.6,
+      lift: 0.6 + h(72) * 0.9,
+      limp: (h(73) - 0.5) * 0.36,
+      sink: 0.05 + h(74) * 0.22,
+      armLag: (h(75) - 0.5) * 1.4,
+      armSwing: 0.5 + h(76) * 0.45,
+    };
+  }
+
   private _animateWalkHumanoid(): void {
     const t = this._time + this._wobblePhase;
     const b = this._body;
-    const speed = 8; // cycle speed
+    const gait = (this._gait ??= this._buildGait());
+    const speed = gait.rate; // cycle speed
     const wobble = 0.08; // constant wobble overlay
 
     // Torso leans forward and sways side to side. Each man runs at his own lean, 0.28-0.54 (at 0.16-0.46 the shallow end ran near upright), hashed from the wobble phase like the idle slouch: at one 0.38 a charging rank was the same man stamped down its length
@@ -719,21 +739,25 @@ export class ProceduralAnimator {
     const legSwing = (this._shovePose ??= this._buildShovePose()).stride; // per-unit (0.6-0.85 rad), so a charge does not share one stride length
     // Both legs trail behind the hips, so the body tilts into the run from the feet up and the torso does not fold over upright legs. Per-unit (0.12-0.32 rad), so a charge does not share one lean.
     const trail = (this._shovePose ??= this._buildShovePose()).trail;
-    b.leftHip.rotation.x = trail + Math.sin(t * speed) * legSwing;
-    b.rightHip.rotation.x = trail + Math.sin(t * speed + Math.PI) * legSwing;
+    // A step has two halves. Going back the leg is the standing leg: straight but for the man's own sink at the knee. Coming forward it is the free leg: the knee folds
+    // and the thigh lifts as it passes under the hips, and it straightens again to reach the ground out in front. So a marcher is one straight leg and one bent, never a pair of compasses.
+    const leftStep = t * speed;
+    const rightStep = leftStep + Math.PI;
+    const leftFold = Math.max(0, -Math.cos(leftStep));
+    const rightFold = Math.max(0, -Math.cos(rightStep));
+    b.leftHip.rotation.x = trail + Math.sin(leftStep) * legSwing * (1 + gait.limp) - leftFold * gait.lift * 0.35;
+    b.rightHip.rotation.x = trail + Math.sin(rightStep) * legSwing * (1 - gait.limp) - rightFold * gait.lift * 0.35;
+    b.leftKnee.rotation.x = gait.sink + leftFold * gait.lift;
+    b.rightKnee.rotation.x = gait.sink + rightFold * gait.lift;
 
-    // Knees bend on back-swing
-    b.leftKnee.rotation.x = Math.max(0, -Math.sin(t * speed)) * 0.6;
-    b.rightKnee.rotation.x = Math.max(0, -Math.sin(t * speed + Math.PI)) * 0.6;
-
-    // Arms swing opposite to legs
-    const armSwing = 0.75;
-    b.leftShoulder.rotation.x = Math.sin(t * speed + Math.PI) * armSwing;
-    b.rightShoulder.rotation.x = Math.sin(t * speed) * armSwing;
+    // Arms swing opposite to legs, each man's a beat ahead of or behind his step
+    const armStep = leftStep + gait.armLag;
+    b.leftShoulder.rotation.x = Math.sin(armStep + Math.PI) * gait.armSwing;
+    b.rightShoulder.rotation.x = Math.sin(armStep) * gait.armSwing;
     // Per-unit elbow bend (0.7-1.2 rad), so a rank on the move does not share one arm shape.
     const elbow = (this._shovePose ??= this._buildShovePose()).elbow;
-    b.leftElbow.rotation.x = -elbow + Math.sin(t * speed + Math.PI) * 0.2;
-    b.rightElbow.rotation.x = -elbow + Math.sin(t * speed) * 0.2;
+    b.leftElbow.rotation.x = -elbow + Math.sin(armStep + Math.PI) * 0.2;
+    b.rightElbow.rotation.x = -elbow + Math.sin(armStep) * 0.2;
 
     // Floppy arm Z rotation (TABS signature wobble)
     b.leftShoulder.rotation.z = -0.3 + Math.sin(t * speed * 1.3) * wobble * 3.5; // held 0.3 out from the ribs under the wobble: about zero the signed sine swung the arm in through the torso
