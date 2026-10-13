@@ -440,7 +440,9 @@ export class SimulationSystem {
     }
 
     // Reach is to the target's hide, not its middle: a giant's body keeps a man farther from its centre than his weapon is long, and he never swung.
-    const engageDistance = unit.definition.engageRange + this.attackRangePadding + Math.max(0, enemy.collisionBodyRadius - unit.collisionBodyRadius);
+    // ...and a giant is struck from the second rank too: it stands over the men at its hide, and those a rank's depth behind them reach it past their shoulders.
+    const overRank = enemy.collisionBodyRadius > unit.collisionBodyRadius * 2 ? 1 : 0;
+    const engageDistance = unit.definition.engageRange + this.attackRangePadding + Math.max(0, enemy.collisionBodyRadius - unit.collisionBodyRadius) + overRank;
     const distance = Vector3.Distance(unit.position, enemy.position);
 
     if (hasAbility(unit, "teleport") && distance > engageDistance && distance < engageDistance * 3 && unit.canAttack(now)) {
@@ -1542,7 +1544,9 @@ export class SimulationSystem {
 
   private _scoreCandidate(requester: RuntimeUnit, candidate: RuntimeUnit, priority: TargetPriority): number {
     // Nearest is by the hide too: measured to its middle a giant was never the nearest enemy of the men pressed against it.
-    const hideDistance = Math.max(0, candidate.position.subtract(requester.position).length() - Math.max(0, candidate.collisionBodyRadius - requester.collisionBodyRadius));
+    const hide = Math.max(0, candidate.position.subtract(requester.position).length() - Math.max(0, candidate.collisionBodyRadius - requester.collisionBodyRadius));
+    // A giant draws the men round it: within 2 of its hide it counts as touching, and past that as six tenths as far, so they turn on it and do not fight on beside its legs.
+    const hideDistance = candidate.collisionBodyRadius > requester.collisionBodyRadius * 2 ? Math.max(0, hide - 2) * 0.6 : hide;
     const baseDistanceScore = hideDistance * hideDistance;
     const linkedRolePenalty = candidate.linkedParent ? 9 : 0;
 
