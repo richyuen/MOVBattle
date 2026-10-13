@@ -402,6 +402,24 @@ export class ProceduralAnimator {
       b.rightShoulder.rotation.z += (0.25 - b.rightShoulder.rotation.z) * carry;
       b.rightElbow.rotation.x += (-0.5 - b.rightElbow.rotation.x) * carry;
     }
+    // Prop carry: an arm with a weapon or a board in its hand is not an empty arm on the march. It leaves the walk's pendulum for a hold of the man's own, weapon hand up in front
+    // of the hip and board arm folded across the body, and the load drops on each footfall and is heaved back up between them, twice a stride, on his own beat.
+    if (this._state === AnimState.Walking && this.walkStyle !== "quadruped") {
+      const b = this._body;
+      const c = (this._carry ??= this._buildCarry());
+      const carry = (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
+      const bob = Math.abs(Math.sin((this._time + this._wobblePhase) * (this._gait ??= this._buildGait()).rate + c.beat)) - 0.5;
+      if (c.weapon) {
+        b.rightShoulder.rotation.x += (c.weapon.raise + bob * c.bob - b.rightShoulder.rotation.x * 0.8) * carry;
+        b.rightShoulder.rotation.z += (c.weapon.out - b.rightShoulder.rotation.z) * carry;
+        b.rightElbow.rotation.x += (c.weapon.elbow - bob * c.bob * 1.5 - b.rightElbow.rotation.x) * carry;
+      }
+      if (c.board) {
+        b.leftShoulder.rotation.x += (c.board.raise - bob * c.bob * 0.7 - b.leftShoulder.rotation.x * 0.8) * carry;
+        b.leftShoulder.rotation.z += (c.board.out - b.leftShoulder.rotation.z) * carry;
+        b.leftElbow.rotation.x += (c.board.elbow + bob * c.bob - b.leftElbow.rotation.x) * carry;
+      }
+    }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
     this._limp += (this._limpTarget - this._limp) * Math.min(1, dt * 9);
     if (this._limp > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
@@ -469,6 +487,25 @@ export class ProceduralAnimator {
     // ─── Googly-eye pupil wobble ───
     this._updatePupilWobble(dt);
   }
+
+  // What each arm is carrying on the march and how this man holds it. A weapon is anything in the right hand but the mitt itself; a club over the shoulder, an aimed bow and a wall
+  // carrier's upright spear already have their own holds. Looked up on first use, like the board, and hashed from the wobble phase like the gait.
+  private _carry: { weapon: { raise: number; out: number; elbow: number } | null; board: { raise: number; out: number; elbow: number } | null; bob: number; beat: number } | null = null;
+  private _buildCarry(): NonNullable<ProceduralAnimator["_carry"]> {
+    const h = (n: number): number => {
+      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const held = (this.locomotionBias === "none" || this.locomotionBias === "braced") && !this._spearShaft()
+      && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
+    return {
+      weapon: held ? { raise: -0.35 - h(81) * 0.5, out: 0.12 + h(82) * 0.28, elbow: -0.7 - h(83) * 0.6 } : null,
+      board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
+      bob: 0.08 + h(84) * 0.1,
+      beat: h(88) * Math.PI,
+    };
+  }
+
 
   // The board strapped to the shield hand, if this body carries one big enough to stand behind (a buckler is not). Looked up on first use: props go on after the animator is made.
   private _shield: TransformNode | null | undefined = undefined;
