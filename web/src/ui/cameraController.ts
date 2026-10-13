@@ -30,9 +30,6 @@ const FOLLOW_SPEED = 2.5;
 const FOLLOW_DROP = 0.9;
 const FOLLOW_DROP_SPEED = 0.8;
 
-/** Something that can stand between the result shot and its subject: a standing body, a giant, or a body on the ground. Ground position and footprint radius. */
-export interface ShotOccluder { x: number; z: number; r: number; kind: "man" | "giant" | "corpse" }
-
 export class CameraController {
   readonly camera: ArcRotateCamera;
   readonly isTouchDevice: boolean;
@@ -275,7 +272,7 @@ export class CameraController {
   // ─── Victory shot ───
   /** Drift from the battle view onto the survivors: a slow close shot, a human winner about half the height between the result bands. */
   frameSurvivors(
-    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number; focus: { x: number; z: number }; giant?: { x: number; z: number }; group?: { x: number; z: number }; occluders?: ShotOccluder[] },
+    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number; focus: { x: number; z: number }; giant?: { x: number; z: number }; group?: { x: number; z: number } },
     durationSeconds = 2,
   ): CameraViewState | null {
     if (!this._prebattleView) return null;
@@ -316,62 +313,10 @@ export class CameraController {
         z: giant ? (box.group ?? box.focus).z + shy.z : spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
-    if (box.occluders) {
-      this._clearShot(to, box.occluders, MAX_RADIUS);
-      to.alpha = from.alpha + Math.atan2(Math.sin(to.alpha - from.alpha), Math.cos(to.alpha - from.alpha)); // still the short way round
-    }
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
-  }
-
-  /**
-   * Nothing stands between the lens and the men it is aimed at: the shot fitted above is only the first place tried. The eye is walked round the target a
-   * sixteenth of a turn at a time, and when no place on that circle is clear it backs off and walks round again, up to maxRadius. Each place is scored by what
-   * would stand in the near part of the frame from it: a standing body or a giant inside the lens's width and nearer than the men, or a corpse at the eye's feet.
-   * The clearest place wins, the nearest to the fitted one among equals. The men within GROUP of the target are the subject and block nothing.
-   */
-  private _clearShot(to: CameraViewState, occluders: ShotOccluder[], maxRadius: number): void {
-    const GROUP = 3;
-    const STEPS = 16;
-    const halfWidth = Math.tan(this.camera.fov / 2) * this.camera.getEngine().getAspectRatio(this.camera);
-    const blockers = occluders.filter((o) => o.kind !== "man" || Math.hypot(o.x - to.target.x, o.z - to.target.z) > GROUP);
-    const score = (alpha: number, radius: number): number => {
-      const reach = radius * Math.sin(to.beta);
-      const eyeX = to.target.x + Math.cos(alpha) * reach;
-      const eyeZ = to.target.z + Math.sin(alpha) * reach;
-      let total = 0;
-      for (const o of blockers) {
-        const dx = o.x - eyeX;
-        const dz = o.z - eyeZ;
-        const along = -(dx * Math.cos(alpha) + dz * Math.sin(alpha)); // distance down the line of sight
-        const aside = Math.abs(dx * Math.sin(alpha) - dz * Math.cos(alpha));
-        const gap = Math.hypot(dx, dz) - o.r;
-        // A corpse lies under the sightline unless the eye stands over it; a giant fills the frame from anywhere this side of the men; a man, from the near half.
-        if (o.kind === "corpse") {
-          if (gap < 2.5 && along > -o.r) total += 1;
-          continue;
-        }
-        if (gap < 0 || (gap < 1.5 && along > -o.r)) total += 4; // the eye is inside it, or it is a wall across the lens
-        const near = o.kind === "giant" ? reach + o.r : reach * 0.55;
-        if (along > 0 && along - o.r < near && aside - o.r < Math.max(along, 0.5) * halfWidth) total += o.kind === "giant" ? 3 : 1;
-      }
-      return total;
-    };
-    let best = { alpha: to.alpha, radius: to.radius, score: score(to.alpha, to.radius) };
-    for (const grow of [1, 1.35, 1.8, 2.4]) {
-      if (best.score === 0) break;
-      const radius = Math.min(maxRadius, to.radius * grow);
-      // Out from the fitted place both ways, so of two equally clear places the smaller swing is found first and kept
-      for (let i = 0; i < STEPS; i++) {
-        const alpha = to.alpha + Math.ceil(i / 2) * (i % 2 === 0 ? -1 : 1) * (2 * Math.PI / STEPS);
-        const found = score(alpha, radius);
-        if (found < best.score) best = { alpha, radius, score: found };
-      }
-    }
-    to.alpha = best.alpha;
-    to.radius = best.radius;
   }
 
   // ─── Battle follow ───
