@@ -245,6 +245,7 @@ export class CameraController {
         ahead * Math.cos(side) + across * Math.sin(side) + (Math.abs(across * Math.cos(side) - ahead * Math.sin(side)) + 1.2) / 0.6;
       const halfWidth = center.near.halfWidth ?? 0;
       to.radius = Math.min(14, Math.max(4.5, fit(halfWidth), fit(-halfWidth)));
+      this.camera.fov = 0.65; // at the placement 0.8 the crews were a sixth of the frame high under more than half a frame of sky. The fit above is still for the 0.8 lens: the far end of a long line runs off the frame, as a TABS gun line does
       this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     } else {
       // Melee: the eye sits at head height and looks a touch up, so the ground is the bottom third of the
