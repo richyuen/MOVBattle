@@ -1404,7 +1404,7 @@ export class RuntimeUnit {
     }
 
     this.body.bodyMaterial.emissiveColor = color.scale(pulse);
-    this.body.skinMaterial.emissiveColor = this._skinGlow.add(color.scale(pulse * 0.25));
+    this.body.skinMaterial.emissiveColor = this._skinGlow.add(color.scale(pulse * 0.1));
   }
 
   /** Reset unit to its original spawn state (position, health, alive). */
