@@ -1,6 +1,6 @@
 import {
   Engine, Scene, HemisphericLight, DirectionalLight, Vector3, Color3, Color4,
-  PointerEventTypes, ShadowGenerator, MeshBuilder, Mesh, StandardMaterial, VertexBuffer,
+  PointerEventTypes, CascadedShadowGenerator, MeshBuilder, Mesh, StandardMaterial, VertexBuffer,
 } from "@babylonjs/core";
 import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline";
 import { SSAO2RenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline";
@@ -122,9 +122,10 @@ hemi.intensity = 0.45;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 // The sky fill leans blue, so shade lit by it alone is a cool red-brown and not blood red
 hemi.diffuse = new Color3(0.7, 0.9, 1.6);
-// The sun stands about 55 degrees up, so a tree's shadow is shorter than the tree and does not reach across the field.
-const dir = new DirectionalLight("dir", new Vector3(-0.305, -0.762, 0.457), scene);
-dir.intensity = 0.9;
+// The sun stands 42 degrees up, so a man throws a shadow a little longer than himself across the grass, and the tree ring's shadows reach in over the field's edge (at 35 the lit grass went a dull rust):
+// at 50 degrees a shadow was shorter than its owner and lay hidden under the crowd.
+const dir = new DirectionalLight("dir", new Vector3(-0.412, -0.669, 0.618), scene);
+dir.intensity = 1.0; // raised with the lowered sun, so level ground takes the light it did
 // The sun stands off beyond the tree ring with its own depth range. Left at its default spot just above the field,
 // everything taller than a trunk base sits behind the shadow camera and never reaches the shadow map.
 dir.position = dir.direction.scale(-100);
@@ -142,14 +143,22 @@ scene.onBeforeRenderObservable.add(() => {
   const pullBack = Math.max(0, ((scene.activeCamera as { radius?: number } | null)?.radius ?? 0) - 14);
   scene.fogStart = 70 + pullBack;
   scene.fogEnd = 170 + pullBack;
+  // The shadow cascades reach as far as the fight and a little past it, however far back the eye is
+  shadowGen.shadowMaxZ = SHADOW_REACH + pullBack;
 });
 
 // Shadows
-const shadowGen = new ShadowGenerator(2048, dir);
-// Depth-compared and lightly filtered: the map spans the whole tree ring, and a blurred exponential map over that
-// span smears a unit-sized shadow away to nothing.
+// Cascaded: the sun's map is cut along the eye's view into four maps, the nearest laid over the fight in front of the lens, so a limb, a spear and a shield
+// each land on the grass as themselves. One map stretched over the whole tree ring gave a man a few texels: his shadow was a blot at his feet.
+const SHADOW_REACH = 70;
+const shadowGen = new CascadedShadowGenerator(2048, dir);
+shadowGen.numCascades = 4;
+shadowGen.lambda = 0.8;
+shadowGen.stabilizeCascades = true;
+shadowGen.cascadeBlendPercentage = 0.05;
+shadowGen.shadowMaxZ = SHADOW_REACH;
 shadowGen.usePercentageCloserFiltering = true;
-shadowGen.filteringQuality = ShadowGenerator.QUALITY_HIGH;
+shadowGen.filteringQuality = CascadedShadowGenerator.QUALITY_HIGH;
 // Shadows keep a twenty-fifth of the sun (darkness is the light left in them), the sky fill and the grass's own glow lifting them to about half the lit ground: at an eighth they stayed three quarters of it,
 // a faint red stain and not a shadow.
 shadowGen.darkness = 0.04;
