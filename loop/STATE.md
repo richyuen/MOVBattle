@@ -1,50 +1,53 @@
 # Loop state
-Iteration: 121   Last re-audit: 120   Consecutive rejects: 0   Branch: main
+Iteration: 122   Last re-audit: 120   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 3 | unit-look 3 | maps-light 3 | ui-flow 4 | camera 4 | vfx 3
 
 ## Focus (every pickable gap this iteration)
-- boulders-indigo 3587c82 — APPROVE
-- muzzle-smoke-beaded-line addb39e — APPROVE
-- field-shadows-red fab43a4 — REJECT (reverted 9c924d9)
-- blue-skin-dark e3d323c — APPROVE
-- mammoth-eyes-googly a4aa1d7 — APPROVE
-- cannon-carriage-plank e478938 — APPROVE
-- victory-giant-dwarfs-survivors 9fe4d1e — REJECT (reverted 63e829e)
+- shade-brick-not-plum 1ee1c0e — REJECT (reverted 1b1fc13)
+- victory-fits-giant-not-humans eb9f6ab — APPROVE
+- blue-skin-slate (no edit prescribed) — REJECT
+- muzzle-smoke-two-tone 4b3239e — APPROVE
+- mammoth-eyes-stalked ce02253 — APPROVE
+- boulders-lit-violet 3223cb5 — REJECT (reverted 391d307)
+- cannon-cheeks-unstepped 24d79df — APPROVE
+- melee-lines-stand-apart d33a26e — APPROVE
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: boulders-indigo (3587c82) VERDICT: APPROVE SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: muzzle-smoke-beaded-line (addb39e) VERDICT: APPROVE SCORE: vfx 3/5 (previous: 3/5)
-- GAP: field-shadows-red (fab43a4) VERDICT: REJECT SCORE: maps-light 3/5 (previous: 3/5)
-- GAP: blue-skin-dark (e3d323c) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: mammoth-eyes-googly (a4aa1d7) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: cannon-carriage-plank (e478938) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: victory-giant-dwarfs-survivors (9fe4d1e) VERDICT: REJECT SCORE: camera 4/5 (previous: 4/5)
+- GAP: shade-brick-not-plum (1ee1c0e) VERDICT: REJECT SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: victory-fits-giant-not-humans (eb9f6ab) VERDICT: APPROVE SCORE: camera 4/5 (previous: 4/5)
+- GAP: blue-skin-slate ((none)) VERDICT: REJECT SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: muzzle-smoke-two-tone (4b3239e) VERDICT: APPROVE SCORE: vfx 3/5 (previous: 3/5)
+- GAP: mammoth-eyes-stalked (ce02253) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: boulders-lit-violet (3223cb5) VERDICT: REJECT SCORE: maps-light 3/5 (previous: 3/5)
+- GAP: cannon-cheeks-unstepped (24d79df) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: melee-lines-stand-apart (d33a26e) VERDICT: APPROVE SCORE: battle-feel 3/5 (previous: 3/5)
 
 ## Ranked open gaps (max 8, attempts count in brackets)
-1. [maps-light] shade-brick-not-plum: ground shade R 0.79, B 0.38 of lit vs R 0.42, B 0.59; main.ts hemi.diffuse (0.7, 0.9, 1.6) to (0.37, 0.53, 1.55) [attempts: 1] — ref: tabs_screenshot_01 — ours: hud_placement.png
-2. [camera] victory-fits-giant-not-humans: humans 23-27% of band height vs 75%; cameraController.ts giant branch radius 6.5, target x/z box.focus, y baseY + 1.2 [attempts: 1] — ref: gameplay_sheet_02 r1c2 — ours: big_melee_result.png
-3. [unit-look] blue-skin-slate: lit 108,123,146, shade 76,89,115 vs 140,172,213 and 40,85,150 (measured under the reverted fill); re-measure after gap 1, no factionColors edit [attempts: 0] — ref: tabs_screenshot_08 — ours: closeup_pair_zeus_thor.png
-4. [vfx] muzzle-smoke-two-tone: two dark grey lobes stacked beside the white vs one pale grey puff; projectileSystem.ts smoke loop `smoke.material = sm` for all lobes [attempts: 0] — ref: trailer_2_sheet_02 r1c1 — ours: war_machines_3800ms.png
-5. [unit-look] mammoth-eyes-stalked: white spheres clear of the head, pupil on the outer edge vs flush discs, centred pupil; buildMammoth eye z 0.71 to 0.66, pupil (xOff, 0.08, 0.712) [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_9s.png
-6. [maps-light] boulders-lit-violet: sunlit faces 57,39,78 vs 80,69,82; mapBuilder.ts darkRock.diffuseColor to (0.25, 0.24, 0.32) [attempts: 0] — ref: tabs_screenshot_01 — ours: hud_placement.png
-7. [unit-look] cannon-cheeks-unstepped: one 0.26 box per side vs stepped cheeks; buildCannon add a rear step box per side (0.1 x 0.14 x 0.3 at z -0.25) [attempts: 0] — ref: tabs_screenshot_08 — ours: war_machines_1100ms.png
-8. [battle-feel] melee-lines-stand-apart: at 2 s front ranks three body widths apart vs compressed two deep; simulationSystem.ts melee stop distance (not the collision distance) [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_2s.png
+Gaps 1-4 were measured under the since-reverted fill (0.37, 0.53, 1.55); the live fill is (0.7, 0.9, 1.6).
+1. [unit-look] red-skin-plum: lit 116,50,78 vs 207,74,94; factionColors.ts line 56 Team B (0.8,0.16,0.2) to (1.0,0.30,0.32) [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_2s.png
+2. [maps-light] shade-brick-not-plum: shade R 0.64, B 0.42 of lit vs R 0.32, B 0.68; main.ts hemi.diffuse (0.55,0.72,1.55), hemi.intensity 0.6 to 0.45, shadowGen.darkness 0.12 to 0.04 [attempts: 2] — ref: tabs_screenshot_08 — ours: war_machines_1100ms.png
+3. [unit-look] blue-skin-dark: lit 87,107,160 vs 140,172,213; factionColors.ts line 55 Team A (0.50,0.68,0.96) to (0.62,0.86,1.0) [attempts: 1] — ref: tabs_screenshot_08 — ours: closeup_pair_zeus_thor.png
+4. [maps-light] boulders-indigo: lit faces 75,52,115 vs 75,63,79; mapBuilder.ts darkRock.diffuseColor to (0.26,0.29,0.22) [attempts: 1] — ref: tabs_screenshot_01 — ours: hud_placement.png
+5. [camera] victory-centres-giant: frame centre on the mammoth foreleg, humans 18-41% vs 45-75%; main.ts frameSurvivorsForResult keep units over 4.2 tall out of `spots`, radius 6.5 to 5 [attempts: 0] — ref: gameplay_sheet_02 r1c2 — ours: big_melee_result.png
+6. [battle-feel] reds-arrive-as-singles: clubbers 1-2 body widths apart at contact vs two-deep crush; simulationSystem.ts sameTeamPressureScale 0 to 0.15 * compressionRatio [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_2s.png
+7. [unit-look] mammoth-eyes-beads: 0.12 spheres proud of the outline vs flat discs 1/5 of the face; buildMammoth eye 0.2 with scaling.z 0.3, pupil 0.09 flattened at z 0.69 [attempts: 0] — ref: tabs_screenshot_01 — ours: big_melee_9s.png
+8. [vfx] muzzle-smoke-bead-row: four smooth balls in a line vs a clump of faceted lumps; projectileSystem.ts 7 equal lobes, step 0.2, segments 3 [attempts: 0] — ref: trailer_2_sheet_02 r1c1 — ours: war_machines_3800ms.png
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
-- victory-giant-dwarfs-survivors [attempts: 1] — radius min(11, fit) is 10.2+, y 0.4 height: humans still 23-27% of band; fit the humans, let the giant crop
-- field-shadows-red [attempts: 1] — hemi.diffuse (0.70, 0.78, 1.0): red untouched so R ratio stayed 0.79, blue cut turned shade brick and blue skin slate
-- fireball-foot-dull [attempts: 2] — flameMat (0.70,0.20,0.04) on all 7 tongues: brown-orange shell; TABS is cream with a thin fringe
-- fireball-core-dull [attempts: 1] — coreMat (1.0,0.97,0.75): only blue rose, whiter not creamier
-- red-rank-knot [attempts: 1] — either-bracer 0.8: battlefeel_spillover_chain squire shift 0.20 < 0.55 (hoplite is a bracer)
-- carriage-shade-warm [attempts: 1] — emissive (0.18,0.09,0.09): self-lit blue made the top pink
-- field-dark [attempts: 1] — dir.intensity 1.0: wrong lever
-- presser-lean-capped [attempts: 2] — clamp while Walking: line units are Idle/Attack
+- boulders-lit-violet [attempts: 1] — darkRock (0.25,0.24,0.32) under the blue fill: lit B 113-120 vs 79-84, G lowest
+- blue-skin-slate [attempts: 1] — no edit; under fill (0.37,0.53,1.55) lit skin went dark 87,107,160
+- shade-brick-not-plum [attempts: 2] — hemi.diffuse (0.37,0.53,1.55): shade B only 0.42, iron and stone navy, red skin plum
+- victory-giant-dwarfs-survivors [attempts: 1] — radius min(11, fit): humans still 23-27% of band
+- field-shadows-red [attempts: 1] — hemi.diffuse (0.70,0.78,1.0): R ratio stayed 0.79, shade brick
+- fireball-foot-dull [attempts: 2] — flameMat (0.70,0.20,0.04): brown-orange shell; TABS is cream
+- fireball-core-dull [attempts: 1] — coreMat (1.0,0.97,0.75): whiter not creamier
+- red-rank-knot [attempts: 1] — either-bracer 0.8: spillover_chain squire shift 0.20 < 0.55
 
 ## Notes for next iteration (max 5 lines)
-- Spent (never retry): fireball-foot-dull, presser-lean-capped, fireball-lobes-cream, mammoth-no-launch, mammoth-mop-hat, tusk-white-not-ivory, airborne-sit-square, fireball-no-orange, cloud-level-bases, far-ridge-cones, red-team-maroon, corpses-all-flat, zeus-no-robe-skirt, muzzle-smoke-one-ball, upright-idle-locked-legs, placement-armies-specks, fireball-balloon-stack, helm, grass tufts. Never shrink enemy collision distance.
-- ACES crushes material red and lifts G/B; judge by screen pixel. Fire mats are unlit; fire emissive past 1 washes white, lower goes brown. The hemi fill lights every surface: cutting its blue greys blue skin and bricks the shade.
-- One gap, one change: the critic rejects scope creep and any claim not visible on screen; keep comments true.
-- runtimeUnit owns root.rotation.x/z. Self-lit materials bloom unless glow-excluded. battlefeel_spillover_chain needs the squire shoved 0.55 off a hoplite. buildMammoth is shared with the sacred elephant.
-- Self-light via factory get(cat, c, { emissive }); never mutate cached makeMat. Edit with `sed -i -b` by line number (re-grep the line after an insert); commit with `git commit <file> -F -` heredoc.
+- Spent (never retry): fireball foot/lobes/orange/balloon, presser-lean-capped, mammoth launch/mop-hat/tusks, airborne-sit-square, cloud bases, far ridge, red-team-maroon, corpses-flat, zeus skirt, muzzle-smoke-one-ball, idle legs, placement specks, helm, grass tufts. Never shrink enemy collision distance.
+- ACES crushes material red and lifts G/B; judge by screen pixel. hemi.diffuse lights every surface: cutting its R/G turns neutrals navy and red skin plum, cutting its blue bricks the shade. Re-measure skin and boulders under the live fill before editing them.
+- One gap, one change: the critic rejects scope creep and claims not visible on screen; keep comments true.
+- big_melee ranks spawn 0.6 apart, tighter than body widths; ally contact toppled 13 of 30 at 1 s until 122.8. Probe unit states with render_game_to_text before choosing a battle-feel lever.
+- runtimeUnit owns root.rotation.x/z. buildMammoth is shared with the sacred elephant. Edit with `sed -i -b` by line number; commit with `git commit <file> -F -` heredoc.
