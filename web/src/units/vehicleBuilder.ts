@@ -616,7 +616,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 // Fires FORWARD (+Z). Barrel points along +Z. Trail extends back (-Z).
 /** Pirate gun crew clothes on an operator body: mauve hoops round the team-coloured shirt, brown trousers and shoes, a dark peaked cap */
 export function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Color3, cap = true): void {
-  const hoopMat = makeMat(scene, new Color3(0.58, 0.45, 0.42)); // at (0.74, 0.66, 0.72) the stripes were near white on the shirt, and at (0.60, 0.50, 0.68) a violet no TABS crew wears
+  const hoopMat = makeMat(scene, new Color3(0.66, 0.50, 0.36)); // at (0.74, 0.66, 0.72) the stripes were near white on the shirt, at (0.60, 0.50, 0.68) a violet no TABS crew wears, at (0.58, 0.45, 0.42) a cool grey on the blue, and at (0.55, 0.36, 0.24) too brown
   const trouserMat = makeMat(scene, new Color3(0.42, 0.24, 0.14));
   const capMat = makeMat(scene, darken(color, 0.8)); // at 0.45 the cap was a mid team blue, not the dark navy of a TABS crew cap
   const add = (mesh: Mesh, parent: TransformNode, material: PBRMetallicRoughnessMaterial): void => {
