@@ -248,7 +248,7 @@ export class CameraController {
     } else {
       // Melee: the eye sits at head height and looks a touch up, so the ground is the bottom third of the
       // frame under the nearest rank's feet, and the fight and the giants over it stand against the sky.
-      const pitchUp = 0.12;
+      const pitchUp = 0.2; // at 0.12 the horizon sat above the middle of the frame, the bottom fifth was bare grass and a giant rearing over the line ran out of the top
       to.beta = Math.PI / 2 + pitchUp;
       to.target.y = 1.6 + to.radius * Math.sin(pitchUp);
       this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
