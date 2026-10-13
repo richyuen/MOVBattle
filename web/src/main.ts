@@ -1269,11 +1269,17 @@ function frameSurvivorsForResult(winner: number | null): void {
     box.height = Math.max(box.height, bounds.max.y - unit.position.y);
   }
   if (box.height <= 0) return;
+  const besideGiant = spots.length > 0 && giantSpots.length > 0;
   if (spots.length === 0) spots.push(...giantSpots);
   // Focus: the survivor standing nearest the middle of the group, for when the group is too spread to frame whole.
   const midX = spots.reduce((sum, s) => sum + s.x, 0) / spots.length;
   const midZ = spots.reduce((sum, s) => sum + s.z, 0) / spots.length;
   box.focus = spots.reduce((best, s) => (Math.hypot(s.x - midX, s.z - midZ) < Math.hypot(best.x - midX, best.z - midZ) ? s : best));
+  // Beside a giant the shot is a wall of its flank: with one among the survivors, the focus is the human-sized one standing farthest from any giant.
+  if (besideGiant) {
+    const clear = (s: { x: number; z: number }) => Math.min(...giantSpots.map((g) => Math.hypot(s.x - g.x, s.z - g.z)));
+    box.focus = spots.reduce((best, s) => (clear(s) > clear(best) ? s : best));
+  }
   camCtrl.frameSurvivors(box);
 }
 
