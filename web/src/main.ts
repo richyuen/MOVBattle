@@ -150,9 +150,9 @@ const shadowGen = new ShadowGenerator(2048, dir);
 // span smears a unit-sized shadow away to nothing.
 shadowGen.usePercentageCloserFiltering = true;
 shadowGen.filteringQuality = ShadowGenerator.QUALITY_HIGH;
-// Shadows keep about an eighth of the sun (darkness is the light left in them), the sky fill lifting them to about half the lit ground: at full strength the tree ring's shade fuses into one black mass
-// over the placement half beneath it.
-shadowGen.darkness = 0.12;
+// Shadows keep a twenty-fifth of the sun (darkness is the light left in them), the sky fill and the grass's own glow lifting them to about half the lit ground: at an eighth they stayed three quarters of it,
+// a faint red stain and not a shadow.
+shadowGen.darkness = 0.04;
 shadowGen.bias = 0.0004;
 shadowGen.normalBias = 0.02;
 

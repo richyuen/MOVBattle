@@ -117,9 +117,9 @@ export class TribalSandboxMapBuilder {
   private _createMaterials(): void {
     // Grass: autumn orange
     const grass = new StandardMaterial("grass", this._scene);
-    grass.diffuseColor = new Color3(0.98, 0.5, 0.24);
+    grass.diffuseColor = new Color3(1.08, 0.5, 0.24);
     grass.specularColor = new Color3(0.05, 0.05, 0.05);
-    grass.emissiveColor = new Color3(0.2, 0.04, 0.036); // self-lit red-orange, so the lit field is a bright orange; the blue is held where plum shadows had it
+    grass.emissiveColor = new Color3(0.09, 0.04, 0.036); // self-lit red-orange, less than half as red as it was and the sunlit red raised to make it up: the glow shows in shadow too and held the shade at three quarters of the lit red; the blue is held where plum shadows had it
 
     // Warm orange-grass for edges
     const dryGrass = new StandardMaterial("dryGrass", this._scene);
