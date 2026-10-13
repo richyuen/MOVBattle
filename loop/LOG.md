@@ -139,3 +139,4 @@ iter 137 | spear-no-streak, red-lit-pink-shade-crimson, mammoth-plum-not-brown, 
 iter 138 | clubs-lean-45, field-pale-pink, streak-glowing-beam, red-shade-hue, victory-group-low, clear-tab-rounded, no-bodies-down | 7/7 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 139 | red-bubblegum-pink, shell-burst-cream-ball, field-tan, clubs-shoulder-low, streak-too-long, levels-rounded-pill, victory-crossed-by-shafts | 2/7 approved | scores battle-feel 3 unit-look 3 maps-light 3 ui-flow 4 camera 4 vfx 3 -> battle-feel 3 unit-look 3 maps-light 3 ui-flow 4 camera 4 vfx 3
 iter 140 | re-audit; result-shot-inside-crowd, red-team-bubblegum, muzzle-puff-grey-stack, budget-seven-digits | 3/4 approved | scores 3/3/3/4/4/3 -> 3/3/4/4/3/3
+iter 141 | budget-seven-digits, result-shot-giant-in-frame, red-skin-no-shade, muzzle-puff-flat-facets, impact-burst-glow-ball, lineup-props-undersized, result-prompt-wording | 5/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
