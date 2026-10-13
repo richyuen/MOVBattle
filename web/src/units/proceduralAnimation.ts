@@ -93,6 +93,14 @@ export class ProceduralAnimator {
   }
 
   /** A body in flight takes its own air shape instead of the flat crumple it will land in. */
+  /** Which face a corpse comes to rest on: `up` > 0 on its back, < 0 on its front. Its rest pose then stands folds up off the ground on the open side. */
+  setLandedFace(up: number): void {
+    const landed = up > 0.5 ? 1 : up < -0.5 ? -1 : 0;
+    if (landed === 0 || landed === this._landedFace || this._state !== AnimState.Dead || this.walkStyle === "quadruped") return;
+    this._landedFace = landed;
+    this._writeDeathRest(landed);
+  }
+
   setAirborne(airborne: boolean): void {
     this._airTarget = airborne ? 1 : 0;
   }
@@ -129,6 +137,7 @@ export class ProceduralAnimator {
   private _squashTimer = 0;
   private _limpTarget = 0;
   private _limp = 0;
+  private _landedFace = 0;
   // Per-unit crumple shape so a pile of fallen bodies does not share one pose.
   private readonly _limpPose = this._buildLimpPose();
 
@@ -166,6 +175,8 @@ export class ProceduralAnimator {
     const leftSwing = bit(512) * 1.2;
     const rightSwing = bit(1024) * 1.2;
     return {
+      leftFlung,
+      leftSplayed,
       torsoX: Math.random() * 0.2,
       torsoY: bit(2048),
       torsoZ: (Math.random() - 0.5) * 0.7,
@@ -1150,28 +1161,11 @@ export class ProceduralAnimator {
     const joints = this._body.allJoints;
     this._deathJointAngles = [];
     this._deathAngularVelocities = [];
-    // Corpses come to rest crumpled in the same per-unit limp pose a downed body uses.
+    // Corpses come to rest crumpled in the same per-unit limp pose a downed body uses, until they land and it is known which face is up.
     this._deathRestAngles = new Array(joints.length * 3).fill(0);
+    this._landedFace = 0;
     if (this.walkStyle !== "quadruped") {
-      const b = this._body;
-      const p = this._limpPose;
-      const rest = (joint: unknown, x: number, z = 0, y = 0): void => {
-        const index = joints.indexOf(joint as (typeof joints)[number]);
-        if (index < 0) return;
-        this._deathRestAngles[index * 3] = x;
-        this._deathRestAngles[index * 3 + 1] = y;
-        this._deathRestAngles[index * 3 + 2] = z;
-      };
-      rest(b.torso, p.torsoX, p.torsoZ, p.torsoY);
-      rest(b.neck, p.neckX);
-      rest(b.leftShoulder, p.leftArmX, p.leftArmZ);
-      rest(b.rightShoulder, p.rightArmX, p.rightArmZ);
-      rest(b.leftElbow, p.leftElbowX, p.leftElbowZ);
-      rest(b.rightElbow, p.rightElbowX, p.rightElbowZ);
-      rest(b.leftHip, p.leftHipX, p.leftHipZ);
-      rest(b.rightHip, p.rightHipX, p.rightHipZ);
-      rest(b.leftKnee, p.leftKneeX, p.leftKneeZ);
-      rest(b.rightKnee, p.rightKneeX, p.rightKneeZ);
+      this._writeDeathRest(0);
       // A corpse still in the air sags toward its flight shape and only crumples once it lands.
       this._deathAirAngles = this._deathRestAngles.slice();
       for (const [joint, x, y, z] of (this._airPose ??= this._buildAirPose())) {
@@ -1198,6 +1192,73 @@ export class ProceduralAnimator {
         (Math.random() - 0.5) * 8,
         (Math.random() - 0.5) * 12,
       );
+    }
+  }
+
+  /**
+   * Rest angles of a corpse. Not yet landed (0) it is the per-unit limp pose, every fold in the plane of the body. Landed on its back (1) or its
+   * front (-1), the folds that can stand up off the ground on the open side replace the flat ones, so the body is not a flat strip.
+   */
+  private _writeDeathRest(landed: number): void {
+    const joints = this._body.allJoints;
+    const b = this._body;
+    const p = this._limpPose;
+    const rest = (joint: unknown, x: number, z = 0, y = 0): void => {
+      const index = joints.indexOf(joint as (typeof joints)[number]);
+      if (index < 0) return;
+      this._deathRestAngles[index * 3] = x;
+      this._deathRestAngles[index * 3 + 1] = y;
+      this._deathRestAngles[index * 3 + 2] = z;
+    };
+    rest(b.torso, p.torsoX, p.torsoZ, p.torsoY);
+    rest(b.neck, p.neckX);
+    rest(b.leftShoulder, p.leftArmX, p.leftArmZ);
+    rest(b.rightShoulder, p.rightArmX, p.rightArmZ);
+    rest(b.leftElbow, p.leftElbowX, p.leftElbowZ);
+    rest(b.rightElbow, p.rightElbowX, p.rightElbowZ);
+    rest(b.leftHip, p.leftHipX, p.leftHipZ);
+    rest(b.rightHip, p.rightHipX, p.rightHipZ);
+    rest(b.leftKnee, p.leftKneeX, p.leftKneeZ);
+    rest(b.rightKnee, p.rightKneeX, p.rightKneeZ);
+    if (landed === 0) return;
+    // Everything below comes from the body's own limp numbers: no random draws, and a corpse thrown again lands in its own shape.
+    const u = p.torsoX * 5; // 0..1
+    const roll = p.torsoY < 0 ? -1 : 1;
+    const both = u > 0.66;
+    const raised = u < 0.4;
+    // The leg that lay splayed is the one that stands up, and the arm that lay at the side is the one that lifts. Left is -x.
+    const leg = p.leftSplayed ? -1 : 1;
+    const [upHip, upKnee, otherHip, otherKnee] = p.leftSplayed
+      ? [b.leftHip, b.leftKnee, b.rightHip, b.rightKnee]
+      : [b.rightHip, b.rightKnee, b.leftHip, b.leftKnee];
+    const arm = p.leftFlung ? 1 : -1;
+    const [upShoulder, upElbow] = p.leftFlung ? [b.rightShoulder, b.rightElbow] : [b.leftShoulder, b.leftElbow];
+    // The head lolls over onto one cheek whichever way up the body is.
+    rest(b.neck, p.neckX, 0, roll * (0.7 + 0.4 * u));
+    if (landed > 0) {
+      // On its back. One knee stands propped: the thigh up at 55 to 70 degrees and the shin straight back down to the foot. One body in three props
+      // the other knee half as high. The arm from the side lies across the chest, elbow lifted off the ground and forearm over the ribs,
+      // and two bodies in five lie with head and shoulders lifted, folded at the waist.
+      const thigh = 0.95 + 0.3 * u;
+      rest(upHip, -thigh, leg * 0.08);
+      rest(upKnee, thigh * 2);
+      if (both) {
+        rest(otherHip, -0.6, -leg * 0.15);
+        rest(otherKnee, 1.2);
+      }
+      rest(upShoulder, -0.1, arm * 0.5, -arm * 1.57);
+      rest(upElbow, -1.7);
+      if (raised) rest(b.torso, 0.3 + 0.6 * u, p.torsoZ, p.torsoY);
+    } else {
+      // On its front nothing may fold forward, which is into the ground. One shin stands kicked up from the knee, in one body in three both do. The arm
+      // from the side is a wing: elbow up over the back, hand down by the ribs. Two bodies in five lie arched, chest and head off the ground.
+      rest(upHip, 0, leg * 0.1);
+      rest(upKnee, 1.3 + 0.4 * u);
+      rest(otherHip, 0.05, -leg * 0.05);
+      rest(otherKnee, both ? 0.9 : 0.1);
+      rest(upShoulder, 0.7, arm * 0.6);
+      rest(upElbow, -1.3);
+      rest(b.torso, raised ? -0.3 : 0, p.torsoZ, p.torsoY);
     }
   }
 

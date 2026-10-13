@@ -990,15 +990,18 @@ export class RuntimeUnit {
     }
   }
 
-  /** A grounded humanoid corpse rolls onto its back, front or side rather than resting at a lean. */
+  /** A grounded humanoid corpse rolls onto its back or its front rather than resting at a lean or on edge, and tells its animator which. */
   private _layCorpseFlat(dt: number): number {
     if (isVehicleUnit(this.definition.id) || this.animator.walkStyle === "quadruped") return 0;
     const rot = this.body.root.rotation;
     const nearestFlat = (angle: number): number =>
       Math.round((angle - Math.PI / 2) / Math.PI) * Math.PI + Math.PI / 2;
     const onSide = Math.abs(Math.sin(rot.z)) > 0.8;
-    const targetX = onSide ? rot.x : nearestFlat(rot.x);
-    const targetZ = onSide ? nearestFlat(rot.z) : Math.round(rot.z / Math.PI) * Math.PI;
+    // A body down on its flank is a plank on edge: it rolls on over about its own length, onto its back or its front.
+    const targetX = nearestFlat(rot.x);
+    const targetZ = onSide ? rot.z : Math.round(rot.z / Math.PI) * Math.PI;
+    // The body's front points along -sin(rot.x) in height, so that is the face left open to the sky.
+    this.animator.setLandedFace(-Math.sin(targetX));
     const settle = Math.min(1, dt * 9);
     rot.x += (targetX - rot.x) * settle;
     rot.z += (targetZ - rot.z) * settle;
