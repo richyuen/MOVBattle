@@ -349,7 +349,7 @@ export class VisualEffects {
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
     flashMat.emissiveColor = new Color3(1.0, 0.72, 0.30);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(1.0, 0.38, 0.18);
+    flameMat.emissiveColor = new Color3(0.70, 0.20, 0.04);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -392,7 +392,7 @@ export class VisualEffects {
       const tongue = MeshBuilder.CreateSphere("burstFlash", { diameter: 1, segments: 6 }, this._scene);
       tongue.position.y = 0.5;
       tongue.bakeCurrentTransformIntoVertices();
-      tongue.material = i % 2 === 0 ? flashMat : flameMat;
+      tongue.material = flameMat;
       tongue.parent = root;
       tongue.position.y = 0.3 * fireScale;
       tongue.rotation.set(0, i * 2.4 + 0.3, tongueLeans[i]);
