@@ -61,7 +61,7 @@ export function attachProps(
     const height = head.height * 1.06 + head.neck;
     helmFit = {
       rim: rim / (hatUnit * HAT_OVERSIZE),
-      crown: rim * 0.75 / (hatUnit * HAT_OVERSIZE),
+      crown: rim * 0.86 / (hatUnit * HAT_OVERSIZE),
       height: height / (hatUnit * HAT_OVERSIZE),
       y: (head.height * 0.06 - height * 0.5) / hatUnit,
       slit: 0.5 - head.height * 0.5 / height,
