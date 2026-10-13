@@ -44,7 +44,7 @@ const REGRESSION_SCENARIOS = [
   "gallery_team_color_blue_red_validation",
 ];
 
-// 40 v 41 sandbox melee in 4 tight ranks: the closest analogue to the reference screenshots, where 20-60 a side hide the ground.
+// 30 v 31 sandbox melee in 3 tight ranks: the closest analogue to the reference screenshots.
 const BIG_MELEE = [];
 const RANK_Z = [-2.7, -2.1, -1.5, -0.9, -0.3, 0.3, 0.9, 1.5, 2.1, 2.7];
 function line(team, ids, xs) {
@@ -63,9 +63,7 @@ line(0, [
   "ancient.hoplite", "medieval.squire", "ancient.hoplite", "medieval.squire", "ancient.hoplite",
   "medieval.archer", "medieval.squire", "medieval.archer", "medieval.squire", "medieval.archer",
   "medieval.archer", "medieval.squire", "medieval.archer", "medieval.squire", "medieval.archer",
-  "medieval.squire", "ancient.hoplite", "medieval.squire", "ancient.hoplite", "medieval.squire",
-  "medieval.squire", "ancient.hoplite", "medieval.squire", "ancient.hoplite", "medieval.squire",
-], [-6, -6.9, -7.8, -8.7]);
+], [-6, -6.9, -7.8]);
 line(1, [
   "tribal.protector", "tribal.clubber", "tribal.protector", "tribal.clubber", "tribal.protector",
   "tribal.protector", "tribal.clubber", "tribal.protector", "tribal.clubber", "tribal.protector",
@@ -73,9 +71,7 @@ line(1, [
   "tribal.clubber", "farmer.halfling", "tribal.clubber", "farmer.halfling", "tribal.clubber",
   "farmer.farmer", "tribal.clubber", "farmer.farmer", "tribal.clubber", "tribal.chieftain",
   "tribal.clubber", "farmer.farmer", "tribal.clubber", "farmer.farmer", "tribal.clubber",
-  "tribal.protector", "tribal.clubber", "tribal.protector", "tribal.clubber", "tribal.protector",
-  "tribal.protector", "tribal.clubber", "tribal.protector", "tribal.clubber", "tribal.protector",
-], [6, 6.9, 7.8, 8.7]);
+], [6, 6.9, 7.8]);
 BIG_MELEE.push({ unitId: "tribal.mammoth", team: 1, position: { x: 11, z: 0 } });
 
 // Two cannons against a squire block, close enough that muzzle, shot and impact share one frame.
