@@ -1131,6 +1131,9 @@ function enterSimulation(): void {
 /** Engage range from which a unit shoots from where it stands rather than closing to melee. */
 const STANDOFF_ENGAGE_RANGE = 7;
 
+/** How far the battle focus leans from the midpoint toward the tallest giant. */
+const GIANT_LEAN = 0.4;
+
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
 function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; tall: number; near?: { x: number; z: number; halfWidth: number } } {
   const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
@@ -1163,12 +1166,19 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: 
   const focusZ = (a.z + b.z) / 2;
   let depth = 0;
   let tall = 0; // the tallest living body: a giant over the line needs the eye further back
+  let tallX = 0;
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
     depth = Math.max(depth, focusZ - unit.position.z);
-    tall = Math.max(tall, unit.body.metrics.overallHeight);
+    if (unit.body.metrics.overallHeight > tall) {
+      tall = unit.body.metrics.overallHeight;
+      tallX = unit.position.x;
+    }
   }
-  return { x: (a.x + b.x) / 2, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, tall, near };
+  // A giant (over 3 m) is as long as a rank is wide: the aim leans toward it, so its hindquarters are not off the edge of the frame
+  const midX = (a.x + b.x) / 2;
+  const focusX = tall > 3 ? midX + (tallX - midX) * GIANT_LEAN : midX;
+  return { x: focusX, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, tall, near };
 }
 
 function resetBattle(options: {
