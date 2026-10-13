@@ -132,3 +132,4 @@ iter 130 | re-audit (camera 4 -> 3); battle-horizon-high, showcase-rout, battle-
 iter 131 | giant-untouched-wipe, battle-camera-left-behind, victory-shot-blocked, muzzle-smoke-equator, blast-pastel, red-lit-faces-short, shadow-hue-orange, eyes-navy | 4/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 132 | melee-misses-giant, eyes-navy, victory-shot-blocked, red-lit-faces-short, blast-body-cream, contact-line-low, shadow-not-plum, muzzle-smoke-belly | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 133 | giant-barely-hit, blast-body-cream, muzzle-smoke-belly, red-shade-flat, head-darker-than-limbs, lit-field-dull, victory-giant-backdrop, feet-cropped-2s | 8/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 134 | stomp-flings-to-edge, giant-rout, battle-ground-dull, red-tomato, blast-foot-step, smoke-belly-ratio, victory-giant-headless, head-pulse-zeus | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
