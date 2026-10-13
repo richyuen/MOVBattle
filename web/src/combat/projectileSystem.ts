@@ -211,10 +211,11 @@ export class ProjectileSystem {
       }
       smoke.setVerticesData(VertexBuffer.ColorKind, tones);
       smoke.material = sm;
-      // Each lobe rolls off down the line of fire at its own 0.4-0.6 a second and on out from the middle of the clump, so the puff strings out and breaks up as it hangs: rising only, it was one ball to the end.
-      const drift = direction.scale(0.4 + 0.2 * (i / 7));
-      drift.x += (smoke.position.x - flash.position.x - direction.x * 0.15 * scale) * 1.2;
-      drift.z += (smoke.position.z - flash.position.z - direction.z * 0.15 * scale) * 1.2;
+      // Each lobe rolls off down the line of fire at its own 0.1-0.4 a second and a little on out from the middle of the clump, so the puff loosens as it hangs but stays one clump at the muzzle: rising only, it was one ball to the end,
+      // and at 0.4-0.6 and 1.2 times its offset outward it broke into eight equal balls strung clear of the gun.
+      const drift = direction.scale(0.1 + 0.3 * (i / 7));
+      drift.x += (smoke.position.x - flash.position.x - direction.x * 0.15 * scale) * 0.5;
+      drift.z += (smoke.position.z - flash.position.z - direction.z * 0.15 * scale) * 0.5;
       this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, drift, ownsMaterial: i === 0 });
     }
   }
