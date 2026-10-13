@@ -145,6 +145,13 @@ export class ProjectileSystem {
         case "firework":
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 10);
           break;
+        case "spear":
+        case "arrow":
+          // A brief thin white streak off the shaft (TABS), whatever the team
+          trailSystem = createTrail(this._scene, trailMesh, Color3.White(), 8);
+          trailSystem.minSize = 0.03;
+          trailSystem.maxSize = 0.07;
+          break;
         case "bomb":
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 5);
           trailSystem.minSize = 0.01;
