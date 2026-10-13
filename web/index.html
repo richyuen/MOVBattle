@@ -124,9 +124,9 @@
       justify-content: center;
     }
     .hud-start-group {
+      position: relative;
       display: flex;
       align-items: flex-start;
-      gap: 6px;
     }
     #hudInfo {
       width: 100%;
@@ -231,7 +231,11 @@
       padding: 6px 12px 10px;
       font-size: 12px;
       min-width: 70px;
-      align-self: flex-start;
+      /* Hung off the left of Start, out of the flow, so Start alone sits on the centre line */
+      position: absolute;
+      top: 0;
+      right: 100%;
+      margin-right: 6px;
       opacity: 0.92;
     }
     .btn-corner {
