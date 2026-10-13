@@ -158,8 +158,13 @@ const MITT_FROM_SLEEVE = 1.7;
 const SLEEVE_BULK = 1.05;
 /** A limb narrows in one unbroken line: the forearm and shin start at the width the sleeve and thigh end at, with no step at the joint, and run down to a wrist and ankle no thinner than this share of it. */
 const LOWER_LIMB_MIN_TAPER = 0.6;
-/** Feet are sized from the shin as if it kept this share of its width to the ankle, so the foot is a boot wider than the ankle above it. */
-const FOOT_ANKLE = 0.85;
+/** A shin does not run down to a point: it keeps at least this share of its top width to where it goes into the boot. */
+const SHIN_END = 0.78;
+/** Boot: a cuff this many shin ends across that stands this share of the shin up the leg, on a toe box this many cuff widths long that stops at this share of the cuff's height. */
+const BOOT_OVER_SHIN = 1.3;
+const BOOT_RISE = 0.34;
+const BOOT_LENGTH = 1.7;
+const BOOT_TOE_HEIGHT = 0.5;
 /** Torso wedge: the chest line sits this far up from the middle of the torso (1 is the top), a little wider than the chest, and above it the shoulders slope in to this share of the chest; the waist keeps this share of its depth. */
 const CHEST_LINE = 0.36;
 const CHEST_SWELL = 1.05;
@@ -299,18 +304,37 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Foot: a wedge under the ankle with the heel just behind the shin and the rest of it out in front, narrowing and thinning to the toe. */
+  /** Foot: a boot and not a sole. A cuff block wider and deeper than the shin stands up around its lower end, so the shin goes into the boot, and a lower toe box runs out in front of it from the heel, blunt and a little narrower at the toe. */
   function foot(n: string): Mesh {
-    const m = MeshBuilder.CreateBox(n, { width: footWidth * s, height: footHeight * s, depth: footLength * s }, scene);
-    const positions = m.getVerticesData("position")!;
-    for (let i = 0; i < positions.length; i += 3) {
-      if (positions[i + 2] <= 0) continue;
-      positions[i] *= 0.5;
-      if (positions[i + 1] > 0) positions[i + 1] *= 0.2;
+    const sole = -(lowerLegH + footBottomOffset) * s;
+    const cuffHeight = (footBottomOffset + lowerLegH * BOOT_RISE) * s;
+    const cuff = MeshBuilder.CreateBox(`${n}_cuff`, { width: footWidth * s, height: cuffHeight, depth: footDepth * s }, scene);
+    const cuffPositions = cuff.getVerticesData("position")!;
+    for (let i = 0; i < cuffPositions.length; i += 3) {
+      // The cuff draws in a little to its top edge, which still stands clear of the shin all round.
+      if (cuffPositions[i + 1] <= 0) continue;
+      cuffPositions[i] *= 0.9;
+      cuffPositions[i + 2] *= 0.9;
     }
-    m.setVerticesData("position", positions);
-    m.convertToFlatShadedMesh();
-    m.position.set(0, -(lowerLegH + footHeight * 0.32) * s, footLength * s * 0.25);
+    cuff.setVerticesData("position", cuffPositions);
+    cuff.position.set(0, sole + cuffHeight * 0.5, 0);
+    const toeHeight = cuffHeight * BOOT_TOE_HEIGHT;
+    const toe = MeshBuilder.CreateBox(`${n}_toe`, { width: footWidth * s, height: toeHeight, depth: footLength * s }, scene);
+    const toePositions = toe.getVerticesData("position")!;
+    for (let i = 0; i < toePositions.length; i += 3) {
+      if (toePositions[i + 2] <= 0) continue;
+      toePositions[i] *= 0.8;
+      if (toePositions[i + 1] > 0) toePositions[i + 1] *= 0.4;
+    }
+    toe.setVerticesData("position", toePositions);
+    // The heel sits flush with the back of the cuff; everything else of the toe box is out in front of the shin.
+    toe.position.set(0, sole + toeHeight * 0.5, (footLength - footDepth) * s * 0.5);
+    for (const part of [cuff, toe]) {
+      part.convertToFlatShadedMesh();
+      part.computeWorldMatrix(true);
+    }
+    const m = Mesh.MergeMeshes([cuff, toe], true)!;
+    m.name = n;
     m.material = bodyMat;
     allMeshes.push(m);
     return m;
@@ -351,12 +375,12 @@ export function buildArticulatedBody(
   const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom;
-  const lowerLegBottom = lowerLegTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
-  // Feet are low flat-sided stubs wider than the tapered ankle they sit under, about one and a half times as long as wide,
-  // so a leg ends in a foot pointing forward and not in a point, and the shin never stands on a plinth.
-  const footAnkle = lowerLegTop * FOOT_ANKLE * (p.lowerLegWidth ?? 1.0);
-  const footLength = footAnkle * 1.7 * (p.footLength ?? 1.0);
-  const footWidth = footAnkle * 1.1 * (p.footWidth ?? 1.0);
+  // The shin ends at the width of the boot top it goes into, and not at a needle ankle: a unit's own shin width only thins it down to SHIN_END.
+  const lowerLegBottom = lowerLegTop * Math.max(SHIN_END, Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0));
+  // The boot is cut from the shin end it wraps: wider and deeper than it, and longer than it is wide with the length out in front as the toe.
+  const footWidth = lowerLegBottom * BOOT_OVER_SHIN * (p.footWidth ?? 1.0);
+  const footDepth = lowerLegBottom * BOOT_OVER_SHIN;
+  const footLength = footDepth * BOOT_LENGTH * (p.footLength ?? 1.0);
   const footHeight = 0.07 * (p.footHeight ?? 1.0);
   const footBottomOffset = footHeight * 0.82;
 
