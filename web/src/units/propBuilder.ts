@@ -1090,7 +1090,7 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       cone.position.set(-0.03 * s, 0.14 * s, 0);
       cone.rotation.z = 0.08;
       cone.material = mat(scene, new Color3(0.15, 0.13, 0.2));
-      const band = MeshBuilder.CreateTorus("witchBand", { diameter: 0.16 * s, thickness: 0.012 * s, tessellation: 18 }, scene);
+      const band = MeshBuilder.CreateTorus("witchBand", { diameter: 0.13 * s, thickness: 0.012 * s, tessellation: 18 }, scene);
       band.parent = cone;
       band.position.y = -0.04 * s;
       band.material = mat(scene, accent, 0.08);
