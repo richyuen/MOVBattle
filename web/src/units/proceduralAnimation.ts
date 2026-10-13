@@ -161,7 +161,7 @@ export class ProceduralAnimator {
       boardYaw: (h(110) - 0.5) * 0.44,
       boardTilt: (h(111) - 0.5) * 0.32,
       boardRoll: (h(112) - 0.5) * 0.4,
-      spearDip: 0.02 + (h(113) - 0.5) * 0.36,
+      spearDip: 0.02 + (h(113) - 0.5) * 0.9,
       spearRaise: -2.2 + (h(114) - 0.5) * 0.5,
       spearElbow: -1.2 + (h(115) - 0.5) * 0.4,
       shiftRate: 1.2 + h(116) * 1.4,
