@@ -71,9 +71,9 @@ const CLOTHED_PRESET_WEIGHT = 0.75;
 const ARMOUR_PRESET_WEIGHT = 0.2;
 // Plate is a clearly darker value than the skin of the head and hands beside it, on top of the cloth shade.
 const ARMOUR_SHADE = 0.65;
-// Cool plate is hardly darkened and turned a little toward royal blue: the sky-blue team colour at the warm shade is a dark teal, and turned 30 it was navy beside the teal cloth of its own rank.
+// Cool plate is hardly darkened and turned toward royal blue: the sky-blue team colour at the warm shade is a dark teal.
 const COOL_ARMOUR_SHADE = 0.9;
-const COOL_ARMOUR_HUE_SHIFT = 12;
+const COOL_ARMOUR_HUE_SHIFT = 30;
 // Cool plate and surcoats are never paler than this: the sky-blue team colour only darkened is slate, and TABS knights are a deep blue.
 const COOL_ARMOUR_SATURATION = 0.85;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
