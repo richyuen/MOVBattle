@@ -134,6 +134,40 @@ export class ProceduralAnimator {
       stride: 0.6 + h(10) * 0.25, // at 0.45-0.65 a charging rank took short steps under its lean
     };
   }
+  // Per-man brace behind a board, so a wall in contact is men and not one man stamped out. Each stands in one of three ways, his own: crouched low under the rim on
+  // folded legs, stood tall with the board held high, or shoulder driven into it. Within that he has his own board arm, the board's own turn and tilt in his grip, his own
+  // height and elevation of spear, the way his head is turned, and his own beat of shifting his weight from foot to foot. Hashed from the wobble phase like the shove pose.
+  private _bracePose: ReturnType<ProceduralAnimator["_buildBracePose"]> | null = null;
+  private _braceSink = 0;
+  private _hipRest: number | null = null;
+  private _buildBracePose() {
+    const h = (n: number): number => {
+      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const pick = h(101);
+    const stand = pick < 0.35
+      ? { pitch: 0.2 + h(102) * 0.14, crouch: 0.7 + h(103) * 0.35, raise: -0.45 - h(104) * 0.15 }
+      : pick < 0.7
+        ? { pitch: -0.08 + h(102) * 0.12, crouch: 0.05 + h(103) * 0.15, raise: -0.85 - h(104) * 0.2 }
+        : { pitch: 0.08 + h(102) * 0.12, crouch: 0.25 + h(103) * 0.25, raise: -0.62 - h(104) * 0.16 };
+    return {
+      ...stand,
+      out: 0.15 + h(105) * 0.3,
+      elbow: -0.9 - h(106) * 0.45,
+      kneeBias: (h(107) - 0.5) * 0.16,
+      cant: (h(108) - 0.5) * 0.24,
+      look: (h(109) - 0.5) * 0.7,
+      boardYaw: (h(110) - 0.5) * 0.44,
+      boardTilt: (h(111) - 0.5) * 0.32,
+      boardRoll: (h(112) - 0.5) * 0.4,
+      spearDip: 0.02 + (h(113) - 0.5) * 0.36,
+      spearRaise: -2.2 + (h(114) - 0.5) * 0.5,
+      spearElbow: -1.2 + (h(115) - 0.5) * 0.4,
+      shiftRate: 1.2 + h(116) * 1.4,
+      shiftPhase: h(117) * Math.PI * 2,
+    };
+  }
   private _flinchTimer = 0;
   private _squashTimer = 0;
   private _limpTarget = 0;
@@ -341,6 +375,7 @@ export class ProceduralAnimator {
     // between swings the arms windmill out from the shoulders instead of hanging at the sides.
     this._shoveTimer -= dt;
     this._shove += ((this._shoveTimer > 0 ? 1 : 0) - this._shove) * Math.min(1, dt * 6);
+    this._braceSink = 0;
     if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
       const b = this._body;
       const p = (this._shovePose ??= this._buildShovePose());
@@ -348,12 +383,12 @@ export class ProceduralAnimator {
       const phase = (this._time + this._wobblePhase) * p.rate;
       // The walk already leans 0.55 rad; a presser still stepping in takes half the extra pitch.
       // A man behind a shield does not fold over it: he stands near upright and sinks at the knees instead.
-      const wall = this._shieldBoard() !== null;
-      b.torso.rotation.x += ((wall ? 0.1 : p.pitch) * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
+      const br = this._shieldBoard() ? (this._bracePose ??= this._buildBracePose()) : null;
+      b.torso.rotation.x += ((br ? br.pitch : p.pitch) * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
       // A swing pitches the torso itself; with the shove on top the lean stops at 0.6 rad, short of a fold at the waist.
       b.torso.rotation.x = Math.min(b.torso.rotation.x, 0.6);
-      b.torso.rotation.z += ((wall ? p.roll * 0.3 : p.roll) + Math.cos(phase * 0.35) * 0.08) * k;
-      b.neck.rotation.x -= (wall ? 0.1 : p.pitch) * 0.6 * k;
+      b.torso.rotation.z += ((br ? p.roll * 0.3 + br.cant : p.roll) + Math.cos(phase * 0.35) * 0.08) * k;
+      b.neck.rotation.x -= (br ? br.pitch : p.pitch) * 0.6 * k;
       // Thighs come forward under the pitched torso and the knees give a little, so the body breaks at the waist and stays tall on its legs.
       b.leftHip.rotation.x += (p.stance - 0.15) * k;
       b.rightHip.rotation.x -= (p.stance + 0.15) * k;
@@ -371,29 +406,39 @@ export class ProceduralAnimator {
         b.leftElbow.rotation.x -= (p.elbow + 0.1) * k;
         b.rightElbow.rotation.x -= (p.elbow - 0.1) * k;
       }
-      if (wall) {
+      if (br) {
         // Brace: whatever the walk, the swing or the flail made of the shield arm, it locks out in front of the chest, upper arm forward and forearm
-        // level across the body, and holds there while the weapon arm goes on working. The knees give a little more, so the head sits low behind the rim.
+        // across the body, at the man's own height and reach, and holds there while the weapon arm goes on working.
         const hold = k * (1 - Math.min(1, this._limp));
-        b.leftShoulder.rotation.x += (-0.7 + Math.sin(phase * 0.5) * 0.06 - b.leftShoulder.rotation.x) * hold;
+        b.leftShoulder.rotation.x += (br.raise + Math.sin(phase * 0.5) * 0.06 - b.leftShoulder.rotation.x) * hold;
         b.leftShoulder.rotation.y += (0 - b.leftShoulder.rotation.y) * hold;
-        b.leftShoulder.rotation.z += (0.3 - b.leftShoulder.rotation.z) * hold;
-        b.leftElbow.rotation.x += (-1.1 - b.leftElbow.rotation.x) * hold;
+        b.leftShoulder.rotation.z += (br.out - b.leftShoulder.rotation.z) * hold;
+        b.leftElbow.rotation.x += (br.elbow - b.leftElbow.rotation.x) * hold;
         b.leftElbow.rotation.z += (0 - b.leftElbow.rotation.z) * hold;
-        b.leftKnee.rotation.x += 0.15 * hold;
-        b.rightKnee.rotation.x += 0.15 * hold;
+        // Legs: the thighs come forward by half of what the knees fold, so the feet stay under him, and the hips come down by what that takes off the legs' height.
+        // He shifts his weight from foot to foot on his own beat: the unloaded knee gives and the trunk rocks over the other.
+        const shift = Math.sin(this._time * br.shiftRate + br.shiftPhase);
+        b.leftHip.rotation.x -= (br.crouch * 0.5 + shift * 0.06) * hold;
+        b.rightHip.rotation.x -= (br.crouch * 0.5 - shift * 0.06) * hold;
+        b.leftKnee.rotation.x += (br.crouch + br.kneeBias + Math.max(0, shift) * 0.2) * hold;
+        b.rightKnee.rotation.x += (br.crouch - br.kneeBias + Math.max(0, -shift) * 0.2) * hold;
+        b.torso.rotation.z += shift * 0.05 * hold;
+        b.neck.rotation.y += br.look * hold;
+        this._hipRest ??= b.hip.position.y;
+        this._braceSink = this._hipRest * (1 - Math.cos(br.crouch * 0.5)) * hold;
         if (this._spearShaft()) {
           // Spear arm: no windmill and no underarm poke. The hand goes up beside the head, elbow cocked, and holds the shaft there over the rim of the
           // board (a rear man's over the shoulder of the man ahead); a thrust straightens the arm forward and down from that hold and comes back to it.
           const jab = this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0;
-          b.rightShoulder.rotation.x += (-2.2 + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
+          b.rightShoulder.rotation.x += (br.spearRaise + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
           b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * hold;
           b.rightShoulder.rotation.z += (0.2 - b.rightShoulder.rotation.z) * hold;
-          b.rightElbow.rotation.x += (-1.2 + 0.9 * jab - b.rightElbow.rotation.x) * hold;
+          b.rightElbow.rotation.x += (br.spearElbow + 0.9 * jab - b.rightElbow.rotation.x) * hold;
           b.rightElbow.rotation.z += (0 - b.rightElbow.rotation.z) * hold;
         }
       }
     }
+    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink;
     // Spear carry: a shield man on the march does not pump his spear arm. It hangs at his side with the elbow a little bent, the shaft stood up in the fist.
     if (this._state === AnimState.Walking && this._spearShaft()) {
       const b = this._body;
@@ -553,7 +598,9 @@ export class ProceduralAnimator {
     }
     const hand = this._body.leftHand;
     hand.computeWorldMatrix(true);
-    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0));
+    // Square to the wall's heading, give or take the man's own turn, tilt and twist of it in his grip
+    const br = (this._bracePose ??= this._buildBracePose());
+    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + br.boardYaw, br.boardTilt, br.boardRoll));
     shield.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), square, Math.min(1, k * 1.5));
   }
 
@@ -619,7 +666,8 @@ export class ProceduralAnimator {
     const hand = this._body.rightHand;
     hand.computeWorldMatrix(true);
     const level = Math.min(1, this._shove * 1.5);
-    const carry = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0.06 + (Math.PI / 2 + 0.04) * level, 0);
+    // Each man's point sits a little above or below level (never to one side: the spears stay parallel over the boards)
+    const carry = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0.06 + (Math.PI / 2 + (this._bracePose ??= this._buildBracePose()).spearDip) * level, 0);
     const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
     shaft.rotationQuaternion = turn;
     // The shaft's middle sits as far up the shaft from the fist as it was strapped on.
