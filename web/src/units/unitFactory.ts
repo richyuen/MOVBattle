@@ -54,8 +54,8 @@ const BODY_METAL_WEIGHT = 0.25;
 // Cloth and armour are a different hue from the team-coloured skin they are worn over, not just a darker one:
 // rotated away from the skin hue and a little darker, but nearly as saturated so it still reads as the team's.
 const CLOTH_HUE_SHIFT = 18;
-// Cool cloth turns less far: at 18 a tunic was teal beside the navy tabards and periwinkle skin in the same rank, three hues on one team.
-const COOL_CLOTH_HUE_SHIFT = 8;
+// Cool cloth turns less far: at 18 a tunic was teal beside the navy tabards and periwinkle skin in the same rank, three hues on one team, and at 8 it was still a teal beside the plate.
+const COOL_CLOTH_HUE_SHIFT = 4;
 const CLOTH_SATURATION = 0.92;
 const CLOTH_SHADE = 1.0;
 // Cool cloth is at least this saturated: at the pale team blue’s own it was the grey-blue of the skin beside it, and every tunic in a lineup was one tone.
