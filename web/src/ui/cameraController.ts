@@ -290,7 +290,8 @@ export class CameraController {
     const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) + farSide : from.alpha;
     const to: CameraViewState = {
       alpha: from.alpha + Math.atan2(Math.sin(awayFromGiant - from.alpha), Math.cos(awayFromGiant - from.alpha)), // swing the short way round
-      beta: Math.PI / 1.9,
+      // Beside a giant the eye stands a little above the men and looks down on them, so the ranks behind the nearest man show over him: from below, his torso covered them.
+      beta: giant ? Math.PI / 2.25 : Math.PI / 1.9,
       radius,
       target: {
         x: spread || giant ? box.focus.x : (box.minX + box.maxX) / 2,
