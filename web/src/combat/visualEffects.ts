@@ -357,7 +357,7 @@ export class VisualEffects {
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
     // Plain matte tan, lit by the sun alone: the dust is dirt off the field, not part of the fire
-    const dustMat = mats.createUnique("stone", new Color3(0.92, 0.8, 0.55));
+    const dustMat = mats.createUnique("stone", new Color3(0.75, 0.68, 0.5));
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
     const floorY = -root.position.y + 0.08;
