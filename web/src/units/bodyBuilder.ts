@@ -168,6 +168,12 @@ const LOWER_LIMB_MIN_TAPER = 0.6;
 /** Elbows and knees: each segment overruns the hinge by this share of its width there, as a stub drawn in to JOINT_STUB_END of it. */
 const JOINT_STUB = 0.45;
 const JOINT_STUB_END = 0.6;
+/** Shoulders: the sleeve swells over its top SLEEVE_HEAD_DROP of the upper arm to a head SLEEVE_HEAD of the sleeve wide at the joint (SLEEVE_HEAD_PLATE under a breastplate's pad), closed above by a chamfer SLEEVE_HEAD_RISE of that width tall and drawn in to SLEEVE_HEAD_CROWN of it. */
+const SLEEVE_HEAD = 1.35;
+const SLEEVE_HEAD_PLATE = 1.1;
+const SLEEVE_HEAD_DROP = 0.4;
+const SLEEVE_HEAD_RISE = 0.35;
+const SLEEVE_HEAD_CROWN = 0.6;
 /** A shin does not run down to a point: it keeps at least this share of its top width to where it goes into the boot. */
 const SHIN_END = 0.78;
 /** Boot: a cuff this many shin ends across that stands this share of the shin up the leg, on a toe box this many cuff widths long that stops at this share of the cuff's height. */
@@ -233,6 +239,8 @@ export function buildArticulatedBody(
     scaling: Vector3 = Vector3.One(),
     tessellation = radialSegments,
     jointEnd?: "top" | "bottom",
+    stubMat?: PBRMetallicRoughnessMaterial,
+    headDiameter?: number,
   ): Mesh {
     const shaft = MeshBuilder.CreateCylinder(n, {
       height: height * s,
@@ -254,9 +262,40 @@ export function buildArticulatedBody(
         tessellation,
       }, scene);
       stub.position.y = up * (height * s + stubH) * 0.5;
-      stub.computeWorldMatrix(true);
-      shaft.computeWorldMatrix(true);
-      m = Mesh.MergeMeshes([shaft, stub], true)!;
+      if (stubMat) {
+        // A stub that runs up into the segment above wears that segment's colour and is a part of its own: a forearm's stays sleeve where it shows behind the bent elbow
+        stub.parent = shaft;
+        stub.material = stubMat;
+        allMeshes.push(stub);
+      } else {
+        stub.computeWorldMatrix(true);
+        shaft.computeWorldMatrix(true);
+        m = Mesh.MergeMeshes([shaft, stub], true)!;
+        m.name = n;
+      }
+    }
+    if (headDiameter) {
+      // Sleeve head: the top of the upper arm is one faceted mass with the shoulder and not a stick under a ball. The sleeve swells up to the joint, wider than
+      // the arm below it, and a low chamfered crown closes it over the joint and sinks into the torso's corner; it turns with the arm and takes its colour.
+      const top = height * s * 0.5;
+      const flareH = height * s * SLEEVE_HEAD_DROP;
+      const crownH = headDiameter * s * SLEEVE_HEAD_RISE;
+      const flare = MeshBuilder.CreateCylinder(`${n}_headFlare`, {
+        height: flareH,
+        diameterTop: headDiameter * s,
+        diameterBottom: (diameterTop + (diameterBottom - diameterTop) * SLEEVE_HEAD_DROP) * s,
+        tessellation,
+      }, scene);
+      flare.position.y = top - flareH * 0.5;
+      const crown = MeshBuilder.CreateCylinder(`${n}_headCrown`, {
+        height: crownH,
+        diameterTop: headDiameter * s * SLEEVE_HEAD_CROWN,
+        diameterBottom: headDiameter * s,
+        tessellation,
+      }, scene);
+      crown.position.y = top + crownH * 0.5;
+      for (const part of [m, flare, crown]) part.computeWorldMatrix(true);
+      m = Mesh.MergeMeshes([m, flare, crown], true)!;
       m.name = n;
     }
     m.scaling.copyFrom(scaling);
@@ -533,6 +572,7 @@ export function buildArticulatedBody(
 
   // ─── Arms ───
   const armDepthScale = 0.88;
+  const sleeveHead = upperArmTop * (options.showShoulderPads ? SLEEVE_HEAD_PLATE : SLEEVE_HEAD);
   const shoulderOffX = (Math.max(torsoTop, torsoBottom) * 0.48 + upperArmTop * 0.4) * s;
   const shoulderOffY = (torsoH - 0.08) * s;
 
@@ -548,6 +588,8 @@ export function buildArticulatedBody(
     new Vector3(1, 1, armDepthScale),
     radialSegments,
     "bottom",
+    undefined,
+    sleeveHead,
   );
   leftUpperArm.position.y = -upperArmH * s * 0.5;
   leftUpperArm.parent = leftShoulder;
@@ -562,6 +604,7 @@ export function buildArticulatedBody(
     new Vector3(1, 1, armDepthScale * 0.92),
     radialSegments,
     "top",
+    bodyMat,
   );
   leftLowerArm.position.y = -lowerArmH * s * 0.5;
   leftLowerArm.parent = leftElbow;
@@ -583,6 +626,8 @@ export function buildArticulatedBody(
     new Vector3(1, 1, armDepthScale),
     radialSegments,
     "bottom",
+    undefined,
+    sleeveHead,
   );
   rightUpperArm.position.y = -upperArmH * s * 0.5;
   rightUpperArm.parent = rightShoulder;
@@ -597,6 +642,7 @@ export function buildArticulatedBody(
     new Vector3(1, 1, armDepthScale * 0.92),
     radialSegments,
     "top",
+    bodyMat,
   );
   rightLowerArm.position.y = -lowerArmH * s * 0.5;
   rightLowerArm.parent = rightElbow;
@@ -605,16 +651,6 @@ export function buildArticulatedBody(
   const rightHandMesh = mitt(`${name}_rHandM`, handWidth, skinMat);
   rightHandMesh.position.set(0, -handLength * s * 0.42, 0);
   rightHandMesh.parent = rightHand;
-
-  // ─── Shoulder Caps (hide joint seams) ───
-  // Wider than the sleeve top, so the cap shows as a rounded shoulder on the torso corner and not only a seam filler
-  // On a breastplate the cap is small and flattened into its corner: a full ball there reads as a separate bead
-  const shoulderCapDiam = upperArmTop * (options.showShoulderPads ? 1.1 : 1.3);
-  const capScale = options.showShoulderPads ? new Vector3(1, 0.7, 1) : Vector3.One();
-  const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, capScale, capSegments);
-  lShoulderCap.parent = leftShoulder;
-  const rShoulderCap = sphere(`${name}_rShoulderCap`, shoulderCapDiam, bodyMat, capScale, capSegments);
-  rShoulderCap.parent = rightShoulder;
 
   // ─── Shoulder Pads (armored presets) ───
   if (options.showShoulderPads) {

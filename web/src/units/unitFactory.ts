@@ -325,6 +325,11 @@ export class UnitFactory {
       unit.animator.attackStyle = "mammoth";
       unit.animator.walkStyle = "quadruped";
     }
+    // The elbow stub that runs up into the sleeve wears whatever the upper arm ended up in (sleeve, bare skin or mail), never the forearm's own skin
+    for (const mesh of body.allMeshes) {
+      const side = /_([lr])LowerArm_stub$/.exec(mesh.name)?.[1];
+      if (side) mesh.material = (side === "l" ? body.leftUpperArm : body.rightUpperArm).material;
+    }
     for (const mesh of [...body.allMeshes, ...propMeshes]) {
       mesh.metadata = { runtimeUnit: unit };
     }
