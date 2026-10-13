@@ -223,8 +223,13 @@ function addOperator(
 
 // ═══════════════════════ CATAPULT ═══════════════════════
 // Fires FORWARD (+Z). Arm swings over the top toward +Z.
+// A siege machine stands over the men beside it: built at man height, then the whole rig is scaled under the root
+const CATAPULT_SCALE = 1.4;
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
+  const rig = new TransformNode("catapult_rig", scene);
+  rig.parent = root;
+  rig.scaling.setAll(CATAPULT_SCALE);
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
@@ -233,7 +238,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 
   // Base platform (longer along Z = firing axis)
   const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.2, depth: 1.6 }, scene);
-  base.position.y = 0.4; base.parent = root; base.material = teamPrimary; allMeshes.push(base);
+  base.position.y = 0.4; base.parent = rig; base.material = teamPrimary; allMeshes.push(base);
 
   // Wheels (on the sides, X axis)
   for (const xOff of [-0.45, 0.45]) {
@@ -241,7 +246,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
       const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.5, tessellation: 12 }, scene);
       wheel.position.set(xOff, 0.25, zOff);
       wheel.rotation.z = Math.PI / 2;
-      wheel.parent = root; wheel.material = wood; allMeshes.push(wheel);
+      wheel.parent = rig; wheel.material = wood; allMeshes.push(wheel);
     }
   }
 
@@ -249,27 +254,27 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   for (const xOff of [-0.35, 0.35]) {
     const post = MeshBuilder.CreateBox("post", { width: 0.1, height: 1.0, depth: 0.1 }, scene);
     post.position.set(xOff, 1.0, 0);
-    post.parent = root; post.material = wood; allMeshes.push(post);
+    post.parent = rig; post.material = wood; allMeshes.push(post);
   }
   const crossbar = MeshBuilder.CreateBox("crossbar", { width: 0.8, height: 0.1, depth: 0.1 }, scene);
   crossbar.position.set(0, 1.5, 0);
-  crossbar.parent = root; crossbar.material = wood; allMeshes.push(crossbar);
+  crossbar.parent = rig; crossbar.material = wood; allMeshes.push(crossbar);
 
   // Throwing arm (pivots at crossbar, extends along Z)
   const arm = MeshBuilder.CreateBox("arm", { width: 0.08, height: 0.08, depth: 1.8 }, scene);
   arm.position.set(0, 1.55, 0.2);
   arm.rotation.x = 0.4; // tilted: bucket end up toward +Z
-  arm.parent = root; arm.material = wood; allMeshes.push(arm);
+  arm.parent = rig; arm.material = wood; allMeshes.push(arm);
 
   // Bucket at front end of arm (+Z)
   const bucket = MeshBuilder.CreateBox("bucket", { width: 0.25, height: 0.12, depth: 0.2 }, scene);
   bucket.position.set(0, 2.0, 0.7);
-  bucket.parent = root; bucket.material = metal; allMeshes.push(bucket);
+  bucket.parent = rig; bucket.material = metal; allMeshes.push(bucket);
 
   if (options.spooky) {
     const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.22, segments: 8 }, scene);
     pumpkin.position.set(0, 2.08, 0.7);
-    pumpkin.parent = root;
+    pumpkin.parent = rig;
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
   }
@@ -277,14 +282,14 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   // Counterweight at back end (-Z)
   const cw = MeshBuilder.CreateBox("cw", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
   cw.position.set(0, 1.0, -0.5);
-  cw.parent = root; cw.material = metal; allMeshes.push(cw);
+  cw.parent = rig; cw.material = metal; allMeshes.push(cw);
 
   // Operator sitting beside, behind the frame
-  const operator = addOperator(scene, root, allMeshes, 0.4, 0.72, -0.5, color);
+  const operator = addOperator(scene, rig, allMeshes, 0.4, 0.72, -0.5, color);
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, root, "catapult_bucket_socket", new Vector3(0, 2.08, 0.82)),
-    impactOrigin: makeSocket(scene, root, "catapult_impact_socket", new Vector3(0, 2.0, 0.7)),
+    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.08, 0.82)),
+    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 2.0, 0.7)),
   };
 
   return wrapAsBody(
@@ -293,7 +298,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     base,
     allMeshes,
     operator.headMesh,
-    makeBodyMetrics(operator.headTopY, 0.8, 0.45, 0.8),
+    makeBodyMetrics(operator.headTopY * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE, 0.45 * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE),
     vehicleSockets,
   );
 }
