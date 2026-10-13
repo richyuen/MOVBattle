@@ -628,6 +628,8 @@ export class SimulationSystem {
       this._clearPathState(unit);
       unit.faceTarget(desired);
       unit.holdHeading(slot.heading);
+      // Halted behind a wall that has met the enemy he is in the press too: board up and spear down, though his own reach is short of them.
+      if (Vector3.Distance(unit.position, desired) <= engageDistance + this.shieldRankGap + 1) unit.leanIntoShove();
       return;
     }
     unit.setCohesionMoveMultiplier(Math.min(this._resolveCohesionMoveMultiplier(unit, desired), 0.5 + 0.5 * behind / this.shieldRankFollowBand));

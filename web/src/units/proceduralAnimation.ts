@@ -1,4 +1,4 @@
-import { Quaternion, type TransformNode } from "@babylonjs/core";
+import { Quaternion, Vector3, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 
 export enum AnimState {
@@ -382,7 +382,25 @@ export class ProceduralAnimator {
         b.leftElbow.rotation.z += (0 - b.leftElbow.rotation.z) * hold;
         b.leftKnee.rotation.x += 0.15 * hold;
         b.rightKnee.rotation.x += 0.15 * hold;
+        if (this._spearShaft()) {
+          // Spear arm: no windmill and no underarm poke. The hand goes up beside the head, elbow cocked, and holds the shaft there over the rim of the
+          // board (a rear man's over the shoulder of the man ahead); a thrust straightens the arm forward and down from that hold and comes back to it.
+          const jab = this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0;
+          b.rightShoulder.rotation.x += (-2.2 + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
+          b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * hold;
+          b.rightShoulder.rotation.z += (0.2 - b.rightShoulder.rotation.z) * hold;
+          b.rightElbow.rotation.x += (-1.2 + 0.9 * jab - b.rightElbow.rotation.x) * hold;
+          b.rightElbow.rotation.z += (0 - b.rightElbow.rotation.z) * hold;
+        }
       }
+    }
+    // Spear carry: a shield man on the march does not pump his spear arm. It hangs at his side with the elbow a little bent, the shaft stood up in the fist.
+    if (this._state === AnimState.Walking && this._spearShaft()) {
+      const b = this._body;
+      const carry = (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
+      b.rightShoulder.rotation.x += (Math.sin((this._time + this._wobblePhase) * 4) * 0.06 - b.rightShoulder.rotation.x) * carry;
+      b.rightShoulder.rotation.z += (0.25 - b.rightShoulder.rotation.z) * carry;
+      b.rightElbow.rotation.x += (-0.5 - b.rightElbow.rotation.x) * carry;
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
     this._limp += (this._limpTarget - this._limp) * Math.min(1, dt * 9);
@@ -446,6 +464,7 @@ export class ProceduralAnimator {
     }
 
     this._squareShield();
+    this._carrySpear();
 
     // ─── Googly-eye pupil wobble ───
     this._updatePupilWobble(dt);
@@ -477,6 +496,46 @@ export class ProceduralAnimator {
     hand.computeWorldMatrix(true);
     const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0));
     shield.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), square, Math.min(1, k * 1.5));
+  }
+
+  // The spear in a shield man's weapon hand, with the turn and the offset it was strapped on with. Looked up on first use, like the board.
+  private _spear: { shaft: TransformNode; rest: Quaternion; grip: Vector3 } | null | undefined = undefined;
+  private _spearShaft(): { shaft: TransformNode; rest: Quaternion; grip: Vector3 } | null {
+    if (this._spear === undefined) {
+      const shaft = this._shieldBoard() ? this._body.rightHand.getChildren().find((n): n is TransformNode => /shaft$/.test(n.name)) : undefined;
+      this._spear = shaft ? { shaft, rest: Quaternion.FromEulerAngles(shaft.rotation.x, shaft.rotation.y, shaft.rotation.z), grip: shaft.position.clone() } : null;
+    }
+    return this._spear;
+  }
+
+  /**
+   * A shield man's spear does not ride his hand any more than his board does: it turns in the fist to one of two carries, whatever the arm is doing.
+   * On the march it stands upright, point to the sky; in contact it comes down level along the wall's heading, point a little low, so the spears of
+   * a wall and of the rank behind it lie parallel over the boards and do not fan or cross. The fist keeps its place on the shaft. Limp or dead, the
+   * spear goes back to hanging from the hand.
+   */
+  private _carrySpear(): void {
+    const spear = this._spearShaft();
+    if (!spear) return;
+    const { shaft, rest, grip } = spear;
+    const k = this._state === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
+    if (k <= 0.01) {
+      if (shaft.rotationQuaternion) {
+        shaft.rotationQuaternion = null;
+        shaft.position.copyFrom(grip);
+      }
+      return;
+    }
+    const hand = this._body.rightHand;
+    hand.computeWorldMatrix(true);
+    const level = Math.min(1, this._shove * 1.5);
+    const carry = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0.06 + (Math.PI / 2 + 0.04) * level, 0);
+    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
+    shaft.rotationQuaternion = turn;
+    // The shaft's middle sits as far up the shaft from the fist as it was strapped on.
+    const held = new Vector3(0, grip.length(), 0);
+    held.rotateByQuaternionToRef(turn, held);
+    Vector3.LerpToRef(grip, held, k, shaft.position);
   }
 
   private _resetPose(): void {
