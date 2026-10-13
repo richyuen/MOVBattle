@@ -187,8 +187,8 @@ const THIGH_HEAD = 1.15;
 /** The pelvis is never narrower than the pair of thighs under it, lapped into each other by what this leaves of one. */
 const THIGH_LAP = 0.9;
 /** A forearm and a shin are not straight tubes: each swells below its elbow or knee to a belly this many of its top widths across, this share of its length down, and narrows from there to the wrist or ankle. */
-const FOREARM_SWELL = 1.18;
-const CALF_SWELL = 1.22;
+const FOREARM_SWELL = 1.35;
+const CALF_SWELL = 1.4;
 const LIMB_BELLY_DROP = 0.3;
 /** A shin does not run down to a point: it keeps at least this share of its top width to where it goes into the boot. */
 const SHIN_END = 0.78;
