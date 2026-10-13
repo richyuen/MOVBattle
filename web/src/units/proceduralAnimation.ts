@@ -1,3 +1,4 @@
+import { Quaternion, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 
 export enum AnimState {
@@ -346,11 +347,13 @@ export class ProceduralAnimator {
       const k = this._shove;
       const phase = (this._time + this._wobblePhase) * p.rate;
       // The walk already leans 0.55 rad; a presser still stepping in takes half the extra pitch.
-      b.torso.rotation.x += (p.pitch * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
+      // A man behind a shield does not fold over it: he stands near upright and sinks at the knees instead.
+      const wall = this._shieldBoard() !== null;
+      b.torso.rotation.x += ((wall ? 0.1 : p.pitch) * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
       // A swing pitches the torso itself; with the shove on top the lean stops at 0.6 rad, short of a fold at the waist.
       b.torso.rotation.x = Math.min(b.torso.rotation.x, 0.6);
-      b.torso.rotation.z += (p.roll + Math.cos(phase * 0.35) * 0.08) * k;
-      b.neck.rotation.x -= p.pitch * 0.6 * k;
+      b.torso.rotation.z += ((wall ? p.roll * 0.3 : p.roll) + Math.cos(phase * 0.35) * 0.08) * k;
+      b.neck.rotation.x -= (wall ? 0.1 : p.pitch) * 0.6 * k;
       // Thighs come forward under the pitched torso and the knees give a little, so the body breaks at the waist and stays tall on its legs.
       b.leftHip.rotation.x += (p.stance - 0.15) * k;
       b.rightHip.rotation.x -= (p.stance + 0.15) * k;
@@ -367,6 +370,18 @@ export class ProceduralAnimator {
         // Stepping in or swinging: the elbows stay bent, so no arm is a straight rod.
         b.leftElbow.rotation.x -= (p.elbow + 0.1) * k;
         b.rightElbow.rotation.x -= (p.elbow - 0.1) * k;
+      }
+      if (wall) {
+        // Brace: whatever the walk, the swing or the flail made of the shield arm, it locks out in front of the chest, upper arm forward and forearm
+        // level across the body, and holds there while the weapon arm goes on working. The knees give a little more, so the head sits low behind the rim.
+        const hold = k * (1 - Math.min(1, this._limp));
+        b.leftShoulder.rotation.x += (-0.7 + Math.sin(phase * 0.5) * 0.06 - b.leftShoulder.rotation.x) * hold;
+        b.leftShoulder.rotation.y += (0 - b.leftShoulder.rotation.y) * hold;
+        b.leftShoulder.rotation.z += (0.3 - b.leftShoulder.rotation.z) * hold;
+        b.leftElbow.rotation.x += (-1.1 - b.leftElbow.rotation.x) * hold;
+        b.leftElbow.rotation.z += (0 - b.leftElbow.rotation.z) * hold;
+        b.leftKnee.rotation.x += 0.15 * hold;
+        b.rightKnee.rotation.x += 0.15 * hold;
       }
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
@@ -430,8 +445,38 @@ export class ProceduralAnimator {
       this._body.torso.scaling.setAll(1);
     }
 
+    this._squareShield();
+
     // ─── Googly-eye pupil wobble ───
     this._updatePupilWobble(dt);
+  }
+
+  // The board strapped to the shield hand, if this body carries one big enough to stand behind (a buckler is not). Looked up on first use: props go on after the animator is made.
+  private _shield: TransformNode | null | undefined = undefined;
+  private _shieldBoard(): TransformNode | null {
+    if (this._shield === undefined) {
+      this._shield = this._body.leftHand.getChildren().find((n): n is TransformNode => /shield$/.test(n.name)) ?? null;
+    }
+    return this._shield;
+  }
+
+  /**
+   * In contact the shield stops riding the hand: it turns in the grip until it stands upright with its face square to the way the body is heading,
+   * whatever the arm, the torso and the body's lean are doing under it, so a rank of them is one wall of boards and not boards pointing every way.
+   * Runs after every pose overlay has written the joints; out of contact, limp or dead, the board goes back to hanging from the hand.
+   */
+  private _squareShield(): void {
+    const shield = this._shieldBoard();
+    if (!shield) return;
+    const k = this._state === AnimState.Dead ? 0 : this._shove * (1 - Math.min(1, this._limp));
+    if (k <= 0.01) {
+      if (shield.rotationQuaternion) shield.rotationQuaternion = null;
+      return;
+    }
+    const hand = this._body.leftHand;
+    hand.computeWorldMatrix(true);
+    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0));
+    shield.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), square, Math.min(1, k * 1.5));
   }
 
   private _resetPose(): void {
