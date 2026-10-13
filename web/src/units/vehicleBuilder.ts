@@ -252,7 +252,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 
   // Upright frame (straddles the base, perpendicular to firing direction)
   for (const xOff of [-0.35, 0.35]) {
-    const post = MeshBuilder.CreateBox("post", { width: 0.1, height: 1.0, depth: 0.1 }, scene);
+    const post = MeshBuilder.CreateBox("post", { width: 0.16, height: 1.0, depth: 0.16 }, scene);
     post.position.set(xOff, 1.0, 0);
     post.parent = rig; post.material = wood; allMeshes.push(post);
   }
@@ -261,7 +261,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   crossbar.parent = rig; crossbar.material = wood; allMeshes.push(crossbar);
 
   // Throwing arm (pivots at crossbar, extends along Z)
-  const arm = MeshBuilder.CreateBox("arm", { width: 0.08, height: 0.08, depth: 1.8 }, scene);
+  const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: 1.8 }, scene);
   arm.position.set(0, 1.55, 0.2);
   arm.rotation.x = 0.4; // tilted: bucket end up toward +Z
   arm.parent = rig; arm.material = wood; allMeshes.push(arm);
