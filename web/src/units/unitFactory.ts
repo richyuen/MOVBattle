@@ -5,7 +5,7 @@ import {
 import type { UnitDefinition } from "../data/unitDefinitions";
 import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfiles";
 import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
-import { buildArticulatedBody } from "./bodyBuilder";
+import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
 import { attachProps } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody, dressCannonCrew } from "./vehicleBuilder";
@@ -163,7 +163,8 @@ export class UnitFactory {
       body = buildArticulatedBody(
         this._scene,
         `${team}_${definition.id}_${Math.random().toString(36).slice(2, 6)}`,
-        visual.proportions,
+        // Linked gun crew are built to the infantry's widths like a machine's own operator
+        visual.posePreset === "crew" ? crewProportions(visual.proportions) : visual.proportions,
         bodyColor,
         {
           detailLevel: visual.bodyDetailLevel ?? "standard",

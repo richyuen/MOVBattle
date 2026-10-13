@@ -2,7 +2,7 @@ import {
   Scene, TransformNode, Mesh, MeshBuilder, Color3, Vector3,
   PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core";
-import { buildArticulatedBody } from "./bodyBuilder";
+import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -187,27 +187,20 @@ function addOperator(
   const operator = buildArticulatedBody(
     scene,
     `vehicle_operator_${Math.random().toString(36).slice(2, 6)}`,
-    {
+    // A small man in the cut of the infantry: his own height, head and limb lengths, their shirt and trouser widths
+    crewProportions({
       scale: 0.46,
-      bulk: 0.72,
       headSize: 1.04,
       armLength: 0.9,
       legLength: 0.92,
       headLength: 1.28,
       headWidth: 0.82,
-      torsoWidth: 0.82,
-      torsoDepth: 0.78,
       torsoRoundness: 1.1,
-      upperArmWidth: 0.82,
-      lowerArmWidth: 0.74,
-      upperLegWidth: 0.9,
-      lowerLegWidth: 0.76,
-      limbTaper: 1.08,
       handSize: 1.06,
       footLength: 1.1,
       footWidth: 0.94,
       footHeight: 0.86,
-    },
+    }),
     color,
     { detailLevel: "operator" },
   );

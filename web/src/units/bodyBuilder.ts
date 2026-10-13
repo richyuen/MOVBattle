@@ -144,6 +144,12 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
   footHeight: 1.0,
 };
 
+/** Gun crew and machine operators are small men, not thin ones: whatever their own scale, head and limb lengths, they are cut to the shirt and trouser widths of standard infantry. */
+export function crewProportions(own: Partial<BodyProportions> = {}): Partial<BodyProportions> {
+  const { bulk, torsoWidth, torsoDepth, upperArmWidth, lowerArmWidth, upperLegWidth, lowerLegWidth, limbTaper } = DEFAULT_PROPORTIONS;
+  return { ...own, bulk, torsoWidth, torsoDepth, upperArmWidth, lowerArmWidth, upperLegWidth, lowerLegWidth, limbTaper };
+}
+
 /** TABS silhouette: a tall block of a head on long limbs a good quarter as thick as the torso is wide, so the torso is the wide block. Applied on top of every unit's own proportions. */
 const LIMB_THIN = 1.12;
 /** The head sizes itself from the body it stands on: this share of the standing height for default proportions, a little under a fifth. */
@@ -180,6 +186,10 @@ const THIGH_OF_LEG = 0.2;
 const THIGH_HEAD = 1.15;
 /** The pelvis is never narrower than the pair of thighs under it, lapped into each other by what this leaves of one. */
 const THIGH_LAP = 0.9;
+/** A forearm and a shin are not straight tubes: each swells below its elbow or knee to a belly this many of its top widths across, this share of its length down, and narrows from there to the wrist or ankle. */
+const FOREARM_SWELL = 1.18;
+const CALF_SWELL = 1.22;
+const LIMB_BELLY_DROP = 0.3;
 /** A shin does not run down to a point: it keeps at least this share of its top width to where it goes into the boot. */
 const SHIN_END = 0.78;
 /** Boot: a cuff this many shin ends across that stands this share of the shin up the leg, on a toe box this many cuff widths long that stops at this share of the cuff's height. */
@@ -247,13 +257,28 @@ export function buildArticulatedBody(
     jointEnd?: "top" | "bottom",
     stubMat?: PBRMetallicRoughnessMaterial,
     headDiameter?: number,
+    bellyDiameter?: number,
   ): Mesh {
     const shaft = MeshBuilder.CreateCylinder(n, {
       height: height * s,
       diameterTop: diameterTop * s,
       diameterBottom: diameterBottom * s,
       tessellation,
+      subdivisions: bellyDiameter ? 2 : 1,
     }, scene);
+    if (bellyDiameter) {
+      // Calf or forearm belly: the middle ring is drawn up to LIMB_BELLY_DROP of the way down and pushed out to the belly's width, so the segment flares below the joint and tapers from there to its end
+      const positions = shaft.getVerticesData("position")!;
+      const out = bellyDiameter / ((diameterTop + diameterBottom) * 0.5);
+      for (let i = 0; i < positions.length; i += 3) {
+        if (Math.abs(positions[i + 1]) > height * s * 0.25) continue;
+        positions[i] *= out;
+        positions[i + 1] = height * s * (0.5 - LIMB_BELLY_DROP);
+        positions[i + 2] *= out;
+      }
+      shaft.setVerticesData("position", positions);
+      shaft.refreshBoundingInfo();
+    }
     let m = shaft;
     if (jointEnd) {
       // The end that meets an elbow or a knee runs on past the hinge as a short chamfered stub, drawn in to JOINT_STUB_END of the limb there. Straight, each stub lies
@@ -611,6 +636,8 @@ export function buildArticulatedBody(
     radialSegments,
     "top",
     bodyMat,
+    undefined,
+    lowerArmTop * FOREARM_SWELL,
   );
   leftLowerArm.position.y = -lowerArmH * s * 0.5;
   leftLowerArm.parent = leftElbow;
@@ -649,6 +676,8 @@ export function buildArticulatedBody(
     radialSegments,
     "top",
     bodyMat,
+    undefined,
+    lowerArmTop * FOREARM_SWELL,
   );
   rightLowerArm.position.y = -lowerArmH * s * 0.5;
   rightLowerArm.parent = rightElbow;
@@ -737,6 +766,9 @@ export function buildArticulatedBody(
     new Vector3(1, 1, legDepthScale * 0.94),
     radialSegments,
     "top",
+    undefined,
+    undefined,
+    lowerLegTop * CALF_SWELL,
   );
   leftLowerLeg.position.y = -lowerLegH * s * 0.5;
   leftLowerLeg.parent = leftKnee;
@@ -771,6 +803,9 @@ export function buildArticulatedBody(
     new Vector3(1, 1, legDepthScale * 0.94),
     radialSegments,
     "top",
+    undefined,
+    undefined,
+    lowerLegTop * CALF_SWELL,
   );
   rightLowerLeg.position.y = -lowerLegH * s * 0.5;
   rightLowerLeg.parent = rightKnee;
