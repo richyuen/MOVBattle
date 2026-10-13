@@ -1,9 +1,9 @@
 # Loop state
-Iteration: 166   Last re-audit: 165   Consecutive rejects: 0   Branch: main
+Iteration: 167   Last re-audit: 165   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion, from last audit; see CRITIC.md for the letters)
-battle-feel: a FAIL b PASS c FAIL d PASS (2/4) — a: two boards of a wall lap now, but no rank of more than two reads as a line, boards point every way, no second rank; c: lineup units share one symmetric stance
-unit-look: a PASS b PASS c FAIL d PASS (3/4) — c: limbs taper and the torso is a wedge, but bodies are squat: big head on the shoulders, short arms and legs, wrist-width nub hands
+battle-feel: a FAIL b PASS c FAIL d PASS (2/4) — a: red stands two deep with bodies on one heading, but the rear rank is pressed into the front's backs, boards face three ways, spears cross, blue forms no wall; c: lineup units share one symmetric stance
+unit-look: a PASS b PASS c FAIL d PASS (3/4) — c: limbs are long and the head is off the shoulders, but the head is a pin ball on a stalk neck and the hands are round fists
 maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: shadows are a faint smudge on the grass cards, sky one flat teal
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
@@ -11,23 +11,25 @@ vfx: a PASS b PASS c PASS d PASS (4/4)
 Total 20/24.
 
 ## Focus (every gap this iteration)
-BASE 71f54ac (evidence c233a23: shield_wall_2500ms / 2650ms)
-- [S] battle-feel.a shield-rank-slotting (1eaf71b) — APPROVE, criterion still FAIL
-- [S] unit-look.c tapered-limbs (786c497) — APPROVE, criterion still FAIL
+BASE c681d78 (evidence 71e5c05: six protectors as red's second rank in shield_wall_*)
+- [S] battle-feel.a wall-second-rank-parallel (451b3fb) — APPROVE, criterion still FAIL
+- [S] unit-look.c squat-proportions (47323c6) — APPROVE, criterion still FAIL
+- [P] unit-look.c upper-limbs-blocky (40a1223) — APPROVE, criterion still FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] shield-rank-slotting (1eaf71b) VERDICT: APPROVE CRITERION: battle-feel.a FAIL (previous: FAIL)
-- GAP: [S] tapered-limbs (786c497) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
+- GAP: [S] wall-second-rank-parallel (451b3fb) VERDICT: APPROVE CRITERION: battle-feel.a FAIL (previous: FAIL)
+- GAP: [S] squat-proportions (47323c6) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
+- GAP: [P] upper-limbs-blocky (40a1223) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets)
-1. [S] battle-feel.a wall-second-rank-parallel [0] — rear-rank carriers and spearmen get a depth slot behind a front slot; slotted carriers hold heading to the wall's advance in contact (simulationSystem `_assignShieldSlots`) — ref tabs_screenshot_06 — ours shield_wall_2650ms
-2. [S] unit-look.c squat-proportions [0] — neck segment, smaller head, longer arm and leg segments, mitt sized from the limb top (bodyBuilder) — ref tabs_screenshot_04 — ours lineup_medieval
-3. [S] battle-feel.c idle-stance-variants [0] — per-unit idle pose set hashed per unit: weight on one leg, weapon arm hanging or shouldered, head tilt — ref trailer_3_sheet_01 r3c1 — ours lineup_medieval
-4. [S] maps-light.b sky-gradient-and-shadows [0] — sky dome pale horizon to teal zenith, long low-sun body shadows on the ground — ref tabs_screenshot_01 — ours closeup_state_reads
-5. [S] battle-feel.a wall-evidence-front-view [0] — evidence-only: three-quarter front capture of the shield_wall scenario (capture.mjs) — ref tabs_screenshot_06 — ours shield_wall_2500ms
-6. [S] battle-feel.a carriers-fall-out-of-line [0] — braced carriers in a wall resist topple and turn while both neighbours stand — ref trailer_3_sheet_01 r2c2 — ours shield_wall_2500ms
-7. [P] battle-feel.a bodies-merge-under-boards [0] — shieldSlotSpacing 0.54 -> 0.62 — fallout of shield-rank-slotting (166) — ours shield_wall_2650ms
-8. [P] unit-look.c upper-limbs-blocky [0] — SLEEVE_BULK 1.15 -> 1.05 — fallout of tapered-limbs (166) — ours closeup_pair_zeus_thor
+1. [S] battle-feel.a rear-rank-march-depth [0] — a rank-1 carrier follows its host wall at shieldRankGap on the approach, paced to the front rank, not only in contact — ref tabs_screenshot_06 — ours shield_wall_2500ms
+2. [S] battle-feel.a boards-face-three-ways [0] — a slotted carrier's board yaw locked to slot.heading, not to the arm — ref tabs_screenshot_06 — ours shield_wall_2650ms
+3. [S] unit-look.c pin-ball-head [0] — replace the head mesh with a tall flat-faced facet block near 1/5 of body height (sets its own size) — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
+4. [S] unit-look.c round-fist-hands [0] — flat paddle mitt mesh (wide, thin, thumbless) replacing the faceted ball — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
+5. [S] battle-feel.c idle-stance-variants [0] — per-unit idle stance picked by unit id: weight on one leg, weapon arm cocked, head tilt — ref trailer_3_sheet_01 r1c2 — ours lineup_medieval
+6. [P] unit-look.c stalk-neck [0] — NECK_LENGTH 0.07 -> 0.04 — fallout of squat-proportions (167) — ours closeup_weapon_reads
+7. [S] battle-feel.a rank-spears-cross [0] — a formed rank carries spears at one shared upright angle until the thrust — ref tabs_screenshot_06 — ours shield_wall_2500ms
+8. [S] maps-light.b sky-gradient-and-shadows [0] — sky gradient dome plus a low sun casting long body shadows — ref tabs_screenshot_01 — ours lineup_medieval
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - heart-lobe-dome [attempts: 1, lobe size spent] — LOBES[0] 0.75: not visible in any still, pushes further toward shards
@@ -40,8 +42,8 @@ BASE 71f54ac (evidence c233a23: shield_wall_2500ms / 2650ms)
 - result-foreground-club [attempts: 2] — sideOn fov 0.65 + radius x1.23: clubs still across the bottom third
 
 ## Notes for next iteration (max 5 lines)
-- LEDGER.md holds tuned values and spent gaps: read it first. Edit with a scratchpad EOL-aware node patch script (spec written with the Write tool; bash heredocs choke on apostrophes); commit per gap with `git commit <paths> -F -`.
-- Fast probe beats full captures: a scratch playwright script (createRequire from loop/scripts, build + vite preview, spawn, advanceTime, print temporary `console.error` lines, optional screenshot) runs in ~40 s. big_melee outcome changes run to run.
-- Shield walls: `_assignShieldSlots` (every update) groups ai.brace carriers with a full board by rank depth then sideways gap, slots about the wall centre; `_shieldSlotStep` feeds march steer and in-contact sidle; same-wall pairs collide at 0.9 of the spacing. In big_melee several protectors on one flank stand still for the first second (was so before 166, cause unknown) and the mammoth hides red's wall: judge walls in shield_wall_*. A march hold for men without boards and a blocked-way gate were tried and dropped (walls stopped closing in the press).
-- Shield pose: board is the `/shield$/` child of leftHand, face +z; `_squareShield` squares it to root yaw gated by shove*(1-limp). Corpses: `_layCorpseFlat` + `_writeDeathRest`.
-- Body: `wedgeTorso` is a 3-ring cylinder with displaced rings (unitFactory clones torsoMesh for tabards and skirts and reads its bounds); limbs are `tapered` cylinders, lower limb starts at the upper limb's end; feet sized from FOOT_ANKLE.
+- LEDGER.md holds tuned values and spent gaps: read it first. Edit loop files and sources with scratchpad EOL-aware node patch scripts (quoted heredoc to the scratchpad); commit per gap with `git commit <paths> -F -`. Not picked: [P] bodies-merge-under-boards (shieldSlotSpacing row approved 166/167: ledger reversal).
+- Fast probe: scratch playwright script (createRequire from loop/scripts, executablePath = capture.mjs chromePath, build + vite preview, spawn, advanceTime, temporary `globalThis.__probe` lines, screenshot) runs in ~60 s. big_melee outcome changes run to run.
+- Shield walls: `_assignShieldSlots` keeps a rank per carrier in `_shieldRanks` (set once from depth, promoted when no wall stands ahead); rank 0 slots about the wall centre, rank r slots on the half spacings of its host wall with `hold` (side + depth) used only in the contact branch; `_holdWallHeading` -> `RuntimeUnit.holdHeading` pins root yaw (snaps, no slerp; released at each decision). A depth pull on the march was avoided on purpose (an earlier march hold stopped walls closing): pace the rear to the front instead. The camera picker may shoot the wall from behind red.
+- Shield pose: board is the `/shield$/` child of leftHand, face +z; `_squareShield` squares it to root yaw gated by shove*(1-limp), which is why boards still differ from bodies. Corpses: `_layCorpseFlat` + `_writeDeathRest`.
+- Body: head, eyes and `headTop` sit NECK_LENGTH up the `neck` joint (collars stay at its base); head is a scaled `sphere`, mitt a scaled sphere sized from `upperArmTop`; SLEEVE_BULK scales sleeves, thighs and so mitts and feet. `wedgeTorso` is a 3-ring cylinder; limbs are `tapered` cylinders.

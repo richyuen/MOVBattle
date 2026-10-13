@@ -165,3 +165,4 @@ iter 163 | [S] dust-burst-unread, [S] plank-corpses, [P] heart-lobe-dome | 1/3 a
 iter 164 | [S] burst-white-not-fire, [S] plank-corpses, [P] dust-bank-slab | 3/3 approved | passes 19 -> 19
 iter 165 | [S] result-giant-headless, [S] shield-wall-brace (re-audit) | 2/2 approved | passes 19 -> 20
 iter 166 | [S] shield-rank-slotting, [S] tapered-limbs | 2/2 approved | passes 20 -> 20
+iter 167 | [S] wall-second-rank-parallel, [S] squat-proportions, [P] upper-limbs-blocky | 3/3 approved | passes 20 -> 20
