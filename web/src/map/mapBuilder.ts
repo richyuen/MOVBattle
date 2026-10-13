@@ -133,7 +133,7 @@ export class TribalSandboxMapBuilder {
 
     // Dark boulder stone: a warm dusky brown-grey, part self-lit blue so its faces turned from the sun are a deep blue and not black
     const darkRock = new StandardMaterial("darkRock", this._scene);
-    darkRock.diffuseColor = new Color3(0.30, 0.25, 0.15);
+    darkRock.diffuseColor = new Color3(0.37, 0.33, 0.20);
     darkRock.emissiveColor = new Color3(0.01, 0.015, 0.08);
     darkRock.specularColor = new Color3(0.06, 0.06, 0.06);
 
