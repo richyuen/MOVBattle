@@ -9,8 +9,10 @@ import type {
 import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisuals";
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
 
-/** Weapons and hats are built three fifths over life size (TABS), so they still read as shapes from across the field: a quarter over, thin swords and staffs vanished at lineup distance */
+/** Weapons are built three fifths over life size (TABS), so they still read as shapes from across the field: a quarter over, thin swords and staffs vanished at lineup distance */
 const PROP_OVERSIZE = 1.6;
+/** Hats are a third over: three fifths over, a bucket helm was wider than the shoulders under it */
+const HAT_OVERSIZE = 1.3;
 
 export function attachProps(
   scene: Scene,
@@ -47,7 +49,7 @@ export function attachProps(
   const hat = buildHat(scene, config.hat, scale, accent, teamColor);
   if (hat) {
     hat.parent = body.headTop;
-    hat.scaling.scaleInPlace(PROP_OVERSIZE);
+    hat.scaling.scaleInPlace(HAT_OVERSIZE);
     props.push(hat);
   }
 
