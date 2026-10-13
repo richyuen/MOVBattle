@@ -333,26 +333,20 @@ export class VisualEffects {
   }
 
   // ══════════════════ EXPLOSION BURST ══════════════════
-  /** A ragged burst of faceted flame shards that flies apart over the crater and burns out piece by piece, a head-sized white smoke puff, the dark ball, a low bank of tan dust puffs billowing out along the ground wider than the fire and a spray of clods that outlasts the smoke. No particles. */
+  /** A lumpy two-tone fireball, fat yellow lobes each inside an orange shell with a few orange flecks thrown clear, that burns out piece by piece, a head-sized white smoke puff, the dark ball, a low bank of tan dust puffs billowing out along the ground wider than the fire and a spray of clods that outlasts the smoke. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
     root.position.y += 0.6 * scale;
 
-    // Lit matte materials, bar the flames: fully emissive ones trip the bloom threshold and wash out to white. The inner flame and the fringe are unlit
-    // and show their own colour alone, set well short of white in green and blue: the tone curve lifts both, and sunlight on top clipped them to cream.
+    // Lit matte materials, bar the fire. The fire is unlit and two-tone, each piece showing its own colour alone: golden yellow for the heart, orange for the
+    // shell round it and a deeper orange for the flecks. No sunlight falls on any of it and none of it has any blue, so the tone curve cannot lift it to cream.
     const mats = getMaterialFactory();
-    // The fireball is mostly self-lit and graded from the inside out: a white-hot heart and a pale yellow inner
-    // flame, both lit past white so they burn out to cream on screen, and a soft orange fringe. The inner flame sits between heart and fringe in hue, so it is a step of the grade and not a lemon patch.
-    const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
-    coreMat.emissiveColor = new Color3(2.0, 1.95, 1.6);
-    const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
-    flashMat.emissiveColor = new Color3(3.4, 3.4, 1.2);
-    const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(1.7, 1.25, 0.6);
-    // The foot of the ball is a deeper orange than the fringe, whose own colour burns out to peach beside the heart.
-    const footMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    footMat.emissiveColor = new Color3(1.6, 0.45, 0.1);
+    const coreMat = this._fxMat(Color3.Black(), new Color3(1.3, 0.6, 0));
+    // The shell is drawn inside out, far side only: it stands as an orange rim round its yellow lobe from any angle and never covers it.
+    const shellMat = this._fxMat(Color3.Black(), new Color3(1.0, 0.22, 0));
+    shellMat.cullBackFaces = false;
+    const fleckMat = this._fxMat(Color3.Black(), new Color3(0.85, 0.13, 0));
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -363,15 +357,15 @@ export class VisualEffects {
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
     const floorY = -root.position.y + 0.08;
 
-    const blob = (name: string, segments: number, mat: typeof flashMat): TransformNode => {
+    const blob = (name: string, segments: number, mat: typeof coreMat): TransformNode => {
       const mesh = MeshBuilder.CreateSphere(name, { diameter: 1, segments }, this._scene);
       mesh.material = mat;
       mesh.parent = root;
       return mesh;
     };
-    // Fireball: no ball. Faceted shards thrown out of one point, each a different solid, size and length, lying along its own line of flight:
-    // four fat squashed pale lobes of unequal size for the heart, each pushed off the middle its own way, long pale spikes fanned out round them, and short orange ones low along the ground for the skirt.
-    // The silhouette is a ragged star wider than it is tall, about a man and a half high for a shell, and no piece of it is round.
+    // Fireball: no ball and no star. Four fat squashed yellow lobes of unequal size for the heart, each pushed off the middle its own way and each wrapped in a
+    // bigger orange shell of its own shape, so the mass is yellow in the middle and orange at every edge and in every dent between lobes. Round it a few
+    // short orange flecks thrown clear, and stubby ones low along the ground for the skirt. The silhouette is a lumpy mass wider than it is tall, about a man and a half high for a shell.
     // Fixed layout, so every blast has the same shape.
     const fireScale = Math.min(scale * 1.2, 1.6);
     const fire: { mesh: Mesh; dir: Vector3; reach: number; size: number; length: number; wide: number; deep: number; life: number }[] = [];
@@ -384,8 +378,8 @@ export class VisualEffects {
       { angle: 5.6, lift: 0.15, size: 0.4, reach: 0.64 },
     ];
     const HEART = LOBES.length;
-    const SPIKES = 9;
-    const SHARDS = HEART + SPIKES + 8;
+    const SPIKES = 3;
+    const SHARDS = HEART + SPIKES + 5;
     for (let i = 0; i < SHARDS; i++) {
       const heart = i < HEART;
       const lobe = heart ? LOBES[i] : null;
@@ -397,24 +391,35 @@ export class VisualEffects {
       const flat = Math.sqrt(1 - lift * lift);
       const dir = new Vector3(Math.cos(angle) * flat, lift, Math.sin(angle) * flat);
       const mesh = MeshBuilder.CreatePolyhedron("burstFlash", { type: heart ? 2 + (i % 2) : i % 4, size: 0.5 }, this._scene);
-      mesh.material = heart ? coreMat : skirt ? (i % 2 === 0 ? footMat : flameMat) : i % 3 === 0 ? flameMat : flashMat;
+      mesh.material = heart ? coreMat : skirt ? fleckMat : shellMat;
       mesh.parent = root;
       // Long axis along the line of flight, and a turn about it so no two facets catch the eye alike
       mesh.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion()).multiply(Quaternion.RotationAxis(Vector3.Up(), i * 1.3));
       glow?.addExcludedMesh(mesh); // none of it is in the glow layer: its halo washed over the whole burst and it read as see-through haze
-      const size = (lobe ? lobe.size : skirt ? 0.3 + 0.2 * jitter : 0.28 + 0.24 * jitter) * fireScale;
+      const size = (lobe ? lobe.size : skirt ? 0.3 + 0.2 * jitter : 0.2 + 0.14 * jitter) * fireScale;
+      // The heart outlasts the flecks, and each piece goes out at its own moment: the burst breaks up, it does not shrink as one
+      const life = heart ? 0.42 + 0.12 * jitter : 0.24 + 0.24 * jitter;
       fire.push({
         mesh,
         dir,
-        reach: (lobe ? lobe.reach : skirt ? 0.55 + 0.35 * jitter : 0.4 + 0.3 * jitter) * fireScale,
+        // Flecks fly clear of the shells; the skirt stays under them
+        reach: (lobe ? lobe.reach : skirt ? 0.55 + 0.35 * jitter : 0.95 + 0.3 * jitter) * fireScale,
         size,
-        length: size * (heart ? 0.95 : skirt ? 1.7 + 0.8 * jitter : 2.0 + 1.2 * jitter),
-        // A lobe is fat one way and squashed the other; a spike is as deep as it is wide
+        length: size * (heart ? 0.95 : skirt ? 1.2 + 0.4 * jitter : 1.0 + 0.3 * jitter),
+        // A lobe is fat one way and squashed the other; a fleck is as deep as it is wide
         wide: heart ? 1.3 : 1,
         deep: heart ? 0.68 : 1,
-        // The heart outlasts the spikes, and each piece goes out at its own moment: the burst breaks up, it does not shrink as one
-        life: heart ? 0.42 + 0.12 * jitter : 0.24 + 0.24 * jitter,
+        life,
       });
+      if (lobe) {
+        // Its shell: the same solid lying the same way, half as big again and a little further out, burning a moment longer than the lobe inside it
+        const shell = MeshBuilder.CreatePolyhedron("burstShell", { type: 2 + (i % 2), size: 0.5 }, this._scene);
+        shell.material = shellMat;
+        shell.parent = root;
+        shell.rotationQuaternion = mesh.rotationQuaternion.clone();
+        glow?.addExcludedMesh(shell);
+        fire.push({ mesh: shell, dir, reach: (lobe.reach + 0.06) * fireScale, size: size * 1.5, length: size * 1.4, wide: 1.3, deep: 0.8, life: life + 0.05 });
+      }
     }
 
     // The shot itself: a dark ball that hops out of the puff and comes to rest.
@@ -530,9 +535,8 @@ export class VisualEffects {
       },
       dispose: () => {
         coreMat.dispose();
-        flashMat.dispose();
-        flameMat.dispose();
-        footMat.dispose();
+        shellMat.dispose();
+        fleckMat.dispose();
         smokeMat.dispose();
         for (const mat of dustMats) mat.dispose();
         ballMat.dispose();
