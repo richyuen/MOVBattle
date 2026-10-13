@@ -81,7 +81,7 @@ const COOL_ARMOUR_SATURATION = 0.85;
 const BOOT_SHADE = 0.7;
 // Under cool plate the boot is a neutral grey and the leg is the plate itself: a darker blue leg and boot ran into one navy with the cuirass, or near black.
 const COOL_ARMOUR_BOOT = new Color3(0.40, 0.42, 0.46);
-const BARE_FOOT_SHADE = 0.85;
+const BARE_FOOT_SHADE = 0.72;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only a quarter of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.25;
 // ...but trousers and boots keep four fifths of theirs, so red legs step clearly down from the tunic, and warm cloth and
