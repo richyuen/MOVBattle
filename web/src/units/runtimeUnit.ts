@@ -1272,6 +1272,8 @@ export class RuntimeUnit {
         }
         break;
       case "caster":
+        // A caster with a rod in his hand stands and casts from his own hold: only one with nothing to hold has his arms spread for him
+        if (this.animator.castsFromHold) break;
         body.leftShoulder.rotation.z -= 0.22;
         body.rightShoulder.rotation.z += 0.22;
         body.leftElbow.rotation.x -= 0.15;
