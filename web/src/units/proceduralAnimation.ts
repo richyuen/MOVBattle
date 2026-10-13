@@ -737,7 +737,7 @@ export class ProceduralAnimator {
   }
 
   // Per-unit gait, so a column on the march is not one walk cycle caught at different moments: each man steps at his own cadence, brings the free leg through with the knee
-  // folded and lifted to his own height, steps longer on one side than the other, sinks to his own depth on the standing leg and swings his arms to his own reach, a beat off his legs.
+  // folded and lifted to his own height (0.6-1.1 rad: to 1.5 the deep end was a crouched scuttle), steps longer on one side than the other, sinks to his own depth on the standing leg and swings his arms to his own reach, a beat off his legs.
   // Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
   private _gait: { rate: number; lift: number; limp: number; sink: number; armLag: number; armSwing: number } | null = null;
   private _buildGait(): NonNullable<ProceduralAnimator["_gait"]> {
@@ -747,7 +747,7 @@ export class ProceduralAnimator {
     };
     return {
       rate: 6.8 + h(71) * 2.6,
-      lift: 0.6 + h(72) * 0.9,
+      lift: 0.6 + h(72) * 0.5,
       limp: (h(73) - 0.5) * 0.36,
       sink: 0.05 + h(74) * 0.22,
       armLag: (h(75) - 0.5) * 1.4,
