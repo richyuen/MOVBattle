@@ -187,12 +187,12 @@ const SLEEVE_HEAD_CROWN = 0.6;
 /** Shoulder yoke: the top of the torso is a slab that reaches out over both arm roots, to this share of a sleeve past each shoulder joint, so the arm comes out from under the chest's own silhouette
  * and not from a post stood beside it. It runs from the chest line up to this share of a sleeve above the joints at this share of the torso's depth, and from there slopes in to the neck. */
 const YOKE_REACH = 0.2;
-const YOKE_RISE = 0.3;
+const YOKE_RISE = 0.1;
 const YOKE_DEPTH = 0.92;
 const YOKE_NECK = 0.5;
 // The hull under the yoke: its foot stands this far up the torso, this much of the waist wide and deep (a box drawn inside the waist's round).
 const HULL_FOOT = 0.06;
-const HULL_WAIST = 0.8;
+const HULL_WAIST = 1.0;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
 const THIGH_OF_LEG = 0.2;
 /** Thigh head: the thigh swells up to the hip as the sleeve does to the shoulder, to this many thighs wide, and its crown sinks into the pelvis block in place of a ball cap. */
