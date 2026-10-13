@@ -279,8 +279,12 @@ export class SimulationSystem {
           if (overlap <= 0) continue;
 
           const contactBias = sameTeam ? 0.55 : 1.0;
-          const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance * (1 + a.braceAbsorption));
-          const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance * (1 + b.braceAbsorption));
+          // A colossus is not held up by its own troops: it wades through their ranks and they are the ones moved aside.
+          const resistance = (unit: RuntimeUnit) => sameTeam && unit.definition.size === "colossal"
+            ? 1e6
+            : Math.max(0.55, unit.definition.mass * unit.crowdResistance * (1 + unit.braceAbsorption));
+          const resistanceA = resistance(a);
+          const resistanceB = resistance(b);
           const inverseMassA = 1 / resistanceA;
           const inverseMassB = 1 / resistanceB;
           const inverseMassTotal = inverseMassA + inverseMassB;
