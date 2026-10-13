@@ -670,7 +670,7 @@ export class ProceduralAnimator {
           return v - Math.floor(v);
         };
         b.torso.rotation.x += 0.06;
-        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.7 - 1.45 + (h(61) - 0.5) * 0.5;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.7 - 1.2 + (h(61) - 0.5) * 0.9;
         b.rightShoulder.rotation.z += (h(62) - 0.5) * 0.7;
         b.leftShoulder.rotation.x *= 0.82;
         // The elbow folds a little, to make a right angle with the raised upper arm between them, so the club stands upright off the forearm: folded further it tipped back over the shoulder to level
