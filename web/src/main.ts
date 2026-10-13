@@ -1253,7 +1253,7 @@ function checkVictory(): void {
 
 /** Victory shot: turn the battle camera onto the winner's living units (both teams' on a draw). */
 function frameSurvivorsForResult(winner: number | null): void {
-  const box = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0, focus: { x: 0, z: 0 } };
+  const box: Parameters<typeof camCtrl.frameSurvivors>[0] = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0, focus: { x: 0, z: 0 } };
   const spots: { x: number; z: number }[] = [];
   const giantSpots: { x: number; z: number }[] = [];
   for (const unit of placedUnits) {
@@ -1279,6 +1279,9 @@ function frameSurvivorsForResult(winner: number | null): void {
   if (besideGiant) {
     const clear = (s: { x: number; z: number }) => Math.min(...giantSpots.map((g) => Math.hypot(s.x - g.x, s.z - g.z)));
     box.focus = spots.reduce((best, s) => (clear(s) > clear(best) ? s : best));
+    // The shot is taken from the giant's side of that survivor, looking away from it: the nearest giant is behind the eye and not across the frame.
+    const focus = box.focus;
+    box.giant = giantSpots.reduce((best, g) => (Math.hypot(g.x - focus.x, g.z - focus.z) < Math.hypot(best.x - focus.x, best.z - focus.z) ? g : best));
   }
   camCtrl.frameSurvivors(box);
 }
