@@ -333,7 +333,7 @@ export class VisualEffects {
   }
 
   // ══════════════════ EXPLOSION BURST ══════════════════
-  /** A ragged burst of faceted flame shards that flies apart over the crater and burns out piece by piece, a head-sized white smoke puff, the dark ball, a ring of tan dust lumps rolling out along the ground and a spray of clods that outlasts the smoke. No particles. */
+  /** A ragged burst of faceted flame shards that flies apart over the crater and burns out piece by piece, a head-sized white smoke puff, the dark ball, a low bank of tan dust puffs billowing out along the ground wider than the fire and a spray of clods that outlasts the smoke. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
@@ -356,8 +356,9 @@ export class VisualEffects {
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
-    // Plain matte tan, lit by the sun alone: the dust is dirt off the field, not part of the fire
-    const dustMat = mats.createUnique("stone", new Color3(0.75, 0.68, 0.5));
+    // The dust shows its own colour alone, in three tans all well short of the bloom threshold: lit by the sun, any tan rendered as neutral grey rock.
+    const dustMats = [new Color3(0.62, 0.36, 0.12), new Color3(0.48, 0.27, 0.09), new Color3(0.36, 0.2, 0.07)]
+      .map((tan) => this._fxMat(Color3.Black(), tan));
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
     const floorY = -root.position.y + 0.08;
@@ -437,20 +438,22 @@ export class VisualEffects {
       lobes.push({ mesh: lobe, size: (i === 0 ? 0.42 : 0.22 + Math.random() * 0.12) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
     }
 
-    // Dust: a ring of squat faceted tan lumps that rolls out along the ground from the crater and sinks into it. Nothing of it stands above the knee.
+    // Dust: not a ring of stones. A bank of fat squashed puffs lying on the ground under the fire, spread over a disc so each overlaps its neighbours
+    // and the whole reads as one low cloud wider than the burst: big dark ones out at the rim, small pale ones heaped on the middle. It stands knee high.
     const dustScale = Math.min(scale, 1.4);
-    const DUST_LUMPS = 10;
-    const ring: { mesh: TransformNode; size: number; angle: number; reach: number }[] = [];
-    for (let i = 0; i < DUST_LUMPS; i++) {
-      const lump = MeshBuilder.CreatePolyhedron("burstDust", { type: 2 + (i % 2), size: 0.5 }, this._scene);
-      lump.material = dustMat;
-      lump.parent = root;
-      lump.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
-      ring.push({
-        mesh: lump,
-        size: (0.26 + Math.random() * 0.2) * dustScale,
-        angle: (i / DUST_LUMPS) * Math.PI * 2 + Math.random() * 0.5,
-        reach: (1.1 + Math.random() * 0.7) * dustScale,
+    const DUST_PUFFS = 14;
+    const bank: { mesh: TransformNode; size: number; angle: number; reach: number; tall: number }[] = [];
+    for (let i = 0; i < DUST_PUFFS; i++) {
+      const spread = Math.sqrt((i + 0.5) / DUST_PUFFS); // even cover of the disc, so there is no hole in the middle and no gap at the rim
+      const puff = blob("burstDust", 2, dustMats[i < 4 ? 0 : i % 2 === 0 ? 1 : 2]);
+      puff.rotation.y = i * 1.3;
+      glow?.addExcludedMesh(puff as Mesh);
+      bank.push({
+        mesh: puff,
+        size: (0.7 + 0.5 * spread + 0.25 * ((i * 0.618034) % 1)) * dustScale,
+        angle: i * 2.39996 + Math.random() * 0.4,
+        reach: 2.3 * spread * dustScale,
+        tall: 0.5 - 0.18 * spread,
       });
     }
     // Nine dark faceted clods of mixed shape and size thrown clear of it on high arcs, landing round the crater and lying there.
@@ -496,14 +499,15 @@ export class VisualEffects {
           lobe.mesh.position.y += lobe.rise * dt;
           lobe.mesh.scaling.setAll(lobe.size * swell * smokeFade);
         }
-        // The ring rolls out fast and slows, each lump flattening and sinking as it goes, and is gone 45% of the way through, well before the clods stop.
-        const roll = 1 - Math.exp(-elapsed * 5);
-        const settle = Math.max(0.001, Math.min(1, (totalDuration * 0.45 - elapsed) / 0.4));
-        for (const lump of ring) {
-          const reach = 0.25 * dustScale + lump.reach * roll;
-          const size = lump.size * (0.5 + 0.5 * roll) * settle;
-          lump.mesh.position.set(Math.cos(lump.angle) * reach, floorY + size * 0.2, Math.sin(lump.angle) * reach);
-          lump.mesh.scaling.set(size, size * (0.75 - 0.3 * roll), size);
+        // The bank billows out fast and slows, each puff swelling as it goes, then thins from the rim inward and is gone 60% of the way through, before the clods stop.
+        const roll = 1 - Math.exp(-elapsed * 6);
+        for (const puff of bank) {
+          const settle = Math.max(0.001, Math.min(1, (totalDuration * 0.6 - elapsed - 0.15 * puff.reach / dustScale) / 0.4));
+          const reach = puff.reach * (0.3 + 0.7 * roll);
+          const size = puff.size * (0.45 + 0.55 * roll) * settle;
+          const height = size * puff.tall;
+          puff.mesh.position.set(Math.cos(puff.angle) * reach, floorY + height * 0.3, Math.sin(puff.angle) * reach);
+          puff.mesh.scaling.set(size, height, size);
         }
         ballVelocity.y -= 14 * dt;
         ball.position.addInPlace(ballVelocity.scale(dt));
@@ -530,7 +534,7 @@ export class VisualEffects {
         flameMat.dispose();
         footMat.dispose();
         smokeMat.dispose();
-        dustMat.dispose();
+        for (const mat of dustMats) mat.dispose();
         ballMat.dispose();
         clodMat.dispose();
       },
