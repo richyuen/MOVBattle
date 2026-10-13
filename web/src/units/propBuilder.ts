@@ -1347,6 +1347,11 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
 
 // ─── Shields ───
 function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {
+  // A cool team colour is held as deep as the plate behind it and not washed with white: the sky-blue team colour paled is a slate board.
+  const teamHsv = teamColor.toHSV();
+  const cool = teamHsv.r > 150 && teamHsv.r < 300;
+  if (cool) teamColor = Color3.HSVtoRGBToRef(teamHsv.r, Math.max(teamHsv.g, 0.85), teamHsv.b, new Color3());
+  const board = cool ? teamColor : Color3.Lerp(teamColor, Color3.White(), 0.12);
   switch (type) {
     case "none": return null;
     case "round": {
@@ -1358,7 +1363,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         return m;
       };
       const shield = disc("rshield", 0.3, 0.03);
-      shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
+      shield.material = mat(scene, board);
       const rim = disc("rshieldRim", 0.34, 0.022);
       rim.position.z = -0.006 * s;
       rim.parent = shield;
@@ -1377,7 +1382,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
     }
     case "kite": {
       const shield = MeshBuilder.CreateBox("kshield", { width: 0.18 * s, height: 0.32 * s, depth: 0.025 * s }, scene);
-      shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
+      shield.material = mat(scene, board);
       // Short point pressed as flat as the board and turned a quarter (diameter is corner to corner, hence SQRT2), so a flat
       // triangle faces forward and not a ridge
       const point = MeshBuilder.CreateCylinder("kpoint", { height: 0.13 * s, diameterTop: 0.18 * Math.SQRT2 * s, diameterBottom: 0, tessellation: 4 }, scene);
@@ -1406,7 +1411,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
     }
     case "tower": {
       const shield = MeshBuilder.CreateBox("tshield", { width: 0.22 * s, height: 0.4 * s, depth: 0.03 * s }, scene);
-      shield.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.12));
+      shield.material = mat(scene, board);
       const boss = MeshBuilder.CreateSphere("towerBoss", { diameter: 0.06 * s, segments: 6 }, scene);
       boss.position.z = -0.02 * s;
       boss.parent = shield;
