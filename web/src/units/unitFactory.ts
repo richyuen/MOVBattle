@@ -41,7 +41,7 @@ const WARM_SKIN_BLUE = 0.75;
 // ...and is lightened: red well past white, green and blue lifted, so its sunlit faces are a light coral. Red alone, to 1.8, left them at the same level and only more saturated.
 const WARM_SKIN_RED = 2.5;
 const WARM_SKIN_GREEN_LIFT = 0.26;
-const WARM_SKIN_BLUE_LIFT = 0.18;
+const WARM_SKIN_BLUE_LIFT = 0.30;
 // Its glow is half the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one.
 const WARM_SKIN_GLOW = 0.5;
 // The head is kept out of the glow layer for its eyes' sake, and so glows this much more in its own material to stay the tone of the arms.
