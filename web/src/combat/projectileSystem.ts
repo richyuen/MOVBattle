@@ -322,7 +322,7 @@ export class ProjectileSystem {
       if (f.smokeLife) {
         // Pop out fast, keep swelling slowly, stay opaque for four fifths of the life, then thin out
         const ratio = Math.max(0, f.remaining / f.smokeLife);
-        f.mesh.scaling.setAll(0.55 + (1 - ratio * ratio * ratio) * 1.05);
+        f.mesh.scaling.setAll(0.55 + (1 - ratio * ratio * ratio) * 0.4);
         f.mesh.position.y += 0.3 * dt;
         (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = Math.min(1, ratio * 5);
       } else {
