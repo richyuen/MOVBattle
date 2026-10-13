@@ -44,6 +44,8 @@ const WARM_SKIN_GREEN_LIFT = 0.10;
 const WARM_SKIN_BLUE_LIFT = 0.12;
 // Its glow is a third of the cool skin's, so its shaded side is a deep crimson: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one.
 const WARM_SKIN_GLOW = 0.35;
+// Red has next to no blue above its weakest channel to glow with, so its shaded side was a brick: this much blue glows on it flat, and the shade is a crimson toward plum.
+const WARM_SKIN_GLOW_BLUE = 0.03;
 // The head is kept out of the glow layer for its eyes' sake, and so glows this much more in its own material to stay the tone of the arms.
 const HEAD_GLOW = 1.9;
 const BODY_PRESET_WEIGHT = 0.45;
@@ -353,7 +355,7 @@ function applyMaterialPreset(
   // Only the part of the team colour above its weakest channel glows: the whole colour would wash the skin toward white.
   // Blue glows half again as strongly, so blue skin is a clear sky blue and not a teal grey; red skin has next to no blue above its weakest channel and is unchanged.
   const grey = Math.min(skinColor.r, skinColor.g, skinColor.b);
-  body.skinMaterial.emissiveColor = tint.skinEmissive.add(new Color3(skinColor.r - grey, skinColor.g - grey, (skinColor.b - grey) * SKIN_GLOW_BLUE).scale(skinGlow * (warmSkin ? WARM_SKIN_GLOW : 1)));
+  body.skinMaterial.emissiveColor = tint.skinEmissive.add(new Color3(skinColor.r - grey, skinColor.g - grey, (skinColor.b - grey) * SKIN_GLOW_BLUE).scale(skinGlow * (warmSkin ? WARM_SKIN_GLOW : 1))).add(new Color3(0, 0, warmSkin && skinGlow > 0 ? WARM_SKIN_GLOW_BLUE : 0));
 }
 
 interface MaterialTint {
