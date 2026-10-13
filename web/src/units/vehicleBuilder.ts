@@ -183,12 +183,13 @@ function addOperator(
   scene: Scene, root: TransformNode, allMeshes: Mesh[],
   x: number, y: number, z: number, color: Color3,
   pose?: (body: ArticulatedBody) => void,
+  scale = 0.46,
 ): VehicleOperator {
   const operator = buildArticulatedBody(
     scene,
     `vehicle_operator_${Math.random().toString(36).slice(2, 6)}`,
     {
-      scale: 0.46,
+      scale,
       bulk: 0.72,
       headSize: 1.04,
       armLength: 0.9,
@@ -231,14 +232,13 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   rig.parent = root;
   rig.scaling.setAll(CATAPULT_SCALE);
   const allMeshes: Mesh[] = [];
-  const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
   const pumpkinMat = makeMat(scene, new Color3(0.88, 0.42, 0.12));
 
   // Base platform (longer along Z = firing axis)
   const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.2, depth: 1.6 }, scene);
-  base.position.y = 0.4; base.parent = rig; base.material = teamPrimary; allMeshes.push(base);
+  base.position.y = 0.4; base.parent = rig; base.material = wood; allMeshes.push(base);
 
   // Wheels (on the sides, X axis)
   for (const xOff of [-0.45, 0.45]) {
@@ -284,8 +284,8 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   cw.position.set(0, 1.0, -0.5);
   cw.parent = rig; cw.material = metal; allMeshes.push(cw);
 
-  // Operator sitting beside, behind the frame
-  const operator = addOperator(scene, rig, allMeshes, 0.4, 0.72, -0.5, color);
+  // Operator standing on the base beside the frame, a full man once the rig is scaled: at the 0.46 of other crews he was two thirds of the men beside the machine
+  const operator = addOperator(scene, rig, allMeshes, 0.4, 0.5, -0.5, color, undefined, 0.72);
 
   const vehicleSockets: VehicleSocketSet = {
     primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.08, 0.82)),
