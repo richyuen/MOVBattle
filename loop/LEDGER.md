@@ -29,8 +29,8 @@ mapBuilder.ts:BLADES | 720000 | 159 | approved | 480000 before
 mapBuilder.ts:blade width (`half`) | x1.0 | 160 | spent | x1.5 rejected: squat cones
 projectileSystem.ts:muzzle smoke lobes (size, count, drift, tint, glow) | lead 0.6, seven small | 154 | spent | 35 attempts over iters 11-154, lead lobe 0.6 -> 0.48 -> 0.6: every value tried
 projectileSystem.ts:cannonball colour | near-black | 160 | spent | no shot in flight in any still until the 1250ms pair exists
-visualEffects.ts:explosion burst shards (count, reach, size, length, life) | 21: 4 heart lobes (size .95/.7/.52/.4, reach .34-.64, wide 1.3, deep 0.68), 9 spikes, 8 skirt; fireScale cap 1.6 | 162 | approved | 22: 5 like heart lumps at reach .12-.32 (161 approved, merged into a globe); sphere stack: lobeSizes [1,1,.5,.9,.45,.6] + 7 tongues (spent; cream grade kept, emissives untouched)
-visualEffects.ts:explosion dust ring (lumps, reach, size, colour) | 10 lumps, reach 1.1-1.8, size 0.26-0.46, stone (0.75, 0.68, 0.5) | 162 | spent | colour only: stone (0.92, 0.8, 0.55) rejected 162, both render neutral grey (an [S] replacing the lit lumps is allowed); one self-lit mound 0.85 (spent: fireScale cap 1.35 snowman)
+visualEffects.ts:explosion burst shards (count, reach, size, length, life) | 21: 4 heart lobes (size .95/.7/.52/.4, reach .34-.64, wide 1.3, deep 0.68), 9 spikes, 8 skirt; fireScale cap 1.6 | 163 | approved | lobe size spent: LOBES[0] 0.75 rejected 163 (not visible, pushes toward shards); 22: 5 like heart lumps at reach .12-.32 (161 approved, merged into a globe); sphere stack: lobeSizes [1,1,.5,.9,.45,.6] + 7 tongues (spent; cream grade kept, emissives untouched)
+visualEffects.ts:explosion dust bank (puffs, reach, size, tall, tans) | 14 unlit puffs on a disc, reach 2.3*sqrt, size 0.7-1.45, tall 0.5-0.18*spread, emissive tans (0.62,0.36,0.12)/(0.48,0.27,0.09)/(0.36,0.2,0.07), gone at 60% | 163 | approved | ring of 10 lit stone lumps (0.75,0.68,0.5), colour spent 162: any lit tan renders grey; one self-lit mound 0.85 (spent: fireScale cap 1.35 snowman)
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved | 6, speed 0.9-2.2, up 3-5.4
 vehicleBuilder.ts:catapult arm/posts/bucket/wheels | see 155-158 | 158 | spent | goalpost rejected-kept twice
 vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 | spent | ~30 attempts
@@ -40,6 +40,8 @@ vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 
 - 161 | result-shot-occluded | camera.d | rejected
 - 162 | result-shot-occluded | camera.d | approved
 - 162 | burst-heart-round-ball | vfx.b | approved
+- 163 | dust-burst-unread | vfx.b | approved
+- 163 | plank-corpses | battle-feel.d | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
