@@ -92,6 +92,12 @@ function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
   return attacker.linkedChildren.filter((child) => !child.isDead && child.linkedRelation === "spawned-child").length;
 }
 
+/** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
+interface ShieldSlot {
+  wall: number;
+  offset: Vector3;
+}
+
 interface UnitPathState {
   waypoints: Vector3[];
   waypointIndex: number;
@@ -148,6 +154,15 @@ export class SimulationSystem {
   readonly runnerLeadMargin = 0.4;
   readonly runnerHoldMultiplier = 0.6;
   readonly congestionBypassDistance = 2.2;
+  /** Shield carriers of one wall stand this far apart, centre to centre: two thirds of a round board, so each board laps a third over the next. */
+  readonly shieldSlotSpacing = 0.54;
+  /** Carriers within this depth of the foremost one form a rank; a sideways gap wider than shieldWallGap splits a rank into separate walls. */
+  readonly shieldRankDepth = 1.0;
+  readonly shieldWallGap = 2.2;
+  /** The most a carrier steps across toward its slot for each stride forward. */
+  readonly shieldSlotStride = 0.6;
+  /** Each slotted carrier's wall and the sideways step from where it stands to its slot in it. */
+  private _shieldSlots = new Map<RuntimeUnit, ShieldSlot>();
   private _now = 0;
 
   get isRunning(): boolean { return this._isRunning; }
@@ -224,6 +239,7 @@ export class SimulationSystem {
       }
     }
 
+    this._assignShieldSlots();
     this._resolveLivingCollisions();
 
     for (const unit of this._units) {
@@ -267,7 +283,12 @@ export class SimulationSystem {
           const sameTeam = a.team === b.team;
           // Two bracers of one team stand a fifth closer than their body widths, so a shield line closes up shoulder to shoulder. Any other two of one team stand a tenth closer, so the ranks behind press up into the front one. Enemy contact keeps the full distance.
           const bracedRank = sameTeam && a.definition.aiProfileId === "ai.brace" && b.definition.aiProfileId === "ai.brace";
-          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (bracedRank ? 0.8 : sameTeam ? 0.9 : 1);
+          // Two carriers slotted into one wall stand at the slot spacing, boards lapping: the solver only parts them inside it.
+          const slotA = this._shieldSlots.get(a);
+          const sameWall = slotA !== undefined && slotA.wall === this._shieldSlots.get(b)?.wall;
+          const minDistance = sameWall
+            ? this.shieldSlotSpacing * 0.9
+            : (a.collisionBodyRadius + b.collisionBodyRadius) * (bracedRank ? 0.8 : sameTeam ? 0.9 : 1);
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
@@ -514,10 +535,15 @@ export class SimulationSystem {
       // Bracers hold their ground and let the rush come onto the shields, but two shield lines facing each other both close.
       const contactDistance = unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap;
       const presses = (aiProfile.id !== "ai.brace" || enemy.definition.aiProfileId === "ai.brace") && unit.definition.engageRange < this.meleePressMaxReach;
+      // A carrier out of its slot sidles along the wall into it while it fights.
+      const sidle = this._shieldSlotStep(unit);
       if (canMove && presses && distance > contactDistance + 0.05) {
         const back = unit.position.subtract(enemy.position);
         back.y = 0;
-        unit.moveTo(enemy.position.add(back.normalize().scale(contactDistance)));
+        const stand = enemy.position.add(back.normalize().scale(contactDistance));
+        unit.moveTo(sidle ? stand.addInPlace(sidle) : stand);
+      } else if (canMove && sidle) {
+        unit.moveTo(unit.position.add(sidle));
       } else {
         unit.stopMoving();
       }
@@ -568,7 +594,7 @@ export class SimulationSystem {
     unit.setCohesionMoveMultiplier(this._resolveCohesionMoveMultiplier(unit, desired));
     const navigationGrid = this.navigationGrid;
     if (!navigationGrid) {
-      unit.moveTo(this._resolveHazardAwareMoveTarget(unit, desired));
+      unit.moveTo(this._steerIntoShieldSlot(unit, this._resolveHazardAwareMoveTarget(unit, desired)));
       return;
     }
 
@@ -603,7 +629,83 @@ export class SimulationSystem {
     }
 
     const nextWaypoint = state.waypoints[state.waypointIndex] ?? this._resolveHazardAwareMoveTarget(unit, activeGoal);
-    unit.moveTo(this._applyCrowdAvoidance(unit, nextWaypoint));
+    const steered = this._applyCrowdAvoidance(unit, nextWaypoint);
+    unit.moveTo(state.bypassGoal ? steered : this._steerIntoShieldSlot(unit, steered));
+  }
+
+  /**
+   * Sorts each team's shield carriers into walls: the carriers of one rank, side by side across the line of advance,
+   * each given a slot shieldSlotSpacing from the next about the middle of the wall. Carriers close up into their slots
+   * on the march and in contact, so their boards overlap.
+   */
+  private _assignShieldSlots(): void {
+    this._shieldSlots.clear();
+    let walls = 0;
+    const standing = this._units.filter((unit) => !unit.isDead && !unit.linkedParent);
+    const teams = [...new Set(standing.map((unit) => unit.team))].sort((a, b) => a - b);
+    for (const team of teams) {
+      const carriers = standing.filter((unit) => unit.team === team && this._carriesWallShield(unit));
+      const enemies = standing.filter((unit) => unit.team !== team);
+      if (carriers.length < 2 || enemies.length === 0) continue;
+      const middle = (units: RuntimeUnit[], axis: "x" | "z") => units.reduce((sum, unit) => sum + unit.position[axis], 0) / units.length;
+      let fx = middle(enemies, "x") - middle(carriers, "x");
+      let fz = middle(enemies, "z") - middle(carriers, "z");
+      const advance = Math.hypot(fx, fz);
+      if (advance < 0.01) continue;
+      fx /= advance;
+      fz /= advance;
+      // Depth runs along the advance, side across it.
+      const placed = carriers.map((unit) => ({
+        unit,
+        depth: unit.position.x * fx + unit.position.z * fz,
+        side: unit.position.z * fx - unit.position.x * fz,
+      })).sort((a, b) => b.depth - a.depth || a.unit.runtimeId - b.unit.runtimeId);
+      while (placed.length > 0) {
+        const front = placed[0].depth;
+        const rank = placed.filter((entry) => entry.depth >= front - this.shieldRankDepth)
+          .sort((a, b) => a.side - b.side || a.unit.runtimeId - b.unit.runtimeId);
+        placed.splice(0, rank.length);
+        let start = 0;
+        for (let i = 1; i <= rank.length; i++) {
+          if (i < rank.length && rank[i].side - rank[i - 1].side <= this.shieldWallGap) continue;
+          const wall = rank.slice(start, i);
+          start = i;
+          if (wall.length < 2) continue;
+          const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * this.shieldSlotSpacing;
+          const wallId = walls++;
+          wall.forEach((entry, k) => {
+            const shift = first + k * this.shieldSlotSpacing - entry.side;
+            this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift) });
+          });
+        }
+      }
+    }
+  }
+
+  /** A man on his feet holding the line with a full board: bucklers and chargers do not make a wall. */
+  private _carriesWallShield(unit: RuntimeUnit): boolean {
+    const shield = unit.visualConfig.shield;
+    return unit.definition.aiProfileId === "ai.brace" && shield !== "none" && shield !== "buckler"
+      && !unit.isToppled && !unit.isDowned;
+  }
+
+  /** The step across that takes a carrier toward its slot, no longer than shieldSlotStride, or null when it stands in it. */
+  private _shieldSlotStep(unit: RuntimeUnit): Vector3 | null {
+    const offset = this._shieldSlots.get(unit)?.offset;
+    if (!offset) return null;
+    const reach = offset.length();
+    if (reach <= 0.05) return null;
+    return offset.scale(Math.min(reach, this.shieldSlotStride) / reach);
+  }
+
+  /** A slotted carrier marches a stride ahead and a step across toward its slot, so the wall closes up as it advances. */
+  private _steerIntoShieldSlot(unit: RuntimeUnit, target: Vector3): Vector3 {
+    const step = this._shieldSlotStep(unit);
+    if (!step) return target;
+    const ahead = target.subtract(unit.position);
+    ahead.y = 0;
+    if (ahead.lengthSquared() <= 1) return target.add(step);
+    return unit.position.add(ahead.normalize()).addInPlace(step);
   }
 
   private _buildNavigationWaypoints(unit: RuntimeUnit, desired: Vector3): Vector3[] {
@@ -678,7 +780,10 @@ export class SimulationSystem {
       // Press up against standing allies; step closely around fallen bodies of either team
       const ally = other.team === unit.team;
       const fallen = other.isToppled || other.isDowned;
-      const separation = unit.collisionBodyRadius + other.collisionBodyRadius
+      // Two carriers of one wall only steer apart inside their slot spacing.
+      const slot = this._shieldSlots.get(unit);
+      const sameWall = !fallen && slot !== undefined && slot.wall === this._shieldSlots.get(other)?.wall;
+      const separation = sameWall ? this.shieldSlotSpacing : unit.collisionBodyRadius + other.collisionBodyRadius
         + (fallen ? this.fallenAvoidanceRadius : !ally ? this.localAvoidanceRadius : this.formationAvoidanceRadius);
       if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
 
