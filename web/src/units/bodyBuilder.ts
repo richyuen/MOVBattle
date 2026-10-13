@@ -336,7 +336,7 @@ export function buildArticulatedBody(
   headTop.position.y = headHeight * s;
 
   // ─── Bead Eyes (small black beads, no sclera) ───
-  const eyeDiam = headBase * 0.11;
+  const eyeDiam = headBase * 0.15;
   const pupilDiam = headBase * 0.02;
   const eyeSegs = 6;
   const eyeY = headHeight * s * 0.55;
