@@ -292,7 +292,7 @@ export class CameraController {
       alpha: from.alpha + Math.atan2(Math.sin(awayFromGiant - from.alpha), Math.cos(awayFromGiant - from.alpha)), // swing the short way round
       // Beside a giant the eye stands a little above the men and looks down on them, so the ranks behind the nearest man show over him: from below, his torso covered them. Only a little: steeper, the grass filled the frame and left no sky over them.
       // And it aims at the middle of the men standing round the focus, not at the one man, who put the rest of them off to one side and cut by the edge.
-      beta: giant ? Math.PI / 2.1 : Math.PI / 1.9,
+      beta: giant ? Math.PI / 2.25 : Math.PI / 1.9,
       radius,
       target: {
         x: giant ? (box.group ?? box.focus).x : spread ? box.focus.x : (box.minX + box.maxX) / 2,
