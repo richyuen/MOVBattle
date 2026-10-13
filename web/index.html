@@ -248,7 +248,11 @@
     .btn-corner {
       min-width: 108px;
       padding-bottom: 12px;
+      /* Square-cornered tabs like Clear, the end toward the middle of the bar cut on the same slant: not rounded pills */
+      border-radius: 0;
     }
+    #btnCampaign { clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%); }
+    #btnUnlimited { clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%); }
 
     #campaignStatus {
       font-size: 12px;
