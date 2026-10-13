@@ -240,11 +240,11 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.2, depth: 1.6 }, scene);
   base.position.y = 0.4; base.parent = rig; base.material = makeMat(scene, Color3.Lerp(new Color3(0.5, 0.35, 0.18), color, 0.3)); allMeshes.push(base);
 
-  // Wheels (on the sides, X axis)
-  for (const xOff of [-0.45, 0.45]) {
+  // Wheels (on the sides, X axis): as tall as the deck and thick, standing clear of its edges
+  for (const xOff of [-0.58, 0.58]) {
     for (const zOff of [-0.5, 0.5]) {
-      const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.5, tessellation: 12 }, scene);
-      wheel.position.set(xOff, 0.25, zOff);
+      const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.14, diameter: 0.7, tessellation: 12 }, scene);
+      wheel.position.set(xOff, 0.35, zOff);
       wheel.rotation.z = Math.PI / 2;
       wheel.parent = rig; wheel.material = wood; allMeshes.push(wheel);
     }
