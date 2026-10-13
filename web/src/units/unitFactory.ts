@@ -34,6 +34,8 @@ const SKIN_FLESH_WEIGHT = 0.25;
 // Bare skin is part self-lit with the hue of its team colour, so the faces lit by the sun are a bright team colour and not a dull one.
 const SKIN_GLOW = 0.4;
 const SKIN_GLOW_BLUE = 1.5;
+// Red skin keeps three quarters of its blue: the blue sky light on the whole of it turned the lit faces pink.
+const WARM_SKIN_BLUE = 0.75;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is quartered: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.25;
@@ -324,7 +326,8 @@ function applyMaterialPreset(
   body.bodyMaterial.metallic = tint.metallic * BODY_METAL_WEIGHT;
   body.bodyMaterial.roughness = tint.roughness;
   body.bodyMaterial.alpha = tint.alpha;
-  body.skinMaterial.baseColor = tint.skinDiffuse;
+  const warmSkin = skinColor.r > skinColor.g && skinColor.r > skinColor.b;
+  body.skinMaterial.baseColor = warmSkin ? new Color3(tint.skinDiffuse.r, tint.skinDiffuse.g, tint.skinDiffuse.b * WARM_SKIN_BLUE) : tint.skinDiffuse;
   // Only the part of the team colour above its weakest channel glows: the whole colour would wash the skin toward white.
   // Blue glows half again as strongly, so blue skin is a clear sky blue and not a teal grey; red skin has next to no blue above its weakest channel and is unchanged.
   const grey = Math.min(skinColor.r, skinColor.g, skinColor.b);
