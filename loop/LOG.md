@@ -152,3 +152,4 @@ iter 150 | impact-dust-house-sphere, blue-skin-pale, battle-cam-bare-foreground,
 iter 151 | battle-cam-distance, cloth-skin-one-tone, cannon-barrel-perched, muzzle-smoke-equal-lobes, walk-lean-upright, crew-hoops-raised, impact-dust-house-sphere | 6/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 152 | muzzle-smoke-equal-lobes, battle-cam-fov, bomb-cannon-perched, run-stride-short, run-arms-tidy, tunic-trousers-one-navy, crew-hoops-pale, impact-dust-house-sphere | 6/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 153 | run-arms-tidy, front-lines-no-pile, standoff-cam-fov, bomb-cannon-above-wheels, crew-hoops-violet, muzzle-smoke-equal-lobes, armoured-legs-one-navy | 6/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
+iter 154 | standoff-crews-cut, armoured-legs-one-navy, muzzle-smoke-golf-balls, shields-never-lap, crew-hoops-cool-grey, run-arms-one-splay | 4/6 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
