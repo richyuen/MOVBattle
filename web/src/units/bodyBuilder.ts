@@ -150,7 +150,7 @@ const LIMB_STRETCH = 1.16;
 /** A mitt is sized from the sleeve it hangs from and not from the head: this many sleeve-top widths across its longest side. */
 const MITT_FROM_SLEEVE = 1.7;
 /** Sleeves and thighs are a little fuller than the forearms and shins they end in: more made them square puffed blocks. */
-const SLEEVE_BULK = 1.15;
+const SLEEVE_BULK = 1.05;
 /** A limb narrows in one unbroken line: the forearm and shin start at the width the sleeve and thigh end at, with no step at the joint, and run down to a wrist and ankle no thinner than this share of it. */
 const LOWER_LIMB_MIN_TAPER = 0.6;
 /** Feet are sized from the shin as if it kept this share of its width to the ankle, so the foot is a boot wider than the ankle above it. */
