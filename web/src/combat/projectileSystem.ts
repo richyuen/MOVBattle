@@ -189,15 +189,15 @@ export class ProjectileSystem {
     sm.transparencyMode = 2;
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
-    // The lobes are one clump and not a row along the barrel: all are thrown up to 0.25 any way off one point 0.3 out from the
+    // The lobes are one clump and not a row along the barrel: all are thrown up to 0.15 any way off one point 0.3 out from the
     // muzzle, the first the biggest and the rest a third to three fifths of its width: a clump of many small chunks round one lobe, not four big spheres.
     for (let i = 0; i < 8; i++) {
       const diameter = (i === 0 ? 0.44 : 0.15 + Math.random() * 0.11) * scale;
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
       smoke.position = flash.position.add(direction.scale(0.3 * scale));
-      smoke.position.x += (Math.random() - 0.5) * 0.5 * scale;
-      smoke.position.y += (Math.random() - 0.3) * 0.5 * scale;
-      smoke.position.z += (Math.random() - 0.5) * 0.5 * scale;
+      smoke.position.x += (Math.random() - 0.5) * 0.3 * scale;
+      smoke.position.y += (Math.random() - 0.3) * 0.3 * scale;
+      smoke.position.z += (Math.random() - 0.5) * 0.3 * scale;
       smoke.convertToFlatShadedMesh();
       const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
       const tones: number[] = [];
