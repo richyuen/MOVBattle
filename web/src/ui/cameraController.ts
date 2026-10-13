@@ -281,7 +281,9 @@ export class CameraController {
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
     const giantRadius = Math.min(4.5, Math.max(3, giantOff - 2.5));
     const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
-    const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) : from.alpha;
+    // A giant too near the focus to stand 4.5 clear behind the eye is not behind it at all: its tusks and legs came round into the frame. The eye goes to the far side of the focus, and the giant is the backdrop.
+    const farSide = giantOff - 4.5 < 3 ? Math.PI : 0;
+    const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) + farSide : from.alpha;
     const to: CameraViewState = {
       alpha: from.alpha + Math.atan2(Math.sin(awayFromGiant - from.alpha), Math.cos(awayFromGiant - from.alpha)), // swing the short way round
       beta: Math.PI / 1.9,
