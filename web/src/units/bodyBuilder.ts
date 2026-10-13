@@ -182,7 +182,7 @@ const SLEEVE_HEAD_RISE = 0.35;
 const SLEEVE_HEAD_CROWN = 0.6;
 /** Shoulder yoke: the top of the torso is a slab that reaches out over both arm roots, to this share of a sleeve past each shoulder joint, so the arm comes out from under the chest's own silhouette
  * and not from a post stood beside it. It runs from the chest line up to this share of a sleeve above the joints at this share of the torso's depth, and from there slopes in to the neck. */
-const YOKE_REACH = 0.42;
+const YOKE_REACH = 0.2;
 const YOKE_RISE = 0.3;
 const YOKE_DEPTH = 0.92;
 const YOKE_NECK = 0.5;
