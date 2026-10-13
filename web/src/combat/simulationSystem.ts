@@ -265,9 +265,9 @@ export class SimulationSystem {
           const delta = b.position.subtract(a.position);
           delta.y = 0;
           const sameTeam = a.team === b.team;
-          // Two bracers of one team stand a fifth closer than their body widths, so a shield line closes up shoulder to shoulder. Any other two of one team stand a tenth closer, so the ranks behind press up into the front one. Enemy contact keeps the full distance.
+          // Two bracers of one team stand three tenths closer than their body widths, so the shields of a line lap each other: at a fifth they stood rim to rim. Any other two of one team stand a tenth closer, so the ranks behind press up into the front one. Enemy contact keeps the full distance.
           const bracedRank = sameTeam && a.definition.aiProfileId === "ai.brace" && b.definition.aiProfileId === "ai.brace";
-          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (bracedRank ? 0.8 : sameTeam ? 0.9 : 1);
+          const minDistance = (a.collisionBodyRadius + b.collisionBodyRadius) * (bracedRank ? 0.7 : sameTeam ? 0.9 : 1);
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
