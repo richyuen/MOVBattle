@@ -272,7 +272,7 @@ export class SimulationSystem {
           const overlap = minDistance - distance + this.collisionResolutionPadding;
           if (overlap <= 0) continue;
 
-          const contactBias = sameTeam ? 0.82 : 1.0;
+          const contactBias = sameTeam ? 0.55 : 1.0;
           const resistanceA = Math.max(0.55, a.definition.mass * a.crowdResistance * (1 + a.braceAbsorption));
           const resistanceB = Math.max(0.55, b.definition.mass * b.crowdResistance * (1 + b.braceAbsorption));
           const inverseMassA = 1 / resistanceA;
