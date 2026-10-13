@@ -174,6 +174,8 @@ export class SimulationSystem {
   readonly shieldSlotStride = 0.6;
   /** A rear rank stands this far behind the rank it backs, each man behind the gap between two boards. */
   readonly shieldRankGap = 0.75;
+  /** On the march a rear-rank man slows over this last stretch as he comes up to his depth behind the front, and halts at it. */
+  readonly shieldRankFollowBand = 0.25;
   /** A slotted carrier in contact stands square to the wall's advance while his enemy is within this arc of it; outside it he turns to face him. */
   readonly shieldHeadingArc = 1.0;
   /** Each slotted carrier's wall and the sideways step from where it stands to its slot in it. */
@@ -615,7 +617,20 @@ export class SimulationSystem {
   }
 
   private _moveUnitToward(unit: RuntimeUnit, desired: Vector3, engageDistance: number, now: number): void {
-    unit.setCohesionMoveMultiplier(this._resolveCohesionMoveMultiplier(unit, desired));
+    // A rear-rank man follows the wall he backs: he marches no closer to it than shieldRankGap, paced to the front as he comes up,
+    // and when the front halts he halts behind it, square to the advance, stepping only across to his gap. He is never pulled back.
+    const slot = this._shieldSlots.get(unit);
+    const behind = slot?.hold ? slot.hold.x * Math.sin(slot.heading) + slot.hold.z * Math.cos(slot.heading) : Infinity;
+    if (slot && behind <= 0) {
+      const across = this._shieldSlotStep(unit);
+      if (across) unit.moveTo(unit.position.add(across));
+      else unit.stopMoving();
+      this._clearPathState(unit);
+      unit.faceTarget(desired);
+      unit.holdHeading(slot.heading);
+      return;
+    }
+    unit.setCohesionMoveMultiplier(Math.min(this._resolveCohesionMoveMultiplier(unit, desired), 0.5 + 0.5 * behind / this.shieldRankFollowBand));
     const navigationGrid = this.navigationGrid;
     if (!navigationGrid) {
       unit.moveTo(this._steerIntoShieldSlot(unit, this._resolveHazardAwareMoveTarget(unit, desired)));
@@ -661,7 +676,7 @@ export class SimulationSystem {
    * Sorts each team's shield carriers into walls: the carriers of one rank, side by side across the line of advance,
    * each given a slot shieldSlotSpacing from the next about the middle of the wall. Carriers close up into their slots
    * on the march and in contact, so their boards overlap. A rank behind a wall is slotted to it: each man behind the
-   * gap between two of its boards and shieldRankGap back, so the wall stands two deep.
+   * gap between two of its boards and shieldRankGap back, on the march as in contact, so the wall stands two deep.
    */
   private _assignShieldSlots(): void {
     this._shieldSlots.clear();
