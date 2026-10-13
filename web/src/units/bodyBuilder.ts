@@ -184,15 +184,16 @@ const SLEEVE_HEAD_PLATE = 1.08;
 const SLEEVE_HEAD_DROP = 0.4;
 const SLEEVE_HEAD_RISE = 0.35;
 const SLEEVE_HEAD_CROWN = 0.6;
-/** Shoulder yoke: the top of the torso is a slab that reaches out over both arm roots, to this share of a sleeve past each shoulder joint, so the arm comes out from under the chest's own silhouette
- * and not from a post stood beside it. It runs from the chest line up to this share of a sleeve above the joints at this share of the torso's depth, and from there slopes in to the neck. */
+/** Shoulder ridge: the torso has no flat top. Its widest line reaches this share of a sleeve past each shoulder joint and lies this share of a sleeve below the joints, at this share of the torso's depth;
+ * from that line one plane a side runs up and in to the neck, through the sleeve head, so the shoulder is a slope the arm comes out of and not a plate with a corner over each arm. */
 const YOKE_REACH = 0.2;
-const YOKE_RISE = 0.1;
+const YOKE_DROP = 0.6;
 const YOKE_DEPTH = 0.92;
 const YOKE_NECK = 0.5;
-// The hull under the yoke: its foot stands this far up the torso, this much of the waist wide and deep (a box drawn inside the waist's round).
+// The hull under the ridge: its foot stands this far up the torso, this much of the waist wide and deep (a box drawn inside the waist's round) and never narrower than HULL_TAPER of the shoulder line, so its sides run down near parallel and not as a V.
 const HULL_FOOT = 0.06;
 const HULL_WAIST = 1.0;
+const HULL_TAPER = 0.84;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
 const THIGH_OF_LEG = 0.2;
 /** Thigh head: the thigh swells up to the hip as the sleeve does to the shoulder, to this many thighs wide, and its crown sinks into the pelvis block in place of a ball cap. */
@@ -374,15 +375,15 @@ export function buildArticulatedBody(
     return m;
   }
   /**
-   * Shoulder yoke and the hull under it, one solid with the torso: at the shoulder line it is as wide as the arm roots it covers, and from that edge its side planes run
-   * straight down and in to the waist, an underarm gusset in place of an armpit gap under a shelf. The chest stands out of its front as a swell; above, a wedge slopes in to the neck.
+   * Shoulder ridge and the hull under it, one solid with the torso: its widest line lies under the arm roots it covers, and from there its side planes run near straight
+   * down to the waist, an underarm gusset in place of an armpit gap under a shelf. The chest stands out of its front as a swell; above that line a gable slopes in to the neck through both sleeve heads.
    */
   function shoulderYoke(n: string, jointX: number, jointY: number): Mesh {
     const chestW = chestTop * CHEST_SWELL * 0.96;
     const waistD = waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001);
     const yokeW = Math.max(chestW, (jointX + upperArmTop * YOKE_REACH) * 2);
     const yokeD = Math.max(torsoD * YOKE_DEPTH, upperArmTop * 1.1);
-    const yokeY = jointY + upperArmTop * YOKE_RISE;
+    const yokeY = Math.max(torsoH * 0.5, jointY - upperArmTop * YOKE_DROP);
     const neckW = Math.max(yokeW * YOKE_NECK, chestTop * SHOULDER_SLOPE * 0.9);
     const frustum = (part: string, y0: number, y1: number, w0: number, d0: number, w1: number, d1: number): Mesh => {
       const box = MeshBuilder.CreateBox(`${n}_${part}`, { width: w1 * s, height: (y1 - y0) * s, depth: d1 * s }, scene);
@@ -397,7 +398,8 @@ export function buildArticulatedBody(
       box.computeWorldMatrix(true);
       return box;
     };
-    const slab = frustum("hull", torsoH * HULL_FOOT, yokeY, waist * HULL_WAIST, waistD * HULL_WAIST, yokeW, yokeD);
+    const footW = Math.max(waist * HULL_WAIST, yokeW * HULL_TAPER);
+    const slab = frustum("hull", torsoH * HULL_FOOT, yokeY, footW, waistD * HULL_WAIST, yokeW, yokeD);
     const slope = frustum("slope", yokeY, torsoH * 1.02, yokeW, yokeD, neckW, yokeD * 0.75);
     const m = Mesh.MergeMeshes([slab, slope], true)!;
     m.name = n;
