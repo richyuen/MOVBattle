@@ -289,6 +289,7 @@ export class SimulationSystem {
           const inverseMassB = 1 / resistanceB;
           const inverseMassTotal = inverseMassA + inverseMassB;
           // A colossus on the move parts its own troops to either side of its path: pushed straight off it, the ones at its rump stayed queued behind it.
+          // The push is three tenths forward as well, so the parted troops are carried along its flanks to its front and do not trail at its hind legs.
           const colossus = !sameTeam ? null : a.definition.size === "colossal" ? a : b.definition.size === "colossal" ? b : null;
           const sideways = (unit: RuntimeUnit, away: Vector3): Vector3 => {
             if (!colossus || unit === colossus) return away;
@@ -297,7 +298,7 @@ export class SimulationSystem {
             heading.normalize();
             const side = away.subtract(heading.scale(Vector3.Dot(away, heading)));
             if (side.lengthSquared() < 0.0025) side.set(-heading.z, 0, heading.x).scaleInPlace(unit.runtimeId % 2 === 0 ? 1 : -1);
-            return side.normalize();
+            return side.normalize().addInPlace(heading.scale(0.3));
           };
           a.applyCollisionSeparation(sideways(a, normal.scale(-1)).scale(overlap * (inverseMassA / inverseMassTotal) * a.crowdSeparationStrength * contactBias));
           b.applyCollisionSeparation(sideways(b, normal).scale(overlap * (inverseMassB / inverseMassTotal) * b.crowdSeparationStrength * contactBias));
