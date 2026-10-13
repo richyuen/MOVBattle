@@ -582,8 +582,8 @@ export class ProceduralAnimator {
     const speed = 8; // cycle speed
     const wobble = 0.08; // constant wobble overlay
 
-    // Torso leans forward and sways side to side
-    b.torso.rotation.x = 0.55 + Math.sin(t * speed * 0.5) * wobble * 0.5;
+    // Torso leans forward and sways side to side: at 0.55 a whole advancing rank bowed from the waist in unison
+    b.torso.rotation.x = 0.38 + Math.sin(t * speed * 0.5) * wobble * 0.5;
     b.torso.rotation.z = Math.sin(t * speed * 0.5) * 0.06;
 
     // Head wobbles
