@@ -670,7 +670,7 @@ export class ProceduralAnimator {
           return v - Math.floor(v);
         };
         b.torso.rotation.x += 0.06;
-        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.7 - 0.28 + (h(61) - 0.5) * 0.9;
+        b.rightShoulder.rotation.x = b.rightShoulder.rotation.x * 0.7 - 1.2 + (h(61) - 0.5) * 0.9;
         b.rightShoulder.rotation.z += (h(62) - 0.5) * 0.7;
         b.leftShoulder.rotation.x *= 0.82;
         b.rightElbow.rotation.x -= 0.16 + (h(63) - 0.5) * 0.8;
