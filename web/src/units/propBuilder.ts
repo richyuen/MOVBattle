@@ -706,7 +706,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       const color = type === "bone_staff" ? new Color3(0.9, 0.85, 0.75)
         : type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
-      const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.03 * s }, scene);
+      const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);
       shaft.material = mat(scene, color);
       if (type === "staff" || type === "bone_staff") {
         const orb = MeshBuilder.CreateSphere("orb", { diameter: 0.1 * s, segments: 8 }, scene);
