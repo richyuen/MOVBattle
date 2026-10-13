@@ -87,6 +87,17 @@ for (const x of [4, 5]) {
   }
 }
 
+// Two lines of shield carriers meeting head on with no giant between them: the reference shield wall (tabs_screenshot_06).
+const SHIELD_WALL = [];
+for (let i = 0; i < 8; i++) {
+  const z = -2.8 + i * 0.8;
+  SHIELD_WALL.push({ unitId: "ancient.hoplite", team: 0, position: { x: -4, z } });
+  SHIELD_WALL.push({ unitId: "tribal.protector", team: 1, position: { x: 4, z } });
+}
+for (let i = 0; i < 6; i++) {
+  SHIELD_WALL.push({ unitId: "medieval.squire", team: 0, position: { x: -5, z: -2 + i * 0.8 } });
+}
+
 // Keep only summary.json for iterations older than KEEP_ITERS: the PNGs run to ~10 MB a turn.
 function pruneOld() {
   if (iter <= 0) return;
@@ -287,6 +298,25 @@ async function main() {
       }
       await page.evaluate(() => {
         document.body.classList.remove("capture-mode");
+        window.game.resetBattle();
+        window.advanceTime(50);
+      });
+
+      // Shield lines in contact, and the same press 150 ms on.
+      const wallPlaced = await page.evaluate((units) => {
+        let ok = 0;
+        for (const u of units) {
+          if (window.game.spawnUnit(u.unitId, u.team, u.position)) ok++;
+        }
+        window.game.startBattleImmediate();
+        window.advanceTime(2500);
+        return ok;
+      }, SHIELD_WALL);
+      summary.notes.push(`shield_wall placed ${wallPlaced}/${SHIELD_WALL.length} units`);
+      await shot(page, "shield_wall_2500ms");
+      await page.evaluate(() => window.advanceTime(150));
+      await shot(page, "shield_wall_2650ms");
+      await page.evaluate(() => {
         window.game.resetBattle();
         window.advanceTime(50);
       });
