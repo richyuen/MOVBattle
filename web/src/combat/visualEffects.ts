@@ -369,21 +369,30 @@ export class VisualEffects {
       return mesh;
     };
     // Fireball: no ball. Faceted shards thrown out of one point, each a different solid, size and length, lying along its own line of flight:
-    // a few pale lumps heaped off-centre for the heart, long pale spikes fanned out round them, and short orange ones low along the ground for the skirt.
+    // four fat squashed pale lobes of unequal size for the heart, each pushed off the middle its own way, long pale spikes fanned out round them, and short orange ones low along the ground for the skirt.
     // The silhouette is a ragged star wider than it is tall, about a man and a half high for a shell, and no piece of it is round.
     // Fixed layout, so every blast has the same shape.
     const fireScale = Math.min(scale * 1.2, 1.6);
-    const fire: { mesh: Mesh; dir: Vector3; reach: number; size: number; length: number; life: number }[] = [];
-    const SHARDS = 22;
-    const HEART = 5;
+    const fire: { mesh: Mesh; dir: Vector3; reach: number; size: number; length: number; wide: number; deep: number; life: number }[] = [];
+    // The heart is not a ball: one big lobe up and to one side, a middling one low on the other, two small ones out at the edges. None sits on the middle,
+    // none is as wide as it is deep, and each is a different size, so they stand as a lumpy mass with dents between them and do not merge into a globe.
+    const LOBES = [
+      { angle: 0.6, lift: 0.7, size: 0.95, reach: 0.34 },
+      { angle: 2.9, lift: 0.3, size: 0.7, reach: 0.52 },
+      { angle: 4.6, lift: 0.5, size: 0.52, reach: 0.48 },
+      { angle: 5.6, lift: 0.15, size: 0.4, reach: 0.64 },
+    ];
+    const HEART = LOBES.length;
     const SPIKES = 9;
+    const SHARDS = HEART + SPIKES + 8;
     for (let i = 0; i < SHARDS; i++) {
       const heart = i < HEART;
+      const lobe = heart ? LOBES[i] : null;
       const skirt = i >= HEART + SPIKES;
       const jitter = (i * 0.618034) % 1; // spreads sizes and lives evenly without two neighbours alike
-      const angle = i * 2.39996 + 0.6;
-      // Heart lumps lean a little off the vertical, spikes fan from steep to shallow, the skirt lies nearly flat
-      const lift = heart ? 0.55 + 0.4 * jitter : skirt ? 0.08 + 0.2 * jitter : 0.3 + 0.6 * jitter;
+      const angle = lobe ? lobe.angle : i * 2.39996 + 0.6;
+      // Each heart lobe leans its own way, spikes fan from steep to shallow, the skirt lies nearly flat
+      const lift = lobe ? lobe.lift : skirt ? 0.08 + 0.2 * jitter : 0.3 + 0.6 * jitter;
       const flat = Math.sqrt(1 - lift * lift);
       const dir = new Vector3(Math.cos(angle) * flat, lift, Math.sin(angle) * flat);
       const mesh = MeshBuilder.CreatePolyhedron("burstFlash", { type: heart ? 2 + (i % 2) : i % 4, size: 0.5 }, this._scene);
@@ -392,13 +401,16 @@ export class VisualEffects {
       // Long axis along the line of flight, and a turn about it so no two facets catch the eye alike
       mesh.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion()).multiply(Quaternion.RotationAxis(Vector3.Up(), i * 1.3));
       glow?.addExcludedMesh(mesh); // none of it is in the glow layer: its halo washed over the whole burst and it read as see-through haze
-      const size = (heart ? 0.55 + 0.3 * jitter : skirt ? 0.3 + 0.2 * jitter : 0.28 + 0.24 * jitter) * fireScale;
+      const size = (lobe ? lobe.size : skirt ? 0.3 + 0.2 * jitter : 0.28 + 0.24 * jitter) * fireScale;
       fire.push({
         mesh,
         dir,
-        reach: (heart ? 0.12 + 0.2 * jitter : skirt ? 0.55 + 0.35 * jitter : 0.4 + 0.3 * jitter) * fireScale,
+        reach: (lobe ? lobe.reach : skirt ? 0.55 + 0.35 * jitter : 0.4 + 0.3 * jitter) * fireScale,
         size,
-        length: size * (heart ? 1.15 : skirt ? 1.7 + 0.8 * jitter : 2.0 + 1.2 * jitter),
+        length: size * (heart ? 0.95 : skirt ? 1.7 + 0.8 * jitter : 2.0 + 1.2 * jitter),
+        // A lobe is fat one way and squashed the other; a spike is as deep as it is wide
+        wide: heart ? 1.3 : 1,
+        deep: heart ? 0.68 : 1,
         // The heart outlasts the spikes, and each piece goes out at its own moment: the burst breaks up, it does not shrink as one
         life: heart ? 0.42 + 0.12 * jitter : 0.24 + 0.24 * jitter,
       });
@@ -475,7 +487,7 @@ export class VisualEffects {
           const burn = Math.min(1, elapsed / 0.06 + 0.3) * Math.max(0, Math.min(1, (shard.life - elapsed) / 0.14));
           shard.dir.scaleToRef(shard.reach * (0.35 + 1.1 * flight), shard.mesh.position);
           const girth = Math.max(0.001, shard.size * burn);
-          shard.mesh.scaling.set(girth, Math.max(0.001, shard.length * burn), girth);
+          shard.mesh.scaling.set(girth * shard.wide, Math.max(0.001, shard.length * burn), girth * shard.deep);
         }
         const swell = 0.45 + 0.55 * Math.min(1, elapsed / 0.2);
         // The puff is gone while the clods it kicked up are still settling.
