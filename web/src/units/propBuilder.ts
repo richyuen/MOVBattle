@@ -1358,7 +1358,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
   const teamHsv = teamColor.toHSV();
   const cool = teamHsv.r > 150 && teamHsv.r < 300;
   // A cool board is turned 15 toward royal blue (30 was a violet board beside a royal-blue tabard) and nearly fully saturated: the sky-blue team colour itself is a cyan.
-  if (cool) teamColor = Color3.HSVtoRGBToRef(teamHsv.r + 15, Math.max(teamHsv.g, 0.95), teamHsv.b, new Color3());
+  if (cool) teamColor = Color3.HSVtoRGBToRef(teamHsv.r + 15, Math.max(teamHsv.g, 0.95), teamHsv.b * 0.72, new Color3()); // and darker than the cloth beside it: at the team value the board outshone the tabard
   const board = cool ? teamColor : Color3.Lerp(teamColor, Color3.White(), 0.12);
   switch (type) {
     case "none": return null;
