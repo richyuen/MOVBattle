@@ -1435,16 +1435,16 @@ function buildMinotaur(scene: Scene, color: Color3): ArticulatedBody {
 
 const MAMMOTH_SCALE = 1.8;
 
-const MAMMOTH_HIDE = new Color3(0.30, 0.11, 0.17);
+const MAMMOTH_HIDE = new Color3(0.36, 0.20, 0.16);
 
-function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE): ArticulatedBody {
+function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0): ArticulatedBody {
   const root = new TransformNode("mammoth_root", scene);
   const allMeshes: Mesh[] = [];
   // The hide keeps its own colour: only the war paint is the team's. applyMaterialPreset()
   // repaints bodyMaterial/skinMaterial with the team tint, so those point at the paint.
-  // Part self-lit, so the faces turned from the sun stay a plum hide and not near-black; asked of the factory, whose plain wood is shared
+  // Part self-lit, so the faces turned from the sun stay a brown hide and not near-black; asked of the factory, whose plain wood is shared
   const hideLight = { emissive: hide.scale(0.16) };
-  const fur = getMaterialFactory().get("wood", Color3.Lerp(hide, color, 0.12), hideLight);
+  const fur = getMaterialFactory().get("wood", Color3.Lerp(hide, color, teamTint), hideLight);
   const shaggyFur = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), 0.45), hideLight);
   // Tusks are warm ivory and part self-lit, so the blue ambient does not grey them
   const tuskMat = getMaterialFactory().get("bone", new Color3(1.0, 0.82, 0.58), { emissive: new Color3(0.22, 0.16, 0.09) });
@@ -1744,7 +1744,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE):
 }
 
 function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
-  const body = buildMammoth(scene, color, new Color3(0.46, 0.44, 0.42));
+  const body = buildMammoth(scene, color, new Color3(0.46, 0.44, 0.42), 0.12);
   const shrineWood = makeMat(scene, brighten(color, 0.22));
   const shrineGold = makeMat(scene, brighten(color, 0.34));
   const cloth = makeMat(scene, brighten(color, 0.42));
