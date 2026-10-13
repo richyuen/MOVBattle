@@ -378,7 +378,7 @@ export class VisualEffects {
     // The heart is not a ball: one big lobe up and to one side, a middling one low on the other, two small ones out at the edges. None sits on the middle,
     // none is as wide as it is deep, and each is a different size, so they stand as a lumpy mass with dents between them and do not merge into a globe.
     const LOBES = [
-      { angle: 0.6, lift: 0.7, size: 0.75, reach: 0.34 },
+      { angle: 0.6, lift: 0.7, size: 0.95, reach: 0.34 },
       { angle: 2.9, lift: 0.3, size: 0.7, reach: 0.52 },
       { angle: 4.6, lift: 0.5, size: 0.52, reach: 0.48 },
       { angle: 5.6, lift: 0.15, size: 0.4, reach: 0.64 },
