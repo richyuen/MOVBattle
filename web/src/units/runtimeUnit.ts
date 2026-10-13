@@ -910,6 +910,9 @@ export class RuntimeUnit {
     this._deathSpinX = (fall < 0.5 ? -1 : 1) * (1.5 + (fall * 2 % 1) * 3) * massInv;
     this._deathSpinY = (turn - 0.5) * 4 * massInv;
     this._corpseYaw = this.body.root.rotation.y + (turn - 0.5) * Math.PI * 2;
+    // Two in five come to rest on one flank or the other instead, where the animator curls them up.
+    const flank = Math.floor(turn * 20) % 10;
+    this._corpseRoll = flank < 2 ? Math.PI / 2 : flank < 4 ? -Math.PI / 2 : 0;
 
     // Switch to death animation (ragdoll joints)
     this.animator.setState(AnimState.Dead);
@@ -990,15 +993,18 @@ export class RuntimeUnit {
     }
   }
 
-  /** A grounded humanoid corpse rolls onto its back, front or side rather than resting at a lean. */
+  /** A grounded humanoid corpse rolls onto its back, front or the flank it was dealt at death rather than resting at a lean. */
   private _layCorpseFlat(dt: number): number {
     if (isVehicleUnit(this.definition.id) || this.animator.walkStyle === "quadruped") return 0;
     const rot = this.body.root.rotation;
     const nearestFlat = (angle: number): number =>
       Math.round((angle - Math.PI / 2) / Math.PI) * Math.PI + Math.PI / 2;
-    const onSide = Math.abs(Math.sin(rot.z)) > 0.8;
-    const targetX = onSide ? rot.x : nearestFlat(rot.x);
-    const targetZ = onSide ? nearestFlat(rot.z) : Math.round(rot.z / Math.PI) * Math.PI;
+    const onSide = this._corpseRoll !== 0;
+    // On a flank the pitch settles upright in the body's own frame, or the roll would only turn it on the spot face down.
+    const targetX = onSide ? Math.round(rot.x / Math.PI) * Math.PI : nearestFlat(rot.x);
+    const targetZ = onSide
+      ? this._corpseRoll + Math.round((rot.z - this._corpseRoll) / (Math.PI * 2)) * Math.PI * 2
+      : Math.round(rot.z / Math.PI) * Math.PI;
     const settle = Math.min(1, dt * 9);
     rot.x += (targetX - rot.x) * settle;
     rot.z += (targetZ - rot.z) * settle;
@@ -1010,6 +1016,8 @@ export class RuntimeUnit {
 
   /** Heading a corpse turns to as it comes to rest; null until the unit dies. */
   private _corpseYaw: number | null = null;
+  /** Roll a corpse settles at: a quarter turn either way to lie on a flank, 0 to lie on its back or front. */
+  private _corpseRoll = 0;
 
   private _blastTumbling = false;
   private _blastSpinX = 0;
@@ -1441,6 +1449,7 @@ export class RuntimeUnit {
     this._physicsActive = false;
     this._bounceCount = 0;
     this._corpseYaw = null;
+    this._corpseRoll = 0;
     this._deathSpinX = 0;
     this._deathSpinY = 0;
     this._blastTumbling = false;

@@ -56,6 +56,7 @@ export class ProceduralAnimator {
   private _deathJointAngles: number[] = [];
   private _deathRestAngles: number[] = [];
   private _deathAirAngles: number[] = [];
+  private _deathCurlAngles: number[] = [];
   private _deathDamping = 0.97;
 
   constructor(body: ArticulatedBody) {
@@ -200,6 +201,51 @@ export class ProceduralAnimator {
   // the hips and not a four-pointed star. Hashed from the wobble phase like the shove pose, so it consumes no
   // random numbers.
   private _airPose: Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> | null = null;
+  /**
+   * How far the body lies on its side on the ground, 0 to 1, read off the root's own roll. A body down on its side is not a
+   * plank laid on edge: it curls. The hips are also shifted off the root's line so it rests on its flank and not half sunk.
+   */
+  private _sideCurl(): number {
+    const b = this._body;
+    const roll = Math.sin(b.root.rotation.z);
+    const side = Math.max(0, Math.min(1, (Math.abs(roll) - 0.55) / 0.3)) * (1 - this._air);
+    b.hip.position.x = b.hip.position.y * 0.28 * roll * Math.cos(b.root.rotation.x) * side;
+    return side;
+  }
+
+  private _curlPose: Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> | null = null;
+
+  /** The landed shape of a body on its side: folded forward at the waist, head tucked, one knee drawn up to the chest and the other half bent, one arm flopped out ahead and the other folded in. */
+  private _buildCurlPose(): Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> {
+    const h = (n: number): number => {
+      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const b = this._body;
+    const leftLeads = h(61) < 0.5;
+    const drawnHip = -(1.1 + h(62) * 0.5);
+    const drawnKnee = 1.2 + h(63) * 0.7;
+    const looseHip = -(0.3 + h(64) * 0.45);
+    const looseKnee = 0.5 + h(65) * 0.7;
+    const leftReaches = h(66) < 0.5;
+    const reach = -(0.9 + h(67) * 0.6);
+    const reachElbow = -(0.3 + h(68) * 0.5);
+    const tuck = -(0.2 + h(69) * 0.5);
+    const tuckElbow = -(1.0 + h(70) * 0.7);
+    return [
+      [b.torso, 0.5 + h(71) * 0.45, (h(72) - 0.5) * 0.8, 0],
+      [b.neck, 0.25 + h(73) * 0.4, 0, 0],
+      [b.leftShoulder, leftReaches ? reach : tuck, 0, -0.1],
+      [b.rightShoulder, leftReaches ? tuck : reach, 0, 0.1],
+      [b.leftElbow, leftReaches ? reachElbow : tuckElbow, 0, 0],
+      [b.rightElbow, leftReaches ? tuckElbow : reachElbow, 0, 0],
+      [b.leftHip, leftLeads ? drawnHip : looseHip, 0, 0],
+      [b.rightHip, leftLeads ? looseHip : drawnHip, 0, 0],
+      [b.leftKnee, leftLeads ? drawnKnee : looseKnee, 0, 0],
+      [b.rightKnee, leftLeads ? looseKnee : drawnKnee, 0, 0],
+    ];
+  }
+
   private _buildAirPose(): Array<[{ rotation: { x: number; y: number; z: number } }, number, number, number]> {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
@@ -381,6 +427,17 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x += p.rightHipX * k;
       b.leftKnee.rotation.x += p.leftKneeX * k;
       b.rightKnee.rotation.x += p.rightKneeX * k;
+      // Down on its side the body takes the curled shape instead of the sprawl
+      const side = this._sideCurl() * Math.min(1, k);
+      if (side > 0.01) {
+        for (const [joint, x, y, z] of (this._curlPose ??= this._buildCurlPose())) {
+          joint.rotation.x += (x - joint.rotation.x) * side;
+          joint.rotation.y += (y - joint.rotation.y) * side;
+          joint.rotation.z += (z - joint.rotation.z) * side;
+        }
+      }
+    } else if (this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+      this._body.hip.position.x = 0;
     }
     // Air overlay: a limp body in flight blends from the crumple to its own flight shape, and back on landing
     this._air += (this._airTarget - this._air) * Math.min(1, dt * 9);
@@ -1172,6 +1229,15 @@ export class ProceduralAnimator {
       rest(b.rightHip, p.rightHipX, p.rightHipZ);
       rest(b.leftKnee, p.leftKneeX, p.leftKneeZ);
       rest(b.rightKnee, p.rightKneeX, p.rightKneeZ);
+      // A corpse that comes down on its side curls up instead of sprawling.
+      this._deathCurlAngles = this._deathRestAngles.slice();
+      for (const [joint, x, y, z] of (this._curlPose ??= this._buildCurlPose())) {
+        const index = joints.indexOf(joint as (typeof joints)[number]);
+        if (index < 0) continue;
+        this._deathCurlAngles[index * 3] = x;
+        this._deathCurlAngles[index * 3 + 1] = y;
+        this._deathCurlAngles[index * 3 + 2] = z;
+      }
       // A corpse still in the air sags toward its flight shape and only crumples once it lands.
       this._deathAirAngles = this._deathRestAngles.slice();
       for (const [joint, x, y, z] of (this._airPose ??= this._buildAirPose())) {
@@ -1183,6 +1249,7 @@ export class ProceduralAnimator {
       }
     } else {
       this._deathAirAngles = this._deathRestAngles;
+      this._deathCurlAngles = this._deathRestAngles;
     }
 
     for (let i = 0; i < joints.length; i++) {
@@ -1204,8 +1271,11 @@ export class ProceduralAnimator {
   private _animateDead(dt: number): void {
     const joints = this._body.allJoints;
     const air = this._air;
-    const restAt = (index: number): number =>
-      this._deathRestAngles[index] + (this._deathAirAngles[index] - this._deathRestAngles[index]) * air;
+    const side = this.walkStyle === "quadruped" ? 0 : this._sideCurl();
+    const restAt = (index: number): number => {
+      const landed = this._deathRestAngles[index] + (this._deathCurlAngles[index] - this._deathRestAngles[index]) * side;
+      return landed + (this._deathAirAngles[index] - landed) * air;
+    };
 
     for (let i = 0; i < joints.length; i++) {
       const base = i * 3;
