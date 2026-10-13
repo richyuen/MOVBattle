@@ -9,8 +9,8 @@ import type {
 import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisuals";
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
 
-/** Weapons and hats are built a quarter over life size (TABS), so they still read as shapes from across the field */
-const PROP_OVERSIZE = 1.25;
+/** Weapons and hats are built three fifths over life size (TABS), so they still read as shapes from across the field: a quarter over, thin swords and staffs vanished at lineup distance */
+const PROP_OVERSIZE = 1.6;
 
 export function attachProps(
   scene: Scene,
