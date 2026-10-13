@@ -15,7 +15,7 @@ const PROP_OVERSIZE = 1.6;
 const HAT_OVERSIZE = 1.3;
 /** Cone and brim hats keep the weapons' three fifths: they sit on top of the head and not round it, and at a third over a wizard's cone and a farmer's brim were no wider than the head */
 const TALL_HAT_OVERSIZE = 1.6;
-const TALL_HATS: (HatType | undefined)[] = ["hood", "hood_liripipe", "conical_hat", "witch_hat", "straw_hat", "cowboy_hat", "tricorn", "pirate_hat", "captain_hat", "jester_cap"];
+const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_hat", "cowboy_hat", "tricorn", "pirate_hat", "captain_hat", "jester_cap"];
 
 export function attachProps(
   scene: Scene,
@@ -1065,7 +1065,7 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
     case "hood": {
       const hood = MeshBuilder.CreateCylinder("hood", { height: 0.18 * s, diameterTop: 0.04 * s, diameterBottom: 0.24 * s, tessellation: 8 }, scene);
       hood.material = mat(scene, accent.scale(0.6));
-      hood.position.y = 0.05 * s;
+      hood.position.y = 0.07 * s;
       return hood;
     }
     case "turban": {
@@ -1320,7 +1320,7 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
         height: 0.18 * s, diameterTop: 0, diameterBottom: 0.22 * s, tessellation: 10,
       }, scene);
       hood.material = mat(scene, accent);
-      hood.position.y = 0.06 * s;
+      hood.position.y = 0.07 * s;
       // Liripipe tail hanging behind
       const tail = MeshBuilder.CreateBox("liripipe", { width: 0.03 * s, height: 0.22 * s, depth: 0.02 * s }, scene);
       tail.position.set(0, -0.06 * s, -0.08 * s); tail.parent = hood;
