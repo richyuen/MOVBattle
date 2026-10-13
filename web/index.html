@@ -241,8 +241,10 @@
       margin-right: -2px;
       border-right: none;
       opacity: 0.92;
+      /* A flat-bottomed wing off Start, its outer end cut on a slant, not a second rounded pill */
+      border-radius: 0;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%);
     }
-    .btn-clear, .btn-clear:hover { background: rgba(30,20,30,0.7); }
     .btn-corner {
       min-width: 108px;
       padding-bottom: 12px;
