@@ -345,7 +345,7 @@ export class VisualEffects {
     // The fireball is mostly self-lit and graded from the inside out: a small yellow heart, amber inner
     // flame and a soft orange fringe. The inner flame sits between heart and fringe in hue, so it is a step of the grade and not a lemon patch.
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
-    coreMat.emissiveColor = new Color3(1.0, 0.97, 0.75);
+    coreMat.emissiveColor = new Color3(0.95, 0.88, 0.5);
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
     flashMat.emissiveColor = new Color3(1.0, 0.72, 0.30);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
