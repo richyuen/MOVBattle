@@ -1,41 +1,39 @@
 # Loop state
-Iteration: 141   Last re-audit: 140   Consecutive rejects: 0   Branch: main
+Iteration: 142   Last re-audit: 140   Consecutive rejects: 0   Branch: main
 
 ## Scores (critic, 1-5 per dimension, from last audit)
 battle-feel 3 | unit-look 3 | maps-light 4 | ui-flow 4 | camera 3 | vfx 3
 
 ## Focus (every pickable gap this iteration)
-- budget-seven-digits 2debd66 — APPROVE
-- result-shot-giant-in-frame 91961cd — APPROVE
-- red-skin-no-shade 015ae4b — REJECT (reverted)
-- muzzle-puff-flat-facets 9171ee2 — APPROVE
-- impact-burst-glow-ball 9ca2728 — REJECT (reverted)
-- lineup-props-undersized ddeb48b — APPROVE
-- result-prompt-wording 6618cd5 — APPROVE
+- red-skin-lit-side-dull 5283783 — APPROVE
+- result-shot-tusk-and-offcentre 4243323 — REJECT (reverted)
+- bucket-helm-wider-than-shoulders 7f36199 — APPROVE
+- lineup-blue-bodies-one-tone be556b1 — APPROVE
+- budget-count-not-shown 1ced296 — APPROVE
+- muzzle-puff-too-white 676990a — APPROVE
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: budget-seven-digits (2debd66) VERDICT: APPROVE SCORE: ui-flow 4/5 (previous: 4/5)
-- GAP: result-shot-giant-in-frame (91961cd) VERDICT: APPROVE SCORE: camera 3/5 (previous: 3/5)
-- GAP: red-skin-no-shade (015ae4b) VERDICT: REJECT SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: muzzle-puff-flat-facets (9171ee2) VERDICT: APPROVE SCORE: vfx 3/5 (previous: 3/5)
-- GAP: impact-burst-glow-ball (9ca2728) VERDICT: REJECT SCORE: vfx 3/5 (previous: 3/5)
-- GAP: lineup-props-undersized (ddeb48b) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
-- GAP: result-prompt-wording (6618cd5) VERDICT: APPROVE SCORE: ui-flow 4/5 (previous: 4/5)
+- GAP: red-skin-lit-side-dull (5283783) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: result-shot-tusk-and-offcentre (4243323) VERDICT: REJECT SCORE: camera 3/5 (previous: 3/5)
+- GAP: bucket-helm-wider-than-shoulders (7f36199) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: lineup-blue-bodies-one-tone (be556b1) VERDICT: APPROVE SCORE: unit-look 3/5 (previous: 3/5)
+- GAP: budget-count-not-shown (1ced296) VERDICT: APPROVE SCORE: ui-flow 4/5 (previous: 4/5)
+- GAP: muzzle-puff-too-white (676990a) VERDICT: APPROVE SCORE: vfx 3/5 (previous: 3/5)
 
 ## Ranked open gaps (max 8, attempts count in brackets)
-1. [vfx] impact-burst-glow-ball: cream balls bloom over a smooth orange dome; same gap as putty-ball [attempts: 2, spent: skip] — ref: trailer_3_sheet_03 r1c1 — ours: war_machines_1100ms.png
-2. [unit-look] red-skin-lit-side-dull: lit (208,93,103) vs (223-237,107-116,100-107), shade already matches; unitFactory.ts WARM_SKIN_GREEN_LIFT 0.10 to ~0.14 and a small WARM_SKIN_RED lift, leave WARM_SKIN_GLOW [attempts: 1] — ref: tabs_screenshot_01 — ours: big_melee_9s.png
-3. [battle-feel] melee-no-downed-bodies: one body down at 9 s vs 6+ in the foreground [attempts: 2, spent: skip] — ref: tabs_screenshot_01 — ours: big_melee_9s.png
-4. [camera] result-shot-tusk-and-offcentre: hide x 0-246 (17%), tusk to x~530, survivor centroid 0.38, right 48% empty; cameraController.ts frameSurvivors [attempts: 0] — ref: gameplay_sheet_02 r1c2 — ours: big_melee_result.png
-5. [unit-look] bucket-helm-wider-than-shoulders: helm ~170 px on ~150 px shoulders; propBuilder.ts split PROP_OVERSIZE into weapon 1.6 and hat ~1.3 [attempts: 0] — ref: tabs_screenshot_06 — ours: closeup_weapon_reads.png
-6. [unit-look] lineup-blue-bodies-one-tone: non-knight bodies one grey-blue, shafts a few px wide; unitFactory.ts colour blend, propBuilder.ts shaft radius [attempts: 0] — ref: tabs_screenshot_06 — ours: lineup_medieval.png
-7. [ui-flow] budget-count-not-shown: 30 units placed, counter 0; main.ts spawnHarnessUnit call trySpend [attempts: 0] — ref: gameplay_sheet_02 r1c3 — ours: big_melee_placement.png
-8. [vfx] muzzle-puff-too-white: luminance floor 126 vs 80, white vs grey; projectileSystem.ts smoke base (2.6,2.15,1.3) to ~(1.9,1.6,1.05) [attempts: 0] — ref: trailer_2_sheet_02 r1c1 — ours: war_machines_1100ms.png
+1. [vfx] impact-burst-glow-ball: flat white glowing ball over an orange dome [attempts: 2, spent: skip] — ref: trailer_3_sheet_03 r1c1 — ours: war_machines_1100ms.png
+2. [camera] result-shot-tusk-and-offcentre: tusk x~160-570, leg x 0-150; critic: long lens again with GIANT_SHY 0.8 [attempts: 1] — ref: gameplay_sheet_02 r1c2 — ours: big_melee_result.png
+3. [camera] result-shot-sky-thin: sky ~15% of the band, foreground spear shafts cross the survivors (beta and aim floor are spent) [attempts: 0] — ref: gameplay_sheet_02 r1c2 — ours: big_melee_result.png
+4. [unit-look] spears-too-thick: spearheads as big as a torso, shafts far thicker than TABS sticks; propBuilder.ts spear case [attempts: 0] — ref: tabs_screenshot_06 — ours: big_melee_2s.png
+5. [unit-look] cone-hats-shrunk: keep HAT_OVERSIZE 1.3 for helm types only, cone/brim hats back to 1.6; propBuilder.ts attachProps [attempts: 0] — ref: trailer_3_sheet_02 r1c2 — ours: lineup_medieval.png
+6. [unit-look] tunics-same-teal-and-dark: archer hue 203 vs healer 198, all value 0.31-0.44; unitFactory.ts CLOTH_ACCENT_WEIGHT 0.2 to 0.35 [attempts: 0] — ref: tabs_screenshot_06 — ours: lineup_medieval.png
+7. [ui-flow] empty-hud-zero-budget: empty field shows 0 over 0, TABS shows the budget figure [attempts: 0] — ref: gameplay_sheet_01 r3c2 — ours: hud_placement.png
+8. [vfx] muzzle-puff-dull-and-few-lobes: tops ~210 vs ~240, 4-5 big spheres vs many small chunks; projectileSystem.ts base to ~(2.1,1.8,1.2) [attempts: 0] — ref: trailer_2_sheet_02 r1c1 — ours: war_machines_3800ms.png
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
-- impact-burst-glow-ball [attempts: 2] — emissives ~0.6 and lit faceted foot: halo gone but a putty ball (180,179,167) on a sandstone mound, no fire hue
-- red-skin-no-shade [attempts: 1] — WARM_SKIN_GLOW 0.18: ratio moved 0.03, lit side fell 215 to 208; the lit side is what is short
-- budget-seven-digits [attempts: 1] — budget 50000: expensive units unplaceable; fixed in 141 by the display
+- result-shot-tusk-and-offcentre [attempts: 1] — fov 0.5 at effective radius 3.6, shy 0.5: men centred (0.48) and fill the band, but tusk still x~160-570, sky 15%
+- impact-burst-glow-ball [attempts: 2] — emissives ~0.6 and lit faceted foot: a putty ball on a sandstone mound, no fire hue
+- red-skin-no-shade [attempts: 1] — WARM_SKIN_GLOW 0.18: lit side fell; the lit side is what is short
 - victory-crossed-by-shafts [attempts: 1] — beta PI/2.25: shafts are the men's own, sky cut to a 10% strip
 - streak-too-long [attempts: 1] — lengths 0.8/0.7: still 1.3x the shaft on screen, 1 px hairline
 - clubs-shoulder-low [attempts: 1] — shoulder -1.45, jitter 0.5: walk swing still drops the arm
@@ -43,8 +41,8 @@ battle-feel 3 | unit-look 3 | maps-light 4 | ui-flow 4 | camera 3 | vfx 3
 - mammoth-plum-not-brown [attempts: 1] — spent: premise backwards
 
 ## Notes for next iteration (max 5 lines)
-- Spent (never retry, even when a re-audit lists them): impact burst colour/glow, mammoth hide colour, slam-no-airtime, charged-arms-outglow-head, head-pulse-zeus, giant healthScale, mammoth-no-trample, boulders lit colour, fireball lobes, grass tufts, presser-lean-capped, mammoth launch/mop-hat/tusks, airborne-sit-square, cloud bases, far ridge and its snow, corpses-flat, zeus skirt, idle legs, helm. Never shrink enemy collision distance or lower ally contactBias below 0.55. Never edit capture.mjs.
-- ACES: emissive 0.25 shows ~140, 0.65 ~190, 1.0 ~210; diffuse over 1 does not show. Bloom threshold 0.65 (main.ts). Red skin: WARM_SKIN_GLOW 0.25, GLOW_BLUE 0.03, BLUE_LIFT 0.06. Muzzle smoke emissive 0.11.
-- Probe uncommitted with `capture.mjs --iter 9123 --showcase-only` (~2 min); commit one gap per file (`git commit -- <file>`). Poses differ run to run. Critic's named lever can be wrong: probe it. main.ts is CRLF: multi-line string replaces miss, use a regex with \r?\n.
-- Victory beside a near giant (probed 141): farSide 0.3 PI put the eye under its flank, 0.7 PI put it behind the men filling 45%; side-on 0.5 PI with GIANT_SHY 1.0 is in; 1.5 emptied the giant but left the men in the near third. Radius 4.5-6, target y 0.8, beta PI/2.1; aim floor and beta are spent.
-- Shoulder rotation.x negative raises the arm. `.btn:hover` resets background. Streak is a mesh child "streak". Campaign result labels still read "Next Scenario"/"Retry" after "Press [Tab] to".
+- Spent (never retry, even when a re-audit lists them): impact burst colour/glow, mammoth hide colour, slam-no-airtime, charged-arms-outglow-head, head-pulse-zeus, giant healthScale, mammoth-no-trample, boulders lit colour, fireball lobes, grass tufts, presser-lean-capped, mammoth launch/mop-hat/tusks, airborne-sit-square, cloud bases, far ridge and its snow, corpses-flat, zeus skirt, idle legs, melee-no-downed-bodies. Never shrink enemy collision distance or lower ally contactBias below 0.55. Never edit capture.mjs.
+- ACES: emissive 0.25 shows ~140, 0.65 ~190, 1.0 ~210; diffuse over 1 does not show. Bloom threshold 0.65 (main.ts). Red skin: GREEN_LIFT 0.14 (lit now 214,107,115; critic: BLUE_LIFT 0.06 to 0.04 next, red still 17 short), GLOW 0.25.
+- Probe uncommitted with `capture.mjs --iter 9123 --showcase-only` (~2 min); commit one gap per file (`git commit -- <file>`). Poses differ run to run. Critic's named lever can be wrong: probe it. Edit multi-line with a node script; bash single quotes break on apostrophes.
+- Victory beside a giant: the mammoth stands 1-2 from the men, so a side-on frame cannot both centre them and lose it. A lens (fov on CameraViewState, lerped, reset in restoreViewState; also reset it in returnToPlacementView) lets the shot be tight without the eye in the crowd. Alpha, beta, aim floor spent.
+- Shoulder rotation.x negative raises the arm. Streak is a mesh child "streak". Harness spawns now spend budget in sandbox; hand placement always did.
