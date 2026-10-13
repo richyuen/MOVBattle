@@ -1404,7 +1404,7 @@ function showResult(result: BattleResult): void {
   if (btnResultPrimaryEl) {
     btnResultPrimaryEl.textContent = campaignSession
       ? (!result.isDraw && result.winner === 0 ? "Next Scenario" : "Retry")
-      : "Play Again";
+      : "Continue";
   }
   if (btnResultSecondaryEl) {
     btnResultSecondaryEl.textContent = campaignSession
@@ -3369,6 +3369,11 @@ window.addEventListener("keydown", (e) => {
       e.preventDefault();
       if (stateMachine.currentState === GameState.Result) btnResultPrimaryEl?.click();
       else startBattle();
+      break;
+    case "Tab": // the key the result prompt names; Space still works
+      if (stateMachine.currentState !== GameState.Result) return;
+      e.preventDefault();
+      btnResultPrimaryEl?.click();
       break;
     case "KeyR":
       resetBattle();

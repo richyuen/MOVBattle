@@ -606,7 +606,7 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "battle-recap-survivors", value: "teamA=1,teamB=0" },
       { kind: "battle-recap-target-path", value: "global:projectile-splash>=heavy" },
       { kind: "result-detail-preserves-newlines", value: "true" },
-      { kind: "result-button-labels", value: "primary=Play Again,secondary=Reset" },
+      { kind: "result-button-labels", value: "primary=Continue,secondary=Reset" },
     ],
   },
   battlefeel_impact_heavy_charge: {
