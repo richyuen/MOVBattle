@@ -119,7 +119,7 @@ export class ProceduralAnimator {
       stance: (h(3) < 0.5 ? -1 : 1) * (0.12 + h(4) * 0.15),
       knee: 0.12 + h(5) * 0.2,
       rate: 5 + h(6) * 4,
-      spread: 0.35 + h(7) * 0.4,
+      spread: 0.15 + h(7) * 0.3,
       elbow: 0.7 + h(8) * 0.5,
       trail: 0.12 + h(9) * 0.2,
       stride: 0.6 + h(10) * 0.25, // at 0.45-0.65 a charging rank took short steps under its lean
