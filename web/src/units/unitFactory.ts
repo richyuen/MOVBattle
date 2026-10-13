@@ -73,7 +73,7 @@ const ARMOUR_PRESET_WEIGHT = 0.2;
 const ARMOUR_SHADE = 0.65;
 // Cool plate is hardly darkened and turned toward royal blue: the sky-blue team colour at the warm shade is a dark teal.
 const COOL_ARMOUR_SHADE = 0.9;
-const COOL_ARMOUR_HUE_SHIFT = 30;
+const COOL_ARMOUR_HUE_SHIFT = 12;
 // Cool plate and surcoats are never paler than this: the sky-blue team colour only darkened is slate, and TABS knights are a deep blue.
 const COOL_ARMOUR_SATURATION = 0.85;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
@@ -90,9 +90,9 @@ const WARM_SATURATION = 1.18;
 // cinched by a dark belt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
 const TABARD_SHADE = 0.9;
-// A cool surcoat is turned half as far toward royal blue as the plate and is a good deal deeper: the sky-blue team colour at nine tenths is a pale cyan board on the chest.
-const COOL_TABARD_HUE_SHIFT = 15;
-const COOL_TABARD_SHADE = 0.6;
+// A cool surcoat is turned half as far toward royal blue as the plate and is deeper: the sky-blue team colour at nine tenths is a pale cyan board on the chest, and at six tenths the surcoat was a navy mass beside the teal cloth of its own rank.
+const COOL_TABARD_HUE_SHIFT = 6;
+const COOL_TABARD_SHADE = 0.78;
 const TABARD_WIDTH = 1.02;
 const TABARD_LENGTH = 1.6;
 const TABARD_DEPTH = 1.18;
