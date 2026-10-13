@@ -141,6 +141,12 @@ export class SimulationSystem {
   /** Fallen units of either team are stepped around closely so the press stays shut over bodies. */
   readonly fallenAvoidanceRadius = 0.9;
   readonly cohesionRadius = 1.5;
+  // A runner more than runnerLeadMargin ahead of every marching ally within runnerHoldRadius drops to runnerHoldMultiplier until they draw level.
+  // Only in a body of troops: with fewer than runnerHoldMinAllies marching around it a unit runs free.
+  readonly runnerHoldRadius = 3;
+  readonly runnerHoldMinAllies = 3;
+  readonly runnerLeadMargin = 0.4;
+  readonly runnerHoldMultiplier = 0.6;
   readonly congestionBypassDistance = 2.2;
   private _now = 0;
 
@@ -541,7 +547,7 @@ export class SimulationSystem {
   }
 
   private _moveUnitToward(unit: RuntimeUnit, desired: Vector3, engageDistance: number, now: number): void {
-    unit.setCohesionMoveMultiplier(this._resolveCohesionMoveMultiplier(unit));
+    unit.setCohesionMoveMultiplier(this._resolveCohesionMoveMultiplier(unit, desired));
     const navigationGrid = this.navigationGrid;
     if (!navigationGrid) {
       unit.moveTo(this._resolveHazardAwareMoveTarget(unit, desired));
@@ -604,23 +610,36 @@ export class SimulationSystem {
     return fallbackRoute?.waypoints.map((waypoint) => waypoint.clone()) ?? [reachableGoal];
   }
 
-  /** Caps approach speed to the slowest marching ally within cohesionRadius. */
-  private _resolveCohesionMoveMultiplier(unit: RuntimeUnit): number {
+  /** Caps approach speed to the slowest marching ally within cohesionRadius, and holds back a runner that is out ahead of its rank. */
+  private _resolveCohesionMoveMultiplier(unit: RuntimeUnit, desired: Vector3): number {
     const ownSpeed = unit.definition.moveSpeed;
     if (ownSpeed <= 0.01) return 1;
     let slowest = ownSpeed;
     const radiusSq = this.cohesionRadius * this.cohesionRadius;
+    const holdRadiusSq = this.runnerHoldRadius * this.runnerHoldRadius;
+    const advanceX = desired.x - unit.position.x;
+    const advanceZ = desired.z - unit.position.z;
+    const advanceLength = Math.hypot(advanceX, advanceZ);
+    // How far along the advance the foremost marching ally nearby stands from this unit: negative when all of them are behind it.
+    let foremostAlly = -Infinity;
+    let marchingAllies = 0;
     for (const other of this._units) {
       if (other === unit || other.isDead || other.linkedParent) continue;
       if (other.team !== unit.team || !other.isMoving) continue;
-      const otherSpeed = other.definition.moveSpeed;
-      if (otherSpeed <= 0.01 || otherSpeed >= slowest) continue;
       const dx = other.position.x - unit.position.x;
       const dz = other.position.z - unit.position.z;
-      if (dx * dx + dz * dz > radiusSq) continue;
+      const distanceSq = dx * dx + dz * dz;
+      if (distanceSq <= holdRadiusSq && advanceLength > 0.01) {
+        marchingAllies++;
+        foremostAlly = Math.max(foremostAlly, (dx * advanceX + dz * advanceZ) / advanceLength);
+      }
+      const otherSpeed = other.definition.moveSpeed;
+      if (otherSpeed <= 0.01 || otherSpeed >= slowest) continue;
+      if (distanceSq > radiusSq) continue;
       slowest = otherSpeed;
     }
-    return slowest / ownSpeed;
+    const held = marchingAllies >= this.runnerHoldMinAllies && foremostAlly < -this.runnerLeadMargin;
+    return Math.min(slowest / ownSpeed, held ? this.runnerHoldMultiplier : 1);
   }
 
   private _applyCrowdAvoidance(unit: RuntimeUnit, waypoint: Vector3): Vector3 {
