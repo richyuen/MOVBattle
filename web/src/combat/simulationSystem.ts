@@ -176,6 +176,8 @@ export class SimulationSystem {
   readonly shieldRankGap = 0.75;
   /** On the march a rear-rank man slows over this last stretch as he comes up to his depth behind the front, and halts at it. */
   readonly shieldRankFollowBand = 0.25;
+  /** A wall's men level their spears at the man they are closing on from this far outside their reach, the rear rank with the front. */
+  readonly spearLevelReach = 3.5;
   /** A slotted carrier in contact stands square to the wall's advance while his enemy is within this arc of it; outside it he turns to face him. */
   readonly shieldHeadingArc = 1.0;
   /** Each slotted carrier's wall and the sideways step from where it stands to its slot in it. */
@@ -548,6 +550,7 @@ export class SimulationSystem {
       return;
     }
     unit.setSpinning(false);
+    if (this._shieldSlots.has(unit) && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position);
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to

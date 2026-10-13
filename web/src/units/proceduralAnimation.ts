@@ -114,6 +114,16 @@ export class ProceduralAnimator {
   }
 
   private _shoveTimer = 0;
+
+  /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear is aimed at that man's chest (see _carrySpear) until the calls stop. */
+  levelSpearAt(enemyGround: Vector3): void {
+    this._spearAim.copyFrom(enemyGround);
+    this._spearAimTimer = 0.6;
+  }
+  private _spearAim = new Vector3();
+  private _spearAimTimer = 0;
+  private _spearLevel = 0;
+  private _chestRise: number | null = null;
   private _shove = 0;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
@@ -163,7 +173,7 @@ export class ProceduralAnimator {
       boardYaw: (h(110) - 0.5) * 0.44,
       boardTilt: (h(111) - 0.5) * 0.32,
       boardRoll: (h(112) - 0.5) * 0.4,
-      spearDip: 0.02 + (h(113) - 0.5) * 0.9,
+      spearDip: (h(113) - 0.5) * 0.14,
       spearRaise: -2.2 + (h(114) - 0.5) * 0.5,
       spearElbow: -1.2 + (h(115) - 0.5) * 0.4,
       shiftRate: 1.2 + h(116) * 1.4,
@@ -380,6 +390,8 @@ export class ProceduralAnimator {
     // between swings the arms windmill out from the shoulders instead of hanging at the sides.
     this._shoveTimer -= dt;
     this._shove += ((this._shoveTimer > 0 ? 1 : 0) - this._shove) * Math.min(1, dt * 6);
+    this._spearAimTimer -= dt;
+    this._spearLevel += ((this._spearAimTimer > 0 ? 1 : 0) - this._spearLevel) * Math.min(1, dt * 5);
     this._braceSink = 0;
     if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
       const b = this._body;
@@ -710,9 +722,10 @@ export class ProceduralAnimator {
 
   /**
    * A shield man's spear does not ride his hand any more than his board does: it turns in the fist to one of two carries, whatever the arm is doing.
-   * On the march it stands upright, point to the sky; in contact it comes down level along the wall's heading, point a little low, so the spears of
-   * a wall and of the rank behind it lie parallel over the boards and do not fan or cross. The fist keeps its place on the shaft. Limp or dead, the
-   * spear goes back to hanging from the hand.
+   * On the march it stands upright, point to the sky. As the wall closes on its enemy it comes down along the wall's heading and is aimed: the shaft runs
+   * from the fist, wherever the arm has it, at the chest of the man he was handed, so a front man's point and the point of the man behind him, held by the
+   * head over the front man's shoulder, both come down on the enemy and none pitch up over his head; the spears stay parallel over the boards and do not
+   * fan or cross. The fist keeps its place on the shaft. Limp or dead, the spear goes back to hanging from the hand.
    */
   private _carrySpear(): void {
     const spear = this._spearShaft();
@@ -728,9 +741,20 @@ export class ProceduralAnimator {
     }
     const hand = this._body.rightHand;
     hand.computeWorldMatrix(true);
-    const level = Math.min(1, this._shove * 1.5);
-    // Each man's point sits a little above or below level (never to one side: the spears stay parallel over the boards)
-    const carry = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0.06 + (Math.PI / 2 + (this._bracePose ??= this._buildBracePose()).spearDip) * level, 0);
+    // Shoving with no man handed to him he still levels it, flat.
+    const level = Math.max(this._spearLevel, Math.min(1, this._shove * 1.5));
+    const root = this._body.root;
+    this._body.neck.computeWorldMatrix(true);
+    this._chestRise ??= (this._body.neck.absolutePosition.y - root.absolutePosition.y) * 0.8;
+    let dip = 0.02;
+    if (this._spearAimTimer > 0) {
+      // Fall of the shaft from the fist to the enemy's chest, as high off his ground as this man's own; a man within a pace is aimed at as if a pace off, and no point rises above level by more than a hair.
+      const from = hand.absolutePosition;
+      const run = Math.max(1, Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z));
+      dip = Math.max(-0.05, Math.min(0.5, Math.atan2(from.y - (this._spearAim.y + this._chestRise), run)));
+    }
+    // Each man's point sits a hair above or below his aim (never to one side: the spears stay parallel over the boards)
+    const carry = Quaternion.RotationYawPitchRoll(root.rotation.y, 0.06 + (Math.PI / 2 + dip + (this._bracePose ??= this._buildBracePose()).spearDip - 0.06) * level, 0);
     const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
     shaft.rotationQuaternion = turn;
     // The shaft's middle sits as far up the shaft from the fist as it was strapped on.

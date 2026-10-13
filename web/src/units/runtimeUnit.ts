@@ -401,6 +401,11 @@ export class RuntimeUnit {
     this.animator.leanIntoShove();
   }
 
+  /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
+  levelSpearAt(enemyGround: Vector3): void {
+    this.animator.levelSpearAt(enemyGround);
+  }
+
   get isMoving(): boolean {
     return this._isMoving;
   }
