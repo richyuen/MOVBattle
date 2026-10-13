@@ -42,29 +42,28 @@ projectileSystem.ts:cannonball colour | near-black | 160 | spent | no shot in fl
 visualEffects.ts:explosion burst | 4 unlit yellow lobes in inside-out orange shells x1.5, 3 flecks, 5 skirt; fireScale cap 1.6 | 164 | approved | lobe size spent
 visualEffects.ts:explosion dust bank | 14 unlit puffs, reach 2.3*sqrt, size 0.7-1.45 | 164 | approved | no [P] on tall and tans
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved |
-proceduralAnimation.ts:shield brace (_buildBracePose) | per man: crouched/tall/shoulder-in 0.35/0.35/0.30 (crouch 0.05-1.05, hips let down), weight shift 1.2-2.6/s, head turn +-0.35; board yaw +-0.22, tilt +-0.16 off square | 179 | approved | one pose (165)
-proceduralAnimation.ts:spear carry (_carrySpear, spear arm) | upright on the march, level at 1.5*shove, per-man dip 0.02+-0.45 (no yaw); contact arm x -2.2+-0.25, elbow -1.2+-0.2, jab +0.5/+0.9; march arm z 0.25, elbow -0.5 | 180 | approved | dip +-0.18 (179); no further [P]
-proceduralAnimation.ts:march gait (_buildGait) | per-unit rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, knee sink 0.05-0.27, step asym +-0.18, arm lag +-0.7, swing 0.5-0.95; slump +-0.08, roll 0.08-0.20; lean 0.28-0.54 | 174 | approved | no further [P] on roll
-proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | per-man attitude shouldered/upright/across/trailed at 0.30/0.25/0.25/0.20 (jitter 0.3); board arm x -0.3..-0.7, z +-0.15, elbow -0.8..-1.3; bob 0.08-0.18 | 174 | approved | bob spent for [P]
-proceduralAnimation.ts:idle rest (_buildIdlePose) | hip roll 0.11-0.19, torso -1.5x, neck +0.5x, yaw 0.2-0.6; free foot 0.08 out, standing 0.06 in (do not grow) | 170 | approved |
-proceduralAnimation.ts:landed corpse folds (_writeDeathRest) | back: thigh 0.95+0.3u, knee 2x, arm across chest, torso lift in 2 of 5; front: shin 1.3+0.4u, wing arm, arch -0.3; neck roll 0.7+0.4u | 164 | approved |
-main.ts:sun and shadow map (dir, CascadedShadowGenerator, SHADOW_REACH) | sun 42 deg up (-0.52, -0.669, -0.53) at 1.0; 4 cascades 2048, lambda 0.8, blend 0.05, reach 70 + pull-back, PCF high, darkness 0.04 | 176 | approved | no azimuth [P]
+proceduralAnimation.ts:shield brace (_buildBracePose) | crouched/tall/shoulder-in 0.35/0.35/0.30 (crouch 0.05-1.05), shift 1.2-2.6/s, head turn +-0.35; board yaw +-0.22, tilt +-0.16 | 179 | approved | one pose (165)
+proceduralAnimation.ts:spear carry (_carrySpear, spear arm) | upright on the march, level at 1.5*shove, dip 0.02+-0.45 (no yaw); contact arm x -2.2+-0.25, elbow -1.2+-0.2, jab +0.5/+0.9 | 180 | approved | dip +-0.18 (179); no further [P]
+proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, sink 0.05-0.27, asym +-0.18, arm lag +-0.7, swing 0.5-0.95; slump +-0.08, roll 0.08-0.20; lean 0.28-0.54 | 174 | approved | no further [P] on roll
+proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | shouldered/upright/across/trailed 0.30/0.25/0.25/0.20 (jitter 0.3); board arm x -0.3..-0.7, z +-0.15, elbow -0.8..-1.3; bob 0.08-0.18 | 174 | approved | bob spent for [P]
+proceduralAnimation.ts:idle rest (_buildIdlePose) | hip-shot/sunk/at-ease 0.35/0.35/0.30: roll 0.17-0.27/0.05-0.11/0.10-0.17, crouch 0.02-0.10/0.45-0.80/0.16-0.32, free arm at hip/in front/back; weapon arm keeps the carry hold; free foot 0.08 (do not grow) | 181 | approved | one stance, roll 0.11-0.19 (170)
+proceduralAnimation.ts:landed corpse folds (_writeDeathRest) | back: thigh 0.95+0.3u, knee 2x, arm across chest; front: shin 1.3+0.4u, wing arm, arch -0.3; neck roll 0.7+0.4u | 164 | approved |
+main.ts:sun and shadow map (dir, CascadedShadowGenerator, SHADOW_REACH) | sun 42 deg up at 1.0; 4 cascades 2048, lambda 0.8, reach 70 + pull-back, darkness 0.04 | 176 | approved | no azimuth [P]
 main.ts:hemi.groundColor | (0.30, 0.30, 0.42) | 176 | approved | no [P]
-mapBuilder.ts:blade shade (RootShadowPlugin, BLADE_SIGHT_REACH) | blade vertex takes the shadow where its line of sight meets the lawn (reach 1.5 m); blades carry the grass emissive | 178 | approved | reach 4 (177); no [P]
+mapBuilder.ts:blade shade (RootShadowPlugin, BLADE_SIGHT_REACH) | blade takes the shadow where its sight line meets the lawn (reach 1.5 m) | 178 | approved | reach 4 (177); no [P]
 mapBuilder.ts:lawn shade (LawnShadePlugin, LAWN_BAND_RISE, _BLUR, _WEIGHT, LAWN_SHADE_TINT, _LIFT) | 3 bands by caster height: split 0.4/1.6 m, blur 0.025/0.10/0.24 m, weight 1/0.92/0.8; shade x(0.80,1.0,1.3)+(0,0.02,0.07) | 179 | spent | weight 0.6/0.5/0.4 + lift (0.04,0.08,0.14) rejected: too faint; needs a mechanism
-projectileSystem.ts:stuck shafts (_leaveAsLitter, arrow mesh) | ray to the struck hide, head 0.07 in, held by that part's joint; mark down: planted at pitch 1.0-1.35, head 0.1 under; arrow 0.75 x 0.035 | 180 | approved | arrow 0.5 x 0.025, half thick
+projectileSystem.ts:stuck shafts (_leaveAsLitter, arrow mesh) | ray to the struck hide, head 0.07 in, on that part's joint; mark down: planted at pitch 1.0-1.35; arrow 0.75 x 0.035 | 180 | approved | arrow 0.5 x 0.025, half thick
 bodyBuilder.ts:joint stubs (JOINT_STUB, JOINT_STUB_END) | segment overruns its joint by 0.45 of its width, drawn in to 0.6 | 175 | approved |
-bodyBuilder.ts:sleeve head (SLEEVE_HEAD, _PLATE, _DROP, _RISE, _CROWN) | upper arm swells over its top 0.4 to 1.35 sleeves (1.1 under a pad), crown 0.35 tall drawn in to 0.6 | 176 | approved |
+bodyBuilder.ts:sleeve head (SLEEVE_HEAD, _PLATE, _DROP, _RISE, _CROWN) | head 1.08 sleeves over the top 0.4, crown 0.35 tall drawn in to 0.6 | 181 | approved | 1.35, 1.1 under a pad (176)
+bodyBuilder.ts:shoulder yoke (YOKE_REACH, _RISE, _DEPTH, _NECK) | slab from chest line to 0.42 sleeves past each shoulder joint, 0.3 above, 0.92 torso deep, neck 0.5 | 181 | approved |
 bodyBuilder.ts:thigh (THIGH_OF_LEG, THIGH_HEAD, THIGH_LAP) | thigh at least 0.2 of the leg, head 1.15 thighs, pelvis at least 0.9 of the pair | 177 | approved |
 bodyBuilder.ts:lower limb belly (FOREARM_SWELL, CALF_SWELL, LIMB_BELLY_DROP) | forearm 1.35, shin 1.4 of its top width, 0.3 down | 179 | approved | 1.18, 1.22 (178); no further [P]
 unitFactory.ts:garment solids (hangSkirt, furCollar; vehicleBuilder crewBreeches) | hex skirt on the hips: tabard 0.7 thighs flare 1.6, kilt 0.6/1.55, tunic 0.45/1.5, hide 0.5/1.45; collar torus 0.64 chest; breeches 1.75 -> 1.3 thighs | 179 | approved | breeches top 1.45 open as [P]
 bodyBuilder.ts:crewProportions (addOperator, linked crew) | infantry widths at the crew's own scale | 178 | approved |
-vehicleBuilder.ts:catapult arm/posts/bucket/wheels | see 155-158 | 158 | spent |
-vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 | spent |
+vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
+vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 171 | needle-ankles-no-boots | unit-look.c | approved
-- 171 | march-legs-one-phase | battle-feel.c | approved
 - 172 | paddle-hands | unit-look.c | approved
 - 172 | prop-arm-no-carry | battle-feel.c | approved
 - 173 | march-torsos-one-pitch | battle-feel.c | approved
@@ -83,6 +82,8 @@ vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 
 - 179 | clothes-are-paint | unit-look.d | approved
 - 180 | nothing-sticks | vfx.a | approved
 - 180 | pinched-link-limbs | unit-look.c | approved
+- 181 | lineup-stands-to-attention | battle-feel.c | approved
+- 181 | arm-is-a-detached-pillar | unit-look.c | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

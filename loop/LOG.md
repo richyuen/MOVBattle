@@ -179,3 +179,4 @@ iter 177 | [S] shadow-sawtooth-hard-edge, [S] wire-legs | 2/2 approved | passes 
 iter 178 | [S] shadow-hard-heavy-maroon, [S] crew-stick-body, [P] blade-fringe-at-contact | 3/3 approved | passes 18 -> 18
 iter 179 | [S] shield-rank-one-pose, [S] clothes-are-paint, [P] shade-density, [P] limb-belly-invisible | 3/4 approved | passes 18 -> 18
 iter 180 | [S] nothing-sticks, [S] pinched-link-limbs, [P] spears-one-parallel-bundle (re-audit 19/24) | 3/3 approved | passes 19 -> 20
+iter 181 | [S] lineup-stands-to-attention, [S] arm-is-a-detached-pillar | 2/2 approved | passes 20 -> 20

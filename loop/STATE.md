@@ -1,9 +1,9 @@
 # Loop state
-Iteration: 180   Last re-audit: 180   Consecutive rejects: 0   Branch: main
+Iteration: 181   Last re-audit: 180   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion, from last audit; see CRITIC.md for the letters)
-battle-feel: a PASS b PASS c FAIL d PASS (3/4) — c: the lineup stands bolt upright, arms plumb and mirrored; every braced man's legs make the same crouch zigzag; some wall spears point over the enemy's heads
-unit-look: a PASS b PASS c FAIL d FAIL (2/4) — c: the arm is a detached pillar under a swollen cap with an armpit gap, forearm as thick as the upper arm, pelvis a separate box, head a tall square-jawed box; d: pinprick eyes, faces blank at battle distance
+battle-feel: a PASS b PASS c FAIL d PASS (3/4) — c: aimed and ranged men still stand to attention, arms plumb and mirrored; the hip-shot stance leaves both legs straight posts; the sunk stance is a half squat with arms thrown wide; the pushing rank leans in one shared pose; some wall spears point over the enemy's heads
+unit-look: a PASS b PASS c FAIL d FAIL (2/4) — c: the shoulder yoke is a broad flat shelf with an armpit gap below it, forearm as thick as the upper arm, pelvis a separate box, head a tall square-jawed box; d: pinprick eyes, faces blank at battle distance
 maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
@@ -11,25 +11,23 @@ vfx: a PASS b FAIL c PASS d PASS (3/4) — b: the burst is translucent orange je
 Total 20/24. Weak passes (re-audit): battle-feel.a overlap seen side-on only; battle-feel.b rests on the cannon pair; camera.c and ui-flow.d have no still.
 
 ## Focus (every gap this iteration)
-BASE 79e688f
-- [S] vfx.a nothing-sticks (c182916) — APPROVE, criterion PASS
-- [S] unit-look.c pinched-link-limbs (fec6fb2) — APPROVE, criterion still FAIL
-- [P] battle-feel.c spears-one-parallel-bundle (df2510a) — APPROVE, criterion still FAIL
+BASE b055692
+- [S] battle-feel.c lineup-stands-to-attention (7f534e9) — APPROVE, criterion still FAIL
+- [S] unit-look.c arm-is-a-detached-pillar (9a713e8) — APPROVE, criterion still FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] nothing-sticks (c182916) VERDICT: APPROVE CRITERION: vfx.a PASS (previous: FAIL)
-- GAP: [S] pinched-link-limbs (fec6fb2) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
-- GAP: [P] spears-one-parallel-bundle (df2510a) VERDICT: APPROVE CRITERION: battle-feel.c FAIL (previous: FAIL)
+- GAP: [S] lineup-stands-to-attention (7f534e9) VERDICT: APPROVE CRITERION: battle-feel.c FAIL (previous: FAIL)
+- GAP: [S] arm-is-a-detached-pillar (9a713e8) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets)
-1. [S] battle-feel.c lineup-stands-to-attention [0] — idle stance archetypes in _buildIdlePose: weight on one leg with knees bent, weapon arm cocked across the body, other arm loose, torso slouch — ref tabs_screenshot_04 — ours lineup_medieval
-2. [S] unit-look.c arm-is-a-detached-pillar [0] — shoulder yoke in bodyBuilder: the torso top extends over the arm root so the arm starts inside the chest silhouette, no armpit gap or swollen cap — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
-3. [S] unit-look.c tall-box-head [0] — head mesh as a short wedge, wider at the brow, narrowing to the chin, about 0.8 of the present height — ref trailer_3_sheet_01 r3c1 — ours closeup_state_reads
-4. [S] unit-look.d pinprick-eyes [0] — eye as a white ball with a black pupil, about 0.2 of head width, proud of the face — ref tabs_screenshot_04 — ours lineup_medieval
-5. [S] vfx.b jelly-burst [0] — one opaque unlit white-yellow fireball mesh that swells and breaks into smoke, in place of the translucent shells; ball reads navy — ref trailer_3_sheet_03 r1c1 — ours war_machines_1100ms
-6. [S] battle-feel.c braced-legs-one-zigzag [0] — per-man leg stance archetypes in _buildBracePose (lunge, upright, squat); spear dip aimed at the nearest enemy's chest — ref tabs_screenshot_06 — ours shield_wall_2500ms
-7. [S] vfx.a shafts-in-one-hip-bundle [0] — _leaveAsLitter keeps the true impact point with no chest fallback, one shaft per part before reuse — ref tabs_screenshot_01 — ours big_melee_9s
-No [P] ranked: every candidate constant sits on a spent row or a row approved in 178-180.
+1. [S] battle-feel.c aimed-men-stand-to-attention [0] — a ready stance for aimed units in `_animateIdleHumanoid`: weapon across the chest in two hands, staggered feet, turned torso — ref trailer_3_sheet_01 r3c1 — ours closeup_state_reads
+2. [S] unit-look.c shoulder-shelf-armpit-gap [0] — torso and yoke as one hull, side planes from the yoke edge down to the waist (underarm gusset) — ref tabs_screenshot_04 — ours closeup_state_reads
+3. [S] unit-look.c tall-box-head [0] — replace `blockHead` with a shorter soft-cornered block narrowing to a small chin — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
+4. [S] unit-look.d pinprick-eyes [0] — eyes as raised white discs with a black pupil, sized to the head — ref tabs_screenshot_01 — ours big_melee_5s
+5. [S] vfx.b jelly-burst [0] — opaque faceted fire shells; a black ball mesh with a white streak held in frame from muzzle to impact — ref trailer_3_sheet_02 r2c1 — ours war_machines_1100ms
+6. [S] battle-feel.c push-rank-one-pose [0] — per-man push pose (lean, leg phase) and a spear aimed at the nearest enemy's chest — ref tabs_screenshot_06 — ours shield_wall_2500ms
+7. [P] unit-look.c YOKE_REACH 0.42 -> 0.2 [0] — fallout of 181 arm-is-a-detached-pillar — ref trailer_3_sheet_01 r1c2 — ours closeup_state_reads
+8. [P] battle-feel.c `_buildIdlePose` sunk crouch 0.45-0.80 -> 0.25-0.45 [0] — fallout of 181 lineup-stands-to-attention — ref tabs_screenshot_04 — ours lineup_medieval
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - shade-density [attempts: 1, lawn shade row spent for [P]] — weight 0.6/0.5/0.4 + lift: shadow contrast fell from 28% to 6%, figures float; needs a mechanism
@@ -42,8 +40,8 @@ No [P] ranked: every candidate constant sits on a spent row or a row approved in
 - grass-bare-raised-eye [attempts: 1] — half x1.5: squat cones, still bare
 
 ## Notes for next iteration (max 5 lines)
-- LEDGER.md sits near its byte cap: trim prose before adding, run budget.mjs after each edit; update it (pending) before the critic runs, commit it with the docs. Sources are LF: patch with a node script in the scratchpad (each find asserted once) or sed by line; commit per gap with `git commit <paths> -F -`. No [P] on spearDip, FOREARM/CALF_SWELL, helm crown, lawn shade, carry bob.
-- Limbs: `tapered(..., jointEnd, stubMat, headDiameter, bellyDiameter)`; elbow/knee width comes from `throughHinge` (line from limb top to belly). Critic now finds forearms and legs heavy: do not fatten further. Sleeve head cap (SLEEVE_HEAD*) is the shoulder notch; eye whites and pupils exist in bodyBuilder but are `setEnabled(false)`.
-- Shafts: projectileSystem `_leaveAsLitter` ray-tests the struck body's meshes along the flight line (fallback ray bent to the torso), parents the shaft to the struck part's joint; mark already dead: planted steep in the turf. Litter capped at 60.
-- Wall: `_buildBracePose` (hash 101-117) feeds the shove overlay, `_squareShield` and `_carrySpear` (dip only, never yaw: spears must not cross in plan). Idle: `_buildIdlePose`; do not grow the free-foot 0.08 offset. Never add walk torso yaw.
-- Shadows: mapBuilder `LawnShadePlugin` (3-band filter) and `RootShadowPlugin`; maps-light.b now passes, leave it.
+- LEDGER.md sits at its byte cap: trim prose before adding, run budget.mjs after each edit. Sources are LF: patch with a node script written by the Write tool into the scratchpad (bash heredocs break on apostrophes; each find asserted once), commit per gap with `git commit <path> -F <msgfile>`. No [P] on spearDip, FOREARM/CALF_SWELL, helm crown, lawn shade, carry bob.
+- Idle: `_buildIdlePose` picks hip-shot/sunk/at-ease (hash 121-126); the weapon arm takes `_buildCarry()`'s hold and `_carryProp` turns the weapon in Idle too; aimed units (`locomotionBias === "aimed"`) are left on the plumb hang, which is gap 1. `_idleSink` lowers the hip with `_braceSink`. Do not raise idle lean or the free-foot 0.08; never add walk torso yaw.
+- Shoulders: bodyBuilder `shoulderYoke` (two box frustums on the torso joint, YOKE_*); leave `shoulderOffX` alone, the helm rim is cut from it. Limbs: `tapered(..., headDiameter, bellyDiameter)`, elbow/knee from `throughHinge`; do not fatten forearms or legs. Eye whites and pupils exist but are `setEnabled(false)`.
+- Shafts: projectileSystem `_leaveAsLitter` ray-tests the struck body along the flight line and parents the shaft to that part's joint. Wall: `_buildBracePose` (hash 101-117) feeds the shove overlay, `_squareShield`, `_carrySpear` (dip only, never yaw).
+- Shadows: mapBuilder `LawnShadePlugin` and `RootShadowPlugin`; maps-light.b passes, leave it.
