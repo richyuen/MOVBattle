@@ -1052,9 +1052,9 @@ export class RuntimeUnit {
       return;
     }
     const targetLeanX = Math.max(
-      -0.34,
+      -0.18,
       Math.min(
-        0.34,
+        0.18,
         (
           -this._velocity.z * 0.02
           - this._crowdPressure * 0.05
