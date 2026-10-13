@@ -619,7 +619,7 @@ export class ProceduralAnimator {
 
     // Floppy arm Z rotation (TABS signature wobble)
     b.leftShoulder.rotation.z = -0.3 + Math.sin(t * speed * 1.3) * wobble * 3.5; // held 0.3 out from the ribs under the wobble: about zero the signed sine swung the arm in through the torso
-    b.rightShoulder.rotation.z = 0.3 + Math.sin(t * speed * 1.3 + 1) * wobble * 3.5;
+    b.rightShoulder.rotation.z = 0.3 + Math.sin(t * speed * 1.3 + Math.PI) * wobble * 3.5; // half a cycle off the left: a radian off, both arms stood at nearly one splay
 
     // Hip bounce
     b.hip.rotation.z = Math.sin(t * speed) * 0.04;
