@@ -51,6 +51,8 @@ const CLOTHED_PRESET_WEIGHT = 0.75;
 const ARMOUR_PRESET_WEIGHT = 0.2;
 // Plate is a clearly darker value than the skin of the head and hands beside it, on top of the cloth shade.
 const ARMOUR_SHADE = 0.65;
+// Cool plate and surcoats are never paler than this: the sky-blue team colour only darkened is slate, and TABS knights are a deep blue.
+const COOL_ARMOUR_SATURATION = 0.85;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
 const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
@@ -185,7 +187,7 @@ export class UnitFactory {
       const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
       const legShade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_LEG_SHADE_KEEP;
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      const saturation = cool ? hsv.g * (isArmored ? 1 : CLOTH_SATURATION) : Math.min(1, hsv.g * WARM_SATURATION);
+      const saturation = cool ? (isArmored ? Math.max(hsv.g, COOL_ARMOUR_SATURATION) : hsv.g * CLOTH_SATURATION) : Math.min(1, hsv.g * WARM_SATURATION);
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
       // Warm trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass.
       const legBase = cool || isArmored ? body.bodyMaterial.baseColor : body.skinMaterial.baseColor;
@@ -230,7 +232,11 @@ export class UnitFactory {
       const tabard = body.torsoMesh.clone("tabard");
       tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * TABARD_DEPTH);
       tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
-      tabard.material = getMaterialFactory().getCloth(teamColor.scale(TABARD_SHADE));
+      const teamHsv = teamColor.toHSV();
+      const tabardColor = teamHsv.r > 150 && teamHsv.r < 300
+        ? Color3.HSVtoRGBToRef(teamHsv.r, Math.max(teamHsv.g, COOL_ARMOUR_SATURATION), teamHsv.b, new Color3())
+        : teamColor;
+      tabard.material = getMaterialFactory().getCloth(tabardColor.scale(TABARD_SHADE));
       propMeshes.push(tabard);
       const mailMaterial = getMaterialFactory().getCloth(MAIL_COLOR);
       for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
