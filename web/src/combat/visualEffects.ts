@@ -351,7 +351,7 @@ export class VisualEffects {
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
     // The dust shows its own colour alone, in three tans all well short of the bloom threshold: lit by the sun, any tan rendered as neutral grey rock.
-    const dustMats = [new Color3(0.62, 0.36, 0.12), new Color3(0.48, 0.27, 0.09), new Color3(0.36, 0.2, 0.07)]
+    const dustMats = [new Color3(0.8, 0.6, 0.35), new Color3(0.68, 0.5, 0.28), new Color3(0.56, 0.4, 0.22)]
       .map((tan) => this._fxMat(Color3.Black(), tan));
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
@@ -458,7 +458,7 @@ export class VisualEffects {
         size: (0.7 + 0.5 * spread + 0.25 * ((i * 0.618034) % 1)) * dustScale,
         angle: i * 2.39996 + Math.random() * 0.4,
         reach: 2.3 * spread * dustScale,
-        tall: 0.5 - 0.18 * spread,
+        tall: 0.9 - 0.3 * spread,
       });
     }
     // Nine dark faceted clods of mixed shape and size thrown clear of it on high arcs, landing round the crater and lying there.
