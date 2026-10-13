@@ -378,7 +378,7 @@ export class VisualEffects {
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. The flank lobes are the pale inner flame, bar the lowest: it is a deep orange, sunk to its middle in the ground and stood out clear of the heart, so the ball stands on a warm foot and is not one pale tone to the ground
     const lobeHeights = [0.5, 0.05, 0.55, -0.3, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 3 ? footMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? footMat : flashMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : i === 3 ? 0.4 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
