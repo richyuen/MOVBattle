@@ -64,7 +64,7 @@ export class ProjectileSystem {
   private _active: ActiveProjectile[] = [];
   private _flashes: MuzzleFlash[] = [];
   /** Spent arrows, bolts and spears left standing in the bodies they hit or in the ground, oldest first. */
-  private _litter: { mesh: TransformNode; owner: RuntimeUnit | null; spear?: boolean }[] = [];
+  private _litter: { mesh: TransformNode; owner: RuntimeUnit | null }[] = [];
   private _matCache = new Map<string, PBRMetallicRoughnessMaterial>();
   onShake?: (intensity: number) => void;
   visualEffects?: VisualEffects;
@@ -309,19 +309,10 @@ export class ProjectileSystem {
 
     // A shaft goes when the corpse it stands in is cleared away, so none is left hanging in the air.
     for (let i = this._litter.length - 1; i >= 0; i--) {
-      const litter = this._litter[i];
-      const { mesh, owner } = litter;
+      const { mesh, owner } = this._litter[i];
       if (mesh.isDisposed() || (owner && owner.body.allMeshes[0]?.isVisible === false)) {
         mesh.dispose();
         this._litter.splice(i, 1);
-      } else if (litter.spear && owner?.isDead) {
-        // A spear falls out of the man it killed and lies by him: carried down with the torso it stood straight up
-        // out of the corpse, and a field of the dead was a forest of upright shafts.
-        mesh.setParent(null);
-        mesh.rotationQuaternion = null;
-        mesh.position.y = 0.06;
-        mesh.rotation.set(0, (mesh.position.x * 7.31 + mesh.position.z * 3.17) % (Math.PI * 2), 0);
-        litter.owner = null;
       }
     }
 
@@ -388,7 +379,7 @@ export class ProjectileSystem {
       mesh.position.set(p.targetPos.x + (vary - 0.5) * 0.8, 0.14, p.targetPos.z + ((vary * 7) % 1 - 0.5) * 0.8);
       mesh.rotation.x = 0.35 + vary * 0.35;
     }
-    this._litter.push({ mesh, owner: struck ? p.target : null, spear: p.shape === "spear" });
+    this._litter.push({ mesh, owner: struck ? p.target : null });
     if (this._litter.length > 60) this._litter.shift()!.mesh.dispose();
     return true;
   }
