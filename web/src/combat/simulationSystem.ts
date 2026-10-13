@@ -439,7 +439,8 @@ export class SimulationSystem {
       return;
     }
 
-    const engageDistance = unit.definition.engageRange + this.attackRangePadding;
+    // Reach is to the target's hide, not its middle: a giant's body keeps a man farther from its centre than his weapon is long, and he never swung.
+    const engageDistance = unit.definition.engageRange + this.attackRangePadding + Math.max(0, enemy.collisionBodyRadius - unit.collisionBodyRadius);
     const distance = Vector3.Distance(unit.position, enemy.position);
 
     if (hasAbility(unit, "teleport") && distance > engageDistance && distance < engageDistance * 3 && unit.canAttack(now)) {
@@ -1540,7 +1541,9 @@ export class SimulationSystem {
   }
 
   private _scoreCandidate(requester: RuntimeUnit, candidate: RuntimeUnit, priority: TargetPriority): number {
-    const baseDistanceScore = candidate.position.subtract(requester.position).lengthSquared();
+    // Nearest is by the hide too: measured to its middle a giant was never the nearest enemy of the men pressed against it.
+    const hideDistance = Math.max(0, candidate.position.subtract(requester.position).length() - Math.max(0, candidate.collisionBodyRadius - requester.collisionBodyRadius));
+    const baseDistanceScore = hideDistance * hideDistance;
     const linkedRolePenalty = candidate.linkedParent ? 9 : 0;
 
     switch (priority) {
