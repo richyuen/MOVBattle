@@ -194,12 +194,12 @@ export class ProjectileSystem {
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.15 any way off one point 0.15 out from the flash (at 0.3 the clump hung a barrel-width clear of the
     // muzzle), the first the biggest and the rest a half to four fifths of its width: at a third to three fifths it was one sphere with crumbs on it, a barrel-mouth wide.
     for (let i = 0; i < 8; i++) {
-      const diameter = (i === 0 ? 0.6 : 0.3 + Math.random() * 0.19) * scale; // at 0.44 and 0.22-0.36 the whole clump was a barrel-mouth and a half wide
+      const diameter = (i === 0 ? 0.48 : 0.18 + Math.random() * 0.3) * scale; // at 0.44 and 0.22-0.36 the whole clump was a barrel-mouth and a half wide, and at 0.6 and 0.3-0.49 thrown 0.15 off it was one big ball with crumbs
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
       smoke.position = flash.position.add(direction.scale(0.15 * scale));
-      smoke.position.x += (Math.random() - 0.5) * 0.3 * scale;
-      smoke.position.y += (Math.random() - 0.3) * 0.3 * scale;
-      smoke.position.z += (Math.random() - 0.5) * 0.3 * scale;
+      smoke.position.x += (Math.random() - 0.5) * 0.2 * scale;
+      smoke.position.y += (Math.random() - 0.3) * 0.2 * scale;
+      smoke.position.z += (Math.random() - 0.5) * 0.2 * scale;
       smoke.convertToFlatShadedMesh();
       const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
       const tones: number[] = [];
