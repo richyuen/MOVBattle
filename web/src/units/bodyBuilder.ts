@@ -174,6 +174,12 @@ const SLEEVE_HEAD_PLATE = 1.1;
 const SLEEVE_HEAD_DROP = 0.4;
 const SLEEVE_HEAD_RISE = 0.35;
 const SLEEVE_HEAD_CROWN = 0.6;
+/** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
+const THIGH_OF_LEG = 0.2;
+/** Thigh head: the thigh swells up to the hip as the sleeve does to the shoulder, to this many thighs wide, and its crown sinks into the pelvis block in place of a ball cap. */
+const THIGH_HEAD = 1.15;
+/** The pelvis is never narrower than the pair of thighs under it, lapped into each other by what this leaves of one. */
+const THIGH_LAP = 0.9;
 /** A shin does not run down to a point: it keeps at least this share of its top width to where it goes into the boot. */
 const SHIN_END = 0.78;
 /** Boot: a cuff this many shin ends across that stands this share of the shin up the leg, on a toe box this many cuff widths long that stops at this share of the cuff's height. */
@@ -464,7 +470,7 @@ export function buildArticulatedBody(
 
   const upperLegH = 0.308 * LIMB_STRETCH * p.legLength;
   const lowerLegH = 0.275 * LIMB_STRETCH * p.legLength;
-  const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
+  const upperLegTop = Math.max(0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0), (upperLegH + lowerLegH) * THIGH_OF_LEG);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom;
   // The shin ends at the width of the boot top it goes into, and not at a needle ankle: a unit's own shin width only thins it down to SHIN_END.
@@ -686,7 +692,7 @@ export function buildArticulatedBody(
 
   // ─── Legs ───
   const legDepthScale = 0.92;
-  const pelvisW = Math.max(waist, shoulderOffX * 2 / s * PELVIS_OF_SHOULDERS);
+  const pelvisW = Math.max(waist, shoulderOffX * 2 / s * PELVIS_OF_SHOULDERS, upperLegTop * 2 * THIGH_LAP);
   const pelvisH = upperLegTop * PELVIS_HEIGHT;
   const pelvisD = Math.max(waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001), upperLegTop * legDepthScale) * 1.05;
   const hipOffX = (pelvisW - upperLegTop) * 0.5 * s;
@@ -715,6 +721,8 @@ export function buildArticulatedBody(
     new Vector3(1, 1, legDepthScale),
     radialSegments,
     "bottom",
+    undefined,
+    upperLegTop * THIGH_HEAD,
   );
   leftUpperLeg.position.y = -upperLegH * s * 0.5;
   leftUpperLeg.parent = leftHipJ;
@@ -747,6 +755,8 @@ export function buildArticulatedBody(
     new Vector3(1, 1, legDepthScale),
     radialSegments,
     "bottom",
+    undefined,
+    upperLegTop * THIGH_HEAD,
   );
   rightUpperLeg.position.y = -upperLegH * s * 0.5;
   rightUpperLeg.parent = rightHipJ;
@@ -766,13 +776,6 @@ export function buildArticulatedBody(
   rightLowerLeg.parent = rightKnee;
   const rightFoot = foot(`${name}_rFootM`);
   rightFoot.parent = rightKnee;
-
-  // ─── Hip Caps (hide joint seams) ───
-  const hipCapDiam = upperLegTop * 1.1;
-  const lHipCap = sphere(`${name}_lHipCap`, hipCapDiam, bodyMat, Vector3.One(), capSegments);
-  lHipCap.parent = leftHipJ;
-  const rHipCap = sphere(`${name}_rHipCap`, hipCapDiam, bodyMat, Vector3.One(), capSegments);
-  rHipCap.parent = rightHipJ;
 
   // ─── Belt (at torso base / hip level) ───
   if (options.showBelt) {

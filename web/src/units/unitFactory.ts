@@ -178,11 +178,11 @@ export class UnitFactory {
       // tunic and trousers down to the ankle, and the feet are boots a shade darker than the trousers. Whole-body presets (ghost, bone, void...)
       // stay one material.
       if (bareSkinned) {
-        // Bare from head to foot (TABS tribal): only the pelvis block and the hip caps at its corners keep the
-        // body material, as the loincloth.
+        // Bare from head to foot (TABS tribal): only the pelvis block keeps the body material, as the loincloth;
+        // the thigh heads that sink into its corners are bare leg.
         for (const mesh of body.root.getChildMeshes(false)) {
           if (mesh.material !== body.bodyMaterial || propMeshes.includes(mesh as Mesh)) continue;
-          if (!/_pelvis$|_[lr]HipCap$/.test(mesh.name)) mesh.material = body.skinMaterial;
+          if (!/_pelvis$/.test(mesh.name)) mesh.material = body.skinMaterial;
         }
         // Hair mop: a coarse faceted lump half as big again as the head, set up and back so the face stays bare.
         const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
