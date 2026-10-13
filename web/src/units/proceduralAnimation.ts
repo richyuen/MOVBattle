@@ -409,6 +409,7 @@ export class ProceduralAnimator {
       const c = (this._carry ??= this._buildCarry());
       const carry = (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
       const bob = Math.abs(Math.sin((this._time + this._wobblePhase) * (this._gait ??= this._buildGait()).rate + c.beat)) - 0.5;
+      this._carryDip = bob * c.bob;
       if (c.weapon) {
         b.rightShoulder.rotation.x += (c.weapon.raise + bob * c.bob - b.rightShoulder.rotation.x * 0.8) * carry;
         b.rightShoulder.rotation.z += (c.weapon.out - b.rightShoulder.rotation.z) * carry;
@@ -483,23 +484,44 @@ export class ProceduralAnimator {
 
     this._squareShield();
     this._carrySpear();
+    this._carryProp(dt);
 
     // ─── Googly-eye pupil wobble ───
     this._updatePupilWobble(dt);
   }
 
-  // What each arm is carrying on the march and how this man holds it. A weapon is anything in the right hand but the mitt itself; a club over the shoulder, an aimed bow and a wall
-  // carrier's upright spear already have their own holds. Looked up on first use, like the board, and hashed from the wobble phase like the gait.
-  private _carry: { weapon: { raise: number; out: number; elbow: number } | null; board: { raise: number; out: number; elbow: number } | null; bob: number; beat: number } | null = null;
+  // What each arm is carrying on the march and how this man holds it. A weapon is anything in the right hand but the mitt itself; an aimed bow and a wall carrier's upright
+  // spear already have their own holds. Looked up on first use, like the board, and hashed from the wobble phase like the gait.
+  // The weapon is carried in one of four attitudes, the man's own: shouldered (hand up at the collar, the head of it back over the shoulder), upright (hand in front of the
+  // chest, the weapon stood up), across the chest (hand at the belt, the weapon slanted up to the other shoulder) or trailed (arm hung, the weapon low and behind him).
+  // `tip` is where the weapon points in that attitude, in the body's own frame: x out to the weapon side, y up, z ahead.
+  private _carry: {
+    weapon: { raise: number; out: number; elbow: number; tip: Vector3; prop: { node: TransformNode; rest: Quaternion; grip: Vector3 } | null } | null;
+    board: { raise: number; out: number; elbow: number } | null; bob: number; beat: number;
+  } | null = null;
+  private _carryTurn = 0;
+  private _carryDip = 0;
   private _buildCarry(): NonNullable<ProceduralAnimator["_carry"]> {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
     };
-    const held = (this.locomotionBias === "none" || this.locomotionBias === "braced") && !this._spearShaft()
-      && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
+    const held = this.locomotionBias !== "aimed" && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
+    // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
+    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle)$/.test(n.name));
+    const prop = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
+    const side = Math.sign(this._body.rightShoulder.position.x) || 1;
+    const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
+    const pick = h(92);
+    const attitude = pick < 0.3
+      ? { raise: -0.9 - h(81) * 0.3, out: 0.15 + h(82) * 0.2, elbow: -1.9 - h(83) * 0.3, tip: lean(0.25, 0.45, -0.85) }
+      : pick < 0.55
+        ? { raise: -0.5 - h(81) * 0.3, out: 0.2 + h(82) * 0.2, elbow: -1.2 - h(83) * 0.3, tip: lean(0.1, 1, 0.1) }
+        : pick < 0.8
+          ? { raise: -0.45 - h(81) * 0.25, out: 0.02 + h(82) * 0.1, elbow: -1.4 - h(83) * 0.3, tip: lean(-0.8, 0.55, 0.2) }
+          : { raise: 0.3 + h(81) * 0.2, out: 0.15 + h(82) * 0.15, elbow: -0.15 - h(83) * 0.2, tip: lean(0.2, -0.4, -0.9) };
     return {
-      weapon: held ? { raise: -0.35 - h(81) * 0.5, out: 0.12 + h(82) * 0.28, elbow: -0.7 - h(83) * 0.6 } : null,
+      weapon: held ? { ...attitude, prop } : null,
       board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
       bob: 0.08 + h(84) * 0.1,
       beat: h(88) * Math.PI,
@@ -533,6 +555,37 @@ export class ProceduralAnimator {
     hand.computeWorldMatrix(true);
     const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0));
     shield.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), square, Math.min(1, k * 1.5));
+  }
+
+  /**
+   * On the march the weapon does not ride the hand at the one angle it was strapped on with: it turns in the fist to the man's own carry attitude, whatever the arm is
+   * doing under it, so a line of clubs is clubs on shoulders, stood up, slanted across chests and trailed, and not one club repeated level and parallel. The weapon's
+   * middle sits as far along it from the fist as it was strapped on, and its head dips with the load's bob on each footfall. In contact, in a swing, limp or dead it
+   * eases back to hanging from the hand as it was built.
+   */
+  private _carryProp(dt: number): void {
+    const weapon = this._carry?.weapon;
+    if (!weapon?.prop) return;
+    const { node, rest, grip } = weapon.prop;
+    const marching = this._state === AnimState.Walking ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0;
+    this._carryTurn = this._state === AnimState.Dead ? 0 : this._carryTurn + (marching - this._carryTurn) * Math.min(1, dt * 10);
+    const k = this._carryTurn;
+    if (k <= 0.01) {
+      if (node.rotationQuaternion) {
+        node.rotationQuaternion = null;
+        node.position.copyFrom(grip);
+      }
+      return;
+    }
+    const hand = this._body.rightHand;
+    hand.computeWorldMatrix(true);
+    const tip = new Vector3(weapon.tip.x, weapon.tip.y - this._carryDip * 1.5, weapon.tip.z).normalize();
+    const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
+    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(attitude), k);
+    node.rotationQuaternion = turn;
+    const held = new Vector3(0, grip.length(), 0);
+    held.rotateByQuaternionToRef(turn, held);
+    Vector3.LerpToRef(grip, held, k, node.position);
   }
 
   // The spear in a shield man's weapon hand, with the turn and the offset it was strapped on with. Looked up on first use, like the board.
