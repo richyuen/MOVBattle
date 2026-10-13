@@ -6,8 +6,8 @@ or when it was listed as never-retry; it is not pickable as [P]. The critic reje
 reverses or re-nudges a row approved within the last 20 iterations ("ledger reversal"). An [S] gap
 that replaces the mechanism owning a row may set new values: the worker resets the row to pending
 and keeps the old value under earlier values. One row per tuning knob a mechanism exposes, not per
-line. The worker updates rows at commit time (pending) and after verdicts. Drop rows untouched for
-40 iterations.
+line; a value column is at most 80 characters (name the knobs, not their story). The worker updates
+rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Rows
 main.ts:GIANT_LEAN | 0.4 | 159 | spent |

@@ -15,11 +15,11 @@ approved. Follow these steps in order.
 - N = Iteration in STATE + 1.
 
 ## 2. Re-audit when due
-If N is a multiple of 5, or Criteria in STATE says `unscored`, or fewer than 2 structural gaps are pickable: run `node loop/scripts/capture.mjs --iter N --showcase-only`, spawn the critic in RE-AUDIT mode (see step 6; give it the whole digest, `loop/LEDGER.md`, all `reference/small/*.jpg`, all `reference/frames/gameplay_sheet_*.jpg`, and the new PNGs), and rewrite Criteria and Ranked open gaps from its answer before continuing.
+If N is a multiple of 5, or Criteria in STATE says `unscored`, or fewer than 2 structural gaps are pickable: run `node loop/scripts/capture.mjs --iter N --showcase-only`, spawn the critic in RE-AUDIT mode (see step 6; give it the whole digest, `loop/LEDGER.md`, the Criteria block from STATE verbatim (its previous verdicts and blockers), all `reference/small/*.jpg`, all `reference/frames/gameplay_sheet_*.jpg`, and the new PNGs), and rewrite Criteria and Ranked open gaps from its answer before continuing.
 
 ## 3. Pick gaps: structural first
 - A gap is `[S]` structural (adds or replaces a mechanism: a pose state, a prop mesh, an effect, a camera rule, a map prop; up to 3 files and 300 changed lines, one failing criterion) or `[P]` polish (constants, colours, sizes; up to 2 files and 20 lines).
-- Pickable: attempts < 2, and not spent in LEDGER. Take the top 2 pickable `[S]` gaps, in ranked order, from different dimensions when possible. Then take up to 2 pickable `[P]` gaps, but only ones the critic listed as fallout of an `[S]` gap approved within the last 3 iterations. Never pick a `[P]` gap on a criterion with no `[S]` attempt in the last 10 iterations. Both windows are read from Structural attempts in LEDGER, nowhere else.
+- Pickable: attempts < 2, not spent in LEDGER, and its criterion not marked `plateau` in Criteria. Take the top 2 pickable `[S]` gaps, in ranked order, on two different criteria, and not the same pair of criteria as the previous iteration's `[S]` picks (Structural attempts in LEDGER); each must clear a numbered blocker of its criterion. A blocker reading `no evidence` is cleared by an evidence commit (step 4), not a gap. Then take at most 1 pickable `[P]` gap, only one the critic listed as fallout of an `[S]` gap approved within the last 3 iterations, whose NEXT line names the shot it shows in. Never pick a `[P]` gap on a criterion with no `[S]` attempt in the last 10 iterations. Both windows are read from Structural attempts in LEDGER, nowhere else.
 - Read Rejected attempts and the LEDGER rows for every identifier you intend to touch. Write the picks into Focus. Record `BASE=$(git rev-parse HEAD)`.
 
 ## 4. Implement, one commit per gap
@@ -36,11 +36,12 @@ Spawn a fresh `Agent` (general-purpose). Its prompt lists, by path: `loop/CRITIC
 ## 7. Apply verdicts
 - Each REJECT: `git revert --no-edit <sha>`. If the revert conflicts, `git revert --abort`, keep the code, mark it `rejected-kept`. Add the gap to Rejected attempts with attempts+1 and the top defect.
 - Set each touched LEDGER row's verdict, and the gap's Structural attempts line, to the critic's verdict. A row attempted twice as `[P]` without approval becomes `spent`.
+- Apply the critic's blocker strikes and additions to the Criteria block. A criterion with 4 or more approved `[S]` since its blocker list was written and still FAIL is marked `plateau`: no `[S]` is picked on it until a re-audit rewrites its blockers and clears the mark.
 - Consecutive rejects: reset to 0 if any gap was approved, else +1. At 3, write the reason into a file named `STOP`.
 
 ## 8. Write memory and commit
 - In LEDGER drop Structural attempts older than 10 iterations and rows untouched for 40.
-- Rewrite `loop/STATE.md` fully: Iteration N, Criteria (from the last audit, with the critic's per-gap criterion flips applied), Focus with verdicts, Last verdicts (critic header lines verbatim), Ranked open gaps (critic's list, max 8, tags kept), Rejected attempts (last 8), Notes (max 5 lines).
+- Rewrite `loop/STATE.md` fully: Iteration N, Criteria (verdict, blockers and approved-[S]-since count per criterion, with this iteration's flips, strikes and `plateau` marks applied), Focus with verdicts, Last verdicts (critic header lines verbatim), Ranked open gaps (critic's list, max 8, tags kept), Rejected attempts (last 8), Notes (max 5 lines).
 - Append to `loop/LOG.md`: `iter N | <gap ids with tags> | <approved>/<total> approved | passes <before> -> <after>`.
 - `node loop/scripts/budget.mjs` must pass. Commit the docs: subject `loop(N): <approved>/<total> gaps approved`.
 - `git push` (bare, no arguments). If it fails, note it in LOG.md and carry on; the commit is what counts.
