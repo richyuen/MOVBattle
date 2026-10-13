@@ -601,21 +601,22 @@ export class ProceduralAnimator {
     this._animateIdleHumanoid();
   }
 
-  // Per-unit standing slouch: forward lean, which arm hangs ahead, how far the arms sit off the ribs, each
-  // elbow's fold, and how far the leading foot is planted ahead of the other. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
-  private _idlePose: { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number } | null = null;
-  private _buildIdlePose(): { lean: number; side: number; spread: number; leftElbow: number; rightElbow: number; stride: number } {
+  // Per-unit standing rest: forward lean, which leg is the free one planted ahead, how far the pelvis drops on that side, where the head
+  // is turned, and for each arm its hang off the ribs, its elbow's give and the reach, pace and phase of its swing. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
+  private _idlePose: { lean: number; side: number; stride: number; tilt: number; turn: number; arms: Array<{ out: number; elbow: number; swing: number; rate: number; phase: number }> } | null = null;
+  private _buildIdlePose(): NonNullable<ProceduralAnimator["_idlePose"]> {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
       return v - Math.floor(v);
     };
+    const arm = (n: number) => ({ out: 0.08 + h(n) * 0.1, elbow: 0.4 + h(n + 1) * 0.4, swing: 0.14 + h(n + 2) * 0.18, rate: 0.9 + h(n + 3) * 0.7, phase: h(n + 4) * Math.PI * 2 });
     return {
       lean: 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
-      spread: 0.2 + h(43) * 0.16,
-      leftElbow: 0.8 + h(44) * 0.6, // at 0.45-0.95 a standing arm was near enough a straight rod hung off the shoulder
-      rightElbow: 0.8 + h(45) * 0.6,
       stride: 0.2 + h(46) * 0.14,
+      tilt: 0.11 + h(43) * 0.08,
+      turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
+      arms: [arm(70), arm(80)],
     };
   }
 
@@ -624,36 +625,46 @@ export class ProceduralAnimator {
     const b = this._body;
     const wobble = 0.07; // TABS-style pronounced sway
     const p = (this._idlePose ??= this._buildIdlePose());
+    const leftLeads = p.side < 0;
 
-    // Gentle torso sway around a slight forward slouch
-    b.torso.rotation.z = Math.sin(t * 1.5) * wobble;
+    // Weight on one leg: the pelvis drops on the side of the free leg and the chest rolls back the other way over the standing one, swaying about a slight forward slouch
+    const tilt = (leftLeads ? 1 : -1) * p.tilt + Math.sin(t * 0.7) * 0.03;
+    const sway = Math.sin(t * 1.5) * wobble;
+    b.hip.rotation.z = tilt;
+    b.torso.rotation.z = -tilt * 1.5 + sway;
     b.torso.rotation.x = p.lean + Math.sin(t * 1.2 + 1) * wobble * 0.5;
 
-    // Head bob
-    b.neck.rotation.z = Math.sin(t * 1.8 + 0.5) * wobble * 1.2;
+    // The head rides back toward level a quarter of a sway behind the chest, turned off to its own side
+    b.neck.rotation.z = tilt * 0.5 + Math.sin(t * 1.5 - Math.PI / 2) * wobble * 1.2;
+    b.neck.rotation.y = p.turn + Math.sin(t * 0.6 + p.turn * 9) * 0.12;
     b.neck.rotation.x = Math.sin(t * 1.3 + 2) * wobble * 0.8;
 
-    // Arms are carried off the ribs, one ahead of the body and one behind, each elbow folded its own amount, and swing a quarter radian either way from the shoulder (at half that they hung dead)
-    b.leftShoulder.rotation.x = -p.side * 0.22 + Math.sin(t * 1.1) * wobble * 4;
-    b.rightShoulder.rotation.x = p.side * 0.22 + Math.sin(t * 1.1 + Math.PI) * wobble * 4;
-    b.leftShoulder.rotation.z = -p.spread;
-    b.rightShoulder.rotation.z = p.spread;
-    b.leftElbow.rotation.x = -p.leftElbow + Math.sin(t * 1.4) * wobble;
-    b.rightElbow.rotation.x = -p.rightElbow + Math.sin(t * 1.4 + Math.PI) * wobble;
+    // Arms hang from the shoulders under their own weight, plumb whatever the chest above them is doing, each a little
+    // off the ribs on an elbow bent enough to keep the hand at the thigh, and each swings as its own pendulum with the forearm trailing the upper arm
+    const roll = b.hip.rotation.z + b.torso.rotation.z;
+    const [left, right] = p.arms;
+    const leftSwing = Math.sin(t * left.rate + left.phase);
+    const rightSwing = Math.sin(t * right.rate + right.phase);
+    b.leftShoulder.rotation.x = -b.torso.rotation.x * 0.7 + leftSwing * left.swing;
+    b.rightShoulder.rotation.x = -b.torso.rotation.x * 0.7 + rightSwing * right.swing;
+    b.leftShoulder.rotation.z = -roll - left.out;
+    b.rightShoulder.rotation.z = -roll + right.out;
+    b.leftElbow.rotation.x = -left.elbow - (0.5 + 0.5 * Math.sin(t * left.rate + left.phase - 0.9)) * left.swing;
+    b.rightElbow.rotation.x = -right.elbow - (0.5 + 0.5 * Math.sin(t * right.rate + right.phase - 0.9)) * right.swing;
 
-    // Staggered stance: the leg opposite the leading arm is planted ahead with its knee bent (twice the hip
-    // angle, which keeps that foot on the ground); the other trails slightly behind, nearly straight.
-    const leftLeads = p.side < 0;
+    // Staggered stance: the free leg is planted ahead with its knee bent (twice the hip angle, which keeps that foot
+    // on the ground under its dropped hip); the standing leg trails slightly behind, nearly straight.
     // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs
     const sag = p.lean * 0.2;
     const lead = -p.stride - sag;
     const trail = p.stride * 0.45 - sag;
     b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
     b.rightHip.rotation.x = (leftLeads ? trail : lead) + Math.sin(t * 0.9 + Math.PI) * wobble;
+    // The legs stay upright under the tilted pelvis: the standing foot comes in under the body and the free foot rests out to its side
+    b.leftHip.rotation.z = -tilt + (leftLeads ? -0.08 : 0.06);
+    b.rightHip.rotation.z = -tilt + (leftLeads ? -0.06 : 0.08);
     b.leftKnee.rotation.x = leftLeads ? (p.stride + sag) * 2 : 0.1 + sag * 2;
     b.rightKnee.rotation.x = leftLeads ? 0.1 + sag * 2 : (p.stride + sag) * 2;
-
-    // (no hip bounce — keeps units grounded)
   }
 
   private _animateIdleQuadruped(): void {
