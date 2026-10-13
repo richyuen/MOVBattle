@@ -1161,8 +1161,9 @@ export class RuntimeUnit {
     const carry = toppleDirection.scale(Math.max(0.22, pressure * this._crowdPhysicsProfile.shoveResponse * this._crowdPhysicsProfile.topplePitchStrength));
     this._velocity.x = this._velocity.x * 0.35 + carry.x;
     this._velocity.z = this._velocity.z * 0.35 + carry.z;
-    const toppleLift = (launched ? 0.24 : 0.12) + pressure * this._crowdPhysicsProfile.toppleCarry;
-    this._velocity.y = Math.min(0.7, Math.max(this._velocity.y * 0.45, toppleLift));
+    // A launch throws a man-weight body up at 4.8, half a metre and nearly half a second clear of the grass, and a plain topple at 2.4, a hand off it, a heavier body less by its mass: under the 0.7 cap both left the ground by millimetres.
+    const toppleLift = (launched ? 4.8 : 2.4) / Math.max(1, this.definition.mass) + pressure * this._crowdPhysicsProfile.toppleCarry;
+    this._velocity.y = Math.min(launched ? 5.4 : 3, Math.max(this._velocity.y * 0.45, toppleLift));
     this._staggerTimer = Math.max(
       this._staggerTimer,
       this._crowdPhysicsProfile.toppleSeconds * (launched ? 0.45 : 0.35),
