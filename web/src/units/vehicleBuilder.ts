@@ -262,8 +262,8 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 
   // Throwing arm (pivots at crossbar, extends along Z)
   const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: 1.8 }, scene);
-  arm.position.set(0, 1.55, 0.2);
-  arm.rotation.x = 0.4; // tilted: bucket end up toward +Z
+  arm.position.set(0, 1.65, 0.2);
+  arm.rotation.x = -0.4; // tilted: bucket end up toward +Z (a positive turn about X drops the +Z end), lying on the crossbar and running up under the bucket
   arm.parent = rig; arm.material = wood; allMeshes.push(arm);
 
   // Bucket at front end of arm (+Z)
