@@ -292,7 +292,7 @@ export class CameraController {
     // With the giant's place known the eye stands between it and the focus, its back to the giant: as far off the focus as leaves the giant 2.5 clear behind it,
     // from the 4.5 at which a man is whole between the bands up to 6, and aimed a little under his middle: at 3 the eye stood inside the crowd and one back filled the frame.
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
-    const giantRadius = Math.min(8, Math.max(6.5, giantOff - 2.5)); // two metres further off than a man needs alone: at 4.5 to 6 the clubs of the nearest men filled the foreground
+    const giantRadius = Math.min(6, Math.max(4.5, giantOff - 2.5));
     const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     // A giant too near the focus to stand 4.5 clear behind the eye is not behind it at all: its tusks and legs came round into the frame. The eye goes a quarter turn round the focus and stands side-on to the giant,
     // and aims GIANT_SHY past the men on the side away from it, so its near leg and tusk are off the edge of the frame and not the near third of it. Turning further round, either way, only brought more of it in.
