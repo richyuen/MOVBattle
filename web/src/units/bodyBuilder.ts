@@ -174,7 +174,7 @@ export function buildArticulatedBody(
   const mf = getMaterialFactory();
   const bodyMat = mf.createUnique("cloth", bodyColor);
   const skinMat = mf.createUnique("skin", new Color3(0.94, 0.90, 0.86));
-  const eyeMat = mf.get("unlit", new Color3(0.02, 0.02, 0.02)); // unlit: lit, the sky put a navy sheen on them
+  const eyeMat = mf.get("skin", new Color3(0.05, 0.05, 0.05), { roughness: 0.4 });
   const pupilMat = mf.get("skin", new Color3(0.05, 0.05, 0.05), { roughness: 0.4 });
 
   function sphere(
