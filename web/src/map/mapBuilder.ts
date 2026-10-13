@@ -131,9 +131,10 @@ export class TribalSandboxMapBuilder {
     rock.diffuseColor = new Color3(0.78, 0.72, 0.58);
     rock.specularColor = new Color3(0.08, 0.08, 0.08);
 
-    // Dark boulder stone: a near-neutral dark grey, so any blue it shows comes from the sky fill and not its own colour
+    // Dark boulder stone: a warm dusky brown-grey, part self-lit blue so its faces turned from the sun are a deep blue and not black
     const darkRock = new StandardMaterial("darkRock", this._scene);
-    darkRock.diffuseColor = new Color3(0.22, 0.235, 0.24);
+    darkRock.diffuseColor = new Color3(0.30, 0.25, 0.15);
+    darkRock.emissiveColor = new Color3(0.01, 0.015, 0.08);
     darkRock.specularColor = new Color3(0.06, 0.06, 0.06);
 
     // Cliff rock: the island's sides are grey stone, a different stuff from the warm earth and boulders on top
