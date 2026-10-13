@@ -656,6 +656,13 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   const carriage = MeshBuilder.CreateBox("carriage", { width: 0.5, height: 0.12, depth: 0.9 }, scene);
   carriage.position.y = 0.3; carriage.parent = root; carriage.material = wood; allMeshes.push(carriage);
 
+  // Cheeks: a thick wooden wall standing on the bed each side of the barrel, nearly to its top, so the gun sits down in its carriage
+  for (const xOff of [-0.2, 0.2]) {
+    const cheek = MeshBuilder.CreateBox("carriageCheek", { width: 0.1, height: 0.26, depth: 0.6 }, scene);
+    cheek.position.set(xOff, 0.49, 0.2);
+    cheek.parent = root; cheek.material = wood; allMeshes.push(cheek);
+  }
+
   // Axle under the bed: the body mesh that takes the team tint, so the iron barrel and the wooden carriage keep their own colours
   const axle = MeshBuilder.CreateCylinder("axle", { height: 0.56, diameter: 0.06, tessellation: 6 }, scene);
   axle.position.y = 0.29;
