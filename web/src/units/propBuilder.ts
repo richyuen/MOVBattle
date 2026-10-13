@@ -655,20 +655,17 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
           flange.material = headMat;
         }
       } else {
-        // Hammer: box head with flat face vs peen distinction. Stone, not metal: a pale accent on metal has nothing to reflect and goes black
-        const stoneMat = mat(scene, accent, 0, "stone");
-        const head = MeshBuilder.CreateBox("hammerhead", { width: 0.22 * s, height: 0.14 * s, depth: 0.14 * s }, scene); // a long heavy block across the haft, not a near-cube
+        // Hammer: a pale block across the haft, the same face at both ends, gripped by a dark collar where the haft goes through. Stone, not metal: a pale colour on metal has nothing to reflect and goes black.
+        // A fixed pale stone and not the accent, which is blended with the team colour and made the head a block of skin
+        const stoneMat = mat(scene, new Color3(0.85, 0.82, 0.78), 0, "stone");
+        const head = MeshBuilder.CreateBox("hammerhead", { width: 0.155 * s, height: 0.1 * s, depth: 0.1 * s }, scene); // a long heavy block across the haft, not a near-cube: at 0.22 it was as big as the torso behind it
         head.position.y = 0.28 * s;
         head.parent = handle;
         head.material = stoneMat;
-        // Peen (wedge side)
-        const peen = MeshBuilder.CreateCylinder("peen", {
-          height: 0.04 * s, diameterTop: 0.01 * s, diameterBottom: 0.05 * s, tessellation: 4,
-        }, scene);
-        peen.position.set(-0.13 * s, 0.28 * s, 0);
-        peen.rotation.z = Math.PI / 2;
-        peen.parent = handle;
-        peen.material = stoneMat;
+        const collar = MeshBuilder.CreateBox("hammerCollar", { width: 0.06 * s, height: 0.115 * s, depth: 0.115 * s }, scene);
+        collar.position.y = 0.28 * s;
+        collar.parent = handle;
+        collar.material = mat(scene, new Color3(0.2, 0.19, 0.2), 0, "stone");
       }
       handle.position.y = 0.1 * s;
       return handle;
