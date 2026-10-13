@@ -27,6 +27,8 @@ export interface GalleryCameraOverride {
 // Battle follow: how far the fight's middle may sit off the view's before the view slides after it, and how fast it slides.
 const FOLLOW_SLACK = 0.6;
 const FOLLOW_SPEED = 2.5;
+const FOLLOW_DROP = 0.6;
+const FOLLOW_DROP_SPEED = 0.3;
 
 export class CameraController {
   readonly camera: ArcRotateCamera;
@@ -46,6 +48,7 @@ export class CameraController {
   private _transition: { from: CameraViewState; to: CameraViewState; elapsed: number; duration: number } | null = null;
   /** Where the melee swoop, and each follow step since, left the camera; null once anything else has moved it, and then it is the player's. */
   private _battleAim: CameraViewState | null = null;
+  private _battleDrop = 0;
   private _prebattleView: CameraViewState | null = null;
   private _prebattleBetaLimits: { lower: number | null; upper: number | null; radius: number | null } | null = null;
 
@@ -253,6 +256,7 @@ export class CameraController {
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
     this._battleAim = center.near ? null : to;
+    this._battleDrop = 0;
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
   }
@@ -316,6 +320,13 @@ export class CameraController {
     if (moved) {
       this._battleAim = null;
       return;
+    }
+    // After the swoop the view sinks FOLLOW_DROP, its pitch unchanged: the horizon stays where it was and the feet of the nearest rank come up into the frame.
+    const drop = Math.min(FOLLOW_DROP - this._battleDrop, FOLLOW_DROP_SPEED * dt);
+    if (drop > 0) {
+      this._battleDrop += drop;
+      aim.target.y -= drop;
+      cam.target.y -= drop;
     }
     const dx = focus.x - aim.target.x;
     const dz = focus.z - aim.target.z;
