@@ -676,28 +676,28 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // Axle under the bed: the body mesh that takes the team tint, so the iron barrel and the wooden carriage keep their own colours
   const axle = MeshBuilder.CreateCylinder("axle", { height: 0.56, diameter: 0.06, tessellation: 6 }, scene);
-  axle.position.y = 0.29;
+  axle.position.y = 0.24;
   axle.rotation.z = Math.PI / 2;
   axle.parent = root; axle.material = teamPrimary; allMeshes.push(axle);
 
-  // Wheels (on sides, X axis): dark, and 0.58 across, so the rims stand as tall as the gun they carry.
+  // Wheels (on sides, X axis): dark, and 0.44 across, so the rims come to the crew's waist and the barrel rides over them: at 0.58 a rim stood to a crewman's shoulder and the gun dwarfed the men serving it.
   // An open rim on eight thick spokes, with daylight between them, not a solid slab
   for (const xOff of [-0.3, 0.3]) {
-    const wheel = MeshBuilder.CreateTorus("wheel", { diameter: 0.58, thickness: 0.1, tessellation: 14 }, scene);
-    wheel.position.set(xOff, 0.29, 0);
+    const wheel = MeshBuilder.CreateTorus("wheel", { diameter: 0.44, thickness: 0.1, tessellation: 14 }, scene);
+    wheel.position.set(xOff, 0.24, 0);
     wheel.rotation.z = Math.PI / 2;
     wheel.parent = root; wheel.material = wheelWood; allMeshes.push(wheel);
 
     // Hub: a fat block on the axle where the spokes meet
     const wheelHub = MeshBuilder.CreateCylinder("wheelHub", { height: 0.1, diameter: 0.12, tessellation: 8 }, scene);
-    wheelHub.position.set(xOff, 0.29, 0);
+    wheelHub.position.set(xOff, 0.24, 0);
     wheelHub.rotation.z = Math.PI / 2;
     wheelHub.parent = root; wheelHub.material = wheelWood; allMeshes.push(wheelHub);
 
     // Spokes: four bars across the full rim, turned about the axle
     for (let i = 0; i < 4; i++) {
-      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.05, height: 0.54, depth: 0.05 }, scene);
-      spoke.position.set(xOff, 0.29, 0);
+      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.05, height: 0.4, depth: 0.05 }, scene);
+      spoke.position.set(xOff, 0.24, 0);
       spoke.rotation.set(i * Math.PI / 4, 0, 0);
       spoke.parent = root; spoke.material = wheelWood; allMeshes.push(spoke);
     }
