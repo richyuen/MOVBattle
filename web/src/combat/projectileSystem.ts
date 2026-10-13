@@ -188,7 +188,7 @@ export class ProjectileSystem {
     sm.emissiveColor = new Color3(0.11, 0.11, 0.10);
     sm.transparencyMode = 2;
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
-    const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
+    const smokeLife = 3.0 + 0.5 * Math.max(0, scale - 1);
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.15 any way off one point 0.15 out from the flash (at 0.3 the clump hung a barrel-width clear of the
     // muzzle), the first the biggest and the rest a half to four fifths of its width: at a third to three fifths it was one sphere with crumbs on it, a barrel-mouth wide.
     for (let i = 0; i < 8; i++) {
