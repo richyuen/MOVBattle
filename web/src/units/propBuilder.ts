@@ -1357,8 +1357,8 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
   // A cool team colour is held as deep as the plate behind it and not washed with white: the sky-blue team colour paled is a slate board.
   const teamHsv = teamColor.toHSV();
   const cool = teamHsv.r > 150 && teamHsv.r < 300;
-  // A cool board is turned 30 toward royal blue, as cool plate is, and nearly fully saturated: the sky-blue team colour itself is a cyan.
-  if (cool) teamColor = Color3.HSVtoRGBToRef(teamHsv.r + 30, Math.max(teamHsv.g, 0.95), teamHsv.b, new Color3());
+  // A cool board is turned 15 toward royal blue (30 was a violet board beside a royal-blue tabard) and nearly fully saturated: the sky-blue team colour itself is a cyan.
+  if (cool) teamColor = Color3.HSVtoRGBToRef(teamHsv.r + 15, Math.max(teamHsv.g, 0.95), teamHsv.b, new Color3());
   const board = cool ? teamColor : Color3.Lerp(teamColor, Color3.White(), 0.12);
   switch (type) {
     case "none": return null;
