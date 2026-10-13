@@ -285,7 +285,10 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   cw.parent = rig; cw.material = metal; allMeshes.push(cw);
 
   // Operator sitting beside, behind the frame
-  const operator = addOperator(scene, rig, allMeshes, 0.4, 0.72, -0.5, color);
+  // Dressed as a gun crewman: bare, he was a washed mannequin beside the machine
+  const operator = addOperator(scene, rig, allMeshes, 0.4, 0.72, -0.5, color, (body) => {
+    dressCannonCrew(scene, body, color);
+  });
 
   const vehicleSockets: VehicleSocketSet = {
     primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.08, 0.82)),
