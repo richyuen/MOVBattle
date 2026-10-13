@@ -130,3 +130,4 @@ iter 128 | reds-queue-behind-mammoth, blue-plate-shield-cyan, muzzle-smoke-flat-
 iter 129 | blast-no-warm-foot, muzzle-smoke-flat-tone, red-skin-bright, mammoth-no-trample, blue-tabard-cyan, reds-trail-mammoth, victory-crowded, crowd-thin | 4/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
 iter 130 | re-audit (camera 4 -> 3); battle-horizon-high, showcase-rout, battle-camera-left-behind, muzzle-smoke-equator, red-lit-faces-dim, blast-foot-one-sided, eyes-small-tinted, shadows-pale-warm | 6/8 approved | scores 3/3/3/4/3/3 -> 3/3/3/4/4/3
 iter 131 | giant-untouched-wipe, battle-camera-left-behind, victory-shot-blocked, muzzle-smoke-equator, blast-pastel, red-lit-faces-short, shadow-hue-orange, eyes-navy | 4/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
+iter 132 | melee-misses-giant, eyes-navy, victory-shot-blocked, red-lit-faces-short, blast-body-cream, contact-line-low, shadow-not-plum, muzzle-smoke-belly | 6/8 approved | scores 3/3/3/4/4/3 -> 3/3/3/4/4/3
