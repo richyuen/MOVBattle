@@ -3476,6 +3476,7 @@ function tick(dt: number, nowSeconds: number): void {
     simulation.update(dt, nowSeconds);
     projectileSystem.update(dt);
     visualEffects.update(dt);
+    if (!galleryCaptureSession) camCtrl.followBattle(computeBattleFocus(), dt);
     checkVictory();
   } else if (stateMachine.currentState === GameState.Placement) {
     // Still update units for idle animation if needed

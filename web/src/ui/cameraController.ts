@@ -24,6 +24,10 @@ export interface GalleryCameraOverride {
   target?: { x: number; y: number; z: number };
 }
 
+// Battle follow: how far the fight's middle may sit off the view's before the view slides after it, and how fast it slides.
+const FOLLOW_SLACK = 0.6;
+const FOLLOW_SPEED = 2.5;
+
 export class CameraController {
   readonly camera: ArcRotateCamera;
   readonly isTouchDevice: boolean;
@@ -40,6 +44,8 @@ export class CameraController {
   private readonly _minTargetY = -2.5;
   private readonly _maxTargetY = 8;
   private _transition: { from: CameraViewState; to: CameraViewState; elapsed: number; duration: number } | null = null;
+  /** Where the melee swoop, and each follow step since, left the camera; null once anything else has moved it, and then it is the player's. */
+  private _battleAim: CameraViewState | null = null;
   private _prebattleView: CameraViewState | null = null;
   private _prebattleBetaLimits: { lower: number | null; upper: number | null; radius: number | null } | null = null;
 
@@ -164,6 +170,7 @@ export class CameraController {
 
   restoreViewState(view: CameraViewState): void {
     this._transition = null;
+    this._battleAim = null;
     this.camera.alpha = view.alpha;
     this.camera.beta = view.beta;
     this.camera.radius = view.radius;
@@ -245,6 +252,7 @@ export class CameraController {
       this.camera.lowerBetaLimit = Math.min(this.camera.lowerBetaLimit ?? to.beta, to.beta);
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
+    this._battleAim = center.near ? null : to;
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
   }
@@ -256,6 +264,7 @@ export class CameraController {
     durationSeconds = 2,
   ): CameraViewState | null {
     if (!this._prebattleView) return null;
+    this._battleAim = null;
     const from = this.captureViewState();
     const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
     // The bands cover the top and bottom of the frame, so a survivor gets ~0.28 radius of height either side of
@@ -287,6 +296,34 @@ export class CameraController {
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
+  }
+
+  // ─── Battle follow ───
+  /** The fight walks off from where the lines first met: slide the melee view sideways after its middle, a man's width of slack and FOLLOW_SPEED a second at most, for as long as the player leaves the camera where the swoop put it. */
+  followBattle(focus: { x: number; z: number }, dt: number): void {
+    const aim = this._battleAim;
+    if (!aim || this._transition) return;
+    const cam = this.camera;
+    const moved =
+      Math.abs(cam.alpha - aim.alpha) > 0.001 ||
+      Math.abs(cam.beta - aim.beta) > 0.001 ||
+      Math.abs(cam.radius - aim.radius) > 0.01 ||
+      Math.abs(cam.target.x - this._shakeOffset.x - aim.target.x) > 0.01 ||
+      Math.abs(cam.target.y - this._shakeOffset.y - aim.target.y) > 0.01 ||
+      Math.abs(cam.target.z - this._shakeOffset.z - aim.target.z) > 0.01;
+    if (moved) {
+      this._battleAim = null;
+      return;
+    }
+    const dx = focus.x - aim.target.x;
+    const dz = focus.z - aim.target.z;
+    const off = Math.hypot(dx, dz);
+    if (off <= FOLLOW_SLACK) return;
+    const step = Math.min(off - FOLLOW_SLACK, FOLLOW_SPEED * dt) / off;
+    aim.target.x += dx * step;
+    aim.target.z += dz * step;
+    cam.target.x += dx * step;
+    cam.target.z += dz * step;
   }
 
   /** Undo the battle swoop: restore the placement view, its pitch limits and its zoom floor. */
