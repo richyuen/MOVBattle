@@ -141,3 +141,4 @@ iter 139 | red-bubblegum-pink, shell-burst-cream-ball, field-tan, clubs-shoulder
 iter 140 | re-audit; result-shot-inside-crowd, red-team-bubblegum, muzzle-puff-grey-stack, budget-seven-digits | 3/4 approved | scores 3/3/3/4/4/3 -> 3/3/4/4/3/3
 iter 141 | budget-seven-digits, result-shot-giant-in-frame, red-skin-no-shade, muzzle-puff-flat-facets, impact-burst-glow-ball, lineup-props-undersized, result-prompt-wording | 5/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 142 | red-skin-lit-side-dull, result-shot-tusk-and-offcentre, bucket-helm-wider-than-shoulders, lineup-blue-bodies-one-tone, budget-count-not-shown, muzzle-puff-too-white | 5/6 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
+iter 143 | result-shot-tusk-and-offcentre, spears-too-thick, cone-hats-shrunk, tunics-same-teal-and-dark, muzzle-puff-dull-and-few-lobes (no commit: result-shot-sky-thin, empty-hud-zero-budget) | 3/5 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
