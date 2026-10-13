@@ -808,7 +808,7 @@ export class ProceduralAnimator {
       armLag: (h(75) - 0.5) * 1.4,
       armSwing: 0.5 + h(76) * 0.45,
       slump: (h(77) - 0.5) * 0.16,
-      roll: 0.04 + h(78) * 0.1,
+      roll: 0.08 + h(78) * 0.12,
       nod: 0.03 + h(79) * 0.05,
       nodLag: h(80) * Math.PI,
       chin: -0.28 + h(89) * 0.32,
