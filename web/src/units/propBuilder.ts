@@ -583,7 +583,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       const tip = MeshBuilder.CreateCylinder("tip", { height: 0.18 * s, diameterTop: 0, diameterBottom: 0.05 * s, tessellation: 4 }, scene);
       tip.position.y = 0.59 * s; // seated on the shaft end: a point 0.055 across and 0.16 long was a spade on a stick, and one 0.038 across and 0.12 long a pin
       tip.parent = shaft;
-      tip.material = mat(scene, type === "harpoon" ? new Color3(0.6, 0.6, 0.65) : new Color3(0.35, 0.35, 0.4));
+      tip.material = mat(scene, new Color3(0.6, 0.6, 0.65)); // bright steel: at (0.35, 0.35, 0.4) the point was a dark stub that read as more shaft
       shaft.position.y = 0.15 * s; // gripped where it was, 0.35 up from the butt
       return shaft;
     }
