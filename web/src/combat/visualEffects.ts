@@ -378,7 +378,7 @@ export class VisualEffects {
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. The flank lobes are the pale inner flame, bar the two foot lobes: they are a deep orange, both sunk to near their middle in the ground so the orange is a low foot and not half the ball, the lowest and stood out clear of the heart, so the ball stands on a warm foot and is not one pale tone to the ground
     const lobeHeights = [0.5, -0.25, 0.55, -0.3, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 2, i === 0 ? coreMat : i === 1 || i === 3 ? footMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? footMat : flashMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : i === 3 ? 0.4 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
@@ -392,7 +392,7 @@ export class VisualEffects {
     const tongueWidths = [0.95, 0.8, 0.85, 0.7, 0.8, 0.65, 0.75];
     const tongueLeans = [0.1, 0.7, 0.9, 0.5, 0.9, 0.8, 0.85];
     for (let i = 0; i < tongueLengths.length; i++) {
-      const tongue = MeshBuilder.CreateSphere("burstFlash", { diameter: 1, segments: 2 }, this._scene); // two segments: at six the fire was smooth balls beside faceted everything else
+      const tongue = MeshBuilder.CreateSphere("burstFlash", { diameter: 1, segments: 6 }, this._scene);
       tongue.position.y = 0.5;
       tongue.bakeCurrentTransformIntoVertices();
       tongue.material = i % 2 === 0 ? flashMat : flameMat;
