@@ -175,11 +175,17 @@ const LOWER_LIMB_MIN_TAPER = 0.6;
 const JOINT_STUB = 0.45;
 const JOINT_STUB_END = 0.6;
 /** Shoulders: the sleeve swells over its top SLEEVE_HEAD_DROP of the upper arm to a head SLEEVE_HEAD of the sleeve wide at the joint (SLEEVE_HEAD_PLATE under a breastplate's pad), closed above by a chamfer SLEEVE_HEAD_RISE of that width tall and drawn in to SLEEVE_HEAD_CROWN of it. */
-const SLEEVE_HEAD = 1.35;
-const SLEEVE_HEAD_PLATE = 1.1;
+const SLEEVE_HEAD = 1.08;
+const SLEEVE_HEAD_PLATE = 1.08;
 const SLEEVE_HEAD_DROP = 0.4;
 const SLEEVE_HEAD_RISE = 0.35;
 const SLEEVE_HEAD_CROWN = 0.6;
+/** Shoulder yoke: the top of the torso is a slab that reaches out over both arm roots, to this share of a sleeve past each shoulder joint, so the arm comes out from under the chest's own silhouette
+ * and not from a post stood beside it. It runs from the chest line up to this share of a sleeve above the joints at this share of the torso's depth, and from there slopes in to the neck. */
+const YOKE_REACH = 0.42;
+const YOKE_RISE = 0.3;
+const YOKE_DEPTH = 0.92;
+const YOKE_NECK = 0.5;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
 const THIGH_OF_LEG = 0.2;
 /** Thigh head: the thigh swells up to the hip as the sleeve does to the shoulder, to this many thighs wide, and its crown sinks into the pelvis block in place of a ball cap. */
@@ -356,6 +362,36 @@ export function buildArticulatedBody(
     m.setVerticesData("position", positions);
     m.refreshBoundingInfo();
     m.scaling.z = torsoD / Math.max(chestTop, waist, 0.001);
+    m.material = bodyMat;
+    allMeshes.push(m);
+    return m;
+  }
+  /** Shoulder yoke: a slab from the chest line up to the shoulder line, as wide there as the arm roots it covers, closed above by a wedge sloped in to the neck. */
+  function shoulderYoke(n: string, jointX: number, jointY: number): Mesh {
+    const chestY = torsoH * (0.5 + 0.5 * CHEST_LINE);
+    const chestW = chestTop * CHEST_SWELL * 0.96;
+    const chestD = torsoD * CHEST_SWELL * 0.96;
+    const yokeW = Math.max(chestW, (jointX + upperArmTop * YOKE_REACH) * 2);
+    const yokeD = Math.max(torsoD * YOKE_DEPTH, upperArmTop * 1.1);
+    const yokeY = jointY + upperArmTop * YOKE_RISE;
+    const neckW = Math.max(yokeW * YOKE_NECK, chestTop * SHOULDER_SLOPE * 0.9);
+    const frustum = (part: string, y0: number, y1: number, w0: number, d0: number, w1: number, d1: number): Mesh => {
+      const box = MeshBuilder.CreateBox(`${n}_${part}`, { width: w1 * s, height: (y1 - y0) * s, depth: d1 * s }, scene);
+      const positions = box.getVerticesData("position")!;
+      for (let i = 0; i < positions.length; i += 3) {
+        if (positions[i + 1] > 0) continue;
+        positions[i] *= w0 / w1;
+        positions[i + 2] *= d0 / d1;
+      }
+      box.setVerticesData("position", positions);
+      box.position.y = (y0 + y1) * 0.5 * s;
+      box.computeWorldMatrix(true);
+      return box;
+    };
+    const slab = frustum("slab", chestY, yokeY, chestW, chestD, yokeW, yokeD);
+    const slope = frustum("slope", yokeY, torsoH * 1.02, yokeW, yokeD, neckW, yokeD * 0.75);
+    const m = Mesh.MergeMeshes([slab, slope], true)!;
+    m.name = n;
     m.material = bodyMat;
     allMeshes.push(m);
     return m;
@@ -612,6 +648,7 @@ export function buildArticulatedBody(
   const sleeveHead = upperArmTop * (options.showShoulderPads ? SLEEVE_HEAD_PLATE : SLEEVE_HEAD);
   const shoulderOffX = (Math.max(torsoTop, torsoBottom) * 0.48 + upperArmTop * 0.4) * s;
   const shoulderOffY = (torsoH - 0.08) * s;
+  shoulderYoke(`${name}_yoke`, shoulderOffX / s, shoulderOffY / s).parent = torso;
 
   // Left arm
   const leftShoulder = joint(`${name}_lShoulder`, torso);
