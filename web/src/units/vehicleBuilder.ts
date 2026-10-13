@@ -616,7 +616,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 // Fires FORWARD (+Z). Barrel points along +Z. Trail extends back (-Z).
 /** Pirate gun crew clothes on an operator body: mauve hoops round the team-coloured shirt, brown trousers and shoes, a dark peaked cap */
 export function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Color3, cap = true): void {
-  const hoopMat = makeMat(scene, new Color3(0.5, 0.42, 0.52));
+  const hoopMat = makeMat(scene, new Color3(0.56, 0.46, 0.52));
   const trouserMat = makeMat(scene, new Color3(0.42, 0.24, 0.14));
   const capMat = makeMat(scene, darken(color, 0.45));
   const add = (mesh: Mesh, parent: TransformNode, material: PBRMetallicRoughnessMaterial): void => {
@@ -629,14 +629,14 @@ export function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Colo
     if (legJoints.has(mesh.parent)) mesh.material = trouserMat;
   }
 
-  // Shirt hoops: three bands a little proud of the torso, following its taper from waist to chest
+  // Shirt hoops: four even bands a little proud of the torso, each as deep as the shirt showing between them, following its taper from waist to chest (three deeper ones were a few grey belts, not a striped shirt)
   const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
   const girth = (t: number): number => Math.max(chest.x, chest.z) * 2 * (0.76 + 0.26 * t) * 1.1;
-  for (const t of [0.12, 0.4, 0.68]) {
+  for (const t of [0.06, 0.26, 0.46, 0.66]) {
     const hoop = MeshBuilder.CreateCylinder("crewHoop", {
-      height: chest.y * 0.28, diameterTop: girth(t + 0.14), diameterBottom: girth(t), tessellation: 6,
+      height: chest.y * 0.2, diameterTop: girth(t + 0.1), diameterBottom: girth(t), tessellation: 6,
     }, scene);
-    hoop.position.y = chest.y * 2 * (t + 0.07);
+    hoop.position.y = chest.y * 2 * (t + 0.05);
     hoop.scaling.z = body.torsoMesh.scaling.z;
     add(hoop, body.torso, hoopMat);
   }
