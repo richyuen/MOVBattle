@@ -581,7 +581,10 @@ const btnRemoveEl = document.getElementById("btnRemove") as HTMLButtonElement | 
 function updateBudgetDisplay(): void {
   const team = isCampaignModeActive() ? 0 : budgetHudTeam;
   budgetAEl.classList.toggle("team-b", team === 1);
-  budgetAmountEl.textContent = campaignSession?.unlimited ? "∞" : `${budgetSystem.getRemaining(team)}`;
+  // Sandbox counts up what the side has spent, from 0, as TABS does: its budget is too deep to read as a countdown. A campaign scenario counts down what is left of its own.
+  const sandboxBudget = team === 0 ? BATTLE_CONFIG.teamABudget : BATTLE_CONFIG.teamBBudget;
+  const amount = isCampaignModeActive() ? budgetSystem.getRemaining(team) : sandboxBudget - budgetSystem.getRemaining(team);
+  budgetAmountEl.textContent = campaignSession?.unlimited ? "∞" : `${amount}`;
   budgetUnitsEl.textContent = `${placedUnits.filter((unit) => !unit.linkedParent && unit.team === team).length}`;
   updateCampaignStatusDisplay();
 }
