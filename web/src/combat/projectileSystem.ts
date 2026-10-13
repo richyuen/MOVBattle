@@ -194,7 +194,7 @@ export class ProjectileSystem {
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.15 any way off one point 0.15 out from the flash (at 0.3 the clump hung a barrel-width clear of the
     // muzzle), the first the biggest and the rest a half to four fifths of its width: at a third to three fifths it was one sphere with crumbs on it, a barrel-mouth wide.
     for (let i = 0; i < 8; i++) {
-      const diameter = (i === 0 ? 0.48 : 0.18 + Math.random() * 0.3) * scale; // at 0.44 and 0.22-0.36 the whole clump was a barrel-mouth and a half wide, and at 0.6 and 0.3-0.49 thrown 0.15 off it was one big ball with crumbs
+      const diameter = (i === 0 ? 0.6 : 0.14 + Math.random() * 0.16) * scale; // at 0.48 and 0.18-0.48 on the 0.24 offset the lobes were a round bunch of equal balls, at 0.44 and 0.22-0.36 the whole clump was a barrel-mouth and a half wide, and at 0.6 and 0.3-0.49 thrown 0.15 off it was one big ball with crumbs
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
       smoke.position = flash.position.add(direction.scale(0.15 * scale));
       // The small lobes sit on the skin of the lead one, 0.24 off its middle in any direction and more often over it than under: thrown inside a 0.2 box half of them were buried in the lead, and three to five of the eight showed
