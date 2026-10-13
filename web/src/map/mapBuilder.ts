@@ -82,9 +82,9 @@ vec4 bladeRoot=vec4(worldPos.xz+bladeSight,${BLADE_ROOT_Y.toFixed(3)},1.0).xzyw;
  */
 const LAWN_BAND_RISE = [0.4, 1.6];           // metres along the sun's ray: what stands less than the first above the lawn is contact, more than the second is high
 const LAWN_BAND_BLUR = [0.025, 0.10, 0.24];  // metres: blur radius of the contact, middle and high bands
-const LAWN_BAND_WEIGHT = [1.0, 0.92, 0.8];   // how much of the sun each band's shadow takes
+const LAWN_BAND_WEIGHT = [0.6, 0.5, 0.4];    // how much of the sun each band's shadow takes
 const LAWN_SHADE_TINT = new Color3(0.80, 1.0, 1.3);
-const LAWN_SHADE_LIFT = new Color3(0.0, 0.02, 0.07);
+const LAWN_SHADE_LIFT = new Color3(0.04, 0.08, 0.14);
 const LAWN_TAPS = 16;
 class LawnShadePlugin extends MaterialPluginBase {
   constructor(material: Material) {
