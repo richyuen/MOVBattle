@@ -29,6 +29,8 @@ export type AttackMotion =
   | "carry"
   | "breath";
 export type LocomotionBias = "none" | "heavy_carry" | "aimed" | "braced";
+/** A weapon that turns in the fist: the turn and the offset it was strapped on with, and for a bow the spin about its length and where its middle sits from the fist. */
+type CarriedProp = { node: TransformNode; rest: Quaternion; grip: Vector3; spin?: Quaternion; seat?: Vector3 };
 export type ReleaseTimingProfile =
   | "default"
   | "melee_commit"
@@ -541,8 +543,13 @@ export class ProceduralAnimator {
   // The weapon is carried in one of four attitudes, the man's own: shouldered (hand up at the collar, the head of it back over the shoulder), upright (hand in front of the
   // chest, the weapon stood up), across the chest (hand at the belt, the weapon slanted up to the other shoulder) or trailed (arm hung, the weapon low and behind him).
   // `tip` is where the weapon points in that attitude, in the body's own frame: x out to the weapon side, y up, z ahead.
+  // A bowman has no carry. Standing, he has a ready hold instead, one of three and his own: at the port (the bow slanted across the chest, both hands on it), stood up in
+  // front of him at half arm with the other hand at the string, or held low across the hips. With it goes his stance: feet staggered fore and aft by `stagger` on knees
+  // giving by `give`, and the body turned `yaw` off the line to the enemy with the head left looking down it. `spin` turns a bow about its own length so the belly faces away
+  // from him, and `seat` is where its middle sits from the fist, in the weapon's own frame.
   private _carry: {
-    weapon: { raise: number; out: number; elbow: number; tip: Vector3; prop: { node: TransformNode; rest: Quaternion; grip: Vector3 } | null } | null;
+    weapon: { raise: number; out: number; elbow: number; tip: Vector3; prop: CarriedProp | null } | null;
+    ready: { raise: number; out: number; elbow: number; tip: Vector3; prop: CarriedProp | null; left: { raise: number; out: number; elbow: number }; yaw: number; stagger: number; give: number } | null;
     board: { raise: number; out: number; elbow: number } | null; bob: number; beat: number;
   } | null = null;
   private _carryTurn = 0;
@@ -566,8 +573,19 @@ export class ProceduralAnimator {
         : pick < 0.8
           ? { raise: -0.45 - h(81) * 0.25, out: 0.02 + h(82) * 0.1, elbow: -1.4 - h(83) * 0.3, tip: lean(-0.8, 0.55, 0.2) }
           : { raise: 0.3 + h(81) * 0.2, out: 0.15 + h(82) * 0.15, elbow: -0.15 - h(83) * 0.2, tip: lean(0.2, -0.4, -0.9) };
+    const bow = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bow");
+    const hang = bow ? Quaternion.FromEulerAngles(bow.rotation.x, bow.rotation.y, bow.rotation.z) : null;
+    const stave = bow && hang ? { node: bow, rest: hang, grip: bow.position.clone(), spin: Quaternion.RotationYawPitchRoll(Math.PI, 0, 0), seat: new Vector3(0, 0, bow.position.length() * 0.3) } : null;
+    const stand = h(96);
+    const hold = stand < 0.38
+      ? { raise: -0.5 - h(81) * 0.2, out: -0.12 - h(82) * 0.12, elbow: -1.45 - h(83) * 0.3, tip: lean(-0.55, 0.8, 0.15), left: { raise: -0.75 - h(97) * 0.2, out: -0.3 - h(98) * 0.15, elbow: -1.15 - h(99) * 0.3 } }
+      : stand < 0.72
+        ? { raise: -0.85 - h(81) * 0.25, out: 0.02 + h(82) * 0.12, elbow: -0.35 - h(83) * 0.25, tip: lean(0.05, 1, 0.2), left: { raise: -0.65 - h(97) * 0.2, out: -0.35 - h(98) * 0.15, elbow: -1.5 - h(99) * 0.3 } }
+        : { raise: -0.1 - h(81) * 0.2, out: 0.05 + h(82) * 0.12, elbow: -0.75 - h(83) * 0.3, tip: lean(-0.75, 0.5, 0.3), left: { raise: -0.35 - h(97) * 0.2, out: -0.2 - h(98) * 0.15, elbow: -0.95 - h(99) * 0.3 } };
+    const armed = this.locomotionBias === "aimed" && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     return {
       weapon: held ? { ...attitude, prop } : null,
+      ready: armed ? { ...hold, prop: stave, yaw: 0.35 + h(89) * 0.35, stagger: 0.24 + h(90) * 0.16, give: 0.1 + h(91) * 0.16 } : null,
       board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
       bob: 0.08 + h(84) * 0.1,
       beat: h(88) * Math.PI,
@@ -612,10 +630,11 @@ export class ProceduralAnimator {
    * eases back to hanging from the hand as it was built.
    */
   private _carryProp(dt: number): void {
-    const weapon = this._carry?.weapon;
+    const ready = this._carry?.ready;
+    const weapon = this._carry?.weapon ?? ready;
     if (!weapon?.prop) return;
-    const { node, rest, grip } = weapon.prop;
-    const marching = this._state === AnimState.Walking || this._state === AnimState.Idle ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0;
+    const { node, rest, grip, spin, seat } = weapon.prop;
+    const marching = this._state === AnimState.Idle || (this._state === AnimState.Walking && weapon !== ready) ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0;
     this._carryTurn = this._state === AnimState.Dead ? 0 : this._carryTurn + (marching - this._carryTurn) * Math.min(1, dt * 10);
     const k = this._carryTurn;
     if (k <= 0.01) {
@@ -629,9 +648,9 @@ export class ProceduralAnimator {
     hand.computeWorldMatrix(true);
     const tip = new Vector3(weapon.tip.x, weapon.tip.y - this._carryDip * 1.5, weapon.tip.z).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
-    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(attitude), k);
+    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(spin ? attitude.multiply(spin) : attitude), k);
     node.rotationQuaternion = turn;
-    const held = new Vector3(0, grip.length(), 0);
+    const held = seat ? seat.clone() : new Vector3(0, grip.length(), 0);
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, node.position);
   }
@@ -778,9 +797,12 @@ export class ProceduralAnimator {
     const leftLeads = p.side < 0;
     // The stance is a man's own while nobody is on him: in a press the shove and the brace take the arms and legs over
     const ease = 1 - Math.min(1, this._shove);
+    const c = (this._carry ??= this._buildCarry());
+    const hold = ease * (1 - Math.min(1, this._limp));
+    const ready = c.ready;
 
     // Weight on one leg: the pelvis drops on the side of the free leg and the chest rolls back the other way over the standing one, swaying about a slight forward slouch
-    const tilt = (leftLeads ? 1 : -1) * p.tilt + Math.sin(t * 0.7) * 0.03;
+    const tilt = (leftLeads ? 1 : -1) * p.tilt * (ready ? 0.4 : 1) + Math.sin(t * 0.7) * 0.03;
     const sway = Math.sin(t * 1.5) * wobble;
     b.hip.rotation.z = tilt;
     b.torso.rotation.z = -tilt * 1.5 + sway;
@@ -790,6 +812,13 @@ export class ProceduralAnimator {
     b.neck.rotation.z = tilt * 0.5 + (leftLeads ? -1 : 1) * p.cock + Math.sin(t * 1.5 - Math.PI / 2) * wobble * 1.2;
     b.neck.rotation.y = p.turn + Math.sin(t * 0.6 + p.turn * 9) * 0.12;
     b.neck.rotation.x = p.chin * ease + Math.sin(t * 1.3 + 2) * wobble * 0.8;
+    // A bowman at the ready stands half side-on: hips and chest turned off the line with his leading shoulder to the enemy, and the head left looking down it
+    if (ready) {
+      const yaw = (leftLeads ? 1 : -1) * ready.yaw * hold + Math.sin(t * 0.5 + ready.yaw * 7) * 0.05;
+      b.hip.rotation.y = yaw * 0.45;
+      b.torso.rotation.y = yaw * 0.55;
+      b.neck.rotation.y = p.turn * 0.35 - yaw * 0.85 + Math.sin(t * 0.6 + p.turn * 9) * 0.12;
+    }
 
     // An arm with nothing to do hangs from the shoulder under its own weight, plumb whatever the chest above it is doing, a little
     // off the ribs on an elbow bent enough to keep the hand at the thigh, and swings as its own pendulum with the forearm trailing the upper arm
@@ -804,16 +833,16 @@ export class ProceduralAnimator {
     b.leftElbow.rotation.x = -left.elbow - (0.5 + 0.5 * Math.sin(t * left.rate + left.phase - 0.9)) * left.swing;
     b.rightElbow.rotation.x = -right.elbow - (0.5 + 0.5 * Math.sin(t * right.rate + right.phase - 0.9)) * right.swing;
     // ...but neither arm of a standing man is left to hang plumb beside the other. The weapon hand keeps the hold he marches with (shouldered, stood up, slanted across the chest or
-    // trailed), a board arm stays folded across the body, and an empty hand goes where his stance puts it; each still breathes on its own pendulum. An aimed weapon takes both hands and keeps the hang.
-    const c = (this._carry ??= this._buildCarry());
-    const hold = ease * (1 - Math.min(1, this._limp));
+    // trailed), a board arm stays folded across the body, and an empty hand goes where his stance puts it; each still breathes on its own pendulum. An aimed weapon takes both hands:
+    // the bow hand holds it at the ready and the other comes across to it.
     this._carryDip = 0;
-    if (c.weapon) {
-      b.rightShoulder.rotation.x += (c.weapon.raise + rightSwing * right.swing * 0.3 - b.rightShoulder.rotation.x) * hold;
-      b.rightShoulder.rotation.z += (c.weapon.out - b.rightShoulder.rotation.z) * hold;
-      b.rightElbow.rotation.x += (c.weapon.elbow - b.rightElbow.rotation.x) * hold;
+    const grip = c.weapon ?? ready;
+    if (grip) {
+      b.rightShoulder.rotation.x += (grip.raise + rightSwing * right.swing * 0.3 - b.rightShoulder.rotation.x) * hold;
+      b.rightShoulder.rotation.z += (grip.out - b.rightShoulder.rotation.z) * hold;
+      b.rightElbow.rotation.x += (grip.elbow - b.rightElbow.rotation.x) * hold;
     }
-    const off = c.board ?? (this.locomotionBias !== "aimed" ? p.off : null);
+    const off = c.board ?? ready?.left ?? (this.locomotionBias !== "aimed" ? p.off : null);
     if (off) {
       b.leftShoulder.rotation.x += (off.raise + leftSwing * left.swing * 0.3 - b.leftShoulder.rotation.x) * hold;
       b.leftShoulder.rotation.z += (-off.out - b.leftShoulder.rotation.z) * hold;
@@ -837,6 +866,19 @@ export class ProceduralAnimator {
     b.rightKnee.rotation.x = leftLeads ? 0.1 + sag * 2 : (p.stride + sag) * 2;
     this._hipRest ??= b.hip.position.y;
     this._idleSink = this._hipRest * (1 - Math.cos(crouch * 0.5));
+    // Ready stance: the feet are staggered fore and aft, not set side by side under the hips. The leading leg reaches out ahead on a knee that gives, the other is set
+    // back nearly straight with its heel behind him, and the hips come down by what the spread takes off the legs' height.
+    if (ready) {
+      const reach = ready.stagger * ease;
+      const give = ready.give * ease + p.lean * 0.2;
+      const ahead = -reach - give + Math.sin(t * 0.9) * wobble * 0.5;
+      const behind = reach * 0.9 - give * 0.3 + Math.sin(t * 0.9 + Math.PI) * wobble * 0.5;
+      b.leftHip.rotation.x = leftLeads ? ahead : behind;
+      b.rightHip.rotation.x = leftLeads ? behind : ahead;
+      b.leftKnee.rotation.x = leftLeads ? give * 2 + 0.1 : 0.15 + give * 0.6;
+      b.rightKnee.rotation.x = leftLeads ? 0.15 + give * 0.6 : give * 2 + 0.1;
+      this._idleSink = this._hipRest * (1 - Math.cos(reach) * Math.cos(give));
+    }
   }
 
   private _animateIdleQuadruped(): void {
