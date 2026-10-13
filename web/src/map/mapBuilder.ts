@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, type ShadowGenerator,
+  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, MaterialPluginBase, type Material, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
@@ -14,6 +14,7 @@ const TREE_RING_X = 42;   // tree ring radii around the fighting field
 const TREE_RING_Z = 36;
 const BLADE_DARK = 0.9;    // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
+const BLADE_ROOT_Y = 0.02; // the lawn's top, where every blade is rooted
 const HAZE_MIX = 0.08;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
 const FAR_ROCK = new Color3(0.5, 0.48, 0.44);  // warm grey-brown, dark enough that the snow tips read against it
@@ -23,6 +24,49 @@ const FAR_SNOW_MIX = 0.4;
 const FAR_SNOW_GLOW = 0.05; // matte: snow tips shade with the sun like the rock under them
 const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay darker than lit ones
 const FAR_ROCK_MIX = 0.3;   // far ridge sits three tenths into the sky haze: its sunlit faces stay rock, darker than the snow on them
+
+/**
+ * Grass takes the shadow of the ground it is rooted in. A blade is shaded per fragment like anything else, so a man's shadow fell on the tips a hand's breadth
+ * from where it fell on the lawn, and each card cut its own lit or dark sliver out of the silhouette. Here the shadow lookup of every blade vertex is redone
+ * from the point of the lawn under it, after the standard shader has done it from the vertex itself: root and tip get the lawn's value, and a shadow
+ * lies over grass and soil as one flat shape.
+ */
+class RootShadowPlugin extends MaterialPluginBase {
+  constructor(material: Material) {
+    super(material, "RootShadow", 200);
+    this._enable(true);
+  }
+
+  getClassName(): string {
+    return "RootShadowPlugin";
+  }
+
+  getCustomCode(shaderType: string): { [pointName: string]: string } | null {
+    if (shaderType !== "vertex") return null;
+    // The same lookup as the engine's shadowsVertex include, for whichever light slot the sun holds
+    const depth = (x: number, at: string) => `
+#ifdef USE_REVERSE_DEPTHBUFFER
+vDepthMetric${x}${at}=(-vPositionFromLight${x}${at}.z+light${x}.depthValues.x)/light${x}.depthValues.y;
+#else
+vDepthMetric${x}${at}=(vPositionFromLight${x}${at}.z+light${x}.depthValues.x)/light${x}.depthValues.y;
+#endif`;
+    const slot = (x: number) => `
+#if defined(SHADOWCSM${x})
+vPositionFromCamera${x}=view*bladeRoot;
+for (int i=0; i<SHADOWCSMNUM_CASCADES${x}; i++) {
+vPositionFromLight${x}[i]=lightMatrix${x}[i]*bladeRoot;${depth(x, "[i]")}
+}
+#elif defined(SHADOW${x}) && !defined(SHADOWCUBE${x})
+vPositionFromLight${x}=lightMatrix${x}*bladeRoot;${depth(x, "")}
+#endif`;
+    return {
+      CUSTOM_VERTEX_MAIN_END: `
+#ifdef SHADOWS
+vec4 bladeRoot=vec4(worldPos.x,${BLADE_ROOT_Y.toFixed(3)},worldPos.z,1.0);${[0, 1, 2, 3].map(slot).join("")}
+#endif`,
+    };
+  }
+}
 
 /** The sun's shadow generator, when the scene has one: trees register with it so they throw ground shadows like units do */
 function sunShadows(scene: Scene): ShadowGenerator | null {
@@ -166,6 +210,9 @@ export class TribalSandboxMapBuilder {
     for (const blade of [bladeDark, bladeLight]) {
       blade.specularColor = Color3.Black();
       blade.backFaceCulling = false;
+      // The lawn's own glow, so a shaded blade is the plum of the shaded lawn under it and not a near-black tuft on it
+      blade.emissiveColor = grass.emissiveColor.clone();
+      new RootShadowPlugin(blade);
     }
 
     // Far treeline and off-island mountains: colors pre-mixed toward the sky so they sit back in the haze
@@ -622,8 +669,8 @@ export class TribalSandboxMapBuilder {
         const base = positions.length / 3;
         // Top edge 0.4 of the base width, so each card is a flat blade and not a spike.
         positions.push(
-          x - dx, 0.02, z - dz, x + dx, 0.02, z + dz,
-          x + lean + dx * 0.4, 0.02 + h, z + lean + dz * 0.4, x + lean - dx * 0.4, 0.02 + h, z + lean - dz * 0.4,
+          x - dx, BLADE_ROOT_Y, z - dz, x + dx, BLADE_ROOT_Y, z + dz,
+          x + lean + dx * 0.4, BLADE_ROOT_Y + h, z + lean + dz * 0.4, x + lean - dx * 0.4, BLADE_ROOT_Y + h, z + lean - dz * 0.4,
         );
         // Up-facing normals: blades take the same light as the ground and never go black edge-on.
         normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0);
@@ -637,7 +684,7 @@ export class TribalSandboxMapBuilder {
       data.applyToMesh(blades);
       blades.material = this._scene.getMaterialByName(matName);
       blades.isPickable = false;
-      // Shaded with the lawn under them, so a tree's shadow is not peppered with sunlit flecks
+      // Shaded with the lawn under them (RootShadowPlugin), so a shadow is not peppered with sunlit flecks
       blades.receiveShadows = true;
     }
   }
