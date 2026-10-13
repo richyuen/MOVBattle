@@ -141,8 +141,14 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
 };
 
 /** TABS silhouette: small head on long limbs a good quarter as thick as the torso is wide, so the torso is the wide block. Applied on top of every unit's own proportions. */
-const HEAD_SHRINK = 0.88;
+const HEAD_SHRINK = 0.78;
 const LIMB_THIN = 1.12;
+/** The head stands clear of the shoulders on a neck this long, a third of its own height: head, eyes and hat anchor all ride on top of it. */
+const NECK_LENGTH = 0.07;
+/** Arms and legs are stretched by this much over their old segment lengths, so the body is some six and a half heads tall and the hands hang to mid thigh. */
+const LIMB_STRETCH = 1.16;
+/** A mitt is sized from the sleeve it hangs from and not from the head: this many sleeve-top widths across its longest side. */
+const MITT_FROM_SLEEVE = 1.7;
 /** Sleeves and thighs are a little fuller than the forearms and shins they end in: more made them square puffed blocks. */
 const SLEEVE_BULK = 1.15;
 /** A limb narrows in one unbroken line: the forearm and shin start at the width the sleeve and thigh end at, with no step at the joint, and run down to a wrist and ankle no thinner than this share of it. */
@@ -289,17 +295,16 @@ export function buildArticulatedBody(
   const headDepth = 0.176 * HEAD_SHRINK * p.headSize * (p.headDepth ?? 1.0);
   const headBase = Math.max(headHeight, headWidth, headDepth);
 
-  // Arms and legs are a tenth longer than the old 0.24/0.22 and 0.28/0.25
-  const upperArmH = 0.264 * p.armLength;
-  const lowerArmH = 0.242 * p.armLength;
+  const upperArmH = 0.264 * LIMB_STRETCH * p.armLength;
+  const lowerArmH = 0.242 * LIMB_STRETCH * p.armLength;
   const upperArmTop = 0.09 * LIMB_THIN * SLEEVE_BULK * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
   const lowerArmTop = upperArmBottom;
   const lowerArmBottom = lowerArmTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
-  const handDiameter = 0.13 * Math.max(0.8, p.headSize * 0.9) * (p.handSize ?? 1.0);
+  const handDiameter = upperArmTop * MITT_FROM_SLEEVE * (p.handSize ?? 1.0);
 
-  const upperLegH = 0.308 * p.legLength;
-  const lowerLegH = 0.275 * p.legLength;
+  const upperLegH = 0.308 * LIMB_STRETCH * p.legLength;
+  const lowerLegH = 0.275 * LIMB_STRETCH * p.legLength;
   const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom;
@@ -326,11 +331,12 @@ export function buildArticulatedBody(
   const neck = joint(`${name}_neck`, torso);
   neck.position.y = torsoH * s;
 
-  // Visible neck cylinder connecting torso to head
+  // Neck: a thin faceted column from just inside the shoulders up into the head, which stands on top of it
+  const neckLength = NECK_LENGTH * s;
   if (options.showNeck !== false) {
-    const neckH = 0.06 * s;
-    const neckDTop = headWidth * 0.55 * s;
-    const neckDBot = Math.max(torsoTop, torsoBottom) * 0.42 * s;
+    const neckH = neckLength * 1.3;
+    const neckDTop = headWidth * 0.5 * s;
+    const neckDBot = headWidth * 0.62 * s;
     const neckMesh = MeshBuilder.CreateCylinder(`${name}_neckM`, {
       height: neckH,
       diameterTop: neckDTop,
@@ -338,7 +344,7 @@ export function buildArticulatedBody(
       tessellation: radialSegments,
     }, scene);
     neckMesh.material = skinMat;
-    neckMesh.position.y = neckH * 0.1;
+    neckMesh.position.y = neckLength * 0.5;
     neckMesh.parent = neck;
     allMeshes.push(neckMesh);
   }
@@ -354,18 +360,18 @@ export function buildArticulatedBody(
     ),
     6,
   );
-  headMesh.position.y = headHeight * s * 0.5;
+  headMesh.position.y = neckLength + headHeight * s * 0.5;
   headMesh.parent = neck;
   scene.getGlowLayerByName("glow")?.addExcludedMesh(headMesh); // no halo off the self-lit head: it lay over the bead eyes and turned their black to the skin's navy
 
   const headTop = joint(`${name}_headTop`, neck);
-  headTop.position.y = headHeight * s;
+  headTop.position.y = neckLength + headHeight * s;
 
   // ─── Bead Eyes (small black beads, no sclera) ───
   const eyeDiam = headBase * 0.15;
   const pupilDiam = headBase * 0.02;
   const eyeSegs = 6;
-  const eyeY = headHeight * s * 0.55;
+  const eyeY = neckLength + headHeight * s * 0.55;
   const eyeZ = headDepth * s * 0.44;
   const eyeSpread = headWidth * s * 0.22;
 
@@ -595,8 +601,8 @@ export function buildArticulatedBody(
   }
 
   const metrics: BodyMetrics = {
-    overallHeight: hip.position.y + torsoH * s + headHeight * s,
-    headTopY: hip.position.y + torsoH * s + headHeight * s,
+    overallHeight: hip.position.y + torsoH * s + neckLength + headHeight * s,
+    headTopY: hip.position.y + torsoH * s + neckLength + headHeight * s,
     shoulderWidth: shoulderOffX * 2,
     hipWidth: hipOffX * 2,
     handReachY: hip.position.y + shoulderOffY - upperArmH * s - lowerArmH * s,
