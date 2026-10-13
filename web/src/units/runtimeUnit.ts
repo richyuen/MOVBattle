@@ -1,4 +1,4 @@
-import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, PBRMetallicRoughnessMaterial } from "@babylonjs/core";
+import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -43,10 +43,6 @@ export class RuntimeUnit {
   readonly body: ArticulatedBody;
   /** The skin's own self-light from the factory: the base an fx preset glows on top of and falls back to. */
   private readonly _skinGlow: Color3;
-  /** The head's own material and self-light, when the factory gave it one: it glows more than the skin, and takes an fx pulse in the same measure. */
-  private readonly _headMaterial: PBRMetallicRoughnessMaterial | null;
-  private readonly _headGlow: Color3;
-  private readonly _headGlowRatio: number;
   readonly animator: ProceduralAnimator;
   readonly propMeshes: Mesh[];
   readonly visualConfig: UnitVisualConfig;
@@ -258,11 +254,6 @@ export class RuntimeUnit {
     this.team = team;
     this.body = body;
     this._skinGlow = body.skinMaterial.emissiveColor.clone();
-    const headMaterial = body.headMesh?.material;
-    this._headMaterial = headMaterial instanceof PBRMetallicRoughnessMaterial && headMaterial !== body.skinMaterial && headMaterial !== body.bodyMaterial ? headMaterial : null;
-    this._headGlow = this._headMaterial ? this._headMaterial.emissiveColor.clone() : this._skinGlow.clone();
-    const skinPeak = Math.max(this._skinGlow.r, this._skinGlow.g, this._skinGlow.b);
-    this._headGlowRatio = skinPeak > 0.001 ? Math.max(this._headGlow.r, this._headGlow.g, this._headGlow.b) / skinPeak : 1;
     this.propMeshes = propMeshes;
     this.visualConfig = visualConfig;
     this._ragdollProfile = ragdollProfile;
@@ -1409,13 +1400,11 @@ export class RuntimeUnit {
     if (!color) {
       this.body.bodyMaterial.emissiveColor.set(0, 0, 0);
       this.body.skinMaterial.emissiveColor.copyFrom(this._skinGlow);
-      this._headMaterial?.emissiveColor.copyFrom(this._headGlow);
       return;
     }
 
     this.body.bodyMaterial.emissiveColor = color.scale(pulse);
     this.body.skinMaterial.emissiveColor = this._skinGlow.add(color.scale(pulse * 0.25));
-    if (this._headMaterial) this._headMaterial.emissiveColor = this._headGlow.add(color.scale(pulse * 0.25 * this._headGlowRatio));
   }
 
   /** Reset unit to its original spawn state (position, health, alive). */
