@@ -1,6 +1,6 @@
 export const BATTLE_CONFIG = {
-  teamABudget: 50000,
-  teamBBudget: 50000,
+  teamABudget: 1000000,
+  teamBBudget: 1000000,
   maxUnitsPerTeam: 100,
   countdownSeconds: 1.5,
   optionalTimeLimitSeconds: 120,
