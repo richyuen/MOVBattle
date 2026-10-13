@@ -182,10 +182,10 @@ export class ProjectileSystem {
 
     // Smoke puff: a head-sized clump of flat-faceted warm white lobes thrown out of the muzzle that hangs and drifts up.
     // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball. Its tone comes from the base colour, well past white
-    // and warm against the blue sky light, with next to no glow of its own: the glow lifted lit and shaded facets alike into one flat pale grey.
+    // and warm against the blue sky light, with a fifth of glow of its own: with next to none the belly fell to a brown under the white top, and at three tenths the clump was one flat white ball.
     // Facets that face down are tinted darker, to three tenths at the underside, so the clump has a lit top and a shaded belly whatever side the sun is on.
-    const sm = getMaterialFactory().createUnique("cloth", new Color3(2.6, 2.15, 1.3));
-    sm.emissiveColor = new Color3(0.02, 0.02, 0.02);
+    const sm = getMaterialFactory().createUnique("cloth", new Color3(2.35, 1.95, 1.17));
+    sm.emissiveColor = new Color3(0.22, 0.22, 0.235);
     sm.transparencyMode = 2;
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
