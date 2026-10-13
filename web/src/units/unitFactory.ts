@@ -38,12 +38,12 @@ const SKIN_GLOW = 0.4;
 const SKIN_GLOW_BLUE = 1.5;
 // Red skin keeps three quarters of its blue: the blue sky light on the whole of it turned the lit faces pink.
 const WARM_SKIN_BLUE = 0.75;
-// ...and is lightened: red well past white, green and blue lifted, so its sunlit faces are a light coral. Red alone, to 1.8, left them at the same level and only more saturated.
+// ...and is lightened: red well past white, green and blue lifted a little, so its sunlit faces are a coral red: lifted 0.18 and 0.30 they were pink. Red alone, to 1.8, left them at the same level and only more saturated.
 const WARM_SKIN_RED = 2.5;
-const WARM_SKIN_GREEN_LIFT = 0.18;
-const WARM_SKIN_BLUE_LIFT = 0.30;
-// Its glow is half the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one.
-const WARM_SKIN_GLOW = 0.5;
+const WARM_SKIN_GREEN_LIFT = 0.10;
+const WARM_SKIN_BLUE_LIFT = 0.12;
+// Its glow is a third of the cool skin's, so its shaded side is a deep crimson: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one.
+const WARM_SKIN_GLOW = 0.35;
 // The head is kept out of the glow layer for its eyes' sake, and so glows this much more in its own material to stay the tone of the arms.
 const HEAD_GLOW = 1.9;
 const BODY_PRESET_WEIGHT = 0.45;
