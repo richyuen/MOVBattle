@@ -1,11 +1,11 @@
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder,
-  type ShadowGenerator,
+  type Material, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfiles";
 import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
-import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
+import { buildArticulatedBody, crewProportions, type ArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
 import { attachProps } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody, dressCannonCrew } from "./vehicleBuilder";
@@ -109,6 +109,41 @@ const ZEUS_SASH_COLOR = new Color3(0.8, 0.2, 0.2);
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
 const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
+
+// Clothes are solids hung on the body, not a colour painted on it. The lower half of a garment is a faceted bell hung from the waist over the pelvis and the tops of
+// the thighs, standing off the legs at its hem: it rides the hips and not the legs, so a stride swings the knees out from under it. length is in thighs, flare is the
+// hem's width over the pelvis's.
+const SKIRT_WAIST = 1.15;
+const ARMOUR_SKIRT_SHADE = 0.8;
+const FUR_COLOR = new Color3(0.3, 0.2, 0.13);
+function hangSkirt(scene: Scene, body: ArticulatedBody, name: string, length: number, flare: number, material: Material | null): Mesh | null {
+  const pelvis = body.allMeshes.find((m) => /_pelvis$/.test(m.name));
+  if (!pelvis) return null;
+  const size = pelvis.getBoundingInfo().boundingBox.extendSize;
+  const drop = Math.abs(body.leftKnee.position.y) * length;
+  const skirt = MeshBuilder.CreateCylinder(name, {
+    height: drop, diameterTop: size.x * 2 * SKIRT_WAIST, diameterBottom: size.x * 2 * flare, tessellation: 6,
+  }, scene);
+  skirt.convertToFlatShadedMesh();
+  skirt.scaling.z = Math.max(0.7, size.z / size.x * 1.25);
+  skirt.position.y = pelvis.position.y + size.y - drop / 2;
+  skirt.parent = body.hip;
+  skirt.material = material;
+  return skirt;
+}
+
+// A fur collar is a fat faceted ring laid over the shoulders round the neck, as wide as the chest
+function furCollar(scene: Scene, body: ArticulatedBody): Mesh {
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const span = chest.x * 2 * body.torsoMesh.scaling.x;
+  const collar = MeshBuilder.CreateTorus("furCollar", { diameter: span * 0.64, thickness: span * 0.32, tessellation: 7 }, scene);
+  collar.convertToFlatShadedMesh();
+  collar.scaling.set(1, 0.85, Math.max(0.75, chest.z * body.torsoMesh.scaling.z / (chest.x * body.torsoMesh.scaling.x) * 1.3));
+  collar.position.y = body.torsoMesh.position.y + chest.y * 0.9;
+  collar.parent = body.torsoMesh.parent;
+  collar.material = getMaterialFactory().getCloth(FUR_COLOR);
+  return collar;
+}
 
 function shouldFavorTeamBodyColor(materialPreset: MaterialPreset): boolean {
   return TEAM_DOMINANT_BODY_PRESETS.has(materialPreset);
@@ -303,6 +338,21 @@ export class UnitFactory {
       belt.position.y = body.torsoMesh.position.y - chest.y * 0.85;
       belt.material = getMaterialFactory().getCloth(BELT_COLOR);
       propMeshes.push(belt);
+    }
+
+    // Every dressed man's garment ends in a skirt of its own: the tabard's long one, a tunic's short hem, a cloth kilt under a cuirass, and on a bare tribesman a hide
+    // kilt in place of the painted loincloth, with a fur collar over his shoulders.
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew") {
+      const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
+      const skirt = bareSkinned
+        ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
+        : tabard
+          ? hangSkirt(this._scene, body, "tabardSkirt", 0.7, 1.6, tabard.material)
+          : isArmored
+            ? hangSkirt(this._scene, body, "armourKilt", 0.6, 1.55, getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(ARMOUR_SKIRT_SHADE)))
+            : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
+      if (skirt) propMeshes.push(skirt);
+      if (bareSkinned) propMeshes.push(furCollar(this._scene, body));
     }
 
     // Linked gun crew wear the same hooped shirt and brown trousers as the cannon's own operator, under their own headgear

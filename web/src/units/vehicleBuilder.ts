@@ -641,7 +641,17 @@ export function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Colo
   // Trousers: everything hung off the hip and knee joints, feet included
   const legJoints = new Set<unknown>([body.leftHip, body.leftKnee, body.rightHip, body.rightKnee]);
   for (const mesh of body.allMeshes) {
-    if (legJoints.has(mesh.parent)) mesh.material = trouserMat;
+    if (legJoints.has(mesh.parent) || /_pelvis$/.test(mesh.name)) mesh.material = trouserMat;
+  }
+  // Breeches: the trousers are solids of their own and not brown paint on the legs. A baggy faceted tube hangs on each thigh from the hip, wider than the leg inside it
+  // and drawn in toward the knee, and the two meet over the pelvis as the seat.
+  for (const [hip, thigh] of [[body.leftHip, body.leftUpperLeg], [body.rightHip, body.rightUpperLeg]] as const) {
+    const width = thigh.getBoundingInfo().boundingBox.extendSize.x * 2 * thigh.scaling.x;
+    const length = Math.abs(body.leftKnee.position.y);
+    const leg = MeshBuilder.CreateCylinder("crewBreeches", { height: length * 1.1, diameterTop: width * 1.75, diameterBottom: width * 1.3, tessellation: 6 }, scene);
+    leg.convertToFlatShadedMesh();
+    leg.position.y = -length * 0.5;
+    add(leg, hip, trouserMat);
   }
 
   // Shirt hoops: five even pale bands all but flush with the torso (at 1.1 of its girth and a dark mauve they were raised rings round it, not stripes on it), each as deep as the shirt showing between them, following its taper from waist to chest (three deep ones, and four, were a few grey belts, not a striped shirt)
