@@ -583,9 +583,9 @@ export class ProceduralAnimator {
     const speed = 8; // cycle speed
     const wobble = 0.08; // constant wobble overlay
 
-    // Torso leans forward and sways side to side. Each man runs at his own lean, 0.16-0.46, hashed from the wobble phase like the idle slouch: at one 0.38 a charging rank was the same man stamped down its length
+    // Torso leans forward and sways side to side. Each man runs at his own lean, 0.28-0.54 (at 0.16-0.46 the shallow end ran near upright), hashed from the wobble phase like the idle slouch: at one 0.38 a charging rank was the same man stamped down its length
     const leanHash = Math.sin(this._wobblePhase * 12.9898 + 51 * 78.233) * 43758.5453;
-    b.torso.rotation.x = 0.16 + (leanHash - Math.floor(leanHash)) * 0.3 + Math.sin(t * speed * 0.5) * wobble * 0.5;
+    b.torso.rotation.x = 0.28 + (leanHash - Math.floor(leanHash)) * 0.26 + Math.sin(t * speed * 0.5) * wobble * 0.5;
     b.torso.rotation.z = Math.sin(t * speed * 0.5) * 0.06;
 
     // Head wobbles
