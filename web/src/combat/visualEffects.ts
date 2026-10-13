@@ -344,10 +344,10 @@ export class VisualEffects {
     const mats = getMaterialFactory();
     // The fireball is mostly self-lit and graded from the inside out: a white-hot heart and a pale yellow inner
     // flame, both lit past white so they burn out to cream on screen, and a soft orange fringe. The inner flame sits between heart and fringe in hue, so it is a step of the grade and not a lemon patch.
-    const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
-    coreMat.emissiveColor = new Color3(2.0, 1.95, 1.6);
+    const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3)); // Heart and inner flame are held to yellow and yellow-orange, a third smaller: lit past white they burned out to one cream ball taller than the cannon.
+    coreMat.emissiveColor = new Color3(1.5, 0.95, 0.2);
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
-    flashMat.emissiveColor = new Color3(3.4, 3.4, 1.2);
+    flashMat.emissiveColor = new Color3(1.3, 0.62, 0.06);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
     flameMat.emissiveColor = new Color3(1.7, 1.25, 0.6);
     // The foot of the ball is a deeper orange than the fringe, whose own colour burns out to peach beside the heart.
@@ -372,7 +372,7 @@ export class VisualEffects {
     // Fireball: a small pale heart with orange lobes standing out of its flanks to make the rim, and short round
     // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
     // enough to show no facets, and a shell's can grow to about three men tall.
-    const fireScale = Math.min(scale * 2.0, 3.6);
+    const fireScale = Math.min(scale * 1.35, 2.4);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.0, 1.0, 0.5, 0.9, 0.45, 0.6];
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. The flank lobes are the pale inner flame, bar the two foot lobes: they are a deep orange, both sunk to near their middle in the ground so the orange is a low foot and not half the ball, the lowest and stood out clear of the heart, so the ball stands on a warm foot and is not one pale tone to the ground
