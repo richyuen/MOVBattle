@@ -1162,7 +1162,7 @@ export class RuntimeUnit {
     this._velocity.x = this._velocity.x * 0.35 + carry.x;
     this._velocity.z = this._velocity.z * 0.35 + carry.z;
     const toppleLift = (launched ? 0.24 : 0.12) + pressure * this._crowdPhysicsProfile.toppleCarry;
-    this._velocity.y = Math.min(1.4, Math.max(this._velocity.y * 0.45, toppleLift));
+    this._velocity.y = Math.min(0.7, Math.max(this._velocity.y * 0.45, toppleLift));
     this._staggerTimer = Math.max(
       this._staggerTimer,
       this._crowdPhysicsProfile.toppleSeconds * (launched ? 0.45 : 0.35),
