@@ -18,11 +18,13 @@ cameraController.ts:_pickSubject (places, band, knot, cut weight) | 12 places, B
 cameraController.ts:_pickSubject facing (FACE_SIDE, HEADLESS, CORPSE_CUT, GIANT_PITCH, giant weight) | side-on 0.4 of face-on, cut winning giant +2, cut corpse x0.15, giant shot eye 1 up pitch 0.12, giant counts min(1.5, 2*size) outside the men's 1.5 cap | 165 | approved | no [P] on this row (critic 165); corpse cuts at full weight kept every front place out; shot bodies clamped to y >= 0 (main.ts)
 simulationSystem.ts:contactBias (ally) | 0.55 | 153 | spent | never lower; never shrink enemy collision distance
 simulationSystem.ts:shove spread | 0.15 + h*0.3 | 160 | approved |
+simulationSystem.ts:shield wall slots (spacing, rank depth, wall gap, stride) | shieldSlotSpacing 0.54 (same-wall collision at 0.9 of it), shieldRankDepth 1.0, shieldWallGap 2.2, shieldSlotStride 0.6 | 166 | approved | same-wall carriers were held at 0.8*(rA+rB) = 0.77 by bracedRank
 simulationSystem.ts:_buildShovePose arms | level | 160 | approved |
 unitFactory.ts:CLOTH_SHADE | 0.8 | 151 | approved | also darkens armour
 unitFactory.ts:team blue colour | (0.42, 0.60, 0.98) | 150 | spent | (0.62,0.86,1.0) 123, (0.50,0.68,0.96) 121, (0.38,0.58,0.95) 120: walked up and back down
 unitFactory.ts:team red colour | greyed crimson | 142 | spent | plum 123, pink 126, crimson 127, bright 128 rejected, greyed 129, bubblegum 140: walked in circles
 unitFactory.ts:idle lean | 0.26 + h*0.14 | 148 | spent | do not raise, drives lineups
+bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, FOOT_ANKLE, CHEST_LINE, CHEST_SWELL, SHOULDER_SLOPE, WAIST_DEPTH) | lower limb starts at the upper limb's end (no step), min taper 0.6, foot from 0.85 of shin top; chest line 0.36, swell 1.05, shoulders 0.8, waist depth 0.85 | 166 | approved | LOWER_LIMB_STEP 1.0375 joint step + min taper 0.88; torso a plain hex frustum
 propBuilder.ts:hair scale/y | 1.5x head, y 0.24 | 160 | approved |
 propBuilder.ts:bare shoulder cap | 1.3 | 160 | approved |
 propBuilder.ts:rshield disc/rim | 0.36 / 0.4 | 160 | approved | 0.3/0.33 154
@@ -49,6 +51,8 @@ vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 
 - 164 | plank-corpses | battle-feel.d | approved
 - 165 | result-giant-headless | camera.d | approved
 - 165 | shield-wall-brace | battle-feel.a | approved
+- 166 | shield-rank-slotting | battle-feel.a | approved
+- 166 | tapered-limbs | unit-look.c | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
