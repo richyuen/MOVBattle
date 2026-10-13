@@ -11,6 +11,7 @@ opinion is not in your prompt on purpose. Judge only what you can see in the fil
 - Reject scope creep (edits outside the gap), claims not visible in the evidence, and any gap with a regression attributed to it (a failed scenario in summary.json, or a criterion that flipped PASS to FAIL).
 - Approve only a net improvement with no attributed regression. A small real step counts.
 - `loop/LEDGER.md` is the loop's memory of every value it has tuned and of recent `[S]` attempts. For a `[P]` gap, or any gap whose only effect on a row is changing its value: never rank one that reverses or re-nudges a row approved within the last 20 iterations, or any row marked `spent`; if its commit does that, it is a REJECT with defect "ledger reversal". An `[S]` gap that replaces the mechanism owning a row may set new values freely; judge it on the criterion.
+- An `[R]` rebuild gap replaces the mechanism owning a `plateau` criterion from a written spec and claims its whole blocker list. Judge it against the full criterion: APPROVE only if it clears at least half the blockers with no regression; a rebuild that clears one is an expensive `[S]` and is a REJECT. Its ledger rows reset freely.
 - Rank mechanisms before numbers. A `[S]` gap adds or replaces a mechanism (a pose state, a prop mesh, an effect, a camera rule, a map prop) for one blocker of one failing criterion. A `[P]` gap tunes constants, is ranked only as fallout of a `[S]` gap approved within the last 3 iterations (Structural attempts in LEDGER), and its NEXT line must name the shot and the element in it that will change; a `[P]` that cannot be seen in a named shot is not ranked.
 
 ## Criteria (score = PASS count per dimension, 0-4)
@@ -29,7 +30,7 @@ Every FAIL carries a closed BLOCKERS list (max 4): everything that keeps the cri
 ## Output format (hard cap: 30 lines per gap, 20 lines for the tail)
 One block per gap, in the order the prompt listed them:
 ```
-GAP: [S|P] <id> (<sha>)
+GAP: [S|P|R] <id> (<sha>)
 VERDICT: APPROVE | REJECT
 CRITERION: <dimension>.<letter> <PASS|FAIL>   (previous: <PASS|FAIL>)
 BLOCKERS: <remaining list, numbered; 'struck: n' for ones this commit cleared; 'added: ... introduced by <sha>'>
@@ -45,7 +46,7 @@ Then the tail:
 REGRESSIONS: none | <scenario or criterion flip> -> attributed to <sha or all>
 RANKED GAPS:
 1. [S|P] <dimension>.<letter> <gap> — blocker <n>: <mechanism> — ref: <file> — ours: <png>
-... up to 8; at least 4 must be [S]; at most 1 [P], naming the [S] gap it is fallout of; no [S] on a `plateau` criterion
+... up to 8; at least 4 must be [S]; at most 1 [P], naming the [S] gap it is fallout of; a `plateau` criterion gets exactly one [R] entry naming the mechanism to rebuild and the reference to spec it from, and no [S]
 ```
 
 ## RE-AUDIT mode

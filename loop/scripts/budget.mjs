@@ -7,11 +7,11 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CAPS = {
-  "loop/ITERATE.md": 6_500,
+  "loop/ITERATE.md": 7_200,
   "loop/STATE.md": 8_000,
   "loop/LEDGER.md": 14_000,
   "loop/REFERENCE_DIGEST.md": 8_200,
-  "loop/CRITIC.md": 7_000,
+  "loop/CRITIC.md": 7_600,
 };
 const PER_ITERATION = ["loop/ITERATE.md", "loop/STATE.md", "loop/LEDGER.md", "loop/REFERENCE_DIGEST.md"];
 const PER_ITERATION_WARN = 34_000;
