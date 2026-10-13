@@ -238,7 +238,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 
   // Base platform (longer along Z = firing axis)
   const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.2, depth: 1.6 }, scene);
-  base.position.y = 0.4; base.parent = rig; base.material = teamPrimary; allMeshes.push(base);
+  base.position.y = 0.4; base.parent = rig; base.material = wood; allMeshes.push(base);
 
   // Wheels (on the sides, X axis): as tall as the deck and thick, standing clear of its edges
   for (const xOff of [-0.58, 0.58]) {
@@ -279,10 +279,10 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     allMeshes.push(pumpkin);
   }
 
-  // Counterweight at back end (-Z)
-  const cw = MeshBuilder.CreateBox("cw", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
-  cw.position.set(0, 1.0, -0.5);
-  cw.parent = rig; cw.material = metal; allMeshes.push(cw);
+  // Counterweight at back end (-Z), hung under the arm: a big team-coloured block and the tinted main mesh, so the deck is plain timber and not a team-coloured table
+  const cw = MeshBuilder.CreateBox("cw", { width: 0.36, height: 0.44, depth: 0.4 }, scene);
+  cw.position.set(0, 1.05, -0.5);
+  cw.parent = rig; cw.material = teamPrimary; allMeshes.push(cw);
 
   // Operator sitting beside, behind the frame
   // Dressed as a gun crewman: bare, he was a washed mannequin beside the machine
@@ -298,7 +298,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   return wrapAsBody(
     scene,
     root,
-    base,
+    cw,
     allMeshes,
     operator.headMesh,
     makeBodyMetrics(operator.headTopY * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE, 0.45 * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE),
