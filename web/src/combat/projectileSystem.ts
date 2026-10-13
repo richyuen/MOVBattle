@@ -183,8 +183,7 @@ export class ProjectileSystem {
     // Smoke puff: a head-sized clump of flat-faceted warm white lobes thrown out of the muzzle that hangs and drifts up.
     // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball.
     const sm = getMaterialFactory().createUnique("cloth", new Color3(0.82, 0.78, 0.71));
-    // Self-lit by half as much: the faces turned from the sun are a clear step darker than the lit ones, and the puff is a solid lump and not one flat tone.
-    sm.emissiveColor = new Color3(0.10, 0.09, 0.07);
+    sm.emissiveColor = new Color3(0.21, 0.19, 0.16);
     sm.transparencyMode = 2;
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.25 any way off one point 0.3 out from the
