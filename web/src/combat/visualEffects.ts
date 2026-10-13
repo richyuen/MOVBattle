@@ -350,6 +350,9 @@ export class VisualEffects {
     flashMat.emissiveColor = new Color3(1.7, 1.5, 0.85);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
     flameMat.emissiveColor = new Color3(1.7, 1.25, 0.6);
+    // The foot of the ball is a deeper orange than the fringe, whose own colour burns out to peach beside the heart.
+    const footMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
+    footMat.emissiveColor = new Color3(2.0, 0.65, 0.25);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -372,12 +375,12 @@ export class VisualEffects {
     const fireScale = Math.min(scale * 2.0, 3.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.0, 1.0, 0.5, 0.9, 0.45, 0.6];
-    // None sits above the heart's shoulder: lumps on one ball, not caps over it. All the flank lobes are the pale inner flame: the fringe on the two largest made the lower half of the ball peach, and only every other tongue is fringe now
-    const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
+    // None sits above the heart's shoulder: lumps on one ball, not caps over it. The flank lobes are the pale inner flame, bar the lowest: it is a deep orange, sunk to its middle in the ground and stood out clear of the heart, so the ball stands on a warm foot and is not one pale tone to the ground
+    const lobeHeights = [0.5, 0.05, 0.55, -0.3, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 3 ? footMat : flashMat);
       const angle = i * 2.4 + 0.6;
-      const reach = (i === 0 ? 0 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
+      const reach = (i === 0 ? 0 : i === 3 ? 0.4 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
       lobe.rotation.set(i * 1.3, i * 2.1, 0);
       glow?.addExcludedMesh(lobe as Mesh); // none of it is in the glow layer: its halo washed over the whole ball and it read as see-through haze
@@ -506,6 +509,7 @@ export class VisualEffects {
         coreMat.dispose();
         flashMat.dispose();
         flameMat.dispose();
+        footMat.dispose();
         smokeMat.dispose();
         dustMat.dispose();
         ballMat.dispose();
