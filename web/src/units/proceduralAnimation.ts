@@ -122,7 +122,7 @@ export class ProceduralAnimator {
       spread: 0.35 + h(7) * 0.4,
       elbow: 0.7 + h(8) * 0.5,
       trail: 0.12 + h(9) * 0.2,
-      stride: 0.45 + h(10) * 0.2,
+      stride: 0.6 + h(10) * 0.25, // at 0.45-0.65 a charging rank took short steps under its lean
     };
   }
   private _flinchTimer = 0;
@@ -594,7 +594,7 @@ export class ProceduralAnimator {
     b.neck.rotation.x = -0.1 + Math.sin(t * speed * 0.5 + 2) * 0.04;
 
     // Alternating leg swing (TABS-style exaggerated)
-    const legSwing = (this._shovePose ??= this._buildShovePose()).stride; // per-unit (0.45-0.65 rad), so a charge does not share one stride length
+    const legSwing = (this._shovePose ??= this._buildShovePose()).stride; // per-unit (0.6-0.85 rad), so a charge does not share one stride length
     // Both legs trail behind the hips, so the body tilts into the run from the feet up and the torso does not fold over upright legs. Per-unit (0.12-0.32 rad), so a charge does not share one lean.
     const trail = (this._shovePose ??= this._buildShovePose()).trail;
     b.leftHip.rotation.x = trail + Math.sin(t * speed) * legSwing;
