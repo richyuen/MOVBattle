@@ -165,6 +165,9 @@ const MITT_DEPTH = 0.8;
 const SLEEVE_BULK = 1.05;
 /** A limb narrows in one unbroken line: the forearm and shin start at the width the sleeve and thigh end at, with no step at the joint, and run down to a wrist and ankle no thinner than this share of it. */
 const LOWER_LIMB_MIN_TAPER = 0.6;
+/** Elbows and knees: each segment overruns the hinge by this share of its width there, as a stub drawn in to JOINT_STUB_END of it. */
+const JOINT_STUB = 0.45;
+const JOINT_STUB_END = 0.6;
 /** A shin does not run down to a point: it keeps at least this share of its top width to where it goes into the boot. */
 const SHIN_END = 0.78;
 /** Boot: a cuff this many shin ends across that stands this share of the shin up the leg, on a toe box this many cuff widths long that stops at this share of the cuff's height. */
@@ -229,13 +232,33 @@ export function buildArticulatedBody(
     mat: PBRMetallicRoughnessMaterial,
     scaling: Vector3 = Vector3.One(),
     tessellation = radialSegments,
+    jointEnd?: "top" | "bottom",
   ): Mesh {
-    const m = MeshBuilder.CreateCylinder(n, {
+    const shaft = MeshBuilder.CreateCylinder(n, {
       height: height * s,
       diameterTop: diameterTop * s,
       diameterBottom: diameterBottom * s,
       tessellation,
     }, scene);
+    let m = shaft;
+    if (jointEnd) {
+      // The end that meets an elbow or a knee runs on past the hinge as a short chamfered stub, drawn in to JOINT_STUB_END of the limb there. Straight, each stub lies
+      // hidden inside the segment it meets; bent, the two close the open side of the hinge as one faceted elbow or knee, in the colours of the limb itself.
+      const up = jointEnd === "top" ? 1 : -1;
+      const d = (jointEnd === "top" ? diameterTop : diameterBottom) * s;
+      const stubH = d * JOINT_STUB;
+      const stub = MeshBuilder.CreateCylinder(`${n}_stub`, {
+        height: stubH,
+        diameterTop: d * (up > 0 ? JOINT_STUB_END : 1),
+        diameterBottom: d * (up > 0 ? 1 : JOINT_STUB_END),
+        tessellation,
+      }, scene);
+      stub.position.y = up * (height * s + stubH) * 0.5;
+      stub.computeWorldMatrix(true);
+      shaft.computeWorldMatrix(true);
+      m = Mesh.MergeMeshes([shaft, stub], true)!;
+      m.name = n;
+    }
     m.scaling.copyFrom(scaling);
     m.material = mat;
     allMeshes.push(m);
@@ -523,6 +546,8 @@ export function buildArticulatedBody(
     upperArmBottom,
     bodyMat,
     new Vector3(1, 1, armDepthScale),
+    radialSegments,
+    "bottom",
   );
   leftUpperArm.position.y = -upperArmH * s * 0.5;
   leftUpperArm.parent = leftShoulder;
@@ -535,6 +560,8 @@ export function buildArticulatedBody(
     lowerArmBottom,
     skinMat,
     new Vector3(1, 1, armDepthScale * 0.92),
+    radialSegments,
+    "top",
   );
   leftLowerArm.position.y = -lowerArmH * s * 0.5;
   leftLowerArm.parent = leftElbow;
@@ -554,6 +581,8 @@ export function buildArticulatedBody(
     upperArmBottom,
     bodyMat,
     new Vector3(1, 1, armDepthScale),
+    radialSegments,
+    "bottom",
   );
   rightUpperArm.position.y = -upperArmH * s * 0.5;
   rightUpperArm.parent = rightShoulder;
@@ -566,6 +595,8 @@ export function buildArticulatedBody(
     lowerArmBottom,
     skinMat,
     new Vector3(1, 1, armDepthScale * 0.92),
+    radialSegments,
+    "top",
   );
   rightLowerArm.position.y = -lowerArmH * s * 0.5;
   rightLowerArm.parent = rightElbow;
@@ -646,6 +677,8 @@ export function buildArticulatedBody(
     upperLegBottom,
     bodyMat,
     new Vector3(1, 1, legDepthScale),
+    radialSegments,
+    "bottom",
   );
   leftUpperLeg.position.y = -upperLegH * s * 0.5;
   leftUpperLeg.parent = leftHipJ;
@@ -658,6 +691,8 @@ export function buildArticulatedBody(
     lowerLegBottom,
     bodyMat,
     new Vector3(1, 1, legDepthScale * 0.94),
+    radialSegments,
+    "top",
   );
   leftLowerLeg.position.y = -lowerLegH * s * 0.5;
   leftLowerLeg.parent = leftKnee;
@@ -674,6 +709,8 @@ export function buildArticulatedBody(
     upperLegBottom,
     bodyMat,
     new Vector3(1, 1, legDepthScale),
+    radialSegments,
+    "bottom",
   );
   rightUpperLeg.position.y = -upperLegH * s * 0.5;
   rightUpperLeg.parent = rightHipJ;
@@ -686,6 +723,8 @@ export function buildArticulatedBody(
     lowerLegBottom,
     bodyMat,
     new Vector3(1, 1, legDepthScale * 0.94),
+    radialSegments,
+    "top",
   );
   rightLowerLeg.position.y = -lowerLegH * s * 0.5;
   rightLowerLeg.parent = rightKnee;
