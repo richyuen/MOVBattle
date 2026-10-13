@@ -572,7 +572,7 @@ export class ProjectileSystem {
       }
       case "stone": {
         const stone = MeshBuilder.CreateSphere("stone", { diameter: 0.35, segments: 6 }, this._scene);
-        stone.material = this._getMat("stone_body", new Color3(0.1, 0.1, 0.11)); // a near-black ball for either team, not a team-coloured one
+        stone.material = this._getMat(`stone_body_${attackerTeam}`, Color3.Lerp(palette.primary, new Color3(0.5, 0.48, 0.42), 0.4));
         stone.parent = root;
         break;
       }
