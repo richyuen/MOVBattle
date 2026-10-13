@@ -190,15 +190,15 @@ export class ProjectileSystem {
     dark.emissiveColor = new Color3(0.06, 0.06, 0.06);
     dark.transparencyMode = 2;
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
-    // Each lobe is about three quarters the size of the one behind it and stands 0.4 further out along the barrel,
-    // so the puff is a ragged string of lumps tapering away from the muzzle and not one ball sitting on it.
+    // Each lobe is a little smaller than the one behind it and stands 0.4 further out along the barrel, thrown up to 0.2
+    // off that line to either side, so the puff is a ragged clump of lumps and not a row of beads on a string.
     for (let i = 0; i < 4; i++) {
-      const diameter = (0.3 + Math.random() * 0.1) * [1, 0.72, 0.52, 0.38][i] * scale;
+      const diameter = (0.3 + Math.random() * 0.1) * [1, 0.85, 0.7, 0.55][i] * scale;
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
       smoke.position = flash.position.add(direction.scale((0.08 + 0.4 * i) * scale));
-      smoke.position.x += (Math.random() - 0.5) * 0.14 * scale;
-      smoke.position.y += (Math.random() - 0.3) * 0.14 * scale;
-      smoke.position.z += (Math.random() - 0.5) * 0.14 * scale;
+      smoke.position.x += (Math.random() - 0.5) * 0.40 * scale;
+      smoke.position.y += (Math.random() - 0.3) * 0.40 * scale;
+      smoke.position.z += (Math.random() - 0.5) * 0.40 * scale;
       smoke.material = i >= 2 ? dark : sm;
       this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 || i === 2 });
     }
