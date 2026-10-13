@@ -503,7 +503,7 @@ export class ProjectileSystem {
         fletch.position.z = -0.2;
         fletch.material = this._getMat(`fletch_${attackerTeam}`, palette.primary);
         fletch.parent = root;
-        this._addStreak(root, 0.25, 1.6);
+        this._addStreak(root, 0.25, 0.8);
         break;
       }
       case "bolt": {
@@ -528,7 +528,7 @@ export class ProjectileSystem {
         tip.position.z = 0.5;
         tip.material = this._getMat(`spear_tip_${attackerTeam}`, palette.primary);
         tip.parent = root;
-        this._addStreak(root, 0.45, 1.4);
+        this._addStreak(root, 0.45, 0.7);
         break;
       }
       case "bomb": {
