@@ -165,6 +165,9 @@ const CHEST_LINE = 0.36;
 const CHEST_SWELL = 1.05;
 const SHOULDER_SLOPE = 0.8;
 const WAIST_DEPTH = 0.85;
+/** The legs hang from the lower corners of a pelvis block this share of the shoulders wide and this many thigh widths tall, so the thighs start hip-width apart and run down side by side instead of forking from one point under the belt. */
+const PELVIS_OF_SHOULDERS = 0.8;
+const PELVIS_HEIGHT = 1.2;
 
 export function buildArticulatedBody(
   scene: Scene,
@@ -562,7 +565,22 @@ export function buildArticulatedBody(
 
   // ─── Legs ───
   const legDepthScale = 0.92;
-  const hipOffX = (torsoBottom * 0.28) * s;
+  const pelvisW = Math.max(waist, shoulderOffX * 2 / s * PELVIS_OF_SHOULDERS);
+  const pelvisH = upperLegTop * PELVIS_HEIGHT;
+  const pelvisD = Math.max(waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001), upperLegTop * legDepthScale) * 1.05;
+  const hipOffX = (pelvisW - upperLegTop) * 0.5 * s;
+
+  // Pelvis: a short block under the waist, drawn in at the top to the waist it meets, with a thigh under each lower corner
+  const pelvis = MeshBuilder.CreateBox(`${name}_pelvis`, { width: pelvisW * s, height: pelvisH * s, depth: pelvisD * s }, scene);
+  const pelvisPositions = pelvis.getVerticesData("position")!;
+  for (let i = 0; i < pelvisPositions.length; i += 3) {
+    if (pelvisPositions[i + 1] > 0) pelvisPositions[i] *= waist / pelvisW;
+  }
+  pelvis.setVerticesData("position", pelvisPositions);
+  pelvis.position.y = -pelvisH * s * 0.2;
+  pelvis.material = bodyMat;
+  pelvis.parent = hip;
+  allMeshes.push(pelvis);
 
   // Left leg
   const leftHipJ = joint(`${name}_lHip`, hip);
