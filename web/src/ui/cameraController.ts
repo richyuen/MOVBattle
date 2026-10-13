@@ -276,10 +276,10 @@ export class CameraController {
     // A group too spread out for a close shot is not fitted: the camera goes to the survivor nearest its middle.
     const MAX_RADIUS = 11;
     const spread = fitSpan > MAX_RADIUS;
-    // With the giant's place known the eye stands between it and the focus, its back to the giant: as far off the focus as leaves the giant 2.5 clear behind it,
+    // With the giant's place known the eye stands between it and the focus, its back to the giant: as far off the focus as leaves the giant 4.5 clear behind it, tusks and all,
     // from 3 up to the 4.5 at which a man is whole between the bands, and aimed lower the farther back it stands, down to his middle.
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
-    const giantRadius = Math.min(4.5, Math.max(3, giantOff - 2.5));
+    const giantRadius = Math.min(4.5, Math.max(3, giantOff - 4.5));
     const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) : from.alpha;
     const to: CameraViewState = {
