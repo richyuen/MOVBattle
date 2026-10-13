@@ -1132,7 +1132,7 @@ function enterSimulation(): void {
 const STANDOFF_ENGAGE_RANGE = 7;
 
 /** How far the battle focus leans from the midpoint toward the tallest giant. */
-const GIANT_LEAN = 0.4;
+const GIANT_LEAN = 0.25; // at 0.4 the rear of the army facing the giant was cut by the far edge
 
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
 function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; tall: number; near?: { x: number; z: number; halfWidth: number } } {
