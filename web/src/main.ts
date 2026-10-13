@@ -1132,7 +1132,7 @@ function enterSimulation(): void {
 const STANDOFF_ENGAGE_RANGE = 7;
 
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
-function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; near?: { x: number; z: number; halfWidth: number } } {
+function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; tall: number; near?: { x: number; z: number; halfWidth: number } } {
   const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
@@ -1162,11 +1162,13 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: 
   // How far the formations reach toward the side-on battle camera (-z) from the clash point.
   const focusZ = (a.z + b.z) / 2;
   let depth = 0;
+  let tall = 0; // the tallest living body: a giant over the line needs the eye further back
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
     depth = Math.max(depth, focusZ - unit.position.z);
+    tall = Math.max(tall, unit.body.metrics.overallHeight);
   }
-  return { x: (a.x + b.x) / 2, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, near };
+  return { x: (a.x + b.x) / 2, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, tall, near };
 }
 
 function resetBattle(options: {
