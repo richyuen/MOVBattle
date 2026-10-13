@@ -237,9 +237,12 @@
       position: absolute;
       top: 0;
       right: 100%;
-      margin-right: 6px;
+      /* Joined to Start as one tab: overlapping its left border, with none of its own on that side */
+      margin-right: -2px;
+      border-right: none;
       opacity: 0.92;
     }
+    .btn-clear, .btn-clear:hover { background: rgba(30,20,30,0.7); }
     .btn-corner {
       min-width: 108px;
       padding-bottom: 12px;
