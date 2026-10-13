@@ -197,9 +197,13 @@ export class ProjectileSystem {
       const diameter = (i === 0 ? 0.48 : 0.18 + Math.random() * 0.3) * scale; // at 0.44 and 0.22-0.36 the whole clump was a barrel-mouth and a half wide, and at 0.6 and 0.3-0.49 thrown 0.15 off it was one big ball with crumbs
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
       smoke.position = flash.position.add(direction.scale(0.15 * scale));
-      smoke.position.x += (Math.random() - 0.5) * 0.2 * scale;
-      smoke.position.y += (Math.random() - 0.3) * 0.2 * scale;
-      smoke.position.z += (Math.random() - 0.5) * 0.2 * scale;
+      // The small lobes sit on the skin of the lead one, 0.24 off its middle in any direction and more often over it than under: thrown inside a 0.2 box half of them were buried in the lead, and three to five of the eight showed
+      if (i > 0) {
+        const azimuth = Math.random() * Math.PI * 2;
+        const up = Math.random() * 1.6 - 0.6;
+        const flat = Math.sqrt(Math.max(0, 1 - up * up));
+        smoke.position.addInPlaceFromFloats(Math.cos(azimuth) * flat * 0.24 * scale, up * 0.24 * scale, Math.sin(azimuth) * flat * 0.24 * scale);
+      }
       smoke.convertToFlatShadedMesh();
       const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
       const tones: number[] = [];
@@ -214,8 +218,8 @@ export class ProjectileSystem {
       // Each lobe rolls off down the line of fire at its own 0.1-0.4 a second and a little on out from the middle of the clump, so the puff loosens as it hangs but stays one clump at the muzzle: rising only, it was one ball to the end,
       // and at 0.4-0.6 and 1.2 times its offset outward it broke into eight equal balls strung clear of the gun.
       const drift = direction.scale(0.1 + 0.3 * (i / 7));
-      drift.x += (smoke.position.x - flash.position.x - direction.x * 0.15 * scale) * 0.5;
-      drift.z += (smoke.position.z - flash.position.z - direction.z * 0.15 * scale) * 0.5;
+      drift.x += (smoke.position.x - flash.position.x - direction.x * 0.15 * scale) * 0.2;
+      drift.z += (smoke.position.z - flash.position.z - direction.z * 0.15 * scale) * 0.2;
       this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, drift, ownsMaterial: i === 0 });
     }
   }
