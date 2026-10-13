@@ -349,7 +349,7 @@ export class VisualEffects {
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
     flashMat.emissiveColor = new Color3(1.0, 0.72, 0.30);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(1.3, 0.62, 0.40);
+    flameMat.emissiveColor = new Color3(1.0, 0.38, 0.18);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -371,7 +371,7 @@ export class VisualEffects {
     // enough to show no facets, and a shell's can grow to about three men tall.
     const fireScale = Math.min(scale * 2.0, 3.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
-    const lobeSizes = [1.0, 0.85, 0.5, 0.9, 0.45, 0.6];
+    const lobeSizes = [1.0, 1.0, 0.5, 0.9, 0.45, 0.6];
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. Two are the deep orange of the fringe and the largest of the flank lobes, so the foot of the ball is orange and not cream
     const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
