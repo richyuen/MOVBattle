@@ -1274,9 +1274,18 @@ function frameSurvivorsForResult(winner: number | null): void {
   const box: Parameters<typeof camCtrl.frameSurvivors>[0] = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0, focus: { x: 0, z: 0 } };
   const spots: { x: number; z: number }[] = [];
   const giantSpots: { x: number; z: number }[] = [];
+  // Everything on the field that the shot could end up looking through: the living of both sides, the giants and the dead.
+  const occluders: NonNullable<typeof box.occluders> = [];
   for (const unit of placedUnits) {
-    if (unit.linkedParent || unit.isDead || (winner !== null && unit.team !== winner)) continue;
+    if (unit.linkedParent) continue;
     const bounds = unit.body.root.getHierarchyBoundingVectors();
+    occluders.push({
+      x: unit.position.x,
+      z: unit.position.z,
+      r: Math.max(0.4, Math.max(bounds.max.x - bounds.min.x, bounds.max.z - bounds.min.z) / 2),
+      kind: unit.isDead ? "corpse" : bounds.max.y - unit.position.y > 4.2 ? "giant" : "man",
+    });
+    if (unit.isDead || (winner !== null && unit.team !== winner)) continue;
     // A survivor over 4.2 tall is not somewhere to point the shot: the focus is picked among the human-sized ones.
     (bounds.max.y - unit.position.y > 4.2 ? giantSpots : spots).push({ x: unit.position.x, z: unit.position.z });
     box.minX = Math.min(box.minX, unit.position.x);
@@ -1304,6 +1313,7 @@ function frameSurvivorsForResult(winner: number | null): void {
     const near = spots.filter((s) => Math.hypot(s.x - focus.x, s.z - focus.z) <= 3);
     box.group = { x: near.reduce((sum, s) => sum + s.x, 0) / near.length, z: near.reduce((sum, s) => sum + s.z, 0) / near.length };
   }
+  box.occluders = occluders;
   camCtrl.frameSurvivors(box);
 }
 
