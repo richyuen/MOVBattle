@@ -30,6 +30,9 @@ const FOLLOW_SPEED = 2.5;
 const FOLLOW_DROP = 0.9;
 const FOLLOW_DROP_SPEED = 0.8;
 
+/** A body on the field as the result shot sees it: where it stands or lies, its footprint radius, its base and height, and whether it is one of the winners. */
+export interface ShotBody { x: number; z: number; y: number; r: number; h: number; standing: boolean; survivor: boolean; giant: boolean }
+
 export class CameraController {
   readonly camera: ArcRotateCamera;
   readonly isTouchDevice: boolean;
@@ -272,7 +275,7 @@ export class CameraController {
   // ─── Victory shot ───
   /** Drift from the battle view onto the survivors: a slow close shot, a human winner about half the height between the result bands. */
   frameSurvivors(
-    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number; focus: { x: number; z: number }; giant?: { x: number; z: number }; group?: { x: number; z: number } },
+    box: { minX: number; maxX: number; minZ: number; maxZ: number; baseY: number; height: number; focus: { x: number; z: number }; giant?: { x: number; z: number }; group?: { x: number; z: number }; bodies?: ShotBody[] },
     durationSeconds = 2,
   ): CameraViewState | null {
     if (!this._prebattleView) return null;
@@ -313,10 +316,92 @@ export class CameraController {
         z: giant ? (box.group ?? box.focus).z + shy.z : spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
+    if (box.bodies) {
+      this._pickSubject(to, box.bodies);
+      to.alpha = from.alpha + Math.atan2(Math.sin(to.alpha - from.alpha), Math.cos(to.alpha - from.alpha)); // still the short way round
+    }
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
+  }
+
+  /**
+   * The shot fitted above is only the first subject tried. Every knot of surviving men is one the shot could take instead, and so is every surviving giant, fitted whole
+   * between the bands. Each is tried from twelve places round it, and a place is scored by every body on the field, at any depth, that its frame would cut:
+   * one partly inside the side edges and the result bands and partly out, weighed by how big it stands there. The subject and place that cut least win;
+   * the fitted shot is kept unless another is plainly cleaner.
+   */
+  private _pickSubject(to: CameraViewState, bodies: ShotBody[]): void {
+    const BAND = 0.28; // the height either side of the aim that the result bands leave, per unit of distance
+    const STEPS = 12;
+    const halfWidth = Math.tan(this.camera.fov / 2) * this.camera.getEngine().getAspectRatio(this.camera);
+    const score = (view: CameraViewState): number => {
+      const reach = view.radius * Math.sin(view.beta);
+      const eyeX = view.target.x + Math.cos(view.alpha) * reach;
+      const eyeZ = view.target.z + Math.sin(view.alpha) * reach;
+      const eyeY = view.target.y + view.radius * Math.cos(view.beta);
+      const pitch = (view.target.y - eyeY) / reach;
+      let cuts = 0;
+      let shown = 0;
+      for (const b of bodies) {
+        const dx = b.x - eyeX;
+        const dz = b.z - eyeZ;
+        const along = -(dx * Math.cos(view.alpha) + dz * Math.sin(view.alpha)); // distance down the line of sight
+        const aside = Math.abs(dx * Math.sin(view.alpha) - dz * Math.cos(view.alpha));
+        if (along + b.r < 0.3) continue; // behind the lens
+        if (Math.hypot(dx, dz) < b.r + 0.8) {
+          cuts += 6; // the lens stands in it
+          continue;
+        }
+        const depth = Math.max(along, 0.3);
+        if ((aside - b.r) / depth > halfWidth) continue; // off the side of the frame
+        const top = (b.y + b.h - eyeY) / depth - pitch;
+        const foot = (b.y - eyeY) / depth - pitch;
+        if (foot > BAND || top < -BAND) continue; // wholly behind a band
+        const size = Math.min(1, Math.max(b.h, b.r * 2) / depth / (BAND * 2)); // its share of the height between the bands
+        if ((aside + b.r) / depth <= halfWidth && top <= BAND && foot >= -BAND) {
+          // Whole in the frame: a winner is what the shot is of, and anyone else standing this side of the subject is in its way
+          if (b.survivor) shown += Math.min(0.25, size);
+          else if (b.standing && along < reach * 0.6) cuts += size;
+          continue;
+        }
+        cuts += 0.3 + 3 * size;
+      }
+      return cuts - Math.min(1.5, shown);
+    };
+    const subjects: { x: number; y: number; z: number; radius: number; beta: number }[] = [];
+    const men = bodies.filter((b) => b.survivor && !b.giant);
+    const stride = Math.max(1, Math.ceil(men.length / 16));
+    for (let i = 0; i < men.length; i += stride) {
+      // The men within 3 of this one are a knot: aimed at their middle, from as far off as holds them all and never nearer than a man stands whole
+      const knot = men.filter((m) => Math.hypot(m.x - men[i].x, m.z - men[i].z) <= 3);
+      const x = knot.reduce((sum, m) => sum + m.x, 0) / knot.length;
+      const z = knot.reduce((sum, m) => sum + m.z, 0) / knot.length;
+      const half = Math.max(...knot.map((m) => Math.hypot(m.x - x, m.z - z)));
+      subjects.push({ x, y: to.target.y, z, radius: Math.max(4.5, (half + 1.5) / 0.6), beta: to.beta });
+    }
+    for (const g of bodies) {
+      // A giant is a subject too: aimed at its middle from where its whole height stands between the bands and its whole length inside the edges
+      if (g.survivor && g.giant) subjects.push({ x: g.x, y: g.y + g.h * 0.5, z: g.z, radius: Math.max((g.h * 0.5 + 0.7) / BAND, (g.r + 1.5) / 0.6), beta: Math.PI / 1.9 });
+    }
+    let best = to;
+    let bestScore = score(to) - 0.2;
+    for (const s of subjects) {
+      // Out from the fitted place both ways, so of two equally clean places the smaller swing is found first and kept
+      for (let i = 0; i < STEPS; i++) {
+        const view: CameraViewState = { alpha: to.alpha + Math.ceil(i / 2) * (i % 2 === 0 ? -1 : 1) * (2 * Math.PI / STEPS), beta: s.beta, radius: s.radius, target: { x: s.x, y: s.y, z: s.z } };
+        const found = score(view);
+        if (found < bestScore) {
+          best = view;
+          bestScore = found;
+        }
+      }
+    }
+    to.alpha = best.alpha;
+    to.beta = best.beta;
+    to.radius = best.radius;
+    to.target = best.target;
   }
 
   // ─── Battle follow ───

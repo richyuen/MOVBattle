@@ -1274,9 +1274,25 @@ function frameSurvivorsForResult(winner: number | null): void {
   const box: Parameters<typeof camCtrl.frameSurvivors>[0] = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0, focus: { x: 0, z: 0 } };
   const spots: { x: number; z: number }[] = [];
   const giantSpots: { x: number; z: number }[] = [];
+  // Every body on the field, standing or down, as the shot will see it: the camera picks its subject by what each frame would cut.
+  const bodies: NonNullable<typeof box.bodies> = [];
   for (const unit of placedUnits) {
-    if (unit.linkedParent || unit.isDead || (winner !== null && unit.team !== winner)) continue;
+    if (unit.linkedParent) continue;
     const bounds = unit.body.root.getHierarchyBoundingVectors();
+    const survivor = !unit.isDead && (winner === null || unit.team === winner);
+    const giant = !unit.isDead && bounds.max.y - unit.position.y > 4.2;
+    const footprint = Math.max(bounds.max.x - bounds.min.x, bounds.max.z - bounds.min.z) / 2;
+    bodies.push({
+      x: unit.position.x,
+      z: unit.position.z,
+      y: bounds.min.y,
+      r: unit.isDead || giant ? Math.max(0.4, footprint) : 0.5, // a standing man is his body, not the reach of his spear
+      h: Math.max(0.3, bounds.max.y - bounds.min.y),
+      standing: !unit.isDead,
+      survivor,
+      giant,
+    });
+    if (!survivor) continue;
     // A survivor over 4.2 tall is not somewhere to point the shot: the focus is picked among the human-sized ones.
     (bounds.max.y - unit.position.y > 4.2 ? giantSpots : spots).push({ x: unit.position.x, z: unit.position.z });
     box.minX = Math.min(box.minX, unit.position.x);
@@ -1304,6 +1320,7 @@ function frameSurvivorsForResult(winner: number | null): void {
     const near = spots.filter((s) => Math.hypot(s.x - focus.x, s.z - focus.z) <= 3);
     box.group = { x: near.reduce((sum, s) => sum + s.x, 0) / near.length, z: near.reduce((sum, s) => sum + s.z, 0) / near.length };
   }
+  box.bodies = bodies;
   camCtrl.frameSurvivors(box);
 }
 
