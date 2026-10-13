@@ -119,7 +119,7 @@ initMaterialFactory(scene);
 // Lights
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
 hemi.intensity = 0.45;
-hemi.groundColor = new Color3(0.25, 0.22, 0.18);
+hemi.groundColor = new Color3(0.30, 0.30, 0.42); // cool bounce: what the sun does not reach is tinted blue-violet and not rust
 // The sky fill leans blue, so shade lit by it alone is a cool red-brown and not blood red
 hemi.diffuse = new Color3(0.7, 0.9, 1.6);
 // The sun stands 42 degrees up, so a man throws a shadow a little longer than himself across the grass, and the tree ring's shadows reach in over the field's edge (at 35 the lit grass went a dull rust):
