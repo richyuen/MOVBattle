@@ -318,28 +318,28 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
   // Short and stubby, 0.7 long with the muzzle where it was, and hooped by two raised bands
   const barrelMat = makeMat(scene, new Color3(0.45, 0.41, 0.375));
   const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 0.7, diameterTop: 0.3, diameterBottom: 0.38, tessellation: 8 }, scene);
-  barrel.position.set(0, 0.60, 0.55); // at 0.69 the barrel sat at its crew's head height, perched over the carriage
+  barrel.position.set(0, 0.52, 0.55); // at 0.69 the barrel sat at its crew's head height, and at 0.60 it still rode above the wheel rims
   barrel.rotation.x = Math.PI / 2 - 0.18;
   barrel.parent = root;
   barrel.material = barrelMat;
   body.allMeshes.push(barrel);
   for (const [along, d] of [[-0.2, 0.43], [0.16, 0.39]]) {
     const band = MeshBuilder.CreateCylinder("bombBand", { height: 0.08, diameter: d, tessellation: 8 }, scene);
-    band.position.set(0, 0.60 + Math.sin(0.18) * along, 0.55 + Math.cos(0.18) * along);
+    band.position.set(0, 0.52 + Math.sin(0.18) * along, 0.55 + Math.cos(0.18) * along);
     band.rotation.x = Math.PI / 2 - 0.18;
     band.parent = root;
     band.material = barrelMat;
     body.allMeshes.push(band);
   }
   const bomb = MeshBuilder.CreateSphere("bombRound", { diameter: 0.22, segments: 8 }, scene);
-  bomb.position.set(0, 0.63, 0.75);
+  bomb.position.set(0, 0.55, 0.75);
   bomb.parent = root;
   bomb.material = makeMat(scene, new Color3(0.12, 0.12, 0.12));
   body.allMeshes.push(bomb);
   body.vehicleSockets = {
-    primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", new Vector3(0, 0.69, 0.96)),
-    smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", new Vector3(0, 0.67, 0.9)),
-    impactOrigin: makeSocket(scene, root, "bomb_cannon_impact_socket", new Vector3(0, 0.63, 0.78)),
+    primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", new Vector3(0, 0.61, 0.96)),
+    smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", new Vector3(0, 0.59, 0.9)),
+    impactOrigin: makeSocket(scene, root, "bomb_cannon_impact_socket", new Vector3(0, 0.55, 0.78)),
   };
   return body;
 }
