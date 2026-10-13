@@ -156,3 +156,4 @@ iter 154 | standoff-crews-cut, armoured-legs-one-navy, muzzle-smoke-golf-balls, 
 iter 155 | re-audit; catapult-team-slab, thor-hammer-black, melee-feet-cut, kite-board-violet, catapult-arm-twig, catapult-wheels-small | 5/6 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 156 | catapult-bucket-floats, catapult-wood-khaki, catapult-team-slab, melee-giant-crop, thor-hammer-small-head, catapult-crossbar-thin, catapult-wheel-plain, kite-board-flat-blue | 6/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 157 | melee-giant-crop, kite-board-flat-blue, catapult-bucket-tiny, catapult-goalpost, thor-hammer-plain-box, catapult-wheel-black | 3/6 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
+iter 158 | catapult-wheel-black, thor-hammer-plain-box, catapult-goalpost, catapult-tray-slab, giant-rump-off-right, battle-flat-profile, kite-no-rim, result-foreground-club | 5/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
