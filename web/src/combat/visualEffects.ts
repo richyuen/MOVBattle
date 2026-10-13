@@ -424,15 +424,15 @@ export class VisualEffects {
       lobes.push({ mesh: lobe, size: (i === 0 ? 0.42 : 0.22 + Math.random() * 0.12) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
     }
 
-    // Dust: one fat mound of pale lobes sunk into each other, heaved up out of the crater, a big one in the middle and
-    // smaller ones crowded against it, so the hit reads as a single burst from any side.
+    // Dust: a low ring of small pale lobes heaved up out of the crater, a bigger one in the middle and the rest stood clear of it,
+    // so the hit kicks up separate knee-high puffs and not one mound: at 0.85 and 0.4-0.65, a hand apart, they were a single man-wide sphere.
     const dustScale = Math.min(scale, 1.4);
     const mound: { mesh: TransformNode; size: number }[] = [];
     for (let i = 0; i < 6; i++) {
       const lobe = blob("burstDust", 2, dustMat);
       const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
-      const reach = (i === 0 ? 0 : 0.14 + Math.random() * 0.1) * dustScale;
-      const size = (i === 0 ? 0.85 : 0.4 + Math.random() * 0.25) * dustScale;
+      const reach = (i === 0 ? 0 : 0.3 + Math.random() * 0.2) * dustScale;
+      const size = (i === 0 ? 0.34 : 0.16 + Math.random() * 0.1) * dustScale;
       lobe.position.set(Math.cos(angle) * reach, floorY + size * 0.12, Math.sin(angle) * reach);
       mound.push({ mesh: lobe, size });
     }
