@@ -667,7 +667,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   // Cheeks: a thick wooden wall standing on the bed each side of the barrel, nearly to its top, so the gun sits down in its carriage; behind each a lower block, so the cheek steps down toward the tail of the bed
   for (const xOff of [-0.2, 0.2]) {
     const cheek = MeshBuilder.CreateBox("carriageCheek", { width: 0.1, height: 0.26, depth: 0.6 }, scene);
-    cheek.position.set(xOff, 0.49, 0.2);
+    cheek.position.set(xOff, 0.43, 0.2);
     cheek.parent = root; cheek.material = wood; allMeshes.push(cheek);
     const step = MeshBuilder.CreateBox("carriageCheekStep", { width: 0.1, height: 0.14, depth: 0.3 }, scene);
     step.position.set(xOff, 0.43, -0.25);
@@ -710,24 +710,24 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // Barrel (along +Z)
   // A short stout tube, 0.8 long with the muzzle where it was, tapering a little from breech to muzzle, faceted, with
-  // two raised bands and a knob on the back end
+  // two raised bands and a knob on the back end. Its axis is 0.44 up, under the top of the rims, so it lies down between the wheels in the bed: at 0.52 it rode perched above the rims
   const barrel = MeshBuilder.CreateCylinder("barrel", { height: 0.8, diameterTop: 0.22, diameterBottom: 0.28, tessellation: 8 }, scene);
-  barrel.position.set(0, 0.52, 0.35);
+  barrel.position.set(0, 0.44, 0.35);
   barrel.rotation.x = Math.PI / 2; // along Z
   barrel.parent = root; barrel.material = metal; allMeshes.push(barrel);
   for (const [z, d] of [[0.08, 0.33], [0.45, 0.29]]) {
     const band = MeshBuilder.CreateCylinder("barrelBand", { height: 0.07, diameter: d, tessellation: 8 }, scene);
-    band.position.set(0, 0.52, z);
+    band.position.set(0, 0.44, z);
     band.rotation.x = Math.PI / 2;
     band.parent = root; band.material = metal; allMeshes.push(band);
   }
   const knob = MeshBuilder.CreateSphere("breechKnob", { diameter: 0.14, segments: 3 }, scene);
-  knob.position.set(0, 0.52, -0.1);
+  knob.position.set(0, 0.44, -0.1);
   knob.parent = root; knob.material = metal; allMeshes.push(knob);
 
   // Muzzle flare at front (+Z end)
   const muzzle = MeshBuilder.CreateCylinder("muzzle", { height: 0.08, diameterTop: 0.3, diameterBottom: 0.22, tessellation: 8 }, scene);
-  muzzle.position.set(0, 0.52, 0.75);
+  muzzle.position.set(0, 0.44, 0.75);
   muzzle.rotation.x = Math.PI / 2;
   muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
 
@@ -754,9 +754,9 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   }
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, root, "cannon_muzzle_socket", new Vector3(0, 0.52, 0.86)),
-    smokeSocket: makeSocket(scene, root, "cannon_smoke_socket", new Vector3(0, 0.52, 0.78)),
-    impactOrigin: makeSocket(scene, root, "cannon_impact_socket", new Vector3(0, 0.52, 0.7)),
+    primaryMuzzle: makeSocket(scene, root, "cannon_muzzle_socket", new Vector3(0, 0.44, 0.86)),
+    smokeSocket: makeSocket(scene, root, "cannon_smoke_socket", new Vector3(0, 0.44, 0.78)),
+    impactOrigin: makeSocket(scene, root, "cannon_impact_socket", new Vector3(0, 0.44, 0.7)),
   };
 
   return wrapAsBody(
