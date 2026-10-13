@@ -57,7 +57,7 @@ const ARMOUR_PRESET_WEIGHT = 0.2;
 const ARMOUR_SHADE = 0.65;
 // Cool plate is hardly darkened and turned toward royal blue: the sky-blue team colour at the warm shade is a dark teal.
 const COOL_ARMOUR_SHADE = 0.9;
-const COOL_ARMOUR_HUE_SHIFT = 15;
+const COOL_ARMOUR_HUE_SHIFT = 30;
 // Cool plate and surcoats are never paler than this: the sky-blue team colour only darkened is slate, and TABS knights are a deep blue.
 const COOL_ARMOUR_SATURATION = 0.85;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
