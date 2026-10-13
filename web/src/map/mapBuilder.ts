@@ -587,7 +587,7 @@ export class TribalSandboxMapBuilder {
 
   /** Patches of tall grass clumps between short turf and open ground: two meshes, no per-blade nodes */
   private _createFieldBlades(): void {
-    const BLADES = 480000;
+    const BLADES = 720000; // half as many again, and fewer open cells below: at 480000 the field was wisps on bare ground
     const PER_TUFT = 4;
     for (const [pass, matName] of ["grassBladeDark", "grassBladeLight"].entries()) {
       const positions: number[] = [];
@@ -606,7 +606,7 @@ export class TribalSandboxMapBuilder {
         // Across the middle where the lines meet it is a little more, so the fight still stands in grass.
         const cellX = Math.floor((tuftX + 50 + (this._seededValue(tuft, 40) - 0.5) * 3) / 4);
         const cellZ = Math.floor((tuftZ + 44 + (this._seededValue(tuft, 41) - 0.5) * 3) / 4);
-        if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.3 : 0.25)) continue;
+        if (this._seededValue(cellX * 32 + cellZ, 39) < (Math.abs(tuftX) < 14 ? 0.15 : 0.12)) continue;
         // Each patch has its own height, from ankle turf to full clumps, so the field is not one level carpet.
         // Where the armies stand and fight no patch tops the shin, easing back to full height by the flanks.
         const heightCap = 0.6 + 0.4 * Math.min(1, Math.max(0, (Math.abs(tuftX) - 24) / 6));
