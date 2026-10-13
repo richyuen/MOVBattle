@@ -190,9 +190,9 @@ export class ProjectileSystem {
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.15 any way off one point 0.3 out from the
-    // muzzle, the first the biggest and the rest a third to three fifths of its width: a clump of many small chunks round one lobe, not four big spheres.
+    // muzzle, the first the biggest and the rest a half to four fifths of its width: at a third to three fifths it was one sphere with crumbs on it, a barrel-mouth wide.
     for (let i = 0; i < 8; i++) {
-      const diameter = (i === 0 ? 0.44 : 0.15 + Math.random() * 0.11) * scale;
+      const diameter = (i === 0 ? 0.44 : 0.22 + Math.random() * 0.14) * scale;
       const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
       smoke.position = flash.position.add(direction.scale(0.3 * scale));
       smoke.position.x += (Math.random() - 0.5) * 0.3 * scale;
