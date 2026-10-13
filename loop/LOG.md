@@ -148,3 +148,4 @@ iter 146 | catapult-operator-miniature, spear-shafts-thick, team-cloth-three-hue
 iter 147 | walk-ranks-bow, rear-ranks-stand-upright, armour-navy-vs-teal, catapult-crew-bare, muzzle-puff-detached, spear-point-pin, witch-band-thread (mammoth-stilt-legs skipped: misread) | 5/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 148 | walk-ranks-bow, armour-navy-vs-teal, muzzle-smoke-one-ball, spear-tip-dark, idle-arms-hang-dead, witch-hat-black, crew-hoops-grey, shove-walk-share | 4/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 149 | impact-dust-house-sphere, shove-walk-share, muzzle-smoke-one-ball, cloth-teal-vs-plate, crew-hoops-grey, idle-arms-hang-dead, battle-cam-crops-mammoth | 5/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
+iter 150 | impact-dust-house-sphere, blue-skin-pale, battle-cam-bare-foreground, walk-lean-shared, cloth-teal-vs-plate, cannon-dwarfs-crew, muzzle-smoke-balloons, crew-hoops-count | 8/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
