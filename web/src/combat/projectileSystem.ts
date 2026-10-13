@@ -185,6 +185,10 @@ export class ProjectileSystem {
     const sm = getMaterialFactory().createUnique("cloth", new Color3(0.90, 0.88, 0.80));
     sm.emissiveColor = new Color3(0.22, 0.21, 0.19);
     sm.transparencyMode = 2;
+    // The two lobes furthest from the muzzle are dark grey: spent smoke beside the white of the fresh blast.
+    const dark = getMaterialFactory().createUnique("cloth", new Color3(0.42, 0.42, 0.44));
+    dark.emissiveColor = new Color3(0.06, 0.06, 0.06);
+    dark.transparencyMode = 2;
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
     // Each lobe is about three quarters the size of the one behind it and stands 0.4 further out along the barrel,
     // so the puff is a ragged string of lumps tapering away from the muzzle and not one ball sitting on it.
@@ -195,8 +199,8 @@ export class ProjectileSystem {
       smoke.position.x += (Math.random() - 0.5) * 0.14 * scale;
       smoke.position.y += (Math.random() - 0.3) * 0.14 * scale;
       smoke.position.z += (Math.random() - 0.5) * 0.14 * scale;
-      smoke.material = sm;
-      this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 });
+      smoke.material = i >= 2 ? dark : sm;
+      this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 || i === 2 });
     }
   }
 
