@@ -31,6 +31,8 @@ const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
 
 // How much of each preset's flesh tone / cloth tone survives over the team color.
 const SKIN_FLESH_WEIGHT = 0.25;
+// Red skin takes more of the flesh tone: the red team colour nearly pure is a crimson, and TABS red skin is a duller rose red.
+const WARM_SKIN_FLESH_WEIGHT = 1.0;
 // Bare skin is part self-lit with the hue of its team colour, so the faces lit by the sun are a bright team colour and not a dull one.
 const SKIN_GLOW = 0.4;
 const SKIN_GLOW_BLUE = 1.5;
@@ -350,7 +352,8 @@ interface MaterialTint {
 function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3, skinColor: Color3, presetWeight: number): MaterialTint {
   const skinBase = skinColor;
   // Skin is the team color (TABS); presets only nudge it a little toward their flesh tone.
-  const flesh = (target: Color3, amount: number) => Color3.Lerp(skinBase, target, amount * SKIN_FLESH_WEIGHT);
+  const fleshWeight = skinColor.r > skinColor.g && skinColor.r > skinColor.b ? WARM_SKIN_FLESH_WEIGHT : SKIN_FLESH_WEIGHT;
+  const flesh = (target: Color3, amount: number) => Color3.Lerp(skinBase, target, amount * fleshWeight);
   const zero = new Color3(0, 0, 0);
   const blend = (target: Color3, amount: number) => Color3.Lerp(bodyColor, target, amount * presetWeight);
   // Defaults: cloth-like (non-metallic, fairly rough)
