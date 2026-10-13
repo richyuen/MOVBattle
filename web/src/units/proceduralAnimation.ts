@@ -494,7 +494,7 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     return {
-      lean: 0.22 + h(41) * 0.16,
+      lean: 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       spread: 0.2 + h(43) * 0.16,
       leftElbow: 0.45 + h(44) * 0.5,
@@ -530,7 +530,7 @@ export class ProceduralAnimator {
     // angle, which keeps that foot on the ground); the other trails slightly behind, nearly straight.
     const leftLeads = p.side < 0;
     // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs
-    const sag = p.lean * 0.4;
+    const sag = p.lean * 0.2;
     const lead = -p.stride - sag;
     const trail = p.stride * 0.45 - sag;
     b.leftHip.rotation.x = (leftLeads ? lead : trail) + Math.sin(t * 0.9) * wobble;
