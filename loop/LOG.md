@@ -170,3 +170,4 @@ iter 168 | [S] rear-rank-march-depth, [S] pin-ball-head | 2/2 approved | passes 
 iter 169 | [S] round-fist-hands, [S] rear-spears-fan-and-cross, [P] bucket-helm-torso-sized | 2/3 approved | passes 20 -> 20
 iter 170 | re-audit; [S] legs-a-frame-from-one-point, [S] idle-mannequin-arms-out | 2/2 approved | passes 20 -> 20
 iter 171 | [S] needle-ankles-no-boots, [S] march-legs-one-phase | 2/2 approved | passes 20 -> 20
+iter 172 | [S] paddle-hands, [S] prop-arm-no-carry, [P] boot-shade, [P] gait-lift-ceiling | 4/4 approved | passes 20 -> 20

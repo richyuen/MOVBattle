@@ -1,9 +1,9 @@
 # Loop state
-Iteration: 171   Last re-audit: 170   Consecutive rejects: 0   Branch: main
+Iteration: 172   Last re-audit: 170   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion, from last audit; see CRITIC.md for the letters)
-battle-feel: a PASS b PASS c FAIL d PASS (3/4) — c: marchers now walk their own gait (one leg straight, one folded), but idle rows still read as one mannequin, the free-leg fold reaches a crouched scuttle, prop arms have no carry, marching torsos pitch alike
-unit-look: a PASS b FAIL c FAIL d PASS (2/4) — b: bucket helm a drum wider than the shoulders and torso tall with no neck, knight sword a thin sliver; c: legs now end in a cuffed boot with a toe, but the boot is leg-coloured and box-cornered, the hand a flat paddle wider than the forearm, the bare pelvis a proud box
+battle-feel: a PASS b PASS c FAIL d PASS (3/4) — c: prop arms now have a per-unit hold on the march and the deep knee fold is gone, but marching torsos pitch alike (knights read hunched), the carry bob is not visible, clubs are held level and parallel, idle rows still read as one mannequin
+unit-look: a PASS b FAIL c FAIL d PASS (2/4) — b: bucket helm a drum wider than the shoulders and torso tall with no neck, knight sword a thin sliver; c: the hand is a block fist with a thumb but no wider than the wrist (a stump end, gone at distance) and does not wrap the grip, knob joints at shoulder and elbow like a mannequin, the boot box-cornered, the bare pelvis a proud box
 maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: units cast a foot-sized blot, the wall no shadow, grass blades stay bright inside a shadow
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
@@ -11,23 +11,27 @@ vfx: a PASS b PASS c PASS d PASS (4/4)
 Total 20/24.
 
 ## Focus (every gap this iteration)
-BASE 7eb8903
-- [S] unit-look.c needle-ankles-no-boots (a8871b2) — APPROVE, criterion still FAIL
-- [S] battle-feel.c march-legs-one-phase (103b28e) — APPROVE, criterion still FAIL
+BASE 846ad24
+- [S] unit-look.c paddle-hands (410a6cb) — APPROVE, criterion still FAIL
+- [S] battle-feel.c prop-arm-no-carry (cbdf483) — APPROVE, criterion still FAIL
+- [P] unit-look.c boot-shade (42771cc) — APPROVE, criterion still FAIL
+- [P] battle-feel.c gait-lift-ceiling (a47e6ed) — APPROVE, criterion still FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] needle-ankles-no-boots (a8871b2) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
-- GAP: [S] march-legs-one-phase (103b28e) VERDICT: APPROVE CRITERION: battle-feel.c FAIL (previous: FAIL)
+- GAP: [S] paddle-hands (410a6cb) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
+- GAP: [S] prop-arm-no-carry (cbdf483) VERDICT: APPROVE CRITERION: battle-feel.c FAIL (previous: FAIL)
+- GAP: [P] boot-shade (42771cc) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
+- GAP: [P] gait-lift-ceiling (a47e6ed) VERDICT: APPROVE CRITERION: battle-feel.c FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets)
-1. [S] unit-look.c paddle-hands [0] — block mitt no wider than the forearm end, replacing the flat tile, in bodyBuilder mitt() — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
-2. [S] unit-look.b bucket-helm-drum [1] — fit the knight helm in propBuilder to head width with a visible neck gap below it; HAT_CUT_FOR_HEAD untouched (spent) — ref trailer_3_sheet_02 r1c1 — ours closeup_weapon_reads
-3. [S] battle-feel.c prop-arm-no-carry [0] — weapon and shield arm carry/bob state on the march, per-unit — ref trailer_2_sheet_02 r1c1 — ours big_melee_2s
-4. [S] maps-light.b foot-blot-shadows [0] — long body-shaped unit shadow along the sun direction, plus wall shadows — ref trailer_3_sheet_02 r1c1 — ours lineup_medieval
-5. [S] battle-feel.c idle-row-one-pose [0] — per-unit idle stance variants (arm hang angle, foot stagger, head drop) readable at lineup scale — ref trailer_3_sheet_01 r1c2 — ours lineup_medieval
-6. [S] unit-look.b knight-sword-sliver [0] — broad flat blade mesh with wide crossguard in propBuilder — ref trailer_3_sheet_02 r1c1 — ours closeup_weapon_reads
-7. [P] battle-feel.c gait-lift-ceiling [0] — _buildGait lift 0.6-1.5 -> 0.6-1.1; fallout of [S] march-legs-one-phase (171) — ref trailer_3_sheet_01 r1c2 — ours big_melee_2150ms
-8. [P] unit-look.c boot-shade [0] — darken the boot against the leg (about 0.75 of the leg colour); fallout of [S] needle-ankles-no-boots (171) — ref tabs_screenshot_06 — ours shield_wall_2650ms
+1. [S] battle-feel.c march-torsos-one-pitch [0] — per-unit torso pitch, shoulder roll and head bob in the walk, hashed like _buildGait — ref trailer_3_sheet_01 r1c2 — ours closeup_weapon_reads
+2. [S] unit-look.b bucket-helm-drum [1] — size the great helm from head width in propBuilder (narrower than the shoulders, about 1.3 heads tall, seated on the shoulders); HAT_CUT_FOR_HEAD untouched (spent) — ref trailer_3_sheet_02 r1c1 — ours closeup_weapon_reads
+3. [S] unit-look.c mannequin-joint-knobs [0] — drop or merge the shoulder, elbow and knee knob meshes so each limb is one unbroken tapered line — ref tabs_screenshot_04 — ours lineup_medieval
+4. [S] battle-feel.c idle-rows-one-mannequin [0] — per-unit idle stance states (weapon grounded or shouldered, weight shift, head turned), a new pose state, not amplitude on the 170 idle rest row — ref trailer_3_sheet_01 r3c1 — ours lineup_medieval
+5. [S] unit-look.b knight-sword-sliver [0] — blade with a broad diamond cross-section and heavy guard — ref trailer_2_sheet_02 r1c1 — ours lineup_medieval
+6. [S] maps-light.b blob-shadows [0] — low warm directional sun casting long soft body shadows in place of the dark smear under each unit — ref tabs_screenshot_06 — ours lineup_medieval
+7. [P] unit-look.c mitt-width [0] — MITT_OF_WRIST 1.0 -> 1.25; fallout of [S] paddle-hands (172) — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
+8. [P] battle-feel.c carry-bob [0] — prop carry bob 0.08-0.18 -> 0.15-0.30; fallout of [S] prop-arm-no-carry (172) — ref tabs_screenshot_06 — ours big_melee_2150ms
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - bucket-helm-torso-sized [attempts: 1, [P] spent] — HAT_CUT_FOR_HEAD 0.85: shrank every hat, Zeus's hair and wreath fell off the head, helm still wider than the shoulders
@@ -40,8 +44,8 @@ BASE 7eb8903
 - giant-lean-cuts-blue [attempts: 1] — GIANT_LEAN 0.25: the cut moved to red's rear
 
 ## Notes for next iteration (max 5 lines)
-- LEDGER.md holds tuned values and spent gaps: read it first. Sources are CRLF (unitFactory.ts and loop files LF): patch with EOL-aware node scripts written to the scratchpad; commit per gap with `git commit <paths> -F -`. A `--showcase-only` capture (~90 s) is the quick visual probe.
-- Legs: `hipOffX` comes from the pelvis block (`_pelvis` mesh on `hip`). `foot()` merges a cuff and a toe box into one `_[lr]FootM` mesh parented to the knee; unitFactory colours it by that name (BOOT_SHADE, BARE_FOOT_SHADE). Shins end at SHIN_END.
-- Idle: `_buildIdlePose` (lean, side, stride, tilt, turn, arms[2]) drives `_animateIdleHumanoid`; `hip.rotation.z` is the pelvis drop and resets every frame. Do not grow the free-foot 0.08 offset. Walk is `_animateWalkHumanoid`, per-unit `_buildGait` (hashes 71-76); wobble phase is Math.random, so phases already differ per man.
-- Shield walls: `_assignShieldSlots` keeps a rank per carrier in `_shieldRanks`; board is the `/shield$/` child of leftHand, spear the `/shaft$/` child of rightHand; `_squareShield` and `_carrySpear` set rotationQuaternion from root yaw after all overlays.
-- Body: `headTop` is scaled by headUnit/(HAT_CUT_FOR_HEAD*headSize) and carries every hat, hair and wreath, so fit single props in propBuilder. `mitt()` is a CreateBox paddle sized from `upperArmTop`; props parent to the hand joints, not the mitt.
+- LEDGER.md is at ~9990/10000 bytes: compact rows before adding any. Sources are LF in the working tree; patch with EOL-aware node scripts in the scratchpad; commit per gap with `git commit <paths> -F -`. `--showcase-only` capture (~90 s) is the quick probe. Critic 172: no further [P] on gait lift or BARE_FOOT_SHADE; boot must read by shape ([S] bevel foot() corners).
+- Hands: `mitt(n, width)` merges a 3-ring square palm and a thumb box into `_[lr]HandM`, sized from `lowerArmBottom` (handWidth/handLength); props parent to the hand joints and the fist does not wrap the grip. Legs: `foot()` merges cuff + toe into `_[lr]FootM` on the knee; unitFactory colours it by name.
+- Walk: `_animateWalkHumanoid` (per-unit `_buildGait`, hashes 71-76; torso lean hash 51) then `_applyWalkBias` (heavy_carry hashes 61-63: clubs), then in update the shove overlay, spear carry, and prop carry (`_buildCarry`, hashes 81-88; weapon arm only for bias none/braced, board arm for any `_shieldBoard()`), each weighted (1-shove)(1-limp).
+- Idle: `_buildIdlePose` drives `_animateIdleHumanoid`; `hip.rotation.z` is the pelvis drop. Do not grow the free-foot 0.08 offset.
+- Shield walls: `_shieldRanks` keeps a rank per carrier; `_squareShield` and `_carrySpear` set rotationQuaternion from root yaw after all overlays. `headTop` carries every hat, hair and wreath, so fit single props in propBuilder.
