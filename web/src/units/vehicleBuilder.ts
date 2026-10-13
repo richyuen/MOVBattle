@@ -308,7 +308,7 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
     }
   }
   // Short and stubby, 0.7 long with the muzzle where it was, and hooped by two raised bands
-  const barrelMat = makeMat(scene, new Color3(0.22, 0.22, 0.26));
+  const barrelMat = makeMat(scene, new Color3(0.45, 0.41, 0.375));
   const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 0.7, diameterTop: 0.3, diameterBottom: 0.38, tessellation: 8 }, scene);
   barrel.position.set(0, 0.69, 0.55);
   barrel.rotation.x = Math.PI / 2 - 0.18;
@@ -649,7 +649,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
   const wood = getMaterialFactory().get("wood", new Color3(0.36, 0.13, 0.09), { emissive: new Color3(0.08, 0.04, 0.035) }); // dark red-brown wood, a little self-lit so the shaded side stays wood and not black
-  const metal = makeMat(scene, new Color3(0.3, 0.3, 0.35));
+  const metal = makeMat(scene, new Color3(0.55, 0.50, 0.46)); // iron grey, a little warm against the blue sky light, under which a cool dark grey went navy
   const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09));
 
   // Carriage (longer along Z)
