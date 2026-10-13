@@ -214,8 +214,8 @@ export class CameraController {
     // Armies that hold their ground (halfSpan > 0) must both fit: the frame is ~0.63 radius wide each side of the target.
     const spanRadius = ((center.halfSpan ?? 0) + 1.5) / 0.6;
     // The eye stands clear of the rank nearest to it, so the fight spreading sideways does not swallow the camera.
-    // Five and a half metres off its feet: the rank comes on toward the eye as the fight spreads, and must not reach it.
-    const clearRadius = (center.depth ?? 0) + 5.5;
+    // Seven and a half metres off its feet: the rank comes on toward the eye as the fight spreads, and must not reach it, and at five and a half a giant over the line ran out of the top and side of the frame.
+    const clearRadius = (center.depth ?? 0) + 7.5;
     const to: CameraViewState = {
       alpha: -Math.PI / 2,
       beta: Math.PI / 1.9,    // eye just below unit head height, looking slightly up so sky fills the top third
