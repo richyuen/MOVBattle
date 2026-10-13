@@ -150,3 +150,4 @@ iter 148 | walk-ranks-bow, armour-navy-vs-teal, muzzle-smoke-one-ball, spear-tip
 iter 149 | impact-dust-house-sphere, shove-walk-share, muzzle-smoke-one-ball, cloth-teal-vs-plate, crew-hoops-grey, idle-arms-hang-dead, battle-cam-crops-mammoth | 5/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 150 | impact-dust-house-sphere, blue-skin-pale, battle-cam-bare-foreground, walk-lean-shared, cloth-teal-vs-plate, cannon-dwarfs-crew, muzzle-smoke-balloons, crew-hoops-count | 8/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
 iter 151 | battle-cam-distance, cloth-skin-one-tone, cannon-barrel-perched, muzzle-smoke-equal-lobes, walk-lean-upright, crew-hoops-raised, impact-dust-house-sphere | 6/7 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
+iter 152 | muzzle-smoke-equal-lobes, battle-cam-fov, bomb-cannon-perched, run-stride-short, run-arms-tidy, tunic-trousers-one-navy, crew-hoops-pale, impact-dust-house-sphere | 6/8 approved | scores 3/3/4/4/3/3 -> 3/3/4/4/3/3
