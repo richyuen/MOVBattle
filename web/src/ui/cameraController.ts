@@ -28,7 +28,7 @@ export interface GalleryCameraOverride {
 const FOLLOW_SLACK = 0.6;
 const FOLLOW_SPEED = 2.5;
 const FOLLOW_DROP = 0.6;
-const FOLLOW_DROP_SPEED = 0.3;
+const FOLLOW_DROP_SPEED = 0.8;
 
 export class CameraController {
   readonly camera: ArcRotateCamera;
