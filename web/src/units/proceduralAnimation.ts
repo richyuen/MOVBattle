@@ -519,8 +519,8 @@ export class ProceduralAnimator {
     b.neck.rotation.x = Math.sin(t * 1.3 + 2) * wobble * 0.8;
 
     // Arms hang off the ribs, one ahead of the body and one behind, each elbow folded its own amount
-    b.leftShoulder.rotation.x = -p.side * 0.4 + Math.sin(t * 1.1) * wobble * 2;
-    b.rightShoulder.rotation.x = p.side * 0.4 + Math.sin(t * 1.1 + Math.PI) * wobble * 2;
+    b.leftShoulder.rotation.x = -p.side * 0.22 + Math.sin(t * 1.1) * wobble * 2;
+    b.rightShoulder.rotation.x = p.side * 0.22 + Math.sin(t * 1.1 + Math.PI) * wobble * 2;
     b.leftShoulder.rotation.z = -p.spread;
     b.rightShoulder.rotation.z = p.spread;
     b.leftElbow.rotation.x = -p.leftElbow + Math.sin(t * 1.4) * wobble;
