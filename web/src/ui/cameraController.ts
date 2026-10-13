@@ -27,7 +27,7 @@ export interface GalleryCameraOverride {
 // Battle follow: how far the fight's middle may sit off the view's before the view slides after it, and how fast it slides.
 const FOLLOW_SLACK = 0.6;
 const FOLLOW_SPEED = 2.5;
-const FOLLOW_DROP = 0.6;
+const FOLLOW_DROP = 0.9;
 const FOLLOW_DROP_SPEED = 0.8;
 
 export class CameraController {
