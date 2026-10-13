@@ -372,7 +372,7 @@ export class VisualEffects {
     // Fireball: a small pale heart with orange lobes standing out of its flanks to make the rim, and short round
     // tongues of flame swelling up and out of it, so the silhouette is one soft lumpy ball. All of it is round
     // enough to show no facets, and a shell's can grow to about two men tall.
-    const fireScale = Math.min(scale * 1.2, 1.6); // at twice the blast scale and up to 3.6 a shell burst was a house-sized ball on two domes wider than the gun, and capped at 2.0 it still stood near three men tall
+    const fireScale = Math.min(scale * 1.2, 1.35); // at twice the blast scale and up to 3.6 a shell burst was a house-sized ball on two domes wider than the gun, capped at 2.0 it still stood near three men tall, and at 1.6 two and a half
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.0, 1.0, 0.5, 0.9, 0.45, 0.6];
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. The flank lobes are the pale inner flame, bar the two foot lobes: they are a deep orange, both sunk to near their middle in the ground so the orange is a low foot and not half the ball, the lowest and stood out clear of the heart, so the ball stands on a warm foot and is not one pale tone to the ground
