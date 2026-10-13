@@ -44,6 +44,8 @@ const WARM_SKIN_GREEN_LIFT = 0.26;
 const WARM_SKIN_BLUE_LIFT = 0.18;
 // Its glow is half the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one.
 const WARM_SKIN_GLOW = 0.5;
+// The head is kept out of the glow layer for its eyes' sake, and so glows this much more in its own material to stay the tone of the arms.
+const HEAD_GLOW = 1.9;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is quartered: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.25;
@@ -189,6 +191,11 @@ export class UnitFactory {
 
     const clothed = !shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset);
     applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? (isArmored ? ARMOUR_PRESET_WEIGHT : CLOTHED_PRESET_WEIGHT) : BODY_PRESET_WEIGHT, shouldUseVehicleBody ? 0 : SKIN_GLOW);
+    if (!shouldUseVehicleBody && body.headMesh.material === body.skinMaterial) {
+      const headMaterial = body.skinMaterial.clone(`${body.skinMaterial.name}_head`);
+      headMaterial.emissiveColor = body.skinMaterial.emissiveColor.scale(HEAD_GLOW);
+      body.headMesh.material = headMaterial;
+    }
     if (bareSkinned && clothed) {
       body.bodyMaterial.baseColor = LOINCLOTH_COLOR;
       // Bare feet are a slightly darker shade of the skin, so a bare leg still ends in a foot and not a point.
