@@ -1,35 +1,34 @@
 # Loop state
-Iteration: 169   Last re-audit: 165   Consecutive rejects: 0   Branch: main
+Iteration: 170   Last re-audit: 170   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion, from last audit; see CRITIC.md for the letters)
-battle-feel: a FAIL b PASS c FAIL d PASS (2/4) — a: red's spears stand upright on the march and lie level and parallel in contact, but as one flat rack with no fist on the shaft, a toppling man's spear stays level, rear boards hang low, the front is narrower than the rear, blue forms no wall; c: lineup units share one symmetric stance
-unit-look: a PASS b PASS c FAIL d PASS (3/4) — c: the head is a tall flat-faced block, but straight-sided like a can, hidden under hair and dome caps, on a stalk neck; the hands are flat slabs but flare like a trowel, too long, and do not close on a shaft; helms wider than the shoulders
-maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: shadows are a faint smudge on the grass cards, sky one flat teal
+battle-feel: a PASS b PASS c FAIL d PASS (3/4) — c: idle men now hang their arms and shift weight, but neighbours still read as one mirrored pose, the shift is lost at lineup scale, prop arms have no carry, and men on the march share one leg pose in one phase
+unit-look: a PASS b FAIL c FAIL d PASS (2/4) — b: bucket helm a drum wider than the shoulders and torso tall with no neck, knight sword a thin sliver; c: legs now hang hip-width from a pelvis block, but each is a cone to a needle ankle with a tiny foot, the hand a flat tile wider than the forearm, the bare pelvis a proud box
+maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: units cast a foot-sized blot, the wall no shadow, grass blades stay bright inside a shadow
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
 Total 20/24.
 
 ## Focus (every gap this iteration)
-BASE 0dbba2b
-- [S] unit-look.c round-fist-hands (dafad8c) — APPROVE, criterion still FAIL
-- [S] battle-feel.a rear-spears-fan-and-cross (5b5d8d6) — APPROVE, criterion still FAIL
-- [P] unit-look.c bucket-helm-torso-sized (054031b) — REJECT, reverted (15ee89d)
+BASE 86403c3
+- [S] unit-look.c legs-a-frame-from-one-point (22b1b79) — APPROVE, criterion still FAIL
+- [S] battle-feel.c idle-mannequin-arms-out (82b9634) — APPROVE, criterion still FAIL
+- audit rank 2 (unit-look.b bucket helm) skipped only for sharing a dimension with rank 1
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] round-fist-hands (dafad8c) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
-- GAP: [S] rear-spears-fan-and-cross (5b5d8d6) VERDICT: APPROVE CRITERION: battle-feel.a FAIL (previous: FAIL)
-- GAP: [P] bucket-helm-torso-sized (054031b) VERDICT: REJECT CRITERION: unit-look.c FAIL (previous: FAIL)
+- GAP: [S] legs-a-frame-from-one-point (22b1b79) VERDICT: APPROVE CRITERION: unit-look.c FAIL (previous: FAIL)
+- GAP: [S] idle-mannequin-arms-out (82b9634) VERDICT: APPROVE CRITERION: battle-feel.c FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets)
-1. [S] unit-look.c bucket-helm-torso-sized [1] — helm mesh fitted to the head block inside propBuilder (a sleeve ~1.15x the head), global hat anchor untouched — ref trailer_2_sheet_02 r1c1 — ours closeup_weapon_reads
-2. [S] battle-feel.a front-rank-narrower-than-rear [0] — slot assignment fills the front rank to full width before a rear rank opens, both teams, tower/kite boards too, so blue forms a wall — ref tabs_screenshot_06 — ours shield_wall_2500ms
-3. [S] battle-feel.a toppled-spears-stay-level [0] — spear and board released to the hand when toppled or airborne; rear man's board held at chest; overhand fist visibly on the shaft — ref tabs_screenshot_06 — ours shield_wall_2650ms
-4. [S] unit-look.c hair-caps-hide-head-block [0] — hair/helmet props cut as a cap over the crown and back only, at head width, face flat exposed (covers Zeus's laurel) — ref tabs_screenshot_06 — ours shield_wall_2500ms
-5. [S] battle-feel.c idle-stance-variants [0] — per-unit idle stance seed: weight on one leg, weapon arm carried per weapon type, head turned (not an idle-lean nudge: spent) — ref trailer_3_sheet_01 r1c2 — ours lineup_medieval
-6. [S] maps-light.b sky-gradient-and-shadows [0] — vertical sky gradient dome plus a low sun so unit shadows run two body lengths — ref tabs_screenshot_01 — ours lineup_medieval
-7. [P] unit-look.c mitt-flares-like-a-trowel [0] — mitt() wrist taper 0.6 -> 0.85, height 0.84 -> 0.7, depth 0.24 -> 0.34 — fallout of round-fist-hands (169) — ours closeup_pair_zeus_thor
-8. [P] unit-look.c head-straight-sided-can [0] — blockHead jaw ring 0.78 -> 0.62 — fallout of pin-ball-head (168) — ours closeup_pair_zeus_thor
+1. [S] unit-look.c needle-ankles-no-boots [0] — boot block wider and deeper than the shin end with a toe forward; shin ends at boot-top width, not a point (not a [P]: taper row approved 166) — ref tabs_screenshot_06 — ours shield_wall_2650ms
+2. [S] battle-feel.c march-legs-one-phase [0] — per-unit stride phase offset and stride length in the humanoid walk, hashed from the wobble phase — ref trailer_3_sheet_01 r1c2 — ours big_melee_2150ms
+3. [S] unit-look.b bucket-helm-drum-no-neck [1] — fit the great helm to the head block in propBuilder (width at most the shoulders, ~1.3 heads tall, neck visible under the rim, eye slit); HAT_CUT_FOR_HEAD untouched — ref trailer_2_sheet_02 — ours closeup_weapon_reads
+4. [S] maps-light.b unit-shadow-foot-blot [0] — full-body directional shadow from every unit and the wall onto the ground, lower sun — ref tabs_screenshot_05 — ours closeup_pair_zeus_thor
+5. [S] battle-feel.c idle-neighbours-mirrored [0] — separate carry poses for weapon and shield arms, per-unit facing yaw — ref tabs_screenshot_08 — ours closeup_state_reads
+6. [S] unit-look.c hand-flat-tile [0] — blocky fist no wider than the forearm end, with a thumb facet, in place of the paddle — ref tabs_screenshot_04 — ours closeup_pair_zeus_thor
+7. [S] unit-look.c bare-pelvis-box [0] — on bare units a tapered hip wedge with a short hanging cloth flap — ref tabs_screenshot_01 — ours big_melee_2150ms
+8. [S] maps-light.b grass-bright-in-shadow [0] — grass blades take the shadow tint of the ground under them — ref tabs_screenshot_02 — ours war_machines_3800ms
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - bucket-helm-torso-sized [attempts: 1, [P] spent] — HAT_CUT_FOR_HEAD 0.85: shrank every hat, Zeus's hair and wreath fell off the head, helm still wider than the shoulders
@@ -42,8 +41,8 @@ BASE 0dbba2b
 - giant-lean-cuts-blue [attempts: 1] — GIANT_LEAN 0.25: the cut moved to red's rear
 
 ## Notes for next iteration (max 5 lines)
-- LEDGER.md holds tuned values and spent gaps: read it first. Sources are CRLF, loop files LF: patch with EOL-aware node scripts written to the scratchpad; commit per gap with `git commit <paths> -F -`. Both [P] gaps above sit on the head/mitt row: take one at most.
-- Fast probe: scratch playwright script (createRequire from loop/scripts, chromePath from capture.mjs, build + vite preview, spawn, advanceTime, screenshot) runs in ~60 s. big_melee outcome changes run to run.
-- Shield walls: `_assignShieldSlots` keeps a rank per carrier in `_shieldRanks`; rank r slots on the half spacings of its host wall with `hold` (side + depth). `_moveUnitToward` halts a rear man at his hold depth (returns before hazard and nav steering) and there calls leanIntoShove when the target is near. Never pull a rank back on the march.
-- Shield and spear: board is the `/shield$/` child of leftHand, spear the `/shaft$/` child of rightHand (wall carriers only); `_squareShield` (shove*(1-limp)) and `_carrySpear` (1-limp, level by shove) set rotationQuaternion from root yaw after all overlays, so a toppling body keeps a world-level spear: gate on topple/air.
+- LEDGER.md holds tuned values and spent gaps: read it first. Sources are CRLF (unitFactory.ts and loop files LF): patch with EOL-aware node scripts written to the scratchpad; commit per gap with `git commit <paths> -F -`. A `--showcase-only` capture (~90 s) is the quick visual probe.
+- Legs: `hipOffX` comes from the pelvis block (`_pelvis` mesh on `hip`, kept as the loincloth on bare units with the hip caps); feet are `foot()` boxes parented to the knees, shins `tapered()` cylinders ending at lowerLegBottom.
+- Idle: `_buildIdlePose` (lean, side, stride, tilt, turn, arms[2]) drives `_animateIdleHumanoid`; `hip.rotation.z` is the pelvis drop and resets every frame. Do not grow the free-foot 0.08 offset. Walk is `_animateWalkHumanoid` (speed 8, shared phase t).
+- Shield walls: `_assignShieldSlots` keeps a rank per carrier in `_shieldRanks`; board is the `/shield$/` child of leftHand, spear the `/shaft$/` child of rightHand; `_squareShield` and `_carrySpear` set rotationQuaternion from root yaw after all overlays.
 - Body: `headTop` is scaled by headUnit/(HAT_CUT_FOR_HEAD*headSize) and carries every hat, hair and wreath, so fit single props in propBuilder. `mitt()` is a CreateBox paddle sized from `upperArmTop`; props parent to the hand joints, not the mitt.
