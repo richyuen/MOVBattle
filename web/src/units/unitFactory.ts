@@ -41,7 +41,7 @@ const WARM_SKIN_BLUE = 0.75;
 // ...and is lightened: red well past white, green and blue lifted a little, so its sunlit faces are a coral red: lifted 0.18 and 0.30 they were pink. Red alone, to 1.8, left them at the same level and only more saturated.
 const WARM_SKIN_RED = 2.5;
 const WARM_SKIN_GREEN_LIFT = 0.10;
-const WARM_SKIN_BLUE_LIFT = 0.12;
+const WARM_SKIN_BLUE_LIFT = 0.06; // at 0.12 the lit skin still carried a blue cast, a rose pink beside the crimson of TABS red
 // Its glow is a quarter of the cool skin's, so its shaded side is a deep crimson: at full strength the red stayed a bright scarlet however the base was greyed, and at three quarters its shaded side was as light as its lit one. At 0.35 its lit side was a bubblegum pink.
 const WARM_SKIN_GLOW = 0.25;
 // Red has next to no blue above its weakest channel to glow with, so its shaded side was a brick: this much blue glows on it flat, and the shade is a crimson toward plum.
