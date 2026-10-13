@@ -425,7 +425,7 @@ export class CameraController {
         return {
           alpha: -Math.PI / 2.75,
           beta: Math.PI / 3.9,
-          radius: 16,
+          radius: 22,
           target: { x: 0, y: 1.35, z: 0 },
         };
       case "heroes_bosses_close":
