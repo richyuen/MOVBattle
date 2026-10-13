@@ -80,6 +80,9 @@ const WARM_SATURATION = 1.18;
 // cinched by a dark belt.
 const TABARD_COLOR = new Color3(0.93, 0.9, 0.8);
 const TABARD_SHADE = 0.9;
+// A cool surcoat is turned half as far toward royal blue as the plate and is a good deal deeper: the sky-blue team colour at nine tenths is a pale cyan board on the chest.
+const COOL_TABARD_HUE_SHIFT = 15;
+const COOL_TABARD_SHADE = 0.6;
 const TABARD_WIDTH = 1.02;
 const TABARD_LENGTH = 1.6;
 const TABARD_DEPTH = 1.18;
@@ -246,10 +249,11 @@ export class UnitFactory {
       tabard.scaling.set(body.torsoMesh.scaling.x * TABARD_WIDTH, TABARD_LENGTH, body.torsoMesh.scaling.z * TABARD_DEPTH);
       tabard.position.y = body.torsoMesh.position.y + chest.y * (1 - TABARD_LENGTH) * 0.8;
       const teamHsv = teamColor.toHSV();
-      const tabardColor = teamHsv.r > 150 && teamHsv.r < 300
-        ? Color3.HSVtoRGBToRef(teamHsv.r, Math.max(teamHsv.g, COOL_ARMOUR_SATURATION), teamHsv.b, new Color3())
+      const coolTabard = teamHsv.r > 150 && teamHsv.r < 300;
+      const tabardColor = coolTabard
+        ? Color3.HSVtoRGBToRef(teamHsv.r + COOL_TABARD_HUE_SHIFT, Math.max(teamHsv.g, COOL_ARMOUR_SATURATION), teamHsv.b, new Color3())
         : teamColor;
-      tabard.material = getMaterialFactory().getCloth(tabardColor.scale(TABARD_SHADE));
+      tabard.material = getMaterialFactory().getCloth(tabardColor.scale(coolTabard ? COOL_TABARD_SHADE : TABARD_SHADE));
       propMeshes.push(tabard);
       const mailMaterial = getMaterialFactory().getCloth(MAIL_COLOR);
       for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
