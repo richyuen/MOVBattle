@@ -267,17 +267,24 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   arm.rotation.x = -0.4; // tilted: bucket end up toward +Z (a positive turn about X drops the +Z end), lying on the crossbar and running up under the bucket
   arm.parent = rig; arm.material = wood; allMeshes.push(arm);
 
-  // Bucket at front end of arm (+Z)
-  const bucket = MeshBuilder.CreateBox("bucket", { width: 0.25, height: 0.12, depth: 0.2 }, scene);
-  bucket.position.set(0, 2.0, 0.7);
+  // Bucket on the tip of the arm (+Z): a wide tray three arms across with the shot lying in it, not a small empty box partway down
+  const bucket = MeshBuilder.CreateBox("bucket", { width: 0.5, height: 0.16, depth: 0.45 }, scene);
+  bucket.position.set(0, 2.05, 0.95);
+  bucket.rotation.x = -0.4;
   bucket.parent = rig; bucket.material = metal; allMeshes.push(bucket);
 
   if (options.spooky) {
-    const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.22, segments: 8 }, scene);
-    pumpkin.position.set(0, 2.08, 0.7);
+    const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.45, segments: 8 }, scene);
+    pumpkin.position.set(0, 2.3, 0.86);
     pumpkin.parent = rig;
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
+  } else {
+    const boulder = MeshBuilder.CreateSphere("boulderPayload", { diameter: 0.45, segments: 2 }, scene);
+    boulder.position.set(0, 2.3, 0.86);
+    boulder.parent = rig;
+    boulder.material = makeMat(scene, new Color3(0.2, 0.19, 0.2));
+    allMeshes.push(boulder);
   }
 
   // Counterweight at back end (-Z), hung under the arm: a big team-coloured block and the tinted main mesh, so the deck is plain timber and not a team-coloured table
@@ -292,8 +299,8 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   });
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.08, 0.82)),
-    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 2.0, 0.7)),
+    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.3, 0.86)),
+    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 2.05, 0.95)),
   };
 
   return wrapAsBody(
