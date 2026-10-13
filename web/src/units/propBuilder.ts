@@ -1066,16 +1066,6 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       const hood = MeshBuilder.CreateCylinder("hood", { height: 0.18 * s, diameterTop: 0.04 * s, diameterBottom: 0.24 * s, tessellation: 8 }, scene);
       hood.material = mat(scene, accent.scale(0.6));
       hood.position.y = 0.07 * s;
-      // A pointed hat and not a traffic cone: a brim half as wide again as the cone's foot, and a tip that kinks over to one side.
-      const brim = MeshBuilder.CreateCylinder("hoodBrim", { height: 0.015 * s, diameter: 0.36 * s, tessellation: 10 }, scene);
-      brim.parent = hood;
-      brim.position.y = -0.085 * s;
-      brim.material = hood.material;
-      const tip = MeshBuilder.CreateCylinder("hoodTip", { height: 0.09 * s, diameterTop: 0, diameterBottom: 0.045 * s, tessellation: 6 }, scene);
-      tip.parent = hood;
-      tip.position.set(-0.03 * s, 0.11 * s, 0);
-      tip.rotation.z = 0.9;
-      tip.material = hood.material;
       return hood;
     }
     case "turban": {
@@ -1104,11 +1094,6 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       band.parent = cone;
       band.position.y = -0.04 * s;
       band.material = mat(scene, accent, 0.08);
-      const tip = MeshBuilder.CreateCylinder("witchTip", { height: 0.1 * s, diameterTop: 0, diameterBottom: 0.035 * s, tessellation: 6 }, scene);
-      tip.parent = cone;
-      tip.position.set(-0.035 * s, 0.14 * s, 0);
-      tip.rotation.z = 0.9;
-      tip.material = cone.material;
       return brim;
     }
     case "samurai_helmet": {
