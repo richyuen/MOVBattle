@@ -288,8 +288,19 @@ export class SimulationSystem {
           const inverseMassA = 1 / resistanceA;
           const inverseMassB = 1 / resistanceB;
           const inverseMassTotal = inverseMassA + inverseMassB;
-          a.applyCollisionSeparation(normal.scale(-overlap * (inverseMassA / inverseMassTotal) * a.crowdSeparationStrength * contactBias));
-          b.applyCollisionSeparation(normal.scale(overlap * (inverseMassB / inverseMassTotal) * b.crowdSeparationStrength * contactBias));
+          // A colossus on the move parts its own troops to either side of its path: pushed straight off it, the ones at its rump stayed queued behind it.
+          const colossus = !sameTeam ? null : a.definition.size === "colossal" ? a : b.definition.size === "colossal" ? b : null;
+          const sideways = (unit: RuntimeUnit, away: Vector3): Vector3 => {
+            if (!colossus || unit === colossus) return away;
+            const heading = colossus.collisionVelocity;
+            if (heading.lengthSquared() < 0.04) return away;
+            heading.normalize();
+            const side = away.subtract(heading.scale(Vector3.Dot(away, heading)));
+            if (side.lengthSquared() < 0.0025) side.set(-heading.z, 0, heading.x).scaleInPlace(unit.runtimeId % 2 === 0 ? 1 : -1);
+            return side.normalize();
+          };
+          a.applyCollisionSeparation(sideways(a, normal.scale(-1)).scale(overlap * (inverseMassA / inverseMassTotal) * a.crowdSeparationStrength * contactBias));
+          b.applyCollisionSeparation(sideways(b, normal).scale(overlap * (inverseMassB / inverseMassTotal) * b.crowdSeparationStrength * contactBias));
 
           const relativeVelocity = b.collisionVelocity.subtract(a.collisionVelocity);
           const impactSpeed = Math.max(0, -Vector3.Dot(relativeVelocity, normal));
