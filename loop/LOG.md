@@ -172,3 +172,4 @@ iter 170 | re-audit; [S] legs-a-frame-from-one-point, [S] idle-mannequin-arms-ou
 iter 171 | [S] needle-ankles-no-boots, [S] march-legs-one-phase | 2/2 approved | passes 20 -> 20
 iter 172 | [S] paddle-hands, [S] prop-arm-no-carry, [P] boot-shade, [P] gait-lift-ceiling | 4/4 approved | passes 20 -> 20
 iter 173 | [S] march-torsos-one-pitch, [S] bucket-helm-drum, [P] mitt-width, [P] carry-bob | 3/4 approved | passes 20 -> 20
+iter 174 | [S] knight-sword-sliver, [S] clubs-level-parallel, [P] helm-too-tall, [P] shoulder-roll-faint | 3/4 approved | passes 20 -> 20
