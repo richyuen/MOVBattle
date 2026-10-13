@@ -186,6 +186,9 @@ const YOKE_REACH = 0.42;
 const YOKE_RISE = 0.3;
 const YOKE_DEPTH = 0.92;
 const YOKE_NECK = 0.5;
+// The hull under the yoke: its foot stands this far up the torso, this much of the waist wide and deep (a box drawn inside the waist's round).
+const HULL_FOOT = 0.06;
+const HULL_WAIST = 0.8;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
 const THIGH_OF_LEG = 0.2;
 /** Thigh head: the thigh swells up to the hip as the sleeve does to the shoulder, to this many thighs wide, and its crown sinks into the pelvis block in place of a ball cap. */
@@ -366,11 +369,13 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Shoulder yoke: a slab from the chest line up to the shoulder line, as wide there as the arm roots it covers, closed above by a wedge sloped in to the neck. */
+  /**
+   * Shoulder yoke and the hull under it, one solid with the torso: at the shoulder line it is as wide as the arm roots it covers, and from that edge its side planes run
+   * straight down and in to the waist, an underarm gusset in place of an armpit gap under a shelf. The chest stands out of its front as a swell; above, a wedge slopes in to the neck.
+   */
   function shoulderYoke(n: string, jointX: number, jointY: number): Mesh {
-    const chestY = torsoH * (0.5 + 0.5 * CHEST_LINE);
     const chestW = chestTop * CHEST_SWELL * 0.96;
-    const chestD = torsoD * CHEST_SWELL * 0.96;
+    const waistD = waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001);
     const yokeW = Math.max(chestW, (jointX + upperArmTop * YOKE_REACH) * 2);
     const yokeD = Math.max(torsoD * YOKE_DEPTH, upperArmTop * 1.1);
     const yokeY = jointY + upperArmTop * YOKE_RISE;
@@ -388,7 +393,7 @@ export function buildArticulatedBody(
       box.computeWorldMatrix(true);
       return box;
     };
-    const slab = frustum("slab", chestY, yokeY, chestW, chestD, yokeW, yokeD);
+    const slab = frustum("hull", torsoH * HULL_FOOT, yokeY, waist * HULL_WAIST, waistD * HULL_WAIST, yokeW, yokeD);
     const slope = frustum("slope", yokeY, torsoH * 1.02, yokeW, yokeD, neckW, yokeD * 0.75);
     const m = Mesh.MergeMeshes([slab, slope], true)!;
     m.name = n;
