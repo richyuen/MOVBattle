@@ -268,9 +268,9 @@ export class CameraController {
     const MAX_RADIUS = 11;
     const spread = fitSpan > MAX_RADIUS;
     // With the giant's place known the eye stands between it and the focus, its back to the giant: as far off the focus as leaves the giant 2.5 clear behind it,
-    // from 3 up to 6, at which the survivors stand in open field and do not fill the frame edge to edge, and aimed lower the farther back it stands, down to a man's middle at 4.5 and beyond.
+    // from 3 up to the 4.5 at which a man is whole between the bands, and aimed lower the farther back it stands, down to his middle.
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
-    const giantRadius = Math.min(6, Math.max(3, giantOff - 2.5));
+    const giantRadius = Math.min(4.5, Math.max(3, giantOff - 2.5));
     const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) : from.alpha;
     const to: CameraViewState = {
@@ -279,7 +279,7 @@ export class CameraController {
       radius,
       target: {
         x: spread || giant ? box.focus.x : (box.minX + box.maxX) / 2,
-        y: box.baseY + (giant ? Math.max(1, 1.5 - (giantRadius - 3) / 3) : Math.max(1, tall * 0.5)),
+        y: box.baseY + (giant ? 1.5 - (giantRadius - 3) / 3 : Math.max(1, tall * 0.5)),
         z: spread || giant ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
