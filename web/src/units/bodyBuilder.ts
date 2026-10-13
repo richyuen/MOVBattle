@@ -145,10 +145,15 @@ const HEAD_SHRINK = 0.88;
 const LIMB_THIN = 1.12;
 /** Sleeves and thighs are a little fuller than the forearms and shins they end in: more made them square puffed blocks. */
 const SLEEVE_BULK = 1.15;
-// Forearms and shins step in from the sleeve and thigh by a quarter of the bulk: more left them as sticks.
-const LOWER_LIMB_STEP = 1 + (SLEEVE_BULK - 1) / 4;
-/** Forearms and shins keep most of their width to the wrist and ankle, so they end in a cuff and not a point. */
-const LOWER_LIMB_MIN_TAPER = 0.88;
+/** A limb narrows in one unbroken line: the forearm and shin start at the width the sleeve and thigh end at, with no step at the joint, and run down to a wrist and ankle no thinner than this share of it. */
+const LOWER_LIMB_MIN_TAPER = 0.6;
+/** Feet are sized from the shin as if it kept this share of its width to the ankle, so the foot is a boot wider than the ankle above it. */
+const FOOT_ANKLE = 0.85;
+/** Torso wedge: the chest line sits this far up from the middle of the torso (1 is the top), a little wider than the chest, and above it the shoulders slope in to this share of the chest; the waist keeps this share of its depth. */
+const CHEST_LINE = 0.36;
+const CHEST_SWELL = 1.05;
+const SHOULDER_SLOPE = 0.8;
+const WAIST_DEPTH = 0.85;
 
 export function buildArticulatedBody(
   scene: Scene,
@@ -210,6 +215,32 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
+  /** Torso: a faceted wedge and not a drum. Widest at the chest line, straight-sided from there down to the waist, and sloped in over the shoulders to the neck. */
+  function wedgeTorso(n: string): Mesh {
+    const m = MeshBuilder.CreateCylinder(n, { height: torsoH * s, diameter: chestTop * s, tessellation: radialSegments, subdivisions: 2 }, scene);
+    const positions = m.getVerticesData("position")!;
+    const half = torsoH * s * 0.5;
+    const waistScale = waist / Math.max(chestTop, 0.001);
+    for (let i = 0; i < positions.length; i += 3) {
+      const y = positions[i + 1];
+      if (y > half * 0.5) {
+        positions[i] *= SHOULDER_SLOPE;
+        positions[i + 2] *= SHOULDER_SLOPE;
+      } else if (y < -half * 0.5) {
+        positions[i] *= waistScale;
+        positions[i + 2] *= waistScale * WAIST_DEPTH;
+      } else {
+        positions[i] *= CHEST_SWELL;
+        positions[i + 1] = half * CHEST_LINE;
+      }
+    }
+    m.setVerticesData("position", positions);
+    m.refreshBoundingInfo();
+    m.scaling.z = torsoD / Math.max(chestTop, waist, 0.001);
+    m.material = bodyMat;
+    allMeshes.push(m);
+    return m;
+  }
   /** Mitt hand: a flat faceted, thumbless slab a little wider than the wrist it ends, longer than wide and thin through the palm. */
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
     return sphere(n, size, mat, new Vector3(0.6, 0.8, 0.4), 2);
@@ -263,7 +294,7 @@ export function buildArticulatedBody(
   const lowerArmH = 0.242 * p.armLength;
   const upperArmTop = 0.09 * LIMB_THIN * SLEEVE_BULK * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
-  const lowerArmTop = upperArmBottom / LOWER_LIMB_STEP;
+  const lowerArmTop = upperArmBottom;
   const lowerArmBottom = lowerArmTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
   const handDiameter = 0.13 * Math.max(0.8, p.headSize * 0.9) * (p.handSize ?? 1.0);
 
@@ -271,12 +302,13 @@ export function buildArticulatedBody(
   const lowerLegH = 0.275 * p.legLength;
   const upperLegTop = 0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
-  const lowerLegTop = upperLegBottom / LOWER_LIMB_STEP;
+  const lowerLegTop = upperLegBottom;
   const lowerLegBottom = lowerLegTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0);
-  // Feet are low flat-sided stubs a tenth wider than the ankle they sit under, about one and a half times as long as wide,
+  // Feet are low flat-sided stubs wider than the tapered ankle they sit under, about one and a half times as long as wide,
   // so a leg ends in a foot pointing forward and not in a point, and the shin never stands on a plinth.
-  const footLength = lowerLegBottom * 1.7 * (p.footLength ?? 1.0);
-  const footWidth = lowerLegBottom * 1.1 * (p.footWidth ?? 1.0);
+  const footAnkle = lowerLegTop * FOOT_ANKLE * (p.lowerLegWidth ?? 1.0);
+  const footLength = footAnkle * 1.7 * (p.footLength ?? 1.0);
+  const footWidth = footAnkle * 1.1 * (p.footWidth ?? 1.0);
   const footHeight = 0.07 * (p.footHeight ?? 1.0);
   const footBottomOffset = footHeight * 0.82;
 
@@ -286,14 +318,7 @@ export function buildArticulatedBody(
 
   // ─── Torso ───
   const torso = joint(`${name}_torso`, hip);
-  const torsoMesh = tapered(
-    `${name}_torsoM`,
-    torsoH,
-    chestTop,
-    waist,
-    bodyMat,
-    new Vector3(1, 1, torsoD / Math.max(chestTop, waist, 0.001)),
-  );
+  const torsoMesh = wedgeTorso(`${name}_torsoM`);
   torsoMesh.position.y = torsoH * s * 0.5;
   torsoMesh.parent = torso;
 
