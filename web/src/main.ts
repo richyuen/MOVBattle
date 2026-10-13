@@ -123,8 +123,9 @@ hemi.groundColor = new Color3(0.25, 0.22, 0.18);
 // The sky fill leans blue, so shade lit by it alone is a cool red-brown and not blood red
 hemi.diffuse = new Color3(0.7, 0.9, 1.6);
 // The sun stands 42 degrees up, so a man throws a shadow a little longer than himself across the grass, and the tree ring's shadows reach in over the field's edge (at 35 the lit grass went a dull rust):
-// at 50 degrees a shadow was shorter than its owner and lay hidden under the crowd.
-const dir = new DirectionalLight("dir", new Vector3(-0.412, -0.669, 0.618), scene);
+// at 50 degrees a shadow was shorter than its owner and lay hidden under the crowd. It stands on the far side of the field from the battle lens, so shadows fall toward the eye
+// and lie on the open grass in front of the men, not hidden behind them.
+const dir = new DirectionalLight("dir", new Vector3(-0.52, -0.669, -0.53), scene);
 dir.intensity = 1.0; // raised with the lowered sun, so level ground takes the light it did
 // The sun stands off beyond the tree ring with its own depth range. Left at its default spot just above the field,
 // everything taller than a trunk base sits behind the shadow camera and never reaches the shadow map.
