@@ -22,17 +22,17 @@ simulationSystem.ts:shield wall slots (shieldSlotSpacing, RankDepth, WallGap, Sl
 simulationSystem.ts:_buildShovePose arms | level | 160 | approved |
 unitFactory.ts:CLOTH_SHADE | 0.8 | 151 | approved | also darkens armour
 unitFactory.ts:BARE_FOOT_SHADE | 0.72 | 172 | approved | 0.85; no [P]
-unitFactory.ts:team blue colour | (0.42, 0.60, 0.98) | 150 | spent | three values over 120-123
-unitFactory.ts:team red colour | greyed crimson | 142 | spent | six hues over 123-140
+unitFactory.ts:team blue colour | (0.42, 0.60, 0.98) | 150 | spent | three values
+unitFactory.ts:team red colour | greyed crimson | 142 | spent | six hues
 unitFactory.ts:idle lean | 0.26 + h*0.14 | 148 | spent | do not raise, drives lineups
 bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, CHEST_LINE, CHEST_SWELL, SHOULDER_SLOPE, WAIST_DEPTH) | lower limb starts at the upper limb's end, min taper 0.6; chest line 0.36, swell 1.05, shoulders 0.8, waist depth 0.85 | 166 | approved | min taper 0.88
 bodyBuilder.ts:head, neck, limb length, mitt (HEAD_OF_BODY, HEAD_CORNER, NECK_LENGTH, LIMB_STRETCH, MITT_OF_WRIST, MITT_LENGTH, MITT_DEPTH) | head a bevelled block 0.18 of standing height, corners 0.55; neck 0.07; limb segments x1.16; mitt a block fist 1.25 forearm ends wide, 1.4 long, 0.8 deep plus thumb block | 173 | approved | MITT_OF_WRIST 1.0 (172), no further [P]
 bodyBuilder.ts:boot and shin end (SHIN_END, BOOT_OVER_SHIN, BOOT_RISE, BOOT_LENGTH, BOOT_TOE_HEIGHT) | shin keeps 0.78 of its top width; cuff box 1.3 shin ends wide, 0.34 of the shin tall, toe box 1.7 cuffs long, 0.5 its height | 171 | approved |
 bodyBuilder.ts:pelvis block (PELVIS_OF_SHOULDERS, PELVIS_HEIGHT) | box 0.8 of the shoulders wide (never under the waist), 1.2 thigh tops tall, 0.2 of its height down the hip; hip sockets at its lower corners | 170 | approved |
-bodyBuilder.ts:HAT_CUT_FOR_HEAD | 0.7 | 169 | spent | 0.85 rejected 169: scales headTop, every hat and hair shrank
-propBuilder.ts:great helm (HelmFit rim, crown, height) | rim min(1.3 heads, 0.8 shoulders), crown 0.86 rim, height 1.06 heads + neck, slit at the eyes | 174 | spent | crown 0.75 rejected 174: head breaks the helm wall; needs a mechanism
+bodyBuilder.ts:HAT_CUT_FOR_HEAD | 0.7 | 169 | spent | 0.85 rejected: shrinks every hat
+propBuilder.ts:great helm (HelmFit rim, crown, height) | rim min(1.3 heads, 0.8 shoulders), crown 0.86 rim, height 1.06 heads + neck, slit at the eyes | 174 | spent | crown 0.75 rejected; needs a mechanism
 propBuilder.ts:slab sword (buildSlabSword) | blade 0.46 of standing height (greatsword 0.68), 2.8 fists wide within length/5..length/4 (great /6.5../5), 0.3 as thick, blunt point over the last 0.22; guard max(2 blades, 5 fists), grip 1.7 fists (3.2) | 174 | approved |
-bodyBuilder.ts:SLEEVE_BULK | 1.05 | 167 | approved | 1.15; no further [P] (critic 167); also scales thighs
+bodyBuilder.ts:SLEEVE_BULK | 1.05 | 167 | approved | 1.15; no further [P]; also scales thighs
 propBuilder.ts:hair scale/y | 1.5x head, y 0.24 | 160 | approved |
 propBuilder.ts:rshield disc/rim | 0.36 / 0.4 | 160 | approved |
 mapBuilder.ts:BLADES | 720000 | 159 | approved |
@@ -48,17 +48,16 @@ proceduralAnimation.ts:march gait (_buildGait) | per-unit rate 6.8-9.4, free kne
 proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | per-man attitude shouldered/upright/across/trailed at 0.30/0.25/0.25/0.20: own arm hold and a tip vector (jitter 0.3) the prop is turned to in the fist, eased 10/s, dipped 1.5x bob; board arm x -0.3..-0.7, z +-0.15, elbow -0.8..-1.3; bob 0.08-0.18 | 174 | approved | bob spent for [P]
 proceduralAnimation.ts:idle rest (_buildIdlePose tilt, turn, arms) | hip root roll 0.11-0.19, torso -1.5x, neck +0.5x and yaw 0.2-0.6; legs upright (free foot 0.08 out, standing 0.06 in: do not grow); arms plumb, elbow 0.4-0.8, each its own pendulum 0.14-0.32 at rate 0.9-1.6 | 170 | approved |
 proceduralAnimation.ts:landed corpse folds (_writeDeathRest) | back: thigh 0.95+0.3u, knee 2x, arm across chest (z 0.5, y 1.57, elbow -1.7), torso lift 0.3+0.6u in 2 of 5; front: shin 1.3+0.4u, wing arm x 0.7, arch -0.3; neck roll 0.7+0.4u; flank rolls over | 164 | approved |
-main.ts:sun and shadow map (dir direction, intensity, CascadedShadowGenerator, SHADOW_REACH) | sun 42 deg up (-0.52, -0.669, -0.53) at 1.0; 4 cascades 2048, lambda 0.8, stabilised, blend 0.05, reach 70 + pull-back, PCF high, darkness 0.04 | 176 | approved | no azimuth [P]; was (-0.412, -0.669, 0.618) approved 175; 50 deg at 0.9; 35 deg: rust grass
-main.ts:hemi.groundColor | (0.30, 0.30, 0.42) | 176 | approved | (0.25, 0.22, 0.18); no [P]
-mapBuilder.ts:blade shade (RootShadowPlugin, blade emissive) | blades look the shadow up at the lawn under them (y 0.02) and carry the grass emissive | 176 | approved |
+main.ts:sun and shadow map (dir direction, intensity, CascadedShadowGenerator, SHADOW_REACH) | sun 42 deg up (-0.52, -0.669, -0.53) at 1.0; 4 cascades 2048, lambda 0.8, stabilised, blend 0.05, reach 70 + pull-back, PCF high, darkness 0.04 | 176 | approved | no azimuth [P]; was (-0.412, -0.669, 0.618) approved 175
+main.ts:hemi.groundColor | (0.30, 0.30, 0.42) | 176 | approved | no [P]
+mapBuilder.ts:blade shade (RootShadowPlugin, BLADE_SIGHT_REACH, blade emissive) | each blade vertex looks the shadow up where its line of sight meets the lawn (reach 4 m); blades carry the grass emissive | 177 | approved | from its own root (176)
 bodyBuilder.ts:joint stubs (JOINT_STUB, JOINT_STUB_END) | each limb segment overruns its elbow or knee by 0.45 of its width there, drawn in to 0.6 | 175 | approved |
-bodyBuilder.ts:sleeve head (SLEEVE_HEAD, _PLATE, _DROP, _RISE, _CROWN) | upper arm swells over its top 0.4 to a head 1.35 sleeves wide (1.1 under a pad), crown 0.35 tall drawn in to 0.6, merged in the arm mesh; forearm stub its own mesh in the upper arm's material (unitFactory) | 176 | approved | sphere cap 1.3 (160)
+bodyBuilder.ts:sleeve head (SLEEVE_HEAD, _PLATE, _DROP, _RISE, _CROWN) | upper arm swells over its top 0.4 to a head 1.35 sleeves wide (1.1 under a pad), crown 0.35 tall drawn in to 0.6, merged in the arm mesh; forearm stub its own mesh in the upper arm's material (unitFactory) | 176 | approved |
+bodyBuilder.ts:thigh (THIGH_OF_LEG, THIGH_HEAD, THIGH_LAP) | thigh at least 0.2 of the leg's length, head 1.15 thighs merged in the leg mesh (no hip caps), pelvis at least 0.9 of the pair | 177 | approved |
 vehicleBuilder.ts:catapult arm/posts/bucket/wheels | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 167 | wall-second-rank-parallel | battle-feel.a | approved
-- 167 | squat-proportions | unit-look.c | approved
 - 168 | rear-rank-march-depth | battle-feel.a | approved
 - 168 | pin-ball-head | unit-look.c | approved
 - 169 | round-fist-hands | unit-look.c | approved
@@ -77,6 +76,8 @@ vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 
 - 175 | knob-joint-stick-limbs | unit-look.c | approved
 - 176 | shadow-shredded-by-grass | maps-light.b | approved
 - 176 | ball-shoulders-on-stick-arms | unit-look.c | approved
+- 177 | shadow-sawtooth-hard-edge | maps-light.b | approved
+- 177 | wire-legs | unit-look.c | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
