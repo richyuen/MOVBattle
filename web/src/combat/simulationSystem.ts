@@ -290,8 +290,8 @@ export class SimulationSystem {
           const weightedMassB = resistanceB * this._collisionMomentumMultiplier(b);
           const weightedMassTotal = weightedMassA + weightedMassB;
           const compressionRatio = overlap / Math.max(0.05, minDistance);
-          // Allies shove each other apart but do not knock each other over: contact inside a team adds nothing to balance pressure. A blow reaches the rank behind through the spillover below.
-          const sameTeamPressureScale = 0;
+          // Allies shove each other apart and barely unbalance each other: contact inside a team adds balance pressure only as the two are squeezed together, 0.15 at full overlap. A blow reaches the rank behind through the spillover below.
+          const sameTeamPressureScale = 0.15 * compressionRatio;
           const enemyPressureScale = 0.92 + compressionRatio * 0.46 + impactSpeed * 0.08;
           const contactPressureScale = sameTeam ? sameTeamPressureScale : enemyPressureScale;
           const pressureScaleA = contactPressureScale * this._collisionMomentumMultiplier(b);
