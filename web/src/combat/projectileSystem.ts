@@ -1,6 +1,6 @@
 import {
   Scene, Vector3, MeshBuilder, Color3, Mesh, TransformNode,
-  PBRMetallicRoughnessMaterial, ParticleSystem, VertexBuffer,
+  PBRMetallicRoughnessMaterial, ParticleSystem, VertexBuffer, Ray,
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { VisualEffects } from "./visualEffects";
@@ -353,43 +353,56 @@ export class ProjectileSystem {
     }
   }
 
-  /** Shafts stay where they land: in the body they struck, or slanted into the ground if it was already down. */
+  /**
+   * Shafts stay where they land. One that strikes a standing body is carried on along its own line of flight to the hide it meets first, of whatever the body is built
+   * from: a man's chest, his thigh or his shield arm, a mammoth's flank or its skull. It is left standing out of that place with only its head sunk in, and goes on with
+   * the part it struck. One whose mark is already down comes to earth where the mark stood and stands planted in the turf, steep, its head buried and its tail in the air.
+   */
   private _leaveAsLitter(p: ActiveProjectile, struck: boolean): boolean {
     if (p.shape !== "arrow" && p.shape !== "bolt" && p.shape !== "spear") return false;
     const mesh = p.mesh;
+    const half = p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.4 : 0.24; // from the shaft's middle to the root of its head
+    const vary = (salt: number): number => {
+      const v = Math.sin((p.origin.x + p.origin.z * 1.7 + this._litter.length) * 12.9898 + salt * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const along = (): Vector3 => {
+      const level = Math.cos(mesh.rotation.x);
+      return new Vector3(Math.sin(mesh.rotation.y) * level, -Math.sin(mesh.rotation.x), Math.cos(mesh.rotation.y) * level);
+    };
     if (struck) {
-      // Driven a quarter of the way in toward the point it was aimed at, each shaft at its own height and its own
-      // step across the body and knocked off its line of flight, so a body hit many times bristles instead of carrying
-      // one parallel bundle; then carried by the torso.
-      const vary = (salt: number): number => {
-        const v = Math.sin((p.origin.x + p.origin.z * 1.7 + this._litter.length) * 12.9898 + salt * 78.233) * 43758.5453;
-        return v - Math.floor(v);
-      };
-      const aim = p.target.position.clone();
-      aim.y += p.targetLift + (vary(1) - 0.5) * 0.35;
-      const across = (vary(2) - 0.5) * 0.36;
-      const flight = aim.subtract(p.origin);
+      const body = p.target.body;
+      // The body is asked where it stands now, not where it was last drawn
+      body.root.computeWorldMatrix(true);
+      for (const part of body.root.getDescendants(false)) part.computeWorldMatrix(true);
+      const hide = body.allMeshes.filter((m) => m.isVisible && m.isEnabled());
+      // Each shaft comes in at its own height and its own step across the body, so one hit many times bristles instead of carrying one bundle
+      const flight = along();
       const span = Math.hypot(flight.x, flight.z) || 1;
-      aim.x += (-flight.z / span) * across;
-      aim.z += (flight.x / span) * across;
-      Vector3.LerpToRef(mesh.position, aim, 0.25, mesh.position);
-      mesh.position.y = aim.y;
+      const across = (vary(2) - 0.5) * 0.36;
+      const reach = p.target.definition.collisionRadius + 2;
+      const from = mesh.position.subtract(flight.scale(reach));
+      from.x += (-flight.z / span) * across;
+      from.y += (vary(1) - 0.5) * 0.35;
+      from.z += (flight.x / span) * across;
+      const heart = (body.torso ?? body.root).getAbsolutePosition();
+      // A line of flight that passes between the legs or over a shoulder is bent in to the chest
+      const met = new Ray(from, flight, reach * 2).intersectsMeshes(hide)[0]
+        ?? new Ray(from, heart.subtract(from).normalize(), reach * 2 + 2).intersectsMeshes(hide)[0];
+      // Knocked off its line as it bites
       mesh.rotation.x += (vary(3) - 0.5) * 0.7;
       mesh.rotation.y += (vary(4) - 0.5) * 0.7;
-      // A stuck shaft is half as thick as one in flight and stands back along its own line until only the head is
-      // inside the body, so it juts out of the side it came in by and not out of both.
-      mesh.scaling.x *= 0.5;
-      mesh.scaling.y *= 0.5;
-      const back = (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.28 : 0.24) - 0.07;
-      const level = Math.cos(mesh.rotation.x);
-      mesh.position.x -= Math.sin(mesh.rotation.y) * level * back;
-      mesh.position.y += Math.sin(mesh.rotation.x) * back;
-      mesh.position.z -= Math.cos(mesh.rotation.y) * level * back;
-      mesh.setParent(p.target.body.torso ?? p.target.body.root);
+      const bite = met?.pickedPoint ?? heart;
+      mesh.position.copyFrom(bite).subtractInPlace(along().scale(half - 0.07));
+      // Carried by the joint the struck part hangs from
+      let holder = met?.pickedMesh?.parent ?? null;
+      while (holder instanceof Mesh) holder = holder.parent;
+      mesh.setParent((holder as TransformNode | null) ?? body.torso ?? body.root);
     } else {
-      const vary = Math.abs(p.origin.x * 7.31 + p.origin.z * 3.17) % 1;
-      mesh.position.set(p.targetPos.x + (vary - 0.5) * 0.8, 0.14, p.targetPos.z + ((vary * 7) % 1 - 0.5) * 0.8);
-      mesh.rotation.x = 0.35 + vary * 0.35;
+      const lean = 1.0 + vary(3) * 0.35;
+      mesh.rotation.x = lean;
+      mesh.rotation.y += (vary(4) - 0.5) * 0.9;
+      mesh.position.set(p.targetPos.x + (vary(1) - 0.5) * 0.8, Math.sin(lean) * half - 0.1, p.targetPos.z + (vary(2) - 0.5) * 0.8);
     }
     this._litter.push({ mesh, owner: struck ? p.target : null });
     if (this._litter.length > 60) this._litter.shift()!.mesh.dispose();
@@ -501,21 +514,21 @@ export class ProjectileSystem {
 
     switch (shape) {
       case "arrow": {
-        const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.5, diameter: 0.025, tessellation: 4 }, this._scene);
+        const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.75, diameter: 0.035, tessellation: 4 }, this._scene); // at 0.5 by 0.025 a shaft left standing in a body did not show across the field
         shaft.rotation.x = Math.PI / 2;
         shaft.material = this._getMat("wood_shaft", WOOD_SHAFT_COLOR);
         shaft.parent = root;
-        const tip = MeshBuilder.CreateCylinder("tip", { height: 0.08, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, this._scene);
+        const tip = MeshBuilder.CreateCylinder("tip", { height: 0.1, diameterTop: 0, diameterBottom: 0.055, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
-        tip.position.z = 0.28;
+        tip.position.z = 0.42;
         tip.material = this._getMat(`arrow_tip_${attackerTeam}`, palette.bright);
         tip.parent = root;
         // Fletching
-        const fletch = MeshBuilder.CreateBox("fletch", { width: 0.08, height: 0.005, depth: 0.06 }, this._scene);
-        fletch.position.z = -0.2;
+        const fletch = MeshBuilder.CreateBox("fletch", { width: 0.11, height: 0.008, depth: 0.09 }, this._scene);
+        fletch.position.z = -0.32;
         fletch.material = this._getMat(`fletch_${attackerTeam}`, palette.primary);
         fletch.parent = root;
-        this._addStreak(root, 0.25, 1.6);
+        this._addStreak(root, 0.375, 1.6);
         break;
       }
       case "bolt": {
