@@ -222,7 +222,7 @@ const tribal = makeFaction(FactionId.Tribal, "tribal", [
   ["stoner", "Stoner", 160, "thrower", { projectileHint: "stone", weaponHint: "stone" }],
   ["bone_mage", "Bone Mage", 220, "special_magic", { weaponHint: "bone_staff" }],
   ["chieftain", "Chieftain", 400, "boss_melee", { weaponHint: "club" }],
-  ["mammoth", "Mammoth", 1200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 0.92 }],
+  ["mammoth", "Mammoth", 1200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6 }],
 ]);
 
 const farmer = makeFaction(FactionId.Farmer, "farmer", [
