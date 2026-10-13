@@ -79,6 +79,8 @@ const COOL_ARMOUR_HUE_SHIFT = 12;
 const COOL_ARMOUR_SATURATION = 0.85;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
 const BOOT_SHADE = 0.7;
+// Under cool plate the boot is a neutral grey and the leg is the plate itself: a darker blue leg and boot ran into one navy with the cuirass, or near black.
+const COOL_ARMOUR_BOOT = new Color3(0.40, 0.42, 0.46);
 const BARE_FOOT_SHADE = 0.85;
 // Red darkened as far as blue goes brick-maroon, so warm cloth, plate, trousers and boots keep only a quarter of each darkening and stay coral.
 const WARM_SHADE_KEEP = 0.25;
@@ -224,11 +226,12 @@ export class UnitFactory {
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? (cool ? COOL_ARMOUR_SHADE : shade(ARMOUR_SHADE)) : 1), new Color3());
       // Trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass, and cool legs shaded from the tunic were one navy with it.
       const legBase = isArmored ? body.bodyMaterial.baseColor : body.skinMaterial.baseColor;
-      const trouserMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE)));
+      const plateLegs = isArmored && cool;
+      const trouserMaterial = getMaterialFactory().getCloth(plateLegs ? legBase : legBase.scale(legShade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
       }
-      const bootMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE) * legShade(BOOT_SHADE)));
+      const bootMaterial = getMaterialFactory().getCloth(plateLegs ? COOL_ARMOUR_BOOT : legBase.scale(legShade(TROUSER_SHADE) * legShade(BOOT_SHADE)));
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
