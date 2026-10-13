@@ -501,7 +501,7 @@ export class ProceduralAnimator {
     return {
       weapon: held ? { raise: -0.35 - h(81) * 0.5, out: 0.12 + h(82) * 0.28, elbow: -0.7 - h(83) * 0.6 } : null,
       board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
-      bob: 0.08 + h(84) * 0.1,
+      bob: 0.15 + h(84) * 0.15,
       beat: h(88) * Math.PI,
     };
   }
