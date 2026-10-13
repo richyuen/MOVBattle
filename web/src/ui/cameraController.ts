@@ -242,10 +242,12 @@ export class CameraController {
       // at least its sideways offset from the view axis (plus a body of margin) over the frame half-width.
       const ahead = Math.hypot(center.near.x - to.target.x, center.near.z - to.target.z);
       const fit = (across: number): number =>
-        ahead * Math.cos(side) + across * Math.sin(side) + (Math.abs(across * Math.cos(side) - ahead * Math.sin(side)) + 1.2) / 0.6;
+        ahead * Math.cos(side) + across * Math.sin(side) + (Math.abs(across * Math.cos(side) - ahead * Math.sin(side)) + 1.2) / 0.48; // 0.6 fitted the 0.8 lens: under the 0.65 one the crews at the ends of the line were cut by the frame edges
       const halfWidth = center.near.halfWidth ?? 0;
       to.radius = Math.min(14, Math.max(4.5, fit(halfWidth), fit(-halfWidth)));
-      this.camera.fov = 0.65; // at the placement 0.8 the crews were a sixth of the frame high under more than half a frame of sky. The fit above is still for the 0.8 lens: the far end of a long line runs off the frame, as a TABS gun line does
+      this.camera.fov = 0.65; // at the placement 0.8 the crews were a sixth of the frame high under more than half a frame of sky
+      // The eye sits 0.3 lower than over a melee and never under half a metre: from 1.5 less the pitch the near crews were seen from above their caps
+      to.target.y = Math.max(1.2, 0.5 - to.radius * Math.cos(to.beta));
       this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     } else {
       // Melee: the eye sits at head height and looks a touch up, so the ground is the bottom third of the
