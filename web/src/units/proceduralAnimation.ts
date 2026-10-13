@@ -498,8 +498,8 @@ export class ProceduralAnimator {
       lean: 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       spread: 0.2 + h(43) * 0.16,
-      leftElbow: 0.45 + h(44) * 0.5,
-      rightElbow: 0.45 + h(45) * 0.5,
+      leftElbow: 0.8 + h(44) * 0.6, // at 0.45-0.95 a standing arm was near enough a straight rod hung off the shoulder
+      rightElbow: 0.8 + h(45) * 0.6,
       stride: 0.2 + h(46) * 0.14,
       splay: 0.08 + h(47) * 0.04,
     };
@@ -519,9 +519,9 @@ export class ProceduralAnimator {
     b.neck.rotation.z = Math.sin(t * 1.8 + 0.5) * wobble * 1.2;
     b.neck.rotation.x = Math.sin(t * 1.3 + 2) * wobble * 0.8;
 
-    // Arms hang off the ribs, one ahead of the body and one behind, each elbow folded its own amount
-    b.leftShoulder.rotation.x = -p.side * 0.22 + Math.sin(t * 1.1) * wobble * 2;
-    b.rightShoulder.rotation.x = p.side * 0.22 + Math.sin(t * 1.1 + Math.PI) * wobble * 2;
+    // Arms are carried off the ribs, one ahead of the body and one behind, each elbow folded its own amount, and swing a quarter radian either way from the shoulder (at half that they hung dead)
+    b.leftShoulder.rotation.x = -p.side * 0.22 + Math.sin(t * 1.1) * wobble * 4;
+    b.rightShoulder.rotation.x = p.side * 0.22 + Math.sin(t * 1.1 + Math.PI) * wobble * 4;
     b.leftShoulder.rotation.z = -p.spread;
     b.rightShoulder.rotation.z = p.spread;
     b.leftElbow.rotation.x = -p.leftElbow + Math.sin(t * 1.4) * wobble;
