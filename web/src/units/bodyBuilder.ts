@@ -442,7 +442,7 @@ export function buildArticulatedBody(
   // ─── Shoulder Caps (hide joint seams) ───
   // Wider than the sleeve top, so the cap shows as a rounded shoulder on the torso corner and not only a seam filler
   // On a breastplate the cap is small and flattened into its corner: a full ball there reads as a separate bead
-  const shoulderCapDiam = upperArmTop * (options.showShoulderPads ? 1.1 : 1.55);
+  const shoulderCapDiam = upperArmTop * (options.showShoulderPads ? 1.1 : 1.3);
   const capScale = options.showShoulderPads ? new Vector3(1, 0.7, 1) : Vector3.One();
   const lShoulderCap = sphere(`${name}_lShoulderCap`, shoulderCapDiam, bodyMat, capScale, capSegments);
   lShoulderCap.parent = leftShoulder;
