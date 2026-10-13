@@ -272,7 +272,7 @@ export class CameraController {
     const from = this.captureViewState();
     const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
     // The bands cover the top and bottom of the frame, so a survivor gets ~0.28 radius of height either side of
-    // the target. A giant among the survivors is not fitted: the shot stands 3 off the human-sized survivor nearest the middle of the group and aims 1 above the ground, so the giant crops and the humans are not specks under it.
+    // the target. A giant among the survivors is not fitted: the shot stands 4.5 to 6 off the human-sized survivor farthest from it and aims 0.8 above the ground, so the giant crops and the humans are not specks under it.
     const giant = box.height > 4.2;
     const tall = Math.min(box.height, 4.2);
     const fitHeight = (tall * 0.5 + 0.7) / 0.28;
@@ -285,8 +285,12 @@ export class CameraController {
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
     const giantRadius = Math.min(6, Math.max(4.5, giantOff - 2.5));
     const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
-    // A giant too near the focus to stand 4.5 clear behind the eye is not behind it at all: its tusks and legs came round into the frame. The eye goes a quarter turn round the focus and stands side-on to the giant, which leaves the frame.
-    const farSide = giantOff - 4.5 < 3 ? 0.5 * Math.PI : 0;
+    // A giant too near the focus to stand 4.5 clear behind the eye is not behind it at all: its tusks and legs came round into the frame. The eye goes a quarter turn round the focus and stands side-on to the giant,
+    // and aims GIANT_SHY past the men on the side away from it, so its near leg and tusk are off the edge of the frame and not the near third of it. Turning further round, either way, only brought more of it in.
+    const sideOn = giant && giantOff > 0.01 && giantOff - 4.5 < 3;
+    const farSide = sideOn ? 0.5 * Math.PI : 0;
+    const GIANT_SHY = 1.0; // at 1.5 the giant was gone but the men stood in the near third of the frame beside an empty field
+    const shy = sideOn && box.giant ? { x: (box.focus.x - box.giant.x) / giantOff * GIANT_SHY, z: (box.focus.z - box.giant.z) / giantOff * GIANT_SHY } : { x: 0, z: 0 };
     const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) + farSide : from.alpha;
     const to: CameraViewState = {
       alpha: from.alpha + Math.atan2(Math.sin(awayFromGiant - from.alpha), Math.cos(awayFromGiant - from.alpha)), // swing the short way round
@@ -295,9 +299,9 @@ export class CameraController {
       beta: giant ? Math.PI / 2.1 : Math.PI / 1.9,
       radius,
       target: {
-        x: giant ? (box.group ?? box.focus).x : spread ? box.focus.x : (box.minX + box.maxX) / 2,
+        x: giant ? (box.group ?? box.focus).x + shy.x : spread ? box.focus.x : (box.minX + box.maxX) / 2,
         y: box.baseY + (giant ? 0.8 : Math.max(1, tall * 0.5)),
-        z: giant ? (box.group ?? box.focus).z : spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
+        z: giant ? (box.group ?? box.focus).z + shy.z : spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
