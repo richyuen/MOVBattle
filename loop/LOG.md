@@ -180,3 +180,4 @@ iter 178 | [S] shadow-hard-heavy-maroon, [S] crew-stick-body, [P] blade-fringe-a
 iter 179 | [S] shield-rank-one-pose, [S] clothes-are-paint, [P] shade-density, [P] limb-belly-invisible | 3/4 approved | passes 18 -> 18
 iter 180 | [S] nothing-sticks, [S] pinched-link-limbs, [P] spears-one-parallel-bundle (re-audit 19/24) | 3/3 approved | passes 19 -> 20
 iter 181 | [S] lineup-stands-to-attention, [S] arm-is-a-detached-pillar | 2/2 approved | passes 20 -> 20
+iter 182 | [S] aimed-men-stand-to-attention, [S] shoulder-shelf-armpit-gap, [P] YOKE_REACH, [P] sunk-stance-half-squat | 4/4 approved | passes 20 -> 20
