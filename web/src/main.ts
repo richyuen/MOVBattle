@@ -1798,6 +1798,8 @@ function spawnHarnessUnit(
   dismissTitleIntro();
   if (stateMachine.currentState !== GameState.Placement) return null;
   const unit = spawnRuntimeUnit(unitId, team, new Vector3(position.x, position.y ?? 0, position.z), options);
+  // A sandbox unit spawned here is paid for like one placed by hand, so the counter shows what the side on the field cost; a campaign scenario's own units are not bought.
+  if (unit && !isCampaignModeActive()) budgetSystem.trySpend(team, unit.definition.cost);
   updateBudgetDisplay();
   return unit;
 }
