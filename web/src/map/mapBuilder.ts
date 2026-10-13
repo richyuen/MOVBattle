@@ -73,6 +73,82 @@ vec4 bladeRoot=vec4(worldPos.xz+bladeSight,${BLADE_ROOT_Y.toFixed(3)},1.0).xzyw;
   }
 }
 
+/**
+ * The lawn's own shadow filter and shade colour. The engine's filter gives every shadow one hair-thin edge, and its contact-hardening one finds a blocker only where one of a
+ * few taps strewn a light's width apart happens to land, so a limb's or a spear's shadow drops out of it. Here the lawn reads the sun's map in bands by how far above it the
+ * caster stands: the map is asked again with the lawn's depth lifted toward the sun by LAWN_BAND_RISE, which leaves only what stands that much higher, and each band is blurred
+ * over its own radius and laid in at its own weight. A boot's or a wheel's shadow stays crisp and dark where it meets the ground; a chest's is soft; a head's, a spear tip's and
+ * a tree's are wide, pale smudges. What is shaded is then turned from the grass's warm glow toward the sky's blue (LAWN_SHADE_TINT, LAWN_SHADE_LIFT), by how deep the shade is.
+ */
+const LAWN_BAND_RISE = [0.4, 1.6];           // metres along the sun's ray: what stands less than the first above the lawn is contact, more than the second is high
+const LAWN_BAND_BLUR = [0.025, 0.10, 0.24];  // metres: blur radius of the contact, middle and high bands
+const LAWN_BAND_WEIGHT = [1.0, 0.92, 0.8];   // how much of the sun each band's shadow takes
+const LAWN_SHADE_TINT = new Color3(0.80, 1.0, 1.3);
+const LAWN_SHADE_LIFT = new Color3(0.0, 0.02, 0.07);
+const LAWN_TAPS = 16;
+class LawnShadePlugin extends MaterialPluginBase {
+  constructor(material: Material) {
+    super(material, "LawnShade", 210);
+    this._enable(true);
+  }
+
+  getClassName(): string {
+    return "LawnShadePlugin";
+  }
+
+  getCustomCode(shaderType: string): { [pointName: string]: string } | null {
+    if (shaderType !== "fragment") return null;
+    const f = (v: number) => v.toFixed(4);
+    const vec = (c: Color3) => `vec3(${f(c.r)},${f(c.g)},${f(c.b)})`;
+    // An even spiral of taps over a unit disc
+    const disc = Array.from({ length: LAWN_TAPS }, (_, i) => {
+      const r = Math.sqrt((i + 0.5) / LAWN_TAPS), a = i * 2.399963;
+      return `vec2(${f(r * Math.cos(a))},${f(r * Math.sin(a))})`;
+    }).join(",");
+    // Stands in for the engine's cascaded filter, with its arguments, for whichever light slot the sun holds
+    const slot = (x: number) => `
+#if defined(SHADOWCSM${x})
+float lawnShade${x}(float layer,vec4 fromLight,float depthMetric,highp sampler2DArrayShadow map,vec2 sizeAndInverse,float darkness,float edgeFalloff){
+vec3 clipSpace=fromLight.xyz/fromLight.w;
+vec3 uvDepth=vec3(0.5*clipSpace.xyz+vec3(0.5));
+uvDepth.z=clamp(ZINCLIP,0.,GREATEST_LESS_THAN_ONE);
+mat4 sun=lightMatrix${x}[int(layer)];
+float perMetre=0.5*length(vec3(sun[0].x,sun[1].x,sun[2].x));
+float rise=length(vec3(sun[0].z,sun[1].z,sun[2].z));
+#ifndef IS_NDC_HALF_ZRANGE
+rise*=0.5;
+#endif
+float mid=max(uvDepth.z-rise*${f(LAWN_BAND_RISE[0])},0.);
+float high=max(uvDepth.z-rise*${f(LAWN_BAND_RISE[1])},0.);
+float contactAll=0.,contactMid=0.,midMid=0.,midHigh=0.,highHigh=0.;
+for(int i=0;i<${LAWN_TAPS};i++){
+vec2 at=LAWN_DISC[i]*perMetre;
+contactAll+=texture2D(map,vec4(uvDepth.xy+at*${f(LAWN_BAND_BLUR[0])},layer,uvDepth.z));
+contactMid+=texture2D(map,vec4(uvDepth.xy+at*${f(LAWN_BAND_BLUR[0])},layer,mid));
+midMid+=texture2D(map,vec4(uvDepth.xy+at*${f(LAWN_BAND_BLUR[1])},layer,mid));
+midHigh+=texture2D(map,vec4(uvDepth.xy+at*${f(LAWN_BAND_BLUR[1])},layer,high));
+highHigh+=texture2D(map,vec4(uvDepth.xy+at*${f(LAWN_BAND_BLUR[2])},layer,high));
+}
+float shade=${f(LAWN_BAND_WEIGHT[0])}*max(contactMid-contactAll,0.)+${f(LAWN_BAND_WEIGHT[1])}*max(midHigh-midMid,0.)+${f(LAWN_BAND_WEIGHT[2])}*(${LAWN_TAPS}.-highHigh);
+return computeFallOff(mix(darkness,1.,1.-clamp(shade/${LAWN_TAPS}.,0.,1.)),clipSpace.xy,edgeFalloff);
+}
+#define computeShadowWithCSMPCF5 lawnShade${x}
+#endif`;
+    return {
+      CUSTOM_FRAGMENT_DEFINITIONS: `
+#ifdef SHADOWS
+const vec2 LAWN_DISC[${LAWN_TAPS}]=vec2[${LAWN_TAPS}](${disc});${[0, 1, 2, 3].map(slot).join("")}
+#endif`,
+      // aggShadow is the mean over the lights of what each lets through, and only the sun is ever shadowed
+      CUSTOM_FRAGMENT_BEFORE_FOG: `
+#ifdef SHADOWS
+float lawnShaded=clamp((1.-aggShadow)*numLights,0.,1.);
+color.rgb=mix(color.rgb,color.rgb*${vec(LAWN_SHADE_TINT)}+${vec(LAWN_SHADE_LIFT)},lawnShaded);
+#endif`,
+    };
+  }
+}
+
 /** The sun's shadow generator, when the scene has one: trees register with it so they throw ground shadows like units do */
 function sunShadows(scene: Scene): ShadowGenerator | null {
   return (scene.getLightByName("dir")?.getShadowGenerator() as ShadowGenerator | null | undefined) ?? null;
@@ -218,7 +294,9 @@ export class TribalSandboxMapBuilder {
       // The lawn's own glow, so a shaded blade is the plum of the shaded lawn under it and not a near-black tuft on it
       blade.emissiveColor = grass.emissiveColor.clone();
       new RootShadowPlugin(blade);
+      new LawnShadePlugin(blade);
     }
+    new LawnShadePlugin(grass);
 
     // Far treeline and off-island mountains: colors pre-mixed toward the sky so they sit back in the haze
     for (const name of ["hazeTrees", "hazeTreesShade", "farRock", "farRockShade", "farSnow"]) {
