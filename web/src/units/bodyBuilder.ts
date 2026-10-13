@@ -140,9 +140,14 @@ const DEFAULT_PROPORTIONS: BodyProportions = {
   footHeight: 1.0,
 };
 
-/** TABS silhouette: small head on long limbs a good quarter as thick as the torso is wide, so the torso is the wide block. Applied on top of every unit's own proportions. */
-const HEAD_SHRINK = 0.78;
+/** TABS silhouette: a tall block of a head on long limbs a good quarter as thick as the torso is wide, so the torso is the wide block. Applied on top of every unit's own proportions. */
 const LIMB_THIN = 1.12;
+/** The head sizes itself from the body it stands on: this share of the standing height for default proportions, a little under a fifth. */
+const HEAD_OF_BODY = 0.18;
+/** The head block's bevelled corners sit this share of the way out to its flat sides: 1 is a plain box, 0.41 a regular octagon. */
+const HEAD_CORNER = 0.55;
+/** Hats, crowns and halos were cut for a round head this many head units across, less the corners a block has: the hat anchor scales them up to the head they now sit on. */
+const HAT_CUT_FOR_HEAD = 0.7;
 /** The head stands clear of the shoulders on a neck this long, a third of its own height: head, eyes and hat anchor all ride on top of it. */
 const NECK_LENGTH = 0.07;
 /** Arms and legs are stretched by this much over their old segment lengths, so the body is some six and a half heads tall and the hands hang to mid thigh. */
@@ -247,6 +252,34 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
+  /** Head: a tall flat-faced block and not a ball. Four flat sides with the face square to the front and narrow bevels at the corners, widest at the brow, under a flat crown and drawn in to a narrower flat jaw. */
+  function blockHead(n: string, size: number, mat: PBRMetallicRoughnessMaterial, scaling: Vector3): Mesh {
+    const m = MeshBuilder.CreateCylinder(n, { height: size * s, diameter: size * s, tessellation: 8, subdivisions: 2 }, scene);
+    const positions = m.getVerticesData("position")!;
+    const half = size * s * 0.5;
+    const turn = Math.PI / 8;
+    for (let i = 0; i < positions.length; i += 3) {
+      // Turned so a flat and not a corner faces front, then each ring vertex is pushed out to the side it belongs to.
+      let x = positions[i] * Math.cos(turn) - positions[i + 2] * Math.sin(turn);
+      let z = positions[i] * Math.sin(turn) + positions[i + 2] * Math.cos(turn);
+      const y = positions[i + 1];
+      if (Math.max(Math.abs(x), Math.abs(z)) > half * 0.1) {
+        const onSide = Math.abs(x) >= Math.abs(z);
+        x = Math.sign(x) * half * (onSide ? 1 : HEAD_CORNER);
+        z = Math.sign(z) * half * (onSide ? HEAD_CORNER : 1);
+      }
+      const ring = y > half * 0.5 ? 0.9 : y < -half * 0.5 ? 0.78 : 1;
+      positions[i] = x * ring;
+      positions[i + 1] = ring === 1 ? half * 0.2 : y;
+      positions[i + 2] = z * ring;
+    }
+    m.setVerticesData("position", positions);
+    m.refreshBoundingInfo();
+    m.scaling.copyFrom(scaling);
+    m.material = mat;
+    allMeshes.push(m);
+    return m;
+  }
   /** Mitt hand: a flat faceted, thumbless slab a little wider than the wrist it ends, longer than wide and thin through the palm. */
   function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
     return sphere(n, size, mat, new Vector3(0.6, 0.8, 0.4), 2);
@@ -290,11 +323,6 @@ export function buildArticulatedBody(
   // ...and its waist widens by half that flare, so the plate is a broad slab and not a funnel down to the belt.
   const waist = torsoBottom * (options.showShoulderPads ? 1.12 : 1);
 
-  const headHeight = 0.216 * HEAD_SHRINK * p.headSize * (p.headLength ?? 1.0);
-  const headWidth = 0.192 * HEAD_SHRINK * p.headSize * (p.headWidth ?? 1.0);
-  const headDepth = 0.176 * HEAD_SHRINK * p.headSize * (p.headDepth ?? 1.0);
-  const headBase = Math.max(headHeight, headWidth, headDepth);
-
   const upperArmH = 0.264 * LIMB_STRETCH * p.armLength;
   const lowerArmH = 0.242 * LIMB_STRETCH * p.armLength;
   const upperArmTop = 0.09 * LIMB_THIN * SLEEVE_BULK * Math.max(0.8, p.bulk * 0.95) * (p.upperArmWidth ?? 1.0);
@@ -316,6 +344,14 @@ export function buildArticulatedBody(
   const footWidth = footAnkle * 1.1 * (p.footWidth ?? 1.0);
   const footHeight = 0.07 * (p.footHeight ?? 1.0);
   const footBottomOffset = footHeight * 0.82;
+
+  // The head is cut to the body under it: HEAD_OF_BODY of the standing height for the default head, and a unit's own head proportions scale it from there.
+  const belowHead = upperLegH + lowerLegH + footBottomOffset + torsoH + NECK_LENGTH;
+  const headUnit = belowHead * HEAD_OF_BODY / (1 - HEAD_OF_BODY) * p.headSize / (0.216 * DEFAULT_PROPORTIONS.headSize * (DEFAULT_PROPORTIONS.headLength ?? 1.0));
+  const headHeight = 0.216 * headUnit * (p.headLength ?? 1.0);
+  const headWidth = 0.192 * headUnit * (p.headWidth ?? 1.0);
+  const headDepth = 0.176 * headUnit * (p.headDepth ?? 1.0);
+  const headBase = Math.max(headHeight, headWidth, headDepth);
 
   // ─── Hip (root pivot for body) ───
   const hip = joint(`${name}_hip`, root);
@@ -349,7 +385,7 @@ export function buildArticulatedBody(
     allMeshes.push(neckMesh);
   }
 
-  const headMesh = sphere(
+  const headMesh = blockHead(
     `${name}_headM`,
     headBase,
     skinMat,
@@ -358,7 +394,6 @@ export function buildArticulatedBody(
       headHeight / Math.max(headBase, 0.001),
       headDepth / Math.max(headBase, 0.001),
     ),
-    6,
   );
   headMesh.position.y = neckLength + headHeight * s * 0.5;
   headMesh.parent = neck;
@@ -366,13 +401,14 @@ export function buildArticulatedBody(
 
   const headTop = joint(`${name}_headTop`, neck);
   headTop.position.y = neckLength + headHeight * s;
+  headTop.scaling.setAll(headUnit / (HAT_CUT_FOR_HEAD * p.headSize));
 
-  // ─── Bead Eyes (small black beads, no sclera) ───
-  const eyeDiam = headBase * 0.15;
-  const pupilDiam = headBase * 0.02;
+  // ─── Bead Eyes (small black beads, no sclera): set half into the flat of the face, just under the brow line ───
+  const eyeDiam = headWidth * 0.17;
+  const pupilDiam = headWidth * 0.02;
   const eyeSegs = 6;
-  const eyeY = neckLength + headHeight * s * 0.55;
-  const eyeZ = headDepth * s * 0.44;
+  const eyeY = neckLength + headHeight * s * 0.56;
+  const eyeZ = headDepth * s * 0.49;
   const eyeSpread = headWidth * s * 0.22;
 
   const leftEye = MeshBuilder.CreateSphere(`${name}_lEye`, { diameter: eyeDiam * s, segments: eyeSegs }, scene);
