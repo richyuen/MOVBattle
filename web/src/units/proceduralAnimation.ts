@@ -621,10 +621,10 @@ export class ProceduralAnimator {
           ? { raise: -1.05 - h(81) * 0.2, out: 0.1 + h(82) * 0.1, elbow: -0.45 - h(83) * 0.25, tip: lean(0, 1.6, -0.25), left: { raise: 0.3 + h(97) * 0.2, out: 0.5 + h(98) * 0.2, elbow: -1.5 - h(99) * 0.4 }, plant: true }
           : { raise: -0.45 - h(81) * 0.2, out: -0.05 - h(82) * 0.1, elbow: -1.5 - h(83) * 0.3, tip: lean(-0.45, 0.85, 0.1), left: { raise: -0.7 - h(97) * 0.2, out: -0.3 - h(98) * 0.15, elbow: -1.2 - h(99) * 0.3 }, plant: false }
       : stand < 0.4
-        ? { raise: -2.3 - h(81) * 0.3, out: 0.35 + h(82) * 0.15, elbow: -1.5 - h(83) * 0.3, tip: lean(0.05, 0.45, 0.9), left: { raise: -1.2 - h(97) * 0.3, out: 0.1 + h(98) * 0.2, elbow: -0.3 - h(99) * 0.3 }, plant: false }
+        ? { raise: -2.3 - h(81) * 0.3, out: 0.35 + h(82) * 0.15, elbow: -1.5 - h(83) * 0.3, tip: lean(0.05, 0.45, 0.9), left: { raise: -1.2 - h(97) * 0.3, out: -0.1 + h(98) * 0.25, elbow: -1.2 - h(99) * 0.3 }, plant: false }
         : stand < 0.7
           ? { raise: -2.8 - h(81) * 0.2, out: 0.3 + h(82) * 0.15, elbow: -0.5 - h(83) * 0.3, tip: lean(0, 1, 0.25), left: { raise: 0.3 + h(97) * 0.2, out: 0.5 + h(98) * 0.2, elbow: -1.5 - h(99) * 0.4 }, plant: false }
-          : { raise: -0.3 - h(81) * 0.2, out: 0.25 + h(82) * 0.15, elbow: -0.9 - h(83) * 0.3, tip: lean(0.1, 0.25, 0.95), left: { raise: -1.4 - h(97) * 0.3, out: 0.4 + h(98) * 0.2, elbow: -1.2 - h(99) * 0.3 }, plant: false };
+          : { raise: -0.3 - h(81) * 0.2, out: 0.25 + h(82) * 0.15, elbow: -0.9 - h(83) * 0.3, tip: lean(0.1, 0.25, 0.95), left: { raise: -1.4 - h(97) * 0.3, out: -0.1 + h(98) * 0.25, elbow: -1.2 - h(99) * 0.3 }, plant: false };
     const rodProp = rod && rodHold ? {
       node: rod, rest: Quaternion.FromEulerAngles(rod.rotation.x, rod.rotation.y, rod.rotation.z), grip: rod.position.clone(),
       plant: rodHold.plant ? (rod as Mesh).getBoundingInfo().boundingBox.extendSize.y * rod.scaling.y : undefined,
