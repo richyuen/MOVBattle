@@ -580,8 +580,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
       // A stick with a small point: a head 0.09 across and 0.22 long was as big as a torso once oversized, and a 0.045 shaft a pole.
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.036 * s, tessellation: 6 }, scene);
       shaft.material = mat(scene, new Color3(0.5, 0.35, 0.2));
-      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.16 * s, diameterTop: 0, diameterBottom: 0.055 * s, tessellation: 4 }, scene);
-      tip.position.y = 0.58 * s;
+      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.12 * s, diameterTop: 0, diameterBottom: 0.038 * s, tessellation: 4 }, scene);
+      tip.position.y = 0.56 * s; // seated on the shaft end: a point 0.055 across and 0.16 long was a spade on a stick
       tip.parent = shaft;
       tip.material = mat(scene, type === "harpoon" ? new Color3(0.6, 0.6, 0.65) : new Color3(0.35, 0.35, 0.4));
       shaft.position.y = 0.15 * s; // gripped where it was, 0.35 up from the butt
