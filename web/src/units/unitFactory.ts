@@ -55,7 +55,7 @@ const BODY_METAL_WEIGHT = 0.25;
 // rotated away from the skin hue and a little darker, but nearly as saturated so it still reads as the team's.
 const CLOTH_HUE_SHIFT = 18;
 const CLOTH_SATURATION = 0.92;
-const CLOTH_SHADE = 0.8;
+const CLOTH_SHADE = 1.0;
 // Cool cloth is at least this saturated: at the pale team blue’s own it was the grey-blue of the skin beside it, and every tunic in a lineup was one tone.
 const COOL_CLOTH_SATURATION = 0.55;
 // A tunic takes a fifth of its unit’s accent colour before it is shaded, so a bard’s, an archer’s and a healer’s are three blues and not one.
