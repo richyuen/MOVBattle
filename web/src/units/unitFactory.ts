@@ -54,6 +54,8 @@ const BODY_METAL_WEIGHT = 0.25;
 // Cloth and armour are a different hue from the team-coloured skin they are worn over, not just a darker one:
 // rotated away from the skin hue and a little darker, but nearly as saturated so it still reads as the team's.
 const CLOTH_HUE_SHIFT = 18;
+// Cool cloth turns less far: at 18 a tunic was teal beside the navy tabards and periwinkle skin in the same rank, three hues on one team.
+const COOL_CLOTH_HUE_SHIFT = 8;
 const CLOTH_SATURATION = 0.92;
 const CLOTH_SHADE = 1.0;
 // Cool cloth is at least this saturated: at the pale team blue’s own it was the grey-blue of the skin beside it, and every tunic in a lineup was one tone.
@@ -216,7 +218,7 @@ export class UnitFactory {
       const cool = hsv.r > 150 && hsv.r < 300;
       const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
       const legShade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_LEG_SHADE_KEEP;
-      const hue = isArmored ? hsv.r + (cool ? COOL_ARMOUR_HUE_SHIFT : 0) : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
+      const hue = isArmored ? hsv.r + (cool ? COOL_ARMOUR_HUE_SHIFT : 0) : (hsv.r + (cool ? -COOL_CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
       const saturation = cool ? (isArmored ? Math.max(hsv.g, COOL_ARMOUR_SATURATION) : Math.max(hsv.g * CLOTH_SATURATION, COOL_CLOTH_SATURATION)) : Math.min(1, hsv.g * WARM_SATURATION);
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? (cool ? COOL_ARMOUR_SHADE : shade(ARMOUR_SHADE)) : 1), new Color3());
       // Warm trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass.
