@@ -1160,10 +1160,11 @@ function makeFactionGalleryScenario(
   const singleRank = unitIds.length <= 9;
   return makeGalleryScenario(name, description, unitIds, {
     columns: singleRank ? unitIds.length : undefined,
+    spacingZ: 1.8, // shoulder room only: at the gallery default of 2.4 a seven-unit rank filled the width before the men filled a tenth of the height
     cameraOverride: {
       alpha: -0.2,
       beta: Math.PI / 2.15,
-      radius: singleRank ? 15 : 19,
+      radius: singleRank ? 10.5 : 13,
       target: { x: 0, y: 1.3, z: 0 },
     },
     ...options,
