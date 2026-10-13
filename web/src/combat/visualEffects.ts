@@ -345,14 +345,15 @@ export class VisualEffects {
     // The fireball is mostly self-lit and graded from the inside out: a white-hot heart and a pale yellow inner
     // flame, both lit past white so they burn out to cream on screen, and a soft orange fringe. The inner flame sits between heart and fringe in hue, so it is a step of the grade and not a lemon patch.
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
-    coreMat.emissiveColor = new Color3(2.0, 1.95, 1.6);
+    coreMat.emissiveColor = new Color3(0.6, 0.585, 0.48);
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
-    flashMat.emissiveColor = new Color3(3.4, 3.4, 1.2);
+    flashMat.emissiveColor = new Color3(0.62, 0.61, 0.5);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    flameMat.emissiveColor = new Color3(1.7, 1.25, 0.6);
+    flameMat.emissiveColor = new Color3(0.62, 0.5, 0.3);
     // The foot of the ball is a deeper orange than the fringe, whose own colour burns out to peach beside the heart.
-    const footMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
-    footMat.emissiveColor = new Color3(1.6, 0.45, 0.1);
+    // It is lit and faceted, with a glow for a floor under its shade: unlit and round it was a smooth dome with no form.
+    const footMat = mats.createUnique("stone", new Color3(1, 0.55, 0.2));
+    footMat.emissiveColor = new Color3(0.3, 0.17, 0.06);
     const glow = this._scene.getGlowLayerByName("glow");
     const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
     smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
@@ -378,7 +379,9 @@ export class VisualEffects {
     // None sits above the heart's shoulder: lumps on one ball, not caps over it. The flank lobes are the pale inner flame, bar the two foot lobes: they are a deep orange, both sunk to near their middle in the ground so the orange is a low foot and not half the ball, the lowest and stood out clear of the heart, so the ball stands on a warm foot and is not one pale tone to the ground
     const lobeHeights = [0.5, -0.25, 0.55, -0.3, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 1 || i === 3 ? footMat : flashMat);
+      const foot = i === 1 || i === 3;
+      const lobe = blob("burstFlash", foot ? 2 : 6, i === 0 ? coreMat : foot ? footMat : flashMat);
+      if (foot) (lobe as Mesh).convertToFlatShadedMesh();
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : i === 3 ? 0.4 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
@@ -430,6 +433,7 @@ export class VisualEffects {
     const mound: { mesh: TransformNode; size: number }[] = [];
     for (let i = 0; i < 6; i++) {
       const lobe = blob("burstDust", 2, dustMat);
+      (lobe as Mesh).convertToFlatShadedMesh(); // faceted like the smoke: smooth, the mound was a soft dome
       const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
       const reach = (i === 0 ? 0 : 0.14 + Math.random() * 0.1) * dustScale;
       const size = (i === 0 ? 0.85 : 0.4 + Math.random() * 0.25) * dustScale;
