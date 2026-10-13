@@ -283,11 +283,10 @@ export class CameraController {
     // With the giant's place known the eye stands between it and the focus, its back to the giant: as far off the focus as leaves the giant 2.5 clear behind it,
     // from 3 up to the 4.5 at which a man is whole between the bands, and aimed lower the farther back it stands, down to his middle.
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
+    const giantRadius = Math.min(4.5, Math.max(3, giantOff - 2.5));
+    const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     // A giant too near the focus to stand 4.5 clear behind the eye is not behind it at all: its tusks and legs came round into the frame. The eye goes seven tenths of the way round to the far side of the focus, and the giant is the backdrop, seen from its flank and not square on its rump.
     const farSide = giantOff - 4.5 < 3 ? 0.7 * Math.PI : 0;
-    // Round on the far side nothing stands behind the eye, so it backs off to 6 and the giant's head and back are in the frame, not just its hide down one edge.
-    const giantRadius = farSide ? 6 : Math.min(6, Math.max(3, giantOff - 2.5));
-    const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) + farSide : from.alpha;
     const to: CameraViewState = {
       alpha: from.alpha + Math.atan2(Math.sin(awayFromGiant - from.alpha), Math.cos(awayFromGiant - from.alpha)), // swing the short way round
@@ -295,7 +294,7 @@ export class CameraController {
       radius,
       target: {
         x: spread || giant ? box.focus.x : (box.minX + box.maxX) / 2,
-        y: box.baseY + (giant ? 1.5 - (Math.min(4.5, giantRadius) - 3) / 3 : Math.max(1, tall * 0.5)),
+        y: box.baseY + (giant ? 1.5 - (giantRadius - 3) / 3 : Math.max(1, tall * 0.5)),
         z: spread || giant ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
