@@ -182,10 +182,10 @@ export class ProjectileSystem {
 
     // Smoke puff: a head-sized clump of flat-faceted warm white lobes thrown out of the muzzle that hangs and drifts up.
     // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball. Its tone comes from the base colour, well past white
-    // and warm against the blue sky light, with next to no glow of its own: the glow lifted lit and shaded facets alike into one flat pale grey.
-    // Facets that face down are tinted darker, to three tenths at the underside, so the clump has a lit top and a shaded belly whatever side the sun is on.
+    // and warm against the blue sky light, with a faint cool glow of its own and no more: a strong one lifted lit and shaded facets alike into one flat pale grey.
+    // Facets that face down are tinted darker and cooler, so the clump has a lit top and a shaded belly whatever side the sun is on.
     const sm = getMaterialFactory().createUnique("cloth", new Color3(2.6, 2.15, 1.3));
-    sm.emissiveColor = new Color3(0.02, 0.02, 0.02);
+    sm.emissiveColor = new Color3(0.05, 0.05, 0.08);
     sm.transparencyMode = 2;
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
@@ -202,9 +202,10 @@ export class ProjectileSystem {
       const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
       const tones: number[] = [];
       for (let n = 0; n < normals.length; n += 3) {
-        // A fifth of shade at most, falling off evenly round a slanted axis: no two rows of facets share a tone, and none drops to a dark belly under a hard equator.
-        const tone = 0.9 + 0.1 * (normals[n + 1] * 0.8 + normals[n] * 0.35 - normals[n + 2] * 0.45);
-        tones.push(tone, tone, tone, 1);
+        // Shade falls off evenly round a slanted axis, from none on top to all of it underneath: no two rows of facets share a tone, and there is no hard equator.
+        const shade = 0.5 - 0.5 * (normals[n + 1] * 0.8 + normals[n] * 0.35 - normals[n + 2] * 0.45);
+        // The shade is cool: red and green fall away and blue holds, so the belly is a slate and not the brown the warm base goes when it is only darkened.
+        tones.push(1 - 0.66 * shade, 1 - 0.54 * shade, 1 - 0.18 * shade, 1);
       }
       smoke.setVerticesData(VertexBuffer.ColorKind, tones);
       smoke.material = sm;
