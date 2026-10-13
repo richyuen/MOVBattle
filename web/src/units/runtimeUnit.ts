@@ -1106,7 +1106,7 @@ export class RuntimeUnit {
     const forwardDot = Vector3.Dot(contactDirection, facing);
     const directionalScale = forwardDot >= 0
       ? 1 + forwardDot * Math.max(0, this._crowdPhysicsProfile.forwardToppleBias - 1)
-      : Math.max(0.45, 1 + forwardDot * 0.55);
+      : Math.max(0.7, 1 + forwardDot * 0.55);
     const appliedPressure = Math.max(0, pressure * pressureScale * directionalScale);
 
     const weightedDirection = this._balanceDirection.scale(this._balancePressure)
