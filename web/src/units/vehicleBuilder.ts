@@ -244,10 +244,18 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   // Wheels (on the sides, X axis): as tall as the deck and thick, standing clear of its edges
   for (const xOff of [-0.58, 0.58]) {
     for (const zOff of [-0.5, 0.5]) {
-      const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.14, diameter: 0.7, tessellation: 12 }, scene);
+      const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.7, tessellation: 12 }, scene); // thinner than the rim round it, so the rim stands proud of the face
       wheel.position.set(xOff, 0.35, zOff);
       wheel.rotation.z = Math.PI / 2;
-      wheel.parent = rig; wheel.material = wheelWood; allMeshes.push(wheel);
+      wheel.parent = rig; wheel.material = wood; allMeshes.push(wheel); // the face is the frame's timber: the dark is the rim and hub on it, as on the cannon
+      const wheelRim = MeshBuilder.CreateTorus("wheelRim", { diameter: 0.64, thickness: 0.12, tessellation: 12 }, scene);
+      wheelRim.position.set(xOff, 0.35, zOff);
+      wheelRim.rotation.z = Math.PI / 2;
+      wheelRim.parent = rig; wheelRim.material = wheelWood; allMeshes.push(wheelRim);
+      const wheelHub = MeshBuilder.CreateCylinder("wheelHub", { height: 0.24, diameter: 0.2, tessellation: 8 }, scene);
+      wheelHub.position.set(xOff, 0.35, zOff);
+      wheelHub.rotation.z = Math.PI / 2;
+      wheelHub.parent = rig; wheelHub.material = wheelWood; allMeshes.push(wheelHub);
     }
   }
 
