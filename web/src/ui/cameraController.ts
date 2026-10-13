@@ -15,6 +15,8 @@ export interface CameraViewState {
   beta: number;
   radius: number;
   target: { x: number; y: number; z: number };
+  /** Lens angle; the default lens when left out. */
+  fov?: number;
 }
 
 export interface GalleryCameraOverride {
@@ -29,6 +31,9 @@ const FOLLOW_SLACK = 0.6;
 const FOLLOW_SPEED = 2.5;
 const FOLLOW_DROP = 0.6;
 const FOLLOW_DROP_SPEED = 0.8;
+const DEFAULT_FOV = 0.8;
+// Victory beside a giant is shot close on a long lens from further off: the eye is not in the crowd, the men fill the frame, and the flank and tusk beside them are past its edge.
+const GIANT_SHOT_FOV = 0.5;
 
 export class CameraController {
   readonly camera: ArcRotateCamera;
@@ -163,6 +168,7 @@ export class CameraController {
       alpha: this.camera.alpha,
       beta: this.camera.beta,
       radius: this.camera.radius,
+      fov: this.camera.fov,
       target: {
         x: this.camera.target.x,
         y: this.camera.target.y,
@@ -177,6 +183,7 @@ export class CameraController {
     this.camera.alpha = view.alpha;
     this.camera.beta = view.beta;
     this.camera.radius = view.radius;
+    this.camera.fov = view.fov ?? DEFAULT_FOV;
     this.camera.target.set(view.target.x, view.target.y, view.target.z);
     this._shakeOffset.setAll(0);
     this._shakeIntensity = 0;
@@ -289,7 +296,8 @@ export class CameraController {
     // and aims GIANT_SHY past the men on the side away from it, so its near leg and tusk are off the edge of the frame and not the near third of it. Turning further round, either way, only brought more of it in.
     const sideOn = giant && giantOff > 0.01 && giantOff - 4.5 < 3;
     const farSide = sideOn ? 0.5 * Math.PI : 0;
-    const GIANT_SHY = 1.0; // at 1.5 the giant was gone but the men stood in the near third of the frame beside an empty field
+    const GIANT_SHY = 0.8; // on the long lens: at 0.5 the tusk still crossed the near third of the frame, and on the default lens at 1.0 the men stood left of the middle beside an empty field
+    const SIDE_ON_RADIUS = 3.6; // as near as the default lens would stand: the men are cut at the shin and fill the frame between the bands
     const shy = sideOn && box.giant ? { x: (box.focus.x - box.giant.x) / giantOff * GIANT_SHY, z: (box.focus.z - box.giant.z) / giantOff * GIANT_SHY } : { x: 0, z: 0 };
     const awayFromGiant = giant && box.giant && giantOff > 0.01 ? Math.atan2(box.giant.z - box.focus.z, box.giant.x - box.focus.x) + farSide : from.alpha;
     const to: CameraViewState = {
@@ -297,7 +305,8 @@ export class CameraController {
       // Beside a giant the eye stands a little above the men and looks down on them, so the ranks behind the nearest man show over him: from below, his torso covered them. Only a little: steeper, the grass filled the frame and left no sky over them.
       // And it aims at the middle of the men standing round the focus, not at the one man, who put the rest of them off to one side and cut by the edge.
       beta: giant ? Math.PI / 2.1 : Math.PI / 1.9,
-      radius,
+      radius: sideOn ? SIDE_ON_RADIUS * Math.tan(DEFAULT_FOV / 2) / Math.tan(GIANT_SHOT_FOV / 2) : radius,
+      fov: sideOn ? GIANT_SHOT_FOV : DEFAULT_FOV,
       target: {
         x: giant ? (box.group ?? box.focus).x + shy.x : spread ? box.focus.x : (box.minX + box.maxX) / 2,
         y: box.baseY + (giant ? 0.8 : Math.max(1, tall * 0.5)),
@@ -354,6 +363,7 @@ export class CameraController {
       this.camera.lowerRadiusLimit = this._prebattleBetaLimits.radius;
     }
     if (this._prebattleView) this.restoreViewState(this._prebattleView);
+    this.camera.fov = DEFAULT_FOV;
     this._prebattleView = null;
     this._prebattleBetaLimits = null;
   }
@@ -369,6 +379,7 @@ export class CameraController {
     this.camera.alpha = lerp(t.from.alpha, t.to.alpha);
     this.camera.beta = lerp(t.from.beta, t.to.beta);
     this.camera.radius = lerp(t.from.radius, t.to.radius);
+    this.camera.fov = lerp(t.from.fov ?? DEFAULT_FOV, t.to.fov ?? DEFAULT_FOV);
     this.camera.target.set(
       lerp(t.from.target.x, t.to.target.x),
       lerp(t.from.target.y, t.to.target.y),
