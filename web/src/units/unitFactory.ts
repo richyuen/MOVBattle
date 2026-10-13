@@ -38,8 +38,8 @@ const SKIN_GLOW = 0.4;
 const SKIN_GLOW_BLUE = 1.5;
 // Red skin keeps three quarters of its blue: the blue sky light on the whole of it turned the lit faces pink.
 const WARM_SKIN_BLUE = 0.75;
-// ...and is greyed a step: red a fifth down, green and blue lifted, so it is a dusty rose red and not a scarlet. Darkening the whole colour only deepened it.
-const WARM_SKIN_RED = 0.8;
+// ...and is greyed a step: red a twelfth down, green and blue lifted, so it is a dusty rose red and not a scarlet. Darkening the whole colour only deepened it.
+const WARM_SKIN_RED = 0.92;
 const WARM_SKIN_GREEN_LIFT = 0.14;
 const WARM_SKIN_BLUE_LIFT = 0.12;
 // Its glow is three quarters of the cool skin's: at full strength the red stayed a bright scarlet however the base was greyed.
