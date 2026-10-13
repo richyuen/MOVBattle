@@ -812,6 +812,9 @@ function applyCampaignPlacements(placements: CampaignPlacementSpec[]): void {
 
 function setGalleryCaptureMode(enabled: boolean): void {
   bodyEl.classList.toggle("capture-mode", enabled);
+  // The centre line is a placement guide for the high oblique view: an eye-level gallery shot has none under the units, and it comes back with the placement view
+  const guidesShown = stateMachine.currentState === GameState.Placement || stateMachine.currentState === GameState.Countdown;
+  setPlacementGuidesVisible(scene, !enabled && guidesShown);
 }
 
 function renderStaticFrames(frameCount = 2): void {
