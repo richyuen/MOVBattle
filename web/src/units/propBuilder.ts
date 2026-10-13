@@ -1082,12 +1082,13 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       return hat;
     }
     case "witch_hat": {
-      const brim = MeshBuilder.CreateCylinder("witchBrim", { height: 0.02 * s, diameter: 0.24 * s, tessellation: 18 }, scene);
+      const brim = MeshBuilder.CreateCylinder("witchBrim", { height: 0.02 * s, diameter: 0.34 * s, tessellation: 18 }, scene);
       brim.material = mat(scene, new Color3(0.14, 0.12, 0.18));
       brim.position.y = 0.04 * s;
       const cone = MeshBuilder.CreateCylinder("witchCone", { height: 0.24 * s, diameterTop: 0.02 * s, diameterBottom: 0.18 * s, tessellation: 12 }, scene);
       cone.parent = brim;
-      cone.position.set(0, 0.14 * s, 0); // a straight cone over a narrow brim: kinked 0.08 to one side over a 0.34 brim it was a floppy wizard hat three heads wide
+      cone.position.set(-0.03 * s, 0.14 * s, 0);
+      cone.rotation.z = 0.08;
       cone.material = mat(scene, new Color3(0.15, 0.13, 0.2));
       const band = MeshBuilder.CreateTorus("witchBand", { diameter: 0.16 * s, thickness: 0.012 * s, tessellation: 18 }, scene);
       band.parent = cone;
