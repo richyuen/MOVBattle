@@ -13,6 +13,9 @@ import { getMaterialFactory, type MatCategory } from "./materialFactory";
 const PROP_OVERSIZE = 1.6;
 /** Hats are a third over: three fifths over, a bucket helm was wider than the shoulders under it */
 const HAT_OVERSIZE = 1.3;
+/** Cone and brim hats keep the weapons' three fifths: they sit on top of the head and not round it, and at a third over a wizard's cone and a farmer's brim were no wider than the head */
+const TALL_HAT_OVERSIZE = 1.6;
+const TALL_HATS: (HatType | undefined)[] = ["hood", "hood_liripipe", "conical_hat", "witch_hat", "straw_hat", "cowboy_hat", "tricorn", "pirate_hat", "captain_hat", "jester_cap"];
 
 export function attachProps(
   scene: Scene,
@@ -49,7 +52,7 @@ export function attachProps(
   const hat = buildHat(scene, config.hat, scale, accent, teamColor);
   if (hat) {
     hat.parent = body.headTop;
-    hat.scaling.scaleInPlace(HAT_OVERSIZE);
+    hat.scaling.scaleInPlace(TALL_HATS.includes(config.hat) ? TALL_HAT_OVERSIZE : HAT_OVERSIZE);
     props.push(hat);
   }
 
