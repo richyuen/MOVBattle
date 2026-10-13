@@ -615,7 +615,7 @@ export class TribalSandboxMapBuilder {
         const z = tuftZ + (this._seededValue(i, 35) - 0.5) * 0.08;
         const h = (0.12 + this._seededValue(i, 33) * 0.15) * patchHeight; // ankle to shin, so feet and fallen bodies show above the grass
         const yaw = (this._seededValue(tuft, 37) + (i % PER_TUFT) / PER_TUFT) * Math.PI;
-        const half = 0.02 + this._seededValue(i, 38) * 0.015; // a blade is two fingers wide and a tuft's four stand within a hand: thin wisps with ground between, not a carpet of fat cones
+        const half = 0.03 + this._seededValue(i, 38) * 0.0225; // a blade is three fingers wide and a tuft's four stand within a hand: thin wisps with ground between, not a carpet of fat cones
         const dx = Math.cos(yaw) * half;
         const dz = Math.sin(yaw) * half;
         const lean = (this._seededValue(i, 36) - 0.5) * 0.12; // up to 0.06 m either way, so no two blades stand alike
