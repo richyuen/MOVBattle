@@ -154,8 +154,8 @@ const HAT_CUT_FOR_HEAD = 0.7;
 const NECK_LENGTH = 0.07;
 /** Arms and legs are stretched by this much over their old segment lengths, so the body is some six and a half heads tall and the hands hang to mid thigh. */
 const LIMB_STRETCH = 1.16;
-/** A mitt is sized from the wrist it hangs from, not from the sleeve or the head: its knuckles are this many forearm ends across, so the hand is never wider than the arm it ends. */
-const MITT_OF_WRIST = 1.0;
+/** A mitt is sized from the wrist it hangs from, not from the sleeve or the head: its knuckles are this many forearm ends across, a quarter over the arm it ends: at the arm's own width the fist was a stump end, gone at distance. */
+const MITT_OF_WRIST = 1.25;
 /** ...and it is a block: this many of its own widths long and deep. */
 const MITT_LENGTH = 1.4;
 const MITT_DEPTH = 0.8;
