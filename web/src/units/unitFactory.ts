@@ -50,6 +50,8 @@ const CLOTHED_PRESET_WEIGHT = 0.75;
 const ARMOUR_PRESET_WEIGHT = 0.2;
 // Plate is a clearly darker value than the skin of the head and hands beside it, on top of the cloth shade.
 const ARMOUR_SHADE = 0.65;
+// Cool plate is far more saturated than the pastel skin beside it: a deep blue, where the skin colour only darkened is slate.
+const COOL_ARMOUR_SATURATION = 1.6;
 // Boots are the trouser cloth a shade darker, so the foot ends the leg and does not sit under it as a black block.
 const BOOT_SHADE = 0.7;
 const BARE_FOOT_SHADE = 0.85;
@@ -184,7 +186,7 @@ export class UnitFactory {
       const shade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_SHADE_KEEP;
       const legShade = (factor: number) => cool ? factor : 1 - (1 - factor) * WARM_LEG_SHADE_KEEP;
       const hue = isArmored ? hsv.r : (hsv.r + (cool ? -CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
-      const saturation = cool ? hsv.g * (isArmored ? 1 : CLOTH_SATURATION) : Math.min(1, hsv.g * WARM_SATURATION);
+      const saturation = cool ? Math.min(1, hsv.g * (isArmored ? COOL_ARMOUR_SATURATION : CLOTH_SATURATION)) : Math.min(1, hsv.g * WARM_SATURATION);
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? shade(ARMOUR_SHADE) : 1), new Color3());
       // Warm trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass.
       const legBase = cool || isArmored ? body.bodyMaterial.baseColor : body.skinMaterial.baseColor;
