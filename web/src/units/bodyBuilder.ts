@@ -75,6 +75,8 @@ export interface BodyMetrics {
   hipWidth: number;
   handReachY: number;
   footBottomY: number;
+  /** The head block and the neck under it, in the body's own units, for headgear that is fitted to the head and not only stood on it */
+  head?: { width: number; height: number; neck: number };
 }
 
 export interface BodyProportions {
@@ -723,6 +725,7 @@ export function buildArticulatedBody(
     hipWidth: hipOffX * 2,
     handReachY: hip.position.y + shoulderOffY - upperArmH * s - lowerArmH * s,
     footBottomY: 0,
+    head: { width: headWidth * s, height: headHeight * s, neck: neckLength },
   };
 
   return {

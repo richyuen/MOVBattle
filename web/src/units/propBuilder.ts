@@ -49,7 +49,23 @@ export function attachProps(
     }
   }
 
-  const hat = buildHat(scene, config.hat, scale, accent, teamColor);
+  // A great helm is cut to the man under it and not to the hat scale: a rim 1.3 heads across but never over four fifths of the shoulders, tapered to a crown that just
+  // clears the skull, and tall enough to hide the neck and sit on the shoulders. Handed over in the hat's own units, under the head-top scale and the oversize.
+  const head = body.metrics.head;
+  const hatUnit = body.headTop.scaling.x;
+  let helmFit: HelmFit | undefined;
+  if (config.hat === "great_helm" && head) {
+    const rim = Math.min(head.width * 1.3, body.metrics.shoulderWidth * 0.8);
+    const height = head.height * 1.06 + head.neck;
+    helmFit = {
+      rim: rim / (hatUnit * HAT_OVERSIZE),
+      crown: rim * 0.86 / (hatUnit * HAT_OVERSIZE),
+      height: height / (hatUnit * HAT_OVERSIZE),
+      y: (head.height * 0.06 - height * 0.5) / hatUnit,
+      slit: 0.5 - head.height * 0.5 / height,
+    };
+  }
+  const hat = buildHat(scene, config.hat, scale, accent, teamColor, helmFit);
   if (hat) {
     hat.parent = body.headTop;
     hat.scaling.scaleInPlace(TALL_HATS.includes(config.hat) ? TALL_HAT_OVERSIZE : HAT_OVERSIZE);
@@ -991,7 +1007,10 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
 }
 
 // ─── Hats ───
-function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamColor?: Color3): Mesh | null {
+/** A great helm's cut: rim and crown diameters and height in the hat's own units, the height of its centre over the head top, and how far up from its centre the eye slit lies (as a share of its height) */
+interface HelmFit { rim: number; crown: number; height: number; y: number; slit: number }
+
+function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamColor?: Color3, helmFit?: HelmFit): Mesh | null {
   const s = _s * 1.1; // TABS-style hat exaggeration
   switch (type) {
     case "none": return null;
@@ -1281,8 +1300,10 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       return head;
     }
     case "great_helm": {
-      // Fitted barrel helm: a short, faceted, slightly tapered bucket pulled down over the head, skin-tight to it
-      const helm = MeshBuilder.CreateCylinder("ghelm", { height: 0.17 * s, diameterTop: 0.18 * s, diameterBottom: 0.21 * s, tessellation: 8 }, scene);
+      // Fitted barrel helm: a tall, faceted, slightly tapered bucket pulled down over the head to the shoulders, cut from the head it covers. Off a body with no head
+      // to measure it keeps the old stock cut.
+      const fit = helmFit ?? { rim: 0.164 * s, crown: 0.14 * s, height: 0.156 * s, y: -0.065 * s, slit: -0.09 };
+      const helm = MeshBuilder.CreateCylinder("ghelm", { height: fit.height, diameterTop: fit.crown, diameterBottom: fit.rim, tessellation: 8 }, scene);
       // Turn a flat facet to the front so the eye slit lies on a face, not across an edge
       helm.rotation.y = Math.PI / 8;
       helm.bakeCurrentTransformIntoVertices();
@@ -1291,25 +1312,25 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       // wash turns it into the lightest team-coloured block on the unit
       const steel = new Color3(0.6, 0.6, 0.65);
       helm.material = mat(scene, teamColor ? Color3.Lerp(steel, teamColor, 0.12) : steel);
-      helm.position.y = -0.065 * s;
-      // Eye slit: a bold dark bar across the front facet that wraps onto the two facets beside it
+      helm.position.y = fit.y;
+      // Eye slit: a bold dark bar across the front facet that wraps onto the two facets beside it, at the height of the eyes behind it
       const slitMat = mat(scene, new Color3(0.08, 0.08, 0.08));
-      const slitY = -0.015 * s;
-      const faceR = 0.091 * s;
-      const slit = MeshBuilder.CreateBox("slit", { width: 0.076 * s, height: 0.03 * s, depth: 0.012 * s }, scene);
+      const slitY = fit.slit * fit.height;
+      const faceR = (fit.rim + (fit.crown - fit.rim) * (0.5 + fit.slit)) * 0.5 * Math.cos(Math.PI / 8);
+      const facet = faceR * 2 * Math.tan(Math.PI / 8);
+      const slitH = facet * 0.4;
+      const slitD = facet * 0.16;
+      const slit = MeshBuilder.CreateBox("slit", { width: facet, height: slitH, depth: slitD }, scene);
       slit.position.set(0, slitY, faceR); slit.parent = helm;
       slit.material = slitMat;
       for (const side of [-1, 1]) {
-        const wrap = MeshBuilder.CreateBox("slitWrap", { width: 0.037 * s, height: 0.03 * s, depth: 0.012 * s }, scene);
-        const along = 0.0195 * s;
+        const wrap = MeshBuilder.CreateBox("slitWrap", { width: facet * 0.49, height: slitH, depth: slitD }, scene);
+        const along = facet * 0.26;
         wrap.position.set(side * Math.SQRT1_2 * (faceR - along), slitY, Math.SQRT1_2 * (faceR + along));
         wrap.rotation.y = side * Math.PI / 4;
         wrap.parent = helm;
         wrap.material = slitMat;
       }
-      // Head-tight: after the hat and prop oversize the rim is about 1.15 heads across and the crown just clears the
-      // skull, so it sits on the head as a bucket and is not a block as wide as the waist
-      helm.scaling.set(0.78, 0.92, 0.78);
       return helm;
     }
     case "hood_liripipe": {
