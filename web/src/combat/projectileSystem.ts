@@ -1,6 +1,6 @@
 import {
   Scene, Vector3, MeshBuilder, Color3, Mesh, TransformNode,
-  PBRMetallicRoughnessMaterial, ParticleSystem,
+  PBRMetallicRoughnessMaterial, ParticleSystem, VertexBuffer,
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { VisualEffects } from "./visualEffects";
@@ -181,10 +181,13 @@ export class ProjectileSystem {
     this._flashes.push({ mesh: flash, remaining: 0.12 + 0.04 * Math.max(0, scale - 1) });
 
     // Smoke puff: a head-sized clump of flat-faceted warm white lobes thrown out of the muzzle that hangs and drifts up.
-    // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball.
-    const sm = getMaterialFactory().createUnique("cloth", new Color3(0.82, 0.78, 0.71));
-    sm.emissiveColor = new Color3(0.21, 0.19, 0.16);
+    // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball. Its tone comes from the base colour, well past white
+    // and warm against the blue sky light, with next to no glow of its own: the glow lifted lit and shaded facets alike into one flat pale grey.
+    // Facets that face down are tinted darker, to three tenths at the underside, so the clump has a lit top and a shaded belly whatever side the sun is on.
+    const sm = getMaterialFactory().createUnique("cloth", new Color3(2.6, 2.15, 1.3));
+    sm.emissiveColor = new Color3(0.02, 0.02, 0.02);
     sm.transparencyMode = 2;
+    sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
     const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.25 any way off one point 0.3 out from the
     // muzzle, the first the biggest and the rest anything from a third of its width up.
@@ -196,6 +199,13 @@ export class ProjectileSystem {
       smoke.position.y += (Math.random() - 0.3) * 0.5 * scale;
       smoke.position.z += (Math.random() - 0.5) * 0.5 * scale;
       smoke.convertToFlatShadedMesh();
+      const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
+      const tones: number[] = [];
+      for (let n = 0; n < normals.length; n += 3) {
+        const tone = 0.3 + 0.7 * Math.min(1, Math.max(0, normals[n + 1] + 0.6));
+        tones.push(tone, tone, tone, 1);
+      }
+      smoke.setVerticesData(VertexBuffer.ColorKind, tones);
       smoke.material = sm;
       this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 });
     }
@@ -308,11 +318,11 @@ export class ProjectileSystem {
       const f = this._flashes[i];
       f.remaining -= dt;
       if (f.smokeLife) {
-        // Pop out fast, keep swelling slowly, stay opaque for most of the life, then thin out
+        // Pop out fast, keep swelling slowly, stay opaque for four fifths of the life, then thin out
         const ratio = Math.max(0, f.remaining / f.smokeLife);
         f.mesh.scaling.setAll(0.55 + (1 - ratio * ratio * ratio) * 1.05);
         f.mesh.position.y += 0.3 * dt;
-        (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = Math.min(1, ratio * 2.5);
+        (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = Math.min(1, ratio * 5);
       } else {
         // Fade and expand
         const ratio = Math.max(0, f.remaining / 0.35);
