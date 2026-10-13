@@ -1729,7 +1729,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   for (const [hipJoint, kneeJoint] of legJoints) {
     // Upper leg
     const upper = MeshBuilder.CreateCylinder("uleg", {
-      height: 0.55, diameterTop: 0.76, diameterBottom: 0.66, tessellation: 6,
+      height: 0.55, diameterTop: 0.8, diameterBottom: 0.8, tessellation: 6,
     }, scene);
     upper.position.set(0, -0.22, 0);
     upper.parent = hipJoint; upper.material = fur; allMeshes.push(upper);
@@ -1743,14 +1743,15 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
 
     // Lower leg
     const lower = MeshBuilder.CreateCylinder("lleg", {
-      height: 0.45, diameterTop: 0.62, diameterBottom: 0.6, tessellation: 6,
+      height: 0.45, diameterTop: 0.78, diameterBottom: 0.78, tessellation: 6,
     }, scene);
     lower.position.set(0, -0.18, 0);
-    lower.parent = kneeJoint; lower.material = shaggyFur; allMeshes.push(lower);
+    // Straight pillars in the hide's own colour, as wide as the hips allow: dark and tapered they were thin spikes under the barrel
+    lower.parent = kneeJoint; lower.material = fur; allMeshes.push(lower);
 
     // Foot
     const foot = MeshBuilder.CreateCylinder("foot", {
-      height: 0.08, diameter: 0.68, tessellation: 6,
+      height: 0.08, diameter: 0.84, tessellation: 6,
     }, scene);
     foot.position.set(0, -0.4, 0);
     foot.parent = kneeJoint; foot.material = darkMat; allMeshes.push(foot);
