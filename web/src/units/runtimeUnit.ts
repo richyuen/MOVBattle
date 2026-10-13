@@ -41,6 +41,8 @@ export class RuntimeUnit {
   readonly definition: UnitDefinition;
   readonly team: number;
   readonly body: ArticulatedBody;
+  /** The skin's own self-light from the factory: the base an fx preset glows on top of and falls back to. */
+  private readonly _skinGlow: Color3;
   readonly animator: ProceduralAnimator;
   readonly propMeshes: Mesh[];
   readonly visualConfig: UnitVisualConfig;
@@ -251,6 +253,7 @@ export class RuntimeUnit {
     this.definition = definition;
     this.team = team;
     this.body = body;
+    this._skinGlow = body.skinMaterial.emissiveColor.clone();
     this.propMeshes = propMeshes;
     this.visualConfig = visualConfig;
     this._ragdollProfile = ragdollProfile;
@@ -1396,12 +1399,12 @@ export class RuntimeUnit {
 
     if (!color) {
       this.body.bodyMaterial.emissiveColor.set(0, 0, 0);
-      this.body.skinMaterial.emissiveColor.set(0, 0, 0);
+      this.body.skinMaterial.emissiveColor.copyFrom(this._skinGlow);
       return;
     }
 
     this.body.bodyMaterial.emissiveColor = color.scale(pulse);
-    this.body.skinMaterial.emissiveColor = color.scale(pulse * 0.25);
+    this.body.skinMaterial.emissiveColor = this._skinGlow.add(color.scale(pulse * 0.25));
   }
 
   /** Reset unit to its original spawn state (position, health, alive). */

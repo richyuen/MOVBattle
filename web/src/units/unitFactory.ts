@@ -31,6 +31,8 @@ const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
 
 // How much of each preset's flesh tone / cloth tone survives over the team color.
 const SKIN_FLESH_WEIGHT = 0.25;
+// Bare skin is part self-lit with the hue of its team colour, so the faces lit by the sun are a bright team colour and not a dull one.
+const SKIN_GLOW = 0.4;
 const BODY_PRESET_WEIGHT = 0.45;
 // Preset metal is quartered: an unlit-environment metal body goes grey or near-black and loses its team colour.
 const BODY_METAL_WEIGHT = 0.25;
@@ -167,7 +169,7 @@ export class UnitFactory {
     }
 
     const clothed = !shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset);
-    applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? (isArmored ? ARMOUR_PRESET_WEIGHT : CLOTHED_PRESET_WEIGHT) : BODY_PRESET_WEIGHT);
+    applyMaterialPreset(body, visual, bodyColor, skinColor, clothed ? (isArmored ? ARMOUR_PRESET_WEIGHT : CLOTHED_PRESET_WEIGHT) : BODY_PRESET_WEIGHT, shouldUseVehicleBody ? 0 : SKIN_GLOW);
     if (bareSkinned && clothed) {
       body.bodyMaterial.baseColor = LOINCLOTH_COLOR;
       // Bare feet are a slightly darker shade of the skin, so a bare leg still ends in a foot and not a point.
@@ -307,6 +309,7 @@ function applyMaterialPreset(
   bodyColor: Color3,
   skinColor: Color3,
   presetWeight: number,
+  skinGlow: number,
 ): void {
   const tint = resolveMaterialTint(visual.materialPreset ?? "default", bodyColor, skinColor, presetWeight);
   body.bodyMaterial.baseColor = tint.bodyDiffuse;
@@ -315,7 +318,9 @@ function applyMaterialPreset(
   body.bodyMaterial.roughness = tint.roughness;
   body.bodyMaterial.alpha = tint.alpha;
   body.skinMaterial.baseColor = tint.skinDiffuse;
-  body.skinMaterial.emissiveColor = tint.skinEmissive;
+  // Only the part of the team colour above its weakest channel glows: the whole colour would wash the skin toward white.
+  const grey = Math.min(skinColor.r, skinColor.g, skinColor.b);
+  body.skinMaterial.emissiveColor = tint.skinEmissive.add(new Color3(skinColor.r - grey, skinColor.g - grey, skinColor.b - grey).scale(skinGlow));
 }
 
 interface MaterialTint {
