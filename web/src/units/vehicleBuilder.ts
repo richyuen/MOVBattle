@@ -648,7 +648,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
-  const wood = getMaterialFactory().get("wood", new Color3(0.62, 0.30, 0.20), { emissive: new Color3(0.20, 0.10, 0.05) }); // part self-lit, so the bed top stays warm wood under the blue ambient
+  const wood = getMaterialFactory().get("wood", new Color3(0.50, 0.20, 0.12), { emissive: new Color3(0.14, 0.07, 0.06) }); // part self-lit, so the bed top stays warm wood under the blue ambient
   const metal = makeMat(scene, new Color3(0.3, 0.3, 0.35));
   const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09));
 
