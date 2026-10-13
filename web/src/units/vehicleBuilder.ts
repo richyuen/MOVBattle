@@ -272,33 +272,39 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   // Throwing arm (pivots at crossbar, extends along Z)
   const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: 1.8 }, scene);
   arm.position.set(0, 1.65, 0.2);
-  arm.rotation.x = -0.4; // tilted: bucket end up toward +Z (a positive turn about X drops the +Z end), lying on the crossbar and running up under the bucket
+  arm.rotation.x = -0.1; // near level, bucket end a little up toward +Z (a positive turn about X drops the +Z end), lying on the crossbar: at -0.4 the raised arm set the height of the machine and it stood up like a goalpost
   arm.parent = rig; arm.material = wood; allMeshes.push(arm);
 
   // Bucket on the tip of the arm (+Z): a wide tray three arms across with the shot lying in it, not a small empty box partway down
   const bucket = MeshBuilder.CreateBox("bucket", { width: 0.5, height: 0.16, depth: 0.45 }, scene);
-  bucket.position.set(0, 2.05, 0.95);
-  bucket.rotation.x = -0.4;
+  bucket.position.set(0, 1.78, 0.99);
+  bucket.rotation.x = -0.1;
   bucket.parent = rig; bucket.material = metal; allMeshes.push(bucket);
 
   if (options.spooky) {
     const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.45, segments: 8 }, scene);
-    pumpkin.position.set(0, 2.3, 0.86);
+    pumpkin.position.set(0, 2.03, 0.965);
     pumpkin.parent = rig;
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
   } else {
     const boulder = MeshBuilder.CreateSphere("boulderPayload", { diameter: 0.45, segments: 2 }, scene);
-    boulder.position.set(0, 2.3, 0.86);
+    boulder.position.set(0, 2.03, 0.965);
     boulder.parent = rig;
     boulder.material = makeMat(scene, new Color3(0.2, 0.19, 0.2));
     allMeshes.push(boulder);
   }
 
-  // Counterweight at back end (-Z), hung under the arm: a big team-coloured block and the tinted main mesh, so the deck is plain timber and not a team-coloured table
+  // Counterweight at back end (-Z), hung under the arm: a big dark block of the wheels' timber. As the tinted main mesh it was a pale team-coloured card between the posts
   const cw = MeshBuilder.CreateBox("cw", { width: 0.36, height: 0.44, depth: 0.4 }, scene);
-  cw.position.set(0, 1.05, -0.5);
-  cw.parent = rig; cw.material = teamPrimary; allMeshes.push(cw);
+  cw.position.set(0, 1.28, -0.5);
+  cw.parent = rig; cw.material = wheelWood; allMeshes.push(cw);
+
+  // Axle under the deck: the body mesh that takes the team tint, as on the cannon, so the timber keeps its own colours
+  const axle = MeshBuilder.CreateCylinder("axle", { height: 1.1, diameter: 0.08, tessellation: 6 }, scene);
+  axle.position.y = 0.35;
+  axle.rotation.z = Math.PI / 2;
+  axle.parent = rig; axle.material = teamPrimary; allMeshes.push(axle);
 
   // Operator sitting beside, behind the frame
   // Dressed as a gun crewman: bare, he was a washed mannequin beside the machine
@@ -307,14 +313,14 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   });
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.3, 0.86)),
-    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 2.05, 0.95)),
+    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.03, 0.965)),
+    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 1.78, 0.99)),
   };
 
   return wrapAsBody(
     scene,
     root,
-    cw,
+    axle,
     allMeshes,
     operator.headMesh,
     makeBodyMetrics(operator.headTopY * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE, 0.45 * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE),
