@@ -372,10 +372,10 @@ export class VisualEffects {
     const fireScale = Math.min(scale * 2.0, 3.6);
     const fire: { mesh: TransformNode; size: number; length?: number }[] = [];
     const lobeSizes = [1.0, 1.0, 0.5, 0.9, 0.45, 0.6];
-    // None sits above the heart's shoulder: lumps on one ball, not caps over it. The flank lobes are the pale inner flame, bar the one lowest, which is the orange fringe and the warm foot of the ball: the fringe on the two largest made the whole lower half peach, and with it on none the ball was one pale tone to the ground
+    // None sits above the heart's shoulder: lumps on one ball, not caps over it. All the flank lobes are the pale inner flame: the fringe on the two largest made the lower half of the ball peach, and only every other tongue is fringe now
     const lobeHeights = [0.5, 0.05, 0.55, -0.15, 0.6, 0.35];
     for (let i = 0; i < lobeSizes.length; i++) {
-      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : i === 3 ? flameMat : flashMat);
+      const lobe = blob("burstFlash", 6, i === 0 ? coreMat : flashMat);
       const angle = i * 2.4 + 0.6;
       const reach = (i === 0 ? 0 : 0.45 - lobeSizes[i] * 0.3) * fireScale;
       lobe.position.set(Math.cos(angle) * reach, lobeHeights[i] * fireScale, Math.sin(angle) * reach);
