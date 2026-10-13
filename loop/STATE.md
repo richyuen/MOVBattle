@@ -1,39 +1,39 @@
 # Loop state
-Iteration: 163   Last re-audit: 161   Consecutive rejects: 0   Branch: main
+Iteration: 164   Last re-audit: 161   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion, from last audit; see CRITIC.md for the letters)
-battle-feel: a PASS b PASS c FAIL d FAIL (2/4) — c: lineup units are vertical posts, arms hung symmetric; d: landed corpses are flat T's and planks on edge
+battle-feel: a PASS b PASS c FAIL d FAIL (2/4) — c: lineup units are vertical posts, arms hung symmetric; d: some limbs stand up now, but heaps are ankle-high flat slabs on one ground plane
 unit-look: a PASS b PASS c FAIL d PASS (3/4) — c: sphere joint caps between square sticks read as a mannequin
 maps-light: a PASS b FAIL c PASS d PASS (3/4) — b: no long cast shadows under the crowd or mammoth
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
-vfx: a PASS b FAIL c PASS d PASS (3/4) — b: fire is cream-white glass shards; dust is tan now but an ankle-high dark slab; no ball in flight
+vfx: a PASS b FAIL c PASS d PASS (3/4) — b: fire is yellow/orange now but flat plates with no hot heart; dust is a row of pale lumps; no ball in flight
 Total 19/24.
 
 ## Focus (every gap this iteration)
-BASE d75119e
-- [S] vfx.b dust-burst-unread (f14b41f) — APPROVE, criterion still FAIL
-- [S] battle-feel.d plank-corpses (f94e647) — REJECT, reverted by c1a258a
-- [P] vfx.b heart-lobe-dome (d523f23) — REJECT, reverted by 5b5abb9
+BASE 0813373
+- [S] vfx.b burst-white-not-fire (0136987) — APPROVE, criterion still FAIL
+- [S] battle-feel.d plank-corpses (f65e867) — APPROVE, criterion still FAIL
+- [P] vfx.b dust-bank-slab (0f7fa5f) — APPROVE, criterion still FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] dust-burst-unread (f14b41f) VERDICT: APPROVE CRITERION: vfx.b FAIL (previous: FAIL)
-- GAP: [S] plank-corpses (f94e647) VERDICT: REJECT CRITERION: battle-feel.d FAIL (previous: FAIL)
-- GAP: [P] heart-lobe-dome (d523f23) VERDICT: REJECT CRITERION: vfx.b FAIL (previous: FAIL)
+- GAP: [S] burst-white-not-fire (0136987) VERDICT: APPROVE CRITERION: vfx.b FAIL (previous: FAIL)
+- GAP: [S] plank-corpses (f65e867) VERDICT: APPROVE CRITERION: battle-feel.d FAIL (previous: FAIL)
+- GAP: [P] dust-bank-slab (0f7fa5f) VERDICT: APPROVE CRITERION: vfx.b FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets)
-1. [S] vfx.b burst-white-not-fire [0] — two-tone unlit fire: fat yellow core lobes inside an orange lobe shell, spikes cut to a few short orange flecks — ref trailer_3_sheet_03 r1c1/r2c1 — ours war_machines_3800ms
-2. [S] battle-feel.d plank-corpses [1] — out-of-plane landed poses for back/front corpses too (knee propped vertical, arm across chest, head rolled, asymmetric) and a drape-height lift on other corpses — ref tabs_screenshot_01 — ours big_melee_result
-3. [S] vfx.b no-ball-in-flight [0] — larger ball with a short dark trail on a slower visible arc from muzzle to target — ref trailer_3_sheet_03 r2c1 — ours war_machines_1250ms
-4. [S] battle-feel.c statue-idle [0] — per-unit idle stance variants: weight on one leg, hip shift, one arm cocked, head tilt (not the spent idle lean) — ref trailer_3_sheet_01 r1c2 — ours lineup_medieval
-5. [S] maps-light.b no-battle-shadows [0] — elongated sun-direction shadow casters for large and massed units — ref tabs_screenshot_01 — ours big_melee_5s
-6. [S] unit-look.c ball-joint-mannequin [0] — tapered overlapping limb segments without ball joints — ref trailer_3_sheet_01 r1c2 — ours closeup_pair_zeus_thor
-7. [P] vfx.b dust-bank-slab [0] — visualEffects.ts dust `tall` 0.5 - 0.18*spread -> 0.9 - 0.3*spread, tans lightened toward (0.8, 0.6, 0.35); fallout of [S] dust-burst-unread (163)
-8. [S] vfx.b dust-no-billow [0] — puffs that keep swelling and lift off the ground as the fire dies — ref trailer_3_sheet_03 r2c1 — ours war_machines_1250ms
+1. [S] vfx.b fire-flat-plates [0] — pale near-white unlit heart blob inside the largest lobes, and lobes/shells as rounded closed solids rather than flat polyhedron plates — ref trailer_3_sheet_03 r1c1/r2c1 — ours war_machines_1100ms
+2. [S] vfx.b no-ball-in-flight [0] — oversized black shot with a short dark trail, visible mid-arc between muzzle and target at 1100/1250ms (colour spent as [P]) — ref trailer_3_sheet_03 r3c1 — ours war_machines_1250ms
+3. [S] battle-feel.d corpse-heap-flat [0] — corpse stacking: a body landing on a body rests on top at body thickness, tilted across it (runtimeUnit `_layCorpseFlat`) — ref tabs_screenshot_01 — ours big_melee_result
+4. [S] battle-feel.c lineup-posts [0] — per-unit asymmetric idle stance state: weight on one leg, hip shifted, weapon arm low, other arm bent (idle legs/arms spent as [P]) — ref trailer_3_sheet_01 r1c2 — ours lineup_medieval
+5. [S] unit-look.c mannequin-joints [0] — tapered limb segments that overlap at the joint, no sphere caps — ref tabs_screenshot_01 — ours closeup_pair_zeus_thor
+6. [S] maps-light.b no-crowd-shadows [0] — long cast shadows for the crowd and the mammoth in battle shots — ref tabs_screenshot_01 — ours big_melee_5s
+7. [S] vfx.b dust-sandbags [0] — dust puffs rise and shrink outward into one mound thinning at the rim — ref trailer_3_sheet_03 r1c1 — ours war_machines_1250ms
+8. [P] vfx.b fire-shell-rim [0] — shell `size * 1.5` -> `size * 1.25`, coreMat emissive (1.3, 0.6, 0) -> (1.4, 0.85, 0.1); fallout of [S] burst-white-not-fire (164)
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - heart-lobe-dome [attempts: 1, lobe size spent] — LOBES[0] 0.75: not visible in any still, pushes further toward shards
-- plank-corpses [attempts: 1] — 2-in-5 flank landing + sagittal curl: on a flank the curl lies in the ground plane, still a flat strip; none of ~30 dead read as curled
+- plank-corpses [attempts: 2, 1 approved 164] — 163: 2-in-5 flank landing + sagittal curl lay in the ground plane, a flat strip
 - dust-ring-grey [attempts: 1, spent] — stone (0.92,0.8,0.55) still rendered neutral grey; colour is not the cause
 - grass-bare-raised-eye [attempts: 1] — half x1.5: squat cones, still bare
 - cannonball-team-navy [attempts: 1] — near-black stone: no shot in flight in either frame, claim not visible
@@ -43,7 +43,7 @@ BASE d75119e
 
 ## Notes for next iteration (max 5 lines)
 - Tuned values and spent gaps live in LEDGER.md: read it before touching any constant. Structural gaps are the point now; a [P] gap is only fallout of an approved [S].
-- ACES: emissive 0.25 shows ~140, 0.65 ~190, 1.0 ~210; bloom threshold 0.65. No environment texture: an "unlit" material shows only its emissive (`_fxMat(Color3.Black(), colour)`); lit tans go grey. Dust emissive (0.62,0.36,0.12) rendered khaki-olive, darker than the grass.
-- Commit per gap with `git commit <path> -m`; edit via a node script in the scratchpad (quoted heredoc works), EOL-aware; sed -i turns CRLF files to LF. big_melee outcome changes run to run.
-- Corpses: root pivot is the feet, Euler order YXZ: at rot.x = +-90 deg any rot.z is flat; a flank needs rot.z = +-90 deg AND rot.x = k*PI. Limp pose keeps every fold in the ground plane on purpose: the next try must stand folds up out of it (knee tent exists as `tent`), for back/front corpses too. Downed living bodies use the same limp overlay.
-- Burst heart is the LOBES table in spawnExplosionBurst; the critic wants lobes dominant and spikes minor. Result shot (`_pickSubject`): if camera.d reopens add a facing/fill term, do not re-tune.
+- ACES: emissive 0.25 shows ~140, 0.65 ~190, 1.0 ~210; bloom threshold 0.65. Unlit = `_fxMat(Color3.Black(), colour)`; lit tans go grey. Fire: unlit, blue 0 kept it off cream; shells are inside-out hulls (`cullBackFaces = false`), critic finds them too thick and the polyhedra flat plates with detached hexagon flecks.
+- Edit with scratchpad `patch.mjs <file> <patchfile>` style node scripts (EOL-aware; sources are CRLF, loop/*.md LF); commit per gap with `git commit <paths> -F -`. big_melee outcome changes run to run.
+- Corpses: root pivot is the feet, Euler YXZ, face is +z, left is -x; face up when -sin(rot.x) > 0. `_layCorpseFlat` always targets back/front and calls `animator.setLandedFace`; `_writeDeathRest` holds the per-face folds. Only leg folds showed in stills; bodies are thin and rest at y = 0 (torso half depth ~0.1), no stacking.
+- Result shot (`_pickSubject`): if camera.d reopens add a facing/fill term, do not re-tune.
