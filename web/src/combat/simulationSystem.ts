@@ -96,6 +96,17 @@ function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
 interface ShieldSlot {
   wall: number;
   offset: Vector3;
+  /** Yaw of the wall's advance: its carriers stand square to it in contact. */
+  heading: number;
+  /** A rear-rank man's step to his place behind the front, across and in depth; null in the front rank. */
+  hold: Vector3 | null;
+}
+
+/** A formed wall as the rank behind it sees it: its first slot across the line, how many slots, and how far forward it stands. */
+interface ShieldWallLine {
+  first: number;
+  count: number;
+  depth: number;
 }
 
 interface UnitPathState {
@@ -161,8 +172,14 @@ export class SimulationSystem {
   readonly shieldWallGap = 2.2;
   /** The most a carrier steps across toward its slot for each stride forward. */
   readonly shieldSlotStride = 0.6;
+  /** A rear rank stands this far behind the rank it backs, each man behind the gap between two boards. */
+  readonly shieldRankGap = 0.75;
+  /** A slotted carrier in contact stands square to the wall's advance while his enemy is within this arc of it; outside it he turns to face him. */
+  readonly shieldHeadingArc = 1.0;
   /** Each slotted carrier's wall and the sideways step from where it stands to its slot in it. */
   private _shieldSlots = new Map<RuntimeUnit, ShieldSlot>();
+  /** The rank each living carrier was sorted into, 0 the front: kept from tick to tick, so a rear rank pressed up against the front stays a rank behind it. */
+  private _shieldRanks = new Map<RuntimeUnit, number>();
   private _now = 0;
 
   get isRunning(): boolean { return this._isRunning; }
@@ -436,6 +453,7 @@ export class SimulationSystem {
     const preset = getBehaviorPreset(unit);
     const canAttack = unit.hasCapability("attack", now);
     const canMove = unit.hasCapability("move", now);
+    unit.holdHeading(null);
 
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
@@ -536,8 +554,13 @@ export class SimulationSystem {
       const contactDistance = unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap;
       const presses = (aiProfile.id !== "ai.brace" || enemy.definition.aiProfileId === "ai.brace") && unit.definition.engageRange < this.meleePressMaxReach;
       // A carrier out of its slot sidles along the wall into it while it fights.
-      const sidle = this._shieldSlotStep(unit);
-      if (canMove && presses && distance > contactDistance + 0.05) {
+      const slot = this._shieldSlots.get(unit);
+      const sidle = this._shieldSlotStep(unit, true);
+      if (canMove && slot?.hold) {
+        // A rear-rank man keeps his place behind the boards and fights over them: he does not press through the front.
+        if (sidle) unit.moveTo(unit.position.add(sidle));
+        else unit.stopMoving();
+      } else if (canMove && presses && distance > contactDistance + 0.05) {
         const back = unit.position.subtract(enemy.position);
         back.y = 0;
         const stand = enemy.position.add(back.normalize().scale(contactDistance));
@@ -549,6 +572,7 @@ export class SimulationSystem {
       }
       this._clearPathState(unit);
       unit.faceTarget(enemy.position);
+      if (slot) this._holdWallHeading(unit, slot, enemy);
       if (attackProfile.type === AttackType.Melee) unit.leanIntoShove();
       if (canAttack) {
         this._tryAttack(unit, enemy, attackProfile, now);
@@ -636,10 +660,14 @@ export class SimulationSystem {
   /**
    * Sorts each team's shield carriers into walls: the carriers of one rank, side by side across the line of advance,
    * each given a slot shieldSlotSpacing from the next about the middle of the wall. Carriers close up into their slots
-   * on the march and in contact, so their boards overlap.
+   * on the march and in contact, so their boards overlap. A rank behind a wall is slotted to it: each man behind the
+   * gap between two of its boards and shieldRankGap back, so the wall stands two deep.
    */
   private _assignShieldSlots(): void {
     this._shieldSlots.clear();
+    for (const unit of [...this._shieldRanks.keys()]) {
+      if (unit.isDead || !this._units.includes(unit)) this._shieldRanks.delete(unit);
+    }
     let walls = 0;
     const standing = this._units.filter((unit) => !unit.isDead && !unit.linkedParent);
     const teams = [...new Set(standing.map((unit) => unit.team))].sort((a, b) => a - b);
@@ -654,32 +682,85 @@ export class SimulationSystem {
       if (advance < 0.01) continue;
       fx /= advance;
       fz /= advance;
+      const heading = Math.atan2(fx, fz);
       // Depth runs along the advance, side across it.
       const placed = carriers.map((unit) => ({
         unit,
         depth: unit.position.x * fx + unit.position.z * fz,
         side: unit.position.z * fx - unit.position.x * fz,
-      })).sort((a, b) => b.depth - a.depth || a.unit.runtimeId - b.unit.runtimeId);
-      while (placed.length > 0) {
-        const front = placed[0].depth;
-        const rank = placed.filter((entry) => entry.depth >= front - this.shieldRankDepth)
-          .sort((a, b) => a.side - b.side || a.unit.runtimeId - b.unit.runtimeId);
-        placed.splice(0, rank.length);
-        let start = 0;
-        for (let i = 1; i <= rank.length; i++) {
-          if (i < rank.length && rank[i].side - rank[i - 1].side <= this.shieldWallGap) continue;
-          const wall = rank.slice(start, i);
-          start = i;
-          if (wall.length < 2) continue;
-          const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * this.shieldSlotSpacing;
-          const wallId = walls++;
-          wall.forEach((entry, k) => {
-            const shift = first + k * this.shieldSlotSpacing - entry.side;
-            this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift) });
-          });
+      })).sort((a, b) => a.side - b.side || a.unit.runtimeId - b.unit.runtimeId);
+      // A carrier seen for the first time takes the rank its depth behind the foremost one puts it in.
+      const front = Math.max(...placed.map((entry) => entry.depth));
+      for (const entry of placed) {
+        if (this._shieldRanks.has(entry.unit)) continue;
+        this._shieldRanks.set(entry.unit, Math.max(0, Math.ceil((front - entry.depth) / this.shieldRankDepth - 1 - 1e-6)));
+      }
+      const rankOf = (unit: RuntimeUnit) => this._shieldRanks.get(unit) ?? 0;
+      let ahead: ShieldWallLine[] = [];
+      let aheadRank = -1;
+      for (const r of [...new Set(placed.map((entry) => rankOf(entry.unit)))].sort((a, b) => a - b)) {
+        const rank = placed.filter((entry) => rankOf(entry.unit) === r);
+        const hosts = aheadRank === r - 1 ? ahead : [];
+        const formed: ShieldWallLine[] = [];
+        if (r === 0) {
+          let start = 0;
+          for (let i = 1; i <= rank.length; i++) {
+            if (i < rank.length && rank[i].side - rank[i - 1].side <= this.shieldWallGap) continue;
+            const wall = rank.slice(start, i);
+            start = i;
+            if (wall.length < 2) continue;
+            const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * this.shieldSlotSpacing;
+            const wallId = walls++;
+            wall.forEach((entry, k) => {
+              const shift = first + k * this.shieldSlotSpacing - entry.side;
+              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null });
+            });
+            formed.push({ first, count: wall.length, depth: wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length });
+          }
+        } else {
+          // Each rear man backs the wall ahead that he stands behind; with none ahead of him he moves up a rank.
+          const backing = new Map<ShieldWallLine, typeof rank>();
+          for (const entry of rank) {
+            const host = hosts.find((line) => entry.side >= line.first - this.shieldWallGap
+              && entry.side <= line.first + (line.count - 1) * this.shieldSlotSpacing + this.shieldWallGap);
+            if (!host) {
+              this._shieldRanks.set(entry.unit, r - 1);
+              continue;
+            }
+            backing.set(host, [...(backing.get(host) ?? []), entry]);
+          }
+          for (const [host, group] of backing) {
+            // Slots sit on the half spacings of the wall ahead: behind its gaps while the group fits between its flanks, centred on it when it does not.
+            const gaps = host.count - 1;
+            const wanted = Math.round((group.reduce((sum, entry) => sum + entry.side, 0) / group.length - host.first) / this.shieldSlotSpacing - group.length * 0.5);
+            const j0 = group.length <= gaps ? Math.min(Math.max(wanted, 0), gaps - group.length) : Math.floor((gaps - group.length) / 2);
+            const first = host.first + (j0 + 0.5) * this.shieldSlotSpacing;
+            const depth = host.depth - this.shieldRankGap;
+            const wallId = walls++;
+            group.forEach((entry, k) => {
+              const shift = first + k * this.shieldSlotSpacing - entry.side;
+              const back = depth - entry.depth;
+              this._shieldSlots.set(entry.unit, {
+                wall: wallId,
+                offset: new Vector3(-fz * shift, 0, fx * shift),
+                heading,
+                hold: new Vector3(-fz * shift + fx * back, 0, fx * shift + fz * back),
+              });
+            });
+            formed.push({ first, count: group.length, depth });
+          }
         }
+        ahead = formed;
+        aheadRank = r;
       }
     }
+  }
+
+  /** In contact a slotted carrier stands square to his wall's advance, board to the front, while his enemy is within shieldHeadingArc of it. */
+  private _holdWallHeading(unit: RuntimeUnit, slot: ShieldSlot, enemy: RuntimeUnit): void {
+    const bearing = Math.atan2(enemy.position.x - unit.position.x, enemy.position.z - unit.position.z);
+    const off = Math.atan2(Math.sin(bearing - slot.heading), Math.cos(bearing - slot.heading));
+    unit.holdHeading(Math.abs(off) <= this.shieldHeadingArc ? slot.heading : null);
   }
 
   /** A man on his feet holding the line with a full board: bucklers and chargers do not make a wall. */
@@ -689,9 +770,10 @@ export class SimulationSystem {
       && !unit.isToppled && !unit.isDowned;
   }
 
-  /** The step across that takes a carrier toward its slot, no longer than shieldSlotStride, or null when it stands in it. */
-  private _shieldSlotStep(unit: RuntimeUnit): Vector3 | null {
-    const offset = this._shieldSlots.get(unit)?.offset;
+  /** The step across that takes a carrier toward its slot, no longer than shieldSlotStride, or null when it stands in it. In contact a rear-rank man's step also takes him to his depth behind the front. */
+  private _shieldSlotStep(unit: RuntimeUnit, inContact = false): Vector3 | null {
+    const slot = this._shieldSlots.get(unit);
+    const offset = inContact ? slot?.hold ?? slot?.offset : slot?.offset;
     if (!offset) return null;
     const reach = offset.length();
     if (reach <= 0.05) return null;

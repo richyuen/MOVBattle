@@ -89,6 +89,7 @@ export class RuntimeUnit {
 
   // Special: spinning (berserker)
   private _spinning = false;
+  private _headingHold: number | null = null;
   private _slowMultiplier = 1;
   private _cohesionMoveMultiplier = 1;
   private _slowUntil = 0;
@@ -431,6 +432,12 @@ export class RuntimeUnit {
     if (dx * dx + dz * dz > 0.001) {
       this.body.root.rotation.y = Math.atan2(dx, dz);
     }
+  }
+
+  /** Stands facing this yaw whichever way it steps, until released with null. */
+  holdHeading(yaw: number | null): void {
+    this._headingHold = yaw;
+    if (yaw !== null && !this._isDead) this.body.root.rotation.y = yaw;
   }
 
   setSpinning(spinning: boolean): void {
@@ -814,7 +821,7 @@ export class RuntimeUnit {
           this.body.root.rotation.y += dt * 20;
         } else {
           const angle = Math.atan2(dir.x, dir.z);
-          this.body.root.rotation.y = angle;
+          this.body.root.rotation.y = this._headingHold ?? angle;
         }
 
         // Resolve obstacle collisions after movement step
