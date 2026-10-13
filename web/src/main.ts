@@ -120,8 +120,8 @@ initMaterialFactory(scene);
 const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0.3), scene);
 hemi.intensity = 0.6;
 hemi.groundColor = new Color3(0.25, 0.22, 0.18);
-// The sky fill is nearly all blue: about half the red and green of the old (0.7, 0.9) with the blue kept, so shade lit by it alone holds less red
-hemi.diffuse = new Color3(0.37, 0.53, 1.55);
+// The sky fill leans blue, so shade lit by it alone is a cool red-brown and not blood red
+hemi.diffuse = new Color3(0.7, 0.9, 1.6);
 // The sun stands about 55 degrees up, so a tree's shadow is shorter than the tree and does not reach across the field.
 const dir = new DirectionalLight("dir", new Vector3(-0.305, -0.762, 0.457), scene);
 dir.intensity = 0.9;
