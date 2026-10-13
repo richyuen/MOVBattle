@@ -576,15 +576,15 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3)
     case "spear":
     case "javelin":
     case "harpoon": {
-      // Taller than the unit: body height is ~1.3 at scale 1, s already carries the 1.25 exaggeration
+      // Half as tall again as the unit and no more: body height is ~1.3 at scale 1 and s carries the 1.25 exaggeration under the 1.6 prop oversize, so a 1.3 shaft stood twice a man and a rank of them was a forest of poles
       // A stick with a small point: a head 0.09 across and 0.22 long was as big as a torso once oversized, and a 0.045 shaft a pole.
-      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.3 * s, diameter: 0.036 * s, tessellation: 6 }, scene);
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.036 * s, tessellation: 6 }, scene);
       shaft.material = mat(scene, new Color3(0.5, 0.35, 0.2));
       const tip = MeshBuilder.CreateCylinder("tip", { height: 0.16 * s, diameterTop: 0, diameterBottom: 0.055 * s, tessellation: 4 }, scene);
-      tip.position.y = 0.73 * s;
+      tip.position.y = 0.58 * s;
       tip.parent = shaft;
       tip.material = mat(scene, type === "harpoon" ? new Color3(0.6, 0.6, 0.65) : new Color3(0.35, 0.35, 0.4));
-      shaft.position.y = 0.3 * s;
+      shaft.position.y = 0.15 * s; // gripped where it was, 0.35 up from the butt
       return shaft;
     }
     case "axe": {
