@@ -152,8 +152,11 @@ const HAT_CUT_FOR_HEAD = 0.7;
 const NECK_LENGTH = 0.07;
 /** Arms and legs are stretched by this much over their old segment lengths, so the body is some six and a half heads tall and the hands hang to mid thigh. */
 const LIMB_STRETCH = 1.16;
-/** A mitt is sized from the sleeve it hangs from and not from the head: this many sleeve-top widths across its longest side. */
-const MITT_FROM_SLEEVE = 1.7;
+/** A mitt is sized from the wrist it hangs from, not from the sleeve or the head: its knuckles are this many forearm ends across, so the hand is never wider than the arm it ends. */
+const MITT_OF_WRIST = 1.0;
+/** ...and it is a block: this many of its own widths long and deep. */
+const MITT_LENGTH = 1.4;
+const MITT_DEPTH = 0.8;
 /** Sleeves and thighs are a little fuller than the forearms and shins they end in: more made them square puffed blocks. */
 const SLEEVE_BULK = 1.05;
 /** A limb narrows in one unbroken line: the forearm and shin start at the width the sleeve and thigh end at, with no step at the joint, and run down to a wrist and ankle no thinner than this share of it. */
@@ -288,18 +291,40 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Mitt hand: a flat thumbless paddle cut from a box and not a ball. Square across the fingertips, wider there than the wrist it hangs from, drawn in to the wrist at its top and thin through the palm. */
-  function mitt(n: string, size: number, mat: PBRMetallicRoughnessMaterial): Mesh {
-    const m = MeshBuilder.CreateBox(n, { width: size * s * 0.66, height: size * s * 0.84, depth: size * s * 0.24 }, scene);
-    const positions = m.getVerticesData("position")!;
+  /** Mitt hand: a block fist and not a paddle. Its knuckles are as wide as the forearm end it hangs from and nearly as deep, it draws in a little to the wrist above them and is bevelled to a blunt end below, and a thumb block stands off the front of the palm. */
+  function mitt(n: string, width: number, mat: PBRMetallicRoughnessMaterial): Mesh {
+    const w = width * s;
+    const length = w * MITT_LENGTH;
+    const depth = w * MITT_DEPTH;
+    const palm = MeshBuilder.CreateCylinder(`${n}_palm`, { height: length, diameter: 1, tessellation: 4, subdivisions: 2 }, scene);
+    const positions = palm.getVerticesData("position")!;
     for (let i = 0; i < positions.length; i += 3) {
-      // The wrist end narrows to the forearm; the fingertip end keeps its full width and thins to a blunt edge.
-      if (positions[i + 1] > 0) positions[i] *= 0.6;
-      else positions[i + 2] *= 0.7;
+      const x = positions[i];
+      const z = positions[i + 2];
+      const y = positions[i + 1];
+      // Three square rings: the wrist, the knuckles at full width a third of the way down, and the fingertips drawn in under them.
+      const ring = y > length * 0.25 ? 0.85 : y < -length * 0.25 ? 0.7 : 1;
+      if (ring === 1) positions[i + 1] = length * 0.1;
+      if (Math.abs(x) + Math.abs(z) < 1e-6) continue;
+      positions[i] = Math.sign(x - z) * w * 0.5 * ring;
+      positions[i + 2] = Math.sign(x + z) * depth * 0.5 * (ring === 0.7 ? 0.6 : ring);
     }
-    m.setVerticesData("position", positions);
-    m.convertToFlatShadedMesh();
-    m.refreshBoundingInfo();
+    palm.setVerticesData("position", positions);
+    // The thumb: a short block on the front of the palm below the wrist, tipped out from it and narrower at its end.
+    const thumb = MeshBuilder.CreateBox(`${n}_thumb`, { width: w * 0.42, height: length * 0.5, depth: depth * 0.5 }, scene);
+    const thumbPositions = thumb.getVerticesData("position")!;
+    for (let i = 0; i < thumbPositions.length; i += 3) {
+      if (thumbPositions[i + 1] < 0) thumbPositions[i] *= 0.7;
+    }
+    thumb.setVerticesData("position", thumbPositions);
+    thumb.rotation.x = -0.45;
+    thumb.position.set(0, length * 0.02, depth * 0.62);
+    for (const part of [palm, thumb]) {
+      part.convertToFlatShadedMesh();
+      part.computeWorldMatrix(true);
+    }
+    const m = Mesh.MergeMeshes([palm, thumb], true)!;
+    m.name = n;
     m.material = mat;
     allMeshes.push(m);
     return m;
@@ -368,7 +393,8 @@ export function buildArticulatedBody(
   const upperArmBottom = upperArmTop * Math.max(0.62, 0.82 - limbTaper * 0.12);
   const lowerArmTop = upperArmBottom;
   const lowerArmBottom = lowerArmTop * Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerArmWidth ?? 1.0);
-  const handDiameter = upperArmTop * MITT_FROM_SLEEVE * (p.handSize ?? 1.0);
+  const handWidth = lowerArmBottom * MITT_OF_WRIST * (p.handSize ?? 1.0);
+  const handLength = handWidth * MITT_LENGTH;
 
   const upperLegH = 0.308 * LIMB_STRETCH * p.legLength;
   const lowerLegH = 0.275 * LIMB_STRETCH * p.legLength;
@@ -510,8 +536,8 @@ export function buildArticulatedBody(
   leftLowerArm.parent = leftElbow;
   const leftHand = joint(`${name}_lHand`, leftElbow);
   leftHand.position.y = -lowerArmH * s;
-  const leftHandMesh = mitt(`${name}_lHandM`, handDiameter, skinMat);
-  leftHandMesh.position.set(-0.01 * s, -handDiameter * s * 0.3, handDiameter * s * 0.08);
+  const leftHandMesh = mitt(`${name}_lHandM`, handWidth, skinMat);
+  leftHandMesh.position.set(0, -handLength * s * 0.42, 0);
   leftHandMesh.parent = leftHand;
 
   // Right arm
@@ -541,8 +567,8 @@ export function buildArticulatedBody(
   rightLowerArm.parent = rightElbow;
   const rightHand = joint(`${name}_rHand`, rightElbow);
   rightHand.position.y = -lowerArmH * s;
-  const rightHandMesh = mitt(`${name}_rHandM`, handDiameter, skinMat);
-  rightHandMesh.position.set(0.01 * s, -handDiameter * s * 0.3, handDiameter * s * 0.08);
+  const rightHandMesh = mitt(`${name}_rHandM`, handWidth, skinMat);
+  rightHandMesh.position.set(0, -handLength * s * 0.42, 0);
   rightHandMesh.parent = rightHand;
 
   // ─── Shoulder Caps (hide joint seams) ───
