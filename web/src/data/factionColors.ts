@@ -52,6 +52,6 @@ export const FACTION_NAMES: Record<FactionId, string> = {
 };
 
 export const TEAM_COLORS = {
-  0: new Color3(0.50, 0.68, 0.96),  // Team A - sky blue
+  0: new Color3(0.62, 0.86, 1.0),  // Team A - sky blue
   1: new Color3(1.0, 0.26, 0.28),  // Team B - crimson
 } as Record<number, Color3>;
