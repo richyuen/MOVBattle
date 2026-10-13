@@ -1255,10 +1255,12 @@ function checkVictory(): void {
 function frameSurvivorsForResult(winner: number | null): void {
   const box = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, baseY: Infinity, height: 0, focus: { x: 0, z: 0 } };
   const spots: { x: number; z: number }[] = [];
+  const giantSpots: { x: number; z: number }[] = [];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead || (winner !== null && unit.team !== winner)) continue;
-    spots.push({ x: unit.position.x, z: unit.position.z });
     const bounds = unit.body.root.getHierarchyBoundingVectors();
+    // A survivor over 4.2 tall is not somewhere to point the shot: the focus is picked among the human-sized ones.
+    (bounds.max.y - unit.position.y > 4.2 ? giantSpots : spots).push({ x: unit.position.x, z: unit.position.z });
     box.minX = Math.min(box.minX, unit.position.x);
     box.maxX = Math.max(box.maxX, unit.position.x);
     box.minZ = Math.min(box.minZ, unit.position.z);
@@ -1267,6 +1269,7 @@ function frameSurvivorsForResult(winner: number | null): void {
     box.height = Math.max(box.height, bounds.max.y - unit.position.y);
   }
   if (box.height <= 0) return;
+  if (spots.length === 0) spots.push(...giantSpots);
   // Focus: the survivor standing nearest the middle of the group, for when the group is too spread to frame whole.
   const midX = spots.reduce((sum, s) => sum + s.x, 0) / spots.length;
   const midZ = spots.reduce((sum, s) => sum + s.z, 0) / spots.length;
