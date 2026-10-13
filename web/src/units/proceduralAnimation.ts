@@ -619,7 +619,7 @@ export class ProceduralAnimator {
     } : null;
     return {
       weapon: held ? { ...attitude, prop } : null,
-      ready: armed ? { ...hold, prop: stave, yaw: 0.35 + h(89) * 0.35, stagger: 0.24 + h(90) * 0.16, give: 0.1 + h(91) * 0.16 }
+      ready: armed ? { ...hold, prop: stave, yaw: 0.6 + h(89) * 0.35, stagger: 0.4 + h(90) * 0.2, give: 0.1 + h(91) * 0.16 }
         : rodHold ? { ...rodHold, prop: rodProp, yaw: 0.1 + h(89) * 0.25, stagger: 0, give: 0, cast: true } : null,
       board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
       bob: 0.08 + h(84) * 0.1,
