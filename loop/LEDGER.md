@@ -25,7 +25,8 @@ unitFactory.ts:team blue colour | (0.42, 0.60, 0.98) | 150 | spent | (0.62,0.86,
 unitFactory.ts:team red colour | greyed crimson | 142 | spent | plum 123, pink 126, crimson 127, bright 128 rejected, greyed 129, bubblegum 140: walked in circles
 unitFactory.ts:idle lean | 0.26 + h*0.14 | 148 | spent | do not raise, drives lineups
 bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, FOOT_ANKLE, CHEST_LINE, CHEST_SWELL, SHOULDER_SLOPE, WAIST_DEPTH) | lower limb starts at the upper limb's end (no step), min taper 0.6, foot from 0.85 of shin top; chest line 0.36, swell 1.05, shoulders 0.8, waist depth 0.85 | 166 | approved | LOWER_LIMB_STEP 1.0375 joint step + min taper 0.88; torso a plain hex frustum
-bodyBuilder.ts:head, neck, limb length, mitt (HEAD_OF_BODY, HEAD_CORNER, HAT_CUT_FOR_HEAD, NECK_LENGTH, LIMB_STRETCH, MITT_FROM_SLEEVE) | head a bevelled block (blockHead: crown 0.9, brow at 0.6 of its height, jaw 0.78) sized 0.18 of standing height, corners 0.55, hat anchor scaled as for a 0.7 head, eyes on the face flat; neck column 0.07 with head, eyes and hat anchor on top, arm and leg segments x1.16, mitt 1.7 sleeve tops | 168 | approved | head a 6-segment sphere at HEAD_SHRINK 0.78 (167), HEAD_SHRINK 0.88, head on the torso top, mitt 0.13 from headSize; no HEAD_SHRINK re-nudge (critic 167: head shape needs an [S])
+bodyBuilder.ts:head, neck, limb length, mitt (HEAD_OF_BODY, HEAD_CORNER, NECK_LENGTH, LIMB_STRETCH, MITT_FROM_SLEEVE, mitt box) | head a bevelled block (blockHead: crown 0.9, brow at 0.6 of its height, jaw 0.78) sized 0.18 of standing height, corners 0.55, eyes on the face flat; neck column 0.07 with head, eyes and hat anchor on top, arm and leg segments x1.16, mitt 1.7 sleeve tops: a box paddle 0.66 wide, 0.84 long, 0.24 thick, wrist end x0.6, fingertip depth x0.7 | 169 | approved | mitt a 2-segment sphere scaled 0.6/0.8/0.4 (168); head a 6-segment sphere at HEAD_SHRINK 0.78 (167), HEAD_SHRINK 0.88, head on the torso top, mitt 0.13 from headSize; no HEAD_SHRINK re-nudge (critic 167: head shape needs an [S])
+bodyBuilder.ts:HAT_CUT_FOR_HEAD | 0.7 | 169 | spent | 0.85 rejected 169: scales headTop, so every hat, hair and wreath shrank off the head and the helm was still wider than the shoulders; fit the helm in propBuilder instead
 bodyBuilder.ts:SLEEVE_BULK | 1.05 | 167 | approved | 1.15; tuned, no further [P] (critic 167); also scales thighs and the mitt
 propBuilder.ts:hair scale/y | 1.5x head, y 0.24 | 160 | approved |
 propBuilder.ts:bare shoulder cap | 1.3 | 160 | approved |
@@ -38,6 +39,7 @@ visualEffects.ts:explosion burst (lobes, shells, flecks, colours) | 4 unlit yell
 visualEffects.ts:explosion dust bank (puffs, reach, size, tall, tans) | 14 unlit puffs on a disc, reach 2.3*sqrt, size 0.7-1.45, tall 0.9-0.3*spread, emissive tans (0.8,0.6,0.35)/(0.68,0.5,0.28)/(0.56,0.4,0.22), gone at 60% | 164 | approved | tall and tans now tuned, no further [P] on them (critic 164); tall 0.5-0.18*spread, tans (0.62,0.36,0.12)/(0.48,0.27,0.09)/(0.36,0.2,0.07) 163; ring of 10 lit stone lumps (0.75,0.68,0.5), colour spent 162: any lit tan renders grey; one self-lit mound 0.85 (spent: fireScale cap 1.35 snowman)
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved | 6, speed 0.9-2.2, up 3-5.4
 proceduralAnimation.ts:shield brace (arm, torso, knees, board) | shoulder x -0.7 z 0.3, elbow -1.1, torso pitch 0.1, roll x0.3, knees +0.15, board slerped square to root yaw at 1.5*shove | 165 | approved |
+proceduralAnimation.ts:spear carry (_carrySpear, spear arm) | wall carrier's shaft turned in the fist by root yaw: upright (pitch 0.06) on the march, level (+PI/2+0.04) at 1.5*shove, weight 1-limp; contact arm shoulder x -2.2 z 0.2 elbow -1.2, jab +0.5/+0.9 over the attack; march arm x ~0, z 0.25, elbow -0.5; a rear man halted within engage + shieldRankGap + 1 of his target braces (simulationSystem) | 169 | approved |
 proceduralAnimation.ts:landed corpse folds (_writeDeathRest) | back: thigh 0.95+0.3u, knee 2x, arm across chest (z 0.5, y 1.57, elbow -1.7), torso lift 0.3+0.6u in 2 of 5; front: shin 1.3+0.4u, wing arm x 0.7, arch -0.3; neck roll 0.7+0.4u; flank rolls over | 164 | approved |
 vehicleBuilder.ts:catapult arm/posts/bucket/wheels | see 155-158 | 158 | spent | goalpost rejected-kept twice
 vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 | spent | ~30 attempts
@@ -59,6 +61,8 @@ vehicleBuilder.ts:mammoth hide/tusks/hat/trample/launch/legs | see 15-159 | 159 
 - 167 | squat-proportions | unit-look.c | approved
 - 168 | rear-rank-march-depth | battle-feel.a | approved
 - 168 | pin-ball-head | unit-look.c | approved
+- 169 | round-fist-hands | unit-look.c | approved
+- 169 | rear-spears-fan-and-cross | battle-feel.a | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
