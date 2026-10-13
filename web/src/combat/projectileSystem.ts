@@ -184,7 +184,7 @@ export class ProjectileSystem {
     // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball. Its tone comes from the base colour, well past white
     // and warm against the blue sky light, with a faint glow of its own and no more: the glow is a floor under every facet, and at 0.22 it lifted lit and shaded facets alike into one flat pale tone.
     // Facets that face down are tinted darker and cooler, so the clump has a lit top and a shaded belly whatever side the sun is on.
-    const sm = getMaterialFactory().createUnique("cloth", new Color3(2.6, 2.15, 1.3));
+    const sm = getMaterialFactory().createUnique("cloth", new Color3(1.9, 1.6, 1.05)); // at (2.6, 2.15, 1.3) its darkest facet was still a pale grey and the clump a white ball
     sm.emissiveColor = new Color3(0.11, 0.11, 0.10);
     sm.transparencyMode = 2;
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
