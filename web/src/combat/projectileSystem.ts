@@ -36,6 +36,8 @@ interface MuzzleFlash {
   remaining: number;
   /** Smoke blobs only: total life, used to swell, rise and hold opaque before fading. */
   smokeLife?: number;
+  /** Smoke blobs only: metres a second it drifts off down the line of fire and out from the middle of its clump. */
+  drift?: Vector3;
   ownsMaterial?: boolean;
 }
 
@@ -188,7 +190,7 @@ export class ProjectileSystem {
     sm.emissiveColor = new Color3(0.11, 0.11, 0.10);
     sm.transparencyMode = 2;
     sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
-    const smokeLife = 1.5 + 0.5 * Math.max(0, scale - 1);
+    const smokeLife = 3.0 + 0.5 * Math.max(0, scale - 1); // at 1.5 the puff was gone before the next shot, and a gun line never stood in its own smoke
     // The lobes are one clump and not a row along the barrel: all are thrown up to 0.15 any way off one point 0.15 out from the flash (at 0.3 the clump hung a barrel-width clear of the
     // muzzle), the first the biggest and the rest a half to four fifths of its width: at a third to three fifths it was one sphere with crumbs on it, a barrel-mouth wide.
     for (let i = 0; i < 8; i++) {
@@ -209,7 +211,11 @@ export class ProjectileSystem {
       }
       smoke.setVerticesData(VertexBuffer.ColorKind, tones);
       smoke.material = sm;
-      this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, ownsMaterial: i === 0 });
+      // Each lobe rolls off down the line of fire at its own 0.4-0.6 a second and on out from the middle of the clump, so the puff strings out and breaks up as it hangs: rising only, it was one ball to the end.
+      const drift = direction.scale(0.4 + 0.2 * (i / 7));
+      drift.x += (smoke.position.x - flash.position.x - direction.x * 0.15 * scale) * 1.2;
+      drift.z += (smoke.position.z - flash.position.z - direction.z * 0.15 * scale) * 1.2;
+      this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, drift, ownsMaterial: i === 0 });
     }
   }
 
@@ -325,6 +331,7 @@ export class ProjectileSystem {
         const ratio = Math.max(0, f.remaining / f.smokeLife);
         f.mesh.scaling.setAll(0.55 + (1 - ratio * ratio * ratio) * 0.4);
         f.mesh.position.y += 0.3 * dt;
+        if (f.drift) f.mesh.position.addInPlace(f.drift.scale(dt));
         (f.mesh.material as PBRMetallicRoughnessMaterial).alpha = Math.min(1, ratio * 5);
       } else {
         // Fade and expand
