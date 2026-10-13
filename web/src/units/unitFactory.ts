@@ -222,8 +222,8 @@ export class UnitFactory {
       const hue = isArmored ? hsv.r + (cool ? COOL_ARMOUR_HUE_SHIFT : 0) : (hsv.r + (cool ? -COOL_CLOTH_HUE_SHIFT : CLOTH_HUE_SHIFT) + 360) % 360;
       const saturation = cool ? (isArmored ? Math.max(hsv.g, COOL_ARMOUR_SATURATION) : Math.max(hsv.g * CLOTH_SATURATION, COOL_CLOTH_SATURATION)) : Math.min(1, hsv.g * WARM_SATURATION);
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? (cool ? COOL_ARMOUR_SHADE : shade(ARMOUR_SHADE)) : 1), new Color3());
-      // Warm trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass.
-      const legBase = cool || isArmored ? body.bodyMaterial.baseColor : body.skinMaterial.baseColor;
+      // Trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass, and cool legs shaded from the tunic were one navy with it.
+      const legBase = isArmored ? body.bodyMaterial.baseColor : body.skinMaterial.baseColor;
       const trouserMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
