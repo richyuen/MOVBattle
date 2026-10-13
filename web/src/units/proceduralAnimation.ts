@@ -113,7 +113,8 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     return {
-      pitch: 0.2 + h(1) * 0.15,
+      // A third of a rank presses upright or leaning a touch back, the rest lean in by their own amount: at 0.2-0.35 for all, every presser met the 0.6 cap and the rank folded at one angle.
+      pitch: h(1) < 0.34 ? -0.08 + h(11) * 0.12 : 0.1 + h(11) * 0.25,
       roll: (h(2) - 0.5) * 0.4,
       stance: (h(3) < 0.5 ? -1 : 1) * (0.12 + h(4) * 0.15),
       knee: 0.12 + h(5) * 0.2,
