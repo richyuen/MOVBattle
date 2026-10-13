@@ -658,10 +658,10 @@ export class ProjectileSystem {
 
   // A brief white streak off the back of a thrown shaft: a thin spike of its own, tapering to nothing behind it. Particles left along the path were lost against the pale sky.
   private _addStreak(root: TransformNode, shaftHalf: number, length: number): void {
-    const streak = MeshBuilder.CreateCylinder("streak", { height: length, diameterTop: 0.05, diameterBottom: 0, tessellation: 4 }, this._scene);
+    const streak = MeshBuilder.CreateCylinder("streak", { height: length, diameterTop: 0.02, diameterBottom: 0, tessellation: 4 }, this._scene);
     streak.rotation.x = Math.PI / 2;
     streak.position.z = -(shaftHalf + length / 2);
-    streak.material = this._getMat("streak", new Color3(1, 1, 1), 1);
+    streak.material = getMaterialFactory().get("wood", new Color3(1, 1, 1), { emissiveIntensity: 0.3, alpha: 0.5 });
     streak.parent = root;
   }
 
