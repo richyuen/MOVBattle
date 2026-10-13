@@ -674,7 +674,7 @@ export class ProceduralAnimator {
         b.rightShoulder.rotation.z += (h(62) - 0.5) * 0.7;
         b.leftShoulder.rotation.x *= 0.82;
         // The elbow folds most of the way up, so the club stands upright off the forearm and not level with the ground
-        b.rightElbow.rotation.x -= 0.9 + (h(63) - 0.5) * 0.8;
+        b.rightElbow.rotation.x -= 1.3 + (h(63) - 0.5) * 0.4;
         break;
       }
       case "aimed":
