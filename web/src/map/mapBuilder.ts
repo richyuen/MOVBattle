@@ -15,6 +15,7 @@ const TREE_RING_Z = 36;
 const BLADE_DARK = 0.9;    // grass-blade shades relative to the field color
 const BLADE_LIGHT = 1.0;   // in-hue: scaled, never mixed toward white
 const BLADE_ROOT_Y = 0.02; // the lawn's top, where every blade is rooted
+const BLADE_SIGHT_REACH = 4; // metres: the farthest a blade looks past its own root for the lawn the eye sees behind it
 const HAZE_MIX = 0.08;     // how far the far treeline is mixed toward the lightened fog color
 const HAZE_LIFT = 0.4;     // how far the fog color is lightened before far props are mixed into it
 const FAR_ROCK = new Color3(0.5, 0.48, 0.44);  // warm grey-brown, dark enough that the snow tips read against it
@@ -26,10 +27,11 @@ const FAR_ROCK_GLOW = 0.06; // low self-light, so faces turned from the sun stay
 const FAR_ROCK_MIX = 0.3;   // far ridge sits three tenths into the sky haze: its sunlit faces stay rock, darker than the snow on them
 
 /**
- * Grass takes the shadow of the ground it is rooted in. A blade is shaded per fragment like anything else, so a man's shadow fell on the tips a hand's breadth
- * from where it fell on the lawn, and each card cut its own lit or dark sliver out of the silhouette. Here the shadow lookup of every blade vertex is redone
- * from the point of the lawn under it, after the standard shader has done it from the vertex itself: root and tip get the lawn's value, and a shadow
- * lies over grass and soil as one flat shape.
+ * Grass takes the shadow of the lawn the eye sees through it. A blade is shaded per fragment like anything else, so a man's shadow fell on the tips a hand's breadth
+ * from where it fell on the lawn, and each card cut its own lit or dark sliver out of the silhouette. Shaded whole from its root, a blade stood dark out of the
+ * shadow's far edge and lit into its near one, and the outline was a sawtooth of cards. Here the shadow lookup of every blade vertex is redone, after the standard
+ * shader has done it from the vertex itself, from the point where the line of sight through that vertex meets the lawn: the root looks itself up, the tip the
+ * lawn behind it, and the card fades between the two. What a blade shows is what the lawn it covers would show, so a shadow keeps the outline it has on bare ground.
  */
 class RootShadowPlugin extends MaterialPluginBase {
   constructor(material: Material) {
@@ -62,7 +64,10 @@ vPositionFromLight${x}=lightMatrix${x}*bladeRoot;${depth(x, "")}
     return {
       CUSTOM_VERTEX_MAIN_END: `
 #ifdef SHADOWS
-vec4 bladeRoot=vec4(worldPos.x,${BLADE_ROOT_Y.toFixed(3)},worldPos.z,1.0);${[0, 1, 2, 3].map(slot).join("")}
+vec3 bladeEye=-vec3(dot(view[0].xyz,view[3].xyz),dot(view[1].xyz,view[3].xyz),dot(view[2].xyz,view[3].xyz));
+vec2 bladeSight=(worldPos.xz-bladeEye.xz)*(max(worldPos.y-${BLADE_ROOT_Y.toFixed(3)},0.0)/max(bladeEye.y-worldPos.y,0.05));
+bladeSight*=min(1.0,${BLADE_SIGHT_REACH.toFixed(1)}/max(length(bladeSight),0.0001));
+vec4 bladeRoot=vec4(worldPos.xz+bladeSight,${BLADE_ROOT_Y.toFixed(3)},1.0).xzyw;${[0, 1, 2, 3].map(slot).join("")}
 #endif`,
     };
   }
