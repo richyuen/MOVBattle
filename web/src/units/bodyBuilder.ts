@@ -500,6 +500,12 @@ export function buildArticulatedBody(
   const lowerLegTop = upperLegBottom;
   // The shin ends at the width of the boot top it goes into, and not at a needle ankle: a unit's own shin width only thins it down to SHIN_END.
   const lowerLegBottom = lowerLegTop * Math.max(SHIN_END, Math.max(LOWER_LIMB_MIN_TAPER, 0.8 - limbTaper * 0.14) * (p.lowerLegWidth ?? 1.0));
+  // One line through the hinge: an elbow or a knee is not where the taper of the sleeve or thigh above it happens to end, pinched between that and the belly below, which made each limb
+  // two links. It stands on the straight line from the top of the limb to the belly of the forearm or shin, so the limb runs through its joint as one tube and narrows only from the belly down.
+  const throughHinge = (top: number, upperH: number, belly: number, lowerH: number): number =>
+    (top * lowerH * LIMB_BELLY_DROP + belly * upperH) / (upperH + lowerH * LIMB_BELLY_DROP);
+  const elbowWidth = throughHinge(upperArmTop, upperArmH, lowerArmTop * FOREARM_SWELL, lowerArmH);
+  const kneeWidth = throughHinge(upperLegTop, upperLegH, lowerLegTop * CALF_SWELL, lowerLegH);
   // The boot is cut from the shin end it wraps: wider and deeper than it, and longer than it is wide with the length out in front as the toe.
   const footWidth = lowerLegBottom * BOOT_OVER_SHIN * (p.footWidth ?? 1.0);
   const footDepth = lowerLegBottom * BOOT_OVER_SHIN;
@@ -614,7 +620,7 @@ export function buildArticulatedBody(
     `${name}_lUpperArm`,
     upperArmH,
     upperArmTop,
-    upperArmBottom,
+    elbowWidth,
     bodyMat,
     new Vector3(1, 1, armDepthScale),
     radialSegments,
@@ -629,7 +635,7 @@ export function buildArticulatedBody(
   const leftLowerArm = tapered(
     `${name}_lLowerArm`,
     lowerArmH,
-    lowerArmTop,
+    elbowWidth,
     lowerArmBottom,
     skinMat,
     new Vector3(1, 1, armDepthScale * 0.92),
@@ -654,7 +660,7 @@ export function buildArticulatedBody(
     `${name}_rUpperArm`,
     upperArmH,
     upperArmTop,
-    upperArmBottom,
+    elbowWidth,
     bodyMat,
     new Vector3(1, 1, armDepthScale),
     radialSegments,
@@ -669,7 +675,7 @@ export function buildArticulatedBody(
   const rightLowerArm = tapered(
     `${name}_rLowerArm`,
     lowerArmH,
-    lowerArmTop,
+    elbowWidth,
     lowerArmBottom,
     skinMat,
     new Vector3(1, 1, armDepthScale * 0.92),
@@ -745,7 +751,7 @@ export function buildArticulatedBody(
     `${name}_lUpperLeg`,
     upperLegH,
     upperLegTop,
-    upperLegBottom,
+    kneeWidth,
     bodyMat,
     new Vector3(1, 1, legDepthScale),
     radialSegments,
@@ -760,7 +766,7 @@ export function buildArticulatedBody(
   const leftLowerLeg = tapered(
     `${name}_lLowerLeg`,
     lowerLegH,
-    lowerLegTop,
+    kneeWidth,
     lowerLegBottom,
     bodyMat,
     new Vector3(1, 1, legDepthScale * 0.94),
@@ -782,7 +788,7 @@ export function buildArticulatedBody(
     `${name}_rUpperLeg`,
     upperLegH,
     upperLegTop,
-    upperLegBottom,
+    kneeWidth,
     bodyMat,
     new Vector3(1, 1, legDepthScale),
     radialSegments,
@@ -797,7 +803,7 @@ export function buildArticulatedBody(
   const rightLowerLeg = tapered(
     `${name}_rLowerLeg`,
     lowerLegH,
-    lowerLegTop,
+    kneeWidth,
     lowerLegBottom,
     bodyMat,
     new Vector3(1, 1, legDepthScale * 0.94),
