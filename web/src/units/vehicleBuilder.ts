@@ -1605,16 +1605,19 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     cheekPaint.parent = neck; cheekPaint.material = paintMat; allMeshes.push(cheekPaint);
   }
 
-  // Eyes: flat white discs lying on the face, each with a flat black pupil on the middle of its front
-  const eyeWhite = makeMat(scene, new Color3(0.95, 0.95, 0.95));
+  // Eyes: flat discs of self-lit warm white, so the blue ambient does not grey them, each turned out to lie on its side of the skull with a flat black pupil on the middle of its front
+  const eyeWhite = getMaterialFactory().get("bone", new Color3(0.95, 0.95, 0.95), { emissive: new Color3(0.3, 0.28, 0.25) });
   const pupilMat = makeMat(scene, new Color3(0.03, 0.03, 0.03));
-  for (const xOff of [-0.3, 0.3]) {
+  for (const side of [-1, 1]) {
+    const turn = side * 0.9;
     const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.2, segments: 6 }, scene);
-    eye.position.set(xOff, 0.08, 0.66);
+    eye.position.set(side * 0.36, 0.08, 0.63);
+    eye.rotation.y = turn;
     eye.scaling.z = 0.3;
     eye.parent = neck; eye.material = eyeWhite; allMeshes.push(eye);
     const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.09, segments: 4 }, scene);
-    pupil.position.set(xOff, 0.08, 0.69);
+    pupil.position.set(side * 0.36 + Math.sin(turn) * 0.03, 0.08, 0.63 + Math.cos(turn) * 0.03);
+    pupil.rotation.y = turn;
     pupil.scaling.z = 0.3;
     pupil.parent = neck; pupil.material = pupilMat; allMeshes.push(pupil);
   }
