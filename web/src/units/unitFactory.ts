@@ -74,7 +74,6 @@ const ARMOUR_PRESET_WEIGHT = 0.2;
 const ARMOUR_SHADE = 0.65;
 // Cool plate is hardly darkened and turned toward royal blue: the sky-blue team colour at the warm shade is a dark teal.
 const COOL_ARMOUR_SHADE = 0.9;
-const COOL_ARMOUR_LEG_SHADE = 0.75;
 const COOL_ARMOUR_HUE_SHIFT = 12;
 // Cool plate and surcoats are never paler than this: the sky-blue team colour only darkened is slate, and TABS knights are a deep blue.
 const COOL_ARMOUR_SATURATION = 0.85;
@@ -225,13 +224,11 @@ export class UnitFactory {
       body.bodyMaterial.baseColor = Color3.HSVtoRGBToRef(hue, saturation, hsv.b * shade(CLOTH_SHADE) * (isArmored ? (cool ? COOL_ARMOUR_SHADE : shade(ARMOUR_SHADE)) : 1), new Color3());
       // Trousers and boots are shades of the team skin, not of the tunic: orange-tan legs vanish against the autumn grass, and cool legs shaded from the tunic were one navy with it.
       const legBase = isArmored ? body.bodyMaterial.baseColor : body.skinMaterial.baseColor;
-      // Cool plate legs are a quarter darker again: shaded as the cloth ones are, they were one navy with the cuirass over them.
-      const plateLegShade = isArmored && cool ? COOL_ARMOUR_LEG_SHADE : 1;
-      const trouserMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE) * plateLegShade));
+      const trouserMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE)));
       for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
         leg.material = trouserMaterial;
       }
-      const bootMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE) * legShade(BOOT_SHADE) * plateLegShade));
+      const bootMaterial = getMaterialFactory().getCloth(legBase.scale(legShade(TROUSER_SHADE) * legShade(BOOT_SHADE)));
       for (const mesh of [...body.leftKnee.getChildMeshes(true), ...body.rightKnee.getChildMeshes(true)]) {
         if (/_[lr]FootM$/.test(mesh.name)) mesh.material = bootMaterial;
       }
