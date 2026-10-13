@@ -281,9 +281,9 @@ export class CameraController {
     const MAX_RADIUS = 11;
     const spread = fitSpan > MAX_RADIUS;
     // With the giant's place known the eye stands between it and the focus, its back to the giant: as far off the focus as leaves the giant 2.5 clear behind it,
-    // from 3 up to the 4.5 at which a man is whole between the bands, and aimed lower the farther back it stands, down to his middle.
+    // from the 4.5 at which a man is whole between the bands up to 6, and aimed a little under his middle: at 3 the eye stood inside the crowd and one back filled the frame.
     const giantOff = giant && box.giant ? Math.hypot(box.giant.x - box.focus.x, box.giant.z - box.focus.z) : 0;
-    const giantRadius = Math.min(4.5, Math.max(3, giantOff - 2.5));
+    const giantRadius = Math.min(6, Math.max(4.5, giantOff - 2.5));
     const radius = giant ? giantRadius : Math.min(MAX_RADIUS, Math.max(4.5, fitHeight, spread ? 0 : fitSpan));
     // A giant too near the focus to stand 4.5 clear behind the eye is not behind it at all: its tusks and legs came round into the frame. The eye goes a quarter turn round the focus and stands side-on to the giant, which leaves the frame.
     const farSide = giantOff - 4.5 < 3 ? 0.5 * Math.PI : 0;
@@ -296,7 +296,7 @@ export class CameraController {
       radius,
       target: {
         x: giant ? (box.group ?? box.focus).x : spread ? box.focus.x : (box.minX + box.maxX) / 2,
-        y: box.baseY + (giant ? 1 - (giantRadius - 3) / 3 : Math.max(1, tall * 0.5)),
+        y: box.baseY + (giant ? 0.8 : Math.max(1, tall * 0.5)),
         z: giant ? (box.group ?? box.focus).z : spread ? box.focus.z : (box.minZ + box.maxZ) / 2,
       },
     };
