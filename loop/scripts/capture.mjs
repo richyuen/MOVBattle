@@ -97,6 +97,10 @@ for (let i = 0; i < 8; i++) {
 for (let i = 0; i < 6; i++) {
   SHIELD_WALL.push({ unitId: "medieval.squire", team: 0, position: { x: -5, z: -2 + i * 0.8 } });
 }
+// A second rank of boards behind red's wall, a clear rank depth back.
+for (let i = 0; i < 6; i++) {
+  SHIELD_WALL.push({ unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -2 + i * 0.8 } });
+}
 
 // Keep only summary.json for iterations older than KEEP_ITERS: the PNGs run to ~10 MB a turn.
 function pruneOld() {
