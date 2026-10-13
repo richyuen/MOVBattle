@@ -315,8 +315,10 @@ export class SimulationSystem {
           const sameTeamPressureScale = 0;
           const enemyPressureScale = 0.92 + compressionRatio * 0.46 + impactSpeed * 0.08;
           const contactPressureScale = sameTeam ? sameTeamPressureScale : enemyPressureScale;
-          const pressureScaleA = contactPressureScale * this._collisionMomentumMultiplier(b);
-          const pressureScaleB = contactPressureScale * this._collisionMomentumMultiplier(a);
+          // A colossus on the move tramples: an enemy it walks into takes two and a half times the balance pressure and goes down under it, where the plain shove left it standing under the tusks.
+          const trample = (by: RuntimeUnit) => !sameTeam && by.definition.size === "colossal" && by.collisionVelocity.lengthSquared() > 0.04 ? 2.5 : 1;
+          const pressureScaleA = contactPressureScale * this._collisionMomentumMultiplier(b) * trample(b);
+          const pressureScaleB = contactPressureScale * this._collisionMomentumMultiplier(a) * trample(a);
           a.applyCollisionImpulse(
             normal.scale(-impulseStrength * (weightedMassB / weightedMassTotal)),
             normal,
