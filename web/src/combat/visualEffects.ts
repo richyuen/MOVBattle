@@ -345,9 +345,9 @@ export class VisualEffects {
     // The fireball is mostly self-lit and graded from the inside out: a white-hot heart and a pale yellow inner
     // flame, both lit past white so they burn out to cream on screen, and a soft orange fringe. The inner flame sits between heart and fringe in hue, so it is a step of the grade and not a lemon patch.
     const coreMat = mats.createUnique("cloth", new Color3(1, 0.85, 0.3));
-    coreMat.emissiveColor = new Color3(0.8, 0.55, 0.04); // short of white in every channel: lit past it the heart burned out to cream and the ball was a snowman
+    coreMat.emissiveColor = new Color3(2.0, 1.95, 1.6);
     const flashMat = mats.createUnique("unlit", new Color3(1, 0.7, 0.2));
-    flashMat.emissiveColor = new Color3(1.0, 0.72, 0.06); // a saturated yellow, green well under red and next to no blue
+    flashMat.emissiveColor = new Color3(3.4, 3.4, 1.2);
     const flameMat = mats.createUnique("unlit", new Color3(1, 0.38, 0.02));
     flameMat.emissiveColor = new Color3(1.7, 1.25, 0.6);
     // The foot of the ball is a deeper orange than the fringe, whose own colour burns out to peach beside the heart.
