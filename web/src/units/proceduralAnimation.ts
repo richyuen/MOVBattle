@@ -494,7 +494,7 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     return {
-      lean: 0.32 + h(41) * 0.2, // at 0.22-0.38 a rear rank waiting behind the press stood bolt upright
+      lean: 0.22 + h(41) * 0.16,
       side: h(42) < 0.5 ? -1 : 1,
       spread: 0.2 + h(43) * 0.16,
       leftElbow: 0.45 + h(44) * 0.5,
