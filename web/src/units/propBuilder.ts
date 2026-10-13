@@ -1367,9 +1367,9 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         m.bakeCurrentTransformIntoVertices();
         return m;
       };
-      const shield = disc("rshield", 0.3, 0.03);
+      const shield = disc("rshield", 0.36, 0.03);
       shield.material = mat(scene, board);
-      const rim = disc("rshieldRim", 0.34, 0.022);
+      const rim = disc("rshieldRim", 0.4, 0.022);
       rim.position.z = -0.006 * s;
       rim.parent = shield;
       rim.material = mat(scene, teamColor.scale(0.45));
