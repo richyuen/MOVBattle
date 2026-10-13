@@ -157,7 +157,7 @@ const HEAD_OF_BODY = 0.18;
 /** The head block's bevelled corners sit this share of the way out to its flat sides: 1 is a plain box, 0.41 a regular octagon. */
 const HEAD_CORNER = 0.55;
 /** The head's profile, chin to crown, as [share of the brow's width, height from the middle in half heads]: chin, cheek, brow, temple, crown. */
-const HEAD_RINGS: ReadonlyArray<readonly [number, number]> = [[0.5, -1], [0.8, -0.45], [1, 0.15], [0.95, 0.6], [0.66, 1]];
+const HEAD_RINGS: ReadonlyArray<readonly [number, number]> = [[0.72, -1], [0.9, -0.45], [1, 0.15], [0.95, 0.6], [0.66, 1]];
 /** ...and it is no taller than its brow is wide: the block was an eighth taller than wide. */
 const HEAD_SQUAT = 0.86;
 /** Hats, crowns and halos were cut for a round head this many head units across, less the corners a block has: the hat anchor scales them up to the head they now sit on. */
@@ -407,7 +407,7 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Head: a faceted wedge and not a tall box. Flat sides with the face square to the front and bevelled corners; it is widest at the brow, above the middle, is closed over by a crown that slopes in to a small flat top, and below the brow draws in past the cheeks to a chin half the brow across. */
+  /** Head: a faceted wedge and not a tall box. Flat sides with the face square to the front and bevelled corners; it is widest at the brow, above the middle, is closed over by a crown that slopes in to a small flat top, and below the brow draws in past the cheeks to a chin near three quarters of the brow across. */
   function blockHead(n: string, size: number, mat: PBRMetallicRoughnessMaterial, scaling: Vector3): Mesh {
     const m = MeshBuilder.CreateCylinder(n, { height: size * s, diameter: size * s, tessellation: 8, subdivisions: 4 }, scene);
     const positions = m.getVerticesData("position")!;
