@@ -1605,15 +1605,17 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     cheekPaint.parent = neck; cheekPaint.material = paintMat; allMeshes.push(cheekPaint);
   }
 
-  // Eyes: small white beads, each with a black pupil on the middle of its front
+  // Eyes: flat white discs lying on the face, each with a flat black pupil on the middle of its front
   const eyeWhite = makeMat(scene, new Color3(0.95, 0.95, 0.95));
   const pupilMat = makeMat(scene, new Color3(0.03, 0.03, 0.03));
   for (const xOff of [-0.3, 0.3]) {
-    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.12, segments: 6 }, scene);
+    const eye = MeshBuilder.CreateSphere("eye", { diameter: 0.2, segments: 6 }, scene);
     eye.position.set(xOff, 0.08, 0.66);
+    eye.scaling.z = 0.3;
     eye.parent = neck; eye.material = eyeWhite; allMeshes.push(eye);
-    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.066, segments: 4 }, scene);
-    pupil.position.set(xOff, 0.08, 0.712);
+    const pupil = MeshBuilder.CreateSphere("pupil", { diameter: 0.09, segments: 4 }, scene);
+    pupil.position.set(xOff, 0.08, 0.69);
+    pupil.scaling.z = 0.3;
     pupil.parent = neck; pupil.material = pupilMat; allMeshes.push(pupil);
   }
 
