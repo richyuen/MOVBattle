@@ -202,6 +202,13 @@ export class ProceduralAnimator {
       shiftPhase: h(117) * Math.PI * 2,
       thrustRate: 0.9 + h(118) * 0.5,
       thrustPhase: h(119),
+      // Drive leg: he pushes off one leg, his own. That foot is planted behind him on a straight leg and the other is stepped in under the board on a bent knee,
+      // by his own length of step; a man sunk low on folded legs steps shorter. The trunk turns the lead shoulder into the board and the head is tucked behind
+      // the rim or lifted to look over it.
+      lead: h(120) < 0.5 ? -1 : 1,
+      lunge: (0.35 + h(121) * 0.4) * (1 - Math.min(0.5, stand.crouch * 0.5)),
+      twist: 0.08 + h(122) * 0.3,
+      tuck: -0.2 + h(123) * 0.6,
     };
   }
   private _flinchTimer = 0;
@@ -467,8 +474,20 @@ export class ProceduralAnimator {
         b.rightKnee.rotation.x += (br.crouch - br.kneeBias + Math.max(0, -shift) * 0.2) * hold;
         b.torso.rotation.z += shift * 0.05 * hold;
         b.neck.rotation.y += br.look * hold;
+        // Drive leg (see _buildBracePose): the lead thigh comes forward with its shin left upright under the knee, the drive leg goes back straight by the seven tenths
+        // of that angle that keeps both feet on the ground, and the hips come down by what the split takes off the legs.
+        const lunge = br.lunge * hold;
+        const leadHip = br.lead < 0 ? b.leftHip : b.rightHip;
+        const leadKnee = br.lead < 0 ? b.leftKnee : b.rightKnee;
+        const driveHip = br.lead < 0 ? b.rightHip : b.leftHip;
+        leadHip.rotation.x -= lunge;
+        leadKnee.rotation.x += lunge;
+        driveHip.rotation.x += lunge * 0.7;
+        b.torso.rotation.y += br.lead * br.twist * hold;
+        b.neck.rotation.y -= br.lead * br.twist * 0.6 * hold;
+        b.neck.rotation.x += br.tuck * hold;
         this._hipRest ??= b.hip.position.y;
-        this._braceSink = this._hipRest * (1 - Math.cos(br.crouch * 0.5)) * hold;
+        this._braceSink = this._hipRest * ((1 - Math.cos(br.crouch * 0.5)) + (1 - Math.cos(br.lunge)) * 0.5) * hold;
         if (this._spearShaft()) {
           // Spear arm: no windmill and no underarm poke. The hand goes up beside the head, elbow cocked, and holds the shaft there over the rim of the
           // board (a rear man's over the shoulder of the man ahead); a thrust straightens the arm forward and down from that hold and comes back to it.
