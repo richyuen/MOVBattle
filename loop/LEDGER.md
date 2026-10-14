@@ -70,7 +70,6 @@ proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 203 | lapped-boards-in-contact | battle-feel.h | rejected
 - 204 | dressed-front-under-shove | battle-feel.h | rejected
 - 204 | result-drift | camera.g | approved
 - 205 | board-contact-plane | battle-feel.h | approved
@@ -82,6 +81,7 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 211 | board-grip | battle-feel.h | approved
 - 213 | board-axis-from-heading | battle-feel.h | rejected
 - 213 | landing-hold | battle-feel.g | approved
+- 214 | board-layers | battle-feel.h | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
