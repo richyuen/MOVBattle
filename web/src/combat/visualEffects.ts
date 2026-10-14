@@ -17,6 +17,11 @@ interface TimedEffect {
  * Manages transient visual effects: lightning, smoke puffs, impact sparks, etc.
  */
 // A spell dome (see VisualEffects.spawnSpellDome): its life in seconds, the share of it spent swelling and fading, and its see-through-ness.
+// Shed gear (see VisualEffects.spawnGearLitter): how far off it lands, how far a board leans back off upright, and how far a weapon's grip end stands off the ground.
+const GEAR_TOSS_MIN = 0.6;
+const GEAR_TOSS_MAX = 1.1;
+const GEAR_BOARD_LEAN = 0.35;
+const GEAR_BLADE_RAISE = 0.28;
 const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
@@ -412,6 +417,35 @@ export class VisualEffects {
     });
   }
 
+  // ══════════════════ SHED GEAR ══════════════════
+  /**
+   * A dead man's shield and weapon (RuntimeUnit.shedGear) lie loose beside him where they read over the grass (trailer_2_sheet_02 r1c2: a round shield on its
+   * rim by the dead, a sword lying clear): each lands GEAR_TOSS_MIN..MAX off where it was held, on its own heading; a board stands leaning on its rim
+   * GEAR_BOARD_LEAN off upright, a weapon lies along the ground with its grip end raised GEAR_BLADE_RAISE; then it is set down so its lowest point is on the
+   * ground. Laid at once, not flown: effects stop with the battle, and gear still in the air at the result hung there. Kept as litter, the oldest cleared past a
+   * quarter of LITTER_CAP.
+   */
+  spawnGearLitter(gear: TransformNode[]): void {
+    for (const node of gear) {
+      const angle = Math.random() * Math.PI * 2;
+      const reach = GEAR_TOSS_MIN + Math.random() * (GEAR_TOSS_MAX - GEAR_TOSS_MIN);
+      node.position.x += Math.cos(angle) * reach;
+      node.position.z += Math.sin(angle) * reach;
+      const board = /shield/.test(node.name);
+      // A board's face is its local Z: leant back off upright. A weapon's length is its local Y: laid down along the ground but for its raised grip end.
+      const pitch = board ? GEAR_BOARD_LEAN : Math.PI / 2 - GEAR_BLADE_RAISE;
+      node.rotationQuaternion = Quaternion.RotationYawPitchRoll(Math.random() * Math.PI * 2, pitch, (Math.random() - 0.5) * 0.3);
+      node.computeWorldMatrix(true);
+      for (const child of node.getChildMeshes()) child.computeWorldMatrix(true);
+      const lowest = node.getHierarchyBoundingVectors(true).min.y;
+      node.position.y -= lowest;
+      node.freezeWorldMatrix();
+      this._gearLitter.push(node);
+      while (this._gearLitter.length > VisualEffects.LITTER_CAP / 4) this._gearLitter.shift()!.dispose();
+    }
+  }
+  private _gearLitter: TransformNode[] = [];
+
   /** Landed debris chunks, kept until the battle is cleared */
   private _litter: Mesh[] = [];
   private static readonly LITTER_CAP = 240;
@@ -711,5 +745,7 @@ export class VisualEffects {
     this._effects.length = 0;
     for (const m of this._litter) m.dispose();
     this._litter.length = 0;
+    for (const g of this._gearLitter) g.dispose();
+    this._gearLitter.length = 0;
   }
 }
