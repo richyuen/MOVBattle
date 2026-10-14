@@ -74,6 +74,8 @@ const SPEAR_FRONT_GRIP_MAX = 0.28;
 const BOARD_PLANE_REACH = 0.42;
 // How far a pressed board's top is tipped forward into the foe (radians), at full shove (see _lapBoard).
 const BOARD_PRESS_TILT = 0.3;
+// How far a pressing wall man's drive leg goes back (radians at the hip, at full shove); his lead knee and trunk follow it (see the brace).
+const PRESS_DRIVE = 0.4;
 const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
 // Where a board rides on its rank's strip: this share of the bearer's neck height above his feet (chest height; tabs_screenshot_06 boards run chin to knee).
@@ -693,6 +695,13 @@ export class ProceduralAnimator {
         leadHip.rotation.x -= lunge;
         leadKnee.rotation.x += lunge;
         driveHip.rotation.x += lunge * 0.7;
+        // Pressing (tabs_screenshot_06: the men walk into their boards): in the shove the drive leg goes further back and straight, the lead knee bends over
+        // the foot and the trunk is driven forward into the board, by PRESS_DRIVE at full shove
+        const drive = PRESS_DRIVE * Math.min(1, this._shove) * hold;
+        driveHip.rotation.x += drive;
+        leadHip.rotation.x -= drive * 0.5;
+        leadKnee.rotation.x += drive * 0.6;
+        b.torso.rotation.x += drive * 0.5;
         b.torso.rotation.y += br.lead * br.twist * hold;
         b.neck.rotation.y -= br.lead * br.twist * 0.6 * hold;
         this._hipRest ??= b.hip.position.y;
@@ -1018,7 +1027,10 @@ export class ProceduralAnimator {
       shield.position.copyFrom(Vector3.TransformCoordinates(seat, Matrix.Invert(hand.getWorldMatrix())));
       // Pressed (in contact and shoving), the board's top is tipped forward into the foe by BOARD_PRESS_TILT and its foot driven up behind it (tabs_screenshot_06:
       // the boards lean into the push), the wall's weight going in at the rim; off the press it stands upright on the strip
-      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, BOARD_PRESS_TILT * Math.min(1, this._shove), 0);
+      // Each man's own lean: half the press tilt and half his own trunk pitch, rocking a little on his weight-shift beat, so no two boards share one tilt
+      const br = this._bracePose;
+      const own = br ? BOARD_PRESS_TILT * 0.5 + br.pitch * 0.5 + Math.sin(this._time * br.shiftRate + br.shiftPhase) * 0.06 : BOARD_PRESS_TILT;
+      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, own * Math.min(1, this._shove), 0);
     }
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
