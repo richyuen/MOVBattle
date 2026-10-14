@@ -61,7 +61,7 @@ BASE 471cdaa
 
 ## Notes for next iteration (max 5 lines)
 - 200 [S] pair was (battle-feel.e, vfx.h); 201 must not repeat it. Critic [P] fallout from 200: press club heave 0.12 -> ~0.6 per-man phase (big_melee_5s); vfx.h next [S]: reuse the feathered billboard puff (`_leavePuff` in projectileSystem.ts) as a soft envelope round the burst and drifting muzzle smoke.
-- Four `no evidence` blockers (maps-light.e, ui-flow.g, camera.f, camera.g) want evidence commits to capture.mjs. CRITIC.md tile cites are wrong for vfx.f (use trailer_3_sheet_03 r1c1-r2c1), unit-look.e (trailer_3_sheet_01 r3c1), battle-feel.e (r2c3), battle-feel.g (trailer_2_sheet_02 r1c2).
+- Four `no evidence` blockers (maps-light.e, ui-flow.g, camera.f, camera.g) want evidence commits to capture.mjs. Evidence first is now a rule (ITERATE step 3): one per iteration. CRITIC.md and digest tile cites were corrected after 200; trailer_3_sheet_03 row 3 is another game's trailer, never cite it.
 - Clubbers: only ~1/3 are in shove contact at 9s; the rest are Idle/Walking near the press, so poses for them go through `readyBlow` (simulationSystem blowReadyReach) not the shove overlay. Probe animator branches with console.error -> look/summary.json consoleErrors.
 - Self-check with `capture.mjs --only <shot>` (redirect to a log); shots are deterministic run to run, so a look diff is the code change. Commit per gap with `git commit <paths> -F <msgfile>`. Crop shots with python PIL. Write long docs via the Write tool.
 - Shadows pass, leave them. No raised idle lean, free-foot 0.08 or walk torso yaw. No [P] on SHOULDER_INSET, TRAPEZIUS_*, NECK_*, hull, pelvis, arm taper, ghost, bow ready, laurel, sunk crouch, CALF_SWELL, helm crown, lawn shade, carry bob, mammoth hull, spear carry.

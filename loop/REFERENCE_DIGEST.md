@@ -9,7 +9,7 @@ Read-only during the loop. The gap list in STATE.md is derived from this.
 ## 1. Battle feel and physics
 - Units are floppy ragdolls that never stop moving: arms windmill, torsos lean into runs, heads bob. Idle units sway; nothing stands rigid.
 - Melee is a shoving contest. Front lines collide and compress, bodies pile up two deep, shields overlap into a solid wall. Dead units lie where they fell and stay in the scene as obstacles.
-- Big impacts send bodies flying in arcs: a mammoth charge or a hammer hit launches 3-6 units at once (trailer_3_sheet_01 r1c2 shows a whole line airborne). Hit units spin end over end.
+- Big impacts send bodies flying in arcs: a mammoth charge or a hammer hit launches 3-6 units at once (trailer_3_sheet_03 r1c2-r2c1 show a whole line airborne). Hit units spin end over end.
 - Attacks are telegraphed: wide windup, then a committed swing that visibly connects. Spears thrust from behind shield lines; axes come over the top.
 - Deaths are physical, not animated: the body goes limp mid-pose and drops. Skeleton units fall apart into loose bones (tabs_screenshot_09).
 - Crowd density is the spectacle: 20-60 units a side, dense enough to hide the ground.
@@ -47,8 +47,8 @@ Read-only during the loop. The gap list in STATE.md is derived from this.
 
 ## 6. VFX and projectiles
 - Arrows and spears are long thin sticks that leave a brief white streak; they stick into bodies and the ground and stay there.
-- Cannon and musket fire: a fat white smoke puff at the muzzle, a visible black ball, a dust burst and bodies flung on hit (trailer_3_sheet_03 r2c1 fireball, r3c1 arc of cannon shots).
+- Cannon and musket fire: a fat white smoke puff at the muzzle, a visible black ball, a dust burst and bodies flung on hit (trailer_3_sheet_03 r1c1 fireball, r2c1 black balls in flight; its row 3 is another game).
 - Magic is bold and graphic: solid-color rings, glowing shapes, pink domes, lightning as jagged white polygons (trailer_2_sheet_03 r1c2, r3c2).
 - Blood is minimal: a few dark red chunks. Debris is chunky low-poly bits, not particles.
 - Hit flashes are rare; impact is sold by motion (ragdoll launch) rather than sparkles.
-- Reference: trailer_3_sheet_03 (cannon, arrows, hands), tabs_screenshot_09 (magic dome), trailer_2_sheet_02 r1c2 (debris and shields).
+- Reference: trailer_3_sheet_03 rows 1-2 (cannon bursts, flung bodies, balls in flight), trailer_3_sheet_01 r3c3 (spear streak), tabs_screenshot_09 (magic dome), trailer_2_sheet_02 r1c2 (debris and shields).
