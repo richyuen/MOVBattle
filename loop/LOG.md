@@ -188,3 +188,4 @@ iter 186 | [S] torso-is-a-barrel, [S] wall-spears-held-not-thrust, [P] laurel wr
 iter 187 | evidence ghost shot; [S] ghost-preview, [S] trunk-widest-below-the-arms | 2/2 approved | passes 21 -> 21
 iter 188 | [S] ghost-unreadable, [S] pushing-rank-one-pose, [P] GHOST_ALPHA | 3/3 approved | passes 21 -> 22
 iter 189 | [S] wall-spears-through-own-men, [S] trunk-top-flat-plate | 2/2 approved | passes 22 -> 22
+iter 190 | re-audit (no change); [S] wall-spears-thread-helmets | 0/1 approved | passes 22 -> 22

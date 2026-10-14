@@ -49,7 +49,7 @@ proceduralAnimation.ts:shield brace (_buildBracePose) | crouched/tall/shoulder-i
 proceduralAnimation.ts:brace drive leg (_buildBracePose lead, lunge, twist, tuck) | lead leg hashed, step 0.35-0.75 less crouch, twist 0.08-0.38, head tuck -0.2..0.4 | 188 | approved |
 proceduralAnimation.ts:spear carry (_carrySpear, levelSpearAt; sim spearLevelReach) | upright on the march; within reach + 3.5 aimed from the fist at the enemy's chest, dip -0.05..0.5, jitter +-0.07 (no yaw) | 184 | approved | level by shove, dip 0.02+-0.45 (180); no [P]
 proceduralAnimation.ts:spear thrust (_thrustStroke, SPEAR_LUNGE, _DRAW, _CHOKE; brace thrustRate) | lunge 0.45 m, draw -0.4 of it, choke up to 0.45 of the length ahead; beat 0.9-1.4/s | 186 | approved |
-proceduralAnimation.ts:rear spear lane (SPEAR_REAR_ARM_IN, SPEAR_LANE_REACH, SPEAR_REAR_LIFT, SPEAR_REAR_AIM_RISE) | arm in -0.35, lane reach 0.4 m, lift 0.12, aim +0.3; pitch from the neck | 189 | approved |
+proceduralAnimation.ts:rear spear lane (SPEAR_REAR_ARM_IN, SPEAR_LANE_REACH, SPEAR_REAR_LIFT, SPEAR_REAR_AIM_RISE) | arm in -0.35, lane reach 0.4 m, lift 0.12, aim +0.3; pitch from the neck | 190 | approved | lane from the heads ahead + own crown (190) rejected and reverted
 proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, sink 0.05-0.27, asym +-0.18, arm lag +-0.7, swing 0.5-0.95 | 174 | approved | no further [P] on roll
 proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | shouldered/upright/across/trailed 0.30/0.25/0.25/0.20 (jitter 0.3); bob 0.08-0.18 | 174 | approved | bob spent for [P]
 proceduralAnimation.ts:idle rest (_buildIdlePose) | hip-shot/sunk/at-ease 0.35/0.35/0.30: roll 0.17-0.27/0.05-0.11/0.10-0.17, crouch 0.02-0.10/0.25-0.45/0.16-0.32; free foot 0.08 (do not grow) | 182 | approved |
@@ -72,8 +72,6 @@ vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 179 | shield-rank-one-pose | battle-feel.c | approved
-- 179 | clothes-are-paint | unit-look.d | approved
 - 180 | nothing-sticks | vfx.a | approved
 - 180 | pinched-link-limbs | unit-look.c | approved
 - 181 | lineup-stands-to-attention | battle-feel.c | approved
@@ -94,6 +92,7 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 188 | pushing-rank-one-pose | battle-feel.c | approved
 - 189 | wall-spears-through-own-men | battle-feel.c | approved
 - 189 | trunk-top-flat-plate | unit-look.c | approved
+- 190 | wall-spears-thread-helmets | battle-feel.c | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
