@@ -92,6 +92,9 @@ function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
   return attacker.linkedChildren.filter((child) => !child.isDead && child.linkedRelation === "spawned-child").length;
 }
 
+// How far ahead of a front-rank carrier his board stands against an enemy (see _resolveLivingCollisions): the board plane's reach plus its thickness.
+const SHIELD_BOARD_STANDOFF = 0.46;
+
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
   wall: number;
@@ -313,9 +316,16 @@ export class SimulationSystem {
           // Two carriers slotted into one wall stand at the slot spacing, boards lapping: the solver only parts them inside it.
           const slotA = this._shieldSlots.get(a);
           const sameWall = slotA !== undefined && slotA.wall === this._shieldSlots.get(b)?.wall;
+          // Against an enemy a front-rank carrier's reach is his board, not his body: the board stands SHIELD_BOARD_STANDOFF ahead of him on the wall's plane, so an
+          // enemy is stopped at its face and two walls meet board to board, instead of bodies and shafts sinking through the boards into the men behind them.
+          const reach = (unit: RuntimeUnit) => (this._shieldSlots.get(unit)?.plane ?? null) !== null
+            ? Math.max(unit.collisionBodyRadius, SHIELD_BOARD_STANDOFF)
+            : unit.collisionBodyRadius;
           const minDistance = sameWall
             ? this.shieldSlotSpacing * 0.9
-            : (a.collisionBodyRadius + b.collisionBodyRadius) * (bracedRank ? 0.8 : sameTeam ? 0.9 : 1);
+            : sameTeam
+              ? (a.collisionBodyRadius + b.collisionBodyRadius) * (bracedRank ? 0.8 : 0.9)
+              : reach(a) + reach(b);
           const distanceSq = delta.lengthSquared();
           if (distanceSq > minDistance * minDistance) continue;
 
