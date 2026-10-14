@@ -29,6 +29,8 @@ const FIREBALL_BODY = 5;
 const FIREBALL_RIM = 7;
 const FIREBALL_GROW = 0.28;
 const FIREBALL_LIFE = 0.9;
+// How far behind the blast point, along the camera's line of sight, the fire sprites stand, per unit of fire scale.
+const FIREBALL_BEHIND = 1.6;
 // The fire's place in the see-through draw order (dust two below it, smoke one below): it is drawn last, over them.
 const FIREBALL_ALPHA_INDEX = 1002;
 const DUST_SPRITES = 10;
@@ -268,16 +270,23 @@ export class VisualEffects {
       return new Vector3(position.x + Math.cos(angle) * reach, position.y + lift, position.z + Math.sin(angle) * reach);
     };
     const still = Vector3.Zero();
+    // The fire stands behind the men it throws, as the camera sees it: its sprites are set back FIREBALL_BEHIND along the line of sight, so a body in the
+    // burst occludes the glow and reads dark against it (trailer_3_sheet_03 r1c2) instead of being washed pale by the additive light in front of it
+    const eye = this._scene.activeCamera?.globalPosition;
+    const back = eye ? position.subtract(eye) : Vector3.Zero();
+    back.y = 0;
+    if (back.lengthSquared() > 1e-6) back.normalize().scaleInPlace(FIREBALL_BEHIND * fire);
+    const behind = (at: Vector3): Vector3 => at.addInPlace(back);
     for (let k = 0; k < FIREBALL_RIM; k++) {
-      const at = ring(FIREBALL_RIM, 0.75 * fire, (0.6 + Math.random() * 0.6) * fire, k);
+      const at = behind(ring(FIREBALL_RIM, 0.75 * fire, (0.6 + Math.random() * 0.6) * fire, k));
       add("fireRim", new Color3(1, 0.62, 0.3), true, at, 0.6 * fire, 2.0 * fire, FIREBALL_GROW, new Vector3(0, 0.5 * fire, 0), FIREBALL_LIFE * (0.8 + Math.random() * 0.3), 0.55);
     }
     for (let k = 0; k < FIREBALL_BODY; k++) {
-      const at = ring(FIREBALL_BODY, 0.4 * fire, (0.7 + Math.random() * 0.4) * fire, k);
+      const at = behind(ring(FIREBALL_BODY, 0.4 * fire, (0.7 + Math.random() * 0.4) * fire, k));
       add("fireBody", new Color3(1, 0.9, 0.6), true, at, 0.5 * fire, 1.7 * fire, FIREBALL_GROW, new Vector3(0, 0.4 * fire, 0), FIREBALL_LIFE * (0.75 + Math.random() * 0.25), 0.7);
     }
     for (let k = 0; k < FIREBALL_CORE; k++) {
-      const at = ring(FIREBALL_CORE, 0.12 * fire, 0.8 * fire, k);
+      const at = behind(ring(FIREBALL_CORE, 0.12 * fire, 0.8 * fire, k));
       add("fireCore", new Color3(1, 0.98, 0.92), true, at, 0.4 * fire, 1.3 * fire, FIREBALL_GROW * 0.8, still, FIREBALL_LIFE * 0.6, 0.95);
     }
     for (let k = 0; k < DUST_SPRITES; k++) {
