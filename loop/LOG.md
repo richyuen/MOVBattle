@@ -191,3 +191,4 @@ iter 189 | [S] wall-spears-through-own-men, [S] trunk-top-flat-plate | 2/2 appro
 iter 190 | re-audit (no change); [S] wall-spears-thread-helmets | 0/1 approved | passes 22 -> 22
 iter 191 | [S] aimed-men-stand-to-attention, [S] forearm-as-thick-as-upper-arm | 2/2 approved | passes 22 -> 22 (both failing criteria plateau)
 iter 192 | evidence side-on wall + archer loose; [R] shield press, wall spears and the bowman's hold | 1/1 approved | passes 22 -> 22 (battle-feel.c plateau cleared)
+iter 193 | [S] spear-overruns-its-mark, [R] bare-neck, [P] SPEAR_REAR_UP_MIN | 3/3 approved | passes 22 -> 23
