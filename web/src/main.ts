@@ -135,7 +135,7 @@ dir.shadowMaxZ = 220;
 
 // Fog — depth fade to sky color (see the aerial perspective below)
 const HAZE_LEAD = 12;
-const HAZE_DEPTH = 95;
+const HAZE_DEPTH = 60; // the tree ring 45-55 m off sits ~40% into it, the ridges beyond it near the sky colour (at 95 the ring stayed full orange)
 scene.fogMode = Scene.FOGMODE_LINEAR;
 scene.fogColor = new Color3(0.62, 0.86, 0.76);
 scene.fogStart = 70;

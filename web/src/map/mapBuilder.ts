@@ -302,8 +302,9 @@ export class TribalSandboxMapBuilder {
     for (const name of ["hazeTrees", "hazeTreesShade", "farRock", "farRockShade", "farSnow"]) {
       const far = new StandardMaterial(name, this._scene);
       far.specularColor = Color3.Black();
-      // The ridges are fog-free: scene fog would paint them flat fog-green, so they keep their own pre-hazed rock colour
-      far.fogEnabled = !name.startsWith("far");
+      // Every backdrop material takes the scene's aerial perspective (main.ts HAZE_*), the ridges too: fog-free, the ridges stood near-black and full
+      // strength against a pastel sky (tabs_screenshot_05 washes its far set into the haze)
+      far.fogEnabled = true;
     }
     paintFarProps(this._scene, leaves.diffuseColor);
   }
