@@ -70,6 +70,8 @@ export interface VehicleSocketSet {
 
 export interface BodyMetrics {
   overallHeight: number;
+  /** How far a pupil may slide from the middle of its eye disc and stay on the white. */
+  pupilTravel?: number;
   headTopY: number;
   shoulderWidth: number;
   hipWidth: number;
@@ -164,6 +166,11 @@ const HEAD_SQUAT = 0.86;
 const HAT_CUT_FOR_HEAD = 0.7;
 /** The head stands clear of the shoulders on a neck this long, a third of its own height: head, eyes and hat anchor all ride on top of it. */
 const NECK_LENGTH = 0.07;
+/** An eye is a white disc this share of the face across, set this far off the middle of the face, pressed to this share of its width in depth; its black pupil is this share of the disc. */
+const EYE_OF_FACE = 0.24;
+const EYE_SPREAD = 0.16;
+const EYE_FLAT = 0.3;
+const PUPIL_OF_EYE = 0.5;
 /** Arms and legs are stretched by this much over their old segment lengths, so the body is some six and a half heads tall and the hands hang to mid thigh. */
 const LIMB_STRETCH = 1.16;
 /** A mitt is sized from the wrist it hangs from, not from the sleeve or the head: its knuckles are this many forearm ends across, a quarter over the arm it ends: at the arm's own width the fist was a stump end, gone at distance. */
@@ -244,7 +251,7 @@ export function buildArticulatedBody(
   const mf = getMaterialFactory();
   const bodyMat = mf.createUnique("cloth", bodyColor);
   const skinMat = mf.createUnique("skin", new Color3(0.94, 0.90, 0.86));
-  const eyeMat = mf.get("skin", new Color3(0.05, 0.05, 0.05), { roughness: 0.4 });
+  const eyeMat = mf.get("bone", new Color3(0.95, 0.95, 0.95), { emissive: new Color3(0.3, 0.28, 0.25) }); // self-lit warm white: the blue ambient greys a plain one
   const pupilMat = mf.get("skin", new Color3(0.05, 0.05, 0.05), { roughness: 0.4 });
 
   function sphere(
@@ -619,41 +626,36 @@ export function buildArticulatedBody(
   headTop.position.y = neckLength + headHeight * s;
   headTop.scaling.setAll(headUnit / (HAT_CUT_FOR_HEAD * p.headSize));
 
-  // ─── Bead Eyes (small black beads, no sclera): set half into the flat of the face, just under the brow line ───
-  const eyeDiam = headWidth * 0.17;
-  const pupilDiam = headWidth * 0.02;
-  const eyeSegs = 6;
+  // ─── Eyes: a white disc with a black pupil, each a quarter of the face wide, lying proud on the flat of the face under the brow line ───
+  const eyeDiam = headWidth * EYE_OF_FACE;
+  const pupilDiam = eyeDiam * PUPIL_OF_EYE;
+  const eyeSegs = 8;
   const eyeY = neckLength + headHeight * s * 0.56;
-  const eyeZ = headDepth * s * 0.49;
-  const eyeSpread = headWidth * s * 0.22;
+  const eyeZ = headDepth * s * 0.5;
+  const eyeSpread = headWidth * s * EYE_SPREAD;
+  const glow = scene.getGlowLayerByName("glow");
 
-  const leftEye = MeshBuilder.CreateSphere(`${name}_lEye`, { diameter: eyeDiam * s, segments: eyeSegs }, scene);
-  leftEye.material = eyeMat;
-  leftEye.position.set(-eyeSpread, eyeY, eyeZ);
-  leftEye.parent = neck;
-  allMeshes.push(leftEye);
+  const buildEye = (tag: string, side: number): { eye: Mesh; pupil: Mesh } => {
+    const eye = MeshBuilder.CreateSphere(`${name}_${tag}Eye`, { diameter: eyeDiam * s, segments: eyeSegs }, scene);
+    eye.material = eyeMat;
+    eye.scaling.z = EYE_FLAT;
+    eye.position.set(side * eyeSpread, eyeY, eyeZ);
+    eye.parent = neck;
+    glow?.addExcludedMesh(eye); // a crisp disc, no halo
+    allMeshes.push(eye);
 
-  const rightEye = MeshBuilder.CreateSphere(`${name}_rEye`, { diameter: eyeDiam * s, segments: eyeSegs }, scene);
-  rightEye.material = eyeMat;
-  rightEye.position.set(eyeSpread, eyeY, eyeZ);
-  rightEye.parent = neck;
-  allMeshes.push(rightEye);
-
-  const leftPupil = MeshBuilder.CreateSphere(`${name}_lPupil`, { diameter: pupilDiam * s, segments: eyeSegs }, scene);
-  leftPupil.material = pupilMat;
-  leftPupil.scaling = new Vector3(1, 1, 0.5);
-  leftPupil.position.z = eyeDiam * s * 0.14;
-  leftPupil.parent = leftEye;
-  leftPupil.setEnabled(false);
-  allMeshes.push(leftPupil);
-
-  const rightPupil = MeshBuilder.CreateSphere(`${name}_rPupil`, { diameter: pupilDiam * s, segments: eyeSegs }, scene);
-  rightPupil.material = pupilMat;
-  rightPupil.scaling = new Vector3(1, 1, 0.5);
-  rightPupil.position.z = eyeDiam * s * 0.14;
-  rightPupil.parent = rightEye;
-  rightPupil.setEnabled(false);
-  allMeshes.push(rightPupil);
+    // The pupil rides the front of the disc (its z is in the disc's own flattened space) and slides over it as the head swings
+    const pupil = MeshBuilder.CreateSphere(`${name}_${tag}Pupil`, { diameter: pupilDiam * s, segments: eyeSegs }, scene);
+    pupil.material = pupilMat;
+    pupil.position.z = eyeDiam * s * 0.42;
+    pupil.parent = eye;
+    glow?.addExcludedMesh(pupil);
+    allMeshes.push(pupil);
+    return { eye, pupil };
+  };
+  const { eye: leftEye, pupil: leftPupil } = buildEye("l", -1);
+  const { eye: rightEye, pupil: rightPupil } = buildEye("r", 1);
+  const pupilTravel = (eyeDiam - pupilDiam) * s * 0.3;
 
   // ─── Arms ───
   const armDepthScale = 0.88;
@@ -890,6 +892,7 @@ export function buildArticulatedBody(
 
   const metrics: BodyMetrics = {
     overallHeight: hip.position.y + torsoH * s + neckLength + headHeight * s,
+    pupilTravel,
     headTopY: hip.position.y + torsoH * s + neckLength + headHeight * s,
     shoulderWidth: shoulderOffX * 2,
     hipWidth: hipOffX * 2,

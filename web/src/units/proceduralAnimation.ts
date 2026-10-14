@@ -796,8 +796,8 @@ export class ProceduralAnimator {
     this._pupilOffX += this._pupilVelX * dt;
     this._pupilOffY += this._pupilVelY * dt;
 
-    // Clamp within eye radius
-    const maxOff = 0.025 * (b.metrics.overallHeight / 1.4);
+    // Clamp to the white of the eye disc
+    const maxOff = b.metrics.pupilTravel ?? 0.025 * (b.metrics.overallHeight / 1.4);
     const dist = Math.sqrt(this._pupilOffX * this._pupilOffX + this._pupilOffY * this._pupilOffY);
     if (dist > maxOff) {
       const ratio = maxOff / dist;
