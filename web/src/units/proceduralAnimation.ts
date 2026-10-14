@@ -68,6 +68,9 @@ const SPEAR_DRAW = -0.4;
 const SPEAR_WALL_UP = 1.48;
 const SPEAR_FRONT_GRIP_MIN = 0.2;
 const SPEAR_FRONT_GRIP_MAX = 0.28;
+// The front rank's boards in a wall in contact (see _lapBoard): how far ahead of the rank's line their plane stands, and the one turn off square every board in it takes.
+const BOARD_PLANE_REACH = 0.42;
+const BOARD_LAP = 0.22;
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
 const SPEAR_COUCH_RAISE = -0.45;
 const SPEAR_COUCH_ELBOW = -1.25;
@@ -179,10 +182,15 @@ export class ProceduralAnimator {
   }
   private _spearAim = new Vector3();
   /** Slotted into a shield wall, called every step while he stands in it: his spear goes up on the wall's heading at SPEAR_WALL_UP (see _carrySpear), until the calls stop. */
-  holdSpearInWall(heading: number): void {
+  holdSpearInWall(heading: number, boardPlane: number | null = null): void {
     this._wallHeading = heading;
     this._wallTimer = 0.3;
+    this._boardPlane = boardPlane;
   }
+  // A front-rank man's wall line along the heading (see _lapBoard), null in a rear rank; how far his board has gone over from his hand to it (0 to 1); and where it was strapped on.
+  private _boardPlane: number | null = null;
+  private _boardLap = 0;
+  private _boardRest: Vector3 | null = null;
   // The heading of the wall he stands in, shared by every man in it, and how far his spear has gone over to the wall's line (0 to 1).
   private _wallHeading = 0;
   private _wallTimer = 0;
@@ -499,6 +507,7 @@ export class ProceduralAnimator {
     this._spearRearHold += ((this._spearRear ? 1 : 0) - this._spearRearHold) * Math.min(1, dt * 4);
     this._wallTimer -= dt;
     this._wallHold += ((this._wallTimer > 0 ? 1 : 0) - this._wallHold) * Math.min(1, dt * 6);
+    this._boardLap += ((this._wallTimer > 0 && this._boardPlane !== null ? 1 : 0) - this._boardLap) * Math.min(1, dt * 5);
     this._spearThrust = this._spearLevel > 0.01 && this._spearShaft() ? this._thrustStroke() * this._spearLevel * this._spearNear : 0;
     this._braceSink = 0;
     if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
@@ -812,8 +821,12 @@ export class ProceduralAnimator {
     const shield = this._shieldBoard();
     if (!shield) return;
     const k = this._state === AnimState.Dead ? 0 : this._shove * (1 - Math.min(1, this._limp));
+    const rest = (this._boardRest ??= shield.position.clone());
     if (k <= 0.01) {
-      if (shield.rotationQuaternion) shield.rotationQuaternion = null;
+      if (shield.rotationQuaternion) {
+        shield.rotationQuaternion = null;
+        shield.position.copyFrom(rest);
+      }
       return;
     }
     const hand = this._body.leftHand;
@@ -821,8 +834,36 @@ export class ProceduralAnimator {
     // Square to the wall's heading, give or take the man's own turn, tilt and twist of it in his grip
     const br = (this._bracePose ??= this._buildBracePose());
     // ...and of the shoulders behind it: it turns with the lead shoulder and leans with the trunk
-    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + br.boardYaw + br.lead * br.twist * 0.7, br.boardTilt + br.pitch * 0.5, br.boardRoll));
+    const held = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + br.boardYaw + br.lead * br.twist * 0.7, br.boardTilt + br.pitch * 0.5, br.boardRoll);
+    const lap = Math.min(1, k * 1.5) * this._boardLap;
+    let world = held;
+    if (lap > 0.01) world = Quaternion.Slerp(held, this._lapBoard(shield, hand, rest, br.boardRoll, lap), lap);
+    else shield.position.copyFrom(rest);
+    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(world);
     shield.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), square, Math.min(1, k * 1.5));
+  }
+
+  /**
+   * A front-rank board in a wall in contact does not stand where his hand happens to be: it stands on the wall's plane, BOARD_PLANE_REACH ahead of the rank's line, on his own
+   * line across it and at his own height, upright and turned BOARD_LAP off square to the wall the same way as every other board in it. Boards about 0.8 m across on slots
+   * 0.54 apart, all turned one way, lap rim over rim: each board's one rim stands in front of its neighbour's, into one scaled surface (tabs_screenshot_06). Moves the board
+   * there by `lap` and returns the world attitude it is turned to.
+   */
+  private _lapBoard(shield: TransformNode, hand: TransformNode, rest: Vector3, roll: number, lap: number): Quaternion {
+    const heading = this._wallHeading;
+    const fx = Math.sin(heading);
+    const fz = Math.cos(heading);
+    const strapped = Vector3.TransformCoordinates(rest, hand.getWorldMatrix());
+    const root = this._body.root.absolutePosition;
+    const scale = this._body.root.absoluteScaling.y || 1;
+    // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
+    const out = (this._boardPlane ?? 0) + BOARD_PLANE_REACH * scale - (strapped.x * fx + strapped.z * fz);
+    const across = (root.z * fx - root.x * fz) - (strapped.z * fx - strapped.x * fz);
+    const target = new Vector3(strapped.x + fx * out - fz * across * 0.6, strapped.y, strapped.z + fz * out + fx * across * 0.6);
+    Vector3.LerpToRef(strapped, target, lap, target);
+    const local = Vector3.TransformCoordinates(target, Matrix.Invert(hand.getWorldMatrix()));
+    shield.position.copyFrom(local);
+    return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, 0.04, roll * 0.5);
   }
 
   /**
