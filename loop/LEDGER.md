@@ -13,7 +13,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 main.ts:GIANT_LEAN | 0.4 | 159 | spent |
 main.ts:placement ghost (GHOST_ALPHA, GHOST_BLOCKED_ALPHA) | 0.85, blocked 0.22 | 188 | approved | 0.55 (187); no further [P]
 main.ts:ghost footprint (GHOST_TILE_OF_BODY, _MIN, _HEIGHT, _BLOCKED_ALPHA) | hex slab 1.7 bodies across, at least 1.2 m, 0.22 tall; blocked 0.3 | 188 | approved |
-cameraController.ts:clearRadius | depth + max(6.0, giant/0.58) | 157 | approved |
 cameraController.ts:melee alpha | -PI/3 | 159 | approved |
 cameraController.ts:_pickSubject (places, band, knot, cut weight) | 12 places, BAND 0.28, knot 3, cut 0.3 + 3*size | 162 | approved |
 cameraController.ts:_pickSubject facing (FACE_SIDE, HEADLESS, CORPSE_CUT, GIANT_PITCH) | side-on 0.4 of face-on, giant +2, corpse x0.15, giant pitch 0.12 | 165 | approved | no [P]
@@ -65,10 +64,10 @@ unitFactory.ts:garment solids (hangSkirt, furCollar; vehicleBuilder crewBreeches
 bodyBuilder.ts:crewProportions (addOperator, linked crew) | infantry widths at the crew's own scale | 178 | approved |
 vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth hull (BODY_RADII, BODY_LIFT, fur hem, paint daubs, leg width) | ellipsoid 0.85/0.68/1.16 lifted 0.12; 5 hem lobes a side; 4 daubs a side; legs 0.6 | 196 | approved | barrel, skirts, bands, legs 0.8 (spent for [P], 159)
+vehicleBuilder.ts:mammoth trunk (trunkKnots, trunkRoot, knot rings) | 7 short pieces inside the head (reverted) | 198 | rejected | 8-knot hanging tube in hide purple, unseen (198)
+visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white torus at the strike, 0.4 -> 2.6 m over 0.7 s, fade last third | 198 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 188 | ghost-unreadable | ui-flow.d | approved
-- 188 | pushing-rank-one-pose | battle-feel.c | approved
 - 189 | wall-spears-through-own-men | battle-feel.c | approved
 - 189 | trunk-top-flat-plate | unit-look.c | approved
 - 190 | wall-spears-thread-helmets | battle-feel.c | rejected
@@ -83,6 +82,8 @@ vehicleBuilder.ts:mammoth hull (BODY_RADII, BODY_LIFT, fur hem, paint daubs, leg
 - 196 | mammoth-fur-mass | unit-look.f | approved
 - 197 | wall-shafts-one-plane | battle-feel.c | approved
 - 197 | zeus-no-mouth | unit-look.h | approved
+- 198 | mammoth-trunk | unit-look.f | rejected
+- 198 | impact-ring | vfx.e | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
