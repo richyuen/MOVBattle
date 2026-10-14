@@ -125,6 +125,47 @@ color.rgb=mix(color.rgb,backdropHaze,${f(BACKDROP_HAZE_MAX)}*hazeOut*hazeEye);
   }
 }
 
+/*
+ * Canopy aerial grade (tabs_screenshot_01: the background canopies lift to pale peach against the sky, weaker than the lawn): the tree crowns only are mixed
+ * toward a lightened sky by their distance from the eye, CANOPY_AERIAL_NEAR to _FAR metres, up to CANOPY_AERIAL_MAX, so a crown twenty metres off already sits
+ * paler than the lawn in front of it. Keyed to the eye, not the field (the backdrop haze), and only on crowns, so the lawn and the men keep their colour.
+ */
+const CANOPY_AERIAL_NEAR = 8;
+const CANOPY_AERIAL_FAR = 55;
+const CANOPY_AERIAL_MAX = 0.42;
+const CANOPY_AERIAL_LIFT = 0.55;
+class CanopyAerialPlugin extends MaterialPluginBase {
+  constructor(material: Material) {
+    super(material, "CanopyAerial", 230);
+    this._enable(true);
+  }
+
+  getClassName(): string {
+    return "CanopyAerialPlugin";
+  }
+
+  getUniforms(): { ubo: { name: string; size: number; type: string }[]; fragment: string } {
+    return { ubo: [{ name: "canopySky", size: 3, type: "vec3" }], fragment: "uniform vec3 canopySky;" };
+  }
+
+  bindForSubMesh(uniformBuffer: UniformBuffer, scene: Scene): void {
+    uniformBuffer.updateColor3("canopySky", Color3.Lerp(scene.fogColor, Color3.White(), CANOPY_AERIAL_LIFT));
+  }
+
+  getCustomCode(shaderType: string): { [pointName: string]: string } | null {
+    if (shaderType !== "fragment") return null;
+    const f = (v: number) => v.toFixed(4);
+    return {
+      CUSTOM_FRAGMENT_BEFORE_FOG: `
+{
+float canopyFar=smoothstep(${f(CANOPY_AERIAL_NEAR)},${f(CANOPY_AERIAL_FAR)},distance(vPositionW,vEyePosition.xyz));
+color.rgb=mix(color.rgb,canopySky,${f(CANOPY_AERIAL_MAX)}*canopyFar);
+}`,
+    };
+  }
+}
+RegisterClass("BABYLON.CanopyAerialPlugin", CanopyAerialPlugin);
+
 // Tree materials are cloned (per-tree tints), and a clone rebuilds its plugins by class name
 RegisterClass("BABYLON.BackdropHazePlugin", BackdropHazePlugin);
 
@@ -269,6 +310,8 @@ export class TribalSandboxMapBuilder {
     this._createMountains();
     this._createRocks();
     this._createTrees();
+    // The crowns (every *Crown clone the trees made) take the canopy aerial grade
+    for (const mat of this._scene.materials) if (mat.name.endsWith("Crown") && !mat.pluginManager?.getPlugin("CanopyAerial")) new CanopyAerialPlugin(mat);
     this._createGrassPatches();
     this._createFieldBlades();
     this._createHazeTreeline();
