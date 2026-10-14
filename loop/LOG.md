@@ -215,3 +215,4 @@ iter 213 | [S] board-axis-from-heading, [S] landing-hold | 1/2 approved | passes
 iter 214 | [S] board-layers (+[S] press-downstroke dropped) | 0/1 approved | passes 13 -> 13
 iter 215 | re-audit; [S] fight-keyed haze and vignette, [S] spell-dome | 2/2 approved | passes 13 -> 13
 iter 216 | [S] zeus-bolt-slabs, [S] shed-gear | 1/2 approved | passes 13 -> 14
+iter 217 | [S] shed-gear-visible, [S] fire-envelope | 2/2 approved | passes 14 -> 15
