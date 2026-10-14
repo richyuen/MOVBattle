@@ -551,7 +551,10 @@ export class SimulationSystem {
     }
     unit.setSpinning(false);
     const spearSlot = this._shieldSlots.get(unit);
-    if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
+    if (spearSlot && distance <= engageDistance + this.spearLevelReach) {
+      const rear = spearSlot.hold !== null;
+      unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, rear, rear ? this._spearLaneAcross(unit, spearSlot.heading) : 0);
+    }
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
@@ -775,6 +778,32 @@ export class SimulationSystem {
         aheadRank = r;
       }
     }
+  }
+
+  /**
+   * Where a rear man's spear can pass the men ahead of him: the middle of the gap between the nearest man ahead on his left and the nearest on his right, as metres to the right
+   * of his own middle line along the wall's front. With a man ahead on one side only, the lane lies a head and a half clear of that man; with nobody ahead it is his own line.
+   */
+  private _spearLaneAcross(unit: RuntimeUnit, heading: number): number {
+    const fx = Math.sin(heading);
+    const fz = Math.cos(heading);
+    let left = -Infinity;
+    let right = Infinity;
+    for (const other of this._units) {
+      if (other === unit || other.isDead || other.team !== unit.team || other.linkedParent) continue;
+      const dx = other.position.x - unit.position.x;
+      const dz = other.position.z - unit.position.z;
+      const ahead = dx * fx + dz * fz;
+      if (ahead < 0.25 || ahead > 2) continue;
+      const across = dx * fz - dz * fx;
+      if (across <= 0) left = Math.max(left, across);
+      else right = Math.min(right, across);
+    }
+    const clear = 0.35;
+    if (left > -1 && right < 1) return (left + right) / 2;
+    if (left > -clear) return left + clear;
+    if (right < clear) return right - clear;
+    return 0;
   }
 
   /** In contact a slotted carrier stands square to his wall's advance, board to the front, while his enemy is within shieldHeadingArc of it. */
