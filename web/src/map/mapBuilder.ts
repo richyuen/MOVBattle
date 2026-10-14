@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, MaterialPluginBase, RegisterClass, type Material, type UniformBuffer, type ShadowGenerator,
+  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, Quaternion, MaterialPluginBase, RegisterClass, type Material, type UniformBuffer, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
@@ -1123,6 +1123,9 @@ interface CampaignPropSpec {
     | "tree"
     | "ruin"
     | "lantern"
+    | "deadTree"
+    | "tomb"
+    | "graveLight"
     | "column"
     | "bones"
     | "crystal"
@@ -1433,6 +1436,83 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     addBoxObstacle(x, z, 8 * scale, 7 * scale, 4.8 * scale, paleMat, blocking, rotationY);
     addBoxObstacle(x, z, 8.8 * scale, 7.8 * scale, 1.6 * scale, darkMat, false, rotationY);
   };
+  /*
+   * Graveyard dressing (spooky; tabs_screenshot_09, 03): bare dead trees, a crooked dark trunk forking into a few angled bare limbs with no canopy; headstones
+   * with a rounded top or a cross, pale, leaning a little each; and pink grave lights, a dark post with a glowing pink lamp the glow layer haloes.
+   */
+  const deadWoodMat = new StandardMaterial(`${theme.displayName}_deadWood`, scene);
+  deadWoodMat.diffuseColor = new Color3(0.16, 0.14, 0.2);
+  deadWoodMat.specularColor = Color3.Black();
+  const graveGlowMat = new StandardMaterial(`${theme.displayName}_graveGlow`, scene);
+  graveGlowMat.diffuseColor = new Color3(1, 0.45, 0.8);
+  graveGlowMat.emissiveColor = new Color3(1, 0.4, 0.78);
+  graveGlowMat.disableLighting = true;
+  const limb = (from: Vector3, length: number, radius: number, yaw: number, tilt: number): Vector3 => {
+    const dir = new Vector3(Math.sin(tilt) * Math.sin(yaw), Math.cos(tilt), Math.sin(tilt) * Math.cos(yaw));
+    const mesh = MeshBuilder.CreateCylinder(`${theme.displayName}_deadLimb`, { height: length, diameterTop: radius * 0.9, diameterBottom: radius * 2, tessellation: 5 }, scene);
+    mesh.position = from.add(dir.scale(length / 2));
+    const up = new Vector3(0, 1, 0);
+    const axis = Vector3.Cross(up, dir);
+    if (axis.lengthSquared() > 1e-6) mesh.rotationQuaternion = Quaternion.RotationAxis(axis.normalize(), Math.acos(Vector3.Dot(up, dir)));
+    mesh.material = deadWoodMat;
+    mesh.receiveShadows = true;
+    return from.add(dir.scale(length));
+  };
+  const addDeadTree = (x: number, z: number, scale = 1, blocking = true) => {
+    const seed = Math.abs(Math.sin(x * 12.9898 + z * 78.233)) * 43758.5453;
+    const r = (k: number) => (Math.sin(seed + k * 17.31) + 1) / 2;
+    const top = limb(new Vector3(x, 0, z), 4.2 * scale, 0.32 * scale, r(1) * 6.28, 0.12);
+    const fork = limb(top, 2.2 * scale, 0.2 * scale, r(2) * 6.28, 0.3);
+    for (let i = 0; i < 4; i++) {
+      const from = i < 2 ? top : fork;
+      const end = limb(from, (1.4 + r(3 + i) * 1.4) * scale, 0.12 * scale, r(7 + i) * 6.28, 0.7 + r(11 + i) * 0.5);
+      limb(end, 0.8 * scale, 0.06 * scale, r(13 + i) * 6.28, 0.5 + r(17 + i) * 0.6);
+    }
+    if (blocking) obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.4 * scale });
+  };
+  const addTomb = (x: number, z: number, scale = 1, rotationY = 0) => {
+    const lean = (Math.sin(x * 3.1 + z * 1.7) * 0.12);
+    const root = new Mesh(`${theme.displayName}_tomb`, scene);
+    root.position = new Vector3(x, 0, z);
+    root.rotation.set(lean, rotationY, lean * 0.5);
+    const cross = Math.abs(Math.sin(x * 5.3 - z * 2.9)) > 0.65;
+    const parts: Mesh[] = [];
+    if (cross) {
+      const post = MeshBuilder.CreateBox(`${theme.displayName}_tombPost`, { width: 0.3 * scale, depth: 0.3 * scale, height: 2 * scale }, scene);
+      post.position.y = 1 * scale;
+      const bar = MeshBuilder.CreateBox(`${theme.displayName}_tombBar`, { width: 1.2 * scale, depth: 0.28 * scale, height: 0.28 * scale }, scene);
+      bar.position.y = 1.45 * scale;
+      parts.push(post, bar);
+    } else {
+      const slab = MeshBuilder.CreateBox(`${theme.displayName}_tombSlab`, { width: 1.1 * scale, depth: 0.3 * scale, height: 1.1 * scale }, scene);
+      slab.position.y = 0.55 * scale;
+      const cap = MeshBuilder.CreateCylinder(`${theme.displayName}_tombCap`, { diameter: 1.1 * scale, height: 0.3 * scale, tessellation: 12 }, scene);
+      cap.rotation.x = Math.PI / 2;
+      cap.position.y = 1.1 * scale;
+      parts.push(slab, cap);
+    }
+    for (const part of parts) {
+      part.parent = root;
+      part.material = paleMat;
+      part.receiveShadows = true;
+    }
+  };
+  const addGraveLight = (x: number, z: number, scale = 1) => {
+    addCylinderObstacle(x, z, 0.12 * scale, 2.6 * scale, deadWoodMat, false);
+    const lamp = MeshBuilder.CreateSphere(`${theme.displayName}_graveLight`, { diameter: 0.7 * scale, segments: 6 }, scene);
+    lamp.position = new Vector3(x, 2.8 * scale, z);
+    lamp.material = graveGlowMat;
+    const pool = MeshBuilder.CreateDisc(`${theme.displayName}_graveLightPool`, { radius: 3.2 * scale, tessellation: 20 }, scene);
+    pool.rotation.x = Math.PI / 2;
+    pool.position = new Vector3(x, 0.07, z);
+    const poolMat = new StandardMaterial(`${theme.displayName}_graveLightPool`, scene);
+    poolMat.diffuseColor = Color3.Black();
+    poolMat.emissiveColor = new Color3(0.55, 0.18, 0.42);
+    poolMat.disableLighting = true;
+    poolMat.alpha = 0.35;
+    pool.material = poolMat;
+    pool.isPickable = false;
+  };
   const addGravestone = (x: number, z: number, scale = 1) => {
     addBoxObstacle(x, z, 1.4 * scale, 0.5 * scale, 2.1 * scale, paleMat, false);
   };
@@ -1485,6 +1565,9 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
       case "bridge": addBridge(prop.x, prop.z, scale, rotationY); break;
       case "house": addHouse(prop.x, prop.z, scale, rotationY, blocking); break;
       case "gravestone": addGravestone(prop.x, prop.z, scale); break;
+      case "deadTree": addDeadTree(prop.x, prop.z, scale, blocking); break;
+      case "tomb": addTomb(prop.x, prop.z, scale, rotationY); break;
+      case "graveLight": addGraveLight(prop.x, prop.z, scale); break;
       case "church": addChurch(prop.x, prop.z, scale, blocking); break;
       case "temple": addTemple(prop.x, prop.z, scale, blocking); break;
       case "waterfall": addWaterfall(prop.x, prop.z, scale); break;
@@ -1687,6 +1770,21 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       { kind: "bones", x: 18, z: -12, scale: 1.0 },
       { kind: "tree", x: 18, z: 18, scale: 0.95 },
       { kind: "totem", x: 0, z: 24, scale: 1.0 },
+      // Graveyard dressing: two rows of headstones off each flank, dead trees round the field, pink grave lights among the stones
+      ...[-1, 1].flatMap((side) => [0, 1, 2, 3, 4].flatMap((i) => [
+        { kind: "tomb" as const, x: side * (8 + i * 4), z: -30, scale: 1.5, rotationY: side * 0.1 },
+        { kind: "tomb" as const, x: side * (10 + i * 4), z: 30, scale: 1.4, rotationY: Math.PI },
+      ])),
+      { kind: "deadTree", x: -34, z: -24, scale: 1.7 },
+      { kind: "deadTree", x: -36, z: 8, scale: 1.5 },
+      { kind: "deadTree", x: 34, z: -20, scale: 1.6 },
+      { kind: "deadTree", x: 36, z: 12, scale: 1.8 },
+      { kind: "deadTree", x: -8, z: 36, scale: 1.6 },
+      { kind: "deadTree", x: 10, z: -36, scale: 1.5 },
+      { kind: "graveLight", x: -14, z: -27, scale: 1 },
+      { kind: "graveLight", x: 14, z: -27, scale: 1 },
+      { kind: "graveLight", x: -16, z: 27, scale: 1 },
+      { kind: "graveLight", x: 16, z: 27, scale: 1 },
     ],
   },
   "campaign.simulation": {
