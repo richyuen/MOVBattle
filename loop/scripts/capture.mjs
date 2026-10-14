@@ -248,25 +248,16 @@ async function main() {
         window.advanceTime(50);
       });
       await shot(page, "hud_placement");
-    }
-
-    if (doRegression) {
-      for (const name of REGRESSION_SCENARIOS) {
-        const t0 = Date.now();
-        const result = await page.evaluate((n) => {
-          const out = window.game.runScenarioCheck(n);
-          return out ? JSON.parse(JSON.stringify(out)) : null;
-        }, name);
-        const passed = Boolean(result?.passed);
-        summary.scenarios.push({
-          name,
-          passed,
-          failures: result ? result.failures : ["scenario not found"],
-          ms: Date.now() - t0,
-        });
-        full.scenarios.push({ name, result });
-        log(`${passed ? "PASS" : "FAIL"} ${name}`);
-      }
+      // Campaign select: the level list over the placement view.
+      await page.evaluate(() => {
+        window.game.openCampaignPicker();
+        window.advanceTime(50);
+      });
+      await shot(page, "ui_campaign_select");
+      await page.evaluate(() => {
+        window.game.closeCampaignPicker();
+        window.advanceTime(50);
+      });
     }
 
     if (doShowcase) {
@@ -393,6 +384,25 @@ async function main() {
         window.advanceTime(50);
       });
       await shot(page, "biome_spooky");
+    }
+    // After the showcase, so the showcase scenes start from the same state in a full run as in a --only look.
+    if (doRegression) {
+      for (const name of REGRESSION_SCENARIOS) {
+        const t0 = Date.now();
+        const result = await page.evaluate((n) => {
+          const out = window.game.runScenarioCheck(n);
+          return out ? JSON.parse(JSON.stringify(out)) : null;
+        }, name);
+        const passed = Boolean(result?.passed);
+        summary.scenarios.push({
+          name,
+          passed,
+          failures: result ? result.failures : ["scenario not found"],
+          ms: Date.now() - t0,
+        });
+        full.scenarios.push({ name, result });
+        log(`${passed ? "PASS" : "FAIL"} ${name}`);
+      }
     }
   } finally {
     await browser.close();
