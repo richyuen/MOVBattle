@@ -413,8 +413,8 @@ export class RuntimeUnit {
   }
 
   /** Slotted into a shield wall this step: the spear stands on the wall's heading. */
-  holdSpearInWall(heading: number, boardPlane: number | null = null): void {
-    this.animator.holdSpearInWall(heading, boardPlane);
+  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null): void {
+    this.animator.holdSpearInWall(heading, boardPlane, slotAt);
   }
 
   get isMoving(): boolean {
