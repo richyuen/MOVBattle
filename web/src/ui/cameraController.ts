@@ -31,6 +31,9 @@ const FOLLOW_DROP = 0.9;
 const FOLLOW_DROP_SPEED = 0.8;
 
 /** A body on the field as the result shot sees it: where it stands or lies, its footprint radius, its base and height, and whether it is one of the winners. */
+// The settled victory shot keeps turning round the survivors at this many radians a second (about 3 degrees), so the result is never a still frame.
+const RESULT_DRIFT_RATE = 0.055;
+
 export interface ShotBody { x: number; z: number; y: number; r: number; h: number; standing: boolean; survivor: boolean; giant: boolean; /** Unit vector along the ground the body's front points down. */ fx: number; fz: number }
 
 export class CameraController {
@@ -176,6 +179,7 @@ export class CameraController {
 
   restoreViewState(view: CameraViewState): void {
     this._transition = null;
+    this._resultDrift = 0;
     this._battleAim = null;
     this.camera.alpha = view.alpha;
     this.camera.beta = view.beta;
@@ -268,6 +272,7 @@ export class CameraController {
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
     this._battleAim = center.near ? null : to;
     this._battleDrop = 0;
+    this._resultDrift = 0;
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
     return to;
   }
@@ -323,6 +328,8 @@ export class CameraController {
     this.camera.lowerRadiusLimit = Math.min(this.camera.lowerRadiusLimit ?? to.radius, to.radius);
     this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? to.beta, to.beta);
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
+    // Once the swoop is down the shot does not freeze: it keeps turning slowly round the survivors (see advanceTransition)
+    this._resultDrift = RESULT_DRIFT_RATE * (to.alpha >= from.alpha ? 1 : -1);
     return to;
   }
 
@@ -458,6 +465,7 @@ export class CameraController {
   /** Undo the battle swoop: restore the placement view, its pitch limits and its zoom floor. */
   returnToPlacementView(): void {
     this._transition = null;
+    this._resultDrift = 0;
     if (this._prebattleBetaLimits) {
       this.camera.lowerBetaLimit = this._prebattleBetaLimits.lower;
       this.camera.upperBetaLimit = this._prebattleBetaLimits.upper;
@@ -472,7 +480,11 @@ export class CameraController {
   /** Advance the swoop tween; called from update() and from the deterministic time stepper. */
   advanceTransition(dt: number): void {
     const t = this._transition;
-    if (!t) return;
+    if (!t) {
+      // The victory shot, settled, keeps orbiting its subject in the direction it swooped, a few degrees a second, as the reference result camera keeps panning
+      if (this._resultDrift !== 0) this.camera.alpha += this._resultDrift * dt;
+      return;
+    }
     t.elapsed += dt;
     const u = Math.min(1, t.elapsed / t.duration);
     const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
@@ -487,6 +499,9 @@ export class CameraController {
     );
     if (u >= 1) this._transition = null;
   }
+
+  // The victory shot's slow orbit once its swoop has settled, radians a second (signed); 0 when there is none
+  private _resultDrift = 0;
 
   // ─── Screen Shake ───
   private _shakeIntensity = 0;
@@ -503,6 +518,8 @@ export class CameraController {
     }
     this.advanceTransition(_dt);
 
+    // A viewer who takes the camera stops the victory drift
+    if (this._motionIntent.rotate !== 0 || this._motionIntent.panX !== 0 || this._motionIntent.panY !== 0 || this._motionIntent.vertical !== 0) this._resultDrift = 0;
     if (this._motionIntent.rotate !== 0) {
       this.camera.alpha += this._motionIntent.rotate * this._rotationSpeed * _dt;
     }
