@@ -95,6 +95,10 @@ function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
 // How far ahead of a front-rank carrier his board stands against an enemy (see _resolveLivingCollisions): the board plane's reach plus its thickness.
 const SHIELD_BOARD_STANDOFF = 0.46;
 
+// A shield wall held as one frame under the shove (see SimulationSystem._holdShieldFrames): the share of a man's error from his slot taken out each step, and the most a step moves him.
+const SHIELD_FRAME_PULL = 0.4;
+const SHIELD_FRAME_STEP = 0.05;
+
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
   wall: number;
@@ -105,6 +109,8 @@ interface ShieldSlot {
   hold: Vector3 | null;
   /** A front-rank wall's line along its heading (metres): every board in it stands on the plane this far forward, so the boards lap into one surface; null in a rear rank. */
   plane: number | null;
+  /** Where on the ground his slot is in the wall's frame: across at his slot's place, in depth on his rank's line. The frame sits on the wall's own mean place, so it moves as one with the men under the shove. */
+  at: Vector3;
 }
 
 /** A formed wall as the rank behind it sees it: its first slot across the line, how many slots, and how far forward it stands. */
@@ -271,6 +277,7 @@ export class SimulationSystem {
 
     this._assignShieldSlots();
     this._resolveLivingCollisions();
+    this._holdShieldFrames();
 
     for (const unit of this._units) {
       if (unit.isDead || unit.isAnchoredActor) continue;
@@ -752,7 +759,8 @@ export class SimulationSystem {
             const line = wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length;
             wall.forEach((entry, k) => {
               const shift = first + k * this.shieldSlotSpacing - entry.side;
-              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line });
+              const side = first + k * this.shieldSlotSpacing;
+              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line, at: new Vector3(line * fx - side * fz, 0, line * fz + side * fx) });
             });
             formed.push({ first, count: wall.length, depth: wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length });
           }
@@ -785,6 +793,7 @@ export class SimulationSystem {
                 heading,
                 hold: new Vector3(-fz * shift + fx * back, 0, fx * shift + fz * back),
                 plane: null,
+                at: new Vector3(depth * fx - (first + k * this.shieldSlotSpacing) * fz, 0, depth * fz + (first + k * this.shieldSlotSpacing) * fx),
               });
             });
             formed.push({ first, count: group.length, depth });
@@ -796,6 +805,24 @@ export class SimulationSystem {
     }
     // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
     for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane);
+  }
+
+  /**
+   * A shield wall under the shove is one frame, not men pushed apart one by one: after the crowd solver has had its say each carrier on his feet is drawn back toward
+   * his slot in the wall's frame (ShieldSlot.at), across and in depth, by SHIELD_FRAME_PULL of his error a step and at most SHIELD_FRAME_STEP. The frame sits on the
+   * wall's mean place, so what the shove does to the men together moves the whole wall, and what it does to one man alone is taken back out: the slots keep their
+   * spacing sideways, the boards stay lapped, and the rank does not heap up three and four deep behind the contact (tabs_screenshot_06).
+   */
+  private _holdShieldFrames(): void {
+    for (const [unit, slot] of this._shieldSlots) {
+      if (unit.isDead || unit.isToppled || unit.isDowned) continue;
+      const error = slot.at.subtract(unit.position);
+      error.y = 0;
+      const reach = error.length();
+      if (reach < 1e-3) continue;
+      const step = Math.min(reach * SHIELD_FRAME_PULL, SHIELD_FRAME_STEP);
+      unit.applyCollisionSeparation(error.scaleInPlace(step / reach));
+    }
   }
 
   /** In contact a slotted carrier stands square to his wall's advance, board to the front, while his enemy is within shieldHeadingArc of it. */
