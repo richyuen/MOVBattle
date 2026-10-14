@@ -49,6 +49,7 @@ proceduralAnimation.ts:shield brace (_buildBracePose) | crouched/tall/shoulder-i
 proceduralAnimation.ts:brace drive leg (_buildBracePose lead, lunge, twist, tuck) | lead leg hashed, step 0.35-0.75 less crouch, twist 0.08-0.38, head tuck -0.2..0.4 | 188 | approved |
 proceduralAnimation.ts:spear carry (_carrySpear, levelSpearAt; sim spearLevelReach) | upright on the march; within reach + 3.5 aimed from the fist at the enemy's chest, dip -0.05..0.5, jitter +-0.07 (no yaw) | 184 | approved | level by shove, dip 0.02+-0.45 (180); no [P]
 proceduralAnimation.ts:spear thrust (_thrustStroke, SPEAR_LUNGE, _DRAW, _CHOKE; brace thrustRate) | lunge 0.45 m, draw -0.4 of it, choke up to 0.45 of the length ahead; beat 0.9-1.4/s | 186 | approved |
+proceduralAnimation.ts:rear spear lane (SPEAR_REAR_ARM_IN, SPEAR_LANE_REACH, SPEAR_REAR_LIFT, SPEAR_REAR_AIM_RISE) | arm in -0.35, lane reach 0.4 m, lift 0.12, aim +0.3; pitch from the neck | 189 | approved |
 proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, sink 0.05-0.27, asym +-0.18, arm lag +-0.7, swing 0.5-0.95 | 174 | approved | no further [P] on roll
 proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | shouldered/upright/across/trailed 0.30/0.25/0.25/0.20 (jitter 0.3); bob 0.08-0.18 | 174 | approved | bob spent for [P]
 proceduralAnimation.ts:idle rest (_buildIdlePose) | hip-shot/sunk/at-ease 0.35/0.35/0.30: roll 0.17-0.27/0.05-0.11/0.10-0.17, crouch 0.02-0.10/0.25-0.45/0.16-0.32; free foot 0.08 (do not grow) | 182 | approved |
@@ -62,7 +63,7 @@ mapBuilder.ts:lawn shade (LawnShadePlugin, LAWN_BAND_RISE, _BLUR, _WEIGHT, LAWN_
 projectileSystem.ts:stuck shafts (_leaveAsLitter, arrow mesh) | ray to the struck hide, head 0.07 in, on that part's joint; mark down: planted at pitch 1.0-1.35; arrow 0.75 x 0.035 | 180 | approved |
 bodyBuilder.ts:joint stubs (JOINT_STUB, JOINT_STUB_END) | segment overruns its joint by 0.45 of its width, drawn in to 0.6 | 175 | approved |
 bodyBuilder.ts:sleeve head (SLEEVE_HEAD, _PLATE, _DROP, _RISE, _CROWN) | head 1.08 sleeves over the top 0.4, crown 0.35 tall drawn in to 0.6 | 181 | approved |
-bodyBuilder.ts:shoulder line, hull and collar (YOKE_REACH, _DEPTH, COLLAR_OF_NECK, COLLAR_RISE, PELVIS_ABOVE_HIP) | top edge at the joints, reach 0.2; collar 1.35 necks, 0.6 up the neck; foot = pelvis top | 187 | approved | gable from 0.6 sleeves under the joints to a 0.5 neck (184-186); no [P]
+bodyBuilder.ts:shoulder line, hull and trapezius (SHOULDER_INSET, TRAPEZIUS_OVER_CROWN, YOKE_DEPTH, COLLAR_OF_NECK, COLLAR_RISE, PELVIS_ABOVE_HIP) | edge 0.15 sleeves inside the joints, 0.6 crowns over; trapezius to 1.2 necks, 0.85 up | 189 | approved | edge at the joints + 0.2, collar 1.35 necks 0.6 up (187); no [P]
 bodyBuilder.ts:thigh (THIGH_OF_LEG, THIGH_HEAD, THIGH_LAP) | thigh at least 0.2 of the leg, head 1.15 thighs, pelvis at least 0.9 of the pair | 177 | approved |
 bodyBuilder.ts:lower limb belly (FOREARM_SWELL, CALF_SWELL, LIMB_BELLY_DROP) | forearm 1.35, shin 1.4 of its top width, 0.3 down | 179 | approved | no [P]
 unitFactory.ts:garment solids (hangSkirt, furCollar; vehicleBuilder crewBreeches) | hex skirt on the hips: tabard 0.7 thighs flare 1.6, kilt 0.6/1.55, tunic 0.45/1.5, hide 0.5/1.45; collar torus 0.64 chest; breeches 1.75 -> 1.3 thighs | 179 | approved | breeches top 1.45 open as [P]
@@ -71,8 +72,6 @@ vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 178 | shadow-hard-heavy-maroon | maps-light.b | approved
-- 178 | crew-stick-body | unit-look.c | approved
 - 179 | shield-rank-one-pose | battle-feel.c | approved
 - 179 | clothes-are-paint | unit-look.d | approved
 - 180 | nothing-sticks | vfx.a | approved
@@ -93,6 +92,8 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 187 | trunk-widest-below-the-arms | unit-look.c | approved
 - 188 | ghost-unreadable | ui-flow.d | approved
 - 188 | pushing-rank-one-pose | battle-feel.c | approved
+- 189 | wall-spears-through-own-men | battle-feel.c | approved
+- 189 | trunk-top-flat-plate | unit-look.c | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
