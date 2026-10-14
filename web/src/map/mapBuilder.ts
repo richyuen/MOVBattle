@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, MaterialPluginBase, type Material, type ShadowGenerator,
+  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, MaterialPluginBase, RegisterClass, type Material, type UniformBuffer, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
@@ -80,6 +80,54 @@ vec4 bladeRoot=vec4(worldPos.xz+bladeSight,${BLADE_ROOT_Y.toFixed(3)},1.0).xzyw;
  * over its own radius and laid in at its own weight. A boot's or a wheel's shadow stays crisp and dark where it meets the ground; a chest's is soft; a head's, a spear tip's and
  * a tree's are wide, pale smudges. What is shaded is then turned from the grass's warm glow toward the sky's blue (LAWN_SHADE_TINT, LAWN_SHADE_LIFT), by how deep the shade is.
  */
+/*
+ * Backdrop haze (aerial perspective on the scenery only; tabs_screenshot_05, 01): the tree ring and the ridges past the field are washed toward a lightened
+ * sky the farther out from the field's middle they stand, so they sit pale and soft behind the fight while the field and the men keep their colour. Keyed to
+ * the point's distance out from the field's middle (BACKDROP_HAZE_NEAR to _FAR) and faded out close to the eye (BACKDROP_HAZE_EYE), so a tree the camera
+ * stands by is not washed. Separate from the scene fog (main.ts HAZE_*), which is keyed to the fight and leaves the fog-free ridges alone.
+ */
+const BACKDROP_HAZE_NEAR = 26;
+const BACKDROP_HAZE_FAR = 80;
+const BACKDROP_HAZE_MAX = 0.55;
+const BACKDROP_HAZE_EYE = 30;
+const BACKDROP_HAZE_LIFT = 0.45;
+class BackdropHazePlugin extends MaterialPluginBase {
+  constructor(material: Material) {
+    super(material, "BackdropHaze", 220);
+    this._enable(true);
+  }
+
+  getUniforms(): { ubo: { name: string; size: number; type: string }[]; fragment: string } {
+    return { ubo: [{ name: "backdropHaze", size: 3, type: "vec3" }], fragment: "uniform vec3 backdropHaze;" };
+  }
+
+  // The sky it washes toward follows the biome's fog colour, lightened
+  bindForSubMesh(uniformBuffer: UniformBuffer, scene: Scene): void {
+    const c = Color3.Lerp(scene.fogColor, Color3.White(), BACKDROP_HAZE_LIFT);
+    uniformBuffer.updateColor3("backdropHaze", c);
+  }
+
+  getClassName(): string {
+    return "BackdropHazePlugin";
+  }
+
+  getCustomCode(shaderType: string): { [pointName: string]: string } | null {
+    if (shaderType !== "fragment") return null;
+    const f = (v: number) => v.toFixed(4);
+    return {
+      CUSTOM_FRAGMENT_BEFORE_FOG: `
+{
+float hazeOut=smoothstep(${f(BACKDROP_HAZE_NEAR)},${f(BACKDROP_HAZE_FAR)},length(vPositionW.xz));
+float hazeEye=smoothstep(${f(BACKDROP_HAZE_EYE * 0.5)},${f(BACKDROP_HAZE_EYE)},distance(vPositionW,vEyePosition.xyz));
+color.rgb=mix(color.rgb,backdropHaze,${f(BACKDROP_HAZE_MAX)}*hazeOut*hazeEye);
+}`,
+    };
+  }
+}
+
+// Tree materials are cloned (per-tree tints), and a clone rebuilds its plugins by class name
+RegisterClass("BABYLON.BackdropHazePlugin", BackdropHazePlugin);
+
 const LAWN_BAND_RISE = [0.4, 1.6];           // metres along the sun's ray: what stands less than the first above the lawn is contact, more than the second is high
 const LAWN_BAND_BLUR = [0.025, 0.10, 0.24];  // metres: blur radius of the contact, middle and high bands
 const LAWN_BAND_WEIGHT = [1.0, 0.92, 0.8];   // how much of the sun each band's shadow takes
@@ -304,6 +352,11 @@ export class TribalSandboxMapBuilder {
       far.specularColor = Color3.Black();
       // The ridges are fog-free: scene fog would paint them flat fog-green, so they keep their own pre-hazed rock colour
       far.fogEnabled = !name.startsWith("far");
+    }
+    // The scenery past the field (ring trees, far treeline, ridges) takes the backdrop haze; the field's own trees stand inside its near radius
+    for (const name of ["trunk", "leaves", "darkLeaves", "hazeTrees", "hazeTreesShade", "farRock", "farRockShade", "farSnow"]) {
+      const mat = this._scene.getMaterialByName(name);
+      if (mat) new BackdropHazePlugin(mat);
     }
     paintFarProps(this._scene, leaves.diffuseColor);
   }
