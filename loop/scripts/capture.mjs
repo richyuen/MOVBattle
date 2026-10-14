@@ -387,6 +387,17 @@ async function main() {
     }
     // After the showcase, so the showcase scenes start from the same state in a full run as in a --only look.
     if (doRegression) {
+      // On a fresh page: the showcase leaves a campaign loaded and its own random draws behind.
+      await page.goto(baseUrl, { waitUntil: "networkidle" });
+      await page.waitForFunction(
+        () => window.game && typeof window.game.runScenarioCheck === "function",
+        undefined,
+        { polling: 100, timeout: 60_000 },
+      );
+      await page.evaluate(() => {
+        window.game.skipTitleIntro();
+        window.advanceTime(50);
+      });
       for (const name of REGRESSION_SCENARIOS) {
         const t0 = Date.now();
         const result = await page.evaluate((n) => {
