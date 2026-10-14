@@ -1220,7 +1220,7 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
     const crown = mat && scene.getMaterialByName(`${mat.name}Crown`) as StandardMaterial | null;
     if (!mat || !crown) continue;
     crown.diffuseColor = mat.diffuseColor.scale(0.38);
-    crown.emissiveColor = mat.diffuseColor.scale(theme.ring ? 0.3 : 0.62);
+    crown.emissiveColor = mat.diffuseColor.scale(0.62);
   }
   paintFarProps(scene, theme.grass.scale(0.85));
   if (theme.ring) deadenRing(scene, theme.ring.bare, theme.ring.trunk);
@@ -1817,7 +1817,7 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     ],
     accent: new Color3(0.82, 0.7, 0.38),
     // Navy night canopies on near-black trunks, and most of the ring stood bare and dead
-    ring: { leaves: new Color3(0.12, 0.13, 0.26), darkLeaves: new Color3(0.1, 0.1, 0.22), trunk: new Color3(0.1, 0.09, 0.14), bare: 0.6 },
+    ring: { leaves: new Color3(0.2, 0.22, 0.4), darkLeaves: new Color3(0.14, 0.15, 0.3), trunk: new Color3(0.1, 0.09, 0.14), bare: 0.6 },
     props: [
       { kind: "gravestone", x: -22, z: -16, scale: 1.0 },
       { kind: "gravestone", x: -20, z: 16, scale: 1.0 },
