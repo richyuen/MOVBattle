@@ -35,8 +35,13 @@ interface ActiveProjectile {
 }
 
 /** A soft smoke puff left hanging in a cannonball's wake. */
+// A gun's muzzle smoke (see spawnMuzzleFlash): how many soft puffs make the cloud.
+const MUZZLE_PUFFS = 7;
+
 interface TrailPuff {
   mesh: Mesh;
+  /** Sideways roll off the muzzle, metres a second, slowing as the puff thins; none on a wake puff */
+  drift?: Vector3;
   age: number;
   life: number;
   size: number;
@@ -207,45 +212,24 @@ export class ProjectileSystem {
 
     this._flashes.push({ mesh: flash, remaining: 0.12 + 0.04 * Math.max(0, scale - 1) });
 
-    // Smoke puff: a head-sized clump of flat-faceted warm white lobes thrown out of the muzzle that hangs and drifts up.
-    // Lit matte material: a fully emissive one trips the bloom threshold and washes out to a glowing ball. Its tone comes from the base colour, well past white
-    // and warm against the blue sky light, with a faint glow of its own and no more: the glow is a floor under every facet, and at 0.22 it lifted lit and shaded facets alike into one flat pale tone.
-    // Facets that face down are tinted darker and cooler, so the clump has a lit top and a shaded belly whatever side the sun is on.
-    const sm = getMaterialFactory().createUnique("cloth", new Color3(2.1, 1.8, 1.2)); // at (2.6, 2.15, 1.3) its darkest facet was still a pale grey and the clump a white ball, and at (1.9, 1.6, 1.05) its lit top was a dull grey too
-    sm.emissiveColor = new Color3(0.11, 0.11, 0.10);
-    sm.transparencyMode = 2;
-    sm.forceDepthWrite = true; // a solid clump until it fades: blended without depth the lobes showed through each other
-    const smokeLife = 3.0 + 0.5 * Math.max(0, scale - 1); // at 1.5 the puff was gone before the next shot, and a gun line never stood in its own smoke
-    // The lobes are one clump and not a row along the barrel: all are thrown up to 0.15 any way off one point 0.15 out from the flash (at 0.3 the clump hung a barrel-width clear of the
-    // muzzle), the first the biggest and the rest a half to four fifths of its width: at a third to three fifths it was one sphere with crumbs on it, a barrel-mouth wide.
-    for (let i = 0; i < 8; i++) {
-      const diameter = (i === 0 ? 0.6 : 0.14 + Math.random() * 0.16) * scale; // at 0.48 and 0.18-0.48 on the 0.24 offset the lobes were a round bunch of equal balls, at 0.44 and 0.22-0.36 the whole clump was a barrel-mouth and a half wide, and at 0.6 and 0.3-0.49 thrown 0.15 off it was one big ball with crumbs
-      const smoke = MeshBuilder.CreateSphere("smoke", { diameter, segments: 2 }, this._scene);
-      smoke.position = flash.position.add(direction.scale(0.15 * scale));
-      // The small lobes sit on the skin of the lead one, 0.24 off its middle in any direction and more often over it than under: thrown inside a 0.2 box half of them were buried in the lead, and three to five of the eight showed
-      if (i > 0) {
-        const azimuth = Math.random() * Math.PI * 2;
-        const up = Math.random() * 1.6 - 0.6;
-        const flat = Math.sqrt(Math.max(0, 1 - up * up));
-        smoke.position.addInPlaceFromFloats(Math.cos(azimuth) * flat * 0.24 * scale, up * 0.24 * scale, Math.sin(azimuth) * flat * 0.24 * scale);
-      }
-      smoke.convertToFlatShadedMesh();
-      const normals = smoke.getVerticesData(VertexBuffer.NormalKind) ?? [];
-      const tones: number[] = [];
-      for (let n = 0; n < normals.length; n += 3) {
-        // Shade falls off evenly round a slanted axis, from none on top to all of it underneath: no two rows of facets share a tone, and there is no hard equator.
-        const shade = 0.5 - 0.5 * (normals[n + 1] * 0.8 + normals[n] * 0.35 - normals[n + 2] * 0.45);
-        // The shade is cool: red and green fall away and blue holds, so the belly is a slate and not the brown the warm base goes when it is only darkened.
-        tones.push(1 - 0.78 * shade, 1 - 0.68 * shade, 1 - 0.32 * shade, 1);
-      }
-      smoke.setVerticesData(VertexBuffer.ColorKind, tones);
-      smoke.material = sm;
-      // Each lobe rolls off down the line of fire at its own 0.1-0.4 a second and a little on out from the middle of the clump, so the puff loosens as it hangs but stays one clump at the muzzle: rising only, it was one ball to the end,
-      // and at 0.4-0.6 and 1.2 times its offset outward it broke into eight equal balls strung clear of the gun.
-      const drift = direction.scale(0.1 + 0.3 * (i / 7));
-      drift.x += (smoke.position.x - flash.position.x - direction.x * 0.15 * scale) * 0.2;
-      drift.z += (smoke.position.z - flash.position.z - direction.z * 0.15 * scale) * 0.2;
-      this._flashes.push({ mesh: smoke, remaining: smokeLife, smokeLife, drift, ownsMaterial: i === 0 });
+    // Smoke puff (trailer_3_sheet_03 r1c1): a fat soft white cloud thrown out of the muzzle that hangs and drifts, made of MUZZLE_PUFFS feathered camera-facing
+    // discs (the wake's soft puff) round one point just out from the flash, the first the biggest. Each swells, rolls off down the line of fire at its own pace
+    // and a little out from the middle, rises, and thins away over about three seconds, so a gun line stands in its own drifting smoke. It replaces a clump of
+    // faceted white balls that never lost their hard edges.
+    const smokeLife = 3.0 + 0.5 * Math.max(0, scale - 1);
+    const centre = flash.position.add(direction.scale(0.25 * scale));
+    for (let i = 0; i < MUZZLE_PUFFS; i++) {
+      const azimuth = Math.random() * Math.PI * 2;
+      const off = i === 0 ? 0 : 0.18 * scale * (0.5 + Math.random() * 0.5);
+      const at = centre.add(new Vector3(Math.cos(azimuth) * off, (Math.random() - 0.3) * off, Math.sin(azimuth) * off));
+      const drift = direction.scale(0.15 + 0.35 * (i / (MUZZLE_PUFFS - 1))).addInPlace(at.subtract(centre).scale(0.4));
+      drift.y = 0;
+      this._leavePuff(at, {
+        size: (i === 0 ? 0.85 : 0.45 + Math.random() * 0.3) * scale,
+        life: smokeLife * (0.8 + Math.random() * 0.4),
+        rise: 0.12 + Math.random() * 0.18,
+        drift,
+      });
     }
   }
 
@@ -372,6 +356,7 @@ export class ProjectileSystem {
       // Swells fast then slowly; full for the first fifth, then thins out
       q.mesh.scaling.setAll(q.size * (1 + (TRAIL_PUFF_GROWN - 1) * (1 - (1 - u) * (1 - u))));
       q.mesh.position.y += q.rise * dt;
+      if (q.drift) q.mesh.position.addInPlace(q.drift.scale(dt * (1 - u)));
       q.mesh.visibility = u < 0.2 ? 0.85 : 0.85 * (1 - (u - 0.2) / 0.8) * (1 - (u - 0.2) / 0.8);
     }
 
@@ -771,7 +756,7 @@ export class ProjectileSystem {
   }
 
   /** One soft wake puff at a ball's position: a feathered white disc that always faces the camera. Shared texture and material; each puff fades by its own visibility. */
-  private _leavePuff(at: Vector3): void {
+  private _leavePuff(at: Vector3, opts: { size?: number; life?: number; rise?: number; drift?: Vector3 } = {}): void {
     if (!this._puffMat) {
       const tex = new DynamicTexture("trailPuffTex", { width: 64, height: 64 }, this._scene, false);
       const ctx = tex.getContext() as unknown as CanvasRenderingContext2D;
@@ -801,10 +786,10 @@ export class ProjectileSystem {
     puff.material = this._puffMat;
     puff.isPickable = false;
     puff.position.set(at.x + (h(1) - 0.5) * 0.12, at.y + (h(2) - 0.5) * 0.12, at.z + (h(3) - 0.5) * 0.12);
-    const size = TRAIL_PUFF_BORN * (0.8 + h(4) * 0.4);
+    const size = opts.size ?? TRAIL_PUFF_BORN * (0.8 + h(4) * 0.4);
     puff.scaling.setAll(size);
     this._scene.getGlowLayerByName("glow")?.addExcludedMesh(puff);
-    this._puffs.push({ mesh: puff, age: 0, life: TRAIL_PUFF_LIFE * (0.8 + h(5) * 0.4), size, rise: 0.15 + h(6) * 0.2 });
+    this._puffs.push({ mesh: puff, age: 0, life: opts.life ?? TRAIL_PUFF_LIFE * (0.8 + h(5) * 0.4), size, rise: opts.rise ?? 0.15 + h(6) * 0.2, drift: opts.drift });
     if (this._puffs.length > TRAIL_PUFF_CAP) this._puffs.shift()!.mesh.dispose();
   }
 
