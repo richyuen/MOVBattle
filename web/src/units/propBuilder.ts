@@ -27,7 +27,15 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet"];
+/*
+ * Helms fitted to the head (237; tabs_screenshot_06: every helm a dome down over the skull to the brow, the face below it, a crest standing up on top): a dome
+ * HELM_HEADS heads across from the hat seat to HELM_CROWN of the head over the crown, open at the brow so the eyes show; a plume helm carries a crest
+ * PLUME_TALL of the head high running front to back on its top. Not a bowl: the old helm was a sphere cap turned open side up, a dish lying on the head.
+ */
+const HELM_HEADS = 1.2;
+const HELM_CROWN = 0.12;
+const PLUME_TALL = 0.45;
 const HAT_EYE_CLEAR = 0.05;
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
@@ -42,6 +50,23 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   const eyeTop = 0.44 * H - 0.18 * W;
   const seat = -eyeTop + HAT_EYE_CLEAR * H;
   const u = (v: number) => v / unit;
+  if (type === "helmet" || type === "plume_helmet") {
+    const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
+    const helm = MeshBuilder.CreateSphere("helm", { diameter: 1, segments: 10, slice: 0.5 }, scene);
+    helm.scaling.set(u(HELM_HEADS * W), u(tall * 2), u(HELM_HEADS * W * 1.05));
+    helm.position.y = u(seat);
+    helm.material = mat(scene, new Color3(0.6, 0.6, 0.65));
+    if (type === "plume_helmet") {
+      const crest = MeshBuilder.CreateBox("plume", { width: 1, height: 1, depth: 1 }, scene);
+      crest.scaling.set(u(0.12 * W), u(PLUME_TALL * H), u(0.95 * W));
+      crest.position.y = u(seat + tall + PLUME_TALL * H * 0.4);
+      crest.material = mat(scene, accent, 0.1);
+      crest.parent = null;
+      // Both are seated on the head top joint by the caller through the helm: the crest rides on it
+      crest.setParent(helm);
+    }
+    return helm;
+  }
   if (type === "beret") {
     const beret = MeshBuilder.CreateSphere("beret", { diameter: 1, segments: 10 }, scene);
     beret.scaling.set(u(BERET_HEADS * W), u(BERET_THICK * H), u(BERET_HEADS * W * 0.95));
