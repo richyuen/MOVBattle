@@ -944,9 +944,7 @@ export class ProceduralAnimator {
       // His fist goes to the board, not the board off his fist: the shield arm is reached straight out at the back of the board (see _gripBoard)
       this._gripBoard(new Vector3(seat.x - fx * BOARD_GRIP_BACK * scale, seat.y, seat.z - fz * BOARD_GRIP_BACK * scale), lap);
       shield.position.copyFrom(Vector3.TransformCoordinates(seat, Matrix.Invert(hand.getWorldMatrix())));
-      // In contact the lap closes: the boards come square to the enemy, so two walls meet board face to board face, as at trailer_2_sheet_03 r2c3, and no board
-      // shows its face down the line to the flank
-      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP * (1 - Math.min(1, this._shove)), 0, 0);
+      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, 0, 0);
     }
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
