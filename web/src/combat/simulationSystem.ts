@@ -102,9 +102,6 @@ const SHIELD_SLOT_SNAP = 0.15;
 const RANK_DEPTH_SHARE = 0.95;
 // An ally who is not in the wall stands at least this much more than a body behind its front rank (clear of the boards, see _keepRanksDeep).
 const WALL_QUEUE_GAP = 0.25;
-// The second-rank blow: how much further than a front man's strike reach a clubber a rank back strikes from, over an ally within this lane of his line to the enemy.
-const SECOND_RANK_REACH = 1.4;
-const SECOND_RANK_LANE = 0.7;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -582,13 +579,7 @@ export class SimulationSystem {
     unit.setSpinning(false);
     const spearSlot = this._shieldSlots.get(unit);
     if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
-    // A clubber a rank back strikes too: with a man of his side between him and his enemy he brings his club down on his beat over that man's shoulder
-    // (trailer_3_sheet_01 r2c3: the second rank's clubs come down onto the line), not held cocked behind the press
-    if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) {
-      const inReach = distance <= engageDistance + this.blowStrikeReach;
-      const overRank = !inReach && distance <= engageDistance + this.blowStrikeReach + SECOND_RANK_REACH && this._allyBetween(unit, enemy);
-      unit.readyBlow(inReach || overRank, enemy);
-    }
+    if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) unit.readyBlow(distance <= engageDistance + this.blowStrikeReach, enemy);
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
@@ -859,22 +850,6 @@ export class SimulationSystem {
    * has come within a body of a man of his own side ahead of him in the wall is put back along the wall's heading by the shortfall. Depth only: the front rank and
    * the lateral pitch (the board lap) are not touched, so this does not fight the snap across.
    */
-  /** Whether a man of his side on his feet stands between him and this enemy, within a body or two of him and ahead of him toward the enemy (see the second-rank blow). */
-  private _allyBetween(unit: RuntimeUnit, enemy: RuntimeUnit): boolean {
-    const tx = enemy.position.x - unit.position.x, tz = enemy.position.z - unit.position.z;
-    const reach = Math.hypot(tx, tz);
-    if (reach < 1e-3) return false;
-    const fx = tx / reach, fz = tz / reach;
-    for (const ally of this._units) {
-      if (ally === unit || ally.team !== unit.team || ally.isDead || ally.isToppled || ally.isDowned) continue;
-      const dx = ally.position.x - unit.position.x, dz = ally.position.z - unit.position.z;
-      const along = dx * fx + dz * fz;
-      if (along <= 0.1 || along >= reach) continue;
-      if (Math.abs(dz * fx - dx * fz) < SECOND_RANK_LANE && along < SECOND_RANK_REACH + 0.6) return true;
-    }
-    return false;
-  }
-
   private _keepRanksDeep(): void {
     const front: RuntimeUnit[] = [];
     for (const [unit, slot] of this._shieldSlots) if (slot.hold === null && unit.wallBraced) front.push(unit);
