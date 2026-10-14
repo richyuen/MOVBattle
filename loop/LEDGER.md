@@ -50,14 +50,13 @@ visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white toru
 visualEffects.ts:spell dome (spawnSpellDome, DOME_LIFE, _RISE, _FADE, _ALPHA) | unlit one-colour hemisphere over a lightning/area strike: 1.4 s, rise 0.15, fade 0.35, alpha 0.5, pink | 215 | approved |
 propBuilder.ts:held lightning bolt (lightning_bolt) | 4 flat white jagged shards in a zigzag, cyan shard 1.55x behind each | 216 | approved | 3 yellow glow boxes
 visualEffects.ts:shed gear (spawnGearLitter, GEAR_TOSS_MIN/MAX, GEAR_BOARD_LEAN, GEAR_BLADE_RAISE; RuntimeUnit.shedGear) | on death shield+weapon copies land 0.6-1.1 m off, board leant 0.35 off upright, blade grip raised 0.28, set on lowest point | 217 | approved |
-visualEffects.ts:fire envelope (_spawnFireEnvelope, ENVELOPE_LIFE, _FIRE, _SMOKE; sprite colour/alpha) | 9 feathered orange sprites 0.8 s (1, 0.5-0.7, 0.12) alpha 0.85, 6 grey smoke 2.2x life | 217 | approved |; [P] colour pale core (1,0.92,0.7)/(1,0.75,0.4) a 0.95 rejected 218: renders mustard, needs a mechanism
+visualEffects.ts:fire envelope (_spawnFireEnvelope, ENVELOPE_LIFE, _FIRE, _SMOKE, _CORE; additive _envelopeMat) | 9 additive pale-orange sprites alpha 0.5, 3 near-white additive cores 0.65, 6 grey smoke | 219 | approved | (1,0.5-0.7,0.12) alpha 0.85 blended (217)
 projectileSystem.ts:muzzle smoke (MUZZLE_PUFFS; _leavePuff size/life/rise/drift) | 7 feathered puffs 0.45-0.85, ~3 s, drift 0.15-0.5 down the line | 218 | approved | 8 faceted lobes
-main.ts:aerial haze and vignette (HAZE_LEAD, HAZE_DEPTH; vignetteWeight) | fog from camera radius+12 m over 95 m; vignette 1.6 | 215 | approved | fog 70-170 from the eye, vignette 0.3
+main.ts:aerial haze and vignette (HAZE_LEAD, HAZE_DEPTH; vignetteWeight) | fog from camera radius+12 m over 95 m; vignette 1.6 | 215 | approved | fog 70-170 from the eye, vignette 0.3; HAZE_DEPTH 60 rejected 219 (ledger reversal, ring milky)
 proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_SEAT_HEIGHT; _boardSlot) | every rank: board on its slot, 0.42 ahead of the rank line, 0.62 of neck height, heading+0.22 | 210 | approved | front only, from the hand (202); 201/203/207-209 rejected
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 208 | wall-board-yaw-from-frame | battle-feel.h | rejected
 - 209 | wall-side-band | battle-feel.h | rejected
 - 210 | [R] wall-as-body | battle-feel.h | approved
 - 211 | board-grip | battle-feel.h | approved
@@ -72,6 +71,8 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 217 | fire-envelope | vfx.h | approved
 - 218 | muzzle-smoke | vfx.h | approved
 - 218 | lineup-eyes | unit-look.h | approved
+- 219 | envelope-glow | vfx.h | approved
+- 219 | backdrop-haze | maps-light.f | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

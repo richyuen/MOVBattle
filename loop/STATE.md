@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 218   Last re-audit: 215   Consecutive rejects: 0   Branch: main
+Iteration: 219   Last re-audit: 215   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,45 +17,43 @@ unit-look: e PASS f FAIL g PASS h FAIL (2/4)
 - h FAIL [S since: 2, rejected since: 2] B: 3 beret and yellow cone ~1 head wide (ref ~2 heads, tabs_screenshot_05) — lineup_medieval. (1 struck 218) Ref tabs_screenshot_04.
 maps-light: e FAIL f FAIL g PASS h PASS (2/4)
 - e FAIL [S since: 0] B: 1 spooky tree ring is lime-green deciduous, a day meadow palette on purple ground (ref navy night, pink glow); 2 placement top-down only, team tints hide the ground, no battle-angle shot; 3 no spooky dressing (gravestones, dead trees, pink lights) — biome_spooky. Ref tabs_screenshot_03, 05.
-- f FAIL [S since: 1] B: 2 no distance haze: far tree ring and mountains as saturated and dark as the field (fog keyed to the fight, but backdrop materials not washed) — big_melee_5s, spell_dome. (1 struck 215) Ref tabs_screenshot_05, 01.
+- f FAIL [S since: 1, rejected since: 1] B: 2 no distance haze: far tree ring and mountains as saturated and dark as the field (fog keyed to the fight, but backdrop materials not washed) — big_melee_5s, spell_dome. (1 struck 215) Ref tabs_screenshot_05, 01.
 ui-flow: e PASS f PASS g FAIL h PASS (3/4)
 - g FAIL [S since: 0] B: 1 levels are text cards in a centred two-column modal, not level nodes on a campaign map; 2 bold mixed-case sans, ref thin widely tracked white caps (tabs_screenshot_04); 3 a sentence of description per card, a wall of text, ref terse labels on empty screen — ui_campaign_select.
 camera: e PASS f FAIL g PASS h PASS (3/4)
 - f FAIL [S since: 0] B: 1 missing: a near-ground spectator camera rule looking up at the mammoth or a launch (none in web/src; confirmed 203).
 vfx: e PASS f PASS g PASS h FAIL (3/4)
-- h FAIL [S since: 3] B: 4 the envelope reads as a brown/mustard dust cloud with hard octagon edges, not a glowing near-white core fading to pale yellow — war_machines_1100ms, 1250ms. (3 struck 218, 1 struck 217, 2 struck 200) Ref trailer_3_sheet_03 r1c1, r1c2.
+- h FAIL [S since: 4] B: 4 the solid lobe shells (orange rim, yellow core, hard octagon silhouettes) still carry the burst; the additive cream glow sits behind them; the core reads cream-tan, not clipped white — war_machines_1100ms, 1250ms. (3 struck 218, 1 struck 217, 2 struck 200) Ref trailer_3_sheet_03 r1c1, r1c2.
 Total tier 1 24/24; tier 2 15/24.
 
 ## Focus (every gap this iteration)
-BASE 850db0d
-- [S] vfx.h muzzle-smoke (7f05345) — APPROVE, blocker 3 struck
-- [P] vfx.h envelope-colour (3d824c8) — REJECT, reverted: the colours render mustard and dark orange with hard octagon rims (the solid shells may be what reads, not the sprites)
-- [S] unit-look.h lineup-eyes (89bee2a) — APPROVE, blocker 1 struck (critic: the 1.2x black rim reads as a heavy cartoon ring up close)
+BASE 0186233
+- [S] vfx.h envelope-glow (77616b3) — APPROVE, blocker 4 narrowed to the solid lobe shells, criterion still FAIL
+- [S] maps-light.f backdrop-haze (5d6b0d1) — REJECT, reverted: far* fogEnabled flip was good (ridges fade), but HAZE_DEPTH 95 -> 60 re-nudged the 215 row (ledger reversal) and washed the ring milky
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] muzzle-smoke (7f05345) VERDICT: APPROVE CRITERION: vfx.h FAIL (previous: FAIL)
-- GAP: [P] envelope-colour (3d824c8) VERDICT: REJECT CRITERION: vfx.h FAIL (previous: FAIL)
-- GAP: [S] lineup-eyes (89bee2a) VERDICT: APPROVE CRITERION: unit-look.h FAIL (previous: FAIL)
+- GAP: [S] envelope-glow (77616b3) VERDICT: APPROVE CRITERION: vfx.h FAIL (previous: FAIL)
+- GAP: [S] backdrop-haze (5d6b0d1) VERDICT: REJECT CRITERION: maps-light.f FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] vfx.h envelope-glow [0] — blocker 4: unlit emissive fire sprites with a feathered alpha texture plus an additive near-white core drawn over the grey smoke (check first which meshes read as the hard octagons: the solid lobe shells or the sprites) — ref trailer_3_sheet_03 r1c1 — ours war_machines_1250ms
-2. [S] unit-look.h hat-scale [0] — blocker 3: beret and cone hats ~2 heads wide, seated on the skull — ref tabs_screenshot_05 — ours lineup_medieval
-3. [S] unit-look.f mammoth-scale [2] — blocker 1: mammoth ~3.5 men tall, legs and tusks in proportion — ref tabs_screenshot_01 — ours big_melee_result
-4. [S] maps-light.f backdrop-haze [0] — blocker 2: wash the far tree ring and mountain materials toward the fog/sky colour by distance — ref tabs_screenshot_05 — ours big_melee_5s
-5. [S] maps-light.e spooky-palette [0] — blocker 1: navy-night tree ring and pink glow palette for the spooky biome — ref tabs_screenshot_03 — ours biome_spooky
-6. [S] camera.f spectator-low [0] — blocker 1: a near-ground camera rule looking up at the mammoth or a launch — ref trailer_3_sheet_03 r1c2 — ours war_machines_1250ms
-7. [R] battle-feel.e telegraph-swing [0] — windup-to-committed-strike pose machine whose blow lands on a head or shoulder — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
-8. [R] battle-feel.h wall-facing [0] — both teams hold their boards toward the foe without interpenetrating — ref tabs_screenshot_06 — ours shield_wall_side
+1. [S] maps-light.f backdrop-haze-ridges [1] — blocker 2: the far* backdrop fogEnabled flip alone, plus a ring-owned pastel distance tint (radius-keyed lerp toward the sky on the ring tree materials), HAZE_DEPTH untouched — ref tabs_screenshot_05 — ours spell_dome
+2. [S] vfx.h lobe-shell-soften [0] — blocker 4: replace the orange-rimmed solid lobes with a rimless pale fill so the additive sprites are the burst — ref trailer_3_sheet_03 r1c1 — ours war_machines_1100ms
+3. [S] unit-look.f mammoth-scale [2] — blocker 1: mammoth ~3.5 men tall — ref tabs_screenshot_01 — ours big_melee_result
+4. [S] unit-look.h hat-size [0] — blocker 3: beret and cone ~2 heads wide — ref tabs_screenshot_05 — ours lineup_medieval
+5. [S] maps-light.e spooky-palette [0] — blocker 1: navy night, dead trees, pink glow tree ring for the spooky biome — ref tabs_screenshot_03 — ours biome_spooky
+6. [S] camera.f spectator-low [0] — blocker 1: near-ground camera rule looking up at the mammoth or a launch — ref trailer_3_sheet_03 r1c2 — ours big_melee_5s
+7. [R] battle-feel.e swing-arc [0] — windup and a descending blow landing on a head or shoulder — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
+8. [R] battle-feel.h wall-band [0] — both teams hold boards toward the foe, no interpenetration — ref tabs_screenshot_06 — ours shield_wall_side
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
+- backdrop-haze [attempts: 1, [S]] — 219: far* fog on (good) + HAZE_DEPTH 60: ledger reversal of the 215 haze row and a milky ring; resubmit the flip alone with a ring-owned tint
 - envelope-colour [attempts: 1, [P]] — 218: pale core/outer colours at alpha 0.95 rendered mustard/dark orange with hard octagons; needs an [S] (unlit/additive core over the smoke)
 - shed-gear [attempts: 1, [S]] — 216: shield/weapon cloned off the hands, laid flat at y 0.04 beside the corpse: hidden by grass cards. Clones keep the source parent (set parent null); skip the rHandM mitt
 - board-layers [attempts: 1, [S]] — 214: square boards, every other one 0.07 forward: head-on band good, but blue boards beside the knights still face-on in the side shot
 - board-axis-from-heading [attempts: 1, [S]] — 213: lap scaled by (1 - shove) on the strip path: blue boards unchanged face-on to the side camera; squaring removes the overlap
-- press-club-lands [attempts: 2, [S], dropped] — 205-212, never committed: in contact clubbers topple, stood off they are speared before a chop lands
 
 ## Notes for next iteration (max 5 lines)
-- 218 [S] pair was (vfx.h, unit-look.h); 219 must not repeat it. battle-feel.e and .h are plateau (rewritten 215): only [R] on them. Visual effects stop updating once the battle ends: anything mid-flight at the result freezes; shed gear is laid at once for that reason.
+- 219 [S] pair was (vfx.h, maps-light.f); 220 is a re-audit. battle-feel.e and .h are plateau (rewritten 215): only [R] on them. A value change bundled into an [S] on an approved row within 20 iterations counts as a ledger reversal: give it its own mechanism.
 - Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the shield arm aims at the board back (_gripBoard). The blue wall men are hoplites with round boards (no tower shields in the wall shots).
 - battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.

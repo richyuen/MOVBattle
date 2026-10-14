@@ -217,3 +217,4 @@ iter 215 | re-audit; [S] fight-keyed haze and vignette, [S] spell-dome | 2/2 app
 iter 216 | [S] zeus-bolt-slabs, [S] shed-gear | 1/2 approved | passes 13 -> 14
 iter 217 | [S] shed-gear-visible, [S] fire-envelope | 2/2 approved | passes 14 -> 15
 iter 218 | [S] muzzle-smoke, [P] envelope-colour, [S] lineup-eyes | 2/3 approved | passes 15 -> 15
+iter 219 | [S] envelope-glow, [S] backdrop-haze | 1/2 approved | passes 15 -> 15
