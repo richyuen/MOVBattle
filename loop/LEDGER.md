@@ -11,7 +11,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 
 ## Rows
 main.ts:GIANT_LEAN | 0.4 | 159 | spent |
-main.ts:placement ghost (GHOST_ALPHA, GHOST_BLOCKED_ALPHA) | 0.55, blocked 0.22 | 187 | approved |
+main.ts:placement ghost (GHOST_ALPHA, GHOST_BLOCKED_ALPHA) | 0.85, blocked 0.22 | 188 | approved | 0.55 (187); no further [P]
+main.ts:ghost footprint (GHOST_TILE_OF_BODY, _MIN, _HEIGHT, _BLOCKED_ALPHA) | hex slab 1.7 bodies across, at least 1.2 m, 0.22 tall; blocked 0.3 | 188 | approved |
 cameraController.ts:FOLLOW_DROP | 0.9 | 155 | approved |
 cameraController.ts:clearRadius | depth + max(6.0, giant/0.58) | 157 | approved |
 cameraController.ts:melee alpha | -PI/3 | 159 | approved |
@@ -45,6 +46,7 @@ visualEffects.ts:explosion burst | 4 unlit yellow lobes in inside-out orange she
 visualEffects.ts:explosion dust bank | 14 unlit puffs, reach 2.3*sqrt, size 0.7-1.45 | 164 | approved | no [P] on tall and tans
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved |
 proceduralAnimation.ts:shield brace (_buildBracePose) | crouched/tall/shoulder-in 0.35/0.35/0.30 (crouch 0.05-1.05), shift 1.2-2.6/s, head turn +-0.35; board yaw +-0.22, tilt +-0.16 | 179 | approved |
+proceduralAnimation.ts:brace drive leg (_buildBracePose lead, lunge, twist, tuck) | lead leg hashed, step 0.35-0.75 less crouch, twist 0.08-0.38, head tuck -0.2..0.4 | 188 | approved |
 proceduralAnimation.ts:spear carry (_carrySpear, levelSpearAt; sim spearLevelReach) | upright on the march; within reach + 3.5 aimed from the fist at the enemy's chest, dip -0.05..0.5, jitter +-0.07 (no yaw) | 184 | approved | level by shove, dip 0.02+-0.45 (180); no [P]
 proceduralAnimation.ts:spear thrust (_thrustStroke, SPEAR_LUNGE, _DRAW, _CHOKE; brace thrustRate) | lunge 0.45 m, draw -0.4 of it, choke up to 0.45 of the length ahead; beat 0.9-1.4/s | 186 | approved |
 proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, sink 0.05-0.27, asym +-0.18, arm lag +-0.7, swing 0.5-0.95 | 174 | approved | no further [P] on roll
@@ -69,8 +71,6 @@ vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 177 | shadow-sawtooth-hard-edge | maps-light.b | approved
-- 177 | wire-legs | unit-look.c | approved
 - 178 | shadow-hard-heavy-maroon | maps-light.b | approved
 - 178 | crew-stick-body | unit-look.c | approved
 - 179 | shield-rank-one-pose | battle-feel.c | approved
@@ -91,6 +91,8 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 186 | wall-spears-held-not-thrust | battle-feel.c | approved
 - 187 | ghost-preview | ui-flow.d | approved
 - 187 | trunk-widest-below-the-arms | unit-look.c | approved
+- 188 | ghost-unreadable | ui-flow.d | approved
+- 188 | pushing-rank-one-pose | battle-feel.c | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
