@@ -25,18 +25,16 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Seat: its lowest edge stands HAT_EYE_CLEAR of the head's height above the top of the eye (the eyes are 0.56 of the head up, EYE_OF_FACE x EYE_RIM wide),
  *   wherever that falls for this head, so it is low on the brow and the eyes stay clear.
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
- *   Cone: a flared brim skirt CONE_SKIRT_HEADS heads across on the seat, in a lighter tone, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
+ *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
 const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat"];
 const HAT_EYE_CLEAR = 0.05;
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
 const BERET_TILT = 0.22;
+const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
-// The cone hat's brim skirt: how far out it flares (heads across) and how deep it is at its edge (of the head's height).
-const CONE_SKIRT_HEADS = 2.4;
-const CONE_SKIRT_THICK = 0.1;
 
 function buildFittedHat(scene: Scene, type: HatType, head: { width: number; height: number }, unit: number, accent: Color3): Mesh {
   const W = head.width, H = head.height;
@@ -52,18 +50,15 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     beret.material = mat(scene, accent);
     return beret;
   }
-  // The brim is its own shape (tabs_screenshot_05: the brim reads as a flat ring of its own round the crown): a shallow flared skirt from the cone's foot out to
-  // CONE_SKIRT_HEADS heads, CONE_SKIRT_THICK of the head deep at its edge, in a lighter tone than the cone so it stands out from it at lineup distance
-  const brim = MeshBuilder.CreateCylinder("conehatBrim", {
-    height: u(CONE_SKIRT_THICK * H), diameterTop: u(CONE_HEADS * W), diameterBottom: u(CONE_SKIRT_HEADS * W), tessellation: 18,
-  }, scene);
-  brim.position.y = u(seat + CONE_SKIRT_THICK * H * 0.5);
-  brim.material = mat(scene, Color3.Lerp(accent, new Color3(1, 0.95, 0.8), 0.35));
-  const cone = MeshBuilder.CreateCylinder("conehat", {
-    height: u(CONE_TALL * H), diameterTop: 0, diameterBottom: u(CONE_HEADS * W), tessellation: 14,
-  }, scene);
+  const brim = MeshBuilder.CreateCylinder("conehatBrim", { height: 1, diameter: 1, tessellation: 18 }, scene);
+  brim.scaling.set(u(CONE_BRIM_HEADS * W), u(0.05 * H), u(CONE_BRIM_HEADS * W));
+  brim.position.y = u(seat);
+  brim.material = mat(scene, accent.scale(0.45));
+  const cone = MeshBuilder.CreateCylinder("conehat", { height: 1, diameterTop: 0, diameterBottom: 1, tessellation: 14 }, scene);
   cone.parent = brim;
-  cone.position.y = u(CONE_SKIRT_THICK * H * 0.5 + CONE_TALL * H * 0.5);
+  // In the brim's scaled frame: a cone CONE_HEADS heads across standing CONE_TALL of the head high on the brim
+  cone.scaling.set(CONE_HEADS / CONE_BRIM_HEADS, CONE_TALL / 0.05, CONE_HEADS / CONE_BRIM_HEADS);
+  cone.position.y = 0.5 + 0.5 * CONE_TALL / 0.05;
   cone.material = mat(scene, accent.scale(0.5));
   return brim;
 }
