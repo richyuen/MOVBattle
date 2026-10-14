@@ -72,6 +72,8 @@ const SPEAR_FRONT_GRIP_MAX = 0.28;
 const BOARD_PLANE_REACH = 0.42;
 const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
+// Where a board rides on its rank's strip: this share of the bearer's neck height above his feet (chest height; tabs_screenshot_06 boards run chin to knee).
+const BOARD_SEAT_HEIGHT = 0.62;
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
 const SPEAR_COUCH_RAISE = -0.45;
 const SPEAR_COUCH_ELBOW = -1.25;
@@ -191,13 +193,19 @@ export class ProceduralAnimator {
   }
   private _spearAim = new Vector3();
   /** Slotted into a shield wall, called every step while he stands in it: his spear goes up on the wall's heading at SPEAR_WALL_UP (see _carrySpear), until the calls stop. */
-  holdSpearInWall(heading: number, boardPlane: number | null = null): void {
+  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null): void {
     this._wallHeading = heading;
     this._wallTimer = 0.3;
     this._boardPlane = boardPlane;
+    if (slotAt) (this._boardSlot ??= new Vector3()).copyFrom(slotAt);
+    else this._boardSlot = null;
   }
   // A front-rank man's wall line along the heading (see _lapBoard), null in a rear rank; how far his board has gone over from his hand to it (0 to 1); and where it was strapped on.
   private _boardPlane: number | null = null;
+  // His slot in the wall's frame (SimulationSystem ShieldSlot.at): his board is seated on it across the wall, not on his hand (see _lapBoard)
+  private _boardSlot: Vector3 | null = null;
+  // The height his board rides at, a share of his stature taken from his body when it is first seated, so every board in a strip is at one height
+  private _boardSeat: number | null = null;
   private _boardLap = 0;
   private _boardRest: Vector3 | null = null;
   // The heading of the wall he stands in, shared by every man in it, and how far his spear has gone over to the wall's line (0 to 1).
@@ -896,6 +904,20 @@ export class ProceduralAnimator {
     const strapped = Vector3.TransformCoordinates(rest, hand.getWorldMatrix());
     const root = this._body.root.absolutePosition;
     const scale = this._body.root.absoluteScaling.y || 1;
+    if (this._boardSlot && this._boardPlane !== null) {
+      // On a rank's strip (see the spec at SimulationSystem._holdShieldFrames): on his slot across the wall, BOARD_PLANE_REACH ahead of the rank's line, at
+      // BOARD_SEAT_HEIGHT of his stature, square to the heading plus BOARD_LAP, whatever his arms and trunk are doing
+      if (this._boardSeat === null) {
+        this._body.neck.computeWorldMatrix(true);
+        this._boardSeat = (this._body.neck.getAbsolutePosition().y - root.y) * BOARD_SEAT_HEIGHT;
+      }
+      const slotSide = this._boardSlot.z * fx - this._boardSlot.x * fz;
+      const depth = this._boardPlane + BOARD_PLANE_REACH * scale;
+      const seat = new Vector3(depth * fx - slotSide * fz, root.y + this._boardSeat, depth * fz + slotSide * fx);
+      Vector3.LerpToRef(strapped, seat, lap, seat);
+      shield.position.copyFrom(Vector3.TransformCoordinates(seat, Matrix.Invert(hand.getWorldMatrix())));
+      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, 0, 0);
+    }
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
     const out = Math.max(-0.2 * scale, Math.min(BOARD_PLANE_MAX_OUT * scale, (this._boardPlane ?? 0) + BOARD_PLANE_REACH * scale - (strapped.x * fx + strapped.z * fz)));

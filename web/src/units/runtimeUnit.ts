@@ -413,9 +413,12 @@ export class RuntimeUnit {
   }
 
   /** Slotted into a shield wall this step: the spear stands on the wall's heading. */
-  holdSpearInWall(heading: number, boardPlane: number | null = null): void {
-    this.animator.holdSpearInWall(heading, boardPlane);
+  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null): void {
+    this.animator.holdSpearInWall(heading, boardPlane, slotAt);
   }
+
+  /** Held on his slot in a shield wall this step (see SimulationSystem._holdShieldFrames): crowd pressure does not topple a braced man, a blast still does. */
+  wallBraced = false;
 
   get isMoving(): boolean {
     return this._isMoving;
@@ -1154,6 +1157,8 @@ export class RuntimeUnit {
       return;
     }
 
+    // A man held in his shield wall is braced by it: the shove moves the wall, it does not fold him
+    if (this.wallBraced) return;
     if (this._balancePressure >= this._crowdPhysicsProfile.launchThreshold) {
       this._enterTopple(now, Math.max(appliedPressure, this._balancePressure), this._balanceDirection, true);
       return;

@@ -95,9 +95,9 @@ function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
 // How far ahead of a front-rank carrier his board stands against an enemy (see _resolveLivingCollisions): the board plane's reach plus its thickness.
 const SHIELD_BOARD_STANDOFF = 0.46;
 
-// A shield wall held as one frame under the shove (see SimulationSystem._holdShieldFrames): the share of a man's error from his slot taken out each step, and the most a step moves him.
-const SHIELD_FRAME_PULL = 0.4;
-const SHIELD_FRAME_STEP = 0.05;
+// The shield wall as one body (see the spec at SimulationSystem._holdShieldFrames): the most a step puts a carrier back toward his slot. At 60 steps a second
+// that is 9 m/s, more than any shove or march moves a man in a step, so on his feet he is on his slot.
+const SHIELD_SLOT_SNAP = 0.15;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -804,24 +804,39 @@ export class SimulationSystem {
       }
     }
     // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
-    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane);
+    // ...and his board on his rank's strip: the front rank's on the wall's plane, a rear rank's on its own line, each seated on his slot (see _holdShieldFrames).
+    for (const [unit, slot] of this._shieldSlots) {
+      const line = slot.plane ?? slot.at.x * Math.sin(slot.heading) + slot.at.z * Math.cos(slot.heading);
+      unit.holdSpearInWall(slot.heading, line, slot.at);
+    }
   }
 
-  /**
-   * A shield wall under the shove is one frame, not men pushed apart one by one: after the crowd solver has had its say each carrier on his feet is drawn back toward
-   * his slot in the wall's frame (ShieldSlot.at), across and in depth, by SHIELD_FRAME_PULL of his error a step and at most SHIELD_FRAME_STEP. The frame sits on the
-   * wall's mean place, so what the shove does to the men together moves the whole wall, and what it does to one man alone is taken back out: the slots keep their
-   * spacing sideways, the boards stay lapped, and the rank does not heap up three and four deep behind the contact (tabs_screenshot_06).
+  /*
+   * The shield wall as one body (rebuilt 210). Spec, read off the reference:
+   *   tabs_screenshot_06 (a Viking wall closing, two ranks): the front rank's round boards, each about 1.5 shoulder spacings across, overlap rim over rim into one
+   *   band at chest height, every board at the same height and the same turn, so from the front, the side or three-quarter on no torso shows between two of them.
+   *   Every man stands upright behind his own board, a shoulder spacing from the next, none inside another; the rear rank stands a rank gap behind, its boards a
+   *   second band behind the first. trailer_2_sheet_03 r2c3: tall boards packed edge to edge in one plane, the wall a single face.
+   * So:
+   *   Slots: each carrier's slot is a point in his wall's frame (ShieldSlot.at): across at his slot spacing, in depth on his rank's line. The frame sits on the
+   *   wall's mean place and heading every step, so what the shove does to the men together moves the whole wall; after the crowd solver each carrier on his feet
+   *   is put back on his slot (up to SHIELD_SLOT_SNAP a step, which is every step's drift), so no shove parts two men of a wall or runs one into another.
+   *   Feet: a man held in his wall is braced by it: crowd pressure does not topple him (RuntimeUnit.wallBraced). A blast still throws him, and a man out of his
+   *   wall falls as any other does.
+   *   Boards: each rank's boards are one strip: every board in a rank is seated on its bearer's slot across the wall, BOARD_PLANE_REACH ahead of the rank's line,
+   *   at one height (BOARD_SEAT_HEIGHT of the bearer's stature) and one turn (the heading plus BOARD_LAP), whatever his arms and trunk are doing (see
+   *   ProceduralAnimator._lapBoard). The front rank's strip is the face an enemy is stopped at (SHIELD_BOARD_STANDOFF).
    */
   private _holdShieldFrames(): void {
+    for (const unit of this._units) unit.wallBraced = false;
     for (const [unit, slot] of this._shieldSlots) {
       if (unit.isDead || unit.isToppled || unit.isDowned) continue;
+      unit.wallBraced = true;
       const error = slot.at.subtract(unit.position);
       error.y = 0;
       const reach = error.length();
       if (reach < 1e-3) continue;
-      const step = Math.min(reach * SHIELD_FRAME_PULL, SHIELD_FRAME_STEP);
-      unit.applyCollisionSeparation(error.scaleInPlace(step / reach));
+      unit.applyCollisionSeparation(error.scaleInPlace(Math.min(reach, SHIELD_SLOT_SNAP) / reach));
     }
   }
 
