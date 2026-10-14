@@ -209,3 +209,4 @@ iter 207 | [S] wall-face-held-in-contact (+[S] club-overhead-strike dropped) | 0
 iter 208 | [S] wall-board-yaw-from-frame (+[S] club-overhead-strike dropped) | 0/1 approved | passes 12 -> 12
 iter 209 | [S] wall-side-band (+[S] club-overhead-strike dropped) | 0/1 approved | passes 12 -> 12 | STOP: 3 consecutive rejects
 iter 210 | re-audit; [R] wall-as-body (+[S] strike-survives-shove dropped) | 1/1 approved | passes 12 -> 12
+iter 211 | [S] board-grip (+[S] press-club-lands dropped) | 1/1 approved | passes 12 -> 12
