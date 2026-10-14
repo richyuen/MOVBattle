@@ -1,6 +1,6 @@
 import {
   Scene, Mesh, MeshBuilder, Color3, Vector3, TransformNode,
-  PBRMetallicRoughnessMaterial,
+  PBRMetallicRoughnessMaterial, VertexBuffer, VertexData,
 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import type {
@@ -1251,6 +1251,19 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       // A cap of brown hair over the crown and the back of the head, with the wreath resting on it tipped up at the back,
       // so the head is not bald under a sweatband.
       const hair = MeshBuilder.CreateIcoSphere("laurelHair", { radiusX: 0.068 * s, radiusY: 0.075 * s, radiusZ: 0.08 * s, subdivisions: 1, flat: true }, scene);
+      // The face is bare below the brow (tabs_screenshot_04: two eyes on a plain head): the cap's front is cut back to its own middle under the wreath, or its lowest
+      // front facet broke through the face below the eyes as a dark "o" of a mouth.
+      const hairAt = hair.getVerticesData(VertexBuffer.PositionKind);
+      if (hairAt) {
+        for (let i = 0; i < hairAt.length; i += 3) {
+          if (hairAt[i + 1] < 0.02 * s && hairAt[i + 2] > 0) hairAt[i + 2] = 0;
+        }
+        hair.setVerticesData(VertexBuffer.PositionKind, hairAt);
+        const normals: number[] = [];
+        VertexData.ComputeNormals(hairAt, hair.getIndices() ?? [], normals);
+        hair.setVerticesData(VertexBuffer.NormalKind, normals);
+        hair.refreshBoundingInfo();
+      }
       hair.material = mat(scene, new Color3(0.36, 0.22, 0.1));
       hair.position.set(0, -0.05 * s, -0.03 * s);
       const laurel = MeshBuilder.CreateTorus("laurel", { diameter: 0.125 * s, thickness: 0.022 * s, tessellation: 6 }, scene);
