@@ -178,6 +178,8 @@ export class SimulationSystem {
   readonly shieldRankFollowBand = 0.25;
   /** A wall's men level their spears at the man they are closing on from this far outside their reach, the rear rank with the front. */
   readonly spearLevelReach = 3.5;
+  /** Within this much of its reach a heavy weapon's man strikes on his own beat as the press does, out of contact (see ProceduralAnimator._pressBlow). */
+  blowStrikeReach = 0.9;
   /** Within this much of its reach a melee unit with a heavy weapon carries it cocked (see ProceduralAnimator.readyBlow). */
   readonly blowReadyReach = 4;
   /** A slotted carrier in contact stands square to the wall's advance while his enemy is within this arc of it; outside it he turns to face him. */
@@ -554,7 +556,7 @@ export class SimulationSystem {
     unit.setSpinning(false);
     const spearSlot = this._shieldSlots.get(unit);
     if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
-    if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) unit.readyBlow();
+    if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) unit.readyBlow(distance <= engageDistance + this.blowStrikeReach);
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to

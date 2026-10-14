@@ -87,6 +87,12 @@ const CASTER_CROUCH = 0.3;
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
+// The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent dropping, landed on the head and heaving back to the cock.
+const PRESS_BLOW_BEAT_MIN = 1.5;
+const PRESS_BLOW_BEAT_MAX = 2.4;
+const PRESS_BLOW_DROP = 0.1;
+const PRESS_BLOW_HOLD = 0.16;
+const PRESS_BLOW_BACK = 0.16;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -164,9 +170,11 @@ export class ProceduralAnimator {
   private _shoveTimer = 0;
 
   /** An enemy is close enough to close with (a few strides): a heavy weapon comes up to its cocked hold over the shoulder and stays there until the calls stop. */
-  readyBlow(): void {
+  readyBlow(striking = false): void {
     this._readyTimer = 0.6;
+    if (striking) this._strikeTimer = 0.6;
   }
+  private _strikeTimer = 0;
   private _readyTimer = 0;
   private _ready = 0;
 
@@ -197,6 +205,27 @@ export class ProceduralAnimator {
   // The stroke (see _carrySpear): where in it the man is, from SPEAR_DRAW (drawn back) through 0 (the hold) to 1 (full lunge), and how near the enemy is to being in reach, 0 to 1.
   private _spearThrust = 0;
   private _spearNear = 0;
+  /**
+   * A clubber's blow in the press, on his own beat of PRESS_BLOW_BEAT_MIN..MAX seconds (hashed from the wobble phase, so a press is staggered): 0 while the club is cocked,
+   * then the drop onto the man in front over PRESS_BLOW_DROP of the beat, slow off the cock and fastest at the bottom, 1 held there on the head over PRESS_BLOW_HOLD,
+   * then heaved back up to the cock. About a quarter of the press is dropping or landed in any frame (trailer_3_sheet_01 r2c3: the club over and down on a head).
+   */
+  private _pressBlow(): number {
+    const h = Math.sin(this._wobblePhase * 91.7) * 43758.5453;
+    const own = h - Math.floor(h);
+    const beat = PRESS_BLOW_BEAT_MIN + (PRESS_BLOW_BEAT_MAX - PRESS_BLOW_BEAT_MIN) * own;
+    const u = (this._time / beat + own * 3.7) % 1;
+    const start = 1 - PRESS_BLOW_DROP - PRESS_BLOW_HOLD - PRESS_BLOW_BACK;
+    if (u < start) return 0;
+    if (u < start + PRESS_BLOW_DROP) {
+      const x = (u - start) / PRESS_BLOW_DROP;
+      return x * x;
+    }
+    if (u < start + PRESS_BLOW_DROP + PRESS_BLOW_HOLD) return 1;
+    const x = (u - start - PRESS_BLOW_DROP - PRESS_BLOW_HOLD) / PRESS_BLOW_BACK;
+    return 1 - x * x * (3 - 2 * x);
+  }
+
   /** One stroke of a levelled spear on the man's own beat: a slow draw back, a lunge in an eighth of the beat, and a recovery to the hold. */
   private _thrustStroke(): number {
     const br = (this._bracePose ??= this._buildBracePose());
@@ -527,16 +556,20 @@ export class ProceduralAnimator {
       b.leftKnee.rotation.x += (p.knee + 0.05) * k;
       b.rightKnee.rotation.x += (p.knee + 0.05) * k;
       if (this._state !== AnimState.Attacking && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
-        // A clubber in the press, stood or stepping in, does not windmill or level his weapon arm: between blows he keeps it cocked up over his shoulder, ready to bring it down,
-        // heaving it a little on his own beat, while the free arm still claws and shoves.
+        // A clubber in the press, stood or stepping in, does not windmill or level his weapon arm: he keeps it cocked up over his shoulder and, on his own beat,
+        // brings it down onto the man in front (see _pressBlow), holds it there a moment and heaves it back up, while the free arm still claws and shoves.
         const heave = Math.sin(phase * 0.5) * 0.12;
-        b.rightShoulder.rotation.x += (-2.5 + heave - b.rightShoulder.rotation.x) * k;
-        b.rightShoulder.rotation.z += (0.3 - b.rightShoulder.rotation.z) * k;
-        b.rightElbow.rotation.x += (-1.3 - b.rightElbow.rotation.x) * k;
+        const blow = this._pressBlow();
+        b.rightShoulder.rotation.x += (-2.5 + heave + 3.0 * blow - b.rightShoulder.rotation.x) * k;
+        b.rightShoulder.rotation.z += (0.3 - 0.4 * blow - b.rightShoulder.rotation.z) * k;
+        b.rightElbow.rotation.x += (-1.3 + 1.15 * blow - b.rightElbow.rotation.x) * k;
+        // The trunk goes over with the blow and the head with it
+        b.torso.rotation.x += 0.45 * blow * k;
+        b.neck.rotation.x += 0.15 * blow * k;
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
         b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
         b.leftElbow.rotation.x -= (1.0 + Math.sin(phase) * 0.6) * k;
-        this._clubArc = CLUB_COCK * 0.9 + heave;
+        this._clubArc = CLUB_COCK * 0.9 + heave + (CLUB_LAND - CLUB_COCK * 0.9 - heave) * blow;
         this._clubHold = Math.max(this._clubHold, k);
       } else if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
@@ -628,15 +661,19 @@ export class ProceduralAnimator {
     // Closing on a man with a heavy weapon, out of contact: whatever the carry or the stand made of the weapon arm, it comes up to the cocked hold over the
     // shoulder that the press keeps (see _animateHeavySwing), so men stepping into a fight carry their clubs raised and not slanted or trailed.
     this._readyTimer -= dt;
+    this._strikeTimer -= dt;
     this._ready += ((this._readyTimer > 0 ? 1 : 0) - this._ready) * Math.min(1, dt * 6);
     const cocked = this._ready * (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
     if (cocked > 0.01 && this._state !== AnimState.Attacking && this._state !== AnimState.Dead && this.walkStyle !== "quadruped" && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
       const b = this._body;
       const heave = Math.sin((this._time + this._wobblePhase) * 3) * 0.1;
-      b.rightShoulder.rotation.x += (-2.5 + heave - b.rightShoulder.rotation.x) * cocked;
-      b.rightShoulder.rotation.z += (0.3 - b.rightShoulder.rotation.z) * cocked;
-      b.rightElbow.rotation.x += (-1.3 - b.rightElbow.rotation.x) * cocked;
-      this._clubArc = this._clubHold > 0.01 ? this._clubArc : CLUB_COCK * 0.9 + heave;
+      // Within striking distance he brings it down on his own beat, as a man in the press does
+      const blow = this._strikeTimer > 0 ? this._pressBlow() : 0;
+      b.rightShoulder.rotation.x += (-2.5 + heave + 3.0 * blow - b.rightShoulder.rotation.x) * cocked;
+      b.rightShoulder.rotation.z += (0.3 - 0.4 * blow - b.rightShoulder.rotation.z) * cocked;
+      b.rightElbow.rotation.x += (-1.3 + 1.15 * blow - b.rightElbow.rotation.x) * cocked;
+      b.torso.rotation.x += 0.45 * blow * cocked;
+      this._clubArc = this._clubHold > 0.01 ? this._clubArc : CLUB_COCK * 0.9 + heave + (CLUB_LAND - CLUB_COCK * 0.9 - heave) * blow;
       this._clubHold = Math.max(this._clubHold, cocked);
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed

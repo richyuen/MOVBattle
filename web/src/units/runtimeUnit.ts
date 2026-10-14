@@ -401,10 +401,10 @@ export class RuntimeUnit {
     this.animator.leanIntoShove();
   }
 
-  /** Closing on its target, a few strides out: a heavy weapon comes up cocked over the shoulder. */
-  readyBlow(): void {
+  /** Closing on its target, a few strides out: a heavy weapon comes up cocked over the shoulder; within striking distance it is brought down on its own beat. */
+  readyBlow(striking = false): void {
     if (isVehicleUnit(this.definition.id)) return;
-    this.animator.readyBlow();
+    this.animator.readyBlow(striking);
   }
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
