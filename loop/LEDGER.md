@@ -43,8 +43,6 @@ proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 224 | bodies-over-fire | vfx.h | approved
-- 224 | spooky-dressing | maps-light.e | approved
 - 225 | spooky-canopy | maps-light.e | approved
 - 225 | campaign-map | ui-flow.g | approved
 - 226 | overhead-strike | battle-feel.e | approved
@@ -63,6 +61,8 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 232 | pressing-lean | battle-feel.h | approved
 - 233 | [R] hat-seat rebuild | unit-look.h | approved
 - 233 | rear-strike-lands | battle-feel.e | rejected
+- 234 | aimed-club-cycle | battle-feel.e | rejected
+- 234 | pressing-stride | battle-feel.h | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -78,5 +78,5 @@ simulationSystem.ts:wall queue in _keepRanksDeep (WALL_QUEUE_GAP; non-carrier al
 proceduralAnimation.ts:overhand rear-rank spear (SPEAR_OVERHAND_UP; rear hold x foe near, eased 6/s, aimed on the foe bearing) | 0.18 rad above level | 230 | approved |
 mapBuilder.ts:CanopyAerialPlugin on *Crown materials (CANOPY_AERIAL_NEAR, _FAR, _MAX, _LIFT) | 8-55 m from the eye, 0.42, lift 0.55 | 231 | approved |
 proceduralAnimation.ts:rear-rank club rest (REAR_CLUB_REST; simulationSystem _allyBetween, REAR_RANK_REACH, _LANE) | 0.85 of cock->landed, heave 0.08; reach +1.4 m, lane 0.7 m | 232 | approved |
-proceduralAnimation.ts:pressed board tilt (BOARD_PRESS_TILT x shove, in _lapBoard) | 0.3 rad top forward | 232 | approved |
+proceduralAnimation.ts:pressed board tilt + press stride (BOARD_PRESS_TILT, PRESS_DRIVE; per-man lean = half tilt + half trunk pitch + rock 0.06) | 0.3 rad; drive 0.4 at full shove | 234 | approved | shared tilt 0.3 (232)
 propBuilder.ts:buildFittedHat (HEAD_FITTED_HATS, HAT_EYE_CLEAR, BERET_*, CONE_*) | seat 0.05 head over eye top; beret 2 heads x 0.32, tilt 0.22; cone brim 2.1, foot 1.5, tall 1.05 | 233 | approved |
