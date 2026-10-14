@@ -1651,40 +1651,24 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   }
 
   // ── Trunk (parented to neck) ──
-  // Spec, read off tabs_screenshot_01: the trunk is the face's one big shape below the eyes, half a head wide where it leaves
-  // the face, hanging nearly straight down between the tusks to just above the ground (the neck is 1.6 up), its last
-  // stretch bowing forward into a curl. One faceted tube on a bent line: each piece runs from one knot to the next so
-  // there are no gaps, narrowing to 0.4 of its root, with a dark fur ring at every knot so it reads as segmented.
-  const trunkKnots = [
-    new Vector3(0, -0.12, 0.62), new Vector3(0, -0.48, 0.84), new Vector3(0, -0.82, 0.94), new Vector3(0, -1.08, 0.95),
-    new Vector3(0, -1.28, 0.99), new Vector3(0, -1.38, 1.1), new Vector3(0, -1.36, 1.22), new Vector3(0, -1.26, 1.28),
-  ];
-  const trunkRoot = 0.56;
-  const trunkWidth = (u: number): number => trunkRoot * (1 - 0.6 * u);
-  const trunkPieces = trunkKnots.length - 1;
-  for (let i = 0; i < trunkPieces; i++) {
-    const a = trunkKnots[i], b = trunkKnots[i + 1];
-    const run = b.subtract(a);
+  const trunkSegments = 7;
+  for (let i = 0; i < trunkSegments; i++) {
+    const t = i / (trunkSegments - 1);
+    // A thick trunk half as long again as it was, 0.4 across at the face and still half that at the tip
+    const diam = 0.4 - t * 0.2;
     const seg = MeshBuilder.CreateCylinder("trunk", {
-      height: run.length() * 1.12, diameterBottom: trunkWidth(i / trunkPieces), diameterTop: trunkWidth((i + 1) / trunkPieces), tessellation: 7,
+      height: 0.28, diameterTop: diam * 0.85, diameterBottom: diam, tessellation: 8,
     }, scene);
-    seg.position = a.add(b).scale(0.5);
-    seg.rotation.x = Math.atan2(run.z, run.y);
+    const zOff = 0.55 + t * 0.42;
+    const yOff = -0.3 - t * 0.53;
+    seg.position.set(0, yOff, zOff);
+    seg.rotation.x = -0.3 + t * 0.5;
     seg.parent = neck; seg.material = fur; allMeshes.push(seg);
-    if (i === 0) continue;
-    // The ring on the knot, turned halfway between the two pieces it joins
-    const before = a.subtract(trunkKnots[i - 1]);
-    const ring = MeshBuilder.CreateCylinder("trunkRing", { height: 0.05, diameter: trunkWidth(i / trunkPieces) * 1.1, tessellation: 7 }, scene);
-    ring.position = a.clone();
-    ring.rotation.x = (Math.atan2(before.z, before.y) + Math.atan2(run.z, run.y)) / 2;
-    ring.parent = neck; ring.material = shaggyFur; allMeshes.push(ring);
   }
 
-  // Trunk tip: the dark nostril end of the curl
-  const tipKnot = trunkKnots[trunkPieces], tipRun = tipKnot.subtract(trunkKnots[trunkPieces - 1]);
-  const trunkTip = MeshBuilder.CreateCylinder("trunkTip", { height: 0.05, diameter: trunkWidth(1) * 0.9, tessellation: 7 }, scene);
-  trunkTip.position = tipKnot.add(tipRun.normalize().scale(0.04));
-  trunkTip.rotation.x = Math.atan2(tipRun.z, tipRun.y);
+  // Trunk tip
+  const trunkTip = MeshBuilder.CreateSphere("trunkTip", { diameter: 0.12, segments: 4 }, scene);
+  trunkTip.position.set(0, -0.98, 0.94);
   trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
 
   // ── Tusks (parented to neck) ──
