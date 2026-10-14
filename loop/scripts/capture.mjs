@@ -374,6 +374,9 @@ async function main() {
       summary.notes.push(`big_melee ended in mode ${mode} at ${simMs} ms`);
       await page.evaluate(() => window.advanceTime(2500)); // past the 2 s victory-shot drift
       await shot(page, "big_melee_result");
+      // A pair 1 s apart, so the victory camera's drift and the survivors' motion can be judged.
+      await page.evaluate(() => window.advanceTime(1000));
+      await shot(page, "big_melee_result_1s");
       const finalState = await page.evaluate(() => window.render_game_to_text());
       fs.writeFileSync(path.join(outDir, "big_melee_final_state.json"), finalState);
 
