@@ -1519,6 +1519,32 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     "Red's front boards should lap rim over rim into one surface along the wall.",
     800,
   ),
+  // Loop evidence: a rank of clubbers in the press against a hoplite wall, seen side-on down the line of contact, so a blow is framed on the man it lands on.
+  gallery_press_clubbers: makeGalleryScenario(
+    "gallery_press_clubbers",
+    "Clubbers in contact with a hoplite wall, side-on.",
+    ["tribal.clubber", "tribal.clubber", "tribal.clubber", "tribal.clubber", "tribal.clubber"],
+    {
+      autoStart: true,
+      advanceMs: 2200,
+      captureAdvanceMs: 2200,
+      capturePhase: "simulation-mid",
+      columns: 5,
+      centerX: -2.5,
+      centerZ: 0,
+      spacingX: 0,
+      spacingZ: 0.9,
+      galleryPresetId: "state_read_duel",
+      cameraOverride: {
+        alpha: -Math.PI / 2 - 0.2,
+        beta: Math.PI / 2.08,
+        radius: 4.4,
+        target: { x: 0, y: 1.1, z: -1.4 },
+      },
+      extraUnits: [-1.8, -0.9, 0, 0.9, 1.8].map((z) => ({ unitId: "ancient.hoplite", team: 1, position: { x: 2.5, z } })),
+      focus: "A clubber's blow should come down on the head of the man in front of him, who ducks under it.",
+    },
+  ),
   // Loop evidence: bowmen at the loose, seen side-on.
   gallery_archer_loose: makeGalleryScenario(
     "gallery_archer_loose",
