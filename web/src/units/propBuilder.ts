@@ -1256,8 +1256,8 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       const laurel = MeshBuilder.CreateTorus("laurel", { diameter: 0.125 * s, thickness: 0.022 * s, tessellation: 6 }, scene);
       laurel.material = mat(scene, new Color3(0.35, 0.45, 0.18), 0.1);
       laurel.parent = hair;
-      laurel.position.set(0, 0.005 * s, 0.015 * s);
-      laurel.rotation.x = 0.25;
+      laurel.position.set(0, 0.028 * s, 0.015 * s); // on the brow, clear of the eye discs: at 0.005 and tipped 0.25 its front lay across them
+      laurel.rotation.x = 0.1;
       return hair;
     }
     case "feather_headdress": {
