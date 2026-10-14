@@ -72,6 +72,8 @@ const SPEAR_FRONT_GRIP_MIN = 0.2;
 const SPEAR_FRONT_GRIP_MAX = 0.28;
 // The front rank's boards in a wall in contact (see _lapBoard): how far ahead of the rank's line their plane stands, and the one turn off square every board in it takes.
 const BOARD_PLANE_REACH = 0.42;
+// How far a pressed board's top is tipped forward into the foe (radians), at full shove (see _lapBoard).
+const BOARD_PRESS_TILT = 0.3;
 const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
 // Where a board rides on its rank's strip: this share of the bearer's neck height above his feet (chest height; tabs_screenshot_06 boards run chin to knee).
@@ -994,7 +996,9 @@ export class ProceduralAnimator {
       // His fist goes to the board, not the board off his fist: the shield arm is reached straight out at the back of the board (see _gripBoard)
       this._gripBoard(new Vector3(seat.x - fx * BOARD_GRIP_BACK * scale, seat.y, seat.z - fz * BOARD_GRIP_BACK * scale), lap);
       shield.position.copyFrom(Vector3.TransformCoordinates(seat, Matrix.Invert(hand.getWorldMatrix())));
-      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, 0, 0);
+      // Pressed (in contact and shoving), the board's top is tipped forward into the foe by BOARD_PRESS_TILT and its foot driven up behind it (tabs_screenshot_06:
+      // the boards lean into the push), the wall's weight going in at the rim; off the press it stands upright on the strip
+      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, BOARD_PRESS_TILT * Math.min(1, this._shove), 0);
     }
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
