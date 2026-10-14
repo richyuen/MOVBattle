@@ -51,8 +51,6 @@ BASE 8bb7a14
 - board-axis-from-heading [attempts: 1, [S]] — 213: lap scaled by (1 - shove) on the strip path: blue boards unchanged face-on to the side camera; squaring removes the overlap
 - press-club-lands [attempts: 2, [S], dropped] — 205-212, never committed: in contact clubbers topple, stood off they are speared before a chop lands
 - lapped-band-at-contact [attempts: 2, [S], dropped] — 212: from the side one wall shows faces, the other backs; turning boards cannot make a side band
-- wall-side-band [attempts: 1, [S]] — 209: end men wing boards out 0.9 rad, gap-side boards turn up to 0.6 rad: a turned disc does not move into the gap, torsos still show; wings read edge-on under the shove
-- wall-board-yaw-from-frame [attempts: 1, [S]] — 208: rear-rank boards on their own lapped line square to the heading: side/2500/2650 still show two turned discs and ~6 bare torsos; a board covers half a man's width side-on
 
 ## Notes for next iteration (max 5 lines)
 - 217 [S] pair was (vfx.g, vfx.h); 218 must not repeat it. battle-feel.e and .h are plateau (rewritten 215): only [R] on them. Visual effects stop updating once the battle ends: anything mid-flight at the result freezes; shed gear is laid at once for that reason.
