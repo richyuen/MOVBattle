@@ -76,6 +76,9 @@ const BOARD_PLANE_REACH = 0.42;
 const BOARD_PRESS_TILT = 0.3;
 // How far a pressing wall man's drive leg goes back (radians at the hip, at full shove); his lead knee and trunk follow it (see the brace).
 const PRESS_DRIVE = 0.4;
+// A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
+const WALL_TRUNK_MAX = 0.3;
+const WALL_HEAD_LEVEL = 0.9;
 const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
 // Where a board rides on its rank's strip: this share of the bearer's neck height above his feet (chest height; tabs_screenshot_06 boards run chin to knee).
@@ -705,7 +708,18 @@ export class ProceduralAnimator {
         }
       }
     }
-    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink;
+    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink;
+    // Upright in the wall (tabs_screenshot_06: every man stands upright behind his board, face over the rim): whatever the brace, the press and the stride made of him,
+    // a man held in a wall carries his trunk no further over than WALL_TRUNK_MAX, his neck brings his face back up level over the rim, and his knees stay under
+    // his hips with no splay out to the side. The shove is in his stride and his shoulder, not a fold at the waist.
+    const upright = this._wallHold * (1 - Math.min(1, this._limp));
+    if (upright > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+      const b = this._body;
+      const over = Math.max(0, b.torso.rotation.x - WALL_TRUNK_MAX);
+      b.torso.rotation.x -= over * upright;
+      b.neck.rotation.x += (-b.torso.rotation.x * WALL_HEAD_LEVEL - b.neck.rotation.x) * upright;
+      for (const hip of [b.leftHip, b.rightHip]) hip.rotation.z -= hip.rotation.z * upright;
+    }
     // Spear carry: a shield man on the march does not pump his spear arm. It hangs at his side with the elbow a little bent, the shaft stood up in the fist.
     if (this._state === AnimState.Walking && this._spearShaft()) {
       const b = this._body;
