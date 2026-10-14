@@ -1105,7 +1105,7 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
 // ─── Placement ghost ───
 // Before it is placed, the selected unit stands under the cursor as a see-through figure in the colours of the side it would join, and follows the cursor over the field.
 // Where it could not be placed (off its side's ground, on top of another unit) it thins out further. It is a body only: never registered with the battle, never pickable.
-const GHOST_ALPHA = 0.55;
+const GHOST_ALPHA = 0.85;
 const GHOST_BLOCKED_ALPHA = 0.22;
 // The figure alone is lost against the lawn from the placement camera, so it stands on a footprint: a low six-sided slab of its side's flat, unlit colour, cut from the
 // room the unit takes on the ground and never smaller than GHOST_TILE_MIN across. The slab is what marks the spot from above; it dims with the figure where the spot is refused.
