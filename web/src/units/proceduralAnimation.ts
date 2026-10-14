@@ -42,6 +42,10 @@ export type ReleaseTimingProfile =
 
 /** A levelled spear's stroke: the lunge throws the shaft this many metres forward through the fist, the draw before it takes it back this share of that, and the fist may choke up the shaft by this share of the length ahead of it. */
 const SPEAR_LUNGE = 0.45;
+/** How far off the line of his shot a bowman turns to shoot: side-on, the bow shoulder leading. */
+const BOW_TURN = 1.15;
+/** A caster does not hold his rod from a squat: of whatever crouch his rest stance has, he keeps this share. */
+const CASTER_CROUCH = 0.3;
 const SPEAR_DRAW = -0.4;
 const SPEAR_CHOKE = 0.45;
 /** A rear-rank spear has a lane of its own: the man stands behind the gap between two boards, and his shaft is carried over that gap and not over the man beside it. His spear arm
@@ -681,7 +685,7 @@ export class ProceduralAnimator {
       : stand < 0.4
         ? { raise: -2.3 - h(81) * 0.3, out: 0.35 + h(82) * 0.15, elbow: -1.5 - h(83) * 0.3, tip: lean(0.05, 0.45, 0.9), left: { raise: -1.2 - h(97) * 0.3, out: 0.1 + h(98) * 0.2, elbow: -0.3 - h(99) * 0.3 }, plant: false }
         : stand < 0.7
-          ? { raise: -2.8 - h(81) * 0.2, out: 0.3 + h(82) * 0.15, elbow: -0.5 - h(83) * 0.3, tip: lean(0, 1, 0.25), left: { raise: 0.3 + h(97) * 0.2, out: 0.5 + h(98) * 0.2, elbow: -1.5 - h(99) * 0.4 }, plant: false }
+          ? { raise: -2.8 - h(81) * 0.2, out: 0.3 + h(82) * 0.15, elbow: -0.5 - h(83) * 0.3, tip: lean(0, 1, 0.25), left: { raise: -1.35 - h(97) * 0.3, out: 0.15 + h(98) * 0.2, elbow: -0.3 - h(99) * 0.3 }, plant: false }
           : { raise: -0.3 - h(81) * 0.2, out: 0.25 + h(82) * 0.15, elbow: -0.9 - h(83) * 0.3, tip: lean(0.1, 0.25, 0.95), left: { raise: -1.4 - h(97) * 0.3, out: 0.4 + h(98) * 0.2, elbow: -1.2 - h(99) * 0.3 }, plant: false };
     const rodProp = rod && rodHold ? {
       node: rod, rest: Quaternion.FromEulerAngles(rod.rotation.x, rod.rotation.y, rod.rotation.z), grip: rod.position.clone(),
@@ -1005,7 +1009,7 @@ export class ProceduralAnimator {
     // on the ground under its dropped hip); the standing leg trails slightly behind, nearly straight.
     // Both knees give under the forward lean (knee twice the hip, so the feet stay put): nobody leans on locked legs.
     // A sunk stance folds both knees further, the thighs coming forward by half of it, and lets the hips down by what that takes off the legs' height.
-    const crouch = p.crouch * ease;
+    const crouch = p.crouch * ease * (ready?.cast ? CASTER_CROUCH : 1);
     const sag = p.lean * 0.2 + crouch * 0.5;
     const lead = -p.stride - sag;
     const trail = p.stride * 0.45 - sag;
@@ -1373,12 +1377,14 @@ export class ProceduralAnimator {
     b.torso.rotation.y += (0.32 * wind - 0.28 * drive) * k;
     b.neck.rotation.y -= (0.25 * wind - 0.2 * drive) * k;
     b.neck.rotation.x += 0.1 * drive * k;
-    // The legs take it: both knees give on the wind-up and the drive goes through them
-    const give = (0.1 * wind + 0.22 * drive) * k;
-    b.leftHip.rotation.x -= give * 0.5;
-    b.rightHip.rotation.x -= give * 0.5;
-    b.leftKnee.rotation.x += give;
-    b.rightKnee.rotation.x += give;
+    // The legs take it as a stride, not a squat: on the wind-up the weight goes back onto the rod-side leg, which folds a little while the other foot is set out ahead,
+    // and the drive goes forward through that leading leg, its knee giving under him as the rear leg straightens out behind and pushes.
+    to(b.leftHip, "x", -0.3, -0.52);
+    to(b.leftKnee, "x", 0.18, 0.5);
+    to(b.rightHip, "x", 0.1, 0.42);
+    to(b.rightKnee, "x", 0.3, 0.06);
+    to(b.leftHip, "z", 0, 0);
+    to(b.rightHip, "z", 0, 0);
     this._castLift = Math.max(wind, drive);
     this._castReach = -0.45 * wind + 1.1 * drive;
     if (progress >= 1) this._state = AnimState.Idle;
@@ -1558,47 +1564,54 @@ export class ProceduralAnimator {
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
+  /**
+   * A bowman does not shoot from attention with the bow at his hip. He shoots from his ready stance, turned further until he stands side-on with the bow shoulder to the enemy
+   * (BOW_TURN off the line, shared between hips and chest, the head left looking down the arrow): the bow arm comes up straight and level along the line of the shot, the
+   * other hand comes across to the string and draws it back to the cheek with the elbow carried out behind at shoulder height, the chest leans back off the bow, the leg
+   * under the bow is set ahead on a knee that gives and the other is dropped back straight. At the loose the string hand flies back off the cheek and the chest follows the
+   * arrow a little; he holds the bow up a moment and lets it down to the ready.
+   */
   private _animateBowDrawRelease(dt: number): void {
     this._attackTimer += dt;
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
     const releasePoint = this._resolveReleasePoint(0.72);
     const drawPoint = Math.max(0.28, releasePoint - 0.32);
-    if (progress < drawPoint) {
-      const draw = progress / Math.max(drawPoint, 0.001);
-      b.leftShoulder.rotation.x = -0.42 * draw;
-      b.leftShoulder.rotation.z = -0.22 * draw;
-      b.leftElbow.rotation.x = -0.08 * draw;
-      b.rightShoulder.rotation.x = -0.18 - 0.24 * draw;
-      b.rightShoulder.rotation.z = 0.28 + 0.26 * draw;
-      b.rightElbow.rotation.x = -0.25 - 0.72 * draw;
-      b.torso.rotation.z = -0.12 * draw;
-      b.torso.rotation.x = 0.04 * draw;
-      b.neck.rotation.z = -0.06 * draw;
-    } else if (progress < releasePoint) {
-      b.leftShoulder.rotation.x = -0.42;
-      b.leftShoulder.rotation.z = -0.22;
-      b.leftElbow.rotation.x = -0.08;
-      b.rightShoulder.rotation.x = -0.42;
-      b.rightShoulder.rotation.z = 0.54;
-      b.rightElbow.rotation.x = -0.97;
-      b.torso.rotation.z = -0.12;
-      b.torso.rotation.x = 0.08;
-      b.neck.rotation.z = -0.08;
-      b.rightHip.rotation.x = 0.08;
-    } else {
-      const release = (progress - releasePoint) / Math.max(1 - releasePoint, 0.001);
-      const eased = 1 - Math.pow(1 - release, 3);
-      b.leftShoulder.rotation.x = -0.42 + 0.12 * eased;
-      b.leftShoulder.rotation.z = -0.22 + 0.1 * eased;
-      b.rightShoulder.rotation.x = -0.42 + 0.78 * eased;
-      b.rightShoulder.rotation.z = 0.54 - 0.52 * eased;
-      b.rightElbow.rotation.x = -0.97 + 0.92 * eased;
-      b.torso.rotation.z = -0.12 + 0.16 * eased;
-      b.torso.rotation.x = 0.08 - 0.02 * eased;
-      b.neck.rotation.z = -0.08 + 0.08 * eased;
-    }
-    b.leftHip.rotation.x = 0.03;
+    this._animateIdleHumanoid();
+    const step = (from: number, to: number): number => {
+      const u = Math.max(0, Math.min(1, (progress - from) / Math.max(0.001, to - from)));
+      return u * u * (3 - 2 * u);
+    };
+    const up = step(0, drawPoint * 0.5) * (1 - step(releasePoint + (1 - releasePoint) * 0.55, 1));
+    const draw = step(drawPoint * 0.4, drawPoint);
+    const loose = step(releasePoint, releasePoint + (1 - releasePoint) * 0.3);
+    const k = up * (1 - Math.min(1, this._limp));
+    const set = (joint: TransformNode, axis: "x" | "y" | "z", value: number): void => {
+      joint.rotation[axis] += (value - joint.rotation[axis]) * k;
+    };
+    // Side-on, bow shoulder leading
+    set(b.hip, "y", -BOW_TURN * 0.45);
+    set(b.torso, "y", -BOW_TURN * 0.55);
+    set(b.neck, "y", BOW_TURN * 0.9);
+    set(b.neck, "x", 0.04);
+    set(b.neck, "z", 0);
+    set(b.torso, "x", -0.04 - 0.12 * draw + 0.1 * loose);
+    set(b.torso, "z", 0.1 * draw - 0.06 * loose);
+    // Bow arm: straight and level down the line of the shot
+    set(b.rightShoulder, "x", -Math.PI / 2);
+    set(b.rightShoulder, "y", 0);
+    set(b.rightShoulder, "z", BOW_TURN);
+    set(b.rightElbow, "x", -0.1);
+    // String arm: across to the bow, back to the cheek, off it at the loose
+    set(b.leftShoulder, "x", -1.5);
+    set(b.leftShoulder, "y", 0);
+    set(b.leftShoulder, "z", 0.6 - 0.9 * draw - 0.55 * loose);
+    set(b.leftElbow, "x", -2.2 + 1.2 * loose);
+    // Legs: the leg under the bow ahead on a giving knee, the other dropped back straight
+    set(b.rightHip, "x", -0.3 - 0.06 * draw);
+    set(b.rightKnee, "x", 0.34);
+    set(b.leftHip, "x", 0.36);
+    set(b.leftKnee, "x", 0.1);
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
