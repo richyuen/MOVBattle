@@ -40,21 +40,50 @@ export type ReleaseTimingProfile =
   | "firearm_recoil"
   | "throw_release";
 
-/** A levelled spear's stroke: the lunge throws the shaft this many metres forward through the fist, the draw before it takes it back this share of that, and the fist may choke up the shaft by this share of the length ahead of it. */
+/*
+ * The shield press, rebuilt. Spec, read off the reference:
+ *   tabs_screenshot_06 (a shield wall closing, two ranks deep): no two men carry the trunk at one angle; the chests are pitched forward of the hips by anything from about 10 to
+ *   about 30 degrees and the heads are not levelled back, each sits on its trunk at its own tilt. Every man is at his own point of a stride, one knee forward and bent. The boards
+ *   stand at different turns and tilts, following the shoulders behind them. Six spears show, all in the rear rank, and every one of them is RAISED: the shafts stand above the
+ *   helmets at pitches between about 60 and 85 degrees above level, no two alike, none crossing another and none crossing a head. No spear in the wall lies level.
+ *   trailer_3_sheet_01 r3c1 (five spearmen with the spear up to strike): the fist is at the ear, above the shoulder, the elbow carried out behind, the trunk leant a little back,
+ *   the shaft beside the cheek; five shafts at five slightly different pitches.
+ * So:
+ *   Trunk: a braced man's trunk pitch is his own, BRACE_PITCH_MIN..MAX forward of the hips, and it is his whatever he is doing under it (stepping in, standing, striking): the
+ *   walk's lean and the shove's cap no longer bring a rank to one angle. His head follows the trunk by his own share and is tucked or lifted on top of that. The lead shoulder is
+ *   turned into the board, and the board turns and tilts with it.
+ *   Spears: one pitch per man, measured above level. A rear man's spear stays raised, SPEAR_REAR_UP_MIN..MAX above level, his own; it is over every head by construction, his and
+ *   the front rank's, and its butt drops beside his own hip. It comes down only inside a stroke, and then only to SPEAR_REAR_STRIKE above level, over the gap between the two boards
+ *   ahead of him where he stands, and goes back up. A front man's spear is held overhand and pointed down over the rim of his board, SPEAR_FRONT_DIP_MIN..MAX below level,
+ *   and he grips it overhand at its balance, SPEAR_FRONT_GRIP_MIN..MAX of its length from the butt, not near the butt as it is carried: about a pace of shaft is ahead of his fist,
+ *   so its point ends in the enemy's board and not out of the enemy's back or in the ground beyond him, and the rest rises behind him over the heads of the rear rank.
+ *   Each works his stroke on his own beat: drawn back SPEAR_DRAW of a lunge, thrown SPEAR_LUNGE metres along the shaft's own line, brought back.
+ *   Legs: a braced man is on his feet, not sat on his heels. The deepest crouch folds the knees BRACE_CROUCH_DEEP at most and the step of the drive leg is BRACE_STEP_MIN..MAX.
+ */
+const BRACE_PITCH_MIN = 0.14;
+const BRACE_PITCH_MAX = 0.56;
 const SPEAR_LUNGE = 0.45;
-/** How far off the line of his shot a bowman turns to shoot: side-on, the bow shoulder leading. */
-const BOW_TURN = 1.15;
+const SPEAR_DRAW = -0.4;
+const SPEAR_REAR_UP_MIN = 0.75;
+const SPEAR_REAR_UP_MAX = 1.4;
+const SPEAR_REAR_STRIKE = 0.3;
+const SPEAR_FRONT_DIP_MIN = 0.42;
+const SPEAR_FRONT_DIP_MAX = 0.64;
+const SPEAR_FRONT_GRIP_MIN = 0.48;
+const SPEAR_FRONT_GRIP_MAX = 0.58;
+const BRACE_CROUCH_DEEP = 0.7;
+const BRACE_STEP_MIN = 0.22;
+const BRACE_STEP_MAX = 0.5;
+/*
+ * The bowman's shot. Spec, read off trailer_3_sheet_01 r1c1 (an archer with the bow up): the stave stands upright in the fist of the leading arm, out in front of the face
+ * at the end of that arm, its two limbs above and below the fist; the other hand is at the string by the chest or cheek; he stands part side-on with the bow shoulder to his mark.
+ * So: he turns BOW_TURN_MIN..MAX off the line of the shot, his own amount, and leans back off the bow by his own amount; and the stave does not go back to hanging from the hand
+ * while he shoots, as it did: it is turned in the fist to stand upright, canted a little toward the mark, for as long as the bow arm is up (see _carryProp).
+ */
+const BOW_TURN_MIN = 0.95;
+const BOW_TURN_MAX = 1.3;
 /** A caster does not hold his rod from a squat: of whatever crouch his rest stance has, he keeps this share. */
 const CASTER_CROUCH = 0.3;
-const SPEAR_DRAW = -0.4;
-const SPEAR_CHOKE = 0.45;
-/** A rear-rank spear has a lane of its own: the man stands behind the gap between two boards, and his shaft is carried over that gap and not over the man beside it. His spear arm
- * comes in over his own head by this much, what is left of the fist's offset from his middle line is taken out of the shaft's place (never by more than SPEAR_LANE_REACH metres),
- * and the shaft rides this much higher and is aimed this much higher on its mark, so it lies over the shoulders ahead of him. */
-const SPEAR_REAR_ARM_IN = -0.35;
-const SPEAR_LANE_REACH = 0.4;
-const SPEAR_REAR_LIFT = 0.12;
-const SPEAR_REAR_AIM_RISE = 0.3;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -131,7 +160,7 @@ export class ProceduralAnimator {
 
   private _shoveTimer = 0;
 
-  /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear is aimed at that man's chest (see _carrySpear) until the calls stop. */
+  /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear comes to its fighting hold (see _carrySpear), a front man's pointed down at that man, a rear man's raised over the rank ahead, until the calls stop. */
   levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false): void {
     this._spearAim.copyFrom(enemyGround);
     this._spearAimRadius = enemyRadius;
@@ -140,14 +169,13 @@ export class ProceduralAnimator {
   }
   private _spearAim = new Vector3();
   private _spearAimRadius = 0.3;
-  // Whether he stands in a rear rank, and how far his shaft has moved over into its lane (0 to 1).
+  // Whether he stands in a rear rank, and how far his hold has gone over from the front man's to the rear man's (0 to 1).
   private _spearRear = false;
-  private _spearLane = 0;
-  // The thrust (see _carrySpear): where in his stroke the man is, from SPEAR_DRAW (drawn back) through 0 (the hold) to 1 (full lunge); how far back through the fist
-  // the shaft rests so that the lunge ends on the enemy's front, in metres; and how near the enemy is to being in reach, 0 to 1.
+  private _spearRearHold = 0;
+  // How far the bow arm is up in a shot (0 to 1): the stave is stood upright in the fist by this much (see _carryProp).
+  private _bowUp = 0;
+  // The stroke (see _carrySpear): where in it the man is, from SPEAR_DRAW (drawn back) through 0 (the hold) to 1 (full lunge), and how near the enemy is to being in reach, 0 to 1.
   private _spearThrust = 0;
-  private _spearRest = 0;
-  private _spearRestAim = 0;
   private _spearNear = 0;
   /** One stroke of a levelled spear on the man's own beat: a slow draw back, a lunge in an eighth of the beat, and a recovery to the hold. */
   private _thrustStroke(): number {
@@ -196,12 +224,19 @@ export class ProceduralAnimator {
     };
     const pick = h(101);
     const stand = pick < 0.35
-      ? { pitch: 0.2 + h(102) * 0.14, crouch: 0.7 + h(103) * 0.35, raise: -0.45 - h(104) * 0.15 }
+      ? { crouch: BRACE_CROUCH_DEEP - 0.28 + h(103) * 0.28, raise: -0.45 - h(104) * 0.15 }
       : pick < 0.7
-        ? { pitch: -0.08 + h(102) * 0.12, crouch: 0.05 + h(103) * 0.15, raise: -0.85 - h(104) * 0.2 }
-        : { pitch: 0.08 + h(102) * 0.12, crouch: 0.25 + h(103) * 0.25, raise: -0.62 - h(104) * 0.16 };
+        ? { crouch: 0.05 + h(103) * 0.15, raise: -0.85 - h(104) * 0.2 }
+        : { crouch: 0.25 + h(103) * 0.25, raise: -0.62 - h(104) * 0.16 };
     return {
       ...stand,
+      // Trunk and head (see the spec at the head of this file): his own pitch into the board, the share of it his head is carried back up by, and the pitch of his spear
+      // above level when he stands in a rear rank and below it when he stands in the front one.
+      pitch: BRACE_PITCH_MIN + h(102) * (BRACE_PITCH_MAX - BRACE_PITCH_MIN),
+      headLevel: 0.1 + h(124) * 0.7,
+      spearUp: SPEAR_REAR_UP_MIN + h(125) * (SPEAR_REAR_UP_MAX - SPEAR_REAR_UP_MIN),
+      spearDown: SPEAR_FRONT_DIP_MIN + h(126) * (SPEAR_FRONT_DIP_MAX - SPEAR_FRONT_DIP_MIN),
+      spearGrip: SPEAR_FRONT_GRIP_MIN + h(127) * (SPEAR_FRONT_GRIP_MAX - SPEAR_FRONT_GRIP_MIN),
       out: 0.15 + h(105) * 0.3,
       elbow: -0.9 - h(106) * 0.45,
       kneeBias: (h(107) - 0.5) * 0.16,
@@ -221,8 +256,8 @@ export class ProceduralAnimator {
       // by his own length of step; a man sunk low on folded legs steps shorter. The trunk turns the lead shoulder into the board and the head is tucked behind
       // the rim or lifted to look over it.
       lead: h(120) < 0.5 ? -1 : 1,
-      lunge: (0.35 + h(121) * 0.4) * (1 - Math.min(0.5, stand.crouch * 0.5)),
-      twist: 0.08 + h(122) * 0.3,
+      lunge: (BRACE_STEP_MIN + h(121) * (BRACE_STEP_MAX - BRACE_STEP_MIN)) * (1 - Math.min(0.5, stand.crouch * 0.5)),
+      twist: 0.1 + h(122) * 0.4,
       tuck: -0.2 + h(123) * 0.6,
     };
   }
@@ -438,8 +473,7 @@ export class ProceduralAnimator {
     this._shove += ((this._shoveTimer > 0 ? 1 : 0) - this._shove) * Math.min(1, dt * 6);
     this._spearAimTimer -= dt;
     this._spearLevel += ((this._spearAimTimer > 0 ? 1 : 0) - this._spearLevel) * Math.min(1, dt * 5);
-    this._spearRest += (this._spearRestAim - this._spearRest) * Math.min(1, dt * 6);
-    this._spearLane += ((this._spearRear && this._spearAimTimer > 0 ? 1 : 0) - this._spearLane) * Math.min(1, dt * 5);
+    this._spearRearHold += ((this._spearRear ? 1 : 0) - this._spearRearHold) * Math.min(1, dt * 4);
     this._spearThrust = this._spearLevel > 0.01 && this._spearShaft() ? this._thrustStroke() * this._spearLevel * this._spearNear : 0;
     this._braceSink = 0;
     if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
@@ -448,13 +482,20 @@ export class ProceduralAnimator {
       const k = this._shove;
       const phase = (this._time + this._wobblePhase) * p.rate;
       // The walk already leans 0.55 rad; a presser still stepping in takes half the extra pitch.
-      // A man behind a shield does not fold over it: he stands near upright and sinks at the knees instead.
       const br = this._shieldBoard() ? (this._bracePose ??= this._buildBracePose()) : null;
-      b.torso.rotation.x += ((br ? br.pitch : p.pitch) * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
-      // A swing pitches the torso itself; with the shove on top the lean stops at 0.6 rad, short of a fold at the waist.
-      b.torso.rotation.x = Math.min(b.torso.rotation.x, 0.6);
+      if (br) {
+        // A man behind a board carries the trunk at his own pitch, whatever the walk, the stand or the strike under the shove had made of it, heaving on it a little;
+        // and his head is his own on top of that, carried part of the way back up and tucked or lifted. Nothing here brings two men to one angle.
+        const set = k * (1 - Math.min(1, this._limp));
+        b.torso.rotation.x += (br.pitch + Math.sin(phase * 0.5) * 0.06 - b.torso.rotation.x) * set;
+        b.neck.rotation.x += (-br.pitch * br.headLevel + br.tuck - b.neck.rotation.x) * set;
+      } else {
+        b.torso.rotation.x += (p.pitch * (this._state === AnimState.Walking ? 0.5 : 1) + Math.sin(phase * 0.5) * 0.08) * k;
+        // A swing pitches the torso itself; with the shove on top the lean stops at 0.6 rad, short of a fold at the waist.
+        b.torso.rotation.x = Math.min(b.torso.rotation.x, 0.6);
+        b.neck.rotation.x -= p.pitch * 0.6 * k;
+      }
       b.torso.rotation.z += ((br ? p.roll * 0.3 + br.cant : p.roll) + Math.cos(phase * 0.35) * 0.08) * k;
-      b.neck.rotation.x -= (br ? br.pitch : p.pitch) * 0.6 * k;
       // Thighs come forward under the pitched torso and the knees give a little, so the body breaks at the waist and stays tall on its legs.
       b.leftHip.rotation.x += (p.stance - 0.15) * k;
       b.rightHip.rotation.x -= (p.stance + 0.15) * k;
@@ -501,17 +542,15 @@ export class ProceduralAnimator {
         driveHip.rotation.x += lunge * 0.7;
         b.torso.rotation.y += br.lead * br.twist * hold;
         b.neck.rotation.y -= br.lead * br.twist * 0.6 * hold;
-        b.neck.rotation.x += br.tuck * hold;
         this._hipRest ??= b.hip.position.y;
         this._braceSink = this._hipRest * ((1 - Math.cos(br.crouch * 0.5)) + (1 - Math.cos(br.lunge)) * 0.5) * hold;
         if (this._spearShaft()) {
-          // Spear arm: no windmill and no underarm poke. The hand goes up beside the head, elbow cocked, and holds the shaft there over the rim of the
-          // board (a rear man's over the shoulder of the man ahead); a thrust straightens the arm forward and down from that hold and comes back to it.
-          // With the spear levelled at a man he works it on his own beat as well: the elbow cocks further as the shaft is drawn back and the arm goes out with the lunge.
+          // Spear arm: no windmill and no underarm poke. The fist goes up to the ear, above the shoulder, with the elbow cocked out behind, and holds the shaft there;
+          // a stroke straightens the arm forward along the shaft from that hold and comes back to it, the elbow cocking further as the shaft is drawn back.
           const jab = Math.max(this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0, this._spearThrust);
           b.rightShoulder.rotation.x += (br.spearRaise + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
           b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * hold;
-          b.rightShoulder.rotation.z += (0.2 + (SPEAR_REAR_ARM_IN - 0.2) * this._spearLane - b.rightShoulder.rotation.z) * hold;
+          b.rightShoulder.rotation.z += (0.2 - b.rightShoulder.rotation.z) * hold;
           b.rightElbow.rotation.x += (br.spearElbow + 0.9 * jab + 0.8 * Math.min(0, this._spearThrust) - b.rightElbow.rotation.x) * hold;
           b.rightElbow.rotation.z += (0 - b.rightElbow.rotation.z) * hold;
         }
@@ -728,7 +767,8 @@ export class ProceduralAnimator {
     hand.computeWorldMatrix(true);
     // Square to the wall's heading, give or take the man's own turn, tilt and twist of it in his grip
     const br = (this._bracePose ??= this._buildBracePose());
-    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + br.boardYaw, br.boardTilt, br.boardRoll));
+    // ...and of the shoulders behind it: it turns with the lead shoulder and leans with the trunk
+    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + br.boardYaw + br.lead * br.twist * 0.7, br.boardTilt + br.pitch * 0.5, br.boardRoll));
     shield.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), square, Math.min(1, k * 1.5));
   }
 
@@ -743,8 +783,9 @@ export class ProceduralAnimator {
     const weapon = this._carry?.weapon ?? ready;
     if (!weapon?.prop) return;
     const { node, rest, grip, spin, seat, plant } = weapon.prop;
-    // A caster's rod stays in its hold on the march and through the cast; a bow leaves its hold to be drawn.
-    const kept = this._state === AnimState.Idle || (this._state === AnimState.Walking && weapon !== ready) || (ready?.cast === true && this._state !== AnimState.Dead);
+    // A caster's rod stays in its hold on the march and through the cast. A bow leaves its ready hold to be shot, but not the fist's keeping: while the bow arm is up it is stood upright.
+    const shooting = weapon === ready && ready?.cast !== true && this._state === AnimState.Attacking && this._attackMotion === "bow_draw_release" ? this._bowUp : 0;
+    const kept = this._state === AnimState.Idle || (this._state === AnimState.Walking && weapon !== ready) || (ready?.cast === true && this._state !== AnimState.Dead) || shooting > 0;
     const marching = kept ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0;
     this._carryTurn = this._state === AnimState.Dead ? 0 : this._carryTurn + (marching - this._carryTurn) * Math.min(1, dt * 10);
     const k = this._carryTurn;
@@ -758,6 +799,8 @@ export class ProceduralAnimator {
     const hand = this._body.rightHand;
     hand.computeWorldMatrix(true);
     const tip = new Vector3(weapon.tip.x, weapon.tip.y - this._carryDip * 1.5, weapon.tip.z + this._castReach).normalize();
+    // Shooting: upright in the fist, canted a little toward the mark
+    if (shooting > 0) Vector3.LerpToRef(tip, new Vector3(0, 1, 0.12), shooting, tip).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
     const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(spin ? attitude.multiply(spin) : attitude), k);
     node.rotationQuaternion = turn;
@@ -783,14 +826,11 @@ export class ProceduralAnimator {
   }
 
   /**
-   * A shield man's spear does not ride his hand any more than his board does: it turns in the fist to one of two carries, whatever the arm is doing.
-   * On the march it stands upright, point to the sky. As the wall closes on its enemy it comes down along the wall's heading and is aimed: the shaft runs
-   * from the fist, wherever the arm has it, at the chest of the man he was handed, so a front man's point and the point of the man behind him, held by the
-   * head over the front man's shoulder, both come down on the enemy and none pitch up over his head; the spears stay parallel over the boards and do not
-   * fan or cross. Limp or dead, the spear goes back to hanging from the hand.
-   * Aimed, it is not held still. The shaft runs through the fist along its own line in a stroke (_thrustStroke): drawn back SPEAR_DRAW of a lunge, thrown forward
-   * SPEAR_LUNGE, brought back to the hold, each man on his own beat, so no two points in a rank stand at one reach. The hold is set from the man he was handed: the fist
-   * chokes up the shaft, by no more than SPEAR_CHOKE of the length ahead of it, until a full lunge ends at that man's front and not out of his back.
+   * A shield man's spear does not ride his hand any more than his board does: it turns in the fist to his carry, whatever the arm is doing (see the spec at the head of this file).
+   * On the march it stands upright, point to the sky. Handed an enemy, it goes to his fighting hold along the wall's heading: in the front rank overhand and pointed down over
+   * the rim of his board at the man he was handed, at his own dip; in a rear rank raised, at his own pitch above level, over every head between him and the enemy. He works it
+   * in strokes on his own beat, the shaft running through the fist along its own line; a rear man's comes down to just above level for the length of the stroke and goes back up.
+   * The spears keep the wall's heading and are never turned to one side. Limp or dead, the spear goes back to hanging from the hand.
    */
   private _carrySpear(): void {
     const spear = this._spearShaft();
@@ -806,48 +846,35 @@ export class ProceduralAnimator {
     }
     const hand = this._body.rightHand;
     hand.computeWorldMatrix(true);
-    // Shoving with no man handed to him he still levels it, flat.
+    // Shoving with no man handed to him he still brings it to his hold.
     const level = Math.max(this._spearLevel, Math.min(1, this._shove * 1.5));
     const root = this._body.root;
-    this._body.neck.computeWorldMatrix(true);
-    this._chestRise ??= (this._body.neck.absolutePosition.y - root.absolutePosition.y) * 0.8;
-    let dip = 0.02;
+    const br = (this._bracePose ??= this._buildBracePose());
     const handScale = Math.max(0.001, hand.absoluteScaling.y);
-    this._spearRestAim = 0;
+    // The shaft from the fist to its point and from the fist to its butt, as it was strapped on, in the hand's own measure
+    const tip = shaft.getChildMeshes(true)[0];
+    const aheadOfFist = grip.length() + (tip ? tip.position.y + tip.getBoundingInfo().boundingBox.maximum.y : 0) * shaft.scaling.y;
+    const behindFist = (shaft as Mesh).getBoundingInfo().boundingBox.maximum.y * shaft.scaling.y - grip.length();
     this._spearNear = 0;
     if (this._spearAimTimer > 0) {
-      // Fall of the shaft to the enemy's chest, as high off his ground as this man's own; a man within a pace is aimed at as if a pace off, and no point rises above level by more than a hair.
-      // The fall is taken from the base of his own neck and not from the fist, which travels with every stroke: the shaft keeps one pitch through the stroke and a rank's shafts lie parallel.
-      // A rear man's mark is SPEAR_REAR_AIM_RISE higher, so his shaft lies flatter, over the men ahead of him.
+      // In reach, or a stride and a half short of it: only then does he strike
       const from = hand.absolutePosition;
-      const sight = this._body.neck.absolutePosition;
-      const reach = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z);
-      const run = Math.max(1, Math.hypot(this._spearAim.x - sight.x, this._spearAim.z - sight.z));
-      dip = Math.max(-0.05, Math.min(0.5, Math.atan2(sight.y - (this._spearAim.y + this._chestRise + SPEAR_REAR_AIM_RISE * this._spearLane), run)));
-      // From the fist to the point, and from the fist to the near face of the man aimed at
-      const tip = shaft.getChildMeshes(true)[0];
-      const ahead = (grip.length() + (tip ? tip.position.y + tip.getBoundingInfo().boundingBox.maximum.y : 0) * shaft.scaling.y) * handScale;
-      const front = reach - this._spearAimRadius;
-      this._spearRestAim = Math.max(-ahead * SPEAR_CHOKE, Math.min(0, front - ahead - SPEAR_LUNGE));
-      this._spearNear = Math.max(0, Math.min(1, ahead + SPEAR_LUNGE + 1.5 - front));
+      const front = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z) - this._spearAimRadius;
+      this._spearNear = Math.max(0, Math.min(1, aheadOfFist * handScale + SPEAR_LUNGE + 1.5 - front));
     }
-    // Each man's point sits a hair above or below his aim (never to one side: the spears stay parallel over the boards)
-    const carry = Quaternion.RotationYawPitchRoll(root.rotation.y, 0.06 + (Math.PI / 2 + dip + (this._bracePose ??= this._buildBracePose()).spearDip - 0.06) * level, 0);
+    // A front man shifts his grip to the balance for the overhand hold: the shaft goes back through the fist by what that takes
+    const toBalance = ((aheadOfFist + behindFist) * (1 - br.spearGrip) - aheadOfFist) * (1 - this._spearRearHold) * level;
+    // His pitch above level: the front man's dip, the rear man's raise, and for the rear man the fall to the strike inside the lunge
+    const strike = Math.max(0, this._spearThrust);
+    const rearUp = br.spearUp + (SPEAR_REAR_STRIKE - br.spearUp) * strike;
+    const up = -br.spearDown + (rearUp + br.spearDown) * this._spearRearHold;
+    const carry = Quaternion.RotationYawPitchRoll(root.rotation.y, 0.06 + (Math.PI / 2 - up - 0.06) * level, 0);
     const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
     shaft.rotationQuaternion = turn;
-    // The shaft's middle sits as far up the shaft from the fist as it was strapped on.
-    const held = new Vector3(0, grip.length() + (this._spearRest * this._spearLevel + this._spearThrust * SPEAR_LUNGE) / handScale, 0);
+    // The shaft's middle sits as far up the shaft from the fist as it was strapped on, and runs through the fist with the stroke.
+    const held = new Vector3(0, grip.length() + toBalance + this._spearThrust * SPEAR_LUNGE / handScale, 0);
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, shaft.position);
-    if (this._spearLane > 0.01) {
-      // Lane: the shaft is set over his own middle line, which is the gap between the two men ahead, and lifted; its place only, never its heading
-      const yaw = root.rotation.y;
-      const across = (from: Vector3): number => (from.x - root.absolutePosition.x) * Math.cos(yaw) - (from.z - root.absolutePosition.z) * Math.sin(yaw);
-      const over = Math.max(-SPEAR_LANE_REACH, Math.min(SPEAR_LANE_REACH, -across(hand.absolutePosition))) * this._spearLane * level * k;
-      const shift = new Vector3(Math.cos(yaw) * over, SPEAR_REAR_LIFT * this._spearLane * level * k, -Math.sin(yaw) * over);
-      shift.rotateByQuaternionToRef(Quaternion.Inverse(hand.absoluteRotationQuaternion), shift);
-      shaft.position.addInPlace(shift.scaleInPlace(1 / handScale));
-    }
   }
 
   private _resetPose(): void {
@@ -1586,6 +1613,15 @@ export class ProceduralAnimator {
     const draw = step(drawPoint * 0.4, drawPoint);
     const loose = step(releasePoint, releasePoint + (1 - releasePoint) * 0.3);
     const k = up * (1 - Math.min(1, this._limp));
+    this._bowUp = k;
+    // His own turn, lean and height of the string elbow, hashed from the wobble phase like every other stance
+    const h = (n: number): number => {
+      const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const BOW_TURN = BOW_TURN_MIN + h(131) * (BOW_TURN_MAX - BOW_TURN_MIN);
+    const lean = 0.06 + h(132) * 0.16;
+    const elbowHigh = (h(133) - 0.5) * 0.4;
     const set = (joint: TransformNode, axis: "x" | "y" | "z", value: number): void => {
       joint.rotation[axis] += (value - joint.rotation[axis]) * k;
     };
@@ -1595,7 +1631,7 @@ export class ProceduralAnimator {
     set(b.neck, "y", BOW_TURN * 0.9);
     set(b.neck, "x", 0.04);
     set(b.neck, "z", 0);
-    set(b.torso, "x", -0.04 - 0.12 * draw + 0.1 * loose);
+    set(b.torso, "x", -0.02 - lean * draw + 0.1 * loose);
     set(b.torso, "z", 0.1 * draw - 0.06 * loose);
     // Bow arm: straight and level down the line of the shot
     set(b.rightShoulder, "x", -Math.PI / 2);
@@ -1603,7 +1639,7 @@ export class ProceduralAnimator {
     set(b.rightShoulder, "z", BOW_TURN);
     set(b.rightElbow, "x", -0.1);
     // String arm: across to the bow, back to the cheek, off it at the loose
-    set(b.leftShoulder, "x", -1.5);
+    set(b.leftShoulder, "x", -1.5 + elbowHigh);
     set(b.leftShoulder, "y", 0);
     set(b.leftShoulder, "z", 0.6 - 0.9 * draw - 0.55 * loose);
     set(b.leftElbow, "x", -2.2 + 1.2 * loose);
