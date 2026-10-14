@@ -191,13 +191,16 @@ export class ProceduralAnimator {
   }
   private _spearAim = new Vector3();
   /** Slotted into a shield wall, called every step while he stands in it: his spear goes up on the wall's heading at SPEAR_WALL_UP (see _carrySpear), until the calls stop. */
-  holdSpearInWall(heading: number, boardPlane: number | null = null): void {
+  holdSpearInWall(heading: number, boardPlane: number | null = null, boardTurn = 0): void {
     this._wallHeading = heading;
     this._wallTimer = 0.3;
     this._boardPlane = boardPlane;
+    this._boardTurn = boardTurn;
   }
   // A front-rank man's wall line along the heading (see _lapBoard), null in a rear rank; how far his board has gone over from his hand to it (0 to 1); and where it was strapped on.
   private _boardPlane: number | null = null;
+  // His board's own turn off the wall's lap: a wing at the wall's end, or toward a gap opened beside him (see SimulationSystem ShieldSlot.turn)
+  private _boardTurn = 0;
   private _boardLap = 0;
   private _boardRest: Vector3 | null = null;
   // The heading of the wall he stands in, shared by every man in it, and how far his spear has gone over to the wall's line (0 to 1).
@@ -904,7 +907,7 @@ export class ProceduralAnimator {
     Vector3.LerpToRef(strapped, target, lap, target);
     const local = Vector3.TransformCoordinates(target, Matrix.Invert(hand.getWorldMatrix()));
     shield.position.copyFrom(local);
-    return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, 0.04, roll * 0.5);
+    return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP + this._boardTurn, 0.04, roll * 0.5);
   }
 
   /**
