@@ -16,10 +16,6 @@ const HAT_OVERSIZE = 1.3;
 /** Cone and brim hats keep the weapons' three fifths: they sit on top of the head and not round it, and at a third over a wizard's cone and a farmer's brim were no wider than the head */
 const TALL_HAT_OVERSIZE = 1.6;
 const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_hat", "cowboy_hat", "tricorn", "pirate_hat", "captain_hat", "jester_cap"];
-/** Soft hats fitted to the head (see attachProps): this many head widths across, and pulled this share of the head's height down from the crown. */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat"];
-const HAT_HEAD_WIDTHS = 2.0;
-const HAT_BROW_SEAT = 0.12;
 
 export function attachProps(
   scene: Scene,
@@ -75,20 +71,6 @@ export function attachProps(
   if (hat) {
     hat.parent = body.headTop;
     hat.scaling.scaleInPlace(TALL_HATS.includes(config.hat) ? TALL_HAT_OVERSIZE : HAT_OVERSIZE);
-    // A soft hat is cut to the head it sits on (tabs_screenshot_05: a hat about two heads across, pulled down on the skull): scaled across so it spans
-    // HAT_HEAD_WIDTHS of this man's head, whatever the hat scale makes of it, and seated down to the brow instead of perched on the crown
-    if (head && HEAD_FITTED_HATS.includes(config.hat)) {
-      hat.refreshBoundingInfo();
-      const box = hat.getBoundingInfo().boundingBox;
-      const across = (box.maximum.x - box.minimum.x) * hat.scaling.x * hatUnit;
-      if (across > 1e-4) {
-        const fit = (head.width * HAT_HEAD_WIDTHS) / across;
-        hat.scaling.x *= fit;
-        hat.scaling.z *= fit;
-        hat.scaling.y *= Math.sqrt(fit);
-      }
-      hat.position.y -= (head.height * HAT_BROW_SEAT) / hatUnit;
-    }
     props.push(hat);
   }
 
