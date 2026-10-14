@@ -43,8 +43,6 @@ proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 228 | strike-tip | battle-feel.e | dropped
-- 228 | body-spaced-slots | battle-feel.h | rejected
 - 229 | head-fitted-hats | unit-look.h | rejected
 - 229 | body-deep-ranks | battle-feel.h | approved
 - 230 | wall-queue | battle-feel.h | approved
@@ -62,6 +60,7 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 236 | upright-wall-legs | battle-feel.h | approved
 - 237 | wall-head-level | battle-feel.h | approved
 - 237 | archer-brim | unit-look.h | dropped
+- 238 | wall-board-lean | battle-feel.h | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -80,3 +79,4 @@ proceduralAnimation.ts:rear-rank club rest (REAR_CLUB_REST; simulationSystem _al
 proceduralAnimation.ts:pressed board tilt + press stride (BOARD_PRESS_TILT, PRESS_DRIVE; per-man lean = half tilt + half trunk pitch + rock 0.06) | 0.3 rad; drive 0.4 at full shove | 234 | approved | shared tilt 0.3 (232)
 propBuilder.ts:buildFittedHat (HEAD_FITTED_HATS incl. helmet/plume_helmet, HELM_HEADS, HELM_CROWN, PLUME_TALL, HAT_EYE_CLEAR, BERET_*, CONE_*) | seat 0.05 head over eye top; beret 2 heads x 0.32, tilt 0.22; cone brim 2.1, foot 1.5, tall 1.05; helm dome 1.2 heads to 0.12 over crown, crest 0.45 | 237 | approved | flared skirt rejected 235
 proceduralAnimation.ts:upright wall stance (WALL_TRUNK_MAX, WALL_HEAD_LEVEL, WALL_KNEE_MAX, WALL_HIP_MAX, WALL_SINK_SHARE; hip splay cleared, by wallHold) | trunk <= 0.3, head 0.9 back; knee <= 0.35, thigh +-0.35, sink 0.3 | 236 | approved |
+proceduralAnimation.ts:board scatter (BOARD_SCATTER of brace boardYaw/Tilt/Roll + a height step, in _lapBoard) | 0.6 | 238 | approved |
