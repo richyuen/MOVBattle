@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 211   Last re-audit: 210   Consecutive rejects: 0   Branch: main
+Iteration: 212   Last re-audit: 210   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -30,9 +30,10 @@ vfx: e FAIL f PASS g FAIL h FAIL (1/4)
 Total tier 1 24/24; tier 2 12/24.
 
 ## Focus (every gap this iteration)
-BASE a6c0369
-- [S] battle-feel.h board-grip (7a4746a) — APPROVE, blocker 5 struck, criterion still FAIL
-- [S] battle-feel.e press-club-lands — dropped uncommitted (not attempted)
+BASE 3f052ca
+- [S] battle-feel.h lapped-band-at-contact — dropped uncommitted: boards turned a further 0.4 rad under the shove still stack behind the lead board from the side camera (both walls lap with one handedness, so from the flank one wall shows faces, the other backs)
+- [S] battle-feel.e press-club-lands — dropped uncommitted: clubbers stood off a braced wall (no shove) with an upright chop stayed on their feet, but were speared before any chop landed in frame (4.8 s)
+- No gap reached the critic; consecutive rejects unchanged.
 
 ## Last verdicts (one line per gap, verbatim critic header)
 - GAP: [S] board-grip (7a4746a) VERDICT: APPROVE CRITERION: battle-feel.h FAIL (previous: FAIL)
@@ -56,7 +57,7 @@ BASE a6c0369
 - lapped-shield-boards [attempts: 1, [S]] — 201: front boards on one plane 0.42 ahead of the rank line, lap 0.22; in the full capture still separate discs at different depths, the front shot stood behind blue
 
 ## Notes for next iteration (max 5 lines)
-- 211 [S] pick was battle-feel.h (e dropped); 212 must not repeat h alone. The plateau rule counts rejected [S] since the blocker list was written (rewritten 210). Ranked 1 and 2 are both battle-feel.h: take 1, then the next pickable on another criterion.
+- 212 committed nothing (both picks dropped, see Focus). Next: battle-feel.h blocker 1 needs a view the critic can read (a lapped band from the side is not reachable with one lap handedness); consider squaring boards to the enemy in contact for blocker 4 instead. battle-feel.e: standing clubbers off a braced wall keeps them up but gets them speared; a landed chop needs a target that is not a spear wall.
 - Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the shield arm aims at the board back (_gripBoard). The blue wall men are hoplites with round boards (no tower shields in the wall shots).
 - battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.
