@@ -226,3 +226,4 @@ iter 224 | [S] bodies-over-fire, [S] spooky-dressing, [P] haze-near | 2/3 approv
 iter 225 | re-audit; [S] spooky-canopy, [S] campaign-map | 2/2 approved | passes 18 -> 19
 iter 226 | [S] overhead-strike, [S] block-separation (dropped), [P] spooky-leaves | 1/3 approved | passes 19 -> 19
 iter 227 | [S] tint-free-battle, [S] strike-aim | 1/2 approved | passes 19 -> 20
+iter 228 | [S] strike-tip (dropped), [S] body-spaced-slots | 0/2 approved | passes 20 -> 20
