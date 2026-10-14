@@ -197,10 +197,8 @@ const YOKE_REACH = 0.2;
 const YOKE_DROP = 0.6;
 const YOKE_DEPTH = 0.92;
 const YOKE_NECK = 0.5;
-// The hull under the ridge: its foot stands this far up the torso, this much of the waist wide and deep (a box drawn inside the waist's round) and never narrower than HULL_TAPER of the shoulder line, so its sides run down near parallel and not as a V.
-const HULL_FOOT = 0.06;
-const HULL_WAIST = 1.0;
-const HULL_TAPER = 0.84;
+/** The pelvis block stands this share of its own height above the hip line: the belt, where the hull's foot lands on it. */
+const PELVIS_ABOVE_HIP = 0.3;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
 const THIGH_OF_LEG = 0.2;
 /** Thigh head: the thigh swells up to the hip as the sleeve does to the shoulder, to this many thighs wide, and its crown sinks into the pelvis block in place of a ball cap. */
@@ -382,13 +380,16 @@ export function buildArticulatedBody(
     return m;
   }
   /**
-   * Shoulder ridge and the hull under it, one solid with the torso: its widest line lies under the arm roots it covers, and from there its side planes run near straight
-   * down to the waist, an underarm gusset in place of an armpit gap under a shelf. The chest stands out of its front as a swell; above that line a gable slopes in to the neck through both sleeve heads.
+   * Shoulder ridge and the hull under it, one solid with the torso.
+   * Spec, read off tabs_screenshot_04: the trunk is one trapezoid, about two heads from belt to shoulder line. It is widest at the shoulder line and nowhere else; each side
+   * is a single straight plane from there down to the belt, where the trunk is about three quarters of its shoulder width and exactly as wide as the hips under it, so
+   * belt, hips and skirt top are one line with no step or corner; above the shoulder line a gable slopes in to the neck through both sleeve heads.
+   * So the hull's foot is not sized from the waist or from the shoulders: it is the top face of the pelvis block (pelvisW by pelvisD, PELVIS_OF_SHOULDERS of the joint span),
+   * and the hull stands on that block at the belt. The chest stands out of its front as a swell.
    */
-  function shoulderYoke(n: string, jointX: number, jointY: number): Mesh {
+  function shoulderYoke(n: string, jointX: number, jointY: number, pelvisW: number, pelvisD: number, beltY: number): Mesh {
     const chestW = chestTop * CHEST_SWELL * 0.96;
-    const waistD = waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001);
-    const yokeW = Math.max(chestW, (jointX + upperArmTop * YOKE_REACH) * 2);
+    const yokeW = Math.max(chestW, pelvisW, (jointX + upperArmTop * YOKE_REACH) * 2);
     const yokeD = Math.max(torsoD * YOKE_DEPTH, upperArmTop * 1.1);
     const yokeY = Math.max(torsoH * 0.5, jointY - upperArmTop * YOKE_DROP);
     const neckW = Math.max(yokeW * YOKE_NECK, chestTop * SHOULDER_SLOPE * 0.9);
@@ -405,8 +406,7 @@ export function buildArticulatedBody(
       box.computeWorldMatrix(true);
       return box;
     };
-    const footW = Math.max(waist * HULL_WAIST, yokeW * HULL_TAPER);
-    const slab = frustum("hull", torsoH * HULL_FOOT, yokeY, footW, waistD * HULL_WAIST, yokeW, yokeD);
+    const slab = frustum("hull", beltY, yokeY, pelvisW, pelvisD, yokeW, Math.max(yokeD, pelvisD));
     const slope = frustum("slope", yokeY, torsoH * 1.02, yokeW, yokeD, neckW, yokeD * 0.75);
     const m = Mesh.MergeMeshes([slab, slope], true)!;
     m.name = n;
@@ -662,7 +662,12 @@ export function buildArticulatedBody(
   const sleeveHead = upperArmTop * (options.showShoulderPads ? SLEEVE_HEAD_PLATE : SLEEVE_HEAD);
   const shoulderOffX = (Math.max(torsoTop, torsoBottom) * 0.48 + upperArmTop * 0.4) * s;
   const shoulderOffY = (torsoH - 0.08) * s;
-  shoulderYoke(`${name}_yoke`, shoulderOffX / s, shoulderOffY / s).parent = torso;
+  // The hips are sized here, ahead of the legs they carry, because the trunk above is built down onto them
+  const legDepthScale = 0.92;
+  const pelvisW = Math.max(waist, shoulderOffX * 2 / s * PELVIS_OF_SHOULDERS, upperLegTop * 2 * THIGH_LAP);
+  const pelvisH = upperLegTop * PELVIS_HEIGHT;
+  const pelvisD = Math.max(waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001), upperLegTop * legDepthScale) * 1.05;
+  shoulderYoke(`${name}_yoke`, shoulderOffX / s, shoulderOffY / s, pelvisW, pelvisD, pelvisH * PELVIS_ABOVE_HIP).parent = torso;
 
   // Left arm
   const leftShoulder = joint(`${name}_lShoulder`, torso);
@@ -777,20 +782,11 @@ export function buildArticulatedBody(
   }
 
   // ─── Legs ───
-  const legDepthScale = 0.92;
-  const pelvisW = Math.max(waist, shoulderOffX * 2 / s * PELVIS_OF_SHOULDERS, upperLegTop * 2 * THIGH_LAP);
-  const pelvisH = upperLegTop * PELVIS_HEIGHT;
-  const pelvisD = Math.max(waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001), upperLegTop * legDepthScale) * 1.05;
   const hipOffX = (pelvisW - upperLegTop) * 0.5 * s;
 
-  // Pelvis: a short block under the waist, drawn in at the top to the waist it meets, with a thigh under each lower corner
+  // Pelvis: a short straight block under the trunk, whose foot is this block's top face, with a thigh under each lower corner
   const pelvis = MeshBuilder.CreateBox(`${name}_pelvis`, { width: pelvisW * s, height: pelvisH * s, depth: pelvisD * s }, scene);
-  const pelvisPositions = pelvis.getVerticesData("position")!;
-  for (let i = 0; i < pelvisPositions.length; i += 3) {
-    if (pelvisPositions[i + 1] > 0) pelvisPositions[i] *= waist / pelvisW;
-  }
-  pelvis.setVerticesData("position", pelvisPositions);
-  pelvis.position.y = -pelvisH * s * 0.2;
+  pelvis.position.y = pelvisH * s * (PELVIS_ABOVE_HIP - 0.5);
   pelvis.material = bodyMat;
   pelvis.parent = hip;
   allMeshes.push(pelvis);
