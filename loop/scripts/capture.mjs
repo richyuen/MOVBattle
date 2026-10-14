@@ -274,10 +274,15 @@ async function main() {
           if (window.game.spawnUnit(u.unitId, u.team, u.position)) ok++;
         }
         window.game.startBattleImmediate();
-        window.advanceTime(1100);
+        window.advanceTime(400);
         return ok;
       }, WAR_MACHINES);
       summary.notes.push(`war_machines placed ${machinesPlaced}/${WAR_MACHINES.length} units`);
+      // Shots in flight: the first salvo is in the air from 0 to ~0.83 s, so the 1100/1250 pair never holds one.
+      await shot(page, "war_machines_400ms");
+      await page.evaluate(() => window.advanceTime(150));
+      await shot(page, "war_machines_550ms");
+      await page.evaluate(() => window.advanceTime(550));
       // Probed in 50 ms steps: blasts land at ~0.83 s and ~3.58 s and bodies peak ~0.3 s later.
       await shot(page, "war_machines_1100ms");
       // Motion pair: 150 ms later, so flung bodies and shots in flight can be judged as arcs.
@@ -338,8 +343,11 @@ async function main() {
       await shot(page, "big_melee_placement");
       await page.evaluate(() => {
         window.game.startBattleImmediate();
-        window.advanceTime(2000);
+        window.advanceTime(500);
       });
+      // Mid-swoop: the camera on its way down from the placement oblique to the battle view.
+      await shot(page, "big_melee_500ms");
+      await page.evaluate(() => window.advanceTime(1500));
       await shot(page, "big_melee_2s");
       // Motion pair for the shove: arm swing, lean and topple read from the two frames.
       await page.evaluate(() => window.advanceTime(150));
