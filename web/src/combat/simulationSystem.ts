@@ -804,7 +804,12 @@ export class SimulationSystem {
       }
     }
     // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
-    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane);
+    // Every slotted man's spear stands on his wall's heading from the moment he is slotted, and his board stands on his rank's line: the front rank's on the wall's
+    // plane, a rear rank's on its own line a rank gap behind, lapped and square to the heading like the front's, so no rank's boards turn with the men holding them.
+    for (const [unit, slot] of this._shieldSlots) {
+      const line = slot.plane ?? slot.at.x * Math.sin(slot.heading) + slot.at.z * Math.cos(slot.heading);
+      unit.holdSpearInWall(slot.heading, line);
+    }
   }
 
   /**
