@@ -748,14 +748,6 @@ export class RuntimeUnit {
       this._drawnFlung = flung;
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
-    // A rank-back clubber's blow is laid onto the top of his target's head (proceduralAnimation _carryProp)
-    const blowFoe = this._blowTarget;
-    if (blowFoe && !blowFoe.isDead && Vector3.Distance(blowFoe.position, this.position) < 4) {
-      blowFoe.body.headTop.computeWorldMatrix(true);
-      this.animator.setStrikePoint(blowFoe.body.headTop.getAbsolutePosition());
-    } else {
-      this.animator.setStrikePoint(null);
-    }
     this.animator.update(dt);
     if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3) {
       this._blowTarget.animator.triggerFlinch();
