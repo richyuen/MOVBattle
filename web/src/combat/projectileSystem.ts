@@ -9,7 +9,7 @@ import { getMaterialFactory } from "../units/materialFactory";
 import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell" | "cannonball";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -117,6 +117,7 @@ export class ProjectileSystem {
       case "bomb":    speed = 12; arcHeight = dist * 0.35; break;
       case "shell":   speed = 46; arcHeight = dist * 0.015; break;
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
+      case "cannonball": speed = 10; arcHeight = dist * 0.4; break;
       case "firework": speed = 22; arcHeight = dist * 0.25; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
       case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
@@ -558,8 +559,9 @@ export class ProjectileSystem {
       }
       case "bomb": {
         const body = MeshBuilder.CreateSphere("bomb", { diameter: 0.2, segments: 8 }, this._scene);
-        body.material = this._getMat(`bomb_body_${attackerTeam}`, palette.dark);
+        body.material = this._ironMat();
         body.parent = root;
+        this._addStreak(root, 0.1, 1.2, 0.07);
         const fuse = MeshBuilder.CreateCylinder("fuse", { height: 0.1, diameter: 0.015, tessellation: 4 }, this._scene);
         fuse.position.y = 0.12;
         fuse.material = this._getMat("fuse", new Color3(0.85, 0.6, 0.2), 0.4);
@@ -587,6 +589,16 @@ export class ProjectileSystem {
         const stone = MeshBuilder.CreateSphere("stone", { diameter: 0.35, segments: 6 }, this._scene);
         stone.material = this._getMat(`stone_body_${attackerTeam}`, Color3.Lerp(palette.primary, new Color3(0.5, 0.48, 0.42), 0.4));
         stone.parent = root;
+        break;
+      }
+      case "cannonball": {
+        // A cannon's shot: a fat iron ball, faceted, black against sky and grass alike whichever side fired it, with a white streak behind it for as long as it flies
+        const ball = MeshBuilder.CreateSphere("cannonball", { diameter: 0.46, segments: 3 }, this._scene);
+        ball.convertToFlatShadedMesh();
+        ball.material = this._ironMat();
+        ball.parent = root;
+        this._scene.getGlowLayerByName("glow")?.addExcludedMesh(ball);
+        this._addStreak(root, 0.23, 2.2, 0.14);
         break;
       }
       case "firework": {
@@ -682,12 +694,22 @@ export class ProjectileSystem {
   }
 
   // A brief white streak off the back of a thrown shaft: a thin spike of its own, tapering to nothing behind it. Particles left along the path were lost against the pale sky.
-  private _addStreak(root: TransformNode, shaftHalf: number, length: number): void {
-    const streak = MeshBuilder.CreateCylinder("streak", { height: length, diameterTop: 0.02, diameterBottom: 0, tessellation: 4 }, this._scene);
+  private _addStreak(root: TransformNode, shaftHalf: number, length: number, width = 0.02): void {
+    const streak = MeshBuilder.CreateCylinder("streak", { height: length, diameterTop: width, diameterBottom: 0, tessellation: 4 }, this._scene);
     streak.rotation.x = Math.PI / 2;
     streak.position.z = -(shaftHalf + length / 2);
     streak.material = getMaterialFactory().get("wood", new Color3(1, 1, 1), { emissiveIntensity: 0.3, alpha: 0.5 });
     streak.parent = root;
+  }
+
+  /** Shot and bomb iron: near black and in no team's colour, which under the blue sky light read navy. */
+  private _ironMat(): PBRMetallicRoughnessMaterial {
+    let m = this._matCache.get("iron_shot");
+    if (!m) {
+      m = getMaterialFactory().get("stone", new Color3(0.045, 0.045, 0.05));
+      this._matCache.set("iron_shot", m);
+    }
+    return m;
   }
 
   private _getMat(key: string, color: Color3, emissive = 0): PBRMetallicRoughnessMaterial {

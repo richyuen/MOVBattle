@@ -36,7 +36,7 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "arrow": return "arrow";
     case "bolt": return "bolt";
     case "bomb": return "bomb";
-    case "stone": return "stone";
+    case "stone": return unit.definition.specialHint === "cannon" ? "cannonball" : "stone"; // a cannon fires an iron ball, not the catapult's rock
     case "spear": return "spear";
     case "firework": return "firework";
     case "shuriken": return "shuriken";
