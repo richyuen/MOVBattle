@@ -197,3 +197,4 @@ iter 195 | re-audit (no change); [S] couched-butt-grip | 1/1 approved | passes 2
 iter 196 | [S] battle-feel.c wall-shafts-share-one-heading (rejected), [S] unit-look.f mammoth-fur-mass | 1/2 approved | passes 23/24 -> 23/24 (tier 2 10/20 -> 10/20; re-audit scored tier 2)
 iter 197 | [S] battle-feel.c wall-shafts-one-plane, [S] unit-look.h zeus-no-mouth | 2/2 approved | passes 23/24 -> 24/24 (tier 2 10/20 -> 10/20)
 iter 198 | re-audit; [S] unit-look.f mammoth-trunk, [S] vfx.e impact-ring | 1/2 approved | passes tier1 24 -> 24, tier2 11/24 -> 11/24
+iter 199 | [S] mammoth-trunk retry, [S] blood-chunks | 2/2 approved | passes 35 -> 35

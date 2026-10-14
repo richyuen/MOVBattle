@@ -62,14 +62,12 @@ bodyBuilder.ts:thigh (THIGH_OF_LEG, THIGH_HEAD, THIGH_LAP) | thigh at least 0.2 
 bodyBuilder.ts:lower limb belly (CALF_SWELL, LIMB_BELLY_DROP; armTaper) | shin 1.4 of its top width, 0.3 down; arm one straight taper sleeve top to wrist, no belly | 191 | approved | forearm belly 1.35 (179); no [P]
 unitFactory.ts:garment solids (hangSkirt, furCollar; vehicleBuilder crewBreeches) | hex skirt on the hips: tabard 0.7 thighs flare 1.6, kilt 0.6/1.55, tunic 0.45/1.5, hide 0.5/1.45; collar torus 0.64 chest; breeches 1.75 -> 1.3 thighs | 179 | approved | breeches top 1.45 open as [P]
 bodyBuilder.ts:crewProportions (addOperator, linked crew) | infantry widths at the crew's own scale | 178 | approved |
-vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth hull (BODY_RADII, BODY_LIFT, fur hem, paint daubs, leg width) | ellipsoid 0.85/0.68/1.16 lifted 0.12; 5 hem lobes a side; 4 daubs a side; legs 0.6 | 196 | approved | barrel, skirts, bands, legs 0.8 (spent for [P], 159)
-vehicleBuilder.ts:mammoth trunk (trunkKnots, trunkRoot, knot rings) | 7 short pieces inside the head (reverted) | 198 | rejected | 8-knot hanging tube in hide purple, unseen (198)
+vehicleBuilder.ts:mammoth trunk (TRUNK_PITCH, _PIECE, _ROOT, _TIP, trunkMat; cheek paint removed) | 8 pieces 0.2 from (0,-0.12,0.76), pitch 1.0..0.1..1.3, 0.5 -> 0.22; hide 0.6 to black | 199 | approved | 7 short pieces inside the head; 8-knot hanging tube in hide purple, unseen (198)
+visualEffects.ts:hit debris litter (spawnHitDebris, LITTER_CAP, _debrisMats) | 3-4 chunks 0.26-0.04i, land flat x1.15/0.45 and stay; cap 240; reds 0.55/0.38 | 199 | approved | 0.16-0.035i, shrink away at 0.7 s
 visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white torus at the strike, 0.4 -> 2.6 m over 0.7 s, fade last third | 198 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 189 | wall-spears-through-own-men | battle-feel.c | approved
-- 189 | trunk-top-flat-plate | unit-look.c | approved
 - 190 | wall-spears-thread-helmets | battle-feel.c | rejected
 - 191 | aimed-men-stand-to-attention | battle-feel.c | approved
 - 191 | forearm-as-thick-as-upper-arm | unit-look.c | approved
@@ -84,6 +82,8 @@ visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white toru
 - 197 | zeus-no-mouth | unit-look.h | approved
 - 198 | mammoth-trunk | unit-look.f | rejected
 - 198 | impact-ring | vfx.e | approved
+- 199 | mammoth-trunk retry | unit-look.f | approved
+- 199 | blood-chunks | vfx.g | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
