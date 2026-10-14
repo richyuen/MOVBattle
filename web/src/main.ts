@@ -1102,6 +1102,46 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
   removeRuntimeUnitTree(root, true);
 }
 
+// ─── Placement ghost ───
+// Before it is placed, the selected unit stands under the cursor as a see-through figure in the colours of the side it would join, and follows the cursor over the field.
+// Where it could not be placed (off its side's ground, on top of another unit) it thins out further. It is a body only: never registered with the battle, never pickable.
+const GHOST_ALPHA = 0.55;
+const GHOST_BLOCKED_ALPHA = 0.22;
+let placementGhost: { unit: RuntimeUnit; unitId: string; team: number } | null = null;
+
+function clearPlacementGhost(): void {
+  if (!placementGhost) return;
+  placementGhost.unit.dispose();
+  placementGhost = null;
+}
+
+function showPlacementGhost(groundPoint: Vector3 | null): void {
+  const def = stateMachine.currentState === GameState.Placement && !removeMode ? getUnit(selectedUnitId) : undefined;
+  const team = groundPoint && groundPoint.x >= 0 ? 1 : 0;
+  if (!def || !groundPoint || (campaignSession && team === 1)) {
+    clearPlacementGhost();
+    return;
+  }
+  const point = new Vector3(groundPoint.x, 0, groundPoint.z);
+  if (!placementGhost || placementGhost.unitId !== def.id || placementGhost.team !== team) {
+    clearPlacementGhost();
+    placementGhost = { unit: unitFactory.spawn(def, team, point), unitId: def.id, team };
+  }
+  const ghost = placementGhost.unit;
+  ghost.position.copyFrom(point);
+  const alpha = placementValidator.validate(team, point, def.collisionRadius, placedUnits) ? GHOST_BLOCKED_ALPHA : GHOST_ALPHA;
+  for (const mesh of ghost.body.root.getChildMeshes(false)) {
+    mesh.visibility = alpha;
+    mesh.isPickable = false;
+  }
+}
+
+/** The ghost goes to the ground under this point of the screen, seen through any unit standing there. */
+function previewPlacementAt(screenX: number, screenY: number): void {
+  const pick = scene.pick(screenX, screenY, (mesh) => mesh.isPickable && mesh.isVisible && mesh.isEnabled() && !mesh.metadata?.runtimeUnit);
+  showPlacementGhost(pick?.hit && pick.pickedPoint ? pick.pickedPoint : null);
+}
+
 // ─── Battle lifecycle ───
 function startBattle(immediate = false): void {
   dismissTitleIntro();
@@ -3383,6 +3423,12 @@ function getGalleryManifest(): GalleryCaptureManifestEntry[] {
 scene.onPointerObservable.add((pointerInfo) => {
   if (stateMachine.currentState !== GameState.Placement) return;
 
+  if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
+    // A finger has no hover: the ghost is the mouse's
+    if ((pointerInfo.event as PointerEvent).pointerType !== "touch") previewPlacementAt(scene.pointerX, scene.pointerY);
+    return;
+  }
+
   if (pointerInfo.type === PointerEventTypes.POINTERTAP) {
     const evt = pointerInfo.event as PointerEvent;
     if (evt.button === 2) {
@@ -3446,6 +3492,9 @@ window.addEventListener("blur", () => {
 const gameApi = {
   startBattle,
   startBattleImmediate: () => startBattle(true),
+  previewPlacementAt,
+  previewPlacementAtGround: (x: number, z: number) => showPlacementGhost(new Vector3(x, 0, z)),
+  clearPlacementPreview: clearPlacementGhost,
   resetBattle,
   playAgain,
   openCampaignPicker: () => toggleCampaignOverlay(true),
@@ -3529,6 +3578,7 @@ engine.runRenderLoop(() => {
 });
 
 function tick(dt: number, nowSeconds: number): void {
+  if (placementGhost && (stateMachine.currentState !== GameState.Placement || removeMode || placementGhost.unitId !== selectedUnitId)) clearPlacementGhost();
   if (stateMachine.currentState === GameState.Simulation) {
     simulation.update(dt, nowSeconds);
     projectileSystem.update(dt);
