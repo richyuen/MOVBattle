@@ -48,7 +48,7 @@ visualEffects.ts:explosion dust bank | 14 unlit puffs, reach 2.3*sqrt, size 0.7-
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved |
 proceduralAnimation.ts:shield brace (_buildBracePose; BRACE_PITCH_*, BRACE_CROUCH_DEEP, BRACE_STEP_*) | trunk pitch 0.14-0.56 own, set not added; head level 0.1-0.8; crouch to 0.7; step 0.22-0.5; twist 0.1-0.5; board follows | 192 | approved | 3 stands pitch -0.08..0.34, crouch to 1.05 (179); lunge 0.35-0.75 (188)
 proceduralAnimation.ts:spear carry (_carrySpear; SPEAR_REAR_UP_*, SPEAR_REAR_STRIKE, SPEAR_FRONT_DIP_*, SPEAR_FRONT_GRIP_*) | rear raised 1.05-1.4 above level, strike 0.3; front dipped 0.42-0.64, gripped at 0.48-0.58 | 193 | approved | rear floor 0.75 (192); no [P] on the rear raise
-proceduralAnimation.ts:spear reach stop (SPEAR_BITE, SPEAR_GIVE) | front stroke stops 0.08 m into the enemy's near face; shaft gives back up to 0.4 m | 193 | approved |
+proceduralAnimation.ts:spear reach stop (SPEAR_BITE, SPEAR_GIVE) | front stroke stops 0.08 m into the aimed man's near face; shaft gives back up to 0.4 m | 194 | approved | first-face from the sim (194) rejected and reverted
 proceduralAnimation.ts:spear thrust (_thrustStroke, SPEAR_LUNGE, SPEAR_DRAW; brace thrustRate) | lunge 0.45 m, draw -0.4 of it; beat 0.9-1.4/s | 192 | approved | choke 0.45 removed (186)
 proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, sink 0.05-0.27, asym +-0.18, arm lag +-0.7, swing 0.5-0.95 | 174 | approved | no further [P] on roll
 proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | shouldered/upright/across/trailed 0.30/0.25/0.25/0.20 (jitter 0.3); bob 0.08-0.18 | 174 | approved | bob spent for [P]
@@ -73,8 +73,6 @@ vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 183 | casters-stand-to-attention | battle-feel.c | approved
-- 183 | head-is-a-tall-square-box | unit-look.c | approved
 - 184 | torso-top-is-a-plate-with-eaves | unit-look.c | approved
 - 184 | wall-spears-pitch-over-heads | battle-feel.c | approved
 - 185 | faces-blank-at-distance | unit-look.d | approved
@@ -93,6 +91,7 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 192 | [R] shield press, wall spears and the bowman's hold | battle-feel.c | approved
 - 193 | spear-overruns-its-mark | battle-feel.c | approved
 - 193 | [R] bare-neck | unit-look.c | approved
+- 194 | spear-stops-on-the-first-body | battle-feel.c | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
