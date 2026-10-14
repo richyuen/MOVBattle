@@ -98,8 +98,6 @@ const SHIELD_BOARD_STANDOFF = 0.46;
 // The shield wall as one body (see the spec at SimulationSystem._holdShieldFrames): the most a step puts a carrier back toward his slot. At 60 steps a second
 // that is 9 m/s, more than any shove or march moves a man in a step, so on his feet he is on his slot.
 const SHIELD_SLOT_SNAP = 0.15;
-// A wall's slots stand at least this share of two body radii apart (see _assignShieldSlots).
-const WALL_BODY_SPACING = 1.0;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -201,8 +199,6 @@ export class SimulationSystem {
   private _shieldSlots = new Map<RuntimeUnit, ShieldSlot>();
   /** The rank each living carrier was sorted into, 0 the front: kept from tick to tick, so a rear rank pressed up against the front stays a rank behind it. */
   private _shieldRanks = new Map<RuntimeUnit, number>();
-  // Each team's wall slot spacing this step (see _assignShieldSlots)
-  private _wallSpacing = new Map<number, number>();
   private _now = 0;
 
   get isRunning(): boolean { return this._isRunning; }
@@ -724,10 +720,6 @@ export class SimulationSystem {
       const carriers = standing.filter((unit) => unit.team === team && this._carriesWallShield(unit));
       const enemies = standing.filter((unit) => unit.team !== team);
       if (carriers.length < 2 || enemies.length === 0) continue;
-      // Slots are a body apart (tabs_screenshot_06: every man upright behind his own board, none inside another): a wall's slot spacing is at least its widest
-      // carrier's body across (WALL_BODY_SPACING of two body radii), so slotted men stand clear of each other and helmets do not merge in the press
-      const spacing = Math.max(this.shieldSlotSpacing, ...carriers.map((unit) => unit.collisionBodyRadius * 2 * WALL_BODY_SPACING));
-      this._wallSpacing.set(team, spacing);
       const middle = (units: RuntimeUnit[], axis: "x" | "z") => units.reduce((sum, unit) => sum + unit.position[axis], 0) / units.length;
       let fx = middle(enemies, "x") - middle(carriers, "x");
       let fz = middle(enemies, "z") - middle(carriers, "z");
@@ -762,12 +754,12 @@ export class SimulationSystem {
             const wall = rank.slice(start, i);
             start = i;
             if (wall.length < 2) continue;
-            const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * spacing;
+            const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * this.shieldSlotSpacing;
             const wallId = walls++;
             const line = wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length;
             wall.forEach((entry, k) => {
-              const shift = first + k * spacing - entry.side;
-              const side = first + k * spacing;
+              const shift = first + k * this.shieldSlotSpacing - entry.side;
+              const side = first + k * this.shieldSlotSpacing;
               this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line, at: new Vector3(line * fx - side * fz, 0, line * fz + side * fx) });
             });
             formed.push({ first, count: wall.length, depth: wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length });
@@ -777,7 +769,7 @@ export class SimulationSystem {
           const backing = new Map<ShieldWallLine, typeof rank>();
           for (const entry of rank) {
             const host = hosts.find((line) => entry.side >= line.first - this.shieldWallGap
-              && entry.side <= line.first + (line.count - 1) * spacing + this.shieldWallGap);
+              && entry.side <= line.first + (line.count - 1) * this.shieldSlotSpacing + this.shieldWallGap);
             if (!host) {
               this._shieldRanks.set(entry.unit, r - 1);
               continue;
@@ -787,13 +779,13 @@ export class SimulationSystem {
           for (const [host, group] of backing) {
             // Slots sit on the half spacings of the wall ahead: behind its gaps while the group fits between its flanks, centred on it when it does not.
             const gaps = host.count - 1;
-            const wanted = Math.round((group.reduce((sum, entry) => sum + entry.side, 0) / group.length - host.first) / spacing - group.length * 0.5);
+            const wanted = Math.round((group.reduce((sum, entry) => sum + entry.side, 0) / group.length - host.first) / this.shieldSlotSpacing - group.length * 0.5);
             const j0 = group.length <= gaps ? Math.min(Math.max(wanted, 0), gaps - group.length) : Math.floor((gaps - group.length) / 2);
-            const first = host.first + (j0 + 0.5) * spacing;
+            const first = host.first + (j0 + 0.5) * this.shieldSlotSpacing;
             const depth = host.depth - this.shieldRankGap;
             const wallId = walls++;
             group.forEach((entry, k) => {
-              const shift = first + k * spacing - entry.side;
+              const shift = first + k * this.shieldSlotSpacing - entry.side;
               const back = depth - entry.depth;
               this._shieldSlots.set(entry.unit, {
                 wall: wallId,
@@ -801,7 +793,7 @@ export class SimulationSystem {
                 heading,
                 hold: new Vector3(-fz * shift + fx * back, 0, fx * shift + fz * back),
                 plane: null,
-                at: new Vector3(depth * fx - (first + k * spacing) * fz, 0, depth * fz + (first + k * spacing) * fx),
+                at: new Vector3(depth * fx - (first + k * this.shieldSlotSpacing) * fz, 0, depth * fz + (first + k * this.shieldSlotSpacing) * fx),
               });
             });
             formed.push({ first, count: group.length, depth });
@@ -957,7 +949,7 @@ export class SimulationSystem {
       // Two carriers of one wall only steer apart inside their slot spacing.
       const slot = this._shieldSlots.get(unit);
       const sameWall = !fallen && slot !== undefined && slot.wall === this._shieldSlots.get(other)?.wall;
-      const separation = sameWall ? (this._wallSpacing.get(unit.team) ?? this.shieldSlotSpacing) : unit.collisionBodyRadius + other.collisionBodyRadius
+      const separation = sameWall ? this.shieldSlotSpacing : unit.collisionBodyRadius + other.collisionBodyRadius
         + (fallen ? this.fallenAvoidanceRadius : !ally ? this.localAvoidanceRadius : this.formationAvoidanceRadius);
       if (distanceSq <= 0.0001 || distanceSq > separation * separation) continue;
 
