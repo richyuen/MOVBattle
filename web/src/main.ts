@@ -14,7 +14,7 @@ import type { BattleResult } from "./core/battleResult";
 
 import { ALL_UNITS, getUnit } from "./data/unitDefinitions";
 import type { UnitDefinition } from "./data/unitDefinitions";
-import { FactionId, FACTION_NAMES } from "./data/factionColors";
+import { FactionId, FACTION_NAMES, TEAM_COLORS } from "./data/factionColors";
 import { FACTION_GLYPH_PATHS, isSolidGlyph, unitGlyphPath } from "./ui/trayGlyphs";
 import {
   advanceCampaignSession,
@@ -1107,11 +1107,38 @@ function tryRemoveUnit(screenX: number, screenY: number): void {
 // Where it could not be placed (off its side's ground, on top of another unit) it thins out further. It is a body only: never registered with the battle, never pickable.
 const GHOST_ALPHA = 0.55;
 const GHOST_BLOCKED_ALPHA = 0.22;
-let placementGhost: { unit: RuntimeUnit; unitId: string; team: number } | null = null;
+// The figure alone is lost against the lawn from the placement camera, so it stands on a footprint: a low six-sided slab of its side's flat, unlit colour, cut from the
+// room the unit takes on the ground and never smaller than GHOST_TILE_MIN across. The slab is what marks the spot from above; it dims with the figure where the spot is refused.
+const GHOST_TILE_OF_BODY = 1.7;
+const GHOST_TILE_MIN = 1.2;
+const GHOST_TILE_HEIGHT = 0.22;
+const GHOST_TILE_BLOCKED_ALPHA = 0.3;
+let placementGhost: { unit: RuntimeUnit; tile: Mesh; unitId: string; team: number } | null = null;
+const ghostTileMaterials = new Map<number, StandardMaterial>();
+
+function buildGhostTile(team: number, collisionRadius: number): Mesh {
+  const tile = MeshBuilder.CreateCylinder("placementGhostTile", {
+    height: GHOST_TILE_HEIGHT,
+    diameter: Math.max(GHOST_TILE_MIN, collisionRadius * 2 * GHOST_TILE_OF_BODY),
+    tessellation: 6,
+  }, scene);
+  let material = ghostTileMaterials.get(team);
+  if (!material) {
+    material = new StandardMaterial(`placementGhostTile_${team}`, scene);
+    material.disableLighting = true;
+    material.emissiveColor = TEAM_COLORS[team] ?? new Color3(0.5, 0.5, 0.5);
+    ghostTileMaterials.set(team, material);
+  }
+  tile.material = material;
+  tile.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(tile);
+  return tile;
+}
 
 function clearPlacementGhost(): void {
   if (!placementGhost) return;
   placementGhost.unit.dispose();
+  placementGhost.tile.dispose();
   placementGhost = null;
 }
 
@@ -1125,15 +1152,20 @@ function showPlacementGhost(groundPoint: Vector3 | null): void {
   const point = new Vector3(groundPoint.x, 0, groundPoint.z);
   if (!placementGhost || placementGhost.unitId !== def.id || placementGhost.team !== team) {
     clearPlacementGhost();
-    placementGhost = { unit: unitFactory.spawn(def, team, point), unitId: def.id, team };
+    const unit = unitFactory.spawn(def, team, point);
+    // A see-through body throws no shadow: the slab under it marks its place
+    for (const mesh of unit.body.root.getChildMeshes(false)) shadowGen.removeShadowCaster(mesh, false);
+    placementGhost = { unit, tile: buildGhostTile(team, def.collisionRadius), unitId: def.id, team };
   }
   const ghost = placementGhost.unit;
   ghost.position.copyFrom(point);
-  const alpha = placementValidator.validate(team, point, def.collisionRadius, placedUnits) ? GHOST_BLOCKED_ALPHA : GHOST_ALPHA;
+  const blocked = Boolean(placementValidator.validate(team, point, def.collisionRadius, placedUnits));
   for (const mesh of ghost.body.root.getChildMeshes(false)) {
-    mesh.visibility = alpha;
+    mesh.visibility = blocked ? GHOST_BLOCKED_ALPHA : GHOST_ALPHA;
     mesh.isPickable = false;
   }
+  placementGhost.tile.position.set(point.x, GHOST_TILE_HEIGHT / 2, point.z);
+  placementGhost.tile.visibility = blocked ? GHOST_TILE_BLOCKED_ALPHA : 1;
 }
 
 /** The ghost goes to the ground under this point of the screen, seen through any unit standing there. */
