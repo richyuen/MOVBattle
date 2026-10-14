@@ -413,8 +413,8 @@ export class RuntimeUnit {
   }
 
   /** Slotted into a shield wall this step: the spear stands on the wall's heading. */
-  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null): void {
-    this.animator.holdSpearInWall(heading, boardPlane, slotAt);
+  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null, boardLayer = 0): void {
+    this.animator.holdSpearInWall(heading, boardPlane, slotAt, boardLayer);
   }
 
   /** Held on his slot in a shield wall this step (see SimulationSystem._holdShieldFrames): crowd pressure does not topple a braced man, a blast still does. */

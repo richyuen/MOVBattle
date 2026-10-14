@@ -111,6 +111,8 @@ interface ShieldSlot {
   plane: number | null;
   /** Where on the ground his slot is in the wall's frame: across at his slot's place, in depth on his rank's line. The frame sits on the wall's own mean place, so it moves as one with the men under the shove. */
   at: Vector3;
+  /** Which of the two board layers his slot's board rides in: every other board along a rank stands a board's thickness forward, so the boards lap rim over rim square to the heading. */
+  layer: number;
 }
 
 /** A formed wall as the rank behind it sees it: its first slot across the line, how many slots, and how far forward it stands. */
@@ -760,7 +762,7 @@ export class SimulationSystem {
             wall.forEach((entry, k) => {
               const shift = first + k * this.shieldSlotSpacing - entry.side;
               const side = first + k * this.shieldSlotSpacing;
-              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line, at: new Vector3(line * fx - side * fz, 0, line * fz + side * fx) });
+              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line, at: new Vector3(line * fx - side * fz, 0, line * fz + side * fx), layer: k % 2 });
             });
             formed.push({ first, count: wall.length, depth: wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length });
           }
@@ -794,6 +796,7 @@ export class SimulationSystem {
                 hold: new Vector3(-fz * shift + fx * back, 0, fx * shift + fz * back),
                 plane: null,
                 at: new Vector3(depth * fx - (first + k * this.shieldSlotSpacing) * fz, 0, depth * fz + (first + k * this.shieldSlotSpacing) * fx),
+                layer: k % 2,
               });
             });
             formed.push({ first, count: group.length, depth });
@@ -807,7 +810,7 @@ export class SimulationSystem {
     // ...and his board on his rank's strip: the front rank's on the wall's plane, a rear rank's on its own line, each seated on his slot (see _holdShieldFrames).
     for (const [unit, slot] of this._shieldSlots) {
       const line = slot.plane ?? slot.at.x * Math.sin(slot.heading) + slot.at.z * Math.cos(slot.heading);
-      unit.holdSpearInWall(slot.heading, line, slot.at);
+      unit.holdSpearInWall(slot.heading, line, slot.at, slot.layer);
     }
   }
 
