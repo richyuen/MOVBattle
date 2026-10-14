@@ -231,3 +231,4 @@ iter 229 | [S] head-fitted-hats, [S] body-deep-ranks | 1/2 approved | passes 20 
 iter 230 | re-audit; [S] wall-queue, [S] levelled-thrust | 2/2 approved | passes 20 -> 20
 iter 231 | [S] second-rank-blow, [S] canopy-lift | 1/2 approved | passes 20 -> 21
 iter 232 | [S] rear-club-rest, [S] pressing-lean | 2/2 approved | passes 21 -> 21
+iter 233 | [R] hat-seat rebuild, [S] rear-strike-lands | 1/2 approved | passes 21 -> 21
