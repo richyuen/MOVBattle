@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 229   Last re-audit: 225   Consecutive rejects: 0   Branch: main
+Iteration: 230   Last re-audit: 230   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -8,37 +8,36 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Tier 2 (fully scored at 198, re-audited 220, 225):
+Tier 2 (fully scored at 198, re-audited 220, 225, 230):
 battle-feel: e FAIL f PASS g PASS h FAIL (2/4)
-- e FAIL (rewritten 225) [S since: 1, rejected since: 2] B: 1 press clubs mostly landed (226) but at the striker's hip or short in the air, not on a board top or head; no struck man visibly reacts (227 arm aim made the club stand up off the arm) — press_clubbers_side; 2 red clubs partly eased (226) but 2-3 still bolt upright behind the line, none descending onto the boards — big_melee_5s, 9s; 3 every hoplite spear a vertical picket, none levelled or thrust over the boards — shield_wall_side, _front, 2500ms, 2650ms; 4 swords upright before the chest or trailed at the hip, none mid-arc — closeup_weapon_reads. Ref trailer_3_sheet_01 r2c3, r3c1.
-- h FAIL (rewritten 225) [S since: 1, rejected since: 2] B: 1 blue boards show full faces to the side lens while red boards angle to the foe; red bodies side-on between red boards — shield_wall_side; 3 blue knights fold into the blue board row, blades and mitts crossing the boards — shield_wall_side; 4 boards bolt upright, men not pressing into a stride (arc eased 229) — shield_wall_front. (2 struck 229) Ref tabs_screenshot_06.
+- e FAIL (rewritten 230) [S since: 1, rejected since: 0] B: 1 blue clubs never land on a red board top or head (one slanted in air, one level at the chest, one low at the hip); no struck man reacts — press_clubbers_side; 2 red clubs cocked overhead in every frame, no stroke coming down onto the blue boards — big_melee_2s, 2150ms, 5s, 9s; 4 knight swords cocked behind the helm or level across the chest, no blade meets a body — closeup_weapon_reads. (3 struck 230) Ref trailer_3_sheet_01 r2c3, r3c1.
+- h FAIL (rewritten 230) [S since: 1, rejected since: 0] B: 1 blue boards full face to the side lens while red boards angle to the foe; red torsos side-on between red boards — shield_wall_side; 3 boards bolt upright on a straight line, no top-forward lean, men not in a pressing stride — shield_wall_front. (2 struck 230) Ref tabs_screenshot_06.
 unit-look: e PASS f PASS g PASS h FAIL (3/4)
-- h FAIL plateau [S since: 2, rejected since: 3] B: 3 beret and yellow cone ~1.5 heads wide, small on the head (ref ~2 heads, tabs_screenshot_05); a low seat must keep the brim above the eyes — lineup_medieval. (1 struck 218) Ref tabs_screenshot_04.
+- h FAIL plateau (rewritten 230; plateau until an [R] is judged) [S since: 2, rejected since: 3] B: 1 purple beret ~1.5 heads wide, perched on the crown instead of seated at the brow; 2 green and yellow archer cones ~1 head wide, no brim, sitting high — lineup_medieval. Ref tabs_screenshot_05, 06, 04.
 maps-light: e PASS f FAIL g PASS h PASS (3/4)
-- f FAIL [S since: 2, rejected since: 1] B: 2 ring canopies full-saturation, same strength as the field (ridges hazed 223) — big_melee_5s, spell_dome. (1 struck 215) Ref tabs_screenshot_05, 01.
+- f FAIL (rewritten 230) [S since: 0, rejected since: 0] B: 1 mid-distance ring canopies saturated red/orange, stronger than the lawn, no lift toward the sky — spell_dome (big_melee_5s now reads hazed). Ref tabs_screenshot_05, 01.
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Total tier 1 24/24; tier 2 20/24.
 
 ## Focus (every gap this iteration)
-BASE 9572e3d
-- [S] unit-look.h head-fitted-hats (8131f67) — REJECT, reverted: width ~2 heads read, but the fixed 0.12-head seat pulled the yellow cone's brim over the eyes; unit-look.h now plateau (3 rejected [S])
-- [S] battle-feel.h body-deep-ranks (27cc1e5) — APPROVE, blocker 2 struck
+BASE a2a564c (re-audit 230: no flips; e, h, unit-look.h, maps-light.f lists rewritten; unit-look.h stays plateau)
+- [S] battle-feel.h wall-queue (7b79381) — APPROVE, blocker 2 struck
+- [S] battle-feel.e levelled-thrust (1ef73cb) — APPROVE, blocker 3 struck (red rear rank levels over the boards; blue rear rank still vertical)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] head-fitted-hats (8131f67) VERDICT: REJECT CRITERION: unit-look.h FAIL (previous: FAIL)
-- GAP: [S] body-deep-ranks (27cc1e5) VERDICT: APPROVE CRITERION: battle-feel.h FAIL (previous: FAIL)
+- GAP: [S] wall-queue (7b79381) VERDICT: APPROVE CRITERION: battle-feel.h FAIL (previous: FAIL)
+- GAP: [S] levelled-thrust (1ef73cb) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.h wall-board-facing [0] — blocker 1: every slotted carrier's board squared to his wall's heading toward the foe (blue boards edge-on to a side lens like the red) — ref tabs_screenshot_06 — ours shield_wall_side
-2. [S] battle-feel.h press-stride [0] — blocker 4: braced press pose, board canted ~15 deg into the foe, shoulder behind it, rear leg driven back — ref tabs_screenshot_06 — ours shield_wall_front
-3. [S] battle-feel.h behind-own-wall [0] — blocker 3: non-carriers held a body behind their own board row — ref tabs_screenshot_06 — ours shield_wall_side
-4. [R] unit-look.h hat-fit [0] — plateau: soft hats fitted from head metrics, ~2 heads across, brim seated a margin above the eye top — ref tabs_screenshot_05 — ours lineup_medieval
-5. [S] battle-feel.e levelled-spear [0] — blocker 3: second-rank hoplite levels the spear overhand and thrusts over the front boards — ref trailer_3_sheet_01 r3c1 — ours shield_wall_side
-6. [S] battle-feel.e sword-arc [0] — blocker 4: sword swing with a mid-arc frame, blade across the body — ref trailer_3_sheet_01 r2c3 — ours closeup_weapon_reads
-7. [S] maps-light.f ring-canopy-haze [0] — blocker 2: ring canopies weaker than the field (new mechanism, not a haze knob) — ref tabs_screenshot_05 — ours big_melee_5s
-8. [S] battle-feel.e struck-reaction [2, spent] — blocker 1: needs the press crouch arm pose fixed first — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
+1. [S] battle-feel.e red-club-downstroke [0] — blocker 2: red clubbers in the press run the press-blow beat down onto the blue boards instead of holding the cock — ref trailer_3_sheet_01 r2c3 — ours big_melee_2s
+2. [S] battle-feel.h board-lap-face [0] — blocker 1: front-rank boards turned to the foe, edge over edge, torsos square behind — ref tabs_screenshot_06 — ours shield_wall_side
+3. [S] battle-feel.h pressing-lean [0] — blocker 3: front rank in contact tips board tops forward and takes a braced stride — ref tabs_screenshot_06 — ours shield_wall_front
+4. [S] battle-feel.e knight-blade-contact [0] — blocker 4: sword swing aimed to end on the target's body — ref trailer_3_sheet_01 r2c3 — ours closeup_weapon_reads
+5. [S] maps-light.f canopy-lift [0] — blocker 1: ring canopies desaturated and lifted toward the sky by distance (new mechanism) — ref tabs_screenshot_05 — ours spell_dome
+6. [R] unit-look.h hat-seat rebuild [0] — blockers 1-2: hat fitting from a spec (brow-seated, brims ~2 heads, eyes clear) — ref tabs_screenshot_04, 05, 06 — ours lineup_medieval
+7. [S] battle-feel.e committed-blow-landing [0] — blocker 1: club stroke target-locked to the board top or head (press crouch keeps the fist at knee height: fix that first) — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - head-fitted-hats [attempts: 1] — 229: 2-head width read; fixed brow seat covers the cone archer's eyes
@@ -51,7 +50,7 @@ BASE 9572e3d
 - committed-blow v2 [attempts: 2, [R]] — 222: crown-aimed arm and club over the descent + hold, no-topple window, spear drop: aim never caught in a frame (weight follows the ease, short hold)
 
 ## Notes for next iteration (max 5 lines)
-- 229 picks were [S] unit-look.h + [S] battle-feel.h. Skip [P]s on rows approved within 20 iterations. Arm angles: shoulder.x 0 = arm hanging, about -1.6 = level forward, -2.5 cocked overhead. 230 is a re-audit.
+- 230 picks were [S] battle-feel.h + [S] battle-feel.e; 231 must not repeat that pair. Skip [P]s on rows approved within 20 iterations. Arm angles: shoulder.x 0 = arm hanging, about -1.6 = level forward, -2.5 cocked overhead. Fallout for later: blue rear rank should level too; queued allies could press into the man ahead.
 - Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the shield arm aims at the board back (_gripBoard). The blue wall men are hoplites with round boards (no tower shields in the wall shots).
 - battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.
