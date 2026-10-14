@@ -208,8 +208,7 @@ const THIGH_OF_LEG = 0.2;
 const THIGH_HEAD = 1.15;
 /** The pelvis is never narrower than the pair of thighs under it, lapped into each other by what this leaves of one. */
 const THIGH_LAP = 0.9;
-/** A forearm and a shin are not straight tubes: each swells below its elbow or knee to a belly this many of its top widths across, this share of its length down, and narrows from there to the wrist or ankle. */
-const FOREARM_SWELL = 1.35;
+/** A shin is not a straight tube: it swells below the knee to a belly this many of its top widths across, this share of its length down, and narrows from there to the ankle. An arm has no such belly (see armTaper). */
 const CALF_SWELL = 1.4;
 const LIMB_BELLY_DROP = 0.3;
 /** A shin does not run down to a point: it keeps at least this share of its top width to where it goes into the boot. */
@@ -566,7 +565,11 @@ export function buildArticulatedBody(
   // two links. It stands on the straight line from the top of the limb to the belly of the forearm or shin, so the limb runs through its joint as one tube and narrows only from the belly down.
   const throughHinge = (top: number, upperH: number, belly: number, lowerH: number): number =>
     (top * lowerH * LIMB_BELLY_DROP + belly * upperH) / (upperH + lowerH * LIMB_BELLY_DROP);
-  const elbowWidth = throughHinge(upperArmTop, upperArmH, lowerArmTop * FOREARM_SWELL, lowerArmH);
+  // An arm is one taper. Spec, read off tabs_screenshot_04: the arm narrows continuously from the shoulder to a thin wrist, under half the sleeve's width, with no swell below the
+  // elbow and no step at it. So the elbow is not sized on its own: it is the point on the straight line from the sleeve's top to the wrist that lies at the upper arm's length,
+  // the upper arm runs from the sleeve's top to it and the forearm from it to the wrist, two straight-sided segments on one line.
+  const armTaper = (along: number): number => upperArmTop + (lowerArmBottom - upperArmTop) * along / (upperArmH + lowerArmH);
+  const elbowWidth = armTaper(upperArmH);
   const kneeWidth = throughHinge(upperLegTop, upperLegH, lowerLegTop * CALF_SWELL, lowerLegH);
   // The boot is cut from the shin end it wraps: wider and deeper than it, and longer than it is wide with the length out in front as the toe.
   const footWidth = lowerLegBottom * BOOT_OVER_SHIN * (p.footWidth ?? 1.0);
@@ -708,8 +711,6 @@ export function buildArticulatedBody(
     radialSegments,
     "top",
     bodyMat,
-    undefined,
-    lowerArmTop * FOREARM_SWELL,
   );
   leftLowerArm.position.y = -lowerArmH * s * 0.5;
   leftLowerArm.parent = leftElbow;
@@ -748,8 +749,6 @@ export function buildArticulatedBody(
     radialSegments,
     "top",
     bodyMat,
-    undefined,
-    lowerArmTop * FOREARM_SWELL,
   );
   rightLowerArm.position.y = -lowerArmH * s * 0.5;
   rightLowerArm.parent = rightElbow;
