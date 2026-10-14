@@ -86,7 +86,7 @@ vec4 bladeRoot=vec4(worldPos.xz+bladeSight,${BLADE_ROOT_Y.toFixed(3)},1.0).xzyw;
  * the point's distance out from the field's middle (BACKDROP_HAZE_NEAR to _FAR) and faded out close to the eye (BACKDROP_HAZE_EYE), so a tree the camera
  * stands by is not washed. Separate from the scene fog (main.ts HAZE_*), which is keyed to the fight and leaves the fog-free ridges alone.
  */
-const BACKDROP_HAZE_NEAR = 18;
+const BACKDROP_HAZE_NEAR = 26;
 const BACKDROP_HAZE_FAR = 80;
 const BACKDROP_HAZE_MAX = 0.55;
 const BACKDROP_HAZE_EYE = 30;
