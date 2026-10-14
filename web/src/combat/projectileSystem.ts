@@ -1,6 +1,7 @@
 import {
   Scene, Vector3, MeshBuilder, Color3, Mesh, TransformNode,
   PBRMetallicRoughnessMaterial, ParticleSystem, VertexBuffer, Ray,
+  StandardMaterial, DynamicTexture,
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { VisualEffects } from "./visualEffects";
@@ -29,7 +30,27 @@ interface ActiveProjectile {
   targetLift: number;
   trailSystem?: ParticleSystem;
   trailStarted?: boolean;
+  /** Cannonball only: seconds since the last smoke puff was left behind it. */
+  puffClock?: number;
 }
+
+/** A soft smoke puff left hanging in a cannonball's wake. */
+interface TrailPuff {
+  mesh: Mesh;
+  age: number;
+  life: number;
+  size: number;
+  rise: number;
+}
+
+// Cannonball wake (ref trailer_3_sheet_03 r1c2): not a line but a string of soft round smoke puffs, one every TRAIL_PUFF_EVERY seconds of flight, each a camera-facing
+// sprite with a feathered edge. It is born ball-sized (TRAIL_PUFF_BORN) and swells to TRAIL_PUFF_GROWN times that, rising slowly while it thins away over
+// TRAIL_PUFF_LIFE, so the wake is thick and white at the gun end of the arc only a moment after the ball, and tapers to nothing behind it.
+const TRAIL_PUFF_EVERY = 0.03;
+const TRAIL_PUFF_BORN = 0.55;
+const TRAIL_PUFF_GROWN = 2.6;
+const TRAIL_PUFF_LIFE = 1.6;
+const TRAIL_PUFF_CAP = 240;
 
 interface MuzzleFlash {
   mesh: Mesh;
@@ -65,6 +86,9 @@ export class ProjectileSystem {
   private _scene: Scene;
   private _active: ActiveProjectile[] = [];
   private _flashes: MuzzleFlash[] = [];
+  private _puffs: TrailPuff[] = [];
+  private _puffMat: StandardMaterial | null = null;
+  private _puffCount = 0;
   /** Spent arrows, bolts and spears left standing in the bodies they hit or in the ground, oldest first. */
   private _litter: { mesh: TransformNode; owner: RuntimeUnit | null }[] = [];
   private _matCache = new Map<string, PBRMetallicRoughnessMaterial>();
@@ -274,6 +298,14 @@ export class ProjectileSystem {
         }
       }
 
+      if (p.shape === "cannonball") {
+        p.puffClock = (p.puffClock ?? TRAIL_PUFF_EVERY) + dt;
+        while (p.puffClock >= TRAIL_PUFF_EVERY) {
+          p.puffClock -= TRAIL_PUFF_EVERY;
+          this._leavePuff(p.mesh.position);
+        }
+      }
+
       // Shuriken spin
       if (p.shape === "shuriken") {
         p.mesh.rotation.z += dt * 25;
@@ -326,6 +358,21 @@ export class ProjectileSystem {
         mesh.dispose();
         this._litter.splice(i, 1);
       }
+    }
+
+    for (let i = this._puffs.length - 1; i >= 0; i--) {
+      const q = this._puffs[i];
+      q.age += dt;
+      const u = q.age / q.life;
+      if (u >= 1) {
+        q.mesh.dispose();
+        this._puffs.splice(i, 1);
+        continue;
+      }
+      // Swells fast then slowly; full for the first fifth, then thins out
+      q.mesh.scaling.setAll(q.size * (1 + (TRAIL_PUFF_GROWN - 1) * (1 - (1 - u) * (1 - u))));
+      q.mesh.position.y += q.rise * dt;
+      q.mesh.visibility = u < 0.2 ? 0.85 : 0.85 * (1 - (u - 0.2) / 0.8) * (1 - (u - 0.2) / 0.8);
     }
 
     // Update flashes
@@ -723,6 +770,44 @@ export class ProjectileSystem {
     return m;
   }
 
+  /** One soft wake puff at a ball's position: a feathered white disc that always faces the camera. Shared texture and material; each puff fades by its own visibility. */
+  private _leavePuff(at: Vector3): void {
+    if (!this._puffMat) {
+      const tex = new DynamicTexture("trailPuffTex", { width: 64, height: 64 }, this._scene, false);
+      const ctx = tex.getContext() as unknown as CanvasRenderingContext2D;
+      const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, "rgba(255,255,255,1)");
+      g.addColorStop(0.45, "rgba(255,255,255,0.85)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.clearRect(0, 0, 64, 64);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      tex.hasAlpha = true;
+      tex.update();
+      const m = new StandardMaterial("trailPuffMat", this._scene);
+      m.diffuseTexture = tex;
+      m.useAlphaFromDiffuseTexture = true;
+      m.disableLighting = true;
+      m.emissiveColor = new Color3(0.9, 0.9, 0.88);
+      m.backFaceCulling = false;
+      m.disableDepthWrite = true;
+      this._puffMat = m;
+    }
+    // Hashed, not drawn from Math.random, so the wake does not shift the battle's random stream
+    const n = this._puffCount++;
+    const h = (k: number): number => { const v = Math.sin(n * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
+    const puff = MeshBuilder.CreatePlane("trailPuff", { size: 1 }, this._scene);
+    puff.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    puff.material = this._puffMat;
+    puff.isPickable = false;
+    puff.position.set(at.x + (h(1) - 0.5) * 0.12, at.y + (h(2) - 0.5) * 0.12, at.z + (h(3) - 0.5) * 0.12);
+    const size = TRAIL_PUFF_BORN * (0.8 + h(4) * 0.4);
+    puff.scaling.setAll(size);
+    this._scene.getGlowLayerByName("glow")?.addExcludedMesh(puff);
+    this._puffs.push({ mesh: puff, age: 0, life: TRAIL_PUFF_LIFE * (0.8 + h(5) * 0.4), size, rise: 0.15 + h(6) * 0.2 });
+    if (this._puffs.length > TRAIL_PUFF_CAP) this._puffs.shift()!.mesh.dispose();
+  }
+
   dispose(): void {
     for (const p of this._active) {
       if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
@@ -730,6 +815,8 @@ export class ProjectileSystem {
     }
     for (const f of this._flashes) f.mesh.dispose();
     for (const l of this._litter) l.mesh.dispose();
+    for (const q of this._puffs) q.mesh.dispose();
+    this._puffs.length = 0;
     this._litter.length = 0;
     this._active.length = 0;
     this._flashes.length = 0;
