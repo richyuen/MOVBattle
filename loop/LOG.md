@@ -211,3 +211,4 @@ iter 209 | [S] wall-side-band (+[S] club-overhead-strike dropped) | 0/1 approved
 iter 210 | re-audit; [R] wall-as-body (+[S] strike-survives-shove dropped) | 1/1 approved | passes 12 -> 12
 iter 211 | [S] board-grip (+[S] press-club-lands dropped) | 1/1 approved | passes 12 -> 12
 iter 212 | [S] lapped-band-at-contact, [S] press-club-lands both dropped uncommitted | 0/0 reviewed | passes 12 -> 12
+iter 213 | [S] board-axis-from-heading, [S] landing-hold | 1/2 approved | passes 12 -> 13
