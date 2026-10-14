@@ -98,6 +98,8 @@ const SHIELD_BOARD_STANDOFF = 0.46;
 // The shield wall as one body (see the spec at SimulationSystem._holdShieldFrames): the most a step puts a carrier back toward his slot. At 60 steps a second
 // that is 9 m/s, more than any shove or march moves a man in a step, so on his feet he is on his slot.
 const SHIELD_SLOT_SNAP = 0.15;
+// Rear-rank men are kept at least this share of a clear body gap behind the man ahead (see _keepRanksDeep).
+const RANK_DEPTH_SHARE = 0.95;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -837,6 +839,34 @@ export class SimulationSystem {
       const reach = error.length();
       if (reach < 1e-3) continue;
       unit.applyCollisionSeparation(error.scaleInPlace(Math.min(reach, SHIELD_SLOT_SNAP) / reach));
+    }
+    this._keepRanksDeep();
+  }
+
+  /**
+   * Ranks a body deep (tabs_screenshot_06: the rear rank stands a full body behind the front, every helmet its own): after the slot snap, a rear-rank man who
+   * has come within a body of a man of his own side ahead of him in the wall is put back along the wall's heading by the shortfall. Depth only: the front rank and
+   * the lateral pitch (the board lap) are not touched, so this does not fight the snap across.
+   */
+  private _keepRanksDeep(): void {
+    const front: RuntimeUnit[] = [];
+    for (const [unit, slot] of this._shieldSlots) if (slot.hold === null && unit.wallBraced) front.push(unit);
+    for (const [unit, slot] of this._shieldSlots) {
+      if (slot.hold === null || !unit.wallBraced) continue;
+      const fx = Math.sin(slot.heading), fz = Math.cos(slot.heading);
+      let back = 0;
+      for (const ahead of front) {
+        if (ahead.team !== unit.team) continue;
+        const dx = ahead.position.x - unit.position.x, dz = ahead.position.z - unit.position.z;
+        const along = dx * fx + dz * fz;
+        const across = Math.abs(dz * fx - dx * fz);
+        const body = unit.collisionBodyRadius + ahead.collisionBodyRadius;
+        if (along < -0.05 || across >= body) continue;
+        // How far in depth he must stand behind this man for the two bodies to be clear at this lateral offset
+        const need = Math.sqrt(Math.max(0, body * body - across * across)) * RANK_DEPTH_SHARE;
+        back = Math.max(back, need - along);
+      }
+      if (back > 1e-3) unit.applyCollisionSeparation(new Vector3(-fx * back, 0, -fz * back));
     }
   }
 
