@@ -1,5 +1,6 @@
 // Evidence capture for the TABS-fidelity improvement loop.
 //   node loop/scripts/capture.mjs --iter N [--showcase-only] [--regression-only] [--port 4181]
+//   node loop/scripts/capture.mjs --only shot[,shot]   quick look: only those showcase shots, to output/loop/look/
 // Builds web/, serves it with vite preview, drives the game headlessly with time advanced ONLY
 // through window.advanceTime (requestAnimationFrame is stubbed so the real-time render loop never
 // runs), runs the regression scenario set, captures showcase screenshots, and writes
@@ -25,9 +26,10 @@ const opt = (name, fallback) => {
 };
 const iter = Number(opt("--iter", "0"));
 const port = Number(opt("--port", "4181"));
-const doRegression = !flag("--showcase-only");
+const only = opt("--only", "").split(",").map((n) => n.trim()).filter(Boolean);
+const doRegression = !flag("--showcase-only") && only.length === 0;
 const doShowcase = !flag("--regression-only");
-const outDir = path.join(root, "output", "loop", `iter-${iter}`);
+const outDir = only.length > 0 ? path.join(root, "output", "loop", "look") : path.join(root, "output", "loop", `iter-${iter}`);
 const baseUrl = `http://127.0.0.1:${port}/MOVBattle/`;
 const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const KEEP_ITERS = 10;
@@ -104,7 +106,7 @@ for (let i = 0; i < 6; i++) {
 
 // Keep only summary.json for iterations older than KEEP_ITERS: the PNGs run to ~10 MB a turn.
 function pruneOld() {
-  if (iter <= 0) return;
+  if (iter <= 0 || only.length > 0) return;
   const parent = path.dirname(outDir);
   if (!fs.existsSync(parent)) return;
   let pruned = 0;
@@ -182,14 +184,18 @@ const summary = {
 const full = { scenarios: [] };
 
 async function shot(page, name) {
+  if (only.length > 0 && !only.includes(name)) return;
   const file = path.join(outDir, `${name}.png`);
   // A cold frame draws props and shadows but no bodies: redraw until every shader is compiled.
   // No sim time passes.
-  const ready = await page.evaluate(() => Promise.race([
-    window.game.renderWhenReady().then(() => true),
-    new Promise((r) => setTimeout(() => r(false), 30_000)),
+  const state = await page.evaluate(() => Promise.race([
+    window.game.renderWhenReady(),
+    new Promise((r) => setTimeout(() => r({ ready: false, renders: -1, unready: ["timed out"] }), 30_000)),
   ]));
-  if (!ready) summary.notes.push(`${name}: scene not ready after 30 s, shot may miss meshes`);
+  if (!state || !state.ready) {
+    const what = state ? state.unready.join(", ") : "no state";
+    summary.notes.push(`${name}: scene not ready after ${state ? state.renders : "?"} renders, shot may miss: ${what}`);
+  }
   await page.screenshot({ path: file });
   summary.screenshots.push(`${name}.png`);
   log(`shot ${name}.png`);

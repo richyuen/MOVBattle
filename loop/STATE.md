@@ -9,7 +9,8 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Total 23/24 (195 re-audit: no verdict changed)
+Tier 2 (e-h, see CRITIC.md): unscored for every dimension — 196 must re-audit and write blockers for each FAIL; a dimension's tier 2 is pickable only once its a-d all pass (battle-feel: not yet).
+Total tier 1 23/24 (195 re-audit: no verdict changed); tier 2 0/24 unscored.
 
 ## Focus (every gap this iteration)
 BASE bda7c10
@@ -38,8 +39,7 @@ No [P] ranked. Critic notes: the front man's stroke now ends above the enemy's h
 - heart-lobe-dome [attempts: 1, lobe size spent] — LOBES[0] 0.75: not visible in any still
 
 ## Notes for next iteration (max 5 lines)
-- The user stopped the loop after 195; restart only when asked. Only battle-feel.c fails, so one [S] per iteration. Commit per gap with `git commit <paths> -F <msgfile>`; write messages and patch scripts with the Write tool; run the full capture in the background (over 10 minutes).
-- Scratch check before committing: `scratchpad/look.mjs gallery_shield_wall_side` renders the flank view to a PNG outside output/loop; judge it against the named blocker point by point (where each shaft runs and ends), not at a glance.
+- After 195: particle VFX (trails, smoke, fire, dust, ambient magic) were absent from every capture since the first reset (a shared texture was disposed; fixed) and the capture spent 5 of 9 minutes waiting on it; it is about 4 minutes again, run it in the foreground. Tier-2 criteria exist: 196 re-audits them. Self-check with `capture.mjs --only <shot>` before committing (ITERATE step 4), judged against the blocker point by point, not at a glance. Commit per gap with `git commit <paths> -F <msgfile>`.
 - Spear: `_carrySpear` raises front and rear alike to `br.spearUp` (1.05-1.4 above level, hashed per man) along `root.rotation.y`; rear strike falls to SPEAR_REAR_STRIKE inside the lunge; front men are couched at the waist (SPEAR_COUCH_*) with the grip near the butt (SPEAR_FRONT_GRIP_*, `toGrip`); stroke `run` = `_thrustStroke` x SPEAR_LUNGE along the shaft. Slots and the wall heading live in the sim (`_shieldSlots`, `slot.heading`).
 - Brace: trunk pitch `br.pitch` set under the shove, head by `headLevel` + `tuck`, board follows (`_squareShield`). Bow: `_bowUp` keeps the stave upright via `_carryProp` `shooting`. Neck: one skin solid (NECK_*), trapezius ends on its foot.
 - Shadows pass, leave them. Never raise idle lean or the free-foot 0.08; no walk torso yaw. No [P] on SHOULDER_INSET, TRAPEZIUS_*, NECK_*, hull, pelvis, arm taper, ghost, bow ready, SPEAR_REAR_UP_*, laurel, sunk crouch, CALF_SWELL, helm crown, lawn shade, carry bob.
