@@ -35,6 +35,8 @@ export interface OriginInfo {
 
 /** The rendering group a flung body is drawn in: after the scene's see-through effects, sharing their depth (main.ts keeps its depth uncleared). */
 export const FLUNG_RENDER_GROUP = 1;
+/** How far a man a press blow lands on is put back from the striker (a half step: he reels from it). */
+const BLOW_STAGGER_STEP = 0.25;
 
 export class RuntimeUnit {
   private static _nextRuntimeId = 1;
@@ -748,9 +750,21 @@ export class RuntimeUnit {
       this._drawnFlung = flung;
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
+    // The press blow is aimed at the top of its target's head (proceduralAnimation _aimBlow)
+    const foe = this._blowTarget;
+    if (foe && !foe.isDead && Vector3.Distance(foe.position, this.position) < 3) {
+      foe.body.headTop.computeWorldMatrix(true);
+      this.animator.setStrikePoint(foe.body.headTop.getAbsolutePosition());
+    } else {
+      this.animator.setStrikePoint(null);
+    }
     this.animator.update(dt);
-    if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3) {
-      this._blowTarget.animator.triggerFlinch();
+    if (this.animator.takeBlowsLanded() > 0 && foe && !foe.isDead && Vector3.Distance(foe.position, this.position) < 3) {
+      // He reels from it: a deep flinch and half a step back from the striker
+      foe.animator.triggerFlinch(true);
+      const away = foe.position.subtract(this.position);
+      away.y = 0;
+      if (away.lengthSquared() > 1e-4) foe.applyCollisionSeparation(away.normalize().scaleInPlace(BLOW_STAGGER_STEP));
     }
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);

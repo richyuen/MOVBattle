@@ -103,6 +103,9 @@ const PRESS_BLOW_REST = 0.38;
 const PRESS_BLOW_HEAVE = 0.14;
 const PRESS_BLOW_COCK = 0.1;
 const PRESS_BLOW_SLAM = 0.08;
+// A man a club lands on reels: his flinch lasts this long and goes this much deeper than a hit's, and he is put this far back from the blow (RuntimeUnit).
+const FLINCH_STAGGER_TIME = 0.75;
+const FLINCH_STAGGER_DEPTH = 1.5;
 // How far the arm comes down from the cock onto the man: the fist stops raised before the striker's face, so the club laid down from it lands on the board top or
 // the head in front, not level into the board at the belly.
 const PRESS_BLOW_ARM = 1.7;
@@ -152,11 +155,49 @@ export class ProceduralAnimator {
     this._attackMotion = motion ?? this.defaultAttackMotion;
   }
 
-  /** Brief flinch on hit — snaps torso/head back then recovers. */
-  triggerFlinch(): void {
+  /** Brief flinch on hit — snaps torso/head back then recovers. A stagger (a club landed on him) is longer and deeper: he reels back from the blow. */
+  triggerFlinch(stagger = false): void {
     if (this._state === AnimState.Dead) return;
-    this._flinchTimer = 0.35;
+    this._flinchSpan = stagger ? FLINCH_STAGGER_TIME : 0.35;
+    this._flinchDepth = stagger ? FLINCH_STAGGER_DEPTH : 1;
+    this._flinchTimer = this._flinchSpan;
     this._squashTimer = 0.15;
+  }
+  private _flinchSpan = 0.35;
+  private _flinchDepth = 1;
+
+  /** The point a clubber's press blow lands on (the top of his target's head, from the unit each frame); null when he has none. */
+  setStrikePoint(point: Vector3 | null): void {
+    if (point) (this._strikePoint ??= new Vector3()).copyFrom(point);
+    else this._strikePoint = null;
+  }
+  private _strikePoint: Vector3 | null = null;
+
+  /**
+   * The landed press blow, aimed (trailer_3_sheet_01 r2c3: the club comes down on the man in front): by `weight` (how far down the blow is), the weapon arm is
+   * turned to point from the shoulder at the strike point with the elbow straight, and the club's arc laid along the same line, so the club ends on his head
+   * or the board top in front of it, at his height and distance, not at the striker's hip or short in the air.
+   */
+  private _aimBlow(weight: number): void {
+    const point = this._strikePoint;
+    if (!point || weight <= 0.001) return;
+    const b = this._body;
+    const shoulder = b.rightShoulder;
+    const parent = shoulder.parent as TransformNode | null;
+    if (!parent) return;
+    parent.computeWorldMatrix(true);
+    shoulder.computeWorldMatrix(true);
+    const world = point.subtract(shoulder.getAbsolutePosition());
+    if (world.lengthSquared() < 1e-6) return;
+    const local = Vector3.TransformNormal(world, Matrix.Invert(parent.getWorldMatrix())).normalize();
+    const aim = Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), local, new Quaternion()).toEulerAngles();
+    shoulder.rotation.x += (aim.x - shoulder.rotation.x) * weight;
+    shoulder.rotation.y += (aim.y - shoulder.rotation.y) * weight;
+    shoulder.rotation.z += (aim.z - shoulder.rotation.z) * weight;
+    b.rightElbow.rotation.scaleInPlace(1 - weight);
+    const yaw = b.root.rotation.y;
+    const ahead = world.x * Math.sin(yaw) + world.z * Math.cos(yaw);
+    this._clubArc += (Math.atan2(ahead, world.y) - this._clubArc) * weight;
   }
 
   /** Toppled/downed living bodies go limp: 1 crumples the joints, 0 returns to the animated pose. */
@@ -554,7 +595,7 @@ export class ProceduralAnimator {
     // Flinch overlay (additive on top of current pose)
     if (this._flinchTimer > 0) {
       this._flinchTimer -= dt;
-      const intensity = Math.max(0, this._flinchTimer / 0.35);
+      const intensity = Math.max(0, this._flinchTimer / this._flinchSpan) * this._flinchDepth;
       const b = this._body;
       // Snap torso backward and to the side
       b.torso.rotation.x -= 0.55 * intensity;
@@ -617,6 +658,7 @@ export class ProceduralAnimator {
         b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
         b.leftElbow.rotation.x -= (1.0 + Math.sin(phase) * 0.6) * k;
         this._clubArc = CLUB_COCK * 0.9 + heave + (PRESS_BLOW_CLUB - CLUB_COCK * 0.9 - heave) * blow;
+        this._aimBlow(blow * k);
         this._clubHold = Math.max(this._clubHold, k);
       } else if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
@@ -721,6 +763,7 @@ export class ProceduralAnimator {
       b.rightElbow.rotation.x += (-1.3 + 1.15 * blow - b.rightElbow.rotation.x) * cocked;
       b.torso.rotation.x += 0.45 * blow * cocked;
       this._clubArc = this._clubHold > 0.01 ? this._clubArc : CLUB_COCK * 0.9 + heave + (PRESS_BLOW_CLUB - CLUB_COCK * 0.9 - heave) * blow;
+      this._aimBlow(blow * cocked);
       this._clubHold = Math.max(this._clubHold, cocked);
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
