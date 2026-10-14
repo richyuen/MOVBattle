@@ -708,7 +708,7 @@ export class ProceduralAnimator {
         }
       }
     }
-    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink;
+    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink;
     // Upright in the wall (tabs_screenshot_06: every man stands upright behind his board, face over the rim): whatever the brace, the press and the stride made of him,
     // a man held in a wall carries his trunk no further over than WALL_TRUNK_MAX, his neck brings his face back up level over the rim, and his knees stay under
     // his hips with no splay out to the side. The shove is in his stride and his shoulder, not a fold at the waist.
