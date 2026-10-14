@@ -1227,7 +1227,7 @@ const GIANT_LEAN = 0.4;
 let landingHold: { x: number; z: number; until: number } | null = null;
 const LANDING_HOLD_SECONDS = 1.6;
 
-function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; tall: number; near?: { x: number; z: number; halfWidth: number }; landing?: { x: number; z: number } } {
+function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; tall: number; near?: { x: number; z: number; halfWidth: number }; landing?: { x: number; z: number }; launched?: number } {
   const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
@@ -1283,7 +1283,7 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: 
   }
   if (flung > 0) landingHold = { x: flungX / flung, z: flungZ / flung, until: worldTimeSeconds + LANDING_HOLD_SECONDS };
   const landing = landingHold && worldTimeSeconds < landingHold.until ? { x: landingHold.x, z: landingHold.z } : undefined;
-  return { x: focusX, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, tall, near, landing };
+  return { x: focusX, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, tall, near, landing, launched: flung };
 }
 
 function resetBattle(options: {

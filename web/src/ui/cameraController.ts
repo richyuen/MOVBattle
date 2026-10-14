@@ -29,6 +29,13 @@ const FOLLOW_SLACK = 0.6;
 const FOLLOW_SPEED = 2.5;
 // How fast the view goes to where flung bodies are landing (see followBattle): a throw lands in about a second
 const LANDING_FOLLOW_SPEED = 6;
+// Spectator low (see followBattle): bodies in the air at once that call for it, the eye's height off the grass, its pitch above level, how long it holds after
+// the launch and how fast it eases in and out.
+const LOW_LAUNCH = 3;
+const LOW_EYE = 0.45;
+const LOW_PITCH = 0.3;
+const LOW_HOLD = 1.2;
+const LOW_EASE = 4;
 const FOLLOW_DROP = 0.9;
 const FOLLOW_DROP_SPEED = 0.8;
 
@@ -436,21 +443,25 @@ export class CameraController {
 
   // ─── Battle follow ───
   /** The fight walks off from where the lines first met: slide the melee view sideways after its middle, a man's width of slack and FOLLOW_SPEED a second at most, for as long as the player leaves the camera where the swoop put it. */
-  followBattle(focus: { x: number; z: number; landing?: { x: number; z: number } }, dt: number): void {
+  followBattle(focus: { x: number; z: number; landing?: { x: number; z: number }; launched?: number }, dt: number): void {
     // While flung bodies are coming down the view goes to where they land, the standoff view too, faster than it follows the lines
     const aim = this._battleAim ?? (focus.landing ? this._standoffAim : null);
     if (!aim || this._transition) return;
     const cam = this.camera;
     const moved =
       Math.abs(cam.alpha - aim.alpha) > 0.001 ||
-      Math.abs(cam.beta - aim.beta) > 0.001 ||
+      Math.abs(cam.beta - this._lowBeta - aim.beta) > 0.001 ||
       Math.abs(cam.radius - aim.radius) > 0.01 ||
       Math.abs(cam.target.x - this._shakeOffset.x - aim.target.x) > 0.01 ||
-      Math.abs(cam.target.y - this._shakeOffset.y - aim.target.y) > 0.01 ||
+      Math.abs(cam.target.y - this._shakeOffset.y - this._lowRise - aim.target.y) > 0.01 ||
       Math.abs(cam.target.z - this._shakeOffset.z - aim.target.z) > 0.01;
     if (moved) {
       this._battleAim = null;
       this._standoffAim = null;
+      this._lowBeta = 0;
+      this._lowRise = 0;
+      this._lowHold = 0;
+      this._lowBlend = 0;
       return;
     }
     // After the swoop the view sinks FOLLOW_DROP, its pitch unchanged: the horizon stays where it was and the feet of the nearest rank come up into the frame.
@@ -460,6 +471,21 @@ export class CameraController {
       aim.target.y -= drop;
       cam.target.y -= drop;
     }
+    // Spectator low (trailer_3_sheet_03 r1c2, trailer_3_sheet_01 r1c2): when a blast throws LOW_LAUNCH or more bodies at once the lens drops to LOW_EYE above
+    // the grass and pitches LOW_PITCH up, so the launch is seen from underneath against the sky; it holds there LOW_HOLD after the last body is in the air and
+    // eases back. Kept as an offset over the aim, so following and the viewer's own moves work as before.
+    if ((focus.launched ?? 0) >= LOW_LAUNCH) this._lowHold = LOW_HOLD;
+    this._lowHold = Math.max(0, this._lowHold - dt);
+    this._lowBlend += ((this._lowHold > 0 ? 1 : 0) - this._lowBlend) * Math.min(1, dt * LOW_EASE);
+    const lowBeta = Math.PI / 2 + LOW_PITCH;
+    const beta = (lowBeta - aim.beta) * this._lowBlend;
+    const rise = (LOW_EYE - aim.radius * Math.cos(lowBeta) - aim.target.y) * this._lowBlend;
+    if (this._lowBlend > 0.001) this.camera.upperBetaLimit = Math.max(this.camera.upperBetaLimit ?? lowBeta, lowBeta);
+    cam.beta += beta - this._lowBeta;
+    cam.target.y += rise - this._lowRise;
+    this._lowBeta = beta;
+    this._lowRise = rise;
+
     const goal = focus.landing ?? focus;
     const dx = goal.x - aim.target.x;
     const dz = goal.z - aim.target.z;
@@ -509,6 +535,12 @@ export class CameraController {
     );
     if (u >= 1) this._transition = null;
   }
+
+  // Spectator low (see followBattle): seconds left to hold it, how far in it is (0 to 1), and the pitch and lift it has put on the camera over the aim
+  private _lowHold = 0;
+  private _lowBlend = 0;
+  private _lowBeta = 0;
+  private _lowRise = 0;
 
   // The victory shot's slow orbit once its swoop has settled, radians a second (signed); 0 when there is none
   private _resultDrift = 0;
