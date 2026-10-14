@@ -1,6 +1,6 @@
 import {
   Scene, Vector3, Quaternion, Mesh, MeshBuilder, Color3, TransformNode,
-  PBRMetallicRoughnessMaterial, ParticleSystem,
+  PBRMetallicRoughnessMaterial, ParticleSystem, StandardMaterial, DynamicTexture,
 } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
 import { createSmoke, createSparks, createFire, createDust } from "./particleFactory";
@@ -22,6 +22,10 @@ const GEAR_TOSS_MIN = 0.6;
 const GEAR_TOSS_MAX = 1.1;
 const GEAR_BOARD_LEAN = 0.35;
 const GEAR_BLADE_RAISE = 0.28;
+// The soft fire round a blast (see VisualEffects._spawnFireEnvelope): the fire sprites' life in seconds (smoke lives 2.2 times as long), and how many of each.
+const ENVELOPE_LIFE = 0.8;
+const ENVELOPE_FIRE = 9;
+const ENVELOPE_SMOKE = 6;
 const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
@@ -213,6 +217,87 @@ export class VisualEffects {
       },
     });
   }
+
+  // ══════════════════ FIRE ENVELOPE ══════════════════
+  /**
+   * The soft fire round a blast (trailer_3_sheet_03 r1c2): the solid lobes are the heart, and round them a glowing mass of feathered camera-facing sprites,
+   * orange at the core and rising, swelling and thinning away over ENVELOPE_LIFE, with grey smoke sprites that rise out of it slower and outlast it, so the
+   * burst has a soft edge and drifts instead of being a cluster of hard balls.
+   */
+  private _spawnFireEnvelope(position: Vector3, scale: number): void {
+    const root = new TransformNode("fireEnvelope", this._scene);
+    const sprites: { mesh: Mesh; mat: StandardMaterial; born: number; grown: number; rise: Vector3; life: number; peak: number }[] = [];
+    const add = (fire: boolean, i: number, count: number): void => {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.8;
+      const out = (fire ? 0.5 : 0.3) * scale * (0.6 + Math.random() * 0.6);
+      const mesh = MeshBuilder.CreatePlane(fire ? "envelopeFire" : "envelopeSmoke", { size: 1 }, this._scene);
+      mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+      mesh.isPickable = false;
+      mesh.parent = root;
+      mesh.position.set(position.x + Math.cos(angle) * out, position.y + (fire ? 0.5 : 0.9) * scale + Math.random() * 0.5 * scale, position.z + Math.sin(angle) * out);
+      const mat = this._envelopeMat(fire ? new Color3(1, 0.5 + Math.random() * 0.2, 0.12) : new Color3(0.42, 0.4, 0.38));
+      mesh.material = mat;
+      this._scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+      const born = (fire ? 1.3 : 1.0) * scale * (0.8 + Math.random() * 0.5);
+      sprites.push({
+        mesh, mat, born, grown: born * (fire ? 1.8 : 2.6),
+        rise: new Vector3(Math.cos(angle) * 0.4, fire ? 1.1 : 0.7, Math.sin(angle) * 0.4).scale(scale),
+        life: (fire ? ENVELOPE_LIFE : ENVELOPE_LIFE * 2.2) * (0.8 + Math.random() * 0.4),
+        peak: fire ? 0.85 : 0.55,
+      });
+    };
+    for (let i = 0; i < ENVELOPE_FIRE; i++) add(true, i, ENVELOPE_FIRE);
+    for (let i = 0; i < ENVELOPE_SMOKE; i++) add(false, i, ENVELOPE_SMOKE);
+    let age = 0;
+    const life = ENVELOPE_LIFE * 2.6;
+    this._effects.push({
+      root,
+      remaining: life,
+      update: (dt) => {
+        age += dt;
+        for (const sp of sprites) {
+          const u = Math.min(1, age / sp.life);
+          sp.mesh.scaling.setAll(sp.born + (sp.grown - sp.born) * (1 - (1 - u) * (1 - u)));
+          sp.mesh.position.addInPlace(sp.rise.scale(dt * (1 - u)));
+          // In fast at full strength, then thinning away over the rest of its life
+          sp.mat.alpha = sp.peak * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85);
+        }
+      },
+      dispose: () => {
+        for (const sp of sprites) {
+          this._scene.getGlowLayerByName("glow")?.removeExcludedMesh(sp.mesh);
+          sp.mat.dispose();
+        }
+      },
+    });
+  }
+
+  /** A feathered sprite material in one colour: the shared soft disc texture, unlit, no depth write, faded by its own alpha. */
+  private _envelopeMat(color: Color3): StandardMaterial {
+    if (!this._softDisc) {
+      const tex = new DynamicTexture("softDiscTex", { width: 64, height: 64 }, this._scene, false);
+      const ctx = tex.getContext() as unknown as CanvasRenderingContext2D;
+      const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, "rgba(255,255,255,1)");
+      g.addColorStop(0.5, "rgba(255,255,255,0.7)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.clearRect(0, 0, 64, 64);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      tex.hasAlpha = true;
+      tex.update();
+      this._softDisc = tex;
+    }
+    const m = new StandardMaterial("envelopeMat", this._scene);
+    m.diffuseTexture = this._softDisc;
+    m.useAlphaFromDiffuseTexture = true;
+    m.disableLighting = true;
+    m.emissiveColor = color;
+    m.backFaceCulling = false;
+    m.disableDepthWrite = true;
+    return m;
+  }
+  private _softDisc: DynamicTexture | null = null;
 
   // ══════════════════ SPELL DOME ══════════════════
   /**
@@ -484,6 +569,7 @@ export class VisualEffects {
   // ══════════════════ EXPLOSION BURST ══════════════════
   /** A lumpy two-tone fireball, fat yellow lobes each inside an orange shell with a few orange flecks thrown clear, that burns out piece by piece, a head-sized white smoke puff, the dark ball, a low bank of tan dust puffs billowing out along the ground wider than the fire and a spray of clods that outlasts the smoke. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
+    this._spawnFireEnvelope(position, scale);
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
     root.position.y += 0.6 * scale;
