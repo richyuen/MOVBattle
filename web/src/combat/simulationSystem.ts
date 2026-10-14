@@ -551,7 +551,7 @@ export class SimulationSystem {
     }
     unit.setSpinning(false);
     const spearSlot = this._shieldSlots.get(unit);
-    if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
+    if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null, spearSlot.heading);
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to

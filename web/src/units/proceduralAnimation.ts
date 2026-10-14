@@ -1,4 +1,4 @@
-import { Quaternion, Vector3, type Mesh, type TransformNode } from "@babylonjs/core";
+import { Matrix, Quaternion, Vector3, type Mesh, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 
 export enum AnimState {
@@ -65,8 +65,8 @@ const BRACE_PITCH_MIN = 0.14;
 const BRACE_PITCH_MAX = 0.56;
 const SPEAR_LUNGE = 0.45;
 const SPEAR_DRAW = -0.4;
-const SPEAR_REAR_UP_MIN = 1.05;
-const SPEAR_REAR_UP_MAX = 1.4;
+const SPEAR_REAR_UP_MIN = 1.25;
+const SPEAR_REAR_UP_MAX = 1.38;
 const SPEAR_REAR_STRIKE = 0.3;
 const SPEAR_FRONT_GRIP_MIN = 0.2;
 const SPEAR_FRONT_GRIP_MAX = 0.28;
@@ -163,13 +163,17 @@ export class ProceduralAnimator {
   private _shoveTimer = 0;
 
   /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear comes to its fighting hold (see _carrySpear), a front man's pointed down at that man, a rear man's raised over the rank ahead, until the calls stop. */
-  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false): void {
+  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false, wallHeading: number | null = null): void {
     this._spearAim.copyFrom(enemyGround);
     this._spearAimRadius = enemyRadius;
     this._spearRear = rearRank;
     this._spearAimTimer = 0.6;
+    if (wallHeading !== null) this._spearHeading = wallHeading;
   }
   private _spearAim = new Vector3();
+  // The heading of the wall he stands in, shared by every man in it: his raised shaft keeps it whichever way his body is turned (see _carrySpear).
+  private _spearHeading: number | null = null;
+  private _spearDir = new Vector3();
   private _spearAimRadius = 0.3;
   // Whether he stands in a rear rank, and how far his hold has gone over from the front man's to the rear man's (0 to 1).
   private _spearRear = false;
@@ -873,8 +877,17 @@ export class ProceduralAnimator {
     const strike = Math.max(0, this._spearThrust);
     const rearUp = br.spearUp + (SPEAR_REAR_STRIKE - br.spearUp) * strike;
     const up = br.spearUp + (rearUp - br.spearUp) * this._spearRearHold;
-    const carry = Quaternion.RotationYawPitchRoll(root.rotation.y, 0.06 + (Math.PI / 2 - up - 0.06) * level, 0);
-    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
+    // His yaw: the wall's heading, not his body's, so every raised shaft in the wall stands in one plane with its neighbours' and none crosses another, and with no roll.
+    // On the march (level 0) it is upright and the yaw does not show.
+    const ownYaw = root.rotation.y;
+    const wallOff = this._spearHeading === null ? 0 : Math.atan2(Math.sin(this._spearHeading - ownYaw), Math.cos(this._spearHeading - ownYaw));
+    const carry = Quaternion.RotationYawPitchRoll(ownYaw + wallOff * level, 0.06 + (Math.PI / 2 - up - 0.06) * level, 0);
+    // The trunk's squash on a hit scales it unevenly, which shears everything hung from it: a rotation set in the fist's frame would come out turned in the world, up to
+    // 0.4 rad off the wall's line. The shaft's own axis is taken back through the fist's whole world matrix instead, so it points where the carry says, squash or not.
+    const inFist = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry);
+    const along = Vector3.TransformNormal(Vector3.Up().rotateByQuaternionToRef(carry, this._spearDir), Matrix.Invert(hand.getWorldMatrix())).normalize();
+    const unsheared = Quaternion.FromUnitVectorsToRef(Vector3.Up().rotateByQuaternionToRef(inFist, this._spearDir), along, new Quaternion()).multiply(inFist);
+    const turn = Quaternion.Slerp(rest, unsheared, k);
     shaft.rotationQuaternion = turn;
     // The shaft's middle sits as far up the shaft from the fist as it was strapped on, and runs through the fist with the stroke.
     const held = new Vector3(0, grip.length() + toGrip + run, 0);
