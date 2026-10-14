@@ -102,8 +102,6 @@ interface ShieldSlot {
   hold: Vector3 | null;
   /** A front-rank wall's line along its heading (metres): every board in it stands on the plane this far forward, so the boards lap into one surface; null in a rear rank. */
   plane: number | null;
-  /** A front-rank man's step along the heading back onto his wall's line, so in contact the rank stays dressed on its boards; null in a rear rank. */
-  dress: Vector3 | null;
 }
 
 /** A formed wall as the rank behind it sees it: its first slot across the line, how many slots, and how far forward it stands. */
@@ -744,7 +742,7 @@ export class SimulationSystem {
             const line = wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length;
             wall.forEach((entry, k) => {
               const shift = first + k * this.shieldSlotSpacing - entry.side;
-              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line, dress: new Vector3(fx * (line - entry.depth), 0, fz * (line - entry.depth)) });
+              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line });
             });
             formed.push({ first, count: wall.length, depth: wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length });
           }
@@ -777,7 +775,6 @@ export class SimulationSystem {
                 heading,
                 hold: new Vector3(-fz * shift + fx * back, 0, fx * shift + fz * back),
                 plane: null,
-                dress: null,
               });
             });
             formed.push({ first, count: group.length, depth });
@@ -808,8 +805,7 @@ export class SimulationSystem {
   /** The step across that takes a carrier toward its slot, no longer than shieldSlotStride, or null when it stands in it. In contact a rear-rank man's step also takes him to his depth behind the front. */
   private _shieldSlotStep(unit: RuntimeUnit, inContact = false): Vector3 | null {
     const slot = this._shieldSlots.get(unit);
-    // In contact a front-rank man also steps back onto his wall's line, ahead or behind, so the men follow their boards and the boards stay one surface
-    const offset = inContact ? slot?.hold ?? (slot?.dress ? slot.offset.add(slot.dress) : slot?.offset) : slot?.offset;
+    const offset = inContact ? slot?.hold ?? slot?.offset : slot?.offset;
     if (!offset) return null;
     const reach = offset.length();
     if (reach <= 0.05) return null;
