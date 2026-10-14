@@ -1624,14 +1624,6 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   browPaint.position.set(0, 0.3, 0.68);
   browPaint.parent = neck; browPaint.material = paintMat; allMeshes.push(browPaint);
 
-  // Face paint: a slab down each cheek under the eye, turned to lie on the skull
-  for (const side of [-1, 1]) {
-    const cheekPaint = MeshBuilder.CreateBox("cheekPaint", { width: 0.2, height: 0.34, depth: 0.14 }, scene);
-    cheekPaint.position.set(side * 0.37, -0.2, 0.615);
-    cheekPaint.rotation.y = side * 0.55;
-    cheekPaint.parent = neck; cheekPaint.material = paintMat; allMeshes.push(cheekPaint);
-  }
-
   // Eyes: flat discs of self-lit warm white, so the blue ambient does not grey them, kept out of the glow layer so each is a crisp disc with no halo, each turned out to lie on its side of the skull with a flat black pupil on the middle of its front
   const eyeWhite = getMaterialFactory().get("bone", new Color3(0.95, 0.95, 0.95), { emissive: new Color3(0.3, 0.28, 0.25) });
   const pupilMat = makeMat(scene, new Color3(0.03, 0.03, 0.03));
@@ -1651,25 +1643,35 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   }
 
   // ── Trunk (parented to neck) ──
-  const trunkSegments = 7;
-  for (let i = 0; i < trunkSegments; i++) {
-    const t = i / (trunkSegments - 1);
-    // A thick trunk half as long again as it was, 0.4 across at the face and still half that at the tip
-    const diam = 0.4 - t * 0.2;
+  // Read off tabs_screenshot_01: one thick tube, as wide at the face as the gap between the eyes, rooted on the front of the
+  // face below the eyes and ahead of the tusk roots, pitching out a little and then hanging nearly to the ground between the
+  // tusks, its last stretch curled forward. Darker than the hide so it reads against the chest behind it.
+  const trunkMat = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.04, 0.03, 0.03), 0.6), { emissive: hide.scale(0.03) });
+  // Pitch of each piece from straight down (positive = tip forward); the drop runs from the face to 0.15 above the ground
+  const TRUNK_PITCH = [1.0, 0.7, 0.4, 0.2, 0.1, 0.3, 0.8, 1.3];
+  const TRUNK_PIECE = 0.2;
+  const TRUNK_ROOT = 0.5;
+  const TRUNK_TIP = 0.22;
+  const trunkAt = new Vector3(0, -0.12, 0.76);
+  for (let i = 0; i < TRUNK_PITCH.length; i++) {
+    const t = i / (TRUNK_PITCH.length - 1);
+    const pitch = TRUNK_PITCH[i];
+    const end = trunkAt.add(new Vector3(0, -Math.cos(pitch) * TRUNK_PIECE, Math.sin(pitch) * TRUNK_PIECE));
+    const diam = TRUNK_ROOT + (TRUNK_TIP - TRUNK_ROOT) * t;
+    const next = TRUNK_ROOT + (TRUNK_TIP - TRUNK_ROOT) * Math.min(1, (i + 1) / (TRUNK_PITCH.length - 1));
+    // Each piece overruns its length so the bends close up with no gap between pieces
     const seg = MeshBuilder.CreateCylinder("trunk", {
-      height: 0.28, diameterTop: diam * 0.85, diameterBottom: diam, tessellation: 8,
+      height: TRUNK_PIECE * 1.25, diameterTop: diam, diameterBottom: next, tessellation: 8,
     }, scene);
-    const zOff = 0.55 + t * 0.42;
-    const yOff = -0.3 - t * 0.53;
-    seg.position.set(0, yOff, zOff);
-    seg.rotation.x = -0.3 + t * 0.5;
-    seg.parent = neck; seg.material = fur; allMeshes.push(seg);
+    seg.position = Vector3.Center(trunkAt, end);
+    seg.rotation.x = Math.PI - pitch;
+    seg.parent = neck; seg.material = trunkMat; allMeshes.push(seg);
+    trunkAt.copyFrom(end);
   }
-
-  // Trunk tip
-  const trunkTip = MeshBuilder.CreateSphere("trunkTip", { diameter: 0.12, segments: 4 }, scene);
-  trunkTip.position.set(0, -0.98, 0.94);
-  trunkTip.parent = neck; trunkTip.material = darkMat; allMeshes.push(trunkTip);
+  // Blunt cap closing the curled tip
+  const trunkTip = MeshBuilder.CreateSphere("trunkTip", { diameter: TRUNK_TIP * 1.05, segments: 4 }, scene);
+  trunkTip.position.copyFrom(trunkAt);
+  trunkTip.parent = neck; trunkTip.material = trunkMat; allMeshes.push(trunkTip);
 
   // ── Tusks (parented to neck) ──
   // One long thick curve per side: down and well out of the jaw, forward past the trunk, then up and back in to a tip about level with the eye.
