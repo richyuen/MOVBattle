@@ -100,6 +100,8 @@ const SHIELD_BOARD_STANDOFF = 0.46;
 const SHIELD_SLOT_SNAP = 0.15;
 // Rear-rank men are kept at least this share of a clear body gap behind the man ahead (see _keepRanksDeep).
 const RANK_DEPTH_SHARE = 0.95;
+// An ally who is not in the wall stands at least this much more than a body behind its front rank (clear of the boards, see _keepRanksDeep).
+const WALL_QUEUE_GAP = 0.25;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -867,6 +869,29 @@ export class SimulationSystem {
         back = Math.max(back, need - along);
       }
       if (back > 1e-3) unit.applyCollisionSeparation(new Vector3(-fx * back, 0, -fz * back));
+    }
+    // ...and an ally of the wall who is not in it (a knight, a clubber come up behind it) queues behind its board row: a man on his feet within a body and a
+    // board's reach behind a front-rank wall man is put back along that wall's heading, so no blade or mitt is pushed through the boards from behind
+    for (const unit of this._units) {
+      if (unit.isDead || unit.isToppled || unit.isDowned || this._shieldSlots.has(unit) || unit.position.y > 0.3) continue;
+      let back = 0;
+      let dir: Vector3 | null = null;
+      for (const ahead of front) {
+        if (ahead.team !== unit.team) continue;
+        const heading = this._shieldSlots.get(ahead)!.heading;
+        const fx = Math.sin(heading), fz = Math.cos(heading);
+        const dx = ahead.position.x - unit.position.x, dz = ahead.position.z - unit.position.z;
+        const along = dx * fx + dz * fz;
+        const across = Math.abs(dz * fx - dx * fz);
+        const body = unit.collisionBodyRadius + ahead.collisionBodyRadius;
+        if (along < -0.05 || across >= body) continue;
+        const need = Math.sqrt(Math.max(0, body * body - across * across)) + WALL_QUEUE_GAP;
+        if (need - along > back) {
+          back = need - along;
+          dir = new Vector3(-fx, 0, -fz);
+        }
+      }
+      if (dir && back > 1e-3) unit.applyCollisionSeparation(dir.scaleInPlace(back));
     }
   }
 
