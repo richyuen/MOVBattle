@@ -389,6 +389,18 @@ async function main() {
         window.advanceTime(50);
       });
       await shot(page, "biome_spooky");
+      // The same map in battle, from the low battle camera: the biome's ground and ring with the team tints gone (they are placement guides).
+      const spookyPlaced = await page.evaluate(() => {
+        let ok = 0;
+        for (let i = 0; i < 6; i++) {
+          if (window.game.spawnUnit(i % 2 ? "medieval.squire" : "tribal.protector", 0, { x: -10 - (i % 2) * 1.5, z: -4 + i * 1.6 })) ok++;
+        }
+        window.game.startBattleImmediate();
+        window.advanceTime(3000);
+        return ok;
+      });
+      summary.notes.push(`biome_spooky_battle placed ${spookyPlaced}/6 units`);
+      await shot(page, "biome_spooky_battle");
     }
     // After the showcase, so the showcase scenes start from the same state in a full run as in a --only look.
     if (doRegression) {
