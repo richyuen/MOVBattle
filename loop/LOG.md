@@ -195,3 +195,4 @@ iter 193 | [S] spear-overruns-its-mark, [R] bare-neck, [P] SPEAR_REAR_UP_MIN | 3
 iter 194 | [S] spear-stops-on-the-first-body | 0/1 approved | passes 23 -> 23
 iter 195 | re-audit (no change); [S] couched-butt-grip | 1/1 approved | passes 23 -> 23 (loop stopped by the user after this iteration)
 iter 196 | [S] battle-feel.c wall-shafts-share-one-heading (rejected), [S] unit-look.f mammoth-fur-mass | 1/2 approved | passes 23/24 -> 23/24 (tier 2 10/20 -> 10/20; re-audit scored tier 2)
+iter 197 | [S] battle-feel.c wall-shafts-one-plane, [S] unit-look.h zeus-no-mouth | 2/2 approved | passes 23/24 -> 24/24 (tier 2 10/20 -> 10/20)

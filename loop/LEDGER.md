@@ -13,19 +13,14 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 main.ts:GIANT_LEAN | 0.4 | 159 | spent |
 main.ts:placement ghost (GHOST_ALPHA, GHOST_BLOCKED_ALPHA) | 0.85, blocked 0.22 | 188 | approved | 0.55 (187); no further [P]
 main.ts:ghost footprint (GHOST_TILE_OF_BODY, _MIN, _HEIGHT, _BLOCKED_ALPHA) | hex slab 1.7 bodies across, at least 1.2 m, 0.22 tall; blocked 0.3 | 188 | approved |
-cameraController.ts:FOLLOW_DROP | 0.9 | 155 | approved |
 cameraController.ts:clearRadius | depth + max(6.0, giant/0.58) | 157 | approved |
 cameraController.ts:melee alpha | -PI/3 | 159 | approved |
 cameraController.ts:_pickSubject (places, band, knot, cut weight) | 12 places, BAND 0.28, knot 3, cut 0.3 + 3*size | 162 | approved |
 cameraController.ts:_pickSubject facing (FACE_SIDE, HEADLESS, CORPSE_CUT, GIANT_PITCH) | side-on 0.4 of face-on, giant +2, corpse x0.15, giant pitch 0.12 | 165 | approved | no [P]
-simulationSystem.ts:contactBias (ally) | 0.55 | 153 | spent | never lower
 simulationSystem.ts:shove spread | 0.15 + h*0.3 | 160 | approved |
 simulationSystem.ts:shield wall slots (Spacing, RankDepth, WallGap, SlotStride, RankGap, HeadingArc) | 0.54, 1.0, 2.2, 0.6, 0.75, 1.0 | 168 | approved |
 simulationSystem.ts:_buildShovePose arms | level | 160 | approved |
-unitFactory.ts:CLOTH_SHADE | 0.8 | 151 | approved |
 unitFactory.ts:BARE_FOOT_SHADE | 0.72 | 172 | approved | 0.85; no [P]
-unitFactory.ts:team blue colour | (0.42, 0.60, 0.98) | 150 | spent |
-unitFactory.ts:idle lean | 0.26 + h*0.14 | 148 | spent | do not raise, drives lineups
 bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, CHEST_LINE, CHEST_SWELL, WAIST_DEPTH) | throughHinge line, min taper 0.6; chest 0.36, 1.05, top drawn in to the collar, waist depth 0.85 | 187 | approved | SHOULDER_SLOPE 0.8 (180)
 bodyBuilder.ts:head, neck, limb length, mitt (HEAD_OF_BODY, HEAD_SQUAT, HEAD_RINGS, HEAD_CORNER, NECK_LENGTH, LIMB_STRETCH, MITT_OF_WRIST, MITT_LENGTH, MITT_DEPTH) | head 0.18 of height x0.86, rings chin 0.72/cheek 0.9/brow 1/temple 0.95/crown 0.66, corners 0.55; neck 0.07; limbs x1.16; mitt 1.25/1.4/0.8, thumb | 184 | approved | chin 0.5, cheek 0.8 (183); no [P] on MITT_OF_WRIST
 bodyBuilder.ts:neck (NECK_LENGTH, NECK_BASE, NECK_TOP, NECK_SUNK, NECK_INTO_HEAD, COLLAR_SEAT) | one skin solid 0.05 tall, 0.72 head at the foot, 0.6 at the chin; trapezius ends 0.2 up it | 193 | approved | post 0.5-0.62 head, 0.07 tall, collar 1.2 necks 0.85 up (189)
@@ -38,16 +33,16 @@ propBuilder.ts:slab sword (buildSlabSword) | blade 0.46 of standing height (grea
 bodyBuilder.ts:SLEEVE_BULK | 1.05 | 167 | approved | 1.15; no further [P]; also scales thighs
 propBuilder.ts:hair scale/y | 1.5x head, y 0.24 | 160 | approved |
 propBuilder.ts:laurel wreath y/tilt | y 0.028, tilt 0.1 | 186 | approved | y 0.005, tilt 0.25
+propBuilder.ts:laurel hair cap cut | front below 0.02 s pulled back to the cap's middle | 197 | approved |
 propBuilder.ts:rshield disc/rim | 0.36 / 0.4 | 160 | approved |
 mapBuilder.ts:BLADES | 720000 | 159 | approved |
 mapBuilder.ts:blade width (`half`) | x1.0 | 160 | spent | x1.5 rejected: squat cones
-projectileSystem.ts:muzzle smoke lobes | lead 0.6, seven small | 154 | spent | every value tried
 projectileSystem.ts:cannon shot (cannonball shape, _ironMat, _addStreak width) | ball 0.46 faceted iron 0.045, streak 2.2 x 0.14; bomb iron, streak 1.2 x 0.07 | 185 | approved | near-black (160, spent)
 visualEffects.ts:explosion burst | 4 unlit yellow lobes in inside-out orange shells x1.5; fireScale cap 1.6 | 164 | approved | lobe size spent
 visualEffects.ts:explosion dust bank | 14 unlit puffs, reach 2.3*sqrt, size 0.7-1.45 | 164 | approved | no [P] on tall and tans
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved |
 proceduralAnimation.ts:shield brace (_buildBracePose; BRACE_PITCH_*, BRACE_CROUCH_DEEP, BRACE_STEP_*) | trunk pitch 0.14-0.56 own, set not added; head level 0.1-0.8; crouch to 0.7; step 0.22-0.5; twist 0.1-0.5; board follows | 192 | approved | 3 stands pitch -0.08..0.34, crouch to 1.05 (179); lunge 0.35-0.75 (188)
-proceduralAnimation.ts:spear carry (_carrySpear; SPEAR_REAR_UP_*, SPEAR_REAR_STRIKE, SPEAR_FRONT_GRIP_*, SPEAR_COUCH_*) | all raised 1.05-1.4 above level, rear strike 0.3; front couched at the waist, grip 0.2-0.28 | 196 | approved | 1.25-1.38 on the wall heading rejected (196, reverted); front dipped 0.42-0.64 (192-193); no [P] on the rear raise
+proceduralAnimation.ts:spear carry (_carrySpear; SPEAR_WALL_UP, SPEAR_FRONT_GRIP_*, SPEAR_COUCH_*) | one wall line: slot heading at 1.48 above level, no strike drop; grip 0.2-0.28 | 197 | approved | per man 1.05-1.4, rear strike 0.3 (196); front dipped 0.42-0.64 (192-193)
 proceduralAnimation.ts:spear thrust (_thrustStroke, SPEAR_LUNGE, SPEAR_DRAW; brace thrustRate) | lunge 0.45 m, draw -0.4 of it; beat 0.9-1.4/s | 192 | approved | choke 0.45 removed (186)
 proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, sink 0.05-0.27, asym +-0.18, arm lag +-0.7, swing 0.5-0.95 | 174 | approved | no further [P] on roll
 proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | shouldered/upright/across/trailed 0.30/0.25/0.25/0.20 (jitter 0.3); bob 0.08-0.18 | 174 | approved | bob spent for [P]
@@ -72,8 +67,6 @@ vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth hull (BODY_RADII, BODY_LIFT, fur hem, paint daubs, leg width) | ellipsoid 0.85/0.68/1.16 lifted 0.12; 5 hem lobes a side; 4 daubs a side; legs 0.6 | 196 | approved | barrel, skirts, bands, legs 0.8 (spent for [P], 159)
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 187 | ghost-preview | ui-flow.d | approved
-- 187 | trunk-widest-below-the-arms | unit-look.c | approved
 - 188 | ghost-unreadable | ui-flow.d | approved
 - 188 | pushing-rank-one-pose | battle-feel.c | approved
 - 189 | wall-spears-through-own-men | battle-feel.c | approved
@@ -88,6 +81,8 @@ vehicleBuilder.ts:mammoth hull (BODY_RADII, BODY_LIFT, fur hem, paint daubs, leg
 - 195 | couched-butt-grip | battle-feel.c | approved
 - 196 | wall-shafts-share-one-heading | battle-feel.c | rejected
 - 196 | mammoth-fur-mass | unit-look.f | approved
+- 197 | wall-shafts-one-plane | battle-feel.c | approved
+- 197 | zeus-no-mouth | unit-look.h | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
