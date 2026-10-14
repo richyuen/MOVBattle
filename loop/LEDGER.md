@@ -59,8 +59,6 @@ proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 219 | envelope-glow | vfx.h | approved
-- 219 | backdrop-haze | maps-light.f | rejected
 - 220 | [R] cannon-impact-burst | vfx.h | approved
 - 220 | giant-scale | unit-look.f | approved
 - 221 | spectator-low | camera.f | approved
@@ -79,6 +77,8 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 227 | strike-aim | battle-feel.e | rejected
 - 228 | strike-tip | battle-feel.e | dropped
 - 228 | body-spaced-slots | battle-feel.h | rejected
+- 229 | head-fitted-hats | unit-look.h | rejected
+- 229 | body-deep-ranks | battle-feel.h | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -89,3 +89,4 @@ mapBuilder.ts:spooky dressing (deadTree, tomb, graveLight kinds; spooky prop lis
 mapBuilder.ts:theme ring palette + deadenRing (RING_DEAD_FROM; spooky ring leaves/darkLeaves/trunk/bare) | 30 m; navy 0.2,0.22,0.4 / 0.14,0.15,0.3, trunk 0.1,0.09,0.14, bare 0.6 | 225 | approved | [P] leaves 0.12,0.13,0.26 + crown emissive 0.3 rejected 226 (ledger reversal)
 index.html+main.ts:campaign map (CAMPAIGN_NODE_AT node layout, card, thin caps) | 15 node slots, card 300px bottom-right, caption one sentence | 225 | approved |
 mapBuilder.ts:setPlacementGuidesVisible hides zone tints (zone_overlay_*, campaign_zone_*) in battle | placement-only tints | 227 | approved |
+simulationSystem.ts:_keepRanksDeep (RANK_DEPTH_SHARE; rear-rank vs front-rank depth-only resolve) | 0.95 of the clear body depth | 229 | approved |
