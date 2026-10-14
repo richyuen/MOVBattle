@@ -235,7 +235,7 @@ export class VisualEffects {
       mesh.isPickable = false;
       mesh.parent = root;
       mesh.position.set(position.x + Math.cos(angle) * out, position.y + (fire ? 0.5 : 0.9) * scale + Math.random() * 0.5 * scale, position.z + Math.sin(angle) * out);
-      const mat = this._envelopeMat(fire ? (i < ENVELOPE_FIRE / 2 ? new Color3(1, 0.92, 0.7) : new Color3(1, 0.75, 0.4)) : new Color3(0.42, 0.4, 0.38));
+      const mat = this._envelopeMat(fire ? new Color3(1, 0.5 + Math.random() * 0.2, 0.12) : new Color3(0.42, 0.4, 0.38));
       mesh.material = mat;
       this._scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
       const born = (fire ? 1.3 : 1.0) * scale * (0.8 + Math.random() * 0.5);
@@ -243,7 +243,7 @@ export class VisualEffects {
         mesh, mat, born, grown: born * (fire ? 1.8 : 2.6),
         rise: new Vector3(Math.cos(angle) * 0.4, fire ? 1.1 : 0.7, Math.sin(angle) * 0.4).scale(scale),
         life: (fire ? ENVELOPE_LIFE : ENVELOPE_LIFE * 2.2) * (0.8 + Math.random() * 0.4),
-        peak: fire ? 0.95 : 0.55,
+        peak: fire ? 0.85 : 0.55,
       });
     };
     for (let i = 0; i < ENVELOPE_FIRE; i++) add(true, i, ENVELOPE_FIRE);
