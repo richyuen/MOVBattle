@@ -576,6 +576,7 @@ export class SimulationSystem {
     const spearSlot = this._shieldSlots.get(unit);
     if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
     if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) unit.readyBlow(distance <= engageDistance + this.blowStrikeReach);
+    if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowStrikeReach) unit.setStrikeTarget(enemy);
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
@@ -1066,6 +1067,8 @@ export class SimulationSystem {
 
     const preset = getBehaviorPreset(attacker);
     const cooldownMultiplier = attacker.definition.cooldownMultiplier ?? 1;
+    // The blow is aimed at this man's head (proceduralAnimation committed-blow spec)
+    attacker.setStrikeTarget(target);
     attacker.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
     attacker.triggerLinkedRoleActions(attackProfile.cooldown * cooldownMultiplier);
     const emitter = attacker.getAttackEmitter();

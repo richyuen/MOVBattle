@@ -95,6 +95,20 @@ const CASTER_CROUCH = 0.3;
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
+/*
+ * The committed blow, rebuilt (222). Spec, read off trailer_3_sheet_01 r2c3 (a clubber's blow landing on a falling man; spearmen thrusting from the line):
+ *   Club: one clear windup with the club cocked high over the shoulder, then a committed descent that ends ON the man it is aimed at: the arm and the club
+ *   lie along one line from the striker's shoulder to the top of that man's head (or the board top in front of it), so the club's head comes to rest on his
+ *   crown, at his height, whatever his distance and height. Not fixed joint angles: a fixed drop either left the club up over the striker's own head (read as
+ *   a held windup) or drove it level into the board at belly height. The aim is blended in over the descent (weight = how far down the club is) and held
+ *   for CHOP_HOLD of the rest of the swing before it is heaved back. The press blow between swings lands the same way on the man in front.
+ *   Feet: from the descent to the end of the hold the striker owns his body (RuntimeUnit: crowd pressure does not topple a man mid-blow).
+ *   Spear: a wall spear stands raised on the wall's heading at its hold (SPEAR_WALL_UP), and on the lunge of each stroke its point comes down toward the
+ *   enemy, to SPEAR_THRUST_UP above level for a front man and SPEAR_THRUST_UP_REAR for a man reaching over the rank ahead.
+ */
+const CHOP_HOLD = 0.45;
+const SPEAR_THRUST_UP = 0.3;
+const SPEAR_THRUST_UP_REAR = 0.6;
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent dropping, landed on the head and heaving back to the cock.
 const PRESS_BLOW_BEAT_MIN = 1.5;
 const PRESS_BLOW_BEAT_MAX = 2.4;
@@ -109,6 +123,45 @@ export class ProceduralAnimator {
   private _attackTimer = 0;
   private _attackDuration = 0.4;
   private _attackMotion: AttackMotion = "strike";
+  // Where the blow being swung is aimed (the target's crown, from the unit each frame), and whether the swing is between its descent and the end of its hold
+  private _strikePoint: Vector3 | null = null;
+  private _striking = false;
+  /** The point the next blow lands on, the top of the target's head; null when there is none. */
+  setStrikePoint(point: Vector3 | null): void {
+    if (point) (this._strikePoint ??= new Vector3()).copyFrom(point);
+    else this._strikePoint = null;
+  }
+  /** Mid-blow, from the descent to the end of the landed hold: crowd pressure does not topple a man now (see the committed-blow spec). */
+  get striking(): boolean {
+    return this._striking && this._state === AnimState.Attacking;
+  }
+
+  /**
+   * Lays the weapon arm and the club along one line from the shoulder to the strike point, by `weight`: the shoulder turned to point the arm at it, the elbow
+   * straight, and the club's arc in the fist set to the same line, so the club's head comes down on the target's crown (see the committed-blow spec).
+   */
+  private _aimBlow(weight: number): void {
+    const point = this._strikePoint;
+    if (!point || weight <= 0.001) return;
+    const b = this._body;
+    const shoulder = b.rightShoulder;
+    const parent = shoulder.parent as TransformNode | null;
+    if (!parent) return;
+    parent.computeWorldMatrix(true);
+    shoulder.computeWorldMatrix(true);
+    const world = point.subtract(shoulder.getAbsolutePosition());
+    if (world.lengthSquared() < 1e-6) return;
+    const local = Vector3.TransformNormal(world, Matrix.Invert(parent.getWorldMatrix())).normalize();
+    const aim = Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), local, new Quaternion()).toEulerAngles();
+    shoulder.rotation.x += (aim.x - shoulder.rotation.x) * weight;
+    shoulder.rotation.y += (aim.y - shoulder.rotation.y) * weight;
+    shoulder.rotation.z += (aim.z - shoulder.rotation.z) * weight;
+    b.rightElbow.rotation.scaleInPlace(1 - weight);
+    const yaw = b.root.rotation.y;
+    const ahead = world.x * Math.sin(yaw) + world.z * Math.cos(yaw);
+    const arc = Math.atan2(ahead, world.y);
+    this._clubArc += (arc - this._clubArc) * weight;
+  }
   private _wobblePhase: number; // random offset per unit
   attackStyle: AttackStyle = "humanoid";
   walkStyle: WalkStyle = "humanoid";
@@ -590,6 +643,7 @@ export class ProceduralAnimator {
         b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
         b.leftElbow.rotation.x -= (1.0 + Math.sin(phase) * 0.6) * k;
         this._clubArc = CLUB_COCK * 0.9 + heave + (CLUB_LAND - CLUB_COCK * 0.9 - heave) * blow;
+        this._aimBlow(blow * k);
         this._clubHold = Math.max(this._clubHold, k);
       } else if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
@@ -1058,7 +1112,10 @@ export class ProceduralAnimator {
     // the wall is parallel to every other, front rank and rear, and the stroke slides along it. No roll and no pitch of his own.
     const ownYaw = root.rotation.y;
     const yaw = ownYaw + Math.atan2(Math.sin(this._wallHeading - ownYaw), Math.cos(this._wallHeading - ownYaw)) * this._wallHold;
-    const up = Math.PI / 2 - 0.06 + (SPEAR_WALL_UP - Math.PI / 2 + 0.06) * level;
+    // On the lunge the point comes down toward the enemy from the hold, a front man's nearly level, a rear man's over the rank ahead, and back up on the draw
+    const lunge = Math.max(0, this._spearThrust);
+    const thrustUp = SPEAR_THRUST_UP + (SPEAR_THRUST_UP_REAR - SPEAR_THRUST_UP) * this._spearRearHold;
+    const up = Math.PI / 2 - 0.06 + (SPEAR_WALL_UP - Math.PI / 2 + 0.06) * level + (thrustUp - SPEAR_WALL_UP) * lunge * level;
     const d = this._spearDir.set(Math.sin(yaw) * Math.cos(up), Math.sin(up), Math.cos(yaw) * Math.cos(up));
     // Set directly through the fist's whole world matrix: the trunk's on-hit squash scales it unevenly and shears the arm, and a rotation composed in the fist's frame
     // would come out up to 0.4 rad off the line in the world.
@@ -1667,6 +1724,7 @@ export class ProceduralAnimator {
    */
   private _animateHeavySwing(dt: number): void {
     this._attackTimer += dt;
+    this._striking = false;
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
     const commit = this._resolveReleasePoint(0.45);
@@ -1691,7 +1749,10 @@ export class ProceduralAnimator {
     } else {
       const swing = Math.min(1, (progress - commit) / Math.max(drop - commit, 0.001));
       const eased = swing * swing * (3 - 2 * swing) * 0.4 + swing * swing * 0.6; // slow off the cock, fastest at the bottom
-      const back = progress > drop ? (progress - drop) / Math.max(1 - drop, 0.001) : 0;
+      // Landed, the club rests on the head for CHOP_HOLD of what is left of the swing before it is heaved back
+      const settle = drop + (1 - drop) * CHOP_HOLD;
+      const back = progress > settle ? (progress - settle) / Math.max(1 - settle, 0.001) : 0;
+      this._striking = progress < settle;
       const e = eased - back * (2 - back) * 0.65;
       b.rightShoulder.rotation.x = -2.75 + 3.25 * e;
       b.rightShoulder.rotation.z = 0.3 - 0.4 * e;
@@ -1706,6 +1767,8 @@ export class ProceduralAnimator {
       b.leftHip.rotation.x = -0.22 - 0.2 * e;
       b.leftKnee.rotation.x = 0.12 + 0.23 * e;
       this._clubArc = CLUB_COCK + (CLUB_LAND - CLUB_COCK) * e;
+      // The descent is aimed: by the time it lands the arm and the club lie along the line to the target's crown
+      this._aimBlow(Math.min(1, Math.max(0, e)));
     }
     this._clubHold = 1;
     b.rightKnee.rotation.x = 0.12;

@@ -408,6 +408,12 @@ export class RuntimeUnit {
     }
   }
 
+  /** The man this unit's blows are aimed at: each frame the animator is handed the top of his head (see the committed-blow spec). */
+  setStrikeTarget(target: RuntimeUnit | null): void {
+    this._strikeTarget = target;
+  }
+  private _strikeTarget: RuntimeUnit | null = null;
+
   setAttackCooldown(now: number, cooldown: number): void {
     this._nextAttackAt = now + Math.max(0.05, cooldown);
     // Trigger attack animation
@@ -734,6 +740,13 @@ export class RuntimeUnit {
     // A blasted body stays limp for its whole flight, not just until the topple clock runs out mid-air.
     this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
     this.animator.setAirborne(!this._grounded && this.position.y > 0.35);
+    const foe = this._strikeTarget;
+    if (foe && !foe.isDead) {
+      foe.body.headTop.computeWorldMatrix(true);
+      this.animator.setStrikePoint(foe.body.headTop.getAbsolutePosition());
+    } else {
+      this.animator.setStrikePoint(null);
+    }
     this.animator.update(dt);
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
@@ -1187,6 +1200,8 @@ export class RuntimeUnit {
 
     // A man held in his shield wall is braced by it: the shove moves the wall, it does not fold him
     if (this.wallBraced) return;
+    // Nor is a man mid-blow: from the descent to the landed hold he owns his body (proceduralAnimation committed-blow spec)
+    if (this.animator.striking) return;
     if (this._balancePressure >= this._crowdPhysicsProfile.launchThreshold) {
       this._enterTopple(now, Math.max(appliedPressure, this._balancePressure), this._balanceDirection, true);
       return;
