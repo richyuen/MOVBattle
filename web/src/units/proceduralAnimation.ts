@@ -84,6 +84,9 @@ const BOW_TURN_MIN = 0.95;
 const BOW_TURN_MAX = 1.3;
 /** A caster does not hold his rod from a squat: of whatever crouch his rest stance has, he keeps this share. */
 const CASTER_CROUCH = 0.3;
+/** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
+const CLUB_COCK = -0.4;
+const CLUB_LAND = 1.8;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -160,6 +163,13 @@ export class ProceduralAnimator {
 
   private _shoveTimer = 0;
 
+  /** An enemy is close enough to close with (a few strides): a heavy weapon comes up to its cocked hold over the shoulder and stays there until the calls stop. */
+  readyBlow(): void {
+    this._readyTimer = 0.6;
+  }
+  private _readyTimer = 0;
+  private _ready = 0;
+
   /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear comes to its fighting hold (see _carrySpear), a front man's pointed down at that man, a rear man's raised over the rank ahead, until the calls stop. */
   levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false): void {
     this._spearAim.copyFrom(enemyGround);
@@ -200,6 +210,10 @@ export class ProceduralAnimator {
   private _spearLevel = 0;
   private _chestRise: number | null = null;
   private _shove = 0;
+  // A heavy weapon's arc in the fist, radians from straight up (negative behind, positive in front), and how far it overrides the carry; written by the heavy
+  // swing and the press, zeroed every frame.
+  private _clubArc = 0;
+  private _clubHold = 0;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
   private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number; trail: number; stride: number } | null = null;
@@ -444,6 +458,7 @@ export class ProceduralAnimator {
     }
 
     this._idleSink = 0;
+    this._clubHold = 0;
     this._castLift = 0;
     this._castReach = 0;
     switch (this._state) {
@@ -511,7 +526,19 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x -= (p.stance + 0.15) * k;
       b.leftKnee.rotation.x += (p.knee + 0.05) * k;
       b.rightKnee.rotation.x += (p.knee + 0.05) * k;
-      if (this._state === AnimState.Idle) {
+      if (this._state !== AnimState.Attacking && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
+        // A clubber in the press, stood or stepping in, does not windmill or level his weapon arm: between blows he keeps it cocked up over his shoulder, ready to bring it down,
+        // heaving it a little on his own beat, while the free arm still claws and shoves.
+        const heave = Math.sin(phase * 0.5) * 0.12;
+        b.rightShoulder.rotation.x += (-2.5 + heave - b.rightShoulder.rotation.x) * k;
+        b.rightShoulder.rotation.z += (0.3 - b.rightShoulder.rotation.z) * k;
+        b.rightElbow.rotation.x += (-1.3 - b.rightElbow.rotation.x) * k;
+        b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
+        b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
+        b.leftElbow.rotation.x -= (1.0 + Math.sin(phase) * 0.6) * k;
+        this._clubArc = CLUB_COCK * 0.9 + heave;
+        this._clubHold = Math.max(this._clubHold, k);
+      } else if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
         b.rightShoulder.rotation.x += (-0.9 + Math.sin(phase + Math.PI) * 1.1) * k;
         b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
@@ -597,6 +624,20 @@ export class ProceduralAnimator {
         b.leftShoulder.rotation.z += (c.board.out - b.leftShoulder.rotation.z) * carry;
         b.leftElbow.rotation.x += (c.board.elbow + bob * c.bob - b.leftElbow.rotation.x) * carry;
       }
+    }
+    // Closing on a man with a heavy weapon, out of contact: whatever the carry or the stand made of the weapon arm, it comes up to the cocked hold over the
+    // shoulder that the press keeps (see _animateHeavySwing), so men stepping into a fight carry their clubs raised and not slanted or trailed.
+    this._readyTimer -= dt;
+    this._ready += ((this._readyTimer > 0 ? 1 : 0) - this._ready) * Math.min(1, dt * 6);
+    const cocked = this._ready * (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
+    if (cocked > 0.01 && this._state !== AnimState.Attacking && this._state !== AnimState.Dead && this.walkStyle !== "quadruped" && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
+      const b = this._body;
+      const heave = Math.sin((this._time + this._wobblePhase) * 3) * 0.1;
+      b.rightShoulder.rotation.x += (-2.5 + heave - b.rightShoulder.rotation.x) * cocked;
+      b.rightShoulder.rotation.z += (0.3 - b.rightShoulder.rotation.z) * cocked;
+      b.rightElbow.rotation.x += (-1.3 - b.rightElbow.rotation.x) * cocked;
+      this._clubArc = this._clubHold > 0.01 ? this._clubArc : CLUB_COCK * 0.9 + heave;
+      this._clubHold = Math.max(this._clubHold, cocked);
     }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
     this._limp += (this._limpTarget - this._limp) * Math.min(1, dt * 9);
@@ -798,8 +839,11 @@ export class ProceduralAnimator {
     // A caster's rod stays in its hold on the march and through the cast. A bow leaves its ready hold to be shot, but not the fist's keeping: while the bow arm is up it is stood upright.
     const shooting = weapon === ready && ready?.cast !== true && this._state === AnimState.Attacking && this._attackMotion === "bow_draw_release" ? this._bowUp : 0;
     const kept = this._state === AnimState.Idle || (this._state === AnimState.Walking && weapon !== ready) || (ready?.cast === true && this._state !== AnimState.Dead) || shooting > 0;
-    const marching = kept ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0;
+    const club = weapon === this._carry?.weapon && this._state !== AnimState.Dead ? this._clubHold * (1 - Math.min(1, this._limp)) : 0;
+    const marching = Math.max(club, kept ? (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp)) : 0);
     this._carryTurn = this._state === AnimState.Dead ? 0 : this._carryTurn + (marching - this._carryTurn) * Math.min(1, dt * 10);
+    // A blow does not wait on the carry's easing: the head is on its arc from the first frame of the swing
+    if (club > this._carryTurn) this._carryTurn = club;
     const k = this._carryTurn;
     if (k <= 0.01) {
       if (node.rotationQuaternion) {
@@ -811,6 +855,8 @@ export class ProceduralAnimator {
     const hand = this._body.rightHand;
     hand.computeWorldMatrix(true);
     const tip = new Vector3(weapon.tip.x, weapon.tip.y - this._carryDip * 1.5, weapon.tip.z + this._castReach).normalize();
+    // Swinging or cocked: the head of the weapon is on its arc over the man, a touch out to his weapon side
+    if (club > 0.01) Vector3.LerpToRef(tip, new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(this._clubArc), Math.sin(this._clubArc)), Math.min(1, club), tip).normalize();
     // Shooting: upright in the fist, canted a little toward the mark
     if (shooting > 0) Vector3.LerpToRef(tip, new Vector3(0, 1, 0.12), shooting, tip).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
@@ -1476,39 +1522,60 @@ export class ProceduralAnimator {
     }
   }
 
+  /**
+   * Heavy swing (club, mace, hammer, pan): an overhead blow, not a level shove of the arm (ref trailer_3_sheet_01 r2c3).
+   * - Wind-up (0 -> commit): the weapon arm goes up past the head, shoulder to -2.75 rad (nearly vertical) with the elbow folded 1.25, so the fist is
+   *   above and behind the crown; the trunk arches back 0.25 and twists 0.2 onto the weapon side; the head lifts to the mark. The head of the club points
+   *   up and back over the shoulder, its arc angle CLUB_COCK (-0.4 rad from vertical, behind: at 0.85 a side view read it as level).
+   * - Drop (commit -> 45% of what is left): a committed downswing, eased in hard. Shoulder to +0.5 (fist below and ahead of the chest), elbow out to -0.15,
+   *   trunk folds forward 0.55 over a front knee bent 0.35; the club's arc runs through vertical to CLUB_LAND (+1.8 rad, head forward and a little down, at the
+   *   target's chest: at 2.05 it was driven into the turf).
+   * - Recover (the rest): he heaves it back up two thirds of the way to the cock, so a press between blows is clubs held up, not clubs left lying forward.
+   * The club's arc is handed to _carryProp through _clubArc/_clubHold and turned in the fist there; the arm alone could not stand it up overhead.
+   */
   private _animateHeavySwing(dt: number): void {
     this._attackTimer += dt;
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
     const commit = this._resolveReleasePoint(0.45);
+    const drop = commit + (1 - commit) * 0.45;
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
     if (progress < commit) {
-      const windUp = progress / Math.max(commit, 0.001);
-      b.rightShoulder.rotation.x = -1.55 * windUp;
-      b.rightShoulder.rotation.z = 0.52 * windUp;
-      b.rightElbow.rotation.x = -0.95 * windUp;
-      b.leftShoulder.rotation.x = -0.18 * windUp;
-      b.leftShoulder.rotation.z = -0.16 * windUp;
-      b.torso.rotation.x = -0.14 * windUp;
-      b.torso.rotation.z = 0.14 * windUp;
-      b.rightHip.rotation.x = 0.14 * windUp;
-      b.leftHip.rotation.x = -0.06 * windUp;
-      b.neck.rotation.z = 0.05 * windUp;
+      const w = progress / Math.max(commit, 0.001);
+      const windUp = w * (2 - w); // eased out: up fast, slowing into the cock
+      b.rightShoulder.rotation.x = -2.75 * windUp;
+      b.rightShoulder.rotation.z = 0.3 * windUp;
+      b.rightElbow.rotation.x = -1.25 * windUp;
+      b.leftShoulder.rotation.x = -0.7 * windUp;
+      b.leftShoulder.rotation.z = -0.35 * windUp;
+      b.leftElbow.rotation.x = -0.5 * windUp;
+      b.torso.rotation.x = -0.25 * windUp;
+      b.torso.rotation.y = 0.2 * side * windUp;
+      b.neck.rotation.x = -0.12 * windUp;
+      b.rightHip.rotation.x = 0.18 * windUp;
+      b.leftHip.rotation.x = -0.22 * windUp;
+      b.leftKnee.rotation.x = 0.12 * windUp;
+      this._clubArc = CLUB_COCK * windUp;
     } else {
-      const swing = (progress - commit) / Math.max(1 - commit, 0.001);
-      const eased = 1 - Math.pow(1 - swing, 3);
-      b.rightShoulder.rotation.x = -1.55 + 2.45 * eased;
-      b.rightShoulder.rotation.z = 0.52 - 0.78 * eased;
-      b.rightElbow.rotation.x = -0.95 + 1.15 * eased;
-      b.leftShoulder.rotation.x = -0.18 + 0.24 * eased;
-      b.leftShoulder.rotation.z = -0.16 + 0.18 * eased;
-      b.torso.rotation.x = -0.14 + 0.48 * eased;
-      b.torso.rotation.z = 0.14 - 0.28 * eased;
-      b.rightHip.rotation.x = 0.14 + 0.1 * eased;
-      b.leftHip.rotation.x = -0.06 + 0.08 * eased;
-      b.neck.rotation.x = 0.08 * eased;
-      b.neck.rotation.z = 0.05 - 0.12 * eased;
+      const swing = Math.min(1, (progress - commit) / Math.max(drop - commit, 0.001));
+      const eased = swing * swing * (3 - 2 * swing) * 0.4 + swing * swing * 0.6; // slow off the cock, fastest at the bottom
+      const back = progress > drop ? (progress - drop) / Math.max(1 - drop, 0.001) : 0;
+      const e = eased - back * (2 - back) * 0.65;
+      b.rightShoulder.rotation.x = -2.75 + 3.25 * e;
+      b.rightShoulder.rotation.z = 0.3 - 0.4 * e;
+      b.rightElbow.rotation.x = -1.25 + 1.1 * e;
+      b.leftShoulder.rotation.x = -0.7 + 0.9 * e;
+      b.leftShoulder.rotation.z = -0.35 + 0.1 * e;
+      b.leftElbow.rotation.x = -0.5 + 0.1 * e;
+      b.torso.rotation.x = -0.25 + 0.8 * e;
+      b.torso.rotation.y = (0.2 - 0.35 * e) * side;
+      b.neck.rotation.x = -0.12 + 0.1 * e;
+      b.rightHip.rotation.x = 0.18 + 0.12 * e;
+      b.leftHip.rotation.x = -0.22 - 0.2 * e;
+      b.leftKnee.rotation.x = 0.12 + 0.23 * e;
+      this._clubArc = CLUB_COCK + (CLUB_LAND - CLUB_COCK) * e;
     }
-    b.leftElbow.rotation.x = -0.22;
+    this._clubHold = 1;
     b.rightKnee.rotation.x = 0.12;
     if (progress >= 1) this._state = AnimState.Idle;
   }
