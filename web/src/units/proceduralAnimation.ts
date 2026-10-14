@@ -66,6 +66,8 @@ const BRACE_PITCH_MAX = 0.56;
 const SPEAR_LUNGE = 0.45;
 const SPEAR_DRAW = -0.4;
 const SPEAR_WALL_UP = 1.48;
+// A rear-rank spear thrust overhand over the boards at a foe in reach: this far above level (see _carrySpear).
+const SPEAR_OVERHAND_UP = 0.18;
 const SPEAR_FRONT_GRIP_MIN = 0.2;
 const SPEAR_FRONT_GRIP_MAX = 0.28;
 // The front rank's boards in a wall in contact (see _lapBoard): how far ahead of the rank's line their plane stands, and the one turn off square every board in it takes.
@@ -231,6 +233,9 @@ export class ProceduralAnimator {
   // The stroke (see _carrySpear): where in it the man is, from SPEAR_DRAW (drawn back) through 0 (the hold) to 1 (full lunge), and how near the enemy is to being in reach, 0 to 1.
   private _spearThrust = 0;
   private _spearNear = 0;
+  // How far a rear man's spear has come down from its raised hold to the overhand thrust over the boards (0 to 1; see _carrySpear)
+  private _spearOverhand = 0;
+  private _lastDt = 1 / 60;
   /**
    * A clubber's blow in the press, on his own beat of PRESS_BLOW_BEAT_MIN..MAX seconds (hashed from the wobble phase, so a press is staggered). 1 is the club down
    * on the man in front, 0 cocked over the shoulder. The beat: resting landed on him (PRESS_BLOW_REST), heaved up off him to the cock (PRESS_BLOW_HEAVE), held
@@ -526,6 +531,7 @@ export class ProceduralAnimator {
   private _prevNeckRotZ = 0;
 
   update(dt: number): void {
+    this._lastDt = dt;
     this._time += dt;
 
     if (this._state !== AnimState.Dead) {
@@ -1084,8 +1090,18 @@ export class ProceduralAnimator {
     // The shaft's line in the world: on the march upright, a touch forward; at the hold SPEAR_WALL_UP above level on the wall's heading, not his body's, so every shaft in
     // the wall is parallel to every other, front rank and rear, and the stroke slides along it. No roll and no pitch of his own.
     const ownYaw = root.rotation.y;
-    const yaw = ownYaw + Math.atan2(Math.sin(this._wallHeading - ownYaw), Math.cos(this._wallHeading - ownYaw)) * this._wallHold;
-    const up = Math.PI / 2 - 0.06 + (SPEAR_WALL_UP - Math.PI / 2 + 0.06) * level;
+    let yaw = ownYaw + Math.atan2(Math.sin(this._wallHeading - ownYaw), Math.cos(this._wallHeading - ownYaw)) * this._wallHold;
+    let up = Math.PI / 2 - 0.06 + (SPEAR_WALL_UP - Math.PI / 2 + 0.06) * level;
+    // Overhand over the boards (trailer_3_sheet_01 r3c1: spears levelled at shoulder height, pointed at the foe): a rear-rank man whose foe is in reach brings his
+    // raised shaft down from the ear to SPEAR_OVERHAND_UP above level and onto the bearing of that foe, so it is thrust over the front rank's boards and heads; his
+    // strokes run along that line. The front man keeps his couched raised hold (a level shaft from the waist would run through his own board).
+    this._spearOverhand += ((this._spearAimTimer > 0 ? this._spearRearHold * this._spearNear : 0) - this._spearOverhand) * Math.min(1, this._lastDt * 6);
+    if (this._spearOverhand > 0.01) {
+      const at = hand.absolutePosition;
+      const bearing = Math.atan2(this._spearAim.x - at.x, this._spearAim.z - at.z);
+      yaw += Math.atan2(Math.sin(bearing - yaw), Math.cos(bearing - yaw)) * this._spearOverhand;
+      up += (SPEAR_OVERHAND_UP - up) * this._spearOverhand;
+    }
     const d = this._spearDir.set(Math.sin(yaw) * Math.cos(up), Math.sin(up), Math.cos(yaw) * Math.cos(up));
     // Set directly through the fist's whole world matrix: the trunk's on-hit squash scales it unevenly and shears the arm, and a rotation composed in the fist's frame
     // would come out up to 0.4 rad off the line in the world.
