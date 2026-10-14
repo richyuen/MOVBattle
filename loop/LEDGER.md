@@ -61,13 +61,12 @@ proceduralAnimation.ts:heavy swing (_animateHeavySwing, CLUB_COCK, CLUB_LAND; pr
 proceduralAnimation.ts:press blow (_pressBlow, PRESS_BLOW_BEAT_*, _DROP, _HOLD, _BACK; blowStrikeReach) | beat 1.5-2.4 s, drop 0.1, hold 0.16, back 0.16; arm +3.0, trunk +0.45; strike reach 0.9 m | 202 | approved |
 cameraController.ts:result drift (RESULT_DRIFT_RATE; _resultDrift) | settled victory shot orbits 0.055 rad/s in the swoop direction; stops on viewer input or a new shot | 204 | approved |
 simulationSystem.ts:front-rank dress (SHIELD_DRESS_PULL, _STEP; _dressShieldFronts) | reverted | 204 | rejected | 0.35, 0.04 m/step after the solver: depth only, boards still split sideways; dress idea spent
+simulationSystem.ts:board contact (SHIELD_BOARD_STANDOFF; _resolveLivingCollisions enemy reach) | front-rank carrier reach vs an enemy = max(radius, 0.46) | 205 | approved |
 projectileSystem.ts:cannonball wake (TRAIL_PUFF_EVERY, _BORN, _GROWN, _LIFE, _CAP) | feathered billboard puff every 0.03 s, 0.55 -> x2.6, life 1.6, cap 240 | 200 | approved |
 visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white torus at the strike, 0.4 -> 2.6 m over 0.7 s, fade last third | 198 | approved |
 proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_PLANE_MAX_OUT; slot plane) | from slotting: plane 0.42 ahead, lap 0.22, out at most 0.7 | 202 | approved | in contact only (201 rejected); back clamp -0.7 + front-rank dress rejected 203 (keep back clamp -0.2)
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 194 | spear-stops-on-the-first-body | battle-feel.c | rejected
-- 195 | couched-butt-grip | battle-feel.c | approved
 - 196 | wall-shafts-share-one-heading | battle-feel.c | rejected
 - 196 | mammoth-fur-mass | unit-look.f | approved
 - 197 | wall-shafts-one-plane | battle-feel.c | approved
@@ -84,6 +83,7 @@ proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP,
 - 203 | lapped-boards-in-contact | battle-feel.h | rejected
 - 204 | dressed-front-under-shove | battle-feel.h | rejected
 - 204 | result-drift | camera.g | approved
+- 205 | board-contact-plane | battle-feel.h | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

@@ -203,3 +203,4 @@ iter 201 | [S] lapped-shield-boards, [P] press-club-phase (+[S] landed-tumble-po
 iter 202 | [S] press-blow, [S] lapped-boards retry (+evidence ui_campaign_select, shield_wall_front re-aim, regression on fresh page) | 2/2 approved | passes 11 -> 11
 iter 203 | [S] lapped-boards-in-contact (+[S] landed-spread dropped; evidence big_melee_result_1s) | 0/1 approved | passes 11 -> 11
 iter 204 | [S] dressed-front-under-shove, [S] result-drift | 1/2 approved | passes 11 -> 12
+iter 205 | re-audit; [S] board-contact-plane (+[S] landed-press-club dropped; evidence press_clubbers_side) | 1/1 approved | passes 12 -> 12
