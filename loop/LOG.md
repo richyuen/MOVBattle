@@ -213,3 +213,4 @@ iter 211 | [S] board-grip (+[S] press-club-lands dropped) | 1/1 approved | passe
 iter 212 | [S] lapped-band-at-contact, [S] press-club-lands both dropped uncommitted | 0/0 reviewed | passes 12 -> 12
 iter 213 | [S] board-axis-from-heading, [S] landing-hold | 1/2 approved | passes 12 -> 13
 iter 214 | [S] board-layers (+[S] press-downstroke dropped) | 0/1 approved | passes 13 -> 13
+iter 215 | re-audit; [S] fight-keyed haze and vignette, [S] spell-dome | 2/2 approved | passes 13 -> 13

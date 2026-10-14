@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 214   Last re-audit: 210   Consecutive rejects: 1   Branch: main
+Iteration: 215   Last re-audit: 215   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -8,43 +8,45 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Tier 2 (fully scored at 198, re-audited 210):
+Tier 2 (fully scored at 198, re-audited 215):
 battle-feel: e FAIL f PASS g PASS h FAIL (2/4)
-- e FAIL [S since: 2] B: 1 no swing caught mid-arc against a target — closeup_weapon_reads (only sword knights, no clubber, no landed blow); 3 no press club caught landing on a man: side-on press_clubbers_side shows one club cocked and one driven level into the board face, none down on a head or body — press_clubbers_side, big_melee_9s. (2 struck 200) Ref trailer_3_sheet_01 r2c3.
-- h FAIL [S since: 1, rejected since: 2] B: 1 under the shove only the lead red board of each rank faces the enemy, the rank's other boards hidden behind it, no lapped band at contact — shield_wall_2500ms, 2650ms; 4 blue (hoplite, round) boards seat face-on to the side camera, a mitt and a blade through the board face — shield_wall_side. (2, 3 struck 210; 5 struck 211) Ref tabs_screenshot_06, trailer_2_sheet_03 r2c3.
+- e FAIL plateau (list rewritten 215) [S since: 0] B: 1 press_clubbers_side: two clubbers flung backward off the braced boards with clubs loose in the air, the third's club driven level into the board face; no club comes down on a head or shoulder; 2 big_melee_5s, 9s: tribal clubs held upright over the red crowd at contact, none caught in a wide windup or descending onto a blue man; 3 shield_wall_2500ms, 2650ms: hoplite spears stand vertical at contact, none thrust forward from behind the boards (the knight's levelled sword lunge in 2650ms is the only committed blow on show); 4 closeup_weapon_reads: red knights carry swords shouldered or trailed, no swing caught mid-arc against a target.
+- h FAIL plateau (list rewritten 215) [S since: 0] B: 1 blue hoplite boards sit face-on to the side camera (three octagons with slots facing the lens) while red boards face the enemy; both teams must hold boards toward the foe — shield_wall_side, shield_wall_2500ms; 2 the pressed red block interpenetrates: helmets merged two and three into one another, bodies inside bodies — shield_wall_2500ms, 2650ms; 3 a blue knight's blade and mitt pass through the blue board row — shield_wall_side; 4 no evidence of the band under shove from the enemy side: add shield_wall_front at contact (current shield_wall_front is pre-contact and there the red boards do lap edge to edge).
 unit-look: e PASS f FAIL g PASS h FAIL (2/4)
 - f FAIL [S since: 2] B: 1 mammoth ~2.5-2.9 men tall (ref ~3.5) — big_melee_result. (3 struck 199) Ref tabs_screenshot_01.
 - h FAIL [S since: 1, rejected since: 2] B: 1 eyes do not read at lineup distance on bare-faced units; 3 beret and yellow cone ~1 head wide (ref ~2 heads, tabs_screenshot_05) — lineup_medieval. Ref tabs_screenshot_04.
 maps-light: e FAIL f FAIL g PASS h PASS (2/4)
 - e FAIL [S since: 0] B: 1 spooky tree ring is lime-green deciduous, a day meadow palette on purple ground (ref navy night, pink glow); 2 placement top-down only, team tints hide the ground, no battle-angle shot; 3 no spooky dressing (gravestones, dead trees, pink lights) — biome_spooky. Ref tabs_screenshot_03, 05.
-- f FAIL [S since: 0] B: 1 corners no darker than centre (no vignette); 2 no distance haze, far trees as saturated as near grass — big_melee_5s. Ref tabs_screenshot_05, 01.
+- f FAIL [S since: 1] B: 2 no distance haze: far tree ring and mountains as saturated and dark as the field (fog keyed to the fight, but backdrop materials not washed) — big_melee_5s, spell_dome. (1 struck 215) Ref tabs_screenshot_05, 01.
 ui-flow: e PASS f PASS g FAIL h PASS (3/4)
 - g FAIL [S since: 0] B: 1 levels are text cards in a centred two-column modal, not level nodes on a campaign map; 2 bold mixed-case sans, ref thin widely tracked white caps (tabs_screenshot_04); 3 a sentence of description per card, a wall of text, ref terse labels on empty screen — ui_campaign_select.
 camera: e PASS f FAIL g PASS h PASS (3/4)
 - f FAIL [S since: 0] B: 1 missing: a near-ground spectator camera rule looking up at the mammoth or a launch (none in web/src; confirmed 203).
 vfx: e FAIL f PASS g FAIL h FAIL (1/4)
-- e FAIL [S since: 1] B: 1 no whole solid ring or dome (198 ring shows a quarter arc behind a body) — closeup_state_reads; 2 Zeus held bolt is a pale yellow glow slab (ref white jagged slabs trailer_2_sheet_03 r3c2) — closeup_pair_zeus_thor. Ref trailer_2_sheet_03 r2c1.
+- e FAIL [S since: 2] B: 2 Zeus held bolt is a pale yellow glow slab (ref white jagged slabs trailer_2_sheet_03 r3c2) — closeup_pair_zeus_thor. (1 struck 215 by spell_dome) Ref trailer_2_sheet_03 r2c1.
 - g FAIL [S since: 1] B: 2 no broken-gear debris (r1c2) — big_melee_5s, 9s. (1 struck 199) Ref trailer_2_sheet_02.
 - h FAIL [S since: 1, rejected since: 2] B: 1 burst hard solid lobes, no soft fire envelope (ref trailer_3_sheet_03 r1c2) — war_machines_1100ms; 3 muzzle puff faceted spheres, no drifting smoke — 1250ms. (2 struck 200)
 Total tier 1 24/24; tier 2 13/24.
 
 ## Focus (every gap this iteration)
-BASE e2c6d41
-- [S] battle-feel.h board-layers (33ccb05) — REJECT, reverted: red front reads as a two-layer square band head-on (shield_wall_front), but the two blue boards in shield_wall_side stay face-on and the contact pair still shows one board per rank
-- [S] battle-feel.e press-downstroke — dropped uncommitted (counts as an attempt)
+BASE bedcd83 (re-audit 215: no flips; battle-feel.e and .h plateau, lists rewritten; other criteria ranked first)
+- evidence 5525346 spell_dome (divine arbiter strike on a squire block)
+- [S] maps-light.f fight-keyed haze and vignette (a0c3330) — APPROVE, blocker 1 struck
+- [S] vfx.e spell-dome (fb77eb0) — APPROVE, blocker 1 struck
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] board-layers (33ccb05) VERDICT: REJECT CRITERION: battle-feel.h FAIL (previous: FAIL)
+- GAP: [S] fight-keyed haze and vignette (a0c3330) VERDICT: APPROVE CRITERION: maps-light.f FAIL (previous: FAIL)
+- GAP: [S] spell-dome (fb77eb0) VERDICT: APPROVE CRITERION: vfx.e FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.h board-layers-both-walls [1] — blocker 4: the blue boards seen face-on in shield_wall_side seated on a rank strip, square and layered; probe first whether those blue men are slotted at all (fragmented walls, rank, toppled) — ref trailer_2_sheet_03 r2c3 — ours shield_wall_side
-2. [S] battle-feel.h contact-band [0] — blocker 1: at contact the strip boards behind the lead one spread across their slots instead of stacking behind it, so the band shows in the flank pair — ref tabs_screenshot_06 — ours shield_wall_2500ms
-3. [S] battle-feel.e press-downstroke [1] — blocker 3: a press clubber's overhead blow lands on a head or body over the board — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
-4. [S] unit-look.f mammoth-stature [2] — blocker 1: mammoth ~3.5 men tall, legs and tusks scaled with it — ref tabs_screenshot_01 — ours big_melee_result
-5. [S] maps-light.f post-vignette [0] — blocker 1: a vignette post-process darkening the frame corners — ref tabs_screenshot_05 — ours big_melee_5s
-6. [S] vfx.g gear-debris [1] — blocker 2: broken shield/helmet chunks thrown on death or impact — ref trailer_2_sheet_02 r1c2 — ours big_melee_5s
-7. [S] camera.f spectator-low-shot [0] — blocker 1: a near-ground camera rule looking up at the mammoth or a launch — ref trailer_3_sheet_01 r1c2 — ours war_machines_1100ms
-8. [S] vfx.e solid-ring [0] — blocker 1: a whole solid one-colour ring or dome round a magic unit — ref trailer_2_sheet_03 r2c1 — ours closeup_state_reads
+1. [S] vfx.e zeus-bolt-slabs [0] — blocker 2: held/struck bolt as 3-5 flat white jagged polygon slabs in a zigzag, unlit — ref trailer_2_sheet_03 r3c2 — ours closeup_pair_zeus_thor
+2. [S] maps-light.f backdrop-haze [0] — blocker 2: fog on the mountain and ring materials, or a depth tint toward the sky colour — ref tabs_screenshot_05 — ours big_melee_5s, spell_dome
+3. [S] unit-look.f mammoth-scale [2] — blocker 1: leg and hull proportions to ~3.5 men tall — ref tabs_screenshot_01 — ours big_melee_result
+4. [S] vfx.g broken-gear [1] — blocker 2: snapped shield halves and shafts dropped as litter — ref trailer_2_sheet_02 r1c2 — ours big_melee_5s, 9s
+5. [S] maps-light.e spooky-palette [0] — blocker 1: bare dead navy/black trunks replacing the lime ring on that biome — ref tabs_screenshot_03, 05 — ours biome_spooky
+6. [S] vfx.h soft-fire-envelope [0] — blocker 1: feathered sprite fire and smoke round the solid burst lobes — ref trailer_3_sheet_03 r1c2 — ours war_machines_1100ms
+7. [R] battle-feel.e committed-strike [0] — contact-keyed wide windup then a descending swing onto head or shoulder; check the shield_wall pair for an h regression — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side, big_melee_5s
+8. [R] battle-feel.h wall-under-shove [0] — both teams' boards one enemy-facing surface, no interpenetration — ref tabs_screenshot_06 — ours shield_wall_side, 2500ms
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - board-layers [attempts: 1, [S]] — 214: square boards, every other one 0.07 forward: head-on band good, but blue boards beside the knights still face-on in the side shot
@@ -53,11 +55,9 @@ BASE e2c6d41
 - lapped-band-at-contact [attempts: 2, [S], dropped] — 212: from the side one wall shows faces, the other backs; turning boards cannot make a side band
 - wall-side-band [attempts: 1, [S]] — 209: end men wing boards out 0.9 rad, gap-side boards turn up to 0.6 rad: a turned disc does not move into the gap, torsos still show; wings read edge-on under the shove
 - wall-board-yaw-from-frame [attempts: 1, [S]] — 208: rear-rank boards on their own lapped line square to the heading: side/2500/2650 still show two turned discs and ~6 bare torsos; a board covers half a man's width side-on
-- wall-face-held-in-contact [attempts: 1, [S]] — 207: board seated across on its ShieldSlot.at (0.45 m reach), kept up under a stagger: front boards in shield_wall_side/2650ms still face a flank camera (yaw not square to the wall) with torsos between them
-- dressed-front-under-shove [attempts: 2, [S]] — 204: front rank pulled onto its mean depth after the solver (0.35/step, 0.04 m cap): depth only, boards still split sideways, bodies still overlap at the line; no contact shot of the board faces
 
 ## Notes for next iteration (max 5 lines)
-- 214 [S] pick was battle-feel.h (e dropped). 215 is a re-audit. battle-feel.h: 2 rejected [S] since its list was rewritten (213, 214); one more makes it plateau. The blue boards the critic sees face-on in shield_wall_side may belong to unslotted men: probe before touching boards again.
+- 215 [S] pair was (maps-light.f, vfx.e); 216 must not repeat it. battle-feel.e and .h are plateau (rewritten 215): only [R] on them. The 212 drop counted toward h plateau (dropped gaps count as attempts).
 - Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the shield arm aims at the board back (_gripBoard). The blue wall men are hoplites with round boards (no tower shields in the wall shots).
 - battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.
