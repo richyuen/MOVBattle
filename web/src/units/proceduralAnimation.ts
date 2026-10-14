@@ -105,6 +105,8 @@ const PRESS_BLOW_REST = 0.38;
 const PRESS_BLOW_HEAVE = 0.14;
 const PRESS_BLOW_COCK = 0.1;
 const PRESS_BLOW_SLAM = 0.08;
+// A rear-rank clubber's resting blow between beats: this far down from the cock toward landed (1), the club laid forward over the man ahead (see readyBlow).
+const REAR_CLUB_REST = 0.85;
 // How far the arm comes down from the cock onto the man: the fist stops raised before the striker's face, so the club laid down from it lands on the board top or
 // the head in front, not level into the board at the belly.
 const PRESS_BLOW_ARM = 1.7;
@@ -187,10 +189,13 @@ export class ProceduralAnimator {
   private _shoveTimer = 0;
 
   /** An enemy is close enough to close with (a few strides): a heavy weapon comes up to its cocked hold over the shoulder and stays there until the calls stop. */
-  readyBlow(striking = false): void {
+  readyBlow(striking = false, behindRank = false): void {
     this._readyTimer = 0.6;
     if (striking) this._strikeTimer = 0.6;
+    if (behindRank) this._restLowTimer = 0.6;
   }
+  // A clubber a rank back behind a man of his own side (see readyBlow): between beats his club rests low over that man's shoulder, not cocked
+  private _restLowTimer = 0;
   private _strikeTimer = 0;
   private _readyTimer = 0;
   private _ready = 0;
@@ -267,6 +272,14 @@ export class ProceduralAnimator {
       this._lastBlowBeat = beatIndex;
     }
     return blow;
+  }
+  /** Whether the press beat is in its heave-up or cocked phase right now (the club is going up for the slam, not resting). */
+  private _pressBlowCocked(): boolean {
+    const h = Math.sin(this._wobblePhase * 91.7) * 43758.5453;
+    const own = h - Math.floor(h);
+    const beat = PRESS_BLOW_BEAT_MIN + (PRESS_BLOW_BEAT_MAX - PRESS_BLOW_BEAT_MIN) * own;
+    const u = (this._time / beat + own * 3.7) % 1;
+    return u >= PRESS_BLOW_REST && u < PRESS_BLOW_REST + PRESS_BLOW_HEAVE + PRESS_BLOW_COCK;
   }
   private _lastBlowBeat: number | null = null;
   private _blowsLanded = 0;
@@ -720,8 +733,12 @@ export class ProceduralAnimator {
     if (cocked > 0.01 && this._state !== AnimState.Attacking && this._state !== AnimState.Dead && this.walkStyle !== "quadruped" && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
       const b = this._body;
       const heave = Math.sin((this._time + this._wobblePhase) * 3) * 0.1;
-      // Within striking distance he brings it down on his own beat, as a man in the press does
-      const blow = this._strikeTimer > 0 ? this._pressBlow() : 0;
+      // Within striking distance he brings it down on his own beat, as a man in the press does. A rank back, behind a man of his own side, he rests the club
+      // low and forward over that man's shoulder between beats, heaving it a little (trailer_3_sheet_01 r2c3: the clubs behind the line are down on it, not
+      // raised), and on his beat it is cocked and slammed down from there
+      this._restLowTimer -= dt;
+      const rest = this._restLowTimer > 0 ? REAR_CLUB_REST + Math.sin((this._time + this._wobblePhase) * 2.2) * 0.08 : 0;
+      const blow = this._strikeTimer > 0 ? (rest > 0 ? Math.max(this._pressBlow(), rest * (this._pressBlow() > 0.001 || this._pressBlowCocked() ? 0 : 1)) : this._pressBlow()) : rest;
       b.rightShoulder.rotation.x += (-2.5 + heave + PRESS_BLOW_ARM * blow - b.rightShoulder.rotation.x) * cocked;
       b.rightShoulder.rotation.z += (0.3 - 0.4 * blow - b.rightShoulder.rotation.z) * cocked;
       b.rightElbow.rotation.x += (-1.3 + 1.15 * blow - b.rightElbow.rotation.x) * cocked;

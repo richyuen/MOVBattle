@@ -434,9 +434,9 @@ export class RuntimeUnit {
   }
 
   /** Closing on its target, a few strides out: a heavy weapon comes up cocked over the shoulder; within striking distance it is brought down on its own beat. */
-  readyBlow(striking = false, target: RuntimeUnit | null = null): void {
+  readyBlow(striking = false, target: RuntimeUnit | null = null, behindRank = false): void {
     if (isVehicleUnit(this.definition.id)) return;
-    this.animator.readyBlow(striking);
+    this.animator.readyBlow(striking, behindRank);
     if (striking) this._blowTarget = target;
   }
   // The man a press blow lands on: he flinches (head and trunk snapped back) on each slam that reaches him

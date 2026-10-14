@@ -102,6 +102,9 @@ const SHIELD_SLOT_SNAP = 0.15;
 const RANK_DEPTH_SHARE = 0.95;
 // An ally who is not in the wall stands at least this much more than a body behind its front rank (clear of the boards, see _keepRanksDeep).
 const WALL_QUEUE_GAP = 0.25;
+// A clubber a rank back (see _allyBetween): how much further than a front man's strike reach he strikes from, over an ally within this lane of his line.
+const REAR_RANK_REACH = 1.4;
+const REAR_RANK_LANE = 0.7;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -579,7 +582,12 @@ export class SimulationSystem {
     unit.setSpinning(false);
     const spearSlot = this._shieldSlots.get(unit);
     if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
-    if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) unit.readyBlow(distance <= engageDistance + this.blowStrikeReach, enemy);
+    if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) {
+      const inReach = distance <= engageDistance + this.blowStrikeReach;
+      // A rank back, behind a man of his own side, a clubber rests his club low over that man's shoulder between beats and strikes from there on his beat
+      const behind = !inReach && distance <= engageDistance + this.blowStrikeReach + REAR_RANK_REACH && this._allyBetween(unit, enemy);
+      unit.readyBlow(inReach || behind, enemy, behind);
+    }
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
@@ -850,6 +858,22 @@ export class SimulationSystem {
    * has come within a body of a man of his own side ahead of him in the wall is put back along the wall's heading by the shortfall. Depth only: the front rank and
    * the lateral pitch (the board lap) are not touched, so this does not fight the snap across.
    */
+  /** Whether a man of his side on his feet stands between him and this enemy, in a lane of his line to him and within about two bodies of him. */
+  private _allyBetween(unit: RuntimeUnit, enemy: RuntimeUnit): boolean {
+    const tx = enemy.position.x - unit.position.x, tz = enemy.position.z - unit.position.z;
+    const reach = Math.hypot(tx, tz);
+    if (reach < 1e-3) return false;
+    const fx = tx / reach, fz = tz / reach;
+    for (const ally of this._units) {
+      if (ally === unit || ally.team !== unit.team || ally.isDead || ally.isToppled || ally.isDowned) continue;
+      const dx = ally.position.x - unit.position.x, dz = ally.position.z - unit.position.z;
+      const along = dx * fx + dz * fz;
+      if (along <= 0.1 || along >= reach) continue;
+      if (Math.abs(dz * fx - dx * fz) < REAR_RANK_LANE && along < REAR_RANK_REACH + 0.6) return true;
+    }
+    return false;
+  }
+
   private _keepRanksDeep(): void {
     const front: RuntimeUnit[] = [];
     for (const [unit, slot] of this._shieldSlots) if (slot.hold === null && unit.wallBraced) front.push(unit);
