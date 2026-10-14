@@ -90,8 +90,6 @@ const CASTER_CROUCH = 0.3;
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
-// How far a cocked club rocks on the shoulder between blows, each man on his own phase, so a press of clubs stands at mixed angles.
-const CLUB_HEAVE = 0.6;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -540,7 +538,7 @@ export class ProceduralAnimator {
       if (this._state !== AnimState.Attacking && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
         // A clubber in the press, stood or stepping in, does not windmill or level his weapon arm: between blows he keeps it cocked up over his shoulder, ready to bring it down,
         // heaving it a little on his own beat, while the free arm still claws and shoves.
-        const heave = Math.sin(phase * 0.5 + this._wobblePhase * 7) * CLUB_HEAVE;
+        const heave = Math.sin(phase * 0.5) * 0.12;
         b.rightShoulder.rotation.x += (-2.5 + heave - b.rightShoulder.rotation.x) * k;
         b.rightShoulder.rotation.z += (0.3 - b.rightShoulder.rotation.z) * k;
         b.rightElbow.rotation.x += (-1.3 - b.rightElbow.rotation.x) * k;
@@ -643,7 +641,7 @@ export class ProceduralAnimator {
     const cocked = this._ready * (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
     if (cocked > 0.01 && this._state !== AnimState.Attacking && this._state !== AnimState.Dead && this.walkStyle !== "quadruped" && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
       const b = this._body;
-      const heave = Math.sin(this._time * 3 + this._wobblePhase * 7) * CLUB_HEAVE;
+      const heave = Math.sin((this._time + this._wobblePhase) * 3) * 0.1;
       b.rightShoulder.rotation.x += (-2.5 + heave - b.rightShoulder.rotation.x) * cocked;
       b.rightShoulder.rotation.z += (0.3 - b.rightShoulder.rotation.z) * cocked;
       b.rightElbow.rotation.x += (-1.3 - b.rightElbow.rotation.x) * cocked;
