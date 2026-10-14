@@ -22,12 +22,17 @@ const GEAR_TOSS_MIN = 0.6;
 const GEAR_TOSS_MAX = 1.1;
 const GEAR_BOARD_LEAN = 0.35;
 const GEAR_BLADE_RAISE = 0.28;
-// The soft fire round a blast (see VisualEffects._spawnFireEnvelope): the fire sprites' life in seconds (smoke lives 2.2 times as long), and how many of each.
-const ENVELOPE_LIFE = 0.8;
-const ENVELOPE_FIRE = 9;
-const ENVELOPE_SMOKE = 6;
-// Near-white core sprites at the heart of a blast.
-const ENVELOPE_CORE = 3;
+// The burst as sprites (see the spec at VisualEffects._spawnFireball): fire sprite counts (white core, pale-yellow body, orange rim), seconds to full size and
+// to gone, and the dust and smoke sprites under and over it with their lives.
+const FIREBALL_CORE = 3;
+const FIREBALL_BODY = 5;
+const FIREBALL_RIM = 7;
+const FIREBALL_GROW = 0.28;
+const FIREBALL_LIFE = 0.9;
+const DUST_SPRITES = 10;
+const DUST_LIFE = 1.8;
+const SMOKE_SPRITES = 6;
+const SMOKE_LIFE = 2.4;
 const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
@@ -220,58 +225,86 @@ export class VisualEffects {
     });
   }
 
-  // ══════════════════ FIRE ENVELOPE ══════════════════
-  /**
-   * The soft fire round a blast (trailer_3_sheet_03 r1c2): the solid lobes are the heart, and round them a glowing mass of feathered camera-facing sprites,
-   * orange at the core and rising, swelling and thinning away over ENVELOPE_LIFE, with grey smoke sprites that rise out of it slower and outlast it, so the
-   * burst has a soft edge and drifts instead of being a cluster of hard balls.
+  // ══════════════════ FIREBALL ══════════════════
+  /*
+   * A cannon or bomb burst, rebuilt as sprites (220). Spec, read off the reference:
+   *   trailer_3_sheet_03 r1c1, r1c2: one soft, overexposed fireball about two men across, its heart clipped to white, cream-yellow through the body and pale
+   *   orange only at the feathered rim; no hard edge, no outline and no solid shape anywhere in it; the flung bodies stand dark against it. r2c1: by the
+   *   time the bodies land the fire is gone and only smoke and dust hang over the crater.
+   * So:
+   *   Fireball: FIREBALL_CORE near-white, FIREBALL_BODY pale-yellow and FIREBALL_RIM pale-orange feathered camera-facing discs, all additive so where they
+   *   overlap the heart clips to white; the core small and central, the body round it, the rim widest and outermost. Each swells to full size by
+   *   FIREBALL_GROW and is gone by FIREBALL_LIFE (about a second), so it is at its brightest while the bodies are thrown and out before they land.
+   *   Dust: DUST_SPRITES feathered tan discs blended normally on the ground, billowing out low and wide under the fire and thinning over DUST_LIFE.
+   *   Smoke: SMOKE_SPRITES feathered grey discs rising slowly out of the fire and outlasting it.
+   *   No solid lobes, shells, flecks, smoke balls or dust domes: every soft part is a sprite. The shot ball and the clods stay solid: they are things.
    */
-  private _spawnFireEnvelope(position: Vector3, scale: number): void {
-    const root = new TransformNode("fireEnvelope", this._scene);
-    const sprites: { mesh: Mesh; mat: StandardMaterial; born: number; grown: number; rise: Vector3; life: number; peak: number }[] = [];
-    // Fire and core sprites are additive, so they glow over the smoke: blended normally over the grey smoke they came
-    // out mustard and brown; added, they can only brighten, so the heart of the blast glows near white. (Drawn over everything, they washed out the guns in front.)
-    const add = (fire: boolean, i: number, count: number, core = false): void => {
-      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.8;
-      const out = (fire ? 0.5 : 0.3) * scale * (0.6 + Math.random() * 0.6);
-      const mesh = MeshBuilder.CreatePlane(fire ? "envelopeFire" : "envelopeSmoke", { size: 1 }, this._scene);
+  private _spawnFireball(position: Vector3, scale: number): void {
+    const root = new TransformNode("fireball", this._scene);
+    const glow = this._scene.getGlowLayerByName("glow");
+    const fire = Math.min(scale * 1.2, 1.6);
+    const dust = Math.min(scale, 1.4);
+    type Sprite = { mesh: Mesh; mat: StandardMaterial; born: number; grown: number; grow: number; drift: Vector3; life: number; peak: number };
+    const sprites: Sprite[] = [];
+    const add = (name: string, color: Color3, additive: boolean, at: Vector3, born: number, grown: number, grow: number, drift: Vector3, life: number, peak: number): void => {
+      const mesh = MeshBuilder.CreatePlane(name, { size: 1 }, this._scene);
       mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
       mesh.isPickable = false;
       mesh.parent = root;
-      mesh.position.set(position.x + Math.cos(angle) * out, position.y + (fire ? 0.5 : 0.9) * scale + Math.random() * 0.5 * scale, position.z + Math.sin(angle) * out);
-      const mat = this._envelopeMat(core ? new Color3(1, 0.95, 0.82) : fire ? new Color3(1, 0.62 + Math.random() * 0.15, 0.25) : new Color3(0.42, 0.4, 0.38), fire);
+      mesh.position.copyFrom(at);
+      const mat = this._envelopeMat(color, additive);
       mesh.material = mat;
-      if (core) mesh.position.set(position.x + Math.cos(angle) * out * 0.3, position.y + 0.6 * scale, position.z + Math.sin(angle) * out * 0.3);
-      this._scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
-      const born = (core ? 1.9 : fire ? 1.3 : 1.0) * scale * (0.8 + Math.random() * 0.5);
-      sprites.push({
-        mesh, mat, born, grown: born * (fire ? 1.8 : 2.6),
-        rise: new Vector3(Math.cos(angle) * 0.4, fire ? 1.1 : 0.7, Math.sin(angle) * 0.4).scale(scale),
-        life: (fire ? ENVELOPE_LIFE : ENVELOPE_LIFE * 2.2) * (0.8 + Math.random() * 0.4),
-        peak: core ? 0.65 : fire ? 0.5 : 0.55,
-      });
+      glow?.addExcludedMesh(mesh);
+      sprites.push({ mesh, mat, born, grown, grow, drift, life, peak });
     };
-    for (let i = 0; i < ENVELOPE_FIRE; i++) add(true, i, ENVELOPE_FIRE);
-    for (let i = 0; i < ENVELOPE_CORE; i++) add(true, i, ENVELOPE_CORE, true);
-    for (let i = 0; i < ENVELOPE_SMOKE; i++) add(false, i, ENVELOPE_SMOKE);
+    const ring = (count: number, out: number, lift: number, k: number): Vector3 => {
+      const angle = (k / count) * Math.PI * 2 + Math.random() * 0.7;
+      const reach = out * (0.6 + Math.random() * 0.5);
+      return new Vector3(position.x + Math.cos(angle) * reach, position.y + lift, position.z + Math.sin(angle) * reach);
+    };
+    const still = Vector3.Zero();
+    for (let k = 0; k < FIREBALL_RIM; k++) {
+      const at = ring(FIREBALL_RIM, 0.75 * fire, (0.6 + Math.random() * 0.6) * fire, k);
+      add("fireRim", new Color3(1, 0.62, 0.3), true, at, 0.6 * fire, 2.0 * fire, FIREBALL_GROW, new Vector3(0, 0.5 * fire, 0), FIREBALL_LIFE * (0.8 + Math.random() * 0.3), 0.55);
+    }
+    for (let k = 0; k < FIREBALL_BODY; k++) {
+      const at = ring(FIREBALL_BODY, 0.4 * fire, (0.7 + Math.random() * 0.4) * fire, k);
+      add("fireBody", new Color3(1, 0.9, 0.6), true, at, 0.5 * fire, 1.7 * fire, FIREBALL_GROW, new Vector3(0, 0.4 * fire, 0), FIREBALL_LIFE * (0.75 + Math.random() * 0.25), 0.7);
+    }
+    for (let k = 0; k < FIREBALL_CORE; k++) {
+      const at = ring(FIREBALL_CORE, 0.12 * fire, 0.8 * fire, k);
+      add("fireCore", new Color3(1, 0.98, 0.92), true, at, 0.4 * fire, 1.3 * fire, FIREBALL_GROW * 0.8, still, FIREBALL_LIFE * 0.6, 0.95);
+    }
+    for (let k = 0; k < DUST_SPRITES; k++) {
+      const spread = Math.sqrt((k + 0.5) / DUST_SPRITES);
+      const at = ring(DUST_SPRITES, 1.2 * spread * dust, 0.25 * dust, k);
+      const away = at.subtract(position);
+      away.y = 0;
+      const tan = new Color3(0.78, 0.62, 0.42).scale(0.85 + 0.25 * Math.random());
+      add("burstDust", tan, false, at, 0.8 * dust, 2.2 * dust, 0.5, away.scale(1.2), DUST_LIFE * (0.75 + Math.random() * 0.4), 0.8);
+    }
+    for (let k = 0; k < SMOKE_SPRITES; k++) {
+      const at = ring(SMOKE_SPRITES, 0.5 * fire, 1.1 * fire, k);
+      add("burstSmoke", new Color3(0.55, 0.53, 0.5), false, at, 0.7 * fire, 2.4 * fire, 1.2, new Vector3(0, 0.55, 0), SMOKE_LIFE * (0.8 + Math.random() * 0.4), 0.55);
+    }
     let age = 0;
-    const life = ENVELOPE_LIFE * 2.6;
     this._effects.push({
       root,
-      remaining: life,
+      remaining: SMOKE_LIFE * 1.25,
       update: (dt) => {
         age += dt;
         for (const sp of sprites) {
           const u = Math.min(1, age / sp.life);
-          sp.mesh.scaling.setAll(sp.born + (sp.grown - sp.born) * (1 - (1 - u) * (1 - u)));
-          sp.mesh.position.addInPlace(sp.rise.scale(dt * (1 - u)));
-          // In fast at full strength, then thinning away over the rest of its life
-          sp.mat.alpha = sp.peak * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85);
+          const g = Math.min(1, age / sp.grow);
+          sp.mesh.scaling.setAll(Math.max(0.001, sp.born + (sp.grown - sp.born) * (1 - (1 - g) * (1 - g))));
+          sp.mesh.position.addInPlace(sp.drift.scale(dt * (1 - u)));
+          // In at full strength fast, then thinning away over the rest of its life
+          sp.mat.alpha = u >= 1 ? 0 : sp.peak * (u < 0.12 ? u / 0.12 : 1 - (u - 0.12) / 0.88);
         }
       },
       dispose: () => {
         for (const sp of sprites) {
-          this._scene.getGlowLayerByName("glow")?.removeExcludedMesh(sp.mesh);
+          glow?.removeExcludedMesh(sp.mesh);
           sp.mat.dispose();
         }
       },
@@ -576,134 +609,27 @@ export class VisualEffects {
   // ══════════════════ EXPLOSION BURST ══════════════════
   /** A lumpy two-tone fireball, fat yellow lobes each inside an orange shell with a few orange flecks thrown clear, that burns out piece by piece, a head-sized white smoke puff, the dark ball, a low bank of tan dust puffs billowing out along the ground wider than the fire and a spray of clods that outlasts the smoke. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
-    this._spawnFireEnvelope(position, scale);
+    // The fire, dust and smoke are sprites (see the spec at _spawnFireball); only the shot ball and the clods it kicks up are solid
+    this._spawnFireball(position, scale);
     const root = new TransformNode("explosionBurst", this._scene);
     root.position = position.clone();
     root.position.y += 0.6 * scale;
-
-    // Lit matte materials, bar the fire. The fire is unlit and two-tone, each piece showing its own colour alone: golden yellow for the heart, orange for the
-    // shell round it and a deeper orange for the flecks. No sunlight falls on any of it and none of it has any blue, so the tone curve cannot lift it to cream.
     const mats = getMaterialFactory();
-    const coreMat = this._fxMat(Color3.Black(), new Color3(1.3, 0.6, 0));
-    // The shell is drawn inside out, far side only: it stands as an orange rim round its yellow lobe from any angle and never covers it.
-    const shellMat = this._fxMat(Color3.Black(), new Color3(1.0, 0.22, 0));
-    shellMat.cullBackFaces = false;
-    const fleckMat = this._fxMat(Color3.Black(), new Color3(0.85, 0.13, 0));
-    const glow = this._scene.getGlowLayerByName("glow");
-    const smokeMat = mats.createUnique("cloth", new Color3(0.86, 0.85, 0.82));
-    smokeMat.emissiveColor = new Color3(0.14, 0.14, 0.13);
-    // The dust shows its own colour alone, in three tans all well short of the bloom threshold: lit by the sun, any tan rendered as neutral grey rock.
-    const dustMats = [new Color3(0.8, 0.6, 0.35), new Color3(0.68, 0.5, 0.28), new Color3(0.56, 0.4, 0.22)]
-      .map((tan) => this._fxMat(Color3.Black(), tan));
     const ballMat = mats.createUnique("stone", new Color3(0.1, 0.1, 0.11));
     const clodMat = mats.createUnique("stone", new Color3(0.24, 0.2, 0.16));
     const floorY = -root.position.y + 0.08;
 
-    const blob = (name: string, segments: number, mat: typeof coreMat): TransformNode => {
-      const mesh = MeshBuilder.CreateSphere(name, { diameter: 1, segments }, this._scene);
-      mesh.material = mat;
-      mesh.parent = root;
-      return mesh;
-    };
-    // Fireball: no ball and no star. Four fat squashed yellow lobes of unequal size for the heart, each pushed off the middle its own way and each wrapped in a
-    // bigger orange shell of its own shape, so the mass is yellow in the middle and orange at every edge and in every dent between lobes. Round it a few
-    // short orange flecks thrown clear, and stubby ones low along the ground for the skirt. The silhouette is a lumpy mass wider than it is tall, about a man and a half high for a shell.
-    // Fixed layout, so every blast has the same shape.
-    const fireScale = Math.min(scale * 1.2, 1.6);
-    const fire: { mesh: Mesh; dir: Vector3; reach: number; size: number; length: number; wide: number; deep: number; life: number }[] = [];
-    // The heart is not a ball: one big lobe up and to one side, a middling one low on the other, two small ones out at the edges. None sits on the middle,
-    // none is as wide as it is deep, and each is a different size, so they stand as a lumpy mass with dents between them and do not merge into a globe.
-    const LOBES = [
-      { angle: 0.6, lift: 0.7, size: 0.95, reach: 0.34 },
-      { angle: 2.9, lift: 0.3, size: 0.7, reach: 0.52 },
-      { angle: 4.6, lift: 0.5, size: 0.52, reach: 0.48 },
-      { angle: 5.6, lift: 0.15, size: 0.4, reach: 0.64 },
-    ];
-    const HEART = LOBES.length;
-    const SPIKES = 3;
-    const SHARDS = HEART + SPIKES + 5;
-    for (let i = 0; i < SHARDS; i++) {
-      const heart = i < HEART;
-      const lobe = heart ? LOBES[i] : null;
-      const skirt = i >= HEART + SPIKES;
-      const jitter = (i * 0.618034) % 1; // spreads sizes and lives evenly without two neighbours alike
-      const angle = lobe ? lobe.angle : i * 2.39996 + 0.6;
-      // Each heart lobe leans its own way, spikes fan from steep to shallow, the skirt lies nearly flat
-      const lift = lobe ? lobe.lift : skirt ? 0.08 + 0.2 * jitter : 0.3 + 0.6 * jitter;
-      const flat = Math.sqrt(1 - lift * lift);
-      const dir = new Vector3(Math.cos(angle) * flat, lift, Math.sin(angle) * flat);
-      const mesh = MeshBuilder.CreatePolyhedron("burstFlash", { type: heart ? 2 + (i % 2) : i % 4, size: 0.5 }, this._scene);
-      mesh.material = heart ? coreMat : skirt ? fleckMat : shellMat;
-      mesh.parent = root;
-      // Long axis along the line of flight, and a turn about it so no two facets catch the eye alike
-      mesh.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion()).multiply(Quaternion.RotationAxis(Vector3.Up(), i * 1.3));
-      glow?.addExcludedMesh(mesh); // none of it is in the glow layer: its halo washed over the whole burst and it read as see-through haze
-      const size = (lobe ? lobe.size : skirt ? 0.3 + 0.2 * jitter : 0.2 + 0.14 * jitter) * fireScale;
-      // The heart outlasts the flecks, and each piece goes out at its own moment: the burst breaks up, it does not shrink as one
-      const life = heart ? 0.42 + 0.12 * jitter : 0.24 + 0.24 * jitter;
-      fire.push({
-        mesh,
-        dir,
-        // Flecks fly clear of the shells; the skirt stays under them
-        reach: (lobe ? lobe.reach : skirt ? 0.55 + 0.35 * jitter : 0.95 + 0.3 * jitter) * fireScale,
-        size,
-        length: size * (heart ? 0.95 : skirt ? 1.2 + 0.4 * jitter : 1.0 + 0.3 * jitter),
-        // A lobe is fat one way and squashed the other; a fleck is as deep as it is wide
-        wide: heart ? 1.3 : 1,
-        deep: heart ? 0.68 : 1,
-        life,
-      });
-      if (lobe) {
-        // Its shell: the same solid lying the same way, half as big again and a little further out, burning a moment longer than the lobe inside it
-        const shell = MeshBuilder.CreatePolyhedron("burstShell", { type: 2 + (i % 2), size: 0.5 }, this._scene);
-        shell.material = shellMat;
-        shell.parent = root;
-        shell.rotationQuaternion = mesh.rotationQuaternion.clone();
-        glow?.addExcludedMesh(shell);
-        fire.push({ mesh: shell, dir, reach: (lobe.reach + 0.06) * fireScale, size: size * 1.5, length: size * 1.4, wide: 1.3, deep: 0.8, life: life + 0.05 });
-      }
-    }
-
-    // The shot itself: a dark ball that hops out of the puff and comes to rest.
-    const ball = blob("burstBall", 4, ballMat);
+    // The shot itself: a dark ball that hops out of the burst and comes to rest.
+    const ball = MeshBuilder.CreateSphere("burstBall", { diameter: 1, segments: 4 }, this._scene);
+    ball.material = ballMat;
+    ball.parent = root;
     const ballSize = 0.34 * scale;
     ball.scaling.setAll(ballSize);
     const ballFloor = floorY + ballSize * 0.5;
     const ballAngle = Math.random() * Math.PI * 2;
     const ballVelocity = new Vector3(Math.cos(ballAngle) * 1.6 * scale, 3.4, Math.sin(ballAngle) * 1.6 * scale);
 
-    // Smoke: a small clump of faceted off-white lobes that swells and drifts up. A shell's puff is capped at a
-    // musket ball's and sits at chest height, so it stays below the heads of the bodies it throws.
-    const smokeScale = Math.min(scale, 1);
-    const smokeY = 0.6 * smokeScale - 0.6 * scale;
-    const lobes: { mesh: TransformNode; size: number; rise: number }[] = [];
-    for (let i = 0; i < 5; i++) {
-      const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.6;
-      const reach = (i === 0 ? 0 : 0.22 + Math.random() * 0.16) * smokeScale;
-      const lobe = blob("burstSmoke", 2, smokeMat);
-      lobe.position.set(Math.cos(angle) * reach, smokeY + (Math.random() - 0.5) * 0.3 * smokeScale, Math.sin(angle) * reach);
-      lobes.push({ mesh: lobe, size: (i === 0 ? 0.42 : 0.22 + Math.random() * 0.12) * smokeScale, rise: 0.2 + Math.random() * 0.2 });
-    }
-
-    // Dust: not a ring of stones. A bank of fat squashed puffs lying on the ground under the fire, spread over a disc so each overlaps its neighbours
-    // and the whole reads as one low cloud wider than the burst: big dark ones out at the rim, small pale ones heaped on the middle. It stands knee high.
-    const dustScale = Math.min(scale, 1.4);
-    const DUST_PUFFS = 14;
-    const bank: { mesh: TransformNode; size: number; angle: number; reach: number; tall: number }[] = [];
-    for (let i = 0; i < DUST_PUFFS; i++) {
-      const spread = Math.sqrt((i + 0.5) / DUST_PUFFS); // even cover of the disc, so there is no hole in the middle and no gap at the rim
-      const puff = blob("burstDust", 2, dustMats[i < 4 ? 0 : i % 2 === 0 ? 1 : 2]);
-      puff.rotation.y = i * 1.3;
-      glow?.addExcludedMesh(puff as Mesh);
-      bank.push({
-        mesh: puff,
-        size: (0.7 + 0.5 * spread + 0.25 * ((i * 0.618034) % 1)) * dustScale,
-        angle: i * 2.39996 + Math.random() * 0.4,
-        reach: 2.3 * spread * dustScale,
-        tall: 0.9 - 0.3 * spread,
-      });
-    }
-    // Nine dark faceted clods of mixed shape and size thrown clear of it on high arcs, landing round the crater and lying there.
+    // Nine dark faceted clods of mixed shape and size thrown clear on high arcs, landing round the crater and lying there.
     const chunks: { mesh: TransformNode; size: number; velocity: Vector3 }[] = [];
     const CLODS = 9;
     for (let i = 0; i < CLODS; i++) {
@@ -723,39 +649,12 @@ export class VisualEffects {
       });
     }
 
-    const smokeDuration = 1.1;
     const totalDuration = 1.9;
     this._effects.push({
       root,
       remaining: totalDuration,
       update: (dt, remaining) => {
-        const elapsed = totalDuration - remaining;
         const fade = Math.max(0.001, Math.min(1, remaining / 0.35));
-        // The shards fly out fast and slow to a stop, each swelling as it goes and burning out at its own moment, all of them before the bodies they threw have peaked.
-        const flight = 1 - Math.exp(-elapsed * 9);
-        for (const shard of fire) {
-          const burn = Math.min(1, elapsed / 0.06 + 0.3) * Math.max(0, Math.min(1, (shard.life - elapsed) / 0.14));
-          shard.dir.scaleToRef(shard.reach * (0.35 + 1.1 * flight), shard.mesh.position);
-          const girth = Math.max(0.001, shard.size * burn);
-          shard.mesh.scaling.set(girth * shard.wide, Math.max(0.001, shard.length * burn), girth * shard.deep);
-        }
-        const swell = 0.45 + 0.55 * Math.min(1, elapsed / 0.2);
-        // The puff is gone while the clods it kicked up are still settling.
-        const smokeFade = Math.max(0.001, Math.min(1, (smokeDuration - elapsed) / 0.35));
-        for (const lobe of lobes) {
-          lobe.mesh.position.y += lobe.rise * dt;
-          lobe.mesh.scaling.setAll(lobe.size * swell * smokeFade);
-        }
-        // The bank billows out fast and slows, each puff swelling as it goes, then thins from the rim inward and is gone 60% of the way through, before the clods stop.
-        const roll = 1 - Math.exp(-elapsed * 6);
-        for (const puff of bank) {
-          const settle = Math.max(0.001, Math.min(1, (totalDuration * 0.6 - elapsed - 0.15 * puff.reach / dustScale) / 0.4));
-          const reach = puff.reach * (0.3 + 0.7 * roll);
-          const size = puff.size * (0.45 + 0.55 * roll) * settle;
-          const height = size * puff.tall;
-          puff.mesh.position.set(Math.cos(puff.angle) * reach, floorY + height * 0.3, Math.sin(puff.angle) * reach);
-          puff.mesh.scaling.set(size, height, size);
-        }
         ballVelocity.y -= 14 * dt;
         ball.position.addInPlace(ballVelocity.scale(dt));
         if (ball.position.y < ballFloor) {
@@ -771,16 +670,10 @@ export class VisualEffects {
             chunk.mesh.position.y = rest;
             chunk.velocity.setAll(0);
           }
-          const size = chunk.size * fade;
-          chunk.mesh.scaling.setAll(size);
+          chunk.mesh.scaling.setAll(chunk.size * fade);
         }
       },
       dispose: () => {
-        coreMat.dispose();
-        shellMat.dispose();
-        fleckMat.dispose();
-        smokeMat.dispose();
-        for (const mat of dustMats) mat.dispose();
         ballMat.dispose();
         clodMat.dispose();
       },
