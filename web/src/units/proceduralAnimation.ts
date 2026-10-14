@@ -74,6 +74,8 @@ const SPEAR_FRONT_GRIP_MAX = 0.28;
 const BOARD_PLANE_REACH = 0.42;
 // How far a pressed board's top is tipped forward into the foe (radians), at full shove (see _lapBoard).
 const BOARD_PRESS_TILT = 0.3;
+// The share of his own brace seeds (board yaw, tilt, roll, and a height step) a wall man's lapped board takes, so no two boards on a strip sit alike.
+const BOARD_SCATTER = 0.6;
 // How far a pressing wall man's drive leg goes back (radians at the hip, at full shove); his lead knee and trunk follow it (see the brace).
 const PRESS_DRIVE = 0.4;
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
@@ -1023,7 +1025,8 @@ export class ProceduralAnimator {
       }
       const slotSide = this._boardSlot.z * fx - this._boardSlot.x * fz;
       const depth = this._boardPlane + BOARD_PLANE_REACH * scale;
-      const seat = new Vector3(depth * fx - slotSide * fz, root.y + this._boardSeat, depth * fz + slotSide * fx);
+      const lift = this._bracePose ? (this._bracePose.kneeBias * 2 + this._bracePose.boardTilt * 0.5) * BOARD_SCATTER * scale : 0;
+      const seat = new Vector3(depth * fx - slotSide * fz, root.y + this._boardSeat + lift, depth * fz + slotSide * fx);
       Vector3.LerpToRef(strapped, seat, lap, seat);
       // His fist goes to the board, not the board off his fist: the shield arm is reached straight out at the back of the board (see _gripBoard)
       this._gripBoard(new Vector3(seat.x - fx * BOARD_GRIP_BACK * scale, seat.y, seat.z - fz * BOARD_GRIP_BACK * scale), lap);
@@ -1033,7 +1036,10 @@ export class ProceduralAnimator {
       // Each man's own lean: half the press tilt and half his own trunk pitch, rocking a little on his weight-shift beat, so no two boards share one tilt
       const br = this._bracePose;
       const own = br ? BOARD_PRESS_TILT * 0.5 + br.pitch * 0.5 + Math.sin(this._time * br.shiftRate + br.shiftPhase) * 0.06 : BOARD_PRESS_TILT;
-      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, own * Math.min(1, this._shove), 0);
+      // ...and his board sits at his own small turn, roll and height on the strip (his brace seeds, BOARD_SCATTER of them), so neighbouring rims overlap unevenly
+      // into one rough surface (tabs_screenshot_06) instead of a row of identical boards
+      const scatter = br ? BOARD_SCATTER : 0;
+      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP + (br?.boardYaw ?? 0) * scatter, own * Math.min(1, this._shove) + (br?.boardTilt ?? 0) * scatter, (br?.boardRoll ?? 0) * scatter);
     }
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
