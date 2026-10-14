@@ -434,10 +434,13 @@ export class RuntimeUnit {
   }
 
   /** Closing on its target, a few strides out: a heavy weapon comes up cocked over the shoulder; within striking distance it is brought down on its own beat. */
-  readyBlow(striking = false): void {
+  readyBlow(striking = false, target: RuntimeUnit | null = null): void {
     if (isVehicleUnit(this.definition.id)) return;
     this.animator.readyBlow(striking);
+    if (striking) this._blowTarget = target;
   }
+  // The man a press blow lands on: he flinches (head and trunk snapped back) on each slam that reaches him
+  private _blowTarget: RuntimeUnit | null = null;
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
   levelSpearAt(enemyGround: Vector3, enemyRadius: number, rearRank: boolean): void {
@@ -746,6 +749,9 @@ export class RuntimeUnit {
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
     this.animator.update(dt);
+    if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3) {
+      this._blowTarget.animator.triggerFlinch();
+    }
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
 
