@@ -16,6 +16,52 @@ const HAT_OVERSIZE = 1.3;
 /** Cone and brim hats keep the weapons' three fifths: they sit on top of the head and not round it, and at a third over a wizard's cone and a farmer's brim were no wider than the head */
 const TALL_HAT_OVERSIZE = 1.6;
 const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_hat", "cowboy_hat", "tricorn", "pirate_hat", "captain_hat", "jester_cap"];
+/*
+ * Soft hats fitted to the head (rebuilt 233). Spec, read off the reference:
+ *   tabs_screenshot_05: the cowboy's brim is about 2 to 2.5 heads across and sits low, the crown pulled down over the skull, the face and its bead eyes in full
+ *   view under it. tabs_screenshot_06: helms and caps seated down to the brow line, never perched on the crown. tabs_screenshot_04: the bead eyes always read
+ *   under the head line.
+ * So a soft hat is built in its wearer's head units, not the hat scale (see buildFittedHat):
+ *   Seat: its lowest edge stands HAT_EYE_CLEAR of the head's height above the top of the eye (the eyes are 0.56 of the head up, EYE_OF_FACE x EYE_RIM wide),
+ *   wherever that falls for this head, so it is low on the brow and the eyes stay clear.
+ *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
+ *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
+ */
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat"];
+const HAT_EYE_CLEAR = 0.05;
+const BERET_HEADS = 2.0;
+const BERET_THICK = 0.32;
+const BERET_TILT = 0.22;
+const CONE_BRIM_HEADS = 2.1;
+const CONE_HEADS = 1.5;
+const CONE_TALL = 1.05;
+
+function buildFittedHat(scene: Scene, type: HatType, head: { width: number; height: number }, unit: number, accent: Color3): Mesh {
+  const W = head.width, H = head.height;
+  // Below the crown (the head top joint) to the top of the eye, in the neck's units; the hat's seat is HAT_EYE_CLEAR of the head above that
+  const eyeTop = 0.44 * H - 0.18 * W;
+  const seat = -eyeTop + HAT_EYE_CLEAR * H;
+  const u = (v: number) => v / unit;
+  if (type === "beret") {
+    const beret = MeshBuilder.CreateSphere("beret", { diameter: 1, segments: 10 }, scene);
+    beret.scaling.set(u(BERET_HEADS * W), u(BERET_THICK * H), u(BERET_HEADS * W * 0.95));
+    beret.position.y = u(seat + BERET_THICK * H * 0.5);
+    beret.rotation.z = BERET_TILT;
+    beret.material = mat(scene, accent);
+    return beret;
+  }
+  const brim = MeshBuilder.CreateCylinder("conehatBrim", { height: 1, diameter: 1, tessellation: 18 }, scene);
+  brim.scaling.set(u(CONE_BRIM_HEADS * W), u(0.05 * H), u(CONE_BRIM_HEADS * W));
+  brim.position.y = u(seat);
+  brim.material = mat(scene, accent.scale(0.45));
+  const cone = MeshBuilder.CreateCylinder("conehat", { height: 1, diameterTop: 0, diameterBottom: 1, tessellation: 14 }, scene);
+  cone.parent = brim;
+  // In the brim's scaled frame: a cone CONE_HEADS heads across standing CONE_TALL of the head high on the brim
+  cone.scaling.set(CONE_HEADS / CONE_BRIM_HEADS, CONE_TALL / 0.05, CONE_HEADS / CONE_BRIM_HEADS);
+  cone.position.y = 0.5 + 0.5 * CONE_TALL / 0.05;
+  cone.material = mat(scene, accent.scale(0.5));
+  return brim;
+}
 
 export function attachProps(
   scene: Scene,
@@ -67,8 +113,13 @@ export function attachProps(
       slit: 0.5 - head.height * 0.5 / height,
     };
   }
-  const hat = buildHat(scene, config.hat, scale, accent, teamColor, helmFit);
-  if (hat) {
+  const hat = head && HEAD_FITTED_HATS.includes(config.hat)
+    ? buildFittedHat(scene, config.hat, head, hatUnit, accent)
+    : buildHat(scene, config.hat, scale, accent, teamColor, helmFit);
+  if (hat && head && HEAD_FITTED_HATS.includes(config.hat)) {
+    hat.parent = body.headTop;
+    props.push(hat);
+  } else if (hat) {
     hat.parent = body.headTop;
     hat.scaling.scaleInPlace(TALL_HATS.includes(config.hat) ? TALL_HAT_OVERSIZE : HAT_OVERSIZE);
     props.push(hat);
