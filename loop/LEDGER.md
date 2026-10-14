@@ -59,7 +59,6 @@ proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 214 | board-layers | battle-feel.h | rejected
 - 215 | fight-keyed haze and vignette | maps-light.f | approved
 - 215 | spell-dome | vfx.e | approved
 - 216 | zeus-bolt-slabs | vfx.e | approved
@@ -78,8 +77,12 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 222 | [R] committed-blow v2 | battle-feel.e | rejected
 - 223 | fire-behind-bodies | vfx.h | approved
 - 223 | distance-haze | maps-light.f | approved
+- 224 | bodies-over-fire | vfx.h | approved
+- 224 | spooky-dressing | maps-light.e | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-mapBuilder.ts:backdrop haze plugin (BACKDROP_HAZE_NEAR, _FAR, _MAX, _EYE, _LIFT) | 26 m, 80 m, 0.55, eye 30 m, lift 0.45 toward white | 223 | approved |
+mapBuilder.ts:backdrop haze plugin (BACKDROP_HAZE_NEAR, _FAR, _MAX, _EYE, _LIFT) | 26 m, 80 m, 0.55, eye 30 m, lift 0.45 toward white | 223 | approved | [P] NEAR 26->18 rejected 224 (not visible; ledger reversal)
+runtimeUnit.ts:flung render group (FLUNG_RENDER_GROUP; main.ts group 1 keeps depth) | airborne > 0.35 m drawn after blast sprites | 224 | approved |
+mapBuilder.ts:spooky dressing (deadTree, tomb, graveLight kinds; spooky prop list) | 10+10 tombs scale 1.4-1.5, 6 dead trees 1.5-1.8, 4 pink lights | 224 | approved |
