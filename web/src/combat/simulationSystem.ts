@@ -551,9 +551,7 @@ export class SimulationSystem {
     }
     unit.setSpinning(false);
     const spearSlot = this._shieldSlots.get(unit);
-    if (spearSlot && distance <= engageDistance + this.spearLevelReach) {
-      unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null, this._spearFirstFace(unit, spearSlot.heading));
-    }
+    if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
@@ -777,29 +775,6 @@ export class SimulationSystem {
         aheadRank = r;
       }
     }
-  }
-
-  /**
-   * The first enemy in a wall man's spear path: how far ahead of him, along the wall's heading, the near face of the nearest standing enemy lies whose body the
-   * shaft's line would meet (the line runs from his weapon side, so the path is as wide as that body and a hand more). Null when the path is clear.
-   */
-  private _spearFirstFace(unit: RuntimeUnit, heading: number): number | null {
-    const fx = Math.sin(heading);
-    const fz = Math.cos(heading);
-    let first: number | null = null;
-    for (const other of this._units) {
-      if (other.isDead || other.team === unit.team || other.linkedParent) continue;
-      const dx = other.position.x - unit.position.x;
-      const dz = other.position.z - unit.position.z;
-      const ahead = dx * fx + dz * fz;
-      if (ahead <= 0) continue;
-      const across = dx * fz - dz * fx;
-      if (Math.abs(across) > other.collisionBodyRadius + 0.35) continue;
-      // A man behind a board is met at the board, a forearm ahead of his body
-      const face = ahead - other.collisionBodyRadius - (other.visualConfig.shield !== "none" ? 0.25 : 0);
-      if (first === null || face < first) first = face;
-    }
-    return first;
   }
 
   /** In contact a slotted carrier stands square to his wall's advance, board to the front, while his enemy is within shieldHeadingArc of it. */
