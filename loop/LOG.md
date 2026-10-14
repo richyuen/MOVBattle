@@ -199,3 +199,4 @@ iter 197 | [S] battle-feel.c wall-shafts-one-plane, [S] unit-look.h zeus-no-mout
 iter 198 | re-audit; [S] unit-look.f mammoth-trunk, [S] vfx.e impact-ring | 1/2 approved | passes tier1 24 -> 24, tier2 11/24 -> 11/24
 iter 199 | [S] mammoth-trunk retry, [S] blood-chunks | 2/2 approved | passes 35 -> 35
 iter 200 | [S] battle-feel.e overhead-club-strike, [S] vfx.h cannonball-smoke-trail (re-audit: criteria unchanged) | 2/2 approved | passes 35 -> 35
+iter 201 | [S] lapped-shield-boards, [P] press-club-phase (+[S] landed-tumble-poses dropped; evidence biome_spooky, shield_wall_front) | 0/2 approved | passes 11 -> 11

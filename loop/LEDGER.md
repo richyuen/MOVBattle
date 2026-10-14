@@ -14,9 +14,7 @@ main.ts:placement ghost (GHOST_ALPHA, GHOST_BLOCKED_ALPHA) | 0.85, blocked 0.22 
 main.ts:ghost footprint (GHOST_TILE_OF_BODY, _MIN, _HEIGHT, _BLOCKED_ALPHA) | hex slab 1.7 bodies across, at least 1.2 m, 0.22 tall; blocked 0.3 | 188 | approved |
 cameraController.ts:_pickSubject (places, band, knot, cut weight) | 12 places, BAND 0.28, knot 3, cut 0.3 + 3*size | 162 | approved |
 cameraController.ts:_pickSubject facing (FACE_SIDE, HEADLESS, CORPSE_CUT, GIANT_PITCH) | side-on 0.4 of face-on, giant +2, corpse x0.15, giant pitch 0.12 | 165 | approved | no [P]
-simulationSystem.ts:shove spread | 0.15 + h*0.3 | 160 | approved |
 simulationSystem.ts:shield wall slots (Spacing, RankDepth, WallGap, SlotStride, RankGap, HeadingArc) | 0.54, 1.0, 2.2, 0.6, 0.75, 1.0 | 168 | approved |
-simulationSystem.ts:_buildShovePose arms | level | 160 | approved |
 unitFactory.ts:BARE_FOOT_SHADE | 0.72 | 172 | approved | 0.85; no [P]
 bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, CHEST_LINE, CHEST_SWELL, WAIST_DEPTH) | throughHinge line, min taper 0.6; chest 0.36, 1.05, top drawn in to the collar, waist depth 0.85 | 187 | approved | SHOULDER_SLOPE 0.8 (180)
 bodyBuilder.ts:head, neck, limb length, mitt (HEAD_OF_BODY, HEAD_SQUAT, HEAD_RINGS, HEAD_CORNER, NECK_LENGTH, LIMB_STRETCH, MITT_OF_WRIST, MITT_LENGTH, MITT_DEPTH) | head 0.18 of height x0.86, rings chin 0.72/cheek 0.9/brow 1/temple 0.95/crown 0.66, corners 0.55; neck 0.07; limbs x1.16; mitt 1.25/1.4/0.8, thumb | 184 | approved | chin 0.5, cheek 0.8 (183); no [P] on MITT_OF_WRIST
@@ -28,11 +26,8 @@ bodyBuilder.ts:HAT_CUT_FOR_HEAD | 0.7 | 169 | spent | 0.85 rejected: shrinks eve
 propBuilder.ts:great helm (HelmFit rim, crown, height) | rim min(1.3 heads, 0.8 shoulders), crown 0.86 rim, height 1.06 heads + neck | 174 | spent | needs a mechanism
 propBuilder.ts:slab sword (buildSlabSword) | blade 0.46 of standing height (great 0.68), 2.8 fists wide, 0.3 as thick, blunt over the last 0.22 | 174 | approved |
 bodyBuilder.ts:SLEEVE_BULK | 1.05 | 167 | approved | 1.15; no further [P]; also scales thighs
-propBuilder.ts:hair scale/y | 1.5x head, y 0.24 | 160 | approved |
 propBuilder.ts:laurel wreath y/tilt | y 0.028, tilt 0.1 | 186 | approved | y 0.005, tilt 0.25
 propBuilder.ts:laurel hair cap cut | front below 0.02 s pulled back to the cap's middle | 197 | approved |
-propBuilder.ts:rshield disc/rim | 0.36 / 0.4 | 160 | approved |
-mapBuilder.ts:blade width (`half`) | x1.0 | 160 | spent | x1.5 rejected: squat cones
 projectileSystem.ts:cannon shot (cannonball shape, _ironMat, _addStreak width) | ball 0.46 faceted iron 0.045, streak 2.2 x 0.14; bomb iron, streak 1.2 x 0.07 | 185 | approved | near-black (160, spent)
 visualEffects.ts:explosion burst | 4 unlit yellow lobes in inside-out orange shells x1.5; fireScale cap 1.6 | 164 | approved | lobe size spent
 visualEffects.ts:explosion dust bank | 14 unlit puffs, reach 2.3*sqrt, size 0.7-1.45 | 164 | approved | no [P] on tall and tans
@@ -62,9 +57,10 @@ bodyBuilder.ts:crewProportions (addOperator, linked crew) | infantry widths at t
 vehicleBuilder.ts:mammoth hull (BODY_RADII, BODY_LIFT, fur hem, paint daubs, leg width) | ellipsoid 0.85/0.68/1.16 lifted 0.12; 5 hem lobes a side; 4 daubs a side; legs 0.6 | 196 | approved | barrel, skirts, bands, legs 0.8 (spent for [P], 159)
 vehicleBuilder.ts:mammoth trunk (TRUNK_PITCH, _PIECE, _ROOT, _TIP, trunkMat; cheek paint removed) | 8 pieces 0.2 from (0,-0.12,0.76), pitch 1.0..0.1..1.3, 0.5 -> 0.22; hide 0.6 to black | 199 | approved | 7 short pieces inside the head; 8-knot hanging tube in hide purple, unseen (198)
 visualEffects.ts:hit debris litter (spawnHitDebris, LITTER_CAP, _debrisMats) | 3-4 chunks 0.26-0.04i, land flat x1.15/0.45 and stay; cap 240; reds 0.55/0.38 | 199 | approved | 0.16-0.035i, shrink away at 0.7 s
-proceduralAnimation.ts:heavy swing (_animateHeavySwing, CLUB_COCK, CLUB_LAND; press/readyBlow hold, blowReadyReach) | cock -0.4, land 1.8, recover 0.65; hold arm -2.5/-1.3, heave 0.12; ready 4 m | 200 | approved |
+proceduralAnimation.ts:heavy swing (_animateHeavySwing, CLUB_COCK, CLUB_LAND; press/readyBlow hold, blowReadyReach) | cock -0.4, land 1.8, recover 0.65; hold arm -2.5/-1.3, heave 0.12; ready 4 m | 201 | approved | heave 0.6 per-man phase rejected 201 (ledger reversal; needs a press blow)
 projectileSystem.ts:cannonball wake (TRAIL_PUFF_EVERY, _BORN, _GROWN, _LIFE, _CAP) | feathered billboard puff every 0.03 s, 0.55 -> x2.6, life 1.6, cap 240 | 200 | approved |
 visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white torus at the strike, 0.4 -> 2.6 m over 0.7 s, fade last third | 198 | approved |
+proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP; slot plane) | reverted | 201 | rejected | plane 0.42 ahead, lap 0.22: boards still read as separate discs
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
 - 191 | aimed-men-stand-to-attention | battle-feel.c | approved
@@ -84,6 +80,7 @@ visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white toru
 - 199 | blood-chunks | vfx.g | approved
 - 200 | overhead-club-strike | battle-feel.e | approved
 - 200 | cannonball-smoke-trail | vfx.h | approved
+- 201 | lapped-shield-boards | battle-feel.h | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
