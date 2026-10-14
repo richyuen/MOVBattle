@@ -207,3 +207,4 @@ iter 205 | re-audit; [S] board-contact-plane (+[S] landed-press-club dropped; ev
 iter 206 | [S] wall-rigid-frame (+[S] club-overhead-strike dropped) | 1/1 approved | passes 12 -> 12
 iter 207 | [S] wall-face-held-in-contact (+[S] club-overhead-strike dropped) | 0/1 approved | passes 12 -> 12
 iter 208 | [S] wall-board-yaw-from-frame (+[S] club-overhead-strike dropped) | 0/1 approved | passes 12 -> 12
+iter 209 | [S] wall-side-band (+[S] club-overhead-strike dropped) | 0/1 approved | passes 12 -> 12 | STOP: 3 consecutive rejects

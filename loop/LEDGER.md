@@ -68,8 +68,6 @@ visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white toru
 proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_PLANE_MAX_OUT; slot plane) | from slotting: plane 0.42 ahead, lap 0.22, out at most 0.7 | 202 | approved | in contact only (201 rejected); back clamp -0.7 + front-rank dress rejected 203 (keep back clamp -0.2); slot seat (BOARD_SLOT_REACH 0.45) + BOARD_DROP_LIMP 0.6 rejected 207
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 199 | mammoth-trunk retry | unit-look.f | approved
-- 199 | blood-chunks | vfx.g | approved
 - 200 | overhead-club-strike | battle-feel.e | approved
 - 200 | cannonball-smoke-trail | vfx.h | approved
 - 201 | lapped-shield-boards | battle-feel.h | rejected
@@ -82,6 +80,7 @@ proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP,
 - 206 | wall-rigid-frame | battle-feel.h | approved
 - 207 | wall-face-held-in-contact | battle-feel.h | rejected
 - 208 | wall-board-yaw-from-frame | battle-feel.h | rejected
+- 209 | wall-side-band | battle-feel.h | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
