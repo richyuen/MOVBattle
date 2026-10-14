@@ -1156,6 +1156,8 @@ interface CampaignMapTheme {
   zones: PlacementZone[];
   hazards: HazardRegion[];
   props: CampaignPropSpec[];
+  /** The ring trees' own palette (canopy, upper canopy, trunk) in place of the campaign green, and the share of ring trees stood bare and dead (see deadenRing) */
+  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number };
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -1208,9 +1210,11 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (bladeLight) bladeLight.diffuseColor = theme.grass.scale(BLADE_LIGHT);
   // Campaign trees keep green canopies; only the tribal sandbox is autumn red
   const leaves = scene.getMaterialByName("leaves") as StandardMaterial | null;
-  if (leaves) leaves.diffuseColor = new Color3(0.58, 0.7, 0.34);
+  if (leaves) leaves.diffuseColor = theme.ring?.leaves ?? new Color3(0.58, 0.7, 0.34);
   const darkLeaves = scene.getMaterialByName("darkLeaves") as StandardMaterial | null;
-  if (darkLeaves) darkLeaves.diffuseColor = new Color3(0.48, 0.62, 0.3);
+  if (darkLeaves) darkLeaves.diffuseColor = theme.ring?.darkLeaves ?? new Color3(0.48, 0.62, 0.3);
+  const trunk = scene.getMaterialByName("trunk") as StandardMaterial | null;
+  if (trunk && theme.ring) trunk.diffuseColor = theme.ring.trunk;
   // The round crowns wear mostly self-lit clones of the two leaf materials, evenly self-lit so their shade stays green
   for (const mat of [leaves, darkLeaves]) {
     const crown = mat && scene.getMaterialByName(`${mat.name}Crown`) as StandardMaterial | null;
@@ -1219,6 +1223,54 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
     crown.emissiveColor = mat.diffuseColor.scale(0.62);
   }
   paintFarProps(scene, theme.grass.scale(0.85));
+  if (theme.ring) deadenRing(scene, theme.ring.bare, theme.ring.trunk);
+}
+
+/*
+ * A dead ring (spooky; tabs_screenshot_09: black bare trees are the skyline): a seeded share of the ring trees out past RING_DEAD_FROM drop their crowns
+ * and stand bare, each trunk forking into three or four angled limbs with a twig on each, in the trunk's dark colour; the rest keep the theme's dark canopy.
+ */
+const RING_DEAD_FROM = 30;
+function deadenRing(scene: Scene, share: number, color: Color3): void {
+  const wood = new StandardMaterial("deadRingWood", scene);
+  wood.diffuseColor = color;
+  wood.specularColor = Color3.Black();
+  const trunks = new Set<Mesh>();
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "canopy" && mesh.parent instanceof Mesh && mesh.parent.name === "trunk") trunks.add(mesh.parent);
+  }
+  let k = 0;
+  for (const trunk of trunks) {
+    k++;
+    const at = trunk.position;
+    if (Math.hypot(at.x, at.z) < RING_DEAD_FROM) continue;
+    const r = (n: number) => (Math.sin(k * 12.9898 + n * 78.233) * 43758.5453) % 1;
+    const pick = Math.abs(r(1));
+    if (pick > share) continue;
+    for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.setEnabled(false);
+    const info = trunk.getBoundingInfo().boundingBox;
+    const height = info.maximum.y - info.minimum.y;
+    const top = new Vector3(0, height / 2, 0);
+    const limbs = 3 + Math.round(Math.abs(r(2)));
+    for (let i = 0; i < limbs; i++) {
+      const yaw = (i / limbs) * Math.PI * 2 + Math.abs(r(3 + i)) * 1.2;
+      const tilt = 0.55 + Math.abs(r(9 + i)) * 0.5;
+      const length = height * (0.45 + Math.abs(r(15 + i)) * 0.35);
+      const dir = new Vector3(Math.sin(tilt) * Math.sin(yaw), Math.cos(tilt), Math.sin(tilt) * Math.cos(yaw));
+      const from = top.add(new Vector3(0, -height * 0.15 * (i % 2), 0));
+      for (const [len, rad, d] of [[length, height * 0.035, dir], [length * 0.5, height * 0.018, new Vector3(dir.x * 0.4, 1, dir.z * 0.4).normalize()]] as const) {
+        const limb = MeshBuilder.CreateCylinder("deadLimb", { height: len, diameterTop: rad, diameterBottom: rad * 2, tessellation: 5 }, scene);
+        limb.parent = trunk;
+        const base = d === dir ? from : from.add(dir.scale(length));
+        limb.position = base.add(d.scale(len / 2));
+        const axis = Vector3.Cross(Vector3.Up(), d);
+        if (axis.lengthSquared() > 1e-6) limb.rotationQuaternion = Quaternion.RotationAxis(axis.normalize(), Math.acos(Vector3.Dot(Vector3.Up(), d)));
+        limb.material = wood;
+        limb.isPickable = false;
+      }
+    }
+    trunk.material = wood;
+  }
 }
 
 function createPlacementGuides(scene: Scene, zones: readonly PlacementZone[]): void {
@@ -1764,6 +1816,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       boxHazard("void", 0, -26, 40, 8),
     ],
     accent: new Color3(0.82, 0.7, 0.38),
+    // Navy night canopies on near-black trunks, and most of the ring stood bare and dead
+    ring: { leaves: new Color3(0.2, 0.22, 0.4), darkLeaves: new Color3(0.14, 0.15, 0.3), trunk: new Color3(0.1, 0.09, 0.14), bare: 0.6 },
     props: [
       { kind: "gravestone", x: -22, z: -16, scale: 1.0 },
       { kind: "gravestone", x: -20, z: 16, scale: 1.0 },
