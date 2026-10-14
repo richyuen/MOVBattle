@@ -74,6 +74,8 @@ const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
 // Where a board rides on its rank's strip: this share of the bearer's neck height above his feet (chest height; tabs_screenshot_06 boards run chin to knee).
 const BOARD_SEAT_HEIGHT = 0.62;
+// The shield fist is reached to this far behind the board's seat, at its back, so it does not come through the face.
+const BOARD_GRIP_BACK = 0.12;
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
 const SPEAR_COUCH_RAISE = -0.45;
 const SPEAR_COUCH_ELBOW = -1.25;
@@ -892,6 +894,30 @@ export class ProceduralAnimator {
   }
 
   /**
+   * A board seated on its rank's strip is held, not floated: the shield arm is turned at the shoulder to point straight at the board's seat, elbow out straight, by
+   * `lap`, so the fist is at the back of the board and the arm is hidden behind it instead of reaching past the rim with an empty mitt. Leaves the hand's world matrix
+   * current for seating the board on it.
+   */
+  private _gripBoard(seat: Vector3, lap: number): void {
+    const b = this._body;
+    const shoulder = b.leftShoulder;
+    const parent = shoulder.parent as TransformNode | null;
+    if (!parent) return;
+    parent.computeWorldMatrix(true);
+    shoulder.computeWorldMatrix(true);
+    const reach = Vector3.TransformNormal(seat.subtract(shoulder.getAbsolutePosition()), Matrix.Invert(parent.getWorldMatrix()));
+    if (reach.lengthSquared() < 1e-6) return;
+    const aim = Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), reach.normalize(), new Quaternion()).toEulerAngles();
+    shoulder.rotation.x += (aim.x - shoulder.rotation.x) * lap;
+    shoulder.rotation.y += (aim.y - shoulder.rotation.y) * lap;
+    shoulder.rotation.z += (aim.z - shoulder.rotation.z) * lap;
+    b.leftElbow.rotation.scaleInPlace(1 - lap);
+    shoulder.computeWorldMatrix(true);
+    b.leftElbow.computeWorldMatrix(true);
+    b.leftHand.computeWorldMatrix(true);
+  }
+
+  /**
    * A front-rank board in a wall does not stand where his hand happens to be: it stands on the wall's plane, BOARD_PLANE_REACH ahead of the rank's line, on his own
    * line across it and at his own height, upright and turned BOARD_LAP off square to the wall the same way as every other board in it. Boards about 0.8 m across on slots
    * 0.54 apart, all turned one way, lap rim over rim: each board's one rim stands in front of its neighbour's, into one scaled surface (tabs_screenshot_06). Moves the board
@@ -915,6 +941,8 @@ export class ProceduralAnimator {
       const depth = this._boardPlane + BOARD_PLANE_REACH * scale;
       const seat = new Vector3(depth * fx - slotSide * fz, root.y + this._boardSeat, depth * fz + slotSide * fx);
       Vector3.LerpToRef(strapped, seat, lap, seat);
+      // His fist goes to the board, not the board off his fist: the shield arm is reached straight out at the back of the board (see _gripBoard)
+      this._gripBoard(new Vector3(seat.x - fx * BOARD_GRIP_BACK * scale, seat.y, seat.z - fz * BOARD_GRIP_BACK * scale), lap);
       shield.position.copyFrom(Vector3.TransformCoordinates(seat, Matrix.Invert(hand.getWorldMatrix())));
       return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, 0, 0);
     }
