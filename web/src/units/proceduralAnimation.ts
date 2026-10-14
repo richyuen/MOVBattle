@@ -40,6 +40,11 @@ export type ReleaseTimingProfile =
   | "firearm_recoil"
   | "throw_release";
 
+/** A levelled spear's stroke: the lunge throws the shaft this many metres forward through the fist, the draw before it takes it back this share of that, and the fist may choke up the shaft by this share of the length ahead of it. */
+const SPEAR_LUNGE = 0.45;
+const SPEAR_DRAW = -0.4;
+const SPEAR_CHOKE = 0.45;
+
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
   private _state = AnimState.Idle;
@@ -116,11 +121,28 @@ export class ProceduralAnimator {
   private _shoveTimer = 0;
 
   /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear is aimed at that man's chest (see _carrySpear) until the calls stop. */
-  levelSpearAt(enemyGround: Vector3): void {
+  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3): void {
     this._spearAim.copyFrom(enemyGround);
+    this._spearAimRadius = enemyRadius;
     this._spearAimTimer = 0.6;
   }
   private _spearAim = new Vector3();
+  private _spearAimRadius = 0.3;
+  // The thrust (see _carrySpear): where in his stroke the man is, from SPEAR_DRAW (drawn back) through 0 (the hold) to 1 (full lunge); how far back through the fist
+  // the shaft rests so that the lunge ends on the enemy's front, in metres; and how near the enemy is to being in reach, 0 to 1.
+  private _spearThrust = 0;
+  private _spearRest = 0;
+  private _spearRestAim = 0;
+  private _spearNear = 0;
+  /** One stroke of a levelled spear on the man's own beat: a slow draw back, a lunge in an eighth of the beat, and a recovery to the hold. */
+  private _thrustStroke(): number {
+    const br = (this._bracePose ??= this._buildBracePose());
+    const u = (this._time * br.thrustRate + br.thrustPhase) % 1;
+    const ease = (x: number): number => x * x * (3 - 2 * x);
+    if (u < 0.45) return SPEAR_DRAW * ease(u / 0.45);
+    if (u < 0.58) return SPEAR_DRAW + (1 - SPEAR_DRAW) * ease((u - 0.45) / 0.13);
+    return 1 - ease((u - 0.58) / 0.42);
+  }
   private _spearAimTimer = 0;
   private _spearLevel = 0;
   private _chestRise: number | null = null;
@@ -178,6 +200,8 @@ export class ProceduralAnimator {
       spearElbow: -1.2 + (h(115) - 0.5) * 0.4,
       shiftRate: 1.2 + h(116) * 1.4,
       shiftPhase: h(117) * Math.PI * 2,
+      thrustRate: 0.9 + h(118) * 0.5,
+      thrustPhase: h(119),
     };
   }
   private _flinchTimer = 0;
@@ -392,6 +416,8 @@ export class ProceduralAnimator {
     this._shove += ((this._shoveTimer > 0 ? 1 : 0) - this._shove) * Math.min(1, dt * 6);
     this._spearAimTimer -= dt;
     this._spearLevel += ((this._spearAimTimer > 0 ? 1 : 0) - this._spearLevel) * Math.min(1, dt * 5);
+    this._spearRest += (this._spearRestAim - this._spearRest) * Math.min(1, dt * 6);
+    this._spearThrust = this._spearLevel > 0.01 && this._spearShaft() ? this._thrustStroke() * this._spearLevel * this._spearNear : 0;
     this._braceSink = 0;
     if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
       const b = this._body;
@@ -446,11 +472,12 @@ export class ProceduralAnimator {
         if (this._spearShaft()) {
           // Spear arm: no windmill and no underarm poke. The hand goes up beside the head, elbow cocked, and holds the shaft there over the rim of the
           // board (a rear man's over the shoulder of the man ahead); a thrust straightens the arm forward and down from that hold and comes back to it.
-          const jab = this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0;
+          // With the spear levelled at a man he works it on his own beat as well: the elbow cocks further as the shaft is drawn back and the arm goes out with the lunge.
+          const jab = Math.max(this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0, this._spearThrust);
           b.rightShoulder.rotation.x += (br.spearRaise + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
           b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * hold;
           b.rightShoulder.rotation.z += (0.2 - b.rightShoulder.rotation.z) * hold;
-          b.rightElbow.rotation.x += (br.spearElbow + 0.9 * jab - b.rightElbow.rotation.x) * hold;
+          b.rightElbow.rotation.x += (br.spearElbow + 0.9 * jab + 0.8 * Math.min(0, this._spearThrust) - b.rightElbow.rotation.x) * hold;
           b.rightElbow.rotation.z += (0 - b.rightElbow.rotation.z) * hold;
         }
       }
@@ -725,7 +752,10 @@ export class ProceduralAnimator {
    * On the march it stands upright, point to the sky. As the wall closes on its enemy it comes down along the wall's heading and is aimed: the shaft runs
    * from the fist, wherever the arm has it, at the chest of the man he was handed, so a front man's point and the point of the man behind him, held by the
    * head over the front man's shoulder, both come down on the enemy and none pitch up over his head; the spears stay parallel over the boards and do not
-   * fan or cross. The fist keeps its place on the shaft. Limp or dead, the spear goes back to hanging from the hand.
+   * fan or cross. Limp or dead, the spear goes back to hanging from the hand.
+   * Aimed, it is not held still. The shaft runs through the fist along its own line in a stroke (_thrustStroke): drawn back SPEAR_DRAW of a lunge, thrown forward
+   * SPEAR_LUNGE, brought back to the hold, each man on his own beat, so no two points in a rank stand at one reach. The hold is set from the man he was handed: the fist
+   * chokes up the shaft, by no more than SPEAR_CHOKE of the length ahead of it, until a full lunge ends at that man's front and not out of his back.
    */
   private _carrySpear(): void {
     const spear = this._spearShaft();
@@ -747,18 +777,28 @@ export class ProceduralAnimator {
     this._body.neck.computeWorldMatrix(true);
     this._chestRise ??= (this._body.neck.absolutePosition.y - root.absolutePosition.y) * 0.8;
     let dip = 0.02;
+    const handScale = Math.max(0.001, hand.absoluteScaling.y);
+    this._spearRestAim = 0;
+    this._spearNear = 0;
     if (this._spearAimTimer > 0) {
       // Fall of the shaft from the fist to the enemy's chest, as high off his ground as this man's own; a man within a pace is aimed at as if a pace off, and no point rises above level by more than a hair.
       const from = hand.absolutePosition;
-      const run = Math.max(1, Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z));
+      const reach = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z);
+      const run = Math.max(1, reach);
       dip = Math.max(-0.05, Math.min(0.5, Math.atan2(from.y - (this._spearAim.y + this._chestRise), run)));
+      // From the fist to the point, and from the fist to the near face of the man aimed at
+      const tip = shaft.getChildMeshes(true)[0];
+      const ahead = (grip.length() + (tip ? tip.position.y + tip.getBoundingInfo().boundingBox.maximum.y : 0) * shaft.scaling.y) * handScale;
+      const front = reach - this._spearAimRadius;
+      this._spearRestAim = Math.max(-ahead * SPEAR_CHOKE, Math.min(0, front - ahead - SPEAR_LUNGE));
+      this._spearNear = Math.max(0, Math.min(1, ahead + SPEAR_LUNGE + 1.5 - front));
     }
     // Each man's point sits a hair above or below his aim (never to one side: the spears stay parallel over the boards)
     const carry = Quaternion.RotationYawPitchRoll(root.rotation.y, 0.06 + (Math.PI / 2 + dip + (this._bracePose ??= this._buildBracePose()).spearDip - 0.06) * level, 0);
     const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
     shaft.rotationQuaternion = turn;
     // The shaft's middle sits as far up the shaft from the fist as it was strapped on.
-    const held = new Vector3(0, grip.length(), 0);
+    const held = new Vector3(0, grip.length() + (this._spearRest * this._spearLevel + this._spearThrust * SPEAR_LUNGE) / handScale, 0);
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, shaft.position);
   }

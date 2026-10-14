@@ -550,7 +550,7 @@ export class SimulationSystem {
       return;
     }
     unit.setSpinning(false);
-    if (this._shieldSlots.has(unit) && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position);
+    if (this._shieldSlots.has(unit) && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius);
 
     if (distance <= engageDistance) {
       // Reach decides who may swing, not where the rank stops: short weapons shove in to
