@@ -59,13 +59,13 @@ vehicleBuilder.ts:mammoth trunk (TRUNK_PITCH, _PIECE, _ROOT, _TIP, trunkMat; che
 visualEffects.ts:hit debris litter (spawnHitDebris, LITTER_CAP, _debrisMats) | 3-4 chunks 0.26-0.04i, land flat x1.15/0.45 and stay; cap 240; reds 0.55/0.38 | 199 | approved | 0.16-0.035i, shrink away at 0.7 s
 proceduralAnimation.ts:heavy swing (_animateHeavySwing, CLUB_COCK, CLUB_LAND; press/readyBlow hold, blowReadyReach) | cock -0.4, land 1.8, recover 0.65; hold arm -2.5/-1.3, heave 0.12; ready 4 m | 201 | approved | heave 0.6 per-man phase rejected 201 (ledger reversal; needs a press blow)
 proceduralAnimation.ts:press blow (_pressBlow, PRESS_BLOW_BEAT_*, _DROP, _HOLD, _BACK; blowStrikeReach) | beat 1.5-2.4 s, drop 0.1, hold 0.16, back 0.16; arm +3.0, trunk +0.45; strike reach 0.9 m | 202 | approved |
+cameraController.ts:result drift (RESULT_DRIFT_RATE; _resultDrift) | settled victory shot orbits 0.055 rad/s in the swoop direction; stops on viewer input or a new shot | 204 | approved |
+simulationSystem.ts:front-rank dress (SHIELD_DRESS_PULL, _STEP; _dressShieldFronts) | reverted | 204 | rejected | 0.35, 0.04 m/step after the solver: depth only, boards still split sideways; dress idea spent
 projectileSystem.ts:cannonball wake (TRAIL_PUFF_EVERY, _BORN, _GROWN, _LIFE, _CAP) | feathered billboard puff every 0.03 s, 0.55 -> x2.6, life 1.6, cap 240 | 200 | approved |
 visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white torus at the strike, 0.4 -> 2.6 m over 0.7 s, fade last third | 198 | approved |
 proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_PLANE_MAX_OUT; slot plane) | from slotting: plane 0.42 ahead, lap 0.22, out at most 0.7 | 202 | approved | in contact only (201 rejected); back clamp -0.7 + front-rank dress rejected 203 (keep back clamp -0.2)
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 193 | spear-overruns-its-mark | battle-feel.c | approved
-- 193 | [R] bare-neck | unit-look.c | approved
 - 194 | spear-stops-on-the-first-body | battle-feel.c | rejected
 - 195 | couched-butt-grip | battle-feel.c | approved
 - 196 | wall-shafts-share-one-heading | battle-feel.c | rejected
@@ -82,6 +82,8 @@ proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP,
 - 202 | press-blow | battle-feel.e | approved
 - 202 | lapped-boards retry | battle-feel.h | approved
 - 203 | lapped-boards-in-contact | battle-feel.h | rejected
+- 204 | dressed-front-under-shove | battle-feel.h | rejected
+- 204 | result-drift | camera.g | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
