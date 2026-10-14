@@ -26,6 +26,7 @@ unitFactory.ts:team blue colour | (0.42, 0.60, 0.98) | 150 | spent |
 unitFactory.ts:idle lean | 0.26 + h*0.14 | 148 | spent | do not raise, drives lineups
 bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, CHEST_LINE, CHEST_SWELL, SHOULDER_SLOPE, WAIST_DEPTH) | throughHinge line, min taper 0.6; chest 0.36, 1.05, 0.8, 0.85 | 180 | approved |
 bodyBuilder.ts:head, neck, limb length, mitt (HEAD_OF_BODY, HEAD_SQUAT, HEAD_RINGS, HEAD_CORNER, NECK_LENGTH, LIMB_STRETCH, MITT_OF_WRIST, MITT_LENGTH, MITT_DEPTH) | head 0.18 of height x0.86, rings chin 0.72/cheek 0.9/brow 1/temple 0.95/crown 0.66, corners 0.55; neck 0.07; limbs x1.16; mitt 1.25/1.4/0.8, thumb | 184 | approved | chin 0.5, cheek 0.8 (183); no [P] on MITT_OF_WRIST
+bodyBuilder.ts:eyes (EYE_OF_FACE, EYE_SPREAD, EYE_FLAT, PUPIL_OF_EYE; metrics.pupilTravel) | white disc 0.24 face, 0.16 off centre, depth 0.3; pupil 0.5 disc, travel 0.3 | 185 | approved | black bead 0.17 (184)
 bodyBuilder.ts:boot and shin end (SHIN_END, BOOT_OVER_SHIN, BOOT_RISE, BOOT_LENGTH, BOOT_TOE_HEIGHT) | shin keeps 0.78; cuff 1.3 shin ends wide, 0.34 shin tall, toe 1.7 long, 0.5 high | 171 | approved |
 bodyBuilder.ts:pelvis block (PELVIS_OF_SHOULDERS, PELVIS_HEIGHT) | box 0.8 shoulders wide, 1.2 thigh tops tall | 170 | approved |
 bodyBuilder.ts:HAT_CUT_FOR_HEAD | 0.7 | 169 | spent | 0.85 rejected: shrinks every hat
@@ -37,7 +38,7 @@ propBuilder.ts:rshield disc/rim | 0.36 / 0.4 | 160 | approved |
 mapBuilder.ts:BLADES | 720000 | 159 | approved |
 mapBuilder.ts:blade width (`half`) | x1.0 | 160 | spent | x1.5 rejected: squat cones
 projectileSystem.ts:muzzle smoke lobes | lead 0.6, seven small | 154 | spent | every value tried
-projectileSystem.ts:cannonball colour | near-black | 160 | spent | no shot in flight in any still
+projectileSystem.ts:cannon shot (cannonball shape, _ironMat, _addStreak width) | ball 0.46 faceted iron 0.045, streak 2.2 x 0.14; bomb iron, streak 1.2 x 0.07 | 185 | approved | near-black (160, spent)
 visualEffects.ts:explosion burst | 4 unlit yellow lobes in inside-out orange shells x1.5; fireScale cap 1.6 | 164 | approved | lobe size spent
 visualEffects.ts:explosion dust bank | 14 unlit puffs, reach 2.3*sqrt, size 0.7-1.45 | 164 | approved | no [P] on tall and tans
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved |
@@ -65,8 +66,6 @@ vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 174 | knight-sword-sliver | unit-look.b | approved
-- 174 | clubs-level-parallel | battle-feel.c | approved
 - 175 | units-cast-no-ground-shadow | maps-light.b | approved
 - 175 | knob-joint-stick-limbs | unit-look.c | approved
 - 176 | shadow-shredded-by-grass | maps-light.b | approved
@@ -87,6 +86,8 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 183 | head-is-a-tall-square-box | unit-look.c | approved
 - 184 | torso-top-is-a-plate-with-eaves | unit-look.c | approved
 - 184 | wall-spears-pitch-over-heads | battle-feel.c | approved
+- 185 | faces-blank-at-distance | unit-look.d | approved
+- 185 | no-ball-in-flight | vfx.b | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
