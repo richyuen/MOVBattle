@@ -341,6 +341,10 @@ async function main() {
       }, BIG_MELEE);
       summary.notes.push(`big_melee placed ${placed}/${BIG_MELEE.length} units`);
       await shot(page, "big_melee_placement");
+      // Placement ghost: the selected tray unit held over open ground ahead of blue's front rank, as the cursor would hold it.
+      await page.evaluate(() => window.game.previewPlacementAtGround(-3, 1));
+      await shot(page, "big_melee_placement_ghost");
+      await page.evaluate(() => window.game.clearPlacementPreview());
       await page.evaluate(() => {
         window.game.startBattleImmediate();
         window.advanceTime(500);
