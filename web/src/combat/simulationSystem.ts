@@ -99,11 +99,6 @@ const SHIELD_BOARD_STANDOFF = 0.46;
 const SHIELD_FRAME_PULL = 0.4;
 const SHIELD_FRAME_STEP = 0.05;
 
-// A wall's board face held as one band (see ShieldSlot.turn): how far each end man turns his board out to wing the flank, and how far a man turns his toward a
-// neighbour gap opened a full spacing wide.
-const SHIELD_WING_TURN = 0.9;
-const SHIELD_GAP_TURN = 0.6;
-
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
   wall: number;
@@ -116,9 +111,6 @@ interface ShieldSlot {
   plane: number | null;
   /** Where on the ground his slot is in the wall's frame: across at his slot's place, in depth on his rank's line. The frame sits on the wall's own mean place, so it moves as one with the men under the shove. */
   at: Vector3;
-  /** A front-rank board's own turn off the wall's lap, radians (positive turns its face toward the low side): a wing board at each end of the wall turned out
-   *  to close the flank, and a board turned toward a neighbour gap the shove has opened, so the face stays one band of boards. 0 in a rear rank. */
-  turn: number;
 }
 
 /** A formed wall as the rank behind it sees it: its first slot across the line, how many slots, and how far forward it stands. */
@@ -765,16 +757,10 @@ export class SimulationSystem {
             const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * this.shieldSlotSpacing;
             const wallId = walls++;
             const line = wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length;
-            // How far a gap to a neighbour has opened past the slot spacing, as a share of it (0 to 1)
-            const opened = (a: number, b: number) => Math.max(0, Math.min(1, (Math.abs(b - a) - this.shieldSlotSpacing) / this.shieldSlotSpacing));
             wall.forEach((entry, k) => {
               const shift = first + k * this.shieldSlotSpacing - entry.side;
               const side = first + k * this.shieldSlotSpacing;
-              const wing = k === 0 ? SHIELD_WING_TURN : k === wall.length - 1 ? -SHIELD_WING_TURN : 0;
-              const gapLow = k > 0 ? opened(wall[k - 1].side, entry.side) : 0;
-              const gapHigh = k < wall.length - 1 ? opened(entry.side, wall[k + 1].side) : 0;
-              const turn = wing + SHIELD_GAP_TURN * (gapLow - gapHigh);
-              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line, at: new Vector3(line * fx - side * fz, 0, line * fz + side * fx), turn });
+              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line, at: new Vector3(line * fx - side * fz, 0, line * fz + side * fx) });
             });
             formed.push({ first, count: wall.length, depth: wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length });
           }
@@ -807,7 +793,6 @@ export class SimulationSystem {
                 heading,
                 hold: new Vector3(-fz * shift + fx * back, 0, fx * shift + fz * back),
                 plane: null,
-                turn: 0,
                 at: new Vector3(depth * fx - (first + k * this.shieldSlotSpacing) * fz, 0, depth * fz + (first + k * this.shieldSlotSpacing) * fx),
               });
             });
@@ -819,7 +804,7 @@ export class SimulationSystem {
       }
     }
     // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
-    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane, slot.turn);
+    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane);
   }
 
   /**
