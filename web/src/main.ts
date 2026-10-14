@@ -133,17 +133,23 @@ dir.position = dir.direction.scale(-100);
 dir.shadowMinZ = 10;
 dir.shadowMaxZ = 220;
 
-// Fog — depth fade to sky color
+// Fog — depth fade to sky color (see the aerial perspective below)
+const HAZE_LEAD = 12;
+const HAZE_DEPTH = 95;
 scene.fogMode = Scene.FOGMODE_LINEAR;
 scene.fogColor = new Color3(0.62, 0.86, 0.76);
 scene.fogStart = 70;
 scene.fogEnd = 170;
 // The haze starts behind the fight, not at a fixed distance from the eye: pulled back to the placement view,
 // the board would otherwise sit a third of the way into the fog and both teams wash out to its colour.
+// It is an aerial perspective keyed to the fight (tabs_screenshot_05, 01): clear out to HAZE_LEAD past what the camera is looking at, then thickening over
+// HAZE_DEPTH, so the tree ring and the hills behind the field are washed toward the sky colour and the fight stands out against them; at 70 m from the eye the
+// ring, 45-55 m off, never reached the haze and stood as saturated as the grass in front.
 scene.onBeforeRenderObservable.add(() => {
-  const pullBack = Math.max(0, ((scene.activeCamera as { radius?: number } | null)?.radius ?? 0) - 14);
-  scene.fogStart = 70 + pullBack;
-  scene.fogEnd = 170 + pullBack;
+  const radius = (scene.activeCamera as { radius?: number } | null)?.radius ?? 0;
+  const pullBack = Math.max(0, radius - 14);
+  scene.fogStart = radius + HAZE_LEAD;
+  scene.fogEnd = radius + HAZE_LEAD + HAZE_DEPTH;
   // The shadow cascades reach as far as the fight and a little past it, however far back the eye is
   shadowGen.shadowMaxZ = SHADOW_REACH + pullBack;
 });
@@ -272,7 +278,7 @@ pipeline.imageProcessingEnabled = true;
 pipeline.imageProcessing.toneMappingEnabled = true;
 pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
 pipeline.imageProcessing.vignetteEnabled = true;
-pipeline.imageProcessing.vignetteWeight = 0.3;
+pipeline.imageProcessing.vignetteWeight = 1.6; // at 0.3 the corners were no darker than the middle (tabs_screenshot_05 falls off toward every corner)
 pipeline.imageProcessing.vignetteStretch = 0.5;
 pipeline.imageProcessing.exposure = 1.05;
 pipeline.imageProcessing.contrast = 1.1;
