@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 209   Last re-audit: 205   Consecutive rejects: 0   Branch: main
+Iteration: 210   Last re-audit: 210   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -8,11 +8,11 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Tier 2 (fully scored at 198, re-audited 205):
+Tier 2 (fully scored at 198, re-audited 210):
 battle-feel: e FAIL f PASS g FAIL h FAIL (1/4)
 - e FAIL [S since: 2] B: 1 no swing caught mid-arc against a target — closeup_weapon_reads (only sword knights, no clubber, no landed blow); 3 no press club caught landing on a man: side-on press_clubbers_side shows one club cocked and one driven level into the board face, none down on a head or body — press_clubbers_side, big_melee_9s. (2 struck 200) Ref trailer_3_sheet_01 r2c3.
 - g FAIL [S since: 0] B: 1 landing not shown: flung knights out of frame at war_machines_3800ms, no landed spread of varied poses. Ref trailer_2_sheet_02 r1c2.
-- h FAIL plateau (6 rejected [S] in 201-209) [S since: 3] B: 1 under the shove the front boards turn and split sideways into separate discs with torsos between them, not one lapped face (the heap and flat-tipped boards cleared 206) — shield_wall_side, 2650ms. (2 struck 205) Ref tabs_screenshot_06.
+- h FAIL [S since: 0] B: 1 under the shove only the lead red board of each rank faces the enemy, the rank's other boards hidden behind it, no lapped band at contact — shield_wall_2500ms, 2650ms; 4 blue tower boards seat face-on to the side camera (prop axis off the heading), a mitt and a blade through the board face — shield_wall_side; 5 front men's board arms reach past the rim with empty mitts, the board floating off the hand (added 210 by 725bd56) — shield_wall_side, 2650ms. (2, 3 struck 210 by the [R]; plateau cleared) Ref tabs_screenshot_06, trailer_2_sheet_03 r2c3.
 unit-look: e PASS f FAIL g PASS h FAIL (2/4)
 - f FAIL [S since: 2] B: 1 mammoth ~2.5-2.9 men tall (ref ~3.5) — big_melee_result. (3 struck 199) Ref tabs_screenshot_01.
 - h FAIL [S since: 1] B: 1 eyes do not read at lineup distance on bare-faced units; 3 beret and yellow cone ~1 head wide (ref ~2 heads, tabs_screenshot_05) — lineup_medieval. Ref tabs_screenshot_04.
@@ -30,23 +30,22 @@ vfx: e FAIL f PASS g FAIL h FAIL (1/4)
 Total tier 1 24/24; tier 2 12/24.
 
 ## Focus (every gap this iteration)
-BASE 567e382
-- [S] battle-feel.h wall-side-band (5337ff3) — REJECT, reverted
-- [S] battle-feel.e club-overhead-strike — dropped uncommitted: keeping clubbers upright in contact touches the topple rule crowd_topple_clubber_vs_protector guards
-- STOP written: 3 consecutive all-reject iterations (207-209)
+BASE 7f0861d (re-audit 210: verdicts unchanged; battle-feel.h blockers rewritten, plateau kept)
+- [R] battle-feel.h wall-as-body (725bd56) — APPROVE, blockers 2 and 3 struck, 5 added, plateau cleared, criterion still FAIL
+- [S] battle-feel.e strike-survives-shove — dropped uncommitted (not attempted)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] wall-side-band (5337ff3) VERDICT: REJECT CRITERION: battle-feel.h FAIL (previous: FAIL)
+- GAP: [R] wall-as-body (725bd56) VERDICT: APPROVE CRITERION: battle-feel.h FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [R] battle-feel.h wall-face-rebuild [0] — whole blocker list: rebuild the wall face (slot frame + _lapBoard/_squareShield) from a spec off tabs_screenshot_06: under the shove one rim-over-rim band, no torso between boards; consider rank fill (rear man steps into an opened front gap) — ours shield_wall_side, shield_wall_2650ms
-2. [S] battle-feel.e club-overhead-strike [0] — blocker 3: a press club comes down onto a head or shoulders, from a contact stance that keeps the clubber upright without breaking the crowd_topple_clubber_vs_protector guard — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
-3. [S] battle-feel.g landed-pose-spread [1] — blocker 1: keep the flung knights in frame at landing and show varied landed poses — ref trailer_2_sheet_02 r1c2 — ours war_machines_3800ms
-4. [S] unit-look.f mammoth-scale [2] — blocker 1: mammoth ~3.5 men tall — ref tabs_screenshot_01 — ours big_melee_result
-5. [S] vfx.h soft-fire-envelope [0] — blocker 1: soft billboard fire and smoke round the burst lobes, drifting muzzle smoke at 1250ms — ref trailer_3_sheet_03 r1c2 — ours war_machines_1100ms
-6. [S] maps-light.f vignette-haze [0] — blockers 1-2: screen-edge vignette and distance haze — ref tabs_screenshot_05 — ours big_melee_5s
-7. [S] vfx.e solid-dome [0] — blocker 1: a whole solid one-colour ring or dome for state magic — ref trailer_2_sheet_03 r3c2 — ours closeup_state_reads
-8. [S] unit-look.h lineup-eyes [1] — blocker 1: bead eyes sized to read at lineup distance on bare-faced units — ref tabs_screenshot_04 — ours lineup_medieval
+1. [S] battle-feel.h board-grip-and-axis [0] — blockers 5, 4: with the board on its strip, put the shield hand on the board's boss (or fold the arm behind it), and correct the yaw for the tower prop's local axis so blue boards face the heading — ref tabs_screenshot_06, trailer_2_sheet_03 r2c3 — ours shield_wall_side, 2650ms
+2. [S] battle-feel.e press-club-lands [0] — blockers 1, 3: a press clubber's blow comes down on a head or body, caught mid-arc against a target (contact clubbers are limp 0.8-0.98) — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side, closeup_weapon_reads
+3. [S] battle-feel.g landed-spread-shot [1] — blocker 1: frame the flung knights' landing so varied rest poses are in shot — ref trailer_2_sheet_02 r1c2 — ours war_machines_3800ms
+4. [S] vfx.h soft-fire-envelope [0] — blocker 1: soft sprite fire and smoke round the burst lobes, drifting muzzle smoke — ref trailer_3_sheet_03 r1c2 — ours war_machines_1100ms, 1250ms
+5. [S] vfx.e solid-magic-ring [0] — blockers 1-2: a whole one-colour ring or dome in frame; Zeus's bolt as jagged white slabs — ref trailer_2_sheet_03 r2c1, r3c2 — ours closeup_state_reads, closeup_pair_zeus_thor
+6. [S] maps-light.f vignette-and-haze [0] — blockers 1-2 — ref tabs_screenshot_05, 01 — ours big_melee_5s
+7. [S] unit-look.f mammoth-scale [2] — blocker 1: mammoth ~3.5 men tall — ref tabs_screenshot_01 — ours big_melee_result
+8. [S] vfx.g broken-gear-debris [1] — blocker 2: dropped shield and weapon pieces as litter — ref trailer_2_sheet_02 r1c2 — ours big_melee_5s, 9s
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - wall-side-band [attempts: 1, [S]] — 209: end men wing boards out 0.9 rad, gap-side boards turn up to 0.6 rad: a turned disc does not move into the gap, torsos still show; wings read edge-on under the shove
@@ -55,12 +54,10 @@ BASE 567e382
 - dressed-front-under-shove [attempts: 2, [S]] — 204: front rank pulled onto its mean depth after the solver (0.35/step, 0.04 m cap): depth only, boards still split sideways, bodies still overlap at the line; no contact shot of the board faces
 - lapped-boards-in-contact [attempts: 1, [S]] — 203: front-rank dress step onto the live line + board back clamp -0.7: men still three or four depths deep under the shove, boards flat or edge-on, boards trail behind bearers
 - lapped-shield-boards [attempts: 1, [S]] — 201: front boards on one plane 0.42 ahead of the rank line, lap 0.22; in the full capture still separate discs at different depths, the front shot stood behind blue
-- press-club-phase [attempts: 1, [P]] — 201: heave 0.12 -> 0.6 per-man phase: ledger reversal of the 200 row; sway, not a blow landing
-- mammoth-trunk [attempts: 1, [S]] — 198: 8-knot hanging tube in hide purple off the neck: blends into the chest, sits behind the tusk arc; salmon cheek panel left; 0.05 m knot rings too thin to read (199 retry approved)
 
 ## Notes for next iteration (max 5 lines)
-- STOP (209) cleared by the user, rejects reset. Step 7 now also marks plateau at 3 rejected [S] in 10 iterations: battle-feel.h is plateau, next pick on it is the [R]. battle-feel.h: approved 202/205/206, rejected 201/203/204/207/208/209. Critic 209: consider marking it plateau at the next re-audit and specifying an [R] rebuild of the wall face from tabs_screenshot_06.
-- battle-feel.e: probe (208) in gallery_press_clubbers at 2.6 s: clubbers in shove contact are limp 0.8-0.98 (toppled by braced hoplites), so the club pose is overridden. A landed blow needs strikers that stay upright at contact without breaking crowd_topple_clubber_vs_protector.
-- capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Gallery shots stop advancing at Result. A war_machines salvo kills ~1 squire.
-- Probe animator branches with console.error -> look/summary.json consoleErrors. Python edits: read/write bytes as utf-8 and keep the file's eol.
+- 210 pick was the [R] on battle-feel.h; 211 picks the top 2 [S] on two criteria. Step 7 plateau rule now counts rejected [S] since the blocker list was written (rewritten 210), not a 10-iteration window, so an approved [R] or a re-audit resets it.
+- Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the board no longer follows the hand (blocker 5). Tower shields (blue knights) use another local axis than the round board.
+- battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
+- capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.
 - Shadows pass, leave them. No raised idle lean, free-foot 0.08 or walk torso yaw. No [P] on SHOULDER_INSET, TRAPEZIUS_*, NECK_*, hull, pelvis, arm taper, ghost, bow ready, laurel, sunk crouch, CALF_SWELL, helm crown, lawn shade, carry bob, mammoth hull, spear carry, club heave.

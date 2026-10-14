@@ -62,14 +62,12 @@ proceduralAnimation.ts:press blow (_pressBlow, PRESS_BLOW_BEAT_*, _DROP, _HOLD, 
 cameraController.ts:result drift (RESULT_DRIFT_RATE; _resultDrift) | settled victory shot orbits 0.055 rad/s in the swoop direction; stops on viewer input or a new shot | 204 | approved |
 simulationSystem.ts:front-rank dress (SHIELD_DRESS_PULL, _STEP; _dressShieldFronts) | reverted | 204 | rejected | 0.35, 0.04 m/step after the solver: depth only, boards still split sideways; dress idea spent
 simulationSystem.ts:board contact (SHIELD_BOARD_STANDOFF; _resolveLivingCollisions enemy reach) | front-rank carrier reach vs an enemy = max(radius, 0.46) | 205 | approved |
-simulationSystem.ts:wall frame (SHIELD_FRAME_PULL, _STEP; ShieldSlot.at, _holdShieldFrames) | carriers drawn to their frame slot after the solver: 0.4 of error, at most 0.05 m a step | 206 | approved |
+simulationSystem.ts:wall frame (SHIELD_SLOT_SNAP; ShieldSlot.at, _holdShieldFrames, RuntimeUnit.wallBraced) | carriers put back on their frame slot up to 0.15 m a step; braced men not crowd-toppled | 210 | approved | pull 0.4, step 0.05 (206)
 projectileSystem.ts:cannonball wake (TRAIL_PUFF_EVERY, _BORN, _GROWN, _LIFE, _CAP) | feathered billboard puff every 0.03 s, 0.55 -> x2.6, life 1.6, cap 240 | 200 | approved |
 visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white torus at the strike, 0.4 -> 2.6 m over 0.7 s, fade last third | 198 | approved |
-proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_PLANE_MAX_OUT; slot plane) | from slotting: plane 0.42 ahead, lap 0.22, out at most 0.7 | 202 | approved | in contact only (201 rejected); back clamp -0.7 + front-rank dress rejected 203 (keep back clamp -0.2); slot seat (BOARD_SLOT_REACH 0.45) + BOARD_DROP_LIMP 0.6 rejected 207
+proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_SEAT_HEIGHT; _boardSlot) | every rank: board on its slot, 0.42 ahead of the rank line, 0.62 of neck height, heading+0.22 | 210 | approved | front only, from the hand (202); 201/203/207-209 rejected
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 200 | overhead-club-strike | battle-feel.e | approved
-- 200 | cannonball-smoke-trail | vfx.h | approved
 - 201 | lapped-shield-boards | battle-feel.h | rejected
 - 202 | press-blow | battle-feel.e | approved
 - 202 | lapped-boards retry | battle-feel.h | approved
@@ -81,6 +79,7 @@ proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP,
 - 207 | wall-face-held-in-contact | battle-feel.h | rejected
 - 208 | wall-board-yaw-from-frame | battle-feel.h | rejected
 - 209 | wall-side-band | battle-feel.h | rejected
+- 210 | [R] wall-as-body | battle-feel.h | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
