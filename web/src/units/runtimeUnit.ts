@@ -406,6 +406,11 @@ export class RuntimeUnit {
     this.animator.levelSpearAt(enemyGround, enemyRadius, rearRank);
   }
 
+  /** Slotted into a shield wall this step: the spear stands on the wall's heading. */
+  holdSpearInWall(heading: number): void {
+    this.animator.holdSpearInWall(heading);
+  }
+
   get isMoving(): boolean {
     return this._isMoving;
   }

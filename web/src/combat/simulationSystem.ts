@@ -775,6 +775,8 @@ export class SimulationSystem {
         aheadRank = r;
       }
     }
+    // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
+    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading);
   }
 
   /** In contact a slotted carrier stands square to his wall's advance, board to the front, while his enemy is within shieldHeadingArc of it. */

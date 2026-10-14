@@ -1,4 +1,4 @@
-import { Quaternion, Vector3, type Mesh, type TransformNode } from "@babylonjs/core";
+import { Matrix, Quaternion, Vector3, type Mesh, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 
 export enum AnimState {
@@ -45,29 +45,27 @@ export type ReleaseTimingProfile =
  *   tabs_screenshot_06 (a shield wall closing, two ranks deep): no two men carry the trunk at one angle; the chests are pitched forward of the hips by anything from about 10 to
  *   about 30 degrees and the heads are not levelled back, each sits on its trunk at its own tilt. Every man is at his own point of a stride, one knee forward and bent. The boards
  *   stand at different turns and tilts, following the shoulders behind them. Six spears show, all in the rear rank, and every one of them is RAISED: the shafts stand above the
- *   helmets at pitches between about 60 and 85 degrees above level, no two alike, none crossing another and none crossing a head. No spear in the wall lies level.
+ *   helmets at pitches between about 60 and 85 degrees above level, parallel, none crossing another and none crossing a head. No spear in the wall lies level.
  *   trailer_3_sheet_01 r3c1 (five spearmen with the spear up to strike): the fist is at the ear, above the shoulder, the elbow carried out behind, the trunk leant a little back,
  *   the shaft beside the cheek; five shafts at five slightly different pitches.
  * So:
  *   Trunk: a braced man's trunk pitch is his own, BRACE_PITCH_MIN..MAX forward of the hips, and it is his whatever he is doing under it (stepping in, standing, striking): the
  *   walk's lean and the shove's cap no longer bring a rank to one angle. His head follows the trunk by his own share and is tucked or lifted on top of that. The lead shoulder is
  *   turned into the board, and the board turns and tilts with it.
- *   Spears: one pitch per man, measured above level. A rear man's spear stays raised, SPEAR_REAR_UP_MIN..MAX above level, his own; it is over every head by construction, his and
- *   the front rank's, and its butt drops beside his own hip. It comes down only inside a stroke, and then only to SPEAR_REAR_STRIKE above level, over the gap between the two boards
- *   ahead of him where he stands, and goes back up. A front man's spear is not levelled or dipped either: no wall spear in the reference lies level, and a shaft half as tall again
+ *   Spears: one line per wall. From the moment a man is slotted into a wall his spear stands on the wall's heading at SPEAR_WALL_UP above level, the same for every man in it,
+ *   front rank and rear, whichever way his own body is turned: so the shafts are parallel and none crosses another or a head, and its butt drops beside his own hip. The stroke
+ *   runs the shaft through the fist along that line and back; it never tips the shaft down. A front man's spear is not levelled or dipped either: no wall spear in the reference lies level, and a shaft half as tall again
  *   as the man, pointed at an enemy under a pace away, either runs on through him or is pushed back through the fist into the man behind. He holds it couched low instead, the
- *   fist at his waist in front of him and gripped near the butt, SPEAR_FRONT_GRIP_MIN..MAX of its length from it, and raised in the same band as the rear rank's spears, so the
+ *   fist at his waist in front of him and gripped near the butt, SPEAR_FRONT_GRIP_MIN..MAX of its length from it, and raised on the same line as the rear rank's spears, so the
  *   point stands over the enemy's head and the short end below the fist points down behind him to his heel, through nobody.
- *   Each works his stroke on his own beat: drawn back SPEAR_DRAW of a lunge, thrown SPEAR_LUNGE metres along the shaft's own line, brought back; a front man's along his raised line.
+ *   Each works his stroke on his own beat: drawn back SPEAR_DRAW of a lunge, thrown SPEAR_LUNGE metres along the wall's raised line, brought back.
  *   Legs: a braced man is on his feet, not sat on his heels. The deepest crouch folds the knees BRACE_CROUCH_DEEP at most and the step of the drive leg is BRACE_STEP_MIN..MAX.
  */
 const BRACE_PITCH_MIN = 0.14;
 const BRACE_PITCH_MAX = 0.56;
 const SPEAR_LUNGE = 0.45;
 const SPEAR_DRAW = -0.4;
-const SPEAR_REAR_UP_MIN = 1.05;
-const SPEAR_REAR_UP_MAX = 1.4;
-const SPEAR_REAR_STRIKE = 0.3;
+const SPEAR_WALL_UP = 1.48;
 const SPEAR_FRONT_GRIP_MIN = 0.2;
 const SPEAR_FRONT_GRIP_MAX = 0.28;
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
@@ -170,6 +168,16 @@ export class ProceduralAnimator {
     this._spearAimTimer = 0.6;
   }
   private _spearAim = new Vector3();
+  /** Slotted into a shield wall, called every step while he stands in it: his spear goes up on the wall's heading at SPEAR_WALL_UP (see _carrySpear), until the calls stop. */
+  holdSpearInWall(heading: number): void {
+    this._wallHeading = heading;
+    this._wallTimer = 0.3;
+  }
+  // The heading of the wall he stands in, shared by every man in it, and how far his spear has gone over to the wall's line (0 to 1).
+  private _wallHeading = 0;
+  private _wallTimer = 0;
+  private _wallHold = 0;
+  private _spearDir = new Vector3();
   private _spearAimRadius = 0.3;
   // Whether he stands in a rear rank, and how far his hold has gone over from the front man's to the rear man's (0 to 1).
   private _spearRear = false;
@@ -236,7 +244,6 @@ export class ProceduralAnimator {
       // above level when he stands in a rear rank and below it when he stands in the front one.
       pitch: BRACE_PITCH_MIN + h(102) * (BRACE_PITCH_MAX - BRACE_PITCH_MIN),
       headLevel: 0.1 + h(124) * 0.7,
-      spearUp: SPEAR_REAR_UP_MIN + h(125) * (SPEAR_REAR_UP_MAX - SPEAR_REAR_UP_MIN),
       spearGrip: SPEAR_FRONT_GRIP_MIN + h(127) * (SPEAR_FRONT_GRIP_MAX - SPEAR_FRONT_GRIP_MIN),
       out: 0.15 + h(105) * 0.3,
       elbow: -0.9 - h(106) * 0.45,
@@ -475,6 +482,8 @@ export class ProceduralAnimator {
     this._spearAimTimer -= dt;
     this._spearLevel += ((this._spearAimTimer > 0 ? 1 : 0) - this._spearLevel) * Math.min(1, dt * 5);
     this._spearRearHold += ((this._spearRear ? 1 : 0) - this._spearRearHold) * Math.min(1, dt * 4);
+    this._wallTimer -= dt;
+    this._wallHold += ((this._wallTimer > 0 ? 1 : 0) - this._wallHold) * Math.min(1, dt * 6);
     this._spearThrust = this._spearLevel > 0.01 && this._spearShaft() ? this._thrustStroke() * this._spearLevel * this._spearNear : 0;
     this._braceSink = 0;
     if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
@@ -830,10 +839,8 @@ export class ProceduralAnimator {
 
   /**
    * A shield man's spear does not ride his hand any more than his board does: it turns in the fist to his carry, whatever the arm is doing (see the spec at the head of this file).
-   * On the march it stands upright, point to the sky. Handed an enemy, it goes to his fighting hold along the wall's heading: in the front rank overhand and pointed down over
-   * the rim of his board at the man he was handed, at his own dip; in a rear rank raised, at his own pitch above level, over every head between him and the enemy. He works it
-   * in strokes on his own beat, the shaft running through the fist along its own line; a rear man's comes down to just above level for the length of the stroke and goes back up.
-   * The spears keep the wall's heading and are never turned to one side. Limp or dead, the spear goes back to hanging from the hand.
+   * On the march out of a wall it stands upright, point to the sky. Slotted into a wall, or shoving, it goes to the hold: SPEAR_WALL_UP above level on the wall's heading, one
+   * line for the whole wall, front rank (couched near the butt) and rear alike. He works it in strokes on his own beat, the shaft running through the fist along that line. Limp or dead, the spear goes back to hanging from the hand.
    */
   private _carrySpear(): void {
     const spear = this._spearShaft();
@@ -849,8 +856,8 @@ export class ProceduralAnimator {
     }
     const hand = this._body.rightHand;
     hand.computeWorldMatrix(true);
-    // Shoving with no man handed to him he still brings it to his hold.
-    const level = Math.max(this._spearLevel, Math.min(1, this._shove * 1.5));
+    // Shoving with no man handed to him he still brings it to his hold, and standing in a wall he holds it there from the moment he is slotted.
+    const level = Math.max(this._spearLevel, Math.min(1, this._shove * 1.5), this._wallHold);
     const root = this._body.root;
     const br = (this._bracePose ??= this._buildBracePose());
     const handScale = Math.max(0.001, hand.absoluteScaling.y);
@@ -869,12 +876,16 @@ export class ProceduralAnimator {
       const front = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z) - this._spearAimRadius;
       this._spearNear = Math.max(0, Math.min(1, aheadOfFist * handScale + SPEAR_LUNGE + 1.5 - front));
     }
-    // His pitch above level: raised, front and rear rank alike; a rear man's falls toward the strike inside the lunge, a front man strikes along his raised line
-    const strike = Math.max(0, this._spearThrust);
-    const rearUp = br.spearUp + (SPEAR_REAR_STRIKE - br.spearUp) * strike;
-    const up = br.spearUp + (rearUp - br.spearUp) * this._spearRearHold;
-    const carry = Quaternion.RotationYawPitchRoll(root.rotation.y, 0.06 + (Math.PI / 2 - up - 0.06) * level, 0);
-    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
+    // The shaft's line in the world: on the march upright, a touch forward; at the hold SPEAR_WALL_UP above level on the wall's heading, not his body's, so every shaft in
+    // the wall is parallel to every other, front rank and rear, and the stroke slides along it. No roll and no pitch of his own.
+    const ownYaw = root.rotation.y;
+    const yaw = ownYaw + Math.atan2(Math.sin(this._wallHeading - ownYaw), Math.cos(this._wallHeading - ownYaw)) * this._wallHold;
+    const up = Math.PI / 2 - 0.06 + (SPEAR_WALL_UP - Math.PI / 2 + 0.06) * level;
+    const d = this._spearDir.set(Math.sin(yaw) * Math.cos(up), Math.sin(up), Math.cos(yaw) * Math.cos(up));
+    // Set directly through the fist's whole world matrix: the trunk's on-hit squash scales it unevenly and shears the arm, and a rotation composed in the fist's frame
+    // would come out up to 0.4 rad off the line in the world.
+    const along = Vector3.TransformNormal(d, Matrix.Invert(hand.getWorldMatrix())).normalize();
+    const turn = Quaternion.Slerp(rest, Quaternion.FromUnitVectorsToRef(Vector3.Up(), along, new Quaternion()), k);
     shaft.rotationQuaternion = turn;
     // The shaft's middle sits as far up the shaft from the fist as it was strapped on, and runs through the fist with the stroke.
     const held = new Vector3(0, grip.length() + toGrip + run, 0);
