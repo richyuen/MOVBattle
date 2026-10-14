@@ -54,7 +54,8 @@ proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1
 proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | shouldered/upright/across/trailed 0.30/0.25/0.25/0.20 (jitter 0.3); bob 0.08-0.18 | 174 | approved | bob spent for [P]
 proceduralAnimation.ts:idle rest (_buildIdlePose) | hip-shot/sunk/at-ease 0.35/0.35/0.30: roll 0.17-0.27/0.05-0.11/0.10-0.17, crouch 0.02-0.10/0.25-0.45/0.16-0.32; free foot 0.08 (do not grow) | 182 | approved |
 proceduralAnimation.ts:bow ready (_buildCarry ready) | port/upright/low 0.38/0.34/0.28, yaw 0.60-0.95, stagger 0.40-0.60, give 0.10-0.26 | 183 | approved | no [P]
-proceduralAnimation.ts:caster hold (_buildCarry cast, _animateCast) | staff beside/leant/cradled 0.45/0.30/0.25, bolt cocked/overhead/low 0.40/0.30/0.30; yaw 0.10-0.35, tilt +0.08 | 184 | rejected | off arm [P] unseen
+proceduralAnimation.ts:bow shot (_animateBowDrawRelease, BOW_TURN) | from the ready stance, turned 1.15 side-on; bow arm level down the line, string hand to the cheek, legs staggered | 191 | approved |
+proceduralAnimation.ts:caster hold (_buildCarry cast, _animateCast, CASTER_CROUCH) | staff beside/leant/cradled, bolt cocked/overhead/low; cast from a stride; rest crouch x0.3; overhead off arm thrown out | 191 | approved | squat give 0.1/0.22, off arm hung (184 [P] rejected)
 proceduralAnimation.ts:landed corpse folds (_writeDeathRest) | back: thigh 0.95+0.3u, knee 2x, arm across chest; front: shin 1.3+0.4u, wing arm, arch -0.3; neck roll 0.7+0.4u | 164 | approved |
 main.ts:sun and shadow map (dir, CascadedShadowGenerator, SHADOW_REACH) | sun 42 deg up at 1.0; 4 cascades 2048, lambda 0.8, reach 70 + pull-back, darkness 0.04 | 176 | approved | no azimuth [P]
 main.ts:hemi.groundColor | (0.30, 0.30, 0.42) | 176 | approved | no [P]
@@ -65,15 +66,13 @@ bodyBuilder.ts:joint stubs (JOINT_STUB, JOINT_STUB_END) | segment overruns its j
 bodyBuilder.ts:sleeve head (SLEEVE_HEAD, _PLATE, _DROP, _RISE, _CROWN) | head 1.08 sleeves over the top 0.4, crown 0.35 tall drawn in to 0.6 | 181 | approved |
 bodyBuilder.ts:shoulder line, hull and trapezius (SHOULDER_INSET, TRAPEZIUS_OVER_CROWN, YOKE_DEPTH, COLLAR_OF_NECK, COLLAR_RISE, PELVIS_ABOVE_HIP) | edge 0.15 sleeves inside the joints, 0.6 crowns over; trapezius to 1.2 necks, 0.85 up | 189 | approved | edge at the joints + 0.2, collar 1.35 necks 0.6 up (187); no [P]
 bodyBuilder.ts:thigh (THIGH_OF_LEG, THIGH_HEAD, THIGH_LAP) | thigh at least 0.2 of the leg, head 1.15 thighs, pelvis at least 0.9 of the pair | 177 | approved |
-bodyBuilder.ts:lower limb belly (FOREARM_SWELL, CALF_SWELL, LIMB_BELLY_DROP) | forearm 1.35, shin 1.4 of its top width, 0.3 down | 179 | approved | no [P]
+bodyBuilder.ts:lower limb belly (CALF_SWELL, LIMB_BELLY_DROP; armTaper) | shin 1.4 of its top width, 0.3 down; arm one straight taper sleeve top to wrist, no belly | 191 | approved | forearm belly 1.35 (179); no [P]
 unitFactory.ts:garment solids (hangSkirt, furCollar; vehicleBuilder crewBreeches) | hex skirt on the hips: tabard 0.7 thighs flare 1.6, kilt 0.6/1.55, tunic 0.45/1.5, hide 0.5/1.45; collar torus 0.64 chest; breeches 1.75 -> 1.3 thighs | 179 | approved | breeches top 1.45 open as [P]
 bodyBuilder.ts:crewProportions (addOperator, linked crew) | infantry widths at the crew's own scale | 178 | approved |
 vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 180 | nothing-sticks | vfx.a | approved
-- 180 | pinched-link-limbs | unit-look.c | approved
 - 181 | lineup-stands-to-attention | battle-feel.c | approved
 - 181 | arm-is-a-detached-pillar | unit-look.c | approved
 - 182 | aimed-men-stand-to-attention | battle-feel.c | approved
@@ -93,6 +92,8 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 189 | wall-spears-through-own-men | battle-feel.c | approved
 - 189 | trunk-top-flat-plate | unit-look.c | approved
 - 190 | wall-spears-thread-helmets | battle-feel.c | rejected
+- 191 | aimed-men-stand-to-attention | battle-feel.c | approved
+- 191 | forearm-as-thick-as-upper-arm | unit-look.c | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
