@@ -1208,7 +1208,10 @@ export class SimulationSystem {
 
     if (preset === "iconic_chronomancer") {
       this._applyAreaControl(target.position, Math.max(3.6, splashRadius + 1.1), attacker.team, damage * 0.72, knockback.scale(0.55 * controlStrength), now, 0.34, attacker.definition.statusDurationSeconds ?? 3.8);
-      if (this.visualEffects) this.visualEffects.spawnSmokePuff(target.position);
+      if (this.visualEffects) {
+        this.visualEffects.spawnSmokePuff(target.position);
+        this.visualEffects.spawnSpellDome(target.position, Math.max(3.6, splashRadius + 1.1), new Color3(0.55, 0.62, 0.95));
+      }
       return;
     }
 
@@ -1240,6 +1243,8 @@ export class SimulationSystem {
     if (abilities.has("lightning_strike")) {
       if (this.visualEffects) {
         this.visualEffects.spawnLightning(attackOrigin, target.position);
+        // The strike's area as one solid shape over the men it hits
+        this.visualEffects.spawnSpellDome(target.position, splashRadius > 0 ? splashRadius : 2.2);
       }
       this._applyDirectOrSplash(target, damage, splashRadius > 0 ? splashRadius : 2.2, attacker.team, knockback.scale(1.4));
       if (abilities.has("freeze")) {

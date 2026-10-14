@@ -16,6 +16,12 @@ interface TimedEffect {
 /**
  * Manages transient visual effects: lightning, smoke puffs, impact sparks, etc.
  */
+// A spell dome (see VisualEffects.spawnSpellDome): its life in seconds, the share of it spent swelling and fading, and its see-through-ness.
+const DOME_LIFE = 1.4;
+const DOME_RISE = 0.15;
+const DOME_FADE = 0.35;
+const DOME_ALPHA = 0.5;
+
 export class VisualEffects {
   private _scene: Scene;
   private _effects: TimedEffect[] = [];
@@ -199,6 +205,43 @@ export class VisualEffects {
       dispose: () => {
         glow?.removeExcludedMesh(ring);
         ringMat.dispose();
+      },
+    });
+  }
+
+  // ══════════════════ SPELL DOME ══════════════════
+  /**
+   * A magic strike's area as one graphic shape (tabs_screenshot_09): a whole hemisphere of one flat colour standing on the ground over the area the spell
+   * hits, unlit and see-through, so the bodies inside show through it. It swells from the ground to its full radius in DOME_RISE, holds, and fades over its
+   * last DOME_FADE share of DOME_LIFE, so it is caught whole in frame for most of a second.
+   */
+  spawnSpellDome(position: Vector3, radius: number, color = new Color3(0.93, 0.42, 0.62)): void {
+    const root = new TransformNode("spellDome", this._scene);
+    root.position.set(position.x, 0, position.z);
+    const mat = getMaterialFactory().createUnique("cloth", color);
+    mat.emissiveColor = color;
+    mat.disableLighting = true;
+    mat.backFaceCulling = false;
+    mat.transparencyMode = 2;
+    mat.alpha = DOME_ALPHA;
+    const dome = MeshBuilder.CreateSphere("spellDomeShell", { diameter: 2, segments: 12, slice: 0.5 }, this._scene);
+    dome.material = mat;
+    dome.parent = root;
+    dome.isPickable = false;
+    this._scene.getGlowLayerByName("glow")?.addExcludedMesh(dome);
+    const shape = (u: number): void => {
+      const rise = Math.min(1, u / DOME_RISE);
+      root.scaling.setAll(Math.max(0.05, radius * (1 - (1 - rise) * (1 - rise))));
+      mat.alpha = DOME_ALPHA * (u < 1 - DOME_FADE ? 1 : Math.max(0, (1 - u) / DOME_FADE));
+    };
+    shape(0);
+    this._effects.push({
+      root,
+      remaining: DOME_LIFE,
+      update: (_dt, remaining) => shape(Math.min(1, 1 - remaining / DOME_LIFE)),
+      dispose: () => {
+        this._scene.getGlowLayerByName("glow")?.removeExcludedMesh(dome);
+        mat.dispose();
       },
     });
   }
