@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 199   Last re-audit: 198   Consecutive rejects: 0   Branch: main
+Iteration: 200   Last re-audit: 200   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -8,9 +8,9 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Tier 2 (fully scored at 198):
+Tier 2 (fully scored at 198, re-audited 200):
 battle-feel: e FAIL f PASS g FAIL h FAIL (1/4)
-- e FAIL [S since: 0] B: 1 no swing caught mid-arc against a target — closeup_weapon_reads; 2 clubbers in the press carry clubs level at the chest, no overhead windup or landing — big_melee_5s, 9s. Ref trailer_3_sheet_01 r2c3.
+- e FAIL [S since: 1] B: 1 no swing caught mid-arc against a target — closeup_weapon_reads (only sword knights, no clubber, no landed blow); 3 every press clubber holds the club cocked at one near-vertical angle, a picket of posts, none caught dropping onto a man — big_melee_5s, 9s. (2 struck 200) Ref trailer_3_sheet_01 r2c3.
 - g FAIL [S since: 0] B: 1 landing not shown: flung knights out of frame at war_machines_3800ms, no landed spread of varied poses. Ref trailer_2_sheet_02 r1c2.
 - h FAIL [S since: 0] B: 1 red front boards are separate edge-on discs with gaps, not lapped rim over rim — shield_wall_side, 2650ms; 2 men pass through each other at contact, blue rank fused, shafts sink into red boards — shield_wall_side. Ref tabs_screenshot_06.
 unit-look: e PASS f FAIL g PASS h FAIL (2/4)
@@ -27,27 +27,27 @@ camera: e PASS f FAIL g FAIL h PASS (2/4)
 vfx: e FAIL f PASS g FAIL h FAIL (1/4)
 - e FAIL [S since: 1] B: 1 no whole solid ring or dome (198 ring shows a quarter arc behind a body) — closeup_state_reads; 2 Zeus held bolt is a pale yellow glow slab (ref white jagged slabs trailer_2_sheet_03 r3c2) — closeup_pair_zeus_thor. Ref trailer_2_sheet_03 r2c1.
 - g FAIL [S since: 1] B: 2 no broken-gear debris (r1c2) — big_melee_5s, 9s. (1 struck 199) Ref trailer_2_sheet_02.
-- h FAIL [S since: 0] B: 1 burst hard solid lobes, no soft fire envelope (ref trailer_3_sheet_03 r1c2) — war_machines_1100ms; 2 ball leaves a thin line, no smoke trail — 550ms; 3 muzzle puff faceted spheres, no drifting smoke — 1250ms.
+- h FAIL [S since: 1] B: 1 burst hard solid lobes, no soft fire envelope (ref trailer_3_sheet_03 r1c2) — war_machines_1100ms; 3 muzzle puff faceted spheres, no drifting smoke — 1250ms. (2 struck 200)
 Total tier 1 24/24; tier 2 11/24.
 
 ## Focus (every gap this iteration)
-BASE 6d1cb21
-- [S] unit-look.f mammoth-trunk retry (65b0386) — APPROVE, blocker 3 struck, criterion still FAIL
-- [S] vfx.g blood-chunks (27ddf19) — APPROVE, blocker 1 struck, criterion still FAIL
+BASE 471cdaa
+- [S] battle-feel.e overhead-club-strike (b0ca225) — APPROVE, blocker 2 struck, blocker 3 added, criterion still FAIL
+- [S] vfx.h cannonball-smoke-trail (df80399) — APPROVE, blocker 2 struck, criterion still FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] mammoth-trunk retry (65b0386) VERDICT: APPROVE CRITERION: unit-look.f FAIL (previous: FAIL)
-- GAP: [S] blood-chunks (27ddf19) VERDICT: APPROVE CRITERION: vfx.g FAIL (previous: FAIL)
+- GAP: [S] overhead-club-strike (b0ca225) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL)
+- GAP: [S] cannonball-smoke-trail (df80399) VERDICT: APPROVE CRITERION: vfx.h FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] vfx.g gear-debris [0] — blocker 2: splintered shield-board and shaft shards spawned on a shield break, left as litter — ref trailer_2_sheet_02 — ours big_melee_9s
-2. [S] unit-look.f mammoth-scale [0] — blocker 1: one giant-height constant scales the whole mammoth rig to ~3.5-4 men — ref tabs_screenshot_01 — ours big_melee_result
-3. [S] vfx.h burst-fire-envelope [0] — blocker 1: soft sprite fire/smoke envelope around the solid burst lobes — ref trailer_3_sheet_03 — ours war_machines_1100ms
-4. [S] vfx.h ball-smoke-trail [0] — blocker 2: soft sprite smoke puffs trailing the cannonball — ref trailer_3_sheet_03 — ours war_machines_550ms
-5. [S] vfx.e zeus-jagged-bolt [0] — blocker 2: held bolt rebuilt as white jagged polygon slabs — ref trailer_2_sheet_03 — ours closeup_pair_zeus_thor
-6. [S] unit-look.h lineup-eyes [0] — blocker 1: larger white-disc eyes with a fixed screen-size floor on bare faces — ref tabs_screenshot_04 — ours lineup_medieval
-7. [S] battle-feel.e overhead-club-swing [0] — blocker 2: club windup raised overhead, then a committed downswing — ref trailer_3_sheet_01 — ours big_melee_5s
-8. [S] battle-feel.h lapped-wall-boards [0] — blocker 1: front boards slot rim over rim into one surface — ref tabs_screenshot_06 — ours shield_wall_side
+1. [S] battle-feel.h lapped-shield-boards [0] — blocker 1: red front boards overlap rim over rim into one surface (shared wall plane + lateral overlap offset) — ref tabs_screenshot_06 — ours shield_wall_side, 2650ms
+2. [S] battle-feel.g landed-tumble-poses [0] — blocker 1: keep flung bodies in frame and capture the landing; varied landed poses from tumble state — ref trailer_2_sheet_02 r1c2 — ours war_machines_3800ms
+3. [S] maps-light.f vignette-and-haze [0] — blocker 1: post-process vignette darkening the corners (blocker 2 distance desaturation fog) — ref tabs_screenshot_05, 01 — ours big_melee_5s
+4. [S] vfx.e zeus-jagged-bolt [1] — blocker 2: held bolt as jagged white polygon slab, not a pale glow — ref trailer_2_sheet_03 r3c2 — ours closeup_pair_zeus_thor
+5. [S] unit-look.h lineup-eyes [1] — blocker 1: eye discs read at lineup distance (contrast or size) — ref tabs_screenshot_04 — ours lineup_medieval
+6. [S] vfx.g broken-gear-debris [1] — blocker 2: shattered shield and weapon chunks on hit or death — ref trailer_2_sheet_02 r1c2 — ours big_melee_5s, 9s
+7. [S] unit-look.f mammoth-scale [2] — blocker 1: mammoth about 3.5 men tall — ref tabs_screenshot_01 — ours big_melee_result
+8. [P] battle-feel.e press-club-phase [0] — fallout of overhead-club-strike (approved 200): heave 0.12 -> ~0.6 with per-man phase — NEXT shot: big_melee_5s, clubs over the red press at visibly mixed angles
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - mammoth-trunk [attempts: 1, [S]] — 198: 8-knot hanging tube in hide purple off the neck: blends into the chest, sits behind the tusk arc; salmon cheek panel left; 0.05 m knot rings too thin to read (199 retry approved)
@@ -60,8 +60,8 @@ BASE 6d1cb21
 - carry-bob [attempts: 1, bob spent for [P]] — 0.15-0.30: a bob on a level carry still reads level and parallel
 
 ## Notes for next iteration (max 5 lines)
-- 199 [S] pair was (unit-look.f, vfx.g); 200 must not repeat it. 200 is a re-audit iteration (N multiple of 5). Critic [P] fallout from 199: trunk only a little darker and its lower half merges with the front leg (more forward root pitch); landed blood chunks squashed 0.45 sink under grass blades.
+- 200 [S] pair was (battle-feel.e, vfx.h); 201 must not repeat it. Critic [P] fallout from 200: press club heave 0.12 -> ~0.6 per-man phase (big_melee_5s); vfx.h next [S]: reuse the feathered billboard puff (`_leavePuff` in projectileSystem.ts) as a soft envelope round the burst and drifting muzzle smoke.
 - Four `no evidence` blockers (maps-light.e, ui-flow.g, camera.f, camera.g) want evidence commits to capture.mjs. CRITIC.md tile cites are wrong for vfx.f (use trailer_3_sheet_03 r1c1-r2c1), unit-look.e (trailer_3_sheet_01 r3c1), battle-feel.e (r2c3), battle-feel.g (trailer_2_sheet_02 r1c2).
-- Mammoth: whole rig scales from MAMMOTH_SCALE on `m_bulk` in buildMammoth; trunk is TRUNK_PITCH chain on the neck. Blood litter: `_litter` + LITTER_CAP in visualEffects.ts, cleared in dispose(); a gear-debris spawner can push into the same list.
-- Self-check with `capture.mjs --only <shot>` (redirect to a log; piping to tail exited 4); big_melee_result angle differs between --only and full runs. Commit per gap with `git commit <paths> -F <msgfile>`. Crop shots with python PIL. Write long docs via the Write tool.
+- Clubbers: only ~1/3 are in shove contact at 9s; the rest are Idle/Walking near the press, so poses for them go through `readyBlow` (simulationSystem blowReadyReach) not the shove overlay. Probe animator branches with console.error -> look/summary.json consoleErrors.
+- Self-check with `capture.mjs --only <shot>` (redirect to a log); shots are deterministic run to run, so a look diff is the code change. Commit per gap with `git commit <paths> -F <msgfile>`. Crop shots with python PIL. Write long docs via the Write tool.
 - Shadows pass, leave them. No raised idle lean, free-foot 0.08 or walk torso yaw. No [P] on SHOULDER_INSET, TRAPEZIUS_*, NECK_*, hull, pelvis, arm taper, ghost, bow ready, laurel, sunk crouch, CALF_SWELL, helm crown, lawn shade, carry bob, mammoth hull, spear carry.
