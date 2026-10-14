@@ -11,6 +11,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 
 ## Rows
 main.ts:GIANT_LEAN | 0.4 | 159 | spent |
+main.ts:placement ghost (GHOST_ALPHA, GHOST_BLOCKED_ALPHA) | 0.55, blocked 0.22 | 187 | approved |
 cameraController.ts:FOLLOW_DROP | 0.9 | 155 | approved |
 cameraController.ts:clearRadius | depth + max(6.0, giant/0.58) | 157 | approved |
 cameraController.ts:melee alpha | -PI/3 | 159 | approved |
@@ -24,7 +25,7 @@ unitFactory.ts:CLOTH_SHADE | 0.8 | 151 | approved |
 unitFactory.ts:BARE_FOOT_SHADE | 0.72 | 172 | approved | 0.85; no [P]
 unitFactory.ts:team blue colour | (0.42, 0.60, 0.98) | 150 | spent |
 unitFactory.ts:idle lean | 0.26 + h*0.14 | 148 | spent | do not raise, drives lineups
-bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, CHEST_LINE, CHEST_SWELL, SHOULDER_SLOPE, WAIST_DEPTH) | throughHinge line, min taper 0.6; chest 0.36, 1.05, 0.8, 0.85 | 180 | approved |
+bodyBuilder.ts:limb taper and torso wedge (LOWER_LIMB_MIN_TAPER, CHEST_LINE, CHEST_SWELL, WAIST_DEPTH) | throughHinge line, min taper 0.6; chest 0.36, 1.05, top drawn in to the collar, waist depth 0.85 | 187 | approved | SHOULDER_SLOPE 0.8 (180)
 bodyBuilder.ts:head, neck, limb length, mitt (HEAD_OF_BODY, HEAD_SQUAT, HEAD_RINGS, HEAD_CORNER, NECK_LENGTH, LIMB_STRETCH, MITT_OF_WRIST, MITT_LENGTH, MITT_DEPTH) | head 0.18 of height x0.86, rings chin 0.72/cheek 0.9/brow 1/temple 0.95/crown 0.66, corners 0.55; neck 0.07; limbs x1.16; mitt 1.25/1.4/0.8, thumb | 184 | approved | chin 0.5, cheek 0.8 (183); no [P] on MITT_OF_WRIST
 bodyBuilder.ts:eyes (EYE_OF_FACE, EYE_SPREAD, EYE_FLAT, PUPIL_OF_EYE; metrics.pupilTravel) | white disc 0.24 face, 0.16 off centre, depth 0.3; pupil 0.5 disc, travel 0.3 | 185 | approved | black bead 0.17 (184)
 bodyBuilder.ts:boot and shin end (SHIN_END, BOOT_OVER_SHIN, BOOT_RISE, BOOT_LENGTH, BOOT_TOE_HEIGHT) | shin keeps 0.78; cuff 1.3 shin ends wide, 0.34 shin tall, toe 1.7 long, 0.5 high | 171 | approved |
@@ -59,7 +60,7 @@ mapBuilder.ts:lawn shade (LawnShadePlugin, LAWN_BAND_RISE, _BLUR, _WEIGHT, LAWN_
 projectileSystem.ts:stuck shafts (_leaveAsLitter, arrow mesh) | ray to the struck hide, head 0.07 in, on that part's joint; mark down: planted at pitch 1.0-1.35; arrow 0.75 x 0.035 | 180 | approved |
 bodyBuilder.ts:joint stubs (JOINT_STUB, JOINT_STUB_END) | segment overruns its joint by 0.45 of its width, drawn in to 0.6 | 175 | approved |
 bodyBuilder.ts:sleeve head (SLEEVE_HEAD, _PLATE, _DROP, _RISE, _CROWN) | head 1.08 sleeves over the top 0.4, crown 0.35 tall drawn in to 0.6 | 181 | approved |
-bodyBuilder.ts:shoulder ridge and hull (YOKE_REACH, _DROP, _DEPTH, _NECK, PELVIS_ABOVE_HIP) | gable as 184; hull foot is the pelvis top face (pelvisW x pelvisD) at the belt, 0.3 up | 186 | approved | foot 1.0 waist, at least 0.84 of the shoulder line (184); no [P]
+bodyBuilder.ts:shoulder line, hull and collar (YOKE_REACH, _DEPTH, COLLAR_OF_NECK, COLLAR_RISE, PELVIS_ABOVE_HIP) | top edge at the joints, reach 0.2; collar 1.35 necks, 0.6 up the neck; foot = pelvis top | 187 | approved | gable from 0.6 sleeves under the joints to a 0.5 neck (184-186); no [P]
 bodyBuilder.ts:thigh (THIGH_OF_LEG, THIGH_HEAD, THIGH_LAP) | thigh at least 0.2 of the leg, head 1.15 thighs, pelvis at least 0.9 of the pair | 177 | approved |
 bodyBuilder.ts:lower limb belly (FOREARM_SWELL, CALF_SWELL, LIMB_BELLY_DROP) | forearm 1.35, shin 1.4 of its top width, 0.3 down | 179 | approved | no [P]
 unitFactory.ts:garment solids (hangSkirt, furCollar; vehicleBuilder crewBreeches) | hex skirt on the hips: tabard 0.7 thighs flare 1.6, kilt 0.6/1.55, tunic 0.45/1.5, hide 0.5/1.45; collar torus 0.64 chest; breeches 1.75 -> 1.3 thighs | 179 | approved | breeches top 1.45 open as [P]
@@ -68,8 +69,6 @@ vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
 vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 176 | shadow-shredded-by-grass | maps-light.b | approved
-- 176 | ball-shoulders-on-stick-arms | unit-look.c | approved
 - 177 | shadow-sawtooth-hard-edge | maps-light.b | approved
 - 177 | wire-legs | unit-look.c | approved
 - 178 | shadow-hard-heavy-maroon | maps-light.b | approved
@@ -90,6 +89,8 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 185 | no-ball-in-flight | vfx.b | approved
 - 186 | torso-is-a-barrel | unit-look.c | approved
 - 186 | wall-spears-held-not-thrust | battle-feel.c | approved
+- 187 | ghost-preview | ui-flow.d | approved
+- 187 | trunk-widest-below-the-arms | unit-look.c | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

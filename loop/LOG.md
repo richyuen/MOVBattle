@@ -185,3 +185,4 @@ iter 183 | [S] casters-stand-to-attention, [S] head-is-a-tall-square-box, [P] bo
 iter 184 | [S] torso-top-is-a-plate-with-eaves, [S] wall-spears-pitch-over-heads, [P] HEAD_RINGS chin/cheek, [P] bolt hold off arm | 3/4 approved | passes 20 -> 20
 iter 185 | re-audit; evidence in-flight pair + mid-swoop; [S] unit-look.d faces-blank-at-distance, [S] vfx.b no-ball-in-flight | 2/2 approved | passes 18 -> 21
 iter 186 | [S] torso-is-a-barrel, [S] wall-spears-held-not-thrust, [P] laurel wreath y/tilt | 3/3 approved | passes 21 -> 21
+iter 187 | evidence ghost shot; [S] ghost-preview, [S] trunk-widest-below-the-arms | 2/2 approved | passes 21 -> 21
