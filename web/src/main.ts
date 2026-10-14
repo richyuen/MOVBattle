@@ -136,6 +136,8 @@ dir.shadowMaxZ = 220;
 // Fog — depth fade to sky color (see the aerial perspective below)
 const HAZE_LEAD = 12;
 const HAZE_DEPTH = 95;
+// Flung bodies draw in their own group after the blast sprites, sharing the scene's depth so solid things in front still hide them (runtimeUnit FLUNG_RENDER_GROUP)
+scene.setRenderingAutoClearDepthStencil(1, false, false, false);
 scene.fogMode = Scene.FOGMODE_LINEAR;
 scene.fogColor = new Color3(0.62, 0.86, 0.76);
 scene.fogStart = 70;

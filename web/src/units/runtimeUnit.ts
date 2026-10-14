@@ -33,6 +33,9 @@ export interface OriginInfo {
   emitter?: RuntimeUnit;
 }
 
+/** The rendering group a flung body is drawn in: after the scene's see-through effects, sharing their depth (main.ts keeps its depth uncleared). */
+export const FLUNG_RENDER_GROUP = 1;
+
 export class RuntimeUnit {
   private static _nextRuntimeId = 1;
   static timeNowSeconds: () => number = () => performance.now() / 1000;
@@ -259,6 +262,7 @@ export class RuntimeUnit {
     const radiusScale = this.isDowned ? this.definition.downedBlockRadiusScale : 1;
     return this.definition.collisionRadius * radiusScale;
   }
+  private _drawnFlung = false;
   get physicsState(): "steady" | "airborne" | "toppled" | "downed" | "recovering" | "dead" {
     if (this._isDead) return "dead";
     const now = RuntimeUnit.timeNowSeconds();
@@ -733,7 +737,14 @@ export class RuntimeUnit {
     // Animate
     // A blasted body stays limp for its whole flight, not just until the topple clock runs out mid-air.
     this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
-    this.animator.setAirborne(!this._grounded && this.position.y > 0.35);
+    const flung = !this._grounded && this.position.y > 0.35;
+    this.animator.setAirborne(flung);
+    // A flung body is drawn over the blast it is thrown through (FLUNG_RENDER_GROUP: after the fire and smoke sprites, still depth-tested against the solid
+    // scene), so it stays a dark, solid figure against the fireball and the smoke instead of being lit pale by the additive fire in front of it
+    if (flung !== this._drawnFlung) {
+      this._drawnFlung = flung;
+      for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
+    }
     this.animator.update(dt);
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
