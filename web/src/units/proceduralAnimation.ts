@@ -44,6 +44,13 @@ export type ReleaseTimingProfile =
 const SPEAR_LUNGE = 0.45;
 const SPEAR_DRAW = -0.4;
 const SPEAR_CHOKE = 0.45;
+/** A rear-rank spear has a lane of its own: the man stands behind the gap between two boards, and his shaft is carried over that gap and not over the man beside it. His spear arm
+ * comes in over his own head by this much, what is left of the fist's offset from his middle line is taken out of the shaft's place (never by more than SPEAR_LANE_REACH metres),
+ * and the shaft rides this much higher and is aimed this much higher on its mark, so it lies over the shoulders ahead of him. */
+const SPEAR_REAR_ARM_IN = -0.35;
+const SPEAR_LANE_REACH = 0.4;
+const SPEAR_REAR_LIFT = 0.12;
+const SPEAR_REAR_AIM_RISE = 0.3;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -121,13 +128,17 @@ export class ProceduralAnimator {
   private _shoveTimer = 0;
 
   /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear is aimed at that man's chest (see _carrySpear) until the calls stop. */
-  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3): void {
+  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false): void {
     this._spearAim.copyFrom(enemyGround);
     this._spearAimRadius = enemyRadius;
+    this._spearRear = rearRank;
     this._spearAimTimer = 0.6;
   }
   private _spearAim = new Vector3();
   private _spearAimRadius = 0.3;
+  // Whether he stands in a rear rank, and how far his shaft has moved over into its lane (0 to 1).
+  private _spearRear = false;
+  private _spearLane = 0;
   // The thrust (see _carrySpear): where in his stroke the man is, from SPEAR_DRAW (drawn back) through 0 (the hold) to 1 (full lunge); how far back through the fist
   // the shaft rests so that the lunge ends on the enemy's front, in metres; and how near the enemy is to being in reach, 0 to 1.
   private _spearThrust = 0;
@@ -424,6 +435,7 @@ export class ProceduralAnimator {
     this._spearAimTimer -= dt;
     this._spearLevel += ((this._spearAimTimer > 0 ? 1 : 0) - this._spearLevel) * Math.min(1, dt * 5);
     this._spearRest += (this._spearRestAim - this._spearRest) * Math.min(1, dt * 6);
+    this._spearLane += ((this._spearRear && this._spearAimTimer > 0 ? 1 : 0) - this._spearLane) * Math.min(1, dt * 5);
     this._spearThrust = this._spearLevel > 0.01 && this._spearShaft() ? this._thrustStroke() * this._spearLevel * this._spearNear : 0;
     this._braceSink = 0;
     if (this._shove > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
@@ -495,7 +507,7 @@ export class ProceduralAnimator {
           const jab = Math.max(this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0, this._spearThrust);
           b.rightShoulder.rotation.x += (br.spearRaise + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
           b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * hold;
-          b.rightShoulder.rotation.z += (0.2 - b.rightShoulder.rotation.z) * hold;
+          b.rightShoulder.rotation.z += (0.2 + (SPEAR_REAR_ARM_IN - 0.2) * this._spearLane - b.rightShoulder.rotation.z) * hold;
           b.rightElbow.rotation.x += (br.spearElbow + 0.9 * jab + 0.8 * Math.min(0, this._spearThrust) - b.rightElbow.rotation.x) * hold;
           b.rightElbow.rotation.z += (0 - b.rightElbow.rotation.z) * hold;
         }
@@ -800,11 +812,14 @@ export class ProceduralAnimator {
     this._spearRestAim = 0;
     this._spearNear = 0;
     if (this._spearAimTimer > 0) {
-      // Fall of the shaft from the fist to the enemy's chest, as high off his ground as this man's own; a man within a pace is aimed at as if a pace off, and no point rises above level by more than a hair.
+      // Fall of the shaft to the enemy's chest, as high off his ground as this man's own; a man within a pace is aimed at as if a pace off, and no point rises above level by more than a hair.
+      // The fall is taken from the base of his own neck and not from the fist, which travels with every stroke: the shaft keeps one pitch through the stroke and a rank's shafts lie parallel.
+      // A rear man's mark is SPEAR_REAR_AIM_RISE higher, so his shaft lies flatter, over the men ahead of him.
       const from = hand.absolutePosition;
+      const sight = this._body.neck.absolutePosition;
       const reach = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z);
-      const run = Math.max(1, reach);
-      dip = Math.max(-0.05, Math.min(0.5, Math.atan2(from.y - (this._spearAim.y + this._chestRise), run)));
+      const run = Math.max(1, Math.hypot(this._spearAim.x - sight.x, this._spearAim.z - sight.z));
+      dip = Math.max(-0.05, Math.min(0.5, Math.atan2(sight.y - (this._spearAim.y + this._chestRise + SPEAR_REAR_AIM_RISE * this._spearLane), run)));
       // From the fist to the point, and from the fist to the near face of the man aimed at
       const tip = shaft.getChildMeshes(true)[0];
       const ahead = (grip.length() + (tip ? tip.position.y + tip.getBoundingInfo().boundingBox.maximum.y : 0) * shaft.scaling.y) * handScale;
@@ -820,6 +835,15 @@ export class ProceduralAnimator {
     const held = new Vector3(0, grip.length() + (this._spearRest * this._spearLevel + this._spearThrust * SPEAR_LUNGE) / handScale, 0);
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, shaft.position);
+    if (this._spearLane > 0.01) {
+      // Lane: the shaft is set over his own middle line, which is the gap between the two men ahead, and lifted; its place only, never its heading
+      const yaw = root.rotation.y;
+      const across = (from: Vector3): number => (from.x - root.absolutePosition.x) * Math.cos(yaw) - (from.z - root.absolutePosition.z) * Math.sin(yaw);
+      const over = Math.max(-SPEAR_LANE_REACH, Math.min(SPEAR_LANE_REACH, -across(hand.absolutePosition))) * this._spearLane * level * k;
+      const shift = new Vector3(Math.cos(yaw) * over, SPEAR_REAR_LIFT * this._spearLane * level * k, -Math.sin(yaw) * over);
+      shift.rotateByQuaternionToRef(Quaternion.Inverse(hand.absoluteRotationQuaternion), shift);
+      shaft.position.addInPlace(shift.scaleInPlace(1 / handScale));
+    }
   }
 
   private _resetPose(): void {

@@ -402,8 +402,8 @@ export class RuntimeUnit {
   }
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
-  levelSpearAt(enemyGround: Vector3, enemyRadius: number): void {
-    this.animator.levelSpearAt(enemyGround, enemyRadius);
+  levelSpearAt(enemyGround: Vector3, enemyRadius: number, rearRank: boolean): void {
+    this.animator.levelSpearAt(enemyGround, enemyRadius, rearRank);
   }
 
   get isMoving(): boolean {
