@@ -54,10 +54,11 @@ export type ReleaseTimingProfile =
  *   turned into the board, and the board turns and tilts with it.
  *   Spears: one pitch per man, measured above level. A rear man's spear stays raised, SPEAR_REAR_UP_MIN..MAX above level, his own; it is over every head by construction, his and
  *   the front rank's, and its butt drops beside his own hip. It comes down only inside a stroke, and then only to SPEAR_REAR_STRIKE above level, over the gap between the two boards
- *   ahead of him where he stands, and goes back up. A front man's spear is held overhand and pointed down over the rim of his board, SPEAR_FRONT_DIP_MIN..MAX below level,
- *   and he grips it overhand at its balance, SPEAR_FRONT_GRIP_MIN..MAX of its length from the butt, not near the butt as it is carried: about a pace of shaft is ahead of his fist,
- *   so its point ends in the enemy's board and not out of the enemy's back or in the ground beyond him, and the rest rises behind him over the heads of the rear rank.
- *   Each works his stroke on his own beat: drawn back SPEAR_DRAW of a lunge, thrown SPEAR_LUNGE metres along the shaft's own line, brought back.
+ *   ahead of him where he stands, and goes back up. A front man's spear is not levelled or dipped either: no wall spear in the reference lies level, and a shaft half as tall again
+ *   as the man, pointed at an enemy under a pace away, either runs on through him or is pushed back through the fist into the man behind. He holds it couched low instead, the
+ *   fist at his waist in front of him and gripped near the butt, SPEAR_FRONT_GRIP_MIN..MAX of its length from it, and raised in the same band as the rear rank's spears, so the
+ *   point stands over the enemy's head and the short end below the fist points down behind him to his heel, through nobody.
+ *   Each works his stroke on his own beat: drawn back SPEAR_DRAW of a lunge, thrown SPEAR_LUNGE metres along the shaft's own line, brought back; a front man's along his raised line.
  *   Legs: a braced man is on his feet, not sat on his heels. The deepest crouch folds the knees BRACE_CROUCH_DEEP at most and the step of the drive leg is BRACE_STEP_MIN..MAX.
  */
 const BRACE_PITCH_MIN = 0.14;
@@ -67,14 +68,11 @@ const SPEAR_DRAW = -0.4;
 const SPEAR_REAR_UP_MIN = 1.05;
 const SPEAR_REAR_UP_MAX = 1.4;
 const SPEAR_REAR_STRIKE = 0.3;
-const SPEAR_FRONT_DIP_MIN = 0.42;
-const SPEAR_FRONT_DIP_MAX = 0.64;
-const SPEAR_FRONT_GRIP_MIN = 0.48;
-const SPEAR_FRONT_GRIP_MAX = 0.58;
-/** A front man's stroke stops on its mark: the point runs on until it is this deep in the near face of the man aimed at and no further, and where that man stands closer than the
- * shaft's reach from the fist the shaft gives back through the fist to keep the point there, by this much at most. */
-const SPEAR_BITE = 0.08;
-const SPEAR_GIVE = 0.4;
+const SPEAR_FRONT_GRIP_MIN = 0.2;
+const SPEAR_FRONT_GRIP_MAX = 0.28;
+/** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
+const SPEAR_COUCH_RAISE = -0.45;
+const SPEAR_COUCH_ELBOW = -1.25;
 const BRACE_CROUCH_DEEP = 0.7;
 const BRACE_STEP_MIN = 0.22;
 const BRACE_STEP_MAX = 0.5;
@@ -239,7 +237,6 @@ export class ProceduralAnimator {
       pitch: BRACE_PITCH_MIN + h(102) * (BRACE_PITCH_MAX - BRACE_PITCH_MIN),
       headLevel: 0.1 + h(124) * 0.7,
       spearUp: SPEAR_REAR_UP_MIN + h(125) * (SPEAR_REAR_UP_MAX - SPEAR_REAR_UP_MIN),
-      spearDown: SPEAR_FRONT_DIP_MIN + h(126) * (SPEAR_FRONT_DIP_MAX - SPEAR_FRONT_DIP_MIN),
       spearGrip: SPEAR_FRONT_GRIP_MIN + h(127) * (SPEAR_FRONT_GRIP_MAX - SPEAR_FRONT_GRIP_MIN),
       out: 0.15 + h(105) * 0.3,
       elbow: -0.9 - h(106) * 0.45,
@@ -552,10 +549,12 @@ export class ProceduralAnimator {
           // Spear arm: no windmill and no underarm poke. The fist goes up to the ear, above the shoulder, with the elbow cocked out behind, and holds the shaft there;
           // a stroke straightens the arm forward along the shaft from that hold and comes back to it, the elbow cocking further as the shaft is drawn back.
           const jab = Math.max(this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0, this._spearThrust);
-          b.rightShoulder.rotation.x += (br.spearRaise + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
+          // A rear man's fist is at his ear; a front man's is couched at his waist (see the spec at the head of this file)
+          const front = 1 - this._spearRearHold;
+          b.rightShoulder.rotation.x += (br.spearRaise + (SPEAR_COUCH_RAISE - br.spearRaise) * front + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
           b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * hold;
           b.rightShoulder.rotation.z += (0.2 - b.rightShoulder.rotation.z) * hold;
-          b.rightElbow.rotation.x += (br.spearElbow + 0.9 * jab + 0.8 * Math.min(0, this._spearThrust) - b.rightElbow.rotation.x) * hold;
+          b.rightElbow.rotation.x += (br.spearElbow + (SPEAR_COUCH_ELBOW - br.spearElbow) * front + 0.9 * jab + 0.8 * Math.min(0, this._spearThrust) - b.rightElbow.rotation.x) * hold;
           b.rightElbow.rotation.z += (0 - b.rightElbow.rotation.z) * hold;
         }
       }
@@ -860,31 +859,25 @@ export class ProceduralAnimator {
     const aheadOfFist = grip.length() + (tip ? tip.position.y + tip.getBoundingInfo().boundingBox.maximum.y : 0) * shaft.scaling.y;
     const behindFist = (shaft as Mesh).getBoundingInfo().boundingBox.maximum.y * shaft.scaling.y - grip.length();
     this._spearNear = 0;
-    // A front man shifts his grip to the balance for the overhand hold: the shaft goes back through the fist by what that takes
-    const toBalance = ((aheadOfFist + behindFist) * (1 - br.spearGrip) - aheadOfFist) * (1 - this._spearRearHold) * level;
+    // A front man takes the couched grip near the butt: the shaft runs forward through the fist by what that takes
+    const toGrip = ((aheadOfFist + behindFist) * (1 - br.spearGrip) - aheadOfFist) * (1 - this._spearRearHold) * level;
     // The stroke's run through the fist, in the hand's measure
-    let run = this._spearThrust * SPEAR_LUNGE / handScale;
+    const run = this._spearThrust * SPEAR_LUNGE / handScale;
     if (this._spearAimTimer > 0) {
       // In reach, or a stride and a half short of it: only then does he strike
       const from = hand.absolutePosition;
       const front = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z) - this._spearAimRadius;
       this._spearNear = Math.max(0, Math.min(1, aheadOfFist * handScale + SPEAR_LUNGE + 1.5 - front));
-      // Reach stop, for the dipped spear of the front rank: along the shaft's own fall it is this far from the fist to the near face of the man aimed at, and the point
-      // goes SPEAR_BITE into that face and stops; the lunge is cut short there, and a man closer than the shaft's reach has the shaft given back through the fist.
-      const toFace = (Math.max(0, front) / Math.cos(br.spearDown) + SPEAR_BITE) / handScale;
-      const room = toFace - (aheadOfFist + toBalance);
-      const stopped = Math.max(-SPEAR_GIVE / handScale, Math.min(run, room));
-      run += (stopped - run) * (1 - this._spearRearHold) * this._spearLevel;
     }
-    // His pitch above level: the front man's dip, the rear man's raise, and for the rear man the fall to the strike inside the lunge
+    // His pitch above level: raised, front and rear rank alike; a rear man's falls toward the strike inside the lunge, a front man strikes along his raised line
     const strike = Math.max(0, this._spearThrust);
     const rearUp = br.spearUp + (SPEAR_REAR_STRIKE - br.spearUp) * strike;
-    const up = -br.spearDown + (rearUp + br.spearDown) * this._spearRearHold;
+    const up = br.spearUp + (rearUp - br.spearUp) * this._spearRearHold;
     const carry = Quaternion.RotationYawPitchRoll(root.rotation.y, 0.06 + (Math.PI / 2 - up - 0.06) * level, 0);
     const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
     shaft.rotationQuaternion = turn;
     // The shaft's middle sits as far up the shaft from the fist as it was strapped on, and runs through the fist with the stroke.
-    const held = new Vector3(0, grip.length() + toBalance + run, 0);
+    const held = new Vector3(0, grip.length() + toGrip + run, 0);
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, shaft.position);
   }
