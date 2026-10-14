@@ -165,14 +165,17 @@ export class ProceduralAnimator {
   private _shoveTimer = 0;
 
   /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear comes to its fighting hold (see _carrySpear), a front man's pointed down at that man, a rear man's raised over the rank ahead, until the calls stop. */
-  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false): void {
+  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false, firstFace: number | null = null): void {
     this._spearAim.copyFrom(enemyGround);
     this._spearAimRadius = enemyRadius;
     this._spearRear = rearRank;
+    this._spearFirstFace = firstFace;
     this._spearAimTimer = 0.6;
   }
   private _spearAim = new Vector3();
   private _spearAimRadius = 0.3;
+  // How far ahead of where he stands, along the wall's heading, the near face of the first enemy in his spear's path is: the man aimed at, or whoever stands in front of that man.
+  private _spearFirstFace: number | null = null;
   // Whether he stands in a rear rank, and how far his hold has gone over from the front man's to the rear man's (0 to 1).
   private _spearRear = false;
   private _spearRearHold = 0;
@@ -867,7 +870,13 @@ export class ProceduralAnimator {
     if (this._spearAimTimer > 0) {
       // In reach, or a stride and a half short of it: only then does he strike
       const from = hand.absolutePosition;
-      const front = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z) - this._spearAimRadius;
+      // The stop is taken on the first enemy the shaft's line meets, as the battle measured it from where he stands, less what the fist is already ahead of him;
+      // with no such measure, on the man aimed at.
+      const yaw = root.rotation.y;
+      const fistAhead = (from.x - root.absolutePosition.x) * Math.sin(yaw) + (from.z - root.absolutePosition.z) * Math.cos(yaw);
+      const front = this._spearFirstFace !== null
+        ? this._spearFirstFace - fistAhead
+        : Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z) - this._spearAimRadius;
       this._spearNear = Math.max(0, Math.min(1, aheadOfFist * handScale + SPEAR_LUNGE + 1.5 - front));
       // Reach stop, for the dipped spear of the front rank: along the shaft's own fall it is this far from the fist to the near face of the man aimed at, and the point
       // goes SPEAR_BITE into that face and stops; the lunge is cut short there, and a man closer than the shaft's reach has the shaft given back through the fist.
