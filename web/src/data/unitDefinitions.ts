@@ -260,7 +260,10 @@ function buildDefinition(entry: RosterManifestEntry): UnitDefinition {
   const base = ARCHETYPES[entry.archetype];
   const size = inferSize(entry);
   const sizeMultiplier = SIZE_MULTIPLIERS[size];
-  const { attackProfileId, aiProfileId, engageRange, moveSpeed } = applyAbilityOverrides(entry, base);
+  const { attackProfileId, aiProfileId, engageRange: reach, moveSpeed } = applyAbilityOverrides(entry, base);
+  // A giant drawn bigger than its class takes up and reaches over that much more ground with it
+  const giant = entry.giantScale ?? 1;
+  const engageRange = reach * giant;
   const healthMultiplier = entry.healthMultiplier ?? 1;
   const crowdPhysicsProfileId = prefersCrowdPhysics(entry);
   const battleFeel = deriveBattleFeelTuning(entry, crowdPhysicsProfileId);
@@ -271,7 +274,7 @@ function buildDefinition(entry: RosterManifestEntry): UnitDefinition {
     mass: Number((base.mass * sizeMultiplier.mass).toFixed(2)),
     moveSpeed,
     engageRange,
-    collisionRadius: Number((base.collisionRadius * sizeMultiplier.radius).toFixed(2)),
+    collisionRadius: Number((base.collisionRadius * sizeMultiplier.radius * giant).toFixed(2)),
     attackProfileId,
     aiProfileId,
     ragdollProfileId: prefersRagdoll(entry),

@@ -5,6 +5,7 @@ import {
 import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
+import { getUnit } from "../data/unitDefinitions";
 
 /**
  * IDs of units that should be built as vehicles/equipment rather than humanoids.
@@ -53,7 +54,7 @@ export function buildVehicleBody(
     case "renaissance.da_vinci_tank": return buildDaVinciTank(scene, bodyColor, options);
     case "farmer.wheelbarrow": return buildWheelbarrow(scene, bodyColor);
     case "ancient.minotaur": return buildMinotaur(scene, bodyColor);
-    case "tribal.mammoth": return buildMammoth(scene, bodyColor);
+    case "tribal.mammoth": return buildMammoth(scene, bodyColor, MAMMOTH_HIDE, 0, getUnit("tribal.mammoth")?.giantScale ?? 1);
     case "spooky.pumpkin_catapult": return buildCatapult(scene, bodyColor, { spooky: true });
     case "legacy.chariot": return buildChariot(scene, bodyColor);
     case "legacy.tank": return buildLegacyTank(scene, bodyColor, options);
@@ -1480,7 +1481,9 @@ const MAMMOTH_SCALE = 1.8;
 
 const MAMMOTH_HIDE = new Color3(0.43, 0.20, 0.25);
 
-function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0): ArticulatedBody {
+function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
+  // The whole rig under the root scales by the unit's giant scale with its footprint and reach (unitDefinitions), so hull, legs, tusks, trunk and seats keep their proportions
+  const scale = MAMMOTH_SCALE * giant;
   const root = new TransformNode("mammoth_root", scene);
   const allMeshes: Mesh[] = [];
   // The hide keeps its own colour: only the war paint is the team's. applyMaterialPreset()
@@ -1498,7 +1501,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   // hip sits at body center; torso pivots on hip; neck pivots on torso
   // Giants are several human heights tall: scale the whole rig under the root
   const bulk = dummyJoint("m_bulk", root, scene);
-  bulk.scaling.setAll(MAMMOTH_SCALE);
+  bulk.scaling.setAll(scale);
   const hip = dummyJoint("m_hip", bulk, scene);
   hip.position.set(0, 1.4, 0);
   const torso = dummyJoint("m_torso", hip, scene);
@@ -1779,7 +1782,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const allJoints = [hip, torso, neck, flHip, flKnee, frHip, frKnee, blHip, blKnee, brHip, brKnee];
 
   return {
-    root, bodyMaterial: paintMat, skinMaterial: paintMat, metrics: makeBodyMetrics(2.35 * MAMMOTH_SCALE, 0.8 * MAMMOTH_SCALE, 0.8 * MAMMOTH_SCALE, 0.62 * MAMMOTH_SCALE), hip, torso, torsoMesh, neck, headMesh,
+    root, bodyMaterial: paintMat, skinMaterial: paintMat, metrics: makeBodyMetrics(2.35 * scale, 0.8 * scale, 0.8 * scale, 0.62 * scale), hip, torso, torsoMesh, neck, headMesh,
     leftShoulder: flHip, leftUpperArm: torsoMesh, leftElbow: flKnee, leftLowerArm: torsoMesh,
     rightShoulder: frHip, rightUpperArm: torsoMesh, rightElbow: frKnee, rightLowerArm: torsoMesh,
     leftHip: blHip, leftUpperLeg: torsoMesh, leftKnee: blKnee, leftLowerLeg: torsoMesh,

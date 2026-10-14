@@ -188,6 +188,8 @@ export interface RosterManifestEntry {
   cooldownMultiplier?: number;
   moveSpeedOverride?: number;
   engageRangeOverride?: number;
+  /** A giant drawn bigger than its size class: the whole rig, its collision footprint and its reach are scaled together by this much (see unitDefinitions). */
+  giantScale?: number;
   healthMultiplier?: number;
   compositionParts?: CompositionPartSpec[];
 }
@@ -222,7 +224,8 @@ const tribal = makeFaction(FactionId.Tribal, "tribal", [
   ["stoner", "Stoner", 160, "thrower", { projectileHint: "stone", weaponHint: "stone" }],
   ["bone_mage", "Bone Mage", 220, "special_magic", { weaponHint: "bone_staff" }],
   ["chieftain", "Chieftain", 400, "boss_melee", { weaponHint: "club" }],
-  ["mammoth", "Mammoth", 1200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6 }],
+  // tabs_screenshot_01: a mammoth's back stands about three and a half men above the grass; at the colossal class's own size it stood two and three quarters
+  ["mammoth", "Mammoth", 1200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6, giantScale: 1.25 }],
 ]);
 
 const farmer = makeFaction(FactionId.Farmer, "farmer", [
