@@ -27,6 +27,8 @@ export interface GalleryCameraOverride {
 // Battle follow: how far the fight's middle may sit off the view's before the view slides after it, and how fast it slides.
 const FOLLOW_SLACK = 0.6;
 const FOLLOW_SPEED = 2.5;
+// How fast the view goes to where flung bodies are landing (see followBattle): a throw lands in about a second
+const LANDING_FOLLOW_SPEED = 6;
 const FOLLOW_DROP = 0.9;
 const FOLLOW_DROP_SPEED = 0.8;
 
@@ -54,6 +56,7 @@ export class CameraController {
   private _transition: { from: CameraViewState; to: CameraViewState; elapsed: number; duration: number } | null = null;
   /** Where the melee swoop, and each follow step since, left the camera; null once anything else has moved it, and then it is the player's. */
   private _battleAim: CameraViewState | null = null;
+  private _standoffAim: CameraViewState | null = null;
   private _battleDrop = 0;
   private _prebattleView: CameraViewState | null = null;
   private _prebattleBetaLimits: { lower: number | null; upper: number | null; radius: number | null; fov: number } | null = null;
@@ -181,6 +184,7 @@ export class CameraController {
     this._transition = null;
     this._resultDrift = 0;
     this._battleAim = null;
+    this._standoffAim = null;
     this.camera.alpha = view.alpha;
     this.camera.beta = view.beta;
     this.camera.radius = view.radius;
@@ -271,6 +275,8 @@ export class CameraController {
     }
     to.alpha = from.alpha + wrap(to.alpha - from.alpha); // swing the short way round
     this._battleAim = center.near ? null : to;
+    // A standoff view does not follow the lines, but it does go to a landing (see followBattle)
+    this._standoffAim = center.near ? to : null;
     this._battleDrop = 0;
     this._resultDrift = 0;
     this._transition = { from, to, elapsed: 0, duration: Math.max(0.01, durationSeconds) };
@@ -286,6 +292,7 @@ export class CameraController {
     if (!this._prebattleView) return null;
     if (this._prebattleBetaLimits) this.camera.fov = this._prebattleBetaLimits.fov; // the fits below are for the placement lens
     this._battleAim = null;
+    this._standoffAim = null;
     const from = this.captureViewState();
     const halfSpan = Math.hypot(box.maxX - box.minX, box.maxZ - box.minZ) / 2;
     // The bands cover the top and bottom of the frame, so a survivor gets ~0.28 radius of height either side of
@@ -429,8 +436,9 @@ export class CameraController {
 
   // ─── Battle follow ───
   /** The fight walks off from where the lines first met: slide the melee view sideways after its middle, a man's width of slack and FOLLOW_SPEED a second at most, for as long as the player leaves the camera where the swoop put it. */
-  followBattle(focus: { x: number; z: number }, dt: number): void {
-    const aim = this._battleAim;
+  followBattle(focus: { x: number; z: number; landing?: { x: number; z: number } }, dt: number): void {
+    // While flung bodies are coming down the view goes to where they land, the standoff view too, faster than it follows the lines
+    const aim = this._battleAim ?? (focus.landing ? this._standoffAim : null);
     if (!aim || this._transition) return;
     const cam = this.camera;
     const moved =
@@ -442,20 +450,22 @@ export class CameraController {
       Math.abs(cam.target.z - this._shakeOffset.z - aim.target.z) > 0.01;
     if (moved) {
       this._battleAim = null;
+      this._standoffAim = null;
       return;
     }
     // After the swoop the view sinks FOLLOW_DROP, its pitch unchanged: the horizon stays where it was and the feet of the nearest rank come up into the frame.
-    const drop = Math.min(FOLLOW_DROP - this._battleDrop, FOLLOW_DROP_SPEED * dt);
+    const drop = aim === this._battleAim ? Math.min(FOLLOW_DROP - this._battleDrop, FOLLOW_DROP_SPEED * dt) : 0;
     if (drop > 0) {
       this._battleDrop += drop;
       aim.target.y -= drop;
       cam.target.y -= drop;
     }
-    const dx = focus.x - aim.target.x;
-    const dz = focus.z - aim.target.z;
+    const goal = focus.landing ?? focus;
+    const dx = goal.x - aim.target.x;
+    const dz = goal.z - aim.target.z;
     const off = Math.hypot(dx, dz);
     if (off <= FOLLOW_SLACK) return;
-    const step = Math.min(off - FOLLOW_SLACK, FOLLOW_SPEED * dt) / off;
+    const step = Math.min(off - FOLLOW_SLACK, (focus.landing ? LANDING_FOLLOW_SPEED : FOLLOW_SPEED) * dt) / off;
     aim.target.x += dx * step;
     aim.target.z += dz * step;
     cam.target.x += dx * step;

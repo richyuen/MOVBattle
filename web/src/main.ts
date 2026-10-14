@@ -1217,7 +1217,11 @@ const STANDOFF_ENGAGE_RANGE = 7;
 const GIANT_LEAN = 0.4;
 
 /** Midpoint between the two teams' living formations, where the front lines will meet. */
-function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; tall: number; near?: { x: number; z: number; halfWidth: number } } {
+// Where flung bodies are coming down, and the world time the battle view holds on it until (see computeBattleFocus)
+let landingHold: { x: number; z: number; until: number } | null = null;
+const LANDING_HOLD_SECONDS = 1.6;
+
+function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: number; tall: number; near?: { x: number; z: number; halfWidth: number }; landing?: { x: number; z: number } } {
   const sums = [{ x: 0, z: 0, n: 0, ranged: 0 }, { x: 0, z: 0, n: 0, ranged: 0 }];
   for (const unit of placedUnits) {
     if (unit.linkedParent || unit.isDead) continue;
@@ -1260,7 +1264,20 @@ function computeBattleFocus(): { x: number; z: number; halfSpan: number; depth: 
   // A giant (over 3 m) is as long as a rank is wide: the aim leans toward it, so its hindquarters are not off the edge of the frame
   const midX = (a.x + b.x) / 2;
   const focusX = tall > 3 ? midX + (tallX - midX) * GIANT_LEAN : midX;
-  return { x: focusX, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, tall, near };
+  // Bodies thrown by a blast are the shot while they are in the air and for LANDING_HOLD_SECONDS after: the view leans to where they come down, ahead of their
+  // flight by the second their throw has left in it, so the landing and the spread of how they lie is in frame (trailer_2_sheet_02 r1c2), not out of it
+  let flungX = 0;
+  let flungZ = 0;
+  let flung = 0;
+  for (const unit of placedUnits) {
+    if (unit.linkedParent || unit.position.y < 0.4) continue;
+    flungX += unit.position.x;
+    flungZ += unit.position.z;
+    flung += 1;
+  }
+  if (flung > 0) landingHold = { x: flungX / flung, z: flungZ / flung, until: worldTimeSeconds + LANDING_HOLD_SECONDS };
+  const landing = landingHold && worldTimeSeconds < landingHold.until ? { x: landingHold.x, z: landingHold.z } : undefined;
+  return { x: focusX, z: focusZ, halfSpan: standoff ? Math.abs(a.x - b.x) / 2 : 0, depth, tall, near, landing };
 }
 
 function resetBattle(options: {
