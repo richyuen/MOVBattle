@@ -303,18 +303,19 @@ export class VisualEffects {
   }
 
   // ══════════════════ HIT DEBRIS ══════════════════
-  /** A few dark faceted chunks of mixed shape and size knocked loose by a hit: they tumble out, drop and shrink away. Lit and matte, so nothing glows. */
+  /**
+   * A few dark-red faceted chunks of mixed shape and size knocked loose by a hit: they tumble out, drop, and then lie
+   * where they land for the rest of the battle, squashed flat on the grass, so the melee floor collects them.
+   * Lit and matte, so nothing glows. The oldest landed chunks are cleared past LITTER_CAP.
+   */
   spawnHitDebris(position: Vector3, intensity = 1): void {
     const root = new TransformNode("hitDebris", this._scene);
     root.position = position.clone();
     root.position.y += 0.9;
-    const mats = [
-      getMaterialFactory().createUnique("stone", new Color3(0.34, 0.1, 0.09)),
-      getMaterialFactory().createUnique("stone", new Color3(0.2, 0.08, 0.07)),
-    ];
+    const mats = this._debrisMats();
     const floorY = -root.position.y + 0.05;
 
-    const chunks: { mesh: TransformNode; size: number; velocity: Vector3; spin: Vector3 }[] = [];
+    const chunks: { mesh: Mesh; size: number; velocity: Vector3; spin: Vector3; landed: boolean }[] = [];
     const count = Math.max(2, Math.round(3 * intensity));
     for (let i = 0; i < count; i++) {
       // Wedge, gem or slab: no two chunks of a hit share a shape
@@ -326,34 +327,62 @@ export class VisualEffects {
       mesh.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
       const angle = (i / count) * Math.PI * 2 + Math.random() * 0.9;
       const speed = (1.3 + Math.random() * 1.5) * Math.min(1.3, intensity);
+      // One big lump and the rest progressively smaller, big enough to read on the ground at battle distance
+      const size = (0.26 - 0.04 * i) * (0.8 + Math.random() * 0.35);
+      mesh.scaling.setAll(size);
       chunks.push({
         mesh,
-        // One big lump and the rest progressively smaller
-        size: (0.16 - 0.035 * i) * (0.75 + Math.random() * 0.35),
+        size,
         velocity: new Vector3(Math.cos(angle) * speed, 1.6 + Math.random() * 1.6, Math.sin(angle) * speed),
         spin: new Vector3(4 + Math.random() * 6, Math.random() * 4, 4 + Math.random() * 6),
+        landed: false,
       });
     }
 
+    const settle = (chunk: (typeof chunks)[number]): void => {
+      chunk.landed = true;
+      chunk.mesh.position.y = floorY + chunk.size * 0.15;
+      // Lie flat: keep the yaw, drop the tumble, squash it into the grass
+      chunk.mesh.rotation.set(0, chunk.mesh.rotation.y, 0);
+      chunk.mesh.scaling.set(chunk.size * 1.15, chunk.size * 0.45, chunk.size * 1.15);
+      // Hand it over to the battle floor in world space, frozen
+      chunk.mesh.setParent(null);
+      chunk.mesh.freezeWorldMatrix();
+      this._litter.push(chunk.mesh);
+      while (this._litter.length > VisualEffects.LITTER_CAP) this._litter.shift()!.dispose();
+    };
+
     this._effects.push({
       root,
-      remaining: 0.7,
-      update: (dt, remaining) => {
-        const fade = Math.min(1, remaining / 0.2);
+      remaining: 1.2,
+      update: (dt) => {
         for (const chunk of chunks) {
+          if (chunk.landed) continue;
           chunk.velocity.y -= 14 * dt;
           chunk.mesh.position.addInPlace(chunk.velocity.scale(dt));
-          if (chunk.mesh.position.y < floorY) {
-            chunk.mesh.position.y = floorY;
-            chunk.velocity.setAll(0);
-            chunk.spin.setAll(0);
-          }
           chunk.mesh.rotation.addInPlace(chunk.spin.scale(dt));
-          chunk.mesh.scaling.setAll(Math.max(0.001, chunk.size * fade));
+          if (chunk.mesh.position.y < floorY) settle(chunk);
         }
       },
-      dispose: () => { for (const m of mats) m.dispose(); },
+      // Anything still in the air when the effect ends lands where it is
+      dispose: () => { for (const chunk of chunks) if (!chunk.landed && !chunk.mesh.isDisposed()) settle(chunk); },
     });
+  }
+
+  /** Landed debris chunks, kept until the battle is cleared */
+  private _litter: Mesh[] = [];
+  private static readonly LITTER_CAP = 240;
+  private _debrisMatPair?: PBRMetallicRoughnessMaterial[];
+
+  /** The two dark blood reds every debris chunk shares, made once */
+  private _debrisMats(): PBRMetallicRoughnessMaterial[] {
+    if (!this._debrisMatPair) {
+      this._debrisMatPair = [
+        getMaterialFactory().createUnique("stone", new Color3(0.55, 0.07, 0.06)),
+        getMaterialFactory().createUnique("stone", new Color3(0.38, 0.04, 0.04)),
+      ];
+    }
+    return this._debrisMatPair;
   }
 
   // ══════════════════ FIRE BURST ══════════════════
@@ -637,5 +666,7 @@ export class VisualEffects {
       e.dispose?.();
     }
     this._effects.length = 0;
+    for (const m of this._litter) m.dispose();
+    this._litter.length = 0;
   }
 }
