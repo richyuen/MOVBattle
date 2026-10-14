@@ -299,6 +299,7 @@ async function main() {
         ["shield_wall_front", "gallery_shield_wall_front"],
         ["closeup_archer_loose", "gallery_archer_loose"],
         ["press_clubbers_side", "gallery_press_clubbers"],
+        ["spell_dome", "gallery_spell_dome"],
       ];
       for (const [shotName, scenario] of galleryShots) {
         await page.evaluate((n) => {

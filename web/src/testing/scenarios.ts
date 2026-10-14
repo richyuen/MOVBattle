@@ -1545,6 +1545,30 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       focus: "A clubber's blow should come down on the head of the man in front of him, who ducks under it.",
     },
   ),
+  // Loop evidence: a divine arbiter's lightning strike on a packed squire block, framed on the block so the spell's area dome stands whole in the shot.
+  gallery_spell_dome: makeGalleryScenario(
+    "gallery_spell_dome",
+    "A lightning strike's area dome over the men it hits.",
+    ["good.divine_arbiter"],
+    {
+      autoStart: true,
+      advanceMs: 900,
+      captureAdvanceMs: 900,
+      capturePhase: "simulation-mid",
+      columns: 1,
+      centerX: -9,
+      centerZ: 0,
+      galleryPresetId: "state_read_duel",
+      cameraOverride: {
+        alpha: -Math.PI / 2 - 0.35,
+        beta: 1.38,
+        radius: 11,
+        target: { x: 2, y: 1.2, z: 0 },
+      },
+      extraUnits: [-1, 0, 1].flatMap((z) => [1.6, 2.4].map((x) => ({ unitId: "medieval.squire", team: 1, position: { x, z } }))),
+      focus: "A magic strike's area should read as one whole solid one-colour dome over the men it hits.",
+    },
+  ),
   // Loop evidence: bowmen at the loose, seen side-on.
   gallery_archer_loose: makeGalleryScenario(
     "gallery_archer_loose",
