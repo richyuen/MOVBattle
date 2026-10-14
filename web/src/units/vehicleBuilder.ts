@@ -1,5 +1,5 @@
 import {
-  Scene, TransformNode, Mesh, MeshBuilder, Color3, Vector3,
+  Scene, TransformNode, Mesh, MeshBuilder, Color3, Quaternion, Vector3,
   PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core";
 import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
@@ -1530,31 +1530,40 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   brKnee.position.set(0, -0.45, 0);
 
   // ── Main body (parented to torso joint) ──
-  // Tapered barrel: deep chest and shoulders, lower narrower rump.
-  const torsoMesh = MeshBuilder.CreateCylinder("torso", {
-    height: 1.9, diameterTop: 1.6, diameterBottom: 1.25, tessellation: 8,
-  }, scene);
-  torsoMesh.position.set(0, 0, 0);
-  torsoMesh.rotation.x = Math.PI / 2;
+  // Spec, read off tabs_screenshot_01 (two mammoths at the charge): the body is one rounded, faceted fur mass, about as tall as it is
+  // wide and half as long again, its back domed and rising to the shoulder hump; no side panels, no flat belly, no straps. Its
+  // underside rounds up between the legs, so the legs show below it for about a quarter of the animal's height, each leaving the
+  // body through a fur cuff. Team paint is a few round daubs on the hide (the blue dots on the head and flank), not bands.
+  // So: one ellipsoid of BODY_RADII on the torso joint, raised BODY_LIFT so its underside is clear of the leg tops; a hem of fur
+  // lobes round its lower flank; paint daubs laid flat on its surface.
+  const BODY_RADII = new Vector3(0.85, 0.68, 1.16);
+  const BODY_LIFT = 0.12;
+  const BODY_BACK = -0.05;
+  const torsoMesh = MeshBuilder.CreateSphere("torso", { diameter: 2, segments: 4 }, scene);
+  torsoMesh.position.set(0, BODY_LIFT, BODY_BACK);
+  torsoMesh.scaling.copyFrom(BODY_RADII);
   torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
 
-  // Rounded rump and chest close the barrel, so neither end reads as a flat plate
-  for (const [z, diameter] of [[-0.93, 1.27], [0.91, 1.6]]) {
-    const cap = MeshBuilder.CreateSphere("barrelCap", { diameter, segments: 3 }, scene);
-    cap.position.set(0, 0, z);
-    cap.scaling.z = 0.7;
-    cap.parent = torso; cap.material = fur; allMeshes.push(cap);
-  }
+  // A point on the body's surface at height y and length z, on one side, and the way out of the hide there
+  const onHide = (side: number, y: number, z: number): { at: Vector3; out: Vector3 } => {
+    const v = (y - BODY_LIFT) / BODY_RADII.y;
+    const w = (z - BODY_BACK) / BODY_RADII.z;
+    const x = side * BODY_RADII.x * Math.sqrt(Math.max(0, 1 - v * v - w * w));
+    const at = new Vector3(x, y, z);
+    const out = new Vector3(x / BODY_RADII.x ** 2, (y - BODY_LIFT) / BODY_RADII.y ** 2, (z - BODY_BACK) / BODY_RADII.z ** 2).normalize();
+    return { at, out };
+  };
 
-  // War paint: team-coloured bands around the barrel
-  for (const z of [0.5, -0.1, -0.7]) {
-    const girth = 1.425 + 0.184 * z + 0.04;
-    const band = MeshBuilder.CreateCylinder("paintBand", {
-      height: 0.16, diameterTop: girth + 0.013, diameterBottom: girth - 0.013, tessellation: 8,
-    }, scene);
-    band.position.set(0, 0, z);
-    band.rotation.x = Math.PI / 2;
-    band.parent = torso; band.material = paintMat; allMeshes.push(band);
+  // War paint: round daubs in the team colour on the shoulder and flank, each laid flat on the hide
+  for (const side of [-1, 1]) {
+    for (const [y, z, size] of [[0.3, 0.55, 0.3], [-0.05, 0.2, 0.24], [0.35, -0.2, 0.22], [0.0, -0.55, 0.26]]) {
+      const { at, out } = onHide(side, y, z);
+      const daub = MeshBuilder.CreateSphere("paintDaub", { diameter: size, segments: 3 }, scene);
+      daub.scaling.z = 0.25;
+      daub.rotationQuaternion = Quaternion.FromUnitVectorsToRef(new Vector3(0, 0, 1), out, new Quaternion());
+      daub.position = at.add(out.scale(0.01));
+      daub.parent = torso; daub.material = paintMat; allMeshes.push(daub);
+    }
   }
 
   // Shaggy shoulder hump, standing well above the back line
@@ -1570,31 +1579,16 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   ridge.scaling.set(1.15, 0.8, 1.7);
   ridge.parent = torso; ridge.material = shaggyFur; allMeshes.push(ridge);
 
-  // Shaggy fur underbelly
-  const belly = MeshBuilder.CreateSphere("belly", { diameter: 1, segments: 3 }, scene);
-  belly.position.set(0, -0.42, -0.05);
-  belly.scaling.set(1.2, 0.8, 1.85);
-  belly.parent = torso; belly.material = shaggyFur; allMeshes.push(belly);
-
-  // Fur skirts hanging off the flanks: faceted lobes, thick at the shoulder and thinning to the rump
+  // Fur hem: a row of round shaggy lobes along each lower flank, set into the hide, so the side bulges out in fur and rounds
+  // under instead of hanging as a straight panel; none drops below the body's underside, so the legs stay in sight
   for (const side of [-1, 1]) {
-    const skirt = MeshBuilder.CreateCylinder("furSkirt", {
-      height: 1.65, diameterTop: 0.85, diameterBottom: 0.55, tessellation: 5,
-    }, scene);
-    skirt.position.set(side * 0.62, -0.3, 0);
-    skirt.rotation.x = Math.PI / 2;
-    skirt.scaling.x = 0.45;
-    skirt.parent = torso; skirt.material = shaggyFur; allMeshes.push(skirt);
-
-    // Belly fringe: a row of fur points hanging below the skirt, longest under the chest
     for (let i = 0; i < 5; i++) {
-      const drop = 0.2 + i * 0.03;
-      const lock = MeshBuilder.CreateCylinder("furFringe", {
-        height: drop, diameterTop: 0.38, diameterBottom: 0, tessellation: 4,
-      }, scene);
-      lock.position.set(side * 0.5, -0.62 - drop / 2, -0.72 + i * 0.36);
-      lock.scaling.x = 0.6;
-      lock.parent = torso; lock.material = shaggyFur; allMeshes.push(lock);
+      const z = 0.7 - i * 0.36;
+      const { at, out } = onHide(side, -0.32, z);
+      const lobe = MeshBuilder.CreateSphere("furHem", { diameter: 0.5 - i * 0.03, segments: 3 }, scene);
+      lobe.scaling.set(0.7, 0.85, 1);
+      lobe.position = at.subtract(out.scale(0.08));
+      lobe.parent = torso; lobe.material = shaggyFur; allMeshes.push(lobe);
     }
   }
 
@@ -1732,29 +1726,29 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   for (const [hipJoint, kneeJoint] of legJoints) {
     // Upper leg
     const upper = MeshBuilder.CreateCylinder("uleg", {
-      height: 0.55, diameterTop: 0.8, diameterBottom: 0.8, tessellation: 6,
+      height: 0.55, diameterTop: 0.6, diameterBottom: 0.56, tessellation: 6,
     }, scene);
     upper.position.set(0, -0.22, 0);
     upper.parent = hipJoint; upper.material = fur; allMeshes.push(upper);
 
     // Shaggy cuff over the thigh, so the leg leaves the body through fur rather than as a bare post
     const cuff = MeshBuilder.CreateCylinder("legCuff", {
-      height: 0.42, diameterTop: 0.9, diameterBottom: 0.78, tessellation: 6,
+      height: 0.42, diameterTop: 0.72, diameterBottom: 0.62, tessellation: 6,
     }, scene);
     cuff.position.set(0, -0.14, 0);
     cuff.parent = hipJoint; cuff.material = shaggyFur; allMeshes.push(cuff);
 
     // Lower leg
     const lower = MeshBuilder.CreateCylinder("lleg", {
-      height: 0.45, diameterTop: 0.78, diameterBottom: 0.78, tessellation: 6,
+      height: 0.45, diameterTop: 0.56, diameterBottom: 0.6, tessellation: 6,
     }, scene);
     lower.position.set(0, -0.18, 0);
-    // Straight pillars in the hide's own colour, as wide as the hips allow: dark and tapered they were thin spikes under the barrel
+    // Pillars in the hide's own colour, 0.6 across on hips 0.92 apart: as wide as the hips allowed, the four ran together into one block seen from behind
     lower.parent = kneeJoint; lower.material = fur; allMeshes.push(lower);
 
     // Foot
     const foot = MeshBuilder.CreateCylinder("foot", {
-      height: 0.08, diameter: 0.84, tessellation: 6,
+      height: 0.08, diameter: 0.64, tessellation: 6,
     }, scene);
     foot.position.set(0, -0.4, 0);
     foot.parent = kneeJoint; foot.material = darkMat; allMeshes.push(foot);
@@ -1764,12 +1758,12 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const tail = MeshBuilder.CreateCylinder("tail", {
     height: 0.5, diameterTop: 0.03, diameterBottom: 0.06, tessellation: 6,
   }, scene);
-  tail.position.set(0, -0.2, -1.0);
+  tail.position.set(0, -0.2, -1.16);
   tail.rotation.x = -0.7;
   tail.parent = torso; tail.material = darkMat; allMeshes.push(tail);
 
   const tuft = MeshBuilder.CreateSphere("tuft", { diameter: 0.1, segments: 4 }, scene);
-  tuft.position.set(0, -0.45, -1.2);
+  tuft.position.set(0, -0.45, -1.36);
   tuft.parent = torso; tuft.material = darkMat; allMeshes.push(tuft);
 
   // Map to ArticulatedBody: front legs = arms, back legs = legs
