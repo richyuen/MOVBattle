@@ -1092,15 +1092,15 @@ function buildGalleryUnits(
 }
 
 // The shield press of the capture script's shield_wall shots as a gallery scene, seen through the given camera.
-function shieldWallGallery(name: string, description: string, cameraOverride: { alpha: number; beta: number; radius: number; target: { x: number; y: number; z: number } }, focus: string): ScenarioSpec {
+function shieldWallGallery(name: string, description: string, cameraOverride: { alpha: number; beta: number; radius: number; target: { x: number; y: number; z: number } }, focus: string, advanceMs = 2650): ScenarioSpec {
   return makeGalleryScenario(
     name,
     description,
     ["ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite"],
     {
       autoStart: true,
-      advanceMs: 2650,
-      captureAdvanceMs: 2650,
+      advanceMs,
+      captureAdvanceMs: advanceMs,
       capturePhase: "simulation-mid",
       columns: 8,
       centerX: -4,
@@ -1506,17 +1506,18 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     },
     "Each man in the press should carry his own trunk pitch, drive leg and head set, and no spear should pass through a man of its own side.",
   ),
-  // Loop evidence: the same press from in front of red's wall and above blue's heads, three-quarter on, so the front boards read face-on as a line.
+  // Loop evidence: red's wall closing, before contact, from the gap between the lines: three-quarter on to the front boards, so they read face-on as a line.
   gallery_shield_wall_front: shieldWallGallery(
     "gallery_shield_wall_front",
-    "Two shield lines in contact, red's wall seen three-quarter on from the front.",
+    "Two shield lines closing, red's wall seen three-quarter on from the front.",
     {
-      alpha: Math.PI + 0.6,
-      beta: 1.28,
-      radius: 6.4,
-      target: { x: 0.2, y: 0.85, z: 0 },
+      alpha: Math.PI + 0.55,
+      beta: 1.32,
+      radius: 6.5,
+      target: { x: 3.4, y: 0.7, z: 0.4 },
     },
     "Red's front boards should lap rim over rim into one surface along the wall.",
+    800,
   ),
   // Loop evidence: bowmen at the loose, seen side-on.
   gallery_archer_loose: makeGalleryScenario(
