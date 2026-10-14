@@ -71,6 +71,10 @@ const SPEAR_FRONT_DIP_MIN = 0.42;
 const SPEAR_FRONT_DIP_MAX = 0.64;
 const SPEAR_FRONT_GRIP_MIN = 0.48;
 const SPEAR_FRONT_GRIP_MAX = 0.58;
+/** A front man's stroke stops on its mark: the point runs on until it is this deep in the near face of the man aimed at and no further, and where that man stands closer than the
+ * shaft's reach from the fist the shaft gives back through the fist to keep the point there, by this much at most. */
+const SPEAR_BITE = 0.08;
+const SPEAR_GIVE = 0.4;
 const BRACE_CROUCH_DEEP = 0.7;
 const BRACE_STEP_MIN = 0.22;
 const BRACE_STEP_MAX = 0.5;
@@ -856,14 +860,22 @@ export class ProceduralAnimator {
     const aheadOfFist = grip.length() + (tip ? tip.position.y + tip.getBoundingInfo().boundingBox.maximum.y : 0) * shaft.scaling.y;
     const behindFist = (shaft as Mesh).getBoundingInfo().boundingBox.maximum.y * shaft.scaling.y - grip.length();
     this._spearNear = 0;
+    // A front man shifts his grip to the balance for the overhand hold: the shaft goes back through the fist by what that takes
+    const toBalance = ((aheadOfFist + behindFist) * (1 - br.spearGrip) - aheadOfFist) * (1 - this._spearRearHold) * level;
+    // The stroke's run through the fist, in the hand's measure
+    let run = this._spearThrust * SPEAR_LUNGE / handScale;
     if (this._spearAimTimer > 0) {
       // In reach, or a stride and a half short of it: only then does he strike
       const from = hand.absolutePosition;
       const front = Math.hypot(this._spearAim.x - from.x, this._spearAim.z - from.z) - this._spearAimRadius;
       this._spearNear = Math.max(0, Math.min(1, aheadOfFist * handScale + SPEAR_LUNGE + 1.5 - front));
+      // Reach stop, for the dipped spear of the front rank: along the shaft's own fall it is this far from the fist to the near face of the man aimed at, and the point
+      // goes SPEAR_BITE into that face and stops; the lunge is cut short there, and a man closer than the shaft's reach has the shaft given back through the fist.
+      const toFace = (Math.max(0, front) / Math.cos(br.spearDown) + SPEAR_BITE) / handScale;
+      const room = toFace - (aheadOfFist + toBalance);
+      const stopped = Math.max(-SPEAR_GIVE / handScale, Math.min(run, room));
+      run += (stopped - run) * (1 - this._spearRearHold) * this._spearLevel;
     }
-    // A front man shifts his grip to the balance for the overhand hold: the shaft goes back through the fist by what that takes
-    const toBalance = ((aheadOfFist + behindFist) * (1 - br.spearGrip) - aheadOfFist) * (1 - this._spearRearHold) * level;
     // His pitch above level: the front man's dip, the rear man's raise, and for the rear man the fall to the strike inside the lunge
     const strike = Math.max(0, this._spearThrust);
     const rearUp = br.spearUp + (SPEAR_REAR_STRIKE - br.spearUp) * strike;
@@ -872,7 +884,7 @@ export class ProceduralAnimator {
     const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(carry), k);
     shaft.rotationQuaternion = turn;
     // The shaft's middle sits as far up the shaft from the fist as it was strapped on, and runs through the fist with the stroke.
-    const held = new Vector3(0, grip.length() + toBalance + this._spearThrust * SPEAR_LUNGE / handScale, 0);
+    const held = new Vector3(0, grip.length() + toBalance + run, 0);
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, shaft.position);
   }
