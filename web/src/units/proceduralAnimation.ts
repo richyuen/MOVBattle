@@ -111,10 +111,6 @@ const PRESS_BLOW_COCK = 0.1;
 const PRESS_BLOW_SLAM = 0.08;
 // A rear-rank clubber's resting blow between beats: this far down from the cock toward landed (1), the club laid forward over the man ahead (see readyBlow).
 const REAR_CLUB_REST = 0.85;
-// A rank-back clubber's arm at landed: this far down from the cock, so his fist stays above his shoulder over the man ahead (see readyBlow, _carryProp).
-const REAR_BLOW_ARM = 0.75;
-// The most a rank-back clubber's cock lifts his club off its line onto the foe (radians): a windup over the front man, not a club stood upright behind him.
-const REAR_COCK_LIFT = 0.9;
 // How far the arm comes down from the cock onto the man: the fist stops raised before the striker's face, so the club laid down from it lands on the board top or
 // the head in front, not level into the board at the belly.
 const PRESS_BLOW_ARM = 1.7;
@@ -204,16 +200,6 @@ export class ProceduralAnimator {
   }
   // A clubber a rank back behind a man of his own side (see readyBlow): between beats his club rests low over that man's shoulder, not cocked
   private _restLowTimer = 0;
-  /** The top of the head a rank-back clubber's blow lands on (from the unit each frame); null when there is none. See _carryProp. */
-  setStrikePoint(point: Vector3 | null): void {
-    if (point) (this._strikePoint ??= new Vector3()).copyFrom(point);
-    else this._strikePoint = null;
-  }
-  private _strikePoint: Vector3 | null = null;
-  // How far a rank-back clubber's club is laid onto the strike point this frame (0..1; see _carryProp)
-  private _overShoulder = 0;
-  // How far the cock lifts that laid club off its line this frame (radians)
-  private _overLift = 0;
   private _strikeTimer = 0;
   private _readyTimer = 0;
   private _ready = 0;
@@ -562,7 +548,6 @@ export class ProceduralAnimator {
   private _prevNeckRotZ = 0;
 
   update(dt: number): void {
-    this._overShoulder = 0;
     this._lastDt = dt;
     this._time += dt;
 
@@ -765,12 +750,7 @@ export class ProceduralAnimator {
       this._restLowTimer -= dt;
       const rest = this._restLowTimer > 0 ? REAR_CLUB_REST + Math.sin((this._time + this._wobblePhase) * 2.2) * 0.08 : 0;
       const blow = this._strikeTimer > 0 ? (rest > 0 ? Math.max(this._pressBlow(), rest * (this._pressBlow() > 0.001 || this._pressBlowCocked() ? 0 : 1)) : this._pressBlow()) : rest;
-      // A rank back, the fist comes down only to above his shoulder (REAR_BLOW_ARM), over the man ahead, and the club is laid from it onto the foe's head (_carryProp)
-      const rear = this._restLowTimer > 0 && this._strikePoint ? 1 : 0;
-      // Aimed through the whole beat: laid on the foe at rest and on landing, lifted off that line by up to REAR_COCK_LIFT on the cock (1 - blow), never stood up behind him
-      this._overShoulder = rear * cocked;
-      this._overLift = REAR_COCK_LIFT * Math.max(0, 1 - blow);
-      b.rightShoulder.rotation.x += (-2.5 + heave + (rear ? REAR_BLOW_ARM : PRESS_BLOW_ARM) * blow - b.rightShoulder.rotation.x) * cocked;
+      b.rightShoulder.rotation.x += (-2.5 + heave + PRESS_BLOW_ARM * blow - b.rightShoulder.rotation.x) * cocked;
       b.rightShoulder.rotation.z += (0.3 - 0.4 * blow - b.rightShoulder.rotation.z) * cocked;
       b.rightElbow.rotation.x += (-1.3 + 1.15 * blow - b.rightElbow.rotation.x) * cocked;
       b.torso.rotation.x += 0.45 * blow * cocked;
@@ -1075,20 +1055,6 @@ export class ProceduralAnimator {
     const tip = new Vector3(weapon.tip.x, weapon.tip.y - this._carryDip * 1.5, weapon.tip.z + this._castReach).normalize();
     // Swinging or cocked: the head of the weapon is on its arc over the man, a touch out to his weapon side
     if (club > 0.01) Vector3.LerpToRef(tip, new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(this._clubArc), Math.sin(this._clubArc)), Math.min(1, club), tip).normalize();
-    // A rank-back clubber's blow is laid on the foe (trailer_3_sheet_01 r2c3): from his raised fist, where it really is, over the man ahead onto the top of the foe's
-    // head, coming down onto it, so the club lands on the head or board top beyond his own front man instead of drooping at his hip
-    const over = this._strikePoint && club > 0.01 ? Math.min(1, this._overShoulder) : 0;
-    if (over > 0.01) {
-      const toHead = this._strikePoint!.subtract(hand.getAbsolutePosition());
-      const yaw = this._body.root.rotation.y;
-      const across = toHead.x * Math.cos(yaw) - toHead.z * Math.sin(yaw);
-      const ahead = toHead.x * Math.sin(yaw) + toHead.z * Math.cos(yaw);
-      const flat = Math.max(1e-4, Math.hypot(across, ahead));
-      // Down onto the head (at least a little below the fist), lifted on the cock by this beat's share of REAR_COCK_LIFT
-      const pitch = Math.min(Math.atan2(toHead.y, flat), Math.atan2(-0.15, 1)) + this._overLift;
-      const onto = new Vector3((across / flat) * Math.cos(pitch), Math.sin(pitch), (ahead / flat) * Math.cos(pitch));
-      if (onto.lengthSquared() > 1e-6) Vector3.LerpToRef(tip, onto.normalize(), over, tip).normalize();
-    }
     // Shooting: upright in the fist, canted a little toward the mark
     if (shooting > 0) Vector3.LerpToRef(tip, new Vector3(0, 1, 0.12), shooting, tip).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
