@@ -229,3 +229,4 @@ iter 227 | [S] tint-free-battle, [S] strike-aim | 1/2 approved | passes 19 -> 20
 iter 228 | [S] strike-tip (dropped), [S] body-spaced-slots | 0/2 approved | passes 20 -> 20
 iter 229 | [S] head-fitted-hats, [S] body-deep-ranks | 1/2 approved | passes 20 -> 20
 iter 230 | re-audit; [S] wall-queue, [S] levelled-thrust | 2/2 approved | passes 20 -> 20
+iter 231 | [S] second-rank-blow, [S] canopy-lift | 1/2 approved | passes 20 -> 21
