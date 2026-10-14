@@ -164,8 +164,21 @@ const HEAD_RINGS: ReadonlyArray<readonly [number, number]> = [[0.72, -1], [0.9, 
 const HEAD_SQUAT = 0.86;
 /** Hats, crowns and halos were cut for a round head this many head units across, less the corners a block has: the hat anchor scales them up to the head they now sit on. */
 const HAT_CUT_FOR_HEAD = 0.7;
-/** The head stands clear of the shoulders on a neck this long, a third of its own height: head, eyes and hat anchor all ride on top of it. */
-const NECK_LENGTH = 0.07;
+/*
+ * The neck, rebuilt. Spec, read off tabs_screenshot_04 (the unit in the editor, head about 27 px wide and 45 tall): the head sits on a short thick bare neck of the skin's own
+ * colour. Between the collar and the chin about 8 px of neck show, under a fifth of the head's height; the neck is about two thirds of the head's width where it leaves the
+ * collar and narrows only slightly to the chin, so it is nearly as wide as the chin it carries and there is no thin post and no step. The collar closes on the neck's foot at the
+ * neck's own width: no block of the coat's colour stands up around it, and the shoulders fall away from that foot.
+ * So: one faceted solid of skin, NECK_BASE of the head's width at its foot and NECK_TOP at the chin, as deep as it is wide in the head's own proportion, sunk NECK_SUNK of its
+ * length into the trunk below and NECK_INTO_HEAD of the head's height into the head above, so neither end shows a seam. It stands NECK_LENGTH tall between them. The trapezius
+ * ends on its foot (COLLAR_SEAT of the neck's length up, at the foot's own width) and does not climb it.
+ */
+const NECK_LENGTH = 0.05;
+const NECK_BASE = 0.72;
+const NECK_TOP = 0.6;
+const NECK_SUNK = 0.6;
+const NECK_INTO_HEAD = 0.22;
+const COLLAR_SEAT = 0.2;
 /** An eye is a white disc this share of the face across, set this far off the middle of the face, pressed to this share of its width in depth; its black pupil is this share of the disc. */
 const EYE_OF_FACE = 0.24;
 const EYE_SPREAD = 0.16;
@@ -193,13 +206,11 @@ const SLEEVE_HEAD_RISE = 0.35;
 const SLEEVE_HEAD_CROWN = 0.6;
 /** Shoulder line: the trunk's widest line is its top edge, and an arm hangs outside each end of it. The edge stops this share of a sleeve short of each shoulder joint, so the sleeve head
  * stands out past the corner as the point of the shoulder, and it lies this share of the sleeve head's crown above the joints, so the crown's inner half is under it. It has this share of the torso's depth.
- * From that edge the trapezius runs up and in as one plane a side to the foot of the head: this many neck widths across where it ends, this share of the neck's length up. The sleeve crown's
- * outer chamfer carries the same slope on down to the arm, so the shoulder is one fall from the head to the sleeve with no level stretch in it. */
+ * From that edge the trapezius runs up and in as one plane a side to the foot of the neck, where it ends at the neck's own width (see the neck's spec). The sleeve crown's
+ * outer chamfer carries the same slope on down to the arm, so the shoulder is one fall from the neck to the sleeve with no level stretch in it. */
 const SHOULDER_INSET = 0.15;
 const TRAPEZIUS_OVER_CROWN = 0.6;
 const YOKE_DEPTH = 0.92;
-const COLLAR_OF_NECK = 1.2;
-const COLLAR_RISE = 0.85;
 /** The pelvis block stands this share of its own height above the hip line: the belt, where the hull's foot lands on it. */
 const PELVIS_ABOVE_HIP = 0.3;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
@@ -413,7 +424,7 @@ export function buildArticulatedBody(
       return box;
     };
     const slab = frustum("hull", beltY, yokeY, pelvisW, pelvisD, yokeW, Math.max(yokeD, pelvisD));
-    const slope = frustum("collar", yokeY, torsoH + NECK_LENGTH * COLLAR_RISE, yokeW, Math.max(yokeD, pelvisD), collarWidth, Math.min(yokeD, collarWidth));
+    const slope = frustum("collar", yokeY, torsoH + NECK_LENGTH * COLLAR_SEAT, yokeW, Math.max(yokeD, pelvisD), collarWidth, Math.min(yokeD, collarDepth));
     const m = Mesh.MergeMeshes([slab, slope], true)!;
     m.name = n;
     m.material = bodyMat;
@@ -586,8 +597,9 @@ export function buildArticulatedBody(
   const headDepth = 0.176 * headUnit * (p.headDepth ?? 1.0);
   const headBase = Math.max(headHeight, headWidth, headDepth);
 
-  // The collar closes on the neck post: sized from the neck's foot, not from the shoulders
-  const collarWidth = headWidth * 0.62 * COLLAR_OF_NECK;
+  // The collar closes on the neck's foot at the neck's own width and depth
+  const collarWidth = headWidth * NECK_BASE;
+  const collarDepth = headDepth * NECK_BASE;
 
   // ─── Hip (root pivot for body) ───
   const hip = joint(`${name}_hip`, root);
@@ -603,20 +615,20 @@ export function buildArticulatedBody(
   const neck = joint(`${name}_neck`, torso);
   neck.position.y = torsoH * s;
 
-  // Neck: a thin faceted column from just inside the shoulders up into the head, which stands on top of it
+  // Neck: one short thick solid of skin from inside the trunk's top up into the head (see the spec at NECK_LENGTH)
   const neckLength = NECK_LENGTH * s;
   if (options.showNeck !== false) {
-    const neckH = neckLength * 1.3;
-    const neckDTop = headWidth * 0.5 * s;
-    const neckDBot = headWidth * 0.62 * s;
+    const sunk = neckLength * NECK_SUNK;
+    const intoHead = headHeight * s * NECK_INTO_HEAD;
     const neckMesh = MeshBuilder.CreateCylinder(`${name}_neckM`, {
-      height: neckH,
-      diameterTop: neckDTop,
-      diameterBottom: neckDBot,
-      tessellation: radialSegments,
+      height: sunk + neckLength + intoHead,
+      diameterTop: headWidth * NECK_TOP * s,
+      diameterBottom: headWidth * NECK_BASE * s,
+      tessellation: 8,
     }, scene);
+    neckMesh.scaling.z = headDepth / Math.max(headWidth, 0.001);
     neckMesh.material = skinMat;
-    neckMesh.position.y = neckLength * 0.5;
+    neckMesh.position.y = (neckLength + intoHead - sunk) * 0.5;
     neckMesh.parent = neck;
     allMeshes.push(neckMesh);
   }
