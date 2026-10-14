@@ -412,6 +412,25 @@ export class VisualEffects {
     });
   }
 
+  // ══════════════════ SHED GEAR ══════════════════
+  /**
+   * A dead man's shield and weapon (RuntimeUnit.shedGear) lie loose on the grass beside him, each a short way off where it was held on its own heading, flat
+   * (a board face up or down, a shaft along the ground), and stay as litter with the dead (trailer_2_sheet_02 r1c2), cleared with the rest past a quarter
+   * of LITTER_CAP. Laid down at once, not flown: effects stop with the battle, and gear still in the air at the result hung there.
+   */
+  spawnGearLitter(gear: TransformNode[]): void {
+    gear.forEach((node, i) => {
+      const angle = Math.random() * Math.PI * 2;
+      const reach = 0.3 + Math.random() * 0.6;
+      node.position.set(node.position.x + Math.cos(angle) * reach, 0.04, node.position.z + Math.sin(angle) * reach);
+      node.rotationQuaternion = Quaternion.RotationYawPitchRoll(Math.random() * Math.PI * 2, (Math.PI / 2) * (i % 2 === 0 ? 1 : -1), 0);
+      node.freezeWorldMatrix();
+      this._gearLitter.push(node);
+      while (this._gearLitter.length > VisualEffects.LITTER_CAP / 4) this._gearLitter.shift()!.dispose();
+    });
+  }
+  private _gearLitter: TransformNode[] = [];
+
   /** Landed debris chunks, kept until the battle is cleared */
   private _litter: Mesh[] = [];
   private static readonly LITTER_CAP = 240;
@@ -711,5 +730,7 @@ export class VisualEffects {
     this._effects.length = 0;
     for (const m of this._litter) m.dispose();
     this._litter.length = 0;
+    for (const g of this._gearLitter) g.dispose();
+    this._gearLitter.length = 0;
   }
 }

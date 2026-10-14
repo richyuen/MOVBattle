@@ -255,6 +255,8 @@ export class ImpactPresentation {
         this._shake(tier === "downed" ? 0.08 : 0.065);
         break;
       case "death":
+        // He drops what he carried: shield and weapon lie loose among the dead
+        if (event.target) this.visualEffects.spawnGearLitter(event.target.shedGear());
         this.visualEffects.spawnImpactDust(position, 1.75, new Color3(0.78, 0.68, 0.52));
         this.visualEffects.spawnHitDebris(position, 1.25);
         this.visualEffects.spawnHitSparks(position, 1.35);
