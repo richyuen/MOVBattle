@@ -43,8 +43,6 @@ proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 226 | overhead-strike | battle-feel.e | approved
-- 226 | block-separation | battle-feel.h | dropped
 - 227 | tint-free-battle | maps-light.e | approved
 - 227 | strike-aim | battle-feel.e | rejected
 - 228 | strike-tip | battle-feel.e | dropped
@@ -63,6 +61,7 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 234 | pressing-stride | battle-feel.h | approved
 - 235 | cone-brim-skirt | unit-look.h | rejected
 - 235 | upright-wall-stance | battle-feel.h | approved
+- 236 | upright-wall-legs | battle-feel.h | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -80,4 +79,4 @@ mapBuilder.ts:CanopyAerialPlugin on *Crown materials (CANOPY_AERIAL_NEAR, _FAR, 
 proceduralAnimation.ts:rear-rank club rest (REAR_CLUB_REST; simulationSystem _allyBetween, REAR_RANK_REACH, _LANE) | 0.85 of cock->landed, heave 0.08; reach +1.4 m, lane 0.7 m | 232 | approved |
 proceduralAnimation.ts:pressed board tilt + press stride (BOARD_PRESS_TILT, PRESS_DRIVE; per-man lean = half tilt + half trunk pitch + rock 0.06) | 0.3 rad; drive 0.4 at full shove | 234 | approved | shared tilt 0.3 (232)
 propBuilder.ts:buildFittedHat (HEAD_FITTED_HATS, HAT_EYE_CLEAR, BERET_*, CONE_*) | seat 0.05 head over eye top; beret 2 heads x 0.32, tilt 0.22; cone brim 2.1, foot 1.5, tall 1.05 | 233 | approved | [S] flared skirt 2.4 heads x 0.1 rejected 235 (invisible edge-on)
-proceduralAnimation.ts:upright wall stance (WALL_TRUNK_MAX, WALL_HEAD_LEVEL; hip splay cleared, by wallHold) | trunk <= 0.3 rad, head 0.9 of trunk back | 235 | approved |
+proceduralAnimation.ts:upright wall stance (WALL_TRUNK_MAX, WALL_HEAD_LEVEL, WALL_KNEE_MAX, WALL_HIP_MAX, WALL_SINK_SHARE; hip splay cleared, by wallHold) | trunk <= 0.3, head 0.9 back; knee <= 0.35, thigh +-0.35, sink 0.3 | 236 | approved |

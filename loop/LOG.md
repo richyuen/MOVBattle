@@ -234,3 +234,4 @@ iter 232 | [S] rear-club-rest, [S] pressing-lean | 2/2 approved | passes 21 -> 2
 iter 233 | [R] hat-seat rebuild, [S] rear-strike-lands | 1/2 approved | passes 21 -> 21
 iter 234 | [S] aimed-club-cycle, [S] pressing-stride | 1/2 approved | passes 21 -> 21
 iter 235 | re-audit; [S] cone-brim-skirt, [S] upright-wall-stance | 1/2 approved | passes 21 -> 21
+iter 236 | [S] upright-wall-legs | 1/1 approved | passes 21 -> 21
