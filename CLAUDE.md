@@ -49,6 +49,9 @@ web/                         # Web app root
 - TABS-fidelity improvement loop lives in `loop/` (procedure `loop/ITERATE.md`, critic contract `loop/CRITIC.md`, memory `loop/STATE.md` + tuned-value ledger `loop/LEDGER.md`, scripts under `loop/scripts/`); it runs under the autoloop plugin on `main` and pushes after every iteration. It works coarse to fine: structural `[S]` gaps first, constant-tuning `[P]` gaps only as fallout of an approved `[S]`; the critic scores 4 PASS/FAIL criteria per dimension
 - Loop iterations must not read `progress.md`, `.omx/`, or `web/*.md`; those are large and not part of the loop's memory budget
 
+## Default action: one loop iteration
+When the first message of an empty conversation is just `continue` (or `go`, `next`, or blank), it means: run one improvement-loop iteration. Read `loop/ITERATE.md` and follow it exactly. This is how `/autoloop on` drives the loop with its default prompt. Mid-conversation, `continue` keeps its ordinary meaning.
+
 ## Commands
 - **Dev server**: `cd web && npm run dev` (runs on localhost:5173)
 - **Type check**: `cd web && npx tsc --noEmit`
