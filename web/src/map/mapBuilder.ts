@@ -1066,10 +1066,13 @@ export class TribalSandboxMapBuilder {
   }
 }
 
-/** Show or hide the sandbox zone borders and center divider (placement-only guides) */
+/**
+ * Show or hide the placement-only guides: the centre divider and every team tint (the sandbox halves and a campaign's zone fills and borders). Once the battle
+ * starts the field is the biome's own ground (tabs_screenshot_09: a spooky fight on navy ground, no team colour on it); placement brings the tints back.
+ */
 export function setPlacementGuidesVisible(scene: Scene, visible: boolean): void {
   for (const mesh of scene.meshes) {
-    if (mesh.name === "border") mesh.setEnabled(visible);
+    if (mesh.name === "border" || mesh.name.startsWith("zone_overlay_") || mesh.name.startsWith("campaign_zone_")) mesh.setEnabled(visible);
   }
 }
 
