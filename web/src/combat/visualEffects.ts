@@ -147,6 +147,8 @@ export class VisualEffects {
     addShard(forkOrigin, forkKnee, 0.04);
     addShard(forkKnee, forkEnd, 0.0275);
 
+    this._spawnShockRing(endPoint);
+
     // No strike flash and no fade: the bolt is solid for its whole life and then gone, so it is never a see-through shape
     this._effects.push({
       root,
@@ -156,6 +158,47 @@ export class VisualEffects {
         for (const shard of shards) glow?.removeExcludedMesh(shard);
         boltMat.dispose();
         rimMat.dispose();
+      },
+    });
+  }
+
+  // ══════════════════ SHOCK RING ══════════════════
+  /**
+   * A solid white ring standing in the air round a magic strike and turned square to the camera (trailer_2_sheet_03
+   * r2c1): one faceted band that widens from a body's width to more than a man's height, its band broadening with it,
+   * opaque for most of its life and only faded over the last third, so it reads as one graphic shape and not a haze.
+   * Outlives the bolt that made it.
+   */
+  private _spawnShockRing(at: Vector3): void {
+    const root = new TransformNode("shockRing", this._scene);
+    root.position.copyFrom(at);
+    root.billboardMode = TransformNode.BILLBOARDMODE_ALL;
+    const ringMat = getMaterialFactory().createUnique("cloth", new Color3(0.97, 0.99, 1));
+    ringMat.emissiveColor = new Color3(1, 1, 1);
+    ringMat.disableLighting = true;
+    const glow = this._scene.getGlowLayerByName("glow");
+    const ring = MeshBuilder.CreateTorus("shockRingBand", { diameter: 1, thickness: 0.16, tessellation: 18 }, this._scene);
+    ring.rotation.x = Math.PI / 2; // its axis down the line of sight, so the camera sees the whole hoop
+    ring.scaling.y = 0.35; // a flat band, not a tube
+    ring.material = ringMat;
+    ring.parent = root;
+    glow?.addExcludedMesh(ring);
+    const life = 0.7;
+    const grow = (u: number): void => {
+      // Fast out, slowing as it widens: 0.4 m across at the strike to 2.6 m
+      const reach = 0.4 + 2.2 * (1 - (1 - u) * (1 - u));
+      root.scaling.setAll(reach);
+      const fade = u < 0.66 ? 1 : 1 - (u - 0.66) / 0.34;
+      if (fade < 1) { ringMat.alpha = Math.max(0, fade); ringMat.transparencyMode = 2; }
+    };
+    grow(0);
+    this._effects.push({
+      root,
+      remaining: life,
+      update: (_dt, remaining) => grow(Math.min(1, 1 - remaining / life)),
+      dispose: () => {
+        glow?.removeExcludedMesh(ring);
+        ringMat.dispose();
       },
     });
   }
