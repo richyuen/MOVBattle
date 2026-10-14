@@ -384,6 +384,14 @@ async function main() {
       await shot(page, "big_melee_result");
       const finalState = await page.evaluate(() => window.render_game_to_text());
       fs.writeFileSync(path.join(outDir, "big_melee_final_state.json"), finalState);
+
+      // Second biome: the spooky campaign map with its locked undead line, at the placement view.
+      await page.evaluate(() => {
+        window.game.resetBattle();
+        window.game.loadCampaignScenario("spooky");
+        window.advanceTime(50);
+      });
+      await shot(page, "biome_spooky");
     }
   } finally {
     await browser.close();
