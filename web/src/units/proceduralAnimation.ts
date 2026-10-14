@@ -74,8 +74,6 @@ const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
 // Where a board rides on its rank's strip: this share of the bearer's neck height above his feet (chest height; tabs_screenshot_06 boards run chin to knee).
 const BOARD_SEAT_HEIGHT = 0.62;
-// How far forward of its neighbours every other board in a rank strip stands, so square boards lap rim over rim (see _lapBoard).
-const BOARD_LAYER_STEP = 0.07;
 // The shield fist is reached to this far behind the board's seat, at its back, so it does not come through the face.
 const BOARD_GRIP_BACK = 0.12;
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
@@ -197,8 +195,7 @@ export class ProceduralAnimator {
   }
   private _spearAim = new Vector3();
   /** Slotted into a shield wall, called every step while he stands in it: his spear goes up on the wall's heading at SPEAR_WALL_UP (see _carrySpear), until the calls stop. */
-  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null, boardLayer = 0): void {
-    this._boardLayer = boardLayer;
+  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null): void {
     this._wallHeading = heading;
     this._wallTimer = 0.3;
     this._boardPlane = boardPlane;
@@ -209,8 +206,6 @@ export class ProceduralAnimator {
   private _boardPlane: number | null = null;
   // His slot in the wall's frame (SimulationSystem ShieldSlot.at): his board is seated on it across the wall, not on his hand (see _lapBoard)
   private _boardSlot: Vector3 | null = null;
-  // Which of his rank's two board layers his board rides in (0 or 1): see _lapBoard
-  private _boardLayer = 0;
   // The height his board rides at, a share of his stature taken from his body when it is first seated, so every board in a strip is at one height
   private _boardSeat: number | null = null;
   private _boardLap = 0;
@@ -943,15 +938,13 @@ export class ProceduralAnimator {
         this._boardSeat = (this._body.neck.getAbsolutePosition().y - root.y) * BOARD_SEAT_HEIGHT;
       }
       const slotSide = this._boardSlot.z * fx - this._boardSlot.x * fz;
-      // Square to the heading, every other board a board's thickness forward: neighbours lap rim over rim in two layers, the rank one band of boards, and from
-      // the flank every board shows its edge, as both walls' boards face the enemy (tabs_screenshot_06, trailer_2_sheet_03 r2c3)
-      const depth = this._boardPlane + (BOARD_PLANE_REACH + BOARD_LAYER_STEP * this._boardLayer) * scale;
+      const depth = this._boardPlane + BOARD_PLANE_REACH * scale;
       const seat = new Vector3(depth * fx - slotSide * fz, root.y + this._boardSeat, depth * fz + slotSide * fx);
       Vector3.LerpToRef(strapped, seat, lap, seat);
       // His fist goes to the board, not the board off his fist: the shield arm is reached straight out at the back of the board (see _gripBoard)
       this._gripBoard(new Vector3(seat.x - fx * BOARD_GRIP_BACK * scale, seat.y, seat.z - fz * BOARD_GRIP_BACK * scale), lap);
       shield.position.copyFrom(Vector3.TransformCoordinates(seat, Matrix.Invert(hand.getWorldMatrix())));
-      return Quaternion.RotationYawPitchRoll(heading, 0, 0);
+      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP, 0, 0);
     }
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
