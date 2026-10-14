@@ -1,4 +1,4 @@
-import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode } from "@babylonjs/core";
+import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -174,34 +174,6 @@ export class RuntimeUnit {
   get collisionPushTotal(): number { return this._collisionPushTotal; }
   get collisionPushPeak(): number { return this._collisionPushPeak; }
   get collisionContactCount(): number { return this._collisionContactCount; }
-  /**
-   * A man killed drops what he carried (trailer_2_sheet_02 r1c2: shields and blades lie among the dead): his shield and the weapon in his fist leave his hands as
-   * free copies placed where they were in the world, for the battle's litter to throw and keep, and his own are hidden until he is reset. Once per death.
-   */
-  shedGear(): TransformNode[] {
-    if (this._shedGear.length > 0 || isVehicleUnit(this.definition.id)) return [];
-    const carried = [
-      ...this.body.leftHand.getChildren().filter((n) => /shield$/.test(n.name)),
-      ...this.body.rightHand.getChildren().filter((n) => !/HandM$/.test(n.name) && (this.propMeshes.includes(n as Mesh) || /bolt|weapon|sword|club|spear|axe|hammer|mace/i.test(n.name))),
-    ].filter((n): n is TransformNode => n instanceof TransformNode && n.isEnabled());
-    const copies: TransformNode[] = [];
-    for (const node of carried) {
-      node.computeWorldMatrix(true);
-      const copy = (node as Mesh).clone(`${node.name}_shed`, null);
-      if (!copy) continue;
-      // Off the hand: a clone keeps its source's parent, and left on the hand it rode the corpse into the air
-      copy.parent = null;
-      copy.position.copyFrom(node.getAbsolutePosition());
-      copy.rotationQuaternion = node.absoluteRotationQuaternion.clone();
-      copy.scaling.copyFrom(node.absoluteScaling);
-      node.setEnabled(false);
-      this._shedGear.push(node);
-      copies.push(copy);
-    }
-    return copies;
-  }
-  private _shedGear: TransformNode[] = [];
-
   get isAirborne(): boolean { return !this._grounded || this.position.y > 0.01; }
   get crowdPressure(): number { return this._crowdPressure; }
   get balancePressure(): number { return this._balancePressure; }
@@ -1502,8 +1474,6 @@ export class RuntimeUnit {
     this._physicsActive = false;
     this._bounceCount = 0;
     this._corpseYaw = null;
-    for (const node of this._shedGear) node.setEnabled(true);
-    this._shedGear.length = 0;
     this._deathSpinX = 0;
     this._deathSpinY = 0;
     this._blastTumbling = false;
