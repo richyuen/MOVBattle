@@ -47,7 +47,7 @@ visualEffects.ts:explosion burst | 4 unlit yellow lobes in inside-out orange she
 visualEffects.ts:explosion dust bank | 14 unlit puffs, reach 2.3*sqrt, size 0.7-1.45 | 164 | approved | no [P] on tall and tans
 visualEffects.ts:explosion clods | 9, speed 1.2-3.0, up 3.5-6.5 | 161 | approved |
 proceduralAnimation.ts:shield brace (_buildBracePose; BRACE_PITCH_*, BRACE_CROUCH_DEEP, BRACE_STEP_*) | trunk pitch 0.14-0.56 own, set not added; head level 0.1-0.8; crouch to 0.7; step 0.22-0.5; twist 0.1-0.5; board follows | 192 | approved | 3 stands pitch -0.08..0.34, crouch to 1.05 (179); lunge 0.35-0.75 (188)
-proceduralAnimation.ts:spear carry (_carrySpear; SPEAR_REAR_UP_*, SPEAR_REAR_STRIKE, SPEAR_FRONT_GRIP_*, SPEAR_COUCH_*) | all raised 1.05-1.4 above level, rear strike 0.3; front couched at the waist, grip 0.2-0.28 | 195 | approved | front dipped 0.42-0.64, grip 0.48-0.58 (192-193); no [P] on the rear raise
+proceduralAnimation.ts:spear carry (_carrySpear; SPEAR_REAR_UP_*, SPEAR_REAR_STRIKE, SPEAR_FRONT_GRIP_*, SPEAR_COUCH_*) | all raised 1.05-1.4 above level, rear strike 0.3; front couched at the waist, grip 0.2-0.28 | 196 | approved | 1.25-1.38 on the wall heading rejected (196, reverted); front dipped 0.42-0.64 (192-193); no [P] on the rear raise
 proceduralAnimation.ts:spear thrust (_thrustStroke, SPEAR_LUNGE, SPEAR_DRAW; brace thrustRate) | lunge 0.45 m, draw -0.4 of it; beat 0.9-1.4/s | 192 | approved | choke 0.45 removed (186)
 proceduralAnimation.ts:march gait (_buildGait) | rate 6.8-9.4, knee fold 0.6-1.1, thigh lift 0.35x, sink 0.05-0.27, asym +-0.18, arm lag +-0.7, swing 0.5-0.95 | 174 | approved | no further [P] on roll
 proceduralAnimation.ts:prop carry (_buildCarry, _carryProp) | shouldered/upright/across/trailed 0.30/0.25/0.25/0.20 (jitter 0.3); bob 0.08-0.18 | 174 | approved | bob spent for [P]
@@ -69,13 +69,9 @@ bodyBuilder.ts:lower limb belly (CALF_SWELL, LIMB_BELLY_DROP; armTaper) | shin 1
 unitFactory.ts:garment solids (hangSkirt, furCollar; vehicleBuilder crewBreeches) | hex skirt on the hips: tabard 0.7 thighs flare 1.6, kilt 0.6/1.55, tunic 0.45/1.5, hide 0.5/1.45; collar torus 0.64 chest; breeches 1.75 -> 1.3 thighs | 179 | approved | breeches top 1.45 open as [P]
 bodyBuilder.ts:crewProportions (addOperator, linked crew) | infantry widths at the crew's own scale | 178 | approved |
 vehicleBuilder.ts:catapult | see 155-158 | 158 | spent |
-vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
+vehicleBuilder.ts:mammoth hull (BODY_RADII, BODY_LIFT, fur hem, paint daubs, leg width) | ellipsoid 0.85/0.68/1.16 lifted 0.12; 5 hem lobes a side; 4 daubs a side; legs 0.6 | 196 | approved | barrel, skirts, bands, legs 0.8 (spent for [P], 159)
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 185 | faces-blank-at-distance | unit-look.d | approved
-- 185 | no-ball-in-flight | vfx.b | approved
-- 186 | torso-is-a-barrel | unit-look.c | approved
-- 186 | wall-spears-held-not-thrust | battle-feel.c | approved
 - 187 | ghost-preview | ui-flow.d | approved
 - 187 | trunk-widest-below-the-arms | unit-look.c | approved
 - 188 | ghost-unreadable | ui-flow.d | approved
@@ -90,6 +86,8 @@ vehicleBuilder.ts:mammoth | see 15-159 | 159 | spent |
 - 193 | [R] bare-neck | unit-look.c | approved
 - 194 | spear-stops-on-the-first-body | battle-feel.c | rejected
 - 195 | couched-butt-grip | battle-feel.c | approved
+- 196 | wall-shafts-share-one-heading | battle-feel.c | rejected
+- 196 | mammoth-fur-mass | unit-look.f | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
