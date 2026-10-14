@@ -28,8 +28,8 @@ const FIREBALL_CORE = 3;
 const FIREBALL_BODY = 5;
 const FIREBALL_RIM = 7;
 const FIREBALL_GROW = 0.28;
-const FIREBALL_LIFE = 0.9;
-// The fire's place in the see-through draw order (dust two below it, smoke one below): it is drawn last, over them.
+const FIREBALL_LIFE = 0.9;
+// The fire's place in the see-through draw order (dust two below it, smoke one below): it is drawn last, over them.
 const FIREBALL_ALPHA_INDEX = 1002;
 const DUST_SPRITES = 10;
 const DUST_LIFE = 1.8;
