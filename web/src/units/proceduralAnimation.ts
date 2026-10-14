@@ -72,9 +72,6 @@ const SPEAR_FRONT_GRIP_MAX = 0.28;
 const BOARD_PLANE_REACH = 0.42;
 const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
-// In contact a front board is seated on its bearer's slot in the wall's frame, at most this far across from where he holds it; and it stays up until he is this far gone limp.
-const BOARD_SLOT_REACH = 0.45;
-const BOARD_DROP_LIMP = 0.6;
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
 const SPEAR_COUCH_RAISE = -0.45;
 const SPEAR_COUCH_ELBOW = -1.25;
@@ -194,17 +191,13 @@ export class ProceduralAnimator {
   }
   private _spearAim = new Vector3();
   /** Slotted into a shield wall, called every step while he stands in it: his spear goes up on the wall's heading at SPEAR_WALL_UP (see _carrySpear), until the calls stop. */
-  holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null): void {
+  holdSpearInWall(heading: number, boardPlane: number | null = null): void {
     this._wallHeading = heading;
     this._wallTimer = 0.3;
     this._boardPlane = boardPlane;
-    if (slotAt) (this._boardSlot ??= new Vector3()).copyFrom(slotAt);
-    else this._boardSlot = null;
   }
   // A front-rank man's wall line along the heading (see _lapBoard), null in a rear rank; how far his board has gone over from his hand to it (0 to 1); and where it was strapped on.
   private _boardPlane: number | null = null;
-  // His slot in the wall's frame (SimulationSystem ShieldSlot.at): in contact his board is seated on it, not on wherever the shove has put him.
-  private _boardSlot: Vector3 | null = null;
   private _boardLap = 0;
   private _boardRest: Vector3 | null = null;
   // The heading of the wall he stands in, shared by every man in it, and how far his spear has gone over to the wall's line (0 to 1).
@@ -865,8 +858,7 @@ export class ProceduralAnimator {
   private _squareShield(): void {
     const shield = this._shieldBoard();
     if (!shield) return;
-    // A stagger does not drop the board: only a man gone down lets it go
-    const up = this._state === AnimState.Dead || this._limp > BOARD_DROP_LIMP ? 0 : 1;
+    const up = this._state === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
     // A front-rank man in a wall holds his board on the wall's plane from the moment he is slotted, closing or in contact, not only while he shoves
     const lap = this._boardLap * up;
     const k = Math.max(this._shove * up, lap);
@@ -907,13 +899,8 @@ export class ProceduralAnimator {
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
     const out = Math.max(-0.2 * scale, Math.min(BOARD_PLANE_MAX_OUT * scale, (this._boardPlane ?? 0) + BOARD_PLANE_REACH * scale - (strapped.x * fx + strapped.z * fz)));
-    // Across the wall the board sits on his slot in the wall's frame, so a man shoved off his slot does not take his board out of the lap with him: as far as his arm
-    // will carry it, BOARD_SLOT_REACH either side of where he holds it. Without a slot it is a hand's width toward his middle.
-    const slotSide = this._boardSlot ? this._boardSlot.z * fx - this._boardSlot.x * fz : null;
-    const across = slotSide !== null
-      ? Math.max(-BOARD_SLOT_REACH * scale, Math.min(BOARD_SLOT_REACH * scale, slotSide - (strapped.z * fx - strapped.x * fz)))
-      : ((root.z * fx - root.x * fz) - (strapped.z * fx - strapped.x * fz)) * 0.6;
-    const target = new Vector3(strapped.x + fx * out - fz * across, strapped.y, strapped.z + fz * out + fx * across);
+    const across = (root.z * fx - root.x * fz) - (strapped.z * fx - strapped.x * fz);
+    const target = new Vector3(strapped.x + fx * out - fz * across * 0.6, strapped.y, strapped.z + fz * out + fx * across * 0.6);
     Vector3.LerpToRef(strapped, target, lap, target);
     const local = Vector3.TransformCoordinates(target, Matrix.Invert(hand.getWorldMatrix()));
     shield.position.copyFrom(local);

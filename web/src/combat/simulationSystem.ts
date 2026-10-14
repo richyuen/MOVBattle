@@ -804,7 +804,7 @@ export class SimulationSystem {
       }
     }
     // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
-    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane, slot.plane === null ? null : slot.at);
+    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane);
   }
 
   /**
