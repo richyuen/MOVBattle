@@ -39,9 +39,9 @@ BASE 3f052ca
 - GAP: [S] board-grip (7a4746a) VERDICT: APPROVE CRITERION: battle-feel.h FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.h lapped-band-at-contact [0] — blocker 1: lay each rank's boards along the wall line with the lap offset, so side and 2650ms show 3+ boards overlapping, not one lead board per rank — ref tabs_screenshot_06 — ours shield_wall_2650ms
+1. [S] battle-feel.h lapped-band-at-contact [2] — blocker 1: lay each rank's boards along the wall line with the lap offset, so side and 2650ms show 3+ boards overlapping, not one lead board per rank — ref tabs_screenshot_06 — ours shield_wall_2650ms
 2. [S] battle-feel.h board-axis-from-heading [0] — blocker 4: blue hoplite boards face the enemy, not the side camera; blade and mitt kept behind the board plane — ref trailer_2_sheet_03 r2c3 — ours shield_wall_side
-3. [S] battle-feel.e press-club-lands [0] — blocker 3: an overhead club arc ending on the head or shoulders of a man behind the board, held a frame on contact — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
+3. [S] battle-feel.e press-club-lands [2] — blocker 3: an overhead club arc ending on the head or shoulders of a man behind the board, held a frame on contact — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
 4. [S] battle-feel.g landed-spread-shot [1] — blocker 1: keep the camera on the flung knights through landing so varied landed poses show — ref trailer_2_sheet_02 r1c2 — ours war_machines_3800ms
 5. [S] unit-look.f mammoth-scale [2] — blocker 1: mammoth ~3.5 men tall, legs and tusks scaled to match — ref tabs_screenshot_01 — ours big_melee_result
 6. [S] vfx.e solid-ring [0] — blocker 1: a whole flat solid one-colour ring or dome round the caster — ref trailer_2_sheet_03 r2c1 — ours closeup_state_reads
@@ -49,6 +49,8 @@ BASE 3f052ca
 8. [S] unit-look.h hat-scale [0] — blocker 3: beret and cone ~2 heads wide, seated on the head — ref tabs_screenshot_05 — ours lineup_medieval
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
+- press-club-lands [attempts: 2, [S], dropped] — 205-212, never committed: in contact clubbers topple, stood off they are speared before a chop lands
+- lapped-band-at-contact [attempts: 2, [S], dropped] — 212: from the side one wall shows faces, the other backs; turning boards cannot make a side band
 - wall-side-band [attempts: 1, [S]] — 209: end men wing boards out 0.9 rad, gap-side boards turn up to 0.6 rad: a turned disc does not move into the gap, torsos still show; wings read edge-on under the shove
 - wall-board-yaw-from-frame [attempts: 1, [S]] — 208: rear-rank boards on their own lapped line square to the heading: side/2500/2650 still show two turned discs and ~6 bare torsos; a board covers half a man's width side-on
 - wall-face-held-in-contact [attempts: 1, [S]] — 207: board seated across on its ShieldSlot.at (0.45 m reach), kept up under a stagger: front boards in shield_wall_side/2650ms still face a flank camera (yaw not square to the wall) with torsos between them
@@ -57,7 +59,7 @@ BASE 3f052ca
 - lapped-shield-boards [attempts: 1, [S]] — 201: front boards on one plane 0.42 ahead of the rank line, lap 0.22; in the full capture still separate discs at different depths, the front shot stood behind blue
 
 ## Notes for next iteration (max 5 lines)
-- 212 committed nothing (both picks dropped, see Focus). Next: battle-feel.h blocker 1 needs a view the critic can read (a lapped band from the side is not reachable with one lap handedness); consider squaring boards to the enemy in contact for blocker 4 instead. battle-feel.e: standing clubbers off a braced wall keeps them up but gets them speared; a landed chop needs a target that is not a spear wall.
+- 212 committed nothing. ITERATE step 4 now counts a dropped gap as an attempt (user, after 212), so lapped-band-at-contact and press-club-lands are at [2] and not pickable; the next picks come from ranks 2 and 4-8 until a re-audit (215) re-ranks.
 - Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the shield arm aims at the board back (_gripBoard). The blue wall men are hoplites with round boards (no tower shields in the wall shots).
 - battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.
