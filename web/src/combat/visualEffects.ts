@@ -269,7 +269,7 @@ export class VisualEffects {
     }
     for (let k = 0; k < FIREBALL_BODY; k++) {
       const at = ring(FIREBALL_BODY, 0.4 * fire, (0.7 + Math.random() * 0.4) * fire, k);
-      add("fireBody", new Color3(1, 0.9, 0.6), true, at, 0.5 * fire, 1.7 * fire, FIREBALL_GROW, new Vector3(0, 0.4 * fire, 0), FIREBALL_LIFE * (0.75 + Math.random() * 0.25), 0.7);
+      add("fireBody", new Color3(1, 0.9, 0.6), true, at, 0.5 * fire, 1.7 * fire, FIREBALL_GROW, new Vector3(0, 0.4 * fire, 0), FIREBALL_LIFE * (0.75 + Math.random() * 0.25), 0.95);
     }
     for (let k = 0; k < FIREBALL_CORE; k++) {
       const at = ring(FIREBALL_CORE, 0.12 * fire, 0.8 * fire, k);
@@ -277,11 +277,11 @@ export class VisualEffects {
     }
     for (let k = 0; k < DUST_SPRITES; k++) {
       const spread = Math.sqrt((k + 0.5) / DUST_SPRITES);
-      const at = ring(DUST_SPRITES, 1.2 * spread * dust, 0.25 * dust, k);
+      const at = ring(DUST_SPRITES, 1.2 * spread * dust, 0.1 * dust, k);
       const away = at.subtract(position);
       away.y = 0;
       const tan = new Color3(0.78, 0.62, 0.42).scale(0.85 + 0.25 * Math.random());
-      add("burstDust", tan, false, at, 0.8 * dust, 2.2 * dust, 0.5, away.scale(1.2), DUST_LIFE * (0.75 + Math.random() * 0.4), 0.8);
+      add("burstDust", tan, false, at, 0.8 * dust, 2.2 * dust, 0.5, away.scale(1.2), DUST_LIFE * (0.75 + Math.random() * 0.4), 0.45);
     }
     for (let k = 0; k < SMOKE_SPRITES; k++) {
       const at = ring(SMOKE_SPRITES, 0.5 * fire, 1.1 * fire, k);
