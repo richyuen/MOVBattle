@@ -1091,6 +1091,51 @@ function buildGalleryUnits(
   });
 }
 
+// The shield press of the capture script's shield_wall shots as a gallery scene, seen through the given camera.
+function shieldWallGallery(name: string, description: string, cameraOverride: { alpha: number; beta: number; radius: number; target: { x: number; y: number; z: number } }, focus: string): ScenarioSpec {
+  return makeGalleryScenario(
+    name,
+    description,
+    ["ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite"],
+    {
+      autoStart: true,
+      advanceMs: 2650,
+      captureAdvanceMs: 2650,
+      capturePhase: "simulation-mid",
+      columns: 8,
+      centerX: -4,
+      centerZ: 0,
+      spacingX: 0,
+      spacingZ: 0.8,
+      galleryPresetId: "state_read_duel",
+      cameraOverride,
+      extraUnits: [
+        { unitId: "medieval.squire", team: 0, position: { x: -5, z: -2.0 } },
+        { unitId: "medieval.squire", team: 0, position: { x: -5, z: -1.2 } },
+        { unitId: "medieval.squire", team: 0, position: { x: -5, z: -0.4 } },
+        { unitId: "medieval.squire", team: 0, position: { x: -5, z: 0.4 } },
+        { unitId: "medieval.squire", team: 0, position: { x: -5, z: 1.2 } },
+        { unitId: "medieval.squire", team: 0, position: { x: -5, z: 2.0 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -2.8 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -2.0 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -1.2 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -0.4 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 0.4 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 1.2 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 2.0 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 2.8 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -2.0 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -1.2 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -0.4 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: 0.4 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: 1.2 } },
+        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: 2.0 } },
+      ],
+      focus,
+    },
+  );
+}
+
 function makeGalleryScenario(
   name: string,
   description: string,
@@ -1450,51 +1495,28 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     },
   ),
   // Loop evidence: the shield press of the capture script's shield_wall shots, seen from the flank so trunk pitch, drive legs and the pitch of the spears can be read.
-  gallery_shield_wall_side: makeGalleryScenario(
+  gallery_shield_wall_side: shieldWallGallery(
     "gallery_shield_wall_side",
     "Two shield lines in contact, seen side-on from the flank.",
-    ["ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite", "ancient.hoplite"],
     {
-      autoStart: true,
-      advanceMs: 2650,
-      captureAdvanceMs: 2650,
-      capturePhase: "simulation-mid",
-      columns: 8,
-      centerX: -4,
-      centerZ: 0,
-      spacingX: 0,
-      spacingZ: 0.8,
-      galleryPresetId: "state_read_duel",
-      cameraOverride: {
-        alpha: -Math.PI / 2 + 0.3,
-        beta: Math.PI / 2.06,
-        radius: 4.6,
-        target: { x: 0, y: 1.05, z: -2.4 },
-      },
-      extraUnits: [
-        { unitId: "medieval.squire", team: 0, position: { x: -5, z: -2.0 } },
-        { unitId: "medieval.squire", team: 0, position: { x: -5, z: -1.2 } },
-        { unitId: "medieval.squire", team: 0, position: { x: -5, z: -0.4 } },
-        { unitId: "medieval.squire", team: 0, position: { x: -5, z: 0.4 } },
-        { unitId: "medieval.squire", team: 0, position: { x: -5, z: 1.2 } },
-        { unitId: "medieval.squire", team: 0, position: { x: -5, z: 2.0 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -2.8 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -2.0 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -1.2 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: -0.4 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 0.4 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 1.2 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 2.0 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 4, z: 2.8 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -2.0 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -1.2 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -0.4 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: 0.4 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: 1.2 } },
-        { unitId: "tribal.protector", team: 1, position: { x: 5.3, z: 2.0 } },
-      ],
-      focus: "Each man in the press should carry his own trunk pitch, drive leg and head set, and no spear should pass through a man of its own side.",
+      alpha: -Math.PI / 2 + 0.3,
+      beta: Math.PI / 2.06,
+      radius: 4.6,
+      target: { x: 0, y: 1.05, z: -2.4 },
     },
+    "Each man in the press should carry his own trunk pitch, drive leg and head set, and no spear should pass through a man of its own side.",
+  ),
+  // Loop evidence: the same press from in front of red's wall and above blue's heads, three-quarter on, so the front boards read face-on as a line.
+  gallery_shield_wall_front: shieldWallGallery(
+    "gallery_shield_wall_front",
+    "Two shield lines in contact, red's wall seen three-quarter on from the front.",
+    {
+      alpha: Math.PI + 0.6,
+      beta: 1.28,
+      radius: 6.4,
+      target: { x: 0.2, y: 0.85, z: 0 },
+    },
+    "Red's front boards should lap rim over rim into one surface along the wall.",
   ),
   // Loop evidence: bowmen at the loose, seen side-on.
   gallery_archer_loose: makeGalleryScenario(

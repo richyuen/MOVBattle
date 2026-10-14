@@ -305,6 +305,7 @@ async function main() {
         ["closeup_pair_zeus_thor", "gallery_pair_ancient_zeus_vs_legacy_thor"],
         // Side-on reads: the shield press from the flank, and bowmen at the loose.
         ["shield_wall_side", "gallery_shield_wall_side"],
+        ["shield_wall_front", "gallery_shield_wall_front"],
         ["closeup_archer_loose", "gallery_archer_loose"],
       ];
       for (const [shotName, scenario] of galleryShots) {
