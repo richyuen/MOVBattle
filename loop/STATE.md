@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 224   Last re-audit: 220   Consecutive rejects: 0   Branch: main
+Iteration: 225   Last re-audit: 225   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -8,41 +8,38 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Tier 2 (fully scored at 198, re-audited 220):
+Tier 2 (fully scored at 198, re-audited 220, 225):
 battle-feel: e FAIL f PASS g PASS h FAIL (2/4)
-- e FAIL plateau (rewritten 220) [S since: 0] B: 1 no club comes down on a board top, head or shoulder; overhead windup held, others jammed level into the board face — press_clubbers_side; 2 red clubs lean ~45 deg as a uniform forest, none at the top of a windup or descending — big_melee_5s, 9s; 3 hoplite spears vertical at contact, none thrust from behind the boards — shield_wall_2500ms, 2650ms; 4 knights' swords upright or trailed, no swing mid-arc — closeup_weapon_reads. Ref trailer_3_sheet_01 r2c3.
-- h FAIL plateau (rewritten 220) [S since: 0] B: 1 blue hoplite boards face the side lens while red boards angle toward the foe — shield_wall_side, 2650ms; 2 pressed red block interpenetrates, helmets merged two and three deep — 2500ms, 2650ms; 3 blue knights overlap and their blades and mitts cross the blue board row — shield_wall_side; 4 no evidence of the band under shove from the enemy side: add shield_wall_front at contact. Ref tabs_screenshot_06.
+- e FAIL (rewritten 225, plateau cleared) [S since: 0] B: 1 no club comes down on a board top, head or shoulder: one held upright over the red boards, one jammed level at chest height into air, one cocked behind the head; no struck man reacts — press_clubbers_side; 2 red clubs a held-windup forest (3-4 at 70-80 deg, rest ~45), none past the head or descending — big_melee_5s, 9s; 3 every hoplite spear a vertical picket, none levelled or thrust over the boards — shield_wall_side, _front, 2500ms, 2650ms; 4 swords upright before the chest or trailed at the hip, none mid-arc — closeup_weapon_reads. Ref trailer_3_sheet_01 r2c3, r3c1.
+- h FAIL (rewritten 225, plateau cleared) [S since: 0] B: 1 blue boards show full faces to the side lens while red boards angle to the foe; red bodies side-on between red boards — shield_wall_side; 2 pressed red block interpenetrates, helmets merged two-three deep — 2500ms, 2650ms; 3 blue knights fold into the blue board row, blades and mitts crossing the boards — shield_wall_side; 4 red band bows into an arc (right wing ~45 deg back), boards bolt upright, men not pressing into a stride — shield_wall_front. Ref tabs_screenshot_06.
 unit-look: e PASS f PASS g PASS h FAIL (3/4)
 - h FAIL [S since: 2, rejected since: 2] B: 3 beret and yellow cone ~1.5 heads wide, small on the head (ref ~2 heads, tabs_screenshot_05) — lineup_medieval. (1 struck 218) Ref tabs_screenshot_04.
 maps-light: e FAIL f FAIL g PASS h PASS (2/4)
-- e FAIL [S since: 1] B: 1 spooky tree ring lime-green deciduous on purple ground (ref navy night, pink glow); 2 placement top-down only, team tints hide the ground — biome_spooky. (3 struck 224) Ref tabs_screenshot_03, 05, 09.
-- f FAIL [S since: 2, rejected since: 1] B: 2 ring trees as saturated as the field (ridges now hazed, 223) — big_melee_5s, spell_dome. (1 struck 215) Ref tabs_screenshot_05, 01.
-ui-flow: e PASS f PASS g FAIL h PASS (3/4)
-- g FAIL [S since: 0] B: 1 levels are text cards in a centred modal, not level nodes on a map; 2 bold mixed-case sans, ref thin tracked white caps; 3 a sentence per card, a wall of text — ui_campaign_select. Ref tabs_screenshot_04.
+- e FAIL [S since: 2] B: 2 placement top-down only, full-half team tints hide the ground; no low tint-free spooky shot — biome_spooky. (1 struck 225, 3 struck 224) Ref tabs_screenshot_03, 05, 09.
+- f FAIL [S since: 2, rejected since: 1] B: 2 ring canopies full-saturation, same strength as the field (ridges hazed 223) — big_melee_5s, spell_dome. (1 struck 215) Ref tabs_screenshot_05, 01.
+ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
-Total tier 1 24/24; tier 2 18/24.
+Total tier 1 24/24; tier 2 19/24.
 
 ## Focus (every gap this iteration)
-BASE 63a9490
-- [S] vfx.h bodies-over-fire (50b453a) — APPROVE, blocker 2 struck, vfx.h PASS
-- [S] maps-light.e spooky-dressing (eb4226c) — APPROVE, blocker 3 struck
-- [P] maps-light.f haze-near (ae06f49) — REJECT, reverted: ring crowns not visibly paler (saturation 51 -> 47); re-nudged a row approved 223
+BASE 9d6f2a8 (re-audit 225: no flips; battle-feel.e and .h lists rewritten, plateau cleared)
+- [S] maps-light.e spooky-canopy (ec4315c) — APPROVE, blocker 1 struck
+- [S] ui-flow.g campaign-map (bc5fc98) — APPROVE, blockers 1-3 struck, ui-flow.g PASS
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] bodies-over-fire (50b453a) VERDICT: APPROVE CRITERION: vfx.h PASS (previous: FAIL)
-- GAP: [S] spooky-dressing (eb4226c) VERDICT: APPROVE CRITERION: maps-light.e FAIL (previous: FAIL)
-- GAP: [P] haze-near (ae06f49) VERDICT: REJECT CRITERION: maps-light.f FAIL (previous: FAIL)
+- GAP: [S] spooky-canopy (ec4315c) VERDICT: APPROVE CRITERION: maps-light.e FAIL (previous: FAIL)
+- GAP: [S] campaign-map (bc5fc98) VERDICT: APPROVE CRITERION: ui-flow.g PASS (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] maps-light.e spooky-ring [0] — blocker 1: spooky ring of dead and navy trees plus a navy ground palette in place of lime deciduous — ref tabs_screenshot_09 — ours biome_spooky
-2. [S] maps-light.f crown-aerial-tint [0] — blocker 2: per-material aerial tint on ring crowns toward the sky, keyed to crown height and distance, separate from the backdrop haze row — ref tabs_screenshot_05 — ours spell_dome
-3. [S] maps-light.e zone-edge-tint [0] — blocker 2: placement team zones as an edge band or outline instead of a full-field fill — ref tabs_screenshot_03 — ours biome_spooky
-4. [S] ui-flow.g level-map [0] — blocker 1: campaign select as level nodes on a map backdrop — ref tabs_screenshot_04 — ours ui_campaign_select
-5. [S] ui-flow.g thin-caps [0] — blocker 2: thin tracked white caps for level titles, one line per level — ref tabs_screenshot_04 — ours ui_campaign_select
-6. [S] unit-look.h hat-scale [0] — blocker 3: beret and cone ~2 head-widths, seated on the skull — ref tabs_screenshot_05 — ours lineup_medieval
-7. [R] battle-feel.e committed-blow [2] — spent until the 225 re-audit — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
-8. [R] battle-feel.h shield-band [0] — one lapped board surface per rank facing the foe, no interpenetration — ref tabs_screenshot_06 — ours shield_wall_side
+1. [S] battle-feel.e overhead-strike [0] — blocker 1: overhead club strike landing on board top, head or shoulder, plus a reaction from the man struck — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
+2. [S] battle-feel.h block-separation [0] — blocker 2: hard separation in the pressed block, one body per slot two deep, helmets never merge — ref tabs_screenshot_06 — ours shield_wall_2500ms
+3. [S] maps-light.e low-spooky-shot [0] — blocker 2: low-angle tint-free spooky battle shot (navy ground, dead-tree skyline); evidence + zone overlay — ref tabs_screenshot_09 — ours biome_spooky
+4. [S] unit-look.h hat-geometry [0] — blocker 3: beret and cone ~2 heads wide, seated over the brow — ref tabs_screenshot_05 — ours lineup_medieval
+5. [S] maps-light.f canopy-pastel [0] — blocker 2: desaturating distance pass on ring canopies toward the sky colour (not a haze knob) — ref tabs_screenshot_05 — ours big_melee_5s
+6. [S] battle-feel.e spear-level [0] — blocker 3: hoplite spears levelled and thrust over the boards — ref trailer_3_sheet_01 r3c1 — ours shield_wall_side
+7. [S] battle-feel.h blue-boards-face [0] — blocker 1: blue boards turned to the foe, edges lapped, bodies behind — ref tabs_screenshot_06 — ours shield_wall_side
+8. [P] maps-light.e spooky-leaves fallout of 225 spooky-canopy [0] — leaves 0.2,0.22,0.4 -> 0.12,0.13,0.26 with crown emissive capped for the theme — NEXT shot biome_spooky: flank crowns lavender -> dark navy
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - haze-near [attempts: 1, [P]] — 224: BACKDROP_HAZE_NEAR 26 -> 18: crowns not visibly paler; ledger reversal of a 223 row
@@ -53,7 +50,7 @@ BASE 63a9490
 - envelope-colour [attempts: 1, [P]] — 218: pale core/outer colours at alpha 0.95 rendered mustard/dark orange with hard octagons; needs an [S] (unlit/additive core over the smoke)
 
 ## Notes for next iteration (max 5 lines)
-- 224 picks were [S] vfx.h + [S] maps-light.e + [P] maps-light.f. 225 is a re-audit (battle-feel.e/.h plateau lists get rewritten). Flung bodies render in group 1 (depth kept, main.ts); landed sliding bodies near fire are still lit (critic note, vfx now PASS).
+- 225 picks were [S] maps-light.e + [S] ui-flow.g (after re-audit). battle-feel.e/.h plateau cleared by the 225 rewrite: [S] pickable again (the committed-blow [R] gap is spent). ui-flow fallout [P]: campaign card caption cut mid-word, card overlaps node 11/12 labels.
 - Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the shield arm aims at the board back (_gripBoard). The blue wall men are hoplites with round boards (no tower shields in the wall shots).
 - battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.
