@@ -100,8 +100,6 @@ interface ShieldSlot {
   heading: number;
   /** A rear-rank man's step to his place behind the front, across and in depth; null in the front rank. */
   hold: Vector3 | null;
-  /** A front-rank wall's line along its heading (metres): every board in it stands on the plane this far forward, so the boards lap into one surface; null in a rear rank. */
-  plane: number | null;
 }
 
 /** A formed wall as the rank behind it sees it: its first slot across the line, how many slots, and how far forward it stands. */
@@ -737,10 +735,9 @@ export class SimulationSystem {
             if (wall.length < 2) continue;
             const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * this.shieldSlotSpacing;
             const wallId = walls++;
-            const line = wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length;
             wall.forEach((entry, k) => {
               const shift = first + k * this.shieldSlotSpacing - entry.side;
-              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null, plane: line });
+              this._shieldSlots.set(entry.unit, { wall: wallId, offset: new Vector3(-fz * shift, 0, fx * shift), heading, hold: null });
             });
             formed.push({ first, count: wall.length, depth: wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length });
           }
@@ -772,7 +769,6 @@ export class SimulationSystem {
                 offset: new Vector3(-fz * shift, 0, fx * shift),
                 heading,
                 hold: new Vector3(-fz * shift + fx * back, 0, fx * shift + fz * back),
-                plane: null,
               });
             });
             formed.push({ first, count: group.length, depth });
@@ -783,7 +779,7 @@ export class SimulationSystem {
       }
     }
     // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
-    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane);
+    for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading);
   }
 
   /** In contact a slotted carrier stands square to his wall's advance, board to the front, while his enemy is within shieldHeadingArc of it. */
