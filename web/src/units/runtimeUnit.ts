@@ -1520,7 +1520,7 @@ export class RuntimeUnit {
   dispose(): void {
     if (this._fxParticleSystem) {
       this._fxParticleSystem.stop();
-      this._fxParticleSystem.dispose();
+      this._fxParticleSystem.dispose(false);
       this._fxParticleSystem = null;
     }
     if (this._linkedParent) {

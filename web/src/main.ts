@@ -3583,13 +3583,51 @@ const gameApi = {
   skipTitleIntro: dismissTitleIntro,
   spawnUnit: spawnHarnessUnit,
   // Capture harness: a first draw skips meshes whose shaders are still compiling, so wait and redraw.
+  // Resolves with what still was not ready, so a capture can say which meshes a shot may miss.
   renderWhenReady: async () => {
+    let renders = 0;
+    let ready = false;
     for (let i = 0; i < 40; i++) {
       scene.render();
+      renders++;
       await new Promise((resolve) => setTimeout(resolve, 50));
-      if (i >= 5 && scene.isReady() && engine.areAllEffectsReady()) break;
+      if (i >= 5 && scene.isReady() && engine.areAllEffectsReady()) {
+        ready = true;
+        break;
+      }
     }
     scene.render();
+    const unready: string[] = [];
+    if (!ready) {
+      // Mirror Scene.isReady's checks one by one so the culprit is named, not just "not ready".
+      const s = scene as any;
+      unready.push(`isReady now ${scene.isReady()}; activeCameras ${scene.activeCameras?.length ?? 0}; particles ${scene.particleSystems.filter((p) => !p.isReady()).length} unready of ${scene.particleSystems.length}; geometries loading ${scene.geometries.filter((g) => g.delayLoadState === 2).length}`);
+      unready.push(`isReady(no render targets) ${scene.isReady(false)}; effect layers unready: ${(scene.effectLayers ?? []).filter((l) => !l.isLayerReady()).map((l) => l.name).join(",") || "none"}; layers unready: ${(scene.layers ?? []).filter((l) => !l.isReady()).length}`);
+      if (s._pendingData?.length > 0) unready.push(`pendingData ${s._pendingData.length}`);
+      for (const ps of scene.particleSystems.slice(0, 4)) {
+        if (ps.isReady()) continue;
+        const p = ps as any;
+        unready.push(`particles ${ps.name}: emitter ${!!ps.emitter} started ${ps.isStarted()} tex ${p.particleTexture?.isReady?.()} ipc ${p._imageProcessingConfiguration?.isReady?.()} blend ${p.blendMode} effect ${p._getWrapper?.(p.blendMode)?.effect?.isReady?.()}`);
+      }
+      const cam = scene.activeCamera;
+      if (cam && !cam.isReady(true)) {
+        const pps = ((cam as any)._postProcesses ?? []).filter((p: any) => p && !p.isReady()).map((p: any) => p.name);
+        unready.push(`camera ${cam.name} post-processes: ${pps.join(",") || "?"}`);
+      }
+      const steps: Array<{ action: (m: any, inst: boolean) => boolean; componentName?: string }> = s._isReadyForMeshStage ?? [];
+      for (const m of scene.meshes) {
+        if (!m.isEnabled() || !m.subMeshes || m.subMeshes.length === 0) continue;
+        if (!m.isReady(true)) {
+          unready.push(`${m.name} mesh`);
+        } else {
+          const inst = (m as any).hasThinInstances || (engine.getCaps().instancedArrays && (m as any).instances?.length > 0);
+          const failed = steps.filter((st) => !st.action(m, inst)).map((st) => st.componentName ?? "step");
+          if (failed.length) unready.push(`${m.name} (${m.material?.name ?? "no mat"}) ${failed.join(",")}`);
+        }
+        if (unready.length >= 12) break;
+      }
+    }
+    return { ready, renders, effectsReady: engine.areAllEffectsReady(), unready };
   },
   runScenario,
   runScenarioCheck,

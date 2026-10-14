@@ -9,7 +9,10 @@ let _particleTex: Texture | undefined;
 
 /** Create or return a shared 32x32 radial gradient texture for all particle systems. */
 function getParticleTexture(scene: Scene): Texture {
-  if (_particleTex) return _particleTex;
+  // ParticleSystem.dispose() disposes its texture by default: a dead shared texture left every
+  // later system unready, and an unready system never renders. Callers pass dispose(false), and
+  // this guards against any that do not.
+  if (_particleTex && _particleTex.getInternalTexture()) return _particleTex;
   const dyn = new DynamicTexture("particleTex", 32, scene, false);
   const ctx = dyn.getContext();
   const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);

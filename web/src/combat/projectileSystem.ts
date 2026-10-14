@@ -312,7 +312,7 @@ export class ProjectileSystem {
       if (t >= 1 || earlyHit) {
         const struck = !p.target.isDead;
         this._onImpact(p);
-        if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(); }
+        if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
         p.mesh.getChildMeshes().find((m) => m.name === "streak")?.dispose(); // the streak is of the flight: a shaft left standing has none
         if (!this._leaveAsLitter(p, struck)) p.mesh.dispose();
         this._active.splice(i, 1);
@@ -725,7 +725,7 @@ export class ProjectileSystem {
 
   dispose(): void {
     for (const p of this._active) {
-      if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(); }
+      if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
       p.mesh.dispose();
     }
     for (const f of this._flashes) f.mesh.dispose();

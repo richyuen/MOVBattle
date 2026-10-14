@@ -39,7 +39,7 @@ export class VisualEffects {
       e.remaining -= dt;
       if (e.update) e.update(dt, e.remaining);
       if (e.remaining <= 0) {
-        if (e.particles) for (const ps of e.particles) { ps.stop(); ps.dispose(); }
+        if (e.particles) for (const ps of e.particles) { ps.stop(); ps.dispose(false); }
         e.root.dispose();
         e.dispose?.();
         this._effects.splice(i, 1);
@@ -589,7 +589,7 @@ export class VisualEffects {
 
   dispose(): void {
     for (const e of this._effects) {
-      if (e.particles) for (const ps of e.particles) { ps.stop(); ps.dispose(); }
+      if (e.particles) for (const ps of e.particles) { ps.stop(); ps.dispose(false); }
       e.root.dispose();
       e.dispose?.();
     }
