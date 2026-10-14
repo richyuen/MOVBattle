@@ -261,94 +261,50 @@
       text-align: center;
     }
 
+    /* Campaign select as a map (tabs_screenshot_04): a dark sea with a few low islands, the campaigns as numbered nodes along a dashed route, a tiny
+       thin-caps name under each, and one small card for the chosen node: its name in thin tracked caps, one caption line and its levels as caps lines. */
     #campaignOverlay {
       position: absolute; inset: 0; z-index: 30; display: none;
-      align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.62);
-      padding: 20px;
+      background: #0d1a26;
     }
-    #campaignOverlay.visible { display: flex; }
-    .campaign-panel {
-      width: min(860px, 96vw);
-      height: min(620px, 88vh);
-      max-height: min(620px, 88vh);
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: minmax(220px, 0.9fr) minmax(300px, 1.1fr);
-      background: rgba(15,19,25,0.95);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px;
-      box-shadow: 0 18px 48px rgba(0,0,0,0.4);
+    #campaignOverlay.visible { display: block; }
+    .campaign-map { position: absolute; inset: 0; overflow: hidden; }
+    .campaign-map-land, .campaign-map-route { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .campaign-map-land path { fill: #24384a; stroke: #3c5a72; stroke-width: 2; }
+    .campaign-map-land path.campaign-map-hill { fill: #2d4659; stroke: none; }
+    .campaign-map-route path { fill: none; stroke: rgba(255,255,255,0.35); stroke-width: 2; stroke-dasharray: 6 8; }
+    .campaign-map-title {
+      position: absolute; left: 32px; top: 24px; color: #fff; font-weight: 300; font-size: 22px; letter-spacing: 0.32em; text-transform: uppercase;
     }
-    .campaign-column {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
+    .campaign-nodes { position: absolute; inset: 0; }
+    .campaign-item {
+      position: absolute; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.75); background: #13212e; color: #fff; cursor: pointer; padding: 0;
+      font-size: 13px; font-weight: 300; font-family: inherit;
     }
-    .campaign-column + .campaign-column {
-      border-left: 1px solid rgba(255,255,255,0.08);
+    .campaign-item.active { background: #fff; color: #13212e; box-shadow: 0 0 0 5px rgba(255,255,255,0.18); }
+    .campaign-item-title {
+      position: absolute; top: 40px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+      font-size: 9px; font-weight: 300; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.7);
     }
-    .campaign-header {
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
+    .campaign-card {
+      position: absolute; right: 28px; bottom: 28px; width: min(300px, 80vw); padding: 16px 18px;
+      background: rgba(8,14,20,0.82); border-left: 2px solid rgba(255,255,255,0.6); color: #fff;
     }
+    .campaign-header { font-size: 15px; font-weight: 300; letter-spacing: 0.3em; text-transform: uppercase; }
     .campaign-subtitle {
-      margin-top: 6px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.68);
-      font-weight: 400;
-      line-height: 1.5;
+      margin-top: 6px; font-size: 10px; color: rgba(255,255,255,0.55); line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .campaign-list,
-    .campaign-scenario-list {
-      padding: 10px;
-      display: flex;
-      flex: 1 1 auto;
-      flex-direction: column;
-      gap: 8px;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-      min-height: 0;
-    }
-    .campaign-item,
+    .campaign-scenario-list { margin-top: 12px; display: flex; flex-direction: column; gap: 4px; }
     .campaign-scenario-item {
-      padding: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 8px;
-      background: rgba(255,255,255,0.04);
-      color: #fff;
-      cursor: pointer;
-      text-align: left;
+      background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; text-align: left; padding: 4px 0;
+      font-family: inherit; font-size: 11px; font-weight: 300; letter-spacing: 0.22em; text-transform: uppercase;
     }
-    .campaign-item.active,
-    .campaign-scenario-item.active {
-      border-color: rgba(159, 227, 255, 0.8);
-      background: rgba(71, 145, 196, 0.18);
-    }
-    .campaign-item-title,
-    .campaign-scenario-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .campaign-item-desc,
-    .campaign-scenario-desc {
-      font-size: 12px;
-      line-height: 1.45;
-      color: rgba(255,255,255,0.72);
-    }
-    .campaign-actions {
-      padding: 14px 16px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
+    .campaign-scenario-item.active, .campaign-scenario-item:hover { color: #fff; }
+    .campaign-scenario-item.active::before { content: "\25B8  "; }
+    .campaign-actions { margin-top: 14px; display: flex; gap: 10px; }
+    .campaign-actions .btn { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
 
     #unitPanel {
       position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
@@ -612,13 +568,8 @@
 
       #resultTitle { font-size: 24px; }
 
-      .campaign-panel {
-        grid-template-columns: 1fr;
-      }
-      .campaign-column + .campaign-column {
-        border-left: none;
-        border-top: 1px solid rgba(255,255,255,0.08);
-      }
+      .campaign-card { left: 16px; right: 16px; bottom: 16px; width: auto; }
+      .campaign-item-title { display: none; }
     }
 
     @media (max-width: 400px) {
@@ -701,19 +652,20 @@
   </div>
 
   <div id="campaignOverlay" aria-hidden="true">
-    <div class="campaign-panel">
-      <div class="campaign-column">
-        <div class="campaign-header">
-          Campaign
-          <div class="campaign-subtitle">Choose a TABS campaign first, then select one of its scenarios.</div>
-        </div>
-        <div class="campaign-list" id="campaignList"></div>
-      </div>
-      <div class="campaign-column">
-        <div class="campaign-header">
-          Scenario
-          <div class="campaign-subtitle" id="campaignScenarioSubtitle">Select a campaign to see its scenario ladder.</div>
-        </div>
+    <div class="campaign-map">
+      <svg class="campaign-map-land" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path d="M60 330 C90 220 210 170 330 190 C420 120 560 110 640 170 C760 140 900 200 930 300 C960 400 880 500 760 500 C660 560 520 540 430 500 C320 540 170 520 110 460 C60 420 40 380 60 330 Z"/>
+        <path class="campaign-map-hill" d="M300 300 C340 250 420 250 450 290 C470 330 420 360 360 350 C320 345 290 330 300 300 Z"/>
+        <path class="campaign-map-hill" d="M640 250 C690 220 760 240 770 290 C770 330 700 340 660 320 C630 300 625 270 640 250 Z"/>
+        <path d="M820 80 C860 60 920 70 930 110 C930 150 870 160 830 140 C800 125 800 95 820 80 Z"/>
+        <path d="M120 90 C150 70 200 80 205 110 C205 140 160 150 130 135 C105 122 105 102 120 90 Z"/>
+      </svg>
+      <svg class="campaign-map-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path id="campaignRoute" vector-effect="non-scaling-stroke"/></svg>
+      <div class="campaign-map-title">Campaign</div>
+      <div class="campaign-nodes" id="campaignList"></div>
+      <div class="campaign-card">
+        <div class="campaign-header" id="campaignCardName">Campaign</div>
+        <div class="campaign-subtitle" id="campaignScenarioSubtitle">Select a campaign.</div>
         <div class="campaign-scenario-list" id="campaignScenarioList"></div>
         <div class="campaign-actions">
           <button class="btn" id="btnLeaveCampaign">Sandbox</button>

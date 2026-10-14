@@ -90,6 +90,17 @@ const campaignOverlayEl = document.getElementById("campaignOverlay")!;
 const campaignListEl = document.getElementById("campaignList")!;
 const campaignScenarioListEl = document.getElementById("campaignScenarioList")!;
 const campaignScenarioSubtitleEl = document.getElementById("campaignScenarioSubtitle")!;
+const campaignCardNameEl = document.getElementById("campaignCardName")!;
+const campaignRouteEl = document.getElementById("campaignRoute")!;
+// Where each campaign's node stands on the campaign map, in percent of the screen, in order along the route (tabs_screenshot_04: levels as nodes on a map)
+const CAMPAIGN_NODE_AT: readonly [number, number][] = [
+  [12, 58], [20, 44], [30, 36], [40, 46], [47, 32], [56, 26], [64, 38], [72, 30], [80, 42], [86, 56], [76, 66], [64, 72], [52, 66], [40, 72], [28, 70],
+];
+/** The first sentence of a description, for the one caption line under a name */
+function firstSentence(text: string): string {
+  const end = text.search(/[.!?](\s|$)/);
+  return end >= 0 ? text.slice(0, end + 1) : text;
+}
 const resultOverlayEl = document.getElementById("resultOverlay")!;
 const resultTitleEl = document.getElementById("resultTitle")!;
 const resultDetailEl = document.getElementById("resultDetail")!;
@@ -739,7 +750,8 @@ function populateCampaignScenarioList(campaignId: CampaignId | null): void {
     campaignScenarioSubtitleEl.textContent = "Select a campaign to see its scenario ladder.";
     return;
   }
-  campaignScenarioSubtitleEl.textContent = campaign.description;
+  campaignCardNameEl.textContent = campaign.displayName;
+  campaignScenarioSubtitleEl.textContent = firstSentence(campaign.description);
   const defaultScenarioId = selectedCampaignScenarioId
     ?? (campaignSession?.campaignId === campaign.id
       ? campaignSession?.scenarioId
@@ -748,14 +760,13 @@ function populateCampaignScenarioList(campaignId: CampaignId | null): void {
     selectedCampaignScenarioId = defaultScenarioId;
   }
 
-  for (const scenario of campaign.scenarios) {
+  campaign.scenarios.forEach((scenario, index) => {
     const btn = document.createElement("button");
     btn.className = "campaign-scenario-item";
     btn.classList.toggle("active", selectedCampaignScenarioId === scenario.id);
-    btn.innerHTML = `
-      <div class="campaign-scenario-title">${scenario.displayName}</div>
-      <div class="campaign-scenario-desc">${scenario.description}</div>
-    `;
+    // One caps line per level: its number and name, the description left as the hover title
+    btn.textContent = `${index + 1}  ${scenario.displayName}`;
+    btn.title = scenario.description;
     btn.addEventListener("click", () => {
       const nextSession = createCampaignSession(campaign.id, campaignSession?.unlimited ?? false, scenario.id);
       if (!nextSession) return;
@@ -765,7 +776,7 @@ function populateCampaignScenarioList(campaignId: CampaignId | null): void {
       loadCampaignScenario("Campaign ready.");
     });
     campaignScenarioListEl.appendChild(btn);
-  }
+  });
 }
 
 function populateCampaignList(): void {
@@ -775,14 +786,17 @@ function populateCampaignList(): void {
     selectedCampaignId = campaigns[0].id;
     selectedCampaignScenarioId = campaigns[0].scenarios[0]?.id ?? null;
   }
-  for (const campaign of campaigns) {
+  // The campaigns as numbered nodes along a dashed route over the map, a tiny caps name under each
+  const at = (index: number): [number, number] => CAMPAIGN_NODE_AT[index % CAMPAIGN_NODE_AT.length];
+  campaignRouteEl.setAttribute("d", campaigns.map((_, index) => `${index === 0 ? "M" : "L"}${at(index)[0]} ${at(index)[1]}`).join(" "));
+  campaigns.forEach((campaign, index) => {
     const btn = document.createElement("button");
     btn.className = "campaign-item";
     btn.classList.toggle("active", selectedCampaignId === campaign.id);
-    btn.innerHTML = `
-      <div class="campaign-item-title">${campaign.displayName}</div>
-      <div class="campaign-item-desc">${campaign.description}</div>
-    `;
+    btn.style.left = `${at(index)[0]}%`;
+    btn.style.top = `${at(index)[1]}%`;
+    btn.title = campaign.description;
+    btn.innerHTML = `${index + 1}<span class="campaign-item-title">${campaign.displayName}</span>`;
     btn.addEventListener("click", () => {
       selectedCampaignId = campaign.id;
       selectedCampaignScenarioId = campaign.scenarios[0]?.id ?? null;
@@ -790,7 +804,7 @@ function populateCampaignList(): void {
       populateCampaignScenarioList(campaign.id);
     });
     campaignListEl.appendChild(btn);
-  }
+  });
   populateCampaignScenarioList(selectedCampaignId);
 }
 
