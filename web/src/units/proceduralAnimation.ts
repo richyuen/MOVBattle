@@ -897,8 +897,8 @@ export class ProceduralAnimator {
     const root = this._body.root.absolutePosition;
     const scale = this._body.root.absoluteScaling.y || 1;
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
-    // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it
-    const out = Math.max(-0.2 * scale, Math.min(BOARD_PLANE_MAX_OUT * scale, (this._boardPlane ?? 0) + BOARD_PLANE_REACH * scale - (strapped.x * fx + strapped.z * fz)));
+    // Pushed off the line, back or through, he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT either side of where he holds it
+    const out = Math.max(-BOARD_PLANE_MAX_OUT * scale, Math.min(BOARD_PLANE_MAX_OUT * scale, (this._boardPlane ?? 0) + BOARD_PLANE_REACH * scale - (strapped.x * fx + strapped.z * fz)));
     const across = (root.z * fx - root.x * fz) - (strapped.z * fx - strapped.x * fz);
     const target = new Vector3(strapped.x + fx * out - fz * across * 0.6, strapped.y, strapped.z + fz * out + fx * across * 0.6);
     Vector3.LerpToRef(strapped, target, lap, target);
