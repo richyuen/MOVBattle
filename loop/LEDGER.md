@@ -42,6 +42,7 @@ proceduralAnimation.ts:heavy swing (_animateHeavySwing, CLUB_COCK, CLUB_LAND; pr
 proceduralAnimation.ts:press blow (_pressBlow, PRESS_BLOW_BEAT_*, _DROP, _HOLD, _BACK; blowStrikeReach) | beat 1.5-2.4 s, drop 0.1, hold 0.16, back 0.16; arm +3.0, trunk +0.45; strike reach 0.9 m | 202 | approved |
 cameraController.ts:result drift (RESULT_DRIFT_RATE; _resultDrift) | settled victory shot orbits 0.055 rad/s in the swoop direction; stops on viewer input or a new shot | 204 | approved |
 main.ts:landing hold (LANDING_HOLD_SECONDS; cameraController LANDING_FOLLOW_SPEED, _standoffAim) | view leans to bodies above 0.4 m and holds 1.6 s; 6 m/s, standoff view too | 213 | approved |
+cameraController.ts:spectator low (LOW_LAUNCH, LOW_EYE, LOW_PITCH, LOW_HOLD, LOW_EASE; offset over the follow aim) | 3+ bodies flung: eye 0.45 m, pitch +0.3 rad, hold 1.2 s, ease 4 | 221 | approved |
 simulationSystem.ts:front-rank dress (SHIELD_DRESS_PULL, _STEP; _dressShieldFronts) | reverted | 204 | rejected | 0.35, 0.04 m/step after the solver: depth only, boards still split sideways; dress idea spent
 simulationSystem.ts:board contact (SHIELD_BOARD_STANDOFF; _resolveLivingCollisions enemy reach) | front-rank carrier reach vs an enemy = max(radius, 0.46) | 205 | approved |
 simulationSystem.ts:wall frame (SHIELD_SLOT_SNAP; ShieldSlot.at, _holdShieldFrames, RuntimeUnit.wallBraced) | carriers put back on their frame slot up to 0.15 m a step; braced men not crowd-toppled | 210 | approved | pull 0.4, step 0.05 (206)
@@ -50,7 +51,7 @@ visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white toru
 visualEffects.ts:spell dome (spawnSpellDome, DOME_LIFE, _RISE, _FADE, _ALPHA) | unlit one-colour hemisphere over a lightning/area strike: 1.4 s, rise 0.15, fade 0.35, alpha 0.5, pink | 215 | approved |
 propBuilder.ts:held lightning bolt (lightning_bolt) | 4 flat white jagged shards in a zigzag, cyan shard 1.55x behind each | 216 | approved | 3 yellow glow boxes
 visualEffects.ts:shed gear (spawnGearLitter, GEAR_TOSS_MIN/MAX, GEAR_BOARD_LEAN, GEAR_BLADE_RAISE; RuntimeUnit.shedGear) | on death shield+weapon copies land 0.6-1.1 m off, board leant 0.35 off upright, blade grip raised 0.28, set on lowest point | 217 | approved |
-visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW, _LIFE, DUST_SPRITES/_LIFE, SMOKE_SPRITES/_LIFE; peaks) | additive core 3 @0.95, body 5 @0.7, rim 7 @0.55, grow 0.28, life 0.9; dust 10 @0.8 lift 0.25, 1.8 s; smoke 6, 2.4 s | 220 | approved | solid lobes/shells/dust domes + fire envelope (217-219)
+visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW, _LIFE, DUST_SPRITES/_LIFE, SMOKE_SPRITES/_LIFE; peaks) | additive core 3 @0.95, body 5 @0.7, rim 7 @0.55, grow 0.28, life 0.9; dust 10 @0.8 lift 0.25, 1.8 s; smoke 6, 2.4 s | 220 | approved | solid lobes/shells/dust domes + fire envelope (217-219); [P] dust 0.45/lift 0.1, body 0.95 rejected 221 (draw order, not opacity)
 rosterManifest.ts:giantScale (unitDefinitions collision/reach, vehicleBuilder rig) | mammoth 1.25: rig, metrics, collision radius and reach scaled together | 220 | approved |
 projectileSystem.ts:muzzle smoke (MUZZLE_PUFFS; _leavePuff size/life/rise/drift) | 7 feathered puffs 0.45-0.85, ~3 s, drift 0.15-0.5 down the line | 218 | approved | 8 faceted lobes
 main.ts:aerial haze and vignette (HAZE_LEAD, HAZE_DEPTH; vignetteWeight) | fog from camera radius+12 m over 95 m; vignette 1.6 | 215 | approved | fog 70-170 from the eye, vignette 0.3; HAZE_DEPTH 60 rejected 219 (ledger reversal, ring milky)
@@ -58,8 +59,6 @@ proceduralAnimation.ts:rank board strip (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP
 proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aimed from the shoulder at 0.12 m behind the board seat, elbow straight | 211 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 210 | [R] wall-as-body | battle-feel.h | approved
-- 211 | board-grip | battle-feel.h | approved
 - 213 | board-axis-from-heading | battle-feel.h | rejected
 - 213 | landing-hold | battle-feel.g | approved
 - 214 | board-layers | battle-feel.h | rejected
@@ -75,6 +74,8 @@ proceduralAnimation.ts:board grip (_gripBoard, BOARD_GRIP_BACK) | shield arm aim
 - 219 | backdrop-haze | maps-light.f | rejected
 - 220 | [R] cannon-impact-burst | vfx.h | approved
 - 220 | giant-scale | unit-look.f | approved
+- 221 | spectator-low | camera.f | approved
+- 221 | [R] committed-blow | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

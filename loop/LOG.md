@@ -219,3 +219,4 @@ iter 217 | [S] shed-gear-visible, [S] fire-envelope | 2/2 approved | passes 14 -
 iter 218 | [S] muzzle-smoke, [P] envelope-colour, [S] lineup-eyes | 2/3 approved | passes 15 -> 15
 iter 219 | [S] envelope-glow, [S] backdrop-haze | 1/2 approved | passes 15 -> 15
 iter 220 | re-audit; [R] cannon-impact-burst, [S] giant-scale | 2/2 approved | passes 15 -> 16
+iter 221 | [P] dust-under-fire, [S] spectator-low, [R] committed-blow | 1/3 approved | passes 16 -> 17
