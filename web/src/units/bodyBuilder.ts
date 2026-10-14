@@ -191,12 +191,15 @@ const SLEEVE_HEAD_PLATE = 1.08;
 const SLEEVE_HEAD_DROP = 0.4;
 const SLEEVE_HEAD_RISE = 0.35;
 const SLEEVE_HEAD_CROWN = 0.6;
-/** Shoulder line: the trunk's widest line is its top edge. It lies at the height of the shoulder joints, reaches this share of a sleeve past each of them and has this share of the torso's depth,
- * so an arm hangs from each top corner. Above it there is only a collar: a short bevel that closes straight onto the neck, this many neck widths across where it meets it and this share of the neck's length up it. */
-const YOKE_REACH = 0.2;
+/** Shoulder line: the trunk's widest line is its top edge, and an arm hangs outside each end of it. The edge stops this share of a sleeve short of each shoulder joint, so the sleeve head
+ * stands out past the corner as the point of the shoulder, and it lies this share of the sleeve head's crown above the joints, so the crown's inner half is under it. It has this share of the torso's depth.
+ * From that edge the trapezius runs up and in as one plane a side to the foot of the head: this many neck widths across where it ends, this share of the neck's length up. The sleeve crown's
+ * outer chamfer carries the same slope on down to the arm, so the shoulder is one fall from the head to the sleeve with no level stretch in it. */
+const SHOULDER_INSET = 0.15;
+const TRAPEZIUS_OVER_CROWN = 0.6;
 const YOKE_DEPTH = 0.92;
-const COLLAR_OF_NECK = 1.35;
-const COLLAR_RISE = 0.6;
+const COLLAR_OF_NECK = 1.2;
+const COLLAR_RISE = 0.85;
 /** The pelvis block stands this share of its own height above the hip line: the belt, where the hull's foot lands on it. */
 const PELVIS_ABOVE_HIP = 0.3;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
@@ -380,19 +383,23 @@ export function buildArticulatedBody(
     return m;
   }
   /**
-   * The trunk's hull and its collar, one solid with the torso.
-   * Spec, read off tabs_screenshot_04: the trunk is one trapezoid, about two heads from belt to shoulder line. Its widest line is its top edge, at the height of the arm roots,
-   * and the arms hang from its two top corners: nothing of the trunk is wider below them. Each side is a single straight plane from that edge down to the belt, where the trunk
-   * is about three quarters of its top width and exactly as wide as the hips under it, so belt, hips and skirt top are one line with no step or corner. Above the top edge
-   * there is no gable and no shelf: a short collar bevel runs from the edge straight onto a short thick neck and takes the lower part of the neck into itself.
-   * So the hull's foot is the top face of the pelvis block (pelvisW by pelvisD) at the belt, its top edge is the shoulder joints' own line, and the collar is sized from the neck
-   * it closes on, not from the shoulders. The chest stands out of the hull's front as a swell.
+   * The trunk's hull and the trapezius over it, one solid with the torso.
+   * Spec, read off tabs_screenshot_04: the trunk is one trapezoid, about two heads from belt to shoulder line and about 1.7 heads across at the top. Its widest line is its top edge,
+   * at the arm roots, and the arms hang outside its two top corners: nothing of the trunk is wider below them. Each side is a single straight plane from that edge down to the belt,
+   * where the trunk is as wide as the hips under it, so belt, hips and skirt top are one line with no step or corner. The top is not level anywhere: from a short thick neck the
+   * shoulders fall away in one plane a side to the arm roots, at something near forty degrees, and the point of each shoulder is the sleeve head itself.
+   * So the hull's foot is the top face of the pelvis block (pelvisW by pelvisD) at the belt; its top edge ends inside the shoulder joints (SHOULDER_INSET) and just over them
+   * (TRAPEZIUS_OVER_CROWN of the sleeve crown), and the trapezius runs from that edge to the foot of the head, sized from the neck it closes on. The chest stands out of the hull's front
+   * as a swell, and is drawn in where it would stand out of the hull's side.
    */
-  function shoulderYoke(n: string, jointX: number, jointY: number, pelvisW: number, pelvisD: number, beltY: number): Mesh {
-    const chestW = chestTop * CHEST_SWELL * 0.96;
-    const yokeW = Math.max(chestW, pelvisW, (jointX + upperArmTop * YOKE_REACH) * 2);
+  function shoulderYoke(n: string, jointX: number, jointY: number, crownH: number, pelvisW: number, pelvisD: number, beltY: number): Mesh {
+    const yokeW = Math.max(pelvisW, (jointX - upperArmTop * SHOULDER_INSET) * 2);
     const yokeD = Math.max(torsoD * YOKE_DEPTH, upperArmTop * 1.1);
-    const yokeY = Math.max(torsoH * 0.5, jointY);
+    const yokeY = Math.max(torsoH * 0.5, jointY + crownH * TRAPEZIUS_OVER_CROWN);
+    // The chest wedge keeps inside the hull's side planes at its own widest line
+    const chestY = torsoH * 0.5 * (1 + CHEST_LINE);
+    const hullAtChest = pelvisW + (yokeW - pelvisW) * Math.min(1, Math.max(0, (chestY - beltY) / Math.max(0.001, yokeY - beltY)));
+    torsoMesh.scaling.x *= Math.min(1, hullAtChest * 0.97 / (chestTop * CHEST_SWELL));
     const frustum = (part: string, y0: number, y1: number, w0: number, d0: number, w1: number, d1: number): Mesh => {
       const box = MeshBuilder.CreateBox(`${n}_${part}`, { width: w1 * s, height: (y1 - y0) * s, depth: d1 * s }, scene);
       const positions = box.getVerticesData("position")!;
@@ -670,7 +677,7 @@ export function buildArticulatedBody(
   const pelvisW = Math.max(waist, shoulderOffX * 2 / s * PELVIS_OF_SHOULDERS, upperLegTop * 2 * THIGH_LAP);
   const pelvisH = upperLegTop * PELVIS_HEIGHT;
   const pelvisD = Math.max(waist * WAIST_DEPTH * torsoD / Math.max(chestTop, waist, 0.001), upperLegTop * legDepthScale) * 1.05;
-  shoulderYoke(`${name}_yoke`, shoulderOffX / s, shoulderOffY / s, pelvisW, pelvisD, pelvisH * PELVIS_ABOVE_HIP).parent = torso;
+  shoulderYoke(`${name}_yoke`, shoulderOffX / s, shoulderOffY / s, sleeveHead * SLEEVE_HEAD_RISE, pelvisW, pelvisD, pelvisH * PELVIS_ABOVE_HIP).parent = torso;
 
   // Left arm
   const leftShoulder = joint(`${name}_lShoulder`, torso);
