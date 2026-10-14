@@ -92,10 +92,6 @@ function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
   return attacker.linkedChildren.filter((child) => !child.isDead && child.linkedRelation === "spawned-child").length;
 }
 
-// A wall's front rank held on its line (see SimulationSystem._dressShieldFronts): the share of a man's depth error taken out each step, and the most a step moves him.
-const SHIELD_DRESS_PULL = 0.35;
-const SHIELD_DRESS_STEP = 0.04;
-
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
   wall: number;
@@ -272,7 +268,6 @@ export class SimulationSystem {
 
     this._assignShieldSlots();
     this._resolveLivingCollisions();
-    this._dressShieldFronts();
 
     for (const unit of this._units) {
       if (unit.isDead || unit.isAnchoredActor) continue;
@@ -791,22 +786,6 @@ export class SimulationSystem {
     }
     // Every slotted man's spear stands on his wall's heading from the moment he is slotted, not only once an enemy is handed to him, so a wall's shafts are one line.
     for (const [unit, slot] of this._shieldSlots) unit.holdSpearInWall(slot.heading, slot.plane);
-  }
-
-  /**
-   * A wall's front rank is dressed on its line after the crowd solver has had its say: each man is drawn back along the wall's heading toward the rank's mean depth
-   * (ShieldSlot.plane) by SHIELD_DRESS_PULL of his error a step, at most SHIELD_DRESS_STEP. The solver parts men across and in depth alike, and left alone a shoved
-   * rank stood three and four men deep with its boards scattered among them; dressed, the men stay behind their boards on one line (tabs_screenshot_06).
-   */
-  private _dressShieldFronts(): void {
-    for (const [unit, slot] of this._shieldSlots) {
-      if (slot.plane === null || unit.isDead || unit.isToppled || unit.isDowned) continue;
-      const fx = Math.sin(slot.heading);
-      const fz = Math.cos(slot.heading);
-      const error = slot.plane - (unit.position.x * fx + unit.position.z * fz);
-      const step = Math.max(-SHIELD_DRESS_STEP, Math.min(SHIELD_DRESS_STEP, error * SHIELD_DRESS_PULL));
-      if (Math.abs(step) > 1e-4) unit.applyCollisionSeparation(new Vector3(fx * step, 0, fz * step));
-    }
   }
 
   /** In contact a slotted carrier stands square to his wall's advance, board to the front, while his enemy is within shieldHeadingArc of it. */
