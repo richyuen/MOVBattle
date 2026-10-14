@@ -44,14 +44,12 @@ export type ReleaseTimingProfile =
 const SPEAR_LUNGE = 0.45;
 const SPEAR_DRAW = -0.4;
 const SPEAR_CHOKE = 0.45;
-/** A rear-rank spear has a lane of its own, and the lane is found, not assumed. Across, it is the gap between the heads of the two men standing ahead of him, wherever the press has
- * put them (the battle hands him that gap as a distance to one side of his own middle line): the shaft is set over it, moved from the fist by no more than SPEAR_LANE_REACH metres.
- * In height it is cut from his own head: the shaft passes SPEAR_OVER_CROWN metres clear above his own crown where it leaves the fist, so it never runs through his own helmet, and his
- * spear arm comes in over his head by SPEAR_REAR_ARM_IN and up by SPEAR_REAR_ARM_UP to hold it there. It is aimed SPEAR_REAR_AIM_RISE higher on its mark, so it lies flat over the gap. */
+/** A rear-rank spear has a lane of its own: the man stands behind the gap between two boards, and his shaft is carried over that gap and not over the man beside it. His spear arm
+ * comes in over his own head by this much, what is left of the fist's offset from his middle line is taken out of the shaft's place (never by more than SPEAR_LANE_REACH metres),
+ * and the shaft rides this much higher and is aimed this much higher on its mark, so it lies over the shoulders ahead of him. */
 const SPEAR_REAR_ARM_IN = -0.35;
-const SPEAR_REAR_ARM_UP = -0.45;
-const SPEAR_LANE_REACH = 0.45;
-const SPEAR_OVER_CROWN = 0.08;
+const SPEAR_LANE_REACH = 0.4;
+const SPEAR_REAR_LIFT = 0.12;
 const SPEAR_REAR_AIM_RISE = 0.3;
 
 export class ProceduralAnimator {
@@ -130,11 +128,10 @@ export class ProceduralAnimator {
   private _shoveTimer = 0;
 
   /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear is aimed at that man's chest (see _carrySpear) until the calls stop. */
-  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false, laneAcross = 0): void {
+  levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false): void {
     this._spearAim.copyFrom(enemyGround);
     this._spearAimRadius = enemyRadius;
     this._spearRear = rearRank;
-    this._spearLaneAcross += (laneAcross - this._spearLaneAcross) * 0.35;
     this._spearAimTimer = 0.6;
   }
   private _spearAim = new Vector3();
@@ -142,8 +139,6 @@ export class ProceduralAnimator {
   // Whether he stands in a rear rank, and how far his shaft has moved over into its lane (0 to 1).
   private _spearRear = false;
   private _spearLane = 0;
-  // Where his lane lies across his own middle line, in metres to his right: the gap between the two heads ahead of him, eased so the shaft does not jump as the press shifts.
-  private _spearLaneAcross = 0;
   // The thrust (see _carrySpear): where in his stroke the man is, from SPEAR_DRAW (drawn back) through 0 (the hold) to 1 (full lunge); how far back through the fist
   // the shaft rests so that the lunge ends on the enemy's front, in metres; and how near the enemy is to being in reach, 0 to 1.
   private _spearThrust = 0;
@@ -510,7 +505,7 @@ export class ProceduralAnimator {
           // board (a rear man's over the shoulder of the man ahead); a thrust straightens the arm forward and down from that hold and comes back to it.
           // With the spear levelled at a man he works it on his own beat as well: the elbow cocks further as the shaft is drawn back and the arm goes out with the lunge.
           const jab = Math.max(this._state === AnimState.Attacking ? Math.sin(Math.min(1, this._attackTimer / this._attackDuration) * Math.PI) : 0, this._spearThrust);
-          b.rightShoulder.rotation.x += (br.spearRaise + SPEAR_REAR_ARM_UP * this._spearLane + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
+          b.rightShoulder.rotation.x += (br.spearRaise + 0.5 * jab + Math.sin(phase * 0.5 + 1) * 0.05 - b.rightShoulder.rotation.x) * hold;
           b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * hold;
           b.rightShoulder.rotation.z += (0.2 + (SPEAR_REAR_ARM_IN - 0.2) * this._spearLane - b.rightShoulder.rotation.z) * hold;
           b.rightElbow.rotation.x += (br.spearElbow + 0.9 * jab + 0.8 * Math.min(0, this._spearThrust) - b.rightElbow.rotation.x) * hold;
@@ -841,13 +836,11 @@ export class ProceduralAnimator {
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, shaft.position);
     if (this._spearLane > 0.01) {
-      // Lane: the shaft is set over the gap between the two heads ahead and above his own crown; its place only, never its heading
+      // Lane: the shaft is set over his own middle line, which is the gap between the two men ahead, and lifted; its place only, never its heading
       const yaw = root.rotation.y;
       const across = (from: Vector3): number => (from.x - root.absolutePosition.x) * Math.cos(yaw) - (from.z - root.absolutePosition.z) * Math.sin(yaw);
-      const over = Math.max(-SPEAR_LANE_REACH, Math.min(SPEAR_LANE_REACH, this._spearLaneAcross - across(hand.absolutePosition))) * this._spearLane * level * k;
-      this._body.headTop.computeWorldMatrix(true);
-      const rise = Math.max(0, this._body.headTop.absolutePosition.y + SPEAR_OVER_CROWN - hand.absolutePosition.y) * this._spearLane * level * k;
-      const shift = new Vector3(Math.cos(yaw) * over, rise, -Math.sin(yaw) * over);
+      const over = Math.max(-SPEAR_LANE_REACH, Math.min(SPEAR_LANE_REACH, -across(hand.absolutePosition))) * this._spearLane * level * k;
+      const shift = new Vector3(Math.cos(yaw) * over, SPEAR_REAR_LIFT * this._spearLane * level * k, -Math.sin(yaw) * over);
       shift.rotateByQuaternionToRef(Quaternion.Inverse(hand.absoluteRotationQuaternion), shift);
       shaft.position.addInPlace(shift.scaleInPlace(1 / handScale));
     }
