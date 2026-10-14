@@ -1187,8 +1187,6 @@ export class RuntimeUnit {
 
     // A man held in his shield wall is braced by it: the shove moves the wall, it does not fold him
     if (this.wallBraced) return;
-    // Nor is a man mid-blow: from the descent to the landed hold he owns his body (proceduralAnimation committed-blow spec)
-    if (this.animator.striking) return;
     if (this._balancePressure >= this._crowdPhysicsProfile.launchThreshold) {
       this._enterTopple(now, Math.max(appliedPressure, this._balancePressure), this._balanceDirection, true);
       return;
