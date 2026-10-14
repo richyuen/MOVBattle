@@ -79,6 +79,10 @@ const PRESS_DRIVE = 0.4;
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
+// A wall man's legs (see the upright pass): the most a knee folds and a thigh swings (radians), and the share of the brace's hip sink he keeps.
+const WALL_KNEE_MAX = 0.35;
+const WALL_HIP_MAX = 0.35;
+const WALL_SINK_SHARE = 0.3;
 const BOARD_LAP = 0.22;
 const BOARD_PLANE_MAX_OUT = 0.7;
 // Where a board rides on its rank's strip: this share of the bearer's neck height above his feet (chest height; tabs_screenshot_06 boards run chin to knee).
@@ -719,6 +723,11 @@ export class ProceduralAnimator {
       b.torso.rotation.x -= over * upright;
       b.neck.rotation.x += (-b.torso.rotation.x * WALL_HEAD_LEVEL - b.neck.rotation.x) * upright;
       for (const hip of [b.leftHip, b.rightHip]) hip.rotation.z -= hip.rotation.z * upright;
+      // ...and he stands on his legs: no knee folded past WALL_KNEE_MAX, no thigh swung past WALL_HIP_MAX either way (a short step, not a lunge), and his hips
+      // carried at WALL_SINK_SHARE of the brace's sink, so he stands about his height behind the board and not crouched under its rim
+      for (const knee of [b.leftKnee, b.rightKnee]) knee.rotation.x -= Math.max(0, knee.rotation.x - WALL_KNEE_MAX) * upright;
+      for (const hip of [b.leftHip, b.rightHip]) hip.rotation.x -= (hip.rotation.x - Math.max(-WALL_HIP_MAX, Math.min(WALL_HIP_MAX, hip.rotation.x))) * upright;
+      if (this._hipRest !== null) b.hip.position.y = this._hipRest - (this._braceSink * (1 - upright * (1 - WALL_SINK_SHARE))) - this._idleSink;
     }
     // Spear carry: a shield man on the march does not pump his spear arm. It hangs at his side with the elbow a little bent, the shaft stood up in the fist.
     if (this._state === AnimState.Walking && this._spearShaft()) {
