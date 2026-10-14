@@ -180,7 +180,8 @@ const NECK_SUNK = 0.6;
 const NECK_INTO_HEAD = 0.22;
 const COLLAR_SEAT = 0.2;
 /** An eye is a white disc this share of the face across, set this far off the middle of the face, pressed to this share of its width in depth; its black pupil is this share of the disc. */
-const EYE_OF_FACE = 0.24;
+const EYE_OF_FACE = 0.3; // at 0.24 the eyes did not read at lineup distance
+const EYE_RIM = 1.2;
 const EYE_SPREAD = 0.16;
 const EYE_FLAT = 0.3;
 const PUPIL_OF_EYE = 0.5;
@@ -668,6 +669,16 @@ export function buildArticulatedBody(
     eye.parent = neck;
     glow?.addExcludedMesh(eye); // a crisp disc, no halo
     allMeshes.push(eye);
+
+    // A dark rim round the white, a disc EYE_RIM as wide just behind it: on a pale blue or pink face at lineup distance the white alone melted into the skin
+    // and only the pupils read, as two dots (tabs_screenshot_04: the eye is a white ball ringed dark against the face)
+    const rim = MeshBuilder.CreateSphere(`${name}_${tag}EyeRim`, { diameter: eyeDiam * s * EYE_RIM, segments: eyeSegs }, scene);
+    rim.material = pupilMat;
+    rim.scaling.z = 0.6;
+    rim.position.z = -eyeDiam * s * 0.08;
+    rim.parent = eye;
+    glow?.addExcludedMesh(rim);
+    allMeshes.push(rim);
 
     // The pupil rides the front of the disc (its z is in the disc's own flattened space) and slides over it as the head swings
     const pupil = MeshBuilder.CreateSphere(`${name}_${tag}Pupil`, { diameter: pupilDiam * s, segments: eyeSegs }, scene);
