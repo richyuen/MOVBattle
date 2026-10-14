@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CAPS = {
-  "loop/ITERATE.md": 8_000,
+  "loop/ITERATE.md": 8_400,
   "loop/STATE.md": 9_000,
   "loop/LEDGER.md": 14_000,
   "loop/REFERENCE_DIGEST.md": 8_200,

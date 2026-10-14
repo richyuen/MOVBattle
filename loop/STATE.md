@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 209   Last re-audit: 205   Consecutive rejects: 3   Branch: main
+Iteration: 209   Last re-audit: 205   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -12,7 +12,7 @@ Tier 2 (fully scored at 198, re-audited 205):
 battle-feel: e FAIL f PASS g FAIL h FAIL (1/4)
 - e FAIL [S since: 2] B: 1 no swing caught mid-arc against a target — closeup_weapon_reads (only sword knights, no clubber, no landed blow); 3 no press club caught landing on a man: side-on press_clubbers_side shows one club cocked and one driven level into the board face, none down on a head or body — press_clubbers_side, big_melee_9s. (2 struck 200) Ref trailer_3_sheet_01 r2c3.
 - g FAIL [S since: 0] B: 1 landing not shown: flung knights out of frame at war_machines_3800ms, no landed spread of varied poses. Ref trailer_2_sheet_02 r1c2.
-- h FAIL [S since: 3] B: 1 under the shove the front boards turn and split sideways into separate discs with torsos between them, not one lapped face (the heap and flat-tipped boards cleared 206) — shield_wall_side, 2650ms. (2 struck 205) Ref tabs_screenshot_06.
+- h FAIL plateau (6 rejected [S] in 201-209) [S since: 3] B: 1 under the shove the front boards turn and split sideways into separate discs with torsos between them, not one lapped face (the heap and flat-tipped boards cleared 206) — shield_wall_side, 2650ms. (2 struck 205) Ref tabs_screenshot_06.
 unit-look: e PASS f FAIL g PASS h FAIL (2/4)
 - f FAIL [S since: 2] B: 1 mammoth ~2.5-2.9 men tall (ref ~3.5) — big_melee_result. (3 struck 199) Ref tabs_screenshot_01.
 - h FAIL [S since: 1] B: 1 eyes do not read at lineup distance on bare-faced units; 3 beret and yellow cone ~1 head wide (ref ~2 heads, tabs_screenshot_05) — lineup_medieval. Ref tabs_screenshot_04.
@@ -39,7 +39,7 @@ BASE 567e382
 - GAP: [S] wall-side-band (5337ff3) VERDICT: REJECT CRITERION: battle-feel.h FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.h wall-rank-fill [0] — blocker 1: a rear-rank carrier steps into a front gap opened past the slot spacing, his board on the front plane, so no torso shows between boards — ref tabs_screenshot_06 — ours shield_wall_side
+1. [R] battle-feel.h wall-face-rebuild [0] — whole blocker list: rebuild the wall face (slot frame + _lapBoard/_squareShield) from a spec off tabs_screenshot_06: under the shove one rim-over-rim band, no torso between boards; consider rank fill (rear man steps into an opened front gap) — ours shield_wall_side, shield_wall_2650ms
 2. [S] battle-feel.e club-overhead-strike [0] — blocker 3: a press club comes down onto a head or shoulders, from a contact stance that keeps the clubber upright without breaking the crowd_topple_clubber_vs_protector guard — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_side
 3. [S] battle-feel.g landed-pose-spread [1] — blocker 1: keep the flung knights in frame at landing and show varied landed poses — ref trailer_2_sheet_02 r1c2 — ours war_machines_3800ms
 4. [S] unit-look.f mammoth-scale [2] — blocker 1: mammoth ~3.5 men tall — ref tabs_screenshot_01 — ours big_melee_result
@@ -59,7 +59,7 @@ BASE 567e382
 - mammoth-trunk [attempts: 1, [S]] — 198: 8-knot hanging tube in hide purple off the neck: blends into the chest, sits behind the tusk arc; salmon cheek panel left; 0.05 m knot rings too thin to read (199 retry approved)
 
 ## Notes for next iteration (max 5 lines)
-- STOP was written at 209 (rejects 207, 208, 209, all battle-feel.h board attempts). battle-feel.h: approved 202/205/206, rejected 201/203/204/207/208/209. Critic 209: consider marking it plateau at the next re-audit and specifying an [R] rebuild of the wall face from tabs_screenshot_06.
+- STOP (209) cleared by the user, rejects reset. Step 7 now also marks plateau at 3 rejected [S] in 10 iterations: battle-feel.h is plateau, next pick on it is the [R]. battle-feel.h: approved 202/205/206, rejected 201/203/204/207/208/209. Critic 209: consider marking it plateau at the next re-audit and specifying an [R] rebuild of the wall face from tabs_screenshot_06.
 - battle-feel.e: probe (208) in gallery_press_clubbers at 2.6 s: clubbers in shove contact are limp 0.8-0.98 (toppled by braced hoplites), so the club pose is overridden. A landed blow needs strikers that stay upright at contact without breaking crowd_topple_clubber_vs_protector.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Gallery shots stop advancing at Result. A war_machines salvo kills ~1 squire.
 - Probe animator branches with console.error -> look/summary.json consoleErrors. Python edits: read/write bytes as utf-8 and keep the file's eol.

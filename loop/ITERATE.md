@@ -38,7 +38,7 @@ Spawn a fresh `Agent` (general-purpose). Its prompt lists, by path: `loop/CRITIC
 ## 7. Apply verdicts
 - Each REJECT: `git revert --no-edit <sha>`. If the revert conflicts, `git revert --abort`, keep the code, mark it `rejected-kept`. Add the gap to Rejected attempts with attempts+1 and the top defect.
 - Set each touched LEDGER row's verdict, and the gap's Structural attempts line, to the critic's verdict. A row attempted twice as `[P]` without approval becomes `spent`.
-- Apply the critic's blocker strikes and additions to the Criteria block. A criterion with 4 or more approved `[S]` since its blocker list was written and still FAIL is marked `plateau`: no `[S]` is picked on it; the next pick on it is one `[R]`, and the mark clears when a re-audit rewrites its blockers or the `[R]` is approved.
+- Apply the critic's blocker strikes and additions to the Criteria block. A criterion still FAIL with 4 or more approved `[S]` since its blocker list was written, or 3 or more rejected `[S]` in Structural attempts (last 10 iterations), is marked `plateau`: no `[S]` is picked on it; the next pick on it is one `[R]`, and the mark clears when a re-audit rewrites its blockers or the `[R]` is approved.
 - Consecutive rejects: reset to 0 if any gap was approved, else +1. At 3, write the reason into a file named `STOP`.
 
 ## 8. Write memory and commit
