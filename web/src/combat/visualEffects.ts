@@ -28,7 +28,9 @@ const FIREBALL_CORE = 3;
 const FIREBALL_BODY = 5;
 const FIREBALL_RIM = 7;
 const FIREBALL_GROW = 0.28;
-const FIREBALL_LIFE = 0.9;
+const FIREBALL_LIFE = 0.9;
+// The fire's place in the see-through draw order (dust two below it, smoke one below): it is drawn last, over them.
+const FIREBALL_ALPHA_INDEX = 1002;
 const DUST_SPRITES = 10;
 const DUST_LIFE = 1.8;
 const SMOKE_SPRITES = 6;
@@ -254,6 +256,9 @@ export class VisualEffects {
       mesh.position.copyFrom(at);
       const mat = this._envelopeMat(color, additive);
       mesh.material = mat;
+      // Draw order among see-through meshes: dust first, then smoke, then the additive fire over both, so the fireball is composited over the dust and not
+      // buried under it (depth still tests against the solid scene, so the guns and men in front stay in front)
+      mesh.alphaIndex = additive ? FIREBALL_ALPHA_INDEX : name === "burstSmoke" ? FIREBALL_ALPHA_INDEX - 1 : FIREBALL_ALPHA_INDEX - 2;
       glow?.addExcludedMesh(mesh);
       sprites.push({ mesh, mat, born, grown, grow, drift, life, peak });
     };
