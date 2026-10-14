@@ -65,11 +65,9 @@ simulationSystem.ts:board contact (SHIELD_BOARD_STANDOFF; _resolveLivingCollisio
 simulationSystem.ts:wall frame (SHIELD_FRAME_PULL, _STEP; ShieldSlot.at, _holdShieldFrames) | carriers drawn to their frame slot after the solver: 0.4 of error, at most 0.05 m a step | 206 | approved |
 projectileSystem.ts:cannonball wake (TRAIL_PUFF_EVERY, _BORN, _GROWN, _LIFE, _CAP) | feathered billboard puff every 0.03 s, 0.55 -> x2.6, life 1.6, cap 240 | 200 | approved |
 visualEffects.ts:shock ring (_spawnShockRing) | upright camera-facing white torus at the strike, 0.4 -> 2.6 m over 0.7 s, fade last third | 198 | approved |
-proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_PLANE_MAX_OUT; slot plane) | from slotting: plane 0.42 ahead, lap 0.22, out at most 0.7 | 202 | approved | in contact only (201 rejected); back clamp -0.7 + front-rank dress rejected 203 (keep back clamp -0.2)
+proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP, BOARD_PLANE_MAX_OUT; slot plane) | from slotting: plane 0.42 ahead, lap 0.22, out at most 0.7 | 202 | approved | in contact only (201 rejected); back clamp -0.7 + front-rank dress rejected 203 (keep back clamp -0.2); slot seat (BOARD_SLOT_REACH 0.45) + BOARD_DROP_LIMP 0.6 rejected 207
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 197 | wall-shafts-one-plane | battle-feel.c | approved
-- 197 | zeus-no-mouth | unit-look.h | approved
 - 198 | mammoth-trunk | unit-look.f | rejected
 - 198 | impact-ring | vfx.e | approved
 - 199 | mammoth-trunk retry | unit-look.f | approved
@@ -84,6 +82,7 @@ proceduralAnimation.ts:front board lap (_lapBoard, BOARD_PLANE_REACH, BOARD_LAP,
 - 204 | result-drift | camera.g | approved
 - 205 | board-contact-plane | battle-feel.h | approved
 - 206 | wall-rigid-frame | battle-feel.h | approved
+- 207 | wall-face-held-in-contact | battle-feel.h | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

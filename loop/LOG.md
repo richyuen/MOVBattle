@@ -205,3 +205,4 @@ iter 203 | [S] lapped-boards-in-contact (+[S] landed-spread dropped; evidence bi
 iter 204 | [S] dressed-front-under-shove, [S] result-drift | 1/2 approved | passes 11 -> 12
 iter 205 | re-audit; [S] board-contact-plane (+[S] landed-press-club dropped; evidence press_clubbers_side) | 1/1 approved | passes 12 -> 12
 iter 206 | [S] wall-rigid-frame (+[S] club-overhead-strike dropped) | 1/1 approved | passes 12 -> 12
+iter 207 | [S] wall-face-held-in-contact (+[S] club-overhead-strike dropped) | 0/1 approved | passes 12 -> 12
