@@ -930,17 +930,28 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return flask;
     }
     case "lightning_bolt": {
+      // A held bolt is the thrown one in the hand (trailer_2_sheet_03 r3c2): flat white jagged slabs, each a long four-sided shard pressed flat, laid end to end
+      // in a zigzag, every one backed by the same shard half again as broad in cyan, a hair behind it, so it reads as a white blade with a cyan rim and not a
+      // glowing yellow block.
       const bolt = new TransformNode("bolt", scene) as unknown as Mesh;
-      const yellow = new Color3(1, 0.9, 0.2);
-      const seg1 = MeshBuilder.CreateBox("seg1", { width: 0.06 * s, height: 0.2 * s, depth: 0.02 * s }, scene);
-      seg1.material = mat(scene, yellow, 0.6);
-      seg1.position.set(0.02 * s, 0.3 * s, 0); seg1.rotation.z = 0.3; seg1.parent = bolt;
-      const seg2 = MeshBuilder.CreateBox("seg2", { width: 0.06 * s, height: 0.2 * s, depth: 0.02 * s }, scene);
-      seg2.material = mat(scene, yellow, 0.6);
-      seg2.position.set(-0.02 * s, 0.12 * s, 0); seg2.rotation.z = -0.3; seg2.parent = bolt;
-      const seg3 = MeshBuilder.CreateBox("seg3", { width: 0.05 * s, height: 0.15 * s, depth: 0.02 * s }, scene);
-      seg3.material = mat(scene, yellow, 0.6);
-      seg3.position.set(0.01 * s, -0.04 * s, 0); seg3.rotation.z = 0.2; seg3.parent = bolt;
+      const white = mat(scene, new Color3(1, 1, 1), 1.2);
+      const cyan = mat(scene, new Color3(0.35, 0.9, 1), 1.0);
+      // Joints of the zigzag, bottom (the fist) to top, as x, y in units of s
+      const joints: [number, number][] = [[0, -0.08], [0.07, 0.12], [-0.05, 0.3], [0.08, 0.5], [-0.02, 0.68]];
+      for (let k = 0; k < joints.length - 1; k++) {
+        const [x0, y0] = joints[k];
+        const [x1, y1] = joints[k + 1];
+        const length = Math.hypot(x1 - x0, y1 - y0) * s * 1.15;
+        const broad = (0.07 - 0.012 * k) * s;
+        for (const [layer, material, scale, z] of [[0, white, 1, 0], [1, cyan, 1.55, -0.012]] as const) {
+          const shard = MeshBuilder.CreateCylinder(`boltShard${layer}`, { height: length, diameterTop: 0, diameterBottom: broad * scale, tessellation: 4 }, scene);
+          shard.scaling.z = 0.18; // pressed flat: a slab, not a spike
+          shard.position.set(((x0 + x1) / 2) * s, ((y0 + y1) / 2) * s, z * s);
+          shard.rotation.z = -Math.atan2(x1 - x0, y1 - y0);
+          shard.material = material;
+          shard.parent = bolt;
+        }
+      }
       return bolt;
     }
     case "fan": {
