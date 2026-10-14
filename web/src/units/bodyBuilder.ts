@@ -191,12 +191,12 @@ const SLEEVE_HEAD_PLATE = 1.08;
 const SLEEVE_HEAD_DROP = 0.4;
 const SLEEVE_HEAD_RISE = 0.35;
 const SLEEVE_HEAD_CROWN = 0.6;
-/** Shoulder ridge: the torso has no flat top. Its widest line reaches this share of a sleeve past each shoulder joint and lies this share of a sleeve below the joints, at this share of the torso's depth;
- * from that line one plane a side runs up and in to the neck, through the sleeve head, so the shoulder is a slope the arm comes out of and not a plate with a corner over each arm. */
+/** Shoulder line: the trunk's widest line is its top edge. It lies at the height of the shoulder joints, reaches this share of a sleeve past each of them and has this share of the torso's depth,
+ * so an arm hangs from each top corner. Above it there is only a collar: a short bevel that closes straight onto the neck, this many neck widths across where it meets it and this share of the neck's length up it. */
 const YOKE_REACH = 0.2;
-const YOKE_DROP = 0.6;
 const YOKE_DEPTH = 0.92;
-const YOKE_NECK = 0.5;
+const COLLAR_OF_NECK = 1.35;
+const COLLAR_RISE = 0.6;
 /** The pelvis block stands this share of its own height above the hip line: the belt, where the hull's foot lands on it. */
 const PELVIS_ABOVE_HIP = 0.3;
 /** A thigh is no thinner than this share of the leg's length, however slight the body: a small man stands on trouser legs and not on wire. */
@@ -216,10 +216,9 @@ const BOOT_OVER_SHIN = 1.3;
 const BOOT_RISE = 0.34;
 const BOOT_LENGTH = 1.7;
 const BOOT_TOE_HEIGHT = 0.5;
-/** Torso wedge: the chest line sits this far up from the middle of the torso (1 is the top), a little wider than the chest, and above it the shoulders slope in to this share of the chest; the waist keeps this share of its depth. */
+/** Torso wedge: the chest line sits this far up from the middle of the torso (1 is the top), a little wider than the chest, and above it the chest draws in to the collar; the waist keeps this share of its depth. */
 const CHEST_LINE = 0.36;
 const CHEST_SWELL = 1.05;
-const SHOULDER_SLOPE = 0.8;
 const WAIST_DEPTH = 0.85;
 /** The legs hang from the lower corners of a pelvis block this share of the shoulders wide and this many thigh widths tall, so the thighs start hip-width apart and run down side by side instead of forking from one point under the belt. */
 const PELVIS_OF_SHOULDERS = 0.8;
@@ -353,8 +352,9 @@ export function buildArticulatedBody(
     allMeshes.push(m);
     return m;
   }
-  /** Torso: a faceted wedge and not a drum. Widest at the chest line, straight-sided from there down to the waist, and sloped in over the shoulders to the neck. */
+  /** Torso: a faceted wedge and not a drum. Widest at the chest line, straight-sided from there down to the waist, and drawn in above it to the collar, so it leaves no flat top around the neck. */
   function wedgeTorso(n: string): Mesh {
+    const collar = collarWidth / Math.max(chestTop, 0.001);
     const m = MeshBuilder.CreateCylinder(n, { height: torsoH * s, diameter: chestTop * s, tessellation: radialSegments, subdivisions: 2 }, scene);
     const positions = m.getVerticesData("position")!;
     const half = torsoH * s * 0.5;
@@ -362,8 +362,8 @@ export function buildArticulatedBody(
     for (let i = 0; i < positions.length; i += 3) {
       const y = positions[i + 1];
       if (y > half * 0.5) {
-        positions[i] *= SHOULDER_SLOPE;
-        positions[i + 2] *= SHOULDER_SLOPE;
+        positions[i] *= collar;
+        positions[i + 2] *= collar;
       } else if (y < -half * 0.5) {
         positions[i] *= waistScale;
         positions[i + 2] *= waistScale * WAIST_DEPTH;
@@ -380,19 +380,19 @@ export function buildArticulatedBody(
     return m;
   }
   /**
-   * Shoulder ridge and the hull under it, one solid with the torso.
-   * Spec, read off tabs_screenshot_04: the trunk is one trapezoid, about two heads from belt to shoulder line. It is widest at the shoulder line and nowhere else; each side
-   * is a single straight plane from there down to the belt, where the trunk is about three quarters of its shoulder width and exactly as wide as the hips under it, so
-   * belt, hips and skirt top are one line with no step or corner; above the shoulder line a gable slopes in to the neck through both sleeve heads.
-   * So the hull's foot is not sized from the waist or from the shoulders: it is the top face of the pelvis block (pelvisW by pelvisD, PELVIS_OF_SHOULDERS of the joint span),
-   * and the hull stands on that block at the belt. The chest stands out of its front as a swell.
+   * The trunk's hull and its collar, one solid with the torso.
+   * Spec, read off tabs_screenshot_04: the trunk is one trapezoid, about two heads from belt to shoulder line. Its widest line is its top edge, at the height of the arm roots,
+   * and the arms hang from its two top corners: nothing of the trunk is wider below them. Each side is a single straight plane from that edge down to the belt, where the trunk
+   * is about three quarters of its top width and exactly as wide as the hips under it, so belt, hips and skirt top are one line with no step or corner. Above the top edge
+   * there is no gable and no shelf: a short collar bevel runs from the edge straight onto a short thick neck and takes the lower part of the neck into itself.
+   * So the hull's foot is the top face of the pelvis block (pelvisW by pelvisD) at the belt, its top edge is the shoulder joints' own line, and the collar is sized from the neck
+   * it closes on, not from the shoulders. The chest stands out of the hull's front as a swell.
    */
   function shoulderYoke(n: string, jointX: number, jointY: number, pelvisW: number, pelvisD: number, beltY: number): Mesh {
     const chestW = chestTop * CHEST_SWELL * 0.96;
     const yokeW = Math.max(chestW, pelvisW, (jointX + upperArmTop * YOKE_REACH) * 2);
     const yokeD = Math.max(torsoD * YOKE_DEPTH, upperArmTop * 1.1);
-    const yokeY = Math.max(torsoH * 0.5, jointY - upperArmTop * YOKE_DROP);
-    const neckW = Math.max(yokeW * YOKE_NECK, chestTop * SHOULDER_SLOPE * 0.9);
+    const yokeY = Math.max(torsoH * 0.5, jointY);
     const frustum = (part: string, y0: number, y1: number, w0: number, d0: number, w1: number, d1: number): Mesh => {
       const box = MeshBuilder.CreateBox(`${n}_${part}`, { width: w1 * s, height: (y1 - y0) * s, depth: d1 * s }, scene);
       const positions = box.getVerticesData("position")!;
@@ -407,7 +407,7 @@ export function buildArticulatedBody(
       return box;
     };
     const slab = frustum("hull", beltY, yokeY, pelvisW, pelvisD, yokeW, Math.max(yokeD, pelvisD));
-    const slope = frustum("slope", yokeY, torsoH * 1.02, yokeW, yokeD, neckW, yokeD * 0.75);
+    const slope = frustum("collar", yokeY, torsoH + NECK_LENGTH * COLLAR_RISE, yokeW, Math.max(yokeD, pelvisD), collarWidth, Math.min(yokeD, collarWidth));
     const m = Mesh.MergeMeshes([slab, slope], true)!;
     m.name = n;
     m.material = bodyMat;
@@ -575,6 +575,9 @@ export function buildArticulatedBody(
   const headWidth = 0.192 * headUnit * (p.headWidth ?? 1.0);
   const headDepth = 0.176 * headUnit * (p.headDepth ?? 1.0);
   const headBase = Math.max(headHeight, headWidth, headDepth);
+
+  // The collar closes on the neck post: sized from the neck's foot, not from the shoulders
+  const collarWidth = headWidth * 0.62 * COLLAR_OF_NECK;
 
   // ─── Hip (root pivot for body) ───
   const hip = joint(`${name}_hip`, root);
