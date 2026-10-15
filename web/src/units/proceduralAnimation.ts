@@ -145,6 +145,8 @@ const REAR_CLUB_REST = 0.85;
 const PRESS_BLOW_ARM = 1.7;
 // The club's arc in that raised fist when landed: forward and a little down, across the board top or the head, not hanging to the ground.
 const PRESS_BLOW_CLUB = 1.2;
+// Where in a heavy swing's drop (0 cocked, 1 bottomed out) the club passes through the head of a man at shoulder contact: the blow lands on him there (see heavyBlowLandsIn).
+const BLOW_LAND_E = 0.3;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -187,6 +189,24 @@ export class ProceduralAnimator {
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
     this._attackMotion = motion ?? this.defaultAttackMotion;
+  }
+
+  /**
+   * A heavy swing just started: seconds until its club comes down through the head of the man in front (BLOW_LAND_E of the drop in _animateHeavySwing), so the
+   * blow lands on him then and not while the club is still going up. 0 when no humanoid heavy swing is running.
+   */
+  heavyBlowLandsIn(): number {
+    if (this._state !== AnimState.Attacking || this._attackMotion !== "heavy_swing" || this.attackStyle === "mammoth") return 0;
+    const commit = this._resolveReleasePoint(0.45);
+    const drop = commit + (1 - commit) * 0.45;
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 16; i++) {
+      const s = (lo + hi) / 2;
+      if (s * s * (3 - 2 * s) * 0.4 + s * s * 0.6 < BLOW_LAND_E) lo = s;
+      else hi = s;
+    }
+    return Math.max(0.001, (commit + (drop - commit) * hi) * this._attackDuration - this._attackTimer);
   }
 
   /** Brief flinch on hit — snaps torso/head back then recovers. */
