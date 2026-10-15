@@ -1413,6 +1413,17 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       focus: "The sacred elephant should read as a white elephant in gold trappings with a blanket, a throne and an archer riding it.",
     },
   ),
+  // The legacy lineup buries the chariot in its back ranks and shows it end-on: horse, wheels, car and driver are read here, three-quarter side and a little above
+  gallery_legacy_chariot: makeGalleryScenario(
+    "gallery_legacy_chariot",
+    "Legacy chariot at three-quarter view.",
+    ["legacy.chariot"],
+    {
+      columns: 1,
+      cameraOverride: { alpha: -0.55, beta: Math.PI / 2.3, radius: 6.5, target: { x: 0, y: 1.1, z: 0 } },
+      focus: "The chariot should read as a horse drawing a two-wheeled car on shafts, with a driver standing in the car.",
+    },
+  ),
   gallery_state_reads: makeGalleryScenario(
     "gallery_state_reads",
     "Attack and ability state-read validation gallery.",

@@ -308,6 +308,8 @@ async function main() {
         ["lineup_secret_giants", "gallery_secret_giants"],
         // The good lineup crops the sacred elephant: its trappings and rider are read here
         ["closeup_sacred_elephant", "gallery_sacred_elephant"],
+        // The legacy lineup hides the chariot end-on in its back ranks: horse, wheels, car and driver are read here
+        ["closeup_legacy_chariot", "gallery_legacy_chariot"],
         ["closeup_state_reads", "gallery_state_reads"],
         ["closeup_weapon_reads", "gallery_weapon_reads"],
         ["closeup_pair_zeus_thor", "gallery_pair_ancient_zeus_vs_legacy_thor"],
