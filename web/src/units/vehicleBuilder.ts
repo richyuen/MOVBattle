@@ -1578,47 +1578,129 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   };
 }
 
+/*
+ * The sacred elephant (261; units/good.sacred_elephant). Spec, read off the reference: a pale grey-white elephant, the same smooth faceted grey on body,
+ * ears, legs and the long hanging trunk (no dark fur, no mop, crest or shoulder hump, no war paint); ivory tusks with a broad gold ring a third of the way along each;
+ * a gold headplate on the brow, a pointed shield shape about half the skull wide, set with blue gems, with a gold strap running back from it over the
+ * crown; a team-blue blanket with a gold hem draped over the back behind the shoulders, its sides hanging a third of the way down the flanks; and on the
+ * shoulders a throne, a gold-framed team-coloured high back about as tall as the rider sitting before it, with an archer seated on it drawing a bow.
+ * So: buildMammoth in an ELEPHANT_HIDE, its shaggy pieces repainted in the hide and its crest, mop and paint taken away; then the trappings below,
+ * every one in torso or neck space (the rig's own 1.8 scale), the rider counter-scaled so he stays a man's size on it.
+ */
+const ELEPHANT_HIDE = new Color3(0.74, 0.75, 0.76);
+const ELEPHANT_GOLD = new Color3(0.95, 0.66, 0.16);
+const ELEPHANT_GEM = new Color3(0.16, 0.26, 0.85);
+const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "browPaint", "paintDaub", "hump"]);
+const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
+const TUSK_RING_PIECE = 4;
+const BLANKET_RADII = new Vector3(0.92, 0.8, 0.74);
+const BLANKET_AT = new Vector3(0, 0.16, -0.46);
+const THRONE_SEAT = new Vector3(0, 0.9, 0.12);
+const THRONE_BACK_TALL = 0.62;
+const RIDER_SCALE = 2.4;
 function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
-  const body = buildMammoth(scene, color, new Color3(0.46, 0.44, 0.42), 0.12);
-  const shrineWood = makeMat(scene, brighten(color, 0.22));
-  const shrineGold = makeMat(scene, brighten(color, 0.34));
-  const cloth = makeMat(scene, brighten(color, 0.42));
+  const body = buildMammoth(scene, color, ELEPHANT_HIDE, 0);
+  const hide = body.torsoMesh.material;
+  const gold = getMaterialFactory().get("cloth", ELEPHANT_GOLD, { emissive: ELEPHANT_GOLD.scale(0.22) });
+  const gem = getMaterialFactory().get("cloth", ELEPHANT_GEM, { emissive: ELEPHANT_GEM.scale(0.3) });
+  const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12) });
 
-  const platform = MeshBuilder.CreateBox("sacredElephantPlatform", { width: 0.9, height: 0.12, depth: 0.68 }, scene);
-  platform.parent = body.torso;
-  platform.position.set(0, 0.62, -0.02);
-  platform.material = shrineWood;
-  body.allMeshes.push(platform);
+  // Shave the mammoth: no indigo crest or mop, no daubs; every shaggy piece goes the smooth hide
+  body.allMeshes = body.allMeshes.filter((mesh) => {
+    if (ELEPHANT_SHAVED.has(mesh.name)) { mesh.dispose(); return false; }
+    if (ELEPHANT_HIDE_PIECES.has(mesh.name)) mesh.material = hide;
+    return true;
+  });
+  const add = (mesh: Mesh, parent: TransformNode, material: Mesh["material"]): Mesh => {
+    mesh.parent = parent;
+    mesh.material = material;
+    mesh.convertToFlatShadedMesh();
+    body.allMeshes.push(mesh);
+    return mesh;
+  };
 
-  for (const xOff of [-0.32, 0.32]) {
-    for (const zOff of [-0.2, 0.2]) {
-      const post = MeshBuilder.CreateCylinder("sacredElephantPost", { height: 0.42, diameter: 0.06, tessellation: 10 }, scene);
-      post.parent = body.torso;
-      post.position.set(xOff, 0.86, zOff);
-      post.material = shrineGold;
-      body.allMeshes.push(post);
-    }
+  // Tusks: ivory to the tip, a broad gold ring round each a third of the way out
+  const tusks = body.allMeshes.filter((mesh) => mesh.name === "tusk");
+  const perSide = tusks.length / 2;
+  for (const [i, tusk] of tusks.entries()) {
+    if (i % perSide === perSide - 1 || i % perSide === perSide - 2) tusk.material = tusks[0].material;
+    if (i % perSide !== TUSK_RING_PIECE) continue;
+    const ring = add(MeshBuilder.CreateCylinder("tuskRing", { height: 0.13, diameter: 0.33, tessellation: 8 }, scene), body.neck, gold);
+    ring.position.copyFrom(tusk.position);
+    ring.rotation.copyFrom(tusk.rotation);
   }
 
-  const canopy = MeshBuilder.CreateCylinder("sacredElephantCanopy", { height: 0.24, diameterTop: 0.42, diameterBottom: 1.02, tessellation: 12 }, scene);
-  canopy.parent = body.torso;
-  canopy.position.set(0, 1.18, -0.02);
-  canopy.material = cloth;
-  body.allMeshes.push(canopy);
+  // Headplate: a pointed gold shield on the brow, point down between the eyes, three blue gems, and a strap back over the crown
+  const plate = add(MeshBuilder.CreateCylinder("elephantHeadplate", { height: 0.06, diameter: 0.56, tessellation: 4 }, scene), body.neck, gold);
+  plate.scaling.set(0.8, 1, 1.25);
+  plate.position.set(0, 0.42, 0.6);
+  plate.rotation.set(Math.PI / 2 - 0.75, 0, 0);
+  for (const [x, y, z, d] of [[0, 0.5, 0.65, 0.12], [-0.12, 0.4, 0.68, 0.08], [0.12, 0.4, 0.68, 0.08], [0, 0.3, 0.72, 0.08]]) {
+    const stone = add(MeshBuilder.CreateSphere("elephantGem", { diameter: d, segments: 2 }, scene), body.neck, gem);
+    stone.position.set(x, y, z);
+  }
+  const strap = add(MeshBuilder.CreateTorus("elephantCrownStrap", { diameter: 1.16, thickness: 0.07, tessellation: 14 }, scene), body.neck, gold);
+  strap.position.set(0, 0.12, 0.22);
+  strap.rotation.z = Math.PI / 2;
+  strap.scaling.set(1, 1, 0.92);
 
-  const halo = MeshBuilder.CreateTorus("sacredElephantHalo", { diameter: 0.84, thickness: 0.04, tessellation: 24 }, scene);
-  halo.parent = body.torso;
-  halo.position.set(0, 1.36, -0.02);
-  halo.rotation.x = Math.PI / 2;
-  halo.material = shrineGold;
-  body.allMeshes.push(halo);
+  // Blanket: a half shell over the back (a cylinder's arc runs on its negative z, so it is turned +90 degrees to lie over the top) behind the shoulders, team cloth with a gold hem along each flank and a gold band across each end
+  const blanket = add(MeshBuilder.CreateCylinder("elephantBlanket", { height: 0.9, diameter: 2, arc: 0.5, tessellation: 18, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene), body.torso, cloth);
+  blanket.rotation.x = Math.PI / 2;
+  blanket.scaling.copyFrom(BLANKET_RADII);
+  blanket.position.copyFrom(BLANKET_AT);
+  for (const end of [-1, 1]) {
+    const band = add(MeshBuilder.CreateCylinder("elephantBlanketBand", { height: 0.08, diameter: 2.04, arc: 0.5, tessellation: 18, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene), body.torso, gold);
+    band.rotation.x = Math.PI / 2;
+    band.scaling.copyFrom(BLANKET_RADII);
+    band.position.set(BLANKET_AT.x, BLANKET_AT.y, BLANKET_AT.z + end * 0.43);
+    const hem = add(MeshBuilder.CreateBox("elephantBlanketHem", { width: 0.06, height: 0.1, depth: 0.92 }, scene), body.torso, gold);
+    hem.position.set(end * BLANKET_RADII.x, BLANKET_AT.y + 0.03, BLANKET_AT.z);
+    // A tassel off each hem's back corner
+    const tassel = add(MeshBuilder.CreateCylinder("elephantTassel", { height: 0.18, diameterTop: 0.03, diameterBottom: 0.1, tessellation: 5 }, scene), body.torso, cloth);
+    tassel.position.set(end * BLANKET_RADII.x, BLANKET_AT.y - 0.1, BLANKET_AT.z - 0.4);
+  }
 
-  const frontalCloth = MeshBuilder.CreatePlane("sacredElephantFrontalCloth", { width: 0.64, height: 0.82 }, scene);
-  frontalCloth.parent = body.neck;
-  frontalCloth.position.set(0, -0.06, 0.22);
-  frontalCloth.rotation.x = -0.18;
-  frontalCloth.material = cloth;
-  body.allMeshes.push(frontalCloth);
+  // Throne on the shoulders: a gold seat, a team-cloth high back in a gold frame with a round gold crest, gold arms
+  const seat = add(MeshBuilder.CreateBox("elephantThroneSeat", { width: 0.42, height: 0.08, depth: 0.36 }, scene), body.torso, gold);
+  seat.position.copyFrom(THRONE_SEAT);
+  const back = add(MeshBuilder.CreateBox("elephantThroneBack", { width: 0.36, height: THRONE_BACK_TALL, depth: 0.05 }, scene), body.torso, cloth);
+  back.position.set(0, THRONE_SEAT.y + THRONE_BACK_TALL / 2, THRONE_SEAT.z - 0.19);
+  back.rotation.x = -0.12;
+  const frame = add(MeshBuilder.CreateBox("elephantThroneFrame", { width: 0.44, height: THRONE_BACK_TALL + 0.06, depth: 0.04 }, scene), body.torso, gold);
+  frame.position.set(0, back.position.y, back.position.z - 0.035);
+  frame.rotation.x = back.rotation.x;
+  const crown = add(MeshBuilder.CreateCylinder("elephantThroneCrest", { height: 0.04, diameter: 0.3, tessellation: 10 }, scene), body.torso, gold);
+  crown.rotation.x = Math.PI / 2 + back.rotation.x;
+  crown.position.set(0, THRONE_SEAT.y + THRONE_BACK_TALL + 0.06, back.position.z - 0.06);
+  for (const side of [-1, 1]) {
+    const arm = add(MeshBuilder.CreateBox("elephantThroneArm", { width: 0.05, height: 0.16, depth: 0.32 }, scene), body.torso, gold);
+    arm.position.set(side * 0.21, THRONE_SEAT.y + 0.1, THRONE_SEAT.z);
+  }
+
+  // The archer: a seated man on the throne, thighs level, shins down, bow held out to the front in his left hand
+  const saddle = new TransformNode("elephantRiderSeat", scene);
+  saddle.parent = body.torso;
+  saddle.scaling.setAll(RIDER_SCALE);
+  let hipY = 0;
+  addOperator(scene, saddle, body.allMeshes, 0, 0, 0, color, (rider) => {
+    hipY = rider.hip.position.y;
+    rider.leftHip.rotation.x = -1.45;
+    rider.rightHip.rotation.x = -1.45;
+    rider.leftKnee.rotation.x = 1.4;
+    rider.rightKnee.rotation.x = 1.4;
+    rider.leftShoulder.rotation.x = -1.45;
+    rider.rightShoulder.rotation.x = -1.2;
+    rider.rightElbow.rotation.x = -0.9;
+    rider.neck.rotation.x = 0.1;
+    const limb = Array.from({ length: 9 }, (_, i) => { const a = (i / 8 - 0.5) * 2.2; return new Vector3(0, Math.sin(a) * 0.26, Math.cos(a) * 0.26 - 0.16); });
+    const bow = MeshBuilder.CreateTube("elephantRiderBow", { path: limb, radius: 0.016, tessellation: 5 }, scene);
+    bow.parent = rider.leftHand;
+    bow.material = gold;
+    rider.allMeshes.push(bow);
+  });
+  // Seat the man by his hips on the throne seat
+  saddle.position.set(0, THRONE_SEAT.y + 0.04 - hipY * RIDER_SCALE, THRONE_SEAT.z - 0.02);
 
   return body;
 }

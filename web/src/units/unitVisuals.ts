@@ -710,7 +710,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.sacred_elephant": vis(
-    { scale: 2.56, bulk: 1.98, headSize: 1.42, legLength: 0.84 }, "none", "none", "none", "elephant_shrine", "#F3D88C", undefined, {
+    { scale: 2.56, bulk: 1.98, headSize: 1.42, legLength: 0.84 }, "none", "none", "none", "none", "#F3D88C", undefined, {
       posePreset: "vehicle",
       materialPreset: "good_gold",
       bodyDetailLevel: "hero",
