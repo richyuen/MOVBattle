@@ -1402,6 +1402,17 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       focus: "Each secret giant should read as its own character (bones, samurai, woodsman with a tree, ice) at lineup distance.",
     },
   ),
+  // The good lineup crops the sacred elephant at its back: its trappings, throne and rider are read here, three-quarter front and a little above
+  gallery_sacred_elephant: makeGalleryScenario(
+    "gallery_sacred_elephant",
+    "Sacred elephant at three-quarter view.",
+    ["good.sacred_elephant"],
+    {
+      columns: 1,
+      cameraOverride: { alpha: -0.75, beta: Math.PI / 2.6, radius: 15, target: { x: 0, y: 3.2, z: 0 } },
+      focus: "The sacred elephant should read as a white elephant in gold trappings with a blanket, a throne and an archer riding it.",
+    },
+  ),
   gallery_state_reads: makeGalleryScenario(
     "gallery_state_reads",
     "Attack and ability state-read validation gallery.",
