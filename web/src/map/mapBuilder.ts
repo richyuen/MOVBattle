@@ -1205,7 +1205,7 @@ interface CampaignMapTheme {
   hazards: HazardRegion[];
   props: CampaignPropSpec[];
   /** The ring trees' own palette (canopy, upper canopy, trunk) in place of the campaign green, and the share of ring trees stood bare and dead (see deadenRing) */
-  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number };
+  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number };
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -1271,7 +1271,89 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
     crown.emissiveColor = mat.diffuseColor.scale(0.62);
   }
   paintFarProps(scene, theme.grass.scale(0.85));
-  if (theme.ring) deadenRing(scene, theme.ring.bare, theme.ring.trunk);
+  if (theme.ring && theme.ring.bare > 0) deadenRing(scene, theme.ring.bare, theme.ring.trunk);
+  if (theme.ring?.blossom) blossomRing(scene, theme.ring.blossom);
+}
+
+/*
+ * A cherry ring (dynasty; maps/dynasty.png, units/dynasty.dragon: the island's trees are pale pink, never sage). Spec read off the reference: two kinds stand
+ * mixed. Tall ones are a thin stalk with one big pink ball (the base lollipops, recoloured by the theme). The rest are cherries: a crooked tan trunk forking at
+ * its top into CHERRY_LIMBS[0]-[1] limbs that reach out and up at CHERRY_TILT off upright, CHERRY_LIMB of the tree's height long, each carrying a cluster of
+ * two or three faceted puffs, plus one cluster on the trunk top, so the crown is 3-5 separate lumps with sky between them, wider than tall (puffs squashed
+ * CHERRY_SQUASH), each lump CHERRY_PUFF of the height across. A seeded share (blossom) of the trees takes this form; their single ball or broadleaf is hidden.
+ * The puffs wear the leavesCrown / darkLeavesCrown materials so the canopy haze and the theme's crown light reach them.
+ */
+const CHERRY_LIMBS = [2, 4];
+const CHERRY_TILT = [0.6, 1.05];
+const CHERRY_LIMB = [0.32, 0.5];
+const CHERRY_PUFF = [0.16, 0.24];
+const CHERRY_SQUASH = 0.72;
+function blossomRing(scene: Scene, share: number): void {
+  const light = scene.getMaterialByName("leavesCrown") as StandardMaterial | null;
+  const dark = scene.getMaterialByName("darkLeavesCrown") as StandardMaterial | null;
+  if (!light || !dark) return;
+  const trunks = new Set<Mesh>();
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "canopy" && mesh.parent instanceof Mesh && mesh.parent.name === "trunk") trunks.add(mesh.parent);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const shadows = sunShadows(scene);
+  let k = 0;
+  for (const trunk of trunks) {
+    k++;
+    const r = (n: number) => Math.abs((Math.sin(k * 17.137 + n * 51.71) * 24634.6345) % 1);
+    if (r(1) > share) continue;
+    for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.setEnabled(false);
+    const info = trunk.getBoundingInfo().boundingBox;
+    const trunkLong = info.maximum.y - info.minimum.y;
+    const height = trunkLong / 0.6; // the stalk is 0.6 of the tree
+    const top = new Vector3(0, trunkLong / 2, 0);
+    // The trunk itself kinks: lean it further off upright so it reads crooked, not a pole
+    trunk.rotation.x += (r(2) - 0.5) * 0.35;
+    trunk.rotation.z += (r(3) - 0.5) * 0.35;
+    const puff = (at: Vector3, radius: number, n: number): void => {
+      const ball = MeshBuilder.CreateIcoSphere("blossom", { radius, subdivisions: 1 }, scene);
+      ball.parent = trunk;
+      ball.position = at;
+      ball.scaling.y = CHERRY_SQUASH;
+      ball.rotation.y = r(n) * Math.PI;
+      ball.material = r(n + 1) > 0.3 ? light : dark;
+      ball.receiveShadows = false;
+      ball.isPickable = false;
+      ball.convertToFlatShadedMesh();
+      glow?.addExcludedMesh(ball);
+      shadows?.addShadowCaster(ball, false);
+    };
+    const cluster = (at: Vector3, n: number): void => {
+      const big = height * (CHERRY_PUFF[0] + r(n) * (CHERRY_PUFF[1] - CHERRY_PUFF[0]));
+      puff(at, big, n + 1);
+      const lumps = 1 + Math.round(r(n + 2));
+      for (let j = 0; j < lumps; j++) {
+        const yaw = r(n + 3 + j) * Math.PI * 2;
+        puff(at.add(new Vector3(Math.cos(yaw) * big * 0.85, -big * 0.2 + r(n + 5 + j) * big * 0.4, Math.sin(yaw) * big * 0.85)), big * (0.55 + r(n + 7 + j) * 0.2), n + 9 + j);
+      }
+    };
+    const limbs = CHERRY_LIMBS[0] + Math.round(r(4) * (CHERRY_LIMBS[1] - CHERRY_LIMBS[0]));
+    for (let i = 0; i < limbs; i++) {
+      const yaw = (i / limbs) * Math.PI * 2 + r(10 + i) * 1.1;
+      const tilt = CHERRY_TILT[0] + r(20 + i) * (CHERRY_TILT[1] - CHERRY_TILT[0]);
+      const length = height * (CHERRY_LIMB[0] + r(30 + i) * (CHERRY_LIMB[1] - CHERRY_LIMB[0]));
+      const dir = new Vector3(Math.sin(tilt) * Math.sin(yaw), Math.cos(tilt), Math.sin(tilt) * Math.cos(yaw));
+      const from = top.add(new Vector3(0, -trunkLong * 0.18 * (i % 2), 0));
+      const rad = height * 0.03;
+      const limb = MeshBuilder.CreateCylinder("cherryLimb", { height: length, diameterTop: rad, diameterBottom: rad * 1.8, tessellation: 5 }, scene);
+      limb.parent = trunk;
+      limb.position = from.add(dir.scale(length / 2));
+      const axis = Vector3.Cross(Vector3.Up(), dir);
+      if (axis.lengthSquared() > 1e-6) limb.rotationQuaternion = Quaternion.RotationAxis(axis.normalize(), Math.acos(Vector3.Dot(Vector3.Up(), dir)));
+      limb.material = trunk.material;
+      limb.isPickable = false;
+      glow?.addExcludedMesh(limb);
+      shadows?.addShadowCaster(limb, false);
+      cluster(from.add(dir.scale(length)), 40 + i * 20);
+    }
+    cluster(top.add(new Vector3(0, height * 0.08, 0)), 200);
+  }
 }
 
 /*
@@ -1894,6 +1976,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       cylinderHazard("pit", 0, 0, 5),
     ],
     accent: new Color3(0.72, 0.18, 0.18),
+    // Pale pink blossom on tan wood, most of the ring stood as forked cherries (see blossomRing)
+    ring: { leaves: new Color3(0.9, 0.58, 0.84), darkLeaves: new Color3(0.76, 0.46, 0.74), trunk: new Color3(0.6, 0.47, 0.32), bare: 0, blossom: 0.65 },
     props: [
       { kind: "lantern", x: -20, z: -18, scale: 1.0 },
       { kind: "lantern", x: -20, z: 18, scale: 1.0 },
