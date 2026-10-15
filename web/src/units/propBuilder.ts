@@ -1567,15 +1567,33 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return tube;
     }
     case "scythe": {
-      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.8 * s, diameter: 0.025 * s }, scene);
-      shaft.material = mat(scene, new Color3(0.45, 0.3, 0.15));
-      addGripWraps(scene, shaft, [-0.18 * s, -0.08 * s, 0.02 * s], 0.03 * s);
-      const blade = MeshBuilder.CreateBox("scyblade", { width: 0.2 * s, height: 0.04 * s, depth: 0.005 * s }, scene);
-      blade.position.y = 0.38 * s; blade.position.x = 0.08 * s;
-      blade.rotation.z = -0.3;
-      blade.parent = shaft;
-      blade.material = mat(scene, new Color3(0.7, 0.7, 0.75));
-      shaft.position.y = 0.2 * s;
+      // A war scythe (251; units/spooky.reaper): the snath taller than the man, a collar at its head, and a long blade sweeping out from it and curving
+      // down, broad at the heel and narrowing to a point, about SCYTHE_BLADE of the snath long, built from SCYTHE_SEGS flat faceted segments along the arc
+      const SCYTHE_SNATH = 1.25, SCYTHE_BLADE = 0.62, SCYTHE_SEGS = 5, SCYTHE_CURL = 1.05;
+      const snathLong = SCYTHE_SNATH * s;
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: snathLong, diameter: 0.03 * s, tessellation: 6 }, scene);
+      shaft.material = mat(scene, new Color3(0.32, 0.22, 0.14));
+      addGripWraps(scene, shaft, [-0.18 * s, -0.08 * s, 0.02 * s], 0.035 * s);
+      const steel = mat(scene, new Color3(0.72, 0.73, 0.78), 0.05);
+      const collar = MeshBuilder.CreateCylinder("scycollar", { height: 0.06 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
+      collar.position.y = snathLong * 0.46;
+      collar.material = steel;
+      collar.parent = shaft;
+      const segLong = (SCYTHE_BLADE * snathLong) / SCYTHE_SEGS;
+      let x = 0.01 * s, y = snathLong * 0.48, heading = 0.12;
+      for (let i = 0; i < SCYTHE_SEGS; i++) {
+        const k = i / (SCYTHE_SEGS - 1);
+        const wide = (0.1 - 0.075 * k) * s;
+        const seg = MeshBuilder.CreateBox("scyblade", { width: segLong * 1.08, height: wide, depth: 0.012 * s }, scene);
+        seg.position.set(x + Math.cos(heading) * segLong * 0.5, y + Math.sin(heading) * segLong * 0.5 - wide * 0.4, 0);
+        seg.rotation.z = heading;
+        seg.material = steel;
+        seg.parent = shaft;
+        x += Math.cos(heading) * segLong;
+        y += Math.sin(heading) * segLong;
+        heading -= SCYTHE_CURL / SCYTHE_SEGS;
+      }
+      shaft.position.y = snathLong * 0.32;
       return shaft;
     }
     case "pitchfork": {

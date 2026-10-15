@@ -128,6 +128,23 @@ const SKELETON_SKIRT = 0.7;
 const SKELETON_HEM = 1.45;
 const SKELETON_TATTERS = 6;
 const SKELETON_CLOTH = 0.72;
+/*
+ * The reaper (251; units/spooky.reaper): a skeleton in a hooded robe. Read off the reference: the cowl is deep and drawn down over the brow, about 1.7 heads
+ * across, the bone skull and its bead eyes looking out of the opening; the robe hangs from the shoulders, wider than the chest, in wide sleeves to the wrist,
+ * and falls in a ragged hem to mid-shin, the bone shins and feet showing below it; the cloth is near-black maroon, tinted toward the team.
+ *   REAPER_HOOD heads across, REAPER_HOOD_OPEN of its round open at the face, REAPER_HOOD_FORWARD heads set forward (negative: back); robe REAPER_ROBE chest widths at the hem
+ *   of the bodice, skirt REAPER_SKIRT thighs long flaring to REAPER_HEM pelvis widths, REAPER_TATTERS rags off the hem; sleeves REAPER_SLEEVE thicker than an arm.
+ */
+const REAPER_HOOD = 1.7;
+const REAPER_HOOD_OPEN = 0.4;
+const REAPER_HOOD_FORWARD = -0.06;
+const REAPER_ROBE = 1.3;
+const REAPER_SKIRT = 1.55;
+const REAPER_HEM = 2.1;
+const REAPER_TATTERS = 7;
+const REAPER_SLEEVE = 1.35;
+const REAPER_CLOTH = new Color3(0.3, 0.06, 0.09);
+const REAPER_TEAM = 0.4;
 
 // Clothes are solids hung on the body, not a colour painted on it. The lower half of a garment is a faceted bell hung from the waist over the pelvis and the tops of
 // the thighs, standing off the legs at its hem: it rides the hips and not the legs, so a stride swings the knees out from under it. length is in thighs, flare is the
@@ -295,6 +312,9 @@ export class UnitFactory {
 
     if (SKELETON_UNITS.has(definition.id) && !shouldUseVehicleBody) {
       propMeshes.push(...dressSkeleton(this._scene, body, teamColor));
+    }
+    if (definition.id === "spooky.reaper" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressReaper(this._scene, body, teamColor));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -501,6 +521,93 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
       tatter.position.set(Math.sin(a) * hem * 0.42, -long / 2 - drop / 2, Math.cos(a) * hem * 0.42);
       tatter.rotation.y = a;
       tatter.material = cloth;
+      tatter.parent = skirt;
+      added.push(tatter);
+    }
+  }
+  return added;
+}
+
+/** Dresses the reaper as a robed skeleton (see REAPER_*): bone skull, hands, shins and feet; a deep forward cowl; a robe with wide sleeves and a ragged hem. */
+function dressReaper(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const bone = getMaterialFactory().getCloth(SKELETON_BONE);
+  const robe = getMaterialFactory().getCloth(Color3.Lerp(REAPER_CLOTH, teamColor.scale(0.45), REAPER_TEAM));
+  const flesh = new Set<Material | null>([body.bodyMaterial, body.skinMaterial]);
+  // Everything the body wore goes robe, hands and feet go bone
+  for (const mesh of [...body.allMeshes, ...body.leftElbow.getChildMeshes(false), ...body.rightElbow.getChildMeshes(false), ...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr](Hand|HandM|FootM)$/.test(mesh.name)) mesh.material = bone;
+    else if (flesh.has(mesh.material)) mesh.material = robe;
+  }
+  // Wide sleeves to the wrist; bone legs, thin as a skeleton's, under the skirt
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    arm.scaling.x *= REAPER_SLEEVE;
+    arm.scaling.z *= REAPER_SLEEVE;
+    arm.material = robe;
+  }
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    leg.scaling.x *= SKELETON_LIMB;
+    leg.scaling.z *= SKELETON_LIMB;
+    leg.material = bone;
+  }
+  // Bodice: the robe round the chest from the shoulders to the waist, wider than the chest
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const bodice = MeshBuilder.CreateCylinder(`${chest.name}_robe`, { height: H * 1.04, diameterTop: W * 1.08, diameterBottom: W * REAPER_ROBE, tessellation: 8 }, scene);
+  bodice.scaling.z = (D * 1.25) / W;
+  bodice.position.set(0, chest.position.y, 0);
+  bodice.material = robe;
+  bodice.convertToFlatShadedMesh();
+  bodice.parent = body.torso;
+  added.push(bodice);
+  // Skull in the cowl: the head goes bone, the cowl shell round it opens wide to the face (the giant stands side-on in the lineup, so the bone face must clear the cowl in profile), its crown pulled up into a peak
+  body.headMesh.material = bone;
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const cowl = MeshBuilder.CreateSphere(`${body.headMesh.name}_cowl`, { diameter: 1, segments: 10, arc: 1 - REAPER_HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  cowl.scaling.set(headSize * REAPER_HOOD, headSize * REAPER_HOOD * 1.12, headSize * REAPER_HOOD * 1.05);
+  cowl.rotation.y = Math.PI / 2 + Math.PI * REAPER_HOOD_OPEN;
+  cowl.position.set(0, headSize * 0.08, headSize * REAPER_HOOD_FORWARD);
+  cowl.material = robe;
+  cowl.convertToFlatShadedMesh();
+  cowl.parent = body.headMesh;
+  added.push(cowl);
+  const peak = MeshBuilder.CreateCylinder(`${body.headMesh.name}_cowlPeak`, { height: headSize * 0.6, diameterTop: 0, diameterBottom: headSize * 0.9, tessellation: 7 }, scene);
+  peak.position.set(0, headSize * 0.78, -headSize * 0.12);
+  peak.rotation.x = -0.55;
+  peak.material = robe;
+  peak.convertToFlatShadedMesh();
+  peak.parent = body.headMesh;
+  added.push(peak);
+  const mantle = MeshBuilder.CreateCylinder(`${body.headMesh.name}_mantle`, { height: headSize * 0.5, diameterTop: headSize * 1.1, diameterBottom: W * 1.25, tessellation: 8 }, scene);
+  mantle.position.set(0, chest.position.y + H * 0.48, -D * 0.05);
+  mantle.scaling.z = (D * 1.35) / (W * 1.25);
+  mantle.material = robe;
+  mantle.convertToFlatShadedMesh();
+  mantle.parent = body.torso;
+  added.push(mantle);
+  // Skirt from the waist to mid-shin, flaring, the hem torn into rags
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  if (pelvis) {
+    const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
+    const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y;
+    const long = thigh * REAPER_SKIRT;
+    const top = Math.max(pExt.x * 2.3, W * REAPER_ROBE * 0.95), hem = pExt.x * 2 * REAPER_HEM;
+    const skirt = MeshBuilder.CreateCylinder(`${pelvis.name}_robeSkirt`, { height: long, diameterTop: top, diameterBottom: Math.max(hem, top * 1.15), tessellation: 9 }, scene);
+    skirt.scaling.z = (pExt.z * 2.6) / top + 0.25;
+    skirt.position.y = pelvis.position.y + pExt.y * 1.5 - long / 2;
+    skirt.material = robe;
+    skirt.convertToFlatShadedMesh();
+    skirt.parent = body.hip;
+    added.push(skirt);
+    const rim = Math.max(hem, top * 1.15);
+    for (let i = 0; i < REAPER_TATTERS; i++) {
+      const a = ((i + 0.5) / REAPER_TATTERS) * Math.PI * 2;
+      const drop = long * (0.18 + 0.14 * ((i * 5) % 3) / 2);
+      const tatter = MeshBuilder.CreateCylinder(`${pelvis.name}_robeRag`, { height: drop, diameterTop: rim * 0.34, diameterBottom: 0, tessellation: 3 }, scene);
+      tatter.position.set(Math.sin(a) * rim * 0.4, -long / 2 - drop / 2, Math.cos(a) * rim * 0.4);
+      tatter.rotation.y = a;
+      tatter.material = robe;
       tatter.parent = skirt;
       added.push(tatter);
     }

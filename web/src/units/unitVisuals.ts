@@ -830,7 +830,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["crow_swarm"], "ability-active": ["crow_swarm"] },
       });
     case "iconic_reaper":
-      return vis({ scale: 1.92, bulk: 1.5, headSize: 1.12, armLength: 1.18 }, "scythe", "hood", "none", "cape", "#6f6d86", undefined, {
+      return vis({ scale: 1.92, bulk: 1.5, headSize: 1.12, armLength: 1.18 }, "scythe", "none", "none", "cape", "#3a1420", undefined, {
         posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "reaper_aura", fxPreset: "spectral",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["reaper_trail"], attacking: ["reaper_trail", "reaper_arc"], "ability-active": ["reaper_trail", "reaper_arc"] },
