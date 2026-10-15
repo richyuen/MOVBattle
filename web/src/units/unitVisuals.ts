@@ -572,9 +572,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "wild_west.cactus": vis(
-    { scale: 1.26, bulk: 1.34, headSize: 0.94, armLength: 0.88, legLength: 0.84 }, "none", "none", "none", "cactus_body", "#5E9B4C", undefined, {
+    { scale: 1.26, bulk: 1.34, headSize: 0.94, armLength: 0.88, legLength: 0.84 }, "none", "none", "none", "none", "#5E9B4C", undefined, {
+      // The suit is dressed on in unitFactory (dressCactus); the skin under it stays team colour
       posePreset: "beast",
-      materialPreset: "secret_nature",
     },
   ),
   "wild_west.gunslinger": vis(

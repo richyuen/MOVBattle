@@ -177,6 +177,26 @@ const PAINTER_SHOE = new Color3(0.66, 0.22, 0.12);
 const PAINTER_RUFF_COLOR = new Color3(1.0, 0.86, 0.55);
 const PAINTER_RUFF = 1.25;
 const PAINTER_RUFF_TIERS = 2;
+/*
+ * The cactus (256; units/wild_west.cactus): a man in a full-length cactus suit, not a man holding a green plank. Read off the reference: one dark green robe from
+ * the shoulders to the ankle, flaring a little to the hem, with green sleeves to the wrist; a squarish green hood over the head with a window cut on the face so the
+ * team-skin face and bead eyes show; team-skin shins and dark shoes under the hem; the whole suit studded with fat brown-maroon four-sided spines (about 40 seen
+ * on one side), standing straight out of the cloth; a lilac flower with a yellow eye on the crown of the hood and one low on the robe front.
+ *   robe CACTUS_ROBE chest widths across at the hem, CACTUS_LONG of the leg long; hood CACTUS_HOOD heads across, CACTUS_HOOD_OPEN of its round open on the face;
+ *   sleeves CACTUS_SLEEVE thick; CACTUS_SPINES spines on the robe, CACTUS_SLEEVE_SPINES per arm segment, CACTUS_HOOD_SPINES on the hood, each CACTUS_SPINE heads tall.
+ */
+const CACTUS_ROBE = 1.55;
+const CACTUS_LONG = 0.86;
+const CACTUS_HOOD = 1.6;
+const CACTUS_HOOD_OPEN = 0.26;
+const CACTUS_SLEEVE = 1.4;
+const CACTUS_SPINES = 34;
+const CACTUS_SLEEVE_SPINES = 3;
+const CACTUS_HOOD_SPINES = 6;
+const CACTUS_SPINE = 0.4;
+const CACTUS_GREEN = new Color3(0.12, 0.36, 0.2);
+const CACTUS_SPINE_COLOR = new Color3(0.66, 0.38, 0.26);
+const CACTUS_PETAL = new Color3(0.62, 0.55, 0.98);
 
 // Clothes are solids hung on the body, not a colour painted on it. The lower half of a garment is a faceted bell hung from the waist over the pelvis and the tops of
 // the thighs, standing off the legs at its hem: it rides the hips and not the legs, so a stride swings the knees out from under it. length is in thighs, flare is the
@@ -353,6 +373,9 @@ export class UnitFactory {
     }
     if (definition.id === "renaissance.painter" && !shouldUseVehicleBody) {
       propMeshes.push(...dressPainter(this._scene, body, teamColor, propMeshes));
+    }
+    if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressCactus(this._scene, body, teamColor));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -686,6 +709,136 @@ function dressPainter(scene: Scene, body: ArticulatedBody, teamColor: Color3, pr
   bib.material = ruffMat;
   bib.parent = body.torso;
   added.push(bib);
+  return added;
+}
+
+/** Dresses the cactus in a full-length spiked cactus suit (see CACTUS_*): green robe, sleeves and face-window hood, brown spines all over, lilac flowers. */
+function dressCactus(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  // The suit is the body's own cloth turned green, so the tunic hem hung later follows it
+  body.bodyMaterial.baseColor = Color3.Lerp(CACTUS_GREEN, teamColor.scale(0.3), 0.08);
+  const green = body.bodyMaterial;
+  const spineMat = getMaterialFactory().getCloth(CACTUS_SPINE_COLOR);
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const spineTall = headSize * CACTUS_SPINE;
+  // A four-sided spine on a parent, at a point on its surface, pointing out along `out` (unit, horizontal or not)
+  const spine = (parent: Mesh | ArticulatedBody["hip"], at: Vector3, out: Vector3): void => {
+    const s = MeshBuilder.CreateCylinder("cactusSpine", { height: spineTall, diameterTop: 0, diameterBottom: spineTall * 0.85, tessellation: 4 }, scene);
+    s.parent = parent;
+    s.position.copyFrom(at.add(out.scale(spineTall * 0.35)));
+    // The cylinder's +y turned onto `out`: pitch it off upright, then yaw it round
+    s.rotation.set(Math.acos(Math.max(-1, Math.min(1, out.y))), Math.atan2(out.x, out.z), 0);
+    s.material = spineMat;
+    s.convertToFlatShadedMesh();
+    added.push(s);
+  };
+  // Arms go green sleeves, wider than the arm
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    arm.scaling.x *= CACTUS_SLEEVE;
+    arm.scaling.z *= CACTUS_SLEEVE;
+    arm.material = green;
+    const ext = arm.getBoundingInfo().boundingBox.extendSize;
+    const r = Math.max(ext.x * arm.scaling.x, ext.z * arm.scaling.z);
+    const len = ext.y * 2 * arm.scaling.y;
+    const holder = arm.parent as Mesh;
+    for (let i = 0; i < CACTUS_SLEEVE_SPINES; i++) {
+      const a = i * 2.3 + (arm === body.leftUpperArm || arm === body.leftLowerArm ? 0.7 : 0);
+      const out = new Vector3(Math.sin(a), 0, Math.cos(a));
+      spine(holder, arm.position.add(new Vector3(out.x * r, len * (0.3 - 0.3 * i), out.z * r)), out);
+    }
+  }
+  // Bodice over the chest, wider than it, into the robe skirt to the ankle
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const bodiceTop = W * 1.12, bodiceBottom = W * 1.24, depthScale = (D * 1.3) / W;
+  const bodice = MeshBuilder.CreateCylinder(`${chest.name}_cactusRobe`, { height: H * 1.04, diameterTop: bodiceTop, diameterBottom: bodiceBottom, tessellation: 8 }, scene);
+  bodice.scaling.z = depthScale;
+  bodice.position.set(0, chest.position.y, 0);
+  bodice.material = green;
+  bodice.convertToFlatShadedMesh();
+  bodice.parent = body.torso;
+  added.push(bodice);
+  const leg = (body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y)
+    + (body.leftLowerLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftLowerLeg.scaling.y);
+  const long = leg * CACTUS_LONG;
+  const hem = W * CACTUS_ROBE;
+  const skirt = MeshBuilder.CreateCylinder(`${chest.name}_cactusSkirt`, { height: long, diameterTop: bodiceBottom, diameterBottom: hem, tessellation: 9 }, scene);
+  skirt.scaling.z = depthScale;
+  const skirtY = H * 0.08 - long / 2;
+  skirt.position.y = skirtY;
+  skirt.material = green;
+  skirt.convertToFlatShadedMesh();
+  skirt.parent = body.hip;
+  added.push(skirt);
+  // Spines over the robe, scattered round it in a golden-angle spiral from the shoulders to the hem
+  for (let i = 0; i < CACTUS_SPINES; i++) {
+    const t = (i + 0.5) / CACTUS_SPINES;
+    const a = i * 2.39996;
+    const out = new Vector3(Math.sin(a), 0, Math.cos(a) * depthScale).normalize();
+    const onBodice = t < 0.3;
+    const u = onBodice ? t / 0.3 : (t - 0.3) / 0.7;
+    const r = onBodice ? (bodiceTop + (bodiceBottom - bodiceTop) * u) / 2 : (bodiceBottom + (hem - bodiceBottom) * u) / 2;
+    const at = new Vector3(Math.sin(a) * r, 0, Math.cos(a) * r * depthScale);
+    if (onBodice) {
+      at.y = chest.position.y + H * (0.45 - 0.9 * u);
+      spine(body.torso as Mesh, at, out);
+    } else {
+      at.y = skirtY + long * (0.48 - 0.92 * u);
+      spine(body.hip as Mesh, at, out);
+    }
+  }
+  // Hood: a blocky green shell over the head, its arc gap on the face (+z, see dressReaper), into a mantle over the shoulders
+  const hood = MeshBuilder.CreateSphere(`${body.headMesh.name}_cactusHood`, { diameter: 1, segments: 5, arc: 1 - CACTUS_HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  hood.scaling.set(headSize * CACTUS_HOOD, headSize * CACTUS_HOOD * 1.15, headSize * CACTUS_HOOD);
+  hood.rotation.y = -Math.PI / 2 + Math.PI * CACTUS_HOOD_OPEN;
+  hood.position.set(0, headSize * 0.1, -headSize * 0.08);
+  hood.material = green;
+  hood.convertToFlatShadedMesh();
+  hood.parent = body.headMesh;
+  added.push(hood);
+  const mantle = MeshBuilder.CreateCylinder(`${body.headMesh.name}_cactusMantle`, { height: headSize * 0.5, diameterTop: headSize * 1.2, diameterBottom: bodiceTop * 1.02, tessellation: 8 }, scene);
+  mantle.position.set(0, chest.position.y + H * 0.48, -D * 0.05);
+  mantle.scaling.z = depthScale;
+  mantle.material = green;
+  mantle.convertToFlatShadedMesh();
+  mantle.parent = body.torso;
+  added.push(mantle);
+  const hoodR = headSize * CACTUS_HOOD * 0.5;
+  for (let i = 0; i < CACTUS_HOOD_SPINES; i++) {
+    // Over the crown and back of the hood, clear of the face window
+    const a = Math.PI * (0.55 + 0.9 * i / (CACTUS_HOOD_SPINES - 1)) * (i % 2 ? 1 : -1);
+    const tilt = 0.5 + 0.35 * (i % 3);
+    const out = new Vector3(Math.sin(a) * Math.sin(tilt), Math.cos(tilt), Math.cos(a) * Math.sin(tilt));
+    spine(body.headMesh, new Vector3(0, headSize * 0.1, -headSize * 0.08).add(out.scale(hoodR)), out);
+  }
+  // Lilac flowers: one on the crown of the hood, one low on the robe front
+  const petal = getMaterialFactory().getCloth(CACTUS_PETAL);
+  const eye = getMaterialFactory().getCloth(new Color3(1, 0.85, 0.3));
+  const flower = (parent: Mesh | ArticulatedBody["hip"], at: Vector3, pitch: number, size: number): void => {
+    const holder = new Mesh("cactusFlower", scene);
+    holder.parent = parent;
+    holder.position.copyFrom(at);
+    holder.rotation.x = pitch;
+    for (let i = 0; i < 6; i++) {
+      const p = MeshBuilder.CreateSphere("cactusPetal", { diameter: 1, segments: 3 }, scene);
+      const a = (i / 6) * Math.PI * 2;
+      p.scaling.set(size * 0.22, size * 0.07, size * 0.5);
+      p.rotation.y = a;
+      p.position.set(Math.sin(a) * size * 0.25, 0, Math.cos(a) * size * 0.25);
+      p.material = petal;
+      p.parent = holder;
+      added.push(p);
+    }
+    const c = MeshBuilder.CreateSphere("cactusFlowerEye", { diameter: size * 0.24, segments: 3 }, scene);
+    c.position.y = size * 0.05;
+    c.material = eye;
+    c.parent = holder;
+    added.push(c);
+    added.push(holder);
+  };
+  flower(body.headMesh, new Vector3(headSize * 0.12, headSize * 0.1 + hoodR * 1.3, -headSize * 0.05), -0.25, headSize * 0.85);
+  flower(body.hip as Mesh, new Vector3(hem * 0.12, skirtY - long * 0.25, (bodiceBottom + (hem - bodiceBottom) * 0.75) / 2 * depthScale + headSize * 0.03), Math.PI / 2, headSize * 0.8);
   return added;
 }
 
