@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 247   Last re-audit: 245   Consecutive rejects: 0   Branch: main
+Iteration: 248   Last re-audit: 245   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,9 +17,9 @@ ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240, re-audited 245; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: k l m PASS, i j n-v FAIL (3/14) [S since: 0 each, except i 1 (243), v 1 (244)]
+unit-look tier 3: k l m PASS, i j n-v FAIL (3/14) [S since: 0 each, except i 1 (243), j 1 (248), v 1 (244)]
 - i tribal: 1 struck (slab, 116e106, 243); 2 bone_mage grey sphere head, no antlered skull (units/tribal.bone_mage)
-- j farmer: 1 farmer small green ball cap, not the tall pointed cowl (units/farmer.farmer); 2 halo over a farmer (5th), off-faction
+- j farmer: 1 struck (pointed cowl, d2a7e4e, 248); 2 halo over a farmer (5th), off-faction
 - k ancient PASS (cleared by a5f0805, 245; crest small at lineup distance, helm close to skin value: polish, no blocker)
 - l viking PASS (cleared by 312a742, 242)
 - m dynasty PASS (cleared by a6d3c59, 7263927, 247; polish: kasa straw-yellow ~2 heads, beads small; monk has no bo staff)
@@ -32,35 +32,35 @@ unit-look tier 3: k l m PASS, i j n-v FAIL (3/14) [S since: 0 each, except i 1 (
 - t evil: 1 four of seven in the same plain cone, no horns/spikes/dark armour (units/evil.void_cultist); 2 void_monarch bright yellow jewelled crown (units/evil.void_monarch)
 - u secret: 1 halos repeat on 5+ units (factions/secret); 2 tree giant a plain grey block man (units/secret.tree_giant)
 - v medieval: 1 struck (cross kite + bucket helm, adb58a6, 244); 2 bard purple beret, not feathered straw hat (units/medieval.bard)
-maps-light tier 3: l PASS, i-k m-o FAIL (1/7) [S since: 0 each, except k 1 (247)]
+maps-light tier 3: k l PASS, i j m-o FAIL (2/7) [S since: 0 each]
 - i introduction (meadow): 1 shared pale-sage puffball ring, not dark twisted oaks; 2 no ruins/castle, generic rocks and walls (maps/meadow_medieval_1)
 - j adventure (meadow): 1 pools are flat grey-blue rectangles, not water (maps/meadow_medieval_2); 2 same ring and props as introduction
-- k challenge (autumn): 1 ground dusty mauve-red, not orange grass (maps/autumn_tribal_1); 2 struck (ball ring, 812ce52, 247)
+- k challenge PASS (cleared by 812ce52, 247, e50d2f3, 248; polish: island side wall slate blue-violet, not ochre strata)
 - l dynasty PASS (cleared by 466ebe1, 246; polish: dark green far bushes behind the pagoda, olive field with no green terraces/stone paths)
 - m renaissance: 1 no townhouses, two boxes and columns in a field; 2 sage grass, not a paved plaza (maps/renaissance_town)
 - n pirate: 1 ships are olive boxes with slab sails, no masts/hulls; 2 pale puffball ring, no palms or sea (maps/pirate_beach)
 - o simulation: 1 purple ground with trees and rocks, not a bare off-white plane; 2 wide tinted centre band, not one thin red line (maps/simulation)
-Total tier 1 24/24; tier 2 23/24; tier 3 4/21.
+Total tier 1 24/24; tier 2 23/24; tier 3 5/21.
 
 ## Focus (every gap this iteration)
-BASE 9c1aff8 (no re-audit; picks ranked 1 and 2, pair m+k; no [P]: none listed as fallout)
-- [S] unit-look.m monk-kasa (7263927) — APPROVE, blocker 2 struck, m PASS
-- [S] maps-light.k challenge-ball-ring (812ce52) — APPROVE, blocker 2 struck, k FAIL
+BASE 2276f7f (iter 248; no re-audit; picks ranked 1 and 2, pair k+j; no [P]: none listed as fallout)
+- [S] maps-light.k challenge-orange-field (e50d2f3) — APPROVE, blocker 1 struck, k PASS
+- [S] unit-look.j farmer-pointed-cowl (d2a7e4e) — APPROVE, blocker 1 struck, j FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] monk-kasa (7263927) VERDICT: APPROVE CRITERION: unit-look.m PASS (previous: FAIL)
-- GAP: [S] challenge-ball-ring (812ce52) VERDICT: APPROVE CRITERION: maps-light.k FAIL (previous: FAIL)
+- GAP: [S] challenge-orange-field (e50d2f3) VERDICT: APPROVE CRITERION: maps-light.k PASS (previous: FAIL)
+- GAP: [S] farmer-pointed-cowl (d2a7e4e) VERDICT: APPROVE CRITERION: unit-look.j FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] maps-light.k challenge-orange-field [0] — blocker 1: ochre/orange field material plus orange grass cards replacing the mauve ground — ref maps/autumn_tribal_1.png — ours biome_challenge
-2. [S] unit-look.j farmer-pointed-cowl [0] — blocker 1: fitted tall pointed cowl replacing the small green ball cap — ref units/farmer.farmer — ours lineup_farmer
-3. [S] unit-look.o pirate-bandana-tricorn [0] — blocker 1: fitted bandana and tricorn hats replacing the shared black stovepipe — ref units/pirate.flintlock — ours lineup_pirate
-4. [S] maps-light.n pirate-palm-ring [0] — blocker 2: palm ring (bent trunk, frond crown) and a sea edge via the per-theme ring pass (466ebe1/812ce52) — ref maps/pirate_beach.png — ours biome_pirate
-5. [S] unit-look.p skeleton-bone-body [0] — blocker 1: thin bone limbs, rib cage, skull for skeleton warrior/archer — ref units/spooky.skeleton_warrior — ours lineup_spooky
-6. [S] maps-light.i introduction-oak-ring [0] — blocker 1: dark twisted oak ring trees replacing the pale-sage puffballs, a per-theme ring pass like ballRing — ref maps/meadow_medieval_1.png — ours biome_introduction
-7. [S] unit-look.n jouster-horse [0] — blocker 1: a horse body under the jouster replacing the box — ref units/renaissance.jouster — ours lineup_renaissance
-8. [R] battle-feel.e deferred [2] — deferred stands (re-audit 245); respec from trailer_3_sheet_01 r2c3 only after a new angle
-(Off-list: [S] unit-look.i bone-mage-antler-skull (blocker 2); [S] unit-look.v bard-feather-hat (blocker 2); maps-light.o simulation-thin-line (blocker 2); polish: monk bo staff, challenge far charcoal hedges.)
+1. [S] unit-look.j farmer-halo [0] — blocker 2: replace the 5th unit's halo with a farm hat (straw hat or flat cap) — ref units/farmer.farmer, factions/farmer — ours lineup_farmer
+2. [S] unit-look.u secret-halos [0] — blocker 1: drop halos repeated on 5+ units for per-unit faction hats — ref factions/secret — ours lineup_secret
+3. [S] unit-look.o pirate-hats [0] — blocker 2: remove the harpooner halo; blocker 1 bandana/tricorn meshes in place of the stovepipe — ref units/pirate.flintlock — ours lineup_pirate
+4. [S] maps-light.j adventure-water-pools [0] — blocker 1: water pool mesh (bright blue faceted surface, shore lip) in place of flat grey rectangles — ref maps/meadow_medieval_2.png — ours biome_adventure
+5. [S] maps-light.o simulation-bare-plane [0] — blocker 1: bare off-white plane theme (no trees or rocks) — ref maps/simulation.png — ours biome_simulation
+6. [S] unit-look.v bard-feather-hat [0] — blocker 2: feathered straw hat for the bard in place of the purple beret — ref units/medieval.bard — ours lineup_medieval
+7. [S] unit-look.i bone-mage-antler-skull [0] — blocker 2: antlered skull head for bone_mage — ref units/tribal.bone_mage — ours lineup_tribal
+8. [R] battle-feel.e deferred [2] — deferred stands; respec from trailer_3_sheet_01 r2c3 only after a new angle
+(Off-list: polish: challenge island side wall ochre strata (autumnField tints cliff), cowl ball-under-cone from behind, monk bo staff.)
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - [R] aimed-blow rebuild [attempts: 2] — 241: fist-mark IK + step-in + board-top fallback + hit re-pose; hit frame still shows the front club upright (cocked for his next), no visible hoplite lean, rank-back clubs fan in the air, knights over-folded
@@ -74,7 +74,7 @@ BASE 9c1aff8 (no re-audit; picks ranked 1 and 2, pair m+k; no [P]: none listed a
 
 ## Notes for next iteration (max 5 lines)
 - battle-feel.e is deferred (deferred stands at re-audit 245). 241 findings: clubbers strike from up to ~2 m, hoplites taller than clubbers, units animate BEFORE the decision loop, so the hit frame renders the pre-hit pose unless re-posed in the same step.
-- Placement camera sits at -z (alpha -pi/2): far edge of a biome shot is +z. Theme ring post-passes: deadenRing (bare>0) and blossomRing (ring.blossom) walk trunk/canopy meshes; puffs reuse leavesCrown/darkLeavesCrown.
-- Kite boards carry a cream cross for every kite user. buildFittedHat now takes teamColor (crested_helm uses it); other fitted hats still use the unit accent.
-- Tier 3 letters are separate criteria. TABS medieval.healer is bare-headed in a robe (unit-look.v candidate). mapBuilder.ts and loop files are CRLF: use Edit, not node string replace.
-- capture.mjs runs the showcase first; --only looks can differ in pose from full-run frames. No [P] on rows approved within 20 iterations (incl. cherry ring, dragon_head 246, kasa, ballRing 247). ballRing: ring.balls palette per tree, broadleafs swapped to one ball.
+- Placement camera sits at -z (alpha -pi/2): far edge of a biome shot is +z. Theme passes in recolorBaseTerrain: deadenRing, blossomRing, ballRing (ring.*), autumnField (theme.field: lawn/blade glow + tuft clumps; campaign lawns otherwise keep the sandbox plum glow).
+- Kite boards carry a cream cross for every kite user. buildFittedHat takes teamColor (crested_helm, pointed_cowl use it); hood_liripipe is shared by medieval archer + secret: add new hat types rather than reshaping it.
+- Tier 3 letters are separate criteria. Halos (j, o, u) may share one cause: grep the hat resolver in unitVisuals.ts before j/o/u halo gaps. mapBuilder.ts and loop files are CRLF: use Edit, not node string replace.
+- capture.mjs runs the showcase first; --only looks can differ in pose from full-run frames. No [P] on rows approved within 20 iterations (incl. ballRing 247, autumnField + pointed_cowl 248).

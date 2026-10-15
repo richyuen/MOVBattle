@@ -246,3 +246,4 @@ iter 244 | [S] unit-look.k hoplite-crested-helm, [S] unit-look.v knight-cross-he
 iter 245 | [S] team-tinted-crested-helm, [S] tiered-pagoda | 2/2 approved | passes 48 -> 49
 iter 246 | [S] dynasty-cherry-ring, [S] dragon-costume-head | 2/2 approved | passes 49 -> 50
 iter 247 | [S] monk-kasa, [S] challenge-ball-ring | 2/2 approved | passes tier3 3/21 -> 4/21
+iter 248 | [S] challenge-orange-field, [S] farmer-pointed-cowl | 2/2 approved | passes 51 -> 52
