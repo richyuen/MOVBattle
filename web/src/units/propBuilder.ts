@@ -27,7 +27,20 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana"];
+/*
+ * A bandana tied over the skull (249; units/secret.taekwondo, factions/secret: cloth pulled down over the whole crown to the brow, the face and bead eyes clear
+ * under its edge, knotted at the nape with two short tails hanging and flaring behind). Not a halo: the old bandana was a thin ring floating at the crown, and
+ * six secret bodies wore it.
+ *   Wrap BANDANA_HEADS heads across, from the seat to BANDANA_CROWN of the head over the crown; knot BANDANA_KNOT head widths across at the nape; tails
+ *   BANDANA_TAIL of the head long, splayed BANDANA_SPLAY apart and swept BANDANA_SWEEP back off hanging.
+ */
+const BANDANA_HEADS = 1.16;
+const BANDANA_CROWN = 0.1;
+const BANDANA_KNOT = 0.3;
+const BANDANA_TAIL = 0.55;
+const BANDANA_SPLAY = 0.35;
+const BANDANA_SWEEP = 0.5;
 /*
  * A harvester's wide felt sun hat (249; factions/farmer, the scythe woman: a brown hat pushed back off the brow, its brim about two and a half heads across,
  * a low round-topped crown with a dark band, two brown braids hanging from under the brim at the sides down to the shoulders). Not a halo: the old bandana
@@ -200,6 +213,30 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     collar.convertToFlatShadedMesh();
     collar.parent = holder;
     return holder;
+  }
+  if (type === "bandana") {
+    const cloth = mat(scene, accent);
+    const tall = eyeTop - HAT_EYE_CLEAR * H + BANDANA_CROWN * H;
+    const R = BANDANA_HEADS * W * 0.5;
+    const wrap = MeshBuilder.CreateSphere("bandana", { diameterX: u(2 * R), diameterY: u(tall * 2), diameterZ: u(2 * R * 1.06), segments: 7, slice: 0.5 }, scene);
+    wrap.position.y = u(seat);
+    wrap.material = cloth;
+    wrap.convertToFlatShadedMesh();
+    // The knot at the back of the head just above the wrap's edge, and the two tails hanging from it, swept back and apart
+    const knot = MeshBuilder.CreateIcoSphere("bandanaKnot", { radius: u(BANDANA_KNOT * W * 0.5), subdivisions: 1, flat: true }, scene);
+    knot.position.set(0, u(tall * 0.3), -u(R * 1.02));
+    knot.material = cloth;
+    knot.parent = wrap;
+    const tailLong = u(BANDANA_TAIL * H);
+    for (const side of [-1, 1]) {
+      const tail = MeshBuilder.CreateBox("bandanaTail", { width: u(0.16 * W), height: tailLong, depth: u(0.04 * W) }, scene);
+      tail.setPivotPoint(new Vector3(0, tailLong / 2, 0));
+      tail.position.set(side * u(0.06 * W), -tailLong / 2, -u(0.04 * W));
+      tail.rotation.set(BANDANA_SWEEP, 0, side * BANDANA_SPLAY * 0.5);
+      tail.material = cloth;
+      tail.parent = knot;
+    }
+    return wrap;
   }
   if (type === "sun_hat") {
     const brown = new Color3(0.44, 0.27, 0.16);

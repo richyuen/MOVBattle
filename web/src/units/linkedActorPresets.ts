@@ -367,7 +367,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         offset: new Vector3(-0.46, 0, -0.08),
         syncFacing: true,
         semantics: { ...emittingCrew, actionPreset: "cart-brace" },
-        visual: visual("flintlock", "bandana", "none", "none", {
+        visual: visual("flintlock", "cowboy_hat", "none", "none", {
           proportions: { scale: 0.78, bulk: 0.82, headSize: 1.0 },
           materialPreset: "secret_bandit",
           posePreset: "duelist",

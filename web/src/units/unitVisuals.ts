@@ -969,7 +969,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["flame_lash"], "ability-active": ["flame_lash"] },
       });
     case "secret_bank_robbers":
-      return vis({ scale: 1.08, bulk: 1.08 }, "flintlock", "bandana", "none", "safe_bundle", "#5b5b5b", "flintlock", {
+      return vis({ scale: 1.08, bulk: 1.08 }, "flintlock", "cowboy_hat", "none", "safe_bundle", "#5b5b5b", "flintlock", {
         posePreset: "support", materialPreset: "secret_bandit", attachmentPreset: "bank_robbers",
         stateVariants: { attacking: ["loot_flash"] },
       });
