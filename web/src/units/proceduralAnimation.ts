@@ -89,8 +89,9 @@ const WALL_BOARD_LEAN = [-0.2, 0.3];
 const PRESS_DRIVE = 0.4;
 // The tree giant's hip carry: the arm a little forward with the elbow half bent (fist at the belt), and where the trunk points in the body's frame (x out, y up, z ahead).
 const TREE_HIP_ARM = { raise: -0.35, out: 0.12, elbow: -0.7 };
-// The trunk is held level out at his flank with the crown a little above the fist (no per-man droop), so the crown hangs clear of the ground beside him.
-const TREE_HIP_TIP = new Vector3(0.85, 0.22, 0.35);
+// 267 [R] (units/secret.tree_giant): the trunk runs out from the fist to his flank and a little ahead, dipping slightly, and its bend (built to the trunk's own
+// +x; see the spec over TREE_CLUB_LONG in propBuilder) is turned to hang under it, so the crown hangs knee to hip high beside him and below the line's sightline.
+const TREE_HIP_TIP = new Vector3(0.9, -0.02, 0.35);
 // The scythe's high carry (units/spooky.reaper): the fist up in front of the chest, the snath slanted up and out over his weapon shoulder so its head
 // rides above the hood, and the crescent turned flat to the front (SCYTHE_SPIN about the snath), sweeping back in over the hood and curling down.
 const SCYTHE_HIGH_ARM = { raise: -0.95, out: 0.22, elbow: -1.05 };
@@ -919,6 +920,8 @@ export class ProceduralAnimator {
       spin: scythe ? Quaternion.RotationYawPitchRoll(SCYTHE_SPIN * side, 0, 0) : undefined,
     } : null;
     if (scythe) this._carryTurn = 1;
+    // The tree's bent side (its own +x) is turned about the trunk to face the way the trunk runs out, which the carry's turn then brings round to hang under it
+    if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side), 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
     const pick = h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist low in front of the belt, the trunk run out to his own side, forward and down, the crown

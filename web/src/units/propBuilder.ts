@@ -1389,13 +1389,29 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
   return { blade, hilt };
 }
 
-const TREE_CLUB_LONG = 0.8;
-const TREE_CLUB_GRIP = 0.14;
-const TREE_CLUB_ROOTS = 4;
-const TREE_CLUB_CROWN = 0.24;
+/*
+ * The giant's tree [R] (267; units/secret.tree_giant, H = the carrier's standing height, read off the reference):
+ * - trunk: about 0.6 H all told, gripped TREE_CLUB_GRIP of it from the butt, so a 0.09 H stub shows behind the fist and 0.5 H runs out to the crown.
+ *   It is thick, as thick as his forearm at the fist (TREE_CLUB_THICK of the trunk as radius), swelling at the broken butt and down to about half at the crown.
+ * - it is gnarled and bent, not a turned pole: it sags TREE_CLUB_BEND of its length toward its far end and kinks a little at two knots along the way.
+ *   The bend is built toward the trunk's own +x; the animator turns that side to hang under the trunk (see TREE_HIP_TIP), so the trunk bends down to the crown.
+ * - roots: TREE_CLUB_ROOTS short tapered roots, about 0.07 H, fanning back from the butt TREE_CLUB_ROOT_FAN off the trunk's axis like a torn root ball, all
+ *   behind the fist and none square across it (that read as a sword's crossguard).
+ * - one forked limb stub rising off the top of the trunk near the crown, and a knot half way out.
+ * - crown: three big round olive lobes, each about 0.13 H in radius, in a triangle in the trunk's plane: two along the top of the trunk's end and one
+ *   hanging below it, so the crown hangs beside him about knee to hip high with its bottom clear of the grass.
+ */
+const TREE_CLUB_LONG = 0.6;
+const TREE_CLUB_GRIP = 0.15;
+const TREE_CLUB_THICK = 0.09;
+const TREE_CLUB_BEND = 0.12;
+const TREE_CLUB_ROOTS = 5;
+const TREE_CLUB_ROOT_FAN = [0.35, 0.6];
+const TREE_CLUB_CROWN = 0.25;
 const TREE_CLUB_CARRY = 1.2;
 const TREE_CLUB_LOBE = 0.85;
-const TREE_CLUB_LOBE_OFF = 1.0;
+// Lobes of the crown from the trunk's end, in crown radii: along the trunk, toward its bent (hanging) side, and across it
+const TREE_CLUB_LOBES: [number, number, number][] = [[0.3, -0.5, 0.25], [1.25, -0.35, -0.2], [0.8, 0.7, 0.1]];
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -1415,45 +1431,69 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return m;
     }
     case "tree_club": {
-      // An uprooted tree swung as a club (units/secret.tree_giant): a bark trunk TREE_CLUB_LONG of the carrier's height, gripped near its root end with
-      // TREE_CLUB_ROOTS roots splayed out past the fist, a forked side limb, and a crown of three big olive faceted lobes, TREE_CLUB_CROWN of the trunk across.
+      // An uprooted tree swung as a club, built to the spec above TREE_CLUB_LONG
       const T = fit.stand * TREE_CLUB_LONG;
       const bark = mat(scene, new Color3(0.47, 0.31, 0.18));
-      const trunk = MeshBuilder.CreateCylinder("treeTrunk", { height: T, diameterTop: T * 0.08, diameterBottom: T * 0.13, tessellation: 7 }, scene);
-      trunk.material = bark;
       // Strapped on out to the giant's side (TREE_CLUB_CARRY off upright); standing and on the march the animator turns it in the fist to the low hip carry (TREE_HIP_TIP)
       const carry = new Mesh("treeClubCarry", scene);
       carry.rotation.set(0.3, 0, -TREE_CLUB_CARRY);
+      // The trunk's line in the carry's frame, the fist at the origin: butt at -GRIP, crown end at 1 - GRIP, sagging to +x and kinked at the knots
+      const along = [0, 0.1, 0.3, 0.5, 0.7, 0.88, 1];
+      const kinkX = [0, 0, 0.025, -0.02, 0.02, 0, 0];
+      const kinkZ = [0, 0.015, -0.025, 0.02, -0.015, 0.01, 0];
+      const line = along.map((u, i) => new Vector3((TREE_CLUB_BEND * u * u + kinkX[i]) * T, (u - TREE_CLUB_GRIP) * T, kinkZ[i] * T));
+      const trunk = MeshBuilder.CreateTube("treeTrunk", {
+        path: line, tessellation: 7, cap: Mesh.CAP_ALL,
+        radiusFunction: (i) => {
+          const u = along[i];
+          return T * (TREE_CLUB_THICK * (1 - 0.45 * u) + (u < 0.1 ? 0.025 * (1 - u / 0.1) : 0));
+        },
+      }, scene);
+      trunk.material = bark;
       trunk.parent = carry;
-      trunk.position.y = T * (0.5 - TREE_CLUB_GRIP);
       trunk.convertToFlatShadedMesh();
+      const axis = line[1].subtract(line[0]).normalize();
+      const butt = line[0];
       for (let i = 0; i < TREE_CLUB_ROOTS; i++) {
         const a = (i / TREE_CLUB_ROOTS) * Math.PI * 2 + 0.4;
-        const root = MeshBuilder.CreateCylinder("treeClubRoot", { height: T * 0.17, diameterTop: T * 0.06, diameterBottom: 0, tessellation: 5 }, scene);
-        root.parent = trunk;
-        root.position.set(Math.cos(a) * T * 0.03, -T / 2 - T * 0.05, Math.sin(a) * T * 0.03);
-        root.rotation.set(0, -a, 0.75 + (i % 2) * 0.25);
+        const fan = TREE_CLUB_ROOT_FAN[0] + (TREE_CLUB_ROOT_FAN[1] - TREE_CLUB_ROOT_FAN[0]) * ((i * 0.618) % 1);
+        const dir = axis.scale(-Math.cos(fan)).add(new Vector3(Math.cos(a), 0, Math.sin(a)).scale(Math.sin(fan))).normalize();
+        const long = T * (0.1 + 0.04 * (i % 2));
+        const root = MeshBuilder.CreateCylinder("treeClubRoot", { height: long, diameterTop: 0, diameterBottom: T * 0.04, tessellation: 5 }, scene);
+        root.parent = carry;
+        root.position.copyFrom(butt.add(dir.scale(long * 0.45)));
+        root.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
         root.material = bark;
       }
-      const limb = MeshBuilder.CreateCylinder("treeClubLimb", { height: T * 0.3, diameterTop: T * 0.02, diameterBottom: T * 0.045, tessellation: 5 }, scene);
-      limb.parent = trunk;
-      limb.position.set(T * 0.07, T * 0.22, 0);
-      limb.rotation.z = -0.6;
-      limb.material = bark;
-      // The crown is three separate round lobes (a clover round the trunk's end, TREE_CLUB_LOBE of R each, set TREE_CLUB_LOBE_OFF of R off the axis at 120 degrees so
-      // they just touch), one shade apart, so its silhouette reads as three bumps and not one merged blob
+      // A forked limb stub off the top of the trunk (its -x side) near the crown, and a knot half way out
+      const limbAt = line[4].add(line[5]).scale(0.5);
+      const limbs: [Vector3, number, number][] = [[new Vector3(-0.75, 0.65, 0.1), 0.2, 0.035], [new Vector3(-0.35, 0.9, -0.25), 0.13, 0.022]];
+      for (const [toward, long, thick] of limbs) {
+        const dir = toward.normalize();
+        const limb = MeshBuilder.CreateCylinder("treeClubLimb", { height: T * long, diameterTop: T * thick * 0.35, diameterBottom: T * thick, tessellation: 5 }, scene);
+        limb.parent = carry;
+        limb.position.copyFrom(limbAt.add(dir.scale(T * long * 0.45)));
+        limb.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+        limb.material = bark;
+      }
+      const knot = MeshBuilder.CreateIcoSphere("treeClubKnot", { radius: T * 0.045, subdivisions: 1 }, scene);
+      knot.parent = carry;
+      knot.position.copyFrom(line[3].add(new Vector3(-0.02 * T, 0, 0.025 * T)));
+      knot.scaling.set(1, 1.6, 1);
+      knot.material = bark;
+      // The crown: three separate round lobes one shade apart, so its silhouette reads as three bumps and not one merged blob
       const leaves = [mat(scene, new Color3(0.5, 0.57, 0.27)), mat(scene, new Color3(0.43, 0.5, 0.23))];
       const R = T * TREE_CLUB_CROWN;
-      for (let i = 0; i < 3; i++) {
-        const a = (i / 3) * Math.PI * 2 + 0.5;
+      const end = line[line.length - 1];
+      TREE_CLUB_LOBES.forEach(([on, hang, across], i) => {
         const lobe = MeshBuilder.CreateIcoSphere("treeClubCrown", { radius: R * TREE_CLUB_LOBE * (1 - i * 0.05), subdivisions: 2 }, scene);
-        lobe.parent = trunk;
-        lobe.position.set(Math.cos(a) * R * TREE_CLUB_LOBE_OFF, T / 2 + R * (0.35 + 0.3 * i), Math.sin(a) * R * TREE_CLUB_LOBE_OFF);
-        lobe.scaling.y = 0.9;
-        lobe.rotation.y = a;
+        lobe.parent = carry;
+        lobe.position.set(end.x + hang * R, end.y + on * R, end.z + across * R);
+        lobe.scaling.set(0.95, 0.9, 1);
+        lobe.rotation.y = i * 2.1;
         lobe.material = leaves[i % 2];
         lobe.convertToFlatShadedMesh();
-      }
+      });
       return carry;
     }
     case "sword":
