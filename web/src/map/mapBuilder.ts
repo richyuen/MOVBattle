@@ -2435,6 +2435,24 @@ function barePlane(scene: Scene, prior: ReadonlySet<Scene["meshes"][number]>): v
   plane.receiveShadows = true;
 }
 
+/*
+ * The bare plane's only guide (maps/simulation: one thin red line runs straight across the whole plane and on into the haze, and the two halves either
+ * side of it are the plane's own untinted colour). No team fills or zone borders: the line is the guide, named "border" so it hides with the other
+ * placement guides once the battle starts.
+ */
+const BARE_LINE_WIDE = 0.16;
+const BARE_LINE_RED = new Color3(0.78, 0.22, 0.3);
+function bareCentreLine(scene: Scene): void {
+  const line = MeshBuilder.CreateGround("border", { width: BARE_LINE_WIDE, height: BARE_PLANE }, scene);
+  line.position.y = 0.04;
+  const mat = new StandardMaterial("bare_line_mat", scene);
+  mat.diffuseColor = Color3.Black();
+  mat.emissiveColor = BARE_LINE_RED;
+  mat.disableLighting = true;
+  line.material = mat;
+  line.isPickable = false;
+}
+
 function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBuildResult {
   const prior = new Set(scene.meshes);
   const base = new TribalSandboxMapBuilder(scene, false).build();
@@ -2448,7 +2466,8 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
   addCampaignProps(scene, theme, obstacles);
   createHazardVisuals(scene, hazards, theme.sea);
   if (theme.sea) sandSpits(scene, theme.sea, hazards);
-  createPlacementGuides(scene, theme.zones);
+  if (theme.bare) bareCentreLine(scene);
+  else createPlacementGuides(scene, theme.zones);
   return {
     zones: theme.zones.map((zoneDef) => ({
       team: zoneDef.team,
