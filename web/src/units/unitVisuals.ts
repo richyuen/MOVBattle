@@ -15,7 +15,7 @@ export type WeaponType =
   | "harpoon" | "cutlass" | "bomb" | "torch"
   | "katana" | "nunchaku" | "shuriken_hand" | "bo_staff"
   | "stone" | "hay_bale" | "potion" | "lightning_bolt"
-  | "fan" | "flail" | "whip" | "present_box" | "pom_pom";
+  | "fan" | "flail" | "whip" | "present_box" | "pom_pom" | "tree_club";
 
 export type HatType =
   | "none" | "crown" | "helmet" | "viking_helmet" | "horned_helmet"
@@ -1052,7 +1052,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         bodyDetailLevel: "hero",
       });
     case "secret_tree_giant":
-      return vis({ scale: 2.45, bulk: 1.85, headSize: 1.1, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_tree", "#6f8a42", undefined, {
+      return vis({ scale: 2.45, bulk: 1.85, headSize: 1.1, armLength: 1.12, legLength: 0.92 }, "tree_club", "none", "none", "giant_tree", "#6f8a42", undefined, {
         posePreset: "giant", materialPreset: "secret_nature", attachmentPreset: "giant_aura",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },

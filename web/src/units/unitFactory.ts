@@ -148,6 +148,23 @@ const REAPER_TATTERS = 7;
 const REAPER_SLEEVE = 1.35;
 const REAPER_CLOTH = new Color3(0.3, 0.06, 0.09);
 const REAPER_TEAM = 0.4;
+/*
+ * The tree giant (253; units/secret.tree_giant): not a tree-man but a giant woodsman carrying a whole tree. Read off the reference: team-coloured bare skin on
+ * the forearms, legs and face; a dark teal short-sleeved tunic over the chest and upper arms, a rope belt at the waist; a dark hood drawn over the crown, open on
+ * the face so the bead eyes show, running into a long beard that hangs from the chin onto the chest; a ragged khaki skirt from the waist to the knee.
+ *   TREE_GIANT_HOOD heads across, TREE_GIANT_HOOD_OPEN of its round open at the face; beard TREE_GIANT_BEARD heads long, TREE_GIANT_BEARD_WIDE heads across at the chin;
+ *   skirt TREE_GIANT_SKIRT thighs long flaring to TREE_GIANT_HEM pelvis widths, TREE_GIANT_TATTERS rags off the hem.
+ */
+const TREE_GIANT_HOOD = 1.32;
+const TREE_GIANT_HOOD_OPEN = 0.42;
+const TREE_GIANT_BEARD = 1.05;
+const TREE_GIANT_BEARD_WIDE = 0.85;
+const TREE_GIANT_SKIRT = 0.85;
+const TREE_GIANT_HEM = 1.3;
+const TREE_GIANT_TATTERS = 8;
+const TREE_GIANT_TUNIC = new Color3(0.08, 0.18, 0.2);
+const TREE_GIANT_HAIR = new Color3(0.3, 0.15, 0.12);
+const TREE_GIANT_RAGS = new Color3(0.56, 0.42, 0.28);
 
 // Clothes are solids hung on the body, not a colour painted on it. The lower half of a garment is a faceted bell hung from the waist over the pelvis and the tops of
 // the thighs, standing off the legs at its hem: it rides the hips and not the legs, so a stride swings the knees out from under it. length is in thighs, flare is the
@@ -318,6 +335,9 @@ export class UnitFactory {
     }
     if (definition.id === "spooky.reaper" && !shouldUseVehicleBody) {
       propMeshes.push(...dressReaper(this._scene, body, teamColor));
+    }
+    if (definition.id === "secret.tree_giant" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressTreeGiant(this._scene, body, teamColor));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -524,6 +544,87 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
       tatter.position.set(Math.sin(a) * hem * 0.42, -long / 2 - drop / 2, Math.cos(a) * hem * 0.42);
       tatter.rotation.y = a;
       tatter.material = cloth;
+      tatter.parent = skirt;
+      added.push(tatter);
+    }
+  }
+  return added;
+}
+
+/** Dresses the tree giant as a hooded, bearded woodsman (see TREE_GIANT_*): team skin on the limbs and face, a dark tunic and rope belt, a hood into a long beard, a rag skirt. */
+function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const tunic = getMaterialFactory().getCloth(Color3.Lerp(TREE_GIANT_TUNIC, teamColor.scale(0.3), 0.25));
+  const hair = getMaterialFactory().getCloth(Color3.Lerp(TREE_GIANT_HAIR, teamColor.scale(0.45), 0.35));
+  const rags = getMaterialFactory().getCloth(TREE_GIANT_RAGS);
+  // The tunic is whatever the body wore; forearms and legs go bare team skin, feet dark leather
+  for (const mesh of body.allMeshes) {
+    if (mesh.material === body.bodyMaterial) mesh.material = tunic;
+  }
+  for (const limb of [body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    limb.material = body.skinMaterial;
+  }
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = getMaterialFactory().getCloth(new Color3(0.28, 0.18, 0.12));
+  }
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const belt = MeshBuilder.CreateTorus(`${chest.name}_rope`, { diameter: W * 0.92, thickness: W * 0.08, tessellation: 10 }, scene);
+  belt.scaling.z = (D * 1.05) / (W * 0.92);
+  belt.position.set(0, chest.position.y - H * 0.42, 0);
+  belt.material = getMaterialFactory().getCloth(new Color3(0.56, 0.22, 0.18));
+  belt.parent = body.torso;
+  added.push(belt);
+  // Hood: a shell over the crown and back of the head, its arc gap on the face (+z, see dressReaper), a short peak at the back
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const hood = MeshBuilder.CreateSphere(`${body.headMesh.name}_woodHood`, { diameter: 1, segments: 8, arc: 1 - TREE_GIANT_HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  hood.scaling.set(headSize * TREE_GIANT_HOOD, headSize * TREE_GIANT_HOOD * 1.1, headSize * TREE_GIANT_HOOD);
+  hood.rotation.y = -Math.PI / 2 + Math.PI * TREE_GIANT_HOOD_OPEN;
+  hood.position.set(0, headSize * 0.1, -headSize * 0.1);
+  hood.material = hair;
+  hood.convertToFlatShadedMesh();
+  hood.parent = body.headMesh;
+  added.push(hood);
+  const peak = MeshBuilder.CreateCylinder(`${body.headMesh.name}_woodHoodPeak`, { height: headSize * 0.45, diameterTop: 0, diameterBottom: headSize * 0.8, tessellation: 6 }, scene);
+  peak.position.set(0, headSize * 0.7, -headSize * 0.15);
+  peak.rotation.x = -0.45;
+  peak.material = hair;
+  peak.convertToFlatShadedMesh();
+  peak.parent = body.headMesh;
+  added.push(peak);
+  // Beard: a faceted wedge from under the eyes down over the chin onto the chest, widest at the cheeks
+  const beard = MeshBuilder.CreateCylinder(`${body.headMesh.name}_beard`, { height: headSize * TREE_GIANT_BEARD, diameterTop: headSize * TREE_GIANT_BEARD_WIDE, diameterBottom: headSize * 0.22, tessellation: 6 }, scene);
+  beard.scaling.z = 0.6;
+  beard.rotation.x = 0.28;
+  beard.position.set(0, -headSize * 0.52, headSize * 0.3);
+  beard.material = hair;
+  beard.convertToFlatShadedMesh();
+  beard.parent = body.headMesh;
+  added.push(beard);
+  // Rag skirt from the waist to the knee, its hem torn into points
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  if (pelvis) {
+    pelvis.material = rags;
+    const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
+    const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y;
+    const long = thigh * TREE_GIANT_SKIRT;
+    const top = pExt.x * 2.2, hem = pExt.x * 2 * TREE_GIANT_HEM;
+    const skirt = MeshBuilder.CreateCylinder(`${pelvis.name}_rags`, { height: long, diameterTop: top, diameterBottom: Math.max(hem, top * 1.1), tessellation: 9 }, scene);
+    skirt.scaling.z = (pExt.z * 2.3) / top;
+    skirt.position.y = pelvis.position.y + pExt.y * 1.4 - long / 2;
+    skirt.material = rags;
+    skirt.convertToFlatShadedMesh();
+    skirt.parent = body.hip;
+    added.push(skirt);
+    const rim = Math.max(hem, top * 1.1);
+    for (let i = 0; i < TREE_GIANT_TATTERS; i++) {
+      const a = ((i + 0.5) / TREE_GIANT_TATTERS) * Math.PI * 2;
+      const drop = long * (0.16 + 0.12 * ((i * 5) % 3) / 2);
+      const tatter = MeshBuilder.CreateCylinder(`${pelvis.name}_rag`, { height: drop, diameterTop: rim * 0.36, diameterBottom: 0, tessellation: 3 }, scene);
+      tatter.position.set(Math.sin(a) * rim * 0.42, -long / 2 - drop / 2, Math.cos(a) * rim * 0.42);
+      tatter.rotation.y = a;
+      tatter.material = rags;
       tatter.parent = skirt;
       added.push(tatter);
     }

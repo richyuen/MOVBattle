@@ -1313,6 +1313,11 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
   return { blade, hilt };
 }
 
+const TREE_CLUB_LONG = 0.95;
+const TREE_CLUB_GRIP = 0.14;
+const TREE_CLUB_ROOTS = 4;
+const TREE_CLUB_CROWN = 0.24;
+const TREE_CLUB_CARRY = 1.2;
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -1330,6 +1335,46 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       m.position.y = 0.04 * s;
       m.rotation.x = Math.PI * 0.14;
       return m;
+    }
+    case "tree_club": {
+      // An uprooted tree swung as a club (units/secret.tree_giant): a bark trunk TREE_CLUB_LONG of the carrier's height, gripped near its root end with
+      // TREE_CLUB_ROOTS roots splayed out past the fist, a forked side limb, and a crown of three big olive faceted lobes, TREE_CLUB_CROWN of the trunk across.
+      const T = fit.stand * TREE_CLUB_LONG;
+      const bark = mat(scene, new Color3(0.47, 0.31, 0.18));
+      const trunk = MeshBuilder.CreateCylinder("treeTrunk", { height: T, diameterTop: T * 0.08, diameterBottom: T * 0.13, tessellation: 7 }, scene);
+      trunk.material = bark;
+      // Carried out to the giant's side nearly level (TREE_CLUB_CARRY off upright), a little forward, so the whole tree shows broadside from the front, not end-on
+      const carry = new Mesh("treeClubCarry", scene);
+      carry.rotation.set(0.3, 0, -TREE_CLUB_CARRY);
+      trunk.parent = carry;
+      trunk.position.y = T * (0.5 - TREE_CLUB_GRIP);
+      trunk.convertToFlatShadedMesh();
+      for (let i = 0; i < TREE_CLUB_ROOTS; i++) {
+        const a = (i / TREE_CLUB_ROOTS) * Math.PI * 2 + 0.4;
+        const root = MeshBuilder.CreateCylinder("treeClubRoot", { height: T * 0.17, diameterTop: T * 0.06, diameterBottom: 0, tessellation: 5 }, scene);
+        root.parent = trunk;
+        root.position.set(Math.cos(a) * T * 0.03, -T / 2 - T * 0.05, Math.sin(a) * T * 0.03);
+        root.rotation.set(0, -a, 0.75 + (i % 2) * 0.25);
+        root.material = bark;
+      }
+      const limb = MeshBuilder.CreateCylinder("treeClubLimb", { height: T * 0.3, diameterTop: T * 0.02, diameterBottom: T * 0.045, tessellation: 5 }, scene);
+      limb.parent = trunk;
+      limb.position.set(T * 0.07, T * 0.22, 0);
+      limb.rotation.z = -0.6;
+      limb.material = bark;
+      const leaf = mat(scene, new Color3(0.5, 0.57, 0.27));
+      const R = T * TREE_CLUB_CROWN;
+      const lobes: [number, number, number, number][] = [[1, 0, 0.55, 0], [0.82, 0.75, 0.05, 0.3], [0.74, -0.6, 0.15, -0.55], [0.6, 1.25, -0.25, 0.1]];
+      for (const [k, x, y, z] of lobes) {
+        const lobe = MeshBuilder.CreateIcoSphere("treeClubCrown", { radius: R * k, subdivisions: 1 }, scene);
+        lobe.parent = trunk;
+        lobe.position.set(x * R, T / 2 + y * R, z * R);
+        lobe.scaling.y = 0.85;
+        lobe.rotation.y = x * 2;
+        lobe.material = leaf;
+        lobe.convertToFlatShadedMesh();
+      }
+      return carry;
     }
     case "sword":
     case "cutlass": {
@@ -2769,14 +2814,13 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       halo.material = mat(scene, new Color3(1, 0.92, 0.5), 0.3);
       return platform;
     }
+    // The tree giant is a hooded, bearded man in a tunic and a rag skirt carrying a whole tree (tree_club; dressed in unitFactory's dressTreeGiant), not a leafy plated block
+    case "giant_tree": return null;
     case "giant_bones":
-    case "giant_tree":
     case "giant_ice": {
       const color = type === "giant_bones"
         ? new Color3(0.88, 0.85, 0.78)
-        : type === "giant_tree"
-          ? new Color3(0.42, 0.58, 0.26)
-          : new Color3(0.62, 0.9, 1.0);
+        : new Color3(0.62, 0.9, 1.0);
       const shoulder = MeshBuilder.CreateBox("giantShoulder", { width: 0.55 * s, height: 0.22 * s, depth: 0.16 * s }, scene);
       shoulder.position.set(0, 0.18 * s, -0.06 * s);
       shoulder.parent = body.torso;
@@ -2799,18 +2843,6 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
           horn.rotation.z = -side * 0.45;
           horn.parent = crown;
           horn.material = mat(scene, new Color3(0.94, 0.9, 0.82));
-        }
-      } else if (type === "giant_tree") {
-        for (const side of [-1, 1]) {
-          const branch = MeshBuilder.CreateCylinder("branch", { height: 0.22 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
-          branch.position.set(side * 0.12 * s, 0.1 * s, 0);
-          branch.rotation.z = -side * 0.65;
-          branch.parent = crown;
-          branch.material = mat(scene, new Color3(0.38, 0.24, 0.15));
-          const leaf = MeshBuilder.CreateSphere("leaf", { diameter: 0.1 * s, segments: 6 }, scene);
-          leaf.position.set(side * 0.09 * s, 0.18 * s, 0);
-          leaf.parent = crown;
-          leaf.material = mat(scene, new Color3(0.42, 0.62, 0.3), 0.08);
         }
       } else {
         for (const side of [-1, 1]) {
