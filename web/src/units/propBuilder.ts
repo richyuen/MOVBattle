@@ -2720,10 +2720,15 @@ const HORSE_HOCK = 0.22;
 const HORSE_UPPER_SHOW = 0.32;
 const HORSE_UPPER_DEEP = 1.45;
 const HORSE_COAT_GLOW = 0.14;
-const HORSE_CAP_LONG = 1.15;
+// 268 (units/renaissance.jouster: a long low flat-backed box, not a tub): the drape's back is a flat deck at full width that breaks over a hard shoulder
+// bevel HORSE_CAP_BEVEL of the back's height deep into plumb sides, and its chest and rump ends are squared (a superellipse of exponent HORSE_CAP_SQUARE,
+// 1 = round) and run HORSE_CAP_LONG past the barrel, so they overhang chest and rump as flat end panels.
+const HORSE_CAP_LONG = 1.32;
 const HORSE_HOOF = 0.27;
 const HORSE_CAP_BULGE = 1.22;
-const HORSE_CAP_END = 0.7;
+const HORSE_CAP_END = 0.55;
+const HORSE_CAP_SQUARE = 0.35;
+const HORSE_CAP_BEVEL = 0.07;
 const HORSE_HEM_SHARE = 0.5;
 // The bare pinto keeps its legs as they were: its joint height was set from the old sack hem
 const HORSE_PINTO_HEM = 0.55;
@@ -2927,34 +2932,40 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     return barrel;
   }
   // The caparison: a drape over the barrel, a stadium in plan (see the spec): flat side panels falling plumb to a level hem HORSE_HEM_SHARE of
-  // the way up, rounded chest and rump ends HORSE_CAP_END of the half-width deep, its back a flat ridge rounded over at the shoulders
+  // the way up, squared chest and rump ends HORSE_CAP_END of the half-width deep, its back a flat deck breaking over a hard shoulder bevel
   const clothMat = mat(scene, cloth.scale(0.85));
   const rCap = (W / 2) * HORSE_CAP_BULGE;
   const capHalf = (L / 2) * HORSE_CAP_LONG;
   const straight = capHalf - rCap * HORSE_CAP_END;
   const backY = H * HORSE_DEEP / 2;
-  // A point on the stadium of half-width r at perimeter share u (from the rump end of the +x panel, round by the chest), with its outward heading
-  const endLong = (r: number) => Math.PI * Math.sqrt((r * r + (r * HORSE_CAP_END) ** 2) / 2);
+  // A point on the stadium of half-width r at perimeter share u (from the rump end of the +x panel, round by the chest), with its outward heading.
+  // Its ends are squared superellipses: flat end panels with tight rounded corners.
+  const endLong = (r: number) => r * (2 + 2 * HORSE_CAP_END);
+  const sq = (v: number, p: number) => Math.sign(v) * Math.abs(v) ** p;
+  const endPoint = (r: number, y: number, a: number, z0: number): { at: Vector3; heading: number } => {
+    const c = Math.cos(a), s = Math.sin(a);
+    return {
+      at: new Vector3(r * sq(c, HORSE_CAP_SQUARE), y, z0 + r * HORSE_CAP_END * sq(s, HORSE_CAP_SQUARE)),
+      heading: Math.atan2(sq(c, 2 - HORSE_CAP_SQUARE) * HORSE_CAP_END, sq(s, 2 - HORSE_CAP_SQUARE)),
+    };
+  };
   const stadium = (r: number, y: number, u: number): { at: Vector3; heading: number } => {
     const side = 2 * straight, end = endLong(r);
     let d = (((u % 1) + 1) % 1) * 2 * (side + end);
     if (d < side) return { at: new Vector3(r, y, -straight + d), heading: Math.PI / 2 };
     d -= side;
-    if (d < end) {
-      const a = (d / end) * Math.PI;
-      return { at: new Vector3(r * Math.cos(a), y, straight + r * HORSE_CAP_END * Math.sin(a)), heading: Math.atan2(Math.cos(a) * HORSE_CAP_END, Math.sin(a)) };
-    }
+    if (d < end) return endPoint(r, y, (d / end) * Math.PI, straight);
     d -= end;
     if (d < side) return { at: new Vector3(-r, y, straight - d), heading: -Math.PI / 2 };
-    const a = Math.PI + ((d - side) / end) * Math.PI;
-    return { at: new Vector3(r * Math.cos(a), y, -straight + r * HORSE_CAP_END * Math.sin(a)), heading: Math.atan2(Math.cos(a) * HORSE_CAP_END, Math.sin(a)) };
+    return endPoint(r, y, Math.PI + ((d - side) / end) * Math.PI, -straight);
   };
   const ring = (r: number, y: number): Vector3[] => {
     const pts: Vector3[] = [];
-    for (let i = 0; i < 28; i++) pts.push(stadium(r, y, i / 28).at);
+    for (let i = 0; i < 40; i++) pts.push(stadium(r, y, i / 40).at);
     return pts;
   };
-  const profile: ReadonlyArray<readonly [number, number]> = [[0.002, 1.04], [0.55, 1.0], [0.85, 0.82], [0.98, 0.55], [1, 0.25]];
+  // A flat deck to the shoulder edge, a short hard bevel, then the plumb sides
+  const profile: ReadonlyArray<readonly [number, number]> = [[0.002, 1.02], [0.92, 1.02], [1, 1.02 - HORSE_CAP_BEVEL], [1, 0.25]];
   const rings = profile.map(([r, y]) => ring(rCap * r, backY * y));
   rings.push(ring(rCap, hemY));
   part(MeshBuilder.CreateRibbon("hcaparison", { pathArray: rings, closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
