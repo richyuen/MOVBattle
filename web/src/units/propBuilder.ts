@@ -884,7 +884,8 @@ export function attachProps(
     props.push(shield);
   }
 
-  const special = buildSpecial(scene, config.special, scale, accent, body, teamColor);
+  // The western rider sits a bare paint horse, not the barded charger
+  const special = buildSpecial(scene, config.special, scale, accent, body, teamColor, config.materialPreset === "wildwest_leather" ? "pinto" : "barded");
   if (special) {
     props.push(special);
   }
@@ -2564,23 +2565,71 @@ const HORSE_FORE_THICK = 0.36;
 const HORSE_HIND_THICK = 0.46;
 const HORSE_HOCK = 0.2;
 const HORSE_CAP_FLARE = 1.3;
-function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
+/*
+ * The pinto (units/wild_west.lasso: the lasso rides a bare paint horse, no barding): the same horse body, its coat a warm orange broken by big cream
+ * patches, each about a tenth of the barrel (PINTO_PATCHES directions, a face cream within PINTO_PATCH of one, ragged by PINTO_RAGGED), cream socks on two
+ * legs and a cream blaze down the face; a big white eye with a black pupil on each side of the head (PINTO_EYE of H), long ears PINTO_EAR of H with pink
+ * insides, a pink muzzle, and a dark mane in tufts down the top of the neck. No chanfron, plume or caparison. The rider carries a coiled rope loop in his
+ * off hand (PINTO_LOOP of his scale across).
+ */
+const PINTO_COAT = new Color3(0.95, 0.42, 0.1);
+const PINTO_CREAM = new Color3(1, 0.93, 0.78);
+const PINTO_PINK = new Color3(0.98, 0.55, 0.66);
+const PINTO_GLOW = 0.18;
+const PINTO_PATCHES: ReadonlyArray<readonly [number, number, number]> = [[-0.9, 0.25, 0.1], [0.85, 0.1, -0.35], [0.25, 0.7, -0.7], [-0.15, -0.75, 0.55], [0.35, 0.15, 0.92], [-0.5, 0.1, -0.85]];
+const PINTO_PATCH = 0.83;
+const PINTO_RAGGED = 0.06;
+const PINTO_EYE = 0.075;
+const PINTO_EAR = 0.3;
+const PINTO_LOOP = 0.42;
+type HorseStyle = "barded" | "pinto";
+function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: HorseStyle = "barded"): Mesh {
+  const pinto = style === "pinto";
   const H = body.hip.position.y;
   // Up on the horse: the animator keeps this as the hip's rest height (it is read once, on the first tick after the build)
   body.hip.position.y = H * (1 + HORSE_LIFT);
   const ground = -H * (1 + HORSE_LIFT);
   const L = H * HORSE_LONG;
   const W = Math.max(body.metrics.hipWidth * 1.8, H * 0.5);
-  const coat = mat(scene, new Color3(0.5, 0.28, 0.17));
+  // The paint's coat and patches are a little self-lit, so they stay orange and cream in the blue shade instead of greying
+  const coat = pinto ? mat(scene, PINTO_COAT, PINTO_GLOW) : mat(scene, new Color3(0.5, 0.28, 0.17));
   const dark = mat(scene, new Color3(0.16, 0.1, 0.07));
   const plate = mat(scene, new Color3(0.66, 0.68, 0.7));
-  const cream = mat(scene, new Color3(0.93, 0.84, 0.64));
+  const cream = pinto ? mat(scene, PINTO_CREAM, PINTO_GLOW) : mat(scene, new Color3(0.93, 0.84, 0.64));
   const barrel = MeshBuilder.CreateIcoSphere("horse", { radius: 1, subdivisions: 2 }, scene);
   barrel.scaling.set(W / 2, H * HORSE_DEEP / 2, L / 2);
   barrel.convertToFlatShadedMesh();
   barrel.parent = body.hip;
   barrel.position.y = -H * (0.05 + HORSE_DEEP / 2);
   barrel.material = coat;
+  if (pinto) {
+    // The paint coat: the barrel's faces that point near one of the patch directions are laid over again in cream, a hair proud of the orange
+    const pos = barrel.getVerticesData(VertexBuffer.PositionKind)!;
+    const idx = barrel.getIndices()!;
+    const centres = PINTO_PATCHES.map(([x, y, z]) => new Vector3(x, y, z).normalize());
+    const patchPos: number[] = [], patchIdx: number[] = [];
+    for (let f = 0; f < idx.length; f += 3) {
+      const c = new Vector3(0, 0, 0);
+      for (let j = 0; j < 3; j++) c.addInPlace(Vector3.FromArray(pos, idx[f + j] * 3));
+      c.normalize();
+      const ragged = (Math.abs(Math.sin(f * 12.9898) * 43758.5453) % 1 - 0.5) * 2 * PINTO_RAGGED;
+      if (!centres.some((p) => Vector3.Dot(c, p) > PINTO_PATCH + ragged)) continue;
+      for (let j = 0; j < 3; j++) {
+        patchIdx.push(patchPos.length / 3);
+        patchPos.push(...Vector3.FromArray(pos, idx[f + j] * 3).scale(1.02).asArray());
+      }
+    }
+    const patches = new Mesh("hpatches", scene);
+    const data = new VertexData();
+    data.positions = patchPos;
+    data.indices = patchIdx;
+    const normals: number[] = [];
+    VertexData.ComputeNormals(patchPos, patchIdx, normals);
+    data.normals = normals;
+    data.applyToMesh(patches);
+    patches.parent = barrel;
+    patches.material = cream;
+  }
   // Parts hang off a holder at the barrel's middle, so the barrel's own scaling does not stretch them
   const frame = new Mesh("horseFrame", scene);
   frame.parent = body.hip;
@@ -2618,7 +2667,9 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
       limb(z > 0 ? "hforearm" : "hgaskin", joint, upper, H * (z > 0 ? HORSE_FORE_THICK : HORSE_HIND_THICK), H * 0.2);
       const jointBall = part(MeshBuilder.CreateIcoSphere("hjoint", { radius: H * 0.1, subdivisions: 1 }, scene), coat);
       jointBall.position.copyFrom(joint);
-      limb("hcannon", hoofAt, joint, H * 0.16, H * 0.11);
+      const cannon = limb("hcannon", hoofAt, joint, H * 0.16, H * 0.11);
+      // The paint's cream socks, on one fore and the opposite hind
+      if (pinto && x === z) cannon.material = cream;
       const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: H * 0.1, diameterTop: H * 0.12, diameterBottom: H * 0.17, tessellation: 6 }, scene), dark);
       hoof.position.set(legX, floor + H * 0.045, hoofAt.z);
     }
@@ -2633,23 +2684,60 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
   const head = part(MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.17, diameterBottom: H * 0.3, tessellation: 5 }, scene), coat);
   head.rotation.x = 2.05;
   head.position.set(0, poll.y + Math.cos(2.05) * headLong * 0.42, poll.z + Math.sin(2.05) * headLong * 0.42);
-  // The chanfron: a grey plate down the face, on top of the head and standing proud of it
-  const chanfron = part(MeshBuilder.CreateBox("hchanfron", { width: H * 0.2, height: headLong * 0.85, depth: H * 0.05 }, scene), plate);
+  // The chanfron: a grey plate down the face, on top of the head and standing proud of it (the pinto's is a cream blaze instead)
+  const chanfron = part(MeshBuilder.CreateBox(pinto ? "hblaze" : "hchanfron", { width: H * (pinto ? 0.12 : 0.2), height: headLong * 0.85, depth: H * 0.05 }, scene), pinto ? cream : plate);
   chanfron.parent = head;
-  chanfron.position.set(0, -headLong * 0.04, -H * 0.1);
-  const muzzle = part(MeshBuilder.CreateBox("hmuzzle", { width: H * 0.13, height: H * 0.1, depth: H * 0.12 }, scene), coat);
+  chanfron.position.set(0, -headLong * 0.04, pinto ? -H * 0.085 : -H * 0.1);
+  const pink = mat(scene, PINTO_PINK, PINTO_GLOW);
+  const muzzle = part(MeshBuilder.CreateBox("hmuzzle", { width: H * (pinto ? 0.19 : 0.13), height: H * (pinto ? 0.15 : 0.1), depth: H * (pinto ? 0.17 : 0.12) }, scene), pinto ? pink : coat);
   muzzle.position.set(0, poll.y + Math.cos(2.05) * headLong * 0.95, poll.z + Math.sin(2.05) * headLong * 0.95);
+  const earTall = H * (pinto ? PINTO_EAR : 0.18);
   for (const x of [-1, 1]) {
-    const ear = part(MeshBuilder.CreateCylinder("hear", { height: H * 0.18, diameterTop: 0, diameterBottom: H * 0.07, tessellation: 4 }, scene), coat);
-    ear.position.set(x * H * 0.07, poll.y + H * 0.08, poll.z - H * 0.02);
+    const ear = part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * (pinto ? 0.1 : 0.07), tessellation: 4 }, scene), coat);
+    ear.position.set(x * H * (pinto ? 0.08 : 0.07), poll.y + earTall * 0.45, poll.z - H * 0.02);
     ear.rotation.set(-0.3, 0, -x * 0.25);
+    if (!pinto) continue;
+    // Pink inside the long ear, facing forward
+    const inner = part(MeshBuilder.CreateCylinder("hearInner", { height: earTall * 0.8, diameterTop: 0, diameterBottom: H * 0.065, tessellation: 4 }, scene), pink);
+    inner.parent = ear;
+    inner.position.set(0, -earTall * 0.06, H * 0.028);
+    // A big white eye with a black pupil on each side of the head
+    const eye = part(MeshBuilder.CreateIcoSphere("heye", { radius: H * PINTO_EYE, subdivisions: 1 }, scene), mat(scene, new Color3(0.97, 0.97, 0.95)));
+    eye.parent = head;
+    eye.position.set(x * H * 0.12, -headLong * 0.22, -H * 0.03);
+    const pupil = part(MeshBuilder.CreateIcoSphere("hpupil", { radius: H * PINTO_EYE * 0.55, subdivisions: 1 }, scene), dark);
+    pupil.parent = eye;
+    pupil.position.set(x * H * PINTO_EYE * 0.6, 0, -H * PINTO_EYE * 0.15);
   }
-  const plume = part(MeshBuilder.CreateCylinder("hplume", { height: H * 0.3, diameterTop: H * 0.16, diameterBottom: H * 0.03, tessellation: 5 }, scene), mat(scene, cloth.scale(0.9)));
-  plume.position.set(0, poll.y + H * 0.16, poll.z + H * 0.04);
-  plume.rotation.x = -0.35;
+  if (pinto) {
+    // The mane: dark tufts down the top of the neck, a forelock at the poll
+    for (let i = 0; i < 5; i++) {
+      const tuft = part(MeshBuilder.CreateBox("hmane", { width: H * 0.06, height: neckTall * 0.2, depth: H * 0.13 }, scene), dark);
+      tuft.parent = neck;
+      tuft.position.set(0, neckTall * (0.4 - i * 0.18), -H * (0.12 + i * 0.018));
+      tuft.rotation.x = -0.25;
+    }
+  } else {
+    const plume = part(MeshBuilder.CreateCylinder("hplume", { height: H * 0.3, diameterTop: H * 0.16, diameterBottom: H * 0.03, tessellation: 5 }, scene), mat(scene, cloth.scale(0.9)));
+    plume.position.set(0, poll.y + H * 0.16, poll.z + H * 0.04);
+    plume.rotation.x = -0.35;
+  }
   const tail = part(MeshBuilder.CreateCylinder("htail", { height: H * 0.55, diameterTop: H * 0.1, diameterBottom: H * 0.03, tessellation: 5 }, scene), dark);
   tail.rotation.x = 0.35;
   tail.position.set(0, H * 0.02 - H * 0.26, -L * 0.5 - H * 0.08);
+  // Down in the saddle: his shins and feet would stand between the horse's legs
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const m of knee.getChildMeshes(false)) m.isVisible = false;
+  }
+  if (pinto) {
+    // The lasso: a coiled rope loop hanging from his off hand
+    const loop = MeshBuilder.CreateTorus("lassoLoop", { diameter: H * PINTO_LOOP * 2, thickness: H * 0.035, tessellation: 12 }, scene);
+    loop.parent = body.leftHand;
+    loop.position.set(0, -H * PINTO_LOOP * 0.9, H * 0.02);
+    loop.rotation.z = Math.PI / 2;
+    loop.material = mat(scene, new Color3(0.86, 0.74, 0.52));
+    return barrel;
+  }
   // The caparison: team cloth draped over the rounded barrel (a cloth dome on the back) and falling as a bell skirt
   // that flares HORSE_CAP_FLARE wider at the hem, oval in plan, cream hem and square dags all round it
   const clothMat = mat(scene, cloth.scale(0.85));
@@ -2674,14 +2762,10 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
     dag.position.set(Math.cos(a) * hemR * 1.01, hemY - H * 0.04, Math.sin(a) * hemR * 1.01 * capLong / (W * 1.06));
     dag.rotation.y = Math.PI / 2 - a;
   }
-  // Down in the saddle: his shins and feet would stand between the horse's legs
-  for (const knee of [body.leftKnee, body.rightKnee]) {
-    for (const m of knee.getChildMeshes(false)) m.isVisible = false;
-  }
   return barrel;
 }
 
-function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody, teamColor?: Color3): Mesh | null {
+function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody, teamColor?: Color3, horse: HorseStyle = "barded"): Mesh | null {
   switch (type) {
     case "none": return null;
 
@@ -2767,7 +2851,7 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       return mammoth;
     }
     case "mount_horse":
-      return buildHorse(scene, body, teamColor ?? accent);
+      return buildHorse(scene, body, teamColor ?? accent, horse);
     case "catapult_arm": {
       const base = MeshBuilder.CreateBox("catbase", { width: 0.6 * s, height: 0.2 * s, depth: 0.4 * s }, scene);
       base.position.set(0, -0.1 * s, 0.1 * s);
