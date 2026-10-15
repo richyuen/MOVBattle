@@ -1218,6 +1218,8 @@ interface CampaignMapTheme {
   town?: boolean;
   /** A broken tower and lone pillars on the far rim in place of the sandbox's boulders and rubble walls (see meadowRuins) */
   ruins?: boolean;
+  /** A grey keep with blue cone-spired towers on the far rim in place of the sandbox's boulders, rubble walls and bales (see meadowCastle) */
+  castle?: boolean;
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -1837,6 +1839,120 @@ function meadowRuins(scene: Scene, obstacles: MapBuildResult["obstacles"]): void
     block.rotation.set((r() - 0.5) * 0.4, r() * Math.PI, (r() - 0.5) * 0.4);
     piece(block, i % 2 ? stone : dark);
   }
+}
+
+/*
+ * Meadow castle (adventure; maps/meadow_medieval_2: the far rim is crowned by a grey castle about a quarter of the island wide, a crenellated curtain
+ * wall with round corner towers, a square keep behind it and one tall round tower rising from the keep to about three times the wall's height, every
+ * tower capped by a steep blue-violet cone about 1.3x its own width, spire height ~1.4x the cone's base; trees crowd round its foot). The sandbox's
+ * boulders, rubble walls and hay bales on the island are put away with their obstacles, and the ring trees standing on the castle's footprint go too.
+ * Built at (CASTLE_X, CASTLE_Z): a CASTLE_WIDE x CASTLE_DEEP curtain wall CASTLE_WALL tall with merlons along its top and a dark gate on its field
+ * side; four corner towers CASTLE_CORNER across; a keep CASTLE_KEEP square and CASTLE_KEEP_TALL high; the great tower CASTLE_TOWER across up to
+ * CASTLE_TOWER_TALL; two turrets on the keep's front corners. Grey stone part self-lit, spires CASTLE_ROOF self-lit so they stay blue in shade.
+ */
+const CASTLE_X = -10;
+const CASTLE_Z = 31;
+const CASTLE_WIDE = 26;
+const CASTLE_DEEP = 10;
+const CASTLE_WALL = 5;
+const CASTLE_CORNER = 3.8;
+const CASTLE_KEEP = 11;
+const CASTLE_KEEP_TALL = 11;
+const CASTLE_TOWER = 4.6;
+const CASTLE_TOWER_TALL = 17;
+const CASTLE_STONE = new Color3(0.76, 0.75, 0.72);
+const CASTLE_ROOF = new Color3(0.36, 0.42, 0.82);
+const CASTLE_DRESSING = new Set(["boulder", "wallStone", "hayBale"]);
+function meadowCastle(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const hidden: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!CASTLE_DRESSING.has(mesh.name)) continue;
+    const at = mesh.getAbsolutePosition();
+    if (!onIsland(at.x, at.z)) continue;
+    mesh.setEnabled(false);
+    hidden.push(at.clone());
+  }
+  const halfX = CASTLE_WIDE / 2 + CASTLE_CORNER / 2, halfZ = CASTLE_DEEP / 2 + CASTLE_CORNER / 2;
+  const onCastle = (x: number, z: number, margin: number) => Math.abs(x - CASTLE_X) <= halfX + margin && Math.abs(z - CASTLE_Z) <= halfZ + margin;
+  for (const mesh of scene.meshes) {
+    if (mesh.name !== "trunk" || !mesh.isEnabled()) continue;
+    const at = mesh.getAbsolutePosition();
+    if (!onCastle(at.x, at.z, 2.5)) continue;
+    mesh.setEnabled(false);
+    hidden.push(at.clone());
+  }
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    if (o.type !== "cylinder") continue;
+    if (hidden.some((p) => Math.hypot(p.x - o.center.x, p.z - o.center.z) <= o.radius + 0.1)) obstacles.splice(i, 1);
+  }
+  const self = (name: string, c: Color3, lit: number): StandardMaterial => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(1 - lit);
+    m.emissiveColor = c.scale(lit);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const stone = self("castleStone", CASTLE_STONE, 0.4);
+  const dark = self("castleStoneDark", CASTLE_STONE.scale(0.82), 0.4);
+  const roof = self("castleRoof", CASTLE_ROOF, 0.45);
+  const gateMat = self("castleGate", new Color3(0.22, 0.2, 0.22), 0.2);
+  const glow = scene.getGlowLayerByName("glow");
+  const shadows = sunShadows(scene);
+  const piece = (mesh: Mesh, mat: StandardMaterial): Mesh => {
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    mesh.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(mesh);
+    shadows?.addShadowCaster(mesh, false);
+    return mesh;
+  };
+  const merlons = (x0: number, z0: number, x1: number, z1: number, y: number, size: number): void => {
+    const long = Math.hypot(x1 - x0, z1 - z0);
+    const count = Math.max(2, Math.round(long / (size * 2)));
+    for (let i = 0; i < count; i++) {
+      const t = (i + 0.5) / count;
+      const m = MeshBuilder.CreateBox("castleMerlon", { width: size, height: size, depth: size }, scene);
+      m.position.set(x0 + (x1 - x0) * t, y + size / 2, z0 + (z1 - z0) * t);
+      m.rotation.y = Math.atan2(x1 - x0, z1 - z0);
+      piece(m, stone);
+    }
+  };
+  // A round tower with a jutting crenel ring and a steep blue cone
+  const tower = (x: number, z: number, wide: number, top: number, from = 0): void => {
+    piece(MeshBuilder.CreateCylinder("castleTower", { diameter: wide, height: top - from, tessellation: 10 }, scene), stone).position.set(x, from + (top - from) / 2, z);
+    piece(MeshBuilder.CreateCylinder("castleTowerRing", { diameter: wide * 1.18, height: wide * 0.22, tessellation: 10 }, scene), dark).position.set(x, top + wide * 0.11, z);
+    const coneWide = wide * 1.3;
+    const cone = MeshBuilder.CreateCylinder("castleSpire", { diameterTop: 0, diameterBottom: coneWide, height: coneWide * 1.4, tessellation: 10 }, scene);
+    cone.position.set(x, top + wide * 0.22 + coneWide * 0.7, z);
+    piece(cone, roof);
+  };
+  const x0 = CASTLE_X - CASTLE_WIDE / 2, x1 = CASTLE_X + CASTLE_WIDE / 2;
+  const z0 = CASTLE_Z - CASTLE_DEEP / 2, z1 = CASTLE_Z + CASTLE_DEEP / 2;
+  const thick = 1.2;
+  // Curtain wall: four sides, merlons along every top edge, a dark gate in the field side
+  for (const [cx, cz, w, d] of [
+    [CASTLE_X, z0, CASTLE_WIDE, thick], [CASTLE_X, z1, CASTLE_WIDE, thick], [x0, CASTLE_Z, thick, CASTLE_DEEP], [x1, CASTLE_Z, thick, CASTLE_DEEP],
+  ] as const) {
+    piece(MeshBuilder.CreateBox("castleWall", { width: w, height: CASTLE_WALL, depth: d }, scene), stone).position.set(cx, CASTLE_WALL / 2, cz);
+  }
+  merlons(x0, z0, x1, z0, CASTLE_WALL, 0.75);
+  merlons(x0, z0, x0, z1, CASTLE_WALL, 0.75);
+  merlons(x1, z0, x1, z1, CASTLE_WALL, 0.75);
+  piece(MeshBuilder.CreateBox("castleGate", { width: 3, height: 3.6, depth: 0.3 }, scene), gateMat).position.set(CASTLE_X + 2, 1.8, z0 - thick / 2 - 0.1);
+  for (const [cx, cz] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]] as const) tower(cx, cz, CASTLE_CORNER, CASTLE_WALL * 1.6);
+  // The keep at the back, merlons round its roof, turrets on its front corners and the great tower rising from it off-centre
+  const kx = CASTLE_X - 1.5, kz = CASTLE_Z + 1;
+  piece(MeshBuilder.CreateBox("castleKeep", { width: CASTLE_KEEP, height: CASTLE_KEEP_TALL, depth: CASTLE_KEEP * 0.75 }, scene), dark).position.set(kx, CASTLE_KEEP_TALL / 2, kz);
+  const kx0 = kx - CASTLE_KEEP / 2, kx1 = kx + CASTLE_KEEP / 2, kz0 = kz - CASTLE_KEEP * 0.375, kz1 = kz + CASTLE_KEEP * 0.375;
+  merlons(kx0, kz0, kx1, kz0, CASTLE_KEEP_TALL, 0.8);
+  merlons(kx0, kz0, kx0, kz1, CASTLE_KEEP_TALL, 0.8);
+  merlons(kx1, kz0, kx1, kz1, CASTLE_KEEP_TALL, 0.8);
+  tower(kx0, kz0, 2.4, CASTLE_KEEP_TALL + 3.5, CASTLE_KEEP_TALL - 2);
+  tower(kx1, kz0, 2.4, CASTLE_KEEP_TALL + 3.5, CASTLE_KEEP_TALL - 2);
+  tower(kx + 1.2, kz + 0.6, CASTLE_TOWER, CASTLE_TOWER_TALL, CASTLE_KEEP_TALL - 1);
+  obstacles.push({ type: "box", center: new Vector3(CASTLE_X, 0, CASTLE_Z), halfX, halfZ });
 }
 
 /*
@@ -2959,6 +3075,7 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
   if (theme.bare) barePlane(scene, prior);
   if (theme.town) townPlaza(scene, obstacles);
   if (theme.ruins) meadowRuins(scene, obstacles);
+  if (theme.castle) meadowCastle(scene, obstacles);
   addCampaignProps(scene, theme, obstacles);
   createHazardVisuals(scene, hazards, theme.sea, theme.lagoon);
   if (theme.sea) sandSpits(scene, theme.sea, hazards);
@@ -3025,12 +3142,13 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     ],
     // Clear turquoise lagoons with a pale foam edge (see lagoonPools)
     lagoon: { water: new Color3(0.26, 0.78, 0.66), deep: new Color3(0.1, 0.56, 0.56), shore: new Color3(0.74, 0.86, 0.68) },
+    // A grey keep with blue cone spires on the far rim, no boulders, rubble walls or bales on the field (see meadowCastle)
+    castle: true,
     accent: new Color3(0.78, 0.68, 0.34),
     props: [
       { kind: "tree", x: -28, z: -24, scale: 1.15 },
       { kind: "tree", x: -22, z: 22, scale: 1.1 },
       { kind: "tree", x: 18, z: -10, scale: 1.05 },
-      { kind: "ruin", x: 22, z: 20, scale: 1.0 },
       { kind: "bridge", x: 0, z: 0, scale: 0.9 },
     ],
   },
