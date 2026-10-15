@@ -165,6 +165,18 @@ const TREE_GIANT_TATTERS = 8;
 const TREE_GIANT_TUNIC = new Color3(0.08, 0.18, 0.2);
 const TREE_GIANT_HAIR = new Color3(0.3, 0.15, 0.12);
 const TREE_GIANT_RAGS = new Color3(0.56, 0.42, 0.28);
+/*
+ * The painter (255; units/renaissance.painter): a two-tone man, not one team colour. A dark team doublet and sleeves, tan hose to the ankle, red-brown shoes, a
+ * cream ruff in two stacked collars round the neck, a dark team beret; the palette rides in the off hand (propBuilder "palette").
+ *   doublet PAINTER_DOUBLET of the team colour, beret PAINTER_BERET; ruff PAINTER_RUFF necks across in PAINTER_RUFF_TIERS tiers.
+ */
+const PAINTER_DOUBLET = 0.6;
+const PAINTER_BERET = 0.42;
+const PAINTER_HOSE = new Color3(0.92, 0.6, 0.3);
+const PAINTER_SHOE = new Color3(0.66, 0.22, 0.12);
+const PAINTER_RUFF_COLOR = new Color3(1.0, 0.86, 0.55);
+const PAINTER_RUFF = 1.25;
+const PAINTER_RUFF_TIERS = 2;
 
 // Clothes are solids hung on the body, not a colour painted on it. The lower half of a garment is a faceted bell hung from the waist over the pelvis and the tops of
 // the thighs, standing off the legs at its hem: it rides the hips and not the legs, so a stride swings the knees out from under it. length is in thighs, flare is the
@@ -338,6 +350,9 @@ export class UnitFactory {
     }
     if (definition.id === "secret.tree_giant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressTreeGiant(this._scene, body, teamColor));
+    }
+    if (definition.id === "renaissance.painter" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressPainter(this._scene, body, teamColor, propMeshes));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -629,6 +644,48 @@ function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3):
       added.push(tatter);
     }
   }
+  return added;
+}
+
+/** Dresses the painter two-tone (see PAINTER_*): dark team doublet, tan hose, red-brown shoes, a cream ruff at the neck, a dark team beret. */
+function dressPainter(scene: Scene, body: ArticulatedBody, teamColor: Color3, props: Mesh[]): Mesh[] {
+  const added: Mesh[] = [];
+  // The doublet is the body's own cloth turned dark team; the tunic hem hung later follows it
+  body.bodyMaterial.baseColor = teamColor.scale(PAINTER_DOUBLET);
+  const hose = getMaterialFactory().getCloth(PAINTER_HOSE);
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    leg.material = hose;
+  }
+  const shoe = getMaterialFactory().getCloth(PAINTER_SHOE);
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
+  }
+  const beret = props.find((m) => m.name === "beret");
+  if (beret) beret.material = getMaterialFactory().getCloth(teamColor.scale(PAINTER_BERET));
+  // Ruff: stacked faceted collars round the neck, each a little narrower than the one under it, wider than the neck so they stand off the doublet
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const ruffMat = getMaterialFactory().getCloth(PAINTER_RUFF_COLOR);
+  for (let i = 0; i < PAINTER_RUFF_TIERS; i++) {
+    const across = headSize * PAINTER_RUFF * (1 - 0.18 * i);
+    const tier = MeshBuilder.CreateCylinder(`${chest.name}_ruff`, { height: headSize * 0.2, diameterTop: across * 0.82, diameterBottom: across, tessellation: 9 }, scene);
+    tier.scaling.z = Math.min(1, (D * 1.3) / across);
+    tier.position.set(0, chest.position.y + H * 0.5 + headSize * (0.02 + 0.17 * i), D * 0.06);
+    tier.material = ruffMat;
+    tier.convertToFlatShadedMesh();
+    tier.parent = body.torso;
+    added.push(tier);
+  }
+  // A cream bib falls from the ruff down the front of the chest, as on the reference
+  const bib = MeshBuilder.CreateCylinder(`${chest.name}_ruffBib`, { height: H * 0.32, diameterTop: W * 0.42, diameterBottom: 0, tessellation: 3 }, scene);
+  bib.rotation.y = Math.PI;
+  bib.scaling.z = 0.25;
+  bib.position.set(0, chest.position.y + H * 0.34, D * 0.5);
+  bib.material = ruffMat;
+  bib.parent = body.torso;
+  added.push(bib);
   return added;
 }
 

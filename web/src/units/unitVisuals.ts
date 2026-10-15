@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat";
 
-export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab";
+export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab" | "palette";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -424,7 +424,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ RENAISSANCE ═══════════════════════
   "renaissance.painter": vis(
-    { scale: 0.9, bulk: 0.9 }, "paintbrush", "beret", "none", "none", "#FF69B4",
+    { scale: 0.9, bulk: 0.9 }, "paintbrush", "beret", "palette", "none", "#FF69B4",
     undefined,
     { materialPreset: "renaissance_velvet" },
   ),

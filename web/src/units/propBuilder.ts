@@ -866,7 +866,12 @@ export function attachProps(
   if (shield) {
     shield.parent = body.leftHand;
     // TABS shields cover neck to knee and overlap along a line; bucklers stay small on purpose
-    if (config.shield !== "buckler") {
+    if (config.shield === "palette") {
+      // The palette is held out flat off the hand, its face tipped up and toward the viewer, not strapped across the chest
+      shield.scaling.scaleInPlace(PROP_OVERSIZE);
+      shield.rotation.set(PALETTE_TIP, PALETTE_TURN, 0);
+      shield.position.set(0.06 * scale, -0.02 * scale, 0.12 * scale);
+    } else if (config.shield !== "buckler") {
       const round = config.shield === "round";
       shield.scaling.scaleInPlace(round ? 2.0 : 1.9);
       // A kite is shoulder-wide at the top, not a plank
@@ -1734,10 +1739,14 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return body;
     }
     case "paintbrush": {
-      const handle = MeshBuilder.CreateCylinder("brush", { height: 0.35 * s, diameter: 0.02 * s }, scene);
-      handle.material = mat(scene, new Color3(0.5, 0.35, 0.2));
-      const tip = MeshBuilder.CreateBox("tip", { width: 0.04 * s, height: 0.06 * s, depth: 0.02 * s }, scene);
-      tip.position.y = 0.2 * s; tip.parent = handle;
+      // A fat artist's brush (units/renaissance.painter): a tapered red-brown handle, a dark ferrule and a long pointed tuft of paint
+      const handle = MeshBuilder.CreateCylinder("brush", { height: 0.35 * s, diameterTop: 0.045 * s, diameterBottom: 0.025 * s, tessellation: 6 }, scene);
+      handle.material = mat(scene, new Color3(0.6, 0.3, 0.2));
+      const ferrule = MeshBuilder.CreateCylinder("brushFerrule", { height: 0.05 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
+      ferrule.position.y = 0.2 * s; ferrule.parent = handle;
+      ferrule.material = mat(scene, new Color3(0.3, 0.3, 0.34));
+      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.11 * s, diameterTop: 0, diameterBottom: 0.06 * s, tessellation: 6 }, scene);
+      tip.position.y = 0.3 * s; tip.parent = handle;
       tip.material = mat(scene, accent, 0.2);
       handle.position.y = 0.05 * s;
       return handle;
@@ -2264,6 +2273,10 @@ let roundBoardSerial = 0;
 const SLAB_WIDE = 0.25;
 const SLAB_TALL = 0.71;
 let slabSerial = 0;
+// The painter's palette, in its own units before the prop oversize: across (about a torso wide carried), tipped PALETTE_TIP face-up and turned PALETTE_TURN out in the hand
+const PALETTE_WIDE = 0.24;
+const PALETTE_TIP = -1.0;
+const PALETTE_TURN = 0.4;
 function roundBoardSeed(serial: number, k: number): number {
   const x = Math.sin(serial * 127.1 + k * 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -2426,6 +2439,36 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         stone.scaling.set(1.1, 1.4, 0.6);
         stone.material = rock;
         stone.parent = shield;
+      }
+      return shield;
+    }
+    case "palette": {
+      // The painter's palette (255; units/renaissance.painter): a flat red-brown kidney board about a torso across, a thumb hole near its inner edge, three daubs
+      // of team paint on its face. Held out flat beside the hip, tipped face-up toward the viewer.
+      const shield = MeshBuilder.CreateCylinder("palette", { height: 0.012 * s, diameter: PALETTE_WIDE * s, tessellation: 11 }, scene);
+      shield.scaling.z = 0.78;
+      shield.rotation.x = Math.PI / 2;
+      shield.bakeCurrentTransformIntoVertices();
+      shield.material = mat(scene, new Color3(0.66, 0.3, 0.22));
+      // The kidney's notch: a second lobe of board wider at the far side
+      const lobe = MeshBuilder.CreateCylinder("paletteLobe", { height: 0.012 * s, diameter: PALETTE_WIDE * 0.62 * s, tessellation: 9 }, scene);
+      lobe.rotation.x = Math.PI / 2;
+      lobe.bakeCurrentTransformIntoVertices();
+      lobe.position.set(PALETTE_WIDE * 0.38 * s, -PALETTE_WIDE * 0.08 * s, 0);
+      lobe.material = shield.material;
+      lobe.parent = shield;
+      const hole = MeshBuilder.CreateCylinder("paletteHole", { height: 0.014 * s, diameter: PALETTE_WIDE * 0.16 * s, tessellation: 7 }, scene);
+      hole.rotation.x = Math.PI / 2;
+      hole.position.set(-PALETTE_WIDE * 0.28 * s, PALETTE_WIDE * 0.12 * s, 0.001 * s);
+      hole.material = mat(scene, new Color3(0.2, 0.1, 0.08));
+      hole.parent = shield;
+      for (const [x, y, k] of [[0.02, 0.17, 0.7], [0.1, -0.14, 1.0], [0.48, 0.0, 0.5]]) {
+        const daub = MeshBuilder.CreateSphere("paletteDaub", { diameter: PALETTE_WIDE * 0.24 * s, segments: 3 }, scene);
+        daub.scaling.set(1.3, 0.75, 0.22);
+        daub.rotation.z = 0.4;
+        daub.position.set(x * PALETTE_WIDE * s, y * PALETTE_WIDE * s, 0.008 * s);
+        daub.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.15).scale(k + 0.2), 0.05);
+        daub.parent = shield;
       }
       return shield;
     }
