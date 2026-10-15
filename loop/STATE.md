@@ -18,7 +18,8 @@ maps-light: e PASS f PASS g PASS h PASS (4/4)
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
-Total tier 1 24/24; tier 2 21/24.
+Tier 3 (unit-look i-v, one per faction lineup; maps-light i-o, one per campaign map; see CRITIC.md): unscored — 240 re-audits them from the new lineup_<faction> and biome_<map> shots.
+Total tier 1 24/24; tier 2 21/24; tier 3 0/21 unscored.
 
 ## Focus (every gap this iteration)
 BASE 56150f4 (one gap: battle-feel.e/.h plateau; only unit-look.h [S]-pickable)
@@ -44,7 +45,7 @@ BASE 56150f4 (one gap: battle-feel.e/.h plateau; only unit-look.h [S]-pickable)
 - strike-tip [attempts: 2, dropped] — 228: landed fist at knee height in the press crouch; spent
 
 ## Notes for next iteration (max 5 lines)
-- 239 pick was [S] unit-look.h only. 240 is a re-audit (rewrites the plateau e/h lists and rewords unit-look.h blocker 2). Loop paused by the user after 239 (/loop off). Skip [P]s on rows approved within 20 iterations. Check EOL/CR of every committed file. shield_wall: blue = ancient.hoplite, red = tribal.protector.
+- 240 re-audits: tier 3 scored, plateau e/h lists rewritten, unit-look.h blocker 2 reworded. New evidence: press_clubbers_hit is the frame a clubber's blow lands on (sim hit log), the battle-feel.e shot to judge; 13 lineup_<faction> and 7 biome_<map> shots. Two rejected [R] on a criterion now mark it `deferred`. .gitattributes normalises EOL: no more LF restores. Skip [P]s on rows approved within 20 iterations. Check EOL/CR of every committed file. shield_wall: blue = ancient.hoplite, red = tribal.protector.
 - Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced (no crowd topple); every rank's boards ride the rank strip at 0.62 of neck height; the shield arm aims at the board back (_gripBoard). The blue wall men are hoplites with round boards (no tower shields in the wall shots).
 - battle-feel.e: contact clubbers are limp 0.8-0.98 (toppled by braced hoplites), overriding the club pose; crowd_topple_clubber_vs_protector guards that topple.
 - capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. Python edits: read/write bytes as utf-8 and keep the file's eol.

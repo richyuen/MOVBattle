@@ -291,6 +291,19 @@ async function main() {
       // Gallery-camera reads (UI hidden by design): a lineup, two mid-swing close-ups, one hero pair.
       const galleryShots = [
         ["lineup_medieval", "gallery_faction_medieval"],
+        ["lineup_tribal", "gallery_faction_tribal"],
+        ["lineup_farmer", "gallery_faction_farmer"],
+        ["lineup_ancient", "gallery_faction_ancient"],
+        ["lineup_viking", "gallery_faction_viking"],
+        ["lineup_dynasty", "gallery_faction_dynasty"],
+        ["lineup_renaissance", "gallery_faction_renaissance"],
+        ["lineup_pirate", "gallery_faction_pirate"],
+        ["lineup_spooky", "gallery_faction_spooky"],
+        ["lineup_wild_west", "gallery_faction_wild_west"],
+        ["lineup_legacy", "gallery_faction_legacy"],
+        ["lineup_good", "gallery_faction_good"],
+        ["lineup_evil", "gallery_faction_evil"],
+        ["lineup_secret", "gallery_faction_secret"],
         ["closeup_state_reads", "gallery_state_reads"],
         ["closeup_weapon_reads", "gallery_weapon_reads"],
         ["closeup_pair_zeus_thor", "gallery_pair_ancient_zeus_vs_legacy_thor"],
@@ -307,6 +320,22 @@ async function main() {
           window.game.runScenarioGalleryValidation(n);
         }, scenario);
         await shot(page, shotName);
+        if (shotName === "press_clubbers_side") {
+          // Step a frame at a time until a clubber's blow lands, then shoot that very frame.
+          const hit = await page.evaluate(() => {
+            window.game.clearHitLog();
+            for (let ms = 0; ms < 4000; ms += 16) {
+              window.advanceTime(16);
+              const h = window.game.getHitLog().find((e) => /clubber|chieftain/.test(e.attackerUnit));
+              if (h) return { ms, ...h };
+            }
+            return null;
+          });
+          summary.notes.push(hit
+            ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} at +${hit.ms} ms`
+            : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
+          if (hit) await shot(page, "press_clubbers_hit");
+        }
       }
       await page.evaluate(() => {
         document.body.classList.remove("capture-mode");
@@ -382,6 +411,21 @@ async function main() {
       const finalState = await page.evaluate(() => window.render_game_to_text());
       fs.writeFileSync(path.join(outDir, "big_melee_final_state.json"), finalState);
 
+      // Every other campaign map at the placement view: one shot per biome.
+      for (const mapId of ["introduction","adventure","challenge","dynasty","renaissance","pirate","simulation"]) {
+        const loaded = await page.evaluate((id) => {
+          try {
+            window.game.resetBattle();
+            window.game.loadCampaignScenario(id);
+            window.advanceTime(50);
+            return true;
+          } catch (e) {
+            return String(e);
+          }
+        }, mapId);
+        if (loaded === true) await shot(page, `biome_${mapId}`);
+        else summary.notes.push(`biome_${mapId}: campaign did not load: ${loaded}`);
+      }
       // Second biome: the spooky campaign map with its locked undead line, at the placement view.
       await page.evaluate(() => {
         window.game.resetBattle();

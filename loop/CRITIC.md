@@ -30,6 +30,10 @@ ui-flow: e tray: white line-art unit icons on dark tiles with names, the selecte
 camera: e the horizon stands in the top third of the battle frame: field and figures fill the lower two thirds (big_melee_2s; ref tabs_screenshot_01) | f a spectator low shot: near ground, looking up at a giant or a launch (needs a shot; ref trailer_3_sheet_01 r1c2, trailer_3_sheet_03 r1c2) | g the result shot drifts: two frames 1 s apart differ by a small pan (needs a pair; ref gameplay_sheet_02 r1c2) | h the placement frame shows the whole island with the centre line, units as small figures (big_melee_placement; ref gameplay_sheet_01 r3c3)
 vfx: e lightning as jagged white polygons, magic as solid rings or domes in one colour (closeup_state_reads; ref trailer_2_sheet_03 r1c2, r3c2) | f one fat white puff per shot at the muzzle and a brief white streak behind an arrow (war_machines_400ms; ref trailer_3_sheet_03 r2c1 balls in flight, trailer_3_sheet_01 r3c3 spear streak) | g blood and debris: a few dark red chunks and chunky bits, no sparkles (big_melee_5s; ref trailer_2_sheet_02 r1c2) | h soft sprite smoke, dust and fire sit around the solid burst and trail the shot (war_machines pair; ref trailer_3_sheet_03 r1c2)
 
+## Tier 3 criteria (scored, and pickable, once the dimension's tier 2 is at 3/4 or better)
+unit-look, one per faction lineup, letters i-v: `lineup_<faction>` passes when it would pass as that TABS faction at lineup distance: every unit's hat, weapon, cloth and accent say the faction, silhouettes differ man to man, props oversized, team skin under it all. i tribal (ref tabs_screenshot_01) | j farmer (gameplay_sheet_01 r3c2) | k ancient (tabs_screenshot_02) | l viking (tabs_screenshot_06) | m dynasty (tabs_screenshot_03) | n renaissance (trailer_3_sheet_02 r1c1) | o pirate (trailer_2_sheet_02 r1c2) | p spooky (tabs_screenshot_09) | q wild_west (tabs_screenshot_05) | r legacy (tabs_screenshot_02) | s good (tabs_screenshot_04) | t evil (trailer_2_sheet_02 r3c1) | u secret (trailer_3_sheet_02 r1c1) | v medieval (trailer_3_sheet_01 r2c2). Where the cited file is a weak match, name the closer one you used in EVIDENCE.
+maps-light, one per campaign map, letters i-o: `biome_<map>` passes when the placement view reads as the TABS biome the map is built as (digest section 3: one dominant palette, ringed island with a visible edge, that biome's set dressing, centre line). i introduction | j adventure | k challenge | l dynasty (tabs_screenshot_03) | m renaissance | n pirate | o simulation. Name the biome you judged it as and the reference file in EVIDENCE.
+
 A criterion passes only when a still of ours would pass as TABS for that element. A criterion whose element appears in no shot is FAIL with the single blocker `no evidence: add <shot>`.
 
 ## Blockers: the definition of done
@@ -54,8 +58,10 @@ Then the tail:
 REGRESSIONS: none | <scenario or criterion flip> -> attributed to <sha or all>
 RANKED GAPS:
 1. [S|P] <dimension>.<letter> <gap> — blocker <n>: <mechanism> — ref: <file> — ours: <png>
-... up to 8; tier-1 FAILs before tier-2; at least 4 must be [S]; at most 1 [P], naming the [S] gap it is fallout of; a `plateau` criterion gets exactly one [R] entry naming the mechanism to rebuild and the reference to spec it from, and no [S]
+... up to 8; tier-1 FAILs before tier-2, tier-2 before tier-3; a `deferred` criterion gets one entry, last; at least 4 must be [S]; at most 1 [P], naming the [S] gap it is fallout of; a `plateau` criterion gets exactly one [R] entry naming the mechanism to rebuild and the reference to spec it from, and no [S]
 ```
+
+A `deferred` criterion (two rejected [R]) keeps its list until a re-audit rewrites it; rewrite it only if a shot or commit since gives a new angle, else say `deferred stands`.
 
 ## RE-AUDIT mode
 You are given the previous Criteria block (verdicts, blockers, evidence). Judge every criterion
