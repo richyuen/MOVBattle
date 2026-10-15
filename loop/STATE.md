@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 268   Last re-audit: 265   Consecutive rejects: 0   Branch: main
+Iteration: 269   Last re-audit: 265   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,7 +17,7 @@ ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240, re-audited 245-265; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: i j k l m n o p q r s t v PASS, u FAIL (13/14) [S since: u 0 (5 written 267)]
+unit-look tier 3: i-v all PASS (14/14)
 - i tribal PASS (cleared 243, 251; polish: antlers pale, staff topper)
 - j farmer PASS (cleared 249; polish: brims repeat, braids unreadable; harvester scythe now level-then-droop, 268)
 - k ancient PASS (cleared by a5f0805, 245; polish: crest small, helm close to skin value)
@@ -25,41 +25,41 @@ unit-look tier 3: i j k l m n o p q r s t v PASS, u FAIL (13/14) [S since: u 0 (
 - m dynasty PASS (cleared 247; polish: beads small, monk no bo staff)
 - n renaissance PASS (cleared by 038ffcf, 268; polish: drape corners very hard, rump a flat panel; dags grey-white not cream; horse head a flat brown plank)
 - o pirate PASS (cleared 249, 250; polish: bandana knot/tails, no vests)
-- p spooky PASS (cleared by e37d2ff, 268; polish: heel block + socket reads as a squat plate; blade lavender not pale steel; skull/shins grey not cream)
+- p spooky PASS (cleared by e37d2ff, 268; polish: heel block + socket reads as a squat plate; skull/shins grey not cream)
 - q wild_west PASS (cleared a63efa7 256, 54c5f57 258; polish: pinto legs flat tan planks, tiny hooves; coat tan in shade; robe a broad box)
 - r legacy PASS (cleared 7b0fb2a 263, 971918b 264; polish: chariot hidden behind giant in lineup, driver bare, car a plain drum, horse barrel three lumps; straw saturated gold)
 - s good PASS (cleared 67760f2 259, 5c7d65b 261; polish: elephant mammoth column legs, blanket pale no device, rider stiff; paladin gold lemon)
 - t evil PASS (cleared 5e1852e 265, 0beab60 266; polish: monarch staff held level; pauldrons upright posts; lich tines splay like antlers; mechanic one brown; walker sleeves dark; bringer skull a white cube; cultist bands pale)
-- u secret: 1-3, 3' struck (249-265); 4 struck by [R] 6d39da3 (267); 5 crown hangs shin-high, bottom lobe at the grass, trunk dropping steeply from the belt; ref trunk near level from a hip-high fist, crown hip-high at his side (units/secret.tree_giant); polish: lobes ~1/3 ref size, trunk a bit thin
+- u secret PASS (cleared by 6d39da3 267, f694e83 269; polish: crown lobes ~1/3 ref size, trunk thin and smooth, crown slightly behind his flank)
 - v medieval PASS (cleared adb58a6 244, 507a3fe 264; polish: feather thin and pale, straw grey-beige, brim flat)
-maps-light tier 3: k l n o PASS, i j m FAIL (4/7) [S since: 0 each]
+maps-light tier 3: k l n o PASS, i j m FAIL (4/7) [S since: i 0, j 0, m 1]
 - i introduction (meadow): 1 shared pale-sage puffball ring, not dark twisted oaks; 2 no ruins/castle, generic rocks and walls (maps/meadow_medieval_1)
 - j adventure (meadow): 1 pools are flat grey-blue rectangles, not water (maps/meadow_medieval_2); 2 same ring and props as introduction
 - k challenge PASS (cleared 247, 248; polish: island side wall slate blue-violet, not ochre strata)
 - l dynasty PASS (cleared by [R] 466ebe1, 246; polish: olive field, no terraces/stone paths)
-- m renaissance: 1 no townhouses, two boxes and columns in a field; 2 sage grass, not a paved plaza (maps/renaissance_town)
+- m renaissance: 1 struck by 4b36e9f (269); 2 sage grass with boulders, rubble and two puffball trees inside the town ring, not a pale paved plaza (maps/renaissance_town); polish: house row bends round a round rim, ref a rectilinear block
 - n pirate PASS (cleared by [R] ddcb86b, 258; polish: team-zone rectangles cool grey, slab hulls/short masts)
 - o simulation PASS (cleared bd1653a 260, e54ee13 261; polish: plane cool lavender (do not re-nudge colours, row 260), grey void disc the only object, line wide)
-Total tier 1 24/24; tier 2 23/24; tier 3 17/21.
+Total tier 1 24/24; tier 2 23/24; tier 3 18/21.
 
 ## Focus (every gap this iteration)
-BASE b3c21a6 (iter 268; ranked 1 p + 3 n, pair p+n (p+u was 267's pair); no [P] fallout pickable)
-- [S] unit-look.p reaper-blade-mount (e37d2ff) — APPROVE, p PASS
-- [S] unit-look.n jouster-flat-drape (038ffcf) — APPROVE, n PASS
+BASE 90550c9 (iter 269; ranked 1 u + 2 m, pair u+m (p+n was 268's pair); [P] scythe-steel fallout of e37d2ff)
+- [S] unit-look.u tree-giant-hip-carry (f694e83) — APPROVE, u PASS
+- [S] maps-light.m renaissance-townhouse-row (4b36e9f) — APPROVE, m blocker 1 struck (m still FAIL)
+- [P] unit-look polish scythe-steel (c3b211e) — APPROVE, p PASS
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] unit-look.p reaper-blade-mount (e37d2ff) VERDICT: APPROVE CRITERION: unit-look.p PASS (previous: FAIL)
-- GAP: [S] unit-look.n jouster-flat-drape (038ffcf) VERDICT: APPROVE CRITERION: unit-look.n PASS (previous: FAIL)
+- GAP: [S] unit-look.u tree-giant-hip-carry (f694e83) VERDICT: APPROVE CRITERION: unit-look.u PASS (previous: FAIL)
+- GAP: [S] maps-light.m renaissance-townhouse-row (4b36e9f) VERDICT: APPROVE CRITERION: maps-light.m FAIL (previous: FAIL)
+- GAP: [P] unit-look polish scythe-steel (c3b211e) VERDICT: APPROVE CRITERION: unit-look.p PASS (previous: PASS)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] unit-look.u tree-giant-hip-carry [0] — blocker 5: re-seat the carry so the trunk runs near level from a hip-high fist and the crown hangs hip-high at his side (proceduralAnimation.ts tree hip carry) — ref units/secret.tree_giant — ours lineup_secret, lineup_secret_giants
-2. [S] maps-light.m renaissance-townhouse-row [0] — blocker 1: low-poly townhouse facades (ochre/pink walls, arched ground floor, balconies) ringing the arena — ref maps/renaissance_town — ours biome_renaissance
-3. [S] maps-light.m renaissance-plaza-paving [0] — blocker 2: pale paved flagstones across the field instead of sage grass — ref maps/renaissance_town — ours biome_renaissance
-4. [S] maps-light.i meadow-oak-ring [0] — blocker 1: dark twisted low-poly oaks instead of pale-sage puffballs — ref maps/meadow_medieval_1 — ours biome_introduction
-5. [S] maps-light.i meadow-ruins [0] — blocker 2: ruined castle wall or tower as set dressing — ref maps/meadow_medieval_1 — ours biome_introduction
-6. [S] maps-light.j adventure-water-pools [0] — blocker 1: faceted blue water with a bank rim, not grey-blue slabs — ref maps/meadow_medieval_2 — ours biome_adventure
-7. [P] unit-look polish scythe-steel (fallout of [S] reaper-blade-mount e37d2ff, 268) — NEXT: scythe steel material pale grey-white ~#cfd3d6 instead of lavender; shows in lineup_spooky (crescent) — ref units/spooky.reaper
-8. [S] battle-feel.e (deferred stands) — a club meets a head on the registered hit frame — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_hit
+1. [S] maps-light.m renaissance-plaza-paving [0] — blocker 2: pale flagstone paving across the square, meadow trees, boulders and rubble removed inside the town ring — ref maps/renaissance_town — ours biome_renaissance
+2. [S] maps-light.i meadow-oak-ring [0] — blocker 1: dark twisted low-poly oaks instead of pale-sage puffballs — ref maps/meadow_medieval_1 — ours biome_introduction
+3. [S] maps-light.i meadow-ruins [0] — blocker 2: a ruined castle wall or tower as set dressing — ref maps/meadow_medieval_1 — ours biome_introduction
+4. [S] maps-light.j adventure-water-pools [0] — blocker 1: faceted blue-green water with shore rims, not flat grey-blue rectangles — ref maps/meadow_medieval_2 — ours biome_adventure
+5. [S] maps-light.j adventure-own-dressing [0] — blocker 2: adventure's own ring and props (hedges, farm fences) distinct from introduction — ref maps/meadow_medieval_2 — ours biome_adventure
+6. [S] battle-feel.e (deferred stands) — a club meets a head on the registered hit frame — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_hit
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - reaper-crescent-blade [attempts: 1] — 266: weaponRotationOffset rx -0.7 tipped the scythe head down into the ground in the full capture; no blade visible (ribbon crescent itself read on the farmer)
@@ -75,4 +75,4 @@ BASE b3c21a6 (iter 268; ranked 1 p + 3 n, pair p+n (p+u was 267's pair); no [P] 
 - Next re-audit 270. Simulation plane colour barely responds to ground/fog/emissive (tried 261, reverted). mapBuilder.ts and LOG.md are CRLF: use Edit.
 - buildHorse (jouster, pinto, secret cavalry): frame at barrel middle; legs = 4-sided wedge in a holder scaled HORSE_UPPER_DEEP in z, joint at hem - UPPER_SHOW; thick legs must stay inside hem (W>=.85 H). Drape = stadium rings (superellipse ends, flat deck profile); pinto returns before it.
 - Unit PBR colours grey out in lineup shade: self-light (mf.get("cloth", c, { emissiveIntensity })). dress* in unitFactory set body.bodyMaterial.baseColor. Head is a blockHead (box): box caps (hExt.x*2.2) cover it. Eyes: body.leftEye/rightEye.setEnabled(false).
-- Scythe (reaper + harvester) and tree ride fixed carries in _buildCarry (scytheCarry/treeClubCarry, carryTurn 1). Blade seat = SCYTHE_LEVEL off square + ramped curl in propBuilder; tree bend authored to trunk +x. No [P] on rows approved within 20 iterations.
+- Scythe/tree ride fixed carries in _buildCarry (carryTurn 1); tree bow authored to trunk +x, spun +pi to face up (269). Renaissance town: townRing in mapBuilder (theme.town; hides ring trunks beyond inset 18 + hazeTreeline). No [P] on rows approved within 20 iterations.
