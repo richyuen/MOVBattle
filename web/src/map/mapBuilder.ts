@@ -1208,6 +1208,8 @@ interface CampaignMapTheme {
   ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number; balls?: Color3[]; palms?: number; oaks?: number };
   /** Opaque turquoise shallows in place of the see-through hazard tint, a pale shore round each pool and a band of sea round the island rim (see seaRim) */
   sea?: { water: Color3; shore: Color3 };
+  /** The pools drawn as rounded turquoise lagoons with a pale shore and a deep heart, without the sea round the rim (see lagoonPools) */
+  lagoon?: { water: Color3; deep: Color3; shore: Color3 };
   /** The theme's own lawn in place of the sandbox's (see autumnField): ground and grass colour, the lawn's self-light, and the tuft clumps' palette */
   field?: { ground: Color3; grass: Color3; glow: Color3; tufts: Color3[] };
   /** No island: everything the sandbox base stood on the field and round it is taken away and the lawn runs on to the horizon (see barePlane) */
@@ -1725,6 +1727,56 @@ function seaRim(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>): void {
 }
 
 /*
+ * Meadow lagoons (adventure; maps/meadow_medieval_2: the pools are clear turquoise water with a pale foam edge and a deeper teal heart, their banks soft
+ * and rounded, never ruled grey-blue rectangles). Each box water hazard is drawn as three stacked flat discs of one rounded, ragged outline: a superellipse
+ * of power LAGOON_ROUND through the box's half sizes, LAGOON_SIDES corners each pulled in by up to LAGOON_RAGGED of its reach; a pale shore grown
+ * LAGOON_SHORE metres beyond it, the turquoise shallows, and a deep patch LAGOON_DEEP of the size in the middle. All opaque, part self-lit (seaMaterial).
+ */
+const LAGOON_ROUND = 2.6;
+const LAGOON_SIDES = 30;
+const LAGOON_RAGGED = 0.08;
+const LAGOON_SHORE = 1.3;
+const LAGOON_DEEP = 0.58;
+function lagoonPools(scene: Scene, lagoon: NonNullable<CampaignMapTheme["lagoon"]>, hazards: readonly HazardRegion[]): void {
+  let k = 0;
+  for (const pool of hazards) {
+    if (pool.kind !== "water" || pool.shape !== "box") continue;
+    k++;
+    const r = (n: number) => Math.abs((Math.sin(k * 31.7 + n * 12.9898) * 43758.5453) % 1);
+    const outline: [number, number][] = [];
+    for (let i = 0; i < LAGOON_SIDES; i++) {
+      const a = (i / LAGOON_SIDES) * Math.PI * 2;
+      const c = Math.cos(a), s = Math.sin(a);
+      const pull = 1 - r(i) * LAGOON_RAGGED;
+      outline.push([Math.sign(c) * Math.pow(Math.abs(c), 2 / LAGOON_ROUND) * pool.halfX * pull, Math.sign(s) * Math.pow(Math.abs(s), 2 / LAGOON_ROUND) * pool.halfZ * pull]);
+    }
+    const disc = (name: string, scale: number, grow: number, y: number, colour: Color3): void => {
+      const positions = [pool.center.x, y, pool.center.z], normals = [0, 1, 0], indices: number[] = [];
+      outline.forEach(([x, z], i) => {
+        const d = Math.hypot(x, z) || 1;
+        positions.push(pool.center.x + x * scale + (x / d) * grow, y, pool.center.z + z * scale + (z / d) * grow);
+        normals.push(0, 1, 0);
+        indices.push(0, 1 + ((i + 1) % LAGOON_SIDES), 1 + i);
+      });
+      const mesh = new Mesh(`campaign_lagoon_${name}_${k}`, scene);
+      const data = new VertexData();
+      data.positions = positions;
+      data.normals = normals;
+      data.indices = indices;
+      data.applyToMesh(mesh);
+      const mat = seaMaterial(scene, `campaign_lagoon_${name}_${k}`, colour, mesh);
+      mat.backFaceCulling = false;
+      mesh.material = mat;
+      mesh.receiveShadows = true;
+      mesh.isPickable = false;
+    };
+    disc("shore", 1, LAGOON_SHORE, 0.05, lagoon.shore);
+    disc("water", 1, 0, 0.065, lagoon.water);
+    disc("deep", LAGOON_DEEP, 0, 0.075, lagoon.deep);
+  }
+}
+
+/*
  * Pirate shoreline, rebuilt from maps/pirate_beach (spec, read off the reference at the placement view):
  *   - One sand. The whole island top is a single pale sand, the fighting field included: no second, olive or grey field colour, no seam where the field
  *     meets the beach (the theme's ground and grass are that sand; see campaign.pirate).
@@ -2232,7 +2284,8 @@ function createPlacementGuides(scene: Scene, zones: readonly PlacementZone[]): v
   }
 }
 
-function createHazardVisuals(scene: Scene, hazards: readonly HazardRegion[], sea?: CampaignMapTheme["sea"]): void {
+function createHazardVisuals(scene: Scene, hazards: readonly HazardRegion[], sea?: CampaignMapTheme["sea"], lagoon?: CampaignMapTheme["lagoon"]): void {
+  if (lagoon) lagoonPools(scene, lagoon, hazards);
   const hazardColor = (kind: HazardKind): Color3 => {
     switch (kind) {
       case "water": return new Color3(0.18, 0.46, 0.78);
@@ -2242,6 +2295,7 @@ function createHazardVisuals(scene: Scene, hazards: readonly HazardRegion[], sea
   };
   for (const hazard of hazards) {
     // A sea theme's pools are solid turquoise shallows on a pale shore strip (see seaRim), not a see-through tint
+    if (lagoon && hazard.kind === "water" && hazard.shape === "box") continue;
     if (sea && hazard.kind === "water" && hazard.shape === "box") {
       for (const [name, grow, y, colour] of [["shore", SEA_SHORE * 2, 0.05, sea.shore], ["water", 0, 0.065, sea.water]] as const) {
         const mesh = MeshBuilder.CreateGround(`campaign_hazard_sea_${name}`, { width: hazard.halfX * 2 + grow, height: hazard.halfZ * 2 + grow }, scene);
@@ -2792,7 +2846,7 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
   if (theme.bare) barePlane(scene, prior);
   if (theme.town) townPlaza(scene, obstacles);
   addCampaignProps(scene, theme, obstacles);
-  createHazardVisuals(scene, hazards, theme.sea);
+  createHazardVisuals(scene, hazards, theme.sea, theme.lagoon);
   if (theme.sea) sandSpits(scene, theme.sea, hazards);
   if (theme.bare) bareCentreLine(scene);
   else createPlacementGuides(scene, theme.zones);
@@ -2853,6 +2907,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       boxHazard("water", 0, -10, 18, 6),
       boxHazard("water", 0, 10, 18, 6),
     ],
+    // Clear turquoise lagoons with a pale foam edge (see lagoonPools)
+    lagoon: { water: new Color3(0.26, 0.78, 0.66), deep: new Color3(0.1, 0.56, 0.56), shore: new Color3(0.74, 0.86, 0.68) },
     accent: new Color3(0.78, 0.68, 0.34),
     props: [
       { kind: "tree", x: -28, z: -24, scale: 1.15 },
