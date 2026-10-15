@@ -14,8 +14,6 @@ proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_B
 visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW, _LIFE, DUST_SPRITES/_LIFE, SMOKE_SPRITES/_LIFE; peaks) | additive core 3 @0.95, body 5 @0.7, rim 7 @0.55, grow 0.28, life 0.9; dust 10 @0.8, smoke 6; alphaIndex dust < smoke < fire (FIREBALL_ALPHA_INDEX) ; fire set back FIREBALL_BEHIND 1.6 along the view | 223 | approved | [P] dust 0.45/body 0.95 rejected 221
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 237 | wall-head-level | battle-feel.h | approved
-- 237 | archer-brim | unit-look.h | dropped
 - 238 | wall-board-lean | battle-feel.h | approved
 - 239 | hood-cowl | unit-look.h | approved
 - 240 | healer-cowl | unit-look.h | approved
@@ -32,6 +30,8 @@ visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW
 - 245 | tiered-pagoda | maps-light.l | approved
 - 246 | dynasty-cherry-ring | maps-light.l | approved
 - 246 | dragon-costume-head | unit-look.m | approved
+- 247 | monk-kasa | unit-look.m | approved
+- 247 | challenge-ball-ring | maps-light.k | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -64,3 +64,5 @@ mapBuilder.ts:dynasty pagoda + torii (addPagoda/addRoof/addStorey, addTorii; red
 propBuilder.ts:protector slab shield (SLAB_WIDE, SLAB_TALL, slabSerial; carry rotation.x pi/2; wood lerp 0.12 to team) | 0.25 x 0.71 (x1.9 carry), emissive 0.08 | 243 | approved | round board
 mapBuilder.ts:blossomRing cherry ring (CHERRY_LIMBS, _TILT, _LIMB, _PUFF, _SQUASH; ring.blossom share; dynasty ring palette) | limbs 2-4, tilt 0.6-1.05, limb 0.32-0.5, puff 0.16-0.24, squash 0.72, share 0.65 | 246 | approved | sage ring
 propBuilder.ts:fitted dragon_head (DRAGON_SHELL, _SNOUT, _JAW_DROP, _EYE, _HORN, _HORN_RAKE, _TAIL, _SCALLOPS; team x0.82) | 1.9 heads, snout 0.95, jaw 0.32, eye 0.5, horn 1.25 rake 1.05, tail 2.6, 7 | 246 | approved | dragon_wings black slabs
+propBuilder.ts:fitted kasa + beads (KASA_HEADS, _TALL, _TIP, _BAND, _BEADS, _BEAD; band accent x0.55) | 2.4 heads, tall 0.55, tip 0.14, band 0.09; 11 beads 0.16 torso | 247 | approved | monk_headband torus at the crown
+mapBuilder.ts:ballRing autumn palette (ring.balls per-tree pick, BALL_OF_HEIGHT; challenge trunk) | 5 balls orange/red/yellow/yellow-green/amber, ball 0.5, trunk 0.9,0.86,0.76 | 247 | approved | sage ring

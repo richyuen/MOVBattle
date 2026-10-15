@@ -245,3 +245,4 @@ iter 243 | [S] unit-look.k minotaur-bull-man, [S] unit-look.i protector-slab | 2
 iter 244 | [S] unit-look.k hoplite-crested-helm, [S] unit-look.v knight-cross-helm | 2/2 approved | passes 48 -> 48
 iter 245 | [S] team-tinted-crested-helm, [S] tiered-pagoda | 2/2 approved | passes 48 -> 49
 iter 246 | [S] dynasty-cherry-ring, [S] dragon-costume-head | 2/2 approved | passes 49 -> 50
+iter 247 | [S] monk-kasa, [S] challenge-ball-ring | 2/2 approved | passes tier3 3/21 -> 4/21
