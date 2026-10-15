@@ -1313,7 +1313,7 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
   return { blade, hilt };
 }
 
-const TREE_CLUB_LONG = 0.95;
+const TREE_CLUB_LONG = 0.8;
 const TREE_CLUB_GRIP = 0.14;
 const TREE_CLUB_ROOTS = 4;
 const TREE_CLUB_CROWN = 0.24;
@@ -1343,7 +1343,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const bark = mat(scene, new Color3(0.47, 0.31, 0.18));
       const trunk = MeshBuilder.CreateCylinder("treeTrunk", { height: T, diameterTop: T * 0.08, diameterBottom: T * 0.13, tessellation: 7 }, scene);
       trunk.material = bark;
-      // Carried out to the giant's side nearly level (TREE_CLUB_CARRY off upright), a little forward, so the whole tree shows broadside from the front, not end-on
+      // Strapped on out to the giant's side (TREE_CLUB_CARRY off upright); standing and on the march the animator turns it in the fist to the low hip carry (TREE_HIP_TIP)
       const carry = new Mesh("treeClubCarry", scene);
       carry.rotation.set(0.3, 0, -TREE_CLUB_CARRY);
       trunk.parent = carry;

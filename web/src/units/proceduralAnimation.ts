@@ -87,6 +87,9 @@ const WALL_BOARD_TURN = 0.38;
 const WALL_BOARD_LEAN = [-0.2, 0.3];
 // How far a pressing wall man's drive leg goes back (radians at the hip, at full shove); his lead knee and trunk follow it (see the brace).
 const PRESS_DRIVE = 0.4;
+// The tree giant's hip carry: the arm a little forward with the elbow half bent (fist at the belt), and where the trunk points in the body's frame (x out, y up, z ahead).
+const TREE_HIP_ARM = { raise: -0.35, out: 0.12, elbow: -0.7 };
+const TREE_HIP_TIP = new Vector3(0.65, -0.05, 0.6);
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -901,12 +904,19 @@ export class ProceduralAnimator {
       : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb")));
     const held = this.locomotionBias !== "aimed" && !rod && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
-    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle)$/.test(n.name));
+    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry)$/.test(n.name));
     const prop = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
     const side = Math.sign(this._body.rightShoulder.position.x) || 1;
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
     const pick = h(92);
-    const attitude = pick < 0.3
+    // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist low in front of the belt, the trunk run out to his own side, forward and down, the crown
+    // hanging about knee-high ahead of his flank, not shouldered or stood up over the line beside him
+    const tree = node?.name === "treeClubCarry";
+    // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
+    if (tree) this._carryTurn = 1;
+    const attitude = tree
+      ? { raise: TREE_HIP_ARM.raise, out: TREE_HIP_ARM.out, elbow: TREE_HIP_ARM.elbow, tip: lean(TREE_HIP_TIP.x, TREE_HIP_TIP.y, TREE_HIP_TIP.z) }
+      : pick < 0.3
       ? { raise: -0.9 - h(81) * 0.3, out: 0.15 + h(82) * 0.2, elbow: -1.9 - h(83) * 0.3, tip: lean(0.25, 0.45, -0.85) }
       : pick < 0.55
         ? { raise: -0.5 - h(81) * 0.3, out: 0.2 + h(82) * 0.2, elbow: -1.2 - h(83) * 0.3, tip: lean(0.1, 1, 0.1) }
