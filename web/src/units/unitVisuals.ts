@@ -833,7 +833,6 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       return vis({ scale: 1.92, bulk: 1.5, headSize: 1.12, armLength: 1.18 }, "scythe", "none", "none", "cape", "#3a1420", undefined, {
         posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "reaper_aura", fxPreset: "spectral",
         bodyDetailLevel: "hero",
-        weaponRotationOffset: { rx: -0.7 },
         stateVariants: { moving: ["reaper_trail"], attacking: ["reaper_trail", "reaper_arc"], "ability-active": ["reaper_trail", "reaper_arc"] },
       });
     case "iconic_quick_draw":

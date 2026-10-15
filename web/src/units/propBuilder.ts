@@ -1748,18 +1748,10 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // down, broad at the heel and narrowing to a point, about SCYTHE_BLADE of the snath long, built from SCYTHE_SEGS flat faceted segments along the arc.
       // 252: the blade lies across the carrier's front and not along his line of sight (held across the body, its flat faces the viewer as in the reference),
       // turned SCYTHE_TURN about the snath; SCYTHE_HEEL wide at the heel, with a thick spine SCYTHE_SPINE deep tapering to the tip, so edge-on it is still a wedge.
-      // 266 (units/spooky.reaper): the blade is one continuous crescent, not stepped slabs. It leaves the collar rising SCYTHE_RISE off square, runs out
-      // SCYTHE_BLADE of the snath along its arc and curls SCYTHE_CURL radians down to a point, SCYTHE_HEEL wide at the heel tapering to nothing, a wedge
-      // SCYTHE_SPINE thick at its back; the snath bows SCYTHE_BOW of its length away from the blade, and the hand grips it SCYTHE_GRIP below the middle, so
-      // the head stands high over the hood and the crescent hangs over it.
-      const SCYTHE_SNATH = 1.25, SCYTHE_BLADE = 0.8, SCYTHE_SEGS = 14, SCYTHE_CURL = 1.75, SCYTHE_RISE = 0.35;
-      const SCYTHE_TURN = Math.PI / 2, SCYTHE_HEEL = 0.17, SCYTHE_SPINE = 0.045, SCYTHE_BOW = 0.05, SCYTHE_GRIP = 0.42;
+      const SCYTHE_SNATH = 1.25, SCYTHE_BLADE = 0.62, SCYTHE_SEGS = 6, SCYTHE_CURL = 1.15;
+      const SCYTHE_TURN = Math.PI / 2, SCYTHE_HEEL = 0.15, SCYTHE_SPINE = 0.04;
       const snathLong = SCYTHE_SNATH * s;
-      const bow = SCYTHE_BOW * snathLong;
-      const shaft = MeshBuilder.CreateTube("shaft", {
-        path: [-0.5, -0.25, 0, 0.25, 0.5].map((t) => new Vector3(0, t * snathLong, bow * (1 - 4 * t * t))),
-        radius: 0.016 * s, tessellation: 6, cap: Mesh.CAP_ALL,
-      }, scene);
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: snathLong, diameter: 0.03 * s, tessellation: 6 }, scene);
       shaft.material = mat(scene, new Color3(0.32, 0.22, 0.14));
       addGripWraps(scene, shaft, [-0.18 * s, -0.08 * s, 0.02 * s], 0.035 * s);
       const steel = mat(scene, new Color3(0.72, 0.73, 0.78), 0.05);
@@ -1774,28 +1766,21 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       heel.position.set(0.03 * s, snathLong * 0.47, 0);
       heel.material = steel;
       heel.parent = head;
-      // Three paths along the arc (spine front, cutting edge, spine back), closed round into a wedge-section ribbon
       const segLong = (SCYTHE_BLADE * snathLong) / SCYTHE_SEGS;
-      const front: Vector3[] = [], edge: Vector3[] = [], back: Vector3[] = [];
-      let x = 0.04 * s, y = snathLong * 0.5, heading = SCYTHE_RISE;
-      for (let i = 0; i <= SCYTHE_SEGS; i++) {
-        const k = i / SCYTHE_SEGS;
-        const wide = SCYTHE_HEEL * s * (1 - k) * (1 - 0.35 * k);
-        const thick = SCYTHE_SPINE * s * (1 - k * 0.85) * 0.5;
-        // the edge lies on the inside of the curl, below the spine
-        const nx = Math.sin(heading), ny = -Math.cos(heading);
-        front.push(new Vector3(x, y, thick));
-        edge.push(new Vector3(x + nx * wide, y + ny * wide, 0));
-        back.push(new Vector3(x, y, -thick));
+      let x = 0.04 * s, y = snathLong * 0.48, heading = 0.12;
+      for (let i = 0; i < SCYTHE_SEGS; i++) {
+        const k = i / (SCYTHE_SEGS - 1);
+        const wide = (SCYTHE_HEEL - (SCYTHE_HEEL - 0.02) * k) * s;
+        const seg = MeshBuilder.CreateBox("scyblade", { width: segLong * 1.08, height: wide, depth: (SCYTHE_SPINE - 0.028 * k) * s }, scene);
+        seg.position.set(x + Math.cos(heading) * segLong * 0.5, y + Math.sin(heading) * segLong * 0.5 - wide * 0.4, 0);
+        seg.rotation.z = heading;
+        seg.material = steel;
+        seg.parent = head;
         x += Math.cos(heading) * segLong;
         y += Math.sin(heading) * segLong;
         heading -= SCYTHE_CURL / SCYTHE_SEGS;
       }
-      const blade = MeshBuilder.CreateRibbon("scyblade", { pathArray: [front, edge, back], closeArray: true, sideOrientation: Mesh.DOUBLESIDE }, scene);
-      blade.convertToFlatShadedMesh();
-      blade.material = steel;
-      blade.parent = head;
-      shaft.position.y = snathLong * SCYTHE_GRIP;
+      shaft.position.y = snathLong * 0.32;
       return shaft;
     }
     case "pitchfork": {
