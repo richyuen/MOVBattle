@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, Color3, Mesh, MeshBuilder,
+  Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode,
   type Material, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -191,6 +191,27 @@ const PALADIN_GOLD_GLOW = 0.22;
 const PALADIN_BELT = 0.14;
 const PALADIN_KNEE = 1.15;
 const PALADIN_HELM_BAND = 0.16;
+/*
+ * The void cultist (units/evil.void_cultist): a bald, bearded priest in a long dark robe, not a man in a plain hood. Read off the reference: a dark
+ * maroon-brown robe from the neck to the shins, banded in the team colour twice near its hem, at the neck and at the cuffs; bare team-skin head with a long
+ * grey-tan beard hanging in strands to the chest; a wooden sun wheel (a ring ~2 heads across with ~10 spokes to a hub) standing upright behind the head;
+ * a dark round wooden shield studded with spikes round its rim and one at the boss; a staff topped with a spiked iron ball.
+ *   robe VOID_ROBE, self-lit VOID_GLOW; bands team, self-lit VOID_BAND_GLOW; skirt VOID_SKIRT thighs long, hem VOID_HEM pelvises wide;
+ *   wheel VOID_WHEEL heads across, VOID_SPOKES spokes; beard VOID_BEARD heads long in VOID_STRANDS strands; shield VOID_SHIELD chests across, VOID_STUDS rim spikes.
+ */
+const VOID_ROBE = new Color3(0.3, 0.15, 0.12);
+const VOID_WOOD = new Color3(0.36, 0.22, 0.15);
+const VOID_BEARD_COLOR = new Color3(0.62, 0.52, 0.4);
+const VOID_GLOW = 0.12;
+const VOID_BAND_GLOW = 0.3;
+const VOID_SKIRT = 1.75;
+const VOID_HEM = 1.6;
+const VOID_WHEEL = 2.1;
+const VOID_SPOKES = 10;
+const VOID_BEARD = 0.85;
+const VOID_STRANDS = 5;
+const VOID_SHIELD = 1.5;
+const VOID_STUDS = 8;
 /*
  * The cactus (256; units/wild_west.cactus): a man in a full-length cactus suit, not a man holding a green plank. Read off the reference: one dark green robe from
  * the shoulders to the ankle, flaring a little to the hem, with green sleeves to the wrist; a squarish green hood over the head with a window cut on the face so the
@@ -393,6 +414,9 @@ export class UnitFactory {
     }
     if (definition.id === "good.righteous_paladin" && !shouldUseVehicleBody) {
       propMeshes.push(...dressPaladin(this._scene, body, propMeshes));
+    }
+    if (definition.id === "evil.void_cultist" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressVoidCultist(this._scene, body, teamColor, propMeshes));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -800,6 +824,126 @@ function dressPaladin(scene: Scene, body: ArticulatedBody, props: Mesh[]): Mesh[
     shield.material = white;
     for (const m of shield.getChildMeshes(true)) {
       m.material = m.name === "kpoint" ? white : gold;
+    }
+  }
+  return added;
+}
+
+/** Dresses the void cultist as a robed, bearded sun priest (see VOID_*): dark banded robe, beard strands, spoked wheel behind the head, spiked shield and mace head. */
+function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3, props: Mesh[]): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const keep = (m: Mesh, parent: TransformNode, material: Material): Mesh => {
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    m.material = material;
+    added.push(m);
+    return m;
+  };
+  // The robe is the body's own cloth turned dark maroon-brown, a little self-lit; legs and feet go with it
+  body.bodyMaterial.baseColor = VOID_ROBE;
+  body.bodyMaterial.metallic = 0;
+  body.bodyMaterial.emissiveColor = VOID_ROBE.scale(VOID_GLOW);
+  const robe = mf.get("cloth", VOID_ROBE.scale(0.85), { emissiveIntensity: VOID_GLOW });
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = robe;
+  const wood = mf.get("cloth", VOID_WOOD, { emissiveIntensity: VOID_GLOW });
+  const iron = mf.get("cloth", new Color3(0.2, 0.17, 0.16), { emissiveIntensity: VOID_GLOW });
+  const band = mf.get("cloth", teamColor, { emissiveIntensity: VOID_BAND_GLOW });
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  // Long robe skirt to the shins, two team bands round it near the hem
+  const skirt = hangSkirt(scene, body, "voidRobe", VOID_SKIRT, VOID_HEM, robe);
+  if (skirt) {
+    added.push(skirt);
+    const sb = skirt.getBoundingInfo().boundingBox;
+    const long = sb.maximum.y - sb.minimum.y;
+    const hemD = (sb.maximum.x - sb.minimum.x);
+    for (const at of [0.06, 0.22]) {
+      const ring = MeshBuilder.CreateCylinder("voidRobeBand", { height: long * 0.07, diameter: hemD * (1.03 - at * 0.18), tessellation: 6 }, scene);
+      ring.position.y = sb.minimum.y + long * at;
+      keep(ring, skirt, band);
+    }
+  }
+  // A team band round the neck and round each cuff
+  const neck = MeshBuilder.CreateCylinder("voidNeckBand", { height: H * 0.08, diameter: W * 0.62, tessellation: 8 }, scene);
+  neck.scaling.z = Math.min(1.2, (D * 1.1) / (W * 0.62));
+  neck.position.set(0, chest.position.y + H * 0.48, 0);
+  keep(neck, body.torso, band);
+  for (const hand of [body.leftHand, body.rightHand]) {
+    const cuff = MeshBuilder.CreateCylinder("voidCuff", { height: headSize * 0.16, diameter: headSize * 0.5, tessellation: 6 }, scene);
+    cuff.position.y = headSize * 0.1;
+    keep(cuff, hand, band);
+  }
+  // The beard: a broad wedge under the face and strands hanging from it onto the chest
+  const hair = mf.get("cloth", VOID_BEARD_COLOR, { emissiveIntensity: VOID_GLOW });
+  const beard = MeshBuilder.CreateCylinder("voidBeard", { height: headSize * VOID_BEARD * 0.5, diameterTop: headSize * 0.85, diameterBottom: headSize * 0.5, tessellation: 6 }, scene);
+  beard.scaling.z = 0.55;
+  beard.position.set(0, -headSize * 0.42, headSize * 0.3);
+  keep(beard, body.headMesh, hair);
+  for (let i = 0; i < VOID_STRANDS; i++) {
+    const t = i / (VOID_STRANDS - 1) - 0.5;
+    const len = headSize * VOID_BEARD * (0.75 + 0.25 * (1 - Math.abs(t) * 2));
+    const strand = MeshBuilder.CreateCylinder("voidBeardStrand", { height: len, diameterTop: headSize * 0.13, diameterBottom: headSize * 0.03, tessellation: 4 }, scene);
+    strand.position.set(t * headSize * 0.6, -headSize * 0.55 - len * 0.5, headSize * (0.36 + 0.04 * Math.cos(t * 3)));
+    strand.rotation.set(-0.18, 0, t * 0.5);
+    keep(strand, body.headMesh, hair);
+  }
+  // The sun wheel: an upright wooden ring behind the head, spokes to a hub
+  const wheelD = headSize * VOID_WHEEL;
+  const wheel = new TransformNode("voidWheel", scene);
+  wheel.parent = body.headMesh;
+  wheel.position.set(0, headSize * 0.05, -headSize * 0.62);
+  const rim = MeshBuilder.CreateTorus("voidWheelRim", { diameter: wheelD, thickness: headSize * 0.13, tessellation: 16 }, scene);
+  rim.rotation.x = Math.PI / 2;
+  keep(rim, wheel, wood);
+  const hub = MeshBuilder.CreateCylinder("voidWheelHub", { height: headSize * 0.1, diameter: headSize * 0.42, tessellation: 8 }, scene);
+  hub.rotation.x = Math.PI / 2;
+  keep(hub, wheel, wood);
+  for (let i = 0; i < VOID_SPOKES; i++) {
+    const a = (i / VOID_SPOKES) * Math.PI * 2;
+    const spoke = MeshBuilder.CreateBox("voidWheelSpoke", { width: headSize * 0.07, height: wheelD * 0.5, depth: headSize * 0.05 }, scene);
+    spoke.rotation.z = a;
+    spoke.position.set(-Math.sin(a) * wheelD * 0.25, Math.cos(a) * wheelD * 0.25, 0);
+    keep(spoke, wheel, wood);
+  }
+  // The round shield on the off hand: a dark wooden board, a rim, spikes round it and one at the boss (not named *shield: it is no wall board)
+  const shieldD = W * VOID_SHIELD;
+  const board = MeshBuilder.CreateCylinder("voidBoard", { height: headSize * 0.1, diameter: shieldD, tessellation: 12 }, scene);
+  board.rotation.x = Math.PI / 2;
+  board.position.set(W * 0.25, W * 0.55, W * 0.45);
+  keep(board, body.leftHand, wood);
+  const boardRim = MeshBuilder.CreateTorus("voidBoardRim", { diameter: shieldD, thickness: headSize * 0.12, tessellation: 12 }, scene);
+  keep(boardRim, board, iron);
+  for (let i = 0; i <= VOID_STUDS; i++) {
+    const a = (i / VOID_STUDS) * Math.PI * 2;
+    const boss = i === VOID_STUDS;
+    const spike = MeshBuilder.CreateCylinder("voidBoardSpike", { height: headSize * (boss ? 0.4 : 0.3), diameterTop: 0, diameterBottom: headSize * 0.14, tessellation: 4 }, scene);
+    // The board's own +y is its face (it is a cylinder turned up onto +z): rim spikes point out round the edge, the boss spike out of the face
+    if (boss) spike.position.y = headSize * 0.22;
+    else {
+      spike.position.set(Math.cos(a) * shieldD * 0.56, 0, Math.sin(a) * shieldD * 0.56);
+      spike.rotation.set(0, -a, -Math.PI / 2);
+    }
+    keep(spike, board, iron);
+  }
+  // The staff's glowing orb gives way to a spiked iron ball
+  const staff = props.find((m) => m.name === "staff");
+  if (staff) {
+    const orb = staff.getChildMeshes(true).find((m) => m.name === "orb");
+    if (orb) orb.isVisible = false;
+    const top = staff.getBoundingInfo().boundingBox.maximum.y;
+    const ball = MeshBuilder.CreateIcoSphere("voidMace", { radius: headSize * 0.26, subdivisions: 1 }, scene);
+    ball.position.y = top + headSize * 0.16;
+    keep(ball, staff, iron);
+    for (const dir of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, -1], [0.7, 0.7, 0], [-0.7, 0.7, 0]] as const) {
+      const v = new Vector3(dir[0], dir[1], dir[2]).normalize();
+      const spike = MeshBuilder.CreateCylinder("voidMaceSpike", { height: headSize * 0.3, diameterTop: 0, diameterBottom: headSize * 0.12, tessellation: 4 }, scene);
+      spike.position.copyFrom(v.scale(headSize * 0.32));
+      // Its +y turned onto the spike's direction
+      spike.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), v, new Quaternion());
+      keep(spike, ball, iron);
     }
   }
   return added;

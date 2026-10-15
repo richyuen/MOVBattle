@@ -741,7 +741,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.void_cultist": vis(
-    { scale: 1.08, bulk: 0.96, headSize: 1.08 }, "staff", "hood", "none", "cape", "#6B52A8", undefined, {
+    { scale: 1.08, bulk: 0.96, headSize: 1.08 }, "staff", "none", "none", "none", "#6B52A8", undefined, {
       posePreset: "caster",
       materialPreset: "evil_void",
       attachmentPreset: "summoner",
