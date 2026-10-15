@@ -1220,6 +1220,8 @@ interface CampaignMapTheme {
   ruins?: boolean;
   /** A grey keep with blue cone-spired towers on the far rim in place of the sandbox's boulders, rubble walls and bales (see meadowCastle) */
   castle?: boolean;
+  /** The field's "tree" props grown as clumps of lumpy oaks in place of balls on stalks (see oakClump) */
+  fieldOaks?: boolean;
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -2287,9 +2289,6 @@ function oakRing(scene: Scene, share: number, bark: Color3): void {
   for (const mesh of scene.meshes) {
     if (mesh.name === "canopy" && mesh.parent instanceof Mesh && mesh.parent.name === "trunk") trunks.add(mesh.parent);
   }
-  const glow = scene.getGlowLayerByName("glow");
-  const shadows = sunShadows(scene);
-  const up = new Vector3(0, 1, 0);
   let k = 0;
   for (const trunk of trunks) {
     k++;
@@ -2299,58 +2298,109 @@ function oakRing(scene: Scene, share: number, bark: Color3): void {
     trunk.isVisible = false;
     const info = trunk.getBoundingInfo().boundingBox;
     const trunkLong = info.maximum.y - info.minimum.y;
-    const height = (trunkLong / 0.6) * OAK_SCALE;
-    const finish = (mesh: Mesh, mat: StandardMaterial): void => {
-      mesh.parent = trunk;
-      mesh.material = mat;
-      mesh.isPickable = false;
-      mesh.convertToFlatShadedMesh();
-      glow?.addExcludedMesh(mesh);
-      shadows?.addShadowCaster(mesh, false);
-    };
-    // A tapered cylinder from one point to another, in the stalk's own frame
-    const bole = (from: Vector3, to: Vector3, foot: number, head: number): void => {
-      const span = to.subtract(from);
-      const mesh = MeshBuilder.CreateCylinder("oakBole", { height: span.length(), diameterBottom: foot, diameterTop: head, tessellation: 6 }, scene);
-      mesh.position = from.add(span.scale(0.5));
-      const dir = span.normalize();
-      const axis = Vector3.Cross(up, dir);
-      mesh.rotationQuaternion = axis.length() < 1e-4 ? Quaternion.Identity() : Quaternion.RotationAxis(axis.normalize(), Math.acos(Math.min(1, Vector3.Dot(up, dir))));
-      mesh.receiveShadows = true;
-      finish(mesh, wood);
-    };
-    const lump = (at: Vector3, radius: number, squash: number, n: number): void => {
-      const mesh = MeshBuilder.CreateIcoSphere("oakCrown", { radius, subdivisions: 1 }, scene);
-      mesh.position = at;
-      mesh.scaling.y = squash;
-      mesh.rotation.y = r(n) * Math.PI;
-      mesh.receiveShadows = false;
-      finish(mesh, r(n + 1) > 0.45 ? dark : light);
-    };
-    const lean = (tilt: number, yaw: number) => new Vector3(Math.sin(tilt) * Math.sin(yaw), Math.cos(tilt), Math.sin(tilt) * Math.cos(yaw));
-    // Two boles: the lower leans one way, the upper kinks back across it
-    const foot = new Vector3(0, -trunkLong / 2, 0);
-    const yaw = r(2) * Math.PI * 2;
-    const bend = lean(OAK_LEAN[0] + r(3) * (OAK_LEAN[1] - OAK_LEAN[0]), yaw);
-    const knee = foot.add(bend.scale(height * OAK_BOLE));
-    const top = knee.add(lean(OAK_LEAN[1], yaw + Math.PI * (0.6 + r(4) * 0.5)).scale(height * 0.2));
-    bole(foot, knee, height * 0.14, height * 0.1);
-    bole(knee, top, height * 0.1, height * 0.07);
-    // The broad crown over the fork, a lump at each limb end and more hung round the rim
-    const crown = height * OAK_CROWN / 2;
-    const dome = top.add(new Vector3(0, crown * 0.32, 0));
-    lump(dome, crown, OAK_SQUASH, 10);
-    for (let i = 0; i < OAK_LIMBS; i++) {
-      const out = yaw + Math.PI * (i + 0.3 + r(20 + i) * 0.4);
-      const end = top.add(lean(0.95, out).scale(height * 0.22));
-      bole(top, end, height * 0.06, height * 0.035);
-      lump(end.add(new Vector3(0, crown * 0.18, 0)), crown * 0.62, OAK_SQUASH + 0.08, 30 + i * 2);
-    }
-    for (let i = 0; i < OAK_SKIRT; i++) {
-      const around = yaw + (i / OAK_SKIRT) * Math.PI * 2 + r(40 + i) * 0.9;
-      const at = dome.add(new Vector3(Math.sin(around) * crown * 0.72, -crown * 0.12 + r(50 + i) * crown * 0.2, Math.cos(around) * crown * 0.72));
-      lump(at, crown * (0.48 + r(60 + i) * 0.16), OAK_SQUASH + 0.1, 70 + i * 2);
-    }
+    growOak(scene, trunk, new Vector3(0, -trunkLong / 2, 0), (trunkLong / 0.6) * OAK_SCALE, r, { light, dark, wood });
+  }
+}
+
+/** One oak (see oakRing) grown from foot, in parent's own frame, height tall; r is its seeded random */
+function growOak(
+  scene: Scene, parent: Mesh, foot: Vector3, height: number, r: (n: number) => number,
+  mats: { light: StandardMaterial; dark: StandardMaterial; wood: StandardMaterial },
+): void {
+  const glow = scene.getGlowLayerByName("glow");
+  const shadows = sunShadows(scene);
+  const up = new Vector3(0, 1, 0);
+  const finish = (mesh: Mesh, mat: StandardMaterial): void => {
+    mesh.parent = parent;
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(mesh);
+    shadows?.addShadowCaster(mesh, false);
+  };
+  // A tapered cylinder from one point to another, in the parent's own frame
+  const bole = (from: Vector3, to: Vector3, base: number, head: number): void => {
+    const span = to.subtract(from);
+    const mesh = MeshBuilder.CreateCylinder("oakBole", { height: span.length(), diameterBottom: base, diameterTop: head, tessellation: 6 }, scene);
+    mesh.position = from.add(span.scale(0.5));
+    const dir = span.normalize();
+    const axis = Vector3.Cross(up, dir);
+    mesh.rotationQuaternion = axis.length() < 1e-4 ? Quaternion.Identity() : Quaternion.RotationAxis(axis.normalize(), Math.acos(Math.min(1, Vector3.Dot(up, dir))));
+    mesh.receiveShadows = true;
+    finish(mesh, mats.wood);
+  };
+  const lump = (at: Vector3, radius: number, squash: number, n: number): void => {
+    const mesh = MeshBuilder.CreateIcoSphere("oakCrown", { radius, subdivisions: 1 }, scene);
+    mesh.position = at;
+    mesh.scaling.y = squash;
+    mesh.rotation.y = r(n) * Math.PI;
+    mesh.receiveShadows = false;
+    finish(mesh, r(n + 1) > 0.45 ? mats.dark : mats.light);
+  };
+  const lean = (tilt: number, yaw: number) => new Vector3(Math.sin(tilt) * Math.sin(yaw), Math.cos(tilt), Math.sin(tilt) * Math.cos(yaw));
+  // Two boles: the lower leans one way, the upper kinks back across it
+  const yaw = r(2) * Math.PI * 2;
+  const bend = lean(OAK_LEAN[0] + r(3) * (OAK_LEAN[1] - OAK_LEAN[0]), yaw);
+  const knee = foot.add(bend.scale(height * OAK_BOLE));
+  const top = knee.add(lean(OAK_LEAN[1], yaw + Math.PI * (0.6 + r(4) * 0.5)).scale(height * 0.2));
+  bole(foot, knee, height * 0.14, height * 0.1);
+  bole(knee, top, height * 0.1, height * 0.07);
+  // The broad crown over the fork, a lump at each limb end and more hung round the rim
+  const crown = height * OAK_CROWN / 2;
+  const dome = top.add(new Vector3(0, crown * 0.32, 0));
+  lump(dome, crown, OAK_SQUASH, 10);
+  for (let i = 0; i < OAK_LIMBS; i++) {
+    const out = yaw + Math.PI * (i + 0.3 + r(20 + i) * 0.4);
+    const end = top.add(lean(0.95, out).scale(height * 0.22));
+    bole(top, end, height * 0.06, height * 0.035);
+    lump(end.add(new Vector3(0, crown * 0.18, 0)), crown * 0.62, OAK_SQUASH + 0.08, 30 + i * 2);
+  }
+  for (let i = 0; i < OAK_SKIRT; i++) {
+    const around = yaw + (i / OAK_SKIRT) * Math.PI * 2 + r(40 + i) * 0.9;
+    const at = dome.add(new Vector3(Math.sin(around) * crown * 0.72, -crown * 0.12 + r(50 + i) * crown * 0.2, Math.cos(around) * crown * 0.72));
+    lump(at, crown * (0.48 + r(60 + i) * 0.16), OAK_SQUASH + 0.1, 70 + i * 2);
+  }
+}
+
+/*
+ * Field oak clumps (adventure; maps/meadow_medieval_2: the trees standing out on the meadow are never lone balls on stalks but tight clumps of two to four
+ * lumpy oaks, crowns overlapping into one broad green mass about as tall as the castle's curtain wall, yellow-green in sun and darker in the folds). Each
+ * field "tree" prop keeps its stalk (hidden) and its obstacle, and grows OAK_CLUMP oaks round it: the first at the stalk, the rest set out OAK_CLUMP_SPREAD
+ * of the prop's scale in a seeded ring, OAK_CLUMP_TALL metres tall at scale 1 and each one smaller by OAK_CLUMP_SHRINK. Leaves are part self-lit
+ * (OAK_CLUMP_LEAF, OAK_CLUMP_DARK) so the clump stays green in its own shade rather than a near-black ball.
+ */
+const OAK_CLUMP = [3, 4];
+const OAK_CLUMP_SPREAD = 2.6;
+const OAK_CLUMP_TALL = 7;
+const OAK_CLUMP_SHRINK = 0.16;
+const OAK_CLUMP_LEAF = new Color3(0.46, 0.64, 0.22);
+const OAK_CLUMP_DARK = new Color3(0.3, 0.48, 0.17);
+function oakClump(scene: Scene, stalk: Mesh, scale: number, seed: number): void {
+  const self = (name: string, c: Color3): StandardMaterial => {
+    const found = scene.getMaterialByName(name) as StandardMaterial | null;
+    if (found) return found;
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(0.6);
+    m.emissiveColor = c.scale(0.4);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    light: self("oakClumpLeaves", OAK_CLUMP_LEAF),
+    dark: self("oakClumpLeavesDark", OAK_CLUMP_DARK),
+    wood: self("oakClumpBark", new Color3(0.42, 0.29, 0.19)),
+  };
+  stalk.isVisible = false;
+  const stalkLong = stalk.getBoundingInfo().boundingBox.maximum.y * 2;
+  const rand = (n: number) => Math.abs((Math.sin(seed * 23.17 + n * 51.71) * 31415.9265) % 1);
+  const count = OAK_CLUMP[0] + Math.floor(rand(1) * (OAK_CLUMP[1] - OAK_CLUMP[0] + 1));
+  const turn = rand(2) * Math.PI * 2;
+  for (let i = 0; i < count; i++) {
+    const r = (n: number) => rand(100 + i * 97 + n);
+    const out = i === 0 ? 0 : OAK_CLUMP_SPREAD * scale * (0.75 + r(0) * 0.5);
+    const around = turn + (i / Math.max(1, count - 1)) * Math.PI * 2;
+    const foot = new Vector3(Math.sin(around) * out, -stalkLong / 2, Math.cos(around) * out);
+    growOak(scene, stalk, foot, OAK_CLUMP_TALL * scale * (1 - OAK_CLUMP_SHRINK * i) * (0.9 + r(5) * 0.2), r, mats);
   }
 }
 
@@ -2626,8 +2676,14 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
       obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: width / 2, halfZ: depth / 2 });
     }
   };
+  let trees = 0;
   const addTree = (x: number, z: number, scale = 1, blocking = true) => {
     const trunk = addCylinderObstacle(x, z, 0.55 * scale, 5 * scale, trunkMat, blocking);
+    if (theme.fieldOaks) {
+      oakClump(scene, trunk, scale, ++trees);
+      if (blocking) obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.4 * scale });
+      return;
+    }
     const canopy = MeshBuilder.CreateSphere(`${theme.displayName}_tree_canopy`, { diameter: 4.5 * scale, segments: 6 }, scene);
     canopy.position = new Vector3(x, 5.7 * scale, z);
     canopy.scaling.y = 0.8;
@@ -3144,6 +3200,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     lagoon: { water: new Color3(0.26, 0.78, 0.66), deep: new Color3(0.1, 0.56, 0.56), shore: new Color3(0.74, 0.86, 0.68) },
     // A grey keep with blue cone spires on the far rim, no boulders, rubble walls or bales on the field (see meadowCastle)
     castle: true,
+    // Clumps of lumpy oaks on the field, no balls on stalks (see oakClump)
+    fieldOaks: true,
     accent: new Color3(0.78, 0.68, 0.34),
     props: [
       { kind: "tree", x: -28, z: -24, scale: 1.15 },
