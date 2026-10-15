@@ -1950,22 +1950,99 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     fall.position = new Vector3(x, 8 * scale, z);
     fall.material = waterMat;
   };
+  /*
+   * A moored galleon (252; maps/pirate_beach: two dark wooden ships lying in the cove, each about a third of the island long). Read off the reference: the hull is
+   * about SHIP_BEAM of its length across and SHIP_HULL of it high, dark brown with a pale gunwale band and a light plank deck, a pointed bow carrying a raking
+   * bowsprit, and a raised stern castle over the aft SHIP_CASTLE of the length; three masts (fore, main, mizzen) SHIP_MASTS of the length tall, each with two
+   * square cream sails hung from yards wider than the beam (SHIP_YARD), the upper one narrower, and a crow's nest on the main. The yards are braced SHIP_BRACE
+   * off square, toward the placement camera, so the sails show their faces from the high oblique view rather than their edges.
+   */
+  const SHIP_LONG = 17, SHIP_BEAM = 0.26, SHIP_HULL = 0.15, SHIP_CASTLE = 0.24;
+  const SHIP_MASTS: [number, number][] = [[0.3, 0.62], [0.02, 0.74], [-0.24, 0.55]];
+  const SHIP_YARD = 1.45, SHIP_BRACE = 0.55;
+  const shipMat = (name: string, c: Color3) => {
+    const m = new StandardMaterial(`${theme.displayName}_${name}`, scene);
+    m.diffuseColor = c;
+    m.specularColor = new Color3(0.03, 0.03, 0.03);
+    return m;
+  };
+  let shipMats: Record<"hull" | "band" | "deck" | "sail" | "flag", StandardMaterial> | null = null;
   const addShip = (x: number, z: number, scale = 1, rotationY = 0, blocking = false) => {
-    addBoxObstacle(x, z, 16 * scale, 4.5 * scale, 2.8 * scale, darkMat, blocking, rotationY);
-    addBoxObstacle(x, z, 13 * scale, 3.4 * scale, 0.6 * scale, accentMat, false, rotationY);
-    const mast = MeshBuilder.CreateCylinder(`${theme.displayName}_ship_mast`, { height: 9 * scale, diameter: 0.25 * scale }, scene);
-    mast.position = new Vector3(x, 4.8 * scale, z);
-    mast.material = trunkMat;
-    mast.receiveShadows = true;
-    const sail = MeshBuilder.CreateBox(`${theme.displayName}_ship_sail`, {
-      width: 0.25 * scale,
-      height: 5.4 * scale,
-      depth: 3.8 * scale,
-    }, scene);
-    sail.position = new Vector3(x + Math.sin(rotationY) * 1.2 * scale, 5.6 * scale, z + Math.cos(rotationY) * 1.2 * scale);
-    sail.rotation.y = rotationY;
-    sail.material = paleMat;
-    sail.receiveShadows = true;
+    shipMats ??= {
+      hull: shipMat("shipHull", new Color3(0.27, 0.17, 0.1)),
+      band: shipMat("shipBand", new Color3(0.62, 0.45, 0.24)),
+      deck: shipMat("shipDeck", new Color3(0.66, 0.52, 0.34)),
+      sail: shipMat("shipSail", new Color3(0.94, 0.91, 0.82)),
+      flag: shipMat("shipFlag", new Color3(0.12, 0.1, 0.1)),
+    };
+    // Sun-through cloth: the placement camera looks at the sails' shaded faces, which went navy with no light of their own
+    shipMats.sail.emissiveColor = new Color3(0.94, 0.91, 0.82).scale(0.4);
+    const glow = scene.getGlowLayerByName("glow");
+    const M = shipMats;
+    const L = SHIP_LONG * scale, B = L * SHIP_BEAM, H = L * SHIP_HULL;
+    const root = new Mesh(`${theme.displayName}_ship`, scene);
+    root.position.set(x, 0, z);
+    root.rotation.y = rotationY;
+    const hull = MeshBuilder.CreateBox(`${theme.displayName}_shipHull`, { width: L * 0.86, depth: B, height: H }, scene);
+    placePart(root, hull, M.hull, -L * 0.07, H / 2, 0);
+    // Bow: a diamond-section prow, its point B/2 past the hull end, a little higher than the waist
+    const bowSide = B / Math.SQRT2;
+    const bow = MeshBuilder.CreateBox(`${theme.displayName}_shipBow`, { width: bowSide, depth: bowSide, height: H * 1.12 }, scene);
+    bow.rotation.y = Math.PI / 4;
+    placePart(root, bow, M.hull, L * 0.36, H * 0.56, 0);
+    const band = MeshBuilder.CreateBox(`${theme.displayName}_shipBand`, { width: L * 0.87, depth: B * 1.04, height: H * 0.14 }, scene);
+    placePart(root, band, M.band, -L * 0.07, H * 0.86, 0);
+    const deck = MeshBuilder.CreateBox(`${theme.displayName}_shipDeck`, { width: L * 0.8, depth: B * 0.84, height: H * 0.04 }, scene);
+    placePart(root, deck, M.deck, -L * 0.04, H * 1.01, 0);
+    for (const side of [-1, 1]) {
+      const rail = MeshBuilder.CreateBox(`${theme.displayName}_shipRail`, { width: L * 0.84, depth: B * 0.08, height: H * 0.3 }, scene);
+      placePart(root, rail, M.hull, -L * 0.06, H * 1.15, side * B * 0.46);
+    }
+    // Stern castle over the aft quarter, its top decked, a band at its rim
+    const castleLong = L * SHIP_CASTLE;
+    const castle = MeshBuilder.CreateBox(`${theme.displayName}_shipCastle`, { width: castleLong, depth: B * 0.98, height: H * 0.7 }, scene);
+    placePart(root, castle, M.hull, -L * 0.5 + castleLong / 2, H * 1.35, 0);
+    const castleBand = MeshBuilder.CreateBox(`${theme.displayName}_shipCastleBand`, { width: castleLong * 1.02, depth: B * 1.02, height: H * 0.12 }, scene);
+    placePart(root, castleBand, M.band, -L * 0.5 + castleLong / 2, H * 1.66, 0);
+    const castleDeck = MeshBuilder.CreateBox(`${theme.displayName}_shipCastleDeck`, { width: castleLong * 0.9, depth: B * 0.86, height: H * 0.04 }, scene);
+    placePart(root, castleDeck, M.deck, -L * 0.5 + castleLong / 2, H * 1.72, 0);
+    const bowsprit = MeshBuilder.CreateCylinder(`${theme.displayName}_shipBowsprit`, { height: L * 0.28, diameter: 0.22 * scale, tessellation: 6 }, scene);
+    bowsprit.rotation.z = -Math.PI / 2 + 0.38;
+    placePart(root, bowsprit, M.hull, L * 0.48, H * 1.45, 0);
+    // Masts with two square sails each on yards braced toward the camera
+    const brace = SHIP_BRACE * (rotationY < 0 ? -1 : 1);
+    SHIP_MASTS.forEach(([at, tall], i) => {
+      const mastTall = L * tall;
+      const mast = MeshBuilder.CreateCylinder(`${theme.displayName}_shipMast`, { height: mastTall, diameterTop: 0.18 * scale, diameterBottom: 0.38 * scale, tessellation: 6 }, scene);
+      placePart(root, mast, M.hull, L * at, H + mastTall / 2, 0);
+      const sails: [number, number, number][] = [[0.4, 0.3, 1], [0.76, 0.22, 0.74]];
+      for (const [mid, high, wide] of sails) {
+        const sailW = B * SHIP_YARD * wide, sailH = mastTall * high;
+        const rig = new Mesh(`${theme.displayName}_shipRig`, scene);
+        rig.parent = root;
+        rig.position.set(L * at, H + mastTall * mid, 0);
+        rig.rotation.y = brace;
+        // Bellied forward: the cloth's middle stands proud of its edges
+        const sail = MeshBuilder.CreateBox(`${theme.displayName}_shipSail`, { width: 0.12 * scale, depth: sailW, height: sailH }, scene);
+        placePart(rig, sail, M.sail, 0.35 * scale, 0, 0);
+        const belly = MeshBuilder.CreateBox(`${theme.displayName}_shipSailBelly`, { width: 0.12 * scale, depth: sailW * 0.62, height: sailH * 0.8 }, scene);
+        placePart(rig, belly, M.sail, 0.6 * scale, -sailH * 0.04, 0);
+        glow?.addExcludedMesh(sail); // self-lit cloth, no bloom halo
+        glow?.addExcludedMesh(belly);
+        const yard = MeshBuilder.CreateCylinder(`${theme.displayName}_shipYard`, { height: sailW * 1.12, diameter: 0.16 * scale, tessellation: 5 }, scene);
+        yard.rotation.x = Math.PI / 2;
+        placePart(rig, yard, M.hull, 0.2 * scale, sailH / 2, 0);
+      }
+      if (i === 1) {
+        const nest = MeshBuilder.CreateCylinder(`${theme.displayName}_shipNest`, { height: 0.6 * scale, diameter: 1.1 * scale, tessellation: 8 }, scene);
+        placePart(root, nest, M.hull, L * at, H + mastTall * 0.92, 0);
+      }
+      const flag = MeshBuilder.CreateBox(`${theme.displayName}_shipFlag`, { width: 1.3 * scale, depth: 0.05 * scale, height: 0.75 * scale }, scene);
+      placePart(root, flag, M.flag, L * at - 0.65 * scale, H + mastTall + 0.2 * scale, 0);
+    });
+    if (blocking) {
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: L / 2, halfZ: B / 2 });
+    }
   };
 
   for (const prop of theme.props) {
