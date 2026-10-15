@@ -16,8 +16,6 @@ visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW
 rosterManifest.ts:giantScale (unitDefinitions collision/reach, vehicleBuilder rig) | mammoth 1.25: rig, metrics, collision radius and reach scaled together | 220 | approved |
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 234 | aimed-club-cycle | battle-feel.e | rejected
-- 234 | pressing-stride | battle-feel.h | approved
 - 235 | cone-brim-skirt | unit-look.h | rejected
 - 235 | upright-wall-stance | battle-feel.h | approved
 - 236 | upright-wall-legs | battle-feel.h | approved
@@ -33,6 +31,8 @@ rosterManifest.ts:giantScale (unitDefinitions collision/reach, vehicleBuilder ri
 - 242 | [R] wall-surface rebuild | battle-feel.h | approved
 - 243 | minotaur-bull-man | unit-look.k | approved
 - 243 | protector-slab | unit-look.i | approved
+- 244 | hoplite-crested-helm | unit-look.k | approved
+- 244 | knight-cross-helm | unit-look.v | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -59,4 +59,6 @@ propBuilder.ts:bone skull cap (bone_mask fitted: SKULL_HEADS, SKULL_SOCKET, SKUL
 propBuilder.ts:feather wings (WING_SPAN, _RAISE, _SWEEP, _FEATHERS, _FEATHER_LEN, _FEATHER_FAN) | 2.4 torsos, 0.5, 0.3, 7, 0.32-0.62, 0.35-1.25 | 242 | approved | two 0.35x0.25 s boxes
 propBuilder.ts:fitted bull_head (BULL_SHELL, _MUZZLE, _MUZZLE_DIP, _EYE, _HORN_ROOT, _HORN_TIP, _HORN_TURN) | shell 1.15 heads, muzzle 0.75 dip 0.4, eye 0.34, horns 0.42+0.85 turn 1.05 | 243 | approved | vehicle blob 1.4 m
 unitVisuals.ts:minotaur humanoid proportions (scale, bulk, headSize, armLength; off the vehicle set) | 2.1, 1.5, 1.7, 1.15 | 243 | approved | 1.7/1.6/1.4 vehicle rig
+propBuilder.ts:fitted crested_helm (CREST_HELM_HEADS, _CHEEK_DROP, _CHEEK_WIDE, CREST_TALL, _LONG, _STALK) | 1.28 heads, cheeks 0.62 x 0.24, crest 1.05 x 1.25 x 0.26, stalk 0.14; bronze, red crest | 244 | approved | plume_helmet/helmet dome
+propBuilder.ts:kite cross (kcross bars replace the boss; knight hat great_helm) | upright 0.04 x 0.38 at -0.04, arm 0.15 x 0.04 at 0.0, cream | 244 | approved | grey boss; knight plume_helmet
 propBuilder.ts:protector slab shield (SLAB_WIDE, SLAB_TALL, slabSerial; carry rotation.x pi/2; wood lerp 0.12 to team) | 0.25 x 0.71 (x1.9 carry), emissive 0.08 | 243 | approved | round board

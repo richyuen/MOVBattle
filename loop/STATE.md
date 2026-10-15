@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 243   Last re-audit: 240   Consecutive rejects: 0   Branch: main
+Iteration: 244   Last re-audit: 240   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,10 +17,10 @@ ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: l PASS, i-k m-v FAIL (1/14) [S since: 0 each, except i 1 (243), k 1 (243)]
+unit-look tier 3: l PASS, i-k m-v FAIL (1/14) [S since: 0 each, except i 1 (243), k 2 (243, 244), v 1 (244)]
 - i tribal: 1 struck (slab, 116e106, 243); 2 bone_mage grey sphere head, no antlered skull (units/tribal.bone_mage)
 - j farmer: 1 farmer small green ball cap, not the tall pointed cowl (units/farmer.farmer); 2 halo over a farmer (5th), off-faction
-- k ancient: 1 hoplite/sarissa bareheaded, no crested helm (units/ancient.hoplite); 2 struck (bull-man, e27ec9b, 243)
+- k ancient: 1 struck (crested helm, bd5db27, 244); 2 struck (bull-man, e27ec9b, 243); 3 crested helm fixed tan bronze + red crest, not team colour (units/ancient.hoplite)
 - l viking PASS (cleared by 312a742, 242)
 - m dynasty: 1 dragon a bald big man with a black slab, no dragon-head costume (units/dynasty.dragon); 2 monk wears a halo (units/dynasty.monk)
 - n renaissance: 1 jouster on a box, no horse (units/renaissance.jouster); 2 painter no palette, no two-tone doublet, all plain blue (units/renaissance.painter)
@@ -31,7 +31,7 @@ unit-look tier 3: l PASS, i-k m-v FAIL (1/14) [S since: 0 each, except i 1 (243)
 - s good: 1 no white/gold accent, plain blue tunics (units/good.righteous_paladin); 2 sacred elephant grey, no gold trappings or rider (units/good.sacred_elephant)
 - t evil: 1 four of seven in the same plain cone, no horns/spikes/dark armour (units/evil.void_cultist); 2 void_monarch bright yellow jewelled crown (units/evil.void_monarch)
 - u secret: 1 halos repeat on 5+ units (factions/secret); 2 tree giant a plain grey block man (units/secret.tree_giant)
-- v medieval: 1 knight plain kite board no cross, small capped helm (units/medieval.knight); 2 bard purple beret, not feathered straw hat (units/medieval.bard)
+- v medieval: 1 struck (cross kite + bucket helm, adb58a6, 244); 2 bard purple beret, not feathered straw hat (units/medieval.bard)
 maps-light tier 3: i-o all FAIL (0/7) [S since: 0 each]
 - i introduction (meadow): 1 shared pale-sage puffball ring, not dark twisted oaks; 2 no ruins/castle, generic rocks and walls (maps/meadow_medieval_1)
 - j adventure (meadow): 1 pools are flat grey-blue rectangles, not water (maps/meadow_medieval_2); 2 same ring and props as introduction
@@ -43,22 +43,22 @@ maps-light tier 3: i-o all FAIL (0/7) [S since: 0 each]
 Total tier 1 24/24; tier 2 23/24; tier 3 1/21.
 
 ## Focus (every gap this iteration)
-BASE ecb8bad (picks: top 2 ranked [S], k and i; no [P]: none listed as fallout)
-- [S] unit-look.k minotaur-bull-man (e27ec9b) — APPROVE, blocker 2 struck, k FAIL
-- [S] unit-look.i protector-slab (116e106) — APPROVE, blocker 1 struck, i FAIL
+BASE cff93cd (picks: ranked 1 k and 3 v; ranked 2 i skipped, k+i was the 243 pair; no [P]: none listed as fallout)
+- [S] unit-look.k hoplite-crested-helm (bd5db27) — APPROVE, blocker 1 struck, 3 added, k FAIL
+- [S] unit-look.v knight-cross-helm (adb58a6) — APPROVE, blocker 1 struck, v FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] minotaur-bull-man (e27ec9b) VERDICT: APPROVE CRITERION: unit-look.k FAIL (previous: FAIL)
-- GAP: [S] protector-slab (116e106) VERDICT: APPROVE CRITERION: unit-look.i FAIL (previous: FAIL)
+- GAP: [S] hoplite-crested-helm (bd5db27) VERDICT: APPROVE CRITERION: unit-look.k FAIL (previous: FAIL)
+- GAP: [S] knight-cross-helm (adb58a6) VERDICT: APPROVE CRITERION: unit-look.v FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] unit-look.k hoplite-crested-helm [0] — blocker 1: crested Corinthian helm (cheek guards, tall crest) on hoplite and sarissa — ref units/ancient.hoplite — ours lineup_ancient
-2. [S] unit-look.i bone-mage-antler-skull [0] — blocker 2: antlered skull on bone_mage (bone_mask cap + antler tines) — ref units/tribal.bone_mage — ours lineup_tribal
-3. [S] unit-look.v knight-cross-helm [0] — blocker 1: cross on the kite board and a full bucket helm — ref units/medieval.knight.png — ours lineup_medieval
-4. [S] maps-light.n pirate-ships [0] — blocker 1: ships with hulls and masts, not olive boxes with slab sails — ref maps/pirate_beach — ours biome_pirate
-5. [S] unit-look.m dragon-costume [0] — blocker 1: dragon-head costume (snout, horns, frill), not a bald man with a black slab — ref units/dynasty.dragon — ours lineup_dynasty
-6. [S] unit-look.p skeleton-bones [0] — blocker 1: bone ribs and limbs on skeleton warrior/archer, not fleshed men — ref units/spooky.skeleton_warrior — ours lineup_spooky
-7. [S] unit-look.s paladin-white-gold [0] — blocker 1: white/gold accent tabards and trim on the good units — ref units/good.righteous_paladin — ours lineup_good
+1. [S] unit-look.v bard-straw-hat [0] — blocker 2: feathered wide straw hat replacing the beret on medieval.bard — ref units/medieval.bard.png — ours lineup_medieval
+2. [S] unit-look.k team-tinted-crest [0] — blocker 3: team-colour helm and crest on crested_helm, crest a thicker arched brush — ref units/ancient.hoplite.jpg — ours lineup_ancient
+3. [S] unit-look.j farmer-pointed-cowl [0] — blocker 1: tall pointed cowl hat for farmer.farmer — ref units/farmer.farmer.png — ours lineup_farmer
+4. [S] unit-look.i bone-mage-antler-skull [0] — blocker 2: antlered skull mask replacing the grey sphere head — ref units/tribal.bone_mage — ours lineup_tribal
+5. [S] unit-look.u halo-purge [0] — blocker 1: remove halos repeated on 5+ units, each its own hat (also clears j2, m2, o2) — ref factions/secret — ours lineup_secret
+6. [S] unit-look.p skeleton-bone-body [0] — blocker 1: bone rib cage and thin bone limbs for skeleton warrior/archer — ref units/spooky.skeleton_warrior — ours lineup_spooky
+7. [S] unit-look.n jouster-horse [0] — blocker 1: horse mount rig replacing the box — ref units/renaissance.jouster.png — ours lineup_renaissance
 8. [R] battle-feel.e deferred [2] — until the 245 re-audit; respec from trailer_3_sheet_01 r2c3, acceptance shot press_clubbers_hit
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
@@ -73,7 +73,7 @@ BASE ecb8bad (picks: top 2 ranked [S], k and i; no [P]: none listed as fallout)
 
 ## Notes for next iteration (max 5 lines)
 - battle-feel.e is deferred (not pickable until the 245 re-audit rewrites its list). 241 findings: clubbers strike from up to ~2 m, hoplites taller than clubbers, units animate BEFORE the decision loop, so the hit frame renders the pre-hit pose unless re-posed in the same step.
-- Shield wall: blue = ancient.hoplite (round boards), red = tribal.protector (now plank slabs, ShieldType slab, own slabSerial); boards on the strip at 0.62 neck height. Critic 243: slabs show hip-height gaps (TABS butts them edge to edge); minotaur skull shell reads as a blue cap, no red belt/loin skirt. Polish, no blocker.
-- Minotaur is now a humanoid (off VEHICLE_UNIT_IDS) with fitted bull_head hat (face-covering). Hand frame: a carried board long axis needs rotation.x pi/2 to stand up; lapped boards are stood up by the wall.
-- Tier 3 letters are separate criteria. TABS medieval.healer is bare-headed in a robe (unit-look.v candidate).
-- capture.mjs runs the showcase first; `--only` looks equal full-run frames. No [P] on rows approved within 20 iterations (incl. wall seeds/faces/skull/wings 242, bull head/slab 243).
+- Shield wall: blue = ancient.hoplite (round boards, now crested_helm), red = tribal.protector (plank slabs). Critic 243: slabs show hip-height gaps; minotaur skull shell reads as a blue cap. Polish, no blocker.
+- Kite boards now carry a cream cross (no boss) for every kite user (knight, paladin, jouster, cavalry). Knight and squire share the great_helm bucket; the TABS knight adds a red crest frame (critic 244 defect, no blocker).
+- Tier 3 letters are separate criteria. TABS medieval.healer is bare-headed in a robe (unit-look.v candidate). crested_helm colours are fixed (bronze, red crest) — k blocker 3.
+- capture.mjs runs the showcase first; --only looks can differ in pose from full-run frames. No [P] on rows approved within 20 iterations (incl. crested helm/kite cross 244).
