@@ -369,6 +369,8 @@ export function attachProps(
       shield.scaling.scaleInPlace(round ? 2.0 : 1.9);
       // A kite is shoulder-wide at the top, not a plank
       if (config.shield === "kite") shield.scaling.x *= 1.4;
+      // The slab's length runs up the man, not along the forearm that carries it (a lapped board is stood up by the wall instead)
+      if (config.shield === "slab") shield.rotation.x = Math.PI / 2;
       // Strapped up the forearm and carried across the chest, not dangling at the hip
       shield.position.set(0.1 * scale, (round ? 0.22 : 0.14) * scale, 0.2 * scale);
     }
@@ -1689,6 +1691,10 @@ const ROUND_FACES = 3;
 const ROUND_SHADE = 0.12;
 const ROUND_PAINT = 1.45;
 let roundBoardSerial = 0;
+// The protector's plank slab, in the shield's own units before the 1.9 carry scale: width and height (about 0.48 x 1.35 of a unit scale, shin to over the crown)
+const SLAB_WIDE = 0.25;
+const SLAB_TALL = 0.71;
+let slabSerial = 0;
 function roundBoardSeed(serial: number, k: number): number {
   const x = Math.sin(serial * 127.1 + k * 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -1805,6 +1811,47 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         band.position.set(0, bandY, -0.016 * s);
         band.parent = shield;
         band.material = mat(scene, new Color3(0.56, 0.42, 0.22));
+      }
+      return shield;
+    }
+    case "slab": {
+      // A tall wooden slab (243; units/tribal.protector): two rough planks side by side, as tall as the man from shin to over the crown and about a torso
+      // wide (height SLAB_TALL, 2.8 of its width), their tops cut to a slant at different heights, lashed by two dark hide bands, with grey-brown stones bound
+      // on near the top and the foot. Bare wood, a third of the team colour in it, never a disc.
+      const wood = Color3.Lerp(new Color3(0.62, 0.36, 0.22), board, 0.12);
+      const r = (k: number) => roundBoardSeed(slabSerial + 0.5, k);
+      slabSerial++;
+      const shield = MeshBuilder.CreateBox("slabshield", { width: SLAB_WIDE * s, height: SLAB_TALL * s, depth: 0.012 * s }, scene);
+      shield.material = mat(scene, wood.scale(0.7));
+      for (const side of [-1, 1]) {
+        // Each plank its own length and shade; its top a wedge slanted outward
+        const long = SLAB_TALL * (side < 0 ? 1 : 0.93 + r(1) * 0.05);
+        const plank = MeshBuilder.CreateBox("slabPlank", { width: SLAB_WIDE * 0.5 * s, height: long * s, depth: 0.045 * s }, scene);
+        plank.position.set(side * SLAB_WIDE * 0.25 * s, (long - SLAB_TALL) * 0.5 * s, 0.008 * s);
+        plank.rotation.z = side * (0.015 + r(2) * 0.02);
+        plank.material = mat(scene, wood.scale(0.92 + r(side + 3) * 0.16), 0.08);
+        plank.parent = shield;
+        const cap = MeshBuilder.CreateCylinder("slabCap", { height: SLAB_WIDE * 0.5 * s, diameter: 0.064 * s, tessellation: 3 }, scene);
+        cap.rotation.z = Math.PI / 2;
+        cap.scaling.z = 0.7;
+        cap.position.set(0, long * 0.5 * s, 0);
+        cap.material = plank.material;
+        cap.parent = plank;
+      }
+      const hide = mat(scene, new Color3(0.28, 0.18, 0.12));
+      for (const y of [0.24, -0.26]) {
+        const band = MeshBuilder.CreateBox("slabBand", { width: SLAB_WIDE * 1.06 * s, height: 0.03 * s, depth: 0.062 * s }, scene);
+        band.position.set(0, y * SLAB_TALL * s, 0.008 * s);
+        band.material = hide;
+        band.parent = shield;
+      }
+      const rock = mat(scene, new Color3(0.42, 0.38, 0.3), 0, "stone");
+      for (const [x, y, d] of [[0.32, 0.36, 0.08], [-0.2, -0.4, 0.09]]) {
+        const stone = MeshBuilder.CreateSphere("slabStone", { diameter: d * s, segments: 2 }, scene);
+        stone.position.set(x * SLAB_WIDE * s, y * SLAB_TALL * s, 0.04 * s);
+        stone.scaling.set(1.1, 1.4, 0.6);
+        stone.material = rock;
+        stone.parent = shield;
       }
       return shield;
     }

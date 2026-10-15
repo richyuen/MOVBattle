@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head";
 
-export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler";
+export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -223,7 +223,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "tribal.protector": vis(
-    { scale: 1.0, bulk: 1.1 }, "spear", "bone_mask", "round", "none", "#D2B48C",
+    { scale: 1.0, bulk: 1.1 }, "spear", "bone_mask", "slab", "none", "#D2B48C",
   ),
   "tribal.spear_thrower": vis(
     { scale: 0.95, armLength: 1.1 }, "javelin", "none", "none", "none", "#CD853F",
