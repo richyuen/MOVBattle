@@ -87,11 +87,12 @@ const WALL_BOARD_TURN = 0.38;
 const WALL_BOARD_LEAN = [-0.2, 0.3];
 // How far a pressing wall man's drive leg goes back (radians at the hip, at full shove); his lead knee and trunk follow it (see the brace).
 const PRESS_DRIVE = 0.4;
-// The tree giant's hip carry: the arm a little forward with the elbow half bent (fist at the belt), and where the trunk points in the body's frame (x out, y up, z ahead).
-const TREE_HIP_ARM = { raise: -0.35, out: 0.12, elbow: -0.7 };
-// 267 [R] (units/secret.tree_giant): the trunk runs out from the fist to his flank and a little ahead, dipping slightly, and its bend (built to the trunk's own
-// +x; see the spec over TREE_CLUB_LONG in propBuilder) is turned to hang under it, so the crown hangs knee to hip high beside him and below the line's sightline.
-const TREE_HIP_TIP = new Vector3(0.9, -0.02, 0.35);
+// The tree giant's hip carry: the arm reached forward and down, the elbow nearly straight, so the fist rides at the hip ahead of the thigh (units/secret.tree_giant),
+// and where the trunk points in the body's frame (x out, y up, z ahead).
+const TREE_HIP_ARM = { raise: -0.9, out: 0.15, elbow: -0.4 };
+// 267 [R], 269 (units/secret.tree_giant): the trunk runs out near level from the fist to his flank and a little ahead, and its bow (built to the trunk's own
+// +x; see the spec over TREE_CLUB_LONG in propBuilder) is turned to face up, so the trunk rises a little into a crown centred on its end, hip-high at his side.
+const TREE_HIP_TIP = new Vector3(0.9, 0.02, 0.35);
 // The scythe's high carry (units/spooky.reaper): the fist up in front of the chest, the snath slanted up and out over his weapon shoulder so its head
 // rides above the hood, and the crescent turned flat to the front (SCYTHE_SPIN about the snath), sweeping back in over the hood and curling down.
 const SCYTHE_HIGH_ARM = { raise: -0.95, out: 0.22, elbow: -1.05 };
@@ -920,12 +921,12 @@ export class ProceduralAnimator {
       spin: scythe ? Quaternion.RotationYawPitchRoll(SCYTHE_SPIN * side, 0, 0) : undefined,
     } : null;
     if (scythe) this._carryTurn = 1;
-    // The tree's bent side (its own +x) is turned about the trunk to face the way the trunk runs out, which the carry's turn then brings round to hang under it
-    if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side), 0, 0);
+    // The tree's bowed side (its own +x) is turned about the trunk to face back against the way the trunk runs out, which the carry's turn then brings round to face up
+    if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side) + Math.PI, 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
     const pick = h(92);
-    // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist low in front of the belt, the trunk run out to his own side, forward and down, the crown
-    // hanging about knee-high ahead of his flank, not shouldered or stood up over the line beside him
+    // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
+    // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;

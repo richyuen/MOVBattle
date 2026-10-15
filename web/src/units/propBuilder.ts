@@ -1393,13 +1393,14 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
  * The giant's tree [R] (267; units/secret.tree_giant, H = the carrier's standing height, read off the reference):
  * - trunk: about 0.6 H all told, gripped TREE_CLUB_GRIP of it from the butt, so a 0.09 H stub shows behind the fist and 0.5 H runs out to the crown.
  *   It is thick, as thick as his forearm at the fist (TREE_CLUB_THICK of the trunk as radius), swelling at the broken butt and down to about half at the crown.
- * - it is gnarled and bent, not a turned pole: it sags TREE_CLUB_BEND of its length toward its far end and kinks a little at two knots along the way.
- *   The bend is built toward the trunk's own +x; the animator turns that side to hang under the trunk (see TREE_HIP_TIP), so the trunk bends down to the crown.
+ * - it is gnarled and bent, not a turned pole: it bows TREE_CLUB_BEND of its length toward its far end and kinks a little at two knots along the way.
+ *   The bow is built toward the trunk's own +x; the animator turns that side up (see TREE_HIP_TIP), so the trunk runs near level from the fist and rises a
+ *   little into the crown (269: hung under, it carried the crown down into the grass).
  * - roots: TREE_CLUB_ROOTS short tapered roots, about 0.07 H, fanning back from the butt TREE_CLUB_ROOT_FAN off the trunk's axis like a torn root ball, all
  *   behind the fist and none square across it (that read as a sword's crossguard).
  * - one forked limb stub rising off the top of the trunk near the crown, and a knot half way out.
- * - crown: three big round olive lobes, each about 0.13 H in radius, in a triangle in the trunk's plane: two along the top of the trunk's end and one
- *   hanging below it, so the crown hangs beside him about knee to hip high with its bottom clear of the grass.
+ * - crown: three big round olive lobes, each about 0.13 H in radius, in a triangle centred on the trunk's end: two above its line and one below,
+ *   so the crown sits hip-high at his side, as high as the fist, with its bottom well clear of the grass.
  */
 const TREE_CLUB_LONG = 0.6;
 const TREE_CLUB_GRIP = 0.15;
@@ -1410,8 +1411,8 @@ const TREE_CLUB_ROOT_FAN = [0.35, 0.6];
 const TREE_CLUB_CROWN = 0.25;
 const TREE_CLUB_CARRY = 1.2;
 const TREE_CLUB_LOBE = 0.85;
-// Lobes of the crown from the trunk's end, in crown radii: along the trunk, toward its bent (hanging) side, and across it
-const TREE_CLUB_LOBES: [number, number, number][] = [[0.3, -0.5, 0.25], [1.25, -0.35, -0.2], [0.8, 0.7, 0.1]];
+// Lobes of the crown from the trunk's end, in crown radii: along the trunk, toward its bowed (upper) side, and across it; centred on the trunk's line
+const TREE_CLUB_LOBES: [number, number, number][] = [[0.35, 0.55, 0.25], [1.3, 0.3, -0.2], [0.8, -0.75, 0.1]];
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -1437,7 +1438,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // Strapped on out to the giant's side (TREE_CLUB_CARRY off upright); standing and on the march the animator turns it in the fist to the low hip carry (TREE_HIP_TIP)
       const carry = new Mesh("treeClubCarry", scene);
       carry.rotation.set(0.3, 0, -TREE_CLUB_CARRY);
-      // The trunk's line in the carry's frame, the fist at the origin: butt at -GRIP, crown end at 1 - GRIP, sagging to +x and kinked at the knots
+      // The trunk's line in the carry's frame, the fist at the origin: butt at -GRIP, crown end at 1 - GRIP, bowed to +x and kinked at the knots
       const along = [0, 0.1, 0.3, 0.5, 0.7, 0.88, 1];
       const kinkX = [0, 0, 0.025, -0.02, 0.02, 0, 0];
       const kinkZ = [0, 0.015, -0.025, 0.02, -0.015, 0.01, 0];
@@ -1465,9 +1466,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         root.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
         root.material = bark;
       }
-      // A forked limb stub off the top of the trunk (its -x side) near the crown, and a knot half way out
+      // A forked limb stub off the top of the trunk (its bowed +x side) near the crown, and a knot half way out
       const limbAt = line[4].add(line[5]).scale(0.5);
-      const limbs: [Vector3, number, number][] = [[new Vector3(-0.75, 0.65, 0.1), 0.2, 0.035], [new Vector3(-0.35, 0.9, -0.25), 0.13, 0.022]];
+      const limbs: [Vector3, number, number][] = [[new Vector3(0.75, 0.65, 0.1), 0.2, 0.035], [new Vector3(0.35, 0.9, -0.25), 0.13, 0.022]];
       for (const [toward, long, thick] of limbs) {
         const dir = toward.normalize();
         const limb = MeshBuilder.CreateCylinder("treeClubLimb", { height: T * long, diameterTop: T * thick * 0.35, diameterBottom: T * thick, tessellation: 5 }, scene);
@@ -1478,7 +1479,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       }
       const knot = MeshBuilder.CreateIcoSphere("treeClubKnot", { radius: T * 0.045, subdivisions: 1 }, scene);
       knot.parent = carry;
-      knot.position.copyFrom(line[3].add(new Vector3(-0.02 * T, 0, 0.025 * T)));
+      knot.position.copyFrom(line[3].add(new Vector3(0.02 * T, 0, 0.025 * T)));
       knot.scaling.set(1, 1.6, 1);
       knot.material = bark;
       // The crown: three separate round lobes one shade apart, so its silhouette reads as three bumps and not one merged blob
