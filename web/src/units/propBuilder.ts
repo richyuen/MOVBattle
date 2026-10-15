@@ -2553,8 +2553,10 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody): void {
  *     (a stocky barrel, legs set in under it); the caparison is not a cone but a sack drawn
  *     over it, its section a lathe profile that swells out past the barrel (HORSE_CAP_BULGE of the barrel's half-width) a little under the middle and draws
  *     back in to the hem (HORSE_CAP_HEM), so the hem is narrower than the belly above it, cream, with square dags.
- *   - Under the hem: the thick upper leg (forearm / gaskin, ~0.45 of the barrel's half-width across) carries on for a short way, then a ball joint, a short
- *     cannon about half as long again as the hoof is tall, and a big dark hoof as wide as the upper leg (HORSE_HOOF of H, ~2.3 cannons across).
+ *   - Under the hem: the thick chestnut upper leg (forearm / gaskin, ~0.45 of the barrel's half-width across, ~1.45 times as deep fore-and-aft as across)
+ *     carries on for HORSE_UPPER_SHOW of H and narrows into the joint, then a short cannon about half as long again as the hoof is tall, a fetlock bulge,
+ *     and a big dark hoof as wide as the upper leg (HORSE_HOOF of H, ~2.3 cannons across).
+ *   - The caparison runs HORSE_CAP_LONG past the barrel's length over chest and rump, so from any side it is a long low drape and not a pot.
  *     The hind leg's hock sits HORSE_HOCK of H behind its root and the cannon slants forward again to the hoof: a plain Z in side view.
  *   - The rider is lifted HORSE_LIFT of H, so the back sits just under his lifted hip. The neck leaves the top front of the barrel raked forward HORSE_NECK_RAKE,
  *     the long grey-armoured head points forward and down with ears and a team plume; a dark tail falls off the rump. The rider's shins and feet are hidden.
@@ -2567,7 +2569,10 @@ const HORSE_DAGS = 7;
 const HORSE_FORE_THICK = 0.36;
 const HORSE_HIND_THICK = 0.44;
 const HORSE_HOCK = 0.22;
-const HORSE_KNEE = 0.32;
+const HORSE_UPPER_SHOW = 0.32;
+const HORSE_UPPER_DEEP = 1.45;
+const HORSE_COAT_GLOW = 0.14;
+const HORSE_CAP_LONG = 1.15;
 const HORSE_HOOF = 0.27;
 const HORSE_CAP_BULGE = 1.22;
 const HORSE_CAP_HEM = 1.14;
@@ -2600,7 +2605,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const L = H * HORSE_LONG;
   const W = Math.max(body.metrics.hipWidth * 2.2, H * HORSE_WIDE);
   // The paint's coat and patches are a little self-lit, so they stay orange and cream in the blue shade instead of greying
-  const coat = pinto ? mat(scene, PINTO_COAT, PINTO_GLOW) : mat(scene, new Color3(0.5, 0.28, 0.17));
+  const coat = pinto ? mat(scene, PINTO_COAT, PINTO_GLOW) : mat(scene, new Color3(0.55, 0.3, 0.18), HORSE_COAT_GLOW);
   const dark = mat(scene, new Color3(0.16, 0.1, 0.07));
   const plate = mat(scene, new Color3(0.66, 0.68, 0.7));
   const cream = pinto ? mat(scene, PINTO_CREAM, PINTO_GLOW) : mat(scene, new Color3(0.93, 0.84, 0.64));
@@ -2661,24 +2666,44 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   };
   for (const x of [-1, 1]) {
     for (const z of [-1, 1]) {
-      // Each leg tapers from a muscled upper wedge at the body to a thin cannon and a dark hoof
+      // Each leg is a horse's leg and not a post: a muscled upper wedge, deeper fore-and-aft than across (HORSE_UPPER_DEEP), that comes out
+      // of the hem for at least HORSE_UPPER_SHOW of H and narrows into the joint with no ball at it; a short cannon as thick as the wedge's
+      // foot; a fetlock bulge; a big flared dark hoof. The coat is part self-lit (HORSE_COAT_GLOW) so the legs stay chestnut in the shade.
       const legX = x * W * 0.24;
       const legZ = z * L * (z > 0 ? 0.3 : 0.27);
       const top = belly + H * HORSE_DEEP * 0.3;
       const hoofTall = H * 0.13;
+      const hemAt = floor + H * HORSE_HEM_HEIGHT;
       // Fore: knee straight under the shoulder; hind: the hock set well back and the cannon slanting forward again to the hoof, a Z
       const joint = z > 0
-        ? new Vector3(legX, floor + H * HORSE_KNEE, legZ + H * 0.02)
-        : new Vector3(legX, floor + H * (HORSE_KNEE + 0.04), legZ - H * HORSE_HOCK);
+        ? new Vector3(legX, hemAt - H * HORSE_UPPER_SHOW, legZ + H * 0.02)
+        : new Vector3(legX, hemAt - H * (HORSE_UPPER_SHOW - 0.04), legZ - H * HORSE_HOCK);
       const hoofAt = new Vector3(legX, floor + hoofTall * 0.9, z > 0 ? legZ + H * 0.03 : legZ - H * 0.06);
       const upper = new Vector3(legX, top, z > 0 ? legZ : legZ + H * 0.14);
-      // The thick upper leg (forearm / gaskin) runs from inside the barrel down past the hem to the joint
-      limb(z > 0 ? "hforearm" : "hgaskin", joint, upper, H * (z > 0 ? HORSE_FORE_THICK : HORSE_HIND_THICK), H * 0.22);
-      const jointBall = part(MeshBuilder.CreateIcoSphere("hjoint", { radius: H * 0.12, subdivisions: 1 }, scene), coat);
-      jointBall.position.copyFrom(joint);
-      const cannon = limb("hcannon", hoofAt, joint, H * 0.17, H * 0.13);
+      const foot = H * 0.2;
+      // The thick upper leg (forearm / gaskin) runs from inside the barrel down past the hem to the joint: a four-sided wedge set square to
+      // the horse, laid in a holder stretched HORSE_UPPER_DEEP fore-and-aft (ends given in the holder's space, so they land where they should)
+      const holder = new Mesh("hwedge", scene);
+      holder.parent = frame;
+      holder.scaling.z = HORSE_UPPER_DEEP;
+      const jl = new Vector3(joint.x, joint.y, joint.z / HORSE_UPPER_DEEP);
+      const ul = new Vector3(upper.x, upper.y, upper.z / HORSE_UPPER_DEEP);
+      const d = ul.subtract(jl);
+      const thick = H * (z > 0 ? HORSE_FORE_THICK : HORSE_HIND_THICK);
+      const wedge = MeshBuilder.CreateCylinder(z > 0 ? "hforearm" : "hgaskin", { height: d.length() + foot * 0.4, diameterTop: thick * Math.SQRT2, diameterBottom: foot * Math.SQRT2, tessellation: 4 }, scene);
+      wedge.rotation.y = Math.PI / 4;
+      wedge.bakeCurrentTransformIntoVertices();
+      part(wedge, coat);
+      wedge.parent = holder;
+      wedge.rotation.x = Math.atan2(d.z, d.y);
+      wedge.position.copyFrom(jl.add(ul).scale(0.5).subtract(d.normalize().scale(foot * 0.2)));
+      const cannon = limb("hcannon", hoofAt, joint, foot, H * 0.15);
       // The paint's cream socks, on one fore and the opposite hind
       if (pinto && x === z) cannon.material = cream;
+      // The fetlock: a squat bulge where the cannon meets the hoof
+      const fetlock = part(MeshBuilder.CreateIcoSphere("hfetlock", { radius: H * 0.1, subdivisions: 1 }, scene), cannon.material as typeof coat);
+      fetlock.scaling.set(1, 0.8, 1.15);
+      fetlock.position.set(legX, floor + hoofTall * 1.15, hoofAt.z);
       // A big flared hoof, as wide as the upper leg
       const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: hoofTall, diameterTop: H * HORSE_HOOF * 0.72, diameterBottom: H * HORSE_HOOF, tessellation: 6 }, scene), dark);
       hoof.position.set(legX, floor + hoofTall / 2, hoofAt.z + H * 0.02);
@@ -2734,7 +2759,8 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   }
   const tail = part(MeshBuilder.CreateCylinder("htail", { height: H * 0.55, diameterTop: H * 0.1, diameterBottom: H * 0.03, tessellation: 5 }, scene), dark);
   tail.rotation.x = 0.35;
-  tail.position.set(0, H * HORSE_DEEP * 0.15 - H * 0.26, -L * 0.5 - H * 0.08);
+  // Out of the back of the barrel, or of the longer caparison over it
+  tail.position.set(0, H * HORSE_DEEP * 0.15 - H * 0.26, -L * 0.5 * (pinto ? 1 : HORSE_CAP_BULGE * HORSE_CAP_LONG) - H * 0.08);
   // Down in the saddle: his shins and feet would stand between the horse's legs
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(false)) m.isVisible = false;
@@ -2762,7 +2788,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   profile.push(new Vector3(rW * HORSE_CAP_BULGE, -backY * 0.2, 0));
   profile.push(new Vector3(rW * HORSE_CAP_BULGE * 0.97, -backY * 0.62, 0));
   profile.push(new Vector3(rW * HORSE_CAP_HEM, hemY, 0));
-  const capZ = (L / W) * 1.0;
+  const capZ = (L / W) * HORSE_CAP_LONG;
   const sack = part(MeshBuilder.CreateLathe("hcaparison", { shape: profile, tessellation: 14, sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
   sack.scaling.z = capZ;
   const hemR = rW * HORSE_CAP_HEM;
