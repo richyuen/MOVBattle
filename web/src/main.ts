@@ -3622,6 +3622,11 @@ const gameApi = {
   skipTitleIntro: dismissTitleIntro,
   spawnUnit: spawnHarnessUnit,
   // Capture harness: a first draw skips meshes whose shaders are still compiling, so wait and redraw.
+  // Melee blows landed since the last clear, so a capture can shoot the frame a blow lands on.
+  getHitLog: () => simulation.hitLog.slice(),
+  clearHitLog: () => {
+    simulation.hitLog.length = 0;
+  },
   // Resolves with what still was not ready, so a capture can say which meshes a shot may miss.
   renderWhenReady: async () => {
     let renders = 0;

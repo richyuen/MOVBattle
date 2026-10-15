@@ -140,6 +140,8 @@ interface UnitPathState {
 }
 
 export class SimulationSystem {
+  /** Melee blows landed, newest last, for evidence captures that shoot the frame a blow lands on. Capped at 200. */
+  readonly hitLog: Array<{ t: number; attackerUnit: string; targetUnit: string; x: number; y: number; z: number }> = [];
   private _units: RuntimeUnit[] = [];
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
@@ -1474,6 +1476,8 @@ export class SimulationSystem {
     }
 
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
+    if (this.hitLog.length >= 200) this.hitLog.shift();
+    this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
