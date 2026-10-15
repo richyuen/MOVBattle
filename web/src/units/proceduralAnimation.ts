@@ -91,6 +91,11 @@ const PRESS_DRIVE = 0.4;
 const TREE_HIP_ARM = { raise: -0.35, out: 0.12, elbow: -0.7 };
 // The trunk is held level out at his flank with the crown a little above the fist (no per-man droop), so the crown hangs clear of the ground beside him.
 const TREE_HIP_TIP = new Vector3(0.85, 0.22, 0.35);
+// The scythe's high carry (units/spooky.reaper): the fist up in front of the chest, the snath slanted up and out over his weapon shoulder so its head
+// rides above the hood, and the crescent turned flat to the front (SCYTHE_SPIN about the snath), sweeping back in over the hood and curling down.
+const SCYTHE_HIGH_ARM = { raise: -0.95, out: 0.22, elbow: -1.05 };
+const SCYTHE_HIGH_TIP = new Vector3(0.6, 0.78, 0.15);
+const SCYTHE_SPIN = Math.PI / 2;
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -905,9 +910,15 @@ export class ProceduralAnimator {
       : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb")));
     const held = this.locomotionBias !== "aimed" && !rod && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
-    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry)$/.test(n.name));
-    const prop = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
+    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry)$/.test(n.name));
     const side = Math.sign(this._body.rightShoulder.position.x) || 1;
+    // A scythe is carried one way, high, and like the tree he stands in it from the first frame, whatever phase the arm is in
+    const scythe = node?.name === "scytheCarry";
+    const prop = node ? {
+      node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone(),
+      spin: scythe ? Quaternion.RotationYawPitchRoll(SCYTHE_SPIN * side, 0, 0) : undefined,
+    } : null;
+    if (scythe) this._carryTurn = 1;
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
     const pick = h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist low in front of the belt, the trunk run out to his own side, forward and down, the crown
@@ -915,7 +926,9 @@ export class ProceduralAnimator {
     const tree = node?.name === "treeClubCarry";
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
-    const attitude = tree
+    const attitude = scythe
+      ? { raise: SCYTHE_HIGH_ARM.raise, out: SCYTHE_HIGH_ARM.out, elbow: SCYTHE_HIGH_ARM.elbow, tip: new Vector3(SCYTHE_HIGH_TIP.x * side, SCYTHE_HIGH_TIP.y, SCYTHE_HIGH_TIP.z).normalize() }
+      : tree
       ? { raise: TREE_HIP_ARM.raise, out: TREE_HIP_ARM.out, elbow: TREE_HIP_ARM.elbow, tip: new Vector3(TREE_HIP_TIP.x * side, TREE_HIP_TIP.y, TREE_HIP_TIP.z).normalize() }
       : pick < 0.3
       ? { raise: -0.9 - h(81) * 0.3, out: 0.15 + h(82) * 0.2, elbow: -1.9 - h(83) * 0.3, tip: lean(0.25, 0.45, -0.85) }
