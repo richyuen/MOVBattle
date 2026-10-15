@@ -1216,6 +1216,8 @@ interface CampaignMapTheme {
   bare?: boolean;
   /** A row of townhouses round the rim in place of the tree ring, a low city wall on the near side (see townRing) */
   town?: boolean;
+  /** A broken tower and lone pillars on the far rim in place of the sandbox's boulders and rubble walls (see meadowRuins) */
+  ruins?: boolean;
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -1724,6 +1726,117 @@ function seaRim(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>): void {
   };
   band("seaShore", SEA_RIM, SEA_RIM + SEA_SHORE, 0.06, sea.shore);
   band("seaRim", 0, SEA_RIM, 0.07, sea.water);
+}
+
+/*
+ * Meadow ruins (introduction; maps/meadow_medieval_1: on the far rim, just inside the oaks, stand the grey stumps of old stonework, a broken round tower
+ * and a few lone pillars, some snapped short; the field itself is clear grass, no navy boulders or dry-stone walls). The sandbox's boulders and rubble
+ * walls on the island are put away with their obstacles. In their place along the far rim (z RUIN_FAR): a round tower RUIN_TOWER metres across of
+ * RUIN_TOWER_SIDES wall blocks, broken off on a slant from RUIN_TOWER_TALL down to a third of that, its field side open as a doorway, on a low plinth;
+ * RUIN_PILLARS octagonal pillars on square plinths, each its own height (the tall ones keep a capital, the short ones end in a tilted broken drum); one
+ * pillar fallen in two drums; and RUIN_BLOCKS loose blocks tumbled round them. Pale grey stone, part self-lit so shaded faces stay grey.
+ */
+const RUIN_FAR = 28;
+const RUIN_TOWER = 6.4;
+const RUIN_TOWER_SIDES = 9;
+const RUIN_TOWER_TALL = 10;
+const RUIN_PILLARS: [number, number, number][] = [[-31, 29, 6.8], [-24, 27, 3.0], [-16, 30, 5.2], [-8, 28, 1.8], [30, 26, 4.4]];
+const RUIN_BLOCKS = 9;
+const RUIN_STONE = new Color3(0.76, 0.73, 0.64);
+const RUIN_DRESSING = new Set(["boulder", "wallStone"]);
+function meadowRuins(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const hidden: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!RUIN_DRESSING.has(mesh.name)) continue;
+    const at = mesh.getAbsolutePosition();
+    if (!onIsland(at.x, at.z)) continue;
+    mesh.setEnabled(false);
+    hidden.push(at.clone());
+  }
+  const trunks = scene.meshes.filter((mesh) => mesh.name === "trunk").map((mesh) => mesh.getAbsolutePosition());
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    if (o.type !== "cylinder") continue;
+    const near = (p: Vector3, reach: number) => Math.hypot(p.x - o.center.x, p.z - o.center.z) <= reach;
+    if (trunks.some((p) => near(p, 0.6))) continue;
+    if (hidden.some((p) => near(p, o.radius + 0.1))) obstacles.splice(i, 1);
+  }
+  const self = (name: string, c: Color3): StandardMaterial => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(0.6);
+    m.emissiveColor = c.scale(0.4);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const stone = self("ruinStone", RUIN_STONE);
+  const dark = self("ruinStoneDark", RUIN_STONE.scale(0.8));
+  const glow = scene.getGlowLayerByName("glow");
+  const shadows = sunShadows(scene);
+  const piece = (mesh: Mesh, mat: StandardMaterial): void => {
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    mesh.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(mesh);
+    shadows?.addShadowCaster(mesh, false);
+  };
+  let n = 0;
+  const r = () => Math.abs((Math.sin(++n * 23.117 + 4.3) * 31415.927) % 1);
+  // The broken tower: wall blocks round a ring, tall on its back and falling away toward the field, the field-facing block left out as a doorway
+  const tx = 16, tz = RUIN_FAR + 1;
+  const plinth = MeshBuilder.CreateCylinder("ruinTowerPlinth", { diameter: RUIN_TOWER + 1.2, height: 0.7, tessellation: RUIN_TOWER_SIDES }, scene);
+  plinth.position.set(tx, 0.35, tz);
+  piece(plinth, dark);
+  const chord = Math.PI * RUIN_TOWER / RUIN_TOWER_SIDES * 1.06;
+  for (let i = 0; i < RUIN_TOWER_SIDES; i++) {
+    const a = (i / RUIN_TOWER_SIDES) * Math.PI * 2;
+    const back = 0.5 + 0.5 * Math.cos(a - 0.4);
+    if (back < 0.06) continue;
+    const tall = RUIN_TOWER_TALL * (0.33 + 0.67 * back) * (0.85 + r() * 0.15);
+    const block = MeshBuilder.CreateBox("ruinTowerWall", { width: chord, height: tall, depth: 0.95 }, scene);
+    block.position.set(tx + Math.sin(a) * RUIN_TOWER / 2, 0.7 + tall / 2, tz + Math.cos(a) * RUIN_TOWER / 2);
+    block.rotation.y = a;
+    piece(block, stone);
+  }
+  obstacles.push({ type: "cylinder", center: new Vector3(tx, 0, tz), radius: RUIN_TOWER / 2 + 0.5 });
+  // Lone pillars: plinth, octagonal shaft, then a capital if it still stands tall or a tilted broken drum if it snapped
+  for (const [x, z, tall] of RUIN_PILLARS) {
+    const base = MeshBuilder.CreateBox("ruinPillarPlinth", { width: 2, height: 0.6, depth: 2 }, scene);
+    base.position.set(x, 0.3, z);
+    piece(base, dark);
+    const shaft = MeshBuilder.CreateCylinder("ruinPillar", { diameterTop: 1.15, diameterBottom: 1.35, height: tall, tessellation: 8 }, scene);
+    shaft.position.set(x, 0.6 + tall / 2, z);
+    piece(shaft, stone);
+    if (tall > 4) {
+      const cap = MeshBuilder.CreateBox("ruinPillarCap", { width: 1.8, height: 0.5, depth: 1.8 }, scene);
+      cap.position.set(x, 0.6 + tall + 0.25, z);
+      piece(cap, dark);
+    } else {
+      const drum = MeshBuilder.CreateCylinder("ruinPillarBreak", { diameter: 1.15, height: 0.5, tessellation: 8 }, scene);
+      drum.position.set(x + 0.15, 0.6 + tall + 0.15, z);
+      drum.rotation.set(0.35, 0, 0.3);
+      piece(drum, stone);
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.1 });
+  }
+  // A pillar fallen on its side in two drums
+  for (const [dx, long, tilt] of [[0, 3.4, 0.05], [3.9, 2.6, -0.12]] as const) {
+    const drum = MeshBuilder.CreateCylinder("ruinFallenPillar", { diameter: 1.25, height: long, tessellation: 8 }, scene);
+    drum.position.set(-20 + dx, 0.6, RUIN_FAR - 4.5 + dx * 0.25);
+    drum.rotation.set(0, tilt, Math.PI / 2);
+    piece(drum, stone);
+  }
+  obstacles.push({ type: "box", center: new Vector3(-16.5, 0, RUIN_FAR - 4), halfX: 3.8, halfZ: 0.9 });
+  // Loose blocks tumbled about the tower and the pillars
+  for (let i = 0; i < RUIN_BLOCKS; i++) {
+    const size = 0.6 + r() * 0.6;
+    const block = MeshBuilder.CreateBox("ruinBlock", { width: size * 1.3, height: size, depth: size }, scene);
+    const [ax, az] = i % 3 === 0 ? [tx, tz] : RUIN_PILLARS[i % RUIN_PILLARS.length];
+    const turn = r() * Math.PI * 2, reach = (i % 3 === 0 ? RUIN_TOWER / 2 + 1.5 : 1.8) + r() * 1.8;
+    block.position.set(ax + Math.sin(turn) * reach, size / 2 - 0.05, az - Math.abs(Math.cos(turn)) * reach);
+    block.rotation.set((r() - 0.5) * 0.4, r() * Math.PI, (r() - 0.5) * 0.4);
+    piece(block, i % 2 ? stone : dark);
+  }
 }
 
 /*
@@ -2845,6 +2958,7 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
   recolorBaseTerrain(scene, theme);
   if (theme.bare) barePlane(scene, prior);
   if (theme.town) townPlaza(scene, obstacles);
+  if (theme.ruins) meadowRuins(scene, obstacles);
   addCampaignProps(scene, theme, obstacles);
   createHazardVisuals(scene, hazards, theme.sea, theme.lagoon);
   if (theme.sea) sandSpits(scene, theme.sea, hazards);
@@ -2884,6 +2998,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     accent: new Color3(0.92, 0.82, 0.38),
     // Broad dark-green oaks on kinked brown trunks round the meadow (see oakRing)
     ring: { leaves: new Color3(0.32, 0.52, 0.2), darkLeaves: new Color3(0.22, 0.4, 0.15), trunk: new Color3(0.42, 0.29, 0.19), bare: 0, oaks: 1 },
+    // Grey ruins on the far rim, no boulders or rubble walls on the field (see meadowRuins)
+    ruins: true,
     props: [
       { kind: "tree", x: -26, z: -26, scale: 1.1 },
       { kind: "tree", x: -24, z: 24, scale: 1.1 },
