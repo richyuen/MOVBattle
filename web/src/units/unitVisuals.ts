@@ -719,7 +719,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ EVIL ═══════════════════════
   "evil.shadow_walker": vis(
-    { scale: 1.0, bulk: 0.84, armLength: 1.12 }, "dagger", "hood", "none", "cape", "#5A487A", "dagger", {
+    { scale: 1.0, bulk: 0.84, armLength: 1.12 }, "dagger", "none", "none", "cape", "#5A487A", "dagger", {
       posePreset: "duelist",
       materialPreset: "secret_ghost",
       attachmentPreset: "shadow_orbit",
@@ -759,7 +759,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.death_bringer": vis(
-    { scale: 1.74, bulk: 1.44, headSize: 1.1, armLength: 1.16 }, "greatsword", "hood", "none", "cape", "#7D2E2E", undefined, {
+    { scale: 1.74, bulk: 1.44, headSize: 1.1, armLength: 1.16 }, "greatsword", "none", "none", "cape", "#7D2E2E", undefined, {
       posePreset: "giant",
       materialPreset: "secret_demon",
       attachmentPreset: "reaper_aura",

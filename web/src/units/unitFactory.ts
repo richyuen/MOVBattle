@@ -213,6 +213,37 @@ const VOID_STRANDS = 5;
 const VOID_SHIELD = 1.5;
 const VOID_STUDS = 8;
 /*
+ * The horned evil (units/evil.shadow_walker, evil.death_bringer): a horned head over dark armour, not a man in a plain hood. Read off the references:
+ *   shadow_walker: a dark iron cap on the crown, a mask of ~5 cream bone teeth hanging down over the face, and two long pale horns that run out level from the
+ *   cap's sides for about a head, then turn and rise ~1.5 heads above the crown in a wide U (span ~3 heads); a dark navy jerkin, dark brown breeches and boots,
+ *   cream spikes standing off the forearm guards, the shins and the shoulders; team-skin arms.
+ *   death_bringer: a cream skull over the whole head with dark sockets, and two dark purple horns from the crown that rise ~1.8 heads and sweep back; a black
+ *   tunic and short dark breeches; shins wrapped in pale bandage bands.
+ *   Horn paths are head-local points in heads (x out to the side, y up, z to the face), each horn EVIL_HORN_ROOT x thick heads across at the root, tapering to a point;
+ *   the dark cloth self-lit EVIL_GLOW and the pale bone EVIL_BONE_GLOW so neither greys out in the lineup shade; EVIL_SPIKE heads long per spike.
+ */
+type HornedEvilStyle = {
+  horn: [number, number, number][]; hornColor: Color3; cloth: Color3; legs: Color3; helm: Color3 | null; teeth: number; skull: boolean;
+  spikes: boolean; wraps: boolean; skirt: number; thick: number;
+};
+const HORNED_EVIL: Record<string, HornedEvilStyle> = {
+  "evil.shadow_walker": {
+    horn: [[0.42, 0.3, 0], [0.95, 0.38, 0], [1.42, 0.5, 0], [1.62, 0.95, 0], [1.6, 1.55, 0.05], [1.5, 2.0, 0.1]],
+    hornColor: new Color3(0.9, 0.8, 0.55), cloth: new Color3(0.1, 0.11, 0.24), legs: new Color3(0.26, 0.17, 0.12),
+    helm: new Color3(0.24, 0.16, 0.13), teeth: 5, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1,
+  },
+  "evil.death_bringer": {
+    horn: [[0.24, 0.42, -0.05], [0.4, 0.95, -0.18], [0.46, 1.45, -0.5], [0.36, 1.85, -1.0], [0.24, 2.05, -1.45]],
+    hornColor: new Color3(0.22, 0.12, 0.32), cloth: new Color3(0.1, 0.07, 0.13), legs: new Color3(0.14, 0.09, 0.2),
+    helm: null, teeth: 0, skull: true, spikes: false, wraps: true, skirt: 0.55, thick: 1.5,
+  },
+};
+const EVIL_HORN_ROOT = 0.24;
+const EVIL_BONE = new Color3(0.9, 0.82, 0.62);
+const EVIL_GLOW = 0.15;
+const EVIL_BONE_GLOW = 0.3;
+const EVIL_SPIKE = 0.32;
+/*
  * The cactus (256; units/wild_west.cactus): a man in a full-length cactus suit, not a man holding a green plank. Read off the reference: one dark green robe from
  * the shoulders to the ankle, flaring a little to the hem, with green sleeves to the wrist; a squarish green hood over the head with a window cut on the face so the
  * team-skin face and bead eyes show; team-skin shins and dark shoes under the hem; the whole suit studded with fat brown-maroon four-sided spines (about 40 seen
@@ -417,6 +448,9 @@ export class UnitFactory {
     }
     if (definition.id === "evil.void_cultist" && !shouldUseVehicleBody) {
       propMeshes.push(...dressVoidCultist(this._scene, body, teamColor, propMeshes));
+    }
+    if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
+      propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -945,6 +979,150 @@ function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3
       spike.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), v, new Quaternion());
       keep(spike, ball, iron);
     }
+  }
+  return added;
+}
+
+/** A tapered tube through head-local points: one faceted segment per pair, its root `thick` across narrowing to a point. */
+function taperedPath(scene: Scene, name: string, points: Vector3[], thick: number, parent: TransformNode, material: Material, added: Mesh[]): void {
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i], b = points[i + 1];
+    const dir = b.subtract(a);
+    const len = dir.length();
+    const seg = MeshBuilder.CreateCylinder(name, {
+      height: len * 1.08, diameterBottom: thick * (1 - i / (points.length - 1)), diameterTop: thick * (1 - (i + 1) / (points.length - 1)) + thick * 0.04, tessellation: 5,
+    }, scene);
+    seg.position.copyFrom(a.add(b).scale(0.5));
+    seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir.normalize(), new Quaternion());
+    seg.convertToFlatShadedMesh();
+    seg.material = material;
+    seg.parent = parent;
+    added.push(seg);
+  }
+}
+
+/** A four-sided spike `len` long standing off `parent` at `at` along `dir`. */
+function spikeOut(scene: Scene, parent: TransformNode, at: Vector3, dir: Vector3, len: number, material: Material, added: Mesh[]): void {
+  const v = dir.normalize();
+  const spike = MeshBuilder.CreateCylinder("evilSpike", { height: len, diameterTop: 0, diameterBottom: len * 0.42, tessellation: 4 }, scene);
+  spike.position.copyFrom(at.add(v.scale(len * 0.5)));
+  spike.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), v, new Quaternion());
+  spike.material = material;
+  spike.parent = parent;
+  added.push(spike);
+}
+
+/** Dresses shadow_walker / death_bringer horned over dark armour (see HORNED_EVIL): horns, iron cap and tooth mask or a full skull, dark cloth, spikes or wraps. */
+function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilStyle): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const keep = (m: Mesh, parent: TransformNode, material: Material): Mesh => {
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    m.material = material;
+    added.push(m);
+    return m;
+  };
+  // The armour is the body's own cloth turned dark and matte, a little self-lit; the legs go dark breeches
+  body.bodyMaterial.baseColor = style.cloth;
+  body.bodyMaterial.metallic = 0;
+  body.bodyMaterial.roughness = 0.75;
+  body.bodyMaterial.alpha = 1;
+  body.bodyMaterial.emissiveColor = style.cloth.scale(EVIL_GLOW * 2);
+  const legs = mf.get("cloth", style.legs, { emissiveIntensity: EVIL_GLOW });
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = legs;
+  const boot = mf.get("cloth", style.cloth.scale(0.8), { emissiveIntensity: EVIL_GLOW });
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = boot;
+  }
+  const bone = mf.get("cloth", EVIL_BONE, { emissiveIntensity: EVIL_BONE_GLOW });
+  const hornMat = mf.get("cloth", style.hornColor, { emissiveIntensity: style.skull ? EVIL_GLOW * 2 : EVIL_BONE_GLOW });
+  const head = body.headMesh;
+  const hExt = head.getBoundingInfo().boundingBox.extendSize;
+  const headSize = hExt.y * 2;
+  const face = hExt.z;
+  if (style.helm) {
+    // An iron cap boxed over the block head's crown down to the brow, a low dome on top
+    const iron = mf.get("cloth", style.helm, { emissiveIntensity: EVIL_GLOW });
+    const cap = MeshBuilder.CreateBox("evilCap", { width: hExt.x * 2.24, height: headSize * 0.42, depth: face * 2.24 }, scene);
+    cap.position.y = headSize * 0.32;
+    keep(cap, head, iron);
+    const dome = MeshBuilder.CreateSphere("evilCapDome", { diameter: 1, segments: 4, slice: 0.5 }, scene);
+    dome.scaling.set(hExt.x * 2.1, headSize * 0.5, face * 2.1);
+    dome.position.y = headSize * 0.5;
+    keep(dome, head, iron);
+  }
+  if (style.skull) {
+    // A cream skull boxed over the whole block head (cranium, then a narrower jaw), dark sockets and a nose hole on its face; the bead eyes go
+    const skull = MeshBuilder.CreateBox("evilSkull", { width: hExt.x * 2.3, height: headSize * 0.8, depth: face * 2.3 }, scene);
+    skull.position.set(0, headSize * 0.16, face * 0.04);
+    keep(skull, head, bone);
+    const jaw = MeshBuilder.CreateBox("evilJaw", { width: hExt.x * 1.7, height: headSize * 0.42, depth: face * 1.9 }, scene);
+    jaw.position.set(0, -headSize * 0.36, face * 0.16);
+    keep(jaw, head, bone);
+    body.leftEye?.setEnabled(false);
+    body.rightEye?.setEnabled(false);
+    const socket = mf.get("cloth", new Color3(0.08, 0.05, 0.08), { emissiveIntensity: 0 });
+    for (const side of [-1, 1]) {
+      const eye = MeshBuilder.CreateBox("evilSocket", { width: hExt.x * 0.6, height: headSize * 0.24, depth: face * 0.2 }, scene);
+      eye.position.set(side * hExt.x * 0.46, headSize * 0.08, face * 1.13);
+      keep(eye, head, socket);
+    }
+    const nose = MeshBuilder.CreateCylinder("evilNose", { height: headSize * 0.16, diameterTop: 0, diameterBottom: headSize * 0.18, tessellation: 3 }, scene);
+    nose.rotation.x = Math.PI;
+    nose.scaling.z = 0.4;
+    nose.position.set(0, -headSize * 0.12, face * 1.16);
+    keep(nose, head, socket);
+  }
+  for (let i = 0; i < style.teeth; i++) {
+    // Bone teeth hanging from the cap's brim down over the face
+    const t = i / (style.teeth - 1) - 0.5;
+    const tooth = MeshBuilder.CreateCylinder("evilTooth", { height: headSize * 0.55, diameterTop: headSize * 0.16, diameterBottom: headSize * 0.1, tessellation: 5 }, scene);
+    tooth.scaling.z = 0.6;
+    tooth.position.set(t * hExt.x * 1.35, -headSize * 0.08, face * (1.12 - Math.abs(t) * 0.35));
+    tooth.rotation.y = t * 0.9;
+    keep(tooth, head, bone);
+  }
+  for (const side of [-1, 1]) {
+    const pts = style.horn.map(([x, y, z]) => new Vector3(side * x * headSize, y * headSize, z * headSize));
+    taperedPath(scene, "evilHorn", pts, headSize * EVIL_HORN_ROOT * style.thick, head, hornMat, added);
+  }
+  const spikeLen = headSize * EVIL_SPIKE;
+  if (style.spikes) {
+    // Dark guards on the forearms and shins, cream spikes standing off them; a spike off each shoulder
+    const guard = mf.get("cloth", style.cloth.scale(1.4), { emissiveIntensity: EVIL_GLOW });
+    for (const limb of [body.leftLowerArm, body.rightLowerArm, body.leftLowerLeg, body.rightLowerLeg]) {
+      const e = limb.getBoundingInfo().boundingBox.extendSize;
+      const r = Math.max(e.x, e.z);
+      const band = MeshBuilder.CreateCylinder("evilGuard", { height: e.y * 1.1, diameter: r * 2.5, tessellation: 6 }, scene);
+      band.position.y = -e.y * 0.2;
+      keep(band, limb, guard);
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, -1]] as const) {
+        spikeOut(scene, limb, new Vector3(dx * r * 1.15, -e.y * 0.2, dz * r * 1.15), new Vector3(dx, 0.35, dz), spikeLen, bone, added);
+      }
+    }
+    for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+      const e = arm.getBoundingInfo().boundingBox.extendSize;
+      spikeOut(scene, arm, new Vector3(0, e.y * 0.8, 0), new Vector3(0, 1, -0.3), spikeLen * 1.1, bone, added);
+    }
+  }
+  if (style.wraps) {
+    // Pale bandage bands wound round the shins
+    const wrap = mf.get("cloth", new Color3(0.84, 0.82, 0.76), { emissiveIntensity: EVIL_BONE_GLOW });
+    for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+      const e = shin.getBoundingInfo().boundingBox.extendSize;
+      const r = Math.max(e.x, e.z);
+      for (let k = 0; k < 5; k++) {
+        const ring = MeshBuilder.CreateCylinder("evilWrap", { height: e.y * 0.36, diameter: r * (2.35 - k * 0.06), tessellation: 6 }, scene);
+        ring.position.y = e.y * (0.75 - k * 0.38);
+        ring.rotation.set(0.12 * (k % 2 ? 1 : -1), k, 0);
+        keep(ring, shin, wrap);
+      }
+    }
+  }
+  if (style.skirt > 0) {
+    const skirt = hangSkirt(scene, body, "evilBreech", style.skirt, 1.35, mf.get("cloth", style.legs, { emissiveIntensity: EVIL_GLOW }));
+    if (skirt) added.push(skirt);
   }
   return added;
 }
