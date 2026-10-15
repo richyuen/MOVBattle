@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 260   Last re-audit: 260   Consecutive rejects: 0   Branch: main
+Iteration: 261   Last re-audit: 260   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,7 +17,7 @@ ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240, re-audited 245-260; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: i j k l m o q PASS, n p r-v FAIL (7/14) [S since: 0 each, except n 1 (260; 4' written 259), p 3 (250, 251, 252), s 1 (259), u 3 (249, 253, 254), v 1 (244)]
+unit-look tier 3: i j k l m o q s PASS, n p r t u v FAIL (8/14) [S since: 0 each, except n 1 (260; 4' written 259), p 3 (250, 251, 252), u 3 (249, 253, 254), v 1 (244)]
 - i tribal PASS (cleared 243, 251; polish: antlers pale, staff topper)
 - j farmer PASS (cleared 249; polish: brims repeat, braids unreadable)
 - k ancient PASS (cleared by a5f0805, 245; polish: crest small, helm close to skin value)
@@ -28,39 +28,39 @@ unit-look tier 3: i j k l m o q PASS, n p r-v FAIL (7/14) [S since: 0 each, exce
 - p spooky: 1 struck (f37d3bf, 250; polish: bone greyish, no studded shield); 2 narrowed (01ef730 251, 7155691 252): blade a short stepped slab hanging off a level, lance-carried snath, not a long crescent arcing over the hood (units/spooky.reaper); polish: skull/shins grey not cream
 - q wild_west PASS (cleared a63efa7 256, 54c5f57 258 pinto; still PASS after 67f0425, but pinto legs now flat tan planks, untapered, tiny hooves: give the pinto its own tapered leg; polish: coat tan in shade, rope loop unseen; robe a broad box)
 - r legacy: 1 super_peasant in a dark wizard cone, not straw hair + sack (units/legacy.super_peasant); 2 no horse-drawn chariot (units/legacy.chariot)
-- s good: 1 struck (67760f2, 259; polish: arms white not team skin, kite+cross not round shield with device, gold lemon); 2 sacred elephant grey, no gold trappings or rider (units/good.sacred_elephant)
+- s good PASS (cleared 67760f2 259, 5c7d65b 261; polish: elephant keeps mammoth column legs/forward tusks, blanket pale with no device, rider stiff with floating bow, throne back low; paladin arms white, kite+cross shield, gold lemon)
 - t evil: 1 four of seven in the same plain cone, no horns/spikes/dark armour (units/evil.void_cultist); 2 void_monarch bright yellow jewelled crown (units/evil.void_monarch)
 - u secret: 1-3 struck (249, 253, 254); 3' crown two merged lobes near the ground in front, not three distinct lobes clear of it out at his flank; hood navy not maroon-brown (units/secret.tree_giant)
 - v medieval: 1 struck (adb58a6, 244); 2 bard purple beret, not feathered straw hat (units/medieval.bard)
-maps-light tier 3: k l n PASS, i j m o FAIL (3/7) [S since: 0 each, except o 1 (260)]
+maps-light tier 3: k l n o PASS, i j m FAIL (4/7) [S since: 0 each]
 - i introduction (meadow): 1 shared pale-sage puffball ring, not dark twisted oaks; 2 no ruins/castle, generic rocks and walls (maps/meadow_medieval_1)
 - j adventure (meadow): 1 pools are flat grey-blue rectangles, not water (maps/meadow_medieval_2); 2 same ring and props as introduction
 - k challenge PASS (cleared 247, 248; polish: island side wall slate blue-violet, not ochre strata)
 - l dynasty PASS (cleared by [R] 466ebe1, 246; polish: dark far bushes, olive field, no terraces/stone paths)
 - m renaissance: 1 no townhouses, two boxes and columns in a field; 2 sage grass, not a paved plaza (maps/renaissance_town)
 - n pirate PASS (cleared by [R] ddcb86b, 258; polish: team-zone rectangles cooler grey, corner hill discs smooth domes, slab hulls/short masts)
-- o simulation: 1 struck (bd1653a, 260: bare pale plane, haze-lost edge); 2 wide white centre band and lavender/pink tinted halves, not one thin red line on one warm untinted plane (maps/simulation); polish: grey void-hazard disc the only object, plane cool not warm cream
-Total tier 1 24/24; tier 2 23/24; tier 3 10/21.
+- o simulation PASS (cleared bd1653a 260, e54ee13 261; polish: plane cool lavender not warm cream (do not re-nudge colours, row 260), grey void-hazard disc the only object, line a bit wide/red vs thin magenta)
+Total tier 1 24/24; tier 2 23/24; tier 3 12/21.
 
 ## Focus (every gap this iteration)
-BASE 6221054 (iter 260 re-audit, no flips; picks ranked 1 and 3: rank 2 s would repeat 259's n+s pair; no [P])
-- [S] unit-look.n jouster-horse-legs-thick (67f0425) — APPROVE, 4' narrowed to 4'', n FAIL
-- [S] maps-light.o simulation-bare-plane (bd1653a) — APPROVE, blocker 1 struck, o FAIL (1 left)
+BASE d9beaab (picks ranked 1 and 3: rank 2 n would repeat 260's n+o pair; no [P]; evidence e3fca66 closeup_sacred_elephant)
+- [S] maps-light.o simulation-red-line (e54ee13) — APPROVE, o PASS
+- [S] unit-look.s sacred-elephant-trappings (5c7d65b) — APPROVE, s PASS
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] jouster-horse-legs-thick (67f0425) VERDICT: APPROVE CRITERION: unit-look.n FAIL (previous: FAIL)
-- GAP: [S] simulation-bare-plane (bd1653a) VERDICT: APPROVE CRITERION: maps-light.o FAIL (previous: FAIL)
+- GAP: [S] simulation-red-line (e54ee13) VERDICT: APPROVE CRITERION: maps-light.o PASS (previous: FAIL)
+- GAP: [S] sacred-elephant-trappings (5c7d65b) VERDICT: APPROVE CRITERION: unit-look.s PASS (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] maps-light.o simulation-red-line [0] — blocker 2: one thin red centre line, untinted warm halves on the bare plane (drop the zone tints for the bare theme) — ref maps/simulation — ours biome_simulation
-2. [S] unit-look.n jouster-hem-lift [0] — blocker 4'': lift the hem / stretch the drape long and low so ~40% leg and the hind Z show — ref units/renaissance.jouster — ours lineup_renaissance
-3. [S] unit-look.s sacred-elephant-trappings [0] — blocker 2: white skin, gold tusk rings + headplate, blue-gold blanket, archer on a howdah throne — ref units/good.sacred_elephant — ours lineup_good
-4. [S] unit-look.t void-cultist-horns [0] — blocker 1: dark horned/spiked helm and armour in place of the plain cone — ref units/evil.void_cultist — ours lineup_evil
-5. [S] unit-look.r legacy-chariot [0] — blocker 2: horse-drawn two-wheel chariot (buildHorse + car + driver) — ref units/legacy.chariot — ours lineup_legacy
-6. [S] maps-light.m renaissance-townhouses [0] — blocker 1: coloured townhouse facades ringing a paved square — ref maps/renaissance_town — ours biome_renaissance
-7. [S] unit-look.v bard-straw-hat [0] — blocker 2: feathered straw hat replacing the purple beret — ref units/medieval.bard — ours lineup_medieval
+1. [S] unit-look.n jouster-hem-lift [0] — blocker 4'': lift the hem / make the drape long and low so ~40% leg and the hind Z show — ref units/renaissance.jouster — ours lineup_renaissance
+2. [S] unit-look.t void-cultist-horns [0] — blocker 1: dark horned/spiked helm and armour in place of the plain cone — ref units/evil.void_cultist — ours lineup_evil
+3. [S] unit-look.r legacy-chariot [0] — blocker 2: horse-drawn two-wheel chariot (buildHorse + car + driver) — ref units/legacy.chariot — ours lineup_legacy
+4. [S] maps-light.m renaissance-townhouses [0] — blocker 1: coloured townhouse facades ringing a paved square — ref maps/renaissance_town — ours biome_renaissance
+5. [S] unit-look.v bard-straw-hat [0] — blocker 2: feathered straw hat replacing the purple beret — ref units/medieval.bard — ours lineup_medieval
+6. [S] maps-light.i meadow-oaks [0] — blocker 1: ring of dark twisted oaks replacing the pale-sage puffball ring — ref maps/meadow_medieval_1 — ours biome_introduction
+7. [S] unit-look.r super-peasant-straw [0] — blocker 1: straw hair + sack tunic replacing the dark wizard cone — ref units/legacy.super_peasant — ours lineup_legacy
 8. [S] battle-feel.e (deferred) club-connects — blocker 1 — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_hit
-(Off-list: tree-crown-lobes (u.3'), reaper crescent (p.2), meadow oaks (i.1), adventure water (j.1), pinto tapered legs (q polish, an [S] only: buildHorse row approved 260).)
+(Off-list: adventure water (j.1), reaper crescent (p.2), tree-crown lobes (u.3'), void_monarch crown (t.2), pinto tapered legs (q polish, an [S] only), simulation hazard disc (o polish), elephant tusks/trunk (s polish).)
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - [R] aimed-blow rebuild [attempts: 2] — 241: fist-mark IK + step-in + board-top fallback + hit re-pose; hit frame still shows the front club upright, no hoplite lean, rank-back clubs fan in the air, knights over-folded
@@ -73,7 +73,7 @@ BASE 6221054 (iter 260 re-audit, no flips; picks ranked 1 and 3: rank 2 s would 
 
 ## Notes for next iteration (max 5 lines)
 - battle-feel.e deferred. 241 findings: clubbers strike from up to ~2 m, hoplites taller than clubbers, units animate BEFORE the decision loop, so the hit frame renders the pre-hit pose unless re-posed in the same step.
-- Next re-audit 265. Simulation: theme.bare -> barePlane hides every base mesh but ground/centerGrass, drops obstacles; zone tints come from createPlacementGuides. mapBuilder.ts and LOG.md are CRLF: use Edit.
+- Next re-audit 265. Simulation: theme.bare -> barePlane + bareCentreLine (no zone guides); plane colour barely responds to ground/fog/emissive at the placement height (tried 261, reverted). mapBuilder.ts and LOG.md are CRLF: use Edit.
 - buildHorse (jouster, lasso "pinto", secret cavalry): frame at barrel middle; legs = 4-sided wedge in a holder scaled HORSE_UPPER_DEEP in z, joint at hem - UPPER_SHOW; thick legs must stay inside hem (W>=.85 H). Lineup horse pose varies run to run; crop the look PNG (System.Drawing) to judge legs.
 - Unit PBR colours grey out in lineup shade: self-light (mat emissive). dress* in unitFactory: set body.bodyMaterial.baseColor; dressPaladin also whitens arms (bodyMaterial) - restore skin on arm meshes for s polish.
-- Sacred elephant = buildMammoth(+ shrine posts/canopy/halo) in vehicleBuilder.buildSacredElephant; mammoth crest/topknot is indigo, hide it for the elephant. No [P] on rows approved within 20 iterations.
+- Sacred elephant (261): buildMammoth shaved (crest/mop/hump/daubs disposed) + trappings in torso space; rider via addOperator in a counter node scaled RIDER_SCALE. Babylon cylinder arc runs on negative z: rotate +pi/2 for a top shell. closeup_sacred_elephant shot exists. No [P] on rows approved within 20 iterations.

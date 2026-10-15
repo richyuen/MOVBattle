@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 251 | reaper-robe-scythe | unit-look.p | approved
-- 251 | bone-mage-antler-skull | unit-look.i | approved
 - 252 | reaper-blade-and-skull | unit-look.p | approved
 - 252 | pirate-ships | maps-light.n | approved
 - 253 | pirate-palms-and-sea | maps-light.n | approved
@@ -32,6 +30,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 259 | paladin-white-gold | unit-look.s | approved
 - 260 | jouster-horse-legs-thick | unit-look.n | approved
 - 260 | simulation-bare-plane | maps-light.o | approved
+- 261 | simulation-red-line | maps-light.o | approved
+- 261 | sacred-elephant-trappings | unit-look.s | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -78,3 +78,5 @@ mapBuilder.ts:sandSpits shoreline [R] (SPIT_*; wet band only over water via over
 mapBuilder.ts:barePlane (theme.bare; BARE_PLANE, BARE_KEEP; simulation ground/fog) | 1600 m, keep ground+lawn, no obstacles/props; plane .86,.85,.82 fog .9,.89,.86 | 260 | approved | purple-grey island with ring, crystals, columns
 unitFactory.ts:dressPaladin (PALADIN_WHITE, _GOLD, _GLOW, _GOLD_GLOW, _BELT, _KNEE, _HELM_BAND; helm comb, shield rim/cross gold) | white .93,.94,.96 glow .2; gold .95,.52,.06 glow .22; knee 1.15 | 259 | approved | plain good_gold team body
 propBuilder.ts:buildHorse pinto style (PINTO_COAT, _CREAM, _PINK, _GLOW, _PATCHES, _PATCH, _RAGGED, _EYE, _EAR, _LOOP; wildwest_leather) | coat .95,.42,.1, glow .18, 6 patches dot .83, eye .075, ear .3, loop .42 | 258 | approved | barded horse
+mapBuilder.ts:bareCentreLine (theme.bare; BARE_LINE_WIDE, BARE_LINE_RED; replaces zone fills/borders, named border) | 0.16 m x 1600 m, red .78,.22,.3 self-lit | 261 | approved | tinted zone fills + borders, 10 m untinted gap
+vehicleBuilder.ts:buildSacredElephant (ELEPHANT_HIDE,_GOLD,_GEM; TUSK_RING_PIECE; BLANKET_RADII/_AT; THRONE_SEAT,_BACK_TALL; RIDER_SCALE) | hide .74,.75,.76; ring piece 4; blanket .92x.8x.74 at z-.46; seat .9; rider 2.4 | 261 | approved | buried shrine posts/canopy/halo on mammoth
