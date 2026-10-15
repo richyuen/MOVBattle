@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 253 | pirate-palms-and-sea | maps-light.n | approved
-- 253 | tree-giant-woodsman-and-tree | unit-look.u | approved
 - 254 | tree-hip-carry | unit-look.u | approved
 - 254 | jouster-horse | unit-look.n | approved
 - 255 | renaissance-painter | unit-look.n | approved
@@ -32,13 +30,13 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 261 | sacred-elephant-trappings | unit-look.s | approved
 - 262 | jouster-hem-lift | unit-look.n | approved
 - 262 | void-cultist-horns | unit-look.t | approved
+- 263 | evil-hood-horns | unit-look.t | approved
+- 263 | super-peasant-straw | unit-look.r | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
 proceduralAnimation.ts:pressed board tilt + press stride (BOARD_PRESS_TILT, PRESS_DRIVE; per-man lean = half tilt + half trunk pitch + rock 0.06) | 0.3 rad (half + 1/3 trunk pitch, on wall lean); drive 0.4 | 242 | approved | half tilt + half pitch (234); shared 0.3 (232)
-propBuilder.ts:buildFittedHat (HEAD_FITTED_HATS incl. helmet/plume_helmet, HELM_HEADS, HELM_CROWN, PLUME_TALL, HAT_EYE_CLEAR, BERET_*, CONE_*) | seat 0.05 head over eye top; beret 2 heads x 0.32, tilt 0.22; cone brim 2.1, foot 1.5, tall 1.05; helm dome 1.2 heads to 0.12 over crown, crest 0.45 | 237 | approved | flared skirt rejected 235
-proceduralAnimation.ts:upright wall stance (WALL_TRUNK_MAX, WALL_HEAD_LEVEL, WALL_KNEE_MAX, WALL_HIP_MAX, WALL_SINK_SHARE; hip splay cleared, by wallHold) | trunk <= 0.3, head 0.9 back; knee <= 0.35, thigh +-0.35, sink 0.3 | 236 | approved |
 proceduralAnimation.ts:wall board seeds (WALL_BOARD_DEPTH, _STEP, _TURN, _LEAN; boardRoll whole; in _lapBoard) | 0.09 m, 0.1 m, 0.38 rad, lean -0.2..0.3 + press | 242 | approved | BOARD_SCATTER 0.6 (238)
 propBuilder.ts:fitted hood_liripipe + plain hood (HOOD_HEADS, HOOD_OPEN, HOOD_MANTLE_HEADS; peak, tail) | cowl 1.3 heads, open 0.3, mantle 2.2; plain hood same, accent x0.6, no tail | 240 | approved | plain hood a perched cone
 propBuilder.ts:fitted horned helm (viking_helmet/horned_helmet; HORN_ROOT, HORN_TIP, HORN_SEAT, HORN_TURN, BEARD_HEADS/TOP/LONG) | iron dome; horns 0.32+0.55 heads, seat 0.45, turn 1.15; beard 0.8 x 0.75 at 0.66 | 241 | approved | sphere-cap dish + splayed cones
@@ -81,3 +79,5 @@ propBuilder.ts:buildHorse pinto style (PINTO_COAT, _CREAM, _PINK, _GLOW, _PATCHE
 mapBuilder.ts:bareCentreLine (theme.bare; BARE_LINE_WIDE, BARE_LINE_RED; replaces zone fills/borders, named border) | 0.16 m x 1600 m, red .78,.22,.3 self-lit | 261 | approved | tinted zone fills + borders, 10 m untinted gap
 vehicleBuilder.ts:buildSacredElephant (ELEPHANT_HIDE,_GOLD,_GEM; TUSK_RING_PIECE; BLANKET_RADII/_AT; THRONE_SEAT,_BACK_TALL; RIDER_SCALE) | hide .74,.75,.76; ring piece 4; blanket .92x.8x.74 at z-.46; seat .9; rider 2.4 | 261 | approved | buried shrine posts/canopy/halo on mammoth
 unitFactory.ts:dressVoidCultist (VOID_ROBE,_GLOW,_BAND_GLOW,_SKIRT,_HEM,_WHEEL,_SPOKES,_BEARD,_STRANDS,_SHIELD,_STUDS) | robe .3,.15,.12 glow .12; band .3; skirt 1.75 hem 1.6; wheel 2.1 x10; shield 1.5 x8 | 262 | approved | hood + cape
+unitFactory.ts:dressHornedEvil (HORNED_EVIL horn paths/thick, EVIL_HORN_ROOT, _GLOW, _BONE_GLOW, _SPIKE; cap+teeth / skull box) | root .24 heads (x1 walker, x1.5 bringer), glow .15, bone .3, spike .32 | 263 | approved | plain hood
+unitFactory.ts:dressSuperPeasant (STRAW_COLOR,_GLOW,_LOCKS,_LOCK,_SWEEP; SACK_COLOR,_GLOW,_SKIRT,_ROPE) | straw .92,.66,.24 glow .2, 16 locks 1.1 heads sweep .75; sack .9,.88,.82 skirt .62 | 263 | approved | laurel + hair cap

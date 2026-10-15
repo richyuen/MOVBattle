@@ -261,3 +261,4 @@ iter 259 | [R] jouster-horse-rebuild, [S] paladin-white-gold | 2/2 approved | pa
 iter 260 | [S] jouster-horse-legs-thick, [S] simulation-bare-plane | 2/2 approved | passes 57 -> 57
 iter 261 | [S] simulation-red-line, [S] sacred-elephant-trappings | 2/2 approved | passes 57 -> 59
 iter 262 | [S] jouster-hem-lift, [S] void-cultist-horns | 2/2 approved | passes 59/69 -> 59/69
+iter 263 | [S] evil-hood-horns, [S] super-peasant-straw | 2/2 approved | passes 59/69 -> 59/69
