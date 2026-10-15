@@ -2544,21 +2544,28 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody): void {
 
 // ─── Special features ───
 /*
- * A barded horse under the rider (units/renaissance.jouster), cut to the rider's hip height H, the unit everything below is given in:
- *   the back sits just under his hip, so he is down in the saddle; the barrel is a faceted ovoid HORSE_LONG of H nose-to-tail and HORSE_DEEP deep; four brown legs run
- *   from under it to the ground with dark hooves; the neck rises forward at HORSE_NECK_RAKE to a long grey-armoured head (the chanfron) pointing forward and down, two
- *   brown ears and a team plume on top; a dark tail falls off the rump. Over the middle of the barrel hangs the caparison, a team-coloured cloth to mid-leg with a cream
- *   hem cut into HORSE_DAGS square dags along each side. The rider's shins and feet are hidden: they would stand between the horse's legs.
+ * A barded horse under the rider (units/renaissance.jouster), given in the rider's standing hip height H:
+ *   the rider is lifted HORSE_LIFT of H off the ground, so he sits high on a full-size horse, not on a pony: the back sits just under his lifted hip and the horse's
+ *   back stands near 1.9 H, about a man's chest. The barrel is a faceted ovoid HORSE_LONG of H nose-to-tail and HORSE_DEEP deep, and the legs under it are longer than
+ *   the barrel is deep (about 1.4 : 1, as the reference's); each leg is a forearm and a thinner cannon to a dark hoof on the ground. The neck leaves the front of the
+ *   barrel raked forward HORSE_NECK_RAKE off upright, so the head stands out in front of the rider, clear of his shield, with the poll at about his chest height; the
+ *   long grey-armoured head (the chanfron) points forward and down, two brown ears and a team plume on top; a dark tail falls off the rump. Over the barrel hangs the
+ *   caparison, a team-coloured cloth from the back to below the belly with a cream hem cut into HORSE_DAGS square dags along each side, the legs showing under it.
+ *   The rider's shins and feet are hidden: they would hang through the barrel.
  */
-const HORSE_LONG = 1.55;
-const HORSE_DEEP = 0.6;
-const HORSE_NECK_RAKE = 0.55;
-const HORSE_DAGS = 6;
+const HORSE_LIFT = 0.9;
+const HORSE_LONG = 1.9;
+const HORSE_DEEP = 0.75;
+const HORSE_NECK_RAKE = 0.75;
+const HORSE_DAGS = 7;
 function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
   const H = body.hip.position.y;
+  // Up on the horse: the animator keeps this as the hip's rest height (it is read once, on the first tick after the build)
+  body.hip.position.y = H * (1 + HORSE_LIFT);
+  const ground = -H * (1 + HORSE_LIFT);
   const L = H * HORSE_LONG;
-  const W = Math.max(body.metrics.hipWidth * 1.7, H * 0.42);
-  const coat = mat(scene, new Color3(0.42, 0.24, 0.14));
+  const W = Math.max(body.metrics.hipWidth * 1.8, H * 0.5);
+  const coat = mat(scene, new Color3(0.5, 0.28, 0.17));
   const dark = mat(scene, new Color3(0.16, 0.1, 0.07));
   const plate = mat(scene, new Color3(0.66, 0.68, 0.7));
   const cream = mat(scene, new Color3(0.93, 0.84, 0.64));
@@ -2579,23 +2586,32 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
     return m;
   };
   const belly = -H * HORSE_DEEP / 2;
+  // Frame-local ground: the frame sits at the barrel's middle
+  const floor = ground - barrel.position.y;
   for (const x of [-1, 1]) {
     for (const z of [-1, 1]) {
-      const legTall = -barrel.position.y - H * HORSE_DEEP * 0.3;
-      const leg = part(MeshBuilder.CreateCylinder("hleg", { height: legTall, diameterTop: H * 0.13, diameterBottom: H * 0.08, tessellation: 6 }, scene), coat);
-      leg.position.set(x * W * 0.27, belly + H * HORSE_DEEP * 0.2 - legTall / 2, z * L * 0.34);
-      const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: H * 0.07, diameterTop: H * 0.09, diameterBottom: H * 0.11, tessellation: 6 }, scene), dark);
-      hoof.position.set(0, -legTall / 2 + H * 0.03, 0);
-      hoof.parent = leg;
+      // From inside the belly to the ground: a thick forearm to the knee, a thin cannon below it, the hoof on the ground
+      const top = belly + H * HORSE_DEEP * 0.25;
+      const knee = floor + (top - floor) * 0.45;
+      const legX = x * W * 0.3;
+      const legZ = z * L * 0.36;
+      const forearm = part(MeshBuilder.CreateCylinder("hleg", { height: top - knee, diameterTop: H * 0.28, diameterBottom: H * 0.15, tessellation: 6 }, scene), coat);
+      forearm.position.set(legX, (top + knee) / 2, legZ);
+      const cannonTall = knee - floor - H * 0.08;
+      const cannon = part(MeshBuilder.CreateCylinder("hcannon", { height: cannonTall, diameterTop: H * 0.15, diameterBottom: H * 0.11, tessellation: 6 }, scene), coat);
+      cannon.position.set(legX, floor + H * 0.08 + cannonTall / 2, legZ);
+      const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: H * 0.1, diameterTop: H * 0.13, diameterBottom: H * 0.17, tessellation: 6 }, scene), dark);
+      hoof.position.set(legX, floor + H * 0.045, legZ);
     }
   }
-  const neckTall = H * 1.0;
-  const neck = part(MeshBuilder.CreateCylinder("hneck", { height: neckTall, diameterTop: H * 0.2, diameterBottom: H * 0.36, tessellation: 6 }, scene), coat);
+  const neckTall = H * 1.05;
+  const neck = part(MeshBuilder.CreateCylinder("hneck", { height: neckTall, diameterTop: H * 0.24, diameterBottom: H * 0.42, tessellation: 6 }, scene), coat);
   neck.rotation.x = HORSE_NECK_RAKE;
-  neck.position.set(0, H * 0.12 + Math.cos(HORSE_NECK_RAKE) * neckTall * 0.3, L * 0.4 + Math.sin(HORSE_NECK_RAKE) * neckTall * 0.3);
-  const poll = new Vector3(0, neck.position.y + Math.cos(HORSE_NECK_RAKE) * neckTall * 0.5, neck.position.z + Math.sin(HORSE_NECK_RAKE) * neckTall * 0.5);
-  const headLong = H * 0.6;
-  const head = part(MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.15, diameterBottom: H * 0.26, tessellation: 5 }, scene), coat);
+  const neckRoot = new Vector3(0, H * 0.1, L * 0.38);
+  neck.position.set(0, neckRoot.y + Math.cos(HORSE_NECK_RAKE) * neckTall * 0.5, neckRoot.z + Math.sin(HORSE_NECK_RAKE) * neckTall * 0.5);
+  const poll = new Vector3(0, neckRoot.y + Math.cos(HORSE_NECK_RAKE) * neckTall, neckRoot.z + Math.sin(HORSE_NECK_RAKE) * neckTall);
+  const headLong = H * 0.72;
+  const head = part(MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.17, diameterBottom: H * 0.3, tessellation: 5 }, scene), coat);
   head.rotation.x = 2.05;
   head.position.set(0, poll.y + Math.cos(2.05) * headLong * 0.42, poll.z + Math.sin(2.05) * headLong * 0.42);
   // The chanfron: a grey plate down the face, on top of the head and standing proud of it
@@ -2616,10 +2632,10 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
   tail.rotation.x = 0.35;
   tail.position.set(0, H * 0.02 - H * 0.26, -L * 0.5 - H * 0.08);
   // The caparison: team cloth over the middle of the barrel down to mid-leg, cream hem and square dags along the sides
-  const drop = H * 0.45;
+  const drop = H * 0.88;
   const capLong = L * 0.8;
   const cap = part(MeshBuilder.CreateBox("hcaparison", { width: W * 1.12, height: drop, depth: capLong }, scene), mat(scene, cloth.scale(0.85)));
-  cap.position.y = H * HORSE_DEEP * 0.42 - drop / 2;
+  cap.position.y = H * HORSE_DEEP * 0.3 - drop / 2;
   const hemY = cap.position.y - drop / 2;
   const hem = part(MeshBuilder.CreateBox("hhem", { width: W * 1.14, height: H * 0.07, depth: capLong * 1.01 }, scene), cream);
   hem.position.y = hemY + H * 0.03;
