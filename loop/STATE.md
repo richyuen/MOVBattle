@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 261   Last re-audit: 260   Consecutive rejects: 0   Branch: main
+Iteration: 262   Last re-audit: 260   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,19 +17,19 @@ ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240, re-audited 245-260; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: i j k l m o q s PASS, n p r t u v FAIL (8/14) [S since: 0 each, except n 1 (260; 4' written 259), p 3 (250, 251, 252), u 3 (249, 253, 254), v 1 (244)]
+unit-look tier 3: i j k l m o q s PASS, n p r t u v FAIL (8/14) [S since: 0 each, except n 2 (260, 262; 4' written 259), p 3 (250, 251, 252), t 1 (262), u 3 (249, 253, 254), v 1 (244)]
 - i tribal PASS (cleared 243, 251; polish: antlers pale, staff topper)
 - j farmer PASS (cleared 249; polish: brims repeat, braids unreadable)
 - k ancient PASS (cleared by a5f0805, 245; polish: crest small, helm close to skin value)
 - l viking PASS (cleared by 312a742, 242)
 - m dynasty PASS (cleared 247; polish: beads small, monk no bo staff)
-- n renaissance: 1-3 struck (254-256; polish: palette low, hose olive in shade, neck crosses shield at chest height); 4' narrowed by 67f0425 (260: sticks/ball joint/nub hooves struck; chestnut wedges, fetlock, dark hooves); 4'' (a) only a short stub of leg below the hem (hem .55 H vs show .32), horse squats like a stool, hind Z unread; (b) sack taller than long in 3/4 (pot), HORSE_CAP_LONG 1.15 unread; TABS ~40-45% of height is leg below a long low drape (units/renaissance.jouster); polish: dags grey-white not cream
+- n renaissance: 1-3 struck (254-256; polish: palette low, hose olive in shade, neck crosses shield at chest height); 4' narrowed by 67f0425 (260); 4''(a) struck by 34d65d5 (262: ~48% leg under a level hem, stadium drape); 4''(b) drape back rounds into a dome at the shoulders, body reads about as tall as long (tub), not a long low flat-backed box with a hard shoulder edge and overhanging ends (units/renaissance.jouster); polish: dags grey-white not cream, horse head a flat brown plank
 - o pirate PASS (cleared 249, 250; polish: bandana knot/tails, no vests)
 - p spooky: 1 struck (f37d3bf, 250; polish: bone greyish, no studded shield); 2 narrowed (01ef730 251, 7155691 252): blade a short stepped slab hanging off a level, lance-carried snath, not a long crescent arcing over the hood (units/spooky.reaper); polish: skull/shins grey not cream
 - q wild_west PASS (cleared a63efa7 256, 54c5f57 258 pinto; still PASS after 67f0425, but pinto legs now flat tan planks, untapered, tiny hooves: give the pinto its own tapered leg; polish: coat tan in shade, rope loop unseen; robe a broad box)
 - r legacy: 1 super_peasant in a dark wizard cone, not straw hair + sack (units/legacy.super_peasant); 2 no horse-drawn chariot (units/legacy.chariot)
 - s good PASS (cleared 67760f2 259, 5c7d65b 261; polish: elephant keeps mammoth column legs/forward tusks, blanket pale with no device, rider stiff with floating bow, throne back low; paladin arms white, kite+cross shield, gold lemon)
-- t evil: 1 four of seven in the same plain cone, no horns/spikes/dark armour (units/evil.void_cultist); 2 void_monarch bright yellow jewelled crown (units/evil.void_monarch)
+- t evil: 1' (cultist struck by 792620c, 262) shadow_walker, mad_mechanic, tempest_lich, death_bringer still in the same plain hood cone, no horns/spikes/dark armour (units/evil.shadow_walker, death_bringer, tempest_lich); 2 void_monarch bright yellow jewelled crown (units/evil.void_monarch); polish: cultist robe bands pale blue-white
 - u secret: 1-3 struck (249, 253, 254); 3' crown two merged lobes near the ground in front, not three distinct lobes clear of it out at his flank; hood navy not maroon-brown (units/secret.tree_giant)
 - v medieval: 1 struck (adb58a6, 244); 2 bard purple beret, not feathered straw hat (units/medieval.bard)
 maps-light tier 3: k l n o PASS, i j m FAIL (4/7) [S since: 0 each]
@@ -43,24 +43,24 @@ maps-light tier 3: k l n o PASS, i j m FAIL (4/7) [S since: 0 each]
 Total tier 1 24/24; tier 2 23/24; tier 3 12/21.
 
 ## Focus (every gap this iteration)
-BASE d9beaab (picks ranked 1 and 3: rank 2 n would repeat 260's n+o pair; no [P]; evidence e3fca66 closeup_sacred_elephant)
-- [S] maps-light.o simulation-red-line (e54ee13) — APPROVE, o PASS
-- [S] unit-look.s sacred-elephant-trappings (5c7d65b) — APPROVE, s PASS
+BASE 501477d (iter 262; picks ranked 1 and 2; no [P]; no evidence blocker)
+- [S] unit-look.n jouster-hem-lift (34d65d5) — APPROVE, n FAIL (4''(a) struck)
+- [S] unit-look.t void-cultist-horns (792620c) — APPROVE, t FAIL (1 narrowed to 1')
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] simulation-red-line (e54ee13) VERDICT: APPROVE CRITERION: maps-light.o PASS (previous: FAIL)
-- GAP: [S] sacred-elephant-trappings (5c7d65b) VERDICT: APPROVE CRITERION: unit-look.s PASS (previous: FAIL)
+- GAP: [S] jouster-hem-lift (34d65d5) VERDICT: APPROVE CRITERION: unit-look.n FAIL (previous: FAIL)
+- GAP: [S] void-cultist-horns (792620c) VERDICT: APPROVE CRITERION: unit-look.t FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] unit-look.n jouster-hem-lift [0] — blocker 4'': lift the hem / make the drape long and low so ~40% leg and the hind Z show — ref units/renaissance.jouster — ours lineup_renaissance
-2. [S] unit-look.t void-cultist-horns [0] — blocker 1: dark horned/spiked helm and armour in place of the plain cone — ref units/evil.void_cultist — ours lineup_evil
-3. [S] unit-look.r legacy-chariot [0] — blocker 2: horse-drawn two-wheel chariot (buildHorse + car + driver) — ref units/legacy.chariot — ours lineup_legacy
-4. [S] maps-light.m renaissance-townhouses [0] — blocker 1: coloured townhouse facades ringing a paved square — ref maps/renaissance_town — ours biome_renaissance
-5. [S] unit-look.v bard-straw-hat [0] — blocker 2: feathered straw hat replacing the purple beret — ref units/medieval.bard — ours lineup_medieval
-6. [S] maps-light.i meadow-oaks [0] — blocker 1: ring of dark twisted oaks replacing the pale-sage puffball ring — ref maps/meadow_medieval_1 — ours biome_introduction
-7. [S] unit-look.r super-peasant-straw [0] — blocker 1: straw hair + sack tunic replacing the dark wizard cone — ref units/legacy.super_peasant — ours lineup_legacy
-8. [S] battle-feel.e (deferred) club-connects — blocker 1 — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_hit
-(Off-list: adventure water (j.1), reaper crescent (p.2), tree-crown lobes (u.3'), void_monarch crown (t.2), pinto tapered legs (q polish, an [S] only), simulation hazard disc (o polish), elephant tusks/trunk (s polish).)
+1. [S] unit-look.t evil-hood-horns [0] — blocker 1': horned helm + dark armour replacing the plain hood on shadow_walker/death_bringer — ref units/evil.shadow_walker — ours lineup_evil
+2. [S] unit-look.n jouster-flat-drape [0] — blocker 4''(b): flat saddle-level back, hard shoulder edge, chest/rump overhang — ref units/renaissance.jouster — ours lineup_renaissance
+3. [S] unit-look.r super-peasant-straw [0] — blocker 1: straw hair + sack tunic replacing the dark wizard cone — ref units/legacy.super_peasant — ours lineup_legacy
+4. [S] unit-look.v bard-feather-hat [0] — blocker 2: feathered straw hat replacing the purple beret — ref units/medieval.bard — ours lineup_medieval
+5. [S] unit-look.t monarch-dark-crown [0] — blocker 2: dark spiked iron crown replacing the yellow jewelled one — ref units/evil.void_monarch — ours lineup_evil
+6. [S] unit-look.p reaper-crescent [0] — blocker 2: long crescent arcing over the hood on an upright snath — ref units/spooky.reaper — ours lineup_spooky
+7. [S] unit-look.u tree-giant-crown-lobes [0] — blocker 3': three distinct lobes clear of the ground at the flank — ref units/secret.tree_giant — ours lineup_secret_giants
+8. [S] unit-look.r legacy-chariot [0] — blocker 2: horse-drawn chariot — ref units/legacy.chariot — ours lineup_legacy
+(Off-list: renaissance townhouses (m.1), meadow oaks (i.1), adventure water (j.1), battle-feel.e deferred, pinto tapered legs (q polish), elephant tusks (s polish).)
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - [R] aimed-blow rebuild [attempts: 2] — 241: fist-mark IK + step-in + board-top fallback + hit re-pose; hit frame still shows the front club upright, no hoplite lean, rank-back clubs fan in the air, knights over-folded
@@ -76,4 +76,4 @@ BASE d9beaab (picks ranked 1 and 3: rank 2 n would repeat 260's n+o pair; no [P]
 - Next re-audit 265. Simulation: theme.bare -> barePlane + bareCentreLine (no zone guides); plane colour barely responds to ground/fog/emissive at the placement height (tried 261, reverted). mapBuilder.ts and LOG.md are CRLF: use Edit.
 - buildHorse (jouster, lasso "pinto", secret cavalry): frame at barrel middle; legs = 4-sided wedge in a holder scaled HORSE_UPPER_DEEP in z, joint at hem - UPPER_SHOW; thick legs must stay inside hem (W>=.85 H). Lineup horse pose varies run to run; crop the look PNG (System.Drawing) to judge legs.
 - Unit PBR colours grey out in lineup shade: self-light (mat emissive). dress* in unitFactory: set body.bodyMaterial.baseColor; dressPaladin also whitens arms (bodyMaterial) - restore skin on arm meshes for s polish.
-- Sacred elephant (261): buildMammoth shaved (crest/mop/hump/daubs disposed) + trappings in torso space; rider via addOperator in a counter node scaled RIDER_SCALE. Babylon cylinder arc runs on negative z: rotate +pi/2 for a top shell. closeup_sacred_elephant shot exists. No [P] on rows approved within 20 iterations.
+- buildHorse drape (262): stadium ribbon rings (profile [r,y] list) + hem band + dags via stadium(r,y,u); hem = HORSE_HEM_SHARE of ground-to-back; pinto keeps HORSE_PINTO_HEM legs. dressVoidCultist (unitFactory) is the template for evil dress passes (hat none, own spiked board not named *shield). No [P] on rows approved within 20 iterations.
