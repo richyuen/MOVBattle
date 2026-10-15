@@ -134,12 +134,15 @@ const SKELETON_CLOTH = 0.72;
  * and falls in a ragged hem to mid-shin, the bone shins and feet showing below it; the cloth is near-black maroon, tinted toward the team.
  *   REAPER_HOOD heads across, REAPER_HOOD_OPEN of its round open at the face, REAPER_HOOD_FORWARD heads set forward (negative: back); robe REAPER_ROBE chest widths at the hem
  *   of the bodice, skirt REAPER_SKIRT thighs long flaring to REAPER_HEM pelvis widths, REAPER_TATTERS rags off the hem; sleeves REAPER_SLEEVE thicker than an arm.
+ * 252: the cowl set back off the face and opened wider so the bone skull stands proud of it, with a long bone jaw (REAPER_JAW*); the hem raised to mid-shin, rags included.
  */
 const REAPER_HOOD = 1.7;
-const REAPER_HOOD_OPEN = 0.4;
-const REAPER_HOOD_FORWARD = -0.06;
+const REAPER_HOOD_OPEN = 0.46;
+const REAPER_HOOD_FORWARD = -0.24;
+const REAPER_JAW = 0.5;
+const REAPER_JAW_LONG = 0.5;
 const REAPER_ROBE = 1.3;
-const REAPER_SKIRT = 1.55;
+const REAPER_SKIRT = 0.85;
 const REAPER_HEM = 2.1;
 const REAPER_TATTERS = 7;
 const REAPER_SLEEVE = 1.35;
@@ -566,12 +569,23 @@ function dressReaper(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
   const cowl = MeshBuilder.CreateSphere(`${body.headMesh.name}_cowl`, { diameter: 1, segments: 10, arc: 1 - REAPER_HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
   cowl.scaling.set(headSize * REAPER_HOOD, headSize * REAPER_HOOD * 1.12, headSize * REAPER_HOOD * 1.05);
-  cowl.rotation.y = Math.PI / 2 + Math.PI * REAPER_HOOD_OPEN;
+  // The sphere's arc gap opens on the face (+z): until 252 it was turned half a turn the wrong way, the opening at the back of the head and the face walled in
+  cowl.rotation.y = -Math.PI / 2 + Math.PI * REAPER_HOOD_OPEN;
   cowl.position.set(0, headSize * 0.08, headSize * REAPER_HOOD_FORWARD);
   cowl.material = robe;
   cowl.convertToFlatShadedMesh();
   cowl.parent = body.headMesh;
   added.push(cowl);
+  // The skull's long bone jaw thrust out of the cowl under the bead eyes, REAPER_JAW heads wide at the cheek narrowing down and forward, REAPER_JAW_LONG heads long,
+  // standing proud of the cowl's rim so the face reads in profile as well as from the front
+  const jaw = MeshBuilder.CreateCylinder(`${body.headMesh.name}_reaperJaw`, { height: headSize * REAPER_JAW_LONG, diameterTop: headSize * REAPER_JAW, diameterBottom: headSize * REAPER_JAW * 0.55, tessellation: 6 }, scene);
+  jaw.scaling.z = 0.75;
+  jaw.rotation.x = 0.35;
+  jaw.position.set(0, -headSize * 0.32, headSize * 0.36);
+  jaw.material = bone;
+  jaw.convertToFlatShadedMesh();
+  jaw.parent = body.headMesh;
+  added.push(jaw);
   const peak = MeshBuilder.CreateCylinder(`${body.headMesh.name}_cowlPeak`, { height: headSize * 0.6, diameterTop: 0, diameterBottom: headSize * 0.9, tessellation: 7 }, scene);
   peak.position.set(0, headSize * 0.78, -headSize * 0.12);
   peak.rotation.x = -0.55;
@@ -603,7 +617,7 @@ function dressReaper(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
     const rim = Math.max(hem, top * 1.15);
     for (let i = 0; i < REAPER_TATTERS; i++) {
       const a = ((i + 0.5) / REAPER_TATTERS) * Math.PI * 2;
-      const drop = long * (0.18 + 0.14 * ((i * 5) % 3) / 2);
+      const drop = long * (0.13 + 0.12 * ((i * 5) % 3) / 2);
       const tatter = MeshBuilder.CreateCylinder(`${pelvis.name}_robeRag`, { height: drop, diameterTop: rim * 0.34, diameterBottom: 0, tessellation: 3 }, scene);
       tatter.position.set(Math.sin(a) * rim * 0.4, -long / 2 - drop / 2, Math.cos(a) * rim * 0.4);
       tatter.rotation.y = a;

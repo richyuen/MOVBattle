@@ -1620,8 +1620,11 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "scythe": {
       // A war scythe (251; units/spooky.reaper): the snath taller than the man, a collar at its head, and a long blade sweeping out from it and curving
-      // down, broad at the heel and narrowing to a point, about SCYTHE_BLADE of the snath long, built from SCYTHE_SEGS flat faceted segments along the arc
-      const SCYTHE_SNATH = 1.25, SCYTHE_BLADE = 0.62, SCYTHE_SEGS = 5, SCYTHE_CURL = 1.05;
+      // down, broad at the heel and narrowing to a point, about SCYTHE_BLADE of the snath long, built from SCYTHE_SEGS flat faceted segments along the arc.
+      // 252: the blade lies across the carrier's front and not along his line of sight (held across the body, its flat faces the viewer as in the reference),
+      // turned SCYTHE_TURN about the snath; SCYTHE_HEEL wide at the heel, with a thick spine SCYTHE_SPINE deep tapering to the tip, so edge-on it is still a wedge.
+      const SCYTHE_SNATH = 1.25, SCYTHE_BLADE = 0.62, SCYTHE_SEGS = 6, SCYTHE_CURL = 1.15;
+      const SCYTHE_TURN = Math.PI / 2, SCYTHE_HEEL = 0.15, SCYTHE_SPINE = 0.04;
       const snathLong = SCYTHE_SNATH * s;
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: snathLong, diameter: 0.03 * s, tessellation: 6 }, scene);
       shaft.material = mat(scene, new Color3(0.32, 0.22, 0.14));
@@ -1631,16 +1634,23 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       collar.position.y = snathLong * 0.46;
       collar.material = steel;
       collar.parent = shaft;
+      const head = new Mesh("scyhead", scene);
+      head.rotation.y = SCYTHE_TURN;
+      head.parent = shaft;
+      const heel = MeshBuilder.CreateBox("scyheel", { width: 0.07 * s, height: SCYTHE_HEEL * 1.1 * s, depth: SCYTHE_SPINE * 1.2 * s }, scene);
+      heel.position.set(0.03 * s, snathLong * 0.47, 0);
+      heel.material = steel;
+      heel.parent = head;
       const segLong = (SCYTHE_BLADE * snathLong) / SCYTHE_SEGS;
-      let x = 0.01 * s, y = snathLong * 0.48, heading = 0.12;
+      let x = 0.04 * s, y = snathLong * 0.48, heading = 0.12;
       for (let i = 0; i < SCYTHE_SEGS; i++) {
         const k = i / (SCYTHE_SEGS - 1);
-        const wide = (0.1 - 0.075 * k) * s;
-        const seg = MeshBuilder.CreateBox("scyblade", { width: segLong * 1.08, height: wide, depth: 0.012 * s }, scene);
+        const wide = (SCYTHE_HEEL - (SCYTHE_HEEL - 0.02) * k) * s;
+        const seg = MeshBuilder.CreateBox("scyblade", { width: segLong * 1.08, height: wide, depth: (SCYTHE_SPINE - 0.028 * k) * s }, scene);
         seg.position.set(x + Math.cos(heading) * segLong * 0.5, y + Math.sin(heading) * segLong * 0.5 - wide * 0.4, 0);
         seg.rotation.z = heading;
         seg.material = steel;
-        seg.parent = shaft;
+        seg.parent = head;
         x += Math.cos(heading) * segLong;
         y += Math.sin(heading) * segLong;
         heading -= SCYTHE_CURL / SCYTHE_SEGS;
