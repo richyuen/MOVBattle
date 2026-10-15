@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "monk_headband"
   | "pharaoh" | "feather_headdress" | "bone_mask"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab";
 
@@ -413,7 +413,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.85, bulk: 0.85, armLength: 1.05 }, "shuriken_hand", "ninja_mask", "none", "none", "#1A1A1A",
   ),
   "dynasty.dragon": vis(
-    { scale: 1.6, bulk: 1.3, headSize: 1.5 }, "none", "none", "none", "dragon_wings", "#1A1A1A",
+    { scale: 1.6, bulk: 1.3, headSize: 1.5 }, "none", "dragon_head", "none", "none", "#1A1A1A",
   ),
   "dynasty.hwacha": vis(
     { scale: 1.5, bulk: 1.6, legLength: 0.7 }, "none", "conical_hat", "none", "hwacha_rack", "#8B4513",

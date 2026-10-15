@@ -27,7 +27,23 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head"];
+/*
+ * A dragon-dance costume head worn over the man's (246; units/dynasty.dragon: a huge faceted head in the team colour, wider than the man's shoulders, a broad
+ * blunt snout jutting forward with a dark nose pad on top, the lower jaw hanging open on a red mouth edged in orange, two big round white eyes with black
+ * pupils set high on the front corners in red sockets, a tan brow ridge over them, two tan horns sweeping back off the crown, and a scalloped cloth body
+ * running back from the nape). The shell covers the head, so the man's own eyes are hidden and the dragon's are the face.
+ *   Shell DRAGON_SHELL heads across; snout DRAGON_SNOUT heads long; jaw dropped DRAGON_JAW_DROP open; eyes DRAGON_EYE of the width; horns DRAGON_HORN heads
+ *   long, raked DRAGON_HORN_RAKE back off upright; body cloth DRAGON_TAIL heads long behind, DRAGON_SCALLOPS scallops along its ridge.
+ */
+const DRAGON_SHELL = 1.9;
+const DRAGON_SNOUT = 0.95;
+const DRAGON_JAW_DROP = 0.32;
+const DRAGON_EYE = 0.5;
+const DRAGON_HORN = 1.25;
+const DRAGON_HORN_RAKE = 1.05;
+const DRAGON_TAIL = 2.6;
+const DRAGON_SCALLOPS = 7;
 /*
  * A bull's head in place of the man's (243; units/ancient.minotaur: a long hide head, brow to muzzle about 1.4 of its width, the muzzle jutting forward and
  * down to a dark nose, two big round white eyes set wide on the front corners under a heavy brow, ears flat out to the sides, and pale horns leaving the
@@ -235,6 +251,127 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     }
     return shell;
   }
+  if (type === "dragon_head") {
+    const team = teamColor ?? accent;
+    const hide = mat(scene, team.scale(0.82), 0.04);
+    const deep = mat(scene, team.scale(0.5));
+    const tan = mat(scene, new Color3(0.88, 0.64, 0.36), 0.08);
+    const red = mat(scene, new Color3(0.62, 0.1, 0.1));
+    const trim = mat(scene, new Color3(0.9, 0.48, 0.18), 0.08);
+    const dark = mat(scene, new Color3(0.06, 0.05, 0.06));
+    const R = DRAGON_SHELL * W * 0.5;
+    const shell = MeshBuilder.CreateIcoSphere("dragonShell", { radiusX: u(R), radiusY: u(0.82 * H), radiusZ: u(R * 1.05), subdivisions: 2 }, scene);
+    shell.position.set(0, u(-0.45 * H), u(0.1 * W));
+    shell.material = hide;
+    // The snout: a broad blunt block forward from under the eyes, its nose pad dark on top, the upper teeth along its underside
+    const snoutLong = DRAGON_SNOUT * W;
+    const snout = MeshBuilder.CreateIcoSphere("dragonSnout", { radiusX: u(0.68 * W), radiusY: u(0.3 * H), radiusZ: u(snoutLong * 0.55), subdivisions: 1 }, scene);
+    snout.position.set(0, u(-0.12 * H), u(R * 0.75 + snoutLong * 0.35));
+    snout.material = hide;
+    snout.parent = shell;
+    const nose = MeshBuilder.CreateIcoSphere("dragonNose", { radiusX: u(0.42 * W), radiusY: u(0.14 * H), radiusZ: u(0.24 * W), subdivisions: 1 }, scene);
+    nose.position.set(0, u(0.2 * H), u(snoutLong * 0.32));
+    nose.material = deep;
+    nose.parent = snout;
+    for (const side of [-1, 1]) {
+      const nostril = MeshBuilder.CreateCylinder("dragonNostril", { height: u(0.05 * W), diameter: u(0.12 * W), tessellation: 6 }, scene);
+      nostril.position.set(side * u(0.18 * W), u(0.1 * H), u(0.12 * W));
+      nostril.material = dark;
+      nostril.parent = nose;
+    }
+    // The open mouth: a red lining under the snout, and the lower jaw hinged at its back, dropped open, its rim orange with cream teeth
+    const mouth = MeshBuilder.CreateBox("dragonMouth", { width: u(1.05 * W), height: u(0.2 * H), depth: u(snoutLong * 0.9) }, scene);
+    mouth.position.set(0, u(-0.3 * H), u(-0.05 * W));
+    mouth.material = red;
+    mouth.parent = snout;
+    const hinge = new TransformNode("dragonHinge", scene);
+    hinge.parent = shell;
+    hinge.position.set(0, u(-0.62 * H), u(R * 0.55));
+    hinge.rotation.x = DRAGON_JAW_DROP;
+    const jaw = MeshBuilder.CreateBox("dragonJaw", { width: u(1.15 * W), height: u(0.26 * H), depth: u(snoutLong * 1.05) }, scene);
+    jaw.position.set(0, u(-0.13 * H), u(snoutLong * 0.52));
+    jaw.material = hide;
+    jaw.parent = hinge;
+    // The jaw's top is the red mouth floor; only its front and side edges are the orange rim
+    const floor = MeshBuilder.CreateBox("dragonMouthFloor", { width: u(0.95 * W), height: u(0.04 * H), depth: u(snoutLong * 0.9) }, scene);
+    floor.position.set(0, u(0.14 * H), u(-0.04 * W));
+    floor.material = red;
+    floor.parent = jaw;
+    const lip = MeshBuilder.CreateBox("dragonLip", { width: u(1.2 * W), height: u(0.1 * H), depth: u(0.14 * W) }, scene);
+    lip.position.set(0, u(0.14 * H), u(snoutLong * 0.48));
+    lip.material = trim;
+    lip.parent = jaw;
+    for (const side of [-1, 1]) {
+      const rim = MeshBuilder.CreateBox("dragonLipSide", { width: u(0.1 * W), height: u(0.1 * H), depth: u(snoutLong * 1.0) }, scene);
+      rim.position.set(side * u(0.55 * W), u(0.14 * H), 0);
+      rim.material = trim;
+      rim.parent = jaw;
+    }
+    const ivory = mat(scene, new Color3(0.95, 0.9, 0.78));
+    for (let i = 0; i < 4; i++) {
+      const x = (i - 1.5) * 0.26 * W;
+      for (const [parent, y, flip] of [[jaw, 0.2 * H, 0], [mouth, -0.1 * H, Math.PI]] as const) {
+        const tooth = MeshBuilder.CreateCylinder("dragonTooth", { height: u(0.16 * H), diameterTop: 0, diameterBottom: u(0.1 * W), tessellation: 4 }, scene);
+        tooth.rotation.x = flip;
+        tooth.position.set(u(x), u(y + (flip ? -0.06 : 0.06) * H), u(snoutLong * 0.42));
+        tooth.material = ivory;
+        tooth.parent = parent;
+      }
+    }
+    for (const side of [-1, 1]) {
+      // Big round eyes high on the front corners, each in a red socket under a tan brow ridge
+      const socket = MeshBuilder.CreateCylinder("dragonSocket", { height: u(0.05 * W), diameter: u(DRAGON_EYE * 1.35 * W), tessellation: 10 }, scene);
+      socket.rotation.set(Math.PI / 2, side * 0.5, 0);
+      socket.position.set(side * u(0.5 * W), u(0.22 * H), u(R * 0.86));
+      socket.material = red;
+      socket.parent = shell;
+      const eye = MeshBuilder.CreateCylinder("dragonEye", { height: u(0.04 * W), diameter: u(DRAGON_EYE * W), tessellation: 14 }, scene);
+      eye.position.y = u(0.035 * W);
+      eye.material = mat(scene, new Color3(0.96, 0.94, 0.86), 0.35);
+      eye.parent = socket;
+      const pupil = MeshBuilder.CreateCylinder("dragonPupil", { height: u(0.02 * W), diameter: u(DRAGON_EYE * 0.48 * W), tessellation: 10 }, scene);
+      pupil.position.set(0, u(0.03 * W), u(0.04 * W));
+      pupil.material = dark;
+      pupil.parent = eye;
+      const brow = MeshBuilder.CreateBox("dragonBrow", { width: u(0.75 * W), height: u(0.13 * H), depth: u(0.3 * W) }, scene);
+      brow.position.set(side * u(0.46 * W), u(0.5 * H), u(R * 0.78));
+      brow.rotation.set(0.25, side * 0.45, side * -0.3);
+      brow.material = tan;
+      brow.parent = shell;
+      // Horns: out of the crown behind the brow, raked back and a little out, a tan cone with a kinked tip
+      const horn = MeshBuilder.CreateCylinder("dragonHorn", { height: u(DRAGON_HORN * W * 0.6), diameterTop: u(0.16 * W), diameterBottom: u(0.3 * W), tessellation: 6 }, scene);
+      horn.rotation.set(-DRAGON_HORN_RAKE, 0, -side * 0.3);
+      horn.position.set(side * u(0.45 * W), u(0.68 * H), u(-0.05 * W));
+      horn.material = tan;
+      horn.parent = shell;
+      const hornTip = MeshBuilder.CreateCylinder("dragonHornTip", { height: u(DRAGON_HORN * W * 0.5), diameterTop: 0, diameterBottom: u(0.16 * W), tessellation: 6 }, scene);
+      hornTip.rotation.x = -0.6;
+      hornTip.position.set(0, u(DRAGON_HORN * W * 0.5), u(-0.08 * W));
+      hornTip.material = tan;
+      hornTip.parent = horn;
+      // Gold diamonds on the cheeks
+      const mark = MeshBuilder.CreateBox("dragonMark", { width: u(0.14 * W), height: u(0.14 * W), depth: u(0.04 * W) }, scene);
+      mark.rotation.set(0, side * 0.7, Math.PI / 4);
+      mark.position.set(side * u(0.78 * W), u(-0.2 * H), u(R * 0.62));
+      mark.material = tan;
+      mark.parent = shell;
+    }
+    // The cloth body: a flat team-coloured train from the nape down the man's back, a row of deep scallops standing along its ridge
+    const train = MeshBuilder.CreateBox("dragonTrain", { width: u(1.3 * W), height: u(0.08 * H), depth: u(DRAGON_TAIL * H) }, scene);
+    train.rotation.x = -1.1;
+    train.position.set(0, u(-0.55 * H - Math.sin(1.1) * DRAGON_TAIL * H * 0.5), u(-R * 0.7 - Math.cos(1.1) * DRAGON_TAIL * H * 0.5));
+    train.material = hide;
+    train.parent = shell;
+    for (let i = 0; i < DRAGON_SCALLOPS; i++) {
+      const t = (i + 0.5) / DRAGON_SCALLOPS;
+      const scallop = MeshBuilder.CreateCylinder("dragonScallop", { height: u(0.32 * H * (1 - t * 0.4)), diameterTop: 0, diameterBottom: u(0.3 * W), tessellation: 4 }, scene);
+      scallop.scaling.x = 0.35;
+      scallop.position.set(0, u(0.18 * H), u((0.5 - t) * DRAGON_TAIL * H));
+      scallop.material = deep;
+      scallop.parent = train;
+    }
+    return shell;
+  }
   if (type === "bone_mask") {
     // An animal skull worn as a cap (242 [R]; units/tribal.protector): a bone cranium SKULL_HEADS heads across seated down to the brow, two dark eye holes on
     // its front over the wearer's own eyes, a short snout jutting forward over the brow, and cheek bones down the sides of the face. The face shows under it.
@@ -410,7 +547,7 @@ export function attachProps(
   }
 
   // Hide eyes behind face-covering headgear
-  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bull_head"];
+  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bull_head", "dragon_head"];
   if (faceCoveringHats.includes(config.hat)) {
     body.leftEye?.setEnabled(false);
     body.rightEye?.setEnabled(false);
