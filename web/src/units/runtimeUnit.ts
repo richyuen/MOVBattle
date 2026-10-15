@@ -1754,27 +1754,6 @@ export class RuntimeUnit {
     }
   }
 
-  /** His own attack is a swing that comes down on a man: heavy (club, hammer, axe) or a blade's slash. */
-  get swingsAtMan(): boolean {
-    const motion = this._resolvePrimaryAttackMotion();
-    return motion === "heavy_swing" || motion === "blade_slash";
-  }
-
-  /** The swing he has just started is struck at this man's head (null: at nobody). */
-  aimBlowAt(target: RuntimeUnit | null, landsIn = 0): void {
-    this.animator.aimBlowAt(target ? target.body.headTop : null, landsIn);
-  }
-
-  /** Seconds until the swing he has just started is on the man it is struck at; 0 when his attack is no such swing. */
-  blowLandsIn(): number {
-    return this.animator.blowLandsIn();
-  }
-
-  /** Re-runs this frame's pose without advancing time, so something that happened to him later in the step (a blow landing) shows on this very frame. */
-  reposeNow(): void {
-    if (!this._isDead) this.animator.update(0);
-  }
-
   triggerAttackVisual(durationSeconds: number): void {
     let motion = this._resolvePrimaryAttackMotion();
     switch (this._actionPreset) {
