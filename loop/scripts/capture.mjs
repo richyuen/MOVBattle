@@ -304,6 +304,8 @@ async function main() {
         ["lineup_good", "gallery_faction_good"],
         ["lineup_evil", "gallery_faction_evil"],
         ["lineup_secret", "gallery_faction_secret"],
+        // The secret lineup's front rank runs out of frame past the shogun: its giants (tree, ice) are read here
+        ["lineup_secret_giants", "gallery_secret_giants"],
         ["closeup_state_reads", "gallery_state_reads"],
         ["closeup_weapon_reads", "gallery_weapon_reads"],
         ["closeup_pair_zeus_thor", "gallery_pair_ancient_zeus_vs_legacy_thor"],

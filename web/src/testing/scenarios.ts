@@ -1390,6 +1390,18 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       focus: "Large units should stay readable as distinct colossal silhouettes instead of oversized defaults.",
     },
   ),
+  // The secret lineup's front rank runs out of frame past the shogun, so its giants get their own eye-level rank
+  gallery_secret_giants: makeGalleryScenario(
+    "gallery_secret_giants",
+    "Secret giants lineup at eye level.",
+    ["secret.skeleton_giant", "secret.samurai_giant", "secret.tree_giant", "secret.ice_giant"],
+    {
+      columns: 4,
+      spacingZ: 4.4,
+      cameraOverride: { alpha: -0.2, beta: Math.PI / 2.15, radius: 13.5, target: { x: 0, y: 2.2, z: 0 } },
+      focus: "Each secret giant should read as its own character (bones, samurai, woodsman with a tree, ice) at lineup distance.",
+    },
+  ),
   gallery_state_reads: makeGalleryScenario(
     "gallery_state_reads",
     "Attack and ability state-read validation gallery.",
