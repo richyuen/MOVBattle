@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab";
 
@@ -255,7 +255,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.95, headSize: 1.1 }, "potion", "hood", "none", "none", "#9932CC",
   ),
   "farmer.harvester": vis(
-    { scale: 1.2, bulk: 1.2, armLength: 1.1 }, "scythe", "bandana", "none", "none", "#556B2F",
+    { scale: 1.2, bulk: 1.2, armLength: 1.1 }, "scythe", "sun_hat", "none", "none", "#556B2F",
   ),
   "farmer.wheelbarrow": vis(
     { scale: 1.4, bulk: 1.5 }, "hammer", "straw_hat", "none", "cart", "#8B4513",
@@ -1351,6 +1351,7 @@ function inferHat(hint: string | undefined, faction: FactionId, name: string): H
     case "great_helm":
     case "hood_liripipe":
     case "pointed_cowl":
+    case "sun_hat":
       return hint;
     default:
       break;

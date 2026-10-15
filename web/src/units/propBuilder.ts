@@ -27,7 +27,22 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat"];
+/*
+ * A harvester's wide felt sun hat (249; factions/farmer, the scythe woman: a brown hat pushed back off the brow, its brim about two and a half heads across,
+ * a low round-topped crown with a dark band, two brown braids hanging from under the brim at the sides down to the shoulders). Not a halo: the old bandana
+ * was a thin ring floating at the crown.
+ *   Brim SUN_BRIM heads across, SUN_BRIM_THICK of the head thick, on the seat, tipped SUN_TIP back; crown SUN_CROWN heads across at its foot and
+ *   SUN_CROWN_TALL of the head high, band SUN_BAND of the head deep; braids SUN_BRAID of the head long. Felt: brown lerped SUN_TEAM toward the team colour.
+ */
+const SUN_BRIM = 2.4;
+const SUN_BRIM_THICK = 0.07;
+const SUN_TIP = 0.16;
+const SUN_CROWN = 1.15;
+const SUN_CROWN_TALL = 0.55;
+const SUN_BAND = 0.12;
+const SUN_BRAID = 0.95;
+const SUN_TEAM = 0.22;
 /*
  * A farmer's pointed cowl (248; units/farmer.farmer: a cloth hood in the team colour a shade darker than the skin, wrapped round the whole head to the jaw with
  * the face and both bead eyes showing in its opening, rising off the crown into a tall stiff point about as high again as the head, raked back and bending
@@ -185,6 +200,45 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     collar.convertToFlatShadedMesh();
     collar.parent = holder;
     return holder;
+  }
+  if (type === "sun_hat") {
+    const brown = new Color3(0.44, 0.27, 0.16);
+    const felt = mat(scene, teamColor ? Color3.Lerp(brown, teamColor, SUN_TEAM) : brown);
+    const brim = MeshBuilder.CreateCylinder("sunHatBrim", { height: u(SUN_BRIM_THICK * H), diameter: u(SUN_BRIM * W), tessellation: 11 }, scene);
+    brim.position.y = u(seat + SUN_BRIM_THICK * H * 0.5);
+    brim.rotation.x = -SUN_TIP;
+    brim.material = felt;
+    brim.convertToFlatShadedMesh();
+    // A low crown narrowing a little to a rounded top, over the skull; the band rings its foot on the brim
+    const crownTall = u(SUN_CROWN_TALL * H);
+    const crown = MeshBuilder.CreateCylinder("sunHatCrown", { height: crownTall, diameterTop: u(SUN_CROWN * 0.82 * W), diameterBottom: u(SUN_CROWN * W), tessellation: 9 }, scene);
+    crown.position.y = crownTall * 0.5;
+    crown.material = felt;
+    crown.convertToFlatShadedMesh();
+    crown.parent = brim;
+    const top = MeshBuilder.CreateSphere("sunHatTop", { diameterX: u(SUN_CROWN * 0.82 * W), diameterY: u(0.22 * H), diameterZ: u(SUN_CROWN * 0.82 * W), segments: 5, slice: 0.5 }, scene);
+    top.position.y = crownTall * 0.5;
+    top.material = felt;
+    top.convertToFlatShadedMesh();
+    top.parent = crown;
+    const band = MeshBuilder.CreateCylinder("sunHatBand", { height: u(SUN_BAND * H), diameterTop: u(SUN_CROWN * 0.97 * W), diameterBottom: u(SUN_CROWN * 1.02 * W), tessellation: 9 }, scene);
+    band.position.y = u(SUN_BAND * H * 0.5 + SUN_BRIM_THICK * H * 0.5);
+    band.material = mat(scene, brown.scale(0.45));
+    band.convertToFlatShadedMesh();
+    band.parent = brim;
+    // Braids: from under the brim behind the ears, down past the jaw to the shoulders, each a stack of three faceted plaits
+    const hair = mat(scene, new Color3(0.3, 0.17, 0.09));
+    const braidLong = SUN_BRAID * H;
+    for (const side of [-1, 1]) {
+      for (let k = 0; k < 3; k++) {
+        const plait = MeshBuilder.CreateIcoSphere("sunHatBraid", { radiusX: u(0.11 * W), radiusY: u(braidLong / 6 * 1.15), radiusZ: u(0.11 * W), subdivisions: 1, flat: true }, scene);
+        plait.position.set(side * u(0.52 * W), u(seat - braidLong * (k + 0.5) / 3), u(-0.12 * W));
+        plait.rotation.z = side * 0.08;
+        plait.material = hair;
+        plait.setParent(brim);
+      }
+    }
+    return brim;
   }
   if (type === "hood_liripipe" || type === "hood") {
     const cloth = mat(scene, type === "hood" ? accent.scale(0.6) : accent);
