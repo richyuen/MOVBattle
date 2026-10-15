@@ -9,8 +9,6 @@ and keeps the old value under earlier values. One row per tuning knob a mechanis
 line; a value column is at most 80 characters (name the knobs, not their story). The worker updates
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
-## Rows
-
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
 - 270 | renaissance-plaza-paving | maps-light.m | approved
 - 270 | meadow-oak-ring | maps-light.i | approved
@@ -27,6 +25,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
+## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
 proceduralAnimation.ts:_aimBlow overhead (BLOW_LAND,_AIM_FROM,_HOLD,_ELBOW,_PITCH,_OVERHEAD,_DROP,_CROWN,_LUNGE; FLINCH_HOLD,_PITCH,_HEAD) | land .55 from .75 hold .6, elbow -.15 pitch .4, overhead .3 drop .25, lunge -.4/.3/.1, flinch .12 .85/.9 | 280 | approved | fist at grip of 35deg line (279); fixed CLUB_COCK/LAND arc
 propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_LEVEL,_HEEL,_SPINE,_BOW,_GRIP; ramped curl, socket+tang) | 1.25 s, .8 in 14, curl 1.3 ramped, level -.6, heel .17, bow .05, grip .15 | 268 | approved | curl 1.75 even, rise .35 (267); 6 box segs (252)

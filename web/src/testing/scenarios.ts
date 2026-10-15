@@ -1136,6 +1136,31 @@ function shieldWallGallery(name: string, description: string, cameraOverride: { 
   );
 }
 
+/** Throwers in a column at x -3, a squire for each at `targetX` (inside every thrower's engage range), the camera side-on from the arm side with room ahead of the hand for the missile. */
+function throwGallery(name: string, description: string, unitIds: string[], targetX: number, focus: string): ScenarioSpec {
+  return makeGalleryScenario(name, description, unitIds, {
+    autoStart: true,
+    advanceMs: 0,
+    captureAdvanceMs: 0,
+    capturePhase: "simulation-mid",
+    columns: unitIds.length,
+    centerX: -3,
+    centerZ: 0,
+    spacingX: 0,
+    spacingZ: 1.7,
+    galleryPresetId: "state_read_duel",
+    cameraOverride: {
+      alpha: Math.PI / 2 - 0.35,
+      beta: Math.PI / 2.05,
+      // Aimed a head above the throwers: a bomb's arc is already 2 m up 150 ms after the hand
+      radius: 6.5,
+      target: { x: -1.8, y: 1.8, z: 0.3 },
+    },
+    extraUnits: unitIds.map((_, i) => ({ unitId: "medieval.squire", team: 1, position: { x: targetX, z: (i - (unitIds.length - 1) / 2) * 1.7 } })),
+    focus,
+  });
+}
+
 function makeGalleryScenario(
   name: string,
   description: string,
@@ -1633,6 +1658,29 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
       ],
       focus: "A bowman at the loose stands side-on with the bow stood up at the end of a level arm and the string hand at the cheek.",
     },
+  ),
+  // Loop evidence (vfx tier 3, throw_<unit>): throwers seen side-on at the release. The capture script steps the sim until the first missile exists and shoots
+  // that frame and 150 ms on, so what left the hand can be read against what was in it. Each group shares one engage range so its men throw on the same beat.
+  gallery_throw_spears: throwGallery(
+    "gallery_throw_spears",
+    "A spear thrower and a harpooner at the release, side-on.",
+    ["tribal.spear_thrower", "pirate.harpooner"],
+    8,
+    "The spear that flies is the javelin he held, leaving his hand at the end of the arm's swing; the harpoon leaves the harpooner's gun on its line.",
+  ),
+  gallery_throw_bombs: throwGallery(
+    "gallery_throw_bombs",
+    "A stoner, a bomb thrower and a dynamite thrower at the release, side-on.",
+    ["tribal.stoner", "pirate.bomb_thrower", "wild_west.dynamite_thrower"],
+    6,
+    "The boulder, bomb and dynamite stick in flight are the ones that were in the hands a frame before, and those hands are empty after.",
+  ),
+  gallery_throw_casters: throwGallery(
+    "gallery_throw_casters",
+    "A bone mage, a wizard and a swordcaster casting, side-on.",
+    ["tribal.bone_mage", "legacy.wizard", "spooky.swordcaster"],
+    8,
+    "A caster keeps his staff; what flies is his own missile (leaves, a fireball, a sword), not a crossbow bolt.",
   ),
   gallery_team_color_blue_red_validation: {
     name: "gallery_team_color_blue_red_validation",

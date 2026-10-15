@@ -348,6 +348,29 @@ async function main() {
           }
         }
       }
+      // Throwers at the release (vfx tier 3, throw_<unit>): step the sim a frame at a time until the first missile exists, shoot that frame and the one
+      // 150 ms on, so the thing in flight can be read against the thing that was in the hand.
+      for (const group of ["spears", "bombs", "casters"]) {
+        await page.evaluate((n) => {
+          window.game.resetBattle();
+          window.game.runScenarioGalleryValidation(n);
+        }, `gallery_throw_${group}`);
+        const spawnMs = await page.evaluate(() => {
+          const missiles = () => JSON.parse(window.render_game_to_text()).projectiles;
+          for (let ms = 0; ms < 4000; ms += 16) {
+            if (missiles() > 0) return ms;
+            window.advanceTime(16);
+          }
+          return null;
+        });
+        summary.notes.push(spawnMs === null
+          ? `throw_${group}: no missile within 4 s, pair skipped`
+          : `throw_${group}: first missile at +${spawnMs} ms`);
+        if (spawnMs === null) continue;
+        await shot(page, `throw_${group}_release`);
+        await page.evaluate(() => window.advanceTime(150));
+        await shot(page, `throw_${group}_flight`);
+      }
       await page.evaluate(() => {
         document.body.classList.remove("capture-mode");
         window.game.resetBattle();

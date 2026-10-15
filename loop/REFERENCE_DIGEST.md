@@ -47,6 +47,7 @@ Read-only during the loop. The gap list in STATE.md is derived from this.
 
 ## 6. VFX and projectiles
 - Arrows and spears are long thin sticks that leave a brief white streak; they stick into bodies and the ground and stay there.
+- A thrower throws what he holds: the spear thrower's javelin, the stoner's chest-sized boulder, the bomb thrower's bomb leave the hand at the end of the arm's swing, and the hand is empty until the next one appears at the windup. Casters keep the staff; the missile is theirs (bone mage a whirl of leaves, wizard a fireball, swordcaster a flying sword). Reference: `reference/units/<unitId>` action shots, trailer_3_sheet_01 r3c3 (spear in flight, hand empty).
 - Cannon and musket fire: a fat white smoke puff at the muzzle, a visible black ball, a dust burst and bodies flung on hit (trailer_3_sheet_03 r1c1 fireball, r2c1 black balls in flight; its row 3 is another game).
 - Magic is bold and graphic: solid-color rings, glowing shapes, pink domes, lightning as jagged white polygons (trailer_2_sheet_03 r1c2, r3c2).
 - Blood is minimal: a few dark red chunks. Debris is chunky low-poly bits, not particles.
