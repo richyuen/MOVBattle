@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 263   Last re-audit: 260   Consecutive rejects: 0   Branch: main
+Iteration: 264   Last re-audit: 260   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,7 +17,7 @@ ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240, re-audited 245-260; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: i j k l m o q s PASS, n p r t u v FAIL (8/14) [S since: 0 each, except n 2 (260, 262; 4' written 259), p 3 (250, 251, 252), r 1 (263), t 2 (262, 263), u 3 (249, 253, 254), v 1 (244)]
+unit-look tier 3: i j k l m o q r s v PASS, n p t u FAIL (10/14) [S since: 0 each, except n 2 (260, 262; 4' written 259), p 3 (250, 251, 252), t 2 (262, 263), u 3 (249, 253, 254)]
 - i tribal PASS (cleared 243, 251; polish: antlers pale, staff topper)
 - j farmer PASS (cleared 249; polish: brims repeat, braids unreadable)
 - k ancient PASS (cleared by a5f0805, 245; polish: crest small, helm close to skin value)
@@ -27,11 +27,11 @@ unit-look tier 3: i j k l m o q s PASS, n p r t u v FAIL (8/14) [S since: 0 each
 - o pirate PASS (cleared 249, 250; polish: bandana knot/tails, no vests)
 - p spooky: 1 struck (f37d3bf, 250; polish: bone greyish, no studded shield); 2 narrowed (01ef730 251, 7155691 252): blade a short stepped slab hanging off a level, lance-carried snath, not a long crescent arcing over the hood (units/spooky.reaper); polish: skull/shins grey not cream
 - q wild_west PASS (cleared a63efa7 256, 54c5f57 258 pinto; still PASS after 67f0425, but pinto legs now flat tan planks, untapered, tiny hooves: give the pinto its own tapered leg; polish: coat tan in shade, rope loop unseen; robe a broad box)
-- r legacy: 1 struck by 7b0fb2a (263: straw mop + sack; polish: straw saturated gold not pale tan, locks upright, rope belt unseen); 2 no horse-drawn chariot (units/legacy.chariot)
+- r legacy PASS (cleared 7b0fb2a 263, 971918b 264 chariot; polish: chariot hidden behind giant in lineup, driver bare (no crested galea/scutum), car a plain drum (no laurel), horse barrel three lumps, gait a trot; straw saturated gold)
 - s good PASS (cleared 67760f2 259, 5c7d65b 261; polish: elephant keeps mammoth column legs/forward tusks, blanket pale with no device, rider stiff with floating bow, throne back low; paladin arms white, kite+cross shield, gold lemon)
 - t evil: 1'' (cultist 792620c 262; shadow_walker, death_bringer b28d051 263) mad_mechanic and tempest_lich still in plain hoods, no horns/spikes/branch crown/dark armour (units/evil.tempest_lich); polish: walker sleeves dark not team arms, spikes small; bringer skull a white cube, no jaw tilt; 2 void_monarch bright yellow jewelled crown (units/evil.void_monarch); polish: cultist robe bands pale blue-white
 - u secret: 1-3 struck (249, 253, 254); 3' crown two merged lobes near the ground in front, not three distinct lobes clear of it out at his flank; hood navy not maroon-brown (units/secret.tree_giant)
-- v medieval: 1 struck (adb58a6, 244); 2 bard purple beret, not feathered straw hat (units/medieval.bard)
+- v medieval PASS (cleared adb58a6 244, 507a3fe 264 feather hat; polish: feather thin and pale, straw grey-beige not salmon-tan, brim flat)
 maps-light tier 3: k l n o PASS, i j m FAIL (4/7) [S since: 0 each]
 - i introduction (meadow): 1 shared pale-sage puffball ring, not dark twisted oaks; 2 no ruins/castle, generic rocks and walls (maps/meadow_medieval_1)
 - j adventure (meadow): 1 pools are flat grey-blue rectangles, not water (maps/meadow_medieval_2); 2 same ring and props as introduction
@@ -40,29 +40,29 @@ maps-light tier 3: k l n o PASS, i j m FAIL (4/7) [S since: 0 each]
 - m renaissance: 1 no townhouses, two boxes and columns in a field; 2 sage grass, not a paved plaza (maps/renaissance_town)
 - n pirate PASS (cleared by [R] ddcb86b, 258; polish: team-zone rectangles cooler grey, corner hill discs smooth domes, slab hulls/short masts)
 - o simulation PASS (cleared bd1653a 260, e54ee13 261; polish: plane cool lavender not warm cream (do not re-nudge colours, row 260), grey void-hazard disc the only object, line a bit wide/red vs thin magenta)
-Total tier 1 24/24; tier 2 23/24; tier 3 12/21.
+Total tier 1 24/24; tier 2 23/24; tier 3 14/21.
 
 ## Focus (every gap this iteration)
-BASE 569e40b (iter 263; picks ranked 1 and 3, rank 2 would repeat pair n,t; no [P]; no evidence blocker)
-- [S] unit-look.t evil-hood-horns (b28d051) — APPROVE, t FAIL (1' narrowed to 1'')
-- [S] unit-look.r super-peasant-straw (7b0fb2a) — APPROVE, r FAIL (1 struck)
+BASE 2bec940 (iter 264; picks ranked 1 and 4, ranks 2-3 would repeat pair r,t; [P] straw-pale-tan skipped: ledger reversal of a 263 row; evidence 264.0 closeup_legacy_chariot)
+- [S] unit-look.r legacy-chariot (971918b) — APPROVE, r PASS (2 struck)
+- [S] unit-look.v bard-feather-hat (507a3fe) — APPROVE, v PASS (2 struck)
 
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] evil-hood-horns (b28d051) VERDICT: APPROVE CRITERION: unit-look.t FAIL (previous: FAIL)
-- GAP: [S] super-peasant-straw (7b0fb2a) VERDICT: APPROVE CRITERION: unit-look.r FAIL (previous: FAIL)
+- GAP: [S] legacy-chariot (971918b) VERDICT: APPROVE CRITERION: unit-look.r PASS (previous: FAIL)
+- GAP: [S] bard-feather-hat (507a3fe) VERDICT: APPROVE CRITERION: unit-look.v PASS (previous: FAIL)
 
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] unit-look.r legacy-chariot [0] — blocker 2: horse-drawn chariot (horse, two wheels, car with driver) in vehicleBuilder — ref units/legacy.chariot — ours lineup_legacy
-2. [S] unit-look.t evil-lich-mechanic-horns [0] — blocker 1'': tempest_lich and mad_mechanic through HORNED_EVIL (branch-spike crown, ragged dark robe) — ref units/evil.tempest_lich — ours lineup_evil
-3. [S] unit-look.t monarch-dark-crown [0] — blocker 2: dark spiked crown, bone armour, dark cloth replacing the yellow jewelled crown — ref units/evil.void_monarch — ours lineup_evil
-4. [S] unit-look.v bard-feather-hat [0] — blocker 2: feathered straw hat replacing the purple beret — ref units/medieval.bard — ours lineup_medieval
-5. [S] unit-look.p reaper-crescent [0] — blocker 2: long crescent arcing over the hood — ref units/spooky.reaper — ours lineup_spooky
-6. [S] unit-look.n jouster-flat-drape [0] — blocker 4''(b): long low flat-backed box, hard shoulder edge — ref units/renaissance.jouster — ours lineup_renaissance
-7. [P] unit-look.r straw-pale-tan [0] — fallout of 7b0fb2a: STRAW_COLOR (0.92,0.66,0.24) -> (0.86,0.74,0.5); NEXT shows in lineup_legacy (far-right giant's hair pale tan)
+1. [S] unit-look.t evil-lich-mechanic-horns [0] — blocker 1'': tempest_lich and mad_mechanic through HORNED_EVIL (branch-spike crown, ragged dark robe) — ref units/evil.tempest_lich — ours lineup_evil
+2. [S] unit-look.t monarch-dark-crown [0] — blocker 2: dark spiked crown, bone armour, dark cloth replacing the yellow jewelled crown — ref units/evil.void_monarch — ours lineup_evil
+3. [S] unit-look.p reaper-crescent [0] — blocker 2: long crescent arcing over the hood — ref units/spooky.reaper — ours lineup_spooky
+4. [S] unit-look.n jouster-flat-drape [0] — blocker 4''(b): long low flat-backed box, hard shoulder edge — ref units/renaissance.jouster — ours lineup_renaissance
+5. [S] unit-look.u tree-giant-crown-lobes [0] — blocker 3': three distinct crown lobes clear of the ground at his flank, maroon-brown hood — ref units/secret.tree_giant — ours lineup_secret_giants
+6. [S] maps-light.m renaissance-townhouses [0] — blocker 1: half-timbered townhouses round a plaza — ref maps/renaissance_town — ours biome_renaissance
+7. [S] maps-light.i meadow-oaks [0] — blocker 1: dark twisted oak ring replacing the sage puffballs — ref maps/meadow_medieval_1 — ours biome_introduction
 8. [S] battle-feel.e (deferred stands) — registered hit frame lands the club on a head — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_hit
-(Off-list: tree-giant crown lobes (u 3'), renaissance townhouses (m.1), meadow oaks (i.1), adventure water (j.1), pinto tapered legs (q polish), elephant tusks (s polish).)
+(Off-list: chariot driver galea/scutum + car laurel (r polish), feather_hat FEATHER_WIDE .6 / straw warmer ([P] fallout of 507a3fe, but a ledger reversal within 20), adventure water (j.1), pinto tapered legs (q polish), elephant tusks (s polish).)
 
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
@@ -76,7 +76,7 @@ BASE 569e40b (iter 263; picks ranked 1 and 3, rank 2 would repeat pair n,t; no [
 
 ## Notes for next iteration (max 5 lines)
 - battle-feel.e deferred. 241 findings: clubbers strike from up to ~2 m, hoplites taller than clubbers, units animate BEFORE the decision loop, so the hit frame renders the pre-hit pose unless re-posed in the same step.
-- Next re-audit 265. Simulation: theme.bare -> barePlane + bareCentreLine (no zone guides); plane colour barely responds to ground/fog/emissive at the placement height (tried 261, reverted). mapBuilder.ts and LOG.md are CRLF: use Edit.
+- Next re-audit 265. buildChariot (264) is a rig shifted -0.5 z with a seg(a,b) tapered-limb helper; driver = operator under a stand scaled CHARIOT_DRIVER 2.3; closeup_legacy_chariot shot added. Simulation: theme.bare -> barePlane + bareCentreLine (no zone guides); plane colour barely responds to ground/fog/emissive at the placement height (tried 261, reverted). mapBuilder.ts and LOG.md are CRLF: use Edit.
 - buildHorse (jouster, lasso "pinto", secret cavalry): frame at barrel middle; legs = 4-sided wedge in a holder scaled HORSE_UPPER_DEEP in z, joint at hem - UPPER_SHOW; thick legs must stay inside hem (W>=.85 H). Lineup horse pose varies run to run; crop the look PNG (System.Drawing) to judge legs.
 - Unit PBR colours grey out in lineup shade: self-light (mat emissive). dress* in unitFactory: set body.bodyMaterial.baseColor; dressPaladin also whitens arms (bodyMaterial) - restore skin on arm meshes for s polish. Head is a blockHead (box, non-uniform scaled): spheres sized off its extents leave corners bare; box caps/skulls (hExt.x*2.2) cover it. Eyes: body.leftEye/rightEye.setEnabled(false).
 - HORNED_EVIL table (263) dresses evil units via dressHornedEvil (hat none; horn = head-local point path via taperedPath). Extend it for lich/mechanic. dressSuperPeasant: straw box cap + locks. No [P] on rows approved within 20 iterations.

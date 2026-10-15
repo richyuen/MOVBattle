@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 254 | tree-hip-carry | unit-look.u | approved
-- 254 | jouster-horse | unit-look.n | approved
 - 255 | renaissance-painter | unit-look.n | approved
 - 255 | pirate-full-palm-ring | maps-light.n | approved
 - 256 | jouster-horse-stature | unit-look.n | approved
@@ -32,6 +30,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 262 | void-cultist-horns | unit-look.t | approved
 - 263 | evil-hood-horns | unit-look.t | approved
 - 263 | super-peasant-straw | unit-look.r | approved
+- 264 | legacy-chariot | unit-look.r | approved
+- 264 | bard-feather-hat | unit-look.v | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -81,3 +81,5 @@ vehicleBuilder.ts:buildSacredElephant (ELEPHANT_HIDE,_GOLD,_GEM; TUSK_RING_PIECE
 unitFactory.ts:dressVoidCultist (VOID_ROBE,_GLOW,_BAND_GLOW,_SKIRT,_HEM,_WHEEL,_SPOKES,_BEARD,_STRANDS,_SHIELD,_STUDS) | robe .3,.15,.12 glow .12; band .3; skirt 1.75 hem 1.6; wheel 2.1 x10; shield 1.5 x8 | 262 | approved | hood + cape
 unitFactory.ts:dressHornedEvil (HORNED_EVIL horn paths/thick, EVIL_HORN_ROOT, _GLOW, _BONE_GLOW, _SPIKE; cap+teeth / skull box) | root .24 heads (x1 walker, x1.5 bringer), glow .15, bone .3, spike .32 | 263 | approved | plain hood
 unitFactory.ts:dressSuperPeasant (STRAW_COLOR,_GLOW,_LOCKS,_LOCK,_SWEEP; SACK_COLOR,_GLOW,_SKIRT,_ROPE) | straw .92,.66,.24 glow .2, 16 locks 1.1 heads sweep .75; sack .9,.88,.82 skirt .62 | 263 | approved | laurel + hair cap
+vehicleBuilder.ts:buildChariot (CHARIOT_HORSE, HORSE_BARREL, _GALLOP, _CAR_Z, _FLOOR, _RIM, _WHEEL, _SPOKES, _DRIVER; hide) | horse y1.22 barrel .6x.72x1.7; rim 1.2, wheel .92 x6, driver 2.3; hide .74,.5,.4 | 264 | approved | team-box horse + cart, operator 0.46
+propBuilder.ts:feather_hat (FEATHER_HAT_BRIM, _DIP, _COCK, _CROWN, _TALL, _TEAM, _STRAW; FEATHER_LONG, _PIECES, _WIDE, _RAKE, _CURL) | brim 2.05 dip .14 cock .2; straw .8,.54,.3 team .06; feather 1.9 H x4, wide .42 | 264 | approved | purple beret
