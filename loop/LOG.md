@@ -251,3 +251,4 @@ iter 249 | [S] farmer-halo, [S] secret-halos | 2/2 approved | passes 52 -> 53
 iter 250 | [S] pirate-bandana-tricorn, [S] skeleton-bone-body (re-audit, no flips) | 2/2 approved | passes 53 -> 54
 iter 251 | [S] reaper-robe-scythe, [S] bone-mage-antler-skull | 2/2 approved | passes 54 -> 55
 iter 252 | [S] reaper-blade-and-skull, [S] pirate-ships | 2/2 approved | passes 55 -> 55
+iter 253 | [S] maps-light.n pirate-palms-and-sea, [S] unit-look.u tree-giant-woodsman-and-tree (+evidence lineup_secret_giants) | 2/2 approved | passes 8/21 -> 8/21 (tier 3)
