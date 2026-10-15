@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 267 | reaper-high-carry | unit-look.p | approved
-- 267 | tree-giant-carry-rebuild [R] | unit-look.u | approved
 - 268 | reaper-blade-mount | unit-look.p | approved
 - 268 | jouster-flat-drape | unit-look.n | approved
 - 269 | tree-giant-hip-carry | unit-look.u | approved
@@ -26,15 +24,14 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 273 | field-oak-clumps | maps-light.j | approved
 - 276 | landed-blow-on-hit | battle-feel.e | rejected
 - 277 | target-aimed-blow [R] | battle-feel.e | rejected
+- 278 | aimed-blow-final-layer [R] | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
 simulationSystem.ts:pending heavy blow (BLOW_LAND_E in proceduralAnimation, BLOW_CONTACT_SLACK; reverted) | land .3 of drop, slack .3 | 276 | rejected | hit at swing start (.55 tried at look)
-proceduralAnimation.ts:_aimBlow [R] (BLOW_LAND,_AIM_FROM,_HOLD,_HOLD_FADE,_ELBOW,_PITCH,_AIM_SLACK; reverted) | land .55, from .75, hold .45 fade .15, elbow -.15, pitch .4, slack 1.6 | 277 | rejected | fixed CLUB_COCK/CLUB_LAND arc
-unitFactory.ts:dressReaper (REAPER_HOOD, _OPEN, _FORWARD, _JAW, _JAW_LONG, _SKIRT, _HEM, _TATTERS; cowl gap on the face) | open 0.46 fwd -0.24, jaw 0.5 x 0.5; skirt 0.85, rags 0.13-0.25 | 252 | approved | open 0.4 fwd -0.06 gap at back, skirt 1.55 (251)
+proceduralAnimation.ts:_aimBlow [R] (BLOW_LAND,_AIM_FROM,_HOLD,_HOLD_FADE,_ELBOW,_PITCH,_AIM_SLACK, FLINCH_HOLD; reverted) | land .55, from .75, hold .6, elbow -.15, pitch .4, slack 2.5, flinch hold .12 | 278 | rejected | hold .45 slack 1.6 (277); fixed arc
 propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_LEVEL,_HEEL,_SPINE,_BOW,_GRIP; ramped curl, socket+tang) | 1.25 s, .8 in 14, curl 1.3 ramped, level -.6, heel .17, bow .05, grip .15 | 268 | approved | curl 1.75 even, rise .35 (267); 6 box segs (252)
-mapBuilder.ts:addShip galleon (SHIP_LONG, _BEAM, _HULL, _CASTLE, _MASTS, _YARD, _BRACE; sail emissive 0.4) | 17 m, beam 0.26, hull 0.15, castle 0.24, masts .62/.74/.55, yard 1.45, brace 0.55 | 252 | approved | olive box + slab sail
 mapBuilder.ts:palmRing + seaRim (PALM_LEAN, _BANDS, _FRONDS, _FROND, _ARCH; SEA_RIM, _SHORE, _GLOW; pirate palms share) | lean .22-.5, 4 bands, 6-8 fronds .5 H, arch .35/-.25/-.85; rim 5 m, shore 1.2, glow .3; .72 | 253 | approved | puffball ring, 0.42-alpha hazard tint
 propBuilder.ts:tree_club [R] (TREE_CLUB_LONG,_GRIP,_THICK,_BEND,_ROOTS,_ROOT_FAN,_CROWN,_LOBE,_LOBES; bent tube, limb, knot) | .6 stand, grip .15, thick .09, bend .12 up, 5 roots, crown .25 T, lobes centred on end | 269 | approved | lobes .3,-.5/1.25,-.35/.8,.7 hung (267); .8 stand, 4 square roots, 3-lobe clover .24 (265)
 proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; bow spin +pi to face up) | arm raise -.9 out .15 elbow -.4; tip .9,.02,.35 | 269 | approved | raise -.35 out .12 elbow -.7, tip y -.02, bend hung under (267)
