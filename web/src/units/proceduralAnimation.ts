@@ -145,29 +145,6 @@ const REAR_CLUB_REST = 0.85;
 const PRESS_BLOW_ARM = 1.7;
 // The club's arc in that raised fist when landed: forward and a little down, across the board top or the head, not hanging to the ground.
 const PRESS_BLOW_CLUB = 1.2;
-/*
- * [R] target-aimed blow (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (blue clubbers on a red man) and r3c1 (every strike line ends on a body):
- * - The blow is struck AT a man, not along a fixed arc: on the frame it lands the weapon's head is on the struck man's head (crown or just over it, the shaft
- *   laid across it when the weapon is longer than the gap), whatever his height or how far off he stands, within arm + weapon reach.
- * - The striker's weapon arm is near straight (elbow ~0.15 rad) and points from his shoulder at that head; his trunk is pitched forward ~0.4 rad into the blow,
- *   never folded double (r2c3: the clubber bends at the waist roughly 30-45 deg, legs under him).
- * - Weapons stay down on men for a good share of the beat, not snapped back up (r2c3 catches the club down, r3c1 every line on a body): after the swing the
- *   weapon is held on the man BLOW_HOLD s, easing off over its last BLOW_HOLD_FADE s.
- * - The struck man recoils on that same frame: head and trunk thrown back (the flinch, laid over every stance layer so a braced board man still goes back,
- *   held full FLINCH_HOLD s, and re-posed in the step the blow lands, see SimulationSystem._landMeleeBlow).
- * The windup is the swing's own; from BLOW_AIM_FROM of the time to the landing the weapon is brought round onto the man and is fully on him at BLOW_LAND of
- * the drop, when the sim lands the damage (blowLandsIn).
- */
-const BLOW_LAND = 0.55;
-const BLOW_AIM_FROM = 0.75;
-const BLOW_HOLD = 0.6;
-const BLOW_HOLD_FADE = 0.15;
-const BLOW_ELBOW = -0.15;
-const BLOW_PITCH = 0.4;
-// Farthest a man's head may be from the striker's shoulder, in weapon reaches + one arm, for the blow to be aimed at him at all
-const BLOW_AIM_SLACK = 2.5;
-// A flinch holds its full snap this long before it eases off (see update)
-const FLINCH_HOLD = 0.12;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -210,118 +187,6 @@ export class ProceduralAnimator {
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
     this._attackMotion = motion ?? this.defaultAttackMotion;
-  }
-
-  /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] target-aimed blow spec. */
-  aimBlowAt(mark: TransformNode | null, landsIn = 0): void {
-    this._blowMark = mark;
-    this._blowLandsAt = landsIn;
-    this._blowClock = 0;
-  }
-  private _blowMark: TransformNode | null = null;
-  // Seconds from the start of the swing to the blow landing, and since the swing started: the aim keeps its own time, so a swing the walk or the stand cuts
-  // short in the animation still comes down on the man when the sim lands it
-  private _blowLandsAt = 0;
-  private _blowClock = 0;
-  private _aimWeight = 0;
-  private _aimTip = new Vector3(0, 1, 0);
-
-  /** A swing that lands on a man: heavy (club, hammer, axe) or a blade's slash. */
-  private _strikesAtMan(): boolean {
-    return (this._attackMotion === "heavy_swing" || this._attackMotion === "blade_slash") && this.attackStyle !== "mammoth" && this.walkStyle !== "quadruped";
-  }
-
-  // The share of the attack at which the blow is fully on the man: BLOW_LAND of the way through the drop after the commit
-  private _blowLandFraction(): number {
-    if (this._attackMotion === "heavy_swing") {
-      const commit = this._resolveReleasePoint(0.45);
-      return commit + (1 - commit) * 0.45 * BLOW_LAND;
-    }
-    const commit = this._resolveReleasePoint(0.4);
-    return commit + (1 - commit) * BLOW_LAND * 0.6;
-  }
-
-  /** A swing at a man just started: seconds until it is on him, when the sim lands the blow; 0 when no such swing is running. */
-  blowLandsIn(): number {
-    if (this._state !== AnimState.Attacking || !this._strikesAtMan()) return 0;
-    return Math.max(0.001, this._blowLandFraction() * this._attackDuration - this._attackTimer);
-  }
-
-  /**
-   * The blow on the man (spec above): from early in the drop the weapon arm is brought round to point from the shoulder at his head and the weapon's head laid
-   * on it, the trunk pitched into it; held there after the swing, then let go. Overrides whatever the swing, shove or ready hold made of the arm.
-   */
-  private _aimBlow(dt: number): void {
-    let w = 0;
-    const mark = this._blowMark;
-    if (mark && !mark.isDisposed() && this._state !== AnimState.Dead && this._limp < 0.5 && this._blowLandsAt > 0) {
-      this._blowClock += dt;
-      const t = this._blowClock;
-      const land = this._blowLandsAt;
-      // From BLOW_AIM_FROM short of the landing the weapon comes round onto him, full at the landing, held BLOW_HOLD and let go over its last BLOW_HOLD_FADE
-      const from = land * BLOW_AIM_FROM;
-      const s = Math.max(0, Math.min(1, (t - from) / Math.max(0.001, land - from)));
-      w = t <= land ? s * s * (3 - 2 * s) : Math.max(0, Math.min(1, (land + BLOW_HOLD - t) / BLOW_HOLD_FADE));
-      if (w <= 0 && t > land) this._blowMark = null;
-    }
-    this._aimWeight = 0;
-    if (w <= 0.01 || !mark) return;
-    const b = this._body;
-    // The pose this frame, top down, so the shoulder and the hand are where this frame puts them and not where the last one did
-    const chain: TransformNode[] = [];
-    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
-    b.torso.rotation.x += (BLOW_PITCH - b.torso.rotation.x) * w;
-    for (const n of chain) n.computeWorldMatrix(true);
-    // and his head where he stands now: the sim steps without drawing, so the mark's cached world place can be strides behind him
-    const marks: TransformNode[] = [];
-    for (let n: TransformNode | null = mark; n; n = n.parent as TransformNode | null) marks.unshift(n);
-    for (const n of marks) n.computeWorldMatrix(true);
-    const head = mark.getAbsolutePosition();
-    const shoulder = b.rightShoulder.getAbsolutePosition();
-    const scale = Math.max(0.001, b.rightHand.absoluteScaling.y);
-    const reach = this._weaponReach() * scale;
-    const arm = Vector3.Distance(shoulder, b.rightHand.getAbsolutePosition());
-    if (Vector3.Distance(head, shoulder) > (reach + arm) * BLOW_AIM_SLACK) return;
-    // Arm: pointed from the shoulder at his head, near straight. Rest hangs down -y in the shoulder's parent; rotation.x a turns it to (0, -cos a, -sin a)
-    const parent = b.rightShoulder.parent as TransformNode;
-    const toHead = Vector3.TransformNormal(head.subtract(shoulder), Matrix.Invert(parent.getWorldMatrix())).normalize();
-    const pitch = Math.atan2(-toHead.z, -toHead.y);
-    b.rightShoulder.rotation.x += (pitch - b.rightShoulder.rotation.x) * w;
-    b.rightShoulder.rotation.z += (0.08 - b.rightShoulder.rotation.z) * w;
-    b.rightElbow.rotation.x += (BLOW_ELBOW - b.rightElbow.rotation.x) * w;
-    for (const n of chain) n.computeWorldMatrix(true);
-    // Weapon: its head on his crown; longer than the gap, the shaft is laid across the crown at its height and the head goes on past it
-    const hand = b.rightHand.getAbsolutePosition();
-    const gap = head.subtract(hand);
-    let dir = gap.clone();
-    if (gap.length() < reach) {
-      const flat = new Vector3(gap.x, 0, gap.z);
-      const r = Math.sqrt(Math.max(0, reach * reach - gap.y * gap.y));
-      if (flat.lengthSquared() > 1e-6 && Math.abs(gap.y) < reach) dir = flat.normalize().scale(r).addInPlace(new Vector3(0, gap.y, 0));
-    }
-    dir.normalize();
-    this._aimTip = Vector3.TransformNormal(dir, Matrix.RotationY(-b.root.rotation.y)).normalize();
-    this._aimWeight = w;
-    this._clubHold = Math.max(this._clubHold, w);
-  }
-
-  // How far the weapon's head stands from the fist, in the hand's own scale: the farthest corner of its meshes' boxes, measured once
-  private _reach: number | undefined;
-  private _weaponReach(): number {
-    if (this._reach !== undefined) return this._reach;
-    const node = this._carry?.weapon?.prop?.node;
-    const hand = this._body.rightHand;
-    let far = 0;
-    if (node) {
-      hand.computeWorldMatrix(true);
-      const at = hand.getAbsolutePosition();
-      for (const mesh of node.getChildMeshes(false)) {
-        mesh.computeWorldMatrix(true);
-        for (const corner of mesh.getBoundingInfo().boundingBox.vectorsWorld) far = Math.max(far, Vector3.Distance(corner, at));
-      }
-    }
-    this._reach = Math.max(0.3, far / Math.max(0.001, hand.absoluteScaling.y));
-    return this._reach;
   }
 
   /** Brief flinch on hit — snaps torso/head back then recovers. */
@@ -742,6 +607,20 @@ export class ProceduralAnimator {
         break;
     }
 
+    // Flinch overlay (additive on top of current pose)
+    if (this._flinchTimer > 0) {
+      this._flinchTimer -= dt;
+      const intensity = Math.max(0, this._flinchTimer / 0.35);
+      const b = this._body;
+      // Snap torso backward and to the side
+      b.torso.rotation.x -= 0.55 * intensity;
+      b.torso.rotation.z += 0.3 * intensity;
+      // Head whips back
+      b.neck.rotation.x -= 0.65 * intensity;
+      // Arms flail out
+      b.leftShoulder.rotation.z -= 0.5 * intensity;
+      b.rightShoulder.rotation.z += 0.5 * intensity;
+    }
     // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving;
     // between swings the arms windmill out from the shoulders instead of hanging at the sides.
     this._shoveTimer -= dt;
@@ -988,22 +867,6 @@ export class ProceduralAnimator {
       this._body.torso.scaling.setAll(1);
     }
 
-    // Flinch overlay (additive), laid over every stance layer so a man behind a board, whose brace sets his trunk outright, still goes back under the blow.
-    // It holds full for the first FLINCH_HOLD of its time, so the frame the blow lands on shows it whole.
-    if (this._flinchTimer > 0 && this._state !== AnimState.Dead) {
-      this._flinchTimer -= dt;
-      const intensity = Math.max(0, Math.min(1, this._flinchTimer / (0.35 - FLINCH_HOLD)));
-      const b = this._body;
-      // Snap torso backward and to the side
-      b.torso.rotation.x -= 0.55 * intensity;
-      b.torso.rotation.z += 0.3 * intensity;
-      // Head whips back
-      b.neck.rotation.x -= 0.65 * intensity;
-      // Arms flail out
-      b.leftShoulder.rotation.z -= 0.5 * intensity;
-      b.rightShoulder.rotation.z += 0.5 * intensity;
-    }
-    this._aimBlow(dt);
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
@@ -1260,8 +1123,6 @@ export class ProceduralAnimator {
     const tip = new Vector3(weapon.tip.x, weapon.tip.y - this._carryDip * 1.5, weapon.tip.z + this._castReach).normalize();
     // Swinging or cocked: the head of the weapon is on its arc over the man, a touch out to his weapon side
     if (club > 0.01) Vector3.LerpToRef(tip, new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(this._clubArc), Math.sin(this._clubArc)), Math.min(1, club), tip).normalize();
-    // Coming down on a man (see _aimBlow): the head goes onto him, wherever he stands
-    if (this._aimWeight > 0.01 && weapon === this._carry?.weapon) Vector3.LerpToRef(tip, this._aimTip, this._aimWeight, tip).normalize();
     // Shooting: upright in the fist, canted a little toward the mark
     if (shooting > 0) Vector3.LerpToRef(tip, new Vector3(0, 1, 0.12), shooting, tip).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));

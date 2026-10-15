@@ -104,8 +104,6 @@ const RANK_DEPTH_SHARE = 0.95;
 const WALL_QUEUE_GAP = 0.25;
 // A clubber a rank back (see _allyBetween): how much further than a front man's strike reach he strikes from, over an ally within this lane of his line.
 const REAR_RANK_REACH = 1.4;
-// How far past shoulder contact a pressing clubber may still be when he brings his blow down (see _processUnitDecision).
-const BLOW_CONTACT_SLACK = 0.3;
 const REAR_RANK_LANE = 0.7;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
@@ -145,11 +143,6 @@ export class SimulationSystem {
   /** Melee blows landed, newest last, for evidence captures that shoot the frame a blow lands on. Capped at 200. */
   readonly hitLog: Array<{ t: number; attackerUnit: string; targetUnit: string; x: number; y: number; z: number }> = [];
   private _units: RuntimeUnit[] = [];
-  // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
-  // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
-  private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
-  // A presser's distance to his foe at his last decision: while it is still closing he holds his heavy swing until he is at the man's shoulder.
-  private _closingFrom = new Map<RuntimeUnit, number>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
@@ -248,12 +241,9 @@ export class SimulationSystem {
     if (idx >= 0) this._units.splice(idx, 1);
     this._nextDecisionAt.delete(unit);
     this._pathStates.delete(unit);
-    this._closingFrom.delete(unit);
   }
 
   beginSimulation(now: number): void {
-    this._pendingBlows = [];
-    this._closingFrom.clear();
     this._isRunning = true;
     this._now = now;
     this._battleStartedAt = now;
@@ -280,8 +270,6 @@ export class SimulationSystem {
     for (const unit of this._units) {
       unit.update(dt, now);
     }
-    // After the animation step, so the frame a blow lands on is the frame its club is down on the man
-    if (this._pendingBlows.length > 0) this._landPendingBlows(now);
 
     if (this.hazards.length > 0) {
       for (const unit of this._units) {
@@ -630,13 +618,7 @@ export class SimulationSystem {
       unit.faceTarget(enemy.position);
       if (slot) this._holdWallHeading(unit, slot, enemy);
       if (attackProfile.type === AttackType.Melee) unit.leanIntoShove();
-      // A presser with a club or a blade does not swing from two strides off: while he is still closing he holds it cocked, and brings it down once he
-      // is at the man's shoulder, or has stopped closing (the crowd or a board holds him off).
-      const closingFrom = this._closingFrom.get(unit);
-      this._closingFrom.set(unit, distance);
-      const closing = presses && canMove && !slot?.hold && unit.swingsAtMan && distance > contactDistance + BLOW_CONTACT_SLACK
-        && (closingFrom === undefined || distance < closingFrom - 0.02);
-      if (canAttack && !closing) {
+      if (canAttack) {
         this._tryAttack(unit, enemy, attackProfile, now);
       }
     } else {
@@ -1493,39 +1475,12 @@ export class SimulationSystem {
       return;
     }
 
-    // A swing has only gone up: it is struck at this man, and he takes the blow when it comes down on him
-    const landIn = attacker.blowLandsIn();
-    if (landIn > 0) {
-      attacker.aimBlowAt(target, landIn);
-      this._pendingBlows.push({ attacker, target, damage, splashRadius, knockback, landAt: now + landIn });
-      return;
-    }
-    this._landMeleeBlow(attacker, target, damage, splashRadius, knockback, now, impactOrigin);
-  }
-
-  private _landMeleeBlow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, splashRadius: number, knockback: Vector3, now: number, impactOrigin: Vector3): void {
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
-    // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
-    target.reposeNow();
     if (this.hitLog.length >= 200) this.hitLog.shift();
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
-  }
-
-  /** Lands the heavy blows whose clubs have come down. A striker who died, was knocked down or was knocked out of reach meanwhile, or whose man is already down, has swung at air. */
-  private _landPendingBlows(now: number): void {
-    const due = this._pendingBlows.filter((b) => now >= b.landAt);
-    if (due.length === 0) return;
-    this._pendingBlows = this._pendingBlows.filter((b) => now < b.landAt);
-    for (const b of due) {
-      const { attacker, target } = b;
-      if (attacker.isDead || attacker.isToppled || attacker.isDowned || target.isDead || !this._units.includes(attacker) || !this._units.includes(target)) continue;
-      const reach = attacker.definition.engageRange + this.attackRangePadding + Math.max(0, target.collisionBodyRadius - attacker.collisionBodyRadius) + this.blowStrikeReach;
-      if (Vector3.Distance(attacker.position, target.position) > reach) continue;
-      this._landMeleeBlow(attacker, target, b.damage, b.splashRadius, b.knockback, now, attacker.getImpactOrigin().position);
-    }
   }
 
   private _summonUnits(attacker: RuntimeUnit): boolean {
