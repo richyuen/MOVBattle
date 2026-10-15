@@ -1186,80 +1186,181 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   );
 }
 
+/*
+ * The chariot (264; units/legacy.chariot). Spec, read off the reference: a big natural-coated horse (a pale mauve-tan hide, not the team colour) at full
+ * gallop drawing a two-wheeled car on a pair of shafts. Horse: a long barrel about 1.7 m long and a man's shoulder high at the withers, a thick neck rising
+ * forward at about 55 degrees to a long head pointing forward and down, a dark maroon muzzle, a big white eye with a black pupil on each side, two tall ears,
+ * a dark ragged mane along the top of the neck and a dark tail cocked up and back; legs long and tapered to dark hooves, in a gallop: the near fore lifted and
+ * folded, the far fore reaching, the hinds driving back. An orange collar strap round its chest, the shafts running from it back to the car. Car: a D-shaped
+ * team-coloured box, curved front, open back, its rim at the driver's hips, a gold band round the rim; two wheels about two thirds of the withers high,
+ * spoked, either side of it; the driver standing in it.
+ *   Horse barrel centre CHARIOT_HORSE (y, z), radii HORSE_BARREL; legs off shoulder/hip points through a knee to a hoof (CHARIOT_GALLOP); car centred at
+ *   CHARIOT_CAR_Z, floor CHARIOT_FLOOR high, rim CHARIOT_RIM high, CHARIOT_CAR_WIDE across; wheels CHARIOT_WHEEL across with CHARIOT_SPOKES spokes; driver
+ *   a scale-0.46 operator scaled CHARIOT_DRIVER (a man of the line's height). The whole rig sits CHARIOT_SHIFT back so the unit centre is mid-length.
+ */
+const CHARIOT_HIDE = new Color3(0.74, 0.5, 0.4);
+const CHARIOT_DARK = new Color3(0.2, 0.11, 0.11);
+const CHARIOT_MUZZLE = new Color3(0.36, 0.14, 0.15);
+const CHARIOT_STRAP = new Color3(0.95, 0.52, 0.14);
+const CHARIOT_GOLD = new Color3(0.95, 0.66, 0.16);
+const CHARIOT_HORSE = { y: 1.22, z: 1.0 };
+const HORSE_BARREL = new Vector3(0.6, 0.72, 1.7);
+const CHARIOT_CAR_Z = -1.1;
+const CHARIOT_FLOOR = 0.56;
+const CHARIOT_RIM = 1.2;
+const CHARIOT_CAR_WIDE = 0.92;
+const CHARIOT_WHEEL = 0.92;
+const CHARIOT_SPOKES = 6;
+const CHARIOT_DRIVER = 2.3;
+const CHARIOT_SHIFT = -0.5;
+// Gallop: [side, shoulder or hip (y, z off the barrel centre), knee (y, z), hoof (y, z)]; +x is the near fore lifted
+const CHARIOT_GALLOP: [number, [number, number], [number, number], [number, number]][] = [
+  [1, [1.0, 0.62], [0.72, 0.98], [0.42, 0.86]],
+  [-1, [1.0, 0.62], [0.55, 0.82], [0.06, 1.02]],
+  [1, [1.08, -0.6], [0.55, -0.95], [0.06, -1.2]],
+  [-1, [1.08, -0.6], [0.52, -0.78], [0.06, -0.5]],
+];
 function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("chariot_root", scene);
+  const rig = new TransformNode("chariot_rig", scene);
+  rig.parent = root;
+  rig.position.z = CHARIOT_SHIFT;
   const allMeshes: Mesh[] = [];
+  const lit = (c: Color3, glow: number) => getMaterialFactory().get("cloth", c, { emissive: c.scale(glow) });
   const teamPrimary = makeMat(scene, color);
-  const wood = makeMat(scene, new Color3(0.54, 0.36, 0.18));
-  const metal = makeMat(scene, new Color3(0.62, 0.58, 0.48));
-  const horseMat = makeMat(scene, darken(color, 0.26));
+  const teamDark = makeMat(scene, darken(color, 0.3));
+  const hide = lit(CHARIOT_HIDE, 0.16);
+  const dark = lit(CHARIOT_DARK, 0.05);
+  const muzzleMat = lit(CHARIOT_MUZZLE, 0.1);
+  const strap = lit(CHARIOT_STRAP, 0.2);
+  const gold = lit(CHARIOT_GOLD, 0.22);
+  const white = lit(new Color3(0.95, 0.95, 0.93), 0.3);
+  const add = (mesh: Mesh, material: Mesh["material"], flat = true): Mesh => {
+    mesh.parent = rig;
+    mesh.material = material;
+    if (flat) mesh.convertToFlatShadedMesh();
+    allMeshes.push(mesh);
+    return mesh;
+  };
+  // A tapered limb from a to b, its foot dA across at a and dB at b, squashed to `wide` across its side
+  const seg = (name: string, a: Vector3, b: Vector3, dA: number, dB: number, material: Mesh["material"], wide = 1): Mesh => {
+    const span = b.subtract(a);
+    const mesh = MeshBuilder.CreateCylinder(name, { height: span.length(), diameterBottom: dA, diameterTop: dB, tessellation: 6 }, scene);
+    mesh.position.copyFrom(a.add(b).scale(0.5));
+    mesh.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), span.normalize(), new Quaternion());
+    mesh.scaling.x = wide;
+    return add(mesh, material);
+  };
+  const H = (x: number, y: number, z: number) => new Vector3(x, y, CHARIOT_HORSE.z + z);
 
-  const cart = MeshBuilder.CreateBox("chariotCart", { width: 0.78, height: 0.22, depth: 0.68 }, scene);
-  cart.position.set(0, 0.56, -0.16);
-  cart.parent = root;
-  cart.material = teamPrimary;
-  allMeshes.push(cart);
-
+  // Horse: barrel, a deeper chest and a rounded rump, so the body is not a box
+  const barrel = add(MeshBuilder.CreateSphere("chariotHorseBarrel", { diameterX: HORSE_BARREL.x, diameterY: HORSE_BARREL.y, diameterZ: HORSE_BARREL.z, segments: 7 }, scene), hide);
+  barrel.position.set(0, CHARIOT_HORSE.y, CHARIOT_HORSE.z);
+  const chest = add(MeshBuilder.CreateSphere("chariotHorseChest", { diameterX: 0.6, diameterY: 0.76, diameterZ: 0.66, segments: 6 }, scene), hide);
+  chest.position.copyFrom(H(0, CHARIOT_HORSE.y + 0.04, 0.62));
+  const rump = add(MeshBuilder.CreateSphere("chariotHorseRump", { diameterX: 0.62, diameterY: 0.72, diameterZ: 0.7, segments: 6 }, scene), hide);
+  rump.position.copyFrom(H(0, CHARIOT_HORSE.y + 0.08, -0.6));
+  // Neck up and forward, head long, forward and down, the dark muzzle at its end
+  const withers = H(0, CHARIOT_HORSE.y + 0.18, 0.6);
+  const poll = H(0, CHARIOT_HORSE.y + 1.0, 1.08);
+  const muzzle = H(0, CHARIOT_HORSE.y + 0.58, 1.66);
+  seg("chariotHorseNeck", withers, poll, 0.56, 0.32, hide, 0.7);
+  seg("chariotHorseHead", poll, muzzle, 0.36, 0.3, hide, 0.82);
+  const nose = add(MeshBuilder.CreateSphere("chariotHorseMuzzle", { diameterX: 0.26, diameterY: 0.3, diameterZ: 0.24, segments: 4 }, scene), muzzleMat);
+  nose.position.copyFrom(muzzle);
   for (const side of [-1, 1]) {
-    const wheel = MeshBuilder.CreateCylinder("chariotWheel", { height: 0.08, diameter: 0.74, tessellation: 16 }, scene);
-    wheel.position.set(side * 0.5, 0.36, -0.12);
-    wheel.rotation.z = Math.PI / 2;
-    wheel.parent = root;
-    wheel.material = wood;
-    allMeshes.push(wheel);
+    seg("chariotHorseEar", H(side * 0.08, CHARIOT_HORSE.y + 1.1, 1.04), H(side * 0.13, CHARIOT_HORSE.y + 1.4, 0.94), 0.13, 0.02, hide);
+    const eye = add(MeshBuilder.CreateSphere("chariotHorseEye", { diameter: 0.13, segments: 6 }, scene), white, false);
+    eye.position.copyFrom(H(side * 0.14, CHARIOT_HORSE.y + 0.9, 1.25));
+    const pupil = add(MeshBuilder.CreateSphere("chariotHorsePupil", { diameter: 0.065, segments: 4 }, scene), dark, false);
+    pupil.position.copyFrom(H(side * 0.195, CHARIOT_HORSE.y + 0.9, 1.27));
+  }
+  // Mane: a dark ragged crest along the top of the neck, poll to withers, in tufts; tail cocked up and back off the rump
+  for (let i = 0; i < 5; i++) {
+    const at = Vector3.Lerp(poll, withers, i / 4).add(new Vector3(0, 0.14, -0.16));
+    seg("chariotHorseMane", at, at.add(new Vector3(0, 0.26 - 0.03 * i, -0.16)), 0.22, 0.05, dark, 0.6);
+  }
+  const tailRoot = H(0, CHARIOT_HORSE.y + 0.26, -0.92);
+  const tailBend = tailRoot.add(new Vector3(0, 0.32, -0.32));
+  seg("chariotHorseTail", tailRoot, tailBend, 0.14, 0.2, dark, 0.55);
+  seg("chariotHorseTail", tailBend, tailBend.add(new Vector3(0, 0.1, -0.45)), 0.2, 0.04, dark, 0.55);
+  // Legs: thigh or forearm, cannon, dark hoof
+  for (const [side, top, knee, hoof] of CHARIOT_GALLOP) {
+    const x = side * 0.17;
+    const a = H(x, top[0], top[1]), k = H(x, knee[0], knee[1]), f = H(x, hoof[0], hoof[1]);
+    seg("chariotHorseLeg", a, k, 0.26, 0.14, hide);
+    seg("chariotHorseLeg", k, f, 0.13, 0.1, hide);
+    seg("chariotHorseHoof", f, f.add(f.subtract(k).normalize().scale(0.1)), 0.14, 0.12, dark);
+  }
+  // Harness: an orange strap round the chest just behind the forelegs, and the two shafts from it back to the car
+  const collar = add(MeshBuilder.CreateTorus("chariotCollar", { diameter: 0.66, thickness: 0.09, tessellation: 10 }, scene), strap);
+  collar.rotation.x = Math.PI / 2;
+  collar.scaling.set(1, 1, 1.18);
+  collar.position.copyFrom(H(0, CHARIOT_HORSE.y, 0.36));
+  for (const side of [-1, 1]) {
+    const tip = H(side * 0.34, CHARIOT_HORSE.y - 0.08, 0.36);
+    seg("chariotShaft", new Vector3(side * 0.32, CHARIOT_FLOOR + 0.12, CHARIOT_CAR_Z + 0.42), tip, 0.08, 0.07, teamDark);
+    const knob = add(MeshBuilder.CreateSphere("chariotShaftKnob", { diameter: 0.13, segments: 3 }, scene), strap);
+    knob.position.copyFrom(tip);
   }
 
-  const yoke = MeshBuilder.CreateBox("chariotYoke", { width: 0.12, height: 0.08, depth: 1.3 }, scene);
-  yoke.position.set(0, 0.5, 0.52);
-  yoke.parent = root;
-  yoke.material = wood;
-  allMeshes.push(yoke);
-
-  const horseBody = MeshBuilder.CreateBox("chariotHorseBody", { width: 0.48, height: 0.52, depth: 0.98 }, scene);
-  horseBody.position.set(0, 0.6, 1.24);
-  horseBody.parent = root;
-  horseBody.material = horseMat;
-  allMeshes.push(horseBody);
-
-  const horseNeck = MeshBuilder.CreateCylinder("chariotHorseNeck", { height: 0.42, diameter: 0.16, tessellation: 8 }, scene);
-  horseNeck.position.set(0, 0.82, 1.72);
-  horseNeck.rotation.x = -0.88;
-  horseNeck.parent = root;
-  horseNeck.material = horseMat;
-  allMeshes.push(horseNeck);
-
-  const horseHead = MeshBuilder.CreateBox("chariotHorseHead", { width: 0.2, height: 0.24, depth: 0.34 }, scene);
-  horseHead.position.set(0, 0.94, 1.94);
-  horseHead.parent = root;
-  horseHead.material = horseMat;
-  allMeshes.push(horseHead);
-
+  // Car: a floor, a curved team-coloured front (a half cylinder, its arc on -z, turned to the horse), two side boards, a gold band round the rim
+  const floor = add(MeshBuilder.CreateBox("chariotFloor", { width: CHARIOT_CAR_WIDE, height: 0.08, depth: 0.78 }, scene), teamDark);
+  floor.position.set(0, CHARIOT_FLOOR, CHARIOT_CAR_Z - 0.06);
+  const wallTall = CHARIOT_RIM - CHARIOT_FLOOR;
+  const front = add(MeshBuilder.CreateCylinder("chariotCart", { height: wallTall, diameter: CHARIOT_CAR_WIDE, arc: 0.5, tessellation: 12, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene), teamPrimary);
+  front.rotation.y = Math.PI;
+  front.scaling.z = 0.9;
+  front.position.set(0, CHARIOT_FLOOR + wallTall / 2, CHARIOT_CAR_Z);
+  const band = add(MeshBuilder.CreateCylinder("chariotRim", { height: 0.08, diameter: CHARIOT_CAR_WIDE + 0.05, arc: 0.5, tessellation: 12, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene), gold);
+  band.rotation.y = Math.PI;
+  band.scaling.z = 0.9;
+  band.position.set(0, CHARIOT_RIM - 0.02, CHARIOT_CAR_Z);
   for (const side of [-1, 1]) {
-    for (const zOff of [0.92, 1.46]) {
-      const leg = MeshBuilder.CreateCylinder("chariotHorseLeg", { height: 0.48, diameter: 0.1, tessellation: 8 }, scene);
-      leg.position.set(side * 0.16, 0.24, zOff);
-      leg.parent = root;
-      leg.material = horseMat;
-      allMeshes.push(leg);
+    const board = add(MeshBuilder.CreateBox("chariotSide", { width: 0.05, height: wallTall * 0.7, depth: 0.36 }, scene), teamPrimary);
+    board.position.set(side * (CHARIOT_CAR_WIDE / 2 - 0.02), CHARIOT_FLOOR + wallTall * 0.35, CHARIOT_CAR_Z - 0.2);
+  }
+  // Wheels either side: a dark team rim on spokes round a gold hub, on one axle
+  const axleY = CHARIOT_WHEEL / 2;
+  const axle = add(MeshBuilder.CreateCylinder("chariotAxle", { height: CHARIOT_CAR_WIDE + 0.36, diameter: 0.08, tessellation: 6 }, scene), teamDark);
+  axle.rotation.z = Math.PI / 2;
+  axle.position.set(0, axleY, CHARIOT_CAR_Z - 0.1);
+  for (const side of [-1, 1]) {
+    const x = side * (CHARIOT_CAR_WIDE / 2 + 0.12);
+    const rim = add(MeshBuilder.CreateTorus("chariotWheel", { diameter: CHARIOT_WHEEL - 0.08, thickness: 0.09, tessellation: 14 }, scene), teamDark);
+    rim.rotation.z = Math.PI / 2;
+    rim.position.set(x, axleY, CHARIOT_CAR_Z - 0.1);
+    const hub = add(MeshBuilder.CreateCylinder("chariotHub", { height: 0.16, diameter: 0.17, tessellation: 8 }, scene), gold);
+    hub.rotation.z = Math.PI / 2;
+    hub.position.copyFrom(rim.position);
+    for (let i = 0; i < CHARIOT_SPOKES; i++) {
+      const spoke = add(MeshBuilder.CreateBox("chariotSpoke", { width: 0.04, height: CHARIOT_WHEEL - 0.12, depth: 0.05 }, scene), teamPrimary);
+      spoke.rotation.x = (i / CHARIOT_SPOKES) * Math.PI;
+      spoke.position.copyFrom(rim.position);
     }
   }
 
-  const plume = MeshBuilder.CreateBox("chariotPlume", { width: 0.08, height: 0.28, depth: 0.14 }, scene);
-  plume.position.set(0, 1.16, 1.92);
-  plume.parent = root;
-  plume.material = metal;
-  allMeshes.push(plume);
-
-  const operator = addOperator(scene, root, allMeshes, 0, 0.88, -0.18, color);
+  // The driver standing in the car, arms out to the reins
+  const stand = new TransformNode("chariotDriverStand", scene);
+  stand.parent = rig;
+  stand.scaling.setAll(CHARIOT_DRIVER);
+  stand.position.set(0, CHARIOT_FLOOR + 0.04, CHARIOT_CAR_Z - 0.12);
+  const operator = addOperator(scene, stand, allMeshes, 0, 0, 0, color, (driver) => {
+    driver.leftShoulder.rotation.x = -0.9;
+    driver.rightShoulder.rotation.x = -0.9;
+    driver.leftElbow.rotation.x = -0.4;
+    driver.rightElbow.rotation.x = -0.4;
+  });
+  const headTopY = stand.position.y + operator.headTopY * CHARIOT_DRIVER;
 
   return wrapAsBody(
     scene,
     root,
-    cart,
+    front,
     allMeshes,
     operator.headMesh,
-    makeBodyMetrics(operator.headTopY, 0.84, 0.5, 0.86),
-    { impactOrigin: makeSocket(scene, root, "chariot_impact_socket", new Vector3(0, 0.82, 1.66)) },
+    makeBodyMetrics(headTopY, 0.92, 0.6, headTopY * 0.6),
+    { impactOrigin: makeSocket(scene, root, "chariot_impact_socket", new Vector3(0, CHARIOT_HORSE.y, CHARIOT_HORSE.z + CHARIOT_SHIFT + 0.9)) },
   );
 }
 
