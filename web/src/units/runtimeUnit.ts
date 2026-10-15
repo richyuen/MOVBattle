@@ -1754,16 +1754,6 @@ export class RuntimeUnit {
     }
   }
 
-  /** His own attack is a heavy overhead swing (club, hammer, axe). */
-  get swingsHeavy(): boolean {
-    return this._resolvePrimaryAttackMotion() === "heavy_swing";
-  }
-
-  /** Seconds until the heavy swing he has just started comes down on a head in front of him; 0 when his attack is no heavy swing. */
-  heavyBlowLandsIn(): number {
-    return this.animator.heavyBlowLandsIn();
-  }
-
   triggerAttackVisual(durationSeconds: number): void {
     let motion = this._resolvePrimaryAttackMotion();
     switch (this._actionPreset) {
