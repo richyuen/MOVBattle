@@ -27,7 +27,20 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa"];
+/*
+ * A monk's kasa (247; units/dynasty.monk: a wide shallow straw cone in the accent orange, about 2.4 heads across and half a head high, pulled low over
+ * the brow so the bead eyes look out from just under its rim, a darker woven band round its edge; strings of fist-sized orange prayer beads hang from
+ * the neck down the chest). Not a halo: the old headband was a thin ring floating at the crown.
+ *   Cone KASA_HEADS heads across at the rim, KASA_TALL of the head high, its tip KASA_TIP heads across; rim band KASA_BAND of the head deep, its lowest
+ *   edge on the hat seat. Beads: KASA_BEADS beads, each KASA_BEAD of the torso across, round the neck and down the chest.
+ */
+const KASA_HEADS = 2.4;
+const KASA_TALL = 0.55;
+const KASA_TIP = 0.14;
+const KASA_BAND = 0.09;
+const KASA_BEADS = 11;
+const KASA_BEAD = 0.16;
 /*
  * A dragon-dance costume head worn over the man's (246; units/dynasty.dragon: a huge faceted head in the team colour, wider than the man's shoulders, a broad
  * blunt snout jutting forward with a dark nose pad on top, the lower jaw hanging open on a red mouth edged in orange, two big round white eyes with black
@@ -463,6 +476,23 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     }
     return helm;
   }
+  if (type === "kasa") {
+    // The band is the rim; the cone stands on it, both faceted and open underneath so the dark underside shows from below
+    const band = MeshBuilder.CreateCylinder("kasaBand", { height: u(KASA_BAND * H), diameter: u(KASA_HEADS * W), tessellation: 16 }, scene);
+    band.position.y = u(seat + KASA_BAND * H * 0.5);
+    band.material = mat(scene, accent.scale(0.55));
+    const cone = MeshBuilder.CreateCylinder("kasa", {
+      height: u(KASA_TALL * H), diameterTop: u(KASA_TIP * W), diameterBottom: u(KASA_HEADS * W * 0.98), tessellation: 16, sideOrientation: Mesh.DOUBLESIDE,
+    }, scene);
+    cone.position.y = u(KASA_BAND * H * 0.5 + KASA_TALL * H * 0.5);
+    cone.material = mat(scene, accent);
+    cone.parent = band;
+    const knob = MeshBuilder.CreateSphere("kasaKnob", { diameter: u(KASA_TIP * W * 1.3), segments: 4 }, scene);
+    knob.position.y = u(KASA_TALL * H * 0.5);
+    knob.material = band.material;
+    knob.parent = cone;
+    return band;
+  }
   if (type === "beret") {
     const beret = MeshBuilder.CreateSphere("beret", { diameter: 1, segments: 10 }, scene);
     beret.scaling.set(u(BERET_HEADS * W), u(BERET_THICK * H), u(BERET_HEADS * W * 0.95));
@@ -544,6 +574,24 @@ export function attachProps(
     hat.parent = body.headTop;
     hat.scaling.scaleInPlace(TALL_HATS.includes(config.hat) ? TALL_HAT_OVERSIZE : HAT_OVERSIZE);
     props.push(hat);
+  }
+
+  // A kasa's prayer beads: a loop from the neck's sides down over the front of the chest, strung on the torso so they ride the chest and not the head
+  if (config.hat === "kasa") {
+    const chest = body.torsoMesh.getBoundingInfo().boundingBox;
+    const half = chest.maximum.x, front = chest.maximum.z, base = body.torsoMesh.position;
+    const neckY = body.neck.position.y;
+    const bead = KASA_BEAD * half * 2;
+    const beadMat = mat(scene, accent.scale(0.85));
+    for (let i = 0; i < KASA_BEADS; i++) {
+      const t = (i + 0.5) / KASA_BEADS;
+      const around = Math.sin(Math.PI * t);
+      const b = MeshBuilder.CreateIcoSphere("monkBead", { radius: bead * 0.5, subdivisions: 1 }, scene);
+      b.position.set(base.x - half * 0.62 * Math.cos(Math.PI * t), neckY - (neckY - base.y) * 0.75 * around, base.z + front * (0.35 + 0.65 * Math.sqrt(around)) + bead * 0.3);
+      b.material = beadMat;
+      b.parent = body.torso;
+      props.push(b);
+    }
   }
 
   // Hide eyes behind face-covering headgear
@@ -1647,12 +1695,6 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       trail.parent = hood;
       trail.material = mat(scene, new Color3(0.15, 0.15, 0.18));
       return hood;
-    }
-    case "monk_headband": {
-      const band = MeshBuilder.CreateTorus("band", { diameter: 0.22 * s, thickness: 0.025 * s, tessellation: 16 }, scene);
-      band.material = mat(scene, accent);
-      band.position.y = 0.02 * s;
-      return band;
     }
     case "tricorn": {
       const brim = MeshBuilder.CreateCylinder("brim", { height: 0.02 * s, diameter: 0.32 * s, tessellation: 3 }, scene);

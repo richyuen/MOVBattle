@@ -23,7 +23,7 @@ export type HatType =
   | "cowboy_hat"
   | "miner_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
-  | "samurai_helmet" | "ninja_mask" | "monk_headband"
+  | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask"
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head";
@@ -405,7 +405,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "dynasty.monk": vis(
-    { scale: 1.1, bulk: 1.15, headSize: 1.15 }, "none", "monk_headband", "none", "monk_robe", "#FF8C00",
+    { scale: 1.1, bulk: 1.15, headSize: 1.15 }, "none", "kasa", "none", "monk_robe", "#FF8C00",
     undefined,
     { materialPreset: "dynasty_lacquer" },
   ),
@@ -1342,7 +1342,7 @@ function inferHat(hint: string | undefined, faction: FactionId, name: string): H
     case "beret":
     case "samurai_helmet":
     case "ninja_mask":
-    case "monk_headband":
+    case "kasa":
     case "pharaoh":
     case "feather_headdress":
     case "bone_mask":
