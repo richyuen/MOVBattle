@@ -24,7 +24,7 @@ export type HatType =
   | "miner_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
-  | "pharaoh" | "feather_headdress" | "bone_mask"
+  | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat";
 
@@ -232,7 +232,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.05, bulk: 1.15 }, "stone", "none", "none", "none", "#808080",
   ),
   "tribal.bone_mage": vis(
-    { scale: 1.1, headSize: 1.15 }, "bone_staff", "bone_mask", "none", "none", "#FFFFF0",
+    { scale: 1.1, headSize: 1.15 }, "bone_staff", "antler_skull", "none", "none", "#FFFFF0",
   ),
   "tribal.chieftain": vis(
     { scale: 1.35, bulk: 1.3, headSize: 1.1 }, "club", "feather_headdress", "none", "cape", "#FFD700",

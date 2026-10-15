@@ -257,7 +257,7 @@ export class UnitFactory {
           if (!/_pelvis$/.test(mesh.name)) mesh.material = body.skinMaterial;
         }
         // Hair mop: a coarse faceted lump half as big again as the head, set up and back so the face stays bare. Not under a bone skull cap: the cap is his crown.
-        if (visual.hat !== "bone_mask") {
+        if (visual.hat !== "bone_mask" && visual.hat !== "antler_skull") {
           const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
           const hair = MeshBuilder.CreateSphere(`${body.headMesh.name}_hair`, { diameter: headSize * 1.5, segments: 3 }, this._scene);
           hair.position.set(0, headSize * 0.24, -headSize * 0.14);

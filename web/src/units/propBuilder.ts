@@ -1,5 +1,5 @@
 import {
-  Scene, Mesh, MeshBuilder, Color3, Vector3, TransformNode,
+  Scene, Mesh, MeshBuilder, Color3, Vector3, Quaternion, TransformNode,
   PBRMetallicRoughnessMaterial, VertexBuffer, VertexData,
 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -186,6 +186,57 @@ const BERET_TILT = 0.22;
 const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
+
+/*
+ * The bone mage's deer skull (251; units/tribal.bone_mage): a stag's skull worn as a mask, its long muzzle running forward and down over the face, and a rack
+ * of antlers far wider than the head. Read off the reference: each antler leaves the crown out and up, a main beam bending upward about 1.9 heads long in two
+ * lengths, three tines off it (one forward low, one outward at the bend, a fork at the tip), the rack spanning about 3 head widths; antlers a darker brown
+ * bone than the skull.
+ *   DEER_MUZZLE head widths long, tipped DEER_MUZZLE_DIP below level; beam lengths DEER_BEAM (of the head height), splay DEER_SPLAY from upright; tines DEER_TINE.
+ */
+const DEER_MUZZLE = 0.95;
+const DEER_MUZZLE_DIP = 0.7;
+const DEER_BEAM = [1.05, 0.9];
+const DEER_SPLAY = [0.95, 0.4];
+const DEER_TINE = 0.58;
+const DEER_ANTLER = new Color3(0.66, 0.5, 0.33);
+
+function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: number, tall: number, R: number, u: (v: number) => number): void {
+  const bone = snout.material;
+  const muzzleLong = u(DEER_MUZZLE * W);
+  const muzzle = MeshBuilder.CreateCylinder("deerMuzzle", { height: muzzleLong, diameterTop: u(0.2 * W), diameterBottom: u(0.5 * W), tessellation: 6 }, scene);
+  const down = Math.PI / 2 + DEER_MUZZLE_DIP;
+  muzzle.rotation.x = down;
+  muzzle.position.set(0, u(tall * 0.35) - Math.sin(DEER_MUZZLE_DIP) * muzzleLong * 0.5, u(R * 0.9) + Math.cos(DEER_MUZZLE_DIP) * muzzleLong * 0.5);
+  muzzle.scaling.x = 1.15;
+  muzzle.material = bone;
+  muzzle.parent = skull;
+  const antler = mat(scene, DEER_ANTLER);
+  const up = Vector3.Up();
+  const stick = (from: Vector3, dir: Vector3, long: number, thick: number) => {
+    const d = dir.normalize();
+    const m = MeshBuilder.CreateCylinder("deerAntler", { height: long, diameterTop: thick * 0.6, diameterBottom: thick, tessellation: 5 }, scene);
+    m.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, d, m.rotationQuaternion);
+    m.position = from.add(d.scale(long / 2));
+    m.material = antler;
+    m.parent = skull;
+    return from.add(d.scale(long));
+  };
+  const thick = u(0.17 * W);
+  for (const side of [-1, 1]) {
+    const root = new Vector3(side * u(0.3 * W), u(tall * 0.85), u(0.05 * W));
+    const dir1 = new Vector3(side * Math.sin(DEER_SPLAY[0]), Math.cos(DEER_SPLAY[0]), -0.15);
+    const bend = stick(root, dir1, u(DEER_BEAM[0] * H), thick);
+    const dir2 = new Vector3(side * Math.sin(DEER_SPLAY[1]), Math.cos(DEER_SPLAY[1]), -0.2);
+    const tip = stick(bend, dir2, u(DEER_BEAM[1] * H), thick * 0.8);
+    // Brow tine forward and up off the low beam, a tine outward at the bend, and a fork at the tip
+    stick(root.add(dir1.normalize().scale(u(DEER_BEAM[0] * H * 0.35))), new Vector3(side * 0.25, 0.6, 1), u(DEER_TINE * H), thick * 0.7);
+    stick(bend, new Vector3(side * 1, 0.55, 0.25), u(DEER_TINE * H), thick * 0.65);
+    stick(tip, new Vector3(side * 0.6, 1, 0.35), u(DEER_TINE * 0.7 * H), thick * 0.5);
+    stick(tip, new Vector3(-side * 0.15, 1, -0.3), u(DEER_TINE * 0.6 * H), thick * 0.5);
+  }
+}
 
 function buildFittedHat(scene: Scene, type: HatType, head: { width: number; height: number }, unit: number, accent: Color3, teamColor?: Color3): Mesh {
   const W = head.width, H = head.height;
@@ -592,7 +643,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     }
     return shell;
   }
-  if (type === "bone_mask") {
+  if (type === "bone_mask" || type === "antler_skull") {
     // An animal skull worn as a cap (242 [R]; units/tribal.protector): a bone cranium SKULL_HEADS heads across seated down to the brow, two dark eye holes on
     // its front over the wearer's own eyes, a short snout jutting forward over the brow, and cheek bones down the sides of the face. The face shows under it.
     const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
@@ -621,6 +672,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     snout.scaling.x = 1.2;
     snout.material = bone;
     snout.parent = skull;
+    if (type === "antler_skull") addDeerSkull(scene, skull, snout, W, H, tall, R, u);
     return skull;
   }
   if (type === "crested_helm") {
