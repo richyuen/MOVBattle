@@ -243,3 +243,4 @@ iter 241 | [S] viking-horned-helm, [R] aimed-blow rebuild | 1/2 approved | passe
 iter 242 | [S] valkyrie-wings, [R] wall-surface rebuild | 2/2 approved | passes 46 -> 48
 iter 243 | [S] unit-look.k minotaur-bull-man, [S] unit-look.i protector-slab | 2/2 approved | passes 48 -> 48 (k.2, i.1 struck)
 iter 244 | [S] unit-look.k hoplite-crested-helm, [S] unit-look.v knight-cross-helm | 2/2 approved | passes 48 -> 48
+iter 245 | [S] team-tinted-crested-helm, [S] tiered-pagoda | 2/2 approved | passes 48 -> 49
