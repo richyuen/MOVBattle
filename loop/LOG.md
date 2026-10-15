@@ -266,3 +266,4 @@ iter 264 | [S] legacy-chariot, [S] bard-feather-hat (+ 264.0 evidence chariot cl
 iter 265 | re-audit (no flips); [S] evil-lich-branch-crown, [S] tree-club-three-lobe | 2/2 approved | passes 61 -> 61 (u plateau)
 iter 266 | [S] void-monarch-bone-crown, [S] reaper-crescent-blade (rejected) | 1/2 approved | passes 61 -> 62
 iter 267 | [S] reaper-high-carry, [R] tree-giant-carry-rebuild | 2/2 approved | passes 62 -> 62
+iter 268 | [S] reaper-blade-mount, [S] jouster-flat-drape | 2/2 approved | passes 62 -> 64
