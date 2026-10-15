@@ -1,5 +1,5 @@
 import {
-  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, VertexData, Quaternion, MaterialPluginBase, RegisterClass, type Material, type UniformBuffer, type ShadowGenerator,
+  Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh, TransformNode, VertexData, Quaternion, MaterialPluginBase, RegisterClass, type Material, type UniformBuffer, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
@@ -1212,6 +1212,8 @@ interface CampaignMapTheme {
   field?: { ground: Color3; grass: Color3; glow: Color3; tufts: Color3[] };
   /** No island: everything the sandbox base stood on the field and round it is taken away and the lawn runs on to the horizon (see barePlane) */
   bare?: boolean;
+  /** A row of townhouses round the rim in place of the tree ring, a low city wall on the near side (see townRing) */
+  town?: boolean;
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -1281,6 +1283,7 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (theme.ring?.blossom) blossomRing(scene, theme.ring.blossom);
   if (theme.ring?.balls) ballRing(scene, theme.ring.balls);
   if (theme.ring?.palms) palmRing(scene, theme.ring.palms);
+  if (theme.town) townRing(scene);
   if (theme.field) autumnField(scene, theme.field);
   if (theme.sea) seaRim(scene, theme.sea);
 }
@@ -1395,6 +1398,143 @@ function palmRing(scene: Scene, share: number): void {
       nut.isPickable = false;
     }
   }
+}
+
+/*
+ * A town ring (renaissance; maps/renaissance_town: the square is walled in by tall townhouses, never trees). Read off the reference: an unbroken row of narrow
+ * three- and four-storey houses round the far and side rims, each its own wall colour (ochre, salmon pink, cream, straw), with a dark arcade of round arches
+ * along the ground floor, rows of dark windows above, a stone balcony on some, a pale cornice and a low hipped terracotta roof. The near rim, under the
+ * placement camera, has only a low cream city wall so the square stays in view. Houses stand TOWN_INSET in from the rim, TOWN_WIDE along it, TOWN_DEEP
+ * through, TOWN_STOREY a floor and TOWN_FLOORS floors; the ring trees and the far haze band are taken away. Each material's pieces merge into one mesh.
+ */
+const TOWN_INSET = 5;
+const TOWN_WIDE = [7.5, 10.5];
+const TOWN_DEEP = 7;
+const TOWN_STOREY = 3.2;
+const TOWN_FLOORS = [3, 4];
+const TOWN_NEAR = -30;
+const TOWN_WALLS = [new Color3(0.93, 0.7, 0.42), new Color3(0.9, 0.58, 0.52), new Color3(0.95, 0.88, 0.74), new Color3(0.95, 0.8, 0.52)];
+const TOWN_ROOF = new Color3(0.84, 0.42, 0.26);
+function townRing(scene: Scene): void {
+  const self = (name: string, c: Color3, lit = 0.42): StandardMaterial => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(1 - lit);
+    m.emissiveColor = c.scale(lit);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const walls = TOWN_WALLS.map((c, i) => self(`townWall${i}`, c));
+  const roof = self("townRoof", TOWN_ROOF);
+  const stone = self("townStone", new Color3(0.9, 0.87, 0.8));
+  const dark = self("townDark", new Color3(0.3, 0.24, 0.24), 0.2);
+  const parts = new Map<StandardMaterial, Mesh[]>();
+  const put = (mesh: Mesh, mat: StandardMaterial, root: TransformNode): void => {
+    mesh.parent = root;
+    mesh.computeWorldMatrix(true);
+    (parts.get(mat) ?? parts.set(mat, []).get(mat)!).push(mesh);
+  };
+  // Clear the ring: the trees round the rim and the haze band behind them
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "hazeTreeline") mesh.setEnabled(false);
+    if (mesh.name === "trunk") {
+      const at = mesh.getAbsolutePosition();
+      if (!onIsland(at.x, at.z, 18)) mesh.setEnabled(false);
+    }
+  }
+  let k = 0;
+  const r = (n: number) => Math.abs((Math.sin(k * 23.117 + n * 41.37) * 31337.77) % 1);
+  // Walk the rim by arc length, a house (or a run of wall on the near side) at each step
+  const step = 0.004;
+  let a = -Math.PI / 2;
+  let carried = 0;
+  let next = 0;
+  let [px, pz] = islandRim(a);
+  while (a < Math.PI * 1.5) {
+    a += step;
+    const [x, z] = islandRim(a);
+    carried += Math.hypot(x - px, z - pz);
+    px = x;
+    pz = z;
+    if (carried < next) continue;
+    k++;
+    const wide = TOWN_WIDE[0] + r(1) * (TOWN_WIDE[1] - TOWN_WIDE[0]);
+    carried = 0;
+    next = wide;
+    const out = Math.hypot(x, z) || 1;
+    const cx = x - (x / out) * TOWN_INSET, cz = z - (z / out) * TOWN_INSET;
+    const root = new TransformNode("townHouse", scene);
+    root.position.set(cx, 0, cz);
+    // Its front (local +z) faces the middle of the square
+    root.rotation.y = Math.atan2(-cx, -cz);
+    root.computeWorldMatrix(true);
+    if (cz < TOWN_NEAR) {
+      const wall = MeshBuilder.CreateBox("townCityWall", { width: wide * 1.05, depth: 1.4, height: 3.2 }, scene);
+      wall.position.y = 0.6;
+      put(wall, walls[2], root);
+      const cap = MeshBuilder.CreateBox("townCityWallCap", { width: wide * 1.08, depth: 1.8, height: 0.35 }, scene);
+      cap.position.y = 2.35;
+      put(cap, stone, root);
+      continue;
+    }
+    const floors = TOWN_FLOORS[0] + Math.round(r(2) * (TOWN_FLOORS[1] - TOWN_FLOORS[0]));
+    const tall = floors * TOWN_STOREY;
+    const front = TOWN_DEEP / 2;
+    const body = MeshBuilder.CreateBox("townHouseWall", { width: wide, depth: TOWN_DEEP, height: tall + 1 }, scene);
+    body.position.y = (tall - 1) / 2;
+    put(body, walls[Math.floor(r(3) * walls.length) % walls.length], root);
+    const cornice = MeshBuilder.CreateBox("townCornice", { width: wide * 1.04, depth: TOWN_DEEP * 1.06, height: 0.4 }, scene);
+    cornice.position.y = tall + 0.2;
+    put(cornice, stone, root);
+    // A low hipped roof: a four-sided frustum turned square to the walls, then stretched to them
+    const hip = MeshBuilder.CreateCylinder("townRoof", { height: 1, diameterTop: 0.35 * Math.SQRT2, diameterBottom: Math.SQRT2, tessellation: 4 }, scene);
+    hip.rotation.y = Math.PI / 4;
+    hip.bakeCurrentTransformIntoVertices();
+    hip.scaling.set(wide * 1.12, 1.6 + r(4) * 0.8, TOWN_DEEP * 1.14);
+    hip.position.y = tall + 0.4 + hip.scaling.y / 2;
+    put(hip, roof, root);
+    // The ground-floor arcade: round-headed dark arches across the front
+    const arches = Math.max(2, Math.floor(wide / 2.6));
+    for (let i = 0; i < arches; i++) {
+      const ax = (i + 0.5 - arches / 2) * (wide / arches);
+      const door = MeshBuilder.CreateBox("townArch", { width: 1.5, depth: 0.2, height: 1.9 }, scene);
+      door.position.set(ax, 0.95, front);
+      put(door, dark, root);
+      const head = MeshBuilder.CreateCylinder("townArchHead", { diameter: 1.5, height: 0.2, tessellation: 10 }, scene);
+      head.rotation.x = Math.PI / 2;
+      head.position.set(ax, 1.9, front);
+      put(head, dark, root);
+    }
+    // Rows of tall windows on each upper floor, and a stone balcony on the first floor of about half the houses
+    const panes = Math.max(2, Math.floor(wide / 2.4));
+    for (let f = 1; f < floors; f++) {
+      for (let i = 0; i < panes; i++) {
+        const pane = MeshBuilder.CreateBox("townWindow", { width: 0.8, depth: 0.16, height: 1.4 }, scene);
+        pane.position.set((i + 0.5 - panes / 2) * (wide / panes), f * TOWN_STOREY + 1.4, front);
+        put(pane, dark, root);
+      }
+    }
+    if (r(5) < 0.55) {
+      const ledge = MeshBuilder.CreateBox("townBalcony", { width: wide * 0.55, depth: 0.9, height: 0.2 }, scene);
+      ledge.position.set(0, TOWN_STOREY + 0.6, front + 0.45);
+      put(ledge, stone, root);
+      const rail = MeshBuilder.CreateBox("townBalconyRail", { width: wide * 0.55, depth: 0.12, height: 0.75 }, scene);
+      rail.position.set(0, TOWN_STOREY + 1.05, front + 0.85);
+      put(rail, stone, root);
+    }
+  }
+  const shadows = sunShadows(scene);
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [mat, group] of parts) {
+    const merged = Mesh.MergeMeshes(group, true, true);
+    if (!merged) continue;
+    merged.name = "townRing";
+    merged.material = mat;
+    merged.isPickable = false;
+    merged.receiveShadows = true;
+    glow?.addExcludedMesh(merged);
+    shadows?.addShadowCaster(merged, false);
+  }
+  for (const node of scene.transformNodes.filter((n) => n.name === "townHouse")) node.dispose();
 }
 
 /** Hides a ring tree and sets a dark broadleaf bush on the ground where it stood (see BUSH_*) */
@@ -2613,11 +2753,11 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       boxHazard("water", 0, -24, 52, 10),
     ],
     accent: new Color3(0.95, 0.87, 0.52),
+    // The square is walled in by townhouses, not trees (see townRing); the old pair of grey house boxes in the field are gone with them
+    town: true,
     props: [
       { kind: "column", x: -22, z: -4, scale: 1.0 },
       { kind: "column", x: -22, z: 20, scale: 1.0 },
-      { kind: "house", x: 18, z: -2, scale: 0.9 },
-      { kind: "house", x: 20, z: 18, scale: 0.9 },
       { kind: "bridge", x: 0, z: -24, scale: 0.9 },
     ],
   },
