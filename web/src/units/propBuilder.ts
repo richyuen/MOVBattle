@@ -1662,6 +1662,58 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
   }
 }
 
+/** Feathered wings (units/viking.valkyrie): each wing a brown leading-edge bar this many torso heights long, raised WING_RAISE and swept WING_SWEEP back off the upper back */
+const WING_SPAN = 2.4;
+const WING_RAISE = 0.5;
+const WING_SWEEP = 0.3;
+/** Primary feathers hung under the bar: count, length (share of the bar, growing toward the tip) and their fan from straight down at the root to out along the bar at the tip */
+const WING_FEATHERS = 7;
+const WING_FEATHER_LEN = [0.32, 0.62];
+const WING_FEATHER_FAN = [0.35, 1.25];
+
+/**
+ * Two big faceted white feather wings on the back, angled up and out (units/viking.valkyrie, tabs_screenshot_06): a brown bar along each leading edge, a pale covert
+ * slab under it and a fan of flat pointed feathers below that, longest toward the tip, whose stepped points make the notched trailing edge. Sized off the torso it hangs
+ * on, so the pair spans several torsos and stands over the head at lineup distance.
+ */
+function buildFeatherWings(scene: Scene, body: ArticulatedBody): void {
+  const torsoH = body.torsoMesh.position.y * 2;
+  const L = torsoH * WING_SPAN;
+  const featherMat = mat(scene, new Color3(0.8, 0.9, 0.98), 0.04);
+  const covertMat = mat(scene, new Color3(0.9, 0.95, 1.0), 0.04);
+  const barMat = mat(scene, new Color3(0.42, 0.29, 0.19));
+  for (const side of [-1, 1]) {
+    const root = new TransformNode("wingRoot", scene);
+    root.parent = body.torso;
+    root.position.set(side * torsoH * 0.18, torsoH * 0.82, -torsoH * 0.3);
+    root.rotation.set(0, side * WING_SWEEP, side * WING_RAISE);
+    const bar = MeshBuilder.CreateBox("wingBar", { width: L, height: torsoH * 0.11, depth: torsoH * 0.07 }, scene);
+    bar.parent = root;
+    bar.position.x = side * L * 0.5;
+    bar.material = barMat;
+    const covert = MeshBuilder.CreateCylinder("wingCovert", { height: L * 0.95, diameterTop: torsoH * 1.0, diameterBottom: torsoH * 0.35, tessellation: 4 }, scene);
+    covert.rotation.z = -side * Math.PI / 2;
+    covert.bakeCurrentTransformIntoVertices();
+    covert.scaling.z = 0.12;
+    covert.parent = root;
+    covert.position.set(side * L * 0.5, -torsoH * 0.3, -torsoH * 0.01);
+    covert.material = covertMat;
+    for (let i = 0; i < WING_FEATHERS; i++) {
+      const t = (i + 1) / WING_FEATHERS;
+      const len = L * (WING_FEATHER_LEN[0] + (WING_FEATHER_LEN[1] - WING_FEATHER_LEN[0]) * t);
+      const a = WING_FEATHER_FAN[0] + (WING_FEATHER_FAN[1] - WING_FEATHER_FAN[0]) * t;
+      const feather = MeshBuilder.CreateCylinder("wingFeather", { height: len, diameterTop: 0, diameterBottom: torsoH * 0.75, tessellation: 4 }, scene);
+      feather.scaling.z = 0.1;
+      feather.parent = root;
+      // Its point down and out: the cylinder's +y turned onto (side * sin a, -cos a)
+      feather.rotation.z = Math.PI + side * a;
+      const ax = side * L * (0.08 + 0.9 * t);
+      feather.position.set(ax + side * Math.sin(a) * len * 0.5, -torsoH * 0.06 - Math.cos(a) * len * 0.5, -torsoH * 0.02 * (i % 2));
+      feather.material = i % 2 === 0 ? featherMat : covertMat;
+    }
+  }
+}
+
 // ─── Special features ───
 function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody): Mesh | null {
   switch (type) {
@@ -1715,14 +1767,16 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
     }
     case "wings":
     case "dragon_wings": {
-      const color = type === "dragon_wings" ? new Color3(0.12, 0.12, 0.15) : new Color3(0.9, 0.9, 0.95);
-      const wingS = type === "dragon_wings" ? 1.3 : 1.0;
-      for (const side of [-1, 1]) {
-        const wing = MeshBuilder.CreateBox("wing", { width: 0.35 * s * wingS, height: 0.25 * s * wingS, depth: 0.01 * s }, scene);
-        wing.position.set(side * 0.25 * s, 0.3 * s, -0.1 * s);
-        wing.rotation.y = side * 0.3;
-        wing.parent = body.torso;
-        wing.material = mat(scene, color, 0.05);
+      if (type === "dragon_wings") {
+        for (const side of [-1, 1]) {
+          const wing = MeshBuilder.CreateBox("wing", { width: 0.35 * s * 1.3, height: 0.25 * s * 1.3, depth: 0.01 * s }, scene);
+          wing.position.set(side * 0.25 * s, 0.3 * s, -0.1 * s);
+          wing.rotation.y = side * 0.3;
+          wing.parent = body.torso;
+          wing.material = mat(scene, new Color3(0.12, 0.12, 0.15), 0.05);
+        }
+      } else {
+        buildFeatherWings(scene, body);
       }
       // Return a dummy mesh for disposal tracking
       const marker = MeshBuilder.CreateBox("wingMarker", { width: 0.01, height: 0.01, depth: 0.01 }, scene);
