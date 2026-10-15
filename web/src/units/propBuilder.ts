@@ -27,7 +27,22 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet"];
+/*
+ * A horned helm fitted to the head (241; factions/viking, units/viking.jarl: a dark iron cap domed down to the brow, two horns leaving its sides level and
+ * turning up past the crown like a pair of tusks, a nose bar over the face, and a faceted orange beard chunk hanging from under the eyes to the chest). Not
+ * a dish: the old helm was a sphere cap turned open side up with two cones splayed flat, a wide grey brim at eye level.
+ *   Dome as the fitted helm (HELM_HEADS, HELM_CROWN). Horn: a root HORN_ROOT heads long out of the dome's side at HORN_SEAT of its height, then a tip
+ *   HORN_TIP heads long turned HORN_TURN off level toward the sky. Beard: BEARD_HEADS heads across, from BEARD_TOP of the head under the crown down
+ *   BEARD_LONG of the head, on the face.
+ */
+const HORN_ROOT = 0.32;
+const HORN_TIP = 0.55;
+const HORN_SEAT = 0.45;
+const HORN_TURN = 1.15;
+const BEARD_HEADS = 0.8;
+const BEARD_TOP = 0.66;
+const BEARD_LONG = 0.75;
 /*
  * A hood fitted to the head (239; tabs_screenshot_04/05: a hood is cloth round the whole head, the face showing in its opening, falling to the shoulders): a cowl
  * shell HOOD_HEADS heads across round the skull, open at the face (HOOD_OPEN of its round), its crown drawn up into a short peak tipped back, a mantle flaring from
@@ -83,6 +98,43 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     tail.material = cloth;
     tail.setParent(cowl);
     return cowl;
+  }
+  if (type === "viking_helmet" || type === "horned_helmet") {
+    const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
+    const R = HELM_HEADS * W * 0.5;
+    const iron = mat(scene, new Color3(0.42, 0.44, 0.5));
+    const helm = MeshBuilder.CreateSphere("vhelm", { diameterX: u(2 * R), diameterY: u(tall * 2), diameterZ: u(2 * R * 1.05), segments: 8, slice: 0.5 }, scene);
+    helm.position.y = u(seat);
+    helm.material = iron;
+    const nose = MeshBuilder.CreateBox("vhelmNose", { width: u(0.1 * W), height: u(0.32 * H), depth: u(0.06 * W) }, scene);
+    nose.position.set(0, u(-0.08 * H), u(R * 1.02));
+    nose.material = iron;
+    nose.parent = helm;
+    const bone = mat(scene, new Color3(0.93, 0.87, 0.72));
+    const big = type === "horned_helmet" ? 1.15 : 1;
+    for (const side of [-1, 1]) {
+      // The root leaves the dome level, out to the side; the tip turns up off its end
+      const root = MeshBuilder.CreateCylinder("vhornRoot", { height: u(HORN_ROOT * W * big), diameterTop: u(0.17 * W * big), diameterBottom: u(0.24 * W * big), tessellation: 6 }, scene);
+      root.rotation.z = -side * Math.PI / 2;
+      root.position.set(side * u(R * 0.92 + HORN_ROOT * W * big * 0.5), u(tall * HORN_SEAT), 0);
+      root.material = bone;
+      root.parent = helm;
+      const tipLong = u(HORN_TIP * W * big);
+      const tip = MeshBuilder.CreateCylinder("vhornTip", { height: tipLong, diameterTop: 0, diameterBottom: u(0.17 * W * big), tessellation: 6 }, scene);
+      // In the root's frame +y runs outward and -side x is the sky: the tip's foot sits on the root's outer end, its axis turned HORN_TURN toward the sky
+      const turn = side * HORN_TURN;
+      tip.rotation.z = turn;
+      tip.position.set(-Math.sin(turn) * tipLong * 0.5, u(HORN_ROOT * W * big * 0.5) + Math.cos(turn) * tipLong * 0.5, 0);
+      tip.material = bone;
+      tip.parent = root;
+    }
+    const beard = MeshBuilder.CreateCylinder("vbeard", { height: u(BEARD_LONG * H), diameterTop: u(BEARD_HEADS * W), diameterBottom: u(0.25 * W), tessellation: 5 }, scene);
+    beard.scaling.z = 0.55;
+    beard.position.set(0, u(-BEARD_TOP * H - BEARD_LONG * H * 0.5) - helm.position.y, u(0.4 * W));
+    beard.rotation.x = -0.12;
+    beard.material = mat(scene, new Color3(0.78, 0.38, 0.14));
+    beard.parent = helm;
+    return helm;
   }
   if (type === "helmet" || type === "plume_helmet") {
     const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
