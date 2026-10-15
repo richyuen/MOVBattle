@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 241   Last re-audit: 240   Consecutive rejects: 0   Branch: main
+Iteration: 242   Last re-audit: 240   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -9,20 +9,19 @@ ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
 Tier 2 (fully scored at 198, re-audited 220, 225, 230, 235, 240):
-battle-feel: e FAIL f PASS g PASS h FAIL (2/4)
+battle-feel: e FAIL f PASS g PASS h PASS (3/4) (h cleared by [R] 065ba9e, 242)
 - e FAIL deferred (two [R] rejected since rewrite 240: 240, 241; until a re-audit rewrites its list) [S since: 0, rejected since: 0, R rejected: 2 (240, 241)] B: 1 on the registered hit frame no blue club is on a red head: one club hip-high along the board line's shins, the front clubber's club bolt upright over him, a third over a downed blue man; hoplites upright, no recoil — press_clubbers_hit, press_clubbers_side; 2 red clubbers 1-3 bodies behind their own front, clubs cocked up and forward over the line (2s/2150ms) or upright (9s); none reaches a blue board — big_melee_2s, 2150ms, 9s; 3 red knights folded nearly double, one sword cocked behind the shoulder, others low at the hip; no blade meets a body — closeup_weapon_reads. Ref trailer_3_sheet_01 r2c3, r3c1.
-- h FAIL plateau (rewritten 240) [S since: 0, rejected since: 0, R rejected: 0] B: 1 red front boards lap edge over edge but all tilt the same way with one identical slat face, one depth on the strip: a row of identical tiles, not one battered surface — shield_wall_front; 2 heads over the rims are blank oversized grey domes (tribal.protector bone_mask), no eyes or face above any board — shield_wall_front, shield_wall_2500ms. Ref tabs_screenshot_06.
 unit-look: e PASS f PASS g PASS h PASS (4/4) (h cleared by 810f6c6, 240)
 maps-light: e PASS f PASS g PASS h PASS (4/4)
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: i-v all FAIL (0/14) [S since: 0 each]
+unit-look tier 3: l PASS, i-k m-v FAIL (1/14) [S since: 0 each]
 - i tribal: 1 protector round blue boss board + grey sphere head, not the tall wooden slab (units/tribal.protector); 2 bone_mage grey sphere head, no antlered skull (units/tribal.bone_mage)
 - j farmer: 1 farmer small green ball cap, not the tall pointed cowl (units/farmer.farmer); 2 halo over a farmer (5th), off-faction
 - k ancient: 1 hoplite/sarissa bareheaded, no crested helm (units/ancient.hoplite); 2 minotaur a small round blob, not a tall bull-man (units/ancient.minotaur)
-- l viking [S since: 1 (72b8245)]: 1 valkyrie has no wings (units/viking.valkyrie); 2 struck 241 (72b8245)
+- l viking PASS (cleared by 312a742, 242)
 - m dynasty: 1 dragon a bald big man with a black slab, no dragon-head costume (units/dynasty.dragon); 2 monk wears a halo (units/dynasty.monk)
 - n renaissance: 1 jouster on a box, no horse (units/renaissance.jouster); 2 painter no palette, no two-tone doublet, all plain blue (units/renaissance.painter)
 - o pirate: 1 every pirate in a black stovepipe, not bandanas/tricorns (units/pirate.flintlock, captain); 2 harpooner wears a halo
@@ -41,26 +40,26 @@ maps-light tier 3: i-o all FAIL (0/7) [S since: 0 each]
 - m renaissance: 1 no townhouses, two boxes and columns in a field; 2 sage grass, not a paved plaza (maps/renaissance_town)
 - n pirate: 1 ships are olive boxes with slab sails, no masts/hulls; 2 pale puffball ring, no palms or sea (maps/pirate_beach)
 - o simulation: 1 purple ground with trees and rocks, not a bare off-white plane; 2 wide tinted centre band, not one thin red line (maps/simulation)
-Total tier 1 24/24; tier 2 22/24; tier 3 0/21.
+Total tier 1 24/24; tier 2 23/24; tier 3 1/21.
 
 ## Focus (every gap this iteration)
-BASE 9fb724a (picks: top [R] + top ordinary [S])
-- [S] unit-look.l viking-horned-helm (72b8245) — APPROVE, blocker 2 struck, l still FAIL
-- [R] battle-feel.e aimed-blow rebuild (9816286, reverted 2e19487) — REJECT, 0/3 blockers; e now deferred
+BASE bbb461d (picks: top [R] on plateau h + top ordinary [S]; [P] beard skipped: row approved 241)
+- [S] unit-look.l valkyrie-wings (312a742) — APPROVE, blocker 1 struck, l PASS
+- [R] battle-feel.h wall-surface rebuild (065ba9e) — APPROVE, blockers 1-2 struck, h PASS
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] viking-horned-helm (72b8245) VERDICT: APPROVE CRITERION: unit-look.l FAIL (previous: FAIL)
-- GAP: [R] aimed-blow rebuild (9816286) VERDICT: REJECT CRITERION: battle-feel.e FAIL (previous: FAIL; second [R] rejected (240, 241): now deferred)
+- GAP: [S] valkyrie-wings (312a742) VERDICT: APPROVE CRITERION: unit-look.l PASS (previous: FAIL)
+- GAP: [R] wall-surface rebuild (065ba9e) VERDICT: APPROVE CRITERION: battle-feel.h PASS (previous: FAIL, plateau)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [R] battle-feel.h wall-surface rebuild [0] — blockers 1-2: each front board its own tilt, slat face and depth into one battered surface; protector bone_mask dome replaced by a mask with eyes — ref tabs_screenshot_06 — ours shield_wall_front, shield_wall_2500ms
-2. [S] unit-look.l valkyrie-wings [0] — blocker 1: two big white faceted feather wedges on the back, angled up and out — ref units/viking.valkyrie.png — ours lineup_viking
-3. [S] unit-look.k minotaur-bull-man [0] — blocker 2: tall bull-man (humanoid rig scaled up, bull head with snout and the upturned horns), not a round blob — ref units/ancient.minotaur.png — ours lineup_ancient
-4. [S] unit-look.i protector-slab [0] — blocker 1: tall rectangular wooden slab shield instead of the round boss board — ref units/tribal.protector — ours lineup_tribal
-5. [S] unit-look.v knight-cross-helm [0] — blocker 1: cross on the knight's kite board and a full bucket helm — ref units/medieval.knight.png — ours lineup_medieval
-6. [S] maps-light.n pirate-ships [0] — blocker 1: ship props with hulls and masts, not olive boxes with slab sails — ref maps/pirate_beach — ours biome_pirate
-7. [P] unit-look.l beard fallout of 72b8245 (approved 241) [0] — propBuilder.ts beard colour orange 0.9,0.45,0.15 untinted, BEARD_HEADS 0.8 -> 1.0 — NEXT shows in lineup_viking
-8. [R] battle-feel.e deferred [2] — respec from trailer_3_sheet_01 r2c3 after a re-audit; acceptance shot press_clubbers_hit
+1. [S] unit-look.k minotaur-bull-man [0] — blocker 2: tall bull-man (humanoid rig scaled up, bull head, snout, upturned horns), not a round blob — ref units/ancient.minotaur.png — ours lineup_ancient
+2. [S] unit-look.i protector-slab [0] — blocker 1: tall rectangular wooden slab shield, not the round boss board — ref units/tribal.protector — ours lineup_tribal
+3. [S] unit-look.v knight-cross-helm [0] — blocker 1: cross on the kite board and a full bucket helm — ref units/medieval.knight.png — ours lineup_medieval
+4. [S] maps-light.n pirate-ships [0] — blocker 1: ships with hulls and masts, not olive boxes with slab sails — ref maps/pirate_beach — ours biome_pirate
+5. [S] unit-look.i bone-mage-antler-skull [0] — blocker 2: antlered skull on bone_mage (bone_mask cap + antler tines) — ref units/tribal.bone_mage — ours lineup_tribal
+6. [S] unit-look.m dragon-costume [0] — blocker 1: dragon-head costume (snout, horns, frill), not a bald man with a black slab — ref units/dynasty.dragon — ours lineup_dynasty
+7. [S] unit-look.p skeleton-bones [0] — blocker 1: bone ribs and limbs on skeleton warrior/archer, not fleshed men — ref units/spooky.skeleton_warrior — ours lineup_spooky
+8. [R] battle-feel.e deferred [2] — until the 245 re-audit; respec from trailer_3_sheet_01 r2c3, acceptance shot press_clubbers_hit
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - [R] aimed-blow rebuild [attempts: 2] — 241: fist-mark IK + step-in + board-top fallback + hit re-pose; hit frame still shows the front club upright (cocked for his next), no visible hoplite lean, rank-back clubs fan in the air, knights over-folded
@@ -73,8 +72,8 @@ BASE 9fb724a (picks: top [R] + top ordinary [S])
 - head-fitted-hats [attempts: 1] — 229: 2-head width read; fixed brow seat covers the cone archer's eyes
 
 ## Notes for next iteration (max 5 lines)
-- battle-feel.e is deferred (not pickable until the 245 re-audit rewrites its list). 241 findings: clubbers strike from up to ~2 m (engage range), hoplites are taller than clubbers, and units animate BEFORE the decision loop, so the hit frame renders the pre-hit pose unless re-posed in the same step.
-- press_clubbers_hit is shot on the sim frame a clubber's blow registered (hit log). shield_wall: blue = ancient.hoplite, red = tribal.protector. Math.random wobble phases make the hit frame vary run to run.
-- Shield wall: carriers snap to ShieldSlot.at each step and are wallBraced; boards ride the rank strip at 0.62 of neck height; shield arm aims at the board back (_gripBoard).
-- Tier 3 letters are separate criteria; viking/horned helms now fitted (buildFittedHat), minotaur shares horned_helmet (beard reads as muzzle there). TABS medieval.healer is bare-headed in a robe (unit-look.v candidate).
-- capture.mjs runs the showcase first and the regression set on a reloaded page, so `--only` looks equal full-run frames. No [P] on SHOULDER_INSET, TRAPEZIUS_*, NECK_*, hull, pelvis, arm taper, ghost, bow ready, laurel, sunk crouch, CALF_SWELL, helm crown, lawn shade, carry bob, mammoth hull, spear carry, club heave; skip [P]s on rows approved within 20 iterations.
+- battle-feel.e is deferred (not pickable until the 245 re-audit rewrites its list). 241 findings: clubbers strike from up to ~2 m, hoplites taller than clubbers, units animate BEFORE the decision loop, so the hit frame renders the pre-hit pose unless re-posed in the same step.
+- Shield wall: blue = ancient.hoplite, red = tribal.protector; carriers snap to ShieldSlot.at, boards on the strip at 0.62 neck height with per-man WALL_BOARD_* seeds; round faces seeded by build order (roundBoardSerial). 2500/2650ms shots look from behind red.
+- bone_mask is now a fitted skull cap (eyes shown, no tribal hair mop); critic notes it renders grey, not tan. Valkyrie wings (buildFeatherWings) read as spiky; a wider covert panel would help. Both are polish, no blocker.
+- Tier 3 letters are separate criteria; minotaur shares horned_helmet (beard reads as muzzle). TABS medieval.healer is bare-headed in a robe (unit-look.v candidate).
+- capture.mjs runs the showcase first; `--only` looks equal full-run frames. No [P] on rows approved within 20 iterations (incl. horned helm 241, wall seeds/faces/skull/wings 242).
