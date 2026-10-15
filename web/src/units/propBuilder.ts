@@ -2547,12 +2547,14 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody): void {
 /*
  * A barded horse under the rider (units/renaissance.jouster), given in the rider's standing hip height H. Spec, read off the reference's blue horse
  * (side-on, back to hoof ~330 px):
- *   - Heights over the ground, as shares of the back's height B (~1.85 H): back 1, widest belly bulge ~0.45, caparison hem ~0.3, knee/hock ~0.17, hoof 0.07.
- *     So the cloth drop (back to hem, ~0.7 B) is more than twice the leg showing under it (~0.3 B): the inverse of a horse on stilts.
+ *   - Heights over the ground, as shares of the back's height B (~1.85 H), read off the red horse: back 1, caparison hem HORSE_HEM_SHARE ~0.5 (just over the
+ *     belly line), knee/hock ~0.3, hoof 0.07. So back-to-hem and hem-to-hoof are near even: ~40-45% of the horse's height is leg under a long low drape.
+ *   - The caparison is a drape, not a sack: in plan a stadium (two straight flat side panels joined by rounded chest and rump ends, HORSE_CAP_END of
+ *     its half-width deep), ~1.5 times as long as the horse is tall from hem to back; its sides fall plumb from the shoulder of the back to a straight
+ *     level hem. A lathe oval read as a round pot from the three-quarter view.
  *   - The barrel is deep and round: depth HORSE_DEEP ~0.57 B, length HORSE_LONG about 1.8 times its depth, width at least HORSE_WIDE of H
- *     (a stocky barrel, legs set in under it); the caparison is not a cone but a sack drawn
- *     over it, its section a lathe profile that swells out past the barrel (HORSE_CAP_BULGE of the barrel's half-width) a little under the middle and draws
- *     back in to the hem (HORSE_CAP_HEM), so the hem is narrower than the belly above it, cream, with square dags.
+ *     (a stocky barrel, legs set in under it); the drape stands out past the barrel (HORSE_CAP_BULGE of its half-width) and its hem is a cream band
+ *     with square dags.
  *   - Under the hem: the thick chestnut upper leg (forearm / gaskin, ~0.45 of the barrel's half-width across, ~1.45 times as deep fore-and-aft as across)
  *     carries on for HORSE_UPPER_SHOW of H and narrows into the joint, then a short cannon about half as long again as the hoof is tall, a fetlock bulge,
  *     and a big dark hoof as wide as the upper leg (HORSE_HOOF of H, ~2.3 cannons across).
@@ -2575,8 +2577,10 @@ const HORSE_COAT_GLOW = 0.14;
 const HORSE_CAP_LONG = 1.15;
 const HORSE_HOOF = 0.27;
 const HORSE_CAP_BULGE = 1.22;
-const HORSE_CAP_HEM = 1.14;
-const HORSE_HEM_HEIGHT = 0.55;
+const HORSE_CAP_END = 0.7;
+const HORSE_HEM_SHARE = 0.5;
+// The bare pinto keeps its legs as they were: its joint height was set from the old sack hem
+const HORSE_PINTO_HEM = 0.55;
 const HORSE_WIDE = 0.85;
 /*
  * The pinto (units/wild_west.lasso: the lasso rides a bare paint horse, no barding): the same horse body, its coat a warm orange broken by big cream
@@ -2656,6 +2660,8 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const belly = -H * HORSE_DEEP / 2;
   // Frame-local ground: the frame sits at the barrel's middle
   const floor = ground - barrel.position.y;
+  // The drape's hem: HORSE_HEM_SHARE of the way from the ground to the back
+  const hemY = pinto ? floor + H * HORSE_PINTO_HEM : floor + (H * HORSE_DEEP / 2 - floor) * HORSE_HEM_SHARE;
   // A tapered limb from point a (bottom) to point b (top), its thick end at the top
   const limb = (name: string, a: Vector3, b: Vector3, thick: number, thin: number): Mesh => {
     const d = b.subtract(a);
@@ -2673,7 +2679,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       const legZ = z * L * (z > 0 ? 0.3 : 0.27);
       const top = belly + H * HORSE_DEEP * 0.3;
       const hoofTall = H * 0.13;
-      const hemAt = floor + H * HORSE_HEM_HEIGHT;
+      const hemAt = hemY;
       // Fore: knee straight under the shoulder; hind: the hock set well back and the cannon slanting forward again to the hoof, a Z
       const joint = z > 0
         ? new Vector3(legX, hemAt - H * HORSE_UPPER_SHOW, legZ + H * 0.02)
@@ -2760,7 +2766,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const tail = part(MeshBuilder.CreateCylinder("htail", { height: H * 0.55, diameterTop: H * 0.1, diameterBottom: H * 0.03, tessellation: 5 }, scene), dark);
   tail.rotation.x = 0.35;
   // Out of the back of the barrel, or of the longer caparison over it
-  tail.position.set(0, H * HORSE_DEEP * 0.15 - H * 0.26, -L * 0.5 * (pinto ? 1 : HORSE_CAP_BULGE * HORSE_CAP_LONG) - H * 0.08);
+  tail.position.set(0, H * HORSE_DEEP * 0.15 - H * 0.26, -L * 0.5 * (pinto ? 1 : HORSE_CAP_LONG) - H * 0.08);
   // Down in the saddle: his shins and feet would stand between the horse's legs
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(false)) m.isVisible = false;
@@ -2774,35 +2780,47 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     loop.material = mat(scene, new Color3(0.86, 0.74, 0.52));
     return barrel;
   }
-  // The caparison: one cloth sack drawn over the barrel, a lathe profile in the barrel's half-width: over the round back, swelling out
-  // HORSE_CAP_BULGE a little under the middle, then drawn back in to the HORSE_CAP_HEM hem HORSE_HEM_HEIGHT of H over the ground. Oval in plan.
+  // The caparison: a drape over the barrel, a stadium in plan (see the spec): flat side panels falling plumb to a level hem HORSE_HEM_SHARE of
+  // the way up, rounded chest and rump ends HORSE_CAP_END of the half-width deep, its back a flat ridge rounded over at the shoulders
   const clothMat = mat(scene, cloth.scale(0.85));
-  const rW = W / 2;
+  const rCap = (W / 2) * HORSE_CAP_BULGE;
+  const capHalf = (L / 2) * HORSE_CAP_LONG;
+  const straight = capHalf - rCap * HORSE_CAP_END;
   const backY = H * HORSE_DEEP / 2;
-  const hemY = floor + H * HORSE_HEM_HEIGHT;
-  const profile: Vector3[] = [];
-  for (let i = 0; i <= 4; i++) {
-    const t = (i / 4) * Math.PI * 0.42;
-    profile.push(new Vector3(rW * 1.05 * Math.sin(t) + 0.001, backY * 1.04 * Math.cos(t), 0));
-  }
-  profile.push(new Vector3(rW * HORSE_CAP_BULGE, -backY * 0.2, 0));
-  profile.push(new Vector3(rW * HORSE_CAP_BULGE * 0.97, -backY * 0.62, 0));
-  profile.push(new Vector3(rW * HORSE_CAP_HEM, hemY, 0));
-  const capZ = (L / W) * HORSE_CAP_LONG;
-  const sack = part(MeshBuilder.CreateLathe("hcaparison", { shape: profile, tessellation: 14, sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
-  sack.scaling.z = capZ;
-  const hemR = rW * HORSE_CAP_HEM;
-  const hem = part(MeshBuilder.CreateCylinder("hhem", { height: H * 0.08, diameterTop: hemR * 2.04, diameterBottom: hemR * 2.0, tessellation: 14 }, scene), cream);
-  hem.scaling.z = capZ;
-  hem.position.y = hemY + H * 0.04;
-  // The square dags round the oval hem, each turned to face out
+  // A point on the stadium of half-width r at perimeter share u (from the rump end of the +x panel, round by the chest), with its outward heading
+  const endLong = (r: number) => Math.PI * Math.sqrt((r * r + (r * HORSE_CAP_END) ** 2) / 2);
+  const stadium = (r: number, y: number, u: number): { at: Vector3; heading: number } => {
+    const side = 2 * straight, end = endLong(r);
+    let d = (((u % 1) + 1) % 1) * 2 * (side + end);
+    if (d < side) return { at: new Vector3(r, y, -straight + d), heading: Math.PI / 2 };
+    d -= side;
+    if (d < end) {
+      const a = (d / end) * Math.PI;
+      return { at: new Vector3(r * Math.cos(a), y, straight + r * HORSE_CAP_END * Math.sin(a)), heading: Math.atan2(Math.cos(a) * HORSE_CAP_END, Math.sin(a)) };
+    }
+    d -= end;
+    if (d < side) return { at: new Vector3(-r, y, straight - d), heading: -Math.PI / 2 };
+    const a = Math.PI + ((d - side) / end) * Math.PI;
+    return { at: new Vector3(r * Math.cos(a), y, -straight + r * HORSE_CAP_END * Math.sin(a)), heading: Math.atan2(Math.cos(a) * HORSE_CAP_END, Math.sin(a)) };
+  };
+  const ring = (r: number, y: number): Vector3[] => {
+    const pts: Vector3[] = [];
+    for (let i = 0; i < 28; i++) pts.push(stadium(r, y, i / 28).at);
+    return pts;
+  };
+  const profile: ReadonlyArray<readonly [number, number]> = [[0.002, 1.04], [0.55, 1.0], [0.85, 0.82], [0.98, 0.55], [1, 0.25]];
+  const rings = profile.map(([r, y]) => ring(rCap * r, backY * y));
+  rings.push(ring(rCap, hemY));
+  part(MeshBuilder.CreateRibbon("hcaparison", { pathArray: rings, closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
+  // The cream hem band, standing a hair proud of the panels
+  part(MeshBuilder.CreateRibbon("hhem", { pathArray: [ring(rCap * 1.02, hemY + H * 0.08), ring(rCap * 1.02, hemY)], closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), cream);
+  // The square dags evenly round the hem, each turned to face out
   const dagCount = HORSE_DAGS * 2 + 4;
   for (let i = 0; i < dagCount; i++) {
-    const a = (i + 0.5) / dagCount * Math.PI * 2;
+    const { at, heading } = stadium(rCap * 1.03, hemY - H * 0.04, (i + 0.5) / dagCount);
     const dag = part(MeshBuilder.CreateBox("hdag", { width: H * 0.12, height: H * 0.09, depth: H * 0.02 }, scene), cream);
-    dag.position.set(Math.cos(a) * hemR * 1.01, hemY - H * 0.04, Math.sin(a) * hemR * 1.01 * capZ);
-    // Faced along the oval's outward normal
-    dag.rotation.y = Math.atan2(Math.cos(a) * capZ, Math.sin(a));
+    dag.position.copyFrom(at);
+    dag.rotation.y = heading;
   }
   return barrel;
 }
