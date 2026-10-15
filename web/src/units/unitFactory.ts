@@ -178,6 +178,20 @@ const PAINTER_RUFF_COLOR = new Color3(1.0, 0.86, 0.55);
 const PAINTER_RUFF = 1.25;
 const PAINTER_RUFF_TIERS = 2;
 /*
+ * The righteous paladin (units/good.righteous_paladin): white plate trimmed in gold over the team skin, not a plain team tunic. Read off the reference: white
+ * chest, hips, thighs, greaves and feet; bare team-skin arms; bright orange-gold bands at the waist and round each knee with a pointed gold knee plate on the
+ * front; a white-steel helm with a gold band round its rim and a gold comb over its crown; a white shield with a gold rim and a gold device on the face.
+ *   white PALADIN_WHITE and gold PALADIN_GOLD are self-lit (PALADIN_GLOW, PALADIN_GOLD_GLOW) so they stay white and gold in the lineup shade;
+ *   waist band PALADIN_BELT of the chest's height, knee bands PALADIN_KNEE legs across, helm band PALADIN_HELM_BAND of the helm's height.
+ */
+const PALADIN_WHITE = new Color3(0.93, 0.94, 0.96);
+const PALADIN_GOLD = new Color3(0.95, 0.52, 0.06);
+const PALADIN_GLOW = 0.2;
+const PALADIN_GOLD_GLOW = 0.22;
+const PALADIN_BELT = 0.14;
+const PALADIN_KNEE = 1.15;
+const PALADIN_HELM_BAND = 0.16;
+/*
  * The cactus (256; units/wild_west.cactus): a man in a full-length cactus suit, not a man holding a green plank. Read off the reference: one dark green robe from
  * the shoulders to the ankle, flaring a little to the hem, with green sleeves to the wrist; a squarish green hood over the head with a window cut on the face so the
  * team-skin face and bead eyes show; team-skin shins and dark shoes under the hem; the whole suit studded with fat brown-maroon four-sided spines (about 40 seen
@@ -376,6 +390,9 @@ export class UnitFactory {
     }
     if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressCactus(this._scene, body, teamColor));
+    }
+    if (definition.id === "good.righteous_paladin" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressPaladin(this._scene, body, propMeshes));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -709,6 +726,82 @@ function dressPainter(scene: Scene, body: ArticulatedBody, teamColor: Color3, pr
   bib.material = ruffMat;
   bib.parent = body.torso;
   added.push(bib);
+  return added;
+}
+
+/** Dresses the paladin in white plate with gold trim (see PALADIN_*): white body, legs and feet, gold waist and knee bands, gold-banded helm, white-and-gold shield. */
+function dressPaladin(scene: Scene, body: ArticulatedBody, props: Mesh[]): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  // The plate is the body's own material turned white and matte, a little self-lit
+  body.bodyMaterial.baseColor = PALADIN_WHITE;
+  body.bodyMaterial.metallic = 0;
+  body.bodyMaterial.roughness = 0.6;
+  body.bodyMaterial.emissiveColor = PALADIN_WHITE.scale(PALADIN_GLOW);
+  const white = mf.get("cloth", PALADIN_WHITE, { emissiveIntensity: PALADIN_GLOW });
+  const gold = mf.get("cloth", PALADIN_GOLD, { emissiveIntensity: PALADIN_GOLD_GLOW });
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    leg.material = white;
+  }
+  const sabaton = mf.get("cloth", PALADIN_WHITE.scale(0.86), { emissiveIntensity: PALADIN_GLOW });
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = sabaton;
+  }
+  // Gold waist band round the bottom of the chest
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const belt = MeshBuilder.CreateBox(`${chest.name}_paladinBelt`, { width: W * 1.06, height: H * PALADIN_BELT, depth: D * 1.12 }, scene);
+  belt.position.set(0, chest.position.y - H * 0.42, 0);
+  belt.material = gold;
+  belt.parent = body.torso;
+  added.push(belt);
+  // A gold band round each knee and a pointed gold knee plate on its front
+  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
+    const sx = shin.getBoundingInfo().boundingBox.extendSize;
+    const across = Math.max(sx.x * shin.scaling.x, sx.z * shin.scaling.z) * 2 * PALADIN_KNEE;
+    const band = MeshBuilder.CreateCylinder(`${knee.name}_paladinKnee`, { height: across * 0.28, diameter: across, tessellation: 6 }, scene);
+    band.position.set(0, -across * 0.1, 0);
+    band.material = gold;
+    band.convertToFlatShadedMesh();
+    band.parent = knee;
+    added.push(band);
+    const plate = MeshBuilder.CreateCylinder(`${knee.name}_paladinPoleyn`, { height: across * 0.75, diameterTop: across * 0.8, diameterBottom: 0, tessellation: 3 }, scene);
+    plate.scaling.z = 0.35;
+    plate.position.set(0, across * 0.3, across * 0.48);
+    plate.material = gold;
+    plate.parent = knee;
+    added.push(plate);
+  }
+  // The helm goes white steel with a gold band round its rim and a gold ridge up the face
+  const helm = props.find((m) => m.name === "ghelm");
+  if (helm) {
+    helm.material = white;
+    const hb = helm.getBoundingInfo().boundingBox;
+    const tall = hb.maximum.y - hb.minimum.y;
+    const rim = (hb.maximum.x - hb.minimum.x) * 1.06;
+    const band = MeshBuilder.CreateCylinder("paladinHelmBand", { height: tall * PALADIN_HELM_BAND, diameter: rim, tessellation: 8 }, scene);
+    band.rotation.y = Math.PI / 8;
+    band.position.y = hb.minimum.y + tall * PALADIN_HELM_BAND * 0.5;
+    band.material = gold;
+    band.convertToFlatShadedMesh();
+    band.parent = helm;
+    added.push(band);
+    // A gold comb front to back over the crown, clear of the eye slit
+    const ridge = MeshBuilder.CreateBox("paladinHelmRidge", { width: rim * 0.12, height: tall * 0.2, depth: rim * 0.92 }, scene);
+    ridge.position.set(0, hb.maximum.y + tall * 0.06, 0);
+    ridge.material = gold;
+    ridge.parent = helm;
+    added.push(ridge);
+  }
+  // The kite shield: white board, gold rim and gold cross
+  const shield = props.find((m) => m.name === "kshield");
+  if (shield) {
+    shield.material = white;
+    for (const m of shield.getChildMeshes(true)) {
+      m.material = m.name === "kpoint" ? white : gold;
+    }
+  }
   return added;
 }
 
