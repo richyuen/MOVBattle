@@ -13,7 +13,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_BEAT_*, _REST, _HEAVE, _COCK, _SLAM, _ARM, _CLUB; flinch on landing; blowStrikeReach) | beat 1.5-2.4 s, rest 0.38, heave 0.14, cock 0.1, slam 0.08, impact rest; arm 1.7, club arc 1.2; strike reach 0.9 m | 226 | approved | was drop 0.1/hold 0.16/back 0.16, arm 3.0 (202)
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 239 | hood-cowl | unit-look.h | approved
 - 240 | healer-cowl | unit-look.h | approved
 - 240 | [R] aimed-blow rebuild | battle-feel.e | rejected
 - 241 | viking-horned-helm | unit-look.l | approved
@@ -32,12 +31,12 @@ proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_B
 - 247 | challenge-ball-ring | maps-light.k | approved
 - 248 | challenge-orange-field | maps-light.k | approved
 - 248 | farmer-pointed-cowl | unit-look.j | approved
+- 249 | farmer-halo | unit-look.j | approved
+- 249 | secret-halos | unit-look.u | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-runtimeUnit.ts:flung render group (FLUNG_RENDER_GROUP; main.ts group 1 keeps depth) | airborne > 0.35 m drawn after blast sprites | 224 | approved |
-mapBuilder.ts:spooky dressing (deadTree, tomb, graveLight kinds; spooky prop list) | 10+10 tombs scale 1.4-1.5, 6 dead trees 1.5-1.8, 4 pink lights | 224 | approved |
 mapBuilder.ts:theme ring palette + deadenRing (RING_DEAD_FROM; spooky ring leaves/darkLeaves/trunk/bare) | 30 m; navy 0.2,0.22,0.4 / 0.14,0.15,0.3, trunk 0.1,0.09,0.14, bare 0.6 | 225 | approved | [P] leaves 0.12,0.13,0.26 + crown emissive 0.3 rejected 226 (ledger reversal)
 index.html+main.ts:campaign map (CAMPAIGN_NODE_AT node layout, card, thin caps) | 15 node slots, card 300px bottom-right, caption one sentence | 225 | approved |
 mapBuilder.ts:setPlacementGuidesVisible hides zone tints (zone_overlay_*, campaign_zone_*) in battle | placement-only tints | 227 | approved |
@@ -67,3 +66,5 @@ propBuilder.ts:fitted kasa + beads (KASA_HEADS, _TALL, _TIP, _BAND, _BEADS, _BEA
 mapBuilder.ts:autumnField (theme.field ground/grass/glow; FIELD_TUFTS, _RING_SHARE, _BAND, _CARDS, _TALL, _GLOW) | 260 clumps, 0.7 ring 0.8-0.97, 3-5 cards 0.9-1.5 m, glow 0.45; grass 1,0.58,0.2 | 248 | approved | sandbox plum glow, brown 0.47,0.36,0.23
 propBuilder.ts:fitted pointed_cowl (COWL_FOOT, _LOWER, _TIP, _RAKE, _BEND, _COLLAR, _COLLAR_DEEP, _SHADE) | foot 1.05, lower 0.8 + tip 0.6 heads, rake 0.22 bend 0.4, collar 2.0 x 0.42, team x0.78 | 248 | approved | hood_liripipe accent green
 mapBuilder.ts:ballRing autumn palette (ring.balls per-tree pick, BALL_OF_HEIGHT; challenge trunk) | 5 balls orange/red/yellow/yellow-green/amber, ball 0.5, trunk 0.9,0.86,0.76 | 247 | approved | sage ring
+propBuilder.ts:fitted sun_hat (SUN_BRIM, _BRIM_THICK, _TIP, _CROWN, _CROWN_TALL, _BAND, _BRAID, _TEAM; harvester) | brim 2.4 x 0.07, tip 0.16, crown 1.15 x 0.55, band 0.12, braid 0.95, team 0.22 | 249 | approved | bandana ring
+propBuilder.ts:fitted bandana wrap (BANDANA_HEADS, _CROWN, _KNOT, _TAIL, _SPLAY, _SWEEP; robbers cowboy_hat) | 1.16 heads, crown 0.1, knot 0.3, tail 0.55, splay 0.35, sweep 0.5 | 249 | approved | torus 0.22 s at crown
