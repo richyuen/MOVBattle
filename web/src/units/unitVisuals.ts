@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "monk_headband"
   | "pharaoh" | "feather_headdress" | "bone_mask"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler";
 
@@ -342,7 +342,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "ancient.minotaur": vis(
-    { scale: 1.7, bulk: 1.6, headSize: 1.4 }, "axe", "horned_helmet", "none", "none", "#8B0000",
+    { scale: 2.1, bulk: 1.5, headSize: 1.7, armLength: 1.15 }, "axe", "bull_head", "none", "none", "#8B0000",
   ),
   "ancient.zeus": vis(
     { scale: 1.9, bulk: 1.3, headSize: 1.3 }, "lightning_bolt", "laurel", "none", "cape", "#87CEEB",

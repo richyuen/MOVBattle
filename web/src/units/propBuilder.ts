@@ -27,7 +27,21 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head"];
+/*
+ * A bull's head in place of the man's (243; units/ancient.minotaur: a long hide head, brow to muzzle about 1.4 of its width, the muzzle jutting forward and
+ * down to a dark nose, two big round white eyes set wide on the front corners under a heavy brow, ears flat out to the sides, and pale horns leaving the
+ * crown's sides level then sweeping up past it). The shell covers the head, so the man's own eyes are hidden and the bull's are the face.
+ *   Shell BULL_SHELL heads across; muzzle BULL_MUZZLE heads long, tipped BULL_MUZZLE_DIP down; eyes BULL_EYE of the width; horn root BULL_HORN_ROOT and
+ *   tip BULL_HORN_TIP heads long, the tip turned BULL_HORN_TURN off level toward the sky.
+ */
+const BULL_SHELL = 1.15;
+const BULL_MUZZLE = 0.75;
+const BULL_MUZZLE_DIP = 0.4;
+const BULL_EYE = 0.34;
+const BULL_HORN_ROOT = 0.42;
+const BULL_HORN_TIP = 0.85;
+const BULL_HORN_TURN = 1.05;
 /*
  * A horned helm fitted to the head (241; factions/viking, units/viking.jarl: a dark iron cap domed down to the brow, two horns leaving its sides level and
  * turning up past the crown like a pair of tusks, a nose bar over the face, and a faceted orange beard chunk hanging from under the eyes to the chest). Not
@@ -139,6 +153,72 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     beard.material = mat(scene, new Color3(0.78, 0.38, 0.14));
     beard.parent = helm;
     return helm;
+  }
+  if (type === "bull_head") {
+    const hide = mat(scene, Color3.Lerp(accent, new Color3(0.42, 0.24, 0.16), 0.55).scale(0.85));
+    const snoutHide = mat(scene, Color3.Lerp(accent, new Color3(0.62, 0.42, 0.3), 0.6));
+    const dark = mat(scene, new Color3(0.1, 0.07, 0.06));
+    const shell = MeshBuilder.CreateSphere("bullShell", { diameterX: u(BULL_SHELL * W), diameterY: u(1.08 * H), diameterZ: u(BULL_SHELL * W * 1.05), segments: 7 }, scene);
+    shell.position.y = u(-0.5 * H);
+    shell.material = hide;
+    // Heavy brow across the front, the eyes peering from under it
+    const brow = MeshBuilder.CreateBox("bullBrow", { width: u(1.05 * W), height: u(0.16 * H), depth: u(0.35 * W) }, scene);
+    brow.position.set(0, u(0.18 * H), u(0.36 * W));
+    brow.rotation.x = 0.2;
+    brow.material = hide;
+    brow.parent = shell;
+    // The muzzle: a long wedge forward and down from under the eyes to a flat dark nose with two nostrils
+    const muzzleLong = u(BULL_MUZZLE * W);
+    const muzzle = MeshBuilder.CreateCylinder("bullMuzzle", { height: muzzleLong, diameterTop: u(0.62 * W), diameterBottom: u(0.78 * W), tessellation: 6 }, scene);
+    muzzle.rotation.x = Math.PI / 2 + BULL_MUZZLE_DIP;
+    muzzle.scaling.z = 0.8;
+    muzzle.position.set(0, u(-0.2 * H) - Math.sin(BULL_MUZZLE_DIP) * muzzleLong * 0.5, u(0.42 * W) + Math.cos(BULL_MUZZLE_DIP) * muzzleLong * 0.5);
+    muzzle.material = snoutHide;
+    muzzle.parent = shell;
+    const nose = MeshBuilder.CreateCylinder("bullNose", { height: u(0.08 * W), diameter: u(0.64 * W), tessellation: 6 }, scene);
+    nose.position.y = muzzleLong * 0.5;
+    nose.scaling.z = 0.8;
+    nose.material = mat(scene, Color3.Lerp(accent, new Color3(0.3, 0.17, 0.13), 0.7).scale(0.7));
+    nose.parent = muzzle;
+    for (const side of [-1, 1]) {
+      const nostril = MeshBuilder.CreateCylinder("bullNostril", { height: u(0.04 * W), diameter: u(0.14 * W), tessellation: 6 }, scene);
+      nostril.position.set(side * u(0.15 * W), u(0.03 * W), 0);
+      nostril.material = dark;
+      nostril.parent = nose;
+      // Big round eyes on the front corners, turned a little outward
+      const eye = MeshBuilder.CreateCylinder("bullEye", { height: u(0.05 * W), diameter: u(BULL_EYE * W), tessellation: 12 }, scene);
+      eye.rotation.set(Math.PI / 2, side * 0.45, 0);
+      eye.position.set(side * u(0.3 * W), u(0.02 * H), u(0.5 * W));
+      eye.material = mat(scene, new Color3(0.95, 0.95, 0.92), 0.3);
+      eye.parent = shell;
+      const pupil = MeshBuilder.CreateCylinder("bullPupil", { height: u(0.02 * W), diameter: u(BULL_EYE * 0.5 * W), tessellation: 10 }, scene);
+      pupil.position.y = u(0.03 * W);
+      pupil.material = dark;
+      pupil.parent = eye;
+      // Ears flat out to the sides, drooping a little, below the horns
+      const ear = MeshBuilder.CreateCylinder("bullEar", { height: u(0.5 * W), diameterTop: 0, diameterBottom: u(0.26 * W), tessellation: 4 }, scene);
+      ear.scaling.z = 0.4;
+      ear.rotation.z = -side * (Math.PI / 2 + 0.3);
+      ear.position.set(side * u(0.72 * W), u(0.0 * H), u(-0.05 * W));
+      ear.material = hide;
+      ear.parent = shell;
+      // Horns: a root out of the crown's side, level, then a tip turned up toward the sky
+      const horn = mat(scene, new Color3(0.9, 0.82, 0.64), 0.15);
+      const rootLong = u(BULL_HORN_ROOT * W);
+      const root = MeshBuilder.CreateCylinder("bullHornRoot", { height: rootLong, diameterTop: u(0.26 * W), diameterBottom: u(0.36 * W), tessellation: 6 }, scene);
+      root.rotation.z = -side * Math.PI / 2;
+      root.position.set(side * (u(0.45 * W) + rootLong * 0.5), u(0.3 * H), 0);
+      root.material = horn;
+      root.parent = shell;
+      const tipLong = u(BULL_HORN_TIP * W);
+      const tip = MeshBuilder.CreateCylinder("bullHornTip", { height: tipLong, diameterTop: 0, diameterBottom: u(0.26 * W), tessellation: 6 }, scene);
+      const turn = side * BULL_HORN_TURN;
+      tip.rotation.set(0, 0, turn);
+      tip.position.set(-Math.sin(turn) * tipLong * 0.5, rootLong * 0.5 + Math.cos(turn) * tipLong * 0.5, 0);
+      tip.material = horn;
+      tip.parent = root;
+    }
+    return shell;
   }
   if (type === "bone_mask") {
     // An animal skull worn as a cap (242 [R]; units/tribal.protector): a bone cranium SKULL_HEADS heads across seated down to the brow, two dark eye holes on
@@ -272,7 +352,7 @@ export function attachProps(
   }
 
   // Hide eyes behind face-covering headgear
-  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask"];
+  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bull_head"];
   if (faceCoveringHats.includes(config.hat)) {
     body.leftEye?.setEnabled(false);
     body.rightEye?.setEnabled(false);
