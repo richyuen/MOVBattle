@@ -1206,6 +1206,8 @@ interface CampaignMapTheme {
   props: CampaignPropSpec[];
   /** The ring trees' own palette (canopy, upper canopy, trunk) in place of the campaign green, and the share of ring trees stood bare and dead (see deadenRing) */
   ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number; balls?: Color3[] };
+  /** The theme's own lawn in place of the sandbox's (see autumnField): ground and grass colour, the lawn's self-light, and the tuft clumps' palette */
+  field?: { ground: Color3; grass: Color3; glow: Color3; tufts: Color3[] };
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -1274,6 +1276,91 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (theme.ring && theme.ring.bare > 0) deadenRing(scene, theme.ring.bare, theme.ring.trunk);
   if (theme.ring?.blossom) blossomRing(scene, theme.ring.blossom);
   if (theme.ring?.balls) ballRing(scene, theme.ring.balls);
+  if (theme.field) autumnField(scene, theme.field);
+}
+
+/*
+ * An autumn field (maps/autumn_tribal_1: the island top is one warm orange lawn, ochre where it wears thin, never a dusty mauve; spiky orange and yellow grass
+ * clumps stand in a band along the foot of the tree ring and dot the open field). The sandbox lawn's plum self-light suits its saturated orange; under a
+ * campaign theme's own colours it is what turned the field mauve, so a theme with a field sets the lawn, the dry rim, both blade shades and the ground from
+ * its own colours and swaps the plum self-light for its own warm glow. Clumps: FIELD_TUFTS clumps, FIELD_TUFT_RING_SHARE of them in the band FIELD_TUFT_BAND
+ * of the ring radii in from the trees, the rest over the open field clear of the hazards; each is FIELD_TUFT_CARDS[0]-[1] crossed spiky cards
+ * FIELD_TUFT_TALL[0]-[1] m high, one palette colour per clump, self-lit FIELD_TUFT_GLOW so a clump in shade stays orange.
+ */
+const FIELD_TUFTS = 260;
+const FIELD_TUFT_RING_SHARE = 0.7;
+const FIELD_TUFT_BAND = [0.8, 0.97];
+const FIELD_TUFT_CARDS = [3, 5];
+const FIELD_TUFT_TALL = [0.9, 1.5];
+const FIELD_TUFT_GLOW = 0.45;
+function autumnField(scene: Scene, field: NonNullable<CampaignMapTheme["field"]>): void {
+  const set = (name: string, diffuse: Color3, glow: Color3) => {
+    const mat = scene.getMaterialByName(name) as StandardMaterial | null;
+    if (!mat) return;
+    mat.diffuseColor = diffuse;
+    mat.emissiveColor = glow;
+  };
+  set("groundMat", field.ground, field.glow);
+  set("grass", field.grass, field.glow);
+  set("dryGrass", Color3.Lerp(field.ground, field.grass, 0.45), field.glow);
+  set("grassBladeDark", field.grass.scale(BLADE_DARK), field.glow);
+  set("grassBladeLight", field.grass.scale(BLADE_LIGHT), field.glow);
+  if (field.tufts.length === 0) return;
+  const rand = (k: number, n: number) => Math.abs((Math.sin(k * 17.231 + n * 41.77) * 24634.634) % 1);
+  const perColour = field.tufts.map(() => ({ positions: [] as number[], normals: [] as number[], indices: [] as number[] }));
+  for (let k = 0; k < FIELD_TUFTS; k++) {
+    let x: number, z: number;
+    if (rand(k, 1) < FIELD_TUFT_RING_SHARE) {
+      const a = rand(k, 2) * Math.PI * 2;
+      const band = FIELD_TUFT_BAND[0] + rand(k, 3) * (FIELD_TUFT_BAND[1] - FIELD_TUFT_BAND[0]);
+      x = Math.cos(a) * TREE_RING_X * band;
+      z = Math.sin(a) * TREE_RING_Z * band;
+    } else {
+      x = (rand(k, 2) - 0.5) * TREE_RING_X * 1.5;
+      z = (rand(k, 3) - 0.5) * TREE_RING_Z * 1.5;
+      // Clear of the challenge pits and the middle lane where the lines meet
+      if (Math.abs(Math.abs(z) - 16) < 7.5 || Math.abs(x) < 4) continue;
+    }
+    if (!onIsland(x, z, 2)) continue;
+    const bucket = perColour[Math.floor(rand(k, 4) * field.tufts.length) % field.tufts.length];
+    const cards = FIELD_TUFT_CARDS[0] + Math.floor(rand(k, 5) * (FIELD_TUFT_CARDS[1] - FIELD_TUFT_CARDS[0] + 1));
+    const tall = FIELD_TUFT_TALL[0] + rand(k, 6) * (FIELD_TUFT_TALL[1] - FIELD_TUFT_TALL[0]);
+    for (let c = 0; c < cards; c++) {
+      // Each card a spike splayed out from the clump's foot: a narrow root, a pointed tip leaning away
+      const yaw = (c / cards + rand(k * 7 + c, 7) * 0.3) * Math.PI;
+      const splay = (rand(k * 7 + c, 8) - 0.5) * 0.7;
+      const h = tall * (0.65 + rand(k * 7 + c, 9) * 0.35);
+      const half = 0.16 + rand(k * 7 + c, 10) * 0.1;
+      const dx = Math.cos(yaw) * half, dz = Math.sin(yaw) * half;
+      const lx = -Math.sin(yaw) * splay * h, lz = Math.cos(yaw) * splay * h;
+      const base = bucket.positions.length / 3;
+      bucket.positions.push(
+        x - dx, BLADE_ROOT_Y, z - dz, x + dx, BLADE_ROOT_Y, z + dz, x + lx, BLADE_ROOT_Y + h, z + lz,
+      );
+      bucket.normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
+      bucket.indices.push(base, base + 1, base + 2);
+    }
+  }
+  const shadows = sunShadows(scene);
+  field.tufts.forEach((colour, i) => {
+    const bucket = perColour[i];
+    if (bucket.positions.length === 0) return;
+    const mat = new StandardMaterial(`fieldTuft${i}`, scene);
+    mat.diffuseColor = colour.scale(1 - FIELD_TUFT_GLOW);
+    mat.emissiveColor = colour.scale(FIELD_TUFT_GLOW);
+    mat.specularColor = Color3.Black();
+    mat.backFaceCulling = false;
+    const mesh = new Mesh(`fieldTufts_${i}`, scene);
+    const data = new VertexData();
+    data.positions = bucket.positions;
+    data.normals = bucket.normals;
+    data.indices = bucket.indices;
+    data.applyToMesh(mesh);
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    shadows?.addShadowCaster(mesh, false);
+  });
 }
 
 /*
@@ -2005,6 +2092,11 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     ring: {
       leaves: new Color3(0.95, 0.55, 0.2), darkLeaves: new Color3(0.86, 0.36, 0.18), trunk: new Color3(0.9, 0.86, 0.76), bare: 0,
       balls: [new Color3(1, 0.45, 0.06), new Color3(0.92, 0.18, 0.08), new Color3(1, 0.76, 0.1), new Color3(0.74, 0.78, 0.12), new Color3(1, 0.58, 0.1)],
+    },
+    // Orange lawn, ochre ground, a warm glow in place of the sandbox plum; red-orange, rust and straw-yellow tuft clumps (see autumnField)
+    field: {
+      ground: new Color3(0.86, 0.52, 0.22), grass: new Color3(1.0, 0.58, 0.2), glow: new Color3(0.1, 0.055, 0.02),
+      tufts: [new Color3(0.95, 0.32, 0.08), new Color3(0.86, 0.22, 0.1), new Color3(1, 0.86, 0.3)],
     },
     props: [
       { kind: "barricade", x: -6, z: -20, scale: 1.1, rotationY: 0.2 },
