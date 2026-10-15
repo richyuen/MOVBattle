@@ -1205,7 +1205,7 @@ interface CampaignMapTheme {
   hazards: HazardRegion[];
   props: CampaignPropSpec[];
   /** The ring trees' own palette (canopy, upper canopy, trunk) in place of the campaign green, and the share of ring trees stood bare and dead (see deadenRing) */
-  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number };
+  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number; balls?: Color3[] };
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -1273,6 +1273,58 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   paintFarProps(scene, theme.grass.scale(0.85));
   if (theme.ring && theme.ring.bare > 0) deadenRing(scene, theme.ring.bare, theme.ring.trunk);
   if (theme.ring?.blossom) blossomRing(scene, theme.ring.blossom);
+  if (theme.ring?.balls) ballRing(scene, theme.ring.balls);
+}
+
+/*
+ * A ball ring (autumn; maps/autumn_tribal_1: every ring tree is a lollipop, one round crown on a thin pale stalk, and neighbouring crowns differ: orange,
+ * red, yellow and yellow-green mixed through the ring, so it reads as a speckled autumn wood and not one sage mass). Each ring tree takes a seeded colour
+ * from the palette (balls) on its own crown material; a broadleaf's three lobes are hidden and it carries one ball BALL_OF_HEIGHT of its height across
+ * instead, so the whole ring is balls. The crown materials are lit like the theme crowns (diffuse 0.38, self-light 0.62) and take the canopy haze.
+ */
+const BALL_OF_HEIGHT = 0.5;
+function ballRing(scene: Scene, palette: Color3[]): void {
+  const base = scene.getMaterialByName("leavesCrown") as StandardMaterial | null;
+  if (!base || palette.length === 0) return;
+  const crowns = palette.map((color, i) => {
+    const crown = base.clone(`autumnBall${i}Crown`);
+    crown.diffuseColor = color.scale(0.38);
+    crown.emissiveColor = color.scale(0.62);
+    if (!crown.pluginManager?.getPlugin("CanopyAerial")) new CanopyAerialPlugin(crown);
+    return crown;
+  });
+  const trunks = new Set<Mesh>();
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "canopy" && mesh.parent instanceof Mesh && mesh.parent.name === "trunk") trunks.add(mesh.parent);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const shadows = sunShadows(scene);
+  let k = 0;
+  for (const trunk of trunks) {
+    k++;
+    const r = (n: number) => Math.abs((Math.sin(k * 23.417 + n * 37.13) * 31871.553) % 1);
+    const crown = crowns[Math.floor(r(1) * crowns.length) % crowns.length];
+    const lobes = trunk.getChildMeshes().filter((child) => child.name === "canopy" && child.isEnabled());
+    if (lobes.length === 1) {
+      lobes[0].material = crown;
+      continue;
+    }
+    for (const lobe of lobes) lobe.setEnabled(false);
+    const info = trunk.getBoundingInfo().boundingBox;
+    const trunkLong = info.maximum.y - info.minimum.y;
+    const radius = (trunkLong / 0.5) * BALL_OF_HEIGHT * 0.5;
+    const ball = MeshBuilder.CreateIcoSphere("canopy", { radius, subdivisions: 2 }, scene);
+    ball.parent = trunk;
+    ball.position.set(0, trunkLong / 2 + radius * 0.7, 0);
+    ball.scaling.y = 0.9;
+    ball.rotation.y = r(2) * Math.PI;
+    ball.material = crown;
+    ball.receiveShadows = false;
+    ball.isPickable = false;
+    ball.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(ball);
+    shadows?.addShadowCaster(ball, false);
+  }
 }
 
 /*
@@ -1949,6 +2001,11 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       boxHazard("pit", 0, 16, 16, 6),
     ],
     accent: new Color3(0.95, 0.79, 0.37),
+    // Pale stalks under orange, red, yellow and yellow-green balls, one colour per tree (see ballRing)
+    ring: {
+      leaves: new Color3(0.95, 0.55, 0.2), darkLeaves: new Color3(0.86, 0.36, 0.18), trunk: new Color3(0.9, 0.86, 0.76), bare: 0,
+      balls: [new Color3(1, 0.45, 0.06), new Color3(0.92, 0.18, 0.08), new Color3(1, 0.76, 0.1), new Color3(0.74, 0.78, 0.12), new Color3(1, 0.58, 0.1)],
+    },
     props: [
       { kind: "barricade", x: -6, z: -20, scale: 1.1, rotationY: 0.2 },
       { kind: "barricade", x: -4, z: 20, scale: 1.1, rotationY: -0.2 },
