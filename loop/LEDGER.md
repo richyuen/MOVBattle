@@ -10,11 +10,8 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Rows
-proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_BEAT_*, _REST, _HEAVE, _COCK, _SLAM, _ARM, _CLUB; flinch on landing; blowStrikeReach) | beat 1.5-2.4 s, rest 0.38, heave 0.14, cock 0.1, slam 0.08, impact rest; arm 1.7, club arc 1.2; strike reach 0.9 m | 226 | approved | was drop 0.1/hold 0.16/back 0.16, arm 3.0 (202)
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 241 | viking-horned-helm | unit-look.l | approved
-- 241 | [R] aimed-blow rebuild | battle-feel.e | rejected
 - 242 | valkyrie-wings | unit-look.l | approved
 - 242 | [R] wall-surface rebuild | battle-feel.h | approved
 - 243 | minotaur-bull-man | unit-look.k | approved
@@ -33,6 +30,8 @@ proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_B
 - 249 | secret-halos | unit-look.u | approved
 - 250 | pirate-bandana-tricorn | unit-look.o | approved
 - 250 | skeleton-bone-body | unit-look.p | approved
+- 251 | reaper-robe-scythe | unit-look.p | approved
+- 251 | bone-mage-antler-skull | unit-look.i | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -68,3 +67,6 @@ propBuilder.ts:fitted sun_hat (SUN_BRIM, _BRIM_THICK, _TIP, _CROWN, _CROWN_TALL,
 propBuilder.ts:fitted bandana wrap (BANDANA_HEADS, _CROWN, _KNOT, _TAIL, _SPLAY, _SWEEP; robbers cowboy_hat) | 1.16 heads, crown 0.1, knot 0.3, tail 0.55, splay 0.35, sweep 0.5 | 249 | approved | torus 0.22 s at crown
 propBuilder.ts:fitted tricorn/pirate_hat (TRICORN_DOME, _CROWN, _BRIM, _WALL, _LEAN, _SKULL; crew bandana accents) | dome 1.12, crown 0.16, brim 2.3, wall 0.42 lean 0.3, skull 0.26 | 250 | approved | box on a flat triangle (stovepipe)
 unitFactory.ts:dressSkeleton (SKELETON_BONE, _LIMB, _SPINE, _RIBS, _RIB_TOP/_LOW, _SKIRT, _HEM, _TATTERS, _CLOTH; yoke hidden) | bone 1,0.86,0.6; limb 0.42, spine 0.16, 4 ribs 0.86-0.42, skirt 0.7 hem 1.45, 6 tatters | 250 | approved | fleshed body, secret_bone preset
+unitFactory.ts:dressReaper (REAPER_HOOD, _OPEN, _FORWARD, _ROBE, _SKIRT, _HEM, _TATTERS, _SLEEVE, _CLOTH, _TEAM) | hood 1.7 open 0.4 fwd -0.06; robe 1.3, skirt 1.55 hem 2.1, 7 rags, sleeve 1.35 | 251 | approved | hood hat, ghost body
+propBuilder.ts:scythe (SCYTHE_SNATH, _BLADE, _SEGS, _CURL) | snath 1.25 s, blade 0.62 of snath in 5 segs, curl 1.05 | 251 | approved | 0.8 s shaft, 0.2 s box blade
+propBuilder.ts:antler_skull (DEER_MUZZLE, _DIP, _BEAM, _SPLAY, _TINE, _ANTLER; on bone_mask cap) | muzzle 0.95 dip 0.7; beam 1.05+0.9 H, splay 0.95/0.4, tine 0.58, antler 0.66,0.5,0.33 | 251 | approved | bone_mask
