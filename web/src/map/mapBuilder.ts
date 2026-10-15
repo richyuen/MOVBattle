@@ -1499,12 +1499,19 @@ function seaRim(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>): void {
 }
 
 /*
- * Sand spits (pirate; maps/pirate_beach: the palms and bushes stand on sand beaches and spits with ragged, faceted edges, the turquoise water only in the
- * coves between them; the field's edge against the shallows is scalloped, never a ruled line). Under every ring tree lies a lobe of dry sand, an irregular
- * SPIT_SIDES-gon of radius SPIT_RADIUS[0]-[1] m with each corner jittered by up to SPIT_JITTER of it, pushed SPIT_OUT of its radius out toward the rim; the
- * lobes overlap into a ragged beach band, and where two trees stand apart the sea shows between them as a cove. Every lobe sits on a wet-sand rim
- * SPIT_WET wider, half way from sand to sea. Along each pool's edges a row of smaller lobes (SPIT_EDGE[0]-[1] m, one every SPIT_EDGE_STEP m) straddles the
- * line, so the field bites into the water in rounded teeth.
+ * Pirate shoreline, rebuilt from maps/pirate_beach (spec, read off the reference at the placement view):
+ *   - One sand. The whole island top is a single pale sand, the fighting field included: no second, olive or grey field colour, no seam where the field
+ *     meets the beach (the theme's ground and grass are that sand; see campaign.pirate).
+ *   - Water only in the coves and round the rim. The palms and bushes stand on beaches and spits with ragged, faceted edges (about 8-10 facets a lobe, each
+ *     corner 0.6-1.4x the lobe radius), the turquoise only between them; the field's edge against the shallows is scalloped in rounded teeth, never a
+ *     ruled line.
+ *   - The wet edge is the waterline and nothing else: a thin pale band, about 0.15-0.2 of a lobe radius wide, drawn only where sand meets water. Where sand
+ *     meets sand (lobe against field, lobe against lobe, the field's ends) there is no line at all: 0 metres of wet edge on dry land.
+ * Mechanism: under every ring tree lies a lobe of dry sand, an irregular SPIT_SIDES-gon of radius SPIT_RADIUS[0]-[1] m with each corner jittered by up to
+ * SPIT_JITTER of it, pushed SPIT_OUT of its radius out toward the rim; along each pool's edges a row of smaller lobes (SPIT_EDGE[0]-[1] m, one every
+ * SPIT_EDGE_STEP m) straddles the line. Round every lobe runs a wet ring SPIT_WET m wide, but only as a band outside the dry edge (never a fan under it), and
+ * each corner of that band reaches out only when the spot it reaches lies over water (overWater: inside a pool, or within SEA_RIM of the island rim);
+ * over land the band pinches to nothing, so the dry sand runs straight into the field.
  */
 const SPIT_SIDES = 9;
 const SPIT_RADIUS = [2.6, 4.6];
@@ -1514,8 +1521,18 @@ const SPIT_WET = 0.7;
 const SPIT_EDGE = [1.3, 2.4];
 const SPIT_EDGE_STEP = 3.2;
 const SPIT_SAND = new Color3(0.8, 0.66, 0.4);
+const SPIT_SAND_GLOW = 0.12;
 function sandSpits(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>, hazards: readonly HazardRegion[]): void {
   const dry: number[] = [], wet: number[] = [];
+  const pools = hazards.filter((hazard) => hazard.kind === "water" && hazard.shape === "box");
+  // Water under a spot: inside a pool, or out in the band of sea round the island rim
+  const overWater = (x: number, z: number): boolean => {
+    for (const pool of pools) {
+      if (pool.shape === "box" && Math.abs(x - pool.center.x) <= pool.halfX && Math.abs(z - pool.center.z) <= pool.halfZ) return true;
+    }
+    const [rx, rz] = islandRim(Math.atan2(z, x));
+    return Math.hypot(x, z) >= Math.hypot(rx, rz) - SEA_RIM;
+  };
   let k = 0;
   const lobe = (x: number, z: number, radius: number) => {
     k++;
@@ -1523,14 +1540,21 @@ function sandSpits(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>, haza
     const turn = r(1) * Math.PI * 2;
     const corners = Array.from({ length: SPIT_SIDES }, (_, i) => {
       const a = turn + (i / SPIT_SIDES) * Math.PI * 2;
-      return [a, radius * (1 - SPIT_JITTER + r(2 + i) * SPIT_JITTER * 2)];
+      const d = radius * (1 - SPIT_JITTER + r(2 + i) * SPIT_JITTER * 2);
+      // The wet band reaches out from this corner only over water; over land it pinches shut on the dry edge
+      const reach = overWater(x + Math.cos(a) * (d + SPIT_WET), z + Math.sin(a) * (d + SPIT_WET)) ? SPIT_WET : 0;
+      return [a, d, reach];
     });
-    for (const [out, grow] of [[dry, 0], [wet, SPIT_WET]] as const) {
-      corners.forEach(([a, d], i) => {
-        const [b, e] = corners[(i + 1) % SPIT_SIDES];
-        out.push(x, z, x + Math.cos(a) * (d + grow), z + Math.sin(a) * (d + grow), x + Math.cos(b) * (e + grow), z + Math.sin(b) * (e + grow));
-      });
-    }
+    corners.forEach(([a, d, reach], i) => {
+      const [b, e, reachB] = corners[(i + 1) % SPIT_SIDES];
+      const ax = x + Math.cos(a) * d, az = z + Math.sin(a) * d, bx = x + Math.cos(b) * e, bz = z + Math.sin(b) * e;
+      dry.push(x, z, ax, az, bx, bz);
+      if (reach === 0 && reachB === 0) return;
+      // The wet band: a quad outside the dry edge, from the edge out to each corner's reach
+      const aox = x + Math.cos(a) * (d + reach), aoz = z + Math.sin(a) * (d + reach);
+      const box = x + Math.cos(b) * (e + reachB), boz = z + Math.sin(b) * (e + reachB);
+      wet.push(ax, az, aox, aoz, box, boz, ax, az, box, boz, bx, bz);
+    });
   };
   for (const mesh of scene.meshes) {
     if (mesh.name !== "canopy" || !(mesh.parent instanceof Mesh) || mesh.parent.name !== "trunk") continue;
@@ -1569,11 +1593,19 @@ function sandSpits(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>, haza
     data.indices = indices;
     data.normals = positions.map((_, i) => (i % 3 === 1 ? 1 : 0));
     data.applyToMesh(mesh);
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    // One sand: the dry spits wear the lawn's own material, so beach and field meet without a seam
+    const lawn = name === "sandSpit" ? scene.getMaterialByName("grass") as StandardMaterial | null : null;
+    if (lawn) {
+      lawn.emissiveColor = SPIT_SAND.scale(SPIT_SAND_GLOW);
+      lawn.backFaceCulling = false;
+      mesh.material = lawn;
+      continue;
+    }
     const mat = seaMaterial(scene, `${name}Mat`, colour, mesh);
     mat.backFaceCulling = false;
     mesh.material = mat;
-    mesh.isPickable = false;
-    mesh.receiveShadows = true;
   }
 }
 
@@ -2553,8 +2585,9 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     displayName: "Pirate Cove",
     clearColor: new Color3(0.58, 0.76, 0.88),
     fogColor: new Color3(0.58, 0.76, 0.88),
-    ground: new Color3(0.73, 0.63, 0.42),
-    grass: new Color3(0.54, 0.58, 0.34),
+    // One sand: the field is the beach's own sand (see sandSpits), not an olive lawn
+    ground: new Color3(0.84, 0.72, 0.5),
+    grass: new Color3(0.8, 0.68, 0.46),
     zones: [
       zone(0, -44, 0, 34, 34),
       zone(0, -18, -24, 16, 10),
