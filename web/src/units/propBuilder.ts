@@ -87,6 +87,9 @@ const CREST_CHEEK_WIDE = 0.24;
 const CREST_TALL = 1.05;
 const CREST_LONG = 1.25;
 const CREST_STALK = 0.14;
+// Team paint (245): the helm is the team colour with CREST_HELM_BRONZE of bronze mixed in; the crest is the team colour at CREST_HAIR_SHADE
+const CREST_HELM_BRONZE = 0.18;
+const CREST_HAIR_SHADE = 0.62;
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
@@ -98,7 +101,7 @@ const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
 
-function buildFittedHat(scene: Scene, type: HatType, head: { width: number; height: number }, unit: number, accent: Color3): Mesh {
+function buildFittedHat(scene: Scene, type: HatType, head: { width: number; height: number }, unit: number, accent: Color3, teamColor?: Color3): Mesh {
   const W = head.width, H = head.height;
   // Below the crown (the head top joint) to the top of the eye, in the neck's units; the hat's seat is HAT_EYE_CLEAR of the head above that
   const eyeTop = 0.44 * H - 0.18 * W;
@@ -266,7 +269,10 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   if (type === "crested_helm") {
     const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
     const R = CREST_HELM_HEADS * W * 0.5;
-    const bronze = mat(scene, Color3.Lerp(new Color3(0.74, 0.5, 0.22), accent, 0.2), 0.06);
+    // The helm is painted in the team colour like the skin under it, a shade deeper, with only a touch of bronze (units/ancient.hoplite: red helm on a red
+    // man); the crest is the team colour deeper still, so a blue hoplite wears a blue helm and crest and never the other side's red
+    const bronzeBase = new Color3(0.74, 0.5, 0.22);
+    const bronze = mat(scene, teamColor ? Color3.Lerp(teamColor, bronzeBase, CREST_HELM_BRONZE).scale(0.88) : Color3.Lerp(bronzeBase, accent, 0.2), 0.06);
     const helm = MeshBuilder.CreateSphere("chelm", { diameterX: u(2 * R), diameterY: u(tall * 2.1), diameterZ: u(2 * R * 1.08), segments: 8, slice: 0.5 }, scene);
     helm.position.y = u(seat);
     helm.material = bronze;
@@ -292,7 +298,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     neck.material = bronze;
     neck.parent = helm;
     // The crest: a stalk on the dome's top and a horsehair fan on it, an ellipsoid half sunk in its base so only the arch stands
-    const hair = mat(scene, new Color3(0.62, 0.12, 0.1), 0.05);
+    const hair = mat(scene, teamColor ? teamColor.scale(CREST_HAIR_SHADE) : new Color3(0.62, 0.12, 0.1), 0.05);
     const stalk = MeshBuilder.CreateBox("chelmStalk", { width: u(0.1 * W), height: u(CREST_STALK * H), depth: u(0.5 * W) }, scene);
     stalk.position.y = u(tall + CREST_STALK * H * 0.4);
     stalk.material = bronze;
@@ -392,7 +398,7 @@ export function attachProps(
     };
   }
   const hat = head && HEAD_FITTED_HATS.includes(config.hat)
-    ? buildFittedHat(scene, config.hat, head, hatUnit, accent)
+    ? buildFittedHat(scene, config.hat, head, hatUnit, accent, teamColor)
     : buildHat(scene, config.hat, scale, accent, teamColor, helmFit);
   if (hat && head && HEAD_FITTED_HATS.includes(config.hat)) {
     hat.parent = body.headTop;
