@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -183,6 +183,26 @@ const SKULL_SNOUT = 0.45;
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
 const BERET_TILT = 0.22;
+/*
+ * A minstrel's feathered hat (264; units/medieval.bard: a soft straw-tan hat, its brim about two heads across, a low puffed crown, the whole cocked over to
+ * one side and dipped at the front; a long feather in the team colour, nearly twice the head's height, standing up out of the band at the side and back,
+ * raked back and curling further back toward its tip, a flat tapering vane on a darker quill). Not a beret: the old purple disc read as a cap at lineup range.
+ *   Brim FEATHER_HAT_BRIM heads across, dipped FEATHER_HAT_DIP at the front and cocked FEATHER_HAT_COCK to the side; crown FEATHER_HAT_CROWN heads across,
+ *   FEATHER_HAT_TALL of the head high. Felt: straw tan lerped FEATHER_HAT_TEAM toward the team colour. Feather FEATHER_LONG heads long in FEATHER_PIECES
+ *   pieces, FEATHER_WIDE head widths across at its widest, raked FEATHER_RAKE back at its root and FEATHER_CURL more at each joint; team colour.
+ */
+const FEATHER_HAT_BRIM = 2.05;
+const FEATHER_HAT_DIP = 0.14;
+const FEATHER_HAT_COCK = 0.2;
+const FEATHER_HAT_CROWN = 1.15;
+const FEATHER_HAT_TALL = 0.5;
+const FEATHER_HAT_TEAM = 0.06;
+const FEATHER_HAT_STRAW = new Color3(0.8, 0.54, 0.3);
+const FEATHER_LONG = 1.9;
+const FEATHER_PIECES = 4;
+const FEATHER_WIDE = 0.42;
+const FEATHER_RAKE = 0.3;
+const FEATHER_CURL = 0.22;
 const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
@@ -751,6 +771,56 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     knob.material = band.material;
     knob.parent = cone;
     return band;
+  }
+  if (type === "feather_hat") {
+    const felt = mat(scene, teamColor ? Color3.Lerp(FEATHER_HAT_STRAW, teamColor, FEATHER_HAT_TEAM) : FEATHER_HAT_STRAW, 0.12);
+    const brim = MeshBuilder.CreateCylinder("featherHatBrim", { height: u(0.08 * H), diameter: u(FEATHER_HAT_BRIM * W), tessellation: 10 }, scene);
+    brim.position.y = u(seat + 0.04 * H);
+    brim.rotation.set(FEATHER_HAT_DIP, 0, FEATHER_HAT_COCK);
+    brim.material = felt;
+    brim.convertToFlatShadedMesh();
+    // A low puffed crown over the skull, a darker band round its foot
+    const crown = MeshBuilder.CreateSphere("featherHatCrown", { diameterX: u(FEATHER_HAT_CROWN * W), diameterY: u(FEATHER_HAT_TALL * H * 2), diameterZ: u(FEATHER_HAT_CROWN * 0.95 * W), segments: 6, slice: 0.5 }, scene);
+    crown.material = felt;
+    crown.convertToFlatShadedMesh();
+    crown.parent = brim;
+    const band = MeshBuilder.CreateCylinder("featherHatBand", { height: u(0.12 * H), diameter: u(FEATHER_HAT_CROWN * 1.01 * W), tessellation: 9 }, scene);
+    band.position.y = u(0.06 * H);
+    band.material = mat(scene, FEATHER_HAT_STRAW.scale(0.45));
+    band.convertToFlatShadedMesh();
+    band.parent = brim;
+    // The feather: out of the band at the left side and back, a chain of flat tapering pieces, each raked further back than the one under it, its vane turned
+    // half to the front so it shows broad from the front and from the side
+    const plume = teamColor ?? accent;
+    const vane = mat(scene, plume, 0.15);
+    const quill = mat(scene, plume.scale(0.45));
+    const pieceLong = u((FEATHER_LONG * H) / FEATHER_PIECES);
+    let parent: Mesh = brim;
+    for (let i = 0; i < FEATHER_PIECES; i++) {
+      const t = i / FEATHER_PIECES, t1 = (i + 1) / FEATHER_PIECES;
+      // Widest a third of the way up, a narrow root and a point at the tip
+      const across = (k: number) => FEATHER_WIDE * W * Math.min(1, 0.45 + k * 1.8) * (k > 0.4 ? (1 - k) / 0.6 : 1);
+      const piece = MeshBuilder.CreateCylinder("featherHatPlume", { height: pieceLong, diameterBottom: u(across(t)), diameterTop: u(Math.max(across(t1), 0.02 * W)), tessellation: 4 }, scene);
+      // Flattened into the vertices, so the next piece hangs off it unsquashed
+      piece.scaling.z = 0.18;
+      piece.bakeCurrentTransformIntoVertices();
+      piece.setPivotPoint(new Vector3(0, -pieceLong / 2, 0));
+      piece.material = vane;
+      piece.convertToFlatShadedMesh();
+      if (i === 0) {
+        piece.position.set(u(-0.5 * FEATHER_HAT_CROWN * W), u(0.1 * H) + pieceLong / 2, u(-0.18 * W));
+        piece.rotation.set(-FEATHER_RAKE, 0.7, 0.18);
+      } else {
+        piece.position.y = pieceLong;
+        piece.rotation.x = -FEATHER_CURL;
+      }
+      piece.parent = parent;
+      const stem = MeshBuilder.CreateCylinder("featherHatQuill", { height: pieceLong, diameter: u(0.035 * W), tessellation: 4 }, scene);
+      stem.material = quill;
+      stem.parent = piece;
+      parent = piece;
+    }
+    return brim;
   }
   if (type === "beret") {
     const beret = MeshBuilder.CreateSphere("beret", { diameter: 1, segments: 10 }, scene);

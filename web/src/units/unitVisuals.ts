@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab" | "palette";
 
@@ -266,7 +266,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ MEDIEVAL ═══════════════════════
   "medieval.bard": vis(
-    { scale: 0.85, bulk: 0.8 }, "lute", "beret", "none", "none", "#9B30FF",
+    { scale: 0.85, bulk: 0.8 }, "lute", "feather_hat", "none", "none", "#9B30FF",
   ),
   "medieval.squire": vis(
     { scale: 1.0, bulk: 1.0, torsoLength: 0.86, torsoDepth: 0.75 }, "sword", "great_helm", "none", "none", "#C0C0C0",
@@ -1352,6 +1352,7 @@ function inferHat(hint: string | undefined, faction: FactionId, name: string): H
     case "hood_liripipe":
     case "pointed_cowl":
     case "sun_hat":
+    case "feather_hat":
       return hint;
     default:
       break;
