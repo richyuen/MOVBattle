@@ -27,7 +27,23 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl"];
+/*
+ * A farmer's pointed cowl (248; units/farmer.farmer: a cloth hood in the team colour a shade darker than the skin, wrapped round the whole head to the jaw with
+ * the face and both bead eyes showing in its opening, rising off the crown into a tall stiff point about as high again as the head, raked back and bending
+ * further back near its tip, a short faceted collar of the same cloth over the shoulders). Not a ball cap: the old liripipe read as a small dome at lineup range.
+ *   Cowl as the fitted hood (HOOD_HEADS, HOOD_OPEN). Point: a foot COWL_FOOT heads across on the crown, a lower frustum COWL_LOWER of the head high raked
+ *   COWL_RAKE back, then a tip COWL_TIP of the head high bent COWL_BEND further back. Collar COWL_COLLAR heads across, COWL_COLLAR_DEEP of the head deep.
+ *   Cloth: team colour x COWL_SHADE (the accent when no team colour is given).
+ */
+const COWL_FOOT = 1.05;
+const COWL_LOWER = 0.8;
+const COWL_TIP = 0.6;
+const COWL_RAKE = 0.22;
+const COWL_BEND = 0.4;
+const COWL_COLLAR = 2.0;
+const COWL_COLLAR_DEEP = 0.42;
+const COWL_SHADE = 0.78;
 /*
  * A monk's kasa (247; units/dynasty.monk: a wide shallow straw cone in the accent orange, about 2.4 heads across and half a head high, pulled low over
  * the brow so the bead eyes look out from just under its rim, a darker woven band round its edge; strings of fist-sized orange prayer beads hang from
@@ -136,6 +152,40 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   const eyeTop = 0.44 * H - 0.18 * W;
   const seat = -eyeTop + HAT_EYE_CLEAR * H;
   const u = (v: number) => v / unit;
+  if (type === "pointed_cowl") {
+    const cloth = mat(scene, teamColor ? teamColor.scale(COWL_SHADE) : accent);
+    const cowl = MeshBuilder.CreateSphere("cowlShell", { diameter: 1, segments: 10, arc: 1 - HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    cowl.scaling.set(u(HOOD_HEADS * W), u(1.2 * H), u(HOOD_HEADS * W));
+    cowl.rotation.y = Math.PI / 2 + Math.PI * HOOD_OPEN;
+    cowl.position.y = u(-0.42 * H);
+    cowl.material = cloth;
+    cowl.convertToFlatShadedMesh();
+    // The point is built off the cowl in the head's frame (a sibling under a holder), so the cowl's squash does not bend it
+    const holder = new Mesh("pointedCowl", scene);
+    cowl.parent = holder;
+    const lowerTall = u(COWL_LOWER * H);
+    const lower = MeshBuilder.CreateCylinder("cowlPoint", { height: lowerTall, diameterTop: u(COWL_FOOT * 0.5 * W), diameterBottom: u(COWL_FOOT * W), tessellation: 7 }, scene);
+    lower.setPivotPoint(new Vector3(0, -lowerTall / 2, 0));
+    lower.position.set(0, u(0.02 * H) + lowerTall / 2, u(-0.05 * W));
+    lower.rotation.x = -COWL_RAKE;
+    lower.material = cloth;
+    lower.convertToFlatShadedMesh();
+    lower.parent = holder;
+    const tipTall = u(COWL_TIP * H);
+    const tip = MeshBuilder.CreateCylinder("cowlTip", { height: tipTall, diameterTop: 0, diameterBottom: u(COWL_FOOT * 0.5 * W), tessellation: 7 }, scene);
+    tip.setPivotPoint(new Vector3(0, -tipTall / 2, 0));
+    tip.position.set(0, lowerTall / 2 + tipTall / 2 - u(0.02 * H), 0);
+    tip.rotation.x = -COWL_BEND;
+    tip.material = cloth;
+    tip.convertToFlatShadedMesh();
+    tip.parent = lower;
+    const collar = MeshBuilder.CreateCylinder("cowlCollar", { height: u(COWL_COLLAR_DEEP * H), diameterTop: u(0.95 * W), diameterBottom: u(COWL_COLLAR * W), tessellation: 7 }, scene);
+    collar.position.y = u(-1.02 * H);
+    collar.material = cloth;
+    collar.convertToFlatShadedMesh();
+    collar.parent = holder;
+    return holder;
+  }
   if (type === "hood_liripipe" || type === "hood") {
     const cloth = mat(scene, type === "hood" ? accent.scale(0.6) : accent);
     // The cowl round the skull, its gap turned to the face (+Z), so the eyes and the face show in the opening
