@@ -1806,7 +1806,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       }, scene);
       shaft.material = mat(scene, new Color3(0.32, 0.22, 0.14));
       addGripWraps(scene, shaft, [-0.18 * s, -0.08 * s, 0.02 * s], 0.035 * s);
-      const steel = mat(scene, new Color3(0.72, 0.73, 0.78), 0.05);
+      // Matte pale grey-white steel (units/spooky.reaper), a touch self-lit: the bluer, glossier steel went lavender under the night sky
+      const steel = mat(scene, new Color3(0.81, 0.83, 0.84), 0.15, "stone");
       const collar = MeshBuilder.CreateCylinder("scycollar", { height: 0.06 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
       collar.position.y = snathLong * 0.46;
       collar.material = steel;
