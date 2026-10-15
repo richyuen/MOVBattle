@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 279   Last re-audit: 279   Consecutive rejects: 0 (reset: user un-deferred e after 279)   Branch: main
+Iteration: 280   Last re-audit: 280   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -8,9 +8,9 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Tier 2 (fully scored at 198, re-audited 220-279):
+Tier 2 (fully scored at 198, re-audited 220-280):
 battle-feel: e FAIL f PASS g PASS h PASS (3/4) (h cleared by [R] 065ba9e, 242)
-- e FAIL (un-deferred by the user after 279 to try the critic's [S]; neither plateau nor deferred; earlier [R] 277, 278 and [S] 279 rejected) [S since: 0, rejected since un-defer: 0] B: 1 on the registered hit frame no blue club comes down on a red head: clubs now reach head height (279) but level or rising from a fist at the striker's own head height, heads among the helmet crests, not on a crown; one upright, one clubber down; hoplites upright, no visible recoil or head snap — press_clubbers_hit, press_clubbers_blow, press_clubbers_side; 2 red clubbers 1-3 bodies behind their own front, clubs cocked forward over their own rank (2s/2150ms), upright (9s) or flat at hip (5s); none comes down on a blue board or head — big_melee_2s, 2150ms, 5s, 9s; 3 red knights hold swords level at shoulder or upright before the chest; no blade raised over a shoulder, none meets a body — closeup_weapon_reads. Ref trailer_3_sheet_01 r2c3, r3c1.
+- e FAIL (un-deferred by the user after 279; list from re-audit 280, blocker 1 narrowed by 8f62d4e) [S since: 1 (280 overhead-blow approved)] B: 1 on the registered hit frame the club falls from a straight-up arm but lands on the hoplite's face/neck, not his crown; one clubber down on his back; hoplites upright, no readable recoil or head snap — press_clubbers_hit, press_clubbers_blow, press_clubbers_side; 2 red clubbers 1-3 bodies behind their own front, clubs cocked forward over their own rank (2s/2150ms) or flat at hip (5s/9s); none comes down on a blue board or head — big_melee_2s, 2150ms, 5s, 9s; 3 red knights hold swords upright or level before the body; no blade raised over a shoulder, none meets a body — closeup_weapon_reads. Ref trailer_3_sheet_01 r2c3, r3c1.
 unit-look: e PASS f PASS g PASS h PASS (4/4) (h cleared by 810f6c6, 240)
 maps-light: e PASS f PASS g PASS h PASS (4/4)
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
@@ -43,26 +43,30 @@ maps-light tier 3: i-o all PASS (7/7)
 Total tier 1 24/24; tier 2 23/24; tier 3 21/21.
 
 ## Focus (every gap this iteration)
-BASE dbaba7f (iter 279; re-audit (pickable < 2): no flips, deferred stands. Deferred battle-feel.e picked, nothing else pickable.)
-- [S] overhead-blow (battle-feel.e blocker 1) — 4ecf648 — REJECT, reverted abc310e
+BASE e8a036b (iter 280; re-audit (N%5): no flips, list kept. User asked for the critic's overhead-blow [S], attempt 2.)
+- [S] overhead-blow (battle-feel.e blocker 1) — 8f62d4e — APPROVE (blocker 1 narrowed, not struck)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- RE-AUDIT 279: no flips; REGRESSIONS: none; "battle-feel.e FAIL, deferred. Deferred stands"
-- GAP: [S] overhead-blow (4ecf648) VERDICT: REJECT CRITERION: battle-feel.e FAIL (previous: FAIL); REGRESSIONS: none; CLOSER "the working club is now at the foes' head height ... the striker's arm is raised and long"
+- RE-AUDIT 280: no flips; REGRESSIONS: none; "battle-feel.e FAIL (ordinary FAIL, un-deferred; list kept)"
+- GAP: [S] overhead-blow (8f62d4e) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL); REGRESSIONS: none; CLOSER "For the first time the swing reads overhead-then-down"
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.e overhead-blow (un-deferred; blocker 1; attempts 1, one left) — fist straight overhead (arm vertical, full reach), weapon tip clamped >= BLOW_DOWN below level in the striker's frame wherever the head is, so the shaft comes DOWN onto helmet or board top; struck man's flinch applied after _squareShield/_carryProp (true last layer) — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_blow, press_clubbers_hit
+1. [S] battle-feel.e overhead-blow-stagger — blocker 1: whole-body ROOT stagger on the land step (root pitches back ~.35 rad + half a step back, ~.3 s) so helmet and board tip back together — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_blow
+2. [S] battle-feel.e blow-stance-brace — blocker 1: a striker inside his blow (aim weight > 0 or pending blow) is braced against crowd topple, so both clubbers stand on the hit frame — ref r2c3 — ours press_clubbers_hit
+3. [S] battle-feel.e rear-rank-overhead-blow — blocker 2: extend _aimBlow to rear-rank clubbers (REAR_RANK_REACH) so their clubs come down over their own front onto blue boards/heads — ref r3c1 — ours big_melee_5s
+4. [S] battle-feel.e knight-high-guard — blocker 3: blade_slash knights carry the sword cocked over the shoulder between swings and lay it onto the foe via the aimed blow — ref r2c3 — ours closeup_weapon_reads
+5. [P] battle-feel.e overhead-blow fallout — blocker 1: proceduralAnimation.ts BLOW_PITCH .4 -> .15 (upright trunk lifts the fist over the helmet; club tip from chin to helmet top) — ours press_clubbers_blow
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
-- overhead-blow [attempts: 1] — 279: 278 base + lunge legs + fist aimed at the grip end of a 35 deg line down onto the crown + flinch .85/.9; zoom probe read as overhead blows with hoplites thrown back, but in the capture the fist only reaches the striker's own head height so the club rises to the crests; no visible recoil. Critic: _aimBlow values are now spent
+- overhead-blow [attempts: 1, approved on 2nd at 280] — 279: 278 base + lunge legs + fist aimed at the grip end of a 35 deg line down onto the crown + flinch .85/.9; zoom probe read as overhead blows with hoplites thrown back, but in the capture the fist only reaches the striker's own head height so the club rises to the crests; no visible recoil. Critic: _aimBlow values are now spent
 - [R] aimed-blow-final-layer [attempts: 1] — 278: 277's _aimBlow + flinch moved after every stance layer (held full .12 s) + hold .6 s + no reach gate; zoom probe showed clubs on helmets/faces with hoplites snapping back, but in the capture the club arrives level into the face from a low hand on the board rim, no visible recoil; knights and rear clubs unchanged
 - [R] target-aimed-blow [attempts: 1] — 277: pending-blow queue + _aimBlow (arm pointed from shoulder at foe headTop, club laid across crown, own blow clock, hold .45 s) + reposeNow flinch + contact hold; probe put club tips .2-.6 m from heads, but the critic saw clubs hip-high/upright on the shot frame, no hoplite recoil, knights level, rear clubs over own rank
 - landed-blow-on-hit [attempts: 2] — 276: pending-blow queue landing damage at BLOW_LAND_E .3 of the drop + pressers hold the swing while closing; clubbers reached contact, but the fixed arc ends below/short of the head (board face, shins); no recoil on hoplites
 - landed-blow-on-hit [attempts: 1, dropped] — 275: heavy_swing put at impact (or 0.7 through the drop) on the hit step + striker/struck re-posed via animator.update(0) after decisions; look shot: striking clubbers ~2 m off, clubs diagonal at hip/shoulder, front clubber cocked upright; no club on a red head
 
 ## Notes for next iteration (max 5 lines)
-- USER un-deferred e after the 279 STOP to try the critic's [S] overhead-blow (attempt 2, same gap id): fist straight overhead, tip clamped >= BLOW_DOWN below level, flinch after _squareShield/_carryProp. Values in the _aimBlow row are spent: an [S] must change the mechanism, not re-set them. Zoom probes (scratchpad zoom.mjs pattern) repeatedly looked right while the capture frame did not: the capture's hit frame is a different random draw, so judge from the capture's own press_clubbers_blow. Base for any next try: 4ecf648 (reverted, newest) or ebb241e = pending-blow queue + _aimBlow + late flinch; it gets clubs to head height. Traps: club prop origin near the grip (reach from mesh OBB corners, ~.99 m); sim steps without rendering so headTop world matrices are stale (force-compute the mark chain); moveTo/stopMoving cut the attack anim (aim keeps its own clock); flinch must come after the brace layer. Missing: fist overhead so the club comes DOWN on the crown, and a bigger recoil. Clubbers are small (shoulder .9 m) vs hoplite heads 1.55 m.
-- Every other criterion PASS (274-279). Needs a human: new criteria in CRITIC.md, or accept e as is, or un-defer e again for the critic's clamped-downward-tip [S]. Field oaks: theme.fieldOaks -> oakClump in addTree. mapBuilder.ts is LF, LOG.md CRLF. Hand-built up-facing quads: indices (0,1,2),(0,2,3) or they cull.
+- 280 overhead-blow (8f62d4e) is IN: pending-blow queue + _aimBlow (arm straight up in the WORLD, not the trunk frame; weapon laid down onto the crown if below the fist, else BLOW_DROP under the fist) + flinch as the very last pose layer. Traps: club prop origin near the grip (reach from mesh OBB corners, ~.99 m); sim steps without rendering so headTop world matrices are stale (force-compute the mark chain); moveTo/stopMoving cut the attack anim (aim keeps its own clock). Clubbers are small (shoulder .9 m) vs hoplite heads 1.55 m: a crown blow needs the fist higher (upright trunk) or a stagger that sells it. Judge from the capture's own press_clubbers_blow; zoom probes are a different random draw.
+- Every other criterion PASS (274-280); e is the only open criterion, all ranked gaps are on it (one [S] per iteration). Field oaks: theme.fieldOaks -> oakClump in addTree. mapBuilder.ts is LF, LOG.md CRLF. Hand-built up-facing quads: indices (0,1,2),(0,2,3) or they cull.
 - buildHorse (jouster, pinto, secret cavalry): frame at barrel middle; legs = 4-sided wedge in a holder scaled HORSE_UPPER_DEEP in z, joint at hem - UPPER_SHOW; thick legs must stay inside hem (W>=.85 H). Drape = stadium rings (superellipse ends, flat deck profile); pinto returns before it.
 - Unit PBR colours grey out in lineup shade: self-light (mf.get("cloth", c, { emissiveIntensity })). dress* in unitFactory set body.bodyMaterial.baseColor. Head is a blockHead (box): box caps (hExt.x*2.2) cover it. Eyes: body.leftEye/rightEye.setEnabled(false).
 - Melee hit path: _tryAttack applies damage + hitLog at swing start (setAttackCooldown triggers the anim); decisions run on retargetInterval after unit.update, so per-frame work belongs in update(). Clubber engage ~1.96 m vs contact 1.0 m (light_melee 1.7 + pad .2). Probe recipe: temp console.log in _landMeleeBlow + a playwright script on vite preview (port 4187, build --outDir dist-probe, delete after) running gallery_press_clubbers; window.game.frameCamera zooms a frame. No [P] on rows approved within 20 iterations.

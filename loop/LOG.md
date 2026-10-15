@@ -278,3 +278,4 @@ iter 276 | re-audit; [S] landed-blow-on-hit (rejected, reverted); STOP written |
 iter 277 | re-audit; [R] target-aimed-blow (rejected, reverted) | 0/1 approved | passes 23 -> 23
 iter 278 | re-audit; evidence press_clubbers_blow; [R] aimed-blow-final-layer (rejected, reverted; e deferred) | 0/1 approved | passes 23 -> 23
 iter 279 | re-audit; [S] overhead-blow (rejected, reverted); STOP written | 0/1 approved | passes 23 -> 23
+iter 280 | re-audit; [S] overhead-blow (user un-defer, attempt 2) | 1/1 approved | passes 23 -> 23
