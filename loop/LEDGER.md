@@ -10,16 +10,12 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Rows
-bodyBuilder.ts:eyes (EYE_OF_FACE, EYE_RIM, EYE_SPREAD, EYE_FLAT, PUPIL_OF_EYE) | white disc 0.3 face, dark rim disc 1.2x behind, 0.16 off centre, depth 0.3; pupil 0.5 | 218 | approved | 0.24, no rim (185)
 proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_BEAT_*, _REST, _HEAVE, _COCK, _SLAM, _ARM, _CLUB; flinch on landing; blowStrikeReach) | beat 1.5-2.4 s, rest 0.38, heave 0.14, cock 0.1, slam 0.08, impact rest; arm 1.7, club arc 1.2; strike reach 0.9 m | 226 | approved | was drop 0.1/hold 0.16/back 0.16, arm 3.0 (202)
 cameraController.ts:spectator low (LOW_LAUNCH, LOW_EYE, LOW_PITCH, LOW_HOLD, LOW_EASE; offset over the follow aim) | 3+ bodies flung: eye 0.45 m, pitch +0.3 rad, hold 1.2 s, ease 4 | 221 | approved |
 visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW, _LIFE, DUST_SPRITES/_LIFE, SMOKE_SPRITES/_LIFE; peaks) | additive core 3 @0.95, body 5 @0.7, rim 7 @0.55, grow 0.28, life 0.9; dust 10 @0.8, smoke 6; alphaIndex dust < smoke < fire (FIREBALL_ALPHA_INDEX) ; fire set back FIREBALL_BEHIND 1.6 along the view | 223 | approved | [P] dust 0.45/body 0.95 rejected 221
 rosterManifest.ts:giantScale (unitDefinitions collision/reach, vehicleBuilder rig) | mammoth 1.25: rig, metrics, collision radius and reach scaled together | 220 | approved |
-projectileSystem.ts:muzzle smoke (MUZZLE_PUFFS; _leavePuff size/life/rise/drift) | 7 feathered puffs 0.45-0.85, ~3 s, drift 0.15-0.5 down the line | 218 | approved | 8 faceted lobes
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 233 | [R] hat-seat rebuild | unit-look.h | approved
-- 233 | rear-strike-lands | battle-feel.e | rejected
 - 234 | aimed-club-cycle | battle-feel.e | rejected
 - 234 | pressing-stride | battle-feel.h | approved
 - 235 | cone-brim-skirt | unit-look.h | rejected
@@ -35,6 +31,8 @@ projectileSystem.ts:muzzle smoke (MUZZLE_PUFFS; _leavePuff size/life/rise/drift)
 - 241 | [R] aimed-blow rebuild | battle-feel.e | rejected
 - 242 | valkyrie-wings | unit-look.l | approved
 - 242 | [R] wall-surface rebuild | battle-feel.h | approved
+- 243 | minotaur-bull-man | unit-look.k | approved
+- 243 | protector-slab | unit-look.i | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -59,3 +57,6 @@ propBuilder.ts:fitted horned helm (viking_helmet/horned_helmet; HORN_ROOT, HORN_
 propBuilder.ts:round board faces (ROUND_FACES, ROUND_SHADE, ROUND_PAINT; serial seed) | 3 faces, shade +-0.12, paint 1.45 | 242 | approved | 3 parallel seams
 propBuilder.ts:bone skull cap (bone_mask fitted: SKULL_HEADS, SKULL_SOCKET, SKULL_SNOUT; no hair mop) | 1.25 heads, socket 0.26, snout 0.45; eyes shown | 242 | approved | face-covering sphere 0.24 s
 propBuilder.ts:feather wings (WING_SPAN, _RAISE, _SWEEP, _FEATHERS, _FEATHER_LEN, _FEATHER_FAN) | 2.4 torsos, 0.5, 0.3, 7, 0.32-0.62, 0.35-1.25 | 242 | approved | two 0.35x0.25 s boxes
+propBuilder.ts:fitted bull_head (BULL_SHELL, _MUZZLE, _MUZZLE_DIP, _EYE, _HORN_ROOT, _HORN_TIP, _HORN_TURN) | shell 1.15 heads, muzzle 0.75 dip 0.4, eye 0.34, horns 0.42+0.85 turn 1.05 | 243 | approved | vehicle blob 1.4 m
+unitVisuals.ts:minotaur humanoid proportions (scale, bulk, headSize, armLength; off the vehicle set) | 2.1, 1.5, 1.7, 1.15 | 243 | approved | 1.7/1.6/1.4 vehicle rig
+propBuilder.ts:protector slab shield (SLAB_WIDE, SLAB_TALL, slabSerial; carry rotation.x pi/2; wood lerp 0.12 to team) | 0.25 x 0.71 (x1.9 carry), emissive 0.08 | 243 | approved | round board

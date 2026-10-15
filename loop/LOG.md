@@ -241,3 +241,4 @@ iter 239 | [S] hood-cowl | 1/1 approved | passes 21 -> 21
 iter 240 | re-audit (tier 3 scored 0/21); [S] healer-cowl, [R] aimed-blow rebuild | 1/2 approved | passes 45 -> 46
 iter 241 | [S] viking-horned-helm, [R] aimed-blow rebuild | 1/2 approved | passes 46 -> 46
 iter 242 | [S] valkyrie-wings, [R] wall-surface rebuild | 2/2 approved | passes 46 -> 48
+iter 243 | [S] unit-look.k minotaur-bull-man, [S] unit-look.i protector-slab | 2/2 approved | passes 48 -> 48 (k.2, i.1 struck)
