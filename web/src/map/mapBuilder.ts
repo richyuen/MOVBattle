@@ -1210,6 +1210,8 @@ interface CampaignMapTheme {
   sea?: { water: Color3; shore: Color3 };
   /** The theme's own lawn in place of the sandbox's (see autumnField): ground and grass colour, the lawn's self-light, and the tuft clumps' palette */
   field?: { ground: Color3; grass: Color3; glow: Color3; tufts: Color3[] };
+  /** No island: everything the sandbox base stood on the field and round it is taken away and the lawn runs on to the horizon (see barePlane) */
+  bare?: boolean;
 }
 
 function zone(team: number, x: number, z: number, width: number, depth: number): PlacementZone {
@@ -2416,14 +2418,33 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
   }
 }
 
+/*
+ * The bare plane (simulation; maps/simulation: one flat, off-white plane with nothing on it, its far edge lost in a haze of the same pale colour, no island,
+ * ring, rocks, grass or clouds). Every mesh the sandbox base made is put away except the lawn and the ground under it, and a plane BARE_PLANE metres
+ * across in the lawn's own material is laid flush under them, so the field runs on into the fog with no rim. Its obstacles go with it (see buildCampaignBattlefield).
+ */
+const BARE_PLANE = 1600;
+const BARE_KEEP = new Set(["ground", "centerGrass"]);
+function barePlane(scene: Scene, prior: ReadonlySet<Scene["meshes"][number]>): void {
+  for (const mesh of scene.meshes) {
+    if (!prior.has(mesh) && !BARE_KEEP.has(mesh.name)) mesh.setEnabled(false);
+  }
+  const plane = MeshBuilder.CreateGround("barePlane", { width: BARE_PLANE, height: BARE_PLANE }, scene);
+  plane.position.y = -0.005;
+  plane.material = scene.getMaterialByName("grass");
+  plane.receiveShadows = true;
+}
+
 function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBuildResult {
+  const prior = new Set(scene.meshes);
   const base = new TribalSandboxMapBuilder(scene, false).build();
-  const obstacles = [...base.obstacles];
+  const obstacles = theme.bare ? [] : [...base.obstacles];
   const hazards = theme.hazards.map((hazard) => hazard.shape === "box"
     ? { ...hazard, center: hazard.center.clone() }
     : { ...hazard, center: hazard.center.clone() },
   );
   recolorBaseTerrain(scene, theme);
+  if (theme.bare) barePlane(scene, prior);
   addCampaignProps(scene, theme, obstacles);
   createHazardVisuals(scene, hazards, theme.sea);
   if (theme.sea) sandSpits(scene, theme.sea, hazards);
@@ -2650,22 +2671,18 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
   },
   "campaign.simulation": {
     displayName: "Simulation Arena",
-    clearColor: new Color3(0.62, 0.67, 0.75),
-    fogColor: new Color3(0.62, 0.67, 0.75),
-    ground: new Color3(0.44, 0.44, 0.47),
-    grass: new Color3(0.32, 0.34, 0.38),
+    // One pale plane under a sky of the same pale haze, nothing standing on it (see barePlane)
+    clearColor: new Color3(0.9, 0.89, 0.86),
+    fogColor: new Color3(0.9, 0.89, 0.86),
+    ground: new Color3(0.86, 0.85, 0.82),
+    grass: new Color3(0.86, 0.85, 0.82),
     zones: defaultHalfZones(),
     hazards: [
       cylinderHazard("void", 0, 0, 8),
     ],
     accent: new Color3(0.96, 0.84, 0.4),
-    props: [
-      { kind: "crystal", x: -20, z: -18, scale: 1.05 },
-      { kind: "crystal", x: -20, z: 18, scale: 1.05 },
-      { kind: "column", x: 18, z: -10, scale: 0.9 },
-      { kind: "column", x: 18, z: 10, scale: 0.9 },
-      { kind: "bridge", x: 0, z: 0, scale: 0.65 },
-    ],
+    bare: true,
+    props: [],
   },
   "campaign.wild_west": {
     displayName: "Wild West Flats",
