@@ -1288,7 +1288,15 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
  * off upright, banded every few metres (PALM_BANDS rings), topped by PALM_FRONDS long flat green fronds radiating from one point, each rising a little then
  * arching over and drooping to its tip (three flat cards per frond, pitched PALM_ARCH, PALM_FROND of the tree's height long in all), with a cluster of brown
  * coconuts under them. A seeded share of the ring trees takes this form; their crown is hidden. Palms lean in over the beach.
+ * Every other ring tree becomes a dark broadleaf bush (255; the reference fringes its palms with dark green clumps, never a pale round crown): the tree is
+ * hidden and in its place sits a mound of BUSH_LUMPS faceted dark lumps BUSH_TALL of the tree's height, BUSH_WIDE across, with BUSH_LEAVES broad pointed
+ * leaves fanned up and out of it.
  */
+const BUSH_LUMPS = [3, 5];
+const BUSH_TALL = 0.3;
+const BUSH_WIDE = 0.42;
+const BUSH_LEAVES = [5, 7];
+const BUSH_GREEN = new Color3(0.16, 0.36, 0.15);
 const PALM_LEAN = [0.22, 0.5];
 const PALM_BANDS = 4;
 const PALM_FRONDS = [6, 8];
@@ -1310,6 +1318,14 @@ function palmRing(scene: Scene, share: number): void {
   const nutMat = new StandardMaterial("palmNut", scene);
   nutMat.diffuseColor = new Color3(0.36, 0.24, 0.12);
   nutMat.specularColor = Color3.Black();
+  const bushMat = new StandardMaterial("bushLeaf", scene);
+  bushMat.diffuseColor = BUSH_GREEN.scale(0.6);
+  bushMat.emissiveColor = BUSH_GREEN.scale(0.45);
+  bushMat.specularColor = Color3.Black();
+  bushMat.backFaceCulling = false;
+  const bushDark = bushMat.clone("bushLeafDark");
+  bushDark.diffuseColor = BUSH_GREEN.scale(0.45);
+  bushDark.emissiveColor = BUSH_GREEN.scale(0.3);
   const trunks = new Set<Mesh>();
   for (const mesh of scene.meshes) {
     if (mesh.name === "canopy" && mesh.parent instanceof Mesh && mesh.parent.name === "trunk") trunks.add(mesh.parent);
@@ -1320,7 +1336,10 @@ function palmRing(scene: Scene, share: number): void {
   for (const trunk of trunks) {
     k++;
     const r = (n: number) => Math.abs((Math.sin(k * 19.391 + n * 47.23) * 28411.371) % 1);
-    if (r(1) > share) continue;
+    if (r(1) > share) {
+      broadleafBush(scene, trunk, r, bushMat, bushDark, glow, shadows);
+      continue;
+    }
     for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.setEnabled(false);
     const info = trunk.getBoundingInfo().boundingBox;
     const trunkLong = info.maximum.y - info.minimum.y;
@@ -1373,6 +1392,60 @@ function palmRing(scene: Scene, share: number): void {
       nut.material = nutMat;
       nut.isPickable = false;
     }
+  }
+}
+
+/** Hides a ring tree and sets a dark broadleaf bush on the ground where it stood (see BUSH_*) */
+function broadleafBush(
+  scene: Scene, trunk: Mesh, r: (n: number) => number, leaf: StandardMaterial, dark: StandardMaterial,
+  glow: ReturnType<Scene["getGlowLayerByName"]>, shadows: ReturnType<typeof sunShadows>,
+): void {
+  const info = trunk.getBoundingInfo().boundingBox;
+  const height = (info.maximum.y - info.minimum.y) / 0.55;
+  const foot = trunk.getAbsolutePosition().y - (info.maximum.y - info.minimum.y) / 2 * trunk.scaling.y;
+  const at = trunk.getAbsolutePosition();
+  trunk.setEnabled(false);
+  const tall = height * BUSH_TALL * (0.8 + r(5) * 0.4);
+  const wide = height * BUSH_WIDE * (0.8 + r(6) * 0.4);
+  const root = new Mesh("bush", scene);
+  root.position.set(at.x, foot, at.z);
+  root.rotation.y = r(7) * Math.PI * 2;
+  const parts: Mesh[] = [];
+  const lumps = BUSH_LUMPS[0] + Math.round(r(8) * (BUSH_LUMPS[1] - BUSH_LUMPS[0]));
+  for (let i = 0; i < lumps; i++) {
+    const a = (i / lumps) * Math.PI * 2 + r(60 + i);
+    const off = i === 0 ? 0 : wide * 0.28;
+    const size = (i === 0 ? 1 : 0.7 + r(70 + i) * 0.25) * wide * 0.6;
+    const lump = MeshBuilder.CreateIcoSphere("bushLump", { radius: size / 2, subdivisions: 1, flat: true }, scene);
+    lump.scaling.y = (tall / size) * (i === 0 ? 1.1 : 0.75);
+    lump.position.set(Math.cos(a) * off, tall * (i === 0 ? 0.5 : 0.36), Math.sin(a) * off);
+    lump.rotation.y = r(80 + i) * Math.PI;
+    lump.material = i % 2 === 0 ? dark : leaf;
+    parts.push(lump);
+  }
+  // Broad pointed leaves: a flattened four-sided spindle leaning out of the mound, each pitched up and turned round the bush
+  const leaves = BUSH_LEAVES[0] + Math.round(r(9) * (BUSH_LEAVES[1] - BUSH_LEAVES[0]));
+  for (let i = 0; i < leaves; i++) {
+    const yaw = (i / leaves) * Math.PI * 2 + r(90 + i) * 0.5;
+    const long = wide * (0.55 + r(100 + i) * 0.25);
+    const blade = MeshBuilder.CreateCylinder("bushLeaf", { height: long, diameterTop: 0, diameterBottom: long * 0.42, tessellation: 4 }, scene);
+    blade.scaling.z = 0.12;
+    blade.bakeCurrentTransformIntoVertices();
+    blade.position.y = long / 2;
+    blade.bakeCurrentTransformIntoVertices();
+    const stem = new Mesh("bushStem", scene);
+    stem.parent = root;
+    stem.position.set(Math.sin(yaw) * wide * 0.15, tall * 0.55, Math.cos(yaw) * wide * 0.15);
+    stem.rotation.set(0.9 + r(110 + i) * 0.35, yaw, 0);
+    blade.parent = stem;
+    blade.material = i % 3 === 0 ? dark : leaf;
+    parts.push(blade);
+  }
+  for (const part of parts) {
+    if (!part.parent) part.parent = root;
+    part.isPickable = false;
+    glow?.addExcludedMesh(part);
+    shadows?.addShadowCaster(part, false);
   }
 }
 
