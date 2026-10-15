@@ -225,10 +225,14 @@ const VOID_STUDS = 8;
  *   tempest_lich (units/evil.tempest_lich): no hood. A crown of ~7 dark red-brown branch tines rises straight off the crown, the tallest ~2.4 heads, each kinking
  *   out and back like a dead twig; a dark purple robe to the ankle with its hem torn into long rags. LICH_TINES tines, LICH_TINE_TALL heads at the tallest.
  *   mad_mechanic (factions/evil, third from left): no hood. A dark leather cap with a pair of round pale-blue goggles on the brow, a dark leather apron to the knee.
+ *   void_monarch (units/evil.void_monarch): no gold. A grey-olive bone crown: a band round the brow and ~7 straight four-sided spikes standing off it, the front
+ *   one tallest (~1.5 heads), the flanking ones falling away to ~0.5 heads at the sides; two bone pauldrons, each rising off the shoulder to about the crown's
+ *   height, then running out level ~0.6 chests to the side and hooking down, with spikes along the top; dark navy armour, bone spikes on gauntlets and greaves.
+ *   MONARCH_SPIKES [angle round the band from the face, heads tall]; pauldron MONARCH_PAULDRON chests out, MONARCH_PAULDRON_THICK chests thick.
  */
 type HornedEvilStyle = {
   horn: [number, number, number][]; hornColor: Color3; cloth: Color3; legs: Color3; helm: Color3 | null; teeth: number; skull: boolean;
-  spikes: boolean; wraps: boolean; skirt: number; thick: number; tines?: number; goggles?: boolean; rags?: number;
+  spikes: boolean; wraps: boolean; skirt: number; thick: number; tines?: number; goggles?: boolean; rags?: number; boneCrown?: boolean; bone?: Color3;
 };
 const HORNED_EVIL: Record<string, HornedEvilStyle> = {
   "evil.shadow_walker": {
@@ -249,7 +253,14 @@ const HORNED_EVIL: Record<string, HornedEvilStyle> = {
     horn: [], hornColor: new Color3(0.3, 0.2, 0.13), cloth: new Color3(0.24, 0.15, 0.1), legs: new Color3(0.16, 0.11, 0.09),
     helm: new Color3(0.32, 0.2, 0.12), teeth: 0, skull: false, spikes: false, wraps: false, skirt: 0.95, thick: 1, goggles: true,
   },
+  "evil.void_monarch": {
+    horn: [], hornColor: new Color3(0.6, 0.6, 0.46), cloth: new Color3(0.08, 0.09, 0.2), legs: new Color3(0.07, 0.07, 0.11),
+    helm: null, teeth: 0, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1, boneCrown: true, bone: new Color3(0.6, 0.6, 0.46),
+  },
 };
+const MONARCH_SPIKES: [number, number][] = [[0, 1.5], [-0.55, 0.9], [0.55, 0.9], [-1.2, 0.65], [1.2, 0.65], [-2.0, 0.5], [2.0, 0.5]];
+const MONARCH_PAULDRON = 0.62;
+const MONARCH_PAULDRON_THICK = 0.17;
 const LICH_TINE_TALL = 2.4;
 const GOGGLE_GLASS = new Color3(0.55, 0.85, 1);
 const EVIL_HORN_ROOT = 0.24;
@@ -1068,7 +1079,7 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
   for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
     if (/_[lr]FootM$/.test(mesh.name)) mesh.material = boot;
   }
-  const bone = mf.get("cloth", EVIL_BONE, { emissiveIntensity: EVIL_BONE_GLOW });
+  const bone = mf.get("cloth", style.bone ?? EVIL_BONE, { emissiveIntensity: EVIL_BONE_GLOW });
   const hornMat = mf.get("cloth", style.hornColor, { emissiveIntensity: style.skull ? EVIL_GLOW * 2 : EVIL_BONE_GLOW });
   const head = body.headMesh;
   const hExt = head.getBoundingInfo().boundingBox.extendSize;
@@ -1158,6 +1169,43 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
       lens.rotation.x = Math.PI / 2;
       lens.position.set(side * hExt.x * 0.48, headSize * 0.17, face * 1.37);
       keep(lens, head, glass);
+    }
+  }
+  if (style.boneCrown) {
+    // A bone band round the brow, straight spikes standing off its rim, the front one tallest
+    const rx = hExt.x * 1.16, rz = face * 1.16;
+    const band = MeshBuilder.CreateCylinder("monarchBand", { height: headSize * 0.28, diameterTop: rx * 2.08, diameterBottom: rx * 2, tessellation: 8 }, scene);
+    band.scaling.z = rz / rx;
+    band.rotation.y = Math.PI / 8;
+    band.position.y = headSize * 0.4;
+    keep(band, head, bone);
+    for (const [a, tall] of MONARCH_SPIKES) {
+      const h = tall * headSize;
+      const spike = MeshBuilder.CreateCylinder("monarchSpike", { height: h, diameterTop: 0, diameterBottom: headSize * (tall > 1 ? 0.3 : 0.22), tessellation: 4 }, scene);
+      spike.position.set(Math.sin(a) * rx * 0.92, headSize * 0.52 + h / 2, Math.cos(a) * rz * 0.92);
+      spike.rotation.y = a + Math.PI / 4;
+      keep(spike, head, bone);
+    }
+    // Bone pauldrons off the shoulders: up to the crown's height, out level, hooked down at the end, spikes along the top
+    const chest = body.torsoMesh;
+    const ext = chest.getBoundingInfo().boundingBox.extendSize;
+    const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+    const top = chest.position.y + H * 0.5;
+    for (const side of [-1, 1]) {
+      const cap = MeshBuilder.CreateSphere("monarchShoulder", { diameter: W * 0.46, segments: 4, slice: 0.5 }, scene);
+      cap.position.set(side * W * 0.46, top - H * 0.04, 0);
+      keep(cap, body.torso, bone);
+      const pts = [
+        new Vector3(side * W * 0.44, top, -D * 0.1),
+        new Vector3(side * W * 0.62, top + H * 0.62, -D * 0.2),
+        new Vector3(side * W * (0.62 + MONARCH_PAULDRON), top + H * 0.7, -D * 0.2),
+        new Vector3(side * W * (0.78 + MONARCH_PAULDRON), top + H * 0.42, -D * 0.12),
+      ];
+      taperedPath(scene, "monarchPauldron", pts, W * MONARCH_PAULDRON_THICK, body.torso, bone, added);
+      for (let k = 0; k < 3; k++) {
+        const at = Vector3.Lerp(pts[1], pts[2], 0.2 + k * 0.3);
+        spikeOut(scene, body.torso, at.add(new Vector3(0, W * 0.05, 0)), new Vector3(side * 0.25, 1, 0), W * 0.2, bone, added);
+      }
     }
   }
   const spikeLen = headSize * EVIL_SPIKE;

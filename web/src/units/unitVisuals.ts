@@ -768,7 +768,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.void_monarch": vis(
-    { scale: 2.08, bulk: 1.46, headSize: 1.14, armLength: 1.16 }, "staff", "crown", "none", "cape", "#5A4A8E", undefined, {
+    { scale: 2.08, bulk: 1.46, headSize: 1.14, armLength: 1.16 }, "staff", "none", "none", "cape", "#5A4A8E", undefined, {
       posePreset: "monarch",
       materialPreset: "evil_void",
       attachmentPreset: "shadow_orbit",
