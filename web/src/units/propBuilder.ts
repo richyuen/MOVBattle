@@ -1792,7 +1792,10 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // SCYTHE_BLADE of the snath along its arc and curls SCYTHE_CURL radians down to a point, SCYTHE_HEEL wide at the heel tapering to nothing, a wedge
       // SCYTHE_SPINE thick at its back; the snath bows SCYTHE_BOW of its length away from the blade, and the hand grips it SCYTHE_GRIP below the middle, so
       // the head stands high over the hood and the crescent hangs over it.
-      const SCYTHE_SNATH = 1.25, SCYTHE_BLADE = 0.8, SCYTHE_SEGS = 14, SCYTHE_CURL = 1.75, SCYTHE_RISE = 0.35;
+      // 268 (units/spooky.reaper): the crescent is seated on a heel collar (tang + socket) that turns it SCYTHE_LEVEL below square to the snath, which in the
+      // high carry (snath leant ~0.6 rad out) lays its heel level off the head; its curl is not even but grows along the blade (none at the heel, twice the
+      // mean at the tip), so it runs out flat over the hood and then droops in a long arc, the tip hanging below the head.
+      const SCYTHE_SNATH = 1.25, SCYTHE_BLADE = 0.8, SCYTHE_SEGS = 14, SCYTHE_CURL = 1.3, SCYTHE_LEVEL = -0.6;
       const SCYTHE_TURN = Math.PI / 2, SCYTHE_HEEL = 0.17, SCYTHE_SPINE = 0.045, SCYTHE_BOW = 0.05, SCYTHE_GRIP = 0.15;
       const snathLong = SCYTHE_SNATH * s;
       const bow = SCYTHE_BOW * snathLong;
@@ -1812,12 +1815,23 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       head.parent = shaft;
       const heel = MeshBuilder.CreateBox("scyheel", { width: 0.07 * s, height: SCYTHE_HEEL * 1.1 * s, depth: SCYTHE_SPINE * 1.2 * s }, scene);
       heel.position.set(0.03 * s, snathLong * 0.47, 0);
+      heel.rotation.z = SCYTHE_LEVEL;
       heel.material = steel;
       heel.parent = head;
+      // The heel collar: a socket capping the snath's head and a tang run out of it along the blade's seat, so the crescent sits on the end of the pole
+      const socket = MeshBuilder.CreateCylinder("scysocket", { height: 0.08 * s, diameterTop: 0.06 * s, diameterBottom: 0.045 * s, tessellation: 6 }, scene);
+      socket.position.y = snathLong * 0.5;
+      socket.material = steel;
+      socket.parent = head;
+      const tang = MeshBuilder.CreateBox("scytang", { width: 0.1 * s, height: 0.035 * s, depth: SCYTHE_SPINE * 1.4 * s }, scene);
+      tang.position.set(0.05 * s * Math.cos(SCYTHE_LEVEL), snathLong * 0.5 + 0.05 * s * Math.sin(SCYTHE_LEVEL), 0);
+      tang.rotation.z = SCYTHE_LEVEL;
+      tang.material = steel;
+      tang.parent = head;
       // Three paths along the arc (spine front, cutting edge, spine back), closed round into a wedge-section ribbon
       const segLong = (SCYTHE_BLADE * snathLong) / SCYTHE_SEGS;
       const front: Vector3[] = [], edge: Vector3[] = [], back: Vector3[] = [];
-      let x = 0.04 * s, y = snathLong * 0.5, heading = SCYTHE_RISE;
+      let x = 0.04 * s, y = snathLong * 0.5, heading = SCYTHE_LEVEL;
       for (let i = 0; i <= SCYTHE_SEGS; i++) {
         const k = i / SCYTHE_SEGS;
         const wide = SCYTHE_HEEL * s * (1 - k) * (1 - 0.35 * k);
@@ -1829,7 +1843,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         back.push(new Vector3(x, y, -thick));
         x += Math.cos(heading) * segLong;
         y += Math.sin(heading) * segLong;
-        heading -= SCYTHE_CURL / SCYTHE_SEGS;
+        heading -= (SCYTHE_CURL * (2 * i + 1)) / (SCYTHE_SEGS * SCYTHE_SEGS);
       }
       const blade = MeshBuilder.CreateRibbon("scyblade", { pathArray: [front, edge, back], closeArray: true, sideOrientation: Mesh.DOUBLESIDE }, scene);
       blade.convertToFlatShadedMesh();
