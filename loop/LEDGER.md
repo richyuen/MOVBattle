@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 261 | simulation-red-line | maps-light.o | approved
-- 261 | sacred-elephant-trappings | unit-look.s | approved
 - 262 | jouster-hem-lift | unit-look.n | approved
 - 262 | void-cultist-horns | unit-look.t | approved
 - 263 | evil-hood-horns | unit-look.t | approved
@@ -32,12 +30,12 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 269 | renaissance-townhouse-row | maps-light.m | approved
 - 270 | renaissance-plaza-paving | maps-light.m | approved
 - 270 | meadow-oak-ring | maps-light.i | approved
+- 271 | adventure-pool-water | maps-light.j | approved
+- 271 | meadow-ruin-pillars | maps-light.i | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-mapBuilder.ts:blossomRing cherry ring (CHERRY_LIMBS, _TILT, _LIMB, _PUFF, _SQUASH; ring.blossom share; dynasty ring palette) | limbs 2-4, tilt 0.6-1.05, limb 0.32-0.5, puff 0.16-0.24, squash 0.72, share 0.65 | 246 | approved | sage ring
-propBuilder.ts:fitted dragon_head (DRAGON_SHELL, _SNOUT, _JAW_DROP, _EYE, _HORN, _HORN_RAKE, _TAIL, _SCALLOPS; team x0.82) | 1.9 heads, snout 0.95, jaw 0.32, eye 0.5, horn 1.25 rake 1.05, tail 2.6, 7 | 246 | approved | dragon_wings black slabs
 propBuilder.ts:fitted kasa + beads (KASA_HEADS, _TALL, _TIP, _BAND, _BEADS, _BEAD; band accent x0.55) | 2.4 heads, tall 0.55, tip 0.14, band 0.09; 11 beads 0.16 torso | 247 | approved | monk_headband torus at the crown
 mapBuilder.ts:autumnField (theme.field ground/grass/glow; FIELD_TUFTS, _RING_SHARE, _BAND, _CARDS, _TALL, _GLOW) | 260 clumps, 0.7 ring 0.8-0.97, 3-5 cards 0.9-1.5 m, glow 0.45; grass 1,0.58,0.2 | 248 | approved | sandbox plum glow, brown 0.47,0.36,0.23
 propBuilder.ts:fitted pointed_cowl (COWL_FOOT, _LOWER, _TIP, _RAKE, _BEND, _COLLAR, _COLLAR_DEEP, _SHADE) | foot 1.05, lower 0.8 + tip 0.6 heads, rake 0.22 bend 0.4, collar 2.0 x 0.42, team x0.78 | 248 | approved | hood_liripipe accent green
@@ -75,3 +73,5 @@ mapBuilder.ts:townRing (TOWN_INSET,_WIDE,_DEEP,_STOREY,_FLOORS,_NEAR,_WALLS,_ROO
 propBuilder.ts:scythe steel (blade material; matte stone kind, self-light) | .81,.83,.84 emissive .15 stone | 269 | approved | .72,.73,.78 emissive .05 default
 mapBuilder.ts:townPlaza (PLAZA_STONE, _JOINT, _TONES, _BASIN, _DRESSING; lawn hidden, grout .5,.47,.43; fountain) | 2.6 m, joint .28, tones ~.84,.8,.72 lit .15, basin 7 | 270 | approved | sage lawn, boulders/columns/trees
 mapBuilder.ts:oakRing (OAK_SCALE, _LEAN, _BOLE, _LIMBS, _CROWN, _SQUASH, _SKIRT; introduction ring palette) | 1.35, lean .18-.4, bole .34, 2 limbs, crown .62 sq .5, 3 skirt; leaf .32,.52,.2 | 270 | approved | sage puffball ring
+mapBuilder.ts:lagoonPools (LAGOON_ROUND,_SIDES,_RAGGED,_SHORE,_DEEP; theme.lagoon water/deep/shore) | power 2.6, 30 sides, ragged .08, shore 1.3, deep .58; water .26,.78,.66 deep .1,.56,.56 | 271 | approved | flat .42-alpha blue hazard box
+mapBuilder.ts:meadowRuins (RUIN_FAR,_TOWER,_TOWER_SIDES,_TOWER_TALL,_PILLARS,_BLOCKS,_STONE; boulders+walls hidden) | far 28, tower 6.4 x9 sides 10 m, 5 pillars 1.8-6.8, 9 blocks; stone .76,.73,.64 lit .4 | 271 | approved | sandbox boulders + rubble walls
