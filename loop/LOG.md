@@ -254,3 +254,4 @@ iter 252 | [S] reaper-blade-and-skull, [S] pirate-ships | 2/2 approved | passes 
 iter 253 | [S] maps-light.n pirate-palms-and-sea, [S] unit-look.u tree-giant-woodsman-and-tree (+evidence lineup_secret_giants) | 2/2 approved | passes 8/21 -> 8/21 (tier 3)
 iter 254 | [S] unit-look.u tree-hip-carry, [S] unit-look.n jouster-horse | 2/2 approved | passes 8/21 -> 8/21 (tier 3)
 iter 255 | [S] unit-look.n renaissance-painter, [S] maps-light.n pirate-full-palm-ring (re-audit: no change) | 2/2 approved | passes 55 -> 55
+iter 256 | [S] jouster-horse-stature, [S] cactus-suit | 2/2 approved | passes 55 -> 55

@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 255   Last re-audit: 255   Consecutive rejects: 0   Branch: main
+Iteration: 256   Last re-audit: 255   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -17,16 +17,16 @@ ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
 Tier 3 (scored 240, re-audited 245, 250, 255; ours lineup_<faction> / biome_<map>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
-unit-look tier 3: i j k l m o PASS, n p-v FAIL (6/14) [S since: 0 each, except p 3 (250, 251, 252), u 3 (249, 253, 254), n 2 (254, 255), v 1 (244)]
+unit-look tier 3: i j k l m o PASS, n p-v FAIL (6/14) [S since: 0 each, except n 3 (254, 255, 256), p 3 (250, 251, 252), u 3 (249, 253, 254), q 1 (256), v 1 (244)]
 - i tribal PASS (cleared 243, 251; polish: antlers pale, staff topper)
 - j farmer PASS (cleared 249; polish: brims repeat, braids unreadable)
 - k ancient PASS (cleared by a5f0805, 245; crest small at lineup distance, helm close to skin value: polish, no blocker)
 - l viking PASS (cleared by 312a742, 242)
 - m dynasty PASS (cleared 247; polish: beads small, monk no bo staff)
-- n renaissance: 1 struck (d332b14, 254); 2 struck (7fe313c, 255; polish: palette low at the hip, face tipped away; hose olive in shade; brush tip small); 3 horse pony-scale: barrel at rider's knee, short legs, neck a near-vertical post hidden by the shield; TABS rider sits high, long legs, head forward at chest height (units/renaissance.jouster)
+- n renaissance: 1 struck (d332b14, 254); 2 struck (7fe313c, 255; polish: palette low at the hip, face tipped away; hose olive in shade; brush tip small); 3 struck (6eb1cc9, 256: rider high, legs 1.4x barrel, neck forward of shield; neck still crosses shield's lower half in 3/4 view); 4 stilt horse: square team-cloth box on four thin brown sticks, no thighs or gaskins, reads as a table; TABS rounded barrel, thick muscled legs tapering to the hoof (units/renaissance.jouster)
 - o pirate PASS (cleared 249, 250; polish: bandana knot/tails, no vests)
 - p spooky: 1 struck (f37d3bf, 250; polish: bone greyish, no studded round shield); 2 narrowed (01ef730 251, 7155691 252: cowl opens on the face, skull+jaw+bead eye, hem at mid-shin): blade a short stepped slab hanging off a level, lance-carried snath, not a long crescent arcing over the hood (units/spooky.reaper); polish: skull/shins grey not cream
-- q wild_west: 1 cactus a man with a green plank, not the spiked suit (units/wild_west.cactus); 2 lasso on a grey box, no llama (units/wild_west.lasso)
+- q wild_west: 1 struck (a63efa7, 256; polish: crown flower edge-on, blue skin chunk on robe front, robe a broad straight box); 2 lasso on a grey box, no llama (units/wild_west.lasso)
 - r legacy: 1 super_peasant in a dark wizard cone, not straw hair + sack (units/legacy.super_peasant); 2 no horse-drawn chariot (units/legacy.chariot)
 - s good: 1 no white/gold accent, plain blue tunics (units/good.righteous_paladin); 2 sacred elephant grey, no gold trappings or rider (units/good.sacred_elephant)
 - t evil: 1 four of seven in the same plain cone, no horns/spikes/dark armour (units/evil.void_cultist); 2 void_monarch bright yellow jewelled crown (units/evil.void_monarch)
@@ -43,18 +43,18 @@ maps-light tier 3: k l PASS, i j m-o FAIL (2/7) [S since: 0 each, except n 3 (25
 Total tier 1 24/24; tier 2 23/24; tier 3 8/21.
 
 ## Focus (every gap this iteration)
-BASE db07fb3 (iter 255, re-audit: no verdict changed; picks ranked 1 and 3, rank 2 same criterion as 1; no [P])
-- [S] unit-look.n renaissance-painter (7fe313c) — APPROVE, blocker 2 struck, n FAIL
-- [S] maps-light.n pirate-full-palm-ring (024b809) — APPROVE, blocker 2 struck, n FAIL
+BASE 4a59800 (iter 256; picks ranked 1 and 3: rank 2 would repeat 255's pair n/maps-light.n; no [P])
+- [S] unit-look.n jouster-horse-stature (6eb1cc9) — APPROVE, blocker 3 struck, 4 added, n FAIL
+- [S] unit-look.q cactus-suit (a63efa7) — APPROVE, blocker 1 struck, q FAIL
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] unit-look.n renaissance-painter (7fe313c) VERDICT: APPROVE CRITERION: unit-look.n FAIL (previous: FAIL)
-- GAP: [S] maps-light.n pirate-full-palm-ring (024b809) VERDICT: APPROVE CRITERION: maps-light.n FAIL (previous: FAIL)
+- GAP: [S] jouster-horse-stature (6eb1cc9) VERDICT: APPROVE CRITERION: unit-look.n FAIL (previous: FAIL)
+- GAP: [S] cactus-suit (a63efa7) VERDICT: APPROVE CRITERION: unit-look.q FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] unit-look.n jouster-horse-stature [1] — blocker 3: horse rebuilt tall (long legs, barrel at rider's hip, neck raked forward, head at chest height clear of the shield) — ref units/renaissance.jouster — ours lineup_renaissance
+1. [S] unit-look.n jouster-horse-legs [0] — blocker 4: muscled tapering legs (thigh/gaskin wedge, hock angle) + rounded barrel/caparison bell, not sticks under a box — ref units/renaissance.jouster — ours lineup_renaissance
 2. [S] maps-light.n pirate-sand-spits [0] — blocker 3: irregular faceted sand lobes under the ring palms, field edge jittered, water kept to the coves — ref maps/pirate_beach — ours biome_pirate
-3. [S] unit-look.q cactus-suit [0] — blocker 1: green spiked cactus body suit (ribbed trunk, arm lobes, spines) — ref units/wild_west.cactus — ours lineup_wild_west
+3. [S] unit-look.q lasso-llama [0] — blocker 2: cream faceted llama mount (long neck, ears, saddle blanket) under the lasso rider, replacing the grey box — ref units/wild_west.lasso — ours lineup_wild_west
 4. [S] unit-look.s paladin-white-gold [0] — blocker 1: white tabard, gold trim, gold accent on helm and shield — ref units/good.righteous_paladin — ours lineup_good
 5. [S] unit-look.t void-cultist-horns [0] — blocker 1: horned/spiked dark-armour headgear replacing the plain cone — ref units/evil.void_cultist — ours lineup_evil
 6. [S] maps-light.m renaissance-townhouses [0] — blocker 1: tall coloured townhouse facades (windows, balconies, cornices) round the plaza — ref maps/renaissance_town — ours biome_renaissance
@@ -63,18 +63,17 @@ BASE db07fb3 (iter 255, re-audit: no verdict changed; picks ranked 1 and 3, rank
 (Off-list: tree-crown-lobes (u.3'), reaper crescent (p.2). Open: maps-light.i/.j/.o.)
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
-- [R] aimed-blow rebuild [attempts: 2] — 241: fist-mark IK + step-in + board-top fallback + hit re-pose; hit frame still shows the front club upright (cocked for his next), no visible hoplite lean, rank-back clubs fan in the air, knights over-folded
-- [R] aimed-blow rebuild [attempts: 1] — 240: blow locked to the sim hit, weapon pointed from the existing fist; a low/kneeling fist jabs the club UP at the head; flinch not visible on the hit frame; rank-back men and knights get no target
+- [R] aimed-blow rebuild [attempts: 2] — 241: fist-mark IK + step-in + board-top fallback + hit re-pose; hit frame still shows the front club upright, no hoplite lean, rank-back clubs fan in the air, knights over-folded
+- [R] aimed-blow rebuild [attempts: 1] — 240: blow locked to the sim hit, weapon pointed from the existing fist; a low/kneeling fist jabs the club UP at the head; flinch not visible on the hit frame
 - archer-brim [attempts: 1, dropped] — 237: the lineup cones are hood_liripipe, not conical_hat
 - cone-brim-skirt [attempts: 1] — 235: flared skirt 1.5->2.4 heads, 0.1 deep, lighter: invisible edge-on at eye level
-- aimed-club-cycle [attempts: 1] — 234: laid clubs end on the clubber's own front man, short of the foe; rank-back men need to close to reach
+- aimed-club-cycle [attempts: 1] — 234: laid clubs end on the clubber's own front man, short of the foe
 - rear-strike-lands [attempts: 1] — 233: aimed lay only at the landed fraction; rear club still cocked vertical between beats
 - second-rank-blow [attempts: 1] — 231: beat-only strike from the rear rank; between beats the cocked hold is what stills catch
-- head-fitted-hats [attempts: 1] — 229: 2-head width read; fixed brow seat covers the cone archer's eyes
 
 ## Notes for next iteration (max 5 lines)
 - battle-feel.e deferred. 241 findings: clubbers strike from up to ~2 m, hoplites taller than clubbers, units animate BEFORE the decision loop, so the hit frame renders the pre-hit pose unless re-posed in the same step.
-- Secret lineup (8x5) leaves its front rank right of the shogun out of frame: tree/ice giants read in lineup_secret_giants (gallery_secret_giants, 253). Pirate theme: ring.palms (palmRing; non-palm ring trees -> broadleafBush) + sea (seaRim + opaque hazard pools), sea meshes kept out of the glow layer (they bloomed a haze).
-- Placement camera sits at -z (alpha -pi/2): far edge of a biome shot is +z. Theme passes in recolorBaseTerrain: deadenRing, blossomRing, ballRing (ring.*), autumnField (theme.field: lawn/blade glow + tuft clumps; campaign lawns otherwise keep the sandbox plum glow).
-- Tier 3 letters are separate criteria. buildFittedHat takes teamColor; hood_liripipe is shared by medieval archer + secret: add new hat types rather than reshaping it. mapBuilder.ts and loop files are CRLF: use Edit.
-- capture.mjs runs the showcase first; --only looks differ in pose run to run (random unit-id suffix shifts the idle phase): make a prop read from every side. Weapons in _buildCarry's name regex turn in the fist to a body-frame `tip`, eased in (~0.5 s, lineup shots catch the ease: set _carryTurn 1 at build). mount_horse = buildHorse (shared with whip rider, secret cavalry). Sphere arc gaps: CreateSphere arc gap sits at -z before rotation; reaper cowl needed rotation.y = -pi/2 + pi*open (252). No [P] on rows approved within 20 iterations (incl. 247-253 rows). Body mesh _yoke is the trunk hull: hide it to thin a body. Probe trick: temporarily expose scene on window in main.ts, build, read mesh world positions with playwright from loop/node_modules; revert.
+- Secret lineup front rank right of the shogun is out of frame: giants read in lineup_secret_giants. Pirate theme: ring.palms (palmRing; non-palm ring trees -> broadleafBush) + sea (seaRim + opaque hazard pools), sea meshes kept out of the glow layer.
+- Placement camera sits at -z: far edge of a biome shot is +z. Theme passes in recolorBaseTerrain: deadenRing, blossomRing, ballRing, autumnField. mapBuilder.ts and LOG.md are CRLF: use Edit.
+- buildHorse (shared: jouster, whip rider, secret cavalry) lifts body.hip at build; the animator keeps it as _hipRest (read lazily). dress* in unitFactory: set body.bodyMaterial.baseColor (not material swaps) so the later tunic hem follows. Body mesh _yoke is the trunk hull.
+- --only looks differ in pose run to run (random id suffix shifts idle phase): make a prop read from every side. Sphere arc gap sits at -z before rotation (rotation.y = -pi/2 + pi*open opens on the face). No [P] on rows approved within 20 iterations.
