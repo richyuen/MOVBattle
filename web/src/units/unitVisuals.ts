@@ -852,7 +852,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
       });
     case "iconic_super_peasant":
-      return vis({ scale: 2.02, bulk: 1.18, headSize: 1.08, armLength: 1.2, legLength: 1.08 }, "none", "laurel", "none", "cape", "#f3d45a", undefined, {
+      return vis({ scale: 2.02, bulk: 1.18, headSize: 1.08, armLength: 1.2, legLength: 1.08 }, "none", "none", "none", "cape", "#f3d45a", undefined, {
         posePreset: "giant", materialPreset: "secret_hero", attachmentPreset: "super_aura", fxPreset: "solar",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["super_aura"], attacking: ["super_aura"], "ability-active": ["super_aura"] },

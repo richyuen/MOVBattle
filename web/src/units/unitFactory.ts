@@ -244,6 +244,21 @@ const EVIL_GLOW = 0.15;
 const EVIL_BONE_GLOW = 0.3;
 const EVIL_SPIKE = 0.32;
 /*
+ * The super peasant (units/legacy.super_peasant): a giant farmhand with a shock of straw hair in a plain sack, not a laurel-crowned hero. Read off the reference:
+ * a mop of pale straw hair, thick spiky locks swept up and back off the crown (~12 seen), standing ~1 head off the scalp and hanging over the brow; an off-white
+ * sack tunic from the shoulders to mid-thigh, belted with a thick tan rope; bare team-skin arms, legs and feet.
+ *   hair STRAW_LOCKS locks each STRAW_LOCK heads long, swept STRAW_SWEEP back off upright, self-lit STRAW_GLOW; sack SACK_COLOR, skirt SACK_SKIRT knees long.
+ */
+const STRAW_COLOR = new Color3(0.92, 0.66, 0.24);
+const STRAW_GLOW = 0.2;
+const STRAW_LOCKS = 16;
+const STRAW_LOCK = 1.1;
+const STRAW_SWEEP = 0.75;
+const SACK_COLOR = new Color3(0.9, 0.88, 0.82);
+const SACK_GLOW = 0.18;
+const SACK_SKIRT = 0.62;
+const SACK_ROPE = new Color3(0.78, 0.64, 0.4);
+/*
  * The cactus (256; units/wild_west.cactus): a man in a full-length cactus suit, not a man holding a green plank. Read off the reference: one dark green robe from
  * the shoulders to the ankle, flaring a little to the hem, with green sleeves to the wrist; a squarish green hood over the head with a window cut on the face so the
  * team-skin face and bead eyes show; team-skin shins and dark shoes under the hem; the whole suit studded with fat brown-maroon four-sided spines (about 40 seen
@@ -451,6 +466,9 @@ export class UnitFactory {
     }
     if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
       propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
+    }
+    if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressSuperPeasant(this._scene, body));
     }
 
     if (isZeus && !shouldUseVehicleBody) {
@@ -1123,6 +1141,64 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
   if (style.skirt > 0) {
     const skirt = hangSkirt(scene, body, "evilBreech", style.skirt, 1.35, mf.get("cloth", style.legs, { emissiveIntensity: EVIL_GLOW }));
     if (skirt) added.push(skirt);
+  }
+  return added;
+}
+
+/** Dresses the super peasant as a giant farmhand (see STRAW_*, SACK_*): a spiky straw mop swept up and back, an off-white sack tunic with a rope belt. */
+function dressSuperPeasant(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  // The sack is the body's own cloth turned off-white and matte; legs go bare team skin
+  body.bodyMaterial.baseColor = SACK_COLOR;
+  body.bodyMaterial.metallic = 0;
+  body.bodyMaterial.roughness = 0.85;
+  body.bodyMaterial.emissiveColor = SACK_COLOR.scale(SACK_GLOW);
+  const sack = mf.get("cloth", SACK_COLOR.scale(0.94), { emissiveIntensity: SACK_GLOW });
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = body.skinMaterial;
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = body.skinMaterial;
+  }
+  const skirt = hangSkirt(scene, body, "sackSkirt", SACK_SKIRT, 1.5, sack);
+  if (skirt) added.push(skirt);
+  // A thick rope belt round the waist
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const rope = MeshBuilder.CreateTorus("sackRope", { diameter: W * 0.98, thickness: W * 0.11, tessellation: 10 }, scene);
+  rope.scaling.z = (D * 1.1) / (W * 0.98);
+  rope.position.set(0, chest.position.y - H * 0.4, 0);
+  rope.material = mf.get("cloth", SACK_ROPE, { emissiveIntensity: SACK_GLOW });
+  rope.convertToFlatShadedMesh();
+  rope.parent = body.torso;
+  added.push(rope);
+  // The straw mop: a cap on the crown, then locks fanned round it, each a long tapered spike swept up and back, the front ones hanging over the brow
+  const head = body.headMesh;
+  const hExt = head.getBoundingInfo().boundingBox.extendSize;
+  const headSize = hExt.y * 2;
+  const straw = mf.get("cloth", STRAW_COLOR, { emissiveIntensity: STRAW_GLOW });
+  // The block head's crown and back are boxed in straw (a sphere left its corners bare), a fringe over the brow
+  const cap = MeshBuilder.CreateBox("strawCap", { width: hExt.x * 2.2, height: headSize * 0.36, depth: hExt.z * 2.2 }, scene);
+  cap.position.y = headSize * 0.36;
+  const back = MeshBuilder.CreateBox("strawBack", { width: hExt.x * 2.2, height: headSize * 0.8, depth: hExt.z * 0.5 }, scene);
+  back.position.set(0, headSize * 0.05, -hExt.z * 0.9);
+  const fringe = MeshBuilder.CreateBox("strawFringe", { width: hExt.x * 2.1, height: headSize * 0.16, depth: hExt.z * 0.3 }, scene);
+  fringe.position.set(0, headSize * 0.24, hExt.z * 1.0);
+  for (const m of [cap, back, fringe]) {
+    m.convertToFlatShadedMesh();
+    m.material = straw;
+    m.parent = head;
+    added.push(m);
+  }
+  for (let i = 0; i < STRAW_LOCKS; i++) {
+    // Rooted over the crown box in a jittered grid; every lock rises and sweeps back, the front row hanging forward over the brow
+    const col = (i % 4) / 3 - 0.5, row = Math.floor(i / 4) / Math.max(1, Math.floor((STRAW_LOCKS - 1) / 4)) - 0.5;
+    const root = new Vector3(col * hExt.x * 1.7, headSize * 0.5, row * -hExt.z * 1.7);
+    const front = row < -0.4;
+    const dir = (front ? new Vector3(col * 0.6, 0.35, 1) : new Vector3(col * 1.4, 1, -STRAW_SWEEP * (1 + row))).normalize();
+    const len = headSize * STRAW_LOCK * (front ? 0.55 : 0.85 + 0.35 * ((i * 5) % 4) / 3);
+    const tip = root.add(dir.scale(len));
+    taperedPath(scene, "strawLock", [root, root.add(tip).scale(0.5).add(new Vector3(0, len * 0.1, 0)), tip], headSize * 0.42, head, straw, added);
   }
   return added;
 }
