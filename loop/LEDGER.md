@@ -12,10 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 265 | evil-lich-branch-crown | unit-look.t | approved
-- 265 | tree-club-three-lobe | unit-look.u | approved
-- 266 | void-monarch-bone-crown | unit-look.t | approved
-- 266 | reaper-crescent-blade | unit-look.p | rejected
 - 267 | reaper-high-carry | unit-look.p | approved
 - 267 | tree-giant-carry-rebuild [R] | unit-look.u | approved
 - 268 | reaper-blade-mount | unit-look.p | approved
@@ -28,12 +24,12 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 271 | meadow-ruin-pillars | maps-light.i | approved
 - 272 | adventure-castle | maps-light.j | approved
 - 273 | field-oak-clumps | maps-light.j | approved
+- 276 | landed-blow-on-hit | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-propBuilder.ts:fitted tricorn/pirate_hat (TRICORN_DOME, _CROWN, _BRIM, _WALL, _LEAN, _SKULL; crew bandana accents) | dome 1.12, crown 0.16, brim 2.3, wall 0.42 lean 0.3, skull 0.26 | 250 | approved | box on a flat triangle (stovepipe)
-unitFactory.ts:dressSkeleton (SKELETON_BONE, _LIMB, _SPINE, _RIBS, _RIB_TOP/_LOW, _SKIRT, _HEM, _TATTERS, _CLOTH; yoke hidden) | bone 1,0.86,0.6; limb 0.42, spine 0.16, 4 ribs 0.86-0.42, skirt 0.7 hem 1.45, 6 tatters | 250 | approved | fleshed body, secret_bone preset
+simulationSystem.ts:pending heavy blow (BLOW_LAND_E in proceduralAnimation, BLOW_CONTACT_SLACK; reverted) | land .3 of drop, slack .3 | 276 | rejected | hit at swing start (.55 tried at look)
 unitFactory.ts:dressReaper (REAPER_HOOD, _OPEN, _FORWARD, _JAW, _JAW_LONG, _SKIRT, _HEM, _TATTERS; cowl gap on the face) | open 0.46 fwd -0.24, jaw 0.5 x 0.5; skirt 0.85, rags 0.13-0.25 | 252 | approved | open 0.4 fwd -0.06 gap at back, skirt 1.55 (251)
 propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_LEVEL,_HEEL,_SPINE,_BOW,_GRIP; ramped curl, socket+tang) | 1.25 s, .8 in 14, curl 1.3 ramped, level -.6, heel .17, bow .05, grip .15 | 268 | approved | curl 1.75 even, rise .35 (267); 6 box segs (252)
 propBuilder.ts:antler_skull (DEER_MUZZLE, _DIP, _BEAM, _SPLAY, _TINE, _ANTLER; on bone_mask cap) | muzzle 0.95 dip 0.7; beam 1.05+0.9 H, splay 0.95/0.4, tine 0.58, antler 0.66,0.5,0.33 | 251 | approved | bone_mask
