@@ -27,11 +27,13 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood"];
 /*
  * A hood fitted to the head (239; tabs_screenshot_04/05: a hood is cloth round the whole head, the face showing in its opening, falling to the shoulders): a cowl
  * shell HOOD_HEADS heads across round the skull, open at the face (HOOD_OPEN of its round), its crown drawn up into a short peak tipped back, a mantle flaring from
  * the neck over the shoulders to HOOD_MANTLE_HEADS across, and the liripipe tail hanging from the peak down the back. Not a cone perched on the crown.
+ * A plain hood (240; units/medieval.healer) is the same cowl, peak and mantle in a darker cloth, without the tail.
+ * A plain hood (240; units/medieval.healer) is the same cowl, peak and mantle in a darker cloth, without the tail.
  */
 const HOOD_HEADS = 1.3;
 const HOOD_OPEN = 0.3;
@@ -58,8 +60,8 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   const eyeTop = 0.44 * H - 0.18 * W;
   const seat = -eyeTop + HAT_EYE_CLEAR * H;
   const u = (v: number) => v / unit;
-  if (type === "hood_liripipe") {
-    const cloth = mat(scene, accent);
+  if (type === "hood_liripipe" || type === "hood") {
+    const cloth = mat(scene, type === "hood" ? accent.scale(0.6) : accent);
     // The cowl round the skull, its gap turned to the face (+Z), so the eyes and the face show in the opening
     const cowl = MeshBuilder.CreateSphere("hoodCowl", { diameter: 1, segments: 12, arc: 1 - HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
     cowl.scaling.set(u(HOOD_HEADS * W), u(1.2 * H), u(HOOD_HEADS * W));
@@ -75,6 +77,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     mantle.position.y = u(-1.05 * H);
     mantle.material = cloth;
     mantle.setParent(cowl);
+    if (type === "hood") return cowl;
     const tail = MeshBuilder.CreateBox("liripipe", { width: u(0.14 * W), height: u(0.9 * H), depth: u(0.1 * W) }, scene);
     tail.position.set(0, u(-0.3 * H), u(-0.6 * W));
     tail.rotation.x = 0.25;
