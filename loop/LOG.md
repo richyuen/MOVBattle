@@ -248,3 +248,4 @@ iter 246 | [S] dynasty-cherry-ring, [S] dragon-costume-head | 2/2 approved | pas
 iter 247 | [S] monk-kasa, [S] challenge-ball-ring | 2/2 approved | passes tier3 3/21 -> 4/21
 iter 248 | [S] challenge-orange-field, [S] farmer-pointed-cowl | 2/2 approved | passes 51 -> 52
 iter 249 | [S] farmer-halo, [S] secret-halos | 2/2 approved | passes 52 -> 53
+iter 250 | [S] pirate-bandana-tricorn, [S] skeleton-bone-body (re-audit, no flips) | 2/2 approved | passes 53 -> 54
