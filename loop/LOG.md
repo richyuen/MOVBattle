@@ -238,3 +238,4 @@ iter 236 | [S] upright-wall-legs | 1/1 approved | passes 21 -> 21
 iter 237 | [S] wall-head-level, [S] archer-brim (dropped) | 1/2 approved | passes 21 -> 21
 iter 238 | [S] wall-board-lean | 1/1 approved | passes 21 -> 21
 iter 239 | [S] hood-cowl | 1/1 approved | passes 21 -> 21
+iter 240 | re-audit (tier 3 scored 0/21); [S] healer-cowl, [R] aimed-blow rebuild | 1/2 approved | passes 45 -> 46
