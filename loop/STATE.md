@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 271   Last re-audit: 270   Consecutive rejects: 0   Branch: main
+Iteration: 272   Last re-audit: 270   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -32,9 +32,9 @@ unit-look tier 3: i-v all PASS (14/14)
 - t evil PASS (cleared 5e1852e 265, 0beab60 266; polish: monarch staff held level; pauldrons upright posts; lich tines splay like antlers; mechanic one brown; walker sleeves dark; bringer skull a white cube; cultist bands pale)
 - u secret PASS (cleared by 6d39da3 267, f694e83 269; polish: crown lobes ~1/3 ref size, trunk thin and smooth, crown slightly behind his flank)
 - v medieval PASS (cleared adb58a6 244, 507a3fe 264; polish: feather thin and pale, straw grey-beige, brim flat)
-maps-light tier 3: i k l m n o PASS, j FAIL (6/7) [S since: j 1]
+maps-light tier 3: i k l m n o PASS, j FAIL (6/7) [S since: j 2]
 - i introduction PASS (cleared c585210 270, 22e5909 271; polish: oak crowns dark olive, ref yellow-green; in-field prop trees ball-on-stalk + tan ball; tower squat, takes red-zone tint)
-- j adventure (meadow): 1 struck by aa8235e (271); 2 same ring and props as introduction: sandbox navy boulders, rubble walls, bales, ball-on-stalk trees, no castle (maps/meadow_medieval_2); polish: lagoon sky-cyan not green-turquoise, deep a hard fried-egg blob, shore even white ring
+- j adventure (meadow): 1 struck by aa8235e (271); 2 part-cleared by 85e15ab (272: boulders, rubble walls, bales gone, grey castle on far rim); still open: ball-on-stalk field trees (by castle left wall, lower-left, lower pool right bank) (maps/meadow_medieval_2); polish: castle off-centre and cropped under Start pill, cones royal blue-violet not slate periwinkle, stone mauve-tinted, no trees at castle foot; lagoon sky-cyan, deep a hard fried-egg blob, shore even white ring
 - k challenge PASS (cleared 247, 248; polish: island side wall slate blue-violet, not ochre strata)
 - l dynasty PASS (cleared by [R] 466ebe1, 246; polish: olive field, no terraces/stone paths)
 - m renaissance PASS (cleared 4b36e9f 269, 8492a63 270; polish: 2.6 m tiles + dark grout a strong grid, ref near seamless; lone bridge plank on the square; house row bends round a round rim)
@@ -43,20 +43,20 @@ maps-light tier 3: i k l m n o PASS, j FAIL (6/7) [S since: j 1]
 Total tier 1 24/24; tier 2 23/24; tier 3 20/21.
 
 ## Focus (every gap this iteration)
-BASE 8d6ae88 (iter 271; ranked 1 j + 3 i, pair j+i (m+i was 270's); no [P] ranked)
-- [S] maps-light.j adventure-pool-water (aa8235e) — APPROVE, j blocker 1 struck (j still FAIL)
-- [S] maps-light.i meadow-ruin-pillars (22e5909) — APPROVE, i PASS
+BASE 14f82de (iter 272; only maps-light.j ordinarily pickable (e deferred), so one [S]; [P] lagoon-turquoise skipped: row 271 approved within 20)
+- [S] maps-light.j adventure-castle (85e15ab) — APPROVE, j blocker 2 part-cleared (j still FAIL)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] adventure-pool-water (aa8235e) VERDICT: APPROVE CRITERION: maps-light.j FAIL (previous: FAIL)
-- GAP: [S] meadow-ruin-pillars (22e5909) VERDICT: APPROVE CRITERION: maps-light.i PASS (previous: FAIL)
+- GAP: [S] maps-light.j adventure-castle (85e15ab) VERDICT: APPROVE CRITERION: maps-light.j FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] maps-light.j adventure-castle [0] — blocker 2: grey keep with blue cone-spire towers on the far rim, replacing shared boulders, rubble walls, bales — ref maps/meadow_medieval_2 — ours biome_adventure
-2. [S] maps-light.j adventure-meadow-dressing [0] — blocker 2: hide sandbox boulders, rubble walls, ball-on-stalk trees on adventure (meadowRuins hide path), own dressing (hedges/flower clumps by the water) — ref maps/meadow_medieval_2 — ours biome_adventure
-3. [S] maps-light.j adventure-oak-ring [0] — blocker 2: replace pale mint ball ring with bright yellow-green bushy crowns on kinked trunks (theme.ring.oaks, adventure palette) — ref maps/meadow_medieval_2 — ours biome_adventure
-4. [P] maps-light.j lagoon-turquoise [0] (fallout of [S] adventure-pool-water, 271) — lagoon.water ~.3,.8,.62, deep closer to water for a soft deepening — NEXT: biome_adventure, both pools
-5. [S] battle-feel.e (deferred stands) — wide windup then committed connecting swing — ref trailer_3_sheet_01 r2c3 — ours closeup_weapon_reads, shield_wall pair
+1. [S] maps-light.j field-oak-clumps [0] — blocker 2: replace ball-on-stalk "tree" props on the adventure field with clustered multi-lobe oak clumps (ring mesh family) — ref maps/meadow_medieval_2 — ours biome_adventure
+2. [S] maps-light.j castle-foot-trees [0] — blocker 2 polish: band of oak clumps hugging the castle wall bases — ref maps/meadow_medieval_2 — ours biome_adventure
+3. [S] maps-light.j lagoon-depth-shelf [0] — polish: stepped/offset shelf fading foam to teal, no fried-egg oval — ref maps/meadow_medieval_2 — ours biome_adventure
+4. [S] maps-light.j ragged-foam-shore [0] — polish: uneven foam rim with breaks, bank grass over it — ref maps/meadow_medieval_1 — ours biome_adventure
+5. [S] maps-light.i meadow-field-trees [0] — polish: oak clumps in place of introduction's ball-on-stalk trees and tan ball — ref maps/meadow_medieval_1 — ours biome_introduction
+6. [P] maps-light.j castle-frame [0] (fallout of [S] adventure-castle, 272) — CASTLE_X -10->0, CASTLE_Z 31->28, CASTLE_ROOF ->.45,.55,.78 — NEXT: biome_adventure, castle centred with great spire below Start pill, slate cones (note: row approved 272, 20-iteration reversal rule applies)
+7. [S] battle-feel.e (deferred stands) — wide windup then committed connecting swing — ref trailer_3_sheet_01 r2c3 — ours closeup_weapon_reads
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - reaper-crescent-blade [attempts: 1] — 266: weaponRotationOffset rx -0.7 tipped the scythe head down into the ground in the full capture; no blade visible (ribbon crescent itself read on the farmer)
@@ -72,4 +72,4 @@ BASE 8d6ae88 (iter 271; ranked 1 j + 3 i, pair j+i (m+i was 270's); no [P] ranke
 - Next re-audit 275. Simulation plane colour barely responds to ground/fog/emissive (tried 261, reverted). mapBuilder.ts is LF, LOG.md CRLF. Hand-built up-facing quads: indices (0,1,2),(0,2,3) or they cull.
 - buildHorse (jouster, pinto, secret cavalry): frame at barrel middle; legs = 4-sided wedge in a holder scaled HORSE_UPPER_DEEP in z, joint at hem - UPPER_SHOW; thick legs must stay inside hem (W>=.85 H). Drape = stadium rings (superellipse ends, flat deck profile); pinto returns before it.
 - Unit PBR colours grey out in lineup shade: self-light (mf.get("cloth", c, { emissiveIntensity })). dress* in unitFactory set body.bodyMaterial.baseColor. Head is a blockHead (box): box caps (hExt.x*2.2) cover it. Eyes: body.leftEye/rightEye.setEnabled(false).
-- Scythe/tree ride fixed carries in _buildCarry (carryTurn 1); tree bow authored to trunk +x, spun +pi to face up (269). Renaissance: townRing + townPlaza (hides base dressing + obstacles on island, flat flagstone quads replace centerGrass). Meadow: oakRing (theme.ring.oaks), meadowRuins (theme.ruins: hides boulder/wallStone + their obstacles, far rim z 28; +z is far), lagoonPools (theme.lagoon). No [P] on rows approved within 20 iterations.
+- Scythe/tree ride fixed carries in _buildCarry (carryTurn 1); tree bow authored to trunk +x, spun +pi to face up (269). Renaissance: townRing + townPlaza (hides base dressing + obstacles on island, flat flagstone quads replace centerGrass). Meadow: oakRing (theme.ring.oaks), meadowRuins (theme.ruins: hides boulder/wallStone + their obstacles, far rim z 28; +z is far), lagoonPools (theme.lagoon), meadowCastle (theme.castle: hides boulder/wallStone/hayBale + ring trunks on footprint). No [P] on rows approved within 20 iterations.

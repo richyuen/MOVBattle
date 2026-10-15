@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 262 | jouster-hem-lift | unit-look.n | approved
-- 262 | void-cultist-horns | unit-look.t | approved
 - 263 | evil-hood-horns | unit-look.t | approved
 - 263 | super-peasant-straw | unit-look.r | approved
 - 264 | legacy-chariot | unit-look.r | approved
@@ -32,14 +30,13 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 270 | meadow-oak-ring | maps-light.i | approved
 - 271 | adventure-pool-water | maps-light.j | approved
 - 271 | meadow-ruin-pillars | maps-light.i | approved
+- 272 | adventure-castle | maps-light.j | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-propBuilder.ts:fitted kasa + beads (KASA_HEADS, _TALL, _TIP, _BAND, _BEADS, _BEAD; band accent x0.55) | 2.4 heads, tall 0.55, tip 0.14, band 0.09; 11 beads 0.16 torso | 247 | approved | monk_headband torus at the crown
 mapBuilder.ts:autumnField (theme.field ground/grass/glow; FIELD_TUFTS, _RING_SHARE, _BAND, _CARDS, _TALL, _GLOW) | 260 clumps, 0.7 ring 0.8-0.97, 3-5 cards 0.9-1.5 m, glow 0.45; grass 1,0.58,0.2 | 248 | approved | sandbox plum glow, brown 0.47,0.36,0.23
 propBuilder.ts:fitted pointed_cowl (COWL_FOOT, _LOWER, _TIP, _RAKE, _BEND, _COLLAR, _COLLAR_DEEP, _SHADE) | foot 1.05, lower 0.8 + tip 0.6 heads, rake 0.22 bend 0.4, collar 2.0 x 0.42, team x0.78 | 248 | approved | hood_liripipe accent green
-mapBuilder.ts:ballRing autumn palette (ring.balls per-tree pick, BALL_OF_HEIGHT; challenge trunk) | 5 balls orange/red/yellow/yellow-green/amber, ball 0.5, trunk 0.9,0.86,0.76 | 247 | approved | sage ring
 propBuilder.ts:fitted sun_hat (SUN_BRIM, _BRIM_THICK, _TIP, _CROWN, _CROWN_TALL, _BAND, _BRAID, _TEAM; harvester) | brim 2.4 x 0.07, tip 0.16, crown 1.15 x 0.55, band 0.12, braid 0.95, team 0.22 | 249 | approved | bandana ring
 propBuilder.ts:fitted bandana wrap (BANDANA_HEADS, _CROWN, _KNOT, _TAIL, _SPLAY, _SWEEP; robbers cowboy_hat) | 1.16 heads, crown 0.1, knot 0.3, tail 0.55, splay 0.35, sweep 0.5 | 249 | approved | torus 0.22 s at crown
 propBuilder.ts:fitted tricorn/pirate_hat (TRICORN_DOME, _CROWN, _BRIM, _WALL, _LEAN, _SKULL; crew bandana accents) | dome 1.12, crown 0.16, brim 2.3, wall 0.42 lean 0.3, skull 0.26 | 250 | approved | box on a flat triangle (stovepipe)
@@ -75,3 +72,4 @@ mapBuilder.ts:townPlaza (PLAZA_STONE, _JOINT, _TONES, _BASIN, _DRESSING; lawn hi
 mapBuilder.ts:oakRing (OAK_SCALE, _LEAN, _BOLE, _LIMBS, _CROWN, _SQUASH, _SKIRT; introduction ring palette) | 1.35, lean .18-.4, bole .34, 2 limbs, crown .62 sq .5, 3 skirt; leaf .32,.52,.2 | 270 | approved | sage puffball ring
 mapBuilder.ts:lagoonPools (LAGOON_ROUND,_SIDES,_RAGGED,_SHORE,_DEEP; theme.lagoon water/deep/shore) | power 2.6, 30 sides, ragged .08, shore 1.3, deep .58; water .26,.78,.66 deep .1,.56,.56 | 271 | approved | flat .42-alpha blue hazard box
 mapBuilder.ts:meadowRuins (RUIN_FAR,_TOWER,_TOWER_SIDES,_TOWER_TALL,_PILLARS,_BLOCKS,_STONE; boulders+walls hidden) | far 28, tower 6.4 x9 sides 10 m, 5 pillars 1.8-6.8, 9 blocks; stone .76,.73,.64 lit .4 | 271 | approved | sandbox boulders + rubble walls
+mapBuilder.ts:meadowCastle (CASTLE_X,_Z,_WIDE,_DEEP,_WALL,_CORNER,_KEEP,_KEEP_TALL,_TOWER,_TOWER_TALL,_STONE,_ROOF) | x -10 z 31, 26x10 wall 5, corner 3.8, keep 11x11, tower 4.6 to 17; roof .36,.42,.82 | 272 | approved | sandbox boulders/walls/bales + ruin prop
