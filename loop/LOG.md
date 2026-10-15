@@ -257,3 +257,4 @@ iter 255 | [S] unit-look.n renaissance-painter, [S] maps-light.n pirate-full-pal
 iter 256 | [S] jouster-horse-stature, [S] cactus-suit | 2/2 approved | passes 55 -> 55
 iter 257 | [S] jouster-horse-legs, [S] pirate-sand-spits | 2/2 approved | passes 55 -> 55
 iter 258 | [R] pirate-wet-rim-on-water, [S] lasso-llama | 2/2 approved | passes 55 -> 57
+iter 259 | [R] jouster-horse-rebuild, [S] paladin-white-gold | 2/2 approved | passes 57 -> 57

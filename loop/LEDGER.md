@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 249 | farmer-halo | unit-look.j | approved
-- 249 | secret-halos | unit-look.u | approved
 - 250 | pirate-bandana-tricorn | unit-look.o | approved
 - 250 | skeleton-bone-body | unit-look.p | approved
 - 251 | reaper-robe-scythe | unit-look.p | approved
@@ -32,6 +30,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 257 | pirate-sand-spits | maps-light.n | approved
 - 258 | pirate-wet-rim-on-water [R] | maps-light.n | approved
 - 258 | lasso-llama | unit-look.q | approved
+- 259 | jouster-horse-rebuild [R] | unit-look.n | approved
+- 259 | paladin-white-gold | unit-look.s | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -68,11 +68,12 @@ mapBuilder.ts:addShip galleon (SHIP_LONG, _BEAM, _HULL, _CASTLE, _MASTS, _YARD, 
 mapBuilder.ts:palmRing + seaRim (PALM_LEAN, _BANDS, _FRONDS, _FROND, _ARCH; SEA_RIM, _SHORE, _GLOW; pirate palms share) | lean .22-.5, 4 bands, 6-8 fronds .5 H, arch .35/-.25/-.85; rim 5 m, shore 1.2, glow .3; .72 | 253 | approved | puffball ring, 0.42-alpha hazard tint
 propBuilder.ts:tree_club (TREE_CLUB_LONG, _GRIP, _ROOTS, _CROWN, _CARRY rest only) | 0.8 stand, grip 0.14, 4 roots, crown 0.24 T, rest 1.2 rad off upright | 254 | approved | 0.95 stand (253); none (giant_tree plated block)
 proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; treeClubCarry turned in fist, _carryTurn 1 at build) | arm raise -.35 out .12 elbow -.7; tip .65,-.05,.6 | 254 | approved | shoulder-level rig carry
-propBuilder.ts:buildHorse (HORSE_LIFT, _LONG, _DEEP, _NECK_RAKE, _FORE/_HIND_THICK, _HOCK, _CAP_FLARE) | lift .9, 1.9, .75, .75; legs .36/.46 to .2 H, hock .2 H; bell drop .5 H flare 1.3 | 257 | approved | box caparison, forearm .28 (256); 1.55/.6/.55 (254)
+propBuilder.ts:buildHorse [R] (HORSE_LONG, _DEEP, _WIDE, _HOCK, _KNEE, _HOOF, _CAP_BULGE, _CAP_HEM, _HEM_HEIGHT) | 1.95, 1.05, .85; hock .22 knee .32 hoof .27; lathe sack 1.22/1.14, hem .55 H | 259 | approved | deep .75, flare 1.3 bell (257); box caparison (256)
 unitFactory.ts:dressTreeGiant (TREE_GIANT_HOOD, _OPEN, _BEARD, _BEARD_WIDE, _SKIRT, _HEM, _TATTERS; tunic/hair/rags) | hood 1.32 open .42, beard 1.05 x .85, skirt .85 hem 1.3, 8 rags | 253 | approved | secret_nature team body
 unitFactory.ts:dressPainter + palette (PAINTER_DOUBLET, _BERET, _HOSE, _RUFF, _RUFF_TIERS; PALETTE_WIDE, _TIP, _TURN) | doublet .6, beret .42, hose .92,.6,.3, ruff 1.25 x2; palette .24, tip -1, turn .4 | 255 | approved | plain team body, no palette
 unitFactory.ts:dressCactus (CACTUS_ROBE, _LONG, _HOOD, _HOOD_OPEN, _SLEEVE, _SPINES, _SPINE; flowers) | hem 1.55 W, .86 leg, hood 1.6 open .26, sleeve 1.4, 34+3/arm+6, spine .4 heads | 256 | approved | cactus_body trunk + 10 spines
 mapBuilder.ts:broadleafBush in palmRing (BUSH_LUMPS, _TALL, _WIDE, _LEAVES, _GREEN; non-palm ring trees) | 3-5 lumps, tall .3 H, wide .42 H, 5-7 leaves, green .16,.36,.15 | 255 | approved | pale-sage puffball crown
 
 mapBuilder.ts:sandSpits shoreline [R] (SPIT_*; wet band only over water via overWater; dry = lawn mat, SPIT_SAND_GLOW; pirate ground/grass sand) | wet .7 band, glow .12; ground .84,.72,.5 grass .8,.68,.46 | 258 | approved | wet fan under every lobe, sea-mat dry (257); olive field
+unitFactory.ts:dressPaladin (PALADIN_WHITE, _GOLD, _GLOW, _GOLD_GLOW, _BELT, _KNEE, _HELM_BAND; helm comb, shield rim/cross gold) | white .93,.94,.96 glow .2; gold .95,.52,.06 glow .22; knee 1.15 | 259 | approved | plain good_gold team body
 propBuilder.ts:buildHorse pinto style (PINTO_COAT, _CREAM, _PINK, _GLOW, _PATCHES, _PATCH, _RAGGED, _EYE, _EAR, _LOOP; wildwest_leather) | coat .95,.42,.1, glow .18, 6 patches dot .83, eye .075, ear .3, loop .42 | 258 | approved | barded horse
