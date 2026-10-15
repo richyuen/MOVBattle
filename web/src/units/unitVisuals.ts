@@ -294,7 +294,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.95, headSize: 1.05 }, "staff", "hood", "none", "none", "#FFD700",
   ),
   "medieval.knight": vis(
-    { scale: 1.25, bulk: 1.55 }, "sword", "plume_helmet", "kite", "cape", "#C0C0C0",
+    { scale: 1.25, bulk: 1.55 }, "sword", "great_helm", "kite", "cape", "#C0C0C0",
   ),
   "medieval.catapult": vis(
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "helmet", "none", "catapult_arm", "#8B4513",

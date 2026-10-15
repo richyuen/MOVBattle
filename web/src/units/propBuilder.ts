@@ -1846,9 +1846,14 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       rimPoint.scaling.z = 0.08;
       rimPoint.parent = shield;
       rimPoint.material = rim.material;
-      const boss = MeshBuilder.CreateSphere("kboss", { diameter: 0.07 * s, segments: 4 }, scene);
-      boss.position.z = 0.014 * s; boss.parent = shield;
-      boss.material = mat(scene, new Color3(0.45, 0.45, 0.5));
+      // A pale cross on the face in place of a boss (units/medieval.knight): the upright from near the top down into the point, the arm across the upper third
+      const cross = mat(scene, new Color3(0.93, 0.87, 0.74), 0.05);
+      for (const [w, h, y] of [[0.04, 0.38, -0.04], [0.15, 0.04, 0.0]]) {
+        const bar = MeshBuilder.CreateBox("kcross", { width: w * s, height: h * s, depth: 0.008 * s }, scene);
+        bar.position.set(0, y * s, 0.015 * s);
+        bar.parent = shield;
+        bar.material = cross;
+      }
       return shield;
     }
     case "tower": {
