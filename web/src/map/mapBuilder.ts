@@ -1205,7 +1205,9 @@ interface CampaignMapTheme {
   hazards: HazardRegion[];
   props: CampaignPropSpec[];
   /** The ring trees' own palette (canopy, upper canopy, trunk) in place of the campaign green, and the share of ring trees stood bare and dead (see deadenRing) */
-  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number; balls?: Color3[] };
+  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number; balls?: Color3[]; palms?: number };
+  /** Opaque turquoise shallows in place of the see-through hazard tint, a pale shore round each pool and a band of sea round the island rim (see seaRim) */
+  sea?: { water: Color3; shore: Color3 };
   /** The theme's own lawn in place of the sandbox's (see autumnField): ground and grass colour, the lawn's self-light, and the tuft clumps' palette */
   field?: { ground: Color3; grass: Color3; glow: Color3; tufts: Color3[] };
 }
@@ -1276,7 +1278,151 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (theme.ring && theme.ring.bare > 0) deadenRing(scene, theme.ring.bare, theme.ring.trunk);
   if (theme.ring?.blossom) blossomRing(scene, theme.ring.blossom);
   if (theme.ring?.balls) ballRing(scene, theme.ring.balls);
+  if (theme.ring?.palms) palmRing(scene, theme.ring.palms);
   if (theme.field) autumnField(scene, theme.field);
+  if (theme.sea) seaRim(scene, theme.sea);
+}
+
+/*
+ * A palm ring (pirate; maps/pirate_beach: the beach is fringed with palms, never round puffballs). Read off the reference: a thin tan trunk leaning PALM_LEAN
+ * off upright, banded every few metres (PALM_BANDS rings), topped by PALM_FRONDS long flat green fronds radiating from one point, each rising a little then
+ * arching over and drooping to its tip (three flat cards per frond, pitched PALM_ARCH, PALM_FROND of the tree's height long in all), with a cluster of brown
+ * coconuts under them. A seeded share of the ring trees takes this form; their crown is hidden. Palms lean in over the beach.
+ */
+const PALM_LEAN = [0.22, 0.5];
+const PALM_BANDS = 4;
+const PALM_FRONDS = [6, 8];
+const PALM_FROND = 0.5;
+const PALM_ARCH = [0.35, -0.25, -0.85];
+const PALM_GREEN = new Color3(0.34, 0.6, 0.22);
+function palmRing(scene: Scene, share: number): void {
+  const frondMat = new StandardMaterial("palmFrond", scene);
+  frondMat.diffuseColor = PALM_GREEN.scale(0.55);
+  frondMat.emissiveColor = PALM_GREEN.scale(0.45);
+  frondMat.specularColor = Color3.Black();
+  frondMat.backFaceCulling = false;
+  const darkFrond = frondMat.clone("palmFrondDark");
+  darkFrond.diffuseColor = PALM_GREEN.scale(0.42);
+  darkFrond.emissiveColor = PALM_GREEN.scale(0.32);
+  const bandMat = new StandardMaterial("palmBand", scene);
+  bandMat.diffuseColor = new Color3(0.42, 0.32, 0.2);
+  bandMat.specularColor = Color3.Black();
+  const nutMat = new StandardMaterial("palmNut", scene);
+  nutMat.diffuseColor = new Color3(0.36, 0.24, 0.12);
+  nutMat.specularColor = Color3.Black();
+  const trunks = new Set<Mesh>();
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "canopy" && mesh.parent instanceof Mesh && mesh.parent.name === "trunk") trunks.add(mesh.parent);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const shadows = sunShadows(scene);
+  let k = 0;
+  for (const trunk of trunks) {
+    k++;
+    const r = (n: number) => Math.abs((Math.sin(k * 19.391 + n * 47.23) * 28411.371) % 1);
+    if (r(1) > share) continue;
+    for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.setEnabled(false);
+    const info = trunk.getBoundingInfo().boundingBox;
+    const trunkLong = info.maximum.y - info.minimum.y;
+    const height = trunkLong / 0.55;
+    const rad = info.maximum.x;
+    // Lean in toward the field (a little off the radial line), replacing the base tree's small random tilt
+    const at = trunk.position;
+    const out = Math.hypot(at.x, at.z) || 1;
+    const lean = PALM_LEAN[0] + r(2) * (PALM_LEAN[1] - PALM_LEAN[0]);
+    const turn = (r(3) - 0.5) * 1.2;
+    const ix = -at.x / out, iz = -at.z / out;
+    const lx = ix * Math.cos(turn) - iz * Math.sin(turn), lz = ix * Math.sin(turn) + iz * Math.cos(turn);
+    trunk.rotation.set(lz * lean, trunk.rotation.y, -lx * lean);
+    for (let b = 1; b <= PALM_BANDS; b++) {
+      const band = MeshBuilder.CreateCylinder("palmBand", { height: trunkLong * 0.04, diameter: rad * 2.5, tessellation: 7 }, scene);
+      band.parent = trunk;
+      band.position.y = -trunkLong / 2 + (b / (PALM_BANDS + 1)) * trunkLong;
+      band.material = bandMat;
+      band.isPickable = false;
+    }
+    const top = new Vector3(0, trunkLong / 2, 0);
+    // Fronds radiate about the world's up, not the leaning trunk's: their directions and turns are taken back into the trunk's frame
+    const unlean = Quaternion.FromEulerAngles(trunk.rotation.x, 0, trunk.rotation.z).invert();
+    const fronds = PALM_FRONDS[0] + Math.round(r(4) * (PALM_FRONDS[1] - PALM_FRONDS[0]));
+    for (let i = 0; i < fronds; i++) {
+      const yaw = (i / fronds) * Math.PI * 2 + r(10 + i) * 0.6;
+      const long = height * PALM_FROND * (0.8 + r(20 + i) * 0.35);
+      const wide = height * 0.11;
+      let from = top.clone();
+      PALM_ARCH.forEach((pitch, j) => {
+        const seg = long / PALM_ARCH.length;
+        const p = pitch + (r(30 + i) - 0.5) * 0.3;
+        const dir = new Vector3(Math.sin(yaw) * Math.cos(p), Math.sin(p), Math.cos(yaw) * Math.cos(p)).applyRotationQuaternion(unlean);
+        const card = MeshBuilder.CreateBox("palmFrond", { width: wide * (1 - j * 0.28), height: height * 0.012, depth: seg * 1.08 }, scene);
+        card.parent = trunk;
+        card.position = from.add(dir.scale(seg / 2));
+        card.rotationQuaternion = unlean.multiply(Quaternion.FromEulerAngles(-p, yaw, 0));
+        card.material = (i + j) % 3 === 0 ? darkFrond : frondMat;
+        card.isPickable = false;
+        glow?.addExcludedMesh(card);
+        shadows?.addShadowCaster(card, false);
+        from = from.add(dir.scale(seg));
+      });
+    }
+    for (let n = 0; n < 3; n++) {
+      const a = (n / 3) * Math.PI * 2 + r(50);
+      const nut = MeshBuilder.CreateIcoSphere("palmNut", { radius: height * 0.03, subdivisions: 1 }, scene);
+      nut.parent = trunk;
+      nut.position.set(Math.cos(a) * rad * 1.4, trunkLong / 2 - height * 0.03, Math.sin(a) * rad * 1.4);
+      nut.material = nutMat;
+      nut.isPickable = false;
+    }
+  }
+}
+
+/*
+ * Sea (pirate; maps/pirate_beach: the sand island sits in turquoise shallows, a pale wet-sand edge where the water meets the beach and the ships moored in
+ * the cove). A band SEA_RIM metres wide of opaque turquoise runs round the whole island rim, a paler shore strip SEA_SHORE wide along its inner edge.
+ */
+const SEA_RIM = 5;
+const SEA_SHORE = 1.2;
+const SEA_GLOW = 0.3;
+/** Sea cloth: partly self-lit so the shaded side of the cove stays turquoise, kept out of the glow layer so it does not bloom a haze over the field */
+function seaMaterial(scene: Scene, name: string, colour: Color3, mesh?: Mesh): StandardMaterial {
+  const mat = new StandardMaterial(name, scene);
+  mat.diffuseColor = colour.scale(1 - SEA_GLOW);
+  mat.emissiveColor = colour.scale(SEA_GLOW);
+  mat.specularColor = new Color3(0.05, 0.05, 0.05);
+  if (mesh) scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+  return mat;
+}
+function seaRim(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>): void {
+  const band = (name: string, inner: number, outer: number, y: number, colour: Color3) => {
+    const positions: number[] = [], normals: number[] = [], indices: number[] = [];
+    const steps = 160;
+    for (let i = 0; i <= steps; i++) {
+      const [x, z] = islandRim((i / steps) * Math.PI * 2);
+      const d = Math.hypot(x, z);
+      for (const inset of [outer, inner]) {
+        const f = 1 - inset / d;
+        positions.push(x * f, y, z * f);
+        normals.push(0, 1, 0);
+      }
+      if (i < steps) {
+        const b = i * 2;
+        indices.push(b, b + 1, b + 2, b + 1, b + 3, b + 2);
+      }
+    }
+    const mesh = new Mesh(name, scene);
+    const data = new VertexData();
+    data.positions = positions;
+    data.normals = normals;
+    data.indices = indices;
+    data.applyToMesh(mesh);
+    const mat = seaMaterial(scene, `${name}Mat`, colour, mesh);
+    mat.backFaceCulling = false;
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+  };
+  band("seaShore", SEA_RIM, SEA_RIM + SEA_SHORE, 0.06, sea.shore);
+  band("seaRim", 0, SEA_RIM, 0.07, sea.water);
 }
 
 /*
@@ -1573,7 +1719,7 @@ function createPlacementGuides(scene: Scene, zones: readonly PlacementZone[]): v
   }
 }
 
-function createHazardVisuals(scene: Scene, hazards: readonly HazardRegion[]): void {
+function createHazardVisuals(scene: Scene, hazards: readonly HazardRegion[], sea?: CampaignMapTheme["sea"]): void {
   const hazardColor = (kind: HazardKind): Color3 => {
     switch (kind) {
       case "water": return new Color3(0.18, 0.46, 0.78);
@@ -1582,6 +1728,17 @@ function createHazardVisuals(scene: Scene, hazards: readonly HazardRegion[]): vo
     }
   };
   for (const hazard of hazards) {
+    // A sea theme's pools are solid turquoise shallows on a pale shore strip (see seaRim), not a see-through tint
+    if (sea && hazard.kind === "water" && hazard.shape === "box") {
+      for (const [name, grow, y, colour] of [["shore", SEA_SHORE * 2, 0.05, sea.shore], ["water", 0, 0.065, sea.water]] as const) {
+        const mesh = MeshBuilder.CreateGround(`campaign_hazard_sea_${name}`, { width: hazard.halfX * 2 + grow, height: hazard.halfZ * 2 + grow }, scene);
+        mesh.position.set(hazard.center.x, y, hazard.center.z);
+        mesh.material = seaMaterial(scene, `campaign_hazard_sea_${name}_${hazard.center.z}`, colour, mesh);
+        mesh.receiveShadows = true;
+        mesh.isPickable = false;
+      }
+      continue;
+    }
     const mat = new StandardMaterial(`campaign_hazard_${hazard.kind}_${hazard.center.x}_${hazard.center.z}`, scene);
     mat.diffuseColor = hazardColor(hazard.kind);
     mat.emissiveColor = hazardColor(hazard.kind).scale(hazard.kind === "water" ? 0.22 : 0.12);
@@ -2084,7 +2241,7 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
   );
   recolorBaseTerrain(scene, theme);
   addCampaignProps(scene, theme, obstacles);
-  createHazardVisuals(scene, hazards);
+  createHazardVisuals(scene, hazards, theme.sea);
   createPlacementGuides(scene, theme.zones);
   return {
     zones: theme.zones.map((zoneDef) => ({
@@ -2258,6 +2415,9 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
       boxHazard("water", 0, 24, 44, 8),
     ],
     accent: new Color3(0.94, 0.82, 0.38),
+    // Most of the ring stood as leaning palms, the rest bright tropical green; turquoise shallows round the rim and in the cove where the ships lie
+    ring: { leaves: new Color3(0.42, 0.68, 0.3), darkLeaves: new Color3(0.3, 0.55, 0.24), trunk: new Color3(0.7, 0.58, 0.4), bare: 0, palms: 0.72 },
+    sea: { water: new Color3(0.26, 0.74, 0.62), shore: new Color3(0.86, 0.8, 0.62) },
     props: [
       { kind: "ship", x: -20, z: 20, scale: 1.0, rotationY: 0.28, blocking: false },
       { kind: "ship", x: 20, z: 20, scale: 1.0, rotationY: -0.28, blocking: false },
