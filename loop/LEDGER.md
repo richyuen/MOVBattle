@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 247 | monk-kasa | unit-look.m | approved
-- 247 | challenge-ball-ring | maps-light.k | approved
 - 248 | challenge-orange-field | maps-light.k | approved
 - 248 | farmer-pointed-cowl | unit-look.j | approved
 - 249 | farmer-halo | unit-look.j | approved
@@ -32,11 +30,12 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 255 | pirate-full-palm-ring | maps-light.n | approved
 - 256 | jouster-horse-stature | unit-look.n | approved
 - 256 | cactus-suit | unit-look.q | approved
+- 257 | jouster-horse-legs | unit-look.n | approved
+- 257 | pirate-sand-spits | maps-light.n | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-proceduralAnimation.ts:rear-rank club rest (REAR_CLUB_REST; simulationSystem _allyBetween, REAR_RANK_REACH, _LANE) | 0.85 of cock->landed, heave 0.08; reach +1.4 m, lane 0.7 m | 232 | approved |
 proceduralAnimation.ts:pressed board tilt + press stride (BOARD_PRESS_TILT, PRESS_DRIVE; per-man lean = half tilt + half trunk pitch + rock 0.06) | 0.3 rad (half + 1/3 trunk pitch, on wall lean); drive 0.4 | 242 | approved | half tilt + half pitch (234); shared 0.3 (232)
 propBuilder.ts:buildFittedHat (HEAD_FITTED_HATS incl. helmet/plume_helmet, HELM_HEADS, HELM_CROWN, PLUME_TALL, HAT_EYE_CLEAR, BERET_*, CONE_*) | seat 0.05 head over eye top; beret 2 heads x 0.32, tilt 0.22; cone brim 2.1, foot 1.5, tall 1.05; helm dome 1.2 heads to 0.12 over crown, crest 0.45 | 237 | approved | flared skirt rejected 235
 proceduralAnimation.ts:upright wall stance (WALL_TRUNK_MAX, WALL_HEAD_LEVEL, WALL_KNEE_MAX, WALL_HIP_MAX, WALL_SINK_SHARE; hip splay cleared, by wallHold) | trunk <= 0.3, head 0.9 back; knee <= 0.35, thigh +-0.35, sink 0.3 | 236 | approved |
@@ -69,8 +68,10 @@ mapBuilder.ts:addShip galleon (SHIP_LONG, _BEAM, _HULL, _CASTLE, _MASTS, _YARD, 
 mapBuilder.ts:palmRing + seaRim (PALM_LEAN, _BANDS, _FRONDS, _FROND, _ARCH; SEA_RIM, _SHORE, _GLOW; pirate palms share) | lean .22-.5, 4 bands, 6-8 fronds .5 H, arch .35/-.25/-.85; rim 5 m, shore 1.2, glow .3; .72 | 253 | approved | puffball ring, 0.42-alpha hazard tint
 propBuilder.ts:tree_club (TREE_CLUB_LONG, _GRIP, _ROOTS, _CROWN, _CARRY rest only) | 0.8 stand, grip 0.14, 4 roots, crown 0.24 T, rest 1.2 rad off upright | 254 | approved | 0.95 stand (253); none (giant_tree plated block)
 proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; treeClubCarry turned in fist, _carryTurn 1 at build) | arm raise -.35 out .12 elbow -.7; tip .65,-.05,.6 | 254 | approved | shoulder-level rig carry
-propBuilder.ts:buildHorse (HORSE_LIFT, _LONG, _DEEP, _NECK_RAKE, _DAGS; forearm+cannon legs, cap .88 H) | lift .9 H, 1.9 H, .75 H, .75 rad, 7; neck 1.05 H, head .72 H | 256 | approved | 1.55/.6/.55, no lift (254); box + 4 sticks
+propBuilder.ts:buildHorse (HORSE_LIFT, _LONG, _DEEP, _NECK_RAKE, _FORE/_HIND_THICK, _HOCK, _CAP_FLARE) | lift .9, 1.9, .75, .75; legs .36/.46 to .2 H, hock .2 H; bell drop .5 H flare 1.3 | 257 | approved | box caparison, forearm .28 (256); 1.55/.6/.55 (254)
 unitFactory.ts:dressTreeGiant (TREE_GIANT_HOOD, _OPEN, _BEARD, _BEARD_WIDE, _SKIRT, _HEM, _TATTERS; tunic/hair/rags) | hood 1.32 open .42, beard 1.05 x .85, skirt .85 hem 1.3, 8 rags | 253 | approved | secret_nature team body
 unitFactory.ts:dressPainter + palette (PAINTER_DOUBLET, _BERET, _HOSE, _RUFF, _RUFF_TIERS; PALETTE_WIDE, _TIP, _TURN) | doublet .6, beret .42, hose .92,.6,.3, ruff 1.25 x2; palette .24, tip -1, turn .4 | 255 | approved | plain team body, no palette
 unitFactory.ts:dressCactus (CACTUS_ROBE, _LONG, _HOOD, _HOOD_OPEN, _SLEEVE, _SPINES, _SPINE; flowers) | hem 1.55 W, .86 leg, hood 1.6 open .26, sleeve 1.4, 34+3/arm+6, spine .4 heads | 256 | approved | cactus_body trunk + 10 spines
 mapBuilder.ts:broadleafBush in palmRing (BUSH_LUMPS, _TALL, _WIDE, _LEAVES, _GREEN; non-palm ring trees) | 3-5 lumps, tall .3 H, wide .42 H, 5-7 leaves, green .16,.36,.15 | 255 | approved | pale-sage puffball crown
+
+mapBuilder.ts:sandSpits (SPIT_SIDES, _RADIUS, _JITTER, _OUT, _WET, _EDGE, _EDGE_STEP, _SAND; pirate) | 9-gon 2.6-4.6 m, jitter .38, out .35, wet .7; edge 1.3-2.4 every 3.2; sand .6 lerp | 257 | approved | none (palms in seaRim water)
