@@ -221,10 +221,13 @@ const VOID_STUDS = 8;
  *   tunic and short dark breeches; shins wrapped in pale bandage bands.
  *   Horn paths are head-local points in heads (x out to the side, y up, z to the face), each horn EVIL_HORN_ROOT x thick heads across at the root, tapering to a point;
  *   the dark cloth self-lit EVIL_GLOW and the pale bone EVIL_BONE_GLOW so neither greys out in the lineup shade; EVIL_SPIKE heads long per spike.
+ *   tempest_lich (units/evil.tempest_lich): no hood. A crown of ~7 dark red-brown branch tines rises straight off the crown, the tallest ~2.4 heads, each kinking
+ *   out and back like a dead twig; a dark purple robe to the ankle with its hem torn into long rags. LICH_TINES tines, LICH_TINE_TALL heads at the tallest.
+ *   mad_mechanic (factions/evil, third from left): no hood. A dark leather cap with a pair of round pale-blue goggles on the brow, a dark leather apron to the knee.
  */
 type HornedEvilStyle = {
   horn: [number, number, number][]; hornColor: Color3; cloth: Color3; legs: Color3; helm: Color3 | null; teeth: number; skull: boolean;
-  spikes: boolean; wraps: boolean; skirt: number; thick: number;
+  spikes: boolean; wraps: boolean; skirt: number; thick: number; tines?: number; goggles?: boolean; rags?: number;
 };
 const HORNED_EVIL: Record<string, HornedEvilStyle> = {
   "evil.shadow_walker": {
@@ -237,7 +240,17 @@ const HORNED_EVIL: Record<string, HornedEvilStyle> = {
     hornColor: new Color3(0.22, 0.12, 0.32), cloth: new Color3(0.1, 0.07, 0.13), legs: new Color3(0.14, 0.09, 0.2),
     helm: null, teeth: 0, skull: true, spikes: false, wraps: true, skirt: 0.55, thick: 1.5,
   },
+  "evil.tempest_lich": {
+    horn: [], hornColor: new Color3(0.3, 0.13, 0.11), cloth: new Color3(0.17, 0.09, 0.22), legs: new Color3(0.12, 0.07, 0.15),
+    helm: new Color3(0.13, 0.08, 0.15), teeth: 0, skull: false, spikes: false, wraps: false, skirt: 1.9, thick: 1, tines: 7, rags: 9,
+  },
+  "evil.mad_mechanic": {
+    horn: [], hornColor: new Color3(0.3, 0.2, 0.13), cloth: new Color3(0.24, 0.15, 0.1), legs: new Color3(0.16, 0.11, 0.09),
+    helm: new Color3(0.32, 0.2, 0.12), teeth: 0, skull: false, spikes: false, wraps: false, skirt: 0.95, thick: 1, goggles: true,
+  },
 };
+const LICH_TINE_TALL = 2.4;
+const GOGGLE_GLASS = new Color3(0.55, 0.85, 1);
 const EVIL_HORN_ROOT = 0.24;
 const EVIL_BONE = new Color3(0.9, 0.82, 0.62);
 const EVIL_GLOW = 0.15;
@@ -1105,6 +1118,46 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
     const pts = style.horn.map(([x, y, z]) => new Vector3(side * x * headSize, y * headSize, z * headSize));
     taperedPath(scene, "evilHorn", pts, headSize * EVIL_HORN_ROOT * style.thick, head, hornMat, added);
   }
+  for (let i = 0; i < (style.tines ?? 0); i++) {
+    // Branch crown: tines round the crown, the middle (front-on) ones tallest, each kinking out then back up like a dead twig
+    const n = style.tines ?? 1;
+    const t = i / (n - 1) - 0.5;
+    const a = t * 2.6;
+    const tall = LICH_TINE_TALL * (1 - Math.abs(t) * 0.75) * (0.85 + 0.15 * ((i * 7) % 3) / 2);
+    const out = new Vector3(Math.sin(a), 0, Math.cos(a) * 0.4 - 0.25);
+    const root = new Vector3(out.x * 0.34, 0.5, out.z * 0.3).scale(headSize);
+    const kink = (i % 2 ? 1 : -1) * 0.12;
+    const pts = [
+      root,
+      root.add(new Vector3(out.x * 0.12 + kink, tall * 0.35, out.z * 0.1).scale(headSize)),
+      root.add(new Vector3(out.x * 0.34 - kink, tall * 0.68, out.z * 0.2).scale(headSize)),
+      root.add(new Vector3(out.x * 0.42 + kink * 0.5, tall, out.z * 0.26).scale(headSize)),
+    ];
+    taperedPath(scene, "lichTine", pts, headSize * 0.2, head, hornMat, added);
+    if (Math.abs(t) < 0.3) {
+      // A side twig off the taller tines
+      const fork = pts[2];
+      taperedPath(scene, "lichTwig", [fork, fork.add(new Vector3((kink > 0 ? 1 : -1) * 0.3, 0.42, 0).scale(headSize))], headSize * 0.1, head, hornMat, added);
+    }
+  }
+  if (style.goggles) {
+    // A strap round the cap at the brow, two round pale-blue lenses in brass rims on it
+    const brass = mf.get("cloth", new Color3(0.62, 0.45, 0.2), { emissiveIntensity: EVIL_BONE_GLOW });
+    const glass = mf.get("cloth", GOGGLE_GLASS, { emissiveIntensity: 0.55 });
+    const strap = MeshBuilder.CreateBox("goggleStrap", { width: hExt.x * 2.32, height: headSize * 0.14, depth: face * 2.32 }, scene);
+    strap.position.y = headSize * 0.16;
+    keep(strap, head, mf.get("cloth", new Color3(0.08, 0.06, 0.05), { emissiveIntensity: 0 }));
+    for (const side of [-1, 1]) {
+      const rim = MeshBuilder.CreateCylinder("goggleRim", { height: face * 0.32, diameter: headSize * 0.36, tessellation: 8 }, scene);
+      rim.rotation.x = Math.PI / 2;
+      rim.position.set(side * hExt.x * 0.48, headSize * 0.17, face * 1.2);
+      keep(rim, head, brass);
+      const lens = MeshBuilder.CreateCylinder("goggleLens", { height: face * 0.06, diameter: headSize * 0.26, tessellation: 8 }, scene);
+      lens.rotation.x = Math.PI / 2;
+      lens.position.set(side * hExt.x * 0.48, headSize * 0.17, face * 1.37);
+      keep(lens, head, glass);
+    }
+  }
   const spikeLen = headSize * EVIL_SPIKE;
   if (style.spikes) {
     // Dark guards on the forearms and shins, cream spikes standing off them; a spike off each shoulder
@@ -1139,8 +1192,22 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
     }
   }
   if (style.skirt > 0) {
-    const skirt = hangSkirt(scene, body, "evilBreech", style.skirt, 1.35, mf.get("cloth", style.legs, { emissiveIntensity: EVIL_GLOW }));
-    if (skirt) added.push(skirt);
+    const robe = mf.get("cloth", style.rags ? style.cloth : style.legs, { emissiveIntensity: EVIL_GLOW });
+    const skirt = hangSkirt(scene, body, "evilBreech", style.skirt, 1.35, robe);
+    if (skirt) {
+      added.push(skirt);
+      // A robe's hem torn into long rags
+      const sExt = skirt.getBoundingInfo().boundingBox.extendSize;
+      const rim = sExt.x * 2;
+      for (let i = 0; i < (style.rags ?? 0); i++) {
+        const a = ((i + 0.5) / (style.rags ?? 1)) * Math.PI * 2;
+        const drop = sExt.y * 2 * (0.2 + 0.14 * ((i * 5) % 3));
+        const rag = MeshBuilder.CreateCylinder("evilRag", { height: drop, diameterTop: rim * 0.42, diameterBottom: 0, tessellation: 3 }, scene);
+        rag.position.set(Math.sin(a) * rim * 0.4, -sExt.y - drop / 2, Math.cos(a) * rim * 0.4);
+        rag.rotation.y = a;
+        keep(rag, skirt, robe);
+      }
+    }
   }
   return added;
 }

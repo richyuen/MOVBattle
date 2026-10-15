@@ -733,7 +733,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.mad_mechanic": vis(
-    { scale: 1.18, bulk: 1.16, headSize: 1.04 }, "hammer", "hood", "none", "none", "#8E5A3A", "bomb", {
+    { scale: 1.18, bulk: 1.16, headSize: 1.04 }, "hammer", "none", "none", "none", "#8E5A3A", "bomb", {
       posePreset: "support",
       materialPreset: "secret_bandit",
       attachmentPreset: "bomb_lit",
@@ -750,7 +750,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.tempest_lich": vis(
-    { scale: 1.42, bulk: 1.04, headSize: 1.14 }, "staff", "hood", "none", "none", "#86A7FF", undefined, {
+    { scale: 1.42, bulk: 1.04, headSize: 1.14 }, "staff", "none", "none", "none", "#86A7FF", undefined, {
       posePreset: "caster",
       materialPreset: "evil_void",
       attachmentPreset: "storm_halo",
