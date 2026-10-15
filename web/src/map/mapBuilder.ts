@@ -1499,6 +1499,85 @@ function seaRim(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>): void {
 }
 
 /*
+ * Sand spits (pirate; maps/pirate_beach: the palms and bushes stand on sand beaches and spits with ragged, faceted edges, the turquoise water only in the
+ * coves between them; the field's edge against the shallows is scalloped, never a ruled line). Under every ring tree lies a lobe of dry sand, an irregular
+ * SPIT_SIDES-gon of radius SPIT_RADIUS[0]-[1] m with each corner jittered by up to SPIT_JITTER of it, pushed SPIT_OUT of its radius out toward the rim; the
+ * lobes overlap into a ragged beach band, and where two trees stand apart the sea shows between them as a cove. Every lobe sits on a wet-sand rim
+ * SPIT_WET wider, half way from sand to sea. Along each pool's edges a row of smaller lobes (SPIT_EDGE[0]-[1] m, one every SPIT_EDGE_STEP m) straddles the
+ * line, so the field bites into the water in rounded teeth.
+ */
+const SPIT_SIDES = 9;
+const SPIT_RADIUS = [2.6, 4.6];
+const SPIT_JITTER = 0.38;
+const SPIT_OUT = 0.35;
+const SPIT_WET = 0.7;
+const SPIT_EDGE = [1.3, 2.4];
+const SPIT_EDGE_STEP = 3.2;
+const SPIT_SAND = new Color3(0.8, 0.66, 0.4);
+function sandSpits(scene: Scene, sea: NonNullable<CampaignMapTheme["sea"]>, hazards: readonly HazardRegion[]): void {
+  const dry: number[] = [], wet: number[] = [];
+  let k = 0;
+  const lobe = (x: number, z: number, radius: number) => {
+    k++;
+    const r = (n: number) => Math.abs((Math.sin(k * 23.117 + n * 41.73) * 31337.177) % 1);
+    const turn = r(1) * Math.PI * 2;
+    const corners = Array.from({ length: SPIT_SIDES }, (_, i) => {
+      const a = turn + (i / SPIT_SIDES) * Math.PI * 2;
+      return [a, radius * (1 - SPIT_JITTER + r(2 + i) * SPIT_JITTER * 2)];
+    });
+    for (const [out, grow] of [[dry, 0], [wet, SPIT_WET]] as const) {
+      corners.forEach(([a, d], i) => {
+        const [b, e] = corners[(i + 1) % SPIT_SIDES];
+        out.push(x, z, x + Math.cos(a) * (d + grow), z + Math.sin(a) * (d + grow), x + Math.cos(b) * (e + grow), z + Math.sin(b) * (e + grow));
+      });
+    }
+  };
+  for (const mesh of scene.meshes) {
+    if (mesh.name !== "canopy" || !(mesh.parent instanceof Mesh) || mesh.parent.name !== "trunk") continue;
+    const at = mesh.parent.getAbsolutePosition();
+    const d = Math.hypot(at.x, at.z) || 1;
+    const radius = SPIT_RADIUS[0] + Math.abs((Math.sin(at.x * 3.71 + at.z * 1.93) * 9137.3) % 1) * (SPIT_RADIUS[1] - SPIT_RADIUS[0]);
+    lobe(at.x + (at.x / d) * radius * SPIT_OUT, at.z + (at.z / d) * radius * SPIT_OUT, radius);
+  }
+  for (const hazard of hazards) {
+    if (hazard.kind !== "water" || hazard.shape !== "box") continue;
+    const { x: cx, z: cz } = hazard.center;
+    const edges: [number, number, number, number, number, number][] = [
+      // [from x, from z, step x, step z, out x, out z]: the outward side is away from the pool
+      [cx - hazard.halfX, cz - hazard.halfZ, 1, 0, 0, -1], [cx - hazard.halfX, cz + hazard.halfZ, 1, 0, 0, 1],
+      [cx - hazard.halfX, cz - hazard.halfZ, 0, 1, -1, 0], [cx + hazard.halfX, cz - hazard.halfZ, 0, 1, 1, 0],
+    ];
+    for (const [fx, fz, sx, sz, ox, oz] of edges) {
+      const long = sx ? hazard.halfX * 2 : hazard.halfZ * 2;
+      const n = Math.max(2, Math.round(long / SPIT_EDGE_STEP));
+      for (let i = 0; i <= n; i++) {
+        const t = (i / n) * long;
+        const radius = SPIT_EDGE[0] + Math.abs((Math.sin((fx + t * sx) * 2.9 + (fz + t * sz) * 5.3) * 7193.1) % 1) * (SPIT_EDGE[1] - SPIT_EDGE[0]);
+        lobe(fx + t * sx + ox * radius * 0.25, fz + t * sz + oz * radius * 0.25, radius);
+      }
+    }
+  }
+  for (const [name, tris, y, colour] of [["sandWet", wet, 0.078, Color3.Lerp(sea.shore, sea.water, 0.45)], ["sandSpit", dry, 0.086, Color3.Lerp(sea.shore, SPIT_SAND, 0.6)]] as const) {
+    const positions: number[] = [], indices: number[] = [];
+    for (let i = 0; i < tris.length; i += 2) {
+      positions.push(tris[i], y, tris[i + 1]);
+      indices.push(i / 2);
+    }
+    const mesh = new Mesh(name, scene);
+    const data = new VertexData();
+    data.positions = positions;
+    data.indices = indices;
+    data.normals = positions.map((_, i) => (i % 3 === 1 ? 1 : 0));
+    data.applyToMesh(mesh);
+    const mat = seaMaterial(scene, `${name}Mat`, colour, mesh);
+    mat.backFaceCulling = false;
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+  }
+}
+
+/*
  * An autumn field (maps/autumn_tribal_1: the island top is one warm orange lawn, ochre where it wears thin, never a dusty mauve; spiky orange and yellow grass
  * clumps stand in a band along the foot of the tree ring and dot the open field). The sandbox lawn's plum self-light suits its saturated orange; under a
  * campaign theme's own colours it is what turned the field mauve, so a theme with a field sets the lawn, the dry rim, both blade shades and the ground from
@@ -2315,6 +2394,7 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
   recolorBaseTerrain(scene, theme);
   addCampaignProps(scene, theme, obstacles);
   createHazardVisuals(scene, hazards, theme.sea);
+  if (theme.sea) sandSpits(scene, theme.sea, hazards);
   createPlacementGuides(scene, theme.zones);
   return {
     zones: theme.zones.map((zoneDef) => ({
