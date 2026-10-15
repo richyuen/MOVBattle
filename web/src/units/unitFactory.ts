@@ -109,6 +109,25 @@ const ZEUS_SASH_COLOR = new Color3(0.8, 0.2, 0.2);
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
 const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
+/*
+ * Skeletons are bones, not men (250; units/spooky.skeleton_warrior: cream bone limbs about a third as thick as a man's, a rib cage of hoops round a thin
+ * spine in place of the chest block, a bare skull for a head under a team-coloured hood, and a ragged team-coloured skirt from the hips to the knees with
+ * tatters hanging off its hem). Team colour lives on the cloth: hood, skirt, shield.
+ *   Limbs SKELETON_LIMB of their width; spine SKELETON_SPINE of the chest width; SKELETON_RIBS hoops from SKELETON_RIB_TOP down to SKELETON_RIB_LOW of the
+ *   chest height, narrowing from the chest's width; skirt SKELETON_SKIRT of the thigh long, its hem SKELETON_HEM pelvis widths across, SKELETON_TATTERS tatters.
+ */
+const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_archer"]);
+// Warm cream: a paler bone went lavender-grey in the shade under the teal sky
+const SKELETON_BONE = new Color3(1.0, 0.86, 0.6);
+const SKELETON_LIMB = 0.42;
+const SKELETON_SPINE = 0.16;
+const SKELETON_RIBS = 4;
+const SKELETON_RIB_TOP = 0.86;
+const SKELETON_RIB_LOW = 0.42;
+const SKELETON_SKIRT = 0.7;
+const SKELETON_HEM = 1.45;
+const SKELETON_TATTERS = 6;
+const SKELETON_CLOTH = 0.72;
 
 // Clothes are solids hung on the body, not a colour painted on it. The lower half of a garment is a faceted bell hung from the waist over the pelvis and the tops of
 // the thighs, standing off the legs at its hem: it rides the hips and not the legs, so a stride swings the knees out from under it. length is in thighs, flare is the
@@ -274,6 +293,10 @@ export class UnitFactory {
       }
     }
 
+    if (SKELETON_UNITS.has(definition.id) && !shouldUseVehicleBody) {
+      propMeshes.push(...dressSkeleton(this._scene, body, teamColor));
+    }
+
     if (isZeus && !shouldUseVehicleBody) {
       body.bodyMaterial.baseColor = ZEUS_TUNIC_COLOR;
       body.bodyMaterial.metallic = 0;
@@ -402,6 +425,87 @@ export class UnitFactory {
 
     return unit;
   }
+}
+
+/** Strips a skeleton's body to bone (see SKELETON_*): thin bone limbs, a spine and rib hoops for the chest, a skull under a team hood, a ragged team skirt. */
+function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const bone = getMaterialFactory().getCloth(SKELETON_BONE);
+  const cloth = getMaterialFactory().getCloth(teamColor.scale(SKELETON_CLOTH));
+  const flesh = new Set<Material | null>([body.bodyMaterial, body.skinMaterial]);
+  for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    limb.scaling.x *= SKELETON_LIMB;
+    limb.scaling.z *= SKELETON_LIMB;
+    limb.material = bone;
+  }
+  // Hands, feet, neck and stubs: every part of the body left in flesh or cloth goes bone, whatever it was given
+  for (const mesh of [...body.allMeshes, ...body.leftElbow.getChildMeshes(false), ...body.rightElbow.getChildMeshes(false), ...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name) || flesh.has(mesh.material)) mesh.material = bone;
+  }
+  // Chest: the block thins to a spine; rib hoops round it, widest at the top
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const foot = chest.position.y - H / 2;
+  chest.scaling.x *= SKELETON_SPINE;
+  chest.scaling.z *= SKELETON_SPINE * 2;
+  chest.material = bone;
+  // The shoulder yoke is the trunk's hull and trapezius: a skeleton has none, the ribs stand in for it
+  for (const mesh of body.torso.getChildMeshes(true)) {
+    if (/_yoke/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  for (let i = 0; i < SKELETON_RIBS; i++) {
+    const k = i / (SKELETON_RIBS - 1);
+    const across = W * (0.95 - 0.3 * k);
+    const rib = MeshBuilder.CreateTorus(`${chest.name}_rib`, { diameter: across, thickness: W * 0.07, tessellation: 8 }, scene);
+    rib.scaling.z = (D * 0.9) / across;
+    rib.position.set(0, foot + H * (SKELETON_RIB_TOP - (SKELETON_RIB_TOP - SKELETON_RIB_LOW) * k), D * 0.05);
+    rib.material = bone;
+    rib.convertToFlatShadedMesh();
+    rib.parent = body.torso;
+    added.push(rib);
+  }
+  const collar = MeshBuilder.CreateBox(`${chest.name}_collarbone`, { width: W * 1.05, height: W * 0.08, depth: W * 0.08 }, scene);
+  collar.position.set(0, foot + H * 0.97, D * 0.1);
+  collar.material = bone;
+  collar.parent = body.torso;
+  added.push(collar);
+  // Skull and hood: the head goes bone; a team-coloured hood sits up and back over the crown, the face and its bead eyes clear in front
+  body.headMesh.material = bone;
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const hood = MeshBuilder.CreateSphere(`${body.headMesh.name}_hood`, { diameter: headSize * 1.32, segments: 4 }, scene);
+  hood.position.set(0, headSize * 0.12, -headSize * 0.26);
+  hood.material = cloth;
+  hood.convertToFlatShadedMesh();
+  hood.parent = body.headMesh;
+  added.push(hood);
+  // Ragged skirt from the pelvis to the knees, tatters hanging off the hem
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  if (pelvis) {
+    pelvis.material = cloth;
+    const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
+    const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y;
+    const long = thigh * SKELETON_SKIRT;
+    const top = pExt.x * 2.1, hem = pExt.x * 2 * SKELETON_HEM;
+    const skirt = MeshBuilder.CreateCylinder(`${pelvis.name}_skirt`, { height: long, diameterTop: top, diameterBottom: hem, tessellation: 9 }, scene);
+    skirt.scaling.z = (pExt.z * 2.2) / top;
+    skirt.position.y = pelvis.position.y + pExt.y - long / 2;
+    skirt.material = cloth;
+    skirt.convertToFlatShadedMesh();
+    skirt.parent = body.hip;
+    added.push(skirt);
+    for (let i = 0; i < SKELETON_TATTERS; i++) {
+      const a = ((i + 0.5) / SKELETON_TATTERS) * Math.PI * 2;
+      const drop = long * (0.25 + 0.2 * ((i * 7) % 3) / 2);
+      const tatter = MeshBuilder.CreateCylinder(`${pelvis.name}_tatter`, { height: drop, diameterTop: hem * 0.32, diameterBottom: 0, tessellation: 3 }, scene);
+      tatter.position.set(Math.sin(a) * hem * 0.42, -long / 2 - drop / 2, Math.cos(a) * hem * 0.42);
+      tatter.rotation.y = a;
+      tatter.material = cloth;
+      tatter.parent = skirt;
+      added.push(tatter);
+    }
+  }
+  return added;
 }
 
 function applyMaterialPreset(
