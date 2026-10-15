@@ -89,7 +89,8 @@ const WALL_BOARD_LEAN = [-0.2, 0.3];
 const PRESS_DRIVE = 0.4;
 // The tree giant's hip carry: the arm a little forward with the elbow half bent (fist at the belt), and where the trunk points in the body's frame (x out, y up, z ahead).
 const TREE_HIP_ARM = { raise: -0.35, out: 0.12, elbow: -0.7 };
-const TREE_HIP_TIP = new Vector3(0.65, -0.05, 0.6);
+// The trunk is held level out at his flank with the crown a little above the fist (no per-man droop), so the crown hangs clear of the ground beside him.
+const TREE_HIP_TIP = new Vector3(0.85, 0.22, 0.35);
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -915,7 +916,7 @@ export class ProceduralAnimator {
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
     const attitude = tree
-      ? { raise: TREE_HIP_ARM.raise, out: TREE_HIP_ARM.out, elbow: TREE_HIP_ARM.elbow, tip: lean(TREE_HIP_TIP.x, TREE_HIP_TIP.y, TREE_HIP_TIP.z) }
+      ? { raise: TREE_HIP_ARM.raise, out: TREE_HIP_ARM.out, elbow: TREE_HIP_ARM.elbow, tip: new Vector3(TREE_HIP_TIP.x * side, TREE_HIP_TIP.y, TREE_HIP_TIP.z).normalize() }
       : pick < 0.3
       ? { raise: -0.9 - h(81) * 0.3, out: 0.15 + h(82) * 0.2, elbow: -1.9 - h(83) * 0.3, tip: lean(0.25, 0.45, -0.85) }
       : pick < 0.55

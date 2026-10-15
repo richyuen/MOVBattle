@@ -163,7 +163,8 @@ const TREE_GIANT_SKIRT = 0.85;
 const TREE_GIANT_HEM = 1.3;
 const TREE_GIANT_TATTERS = 8;
 const TREE_GIANT_TUNIC = new Color3(0.08, 0.18, 0.2);
-const TREE_GIANT_HAIR = new Color3(0.3, 0.15, 0.12);
+const TREE_GIANT_HAIR = new Color3(0.42, 0.15, 0.17);
+const TREE_GIANT_HAIR_TEAM = 0.1;
 const TREE_GIANT_RAGS = new Color3(0.56, 0.42, 0.28);
 /*
  * The painter (255; units/renaissance.painter): a two-tone man, not one team colour. A dark team doublet and sleeves, tan hose to the ankle, red-brown shoes, a
@@ -699,7 +700,8 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
 function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
   const tunic = getMaterialFactory().getCloth(Color3.Lerp(TREE_GIANT_TUNIC, teamColor.scale(0.3), 0.25));
-  const hair = getMaterialFactory().getCloth(Color3.Lerp(TREE_GIANT_HAIR, teamColor.scale(0.45), 0.35));
+  // The hood and beard are one maroon-brown, barely tinted to the team, self-lit so they do not go navy in the lineup shade
+  const hair = getMaterialFactory().get("cloth", Color3.Lerp(TREE_GIANT_HAIR, teamColor.scale(0.45), TREE_GIANT_HAIR_TEAM), { emissiveIntensity: 0.18 });
   const rags = getMaterialFactory().getCloth(TREE_GIANT_RAGS);
   // The tunic is whatever the body wore; forearms and legs go bare team skin, feet dark leather
   for (const mesh of body.allMeshes) {

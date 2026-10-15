@@ -1394,6 +1394,8 @@ const TREE_CLUB_GRIP = 0.14;
 const TREE_CLUB_ROOTS = 4;
 const TREE_CLUB_CROWN = 0.24;
 const TREE_CLUB_CARRY = 1.2;
+const TREE_CLUB_LOBE = 0.85;
+const TREE_CLUB_LOBE_OFF = 1.0;
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -1438,16 +1440,18 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       limb.position.set(T * 0.07, T * 0.22, 0);
       limb.rotation.z = -0.6;
       limb.material = bark;
-      const leaf = mat(scene, new Color3(0.5, 0.57, 0.27));
+      // The crown is three separate round lobes (a clover round the trunk's end, TREE_CLUB_LOBE of R each, set TREE_CLUB_LOBE_OFF of R off the axis at 120 degrees so
+      // they just touch), one shade apart, so its silhouette reads as three bumps and not one merged blob
+      const leaves = [mat(scene, new Color3(0.5, 0.57, 0.27)), mat(scene, new Color3(0.43, 0.5, 0.23))];
       const R = T * TREE_CLUB_CROWN;
-      const lobes: [number, number, number, number][] = [[1, 0, 0.55, 0], [0.82, 0.75, 0.05, 0.3], [0.74, -0.6, 0.15, -0.55], [0.6, 1.25, -0.25, 0.1]];
-      for (const [k, x, y, z] of lobes) {
-        const lobe = MeshBuilder.CreateIcoSphere("treeClubCrown", { radius: R * k, subdivisions: 1 }, scene);
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2 + 0.5;
+        const lobe = MeshBuilder.CreateIcoSphere("treeClubCrown", { radius: R * TREE_CLUB_LOBE * (1 - i * 0.05), subdivisions: 2 }, scene);
         lobe.parent = trunk;
-        lobe.position.set(x * R, T / 2 + y * R, z * R);
-        lobe.scaling.y = 0.85;
-        lobe.rotation.y = x * 2;
-        lobe.material = leaf;
+        lobe.position.set(Math.cos(a) * R * TREE_CLUB_LOBE_OFF, T / 2 + R * (0.35 + 0.3 * i), Math.sin(a) * R * TREE_CLUB_LOBE_OFF);
+        lobe.scaling.y = 0.9;
+        lobe.rotation.y = a;
+        lobe.material = leaves[i % 2];
         lobe.convertToFlatShadedMesh();
       }
       return carry;
