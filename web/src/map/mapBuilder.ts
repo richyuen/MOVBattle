@@ -1205,7 +1205,7 @@ interface CampaignMapTheme {
   hazards: HazardRegion[];
   props: CampaignPropSpec[];
   /** The ring trees' own palette (canopy, upper canopy, trunk) in place of the campaign green, and the share of ring trees stood bare and dead (see deadenRing) */
-  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number; balls?: Color3[]; palms?: number };
+  ring?: { leaves: Color3; darkLeaves: Color3; trunk: Color3; bare: number; blossom?: number; balls?: Color3[]; palms?: number; oaks?: number };
   /** Opaque turquoise shallows in place of the see-through hazard tint, a pale shore round each pool and a band of sea round the island rim (see seaRim) */
   sea?: { water: Color3; shore: Color3 };
   /** The theme's own lawn in place of the sandbox's (see autumnField): ground and grass colour, the lawn's self-light, and the tuft clumps' palette */
@@ -1283,6 +1283,7 @@ function recolorBaseTerrain(scene: Scene, theme: CampaignMapTheme): void {
   if (theme.ring?.blossom) blossomRing(scene, theme.ring.blossom);
   if (theme.ring?.balls) ballRing(scene, theme.ring.balls);
   if (theme.ring?.palms) palmRing(scene, theme.ring.palms);
+  if (theme.ring?.oaks) oakRing(scene, theme.ring.oaks, theme.ring.trunk);
   if (theme.town) townRing(scene);
   if (theme.field) autumnField(scene, theme.field);
   if (theme.sea) seaRim(scene, theme.sea);
@@ -1966,6 +1967,109 @@ function ballRing(scene: Scene, palette: Color3[]): void {
     ball.convertToFlatShadedMesh();
     glow?.addExcludedMesh(ball);
     shadows?.addShadowCaster(ball, false);
+  }
+}
+
+/*
+ * An oak ring (meadow; maps/meadow_medieval_1: the island is ringed by broad dark-green oaks, never pale puffballs on stalks). Read off the reference: a
+ * stout brown trunk that leans one way and kinks back the other (two boles, OAK_LEAN off upright, the lower OAK_BOLE of the tree's height and thick), forking
+ * at its top into OAK_LIMBS limbs that reach out and up, under one broad crown wider than tall: a flat dome OAK_CROWN of the height across, squashed
+ * OAK_SQUASH, with a lump at each limb end and OAK_SKIRT lumps hung round its rim, so the canopy is a lumpy umbrella with trunk showing under it. The tree
+ * is OAK_SCALE the size of the stalk it replaces. A seeded share (oaks) of the trees takes this form; the old stalk (now hidden) stays as the parent and
+ * keeps its obstacle. The lumps wear their own part self-lit copies of the theme's ring leaves, without the crown haze that pales the puffballs to sage;
+ * the boles wear the trunk material, darkened to bark.
+ */
+const OAK_SCALE = 1.35;
+const OAK_LEAN = [0.18, 0.4];
+const OAK_BOLE = 0.34;
+const OAK_LIMBS = 2;
+const OAK_CROWN = 0.62;
+const OAK_SQUASH = 0.5;
+const OAK_SKIRT = 3;
+function oakRing(scene: Scene, share: number, bark: Color3): void {
+  const leaf = (name: string, from: string): StandardMaterial | null => {
+    const source = scene.getMaterialByName(from) as StandardMaterial | null;
+    if (!source) return null;
+    const mat = new StandardMaterial(name, scene);
+    mat.diffuseColor = source.diffuseColor.scale(0.6);
+    mat.emissiveColor = source.diffuseColor.scale(0.4);
+    mat.specularColor = Color3.Black();
+    return mat;
+  };
+  const light = leaf("oakLeaves", "leaves");
+  const dark = leaf("oakLeavesDark", "darkLeaves");
+  const wood = scene.getMaterialByName("trunk") as StandardMaterial | null;
+  if (!light || !dark || !wood) return;
+  wood.diffuseColor = bark;
+  wood.emissiveColor = bark.scale(0.25);
+  const trunks = new Set<Mesh>();
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "canopy" && mesh.parent instanceof Mesh && mesh.parent.name === "trunk") trunks.add(mesh.parent);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const shadows = sunShadows(scene);
+  const up = new Vector3(0, 1, 0);
+  let k = 0;
+  for (const trunk of trunks) {
+    k++;
+    const r = (n: number) => Math.abs((Math.sin(k * 19.411 + n * 47.13) * 27183.2818) % 1);
+    if (r(1) > share) continue;
+    for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.setEnabled(false);
+    trunk.isVisible = false;
+    const info = trunk.getBoundingInfo().boundingBox;
+    const trunkLong = info.maximum.y - info.minimum.y;
+    const height = (trunkLong / 0.6) * OAK_SCALE;
+    const finish = (mesh: Mesh, mat: StandardMaterial): void => {
+      mesh.parent = trunk;
+      mesh.material = mat;
+      mesh.isPickable = false;
+      mesh.convertToFlatShadedMesh();
+      glow?.addExcludedMesh(mesh);
+      shadows?.addShadowCaster(mesh, false);
+    };
+    // A tapered cylinder from one point to another, in the stalk's own frame
+    const bole = (from: Vector3, to: Vector3, foot: number, head: number): void => {
+      const span = to.subtract(from);
+      const mesh = MeshBuilder.CreateCylinder("oakBole", { height: span.length(), diameterBottom: foot, diameterTop: head, tessellation: 6 }, scene);
+      mesh.position = from.add(span.scale(0.5));
+      const dir = span.normalize();
+      const axis = Vector3.Cross(up, dir);
+      mesh.rotationQuaternion = axis.length() < 1e-4 ? Quaternion.Identity() : Quaternion.RotationAxis(axis.normalize(), Math.acos(Math.min(1, Vector3.Dot(up, dir))));
+      mesh.receiveShadows = true;
+      finish(mesh, wood);
+    };
+    const lump = (at: Vector3, radius: number, squash: number, n: number): void => {
+      const mesh = MeshBuilder.CreateIcoSphere("oakCrown", { radius, subdivisions: 1 }, scene);
+      mesh.position = at;
+      mesh.scaling.y = squash;
+      mesh.rotation.y = r(n) * Math.PI;
+      mesh.receiveShadows = false;
+      finish(mesh, r(n + 1) > 0.45 ? dark : light);
+    };
+    const lean = (tilt: number, yaw: number) => new Vector3(Math.sin(tilt) * Math.sin(yaw), Math.cos(tilt), Math.sin(tilt) * Math.cos(yaw));
+    // Two boles: the lower leans one way, the upper kinks back across it
+    const foot = new Vector3(0, -trunkLong / 2, 0);
+    const yaw = r(2) * Math.PI * 2;
+    const bend = lean(OAK_LEAN[0] + r(3) * (OAK_LEAN[1] - OAK_LEAN[0]), yaw);
+    const knee = foot.add(bend.scale(height * OAK_BOLE));
+    const top = knee.add(lean(OAK_LEAN[1], yaw + Math.PI * (0.6 + r(4) * 0.5)).scale(height * 0.2));
+    bole(foot, knee, height * 0.14, height * 0.1);
+    bole(knee, top, height * 0.1, height * 0.07);
+    // The broad crown over the fork, a lump at each limb end and more hung round the rim
+    const crown = height * OAK_CROWN / 2;
+    const dome = top.add(new Vector3(0, crown * 0.32, 0));
+    lump(dome, crown, OAK_SQUASH, 10);
+    for (let i = 0; i < OAK_LIMBS; i++) {
+      const out = yaw + Math.PI * (i + 0.3 + r(20 + i) * 0.4);
+      const end = top.add(lean(0.95, out).scale(height * 0.22));
+      bole(top, end, height * 0.06, height * 0.035);
+      lump(end.add(new Vector3(0, crown * 0.18, 0)), crown * 0.62, OAK_SQUASH + 0.08, 30 + i * 2);
+    }
+    for (let i = 0; i < OAK_SKIRT; i++) {
+      const around = yaw + (i / OAK_SKIRT) * Math.PI * 2 + r(40 + i) * 0.9;
+      const at = dome.add(new Vector3(Math.sin(around) * crown * 0.72, -crown * 0.12 + r(50 + i) * crown * 0.2, Math.cos(around) * crown * 0.72));
+      lump(at, crown * (0.48 + r(60 + i) * 0.16), OAK_SQUASH + 0.1, 70 + i * 2);
+    }
   }
 }
 
@@ -2724,6 +2828,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     zones: defaultHalfZones(),
     hazards: [],
     accent: new Color3(0.92, 0.82, 0.38),
+    // Broad dark-green oaks on kinked brown trunks round the meadow (see oakRing)
+    ring: { leaves: new Color3(0.32, 0.52, 0.2), darkLeaves: new Color3(0.22, 0.4, 0.15), trunk: new Color3(0.42, 0.29, 0.19), bare: 0, oaks: 1 },
     props: [
       { kind: "tree", x: -26, z: -26, scale: 1.1 },
       { kind: "tree", x: -24, z: 24, scale: 1.1 },
