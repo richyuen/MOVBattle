@@ -1184,6 +1184,8 @@ interface CampaignPropSpec {
     | "gravestone"
     | "church"
     | "temple"
+    | "pagoda"
+    | "torii"
     | "waterfall";
   x: number;
   z: number;
@@ -1622,6 +1624,106 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
     addBoxObstacle(x, z, 10 * scale, 8 * scale, 3.5 * scale, paleMat, blocking);
     addBoxObstacle(x, z, 12 * scale, 10 * scale, 1.2 * scale, accentMat, false);
   };
+  /*
+   * Dynasty pagoda and torii (245; maps/dynasty.png, tabs_screenshot_03). Spec read off the reference:
+   *   Pagoda: a grey stone plinth with steps, a ground storey of red posts round a pale wall, then two dark slate hipped roofs stacked, each a low four-sided
+   *   pyramid whose eaves flare out well past the storey under it (eaves about 1.6x the storey width, lower roof about a third of the storey high), a small
+   *   upper storey of red posts between them, and a dark finial on top. Overall about 1.3x as tall as the plinth is wide; red, slate and grey, no white box.
+   *   Torii: two red posts leaning in a touch, a red tie beam under the top, and a dark lintel across the top that overhangs both posts and turns up at its ends.
+   */
+  const pagodaRedMat = new StandardMaterial(`${theme.displayName}_pagodaRed`, scene);
+  pagodaRedMat.diffuseColor = new Color3(0.72, 0.13, 0.15);
+  pagodaRedMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const slateMat = new StandardMaterial(`${theme.displayName}_slate`, scene);
+  slateMat.diffuseColor = new Color3(0.3, 0.33, 0.42);
+  slateMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const stoneMat = new StandardMaterial(`${theme.displayName}_stone`, scene);
+  stoneMat.diffuseColor = new Color3(0.62, 0.6, 0.56);
+  stoneMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const paperMat = new StandardMaterial(`${theme.displayName}_paper`, scene);
+  paperMat.diffuseColor = new Color3(0.9, 0.86, 0.74);
+  paperMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const placePart = (root: Mesh, mesh: Mesh, material: StandardMaterial, x: number, y: number, z: number) => {
+    mesh.parent = root;
+    mesh.position.set(x, y, z);
+    mesh.material = material;
+    mesh.receiveShadows = true;
+    sunShadows(scene)?.addShadowCaster(mesh);
+  };
+  // A hipped roof: a four-sided low pyramid (a square-tessellated cone turned to the walls) on a thin flared eave slab
+  const addRoof = (root: Mesh, y: number, eave: number, top: number, tall: number) => {
+    // The red cornice under the eave stands out past the slate all round, so each tier's edge reads from the placement view
+    const slab = MeshBuilder.CreateBox(`${theme.displayName}_pagodaEave`, { width: eave * 1.08, depth: eave * 1.08, height: tall * 0.12 }, scene);
+    placePart(root, slab, pagodaRedMat, 0, y + tall * 0.06, 0);
+    const roof = MeshBuilder.CreateCylinder(`${theme.displayName}_pagodaRoof`, { height: tall, diameterTop: top * Math.SQRT2, diameterBottom: eave * Math.SQRT2, tessellation: 4 }, scene);
+    roof.rotation.y = Math.PI / 4;
+    placePart(root, roof, slateMat, 0, y + tall * 0.5 + tall * 0.1, 0);
+    // The eave corners turn up: a short slate horn at each corner
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const tip = MeshBuilder.CreateBox(`${theme.displayName}_pagodaEaveTip`, { width: eave * 0.08, depth: eave * 0.08, height: tall * 0.35 }, scene);
+      tip.rotation.set(sz * 0.6, 0, -sx * 0.6);
+      placePart(root, tip, slateMat, sx * eave * 0.47, y + tall * 0.2, sz * eave * 0.47);
+    }
+  };
+  const addStorey = (root: Mesh, y: number, width: number, tall: number, posts: number) => {
+    const wall = MeshBuilder.CreateBox(`${theme.displayName}_pagodaWall`, { width: width * 0.82, depth: width * 0.82, height: tall }, scene);
+    placePart(root, wall, paperMat, 0, y + tall / 2, 0);
+    for (let i = 0; i < posts; i++) {
+      const t = -0.5 + i / (posts - 1);
+      for (const [px, pz] of [[t, -0.5], [t, 0.5], [-0.5, t], [0.5, t]]) {
+        const post = MeshBuilder.CreateBox(`${theme.displayName}_pagodaPost`, { width: width * 0.07, depth: width * 0.07, height: tall }, scene);
+        placePart(root, post, pagodaRedMat, px * width * 0.9, y + tall / 2, pz * width * 0.9);
+      }
+    }
+    const beam = MeshBuilder.CreateBox(`${theme.displayName}_pagodaBeam`, { width: width * 0.98, depth: width * 0.98, height: tall * 0.14 }, scene);
+    placePart(root, beam, pagodaRedMat, 0, y + tall * 0.93, 0);
+  };
+  const addPagoda = (x: number, z: number, scale = 1, rotationY = 0, blocking = true) => {
+    const root = new Mesh(`${theme.displayName}_pagoda`, scene);
+    root.position.set(x, 0, z);
+    root.rotation.y = rotationY;
+    const W = 11 * scale;
+    const plinthTall = 1.6 * scale;
+    const plinth = MeshBuilder.CreateBox(`${theme.displayName}_pagodaPlinth`, { width: W * 1.15, depth: W * 1.15, height: plinthTall }, scene);
+    placePart(root, plinth, stoneMat, 0, plinthTall / 2, 0);
+    const steps = MeshBuilder.CreateBox(`${theme.displayName}_pagodaSteps`, { width: W * 0.35, depth: W * 0.3, height: plinthTall * 0.55 }, scene);
+    placePart(root, steps, stoneMat, 0, plinthTall * 0.275, -W * 0.72);
+    const ground = 4.2 * scale;
+    addStorey(root, plinthTall, W * 0.8, ground, 4);
+    const roof1 = plinthTall + ground;
+    addRoof(root, roof1, W * 1.18, W * 0.34, 2.4 * scale);
+    const upper = roof1 + 2.4 * scale * 0.7;
+    addStorey(root, upper, W * 0.4, 3.4 * scale, 3);
+    const roof2 = upper + 3.4 * scale;
+    addRoof(root, roof2, W * 0.72, W * 0.1, 2.6 * scale);
+    const finial = MeshBuilder.CreateCylinder(`${theme.displayName}_pagodaFinial`, { height: 2.2 * scale, diameterTop: 0, diameterBottom: 0.5 * scale, tessellation: 6 }, scene);
+    placePart(root, finial, slateMat, 0, roof2 + 2.6 * scale * 1.1 + 1.1 * scale, 0);
+    if (blocking) obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: W * 0.58, halfZ: W * 0.58 });
+  };
+  const addTorii = (x: number, z: number, scale = 1, rotationY = 0) => {
+    const root = new Mesh(`${theme.displayName}_torii`, scene);
+    root.position.set(x, 0, z);
+    root.rotation.y = rotationY;
+    const span = 6 * scale;
+    const tall = 7 * scale;
+    for (const side of [-1, 1]) {
+      const post = MeshBuilder.CreateCylinder(`${theme.displayName}_toriiPost`, { height: tall, diameterTop: 0.5 * scale, diameterBottom: 0.7 * scale, tessellation: 8 }, scene);
+      post.rotation.z = side * 0.04;
+      placePart(root, post, pagodaRedMat, side * span / 2, tall / 2, 0);
+      // The lintel's upturned end
+      const end = MeshBuilder.CreateBox(`${theme.displayName}_toriiEnd`, { width: 1.4 * scale, depth: 0.7 * scale, height: 0.45 * scale }, scene);
+      end.rotation.z = -side * 0.28;
+      placePart(root, end, slateMat, side * (span / 2 + 1.5 * scale), tall + 0.75 * scale, 0);
+    }
+    const tie = MeshBuilder.CreateBox(`${theme.displayName}_toriiTie`, { width: span + 1.2 * scale, depth: 0.45 * scale, height: 0.45 * scale }, scene);
+    placePart(root, tie, pagodaRedMat, 0, tall * 0.8, 0);
+    const lintelRed = MeshBuilder.CreateBox(`${theme.displayName}_toriiLintelRed`, { width: span + 2 * scale, depth: 0.6 * scale, height: 0.5 * scale }, scene);
+    placePart(root, lintelRed, pagodaRedMat, 0, tall + 0.1 * scale, 0);
+    const lintel = MeshBuilder.CreateBox(`${theme.displayName}_toriiLintel`, { width: span + 2.4 * scale, depth: 0.75 * scale, height: 0.45 * scale }, scene);
+    placePart(root, lintel, slateMat, 0, tall + 0.55 * scale, 0);
+    obstacles.push({ type: "cylinder", center: new Vector3(x - Math.cos(rotationY) * span / 2, 0, z + Math.sin(rotationY) * span / 2), radius: 0.4 * scale });
+    obstacles.push({ type: "cylinder", center: new Vector3(x + Math.cos(rotationY) * span / 2, 0, z - Math.sin(rotationY) * span / 2), radius: 0.4 * scale });
+  };
   const addWaterfall = (x: number, z: number, scale = 1) => {
     const fall = MeshBuilder.CreatePlane(`${theme.displayName}_waterfall`, { width: 6 * scale, height: 14 * scale }, scene);
     fall.position = new Vector3(x, 8 * scale, z);
@@ -1668,6 +1770,8 @@ function addCampaignProps(scene: Scene, theme: CampaignMapTheme, obstacles: Obst
       case "graveLight": addGraveLight(prop.x, prop.z, scale); break;
       case "church": addChurch(prop.x, prop.z, scale, blocking); break;
       case "temple": addTemple(prop.x, prop.z, scale, blocking); break;
+      case "pagoda": addPagoda(prop.x, prop.z, scale, rotationY, blocking); break;
+      case "torii": addTorii(prop.x, prop.z, scale, rotationY); break;
       case "waterfall": addWaterfall(prop.x, prop.z, scale); break;
     }
   }
@@ -1793,7 +1897,8 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     props: [
       { kind: "lantern", x: -20, z: -18, scale: 1.0 },
       { kind: "lantern", x: -20, z: 18, scale: 1.0 },
-      { kind: "temple", x: 0, z: 0, scale: 0.8, blocking: false },
+      { kind: "pagoda", x: 0, z: 29, scale: 0.9 },
+      { kind: "torii", x: -17, z: 25, scale: 0.9, rotationY: 0.35 },
       { kind: "bridge", x: -44, z: -12, scale: 0.7 },
       { kind: "bridge", x: -44, z: 12, scale: 0.7 },
       { kind: "bridge", x: 44, z: -12, scale: 0.7 },
