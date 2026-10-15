@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 257 | jouster-horse-legs | unit-look.n | approved
-- 257 | pirate-sand-spits | maps-light.n | approved
 - 258 | pirate-wet-rim-on-water [R] | maps-light.n | approved
 - 258 | lasso-llama | unit-look.q | approved
 - 259 | jouster-horse-rebuild [R] | unit-look.n | approved
@@ -32,6 +30,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 265 | tree-club-three-lobe | unit-look.u | approved
 - 266 | void-monarch-bone-crown | unit-look.t | approved
 - 266 | reaper-crescent-blade | unit-look.p | rejected
+- 267 | reaper-high-carry | unit-look.p | approved
+- 267 | tree-giant-carry-rebuild [R] | unit-look.u | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -58,12 +58,13 @@ propBuilder.ts:fitted bandana wrap (BANDANA_HEADS, _CROWN, _KNOT, _TAIL, _SPLAY,
 propBuilder.ts:fitted tricorn/pirate_hat (TRICORN_DOME, _CROWN, _BRIM, _WALL, _LEAN, _SKULL; crew bandana accents) | dome 1.12, crown 0.16, brim 2.3, wall 0.42 lean 0.3, skull 0.26 | 250 | approved | box on a flat triangle (stovepipe)
 unitFactory.ts:dressSkeleton (SKELETON_BONE, _LIMB, _SPINE, _RIBS, _RIB_TOP/_LOW, _SKIRT, _HEM, _TATTERS, _CLOTH; yoke hidden) | bone 1,0.86,0.6; limb 0.42, spine 0.16, 4 ribs 0.86-0.42, skirt 0.7 hem 1.45, 6 tatters | 250 | approved | fleshed body, secret_bone preset
 unitFactory.ts:dressReaper (REAPER_HOOD, _OPEN, _FORWARD, _JAW, _JAW_LONG, _SKIRT, _HEM, _TATTERS; cowl gap on the face) | open 0.46 fwd -0.24, jaw 0.5 x 0.5; skirt 0.85, rags 0.13-0.25 | 252 | approved | open 0.4 fwd -0.06 gap at back, skirt 1.55 (251)
-propBuilder.ts:scythe (SCYTHE_SNATH, _BLADE, _SEGS, _CURL, _TURN, _HEEL, _SPINE) | 1.25 s, 0.62 in 6 segs, curl 1.15, turn pi/2, heel 0.15, spine 0.04 | 252 | approved | 5 segs curl 1.05 along the sight line (251)
+propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_RISE,_HEEL,_SPINE,_BOW,_GRIP; ribbon crescent, scytheCarry) | 1.25 s, .8 in 14, curl 1.75 rise .35, heel .17, bow .05, grip .15 | 267 | approved | 6 box segs curl 1.15, grip .32 (252)
 propBuilder.ts:antler_skull (DEER_MUZZLE, _DIP, _BEAM, _SPLAY, _TINE, _ANTLER; on bone_mask cap) | muzzle 0.95 dip 0.7; beam 1.05+0.9 H, splay 0.95/0.4, tine 0.58, antler 0.66,0.5,0.33 | 251 | approved | bone_mask
 mapBuilder.ts:addShip galleon (SHIP_LONG, _BEAM, _HULL, _CASTLE, _MASTS, _YARD, _BRACE; sail emissive 0.4) | 17 m, beam 0.26, hull 0.15, castle 0.24, masts .62/.74/.55, yard 1.45, brace 0.55 | 252 | approved | olive box + slab sail
 mapBuilder.ts:palmRing + seaRim (PALM_LEAN, _BANDS, _FRONDS, _FROND, _ARCH; SEA_RIM, _SHORE, _GLOW; pirate palms share) | lean .22-.5, 4 bands, 6-8 fronds .5 H, arch .35/-.25/-.85; rim 5 m, shore 1.2, glow .3; .72 | 253 | approved | puffball ring, 0.42-alpha hazard tint
-propBuilder.ts:tree_club (TREE_CLUB_LONG, _GRIP, _ROOTS, _CROWN, _LOBE, _LOBE_OFF; 3-lobe clover) | 0.8 stand, grip .14, 4 roots, crown .24 T, lobe .85 R off 1.0 R | 265 | approved | 4 merged lobes (254); 0.95 stand (253)
-proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; fixed tip, no per-man jitter) | arm raise -.35 out .12 elbow -.7; tip .85,.22,.35 | 265 | approved | tip .65,-.05,.6 + lean jitter (254)
+propBuilder.ts:tree_club [R] (TREE_CLUB_LONG,_GRIP,_THICK,_BEND,_ROOTS,_ROOT_FAN,_CROWN,_LOBE,_LOBES; bent tube, limb, knot) | .6 stand, grip .15, thick .09, bend .12, 5 roots .35-.6, crown .25 T, lobe .85 | 267 | approved | .8 stand, 4 square roots, 3-lobe clover .24 (265)
+proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; bend spin to hang under trunk) | arm raise -.35 out .12 elbow -.7; tip .9,-.02,.35 | 267 | approved | tip .85,.22,.35 (265); .65,-.05,.6 + jitter (254)
+proceduralAnimation.ts:scythe high carry (SCYTHE_HIGH_ARM, SCYTHE_HIGH_TIP, SCYTHE_SPIN; fixed, carryTurn 1) | arm raise -.95 out .22 elbow -1.05; tip .6,.78,.15; spin pi/2 | 267 | approved | rode the arm (no carry)
 propBuilder.ts:buildHorse drape (HORSE_CAP_LONG,_CAP_BULGE,_CAP_END,_HEM_SHARE,_UPPER_SHOW; stadium ribbon) | hem .5 of back, end .7, cap long 1.15, show .32 | 262 | approved | lathe sack hem .55 H (260); knee .32 + ball joint (259 [R])
 unitFactory.ts:dressTreeGiant (TREE_GIANT_HOOD, _OPEN, _BEARD, _BEARD_WIDE, _SKIRT, _HEM, _TATTERS; tunic/hair/rags) | hood 1.32 open .42, beard 1.05 x .85, skirt .85 hem 1.3, 8 rags; hair .42,.15,.17 team .1 glow .18 | 265 | approved | hair .3,.15,.12 team .35 (253)
 unitFactory.ts:dressPainter + palette (PAINTER_DOUBLET, _BERET, _HOSE, _RUFF, _RUFF_TIERS; PALETTE_WIDE, _TIP, _TURN) | doublet .6, beret .42, hose .92,.6,.3, ruff 1.25 x2; palette .24, tip -1, turn .4 | 255 | approved | plain team body, no palette
