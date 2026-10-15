@@ -256,3 +256,4 @@ iter 254 | [S] unit-look.u tree-hip-carry, [S] unit-look.n jouster-horse | 2/2 a
 iter 255 | [S] unit-look.n renaissance-painter, [S] maps-light.n pirate-full-palm-ring (re-audit: no change) | 2/2 approved | passes 55 -> 55
 iter 256 | [S] jouster-horse-stature, [S] cactus-suit | 2/2 approved | passes 55 -> 55
 iter 257 | [S] jouster-horse-legs, [S] pirate-sand-spits | 2/2 approved | passes 55 -> 55
+iter 258 | [R] pirate-wet-rim-on-water, [S] lasso-llama | 2/2 approved | passes 55 -> 57

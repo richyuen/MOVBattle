@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 248 | challenge-orange-field | maps-light.k | approved
-- 248 | farmer-pointed-cowl | unit-look.j | approved
 - 249 | farmer-halo | unit-look.j | approved
 - 249 | secret-halos | unit-look.u | approved
 - 250 | pirate-bandana-tricorn | unit-look.o | approved
@@ -32,6 +30,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 256 | cactus-suit | unit-look.q | approved
 - 257 | jouster-horse-legs | unit-look.n | approved
 - 257 | pirate-sand-spits | maps-light.n | approved
+- 258 | pirate-wet-rim-on-water [R] | maps-light.n | approved
+- 258 | lasso-llama | unit-look.q | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -74,4 +74,5 @@ unitFactory.ts:dressPainter + palette (PAINTER_DOUBLET, _BERET, _HOSE, _RUFF, _R
 unitFactory.ts:dressCactus (CACTUS_ROBE, _LONG, _HOOD, _HOOD_OPEN, _SLEEVE, _SPINES, _SPINE; flowers) | hem 1.55 W, .86 leg, hood 1.6 open .26, sleeve 1.4, 34+3/arm+6, spine .4 heads | 256 | approved | cactus_body trunk + 10 spines
 mapBuilder.ts:broadleafBush in palmRing (BUSH_LUMPS, _TALL, _WIDE, _LEAVES, _GREEN; non-palm ring trees) | 3-5 lumps, tall .3 H, wide .42 H, 5-7 leaves, green .16,.36,.15 | 255 | approved | pale-sage puffball crown
 
-mapBuilder.ts:sandSpits (SPIT_SIDES, _RADIUS, _JITTER, _OUT, _WET, _EDGE, _EDGE_STEP, _SAND; pirate) | 9-gon 2.6-4.6 m, jitter .38, out .35, wet .7; edge 1.3-2.4 every 3.2; sand .6 lerp | 257 | approved | none (palms in seaRim water)
+mapBuilder.ts:sandSpits shoreline [R] (SPIT_*; wet band only over water via overWater; dry = lawn mat, SPIT_SAND_GLOW; pirate ground/grass sand) | wet .7 band, glow .12; ground .84,.72,.5 grass .8,.68,.46 | 258 | approved | wet fan under every lobe, sea-mat dry (257); olive field
+propBuilder.ts:buildHorse pinto style (PINTO_COAT, _CREAM, _PINK, _GLOW, _PATCHES, _PATCH, _RAGGED, _EYE, _EAR, _LOOP; wildwest_leather) | coat .95,.42,.1, glow .18, 6 patches dot .83, eye .075, ear .3, loop .42 | 258 | approved | barded horse
