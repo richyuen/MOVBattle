@@ -439,7 +439,7 @@ export class RuntimeUnit {
     this.animator.readyBlow(striking, behindRank);
     if (striking) this._blowTarget = target;
   }
-  // The man a press blow lands on: he flinches (head and trunk snapped back) on each slam that reaches him
+  // The man a blow is struck at: it is aimed at his head (see ProceduralAnimator.aimBlow)
   private _blowTarget: RuntimeUnit | null = null;
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
@@ -748,10 +748,10 @@ export class RuntimeUnit {
       this._drawnFlung = flung;
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
+    // The blow comes down on the sim's clock and onto the head of the man it is struck at (the hit itself makes him flinch, see takeDamage)
+    const blowAt = this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3 ? this._blowTarget.body.headTop.getAbsolutePosition() : null;
+    this.animator.aimBlow(blowAt, this._nextAttackAt - now);
     this.animator.update(dt);
-    if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3) {
-      this._blowTarget.animator.triggerFlinch();
-    }
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
 
