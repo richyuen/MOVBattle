@@ -13,17 +13,12 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 bodyBuilder.ts:eyes (EYE_OF_FACE, EYE_RIM, EYE_SPREAD, EYE_FLAT, PUPIL_OF_EYE) | white disc 0.3 face, dark rim disc 1.2x behind, 0.16 off centre, depth 0.3; pupil 0.5 | 218 | approved | 0.24, no rim (185)
 proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_BEAT_*, _REST, _HEAVE, _COCK, _SLAM, _ARM, _CLUB; flinch on landing; blowStrikeReach) | beat 1.5-2.4 s, rest 0.38, heave 0.14, cock 0.1, slam 0.08, impact rest; arm 1.7, club arc 1.2; strike reach 0.9 m | 226 | approved | was drop 0.1/hold 0.16/back 0.16, arm 3.0 (202)
 cameraController.ts:spectator low (LOW_LAUNCH, LOW_EYE, LOW_PITCH, LOW_HOLD, LOW_EASE; offset over the follow aim) | 3+ bodies flung: eye 0.45 m, pitch +0.3 rad, hold 1.2 s, ease 4 | 221 | approved |
-visualEffects.ts:spell dome (spawnSpellDome, DOME_LIFE, _RISE, _FADE, _ALPHA) | unlit one-colour hemisphere over a lightning/area strike: 1.4 s, rise 0.15, fade 0.35, alpha 0.5, pink | 215 | approved |
-propBuilder.ts:held lightning bolt (lightning_bolt) | 4 flat white jagged shards in a zigzag, cyan shard 1.55x behind each | 216 | approved | 3 yellow glow boxes
 visualEffects.ts:shed gear (spawnGearLitter, GEAR_TOSS_MIN/MAX, GEAR_BOARD_LEAN, GEAR_BLADE_RAISE; RuntimeUnit.shedGear) | on death shield+weapon copies land 0.6-1.1 m off, board leant 0.35 off upright, blade grip raised 0.28, set on lowest point | 217 | approved |
 visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW, _LIFE, DUST_SPRITES/_LIFE, SMOKE_SPRITES/_LIFE; peaks) | additive core 3 @0.95, body 5 @0.7, rim 7 @0.55, grow 0.28, life 0.9; dust 10 @0.8, smoke 6; alphaIndex dust < smoke < fire (FIREBALL_ALPHA_INDEX) ; fire set back FIREBALL_BEHIND 1.6 along the view | 223 | approved | [P] dust 0.45/body 0.95 rejected 221
 rosterManifest.ts:giantScale (unitDefinitions collision/reach, vehicleBuilder rig) | mammoth 1.25: rig, metrics, collision radius and reach scaled together | 220 | approved |
 projectileSystem.ts:muzzle smoke (MUZZLE_PUFFS; _leavePuff size/life/rise/drift) | 7 feathered puffs 0.45-0.85, ~3 s, drift 0.15-0.5 down the line | 218 | approved | 8 faceted lobes
-main.ts:aerial haze and vignette (HAZE_LEAD, HAZE_DEPTH; vignetteWeight) | fog from camera radius+12 m over 95 m; vignette 1.6 | 215 | approved | fog 70-170 from the eye, vignette 0.3; HAZE_DEPTH 60 rejected 219 (ledger reversal, ring milky)
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 231 | second-rank-blow | battle-feel.e | rejected
-- 231 | canopy-lift | maps-light.f | approved
 - 232 | rear-club-rest | battle-feel.e | approved
 - 232 | pressing-lean | battle-feel.h | approved
 - 233 | [R] hat-seat rebuild | unit-look.h | approved
@@ -39,6 +34,8 @@ main.ts:aerial haze and vignette (HAZE_LEAD, HAZE_DEPTH; vignetteWeight) | fog f
 - 239 | hood-cowl | unit-look.h | approved
 - 240 | healer-cowl | unit-look.h | approved
 - 240 | [R] aimed-blow rebuild | battle-feel.e | rejected
+- 241 | viking-horned-helm | unit-look.l | approved
+- 241 | [R] aimed-blow rebuild | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -59,3 +56,4 @@ propBuilder.ts:buildFittedHat (HEAD_FITTED_HATS incl. helmet/plume_helmet, HELM_
 proceduralAnimation.ts:upright wall stance (WALL_TRUNK_MAX, WALL_HEAD_LEVEL, WALL_KNEE_MAX, WALL_HIP_MAX, WALL_SINK_SHARE; hip splay cleared, by wallHold) | trunk <= 0.3, head 0.9 back; knee <= 0.35, thigh +-0.35, sink 0.3 | 236 | approved |
 proceduralAnimation.ts:board scatter (BOARD_SCATTER of brace boardYaw/Tilt/Roll + a height step, in _lapBoard) | 0.6 | 238 | approved |
 propBuilder.ts:fitted hood_liripipe + plain hood (HOOD_HEADS, HOOD_OPEN, HOOD_MANTLE_HEADS; peak, tail) | cowl 1.3 heads, open 0.3, mantle 2.2; plain hood same, accent x0.6, no tail | 240 | approved | plain hood a perched cone
+propBuilder.ts:fitted horned helm (viking_helmet/horned_helmet; HORN_ROOT, HORN_TIP, HORN_SEAT, HORN_TURN, BEARD_HEADS/TOP/LONG) | iron dome; horns 0.32+0.55 heads, seat 0.45, turn 1.15; beard 0.8 x 0.75 at 0.66 | 241 | approved | sphere-cap dish + splayed cones
