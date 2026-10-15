@@ -25,14 +25,15 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 272 | adventure-castle | maps-light.j | approved
 - 273 | field-oak-clumps | maps-light.j | approved
 - 276 | landed-blow-on-hit | battle-feel.e | rejected
+- 277 | target-aimed-blow [R] | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
 simulationSystem.ts:pending heavy blow (BLOW_LAND_E in proceduralAnimation, BLOW_CONTACT_SLACK; reverted) | land .3 of drop, slack .3 | 276 | rejected | hit at swing start (.55 tried at look)
+proceduralAnimation.ts:_aimBlow [R] (BLOW_LAND,_AIM_FROM,_HOLD,_HOLD_FADE,_ELBOW,_PITCH,_AIM_SLACK; reverted) | land .55, from .75, hold .45 fade .15, elbow -.15, pitch .4, slack 1.6 | 277 | rejected | fixed CLUB_COCK/CLUB_LAND arc
 unitFactory.ts:dressReaper (REAPER_HOOD, _OPEN, _FORWARD, _JAW, _JAW_LONG, _SKIRT, _HEM, _TATTERS; cowl gap on the face) | open 0.46 fwd -0.24, jaw 0.5 x 0.5; skirt 0.85, rags 0.13-0.25 | 252 | approved | open 0.4 fwd -0.06 gap at back, skirt 1.55 (251)
 propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_LEVEL,_HEEL,_SPINE,_BOW,_GRIP; ramped curl, socket+tang) | 1.25 s, .8 in 14, curl 1.3 ramped, level -.6, heel .17, bow .05, grip .15 | 268 | approved | curl 1.75 even, rise .35 (267); 6 box segs (252)
-propBuilder.ts:antler_skull (DEER_MUZZLE, _DIP, _BEAM, _SPLAY, _TINE, _ANTLER; on bone_mask cap) | muzzle 0.95 dip 0.7; beam 1.05+0.9 H, splay 0.95/0.4, tine 0.58, antler 0.66,0.5,0.33 | 251 | approved | bone_mask
 mapBuilder.ts:addShip galleon (SHIP_LONG, _BEAM, _HULL, _CASTLE, _MASTS, _YARD, _BRACE; sail emissive 0.4) | 17 m, beam 0.26, hull 0.15, castle 0.24, masts .62/.74/.55, yard 1.45, brace 0.55 | 252 | approved | olive box + slab sail
 mapBuilder.ts:palmRing + seaRim (PALM_LEAN, _BANDS, _FRONDS, _FROND, _ARCH; SEA_RIM, _SHORE, _GLOW; pirate palms share) | lean .22-.5, 4 bands, 6-8 fronds .5 H, arch .35/-.25/-.85; rim 5 m, shore 1.2, glow .3; .72 | 253 | approved | puffball ring, 0.42-alpha hazard tint
 propBuilder.ts:tree_club [R] (TREE_CLUB_LONG,_GRIP,_THICK,_BEND,_ROOTS,_ROOT_FAN,_CROWN,_LOBE,_LOBES; bent tube, limb, knot) | .6 stand, grip .15, thick .09, bend .12 up, 5 roots, crown .25 T, lobes centred on end | 269 | approved | lobes .3,-.5/1.25,-.35/.8,.7 hung (267); .8 stand, 4 square roots, 3-lobe clover .24 (265)

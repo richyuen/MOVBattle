@@ -275,3 +275,4 @@ iter 273 | [S] field-oak-clumps | 1/1 approved | passes 67/69 -> 68/69
 iter 274 | re-audit, no pickable gap (only deferred battle-feel.e FAIL; saturated) | 0/0 approved | passes 68/69 -> 68/69
 iter 275 | re-audit (no flips); [S] landed-blow-on-hit (battle-feel.e, dropped at look) | 0/1 approved | passes 68/69 -> 68/69
 iter 276 | re-audit; [S] landed-blow-on-hit (rejected, reverted); STOP written | 0/1 approved | passes 23 -> 23
+iter 277 | re-audit; [R] target-aimed-blow (rejected, reverted) | 0/1 approved | passes 23 -> 23
