@@ -244,3 +244,4 @@ iter 242 | [S] valkyrie-wings, [R] wall-surface rebuild | 2/2 approved | passes 
 iter 243 | [S] unit-look.k minotaur-bull-man, [S] unit-look.i protector-slab | 2/2 approved | passes 48 -> 48 (k.2, i.1 struck)
 iter 244 | [S] unit-look.k hoplite-crested-helm, [S] unit-look.v knight-cross-helm | 2/2 approved | passes 48 -> 48
 iter 245 | [S] team-tinted-crested-helm, [S] tiered-pagoda | 2/2 approved | passes 48 -> 49
+iter 246 | [S] dynasty-cherry-ring, [S] dragon-costume-head | 2/2 approved | passes 49 -> 50

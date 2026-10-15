@@ -11,11 +11,9 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 
 ## Rows
 proceduralAnimation.ts:press blow (_pressBlow landed-dominant beat: PRESS_BLOW_BEAT_*, _REST, _HEAVE, _COCK, _SLAM, _ARM, _CLUB; flinch on landing; blowStrikeReach) | beat 1.5-2.4 s, rest 0.38, heave 0.14, cock 0.1, slam 0.08, impact rest; arm 1.7, club arc 1.2; strike reach 0.9 m | 226 | approved | was drop 0.1/hold 0.16/back 0.16, arm 3.0 (202)
-cameraController.ts:spectator low (LOW_LAUNCH, LOW_EYE, LOW_PITCH, LOW_HOLD, LOW_EASE; offset over the follow aim) | 3+ bodies flung: eye 0.45 m, pitch +0.3 rad, hold 1.2 s, ease 4 | 221 | approved |
 visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW, _LIFE, DUST_SPRITES/_LIFE, SMOKE_SPRITES/_LIFE; peaks) | additive core 3 @0.95, body 5 @0.7, rim 7 @0.55, grow 0.28, life 0.9; dust 10 @0.8, smoke 6; alphaIndex dust < smoke < fire (FIREBALL_ALPHA_INDEX) ; fire set back FIREBALL_BEHIND 1.6 along the view | 223 | approved | [P] dust 0.45/body 0.95 rejected 221
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 236 | upright-wall-legs | battle-feel.h | approved
 - 237 | wall-head-level | battle-feel.h | approved
 - 237 | archer-brim | unit-look.h | dropped
 - 238 | wall-board-lean | battle-feel.h | approved
@@ -32,6 +30,8 @@ visualEffects.ts:fireball sprites (_spawnFireball, FIREBALL_CORE/BODY/RIM, _GROW
 - 244 | knight-cross-helm | unit-look.v | approved
 - 245 | team-tinted-crested-helm | unit-look.k | approved
 - 245 | tiered-pagoda | maps-light.l | approved
+- 246 | dynasty-cherry-ring | maps-light.l | approved
+- 246 | dragon-costume-head | unit-look.m | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -62,3 +62,5 @@ propBuilder.ts:fitted crested_helm (CREST_HELM_HEADS, _CHEEK_DROP, _CHEEK_WIDE, 
 propBuilder.ts:kite cross (kcross bars replace the boss; knight hat great_helm) | upright 0.04 x 0.38 at -0.04, arm 0.15 x 0.04 at 0.0, cream | 244 | approved | grey boss; knight plume_helmet
 mapBuilder.ts:dynasty pagoda + torii (addPagoda/addRoof/addStorey, addTorii; red cornice 1.08 eave) | pagoda 0.9 at z 29: W 11, eaves 1.18/0.72 W, slate 0.3,0.33,0.42; torii -17,25 | 245 | approved | white temple box at centre
 propBuilder.ts:protector slab shield (SLAB_WIDE, SLAB_TALL, slabSerial; carry rotation.x pi/2; wood lerp 0.12 to team) | 0.25 x 0.71 (x1.9 carry), emissive 0.08 | 243 | approved | round board
+mapBuilder.ts:blossomRing cherry ring (CHERRY_LIMBS, _TILT, _LIMB, _PUFF, _SQUASH; ring.blossom share; dynasty ring palette) | limbs 2-4, tilt 0.6-1.05, limb 0.32-0.5, puff 0.16-0.24, squash 0.72, share 0.65 | 246 | approved | sage ring
+propBuilder.ts:fitted dragon_head (DRAGON_SHELL, _SNOUT, _JAW_DROP, _EYE, _HORN, _HORN_RAKE, _TAIL, _SCALLOPS; team x0.82) | 1.9 heads, snout 0.95, jaw 0.32, eye 0.5, horn 1.25 rake 1.05, tail 2.6, 7 | 246 | approved | dragon_wings black slabs
