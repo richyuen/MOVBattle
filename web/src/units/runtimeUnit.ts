@@ -1,4 +1,4 @@
-import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode } from "@babylonjs/core";
+import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode, type Node } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -35,6 +35,11 @@ export interface OriginInfo {
 
 /** The rendering group a flung body is drawn in: after the scene's see-through effects, sharing their depth (main.ts keeps its depth uncleared). */
 export const FLUNG_RENDER_GROUP = 1;
+/** A living man struck leans this far back off the blow at the root, at once, and comes back up over HIT_LEAN_DECAY seconds (see applyDamage). */
+const HIT_LEAN = 0.25;
+const HIT_LEAN_DECAY = 0.3;
+/** Where on the struck man a blow that cannot be got over his head comes down: this share of his head's height, at his front (his shoulders, a board's top). */
+const BLOW_FRONT_HEIGHT = 0.78;
 
 export class RuntimeUnit {
   private static _nextRuntimeId = 1;
@@ -439,8 +444,42 @@ export class RuntimeUnit {
     this.animator.readyBlow(striking, behindRank);
     if (striking) this._blowTarget = target;
   }
-  // The man a press blow lands on: he flinches (head and trunk snapped back) on each slam that reaches him
+  // The man a blow is struck at: it is aimed at his head (see ProceduralAnimator.aimBlow)
   private _blowTarget: RuntimeUnit | null = null;
+  private _aimBlow(now: number): void {
+    const t = this._blowTarget;
+    const at = t && !t.isDead && Vector3.Distance(t.position, this.position) < 3 ? t.body.headTop.getAbsolutePosition() : null;
+    let front: Vector3 | null = null;
+    if (t && at) {
+      // His front toward the striker at BLOW_FRONT_HEIGHT of his head's height: his shoulders, the top of a board held before him
+      const back = this.position.subtract(t.position);
+      back.y = 0;
+      const d = back.length();
+      front = t.position.add(d > 1e-3 ? back.scaleInPlace(Math.min(d * 0.5, t.collisionBodyRadius * 0.8) / d) : back);
+      front.y = t.position.y + (at.y - t.position.y) * BLOW_FRONT_HEIGHT;
+    }
+    this.animator.aimBlow(at, this._nextAttackAt - now, front);
+  }
+
+  /**
+   * The sim has just landed this man's melee blow on target: both are re-posed in the same step (the aimed blow down on him, his flinch over his brace), so the
+   * frame that records the hit shows it. The root lean-back of the struck man is already on him from applyDamage.
+   */
+  landBlow(target: RuntimeUnit, now: number): void {
+    if (this._isDead || isVehicleUnit(this.definition.id)) return;
+    this._blowTarget = target;
+    if (!target.isDead && !isVehicleUnit(target.definition.id)) {
+      target.animator.repose();
+      target._applyVisualPresentation(now);
+      // His head where the lean and the flinch put it, root down, for the striker to aim at
+      const chain: TransformNode[] = [];
+      for (let n: Node | null = target.body.headTop; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+    }
+    this._aimBlow(now);
+    this.animator.repose();
+    this._applyVisualPresentation(now);
+  }
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
   levelSpearAt(enemyGround: Vector3, enemyRadius: number, rearRank: boolean): void {
@@ -552,6 +591,19 @@ export class RuntimeUnit {
 
     // Flinch: tilt body toward impact
     this.animator.triggerFlinch();
+    // Recoil (trailer_3_sheet_01 r2c3: the struck man is thrown back off his feet): the whole body leans away from the blow at the root, at once, so the hit's own
+    // frame shows it, and eases back up through _applyCrowdLean
+    const level = Math.hypot(impulse.x, impulse.z);
+    if (level > 1e-4 && !this._isAnchoredActor) {
+      const facing = this._getFacingVector();
+      const right = this._getRightVector();
+      const fwd = (impulse.x * facing.x + impulse.z * facing.z) / level;
+      const side = (impulse.x * right.x + impulse.z * right.z) / level;
+      this._hitLeanX = fwd * HIT_LEAN;
+      this._hitLeanZ = -side * HIT_LEAN * 0.6;
+      this.body.root.rotation.x += this._hitLeanX;
+      this.body.root.rotation.z += this._hitLeanZ;
+    }
     this._updateHealthBar();
     return this._buildImpactDelta(damage, healthBefore, wasDead, stateBefore, impulse);
   }
@@ -748,10 +800,9 @@ export class RuntimeUnit {
       this._drawnFlung = flung;
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
+    // The blow comes down on the sim's clock and onto the head of the man it is struck at (the hit itself leans him back, see applyDamage)
+    this._aimBlow(now);
     this.animator.update(dt);
-    if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3) {
-      this._blowTarget.animator.triggerFlinch();
-    }
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
 
@@ -1147,9 +1198,15 @@ export class RuntimeUnit {
       ),
     );
     const settle = Math.min(1, dt * (8 + this._crowdPhysicsProfile.recoveryRate * 2 + horizontalSpeed));
-    this.body.root.rotation.x += (targetLeanX - this.body.root.rotation.x) * settle;
-    this.body.root.rotation.z += (targetLeanZ - this.body.root.rotation.z) * settle;
+    // A blow's recoil (see applyDamage) rides on the lean, outside its clamp, and dies away over HIT_LEAN_DECAY
+    const fade = Math.exp(-dt / HIT_LEAN_DECAY);
+    this._hitLeanX *= fade;
+    this._hitLeanZ *= fade;
+    this.body.root.rotation.x += (targetLeanX + this._hitLeanX - this.body.root.rotation.x) * settle;
+    this.body.root.rotation.z += (targetLeanZ + this._hitLeanZ - this.body.root.rotation.z) * settle;
   }
+  private _hitLeanX = 0;
+  private _hitLeanZ = 0;
 
   hasCapability(channel: LinkedContributionChannel, now = RuntimeUnit.timeNowSeconds()): boolean {
     if (!this.hasContribution(channel)) return false;
