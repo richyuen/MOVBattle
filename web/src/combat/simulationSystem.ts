@@ -586,11 +586,9 @@ export class SimulationSystem {
     if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
     if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) {
       const inReach = distance <= engageDistance + this.blowStrikeReach;
-      // Out of reach of his own target, his blow is aimed at any enemy across his front within his reach and a body more: a rank back, over his own front man
-      const mark = inReach ? enemy : this._blowMark(unit, enemy, engageDistance + this.blowStrikeReach + unit.collisionBodyRadius * 2);
       // A rank back, behind a man of his own side, a clubber rests his club low over that man's shoulder between beats and strikes from there on his beat
-      const behind = !inReach && (mark !== null || (distance <= engageDistance + this.blowStrikeReach + REAR_RANK_REACH && this._allyBetween(unit, enemy)));
-      unit.readyBlow(inReach || behind, mark ?? enemy, behind);
+      const behind = !inReach && distance <= engageDistance + this.blowStrikeReach + REAR_RANK_REACH && this._allyBetween(unit, enemy);
+      unit.readyBlow(inReach || behind, enemy, behind);
     }
 
     if (distance <= engageDistance) {
@@ -862,25 +860,6 @@ export class SimulationSystem {
    * has come within a body of a man of his own side ahead of him in the wall is put back along the wall's heading by the shortfall. Depth only: the front rank and
    * the lateral pitch (the board lap) are not touched, so this does not fight the snap across.
    */
-  /** The nearest enemy on his feet within reach of him and across his front (the side his own target is on), or null: the man a blow out of the sim's reach is aimed at. */
-  private _blowMark(unit: RuntimeUnit, target: RuntimeUnit, reach: number): RuntimeUnit | null {
-    const tx = target.position.x - unit.position.x, tz = target.position.z - unit.position.z;
-    const far = Math.hypot(tx, tz);
-    if (far < 1e-3) return null;
-    let best: RuntimeUnit | null = null;
-    let bestDistance = reach;
-    for (const other of this._units) {
-      if (other.team === unit.team || other.isDead || other.isDowned || other.linkedParent) continue;
-      const dx = other.position.x - unit.position.x, dz = other.position.z - unit.position.z;
-      const d = Math.hypot(dx, dz);
-      if (d >= bestDistance || d < 1e-3) continue;
-      if ((dx * tx + dz * tz) / (d * far) < 0.5) continue;
-      best = other;
-      bestDistance = d;
-    }
-    return best;
-  }
-
   /** Whether a man of his side on his feet stands between him and this enemy, in a lane of his line to him and within about two bodies of him. */
   private _allyBetween(unit: RuntimeUnit, enemy: RuntimeUnit): boolean {
     const tx = enemy.position.x - unit.position.x, tz = enemy.position.z - unit.position.z;
@@ -1499,8 +1478,6 @@ export class SimulationSystem {
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
     if (this.hitLog.length >= 200) this.hitLog.shift();
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z });
-    // The blow is seen to land on the step it is struck: striker and struck re-posed now (see RuntimeUnit.landBlow)
-    attacker.landBlow(target, now);
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
