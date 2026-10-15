@@ -1537,6 +1537,89 @@ function townRing(scene: Scene): void {
   for (const node of scene.transformNodes.filter((n) => n.name === "townHouse")) node.dispose();
 }
 
+/*
+ * The town square's floor (renaissance; maps/renaissance_town: inside the house row the ground is one pale cream-grey paved plaza, not a meadow, with a
+ * round fountain in the middle and nothing else on it). Every bit of meadow dressing the sandbox base scattered on the island (boulders, mounds, trees,
+ * rubble walls, bales, stumps, flowers, pebbles, grass, the lawn itself) is put away with its obstacle, and flat flagstones PLAZA_STONE square are laid
+ * in running-bond rows at the lawn's height, PLAZA_JOINT apart so the ground slab under them (the theme's grout grey) shows as the joints, each stone one of PLAZA_TONES. The
+ * stones sit under the placement guides (zone fills at 0.03), as the lawn did. The fountain is a
+ * low round basin of PLAZA_BASIN metres with teal water, a pillar and a raised bowl, one round obstacle.
+ */
+const PLAZA_STONE = 2.6;
+const PLAZA_JOINT = 0.28;
+const PLAZA_TOP = 0.02;
+const PLAZA_TONES = [new Color3(0.84, 0.8, 0.72), new Color3(0.8, 0.76, 0.67), new Color3(0.87, 0.84, 0.77)];
+const PLAZA_BASIN = 7;
+const PLAZA_DRESSING = new Set(["boulder", "hill", "trunk", "canopy", "grassTuft", "flowerDot", "pebble", "wallStone", "hayBale", "stump"]);
+function townPlaza(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  for (const mesh of scene.meshes) {
+    if (mesh.name.startsWith("fieldBlades_") || mesh.name === "centerGrass") mesh.setEnabled(false);
+    if (!PLAZA_DRESSING.has(mesh.name)) continue;
+    const at = mesh.getAbsolutePosition();
+    if (onIsland(at.x, at.z)) mesh.setEnabled(false);
+  }
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    if (onIsland(obstacles[i].center.x, obstacles[i].center.z)) obstacles.splice(i, 1);
+  }
+  const self = (name: string, c: Color3, lit: number): StandardMaterial => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(1 - lit);
+    m.emissiveColor = c.scale(lit);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  // Flagstones: one flat quad each, gathered per tone into one mesh, kept out of the glow like the houses
+  const glow = scene.getGlowLayerByName("glow");
+  const tones = PLAZA_TONES.map(() => ({ positions: [] as number[], normals: [] as number[], indices: [] as number[] }));
+  const half = (PLAZA_STONE - PLAZA_JOINT) / 2;
+  let row = 0;
+  for (let z = -ISLAND_DEPTH / 2; z < ISLAND_DEPTH / 2; z += PLAZA_STONE, row++) {
+    const shift = (row % 2) * PLAZA_STONE / 2;
+    for (let x = -ISLAND_WIDTH / 2 - shift; x < ISLAND_WIDTH / 2; x += PLAZA_STONE) {
+      const cx = x + PLAZA_STONE / 2, cz = z + PLAZA_STONE / 2;
+      if (!onIsland(cx, cz, 1.2)) continue;
+      const pick = Math.abs((Math.sin(cx * 12.9898 + cz * 78.233) * 43758.5453) % 1);
+      const t = tones[Math.floor(pick * tones.length) % tones.length];
+      const base = t.positions.length / 3;
+      t.positions.push(cx - half, PLAZA_TOP, cz - half, cx + half, PLAZA_TOP, cz - half, cx + half, PLAZA_TOP, cz + half, cx - half, PLAZA_TOP, cz + half);
+      t.normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0);
+      t.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+  }
+  tones.forEach((t, i) => {
+    const mesh = new Mesh(`plazaStones${i}`, scene);
+    const data = new VertexData();
+    data.positions = t.positions;
+    data.normals = t.normals;
+    data.indices = t.indices;
+    data.applyToMesh(mesh);
+    mesh.material = self(`plazaStone${i}`, PLAZA_TONES[i], 0.15);
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    glow?.addExcludedMesh(mesh);
+  });
+  // The fountain: a round stone basin of teal water, a pillar in it and a bowl on the pillar
+  const stone = self("plazaFountainStone", new Color3(0.9, 0.86, 0.78), 0.35);
+  const water = self("plazaFountainWater", new Color3(0.36, 0.72, 0.78), 0.55);
+  const shadows = sunShadows(scene);
+  const piece = (mesh: Mesh, mat: StandardMaterial, y: number): void => {
+    mesh.position.y = y;
+    mesh.material = mat;
+    glow?.addExcludedMesh(mesh);
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    shadows?.addShadowCaster(mesh, false);
+  };
+  piece(MeshBuilder.CreateTorus("plazaFountainRim", { diameter: PLAZA_BASIN - 0.5, thickness: 0.7, tessellation: 16 }, scene), stone, 0.55);
+  piece(MeshBuilder.CreateCylinder("plazaFountainWall", { diameter: PLAZA_BASIN, height: 0.55, tessellation: 16 }, scene), stone, 0.28);
+  piece(MeshBuilder.CreateCylinder("plazaFountainWater", { diameter: PLAZA_BASIN - 1, height: 0.1, tessellation: 16 }, scene), water, 0.6);
+  piece(MeshBuilder.CreateCylinder("plazaFountainPillar", { diameterTop: 0.6, diameterBottom: 0.9, height: 2.2, tessellation: 8 }, scene), stone, 1.1);
+  piece(MeshBuilder.CreateCylinder("plazaFountainBowl", { diameterTop: 2.8, diameterBottom: 1.2, height: 0.45, tessellation: 12 }, scene), stone, 2.2);
+  piece(MeshBuilder.CreateCylinder("plazaFountainBowlWater", { diameter: 2.4, height: 0.06, tessellation: 12 }, scene), water, 2.43);
+  piece(MeshBuilder.CreateSphere("plazaFountainFinial", { diameter: 0.6, segments: 4 }, scene), stone, 2.75);
+  obstacles.push({ type: "cylinder", center: new Vector3(0, 0, 0), radius: PLAZA_BASIN / 2 });
+}
+
 /** Hides a ring tree and sets a dark broadleaf bush on the ground where it stood (see BUSH_*) */
 function broadleafBush(
   scene: Scene, trunk: Mesh, r: (n: number) => number, leaf: StandardMaterial, dark: StandardMaterial,
@@ -2603,6 +2686,7 @@ function buildCampaignBattlefield(scene: Scene, theme: CampaignMapTheme): MapBui
   );
   recolorBaseTerrain(scene, theme);
   if (theme.bare) barePlane(scene, prior);
+  if (theme.town) townPlaza(scene, obstacles);
   addCampaignProps(scene, theme, obstacles);
   createHazardVisuals(scene, hazards, theme.sea);
   if (theme.sea) sandSpits(scene, theme.sea, hazards);
@@ -2743,8 +2827,9 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     displayName: "Renaissance Terrace",
     clearColor: new Color3(0.82, 0.84, 0.9),
     fogColor: new Color3(0.82, 0.84, 0.9),
-    ground: new Color3(0.66, 0.56, 0.34),
-    grass: new Color3(0.5, 0.56, 0.33),
+    // Grout grey under the flagstones of the paved square (see townPlaza)
+    ground: new Color3(0.5, 0.47, 0.43),
+    grass: new Color3(0.68, 0.64, 0.57),
     zones: [
       zone(0, -42, 12, 46, 34),
       zone(1, 42, 12, 46, 34),
@@ -2754,10 +2839,9 @@ const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMap
     ],
     accent: new Color3(0.95, 0.87, 0.52),
     // The square is walled in by townhouses, not trees (see townRing); the old pair of grey house boxes in the field are gone with them
+    // The square is paved and bare but for its fountain (see townPlaza)
     town: true,
     props: [
-      { kind: "column", x: -22, z: -4, scale: 1.0 },
-      { kind: "column", x: -22, z: 20, scale: 1.0 },
       { kind: "bridge", x: 0, z: -24, scale: 0.9 },
     ],
   },
