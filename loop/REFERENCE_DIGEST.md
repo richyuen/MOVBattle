@@ -2,7 +2,7 @@
 
 What Totally Accurate Battle Simulator looks and feels like, distilled once from `reference/`
 (9 store screenshots, 3 trailers, 16 min of gameplay). Paths: `reference/small/tabs_screenshot_NN.jpg`
-(960px), `reference/frames/*_sheet_NN.jpg` (3x3 tiles, r=row c=col from top-left). The 16-min video
+(960px), `reference/frames/*_sheet_NN.jpg` (3x3 tiles, r=row c=col from top-left), `reference/factions/<faction>.jpg` (each faction's units lined up on its own map, from the TABS wiki) and `reference/maps/<biome>.png` (every themed map at the placement view, 512px), `reference/units/<unitId>.jpg|png` (one TABS action shot per unit we have). The 16-min video
 is mostly unit possession (first-person), so its sheets matter for HUD and map framing, not combat.
 Read-only during the loop. The gap list in STATE.md is derived from this.
 
