@@ -74,8 +74,17 @@ const SPEAR_FRONT_GRIP_MAX = 0.28;
 const BOARD_PLANE_REACH = 0.42;
 // How far a pressed board's top is tipped forward into the foe (radians), at full shove (see _lapBoard).
 const BOARD_PRESS_TILT = 0.3;
-// The share of his own brace seeds (board yaw, tilt, roll, and a height step) a wall man's lapped board takes, so no two boards on a strip sit alike.
-const BOARD_SCATTER = 0.6;
+/*
+ * The wall surface (242 [R]; tabs_screenshot_06: the front boards are one battered surface, not a row of tiles). Read off the reference: neighbouring boards stand at
+ * clearly different turns (some near square, some a third edge-on), at different heights (a head's height between the highest and lowest rim), some tipped into
+ * the foe and some leaning back on their bearer, and one stands proud of the next by up to a hand. So each front-rank man's board carries its own seeds, used whole:
+ *   depth off the strip +-WALL_BOARD_DEPTH m, height +-WALL_BOARD_STEP m, a turn +-WALL_BOARD_TURN rad on top of BOARD_LAP, a standing lean WALL_BOARD_LEAN
+ *   (back to forward, rad) to which the press adds half BOARD_PRESS_TILT and a third of his trunk pitch, and his roll. The faces differ too (propBuilder ROUND_FACES).
+ */
+const WALL_BOARD_DEPTH = 0.09;
+const WALL_BOARD_STEP = 0.1;
+const WALL_BOARD_TURN = 0.38;
+const WALL_BOARD_LEAN = [-0.2, 0.3];
 // How far a pressing wall man's drive leg goes back (radians at the hip, at full shove); his lead knee and trunk follow it (see the brace).
 const PRESS_DRIVE = 0.4;
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
@@ -373,6 +382,10 @@ export class ProceduralAnimator {
       boardYaw: (h(110) - 0.5) * 0.44,
       boardTilt: (h(111) - 0.5) * 0.32,
       boardRoll: (h(112) - 0.5) * 0.4,
+      wallDepth: (h(140) - 0.5) * 2 * WALL_BOARD_DEPTH,
+      wallStep: (h(141) - 0.5) * 2 * WALL_BOARD_STEP,
+      wallTurn: (h(143) - 0.5) * 2 * WALL_BOARD_TURN,
+      wallLean: WALL_BOARD_LEAN[0] + h(142) * (WALL_BOARD_LEAN[1] - WALL_BOARD_LEAN[0]),
       spearDip: (h(113) - 0.5) * 0.14,
       spearRaise: -2.2 + (h(114) - 0.5) * 0.5,
       spearElbow: -1.2 + (h(115) - 0.5) * 0.4,
@@ -1005,7 +1018,7 @@ export class ProceduralAnimator {
 
   /**
    * A front-rank board in a wall does not stand where his hand happens to be: it stands on the wall's plane, BOARD_PLANE_REACH ahead of the rank's line, on his own
-   * line across it and at his own height, upright and turned BOARD_LAP off square to the wall the same way as every other board in it. Boards about 0.8 m across on slots
+   * line across it and at his own height, turned BOARD_LAP off square to the wall plus his own turn, lean, height and depth (WALL_BOARD_*). Boards about 0.8 m across on slots
    * 0.54 apart, all turned one way, lap rim over rim: each board's one rim stands in front of its neighbour's, into one scaled surface (tabs_screenshot_06). Moves the board
    * there by `lap` and returns the world attitude it is turned to.
    */
@@ -1024,22 +1037,20 @@ export class ProceduralAnimator {
         this._boardSeat = (this._body.neck.getAbsolutePosition().y - root.y) * BOARD_SEAT_HEIGHT;
       }
       const slotSide = this._boardSlot.z * fx - this._boardSlot.x * fz;
-      const depth = this._boardPlane + BOARD_PLANE_REACH * scale;
-      const lift = this._bracePose ? (this._bracePose.kneeBias * 2 + this._bracePose.boardTilt * 0.5) * BOARD_SCATTER * scale : 0;
+      const br = this._bracePose;
+      const depth = this._boardPlane + BOARD_PLANE_REACH * scale + (br ? br.wallDepth * scale : 0);
+      const lift = br ? br.wallStep * scale : 0;
       const seat = new Vector3(depth * fx - slotSide * fz, root.y + this._boardSeat + lift, depth * fz + slotSide * fx);
       Vector3.LerpToRef(strapped, seat, lap, seat);
       // His fist goes to the board, not the board off his fist: the shield arm is reached straight out at the back of the board (see _gripBoard)
       this._gripBoard(new Vector3(seat.x - fx * BOARD_GRIP_BACK * scale, seat.y, seat.z - fz * BOARD_GRIP_BACK * scale), lap);
       shield.position.copyFrom(Vector3.TransformCoordinates(seat, Matrix.Invert(hand.getWorldMatrix())));
-      // Pressed (in contact and shoving), the board's top is tipped forward into the foe by BOARD_PRESS_TILT and its foot driven up behind it (tabs_screenshot_06:
-      // the boards lean into the push), the wall's weight going in at the rim; off the press it stands upright on the strip
-      // Each man's own lean: half the press tilt and half his own trunk pitch, rocking a little on his weight-shift beat, so no two boards share one tilt
-      const br = this._bracePose;
-      const own = br ? BOARD_PRESS_TILT * 0.5 + br.pitch * 0.5 + Math.sin(this._time * br.shiftRate + br.shiftPhase) * 0.06 : BOARD_PRESS_TILT;
-      // ...and his board sits at his own small turn, roll and height on the strip (his brace seeds, BOARD_SCATTER of them), so neighbouring rims overlap unevenly
-      // into one rough surface (tabs_screenshot_06) instead of a row of identical boards
-      const scatter = br ? BOARD_SCATTER : 0;
-      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP + (br?.boardYaw ?? 0) * scatter, own * Math.min(1, this._shove) + (br?.boardTilt ?? 0) * scatter, (br?.boardRoll ?? 0) * scatter);
+      // His board's own attitude on the strip (the spec at WALL_BOARD_*): his standing lean, back or forward, to which the press adds half BOARD_PRESS_TILT and a third
+      // of his trunk pitch and a rock on his weight-shift beat; his own turn on top of BOARD_LAP, and his roll. Neighbouring boards differ by tenths of a radian, so
+      // rims stand proud of one another at different angles into one battered surface (tabs_screenshot_06), not a row of identical tiles.
+      const press = Math.min(1, this._shove);
+      const lean = br ? br.wallLean + (BOARD_PRESS_TILT * 0.5 + br.pitch * 0.33) * press + Math.sin(this._time * br.shiftRate + br.shiftPhase) * 0.06 : BOARD_PRESS_TILT * press;
+      return Quaternion.RotationYawPitchRoll(heading + BOARD_LAP + (br?.wallTurn ?? 0), lean, br?.boardRoll ?? 0);
     }
     // Out along the heading to the wall's plane from where the board is held, so its height and its place across the wall stay his own; and a hand's width toward his middle.
     // Pushed back off the line he keeps it there as far as his arm will carry it, BOARD_PLANE_MAX_OUT ahead of where he holds it

@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask"];
 /*
  * A horned helm fitted to the head (241; factions/viking, units/viking.jarl: a dark iron cap domed down to the brow, two horns leaving its sides level and
  * turning up past the crown like a pair of tusks, a nose bar over the face, and a faceted orange beard chunk hanging from under the eyes to the chest). Not
@@ -61,6 +61,10 @@ const HELM_HEADS = 1.2;
 const HELM_CROWN = 0.12;
 const PLUME_TALL = 0.45;
 const HAT_EYE_CLEAR = 0.05;
+// The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
+const SKULL_HEADS = 1.25;
+const SKULL_SOCKET = 0.26;
+const SKULL_SNOUT = 0.45;
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
 const BERET_TILT = 0.22;
@@ -135,6 +139,37 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     beard.material = mat(scene, new Color3(0.78, 0.38, 0.14));
     beard.parent = helm;
     return helm;
+  }
+  if (type === "bone_mask") {
+    // An animal skull worn as a cap (242 [R]; units/tribal.protector): a bone cranium SKULL_HEADS heads across seated down to the brow, two dark eye holes on
+    // its front over the wearer's own eyes, a short snout jutting forward over the brow, and cheek bones down the sides of the face. The face shows under it.
+    const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
+    const R = SKULL_HEADS * W * 0.5;
+    const bone = mat(scene, new Color3(0.92, 0.76, 0.5));
+    const skull = MeshBuilder.CreateSphere("bskull", { diameterX: u(2 * R), diameterY: u(tall * 2.1), diameterZ: u(2 * R * 1.1), segments: 7, slice: 0.5 }, scene);
+    skull.position.y = u(seat);
+    skull.material = bone;
+    const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
+    for (const side of [-1, 1]) {
+      const hole = MeshBuilder.CreateCylinder("bskullEye", { height: u(0.04 * W), diameter: u(SKULL_SOCKET * W), tessellation: 6 }, scene);
+      hole.rotation.x = Math.PI / 2;
+      hole.position.set(side * u(0.24 * W), u(tall * 0.42), u(R * 1.02));
+      hole.rotation.y = side * 0.35;
+      hole.material = socket;
+      hole.parent = skull;
+      const cheek = MeshBuilder.CreateBox("bskullCheek", { width: u(0.12 * W), height: u(0.45 * H), depth: u(0.3 * W) }, scene);
+      cheek.position.set(side * u(R * 0.92), u(-0.18 * H), u(0.2 * W));
+      cheek.rotation.z = side * 0.12;
+      cheek.material = bone;
+      cheek.parent = skull;
+    }
+    const snout = MeshBuilder.CreateCylinder("bskullSnout", { height: u(SKULL_SNOUT * W), diameterTop: u(0.26 * W), diameterBottom: u(0.5 * W), tessellation: 6 }, scene);
+    snout.rotation.x = Math.PI / 2 - 0.25;
+    snout.position.set(0, u(tall * 0.2), u(R + SKULL_SNOUT * W * 0.35));
+    snout.scaling.x = 1.2;
+    snout.material = bone;
+    snout.parent = skull;
+    return skull;
   }
   if (type === "helmet" || type === "plume_helmet") {
     const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
@@ -237,7 +272,7 @@ export function attachProps(
   }
 
   // Hide eyes behind face-covering headgear
-  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bone_mask"];
+  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask"];
   if (faceCoveringHats.includes(config.hat)) {
     body.leftEye?.setEnabled(false);
     body.rightEye?.setEnabled(false);
@@ -1565,6 +1600,20 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
 }
 
 // ─── Shields ───
+/*
+ * Round boards are each their own (242 [R]; tabs_screenshot_06: in a wall no two boards show one face): the wood a shade off by up to ROUND_SHADE either way, and one
+ * of ROUND_FACES painted faces (planks with 2-4 seams, quartered, a band round the boss) in ROUND_PAINT of the wood, turned to the board's own angle. Seeded by the
+ * order boards are built in, so a scenario builds the same wall every run.
+ */
+const ROUND_FACES = 3;
+const ROUND_SHADE = 0.12;
+const ROUND_PAINT = 1.45;
+let roundBoardSerial = 0;
+function roundBoardSeed(serial: number, k: number): number {
+  const x = Math.sin(serial * 127.1 + k * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {
   // A cool team colour is held as deep as the plate behind it and not washed with white: the sky-blue team colour paled is a slate board.
   const teamHsv = teamColor.toHSV();
@@ -1582,18 +1631,53 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         m.bakeCurrentTransformIntoVertices();
         return m;
       };
+      // Each board its own (see ROUND_FACES): its wood a shade off its neighbours', and one of the painted faces turned to its own angle
+      const r = (k: number) => roundBoardSeed(roundBoardSerial, k);
+      roundBoardSerial++;
+      const own = board.scale(1 - ROUND_SHADE + r(1) * ROUND_SHADE * 2);
       const shield = disc("rshield", 0.36, 0.03);
-      shield.material = mat(scene, board);
+      shield.material = mat(scene, own);
       const rim = disc("rshieldRim", 0.4, 0.022);
       rim.position.z = -0.006 * s;
       rim.parent = shield;
       rim.material = mat(scene, teamColor.scale(0.45));
-      // Plank seams: dark lines down the board, each cut to the disc's chord at that offset
-      for (const [x, chord] of [[-0.085, 0.23], [0, 0.28], [0.085, 0.23]]) {
-        const seam = MeshBuilder.CreateBox("rshieldSeam", { width: 0.008 * s, height: chord * s, depth: 0.006 * s }, scene);
-        seam.position.set(x * s, 0, 0.015 * s);
-        seam.parent = shield;
-        seam.material = rim.material;
+      const face = new TransformNode("rshieldFace", scene);
+      face.parent = shield;
+      face.rotation.z = r(2) * Math.PI;
+      const paint = mat(scene, own.scale(ROUND_PAINT));
+      const pick = Math.floor(r(3) * ROUND_FACES);
+      if (pick === 1) {
+        // Quartered: two opposite quarters painted over the wood
+        for (const q of [0, Math.PI]) {
+          const quarter = MeshBuilder.CreateCylinder("rshieldQuarter", { height: 0.006 * s, diameter: 0.34 * s, tessellation: 12, arc: 0.25, enclose: true }, scene);
+          quarter.rotation.x = Math.PI / 2;
+          quarter.bakeCurrentTransformIntoVertices();
+          quarter.rotation.z = q;
+          quarter.position.z = 0.016 * s;
+          quarter.parent = face;
+          quarter.material = paint;
+        }
+      } else if (pick === 2) {
+        // A painted band round the boss
+        const band = disc("rshieldBand", 0.27, 0.006);
+        band.position.z = 0.015 * s;
+        band.parent = face;
+        band.material = paint;
+        const inner = disc("rshieldInner", 0.17, 0.006);
+        inner.position.z = 0.017 * s;
+        inner.parent = face;
+        inner.material = shield.material;
+      } else {
+        // Planks: two to four dark seams across the board at its own angle, each cut to the disc's chord at that offset
+        const seams = 2 + Math.floor(r(4) * 3);
+        for (let i = 0; i < seams; i++) {
+          const x = (i - (seams - 1) / 2) * (0.3 / (seams + 1));
+          const chord = 2 * Math.sqrt(Math.max(0, 0.18 * 0.18 - x * x)) * 0.95;
+          const seam = MeshBuilder.CreateBox("rshieldSeam", { width: 0.008 * s, height: chord * s, depth: 0.006 * s }, scene);
+          seam.position.set(x * s, 0, 0.015 * s);
+          seam.parent = face;
+          seam.material = rim.material;
+        }
       }
       const boss = MeshBuilder.CreateSphere("boss", { diameter: 0.09 * s, segments: 4 }, scene);
       boss.position.z = 0.016 * s; boss.parent = shield;
