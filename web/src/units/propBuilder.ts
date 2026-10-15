@@ -33,7 +33,6 @@ const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helm
  * shell HOOD_HEADS heads across round the skull, open at the face (HOOD_OPEN of its round), its crown drawn up into a short peak tipped back, a mantle flaring from
  * the neck over the shoulders to HOOD_MANTLE_HEADS across, and the liripipe tail hanging from the peak down the back. Not a cone perched on the crown.
  * A plain hood (240; units/medieval.healer) is the same cowl, peak and mantle in a darker cloth, without the tail.
- * A plain hood (240; units/medieval.healer) is the same cowl, peak and mantle in a darker cloth, without the tail.
  */
 const HOOD_HEADS = 1.3;
 const HOOD_OPEN = 0.3;
