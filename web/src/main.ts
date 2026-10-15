@@ -3627,6 +3627,10 @@ const gameApi = {
   clearHitLog: () => {
     simulation.hitLog.length = 0;
   },
+  // Capture harness: frame the camera on a point (a landed blow), close, without advancing the battle.
+  frameCamera: (target: { x: number; y: number; z: number }, radius: number, alpha: number, beta: number) => {
+    camCtrl.applyGalleryPreset("state_read_duel", { alpha, beta, radius, target });
+  },
   // Resolves with what still was not ready, so a capture can say which meshes a shot may miss.
   renderWhenReady: async () => {
     let renders = 0;

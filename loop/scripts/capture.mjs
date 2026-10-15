@@ -341,6 +341,11 @@ async function main() {
             ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} at +${hit.ms} ms`
             : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
           if (hit) await shot(page, "press_clubbers_hit");
+          // The same frame, side-on and close on the blow: the striker's club and the head it is struck at fill the shot instead of hiding behind the board line
+          if (hit) {
+            await page.evaluate((h) => window.game.frameCamera({ x: h.x + 0.55, y: 1.3, z: h.z }, 2.6, -Math.PI / 2 - 0.2, Math.PI / 2.2), hit);
+            await shot(page, "press_clubbers_blow");
+          }
         }
       }
       await page.evaluate(() => {
