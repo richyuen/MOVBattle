@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 244 | hoplite-crested-helm | unit-look.k | approved
-- 244 | knight-cross-helm | unit-look.v | approved
 - 245 | team-tinted-crested-helm | unit-look.k | approved
 - 245 | tiered-pagoda | maps-light.l | approved
 - 246 | dynasty-cherry-ring | maps-light.l | approved
@@ -32,11 +30,12 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 252 | pirate-ships | maps-light.n | approved
 - 253 | pirate-palms-and-sea | maps-light.n | approved
 - 253 | tree-giant-woodsman-and-tree | unit-look.u | approved
+- 254 | tree-hip-carry | unit-look.u | approved
+- 254 | jouster-horse | unit-look.n | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-simulationSystem.ts:_keepRanksDeep (RANK_DEPTH_SHARE; rear-rank vs front-rank depth-only resolve) | 0.95 of the clear body depth | 229 | approved |
 simulationSystem.ts:wall queue in _keepRanksDeep (WALL_QUEUE_GAP; non-carrier allies behind front-rank wall men) | body + 0.25 m | 230 | approved |
 proceduralAnimation.ts:overhand rear-rank spear (SPEAR_OVERHAND_UP; rear hold x foe near, eased 6/s, aimed on the foe bearing) | 0.18 rad above level | 230 | approved |
 mapBuilder.ts:CanopyAerialPlugin on *Crown materials (CANOPY_AERIAL_NEAR, _FAR, _MAX, _LIFT) | 8-55 m from the eye, 0.42, lift 0.55 | 231 | approved |
@@ -71,5 +70,7 @@ propBuilder.ts:scythe (SCYTHE_SNATH, _BLADE, _SEGS, _CURL, _TURN, _HEEL, _SPINE)
 propBuilder.ts:antler_skull (DEER_MUZZLE, _DIP, _BEAM, _SPLAY, _TINE, _ANTLER; on bone_mask cap) | muzzle 0.95 dip 0.7; beam 1.05+0.9 H, splay 0.95/0.4, tine 0.58, antler 0.66,0.5,0.33 | 251 | approved | bone_mask
 mapBuilder.ts:addShip galleon (SHIP_LONG, _BEAM, _HULL, _CASTLE, _MASTS, _YARD, _BRACE; sail emissive 0.4) | 17 m, beam 0.26, hull 0.15, castle 0.24, masts .62/.74/.55, yard 1.45, brace 0.55 | 252 | approved | olive box + slab sail
 mapBuilder.ts:palmRing + seaRim (PALM_LEAN, _BANDS, _FRONDS, _FROND, _ARCH; SEA_RIM, _SHORE, _GLOW; pirate palms share) | lean .22-.5, 4 bands, 6-8 fronds .5 H, arch .35/-.25/-.85; rim 5 m, shore 1.2, glow .3; .72 | 253 | approved | puffball ring, 0.42-alpha hazard tint
-propBuilder.ts:tree_club (TREE_CLUB_LONG, _GRIP, _ROOTS, _CROWN, _CARRY; carry rig x 0.3) | 0.95 stand, grip 0.14, 4 roots, crown 0.24 T, carry 1.2 rad off upright | 253 | approved | none (giant_tree plated block)
+propBuilder.ts:tree_club (TREE_CLUB_LONG, _GRIP, _ROOTS, _CROWN, _CARRY rest only) | 0.8 stand, grip 0.14, 4 roots, crown 0.24 T, rest 1.2 rad off upright | 254 | approved | 0.95 stand (253); none (giant_tree plated block)
+proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; treeClubCarry turned in fist, _carryTurn 1 at build) | arm raise -.35 out .12 elbow -.7; tip .65,-.05,.6 | 254 | approved | shoulder-level rig carry
+propBuilder.ts:buildHorse (HORSE_LONG, _DEEP, _NECK_RAKE, _DAGS; back at rider hip H, caparison .45 H, shins hidden) | 1.55 H, .6 H, .55 rad, 6 dags; neck 1.0 H, head .6 H | 254 | approved | box + 4 sticks
 unitFactory.ts:dressTreeGiant (TREE_GIANT_HOOD, _OPEN, _BEARD, _BEARD_WIDE, _SKIRT, _HEM, _TATTERS; tunic/hair/rags) | hood 1.32 open .42, beard 1.05 x .85, skirt .85 hem 1.3, 8 rags | 253 | approved | secret_nature team body
