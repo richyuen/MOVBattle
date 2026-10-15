@@ -263,3 +263,4 @@ iter 261 | [S] simulation-red-line, [S] sacred-elephant-trappings | 2/2 approved
 iter 262 | [S] jouster-hem-lift, [S] void-cultist-horns | 2/2 approved | passes 59/69 -> 59/69
 iter 263 | [S] evil-hood-horns, [S] super-peasant-straw | 2/2 approved | passes 59/69 -> 59/69
 iter 264 | [S] legacy-chariot, [S] bard-feather-hat (+ 264.0 evidence chariot closeup) | 2/2 approved | passes 59 -> 61
+iter 265 | re-audit (no flips); [S] evil-lich-branch-crown, [S] tree-club-three-lobe | 2/2 approved | passes 61 -> 61 (u plateau)
