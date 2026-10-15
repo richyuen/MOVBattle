@@ -12,8 +12,6 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 ## Rows
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 242 | valkyrie-wings | unit-look.l | approved
-- 242 | [R] wall-surface rebuild | battle-feel.h | approved
 - 243 | minotaur-bull-man | unit-look.k | approved
 - 243 | protector-slab | unit-look.i | approved
 - 244 | hoplite-crested-helm | unit-look.k | approved
@@ -32,11 +30,12 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 250 | skeleton-bone-body | unit-look.p | approved
 - 251 | reaper-robe-scythe | unit-look.p | approved
 - 251 | bone-mage-antler-skull | unit-look.i | approved
+- 252 | reaper-blade-and-skull | unit-look.p | approved
+- 252 | pirate-ships | maps-light.n | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
-mapBuilder.ts:setPlacementGuidesVisible hides zone tints (zone_overlay_*, campaign_zone_*) in battle | placement-only tints | 227 | approved |
 simulationSystem.ts:_keepRanksDeep (RANK_DEPTH_SHARE; rear-rank vs front-rank depth-only resolve) | 0.95 of the clear body depth | 229 | approved |
 simulationSystem.ts:wall queue in _keepRanksDeep (WALL_QUEUE_GAP; non-carrier allies behind front-rank wall men) | body + 0.25 m | 230 | approved |
 proceduralAnimation.ts:overhand rear-rank spear (SPEAR_OVERHAND_UP; rear hold x foe near, eased 6/s, aimed on the foe bearing) | 0.18 rad above level | 230 | approved |
@@ -67,6 +66,7 @@ propBuilder.ts:fitted sun_hat (SUN_BRIM, _BRIM_THICK, _TIP, _CROWN, _CROWN_TALL,
 propBuilder.ts:fitted bandana wrap (BANDANA_HEADS, _CROWN, _KNOT, _TAIL, _SPLAY, _SWEEP; robbers cowboy_hat) | 1.16 heads, crown 0.1, knot 0.3, tail 0.55, splay 0.35, sweep 0.5 | 249 | approved | torus 0.22 s at crown
 propBuilder.ts:fitted tricorn/pirate_hat (TRICORN_DOME, _CROWN, _BRIM, _WALL, _LEAN, _SKULL; crew bandana accents) | dome 1.12, crown 0.16, brim 2.3, wall 0.42 lean 0.3, skull 0.26 | 250 | approved | box on a flat triangle (stovepipe)
 unitFactory.ts:dressSkeleton (SKELETON_BONE, _LIMB, _SPINE, _RIBS, _RIB_TOP/_LOW, _SKIRT, _HEM, _TATTERS, _CLOTH; yoke hidden) | bone 1,0.86,0.6; limb 0.42, spine 0.16, 4 ribs 0.86-0.42, skirt 0.7 hem 1.45, 6 tatters | 250 | approved | fleshed body, secret_bone preset
-unitFactory.ts:dressReaper (REAPER_HOOD, _OPEN, _FORWARD, _ROBE, _SKIRT, _HEM, _TATTERS, _SLEEVE, _CLOTH, _TEAM) | hood 1.7 open 0.4 fwd -0.06; robe 1.3, skirt 1.55 hem 2.1, 7 rags, sleeve 1.35 | 251 | approved | hood hat, ghost body
-propBuilder.ts:scythe (SCYTHE_SNATH, _BLADE, _SEGS, _CURL) | snath 1.25 s, blade 0.62 of snath in 5 segs, curl 1.05 | 251 | approved | 0.8 s shaft, 0.2 s box blade
+unitFactory.ts:dressReaper (REAPER_HOOD, _OPEN, _FORWARD, _JAW, _JAW_LONG, _SKIRT, _HEM, _TATTERS; cowl gap on the face) | open 0.46 fwd -0.24, jaw 0.5 x 0.5; skirt 0.85, rags 0.13-0.25 | 252 | approved | open 0.4 fwd -0.06 gap at back, skirt 1.55 (251)
+propBuilder.ts:scythe (SCYTHE_SNATH, _BLADE, _SEGS, _CURL, _TURN, _HEEL, _SPINE) | 1.25 s, 0.62 in 6 segs, curl 1.15, turn pi/2, heel 0.15, spine 0.04 | 252 | approved | 5 segs curl 1.05 along the sight line (251)
 propBuilder.ts:antler_skull (DEER_MUZZLE, _DIP, _BEAM, _SPLAY, _TINE, _ANTLER; on bone_mask cap) | muzzle 0.95 dip 0.7; beam 1.05+0.9 H, splay 0.95/0.4, tine 0.58, antler 0.66,0.5,0.33 | 251 | approved | bone_mask
+mapBuilder.ts:addShip galleon (SHIP_LONG, _BEAM, _HULL, _CASTLE, _MASTS, _YARD, _BRACE; sail emissive 0.4) | 17 m, beam 0.26, hull 0.15, castle 0.24, masts .62/.74/.55, yard 1.45, brace 0.55 | 252 | approved | olive box + slab sail
