@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm"];
 /*
  * A bull's head in place of the man's (243; units/ancient.minotaur: a long hide head, brow to muzzle about 1.4 of its width, the muzzle jutting forward and
  * down to a dark nose, two big round white eyes set wide on the front corners under a heavy brow, ears flat out to the sides, and pale horns leaving the
@@ -75,6 +75,18 @@ const HELM_HEADS = 1.2;
 const HELM_CROWN = 0.12;
 const PLUME_TALL = 0.45;
 const HAT_EYE_CLEAR = 0.05;
+/*
+ * A crested Corinthian helm (244; units/ancient.hoplite: the helm closes over the whole head to the jaw, a T-shaped opening leaving the eyes and nose bar,
+ * cheek guards down both sides of the face, a neck guard behind, and a tall crest standing on a short stalk, front to back, its top arched over the head):
+ *   dome CREST_HELM_HEADS heads across; cheek guards CREST_CHEEK_DROP of the head below the seat, CREST_CHEEK_WIDE head widths each, set out past the eyes;
+ *   crest CREST_TALL of the head high, CREST_LONG head widths front to back, on a stalk CREST_STALK of the head over the dome's top.
+ */
+const CREST_HELM_HEADS = 1.28;
+const CREST_CHEEK_DROP = 0.62;
+const CREST_CHEEK_WIDE = 0.24;
+const CREST_TALL = 1.05;
+const CREST_LONG = 1.25;
+const CREST_STALK = 0.14;
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
@@ -250,6 +262,46 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     snout.material = bone;
     snout.parent = skull;
     return skull;
+  }
+  if (type === "crested_helm") {
+    const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
+    const R = CREST_HELM_HEADS * W * 0.5;
+    const bronze = mat(scene, Color3.Lerp(new Color3(0.74, 0.5, 0.22), accent, 0.2), 0.06);
+    const helm = MeshBuilder.CreateSphere("chelm", { diameterX: u(2 * R), diameterY: u(tall * 2.1), diameterZ: u(2 * R * 1.08), segments: 8, slice: 0.5 }, scene);
+    helm.position.y = u(seat);
+    helm.material = bronze;
+    // Brow band over the eyes, a nose bar down from it, cheek guards closing the sides of the face to the jaw, and a neck guard behind
+    const brow = MeshBuilder.CreateBox("chelmBrow", { width: u(1.05 * W), height: u(0.1 * H), depth: u(0.2 * W) }, scene);
+    brow.position.set(0, u(0.02 * H), u(R * 0.88));
+    brow.material = bronze;
+    brow.parent = helm;
+    const nose = MeshBuilder.CreateBox("chelmNose", { width: u(0.1 * W), height: u(0.3 * H), depth: u(0.08 * W) }, scene);
+    nose.position.set(0, u(-0.15 * H), u(R * 1.0));
+    nose.material = bronze;
+    nose.parent = helm;
+    for (const side of [-1, 1]) {
+      const cheek = MeshBuilder.CreateBox("chelmCheek", { width: u(CREST_CHEEK_WIDE * W), height: u(CREST_CHEEK_DROP * H), depth: u(0.75 * W) }, scene);
+      cheek.position.set(side * u(R - CREST_CHEEK_WIDE * W * 0.45), u(-CREST_CHEEK_DROP * H * 0.5), u(0.12 * W));
+      cheek.rotation.y = side * 0.25;
+      cheek.material = bronze;
+      cheek.parent = helm;
+    }
+    const neck = MeshBuilder.CreateBox("chelmNeck", { width: u(1.1 * W), height: u(0.5 * H), depth: u(0.16 * W) }, scene);
+    neck.position.set(0, u(-0.25 * H), u(-R * 0.92));
+    neck.rotation.x = -0.15;
+    neck.material = bronze;
+    neck.parent = helm;
+    // The crest: a stalk on the dome's top and a horsehair fan on it, an ellipsoid half sunk in its base so only the arch stands
+    const hair = mat(scene, new Color3(0.62, 0.12, 0.1), 0.05);
+    const stalk = MeshBuilder.CreateBox("chelmStalk", { width: u(0.1 * W), height: u(CREST_STALK * H), depth: u(0.5 * W) }, scene);
+    stalk.position.y = u(tall + CREST_STALK * H * 0.4);
+    stalk.material = bronze;
+    stalk.parent = helm;
+    const crest = MeshBuilder.CreateSphere("chelmCrest", { diameterX: u(0.26 * W), diameterY: u(CREST_TALL * H * 2), diameterZ: u(CREST_LONG * W), segments: 8, slice: 0.5 }, scene);
+    crest.position.y = u(tall + CREST_STALK * H * 0.8);
+    crest.material = hair;
+    crest.parent = helm;
+    return helm;
   }
   if (type === "helmet" || type === "plume_helmet") {
     const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;

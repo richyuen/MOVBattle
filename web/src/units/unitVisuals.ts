@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "monk_headband"
   | "pharaoh" | "feather_headdress" | "bone_mask"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab";
 
@@ -310,7 +310,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { materialPreset: "ancient_bronze" },
   ),
   "ancient.sarissa": vis(
-    { scale: 1.05, armLength: 1.3 }, "spear", "helmet", "buckler", "none", "#B8860B",
+    { scale: 1.05, armLength: 1.3 }, "spear", "crested_helm", "buckler", "none", "#B8860B",
     undefined,
     {
       posePreset: "support",
@@ -323,7 +323,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "ancient.hoplite": vis(
-    { scale: 1.15, bulk: 1.2 }, "spear", "plume_helmet", "round", "none", "#DAA520",
+    { scale: 1.15, bulk: 1.2 }, "spear", "crested_helm", "round", "none", "#DAA520",
     undefined,
     { materialPreset: "ancient_bronze" },
   ),
