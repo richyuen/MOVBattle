@@ -2547,10 +2547,12 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody): void {
  * A barded horse under the rider (units/renaissance.jouster), given in the rider's standing hip height H:
  *   the rider is lifted HORSE_LIFT of H off the ground, so he sits high on a full-size horse, not on a pony: the back sits just under his lifted hip and the horse's
  *   back stands near 1.9 H, about a man's chest. The barrel is a faceted ovoid HORSE_LONG of H nose-to-tail and HORSE_DEEP deep, and the legs under it are longer than
- *   the barrel is deep (about 1.4 : 1, as the reference's); each leg is a forearm and a thinner cannon to a dark hoof on the ground. The neck leaves the front of the
+ *   the barrel is deep (about 1.4 : 1, as the reference's); each leg tapers from a muscled upper wedge (forearm in front, a thicker gaskin behind, about half the
+ *   barrel's depth at the root) to a thin cannon and a dark hoof, the hind legs folding back at the hock into a Z. The neck leaves the front of the
  *   barrel raked forward HORSE_NECK_RAKE off upright, so the head stands out in front of the rider, clear of his shield, with the poll at about his chest height; the
  *   long grey-armoured head (the chanfron) points forward and down, two brown ears and a team plume on top; a dark tail falls off the rump. Over the barrel hangs the
- *   caparison, a team-coloured cloth from the back to below the belly with a cream hem cut into HORSE_DAGS square dags along each side, the legs showing under it.
+ *   caparison, a team-coloured cloth domed over the rounded back and falling as an oval bell skirt that flares out to below the belly, its cream hem cut into
+ *   square dags all round, the lower legs showing under it.
  *   The rider's shins and feet are hidden: they would hang through the barrel.
  */
 const HORSE_LIFT = 0.9;
@@ -2558,6 +2560,10 @@ const HORSE_LONG = 1.9;
 const HORSE_DEEP = 0.75;
 const HORSE_NECK_RAKE = 0.75;
 const HORSE_DAGS = 7;
+const HORSE_FORE_THICK = 0.36;
+const HORSE_HIND_THICK = 0.46;
+const HORSE_HOCK = 0.2;
+const HORSE_CAP_FLARE = 1.3;
 function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
   const H = body.hip.position.y;
   // Up on the horse: the animator keeps this as the hip's rest height (it is read once, on the first tick after the build)
@@ -2588,20 +2594,33 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
   const belly = -H * HORSE_DEEP / 2;
   // Frame-local ground: the frame sits at the barrel's middle
   const floor = ground - barrel.position.y;
+  // A tapered limb from point a (bottom) to point b (top), its thick end at the top
+  const limb = (name: string, a: Vector3, b: Vector3, thick: number, thin: number): Mesh => {
+    const d = b.subtract(a);
+    const seg = part(MeshBuilder.CreateCylinder(name, { height: d.length(), diameterTop: thick, diameterBottom: thin, tessellation: 6 }, scene), coat);
+    seg.rotation.x = Math.atan2(d.z, d.y);
+    seg.position.copyFrom(a.add(b).scale(0.5));
+    return seg;
+  };
   for (const x of [-1, 1]) {
     for (const z of [-1, 1]) {
-      // From inside the belly to the ground: a thick forearm to the knee, a thin cannon below it, the hoof on the ground
-      const top = belly + H * HORSE_DEEP * 0.25;
-      const knee = floor + (top - floor) * 0.45;
+      // Each leg tapers from a muscled upper wedge at the body to a thin cannon and a dark hoof
       const legX = x * W * 0.3;
-      const legZ = z * L * 0.36;
-      const forearm = part(MeshBuilder.CreateCylinder("hleg", { height: top - knee, diameterTop: H * 0.28, diameterBottom: H * 0.15, tessellation: 6 }, scene), coat);
-      forearm.position.set(legX, (top + knee) / 2, legZ);
-      const cannonTall = knee - floor - H * 0.08;
-      const cannon = part(MeshBuilder.CreateCylinder("hcannon", { height: cannonTall, diameterTop: H * 0.15, diameterBottom: H * 0.11, tessellation: 6 }, scene), coat);
-      cannon.position.set(legX, floor + H * 0.08 + cannonTall / 2, legZ);
-      const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: H * 0.1, diameterTop: H * 0.13, diameterBottom: H * 0.17, tessellation: 6 }, scene), dark);
-      hoof.position.set(legX, floor + H * 0.045, legZ);
+      const legZ = z * L * 0.34;
+      const top = belly + H * HORSE_DEEP * 0.35;
+      const hoofAt = new Vector3(legX, floor + H * 0.09, legZ + (z > 0 ? 0 : H * 0.04));
+      // Fore: knee straight under the shoulder; hind: the hock set back, so the leg folds into a Z
+      const joint = z > 0
+        ? new Vector3(legX, floor + (top - floor) * 0.42, legZ + H * 0.02)
+        : new Vector3(legX, floor + (top - floor) * 0.36, legZ - H * HORSE_HOCK);
+      const upper = new Vector3(legX, top, legZ);
+      // The upper wedge (forearm / gaskin) is near as wide as the barrel is deep at the root; the hind one the bigger
+      limb(z > 0 ? "hforearm" : "hgaskin", joint, upper, H * (z > 0 ? HORSE_FORE_THICK : HORSE_HIND_THICK), H * 0.2);
+      const jointBall = part(MeshBuilder.CreateIcoSphere("hjoint", { radius: H * 0.1, subdivisions: 1 }, scene), coat);
+      jointBall.position.copyFrom(joint);
+      limb("hcannon", hoofAt, joint, H * 0.16, H * 0.11);
+      const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: H * 0.1, diameterTop: H * 0.12, diameterBottom: H * 0.17, tessellation: 6 }, scene), dark);
+      hoof.position.set(legX, floor + H * 0.045, hoofAt.z);
     }
   }
   const neckTall = H * 1.05;
@@ -2631,19 +2650,29 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh {
   const tail = part(MeshBuilder.CreateCylinder("htail", { height: H * 0.55, diameterTop: H * 0.1, diameterBottom: H * 0.03, tessellation: 5 }, scene), dark);
   tail.rotation.x = 0.35;
   tail.position.set(0, H * 0.02 - H * 0.26, -L * 0.5 - H * 0.08);
-  // The caparison: team cloth over the middle of the barrel down to mid-leg, cream hem and square dags along the sides
-  const drop = H * 0.88;
-  const capLong = L * 0.8;
-  const cap = part(MeshBuilder.CreateBox("hcaparison", { width: W * 1.12, height: drop, depth: capLong }, scene), mat(scene, cloth.scale(0.85)));
-  cap.position.y = H * HORSE_DEEP * 0.3 - drop / 2;
-  const hemY = cap.position.y - drop / 2;
-  const hem = part(MeshBuilder.CreateBox("hhem", { width: W * 1.14, height: H * 0.07, depth: capLong * 1.01 }, scene), cream);
-  hem.position.y = hemY + H * 0.03;
-  for (const x of [-1, 1]) {
-    for (let i = 0; i < HORSE_DAGS; i++) {
-      const dag = part(MeshBuilder.CreateBox("hdag", { width: H * 0.02, height: H * 0.08, depth: capLong / HORSE_DAGS * 0.5 }, scene), cream);
-      dag.position.set(x * W * 0.565, hemY - H * 0.035, -capLong / 2 + capLong * (i + 0.5) / HORSE_DAGS);
-    }
+  // The caparison: team cloth draped over the rounded barrel (a cloth dome on the back) and falling as a bell skirt
+  // that flares HORSE_CAP_FLARE wider at the hem, oval in plan, cream hem and square dags all round it
+  const clothMat = mat(scene, cloth.scale(0.85));
+  const capLong = L * 0.86;
+  const dome = part(MeshBuilder.CreateIcoSphere("hcapdome", { radius: 1, subdivisions: 2 }, scene), clothMat);
+  dome.scaling.set(W * 0.54, H * HORSE_DEEP * 0.54, capLong * 0.52);
+  const drop = H * 0.5;
+  const skirtTop = 0;
+  const skirt = part(MeshBuilder.CreateCylinder("hcaparison", { height: drop, diameterTop: W * 1.06, diameterBottom: W * 1.06 * HORSE_CAP_FLARE, tessellation: 12 }, scene), clothMat);
+  skirt.scaling.z = capLong / (W * 1.06);
+  skirt.position.y = skirtTop - drop / 2;
+  const hemY = skirtTop - drop;
+  const hemR = W * 0.53 * HORSE_CAP_FLARE;
+  const hem = part(MeshBuilder.CreateCylinder("hhem", { height: H * 0.07, diameter: hemR * 2.02, tessellation: 12 }, scene), cream);
+  hem.scaling.z = capLong / (W * 1.06);
+  hem.position.y = hemY + H * 0.035;
+  // The square dags round the oval hem, each turned to face out
+  const dagCount = HORSE_DAGS * 2 + 4;
+  for (let i = 0; i < dagCount; i++) {
+    const a = (i + 0.5) / dagCount * Math.PI * 2;
+    const dag = part(MeshBuilder.CreateBox("hdag", { width: H * 0.12, height: H * 0.09, depth: H * 0.02 }, scene), cream);
+    dag.position.set(Math.cos(a) * hemR * 1.01, hemY - H * 0.04, Math.sin(a) * hemR * 1.01 * capLong / (W * 1.06));
+    dag.rotation.y = Math.PI / 2 - a;
   }
   // Down in the saddle: his shins and feet would stand between the horse's legs
   for (const knee of [body.leftKnee, body.rightKnee]) {
