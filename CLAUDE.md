@@ -46,7 +46,7 @@ web/                         # Web app root
 - Deterministic validation is centered on `web/src/testing/scenarios.ts`, `window.game.runScenarioCheck(...)`, and gallery helpers in `main.ts`
 - Campaign mode is active and currently uses 12 campaign entries with one authored scenario each
 - Living crowd physics already includes collision separation/push metrics and now uses topple/recovery states as part of battle-feel work
-- TABS-fidelity improvement loop lives in `loop/` (procedure `loop/ITERATE.md`, critic contract `loop/CRITIC.md`, memory `loop/STATE.md` + tuned-value ledger `loop/LEDGER.md`, scripts under `loop/scripts/`); it runs under the autoloop plugin on `main` and pushes after every iteration. It works coarse to fine: structural `[S]` gaps first, constant-tuning `[P]` gaps only as fallout of an approved `[S]`; the critic scores 4 PASS/FAIL criteria per dimension
+- TABS-fidelity improvement loop lives in `loop/` (procedure `loop/ITERATE.md`, critic contract `loop/CRITIC.md`, memory `loop/STATE.md` + tuned-value ledger `loop/LEDGER.md`, scripts under `loop/scripts/`); it runs under the autoloop plugin on `main` and pushes after every iteration. It works coarse to fine: structural `[S]` gaps first, constant-tuning `[P]` gaps only as fallout of an approved `[S]`; the critic scores PASS/FAIL criteria in tiers (tier 1 a-d and tier 2 e-h per dimension, tier 3 one per faction lineup and per map), each FAIL carrying a closed blocker list
 - Loop iterations must not read `progress.md`, `.omx/`, or `web/*.md`; those are large and not part of the loop's memory budget
 
 ## Default action: one loop iteration

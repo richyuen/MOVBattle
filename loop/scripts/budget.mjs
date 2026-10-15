@@ -11,7 +11,7 @@ const CAPS = {
   "loop/STATE.md": 11_000,
   "loop/LEDGER.md": 14_000,
   "loop/REFERENCE_DIGEST.md": 8_200,
-  "loop/CRITIC.md": 14_000,
+  "loop/CRITIC.md": 15_500,
 };
 const PER_ITERATION = ["loop/ITERATE.md", "loop/STATE.md", "loop/LEDGER.md", "loop/REFERENCE_DIGEST.md"];
 const PER_ITERATION_WARN = 46_000;

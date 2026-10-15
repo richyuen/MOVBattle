@@ -31,8 +31,8 @@ camera: e the horizon stands in the top third of the battle frame: field and fig
 vfx: e lightning as jagged white polygons, magic as solid rings or domes in one colour (closeup_state_reads; ref trailer_2_sheet_03 r1c2, r3c2) | f one fat white puff per shot at the muzzle and a brief white streak behind an arrow (war_machines_400ms; ref trailer_3_sheet_03 r2c1 balls in flight, trailer_3_sheet_01 r3c3 spear streak) | g blood and debris: a few dark red chunks and chunky bits, no sparkles (big_melee_5s; ref trailer_2_sheet_02 r1c2) | h soft sprite smoke, dust and fire sit around the solid burst and trail the shot (war_machines pair; ref trailer_3_sheet_03 r1c2)
 
 ## Tier 3 criteria (scored, and pickable, once the dimension's tier 2 is at 3/4 or better)
-unit-look, one per faction lineup, letters i-v: `lineup_<faction>` passes when it would pass as that TABS faction at lineup distance: every unit's hat, weapon, cloth and accent say the faction, silhouettes differ man to man, props oversized, team skin under it all. i tribal (ref tabs_screenshot_01) | j farmer (gameplay_sheet_01 r3c2) | k ancient (tabs_screenshot_02) | l viking (tabs_screenshot_06) | m dynasty (tabs_screenshot_03) | n renaissance (trailer_3_sheet_02 r1c1) | o pirate (trailer_2_sheet_02 r1c2) | p spooky (tabs_screenshot_09) | q wild_west (tabs_screenshot_05) | r legacy (tabs_screenshot_02) | s good (tabs_screenshot_04) | t evil (trailer_2_sheet_02 r3c1) | u secret (trailer_3_sheet_02 r1c1) | v medieval (trailer_3_sheet_01 r2c2). Where the cited file is a weak match, name the closer one you used in EVIDENCE.
-maps-light, one per campaign map, letters i-o: `biome_<map>` passes when the placement view reads as the TABS biome the map is built as (digest section 3: one dominant palette, ringed island with a visible edge, that biome's set dressing, centre line). i introduction | j adventure | k challenge | l dynasty (tabs_screenshot_03) | m renaissance | n pirate | o simulation. Name the biome you judged it as and the reference file in EVIDENCE.
+unit-look, one per faction lineup, letters i-v: `lineup_<faction>` passes when it would pass as that TABS faction at lineup distance: every unit's hat, weapon, cloth and accent say the faction, silhouettes differ man to man, props oversized, team skin under it all. i tribal (ref tabs_screenshot_01, trailer_1_sheet_02 r1c1) | j farmer (gameplay_sheet_02 r1c1 straw hat, trailer_1_sheet_01 r3c1 wheat line) | k ancient (trailer_1_sheet_02 r1c2 plumed spearmen, r2c3 hoplite duel) | l viking (tabs_screenshot_06, trailer_1_sheet_02 r2c1 axes) | m dynasty (trailer_2_sheet_01 r3c1 samurai, r3c3 ninjas) | n renaissance (trailer_3_sheet_01 r1c2 musketeers marching, r3c1 firing line) | o pirate (tabs_screenshot_08, trailer_2_sheet_01 r2c3) | p spooky (tabs_screenshot_09 skeletons, trailer_2_sheet_04 r1c1) | q wild_west (tabs_screenshot_05) | r legacy (trailer_3_sheet_02 r1c2 wizard) | s good (trailer_2_sheet_03 r1c1 robed orb-bearers, tabs_screenshot_04 winged) | t evil (trailer_2_sheet_03 r2c3 spiked shield wall, r3c1 spiked warrior) | u secret (trailer_3_sheet_02 r2c1 tank crew, r2c2 giant hands, r3c3 barrel rollers) | v medieval (trailer_1_sheet_01 r1c3 knights at a tower, r2c1 knights in snow). Never cite trailer_3_sheet_03 row 3, trailer_3_sheet_04 or trailer_2_sheet_05: not TABS.
+maps-light, one per campaign map, letters i-o: `biome_<map>` passes when the placement view reads as the TABS biome the map is built as (digest section 3: one dominant palette, ringed island with a visible edge, that biome's set dressing, centre line). i introduction | j adventure | k challenge | l dynasty | m renaissance | n pirate | o simulation. Match the map to its biome and judge against that biome's files: autumn tribal — gameplay_sheet_01 r1c3, trailer_2_sheet_04 r2c1 | farm — gameplay_sheet_01 r3c2, gameplay_sheet_02 r1c3 | green meadow with castle or church — trailer_2_sheet_04 r2c3, trailer_1_sheet_01 r1c1, gameplay_sheet_05 r3c1 | winter lake — trailer_2_sheet_04 r2c2, trailer_1_sheet_02 r1c2 | white Greek town — gameplay_sheet_02 r2c3, gameplay_sheet_07 r1c1 | dynasty — tabs_screenshot_03 | pirate beach — tabs_screenshot_08 | spooky night — trailer_2_sheet_01 r1c3, tabs_screenshot_09 | heaven — tabs_screenshot_07, trailer_2_sheet_03 r1c1 | dark void hall — trailer_2_sheet_03 r2c2, trailer_2_sheet_02 r3c1 | western — tabs_screenshot_05. Name the biome you judged it as and the file in EVIDENCE.
 
 A criterion passes only when a still of ours would pass as TABS for that element. A criterion whose element appears in no shot is FAIL with the single blocker `no evidence: add <shot>`.
 
@@ -51,7 +51,7 @@ EVIDENCE: <a second pair, different element>
 CLOSER: <what moved toward TABS; required even on REJECT>
 DEFECTS:
 1. <specific mismatch> — TABS: <what the reference does instead>
-NEXT: [S|P] <file or function> — <mechanism to add; for [P] the constant, value, and the shot it shows in>
+NEXT: [S|P|R] <file or function> — <mechanism to add; for [P] the constant, value, and the shot it shows in>
 ```
 Then the tail:
 ```
@@ -70,7 +70,8 @@ last audit>` or `MISSED: <element in shot X the previous evidence did not cover>
 needs `CLEARED BY: <shas>`. Without one of those the previous verdict stands, even if you would
 have judged it differently from scratch. An `unscored` criterion takes its first verdict, with
 blockers if FAIL, without a cause line. Output one line per dimension,
-`<dimension>: a PASS|FAIL b PASS|FAIL c PASS|FAIL d PASS|FAIL (<n>/4)`, then for each FAIL its
+`<dimension>: a PASS|FAIL b PASS|FAIL c PASS|FAIL d PASS|FAIL (<n>/4)`, the same shape for tier 2
+(e-h) and tier 3 (`<dimension> tier 3: i PASS|FAIL ... (<n>/<count>)`), then for each FAIL its
 BLOCKERS list (kept from before unless the criterion is `plateau` or flipping, in which case you
 rewrite it) and one EVIDENCE line naming a reference file and a MOVBattle png, then RANKED GAPS.
 

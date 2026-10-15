@@ -21,7 +21,7 @@ Read-only during the loop. The gap list in STATE.md is derived from this.
 - Props are oversized and readable at distance: shields are round and shoulder-wide, clubs are thick, spears longer than the unit is tall, hats exaggerated (knight bucket helm, wizard cone).
 - Proportions: long thin limbs, small head, hands are mitts. Giants (mammoth, trees) are 4-8x human height with the same faceting.
 - Cloth and fur are solid chunks, not flowing: a viking's fur collar is a faceted ring; a cape is a rigid wedge that sways.
-- Reference: tabs_screenshot_06 (shield wall, valkyries), tabs_screenshot_02 (hero scale), trailer_3_sheet_02 r1c1 (knights, musketeers, tank crew), tabs_screenshot_04 (unit creator stats panel).
+- Reference: tabs_screenshot_06 (shield wall, valkyries), tabs_screenshot_02 (hero scale), trailer_1_sheet_01 r1c3 (knights), trailer_3_sheet_01 r1c2 (musketeers), trailer_3_sheet_02 r2c1 (tank crew), tabs_screenshot_04 (unit creator stats panel).
 
 ## 3. Maps, lighting and color
 - Every map is a small floating island or arena with a visible edge, ringed by trees or walls, with a clear flat fighting field in the middle and a faint center line splitting the two placement halves.
