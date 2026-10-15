@@ -27,7 +27,20 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+/*
+ * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
+ * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
+ * front). Not a stovepipe: the old tricorn was a box on a flat triangle and read as a black top hat at lineup range.
+ *   Crown TRICORN_DOME heads across, from the seat to TRICORN_CROWN of the head over the crown; brim corners on a circle TRICORN_BRIM heads across, walls
+ *   TRICORN_WALL of the head high leaning TRICORN_LEAN out; skull TRICORN_SKULL head widths across.
+ */
+const TRICORN_DOME = 1.12;
+const TRICORN_CROWN = 0.16;
+const TRICORN_BRIM = 2.3;
+const TRICORN_WALL = 0.42;
+const TRICORN_LEAN = 0.3;
+const TRICORN_SKULL = 0.26;
 /*
  * A bandana tied over the skull (249; units/secret.taekwondo, factions/secret: cloth pulled down over the whole crown to the brow, the face and bead eyes clear
  * under its edge, knotted at the nape with two short tails hanging and flaring behind). Not a halo: the old bandana was a thin ring floating at the crown, and
@@ -213,6 +226,59 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     collar.convertToFlatShadedMesh();
     collar.parent = holder;
     return holder;
+  }
+  if (type === "tricorn" || type === "pirate_hat") {
+    const felt = mat(scene, new Color3(0.11, 0.1, 0.12));
+    // Crown: a low dome pulled down over the skull to the seat
+    const domeTall = eyeTop - HAT_EYE_CLEAR * H + TRICORN_CROWN * H;
+    const crown = MeshBuilder.CreateSphere("tricornCrown", { diameterX: u(TRICORN_DOME * W), diameterY: u(domeTall * 2), diameterZ: u(TRICORN_DOME * W * 1.05), segments: 6, slice: 0.5 }, scene);
+    crown.position.y = u(seat);
+    crown.material = felt;
+    crown.convertToFlatShadedMesh();
+    // Brim: three walls on the sides of a triangle, one corner over the brow and two behind the ears, each turned up and leaning out
+    const R = TRICORN_BRIM * W * 0.5;
+    const wallTall = u(TRICORN_WALL * H);
+    const corners = [90, 210, 330].map((d) => (d * Math.PI) / 180);
+    const plate: number[] = [0, 0, 0];
+    for (const a of corners) plate.push(u(R * Math.cos(a)), 0, u(R * Math.sin(a)));
+    const flat = new Mesh("tricornBrim", scene);
+    const data = new VertexData();
+    data.positions = plate;
+    // Both windings, so the plate shows from above and below
+    data.indices = [0, 1, 2, 0, 2, 3, 0, 3, 1, 0, 2, 1, 0, 3, 2, 0, 1, 3];
+    data.normals = plate.map((_, k) => (k % 3 === 1 ? 1 : 0));
+    data.applyToMesh(flat);
+    flat.material = felt;
+    flat.parent = crown;
+    for (let i = 0; i < 3; i++) {
+      const a = corners[i], b = corners[(i + 1) % 3];
+      const ax = R * Math.cos(a), az = R * Math.sin(a), bx = R * Math.cos(b), bz = R * Math.sin(b);
+      const mx = (ax + bx) / 2, mz = (az + bz) / 2;
+      const side = Math.hypot(bx - ax, bz - az);
+      const wall = MeshBuilder.CreateBox("tricornWall", { width: u(side * 1.04), height: wallTall, depth: u(0.06 * W) }, scene);
+      wall.setPivotPoint(new Vector3(0, -wallTall / 2, 0));
+      wall.position.set(u(mx), wallTall / 2, u(mz));
+      wall.rotation.y = Math.atan2(mx, mz);
+      wall.rotation.x = TRICORN_LEAN;
+      wall.material = felt;
+      wall.parent = crown;
+    }
+    if (type === "pirate_hat") {
+      // The captain's white skull on the front of the crown, over the brow corner
+      const bone = mat(scene, new Color3(0.92, 0.9, 0.84));
+      const skull = MeshBuilder.CreateSphere("tricornSkull", { diameter: u(TRICORN_SKULL * W), segments: 4 }, scene);
+      skull.position.set(0, u(domeTall * 0.55), u(TRICORN_DOME * W * 0.5));
+      skull.material = bone;
+      skull.parent = crown;
+      for (const s of [-1, 1]) {
+        const bar = MeshBuilder.CreateBox("tricornBone", { width: u(TRICORN_SKULL * 1.5 * W), height: u(0.05 * W), depth: u(0.04 * W) }, scene);
+        bar.position.set(0, u(domeTall * 0.55 - TRICORN_SKULL * 0.6 * W), u(TRICORN_DOME * W * 0.5));
+        bar.rotation.z = s * 0.6;
+        bar.material = bone;
+        bar.parent = crown;
+      }
+    }
+    return crown;
   }
   if (type === "bandana") {
     const cloth = mat(scene, accent);

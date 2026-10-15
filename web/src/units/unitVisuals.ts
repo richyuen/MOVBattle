@@ -468,17 +468,17 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ PIRATE ═══════════════════════
   "pirate.flintlock": vis(
-    { scale: 0.95, bulk: 0.95 }, "flintlock", "tricorn", "none", "none", "#8B4513",
+    { scale: 0.95, bulk: 0.95 }, "flintlock", "bandana", "none", "none", "#b3302a",
     undefined,
     { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
   "pirate.blunderbuss": vis(
-    { scale: 1.05, bulk: 1.1 }, "blunderbuss", "tricorn", "none", "none", "#696969",
+    { scale: 1.05, bulk: 1.1 }, "blunderbuss", "bandana", "none", "none", "#d8722a",
     undefined,
     { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
   "pirate.bomb_thrower": vis(
-    { scale: 1.0, bulk: 1.0 }, "bomb", "tricorn", "none", "none", "#2F4F4F",
+    { scale: 1.0, bulk: 1.0 }, "bomb", "bandana", "none", "none", "#2F4F4F",
     undefined,
     {
       posePreset: "support",
@@ -497,12 +497,12 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { materialPreset: "pirate_tar" },
   ),
   "pirate.captain": vis(
-    { scale: 1.35, bulk: 1.3 }, "cutlass", "captain_hat", "none", "cape", "#DAA520",
+    { scale: 1.35, bulk: 1.3 }, "cutlass", "pirate_hat", "none", "cape", "#DAA520",
     undefined,
     { posePreset: "monarch", materialPreset: "pirate_tar", bodyDetailLevel: "hero" },
   ),
   "pirate.cannon": vis(
-    { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "tricorn", "none", "cannon_base", "#2F4F4F",
+    { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "bandana", "none", "cannon_base", "#8f2a24",
   ),
   "pirate.pirate_queen": vis(
     { scale: 1.6, bulk: 1.2, headSize: 1.1 }, "cutlass", "pirate_hat", "none", "cape", "#FF1493",
