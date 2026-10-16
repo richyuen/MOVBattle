@@ -169,8 +169,13 @@ const BLOW_PITCH = 0.4;
 // the head top (BLOW_CROWN; hand-scale units)
 const BLOW_DROP = 0.25;
 // The weapon arm in the blow: straight up over his head, this far forward of vertical (rad)
-const BLOW_OVERHEAD = 0.3;
+const BLOW_OVERHEAD = 0.5;
 const BLOW_CROWN = 0.04;
+// The weapon on the frame it lands falls at least this far below level (rad), onto the crown or on down through the shoulders and board; a man farther off than
+// the fist and that falling weapon reach is lunged at, the hip carried at most BLOW_STEP of the striker's standing height toward him (r2c3: the clubber steps
+// into the man, the club coming down through him)
+const BLOW_FALL = 0.95;
+const BLOW_STEP = 0.4;
 // Highest the striker springs to bring his fist over a taller man's crown, in shares of his own standing height (see _aimBlow)
 const BLOW_LEAP = 0.5;
 // The striker's legs in the blow: front thigh forward, back thigh behind, knees near straight (hip/knee rotation.x)
@@ -327,6 +332,7 @@ export class ProceduralAnimator {
   private _blowClock = 0;
   private _aimWeight = 0;
   private _aimTip = new Vector3(0, 1, 0);
+  private _blowLunge = new Vector3(0, 0, 0);
 
   /** A swing that lands on a man: heavy (club, hammer, axe) or a blade's slash. */
   private _strikesAtMan(): boolean {
@@ -367,6 +373,12 @@ export class ProceduralAnimator {
       if (w <= 0 && t > land) this._blowMark = null;
     }
     this._aimWeight = 0;
+    // Last frame's lunge comes off the hip first: nothing else poses the hip across the ground
+    const lunged = this._blowLunge;
+    if (lunged.x !== 0 || lunged.z !== 0) {
+      this._body.hip.position.subtractInPlace(lunged);
+      lunged.setAll(0);
+    }
     if (w <= 0.01 || !mark) return;
     // How far past the landing the blow has followed through (BLOW_FOLLOW)
     const fu = Math.max(0, Math.min(1, (this._blowClock - this._blowLandsAt) / BLOW_FOLLOW));
@@ -392,12 +404,25 @@ export class ProceduralAnimator {
     const reach = this._weaponReach() * scale;
     const arm = Vector3.Distance(shoulder, b.rightHand.getAbsolutePosition());
     if (Vector3.Distance(head, shoulder) > (reach + arm) * BLOW_AIM_SLACK) return;
-    // Fist: straight up over his own head at full reach, the arm BLOW_OVERHEAD from vertical toward the man in the world, whatever his trunk's lean, so the
-    // weapon always starts its fall from above. Rest hangs down -y in the shoulder's parent; rotation.x a turns it to (0, -cos a, -sin a)
     const toward = new Vector3(head.x - shoulder.x, 0, head.z - shoulder.z);
     if (toward.lengthSquared() < 1e-6) toward.set(0, 0, 1);
+    toward.normalize();
+    // The weapon falls BLOW_FALL below level onto the man (r2c3: the club comes down through him, not across him), so the fist must stand no farther from him
+    // than the weapon's reach along that line. A man farther off is lunged at: the hip is carried toward him, at most BLOW_STEP of the striker's standing height.
+    const short = Vector3.Dot(head.subtract(shoulder), toward) - arm * Math.sin(BLOW_OVERHEAD) - Math.cos(BLOW_FALL) * reach;
+    if (short > 0) {
+      const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
+      this._hipRest ??= b.hip.position.y;
+      const step = Math.min(short, BLOW_STEP * this._hipRest * 2 * rootScale) * w;
+      lunged.copyFrom(Vector3.TransformNormal(toward, Matrix.RotationY(-b.root.rotation.y)).scale(step / rootScale));
+      lunged.y = 0;
+      b.hip.position.addInPlace(lunged);
+      for (const n of chain) n.computeWorldMatrix(true);
+    }
+    // Fist: up over his own head, the arm BLOW_OVERHEAD from vertical toward the man in the world, whatever his trunk's lean, so the weapon always starts its
+    // fall from above. Rest hangs down -y in the shoulder's parent; rotation.x a turns it to (0, -cos a, -sin a)
     const swing = BLOW_OVERHEAD + (BLOW_FOLLOW_ARM - BLOW_OVERHEAD) * follow;
-    const up = toward.normalize().scale(Math.sin(swing)).addInPlace(new Vector3(0, Math.cos(swing), 0));
+    const up = toward.scale(Math.sin(swing)).addInPlace(new Vector3(0, Math.cos(swing), 0));
     const parent = b.rightShoulder.parent as TransformNode;
     const armDir = Vector3.TransformNormal(up, Matrix.Invert(parent.getWorldMatrix())).normalize();
     const pitch = Math.atan2(-armDir.z, -armDir.y);
@@ -415,10 +440,13 @@ export class ProceduralAnimator {
       b.hip.position.y += lift / rootScale;
       for (const n of chain) n.computeWorldMatrix(true);
     }
-    // Weapon: laid DOWN from the raised fist, never level or rising. Onto his crown when it stands below the fist; a crown still out of that reach after the
-    // leap, it comes down on him BLOW_DROP under the fist, the shaft running on past him
+    // Weapon: laid DOWN from the raised fist, at least BLOW_FALL below level. Onto his crown when it lies that steep under the fist; a crown flatter than that,
+    // the weapon comes down the BLOW_FALL line at full reach, through his shoulders and board top, not level across his face
     const hand = b.rightHand.getAbsolutePosition();
-    const onto = head.y <= hand.y - BLOW_DROP * scale ? head : new Vector3(head.x, hand.y - BLOW_DROP * scale, head.z);
+    const across = Math.max(0.001, Vector3.Dot(head.subtract(hand), toward));
+    const onto = hand.y - head.y >= across * Math.tan(BLOW_FALL)
+      ? head
+      : hand.add(toward.scale(Math.cos(BLOW_FALL) * reach)).addInPlace(new Vector3(0, -Math.sin(BLOW_FALL) * reach, 0));
     // Followed through, the head runs on down him to low over his feet
     const ground = b.root.getAbsolutePosition().y;
     const end = follow > 0 ? Vector3.Lerp(onto, new Vector3(head.x, ground + (head.y - ground) * BLOW_FOLLOW_LOW, head.z), follow) : onto;
@@ -1167,14 +1195,16 @@ export class ProceduralAnimator {
       this._flinchTimer -= dt;
       const intensity = Math.max(0, Math.min(1, this._flinchTimer / (0.35 - FLINCH_HOLD)));
       const b = this._body;
+      // A man struck while his own blow comes down on his man carries it through (r2c3): his trunk and weapon arm stay on the blow, only his head goes back
+      const committed = intensity * (1 - this._aimWeight);
       // Snap torso backward and to the side
-      b.torso.rotation.x -= FLINCH_PITCH * intensity;
-      b.torso.rotation.z += 0.3 * intensity;
+      b.torso.rotation.x -= FLINCH_PITCH * committed;
+      b.torso.rotation.z += 0.3 * committed;
       // Head whips back
       b.neck.rotation.x -= FLINCH_HEAD * intensity;
       // Arms flail out
       b.leftShoulder.rotation.z -= 0.5 * intensity;
-      b.rightShoulder.rotation.z += 0.5 * intensity;
+      b.rightShoulder.rotation.z += 0.5 * committed;
     }
     // Board knocked off and knees gone (see BOARD_OFF): the board arm flung out wide and the board hanging off it, the hips dropped on bent knees
     const off = this._boardOffWeight();
