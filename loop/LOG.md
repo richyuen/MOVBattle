@@ -294,3 +294,4 @@ iter 292 | [S] press-blow-in-crowd (dropped), [S] stoner-two-hand-boulder | 1/1 
 iter 293 | [S] press-second-rank-blow (rejected), [S] bomb-pair-fist-size | 1/2 approved | passes 72 -> 73
 iter 294 | [R] press-blow-rebuild, [S] harpoon-rope-tied | 1/2 approved | passes 73/77 -> 74/77
 iter 295 | re-audit (no flips); [S] dynamite-big-bundle, [S] swordcaster-lockbox | 2/2 approved | passes 74 -> 74
+iter 296 | dynamite-lit-fuse [S], club-overhead-drop [S] | 2/2 approved | passes 50/53 -> 51/53
