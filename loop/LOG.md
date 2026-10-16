@@ -290,3 +290,4 @@ iter 288 | 288.0 evidence press-shot-timing; [S] press-throw-airborne (dropped);
 iter 289 | [S] bone-mage-staff-raise, [S] press-blow-follow-through | 2/2 approved | passes 69 -> 70
 iter 290 | press-blow-off-feet [S] dropped, harpoon-head [S] | 1/2 approved | passes 70/77 -> 70/77
 iter 291 | press-blow-off-feet [S], short-javelin [S] | 2/2 approved | passes 70 -> 71
+iter 292 | [S] press-blow-in-crowd (dropped), [S] stoner-two-hand-boulder | 1/1 approved | passes 71 -> 72
