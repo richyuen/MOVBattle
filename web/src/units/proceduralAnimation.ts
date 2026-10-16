@@ -191,17 +191,6 @@ const THROW_LET_GO = 0.5;
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
 const FLINCH_PITCH = 0.85;
 const FLINCH_HEAD = 0.9;
-// Under a heavy blow on the crown (trailer_3_sheet_01 r2c3: the man the club comes down on sags under it) his legs give as well: both thighs come forward
-// BUCKLE_THIGH, the knees fold BUCKLE_KNEE and the hips drop BUCKLE_SINK of their standing height so the feet stay on the ground (thigh 1 forward and shin .9
-// back stand the hip at ~.58 of the leg: a sag to near a kneel), the board arm sags BUCKLE_BOARD off the rim and the head is knocked BUCKLE_ROLL over to one side on top of the
-// flinch's snap back. Full for BUCKLE_HOLD s from the frame the blow lands, gone by BUCKLE_SECONDS. Only on heavy blows (see triggerBuckle).
-const BUCKLE_SECONDS = 0.5;
-const BUCKLE_HOLD = 0.18;
-const BUCKLE_THIGH = 1.0;
-const BUCKLE_KNEE = 1.9;
-const BUCKLE_SINK = 0.4;
-const BUCKLE_BOARD = 0.55;
-const BUCKLE_ROLL = 0.45;
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -422,13 +411,6 @@ export class ProceduralAnimator {
     this._squashTimer = 0.15;
   }
 
-  /** A heavy blow has come down on him: on top of the flinch his knees buckle and his head is knocked over (BUCKLE_*). */
-  triggerBuckle(): void {
-    if (this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
-    this.triggerFlinch();
-    this._buckleTimer = BUCKLE_SECONDS;
-  }
-
   /** Toppled/downed living bodies go limp: 1 crumples the joints, 0 returns to the animated pose. */
   setLimp(limp: boolean): void {
     this._limpTarget = limp ? 1 : 0;
@@ -647,7 +629,6 @@ export class ProceduralAnimator {
     };
   }
   private _flinchTimer = 0;
-  private _buckleTimer = 0;
   private _squashTimer = 0;
   private _limpTarget = 0;
   private _limp = 0;
@@ -1105,18 +1086,6 @@ export class ProceduralAnimator {
       // Arms flail out
       b.leftShoulder.rotation.z -= 0.5 * intensity;
       b.rightShoulder.rotation.z += 0.5 * intensity;
-    }
-    // Buckle overlay, after the flinch: the legs give under a heavy blow and the head goes over (see BUCKLE_*)
-    if (this._buckleTimer > 0 && this._state !== AnimState.Dead) {
-      this._buckleTimer -= dt;
-      const k = Math.max(0, Math.min(1, this._buckleTimer / (BUCKLE_SECONDS - BUCKLE_HOLD)));
-      const b = this._body;
-      for (const hip of [b.leftHip, b.rightHip]) hip.rotation.x -= BUCKLE_THIGH * k;
-      for (const knee of [b.leftKnee, b.rightKnee]) knee.rotation.x += BUCKLE_KNEE * k;
-      this._hipRest ??= b.hip.position.y;
-      b.hip.position.y -= this._hipRest * BUCKLE_SINK * k;
-      b.leftShoulder.rotation.x += BUCKLE_BOARD * k;
-      b.neck.rotation.z += (this._wobblePhase % 2 < 1 ? 1 : -1) * BUCKLE_ROLL * k;
     }
 
     // ─── Googly-eye pupil wobble ───
