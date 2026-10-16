@@ -275,7 +275,8 @@ async function shot(page, name) {
     summary.notes.push(`${name}: scene not ready after ${state ? state.renders : "?"} renders, shot may miss: ${what}`);
   }
   await page.screenshot({ path: file });
-  summary.screenshots.push(`${name}.png`);
+  // A shot taken again over itself (a candidate pair) is listed once
+  if (!summary.screenshots.includes(`${name}.png`)) summary.screenshots.push(`${name}.png`);
   log(`shot ${name}.png`);
 }
 
@@ -376,25 +377,34 @@ async function main() {
         }, scenario);
         await shot(page, shotName);
         if (shotName === "press_clubbers_side") {
-          // Step a frame at a time until a clubber's blow lands, then shoot that very frame.
-          const hit = await page.evaluate(() => {
-            window.game.clearHitLog();
-            for (let ms = 0; ms < 4000; ms += 16) {
-              window.advanceTime(16);
-              const h = window.game.getHitLog().find((e) => /clubber|chieftain/.test(e.attackerUnit));
-              // Shoot 64 ms after the landing (club settled on the point it struck, before the sim walks the striker on), when the man it threw is in the
-              // air, not on the land frame itself
-              if (h) {
-                for (let k = 0; k < 4; k++) window.advanceTime(16);
-                return { ms, ...h };
+          // Clubber blows are taken in turn, each one's pair shot over the last, until one whose struck man has flown clear of his mates 336 ms after
+          // the landing (a man struck at the wall's end and thrown along it into his mates is buried in the pile and shows nothing of the throw); the
+          // scene is not rerun (it is not seeded), so a candidate is only ever a blow landing after the last one's 336 ms. The pair of the last
+          // candidate stands when none clears within 4 s.
+          await page.evaluate(() => window.game.clearHitLog());
+          let taken = 0;
+          let ms = 0;
+          let candidates = 0;
+          let last = null;
+          while (ms < 4000) {
+            // Step a frame at a time until the next clubber's blow lands, then shoot that very frame.
+            const hit = await page.evaluate(({ ms0, taken }) => {
+              for (let ms = ms0; ms < 4000; ms += 16) {
+                window.advanceTime(16);
+                const hits = window.game.getHitLog().filter((e) => /clubber|chieftain/.test(e.attackerUnit));
+                // Shoot 64 ms after the landing (club settled on the point it struck, before the sim walks the striker on), when the man it threw is in the
+                // air, not on the land frame itself
+                if (hits.length > taken) {
+                  for (let k = 0; k < 4; k++) window.advanceTime(16);
+                  return { ms: ms + 16, taken: hits.length, ...hits[hits.length - 1] };
+                }
               }
-            }
-            return null;
-          });
-          summary.notes.push(hit
-            ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} landed at +${hit.ms} ms, shot 64 ms after the landing`
-            : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
-          if (hit) {
+              return { ms: 4000, taken };
+            }, { ms0: ms, taken });
+            ms = hit.ms + 64;
+            taken = hit.taken;
+            if (hit.attackerUnit === undefined) break;
+            candidates++;
             // Framed live, side-on to the blow itself (across the line from the striker to the man he hit), not down the wall's axis: a blow struck along
             // the line from the wall's end projects as a club pointing at the sky. The lens goes on whichever side of the blow has fewer men in front of it.
             await page.evaluate((h) => {
@@ -409,11 +419,9 @@ async function main() {
               window.game.frameCamera({ x: mid.x, y: 1.0, z: mid.z }, 3.8, Math.atan2(nz, nx), Math.PI / 2.05);
             }, hit);
             await shot(page, "press_clubbers_hit");
-          }
-          // 272 ms later (336 ms after the landing: the blow dwells on him BLOW_DWELL 0.12 s before the throw, and this is the top of it), framed on the struck
-          // man where he is now, not where the club landed: found live as the highest man of the struck side near the blow, seen level down his wall's line
-          // from his end of it.
-          if (hit) {
+            // 272 ms later (336 ms after the landing: the blow dwells on him BLOW_DWELL 0.12 s before the throw, and this is the top of it), framed on the struck
+            // man where he is now, not where the club landed: found live as the highest man of the struck side near the blow, seen level down his wall's line
+            // from his end of it.
             const struck = await page.evaluate((h) => {
               for (let k = 0; k < 17; k++) window.advanceTime(16);
               const units = JSON.parse(window.render_game_to_text()).units.filter((u) => u.alive !== false);
@@ -421,6 +429,8 @@ async function main() {
               if (!pool.length) return null;
               const man = pool.reduce((a, b) => ((b.y ?? 0) > (a.y ?? 0) ? b : a));
               const mates = units.filter((u) => u !== man && u.team === man.team && Math.hypot(u.x - man.x, u.z - man.z) < 3.5);
+              // Clear of the pile: in the air and no mate within half a stride of him
+              const clear = (man.y ?? 0) >= 0.25 && mates.every((u) => Math.hypot(u.x - man.x, u.z - man.z) > 0.55);
               // His wall's line: the long axis of the mates still holding it (not of him: thrown a body out of it, he would skew a short line's axis)
               const all = mates.length >= 2 ? mates : [man, ...mates];
               const cx = all.reduce((s, u) => s + u.x, 0) / all.length, cz = all.reduce((s, u) => s + u.z, 0) / all.length;
@@ -432,19 +442,29 @@ async function main() {
               let nx = -az, nz = ax;
               if (nx * (man.x - h.x) + nz * (man.z - h.z) < 0) { nx = -nx; nz = -nz; }
               // Side-on to his throw (straight down his wall's line, which runs across his facing), so his seat, thighs and head read in profile, from
-              // whichever end of the line has fewer of his mates between him and the lens
+              // his right-hand end of the line (his board, flung out on his left arm, hides him from his left) unless that end has two more of his
+              // mates between him and the lens than the other
               let ox = ax, oz = az;
               const onSide = (sx, sz) => mates.filter((u) => (u.x - man.x) * sx + (u.z - man.z) * sz > 0.2).length;
-              if (onSide(ox, oz) > onSide(-ox, -oz)) { ox = -ox; oz = -oz; }
+              const fl = Math.hypot(h.x - man.x, h.z - man.z) || 1;
+              const rx = (h.z - man.z) / fl, rz = -(h.x - man.x) / fl;
+              if (ox * rx + oz * rz < 0) { ox = -ox; oz = -oz; }
+              if (onSide(ox, oz) > onSide(-ox, -oz) + 1) { ox = -ox; oz = -oz; }
               // Aimed a little past his feet (the root) to his seat, which leads the throw
               window.game.frameCamera({ x: man.x + nx * 0.2, y: (man.y ?? 0) + 0.55, z: man.z + nz * 0.2 }, 3.6, Math.atan2(oz, ox), Math.PI / 2.05);
-              return { id: man.id, y: man.y };
+              return { id: man.id, y: man.y, clear };
             }, hit);
-            summary.notes.push(struck
-              ? `press_clubbers_blow: struck man ${struck.id} framed 336 ms after the landing, ${(struck.y ?? 0).toFixed(2)} m up`
-              : "press_clubbers_blow: no struck man near the blow, shot skipped");
+            ms += 272;
             if (struck) await shot(page, "press_clubbers_blow");
+            last = { hit, struck, candidates };
+            if (struck && struck.clear) break;
           }
+          summary.notes.push(last
+            ? `press_clubbers_hit: ${last.hit.attackerUnit} -> ${last.hit.targetUnit} landed at +${last.hit.ms} ms (candidate blow ${last.candidates}), shot 64 ms after the landing`
+            : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
+          if (last) summary.notes.push(last.struck
+            ? `press_clubbers_blow: struck man ${last.struck.id} framed 336 ms after the landing, ${(last.struck.y ?? 0).toFixed(2)} m up, ${last.struck.clear ? "clear of his mates" : "NOT clear of his mates (no candidate cleared within 4 s)"}`
+            : "press_clubbers_blow: no struck man near the blow, shot skipped");
         }
       }
       // Throwers at the release (vfx tier 3, throw_<unit>): step the sim a frame at a time until every man in the group has let a missile go (one launch
