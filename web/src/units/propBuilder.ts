@@ -1440,6 +1440,8 @@ const DYNAMITE_ROWS = 2;
 const DYNAMITE_STICK_WIDE = 0.075;
 const DYNAMITE_LONG = 0.38;
 const DYNAMITE_BAND = 0.17;
+const DYNAMITE_SPARK = 0.075; // lit-fuse spark core, of s; rays 2.2x as long
+const DYNAMITE_SPARK_RAYS = 6;
 // The stoner's boulder (units/tribal.stoner), in prop units (x s, the man about .67 s tall): across, its height and depth as shares of that, colour
 const BOULDER_WIDE = 0.26;
 const BOULDER_SQUASH = { y: 0.88, z: 0.94 };
@@ -1923,6 +1925,19 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       fuse.rotation.z = 0.35;
       fuse.material = mat(scene, new Color3(0.85, 0.72, 0.45), 0.2);
       fuse.parent = root;
+      // The lit fuse (units/wild_west.dynamite_thrower): an unlit white-hot core in an orange burst of DYNAMITE_SPARK_RAYS short spikes on the fuse tip.
+      // A child of the fuse, so the thrown copy carries it burning through the air.
+      const spark = MeshBuilder.CreateIcoSphere("dynamiteSpark", { radius: DYNAMITE_SPARK * 0.5 * s, subdivisions: 1 }, scene);
+      spark.position.y = 0.03 * s + DYNAMITE_SPARK * 0.25 * s;
+      spark.material = getMaterialFactory().getEmissive(new Color3(1, 0.95, 0.75), 1);
+      spark.parent = fuse;
+      const rayMat = getMaterialFactory().getEmissive(new Color3(1, 0.55, 0.12), 1);
+      for (let i = 0; i < DYNAMITE_SPARK_RAYS; i++) {
+        const ray = MeshBuilder.CreateBox("dynamiteSparkRay", { width: DYNAMITE_SPARK * 0.22 * s, height: DYNAMITE_SPARK * 2.2 * s, depth: DYNAMITE_SPARK * 0.22 * s }, scene);
+        ray.rotation.set((i % 2 ? 0.9 : -0.9), (i * Math.PI * 2) / DYNAMITE_SPARK_RAYS, (i * 2.4) % Math.PI);
+        ray.material = rayMat;
+        ray.parent = spark;
+      }
       root.position.y = 0.155 * s - long / 2;
       return root;
     }
