@@ -253,7 +253,8 @@ export class ProceduralAnimator {
 
   /** What the throwing hand holds now (its prop, not the mitt), or null when it is empty. */
   heldThrowProp(): TransformNode | null {
-    return this._body.rightHand.getChildren().find((n): n is TransformNode => !/HandM$/.test(n.name) && (n as TransformNode).isEnabled()) as TransformNode | undefined ?? null;
+    // Not the mitt, and not a state glow riding the fist (a lit fuse's spark is tagged with a visual key): the weapon itself
+    return this._body.rightHand.getChildren().find((n): n is TransformNode => !/HandM$/.test(n.name) && !n.metadata?.visualKey && (n as TransformNode).isEnabled()) as TransformNode | undefined ?? null;
   }
 
   /** The held prop has left the hand: it is not drawn there again until the next windup. */
