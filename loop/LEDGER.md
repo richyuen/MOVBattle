@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 293 | press-second-rank-blow | battle-feel.e | rejected
-- 293 | bomb-pair-fist-size | vfx.l | approved
 - 294 | press-blow-rebuild [R] | battle-feel.e | rejected
 - 294 | harpoon-rope-tied | vfx.j | approved
 - 295 | dynamite-big-bundle | vfx.m | approved
@@ -28,6 +26,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 301 | one-strike [R] | battle-feel.e | rejected
 - 301 | ring-sword-rises | vfx.p | approved
 - 302 | two-hand-body-swing [R] | battle-feel.e | rejected
+- 303 | stroke-cadence-and-contact-hold [R] | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -35,11 +34,11 @@ slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (m
 ## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
 proceduralAnimation.ts:_aimBlow overhead + follow (BLOW_LAND,_HOLD,_DROP,_LEAP,_OVERHEAD,_FALL,_STEP; BLOW_FOLLOW,_ARM,_PITCH,_LOW) | overhead .5, fall .95, step .4; landing + follow on _contactOn, pinned live each frame | 300 | approved | follow ends on board top (299, rejected-kept); to BLOW_FOLLOW_LOW .2 (296); onto crown level (289)
-runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_PITCH,_SPEED,_LIFT,_MAX,_MIN; x kb x shoveResponse, no topple) | .6 s hold .28 pitch 1.3 head away (sign fixed); min 4.5/5.0, front-half straight back | 291 | approved | pitch .8 toward striker (sign bug), min 1.6/4.4 (289); no floor (287)
+runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_PITCH,_SPEED,_LIFT,_MAX,_MIN; x kb x shoveResponse, no topple) | .6 s hold .28 pitch 1.3 head away (sign fixed); min 4.5/5.0, front-half straight back | 303 | rejected | pitch .5 seat-first (303, reverted); pitch .8 toward striker (sign bug), min 1.6/4.4 (289); no floor (287)
 simulationSystem.ts:wall lets go of a thrown man (isBlowThrown: no slot snap/bracing; wall line = median depth of men not thrown) | median | 291 | approved | mean depth of all, thrown man snapped back
 proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; THROWS_HELD_PROP javelin, bomb, stone) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .5 | 283 | approved | javelin, bomb (282); let-go .38, javelin only (281)
 proceduralAnimation.ts:board off (BOARD_OFF_SECONDS,_HOLD,_FLING,_BUCKLE; knockBoardOff from staggerFromBlow) | .6 s hold .25; fling out 1.4 back .6; thigh .9 knee 1.6 sink .35 | 284 | approved | none (board stayed in the wall)
-proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,legs,knee; throwBack; cancels the board-off buckle) | 1.35, .45, .35, .45, .75, .35 | 287 | rejected-kept | none (knees buckled under the blow)
+proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,legs,knee; throwBack; cancels the board-off buckle) | 1.35, .45, .35, .45, .75, .35 | 303 | rejected | set curl .35 head .15 thighs -2/-1.7 knee 1.2 (303, reverted); none (knees buckled under the blow)
 proceduralAnimation.ts:cast loose/hold (CAST_LOOSE, CAST_HOLD, CAST_LEVEL_TIP; castReleasesIn, fireball pending to the drive) | loose .68 hold .94 tip 0,.1,1 | 287 | approved | fired at cast start, drive .55-.68 out .82-1, tip z+1.1
 proceduralAnimation.ts:bone mage overhead cast (CAST_RAISE_UP,_ARM,_TIP; boneStaff id; leaves pend to CAST_LOOSE from staff head) | up .4, arm -2.9/.32/-.12, tip .15,1,.3 | 289 | approved | wizard level drive, leaves from hand at cast start
 projectileSystem.ts:fireball (FIREBALL_WIDE,_TAIL,_HEART,_SHELL; flat icospheres, heart-only glow; staffHeadOf origin) | .55 wide, tail .8; heart 1,.92,.55 shell 1,.45,.08 opaque, no bloom | 286 | approved | shell alpha .7 heart bloom (285); team-tinted sphere .25 (wizard flew a bolt)
@@ -56,6 +55,7 @@ propBuilder.ts:sword ring (SWORD_RING_COUNT,_ANGLES,_RADIUS,_BLADE,_GUARD,_STAGG
 projectileSystem.ts:ring sword rise (SWORD_RISE_IN; SWORD_RISE_OVER in simulationSystem; flies from the risen height) | .45 s to .25 over head | 301 | approved | none (hovered at its ring guard point, shin height)
 proceduralAnimation.ts:lockbox arms (LOCKBOX_CARRY IK start; DLS palm (mitt middle) onto box ends, LOCKBOX_PALM_OUT, 8 steps) | .15, out .6, .6, -1.85; palm .35 mitt widths out | 300 | approved | out .32, wrist GRIP .06 (299); fixed pose (298)
 proceduralAnimation.ts:in-reach press beat (PRESS_CLUB_COCK, PRESS_AIM_ARM,_ELBOW, PRESS_BOARD_LINE, CONTACT_MIN_FALL,_LOWEST) | cock -1.05; arm 1.0; line .25; head pinned at reach on near face, lowest .6 | 300 | approved | direction only, head overran into turf (299); fixed arc .6-1.25 (297)
+proceduralAnimation.ts:press reach lunge (_pressReach; PRESS_REACH_SEAT,_MAX,_PITCH) | none (reverted) | 303 | rejected | seat .9 max .9 H pitch .5 (303)
 proceduralAnimation.ts:press mark held (PRESS_MARK_HOLD; marked heavy_swing winds to PRESS_CLUB_COCK, recover stays landed) | 1.5 s | 298 | approved | mark dropped on the first out-of-reach call; swing to CLUB_COCK
 propBuilder.ts:boulder (BOULDER_WIDE,_SQUASH,_COLOR; faceted icosphere, thrown copy flies) | .26 s, y .88 z .94, .34,.31,.28 lit .15 | 292 | approved | head-sized smooth sphere .12 s
 proceduralAnimation.ts:two-hand boulder carry + heave (BOULDER_CARRY,_DIP,_HEAVE; rock at hands midpoint) | carry -.6/.42/-.75; dip .25 trunk .55 knee .7; heave -2.4 trunk -.25 | 292 | approved | one-arm overhand throw (THROW_*)
