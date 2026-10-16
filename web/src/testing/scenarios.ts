@@ -1137,7 +1137,8 @@ function shieldWallGallery(name: string, description: string, cameraOverride: { 
 }
 
 /** Throwers in a column at x -3, a squire for each at `targetX` (inside every thrower's engage range), the camera side-on from the arm side with room ahead of the hand for the missile. */
-function throwGallery(name: string, description: string, unitIds: string[], targetX: number, focus: string): ScenarioSpec {
+function throwGallery(name: string, description: string, unitIds: string[], targetX: number, focus: string, view: { alpha?: number; spacingZ?: number; radius?: number } = {}): ScenarioSpec {
+  const spacingZ = view.spacingZ ?? 1.7;
   return makeGalleryScenario(name, description, unitIds, {
     autoStart: true,
     advanceMs: 0,
@@ -1147,16 +1148,16 @@ function throwGallery(name: string, description: string, unitIds: string[], targ
     centerX: -3,
     centerZ: 0,
     spacingX: 0,
-    spacingZ: 1.7,
+    spacingZ,
     galleryPresetId: "state_read_duel",
     cameraOverride: {
-      alpha: Math.PI / 2 - 0.35,
+      alpha: view.alpha ?? Math.PI / 2 - 0.35,
       beta: Math.PI / 2.05,
       // Aimed a head above the throwers: a bomb's arc is already 2 m up 150 ms after the hand
-      radius: 6.5,
+      radius: view.radius ?? 6.5,
       target: { x: -1.8, y: 1.8, z: 0.3 },
     },
-    extraUnits: unitIds.map((_, i) => ({ unitId: "medieval.squire", team: 1, position: { x: targetX, z: (i - (unitIds.length - 1) / 2) * 1.7 } })),
+    extraUnits: unitIds.map((_, i) => ({ unitId: "medieval.squire", team: 1, position: { x: targetX, z: (i - (unitIds.length - 1) / 2) * spacingZ } })),
     focus,
   });
 }
@@ -1681,6 +1682,8 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     ["tribal.bone_mage", "legacy.wizard", "spooky.swordcaster"],
     8,
     "A caster keeps his staff; what flies is his own missile (leaves, a fireball, a sword), not a crossbow bolt.",
+    // Spread and seen further round from the front, so the bone mage's raised staff is not hidden behind the wizard's hat
+    { alpha: Math.PI / 2 - 0.7, spacingZ: 2.4, radius: 7.5 },
   ),
   gallery_team_color_blue_red_validation: {
     name: "gallery_team_color_blue_red_validation",
