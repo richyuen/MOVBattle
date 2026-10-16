@@ -1417,6 +1417,10 @@ const TREE_CLUB_LOBES: [number, number, number][] = [[0.35, 0.55, 0.25], [1.3, 0
 const DYNAMITE_STICKS = 3;
 const DYNAMITE_STICK_WIDE = 0.05;
 const DYNAMITE_LONG = 0.26;
+// The stoner's boulder (units/tribal.stoner), in prop units (x s, the man about .67 s tall): across, its height and depth as shares of that, colour
+const BOULDER_WIDE = 0.26;
+const BOULDER_SQUASH = { y: 0.88, z: 0.94 };
+const BOULDER_COLOR = new Color3(0.34, 0.31, 0.28);
 // The javelin (units/tribal.spear_thrower), in prop units (x s): shaft plus head JAVELIN_LONG, a leaf head JAVELIN_HEAD_LONG x _WIDE, barbs swept back _SWEEP rad
 const JAVELIN_LONG = 0.4;
 const JAVELIN_HEAD_LONG = 0.13;
@@ -2033,9 +2037,13 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "shield_sword":
       return buildWeapon(scene, "sword", s, accent, bladeFit);
     case "stone": {
-      const rock = MeshBuilder.CreateSphere("stone", { diameter: 0.12 * s, segments: 6 }, scene);
-      rock.material = mat(scene, new Color3(0.55, 0.55, 0.5));
-      rock.position.y = 0.06 * s;
+      // The stoner's boulder (units/tribal.stoner): chest-sized, about .38 of his height across, a lumpy faceted rock in dark grey-brown, carried in both
+      // hands at the waist (ProceduralAnimator._carryBoulder sets it between the hands); the thrown one is a copy of it, so the same boulder flies
+      const rock = MeshBuilder.CreateIcoSphere("boulder", {
+        radiusX: BOULDER_WIDE * 0.5 * s, radiusY: BOULDER_WIDE * 0.5 * BOULDER_SQUASH.y * s, radiusZ: BOULDER_WIDE * 0.5 * BOULDER_SQUASH.z * s, subdivisions: 2, flat: true,
+      }, scene);
+      rock.rotation.set(0.5, 0.8, 0.3);
+      rock.material = mat(scene, BOULDER_COLOR, 0.15, "stone");
       return rock;
     }
     case "hay_bale": {

@@ -196,6 +196,16 @@ const THROW_COCK = { raise: -2.9, out: 0.3, elbow: -1.6, turn: 0.4, lean: -0.15,
 const THROW_FOLLOW = { raise: -0.35, lean: 0.35 };
 const THROW_SWING = 0.55;
 const THROW_LET_GO = 0.5;
+/*
+ * Two-hand boulder (vfx.k; units/tribal.stoner). Spec read off the reference: the boulder, about .38 of his height across, is held in front of the belly in both
+ * hands, one on each side of it, upper arms hanging forward ~30 deg (BOULDER_CARRY raise), elbows a little bent, the rock's middle at the hands' midpoint.
+ * The throw is a heave, not an overarm toss: through the windup he folds forward ~30 deg at the waist on bent knees with both arms swung down and back so the
+ * rock hangs low between his knees (BOULDER_DIP); at the commit both arms swing up and forward together, the trunk coming up and leaning back (BOULDER_HEAVE),
+ * and the rock leaves both hands at chest height THROW_LET_GO of the way through that swing, the same let-go the sim times the missile on (throwReleasesIn).
+ */
+const BOULDER_CARRY = { raise: -0.6, inward: 0.42, elbow: -0.75 };
+const BOULDER_DIP = { raise: 0.25, inward: 0.32, elbow: -0.25, trunk: 0.55, thigh: -0.45, knee: 0.7 };
+const BOULDER_HEAVE = { raise: -2.4, inward: 0.3, elbow: -0.15, trunk: -0.25 };
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
 const FLINCH_PITCH = 0.85;
 const FLINCH_HEAD = 0.9;
@@ -1147,6 +1157,7 @@ export class ProceduralAnimator {
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
+    this._carryBoulder();
     // Flinch overlay (additive), the very last pose layer: laid over the brace, the board's squaring and the carries, so a man behind a board still goes back
     // under the blow. It holds full for the first FLINCH_HOLD of its time, so the frame the blow lands on shows it whole.
     if (this._flinchTimer > 0 && this._state !== AnimState.Dead) {
@@ -1428,6 +1439,65 @@ export class ProceduralAnimator {
    * middle sits as far along it from the fist as it was strapped on, and its head dips with the load's bob on each footfall. In contact, in a swing, limp or dead it
    * eases back to hanging from the hand as it was built.
    */
+  /**
+   * The stoner's boulder in both hands (see BOULDER_CARRY): the last arm layer, over the walk, the idle and the overhand throw. Carrying, both arms reach forward
+   * and in round the rock at the belly; in a throw, the heave (BOULDER_DIP, then BOULDER_HEAVE) on the throw's own clock. The rock is set between the two
+   * hands every frame, so it sits in both mitts whatever the arms are doing. With the hand empty after the let-go the arms still finish the heave.
+   */
+  private _carryBoulder(): void {
+    const b = this._body;
+    const rock = b.rightHand.getChildren().find((n): n is TransformNode => n.name === "boulder");
+    if (!rock || this._state === AnimState.Dead) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0) return;
+    let arm: { raise: number; inward: number; elbow: number } = BOULDER_CARRY;
+    if (this._state === AnimState.Attacking && this._attackMotion === "throw") {
+      const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+      const commit = this._resolveReleasePoint(0.45);
+      const mix = (a: number, c: number, t: number) => a + (c - a) * t;
+      let dip = 0;
+      let heave = 0;
+      if (progress < commit) {
+        const u = progress / Math.max(commit, 0.001);
+        dip = u * (2 - u);
+      } else {
+        const s = (progress - commit) / Math.max(1 - commit, 0.001);
+        const v = Math.min(1, s / THROW_SWING);
+        const f = v * v * (3 - 2 * v);
+        const r = s > THROW_SWING ? (s - THROW_SWING) / (1 - THROW_SWING) : 0;
+        const back = 1 - r * r * (3 - 2 * r);
+        dip = (1 - f) * back;
+        heave = f * back;
+      }
+      const from = { raise: mix(BOULDER_CARRY.raise, BOULDER_DIP.raise, dip), inward: mix(BOULDER_CARRY.inward, BOULDER_DIP.inward, dip), elbow: mix(BOULDER_CARRY.elbow, BOULDER_DIP.elbow, dip) };
+      arm = { raise: mix(from.raise, BOULDER_HEAVE.raise, heave), inward: mix(from.inward, BOULDER_HEAVE.inward, heave), elbow: mix(from.elbow, BOULDER_HEAVE.elbow, heave) };
+      // Folded over the rock on bent knees in the dip, up and leant back in the heave
+      b.torso.rotation.x += (BOULDER_DIP.trunk * dip + BOULDER_HEAVE.trunk * heave - b.torso.rotation.x) * w;
+      for (const [hip, knee] of [[b.leftHip, b.leftKnee], [b.rightHip, b.rightKnee]]) {
+        hip.rotation.x += (BOULDER_DIP.thigh * dip - hip.rotation.x) * w;
+        knee.rotation.x += (BOULDER_DIP.knee * dip - knee.rotation.x) * w;
+      }
+    }
+    // Both arms alike, each turned in toward the middle (+z is out for the right arm, -z for the left)
+    b.rightShoulder.rotation.x += (arm.raise - b.rightShoulder.rotation.x) * w;
+    b.leftShoulder.rotation.x += (arm.raise - b.leftShoulder.rotation.x) * w;
+    b.rightShoulder.rotation.z += (-arm.inward - b.rightShoulder.rotation.z) * w;
+    b.leftShoulder.rotation.z += (arm.inward - b.leftShoulder.rotation.z) * w;
+    b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * w;
+    b.leftShoulder.rotation.y += (0 - b.leftShoulder.rotation.y) * w;
+    b.rightElbow.rotation.x += (arm.elbow - b.rightElbow.rotation.x) * w;
+    b.leftElbow.rotation.x += (arm.elbow - b.leftElbow.rotation.x) * w;
+    if (!rock.isEnabled()) return;
+    // The rock between the two mitts: bring both chains up to this frame and set its middle on their midpoint, in the right hand's space
+    for (const hand of [b.rightHand, b.leftHand]) {
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+    }
+    const mid = Vector3.Center(b.rightHand.getAbsolutePosition(), b.leftHand.getAbsolutePosition());
+    rock.position.copyFrom(Vector3.TransformCoordinates(mid, Matrix.Invert(b.rightHand.getWorldMatrix())));
+  }
+
   private _carryProp(dt: number): void {
     const ready = this._carry?.ready;
     const weapon = this._carry?.weapon ?? ready;
