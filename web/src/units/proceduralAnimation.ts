@@ -250,6 +250,16 @@ const BOULDER_CARRY = { raise: -0.6, inward: 0.42, elbow: -0.75 };
  * the navel. Held the same through the walk, the idle and the cast: he never lets go of it.
  */
 const LOCKBOX_CARRY = { raise: 0.15, out: 0.32, turn: 0.6, elbow: -1.85 };
+/*
+ * [S] lockbox-body-anchor (vfx.p; units/spooky.swordcaster: the chest centred at the navel, both mitts on its ends). The box is fixed to the torso, not
+ * placed from the hands: its middle on his centreline LOCKBOX_NAVEL of his shoulder height up the trunk and LOCKBOX_FRONT of it out before the belly. Each
+ * arm is reached onto its own end (wrist LOCKBOX_GRIP of the shoulder height past it) by a solve of shoulder raise, shoulder turn and elbow bend, starting
+ * from LOCKBOX_CARRY with the elbows held out (see _lockboxAnchor).
+ */
+const LOCKBOX_NAVEL = 0.35;
+const LOCKBOX_FRONT = 0.55;
+const LOCKBOX_GRIP = 0.06;
+const LOCKBOX_IK_STEPS = 8;
 const BOULDER_DIP = { raise: 0.25, inward: 0.32, elbow: -0.25, trunk: 0.55, thigh: -0.45, knee: 0.7 };
 const BOULDER_HEAVE = { raise: -2.4, inward: 0.3, elbow: -0.15, trunk: -0.25 };
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
@@ -1596,6 +1606,8 @@ export class ProceduralAnimator {
     b.leftShoulder.rotation.y += (turn - b.leftShoulder.rotation.y) * w;
     b.rightElbow.rotation.x += (arm.elbow - b.rightElbow.rotation.x) * w;
     b.leftElbow.rotation.x += (arm.elbow - b.leftElbow.rotation.x) * w;
+    // The chest is fixed to his body, not to his hands (lockbox-body-anchor): its middle at the navel on his centreline, and each arm reaches to its own end
+    const anchor = chest ? this._lockboxAnchor(rock, w) : null;
     if (!rock.isEnabled()) return;
     // The rock between the two mitts: bring both chains up to this frame and set its middle on their midpoint, in the right hand's space
     for (const hand of [b.rightHand, b.leftHand]) {
@@ -1603,7 +1615,7 @@ export class ProceduralAnimator {
       for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
       for (const n of chain) n.computeWorldMatrix(true);
     }
-    const mid = Vector3.Center(b.rightHand.getAbsolutePosition(), b.leftHand.getAbsolutePosition());
+    const mid = anchor ?? Vector3.Center(b.rightHand.getAbsolutePosition(), b.leftHand.getAbsolutePosition());
     rock.position.copyFrom(Vector3.TransformCoordinates(mid, Matrix.Invert(b.rightHand.getWorldMatrix())));
     if (rock.name === "lockbox") {
       // A chest is held square across him, lid up and keyhole out, whatever the wrist's turn: its rotation in the hand is the torso's world turn less the hand's
@@ -1617,6 +1629,71 @@ export class ProceduralAnimator {
       handQ.toRotationMatrix(handM);
       rock.rotationQuaternion = Quaternion.FromRotationMatrix(local.multiply(handM.transpose()));
     }
+  }
+
+  /**
+   * The lockbox's world middle (lockbox-body-anchor): on his centreline in the torso's own frame, LOCKBOX_NAVEL of his shoulder height up the trunk and
+   * LOCKBOX_FRONT of it out before the belly, so it never rides off to the side however the arms fall. Each arm is then reached onto its own end of the box
+   * (LOCKBOX_SIZE.wide across, the wrist LOCKBOX_GRIP of the shoulder height out past the end): shoulder raise, shoulder turn and elbow bend solved together
+   * (damped least squares on the live chain), the elbows kept out at LOCKBOX_CARRY out. The solved pose is blended in by w.
+   */
+  private _lockboxAnchor(box: TransformNode, w: number): Vector3 {
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.torso; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const height = Math.abs(b.rightShoulder.position.y);
+    const torsoM = b.torso.getWorldMatrix();
+    const mid = Vector3.TransformCoordinates(new Vector3(0, height * LOCKBOX_NAVEL, height * LOCKBOX_FRONT), torsoM);
+    // Half its width across him, off its own mesh
+    const shell = box as Mesh;
+    const half = typeof shell.getBoundingInfo === "function" ? shell.getBoundingInfo().boundingBox.extendSize.x * Math.abs(box.absoluteScaling.x) : 0.13 * height;
+    const across = Vector3.TransformNormal(new Vector3(1, 0, 0), torsoM).normalize();
+    const reach = height * LOCKBOX_GRIP * Math.max(0.001, b.torso.absoluteScaling.y);
+    for (const [shoulder, elbow, hand, side] of [[b.rightShoulder, b.rightElbow, b.rightHand, 1], [b.leftShoulder, b.leftElbow, b.leftHand, -1]] as const) {
+      const sx = Math.sign(shoulder.position.x) || side;
+      const target = mid.add(across.scale(sx * (half + reach)));
+      const keep = [shoulder.rotation.x, shoulder.rotation.y, elbow.rotation.x];
+      const p = [LOCKBOX_CARRY.raise, -sx * LOCKBOX_CARRY.turn, LOCKBOX_CARRY.elbow];
+      const at = (q: number[]) => {
+        shoulder.rotation.x = q[0];
+        shoulder.rotation.y = q[1];
+        elbow.rotation.x = q[2];
+        shoulder.computeWorldMatrix(true);
+        elbow.computeWorldMatrix(true);
+        hand.computeWorldMatrix(true);
+        return hand.getAbsolutePosition().clone();
+      };
+      for (let it = 0; it < LOCKBOX_IK_STEPS; it++) {
+        const f = at(p);
+        const e = target.subtract(f);
+        if (e.length() < half * 0.02) break;
+        // Jacobian by finite differences, columns d(hand)/d(param)
+        const J = [0, 1, 2].map((i) => {
+          const q = p.slice();
+          q[i] += 1e-3;
+          return at(q).subtract(f).scale(1e3);
+        });
+        // (J^T J + l I) d = J^T e, a 3x3 solve
+        const A = J.map((a) => J.map((c) => Vector3.Dot(a, c)));
+        const damp = 0.01 * (A[0][0] + A[1][1] + A[2][2]);
+        for (let i = 0; i < 3; i++) A[i][i] += damp;
+        const g = J.map((a) => Vector3.Dot(a, e));
+        const det = (m: number[][]) => m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+        const D = det(A);
+        if (Math.abs(D) < 1e-12) break;
+        for (let i = 0; i < 3; i++) {
+          const Ai = A.map((row, r) => row.map((v, c) => (c === i ? g[r] : v)));
+          p[i] += det(Ai) / D;
+        }
+        // The elbow only folds forward, and never past a tight fold
+        p[2] = Math.max(-2.6, Math.min(-0.1, p[2]));
+      }
+      shoulder.rotation.x = keep[0] + (p[0] - keep[0]) * w;
+      shoulder.rotation.y = keep[1] + (p[1] - keep[1]) * w;
+      elbow.rotation.x = keep[2] + (p[2] - keep[2]) * w;
+    }
+    return mid;
   }
 
   /**
