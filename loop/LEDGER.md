@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 283 | head-snap-under-crown | battle-feel.e | rejected
-- 283 | stoner-held-rock-release | vfx.k | approved
 - 284 | board-off-under-blow | battle-feel.e | approved
 - 284 | dynamite-stick | vfx.m | approved
 - 285 | wizard-fireball | vfx.o | approved
@@ -27,6 +25,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 291 | press-blow-off-feet | battle-feel.e | approved
 - 291 | short-javelin | vfx.i | approved
 - 292 | stoner-two-hand-boulder | vfx.k | approved
+- 293 | press-second-rank-blow | battle-feel.e | rejected
+- 293 | bomb-pair-fist-size | vfx.l | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -47,13 +47,12 @@ propBuilder.ts:harpoon gun (HARPOON_GUN_LONG,_WIDE, HARPOON_MUZZLE; rope HARPOON
 projectileSystem.ts:leaf whirl (LEAF_COUNT,_LONG,_WIDE,_WHIRL,_SPREAD,_SPIN,_COLORS; bone mage projectileHint leaves, from right hand) | 11 x .5 x .19, whirl .55 spread 1.2, spin 9 | 286 | approved | crossbow bolt from the waist
 projectileSystem.ts:flying sword (SWORD_BLADE_LONG,_WIDE,_GUARD_WIDE,_GRIP_LONG,_COLORS; SWORD_HOVER, hover opt) | blade 1.0 x .1 white unlit, guard .3, grip .22; hover .7 s over head, speed 16 | 288 | approved | crossbow bolt from the waist
 propBuilder.ts:javelin (JAVELIN_LONG,_HEAD_LONG,_HEAD_WIDE,_BARB_LONG,_BARB_SWEEP; dark iron leaf, red binding, grip near butt) | .4 s, head .13 x .09 thin x .45, barbs .06 swept .45 | 291 | approved | shared spear: 1.0 s pole, small steel tip
+propBuilder.ts:bomb (BOMB_FISTS,_NECK,_FUSE; BOMB_SEAT_DOWN,_FORWARD,_TURN; offhand bomb kept) | 2.2 fists, neck .22 fuse .32; seat 1.15/.35 turn 1.7 | 293 | approved | one .15 s ball on the throw grip
 propBuilder.ts:dynamite (DYNAMITE_STICKS,_STICK_WIDE,_LONG; red .8,.13,.1 bands black, fuse top at .18 s) | 3 sticks .05 x .26 s | 284 | approved | bomb ball .15 s
 propBuilder.ts:boulder (BOULDER_WIDE,_SQUASH,_COLOR; faceted icosphere, thrown copy flies) | .26 s, y .88 z .94, .34,.31,.28 lit .15 | 292 | approved | head-sized smooth sphere .12 s
 proceduralAnimation.ts:two-hand boulder carry + heave (BOULDER_CARRY,_DIP,_HEAVE; rock at hands midpoint) | carry -.6/.42/-.75; dip .25 trunk .55 knee .7; heave -2.4 trunk -.25 | 292 | approved | one-arm overhand throw (THROW_*)
-propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_LEVEL,_HEEL,_SPINE,_BOW,_GRIP; ramped curl, socket+tang) | 1.25 s, .8 in 14, curl 1.3 ramped, level -.6, heel .17, bow .05, grip .15 | 268 | approved | curl 1.75 even, rise .35 (267); 6 box segs (252)
 propBuilder.ts:tree_club [R] (TREE_CLUB_LONG,_GRIP,_THICK,_BEND,_ROOTS,_ROOT_FAN,_CROWN,_LOBE,_LOBES; bent tube, limb, knot) | .6 stand, grip .15, thick .09, bend .12 up, 5 roots, crown .25 T, lobes centred on end | 269 | approved | lobes .3,-.5/1.25,-.35/.8,.7 hung (267); .8 stand, 4 square roots, 3-lobe clover .24 (265)
 proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; bow spin +pi to face up) | arm raise -.9 out .15 elbow -.4; tip .9,.02,.35 | 269 | approved | raise -.35 out .12 elbow -.7, tip y -.02, bend hung under (267)
-propBuilder.ts:buildHorse drape (HORSE_CAP_LONG,_END,_SQUARE,_BEVEL,_HEM_SHARE,_UPPER_SHOW; flat deck) | hem .5, end .55 square .35, bevel .07, long 1.32, show .32 | 268 | approved | domed profile, end .7, long 1.15 (262); lathe sack (260)
 
 mapBuilder.ts:townRing (TOWN_INSET,_WIDE,_DEEP,_STOREY,_FLOORS,_NEAR,_WALLS,_ROOF; ring trees + haze hidden) | inset 5, wide 7.5-10.5, deep 7, storey 3.2 x3-4, near wall z<-30 | 269 | approved | puffball ring + 2 grey house boxes
 propBuilder.ts:scythe steel (blade material; matte stone kind, self-light) | .81,.83,.84 emissive .15 stone | 269 | approved | .72,.73,.78 emissive .05 default
