@@ -2,6 +2,8 @@
 //   node loop/scripts/capture.mjs --iter N [--showcase-only] [--regression-only] [--port 4181]
 //   node loop/scripts/capture.mjs --only shot[,shot]   quick look: only those showcase shots, to output/loop/look/
 //   node loop/scripts/capture.mjs --iter N --focus [--shots a,b]   gap review: only the shots named in loop/STATE.md's FAIL blockers
+// Deterministic: Math.random is a seeded PRNG reseeded at every resetBattle, so a scene plays the same frames in a --only look, a --focus
+// review and a full run, whatever ran before it (time is stepped through window.advanceTime only).
 //     and Ranked open gaps (plus --shots, plus each one's motion-pair partner), and the regression scenarios
 // Scenes with no requested shot are skipped, not just left unsaved.
 // Builds web/, serves it with vite preview, drives the game headlessly with time advanced ONLY
@@ -268,7 +270,8 @@ async function shot(page, name) {
   // No sim time passes.
   const state = await page.evaluate(() => Promise.race([
     window.game.renderWhenReady(),
-    new Promise((r) => setTimeout(() => r({ ready: false, renders: -1, unready: ["timed out"] }), 30_000)),
+    // The game's loop is bounded at 40 renders x (50 ms + a swiftshader frame), which can pass 30 s on a crowded scene; the race only guards a hung promise.
+    new Promise((r) => setTimeout(() => r({ ready: false, renders: -1, unready: ["timed out"] }), 120_000)),
   ]));
   if (!state || !state.ready) {
     const what = state ? state.unready.join(", ") : "no state";
@@ -307,6 +310,17 @@ async function main() {
   await page.addInitScript(() => {
     window.requestAnimationFrame = () => 1;
     window.cancelAnimationFrame = () => {};
+    // Seeded randomness (mulberry32): wobble phases, thrown poses, fall directions and hit spread all draw from Math.random, so without
+    // this no two runs of a scene land the same blow at the same frame. window.reseed() restarts the sequence; resetBattle calls it below.
+    const SEED = 0x4d4f5642;
+    let s = SEED;
+    Math.random = () => {
+      s = (s + 0x6d2b79f5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    window.reseed = () => { s = SEED; };
   });
 
   try {
@@ -317,6 +331,9 @@ async function main() {
       { polling: 100, timeout: 60_000 },
     );
     await page.evaluate(() => {
+      // Every scene starts with resetBattle: reseed there so each scene's frames are the same whichever scenes ran before it.
+      const reset = window.game.resetBattle.bind(window.game);
+      window.game.resetBattle = (...args) => { window.reseed(); return reset(...args); };
       window.game.skipTitleIntro();
       window.advanceTime(50);
     });
@@ -379,7 +396,7 @@ async function main() {
         if (shotName === "press_clubbers_side") {
           // Clubber blows are taken in turn, each one's pair shot over the last, until one whose struck man has flown clear of his mates 336 ms after
           // the landing (a man struck at the wall's end and thrown along it into his mates is buried in the pile and shows nothing of the throw); the
-          // scene is not rerun (it is not seeded), so a candidate is only ever a blow landing after the last one's 336 ms. The pair of the last
+          // scene is not rerun (seeded, but a rerun would cost a reset), so a candidate is only ever a blow landing after the last one's 336 ms. The pair of the last
           // candidate stands when none clears within 4 s.
           await page.evaluate(() => window.game.clearHitLog());
           let taken = 0;
