@@ -1417,6 +1417,12 @@ const TREE_CLUB_LOBES: [number, number, number][] = [[0.35, 0.55, 0.25], [1.3, 0
 const DYNAMITE_STICKS = 3;
 const DYNAMITE_STICK_WIDE = 0.05;
 const DYNAMITE_LONG = 0.26;
+// The javelin (units/tribal.spear_thrower), in prop units (x s): shaft plus head JAVELIN_LONG, a leaf head JAVELIN_HEAD_LONG x _WIDE, barbs swept back _SWEEP rad
+const JAVELIN_LONG = 0.4;
+const JAVELIN_HEAD_LONG = 0.13;
+const JAVELIN_HEAD_WIDE = 0.09;
+const JAVELIN_BARB_LONG = 0.06;
+const JAVELIN_BARB_SWEEP = 0.45;
 // The harpoon gun (units/pirate.harpooner): a canister about a forearm long and half as wide again as the forearm is thick; the harpoon leaves from the node named HARPOON_MUZZLE
 const HARPOON_GUN_LONG = 0.24;
 const HARPOON_GUN_WIDE = 0.11;
@@ -1590,8 +1596,43 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       body.position.y = 0.06 * s; // gripped below the middle, the barrel ahead of the fist
       return body;
     }
-    case "spear":
     case "javelin": {
+      // A short throwing spear, not a pole (units/tribal.spear_thrower: gripped near the butt, the shaft about a forearm and a half ahead of the fist, under a
+      // big dark leaf head as long as his own head, two barbs swept back off its root, a red-brown binding at the socket). JAVELIN_LONG is shaft plus head,
+      // about .6 of the man's height; the thrown missile is a copy of this (ProjectileSystem._buildHeldMissile), so it flies the same.
+      const shaftLong = JAVELIN_LONG - JAVELIN_HEAD_LONG;
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: shaftLong * s, diameter: 0.028 * s, tessellation: 6 }, scene);
+      shaft.material = mat(scene, new Color3(0.36, 0.2, 0.15));
+      const iron = mat(scene, new Color3(0.2, 0.21, 0.24), 0.05);
+      const top = shaftLong * 0.5;
+      // The leaf: a four-sided blade, broad in the prop's y-z plane (upright in flight, ProjectileSystem turns +y to the flight's +z), thin across x
+      const head = MeshBuilder.CreateCylinder("tip", { height: JAVELIN_HEAD_LONG * s, diameterTop: 0, diameterBottom: JAVELIN_HEAD_WIDE * s, tessellation: 4 }, scene);
+      head.scaling.x = 0.45;
+      head.position.y = (top + JAVELIN_HEAD_LONG * 0.5) * s;
+      head.material = iron;
+      head.parent = shaft;
+      // Barbs: two flat spikes off the leaf's root, pointing back down the shaft and out
+      for (const side of [1, -1]) {
+        const barb = MeshBuilder.CreateCylinder("javelinBarb", { height: JAVELIN_BARB_LONG * s, diameterTop: 0, diameterBottom: 0.022 * s, tessellation: 4 }, scene);
+        barb.scaling.x = 0.5;
+        // Its tip (+y) turned back down the shaft (-y) and out along z by the sweep, in the leaf's plane
+        barb.rotation.x = Math.PI - side * JAVELIN_BARB_SWEEP;
+        barb.position.set(
+          0,
+          (top + 0.012 - Math.cos(JAVELIN_BARB_SWEEP) * JAVELIN_BARB_LONG * 0.5) * s,
+          side * (JAVELIN_HEAD_WIDE * 0.3 + Math.sin(JAVELIN_BARB_SWEEP) * JAVELIN_BARB_LONG * 0.5) * s,
+        );
+        barb.material = iron;
+        barb.parent = shaft;
+      }
+      const binding = MeshBuilder.CreateCylinder("javelinBinding", { height: 0.05 * s, diameter: 0.042 * s, tessellation: 6 }, scene);
+      binding.position.y = (top - 0.035) * s;
+      binding.material = mat(scene, new Color3(0.45, 0.14, 0.11));
+      binding.parent = shaft;
+      shaft.position.y = (shaftLong * 0.5 - 0.06) * s; // gripped near the butt, the shaft and head ahead of the fist
+      return shaft;
+    }
+    case "spear": {
       // Half as tall again as the unit and no more: body height is ~1.3 at scale 1 and s carries the 1.25 exaggeration under the 1.6 prop oversize, so a 1.3 shaft stood twice a man and a rank of them was a forest of poles
       // A stick with a small point: a head 0.09 across and 0.22 long was as big as a torso once oversized, and a 0.036 shaft a pole as thick as its own point.
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.024 * s, tessellation: 6 }, scene);
