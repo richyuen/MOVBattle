@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 271 | adventure-pool-water | maps-light.j | approved
-- 271 | meadow-ruin-pillars | maps-light.i | approved
 - 272 | adventure-castle | maps-light.j | approved
 - 273 | field-oak-clumps | maps-light.j | approved
 - 276 | landed-blow-on-hit | battle-feel.e | rejected
@@ -21,15 +19,17 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 280 | overhead-blow | battle-feel.e | approved
 - 281 | overhead-blow-stagger | battle-feel.e | approved
 - 281 | held-prop-release | vfx.i | approved
+- 282 | overhead-blow-crown | battle-feel.e | approved
+- 282 | held-bomb-release | vfx.l | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
 ## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
-proceduralAnimation.ts:_aimBlow overhead (BLOW_LAND,_AIM_FROM,_HOLD,_ELBOW,_PITCH,_OVERHEAD,_DROP,_CROWN,_LUNGE; FLINCH_HOLD,_PITCH,_HEAD) | land .55 from .75 hold .6, elbow -.15 pitch .4, overhead .3 drop .25, lunge -.4/.3/.1, flinch .12 .85/.9 | 280 | approved | fist at grip of 35deg line (279); fixed CLUB_COCK/LAND arc
-runtimeUnit.ts:blow stagger (BLOW_STAGGER_SECONDS,_HOLD,_PITCH,_STEP; root lean outside clamp, heavy blows only) | .35 s, hold .12, pitch .38, step .3 | 281 | approved | neck flinch only
-proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; held prop flies, THROWS_HELD_PROP javelin) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .38 | 281 | approved | forward-raise -1.2 then drop; spawn at swing start
+proceduralAnimation.ts:_aimBlow overhead (BLOW_LAND,_AIM_FROM,_HOLD,_ELBOW,_PITCH,_OVERHEAD,_DROP,_CROWN,_LUNGE,_LEAP; _crownOf; FLINCH_*) | crown = hat shell top, leap up to .5 stand; land .55 hold .6, drop .25, flinch .12 .85/.9 | 282 | approved | land at headTop (281); fist at grip of 35deg line (279)
+runtimeUnit.ts:blow stagger (BLOW_STAGGER_SECONDS,_HOLD,_PITCH,_STEP; from _landMeleeBlow on every heavy_swing hit) | .35 s, hold .12, pitch .38, step .3 | 282 | approved | pending blows only (281); neck flinch only
+proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; THROWS_HELD_PROP javelin, bomb) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .5 | 282 | approved | let-go .38, javelin only (281); spawn at swing start
 propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_LEVEL,_HEEL,_SPINE,_BOW,_GRIP; ramped curl, socket+tang) | 1.25 s, .8 in 14, curl 1.3 ramped, level -.6, heel .17, bow .05, grip .15 | 268 | approved | curl 1.75 even, rise .35 (267); 6 box segs (252)
 propBuilder.ts:tree_club [R] (TREE_CLUB_LONG,_GRIP,_THICK,_BEND,_ROOTS,_ROOT_FAN,_CROWN,_LOBE,_LOBES; bent tube, limb, knot) | .6 stand, grip .15, thick .09, bend .12 up, 5 roots, crown .25 T, lobes centred on end | 269 | approved | lobes .3,-.5/1.25,-.35/.8,.7 hung (267); .8 stand, 4 square roots, 3-lobe clover .24 (265)
 proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; bow spin +pi to face up) | arm raise -.9 out .15 elbow -.4; tip .9,.02,.35 | 269 | approved | raise -.35 out .12 elbow -.7, tip y -.02, bend hung under (267)
