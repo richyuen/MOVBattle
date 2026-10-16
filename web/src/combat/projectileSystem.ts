@@ -10,7 +10,7 @@ import { getMaterialFactory } from "../units/materialFactory";
 import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "shell" | "cannonball";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "shell" | "cannonball";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -100,6 +100,14 @@ const FIREBALL_WIDE = 0.55;
 const FIREBALL_TAIL = 0.8;
 const FIREBALL_HEART = new Color3(1, 0.92, 0.55);
 const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
+// A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
+const LEAF_COUNT = 11;
+const LEAF_LONG = 0.5;
+const LEAF_WIDE = 0.19;
+const LEAF_WHIRL = 0.55; // radius of the knot round its line of flight
+const LEAF_SPREAD = 1.2; // its length along the line of flight, trailing back
+const LEAF_SPIN = 9; // rad/s of the whole knot about its line of flight
+const LEAF_COLORS = [new Color3(0.74, 0.22, 0.13), new Color3(0.86, 0.43, 0.16), new Color3(0.52, 0.09, 0.14)];
 // A harpoon's rope (units/pirate.harpooner): dark, thin as a finger, muzzle to harpoon
 const HARPOON_ROPE_WIDE = 0.035;
 const HARPOON_ROPE_COLOR = new Color3(0.13, 0.11, 0.1);
@@ -169,6 +177,7 @@ export class ProjectileSystem {
       case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
       case "crow": speed = 18; arcHeight = dist * 0.15; break;
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
+      case "leaves": speed = 12; arcHeight = dist * 0.12; break;
     }
 
     const flightTime = Math.max(0.1, dist / speed);
@@ -346,6 +355,12 @@ export class ProjectileSystem {
       // Shuriken spin
       if (p.shape === "shuriken") {
         p.mesh.rotation.z += dt * 25;
+      }
+      // Leaf whirl: the knot turns about its line of flight and every leaf tumbles on its own
+      if (p.shape === "leaves") {
+        const whirl = p.mesh.getChildren()[0] as TransformNode | undefined;
+        if (whirl) whirl.rotation.z += dt * LEAF_SPIN;
+        for (const leaf of whirl?.getChildMeshes(true) ?? []) leaf.rotation.x += dt * (leaf.metadata?.tumble ?? 5);
       }
       // Crow wing flapping
       if (p.shape === "crow") {
@@ -781,6 +796,33 @@ export class ProjectileSystem {
         const glowLayer = this._scene.getGlowLayerByName("glow");
         glowLayer?.addExcludedMesh(shell);
         glowLayer?.addExcludedMesh(tail);
+        break;
+      }
+      case "leaves": {
+        // A bone mage's missile (units/tribal.bone_mage): no bolt, a whirl of long pointed leaves in no team's colour, each a flat two-sided diamond
+        // drawn out to a point at both ends with a dark stem, scattered round the line of flight (golden angle) and trailing back along it
+        const whirl = new TransformNode("leaf_whirl", this._scene);
+        whirl.parent = root;
+        const glowLayer = this._scene.getGlowLayerByName("glow");
+        const stemMat = this._getMat("leaf_stem", new Color3(0.3, 0.12, 0.08));
+        for (let i = 0; i < LEAF_COUNT; i++) {
+          const u = (i + 0.5) / LEAF_COUNT;
+          const around = i * 2.39996;
+          const reach = LEAF_WHIRL * (0.35 + 0.65 * Math.sqrt(((i * 7) % LEAF_COUNT + 0.5) / LEAF_COUNT));
+          const leaf = MeshBuilder.CreateDisc("leaf", { radius: 0.5, tessellation: 4, sideOrientation: Mesh.DOUBLESIDE }, this._scene);
+          leaf.scaling.set(LEAF_WIDE, LEAF_LONG, 1);
+          leaf.position.set(Math.cos(around) * reach, Math.sin(around) * reach, 0.25 - u * LEAF_SPREAD);
+          leaf.rotation.set(around * 1.7, around, around * 0.6);
+          leaf.metadata = { tumble: 3 + (i % 4) * 2.2 };
+          leaf.material = this._getMat(`leaf_${i % LEAF_COLORS.length}`, LEAF_COLORS[i % LEAF_COLORS.length], 0.2);
+          leaf.parent = whirl;
+          glowLayer?.addExcludedMesh(leaf);
+          const stem = MeshBuilder.CreateCylinder("leaf_stem", { height: 0.35, diameter: 0.12, tessellation: 3 }, this._scene);
+          stem.scaling.z = 0.25; // the leaf disc has no depth to scale it by
+          stem.position.y = -0.62; // in the leaf's own unit square, so it scales with it: a short stalk off its lower point
+          stem.material = stemMat;
+          stem.parent = leaf;
+        }
         break;
       }
     }

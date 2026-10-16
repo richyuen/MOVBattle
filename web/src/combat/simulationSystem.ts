@@ -44,6 +44,7 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "rocket_arrow": return "rocket_arrow";
     case "crow": return "crow";
     case "fireball": return "fireball";
+    case "leaves": return "leaves";
     default:
       break;
   }
@@ -1511,6 +1512,16 @@ export class SimulationSystem {
           this.projectileSystem.spawnProjectile(
             "fireball", head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
             undefined, 0, { originLift: 0 },
+          );
+        } else if (resolveProjectileShape(attacker, attackProfile) === "leaves" && attacker.body.rightHand) {
+          // A bone mage's leaf whirl rises off the hand that holds his staff up, not from his belt
+          const hand = attacker.body.rightHand;
+          const chain: TransformNode[] = [];
+          for (let n: Node | null = hand; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+          for (const n of chain) n.computeWorldMatrix(true);
+          this.projectileSystem.spawnProjectile(
+            "leaves", hand.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
+            undefined, 0, { originLift: 0.3 },
           );
         } else if (harpoonMuzzleOf(attacker)) {
           // The harpoon leaves the gun's muzzle at the hip, trailing its rope back to it

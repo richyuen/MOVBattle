@@ -222,7 +222,7 @@ const tribal = makeFaction(FactionId.Tribal, "tribal", [
   ["protector", "Protector", 90, "shield_melee", { weaponHint: "spear", shieldHint: "round" }],
   ["spear_thrower", "Spear Thrower", 140, "archer", { projectileHint: "spear", weaponHint: "javelin" }],
   ["stoner", "Stoner", 160, "thrower", { projectileHint: "stone", weaponHint: "stone" }],
-  ["bone_mage", "Bone Mage", 220, "special_magic", { weaponHint: "bone_staff" }],
+  ["bone_mage", "Bone Mage", 220, "special_magic", { weaponHint: "bone_staff", projectileHint: "leaves" }],
   ["chieftain", "Chieftain", 400, "boss_melee", { weaponHint: "club" }],
   // tabs_screenshot_01: a mammoth's back stands about three and a half men above the grass; at the colossal class's own size it stood two and three quarters
   ["mammoth", "Mammoth", 1200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6, giantScale: 1.25 }],
