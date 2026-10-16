@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 289 | bone-mage-staff-raise | vfx.n | approved
-- 289 | press-blow-follow-through | battle-feel.e | approved
 - 290 | harpoon-head | vfx.j | approved
 - 291 | press-blow-off-feet | battle-feel.e | approved
 - 291 | short-javelin | vfx.i | approved
@@ -27,13 +25,15 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 297 | club-cocked-in-press | battle-feel.e | approved
 - 297 | lockbox-belly-two-hand | vfx.p | approved
 - 298 | press-mark-held | battle-feel.e | approved
+- 299 | press-landed-contact | battle-feel.e | rejected-kept
+- 299 | lockbox-body-anchor | vfx.p | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
 ## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
-proceduralAnimation.ts:_aimBlow overhead + follow (BLOW_LAND,_HOLD,_DROP,_LEAP,_OVERHEAD,_FALL,_STEP; BLOW_FOLLOW,_ARM,_PITCH,_LOW) | overhead .5, fall .95 min, step .4 ht; flinch off trunk while aimed | 296 | approved | overhead .3, onto crown level, no step (289); stopped on the crown, arm overhead (282); land at headTop (281)
+proceduralAnimation.ts:_aimBlow overhead + follow (BLOW_LAND,_HOLD,_DROP,_LEAP,_OVERHEAD,_FALL,_STEP; BLOW_FOLLOW,_ARM,_PITCH,_LOW) | overhead .5, fall .95 min, step .4; follow ends on board top (CONTACT_FRONT .12) | 299 | rejected-kept | follow to BLOW_FOLLOW_LOW .2 over feet (296); overhead .3, onto crown level, no step (289); stopped on the crown, arm overhead (282); land at headTop (281)
 runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_PITCH,_SPEED,_LIFT,_MAX,_MIN; x kb x shoveResponse, no topple) | .6 s hold .28 pitch 1.3 head away (sign fixed); min 4.5/5.0, front-half straight back | 291 | approved | pitch .8 toward striker (sign bug), min 1.6/4.4 (289); no floor (287)
 simulationSystem.ts:wall lets go of a thrown man (isBlowThrown: no slot snap/bracing; wall line = median depth of men not thrown) | median | 291 | approved | mean depth of all, thrown man snapped back
 proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; THROWS_HELD_PROP javelin, bomb, stone) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .5 | 283 | approved | javelin, bomb (282); let-go .38, javelin only (281)
@@ -50,11 +50,10 @@ projectileSystem.ts:flying sword (SWORD_BLADE_LONG,_WIDE,_GUARD_WIDE,_GRIP_LONG,
 propBuilder.ts:javelin (JAVELIN_LONG,_HEAD_LONG,_HEAD_WIDE,_BARB_LONG,_BARB_SWEEP; dark iron leaf, red binding, grip near butt) | .4 s, head .13 x .09 thin x .45, barbs .06 swept .45 | 291 | approved | shared spear: 1.0 s pole, small steel tip
 propBuilder.ts:bomb (BOMB_FISTS,_NECK,_FUSE; BOMB_SEAT_DOWN,_FORWARD,_TURN; offhand bomb kept) | 2.2 fists, neck .22 fuse .32; seat 1.15/.35 turn 1.7 | 293 | approved | one .15 s ball on the throw grip
 propBuilder.ts:dynamite (DYNAMITE_COLS,_ROWS,_STICK_WIDE,_LONG,_BAND,_SPARK,_SPARK_RAYS; top at .155 s) | 3x2 .075 x .38 s, bands .17; spark .075 s 6 rays | 296 | approved | no spark (295); 3 sticks in a row .05 x .26 s (284); bomb ball .15 s
-propBuilder.ts:lockbox + carry (LOCKBOX_SIZE,_LID,_IRON,_BAND,_PLATE; _carryBoulder at hands midpoint, square to torso) | .26 x .16 x .16 s, lid .35; iron .13,.14,.17 | 295 | approved | short hand sword at the hip
-proceduralAnimation.ts:lockbox arms (LOCKBOX_CARRY raise,out,turn,elbow; elbows out, forearms in round it) | .15, .32, .6, -1.85 | 298 | rejected | [P] turn .8 out .25 rejected 298 (box placed from hands); BOULDER_CARRY
-proceduralAnimation.ts:in-reach press beat (PRESS_CLUB_COCK, PRESS_AIM_ARM,_ELBOW, PRESS_BOARD_LINE, PRESS_DOWN_MIN,_MAX) | cock -1.05; arm 1.0; elbow -1.7/-.25; line .25; down .6-1.25 | 297 | approved | cock CLUB_COCK*.9, landed PRESS_BLOW_CLUB 1.2 (above level)
+propBuilder.ts:lockbox + carry (LOCKBOX_SIZE,_LID,_IRON,_BAND,_PLATE; _lockboxAnchor torso-fixed, NAVEL .35 FRONT .55 of shoulder ht) | .26 x .16 x .16 s, lid .35 | 299 | approved | hands midpoint (295); short hand sword at the hip
+proceduralAnimation.ts:lockbox arms (LOCKBOX_CARRY IK start; DLS reach to box ends, GRIP .06, 8 steps) | .15, .32, .6, -1.85 | 299 | approved | fixed pose (298); [P] turn .8 out .25 rejected 298 (box placed from hands); BOULDER_CARRY
+proceduralAnimation.ts:in-reach press beat (PRESS_CLUB_COCK, PRESS_AIM_ARM,_ELBOW, PRESS_BOARD_LINE, CONTACT_MIN_FALL) | cock -1.05; arm 1.0; elbow -1.7/-.25; line .25; _contactOn fall .2 | 299 | rejected-kept | down .6-1.25 fixed arc (297); cock CLUB_COCK*.9, landed PRESS_BLOW_CLUB 1.2 (above level)
 proceduralAnimation.ts:press mark held (PRESS_MARK_HOLD; marked heavy_swing winds to PRESS_CLUB_COCK, recover stays landed) | 1.5 s | 298 | approved | mark dropped on the first out-of-reach call; swing to CLUB_COCK
 propBuilder.ts:boulder (BOULDER_WIDE,_SQUASH,_COLOR; faceted icosphere, thrown copy flies) | .26 s, y .88 z .94, .34,.31,.28 lit .15 | 292 | approved | head-sized smooth sphere .12 s
 proceduralAnimation.ts:two-hand boulder carry + heave (BOULDER_CARRY,_DIP,_HEAVE; rock at hands midpoint) | carry -.6/.42/-.75; dip .25 trunk .55 knee .7; heave -2.4 trunk -.25 | 292 | approved | one-arm overhand throw (THROW_*)
 
-mapBuilder.ts:oakClump (theme.fieldOaks; OAK_CLUMP, _SPREAD, _TALL, _SHRINK, _LEAF, _DARK; growOak shared with oakRing) | 3-4 oaks, spread 2.6, tall 7, shrink .16; leaf .46,.64,.22 dark .3,.48,.17 | 273 | approved | ball on stalk, canopy grass x.8
