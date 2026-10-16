@@ -281,14 +281,16 @@ const BOARD_OFF_HOLD = 0.25;
 const BOARD_OFF_FLING = { out: 1.4, back: 0.6 };
 const BOARD_OFF_BUCKLE = { thigh: 0.9, knee: 1.6, sink: 0.35 };
 // Thrown back off his feet by a heavy blow, hip-led (trailer_3_sheet_01 r2c3, the red man leaving the clubbers, read off the frame: he goes seat-first, the
-// pelvis the lowest point of him and the one the blow carries; the trunk is tipped ~57 deg from upright the way he goes, head still above the hips; one leg
-// trails straight down and a little the way he goes, ~40 deg from vertical; the other knee is kicked up toward the striker to hip height, the shin hanging;
-// arms out wide). The root's pitch (RuntimeUnit BLOW_THROW_TRUNK, about the root origin at his feet) is turned into a pitch about the pelvis by anchoring
+// pelvis the lowest point of him and the one the blow carries; the trunk is tipped ~53 deg from upright the way he goes, head still above the hips; one leg
+// trails straight down and a little the way he goes, ~40 deg from vertical; the other leg is flung back toward the striker near straight, the thigh ~20 deg
+// under level and the shin carrying on its line, not folded under him (the tile's man flies face-first with that hip extended, so his shin rises a little off the thigh line; struck from the front ours flies back with the hip flexed, and a near-straight knee is the nearest match); arms out wide). Measured in the flight plane by the pose bench
+// (scratch probe, one clubber on one man in the open): hip-to-neck tilt, kicked thigh and shin angles at 336 ms after the land. The root's pitch (RuntimeUnit BLOW_THROW_TRUNK, about the root origin at his feet) is turned into a pitch about the pelvis by anchoring
 // the hip THROWN.seat of its standing height straight over the root (an offset in the root frame, undone at the top of the next update like the blow lunge),
 // and the thighs are laid out in the flight frame, not swept by a fixed amount: the trailing thigh .legTrail rad from straight down toward where he goes
-// and the kicked one .legKick (past horizontal toward the striker), each as a world angle the root's live pitch is taken out of, knees .kneeTrail/.kneeKick.
-// Shoulders out .armsOut and back .armsBack rad, elbows straight, trunk .trunk and head .head rad over the root's pitch. Laid on the land frame, eased out
-// with the body's throw.
+// and the kicked one .legKick (toward the striker), each as a world angle the root's live pitch is taken out of, knees .kneeTrail/.kneeKick.
+// Shoulders out .armsOut and back .armsBack rad, elbows straight, trunk .trunk and head .head rad over the root's pitch, SET over every trunk layer under it
+// (the walk's run lean, the press crouch and the flinch all added forward pitch, and a man flying back at 4.5 m/s still runs his gait: the trunk stood
+// 8-26 deg off upright on the bench for the root's 57). Laid on the land frame, eased out with the body's throw.
 // A caster's missile leaves his staff's head at the end of the drive, when the staff is thrust level at the enemy (units/legacy.wizard.png: arm out straight,
 // staff level along it, the fireball off its head), CAST_LOOSE of the cast in; the staff stays thrust there to CAST_HOLD, not chopped down after it.
 const CAST_LOOSE = 0.68;
@@ -301,7 +303,7 @@ const CAST_LEVEL_TIP = new Vector3(0, 0.1, 1).normalize();
 const CAST_RAISE_UP = 0.4;
 const CAST_RAISE_ARM = { raise: -2.9, out: 0.32, elbow: -0.12 };
 const CAST_RAISE_TIP = new Vector3(0.15, 1, 0.3).normalize();
-const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0.1, head: 0.1, seat: 0.92, legTrail: 0.7, legKick: -1.9, kneeTrail: 0.15, kneeKick: 1.4 };
+const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0, head: 0.1, seat: 0.92, legTrail: 0.7, legKick: -1.22, kneeTrail: 0.15, kneeKick: 0.1 };
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -1393,8 +1395,8 @@ export class ProceduralAnimator {
       b.leftShoulder.rotation.z -= Math.max(0, THROWN.armsOut - BOARD_OFF_FLING.out * off) * thrown;
       b.rightShoulder.rotation.x += THROWN.armsBack * thrown;
       b.rightElbow.rotation.scaleInPlace(1 - thrown);
-      b.torso.rotation.x -= THROWN.trunk * thrown;
-      b.neck.rotation.x -= THROWN.head * thrown;
+      b.torso.rotation.x += (-THROWN.trunk - b.torso.rotation.x) * thrown;
+      b.neck.rotation.x += (-THROWN.head - b.neck.rotation.x) * thrown;
       // Thighs as world angles from straight down, positive the way he goes (-z, away from the striker who faced him): a hip rotation adds to the root's
       // pitch about the same axis, so the root's live pitch is taken out of each
       const trail = THROWN.legTrail - r.x;
