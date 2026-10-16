@@ -282,3 +282,4 @@ iter 280 | re-audit; [S] overhead-blow (user un-defer, attempt 2) | 1/1 approved
 iter 281 | [S] overhead-blow-stagger, [S] held-prop-release (+ evidence 259bbec; re-audit: vfx tier 3 first scored 0/8) | 2/2 approved | passes 68/77 -> 68/77
 iter 282 | [S] overhead-blow-crown, [S] held-bomb-release, [P] throw-let-go-late | 3/3 approved | passes 68/77 -> 68/77
 iter 283 | [S] head-snap-under-crown, [S] stoner-held-rock-release | 1/2 approved | passes 68/77 -> 68/77
+iter 284 | [S] board-off-under-blow, [S] dynamite-stick (+ evidence) | 2/2 approved | passes 68/77 -> 68/77
