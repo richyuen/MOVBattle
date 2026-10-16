@@ -68,6 +68,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
 // A swordcaster's sword hangs over his head this long, point on the man, before it flies (units/spooky.swordcaster: swords float round him)
 const SWORD_HOVER = 0.7;
+// A ring sword rises to this far over the caster's head before it flies ([S] ring-sword-rises)
+const SWORD_RISE_OVER = 0.25;
 
 /** The head (orb) of the staff in a caster's hand, where his own missile is lit (vfx tier 3, units/legacy.wizard); null when he holds no staff. */
 function staffHeadOf(unit: RuntimeUnit): TransformNode | null {
@@ -1538,7 +1540,7 @@ export class SimulationSystem {
           );
         } else if (resolveProjectileShape(attacker, attackProfile) === "sword") {
           // A swordcaster's sword is one of those that stand round him ([R] swordcaster-blade-ring): the blade of his ring nearest the man is lifted out
-          // of it, hangs there SWORD_HOVER s turning its point onto him, then flies point first. No ring left (all out): one appears over his head.
+          // of it, hangs SWORD_HOVER s rising to over his head and turning its point onto him, then flies point first from there. No ring left (all out): one appears over his head.
           const head = attacker.body.headTop;
           const chain: TransformNode[] = [];
           for (let n: Node | null = head; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
@@ -1546,7 +1548,7 @@ export class SimulationSystem {
           const lifted = launchRingSword(attacker.body, target.position);
           this.projectileSystem.spawnProjectile(
             "sword", lifted?.at ?? head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
-            undefined, SWORD_HOVER, lifted ? { originLift: 0, hover: true, size: lifted.size } : { originLift: 0.35, hover: true },
+            undefined, SWORD_HOVER, lifted ? { originLift: 0, hover: true, size: lifted.size, riseTo: head.getAbsolutePosition().y + SWORD_RISE_OVER } : { originLift: 0.35, hover: true },
           );
         } else if (harpoonMuzzleOf(attacker)) {
           // The harpoon leaves the gun's muzzle at the hip, trailing its rope back to it

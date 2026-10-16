@@ -42,10 +42,16 @@ interface ActiveProjectile {
   hover?: boolean;
   /** A hovering sword: its whole hover, seconds. It is lifted out of the ring point up and turned onto the man over the first SWORD_TURN_IN of it. */
   hoverFor?: number;
+  /** A hovering sword's rise: from the height it was lifted out of the ring at to this world height, over SWORD_RISE_IN of its hover. */
+  riseFrom?: number;
+  riseTo?: number;
 }
 
 // A sword lifted out of the swordcaster's ring stands point up; it is turned onto the man over this long of its hover
 const SWORD_TURN_IN = 0.3;
+// ...and rises from its place in the ring to over his head (units/spooky.swordcaster: the airborne blade rides at head height above the ring) over this long,
+// so it flies from up there and not from his shins
+const SWORD_RISE_IN = 0.45;
 
 /** A soft smoke puff left hanging in a cannonball's wake. */
 // A gun's muzzle smoke (see spawnMuzzleFlash): how many soft puffs make the cloud.
@@ -91,6 +97,8 @@ interface ProjectileSpawnOptions {
   hover?: boolean;
   /** World size factor of the missile (a ring sword flies at the size it stood in the ring). */
   size?: number;
+  /** A hovering sword rises to this world height while it hangs, and flies from there. */
+  riseTo?: number;
 }
 
 interface MuzzleFlashOptions {
@@ -259,6 +267,8 @@ export class ProjectileSystem {
       tether: options.tether,
       hover: options.hover,
       hoverFor: options.hover ? delay : undefined,
+      riseFrom: options.hover && options.riseTo !== undefined ? mesh.position.y : undefined,
+      riseTo: options.hover ? options.riseTo : undefined,
     });
     const spawned = this._active[this._active.length - 1];
     if (spawned.rope) this._layRope(spawned);
@@ -337,8 +347,12 @@ export class ProjectileSystem {
 
       // Delayed projectile: hide until delay expires
       if (p.elapsed < 0 && p.hover) {
-        // Hanging over the caster: point turned on the man, rising a little as it is readied
+        // Hanging over the caster: lifted from its place in the ring to over his head, point turned on the man; it flies from where it has risen to
         if (!p.target.isDead) p.targetPos.copyFrom(p.target.position);
+        if (p.riseFrom !== undefined && p.riseTo !== undefined) {
+          const r = Math.min(1, Math.max(0, (p.elapsed + (p.hoverFor ?? 0)) / SWORD_RISE_IN));
+          p.origin.y = p.riseFrom + (p.riseTo - p.riseFrom) * r * r * (3 - 2 * r);
+        }
         const aim = p.targetPos.add(new Vector3(0, p.targetLift, 0)).subtract(p.origin);
         p.mesh.rotation.y = Math.atan2(aim.x, aim.z);
         // From point up, as it stood in the ring, round onto the man
