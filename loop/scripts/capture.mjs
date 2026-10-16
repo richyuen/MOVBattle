@@ -333,12 +333,16 @@ async function main() {
             for (let ms = 0; ms < 4000; ms += 16) {
               window.advanceTime(16);
               const h = window.game.getHitLog().find((e) => /clubber|chieftain/.test(e.attackerUnit));
-              if (h) return { ms, ...h };
+              // Shoot 128 ms after the landing (club still held down on him), when the man it threw is in the air, not on the land frame itself
+              if (h) {
+                for (let k = 0; k < 8; k++) window.advanceTime(16);
+                return { ms, ...h };
+              }
             }
             return null;
           });
           summary.notes.push(hit
-            ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} at +${hit.ms} ms`
+            ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} landed at +${hit.ms} ms, shot 128 ms after the landing`
             : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
           if (hit) await shot(page, "press_clubbers_hit");
           // The same frame, side-on to the blow and from above the file-mates' helms: striker's fist, club and the struck man's helm in profile, the camera
