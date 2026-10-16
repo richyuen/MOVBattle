@@ -48,6 +48,9 @@ const BLOW_THROW_SPEED = 0.75;
 const BLOW_THROW_LIFT = 1.0;
 const BLOW_THROW_SPEED_MAX = 3.5;
 const BLOW_THROW_LIFT_MAX = 3.2;
+// However braced or heavy he is, a landed blow puts daylight under his feet: at least BLOW_THROW_LIFT_MIN m/s up and BLOW_THROW_SPEED_MIN m/s back
+const BLOW_THROW_LIFT_MIN = 4.4;
+const BLOW_THROW_SPEED_MIN = 1.6;
 
 export class RuntimeUnit {
   private static _nextRuntimeId = 1;
@@ -469,10 +472,10 @@ export class RuntimeUnit {
     this._staggerTimer = Math.max(this._staggerTimer, BLOW_THROW_SECONDS);
     // Thrown back and up: the feet leave the ground
     const push = knockback * this._crowdPhysicsProfile.shoveResponse;
-    const speed = Math.min(BLOW_THROW_SPEED_MAX, push * BLOW_THROW_SPEED);
+    const speed = Math.max(BLOW_THROW_SPEED_MIN, Math.min(BLOW_THROW_SPEED_MAX, push * BLOW_THROW_SPEED));
     this._velocity.x = this._blowStaggerDir.x * speed;
     this._velocity.z = this._blowStaggerDir.z * speed;
-    this._velocity.y = Math.max(this._velocity.y, Math.min(BLOW_THROW_LIFT_MAX, push * BLOW_THROW_LIFT));
+    this._velocity.y = Math.max(this._velocity.y, Math.max(BLOW_THROW_LIFT_MIN, Math.min(BLOW_THROW_LIFT_MAX, push * BLOW_THROW_LIFT)));
     this._grounded = false;
     // His board is knocked off his face, arms flung out and legs gone from under him, on this frame too
     this.animator.knockBoardOff();

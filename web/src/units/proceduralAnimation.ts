@@ -179,6 +179,14 @@ const BLOW_LUNGE = { front: -0.4, back: 0.3, knee: 0.1 };
 const BLOW_AIM_SLACK = 2.5;
 // A flinch holds its full snap this long before it eases off (see update)
 const FLINCH_HOLD = 0.12;
+// The blow does not stop on the crown (trailer_3_sheet_01 r2c3: the club ends low after its arc, the striker bent into it): from the landing the fist goes on
+// down its arc, over BLOW_FOLLOW s, from straight up to BLOW_FOLLOW_ARM rad past the vertical toward the man (forward and below level), the trunk pitched a
+// further BLOW_FOLLOW_PITCH into it, and the weapon head runs on from the crown down to BLOW_FOLLOW_LOW of his standing height over his feet, where it is
+// held out the rest of BLOW_HOLD.
+const BLOW_FOLLOW = 0.12;
+const BLOW_FOLLOW_ARM = 2.05;
+const BLOW_FOLLOW_PITCH = 0.3;
+const BLOW_FOLLOW_LOW = 0.2;
 
 // Overhand throw (trailer_3_sheet_01 r3c3: the spear in flight, the thrower's arm out ahead and the hand empty; units/tribal.spear_thrower): through the windup the
 // throwing arm goes up and back until the fist is behind the head (THROW_COCK: shoulder raise, out, elbow folded, chest turned back and leant away, the other arm
@@ -347,11 +355,14 @@ export class ProceduralAnimator {
     }
     this._aimWeight = 0;
     if (w <= 0.01 || !mark) return;
+    // How far past the landing the blow has followed through (BLOW_FOLLOW)
+    const fu = Math.max(0, Math.min(1, (this._blowClock - this._blowLandsAt) / BLOW_FOLLOW));
+    const follow = fu * fu * (3 - 2 * fu);
     const b = this._body;
     // The pose this frame, top down, so the shoulder and the hand are where this frame puts them and not where the last one did
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
-    b.torso.rotation.x += (BLOW_PITCH - b.torso.rotation.x) * w;
+    b.torso.rotation.x += (BLOW_PITCH + BLOW_FOLLOW_PITCH * follow - b.torso.rotation.x) * w;
     // He comes up out of the press crouch into the blow, legs long in a lunge (r2c3), so the club is brought down from over his own head and not poked up from the board rim
     b.leftHip.rotation.x += (BLOW_LUNGE.front - b.leftHip.rotation.x) * w;
     b.rightHip.rotation.x += (BLOW_LUNGE.back - b.rightHip.rotation.x) * w;
@@ -372,7 +383,8 @@ export class ProceduralAnimator {
     // weapon always starts its fall from above. Rest hangs down -y in the shoulder's parent; rotation.x a turns it to (0, -cos a, -sin a)
     const toward = new Vector3(head.x - shoulder.x, 0, head.z - shoulder.z);
     if (toward.lengthSquared() < 1e-6) toward.set(0, 0, 1);
-    const up = toward.normalize().scale(Math.sin(BLOW_OVERHEAD)).addInPlace(new Vector3(0, Math.cos(BLOW_OVERHEAD), 0));
+    const swing = BLOW_OVERHEAD + (BLOW_FOLLOW_ARM - BLOW_OVERHEAD) * follow;
+    const up = toward.normalize().scale(Math.sin(swing)).addInPlace(new Vector3(0, Math.cos(swing), 0));
     const parent = b.rightShoulder.parent as TransformNode;
     const armDir = Vector3.TransformNormal(up, Matrix.Invert(parent.getWorldMatrix())).normalize();
     const pitch = Math.atan2(-armDir.z, -armDir.y);
@@ -382,7 +394,7 @@ export class ProceduralAnimator {
     for (const n of chain) n.computeWorldMatrix(true);
     // A man whose crown stands over the raised fist is leapt at (r2c3: the clubber comes off his feet into the blow): the striker springs up until his fist is
     // BLOW_DROP over that crown, at most BLOW_LEAP of his own standing height, so the weapon still falls onto the helm and not into the face under it
-    const need = head.y + BLOW_DROP * scale - b.rightHand.getAbsolutePosition().y;
+    const need = (head.y + BLOW_DROP * scale - b.rightHand.getAbsolutePosition().y) * (1 - follow);
     if (need > 0) {
       const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
       this._hipRest ??= b.hip.position.y;
@@ -394,7 +406,10 @@ export class ProceduralAnimator {
     // leap, it comes down on him BLOW_DROP under the fist, the shaft running on past him
     const hand = b.rightHand.getAbsolutePosition();
     const onto = head.y <= hand.y - BLOW_DROP * scale ? head : new Vector3(head.x, hand.y - BLOW_DROP * scale, head.z);
-    const dir = onto.subtract(hand).normalize();
+    // Followed through, the head runs on down him to low over his feet
+    const ground = b.root.getAbsolutePosition().y;
+    const end = follow > 0 ? Vector3.Lerp(onto, new Vector3(head.x, ground + (head.y - ground) * BLOW_FOLLOW_LOW, head.z), follow) : onto;
+    const dir = end.subtract(hand).normalize();
     this._aimTip = Vector3.TransformNormal(dir, Matrix.RotationY(-b.root.rotation.y)).normalize();
     this._aimWeight = w;
     this._clubHold = Math.max(this._clubHold, w);
