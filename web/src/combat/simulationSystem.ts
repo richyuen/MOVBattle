@@ -145,8 +145,8 @@ interface UnitPathState {
 }
 
 export class SimulationSystem {
-  /** Melee blows landed, newest last, for evidence captures that shoot the frame a blow lands on. Capped at 200. */
-  readonly hitLog: Array<{ t: number; attackerUnit: string; targetUnit: string; x: number; y: number; z: number }> = [];
+  /** Melee blows landed, newest last, for evidence captures that shoot the frame a blow lands on: the striker's impact point and the struck man's head. Capped at 200. */
+  readonly hitLog: Array<{ t: number; attackerUnit: string; targetUnit: string; x: number; y: number; z: number; head: { x: number; y: number; z: number } }> = [];
   private _units: RuntimeUnit[] = [];
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
@@ -1522,7 +1522,12 @@ export class SimulationSystem {
     // ...and under a heavy weapon he goes back whole, from the feet, whether the blow was held for the drop or struck at once from a swing the walk cut short
     if (attacker.animator.defaultAttackMotion === "heavy_swing") target.staggerFromBlow(attacker.position);
     if (this.hitLog.length >= 200) this.hitLog.shift();
-    this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z });
+    // His pose was written after the last render: bring the chain down to the head up to date before reading it
+    const chain: TransformNode[] = [];
+    for (let n: Node | null = target.body.headTop; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const head = target.body.headTop.getAbsolutePosition();
+    this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z, head: { x: head.x, y: head.y, z: head.z } });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);

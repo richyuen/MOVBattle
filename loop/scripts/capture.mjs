@@ -341,9 +341,10 @@ async function main() {
             ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} at +${hit.ms} ms`
             : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
           if (hit) await shot(page, "press_clubbers_hit");
-          // The same frame, side-on and close on the blow: the striker's club and the head it is struck at fill the shot instead of hiding behind the board line
+          // The same frame, close on the struck man's head (not the striker's) from over his own rank's shoulders: his helm against his file-mates' on either side,
+          // the striker and his club beyond. Side-on, a man struck mid-line is hidden behind his file.
           if (hit) {
-            await page.evaluate((h) => window.game.frameCamera({ x: h.x + 0.55, y: 1.3, z: h.z }, 2.6, -Math.PI / 2 - 0.2, Math.PI / 2.2), hit);
+            await page.evaluate((h) => window.game.frameCamera({ x: h.head.x, y: h.head.y + 0.2, z: h.head.z }, 3.4, 0.3, Math.PI / 2.6), hit);
             await shot(page, "press_clubbers_blow");
           }
         }
