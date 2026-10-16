@@ -614,22 +614,16 @@ export class ProceduralAnimator {
   }
   private _boardOff = 0;
 
-  /**
-   * A heavy blow has thrown him off his feet: arms flung out wide, legs laid out in the flight frame (THROWN), full for `hold` s of `seconds`. `way` is the
-   * way he goes in his own facing frame: +1 backward (struck from his front, the kicked knee comes up ahead of him), -1 forward (struck from behind, it comes
-   * up behind him); the thighs are laid out against it, so a man thrown either way reads the same in profile.
-   */
-  throwBack(seconds: number, hold: number, way: 1 | -1 = 1): void {
+  /** A heavy blow has thrown him back off his feet: arms flung out wide, legs swept forward from under him (THROWN), full for `hold` s of `seconds`. */
+  throwBack(seconds: number, hold: number): void {
     if (this._state === AnimState.Dead) return;
     this._thrown = seconds;
     this._thrownSeconds = seconds;
     this._thrownHold = hold;
-    this._thrownWay = way;
   }
   private _thrown = 0;
   private _thrownSeconds = 1;
   private _thrownHold = 0;
-  private _thrownWay: 1 | -1 = 1;
   // Last frame's hip anchor of the throw (THROWN.seat), in the root frame: taken off the hip at the top of the next update
   private readonly _thrownSeat = new Vector3(0, 0, 0);
   private _thrownWeight(): number {
@@ -1401,11 +1395,10 @@ export class ProceduralAnimator {
       b.rightElbow.rotation.scaleInPlace(1 - thrown);
       b.torso.rotation.x -= THROWN.trunk * thrown;
       b.neck.rotation.x -= THROWN.head * thrown;
-      // Thighs as world angles from straight down, positive the way he goes (-z when thrown backward by a striker who faced him; mirrored by _thrownWay when
-      // he was struck from behind and goes +z, so the kicked knee still comes up toward the striker): a hip rotation adds to the root's pitch about the
-      // same axis, so the root's live pitch is taken out of each
-      const trail = THROWN.legTrail * this._thrownWay - r.x;
-      const kick = THROWN.legKick * this._thrownWay - r.x;
+      // Thighs as world angles from straight down, positive the way he goes (-z, away from the striker who faced him): a hip rotation adds to the root's
+      // pitch about the same axis, so the root's live pitch is taken out of each
+      const trail = THROWN.legTrail - r.x;
+      const kick = THROWN.legKick - r.x;
       b.rightHip.rotation.x += (trail - b.rightHip.rotation.x) * thrown;
       b.leftHip.rotation.x += (kick - b.leftHip.rotation.x) * thrown;
       b.rightKnee.rotation.x += (THROWN.kneeTrail - b.rightKnee.rotation.x) * thrown;

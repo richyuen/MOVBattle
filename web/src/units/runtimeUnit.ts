@@ -498,10 +498,7 @@ export class RuntimeUnit {
     this.body.root.rotation.z = z;
     // His board is knocked off his face, arms flung out and legs laid out in the flight frame, on this frame too
     this.animator.knockBoardOff();
-    // The legs are laid out against the way he goes: a man thrown backward (struck from his front) kicks a knee up ahead of him toward the striker, one
-    // thrown forward (struck from behind) kicks it up behind him; a man thrown straight sideways goes as if backward
-    const forward = Vector3.Dot(this._blowStaggerDir, this._getFacingVector());
-    this.animator.throwBack(BLOW_THROW_SECONDS, BLOW_THROW_HOLD, forward > 0.05 ? -1 : 1);
+    this.animator.throwBack(BLOW_THROW_SECONDS, BLOW_THROW_HOLD);
     this.animator.update(0);
   }
 
