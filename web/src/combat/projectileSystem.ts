@@ -32,6 +32,8 @@ interface ActiveProjectile {
   trailStarted?: boolean;
   /** Cannonball only: seconds since the last smoke puff was left behind it. */
   puffClock?: number;
+  /** A thrown held prop: from its middle to the root of its head, for where it stands when it sticks. */
+  half?: number;
 }
 
 /** A soft smoke puff left hanging in a cannonball's wake. */
@@ -70,6 +72,8 @@ interface MuzzleFlash {
 interface ProjectileSpawnOptions {
   originLift?: number;
   targetLift?: number;
+  /** The prop that was in the thrower's hand: what flies is a copy of it, at its size, not a missile from the catalogue below. */
+  heldProp?: TransformNode;
 }
 
 interface MuzzleFlashOptions {
@@ -156,9 +160,16 @@ export class ProjectileSystem {
 
     const flightTime = Math.max(0.1, dist / speed);
     const palette = this._getTeamProjectilePalette(attackerTeam);
-    const mesh = this._buildProjectileMesh(shape, palette, attackerTeam);
+    const held = options.heldProp ? this._buildHeldMissile(options.heldProp, shape) : null;
+    const mesh = held?.root ?? this._buildProjectileMesh(shape, palette, attackerTeam);
     mesh.position = launchOrigin.clone();
     mesh.position.y += options.originLift ?? 1.0;
+    if (held) {
+      // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
+      const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
+      mesh.rotation.y = Math.atan2(dir.x, dir.z);
+      mesh.rotation.x = -Math.atan2(dir.y + 4 * arcHeight, Math.hypot(dir.x, dir.z)); // the arc's own climb off the hand
+    }
 
     // Add particle trail for specific projectile types
     let trailSystem: ParticleSystem | undefined;
@@ -195,6 +206,7 @@ export class ProjectileSystem {
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
       trailSystem, trailStarted,
+      half: held?.half,
     });
   }
 
@@ -394,7 +406,7 @@ export class ProjectileSystem {
   private _leaveAsLitter(p: ActiveProjectile, struck: boolean): boolean {
     if (p.shape !== "arrow" && p.shape !== "bolt" && p.shape !== "spear") return false;
     const mesh = p.mesh;
-    const half = p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.4 : 0.24; // from the shaft's middle to the root of its head
+    const half = p.half ?? (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.4 : 0.24); // from the shaft's middle to the root of its head
     const vary = (salt: number): number => {
       const v = Math.sin((p.origin.x + p.origin.z * 1.7 + this._litter.length) * 12.9898 + salt * 78.233) * 43758.5453;
       return v - Math.floor(v);
@@ -726,6 +738,32 @@ export class ProjectileSystem {
   }
 
   // A brief white streak off the back of a thrown shaft: a thin spike of its own, tapering to nothing behind it. Particles left along the path were lost against the pale sky.
+  /**
+   * A thrower's missile is the prop he held (trailer_3_sheet_01 r3c3, units/tribal.spear_thrower): a copy of the hand's prop, its own meshes, colours and world size,
+   * its long axis (the prop's +y, head up) laid along the flight's +z, with the spear's white streak behind it. The sim hides the held one as this leaves the hand.
+   */
+  private _buildHeldMissile(prop: TransformNode, shape: ProjectileShape): { root: TransformNode; half: number } {
+    const root = new TransformNode("proj", this._scene);
+    prop.computeWorldMatrix(true);
+    const scale = prop.absoluteScaling.clone();
+    const copy = prop instanceof Mesh ? prop.clone(`${prop.name}_thrown`, root) : prop.clone(`${prop.name}_thrown`, root);
+    let half = 0.5;
+    if (copy) {
+      copy.setEnabled(true);
+      copy.position.setAll(0);
+      copy.rotationQuaternion = null;
+      copy.rotation.set(Math.PI / 2, 0, 0);
+      copy.scaling.copyFrom(scale);
+      for (const m of copy.getChildMeshes(false)) m.setEnabled(true);
+      if (copy instanceof Mesh) {
+        copy.refreshBoundingInfo();
+        half = copy.getBoundingInfo().boundingBox.extendSize.y * scale.y;
+      }
+    }
+    if (shape === "spear") this._addStreak(root, half, 1.4);
+    return { root, half };
+  }
+
   private _addStreak(root: TransformNode, shaftHalf: number, length: number, width = 0.02): void {
     const streak = MeshBuilder.CreateCylinder("streak", { height: length, diameterTop: width, diameterBottom: 0, tessellation: 4 }, this._scene);
     streak.rotation.x = Math.PI / 2;

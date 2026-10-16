@@ -177,6 +177,15 @@ const BLOW_LUNGE = { front: -0.4, back: 0.3, knee: 0.1 };
 const BLOW_AIM_SLACK = 2.5;
 // A flinch holds its full snap this long before it eases off (see update)
 const FLINCH_HOLD = 0.12;
+
+// Overhand throw (trailer_3_sheet_01 r3c3: the spear in flight, the thrower's arm out ahead and the hand empty; units/tribal.spear_thrower): through the windup the
+// throwing arm goes up and back until the fist is behind the head (THROW_COCK: shoulder raise, out, elbow folded, chest turned back and leant away, the other arm
+// pointed at the foe); at the commit it whips over the top and forward, the elbow straightening, the chest turning through and pitching in, and the missile leaves
+// the fist THROW_LET_GO of the way through that swing, with the arm out ahead near shoulder height; the arm follows through low and the man comes back to the ready.
+const THROW_COCK = { raise: -2.9, out: 0.3, elbow: -1.6, turn: 0.4, lean: -0.15, lead: -1.3 };
+const THROW_FOLLOW = { raise: -0.35, lean: 0.35 };
+const THROW_SWING = 0.55;
+const THROW_LET_GO = 0.38;
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
 const FLINCH_PITCH = 0.85;
 const FLINCH_HEAD = 0.9;
@@ -222,6 +231,33 @@ export class ProceduralAnimator {
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
     this._attackMotion = motion ?? this.defaultAttackMotion;
+    // The next one is in the hand at the windup
+    if (this._thrownProp) {
+      this._thrownProp.setEnabled(true);
+      this._thrownProp = null;
+    }
+  }
+
+  // The held prop that left the hand at the last throw: hidden until the next windup
+  private _thrownProp: TransformNode | null = null;
+
+  /** A throw just started: seconds until the missile leaves the fist (THROW_LET_GO into the forward swing); 0 when no throw is running. */
+  throwReleasesIn(): number {
+    if (this._state !== AnimState.Attacking || this._attackMotion !== "throw") return 0;
+    const commit = this._resolveReleasePoint(0.45);
+    const letGo = commit + (1 - commit) * THROW_SWING * THROW_LET_GO;
+    return Math.max(0.001, letGo * this._attackDuration - this._attackTimer);
+  }
+
+  /** What the throwing hand holds now (its prop, not the mitt), or null when it is empty. */
+  heldThrowProp(): TransformNode | null {
+    return this._body.rightHand.getChildren().find((n): n is TransformNode => !/HandM$/.test(n.name) && (n as TransformNode).isEnabled()) as TransformNode | undefined ?? null;
+  }
+
+  /** The held prop has left the hand: it is not drawn there again until the next windup. */
+  letGoOfThrow(prop: TransformNode): void {
+    prop.setEnabled(false);
+    this._thrownProp = prop;
   }
 
   /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] target-aimed blow spec. */
@@ -2081,27 +2117,41 @@ export class ProceduralAnimator {
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
     const releasePoint = this._resolveReleasePoint(0.45);
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
+    const c = THROW_COCK;
     if (progress < releasePoint) {
-      const windUp = progress / Math.max(releasePoint, 0.001);
-      b.rightShoulder.rotation.x = -1.2 * windUp;
-      b.rightShoulder.rotation.z = 0.35 * windUp;
-      b.rightElbow.rotation.x = -0.65 * windUp;
-      b.leftShoulder.rotation.x = -0.08 * windUp;
-      b.torso.rotation.x = -0.12 * windUp;
-      b.torso.rotation.z = 0.1 * windUp;
-      b.rightHip.rotation.x = 0.12 * windUp;
+      // Up and back: the fist behind the head, the chest turned off the line and leant away, the other arm out at the foe
+      const u = progress / Math.max(releasePoint, 0.001);
+      const w = u * (2 - u);
+      b.rightShoulder.rotation.x = c.raise * w;
+      b.rightShoulder.rotation.z = c.out * w;
+      b.rightElbow.rotation.x = c.elbow * w;
+      b.leftShoulder.rotation.x = c.lead * w;
+      b.leftElbow.rotation.x = -0.12;
+      b.torso.rotation.y = c.turn * side * w;
+      b.torso.rotation.x = c.lean * w;
+      b.neck.rotation.y = -c.turn * side * w * 0.8;
+      b.leftHip.rotation.x = -0.25 * w;
+      b.rightHip.rotation.x = 0.2 * w;
     } else {
-      const release = (progress - releasePoint) / Math.max(1 - releasePoint, 0.001);
-      const eased = 1 - Math.pow(1 - release, 3);
-      b.rightShoulder.rotation.x = -1.2 + 1.9 * eased;
-      b.rightShoulder.rotation.z = 0.35 - 0.45 * eased;
-      b.rightElbow.rotation.x = -0.65 + 0.9 * eased;
-      b.leftShoulder.rotation.x = -0.08 + 0.24 * eased;
-      b.torso.rotation.x = -0.12 + 0.34 * eased;
-      b.torso.rotation.z = 0.1 - 0.16 * eased;
-      b.neck.rotation.x = 0.06 * eased;
+      // Over the top and forward through THROW_SWING of what is left, then back to the ready
+      const s = (progress - releasePoint) / Math.max(1 - releasePoint, 0.001);
+      const v = Math.min(1, s / THROW_SWING);
+      const f = v * v * (3 - 2 * v);
+      const r = s > THROW_SWING ? (s - THROW_SWING) / (1 - THROW_SWING) : 0;
+      const k = 1 - r * r * (3 - 2 * r);
+      b.rightShoulder.rotation.x = (c.raise + (THROW_FOLLOW.raise - c.raise) * f) * k;
+      b.rightShoulder.rotation.z = c.out * (1 - f) * k;
+      b.rightElbow.rotation.x = c.elbow * Math.max(0, 1 - f * 1.5) * k - 0.1 * k;
+      b.leftShoulder.rotation.x = c.lead * (1 - f * 0.8) * k;
+      b.leftElbow.rotation.x = -0.12;
+      b.torso.rotation.y = c.turn * side * (1 - 2 * f) * k;
+      b.torso.rotation.x = (c.lean + (THROW_FOLLOW.lean - c.lean) * f) * k;
+      b.neck.rotation.y = -c.turn * side * (1 - 2 * f) * k * 0.8;
+      b.neck.rotation.x = 0.06 * f * k;
+      b.leftHip.rotation.x = -0.25 * k;
+      b.rightHip.rotation.x = 0.2 * (1 - f) * k;
     }
-    b.leftElbow.rotation.x = -0.12;
     if (progress >= 1) this._state = AnimState.Idle;
   }
 

@@ -1,4 +1,4 @@
-import { Color3, Vector3 } from "@babylonjs/core";
+import { Color3, Node, TransformNode, Vector3 } from "@babylonjs/core";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import {
   AttackType, TargetPriority,
@@ -60,6 +60,9 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
   if (profile.type === AttackType.Siege) return "stone";
   return null;
 }
+
+// Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower): it leaves the fist at the throw's let-go, not at the swing's start
+const THROWS_HELD_PROP = new Set(["javelin"]);
 
 function isFirearmUnit(unit: RuntimeUnit): boolean {
   const hint = unit.definition.weaponHint ?? "";
@@ -147,6 +150,7 @@ export class SimulationSystem {
   private _units: RuntimeUnit[] = [];
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
+  private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number }> = [];
   private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
   // A presser's distance to his foe at his last decision: while it is still closing he holds his heavy swing until he is at the man's shoulder.
   private _closingFrom = new Map<RuntimeUnit, number>();
@@ -253,6 +257,7 @@ export class SimulationSystem {
 
   beginSimulation(now: number): void {
     this._pendingBlows = [];
+    this._pendingThrows = [];
     this._closingFrom.clear();
     this._isRunning = true;
     this._now = now;
@@ -282,6 +287,7 @@ export class SimulationSystem {
     }
     // After the animation step, so the frame a blow lands on is the frame its club is down on the man
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
+    if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
 
     if (this.hazards.length > 0) {
       for (const unit of this._units) {
@@ -1471,6 +1477,12 @@ export class SimulationSystem {
             { originLift: originLiftForSource(smokeOriginInfo.source) },
           );
           this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
+        } else if (THROWS_HELD_PROP.has(attacker.definition.weaponHint ?? "") && attacker.animator.throwReleasesIn() > 0) {
+          // The windup has only started: what he holds leaves his hand at the let-go
+          this._pendingThrows.push({
+            attacker, target, shape: resolveProjectileShape(attacker, attackProfile) ?? "spear", damage, splashRadius, knockback,
+            leavesAt: now + attacker.animator.throwReleasesIn(),
+          });
         } else {
           this.projectileSystem.spawnProjectile(
             resolveProjectileShape(attacker, attackProfile) ?? "arrow",
@@ -1527,6 +1539,28 @@ export class SimulationSystem {
       this._landMeleeBlow(attacker, target, b.damage, b.splashRadius, b.knockback, now, attacker.getImpactOrigin().position);
       // ...and he goes back under it whole, from the feet
       target.staggerFromBlow(attacker.position);
+    }
+  }
+
+  /** Throws whose arm has come over to the let-go: the prop in the fist flies from where the fist is, and the hand is empty until the next windup. */
+  private _launchPendingThrows(now: number): void {
+    const due = this._pendingThrows.filter((t) => now >= t.leavesAt);
+    if (due.length === 0) return;
+    this._pendingThrows = this._pendingThrows.filter((t) => now < t.leavesAt);
+    for (const t of due) {
+      const { attacker, target } = t;
+      if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
+      const prop = attacker.animator.heldThrowProp();
+      // The pose was set this step: bring the hand's chain up to it before reading where the prop is
+      const chain: TransformNode[] = [];
+      for (let n: Node | null = prop ?? attacker.body.rightHand; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const from = (prop ?? attacker.body.rightHand).getAbsolutePosition().clone();
+      this.projectileSystem.spawnProjectile(
+        t.shape, from, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0,
+        { originLift: 0, heldProp: prop ?? undefined },
+      );
+      if (prop) attacker.animator.letGoOfThrow(prop);
     }
   }
 
