@@ -1586,7 +1586,6 @@ export class SimulationSystem {
     const landIn = attacker.blowLandsIn();
     if (landIn > 0) {
       attacker.aimBlowAt(target, landIn);
-      attacker.lungeInto(target, landIn);
       this._pendingBlows.push({ attacker, target, damage, splashRadius, knockback, landAt: now + landIn });
       return;
     }
