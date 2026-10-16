@@ -10,7 +10,7 @@ import { getMaterialFactory } from "../units/materialFactory";
 import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -124,6 +124,17 @@ const SWORD_KEY_COLOR = new Color3(0.6, 0.62, 0.66);
 // A harpoon's rope (units/pirate.harpooner): dark, thin as a finger, muzzle to harpoon
 const HARPOON_ROPE_WIDE = 0.035;
 const HARPOON_ROPE_COLOR = new Color3(0.13, 0.11, 0.1);
+// The harpoon itself: a short thick dark shaft (HARPOON_SHAFT_LONG, about twice a forearm) under a heavy dark iron head (HARPOON_HEAD_LONG x _WIDE, three
+// shaft widths across), with HARPOON_BARBS barbs swept back off its root, a ring at the tail where the rope is tied; no team tint
+const HARPOON_SHAFT_LONG = 0.5;
+const HARPOON_SHAFT_WIDE = 0.05;
+const HARPOON_HEAD_LONG = 0.24;
+const HARPOON_HEAD_WIDE = 0.15;
+const HARPOON_BARBS = 2;
+const HARPOON_BARB_LONG = 0.17;
+const HARPOON_BARB_SWEEP = 0.5; // rad back off the shaft
+const HARPOON_SHAFT_COLOR = new Color3(0.2, 0.16, 0.13);
+const HARPOON_IRON_COLOR = new Color3(0.16, 0.17, 0.19);
 
 export class ProjectileSystem {
   private _scene: Scene;
@@ -192,6 +203,7 @@ export class ProjectileSystem {
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
       case "leaves": speed = 12; arcHeight = dist * 0.12; break;
       case "sword": speed = 16; arcHeight = dist * 0.04; break;
+      case "harpoon": speed = 18; arcHeight = dist * 0.1; break;
     }
 
     const flightTime = Math.max(0.1, dist / speed);
@@ -681,6 +693,47 @@ export class ProjectileSystem {
         tip.material = this._getMat(`spear_tip_${attackerTeam}`, palette.primary);
         tip.parent = root;
         this._addStreak(root, 0.45, 1.4);
+        break;
+      }
+      case "harpoon": {
+        // A harpooner's missile (units/pirate.harpooner), its +z the point: shaft centred on the root, the head on its front end, barbs swept back off the head's root
+        const shaftMat = this._getMat("harpoon_shaft", HARPOON_SHAFT_COLOR);
+        const ironMat = this._getMat("harpoon_iron", HARPOON_IRON_COLOR, 0.05);
+        const shaft = MeshBuilder.CreateCylinder("harpoon_shaft", { height: HARPOON_SHAFT_LONG, diameter: HARPOON_SHAFT_WIDE, tessellation: 6 }, this._scene);
+        shaft.rotation.x = Math.PI / 2;
+        shaft.material = shaftMat;
+        shaft.parent = root;
+        const front = HARPOON_SHAFT_LONG / 2;
+        // The head: a heavy flat four-sided leaf, broad in the upright plane of its flight so its face is turned to a side-on eye
+        const head = MeshBuilder.CreateCylinder("harpoon_head", { height: HARPOON_HEAD_LONG, diameterTop: 0, diameterBottom: HARPOON_HEAD_WIDE, tessellation: 4 }, this._scene);
+        head.rotation.x = Math.PI / 2;
+        head.scaling.set(0.4, 1, 1);
+        head.position.z = front + HARPOON_HEAD_LONG / 2;
+        head.material = ironMat;
+        head.parent = root;
+        const socket = MeshBuilder.CreateCylinder("harpoon_socket", { height: 0.07, diameterTop: HARPOON_SHAFT_WIDE * 1.6, diameterBottom: HARPOON_SHAFT_WIDE * 1.2, tessellation: 6 }, this._scene);
+        socket.rotation.x = Math.PI / 2;
+        socket.position.z = front - 0.02;
+        socket.material = ironMat;
+        socket.parent = root;
+        // Barbs: flat iron spikes from the head's root, pointing back and out above and below, in the head's broad plane
+        for (let i = 0; i < HARPOON_BARBS; i++) {
+          const side = i % 2 === 0 ? 1 : -1;
+          const barb = MeshBuilder.CreateCylinder("harpoon_barb", { height: HARPOON_BARB_LONG, diameterTop: 0, diameterBottom: 0.045, tessellation: 4 }, this._scene);
+          barb.scaling.set(0.5, 1, 1);
+          // Its tip (+y) turned to point back along -z, tilted out by the sweep
+          barb.rotation.x = -Math.PI / 2 + side * HARPOON_BARB_SWEEP;
+          barb.position.set(0, side * (HARPOON_HEAD_WIDE * 0.35 + Math.sin(HARPOON_BARB_SWEEP) * HARPOON_BARB_LONG * 0.5), front - Math.cos(HARPOON_BARB_SWEEP) * HARPOON_BARB_LONG * 0.5 + 0.03);
+          barb.material = ironMat;
+          barb.parent = root;
+        }
+        // The rope's ring at the tail
+        const ring = MeshBuilder.CreateTorus("harpoon_ring", { diameter: 0.08, thickness: 0.022, tessellation: 8 }, this._scene);
+        ring.rotation.z = Math.PI / 2;
+        ring.position.z = -front - 0.03;
+        ring.material = ironMat;
+        ring.parent = root;
+        this._addStreak(root, front, 1.2);
         break;
       }
       case "bomb": {

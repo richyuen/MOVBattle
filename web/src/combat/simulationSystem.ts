@@ -1550,7 +1550,7 @@ export class SimulationSystem {
           for (let n: Node | null = muzzle; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
           for (const n of chain) n.computeWorldMatrix(true);
           this.projectileSystem.spawnProjectile(
-            resolveProjectileShape(attacker, attackProfile) ?? "spear", muzzle.getAbsolutePosition().clone(), target, damage, knockback, splashRadius,
+            "harpoon", muzzle.getAbsolutePosition().clone(), target, damage, knockback, splashRadius,
             attacker.team, this._units, undefined, 0, { originLift: 0, tether: muzzle },
           );
         } else {
