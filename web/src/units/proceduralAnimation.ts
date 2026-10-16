@@ -131,101 +131,68 @@ const CASTER_CROUCH = 0.3;
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
-// The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
-// cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
- * [S] club-cocked-in-press (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (the club arcs down through the man) and r3c1 (arm cocked well back over the
- * shoulder, then committed forward): a clubber in reach of the man he strikes (not a rank back) never holds his club straight up or level between blows.
- * - Cocked (heave + cock of the beat): fist up over his own head, elbow folded so the fist sits behind the crown, the club laid BACK over the shoulder,
- *   PRESS_CLUB_COCK rad from straight up (head back and up on a diagonal behind his crown).
- * - Landed (the slam's end, the rest and the impact): fist raised forward to about head height (PRESS_AIM_ARM), the club laid DOWN from it onto that man's
- *   board line (PRESS_BOARD_LINE of his height under his crown), solved onto him by _contactOn (press-landed-contact), so it comes down onto the board top or
- *   the head and never runs level across the chest.
- * - The slam sweeps the head from the cock up over the top and down onto him (the arc is blended through vertical, not across the front).
+ * [R] one-strike (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (a blue clubber over a red man: the club has arced down through him and its head
+ * ends low on him, the clubber bent ~35 deg at the waist over a long front leg) and r3c1 (the arm cocked well back over the shoulder, then committed
+ * forward). ONE mechanism (_strike) owns the weapon arm of every club and blade man with a foe marked: in reach, a rank or two back, closing, or in the
+ * sim's own swing. It replaces the press beat's arm, the ready cock and the old target-aimed blow, which each laid the weapon toward a man whatever his
+ * distance, so a man 2.5 m off took a club levelled in the air.
+ * - Cocked: upper arm STRIKE_COCK_ARM rad behind vertical (fist behind the crown), elbow STRIKE_COCK_ELBOW, weapon back over the shoulder STRIKE_COCK_ARC
+ *   from straight up (head behind and above his own crown), trunk arched back STRIKE_COCK_PITCH.
+ * - Slam: over the top and through vertical, slow off the cock and fastest at the bottom (x^2 over PRESS_BLOW_SLAM of the beat).
+ * - Landed: the weapon laid from the fist ACROSS a point on the man, falling at least STRIKE_FALL_MIN (~25 deg) below level so it comes down onto him and
+ *   never runs level or rises into his face: his crown when the fist stands over it, else the top of his board on his near face (PRESS_BOARD_LINE of his
+ *   height under the crown, CONTACT_FRONT out toward the striker). The arm is forward of vertical by whichever of STRIKE_ARM_TRY needs the least step and
+ *   then puts the fist nearest STRIKE_SPAN of the weapon from that point; a man taller than the striker is sprung at (hip up to STRIKE_LEAP of the
+ *   striker's height, the fist STRIKE_OVER of the man's height over his board top: r2c3's clubber is off his feet); elbow STRIKE_LAND_ELBOW, trunk pitched
+ *   STRIKE_LAND_PITCH (~25 deg; at most WALL_TRUNK_MAX in a wall), legs in a lunge (BLOW_LUNGE), and the hip carried toward him by up to STRIKE_STEP of
+ *   the striker's height when he stands a step past the fist and the weapon.
+ * - Gate: a man past that step is not struck AT. Closing on him the club is held cocked (a blade is carried as on the march); a rank back (an ally
+ *   between) the beat still swings, over the top to STRIKE_REAR_ARC forward of vertical over the man ahead, never levelled at a man out of reach.
+ * - Beat: the man's own (_pressBlow, ~2/3 of it landed); a sim swing re-times it, cocked by STRIKE_SWING_COCK of the time to its landing and slammed
+ *   after, so the head is on the man the frame the damage lands, and held there BLOW_HOLD.
  */
-const PRESS_CLUB_COCK = -1.05;
-const PRESS_AIM_ARM = 1.0;
-const PRESS_AIM_ELBOW = { cock: -1.7, land: -0.25 };
-const PRESS_BOARD_LINE = 0.25;
-/*
- * [S] press-landed-contact (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (the club arcs down through the man and stops on him): a landed club, in the
- * press beat and through a swing's BLOW_HOLD, is not laid at a fixed angle but solved onto a world point on the struck man (_contactOn), its shaft resting there:
- * - his crown, when the line from the raised fist falls onto it at least CONTACT_MIN_FALL below level;
- * - else the top of his board on his near face (PRESS_BOARD_LINE of his height under the crown, CONTACT_FRONT of it out toward the striker).
- * The swing's follow-through runs on from the crown to that board top and is held there, never down his axis to the turf at his feet.
- */
-const CONTACT_MIN_FALL = 0.2;
-const CONTACT_FRONT = 0.12;
-// press-club-lands-on-board: the lowest the pinned head may sit on his near face, in shares of his height under the crown (the foot of his board)
-const CONTACT_LOWEST = 0.6;
-/*
- * [S] press-mark-held (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (every club at the pile is cocked back or down on a man, none stands up): the in-reach
- * press beat outlives gaps in the sim's strike calls (a man shoved a step out of reach, a retarget): his man stays marked PRESS_MARK_HOLD seconds past the last
- * call and through any swing at him, so the beat keeps cocking back and landing down on him. While marked:
- * - the sim's own swing (heavy_swing) winds up to PRESS_CLUB_COCK, back over the shoulder, not to the near-upright CLUB_COCK, and after the drop the club stays
- *   down on his board line (_pressDownArc) instead of being heaved back up toward vertical;
- * - a clubber in the shove with no man marked (and not a rank back) carries the club in that same cock, never straight up.
- */
-const PRESS_MARK_HOLD = 1.5;
+const STRIKE_COCK_ARM = -0.35;
+const STRIKE_COCK_ELBOW = -1.7;
+const STRIKE_COCK_ARC = -1.05;
+const STRIKE_COCK_PITCH = -0.15;
+const STRIKE_ARM_TRY = [0.75, 1.05, 0.45, 0.15, 1.35];
+const STRIKE_SPAN = 0.9;
+const STRIKE_LEAP = 0.3;
+const STRIKE_OVER = 0.3;
+const STRIKE_FALL_MIN = 0.45;
+const STRIKE_REAR_ARC = 0.8;
+const STRIKE_LAND_ELBOW = -0.2;
+const STRIKE_LAND_PITCH = 0.45;
+const STRIKE_STEP = 0.45;
+const STRIKE_SWING_COCK = 0.72;
+// How fast the strike's weight comes on and off (per s), and the most the blow may rise in a second (the slam is never faster than this)
+const STRIKE_EASE = 8;
+const STRIKE_RISE = 12;
+// The striker's legs in the landed blow: front thigh forward, back thigh behind, knees near straight (hip/knee rotation.x)
+const BLOW_LUNGE = { front: -0.4, back: 0.3, knee: 0.1 };
+// The beat a man in reach strikes on, and the shares of it spent resting landed on him, heaving up off him, cocked, and slamming down (the rest is the
+// impact held). Landed is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 const PRESS_BLOW_BEAT_MIN = 1.5;
 const PRESS_BLOW_BEAT_MAX = 2.4;
 const PRESS_BLOW_REST = 0.38;
 const PRESS_BLOW_HEAVE = 0.14;
 const PRESS_BLOW_COCK = 0.1;
 const PRESS_BLOW_SLAM = 0.08;
-// A rear-rank clubber's resting blow between beats: this far down from the cock toward landed (1), the club laid forward over the man ahead (see readyBlow).
-const REAR_CLUB_REST = 0.85;
-// How far the arm comes down from the cock onto the man: the fist stops raised before the striker's face, so the club laid down from it lands on the board top or
-// the head in front, not level into the board at the belly.
-const PRESS_BLOW_ARM = 1.7;
-// The club's arc in that raised fist when landed: forward and a little down, across the board top or the head, not hanging to the ground.
-const PRESS_BLOW_CLUB = 1.2;
-/*
- * [R] target-aimed blow (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (blue clubbers on a red man) and r3c1 (every strike line ends on a body):
- * - The blow is struck AT a man, not along a fixed arc: on the frame it lands the weapon's head is on the struck man's head (crown or just over it, the shaft
- *   laid across it when the weapon is longer than the gap), whatever his height or how far off he stands, within arm + weapon reach.
- * - The weapon comes DOWN onto the man from above, never level or rising: onto his crown, or, a taller man, across his shoulders and board top under the
- *   fist (BLOW_DROP). The striker's near-straight arm (elbow ~0.15 rad) stands straight up over his own head in the world (BLOW_OVERHEAD), and he rises out of the press crouch into a long-legged lunge (BLOW_LUNGE); his trunk is
- *   pitched forward ~0.4 rad into the blow, never folded double (r2c3: the clubber bends at the waist roughly 30-45 deg, legs long under him).
- * - Weapons stay down on men for a good share of the beat, not snapped back up (r2c3 catches the club down, r3c1 every line on a body): after the swing the
- *   weapon is held on the man BLOW_HOLD s, easing off over its last BLOW_HOLD_FADE s.
- * - The struck man recoils on that same frame: head and trunk thrown back (the flinch, laid over every stance layer so a braced board man still goes back,
- *   held full FLINCH_HOLD s, and re-posed in the step the blow lands, see SimulationSystem._landMeleeBlow).
- * The windup is the swing's own; from BLOW_AIM_FROM of the time to the landing the weapon is brought round onto the man and is fully on him at BLOW_LAND of
- * the drop, when the sim lands the damage (blowLandsIn).
- */
+// A foe called in reach stays marked this long past the last call, so a man shoved a step out of reach is still struck at on the beat
+const PRESS_MARK_HOLD = 1.5;
+// Where a landed blow rests on a man whose crown stands at or over the fist (see _strike): the top of his board, this share of his height under his crown,
+// this share of it out of his axis toward the striker, and never lower than this share under the crown
+const PRESS_BOARD_LINE = 0.25;
+const CONTACT_FRONT = 0.12;
+const CONTACT_LOWEST = 0.6;
+// The share of the drop after the commit at which a sim swing's blow is on the man (blowLandsIn), and how long it is held there after
 const BLOW_LAND = 0.55;
-const BLOW_AIM_FROM = 0.75;
 const BLOW_HOLD = 0.6;
-const BLOW_HOLD_FADE = 0.15;
-const BLOW_ELBOW = -0.15;
-const BLOW_PITCH = 0.4;
-// The weapon falls on a man too tall to crown from the fist this far under the fist (r2c3: the club falls on the man from above), the mark this far over
-// the head top (BLOW_CROWN; hand-scale units)
-const BLOW_DROP = 0.25;
-// The weapon arm in the blow: straight up over his head, this far forward of vertical (rad)
-const BLOW_OVERHEAD = 0.5;
+// The mark the weapon's head lands on stands this far over the head-top mark (hand-scale units)
 const BLOW_CROWN = 0.04;
-// The weapon on the frame it lands falls at least this far below level (rad), onto the crown or on down through the shoulders and board; a man farther off than
-// the fist and that falling weapon reach is lunged at, the hip carried at most BLOW_STEP of the striker's standing height toward him (r2c3: the clubber steps
-// into the man, the club coming down through him)
-const BLOW_FALL = 0.95;
-const BLOW_STEP = 0.4;
-// Highest the striker springs to bring his fist over a taller man's crown, in shares of his own standing height (see _aimBlow)
-const BLOW_LEAP = 0.5;
-// The striker's legs in the blow: front thigh forward, back thigh behind, knees near straight (hip/knee rotation.x)
-const BLOW_LUNGE = { front: -0.4, back: 0.3, knee: 0.1 };
-// Farthest a man's head may be from the striker's shoulder, in weapon reaches + one arm, for the blow to be aimed at him at all
-const BLOW_AIM_SLACK = 2.5;
 // A flinch holds its full snap this long before it eases off (see update)
 const FLINCH_HOLD = 0.12;
-// The blow does not stop on the crown (trailer_3_sheet_01 r2c3: the club ends low after its arc, the striker bent into it): from the landing the fist goes on
-// down its arc, over BLOW_FOLLOW s, from straight up to BLOW_FOLLOW_ARM rad past the vertical toward the man (forward and below level), the trunk pitched a
-// further BLOW_FOLLOW_PITCH into it, and the weapon head runs on from the crown down onto his board top (see press-landed-contact), where it is held out the
-// rest of BLOW_HOLD.
-const BLOW_FOLLOW = 0.12;
-const BLOW_FOLLOW_ARM = 2.05;
-const BLOW_FOLLOW_PITCH = 0.3;
 
 // Overhand throw (trailer_3_sheet_01 r3c3: the spear in flight, the thrower's arm out ahead and the hand empty; units/tribal.spear_thrower): through the windup the
 // throwing arm goes up and back until the fist is behind the head (THROW_COCK: shoulder raise, out, elbow folded, chest turned back and leant away, the other arm
@@ -372,7 +339,7 @@ export class ProceduralAnimator {
     this._thrownProp = prop;
   }
 
-  /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] target-aimed blow spec. */
+  /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] one-strike spec (_strike). */
   aimBlowAt(mark: TransformNode | null, landsIn = 0): void {
     this._blowMark = mark;
     this._blowLandsAt = landsIn;
@@ -409,106 +376,163 @@ export class ProceduralAnimator {
   }
 
   /**
-   * The blow on the man (spec above): from early in the drop the weapon arm is brought round to point from the shoulder at his head and the weapon's head laid
-   * on it, the trunk pitched into it; held there after the swing, then let go. Overrides whatever the swing, shove or ready hold made of the arm.
+   * The one strike (spec at STRIKE_COCK_ARM): a club or blade man with a foe marked has his weapon arm, trunk and stride posed here, over the walk, the
+   * shove and the swing, from the cock back over the shoulder to the weapon's head pinned on the man; a man he cannot reach is not struck at in the air.
    */
-  private _aimBlow(dt: number): void {
-    let w = 0;
-    const mark = this._blowMark;
-    if (mark && !mark.isDisposed() && this._state !== AnimState.Dead && this._limp < 0.5 && this._blowLandsAt > 0) {
-      this._blowClock += dt;
-      const t = this._blowClock;
-      const land = this._blowLandsAt;
-      // From BLOW_AIM_FROM short of the landing the weapon comes round onto him, full at the landing, held BLOW_HOLD and let go over its last BLOW_HOLD_FADE
-      const from = land * BLOW_AIM_FROM;
-      const s = Math.max(0, Math.min(1, (t - from) / Math.max(0.001, land - from)));
-      w = t <= land ? s * s * (3 - 2 * s) : Math.max(0, Math.min(1, (land + BLOW_HOLD - t) / BLOW_HOLD_FADE));
-      if (w <= 0 && t > land) this._blowMark = null;
-    }
+  private _strike(dt: number): void {
+    const b = this._body;
     this._aimWeight = 0;
+    this._strikeCommit = 0;
     // Last frame's lunge comes off the hip first: nothing else poses the hip across the ground
     const lunged = this._blowLunge;
     if (lunged.x !== 0 || lunged.z !== 0) {
-      this._body.hip.position.subtractInPlace(lunged);
+      b.hip.position.subtractInPlace(lunged);
       lunged.setAll(0);
     }
-    if (w <= 0.01 || !mark) return;
-    // How far past the landing the blow has followed through (BLOW_FOLLOW)
-    const fu = Math.max(0, Math.min(1, (this._blowClock - this._blowLandsAt) / BLOW_FOLLOW));
-    const follow = fu * fu * (3 - 2 * fu);
-    const b = this._body;
-    // The pose this frame, top down, so the shoulder and the hand are where this frame puts them and not where the last one did
+    this._foeTimer -= dt;
+    this._strikeTimer -= dt;
+    this._restLowTimer -= dt;
+    this._blowClock += dt;
+    const live = (m: TransformNode | null): m is TransformNode => m !== null && !m.isDisposed() && m.isEnabled();
+    // The sim's own swing at a man, until its blow has been held on him; else the foe the decisions keep marking
+    const swing = live(this._blowMark) && this._blowLandsAt > 0 && this._blowClock <= this._blowLandsAt + BLOW_HOLD ? this._blowMark : null;
+    if (!swing) this._blowMark = null;
+    const foe = live(this._foe) && this._foeTimer > 0 ? this._foe : null;
+    const motion = this.defaultAttackMotion;
+    const able = (motion === "heavy_swing" || motion === "blade_slash") && this.attackStyle !== "mammoth" && this.walkStyle !== "quadruped"
+      && this._state !== AnimState.Dead && this._limp < 0.5 && this._thrownWeight() <= 0 && !!(this._carry ??= this._buildCarry()).weapon?.prop;
+    // A blade man is only struck with when in reach or swinging: closing, he carries his blade as he marches
+    const mark = able ? swing ?? (motion === "heavy_swing" || this._strikeTimer > 0 ? foe : null) : null;
+    if (mark) this._strikeMark = mark;
+    const held = mark ?? (able && live(this._strikeMark) ? this._strikeMark : null);
+    this._strikeW = held ? this._strikeW + ((mark ? 1 : 0) - this._strikeW) * Math.min(1, dt * STRIKE_EASE) : 0;
+    if (!held || this._strikeW <= 0.01) return;
+    const w = this._strikeW;
+    // The pose this frame, top down, and his head where he stands now: the sim steps without drawing, so cached world places can be strides behind
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
-    b.torso.rotation.x += (BLOW_PITCH + BLOW_FOLLOW_PITCH * follow - b.torso.rotation.x) * w;
-    // He comes up out of the press crouch into the blow, legs long in a lunge (r2c3), so the club is brought down from over his own head and not poked up from the board rim
-    b.leftHip.rotation.x += (BLOW_LUNGE.front - b.leftHip.rotation.x) * w;
-    b.rightHip.rotation.x += (BLOW_LUNGE.back - b.rightHip.rotation.x) * w;
-    b.leftKnee.rotation.x += (BLOW_LUNGE.knee - b.leftKnee.rotation.x) * w;
-    b.rightKnee.rotation.x += (BLOW_LUNGE.knee - b.rightKnee.rotation.x) * w;
     for (const n of chain) n.computeWorldMatrix(true);
-    // and his head where he stands now: the sim steps without drawing, so the mark's cached world place can be strides behind him
     const marks: TransformNode[] = [];
-    for (let n: TransformNode | null = mark; n; n = n.parent as TransformNode | null) marks.unshift(n);
+    for (let n: TransformNode | null = held; n; n = n.parent as TransformNode | null) marks.unshift(n);
     for (const n of marks) n.computeWorldMatrix(true);
     const scale = Math.max(0.001, b.rightHand.absoluteScaling.y);
-    const head = this._crownOf(mark).add(new Vector3(0, BLOW_CROWN * scale, 0));
-    const shoulder = b.rightShoulder.getAbsolutePosition();
+    const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
+    const crown = this._crownOf(held).add(new Vector3(0, BLOW_CROWN * scale, 0));
+    const shoulder = b.rightShoulder.getAbsolutePosition().clone();
+    const elbowAt = b.rightElbow.getAbsolutePosition().clone();
+    const arm = Vector3.Distance(shoulder, elbowAt) + Vector3.Distance(elbowAt, b.rightHand.getAbsolutePosition());
     const reach = this._weaponReach() * scale;
-    const arm = Vector3.Distance(shoulder, b.rightHand.getAbsolutePosition());
-    if (Vector3.Distance(head, shoulder) > (reach + arm) * BLOW_AIM_SLACK) return;
-    const toward = new Vector3(head.x - shoulder.x, 0, head.z - shoulder.z);
-    if (toward.lengthSquared() < 1e-6) toward.set(0, 0, 1);
-    toward.normalize();
-    // The weapon falls BLOW_FALL below level onto the man (r2c3: the club comes down through him, not across him), so the fist must stand no farther from him
-    // than the weapon's reach along that line. A man farther off is lunged at: the hip is carried toward him, at most BLOW_STEP of the striker's standing height.
-    const short = Vector3.Dot(head.subtract(shoulder), toward) - arm * Math.sin(BLOW_OVERHEAD) - Math.cos(BLOW_FALL) * reach;
-    if (short > 0) {
-      const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
-      this._hipRest ??= b.hip.position.y;
-      const step = Math.min(short, BLOW_STEP * this._hipRest * 2 * rootScale) * w;
-      lunged.copyFrom(Vector3.TransformNormal(toward, Matrix.RotationY(-b.root.rotation.y)).scale(step / rootScale));
+    this._hipRest ??= b.hip.position.y;
+    const tall = this._hipRest * 2 * rootScale;
+    const toward = new Vector3(crown.x - shoulder.x, 0, crown.z - shoulder.z);
+    const flat = toward.length();
+    if (flat < 1e-3) toward.set(Math.sin(b.root.rotation.y), 0, Math.cos(b.root.rotation.y));
+    else toward.scaleInPlace(1 / flat);
+    const up = new Vector3(0, 1, 0);
+    // Where the blow lands on him: his crown, or, a crown at or over the fist, the top of his board on his near face (PRESS_BOARD_LINE of his height
+    // under the crown, CONTACT_FRONT of it out toward the striker). The weapon is laid from the fist ACROSS that point, at least STRIKE_FALL_MIN below
+    // level, so its head ends on him or over him, never short of him in the air and never rising into his face
+    const ground = b.root.getAbsolutePosition().y;
+    const hisTall = Math.max(0.001, crown.y - ground);
+    const boardTop = crown.add(toward.scale(-CONTACT_FRONT * hisTall));
+    boardTop.y = crown.y - hisTall * PRESS_BOARD_LINE;
+    const restOn = (fist: Vector3): Vector3 => {
+      const fall = (p: Vector3): number => Math.max(0.001, Math.hypot(p.x - fist.x, p.z - fist.z)) * Math.tan(STRIKE_FALL_MIN);
+      const p = fist.y - crown.y >= fall(crown) ? crown.clone() : boardTop.clone();
+      p.y = Math.max(crown.y - hisTall * CONTACT_LOWEST, Math.min(p.y, fist.y - fall(p)));
+      return p;
+    };
+    // The landed arm, spring and lunge: of STRIKE_ARM_TRY, the arm whose fist, sprung up (at most STRIKE_LEAP of the striker's height) to stand STRIKE_OVER
+    // of his height over that board top, needs the least step toward him to lay the weapon across that point, and then stands nearest STRIKE_SPAN of the
+    // weapon's length from it. A man past STRIKE_STEP of the striker's height of step is out of reach
+    const span = reach * STRIKE_SPAN;
+    let landArm = STRIKE_ARM_TRY[0];
+    let need = Infinity;
+    let lift = 0;
+    let best = Infinity;
+    for (const a of STRIKE_ARM_TRY) {
+      const fist = shoulder.add(toward.scale(Math.sin(a) * arm)).addInPlace(up.scale(Math.cos(a) * arm));
+      const spring = Math.max(0, Math.min(STRIKE_LEAP * tall, boardTop.y + STRIKE_OVER * hisTall - fist.y));
+      fist.y += spring;
+      const p = restOn(fist);
+      const dy = fist.y - p.y;
+      const step = Math.max(0, Math.hypot(p.x - fist.x, p.z - fist.z) - Math.sqrt(Math.max(0, span * span - dy * dy)));
+      const score = step * 3 + Math.abs(Vector3.Distance(fist.add(toward.scale(step)), p) - span);
+      if (score < best) {
+        best = score;
+        need = step;
+        landArm = a;
+        lift = spring;
+      }
+    }
+    // The sim's own swing stays on the man it is struck at, thrown off or not, through its hold (its step no longer than STRIKE_STEP allows)
+    const reachable = need <= STRIKE_STEP * tall || swing !== null;
+    need = Math.min(need, STRIKE_STEP * tall);
+    if (!reachable) {
+      // Out of reach (a rank back): no step and no spring, the arm upright, the weapon swung over the top to STRIKE_REAR_ARC over the man ahead
+      landArm = STRIKE_ARM_TRY[3];
+      need = 0;
+      lift = 0;
+    }
+    // The beat: a sim swing's own timing, else his own while he is in reach of the man (or a rank back of him); out of reach, held cocked
+    let target = 0;
+    if (swing) {
+      const t = this._blowClock;
+      const land = this._blowLandsAt;
+      const cockAt = land * STRIKE_SWING_COCK;
+      target = t >= land ? 1 : t < cockAt ? 0 : ((t - cockAt) / Math.max(0.001, land - cockAt)) ** 2;
+    } else if (this._strikeTimer > 0 && (reachable || this._restLowTimer > 0)) target = this._pressBlow(reachable);
+    const was = this._strikeBlow;
+    this._strikeBlow = target > was ? Math.min(target, was + dt * STRIKE_RISE) : was + (target - was) * Math.min(1, dt * STRIKE_EASE * 1.5);
+    const blow = this._strikeBlow;
+    // Lunge: the hip carried toward him by that step as the blow comes down
+    if (reachable && need > 0) {
+      lunged.copyFrom(Vector3.TransformNormal(toward, Matrix.RotationY(-b.root.rotation.y)).scale((need * blow * w) / rootScale));
       lunged.y = 0;
       b.hip.position.addInPlace(lunged);
-      for (const n of chain) n.computeWorldMatrix(true);
     }
-    // Fist: up over his own head, the arm BLOW_OVERHEAD from vertical toward the man in the world, whatever his trunk's lean, so the weapon always starts its
-    // fall from above. Rest hangs down -y in the shoulder's parent; rotation.x a turns it to (0, -cos a, -sin a)
-    const swing = BLOW_OVERHEAD + (BLOW_FOLLOW_ARM - BLOW_OVERHEAD) * follow;
-    const up = toward.scale(Math.sin(swing)).addInPlace(new Vector3(0, Math.cos(swing), 0));
-    const parent = b.rightShoulder.parent as TransformNode;
-    const armDir = Vector3.TransformNormal(up, Matrix.Invert(parent.getWorldMatrix())).normalize();
-    const pitch = Math.atan2(-armDir.z, -armDir.y);
-    b.rightShoulder.rotation.x += (pitch - b.rightShoulder.rotation.x) * w;
-    b.rightShoulder.rotation.z += (0.08 - b.rightShoulder.rotation.z) * w;
-    b.rightElbow.rotation.x += (BLOW_ELBOW - b.rightElbow.rotation.x) * w;
+    // ...and sprung up off his feet into it (r2c3: the clubber comes off the ground into the blow); hip.y is posed afresh every frame
+    if (reachable) b.hip.position.y += (lift * blow * w) / rootScale;
+    // Trunk arched back in the cock and pitched into the landed blow (no further over than a wall allows); legs long in a lunge as it lands
+    const pitch = Math.min(STRIKE_COCK_PITCH + (STRIKE_LAND_PITCH - STRIKE_COCK_PITCH) * blow, this._wallHold > 0.01 ? WALL_TRUNK_MAX : Infinity);
+    b.torso.rotation.x += (pitch - b.torso.rotation.x) * w;
+    const legs = blow * w * (1 - Math.min(1, this._wallHold));
+    b.leftHip.rotation.x += (BLOW_LUNGE.front - b.leftHip.rotation.x) * legs;
+    b.rightHip.rotation.x += (BLOW_LUNGE.back - b.rightHip.rotation.x) * legs;
+    b.leftKnee.rotation.x += (BLOW_LUNGE.knee - b.leftKnee.rotation.x) * legs;
+    b.rightKnee.rotation.x += (BLOW_LUNGE.knee - b.rightKnee.rotation.x) * legs;
     for (const n of chain) n.computeWorldMatrix(true);
-    // A man whose crown stands over the raised fist is leapt at (r2c3: the clubber comes off his feet into the blow): the striker springs up until his fist is
-    // BLOW_DROP over that crown, at most BLOW_LEAP of his own standing height, so the weapon still falls onto the helm and not into the face under it
-    const need = (head.y + BLOW_DROP * scale - b.rightHand.getAbsolutePosition().y) * (1 - follow);
-    if (need > 0) {
-      const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
-      this._hipRest ??= b.hip.position.y;
-      const lift = Math.min(need, BLOW_LEAP * this._hipRest * 2 * rootScale) * w;
-      b.hip.position.y += lift / rootScale;
-      for (const n of chain) n.computeWorldMatrix(true);
-    }
-    // Weapon: laid DOWN from the raised fist, at least BLOW_FALL below level. Onto his crown when it lies that steep under the fist; a crown flatter than that,
-    // the weapon comes down the BLOW_FALL line at full reach, through his shoulders and board top, not level across his face
-    const hand = b.rightHand.getAbsolutePosition();
-    const across = Math.max(0.001, Vector3.Dot(head.subtract(hand), toward));
-    // Pinned on him every frame from where he stands now, after any knockback (press-club-lands-on-board): the head on his crown or, a man nearer than the
-    // weapon is long, on his near face where the shaft meets it, and the follow-through runs on to that pinned point, never past him into the turf
-    const contact = this._contactOn(mark, hand);
-    const onto = hand.y - head.y >= across * Math.tan(BLOW_FALL)
-      ? contact
-      : hand.add(toward.scale(Math.cos(BLOW_FALL) * reach)).addInPlace(new Vector3(0, -Math.sin(BLOW_FALL) * reach, 0));
-    const end = follow > 0 ? Vector3.Lerp(onto, contact, follow) : onto;
-    const dir = end.subtract(hand).normalize();
-    this._aimTip = Vector3.TransformNormal(dir, Matrix.RotationY(-b.root.rotation.y)).normalize();
+    // Arm: from the cock to the landed angle in the world, toward him, whatever his trunk's lean. Rest hangs down -y in the shoulder's parent; rotation.x a
+    // turns it to (0, -cos a, -sin a)
+    const a = STRIKE_COCK_ARM + (landArm - STRIKE_COCK_ARM) * blow;
+    const armWay = toward.scale(Math.sin(a)).addInPlace(up.scale(Math.cos(a)));
+    const parent = b.rightShoulder.parent as TransformNode;
+    const local = Vector3.TransformNormal(armWay, Matrix.Invert(parent.getWorldMatrix())).normalize();
+    b.rightShoulder.rotation.x += (Math.atan2(-local.z, -local.y) - b.rightShoulder.rotation.x) * w;
+    b.rightShoulder.rotation.z += (0.3 - 0.22 * blow - b.rightShoulder.rotation.z) * w;
+    b.rightElbow.rotation.x += (STRIKE_COCK_ELBOW + (STRIKE_LAND_ELBOW - STRIKE_COCK_ELBOW) * blow - b.rightElbow.rotation.x) * w;
+    for (const n of chain) n.computeWorldMatrix(true);
+    // Weapon: from back over the shoulder, over the top, down across that point on him. A rank back and out of reach it comes down the same way at him,
+    // over the shoulder of the man ahead
+    const hand = b.rightHand.getAbsolutePosition().clone();
+    const way = reachable ? restOn(hand).subtract(hand) : toward.scale(Math.sin(STRIKE_REAR_ARC)).addInPlace(up.scale(Math.cos(STRIKE_REAR_ARC)));
+    if (way.lengthSquared() < 1e-6) way.copyFrom(toward);
+    way.normalize();
+    const arc = STRIKE_COCK_ARC + (Math.atan2(Vector3.Dot(way, toward), way.y) - STRIKE_COCK_ARC) * blow;
+    const tip = toward.scale(Math.sin(arc)).addInPlace(up.scale(Math.cos(arc)));
+    Vector3.LerpToRef(tip, way, blow * blow, tip).normalize();
+    this._aimTip = Vector3.TransformNormal(tip, Matrix.RotationY(-b.root.rotation.y)).normalize();
     this._aimWeight = w;
+    this._strikeCommit = w * blow;
     this._clubHold = Math.max(this._clubHold, w);
   }
+  private _foe: TransformNode | null = null;
+  private _foeTimer = 0;
+  private _strikeMark: TransformNode | null = null;
+  private _strikeW = 0;
+  private _strikeBlow = 0;
+  // How far this frame's strike is down on the man (weight x blow): a man struck while his own blow is on his man keeps his trunk and arm on it
+  private _strikeCommit = 0;
 
   /**
    * Where a blow lands on a man: the top of his crown, which under a helm or hat is the top of its shell (the hat's own mesh, not a crest or plume on it),
@@ -605,32 +629,22 @@ export class ProceduralAnimator {
 
   private _shoveTimer = 0;
 
-  /** An enemy is close enough to close with (a few strides): a heavy weapon comes up to its cocked hold over the shoulder and stays there until the calls stop. */
+  /**
+   * An enemy is close enough to close with (a few strides): he is this man's foe for _strike, held 0.6 s past the call (PRESS_MARK_HOLD when in reach), so
+   * the weapon comes up cocked while he closes and is brought down on the beat once he is in reach of him or a rank back of him.
+   */
   readyBlow(striking = false, behindRank = false, mark: TransformNode | null = null): void {
-    this._readyTimer = 0.6;
-    if (striking) this._strikeTimer = 0.6;
-    if (behindRank) this._restLowTimer = 0.6;
-    // In reach of the man himself (not a rank back): his beat is cocked back and landed down on that man (see club-cocked-in-press). The man is held through
-    // gaps in the calls (press-mark-held): a call out of reach leaves him marked for PRESS_MARK_HOLD; a rank back, or his man dead, lets go at once
-    if (striking && !behindRank && mark) {
-      this._pressMark = mark;
-      this._pressMarkTimer = PRESS_MARK_HOLD;
-    } else if (behindRank || striking) this._pressMark = null;
+    if (striking) this._strikeTimer = PRESS_MARK_HOLD;
+    this._restLowTimer = behindRank ? 0.6 : 0;
+    if (mark) {
+      if (mark !== this._foe) this._foeTimer = 0;
+      this._foe = mark;
+      this._foeTimer = Math.max(this._foeTimer, striking ? PRESS_MARK_HOLD : 0.6);
+    }
   }
-  private _pressMark: TransformNode | null = null;
-  private _pressMarkTimer = 0;
-  // How far this frame's press club is landed (0 cocked back, 1 down on the man), for _carryProp to lay it onto his board line; zeroed every frame
-  private _pressLand = 0;
-  /** The in-reach press beat's man: held PRESS_MARK_HOLD past the last call and through a swing at him; null a rank back, or once he is gone. */
-  private _pressAim(): TransformNode | null {
-    const m = this._pressMark;
-    return m && !m.isDisposed() && m.isEnabled() && (this._pressMarkTimer > 0 || this._state === AnimState.Attacking) && this._state !== AnimState.Dead ? m : null;
-  }
-  // A clubber a rank back behind a man of his own side (see readyBlow): between beats his club rests low over that man's shoulder, not cocked
+  // A clubber a rank back behind a man of his own side (see readyBlow): his beat comes down over that man's shoulder
   private _restLowTimer = 0;
   private _strikeTimer = 0;
-  private _readyTimer = 0;
-  private _ready = 0;
 
   /** A wall man's enemy, called every decision while the wall closes on him or fights him: the spear comes to its fighting hold (see _carrySpear), a front man's pointed down at that man, a rear man's raised over the rank ahead, until the calls stop. */
   levelSpearAt(enemyGround: Vector3, enemyRadius = 0.3, rearRank = false): void {
@@ -678,9 +692,9 @@ export class ProceduralAnimator {
    * on the man in front, 0 cocked over the shoulder. The beat: resting landed on him (PRESS_BLOW_REST), heaved up off him to the cock (PRESS_BLOW_HEAVE), held
    * cocked (PRESS_BLOW_COCK), slammed down, slow off the cock and fastest at the bottom (PRESS_BLOW_SLAM), and held on the impact for the rest. So about two
    * thirds of a press is landed in any frame and a few clubs are up or coming down (trailer_3_sheet_01 r2c3). Each slam that lands is counted (blowsLanded):
-   * the unit makes the man it lands on flinch.
+   * the unit makes the man it lands on flinch (only when `landing`: a slam over a rank, short of the man, does not reach him).
    */
-  private _pressBlow(): number {
+  private _pressBlow(landing = true): number {
     const h = Math.sin(this._wobblePhase * 91.7) * 43758.5453;
     const own = h - Math.floor(h);
     const beat = PRESS_BLOW_BEAT_MIN + (PRESS_BLOW_BEAT_MAX - PRESS_BLOW_BEAT_MIN) * own;
@@ -700,18 +714,10 @@ export class ProceduralAnimator {
     // A slam lands once a beat, when the club reaches the man
     const beatIndex = Math.floor(cycle - impact);
     if (u >= impact && beatIndex !== this._lastBlowBeat) {
-      if (this._lastBlowBeat !== null) this._blowsLanded++;
+      if (this._lastBlowBeat !== null && landing) this._blowsLanded++;
       this._lastBlowBeat = beatIndex;
     }
     return blow;
-  }
-  /** Whether the press beat is in its heave-up or cocked phase right now (the club is going up for the slam, not resting). */
-  private _pressBlowCocked(): boolean {
-    const h = Math.sin(this._wobblePhase * 91.7) * 43758.5453;
-    const own = h - Math.floor(h);
-    const beat = PRESS_BLOW_BEAT_MIN + (PRESS_BLOW_BEAT_MAX - PRESS_BLOW_BEAT_MIN) * own;
-    const u = (this._time / beat + own * 3.7) % 1;
-    return u >= PRESS_BLOW_REST && u < PRESS_BLOW_REST + PRESS_BLOW_HEAVE + PRESS_BLOW_COCK;
   }
   private _lastBlowBeat: number | null = null;
   private _blowsLanded = 0;
@@ -989,7 +995,6 @@ export class ProceduralAnimator {
 
     this._idleSink = 0;
     this._clubHold = 0;
-    this._pressLand = 0;
     this._castLift = 0;
     this._castReach = 0;
     this._castLevel = 0;
@@ -1046,27 +1051,16 @@ export class ProceduralAnimator {
       b.leftKnee.rotation.x += (p.knee + 0.05) * k;
       b.rightKnee.rotation.x += (p.knee + 0.05) * k;
       if (this._state !== AnimState.Attacking && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
-        // A clubber in the press, stood or stepping in, does not windmill or level his weapon arm: he keeps it cocked up over his shoulder and, on his own beat,
-        // brings it down onto the man in front (see _pressBlow), holds it there a moment and heaves it back up, while the free arm still claws and shoves.
+        // A clubber in the press does not windmill or level his weapon arm: it is held cocked over his shoulder, and _strike brings it down onto his man on
+        // the beat, while the free arm still claws and shoves.
         const heave = Math.sin(phase * 0.5) * 0.12;
-        const marked = this._pressAim() !== null;
-        // No man marked and not a rank back: he carries the press cock and does not slam at nothing (press-mark-held)
-        const aimed = marked || this._restLowTimer <= 0;
-        const blow = aimed && !marked ? 0 : this._pressBlow();
-        b.rightShoulder.rotation.x += (-2.5 + heave + (aimed ? PRESS_AIM_ARM : PRESS_BLOW_ARM) * blow - b.rightShoulder.rotation.x) * k;
-        b.rightShoulder.rotation.z += (0.3 - 0.4 * blow - b.rightShoulder.rotation.z) * k;
-        const elbow = aimed ? PRESS_AIM_ELBOW.cock + (PRESS_AIM_ELBOW.land - PRESS_AIM_ELBOW.cock) * blow : -1.3 + 1.15 * blow;
-        b.rightElbow.rotation.x += (elbow - b.rightElbow.rotation.x) * k;
-        // The trunk goes over with the blow and the head with it
-        b.torso.rotation.x += 0.45 * blow * k;
-        b.neck.rotation.x += 0.15 * blow * k;
+        b.rightShoulder.rotation.x += (-2.5 + heave - b.rightShoulder.rotation.x) * k;
+        b.rightShoulder.rotation.z += (0.3 - b.rightShoulder.rotation.z) * k;
+        b.rightElbow.rotation.x += (STRIKE_COCK_ELBOW - b.rightElbow.rotation.x) * k;
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
         b.leftShoulder.rotation.z -= (p.spread + Math.cos(phase) * 0.25) * k;
         b.leftElbow.rotation.x -= (1.0 + Math.sin(phase) * 0.6) * k;
-        if (aimed) {
-          this._clubArc = PRESS_CLUB_COCK + heave;
-          this._pressLand = marked ? blow : 0;
-        } else this._clubArc = CLUB_COCK * 0.9 + heave + (PRESS_BLOW_CLUB - CLUB_COCK * 0.9 - heave) * blow;
+        this._clubArc = STRIKE_COCK_ARC + heave;
         this._clubHold = Math.max(this._clubHold, k);
       } else if (this._state === AnimState.Idle) {
         b.leftShoulder.rotation.x += (-0.9 + Math.sin(phase) * 1.1) * k;
@@ -1178,36 +1172,6 @@ export class ProceduralAnimator {
         b.leftElbow.rotation.x += (c.board.elbow + bob * c.bob - b.leftElbow.rotation.x) * carry;
       }
     }
-    // Closing on a man with a heavy weapon, out of contact: whatever the carry or the stand made of the weapon arm, it comes up to the cocked hold over the
-    // shoulder that the press keeps (see _animateHeavySwing), so men stepping into a fight carry their clubs raised and not slanted or trailed.
-    this._readyTimer -= dt;
-    this._strikeTimer -= dt;
-    this._pressMarkTimer -= dt;
-    this._ready += ((this._readyTimer > 0 ? 1 : 0) - this._ready) * Math.min(1, dt * 6);
-    const cocked = this._ready * (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
-    if (cocked > 0.01 && this._state !== AnimState.Attacking && this._state !== AnimState.Dead && this.walkStyle !== "quadruped" && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
-      const b = this._body;
-      const heave = Math.sin((this._time + this._wobblePhase) * 3) * 0.1;
-      // Within striking distance he brings it down on his own beat, as a man in the press does. A rank back, behind a man of his own side, he rests the club
-      // low and forward over that man's shoulder between beats, heaving it a little (trailer_3_sheet_01 r2c3: the clubs behind the line are down on it, not
-      // raised), and on his beat it is cocked and slammed down from there
-      this._restLowTimer -= dt;
-      const rest = this._restLowTimer > 0 ? REAR_CLUB_REST + Math.sin((this._time + this._wobblePhase) * 2.2) * 0.08 : 0;
-      const blow = this._strikeTimer > 0 || (rest <= 0 && this._pressAim() !== null) ? (rest > 0 ? Math.max(this._pressBlow(), rest * (this._pressBlow() > 0.001 || this._pressBlowCocked() ? 0 : 1)) : this._pressBlow()) : rest;
-      // In reach of the man himself: cocked back over the shoulder between slams, landed down onto his board line (club-cocked-in-press); closing on him,
-      // out of reach and not a rank back, the club is carried in that same cock, back over the shoulder, not stood straight up
-      const aimed = rest <= 0 && (this._pressAim() !== null || this._strikeTimer <= 0);
-      b.rightShoulder.rotation.x += (-2.5 + heave + (aimed ? PRESS_AIM_ARM : PRESS_BLOW_ARM) * blow - b.rightShoulder.rotation.x) * cocked;
-      b.rightShoulder.rotation.z += (0.3 - 0.4 * blow - b.rightShoulder.rotation.z) * cocked;
-      const elbow = aimed ? PRESS_AIM_ELBOW.cock + (PRESS_AIM_ELBOW.land - PRESS_AIM_ELBOW.cock) * blow : -1.3 + 1.15 * blow;
-      b.rightElbow.rotation.x += (elbow - b.rightElbow.rotation.x) * cocked;
-      b.torso.rotation.x += 0.45 * blow * cocked;
-      if (this._clubHold <= 0.01) {
-        this._clubArc = aimed ? PRESS_CLUB_COCK + heave : CLUB_COCK * 0.9 + heave + (PRESS_BLOW_CLUB - CLUB_COCK * 0.9 - heave) * blow;
-        this._pressLand = aimed ? blow : 0;
-      }
-      this._clubHold = Math.max(this._clubHold, cocked);
-    }
     // Limp overlay (additive): bend spine, elbows and knees while toppled or downed
     this._limp += (this._limpTarget - this._limp) * Math.min(1, dt * 9);
     if (this._limp > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
@@ -1269,7 +1233,7 @@ export class ProceduralAnimator {
       this._body.torso.scaling.setAll(1);
     }
 
-    this._aimBlow(dt);
+    this._strike(dt);
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
@@ -1282,7 +1246,7 @@ export class ProceduralAnimator {
       const intensity = Math.max(0, Math.min(1, this._flinchTimer / (0.35 - FLINCH_HOLD)));
       const b = this._body;
       // A man struck while his own blow comes down on his man carries it through (r2c3): his trunk and weapon arm stay on the blow, only his head goes back
-      const committed = intensity * (1 - this._aimWeight);
+      const committed = intensity * (1 - this._strikeCommit);
       // Snap torso backward and to the side
       b.torso.rotation.x -= FLINCH_PITCH * committed;
       b.torso.rotation.z += 0.3 * committed;
@@ -1725,53 +1689,6 @@ export class ProceduralAnimator {
     return mid;
   }
 
-  /**
-   * Where a landed club rests on a man (press-landed-contact): the world point its shaft lies across, so it stops on him rather than running on into the turf.
-   * His crown when the line from the fist falls onto it at least CONTACT_MIN_FALL below level; else (a crown at or over the fist) the top of his board, on his
-   * near face: PRESS_BOARD_LINE of his height under the crown, CONTACT_FRONT of his height out of his axis toward the striker. The mark's chain is brought up here.
-   */
-  private _contactOn(mark: TransformNode, hand: Vector3): Vector3 {
-    const chain: TransformNode[] = [];
-    for (let n: TransformNode | null = mark; n; n = n.parent as TransformNode | null) chain.unshift(n);
-    for (const n of chain) n.computeWorldMatrix(true);
-    const scale = Math.max(0.001, this._body.rightHand.absoluteScaling.y);
-    const crown = this._crownOf(mark).add(new Vector3(0, BLOW_CROWN * scale, 0));
-    const across = Math.hypot(crown.x - hand.x, crown.z - hand.z);
-    const onCrown = hand.y - crown.y >= Math.max(0.001, across) * Math.tan(CONTACT_MIN_FALL);
-    // press-club-lands-on-board: the club's HEAD is pinned on him, not only its line. A crown a full weapon's length off takes it; a nearer man would let a
-    // head laid along that line run on past him into the turf, so it stops on his near face where the shaft, one reach long from the fist, meets it.
-    const reach = this._weaponReach() * scale;
-    if (onCrown && Vector3.Distance(hand, crown) >= reach) return crown;
-    // His height over the ground the striker stands on (the field is near flat where men press)
-    const tall = Math.max(0.001, crown.y - this._body.root.getAbsolutePosition().y);
-    const back = new Vector3(hand.x - crown.x, 0, hand.z - crown.z);
-    if (back.lengthSquared() < 1e-6) back.set(0, 0, -1);
-    back.normalize();
-    const face = crown.add(back.scale(CONTACT_FRONT * tall));
-    // Down his near face from the crown (or, a crown at or over the fist, from his board top) to where the head lands at full reach, never under CONTACT_LOWEST
-    const flat = Math.hypot(face.x - hand.x, face.z - hand.z);
-    const drop = Math.sqrt(Math.max(0, reach * reach - flat * flat));
-    const top = onCrown ? crown.y : crown.y - tall * PRESS_BOARD_LINE;
-    face.y = Math.max(crown.y - tall * CONTACT_LOWEST, Math.min(top, hand.y - drop));
-    return face;
-  }
-
-  /** The landed press club's arc from straight up, and its exact way in his yaw frame (_pressTip): the shaft laid from the fist across _contactOn. */
-  private _pressDownArc(mark: TransformNode, hand: Vector3): number {
-    const dir = this._contactOn(mark, hand).subtract(hand);
-    if (dir.lengthSquared() < 1e-6) dir.set(0, 0, 1);
-    const local = Vector3.TransformNormal(dir.normalize(), Matrix.RotationY(-this._body.root.rotation.y)).normalize();
-    // Never rising off him: at least CONTACT_MIN_FALL below level
-    const flat = Math.hypot(local.x, local.z);
-    if (local.y > -flat * Math.tan(CONTACT_MIN_FALL)) {
-      local.y = -Math.max(0.001, flat) * Math.tan(CONTACT_MIN_FALL);
-      local.normalize();
-    }
-    this._pressTip.copyFrom(local);
-    return Math.atan2(Math.hypot(local.z, local.x), local.y);
-  }
-  private _pressTip = new Vector3(0, 0, 1);
-
   private _carryProp(dt: number): void {
     const ready = this._carry?.ready;
     const weapon = this._carry?.weapon ?? ready;
@@ -1798,16 +1715,10 @@ export class ProceduralAnimator {
     const tip = new Vector3(weapon.tip.x, weapon.tip.y - this._carryDip * 1.5, weapon.tip.z + this._castReach).normalize();
     // Swinging or cocked: the head of the weapon is on its arc over the man, a touch out to his weapon side
     if (club > 0.01) {
-      let arc = this._clubArc;
-      // An in-reach press club landed: from the cock back over the shoulder, up over the top and down onto the man's board line (club-cocked-in-press)
-      const pressed = this._pressAim();
-      const landed = this._pressLand > 0.001 && pressed ? this._pressLand : 0;
-      if (landed > 0 && pressed) arc += (this._pressDownArc(pressed, hand.getAbsolutePosition()) - arc) * landed;
+      const arc = this._clubArc;
       Vector3.LerpToRef(tip, new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(arc), Math.sin(arc)), Math.min(1, club), tip).normalize();
-      // ...and, as it comes down, swung round onto the man wherever he stands, the shaft resting across his crown or board top (press-landed-contact)
-      if (landed > 0) Vector3.LerpToRef(tip, this._pressTip, landed * landed * Math.min(1, club), tip).normalize();
     }
-    // Coming down on a man (see _aimBlow): the head goes onto him, wherever he stands
+    // Struck at a man (see _strike): cocked back over the shoulder, or its head down on him wherever he stands
     if (this._aimWeight > 0.01 && weapon === this._carry?.weapon) Vector3.LerpToRef(tip, this._aimTip, this._aimWeight, tip).normalize();
     // Driven at the enemy (see _animateCast): the staff is laid level along the thrust arm, head at him, and held there while its missile flies
     if (this._castLevel > 0.01 && weapon === ready) Vector3.LerpToRef(tip, this._castTip, this._castLevel, tip).normalize();
@@ -2526,8 +2437,7 @@ export class ProceduralAnimator {
    *   trunk folds forward 0.55 over a front knee bent 0.35; the club's arc runs through vertical to CLUB_LAND (+1.8 rad, head forward and a little down, at the
    *   target's chest: at 2.05 it was driven into the turf).
    * - Recover (the rest): he heaves it back up two thirds of the way to the cock, so a press between blows is clubs held up, not clubs left lying forward.
-   * - Swung at a marked press man (press-mark-held, see _pressAim): the cock is PRESS_CLUB_COCK, back over the shoulder, from the first frame; the drop lands the
-   *   club down on that man's board line (_pressLand) and the recover keeps it there, as the press beat does, instead of heaving it back up near vertical.
+   * - Swung at a man (the sim's swing, or a foe marked): _strike takes the weapon arm over from this, cocked, slammed and landed on him.
    * The club's arc is handed to _carryProp through _clubArc/_clubHold and turned in the fist there; the arm alone could not stand it up overhead.
    */
   private _animateHeavySwing(dt: number): void {
@@ -2537,8 +2447,7 @@ export class ProceduralAnimator {
     const commit = this._resolveReleasePoint(0.45);
     const drop = commit + (1 - commit) * 0.45;
     const side = Math.sign(b.rightShoulder.position.x) || 1;
-    const pressed = this._pressAim() !== null;
-    const cockElbow = pressed ? PRESS_AIM_ELBOW.cock : -1.25;
+    const cockElbow = -1.25;
     if (progress < commit) {
       const w = progress / Math.max(commit, 0.001);
       const windUp = w * (2 - w); // eased out: up fast, slowing into the cock
@@ -2554,16 +2463,15 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x = 0.18 * windUp;
       b.leftHip.rotation.x = -0.22 * windUp;
       b.leftKnee.rotation.x = 0.12 * windUp;
-      this._clubArc = pressed ? PRESS_CLUB_COCK : CLUB_COCK * windUp;
+      this._clubArc = CLUB_COCK * windUp;
     } else {
       const swing = Math.min(1, (progress - commit) / Math.max(drop - commit, 0.001));
       const eased = swing * swing * (3 - 2 * swing) * 0.4 + swing * swing * 0.6; // slow off the cock, fastest at the bottom
-      const back = progress > drop && !pressed ? (progress - drop) / Math.max(1 - drop, 0.001) : 0;
+      const back = progress > drop ? (progress - drop) / Math.max(1 - drop, 0.001) : 0;
       const e = eased - back * (2 - back) * 0.65;
-      // On a marked press man the fist stops raised before the face (the press beat's landed arm), so the club laid down from it meets his board top
-      b.rightShoulder.rotation.x = -2.75 + (pressed ? 0.25 + PRESS_AIM_ARM : 3.25) * e;
+      b.rightShoulder.rotation.x = -2.75 + 3.25 * e;
       b.rightShoulder.rotation.z = 0.3 - 0.4 * e;
-      b.rightElbow.rotation.x = pressed ? cockElbow + (PRESS_AIM_ELBOW.land - cockElbow) * e : -1.25 + 1.1 * e;
+      b.rightElbow.rotation.x = cockElbow + 1.1 * e;
       b.leftShoulder.rotation.x = -0.7 + 0.9 * e;
       b.leftShoulder.rotation.z = -0.35 + 0.1 * e;
       b.leftElbow.rotation.x = -0.5 + 0.1 * e;
@@ -2573,10 +2481,7 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x = 0.18 + 0.12 * e;
       b.leftHip.rotation.x = -0.22 - 0.2 * e;
       b.leftKnee.rotation.x = 0.12 + 0.23 * e;
-      if (pressed) {
-        this._clubArc = PRESS_CLUB_COCK;
-        this._pressLand = e;
-      } else this._clubArc = CLUB_COCK + (CLUB_LAND - CLUB_COCK) * e;
+      this._clubArc = CLUB_COCK + (CLUB_LAND - CLUB_COCK) * e;
     }
     this._clubHold = 1;
     b.rightKnee.rotation.x = 0.12;
