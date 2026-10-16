@@ -10,7 +10,7 @@ import { getMaterialFactory } from "../units/materialFactory";
 import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "shell" | "cannonball";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -37,6 +37,8 @@ interface ActiveProjectile {
   /** A harpoon's rope, from the gun's muzzle (tether) to the missile's tail, laid afresh every frame. */
   rope?: Mesh;
   tether?: TransformNode;
+  /** Shown through its delay where it was spawned, point turned on the man, instead of hidden (a swordcaster's sword hangs over him before it flies). */
+  hover?: boolean;
 }
 
 /** A soft smoke puff left hanging in a cannonball's wake. */
@@ -79,6 +81,8 @@ interface ProjectileSpawnOptions {
   heldProp?: TransformNode;
   /** A harpoon gun's muzzle: a dark rope runs from it to the missile for as long as it flies (units/pirate.harpooner). */
   tether?: TransformNode;
+  /** Shown through the delay, hanging where it was spawned with its point on the man, instead of hidden until it flies. */
+  hover?: boolean;
 }
 
 interface MuzzleFlashOptions {
@@ -108,6 +112,15 @@ const LEAF_WHIRL = 0.55; // radius of the knot round its line of flight
 const LEAF_SPREAD = 1.2; // its length along the line of flight, trailing back
 const LEAF_SPIN = 9; // rad/s of the whole knot about its line of flight
 const LEAF_COLORS = [new Color3(0.74, 0.22, 0.13), new Color3(0.86, 0.43, 0.16), new Color3(0.52, 0.09, 0.14)];
+// A swordcaster's flying sword (units/spooky.swordcaster): a long straight glowing white blade (about 10 widths long, 4-5x the hilt below the guard),
+// a short dark crossguard, a dark flat grip plate with a pale keyhole through it and a pale drop pommel, flown point first
+const SWORD_BLADE_LONG = 1.0;
+const SWORD_BLADE_WIDE = 0.1;
+const SWORD_GUARD_WIDE = 0.3;
+const SWORD_GRIP_LONG = 0.22;
+const SWORD_BLADE_COLOR = new Color3(0.93, 0.96, 1);
+const SWORD_HILT_COLOR = new Color3(0.13, 0.14, 0.17);
+const SWORD_KEY_COLOR = new Color3(0.6, 0.62, 0.66);
 // A harpoon's rope (units/pirate.harpooner): dark, thin as a finger, muzzle to harpoon
 const HARPOON_ROPE_WIDE = 0.035;
 const HARPOON_ROPE_COLOR = new Color3(0.13, 0.11, 0.1);
@@ -178,6 +191,7 @@ export class ProjectileSystem {
       case "crow": speed = 18; arcHeight = dist * 0.15; break;
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
       case "leaves": speed = 12; arcHeight = dist * 0.12; break;
+      case "sword": speed = 16; arcHeight = dist * 0.04; break;
     }
 
     const flightTime = Math.max(0.1, dist / speed);
@@ -231,6 +245,7 @@ export class ProjectileSystem {
       half: held?.half,
       rope: options.tether ? this._buildRope() : undefined,
       tether: options.tether,
+      hover: options.hover,
     });
     const spawned = this._active[this._active.length - 1];
     if (spawned.rope) this._layRope(spawned);
@@ -300,6 +315,16 @@ export class ProjectileSystem {
       p.elapsed += dt;
 
       // Delayed projectile: hide until delay expires
+      if (p.elapsed < 0 && p.hover) {
+        // Hanging over the caster: point turned on the man, rising a little as it is readied
+        if (!p.target.isDead) p.targetPos.copyFrom(p.target.position);
+        const aim = p.targetPos.add(new Vector3(0, p.targetLift, 0)).subtract(p.origin);
+        p.mesh.rotation.y = Math.atan2(aim.x, aim.z);
+        p.mesh.rotation.x = -Math.atan2(aim.y, Math.hypot(aim.x, aim.z));
+        p.mesh.position.copyFrom(p.origin);
+        p.mesh.position.y += 0.06 * Math.sin(p.elapsed * 9);
+        continue;
+      }
       if (p.elapsed < 0) {
         if (p.mesh instanceof Mesh) p.mesh.isVisible = false;
         for (const child of p.mesh.getChildMeshes()) child.isVisible = false;
@@ -824,6 +849,56 @@ export class ProjectileSystem {
           stem.material = stemMat;
           stem.parent = leaf;
         }
+        break;
+      }
+      case "sword": {
+        // A swordcaster's missile: a sword in no team's colour, its +z the point. The guard sits at the root, blade forward of it, grip plate and pommel behind.
+        const mf = getMaterialFactory();
+        const glowLayer = this._scene.getGlowLayerByName("glow");
+        const bladeMat = mf.get("unlit", SWORD_BLADE_COLOR, { emissive: SWORD_BLADE_COLOR });
+        const hiltMat = this._getMat("sword_hilt", SWORD_HILT_COLOR, 0.08);
+        const keyMat = this._getMat("sword_key", SWORD_KEY_COLOR, 0.2);
+        // Built flat in x-z, then stood on edge so the blade's face (not its edge) is turned to a side-on eye
+        const flat = new TransformNode("sword_flat", this._scene);
+        flat.rotation.z = Math.PI / 2;
+        flat.parent = root;
+        const edge = SWORD_BLADE_LONG - SWORD_BLADE_WIDE * 1.2;
+        const blade = MeshBuilder.CreateBox("sword_blade", { width: SWORD_BLADE_WIDE, height: SWORD_BLADE_WIDE * 0.22, depth: edge }, this._scene);
+        blade.position.z = edge / 2;
+        blade.material = bladeMat;
+        blade.parent = flat;
+        // The point: a flat four-sided taper off the blade's end
+        const point = MeshBuilder.CreateCylinder("sword_point", { height: SWORD_BLADE_WIDE * 1.2, diameterTop: 0, diameterBottom: SWORD_BLADE_WIDE, tessellation: 4 }, this._scene);
+        point.rotation.x = Math.PI / 2;
+        point.scaling.set(1, 1, 0.22);
+        point.position.z = edge + SWORD_BLADE_WIDE * 0.6;
+        point.material = bladeMat;
+        point.parent = flat;
+        const guard = MeshBuilder.CreateBox("sword_guard", { width: SWORD_GUARD_WIDE, height: 0.05, depth: 0.06 }, this._scene);
+        guard.position.z = -0.03;
+        guard.material = hiltMat;
+        guard.parent = flat;
+        const grip = MeshBuilder.CreateBox("sword_grip", { width: 0.075, height: 0.035, depth: SWORD_GRIP_LONG }, this._scene);
+        grip.position.z = -0.06 - SWORD_GRIP_LONG / 2;
+        grip.material = hiltMat;
+        grip.parent = flat;
+        // The keyhole through the grip plate, both faces: a round bow over a narrow slot
+        for (const face of [1, -1]) {
+          const bow = MeshBuilder.CreateCylinder("sword_keyhole", { height: 0.004, diameter: 0.034, tessellation: 8 }, this._scene);
+          bow.position.set(0, face * 0.019, -0.06 - SWORD_GRIP_LONG * 0.35);
+          bow.material = keyMat;
+          bow.parent = flat;
+          const slot = MeshBuilder.CreateBox("sword_keyslot", { width: 0.014, height: 0.004, depth: 0.05 }, this._scene);
+          slot.position.set(0, face * 0.019, -0.06 - SWORD_GRIP_LONG * 0.35 - 0.03);
+          slot.material = keyMat;
+          slot.parent = flat;
+        }
+        const pommel = MeshBuilder.CreateCylinder("sword_pommel", { height: 0.09, diameterTop: 0.055, diameterBottom: 0, tessellation: 5 }, this._scene);
+        pommel.rotation.x = -Math.PI / 2;
+        pommel.position.z = -0.06 - SWORD_GRIP_LONG - 0.05;
+        pommel.material = keyMat;
+        pommel.parent = flat;
+        for (const m of [guard, grip, pommel]) glowLayer?.addExcludedMesh(m);
         break;
       }
     }

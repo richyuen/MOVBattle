@@ -304,7 +304,7 @@ const spooky = makeFaction(FactionId.Spooky, "spooky", [
   ["candlehead", "Candlehead", 180, "special_magic", { abilities: ["fire_dot"], weaponHint: "torch" }],
   ["vampire", "Vampire", 200, "flying_melee", { abilities: ["flying_hover", "leap_attack"], weaponHint: "dagger" }],
   ["pumpkin_catapult", "Pumpkin Catapult", 1000, "artillery", { specialHint: "catapult", projectileHint: "bomb", size: "large" }],
-  ["swordcaster", "Swordcaster", 300, "special_magic", { weaponHint: "sword", projectileHint: "bolt" }],
+  ["swordcaster", "Swordcaster", 300, "special_magic", { weaponHint: "sword", projectileHint: "sword" }],
   ["reaper", "Reaper", 2500, "boss_melee", { abilities: ["push_force", "fear"], weaponHint: "scythe", size: "giant", visualPreset: "iconic_reaper", behaviorPreset: "iconic_reaper", controlStrength: 1.75, cooldownMultiplier: 0.86 }],
 ]);
 

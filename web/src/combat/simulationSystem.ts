@@ -45,6 +45,7 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "crow": return "crow";
     case "fireball": return "fireball";
     case "leaves": return "leaves";
+    case "sword": return "sword";
     default:
       break;
   }
@@ -65,6 +66,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
+// A swordcaster's sword hangs over his head this long, point on the man, before it flies (units/spooky.swordcaster: swords float round him)
+const SWORD_HOVER = 0.7;
 
 /** The head (orb) of the staff in a caster's hand, where his own missile is lit (vfx tier 3, units/legacy.wizard); null when he holds no staff. */
 function staffHeadOf(unit: RuntimeUnit): TransformNode | null {
@@ -1527,6 +1530,17 @@ export class SimulationSystem {
           this.projectileSystem.spawnProjectile(
             "leaves", hand.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
             undefined, 0, { originLift: 0.3 },
+          );
+        } else if (resolveProjectileShape(attacker, attackProfile) === "sword") {
+          // A swordcaster's sword is one of those that hang round him: it appears over his head, hangs there SWORD_HOVER s with its point on the man,
+          // then flies point first, not from his belt
+          const head = attacker.body.headTop;
+          const chain: TransformNode[] = [];
+          for (let n: Node | null = head; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+          for (const n of chain) n.computeWorldMatrix(true);
+          this.projectileSystem.spawnProjectile(
+            "sword", head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
+            undefined, SWORD_HOVER, { originLift: 0.35, hover: true },
           );
         } else if (harpoonMuzzleOf(attacker)) {
           // The harpoon leaves the gun's muzzle at the hip, trailing its rope back to it
