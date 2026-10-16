@@ -170,7 +170,7 @@ export class SimulationSystem {
   private _units: RuntimeUnit[] = [];
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
-  private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number }> = [];
+  private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean }> = [];
   private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
   // A presser's distance to his foe at his last decision: while it is still closing he holds his heavy swing until he is at the man's shoulder.
   private _closingFrom = new Map<RuntimeUnit, number>();
@@ -1503,6 +1503,11 @@ export class SimulationSystem {
             attacker, target, shape: resolveProjectileShape(attacker, attackProfile) ?? "spear", damage, splashRadius, knockback,
             leavesAt: now + attacker.animator.throwReleasesIn(),
           });
+        } else if (staffHeadOf(attacker) && resolveProjectileShape(attacker, attackProfile) === "fireball" && attacker.animator.castReleasesIn() > 0) {
+          // The cast has only started: the fireball leaves the staff's head when the staff is driven level at the man
+          this._pendingThrows.push({
+            attacker, target, shape: "fireball", damage, splashRadius, knockback, leavesAt: now + attacker.animator.castReleasesIn(), fromStaff: true,
+          });
         } else if (staffHeadOf(attacker) && resolveProjectileShape(attacker, attackProfile) === "fireball") {
           // A caster keeps his staff: the fireball is lit at its head, not thrown from his hip
           const head = staffHeadOf(attacker)!;
@@ -1605,6 +1610,18 @@ export class SimulationSystem {
     for (const t of due) {
       const { attacker, target } = t;
       if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
+      const head = t.fromStaff ? staffHeadOf(attacker) : null;
+      if (head) {
+        // A caster keeps his staff: the missile is lit at its head, where the drive has put it
+        const chain: TransformNode[] = [];
+        for (let n: Node | null = head; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+        for (const n of chain) n.computeWorldMatrix(true);
+        this.projectileSystem.spawnProjectile(
+          t.shape, head.getAbsolutePosition().clone(), target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: 0 },
+        );
+        continue;
+      }
+      if (t.fromStaff) continue;
       const prop = attacker.animator.heldThrowProp();
       // The pose was set this step: bring the hand's chain up to it before reading where the prop is
       const chain: TransformNode[] = [];

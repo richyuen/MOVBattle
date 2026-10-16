@@ -202,6 +202,12 @@ const BOARD_OFF_BUCKLE = { thigh: 0.9, knee: 1.6, sink: 0.35 };
 // Thrown back off his feet by a heavy blow (trailer_3_sheet_01 r2c3: arms out wide, legs going out from under him while the body goes back): shoulders out
 // THROWN.armsOut and back .armsBack rad, elbows straight, trunk .trunk and head .head rad back over the body's own pitch, thighs swept .legs rad forward
 // (the trailing one less), knees a little bent; laid on the land frame, eased out with the body's throw (RuntimeUnit BLOW_THROW).
+// A caster's missile leaves his staff's head at the end of the drive, when the staff is thrust level at the enemy (units/legacy.wizard.png: arm out straight,
+// staff level along it, the fireball off its head), CAST_LOOSE of the cast in; the staff stays thrust there to CAST_HOLD, not chopped down after it.
+const CAST_LOOSE = 0.68;
+const CAST_HOLD = 0.94;
+// The staff's head direction at the full drive, in the body's yaw frame: straight ahead, a touch up
+const CAST_LEVEL_TIP = new Vector3(0, 0.1, 1).normalize();
 const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0.35, head: 0.45, legs: 0.75, knee: 0.35 };
 
 export class ProceduralAnimator {
@@ -254,6 +260,12 @@ export class ProceduralAnimator {
 
   // The held prop that left the hand at the last throw: hidden until the next windup
   private _thrownProp: TransformNode | null = null;
+
+  /** A cast from the hold just started: seconds until the staff is driven level at the enemy (CAST_LOOSE), where its missile leaves its head; 0 when none is running. */
+  castReleasesIn(): number {
+    if (this._state !== AnimState.Attacking || this._attackMotion !== "strike" || this.attackStyle === "mammoth" || !this.castsFromHold) return 0;
+    return Math.max(0.001, CAST_LOOSE * this._attackDuration - this._attackTimer);
+  }
 
   /** A throw just started: seconds until the missile leaves the fist (THROW_LET_GO into the forward swing); 0 when no throw is running. */
   throwReleasesIn(): number {
@@ -848,6 +860,7 @@ export class ProceduralAnimator {
     this._clubHold = 0;
     this._castLift = 0;
     this._castReach = 0;
+    this._castLevel = 0;
     switch (this._state) {
       case AnimState.Idle:
         this._animateIdle(dt);
@@ -1190,6 +1203,8 @@ export class ProceduralAnimator {
   // How far a cast has the staff or bolt off its hold: `_castLift` takes a planted staff off the ground, `_castReach` tips its head back (negative) and then at the enemy.
   private _castLift = 0;
   private _castReach = 0;
+  // How far the drive has laid the staff level at the enemy (CAST_LEVEL_TIP)
+  private _castLevel = 0;
   /** True for a body that stands and casts from its own two-handed hold, so nothing outside should spread its arms for it. */
   get castsFromHold(): boolean {
     return (this._carry ??= this._buildCarry()).ready?.cast === true;
@@ -1418,6 +1433,8 @@ export class ProceduralAnimator {
     if (club > 0.01) Vector3.LerpToRef(tip, new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(this._clubArc), Math.sin(this._clubArc)), Math.min(1, club), tip).normalize();
     // Coming down on a man (see _aimBlow): the head goes onto him, wherever he stands
     if (this._aimWeight > 0.01 && weapon === this._carry?.weapon) Vector3.LerpToRef(tip, this._aimTip, this._aimWeight, tip).normalize();
+    // Driven at the enemy (see _animateCast): the staff is laid level along the thrust arm, head at him, and held there while its missile flies
+    if (this._castLevel > 0.01 && weapon === ready) Vector3.LerpToRef(tip, CAST_LEVEL_TIP, this._castLevel, tip).normalize();
     // Shooting: upright in the fist, canted a little toward the mark
     if (shooting > 0) Vector3.LerpToRef(tip, new Vector3(0, 1, 0.12), shooting, tip).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
@@ -2020,8 +2037,9 @@ export class ProceduralAnimator {
       const u = Math.max(0, Math.min(1, (progress - from) / (to - from)));
       return u * u * (3 - 2 * u);
     };
-    const wind = step(0, 0.5) * (1 - step(0.55, 0.68));
-    const drive = step(0.55, 0.68) * (1 - step(0.82, 1));
+    const wind = step(0, 0.5) * (1 - step(0.55, CAST_LOOSE));
+    // The missile leaves the staff's head at CAST_LOOSE; he holds the staff thrust level at the enemy until CAST_HOLD and only then lets it back to the hold
+    const drive = step(0.55, CAST_LOOSE) * (1 - step(CAST_HOLD, 1));
     const k = 1 - Math.min(1, this._limp);
     const to = (joint: TransformNode, axis: "x" | "y" | "z", back: number, ahead: number): void => {
       joint.rotation[axis] += (back - joint.rotation[axis]) * wind * k;
@@ -2047,6 +2065,7 @@ export class ProceduralAnimator {
     to(b.rightHip, "z", 0, 0);
     this._castLift = Math.max(wind, drive);
     this._castReach = -0.45 * wind + 1.1 * drive;
+    this._castLevel = drive * k;
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
