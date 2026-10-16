@@ -61,8 +61,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
   return null;
 }
 
-// Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower): it leaves the fist at the throw's let-go, not at the swing's start
-const THROWS_HELD_PROP = new Set(["javelin", "bomb"]);
+// Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
+const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
 
 function isFirearmUnit(unit: RuntimeUnit): boolean {
   const hint = unit.definition.weaponHint ?? "";
