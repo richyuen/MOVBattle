@@ -203,6 +203,9 @@ const BLOW_FOLLOW_LOW = 0.2;
 const THROW_COCK = { raise: -2.9, out: 0.3, elbow: -1.6, turn: 0.4, lean: -0.15, lead: -1.3 };
 const THROW_FOLLOW = { raise: -0.35, lean: 0.35 };
 const THROW_SWING = 0.55;
+// Harpoon gun at the hip (units/pirate.harpooner): gun arm a little behind the hang (raise > 0 tips the nozzle down), off hand across onto the canister,
+// trunk rocked back `kick` rad at the release
+const HARPOON_HIP = { raise: 0.25, out: 0.1, elbow: -0.3, offRaise: -0.55, offIn: 0.4, offElbow: -1.0, kick: 0.12 };
 const THROW_LET_GO = 0.5;
 /*
  * Two-hand boulder (vfx.k; units/tribal.stoner). Spec read off the reference: the boulder, about .38 of his height across, is held in front of the belly in both
@@ -2392,6 +2395,23 @@ export class ProceduralAnimator {
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
     const extend = this._resolveReleasePoint(0.5);
+    if (b.rightHand.getChildren().some((n) => n.name === "harpoonGun")) {
+      // A harpoon gun is fired from the hip, not thrust (units/pirate.harpooner): both hands on the canister low at the belt, the nozzle forward and a
+      // little down, the trunk rocked back by the kick at the release
+      const set = Math.min(1, progress / Math.max(extend * 0.5, 0.001));
+      const kick = progress > extend ? Math.max(0, 1 - (progress - extend) / Math.max(1 - extend, 0.001)) : 0;
+      b.rightShoulder.rotation.x = HARPOON_HIP.raise * set;
+      b.rightShoulder.rotation.z = HARPOON_HIP.out * set;
+      b.rightElbow.rotation.x = HARPOON_HIP.elbow * set;
+      b.leftShoulder.rotation.x = HARPOON_HIP.offRaise * set;
+      b.leftShoulder.rotation.z = HARPOON_HIP.offIn * set;
+      b.leftElbow.rotation.x = HARPOON_HIP.offElbow * set;
+      b.torso.rotation.x = -HARPOON_HIP.kick * kick;
+      b.rightHip.rotation.x = 0.12 * set;
+      b.leftHip.rotation.x = -0.12 * set;
+      if (progress >= 1) this._state = AnimState.Idle;
+      return;
+    }
     if (progress < extend) {
       const windUp = progress / Math.max(extend, 0.001);
       b.rightShoulder.rotation.x = -0.42 * windUp;

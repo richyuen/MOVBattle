@@ -1586,8 +1586,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // A harpoon gun (units/pirate.harpooner): a chunky blue-grey octagonal canister carried at the hip, a grey barrel stepping down to a ringed
       // muzzle with the harpoon's dark head sat in it, and a handle on top. Its long axis is the barrel (+y, muzzle up the fist), where a spear lay;
       // the harpoon leaves from HARPOON_MUZZLE on its rope (simulationSystem harpoonMuzzleOf).
-      // Self-lit, not metal: as metal in the field's shade the canister read as one black drill
-      const steel = mat(scene, new Color3(0.42, 0.5, 0.66), 0.25, "cloth");
+      // Self-lit, not metal: as metal in the field's shade the canister read as one black drill. Dark navy, not pale steel (the reference canister is a
+      // deep slate blue under its grey nozzle)
+      const steel = mat(scene, new Color3(0.17, 0.21, 0.34), 0.12, "cloth");
       const grey = mat(scene, new Color3(0.55, 0.56, 0.58), 0.2, "cloth");
       const dark = mat(scene, new Color3(0.14, 0.14, 0.16), 0, "cloth");
       const body = MeshBuilder.CreateCylinder("harpoonGun", { height: HARPOON_GUN_LONG * s, diameter: HARPOON_GUN_WIDE * s, tessellation: 8 }, scene);

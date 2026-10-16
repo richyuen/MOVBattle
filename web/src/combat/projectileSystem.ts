@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, MeshBuilder, Color3, Mesh, TransformNode,
+  Scene, Vector3, MeshBuilder, Color3, Mesh, TransformNode, Node,
   PBRMetallicRoughnessMaterial, ParticleSystem, VertexBuffer, Ray,
   StandardMaterial, DynamicTexture,
 } from "@babylonjs/core";
@@ -275,7 +275,15 @@ export class ProjectileSystem {
 
   private _layRope(p: ActiveProjectile): void {
     if (!p.rope) return;
-    const from = p.tether && !p.tether.isDisposed() ? p.tether.getAbsolutePosition() : p.origin;
+    // Tied to the muzzle where the gun is now: the sim steps without drawing, so the muzzle's cached world place is brought up to this step first, else the
+    // rope's tail hangs back where the muzzle was at the release
+    let from = p.origin;
+    if (p.tether && !p.tether.isDisposed()) {
+      const chain: TransformNode[] = [];
+      for (let n: Node | null = p.tether; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      from = p.tether.getAbsolutePosition();
+    }
     const to = p.mesh.position;
     const len = Vector3.Distance(from, to);
     if (len < 0.01) { p.rope.setEnabled(false); return; }
