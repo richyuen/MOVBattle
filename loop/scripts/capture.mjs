@@ -404,9 +404,8 @@ async function main() {
               if (!pool.length) return null;
               const man = pool.reduce((a, b) => ((b.y ?? 0) > (a.y ?? 0) ? b : a));
               const mates = units.filter((u) => u !== man && u.team === man.team && Math.hypot(u.x - man.x, u.z - man.z) < 3.5);
-              // Down his wall's line (its long axis, toward his end of it), turned .2 rad to the side he is thrown out to: the blow and his throw run across the
-              // frame and he is clear of the line his mates still hold
-              const all = [man, ...mates];
+              // His wall's line: the long axis of the mates still holding it (not of him: thrown a body out of it, he would skew a short line's axis)
+              const all = mates.length >= 2 ? mates : [man, ...mates];
               const cx = all.reduce((s, u) => s + u.x, 0) / all.length, cz = all.reduce((s, u) => s + u.z, 0) / all.length;
               let sxx = 0, sxz = 0, szz = 0;
               for (const u of all) { sxx += (u.x - cx) ** 2; sxz += (u.x - cx) * (u.z - cz); szz += (u.z - cz) ** 2; }
@@ -415,9 +414,13 @@ async function main() {
               if (ax * (man.x - cx) + az * (man.z - cz) < 0) { ax = -ax; az = -az; }
               let nx = -az, nz = ax;
               if (nx * (man.x - h.x) + nz * (man.z - h.z) < 0) { nx = -nx; nz = -nz; }
-              const ox = ax + nx * 0.2, oz = az + nz * 0.2;
-              // Aimed past his feet (the root) to his middle, which lies back along the throw
-              window.game.frameCamera({ x: man.x + nx * 0.5, y: (man.y ?? 0) + 0.55, z: man.z + nz * 0.5 }, 3.6, Math.atan2(oz, ox), Math.PI / 2.05);
+              // Side-on to his throw (straight down his wall's line, which runs across his facing), so his seat, thighs and head read in profile, from
+              // whichever end of the line has fewer of his mates between him and the lens
+              let ox = ax, oz = az;
+              const onSide = (sx, sz) => mates.filter((u) => (u.x - man.x) * sx + (u.z - man.z) * sz > 0.2).length;
+              if (onSide(ox, oz) > onSide(-ox, -oz)) { ox = -ox; oz = -oz; }
+              // Aimed a little past his feet (the root) to his seat, which leads the throw
+              window.game.frameCamera({ x: man.x + nx * 0.2, y: (man.y ?? 0) + 0.55, z: man.z + nz * 0.2 }, 3.6, Math.atan2(oz, ox), Math.PI / 2.05);
               return { id: man.id, y: man.y };
             }, hit);
             summary.notes.push(struck
