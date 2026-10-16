@@ -345,13 +345,16 @@ async function main() {
             ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} landed at +${hit.ms} ms, shot 128 ms after the landing`
             : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
           if (hit) await shot(page, "press_clubbers_hit");
-          // The same frame, side-on to the blow and from above the file-mates' helms: striker's fist, club and the struck man's helm in profile, the camera
-          // square to the line from the striker to the struck head, aimed at its middle, so a club on (or over) the helm can be told apart.
+          // The same frame from low, a little behind the struck man and out past the outer end of his wall (none of his mates between him and the lens): his feet off
+          // the ground, his arms out and the club come down over him onto his legs, the striker beyond him.
           if (hit) {
             await page.evaluate((h) => {
-              const dx = h.head.x - h.x, dz = h.head.z - h.z;
-              const alpha = Math.atan2(dx, -dz); // camera offset (-dz, dx): square to the blow line
-              window.game.frameCamera({ x: (h.head.x + h.x) / 2, y: h.head.y, z: (h.head.z + h.z) / 2 }, 4.2, alpha, Math.PI / 2.4);
+              const len = Math.hypot(h.head.x - h.x, h.head.z - h.z) || 1;
+              const dx = (h.head.x - h.x) / len, dz = (h.head.z - h.z) / len;
+              // Blow line turned 1.3 rad toward his wall's outer end
+              const turn = 1.3 * (h.head.z >= 0 ? 1 : -1) * (dx >= 0 ? 1 : -1);
+              const ox = dx * Math.cos(turn) - dz * Math.sin(turn), oz = dx * Math.sin(turn) + dz * Math.cos(turn);
+              window.game.frameCamera({ x: h.head.x - dx * 0.4, y: h.head.y * 0.6, z: h.head.z - dz * 0.4 }, 3.8, Math.atan2(oz, ox), Math.PI / 2.1);
             }, hit);
             await shot(page, "press_clubbers_blow");
           }
