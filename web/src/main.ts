@@ -800,6 +800,8 @@ function populateCampaignList(): void {
     btn.addEventListener("click", () => {
       selectedCampaignId = campaign.id;
       selectedCampaignScenarioId = campaign.scenarios[0]?.id ?? null;
+      // Sandbox pressed next opens on this level's map
+      sandboxPickedMapId = campaign.scenarios[0]?.mapId ?? null;
       populateCampaignList();
       populateCampaignScenarioList(campaign.id);
     });
@@ -808,7 +810,11 @@ function populateCampaignList(): void {
   populateCampaignScenarioList(selectedCampaignId);
 }
 
+// The map of the level last clicked on the Levels screen since it opened: the Sandbox button takes it (an empty field on that map), else the default map
+let sandboxPickedMapId: BattleMapId | null = null;
+
 function toggleCampaignOverlay(visible: boolean): void {
+  sandboxPickedMapId = null;
   campaignOverlayEl.classList.toggle("visible", visible);
   campaignOverlayEl.setAttribute("aria-hidden", visible ? "false" : "true");
   if (visible) {
@@ -1692,6 +1698,7 @@ function setCampaignUnlimited(enabled: boolean): void {
 }
 
 function leaveCampaignMode(): void {
+  const pickedMapId = sandboxPickedMapId;
   clearPendingCampaignResolution();
   toggleCampaignOverlay(false);
   campaignSession = null;
@@ -1700,9 +1707,11 @@ function leaveCampaignMode(): void {
   selectedCampaignScenarioId = null;
   resetBattle({
     preserveCampaignSession: true,
-    restoreSandboxMap: true,
+    restoreSandboxMap: pickedMapId === null,
     suppressStatus: true,
   });
+  if (pickedMapId !== null) loadMapById(pickedMapId);
+  updateCampaignStatusDisplay();
   budgetSystem = new BudgetSystem(
     BATTLE_CONFIG.teamABudget,
     BATTLE_CONFIG.teamBBudget,
@@ -1711,7 +1720,7 @@ function leaveCampaignMode(): void {
   buildUnitPanel();
   updateBudgetDisplay();
   updateSelectedUnitDisplay();
-  showStatus("Returned to sandbox.");
+  showStatus(pickedMapId !== null ? `Sandbox: ${activeMapInstance.displayName}.` : "Returned to sandbox.");
 }
 
 function buildSuggestedCampaignPlayerPlacements(scenario: CampaignScenarioDefinition): CampaignPlacementSpec[] {

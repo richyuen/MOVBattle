@@ -660,6 +660,57 @@ async function main() {
         full.scenarios.push({ name, result });
         log(`${passed ? "PASS" : "FAIL"} ${name}`);
       }
+      // UI flow: on the Levels screen, a clicked level then Sandbox opens an empty sandbox on that level's map; Sandbox with no level clicked, the default map
+      const t0 = Date.now();
+      const flow = await page.evaluate(() => {
+        const state = () => JSON.parse(window.render_game_to_text());
+        const click = (sel, i = 0) => {
+          const el = document.querySelectorAll(sel)[i];
+          if (!el) throw new Error(`no ${sel}[${i}]`);
+          el.click();
+          window.advanceTime(50);
+        };
+        const failures = [];
+        try {
+          window.game.resetBattle();
+          window.advanceTime(50);
+          const home = state();
+          // The level nodes are built when the Levels screen opens
+          window.game.openCampaignPicker();
+          window.advanceTime(50);
+          const nodes = document.querySelectorAll("#campaignList .campaign-item").length;
+          let picked = null;
+          for (let i = 0; i < nodes && !picked; i++) {
+            window.game.openCampaignPicker();
+            window.advanceTime(50);
+            click("#campaignList .campaign-item", i);
+            click("#campaignScenarioList .campaign-scenario-item", 0);
+            const mapId = state().campaign?.mapId;
+            if (mapId && mapId !== home.map.id) picked = { i, mapId };
+          }
+          if (!picked) return ["no level on a map other than the sandbox's"];
+          // From inside that level's campaign, as a player would be: Levels, the level, Sandbox
+          window.game.openCampaignPicker();
+          window.advanceTime(50);
+          click("#campaignList .campaign-item", picked.i);
+          click("#btnLeaveCampaign");
+          const s = state();
+          if (s.map.id !== picked.mapId) failures.push(`map ${s.map.id}, expected the level's ${picked.mapId}`);
+          if (s.campaign !== null) failures.push("still in campaign mode");
+          if (s.units.length !== 0) failures.push(`${s.units.length} units on the field, expected none`);
+          if (s.budgets.teamA !== home.budgets.teamA || s.budgets.teamB !== home.budgets.teamB) failures.push(`budgets ${s.budgets.teamA}/${s.budgets.teamB}, sandbox ${home.budgets.teamA}/${home.budgets.teamB}`);
+          // No level clicked: the default sandbox map
+          window.game.openCampaignPicker();
+          window.advanceTime(50);
+          click("#btnLeaveCampaign");
+          if (state().map.id !== home.map.id) failures.push(`Sandbox with no level clicked opened ${state().map.id}, expected ${home.map.id}`);
+        } catch (e) {
+          failures.push(String(e));
+        }
+        return failures;
+      });
+      summary.scenarios.push({ name: "ui_levels_sandbox_map", passed: flow.length === 0, failures: flow, ms: Date.now() - t0 });
+      log(`${flow.length === 0 ? "PASS" : "FAIL"} ui_levels_sandbox_map`);
     }
   } finally {
     await browser.close();
