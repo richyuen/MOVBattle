@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 287   Last re-audit: 285   Consecutive rejects: 0   Branch: main
+Iteration: 288   Last re-audit: 285   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -26,29 +26,30 @@ vfx tier 3: i FAIL j FAIL k FAIL l FAIL m FAIL n FAIL o PASS p FAIL (1/8) (first
 - l bomb_thrower [S since: 1 (282 e833fa3)] B: struck 1, 2; 3 the bomb in flight is the one he held, but head-sized and only one; TABS a fist-sized bomb in each hand, short fuse (units/pirate.bomb_thrower.jpg; ours throw_bombs_release)
 - m dynamite_thrower [S since: 1 (284 345314d)] B: struck 1-3; 4 the bundle is a forearm-length 3-pack at the hip (lineup_wild_west), and in flight sticks and bands merge into one plain red cylinder, no lit spark at the fuse (throw_bombs_flight); TABS a hip-to-chest, near torso-wide bundle of distinct sticks, two broad black bands, glowing fuse (units/wild_west.dynamite_thrower.jpg)
 - n bone_mage [S since: 1 (286 397d3ef)] B: struck 1 (leaf whirl from the hand replaces the bolt); 2 no casting pose: staff level across the hips in throw_casters_release, never raised overhead (units/tribal.bone_mage.png: staff high in one arm, skull end up); note: leaves are even diamond kites in a ball, TABS long almond leaves of mixed size, a few very large, strung in a ribbon
-- p swordcaster [S since: 0] B: 1 missing: flying sword (the same dark bolt; TABS long glowing white blades, dark keyhole hilts, point first, units/spooky.swordcaster.jpg); 2 holds a short grey hand sword; TABS a dark lockbox chest at the belly, swords floating round him
+- p swordcaster [S since: 1 (288 462b2dc)] B: struck 1 (462b2dc: glowing white sword, dark guard/grip, hangs .7 s over his head point-on, then flies); 2 holds a short dark hand sword at the hip, one sword at a time; TABS a dark lockbox chest in both hands at the belly, 5-6 blades standing point-up round him (units/spooky.swordcaster.jpg); note: keyhole too small to read, the shot pair shows only the hover, never the flight
 Total tier 1 24/24; tier 2 23/24; tier 3 22/29.
 
 ## Focus (every gap this iteration)
-BASE 87eea7d (iter 287)
-- [S] press-blow-lands (battle-feel.e blocker 1) — 68946d7 — REJECT, revert conflicted: rejected-kept (blow throw + THROWN pose stay in code)
-- [S] wizard-cast-hold (vfx.o blocker 2) — d930bf5 — APPROVE (struck o.2, o flips PASS)
+BASE b1376b9 (iter 288)
+- evidence: press_clubbers_hit/_blow shot 128 ms after the landing — 76c9593
+- [S] press-throw-airborne (battle-feel.e blocker 1) — dropped uncommitted (look: struck hoplite rose .37 m but hidden in his own file in both press shots)
+- [S] swordcaster-flying-sword (vfx.p blocker 1) — 462b2dc — APPROVE (struck p.1, p still FAIL on 2)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] press-blow-lands (68946d7) VERDICT: REJECT CRITERION: battle-feel.e FAIL (previous: FAIL)
-- GAP: [S] wizard-cast-hold (d930bf5) VERDICT: APPROVE CRITERION: vfx.o PASS (previous: FAIL); REGRESSIONS: none
+- GAP: [S] swordcaster-flying-sword (462b2dc) VERDICT: APPROVE CRITERION: vfx.p FAIL (previous: FAIL); REGRESSIONS: none
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.e press-throw-airborne [attempts: 2 as press-blow-lands] — blocker 1: struck hoplite launched off his feet with a fixed minimum lift/back-speed independent of shoveResponse and wall bracing, THROWN pose on, club landed at the hit frame — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_hit
-2. [S] battle-feel.e knight-shoulder-cock — blocker 3: sword windup cocks the blade back over the shoulder before the swing — ref trailer_3_sheet_01 r3c1 — ours closeup_weapon_reads
-3. [S] vfx.p swordcaster-flying-sword — blocker 1: long glowing white blade, dark keyhole hilt, flown point first instead of the dark bolt — ref units/spooky.swordcaster.jpg — ours throw_casters_flight
-4. [S] vfx.n bone-mage-staff-raise — blocker 2: staff raised high in one arm, skull end up, at release — ref units/tribal.bone_mage.png — ours throw_casters_release
-5. [S] vfx.k stoner-two-hand-boulder — blocker 1: chest-sized faceted boulder in both hands at the waist (same mesh in flight, blocker 2) — ref units/tribal.stoner.jpg — ours throw_bombs_release
-6. [S] vfx.m dynamite-bundle — blocker 4: hip-to-chest bundle of distinct sticks, two black bands, lit fuse spark kept in flight — ref units/wild_west.dynamite_thrower.jpg — ours throw_bombs_flight
-7. [S] vfx.j harpoon-head — blocker 2: heavy dark barbed harpoon head on a short shaft as the missile — ref units/pirate.harpooner.jpg — ours throw_spears_flight
-8. [S] vfx.i javelin-leaf-head — blocker 4: short javelin with a big dark leaf head in hand and in flight — ref units/tribal.spear_thrower.jpg — ours throw_spears_release
+1. [S] battle-feel.e press-blow-follow-through — blocker 1: after landing the club travels on down to end low; struck man thrown back off his feet, arms out (in press_clubbers_hit club still high, hoplite upright) — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_hit
+2. [S] battle-feel.e shoulder-cock-windup — blocker 3: knights cock the sword arm well back over the shoulder before the swing — ref trailer_3_sheet_01 r3c1 — ours closeup_weapon_reads
+3. [S] vfx.p swordcaster-lockbox — blocker 2: dark lockbox chest in both hands at the belly plus a ring of 4-6 hovering point-up swords that feed the casts (propBuilder swordcaster special) — ref units/spooky.swordcaster.jpg — ours throw_casters_release
+4. [S] vfx.n bone-mage-staff-raise — blocker 2: staff raised high in one arm, skull end up, through the release — ref units/tribal.bone_mage.png — ours throw_casters_release
+5. [S] vfx.k stoner-two-hand-boulder — blockers 1/2/4: chest-sized faceted boulder in both hands at the waist, two-hand heave, same mesh flies — ref units/tribal.stoner.jpg — ours throw_bombs_release
+6. [S] vfx.l bomb-each-hand — blocker 3: fist-sized bomb in each hand, short fuse; the flying bomb shrinks to match — ref units/pirate.bomb_thrower.jpg — ours throw_bombs_release
+7. [S] vfx.m dynamite-bundle — blocker 4: near torso-wide bundle of distinct sticks, two black bands, glowing fuse spark kept in flight — ref units/wild_west.dynamite_thrower.jpg — ours throw_bombs_flight
+8. [S] vfx.i short-leaf-javelin — blocker 4: short javelin with a big dark leaf head instead of the man-height pole — ref units/tribal.spear_thrower.jpg — ours throw_spears_release
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
+- press-throw-airborne [attempts: 1, dropped] — 288: fixed min lift 4.4 / back 1.6 m/s on the blow throw (probe: struck hoplites .37 m up at +128 ms, scenarios fine) but in press_clubbers_hit and _blow he is hidden behind his board, the blue clubbers and his file; the flipped _blow camera was worse. Needs a shot that sees his feet, or a bigger visible read
 - press-blow-lands [attempts: 2, rejected-kept] — 287: non-topple blow throw (speed/lift x kb x shoveResponse, root pitch .8, THROWN arms-out/legs-swept pose); critic saw no hoplite airborne or arms-out in any press shot, club still vertical at the _hit frame. Code kept (revert conflicted with d930bf5's adjacent constants)
 - press-blow-lands [attempts: 1] — 286: forced blast topple (bypassing wallBraced) + fixed 1.8/1.4 throw on every heavy_swing land; regression battlefeel_shield_wall_vs_light_swarm (protector toppled); unconditional on blow and target
 - head-snap-under-crown [attempts: 1] — 283: triggerBuckle from staggerFromBlow as last overlay after flinch; critic saw every helm under the club level, boards up. Cause found 284: the pose was there but hidden behind his own board / his file
@@ -57,8 +58,8 @@ BASE 87eea7d (iter 287)
 - [R] target-aimed-blow [attempts: 1] — 277: pending-blow queue + _aimBlow + reposeNow flinch + contact hold; critic saw clubs hip-high/upright on the shot frame, no hoplite recoil
 
 ## Notes for next iteration (max 5 lines)
-- 287 probe: every press blow is clubber->hoplite dmg 22 kb 2.5, braced=true, full health; the light-swarm protector hit is identical (dmg 22 kb 2.5 braced, 159/181), so no blow-side threshold separates them; that scenario needs protector steady|pressure-loaded|staggered (no topple clocks). press-blow-lands is at 2 attempts: the next try on e.1 must be a new gap (e.g. press-throw-airborne, fixed min lift) or move to e.3. The press_clubbers_hit frame shifted +720 -> +928 ms between look and full runs; check which blow it shoots.
-- Casters: wizard fireball now pends to the drive (castReleasesIn, CAST_LOOSE .68, staff laid level CAST_LEVEL_TIP, held to CAST_HOLD .94); bone mage/swordcaster still fire at cast start. Throws: THROWS_HELD_PROP keys on weaponHint; missile clones the held prop. harpoonMuzzleOf finds HARPOON_MUZZLE; _layRope reads tether.getAbsolutePosition() without recomputing the hand chain.
-- Every other criterion PASS (274-287). mapBuilder.ts LF, LOG.md CRLF, projectileSystem.ts CRLF-sensitive for node replace (use Edit). Unit PBR colours grey out in shade: self-light. Glow: getGlowLayerByName("glow").addExcludedMesh.
-- capture.mjs prunes output/loop iterations older than iter-10: never use a scratch --iter number above the real one (9001 pruned everything below 8991 this iteration).
+- 288: the blow throw (runtimeUnit staggerFromBlow, kb 2.5 x shoveResponse) lifts a hoplite only ~2 m/s (9 cm under g=22): invisible. A min-lift floor works in the sim (battleFeelState has no airborne state, so the light-swarm protector check survives) but the struck man is occluded in both press shots: fix the evidence (a shot that sees his legs) before another e.1 try. Scratch probe pattern: playwright via createRequire(loop/scripts/package.json), executablePath Chrome, vite preview on its own port.
+- Casters: wizard fireball pends to the drive (castReleasesIn); swordcaster sword spawns at cast start over headTop and hovers SWORD_HOVER .7 s (projectile hover option), so the casters pair shows it hanging, not flying. Bone mage still fires at cast start. THROWS_HELD_PROP keys on weaponHint; missile clones the held prop.
+- Every other criterion PASS (274-288). mapBuilder.ts LF, LOG.md CRLF, projectileSystem.ts CRLF-sensitive for node replace (use Edit). Unit PBR colours grey out in shade: self-light. Glow: getGlowLayerByName("glow").addExcludedMesh.
+- capture.mjs prunes output/loop iterations older than iter-10: never use a scratch --iter number above the real one.
 - Melee hit path: _tryAttack applies damage at swing start unless a heavy blow is pending. No [P] on rows approved within 20 iterations, except fallout named by the critic.
