@@ -279,3 +279,4 @@ iter 277 | re-audit; [R] target-aimed-blow (rejected, reverted) | 0/1 approved |
 iter 278 | re-audit; evidence press_clubbers_blow; [R] aimed-blow-final-layer (rejected, reverted; e deferred) | 0/1 approved | passes 23 -> 23
 iter 279 | re-audit; [S] overhead-blow (rejected, reverted); STOP written | 0/1 approved | passes 23 -> 23
 iter 280 | re-audit; [S] overhead-blow (user un-defer, attempt 2) | 1/1 approved | passes 23 -> 23
+iter 281 | [S] overhead-blow-stagger, [S] held-prop-release (+ evidence 259bbec; re-audit: vfx tier 3 first scored 0/8) | 2/2 approved | passes 68/77 -> 68/77

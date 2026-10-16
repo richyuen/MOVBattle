@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 270 | renaissance-plaza-paving | maps-light.m | approved
-- 270 | meadow-oak-ring | maps-light.i | approved
 - 271 | adventure-pool-water | maps-light.j | approved
 - 271 | meadow-ruin-pillars | maps-light.i | approved
 - 272 | adventure-castle | maps-light.j | approved
@@ -21,6 +19,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 278 | aimed-blow-final-layer [R] | battle-feel.e | rejected
 - 279 | overhead-blow | battle-feel.e | rejected
 - 280 | overhead-blow | battle-feel.e | approved
+- 281 | overhead-blow-stagger | battle-feel.e | approved
+- 281 | held-prop-release | vfx.i | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -28,13 +28,14 @@ slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (m
 ## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
 proceduralAnimation.ts:_aimBlow overhead (BLOW_LAND,_AIM_FROM,_HOLD,_ELBOW,_PITCH,_OVERHEAD,_DROP,_CROWN,_LUNGE; FLINCH_HOLD,_PITCH,_HEAD) | land .55 from .75 hold .6, elbow -.15 pitch .4, overhead .3 drop .25, lunge -.4/.3/.1, flinch .12 .85/.9 | 280 | approved | fist at grip of 35deg line (279); fixed CLUB_COCK/LAND arc
+runtimeUnit.ts:blow stagger (BLOW_STAGGER_SECONDS,_HOLD,_PITCH,_STEP; root lean outside clamp, heavy blows only) | .35 s, hold .12, pitch .38, step .3 | 281 | approved | neck flinch only
+proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; held prop flies, THROWS_HELD_PROP javelin) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .38 | 281 | approved | forward-raise -1.2 then drop; spawn at swing start
 propBuilder.ts:scythe (SCYTHE_SNATH,_BLADE,_SEGS,_CURL,_LEVEL,_HEEL,_SPINE,_BOW,_GRIP; ramped curl, socket+tang) | 1.25 s, .8 in 14, curl 1.3 ramped, level -.6, heel .17, bow .05, grip .15 | 268 | approved | curl 1.75 even, rise .35 (267); 6 box segs (252)
 propBuilder.ts:tree_club [R] (TREE_CLUB_LONG,_GRIP,_THICK,_BEND,_ROOTS,_ROOT_FAN,_CROWN,_LOBE,_LOBES; bent tube, limb, knot) | .6 stand, grip .15, thick .09, bend .12 up, 5 roots, crown .25 T, lobes centred on end | 269 | approved | lobes .3,-.5/1.25,-.35/.8,.7 hung (267); .8 stand, 4 square roots, 3-lobe clover .24 (265)
 proceduralAnimation.ts:tree hip carry (TREE_HIP_ARM, TREE_HIP_TIP; bow spin +pi to face up) | arm raise -.9 out .15 elbow -.4; tip .9,.02,.35 | 269 | approved | raise -.35 out .12 elbow -.7, tip y -.02, bend hung under (267)
 proceduralAnimation.ts:scythe high carry (SCYTHE_HIGH_ARM, SCYTHE_HIGH_TIP, SCYTHE_SPIN; fixed, carryTurn 1) | arm raise -.95 out .22 elbow -1.05; tip .6,.78,.15; spin pi/2 | 267 | approved | rode the arm (no carry)
 propBuilder.ts:buildHorse drape (HORSE_CAP_LONG,_END,_SQUARE,_BEVEL,_HEM_SHARE,_UPPER_SHOW; flat deck) | hem .5, end .55 square .35, bevel .07, long 1.32, show .32 | 268 | approved | domed profile, end .7, long 1.15 (262); lathe sack (260)
 unitFactory.ts:dressTreeGiant (TREE_GIANT_HOOD, _OPEN, _BEARD, _BEARD_WIDE, _SKIRT, _HEM, _TATTERS; tunic/hair/rags) | hood 1.32 open .42, beard 1.05 x .85, skirt .85 hem 1.3, 8 rags; hair .42,.15,.17 team .1 glow .18 | 265 | approved | hair .3,.15,.12 team .35 (253)
-unitFactory.ts:dressCactus (CACTUS_ROBE, _LONG, _HOOD, _HOOD_OPEN, _SLEEVE, _SPINES, _SPINE; flowers) | hem 1.55 W, .86 leg, hood 1.6 open .26, sleeve 1.4, 34+3/arm+6, spine .4 heads | 256 | approved | cactus_body trunk + 10 spines
 
 mapBuilder.ts:sandSpits shoreline [R] (SPIT_*; wet band only over water via overWater; dry = lawn mat, SPIT_SAND_GLOW; pirate ground/grass sand) | wet .7 band, glow .12; ground .84,.72,.5 grass .8,.68,.46 | 258 | approved | wet fan under every lobe, sea-mat dry (257); olive field
 mapBuilder.ts:barePlane (theme.bare; BARE_PLANE, BARE_KEEP; simulation ground/fog) | 1600 m, keep ground+lawn, no obstacles/props; plane .86,.85,.82 fog .9,.89,.86 | 260 | approved | purple-grey island with ring, crystals, columns
