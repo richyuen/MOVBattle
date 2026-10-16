@@ -243,7 +243,7 @@ const BOULDER_CARRY = { raise: -0.6, inward: 0.42, elbow: -0.75 };
  * forearms bent ~80 deg forward (elbow) and swung in round the box (turn, about the vertical through the shoulder) so the two mitts meet its ends in front of
  * the navel. Held the same through the walk, the idle and the cast: he never lets go of it.
  */
-const LOCKBOX_CARRY = { raise: 0.15, out: 0.32, turn: 0.6, elbow: -1.85 };
+const LOCKBOX_CARRY = { raise: 0.15, out: 0.25, turn: 0.8, elbow: -1.85 };
 const BOULDER_DIP = { raise: 0.25, inward: 0.32, elbow: -0.25, trunk: 0.55, thigh: -0.45, knee: 0.7 };
 const BOULDER_HEAVE = { raise: -2.4, inward: 0.3, elbow: -0.15, trunk: -0.25 };
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
