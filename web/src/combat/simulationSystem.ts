@@ -1525,6 +1525,8 @@ export class SimulationSystem {
       const reach = attacker.definition.engageRange + this.attackRangePadding + Math.max(0, target.collisionBodyRadius - attacker.collisionBodyRadius) + this.blowStrikeReach;
       if (Vector3.Distance(attacker.position, target.position) > reach) continue;
       this._landMeleeBlow(attacker, target, b.damage, b.splashRadius, b.knockback, now, attacker.getImpactOrigin().position);
+      // ...and he goes back under it whole, from the feet
+      target.staggerFromBlow(attacker.position);
     }
   }
 
