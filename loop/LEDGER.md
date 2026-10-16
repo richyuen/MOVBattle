@@ -10,7 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 292 | stoner-two-hand-boulder | vfx.k | approved
 - 293 | press-second-rank-blow | battle-feel.e | rejected
 - 293 | bomb-pair-fist-size | vfx.l | approved
 - 294 | press-blow-rebuild [R] | battle-feel.e | rejected
@@ -28,6 +27,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 300 | swordcaster-blade-ring [R] | vfx.p | approved
 - 301 | one-strike [R] | battle-feel.e | rejected
 - 301 | ring-sword-rises | vfx.p | approved
+- 302 | two-hand-body-swing [R] | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.

@@ -300,3 +300,4 @@ iter 298 | [S] press-mark-held, [P] lockbox-grip-centre | 1/2 approved | passes 
 iter 299 | [S] press-landed-contact, [S] lockbox-body-anchor | 1/2 approved | passes 75 -> 75
 iter 300 | [S] press-club-lands-on-board, [R] swordcaster-blade-ring | 2/2 approved | passes 75 -> 75
 iter 301 | [R] one-strike, [S] ring-sword-rises | 1/2 approved | passes 75 -> 76
+iter 302 | two-hand-body-swing [R] | 0/1 approved | passes 23/24 -> 23/24 (tier 2; re-audit 302 no flips; battle-feel.e deferred)
