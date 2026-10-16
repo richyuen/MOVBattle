@@ -135,6 +135,8 @@ const REAR_RANK_REACH = 1.4;
 // How far past shoulder contact a pressing clubber may still be when he brings his blow down (see _processUnitDecision).
 const BLOW_CONTACT_SLACK = 0.3;
 const REAR_RANK_LANE = 0.7;
+// How long a landed heavy blow dwells on the struck man, club head on him, before he is thrown off his feet (see _pendingLaunches).
+const BLOW_DWELL = 0.12;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -177,6 +179,11 @@ export class SimulationSystem {
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
   private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean }> = [];
   private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
+  // A landed heavy blow dwells on the man before it throws him (trailer_3_sheet_01 r2c3: the club head is on the red man, chest to chest, as he starts to go):
+  // the damage, the striker's pinned aim and the flinch are the land step's, the push and the throw off his feet (staggerFromBlow) come BLOW_DWELL s later,
+  // so for that long he crumples under the club head where it struck instead of being a body-length off in the air on the next frame. See _landMeleeBlow
+  // and _fireDwelledLaunches. A blow that kills him outright throws the corpse at once.
+  private _pendingLaunches: Array<{ target: RuntimeUnit; from: Vector3; knockback: number; at: number }> = [];
   // A presser's distance to his foe at his last decision: while it is still closing he holds his heavy swing until he is at the man's shoulder.
   private _closingFrom = new Map<RuntimeUnit, number>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
@@ -283,6 +290,7 @@ export class SimulationSystem {
   beginSimulation(now: number): void {
     this._pendingBlows = [];
     this._pendingThrows = [];
+    this._pendingLaunches = [];
     this._closingFrom.clear();
     this._isRunning = true;
     this._now = now;
@@ -312,6 +320,7 @@ export class SimulationSystem {
     }
     // After the animation step, so the frame a blow lands on is the frame its club is down on the man
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
+    if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
 
     if (this.hazards.length > 0) {
@@ -1595,11 +1604,17 @@ export class SimulationSystem {
   private _landMeleeBlow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, splashRadius: number, knockback: Vector3, now: number, impactOrigin: Vector3): void {
     // The striker's aim is pinned where the blow lands before the man is thrown off that point
     attacker.animator.blowStruck();
-    this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
+    const heavy = attacker.animator.defaultAttackMotion === "heavy_swing";
+    // A heavy blow that leaves him standing dwells on him (BLOW_DWELL): the push is withheld from the damage step and fired with the throw; the crowd
+    // around him still takes the blow's shock now
+    const dwells = heavy && target.currentHealth > damage;
+    this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();
-    // ...and under a heavy weapon he is thrown back off his feet as hard as the blow pushed, whether it was held for the drop or struck at once from a swing the walk cut short
-    if (attacker.animator.defaultAttackMotion === "heavy_swing") target.staggerFromBlow(attacker.position, knockback.length());
+    // ...and under a heavy weapon he is thrown back off his feet as hard as the blow pushed, whether it was held for the drop or struck at once from a swing the
+    // walk cut short: after the dwell with the club head on him, or at once when the blow killed him
+    if (dwells) this._pendingLaunches.push({ target, from: attacker.position.clone(), knockback: knockback.length(), at: now + BLOW_DWELL });
+    else if (heavy) target.staggerFromBlow(attacker.position, knockback.length());
     if (this.hitLog.length >= 200) this.hitLog.shift();
     // His pose was written after the last render: bring the chain down to the head up to date before reading it
     const chain: TransformNode[] = [];
@@ -1623,6 +1638,17 @@ export class SimulationSystem {
       const reach = attacker.definition.engageRange + this.attackRangePadding + Math.max(0, target.collisionBodyRadius - attacker.collisionBodyRadius) + this.blowStrikeReach;
       if (Vector3.Distance(attacker.position, target.position) > reach) continue;
       this._landMeleeBlow(attacker, target, b.damage, b.splashRadius, b.knockback, now, attacker.getImpactOrigin().position);
+    }
+  }
+
+  /** Throws the men whose heavy blow has dwelt on them BLOW_DWELL: back off their feet, from where the striker stood when it landed. A man killed, toppled or downed meanwhile stays as he is. */
+  private _fireDwelledLaunches(now: number): void {
+    const due = this._pendingLaunches.filter((l) => now >= l.at);
+    if (due.length === 0) return;
+    this._pendingLaunches = this._pendingLaunches.filter((l) => now < l.at);
+    for (const l of due) {
+      if (l.target.isDead || !this._units.includes(l.target)) continue;
+      l.target.staggerFromBlow(l.from, l.knockback);
     }
   }
 
@@ -1949,7 +1975,8 @@ export class SimulationSystem {
     }
   }
 
-  private _applyDirectOrSplash(target: RuntimeUnit, damage: number, splashRadius: number, attackerTeam: number, knockback: Vector3): void {
+  /** `shock` is the push the crowd around him and the impact presentation see, the knockback itself unless the man's own share of it is held back (a dwelling blow). */
+  private _applyDirectOrSplash(target: RuntimeUnit, damage: number, splashRadius: number, attackerTeam: number, knockback: Vector3, shock: Vector3 = knockback): void {
     if (splashRadius > 0) {
       this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback, target);
     } else {
@@ -1962,7 +1989,7 @@ export class SimulationSystem {
           target,
           impactDelta: delta,
           damage,
-          impulse: knockback,
+          impulse: shock,
           attackerTeam,
         });
       } else if (this.visualEffects) {
@@ -1971,7 +1998,7 @@ export class SimulationSystem {
       }
     }
     const shockRadius = splashRadius > 0 ? splashRadius + 0.85 : 1.55;
-    this._applyCrowdShockwave(target.position, shockRadius, attackerTeam, knockback.scale(splashRadius > 0 ? 0.3 : 0.2), target);
+    this._applyCrowdShockwave(target.position, shockRadius, attackerTeam, shock.scale(splashRadius > 0 ? 0.3 : 0.2), target);
   }
 
   private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3, primaryTarget?: RuntimeUnit): void {
