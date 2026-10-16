@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 294 | press-blow-rebuild [R] | battle-feel.e | rejected
-- 294 | harpoon-rope-tied | vfx.j | approved
 - 295 | dynamite-big-bundle | vfx.m | approved
 - 295 | swordcaster-lockbox | vfx.p | approved
 - 296 | dynamite-lit-fuse | vfx.m | approved
@@ -27,6 +25,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 301 | ring-sword-rises | vfx.p | approved
 - 302 | two-hand-body-swing [R] | battle-feel.e | rejected
 - 303 | stroke-cadence-and-contact-hold [R] | battle-feel.e | rejected
+- 304 | press-close-in | battle-feel.e | rejected
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -56,6 +55,7 @@ projectileSystem.ts:ring sword rise (SWORD_RISE_IN; SWORD_RISE_OVER in simulatio
 proceduralAnimation.ts:lockbox arms (LOCKBOX_CARRY IK start; DLS palm (mitt middle) onto box ends, LOCKBOX_PALM_OUT, 8 steps) | .15, out .6, .6, -1.85; palm .35 mitt widths out | 300 | approved | out .32, wrist GRIP .06 (299); fixed pose (298)
 proceduralAnimation.ts:in-reach press beat (PRESS_CLUB_COCK, PRESS_AIM_ARM,_ELBOW, PRESS_BOARD_LINE, CONTACT_MIN_FALL,_LOWEST) | cock -1.05; arm 1.0; line .25; head pinned at reach on near face, lowest .6 | 300 | approved | direction only, head overran into turf (299); fixed arc .6-1.25 (297)
 proceduralAnimation.ts:press reach lunge (_pressReach; PRESS_REACH_SEAT,_MAX,_PITCH) | none (reverted) | 303 | rejected | seat .9 max .9 H pitch .5 (303)
+simulationSystem.ts:press lane retarget + contact-gated press beat (PRESS_LANE_DETOUR; _openLaneEnemy; strike reach = radii + gap + slack) | none (reverted) | 304 | rejected | detour 1.6, gate at contact (304)
 proceduralAnimation.ts:press mark held (PRESS_MARK_HOLD; marked heavy_swing winds to PRESS_CLUB_COCK, recover stays landed) | 1.5 s | 298 | approved | mark dropped on the first out-of-reach call; swing to CLUB_COCK
 propBuilder.ts:boulder (BOULDER_WIDE,_SQUASH,_COLOR; faceted icosphere, thrown copy flies) | .26 s, y .88 z .94, .34,.31,.28 lit .15 | 292 | approved | head-sized smooth sphere .12 s
 proceduralAnimation.ts:two-hand boulder carry + heave (BOULDER_CARRY,_DIP,_HEAVE; rock at hands midpoint) | carry -.6/.42/-.75; dip .25 trunk .55 knee .7; heave -2.4 trunk -.25 | 292 | approved | one-arm overhand throw (THROW_*)
