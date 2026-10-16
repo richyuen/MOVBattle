@@ -10,7 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 277 | target-aimed-blow [R] | battle-feel.e | rejected
 - 278 | aimed-blow-final-layer [R] | battle-feel.e | rejected
 - 279 | overhead-blow | battle-feel.e | rejected
 - 280 | overhead-blow | battle-feel.e | approved
@@ -26,6 +25,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 285 | harpoon-gun | vfx.j | approved
 - 286 | bone-mage-leaf-whirl | vfx.n | approved
 - 286 | press-blow-lands | battle-feel.e | rejected
+- 287 | press-blow-lands | battle-feel.e | rejected-kept
+- 287 | wizard-cast-hold | vfx.o | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -33,9 +34,11 @@ slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (m
 ## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
 proceduralAnimation.ts:_aimBlow overhead (BLOW_LAND,_AIM_FROM,_HOLD,_ELBOW,_PITCH,_OVERHEAD,_DROP,_CROWN,_LUNGE,_LEAP; _crownOf; FLINCH_*) | crown = hat shell top, leap up to .5 stand; land .55 hold .6, drop .25, flinch .12 .85/.9 | 282 | approved | land at headTop (281); fist at grip of 35deg line (279)
-runtimeUnit.ts:blow stagger (BLOW_STAGGER_SECONDS,_HOLD,_PITCH,_STEP; from _landMeleeBlow on every heavy_swing hit) | .35 s, hold .12, pitch .38, step .3 | 286 | approved | forced topple throw 1.8/1.4/.7 (286, rejected: regression); pending blows only (281)
+runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_PITCH,_SPEED,_LIFT,_MAX; x kb x shoveResponse, no topple) | .6 s hold .28 pitch .8; .75/1.0 per kb, max 3.5/3.2 | 287 | rejected-kept | stagger .35 s hold .12 pitch .38 step .3 (286); forced topple (286, rejected)
 proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; THROWS_HELD_PROP javelin, bomb, stone) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .5 | 283 | approved | javelin, bomb (282); let-go .38, javelin only (281)
 proceduralAnimation.ts:board off (BOARD_OFF_SECONDS,_HOLD,_FLING,_BUCKLE; knockBoardOff from staggerFromBlow) | .6 s hold .25; fling out 1.4 back .6; thigh .9 knee 1.6 sink .35 | 284 | approved | none (board stayed in the wall)
+proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,legs,knee; throwBack; cancels the board-off buckle) | 1.35, .45, .35, .45, .75, .35 | 287 | rejected-kept | none (knees buckled under the blow)
+proceduralAnimation.ts:cast loose/hold (CAST_LOOSE, CAST_HOLD, CAST_LEVEL_TIP; castReleasesIn, fireball pending to the drive) | loose .68 hold .94 tip 0,.1,1 | 287 | approved | fired at cast start, drive .55-.68 out .82-1, tip z+1.1
 projectileSystem.ts:fireball (FIREBALL_WIDE,_TAIL,_HEART,_SHELL; flat icospheres, heart-only glow; staffHeadOf origin) | .55 wide, tail .8; heart 1,.92,.55 shell 1,.45,.08 opaque, no bloom | 286 | approved | shell alpha .7 heart bloom (285); team-tinted sphere .25 (wizard flew a bolt)
 propBuilder.ts:harpoon gun (HARPOON_GUN_LONG,_WIDE, HARPOON_MUZZLE; rope HARPOON_ROPE_WIDE,_COLOR) | .24 x .11 s, steel .42,.5,.66 lit .25; rope .035 dark | 285 | approved | held spear (shared spear mesh)
 projectileSystem.ts:leaf whirl (LEAF_COUNT,_LONG,_WIDE,_WHIRL,_SPREAD,_SPIN,_COLORS; bone mage projectileHint leaves, from right hand) | 11 x .5 x .19, whirl .55 spread 1.2, spin 9 | 286 | approved | crossbow bolt from the waist
@@ -47,8 +50,6 @@ proceduralAnimation.ts:scythe high carry (SCYTHE_HIGH_ARM, SCYTHE_HIGH_TIP, SCYT
 propBuilder.ts:buildHorse drape (HORSE_CAP_LONG,_END,_SQUARE,_BEVEL,_HEM_SHARE,_UPPER_SHOW; flat deck) | hem .5, end .55 square .35, bevel .07, long 1.32, show .32 | 268 | approved | domed profile, end .7, long 1.15 (262); lathe sack (260)
 unitFactory.ts:dressTreeGiant (TREE_GIANT_HOOD, _OPEN, _BEARD, _BEARD_WIDE, _SKIRT, _HEM, _TATTERS; tunic/hair/rags) | hood 1.32 open .42, beard 1.05 x .85, skirt .85 hem 1.3, 8 rags; hair .42,.15,.17 team .1 glow .18 | 265 | approved | hair .3,.15,.12 team .35 (253)
 
-mapBuilder.ts:bareCentreLine (theme.bare; BARE_LINE_WIDE, BARE_LINE_RED; replaces zone fills/borders, named border) | 0.16 m x 1600 m, red .78,.22,.3 self-lit | 261 | approved | tinted zone fills + borders, 10 m untinted gap
-vehicleBuilder.ts:buildSacredElephant (ELEPHANT_HIDE,_GOLD,_GEM; TUSK_RING_PIECE; BLANKET_RADII/_AT; THRONE_SEAT,_BACK_TALL; RIDER_SCALE) | hide .74,.75,.76; ring piece 4; blanket .92x.8x.74 at z-.46; seat .9; rider 2.4 | 261 | approved | buried shrine posts/canopy/halo on mammoth
 unitFactory.ts:dressVoidCultist (VOID_ROBE,_GLOW,_BAND_GLOW,_SKIRT,_HEM,_WHEEL,_SPOKES,_BEARD,_STRANDS,_SHIELD,_STUDS) | robe .3,.15,.12 glow .12; band .3; skirt 1.75 hem 1.6; wheel 2.1 x10; shield 1.5 x8 | 262 | approved | hood + cape
 unitFactory.ts:dressHornedEvil (HORNED_EVIL horns, EVIL_*; MONARCH_SPIKES, _PAULDRON, _THICK) | root .24 H, spike .32; lich 7 tines 2.4 H; monarch spike 1.5 H, pauldron .62/.17 | 266 | approved | no monarch (crown hat); plain hood
 unitFactory.ts:dressSuperPeasant (STRAW_COLOR,_GLOW,_LOCKS,_LOCK,_SWEEP; SACK_COLOR,_GLOW,_SKIRT,_ROPE) | straw .92,.66,.24 glow .2, 16 locks 1.1 heads sweep .75; sack .9,.88,.82 skirt .62 | 263 | approved | laurel + hair cap

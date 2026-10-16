@@ -285,3 +285,4 @@ iter 283 | [S] head-snap-under-crown, [S] stoner-held-rock-release | 1/2 approve
 iter 284 | [S] board-off-under-blow, [S] dynamite-stick (+ evidence) | 2/2 approved | passes 68/77 -> 68/77
 iter 285 | re-audit (no flips; e plateau cleared), [S] wizard-fireball, [S] harpoon-gun | 2/2 approved | passes 68/77 -> 68/77
 iter 286 | [S] bone-mage-leaf-whirl, [S] press-blow-lands (reverted: regression), [P] fireball-shell | 2/3 approved | passes 68 -> 68
+iter 287 | [S] press-blow-lands (rejected-kept), [S] wizard-cast-hold | 1/2 approved | passes 68 -> 69
