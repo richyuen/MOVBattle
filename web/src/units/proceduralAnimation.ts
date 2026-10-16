@@ -155,6 +155,8 @@ const PRESS_BOARD_LINE = 0.25;
  */
 const CONTACT_MIN_FALL = 0.2;
 const CONTACT_FRONT = 0.12;
+// press-club-lands-on-board: the lowest the pinned head may sit on his near face, in shares of his height under the crown (the foot of his board)
+const CONTACT_LOWEST = 0.6;
 /*
  * [S] press-mark-held (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (every club at the pile is cocked back or down on a man, none stands up): the in-reach
  * press beat outlives gaps in the sim's strike calls (a man shoved a step out of reach, a retarget): his man stays marked PRESS_MARK_HOLD seconds past the last
@@ -492,14 +494,13 @@ export class ProceduralAnimator {
     // the weapon comes down the BLOW_FALL line at full reach, through his shoulders and board top, not level across his face
     const hand = b.rightHand.getAbsolutePosition();
     const across = Math.max(0.001, Vector3.Dot(head.subtract(hand), toward));
+    // Pinned on him every frame from where he stands now, after any knockback (press-club-lands-on-board): the head on his crown or, a man nearer than the
+    // weapon is long, on his near face where the shaft meets it, and the follow-through runs on to that pinned point, never past him into the turf
+    const contact = this._contactOn(mark, hand);
     const onto = hand.y - head.y >= across * Math.tan(BLOW_FALL)
-      ? head
+      ? contact
       : hand.add(toward.scale(Math.cos(BLOW_FALL) * reach)).addInPlace(new Vector3(0, -Math.sin(BLOW_FALL) * reach, 0));
-    // Followed through, the head runs on down off his crown and stops on him, on his board top at his near face (press-landed-contact), not in the turf
-    const tall = Math.max(0.001, head.y - b.root.getAbsolutePosition().y);
-    const face = head.subtract(toward.scale(CONTACT_FRONT * tall));
-    face.y = head.y - tall * PRESS_BOARD_LINE;
-    const end = follow > 0 ? Vector3.Lerp(onto, face, follow) : onto;
+    const end = follow > 0 ? Vector3.Lerp(onto, contact, follow) : onto;
     const dir = end.subtract(hand).normalize();
     this._aimTip = Vector3.TransformNormal(dir, Matrix.RotationY(-b.root.rotation.y)).normalize();
     this._aimWeight = w;
@@ -1708,14 +1709,22 @@ export class ProceduralAnimator {
     const scale = Math.max(0.001, this._body.rightHand.absoluteScaling.y);
     const crown = this._crownOf(mark).add(new Vector3(0, BLOW_CROWN * scale, 0));
     const across = Math.hypot(crown.x - hand.x, crown.z - hand.z);
-    if (hand.y - crown.y >= Math.max(0.001, across) * Math.tan(CONTACT_MIN_FALL)) return crown;
+    const onCrown = hand.y - crown.y >= Math.max(0.001, across) * Math.tan(CONTACT_MIN_FALL);
+    // press-club-lands-on-board: the club's HEAD is pinned on him, not only its line. A crown a full weapon's length off takes it; a nearer man would let a
+    // head laid along that line run on past him into the turf, so it stops on his near face where the shaft, one reach long from the fist, meets it.
+    const reach = this._weaponReach() * scale;
+    if (onCrown && Vector3.Distance(hand, crown) >= reach) return crown;
     // His height over the ground the striker stands on (the field is near flat where men press)
     const tall = Math.max(0.001, crown.y - this._body.root.getAbsolutePosition().y);
     const back = new Vector3(hand.x - crown.x, 0, hand.z - crown.z);
     if (back.lengthSquared() < 1e-6) back.set(0, 0, -1);
     back.normalize();
     const face = crown.add(back.scale(CONTACT_FRONT * tall));
-    face.y = crown.y - tall * PRESS_BOARD_LINE;
+    // Down his near face from the crown (or, a crown at or over the fist, from his board top) to where the head lands at full reach, never under CONTACT_LOWEST
+    const flat = Math.hypot(face.x - hand.x, face.z - hand.z);
+    const drop = Math.sqrt(Math.max(0, reach * reach - flat * flat));
+    const top = onCrown ? crown.y : crown.y - tall * PRESS_BOARD_LINE;
+    face.y = Math.max(crown.y - tall * CONTACT_LOWEST, Math.min(top, hand.y - drop));
     return face;
   }
 
