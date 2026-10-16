@@ -187,9 +187,6 @@ const BLOW_FOLLOW = 0.12;
 const BLOW_FOLLOW_ARM = 2.05;
 const BLOW_FOLLOW_PITCH = 0.3;
 const BLOW_FOLLOW_LOW = 0.2;
-// A man whose weapon, laid down from the raised fist, does not reach the mark (a rank back, over the shoulder of a man of his own side) lunges in under the
-// blow: his hips are carried toward the man along the ground until it lies on him, at most this far (world m; see _aimBlow)
-const BLOW_STEP = 1.3;
 
 // Overhand throw (trailer_3_sheet_01 r3c3: the spear in flight, the thrower's arm out ahead and the hand empty; units/tribal.spear_thrower): through the windup the
 // throwing arm goes up and back until the fist is behind the head (THROW_COCK: shoulder raise, out, elbow folded, chest turned back and leant away, the other arm
@@ -321,7 +318,6 @@ export class ProceduralAnimator {
     this._blowClock = 0;
   }
   private _blowMark: TransformNode | null = null;
-  private _hipFloor: Vector3 | null = null;
   // Seconds from the start of the swing to the blow landing, and since the swing started: the aim keeps its own time, so a swing the walk or the stand cuts
   // short in the animation still comes down on the man when the sim lands it
   private _blowLandsAt = 0;
@@ -355,11 +351,6 @@ export class ProceduralAnimator {
    * on it, the trunk pitched into it; held there after the swing, then let go. Overrides whatever the swing, shove or ready hold made of the arm.
    */
   private _aimBlow(dt: number): void {
-    // The lunge's step is laid on the hips' rest place each frame (nothing else moves them across the ground)
-    const hipAt = this._body.hip.position;
-    this._hipFloor ??= new Vector3(hipAt.x, 0, hipAt.z);
-    hipAt.x = this._hipFloor.x;
-    hipAt.z = this._hipFloor.z;
     let w = 0;
     const mark = this._blowMark;
     if (mark && !mark.isDisposed() && this._state !== AnimState.Dead && this._limp < 0.5 && this._blowLandsAt > 0) {
@@ -419,16 +410,6 @@ export class ProceduralAnimator {
       this._hipRest ??= b.hip.position.y;
       const lift = Math.min(need, BLOW_LEAP * this._hipRest * 2 * rootScale) * w;
       b.hip.position.y += lift / rootScale;
-      for (const n of chain) n.computeWorldMatrix(true);
-    }
-    // Out of reach of the mark from where he stands, he lunges in toward it (BLOW_STEP) until the weapon laid down from the fist spans the gap
-    const fist = b.rightHand.getAbsolutePosition();
-    const fall = Math.max(BLOW_DROP * scale, fist.y - head.y);
-    const gap = Math.hypot(head.x - fist.x, head.z - fist.z) - Math.sqrt(Math.max(0, reach * reach - fall * fall));
-    if (gap > 0) {
-      const step = Vector3.TransformNormal(toward.scale(Math.min(gap, BLOW_STEP) * w), Matrix.Invert((b.hip.parent as TransformNode).getWorldMatrix()));
-      b.hip.position.x += step.x;
-      b.hip.position.z += step.z;
       for (const n of chain) n.computeWorldMatrix(true);
     }
     // Weapon: laid DOWN from the raised fist, never level or rising. Onto his crown when it stands below the fist; a crown still out of that reach after the
