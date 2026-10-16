@@ -479,7 +479,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "pirate.bomb_thrower": vis(
     { scale: 1.0, bulk: 1.0 }, "bomb", "bandana", "none", "none", "#2F4F4F",
-    undefined,
+    // A bomb in each hand (units/pirate.bomb_thrower): the right one is thrown, the left one is kept
+    "bomb",
     {
       posePreset: "support",
       materialPreset: "pirate_tar",

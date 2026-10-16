@@ -843,6 +843,16 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   return brim;
 }
 
+/**
+ * A bomb is held in the fist, not out ahead of it on a grip cut for a haft (units/pirate.bomb_thrower: the mitt closed over the top of the ball, the fuse stub
+ * out of the front): its centre BOMB_SEAT_DOWN fist widths below the wrist and BOMB_SEAT_FORWARD ahead, fuse turned forward.
+ */
+function seatInFist(mesh: Mesh, body: ArticulatedBody, scale: number): void {
+  const w = body.metrics.hand?.width ?? 0.058 * scale;
+  mesh.position.set(0, -w * BOMB_SEAT_DOWN, w * BOMB_SEAT_FORWARD);
+  mesh.rotation.set(BOMB_SEAT_TURN, 0, 0);
+}
+
 export function attachProps(
   scene: Scene,
   body: ArticulatedBody,
@@ -861,6 +871,7 @@ export function attachProps(
     weapon.scaling.scaleInPlace(PROP_OVERSIZE);
     applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
+    if (config.weapon === "bomb") seatInFist(weapon, body, scale);
     if (config.attachmentPreset === "fan_bearer") {
       tagVisualState(weapon, "fan_closed");
     }
@@ -873,6 +884,7 @@ export function attachProps(
       offhand.parent = body.leftHand;
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
+      if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       props.push(offhand);
     }
   }
@@ -1413,6 +1425,14 @@ const TREE_CLUB_CARRY = 1.2;
 const TREE_CLUB_LOBE = 0.85;
 // Lobes of the crown from the trunk's end, in crown radii: along the trunk, toward its bowed (upper) side, and across it; centred on the trunk's line
 const TREE_CLUB_LOBES: [number, number, number][] = [[0.35, 0.55, 0.25], [1.3, 0.3, -0.2], [0.8, -0.75, 0.1]];
+// Bomb (units/pirate.bomb_thrower): across, in fists of the man holding it; its iron neck and its fuse stub, in bomb widths
+const BOMB_FISTS = 2.2;
+// ...and its seat in the fist (see seatInFist): down from the wrist and ahead, in fist widths; the fuse's turn forward off straight up the arm (rad)
+const BOMB_SEAT_DOWN = 1.15;
+const BOMB_SEAT_FORWARD = 0.35;
+const BOMB_SEAT_TURN = 1.7;
+const BOMB_NECK = 0.22;
+const BOMB_FUSE = 0.32;
 // Dynamite bundle (units/wild_west.dynamite_thrower): sticks in the bundle, each stick's width, and its length, in weapon units (s)
 const DYNAMITE_STICKS = 3;
 const DYNAMITE_STICK_WIDE = 0.05;
@@ -1841,11 +1861,21 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return barrel;
     }
     case "bomb": {
-      const bomb = MeshBuilder.CreateSphere("bomb", { diameter: 0.15 * s, segments: 8 }, scene);
-      bomb.material = mat(scene, new Color3(0.2, 0.2, 0.2));
-      const fuse = MeshBuilder.CreateCylinder("fuse", { height: 0.08 * s, diameter: 0.01 * s }, scene);
-      fuse.position.y = 0.08 * s; fuse.parent = bomb;
-      fuse.material = mat(scene, new Color3(0.8, 0.6, 0.2), 0.3);
+      // A round iron bomb a little wider than the fist it sits in (units/pirate.bomb_thrower: one in each hand), not a head-sized ball: a short iron neck on top
+      // and a stub of fuse out of it. Built about its centre, so it rides in the fist and the thrown copy flies the same size.
+      const d = BOMB_FISTS * fit.fist;
+      const bomb = MeshBuilder.CreateSphere("bomb", { diameter: d, segments: 5 }, scene);
+      bomb.convertToFlatShadedMesh();
+      bomb.material = mat(scene, new Color3(0.13, 0.13, 0.15));
+      const neck = MeshBuilder.CreateCylinder("bombNeck", { height: d * BOMB_NECK, diameter: d * 0.34, tessellation: 6 }, scene);
+      neck.position.y = d * (0.5 + BOMB_NECK * 0.3);
+      neck.parent = bomb;
+      neck.material = bomb.material;
+      const fuse = MeshBuilder.CreateCylinder("fuse", { height: d * BOMB_FUSE, diameter: d * 0.09, tessellation: 5 }, scene);
+      fuse.position.y = d * (0.5 + BOMB_NECK * 0.8 + BOMB_FUSE * 0.5);
+      fuse.rotation.z = 0.35;
+      fuse.parent = bomb;
+      fuse.material = mat(scene, new Color3(0.85, 0.7, 0.45), 0.2, "cloth");
       return bomb;
     }
     case "dynamite": {
