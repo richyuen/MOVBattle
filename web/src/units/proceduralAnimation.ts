@@ -138,7 +138,7 @@ const CLUB_LAND = 1.8;
  * - Cocked (heave + cock of the beat): fist up over his own head, elbow folded so the fist sits behind the crown, the club laid BACK over the shoulder,
  *   PRESS_CLUB_COCK rad from straight up (head back and up on a diagonal behind his crown).
  * - Landed (the slam's end, the rest and the impact): fist raised forward to about head height (PRESS_AIM_ARM), the club laid DOWN from it onto that man's
- *   board line (PRESS_BOARD_LINE of his height under his crown), PRESS_DOWN_MIN..MAX rad below level whatever the gap, so it comes down onto the board top or
+ *   board line (PRESS_BOARD_LINE of his height under his crown), solved onto him by _contactOn (press-landed-contact), so it comes down onto the board top or
  *   the head and never runs level across the chest.
  * - The slam sweeps the head from the cock up over the top and down onto him (the arc is blended through vertical, not across the front).
  */
@@ -146,8 +146,15 @@ const PRESS_CLUB_COCK = -1.05;
 const PRESS_AIM_ARM = 1.0;
 const PRESS_AIM_ELBOW = { cock: -1.7, land: -0.25 };
 const PRESS_BOARD_LINE = 0.25;
-const PRESS_DOWN_MIN = 0.6;
-const PRESS_DOWN_MAX = 1.25;
+/*
+ * [S] press-landed-contact (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (the club arcs down through the man and stops on him): a landed club, in the
+ * press beat and through a swing's BLOW_HOLD, is not laid at a fixed angle but solved onto a world point on the struck man (_contactOn), its shaft resting there:
+ * - his crown, when the line from the raised fist falls onto it at least CONTACT_MIN_FALL below level;
+ * - else the top of his board on his near face (PRESS_BOARD_LINE of his height under the crown, CONTACT_FRONT of it out toward the striker).
+ * The swing's follow-through runs on from the crown to that board top and is held there, never down his axis to the turf at his feet.
+ */
+const CONTACT_MIN_FALL = 0.2;
+const CONTACT_FRONT = 0.12;
 /*
  * [S] press-mark-held (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (every club at the pile is cocked back or down on a man, none stands up): the in-reach
  * press beat outlives gaps in the sim's strike calls (a man shoved a step out of reach, a retarget): his man stays marked PRESS_MARK_HOLD seconds past the last
@@ -211,12 +218,11 @@ const BLOW_AIM_SLACK = 2.5;
 const FLINCH_HOLD = 0.12;
 // The blow does not stop on the crown (trailer_3_sheet_01 r2c3: the club ends low after its arc, the striker bent into it): from the landing the fist goes on
 // down its arc, over BLOW_FOLLOW s, from straight up to BLOW_FOLLOW_ARM rad past the vertical toward the man (forward and below level), the trunk pitched a
-// further BLOW_FOLLOW_PITCH into it, and the weapon head runs on from the crown down to BLOW_FOLLOW_LOW of his standing height over his feet, where it is
-// held out the rest of BLOW_HOLD.
+// further BLOW_FOLLOW_PITCH into it, and the weapon head runs on from the crown down onto his board top (see press-landed-contact), where it is held out the
+// rest of BLOW_HOLD.
 const BLOW_FOLLOW = 0.12;
 const BLOW_FOLLOW_ARM = 2.05;
 const BLOW_FOLLOW_PITCH = 0.3;
-const BLOW_FOLLOW_LOW = 0.2;
 
 // Overhand throw (trailer_3_sheet_01 r3c3: the spear in flight, the thrower's arm out ahead and the hand empty; units/tribal.spear_thrower): through the windup the
 // throwing arm goes up and back until the fist is behind the head (THROW_COCK: shoulder raise, out, elbow folded, chest turned back and leant away, the other arm
@@ -479,9 +485,11 @@ export class ProceduralAnimator {
     const onto = hand.y - head.y >= across * Math.tan(BLOW_FALL)
       ? head
       : hand.add(toward.scale(Math.cos(BLOW_FALL) * reach)).addInPlace(new Vector3(0, -Math.sin(BLOW_FALL) * reach, 0));
-    // Followed through, the head runs on down him to low over his feet
-    const ground = b.root.getAbsolutePosition().y;
-    const end = follow > 0 ? Vector3.Lerp(onto, new Vector3(head.x, ground + (head.y - ground) * BLOW_FOLLOW_LOW, head.z), follow) : onto;
+    // Followed through, the head runs on down off his crown and stops on him, on his board top at his near face (press-landed-contact), not in the turf
+    const tall = Math.max(0.001, head.y - b.root.getAbsolutePosition().y);
+    const face = head.subtract(toward.scale(CONTACT_FRONT * tall));
+    face.y = head.y - tall * PRESS_BOARD_LINE;
+    const end = follow > 0 ? Vector3.Lerp(onto, face, follow) : onto;
     const dir = end.subtract(hand).normalize();
     this._aimTip = Vector3.TransformNormal(dir, Matrix.RotationY(-b.root.rotation.y)).normalize();
     this._aimWeight = w;
@@ -1611,18 +1619,44 @@ export class ProceduralAnimator {
     }
   }
 
-  /** The landed press club's arc from straight up: down from the fist onto the man's board line, PRESS_DOWN_MIN..MAX below level. */
-  private _pressDownArc(mark: TransformNode, hand: Vector3): number {
+  /**
+   * Where a landed club rests on a man (press-landed-contact): the world point its shaft lies across, so it stops on him rather than running on into the turf.
+   * His crown when the line from the fist falls onto it at least CONTACT_MIN_FALL below level; else (a crown at or over the fist) the top of his board, on his
+   * near face: PRESS_BOARD_LINE of his height under the crown, CONTACT_FRONT of his height out of his axis toward the striker. The mark's chain is brought up here.
+   */
+  private _contactOn(mark: TransformNode, hand: Vector3): Vector3 {
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = mark; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
-    const crown = this._crownOf(mark);
-    const ground = this._body.root.getAbsolutePosition().y;
-    const line = crown.y - (crown.y - ground) * PRESS_BOARD_LINE;
+    const scale = Math.max(0.001, this._body.rightHand.absoluteScaling.y);
+    const crown = this._crownOf(mark).add(new Vector3(0, BLOW_CROWN * scale, 0));
     const across = Math.hypot(crown.x - hand.x, crown.z - hand.z);
-    const below = Math.max(PRESS_DOWN_MIN, Math.min(PRESS_DOWN_MAX, Math.atan2(hand.y - line, Math.max(0.001, across))));
-    return Math.PI / 2 + below;
+    if (hand.y - crown.y >= Math.max(0.001, across) * Math.tan(CONTACT_MIN_FALL)) return crown;
+    // His height over the ground the striker stands on (the field is near flat where men press)
+    const tall = Math.max(0.001, crown.y - this._body.root.getAbsolutePosition().y);
+    const back = new Vector3(hand.x - crown.x, 0, hand.z - crown.z);
+    if (back.lengthSquared() < 1e-6) back.set(0, 0, -1);
+    back.normalize();
+    const face = crown.add(back.scale(CONTACT_FRONT * tall));
+    face.y = crown.y - tall * PRESS_BOARD_LINE;
+    return face;
   }
+
+  /** The landed press club's arc from straight up, and its exact way in his yaw frame (_pressTip): the shaft laid from the fist across _contactOn. */
+  private _pressDownArc(mark: TransformNode, hand: Vector3): number {
+    const dir = this._contactOn(mark, hand).subtract(hand);
+    if (dir.lengthSquared() < 1e-6) dir.set(0, 0, 1);
+    const local = Vector3.TransformNormal(dir.normalize(), Matrix.RotationY(-this._body.root.rotation.y)).normalize();
+    // Never rising off him: at least CONTACT_MIN_FALL below level
+    const flat = Math.hypot(local.x, local.z);
+    if (local.y > -flat * Math.tan(CONTACT_MIN_FALL)) {
+      local.y = -Math.max(0.001, flat) * Math.tan(CONTACT_MIN_FALL);
+      local.normalize();
+    }
+    this._pressTip.copyFrom(local);
+    return Math.atan2(Math.hypot(local.z, local.x), local.y);
+  }
+  private _pressTip = new Vector3(0, 0, 1);
 
   private _carryProp(dt: number): void {
     const ready = this._carry?.ready;
@@ -1653,8 +1687,11 @@ export class ProceduralAnimator {
       let arc = this._clubArc;
       // An in-reach press club landed: from the cock back over the shoulder, up over the top and down onto the man's board line (club-cocked-in-press)
       const pressed = this._pressAim();
-      if (this._pressLand > 0.001 && pressed) arc += (this._pressDownArc(pressed, hand.getAbsolutePosition()) - arc) * this._pressLand;
+      const landed = this._pressLand > 0.001 && pressed ? this._pressLand : 0;
+      if (landed > 0 && pressed) arc += (this._pressDownArc(pressed, hand.getAbsolutePosition()) - arc) * landed;
       Vector3.LerpToRef(tip, new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(arc), Math.sin(arc)), Math.min(1, club), tip).normalize();
+      // ...and, as it comes down, swung round onto the man wherever he stands, the shaft resting across his crown or board top (press-landed-contact)
+      if (landed > 0) Vector3.LerpToRef(tip, this._pressTip, landed * landed * Math.min(1, club), tip).normalize();
     }
     // Coming down on a man (see _aimBlow): the head goes onto him, wherever he stands
     if (this._aimWeight > 0.01 && weapon === this._carry?.weapon) Vector3.LerpToRef(tip, this._aimTip, this._aimWeight, tip).normalize();
