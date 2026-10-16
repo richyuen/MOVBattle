@@ -36,17 +36,19 @@ export interface OriginInfo {
 /** The rendering group a flung body is drawn in: after the scene's see-through effects, sharing their depth (main.ts keeps its depth uncleared). */
 export const FLUNG_RENDER_GROUP = 1;
 
-// A landed heavy blow throws the struck man back off his feet (trailer_3_sheet_01 r2c3: the hoplite under the club goes back whole, feet off the ground, arms
-// out): on the land step the whole body pitches BLOW_THROW_PITCH rad away from the striker, holds it BLOW_THROW_HOLD s, and settles over the rest of
-// BLOW_THROW_SECONDS, while he is thrown back and up in proportion to the blow (its knockback times his own shove response: a club throws a light man further
-// than a heavy one), BLOW_THROW_SPEED and BLOW_THROW_LIFT m/s per unit of that, capped at _MAX. Laid outside the crowd lean's clamp and his wall's bracing:
-// while the throw runs (isBlowThrown) his wall lets go of him (no slot snap, no bracing) and a man struck from his front half goes straight back out of his
-// file, the way he faced, not along a slanting blow into the next man. It is a stagger, not a topple: no balance pressure is loaded, no topple clocks run, he
-// lands on his feet and his wall takes him back.
+// A landed heavy blow throws the struck man back off his feet, hip-led (trailer_3_sheet_01 r2c3: the red man leaves seat-first, his trunk tipped back the way
+// he goes to ~57 deg from upright with his head still above his hips, one leg trailing down toward where he is going, the other knee kicked up toward the
+// striker at hip height): on the land step the trunk pitches BLOW_THROW_TRUNK rad away from the striker about the pelvis (the animator anchors the hip over
+// the root and lays the legs out in the flight frame, see THROWN), holds it BLOW_THROW_HOLD s, and settles over the rest of BLOW_THROW_SECONDS, while he is
+// thrown back and up in proportion to the blow (its knockback times his own shove response: a club throws a light man further than a heavy one),
+// BLOW_THROW_SPEED and BLOW_THROW_LIFT m/s per unit of that, capped at _MAX. Laid outside the crowd lean's clamp and his wall's bracing: while the throw runs
+// (isBlowThrown) his wall lets go of him (no slot snap, no bracing) and a man struck from his front half goes straight back out of his file, the way he faced,
+// not along a slanting blow into the next man. It is a stagger, not a topple: no balance pressure is loaded, no topple clocks run, he lands on his feet and
+// his wall takes him back.
 const BLOW_THROW_SECONDS = 0.6;
 const BLOW_THROW_HOLD = 0.28;
-// Laid out nearly flat at the top of the throw, his feet the pivot
-const BLOW_THROW_PITCH = 1.3;
+// Trunk back past 45 deg at the top of the throw, his seat the lowest point and the pivot (was 1.3 about the feet: laid flat, head-first and lowest)
+const BLOW_THROW_TRUNK = 1.0;
 const BLOW_THROW_SPEED = 0.75;
 const BLOW_THROW_LIFT = 1.0;
 const BLOW_THROW_SPEED_MAX = 3.5;
@@ -490,24 +492,25 @@ export class RuntimeUnit {
     this._velocity.z = this._blowStaggerDir.z * speed;
     this._velocity.y = Math.max(this._velocity.y, Math.max(BLOW_THROW_LIFT_MIN, Math.min(BLOW_THROW_LIFT_MAX, push * BLOW_THROW_LIFT)));
     this._grounded = false;
-    // His board is knocked off his face, arms flung out and legs gone from under him, on this frame too
-    this.animator.knockBoardOff();
-    this.animator.throwBack(BLOW_THROW_SECONDS, BLOW_THROW_HOLD);
-    this.animator.update(0);
-    // The blow lands after this step's lean was set: put the full pitch on now
+    // The blow lands after this step's lean was set: put the full pitch on now, before the pose is re-laid on this frame, so the hip is anchored under it
     const [x, z] = this._blowStaggerLean(1);
     this.body.root.rotation.x = x;
     this.body.root.rotation.z = z;
+    // His board is knocked off his face, arms flung out and legs laid out in the flight frame, on this frame too
+    this.animator.knockBoardOff();
+    this.animator.throwBack(BLOW_THROW_SECONDS, BLOW_THROW_HOLD);
+    this.animator.update(0);
   }
 
   /**
-   * Root pitch and roll of the blow stagger at strength `k`: his head goes the way the blow drove him (away from the striker), in his own facing frame. A
-   * positive root pitch tips his top toward his facing (+z local) and a positive roll tips it toward his left, so a man driven back takes a negative pitch.
+   * Root pitch and roll of the blow throw at strength `k`: his trunk tips the way the blow drove him (away from the striker), in his own facing frame, about
+   * his pelvis. A positive root pitch tips his top toward his facing (+z local) and a positive roll tips it toward his left, so a man driven back takes a
+   * negative pitch.
    */
   private _blowStaggerLean(k: number): [number, number] {
     const forward = Vector3.Dot(this._blowStaggerDir, this._getFacingVector());
     const side = Vector3.Dot(this._blowStaggerDir, this._getRightVector());
-    return [forward * BLOW_THROW_PITCH * k, -side * BLOW_THROW_PITCH * k];
+    return [forward * BLOW_THROW_TRUNK * k, -side * BLOW_THROW_TRUNK * k];
   }
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
