@@ -1,6 +1,9 @@
 // Evidence capture for the TABS-fidelity improvement loop.
 //   node loop/scripts/capture.mjs --iter N [--showcase-only] [--regression-only] [--port 4181]
 //   node loop/scripts/capture.mjs --only shot[,shot]   quick look: only those showcase shots, to output/loop/look/
+//   node loop/scripts/capture.mjs --iter N --focus [--shots a,b]   gap review: only the shots named in loop/STATE.md's FAIL blockers
+//     and Ranked open gaps (plus --shots, plus each one's motion-pair partner), and the regression scenarios
+// Scenes with no requested shot are skipped, not just left unsaved.
 // Builds web/, serves it with vite preview, drives the game headlessly with time advanced ONLY
 // through window.advanceTime (requestAnimationFrame is stubbed so the real-time render loop never
 // runs), runs the regression scenario set, captures showcase screenshots, and writes
@@ -26,7 +29,9 @@ const opt = (name, fallback) => {
 };
 const iter = Number(opt("--iter", "0"));
 const port = Number(opt("--port", "4181"));
-const only = opt("--only", "").split(",").map((n) => n.trim()).filter(Boolean);
+const list = (s) => s.split(",").map((n) => n.trim()).filter(Boolean);
+const only = list(opt("--only", ""));
+const focus = flag("--focus");
 const doRegression = !flag("--showcase-only") && only.length === 0;
 const doShowcase = !flag("--regression-only");
 const outDir = only.length > 0 ? path.join(root, "output", "loop", "look") : path.join(root, "output", "loop", `iter-${iter}`);
@@ -102,6 +107,79 @@ for (let i = 0; i < 6; i++) {
 // A second rank of boards behind red's wall, a clear rank depth back.
 for (let i = 0; i < 6; i++) {
   SHIELD_WALL.push({ unitId: "tribal.protector", team: 1, position: { x: 5.3, z: -2 + i * 0.8 } });
+}
+
+// Gallery-camera reads (UI hidden by design): a lineup, two mid-swing close-ups, one hero pair.
+const GALLERY_SHOTS = [
+  ["lineup_medieval", "gallery_faction_medieval"],
+  ["lineup_tribal", "gallery_faction_tribal"],
+  ["lineup_farmer", "gallery_faction_farmer"],
+  ["lineup_ancient", "gallery_faction_ancient"],
+  ["lineup_viking", "gallery_faction_viking"],
+  ["lineup_dynasty", "gallery_faction_dynasty"],
+  ["lineup_renaissance", "gallery_faction_renaissance"],
+  ["lineup_pirate", "gallery_faction_pirate"],
+  ["lineup_spooky", "gallery_faction_spooky"],
+  ["lineup_wild_west", "gallery_faction_wild_west"],
+  ["lineup_legacy", "gallery_faction_legacy"],
+  ["lineup_good", "gallery_faction_good"],
+  ["lineup_evil", "gallery_faction_evil"],
+  ["lineup_secret", "gallery_faction_secret"],
+  // The secret lineup's front rank runs out of frame past the shogun: its giants (tree, ice) are read here
+  ["lineup_secret_giants", "gallery_secret_giants"],
+  // The good lineup crops the sacred elephant: its trappings and rider are read here
+  ["closeup_sacred_elephant", "gallery_sacred_elephant"],
+  // The legacy lineup hides the chariot end-on in its back ranks: horse, wheels, car and driver are read here
+  ["closeup_legacy_chariot", "gallery_legacy_chariot"],
+  ["closeup_state_reads", "gallery_state_reads"],
+  ["closeup_weapon_reads", "gallery_weapon_reads"],
+  ["closeup_pair_zeus_thor", "gallery_pair_ancient_zeus_vs_legacy_thor"],
+  // Side-on reads: the shield press from the flank, and bowmen at the loose.
+  ["shield_wall_side", "gallery_shield_wall_side"],
+  ["shield_wall_front", "gallery_shield_wall_front"],
+  ["closeup_archer_loose", "gallery_archer_loose"],
+  ["press_clubbers_side", "gallery_press_clubbers"],
+  ["spell_dome", "gallery_spell_dome"],
+];
+const THROW_GROUPS = [["spears", 2], ["bombs", 3], ["casters", 3]];
+const BIOME_MAPS = ["introduction", "adventure", "challenge", "dynasty", "renaissance", "pirate", "simulation"];
+
+// Every shot a full run takes, for --focus to pick names out of STATE.md
+const ALL_SHOTS = [
+  "hud_placement", "ui_campaign_select",
+  ...["400ms", "550ms", "1100ms", "1250ms", "3800ms"].map((t) => `war_machines_${t}`),
+  ...GALLERY_SHOTS.map(([name]) => name), "press_clubbers_hit", "press_clubbers_blow",
+  "throw_spears_harpoon", ...THROW_GROUPS.flatMap(([g]) => [`throw_${g}_release`, `throw_${g}_flight`]),
+  "shield_wall_2500ms", "shield_wall_2650ms",
+  ...["placement", "placement_ghost", "500ms", "2s", "2150ms", "5s", "9s", "result", "result_1s"].map((t) => `big_melee_${t}`),
+  "melee_club_drop", ...BIOME_MAPS.map((m) => `biome_${m}`), "biome_spooky", "biome_spooky_battle",
+];
+// Motion pairs (CRITIC.md): asking for one frame brings its partner
+const PAIRS = [
+  ["war_machines_1100ms", "war_machines_1250ms"], ["big_melee_2s", "big_melee_2150ms"], ["shield_wall_2500ms", "shield_wall_2650ms"],
+  ["big_melee_result", "big_melee_result_1s"], ...THROW_GROUPS.map(([g]) => [`throw_${g}_release`, `throw_${g}_flight`]),
+];
+
+// --focus: the shots named in STATE.md's FAIL blocker lines (the "- " lines of the Criteria block) and its Ranked open gaps
+function focusShots() {
+  const state = fs.readFileSync(path.join(root, "loop", "STATE.md"), "utf8");
+  const section = (title) => {
+    const m = new RegExp(`^## ${title}[^\\n]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, "m").exec(state);
+    return m ? m[1] : "";
+  };
+  const text = section("Criteria").split(/\r?\n/).filter((l) => l.startsWith("- ")).join("\n") + "\n" + section("Ranked open gaps");
+  const names = new Set(ALL_SHOTS.filter((s) => new RegExp(`(^|[^a-z0-9_])${s}(?![a-z0-9_])`).test(text)));
+  for (const s of list(opt("--shots", ""))) names.add(s);
+  for (const [a, b] of PAIRS) if (names.has(a) || names.has(b)) { names.add(a); names.add(b); }
+  return [...names];
+}
+const wanted = only.length > 0 ? only : focus ? focusShots() : null;
+// Whether any of these shots is to be taken (every shot, in a full run)
+const wants = (...names) => wanted === null || names.some((n) => wanted.includes(n));
+// --list: print the shots this run would take and stop
+if (flag("--list")) {
+  process.stdout.write(`${(wanted ?? ALL_SHOTS).join("\n")}\n`);
+  process.exit(0);
 }
 
 // Keep only summary.json for iterations older than KEEP_ITERS: the PNGs run to ~10 MB a turn.
@@ -184,7 +262,7 @@ const summary = {
 const full = { scenarios: [] };
 
 async function shot(page, name) {
-  if (only.length > 0 && !only.includes(name)) return;
+  if (!wants(name)) return;
   const file = path.join(outDir, `${name}.png`);
   // A cold frame draws props and shadows but no bodies: redraw until every shader is compiled.
   // No sim time passes.
@@ -242,7 +320,7 @@ async function main() {
       window.advanceTime(50);
     });
 
-    if (doShowcase) {
+    if (doShowcase && wants("hud_placement", "ui_campaign_select")) {
       await page.evaluate(() => {
         window.game.resetBattle();
         window.advanceTime(50);
@@ -262,6 +340,7 @@ async function main() {
 
     if (doShowcase) {
       // War machines mid-fire.
+      if (ALL_SHOTS.some((n) => n.startsWith("war_machines_") && wants(n))) {
       // Spawned inside the battle camera's ~12 m wide frame: the cannon_compare scenario's
       // 22 m gap puts both ends off screen.
       const machinesPlaced = await page.evaluate((units) => {
@@ -287,40 +366,10 @@ async function main() {
       await shot(page, "war_machines_1250ms");
       await page.evaluate(() => window.advanceTime(2550));
       await shot(page, "war_machines_3800ms");
+      }
 
-      // Gallery-camera reads (UI hidden by design): a lineup, two mid-swing close-ups, one hero pair.
-      const galleryShots = [
-        ["lineup_medieval", "gallery_faction_medieval"],
-        ["lineup_tribal", "gallery_faction_tribal"],
-        ["lineup_farmer", "gallery_faction_farmer"],
-        ["lineup_ancient", "gallery_faction_ancient"],
-        ["lineup_viking", "gallery_faction_viking"],
-        ["lineup_dynasty", "gallery_faction_dynasty"],
-        ["lineup_renaissance", "gallery_faction_renaissance"],
-        ["lineup_pirate", "gallery_faction_pirate"],
-        ["lineup_spooky", "gallery_faction_spooky"],
-        ["lineup_wild_west", "gallery_faction_wild_west"],
-        ["lineup_legacy", "gallery_faction_legacy"],
-        ["lineup_good", "gallery_faction_good"],
-        ["lineup_evil", "gallery_faction_evil"],
-        ["lineup_secret", "gallery_faction_secret"],
-        // The secret lineup's front rank runs out of frame past the shogun: its giants (tree, ice) are read here
-        ["lineup_secret_giants", "gallery_secret_giants"],
-        // The good lineup crops the sacred elephant: its trappings and rider are read here
-        ["closeup_sacred_elephant", "gallery_sacred_elephant"],
-        // The legacy lineup hides the chariot end-on in its back ranks: horse, wheels, car and driver are read here
-        ["closeup_legacy_chariot", "gallery_legacy_chariot"],
-        ["closeup_state_reads", "gallery_state_reads"],
-        ["closeup_weapon_reads", "gallery_weapon_reads"],
-        ["closeup_pair_zeus_thor", "gallery_pair_ancient_zeus_vs_legacy_thor"],
-        // Side-on reads: the shield press from the flank, and bowmen at the loose.
-        ["shield_wall_side", "gallery_shield_wall_side"],
-        ["shield_wall_front", "gallery_shield_wall_front"],
-        ["closeup_archer_loose", "gallery_archer_loose"],
-        ["press_clubbers_side", "gallery_press_clubbers"],
-        ["spell_dome", "gallery_spell_dome"],
-      ];
-      for (const [shotName, scenario] of galleryShots) {
+      for (const [shotName, scenario] of GALLERY_SHOTS) {
+        if (!wants(shotName) && !(shotName === "press_clubbers_side" && wants("press_clubbers_hit", "press_clubbers_blow"))) continue;
         await page.evaluate((n) => {
           window.game.resetBattle();
           window.game.runScenarioGalleryValidation(n);
@@ -381,7 +430,8 @@ async function main() {
       // Throwers at the release (vfx tier 3, throw_<unit>): step the sim a frame at a time until every man in the group has let a missile go (one launch
       // per thrower, counted as rises in the missile count: a thrower who lets go at the end of his swing is later than one who fires at its start), shoot
       // that frame and the one 150 ms on, so the thing in flight can be read against the thing that was in the hand.
-      for (const [group, throwers] of [["spears", 2], ["bombs", 3], ["casters", 3]]) {
+      for (const [group, throwers] of THROW_GROUPS) {
+        if (!wants(`throw_${group}_release`, `throw_${group}_flight`) && !(group === "spears" && wants("throw_spears_harpoon"))) continue;
         await page.evaluate((n) => {
           window.game.resetBattle();
           window.game.runScenarioGalleryValidation(n);
@@ -434,6 +484,7 @@ async function main() {
       });
 
       // Shield lines in contact, and the same press 150 ms on.
+      if (wants("shield_wall_2500ms", "shield_wall_2650ms")) {
       const wallPlaced = await page.evaluate((units) => {
         let ok = 0;
         for (const u of units) {
@@ -451,8 +502,10 @@ async function main() {
         window.game.resetBattle();
         window.advanceTime(50);
       });
+      }
 
       // Big melee with the HUD visible.
+      if (ALL_SHOTS.some((n) => n.startsWith("big_melee_") && wants(n))) {
       const placed = await page.evaluate((units) => {
         let ok = 0;
         for (const u of units) {
@@ -482,6 +535,8 @@ async function main() {
       await shot(page, "big_melee_5s");
       await page.evaluate(() => window.advanceTime(4000));
       await shot(page, "big_melee_9s");
+      // To the result only when a result shot is wanted: it is most of a full run
+      if (wants("big_melee_result", "big_melee_result_1s")) {
       let simMs = 9000;
       let mode = "";
       while (simMs < 60_000) {
@@ -500,10 +555,12 @@ async function main() {
       await shot(page, "big_melee_result_1s");
       const finalState = await page.evaluate(() => window.render_game_to_text());
       fs.writeFileSync(path.join(outDir, "big_melee_final_state.json"), finalState);
+      }
+      }
 
       // Open-field clubbers on squires, no shield wall (battle-feel.e, a club coming down on a man): step a frame at a time to the first clubber blow after the lines meet,
       // and shoot it 32 ms after the landing, framed side-on to the blow, close.
-      const clubHit = await page.evaluate(() => {
+      const clubHit = !wants("melee_club_drop") ? null : await page.evaluate(() => {
         window.game.resetBattle();
         window.advanceTime(50);
         for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
@@ -531,13 +588,14 @@ async function main() {
         }
         return null;
       });
-      summary.notes.push(clubHit
+      if (wants("melee_club_drop")) summary.notes.push(clubHit
         ? `melee_club_drop: ${clubHit.attackerUnit} -> ${clubHit.targetUnit} landed at ${clubHit.ms} ms, shot 32 ms after the landing`
         : "melee_club_drop: no clubber blow within 7.5 s, shot skipped");
       if (clubHit) await shot(page, "melee_club_drop");
 
       // Every other campaign map at the placement view: one shot per biome.
-      for (const mapId of ["introduction","adventure","challenge","dynasty","renaissance","pirate","simulation"]) {
+      for (const mapId of BIOME_MAPS) {
+        if (!wants(`biome_${mapId}`)) continue;
         const loaded = await page.evaluate((id) => {
           try {
             window.game.resetBattle();
@@ -551,6 +609,7 @@ async function main() {
         if (loaded === true) await shot(page, `biome_${mapId}`);
         else summary.notes.push(`biome_${mapId}: campaign did not load: ${loaded}`);
       }
+      if (wants("biome_spooky", "biome_spooky_battle")) {
       // Second biome: the spooky campaign map with its locked undead line, at the placement view.
       await page.evaluate(() => {
         window.game.resetBattle();
@@ -570,6 +629,7 @@ async function main() {
       });
       summary.notes.push(`biome_spooky_battle placed ${spookyPlaced}/6 units`);
       await shot(page, "biome_spooky_battle");
+      }
     }
     // After the showcase, so the showcase scenes start from the same state in a full run as in a --only look.
     if (doRegression) {
