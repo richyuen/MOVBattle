@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 291 | press-blow-off-feet | battle-feel.e | approved
-- 291 | short-javelin | vfx.i | approved
 - 292 | stoner-two-hand-boulder | vfx.k | approved
 - 293 | press-second-rank-blow | battle-feel.e | rejected
 - 293 | bomb-pair-fist-size | vfx.l | approved
@@ -28,6 +26,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 299 | lockbox-body-anchor | vfx.p | approved
 - 300 | press-club-lands-on-board | battle-feel.e | approved
 - 300 | swordcaster-blade-ring [R] | vfx.p | approved
+- 301 | one-strike [R] | battle-feel.e | rejected
+- 301 | ring-sword-rises | vfx.p | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -53,6 +53,7 @@ propBuilder.ts:bomb (BOMB_FISTS,_NECK,_FUSE; BOMB_SEAT_DOWN,_FORWARD,_TURN; offh
 propBuilder.ts:dynamite (DYNAMITE_COLS,_ROWS,_STICK_WIDE,_LONG,_BAND,_SPARK,_SPARK_RAYS; top at .155 s) | 3x2 .075 x .38 s, bands .17; spark .075 s 6 rays | 296 | approved | no spark (295); 3 sticks in a row .05 x .26 s (284); bomb ball .15 s
 propBuilder.ts:lockbox + carry (LOCKBOX_SIZE,_LID,_IRON,_BAND,_PLATE; _lockboxAnchor torso-fixed, NAVEL .35 FRONT .55 of shoulder ht) | .26 x .16 x .16 s, lid .35 | 299 | approved | hands midpoint (295); short hand sword at the hip
 propBuilder.ts:sword ring (SWORD_RING_COUNT,_ANGLES,_RADIUS,_BLADE,_GUARD,_STAGGER,_BOB,_REFILL; launchRingSword) | 6 at ±1.05/1.85/2.6, r .55 H, blade .7 H, guard .36 H, bob .025/1.7, refill 1.4 | 300 | approved | none (one sword over the head)
+projectileSystem.ts:ring sword rise (SWORD_RISE_IN; SWORD_RISE_OVER in simulationSystem; flies from the risen height) | .45 s to .25 over head | 301 | approved | none (hovered at its ring guard point, shin height)
 proceduralAnimation.ts:lockbox arms (LOCKBOX_CARRY IK start; DLS palm (mitt middle) onto box ends, LOCKBOX_PALM_OUT, 8 steps) | .15, out .6, .6, -1.85; palm .35 mitt widths out | 300 | approved | out .32, wrist GRIP .06 (299); fixed pose (298)
 proceduralAnimation.ts:in-reach press beat (PRESS_CLUB_COCK, PRESS_AIM_ARM,_ELBOW, PRESS_BOARD_LINE, CONTACT_MIN_FALL,_LOWEST) | cock -1.05; arm 1.0; line .25; head pinned at reach on near face, lowest .6 | 300 | approved | direction only, head overran into turf (299); fixed arc .6-1.25 (297)
 proceduralAnimation.ts:press mark held (PRESS_MARK_HOLD; marked heavy_swing winds to PRESS_CLUB_COCK, recover stays landed) | 1.5 s | 298 | approved | mark dropped on the first out-of-reach call; swing to CLUB_COCK
