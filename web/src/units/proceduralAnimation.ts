@@ -208,6 +208,12 @@ const CAST_LOOSE = 0.68;
 const CAST_HOLD = 0.94;
 // The staff's head direction at the full drive, in the body's yaw frame: straight ahead, a touch up
 const CAST_LEVEL_TIP = new Vector3(0, 0.1, 1).normalize();
+// A bone mage casts with his staff up, not driven level (units/tribal.bone_mage: staff arm straight up over the head, the staff stood skull end up and leant a
+// little ahead): the arm is up by CAST_RAISE_UP of the cast and stays up to CAST_HOLD, so the leaves leave its head at CAST_LOOSE with it still overhead.
+// CAST_RAISE_ARM is the staff arm (shoulder raise and out, elbow), CAST_RAISE_TIP the staff head direction in the body yaw frame (x toward the staff side).
+const CAST_RAISE_UP = 0.4;
+const CAST_RAISE_ARM = { raise: -2.9, out: 0.32, elbow: -0.12 };
+const CAST_RAISE_TIP = new Vector3(0.15, 1, 0.3).normalize();
 const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0.35, head: 0.45, legs: 0.75, knee: 0.35 };
 
 export class ProceduralAnimator {
@@ -1195,7 +1201,7 @@ export class ProceduralAnimator {
   // the length of a staff that stands on the ground: the fist slides along it until its butt is down.
   private _carry: {
     weapon: { raise: number; out: number; elbow: number; tip: Vector3; prop: CarriedProp | null } | null;
-    ready: { raise: number; out: number; elbow: number; tip: Vector3; prop: CarriedProp | null; left: { raise: number; out: number; elbow: number }; yaw: number; stagger: number; give: number; cast?: boolean } | null;
+    ready: { raise: number; out: number; elbow: number; tip: Vector3; prop: CarriedProp | null; left: { raise: number; out: number; elbow: number }; yaw: number; stagger: number; give: number; cast?: boolean; overhead?: boolean } | null;
     board: { raise: number; out: number; elbow: number } | null; bob: number; beat: number;
   } | null = null;
   private _carryTurn = 0;
@@ -1205,6 +1211,8 @@ export class ProceduralAnimator {
   private _castReach = 0;
   // How far the drive has laid the staff level at the enemy (CAST_LEVEL_TIP)
   private _castLevel = 0;
+  // Where that cast lays the staff head: level at the enemy, or stood up over the head (CAST_RAISE_TIP, side-signed)
+  private _castTip = CAST_LEVEL_TIP;
   /** True for a body that stands and casts from its own two-handed hold, so nothing outside should spread its arms for it. */
   get castsFromHold(): boolean {
     return (this._carry ??= this._buildCarry()).ready?.cast === true;
@@ -1277,7 +1285,7 @@ export class ProceduralAnimator {
     return {
       weapon: held ? { ...attitude, prop } : null,
       ready: armed ? { ...hold, prop: stave, yaw: 0.6 + h(89) * 0.35, stagger: 0.4 + h(90) * 0.2, give: 0.1 + h(91) * 0.16 }
-        : rodHold ? { ...rodHold, prop: rodProp, yaw: 0.1 + h(89) * 0.25, stagger: 0, give: 0, cast: true } : null,
+        : rodHold ? { ...rodHold, prop: rodProp, yaw: 0.1 + h(89) * 0.25, stagger: 0, give: 0, cast: true, overhead: rod?.id === "boneStaff" } : null,
       board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
       bob: 0.08 + h(84) * 0.1,
       beat: h(88) * Math.PI,
@@ -1434,7 +1442,7 @@ export class ProceduralAnimator {
     // Coming down on a man (see _aimBlow): the head goes onto him, wherever he stands
     if (this._aimWeight > 0.01 && weapon === this._carry?.weapon) Vector3.LerpToRef(tip, this._aimTip, this._aimWeight, tip).normalize();
     // Driven at the enemy (see _animateCast): the staff is laid level along the thrust arm, head at him, and held there while its missile flies
-    if (this._castLevel > 0.01 && weapon === ready) Vector3.LerpToRef(tip, CAST_LEVEL_TIP, this._castLevel, tip).normalize();
+    if (this._castLevel > 0.01 && weapon === ready) Vector3.LerpToRef(tip, this._castTip, this._castLevel, tip).normalize();
     // Shooting: upright in the fist, canted a little toward the mark
     if (shooting > 0) Vector3.LerpToRef(tip, new Vector3(0, 1, 0.12), shooting, tip).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
@@ -2037,6 +2045,35 @@ export class ProceduralAnimator {
       const u = Math.max(0, Math.min(1, (progress - from) / (to - from)));
       return u * u * (3 - 2 * u);
     };
+    if (this._carry?.ready?.overhead) {
+      // Staff up (CAST_RAISE_*): the staff arm goes straight up and holds there through the loose, the chest lifts and leans a little back under it, the
+      // free arm hangs out and back at his side, the weight sits back over the rear foot
+      const up = step(0, CAST_RAISE_UP) * (1 - step(CAST_HOLD, 1));
+      const kk = 1 - Math.min(1, this._limp);
+      const side = Math.sign(b.rightShoulder.position.x) || 1;
+      const set = (joint: TransformNode, axis: "x" | "y" | "z", value: number): void => {
+        joint.rotation[axis] += (value - joint.rotation[axis]) * up * kk;
+      };
+      set(b.rightShoulder, "x", CAST_RAISE_ARM.raise);
+      set(b.rightShoulder, "z", CAST_RAISE_ARM.out);
+      set(b.rightElbow, "x", CAST_RAISE_ARM.elbow);
+      set(b.leftShoulder, "x", 0.25);
+      set(b.leftShoulder, "z", -0.45);
+      set(b.leftElbow, "x", -0.3);
+      b.torso.rotation.x -= 0.16 * up * kk;
+      b.neck.rotation.x -= 0.12 * up * kk;
+      set(b.leftHip, "x", -0.28);
+      set(b.leftKnee, "x", 0.12);
+      set(b.rightHip, "x", 0.18);
+      set(b.rightKnee, "x", 0.22);
+      this._castLift = up;
+      this._castReach = 0;
+      this._castTip = new Vector3(CAST_RAISE_TIP.x * side, CAST_RAISE_TIP.y, CAST_RAISE_TIP.z);
+      this._castLevel = up * kk;
+      if (progress >= 1) this._state = AnimState.Idle;
+      return;
+    }
+    this._castTip = CAST_LEVEL_TIP;
     const wind = step(0, 0.5) * (1 - step(0.55, CAST_LOOSE));
     // The missile leaves the staff's head at CAST_LOOSE; he holds the staff thrust level at the enemy until CAST_HOLD and only then lets it back to the hold
     const drive = step(0.55, CAST_LOOSE) * (1 - step(CAST_HOLD, 1));

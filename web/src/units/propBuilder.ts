@@ -1732,6 +1732,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         orb.material = mat(scene, accent, 0.3);
       }
       shaft.position.y = 0.2 * s;
+      // A bone mage casts with this staff stood up over his head, not driven level (proceduralAnimation CAST_RAISE_*)
+      if (type === "bone_staff") shaft.id = "boneStaff";
       return shaft;
     }
     case "bow":

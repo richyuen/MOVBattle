@@ -1506,10 +1506,11 @@ export class SimulationSystem {
             attacker, target, shape: resolveProjectileShape(attacker, attackProfile) ?? "spear", damage, splashRadius, knockback,
             leavesAt: now + attacker.animator.throwReleasesIn(),
           });
-        } else if (staffHeadOf(attacker) && resolveProjectileShape(attacker, attackProfile) === "fireball" && attacker.animator.castReleasesIn() > 0) {
-          // The cast has only started: the fireball leaves the staff's head when the staff is driven level at the man
+        } else if (staffHeadOf(attacker) && /^(fireball|leaves)$/.test(resolveProjectileShape(attacker, attackProfile) ?? "") && attacker.animator.castReleasesIn() > 0) {
+          // The cast has only started: the fireball leaves the staff's head when the staff is driven level at the man, the bone mage's leaves
+          // when his staff is up over his head
           this._pendingThrows.push({
-            attacker, target, shape: "fireball", damage, splashRadius, knockback, leavesAt: now + attacker.animator.castReleasesIn(), fromStaff: true,
+            attacker, target, shape: resolveProjectileShape(attacker, attackProfile)!, damage, splashRadius, knockback, leavesAt: now + attacker.animator.castReleasesIn(), fromStaff: true,
           });
         } else if (staffHeadOf(attacker) && resolveProjectileShape(attacker, attackProfile) === "fireball") {
           // A caster keeps his staff: the fireball is lit at its head, not thrown from his hip
