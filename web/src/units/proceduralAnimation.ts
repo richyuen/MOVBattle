@@ -228,6 +228,13 @@ const THROW_LET_GO = 0.5;
  * and the rock leaves both hands at chest height THROW_LET_GO of the way through that swing, the same let-go the sim times the missile on (throwReleasesIn).
  */
 const BOULDER_CARRY = { raise: -0.6, inward: 0.42, elbow: -0.75 };
+/*
+ * [S] lockbox-belly-two-hand (vfx.p; units/spooky.swordcaster). Spec read off the reference: the chest is held square across the belly, its long side left to
+ * right and close against him, just under the chest plate, a hand on each end. Upper arms hang near his sides with the elbows out (LOCKBOX_CARRY out), the
+ * forearms bent ~80 deg forward (elbow) and swung in round the box (turn, about the vertical through the shoulder) so the two mitts meet its ends in front of
+ * the navel. Held the same through the walk, the idle and the cast: he never lets go of it.
+ */
+const LOCKBOX_CARRY = { raise: 0.15, out: 0.32, turn: 0.6, elbow: -1.85 };
 const BOULDER_DIP = { raise: 0.25, inward: 0.32, elbow: -0.25, trunk: 0.55, thigh: -0.45, knee: 0.7 };
 const BOULDER_HEAVE = { raise: -2.4, inward: 0.3, elbow: -0.15, trunk: -0.25 };
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
@@ -1551,13 +1558,17 @@ export class ProceduralAnimator {
         knee.rotation.x += (BOULDER_DIP.knee * dip - knee.rotation.x) * w;
       }
     }
+    // The chest: elbows out at his sides, forearms bent forward and swung in round its ends at the navel (LOCKBOX_CARRY), through every state
+    const chest = rock.name === "lockbox";
+    if (chest) arm = { raise: LOCKBOX_CARRY.raise, inward: -LOCKBOX_CARRY.out, elbow: LOCKBOX_CARRY.elbow };
+    const turn = chest ? LOCKBOX_CARRY.turn : 0;
     // Both arms alike, each turned in toward the middle (+z is out for the right arm, -z for the left)
     b.rightShoulder.rotation.x += (arm.raise - b.rightShoulder.rotation.x) * w;
     b.leftShoulder.rotation.x += (arm.raise - b.leftShoulder.rotation.x) * w;
     b.rightShoulder.rotation.z += (-arm.inward - b.rightShoulder.rotation.z) * w;
     b.leftShoulder.rotation.z += (arm.inward - b.leftShoulder.rotation.z) * w;
-    b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * w;
-    b.leftShoulder.rotation.y += (0 - b.leftShoulder.rotation.y) * w;
+    b.rightShoulder.rotation.y += (-turn - b.rightShoulder.rotation.y) * w;
+    b.leftShoulder.rotation.y += (turn - b.leftShoulder.rotation.y) * w;
     b.rightElbow.rotation.x += (arm.elbow - b.rightElbow.rotation.x) * w;
     b.leftElbow.rotation.x += (arm.elbow - b.leftElbow.rotation.x) * w;
     if (!rock.isEnabled()) return;
