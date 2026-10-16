@@ -368,10 +368,30 @@ async function main() {
           window.game.resetBattle();
           window.game.runScenarioGalleryValidation(n);
         }, `gallery_throw_${group}`);
+        // The harpooner fires at his swing's start, long before the javelin's let-go, and his harpoon is out of frame by the pair: shoot it 64 ms off the muzzle
+        let fired = 0;
+        if (group === "spears") {
+          const firstMs = await page.evaluate(() => {
+            for (let ms = 0; ms < 4000; ms += 16) {
+              if (JSON.parse(window.render_game_to_text()).projectiles > 0) {
+                window.advanceTime(64);
+                return ms;
+              }
+              window.advanceTime(16);
+            }
+            return null;
+          });
+          if (firstMs !== null) {
+            fired = 1;
+            summary.notes.push(`throw_spears_harpoon: first missile at +${firstMs} ms, shot 64 ms on`);
+            await shot(page, "throw_spears_harpoon");
+          }
+        }
         const spawnMs = await page.evaluate((n) => {
           const missiles = () => JSON.parse(window.render_game_to_text()).projectiles;
           let launches = 0;
-          let before = 0;
+          // Missiles already flying (the harpoon shot above) are not launches still to come
+          let before = missiles();
           for (let ms = 0; ms < 4000; ms += 16) {
             const now = missiles();
             launches += Math.max(0, now - before);
@@ -380,7 +400,7 @@ async function main() {
             window.advanceTime(16);
           }
           return null;
-        }, throwers);
+        }, throwers - fired);
         summary.notes.push(spawnMs === null
           ? `throw_${group}: not every thrower let go within 4 s, pair skipped`
           : `throw_${group}: last thrower's missile at +${spawnMs} ms`);
