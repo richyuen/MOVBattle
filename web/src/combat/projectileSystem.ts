@@ -785,15 +785,16 @@ export class ProjectileSystem {
         heart.parent = root;
         const shell = MeshBuilder.CreateIcoSphere("fireball_shell", { radius: FIREBALL_WIDE * 0.5, subdivisions: 1, flat: true }, this._scene);
         shell.rotation.set(0.6, 0.9, 0.3); // its facets turned off the heart's
-        shell.material = mf.get("unlit", FIREBALL_SHELL, { emissive: FIREBALL_SHELL, alpha: 0.7 });
+        shell.material = mf.get("unlit", FIREBALL_SHELL, { emissive: FIREBALL_SHELL });
         shell.parent = root;
         const tail = MeshBuilder.CreateCylinder("fireball_tail", { height: FIREBALL_TAIL, diameterTop: FIREBALL_WIDE * 0.8, diameterBottom: 0, tessellation: 6 }, this._scene);
         tail.rotation.x = Math.PI / 2;
         tail.position.z = -FIREBALL_TAIL / 2;
         tail.material = mf.get("unlit", FIREBALL_SHELL, { emissive: FIREBALL_SHELL, alpha: 0.45 });
         tail.parent = root;
-        // Only the heart blooms: lit through the glow layer the whole ball washed out into one soft yellow sun with no orange and no facets
+        // No part blooms: lit through the glow layer the ball washed out into a pale yellow disc with no orange shell and no facets
         const glowLayer = this._scene.getGlowLayerByName("glow");
+        glowLayer?.addExcludedMesh(heart);
         glowLayer?.addExcludedMesh(shell);
         glowLayer?.addExcludedMesh(tail);
         break;
