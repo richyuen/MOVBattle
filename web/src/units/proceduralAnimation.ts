@@ -148,6 +148,15 @@ const PRESS_AIM_ELBOW = { cock: -1.7, land: -0.25 };
 const PRESS_BOARD_LINE = 0.25;
 const PRESS_DOWN_MIN = 0.6;
 const PRESS_DOWN_MAX = 1.25;
+/*
+ * [S] press-mark-held (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (every club at the pile is cocked back or down on a man, none stands up): the in-reach
+ * press beat outlives gaps in the sim's strike calls (a man shoved a step out of reach, a retarget): his man stays marked PRESS_MARK_HOLD seconds past the last
+ * call and through any swing at him, so the beat keeps cocking back and landing down on him. While marked:
+ * - the sim's own swing (heavy_swing) winds up to PRESS_CLUB_COCK, back over the shoulder, not to the near-upright CLUB_COCK, and after the drop the club stays
+ *   down on his board line (_pressDownArc) instead of being heaved back up toward vertical;
+ * - a clubber in the shove with no man marked (and not a rank back) carries the club in that same cock, never straight up.
+ */
+const PRESS_MARK_HOLD = 1.5;
 const PRESS_BLOW_BEAT_MIN = 1.5;
 const PRESS_BLOW_BEAT_MAX = 2.4;
 const PRESS_BLOW_REST = 0.38;
@@ -579,16 +588,21 @@ export class ProceduralAnimator {
     this._readyTimer = 0.6;
     if (striking) this._strikeTimer = 0.6;
     if (behindRank) this._restLowTimer = 0.6;
-    // In reach of the man himself (not a rank back): his beat is cocked back and landed down on that man (see club-cocked-in-press)
-    this._pressMark = striking && !behindRank ? mark : null;
+    // In reach of the man himself (not a rank back): his beat is cocked back and landed down on that man (see club-cocked-in-press). The man is held through
+    // gaps in the calls (press-mark-held): a call out of reach leaves him marked for PRESS_MARK_HOLD; a rank back, or his man dead, lets go at once
+    if (striking && !behindRank && mark) {
+      this._pressMark = mark;
+      this._pressMarkTimer = PRESS_MARK_HOLD;
+    } else if (behindRank || striking) this._pressMark = null;
   }
   private _pressMark: TransformNode | null = null;
+  private _pressMarkTimer = 0;
   // How far this frame's press club is landed (0 cocked back, 1 down on the man), for _carryProp to lay it onto his board line; zeroed every frame
   private _pressLand = 0;
-  /** The in-reach press beat's man, while the strike calls keep coming: null a rank back, out of reach, or once he is gone. */
+  /** The in-reach press beat's man: held PRESS_MARK_HOLD past the last call and through a swing at him; null a rank back, or once he is gone. */
   private _pressAim(): TransformNode | null {
     const m = this._pressMark;
-    return m && !m.isDisposed() && this._strikeTimer > 0 ? m : null;
+    return m && !m.isDisposed() && m.isEnabled() && (this._pressMarkTimer > 0 || this._state === AnimState.Attacking) && this._state !== AnimState.Dead ? m : null;
   }
   // A clubber a rank back behind a man of his own side (see readyBlow): between beats his club rests low over that man's shoulder, not cocked
   private _restLowTimer = 0;
@@ -1013,8 +1027,10 @@ export class ProceduralAnimator {
         // A clubber in the press, stood or stepping in, does not windmill or level his weapon arm: he keeps it cocked up over his shoulder and, on his own beat,
         // brings it down onto the man in front (see _pressBlow), holds it there a moment and heaves it back up, while the free arm still claws and shoves.
         const heave = Math.sin(phase * 0.5) * 0.12;
-        const blow = this._pressBlow();
-        const aimed = this._pressAim() !== null;
+        const marked = this._pressAim() !== null;
+        // No man marked and not a rank back: he carries the press cock and does not slam at nothing (press-mark-held)
+        const aimed = marked || this._restLowTimer <= 0;
+        const blow = aimed && !marked ? 0 : this._pressBlow();
         b.rightShoulder.rotation.x += (-2.5 + heave + (aimed ? PRESS_AIM_ARM : PRESS_BLOW_ARM) * blow - b.rightShoulder.rotation.x) * k;
         b.rightShoulder.rotation.z += (0.3 - 0.4 * blow - b.rightShoulder.rotation.z) * k;
         const elbow = aimed ? PRESS_AIM_ELBOW.cock + (PRESS_AIM_ELBOW.land - PRESS_AIM_ELBOW.cock) * blow : -1.3 + 1.15 * blow;
@@ -1027,7 +1043,7 @@ export class ProceduralAnimator {
         b.leftElbow.rotation.x -= (1.0 + Math.sin(phase) * 0.6) * k;
         if (aimed) {
           this._clubArc = PRESS_CLUB_COCK + heave;
-          this._pressLand = blow;
+          this._pressLand = marked ? blow : 0;
         } else this._clubArc = CLUB_COCK * 0.9 + heave + (PRESS_BLOW_CLUB - CLUB_COCK * 0.9 - heave) * blow;
         this._clubHold = Math.max(this._clubHold, k);
       } else if (this._state === AnimState.Idle) {
@@ -1144,6 +1160,7 @@ export class ProceduralAnimator {
     // shoulder that the press keeps (see _animateHeavySwing), so men stepping into a fight carry their clubs raised and not slanted or trailed.
     this._readyTimer -= dt;
     this._strikeTimer -= dt;
+    this._pressMarkTimer -= dt;
     this._ready += ((this._readyTimer > 0 ? 1 : 0) - this._ready) * Math.min(1, dt * 6);
     const cocked = this._ready * (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
     if (cocked > 0.01 && this._state !== AnimState.Attacking && this._state !== AnimState.Dead && this.walkStyle !== "quadruped" && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
@@ -1154,7 +1171,7 @@ export class ProceduralAnimator {
       // raised), and on his beat it is cocked and slammed down from there
       this._restLowTimer -= dt;
       const rest = this._restLowTimer > 0 ? REAR_CLUB_REST + Math.sin((this._time + this._wobblePhase) * 2.2) * 0.08 : 0;
-      const blow = this._strikeTimer > 0 ? (rest > 0 ? Math.max(this._pressBlow(), rest * (this._pressBlow() > 0.001 || this._pressBlowCocked() ? 0 : 1)) : this._pressBlow()) : rest;
+      const blow = this._strikeTimer > 0 || (rest <= 0 && this._pressAim() !== null) ? (rest > 0 ? Math.max(this._pressBlow(), rest * (this._pressBlow() > 0.001 || this._pressBlowCocked() ? 0 : 1)) : this._pressBlow()) : rest;
       // In reach of the man himself: cocked back over the shoulder between slams, landed down onto his board line (club-cocked-in-press); closing on him,
       // out of reach and not a rank back, the club is carried in that same cock, back over the shoulder, not stood straight up
       const aimed = rest <= 0 && (this._pressAim() !== null || this._strikeTimer <= 0);
@@ -2358,6 +2375,8 @@ export class ProceduralAnimator {
    *   trunk folds forward 0.55 over a front knee bent 0.35; the club's arc runs through vertical to CLUB_LAND (+1.8 rad, head forward and a little down, at the
    *   target's chest: at 2.05 it was driven into the turf).
    * - Recover (the rest): he heaves it back up two thirds of the way to the cock, so a press between blows is clubs held up, not clubs left lying forward.
+   * - Swung at a marked press man (press-mark-held, see _pressAim): the cock is PRESS_CLUB_COCK, back over the shoulder, from the first frame; the drop lands the
+   *   club down on that man's board line (_pressLand) and the recover keeps it there, as the press beat does, instead of heaving it back up near vertical.
    * The club's arc is handed to _carryProp through _clubArc/_clubHold and turned in the fist there; the arm alone could not stand it up overhead.
    */
   private _animateHeavySwing(dt: number): void {
@@ -2367,12 +2386,14 @@ export class ProceduralAnimator {
     const commit = this._resolveReleasePoint(0.45);
     const drop = commit + (1 - commit) * 0.45;
     const side = Math.sign(b.rightShoulder.position.x) || 1;
+    const pressed = this._pressAim() !== null;
+    const cockElbow = pressed ? PRESS_AIM_ELBOW.cock : -1.25;
     if (progress < commit) {
       const w = progress / Math.max(commit, 0.001);
       const windUp = w * (2 - w); // eased out: up fast, slowing into the cock
       b.rightShoulder.rotation.x = -2.75 * windUp;
       b.rightShoulder.rotation.z = 0.3 * windUp;
-      b.rightElbow.rotation.x = -1.25 * windUp;
+      b.rightElbow.rotation.x = cockElbow * windUp;
       b.leftShoulder.rotation.x = -0.7 * windUp;
       b.leftShoulder.rotation.z = -0.35 * windUp;
       b.leftElbow.rotation.x = -0.5 * windUp;
@@ -2382,15 +2403,16 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x = 0.18 * windUp;
       b.leftHip.rotation.x = -0.22 * windUp;
       b.leftKnee.rotation.x = 0.12 * windUp;
-      this._clubArc = CLUB_COCK * windUp;
+      this._clubArc = pressed ? PRESS_CLUB_COCK : CLUB_COCK * windUp;
     } else {
       const swing = Math.min(1, (progress - commit) / Math.max(drop - commit, 0.001));
       const eased = swing * swing * (3 - 2 * swing) * 0.4 + swing * swing * 0.6; // slow off the cock, fastest at the bottom
-      const back = progress > drop ? (progress - drop) / Math.max(1 - drop, 0.001) : 0;
+      const back = progress > drop && !pressed ? (progress - drop) / Math.max(1 - drop, 0.001) : 0;
       const e = eased - back * (2 - back) * 0.65;
-      b.rightShoulder.rotation.x = -2.75 + 3.25 * e;
+      // On a marked press man the fist stops raised before the face (the press beat's landed arm), so the club laid down from it meets his board top
+      b.rightShoulder.rotation.x = -2.75 + (pressed ? 0.25 + PRESS_AIM_ARM : 3.25) * e;
       b.rightShoulder.rotation.z = 0.3 - 0.4 * e;
-      b.rightElbow.rotation.x = -1.25 + 1.1 * e;
+      b.rightElbow.rotation.x = pressed ? cockElbow + (PRESS_AIM_ELBOW.land - cockElbow) * e : -1.25 + 1.1 * e;
       b.leftShoulder.rotation.x = -0.7 + 0.9 * e;
       b.leftShoulder.rotation.z = -0.35 + 0.1 * e;
       b.leftElbow.rotation.x = -0.5 + 0.1 * e;
@@ -2400,7 +2422,10 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x = 0.18 + 0.12 * e;
       b.leftHip.rotation.x = -0.22 - 0.2 * e;
       b.leftKnee.rotation.x = 0.12 + 0.23 * e;
-      this._clubArc = CLUB_COCK + (CLUB_LAND - CLUB_COCK) * e;
+      if (pressed) {
+        this._clubArc = PRESS_CLUB_COCK;
+        this._pressLand = e;
+      } else this._clubArc = CLUB_COCK + (CLUB_LAND - CLUB_COCK) * e;
     }
     this._clubHold = 1;
     b.rightKnee.rotation.x = 0.12;
