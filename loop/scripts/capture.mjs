@@ -382,23 +382,39 @@ async function main() {
             for (let ms = 0; ms < 4000; ms += 16) {
               window.advanceTime(16);
               const h = window.game.getHitLog().find((e) => /clubber|chieftain/.test(e.attackerUnit));
-              // Shoot 128 ms after the landing (club still held down on him), when the man it threw is in the air, not on the land frame itself
+              // Shoot 64 ms after the landing (club settled on the point it struck, before the sim walks the striker on), when the man it threw is in the
+              // air, not on the land frame itself
               if (h) {
-                for (let k = 0; k < 8; k++) window.advanceTime(16);
+                for (let k = 0; k < 4; k++) window.advanceTime(16);
                 return { ms, ...h };
               }
             }
             return null;
           });
           summary.notes.push(hit
-            ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} landed at +${hit.ms} ms, shot 128 ms after the landing`
+            ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} landed at +${hit.ms} ms, shot 64 ms after the landing`
             : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
-          if (hit) await shot(page, "press_clubbers_hit");
-          // 96 ms later (the top of his throw), framed on the struck man where he is now, not where the club landed: found live as the highest man of the struck
-          // side near the blow, seen level down his wall's line from his end of it.
+          if (hit) {
+            // Framed live, side-on to the blow itself (across the line from the striker to the man he hit), not down the wall's axis: a blow struck along
+            // the line from the wall's end projects as a club pointing at the sky. The lens goes on whichever side of the blow has fewer men in front of it.
+            await page.evaluate((h) => {
+              const units = JSON.parse(window.render_game_to_text()).units.filter((u) => u.alive !== false);
+              let dx = h.head.x - h.x, dz = h.head.z - h.z;
+              const len = Math.hypot(dx, dz) || 1;
+              dx /= len; dz /= len;
+              let nx = -dz, nz = dx;
+              const mid = { x: (h.x + h.head.x) / 2, z: (h.z + h.head.z) / 2 };
+              const crowd = (sx, sz) => units.filter((u) => (u.x - mid.x) * sx + (u.z - mid.z) * sz > 0.6).length;
+              if (crowd(nx, nz) > crowd(-nx, -nz)) { nx = -nx; nz = -nz; }
+              window.game.frameCamera({ x: mid.x, y: 1.0, z: mid.z }, 3.8, Math.atan2(nz, nx), Math.PI / 2.05);
+            }, hit);
+            await shot(page, "press_clubbers_hit");
+          }
+          // 160 ms later (224 ms after the landing, the top of his throw), framed on the struck man where he is now, not where the club landed: found live as
+          // the highest man of the struck side near the blow, seen level down his wall's line from his end of it.
           if (hit) {
             const struck = await page.evaluate((h) => {
-              for (let k = 0; k < 6; k++) window.advanceTime(16);
+              for (let k = 0; k < 10; k++) window.advanceTime(16);
               const units = JSON.parse(window.render_game_to_text()).units.filter((u) => u.alive !== false);
               const pool = units.filter((u) => u.id === h.targetUnit && Math.hypot(u.x - h.head.x, u.z - h.head.z) < 2.6);
               if (!pool.length) return null;

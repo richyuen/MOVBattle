@@ -455,7 +455,9 @@ export class RuntimeUnit {
   /** Closing on its target, a few strides out: a heavy weapon comes up cocked over the shoulder; within striking distance it is brought down on its own beat. */
   readyBlow(striking = false, target: RuntimeUnit | null = null, behindRank = false): void {
     if (isVehicleUnit(this.definition.id)) return;
-    this.animator.readyBlow(striking, behindRank, target && !target.isDead ? target.body.headTop : null);
+    // A man thrown, toppled or down is no press mark: the beat's club would chase his crown to the ground
+    const standing = target && !target.isDead && !target.isBlowThrown && !target.isToppled && !target.isDowned;
+    this.animator.readyBlow(striking, behindRank, standing ? target.body.headTop : null);
     if (striking) this._blowTarget = target;
   }
   // The man a press blow lands on: he flinches (head and trunk snapped back) on each slam that reaches him

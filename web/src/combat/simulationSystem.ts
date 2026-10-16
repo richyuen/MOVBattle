@@ -1593,6 +1593,8 @@ export class SimulationSystem {
   }
 
   private _landMeleeBlow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, splashRadius: number, knockback: Vector3, now: number, impactOrigin: Vector3): void {
+    // The striker's aim is pinned where the blow lands before the man is thrown off that point
+    attacker.animator.blowStruck();
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();
