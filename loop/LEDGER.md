@@ -10,7 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 280 | overhead-blow | battle-feel.e | approved
 - 281 | overhead-blow-stagger | battle-feel.e | approved
 - 281 | held-prop-release | vfx.i | approved
 - 282 | overhead-blow-crown | battle-feel.e | approved
@@ -28,6 +27,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 288 | swordcaster-flying-sword | vfx.p | approved
 - 289 | bone-mage-staff-raise | vfx.n | approved
 - 289 | press-blow-follow-through | battle-feel.e | approved
+- 290 | harpoon-head | vfx.j | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -42,6 +42,7 @@ proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,legs,knee
 proceduralAnimation.ts:cast loose/hold (CAST_LOOSE, CAST_HOLD, CAST_LEVEL_TIP; castReleasesIn, fireball pending to the drive) | loose .68 hold .94 tip 0,.1,1 | 287 | approved | fired at cast start, drive .55-.68 out .82-1, tip z+1.1
 proceduralAnimation.ts:bone mage overhead cast (CAST_RAISE_UP,_ARM,_TIP; boneStaff id; leaves pend to CAST_LOOSE from staff head) | up .4, arm -2.9/.32/-.12, tip .15,1,.3 | 289 | approved | wizard level drive, leaves from hand at cast start
 projectileSystem.ts:fireball (FIREBALL_WIDE,_TAIL,_HEART,_SHELL; flat icospheres, heart-only glow; staffHeadOf origin) | .55 wide, tail .8; heart 1,.92,.55 shell 1,.45,.08 opaque, no bloom | 286 | approved | shell alpha .7 heart bloom (285); team-tinted sphere .25 (wizard flew a bolt)
+projectileSystem.ts:harpoon missile (HARPOON_SHAFT_LONG,_WIDE,_HEAD_LONG,_WIDE,_BARBS,_BARB_LONG,_SWEEP; dark iron, streak) | shaft .5 x .05, head .24 x .15 flat, 2 barbs .17 swept .5 | 290 | approved | shared spear mesh, blue tip
 propBuilder.ts:harpoon gun (HARPOON_GUN_LONG,_WIDE, HARPOON_MUZZLE; rope HARPOON_ROPE_WIDE,_COLOR) | .24 x .11 s, steel .42,.5,.66 lit .25; rope .035 dark | 285 | approved | held spear (shared spear mesh)
 projectileSystem.ts:leaf whirl (LEAF_COUNT,_LONG,_WIDE,_WHIRL,_SPREAD,_SPIN,_COLORS; bone mage projectileHint leaves, from right hand) | 11 x .5 x .19, whirl .55 spread 1.2, spin 9 | 286 | approved | crossbow bolt from the waist
 projectileSystem.ts:flying sword (SWORD_BLADE_LONG,_WIDE,_GUARD_WIDE,_GRIP_LONG,_COLORS; SWORD_HOVER, hover opt) | blade 1.0 x .1 white unlit, guard .3, grip .22; hover .7 s over head, speed 16 | 288 | approved | crossbow bolt from the waist
