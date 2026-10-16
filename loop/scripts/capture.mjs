@@ -410,11 +410,12 @@ async function main() {
             }, hit);
             await shot(page, "press_clubbers_hit");
           }
-          // 160 ms later (224 ms after the landing, the top of his throw), framed on the struck man where he is now, not where the club landed: found live as
-          // the highest man of the struck side near the blow, seen level down his wall's line from his end of it.
+          // 272 ms later (336 ms after the landing: the blow dwells on him BLOW_DWELL 0.12 s before the throw, and this is the top of it), framed on the struck
+          // man where he is now, not where the club landed: found live as the highest man of the struck side near the blow, seen level down his wall's line
+          // from his end of it.
           if (hit) {
             const struck = await page.evaluate((h) => {
-              for (let k = 0; k < 10; k++) window.advanceTime(16);
+              for (let k = 0; k < 17; k++) window.advanceTime(16);
               const units = JSON.parse(window.render_game_to_text()).units.filter((u) => u.alive !== false);
               const pool = units.filter((u) => u.id === h.targetUnit && Math.hypot(u.x - h.head.x, u.z - h.head.z) < 2.6);
               if (!pool.length) return null;
@@ -440,7 +441,7 @@ async function main() {
               return { id: man.id, y: man.y };
             }, hit);
             summary.notes.push(struck
-              ? `press_clubbers_blow: struck man ${struck.id} framed 224 ms after the landing, ${(struck.y ?? 0).toFixed(2)} m up`
+              ? `press_clubbers_blow: struck man ${struck.id} framed 336 ms after the landing, ${(struck.y ?? 0).toFixed(2)} m up`
               : "press_clubbers_blow: no struck man near the blow, shot skipped");
             if (struck) await shot(page, "press_clubbers_blow");
           }
