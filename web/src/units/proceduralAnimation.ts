@@ -199,6 +199,10 @@ const BOARD_OFF_SECONDS = 0.6;
 const BOARD_OFF_HOLD = 0.25;
 const BOARD_OFF_FLING = { out: 1.4, back: 0.6 };
 const BOARD_OFF_BUCKLE = { thigh: 0.9, knee: 1.6, sink: 0.35 };
+// Thrown back off his feet by a heavy blow (trailer_3_sheet_01 r2c3: arms out wide, legs going out from under him while the body goes back): shoulders out
+// THROWN.armsOut and back .armsBack rad, elbows straight, trunk .trunk and head .head rad back over the body's own pitch, thighs swept .legs rad forward
+// (the trailing one less), knees a little bent; laid on the land frame, eased out with the body's throw (RuntimeUnit BLOW_THROW).
+const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0.35, head: 0.45, legs: 0.75, knee: 0.35 };
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -425,6 +429,22 @@ export class ProceduralAnimator {
     this._boardOff = BOARD_OFF_SECONDS;
   }
   private _boardOff = 0;
+
+  /** A heavy blow has thrown him back off his feet: arms flung out wide, legs swept forward from under him (THROWN), full for `hold` s of `seconds`. */
+  throwBack(seconds: number, hold: number): void {
+    if (this._state === AnimState.Dead) return;
+    this._thrown = seconds;
+    this._thrownSeconds = seconds;
+    this._thrownHold = hold;
+  }
+  private _thrown = 0;
+  private _thrownSeconds = 1;
+  private _thrownHold = 0;
+  private _thrownWeight(): number {
+    if (this._thrown <= 0 || this._state === AnimState.Dead) return 0;
+    const k = Math.min(1, this._thrown / Math.max(0.01, this._thrownSeconds - this._thrownHold));
+    return k * k * (3 - 2 * k);
+  }
   // Full for the first BOARD_OFF_HOLD s, then eased back over the rest
   private _boardOffWeight(): number {
     if (this._boardOff <= 0 || this._state === AnimState.Dead) return 0;
@@ -1116,11 +1136,31 @@ export class ProceduralAnimator {
       b.leftShoulder.rotation.z -= BOARD_OFF_FLING.out * off;
       b.leftShoulder.rotation.x += BOARD_OFF_FLING.back * off;
       b.leftElbow.rotation.scaleInPlace(1 - off);
-      b.leftHip.rotation.x -= BOARD_OFF_BUCKLE.thigh * off;
-      b.rightHip.rotation.x -= BOARD_OFF_BUCKLE.thigh * off;
-      b.leftKnee.rotation.x += BOARD_OFF_BUCKLE.knee * off;
-      b.rightKnee.rotation.x += BOARD_OFF_BUCKLE.knee * off;
-      if (this._hipRest !== null) b.hip.position.y = Math.min(b.hip.position.y, this._hipRest * (1 - BOARD_OFF_BUCKLE.sink * off));
+      // Thrown off his feet, his knees do not fold under him
+      const buckle = off * (1 - this._thrownWeight());
+      b.leftHip.rotation.x -= BOARD_OFF_BUCKLE.thigh * buckle;
+      b.rightHip.rotation.x -= BOARD_OFF_BUCKLE.thigh * buckle;
+      b.leftKnee.rotation.x += BOARD_OFF_BUCKLE.knee * buckle;
+      b.rightKnee.rotation.x += BOARD_OFF_BUCKLE.knee * buckle;
+      if (this._hipRest !== null) b.hip.position.y = Math.min(b.hip.position.y, this._hipRest * (1 - BOARD_OFF_BUCKLE.sink * buckle));
+    }
+    // Thrown back off his feet (see THROWN): both arms flung out wide and back, the trunk and head going back past the body's pitch, the legs swept forward
+    // from under him, so he reads as a man in the air on his back-swing, not one standing at a lean
+    const thrown = this._thrownWeight();
+    if (thrown > 0) {
+      const b = this._body;
+      if (dt > 0) this._thrown = Math.max(0, this._thrown - dt);
+      b.rightShoulder.rotation.z += THROWN.armsOut * thrown;
+      // The board arm is out already as far as the board's fling took it
+      b.leftShoulder.rotation.z -= Math.max(0, THROWN.armsOut - BOARD_OFF_FLING.out * off) * thrown;
+      b.rightShoulder.rotation.x += THROWN.armsBack * thrown;
+      b.rightElbow.rotation.scaleInPlace(1 - thrown);
+      b.torso.rotation.x -= THROWN.trunk * thrown;
+      b.neck.rotation.x -= THROWN.head * thrown;
+      b.leftHip.rotation.x -= THROWN.legs * thrown;
+      b.rightHip.rotation.x -= THROWN.legs * 0.6 * thrown;
+      b.leftKnee.rotation.x += THROWN.knee * thrown;
+      b.rightKnee.rotation.x += THROWN.knee * 1.6 * thrown;
     }
 
     // ─── Googly-eye pupil wobble ───

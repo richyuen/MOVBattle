@@ -1569,8 +1569,8 @@ export class SimulationSystem {
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();
-    // ...and under a heavy weapon he goes back whole, from the feet, whether the blow was held for the drop or struck at once from a swing the walk cut short
-    if (attacker.animator.defaultAttackMotion === "heavy_swing") target.staggerFromBlow(attacker.position);
+    // ...and under a heavy weapon he is thrown back off his feet as hard as the blow pushed, whether it was held for the drop or struck at once from a swing the walk cut short
+    if (attacker.animator.defaultAttackMotion === "heavy_swing") target.staggerFromBlow(attacker.position, knockback.length());
     if (this.hitLog.length >= 200) this.hitLog.shift();
     // His pose was written after the last render: bring the chain down to the head up to date before reading it
     const chain: TransformNode[] = [];

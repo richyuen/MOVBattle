@@ -36,13 +36,18 @@ export interface OriginInfo {
 /** The rendering group a flung body is drawn in: after the scene's see-through effects, sharing their depth (main.ts keeps its depth uncleared). */
 export const FLUNG_RENDER_GROUP = 1;
 
-// A landed heavy blow rocks the struck man back from the feet (trailer_3_sheet_01 r2c3: the hoplite under the club goes back whole, helm and board together, not
-// only his neck): the whole body pitches BLOW_STAGGER_PITCH rad away from the striker on the land step, holds it BLOW_STAGGER_HOLD s, and settles over the rest
-// of BLOW_STAGGER_SECONDS while his feet give BLOW_STAGGER_STEP m back the way the blow drove him. Laid outside the crowd lean's clamp.
-const BLOW_STAGGER_SECONDS = 0.35;
-const BLOW_STAGGER_HOLD = 0.12;
-const BLOW_STAGGER_PITCH = 0.38;
-const BLOW_STAGGER_STEP = 0.3;
+// A landed heavy blow throws the struck man back off his feet (trailer_3_sheet_01 r2c3: the hoplite under the club goes back whole, feet off the ground, arms
+// out): on the land step the whole body pitches BLOW_THROW_PITCH rad away from the striker, holds it BLOW_THROW_HOLD s, and settles over the rest of
+// BLOW_THROW_SECONDS, while he is thrown back and up in proportion to the blow (its knockback times his own shove response: a club throws a light man further
+// than a heavy one), BLOW_THROW_SPEED and BLOW_THROW_LIFT m/s per unit of that, capped at _MAX. Laid outside the crowd lean's clamp and his wall's bracing,
+// but it is a stagger, not a topple: no balance pressure is loaded, no topple clocks run, he lands on his feet and is back in his file.
+const BLOW_THROW_SECONDS = 0.6;
+const BLOW_THROW_HOLD = 0.28;
+const BLOW_THROW_PITCH = 0.8;
+const BLOW_THROW_SPEED = 0.75;
+const BLOW_THROW_LIFT = 1.0;
+const BLOW_THROW_SPEED_MAX = 3.5;
+const BLOW_THROW_LIFT_MAX = 3.2;
 
 export class RuntimeUnit {
   private static _nextRuntimeId = 1;
@@ -453,29 +458,37 @@ export class RuntimeUnit {
   private _blowStagger = 0;
   private readonly _blowStaggerDir = new Vector3(0, 0, 1);
 
-  /** A heavy blow from `from` has just landed on him: he rocks back from the feet and gives a half step, shown on this very frame. */
-  staggerFromBlow(from: Vector3): void {
+  /** A heavy blow from `from` with `knockback` m/s of push has just landed on him: he is thrown back off his feet (BLOW_THROW), shown on this very frame. */
+  staggerFromBlow(from: Vector3, knockback: number): void {
     if (this._isDead || this.isToppled || this.isDowned || (this._linkedParent && this._isAnchoredActor)) return;
     const away = this.position.subtract(from);
     away.y = 0;
     if (away.lengthSquared() < 0.0001) away.copyFrom(this._getFacingVector().scale(-1));
     this._blowStaggerDir.copyFrom(away.normalize());
-    this._blowStagger = BLOW_STAGGER_SECONDS;
-    // His board is knocked off his face and his knees go, on this frame too
+    this._blowStagger = BLOW_THROW_SECONDS;
+    this._staggerTimer = Math.max(this._staggerTimer, BLOW_THROW_SECONDS);
+    // Thrown back and up: the feet leave the ground
+    const push = knockback * this._crowdPhysicsProfile.shoveResponse;
+    const speed = Math.min(BLOW_THROW_SPEED_MAX, push * BLOW_THROW_SPEED);
+    this._velocity.x = this._blowStaggerDir.x * speed;
+    this._velocity.z = this._blowStaggerDir.z * speed;
+    this._velocity.y = Math.max(this._velocity.y, Math.min(BLOW_THROW_LIFT_MAX, push * BLOW_THROW_LIFT));
+    this._grounded = false;
+    // His board is knocked off his face, arms flung out and legs gone from under him, on this frame too
     this.animator.knockBoardOff();
+    this.animator.throwBack(BLOW_THROW_SECONDS, BLOW_THROW_HOLD);
     this.animator.update(0);
-    // The blow lands after this step's lean was set: put the full pitch on now and give the first of the step
+    // The blow lands after this step's lean was set: put the full pitch on now
     const [x, z] = this._blowStaggerLean(1);
-    this.body.root.rotation.x += x;
-    this.body.root.rotation.z += z;
-    this.applyCollisionSeparation(this._blowStaggerDir.scale(BLOW_STAGGER_STEP * 0.4));
+    this.body.root.rotation.x = x;
+    this.body.root.rotation.z = z;
   }
 
   /** Root pitch and roll of the blow stagger at strength `k`: back along the line the blow drove him, in his own facing frame. */
   private _blowStaggerLean(k: number): [number, number] {
     const forward = Vector3.Dot(this._blowStaggerDir, this._getFacingVector());
     const side = Vector3.Dot(this._blowStaggerDir, this._getRightVector());
-    return [-forward * BLOW_STAGGER_PITCH * k, side * BLOW_STAGGER_PITCH * k];
+    return [-forward * BLOW_THROW_PITCH * k, side * BLOW_THROW_PITCH * k];
   }
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */
@@ -1189,12 +1202,9 @@ export class RuntimeUnit {
     if (this._blowStagger > 0) {
       const before = this._blowStagger;
       this._blowStagger = Math.max(0, this._blowStagger - dt);
-      const k = Math.min(1, this._blowStagger / (BLOW_STAGGER_SECONDS - BLOW_STAGGER_HOLD));
+      const k = Math.min(1, this._blowStagger / (BLOW_THROW_SECONDS - BLOW_THROW_HOLD));
       [staggerX, staggerZ] = this._blowStaggerLean(k);
-      if (before > BLOW_STAGGER_SECONDS - BLOW_STAGGER_HOLD) settle = 1;
-      // The rest of the half step, given over the hold
-      const stepLeft = Math.max(0, Math.min(before, BLOW_STAGGER_SECONDS) - Math.max(this._blowStagger, BLOW_STAGGER_SECONDS - BLOW_STAGGER_HOLD));
-      if (stepLeft > 0) this.applyCollisionSeparation(this._blowStaggerDir.scale(BLOW_STAGGER_STEP * 0.6 * stepLeft / BLOW_STAGGER_HOLD));
+      if (before > BLOW_THROW_SECONDS - BLOW_THROW_HOLD) settle = 1;
     }
     this.body.root.rotation.x += (targetLeanX + staggerX - this.body.root.rotation.x) * settle;
     this.body.root.rotation.z += (targetLeanZ + staggerZ - this.body.root.rotation.z) * settle;
