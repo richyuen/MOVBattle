@@ -90,6 +90,11 @@ function darken(color: Color3, amount: number): Color3 {
 
 // Arrow, bolt and spear shafts are dark wood for both teams; only the head and the fletching carry the team colour.
 const WOOD_SHAFT_COLOR = new Color3(0.3, 0.2, 0.11);
+// A caster's fireball (units/legacy.wizard): about a head and a half across, a white-yellow heart in an orange shell, a flame tail half a man long
+const FIREBALL_WIDE = 0.55;
+const FIREBALL_TAIL = 0.8;
+const FIREBALL_HEART = new Color3(1, 0.92, 0.55);
+const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
 
 export class ProjectileSystem {
   private _scene: Scene;
@@ -178,7 +183,7 @@ export class ProjectileSystem {
     if (trailMesh) {
       switch (shape) {
         case "fireball":
-          trailSystem = createTrail(this._scene, trailMesh, palette.primary, 10);
+          trailSystem = createTrail(this._scene, trailMesh, FIREBALL_SHELL, 10);
           break;
         case "rocket_arrow":
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 15);
@@ -720,16 +725,25 @@ export class ProjectileSystem {
         break;
       }
       case "fireball": {
-        // Team-owned fireball; impact/explosion VFX remain unchanged elsewhere.
-        const ball = MeshBuilder.CreateSphere("fireball", { diameter: 0.25, segments: 8 }, this._scene);
-        ball.material = this._getMat(`fireball_body_${attackerTeam}`, palette.primary, 0.6);
-        ball.parent = root;
-        // Outer glow
-        const glow = MeshBuilder.CreateSphere("glow", { diameter: 0.4, segments: 6 }, this._scene);
-        glow.material = getMaterialFactory().get("unlit", palette.bright, {
-          emissive: palette.primary.scale(0.5), alpha: 0.3,
-        });
-        glow.parent = root;
+        // A wizard's fireball (units/legacy.wizard): fire in no team's colour, a self-lit faceted ball, a white-yellow heart inside an orange shell, with a
+        // short tapering flame behind it on the line of flight, big enough (FIREBALL_WIDE) to read as a glowing thing at the throw_casters distance
+        const mf = getMaterialFactory();
+        const heart = MeshBuilder.CreateIcoSphere("fireball", { radius: FIREBALL_WIDE * 0.3, subdivisions: 1, flat: true }, this._scene);
+        heart.material = mf.get("unlit", FIREBALL_HEART, { emissive: FIREBALL_HEART });
+        heart.parent = root;
+        const shell = MeshBuilder.CreateIcoSphere("fireball_shell", { radius: FIREBALL_WIDE * 0.5, subdivisions: 1, flat: true }, this._scene);
+        shell.rotation.set(0.6, 0.9, 0.3); // its facets turned off the heart's
+        shell.material = mf.get("unlit", FIREBALL_SHELL, { emissive: FIREBALL_SHELL, alpha: 0.7 });
+        shell.parent = root;
+        const tail = MeshBuilder.CreateCylinder("fireball_tail", { height: FIREBALL_TAIL, diameterTop: FIREBALL_WIDE * 0.8, diameterBottom: 0, tessellation: 6 }, this._scene);
+        tail.rotation.x = Math.PI / 2;
+        tail.position.z = -FIREBALL_TAIL / 2;
+        tail.material = mf.get("unlit", FIREBALL_SHELL, { emissive: FIREBALL_SHELL, alpha: 0.45 });
+        tail.parent = root;
+        // Only the heart blooms: lit through the glow layer the whole ball washed out into one soft yellow sun with no orange and no facets
+        const glowLayer = this._scene.getGlowLayerByName("glow");
+        glowLayer?.addExcludedMesh(shell);
+        glowLayer?.addExcludedMesh(tail);
         break;
       }
     }

@@ -64,6 +64,15 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
 
+/** The head (orb) of the staff in a caster's hand, where his own missile is lit (vfx tier 3, units/legacy.wizard); null when he holds no staff. */
+function staffHeadOf(unit: RuntimeUnit): TransformNode | null {
+  for (const hand of [unit.body.rightHand, unit.body.leftHand]) {
+    const orb = hand?.getChildMeshes(false).find((m) => m.name === "orb" && m.isEnabled());
+    if (orb) return orb;
+  }
+  return null;
+}
+
 function isFirearmUnit(unit: RuntimeUnit): boolean {
   const hint = unit.definition.weaponHint ?? "";
   return hint === "flintlock" || hint === "musket" || hint === "blunderbuss" || hint === "cannon_hand";
@@ -1483,6 +1492,16 @@ export class SimulationSystem {
             attacker, target, shape: resolveProjectileShape(attacker, attackProfile) ?? "spear", damage, splashRadius, knockback,
             leavesAt: now + attacker.animator.throwReleasesIn(),
           });
+        } else if (staffHeadOf(attacker) && resolveProjectileShape(attacker, attackProfile) === "fireball") {
+          // A caster keeps his staff: the fireball is lit at its head, not thrown from his hip
+          const head = staffHeadOf(attacker)!;
+          const chain: TransformNode[] = [];
+          for (let n: Node | null = head; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+          for (const n of chain) n.computeWorldMatrix(true);
+          this.projectileSystem.spawnProjectile(
+            "fireball", head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
+            undefined, 0, { originLift: 0 },
+          );
         } else {
           this.projectileSystem.spawnProjectile(
             resolveProjectileShape(attacker, attackProfile) ?? "arrow",

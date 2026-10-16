@@ -328,7 +328,7 @@ const legacy = makeFaction(FactionId.Legacy, "legacy", [
   ["boxer", "Boxer", 30, "tiny_melee", { size: "tiny" }],
   ["flag_bearer", "Flag Bearer", 1000, "support_buff", { weaponHint: "staff" }],
   ["pharaoh", "Pharaoh", 1000, "special_magic", { abilities: ["fear"], hatHint: "pharaoh", weaponHint: "staff" }],
-  ["wizard", "Wizard", 3000, "special_magic", { projectileHint: "bolt", weaponHint: "staff" }],
+  ["wizard", "Wizard", 3000, "special_magic", { projectileHint: "fireball", weaponHint: "staff" }],
   ["chariot", "Chariot", 1000, "charge_melee", { abilities: ["charge_impact"], specialHint: "horse", size: "large" }],
   ["thor", "Thor", 2200, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt", visualPreset: "iconic_thor", behaviorPreset: "iconic_thor", controlStrength: 1.35, cooldownMultiplier: 0.8 }],
   ["tank", "Tank", 5000, "artillery", { abilities: ["rapid_fire"], specialHint: "tank", size: "colossal", projectileHint: "bomb", visualPreset: "iconic_legacy_tank", behaviorPreset: "iconic_legacy_tank", burstCount: 1, cooldownMultiplier: 0.72, healthMultiplier: 1.2, compositionParts: [{ relation: "crew", label: "driver" }, { relation: "crew", label: "gunner" }] }],
