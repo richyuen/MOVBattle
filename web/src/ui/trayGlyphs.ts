@@ -69,6 +69,7 @@ const BY_WEAPON: Record<string, string> = {
   harpoon: "M4 20L18 6M18 6l-5 1M18 6l-1 5M20 4l-2 2M14 10l-3-1",
   pickaxe: "M5 20L15 8M8 6c5-2 10 1 11 7",
   bomb: `${ring(11, 14, 6)}M15 9l3-3M18 6l1-2M18 6h2M18 6l1.5 1.5`,
+  dynamite: "M8 9h8v11H8zM12 9l2-4M14 5l1-1.5M14 5h1.5M14 5l1.2 1.2",
   stone: ROCK,
   hay_bale: "M4 8h16v10H4zM9 8v10M15 8v10M4 13h16",
   potion: "M10 3h4M10.5 3v5l-4 8a3 3 0 0 0 3 4h5a3 3 0 0 0 3-4l-4-8V3M8 14h8",
@@ -103,7 +104,7 @@ const SOLID = new Set<string>([
   ...["mount_horse", "cannon_base", "tank_body", "longship_body", "balloon", "cart", "giant_tree"].map((k) => BY_SPECIAL[k]),
   ...[
     "club", "spear", "axe", "hammer", "mace", "staff", "musket", "flintlock", "blunderbuss", "cannon_hand",
-    "shield_sword", "halberd", "lance", "scythe", "frying_pan", "cutlass", "pickaxe", "bomb", "stone", "potion",
+    "shield_sword", "halberd", "lance", "scythe", "frying_pan", "cutlass", "pickaxe", "bomb", "dynamite", "stone", "potion",
     "lightning_bolt", "flail", "fan", "shuriken_hand", "boxing_glove", "torch",
   ].map((k) => BY_WEAPON[k]),
 ]);

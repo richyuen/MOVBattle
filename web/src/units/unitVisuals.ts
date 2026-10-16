@@ -12,7 +12,7 @@ export type WeaponType =
   | "shield_sword" | "halberd" | "lance"
   | "scythe" | "pitchfork" | "frying_pan" | "broom" | "wheelbarrow_weapon"
   | "bone_staff" | "lute" | "paintbrush" | "rapier"
-  | "harpoon" | "cutlass" | "bomb" | "torch"
+  | "harpoon" | "cutlass" | "bomb" | "dynamite" | "torch"
   | "katana" | "nunchaku" | "shuriken_hand" | "bo_staff"
   | "stone" | "hay_bale" | "potion" | "lightning_bolt"
   | "fan" | "flail" | "whip" | "present_box" | "pom_pom" | "tree_club";
@@ -558,7 +558,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ WILD WEST ═══════════════════════
   "wild_west.dynamite_thrower": vis(
-    { scale: 1.0, bulk: 0.96 }, "bomb", "cowboy_hat", "none", "none", "#B75C21", undefined, {
+    { scale: 1.0, bulk: 0.96 }, "dynamite", "cowboy_hat", "none", "none", "#B75C21", undefined, {
       posePreset: "support",
       materialPreset: "secret_bandit",
       attachmentPreset: "bomb_lit",
@@ -1150,6 +1150,7 @@ function inferWeapon(hint: string | undefined, name: string): WeaponType {
     case "harpoon":
     case "cutlass":
     case "bomb":
+    case "dynamite":
     case "torch":
     case "katana":
     case "nunchaku":
@@ -1216,6 +1217,7 @@ export function inferWeaponPresentationFamily(weapon: WeaponType): WeaponPresent
       return "thrust";
     case "javelin":
     case "bomb":
+    case "dynamite":
     case "stone":
     case "potion":
     case "shuriken_hand":
