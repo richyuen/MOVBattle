@@ -45,9 +45,8 @@ export const FLUNG_RENDER_GROUP = 1;
 // lands on his feet and his wall takes him back.
 const BLOW_THROW_SECONDS = 0.6;
 const BLOW_THROW_HOLD = 0.28;
-// Tipped back at the top of the throw, his feet the pivot, only so far that his seat leads and stays his lowest point (seat-first: the animator's THROWN draws
-// his thighs up past level and curls his trunk over them; laid nearly flat at 1.3 his head went lowest)
-const BLOW_THROW_PITCH = 0.5;
+// Laid out nearly flat at the top of the throw, his feet the pivot
+const BLOW_THROW_PITCH = 1.3;
 const BLOW_THROW_SPEED = 0.75;
 const BLOW_THROW_LIFT = 1.0;
 const BLOW_THROW_SPEED_MAX = 3.5;
