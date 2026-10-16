@@ -501,6 +501,41 @@ async function main() {
       const finalState = await page.evaluate(() => window.render_game_to_text());
       fs.writeFileSync(path.join(outDir, "big_melee_final_state.json"), finalState);
 
+      // Open-field clubbers on squires, no shield wall (battle-feel.e, a club coming down on a man): step a frame at a time to the first clubber blow after the lines meet,
+      // and shoot it 32 ms after the landing, framed side-on to the blow, close.
+      const clubHit = await page.evaluate(() => {
+        window.game.resetBattle();
+        window.advanceTime(50);
+        for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
+          window.game.spawnUnit("tribal.clubber", 1, { x: 3, z });
+          window.game.spawnUnit("medieval.squire", 0, { x: -3, z });
+        }
+        window.advanceTime(50);
+        window.game.startBattleImmediate();
+        window.advanceTime(1500);
+        window.game.clearHitLog();
+        for (let ms = 0; ms < 6000; ms += 16) {
+          window.advanceTime(16);
+          const h = window.game.getHitLog().find((e) => /clubber/.test(e.attackerUnit));
+          if (h) {
+            window.advanceTime(16);
+            window.advanceTime(16);
+            let dx = h.head.x - h.x, dz = h.head.z - h.z;
+            const len = Math.hypot(dx, dz) || 1;
+            dx /= len; dz /= len;
+            // Camera off to the side of the blow line, on the side away from the field's centre line of men
+            const side = Math.sign(-dz * h.x + dx * h.z) || 1;
+            window.game.frameCamera({ x: (h.x + h.head.x) / 2, y: 0.9, z: (h.z + h.head.z) / 2 }, 3.4, Math.atan2(dx * side, -dz * side), Math.PI / 2.1);
+            return { ms: ms + 1500, ...h };
+          }
+        }
+        return null;
+      });
+      summary.notes.push(clubHit
+        ? `melee_club_drop: ${clubHit.attackerUnit} -> ${clubHit.targetUnit} landed at ${clubHit.ms} ms, shot 32 ms after the landing`
+        : "melee_club_drop: no clubber blow within 7.5 s, shot skipped");
+      if (clubHit) await shot(page, "melee_club_drop");
+
       // Every other campaign map at the placement view: one shot per biome.
       for (const mapId of ["introduction","adventure","challenge","dynasty","renaissance","pirate","simulation"]) {
         const loaded = await page.evaluate((id) => {
