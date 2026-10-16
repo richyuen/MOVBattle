@@ -135,6 +135,8 @@ const REAR_RANK_REACH = 1.4;
 // How far past shoulder contact a pressing clubber may still be when he brings his blow down (see _processUnitDecision).
 const BLOW_CONTACT_SLACK = 0.3;
 const REAR_RANK_LANE = 0.7;
+// A clubber whose nearest man stands behind one of his own takes a man he has a clear lane to, if that man is at most this much farther off (see _openLaneEnemy).
+const PRESS_LANE_DETOUR = 1.6;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -549,12 +551,23 @@ export class SimulationSystem {
       return;
     }
 
-    const enemy = this._selectEnemyTarget(unit, aiProfile);
+    let enemy = this._selectEnemyTarget(unit, aiProfile);
     if (!enemy) {
       unit.stopMoving();
       unit.setSpinning(false);
       this._clearPathState(unit);
       return;
+    }
+    // A short-reach clubber or blade with one of his own between him and his man does not stand a rank back swinging into the air (press-close-in):
+    // he goes round to the nearest man he has a clear lane to and closes chest to board on him. With no lane open he fights from the rank behind.
+    const laneBound = unit.swingsAtMan && !this._shieldSlots.has(unit) && unit.definition.engageRange < this.meleePressMaxReach;
+    let blocked = laneBound && this._allyBetween(unit, enemy);
+    if (blocked) {
+      const open = this._openLaneEnemy(unit, enemy);
+      if (open) {
+        enemy = open;
+        blocked = false;
+      }
     }
 
     // Reach is to the target's hide, not its middle: a giant's body keeps a man farther from its centre than his weapon is long, and he never swung.
@@ -628,9 +641,11 @@ export class SimulationSystem {
     const spearSlot = this._shieldSlots.get(unit);
     if (spearSlot && distance <= engageDistance + this.spearLevelReach) unit.levelSpearAt(enemy.position, enemy.collisionBodyRadius, spearSlot.hold !== null);
     if (attackProfile.type === AttackType.Melee && distance <= engageDistance + this.blowReadyReach) {
-      const inReach = distance <= engageDistance + this.blowStrikeReach;
+      // Such a presser's landed press beat waits for the man's shoulder: short of contact he holds the club cocked, so a landed club never ends in open air.
+      const strikeReach = laneBound ? unit.collisionBodyRadius + enemy.collisionBodyRadius + this.meleePressGap + BLOW_CONTACT_SLACK : engageDistance + this.blowStrikeReach;
+      const inReach = !blocked && distance <= strikeReach;
       // A rank back, behind a man of his own side, a clubber rests his club low over that man's shoulder between beats and strikes from there on his beat
-      const behind = !inReach && distance <= engageDistance + this.blowStrikeReach + REAR_RANK_REACH && this._allyBetween(unit, enemy);
+      const behind = !inReach && distance <= engageDistance + this.blowStrikeReach + REAR_RANK_REACH && (blocked || this._allyBetween(unit, enemy));
       unit.readyBlow(inReach || behind, enemy, behind);
     }
 
@@ -927,6 +942,22 @@ export class SimulationSystem {
       if (Math.abs(dz * fx - dx * fz) < REAR_RANK_LANE && along < REAR_RANK_REACH + 0.6) return true;
     }
     return false;
+  }
+
+  /** The nearest enemy this man has a clear lane to (no ally of his within REAR_RANK_LANE of the line), no more than PRESS_LANE_DETOUR farther than `blockedBy`. */
+  private _openLaneEnemy(unit: RuntimeUnit, blockedBy: RuntimeUnit): RuntimeUnit | null {
+    const limit = Vector3.Distance(unit.position, blockedBy.position) + PRESS_LANE_DETOUR;
+    let best: RuntimeUnit | null = null;
+    let bestDistance = limit;
+    for (const candidate of this._units) {
+      if (candidate === blockedBy || candidate.isDead || candidate.team === unit.team || !candidate.isTargetable) continue;
+      if (candidate.collisionBodyRadius > unit.collisionBodyRadius * 2) continue;
+      const d = Vector3.Distance(unit.position, candidate.position);
+      if (d >= bestDistance || this._allyBetween(unit, candidate)) continue;
+      best = candidate;
+      bestDistance = d;
+    }
+    return best;
   }
 
   private _keepRanksDeep(): void {
