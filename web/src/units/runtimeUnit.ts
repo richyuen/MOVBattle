@@ -39,18 +39,21 @@ export const FLUNG_RENDER_GROUP = 1;
 // A landed heavy blow throws the struck man back off his feet (trailer_3_sheet_01 r2c3: the hoplite under the club goes back whole, feet off the ground, arms
 // out): on the land step the whole body pitches BLOW_THROW_PITCH rad away from the striker, holds it BLOW_THROW_HOLD s, and settles over the rest of
 // BLOW_THROW_SECONDS, while he is thrown back and up in proportion to the blow (its knockback times his own shove response: a club throws a light man further
-// than a heavy one), BLOW_THROW_SPEED and BLOW_THROW_LIFT m/s per unit of that, capped at _MAX. Laid outside the crowd lean's clamp and his wall's bracing,
-// but it is a stagger, not a topple: no balance pressure is loaded, no topple clocks run, he lands on his feet and is back in his file.
+// than a heavy one), BLOW_THROW_SPEED and BLOW_THROW_LIFT m/s per unit of that, capped at _MAX. Laid outside the crowd lean's clamp and his wall's bracing:
+// while the throw runs (isBlowThrown) his wall lets go of him (no slot snap, no bracing) and a man struck from his front half goes straight back out of his
+// file, the way he faced, not along a slanting blow into the next man. It is a stagger, not a topple: no balance pressure is loaded, no topple clocks run, he
+// lands on his feet and his wall takes him back.
 const BLOW_THROW_SECONDS = 0.6;
 const BLOW_THROW_HOLD = 0.28;
-const BLOW_THROW_PITCH = 0.8;
+// Laid out nearly flat at the top of the throw, his feet the pivot
+const BLOW_THROW_PITCH = 1.3;
 const BLOW_THROW_SPEED = 0.75;
 const BLOW_THROW_LIFT = 1.0;
 const BLOW_THROW_SPEED_MAX = 3.5;
 const BLOW_THROW_LIFT_MAX = 3.2;
 // However braced or heavy he is, a landed blow puts daylight under his feet: at least BLOW_THROW_LIFT_MIN m/s up and BLOW_THROW_SPEED_MIN m/s back
-const BLOW_THROW_LIFT_MIN = 4.4;
-const BLOW_THROW_SPEED_MIN = 1.6;
+const BLOW_THROW_LIFT_MIN = 5.0;
+const BLOW_THROW_SPEED_MIN = 4.5;
 
 export class RuntimeUnit {
   private static _nextRuntimeId = 1;
@@ -461,12 +464,20 @@ export class RuntimeUnit {
   private _blowStagger = 0;
   private readonly _blowStaggerDir = new Vector3(0, 0, 1);
 
+  /** Thrown by a landed blow and not yet settled (BLOW_THROW): his shield wall lets go of him until he is. */
+  get isBlowThrown(): boolean {
+    return this._blowStagger > 0;
+  }
+
   /** A heavy blow from `from` with `knockback` m/s of push has just landed on him: he is thrown back off his feet (BLOW_THROW), shown on this very frame. */
   staggerFromBlow(from: Vector3, knockback: number): void {
     if (this._isDead || this.isToppled || this.isDowned || (this._linkedParent && this._isAnchoredActor)) return;
     const away = this.position.subtract(from);
     away.y = 0;
-    if (away.lengthSquared() < 0.0001) away.copyFrom(this._getFacingVector().scale(-1));
+    const back = this._getFacingVector().scale(-1);
+    back.y = 0;
+    // Struck from his front half: straight back out of his file
+    if (away.lengthSquared() < 0.0001 || Vector3.Dot(away, back) > 0) away.copyFrom(back);
     this._blowStaggerDir.copyFrom(away.normalize());
     this._blowStagger = BLOW_THROW_SECONDS;
     this._staggerTimer = Math.max(this._staggerTimer, BLOW_THROW_SECONDS);
@@ -487,11 +498,14 @@ export class RuntimeUnit {
     this.body.root.rotation.z = z;
   }
 
-  /** Root pitch and roll of the blow stagger at strength `k`: back along the line the blow drove him, in his own facing frame. */
+  /**
+   * Root pitch and roll of the blow stagger at strength `k`: his head goes the way the blow drove him (away from the striker), in his own facing frame. A
+   * positive root pitch tips his top toward his facing (+z local) and a positive roll tips it toward his left, so a man driven back takes a negative pitch.
+   */
   private _blowStaggerLean(k: number): [number, number] {
     const forward = Vector3.Dot(this._blowStaggerDir, this._getFacingVector());
     const side = Vector3.Dot(this._blowStaggerDir, this._getRightVector());
-    return [-forward * BLOW_THROW_PITCH * k, side * BLOW_THROW_PITCH * k];
+    return [forward * BLOW_THROW_PITCH * k, -side * BLOW_THROW_PITCH * k];
   }
 
   /** In a shield wall that is closing on or fighting this enemy: the spear comes down at him. */

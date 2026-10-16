@@ -817,7 +817,10 @@ export class SimulationSystem {
             if (wall.length < 2) continue;
             const first = wall.reduce((sum, entry) => sum + entry.side, 0) / wall.length - (wall.length - 1) * 0.5 * this.shieldSlotSpacing;
             const wallId = walls++;
-            const line = wall.reduce((sum, entry) => sum + entry.depth, 0) / wall.length;
+            // The line the men holding it stand on: a man a blow has thrown out of it (in the air or just landed behind it) does not carry it back with him
+            const holding = wall.filter((entry) => !entry.unit.isBlowThrown).map((entry) => entry.depth).sort((a, b) => a - b);
+            const depths = holding.length > 0 ? holding : wall.map((entry) => entry.depth).sort((a, b) => a - b);
+            const line = (depths[(depths.length - 1) >> 1] + depths[depths.length >> 1]) / 2;
             wall.forEach((entry, k) => {
               const shift = first + k * this.shieldSlotSpacing - entry.side;
               const side = first + k * this.shieldSlotSpacing;
@@ -891,7 +894,8 @@ export class SimulationSystem {
   private _holdShieldFrames(): void {
     for (const unit of this._units) unit.wallBraced = false;
     for (const [unit, slot] of this._shieldSlots) {
-      if (unit.isDead || unit.isToppled || unit.isDowned) continue;
+      // A man a blow has thrown is out of his wall until he settles (RuntimeUnit BLOW_THROW): no bracing, no snap back onto his slot mid-air
+      if (unit.isDead || unit.isToppled || unit.isDowned || unit.isBlowThrown) continue;
       unit.wallBraced = true;
       const error = slot.at.subtract(unit.position);
       error.y = 0;
