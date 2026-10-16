@@ -345,18 +345,36 @@ async function main() {
             ? `press_clubbers_hit: ${hit.attackerUnit} -> ${hit.targetUnit} landed at +${hit.ms} ms, shot 128 ms after the landing`
             : "press_clubbers_hit: no clubber blow landed within 4 s, shot skipped");
           if (hit) await shot(page, "press_clubbers_hit");
-          // The same frame from low, a little behind the struck man and out past the outer end of his wall (none of his mates between him and the lens): his feet off
-          // the ground, his arms out and the club come down over him onto his legs, the striker beyond him.
+          // 96 ms later (the top of his throw), framed on the struck man where he is now, not where the club landed: found live as the highest man of the struck
+          // side near the blow, seen level down his wall's line from his end of it.
           if (hit) {
-            await page.evaluate((h) => {
-              const len = Math.hypot(h.head.x - h.x, h.head.z - h.z) || 1;
-              const dx = (h.head.x - h.x) / len, dz = (h.head.z - h.z) / len;
-              // Blow line turned 1.3 rad toward his wall's outer end
-              const turn = 1.3 * (h.head.z >= 0 ? 1 : -1) * (dx >= 0 ? 1 : -1);
-              const ox = dx * Math.cos(turn) - dz * Math.sin(turn), oz = dx * Math.sin(turn) + dz * Math.cos(turn);
-              window.game.frameCamera({ x: h.head.x - dx * 0.4, y: h.head.y * 0.6, z: h.head.z - dz * 0.4 }, 3.8, Math.atan2(oz, ox), Math.PI / 2.1);
+            const struck = await page.evaluate((h) => {
+              for (let k = 0; k < 6; k++) window.advanceTime(16);
+              const units = JSON.parse(window.render_game_to_text()).units.filter((u) => u.alive !== false);
+              const pool = units.filter((u) => u.id === h.targetUnit && Math.hypot(u.x - h.head.x, u.z - h.head.z) < 2.6);
+              if (!pool.length) return null;
+              const man = pool.reduce((a, b) => ((b.y ?? 0) > (a.y ?? 0) ? b : a));
+              const mates = units.filter((u) => u !== man && u.team === man.team && Math.hypot(u.x - man.x, u.z - man.z) < 3.5);
+              // Down his wall's line (its long axis, toward his end of it), turned .2 rad to the side he is thrown out to: the blow and his throw run across the
+              // frame and he is clear of the line his mates still hold
+              const all = [man, ...mates];
+              const cx = all.reduce((s, u) => s + u.x, 0) / all.length, cz = all.reduce((s, u) => s + u.z, 0) / all.length;
+              let sxx = 0, sxz = 0, szz = 0;
+              for (const u of all) { sxx += (u.x - cx) ** 2; sxz += (u.x - cx) * (u.z - cz); szz += (u.z - cz) ** 2; }
+              const theta = 0.5 * Math.atan2(2 * sxz, sxx - szz);
+              let ax = Math.cos(theta), az = Math.sin(theta);
+              if (ax * (man.x - cx) + az * (man.z - cz) < 0) { ax = -ax; az = -az; }
+              let nx = -az, nz = ax;
+              if (nx * (man.x - h.x) + nz * (man.z - h.z) < 0) { nx = -nx; nz = -nz; }
+              const ox = ax + nx * 0.2, oz = az + nz * 0.2;
+              // Aimed past his feet (the root) to his middle, which lies back along the throw
+              window.game.frameCamera({ x: man.x + nx * 0.5, y: (man.y ?? 0) + 0.55, z: man.z + nz * 0.5 }, 3.6, Math.atan2(oz, ox), Math.PI / 2.05);
+              return { id: man.id, y: man.y };
             }, hit);
-            await shot(page, "press_clubbers_blow");
+            summary.notes.push(struck
+              ? `press_clubbers_blow: struck man ${struck.id} framed 224 ms after the landing, ${(struck.y ?? 0).toFixed(2)} m up`
+              : "press_clubbers_blow: no struck man near the blow, shot skipped");
+            if (struck) await shot(page, "press_clubbers_blow");
           }
         }
       }
