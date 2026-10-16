@@ -159,6 +159,19 @@ const CONTACT_FRONT = 0.12;
 // press-club-lands-on-board: the lowest the pinned head may sit on his near face, in shares of his height under the crown (the foot of his board)
 const CONTACT_LOWEST = 0.6;
 /*
+ * [R] stroke-cadence-and-contact-hold (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (the clubber stepped long into the man, bent ~35 deg at the waist,
+ * the club head down ON him) and units/tribal.clubber.jpg (club cocked over the shoulder): the press beat is landed for ~2/3 of every beat (PRESS_BLOW_REST +
+ * the impact hold), so a crowd still catches most in-reach clubs down; what kept them in the air was reach: in big_melee a marked clubber stands 2.3-2.7 m
+ * from his man's centre (contact ~1.0 m), so the shaft laid toward his board ended a body's width short of it. Now, landed:
+ * - the club head sits ON the contact point (_contactOn: crown or near-face board top), never short of it in the air: the striker's hip is carried toward the
+ *   man by the horizontal shortfall between the club laid at PRESS_REACH_SEAT of its reach and that point, at most PRESS_REACH_MAX of his standing height;
+ * - he goes into it as a lunge, not a slide: trunk pitched PRESS_REACH_PITCH forward and legs split (BLOW_LUNGE), both by the share of the max he needs;
+ * - all of it rides the beat's landed weight, so he rocks back as the club heaves up to the cock and drives in again on the slam (the 150 ms pair shows it).
+ */
+const PRESS_REACH_SEAT = 0.9;
+const PRESS_REACH_MAX = 0.9;
+const PRESS_REACH_PITCH = 0.5;
+/*
  * [S] press-mark-held (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (every club at the pile is cocked back or down on a man, none stands up): the in-reach
  * press beat outlives gaps in the sim's strike calls (a man shoved a step out of reach, a retarget): his man stays marked PRESS_MARK_HOLD seconds past the last
  * call and through any swing at him, so the beat keeps cocking back and landing down on him. While marked:
@@ -293,7 +306,10 @@ const CAST_LEVEL_TIP = new Vector3(0, 0.1, 1).normalize();
 const CAST_RAISE_UP = 0.4;
 const CAST_RAISE_ARM = { raise: -2.9, out: 0.32, elbow: -0.12 };
 const CAST_RAISE_TIP = new Vector3(0.15, 1, 0.3).normalize();
-const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0.35, head: 0.45, legs: 0.75, knee: 0.35 };
+// stroke-cadence-and-contact-hold: thrown seat-first (trailer_3_sheet_01 r2c3: he goes back with his seat leading and his legs swinging up, head over his
+// seat): the root tips back only RuntimeUnit BLOW_THROW_PITCH, the trunk is curled .curl rad forward of the root (set, not added: whatever the press made of
+// it) and the head .head over that, both thighs drawn up to .legs rad (the trailing one .trail) so they stand past level, knees folded .knee, the shins hanging.
+const THROWN = { armsOut: 1.35, armsBack: 0.45, curl: 0.35, head: 0.15, legs: -2.0, trail: -1.7, knee: 1.2 };
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -509,6 +525,59 @@ export class ProceduralAnimator {
     this._aimWeight = w;
     this._clubHold = Math.max(this._clubHold, w);
   }
+
+  /**
+   * The landed press club reaches its man (stroke-cadence-and-contact-hold): a man farther off than the club laid down onto his contact point is lunged at,
+   * the hip carried in along the ground by the shortfall (shared with _aimBlow's lunge, which takes it off again next frame), the trunk pitched into it.
+   */
+  private _pressReach(): void {
+    const mark = this._pressAim();
+    const landed = mark && this._aimWeight <= 0.01 && this._state !== AnimState.Dead ? this._pressLand * Math.min(1, this._clubHold) * (1 - Math.min(1, this._limp)) : 0;
+    this._pressGap = 0;
+    if (!mark || landed <= 0.01) return;
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const scale = Math.max(0.001, b.rightHand.absoluteScaling.y);
+    const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
+    this._hipRest ??= b.hip.position.y;
+    const tall = this._hipRest * 2 * rootScale;
+    const seat = this._weaponReach() * scale * PRESS_REACH_SEAT;
+    const shortOf = (): [number, Vector3] => {
+      const hand = b.rightHand.getAbsolutePosition();
+      const at = this._contactOn(mark, hand);
+      const flat = Math.hypot(at.x - hand.x, at.z - hand.z);
+      const drop = Math.min(seat, Math.abs(hand.y - at.y));
+      const toward = new Vector3(at.x - hand.x, 0, at.z - hand.z);
+      return [flat - Math.sqrt(seat * seat - drop * drop), toward.lengthSquared() > 1e-6 ? toward.normalize() : new Vector3(0, 0, 1)];
+    };
+    let [short] = shortOf();
+    if (short <= 0) return;
+    // Into it from the waist and the legs, by the share of the full lunge he needs
+    const need = Math.min(1, short / (PRESS_REACH_MAX * tall)) * landed;
+    b.torso.rotation.x += PRESS_REACH_PITCH * need;
+    b.leftHip.rotation.x += (BLOW_LUNGE.front - b.leftHip.rotation.x) * need;
+    b.rightHip.rotation.x += (BLOW_LUNGE.back - b.rightHip.rotation.x) * need;
+    b.leftKnee.rotation.x += (BLOW_LUNGE.knee - b.leftKnee.rotation.x) * need;
+    b.rightKnee.rotation.x += (BLOW_LUNGE.knee - b.rightKnee.rotation.x) * need;
+    for (const n of chain) n.computeWorldMatrix(true);
+    // ...then the hip in along the ground by what is still short, so the head lands on him
+    let toward: Vector3;
+    [short, toward] = shortOf();
+    if (short > 0) {
+      const step = Math.min(short, PRESS_REACH_MAX * tall) * landed;
+      const lunge = Vector3.TransformNormal(toward, Matrix.RotationY(-b.root.rotation.y)).scale(step / rootScale);
+      lunge.y = 0;
+      b.hip.position.addInPlace(lunge);
+      this._blowLunge.addInPlace(lunge);
+      for (const n of chain) n.computeWorldMatrix(true);
+      [short] = shortOf();
+    }
+    this._pressGap = Math.max(0, short);
+  }
+  // How far the landed press club's head still stands short of its man this frame (m; 0 on him), for probes
+  private _pressGap = 0;
 
   /**
    * Where a blow lands on a man: the top of his crown, which under a helm or hat is the top of its shell (the hat's own mesh, not a crest or plume on it),
@@ -1270,6 +1339,7 @@ export class ProceduralAnimator {
     }
 
     this._aimBlow(dt);
+    this._pressReach();
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
@@ -1319,12 +1389,13 @@ export class ProceduralAnimator {
       b.leftShoulder.rotation.z -= Math.max(0, THROWN.armsOut - BOARD_OFF_FLING.out * off) * thrown;
       b.rightShoulder.rotation.x += THROWN.armsBack * thrown;
       b.rightElbow.rotation.scaleInPlace(1 - thrown);
-      b.torso.rotation.x -= THROWN.trunk * thrown;
-      b.neck.rotation.x -= THROWN.head * thrown;
-      b.leftHip.rotation.x -= THROWN.legs * thrown;
-      b.rightHip.rotation.x -= THROWN.legs * 0.6 * thrown;
-      b.leftKnee.rotation.x += THROWN.knee * thrown;
-      b.rightKnee.rotation.x += THROWN.knee * 1.6 * thrown;
+      b.torso.rotation.x += (THROWN.curl - b.torso.rotation.x) * thrown;
+      b.neck.rotation.x += (THROWN.head - b.neck.rotation.x) * thrown;
+      b.leftHip.rotation.x += (THROWN.legs - b.leftHip.rotation.x) * thrown;
+      b.rightHip.rotation.x += (THROWN.trail - b.rightHip.rotation.x) * thrown;
+      b.leftKnee.rotation.x += (THROWN.knee - b.leftKnee.rotation.x) * thrown;
+      b.rightKnee.rotation.x += (THROWN.knee - b.rightKnee.rotation.x) * thrown;
+      if (this._hipRest !== null) b.hip.position.y = Math.max(b.hip.position.y, this._hipRest);
     }
 
     // ─── Googly-eye pupil wobble ───
