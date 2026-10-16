@@ -461,6 +461,9 @@ export class RuntimeUnit {
     if (away.lengthSquared() < 0.0001) away.copyFrom(this._getFacingVector().scale(-1));
     this._blowStaggerDir.copyFrom(away.normalize());
     this._blowStagger = BLOW_STAGGER_SECONDS;
+    // His board is knocked off his face and his knees go, on this frame too
+    this.animator.knockBoardOff();
+    this.animator.update(0);
     // The blow lands after this step's lean was set: put the full pitch on now and give the first of the step
     const [x, z] = this._blowStaggerLean(1);
     this.body.root.rotation.x += x;

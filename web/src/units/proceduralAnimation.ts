@@ -191,6 +191,14 @@ const THROW_LET_GO = 0.5;
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
 const FLINCH_PITCH = 0.85;
 const FLINCH_HEAD = 0.9;
+// Board knocked off (trailer_3_sheet_01 r2c3: the man under the club is thrown open and off his feet, not left standing behind his board): a heavy blow takes the
+// struck man's board out of the wall, his board arm flung out wide and back (BOARD_OFF_FLING, shoulder rad) with the board hanging off it, and his knees go
+// (BOARD_OFF_BUCKLE: thighs forward, knees bent, hips dropped this share of his standing hip height), so his helm drops under his file-mates' and his trunk
+// shows over the gap where his board was. Full BOARD_OFF_HOLD s, eased back over the rest of BOARD_OFF_SECONDS.
+const BOARD_OFF_SECONDS = 0.6;
+const BOARD_OFF_HOLD = 0.25;
+const BOARD_OFF_FLING = { out: 1.4, back: 0.6 };
+const BOARD_OFF_BUCKLE = { thigh: 0.9, knee: 1.6, sink: 0.35 };
 
 export class ProceduralAnimator {
   private _body: ArticulatedBody;
@@ -409,6 +417,19 @@ export class ProceduralAnimator {
     if (this._state === AnimState.Dead) return;
     this._flinchTimer = 0.35;
     this._squashTimer = 0.15;
+  }
+
+  /** A heavy blow has come down on him: his board is knocked off his face and his knees go (BOARD_OFF), shown from the next pose on. */
+  knockBoardOff(): void {
+    if (this._state === AnimState.Dead) return;
+    this._boardOff = BOARD_OFF_SECONDS;
+  }
+  private _boardOff = 0;
+  // Full for the first BOARD_OFF_HOLD s, then eased back over the rest
+  private _boardOffWeight(): number {
+    if (this._boardOff <= 0 || this._state === AnimState.Dead) return 0;
+    const k = Math.min(1, this._boardOff / (BOARD_OFF_SECONDS - BOARD_OFF_HOLD));
+    return k * k * (3 - 2 * k);
   }
 
   /** Toppled/downed living bodies go limp: 1 crumples the joints, 0 returns to the animated pose. */
@@ -1087,6 +1108,20 @@ export class ProceduralAnimator {
       b.leftShoulder.rotation.z -= 0.5 * intensity;
       b.rightShoulder.rotation.z += 0.5 * intensity;
     }
+    // Board knocked off and knees gone (see BOARD_OFF): the board arm flung out wide and the board hanging off it, the hips dropped on bent knees
+    const off = this._boardOffWeight();
+    if (off > 0) {
+      const b = this._body;
+      if (dt > 0) this._boardOff = Math.max(0, this._boardOff - dt);
+      b.leftShoulder.rotation.z -= BOARD_OFF_FLING.out * off;
+      b.leftShoulder.rotation.x += BOARD_OFF_FLING.back * off;
+      b.leftElbow.rotation.scaleInPlace(1 - off);
+      b.leftHip.rotation.x -= BOARD_OFF_BUCKLE.thigh * off;
+      b.rightHip.rotation.x -= BOARD_OFF_BUCKLE.thigh * off;
+      b.leftKnee.rotation.x += BOARD_OFF_BUCKLE.knee * off;
+      b.rightKnee.rotation.x += BOARD_OFF_BUCKLE.knee * off;
+      if (this._hipRest !== null) b.hip.position.y = Math.min(b.hip.position.y, this._hipRest * (1 - BOARD_OFF_BUCKLE.sink * off));
+    }
 
     // ─── Googly-eye pupil wobble ───
     this._updatePupilWobble(dt);
@@ -1212,7 +1247,8 @@ export class ProceduralAnimator {
   private _squareShield(): void {
     const shield = this._shieldBoard();
     if (!shield) return;
-    const up = this._state === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
+    // A board knocked off his face by a heavy blow leaves the wall and hangs from his flung arm until he has it up again
+    const up = this._state === AnimState.Dead ? 0 : (1 - Math.min(1, this._limp)) * (1 - this._boardOffWeight());
     // A front-rank man in a wall holds his board on the wall's plane from the moment he is slotted, closing or in contact, not only while he shoves
     const lap = this._boardLap * up;
     const k = Math.max(this._shove * up, lap);
