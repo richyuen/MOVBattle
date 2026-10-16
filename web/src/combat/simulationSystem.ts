@@ -130,6 +130,8 @@ const RANK_DEPTH_SHARE = 0.95;
 const WALL_QUEUE_GAP = 0.25;
 // A clubber a rank back (see _allyBetween): how much further than a front man's strike reach he strikes from, over an ally within this lane of his line.
 const REAR_RANK_REACH = 1.4;
+// ...and the share of his blow's damage that tells from there: the press is decided at the front, the blows over it make men reel, not fall
+const OVER_RANK_DAMAGE = 0.35;
 // How far past shoulder contact a pressing clubber may still be when he brings his blow down (see _processUnitDecision).
 const BLOW_CONTACT_SLACK = 0.3;
 const REAR_RANK_LANE = 0.7;
@@ -174,7 +176,8 @@ export class SimulationSystem {
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
   private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean }> = [];
-  private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
+  // overRank: struck from a rank back over a man of his own side, reaching REAR_RANK_REACH further
+  private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number; overRank: boolean }> = [];
   // A presser's distance to his foe at his last decision: while it is still closing he holds his heavy swing until he is at the man's shoulder.
   private _closingFrom = new Map<RuntimeUnit, number>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
@@ -630,6 +633,11 @@ export class SimulationSystem {
       // A rank back, behind a man of his own side, a clubber rests his club low over that man's shoulder between beats and strikes from there on his beat
       const behind = !inReach && distance <= engageDistance + this.blowStrikeReach + REAR_RANK_REACH && this._allyBetween(unit, enemy);
       unit.readyBlow(inReach || behind, enemy, behind);
+      // ...and on his beat he does not rest it: he lunges in over that man's shoulder and brings it down on the enemy's front man (trailer_3_sheet_01 r2c3), as
+      // does a man held off at a stride by his own side's backs. The blow is struck at the man and lands on him from there (see _landPendingBlows).
+      if (canAttack && unit.swingsAtMan && distance > engageDistance && (behind || (inReach && this._allyBetween(unit, enemy)))) {
+        this._tryAttack(unit, enemy, attackProfile, now, true);
+      }
     }
 
     if (distance <= engageDistance) {
@@ -1193,7 +1201,7 @@ export class SimulationSystem {
     this._pathStates.delete(unit);
   }
 
-  private _tryAttack(attacker: RuntimeUnit, target: RuntimeUnit, attackProfile: AttackProfile, now: number): void {
+  private _tryAttack(attacker: RuntimeUnit, target: RuntimeUnit, attackProfile: AttackProfile, now: number, overRank = false): void {
     if (!attacker.canAttack(now)) return;
 
     const preset = getBehaviorPreset(attacker);
@@ -1583,9 +1591,11 @@ export class SimulationSystem {
     const landIn = attacker.blowLandsIn();
     if (landIn > 0) {
       attacker.aimBlowAt(target, landIn);
-      this._pendingBlows.push({ attacker, target, damage, splashRadius, knockback, landAt: now + landIn });
+      this._pendingBlows.push({ attacker, target, damage: overRank ? damage * OVER_RANK_DAMAGE : damage, splashRadius, knockback, landAt: now + landIn, overRank });
       return;
     }
+    // A blow struck over a rank that is not held for its drop has swung at air
+    if (overRank) return;
     this._landMeleeBlow(attacker, target, damage, splashRadius, knockback, now, impactOrigin);
   }
 
@@ -1615,7 +1625,8 @@ export class SimulationSystem {
     for (const b of due) {
       const { attacker, target } = b;
       if (attacker.isDead || attacker.isToppled || attacker.isDowned || target.isDead || !this._units.includes(attacker) || !this._units.includes(target)) continue;
-      const reach = attacker.definition.engageRange + this.attackRangePadding + Math.max(0, target.collisionBodyRadius - attacker.collisionBodyRadius) + this.blowStrikeReach;
+      const reach = attacker.definition.engageRange + this.attackRangePadding + Math.max(0, target.collisionBodyRadius - attacker.collisionBodyRadius) + this.blowStrikeReach
+        + (b.overRank ? REAR_RANK_REACH : 0);
       if (Vector3.Distance(attacker.position, target.position) > reach) continue;
       this._landMeleeBlow(attacker, target, b.damage, b.splashRadius, b.knockback, now, attacker.getImpactOrigin().position);
     }
