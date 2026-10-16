@@ -975,6 +975,9 @@ export function attachProps(
   const extraAttachments = buildAttachmentPreset(scene, body, config.attachmentPreset ?? "none", scale, accent);
   props.push(...extraAttachments);
 
+  // The swordcaster's lockbox comes with his ring of standing swords (units/spooky.swordcaster)
+  if (config.weapon === "lockbox") props.push(buildSwordRing(scene, body) as unknown as Mesh);
+
   return props;
 }
 
@@ -994,6 +997,101 @@ function mat(scene: Scene, color: Color3, emissive = 0, category: MatCategory = 
     return mf.get(category, color, { emissiveIntensity: emissive });
   }
   return mf.get(category, color);
+}
+
+/**
+ * A swordcaster's sword (see SWORD_BLADE_LONG), built under `root` with its +z the point: the guard at the root, blade forward of it, grip plate and pommel
+ * behind. The flying missile and the blades of his ring are this same sword.
+ */
+export function buildFlyingSword(scene: Scene, root: TransformNode): void {
+  const glowLayer = scene.getGlowLayerByName("glow");
+  const bladeMat = getMaterialFactory().get("unlit", SWORD_BLADE_COLOR, { emissive: SWORD_BLADE_COLOR });
+  const hiltMat = mat(scene, SWORD_HILT_COLOR, 0.08, "stone");
+  const keyMat = mat(scene, SWORD_KEY_COLOR, 0.2, "stone");
+  // Built flat in x-z, then stood on edge so the blade's face (not its edge) is turned to a side-on eye
+  const flat = new TransformNode("sword_flat", scene);
+  flat.rotation.z = Math.PI / 2;
+  flat.parent = root;
+  const edge = SWORD_BLADE_LONG - SWORD_BLADE_WIDE * 1.2;
+  const blade = MeshBuilder.CreateBox("sword_blade", { width: SWORD_BLADE_WIDE, height: SWORD_BLADE_WIDE * 0.22, depth: edge }, scene);
+  blade.position.z = edge / 2;
+  blade.material = bladeMat;
+  blade.parent = flat;
+  // The point: a flat four-sided taper off the blade's end
+  const point = MeshBuilder.CreateCylinder("sword_point", { height: SWORD_BLADE_WIDE * 1.2, diameterTop: 0, diameterBottom: SWORD_BLADE_WIDE, tessellation: 4 }, scene);
+  point.rotation.x = Math.PI / 2;
+  point.scaling.set(1, 1, 0.22);
+  point.position.z = edge + SWORD_BLADE_WIDE * 0.6;
+  point.material = bladeMat;
+  point.parent = flat;
+  const guard = MeshBuilder.CreateBox("sword_guard", { width: SWORD_GUARD_WIDE, height: 0.05, depth: 0.06 }, scene);
+  guard.position.z = -0.03;
+  guard.material = hiltMat;
+  guard.parent = flat;
+  const grip = MeshBuilder.CreateBox("sword_grip", { width: 0.075, height: 0.035, depth: SWORD_GRIP_LONG }, scene);
+  grip.position.z = -0.06 - SWORD_GRIP_LONG / 2;
+  grip.material = hiltMat;
+  grip.parent = flat;
+  // The keyhole through the grip plate, both faces: a round bow over a narrow slot
+  for (const face of [1, -1]) {
+    const bow = MeshBuilder.CreateCylinder("sword_keyhole", { height: 0.004, diameter: 0.034, tessellation: 8 }, scene);
+    bow.position.set(0, face * 0.019, -0.06 - SWORD_GRIP_LONG * 0.35);
+    bow.material = keyMat;
+    bow.parent = flat;
+    const slot = MeshBuilder.CreateBox("sword_keyslot", { width: 0.014, height: 0.004, depth: 0.05 }, scene);
+    slot.position.set(0, face * 0.019, -0.06 - SWORD_GRIP_LONG * 0.35 - 0.03);
+    slot.material = keyMat;
+    slot.parent = flat;
+  }
+  const pommel = MeshBuilder.CreateCylinder("sword_pommel", { height: 0.09, diameterTop: 0.055, diameterBottom: 0, tessellation: 5 }, scene);
+  pommel.rotation.x = -Math.PI / 2;
+  pommel.position.z = -0.06 - SWORD_GRIP_LONG - 0.05;
+  pommel.material = keyMat;
+  pommel.parent = flat;
+  for (const m of [guard, grip, pommel]) glowLayer?.addExcludedMesh(m);
+}
+
+/** The swordcaster's ring of standing swords (see the [R] swordcaster-blade-ring spec): a node on his root, one "ringSword" child per blade, point up. */
+function buildSwordRing(scene: Scene, body: ArticulatedBody): TransformNode {
+  const tall = body.metrics.overallHeight;
+  const ring = new TransformNode("swordRing", scene);
+  ring.parent = body.root;
+  for (let i = 0; i < SWORD_RING_COUNT; i++) {
+    const a = SWORD_RING_ANGLES[i % SWORD_RING_ANGLES.length];
+    const slot = new TransformNode("ringSword", scene);
+    slot.parent = ring;
+    const y = tall * (SWORD_RING_GUARD + SWORD_RING_STAGGER * (((i * 7) % 5) / 2 - 1));
+    slot.position.set(Math.sin(a) * tall * SWORD_RING_RADIUS, y, Math.cos(a) * tall * SWORD_RING_RADIUS);
+    // Point up (+z turned to +y), each at its own small lean out of true
+    slot.rotation.set(-Math.PI / 2 + 0.07 * Math.sin(i * 2.3), 0, 0.08 * Math.cos(i * 1.7));
+    slot.scaling.setAll((tall * SWORD_RING_BLADE) / SWORD_BLADE_LONG);
+    slot.metadata = { restY: y, phase: i * 1.9, refillIn: 0 };
+    buildFlyingSword(scene, slot);
+  }
+  return ring;
+}
+
+/**
+ * A cast takes the standing sword of the ring nearest `toward` (world) out of it: that blade is hidden and its place refills after SWORD_RING_REFILL s (the
+ * animator tends the ring). Returns the blade's world guard point and world size factor, where the flying sword is lifted from; null for no ring or no blade left.
+ */
+export function launchRingSword(body: ArticulatedBody, toward: Vector3): { at: Vector3; size: number } | null {
+  const ring = body.root.getChildren().find((n): n is TransformNode => n.name === "swordRing");
+  if (!ring || !ring.isEnabled()) return null;
+  let best: TransformNode | null = null;
+  let bestD = Infinity;
+  for (const slot of ring.getChildren() as TransformNode[]) {
+    if (!slot.isEnabled(false)) continue;
+    slot.computeWorldMatrix(true);
+    const d = Vector3.DistanceSquared(slot.getAbsolutePosition(), toward);
+    if (d < bestD) { bestD = d; best = slot; }
+  }
+  if (!best) return null;
+  const at = best.getAbsolutePosition().clone();
+  const size = best.absoluteScaling.y;
+  best.setEnabled(false);
+  best.metadata.refillIn = SWORD_RING_REFILL;
+  return { at, size };
 }
 
 function addGripWraps(
@@ -1453,6 +1551,33 @@ const LOCKBOX_LID = 0.35;
 const LOCKBOX_IRON = new Color3(0.13, 0.14, 0.17);
 const LOCKBOX_BAND = new Color3(0.32, 0.33, 0.36);
 const LOCKBOX_PLATE = new Color3(0.62, 0.62, 0.6);
+// A swordcaster's sword (units/spooky.swordcaster), the one that stands in his ring and the one that flies (world units, the flying size): a long straight
+// glowing white blade (about 10 widths long, 4-5x the hilt below the guard), a short dark crossguard, a dark flat grip plate with a pale keyhole through it and a
+// pale drop pommel
+const SWORD_BLADE_LONG = 1.0;
+const SWORD_BLADE_WIDE = 0.1;
+const SWORD_GUARD_WIDE = 0.3;
+const SWORD_GRIP_LONG = 0.22;
+const SWORD_BLADE_COLOR = new Color3(0.93, 0.96, 1);
+const SWORD_HILT_COLOR = new Color3(0.13, 0.14, 0.17);
+const SWORD_KEY_COLOR = new Color3(0.6, 0.62, 0.66);
+/*
+ * [R] swordcaster-blade-ring (vfx.p). Spec read off units/spooky.swordcaster.jpg (front view, the man ~800 px tall) and factions/spooky.png:
+ * - SWORD_RING_COUNT (6) swords stand round him, point up, none in front of him: three a side, from beside the hips round to behind the shoulders
+ *   (SWORD_RING_ANGLES from his facing), SWORD_RING_RADIUS of his height out from his axis (the outer pair ~.55 H to the side in the shot).
+ * - Each blade is SWORD_RING_BLADE of his height long (waist to over the head), the guard SWORD_RING_GUARD of his height off the ground (knee to hip in the
+ *   shot), each at its own height (SWORD_RING_STAGGER) and lean, all bobbing slowly out of step: they hang in the air, not planted.
+ * - A cast lifts the blade nearest the man out of the ring (it turns from point-up onto him while it hovers, then flies point first: the missile is that same
+ *   sword); its place stands empty SWORD_RING_REFILL s and a new blade appears there.
+ */
+const SWORD_RING_COUNT = 6;
+const SWORD_RING_ANGLES = [1.05, -1.05, 1.85, -1.85, 2.6, -2.6];
+const SWORD_RING_RADIUS = 0.55;
+const SWORD_RING_BLADE = 0.7;
+const SWORD_RING_GUARD = 0.36;
+const SWORD_RING_STAGGER = 0.06;
+export const SWORD_RING_BOB = { height: 0.025, rate: 1.7 };
+const SWORD_RING_REFILL = 1.4;
 // The javelin (units/tribal.spear_thrower), in prop units (x s): shaft plus head JAVELIN_LONG, a leaf head JAVELIN_HEAD_LONG x _WIDE, barbs swept back _SWEEP rad
 const JAVELIN_LONG = 0.4;
 const JAVELIN_HEAD_LONG = 0.13;

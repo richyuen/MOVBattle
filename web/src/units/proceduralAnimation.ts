@@ -1,5 +1,6 @@
 import { Matrix, Quaternion, Vector3, type Mesh, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
+import { SWORD_RING_BOB } from "./propBuilder";
 
 export enum AnimState {
   Idle,
@@ -251,16 +252,18 @@ const BOULDER_CARRY = { raise: -0.6, inward: 0.42, elbow: -0.75 };
  * forearms bent ~80 deg forward (elbow) and swung in round the box (turn, about the vertical through the shoulder) so the two mitts meet its ends in front of
  * the navel. Held the same through the walk, the idle and the cast: he never lets go of it.
  */
-const LOCKBOX_CARRY = { raise: 0.15, out: 0.32, turn: 0.6, elbow: -1.85 };
+const LOCKBOX_CARRY = { raise: 0.15, out: 0.6, turn: 0.6, elbow: -1.85 };
 /*
  * [S] lockbox-body-anchor (vfx.p; units/spooky.swordcaster: the chest centred at the navel, both mitts on its ends). The box is fixed to the torso, not
  * placed from the hands: its middle on his centreline LOCKBOX_NAVEL of his shoulder height up the trunk and LOCKBOX_FRONT of it out before the belly. Each
- * arm is reached onto its own end (wrist LOCKBOX_GRIP of the shoulder height past it) by a solve of shoulder raise, shoulder turn and elbow bend, starting
- * from LOCKBOX_CARRY with the elbows held out (see _lockboxAnchor).
+ * arm is reached onto its own end by a solve of shoulder raise, shoulder turn and elbow bend, starting from LOCKBOX_CARRY (see _lockboxAnchor).
+ * [R] swordcaster-blade-ring (vfx.p), the hug read off units/spooky.swordcaster.jpg: the elbows bow out wide of the trunk (LOCKBOX_CARRY out, ~35 deg off
+ * the side) and the forearms come back in round the box, so what is solved onto each end face is the MITT's middle (the palm), not the wrist joint above
+ * it: the palm sits LOCKBOX_PALM_OUT of a mitt's width out past the end, the mitt cupping the end face, the forearm never running on past the box.
  */
 const LOCKBOX_NAVEL = 0.35;
 const LOCKBOX_FRONT = 0.55;
-const LOCKBOX_GRIP = 0.06;
+const LOCKBOX_PALM_OUT = 0.35;
 const LOCKBOX_IK_STEPS = 8;
 const BOULDER_DIP = { raise: 0.25, inward: 0.32, elbow: -0.25, trunk: 0.55, thigh: -0.45, knee: 0.7 };
 const BOULDER_HEAVE = { raise: -2.4, inward: 0.3, elbow: -0.15, trunk: -0.25 };
@@ -1271,6 +1274,7 @@ export class ProceduralAnimator {
     this._carrySpear();
     this._carryProp(dt);
     this._carryBoulder();
+    this._tendSwordRing(dt);
     // Flinch overlay (additive), the very last pose layer: laid over the brace, the board's squaring and the carries, so a man behind a board still goes back
     // under the blow. It holds full for the first FLINCH_HOLD of its time, so the frame the blow lands on shows it whole.
     if (this._flinchTimer > 0 && this._state !== AnimState.Dead) {
@@ -1633,6 +1637,28 @@ export class ProceduralAnimator {
   }
 
   /**
+   * The swordcaster's ring of standing swords ([R] swordcaster-blade-ring, built in propBuilder): each blade bobs on its own slow beat, a blade lifted out by
+   * a cast (launchRingSword) comes back in its place once its refill time has run, and the whole ring is gone with him when he dies.
+   */
+  private _tendSwordRing(dt: number): void {
+    if (this._ring === undefined) this._ring = this._body.root.getChildren().find((n): n is TransformNode => n.name === "swordRing") ?? null;
+    const ring = this._ring;
+    if (!ring) return;
+    const alive = this._state !== AnimState.Dead && this._limp < 0.5;
+    if (ring.isEnabled() !== alive) ring.setEnabled(alive);
+    if (!alive) return;
+    for (const slot of ring.getChildren() as TransformNode[]) {
+      const m = slot.metadata as { restY: number; phase: number; refillIn: number };
+      if (!slot.isEnabled(false)) {
+        m.refillIn -= dt;
+        if (m.refillIn <= 0) slot.setEnabled(true);
+      }
+      slot.position.y = m.restY + this._body.metrics.overallHeight * SWORD_RING_BOB.height * Math.sin(this._time * SWORD_RING_BOB.rate + m.phase);
+    }
+  }
+  private _ring: TransformNode | null | undefined = undefined;
+
+  /**
    * The lockbox's world middle (lockbox-body-anchor): on his centreline in the torso's own frame, LOCKBOX_NAVEL of his shoulder height up the trunk and
    * LOCKBOX_FRONT of it out before the belly, so it never rides off to the side however the arms fall. Each arm is then reached onto its own end of the box
    * (LOCKBOX_SIZE.wide across, the wrist LOCKBOX_GRIP of the shoulder height out past the end): shoulder raise, shoulder turn and elbow bend solved together
@@ -1650,12 +1676,14 @@ export class ProceduralAnimator {
     const shell = box as Mesh;
     const half = typeof shell.getBoundingInfo === "function" ? shell.getBoundingInfo().boundingBox.extendSize.x * Math.abs(box.absoluteScaling.x) : 0.13 * height;
     const across = Vector3.TransformNormal(new Vector3(1, 0, 0), torsoM).normalize();
-    const reach = height * LOCKBOX_GRIP * Math.max(0.001, b.torso.absoluteScaling.y);
+    const mitt = (this._body.metrics.hand?.width ?? 0.06) * Math.max(0.001, b.root.absoluteScaling.y);
     for (const [shoulder, elbow, hand, side] of [[b.rightShoulder, b.rightElbow, b.rightHand, 1], [b.leftShoulder, b.leftElbow, b.leftHand, -1]] as const) {
       const sx = Math.sign(shoulder.position.x) || side;
-      const target = mid.add(across.scale(sx * (half + reach)));
+      const target = mid.add(across.scale(sx * (half + mitt * LOCKBOX_PALM_OUT)));
       const keep = [shoulder.rotation.x, shoulder.rotation.y, elbow.rotation.x];
       const p = [LOCKBOX_CARRY.raise, -sx * LOCKBOX_CARRY.turn, LOCKBOX_CARRY.elbow];
+      // The palm: the mitt mesh's middle, hung below the wrist joint
+      const palm = hand.getChildMeshes(true).find((m) => /HandM$/.test(m.name));
       const at = (q: number[]) => {
         shoulder.rotation.x = q[0];
         shoulder.rotation.y = q[1];
@@ -1663,7 +1691,7 @@ export class ProceduralAnimator {
         shoulder.computeWorldMatrix(true);
         elbow.computeWorldMatrix(true);
         hand.computeWorldMatrix(true);
-        return hand.getAbsolutePosition().clone();
+        return palm ? Vector3.TransformCoordinates(palm.position, hand.getWorldMatrix()) : hand.getAbsolutePosition().clone();
       };
       for (let it = 0; it < LOCKBOX_IK_STEPS; it++) {
         const f = at(p);

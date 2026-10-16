@@ -10,7 +10,7 @@ import { VisualEffects } from "./visualEffects";
 import type { ImpactPresentation } from "./impactPresentation";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
-import { HARPOON_MUZZLE } from "../units/propBuilder";
+import { HARPOON_MUZZLE, launchRingSword } from "../units/propBuilder";
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
 import type { PlacementZone } from "../map/placementValidator";
@@ -1537,15 +1537,16 @@ export class SimulationSystem {
             undefined, 0, { originLift: 0.3 },
           );
         } else if (resolveProjectileShape(attacker, attackProfile) === "sword") {
-          // A swordcaster's sword is one of those that hang round him: it appears over his head, hangs there SWORD_HOVER s with its point on the man,
-          // then flies point first, not from his belt
+          // A swordcaster's sword is one of those that stand round him ([R] swordcaster-blade-ring): the blade of his ring nearest the man is lifted out
+          // of it, hangs there SWORD_HOVER s turning its point onto him, then flies point first. No ring left (all out): one appears over his head.
           const head = attacker.body.headTop;
           const chain: TransformNode[] = [];
           for (let n: Node | null = head; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
           for (const n of chain) n.computeWorldMatrix(true);
+          const lifted = launchRingSword(attacker.body, target.position);
           this.projectileSystem.spawnProjectile(
-            "sword", head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
-            undefined, SWORD_HOVER, { originLift: 0.35, hover: true },
+            "sword", lifted?.at ?? head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
+            undefined, SWORD_HOVER, lifted ? { originLift: 0, hover: true, size: lifted.size } : { originLift: 0.35, hover: true },
           );
         } else if (harpoonMuzzleOf(attacker)) {
           // The harpoon leaves the gun's muzzle at the hip, trailing its rope back to it
