@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 304   Last re-audit: 304   Consecutive rejects: 0 (STOP cleared after a hand fix, see Notes)   Branch: main
+Iteration: 305   Last re-audit: 305   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -8,34 +8,38 @@ maps-light: a PASS b PASS c PASS d PASS (4/4)
 ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
-Tier 2 (fully scored at 198, re-audited 220-304):
+Tier 2 (fully scored at 198, re-audited 220-305):
 battle-feel: e FAIL f PASS g FAIL h PASS (2/4) (h cleared by [R] 065ba9e, 242; g's blocker moved from e by hand after 304)
-- e FAIL (list REWRITTEN by re-audit 304 on the side-on blow shot 8e0770b + the 303 stand-off probe; deferred cleared; old blocker 4, the thrown pose, moved to g by hand after 304: it is a flung-body defect, not a strike one) [S since: 0; rejected since: 1 (304 0d0a413 reverted)] B: 1 press_clubbers_hit (side-on to the blow, 64 ms after it lands; big_melee_5s/9s second, where the mammoth fills half the frame): the landed club's head finishes on the struck man's crown or board top, the man thrown off it — TABS r2c3 clubber chest to chest, club head finishes on or through the man (hand fix after 304 pins the landed club on the strike point through the hold; before it, landed clubs ended level in open air at shoulder height or at shin height in the turf); 2 big_melee_2s/2150ms: the 150 ms pair shows no club coming down (halo man's and right-hand clubs rise or hold); 3 closeup_weapon_reads: no red knight's blade meets a body, nothing follows through (r3c1 arm cocked well back, committed forward). Ref trailer_3_sheet_01 r2c3, r3c1
-- g FAIL (blocker moved from e by hand after 304; list otherwise as e's re-audit 304 wrote it) [S since: 0; rejected since: 0] B: 1 press_clubbers_blow (side-on): hoplite flies horizontal head-first, helmet lowest below the board, legs trail up-left at hip height, trunk not tipped back — TABS r2c3 seat-first, trunk back past 45 deg, one leg up above the hip. Ref trailer_3_sheet_01 r2c3
+- e FAIL (list written by re-audit 304, kept by re-audit 305; blocker 1 struck by 305.1 b3af71a) [S since: 1; rejected since: 1 (304 0d0a413 reverted)] B: 2 big_melee_2s/2150ms: the 150 ms pair shows no club coming down (right-hand red clubbers: the edge club vertical in both frames, the diagonal one holds its angle, the one at the mammoth's hind foot level at hip height); 3 closeup_weapon_reads: no red knight's blade meets a body, nothing follows through (the knight right of centre carries his blade level at shoulder height across his chest into open air; r3c1 arm cocked well back, committed forward). Struck 1 (305): club head on the struck hoplite's shoulder/board top while he stands in his file at +64 ms, the same head on the board top at +336 ms with him thrown a metre off it. Ref trailer_3_sheet_01 r2c3, r3c1
+- g FAIL (blocker moved from e by hand after 304; kept by re-audit 305, narrowed by 305.2 f796087) [S since: 1; rejected since: 0] B: 1 press_clubbers_blow (side-on, 336 ms after the landing): the head-first torpedo is gone (helmet highest, seat lowest, trunk ~45 deg, shield off the trunk), but no leg reads at or above the hip (both hang under the pelvis in a V, the kicked thigh down-forward ~45 deg) and the hips sit below the shoulders — TABS r2c3: one knee carried at thigh height with the shin up, hips the high point, trunk dipping ~60 deg; what remains of the blocker is the raised leg and the seat leading. Ref trailer_3_sheet_01 r2c3, trailer_3_sheet_03 r1c2-r1c3
 unit-look: e PASS f PASS g PASS h PASS (4/4) (h cleared by 810f6c6, 240)
 maps-light: e PASS f PASS g PASS h PASS (4/4)
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
 camera: e PASS f PASS g PASS h PASS (4/4)
 vfx: e PASS f PASS g PASS h PASS (4/4)
-Tier 3 (scored 240, re-audited 245-304; ours lineup_<faction> / biome_<map> / throw_<group>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
+Tier 3 (scored 240, re-audited 245-305; ours lineup_<faction> / biome_<map> / throw_<group>; refs factions/<f>, units/<f>.<id>, maps/<biome>):
 unit-look tier 3: i-v all PASS (14/14) (cleared 242-269)
 maps-light tier 3: i-o all PASS (7/7) (cleared 246-273)
-vfx tier 3: i-p all PASS (8/8) (first scored 281; o d930bf5 287; n 5deb87c 289; i 2dedac6 291; k a73812a 292; l b22b07e 293; j 6eeeb65 294; m cce136e 296; p 81ea78f 301; confirmed 302-304)
+vfx tier 3: i-p all PASS (8/8) (first scored 281; o d930bf5 287; n 5deb87c 289; i 2dedac6 291; k a73812a 292; l b22b07e 293; j 6eeeb65 294; m cce136e 296; p 81ea78f 301; confirmed 302-305)
 Total tier 1 24/24; tier 2 22/24; tier 3 29/29.
 
 ## Focus (every gap this iteration)
-BASE be960cb (iter 304; re-audit 304: no flips; e's list rewritten, deferred cleared; one criterion fails, so one [S] pick)
-- [S] press-close-in (battle-feel.e blocker 1) — 0d0a413 — REJECT, reverted bfbd2d6
+BASE 7760def (iter 305; re-audit 305: no flips, e and g lists kept; two criteria fail, so two [S] picks on different criteria)
+- [S] press-contact-dwell (battle-feel.e blocker 1) — b3af71a — APPROVE (blocker 1 struck)
+- [S] hip-led-launch (battle-feel.g blocker 1) — f796087 — APPROVE (blocker 1 narrowed)
+- evidence eca8c11: press_clubbers_blow shot at +336 ms (the top of the dwelled throw), not +224
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] press-close-in (0d0a413) VERDICT: REJECT CRITERION: battle-feel.e FAIL (previous: FAIL)
+- GAP: [S] press-contact-dwell (b3af71a) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL)
+- GAP: [S] hip-led-launch (f796087) VERDICT: APPROVE CRITERION: battle-feel.g FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.e press-beat-descends — blocker 2: a crowd clubber in reach runs a full cock-to-drop stroke on his beat so a 150 ms pair catches a club coming down — ref r2c3 — ours big_melee_2s/2150ms
-2. [S] battle-feel.e blade-cock-and-commit — blocker 3: knight sword stroke cocked back over the shoulder, then committed forward through the torso with follow-through — ref r3c1 — ours closeup_weapon_reads
-3. [S] battle-feel.g seat-first-throw-pose — blocker 1: thrown pose leads with the pelvis, trunk back past 45 deg, one leg above the hip — ref r2c3 — ours press_clubbers_blow
-4. [S] battle-feel.e strike-recover-stand — blocker 1: a striker stands on his landed blow through its hold (~0.45 s, club on the point) before the sim walks him on to the next man; today he is walked off ~60 ms after the landing and the hold is let go (BLOW_HOLD_SLIP) — ref r2c3 — ours press_clubbers_hit, big_melee_5s
-(e blocker 1's landing itself, press-crown-landing, was done by hand after 304: the 305 re-audit judges it from the new shots before any [S] is picked on it)
+1. [S] battle-feel.g kick-above-hip — blocker 1: thigh world angles from the hip's live world rotation (or laid out against the throw direction, not a fixed -z) so one knee reads at or above the hip toward the striker — ref r2c3 — ours press_clubbers_blow
+2. [S] battle-feel.e open-melee-strike-clock — blocker 2: a clubber cocked in reach in the open melee brings the club down within 150 ms (contact-gated drop outside the press beat) — ref r2c3 — ours big_melee_2s/2150ms
+3. [S] battle-feel.e sword-cut-contact — blocker 3: the knight's cut arcs from the cocked-back arm onto the man in reach and holds a frame on him, not level across the chest into air — ref r3c1 — ours closeup_weapon_reads
+4. [S] battle-feel.g pelvis-high-tumble — blocker 1: after BLOW_THROW_HOLD the man keeps pitching about the pelvis so the hips become the high point and he comes over end over end into the landing — ref trailer_3_sheet_03 r1c2, trailer_2_sheet_02 r1c2 — ours press_clubbers_blow
+5. [S] battle-feel.e club-swing-through — blocker 2 (fallout of 305.1, replaces the follow pin): hands down past the hip after the dwell, club head to turf beside the thrown man, instead of a pole propped on the board top — ref r2c3 — ours press_clubbers_blow
+(no [P]: neither remaining defect is a constant)
 Watch only (PASS, not pickable): vfx.o fireball not visible in throw_casters_flight (re-audit 303, unchanged code, noise).
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
@@ -49,7 +53,8 @@ Watch only (PASS, not pickable): vfx.o fireball not visible in throw_casters_fli
 - press-second-rank-blow [attempts: 1] — 293: over-rank pending blow + BLOW_STEP 1.3 hip lunge; no shot shows a club landing over a rank
 
 ## Notes for next iteration (max 5 lines)
-- Hand fix after 304 (STOP cleared, rejects reset): a frame probe showed the landed club was pinned right at the land step but then chased the struck man's crown as the blow threw him over (club down to shin height, into the turf), and the walk cutting the swing handed the arm to the cosmetic press beat mid-phase. Now `blowStruck()` freezes the strike point on the land step, the hold solves the arm to keep the club head on it, `_pressBlow` yields to a live swing, and a thrown/toppled man is no press mark. Rules: an [R] is approved on one cleared blocker (partial wins kept); e's thrown-pose blocker moved to g.
-- 305 is a re-audit: judge e from press_clubbers_hit (club head on the strike point, man flying off it) and big_melee; g from press_clubbers_blow. The frozen point and hold solve also run for blade_slash (knights): if a landed sword reads pinned rather than swung through, gate the hold to heavy_swing as an [S] on blocker 3.
-- Probe pattern: temp `(window as any).__sim = simulation` after main.ts:347 (never committed), vite build, preview on 4199 (an old preview may already hold the port and serves the new dist), probe.mjs in the fixing session's scratchpad (417d6149...): patches sim._landMeleeBlow to catch attacker/target and logs club head vs crown/contact per frame.
-- A sim change reshuffles big_melee and the camera follows (mammoth filled 9s at 304): watch camera framing. Focus capture ~3 min with `--shots press_clubbers_side,press_clubbers_hit`. Python/node file edits: keep each file's EOL (LOG.md is CRLF).
+- 305: the dwell (BLOW_DWELL .12 s, _pendingLaunches) and the hip-led throw (hip anchored over the root, THROWN thighs as world angles with the root pitch taken out) were approved. The kicked leg reads down-forward in the gallery shot though a one-on-one probe (clubber vs hoplite, struck from the front) showed it up at hip height: the gallery man was struck from behind (root pitch +1, so legKick - r.x = -2.9 and the fixed -z lay-out mirrors); lay the legs out against the throw direction (sign of Dot(dir, facing)) and raise legKick, and check for any hip-angle wrap.
+- Critic's unscored code defect on 305.1: melee.heavy has splashRadius .5, so _applySplashDamage gets the zeroed knockback for a dwelling blow and neighbours inside .5 m lose the blow's own push (they keep the .3 shock): give the primary target the zero and the neighbours the real impulse when the dwell is next touched.
+- The striker's side at +64 ms: in the focus hit shot the striker's hands are over his head on the butt, the club arriving as a pole (critic defect 1); club-swing-through (ranked 5) is the follow-up. melee_club_drop still carries a spurious `scene not ready after -1 renders` note though the shot lands: an evidence fix, not a gap.
+- Probe pattern (no main.ts hook needed): a scratchpad playwright script with createRequire('C:/Git/MOVBattle/loop/scripts/x.js') for playwright, vite preview on 4199 (kill both pids after), spawnUnit + startBattleImmediate for an isolated pair, frameCamera side-on; or runScenarioGalleryValidation("gallery_press_clubbers") + getHitLog like capture.mjs. System.Drawing (PowerShell) crops/zooms pngs; no PIL or sharp here.
+- A sim change reshuffles big_melee and the camera follows (mammoth filled 2s-9s at 304-305): watch camera framing. Focus capture ~2.5 min. File edits keep each file's EOL (STATE/LEDGER LF, LOG.md CRLF). Do not chain shell commands.

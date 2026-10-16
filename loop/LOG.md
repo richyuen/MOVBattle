@@ -304,3 +304,4 @@ iter 302 | two-hand-body-swing [R] | 0/1 approved | passes 23/24 -> 23/24 (tier 
 iter 303 | [R] stroke-cadence-and-contact-hold (+ evidence 8e0770b) | 0/1 approved | passes 76 -> 76
 iter 304 | press-close-in [S] | 0/1 approved | passes 76 -> 76 | STOP written (3 consecutive rejects)
 hand | press-crown-landing by hand (blowStruck freezes the strike point, hold solved onto it, press beat yields to a live swing, thrown man unmarked), hit shot framed side-on to the blow at +64 ms; rules: [R] approved on one cleared blocker, e blocker 4 (thrown pose) -> g | STOP cleared, rejects reset | passes 76/77 -> 75/77 (g FAIL by the move)
+iter 305 | press-contact-dwell [S], hip-led-launch [S], evidence eca8c11 | 2/2 approved | passes 75 -> 75

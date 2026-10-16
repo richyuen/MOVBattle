@@ -10,8 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 295 | dynamite-big-bundle | vfx.m | approved
-- 295 | swordcaster-lockbox | vfx.p | approved
 - 296 | dynamite-lit-fuse | vfx.m | approved
 - 296 | club-overhead-drop | battle-feel.e | approved
 - 297 | club-cocked-in-press | battle-feel.e | approved
@@ -26,6 +24,8 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 302 | two-hand-body-swing [R] | battle-feel.e | rejected
 - 303 | stroke-cadence-and-contact-hold [R] | battle-feel.e | rejected
 - 304 | press-close-in | battle-feel.e | rejected
+- 305 | press-contact-dwell | battle-feel.e | approved
+- 305 | hip-led-launch | battle-feel.g | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -33,11 +33,12 @@ slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (m
 ## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
 proceduralAnimation.ts:_aimBlow overhead + follow (BLOW_LAND,_HOLD,_DROP,_LEAP,_OVERHEAD,_FALL,_STEP; BLOW_FOLLOW,_ARM,_PITCH,_LOW) | overhead .5, fall .95, step .4; landing + follow on _contactOn, pinned live each frame | 300 | approved | follow ends on board top (299, rejected-kept); to BLOW_FOLLOW_LOW .2 (296); onto crown level (289)
-runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_PITCH,_SPEED,_LIFT,_MAX,_MIN; x kb x shoveResponse, no topple) | .6 s hold .28 pitch 1.3 head away (sign fixed); min 4.5/5.0, front-half straight back | 303 | rejected | pitch .5 seat-first (303, reverted); pitch .8 toward striker (sign bug), min 1.6/4.4 (289); no floor (287)
+runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_TRUNK,_SPEED,_LIFT,_MAX,_MIN; hip-led: pitch about the pelvis; x kb x shoveResponse, no topple) | .6 s hold .28 trunk 1.0; min 4.5/5.0, front-half straight back | 305 | approved | pitch 1.3 about the feet, head away (291-304); pitch .5 seat-first (303, reverted); pitch .8 toward striker (sign bug), min 1.6/4.4 (289); no floor (287)
+simulationSystem.ts:blow dwell (BLOW_DWELL; _pendingLaunches: the man's push and throw fired after the land step, his knockback withheld till then) | .12 s | 305 | approved | none (thrown on the land step)
 simulationSystem.ts:wall lets go of a thrown man (isBlowThrown: no slot snap/bracing; wall line = median depth of men not thrown) | median | 291 | approved | mean depth of all, thrown man snapped back
 proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; THROWS_HELD_PROP javelin, bomb, stone) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .5 | 283 | approved | javelin, bomb (282); let-go .38, javelin only (281)
 proceduralAnimation.ts:board off (BOARD_OFF_SECONDS,_HOLD,_FLING,_BUCKLE; knockBoardOff from staggerFromBlow) | .6 s hold .25; fling out 1.4 back .6; thigh .9 knee 1.6 sink .35 | 284 | approved | none (board stayed in the wall)
-proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,legs,knee; throwBack; cancels the board-off buckle) | 1.35, .45, .35, .45, .75, .35 | 303 | rejected | set curl .35 head .15 thighs -2/-1.7 knee 1.2 (303, reverted); none (knees buckled under the blow)
+proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,seat,legTrail,legKick,kneeTrail,kneeKick; hip anchored over the root, thighs as flight-frame angles; cancels the board-off buckle) | 1.35, .45, .1, .1, seat .92, thighs .7/-1.9, knees .15/1.4 | 305 | approved | trunk .35 head .45 fixed sweeps legs .75 knee .35 (291-304); curl .35 thighs -2/-1.7 knee 1.2 (303, reverted); none (knees buckled under the blow)
 proceduralAnimation.ts:cast loose/hold (CAST_LOOSE, CAST_HOLD, CAST_LEVEL_TIP; castReleasesIn, fireball pending to the drive) | loose .68 hold .94 tip 0,.1,1 | 287 | approved | fired at cast start, drive .55-.68 out .82-1, tip z+1.1
 proceduralAnimation.ts:bone mage overhead cast (CAST_RAISE_UP,_ARM,_TIP; boneStaff id; leaves pend to CAST_LOOSE from staff head) | up .4, arm -2.9/.32/-.12, tip .15,1,.3 | 289 | approved | wizard level drive, leaves from hand at cast start
 projectileSystem.ts:fireball (FIREBALL_WIDE,_TAIL,_HEART,_SHELL; flat icospheres, heart-only glow; staffHeadOf origin) | .55 wide, tail .8; heart 1,.92,.55 shell 1,.45,.08 opaque, no bloom | 286 | approved | shell alpha .7 heart bloom (285); team-tinted sphere .25 (wizard flew a bolt)
