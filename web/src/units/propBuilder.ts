@@ -1433,10 +1433,13 @@ const BOMB_SEAT_FORWARD = 0.35;
 const BOMB_SEAT_TURN = 1.7;
 const BOMB_NECK = 0.22;
 const BOMB_FUSE = 0.32;
-// Dynamite bundle (units/wild_west.dynamite_thrower): sticks in the bundle, each stick's width, and its length, in weapon units (s)
-const DYNAMITE_STICKS = 3;
-const DYNAMITE_STICK_WIDE = 0.05;
-const DYNAMITE_LONG = 0.26;
+// Dynamite bundle (units/wild_west.dynamite_thrower): a hip-to-chest bundle near as wide as his torso, packed DYNAMITE_ROWS deep and DYNAMITE_COLS across,
+// each stick's width and length in weapon units (s), the two black bands' height as a share of the length
+const DYNAMITE_COLS = 3;
+const DYNAMITE_ROWS = 2;
+const DYNAMITE_STICK_WIDE = 0.075;
+const DYNAMITE_LONG = 0.38;
+const DYNAMITE_BAND = 0.17;
 // The stoner's boulder (units/tribal.stoner), in prop units (x s, the man about .67 s tall): across, its height and depth as shares of that, colour
 const BOULDER_WIDE = 0.26;
 const BOULDER_SQUASH = { y: 0.88, z: 0.94 };
@@ -1880,35 +1883,41 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return bomb;
     }
     case "dynamite": {
-      // A bundle of dynamite (units/wild_west.dynamite_thrower): DYNAMITE_STICKS fat red sticks side by side, bound by two black bands, a fuse out of the top.
-      // Long axis up the fist (+y) so the thrown copy flies end first; the fuse's end sits where the lit-fuse spark rides the fist (0.18 s).
+      // A bundle of dynamite (units/wild_west.dynamite_thrower): DYNAMITE_COLS x DYNAMITE_ROWS fat red sticks packed in a block, each its own cylinder with a gap
+      // that shows between them, bound by two broad black bands, a fuse out of the top. Long axis up the fist (+y) so the thrown copy (a clone, sticks and bands
+      // and all) flies end first; the top stays where the lit-fuse spark rides the fist (0.18 s), so the extra length hangs down below the hand.
       const red = mat(scene, new Color3(0.8, 0.13, 0.1), 0.12, "cloth");
-      const black = mat(scene, new Color3(0.07, 0.07, 0.08), 0, "cloth");
+      const black = mat(scene, new Color3(0.05, 0.05, 0.06), 0, "cloth");
       const stickD = DYNAMITE_STICK_WIDE * s;
       const long = DYNAMITE_LONG * s;
-      const middle = MeshBuilder.CreateCylinder("dynamite", { height: long, diameter: stickD, tessellation: 8 }, scene);
-      middle.material = red;
-      // The others alongside it in a row, either side
-      for (let k = 1; k < DYNAMITE_STICKS; k++) {
-        const stick = MeshBuilder.CreateCylinder("dynamiteStick", { height: long * 0.97, diameter: stickD, tessellation: 8 }, scene);
-        stick.position.x = (k % 2 === 1 ? -1 : 1) * Math.ceil(k / 2) * stickD * 0.9;
-        stick.material = red;
-        stick.parent = middle;
+      const pitch = stickD * 0.94;
+      // The root is the block's red core, hidden inside the sticks but for the seams; it gives the thrown copy its length
+      const root = MeshBuilder.CreateBox("dynamite", { width: pitch * (DYNAMITE_COLS - 1), height: long * 0.96, depth: pitch * (DYNAMITE_ROWS - 1) * 0.9 }, scene);
+      root.material = red;
+      for (let c = 0; c < DYNAMITE_COLS; c++) {
+        for (let r = 0; r < DYNAMITE_ROWS; r++) {
+          const stick = MeshBuilder.CreateCylinder("dynamiteStick", { height: long * (r === 0 ? 1 : 0.97), diameter: stickD, tessellation: 8 }, scene);
+          stick.position.x = (c - (DYNAMITE_COLS - 1) / 2) * pitch;
+          stick.position.z = (r - (DYNAMITE_ROWS - 1) / 2) * pitch;
+          stick.material = red;
+          stick.parent = root;
+        }
       }
-      for (const y of [-0.28, 0.28]) {
-        const band = MeshBuilder.CreateCylinder("dynamiteBand", { height: long * 0.13, diameter: stickD * (DYNAMITE_STICKS * 0.9 + 0.25), tessellation: 10 }, scene);
-        band.scaling.z = (stickD * 1.15) / (stickD * (DYNAMITE_STICKS * 0.9 + 0.25)); // flattened to the row's depth
+      const bandW = pitch * (DYNAMITE_COLS - 1) + stickD * 1.06;
+      const bandD = pitch * (DYNAMITE_ROWS - 1) + stickD * 1.06;
+      for (const y of [-0.27, 0.27]) {
+        const band = MeshBuilder.CreateBox("dynamiteBand", { width: bandW, height: long * DYNAMITE_BAND, depth: bandD }, scene); // a strap round the block
         band.position.y = y * long;
         band.material = black;
-        band.parent = middle;
+        band.parent = root;
       }
-      const fuse = MeshBuilder.CreateCylinder("fuse", { height: 0.05 * s, diameter: 0.012 * s, tessellation: 5 }, scene);
-      fuse.position.y = long / 2 + 0.025 * s;
+      const fuse = MeshBuilder.CreateCylinder("fuse", { height: 0.06 * s, diameter: 0.014 * s, tessellation: 5 }, scene);
+      fuse.position.y = long / 2 + 0.03 * s;
       fuse.rotation.z = 0.35;
       fuse.material = mat(scene, new Color3(0.85, 0.72, 0.45), 0.2);
-      fuse.parent = middle;
-      middle.position.y = 0.155 * s - long / 2;
-      return middle;
+      fuse.parent = root;
+      root.position.y = 0.155 * s - long / 2;
+      return root;
     }
     case "torch": {
       const handle = MeshBuilder.CreateCylinder("torch", { height: 0.35 * s, diameter: 0.03 * s }, scene);
