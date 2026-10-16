@@ -128,9 +128,8 @@ const SHIELD_SLOT_SNAP = 0.15;
 const RANK_DEPTH_SHARE = 0.95;
 // An ally who is not in the wall stands at least this much more than a body behind its front rank (clear of the boards, see _keepRanksDeep).
 const WALL_QUEUE_GAP = 0.25;
-// A clubber or swordsman a rank or two back (see _allyBetween): how much further than a front man's strike reach his press strike comes down from, over an
-// ally within this lane of his line (two bodies).
-const REAR_RANK_REACH = 2.4;
+// A clubber a rank back (see _allyBetween): how much further than a front man's strike reach he strikes from, over an ally within this lane of his line.
+const REAR_RANK_REACH = 1.4;
 // How far past shoulder contact a pressing clubber may still be when he brings his blow down (see _processUnitDecision).
 const BLOW_CONTACT_SLACK = 0.3;
 const REAR_RANK_LANE = 0.7;
