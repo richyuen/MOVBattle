@@ -187,7 +187,7 @@ const FLINCH_HOLD = 0.12;
 const THROW_COCK = { raise: -2.9, out: 0.3, elbow: -1.6, turn: 0.4, lean: -0.15, lead: -1.3 };
 const THROW_FOLLOW = { raise: -0.35, lean: 0.35 };
 const THROW_SWING = 0.55;
-const THROW_LET_GO = 0.38;
+const THROW_LET_GO = 0.5;
 // ...and throws the trunk and the head this far back (r2c3: the struck man is knocked back off his feet)
 const FLINCH_PITCH = 0.85;
 const FLINCH_HEAD = 0.9;
