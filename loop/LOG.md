@@ -293,3 +293,4 @@ iter 291 | press-blow-off-feet [S], short-javelin [S] | 2/2 approved | passes 70
 iter 292 | [S] press-blow-in-crowd (dropped), [S] stoner-two-hand-boulder | 1/1 approved | passes 71 -> 72
 iter 293 | [S] press-second-rank-blow (rejected), [S] bomb-pair-fist-size | 1/2 approved | passes 72 -> 73
 iter 294 | [R] press-blow-rebuild, [S] harpoon-rope-tied | 1/2 approved | passes 73/77 -> 74/77
+iter 295 | re-audit (no flips); [S] dynamite-big-bundle, [S] swordcaster-lockbox | 2/2 approved | passes 74 -> 74
