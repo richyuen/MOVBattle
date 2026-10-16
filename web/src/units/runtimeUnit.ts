@@ -45,8 +45,13 @@ export const FLUNG_RENDER_GROUP = 1;
 // lands on his feet and his wall takes him back.
 const BLOW_THROW_SECONDS = 0.6;
 const BLOW_THROW_HOLD = 0.28;
-// Laid out nearly flat at the top of the throw, his feet the pivot
-const BLOW_THROW_PITCH = 1.3;
+// Seat-first (two-hand-body-swing; r2c3: the struck man goes over seat-first, legs swinging up): the body tips only this far back, his thighs swept up in
+// front of him (ProceduralAnimator THROWN), so his seat leads and his head stays over it
+const BLOW_THROW_PITCH = 0.55;
+// The strike lunge (lungeInto): a heavy-weapon man is carried into the man he swings at over the drop, up to STRIKE_LUNGE_MAX m, until their bodies are
+// STRIKE_LUNGE_GAP m apart, so the club comes down on him and not on the air between
+const STRIKE_LUNGE_MAX = 0.8;
+const STRIKE_LUNGE_GAP = 0.08;
 const BLOW_THROW_SPEED = 0.75;
 const BLOW_THROW_LIFT = 1.0;
 const BLOW_THROW_SPEED_MAX = 3.5;
@@ -456,10 +461,7 @@ export class RuntimeUnit {
   readyBlow(striking = false, target: RuntimeUnit | null = null, behindRank = false): void {
     if (isVehicleUnit(this.definition.id)) return;
     this.animator.readyBlow(striking, behindRank, target && !target.isDead ? target.body.headTop : null);
-    if (striking) this._blowTarget = target;
   }
-  // The man a press blow lands on: he flinches (head and trunk snapped back) on each slam that reaches him
-  private _blowTarget: RuntimeUnit | null = null;
 
   private _blowStagger = 0;
   private readonly _blowStaggerDir = new Vector3(0, 0, 1);
@@ -815,9 +817,6 @@ export class RuntimeUnit {
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
     this.animator.update(dt);
-    if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3) {
-      this._blowTarget.animator.triggerFlinch();
-    }
     this._applyVisualPresentation(now);
     this._movementVelocity.setAll(0);
 
@@ -891,6 +890,17 @@ export class RuntimeUnit {
 
       // Resolve obstacle collisions after knockback
       resolveObstacleCollisions(pos, this.collisionBodyRadius, RuntimeUnit.obstacles);
+    }
+
+    // The strike lunge (lungeInto): carried into his man over the drop, whatever the walk makes of him, while he is on his feet
+    if (this._lungeLeft > 0) {
+      if (physicsState === "toppled" || physicsState === "airborne" || physicsState === "downed") this._lungeLeft = 0;
+      else {
+        const step = Math.min(this._lungeLeft, this._lungeRate * dt);
+        pos.addInPlace(this._lungeDir.scale(step));
+        this._lungeLeft -= step;
+        resolveObstacleCollisions(pos, this.collisionBodyRadius, RuntimeUnit.obstacles);
+      }
     }
 
     // ── Stagger: skip movement while staggered ──
@@ -1840,6 +1850,21 @@ export class RuntimeUnit {
   aimBlowAt(target: RuntimeUnit | null, landsIn = 0): void {
     this.animator.aimBlowAt(target ? target.body.headTop : null, landsIn);
   }
+
+  /** A heavy-weapon swing at `target` lands in `seconds`: he lunges in over that time until his body is STRIKE_LUNGE_GAP off the man's (two-hand-body-swing). */
+  lungeInto(target: RuntimeUnit, seconds: number): void {
+    if (this._isDead || isVehicleUnit(this.definition.id) || this.animator.defaultAttackMotion !== "heavy_swing") return;
+    const to = target.position.subtract(this.position);
+    to.y = 0;
+    const gap = to.length() - this.collisionBodyRadius - target.collisionBodyRadius - STRIKE_LUNGE_GAP;
+    if (gap <= 0) return;
+    this._lungeDir.copyFrom(to.normalize());
+    this._lungeLeft = Math.min(gap, STRIKE_LUNGE_MAX);
+    this._lungeRate = this._lungeLeft / Math.max(0.05, seconds);
+  }
+  private _lungeLeft = 0;
+  private _lungeRate = 0;
+  private readonly _lungeDir = new Vector3(0, 0, 1);
 
   /** Seconds until the swing he has just started is on the man it is struck at; 0 when his attack is no such swing. */
   blowLandsIn(): number {
