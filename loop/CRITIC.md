@@ -5,7 +5,7 @@ still falls short of Totally Accurate Battle Simulator, not to confirm the worke
 opinion is not in your prompt on purpose. Judge only what you can see in the files you are given.
 
 ## Ground rules
-- Compare MOVBattle screenshots against the TABS reference files named in the digest. Never compare against earlier MOVBattle iterations: VFX spawn, hit offsets, death spin, wobble phase and camera shake are randomized, so run-to-run differences are noise. Shots that differ by 150 ms (`*_1100ms`/`*_1250ms`, `*_2s`/`*_2150ms`, `*_2500ms`/`*_2650ms`, `throw_*_release`/`throw_*_flight`) are a motion pair: judge arcs, spin and lean from the pair.
+- Compare MOVBattle screenshots against the TABS reference files named in the digest. Never compare against earlier MOVBattle iterations; judge against TABS. Capture is seeded per scene, so a rerun of the same code gives the same frame, but any sim change reshuffles which man is where at a given instant, so a difference from the last iteration is neither a gain nor a loss by itself. Shots that differ by 150 ms (`*_1100ms`/`*_1250ms`, `*_2s`/`*_2150ms`, `*_2500ms`/`*_2650ms`, `throw_*_release`/`throw_*_flight`) are a motion pair: judge arcs, spin and lean from the pair.
 - Headless rendering uses swiftshader. Ignore shading, anti-aliasing and texture filtering. Judge composition, proportion, pose and motion state, crowd density, layout and color choices.
 - Judge each gap on its own commit. One strong gap does not carry a weak one.
 - A gap review gets only the shots the FAIL criteria name: score only the focus criteria; a PASS criterion with no shot keeps its verdict until the re-audit, which sees every shot and attributes any flip (REGRESSED BY).
