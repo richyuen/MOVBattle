@@ -14,7 +14,7 @@ export type WeaponType =
   | "bone_staff" | "lute" | "paintbrush" | "rapier"
   | "harpoon" | "cutlass" | "bomb" | "dynamite" | "torch"
   | "katana" | "nunchaku" | "shuriken_hand" | "bo_staff"
-  | "stone" | "hay_bale" | "potion" | "lightning_bolt"
+  | "stone" | "hay_bale" | "potion" | "lightning_bolt" | "lockbox"
   | "fan" | "flail" | "whip" | "present_box" | "pom_pom" | "tree_club";
 
 export type HatType =
@@ -548,7 +548,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "spooky.swordcaster": vis(
-    { scale: 1.08, bulk: 0.92, headSize: 1.08 }, "sword", "hood", "none", "cape", "#A793FF", undefined, {
+    { scale: 1.08, bulk: 0.92, headSize: 1.08 }, "lockbox", "hood", "none", "cape", "#A793FF", undefined, {
+      // units/spooky.swordcaster: no hand sword, a lockbox chest in both hands at the belly; the cast keeps the sword's timing
+      weaponPresentationFamily: "blade_slash",
       posePreset: "caster",
       materialPreset: "secret_ghost",
       attachmentPreset: "summoner",

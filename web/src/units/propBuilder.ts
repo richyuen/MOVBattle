@@ -1444,6 +1444,13 @@ const DYNAMITE_BAND = 0.17;
 const BOULDER_WIDE = 0.26;
 const BOULDER_SQUASH = { y: 0.88, z: 0.94 };
 const BOULDER_COLOR = new Color3(0.34, 0.31, 0.28);
+// The swordcaster's lockbox (units/spooky.swordcaster): a chest about as wide as his torso, held across the belly in both hands; across, tall, deep (x s),
+// the domed lid's share of the height, dark iron body, lighter iron bands and a pale keyhole plate on the front
+const LOCKBOX_SIZE = { wide: 0.26, tall: 0.16, deep: 0.16 };
+const LOCKBOX_LID = 0.35;
+const LOCKBOX_IRON = new Color3(0.13, 0.14, 0.17);
+const LOCKBOX_BAND = new Color3(0.32, 0.33, 0.36);
+const LOCKBOX_PLATE = new Color3(0.62, 0.62, 0.6);
 // The javelin (units/tribal.spear_thrower), in prop units (x s): shaft plus head JAVELIN_LONG, a leaf head JAVELIN_HEAD_LONG x _WIDE, barbs swept back _SWEEP rad
 const JAVELIN_LONG = 0.4;
 const JAVELIN_HEAD_LONG = 0.13;
@@ -2085,6 +2092,44 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       rock.rotation.set(0.5, 0.8, 0.3);
       rock.material = mat(scene, BOULDER_COLOR, 0.15, "stone");
       return rock;
+    }
+    case "lockbox": {
+      // The swordcaster's lockbox (units/spooky.swordcaster): an iron chest, box below and a domed lid on top running across him (a round bar half sunk in the
+      // box's top), two bands over the lid and down the front, a keyhole plate between them. Carried in both hands (ProceduralAnimator._carryBoulder sets it
+      // between the hands, square to his chest).
+      const { wide, tall, deep } = LOCKBOX_SIZE;
+      const lowTall = tall * (1 - LOCKBOX_LID) * s;
+      const dome = (tall * LOCKBOX_LID * 2) / deep; // the round bar's height over its depth
+      const box = MeshBuilder.CreateBox("lockbox", { width: wide * s, height: lowTall, depth: deep * s }, scene);
+      box.material = mat(scene, LOCKBOX_IRON, 0.05, "stone");
+      const lid = MeshBuilder.CreateCylinder("lockboxLid", { height: wide * s, diameter: deep * s, tessellation: 12 }, scene);
+      lid.rotation.z = Math.PI / 2; // axis across him; its local x is now up
+      lid.scaling.x = dome;
+      lid.position.y = lowTall / 2;
+      lid.parent = box;
+      lid.material = box.material;
+      const bandMat = mat(scene, LOCKBOX_BAND, 0.05, "stone");
+      for (const x of [-0.3, 0.3]) {
+        const band = MeshBuilder.CreateCylinder("lockboxBand", { height: wide * s * 0.08, diameter: deep * s * 1.06, tessellation: 12 }, scene);
+        band.rotation.z = Math.PI / 2;
+        band.scaling.x = dome;
+        band.position.set(x * wide * s, lowTall / 2, 0);
+        band.parent = box;
+        band.material = bandMat;
+        const strap = MeshBuilder.CreateBox("lockboxStrap", { width: wide * s * 0.08, height: lowTall * 1.02, depth: deep * s * 1.06 }, scene);
+        strap.position.x = x * wide * s;
+        strap.parent = box;
+        strap.material = bandMat;
+      }
+      const plate = MeshBuilder.CreateBox("lockboxPlate", { width: wide * s * 0.2, height: tall * s * 0.5, depth: 0.012 * s }, scene);
+      plate.position.set(0, lowTall * 0.15, deep * s * 0.53 + 0.006 * s);
+      plate.parent = box;
+      plate.material = mat(scene, LOCKBOX_PLATE, 0.1, "stone");
+      const hole = MeshBuilder.CreateBox("lockboxKeyhole", { width: wide * s * 0.045, height: tall * s * 0.22, depth: 0.004 * s }, scene);
+      hole.position.set(0, -tall * s * 0.04, 0.008 * s);
+      hole.parent = plate;
+      hole.material = mat(scene, new Color3(0.04, 0.04, 0.05), 0);
+      return box;
     }
     case "hay_bale": {
       const bale = MeshBuilder.CreateBox("bale", { width: 0.25 * s, height: 0.18 * s, depth: 0.2 * s }, scene);

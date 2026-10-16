@@ -1449,7 +1449,8 @@ export class ProceduralAnimator {
    */
   private _carryBoulder(): void {
     const b = this._body;
-    const rock = b.rightHand.getChildren().find((n): n is TransformNode => n.name === "boulder");
+    // The swordcaster's lockbox (units/spooky.swordcaster) rides the same two-hand carry at the belly
+    const rock = b.rightHand.getChildren().find((n): n is TransformNode => n.name === "boulder" || n.name === "lockbox");
     if (!rock || this._state === AnimState.Dead) return;
     const w = 1 - Math.min(1, this._limp);
     if (w <= 0) return;
@@ -1499,6 +1500,18 @@ export class ProceduralAnimator {
     }
     const mid = Vector3.Center(b.rightHand.getAbsolutePosition(), b.leftHand.getAbsolutePosition());
     rock.position.copyFrom(Vector3.TransformCoordinates(mid, Matrix.Invert(b.rightHand.getWorldMatrix())));
+    if (rock.name === "lockbox") {
+      // A chest is held square across him, lid up and keyhole out, whatever the wrist's turn: its rotation in the hand is the torso's world turn less the hand's
+      const handQ = new Quaternion();
+      const torsoQ = new Quaternion();
+      b.rightHand.getWorldMatrix().decompose(undefined, handQ);
+      b.torso.getWorldMatrix().decompose(undefined, torsoQ);
+      const local = Matrix.Identity();
+      torsoQ.toRotationMatrix(local);
+      const handM = Matrix.Identity();
+      handQ.toRotationMatrix(handM);
+      rock.rotationQuaternion = Quaternion.FromRotationMatrix(local.multiply(handM.transpose()));
+    }
   }
 
   private _carryProp(dt: number): void {
