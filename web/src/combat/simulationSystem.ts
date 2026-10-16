@@ -1978,7 +1978,8 @@ export class SimulationSystem {
   /** `shock` is the push the crowd around him and the impact presentation see, the knockback itself unless the man's own share of it is held back (a dwelling blow). */
   private _applyDirectOrSplash(target: RuntimeUnit, damage: number, splashRadius: number, attackerTeam: number, knockback: Vector3, shock: Vector3 = knockback): void {
     if (splashRadius > 0) {
-      this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, knockback, target);
+      // The neighbours in the splash take the blow's real push; only the man it is on has his held back
+      this._applySplashDamage(target.position, splashRadius, attackerTeam, damage, shock, target, knockback);
     } else {
       const delta = target.applyDamage(damage, knockback);
       if (this.impactPresentation) {
@@ -2001,7 +2002,8 @@ export class SimulationSystem {
     this._applyCrowdShockwave(target.position, shockRadius, attackerTeam, shock.scale(splashRadius > 0 ? 0.3 : 0.2), target);
   }
 
-  private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3, primaryTarget?: RuntimeUnit): void {
+  /** `primaryImpulse` is the push the primary target himself takes, the splash's own unless his share is held back (a dwelling blow: zero, thrown later). */
+  private _applySplashDamage(center: Vector3, radius: number, attackerTeam: number, damage: number, impulse: Vector3, primaryTarget?: RuntimeUnit, primaryImpulse: Vector3 = impulse): void {
     const radiusSq = radius * radius;
     for (const unit of this._units) {
       if (unit.isDead || unit.team === attackerTeam || !unit.isTargetable) continue;
@@ -2009,7 +2011,7 @@ export class SimulationSystem {
       if (distanceSq > radiusSq) continue;
       const distance = Math.sqrt(distanceSq);
       const falloff = radius > 0 ? Math.max(0, 1 - distance / radius) : 1;
-      const delta = unit.applyDamage(damage, impulse);
+      const delta = unit.applyDamage(damage, unit === primaryTarget ? primaryImpulse : impulse);
       const path = unit === primaryTarget ? "splash-primary" : "splash-secondary";
       if (this.impactPresentation) {
         this.impactPresentation.recordImpact({
