@@ -348,24 +348,30 @@ async function main() {
           }
         }
       }
-      // Throwers at the release (vfx tier 3, throw_<unit>): step the sim a frame at a time until the first missile exists, shoot that frame and the one
-      // 150 ms on, so the thing in flight can be read against the thing that was in the hand.
-      for (const group of ["spears", "bombs", "casters"]) {
+      // Throwers at the release (vfx tier 3, throw_<unit>): step the sim a frame at a time until every man in the group has let a missile go (one launch
+      // per thrower, counted as rises in the missile count: a thrower who lets go at the end of his swing is later than one who fires at its start), shoot
+      // that frame and the one 150 ms on, so the thing in flight can be read against the thing that was in the hand.
+      for (const [group, throwers] of [["spears", 2], ["bombs", 3], ["casters", 3]]) {
         await page.evaluate((n) => {
           window.game.resetBattle();
           window.game.runScenarioGalleryValidation(n);
         }, `gallery_throw_${group}`);
-        const spawnMs = await page.evaluate(() => {
+        const spawnMs = await page.evaluate((n) => {
           const missiles = () => JSON.parse(window.render_game_to_text()).projectiles;
+          let launches = 0;
+          let before = 0;
           for (let ms = 0; ms < 4000; ms += 16) {
-            if (missiles() > 0) return ms;
+            const now = missiles();
+            launches += Math.max(0, now - before);
+            before = now;
+            if (launches >= n) return ms;
             window.advanceTime(16);
           }
           return null;
-        });
+        }, throwers);
         summary.notes.push(spawnMs === null
-          ? `throw_${group}: no missile within 4 s, pair skipped`
-          : `throw_${group}: first missile at +${spawnMs} ms`);
+          ? `throw_${group}: not every thrower let go within 4 s, pair skipped`
+          : `throw_${group}: last thrower's missile at +${spawnMs} ms`);
         if (spawnMs === null) continue;
         await shot(page, `throw_${group}_release`);
         await page.evaluate(() => window.advanceTime(150));
