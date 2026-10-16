@@ -10,7 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 288 | swordcaster-flying-sword | vfx.p | approved
 - 289 | bone-mage-staff-raise | vfx.n | approved
 - 289 | press-blow-follow-through | battle-feel.e | approved
 - 290 | harpoon-head | vfx.j | approved
@@ -27,6 +26,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 296 | club-overhead-drop | battle-feel.e | approved
 - 297 | club-cocked-in-press | battle-feel.e | approved
 - 297 | lockbox-belly-two-hand | vfx.p | approved
+- 298 | press-mark-held | battle-feel.e | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -51,12 +51,10 @@ propBuilder.ts:javelin (JAVELIN_LONG,_HEAD_LONG,_HEAD_WIDE,_BARB_LONG,_BARB_SWEE
 propBuilder.ts:bomb (BOMB_FISTS,_NECK,_FUSE; BOMB_SEAT_DOWN,_FORWARD,_TURN; offhand bomb kept) | 2.2 fists, neck .22 fuse .32; seat 1.15/.35 turn 1.7 | 293 | approved | one .15 s ball on the throw grip
 propBuilder.ts:dynamite (DYNAMITE_COLS,_ROWS,_STICK_WIDE,_LONG,_BAND,_SPARK,_SPARK_RAYS; top at .155 s) | 3x2 .075 x .38 s, bands .17; spark .075 s 6 rays | 296 | approved | no spark (295); 3 sticks in a row .05 x .26 s (284); bomb ball .15 s
 propBuilder.ts:lockbox + carry (LOCKBOX_SIZE,_LID,_IRON,_BAND,_PLATE; _carryBoulder at hands midpoint, square to torso) | .26 x .16 x .16 s, lid .35; iron .13,.14,.17 | 295 | approved | short hand sword at the hip
-proceduralAnimation.ts:lockbox arms (LOCKBOX_CARRY raise,out,turn,elbow; elbows out, forearms in round it) | .15, .32, .6, -1.85 | 297 | approved | BOULDER_CARRY -.6/.42/-.75 (box out at arm's length)
+proceduralAnimation.ts:lockbox arms (LOCKBOX_CARRY raise,out,turn,elbow; elbows out, forearms in round it) | .15, .32, .6, -1.85 | 298 | rejected | [P] turn .8 out .25 rejected 298 (box placed from hands); BOULDER_CARRY
 proceduralAnimation.ts:in-reach press beat (PRESS_CLUB_COCK, PRESS_AIM_ARM,_ELBOW, PRESS_BOARD_LINE, PRESS_DOWN_MIN,_MAX) | cock -1.05; arm 1.0; elbow -1.7/-.25; line .25; down .6-1.25 | 297 | approved | cock CLUB_COCK*.9, landed PRESS_BLOW_CLUB 1.2 (above level)
+proceduralAnimation.ts:press mark held (PRESS_MARK_HOLD; marked heavy_swing winds to PRESS_CLUB_COCK, recover stays landed) | 1.5 s | 298 | approved | mark dropped on the first out-of-reach call; swing to CLUB_COCK
 propBuilder.ts:boulder (BOULDER_WIDE,_SQUASH,_COLOR; faceted icosphere, thrown copy flies) | .26 s, y .88 z .94, .34,.31,.28 lit .15 | 292 | approved | head-sized smooth sphere .12 s
 proceduralAnimation.ts:two-hand boulder carry + heave (BOULDER_CARRY,_DIP,_HEAVE; rock at hands midpoint) | carry -.6/.42/-.75; dip .25 trunk .55 knee .7; heave -2.4 trunk -.25 | 292 | approved | one-arm overhand throw (THROW_*)
 
-mapBuilder.ts:lagoonPools (LAGOON_ROUND,_SIDES,_RAGGED,_SHORE,_DEEP; theme.lagoon water/deep/shore) | power 2.6, 30 sides, ragged .08, shore 1.3, deep .58; water .26,.78,.66 deep .1,.56,.56 | 271 | approved | flat .42-alpha blue hazard box
-mapBuilder.ts:meadowRuins (RUIN_FAR,_TOWER,_TOWER_SIDES,_TOWER_TALL,_PILLARS,_BLOCKS,_STONE; boulders+walls hidden) | far 28, tower 6.4 x9 sides 10 m, 5 pillars 1.8-6.8, 9 blocks; stone .76,.73,.64 lit .4 | 271 | approved | sandbox boulders + rubble walls
-mapBuilder.ts:meadowCastle (CASTLE_X,_Z,_WIDE,_DEEP,_WALL,_CORNER,_KEEP,_KEEP_TALL,_TOWER,_TOWER_TALL,_STONE,_ROOF) | x -10 z 31, 26x10 wall 5, corner 3.8, keep 11x11, tower 4.6 to 17; roof .36,.42,.82 | 272 | approved | sandbox boulders/walls/bales + ruin prop
 mapBuilder.ts:oakClump (theme.fieldOaks; OAK_CLUMP, _SPREAD, _TALL, _SHRINK, _LEAF, _DARK; growOak shared with oakRing) | 3-4 oaks, spread 2.6, tall 7, shrink .16; leaf .46,.64,.22 dark .3,.48,.17 | 273 | approved | ball on stalk, canopy grass x.8
