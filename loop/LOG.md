@@ -287,3 +287,4 @@ iter 285 | re-audit (no flips; e plateau cleared), [S] wizard-fireball, [S] harp
 iter 286 | [S] bone-mage-leaf-whirl, [S] press-blow-lands (reverted: regression), [P] fireball-shell | 2/3 approved | passes 68 -> 68
 iter 287 | [S] press-blow-lands (rejected-kept), [S] wizard-cast-hold | 1/2 approved | passes 68 -> 69
 iter 288 | 288.0 evidence press-shot-timing; [S] press-throw-airborne (dropped); [S] swordcaster-flying-sword | 1/1 approved | passes 69/77 -> 69/77
+iter 289 | [S] bone-mage-staff-raise, [S] press-blow-follow-through | 2/2 approved | passes 69 -> 70

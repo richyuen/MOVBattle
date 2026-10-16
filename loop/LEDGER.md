@@ -10,7 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 279 | overhead-blow | battle-feel.e | rejected
 - 280 | overhead-blow | battle-feel.e | approved
 - 281 | overhead-blow-stagger | battle-feel.e | approved
 - 281 | held-prop-release | vfx.i | approved
@@ -27,18 +26,21 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 287 | press-blow-lands | battle-feel.e | rejected-kept
 - 287 | wizard-cast-hold | vfx.o | approved
 - 288 | swordcaster-flying-sword | vfx.p | approved
+- 289 | bone-mage-staff-raise | vfx.n | approved
+- 289 | press-blow-follow-through | battle-feel.e | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
 
 ## Rows
 simulationSystem.ts:pending blow + contact hold (_pendingBlows, blowLandsIn, BLOW_CONTACT_SLACK) | land at the aim's BLOW_LAND, slack .3 | 280 | approved | hit at swing start
-proceduralAnimation.ts:_aimBlow overhead (BLOW_LAND,_AIM_FROM,_HOLD,_ELBOW,_PITCH,_OVERHEAD,_DROP,_CROWN,_LUNGE,_LEAP; _crownOf; FLINCH_*) | crown = hat shell top, leap up to .5 stand; land .55 hold .6, drop .25, flinch .12 .85/.9 | 282 | approved | land at headTop (281); fist at grip of 35deg line (279)
-runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_PITCH,_SPEED,_LIFT,_MAX; x kb x shoveResponse, no topple) | .6 s hold .28 pitch .8; .75/1.0 per kb, max 3.5/3.2 | 287 | rejected-kept | stagger .35 s hold .12 pitch .38 step .3 (286); forced topple (286, rejected)
+proceduralAnimation.ts:_aimBlow overhead + follow (BLOW_LAND,_HOLD,_DROP,_CROWN,_LEAP,_OVERHEAD; BLOW_FOLLOW,_ARM,_PITCH,_LOW) | land .55 hold .6; follow .12 s arm 2.05 pitch +.3 head to .2 stand | 289 | approved | stopped on the crown, arm overhead (282); land at headTop (281)
+runtimeUnit.ts:blow throw (BLOW_THROW_SECONDS,_HOLD,_PITCH,_SPEED,_LIFT,_MAX,_MIN; x kb x shoveResponse, no topple) | .6 s hold .28 pitch .8; .75/1.0 per kb, max 3.5/3.2, min 1.6/4.4 | 289 | approved | no floor (287 rejected-kept); stagger .35 s (286)
 proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; THROWS_HELD_PROP javelin, bomb, stone) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .5 | 283 | approved | javelin, bomb (282); let-go .38, javelin only (281)
 proceduralAnimation.ts:board off (BOARD_OFF_SECONDS,_HOLD,_FLING,_BUCKLE; knockBoardOff from staggerFromBlow) | .6 s hold .25; fling out 1.4 back .6; thigh .9 knee 1.6 sink .35 | 284 | approved | none (board stayed in the wall)
 proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,legs,knee; throwBack; cancels the board-off buckle) | 1.35, .45, .35, .45, .75, .35 | 287 | rejected-kept | none (knees buckled under the blow)
 proceduralAnimation.ts:cast loose/hold (CAST_LOOSE, CAST_HOLD, CAST_LEVEL_TIP; castReleasesIn, fireball pending to the drive) | loose .68 hold .94 tip 0,.1,1 | 287 | approved | fired at cast start, drive .55-.68 out .82-1, tip z+1.1
+proceduralAnimation.ts:bone mage overhead cast (CAST_RAISE_UP,_ARM,_TIP; boneStaff id; leaves pend to CAST_LOOSE from staff head) | up .4, arm -2.9/.32/-.12, tip .15,1,.3 | 289 | approved | wizard level drive, leaves from hand at cast start
 projectileSystem.ts:fireball (FIREBALL_WIDE,_TAIL,_HEART,_SHELL; flat icospheres, heart-only glow; staffHeadOf origin) | .55 wide, tail .8; heart 1,.92,.55 shell 1,.45,.08 opaque, no bloom | 286 | approved | shell alpha .7 heart bloom (285); team-tinted sphere .25 (wizard flew a bolt)
 propBuilder.ts:harpoon gun (HARPOON_GUN_LONG,_WIDE, HARPOON_MUZZLE; rope HARPOON_ROPE_WIDE,_COLOR) | .24 x .11 s, steel .42,.5,.66 lit .25; rope .035 dark | 285 | approved | held spear (shared spear mesh)
 projectileSystem.ts:leaf whirl (LEAF_COUNT,_LONG,_WIDE,_WHIRL,_SPREAD,_SPIN,_COLORS; bone mage projectileHint leaves, from right hand) | 11 x .5 x .19, whirl .55 spread 1.2, spin 9 | 286 | approved | crossbow bolt from the waist
@@ -52,8 +54,6 @@ propBuilder.ts:buildHorse drape (HORSE_CAP_LONG,_END,_SQUARE,_BEVEL,_HEM_SHARE,_
 unitFactory.ts:dressTreeGiant (TREE_GIANT_HOOD, _OPEN, _BEARD, _BEARD_WIDE, _SKIRT, _HEM, _TATTERS; tunic/hair/rags) | hood 1.32 open .42, beard 1.05 x .85, skirt .85 hem 1.3, 8 rags; hair .42,.15,.17 team .1 glow .18 | 265 | approved | hair .3,.15,.12 team .35 (253)
 
 unitFactory.ts:dressHornedEvil (HORNED_EVIL horns, EVIL_*; MONARCH_SPIKES, _PAULDRON, _THICK) | root .24 H, spike .32; lich 7 tines 2.4 H; monarch spike 1.5 H, pauldron .62/.17 | 266 | approved | no monarch (crown hat); plain hood
-vehicleBuilder.ts:buildChariot (CHARIOT_HORSE, HORSE_BARREL, _GALLOP, _CAR_Z, _FLOOR, _RIM, _WHEEL, _SPOKES, _DRIVER; hide) | horse y1.22 barrel .6x.72x1.7; rim 1.2, wheel .92 x6, driver 2.3; hide .74,.5,.4 | 264 | approved | team-box horse + cart, operator 0.46
-propBuilder.ts:feather_hat (FEATHER_HAT_BRIM, _DIP, _COCK, _CROWN, _TALL, _TEAM, _STRAW; FEATHER_LONG, _PIECES, _WIDE, _RAKE, _CURL) | brim 2.05 dip .14 cock .2; straw .8,.54,.3 team .06; feather 1.9 H x4, wide .42 | 264 | approved | purple beret
 mapBuilder.ts:townRing (TOWN_INSET,_WIDE,_DEEP,_STOREY,_FLOORS,_NEAR,_WALLS,_ROOF; ring trees + haze hidden) | inset 5, wide 7.5-10.5, deep 7, storey 3.2 x3-4, near wall z<-30 | 269 | approved | puffball ring + 2 grey house boxes
 propBuilder.ts:scythe steel (blade material; matte stone kind, self-light) | .81,.83,.84 emissive .15 stone | 269 | approved | .72,.73,.78 emissive .05 default
 mapBuilder.ts:townPlaza (PLAZA_STONE, _JOINT, _TONES, _BASIN, _DRESSING; lawn hidden, grout .5,.47,.43; fountain) | 2.6 m, joint .28, tones ~.84,.8,.72 lit .15, basin 7 | 270 | approved | sage lawn, boulders/columns/trees
