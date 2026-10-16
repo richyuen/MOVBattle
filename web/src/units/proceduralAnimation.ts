@@ -171,6 +171,8 @@ const BLOW_DROP = 0.25;
 // The weapon arm in the blow: straight up over his head, this far forward of vertical (rad)
 const BLOW_OVERHEAD = 0.3;
 const BLOW_CROWN = 0.04;
+// Highest the striker springs to bring his fist over a taller man's crown, in shares of his own standing height (see _aimBlow)
+const BLOW_LEAP = 0.5;
 // The striker's legs in the blow: front thigh forward, back thigh behind, knees near straight (hip/knee rotation.x)
 const BLOW_LUNGE = { front: -0.4, back: 0.3, knee: 0.1 };
 // Farthest a man's head may be from the striker's shoulder, in weapon reaches + one arm, for the blow to be aimed at him at all
@@ -330,7 +332,7 @@ export class ProceduralAnimator {
     for (let n: TransformNode | null = mark; n; n = n.parent as TransformNode | null) marks.unshift(n);
     for (const n of marks) n.computeWorldMatrix(true);
     const scale = Math.max(0.001, b.rightHand.absoluteScaling.y);
-    const head = mark.getAbsolutePosition().add(new Vector3(0, BLOW_CROWN * scale, 0));
+    const head = this._crownOf(mark).add(new Vector3(0, BLOW_CROWN * scale, 0));
     const shoulder = b.rightShoulder.getAbsolutePosition();
     const reach = this._weaponReach() * scale;
     const arm = Vector3.Distance(shoulder, b.rightHand.getAbsolutePosition());
@@ -347,14 +349,39 @@ export class ProceduralAnimator {
     b.rightShoulder.rotation.z += (0.08 - b.rightShoulder.rotation.z) * w;
     b.rightElbow.rotation.x += (BLOW_ELBOW - b.rightElbow.rotation.x) * w;
     for (const n of chain) n.computeWorldMatrix(true);
-    // Weapon: laid DOWN from the raised fist, never level or rising. Onto his crown when it stands below the fist; a taller man's crown out of that reach, it
-    // comes down on him BLOW_DROP under the fist, across his shoulders and the board top, the shaft running on past him
+    // A man whose crown stands over the raised fist is leapt at (r2c3: the clubber comes off his feet into the blow): the striker springs up until his fist is
+    // BLOW_DROP over that crown, at most BLOW_LEAP of his own standing height, so the weapon still falls onto the helm and not into the face under it
+    const need = head.y + BLOW_DROP * scale - b.rightHand.getAbsolutePosition().y;
+    if (need > 0) {
+      const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
+      this._hipRest ??= b.hip.position.y;
+      const lift = Math.min(need, BLOW_LEAP * this._hipRest * 2 * rootScale) * w;
+      b.hip.position.y += lift / rootScale;
+      for (const n of chain) n.computeWorldMatrix(true);
+    }
+    // Weapon: laid DOWN from the raised fist, never level or rising. Onto his crown when it stands below the fist; a crown still out of that reach after the
+    // leap, it comes down on him BLOW_DROP under the fist, the shaft running on past him
     const hand = b.rightHand.getAbsolutePosition();
     const onto = head.y <= hand.y - BLOW_DROP * scale ? head : new Vector3(head.x, hand.y - BLOW_DROP * scale, head.z);
     const dir = onto.subtract(hand).normalize();
     this._aimTip = Vector3.TransformNormal(dir, Matrix.RotationY(-b.root.rotation.y)).normalize();
     this._aimWeight = w;
     this._clubHold = Math.max(this._clubHold, w);
+  }
+
+  /**
+   * Where a blow lands on a man: the top of his crown, which under a helm or hat is the top of its shell (the hat's own mesh, not a crest or plume on it),
+   * straight over the head-top mark. The mark's chain is already brought up to this frame.
+   */
+  private _crownOf(mark: TransformNode): Vector3 {
+    const at = mark.getAbsolutePosition().clone();
+    for (const child of mark.getChildren()) {
+      const shell = child as Mesh;
+      if (typeof shell.getBoundingInfo !== "function" || !shell.isEnabled() || !shell.isVisible) continue;
+      shell.computeWorldMatrix(true);
+      at.y = Math.max(at.y, shell.getBoundingInfo().boundingBox.maximumWorld.y);
+    }
+    return at;
   }
 
   // How far the weapon's head stands from the fist, in the hand's own scale: the farthest corner of its meshes' boxes, measured once

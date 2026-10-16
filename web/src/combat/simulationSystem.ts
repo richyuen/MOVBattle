@@ -1519,6 +1519,8 @@ export class SimulationSystem {
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();
+    // ...and under a heavy weapon he goes back whole, from the feet, whether the blow was held for the drop or struck at once from a swing the walk cut short
+    if (attacker.animator.defaultAttackMotion === "heavy_swing") target.staggerFromBlow(attacker.position);
     if (this.hitLog.length >= 200) this.hitLog.shift();
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z });
     // Melee sparks
@@ -1537,8 +1539,6 @@ export class SimulationSystem {
       const reach = attacker.definition.engageRange + this.attackRangePadding + Math.max(0, target.collisionBodyRadius - attacker.collisionBodyRadius) + this.blowStrikeReach;
       if (Vector3.Distance(attacker.position, target.position) > reach) continue;
       this._landMeleeBlow(attacker, target, b.damage, b.splashRadius, b.knockback, now, attacker.getImpactOrigin().position);
-      // ...and he goes back under it whole, from the feet
-      target.staggerFromBlow(attacker.position);
     }
   }
 
