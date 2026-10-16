@@ -344,6 +344,13 @@ export class ProceduralAnimator {
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
     this._attackMotion = motion ?? this.defaultAttackMotion;
+    // Contact-gated drop (trailer_3_sheet_01 r2c3: a clubber at a man has his club coming down on him, never held up over him): a clubber whose club is
+    // already cocked over his shoulder (the ready hold while he closed, or the press cock in the shove) does not wind it up again when the sim calls his
+    // strike at contact; the swing starts at its commit, so the club is coming down on the man within the first frames of the call and on him by
+    // BLOW_LAND of the drop, not held cocked for the windup's share first
+    if (this._attackMotion === "heavy_swing" && this._strikesAtMan() && (this._ready > 0.5 || this._shoveTimer > 0)) {
+      this._attackTimer = this._resolveReleasePoint(0.45) * this._attackDuration;
+    }
     // The next one is in the hand at the windup
     if (this._thrownProp) {
       this._thrownProp.setEnabled(true);
