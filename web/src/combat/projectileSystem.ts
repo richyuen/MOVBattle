@@ -34,6 +34,9 @@ interface ActiveProjectile {
   puffClock?: number;
   /** A thrown held prop: from its middle to the root of its head, for where it stands when it sticks. */
   half?: number;
+  /** A harpoon's rope, from the gun's muzzle (tether) to the missile's tail, laid afresh every frame. */
+  rope?: Mesh;
+  tether?: TransformNode;
 }
 
 /** A soft smoke puff left hanging in a cannonball's wake. */
@@ -74,6 +77,8 @@ interface ProjectileSpawnOptions {
   targetLift?: number;
   /** The prop that was in the thrower's hand: what flies is a copy of it, at its size, not a missile from the catalogue below. */
   heldProp?: TransformNode;
+  /** A harpoon gun's muzzle: a dark rope runs from it to the missile for as long as it flies (units/pirate.harpooner). */
+  tether?: TransformNode;
 }
 
 interface MuzzleFlashOptions {
@@ -95,6 +100,9 @@ const FIREBALL_WIDE = 0.55;
 const FIREBALL_TAIL = 0.8;
 const FIREBALL_HEART = new Color3(1, 0.92, 0.55);
 const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
+// A harpoon's rope (units/pirate.harpooner): dark, thin as a finger, muzzle to harpoon
+const HARPOON_ROPE_WIDE = 0.035;
+const HARPOON_ROPE_COLOR = new Color3(0.13, 0.11, 0.1);
 
 export class ProjectileSystem {
   private _scene: Scene;
@@ -212,7 +220,33 @@ export class ProjectileSystem {
       targetLift: options.targetLift ?? 0.5,
       trailSystem, trailStarted,
       half: held?.half,
+      rope: options.tether ? this._buildRope() : undefined,
+      tether: options.tether,
     });
+    const spawned = this._active[this._active.length - 1];
+    if (spawned.rope) this._layRope(spawned);
+  }
+
+  /** A harpoon's rope: a thin dark line whose length runs along its local z, so it can be laid muzzle to missile by position, lookAt and z scale. */
+  private _buildRope(): Mesh {
+    const rope = MeshBuilder.CreateCylinder("harpoonRope", { height: 1, diameter: HARPOON_ROPE_WIDE, tessellation: 4 }, this._scene);
+    rope.rotation.x = Math.PI / 2;
+    rope.bakeCurrentTransformIntoVertices();
+    rope.material = this._getMat("harpoon_rope", HARPOON_ROPE_COLOR);
+    this._scene.getGlowLayerByName("glow")?.addExcludedMesh(rope);
+    return rope;
+  }
+
+  private _layRope(p: ActiveProjectile): void {
+    if (!p.rope) return;
+    const from = p.tether && !p.tether.isDisposed() ? p.tether.getAbsolutePosition() : p.origin;
+    const to = p.mesh.position;
+    const len = Vector3.Distance(from, to);
+    if (len < 0.01) { p.rope.setEnabled(false); return; }
+    p.rope.setEnabled(true);
+    p.rope.position.copyFrom(from).addInPlace(to).scaleInPlace(0.5);
+    p.rope.lookAt(to);
+    p.rope.scaling.set(1, 1, len);
   }
 
   /**
@@ -299,6 +333,8 @@ export class ProjectileSystem {
         }
       }
 
+      if (p.rope) this._layRope(p);
+
       if (p.shape === "cannonball") {
         p.puffClock = (p.puffClock ?? TRAIL_PUFF_EVERY) + dt;
         while (p.puffClock >= TRAIL_PUFF_EVERY) {
@@ -346,6 +382,7 @@ export class ProjectileSystem {
         const struck = !p.target.isDead;
         this._onImpact(p);
         if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
+        p.rope?.dispose();
         p.mesh.getChildMeshes().find((m) => m.name === "streak")?.dispose(); // the streak is of the flight: a shaft left standing has none
         if (!this._leaveAsLitter(p, struck)) p.mesh.dispose();
         this._active.splice(i, 1);
@@ -848,6 +885,7 @@ export class ProjectileSystem {
   dispose(): void {
     for (const p of this._active) {
       if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
+      p.rope?.dispose();
       p.mesh.dispose();
     }
     for (const f of this._flashes) f.mesh.dispose();

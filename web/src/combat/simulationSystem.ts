@@ -10,6 +10,7 @@ import { VisualEffects } from "./visualEffects";
 import type { ImpactPresentation } from "./impactPresentation";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
+import { HARPOON_MUZZLE } from "../units/propBuilder";
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
 import type { PlacementZone } from "../map/placementValidator";
@@ -69,6 +70,15 @@ function staffHeadOf(unit: RuntimeUnit): TransformNode | null {
   for (const hand of [unit.body.rightHand, unit.body.leftHand]) {
     const orb = hand?.getChildMeshes(false).find((m) => m.name === "orb" && m.isEnabled());
     if (orb) return orb;
+  }
+  return null;
+}
+
+/** The muzzle of the harpoon gun in a harpooner's hand (vfx tier 3, units/pirate.harpooner): the harpoon leaves from it on its rope; null with no gun. */
+function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
+  for (const hand of [unit.body.rightHand, unit.body.leftHand]) {
+    const muzzle = hand?.getDescendants(false, (n) => n.name === HARPOON_MUZZLE)[0];
+    if (muzzle instanceof TransformNode && muzzle.isEnabled()) return muzzle;
   }
   return null;
 }
@@ -1501,6 +1511,16 @@ export class SimulationSystem {
           this.projectileSystem.spawnProjectile(
             "fireball", head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
             undefined, 0, { originLift: 0 },
+          );
+        } else if (harpoonMuzzleOf(attacker)) {
+          // The harpoon leaves the gun's muzzle at the hip, trailing its rope back to it
+          const muzzle = harpoonMuzzleOf(attacker)!;
+          const chain: TransformNode[] = [];
+          for (let n: Node | null = muzzle; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+          for (const n of chain) n.computeWorldMatrix(true);
+          this.projectileSystem.spawnProjectile(
+            resolveProjectileShape(attacker, attackProfile) ?? "spear", muzzle.getAbsolutePosition().clone(), target, damage, knockback, splashRadius,
+            attacker.team, this._units, undefined, 0, { originLift: 0, tether: muzzle },
           );
         } else {
           this.projectileSystem.spawnProjectile(

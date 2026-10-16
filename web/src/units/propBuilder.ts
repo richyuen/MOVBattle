@@ -1417,6 +1417,10 @@ const TREE_CLUB_LOBES: [number, number, number][] = [[0.35, 0.55, 0.25], [1.3, 0
 const DYNAMITE_STICKS = 3;
 const DYNAMITE_STICK_WIDE = 0.05;
 const DYNAMITE_LONG = 0.26;
+// The harpoon gun (units/pirate.harpooner): a canister about a forearm long and half as wide again as the forearm is thick; the harpoon leaves from the node named HARPOON_MUZZLE
+const HARPOON_GUN_LONG = 0.24;
+const HARPOON_GUN_WIDE = 0.11;
+export const HARPOON_MUZZLE = "harpoonMuzzle";
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -1548,9 +1552,46 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       blade.rotation.z = 0.05;
       return blade;
     }
-    case "spear":
-    case "javelin":
     case "harpoon": {
+      // A harpoon gun (units/pirate.harpooner): a chunky blue-grey octagonal canister carried at the hip, a grey barrel stepping down to a ringed
+      // muzzle with the harpoon's dark head sat in it, and a handle on top. Its long axis is the barrel (+y, muzzle up the fist), where a spear lay;
+      // the harpoon leaves from HARPOON_MUZZLE on its rope (simulationSystem harpoonMuzzleOf).
+      // Self-lit, not metal: as metal in the field's shade the canister read as one black drill
+      const steel = mat(scene, new Color3(0.42, 0.5, 0.66), 0.25, "cloth");
+      const grey = mat(scene, new Color3(0.55, 0.56, 0.58), 0.2, "cloth");
+      const dark = mat(scene, new Color3(0.14, 0.14, 0.16), 0, "cloth");
+      const body = MeshBuilder.CreateCylinder("harpoonGun", { height: HARPOON_GUN_LONG * s, diameter: HARPOON_GUN_WIDE * s, tessellation: 8 }, scene);
+      body.material = steel;
+      const cap = MeshBuilder.CreateCylinder("harpoonCap", { height: 0.03 * s, diameter: HARPOON_GUN_WIDE * 1.12 * s, tessellation: 8 }, scene);
+      cap.position.y = -HARPOON_GUN_LONG * 0.5 * s;
+      cap.material = dark;
+      cap.parent = body;
+      const barrel = MeshBuilder.CreateCylinder("harpoonBarrel", { height: 0.16 * s, diameterTop: HARPOON_GUN_WIDE * 0.42 * s, diameterBottom: HARPOON_GUN_WIDE * 0.6 * s, tessellation: 8 }, scene);
+      barrel.position.y = (HARPOON_GUN_LONG * 0.5 + 0.08) * s;
+      barrel.material = grey;
+      barrel.parent = body;
+      for (const y of [0.03, 0.12]) {
+        const ring = MeshBuilder.CreateCylinder("harpoonRing", { height: 0.025 * s, diameter: HARPOON_GUN_WIDE * 0.62 * s, tessellation: 8 }, scene);
+        ring.position.y = (HARPOON_GUN_LONG * 0.5 + y) * s;
+        ring.material = dark;
+        ring.parent = body;
+      }
+      const head = MeshBuilder.CreateCylinder("harpoonHead", { height: 0.09 * s, diameterTop: 0, diameterBottom: HARPOON_GUN_WIDE * 0.38 * s, tessellation: 4 }, scene);
+      head.position.y = (HARPOON_GUN_LONG * 0.5 + 0.2) * s;
+      head.material = dark;
+      head.parent = body;
+      const handle = MeshBuilder.CreateBox("harpoonHandle", { width: 0.025 * s, height: HARPOON_GUN_LONG * 0.5 * s, depth: 0.025 * s }, scene);
+      handle.position.z = -(HARPOON_GUN_WIDE * 0.5 + 0.03) * s;
+      handle.material = dark;
+      handle.parent = body;
+      const muzzle = new TransformNode(HARPOON_MUZZLE, scene);
+      muzzle.position.y = (HARPOON_GUN_LONG * 0.5 + 0.16) * s;
+      muzzle.parent = body;
+      body.position.y = 0.06 * s; // gripped below the middle, the barrel ahead of the fist
+      return body;
+    }
+    case "spear":
+    case "javelin": {
       // Half as tall again as the unit and no more: body height is ~1.3 at scale 1 and s carries the 1.25 exaggeration under the 1.6 prop oversize, so a 1.3 shaft stood twice a man and a rank of them was a forest of poles
       // A stick with a small point: a head 0.09 across and 0.22 long was as big as a torso once oversized, and a 0.036 shaft a pole as thick as its own point.
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.024 * s, tessellation: 6 }, scene);
