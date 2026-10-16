@@ -298,3 +298,4 @@ iter 296 | dynamite-lit-fuse [S], club-overhead-drop [S] | 2/2 approved | passes
 iter 297 | [S] club-cocked-in-press, [S] lockbox-belly-two-hand | 2/2 approved | passes 75 -> 75
 iter 298 | [S] press-mark-held, [P] lockbox-grip-centre | 1/2 approved | passes 75 -> 75
 iter 299 | [S] press-landed-contact, [S] lockbox-body-anchor | 1/2 approved | passes 75 -> 75
+iter 300 | [S] press-club-lands-on-board, [R] swordcaster-blade-ring | 2/2 approved | passes 75 -> 75
