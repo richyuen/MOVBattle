@@ -1651,18 +1651,21 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         stone.refreshBoundingInfo();
       }
       stone.scaling.set(1, AXE_HEAD_SQUASH.y, AXE_HEAD_SQUASH.z);
-      stone.rotation.z = 0.1;
-      // In the handle's frame (its centre the origin): the chunk's middle out to +x of the handle top, its inner third round the handle
-      stone.position.set(AXE_HEAD * 0.24 * L, 0.4 * L, 0);
+      // The chunk's broad face lies in the handle's y-z plane (its width along z, thin across x): the swing runs in that plane, so the face shows from the
+      // side of the swing and from the front of the man standing with the axes at his sides (tribal.chieftain.red.png), like a real axe head
+      stone.rotation.set(0.1, Math.PI / 2, 0);
+      // In the handle's frame (its centre the origin): the chunk's middle out to +z of the handle top, its inner third round the handle
+      stone.position.set(0, 0.4 * L, AXE_HEAD * 0.24 * L);
       stone.material = mat(scene, new Color3(0.5, 0.5, 0.52), 0.12, "stone");
       stone.parent = handle;
-      // The lashing: two rope bands in the plane of the handle, each tilted AXE_LASH.tilt off it the opposite way, wrapped over the chunk's top and under its
-      // bottom round the handle top, so they cross on the joint's face in an X and show again on its back
+      // The lashing: two rope bands each in a plane through the handle and the chunk's thin axis, tilted AXE_LASH.tilt off the handle the opposite ways
+      // about the face's normal, wrapped over the chunk's top and under its bottom round the handle top, so they cross on the broad face in an X
       const rope = mat(scene, new Color3(0.36, 0.22, 0.1), 0.08);
       for (const way of [-1, 1]) {
         const lash = MeshBuilder.CreateTorus("stoneAxeLash", { diameter: AXE_HEAD * AXE_HEAD_SQUASH.y * 1.02 * L, thickness: AXE_LASH.thick * L, tessellation: 10 }, scene);
-        lash.rotation.z = Math.PI / 2 + way * AXE_LASH.tilt;
-        lash.position.set(0.05 * L, 0.4 * L, 0);
+        // Stood up into the x-y plane first, then leant about z
+        lash.rotationQuaternion = Quaternion.RotationAxis(Vector3.Right(), Math.PI / 2).multiply(Quaternion.RotationAxis(Vector3.Forward(), way * AXE_LASH.tilt));
+        lash.position.set(0, 0.4 * L, 0.05 * L);
         lash.material = rope;
         lash.parent = handle;
       }
