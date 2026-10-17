@@ -457,7 +457,8 @@ async function main() {
           if (ok) await shot(page, name);
           else summary.notes.push(`${name}: spawn failed`);
         };
-        const far = d >= 6 ? 3 : 0;
+        // A support unit's enemy stands far off: frame the unit and the ally beside it; a ranged unit: the unit and its missile's first metres
+        const far = support ? 1 : d >= 6 ? 3 : 0;
         await take(`unit_${id}_idle`, null, 1);
         if (release) {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
