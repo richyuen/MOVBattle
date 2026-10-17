@@ -230,6 +230,18 @@ const FLINCH_HOLD = 0.12;
 const BLOW_FOLLOW = 0.12;
 const BLOW_FOLLOW_ARM = 2.05;
 const BLOW_FOLLOW_PITCH = 0.3;
+/*
+ * [S] drive-through (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (the clubber bent ~45 deg at the waist into the blow, the club ~40-70 deg below
+ * level, its head low in front of him): a stand-off blow (solved) is laid at an ANGLE, not hung from a point. On the frame it lands the club falls
+ * BLOW_DRIVE_FALL.land below level and the trunk is pitched BLOW_DRIVE_PITCH.land about the waist; over the BLOW_DRIVE s after (the dwell and the throw) the
+ * club steepens to .end, the trunk bends on to .end and any leap settles back onto his feet, so the fist comes down to his chest and the club ends low.
+ * The fist is solved an arm from the shoulder and a club's reach back up that angle from the strike point, the point sliding down the man's axis (crown,
+ * shoulders, chest, never under BLOW_DRIVE_LOWEST of his height) to wherever that fist can reach: the club is driven down through him, not set on his helm.
+ */
+const BLOW_DRIVE = 0.3;
+const BLOW_DRIVE_FALL = { land: 0.7, end: 1.2 };
+const BLOW_DRIVE_PITCH = { land: 0.6, end: 0.9 };
+const BLOW_DRIVE_LOWEST = 0.75;
 
 // Overhand throw (trailer_3_sheet_01 r3c3: the spear in flight, the thrower's arm out ahead and the hand empty; units/tribal.spear_thrower): through the windup the
 // throwing arm goes up and back until the fist is behind the head (THROW_COCK: shoulder raise, out, elbow folded, chest turned back and leant away, the other arm
@@ -474,7 +486,12 @@ export class ProceduralAnimator {
     // The pose this frame, top down, so the shoulder and the hand are where this frame puts them and not where the last one did
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
-    b.torso.rotation.x += (BLOW_PITCH + BLOW_FOLLOW_PITCH * follow - b.torso.rotation.x) * w;
+    // A stand-off blow drives on through him (drive-through): how far into its BLOW_DRIVE after the landing
+    const du = Math.max(0, Math.min(1, (this._blowClock - this._blowLandsAt) / BLOW_DRIVE));
+    const drive = du * du * (3 - 2 * du);
+    const driven = this._blowSolved;
+    const pitchTo = driven ? BLOW_DRIVE_PITCH.land + (BLOW_DRIVE_PITCH.end - BLOW_DRIVE_PITCH.land) * drive : BLOW_PITCH + BLOW_FOLLOW_PITCH * follow;
+    b.torso.rotation.x += (pitchTo - b.torso.rotation.x) * w;
     // He comes up out of the press crouch into the blow, legs long in a lunge (r2c3), so the club is brought down from over his own head and not poked up from the board rim
     b.leftHip.rotation.x += (BLOW_LUNGE.front - b.leftHip.rotation.x) * w;
     b.rightHip.rotation.x += (BLOW_LUNGE.back - b.rightHip.rotation.x) * w;
@@ -522,7 +539,8 @@ export class ProceduralAnimator {
     for (const n of chain) n.computeWorldMatrix(true);
     // A man whose crown stands over the raised fist is leapt at (r2c3: the clubber comes off his feet into the blow): the striker springs up until his fist is
     // BLOW_DROP over that crown, at most BLOW_LEAP of his own standing height, so the weapon still falls onto the helm and not into the face under it
-    const need = (head.y + BLOW_DROP * scale - b.rightHand.getAbsolutePosition().y) * (struck ? 1 : 1 - follow);
+    // (a driven blow's leap settles back onto his feet as it drives on through, drive-through)
+    const need = (head.y + BLOW_DROP * scale - b.rightHand.getAbsolutePosition().y) * (driven ? 1 - drive : struck ? 1 : 1 - follow);
     if (need > 0) {
       const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
       this._hipRest ??= b.hip.position.y;
@@ -543,8 +561,30 @@ export class ProceduralAnimator {
       this._blowSolved = Vector3.Distance(probe, sh) >= reach - arm0 + BLOW_SOLVE_MARGIN;
     }
     const solved = this._blowSolved;
-    const point = struck ? struck.contact : this._contactOn(mark, b.rightHand.getAbsolutePosition(), solved);
-    if (solved || struck) {
+    let point = struck ? struck.contact : this._contactOn(mark, b.rightHand.getAbsolutePosition(), solved);
+    if (solved) {
+      // drive-through: the club at its angle, the fist an arm from the shoulder and a reach back up that angle from a point on his axis, the point slid
+      // down him (never above where it struck, never under BLOW_DRIVE_LOWEST of his height) to where the fist can be
+      const fall = BLOW_DRIVE_FALL.land + (BLOW_DRIVE_FALL.end - BLOW_DRIVE_FALL.land) * drive;
+      const S = b.rightShoulder.getAbsolutePosition();
+      const armNow = Vector3.Distance(S, b.rightHand.getAbsolutePosition());
+      const tall = Math.max(0.001, head.y - b.root.getAbsolutePosition().y);
+      const fh = Vector3.Dot(point.subtract(S), toward) - Math.cos(fall) * reach;
+      const fy = Math.sqrt(Math.max(0, armNow * armNow - fh * fh));
+      const py = Math.max(head.y - tall * BLOW_DRIVE_LOWEST, Math.min(point.y, S.y + fy - Math.sin(fall) * reach));
+      point = new Vector3(point.x, py, point.z);
+      // the fist where the club at that angle starts, or as near it as the arm goes
+      const fist = point.add(toward.scale(-Math.cos(fall) * reach)).addInPlace(new Vector3(0, Math.sin(fall) * reach, 0));
+      const armTo = fist.subtract(S);
+      if (armTo.lengthSquared() > 1e-6) {
+        const armHold = Vector3.TransformNormal(armTo.normalize(), Matrix.Invert(parent.getWorldMatrix())).normalize();
+        b.rightShoulder.rotation.x += (Math.atan2(-armHold.z, -armHold.y) - b.rightShoulder.rotation.x) * w;
+        for (const n of chain) n.computeWorldMatrix(true);
+      }
+      if (struck && drive >= 1 && Vector3.Distance(b.rightHand.getAbsolutePosition(), point) > reach * BLOW_HOLD_SLIP) {
+        this._blowClock = Math.max(this._blowClock, this._blowLandsAt + BLOW_HOLD - BLOW_HOLD_FADE);
+      }
+    } else if (struck) {
       const shoulderNow = b.rightShoulder.getAbsolutePosition();
       const armNow = Vector3.Distance(shoulderNow, b.rightHand.getAbsolutePosition());
       const d = point.subtract(shoulderNow);
