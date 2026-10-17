@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 311   Last re-audit: 310   Consecutive rejects: 0   Branch: main
+Iteration: 312   Last re-audit: 310   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -10,7 +10,7 @@ camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
 Tier 2 (fully scored at 198, re-audited 220-305):
 battle-feel: e FAIL f PASS g PASS h PASS (3/4) (h cleared by [R] 065ba9e, 242; g cleared by 203b0ca, re-audit 307, judged from duel_club_thrown)
-- e FAIL plateau (4 approved [S] since the 307 list: 308, 309, 310, 311; next pick on it is one [R], mark clears on a re-audit rewrite or an approved [R]) (2 narrowed 310 and 311; 5 added 311 by the review of 8d06ed0) [S since: 4; rejected since: 0] B: 2 melee_club_drop: the two clubs come down parallel at the same ~35 deg angle and end side by side, twin logs laid in one motion rather than separate blows (r2c3: one club down and driven into its man while the next is at a different point of its arc); 5 melee_club_drop: all four struck knights fold into one identical pose on the same step (same trunk pitch, helm angle, dropped sword), a drilled bow (r2c3, r3c1: every man under a blow reacts in his own shape). Struck 1 (305), 3 (308), 4 (309), float of 2 (310), no-reaction of 2 (311). Ref trailer_3_sheet_01 r2c3, r3c1
+- e FAIL (plateau cleared 312 by the approved [R] e425f5d; counts re-based there) (blocker 2 narrowed 310, 311, 312; 5 added 311, struck 312) [S since: 0 (since the 312 [R]); rejected since: 0] B: 2 melee_club_drop: the clubs lie parallel on one ~35 deg diagonal side by side; the one down on the squire and the ones still raised behind sit on the same line, so their different points of the arc do not read, one bundle of logs, not separate blows (r2c3: one club driven down toward the ground, the next held near vertical over the shoulder). Struck 1 (305), 3 (308), 4 (309), float (310), no-reaction (311), 5 (312: one struck man folds, the knights behind stand; no drilled bow). Ref trailer_3_sheet_01 r2c3, r3c1
 unit-look: e PASS f PASS g PASS h PASS (4/4) (h cleared by 810f6c6, 240)
 maps-light: e PASS f PASS g PASS h PASS (4/4)
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
@@ -23,20 +23,20 @@ vfx tier 3: i-p all PASS (8/8) (first scored 281; o d930bf5 287; n 5deb87c 289; 
 Total tier 1 24/24; tier 2 23/24; tier 3 29/29.
 
 ## Focus (every gap this iteration)
-BASE 1ba531f (iter 311, one gap, one critic review)
-- [S] struck-man-buckle (battle-feel.e blocker 2, the no-reaction element) — 8d06ed0 — APPROVE (no-reaction struck, 5 added)
+BASE c1e4c82 (iter 312, one [R] on the plateau criterion, one evidence commit, one critic review)
+- evidence: melee_club_drop pair lens 4.6 m pitched ~17 deg down (was 3.4 m level) — 4094f1d
+- [R] one-blow-per-man (battle-feel.e blockers 2, 5) — e425f5d — APPROVE (5 struck, plateau cleared)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] struck-man-buckle (8d06ed0) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL)
+- GAP: [R] one-blow-per-man (e425f5d) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL, plateau)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-(battle-feel.e is plateau: the [S] below are the rebuild's inputs; the pick is one [R] aimed at blockers 2 and 5 together)
-1. [S] battle-feel.e struck-man variety — blocker 5: buckleUnder adds a seeded twist (+-.25 rad), an uneven knee and a head yaw so men struck on the same step fold differently — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
-2. [S] battle-feel.e staggered blows — blocker 2: a seeded per-attacker phase offset on the club swing, so neighbouring clubbers land at different points of their arcs (one down on its man, the next still high) — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
-3. [S] battle-feel.e head snap along the blow — blocker 2: on the land step the struck man's head and helm knocked sideways along the club's line — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop, duel_club_land
-4. [S] battle-feel.e weapon knocked loose — blocker 2: a buckled man's held weapon slips toward the ground — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
-5. [P] battle-feel.e buckle at the knees, fallout of [S] struck-man-buckle (8d06ed0, 311): BUCKLE.trunk .45 -> .3, BUCKLE.knee 1.1 -> 1.4. NEXT shot: duel_club_land — the hoplite's hands clear of the turf, knees visibly bent, trunk ~30 deg forward, not near horizontal.
-6. [P] battle-feel.e BLOW_LUNGE.knee .1 -> .35, fallout of [S] grounded-lunge (98c137f, 310). NEXT shot: melee_club_drop — the red front clubber's front knee bent, hip lower, boots on their shadows.
+1. [S] battle-feel.e ready-club-upright — blocker 2: a lagged striker (STRIKE_LAG holding him) holds his club near vertical over his shoulder until his beat comes, not at the cocked-back diagonal — ref trailer_3_sheet_01 r2c3 (right clubber) — ours melee_club_drop
+2. [S] battle-feel.e drive-to-ground — blocker 2: the drive-through carries the club head past the struck man down toward the ground, ending down-forward, the opposite slope to a waiting club — ref trailer_3_sheet_01 r2c3 (left clubber) — ours melee_club_drop
+3. [S] battle-feel.e per-man swing plane — blocker 2: each man's swing plane yawed his own way so the clubs cross instead of lying side by side — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
+4. [S] battle-feel.e ragged striker depth — blocker 2: strikers hold their own stand-off depth, so the clubs do not end side by side in one rank — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop, press_clubbers_hit
+5. [P] battle-feel.e BLOW_DRIVE_VARY .15 -> .4 rad, fallout of [R] one-blow-per-man (e425f5d, 312). NEXT shot: melee_club_drop — the club on the squire's helm at a visibly different slope from the three raised behind it.
+6. [P] battle-feel.e buckle at the knees, fallout of 311 (8d06ed0): partly taken by the 312 [R] (trunk .3 knee 1.4); NEXT shot: duel_club_land — hoplite's hands clear of the turf.
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - open-melee-strike-clock [S] [attempts: 1] — 306: triggerAttack starts a cocked clubber's heavy swing at its commit (landing 80 ms after the call, was ~330). Critic: the pair's right-hand clubbers are a stride or more from any blue, the call never issues there; melee_club_drop at +32 ms looks the same whatever the clock
@@ -49,7 +49,7 @@ BASE 1ba531f (iter 311, one gap, one critic review)
 - lockbox-grip-centre [P] [attempts: 1] — 298: LOCKBOX_CARRY turn .8 out .25; box still off-centre
 
 ## Notes for next iteration (max 5 lines)
-- 311: struck-man-buckle (8d06ed0): animator.buckleUnder() called in _landMeleeBlow on a dwelling blow, before reposeNow; overlay after the flinch, cancelled by the throw. In a dense line every man is struck on the same step (the lines are synchronised), hence blockers 2 and 5: an [R] should desynchronise the line (seeded per-man phase) and vary the reaction. 310: grounded-lunge (98c137f) removed BLOW_LEAP (every man of both lines sprang to hip 1.22 from .61 at the first blow; probe) and BLOW_DROP; the hip now sinks by the lunge spread. Duel land now strikes the hoplite's board/shoulder ~45 deg with the clubber grounded. 309: drive-through (8dd8b5d) solves a stand-off fist from a club ANGLE (BLOW_DRIVE_FALL .7->1.2 over BLOW_DRIVE .3 s), point slid down the man's axis to where the arm reaches, trunk pitch .6->.9, leap settles. Bench (hoplite): club 38 deg down at land, ~65 deg at +336. Press (unsolved) blows untouched. Fist stays over the crown because the arm is aimed straight at the fist target; a fist-descent gap would bend the elbow / lower the shoulder.
+- 312: [R] e425f5d: RuntimeUnit.vary(salt) (runtimeId hash) seeds animator.variety; STRIKE_LAG .45 x vary(17) once a swingsAtMan striker stops closing (_strikeReadyAt). runtimeId is a global counter, so a --only look draws other per-man values than the full focus capture (look 1564 ms vs focus 2188 ms first blow): judge from the focus capture, or look with the same --shots set. melee_club_drop now frames from 4.6 m, ~17 deg down. 311: struck-man-buckle (8d06ed0): animator.buckleUnder() called in _landMeleeBlow on a dwelling blow, before reposeNow; overlay after the flinch, cancelled by the throw. In a dense line every man is struck on the same step (the lines are synchronised), hence blockers 2 and 5: an [R] should desynchronise the line (seeded per-man phase) and vary the reaction. 310: grounded-lunge (98c137f) removed BLOW_LEAP (every man of both lines sprang to hip 1.22 from .61 at the first blow; probe) and BLOW_DROP; the hip now sinks by the lunge spread. Duel land now strikes the hoplite's board/shoulder ~45 deg with the clubber grounded. 309: drive-through (8dd8b5d) solves a stand-off fist from a club ANGLE (BLOW_DRIVE_FALL .7->1.2 over BLOW_DRIVE .3 s), point slid down the man's axis to where the arm reaches, trunk pitch .6->.9, leap settles. Bench (hoplite): club 38 deg down at land, ~65 deg at +336. Press (unsolved) blows untouched. Fist stays over the crown because the arm is aimed straight at the fist target; a fist-descent gap would bend the elbow / lower the shoulder.
 - Hand session after 306 (bench, no critic): two plain men meeting no longer knock each other down (run-in speed out of topple pressure). Open-field first blow lands ~2 s (melee_club_drop, clubber -> squire at 1980 ms in 309). big_melee_2s contacts are wall shields.
 - Pose bench: `node loop/scripts/bench.mjs [--attacker id --targets a,b --frames --at ms,ms --trace]` after `npm run build --prefix web`; one man on one in the open, seeded replay. Hoplite duel lands at 1104 ms. g's thrown pose passes (trunk 57 deg).
 - melee_club_drop is shot 32 ms after the land: a struck-react pose must be set on the land step (or move the shot to land + ~120 ms by an evidence commit). Struck men's flinch is held BLOW_DWELL on a dwelling blow (simulationSystem holdFlinch).
