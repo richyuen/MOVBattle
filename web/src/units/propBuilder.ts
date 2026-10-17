@@ -1586,7 +1586,9 @@ const CLUB_HEAD = 0.22;
 // The chieftain's stone axe (units/tribal.chieftain), in the man's heights: handle length, the share below the fist, the stone's length across the top
 const AXE_LONG = 0.4;
 const AXE_GRIP = 0.25;
-const AXE_HEAD = 0.42;
+const AXE_HEAD = 0.55;
+// ...and the stone's squash off a ball of AXE_HEAD across: its height and its thickness as shares of its length (a fat stone, not a lens)
+const AXE_HEAD_SQUASH = { y: 0.8, z: 0.6 };
 // The bone mage's staff (units/tribal.bone_mage), in prop units: its length, the share of it below the fist, the skull's width (the mage's own head is about 0.14)
 const BONE_STAFF_LONG = 0.62;
 const BONE_STAFF_GRIP = 0.4;
@@ -1631,7 +1633,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       handle.material = mat(scene, new Color3(0.5, 0.3, 0.17), 0.1);
       handle.position.y = (0.5 - AXE_GRIP) * L;
       const stone = MeshBuilder.CreateIcoSphere("stoneAxeHead", { radius: AXE_HEAD * 0.5 * L, subdivisions: 1 }, scene);
-      stone.scaling.set(1, 0.62, 0.4);
+      stone.scaling.set(1, AXE_HEAD_SQUASH.y, AXE_HEAD_SQUASH.z);
       stone.rotation.z = 0.12;
       // In the handle's frame (its centre the origin): the stone just under the top end
       stone.position.set(0.04 * L, 0.43 * L, 0);
