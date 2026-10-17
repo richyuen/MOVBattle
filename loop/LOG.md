@@ -307,3 +307,4 @@ hand | press-crown-landing by hand (blowStruck freezes the strike point, hold so
 iter 305 | press-contact-dwell [S], hip-led-launch [S], evidence eca8c11 | 2/2 approved | passes 75 -> 75
 iter 306 | [S] kick-above-hip, [S] open-melee-strike-clock (+ evidence 883d669) | 0/2 approved | passes 75 -> 75
 hand | evidence: capture.mjs seeds Math.random per scene (look = review frame), readiness race 120 s, blockers may be re-aimed at a shot that can show them | passes 75/77 -> 75/77
+hand | 203b0ca battle-feel.g thrown trunk set over its layers (bench 57/58 deg); 59bcad4 capture clock reset + duel_club shots; pose bench loop/scripts/bench.mjs; e root cause = charge topple + contact spacing (design call) | passes 75/77 -> 75/77 (verdicts await re-audit)
