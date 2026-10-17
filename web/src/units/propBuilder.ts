@@ -1579,6 +1579,10 @@ const SWORD_RING_STAGGER = 0.06;
 export const SWORD_RING_BOB = { height: 0.025, rate: 1.7 };
 const SWORD_RING_REFILL = 1.4;
 // The javelin (units/tribal.spear_thrower), in prop units (x s): shaft plus head JAVELIN_LONG, a leaf head JAVELIN_HEAD_LONG x _WIDE, barbs swept back _SWEEP rad
+// The tribal club (units/tribal.clubber), in the man's heights: its length, the share of it below the fist, and the head's width (the grip is 0.056)
+const CLUB_LONG = 0.6;
+const CLUB_GRIP = 0.2;
+const CLUB_HEAD = 0.22;
 const JAVELIN_LONG = 0.4;
 const JAVELIN_HEAD_LONG = 0.13;
 const JAVELIN_HEAD_WIDE = 0.09;
@@ -1595,14 +1599,17 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "none": return null;
 
     case "club": {
-      const m = MeshBuilder.CreateCylinder("club", { height: 0.4 * s, diameterTop: 0.11 * s, diameterBottom: 0.07 * s, tessellation: 6 }, scene);
-      // Head: a thick tapered log continuing the handle, not a ball on a stick
-      const head = MeshBuilder.CreateCylinder("clubHead", { height: 0.25 * s, diameterTop: 0.14 * s, diameterBottom: 0.1 * s, tessellation: 6 }, scene); // at 0.35 long and 0.2 across the club was a log longer than the man carrying it
-      head.position.y = 0.3 * s;
-      head.parent = m;
-      head.material = mat(scene, new Color3(0.36, 0.22, 0.12));
-      m.material = mat(scene, new Color3(0.45, 0.3, 0.15));
-      m.position.y = 0.04 * s;
+      // The tribal club (units/tribal.clubber, spec at CLUB_LONG): one faceted brown stick, wrist-thin where the fists hold it near the butt and swelling
+      // smoothly to a head CLUB_HEAD across (nearly three grips), rounded off at the end; a rope wrap above the hands. Self-lit a little: a plain brown
+      // went near-black in the field's shade. +y up the stick from the fist at the origin, CLUB_GRIP of its length below the fist.
+      const L = fit.stand * CLUB_LONG;
+      const along = [0, 0.1, 0.3, 0.5, 0.68, 0.84, 0.94, 1];
+      const across = [0.032, 0.032, 0.034, 0.05, 0.078, CLUB_HEAD * 0.5, 0.07, 0.025];
+      const line = along.map((u, i) => new Vector3(0, (u - CLUB_GRIP) * L, (i === 4 || i === 5 ? 0.015 : 0) * L));
+      const m = MeshBuilder.CreateTube("club", { path: line, tessellation: 7, cap: Mesh.CAP_ALL, radiusFunction: (i) => across[i] * L }, scene);
+      m.material = mat(scene, new Color3(0.55, 0.36, 0.2), 0.12);
+      m.convertToFlatShadedMesh();
+      addGripWraps(scene, m, [0.06 * L, 0.11 * L, 0.16 * L], 0.08 * L);
       m.rotation.x = Math.PI * 0.14;
       return m;
     }
