@@ -21,6 +21,11 @@ for 25 iterations.
 317 | two-handed grip (6a1bbe4) | tribal.clubber.b | approved
 317 | no back spear (3fd57a5) | tribal.protector.b | approved
 317 | upright carry (b6bc951) | tribal.bone_mage.b | approved
+318 | moss chunks (af37ab3) | tribal.protector.b | pending
+318 | lashed stone head (83bec0d) | tribal.chieftain.b | pending
+318 | spear raised overhead (b194791) | tribal.spear_thrower.b | pending
+318 | forward toss (9a15b0d) | tribal.stoner.c | pending
+318 | leaves along the spike line (000f0de) | tribal.bone_mage.c | pending
 
 ## Spent (never retry as [P])
 (none yet)
@@ -31,8 +36,11 @@ propBuilder.ts:club CLUB_GRIP (share below the fist) | 0.2 | 316 | approved | (n
 propBuilder.ts:club CLUB_HEAD (head width, of CLUB_LONG) | 0.22 | 316 | approved | (new)
 propBuilder.ts:stone_axe AXE_LONG (of the man's height) | 0.4 | 316 | approved | (new)
 propBuilder.ts:stone_axe AXE_GRIP | 0.25 | 316 | approved | (new)
-propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.55 | 317 | approved | 0.42 (316; the 317 [P] is the critic's own 316 fallout entry, not a reversal)
-propBuilder.ts:stone_axe AXE_HEAD_SQUASH (height, thickness of the length) | 0.8, 0.6 | 317 | approved | 0.62, 0.4 (316, inline)
+propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.78 | 318 | pending | 0.55 (317 [P]), 0.42 (316); the 318 [S] rebuilt the chunk and its lashing
+propBuilder.ts:stone_axe AXE_HEAD_SQUASH (height, thickness of the length) | 0.62, 0.5 | 318 | pending | 0.8, 0.6 (317), 0.62, 0.4 (316, inline)
+propBuilder.ts:stone_axe AXE_LASH (band thickness of L, tilt off the handle) | 0.03, 0.5 | 318 | pending | (new; the old bands were two tori round the stone's middle)
+propBuilder.ts:slab SLAB_MOSS (top, bottom chunk size, proud of the face) | 0.13, 0.08, 0.03 | 318 | pending | (new)
+proceduralAnimation.ts:throw JAVELIN_COCK (raise, out, elbow) | -2.8, 0.12, -0.1 | 318 | pending | (new; THROW_COCK -2.9, 0.3, -1.6 stays for bombs)
 propBuilder.ts:slab SLAB_WIDE | 0.34 | 316 | approved | 0.25
 propBuilder.ts:slab SLAB_TALL | 0.71 | 316 | approved | (unchanged by the 316 rebuild)
 propBuilder.ts:slab SLAB_EYE (opening across) | 0.12 | 316 | approved | (new)
@@ -46,3 +54,6 @@ projectileSystem.ts:LAUNCH.spear throw (staggerFromBlow force) | 220 | 317 | app
 proceduralAnimation.ts:club OFFHAND_GRIP_UP (of the club's length) | 0.11 | 317 | approved | (new)
 proceduralAnimation.ts:bone_staff BONE_HOLD (raise, out, elbow) | -0.2, 0.18, -0.5 | 317 | approved | (new; planted, tip 0.03, 1.6, 0.04)
 visualEffects.ts:boneSpikes BONE_SPIKE_NEAR..FAR (m) | 0.45, 1.35 | 317 | approved | (new; EVERY 0.025 s, STEP 0.55 m, STAND 1.6 s)
+visualEffects.ts:boneSpikes BONE_SPIKE_GIRTH (base, grow, m) | 0.32, 0.22 | 318 | pending | 0.14, 0.1 (317, inline)
+projectileSystem.ts:LAUNCH.stone speed, gravity (held only) | 18, 9.8 | 318 | pending | (new; the fixed lob flew at 10 with arc 0.4 m per metre, and still does for a catapult)
+simulationSystem.ts:LEAF_ROW (lift, at, arc per metre) | 0.6, 0.7, 0.03 | 318 | pending | (new; the leaves left the staff head with originLift 0, arc 0.12)
