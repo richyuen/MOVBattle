@@ -131,6 +131,13 @@ const CASTER_CROUCH = 0.3;
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
+/*
+ * [S] two-handed grip (units/tribal.clubber, card Weapon Type Two-handed; tribal.clubber.jpg: both fists stacked on the grip, the off hand above the weapon
+ * hand). A club with nothing in the other hand is held in both: after the carry or the swing has turned the club in the weapon fist, the off hand is reached
+ * onto the shaft OFFHAND_GRIP_UP of the club's length above that fist (the fists touch), wherever the shaft is, cocked over the shoulder, laid on a man or
+ * coming down. The off arm is solved (shoulder swing and elbow fold) for that point every frame, its elbow stood out to his free side and down (see _offhandToGrip).
+ */
+const OFFHAND_GRIP_UP = 0.11;
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
 // cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
@@ -1458,6 +1465,7 @@ export class ProceduralAnimator {
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
+    this._offhandToGrip();
     this._carryBoulder();
     this._tendSwordRing(dt);
     // Flinch overlay (additive), the very last pose layer: laid over the brace, the board's squaring and the carries, so a man behind a board still goes back
@@ -1605,6 +1613,9 @@ export class ProceduralAnimator {
       spin: scythe ? Quaternion.RotationYawPitchRoll(SCYTHE_SPIN * side, 0, 0) : undefined,
     } : null;
     if (scythe) this._carryTurn = 1;
+    // A club with nothing in the other hand is held in both (two-handed grip, see OFFHAND_GRIP_UP), and like the scythe it is in its carry from the first frame
+    this._twoHanded = node?.name === "club" && !this._shieldBoard() && this._body.leftHand.getChildren().every((n) => /HandM$/.test(n.name));
+    if (this._twoHanded) this._carryTurn = 1;
     // The tree's bowed side (its own +x) is turned about the trunk to face back against the way the trunk runs out, which the carry's turn then brings round to face up
     if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side) + Math.PI, 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
@@ -2054,6 +2065,56 @@ export class ProceduralAnimator {
     }
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, node.position);
+  }
+
+  // Whether the weapon hand's club is held in both hands (see the spec at OFFHAND_GRIP_UP): a club, no board and nothing else in the off hand. Set by _buildCarry.
+  private _twoHanded = false;
+  /** The off hand onto the club's grip, just above the weapon fist, by the carry's own turn (two-handed grip). */
+  private _offhandToGrip(): void {
+    const prop = this._carry?.weapon?.prop;
+    if (!this._twoHanded || !prop) return;
+    const s = this._state;
+    if (s !== AnimState.Idle && s !== AnimState.Walking && s !== AnimState.Attacking) return;
+    const w = Math.min(1, this._carryTurn) * (1 - Math.min(1, this._limp));
+    if (w <= 0.01) return;
+    const b = this._body;
+    const club = prop.node as Mesh;
+    // The club as the weapon arm has just been posed: its chain up to the root brought up to date before its grip point is read
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = club; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const length = club.getBoundingInfo().boundingBox.extendSize.y * 2;
+    const grip = Vector3.TransformCoordinates(new Vector3(0, length * OFFHAND_GRIP_UP, 0), club.getWorldMatrix());
+    // Into the off shoulder's frame: its parent's (the torso's) space, where the joint rotations act
+    const frame = b.leftShoulder.parent as TransformNode;
+    frame.computeWorldMatrix(true);
+    const target = Vector3.TransformCoordinates(grip, frame.getWorldMatrix().clone().invert());
+    const shoulder = b.leftShoulder.position;
+    const upper = b.leftElbow.position.length();
+    const fore = b.leftHand.position.length();
+    const toTarget = target.subtract(shoulder);
+    const reach = Math.max(Math.abs(upper - fore) + 0.01, Math.min(upper + fore - 0.01, toTarget.length()));
+    const line = toTarget.normalize();
+    // The elbow stands out to his free side and down, square to the line from shoulder to grip
+    const hint = new Vector3(Math.sign(shoulder.x) || -1, -0.6, -0.2);
+    let out = hint.subtract(line.scale(Vector3.Dot(hint, line)));
+    if (out.lengthSquared() < 1e-4) out = new Vector3(0, 0, -1).subtract(line.scale(line.z));
+    out.normalize();
+    const clamp = (v: number): number => Math.max(-1, Math.min(1, v));
+    // The triangle shoulder-elbow-grip: the upper arm's angle off the line, and the fold at the elbow
+    const swing = Math.acos(clamp((upper * upper + reach * reach - fore * fore) / (2 * upper * reach)));
+    const fold = Math.PI - Math.acos(clamp((upper * upper + fore * fore - reach * reach) / (2 * upper * fore)));
+    // The upper arm hangs down its -y and the elbow folds the forearm toward its +z: -y onto the upper arm's line, +z onto the fold's way (back in toward the line)
+    const arm = line.scale(Math.cos(swing)).add(out.scale(Math.sin(swing)));
+    const bend = out.scale(-1);
+    const across = Vector3.Cross(bend, arm);
+    const m = Matrix.FromValues(across.x, across.y, across.z, 0, -arm.x, -arm.y, -arm.z, 0, bend.x, bend.y, bend.z, 0, 0, 0, 0, 1);
+    const want = Quaternion.FromRotationMatrix(m);
+    const have = Quaternion.FromEulerAngles(b.leftShoulder.rotation.x, b.leftShoulder.rotation.y, b.leftShoulder.rotation.z);
+    Quaternion.Slerp(have, want, w).toEulerAnglesToRef(b.leftShoulder.rotation);
+    b.leftElbow.rotation.x += (-fold - b.leftElbow.rotation.x) * w;
+    b.leftElbow.rotation.y *= 1 - w;
+    b.leftElbow.rotation.z *= 1 - w;
   }
 
   // The spear in a shield man's weapon hand, with the turn and the offset it was strapped on with. Looked up on first use, like the board.
