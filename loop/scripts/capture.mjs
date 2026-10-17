@@ -2,8 +2,8 @@
 //   node loop/scripts/capture.mjs --iter N [--showcase-only] [--regression-only] [--port 4181]
 //   node loop/scripts/capture.mjs --only shot[,shot]   quick look: only those showcase shots, to output/loop/look/
 //   node loop/scripts/capture.mjs --iter N --focus [--shots a,b]   gap review: only the shots named in loop/STATE.md's FAIL blockers
-// Deterministic: Math.random is a seeded PRNG reseeded at every resetBattle, so a scene plays the same frames in a --only look, a --focus
-// review and a full run, whatever ran before it (time is stepped through window.advanceTime only).
+// Deterministic: Math.random is a seeded PRNG reseeded, and the world clock restarted from zero (window.game.resetClock), at every resetBattle, so
+// a scene plays the same frames in a --only look, a --focus review and a full run, whatever ran before it (time is stepped through window.advanceTime only).
 //     and Ranked open gaps (plus --shots, plus each one's motion-pair partner), and the regression scenarios
 // Scenes with no requested shot are skipped, not just left unsaved.
 // Builds web/, serves it with vite preview, drives the game headlessly with time advanced ONLY
@@ -154,7 +154,7 @@ const ALL_SHOTS = [
   "throw_spears_harpoon", ...THROW_GROUPS.flatMap(([g]) => [`throw_${g}_release`, `throw_${g}_flight`]),
   "shield_wall_2500ms", "shield_wall_2650ms",
   ...["placement", "placement_ghost", "500ms", "2s", "2150ms", "5s", "9s", "result", "result_1s"].map((t) => `big_melee_${t}`),
-  "melee_club_drop", ...BIOME_MAPS.map((m) => `biome_${m}`), "biome_spooky", "biome_spooky_battle",
+  "melee_club_drop", "duel_club_land", "duel_club_thrown", ...BIOME_MAPS.map((m) => `biome_${m}`), "biome_spooky", "biome_spooky_battle",
 ];
 // Motion pairs (CRITIC.md): asking for one frame brings its partner
 const PAIRS = [
@@ -333,7 +333,7 @@ async function main() {
     await page.evaluate(() => {
       // Every scene starts with resetBattle: reseed there so each scene's frames are the same whichever scenes ran before it.
       const reset = window.game.resetBattle.bind(window.game);
-      window.game.resetBattle = (...args) => { window.reseed(); return reset(...args); };
+      window.game.resetBattle = (...args) => { window.reseed(); const out = reset(...args); window.game.resetClock?.(); return out; };
       window.game.skipTitleIntro();
       window.advanceTime(50);
     });
@@ -649,6 +649,39 @@ async function main() {
         ? `melee_club_drop: ${clubHit.attackerUnit} -> ${clubHit.targetUnit} landed at ${clubHit.ms} ms, shot 32 ms after the landing`
         : "melee_club_drop: no clubber blow within 7.5 s, shot skipped");
       if (clubHit) await shot(page, "melee_club_drop");
+
+      // One clubber on one hoplite in the open (battle-feel.e and g, the pose bench's duel): the blow side-on at the frame it lands, and the struck man
+      // 336 ms later at the top of his throw, nobody in front of either. Framed across the line between the two men, level, so the club's fall and the
+      // thrown man's trunk and legs read in profile.
+      if (wants("duel_club_land", "duel_club_thrown")) {
+        const frameDuel = () => page.evaluate(() => {
+          const [a, t] = window.__duel;
+          const pa = a.body.root.position, pt = t.body.root.position;
+          let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
+          window.game.frameCamera({ x: (pa.x + pt.x) / 2, y: 1.0, z: (pa.z + pt.z) / 2 }, 5.5, Math.atan2(fx, -fz), Math.PI / 2.1);
+        });
+        const duel = await page.evaluate(() => {
+          window.game.resetBattle();
+          window.advanceTime(50);
+          window.__duel = [window.game.spawnUnit("tribal.clubber", 1, { x: 2.5, z: 0 }), window.game.spawnUnit("ancient.hoplite", 0, { x: -2.5, z: 0 })];
+          window.advanceTime(50);
+          window.game.startBattleImmediate();
+          window.game.clearHitLog();
+          for (let ms = 16; ms < 9000; ms += 16) {
+            window.advanceTime(16);
+            if (window.game.getHitLog().some((h) => h.attackerUnit === "tribal.clubber")) return ms;
+          }
+          return null;
+        });
+        summary.notes.push(duel ? `duel_club: tribal.clubber -> ancient.hoplite landed at ${duel} ms` : "duel_club: no clubber blow within 9 s, shots skipped");
+        if (duel) {
+          await frameDuel();
+          await shot(page, "duel_club_land");
+          await page.evaluate(() => { for (let k = 0; k < 21; k++) window.advanceTime(16); });
+          await frameDuel();
+          await shot(page, "duel_club_thrown");
+        }
+      }
 
       // Every other campaign map at the placement view: one shot per biome.
       for (const mapId of BIOME_MAPS) {

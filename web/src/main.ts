@@ -3630,6 +3630,12 @@ const gameApi = {
   toggleRemoveMode,
   skipTitleIntro: dismissTitleIntro,
   spawnUnit: spawnHarnessUnit,
+  // Capture harness: restart the world clock from zero after a reset, so a scene plays the same frames whatever ran before it in the page (absolute
+  // times feed decision schedules and cycle phases). Not called by the game or the regression scenarios, whose timing is left as it was.
+  resetClock: () => {
+    worldTimeSeconds = 0;
+    landingHold = null;
+  },
   // Capture harness: a first draw skips meshes whose shaders are still compiling, so wait and redraw.
   // Melee blows landed since the last clear, so a capture can shoot the frame a blow lands on.
   getHitLog: () => simulation.hitLog.slice(),
