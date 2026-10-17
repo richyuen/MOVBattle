@@ -472,7 +472,10 @@ async function main() {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
           if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
           await take(`unit_${id}_release`, release.tick, far);
-          await take(`unit_${id}_flight`, release.tick + 9, far);
+          // A thrown missile at a man who has closed in (the stoner's boulder at 3 m) lands inside the motion pair's 9 ticks: its flight shot is taken
+          // under half way to the hit instead, so the missile is still in the air and not yet its impact dust
+          const flightAt = release.kind === "throw" && impact && impact.tick - release.tick < 15 ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : 9;
+          await take(`unit_${id}_flight`, release.tick + flightAt, far);
           await take(`unit_${id}_struck`, struckTick, 2);
         }
         if (ability) {
