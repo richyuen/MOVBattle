@@ -58,9 +58,11 @@ const SWORD_RISE_IN = 0.45;
  * hand at LAUNCH speed and its arc is the gravity parabola solved for the low launch angle that carries it to the man under LAUNCH gravity, so a near target
  * gets a flat throw and only a far one a lob. Flight stays the straight lerp plus 4·A·t·(1−t) of the update, which is exact ballistic motion for A = g·T²/8.
  * Shapes not listed keep the fixed arc-per-metre lob of spawnProjectile. A man beyond the throw's reach (no solution) keeps that lob too.
+ * `throw` (the card's force 220, against a club's 20): a man it strikes and leaves standing is thrown back off his feet along its line, as under a heavy blow
+ * (RuntimeUnit.staggerFromBlow), the shaft stuck in him and going with him (_leaveAsLitter).
  */
-const LAUNCH: Partial<Record<ProjectileShape, { speed: number; gravity: number }>> = {
-  spear: { speed: 20, gravity: 9.8 },
+const LAUNCH: Partial<Record<ProjectileShape, { speed: number; gravity: number; throw?: number }>> = {
+  spear: { speed: 20, gravity: 9.8, throw: 220 },
 };
 
 /** The low-angle ballistic solution from `from` to `to` at launch speed v under gravity g: flight time and the arc's peak above the straight line, or null when out of reach. */
@@ -648,6 +650,9 @@ export class ProjectileSystem {
       // Direct hit
       if (!p.target.isDead) {
         const delta = p.target.applyDamage(p.damage, p.knockback);
+        // A thrown spear launches the man it sticks in (LAUNCH.throw): thrown back off his feet from where it was thrown, not merely nudged
+        const launch = LAUNCH[p.shape];
+        if (launch?.throw && !p.target.isDead) p.target.staggerFromBlow(p.origin, launch.throw);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
             source: "projectile",
