@@ -1583,6 +1583,10 @@ const SWORD_RING_REFILL = 1.4;
 const CLUB_LONG = 0.6;
 const CLUB_GRIP = 0.2;
 const CLUB_HEAD = 0.22;
+// The chieftain's stone axe (units/tribal.chieftain), in the man's heights: handle length, the share below the fist, the stone's length across the top
+const AXE_LONG = 0.4;
+const AXE_GRIP = 0.25;
+const AXE_HEAD = 0.42;
 const JAVELIN_LONG = 0.4;
 const JAVELIN_HEAD_LONG = 0.13;
 const JAVELIN_HEAD_WIDE = 0.09;
@@ -1612,6 +1616,33 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       addGripWraps(scene, m, [0.06 * L, 0.11 * L, 0.16 * L], 0.08 * L);
       m.rotation.x = Math.PI * 0.14;
       return m;
+    }
+    case "stone_axe": {
+      // The chieftain's stone axe (units/tribal.chieftain, spec at AXE_LONG): a thin brown handle AXE_LONG of his height, the fist AXE_GRIP up from the
+      // butt, and a grey faceted stone the size of his own head laid across its top, lashed on with two rope bands crossing the joint. Stone and wood a
+      // little self-lit so they read grey and brown in the shade, never iron.
+      const L = fit.stand * AXE_LONG;
+      // Named "handle" like the iron axe's: the animator turns a hafted head in the fist by that name (proceduralAnimation, the carry's node)
+      const handle = MeshBuilder.CreateCylinder("handle", { height: L, diameterTop: 0.05 * L, diameterBottom: 0.065 * L, tessellation: 6 }, scene);
+      handle.material = mat(scene, new Color3(0.5, 0.3, 0.17), 0.1);
+      handle.position.y = (0.5 - AXE_GRIP) * L;
+      const stone = MeshBuilder.CreateIcoSphere("stoneAxeHead", { radius: AXE_HEAD * 0.5 * L, subdivisions: 1 }, scene);
+      stone.scaling.set(1, 0.62, 0.4);
+      stone.rotation.z = 0.12;
+      // In the handle's frame (its centre the origin): the stone just under the top end
+      stone.position.set(0.04 * L, 0.43 * L, 0);
+      stone.material = mat(scene, new Color3(0.5, 0.5, 0.52), 0.12, "stone");
+      stone.convertToFlatShadedMesh();
+      stone.parent = handle;
+      const rope = mat(scene, new Color3(0.36, 0.22, 0.1));
+      for (const tilt of [-0.5, 0.5]) {
+        const lash = MeshBuilder.CreateTorus("stoneAxeLash", { diameter: AXE_HEAD * 0.66 * L, thickness: 0.03 * L, tessellation: 8 }, scene);
+        lash.rotation.set(Math.PI / 2, 0, tilt);
+        lash.position.set(0.02 * L, 0.43 * L, 0);
+        lash.material = rope;
+        lash.parent = handle;
+      }
+      return handle;
     }
     case "tree_club": {
       // An uprooted tree swung as a club, built to the spec above TREE_CLUB_LONG

@@ -4,7 +4,7 @@ import { getUnit } from "../data/unitDefinitions";
 import { ROSTER_MANIFEST } from "../data/rosterManifest";
 
 export type WeaponType =
-  | "none" | "club" | "sword" | "greatsword" | "spear" | "javelin"
+  | "none" | "club" | "stone_axe" | "sword" | "greatsword" | "spear" | "javelin"
   | "axe" | "hammer" | "mace" | "staff" | "dagger"
   | "pickaxe" | "boxing_glove"
   | "blowgun"
@@ -235,7 +235,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.1, headSize: 1.15 }, "bone_staff", "antler_skull", "none", "none", "#FFFFF0",
   ),
   "tribal.chieftain": vis(
-    { scale: 1.35, bulk: 1.3, headSize: 1.1 }, "club", "feather_headdress", "none", "cape", "#FFD700",
+    { scale: 1.35, bulk: 1.3, headSize: 1.1 }, "stone_axe", "feather_headdress", "none", "cape", "#FFD700", "stone_axe",
   ),
   "tribal.mammoth": vis(
     { scale: 2.8, bulk: 2.0, headSize: 1.6, legLength: 0.8 }, "none", "none", "none", "mount_mammoth", "#8B7355",
@@ -1189,6 +1189,7 @@ function inferWeapon(hint: string | undefined, name: string): WeaponType {
 export function inferWeaponPresentationFamily(weapon: WeaponType): WeaponPresentationFamily {
   switch (weapon) {
     case "club":
+    case "stone_axe":
     case "mace":
     case "hammer":
     case "pickaxe":
