@@ -175,6 +175,16 @@ const PRESS_BLOW_COCK = 0.1;
 const PRESS_BLOW_SLAM = 0.08;
 // A rear-rank clubber's resting blow between beats: this far down from the cock toward landed (1), the club laid forward over the man ahead (see readyBlow).
 const REAR_CLUB_REST = 0.85;
+/*
+ * [S] ready-club-upright (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (the right clubber, waiting his turn beside a club that is down on its man): a
+ * striker the sim holds off his first blow (STRIKE_LAG, waitBeat) stands his club near upright over his shoulder, not cocked back on the diagonal every
+ * cocked club shares: the weapon arm raised WAIT_CLUB.arm (fist about shoulder height, out in front), elbow WAIT_CLUB.elbow, the club WAIT_CLUB.arc from
+ * vertical. So a waiting club and a landed one cross in a line instead of lying side by side. Eased in and out over ~0.15 s; his blow starts from it.
+ */
+const WAIT_CLUB = { arm: -1.25, out: 0.2, elbow: -1.5, arc: 0.12 };
+// ...and a marked man's windup lifts the club through that upright and tips it back to his own cock only near the commit: this share of PRESS_CLUB_COCK at
+// least (each man his own, up to the full cock), reached at the commit
+const WAIT_CLUB_DEPTH = { min: 0.45 };
 // How far the arm comes down from the cock onto the man: the fist stops raised before the striker's face, so the club laid down from it lands on the board top or
 // the head in front, not level into the board at the belly.
 const PRESS_BLOW_ARM = 1.7;
@@ -779,6 +789,12 @@ export class ProceduralAnimator {
   }
   // A clubber a rank back behind a man of his own side (see readyBlow): between beats his club rests low over that man's shoulder, not cocked
   private _restLowTimer = 0;
+  /** The sim holds him off his first blow this step (STRIKE_LAG): his club stands near upright over his shoulder (WAIT_CLUB) till his beat. */
+  waitBeat(): void {
+    this._waitTimer = 0.12;
+  }
+  private _waitTimer = 0;
+  private _wait = 0;
   private _strikeTimer = 0;
   private _readyTimer = 0;
   private _ready = 0;
@@ -1343,6 +1359,8 @@ export class ProceduralAnimator {
     this._strikeTimer -= dt;
     this._pressMarkTimer -= dt;
     this._ready += ((this._readyTimer > 0 ? 1 : 0) - this._ready) * Math.min(1, dt * 6);
+    this._waitTimer -= dt;
+    this._wait += ((this._waitTimer > 0 ? 1 : 0) - this._wait) * Math.min(1, dt * 8);
     const cocked = this._ready * (1 - Math.min(1, this._shove)) * (1 - Math.min(1, this._limp));
     if (cocked > 0.01 && this._state !== AnimState.Attacking && this._state !== AnimState.Dead && this.walkStyle !== "quadruped" && this.defaultAttackMotion === "heavy_swing" && (this._carry ??= this._buildCarry()).weapon?.prop) {
       const b = this._body;
@@ -1361,9 +1379,17 @@ export class ProceduralAnimator {
       const elbow = aimed ? PRESS_AIM_ELBOW.cock + (PRESS_AIM_ELBOW.land - PRESS_AIM_ELBOW.cock) * blow : -1.3 + 1.15 * blow;
       b.rightElbow.rotation.x += (elbow - b.rightElbow.rotation.x) * cocked;
       b.torso.rotation.x += 0.45 * blow * cocked;
+      // Held off his first blow (ready-club-upright): the club stood near upright over his shoulder instead of cocked back
+      const wait = this._wait * (1 - Math.min(1, blow * 4));
+      if (wait > 0.01) {
+        b.rightShoulder.rotation.x += (WAIT_CLUB.arm + heave * 0.5 - b.rightShoulder.rotation.x) * wait * cocked;
+        b.rightShoulder.rotation.z += (WAIT_CLUB.out - b.rightShoulder.rotation.z) * wait * cocked;
+        b.rightElbow.rotation.x += (WAIT_CLUB.elbow - b.rightElbow.rotation.x) * wait * cocked;
+      }
       if (this._clubHold <= 0.01) {
         this._clubArc = aimed ? PRESS_CLUB_COCK + heave : CLUB_COCK * 0.9 + heave + (PRESS_BLOW_CLUB - CLUB_COCK * 0.9 - heave) * blow;
-        this._pressLand = aimed ? blow : 0;
+        this._clubArc += (WAIT_CLUB.arc + heave * 0.3 - this._clubArc) * wait;
+        this._pressLand = aimed ? blow * (1 - wait) : 0;
       }
       this._clubHold = Math.max(this._clubHold, cocked);
     }
@@ -2742,6 +2768,8 @@ export class ProceduralAnimator {
     const side = Math.sign(b.rightShoulder.position.x) || 1;
     const pressed = this._pressAim() !== null;
     const cockElbow = pressed ? PRESS_AIM_ELBOW.cock : -1.25;
+    // his own cock depth on a marked man (ready-club-upright)
+    const depth = WAIT_CLUB_DEPTH.min + (1 - WAIT_CLUB_DEPTH.min) * (this._vary(8) * 0.5 + 0.5);
     if (progress < commit) {
       const w = progress / Math.max(commit, 0.001);
       const windUp = w * (2 - w); // eased out: up fast, slowing into the cock
@@ -2757,7 +2785,9 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x = 0.18 * windUp;
       b.leftHip.rotation.x = -0.22 * windUp;
       b.leftKnee.rotation.x = 0.12 * windUp;
-      this._clubArc = pressed ? PRESS_CLUB_COCK : CLUB_COCK * windUp;
+      // On a marked man the club comes up through upright and only tips back to his own cock (WAIT_CLUB_DEPTH of PRESS_CLUB_COCK, per man) as the windup
+      // nears its commit (ready-club-upright), so neighbours a beat apart hold their clubs at different slopes, not all on the one cocked diagonal
+      this._clubArc = pressed ? WAIT_CLUB.arc + (PRESS_CLUB_COCK * depth - WAIT_CLUB.arc) * windUp * windUp * windUp : CLUB_COCK * windUp;
     } else {
       const swing = Math.min(1, (progress - commit) / Math.max(drop - commit, 0.001));
       const eased = swing * swing * (3 - 2 * swing) * 0.4 + swing * swing * 0.6; // slow off the cock, fastest at the bottom
@@ -2777,7 +2807,7 @@ export class ProceduralAnimator {
       b.leftHip.rotation.x = -0.22 - 0.2 * e;
       b.leftKnee.rotation.x = 0.12 + 0.23 * e;
       if (pressed) {
-        this._clubArc = PRESS_CLUB_COCK;
+        this._clubArc = PRESS_CLUB_COCK * depth;
         this._pressLand = e;
       } else this._clubArc = CLUB_COCK + (CLUB_LAND - CLUB_COCK) * e;
     }

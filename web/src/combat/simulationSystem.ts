@@ -715,6 +715,8 @@ export class SimulationSystem {
         else {
           if (!this._strikeReadyAt.has(unit)) this._strikeReadyAt.set(unit, now + STRIKE_LAG * unit.vary(17));
           lagged = now < (this._strikeReadyAt.get(unit) ?? 0);
+          // ...his club stood upright over his shoulder meanwhile (ready-club-upright)
+          if (lagged) unit.animator.waitBeat();
         }
       }
       if (canAttack && !closing && !lagged) {
