@@ -1587,6 +1587,10 @@ const CLUB_HEAD = 0.22;
 const AXE_LONG = 0.4;
 const AXE_GRIP = 0.25;
 const AXE_HEAD = 0.42;
+// The bone mage's staff (units/tribal.bone_mage), in prop units: its length, the share of it below the fist, the skull's width (the mage's own head is about 0.14)
+const BONE_STAFF_LONG = 0.62;
+const BONE_STAFF_GRIP = 0.4;
+const BONE_STAFF_SKULL = 0.1;
 const JAVELIN_LONG = 0.4;
 const JAVELIN_HEAD_LONG = 0.13;
 const JAVELIN_HEAD_WIDE = 0.09;
@@ -1959,22 +1963,65 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       shaft.rotation.x = -0.3;
       return shaft;
     }
+    case "bone_staff": {
+      // The bone mage's staff (units/tribal.bone_mage, spec at BONE_STAFF_LONG): a crooked brown branch BONE_STAFF_LONG long, the fist BONE_STAFF_GRIP up it,
+      // topped by a stag's skull (the cranium a head BONE_STAFF_SKULL across, dark eye sockets, the long muzzle and the antler rack of addDeerSkull, bone and
+      // antler one shade off the mage's own mask) with a rope round the neck of the shaft and red-brown leaves hanging from it. The root keeps the plain
+      // staff's name and its "orb" child (the cranium): the animator's overhead cast looks for a staff with an orb on it and the boneStaff id.
+      const L = BONE_STAFF_LONG * s;
+      const bark = mat(scene, new Color3(0.42, 0.27, 0.16), 0.1);
+      const kinks = [[0, 0], [0.012, -0.008], [-0.015, 0.01], [0.01, 0.014], [-0.008, -0.012], [0.006, 0.004], [0, 0]];
+      const line = kinks.map(([x, z], i) => new Vector3(x * L, (i / (kinks.length - 1) - BONE_STAFF_GRIP) * L, z * L));
+      const shaft = MeshBuilder.CreateTube("staff", { path: line, tessellation: 6, cap: Mesh.CAP_ALL, radiusFunction: (i) => (0.022 - i * 0.0012) * L }, scene);
+      shaft.material = bark;
+      shaft.convertToFlatShadedMesh();
+      const top = line[line.length - 1];
+      const W = BONE_STAFF_SKULL * s;
+      const bone = mat(scene, new Color3(0.86, 0.74, 0.52), 0.1);
+      const skull = MeshBuilder.CreateSphere("orb", { diameterX: W, diameterY: W * 0.9, diameterZ: W * 1.05, segments: 6 }, scene);
+      skull.position.set(top.x, top.y + W * 0.4, top.z);
+      skull.material = bone;
+      skull.convertToFlatShadedMesh();
+      skull.parent = shaft;
+      const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
+      for (const side of [-1, 1]) {
+        const hole = MeshBuilder.CreateCylinder("staffSkullEye", { height: W * 0.06, diameter: W * 0.3, tessellation: 6 }, scene);
+        hole.rotation.x = Math.PI / 2;
+        hole.rotation.y = side * 0.4;
+        hole.position.set(side * W * 0.26, W * 0.05, W * 0.46);
+        hole.material = socket;
+        hole.parent = skull;
+      }
+      // The muzzle and the antlers, cut from the mask's spec to this cranium (W across, a cranium-height tall): the bone material is read off the skull itself
+      addDeerSkull(scene, skull, skull, W, W * 0.9, W * 0.45, W * 0.5, (v) => v);
+      const rope = MeshBuilder.CreateTorus("staffRope", { diameter: 0.07 * L, thickness: 0.016 * L, tessellation: 8 }, scene);
+      rope.position.set(top.x, top.y - 0.02 * L, top.z);
+      rope.material = mat(scene, new Color3(0.36, 0.22, 0.1));
+      rope.parent = shaft;
+      const leaves = [new Color3(0.62, 0.2, 0.12), new Color3(0.58, 0.3, 0.1), new Color3(0.5, 0.14, 0.1)];
+      [[-1, 0.3], [1, -0.2], [-0.6, -0.8], [0.7, 0.7]].forEach(([x, z], i) => {
+        const leaf = MeshBuilder.CreateCylinder("staffLeaf", { height: 0.1 * L, diameterTop: 0, diameterBottom: 0.045 * L, tessellation: 4 }, scene);
+        leaf.scaling.z = 0.25;
+        leaf.rotation.set(0.35 * z, i * 0.8, 0.3 * x);
+        leaf.position.set(top.x + x * 0.04 * L, top.y - 0.07 * L, top.z + z * 0.03 * L);
+        leaf.material = mat(scene, leaves[i % 3], 0.15, "cloth");
+        leaf.parent = shaft;
+      });
+      shaft.id = "boneStaff";
+      return shaft;
+    }
     case "staff":
-    case "bone_staff":
     case "bo_staff": {
-      const color = type === "bone_staff" ? new Color3(0.9, 0.85, 0.75)
-        : type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
+      const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);
       shaft.material = mat(scene, color);
-      if (type === "staff" || type === "bone_staff") {
+      if (type === "staff") {
         const orb = MeshBuilder.CreateSphere("orb", { diameter: 0.1 * s, segments: 8 }, scene);
         orb.position.y = 0.42 * s; orb.parent = shaft;
         orb.material = mat(scene, accent, 0.3);
       }
       shaft.position.y = 0.2 * s;
-      // A bone mage casts with this staff stood up over his head, not driven level (proceduralAnimation CAST_RAISE_*)
-      if (type === "bone_staff") shaft.id = "boneStaff";
       return shaft;
     }
     case "bow":
