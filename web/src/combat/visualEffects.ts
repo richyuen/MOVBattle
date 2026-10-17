@@ -57,6 +57,8 @@ const BONE_SPIKE_NEAR = 0.45;
 const BONE_SPIKE_FAR = 1.35;
 const BONE_SPIKE_LEAN = 0.22;
 const BONE_SPIKE_MAX = 14;
+// ...and a spike's girth at the ground (m): the nearest spike's and how much more the farthest has (tribal.bone_mage.png: fat tusks, not needles)
+const BONE_SPIKE_GIRTH = { base: 0.32, grow: 0.22 };
 
 /** Where the bone mage's row begins: the first spike's ground point, BONE_SPIKE_START ahead of the caster's feet toward his mark (nearer for a close one). */
 export function boneSpikeRowNear(from: Vector3, to: Vector3): Vector3 {
@@ -472,7 +474,7 @@ export class VisualEffects {
       pivot.rotation.set(0, Math.atan2(ux, uz), 0);
       pivot.rotation.x = BONE_SPIKE_LEAN + (hash(i, 3) - 0.5) * 0.2;
       pivot.rotation.z = (hash(i, 4) - 0.5) * 0.3;
-      const spike = MeshBuilder.CreateCylinder("boneSpike", { height: h, diameterTop: 0, diameterBottom: 0.14 + 0.1 * u, tessellation: 5 }, this._scene);
+      const spike = MeshBuilder.CreateCylinder("boneSpike", { height: h, diameterTop: 0, diameterBottom: BONE_SPIKE_GIRTH.base + BONE_SPIKE_GIRTH.grow * u, tessellation: 5 }, this._scene);
       spike.position.y = h / 2;
       spike.rotation.y = hash(i, 5) * Math.PI;
       spike.material = bone;
