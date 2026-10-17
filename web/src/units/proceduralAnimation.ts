@@ -352,6 +352,10 @@ const CAST_LEVEL_TIP = new Vector3(0, 0.1, 1).normalize();
 const CAST_RAISE_UP = 0.4;
 const CAST_RAISE_ARM = { raise: -2.9, out: 0.32, elbow: -0.12 };
 const CAST_RAISE_TIP = new Vector3(0.15, 1, 0.3).normalize();
+// The bone mage's carry (units/tribal.bone_mage, tribal.bone_mage.red.png: the crooked staff stood upright beside the body, its butt by the foot, the skull at
+// shoulder height): the staff arm (shoulder raise and out, elbow) with the fist at the hip and the staff planted, the free arm hanging, and the staff's tip before
+// the per-man jitter (x toward the staff side). One hold for every bone mage, not the three slants a wizard's staff takes, and in it from the first frame.
+const BONE_HOLD = { raise: -0.2, out: 0.18, elbow: -0.5, left: { raise: -0.15, out: 0.12, elbow: -0.35 }, tip: [0.03, 1.6, 0.04] as const };
 const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0, head: 0.1, seat: 0.92, legTrail: 0.7, legKick: -1.22, kneeTrail: 0.15, kneeKick: 0.1 };
 
 export class ProceduralAnimator {
@@ -1647,7 +1651,11 @@ export class ProceduralAnimator {
         : { raise: -0.1 - h(81) * 0.2, out: 0.05 + h(82) * 0.12, elbow: -0.75 - h(83) * 0.3, tip: lean(-0.75, 0.5, 0.3), left: { raise: -0.35 - h(97) * 0.2, out: -0.2 - h(98) * 0.15, elbow: -0.95 - h(99) * 0.3 } };
     const armed = this.locomotionBias === "aimed" && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     const staff = rod?.name === "staff";
-    const rodHold = !rod ? null : staff
+    const bone = rod?.id === "boneStaff";
+    if (bone) this._carryTurn = 1;
+    const rodHold = !rod ? null : bone
+      ? { raise: BONE_HOLD.raise - h(81) * 0.1, out: BONE_HOLD.out + h(82) * 0.08, elbow: BONE_HOLD.elbow - h(83) * 0.15, tip: lean(...BONE_HOLD.tip), left: { raise: BONE_HOLD.left.raise - h(97) * 0.15, out: BONE_HOLD.left.out + h(98) * 0.1, elbow: BONE_HOLD.left.elbow - h(99) * 0.2 }, plant: true }
+      : staff
       ? stand < 0.45
         ? { raise: -0.7 - h(81) * 0.2, out: 0.3 + h(82) * 0.15, elbow: -1.0 - h(83) * 0.3, tip: lean(0.12, 1.6, 0.05), left: { raise: -1.3 - h(97) * 0.3, out: 0.35 + h(98) * 0.2, elbow: -1.3 - h(99) * 0.3 }, plant: true }
         : stand < 0.75
