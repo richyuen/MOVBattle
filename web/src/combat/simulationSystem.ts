@@ -180,6 +180,8 @@ interface UnitPathState {
 export class SimulationSystem {
   /** Melee blows landed, newest last, for evidence captures that shoot the frame a blow lands on: the striker's impact point and the struck man's head. Capped at 200. */
   readonly hitLog: Array<{ t: number; attackerUnit: string; targetUnit: string; x: number; y: number; z: number; head: { x: number; y: number; z: number } }> = [];
+  /** Abilities and special fires, newest last, for evidence captures that shoot the frame a mechanic fires on (loop v2 criterion c). Capped at 200; the same kind on the same man within 0.5 s is one entry. */
+  readonly abilityLog: Array<{ t: number; unit: string; kind: string; x: number; y: number; z: number }> = [];
   private _units: RuntimeUnit[] = [];
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
@@ -607,6 +609,7 @@ export class SimulationSystem {
       this._clearPathState(unit);
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(newPos);
       unit.setAttackCooldown(now, attackProfile.cooldown * 0.5);
+      this._logAbility(unit, "teleport", now);
       return;
     }
 
@@ -630,6 +633,7 @@ export class SimulationSystem {
         );
       }
       unit.setAttackCooldown(now, attackProfile.cooldown * (preset === "iconic_super_peasant" ? 0.18 : 0.32));
+      this._logAbility(unit, "blink", now);
       return;
     }
 
@@ -641,6 +645,7 @@ export class SimulationSystem {
       unit.teleportTo(newPos);
       this._clearPathState(unit);
       unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
+      this._logAbility(unit, "leap", now);
       return;
     }
 
@@ -652,6 +657,7 @@ export class SimulationSystem {
         return;
       }
       this._moveUnitToward(unit, enemy.position, engageDistance, now);
+      if (!unit.isSpinning) this._logAbility(unit, "spin", now);
       unit.setSpinning(true);
       if (this.visualEffects && Math.random() < 0.35) {
         this.visualEffects.spawnTornadoDust(unit.position);
@@ -757,6 +763,7 @@ export class SimulationSystem {
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(ally.position);
     }
     ally.heal(healAmount);
+    this._logAbility(supporter, "heal", now, ally.position);
   }
 
   private _moveUnitToward(unit: RuntimeUnit, desired: Vector3, engageDistance: number, now: number): void {
@@ -1272,7 +1279,7 @@ export class SimulationSystem {
     }
 
     const abilities = new Set(attacker.definition.abilities ?? []);
-    let damage = attackProfile.damage;
+    let damage = attackProfile.damage * (attacker.definition.damageMultiplier ?? 1);
     let splashRadius = attackProfile.splashRadius;
     let knockback = impulseDir.scale(attackProfile.knockback);
     const controlStrength = attacker.definition.controlStrength ?? 1;
@@ -1377,6 +1384,7 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_dark_peasant") {
+      this._logAbility(attacker, "area_pull", now, target.position);
       this._summonUnits(attacker);
       const controlRadius = Math.max(5.2, splashRadius + 1.6);
       const controlDuration = attacker.definition.statusDurationSeconds ?? 3.2;
@@ -1393,6 +1401,7 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_chronomancer") {
+      this._logAbility(attacker, "slow_dome", now, target.position);
       this._applyAreaControl(target.position, Math.max(3.6, splashRadius + 1.1), attacker.team, damage * 0.72, knockback.scale(0.55 * controlStrength), now, 0.34, attacker.definition.statusDurationSeconds ?? 3.8);
       if (this.visualEffects) {
         this.visualEffects.spawnSmokePuff(target.position);
@@ -1408,6 +1417,7 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_zeus") {
+      this._logAbility(attacker, "lightning", now, target.position);
       if (this.visualEffects) {
         this.visualEffects.spawnLightning(attackOrigin, target.position);
         this.visualEffects.spawnLightning(attackOrigin, target.position.add(new Vector3(0.8, 0, 0.6)));
@@ -1418,6 +1428,7 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_thor") {
+      this._logAbility(attacker, "lightning", now, target.position);
       if (this.visualEffects) {
         this.visualEffects.spawnLightning(attackOrigin, target.position);
         this.visualEffects.spawnSmokePuff(attackOrigin);
@@ -1427,6 +1438,7 @@ export class SimulationSystem {
     }
 
     if (abilities.has("lightning_strike")) {
+      this._logAbility(attacker, "lightning", now, target.position);
       if (this.visualEffects) {
         this.visualEffects.spawnLightning(attackOrigin, target.position);
         // The strike's area as one solid shape over the men it hits
@@ -1504,6 +1516,7 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_super_peasant") {
+      this._logAbility(attacker, "slam", now, target.position);
       if (this.visualEffects) {
         this.visualEffects.spawnSmokePuff(impactOrigin, new Color3(1.0, 0.9, 0.42));
       }
@@ -1512,6 +1525,7 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_pirate_queen") {
+      this._logAbility(attacker, "slam", now, target.position);
       if (this.visualEffects) {
         this.visualEffects.spawnSmokePuff(target.position, new Color3(0.92, 0.56, 0.38));
       }
@@ -1709,6 +1723,7 @@ export class SimulationSystem {
     for (const t of due) {
       const { attacker, target } = t;
       if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
+      this._logAbility(attacker, t.fromStaff ? "cast" : "throw", now);
       const head = t.fromStaff ? staffHeadOf(attacker) : null;
       if (head) {
         // A caster keeps his staff: the missile is lit at its head, where the drive has put it
@@ -1785,6 +1800,7 @@ export class SimulationSystem {
       });
       if (unit) {
         summoned = true;
+        this._logAbility(attacker, "summon", RuntimeUnit.timeNowSeconds(), pos);
         if (this.visualEffects) {
           this.visualEffects.spawnSmokePuff(
             pos,
@@ -1801,6 +1817,7 @@ export class SimulationSystem {
   }
 
   private _fireBurst(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, splashRadius: number, shots: number): void {
+    this._logAbility(attacker, "burst", RuntimeUnit.timeNowSeconds());
     const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
     const perShotDamage = Math.max(1, Math.ceil(damage / shots));
     for (let i = 0; i < shots; i++) {
@@ -1847,6 +1864,7 @@ export class SimulationSystem {
   }
 
   private _fireShotgun(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3): void {
+    this._logAbility(attacker, "shotgun", RuntimeUnit.timeNowSeconds());
     const pellets = 6;
     const perPellet = Math.max(1, Math.ceil(damage / pellets));
     const attackOriginInfo = attacker.getAttackOrigin();
@@ -1872,6 +1890,7 @@ export class SimulationSystem {
   }
 
   private _fireVolley(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, count: number): void {
+    this._logAbility(attacker, "volley", RuntimeUnit.timeNowSeconds());
     const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
     const perProjectile = Math.max(1, Math.ceil(damage / count));
 
@@ -1925,6 +1944,7 @@ export class SimulationSystem {
       delayStep: number;
     },
   ): void {
+    this._logAbility(attacker, `volley:${options.projectileShape}`, RuntimeUnit.timeNowSeconds());
     if (!this.projectileSystem) {
       this._applyDirectOrSplash(target, damage, Math.max(0, options.splashRadius), attacker.team, knockback);
       return;
@@ -2009,19 +2029,33 @@ export class SimulationSystem {
     if (abilities.has("freeze")) {
       const freezeStrength = preset === "secret_ice_giant" ? 0.4 : 0.55;
       target.applySlow(freezeStrength, statusDuration, now);
+      this._logAbility(attacker, "status:freeze", now, target.position);
     }
     if (abilities.has("fire_dot")) {
       const fireDamage = preset === "secret_fire_whip" || preset === "secret_dragon_cart" ? 14 : 10;
       const source = impactOrigin ?? attacker.position;
       target.applyDamage(fireDamage, target.position.subtract(source).normalize().scale(0.3));
       if (this.visualEffects) this.visualEffects.spawnFireBurst(target.position);
+      this._logAbility(attacker, "status:fire", now, target.position);
     }
     if (abilities.has("poison")) {
       target.applyDamage(6, Vector3.Zero());
+      this._logAbility(attacker, "status:poison", now, target.position);
     }
     if (abilities.has("fear") && this.visualEffects) {
       this.visualEffects.spawnSmokePuff(target.position);
+      this._logAbility(attacker, "status:fear", now, target.position);
     }
+  }
+
+  /** One ability-log entry; the same kind on the same man within 0.5 s is folded into the last one (a spin or a volley fires every frame or shot). */
+  private _logAbility(unit: RuntimeUnit, kind: string, t: number, at: Vector3 = unit.position): void {
+    const id = unit.definition.id;
+    for (let i = this.abilityLog.length - 1; i >= 0 && this.abilityLog[i].t > t - 0.5; i--) {
+      if (this.abilityLog[i].unit === id && this.abilityLog[i].kind === kind) return;
+    }
+    if (this.abilityLog.length >= 200) this.abilityLog.shift();
+    this.abilityLog.push({ t, unit: id, kind, x: at.x, y: at.y, z: at.z });
   }
 
   /** `shock` is the push the crowd around him and the impact presentation see, the knockback itself unless the man's own share of it is held back (a dwelling blow). */

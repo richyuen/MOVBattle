@@ -13,6 +13,7 @@ import { BATTLE_CONFIG } from "./core/battleConfig";
 import type { BattleResult } from "./core/battleResult";
 
 import { ALL_UNITS, getUnit } from "./data/unitDefinitions";
+import { getAttackProfile } from "./data/combatProfiles";
 import type { UnitDefinition } from "./data/unitDefinitions";
 import { FactionId, FACTION_NAMES, TEAM_COLORS } from "./data/factionColors";
 import { FACTION_GLYPH_PATHS, isSolidGlyph, unitGlyphPath } from "./ui/trayGlyphs";
@@ -3740,6 +3741,40 @@ const gameApi = {
   clearHitLog: () => {
     simulation.hitLog.length = 0;
   },
+  // Abilities and special fires (teleport, leap, heal, volley, summon, lightning, throw, status) since the last clear: loop v2's criterion c evidence.
+  getAbilityLog: () => simulation.abilityLog.slice(),
+  clearAbilityLog: () => {
+    simulation.abilityLog.length = 0;
+  },
+  // Every roster unit's resolved numbers, for loop/scripts/stats.mjs (read out of a capture's summary.json, so the script needs no server of its own).
+  listUnitDefinitions: () =>
+    ALL_UNITS.map((u) => {
+      const attack = getAttackProfile(u.attackProfileId);
+      return {
+        id: u.id,
+        displayName: u.displayName,
+        archetype: u.archetype,
+        cost: u.cost,
+        maxHealth: u.maxHealth,
+        moveSpeed: u.moveSpeed,
+        engageRange: u.engageRange,
+        mass: u.mass,
+        collisionRadius: u.collisionRadius,
+        attackProfileId: u.attackProfileId,
+        damage: attack.damage,
+        cooldown: attack.cooldown,
+        knockback: attack.knockback,
+        splashRadius: attack.splashRadius,
+        healthMultiplier: u.healthMultiplier ?? 1,
+        damageMultiplier: u.damageMultiplier ?? 1,
+        cooldownMultiplier: u.cooldownMultiplier ?? 1,
+        giantScale: u.giantScale ?? 1,
+        visualScale: getUnitVisual(u.id).proportions.scale ?? 1,
+        abilities: u.abilities ?? [],
+        behaviorPreset: u.behaviorPreset ?? null,
+        visualPreset: u.visualPreset ?? null,
+      };
+    }),
   // Capture harness: frame the camera on a point (a landed blow), close, without advancing the battle.
   frameCamera: (target: { x: number; y: number; z: number }, radius: number, alpha: number, beta: number) => {
     camCtrl.applyGalleryPreset("state_read_duel", { alpha, beta, radius, target });

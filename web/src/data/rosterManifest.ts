@@ -191,6 +191,8 @@ export interface RosterManifestEntry {
   /** A giant drawn bigger than its size class: the whole rig, its collision footprint and its reach are scaled together by this much (see unitDefinitions). */
   giantScale?: number;
   healthMultiplier?: number;
+  /** Scales the attack profile's damage for this unit (loop v2 stats: the wiki's weapon damage normalised to the clubber's). */
+  damageMultiplier?: number;
   compositionParts?: CompositionPartSpec[];
 }
 
