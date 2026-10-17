@@ -221,13 +221,14 @@ function makeFaction(
 
 const tribal = makeFaction(FactionId.Tribal, "tribal", [
   ["clubber", "Clubber", 70, "light_melee", { weaponHint: "club" }],
-  ["protector", "Protector", 90, "shield_melee", { weaponHint: "spear", shieldHint: "round" }],
-  ["spear_thrower", "Spear Thrower", 140, "archer", { projectileHint: "spear", weaponHint: "javelin" }],
-  ["stoner", "Stoner", 160, "thrower", { projectileHint: "stone", weaponHint: "stone" }],
-  ["bone_mage", "Bone Mage", 220, "special_magic", { weaponHint: "bone_staff", projectileHint: "leaves" }],
-  ["chieftain", "Chieftain", 400, "boss_melee", { weaponHint: "club" }],
+  // Stats knobs (cost, healthMultiplier, damageMultiplier, cooldownMultiplier) are set by loop/scripts/stats.mjs from the TABS wiki, normalised to the clubber
+  ["protector", "Protector", 80, "shield_melee", { weaponHint: "spear", shieldHint: "round", healthMultiplier: 0.62, damageMultiplier: 0.16, cooldownMultiplier: 0.58 }],
+  ["spear_thrower", "Spear Thrower", 120, "archer", { projectileHint: "spear", weaponHint: "javelin", healthMultiplier: 0.5, damageMultiplier: 2.04, cooldownMultiplier: 3.64 }],
+  ["stoner", "Stoner", 160, "thrower", { projectileHint: "stone", weaponHint: "stone", healthMultiplier: 0.39, damageMultiplier: 0.61, cooldownMultiplier: 2.27 }],
+  ["bone_mage", "Bone Mage", 300, "special_magic", { weaponHint: "bone_staff", projectileHint: "leaves", healthMultiplier: 0.31, damageMultiplier: 0.65, cooldownMultiplier: 2.5 }],
+  ["chieftain", "Chieftain", 400, "boss_melee", { weaponHint: "club", healthMultiplier: 0.4, damageMultiplier: 0.48, cooldownMultiplier: 0.13 }],
   // tabs_screenshot_01: a mammoth's back stands about three and a half men above the grass; at the colossal class's own size it stood two and three quarters
-  ["mammoth", "Mammoth", 1200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6, giantScale: 1.25 }],
+  ["mammoth", "Mammoth", 2200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6, giantScale: 1.25, healthMultiplier: 0.23 }],
 ]);
 
 const farmer = makeFaction(FactionId.Farmer, "farmer", [
