@@ -10,13 +10,6 @@ line; a value column is at most 80 characters (name the knobs, not their story).
 rows at commit time (pending) and after verdicts. Drop rows untouched for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | criterion | verdict`)
-- 297 | club-cocked-in-press | battle-feel.e | approved
-- 297 | lockbox-belly-two-hand | vfx.p | approved
-- 298 | press-mark-held | battle-feel.e | approved
-- 299 | press-landed-contact | battle-feel.e | rejected-kept
-- 299 | lockbox-body-anchor | vfx.p | approved
-- 300 | press-club-lands-on-board | battle-feel.e | approved
-- 300 | swordcaster-blade-ring [R] | vfx.p | approved
 - 301 | one-strike [R] | battle-feel.e | rejected
 - 301 | ring-sword-rises | vfx.p | approved
 - 302 | two-hand-body-swing [R] | battle-feel.e | rejected
@@ -28,6 +21,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 306 | open-melee-strike-clock | battle-feel.e | rejected
 - 308 | open-field-strike-stand-off | battle-feel.e | approved
 - 309 | drive-through | battle-feel.e | approved
+- 310 | grounded-lunge | battle-feel.e | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -43,6 +37,7 @@ proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,seat,legT
 simulationSystem.ts:strike stand-off (STRIKE_STAND past body contact, open field only; flinch held BLOW_DWELL on a dwelling blow) | .45 m | 308 | approved | none (walked into shoulder contact, flinch on the land step)
 proceduralAnimation.ts:solved blow arm (BLOW_SOLVE_MARGIN; point: crown under the fist, else shoulder top on his axis PRESS_BOARD_LINE under it) | margin .15 | 308 | approved | fist overhead, head slid down his near face
 proceduralAnimation.ts:drive-through (BLOW_DRIVE, BLOW_DRIVE_FALL, BLOW_DRIVE_PITCH, BLOW_DRIVE_LOWEST; solved blows, leap settles) | .3 s; fall .7->1.2; pitch .6->.9; lowest .75 | 309 | approved | arm solved onto the crown, upper fold (308)
+proceduralAnimation.ts:grounded lunge (hip sinks by the BLOW_LUNGE spread; replaces BLOW_LEAP spring; BLOW_DROP gone) | sink = hipRest(1-cos spread cos knee/2) | 310 | approved | leap .5 of height to put the fist BLOW_DROP .25 over his crown
 proceduralAnimation.ts:contact-gated drop (triggerAttack: a cocked clubber's heavy swing starts at its commit; gate _ready > .5 or in the shove) | none (reverted) | 306 | rejected | commit .45 of the swing (306, reverted)
 proceduralAnimation.ts:cast loose/hold (CAST_LOOSE, CAST_HOLD, CAST_LEVEL_TIP; castReleasesIn, fireball pending to the drive) | loose .68 hold .94 tip 0,.1,1 | 287 | approved | fired at cast start, drive .55-.68 out .82-1, tip z+1.1
 proceduralAnimation.ts:bone mage overhead cast (CAST_RAISE_UP,_ARM,_TIP; boneStaff id; leaves pend to CAST_LOOSE from staff head) | up .4, arm -2.9/.32/-.12, tip .15,1,.3 | 289 | approved | wizard level drive, leaves from hand at cast start

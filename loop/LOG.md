@@ -311,3 +311,4 @@ hand | 203b0ca battle-feel.g thrown trunk set over its layers (bench 57/58 deg);
 iter 307 | re-audit by hand (evidence c4f6d15: blockers re-aimed); battle-feel.g CLEARED BY 203b0ca; e stands, blockers 2-3 rewritten | 0/0 gaps | passes 75/77 -> 76/77
 iter 308 | [S] open-field-strike-stand-off (by hand, pose bench) | 1/1 approved | passes 76/77 -> 76/77 (e blocker 3 struck, 4 added)
 iter 309 | [S] drive-through | 1/1 approved | passes 76 -> 76
+iter 310 | re-audit (no flips) + [S] grounded-lunge | 1/1 approved | passes 76 -> 76
