@@ -707,6 +707,7 @@ export class RuntimeUnit {
     contactDirection?: Vector3,
     pressureScale = 1,
     contactRole?: ContactRole,
+    toppleScale = 1,
   ): void {
     if (this._isDead || (this._linkedParent && this._isAnchoredActor)) return;
     const horizontalImpulse = new Vector3(impulse.x, 0, impulse.z);
@@ -732,7 +733,7 @@ export class RuntimeUnit {
     this._updateCrowdPhysicsState(
       adjustedPressure,
       contactDirection ?? horizontalImpulse.scale(-1),
-      pressureScale * this._crowdPhysicsProfile.compressionToppleScale,
+      pressureScale * toppleScale * this._crowdPhysicsProfile.compressionToppleScale,
     );
     this._maybeInterruptAttack(adjustedPressure * pressureScale, RuntimeUnit.timeNowSeconds(), contactRole);
     if (magnitude >= 0.9) {

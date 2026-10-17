@@ -134,6 +134,8 @@ const WALL_QUEUE_GAP = 0.25;
 const REAR_RANK_REACH = 1.4;
 // How far past shoulder contact a pressing clubber may still be when he brings his blow down (see _processUnitDecision).
 const BLOW_CONTACT_SLACK = 0.3;
+// Two plain men both coming on at least this fast (m/s, along the line between them) meet without knocking each other down (see the collision pass).
+const MEET_CLOSING = 0.5;
 const REAR_RANK_LANE = 0.7;
 // How long a landed heavy blow dwells on the struck man, club head on him, before he is thrown off his feet (see _pendingLaunches).
 const BLOW_DWELL = 0.12;
@@ -443,17 +445,32 @@ export class SimulationSystem {
           const contactPressureScale = sameTeam ? sameTeamPressureScale : enemyPressureScale;
           const pressureScaleA = contactPressureScale * this._collisionMomentumMultiplier(b);
           const pressureScaleB = contactPressureScale * this._collisionMomentumMultiplier(a);
+          // Two men running into each other do not knock each other down (trailer_3_sheet_01: foot soldiers meet and fight on their feet; men go down to a
+          // blow, a charger or a giant): between two plain men (no size or charge momentum on either) only the shove, not the run-in speed, counts toward a
+          // topple. The run-in still pushes, staggers and can interrupt a swing. Before, a head-on meet at a run put both on their backs and neither could
+          // swing for ~1.75 s, so no club was ever seen coming down where two lines met (battle-feel.e). A meet is both men coming on (each closing at
+          // MEET_CLOSING m/s or more), neither behind a full board: a man who runs onto a raised wall shield still bounces off it and goes over
+          // (crowd_topple_clubber_vs_protector).
+          const closingA = Vector3.Dot(a.collisionVelocity, normal);
+          const closingB = -Vector3.Dot(b.collisionVelocity, normal);
+          const plainMeet = !sameTeam && closingA >= MEET_CLOSING && closingB >= MEET_CLOSING
+            && this._collisionMomentumMultiplier(a) === 1 && this._collisionMomentumMultiplier(b) === 1
+            && !this._carriesWallShield(a) && !this._carriesWallShield(b);
+          const shove = Math.min(4.5, overlap * 4.2 * contactBias);
+          const toppleScale = plainMeet ? Math.min(1, shove / impulseStrength) : 1;
           a.applyCollisionImpulse(
             normal.scale(-impulseStrength * (weightedMassB / weightedMassTotal)),
             normal,
             pressureScaleA,
             b.contactRole,
+            toppleScale,
           );
           b.applyCollisionImpulse(
             normal.scale(impulseStrength * (weightedMassA / weightedMassTotal)),
             normal.scale(-1),
             pressureScaleB,
             a.contactRole,
+            toppleScale,
           );
           if (!sameTeam && impulseStrength >= 0.9) {
             const contactCenter = a.position.add(b.position).scale(0.5);
