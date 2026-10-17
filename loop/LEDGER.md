@@ -28,6 +28,7 @@ rows at commit time (pending) and after verdicts. Drop rows untouched for 25 ite
 - 305 | hip-led-launch | battle-feel.g | approved
 - 306 | kick-above-hip | battle-feel.g | rejected
 - 306 | open-melee-strike-clock | battle-feel.e | rejected
+- 308 | open-field-strike-stand-off | battle-feel.e | approved
 
 ## Spent gaps (never retry as [P]; an [S] on the same criterion is allowed)
 slam airtime, zeus glow/pulse/skirt, giant healthScale/victory shot, boulders (map), airborne sit, clouds, far ridge, corpses, idle legs/arms, downed bodies, empty hud, witch brim/kink, lineup camera/unit size, spear length, catapult operator, streak length, red skin shade, hoop colour, smoke diameters, fire segments/emissives, result-foreground-club, run-arms-one-splay, crew hoops.
@@ -40,6 +41,8 @@ simulationSystem.ts:wall lets go of a thrown man (isBlowThrown: no slot snap/bra
 proceduralAnimation.ts:overhand throw (THROW_COCK, THROW_FOLLOW, THROW_SWING, THROW_LET_GO; THROWS_HELD_PROP javelin, bomb, stone) | cock -2.9/.3/-1.6 turn .4, follow -.35, swing .55, let-go .5 | 283 | approved | javelin, bomb (282); let-go .38, javelin only (281)
 proceduralAnimation.ts:board off (BOARD_OFF_SECONDS,_HOLD,_FLING,_BUCKLE; knockBoardOff from staggerFromBlow) | .6 s hold .25; fling out 1.4 back .6; thigh .9 knee 1.6 sink .35 | 284 | approved | none (board stayed in the wall)
 proceduralAnimation.ts:thrown pose (THROWN armsOut,armsBack,trunk,head,seat,legTrail,legKick,kneeTrail,kneeKick; hip anchored over the root, thighs as flight-frame angles along a fixed -z; cancels the board-off buckle) | 1.35, .45, .1, .1, seat .92, thighs .7/-1.9, knees .15/1.4 | 306 | rejected | thighs mirrored by the throw's sign (306, reverted); trunk .35 head .45 fixed sweeps legs .75 knee .35 (291-304); curl .35 thighs -2/-1.7 knee 1.2 (303, reverted)
+simulationSystem.ts:strike stand-off (STRIKE_STAND past body contact, open field only; flinch held BLOW_DWELL on a dwelling blow) | .45 m | 308 | approved | none (walked into shoulder contact, flinch on the land step)
+proceduralAnimation.ts:solved blow arm (BLOW_SOLVE_MARGIN; point: crown under the fist, else shoulder top on his axis PRESS_BOARD_LINE under it) | margin .15 | 308 | approved | fist overhead, head slid down his near face
 proceduralAnimation.ts:contact-gated drop (triggerAttack: a cocked clubber's heavy swing starts at its commit; gate _ready > .5 or in the shove) | none (reverted) | 306 | rejected | commit .45 of the swing (306, reverted)
 proceduralAnimation.ts:cast loose/hold (CAST_LOOSE, CAST_HOLD, CAST_LEVEL_TIP; castReleasesIn, fireball pending to the drive) | loose .68 hold .94 tip 0,.1,1 | 287 | approved | fired at cast start, drive .55-.68 out .82-1, tip z+1.1
 proceduralAnimation.ts:bone mage overhead cast (CAST_RAISE_UP,_ARM,_TIP; boneStaff id; leaves pend to CAST_LOOSE from staff head) | up .4, arm -2.9/.32/-.12, tip .15,1,.3 | 289 | approved | wizard level drive, leaves from hand at cast start
