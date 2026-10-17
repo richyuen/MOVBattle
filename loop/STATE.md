@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 306   Last re-audit: 305   Consecutive rejects: 1   Branch: main
+Iteration: 307   Last re-audit: 307   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -9,9 +9,8 @@ ui-flow: a PASS b PASS c PASS d PASS (4/4)
 camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
 Tier 2 (fully scored at 198, re-audited 220-305):
-battle-feel: e FAIL f PASS g FAIL h PASS (2/4) (h cleared by [R] 065ba9e, 242; g's blocker moved from e by hand after 304)
-- e FAIL (list written by re-audit 304, kept by 305; blocker 1 struck by 305.1 b3af71a; blockers 2 and 3 re-aimed by hand after 306 under the ITERATE re-aim rule, their old shots could not show the element) [S since: 1; rejected since: 2] B: 2 melee_club_drop_pre/melee_club_drop (re-aimed from big_melee_2s/2150ms, where no right-hand clubber is within reach of a blue in either frame): judge whether a club is seen coming down onto a man across the 144 ms pair, cocked at the first frame and on the man at the second; 3 duel_club_land (re-aimed from closeup_weapon_reads, where the squires are not in reach at the shot time): judge whether the strike visibly meets the man it is aimed at (in the duel the clubber's blow on the hoplite's board/shoulder; the squire's own blade lands overhead on a hoplite's board in the pose bench, output/bench/sq_ancient.hoplite_land.png). Struck 1 (305). Ref trailer_3_sheet_01 r2c3, r3c1
-- g FAIL (blocker moved from e by hand after 304; kept by re-audit 305, narrowed by 305.2 f796087, kept by 306; re-aimed by hand after 306 to the duel, where nobody stands in front of the thrown man; 203b0ca changed the thrown pose) [S since: 1; rejected since: 1] B: 1 duel_club_thrown (re-aimed from press_clubbers_blow, whose thrown man's kicked leg goes back into his own file): judge the thrown man against r2c3 - trunk tipped ~53 deg the way he goes, head above the hips, one leg trailing down, the other flung toward the striker; the tile's man flies face-first with that hip extended, ours (struck from his front) flies back with it flexed, so judge the silhouette, not a rising shin. Ref trailer_3_sheet_01 r2c3, trailer_3_sheet_03 r1c2-r1c3
+battle-feel: e FAIL f PASS g PASS h PASS (3/4) (h cleared by [R] 065ba9e, 242; g cleared by 203b0ca, re-audit 307, judged from duel_club_thrown)
+- e FAIL (blockers 2 and 3 re-aimed by hand after 306 and rewritten by re-audit 307 from the shots they now name; blocker 1 struck 305) [S since: 0; rejected since: 0] B: 2 melee_club_drop_pre -> melee_club_drop: at pre the red clubbers carry their logs shouldered back (reads as cocked); at drop the front club's head stops at the second knight's hip and that knight is unchanged (mid-stride, sword raised, no flinch), the rear club's head goes into the turf by the corpse: no club meets a man (head, shoulder or board) with a reaction, unlike r2c3 where the club head drives into the leaping man's body; 3 duel_club_land: the club stands upright, its fat head above the clubber's own head, beside and behind the hoplite's board rim, not on it; only the clubber's two fists are on the board, so it reads as a two-hand shove with a raised club, and the hoplite is already doubled over before any visible contact. Struck 1 (305). Ref trailer_3_sheet_01 r2c3, r3c1
 unit-look: e PASS f PASS g PASS h PASS (4/4) (h cleared by 810f6c6, 240)
 maps-light: e PASS f PASS g PASS h PASS (4/4)
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
@@ -21,26 +20,25 @@ Tier 3 (scored 240, re-audited 245-305; ours lineup_<faction> / biome_<map> / th
 unit-look tier 3: i-v all PASS (14/14) (cleared 242-269)
 maps-light tier 3: i-o all PASS (7/7) (cleared 246-273)
 vfx tier 3: i-p all PASS (8/8) (first scored 281; o d930bf5 287; n 5deb87c 289; i 2dedac6 291; k a73812a 292; l b22b07e 293; j 6eeeb65 294; m cce136e 296; p 81ea78f 301; confirmed 302-305)
-Total tier 1 24/24; tier 2 22/24; tier 3 29/29.
+Total tier 1 24/24; tier 2 23/24; tier 3 29/29.
 
 ## Focus (every gap this iteration)
-BASE 20d53ca (iter 306; only e and g fail, so the pair (e, g) repeats 305's: the two-different-criteria rule wins over the not-the-same-pair rule)
-- [S] kick-above-hip (battle-feel.g blocker 1) — 8bf659b — REJECT (reverted 9526239: the press man in the shot was struck from his front, the mirror branch never ran for him)
-- [S] open-melee-strike-clock (battle-feel.e blocker 2) — 9bb24df — REJECT (reverted 070415f: no right-hand clubber is in reach in the pair, the strike call never issues)
-- evidence 883d669 (kept): press_clubbers pair taken at the first blow whose man flies clear of his mates, lens at his right-hand end of the line
+BASE c2ec437 (iter 307, by hand: re-audit only, no gaps picked; the user steered the session after 306)
+- hand 203b0ca battle-feel.g thrown trunk set over its layers, kicked leg near straight (bench) -> re-audit CLEARED g
+- hand 104a90a two plain men meeting at a run no longer topple each other -> no regression
+- evidence 59bcad4 (clock reset, duel_club shots), c4f6d15 (melee_club_drop_pre, blockers re-aimed)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] kick-above-hip (8bf659b) VERDICT: REJECT CRITERION: battle-feel.g FAIL (previous: FAIL)
-- GAP: [S] open-melee-strike-clock (9bb24df) VERDICT: REJECT CRITERION: battle-feel.e FAIL (previous: FAIL)
+- RE-AUDIT 307: tier 1 24/24; tier 2 23/24; tier 3 29/29. battle-feel.g FAIL -> PASS, CLEARED BY: 203b0ca. REGRESSIONS: none.
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.e strike-on-arrival — blocker 2: a closing clubber whose target is within reach + one stride starts the heavy swing's drop on the run, timed to BLOW_LAND as he arrives, so clubs are mid-fall at the line — ref trailer_3_sheet_01 r2c3 — ours big_melee_2s/2150ms (prove the clock with a pair bracketing the call: melee_club_drop at the call frame and +150 ms)
-2. [S] battle-feel.g flight-tumble — blocker 1: the root pitch keeps turning about the pelvis through BLOW_THROW_SECONDS (an angular rate, not the fixed _blowStaggerLean) so by +336 ms the hips are the high point and the trunk has dipped ~60 deg, head below the hips — ref trailer_3_sheet_01 r2c3, trailer_3_sheet_03 r1c2-r1c3 — ours press_clubbers_blow
-3. [S] battle-feel.e sword-stroke-on-the-man — blocker 3: the knight's slash aimed and pinned on the target's trunk at its land with a follow-through past him (the clubber's _aimBlow + BLOW_FOLLOW for slashes) — ref trailer_3_sheet_01 r2c3, r3c1 — ours closeup_weapon_reads
-4. [S] battle-feel.g right-leg-kick — blocker 1: the kicked knee on the right (spear-side, board-free) hip, the near leg at the capture's preferred right end, so the raised leg is never the occluded far one — ref trailer_3_sheet_01 r2c3 — ours press_clubbers_blow
-5. [S] battle-feel.e run-carried-club — blocker 2: the cocked club arcs with the stride on the charge (the ready hold is a swing, not a frozen vertical) so no club holds one angle across 150 ms — ref trailer_3_sheet_01 r2c3 — ours big_melee_2s/2150ms
-(no [P]: no approved [S] in the last 3 iterations lists fallout)
-Watch only (PASS, not pickable): vfx.o fireball not visible in throw_casters_flight (re-audit 303, unchanged code, noise).
+1. [S] battle-feel.e open-melee-landing — blocker 3: pin the heavy swing's landing to the target's board top or shoulder in open melee as in the press; the club head comes over and down onto the board, the fists follow it (proceduralAnimation.ts _aimBlow open-melee path) — ref trailer_3_sheet_01 r2c3 — ours duel_club_land
+2. [S] battle-feel.e reaction-after-contact — blocker 3: the struck man's stagger/throw waits until the club head is on him, so the land frame shows contact first, recoil second (simulationSystem.ts dwell/_pendingLaunches) — ref trailer_3_sheet_01 r2c3 — ours duel_club_land / duel_club_thrown
+3. [S] battle-feel.e aim-height — blocker 2: the open-melee drop targets head or shoulder line, not hip or the ground in front (heavy_swing aim in open melee; not the 306 strike-clock retiming) — ref trailer_3_sheet_01 r3c1 — ours melee_club_drop
+4. [S] battle-feel.e hit-flinch — blocker 2: a man struck and not thrown takes a short visible flinch (head snapped away, trunk bent, sword arm dropped) — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
+5. [S] battle-feel.e wide-windup — blocker 2: the pre frame raises the log high overhead from the shoulder, so the pair shows a big top-to-target arc — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop_pre
+(no [P])
+Hand-session finding (bench): the open-field blow lands at shoulder contact (roots ~0.9 m, nearer than the 0.9 m club); gaps 1 and 3 are bounded by that spacing.
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - open-melee-strike-clock [S] [attempts: 1] — 306: triggerAttack starts a cocked clubber's heavy swing at its commit (landing 80 ms after the call, was ~330). Critic: the pair's right-hand clubbers are a stride or more from any blue, the call never issues there; melee_club_drop at +32 ms looks the same whatever the clock
