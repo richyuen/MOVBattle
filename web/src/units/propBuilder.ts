@@ -2808,9 +2808,12 @@ const ROUND_FACES = 3;
 const ROUND_SHADE = 0.12;
 const ROUND_PAINT = 1.45;
 let roundBoardSerial = 0;
-// The protector's plank slab, in the shield's own units before the 1.9 carry scale: width and height (about 0.48 x 1.35 of a unit scale, shin to over the crown)
-const SLAB_WIDE = 0.25;
+// The protector's plank shield (units/tribal.protector), in the shield's own units before the 1.9 carry scale: width and height (the render: about half as wide as
+// tall, shin to over the crown), the face opening across and how far above the middle it sits (as a share of the height)
+const SLAB_WIDE = 0.34;
 const SLAB_TALL = 0.71;
+const SLAB_EYE = 0.12;
+const SLAB_EYE_UP = 0.22;
 let slabSerial = 0;
 // The painter's palette, in its own units before the prop oversize: across (about a torso wide carried), tipped PALETTE_TIP face-up and turned PALETTE_TURN out in the hand
 const PALETTE_WIDE = 0.24;
@@ -2941,43 +2944,46 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       return shield;
     }
     case "slab": {
-      // A tall wooden slab (243; units/tribal.protector): two rough planks side by side, as tall as the man from shin to over the crown and about a torso
-      // wide (height SLAB_TALL, 2.8 of its width), their tops cut to a slant at different heights, lashed by two dark hide bands, with grey-brown stones bound
-      // on near the top and the foot. Bare wood, a third of the team colour in it, never a disc.
-      const wood = Color3.Lerp(new Color3(0.62, 0.36, 0.22), board, 0.12);
+      // The protector's plank shield (units/tribal.protector, spec at SLAB_WIDE): four rough planks side by side, SLAB_TALL tall and SLAB_WIDE wide, their
+      // tops cut to a slant at different heights, bare brown wood with no team colour in it, and a round opening SLAB_EYE across at face height
+      // (SLAB_EYE_UP of the height above the middle) that the two middle planks stop short of above and below, framed by an eight-sided ring. The root is an
+      // empty node, so the opening is a true hole and his face shows through it. The face is +z; two battens hold the planks on the back.
+      const wood = new Color3(0.6, 0.36, 0.22);
       const r = (k: number) => roundBoardSeed(slabSerial + 0.5, k);
       slabSerial++;
-      const shield = MeshBuilder.CreateBox("slabshield", { width: SLAB_WIDE * s, height: SLAB_TALL * s, depth: 0.012 * s }, scene);
-      shield.material = mat(scene, wood.scale(0.7));
-      for (const side of [-1, 1]) {
-        // Each plank its own length and shade; its top a wedge slanted outward
-        const long = SLAB_TALL * (side < 0 ? 1 : 0.93 + r(1) * 0.05);
-        const plank = MeshBuilder.CreateBox("slabPlank", { width: SLAB_WIDE * 0.5 * s, height: long * s, depth: 0.045 * s }, scene);
-        plank.position.set(side * SLAB_WIDE * 0.25 * s, (long - SLAB_TALL) * 0.5 * s, 0.008 * s);
-        plank.rotation.z = side * (0.015 + r(2) * 0.02);
-        plank.material = mat(scene, wood.scale(0.92 + r(side + 3) * 0.16), 0.08);
-        plank.parent = shield;
-        const cap = MeshBuilder.CreateCylinder("slabCap", { height: SLAB_WIDE * 0.5 * s, diameter: 0.064 * s, tessellation: 3 }, scene);
+      const shield = new Mesh("slabshield", scene);
+      const W = SLAB_WIDE * s, H = SLAB_TALL * s, eye = SLAB_EYE * s, eyeY = SLAB_EYE_UP * H;
+      const plankW = W / 4;
+      for (let i = 0; i < 4; i++) {
+        const x = (i - 1.5) * plankW;
+        const shade = mat(scene, wood.scale(0.9 + r(i + 1) * 0.2), 0.1);
+        // Each plank its own length and shade; its top a wedge. The middle two are a lower and an upper board with the opening between them.
+        const top = H * (0.44 + r(i + 5) * 0.06);
+        const pieces: [number, number][] = i === 1 || i === 2 ? [[-H * 0.5, eyeY - eye * 0.5], [eyeY + eye * 0.5, top]] : [[-H * 0.5, top]];
+        for (const [y0, y1] of pieces) {
+          const plank = MeshBuilder.CreateBox("slabPlank", { width: plankW * 0.96, height: y1 - y0, depth: 0.045 * s }, scene);
+          plank.position.set(x, (y0 + y1) * 0.5, 0);
+          plank.material = shade;
+          plank.parent = shield;
+        }
+        const cap = MeshBuilder.CreateCylinder("slabCap", { height: plankW * 0.96, diameter: 0.064 * s, tessellation: 3 }, scene);
         cap.rotation.z = Math.PI / 2;
         cap.scaling.z = 0.7;
-        cap.position.set(0, long * 0.5 * s, 0);
-        cap.material = plank.material;
-        cap.parent = plank;
+        cap.position.set(x, top, 0);
+        cap.material = shade;
+        cap.parent = shield;
       }
-      const hide = mat(scene, new Color3(0.28, 0.18, 0.12));
-      for (const y of [0.24, -0.26]) {
-        const band = MeshBuilder.CreateBox("slabBand", { width: SLAB_WIDE * 1.06 * s, height: 0.03 * s, depth: 0.062 * s }, scene);
-        band.position.set(0, y * SLAB_TALL * s, 0.008 * s);
-        band.material = hide;
-        band.parent = shield;
-      }
-      const rock = mat(scene, new Color3(0.42, 0.38, 0.3), 0, "stone");
-      for (const [x, y, d] of [[0.32, 0.36, 0.08], [-0.2, -0.4, 0.09]]) {
-        const stone = MeshBuilder.CreateSphere("slabStone", { diameter: d * s, segments: 2 }, scene);
-        stone.position.set(x * SLAB_WIDE * s, y * SLAB_TALL * s, 0.04 * s);
-        stone.scaling.set(1.1, 1.4, 0.6);
-        stone.material = rock;
-        stone.parent = shield;
+      const ring = MeshBuilder.CreateTorus("slabEye", { diameter: eye * 1.3, thickness: eye * 0.3, tessellation: 8 }, scene);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, eyeY, 0);
+      ring.material = mat(scene, wood.scale(0.75), 0.08);
+      ring.parent = shield;
+      const batten = mat(scene, wood.scale(0.7), 0.06);
+      for (const y of [0.3, -0.3]) {
+        const bar = MeshBuilder.CreateBox("slabBatten", { width: W * 1.02, height: 0.035 * s, depth: 0.03 * s }, scene);
+        bar.position.set(0, y * H, -0.035 * s);
+        bar.material = batten;
+        bar.parent = shield;
       }
       return shield;
     }
