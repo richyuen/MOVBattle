@@ -141,6 +141,8 @@ const MEET_CLOSING = 0.5;
 const REAR_RANK_LANE = 0.7;
 // How long a landed heavy blow dwells on the struck man, club head on him, before he is thrown off his feet (see _pendingLaunches).
 const BLOW_DWELL = 0.12;
+// one-blow-per-man: the longest beat a striker takes, once at his man, before his first blow (each man his own share of it, RuntimeUnit.vary)
+const STRIKE_LAG = 0.45;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -190,6 +192,8 @@ export class SimulationSystem {
   private _pendingLaunches: Array<{ target: RuntimeUnit; from: Vector3; knockback: number; at: number }> = [];
   // A presser's distance to his foe at his last decision: while it is still closing he holds his heavy swing until he is at the man's shoulder.
   private _closingFrom = new Map<RuntimeUnit, number>();
+  // one-blow-per-man: when a striker who closed on his man may first bring his weapon down (see STRIKE_LAG)
+  private _strikeReadyAt = new Map<RuntimeUnit, number>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
@@ -289,6 +293,7 @@ export class SimulationSystem {
     this._nextDecisionAt.delete(unit);
     this._pathStates.delete(unit);
     this._closingFrom.delete(unit);
+    this._strikeReadyAt.delete(unit);
   }
 
   beginSimulation(now: number): void {
@@ -296,6 +301,7 @@ export class SimulationSystem {
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
+    this._strikeReadyAt.clear();
     this._isRunning = true;
     this._now = now;
     this._battleStartedAt = now;
@@ -701,7 +707,17 @@ export class SimulationSystem {
       this._closingFrom.set(unit, distance);
       const closing = presses && canMove && !slot?.hold && unit.swingsAtMan && distance > strikeDistance + BLOW_CONTACT_SLACK
         && (closingFrom === undefined || distance < closingFrom - 0.02);
-      if (canAttack && !closing) {
+      // one-blow-per-man: a striker who has closed on his man takes his own beat before his first blow, STRIKE_LAG of a spread fixed per man, so a
+      // line that arrives together does not bring every weapon down on the same step (r2c3: one club down on its man, the next still high)
+      let lagged = false;
+      if (unit.swingsAtMan) {
+        if (closing) this._strikeReadyAt.delete(unit);
+        else {
+          if (!this._strikeReadyAt.has(unit)) this._strikeReadyAt.set(unit, now + STRIKE_LAG * unit.vary(17));
+          lagged = now < (this._strikeReadyAt.get(unit) ?? 0);
+        }
+      }
+      if (canAttack && !closing && !lagged) {
         this._tryAttack(unit, enemy, attackProfile, now);
       }
     } else {

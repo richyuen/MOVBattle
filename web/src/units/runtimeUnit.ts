@@ -315,6 +315,8 @@ export class RuntimeUnit {
     this._maxHealth = definition.maxHealth;
     this._currentHealth = this._maxHealth;
     this.animator = new ProceduralAnimator(body);
+    // each man's own blow and reaction (one-blow-per-man): his share of the line's spread of timing and shape, fixed by his runtime id
+    this.animator.variety = this.vary(31);
     this.animator.defaultAttackMotion = this._resolvePrimaryAttackMotion();
     this.animator.locomotionBias = this._resolveLocomotionBias();
     this._spawnPosition = body.root.position.clone();
@@ -1841,6 +1843,12 @@ export class RuntimeUnit {
           break;
       }
     }
+  }
+
+  /** A number in [0, 1) fixed for this man and this salt (deterministic, keyed on the runtime id): his own share of a spread every man draws from. */
+  vary(salt: number): number {
+    const v = Math.sin(this.runtimeId * 12.9898 + salt * 78.233) * 43758.5453;
+    return v - Math.floor(v);
   }
 
   /** His own attack is a swing that comes down on a man: heavy (club, hammer, axe) or a blade's slash. */

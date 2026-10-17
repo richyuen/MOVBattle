@@ -299,7 +299,19 @@ const BOARD_OFF_BUCKLE = { thigh: 0.9, knee: 1.6, sink: 0.35 };
  */
 const BUCKLE_SECONDS = 0.2;
 const BUCKLE_FADE = 0.06;
-const BUCKLE = { thigh: 0.55, knee: 1.1, sink: 0.16, trunk: 0.45, head: 0.5, arm: -0.35, elbow: -0.3 };
+const BUCKLE = { thigh: 0.55, knee: 1.4, sink: 0.2, trunk: 0.3, head: 0.5, arm: -0.35, elbow: -0.3 };
+/*
+ * [R] one-blow-per-man (battle-feel.e blockers 2 and 5). Spec read off trailer_3_sheet_01 r2c3 and r3c1: in a line every blow is its own. Two clubbers side
+ * by side are at different points of their arcs (one club down and driven into its man, the next still high), at their own angles; and every man under a
+ * blow folds in his own shape, none a copy of his neighbour. Each man carries a variety in [0, 1) fixed by his runtime id (RuntimeUnit.vary), from which:
+ * - the sim gives him his own beat, up to STRIKE_LAG s, between reaching his man and his first blow, so a line that arrives together strikes in a ragged run;
+ * - his driven club falls BLOW_DRIVE_VARY rad either side of BLOW_DRIVE_FALL;
+ * - his buckle (BUCKLE, the give at the knees, the trunk only part-way down: r2c3) is turned BUCKLE_VARY.twist either way about his spine, his head turned
+ *   BUCKLE_VARY.head and rolled with it, one knee BUCKLE_VARY.knee deeper than the other, his trunk BUCKLE_VARY.trunk of its fold more or less, and one arm
+ *   dropped further than the other.
+ */
+const BLOW_DRIVE_VARY = 0.15;
+const BUCKLE_VARY = { twist: 0.35, head: 0.5, roll: 0.18, knee: 0.3, trunk: 0.4, arm: 0.5 };
 // Thrown back off his feet by a heavy blow, hip-led (trailer_3_sheet_01 r2c3, the red man leaving the clubbers, read off the frame: he goes seat-first, the
 // pelvis the lowest point of him and the one the blow carries; the trunk is tipped ~53 deg from upright the way he goes, head still above the hips; one leg
 // trails straight down and a little the way he goes, ~40 deg from vertical; the other leg is flung back toward the striker near straight, the thigh ~20 deg
@@ -572,7 +584,7 @@ export class ProceduralAnimator {
     if (solved) {
       // drive-through: the club at its angle, the fist an arm from the shoulder and a reach back up that angle from a point on his axis, the point slid
       // down him (never above where it struck, never under BLOW_DRIVE_LOWEST of his height) to where the fist can be
-      const fall = BLOW_DRIVE_FALL.land + (BLOW_DRIVE_FALL.end - BLOW_DRIVE_FALL.land) * drive;
+      const fall = BLOW_DRIVE_FALL.land + (BLOW_DRIVE_FALL.end - BLOW_DRIVE_FALL.land) * drive + this._vary(7) * BLOW_DRIVE_VARY;
       const S = b.rightShoulder.getAbsolutePosition();
       const armNow = Vector3.Distance(S, b.rightHand.getAbsolutePosition());
       const tall = Math.max(0.001, head.y - b.root.getAbsolutePosition().y);
@@ -687,6 +699,13 @@ export class ProceduralAnimator {
     this._buckle = BUCKLE_SECONDS;
   }
   private _buckle = 0;
+  /** This man's own draw from every spread (one-blow-per-man), in [0, 1); set by his RuntimeUnit from his runtime id. */
+  variety = 0.5;
+  // His share of one spread, in [-1, 1): each salt a different, fixed draw
+  private _vary(salt: number): number {
+    const v = Math.sin((this.variety * 1000 + 1) * 12.9898 + salt * 78.233) * 43758.5453;
+    return (v - Math.floor(v)) * 2 - 1;
+  }
 
   /** A heavy blow has thrown him back off his feet: arms flung out wide, legs swept forward from under him (THROWN), full for `hold` s of `seconds`. */
   throwBack(seconds: number, hold: number): void {
@@ -1437,16 +1456,23 @@ export class ProceduralAnimator {
       const b = this._body;
       const k = Math.min(1, this._buckle / BUCKLE_FADE) * (1 - this._thrownWeight());
       if (dt > 0) this._buckle = Math.max(0, this._buckle - dt);
-      b.leftHip.rotation.x += (-BUCKLE.thigh - b.leftHip.rotation.x) * k;
-      b.rightHip.rotation.x += (-BUCKLE.thigh - b.rightHip.rotation.x) * k;
-      b.leftKnee.rotation.x += (BUCKLE.knee - b.leftKnee.rotation.x) * k;
-      b.rightKnee.rotation.x += (BUCKLE.knee - b.rightKnee.rotation.x) * k;
+      // his own fold (one-blow-per-man): which knee goes deeper, how far his trunk comes down, the way he twists and his head turns
+      const uneven = this._vary(1) * BUCKLE_VARY.knee;
+      const kneeL = BUCKLE.knee * (1 + uneven), kneeR = BUCKLE.knee * (1 - uneven);
+      b.leftHip.rotation.x += (-BUCKLE.thigh * (1 + uneven * 0.6) - b.leftHip.rotation.x) * k;
+      b.rightHip.rotation.x += (-BUCKLE.thigh * (1 - uneven * 0.6) - b.rightHip.rotation.x) * k;
+      b.leftKnee.rotation.x += (kneeL - b.leftKnee.rotation.x) * k;
+      b.rightKnee.rotation.x += (kneeR - b.rightKnee.rotation.x) * k;
       this._hipRest ??= b.hip.position.y;
       b.hip.position.y = Math.min(b.hip.position.y, this._hipRest * (1 - BUCKLE.sink * k));
-      b.torso.rotation.x += (BUCKLE.trunk - b.torso.rotation.x) * k;
+      b.torso.rotation.x += (BUCKLE.trunk * (1 + this._vary(2) * BUCKLE_VARY.trunk) - b.torso.rotation.x) * k;
+      b.torso.rotation.y += (this._vary(3) * BUCKLE_VARY.twist - b.torso.rotation.y) * k;
+      b.torso.rotation.z += (this._vary(4) * BUCKLE_VARY.roll - b.torso.rotation.z) * k;
       b.neck.rotation.x += (BUCKLE.head - b.neck.rotation.x) * k;
-      for (const sh of [b.leftShoulder, b.rightShoulder]) {
-        sh.rotation.x += (BUCKLE.arm - sh.rotation.x) * k;
+      b.neck.rotation.y += (this._vary(5) * BUCKLE_VARY.head - b.neck.rotation.y) * k;
+      const armSide = this._vary(6) * BUCKLE_VARY.arm;
+      for (const [sh, side] of [[b.leftShoulder, 1], [b.rightShoulder, -1]] as const) {
+        sh.rotation.x += (BUCKLE.arm * (1 + side * armSide) - sh.rotation.x) * k;
         sh.rotation.z *= 1 - k * 0.7;
       }
       b.leftElbow.rotation.x += (BUCKLE.elbow - b.leftElbow.rotation.x) * k;
