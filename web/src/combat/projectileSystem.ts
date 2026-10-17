@@ -53,6 +53,28 @@ const SWORD_TURN_IN = 0.3;
 // so it flies from up there and not from his shins
 const SWORD_RISE_IN = 0.45;
 
+/*
+ * A thrown spear flies as a real missile (units/tribal.spear_thrower: a flat shoulder-height throw to range 17, the card's projectile speed 20): it leaves the
+ * hand at LAUNCH speed and its arc is the gravity parabola solved for the low launch angle that carries it to the man under LAUNCH gravity, so a near target
+ * gets a flat throw and only a far one a lob. Flight stays the straight lerp plus 4·A·t·(1−t) of the update, which is exact ballistic motion for A = g·T²/8.
+ * Shapes not listed keep the fixed arc-per-metre lob of spawnProjectile. A man beyond the throw's reach (no solution) keeps that lob too.
+ */
+const LAUNCH: Partial<Record<ProjectileShape, { speed: number; gravity: number }>> = {
+  spear: { speed: 20, gravity: 9.8 },
+};
+
+/** The low-angle ballistic solution from `from` to `to` at launch speed v under gravity g: flight time and the arc's peak above the straight line, or null when out of reach. */
+function solveLowArc(from: Vector3, to: Vector3, v: number, g: number): { flightTime: number; arcHeight: number } | null {
+  const d = Math.hypot(to.x - from.x, to.z - from.z);
+  const h = to.y - from.y;
+  if (d < 0.01) return null;
+  const disc = v ** 4 - g * (g * d * d + 2 * h * v * v);
+  if (disc < 0) return null;
+  const theta = Math.atan((v * v - Math.sqrt(disc)) / (g * d));
+  const flightTime = d / (v * Math.cos(theta));
+  return { flightTime, arcHeight: g * flightTime * flightTime / 8 };
+}
+
 /** A soft smoke puff left hanging in a cannonball's wake. */
 // A gun's muzzle smoke (see spawnMuzzleFlash): how many soft puffs make the cloud.
 const MUZZLE_PUFFS = 7;
@@ -213,7 +235,21 @@ export class ProjectileSystem {
       case "harpoon": speed = 18; arcHeight = dist * 0.1; break;
     }
 
-    const flightTime = Math.max(0.1, dist / speed);
+    let flightTime = Math.max(0.1, dist / speed);
+    // A launched missile (LAUNCH): its arc is the gravity parabola of a throw at its own speed, solved for the low angle that reaches the man
+    const launch = LAUNCH[shape];
+    if (launch) {
+      const from = launchOrigin.clone();
+      from.y += options.originLift ?? 1.0;
+      const to = targetPos.clone();
+      to.y += options.targetLift ?? 0.5;
+      const solved = solveLowArc(from, to, launch.speed, launch.gravity);
+      if (solved) {
+        flightTime = solved.flightTime;
+        arcHeight = solved.arcHeight;
+        speed = dist / flightTime;
+      }
+    }
     const palette = this._getTeamProjectilePalette(attackerTeam);
     const held = options.heldProp ? this._buildHeldMissile(options.heldProp, shape) : null;
     const mesh = held?.root ?? this._buildProjectileMesh(shape, palette, attackerTeam);
