@@ -52,6 +52,7 @@ export const FACTION_NAMES: Record<FactionId, string> = {
 };
 
 export const TEAM_COLORS = {
-  0: new Color3(0.42, 0.60, 0.98), // Team A - periwinkle blue: at (0.62, 0.86, 1.0) the skin was a pale sky cyan
-  1: new Color3(1.0, 0.26, 0.28),  // Team B - crimson
+  // The player's side is red, as in TABS: team A (left, the campaign player) is crimson and team B (right, the campaign enemy) is blue
+  0: new Color3(1.0, 0.26, 0.28),  // Team A - crimson
+  1: new Color3(0.42, 0.60, 0.98), // Team B - periwinkle blue: at (0.62, 0.86, 1.0) the skin was a pale sky cyan
 } as Record<number, Color3>;

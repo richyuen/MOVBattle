@@ -1687,7 +1687,7 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
   ),
   gallery_team_color_blue_red_validation: {
     name: "gallery_team_color_blue_red_validation",
-    description: "Mirrored Team A / Team B validation for blue-red ownership across humanoid, low-skin, and vehicle units.",
+    description: "Mirrored Team A / Team B validation for red-blue ownership across humanoid, low-skin, and vehicle units.",
     autoStart: true,
     advanceMs: 2400,
     units: [
@@ -1701,7 +1701,7 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "units-present", value: "medieval.archer,spooky.skeleton_archer,legacy.tank" },
       { kind: "mode-is", value: "Simulation" },
-      { kind: "comparison-focus", value: "Team A should read blue and Team B should read red while faction clothing remains recognizable, low-skin units use dominant blue/red body surfaces, vehicles show large team-colored surfaces, projectile ownership is blue/red, and health bars match team color." },
+      { kind: "comparison-focus", value: "Team A should read red and Team B should read blue while faction clothing remains recognizable, low-skin units use dominant blue/red body surfaces, vehicles show large team-colored surfaces, projectile ownership is blue/red, and health bars match team color." },
     ],
     gallery: {
       presetId: "state_read_duel",

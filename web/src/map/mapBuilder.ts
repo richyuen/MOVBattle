@@ -2533,7 +2533,7 @@ function deadenRing(scene: Scene, share: number, color: Color3): void {
 }
 
 function createPlacementGuides(scene: Scene, zones: readonly PlacementZone[]): void {
-  const teamColors = [new Color3(0.24, 0.55, 1.0), new Color3(0.96, 0.30, 0.26)];
+  const teamColors = [new Color3(0.96, 0.30, 0.26), new Color3(0.24, 0.55, 1.0)]; // team A red, team B blue (see TEAM_COLORS)
   for (const zone of zones) {
     const overlay = MeshBuilder.CreateGround(`campaign_zone_overlay_${zone.team}_${zone.center.x}_${zone.center.z}`, {
       width: zone.size.x,

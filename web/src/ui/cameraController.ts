@@ -1,4 +1,4 @@
-import { ArcRotateCamera, Vector3, Scene } from "@babylonjs/core";
+import { ArcRotateCamera, ArcRotateCameraPointersInput, Vector3, Scene } from "@babylonjs/core";
 
 export type GalleryCameraPresetId =
   | "faction_lineup_close"
@@ -137,12 +137,17 @@ export class CameraController {
       // Desktop: normal controls
       this.camera.lowerBetaLimit = 0.2;
       this.camera.upperBetaLimit = Math.PI / 2.2;
-      this.camera.panningSensibility = 15;
+      // Right-drag pans: at 15 a small flick threw the view across the field
+      this.camera.panningSensibility = 90;
+      this.camera.panningInertia = 0.8;
       this.camera.angularSensibilityX = 500;
       this.camera.angularSensibilityY = 500;
       this.camera.pinchPrecision = 40;
       this.camera.useNaturalPinchZoom = true;
       this.camera.attachControl(canvas, true);
+      // The left button paints units (see main.ts), as in TABS: the camera keeps middle-drag to rotate and right-drag to pan
+      const pointers = this.camera.inputs.attached.pointers as ArcRotateCameraPointersInput | undefined;
+      if (pointers) pointers.buttons = [1, 2];
     }
 
     // Keyboard rotation (Q/E) handled via game input

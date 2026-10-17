@@ -583,7 +583,7 @@ export class UnitFactory {
     if (visual.posePreset === "crew" && !shouldUseVehicleBody) dressCannonCrew(this._scene, body, bodyColor, false);
 
     body.root.position = position.clone();
-    // Face the border: blue (team 0) faces right (+X), red (team 1) faces left (-X)
+    // Face the border: red (team 0) faces right (+X), blue (team 1) faces left (-X)
     body.root.rotation.y = team === 0 ? Math.PI / 2 : -Math.PI / 2;
 
     // Tag all meshes for raycasting

@@ -171,8 +171,9 @@
       border-radius: 0 0 3px 3px;
     }
     /* Tray spans the viewport: no room beside it, so the boxes sit as a badge above its left end */
+    .budget-label.team-b #budgetAmount::after, .budget-label.team-b .budget-units::after { color: #b4c8f8; }
     @media (max-width: 968px) {
-      .budget-label { left: 8px; bottom: 118px; width: auto; height: auto; }
+      .budget-label { left: 8px; bottom: calc(var(--tray-h, 110px) + 8px); width: auto; height: auto; }
       .budget-label::before { display: none; }
       .budget-label > span, .budget-label #budgetAmount { border: 1px solid rgba(255,255,255,0.6); }
     }
@@ -229,6 +230,25 @@
     }
     /* Start and Clear are filled with a dark wash: as bare outlines they were lost over the red canopy behind them */
     .btn-start, .btn-clear, .btn-start:hover, .btn-clear:hover { background: rgba(30,20,30,0.5); }
+    /* The slanted ends are cut by clip-path, which takes the border with them: the slant is drawn as a line just inside the cut instead */
+    .btn-clear, .btn-clear:hover, #btnCampaign, #btnCampaign:hover {
+      border-left: none;
+      background-image: linear-gradient(to top right, transparent 50%, var(--slant, rgba(255,255,255,0.72)) 50%, var(--slant, rgba(255,255,255,0.72)) calc(50% + 2.2px), transparent calc(50% + 2.2px));
+      background-size: 14px 100%; background-position: left top; background-repeat: no-repeat;
+    }
+    #btnUnlimited, #btnUnlimited:hover {
+      border-right: none;
+      background-image: linear-gradient(to top left, transparent 50%, var(--slant, rgba(255,255,255,0.72)) 50%, var(--slant, rgba(255,255,255,0.72)) calc(50% + 2.2px), transparent calc(50% + 2.2px));
+      background-size: 14px 100%; background-position: right top; background-repeat: no-repeat;
+    }
+    .btn-corner:hover, .btn-clear:hover { --slant: rgba(255,255,255,0.95); }
+    .btn-corner.active { --slant: #ffd54f; }
+    /* Touch has no Space or Tab to call off a fight: a Stop tab hangs at the top centre for the battle only */
+    #btnStopBattle {
+      display: none; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 17;
+      background: rgba(30,20,30,0.5); touch-action: manipulation;
+    }
+    body.touch-device.in-battle #btnStopBattle { display: inline-flex; align-items: center; justify-content: center; }
     .btn-clear {
       padding: 6px 12px 10px;
       font-size: 12px;
@@ -422,7 +442,7 @@
     #touchCameraControls {
       position: absolute;
       right: 12px;
-      bottom: 236px;
+      bottom: calc(var(--tray-h, 200px) + 36px);
       display: none;
       grid-template-columns: auto auto auto;
       align-items: center;
@@ -497,6 +517,7 @@
     body.capture-mode #campaignOverlay,
     body.capture-mode #touchCameraControls,
     body.capture-mode #controls-help,
+    body.capture-mode #btnStopBattle,
     body.capture-mode #titleIntro {
       display: none !important;
     }
@@ -579,7 +600,7 @@
       .budget-label { font-size: 18px; }
       #touchCameraControls {
         right: 8px;
-        bottom: 208px;
+        bottom: calc(var(--tray-h, 180px) + 28px);
         gap: 6px;
       }
       .touch-rotate-btn {
@@ -638,6 +659,8 @@
       <div id="unitGrid"></div>
     </div>
 
+  <button class="btn btn-start" id="btnStopBattle" type="button">Stop</button>
+
   <div id="resultOverlay">
     <div class="result-band result-band-top">
       <div id="resultTitle"></div>
@@ -685,10 +708,10 @@
   </div>
 
   <div id="controls-help">
-    LClick: Place (blue zone = blue, red zone = red)<br>
+    LClick/Drag: Place (red zone = red, blue zone = blue)<br>
     RClick: Remove | N/B: Cycle Unit<br>
-    Space: Start | R: Reset<br>
-    MWheel: Zoom | MMB: Pan | WASD: Pan<br>
+    Space/Tab: Start/Stop | R: Reset<br>
+    MWheel: Zoom | RMB: Pan | MMB: Rotate | WASD: Pan<br>
     Q/E: Rotate | Z/C: Lower/Raise
   </div>
 

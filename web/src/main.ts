@@ -188,6 +188,17 @@ shadowGen.normalBias = 0.02;
 // Camera
 const camCtrl = new CameraController(scene, canvas);
 bodyEl.classList.toggle("touch-device", camCtrl.isTouchDevice);
+// Touch has no Space or Tab: a Stop tab stands at the top of the screen during the fight
+document.getElementById("btnStopBattle")?.addEventListener("click", () => stopBattle());
+// The tray's height changes with the width (tabs and the grid wrap): the budget badge and the touch camera buttons sit above it, never over it
+{
+  const unitPanel = document.getElementById("unitPanel");
+  if (unitPanel && typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty("--tray-h", `${Math.ceil(unitPanel.getBoundingClientRect().height)}px`);
+    }).observe(unitPanel);
+  }
+}
 
 type CameraMotionAction =
   | "rotateLeft"
@@ -1059,21 +1070,25 @@ campaignOverlayEl.addEventListener("click", (event) => {
 });
 
 // ─── Placement ───
-function tryPlaceUnit(screenX: number, screenY: number): void {
-  if (stateMachine.currentState !== GameState.Placement) return;
+/**
+ * Place the selected unit under a screen point. `quiet` (a paint stroke) keeps the zone and overlap refusals off the status line, which would
+ * otherwise flicker on every step of the drag; `team`, when given, is the only side the point may join, so a stroke stays on the side it began on.
+ */
+function tryPlaceUnit(screenX: number, screenY: number, opts: { quiet?: boolean; team?: number } = {}): boolean {
+  if (stateMachine.currentState !== GameState.Placement) return false;
 
   const def = getUnit(selectedUnitId);
   if (!def) {
     // Remove mode: try to remove
     tryRemoveUnit(screenX, screenY);
-    return;
+    return false;
   }
 
   // Raycast from screen to ground
   const pickResult = scene.pick(screenX, screenY);
   if (!pickResult || !pickResult.hit || !pickResult.pickedPoint) {
-    showStatus("Unable to project placement point.");
-    return;
+    if (!opts.quiet) showStatus("Unable to project placement point.");
+    return false;
   }
 
   const worldPoint = pickResult.pickedPoint;
@@ -1081,33 +1096,74 @@ function tryPlaceUnit(screenX: number, screenY: number): void {
 
   // Auto-detect team from placement position: left half = Team A (0), right half = Team B (1)
   const team = worldPoint.x < 0 ? 0 : 1;
+  if (opts.team !== undefined && opts.team !== team) return false;
   if (budgetHudTeam !== team) {
     budgetHudTeam = team;
     updateBudgetDisplay();
   }
   if (campaignSession && team === 1) {
-    showStatus("Campaign enemies are locked.");
-    return;
+    if (!opts.quiet) showStatus("Campaign enemies are locked.");
+    return false;
   }
 
   if (!campaignSession?.unlimited && !budgetSystem.canAddUnit(team, simulation.getLivingCount(team))) {
     showStatus("Team unit cap reached.");
-    return;
+    return false;
   }
 
   const reason = placementValidator.validate(team, worldPoint, def.collisionRadius, placedUnits);
   if (reason) {
-    showStatus(reason);
-    return;
+    if (!opts.quiet) showStatus(reason);
+    return false;
   }
 
   if (!campaignSession?.unlimited && !budgetSystem.trySpend(team, def.cost)) {
     showStatus("Not enough budget.");
-    return;
+    return false;
   }
 
   spawnRuntimeUnit(def.id, team, worldPoint);
   updateBudgetDisplay();
+  return true;
+}
+
+// ─── Paint stroke ───
+// Desktop: holding the left button and dragging paints units along the path, as in TABS. A new one goes down each time the cursor has
+// moved a body's width and a little more from the last spot tried, so the row comes out evenly spaced; in remove mode the drag erases.
+let paintStroke: { lastX: number; lastZ: number; team: number | null } | null = null;
+
+function groundUnder(screenX: number, screenY: number): Vector3 | null {
+  const pick = scene.pick(screenX, screenY, (mesh) => mesh.isPickable && mesh.isVisible && mesh.isEnabled() && !mesh.metadata?.runtimeUnit);
+  return pick?.hit && pick.pickedPoint ? pick.pickedPoint : null;
+}
+
+function beginPaintStroke(screenX: number, screenY: number): void {
+  const point = groundUnder(screenX, screenY);
+  paintStroke = { lastX: point?.x ?? 0, lastZ: point?.z ?? 0, team: point ? (point.x < 0 ? 0 : 1) : null };
+  if (removeMode) tryRemoveUnit(screenX, screenY);
+  else tryPlaceUnit(screenX, screenY);
+}
+
+function continuePaintStroke(screenX: number, screenY: number): void {
+  if (!paintStroke) return;
+  const point = groundUnder(screenX, screenY);
+  if (!point) return;
+  if (removeMode) {
+    tryRemoveUnit(screenX, screenY);
+    return;
+  }
+  const def = getUnit(selectedUnitId);
+  if (!def) return;
+  const spacing = Math.max(0.9, def.collisionRadius * 2.2);
+  if (paintStroke.team !== null && Math.hypot(point.x - paintStroke.lastX, point.z - paintStroke.lastZ) < spacing) return;
+  paintStroke.team ??= point.x < 0 ? 0 : 1;
+  paintStroke.lastX = point.x;
+  paintStroke.lastZ = point.z;
+  tryPlaceUnit(screenX, screenY, { quiet: true, team: paintStroke.team });
+}
+
+function endPaintStroke(): void {
+  paintStroke = null;
 }
 
 function tryRemoveUnit(screenX: number, screenY: number): void {
@@ -1226,6 +1282,24 @@ function startBattle(immediate = false): void {
     enterSimulation();
     countdownTimer = null;
   }, BATTLE_CONFIG.countdownSeconds * 1000);
+}
+
+/** Space, Tab or the touch Stop button during the countdown or the fight: call it off and go back to placement with the armies where they were set down. */
+function stopBattle(): void {
+  endPaintStroke();
+  if (stateMachine.currentState === GameState.Countdown) {
+    if (countdownTimer) {
+      clearTimeout(countdownTimer);
+      countdownTimer = null;
+    }
+    stateMachine.setState(GameState.Placement);
+    showStatus("");
+    return;
+  }
+  if (stateMachine.currentState !== GameState.Simulation) return;
+  simulation.endSimulation(worldTimeSeconds);
+  playAgain();
+  if (!campaignSession) showStatus("Battle stopped.");
 }
 
 function enterSimulation(): void {
@@ -3501,16 +3575,37 @@ function getGalleryManifest(): GalleryCaptureManifestEntry[] {
 
 // ─── Input ───
 scene.onPointerObservable.add((pointerInfo) => {
-  if (stateMachine.currentState !== GameState.Placement) return;
+  if (stateMachine.currentState !== GameState.Placement) {
+    endPaintStroke();
+    return;
+  }
+  const evt = pointerInfo.event as PointerEvent;
+  // A mouse places with a paint stroke (press, drag, release); touch keeps its taps
+  const isMouse = evt.pointerType === "mouse";
+
+  if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
+    if (isMouse && evt.button === 0) beginPaintStroke(scene.pointerX, scene.pointerY);
+    return;
+  }
+
+  if (pointerInfo.type === PointerEventTypes.POINTERUP) {
+    if (evt.button === 0) endPaintStroke();
+    return;
+  }
 
   if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
     // A finger has no hover: the ghost is the mouse's
-    if ((pointerInfo.event as PointerEvent).pointerType !== "touch") previewPlacementAt(scene.pointerX, scene.pointerY);
+    if (evt.pointerType !== "touch") previewPlacementAt(scene.pointerX, scene.pointerY);
+    if (paintStroke) {
+      // A release off the canvas never sends the up: the held button is the truth
+      if (evt.buttons & 1) continuePaintStroke(scene.pointerX, scene.pointerY);
+      else endPaintStroke();
+    }
     return;
   }
 
   if (pointerInfo.type === PointerEventTypes.POINTERTAP) {
-    const evt = pointerInfo.event as PointerEvent;
+    if (isMouse && evt.button === 0) return; // the stroke already placed it
     if (evt.button === 2) {
       // Right-click always removes (desktop)
       tryRemoveUnit(scene.pointerX, scene.pointerY);
@@ -3538,14 +3633,12 @@ window.addEventListener("keydown", (e) => {
 
   switch (e.code) {
     case "Space":
+    case "Tab": // either one starts the battle, stops it early, and goes on from the result
+      if (isTextEntryTarget(e.target)) return;
       e.preventDefault();
       if (stateMachine.currentState === GameState.Result) btnResultPrimaryEl?.click();
-      else startBattle();
-      break;
-    case "Tab": // the key the result prompt names; Space still works
-      if (stateMachine.currentState !== GameState.Result) return;
-      e.preventDefault();
-      btnResultPrimaryEl?.click();
+      else if (stateMachine.currentState === GameState.Placement) startBattle();
+      else stopBattle();
       break;
     case "KeyR":
       resetBattle();
@@ -3566,11 +3659,13 @@ window.addEventListener("keyup", (e) => {
 
 window.addEventListener("blur", () => {
   clearHeldCameraMotion();
+  endPaintStroke();
 });
 
 // Expose to HTML onclick handlers
 const gameApi = {
   startBattle,
+  stopBattle,
   startBattleImmediate: () => startBattle(true),
   previewPlacementAt,
   previewPlacementAtGround: (x: number, z: number) => showPlacementGhost(new Vector3(x, 0, z)),
