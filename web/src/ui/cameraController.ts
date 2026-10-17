@@ -140,6 +140,8 @@ export class CameraController {
       // Right-drag pans: at 15 a small flick threw the view across the field
       this.camera.panningSensibility = 90;
       this.camera.panningInertia = 0.8;
+      // Pan along the ground, not the screen plane: from the tilted view, dragging up or down drove the aim point into the map
+      this.camera.mapPanning = true;
       this.camera.angularSensibilityX = 500;
       this.camera.angularSensibilityY = 500;
       this.camera.pinchPrecision = 40;
