@@ -315,3 +315,4 @@ iter 310 | re-audit (no flips) + [S] grounded-lunge | 1/1 approved | passes 76 -
 iter 311 | [S] struck-man-buckle | 1/1 approved | passes 76 -> 76 (battle-feel.e plateau)
 iter 312 | evidence + [R] one-blow-per-man | 1/1 approved | passes 76 -> 76 (e plateau cleared)
 iter 313 | [S] ready-club-upright, [P] BLOW_DRIVE_VARY | 2/2 approved | passes 76 -> 77 (all pass)
+iter 314 | re-audit only, no gaps pickable | 0/0 approved | passes 77 -> 77 (all pass; loop stopped)
