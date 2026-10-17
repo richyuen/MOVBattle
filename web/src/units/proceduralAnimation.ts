@@ -219,6 +219,8 @@ const BLOW_LEAP = 0.5;
 const BLOW_LUNGE = { front: -0.4, back: 0.3, knee: 0.1 };
 // Farthest a man's head may be from the striker's shoulder, in weapon reaches + one arm, for the blow to be aimed at him at all
 const BLOW_AIM_SLACK = 2.5;
+// The arm is solved onto the strike point only when the point stands this much more than (weapon reach - arm) from the shoulder (see _aimBlow)
+const BLOW_SOLVE_MARGIN = 0.15;
 // A flinch holds its full snap this long before it eases off (see update)
 const FLINCH_HOLD = 0.12;
 // The blow does not stop on the crown (trailer_3_sheet_01 r2c3: the club ends low after its arc, the striker bent into it): from the landing the fist goes on
@@ -393,6 +395,8 @@ export class ProceduralAnimator {
   // Where the blow struck, in the world, taken by blowStruck on the land step: the hold and follow-through stay on that point, not on the man's live crown,
   // which the blow has just thrown over and away (probed: tracking him live ran the club down after his flipped head to shin height, into the turf)
   private _blowStruck: { head: Vector3; contact: Vector3 } | null = null;
+  // This blow's arm is solved onto its point (a stand-off strike), decided each frame of the drop and kept for the land (see _aimBlow)
+  private _blowSolved = false;
 
   /** The sim lands the blow this step, before the struck man is thrown: pin the aim on where his crown and the weapon's head are now. */
   blowStruck(): void {
@@ -407,7 +411,7 @@ export class ProceduralAnimator {
     for (const n of marks) n.computeWorldMatrix(true);
     const scale = Math.max(0.001, b.rightHand.absoluteScaling.y);
     const hand = b.rightHand.getAbsolutePosition();
-    this._blowStruck = { head: this._crownOf(mark).add(new Vector3(0, BLOW_CROWN * scale, 0)), contact: this._contactOn(mark, hand) };
+    this._blowStruck = { head: this._crownOf(mark).add(new Vector3(0, BLOW_CROWN * scale, 0)), contact: this._contactOn(mark, hand, this._blowSolved) };
   }
   // Seconds from the start of the swing to the blow landing, and since the swing started: the aim keeps its own time, so a swing the walk or the stand cuts
   // short in the animation still comes down on the man when the sim lands it
@@ -526,12 +530,24 @@ export class ProceduralAnimator {
       b.hip.position.y += lift / rootScale;
       for (const n of chain) n.computeWorldMatrix(true);
     }
-    // Struck: through the hold the weapon's head stays on the point it hit and the arm is carried on through only as far as keeps it there. The fist lies an
-    // arm from the shoulder and a reach from that point: of the two such places in the vertical plane through both, the upper one (the arm came over the top)
-    if (struck) {
+    // The weapon's head goes onto the point and the arm is brought to it, through the drop and the hold alike: the fist lies an arm from the shoulder and a
+    // reach from that point, of the two such places in the vertical plane through both the upper one (the arm came over the top). Solved through the drop too
+    // (aimed-head-on-crown): with the fist left straight overhead a man nearer than the club is long could only be struck down his near face, the club hung
+    // near vertical in the gap between them, head at his belt (bench: 0.74 m off his crown at the land). Struck, the point is the one it hit.
+    // Solved only from a stand-off: in a press, chest to chest, the point lies inside the fold of arm and weapon (span under reach - arm) and the arm
+    // could only be flung back to reach it, so there the fist stays overhead and the head is pinned on his near face as before (press-landed-contact)
+    if (!struck) {
+      const probe = this._contactOn(mark, b.rightHand.getAbsolutePosition(), true);
+      const sh = b.rightShoulder.getAbsolutePosition();
+      const arm0 = Vector3.Distance(sh, b.rightHand.getAbsolutePosition());
+      this._blowSolved = Vector3.Distance(probe, sh) >= reach - arm0 + BLOW_SOLVE_MARGIN;
+    }
+    const solved = this._blowSolved;
+    const point = struck ? struck.contact : this._contactOn(mark, b.rightHand.getAbsolutePosition(), solved);
+    if (solved || struck) {
       const shoulderNow = b.rightShoulder.getAbsolutePosition();
       const armNow = Vector3.Distance(shoulderNow, b.rightHand.getAbsolutePosition());
-      const d = struck.contact.subtract(shoulderNow);
+      const d = point.subtract(shoulderNow);
       const df = Vector3.Dot(d, toward);
       const span = Math.hypot(df, d.y);
       // A point past the arm's and the weapon's reach together (a lunging strike from a stand-off) has the arm laid straight at it and the head falling short,
@@ -542,26 +558,28 @@ export class ProceduralAnimator {
         // along shoulder->point by k, and off it at right angles, upward, by s
         const upHold = toward.scale(k * ef - s * ey).addInPlace(new Vector3(0, k * ey + s * ef, 0));
         const armHold = Vector3.TransformNormal(upHold, Matrix.Invert(parent.getWorldMatrix())).normalize();
-        b.rightShoulder.rotation.x += (Math.atan2(-armHold.z, -armHold.y) - b.rightShoulder.rotation.x) * w * follow;
+        b.rightShoulder.rotation.x += (Math.atan2(-armHold.z, -armHold.y) - b.rightShoulder.rotation.x) * w * (solved ? 1 : follow);
         for (const n of chain) n.computeWorldMatrix(true);
       }
       // Walked or turned off the point meanwhile (the sim has him on to the next man) so the fist cannot stand a reach from it: the hold is let go now, over
       // its fade, rather than held on a point the club is not on
-      if (follow >= 1 && Vector3.Distance(b.rightHand.getAbsolutePosition(), struck.contact) > reach * BLOW_HOLD_SLIP) {
+      if (struck && follow >= 1 && Vector3.Distance(b.rightHand.getAbsolutePosition(), struck.contact) > reach * BLOW_HOLD_SLIP) {
         this._blowClock = Math.max(this._blowClock, this._blowLandsAt + BLOW_HOLD - BLOW_HOLD_FADE);
       }
     }
-    // Weapon: laid DOWN from the raised fist, at least BLOW_FALL below level. Onto his crown when it lies that steep under the fist; a crown flatter than that,
-    // the weapon comes down the BLOW_FALL line at full reach, through his shoulders and board top, not level across his face
+    // Weapon: laid from the fist onto the point the arm was solved to, so its head is on him: his crown, or under a crown at or over the fist his board top
+    // (_contactOn), pinned every frame from where he stands now, and held on the point it struck after the land, never run on past him into the turf
     const hand = b.rightHand.getAbsolutePosition();
-    const across = Math.max(0.001, Vector3.Dot(head.subtract(hand), toward));
-    // Pinned on him every frame from where he stands now, after any knockback (press-club-lands-on-board): the head on his crown or, a man nearer than the
-    // weapon is long, on his near face where the shaft meets it, and the follow-through runs on to that pinned point, never past him into the turf
-    const contact = struck ? struck.contact : this._contactOn(mark, hand);
-    const onto = hand.y - head.y >= across * Math.tan(BLOW_FALL)
-      ? contact
-      : hand.add(toward.scale(Math.cos(BLOW_FALL) * reach)).addInPlace(new Vector3(0, -Math.sin(BLOW_FALL) * reach, 0));
-    const end = follow > 0 ? Vector3.Lerp(onto, contact, follow) : onto;
+    let end = point;
+    if (!solved) {
+      // Unsolved (a press): laid DOWN from the raised fist at least BLOW_FALL below level, onto his crown when it lies that steep under the fist, else down
+      // the BLOW_FALL line at full reach, settling onto the pinned point over the follow-through
+      const across = Math.max(0.001, Vector3.Dot(head.subtract(hand), toward));
+      const onto = hand.y - head.y >= across * Math.tan(BLOW_FALL)
+        ? point
+        : hand.add(toward.scale(Math.cos(BLOW_FALL) * reach)).addInPlace(new Vector3(0, -Math.sin(BLOW_FALL) * reach, 0));
+      end = follow > 0 ? Vector3.Lerp(onto, point, follow) : onto;
+    }
     const dir = end.subtract(hand).normalize();
     this._aimTip = Vector3.TransformNormal(dir, Matrix.RotationY(-b.root.rotation.y)).normalize();
     this._aimWeight = w;
@@ -1810,7 +1828,7 @@ export class ProceduralAnimator {
    * His crown when the line from the fist falls onto it at least CONTACT_MIN_FALL below level; else (a crown at or over the fist) the top of his board, on his
    * near face: PRESS_BOARD_LINE of his height under the crown, CONTACT_FRONT of his height out of his axis toward the striker. The mark's chain is brought up here.
    */
-  private _contactOn(mark: TransformNode, hand: Vector3): Vector3 {
+  private _contactOn(mark: TransformNode, hand: Vector3, solved = false): Vector3 {
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = mark; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
@@ -1821,9 +1839,14 @@ export class ProceduralAnimator {
     // press-club-lands-on-board: the club's HEAD is pinned on him, not only its line. A crown a full weapon's length off takes it; a nearer man would let a
     // head laid along that line run on past him into the turf, so it stops on his near face where the shaft, one reach long from the fist, meets it.
     const reach = this._weaponReach() * scale;
-    if (onCrown && Vector3.Distance(hand, crown) >= reach) return crown;
+    // A blow whose arm is solved onto the point (_aimBlow) takes the crown however near he stands: the fist is brought back a reach from it
+    if (onCrown && (solved || Vector3.Distance(hand, crown) >= reach)) return crown;
     // His height over the ground the striker stands on (the field is near flat where men press)
     const tall = Math.max(0.001, crown.y - this._body.root.getAbsolutePosition().y);
+    // A solved blow under a crown at or over the fist comes down across the top of his shoulders, on his axis, PRESS_BOARD_LINE of his height under the
+    // crown: his near face lay under the fist, and the head slid down it to his belt (bench: two men both leaping into their blows, neither fist cleared
+    // the other's helm); from a strike stand-off the arm solved onto his axis lays the club ~30 deg down across his shoulders
+    if (solved) return new Vector3(crown.x, crown.y - tall * PRESS_BOARD_LINE, crown.z);
     const back = new Vector3(hand.x - crown.x, 0, hand.z - crown.z);
     if (back.lengthSquared() < 1e-6) back.set(0, 0, -1);
     back.normalize();

@@ -134,6 +134,8 @@ const WALL_QUEUE_GAP = 0.25;
 const REAR_RANK_REACH = 1.4;
 // How far past shoulder contact a pressing clubber may still be when he brings his blow down (see _processUnitDecision).
 const BLOW_CONTACT_SLACK = 0.3;
+// How far past body contact an open-field striker stands to swing (see the strike stand-off in _processUnitDecision).
+const STRIKE_STAND = 0.45;
 // Two plain men both coming on at least this fast (m/s, along the line between them) meet without knocking each other down (see the collision pass).
 const MEET_CLOSING = 0.5;
 const REAR_RANK_LANE = 0.7;
@@ -668,15 +670,21 @@ export class SimulationSystem {
       const presses = (aiProfile.id !== "ai.brace" || enemy.definition.aiProfileId === "ai.brace") && unit.definition.engageRange < this.meleePressMaxReach;
       // A carrier out of its slot sidles along the wall into it while it fights.
       const slot = this._shieldSlots.get(unit);
+      // Strike stand-off (open field: neither man in a shield wall): a man who brings a club or a blade down on a man stops STRIKE_STAND past
+      // body contact, where the weapon falls on the other's crown or board top from overhead (trailer_3_sheet_01 r2c3: the clubbers strike from a
+      // club's length), instead of walking into shoulder contact (pose bench: roots 0.9 m apart at the land, nearer than the club is long, so the
+      // club could only cross the man's front or stand upright behind the fists). A wall's press keeps closing to contact.
+      const standOff = !slot && !this._shieldSlots.get(enemy) && unit.swingsAtMan ? STRIKE_STAND : 0;
+      const strikeDistance = contactDistance + standOff;
       const sidle = this._shieldSlotStep(unit, true);
       if (canMove && slot?.hold) {
         // A rear-rank man keeps his place behind the boards and fights over them: he does not press through the front.
         if (sidle) unit.moveTo(unit.position.add(sidle));
         else unit.stopMoving();
-      } else if (canMove && presses && distance > contactDistance + 0.05) {
+      } else if (canMove && presses && distance > strikeDistance + 0.05) {
         const back = unit.position.subtract(enemy.position);
         back.y = 0;
-        const stand = enemy.position.add(back.normalize().scale(contactDistance));
+        const stand = enemy.position.add(back.normalize().scale(strikeDistance));
         unit.moveTo(sidle ? stand.addInPlace(sidle) : stand);
       } else if (canMove && sidle) {
         unit.moveTo(unit.position.add(sidle));
@@ -691,7 +699,7 @@ export class SimulationSystem {
       // is at the man's shoulder, or has stopped closing (the crowd or a board holds him off).
       const closingFrom = this._closingFrom.get(unit);
       this._closingFrom.set(unit, distance);
-      const closing = presses && canMove && !slot?.hold && unit.swingsAtMan && distance > contactDistance + BLOW_CONTACT_SLACK
+      const closing = presses && canMove && !slot?.hold && unit.swingsAtMan && distance > strikeDistance + BLOW_CONTACT_SLACK
         && (closingFrom === undefined || distance < closingFrom - 0.02);
       if (canAttack && !closing) {
         this._tryAttack(unit, enemy, attackProfile, now);
@@ -1625,6 +1633,10 @@ export class SimulationSystem {
     // A heavy blow that leaves him standing dwells on him (BLOW_DWELL): the push is withheld from the damage step and fired with the throw; the crowd
     // around him still takes the blow's shock now
     const dwells = heavy && target.currentHealth > damage;
+    // Contact first, recoil second (trailer_3_sheet_01 r2c3: the club head is on the man as he starts to go): while the blow dwells on him his flinch is
+    // held, so the land frame shows the club on his crown or shoulders and not his head already snapped 0.8 m back off it (pose bench, hoplite duel);
+    // the throw at the dwell's end lays the recoil on
+    if (dwells) target.holdFlinch(BLOW_DWELL);
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();

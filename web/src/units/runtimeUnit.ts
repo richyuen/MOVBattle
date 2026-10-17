@@ -473,6 +473,12 @@ export class RuntimeUnit {
     return this._blowStagger > 0;
   }
 
+  // A dwelling blow's club rests on him until then: no flinch snaps him off it before the throw (see SimulationSystem._landMeleeBlow)
+  private _flinchHeldUntil = 0;
+  holdFlinch(seconds: number): void {
+    this._flinchHeldUntil = RuntimeUnit.timeNowSeconds() + seconds;
+  }
+
   /** A heavy blow from `from` with `knockback` m/s of push has just landed on him: he is thrown back off his feet (BLOW_THROW), shown on this very frame. */
   staggerFromBlow(from: Vector3, knockback: number): void {
     if (this._isDead || this.isToppled || this.isDowned || (this._linkedParent && this._isAnchoredActor)) return;
@@ -621,8 +627,8 @@ export class RuntimeUnit {
     );
     this._maybeInterruptAttack(impactPressure * this._crowdPhysicsProfile.impactToppleScale, RuntimeUnit.timeNowSeconds());
 
-    // Flinch: tilt body toward impact
-    this.animator.triggerFlinch();
+    // Flinch: tilt body toward impact (not while a dwelling blow's club rests on him, see holdFlinch)
+    if (RuntimeUnit.timeNowSeconds() >= this._flinchHeldUntil) this.animator.triggerFlinch();
     this._updateHealthBar();
     return this._buildImpactDelta(damage, healthBefore, wasDead, stateBefore, impulse);
   }
@@ -821,7 +827,8 @@ export class RuntimeUnit {
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
     this.animator.update(dt);
-    if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3) {
+    if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3
+      && now >= this._blowTarget._flinchHeldUntil) {
       this._blowTarget.animator.triggerFlinch();
     }
     this._applyVisualPresentation(now);

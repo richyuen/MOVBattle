@@ -51,7 +51,7 @@ await page.evaluate(() => {
   window.__clubHead = (u) => { const b = u.body; const hand = window.__wp(b.rightHand); let best = hand, bd = -1; for (const m of b.rightHand.getChildMeshes(false)) { const p = window.__far(m, hand); const d = (p.x - hand.x) ** 2 + (p.y - hand.y) ** 2 + (p.z - hand.z) ** 2; if (d > bd) { bd = d; best = p; } } return best; };
   window.__pose = (u) => { const b = u.body; const P = window.__wp; const kneeL = P(b.leftKnee), kneeR = P(b.rightKnee);
     return { root: P(b.root), hip: P(b.hip), neck: P(b.neck), top: P(b.headTop), hipL: P(b.leftHip), hipR: P(b.rightHip), kneeL, kneeR, footL: window.__far(b.leftLowerLeg, kneeL), footR: window.__far(b.rightLowerLeg, kneeR), thrownW: u.animator._thrownWeight ? u.animator._thrownWeight() : -1, y: u.position.y }; };
-  window.__strike = (a, t) => { const an = a.animator; return { club: window.__clubHead(a), hand: window.__wp(a.body.rightHand), shoulder: window.__wp(a.body.rightShoulder), crownA: window.__wp(a.body.headTop), crownT: window.__wp(t.body.headTop), state: an._state, motion: an._attackMotion, aimW: an._aimWeight, struck: an._blowStruck ? { head: r2(an._blowStruck.head), contact: r2(an._blowStruck.contact) } : null }; };
+  window.__strike = (a, t) => { const an = a.animator; return { club: window.__clubHead(a), hand: window.__wp(a.body.rightHand), shoulder: window.__wp(a.body.rightShoulder), crownA: window.__wp(a.body.headTop), crownT: window.__wp(t.body.headTop), state: an._state, motion: an._attackMotion, aimW: an._aimWeight, struck: an._blowStruck ? { head: r2(an._blowStruck.head), contact: r2(an._blowStruck.contact) } : null, crownOf: an._blowMark && !an._blowMark.isDisposed() ? r2(an._crownOf(an._blowMark)) : null, hipY: +a.body.hip.position.y.toFixed(3), hipRest: an._hipRest, blowClock: an._blowClock, landsAt: an._blowLandsAt }; };
   window.__start = (attacker, target) => {
     window.game.resetBattle(); window.reseed(); window.game.resetClock(); window.advanceTime(50);
     const a = window.game.spawnUnit(attacker, 1, { x: 2.5, z: 0 }); const t = window.game.spawnUnit(target, 0, { x: -2.5, z: 0 });
@@ -84,8 +84,8 @@ async function at(attacker, target, ms, name) {
 
 if (opt("--at", "")) {
   for (const target of targets) for (const ms of opt("--at", "").split(",").map(Number)) {
-    await at(attacker, target, ms, `${target}_t${ms}`);
-    console.log("shot", target, ms);
+    const m = await at(attacker, target, ms, `${target}_t${ms}`);
+    console.log("at", target, ms, JSON.stringify(m.s));
   }
   await browser.close(); kill(); process.exit(0);
 }
