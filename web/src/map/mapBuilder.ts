@@ -251,6 +251,14 @@ function islandRim(a: number): [number, number] {
   return [c * r, s * r];
 }
 
+/** The spot itself if it is on the island, else the point on the rim straight in toward the centre from it: the camera's aim point is held to this. */
+export function clampToIsland(x: number, z: number): [number, number] {
+  const f = Math.abs(x / (ISLAND_WIDTH / 2)) ** ISLAND_ROUND + Math.abs(z / (ISLAND_DEPTH / 2)) ** ISLAND_ROUND;
+  if (f <= 1) return [x, z];
+  const k = f ** (-1 / ISLAND_ROUND);
+  return [x * k, z * k];
+}
+
 /** Whether a spot is on the island, at least `inset` metres in from the rim */
 function onIsland(x: number, z: number, inset = 0): boolean {
   return Math.abs(x / (ISLAND_WIDTH / 2 - inset)) ** ISLAND_ROUND + Math.abs(z / (ISLAND_DEPTH / 2 - inset)) ** ISLAND_ROUND <= 1;

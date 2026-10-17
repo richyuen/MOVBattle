@@ -153,6 +153,29 @@ export class CameraController {
     }
 
     // Keyboard rotation (Q/E) handled via game input
+
+    // Every frame, once the camera has taken its input (drag, inertia), the aim point is held on the ground the bounds allow
+    this.camera.onAfterCheckInputsObservable.add(() => this._clampTarget());
+  }
+
+  /** Where the aim point may go: given a ground spot, the nearest allowed one. Null leaves it free. */
+  private _groundBounds: ((x: number, z: number) => [number, number]) | null = null;
+
+  setGroundBounds(bounds: ((x: number, z: number) => [number, number]) | null): void {
+    this._groundBounds = bounds;
+    this._clampTarget();
+  }
+
+  private _clampTarget(): void {
+    if (!this._groundBounds) return;
+    const t = this.camera.target;
+    const [x, z] = this._groundBounds(t.x, t.z);
+    if (x === t.x && z === t.z) return;
+    t.x = x;
+    t.z = z;
+    // Stop the drag's glide too, or it keeps pressing against the edge
+    this.camera.inertialPanningX = 0;
+    this.camera.inertialPanningY = 0;
   }
   private _applyPanOffsets(offsetX: number, offsetY: number): void {
     const cosA = Math.cos(this.camera.alpha);

@@ -63,6 +63,7 @@ import {
   type BattleMapId,
   type BattleMapInstance,
   setPlacementGuidesVisible,
+  clampToIsland,
 } from "./map/mapBuilder";
 import type { Obstacle } from "./map/obstacles";
 import { isPointInsideHazard } from "./map/hazards";
@@ -187,6 +188,8 @@ shadowGen.normalBias = 0.02;
 
 // Camera
 const camCtrl = new CameraController(scene, canvas);
+// Panning stops at the island's rim: every map stands on the same island
+camCtrl.setGroundBounds(clampToIsland);
 bodyEl.classList.toggle("touch-device", camCtrl.isTouchDevice);
 // Touch has no Space or Tab: a Stop tab stands at the top of the screen during the fight
 document.getElementById("btnStopBattle")?.addEventListener("click", () => stopBattle());
