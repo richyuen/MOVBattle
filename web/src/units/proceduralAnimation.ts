@@ -320,7 +320,7 @@ const BUCKLE = { thigh: 0.55, knee: 1.4, sink: 0.2, trunk: 0.3, head: 0.5, arm: 
  *   BUCKLE_VARY.head and rolled with it, one knee BUCKLE_VARY.knee deeper than the other, his trunk BUCKLE_VARY.trunk of its fold more or less, and one arm
  *   dropped further than the other.
  */
-const BLOW_DRIVE_VARY = 0.15;
+const BLOW_DRIVE_VARY = 0.4;
 const BUCKLE_VARY = { twist: 0.35, head: 0.5, roll: 0.18, knee: 0.3, trunk: 0.4, arm: 0.5 };
 // Thrown back off his feet by a heavy blow, hip-led (trailer_3_sheet_01 r2c3, the red man leaving the clubbers, read off the frame: he goes seat-first, the
 // pelvis the lowest point of him and the one the blow carries; the trunk is tipped ~53 deg from upright the way he goes, head still above the hips; one leg
