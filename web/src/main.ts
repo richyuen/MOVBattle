@@ -3741,6 +3741,8 @@ const gameApi = {
   clearHitLog: () => {
     simulation.hitLog.length = 0;
   },
+  // The world clock the hit and ability logs stamp (seconds), so a capture can turn a log entry into a frame count from the battle's start.
+  getWorldTime: () => worldTimeSeconds,
   // Abilities and special fires (teleport, leap, heal, volley, summon, lightning, throw, status) since the last clear: loop v2's criterion c evidence.
   getAbilityLog: () => simulation.abilityLog.slice(),
   clearAbilityLog: () => {

@@ -1,0 +1,10 @@
+# tribal.mammoth — Mammoth (tribal)
+Source: https://tabs.wiki.gg/wiki/Mammoth (2026-10-17). Renders: reference/units/tribal.mammoth.red.png, .blue.png. Shot: reference/units/tribal.mammoth.jpg. Lineup: reference/factions/tribal.jpg
+## Infobox
+Cost 2,200 | Hitpoints 2525 (2500 (BH)) | Size 1.005x | Weight 50.00x | Speed 1.20x | Abilities Mammoth Charge | Animal Abilities Mammoth Charge | Movement Melee Unit | Targeting Enemy
+## Weapons
+- ability Mammoth Charge (ability): Unit charging like a mammoth, using a mammoth sound. Category:Ability Category:Abilities Category:Tribal Category:TABS Category:Early Access Category:Early acce
+## Characteristics
+The Mammoth is an exceptionally tough and moderately powerful unit. Armed with their two grand tusks, they will charge at enemy units and trample anyone who comes close. They have exceptionally high health that allows them to take on lots of punishment and massive size with somewhat fast movement speed. They also can take more damage to their face compared to the rest of their body. With such toughness, the Mammoth is incredibly expensive. In combat, the biggest strength of the Mammoth is their size, as them walking alone will cause the ground to shake, and anyone who comes close to them will get stunned and trampled by the shear shockwave of the walking Mammoth. Although their trample deals low damage, the cumulative area of effect makes it moderately high in output.
+## Appearance
+The Mammoth is a prehistoric beast of massive size with two grand protruding tusks that slightly curves back at their front. They are quadrupedal mammals, with massive and stubby legs. They are covered in thick brown hair along with a majestic wood-brown mane. They have a big round belly and a skinny and fluffy tail at their rear. Their head has a long proboscis below their two googly eyes called a trunk, along with a pair of small flappy ears. The Mammoth is painted in many parts of their body to distinguish from Red or Blue; their legs painted with stripes and dots, their tusk painted at the end followed by a stripe and a marking on their face from the forehead to the trunk.

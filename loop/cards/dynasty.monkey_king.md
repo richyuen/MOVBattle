@@ -1,0 +1,12 @@
+# dynasty.monkey_king — Monkey King (dynasty)
+Source: https://tabs.wiki.gg/wiki/Monkey_King (2026-10-17). Renders: reference/units/dynasty.monkey_king.red.png, .blue.png. Shot: reference/units/dynasty.monkey_king.jpg. Lineup: reference/factions/dynasty.jpg
+## Infobox
+Cost 2,000 | Hitpoints 529 (400 (BH)) | Size 1.15x | Weight 6.00x | Speed 1.00x | Weapon Type Two-handed | Main Hand Monkey King Staff | Off Hand N/A | Abilities Monkey King JumpSelf CopyFrom their staff | Movement Melee Unit | Targeting Enemy
+## Weapons
+- main Monkey King Staff: Bludgeon - Melee; damage 45-90 (avg 67.5); cooldown 0.85 s; range 3; warm-up 0.5 s; force 1500
+- ability Monkey King Jump (ability): When a Unit is given this ability, they will jump up a certain height when a Unit is in a reasonable distance.
+- ability Self Copy (ability): This ability is activated when a unit using it damages an enemy with an attack at short range, creating an almost exact copy of the previous unit for a short am
+## Characteristics
+The Monkey King is a mythical being that wields a magical staff and has a long Monkey Tail. They are ferocious in combat, leaping into crowds of enemy units, using sweeping attacks with their staff while jumping around frenetically. The Monkey King defeats his enemies using his special techniques. With his staff and powerful attacks, the Monkey King proves to be a formidable fighter who should not be taken lightly. They can create clones of themself for a short while, and the clones will attack enemy units as powerful as the original, before disappearing into thin air. In combat, the staff may also grow in length, increasing the reach of sweep attacks. In most interpretations, the monkey king is mostly shown as an adventurer or a god, and is based off of the Chinese legend of Sun Wukong.
+## Appearance
+The Monkey King is a unique Wobbler in that it has several abnormal body parts. The Monkey King, for one, has a baboon-like head. It has blonde hair and a dark colored face, and also wears a golden crown around their head with feathers attached. The Monkey King wears a scarf. The Monkey King wears a robe with golden strips that covers only their left side of their upper body. They wear a wrapping around their waist and have puffy shorts with golden folds. They also wear little pointy wooden shoes. The Monkey King also has a odd looking curvy tail. The staff that the Monkey King wields is very fast and has golden and emerald designs on the ends.

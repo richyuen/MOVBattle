@@ -1563,6 +1563,7 @@ export class SimulationSystem {
     }
 
     if (attackProfile.type === AttackType.Ranged || attackProfile.type === AttackType.Siege) {
+      this._logAbility(attacker, "fire", now);
       if (this.projectileSystem) {
         if (isFirearmUnit(attacker)) {
           this.projectileSystem.spawnMuzzleFlash(

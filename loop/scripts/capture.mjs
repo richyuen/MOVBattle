@@ -1,10 +1,13 @@
 // Evidence capture for the TABS-fidelity improvement loop.
-//   node loop/scripts/capture.mjs --iter N [--showcase-only] [--regression-only] [--port 4181]
-//   node loop/scripts/capture.mjs --only shot[,shot]   quick look: only those showcase shots, to output/loop/look/
-//   node loop/scripts/capture.mjs --iter N --focus [--shots a,b]   gap review: only the shots named in loop/STATE.md's FAIL blockers
+//   node loop/scripts/capture.mjs --iter N --units a,b | --batch <name>   loop v2: each unit's shot set (idle, windup, release, flight, struck,
+//       ability pair when one fires) in a seeded one-on-one against a squire, plus lineup_<faction> once per faction; no scenarios
+//   node loop/scripts/capture.mjs --units a,b | --batch <name>             the same as a look, to output/loop/look/
+//   node loop/scripts/capture.mjs --iter N --regression-only               the scenario suite alone (loop v2 batch checkpoint)
+//   node loop/scripts/capture.mjs --iter N [--showcase-only]               loop v1's showcase set (kept for reference)
+//   node loop/scripts/capture.mjs --only shot[,shot]                       quick look at v1 showcase shots, to output/loop/look/
+// Every run also writes output/loop/ours.json (game.listUnitDefinitions) for loop/scripts/stats.mjs.
 // Deterministic: Math.random is a seeded PRNG reseeded, and the world clock restarted from zero (window.game.resetClock), at every resetBattle, so
-// a scene plays the same frames in a --only look, a --focus review and a full run, whatever ran before it (time is stepped through window.advanceTime only).
-//     and Ranked open gaps (plus --shots, plus each one's motion-pair partner), and the regression scenarios
+// a scene plays the same frames in a look and in an iteration run, whatever ran before it (time is stepped through window.advanceTime only).
 // Scenes with no requested shot are skipped, not just left unsaved.
 // Builds web/, serves it with vite preview, drives the game headlessly with time advanced ONLY
 // through window.advanceTime (requestAnimationFrame is stubbed so the real-time render loop never
@@ -18,6 +21,7 @@ import path from "node:path";
 import { spawn, execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { loadRoster, batchByName } from "./lib/roster.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..", "..");
@@ -33,10 +37,13 @@ const iter = Number(opt("--iter", "0"));
 const port = Number(opt("--port", "4181"));
 const list = (s) => s.split(",").map((n) => n.trim()).filter(Boolean);
 const only = list(opt("--only", ""));
-const focus = flag("--focus");
-const doRegression = !flag("--showcase-only") && only.length === 0;
-const doShowcase = !flag("--regression-only");
-const outDir = only.length > 0 ? path.join(root, "output", "loop", "look") : path.join(root, "output", "loop", `iter-${iter}`);
+const batchName = opt("--batch", "");
+const batch = batchName ? batchByName(loadRoster(), batchName) : null;
+const unitIds = batch ? batch.units : list(opt("--units", ""));
+const unitMode = unitIds.length > 0;
+const doRegression = flag("--regression-only") || (!flag("--showcase-only") && only.length === 0 && !unitMode);
+const doShowcase = !flag("--regression-only") && !unitMode;
+const outDir = only.length > 0 || (unitMode && iter === 0) ? path.join(root, "output", "loop", "look") : path.join(root, "output", "loop", `iter-${iter}`);
 const baseUrl = `http://127.0.0.1:${port}/MOVBattle/`;
 const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const KEEP_ITERS = 10;
@@ -146,7 +153,7 @@ const GALLERY_SHOTS = [
 const THROW_GROUPS = [["spears", 2], ["bombs", 3], ["casters", 3]];
 const BIOME_MAPS = ["introduction", "adventure", "challenge", "dynasty", "renaissance", "pirate", "simulation"];
 
-// Every shot a full run takes, for --focus to pick names out of STATE.md
+// Every shot a v1 full run takes (--only picks from these)
 const ALL_SHOTS = [
   "hud_placement", "ui_campaign_select",
   ...["400ms", "550ms", "1100ms", "1250ms", "3800ms"].map((t) => `war_machines_${t}`),
@@ -162,25 +169,16 @@ const PAIRS = [
   ["big_melee_result", "big_melee_result_1s"], ["melee_club_drop_pre", "melee_club_drop"], ["duel_club_land", "duel_club_thrown"], ...THROW_GROUPS.map(([g]) => [`throw_${g}_release`, `throw_${g}_flight`]),
 ];
 
-// --focus: the shots named in STATE.md's FAIL blocker lines (the "- " lines of the Criteria block) and its Ranked open gaps
-function focusShots() {
-  const state = fs.readFileSync(path.join(root, "loop", "STATE.md"), "utf8");
-  const section = (title) => {
-    const m = new RegExp(`^## ${title}[^\\n]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, "m").exec(state);
-    return m ? m[1] : "";
-  };
-  const text = section("Criteria").split(/\r?\n/).filter((l) => l.startsWith("- ")).join("\n") + "\n" + section("Ranked open gaps");
-  const names = new Set(ALL_SHOTS.filter((s) => new RegExp(`(^|[^a-z0-9_])${s}(?![a-z0-9_])`).test(text)));
-  for (const s of list(opt("--shots", ""))) names.add(s);
-  for (const [a, b] of PAIRS) if (names.has(a) || names.has(b)) { names.add(a); names.add(b); }
-  return [...names];
-}
-const wanted = only.length > 0 ? only : focus ? focusShots() : null;
+const wanted = only.length > 0 ? only : null;
 // Whether any of these shots is to be taken (every shot, in a full run)
 const wants = (...names) => wanted === null || names.some((n) => wanted.includes(n));
+// Loop v2: the shot set of one unit (the ability pair only when a second mechanic fires)
+const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after"].map((s) => `unit_${id}_${s}`);
+void PAIRS;
 // --list: print the shots this run would take and stop
 if (flag("--list")) {
-  process.stdout.write(`${(wanted ?? ALL_SHOTS).join("\n")}\n`);
+  const names = unitMode ? [...unitIds.flatMap(UNIT_SHOTS), ...new Set(unitIds.map((id) => `lineup_${id.split(".")[0]}`))] : (wanted ?? ALL_SHOTS);
+  process.stdout.write(`${names.join("\n")}\n`);
   process.exit(0);
 }
 
@@ -260,6 +258,7 @@ const summary = {
   consoleErrors: [],
   pageErrors: [],
   notes: [],
+  units: {},
 };
 const full = { scenarios: [] };
 
@@ -337,6 +336,156 @@ async function main() {
       window.game.skipTitleIntro();
       window.advanceTime(50);
     });
+
+    // Every run writes the roster's resolved numbers for loop/scripts/stats.mjs
+    const ours = await page.evaluate(() => window.game.listUnitDefinitions());
+    fs.mkdirSync(path.join(root, "output", "loop"), { recursive: true });
+    fs.writeFileSync(path.join(root, "output", "loop", "ours.json"), JSON.stringify(ours));
+    const oursById = Object.fromEntries(ours.map((r) => [r.id, r]));
+
+    // Loop v2: one unit against a squire in the open. The scene is seeded and replayed from reset to every shot's frame (bench.mjs's pattern), so a
+    // measurement never feeds back into a frame. The release is the first plain attack event the sim records for the unit (a landed blow, a missile,
+    // a throw or cast, a burst or volley); a second, special mechanic (teleport, leap, heal, summon, lightning, slam, status) is the ability pair.
+    if (unitMode) {
+      await page.evaluate(() => {
+        const r2 = (v) => ({ x: +v.x.toFixed(3), y: +v.y.toFixed(3), z: +v.z.toFixed(3) });
+        window.__wp = (n) => { const c = []; for (let k = n; k; k = k.parent) c.unshift(k); for (const k of c) k.computeWorldMatrix(true); return r2(n.getAbsolutePosition()); };
+        // Place the unit (team 1, +x) and its sparring squire (team 0, -x). `support` adds a hurt ally beside the unit and puts the enemy far off, so
+        // the first event is the heal or buff.
+        window.__unitPlace = (id, d, support) => {
+          const game = window.game;
+          game.resetBattle();
+          document.body.classList.add("capture-mode");
+          window.advanceTime(50);
+          const a = game.spawnUnit(id, 1, { x: d, z: 0 });
+          const t = game.spawnUnit("medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
+          let ally = null;
+          if (support) {
+            ally = game.spawnUnit("medieval.squire", 1, { x: d + 2, z: 1.2 });
+            if (ally) ally.applyDamage(ally.maxHealth * 0.6, ally.position.scale(0));
+          }
+          window.__ua = a; window.__ut = t; window.__ually = ally;
+          window.advanceTime(50);
+          return Boolean(a && t);
+        };
+        window.__unitStart = (id, d, support) => {
+          if (!window.__unitPlace(id, d, support)) return false;
+          window.game.startBattleImmediate();
+          window.game.clearHitLog();
+          window.game.clearAbilityLog();
+          window.__t0 = window.game.getWorldTime();
+          return true;
+        };
+        // Times are sim ticks (1/60 s). advanceTime(ms) runs round(ms / 16.67) ticks and renders once, so a replay to a frame is one call and
+        // one swiftshader render, not one per tick.
+        window.__unitAt = (id, d, support, ticks) => {
+          if (!window.__unitStart(id, d, support)) return false;
+          if (ticks > 0) window.advanceTime(ticks * 1000 / 60);
+          return true;
+        };
+        // Rig height, root to head top, for the camera's distance (a giant needs a wider frame)
+        window.__rig = (u) => { try { return Math.max(0.6, window.__wp(u.body.headTop).y - window.__wp(u.body.root).y); } catch { return 1.8; } };
+        // Frame across the line between the two men, level. `on`: 0 the midpoint, 1 the unit alone, 2 the struck man (the ally for a support unit),
+        // 3 the unit and the first metres of its missile's path (a ranged unit's target is far off; the man and what leaves his hand are the evidence).
+        window.__unitFrame = (on, s) => {
+          const a = window.__ua, t = on === 2 && window.__ually ? window.__ually : window.__ut;
+          const pa = a.body.root.position, pt = t.body.root.position;
+          let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
+          const c = on === 1 ? { x: pa.x, z: pa.z } : on === 2 ? { x: pt.x, z: pt.z } : on === 3 ? { x: pa.x + fx * 1.4 * s, z: pa.z + fz * 1.4 * s } : { x: (pa.x + pt.x) / 2, z: (pa.z + pt.z) / 2 };
+          const radius = (on === 1 || on === 2 ? 3.8 : on === 3 ? 5.2 : 5.5) * s;
+          window.game.frameCamera({ x: c.x, y: (on === 3 ? 0.8 : 0.55) * s + 0.45, z: c.z }, radius, Math.atan2(fx, -fz), on === 3 ? Math.PI / 2.2 : Math.PI / 2.1);
+        };
+      });
+      const PLAIN = /^(missile|melee hit|fire|throw|cast|burst|volley|shotgun)/;
+      const TICK = 1000 / 60;
+      const lineupsDone = new Set();
+      for (const id of unitIds) {
+        const def = oursById[id];
+        if (!def) { summary.notes.push(`unit_${id}: not in the roster`); continue; }
+        const abilities = new Set(def.abilities);
+        const charger = def.archetype === "charge_melee" || abilities.has("charge_impact") || abilities.has("jump_charge") || abilities.has("leap_attack");
+        const support = def.archetype === "support_heal" || def.archetype === "support_buff";
+        const d = def.archetype === "artillery" ? 9 : charger ? 8 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
+        // Detection steps 6 ticks (one render) at a time; a logged event's frame comes from its world-time stamp, exact to the tick. Only the
+        // projectile-count fallback (a missile with no fire log) is 6 ticks coarse.
+        const det = await page.evaluate(({ id, d, support }) => {
+          if (!window.__unitStart(id, d, support)) return { error: "spawn failed", events: [], rig: 1.8 };
+          const rig = window.__rig(window.__ua);
+          const game = window.game;
+          const t0 = window.__t0;
+          const tickOf = (t) => Math.max(1, Math.round((t - t0) * 60));
+          const missiles = () => JSON.parse(window.render_game_to_text()).projectiles;
+          let before = missiles();
+          const events = [];
+          const seen = new Set();
+          let hits = 0, logged = 0;
+          const plain = (k) => /^(missile|melee hit|fire|throw|cast|burst|volley|shotgun)/.test(k);
+          for (let tick = 6; tick <= 540; tick += 6) {
+            window.advanceTime(100);
+            const h = game.getHitLog().filter((e) => e.attackerUnit === id);
+            if (h.length > hits && !seen.has("melee hit")) { events.push({ kind: "melee hit", tick: tickOf(h[hits].t) }); seen.add("melee hit"); }
+            hits = h.length;
+            const ab = game.getAbilityLog().filter((e) => e.unit === id);
+            for (const e of ab.slice(logged)) if (!seen.has(e.kind)) { events.push({ kind: e.kind, tick: tickOf(e.t) }); seen.add(e.kind); }
+            logged = ab.length;
+            const now = missiles();
+            if (now > before && !seen.has("missile") && !seen.has("fire") && !seen.has("throw") && !seen.has("cast")) { events.push({ kind: "missile", tick }); seen.add("missile"); }
+            before = now;
+            // Done once a plain attack and a special mechanic are both seen, or 3 s after the first event
+            if (events.some((e) => plain(e.kind)) && events.some((e) => !plain(e.kind))) break;
+            if (events.length && tick >= Math.min(...events.map((e) => e.tick)) + 180) break;
+          }
+          events.sort((a, b) => a.tick - b.tick);
+          return { events, rig };
+        }, { id, d, support });
+        // A thrower or caster logs "fire" at the decision and "throw"/"cast" at the let-go: the let-go is the release
+        const release = det.events.find((e) => /^(throw|cast)/.test(e.kind)) ?? det.events.find((e) => PLAIN.test(e.kind)) ?? det.events[0] ?? null;
+        const ability = det.events.find((e) => !PLAIN.test(e.kind) && e !== release) ?? null;
+        const s = Math.min(4, Math.max(1, det.rig / 1.8));
+        const ms = (e) => Math.round(e.tick * TICK);
+        summary.units[id] = { release: release && { ...release, ms: ms(release) }, ability: ability && { ...ability, ms: ms(ability) }, events: det.events, rigHeight: +det.rig.toFixed(2), d, s: +s.toFixed(2), support };
+        summary.notes.push(det.error ? `unit_${id}: ${det.error}` : release
+          ? `unit_${id}: release = ${release.kind} at ${ms(release)} ms${ability ? `; ability ${ability.kind} at ${ms(ability)} ms` : ""} (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`
+          : `unit_${id}: nothing within 9 s (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`);
+        if (det.error) continue;
+        const take = async (name, ticks, on) => {
+          const ok = await page.evaluate(({ id, d, support, ticks, on, s }) => {
+            const r = ticks === null ? window.__unitPlace(id, d, support) : window.__unitAt(id, d, support, ticks);
+            if (r) window.__unitFrame(on, s);
+            return r;
+          }, { id, d, support, ticks, on, s });
+          if (ok) await shot(page, name);
+          else summary.notes.push(`${name}: spawn failed`);
+        };
+        const far = d >= 6 ? 3 : 0;
+        await take(`unit_${id}_idle`, null, 1);
+        if (release) {
+          // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
+          if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
+          await take(`unit_${id}_release`, release.tick, far);
+          await take(`unit_${id}_flight`, release.tick + 9, far);
+          await take(`unit_${id}_struck`, release.tick + 20, 2);
+        }
+        if (ability) {
+          await take(`unit_${id}_ability`, ability.tick, far);
+          await take(`unit_${id}_ability_after`, ability.tick + 9, far);
+        }
+        const faction = id.split(".")[0];
+        if (!lineupsDone.has(faction)) {
+          lineupsDone.add(faction);
+          await page.evaluate((n) => {
+            window.game.resetBattle();
+            window.game.runScenarioGalleryValidation(n);
+          }, `gallery_faction_${faction}`);
+          await shot(page, `lineup_${faction}`);
+        }
+      }
+      await page.evaluate(() => {
+        document.body.classList.remove("capture-mode");
+        window.game.resetBattle();
+        window.advanceTime(50);
+      });
+    }
 
     if (doShowcase && wants("hud_placement", "ui_campaign_select")) {
       await page.evaluate(() => {
