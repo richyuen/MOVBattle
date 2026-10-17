@@ -202,19 +202,15 @@ const BLOW_HOLD_FADE = 0.15;
 const BLOW_HOLD_SLIP = 1.25;
 const BLOW_ELBOW = -0.15;
 const BLOW_PITCH = 0.4;
-// The weapon falls on a man too tall to crown from the fist this far under the fist (r2c3: the club falls on the man from above), the mark this far over
-// the head top (BLOW_CROWN; hand-scale units)
-const BLOW_DROP = 0.25;
 // The weapon arm in the blow: straight up over his head, this far forward of vertical (rad)
 const BLOW_OVERHEAD = 0.5;
+// The mark this far over the head top (hand-scale units)
 const BLOW_CROWN = 0.04;
 // The weapon on the frame it lands falls at least this far below level (rad), onto the crown or on down through the shoulders and board; a man farther off than
 // the fist and that falling weapon reach is lunged at, the hip carried at most BLOW_STEP of the striker's standing height toward him (r2c3: the clubber steps
 // into the man, the club coming down through him)
 const BLOW_FALL = 0.95;
 const BLOW_STEP = 0.4;
-// Highest the striker springs to bring his fist over a taller man's crown, in shares of his own standing height (see _aimBlow)
-const BLOW_LEAP = 0.5;
 // The striker's legs in the blow: front thigh forward, back thigh behind, knees near straight (hip/knee rotation.x)
 const BLOW_LUNGE = { front: -0.4, back: 0.3, knee: 0.1 };
 // Farthest a man's head may be from the striker's shoulder, in weapon reaches + one arm, for the blow to be aimed at him at all
@@ -537,15 +533,16 @@ export class ProceduralAnimator {
     b.rightShoulder.rotation.z += (0.08 - b.rightShoulder.rotation.z) * w;
     b.rightElbow.rotation.x += (BLOW_ELBOW - b.rightElbow.rotation.x) * w;
     for (const n of chain) n.computeWorldMatrix(true);
-    // A man whose crown stands over the raised fist is leapt at (r2c3: the clubber comes off his feet into the blow): the striker springs up until his fist is
-    // BLOW_DROP over that crown, at most BLOW_LEAP of his own standing height, so the weapon still falls onto the helm and not into the face under it
-    // (a driven blow's leap settles back onto his feet as it drives on through, drive-through)
-    const need = (head.y + BLOW_DROP * scale - b.rightHand.getAbsolutePosition().y) * (driven ? 1 - drive : struck ? 1 : 1 - follow);
-    if (need > 0) {
-      const rootScale = Math.max(0.001, b.root.absoluteScaling.y);
+    // [S] grounded lunge (battle-feel.e; r2c3 and r3c1: every striker's boots on the turf, the blow carried by the bend at the waist, not a spring): the
+    // striker never leaves the ground. The hip sinks by what the spread lunge legs give up in height (thighs BLOW_LUNGE.front/back off vertical, the knees
+    // near straight), so both soles stay on the ground under him; a man whose crown stands over the fist is struck lower down him instead (the drive-through
+    // solve slides the point down his axis; a press blow takes his board top, _contactOn). Replaces the BLOW_LEAP spring, which in a dense line threw every
+    // man of both lines a full half-height off the ground on the same step (probe: hips .61 -> 1.22 at the first blow).
+    {
       this._hipRest ??= b.hip.position.y;
-      const lift = Math.min(need, BLOW_LEAP * this._hipRest * 2 * rootScale) * w;
-      b.hip.position.y += lift / rootScale;
+      const spread = Math.max(Math.abs(BLOW_LUNGE.front), Math.abs(BLOW_LUNGE.back));
+      const sink = this._hipRest * (1 - Math.cos(spread) * Math.cos(BLOW_LUNGE.knee * 0.5)) * w;
+      b.hip.position.y = Math.min(b.hip.position.y, this._hipRest - sink);
       for (const n of chain) n.computeWorldMatrix(true);
     }
     // The weapon's head goes onto the point and the arm is brought to it, through the drop and the hold alike: the fist lies an arm from the shoulder and a
