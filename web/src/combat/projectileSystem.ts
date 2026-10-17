@@ -60,9 +60,12 @@ const SWORD_RISE_IN = 0.45;
  * Shapes not listed keep the fixed arc-per-metre lob of spawnProjectile. A man beyond the throw's reach (no solution) keeps that lob too.
  * `throw` (the card's force 220, against a club's 20): a man it strikes and leaves standing is thrown back off his feet along its line, as under a heavy blow
  * (RuntimeUnit.staggerFromBlow), the shaft stuck in him and going with him (_leaveAsLitter).
+ * The stoner's boulder (units/tribal.stoner, tribal.stoner.jpg: a forward toss to range 12, the card's projectile speed 18) is launched the same way, but only
+ * when it is the rock out of his hands (`held`: the throw's heldProp): a catapult's stone is the same shape and keeps its high lob.
  */
-const LAUNCH: Partial<Record<ProjectileShape, { speed: number; gravity: number; throw?: number }>> = {
+const LAUNCH: Partial<Record<ProjectileShape, { speed: number; gravity: number; throw?: number; held?: boolean }>> = {
   spear: { speed: 20, gravity: 9.8, throw: 220 },
+  stone: { speed: 18, gravity: 9.8, held: true },
 };
 
 /** The low-angle ballistic solution from `from` to `to` at launch speed v under gravity g: flight time and the arc's peak above the straight line, or null when out of reach. */
@@ -240,7 +243,7 @@ export class ProjectileSystem {
     let flightTime = Math.max(0.1, dist / speed);
     // A launched missile (LAUNCH): its arc is the gravity parabola of a throw at its own speed, solved for the low angle that reaches the man
     const launch = LAUNCH[shape];
-    if (launch) {
+    if (launch && (!launch.held || options.heldProp)) {
       const from = launchOrigin.clone();
       from.y += options.originLift ?? 1.0;
       const to = targetPos.clone();
