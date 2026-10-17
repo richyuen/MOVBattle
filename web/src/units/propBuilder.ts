@@ -1586,9 +1586,12 @@ const CLUB_HEAD = 0.22;
 // The chieftain's stone axe (units/tribal.chieftain), in the man's heights: handle length, the share below the fist, the stone's length across the top
 const AXE_LONG = 0.4;
 const AXE_GRIP = 0.25;
-const AXE_HEAD = 0.55;
+const AXE_HEAD = 0.78;
 // ...and the stone's squash off a ball of AXE_HEAD across: its height and its thickness as shares of its length (a fat stone, not a lens)
-const AXE_HEAD_SQUASH = { y: 0.8, z: 0.6 };
+const AXE_HEAD_SQUASH = { y: 0.62, z: 0.5 };
+// ...and the lashing (tribal.chieftain.red.png: rope crossed over the stone and round the handle top): each band's thickness, in handle lengths, and its tilt
+// off the handle, the two bands tilted opposite ways so they cross at the joint
+const AXE_LASH = { thick: 0.03, tilt: 0.5 };
 // The bone mage's staff (units/tribal.bone_mage), in prop units: its length, the share of it below the fist, the skull's width (the mage's own head is about 0.14)
 const BONE_STAFF_LONG = 0.62;
 const BONE_STAFF_GRIP = 0.4;
@@ -1624,27 +1627,42 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return m;
     }
     case "stone_axe": {
-      // The chieftain's stone axe (units/tribal.chieftain, spec at AXE_LONG): a thin brown handle AXE_LONG of his height, the fist AXE_GRIP up from the
-      // butt, and a grey faceted stone the size of his own head laid across its top, lashed on with two rope bands crossing the joint. Stone and wood a
-      // little self-lit so they read grey and brown in the shade, never iron.
+      // The chieftain's stone axe (units/tribal.chieftain, spec at AXE_LONG; tribal.chieftain.red.png): a thin brown handle AXE_LONG of his height, the fist
+      // AXE_GRIP up from the butt, and a grey irregular faceted chunk as wide as his own head (skull cap included) hung off one side of its top, the handle
+      // running up the chunk's inner side to just short of its top; rope crossed over the stone and round the handle top (AXE_LASH) binds the two. Stone and
+      // wood a little self-lit so they read grey and brown in the shade, never iron.
       const L = fit.stand * AXE_LONG;
       // Named "handle" like the iron axe's: the animator turns a hafted head in the fist by that name (proceduralAnimation, the carry's node)
       const handle = MeshBuilder.CreateCylinder("handle", { height: L, diameterTop: 0.05 * L, diameterBottom: 0.065 * L, tessellation: 6 }, scene);
       handle.material = mat(scene, new Color3(0.5, 0.3, 0.17), 0.1);
       handle.position.y = (0.5 - AXE_GRIP) * L;
-      const stone = MeshBuilder.CreateIcoSphere("stoneAxeHead", { radius: AXE_HEAD * 0.5 * L, subdivisions: 1 }, scene);
+      // The chunk: a flat-faced ball AXE_HEAD across with every vertex pushed in or out by its own hashed share, so no two faces lie in a line
+      const stone = MeshBuilder.CreateIcoSphere("stoneAxeHead", { radius: AXE_HEAD * 0.5 * L, subdivisions: 1, flat: true }, scene);
+      const at = stone.getVerticesData(VertexBuffer.PositionKind);
+      if (at) {
+        for (let v = 0; v < at.length; v += 3) {
+          const k = 0.78 + 0.44 * roundBoardSeed(7.5, Math.round(at[v] * 97 + at[v + 1] * 57 + at[v + 2] * 31));
+          at[v] *= k; at[v + 1] *= k; at[v + 2] *= k;
+        }
+        stone.setVerticesData(VertexBuffer.PositionKind, at);
+        const normals: number[] = [];
+        VertexData.ComputeNormals(at, stone.getIndices() ?? [], normals);
+        stone.setVerticesData(VertexBuffer.NormalKind, normals);
+        stone.refreshBoundingInfo();
+      }
       stone.scaling.set(1, AXE_HEAD_SQUASH.y, AXE_HEAD_SQUASH.z);
-      stone.rotation.z = 0.12;
-      // In the handle's frame (its centre the origin): the stone just under the top end
-      stone.position.set(0.04 * L, 0.43 * L, 0);
+      stone.rotation.z = 0.1;
+      // In the handle's frame (its centre the origin): the chunk's middle out to +x of the handle top, its inner third round the handle
+      stone.position.set(AXE_HEAD * 0.24 * L, 0.4 * L, 0);
       stone.material = mat(scene, new Color3(0.5, 0.5, 0.52), 0.12, "stone");
-      stone.convertToFlatShadedMesh();
       stone.parent = handle;
-      const rope = mat(scene, new Color3(0.36, 0.22, 0.1));
-      for (const tilt of [-0.5, 0.5]) {
-        const lash = MeshBuilder.CreateTorus("stoneAxeLash", { diameter: AXE_HEAD * 0.66 * L, thickness: 0.03 * L, tessellation: 8 }, scene);
-        lash.rotation.set(Math.PI / 2, 0, tilt);
-        lash.position.set(0.02 * L, 0.43 * L, 0);
+      // The lashing: two rope bands in the plane of the handle, each tilted AXE_LASH.tilt off it the opposite way, wrapped over the chunk's top and under its
+      // bottom round the handle top, so they cross on the joint's face in an X and show again on its back
+      const rope = mat(scene, new Color3(0.36, 0.22, 0.1), 0.08);
+      for (const way of [-1, 1]) {
+        const lash = MeshBuilder.CreateTorus("stoneAxeLash", { diameter: AXE_HEAD * AXE_HEAD_SQUASH.y * 1.02 * L, thickness: AXE_LASH.thick * L, tessellation: 10 }, scene);
+        lash.rotation.z = Math.PI / 2 + way * AXE_LASH.tilt;
+        lash.position.set(0.05 * L, 0.4 * L, 0);
         lash.material = rope;
         lash.parent = handle;
       }
