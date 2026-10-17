@@ -1,5 +1,5 @@
 # Loop state
-Iteration: 308   Last re-audit: 307   Consecutive rejects: 0   Branch: main
+Iteration: 309   Last re-audit: 307   Consecutive rejects: 0   Branch: main
 
 ## Criteria (critic, PASS/FAIL per criterion; FAIL carries its closed blocker list and the count of approved [S] since the list was written)
 battle-feel: a PASS b PASS c PASS d PASS (4/4)
@@ -10,7 +10,7 @@ camera: a PASS b PASS c PASS d PASS (4/4)
 vfx: a PASS b PASS c PASS d PASS (4/4)
 Tier 2 (fully scored at 198, re-audited 220-305):
 battle-feel: e FAIL f PASS g PASS h PASS (3/4) (h cleared by [R] 065ba9e, 242; g cleared by 203b0ca, re-audit 307, judged from duel_club_thrown)
-- e FAIL (blockers 2 and 3 rewritten by re-audit 307 from the re-aimed shots; 3 struck and 4 added by the 308 review of 203dd38) [S since: 1; rejected since: 0] B: 2 melee_club_drop_pre -> melee_club_drop: the front club's head now lies on the second knight's shoulders and upper chest, but he does not react (mid-stride, sword arm straight up, no buckle, no head-down); the rear club ends at his chest beside it; both read as resting on him, not driven into him as in r2c3 (and both lines float: boots ~0.4 body height over their pre-frame footing, shadows far below); 4 duel_club_land -> duel_club_thrown: the solved arm lays the club level, ~5 deg down, across the clubber's own crown onto the hoplite's helm, trunk upright: a log carried overhead and set down, not swung; 336 ms later it is still level overhead, no fall, no follow-through (r2c3: the club ends low, the striker bent into it). Introduced by 203dd38. Struck 1 (305), 3 (308, 203dd38: club head on the helm, fists off the board). Ref trailer_3_sheet_01 r2c3, r3c1
+- e FAIL (blockers 2 and 3 rewritten by re-audit 307 from the re-aimed shots; 3 struck and 4 added by the 308 review of 203dd38; 4 struck by the 309 review of 8dd8b5d) [S since: 2; rejected since: 0] B: 2 melee_club_drop_pre -> melee_club_drop: the front club now comes down ~40 deg across the second knight's shoulder and chest, but he does not react (mid-stride, sword arm straight up, no buckle, no head-down); the rear club lies along the front one at his chest, reading as resting on him, not driven into him as in r2c3; both lines float: boots ~0.4 body height over their shadows. (32 ms after the land may be too early for a buckle unless the pose is set on the land step, or the shot moves to land + ~120 ms.) Struck 1 (305), 3 (308, 203dd38), 4 (309, 8dd8b5d: club ~30-35 deg down at the land, ends low ~65 deg at the throw, striker bent ~45 deg). Ref trailer_3_sheet_01 r2c3, r3c1
 unit-look: e PASS f PASS g PASS h PASS (4/4) (h cleared by 810f6c6, 240)
 maps-light: e PASS f PASS g PASS h PASS (4/4)
 ui-flow: e PASS f PASS g PASS h PASS (4/4)
@@ -23,19 +23,19 @@ vfx tier 3: i-p all PASS (8/8) (first scored 281; o d930bf5 287; n 5deb87c 289; 
 Total tier 1 24/24; tier 2 23/24; tier 3 29/29.
 
 ## Focus (every gap this iteration)
-BASE 905b78b (iter 308, by hand with the pose bench, one critic review)
-- [S] open-field-strike-stand-off (battle-feel.e blockers 2, 3) — 203dd38 — APPROVE (blocker 3 struck, 4 added)
+BASE c041ecb (iter 309, one critic review)
+- [S] drive-through (battle-feel.e blocker 4) — 8dd8b5d — APPROVE (blocker 4 struck)
 
 ## Last verdicts (one line per gap, verbatim critic header)
-- GAP: [S] open-field-strike-stand-off (203dd38) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL)
+- GAP: [S] drive-through (8dd8b5d) VERDICT: APPROVE CRITERION: battle-feel.e FAIL (previous: FAIL)
 
 ## Ranked open gaps (max 8, tags and attempts in brackets; each clears a numbered blocker)
-1. [S] battle-feel.e drive-through — blocker 4: the solved strike point descends the man through BLOW_DWELL (crown -> shoulders -> chest), the striker's trunk pitched ~35 deg into the blow about the hip, fists below his chin, so the club is ~40 deg down at the land and ends low at the throw (_aimBlow solved path) — ref trailer_3_sheet_01 r2c3 — ours duel_club_land, duel_club_thrown
-2. [S] battle-feel.e struck-man-give — blocker 2: on contact a buckle state for the man the club lands on in the open (knees bend, head and shoulders pressed down under the club head, ~0.15 s, before the throw), driven from blowStruck — ref trailer_3_sheet_01 r3c1, r2c3 — ours melee_club_drop
-3. [S] battle-feel.e grounded-lunge — blocker 2: a stand-off strike replaces BLOW_LEAP's lift with a planted lead-foot lunge, so the lines stay on the turf at the land — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
-4. [S] battle-feel.e wide-windup — blockers 2, 4: in the open the club is cocked back-down behind the shoulders (fists by the ear) so the drop sweeps an overhead arc to the solved point — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop_pre
-5. [S] battle-feel.e contact-mark — blocker 2: a short dust/chunk burst at the club head's contact point on the land step — ref trailer_2_sheet_02 r1c1 — ours melee_club_drop
-(no [P])
+1. [S] battle-feel.e struck-react — blocker 2: on the land step, hold a buckle / head-down / weapon-arm-drop pose on the struck man through BLOW_DWELL — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
+2. [S] battle-feel.e press grounding — blocker 2: pin the press lines' feet to the ground (hip settle or foot plant during press and blow) so the boots meet their shadows — ref trailer_3_sheet_01 r2c3, r3c1 — ours melee_club_drop_pre, melee_club_drop
+3. [S] battle-feel.e rear-club target — blocker 2: the rear clubber picks his own man or reaches past the front club, so his club is not stacked on the same chest — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
+4. [S] battle-feel.e press drive-through — blocker 2: extend the drive-through descent to the in-press (non-stand-off) blow, the club travelling down through the man over the dwell — ref trailer_3_sheet_01 r2c3 — ours melee_club_drop
+5. [S] battle-feel.e fist descent — defect, not a blocker: as the blow drives, the fists travel from the crown down to chest or hip height, so at the throw the club is held from the hips, not hung from over the head — ref trailer_3_sheet_01 r2c3 — ours duel_club_thrown
+6. [P] battle-feel.e drive-through fall, fallout of [S] drive-through (8dd8b5d, 309) — BLOW_DRIVE_FALL.land 0.7 -> 0.85 — ref trailer_3_sheet_01 r2c3 — ours duel_club_land. NEXT shot: duel_club_land — the club head drops off the hoplite's helm onto his shoulder, ~40-45 deg below level.
 
 ## Rejected attempts (last 8, newest first; `rejected-kept` when the revert conflicted)
 - open-melee-strike-clock [S] [attempts: 1] — 306: triggerAttack starts a cocked clubber's heavy swing at its commit (landing 80 ms after the call, was ~330). Critic: the pair's right-hand clubbers are a stride or more from any blue, the call never issues there; melee_club_drop at +32 ms looks the same whatever the clock
@@ -48,8 +48,8 @@ BASE 905b78b (iter 308, by hand with the pose bench, one critic review)
 - lockbox-grip-centre [P] [attempts: 1] — 298: LOCKBOX_CARRY turn .8 out .25; box still off-centre
 
 ## Notes for next iteration (max 5 lines)
-- 306: both [S] were rejected as "mechanism not visible in the named shot", no regressions. capture.mjs now seeds Math.random and reseeds at every resetBattle (hand, after 306), so a --only look shows the critic's frame; before that the first press blow landed anywhere from 272 to 640 ms run to run. 883d669 takes candidate blows in turn in one pass (first whose man is airborne and .55 m clear of mates, else the last) and prefers the lens at the thrown man's right-hand end (the board on his left arm hides him). The kicked leg is leftHip: a kick on the right hip (ranked 4) or a lens rule change would show it.
-- Hand session after 306 (bench, no critic): e blocker 2's cause is sim-side. Two men charging head-on topple each other (toppled ~0.8 s, no attack till ~1.75 s after contact), so at big_melee_2s the front is down or recovering and no club falls; the blow then lands at shoulder contact (roots 0.87 m, nearer than the 0.9 m club), the club hanging in the gap. Strike-on-arrival cannot fire (contact 0.1 s after engage range at 8.7 m/s closing; a blow takes 0.32 s) and an animator-only fix did not read better: tried and reverted. User chose: two plain men meeting no longer knock each other down (run-in speed left out of topple pressure; a wall-shield bearer or a charger still bowls men over). Open field first blow now 2.6 s, all standing (melee_club_drop); big_melee_2s unchanged (its contacts are wall shields and the front has not met). e blocker 3 is shot timing: in the duel the squire's blade lands overhead on the hoplite's board/shoulder (bench: tip 0.19 m from the strike point).
-- Pose bench: `node loop/scripts/bench.mjs [--attacker id --targets a,b --frames --at ms,ms --trace]` after `npm run build --prefix web`; one man on one in the open, measured by seeded replay (reading world matrices every frame changes the sim). g's thrown pose passes it since 203b0ca (trunk 57/58 deg, kicked thigh ~20 deg under level toward the striker). Re-aim candidates: g blocker 1 and e blocker 3 to duel_club_thrown / duel_club_land (59bcad4). Blocker drift: 'hips the high point, shin up' is not in r2c3 (that man flies face-first, hip extended); spec from the tile, not the wording.
-- The `scene not ready after -1 renders` note on melee_club_drop was the capture's 30 s race losing to the game's 40-render loop; the race is now 120 s (hand, after 306). A blocker whose shot cannot show its element may now be re-aimed by an evidence commit (ITERATE step 3): e blocker 2 is the first candidate (big_melee pair -> melee_club_drop). Autoloop was turned off during 306 by the user.
-- A sim change reshuffles big_melee and the camera follows (mammoth fills 2s-9s since 304): watch camera framing. Focus capture ~2.5 min. File edits keep each file's EOL (STATE/LEDGER/capture.mjs LF, LOG.md CRLF). Do not chain shell commands.
+- 309: drive-through (8dd8b5d) solves a stand-off fist from a club ANGLE (BLOW_DRIVE_FALL .7->1.2 over BLOW_DRIVE .3 s), point slid down the man's axis to where the arm reaches, trunk pitch .6->.9, leap settles. Bench (hoplite): club 38 deg down at land, ~65 deg at +336. Press (unsolved) blows untouched. Fist stays over the crown because the arm is aimed straight at the fist target; a fist-descent gap would bend the elbow / lower the shoulder.
+- Hand session after 306 (bench, no critic): two plain men meeting no longer knock each other down (run-in speed out of topple pressure). Open-field first blow lands ~2 s (melee_club_drop, clubber -> squire at 1980 ms in 309). big_melee_2s contacts are wall shields.
+- Pose bench: `node loop/scripts/bench.mjs [--attacker id --targets a,b --frames --at ms,ms --trace]` after `npm run build --prefix web`; one man on one in the open, seeded replay. Hoplite duel lands at 1104 ms. g's thrown pose passes (trunk 57 deg).
+- melee_club_drop is shot 32 ms after the land: a struck-react pose must be set on the land step (or move the shot to land + ~120 ms by an evidence commit). Struck men's flinch is held BLOW_DWELL on a dwelling blow (simulationSystem holdFlinch).
+- A sim change reshuffles big_melee and the camera follows: watch camera framing. Focus capture ~2.5 min. File edits keep each file's EOL (STATE/LEDGER/capture.mjs LF, LOG.md CRLF). Do not chain shell commands.
