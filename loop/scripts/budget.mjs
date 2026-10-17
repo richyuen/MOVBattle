@@ -14,7 +14,7 @@ const CAPS = {
   "loop/CRITIC.md": 15_500,
 };
 const CARD_CAP = 3_200;
-const UNIT_CAP = 2_000;
+const UNIT_CAP = 2_600;
 const STATS_CAP = 60_000;
 // What one iteration reads: the three memory files, plus up to a batch of unit files and the cards of the units it picks gaps on
 const PER_ITERATION = ["loop/ITERATE.md", "loop/STATE.md", "loop/LEDGER.md"];

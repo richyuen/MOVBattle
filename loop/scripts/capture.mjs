@@ -420,8 +420,13 @@ async function main() {
           const seen = new Set();
           let hits = 0, logged = 0;
           const plain = (k) => /^(missile|melee hit|fire|throw|cast|burst|volley|shotgun)/.test(k);
+          const special = (k) => !plain(k) && k !== "impact";
+          // The struck man's first loss of health: a missile's landing (a blow's landing is the hit log)
+          const victim = window.__ut;
+          const hp0 = victim.currentHealth;
           for (let tick = 6; tick <= 540; tick += 6) {
             window.advanceTime(100);
+            if (!seen.has("impact") && (victim.currentHealth < hp0 || victim.isDead)) { events.push({ kind: "impact", tick }); seen.add("impact"); }
             const h = game.getHitLog().filter((e) => e.attackerUnit === id);
             if (h.length > hits && !seen.has("melee hit")) { events.push({ kind: "melee hit", tick: tickOf(h[hits].t) }); seen.add("melee hit"); }
             hits = h.length;
@@ -431,8 +436,8 @@ async function main() {
             const now = missiles();
             if (now > before && !seen.has("missile") && !seen.has("fire") && !seen.has("throw") && !seen.has("cast")) { events.push({ kind: "missile", tick }); seen.add("missile"); }
             before = now;
-            // Done once a plain attack and a special mechanic are both seen, or 3 s after the first event
-            if (events.some((e) => plain(e.kind)) && events.some((e) => !plain(e.kind))) break;
+            // Done once a plain attack, its impact and a special mechanic are all seen, or 3 s after the first event
+            if (events.some((e) => plain(e.kind)) && events.some((e) => special(e.kind)) && seen.has("impact")) break;
             if (events.length && tick >= Math.min(...events.map((e) => e.tick)) + 180) break;
           }
           events.sort((a, b) => a.tick - b.tick);
@@ -440,12 +445,15 @@ async function main() {
         }, { id, d, support });
         // A thrower or caster logs "fire" at the decision and "throw"/"cast" at the let-go: the let-go is the release
         const release = det.events.find((e) => /^(throw|cast)/.test(e.kind)) ?? det.events.find((e) => PLAIN.test(e.kind)) ?? det.events[0] ?? null;
-        const ability = det.events.find((e) => !PLAIN.test(e.kind) && e !== release) ?? null;
+        const ability = det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
+        const impact = det.events.find((e) => e.kind === "impact") ?? null;
+        // The struck frame: 20 ticks (336 ms) after a blow, the top of the thrown man's arc; for a missile, 6 ticks after it first costs the target health
+        const struckTick = release ? (impact && impact.tick > release.tick + 20 ? impact.tick + 6 : release.tick + 20) : null;
         const s = Math.min(4, Math.max(1, det.rig / 1.8));
         const ms = (e) => Math.round(e.tick * TICK);
-        summary.units[id] = { release: release && { ...release, ms: ms(release) }, ability: ability && { ...ability, ms: ms(ability) }, events: det.events, rigHeight: +det.rig.toFixed(2), d, s: +s.toFixed(2), support };
+        summary.units[id] = { release: release && { ...release, ms: ms(release) }, ability: ability && { ...ability, ms: ms(ability) }, impact: impact && { ...impact, ms: ms(impact) }, events: det.events, rigHeight: +det.rig.toFixed(2), d, s: +s.toFixed(2), support };
         summary.notes.push(det.error ? `unit_${id}: ${det.error}` : release
-          ? `unit_${id}: release = ${release.kind} at ${ms(release)} ms${ability ? `; ability ${ability.kind} at ${ms(ability)} ms` : ""} (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`
+          ? `unit_${id}: release = ${release.kind} at ${ms(release)} ms${ability ? `; ability ${ability.kind} at ${ms(ability)} ms` : ""}${impact ? `; target hurt at ${ms(impact)} ms` : "; target never hurt within the window"} (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`
           : `unit_${id}: nothing within 9 s (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`);
         if (det.error) continue;
         const take = async (name, ticks, on) => {
@@ -465,7 +473,7 @@ async function main() {
           if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
           await take(`unit_${id}_release`, release.tick, far);
           await take(`unit_${id}_flight`, release.tick + 9, far);
-          await take(`unit_${id}_struck`, release.tick + 20, 2);
+          await take(`unit_${id}_struck`, struckTick, 2);
         }
         if (ability) {
           await take(`unit_${id}_ability`, ability.tick, far);

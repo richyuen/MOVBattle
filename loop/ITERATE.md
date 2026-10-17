@@ -45,7 +45,7 @@ Spawn a fresh `Agent` (general-purpose). Its prompt lists, by path: `loop/CRITIC
 Only when this iteration leaves no unit of the batch open (all `D` or `p`): `node loop/scripts/capture.mjs --iter N --regression-only` once; a failed scenario goes into STATE Notes as the required first commit of the next iteration. Advance `Batch:` to the next name in STATE's batch list; its units are unaudited (step 2 next iteration). Never run the suite at any other time.
 
 ## 9. Write memory and commit
-- Rewrite every touched `loop/units/<id>.md` (cap 2000 bytes: Verdicts, Ranked gaps left, Attempts, Rejected last 4, Notes max 3 lines).
+- Rewrite every touched `loop/units/<id>.md` (cap 2600 bytes: Verdicts, Ranked gaps left, Attempts, Rejected last 4, Notes max 3 lines).
 - In LEDGER drop Structural attempts older than 10 iterations and rows untouched for 25.
 - Rewrite `loop/STATE.md` fully: Iteration N, Batch, counters, Scoreboard (every unit's a-d marks and status), Focus with shas and verdicts, Last verdicts (critic header lines verbatim), Notes (max 5 lines).
 - `node loop/scripts/budget.mjs` must pass. Commit the docs: subject `loop(N): <batch> <approved>/<total> gaps approved`.
