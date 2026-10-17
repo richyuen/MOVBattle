@@ -154,12 +154,12 @@ const ALL_SHOTS = [
   "throw_spears_harpoon", ...THROW_GROUPS.flatMap(([g]) => [`throw_${g}_release`, `throw_${g}_flight`]),
   "shield_wall_2500ms", "shield_wall_2650ms",
   ...["placement", "placement_ghost", "500ms", "2s", "2150ms", "5s", "9s", "result", "result_1s"].map((t) => `big_melee_${t}`),
-  "melee_club_drop", "duel_club_land", "duel_club_thrown", ...BIOME_MAPS.map((m) => `biome_${m}`), "biome_spooky", "biome_spooky_battle",
+  "melee_club_drop_pre", "melee_club_drop", "duel_club_land", "duel_club_thrown", ...BIOME_MAPS.map((m) => `biome_${m}`), "biome_spooky", "biome_spooky_battle",
 ];
 // Motion pairs (CRITIC.md): asking for one frame brings its partner
 const PAIRS = [
   ["war_machines_1100ms", "war_machines_1250ms"], ["big_melee_2s", "big_melee_2150ms"], ["shield_wall_2500ms", "shield_wall_2650ms"],
-  ["big_melee_result", "big_melee_result_1s"], ...THROW_GROUPS.map(([g]) => [`throw_${g}_release`, `throw_${g}_flight`]),
+  ["big_melee_result", "big_melee_result_1s"], ["melee_club_drop_pre", "melee_club_drop"], ["duel_club_land", "duel_club_thrown"], ...THROW_GROUPS.map(([g]) => [`throw_${g}_release`, `throw_${g}_flight`]),
 ];
 
 // --focus: the shots named in STATE.md's FAIL blocker lines (the "- " lines of the Criteria block) and its Ranked open gaps
@@ -617,7 +617,7 @@ async function main() {
 
       // Open-field clubbers on squires, no shield wall (battle-feel.e, a club coming down on a man): step a frame at a time to the first clubber blow after the lines meet,
       // and shoot it 32 ms after the landing, framed side-on to the blow, close.
-      const clubHit = !wants("melee_club_drop") ? null : await page.evaluate(() => {
+      const clubHit = !wants("melee_club_drop", "melee_club_drop_pre") ? null : await page.evaluate(() => {
         window.game.resetBattle();
         window.advanceTime(50);
         for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
@@ -645,10 +645,33 @@ async function main() {
         }
         return null;
       });
-      if (wants("melee_club_drop")) summary.notes.push(clubHit
+      if (wants("melee_club_drop", "melee_club_drop_pre")) summary.notes.push(clubHit
         ? `melee_club_drop: ${clubHit.attackerUnit} -> ${clubHit.targetUnit} landed at ${clubHit.ms} ms, shot 32 ms after the landing`
         : "melee_club_drop: no clubber blow within 7.5 s, shot skipped");
       if (clubHit) await shot(page, "melee_club_drop");
+      // Its motion pair: the same scene replayed (seeded, clock restarted, so the same frames) to 144 ms before that frame, same lens: the club on its
+      // way down onto the man, not only resting on him.
+      if (clubHit && wants("melee_club_drop_pre")) {
+        await page.evaluate((h) => {
+          window.game.resetBattle();
+          window.advanceTime(50);
+          for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
+            window.game.spawnUnit("tribal.clubber", 1, { x: 3, z });
+            window.game.spawnUnit("medieval.squire", 0, { x: -3, z });
+          }
+          window.advanceTime(50);
+          window.game.startBattleImmediate();
+          window.advanceTime(1500);
+          const steps = (h.ms - 1500) / 16 + 1 + 2 - 9;
+          for (let k = 0; k < steps; k++) window.advanceTime(16);
+          let dx = h.head.x - h.x, dz = h.head.z - h.z;
+          const len = Math.hypot(dx, dz) || 1;
+          dx /= len; dz /= len;
+          const side = Math.sign(-dz * h.x + dx * h.z) || 1;
+          window.game.frameCamera({ x: (h.x + h.head.x) / 2, y: 0.9, z: (h.z + h.head.z) / 2 }, 3.4, Math.atan2(dx * side, -dz * side), Math.PI / 2.1);
+        }, clubHit);
+        await shot(page, "melee_club_drop_pre");
+      }
 
       // One clubber on one hoplite in the open (battle-feel.e and g, the pose bench's duel): the blow side-on at the frame it lands, and the struck man
       // 336 ms later at the top of his throw, nobody in front of either. Framed across the line between the two men, level, so the club's fall and the
