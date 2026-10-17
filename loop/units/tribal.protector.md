@@ -5,14 +5,18 @@ a FAIL (0 since 315)
  1. headgear in unit_tribal.protector_idle is a smooth grey dome — TABS: a pale animal skull with eye sockets and a snout over the top half of the head (ref: tribal.protector.png)
  2. torso in unit_tribal.protector_idle is bare team colour with a dark loincloth box — TABS: a brown garment to the thigh hung from one shoulder strap (ref: tribal.protector.png, card Appearance)
  3. neck in unit_tribal.protector_idle is a dark flat ring — TABS: three small critter skulls strung on a strap (ref: tribal.protector.png, card Appearance)
-b FAIL (0 since 315)
- 1. shield in unit_tribal.protector_idle is a flat grey slab with two dark straps — TABS: a tall wood-brown plank shield with a round opening at face height (ref: tribal.protector.blue.png)
+b FAIL (1 since 315)
+ 1. (struck 316: plank shield with face hole)
  2. a spear with a grey point is slung on the back in unit_tribal.protector_idle — TABS: nothing on the back, Off Hand N/A (ref: tribal.protector.red.png, card Infobox)
  3. shield face in unit_tribal.protector_idle has no moss — TABS: green moss chunks at the top corner and the bottom edge (ref: tribal.protector.blue.png)
 c PASS (315)
 d PASS (stats 315: cost 80=80, hp -8%, dmg +2%, cd +1%)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] b plank shield with face hole — blocker 1: wood-brown plank shield mesh with a round opening at face height — ref: tribal.protector.blue.png — ours: unit_tribal.protector_idle.png
+1. [S] b no back spear — blocker 2: drop the spear weapon (rosterManifest weaponHint / unitVisuals) so the shield is the only prop — ref: tribal.protector.red.png — ours: unit_tribal.protector_idle.png
+2. [S] b moss chunks — blocker 3: green faceted moss at the top corner and bottom edge of the shield face — ref: tribal.protector.blue.png — ours: unit_tribal.protector_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+316 | plank shield with face hole (77c8352) | b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
+- 316 slab: empty Mesh root "slabshield", four planks, SLAB_WIDE 0.34, opening SLAB_EYE 0.12 at SLAB_EYE_UP 0.22; the idle shot shows the shield edge-on, the opening reads in _struck/_flight and the lineup.
+- Critic: the opening sits a third down the shield, TABS has it in the top quarter (minor). Dropping the spear changes the attack family: the shield is the main hand (card Weapon Type Two-handed, Wood Shield).

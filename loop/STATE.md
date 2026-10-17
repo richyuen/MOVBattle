@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 315   Batch: tribal (1/18)   Consecutive empty: 0   Done: 0/139   Parked: 0
+Iteration: 316   Batch: tribal (1/18)   Consecutive empty: 0   Done: 0/139   Parked: 0
 Batches, in order: tribal, farmer, medieval, ancient, viking, dynasty, renaissance, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,17 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-315: batch audit only (dry run of loop v2). Stats commit loop(315.0) set tribal cost/hp/dmg/cd from the wiki: 7/7 pass d. Evidence commit: the struck shot of a missile unit is now taken 6 ticks after the target first loses health. No gaps picked; iteration 316 picks from the unit files' Ranked gaps (step 3).
+316 (BASE ff65871): [S] clubber b club mesh 3af648b approved | [S] chieftain b stone axe heads 41a51fe approved | [S] protector b plank shield with face hole 77c8352 approved | [S] bone_mage b deer-skull staff 9474ce7 approved | [S] spear_thrower c flat javelin a76560b approved. 5/5 approved, no regressions; every b/c list touched still has a blocker left, so no criterion flipped.
 
 ## Last verdicts (critic header lines verbatim)
-- UNIT tribal.clubber: a FAIL b FAIL c PASS d (stats) (1/3 of a-c)
-- UNIT tribal.protector: a FAIL b FAIL c PASS d (stats) (1/3 of a-c)
-- UNIT tribal.spear_thrower: a FAIL b FAIL c FAIL d (stats) (0/3 of a-c)
-- UNIT tribal.stoner: a FAIL b FAIL c FAIL d (stats) (0/3 of a-c)
-- UNIT tribal.bone_mage: a FAIL b FAIL c FAIL d (stats) (0/3 of a-c)
-- UNIT tribal.chieftain: a FAIL b FAIL c PASS d (stats) (1/3 of a-c)
-- UNIT tribal.mammoth: a FAIL b PASS c FAIL d (stats) (1/3 of a-c)
-Batch ranked order (critic, 315): clubber.b club mesh, chieftain.b stone axes, protector.b plank shield, bone_mage.b deer-skull staff, spear_thrower.c flat javelin, stoner.c forward toss, mammoth.a brown fur, clubber.a hair and beard, spear_thrower.a tusk headband, stoner.a garment, bone_mage.c spike line, mammoth.c charge.
+- GAP: [S] tribal.clubber (3af648b) VERDICT: APPROVE CRITERION: tribal.clubber.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
+- GAP: [S] tribal.chieftain (41a51fe) VERDICT: APPROVE CRITERION: tribal.chieftain.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2 (rewritten: the swung stone is a thin lens under a head across).
+- GAP: [S] tribal.protector (77c8352) VERDICT: APPROVE CRITERION: tribal.protector.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3.
+- GAP: [S] tribal.bone_mage (9474ce7) VERDICT: APPROVE CRITERION: tribal.bone_mage.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2 (rewritten: carried level at the hip, TABS upright beside the body).
+- GAP: [S] tribal.spear_thrower (a76560b) VERDICT: APPROVE CRITERION: tribal.spear_thrower.c FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
+- REGRESSIONS: none
+Batch ranked order (critic, 316): bone_mage.c bone spike row, spear_thrower.c stick-and-launch, clubber.b two-handed grip, protector.b no back spear, bone_mage.b upright carry, spear_thrower.b spear raised overhead, chieftain.a animal-skull helmet, protector.b moss chunks, clubber.a hair and beard, [P] chieftain.b stone size (fallout of 41a51fe). Stoner and mammoth keep their 315 ranked gaps (stoner.c forward toss, mammoth.a brown fur, stoner.a garment, mammoth.c charge).
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,7 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- 316 starts at step 3 (the tribal batch is audited, stats done): pick up to 5 [S] from the unit files' Ranked gaps in the batch order above, at most 2 per unit. The full audit text is in output/loop/iter-315/audit.md (not memory; read only if a blocker needs its context).
-- Many tribal a-blockers repeat across units (black hair cap, plain loincloth box, dark neck ring): one mechanism (a tribal loincloth with skull and bones, a necklace of bones/tusks, a hair chunk) can clear a blocker on several units, but each unit's gap is its own commit and its own verdict.
-- Capture: a batch run is ~5.5 min, a 1-3 unit look ~2.5 min (build included); never step 16 ms in a detection loop (one render per advanceTime call). The struck shot of a missile unit is at the impact frame (summary.notes "target hurt at").
+- 317 starts at step 3: up to 5 [S] from the 316 ranked order above (2 per unit max, different criteria), plus at most 1 [P]: chieftain.b stone size is eligible fallout (41a51fe approved in 316, NEXT names unit_tribal.chieftain_release). Stoner's two gaps (c forward toss = give "stone" a LAUNCH entry like the spear's; a one-shoulder garment) and mammoth's are unpicked since 315.
+- Browns and greys go near-black in the capture's shade: give prop materials an emissive of 0.08-0.15 (mat(scene, colour, 0.1)). A raised prop can leave the windup frame at the top: check the look. `node loop/scripts/inspect-prop.mjs <id> [--no-build]` builds, spawns the unit alone and prints every hand mesh (name, visible, world extent) plus output/loop/inspect_<id>_{front,side}.png.
+- The animator keys on prop names: a hafted weapon root must be named like the regex at proceduralAnimation.ts ~1599 (club|blade|handle|...), a caster's staff is "staff" with an "orb" child (id boneStaff for the overhead cast), a shield matches /shield$/.
+- Two gaps in one file: edit, commit, then edit the next; splitting hunks afterwards cost a stash dance this iteration. Capture: a 1-2 unit look ~2.5 min, 5 units ~5 min.
 - File edits keep each file's EOL (LF here). Do not chain shell commands. v1 is under loop/archive/v1/, tag loop-v1-final.

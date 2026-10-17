@@ -11,10 +11,28 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-(none yet)
+316 | club mesh (3af648b) | tribal.clubber.b | approved
+316 | stone axe heads (41a51fe) | tribal.chieftain.b | approved
+316 | plank shield with face hole (77c8352) | tribal.protector.b | approved
+316 | deer-skull staff (9474ce7) | tribal.bone_mage.b | approved
+316 | flat javelin (a76560b) | tribal.spear_thrower.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
 
 ## Rows
-(none yet)
+propBuilder.ts:club CLUB_LONG (of the man's height) | 0.6 | 316 | approved | (new; the old club was 0.65 prop units)
+propBuilder.ts:club CLUB_GRIP (share below the fist) | 0.2 | 316 | approved | (new)
+propBuilder.ts:club CLUB_HEAD (head width, of CLUB_LONG) | 0.22 | 316 | approved | (new)
+propBuilder.ts:stone_axe AXE_LONG (of the man's height) | 0.4 | 316 | approved | (new)
+propBuilder.ts:stone_axe AXE_GRIP | 0.25 | 316 | approved | (new)
+propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.42 | 316 | approved | (new)
+propBuilder.ts:slab SLAB_WIDE | 0.34 | 316 | approved | 0.25
+propBuilder.ts:slab SLAB_TALL | 0.71 | 316 | approved | (unchanged by the 316 rebuild)
+propBuilder.ts:slab SLAB_EYE (opening across) | 0.12 | 316 | approved | (new)
+propBuilder.ts:slab SLAB_EYE_UP (of the height above the middle) | 0.22 | 316 | approved | (new)
+propBuilder.ts:bone_staff BONE_STAFF_LONG (prop units) | 0.62 | 316 | approved | (new; the old rod was 0.85)
+propBuilder.ts:bone_staff BONE_STAFF_GRIP | 0.4 | 316 | approved | (new)
+propBuilder.ts:bone_staff BONE_STAFF_SKULL | 0.1 | 316 | approved | (new)
+projectileSystem.ts:LAUNCH.spear speed | 20 | 316 | approved | (new; the fixed lob flew the chord at 18 with arc 0.15 m per metre)
+projectileSystem.ts:LAUNCH.spear gravity | 9.8 | 316 | approved | (new)

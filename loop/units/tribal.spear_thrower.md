@@ -8,13 +8,15 @@ a FAIL (0 since 315)
 b FAIL (0 since 315)
  1. spear in unit_tribal.spear_thrower_windup is hidden behind the torso, a stub at the shoulder — TABS: arm straight up, spear raised above the head (ref: tribal.spear_thrower.red.png)
  2. spearhead in unit_tribal.spear_thrower_release is a small dark triangle — TABS: a broad grey stone leaf lashed to the shaft with rope (ref: tribal.spear_thrower.jpg)
-c FAIL (0 since 315)
- 1. spear in unit_tribal.spear_thrower_flight has climbed above the tree line two metres out, on a lob — TABS: a flat shoulder-height throw to range 17 (card projectile speed 20; ref: tribal.spear_thrower.jpg)
+c FAIL (1 since 315)
+ 1. (struck 316: flat javelin)
  2. squire in unit_tribal.spear_thrower_struck walks on untouched, no spear near him — TABS: the spear lands and launches the target (card damage 200, force 220). Shot re-aimed at the impact frame by the 315 evidence commit; judge there.
 d PASS (stats 315: cost 120=120, hp -12%, dmg 0%, cd 0%)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c flat javelin — blocker 1: a ballistic launch solved from the release hand to the target (low-arc solution) replacing the fixed lob — ref: tribal.spear_thrower.jpg — ours: unit_tribal.spear_thrower_flight.png
-2. [S] a tusk headband — blocker 1: bare head with a curved tusk each side on a brown strap, no hair — ref: tribal.spear_thrower.blue.png — ours: unit_tribal.spear_thrower_idle.png
+1. [S] c stick-and-launch — blocker 2: spear impact applies the card's force 220 knockback and the spear stays stuck in the target for the struck frame — ref: card Weapons, tribal.spear_thrower.jpg — ours: unit_tribal.spear_thrower_struck.png
+2. [S] b spear raised overhead — blocker 1: windup pose with the arm straight up and the javelin above the head — ref: tribal.spear_thrower.red.png — ours: unit_tribal.spear_thrower_windup.png
 ## Attempts (iter | gap | criterion | verdict)
+316 | flat javelin (a76560b) | c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
+- 316: projectileSystem LAUNCH table (spear: speed 20, gravity 9.8) + solveLowArc; flight keeps the lerp + 4At(1-t) form (A = gT^2/8). Keys on shape "spear", so the harpooner and the plain-spear fallback share it.
