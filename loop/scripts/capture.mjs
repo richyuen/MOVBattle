@@ -616,7 +616,7 @@ async function main() {
       }
 
       // Open-field clubbers on squires, no shield wall (battle-feel.e, a club coming down on a man): step a frame at a time to the first clubber blow after the lines meet,
-      // and shoot it 32 ms after the landing, framed side-on to the blow, close.
+      // and shoot it 32 ms after the landing, framed side-on to the blow, a little above the men (4.6 m, pitched down ~17 deg) so a blow in mid-line reads over the near file.
       const clubHit = !wants("melee_club_drop", "melee_club_drop_pre") ? null : await page.evaluate(() => {
         window.game.resetBattle();
         window.advanceTime(50);
@@ -639,7 +639,7 @@ async function main() {
             dx /= len; dz /= len;
             // Camera off to the side of the blow line, on the side away from the field's centre line of men
             const side = Math.sign(-dz * h.x + dx * h.z) || 1;
-            window.game.frameCamera({ x: (h.x + h.head.x) / 2, y: 0.9, z: (h.z + h.head.z) / 2 }, 3.4, Math.atan2(dx * side, -dz * side), Math.PI / 2.1);
+            window.game.frameCamera({ x: (h.x + h.head.x) / 2, y: 0.9, z: (h.z + h.head.z) / 2 }, 4.6, Math.atan2(dx * side, -dz * side), Math.PI / 2.45);
             return { ms: ms + 1500, ...h };
           }
         }
@@ -668,7 +668,7 @@ async function main() {
           const len = Math.hypot(dx, dz) || 1;
           dx /= len; dz /= len;
           const side = Math.sign(-dz * h.x + dx * h.z) || 1;
-          window.game.frameCamera({ x: (h.x + h.head.x) / 2, y: 0.9, z: (h.z + h.head.z) / 2 }, 3.4, Math.atan2(dx * side, -dz * side), Math.PI / 2.1);
+          window.game.frameCamera({ x: (h.x + h.head.x) / 2, y: 0.9, z: (h.z + h.head.z) / 2 }, 4.6, Math.atan2(dx * side, -dz * side), Math.PI / 2.45);
         }, clubHit);
         await shot(page, "melee_club_drop_pre");
       }
