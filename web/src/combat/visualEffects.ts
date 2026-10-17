@@ -41,6 +41,22 @@ const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
 const DOME_ALPHA = 0.5;
+// The bone mage's spike row (see VisualEffects.spawnBoneSpikeRow): seconds between one spike and the next (the card's 0.025 s a bone), the pop-up and
+// the sink-back times, how long the row stands, the overshoot of the pop; metres from the caster's feet to the first spike, past the mark to the last,
+// between spikes and of sideways scatter; the nearest and farthest spikes' heights, the lean on toward the mark (rad) and the most spikes in a row.
+const BONE_SPIKE_EVERY = 0.025;
+const BONE_SPIKE_RISE = 0.08;
+const BONE_SPIKE_SINK = 0.35;
+const BONE_SPIKE_STAND = 1.6;
+const BONE_SPIKE_OVERSHOOT = 0.18;
+const BONE_SPIKE_START = 0.9;
+const BONE_SPIKE_PAST = 0.4;
+const BONE_SPIKE_STEP = 0.55;
+const BONE_SPIKE_SIDE = 0.4;
+const BONE_SPIKE_NEAR = 0.45;
+const BONE_SPIKE_FAR = 1.35;
+const BONE_SPIKE_LEAN = 0.22;
+const BONE_SPIKE_MAX = 14;
 
 export class VisualEffects {
   private _scene: Scene;
@@ -410,6 +426,69 @@ export class VisualEffects {
       remaining: totalDuration,
       particles: [ps],
     });
+  }
+
+  // ══════════════════ BONE SPIKES (bone mage) ══════════════════
+  /**
+   * The bone mage's spell (units/tribal.bone_mage, card Characteristics: "a chain of spikey osseous will burst through the ground", one bone every 0.025 s):
+   * a row of pale faceted spikes erupts out of the turf along the line from the caster to his mark, each one BONE_SPIKE_EVERY after the last, the nearest a
+   * knee high and the farthest above a man's head (BONE_SPIKE_NEAR..FAR), each leaning a little on toward the mark. Each spike pops up over BONE_SPIKE_RISE with a
+   * small overshoot, stands for the row's life and sinks back into the ground over BONE_SPIKE_SINK. Deterministic: every jitter is hashed from the spike's index.
+   */
+  spawnBoneSpikeRow(from: Vector3, to: Vector3): void {
+    const dx = to.x - from.x, dz = to.z - from.z;
+    const span = Math.hypot(dx, dz);
+    if (span < 0.5) return;
+    const ux = dx / span, uz = dz / span;
+    // The row starts a stride ahead of the caster's feet and runs a little past the mark
+    const start = Math.min(BONE_SPIKE_START, span * 0.3);
+    const length = span - start + BONE_SPIKE_PAST;
+    const count = Math.max(4, Math.min(BONE_SPIKE_MAX, Math.round(length / BONE_SPIKE_STEP)));
+    const root = new TransformNode("boneSpikes", this._scene);
+    const bone = getMaterialFactory().get("bone", new Color3(0.93, 0.9, 0.8), { emissiveIntensity: 0.12 });
+    const hash = (i: number, salt: number): number => {
+      const v = Math.sin(i * 12.9898 + salt * 78.233 + from.x * 0.37) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const pivots: TransformNode[] = [];
+    for (let i = 0; i < count; i++) {
+      const u = count > 1 ? i / (count - 1) : 1;
+      const along = start + u * length;
+      const across = (hash(i, 1) - 0.5) * BONE_SPIKE_SIDE;
+      const h = BONE_SPIKE_NEAR + (BONE_SPIKE_FAR - BONE_SPIKE_NEAR) * u * (0.8 + hash(i, 2) * 0.4);
+      const pivot = new TransformNode(`boneSpike${i}`, this._scene);
+      pivot.parent = root;
+      pivot.position.set(from.x + ux * along - uz * across, from.y, from.z + uz * along + ux * across);
+      // Leaning on toward the mark, with its own slant to either side
+      pivot.rotation.set(0, Math.atan2(ux, uz), 0);
+      pivot.rotation.x = BONE_SPIKE_LEAN + (hash(i, 3) - 0.5) * 0.2;
+      pivot.rotation.z = (hash(i, 4) - 0.5) * 0.3;
+      const spike = MeshBuilder.CreateCylinder("boneSpike", { height: h, diameterTop: 0, diameterBottom: 0.14 + 0.1 * u, tessellation: 5 }, this._scene);
+      spike.position.y = h / 2;
+      spike.rotation.y = hash(i, 5) * Math.PI;
+      spike.material = bone;
+      spike.convertToFlatShadedMesh();
+      spike.parent = pivot;
+      pivot.scaling.y = 0.001;
+      pivots.push(pivot);
+    }
+    const life = BONE_SPIKE_EVERY * count + BONE_SPIKE_RISE + BONE_SPIKE_STAND + BONE_SPIKE_SINK;
+    const pose = (elapsed: number): void => {
+      const sinkFrom = life - BONE_SPIKE_SINK;
+      for (let i = 0; i < pivots.length; i++) {
+        const t = elapsed - i * BONE_SPIKE_EVERY;
+        let k: number;
+        if (t <= 0) k = 0.001;
+        else if (t < BONE_SPIKE_RISE) {
+          const r = t / BONE_SPIKE_RISE;
+          k = r * (2 - r) * (1 + BONE_SPIKE_OVERSHOOT * Math.sin(r * Math.PI)); // out fast, a touch past full, settling
+        } else if (elapsed < sinkFrom) k = 1;
+        else k = Math.max(0.001, 1 - (elapsed - sinkFrom) / BONE_SPIKE_SINK);
+        pivots[i].scaling.y = k;
+      }
+    };
+    pose(0.016);
+    this._effects.push({ root, remaining: life, update: (_dt, remaining) => pose(life - remaining) });
   }
 
   // ══════════════════ SHURIKEN (thrown) ══════════════════

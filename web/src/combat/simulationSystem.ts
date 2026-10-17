@@ -1734,6 +1734,8 @@ export class SimulationSystem {
         this.projectileSystem.spawnProjectile(
           t.shape, head.getAbsolutePosition().clone(), target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: 0 },
         );
+        // The bone mage's spell is in the ground, not the air (units/tribal.bone_mage): his row of bone spikes bursts up from his feet to the man as the leaves go
+        if (t.shape === "leaves") this.visualEffects?.spawnBoneSpikeRow(attacker.position, target.position);
         continue;
       }
       if (t.fromStaff) continue;
