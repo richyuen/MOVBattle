@@ -1637,6 +1637,8 @@ export class SimulationSystem {
     // held, so the land frame shows the club on his crown or shoulders and not his head already snapped 0.8 m back off it (pose bench, hoplite duel);
     // the throw at the dwell's end lays the recoil on
     if (dwells) target.holdFlinch(BLOW_DWELL);
+    // ...and he buckles under it on this same step (struck-man buckle, r2c3: knees give, head down, arms out of his guard) till the throw takes him
+    if (dwells) target.animator.buckleUnder();
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();

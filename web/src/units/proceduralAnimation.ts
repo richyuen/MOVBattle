@@ -290,6 +290,16 @@ const BOARD_OFF_SECONDS = 0.6;
 const BOARD_OFF_HOLD = 0.25;
 const BOARD_OFF_FLING = { out: 1.4, back: 0.6 };
 const BOARD_OFF_BUCKLE = { thigh: 0.9, knee: 1.6, sink: 0.35 };
+/*
+ * [S] struck-man buckle (battle-feel.e). Spec read off trailer_3_sheet_01 r2c3 (the man under the club folds: knees give, head goes down, arms drop out of
+ * his guard, before he goes): a heavy blow that dwells on a man (SimulationSystem BLOW_DWELL) buckles him on the very step it lands, for BUCKLE_SECONDS,
+ * full for all but the last BUCKLE_FADE of it. Thighs forward BUCKLE.thigh and knees bent BUCKLE.knee (rad), the hips dropped BUCKLE.sink of his standing
+ * hip height so both soles stay down; the trunk folded BUCKLE.trunk forward over them and the head BUCKLE.head further down; both arms dropped to BUCKLE.arm
+ * from hanging, elbows loose, whatever guard or swing they held. Laid over every stance and swing layer; the throw off his feet takes over from it.
+ */
+const BUCKLE_SECONDS = 0.2;
+const BUCKLE_FADE = 0.06;
+const BUCKLE = { thigh: 0.55, knee: 1.1, sink: 0.16, trunk: 0.45, head: 0.5, arm: -0.35, elbow: -0.3 };
 // Thrown back off his feet by a heavy blow, hip-led (trailer_3_sheet_01 r2c3, the red man leaving the clubbers, read off the frame: he goes seat-first, the
 // pelvis the lowest point of him and the one the blow carries; the trunk is tipped ~53 deg from upright the way he goes, head still above the hips; one leg
 // trails straight down and a little the way he goes, ~40 deg from vertical; the other leg is flung back toward the striker near straight, the thigh ~20 deg
@@ -670,6 +680,13 @@ export class ProceduralAnimator {
     this._boardOff = BOARD_OFF_SECONDS;
   }
   private _boardOff = 0;
+
+  /** A heavy blow has just landed on him and dwells there: his knees give and he folds under it (BUCKLE), shown from this very pose. */
+  buckleUnder(): void {
+    if (this._state === AnimState.Dead) return;
+    this._buckle = BUCKLE_SECONDS;
+  }
+  private _buckle = 0;
 
   /** A heavy blow has thrown him back off his feet: arms flung out wide, legs swept forward from under him (THROWN), full for `hold` s of `seconds`. */
   throwBack(seconds: number, hold: number): void {
@@ -1414,6 +1431,26 @@ export class ProceduralAnimator {
       // Arms flail out
       b.leftShoulder.rotation.z -= 0.5 * intensity;
       b.rightShoulder.rotation.z += 0.5 * committed;
+    }
+    // Buckled under a dwelling blow (see BUCKLE): knees given, hips dropped, trunk and head folded down, arms dropped out of his guard
+    if (this._buckle > 0 && this._state !== AnimState.Dead) {
+      const b = this._body;
+      const k = Math.min(1, this._buckle / BUCKLE_FADE) * (1 - this._thrownWeight());
+      if (dt > 0) this._buckle = Math.max(0, this._buckle - dt);
+      b.leftHip.rotation.x += (-BUCKLE.thigh - b.leftHip.rotation.x) * k;
+      b.rightHip.rotation.x += (-BUCKLE.thigh - b.rightHip.rotation.x) * k;
+      b.leftKnee.rotation.x += (BUCKLE.knee - b.leftKnee.rotation.x) * k;
+      b.rightKnee.rotation.x += (BUCKLE.knee - b.rightKnee.rotation.x) * k;
+      this._hipRest ??= b.hip.position.y;
+      b.hip.position.y = Math.min(b.hip.position.y, this._hipRest * (1 - BUCKLE.sink * k));
+      b.torso.rotation.x += (BUCKLE.trunk - b.torso.rotation.x) * k;
+      b.neck.rotation.x += (BUCKLE.head - b.neck.rotation.x) * k;
+      for (const sh of [b.leftShoulder, b.rightShoulder]) {
+        sh.rotation.x += (BUCKLE.arm - sh.rotation.x) * k;
+        sh.rotation.z *= 1 - k * 0.7;
+      }
+      b.leftElbow.rotation.x += (BUCKLE.elbow - b.leftElbow.rotation.x) * k;
+      b.rightElbow.rotation.x += (BUCKLE.elbow - b.rightElbow.rotation.x) * k;
     }
     // Board knocked off and knees gone (see BOARD_OFF): the board arm flung out wide and the board hanging off it, the hips dropped on bent knees
     const off = this._boardOffWeight();
