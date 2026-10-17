@@ -2863,6 +2863,9 @@ const SLAB_WIDE = 0.34;
 const SLAB_TALL = 0.71;
 const SLAB_EYE = 0.12;
 const SLAB_EYE_UP = 0.22;
+// ...and its moss (tribal.protector.blue.png): two faceted green chunks grown on the face, a long one draped over the top corner beside the opening and a
+// small one at the bottom edge, each a chunk this big (prop units) and stood proud of the planks by SLAB_MOSS.proud so it reads with the shield edge-on
+const SLAB_MOSS = { top: 0.13, bottom: 0.08, proud: 0.03 };
 let slabSerial = 0;
 // The painter's palette, in its own units before the prop oversize: across (about a torso wide carried), tipped PALETTE_TIP face-up and turned PALETTE_TURN out in the hand
 const PALETTE_WIDE = 0.24;
@@ -3033,6 +3036,35 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         bar.position.set(0, y * H, -0.035 * s);
         bar.material = batten;
         bar.parent = shield;
+      }
+      // Moss (spec at SLAB_MOSS): irregular faceted lumps, one lying along the top corner on the side away from the opening and slanted down toward it, one
+      // clinging to the bottom edge on the other side; both stand off the face. Self-lit a little: a plain green went near-black in the field's shade.
+      const moss = mat(scene, new Color3(0.4, 0.5, 0.2), 0.15, "stone");
+      const lumps: [number, number, number, number, number, number][] = [
+        [0.28 * W, H * 0.45, SLAB_MOSS.top * s, 1.7, 0.6, -0.45],
+        [-0.36 * W, -H * 0.44, SLAB_MOSS.bottom * s, 1.2, 0.8, 0.3],
+      ];
+      for (let i = 0; i < lumps.length; i++) {
+        const [x, y, size, wide, tall, roll] = lumps[i];
+        const lump = MeshBuilder.CreateIcoSphere("slabMoss", { radius: size * 0.5, subdivisions: 1, flat: true }, scene);
+        // Knobbly, not a ball: every vertex pushed in or out by its own hashed share
+        const at = lump.getVerticesData(VertexBuffer.PositionKind);
+        if (at) {
+          for (let v = 0; v < at.length; v += 3) {
+            const k = 0.8 + 0.4 * roundBoardSeed(slabSerial + i, Math.round(at[v] * 97 + at[v + 1] * 57 + at[v + 2] * 31));
+            at[v] *= k; at[v + 1] *= k; at[v + 2] *= k;
+          }
+          lump.setVerticesData(VertexBuffer.PositionKind, at);
+          const normals: number[] = [];
+          VertexData.ComputeNormals(at, lump.getIndices() ?? [], normals);
+          lump.setVerticesData(VertexBuffer.NormalKind, normals);
+          lump.refreshBoundingInfo();
+        }
+        lump.scaling.set(wide, tall, 0.7);
+        lump.rotation.z = roll;
+        lump.position.set(x, y, SLAB_MOSS.proud * s + size * 0.2);
+        lump.material = moss;
+        lump.parent = shield;
       }
       return shield;
     }
