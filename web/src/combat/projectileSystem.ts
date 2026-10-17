@@ -126,6 +126,8 @@ interface ProjectileSpawnOptions {
   size?: number;
   /** A hovering sword rises to this world height while it hangs, and flies from there. */
   riseTo?: number;
+  /** The arc's height per metre of flight in place of the shape's own (a leaf whirl kept low along the ground). */
+  arc?: number;
 }
 
 interface MuzzleFlashOptions {
@@ -239,6 +241,7 @@ export class ProjectileSystem {
       case "sword": speed = 16; arcHeight = dist * 0.04; break;
       case "harpoon": speed = 18; arcHeight = dist * 0.1; break;
     }
+    if (options.arc !== undefined) arcHeight = dist * options.arc;
 
     let flightTime = Math.max(0.1, dist / speed);
     // A launched missile (LAUNCH): its arc is the gravity parabola of a throw at its own speed, solved for the low angle that reaches the man

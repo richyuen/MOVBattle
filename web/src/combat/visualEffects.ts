@@ -58,6 +58,15 @@ const BONE_SPIKE_FAR = 1.35;
 const BONE_SPIKE_LEAN = 0.22;
 const BONE_SPIKE_MAX = 14;
 
+/** Where the bone mage's row begins: the first spike's ground point, BONE_SPIKE_START ahead of the caster's feet toward his mark (nearer for a close one). */
+export function boneSpikeRowNear(from: Vector3, to: Vector3): Vector3 {
+  const dx = to.x - from.x, dz = to.z - from.z;
+  const span = Math.hypot(dx, dz);
+  if (span < 0.01) return from.clone();
+  const start = Math.min(BONE_SPIKE_START, span * 0.3);
+  return new Vector3(from.x + (dx / span) * start, from.y, from.z + (dz / span) * start);
+}
+
 export class VisualEffects {
   private _scene: Scene;
   private _effects: TimedEffect[] = [];

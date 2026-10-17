@@ -6,7 +6,7 @@ import {
   type AttackProfile, type AIProfile,
 } from "../data/combatProfiles";
 import { ProjectileSystem, type ProjectileShape } from "./projectileSystem";
-import { VisualEffects } from "./visualEffects";
+import { VisualEffects, boneSpikeRowNear } from "./visualEffects";
 import type { ImpactPresentation } from "./impactPresentation";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
@@ -66,6 +66,9 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
+// The bone mage's leaf whirl (units/tribal.bone_mage, tribal.bone_mage.png: leaves swirling low among the spikes at the man, none over the caster's head): it rises
+// at the row's near end this high off the turf, runs at the man this high up him, on an arc this high per metre (near flat, under the spike tips)
+const LEAF_ROW = { lift: 0.6, at: 0.7, arc: 0.03 };
 // A swordcaster's sword hangs over his head this long, point on the man, before it flies (units/spooky.swordcaster: swords float round him)
 const SWORD_HOVER = 0.7;
 // A ring sword rises to this far over the caster's head before it flies ([S] ring-sword-rises)
@@ -1726,6 +1729,17 @@ export class SimulationSystem {
       if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
       this._logAbility(attacker, t.fromStaff ? "cast" : "throw", now);
       const head = t.fromStaff ? staffHeadOf(attacker) : null;
+      if (head && t.shape === "leaves") {
+        // The bone mage's spell is in the ground, not the air (units/tribal.bone_mage): his row of bone spikes bursts up from his feet to the man as the staff
+        // comes up, and the leaves are not thrown off the staff head over his own: the whirl rises low at the row's near end, ahead of his feet, and runs along
+        // the spike line at the man under the spike tips (LEAF_ROW)
+        this.projectileSystem.spawnProjectile(
+          t.shape, boneSpikeRowNear(attacker.position, target.position), target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0,
+          { originLift: LEAF_ROW.lift, targetLift: LEAF_ROW.at, arc: LEAF_ROW.arc },
+        );
+        this.visualEffects?.spawnBoneSpikeRow(attacker.position, target.position);
+        continue;
+      }
       if (head) {
         // A caster keeps his staff: the missile is lit at its head, where the drive has put it
         const chain: TransformNode[] = [];
@@ -1734,8 +1748,6 @@ export class SimulationSystem {
         this.projectileSystem.spawnProjectile(
           t.shape, head.getAbsolutePosition().clone(), target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: 0 },
         );
-        // The bone mage's spell is in the ground, not the air (units/tribal.bone_mage): his row of bone spikes bursts up from his feet to the man as the leaves go
-        if (t.shape === "leaves") this.visualEffects?.spawnBoneSpikeRow(attacker.position, target.position);
         continue;
       }
       if (t.fromStaff) continue;
