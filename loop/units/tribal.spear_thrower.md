@@ -8,15 +8,15 @@ a FAIL (0 since 315)
 b FAIL (0 since 315)
  1. spear in unit_tribal.spear_thrower_windup is hidden behind the torso, a stub at the shoulder — TABS: arm straight up, spear raised above the head (ref: tribal.spear_thrower.red.png)
  2. spearhead in unit_tribal.spear_thrower_release is a small dark triangle — TABS: a broad grey stone leaf lashed to the shaft with rope (ref: tribal.spear_thrower.jpg)
-c FAIL (1 since 315)
- 1. (struck 316: flat javelin)
- 2. squire in unit_tribal.spear_thrower_struck walks on untouched, no spear near him — TABS: the spear lands and launches the target (card damage 200, force 220). Shot re-aimed at the impact frame by the 315 evidence commit; judge there.
-d PASS (stats 315: cost 120=120, hp -12%, dmg 0%, cd 0%)
+c PASS (317)
+d PASS (stats 317: cost 120=120, hp -12%, dmg 0%, cd 0%)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c stick-and-launch — blocker 2: spear impact applies the card's force 220 knockback and the spear stays stuck in the target for the struck frame — ref: card Weapons, tribal.spear_thrower.jpg — ours: unit_tribal.spear_thrower_struck.png
-2. [S] b spear raised overhead — blocker 1: windup pose with the arm straight up and the javelin above the head — ref: tribal.spear_thrower.red.png — ours: unit_tribal.spear_thrower_windup.png
+1. [S] b spear raised overhead — blocker 1: overhand throw pose, arm straight up, javelin above the head in the windup (proceduralAnimation throw) — ref: tribal.spear_thrower.red.png — ours: unit_tribal.spear_thrower_windup.png
+2. [S] b stone leaf head — blocker 2: broad grey stone leaf lashed to the shaft with rope — ref: tribal.spear_thrower.jpg — ours: unit_tribal.spear_thrower_release.png
 ## Attempts (iter | gap | criterion | verdict)
 316 | flat javelin (a76560b) | c | approved
+317 | stick-and-launch (6f13b5a) | c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 316: projectileSystem LAUNCH table (spear: speed 20, gravity 9.8) + solveLowArc; flight keeps the lerp + 4At(1-t) form (A = gT^2/8). Keys on shape "spear", so the harpooner and the plain-spear fallback share it.
+- 316: projectileSystem LAUNCH table (spear: speed 20, gravity 9.8) + solveLowArc. 317: LAUNCH.spear.throw 220 -> target.staggerFromBlow(p.origin, throw) on a direct hit that leaves him alive; _leaveAsLitter keeps the shaft stuck in him. Keys on shape "spear" (harpooner and the plain-spear fallback share it).
+- Critic 317: the release is a level push from an extended arm (that is b blocker 1); the two b gaps are one criterion, one per iteration.

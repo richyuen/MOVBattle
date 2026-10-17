@@ -1,9 +1,9 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 316   Batch: tribal (1/18)   Consecutive empty: 0   Done: 0/139   Parked: 0
+Iteration: 317   Batch: tribal (1/18)   Consecutive empty: 0   Done: 0/139   Parked: 0
 Batches, in order: tribal, farmer, medieval, ancient, viking, dynasty, renaissance, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber --++ o | protector --++ o | spear_thrower ---+ o | stoner ---+ o | bone_mage ---+ o | chieftain --++ o | mammoth -+-+ o
+tribal: clubber -+++ o | protector --++ o | spear_thrower --++ o | stoner ---+ o | bone_mage -+-+ o | chieftain --++ o | mammoth -+-+ o
 farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,16 +23,18 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-316 (BASE ff65871): [S] clubber b club mesh 3af648b approved | [S] chieftain b stone axe heads 41a51fe approved | [S] protector b plank shield with face hole 77c8352 approved | [S] bone_mage b deer-skull staff 9474ce7 approved | [S] spear_thrower c flat javelin a76560b approved. 5/5 approved, no regressions; every b/c list touched still has a blocker left, so no criterion flipped.
+317 (BASE 2676b33): [S] bone_mage c bone spike row 7496412 approved | [S] spear_thrower c stick-and-launch 6f13b5a approved | [S] clubber b two-handed grip 6a1bbe4 approved | [S] protector b no back spear 3fd57a5 approved | [S] bone_mage b upright carry b6bc951 approved | [P] chieftain b stone size 3ce2f90 approved (fallout of 41a51fe). 6/6 approved, no regressions; three criteria flipped: clubber.b, spear_thrower.c, bone_mage.b.
+316 (BASE ff65871): 5/5 approved (club mesh 3af648b, stone axe heads 41a51fe, plank shield 77c8352, deer-skull staff 9474ce7, flat javelin a76560b).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.clubber (3af648b) VERDICT: APPROVE CRITERION: tribal.clubber.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
-- GAP: [S] tribal.chieftain (41a51fe) VERDICT: APPROVE CRITERION: tribal.chieftain.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2 (rewritten: the swung stone is a thin lens under a head across).
-- GAP: [S] tribal.protector (77c8352) VERDICT: APPROVE CRITERION: tribal.protector.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3.
-- GAP: [S] tribal.bone_mage (9474ce7) VERDICT: APPROVE CRITERION: tribal.bone_mage.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2 (rewritten: carried level at the hip, TABS upright beside the body).
-- GAP: [S] tribal.spear_thrower (a76560b) VERDICT: APPROVE CRITERION: tribal.spear_thrower.c FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
+- GAP: [S] tribal.bone_mage (7496412) VERDICT: APPROVE CRITERION: tribal.bone_mage.c FAIL (previous: FAIL) BLOCKERS: struck: 1; 2 kept; 3 rewritten (squire strides among the spikes, never lifted). c FAIL (1 since 315).
+- GAP: [S] tribal.spear_thrower (6f13b5a) VERDICT: APPROVE CRITERION: tribal.spear_thrower.c PASS (previous: FAIL) BLOCKERS: struck: 2. List empty; c flips to PASS (317).
+- GAP: [S] tribal.clubber (6a1bbe4) VERDICT: APPROVE CRITERION: tribal.clubber.b PASS (previous: FAIL) BLOCKERS: struck: 2. List empty; b flips to PASS (317).
+- GAP: [S] tribal.protector (3fd57a5) VERDICT: APPROVE CRITERION: tribal.protector.b FAIL (previous: FAIL) BLOCKERS: struck: 2; 3 (moss) remains. b FAIL (2 since 315).
+- GAP: [S] tribal.bone_mage (b6bc951) VERDICT: APPROVE CRITERION: tribal.bone_mage.b PASS (previous: FAIL) BLOCKERS: struck: 2. List empty; b flips to PASS (317).
+- GAP: [P] tribal.chieftain (3ce2f90) VERDICT: APPROVE CRITERION: tribal.chieftain.b FAIL (previous: FAIL) BLOCKERS: 2 rewritten (a fat chunk now, about two-thirds of his head across; TABS head-wide). A further [P] on AXE_HEAD rows would be a re-nudge: the rest goes through an [S].
 - REGRESSIONS: none
-Batch ranked order (critic, 316): bone_mage.c bone spike row, spear_thrower.c stick-and-launch, clubber.b two-handed grip, protector.b no back spear, bone_mage.b upright carry, spear_thrower.b spear raised overhead, chieftain.a animal-skull helmet, protector.b moss chunks, clubber.a hair and beard, [P] chieftain.b stone size (fallout of 41a51fe). Stoner and mammoth keep their 315 ranked gaps (stoner.c forward toss, mammoth.a brown fur, stoner.a garment, mammoth.c charge).
+Batch ranked order (critic, 317): protector.b moss chunks (flips b), chieftain.b lashed stone head (flips b), spear_thrower.b spear raised overhead, bone_mage.c leaves along the spike line, stoner.c forward toss, chieftain.a animal-skull helmet, clubber.a hair and beard, spear_thrower.b stone leaf head, mammoth.a brown fur hide, protector.a skull helmet, stoner.a one-shoulder garment, [P] bone_mage.c spike girth (fallout of 7496412, NEXT unit_tribal.bone_mage_struck). Mammoth.c charge keeps its 315 entry.
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +55,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- 317 starts at step 3: up to 5 [S] from the 316 ranked order above (2 per unit max, different criteria), plus at most 1 [P]: chieftain.b stone size is eligible fallout (41a51fe approved in 316, NEXT names unit_tribal.chieftain_release). Stoner's two gaps (c forward toss = give "stone" a LAUNCH entry like the spear's; a one-shoulder garment) and mammoth's are unpicked since 315.
-- Browns and greys go near-black in the capture's shade: give prop materials an emissive of 0.08-0.15 (mat(scene, colour, 0.1)). A raised prop can leave the windup frame at the top: check the look. `node loop/scripts/inspect-prop.mjs <id> [--no-build]` builds, spawns the unit alone and prints every hand mesh (name, visible, world extent) plus output/loop/inspect_<id>_{front,side}.png.
-- The animator keys on prop names: a hafted weapon root must be named like the regex at proceduralAnimation.ts ~1599 (club|blade|handle|...), a caster's staff is "staff" with an "orb" child (id boneStaff for the overhead cast), a shield matches /shield$/.
-- Two gaps in one file: edit, commit, then edit the next; splitting hunks afterwards cost a stash dance this iteration. Capture: a 1-2 unit look ~2.5 min, 5 units ~5 min.
-- File edits keep each file's EOL (LF here). Do not chain shell commands. v1 is under loop/archive/v1/, tag loop-v1-final.
+- 318 starts at step 3: up to 5 [S] from the 317 ranked order above (2 per unit max, different criteria; spear_thrower's two b gaps are one criterion), plus at most 1 [P]: bone_mage.c spike girth is eligible fallout (7496412 approved 317). Stoner (c forward toss = a "stone" LAUNCH entry like the spear's; a one-shoulder garment) and mammoth are unpicked since 315.
+- capture.mjs `--units a,b` is comma-separated (a space-separated list only shoots the first). A look of 2-3 units ~3 min, 5 units ~5 min. The capture also writes a "working tree was dirty" note when STATE/LEDGER are mid-edit; harmless.
+- Browns and greys go near-black in the capture's shade, and the bone material renders blue-grey: give prop materials an emissive of 0.1-0.2. `node loop/scripts/inspect-prop.mjs <id> [--no-build]` prints every hand mesh and writes output/loop/inspect_<id>_{front,side}.png.
+- The animator keys on prop names: a hafted weapon root must match the regex at proceduralAnimation.ts ~1606 (club|blade|handle|...), a caster's staff is "staff" with an "orb" child (id boneStaff = overhead cast + BONE_HOLD planted carry), a shield matches /shield$/. A "club" with an empty off hand is two-handed (_offhandToGrip). The carry eases in over ~0.3 s: a prop that must read in the placement (idle) frame needs _carryTurn = 1 at _buildCarry like the scythe/bone staff/club.
+- Two gaps in one file: edit, commit, then edit the next. File edits keep each file's EOL (LF here). Do not chain shell commands. v1 is under loop/archive/v1/, tag loop-v1-final.

@@ -16,6 +16,11 @@ for 25 iterations.
 316 | plank shield with face hole (77c8352) | tribal.protector.b | approved
 316 | deer-skull staff (9474ce7) | tribal.bone_mage.b | approved
 316 | flat javelin (a76560b) | tribal.spear_thrower.c | approved
+317 | bone spike row (7496412) | tribal.bone_mage.c | approved
+317 | stick-and-launch (6f13b5a) | tribal.spear_thrower.c | approved
+317 | two-handed grip (6a1bbe4) | tribal.clubber.b | approved
+317 | no back spear (3fd57a5) | tribal.protector.b | approved
+317 | upright carry (b6bc951) | tribal.bone_mage.b | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -26,7 +31,8 @@ propBuilder.ts:club CLUB_GRIP (share below the fist) | 0.2 | 316 | approved | (n
 propBuilder.ts:club CLUB_HEAD (head width, of CLUB_LONG) | 0.22 | 316 | approved | (new)
 propBuilder.ts:stone_axe AXE_LONG (of the man's height) | 0.4 | 316 | approved | (new)
 propBuilder.ts:stone_axe AXE_GRIP | 0.25 | 316 | approved | (new)
-propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.42 | 316 | approved | (new)
+propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.55 | 317 | approved | 0.42 (316; the 317 [P] is the critic's own 316 fallout entry, not a reversal)
+propBuilder.ts:stone_axe AXE_HEAD_SQUASH (height, thickness of the length) | 0.8, 0.6 | 317 | approved | 0.62, 0.4 (316, inline)
 propBuilder.ts:slab SLAB_WIDE | 0.34 | 316 | approved | 0.25
 propBuilder.ts:slab SLAB_TALL | 0.71 | 316 | approved | (unchanged by the 316 rebuild)
 propBuilder.ts:slab SLAB_EYE (opening across) | 0.12 | 316 | approved | (new)
@@ -36,3 +42,7 @@ propBuilder.ts:bone_staff BONE_STAFF_GRIP | 0.4 | 316 | approved | (new)
 propBuilder.ts:bone_staff BONE_STAFF_SKULL | 0.1 | 316 | approved | (new)
 projectileSystem.ts:LAUNCH.spear speed | 20 | 316 | approved | (new; the fixed lob flew the chord at 18 with arc 0.15 m per metre)
 projectileSystem.ts:LAUNCH.spear gravity | 9.8 | 316 | approved | (new)
+projectileSystem.ts:LAUNCH.spear throw (staggerFromBlow force) | 220 | 317 | approved | (new; the card's force)
+proceduralAnimation.ts:club OFFHAND_GRIP_UP (of the club's length) | 0.11 | 317 | approved | (new)
+proceduralAnimation.ts:bone_staff BONE_HOLD (raise, out, elbow) | -0.2, 0.18, -0.5 | 317 | approved | (new; planted, tip 0.03, 1.6, 0.04)
+visualEffects.ts:boneSpikes BONE_SPIKE_NEAR..FAR (m) | 0.45, 1.35 | 317 | approved | (new; EVERY 0.025 s, STEP 0.55 m, STAND 1.6 s)

@@ -8,15 +8,16 @@ a FAIL (0 since 315)
  4. scale in lineup_tribal: ours stands a head and a half over the clubber — TABS: 1.15x, barely taller than the neighbours (ref: tribal.jpg; card Size 1.15x)
 b FAIL (1 since 315)
  1. (struck 316: stone axe heads)
- 2. swung weapon in unit_tribal.chieftain_release has a flat grey lens of a stone well under his head across — TABS: a fat grey stone the size of the man's head on the wrist-thin handle (ref: tribal.chieftain.png)
+ 2. stone in unit_tribal.chieftain_release is a fat faceted chunk now but about two-thirds of his head across (half, at lineup distance) — TABS: as wide as the head, skull cap included (ref: tribal.chieftain.red.png; tribal.chieftain.png larger still)
 c PASS (315)
-d PASS (stats 315: cost 400=400, hp 0%, dmg -1%, cd 0%)
+d PASS (stats 317: cost 400=400, hp 0%, dmg -1%, cd 0%)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a animal-skull helmet — blocker 1: a pale skull chunk strapped on top of the head replacing the cap and rods — ref: tribal.chieftain.blue.png — ours: unit_tribal.chieftain_idle.png
-2. [P] b stone size — blocker 2: AXE_HEAD 0.42 -> 0.55 plus a new row for the stone squash (0.62, 0.4 -> 0.8, 0.6), fallout of stone axe heads (41a51fe, 316); NEXT: shows in unit_tribal.chieftain_release as a stone the size of his head — ref: tribal.chieftain.png — ours: unit_tribal.chieftain_release.png
+1. [S] b lashed stone head — blocker 2: the stone rebuilt head-wide (AXE_HEAD anew at ~0.75 of AXE_LONG) with crossed rope lashing onto the handle top — ref: tribal.chieftain.red.png — ours: unit_tribal.chieftain_release.png (flips b)
+2. [S] a animal-skull helmet — blocker 1: a pale skull chunk strapped on top of the head over a chestnut beard, replacing the cap, ring and rods — ref: tribal.chieftain.blue.png — ours: unit_tribal.chieftain_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 316 | stone axe heads (41a51fe) | b | approved
+317 | [P] stone size (3ce2f90) | b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 316: new WeaponType stone_axe (heavy_swing family), root named "handle" so the animator turns it; chieftain has it in both hands (offhandWeapon).
-- Critic: the off-hand stone hides under the forearm in windup (carry pose, not a blocker); the squash (1, 0.62, 0.4) is what makes the stone a lens.
+- 316: WeaponType stone_axe (heavy_swing family), root "handle" so the animator turns it; both hands (offhandWeapon). 317 [P]: AXE_HEAD 0.55, AXE_HEAD_SQUASH 0.8/0.6 approved; a further [P] on those rows is a re-nudge within 20 iterations, so the remaining size goes through the [S] above.
+- Critic: the off-hand stone hides under the forearm in windup (carry pose, not a blocker).
