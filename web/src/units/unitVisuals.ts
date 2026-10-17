@@ -222,8 +222,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
       weaponRotationOffset: { rx: 0.18, rz: -0.18 },
     },
   ),
+  // The protector carries only his plank shield (units/tribal.protector, card Main Hand Wood Shield, Off Hand N/A): no spear, nothing on his back
   "tribal.protector": vis(
-    { scale: 1.0, bulk: 1.1 }, "spear", "bone_mask", "slab", "none", "#D2B48C",
+    { scale: 1.0, bulk: 1.1 }, "none", "bone_mask", "slab", "none", "#D2B48C",
   ),
   "tribal.spear_thrower": vis(
     { scale: 0.95, armLength: 1.1 }, "javelin", "none", "none", "none", "#CD853F",

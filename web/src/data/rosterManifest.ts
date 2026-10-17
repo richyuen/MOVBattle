@@ -222,7 +222,7 @@ function makeFaction(
 const tribal = makeFaction(FactionId.Tribal, "tribal", [
   ["clubber", "Clubber", 70, "light_melee", { weaponHint: "club" }],
   // Stats knobs (cost, healthMultiplier, damageMultiplier, cooldownMultiplier) are set by loop/scripts/stats.mjs from the TABS wiki, normalised to the clubber
-  ["protector", "Protector", 80, "shield_melee", { weaponHint: "spear", shieldHint: "round", healthMultiplier: 0.62, damageMultiplier: 0.16, cooldownMultiplier: 0.58 }],
+  ["protector", "Protector", 80, "shield_melee", { shieldHint: "round", healthMultiplier: 0.62, damageMultiplier: 0.16, cooldownMultiplier: 0.58 }],
   ["spear_thrower", "Spear Thrower", 120, "archer", { projectileHint: "spear", weaponHint: "javelin", healthMultiplier: 0.5, damageMultiplier: 2.04, cooldownMultiplier: 3.64 }],
   ["stoner", "Stoner", 160, "thrower", { projectileHint: "stone", weaponHint: "stone", healthMultiplier: 0.39, damageMultiplier: 0.61, cooldownMultiplier: 2.27 }],
   ["bone_mage", "Bone Mage", 300, "special_magic", { weaponHint: "bone_staff", projectileHint: "leaves", healthMultiplier: 0.31, damageMultiplier: 0.65, cooldownMultiplier: 2.5 }],
