@@ -54,6 +54,8 @@ for 25 iterations.
 324 | hide cape, joins TRIBAL_CAPE_UNITS (74de196) | tribal.chieftain.a | approved
 324 | tusk necklace (54f0b6b) | tribal.clubber.a | approved
 324 | mane, jittered crest and locks (6d8c95a) | tribal.mammoth.a | approved
+325 | ankle bands (0207b28) | tribal.mammoth.a | approved
+325 | bracelets, joins BRACELETS (e8a2cc0) | tribal.clubber.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -99,7 +101,7 @@ tribalDress.ts:hair LONG_HAIR (strands, face, fringe, long, thick), COLOR | 17, 
 tribalDress.ts:tusks TUSK_BAND (band, strap, rise, bow, thick) | 0.45, 0.1, 0.65, 0.22, 0.4 | 322 | approved | rise 1.1, thick 0.28 (321 [S]); 322 [P] fallout; do not re-nudge before 342
 tribalDress.ts:loincloth LOINCLOTH (ropes, flap, skull, bone, boneAt), FLAP_COLOR | 2, 0.85, 0.42, 0.62, 0.95, (0.5, 0.3, 0.18) e0.15 | 321 | approved | (new; bone_mage)
 tribalDress.ts:necklace BONE_NECKLACE (drop, bone, middle, thick, gap, strap, off) | 0.16, 0.55, 1.25, 0.13, 2.4, 0.03, 0.14 | 322 | approved | (new; stoner, bone_mage)
-tribalDress.ts:bracelets BRACELET (at, apart, bones, long, thick, proud) | 0.76, 0.16, 6, 0.3, 0.28, 0.18 | 322 | approved | (new; bone_mage)
+tribalDress.ts:bracelets BRACELET (at, apart, bones, long, thick, proud) | 0.76, 0.16, 6, 0.3, 0.28, 0.18 | 325 | approved | (new; bone_mage; clubber joins 325)
 tribalDress.ts:pauldrons PAULDRON (wide, long, top, out) | 1.9, 0.95, 0.12, 0.55 | 322 | approved | (new; chieftain; critic 322: too white, sockets too big)
 tribalDress.ts:beard BEARD (down, wide, deep, locks, lockLong, jitter), CLUBBER_HAIR_COLOR | 0.32, 1.0, 0.5, 5, 0.3, 0.15, (0.4, 0.25, 0.15) e0.18 | 322 | approved | (new; clubber)
 tribalDress.ts:necklace FANG_NECKLACE (drop, long, thick, curl, strap, off) | 0.34, 0.8, 0.2, 0.3, 0.03, 0.14 | 323 | approved | (new; spear_thrower; critic 323: fang a little short)
@@ -109,3 +111,4 @@ simulationSystem.ts:MAMMOTH_CHARGE (from, reach, speed, seconds, overrun, contac
 unitVisuals.ts:tribal.chieftain proportions.scale | 1.15 | 324 | approved | 1.35 (pre-loop); card Size 1.15x
 tribalDress.ts:necklace TUSK_NECKLACE (drop, long, side, thick, gap, curl, strap, off) | 0.3, 0.5, 0.8, 0.17, 0.3, 0.3, 0.03, 0.16 | 324 | approved | (new; clubber; critic 324: sags too low, tusks short)
 vehicleBuilder.ts:mammoth MAMMOTH_MANE (jitter, locks, long, glow), COLOR | 0.2, 7, 0.42, 0.12, (0.2, 0.1, 0.06) | 324 | approved | (new; was an indigo crestMat cap; critic 324: barely darker than the coat)
+vehicleBuilder.ts:mammoth ANKLE_BAND (stripes, tall, wide, dots, dotAt, dot, dotOut) | -0.17/-0.25, 0.05, 0.64, 8, -0.33, 0.11, 0.29 | 325 | approved | (new; tuskTipMat; critic 325: stands proud like hardware, dots studs)

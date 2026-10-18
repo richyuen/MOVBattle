@@ -1,9 +1,9 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 324   Batch: tribal (1/18)   Consecutive empty: 0   Done: 5/139   Parked: 0
+Iteration: 325   Batch: tribal (1/18)   Consecutive empty: 0   Done: 6/139   Parked: 0
 Batches, in order: tribal, farmer, medieval, ancient, viking, dynasty, renaissance, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber -+++ o | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
+tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
 farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,16 +23,14 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-324 (BASE 319dba1): [S] chieftain a hide cape 74de196 approved | [S] clubber a tusk necklace 54f0b6b approved | [S] mammoth a mane 6d8c95a approved | [P] chieftain a scale 1.15 d2396d7 approved (a -> PASS, chieftain D). 4/4 approved, no regressions.
-323 (BASE c272b72): 5/5 approved (clubber loincloth, spear_thrower fang necklace -> D, chieftain beard, mammoth hide + Mammoth Charge).
+325 (BASE 75ad012): [S] mammoth a ankle bands 0207b28 approved | [S] clubber a bracelets e8a2cc0 approved (a -> PASS, clubber D). 2/2 approved, no regressions.
+324 (BASE 319dba1): 4/4 approved (chieftain hide cape + scale -> D, clubber tusk necklace, mammoth mane).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.chieftain (74de196) VERDICT: APPROVE CRITERION: tribal.chieftain.a FAIL (previous: FAIL) BLOCKERS: struck: 3. Remaining: 4 (struck by d2396d7 below).
-- GAP: [S] tribal.clubber (54f0b6b) VERDICT: APPROVE CRITERION: tribal.clubber.a FAIL (previous: FAIL) BLOCKERS: struck: 3. Remaining: 4.
-- GAP: [S] tribal.mammoth (6d8c95a) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL) BLOCKERS: struck: 3. Remaining: 2, 4.
-- GAP: [P] tribal.chieftain (d2396d7) VERDICT: APPROVE CRITERION: tribal.chieftain.a PASS (previous: FAIL) BLOCKERS: struck: 4. List is empty.
+- GAP: [S] tribal.mammoth (0207b28) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL) BLOCKERS: struck: 1 (323), 2 (this commit), 3 (324). Remaining: 4.
+- GAP: [S] tribal.clubber (e8a2cc0) VERDICT: APPROVE CRITERION: tribal.clubber.a PASS (previous: FAIL) BLOCKERS: struck: 4 (this commit). The list is empty.
 - REGRESSIONS: none
-Batch ranked order (critic, 324): clubber.a bracelets (BRACELETS), mammoth.a ankle bands (legCuff), mammoth.a face marking (brow stripe down the trunk). No [P] ranked.
+Batch ranked order (critic, 325): [S] mammoth.a face marking; [P] mammoth.a ankle band flush (fallout of 0207b28, NEXT in unit_tribal.mammoth_idle).
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +51,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- 325 starts at step 3: clubber bracelets + one mammoth gap (ankle bands first; both mammoth gaps are on a, so one per iteration). If both clear their lists, the units go D and the batch checkpoint (step 8) runs, then Batch advances to farmer.
-- Tribal ornaments live in web/src/units/tribalDress.ts (NECKLACES incl. "tusks", hornOnRope, HAIR_STYLES, tribalBeard, LOINCLOTHS, BRACELETS, PAULDRONS); tunic and cape are unitFactory (dressTribalTunic, dressTribalCape, TRIBAL_CAPE_UNITS).
-- Mammoth: buildMammoth (vehicleBuilder ~1385), mammoth-only branches key on hide === MAMMOTH_HIDE; the sacred elephant reuses it and shaves by mesh name (ELEPHANT_SHAVED). Leg cuffs: "legCuff" on hipJoint (shaggyFur); brow paint "browPaint" (paintMat).
-- Capture shade greys warm browns: dark saturated base with emissive 0.1 reads brown. Chieftain _idle is now a side view; his cape shows best in _windup.
-- capture.mjs --units takes a comma list (a,b), not spaces. Two gaps in one file: edit, commit, then the next; stage by path. stats.json lives in iter-317.
+- 326 starts at step 3: mammoth is the last open tribal unit. Pick [S] face marking (blocker 4) and the [P] ankle band flush fallout. If a goes PASS, mammoth is D: run the batch checkpoint (step 8) and advance Batch to farmer.
+- Mammoth: buildMammoth (vehicleBuilder ~1390); brow square is "browPaint" (paintMat) on neck ~1540; flat team paint is tuskTipMat (getCloth(color)); ANKLE_BAND on kneeJoint. Elephant shaves paint by mesh name (ELEPHANT_SHAVED): add any new face-paint mesh names there.
+- The 324 critic noted _windup crops the head top; if the face stripe cannot show there, re-aim with an evidence commit first.
+- Capture shade greys warm browns: dark saturated base with emissive 0.1 reads brown.
+- capture.mjs --units takes a comma list (a,b). stats.json lives in iter-317. Never put a bare `cat > file` (no heredoc) in a command: it waits on stdin.
