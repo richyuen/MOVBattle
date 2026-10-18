@@ -447,8 +447,12 @@ async function main() {
         const release = det.events.find((e) => /^(throw|cast)/.test(e.kind)) ?? det.events.find((e) => PLAIN.test(e.kind)) ?? det.events[0] ?? null;
         const ability = det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
         const impact = det.events.find((e) => e.kind === "impact") ?? null;
-        // The struck frame: 20 ticks (336 ms) after a blow, the top of the thrown man's arc; for a missile, 6 ticks after it first costs the target health
-        const struckTick = release ? (impact && impact.tick > release.tick + 20 ? impact.tick + 6 : release.tick + 20) : null;
+        // The struck frame: 20 ticks (336 ms) after a blow, the top of the thrown man's arc; for a missile, 6 ticks after it first costs the target health.
+        // A short throw (the stoner's boulder at a man who has closed in, landing inside 15 ticks of the let-go): 9 ticks after the landing, and framed from
+        // the far rig (`far`, the thrower and the metres ahead of him) rather than the 2 m camera on the struck man, which sat inside the impact dust while
+        // the thrown man left its frame (critic 318)
+        const shortThrow = Boolean(release && release.kind === "throw" && impact && impact.tick - release.tick < 15);
+        const struckTick = release ? (shortThrow ? impact.tick + 9 : impact && impact.tick > release.tick + 20 ? impact.tick + 6 : release.tick + 20) : null;
         const s = Math.min(4, Math.max(1, det.rig / 1.8));
         const ms = (e) => Math.round(e.tick * TICK);
         summary.units[id] = { release: release && { ...release, ms: ms(release) }, ability: ability && { ...ability, ms: ms(ability) }, impact: impact && { ...impact, ms: ms(impact) }, events: det.events, rigHeight: +det.rig.toFixed(2), d, s: +s.toFixed(2), support };
@@ -474,9 +478,9 @@ async function main() {
           await take(`unit_${id}_release`, release.tick, far);
           // A thrown missile at a man who has closed in (the stoner's boulder at 3 m) lands inside the motion pair's 9 ticks: its flight shot is taken
           // under half way to the hit instead, so the missile is still in the air and not yet its impact dust
-          const flightAt = release.kind === "throw" && impact && impact.tick - release.tick < 15 ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : 9;
+          const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : 9;
           await take(`unit_${id}_flight`, release.tick + flightAt, far);
-          await take(`unit_${id}_struck`, struckTick, 2);
+          await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
         }
         if (ability) {
           await take(`unit_${id}_ability`, ability.tick, far);
