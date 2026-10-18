@@ -113,7 +113,7 @@ const SCYTHE_SPIN = Math.PI / 2;
  * swung TPOSE.ahead forward, elbows straight; it eases in and out at .rate (out of it to attack). Each perched crow (propBuilder buildPerchedCrow, on
  * the shoulder at the elbow) is kept upright and facing his front whatever the arm does, sat .perch of his height above the elbow's middle.
  */
-const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.035 };
+const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 /*
  * [S] the hay baler's level stick carry (344; farmer.hay_baler.blue.png: the stick held in the one weapon fist at hip height before the bale, run level
