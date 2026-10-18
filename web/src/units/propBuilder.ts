@@ -2799,7 +2799,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         const brown = variant === "brown_longbow";
         // The balloon archer's longbow, built to the spec at LONGBOW: one faceted light-grey stave along +y, thick at the grip and tapering to the tips, bowed a
         // little off its string; tan wraps near each tip and the team colour round the grip. Laid and seated as the plain bow (named "bow", string child).
-        const Lb = fit.stand * LONGBOW.long;
+        const Lb = fit.stand * (brown ? BROWN_LONGBOW.long : LONGBOW.long);
         const r0 = LONGBOW.thick * Lb * 0.5;
         const zs = 0.04 * s;
         const radius = (t: number): number => r0 * (1 - (1 - LONGBOW.taper) * Math.abs(t));
@@ -3903,7 +3903,7 @@ const LONGBOW = { long: 1.2, thick: 0.065, taper: 0.5, bow: 0.05, wrapAt: [0.6, 
 const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
 /** The medieval archer's longbow colours (352; medieval.archer.red.png): brown wood, a pale leather wrap at the grip */
-const BROWN_LONGBOW = { wood: new Color3(0.45, 0.27, 0.14), wrap: new Color3(0.86, 0.78, 0.62) };
+const BROWN_LONGBOW = { long: 1.4, wood: new Color3(0.45, 0.27, 0.14), wrap: new Color3(0.86, 0.78, 0.62) };
 const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };
 const HEATER_GRIP_SIZE = 1.3;
 const HEATER_YELLOW = new Color3(0.95, 0.72, 0.12);
