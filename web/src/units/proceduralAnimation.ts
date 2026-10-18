@@ -126,9 +126,9 @@ const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8
  *   front toward the weapon side, rad) at .low below level, both fists low before the hips (arms .arm forward), knees bent .crouch;
  *   cut (commit -> .through of the rest): the trunk unwinds to .twist the other way and the snath sweeps level through his front to .end (toward the off
  *   side), slow off the cock and fastest across the front; the blow is on the man where the snath crosses his front (.hitAt of the cut);
- *   hold to .hold of the rest, then eased back to the carry. Through the cut the crescent is turned .roll about the snath, so it lies flat, not hanging. The sim throws a man the sweep leaves alive up and away (simulationSystem SCYTHE_FLING).
+ *   hold to .hold of the rest, then eased back to the carry. The sim throws a man the sweep leaves alive up and away (simulationSystem SCYTHE_FLING).
  */
-const SCYTHE_SWEEP = { roll: Math.PI / 2, twist: 0.75, cock: 2.0, end: -1.1, low: 0.12, arm: -0.55, crouch: 0.25, through: 0.55, hitAt: 0.55, hold: 0.75 };
+const SCYTHE_SWEEP = { twist: 0.75, cock: 2.0, end: -1.45, low: 0.12, arm: -0.55, crouch: 0.25, through: 0.55, hitAt: 0.55, hold: 0.75 };
 /*
  * [S] the hay baler's level stick carry (344; farmer.hay_baler.blue.png: the stick held in the one weapon fist at hip height before the bale, run level
  * across his front to past the off hip). The stick (id hayStick) takes HAY_CARRY in place of the low fork carry: weapon arm .raise swing forward and .out,
@@ -2448,9 +2448,7 @@ export class ProceduralAnimator {
     // Shooting: upright in the fist, canted a little toward the mark
     if (shooting > 0) Vector3.LerpToRef(tip, new Vector3(0, 1, 0.12), shooting, tip).normalize();
     const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, tip, new Quaternion()));
-    // The harvester's sweep lays the crescent flat as it cuts (SCYTHE_SWEEP.roll about the snath)
-    const rolled = spin && this._sweepTip ? spin.multiply(Quaternion.RotationYawPitchRoll(SCYTHE_SWEEP.roll * (Math.sign(this._body.rightShoulder.position.x) || 1) * Math.min(1, club), 0, 0)) : spin;
-    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(rolled ? attitude.multiply(rolled) : attitude), k);
+    const turn = Quaternion.Slerp(rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(spin ? attitude.multiply(spin) : attitude), k);
     node.rotationQuaternion = turn;
     const held = seat ? seat.clone() : new Vector3(0, grip.length(), 0);
     if (plant) {
