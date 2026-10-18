@@ -2468,7 +2468,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // share (BOULDER_JITTER), now BOULDER_CHUNKS such chunks run together into one uneven lump (unequal faces, not an even ball). Carried in both hands at the belly
       // (ProceduralAnimator._carryBoulder sets it between the hands, the hands solved onto its sides); the thrown one is a copy of it, so the same chunk flies
       const chunks = BOULDER_CHUNKS.map((c, i) => {
-        const chunk = MeshBuilder.CreateIcoSphere("boulderChunk" + i, { radius: c.r * BOULDER_WIDE * s, subdivisions: 0, flat: true }, scene);
+        const chunk = MeshBuilder.CreateIcoSphere("boulderChunk" + i, { radius: c.r * BOULDER_WIDE * s, subdivisions: 1, flat: true }, scene);
         const at = chunk.getVerticesData(VertexBuffer.PositionKind);
         if (at) {
           for (let v = 0; v < at.length; v += 3) {
