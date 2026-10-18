@@ -937,10 +937,10 @@ const HALBERD_BELT = new Color3(0.32, 0.17, 0.1);
  * Self-lit tan cloth (HAY_TAN / HAY_TOP, HAY_GLOW): plain tan greys out under this light.
  */
 const HAY_BALE = { drop: 0.55, top: 1.25, bottom: 1.4, deep: 1.7, blades: 10, blade: 0.62, short: 0.6, bladeWide: 0.42, lean: 0.45, hems: 12, hem: 0.5, flare: 0.5, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
-const HAY_TAN = new Color3(0.84, 0.6, 0.32);
-const HAY_TOP = new Color3(0.6, 0.4, 0.24);
+const HAY_TAN = new Color3(0.7, 0.46, 0.22);
+const HAY_TOP = new Color3(0.5, 0.32, 0.18);
 const HAY_STRAP = new Color3(0.26, 0.16, 0.11);
-const HAY_GLOW = 0.3;
+const HAY_GLOW = 0.2;
 /** Dresses the hay baler (spec at HAY_BALE): the bale over his torso, its blade fringe top and bottom and two straps. */
 function dressHayBale(scene: Scene, body: ArticulatedBody): Mesh[] {
   const added: Mesh[] = [];
