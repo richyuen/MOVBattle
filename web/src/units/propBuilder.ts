@@ -4635,8 +4635,8 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
 
 /** The archer's hip quiver (special "quiver_hip"): body-scale units off the hip joint; arrows as [x, z, lean] in the mouth */
 const QUIVER_HIP = {
-  long: 0.5, mouth: 0.13, foot: 0.1, top: 0.06, side: 0.2, back: 0.05, tilt: 0.1, proud: 0.12,
-  leather: new Color3(0.46, 0.22, 0.15), fletch: [0.05, 0.08] as const,
+  long: 0.6, mouth: 0.14, foot: 0.11, top: 0.22, side: 0.27, back: 0.02, tilt: 0.12, proud: 0.2,
+  leather: new Color3(0.46, 0.22, 0.15), fletch: [0.07, 0.1] as const,
   arrows: [[-0.03, -0.02, 0.12], [0.0, 0.03, -0.05], [0.03, -0.01, -0.16], [0.01, -0.035, 0.02]] as const,
 };
 
@@ -5040,8 +5040,10 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       const Q = QUIVER_HIP;
       const quiver = MeshBuilder.CreateCylinder("quiver", { height: Q.long * s, diameterTop: Q.mouth * s, diameterBottom: Q.foot * s, tessellation: 8 }, scene);
       quiver.parent = body.hip;
-      quiver.position.set(Q.side * s, (Q.top - Q.long / 2) * s, -Q.back * s);
-      quiver.rotation.z = Q.tilt;
+      // on the off hip (away from body.rightShoulder's side), beside the leg as in the render
+      const hipSide = -(Math.sign(body.rightShoulder.position.x) || 1);
+      quiver.position.set(hipSide * Q.side * s, (Q.top - Q.long / 2) * s, -Q.back * s);
+      quiver.rotation.z = hipSide * Q.tilt;
       quiver.material = mat(scene, Q.leather);
       const team = teamColor ?? accent;
       const band = MeshBuilder.CreateCylinder("quiverBand", { height: 0.05 * s, diameter: Q.mouth * 1.12 * s, tessellation: 8 }, scene);
