@@ -234,7 +234,7 @@ const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
  * turns and runs, playing: each step heads .turn rad off straight away from the man, so he circles round him and out, alternate bards circling opposite
  * ways. He keeps running until the man is .clear m beyond the lure line, then closes again (the lure). Only a man inside his reach gets the banjo swung at him.
  */
-const BANJO_WALK = { lure: 2.2, clear: 1.5, turn: 1.15, step: 1.2 };
+const BANJO_WALK = { lure: 2.2, clear: 1.5, turn: 0.85, step: 1.2 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
 const LANCE_AIM_REACH = 5;
