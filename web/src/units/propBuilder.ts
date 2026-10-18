@@ -3415,6 +3415,9 @@ function roundBoardSeed(serial: number, k: number): number {
   return x - Math.floor(x);
 }
 
+const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };
+const HEATER_YELLOW = new Color3(0.95, 0.72, 0.12);
+const HEATER_RIM = new Color3(0.62, 0.42, 0.08);
 function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {
   // A cool team colour is held as deep as the plate behind it and not washed with white: the sky-blue team colour paled is a slate board.
   const teamHsv = teamColor.toHSV();
@@ -3424,6 +3427,30 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
   const board = cool ? teamColor : Color3.Lerp(teamColor, Color3.White(), 0.12);
   switch (type) {
     case "none": return null;
+    case "heater": {
+      // The jouster's heater (329; renaissance.jouster.red.png: a plain yellow board on the off arm, whatever the team): a flat top HEATER.wide across, the sides
+      // straight down HEATER.side of the height and then bowed in to a point, HEATER.tall high, on a darker rim HEATER.rim proud all round it. Face toward +Z.
+      const outline = (grow: number): number[][] => {
+        const w = HEATER.wide * 0.5 + grow, top = HEATER.tall * 0.5 + grow, bottom = -HEATER.tall * 0.5 - grow * 1.4, shoulder = top - (HEATER.tall + grow * 2) * HEATER.side;
+        const pts: number[][] = [[-w, top], [w, top]];
+        for (let k = 0; k <= 6; k++) {
+          const t = k / 6;
+          pts.push([w * Math.cos(t * Math.PI * 0.5), shoulder + (bottom - shoulder) * Math.sin(t * Math.PI * 0.5)]);
+        }
+        for (let k = 5; k >= 0; k--) {
+          const t = k / 6;
+          pts.push([-w * Math.cos(t * Math.PI * 0.5), shoulder + (bottom - shoulder) * Math.sin(t * Math.PI * 0.5)]);
+        }
+        return pts.map(([x, y]) => [x * s, y * s]);
+      };
+      const shield = flatPlate(scene, "hshield", outline(0), HEATER.thick * s);
+      shield.material = mat(scene, HEATER_YELLOW, 0.12);
+      const rim = flatPlate(scene, "hshieldRim", outline(HEATER.rim), HEATER.thick * 0.6 * s);
+      rim.position.z = -HEATER.thick * 0.5 * s;
+      rim.material = mat(scene, HEATER_RIM, 0.08);
+      rim.parent = shield;
+      return shield;
+    }
     case "round": {
       // Faceted disc standing upright, face toward +Z: team-colored board, dark rim, metal boss
       const disc = (name: string, diameter: number, depth: number): Mesh => {

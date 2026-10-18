@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet";
 
-export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab" | "palette";
+export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -464,7 +464,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.25, bulk: 1.25 }, "halberd", "sallet", "none", "none", "#4682B4",
   ),
   "renaissance.jouster": vis(
-    { scale: 1.4, bulk: 1.3 }, "lance", "plume_helmet", "kite", "mount_horse", "#C0C0C0",
+    { scale: 1.4, bulk: 1.3 }, "lance", "plume_helmet", "heater", "mount_horse", "#C0C0C0",
   ),
   "renaissance.da_vinci_tank": vis(
     { scale: 2.0, bulk: 2.2, legLength: 0.5 }, "cannon_hand", "none", "none", "tank_body", "#8B7355",
