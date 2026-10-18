@@ -51,6 +51,9 @@ for 25 iterations.
 323 | chestnut beard, shared tribalBeard (a743b12) | tribal.chieftain.a | approved
 323 | brown fur hide, no flank daubs (85c87e9 + 11b021e) | tribal.mammoth.a | approved
 323 | Mammoth Charge, trample fling (7d01e90) | tribal.mammoth.c | approved
+324 | hide cape, joins TRIBAL_CAPE_UNITS (74de196) | tribal.chieftain.a | approved
+324 | tusk necklace (54f0b6b) | tribal.clubber.a | approved
+324 | mane, jittered crest and locks (6d8c95a) | tribal.mammoth.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -90,7 +93,7 @@ propBuilder.ts:bone_mask SKULL_FACETED (heads, tall, under, jitter, socket, snou
 propBuilder.ts:javelin JAVELIN_HEAD_LONG, JAVELIN_HEAD_WIDE | 0.15, 0.095 | 320 | approved | 0.13, 0.09 (the four-sided cone)
 propBuilder.ts:javelin JAVELIN_LEAF (thick, waist, root, jitter, wraps), JAVELIN_STONE | 0.3, 0.35, 0.4, 0.14, 3, (0.44, 0.43, 0.41) e0.15 | 320 | approved | (new; iron (0.2, 0.21, 0.24), red binding)
 unitFactory.ts:tunic TUNIC (top, skirt, flare, tatters, strap), TUNIC_COLOR | 0.88, 0.6, 1.25, 5, 0.22, (0.5, 0.29, 0.18) e0.15 | 320 | approved | (new; stoner, protector)
-unitFactory.ts:cape HIDE_CAPE (wide, thick, tilt, jitter, points, drop), COLOR | 1.25, 0.35, 0.12, 0.12, 4, 0.55, (0.38, 0.23, 0.14) e0.16 | 320 | approved | (new; bone_mage)
+unitFactory.ts:cape HIDE_CAPE (wide, thick, tilt, jitter, points, drop), COLOR | 1.25, 0.35, 0.12, 0.12, 4, 0.55, (0.38, 0.23, 0.14) e0.16 | 324 | approved | (new; bone_mage; chieftain 324, critic: near-black in shade, ends at hip)
 tribalDress.ts:necklace CRITTER_NECKLACE (skull, spread, drop, lift, strap) | 0.5, 0.55, 0.2, 0.05, 0.03 | 321 | approved | skull 0.42 (321 first commit); protector
 tribalDress.ts:hair LONG_HAIR (strands, face, fringe, long, thick), COLOR | 17, 0.8, 4, 1.05, 0.32, (0.3, 0.18, 0.1) e0.18 | 321 | approved | 13 strands, thick 0.24 (321 first commit); stoner
 tribalDress.ts:tusks TUSK_BAND (band, strap, rise, bow, thick) | 0.45, 0.1, 0.65, 0.22, 0.4 | 322 | approved | rise 1.1, thick 0.28 (321 [S]); 322 [P] fallout; do not re-nudge before 342
@@ -103,3 +106,6 @@ tribalDress.ts:necklace FANG_NECKLACE (drop, long, thick, curl, strap, off) | 0.
 tribalDress.ts:beard CHESTNUT (chieftain's beard colour) | (0.52, 0.27, 0.14) e0.18 | 323 | approved | (new; BEARD shape shared with the clubber)
 vehicleBuilder.ts:mammoth MAMMOTH_HIDE, MAMMOTH_FUR (jitter, glow, shag) | (0.34, 0.17, 0.1); 0.06, 0.1, 0.25 | 323 | approved | (0.4, 0.25, 0.19) glow 0.18 (323 first commit); (0.43, 0.2, 0.25) glow 0.08, shag 0.45
 simulationSystem.ts:MAMMOTH_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | 2, 14, 2.2, 2.5, 3, 0.5, 30, 5, 6, 6 | 323 | approved | (new)
+unitVisuals.ts:tribal.chieftain proportions.scale | 1.15 | 324 | approved | 1.35 (pre-loop); card Size 1.15x
+tribalDress.ts:necklace TUSK_NECKLACE (drop, long, side, thick, gap, curl, strap, off) | 0.3, 0.5, 0.8, 0.17, 0.3, 0.3, 0.03, 0.16 | 324 | approved | (new; clubber; critic 324: sags too low, tusks short)
+vehicleBuilder.ts:mammoth MAMMOTH_MANE (jitter, locks, long, glow), COLOR | 0.2, 7, 0.42, 0.12, (0.2, 0.1, 0.06) | 324 | approved | (new; was an indigo crestMat cap; critic 324: barely darker than the coat)
