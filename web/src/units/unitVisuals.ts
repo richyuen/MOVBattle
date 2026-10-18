@@ -38,7 +38,7 @@ export type SpecialType =
   | "raptor_mount" | "clam_shell" | "safe_bundle" | "dragon_cart"
   | "giant_bones" | "giant_tree" | "giant_ice" | "halo"
   | "candle_flame" | "cactus_body" | "banner_back" | "chariot_cart"
-  | "vampire_collar" | "quiver_back" | "elephant_shrine";
+  | "vampire_collar" | "quiver_back" | "quiver_hip" | "elephant_shrine";
 
 export type VisualStateTag = "idle" | "moving" | "attacking" | "ability-active";
 
@@ -289,7 +289,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "medieval.archer": vis(
-    { scale: 0.95, armLength: 1.05 }, "bow", "hood_liripipe", "none", "quiver_back", "#228B22",
+    { scale: 0.95, armLength: 1.05 }, "bow", "hood_liripipe", "none", "quiver_hip", "#228B22",
     undefined,
     {
       posePreset: "archer",

@@ -4627,6 +4627,13 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   return barrel;
 }
 
+/** The archer's hip quiver (special "quiver_hip"): body-scale units off the hip joint; arrows as [x, z, lean] in the mouth */
+const QUIVER_HIP = {
+  long: 0.5, mouth: 0.13, foot: 0.1, top: 0.06, side: 0.2, back: 0.05, tilt: 0.1, proud: 0.12,
+  leather: new Color3(0.46, 0.22, 0.15), fletch: [0.05, 0.08] as const,
+  arrows: [[-0.03, -0.02, 0.12], [0.0, 0.03, -0.05], [0.03, -0.01, -0.16], [0.01, -0.035, 0.02]] as const,
+};
+
 function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody, teamColor?: Color3, horse: HorseStyle = "barded"): Mesh | null {
   switch (type) {
     case "none": return null;
@@ -5019,6 +5026,39 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
         fletch.position.y = 0.11 * s;
         fletch.material = mat(scene, accent, 0.06);
       }
+      return quiver;
+    }
+    case "quiver_hip": {
+      // [S] hip quiver (355; medieval.archer.blue.png: a tall red-brown quiver hangs straight down his side from the belt to below the knee, a team band
+      // at the mouth, a sheaf of team-fletched arrows standing out of it). QUIVER_HIP: hung from the hip joint, .side out and .back behind, .long tall.
+      const Q = QUIVER_HIP;
+      const quiver = MeshBuilder.CreateCylinder("quiver", { height: Q.long * s, diameterTop: Q.mouth * s, diameterBottom: Q.foot * s, tessellation: 8 }, scene);
+      quiver.parent = body.hip;
+      quiver.position.set(Q.side * s, (Q.top - Q.long / 2) * s, -Q.back * s);
+      quiver.rotation.z = Q.tilt;
+      quiver.material = mat(scene, Q.leather);
+      const team = teamColor ?? accent;
+      const band = MeshBuilder.CreateCylinder("quiverBand", { height: 0.05 * s, diameter: Q.mouth * 1.12 * s, tessellation: 8 }, scene);
+      band.parent = quiver;
+      band.position.y = (Q.long / 2 - 0.03) * s;
+      band.material = mat(scene, team, 0.05);
+      const hanger = MeshBuilder.CreateBox("quiverHanger", { width: 0.03 * s, height: 0.12 * s, depth: 0.03 * s }, scene);
+      hanger.parent = quiver;
+      hanger.position.set(-Q.mouth * 0.5 * s, (Q.long / 2 + 0.03) * s, 0);
+      hanger.material = mat(scene, Q.leather.scale(0.7));
+      Q.arrows.forEach(([ax, az, lean], i) => {
+        const shaft = MeshBuilder.CreateCylinder("quiverArrow", { height: Q.proud * 2 * s, diameter: 0.014 * s, tessellation: 6 }, scene);
+        shaft.parent = quiver;
+        shaft.position.set(ax * s, (Q.long / 2) * s, az * s);
+        shaft.rotation.z = lean;
+        shaft.rotation.x = (i % 2 ? 1 : -1) * 0.08;
+        shaft.material = mat(scene, new Color3(0.62, 0.22, 0.16)); // the red shaft of the TABS arrow
+        const fletch = MeshBuilder.CreateBox("quiverFletch", { width: Q.fletch[0] * s, height: Q.fletch[1] * s, depth: 0.012 * s }, scene);
+        fletch.parent = shaft;
+        fletch.position.y = (Q.proud - Q.fletch[1] / 2) * s;
+        fletch.rotation.y = i * 0.7;
+        fletch.material = mat(scene, team, 0.06);
+      });
       return quiver;
     }
     case "banner_back": {
