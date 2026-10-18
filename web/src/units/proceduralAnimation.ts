@@ -153,6 +153,14 @@ const POLE_GRIP = {
   forkBar: [0.2, 0.5], // the pitchfork: the off hand up the shaft toward the head (farmer.farmer.red.png)
 } as const;
 /*
+ * [S] pitchfork carried across the front in both fists (342; farmer.farmer.png: the farmers walk with the weapon fist low before the weapon thigh and the
+ * shaft run across the front of the hips toward the off side, the off fist further up it before the off hip, the tines out ahead past the off hip).
+ * The weapon arm hangs a little forward (FORK_CARRY.raise swing, .out from the ribs, .elbow fold) so the fist is ahead of the thigh, and the shaft's
+ * line from the fist is .tip in his own frame (x toward his weapon side, y up, z back): across to the off side, a touch down, and forward, so the off
+ * hand's solve onto it (POLE_GRIP.forkBar, _twoHandPole) finds it before the hips instead of through the weapon hip.
+ */
+const FORK_CARRY = { raise: -0.4, out: 0.04, elbow: -0.55, tip: [-0.72, -0.28, -0.72] as [number, number, number] };
+/*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
  * butt behind the fist sits in the shoulder; the musket is stood level along his front over its rest, the off hand following it on the fore-stock
  * (_twoHandPole). The shot leaves as the attack starts, often straight from the march, so the aim is held in every living state (eased back in at .rate
@@ -1780,6 +1788,8 @@ export class ProceduralAnimator {
     if (tree) this._carryTurn = 1;
     const attitude = scythe
       ? { raise: SCYTHE_HIGH_ARM.raise, out: SCYTHE_HIGH_ARM.out, elbow: SCYTHE_HIGH_ARM.elbow, tip: new Vector3(SCYTHE_HIGH_TIP.x * side, SCYTHE_HIGH_TIP.y, SCYTHE_HIGH_TIP.z).normalize() }
+      : fork
+      ? { raise: FORK_CARRY.raise - h(81) * 0.1, out: FORK_CARRY.out + h(82) * 0.06, elbow: FORK_CARRY.elbow - h(83) * 0.15, tip: lean(...FORK_CARRY.tip) }
       : tree
       ? { raise: TREE_HIP_ARM.raise, out: TREE_HIP_ARM.out, elbow: TREE_HIP_ARM.elbow, tip: new Vector3(TREE_HIP_TIP.x * side, TREE_HIP_TIP.y, TREE_HIP_TIP.z).normalize() }
       : pick < 0.3
