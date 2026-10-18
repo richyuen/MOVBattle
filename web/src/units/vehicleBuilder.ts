@@ -235,6 +235,12 @@ export const CATAPULT_ARM_PIVOT = "catapult_arm_pivot";
 const CATAPULT_CREW = { z: -0.74, y: 0.5, raise: -2.8, spread: 0.12, elbow: -0.2 };
 /** The catapult's boulder across, in the bucket and in flight (buildFacetedBoulder) */
 export const CATAPULT_BOULDER = 0.65;
+/*
+ * [S] spoon bucket (355; medieval.catapult.blue.png: a wooden cup at the arm's end cradles the rock, its lower half sunk in). An open eight-sided cup on the
+ * long end: .bottom across at the base on the arm, flaring to .top at the mouth, .deep tall, both faces drawn so the inside wall shows; a chunky .rim
+ * ring round the mouth in a lighter timber (.tone) so the cup reads against the arm. The boulder sits .sink of its height down inside it.
+ */
+const CATAPULT_BUCKET = { bottom: 0.4, top: 0.68, deep: 0.28, rim: 0.06, sink: 0.45, tone: new Color3(0.55, 0.26, 0.12) };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const rig = new TransformNode("catapult_rig", scene);
@@ -290,21 +296,31 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   arm.position.set(0, 0, (CATAPULT_ARM.short - L) / 2);
   arm.parent = pivot; arm.material = wood; allMeshes.push(arm);
 
-  // Bucket on the long end: a wide tray three arms across with the shot lying in it, not a small empty box partway down
-  const bucket = MeshBuilder.CreateBox("bucket", { width: 0.5, height: 0.16, depth: 0.45 }, scene);
-  bucket.position.set(0, 0.13, -L + 0.03);
-  bucket.parent = pivot; bucket.material = wood; allMeshes.push(bucket); // the arm's own timber: in iron it was a blue-grey slab
+  // Spoon bucket on the long end (CATAPULT_BUCKET): an open flared cup sat on the arm, rim ring round its mouth, the shot sunk in it
+  const B = CATAPULT_BUCKET;
+  const cupY = 0.08 + B.deep / 2;
+  const cupZ = -L + 0.06;
+  const bucketWood = makeMat(scene, B.tone);
+  const bucket = MeshBuilder.CreateCylinder("bucket", {
+    height: B.deep, diameterBottom: B.bottom, diameterTop: B.top, tessellation: 8, cap: Mesh.CAP_START, sideOrientation: Mesh.DOUBLESIDE,
+  }, scene);
+  bucket.position.set(0, cupY, cupZ);
+  bucket.parent = pivot; bucket.material = bucketWood; allMeshes.push(bucket);
+  const bucketRim = MeshBuilder.CreateTorus("bucketRim", { diameter: B.top, thickness: B.rim, tessellation: 8 }, scene);
+  bucketRim.position.set(0, cupY + B.deep / 2, cupZ);
+  bucketRim.parent = pivot; bucketRim.material = wood; allMeshes.push(bucketRim);
+  const payloadY = cupY + B.deep / 2 - B.sink * CATAPULT_BOULDER + CATAPULT_BOULDER / 2;
 
   if (options.spooky) {
     const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.45, segments: 8 }, scene);
-    pumpkin.position.set(0, 0.38, -L + 0.03);
+    pumpkin.position.set(0, payloadY - 0.1, cupZ);
     pumpkin.parent = pivot;
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
   } else {
     // The faceted grey-brown boulder (BOULDER in propBuilder), the same rock the shot flies as; wider than the tray it lies in
     const boulder = buildFacetedBoulder(scene, "boulderPayload", CATAPULT_BOULDER);
-    boulder.position.set(0, 0.48, -L + 0.03);
+    boulder.position.set(0, payloadY, cupZ);
     boulder.parent = pivot;
     allMeshes.push(boulder);
   }
