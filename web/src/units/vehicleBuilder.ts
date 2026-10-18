@@ -1382,6 +1382,12 @@ const MAMMOTH_FUR = { jitter: 0.06, glow: 0.1, shag: 0.25 };
  */
 const MAMMOTH_MANE = { jitter: 0.2, locks: 7, long: 0.42, glow: 0.12 };
 const MAMMOTH_MANE_COLOR = new Color3(0.2, 0.1, 0.06);
+/*
+ * Ankle bands (TABS blue render): on each leg, a hand above the foot, two thin team-colour stripes close together round the pillar and under them a
+ * ring of round team dots, all flat paint on the brown fur. In knee space (lower leg 0.6 across, foot at -0.4): ANKLE_BAND.stripes the stripes'
+ * heights, .stripeTall their height, .wide their diameter (just proud of the leg), .dots dots at .dotAt, .dot across, .dotOut from the leg's axis.
+ */
+const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.05, wide: 0.64, dots: 8, dotAt: -0.33, dot: 0.11, dotOut: 0.29 };
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
   // The whole rig under the root scales by the unit's giant scale with its footprint and reach (unitDefinitions), so hull, legs, tusks, trunk and seats keep their proportions
@@ -1665,6 +1671,23 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     }, scene);
     foot.position.set(0, -0.4, 0);
     foot.parent = kneeJoint; foot.material = darkMat; allMeshes.push(foot);
+
+    // War-paint anklet just above the foot: two team-colour stripes round the pillar and a ring of team dots under them (ANKLE_BAND)
+    if (mammoth) {
+      for (const y of ANKLE_BAND.stripes) {
+        const stripe = MeshBuilder.CreateCylinder("ankleStripe", { height: ANKLE_BAND.stripeTall, diameter: ANKLE_BAND.wide, tessellation: 12 }, scene);
+        stripe.position.set(0, y, 0);
+        stripe.parent = kneeJoint; stripe.material = tuskTipMat; allMeshes.push(stripe);
+      }
+      for (let i = 0; i < ANKLE_BAND.dots; i++) {
+        const a = (i + 0.5) / ANKLE_BAND.dots * Math.PI * 2;
+        const dot = MeshBuilder.CreateSphere("ankleDot", { diameter: ANKLE_BAND.dot, segments: 4 }, scene);
+        dot.scaling.set(1, 1, 0.45);
+        dot.position.set(Math.sin(a) * ANKLE_BAND.dotOut, ANKLE_BAND.dotAt, Math.cos(a) * ANKLE_BAND.dotOut);
+        dot.rotation.y = a;
+        dot.parent = kneeJoint; dot.material = tuskTipMat; allMeshes.push(dot);
+      }
+    }
   }
 
   // ── Tail (parented to torso) ──
@@ -1712,7 +1735,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
 const ELEPHANT_HIDE = new Color3(0.74, 0.75, 0.76);
 const ELEPHANT_GOLD = new Color3(0.95, 0.66, 0.16);
 const ELEPHANT_GEM = new Color3(0.16, 0.26, 0.85);
-const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "paintDaub", "hump"]);
+const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "paintDaub", "hump", "ankleStripe", "ankleDot"]);
 const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
 const TUSK_RING_PIECE = 4;
 const BLANKET_RADII = new Vector3(0.92, 0.8, 0.74);
