@@ -167,7 +167,7 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow" | "brown_longbow" | "longsword" | "zweihander";
+  weaponVariant?: "longbow" | "brown_longbow" | "longsword" | "zweihander" | "priest_staff";
 }
 
 function vis(
@@ -302,6 +302,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "medieval.healer": vis(
     { scale: 0.95, headSize: 1.05 }, "staff", "hood", "none", "none", "#FFD700",
+    undefined, { weaponVariant: "priest_staff" },
   ),
   "medieval.knight": vis(
     { scale: 1.25, bulk: 1.55 }, "sword", "great_helm", "kite", "cape", "#C0C0C0",

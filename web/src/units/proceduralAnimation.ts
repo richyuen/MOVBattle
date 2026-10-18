@@ -526,6 +526,9 @@ const CAST_RAISE_TIP = new Vector3(0.15, 1, 0.3).normalize();
 // shoulder height): the staff arm (shoulder raise and out, elbow) with the fist at the hip and the staff planted, the free arm hanging, and the staff's tip before
 // the per-man jitter (x toward the staff side). One hold for every bone mage, not the three slants a wizard's staff takes, and in it from the first frame.
 const BONE_HOLD = { raise: -0.2, out: 0.18, elbow: -0.5, left: { raise: -0.15, out: 0.12, elbow: -0.35 }, tip: [0.03, 1.6, 0.04] as const };
+// The Healer's priest staff (353; medieval.healer.blue.png: the staff stood upright at his side, butt by the foot, the fist at the bottom of the ribs, the
+// other arm hanging): the bone mage's planted hold with the fist higher. One hold, in it from the first frame.
+const PRIEST_HOLD = { raise: -0.4, out: 0.2, elbow: -1.05, left: { raise: -0.1, out: 0.12, elbow: -0.3 }, tip: [0.03, 1.6, 0.04] as const };
 const THROWN = { armsOut: 1.35, armsBack: 0.45, trunk: 0, head: 0.1, seat: 0.92, legTrail: 0.7, legKick: -1.22, kneeTrail: 0.15, kneeKick: 0.1 };
 
 export class ProceduralAnimator {
@@ -1917,8 +1920,11 @@ export class ProceduralAnimator {
     const armed = this.locomotionBias === "aimed" && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     const staff = rod?.name === "staff";
     const bone = rod?.id === "boneStaff";
-    if (bone) this._carryTurn = 1;
-    const rodHold = !rod ? null : bone
+    const priest = rod?.id === "priestStaff";
+    if (bone || priest) this._carryTurn = 1;
+    const rodHold = !rod ? null : priest
+      ? { raise: PRIEST_HOLD.raise - h(81) * 0.08, out: PRIEST_HOLD.out + h(82) * 0.06, elbow: PRIEST_HOLD.elbow - h(83) * 0.1, tip: lean(...PRIEST_HOLD.tip), left: { ...PRIEST_HOLD.left }, plant: true }
+      : bone
       ? { raise: BONE_HOLD.raise - h(81) * 0.1, out: BONE_HOLD.out + h(82) * 0.08, elbow: BONE_HOLD.elbow - h(83) * 0.15, tip: lean(...BONE_HOLD.tip), left: { raise: BONE_HOLD.left.raise - h(97) * 0.15, out: BONE_HOLD.left.out + h(98) * 0.1, elbow: BONE_HOLD.left.elbow - h(99) * 0.2 }, plant: true }
       : staff
       ? stand < 0.45

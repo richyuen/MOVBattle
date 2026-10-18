@@ -2109,6 +2109,39 @@ const MUSKET_STEEL = new Color3(0.58, 0.58, 0.6);
 const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
 const BRUSH = { long: 0.34, grip: 0.16, butt: 0.08, neck: 0.12, ferrule: 0.6, collar: 0.1, tuft: 0.22, swell: 0.1 };
 const BRUSH_WOOD = new Color3(0.6, 0.3, 0.2);
+/*
+ * [S] the Healer's Priest Staff (353; medieval.healer.blue.png, card Appearance "a staff with a Globus Cruciger on the top"). In the man's standing heights
+ * (fit.stand, before PROP_OVERSIZE): a thin team shaft PRIEST_STAFF.long long and .thick across, stood upright with its butt by his foot, the fist .grip of the
+ * way up from the butt; a gold sleeve .sleeve long under the orb, a gold butt cap .cap long; a team orb .orb across on a gold collar, girt by two gold bands
+ * (the equator and one meridian, .band thick) and topped by a gold cross finial .finial tall. The orb keeps the name "orb" (the heal beam leaves from it).
+ */
+const PRIEST_STAFF = { long: 1.2, thick: 0.02, grip: 0.45, sleeve: 0.17, cap: 0.05, orb: 0.11, band: 0.012, finial: 0.06 };
+const PRIEST_GOLD = new Color3(0.95, 0.6, 0.2);
+function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const P = PRIEST_STAFF, H = fit.stand, L = P.long * H, r = P.thick * H;
+  const gold = mat(scene, PRIEST_GOLD, 0.12, "metal");
+  const shaft = MeshBuilder.CreateCylinder("staff", { height: L, diameter: r, tessellation: 6 }, scene);
+  shaft.id = "priestStaff";
+  shaft.material = mat(scene, team.scale(0.55));
+  shaft.convertToFlatShadedMesh();
+  const part = (m: Mesh, y: number): Mesh => { m.position.y = y; m.parent = shaft; m.material = gold; m.convertToFlatShadedMesh(); return m; };
+  part(MeshBuilder.CreateCylinder("staffSleeve", { height: P.sleeve * H, diameterTop: r * 1.7, diameterBottom: r * 1.3, tessellation: 6 }, scene), L / 2 - P.sleeve * H / 2);
+  part(MeshBuilder.CreateCylinder("staffCap", { height: P.cap * H, diameterTop: r * 1.5, diameterBottom: r * 2, tessellation: 6 }, scene), -L / 2 + P.cap * H / 2);
+  part(MeshBuilder.CreateCylinder("staffCollar", { height: r * 1.5, diameter: r * 2.6, tessellation: 6 }, scene), L / 2 + r * 0.5);
+  const R = P.orb * H / 2, cy = L / 2 + r + R * 0.95;
+  const orb = MeshBuilder.CreateIcoSphere("orb", { radius: R, subdivisions: 2 }, scene);
+  orb.position.y = cy; orb.parent = shaft; orb.material = mat(scene, team.scale(0.7), 0.08);
+  orb.convertToFlatShadedMesh();
+  part(MeshBuilder.CreateTorus("orbBand", { diameter: R * 2.05, thickness: P.band * H, tessellation: 12 }, scene), cy);
+  const meridian = part(MeshBuilder.CreateTorus("orbBand", { diameter: R * 2.05, thickness: P.band * H, tessellation: 12 }, scene), cy);
+  meridian.rotation.x = Math.PI / 2;
+  const fy = cy + R + P.finial * H / 2;
+  part(MeshBuilder.CreateBox("orbFinial", { width: r * 1.2, height: P.finial * H, depth: r * 1.2 }, scene), fy);
+  part(MeshBuilder.CreateBox("orbFinialBar", { width: P.finial * H * 0.6, height: r * 1.1, depth: r * 1.1 }, scene), fy + P.finial * H * 0.12);
+  // The fist .grip of the way up from the butt: the shaft's middle stands above it
+  shaft.position.y = (0.5 - P.grip) * L;
+  return shaft;
+}
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -2698,6 +2731,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "staff":
     case "bo_staff": {
+      if (type === "staff" && variant === "priest_staff") return buildPriestStaff(scene, fit, teamColor ?? accent);
       const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);
