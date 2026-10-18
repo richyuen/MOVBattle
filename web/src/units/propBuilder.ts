@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -219,6 +219,14 @@ const FEATHER_CURL = 0.22;
  */
 const BRIM_HAT = { brim: 1.75, crown: 1.12, drop: 0.16, tall: 0.42 };
 const BRIM_HAT_FELT = new Color3(0.11, 0.1, 0.12);
+/*
+ * A musketeer's morion (327; renaissance.musketeer.red.png, card Appearance: a black iron helmet, a round dome over the skull with a thin comb standing along
+ * its crown front to back, and a boat-shaped brim all round, longer front to back than across, swept up to a peak at the front and at the back). Not a box:
+ * the old plume helm read as a blue box on a grey brim. Dome MORION.dome heads across, MORION.tall of the head over the seat; comb MORION.comb of the head
+ * high, MORION.combThick head widths thick; brim MORION.brimX heads across by MORION.brimZ front to back, its ends lifted MORION.peak of the head.
+ */
+const MORION = { dome: 1.18, tall: 0.3, comb: 0.22, combThick: 0.1, brimX: 1.5, brimZ: 2.05, peak: 0.3 };
+const MORION_IRON = new Color3(0.12, 0.12, 0.14);
 /*
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
  * heads across, turned up hard against the crown on the left side, a long pale team-coloured plume sweeping back over the turned-up side). Not a helm: the
@@ -916,6 +924,35 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       parent = piece;
     }
     return brim;
+  }
+  if (type === "morion") {
+    // The morion, built to the spec at MORION: a dome from the seat, a comb along its crown, a boat brim peaked up front and back
+    const iron = mat(scene, MORION_IRON, 0.06, "metal");
+    const domeTall = eyeTop - HAT_EYE_CLEAR * H + MORION.tall * H;
+    const dome = MeshBuilder.CreateSphere("morionDome", { diameterX: u(MORION.dome * W), diameterY: u(domeTall * 2), diameterZ: u(MORION.dome * 1.08 * W), segments: 7, slice: 0.5 }, scene);
+    dome.position.y = u(seat);
+    dome.material = iron;
+    dome.convertToFlatShadedMesh();
+    const comb = MeshBuilder.CreateSphere("morionComb", { diameterX: u(MORION.combThick * W), diameterY: u(MORION.comb * H * 2), diameterZ: u(MORION.dome * 0.9 * W), segments: 6, slice: 0.5 }, scene);
+    comb.position.y = u(domeTall * 0.82);
+    comb.material = iron;
+    comb.convertToFlatShadedMesh();
+    comb.parent = dome;
+    // The brim: a thin oval plate wider front to back than across, every point lifted by the square of how far forward or back it lies
+    const brim = MeshBuilder.CreateCylinder("morionBrim", { height: u(0.05 * H), diameter: 1, tessellation: 18 }, scene);
+    brim.scaling.set(u(MORION.brimX * W), 1, u(MORION.brimZ * W));
+    brim.bakeCurrentTransformIntoVertices();
+    const pos = brim.getVerticesData(VertexBuffer.PositionKind);
+    if (pos) {
+      const rz = u(MORION.brimZ * W) * 0.5;
+      for (let i = 0; i < pos.length; i += 3) pos[i + 1] += u(MORION.peak * H) * (pos[i + 2] / rz) ** 2;
+      brim.updateVerticesData(VertexBuffer.PositionKind, pos);
+    }
+    brim.position.y = u(0.02 * H);
+    brim.material = iron;
+    brim.convertToFlatShadedMesh();
+    brim.parent = dome;
+    return dome;
   }
   if (type === "brim_hat") {
     const felt = mat(scene, BRIM_HAT_FELT);

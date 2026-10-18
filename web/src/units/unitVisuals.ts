@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab" | "palette";
 
@@ -449,7 +449,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "renaissance.musketeer": vis(
-    { scale: 1.05, bulk: 1.0 }, "musket", "plume_helmet", "none", "none", "#191970",
+    { scale: 1.05, bulk: 1.0 }, "musket", "morion", "none", "none", "#191970",
     undefined,
     {
       posePreset: "gunner",
