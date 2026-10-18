@@ -165,7 +165,7 @@ export function dressTribalNecklace(scene: Scene, body: ArticulatedBody, unitId:
  * radians either side of the front) left bare but for LONG_HAIR.fringe short locks over the brow. Locks LONG_HAIR.long head heights long (each its own share
  * shorter or longer), LONG_HAIR.thick head widths across at the root. Dark brown, self-lit so it does not go black in the shade.
  */
-const LONG_HAIR = { strands: 13, face: 0.8, fringe: 4, long: 1.05, thick: 0.24 };
+const LONG_HAIR = { strands: 17, face: 0.8, fringe: 4, long: 1.05, thick: 0.32 };
 const LONG_HAIR_COLOR = new Color3(0.3, 0.18, 0.1);
 const HAIR_STYLES: Record<string, "long"> = { "tribal.stoner": "long" };
 
@@ -179,13 +179,15 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   const W = halfX * 2, H = halfY * 2;
   // The cap: a faceted dome over the crown, set back so the brow stays bare
   const cap = MeshBuilder.CreateIcoSphere(`${body.headMesh.name}_hair`, { radius: 1, subdivisions: 1, flat: true }, scene);
-  jitterVertices(cap, 0.14, 7.7, halfX * 1.22, halfY * 0.62, halfZ * 1.2);
-  cap.position.set(0, halfY * 0.62, -halfZ * 0.08);
+  jitterVertices(cap, 0.14, 7.7, halfX * 1.22, halfY * 0.75, halfZ * 1.22);
+  cap.position.set(0, halfY * 0.7, -halfZ * 0.08);
   cap.material = hair;
   cap.parent = body.headMesh;
   added.push(cap);
-  const lock = (name: string, long: number, root: number) => {
+  const lock = (name: string, long: number, root: number, twist = 0) => {
     const m = MeshBuilder.CreateCylinder(name, { height: long, diameterTop: root, diameterBottom: root * 0.45, tessellation: 4 }, scene);
+    m.rotation.y = twist;
+    m.bakeCurrentTransformIntoVertices();
     m.convertToFlatShadedMesh();
     m.material = hair;
     m.parent = body.headMesh;
@@ -198,9 +200,9 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
     const a = LONG_HAIR.face + (i + 0.5) / LONG_HAIR.strands * sweep;
     const share = hashShare(3.1, i * 1.7, i * 0.3, 1);
     const long = H * LONG_HAIR.long * (0.85 + 0.3 * share);
-    const m = lock("hairLock", long, W * LONG_HAIR.thick * (0.85 + 0.3 * hashShare(5.3, i, 2, i)));
+    const m = lock("hairLock", long, W * LONG_HAIR.thick * (0.85 + 0.3 * hashShare(5.3, i, 2, i)), share * 1.5);
     const sx = Math.sin(a), cz = Math.cos(a);
-    const out = 0.12 + 0.1 * share;
+    const out = 0.1 + 0.18 * share;
     m.rotation.set(-cz * out, 0, sx * out);
     const rootY = halfY * (0.55 - 0.1 * share);
     m.position.set(sx * halfX * 1.08 + sx * Math.sin(out) * long * 0.5, rootY - long * 0.5, cz * halfZ * 1.08 - cz * Math.sin(out) * long * 0.5 - halfZ * 0.05);
