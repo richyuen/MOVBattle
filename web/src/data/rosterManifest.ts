@@ -242,13 +242,13 @@ const farmer = makeFaction(FactionId.Farmer, "farmer", [
 ]);
 
 const medieval = makeFaction(FactionId.Medieval, "medieval", [
-  ["bard", "Bard", 65, "light_melee", { weaponHint: "lute" }],
-  ["squire", "Squire", 100, "light_melee", { weaponHint: "sword", hatHint: "great_helm" }],
-  ["archer", "Archer", 140, "archer", { weaponHint: "bow" }],
-  ["healer", "Healer", 180, "support_heal", { weaponHint: "staff" }],
-  ["knight", "Knight", 320, "heavy_melee", { weaponHint: "sword", hatHint: "plume_helmet", shieldHint: "kite" }],
-  ["catapult", "Catapult", 1000, "artillery", { size: "large", projectileHint: "stone", specialHint: "catapult" }],
-  ["king", "King", 1200, "boss_melee", { weaponHint: "greatsword", hatHint: "crown" }],
+  ["bard", "Bard", 60, "light_melee", { weaponHint: "lute", healthMultiplier: 0.79, damageMultiplier: 0.58 }],
+  ["squire", "Squire", 100, "light_melee", { weaponHint: "sword", hatHint: "great_helm", healthMultiplier: 1.26, damageMultiplier: 1.33 }],
+  ["archer", "Archer", 140, "archer", { weaponHint: "bow", healthMultiplier: 0.4, damageMultiplier: 1.94, cooldownMultiplier: 3.64 }],
+  ["healer", "Healer", 180, "support_heal", { weaponHint: "staff", healthMultiplier: 0.19 }],
+  ["knight", "Knight", 650, "heavy_melee", { weaponHint: "sword", hatHint: "plume_helmet", shieldHint: "kite", healthMultiplier: 0.78, damageMultiplier: 0.4, cooldownMultiplier: 0.42 }],
+  ["catapult", "Catapult", 1000, "artillery", { size: "large", projectileHint: "stone", specialHint: "catapult", healthMultiplier: 0.79, damageMultiplier: 0.22, cooldownMultiplier: 1.67 }],
+  ["king", "King", 1500, "boss_melee", { weaponHint: "greatsword", hatHint: "crown", healthMultiplier: 1.05, cooldownMultiplier: 0.54 }],
 ]);
 
 const ancient = makeFaction(FactionId.Ancient, "ancient", [
