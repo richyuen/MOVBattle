@@ -3334,8 +3334,15 @@ const SLAB_EYE_UP = 0.22;
 // small one at the bottom edge, each a chunk this big (prop units) and stood proud of the planks by SLAB_MOSS.proud so it reads with the shield edge-on
 const SLAB_MOSS = { top: 0.13, bottom: 0.08, proud: 0.03 };
 let slabSerial = 0;
-// The painter's palette, in its own units before the prop oversize: across (about a torso wide carried), tipped PALETTE_TIP face-up and turned PALETTE_TURN out in the hand
-const PALETTE_WIDE = 0.24;
+/*
+ * The painter's palette (328; renaissance.painter.jpg: a big flat red-brown kidney board wider than the torso, held out from the shoulder at chest height
+ * on the off hand, a thumb hole by a notch cut in its inner edge, three fat smears of team paint on its face). Not an oval at the hip: the old board was a
+ * plain brown disc low by the thigh. Board PALETTE_WIDE across in its own units before the prop oversize, PALETTE.deep of that tall; notch PALETTE.notch of
+ * the half width deep; hole PALETTE.hole across; daubs PALETTE.daub across, PALETTE.proud off the face. Tipped PALETTE_TIP face-up and turned PALETTE_TURN
+ * out in the hand; the arm that holds it up is the animator's PALETTE_HOLD.
+ */
+const PALETTE = { deep: 0.74, notch: 0.42, hole: 0.15, daub: 0.27, proud: 0.012, thick: 0.016 };
+const PALETTE_WIDE = 0.34;
 const PALETTE_TIP = -1.0;
 const PALETTE_TURN = 0.4;
 function roundBoardSeed(serial: number, k: number): number {
@@ -3538,29 +3545,31 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
     case "palette": {
       // The painter's palette (255; units/renaissance.painter): a flat red-brown kidney board about a torso across, a thumb hole near its inner edge, three daubs
       // of team paint on its face. Held out flat beside the hip, tipped face-up toward the viewer.
-      const shield = MeshBuilder.CreateCylinder("palette", { height: 0.012 * s, diameter: PALETTE_WIDE * s, tessellation: 11 }, scene);
-      shield.scaling.z = 0.78;
-      shield.rotation.x = Math.PI / 2;
-      shield.bakeCurrentTransformIntoVertices();
-      shield.material = mat(scene, new Color3(0.66, 0.3, 0.22));
-      // The kidney's notch: a second lobe of board wider at the far side
-      const lobe = MeshBuilder.CreateCylinder("paletteLobe", { height: 0.012 * s, diameter: PALETTE_WIDE * 0.62 * s, tessellation: 9 }, scene);
-      lobe.rotation.x = Math.PI / 2;
-      lobe.bakeCurrentTransformIntoVertices();
-      lobe.position.set(PALETTE_WIDE * 0.38 * s, -PALETTE_WIDE * 0.08 * s, 0);
-      lobe.material = shield.material;
-      lobe.parent = shield;
-      const hole = MeshBuilder.CreateCylinder("paletteHole", { height: 0.014 * s, diameter: PALETTE_WIDE * 0.16 * s, tessellation: 7 }, scene);
+      // Built to the spec at PALETTE: an oval outline in the x-y plane (face +z), pinched in to a notch on its inner (-x) upper edge by the thumb hole
+      const rx = PALETTE_WIDE * s * 0.5, ry = rx * PALETTE.deep;
+      const outline: number[][] = [];
+      for (let k = 0; k < 22; k++) {
+        const a = (k / 22) * Math.PI * 2;
+        // The notch: a smooth dent centred at 160 degrees (inner side, a little above the middle)
+        const off = Math.atan2(Math.sin(a - 2.8), Math.cos(a - 2.8));
+        const dent = 1 - PALETTE.notch * Math.exp(-(off * off) / 0.09);
+        outline.push([Math.cos(a) * rx * dent, Math.sin(a) * ry * dent]);
+      }
+      const shield = flatPlate(scene, "palette", outline, PALETTE.thick * s);
+      shield.material = mat(scene, new Color3(0.66, 0.3, 0.22), 0.12);
+      // The thumb hole beside the notch, dark on both faces
+      const hole = MeshBuilder.CreateCylinder("paletteHole", { height: PALETTE.thick * 1.3 * s, diameter: PALETTE.hole * PALETTE_WIDE * s, tessellation: 8 }, scene);
       hole.rotation.x = Math.PI / 2;
-      hole.position.set(-PALETTE_WIDE * 0.28 * s, PALETTE_WIDE * 0.12 * s, 0.001 * s);
-      hole.material = mat(scene, new Color3(0.2, 0.1, 0.08));
+      hole.position.set(-rx * 0.45, ry * 0.3, 0);
+      hole.material = mat(scene, new Color3(0.16, 0.08, 0.06));
       hole.parent = shield;
-      for (const [x, y, k] of [[0.02, 0.17, 0.7], [0.1, -0.14, 1.0], [0.48, 0.0, 0.5]]) {
-        const daub = MeshBuilder.CreateSphere("paletteDaub", { diameter: PALETTE_WIDE * 0.24 * s, segments: 3 }, scene);
-        daub.scaling.set(1.3, 0.75, 0.22);
-        daub.rotation.z = 0.4;
-        daub.position.set(x * PALETTE_WIDE * s, y * PALETTE_WIDE * s, 0.008 * s);
-        daub.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.15).scale(k + 0.2), 0.05);
+      // Three smears of team paint standing proud of the face, flattened and turned each its own way; laid on both faces, as the hand turns either one out
+      for (const face of [1, -1]) for (const [x, y, turn, k] of [[0.05, 0.42, 0.4, 0.75], [0.2, -0.38, -0.3, 1.0], [0.6, 0.05, 1.3, 0.55]]) {
+        const daub = MeshBuilder.CreateSphere("paletteDaub", { diameter: PALETTE.daub * PALETTE_WIDE * s, segments: 4 }, scene);
+        daub.scaling.set(1.4, 0.7, 0.3);
+        daub.rotation.z = turn;
+        daub.position.set(x * rx, y * ry, face * (PALETTE.thick * 0.5 + PALETTE.proud * 0.5) * s);
+        daub.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.15).scale(k + 0.2), 0.12);
         daub.parent = shield;
       }
       return shield;

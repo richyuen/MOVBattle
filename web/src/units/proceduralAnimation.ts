@@ -138,6 +138,12 @@ const CLUB_LAND = 1.8;
  * coming down. The off arm is solved (shoulder swing and elbow fold) for that point every frame, its elbow stood out to his free side and down (see _offhandToGrip).
  */
 const OFFHAND_GRIP_UP = 0.11;
+/*
+ * [S] palette held up (328; renaissance.painter.jpg: the off arm out from the shoulder and the forearm up, the palette flat at chest height beside him).
+ * A palette in the off hand is held up in every state but death and limpness, laid over the stand, the walk and the swing (see _holdPalette): shoulder
+ * swung forward PALETTE_HOLD.raise and out PALETTE_HOLD.out, elbow folded PALETTE_HOLD.elbow; it breathes PALETTE_HOLD.sway on its own beat.
+ */
+const PALETTE_HOLD = { raise: -1.0, out: -0.55, elbow: -1.2, sway: 0.05 };
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
 // cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
@@ -1485,6 +1491,7 @@ export class ProceduralAnimator {
     this._carryProp(dt);
     this._offhandToGrip();
     this._carryBoulder();
+    this._holdPalette();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -1696,6 +1703,22 @@ export class ProceduralAnimator {
     };
   }
 
+
+  // The painter's palette arm (see PALETTE_HOLD): held up at chest height over whatever the pose layers made of the off arm
+  private _palette: TransformNode | null | undefined = undefined;
+  private _holdPalette(): void {
+    if (this._palette === undefined) {
+      this._palette = this._body.leftHand.getChildren().find((n): n is TransformNode => n.name === "palette") ?? null;
+    }
+    if (!this._palette || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
+    const k = 1 - Math.min(1, this._limp);
+    if (k <= 0.01) return;
+    const b = this._body;
+    const sway = Math.sin((this._time + this._wobblePhase) * 2.1) * PALETTE_HOLD.sway;
+    b.leftShoulder.rotation.x += (PALETTE_HOLD.raise + sway - b.leftShoulder.rotation.x) * k;
+    b.leftShoulder.rotation.z += (PALETTE_HOLD.out - b.leftShoulder.rotation.z) * k;
+    b.leftElbow.rotation.x += (PALETTE_HOLD.elbow - sway - b.leftElbow.rotation.x) * k;
+  }
 
   // The board strapped to the shield hand, if this body carries one big enough to stand behind (a buckler is not). Looked up on first use: props go on after the animator is made.
   private _shield: TransformNode | null | undefined = undefined;
