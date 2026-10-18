@@ -112,12 +112,12 @@ const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
 /*
  * The tribal hide garment (tribal.stoner.jpg, card Appearance: "a simple brown garment held by a shoulder strap on their right side"): a brown tunic over
  * the trunk from under the arms, hanging on below the waist as a skirt to mid-thigh with a ragged hem, held up by one strap over the right shoulder, the
- * left shoulder bare. The trunk part is the torso's own wedge a skin wider, its top TUNIC.top of the trunk high; the skirt TUNIC.skirt of the thigh long,
+ * left shoulder bare. The trunk part is a faceted sleeve round the torso's bounds, its top TUNIC.top of the trunk high; the skirt TUNIC.skirt of the thigh long,
  * flaring TUNIC.flare; TUNIC.tatters points hang off its hem. Self-lit so the brown does not go black in the shade.
  */
 // The protector wears the same garment (card Appearance: "a brown garment held by a shoulder strap on one side"; tribal.protector.png)
 const TRIBAL_TUNIC_UNITS = new Set(["tribal.stoner", "tribal.protector"]);
-const TUNIC = { top: 0.8, skirt: 0.6, flare: 1.25, tatters: 5, strap: 0.22 };
+const TUNIC = { top: 0.88, skirt: 0.6, flare: 1.25, tatters: 5, strap: 0.22 };
 const TUNIC_COLOR = new Color3(0.5, 0.29, 0.18);
 /*
  * The tribal hide cape (tribal.bone_mage.blue.png, card Appearance: "a primitive hide cape that extends to their thigh"): a stiff brown hide hung from the
@@ -1671,19 +1671,40 @@ function dressTribalTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   const side = Math.sign(body.rightShoulder.position.x) || 1;
   const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
   const depth = chest.z * body.torsoMesh.scaling.z;
-  // The trunk wrap: the torso wedge a skin bigger, squashed so its top sits under the arms and its foot at the waist
-  const wrap = body.torsoMesh.clone("tunicWrap");
-  wrap.scaling.set(body.torsoMesh.scaling.x * 1.08, body.torsoMesh.scaling.y * TUNIC.top, body.torsoMesh.scaling.z * 1.16);
-  wrap.position.y = body.torsoMesh.position.y - trunk * (1 - TUNIC.top) * 0.5;
+  // The trunk wrap: a faceted sleeve round the whole trunk (its bounding half widths a skin out, so no corner of the wedge pokes through), from just over the
+  // waist to TUNIC.top of the trunk, a little narrower at the waist
+  // Read off the trunk's own vertices (the torso wedge and the shoulder yoke hull that is the trunk's real silhouette; bounding boxes go stale once the body
+  // builder reshapes the chest): the widest half width and depth overall for the wrap's top, and below the trunk's middle for its foot
+  let maxX = chest.x * body.torsoMesh.scaling.x, maxZ = depth, lowX = 0;
+  for (const part of body.torso.getChildMeshes(true).filter((m) => m === body.torsoMesh || /_yoke$/.test(m.name))) {
+    const at = part.getVerticesData(VertexBuffer.PositionKind) ?? [];
+    for (let v = 0; v < at.length; v += 3) {
+      const x = Math.abs(at[v] * part.scaling.x), z = Math.abs(at[v + 2] * part.scaling.z), y = at[v + 1] * part.scaling.y + part.position.y;
+      if (y > trunk * 0.92) continue;
+      maxX = Math.max(maxX, x);
+      maxZ = Math.max(maxZ, z + Math.abs(part.position.z));
+      if (y < trunk * 0.45) lowX = Math.max(lowX, x);
+    }
+  }
+  const halfX = maxX * 1.08;
+  const halfZ = maxZ * 1.1;
+  const wrapLong = trunk * (TUNIC.top + 0.04);
+  const wrap = MeshBuilder.CreateCylinder("tunicWrap", { height: wrapLong, diameterTop: 2 * halfX, diameterBottom: 2 * Math.max(lowX * 1.1, halfX * 0.7), tessellation: 7 }, scene);
+  wrap.scaling.z = halfZ / halfX;
+  wrap.position.y = wrapLong * 0.5 - trunk * 0.04;
   wrap.material = hide;
+  wrap.convertToFlatShadedMesh();
   added.push(wrap);
-  // The skirt: the torso wedge turned over, narrow at the waist and flaring to the hem at mid-thigh
-  const skirtLong = thigh * TUNIC.skirt + trunk * 0.08;
-  const skirt = body.torsoMesh.clone("tunicSkirt");
-  skirt.scaling.set(body.torsoMesh.scaling.x * 1.1, skirtLong / (chest.y * 2), body.torsoMesh.scaling.z * TUNIC.flare);
-  skirt.rotation.z = Math.PI;
-  skirt.position.y = trunk * 0.08 - skirtLong * 0.5;
+  // The skirt: a flared faceted sleeve from the waist to mid-thigh, round the loincloth block
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  const pelvisHalf = pelvis ? pelvis.getBoundingInfo().boundingBox.extendSize : chest;
+  const skirtTop = Math.max(halfX * 0.92, pelvisHalf.x * 1.12);
+  const skirtLong = thigh * TUNIC.skirt + trunk * 0.06;
+  const skirt = MeshBuilder.CreateCylinder("tunicSkirt", { height: skirtLong, diameterTop: 2 * skirtTop, diameterBottom: 2 * skirtTop * TUNIC.flare, tessellation: 7 }, scene);
+  skirt.scaling.z = Math.max(halfZ, pelvisHalf.z * 1.15) / skirtTop;
+  skirt.position.y = trunk * 0.06 - skirtLong * 0.5;
   skirt.material = hide;
+  skirt.convertToFlatShadedMesh();
   added.push(skirt);
   // Ragged hem: flat points hanging off the skirt's foot round its front, sides and back
   for (let i = 0; i < TUNIC.tatters; i++) {
@@ -1691,7 +1712,7 @@ function dressTribalTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
     const point = MeshBuilder.CreateCylinder("tunicTatter", { height: thigh * 0.22, diameterTop: 0, diameterBottom: chest.x * 0.55, tessellation: 3 }, scene);
     point.scaling.z = 0.3;
     point.rotation.set(Math.PI, -a, 0);
-    point.position.set(Math.sin(a) * chest.x * body.torsoMesh.scaling.x * 0.95, trunk * 0.08 - skirtLong - thigh * 0.09, Math.cos(a) * depth * TUNIC.flare * 0.9);
+    point.position.set(Math.sin(a) * skirtTop * TUNIC.flare * 0.92, trunk * 0.06 - skirtLong - thigh * 0.09, Math.cos(a) * skirtTop * skirt.scaling.z * TUNIC.flare * 0.92);
     point.material = hide;
     point.parent = body.torso;
     point.convertToFlatShadedMesh();
