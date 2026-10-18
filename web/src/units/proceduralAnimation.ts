@@ -138,6 +138,8 @@ const CLUB_LAND = 1.8;
  * coming down. The off arm is solved (shoulder swing and elbow fold) for that point every frame, its elbow stood out to his free side and down (see _offhandToGrip).
  */
 const OFFHAND_GRIP_UP = 0.11;
+// The couched lance (see _couchLance): weapon arm swing and elbow at rest, the shaft's dip below level and turn in across the horse (rad), the attack's drive and trunk pitch
+const COUCH = { raise: -0.35, elbow: -1.35, dip: 0.08, across: 0.12, drive: 0.5, pitch: 0.2 };
 /*
  * [S] two-handed pole (329; renaissance.halberd.jpg: both fists on the shaft, spaced, the off hand nearer the head). A pole whose root carries one of these
  * marks is held in both hands in every living state but limpness: the weapon arm poses as before and the off hand is solved (as the club's, _offArmTo) onto
@@ -1533,6 +1535,7 @@ export class ProceduralAnimator {
     this._twoHandPole();
     this._carryBoulder();
     this._holdPalette();
+    this._couchLance();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -1745,6 +1748,57 @@ export class ProceduralAnimator {
     };
   }
 
+  /*
+   * [S] couched lance (330; renaissance.jouster.png: both riders' lances level, tucked under the arm at the waist, driven across the horse's neck into the
+   * other; renaissance.jouster.red.png: carried level forward at rest too, tip a little down). A lance in the weapon fist is held couched in every living
+   * state but limpness: the weapon arm low and bent, fist at the waist (COUCH.raise, COUCH.elbow), the shaft stood in the world COUCH.dip below level and
+   * COUCH.across in toward the off side. On the attack it is driven forward (COUCH.drive of arm swing and elbow opening, the trunk pitched COUCH.pitch).
+   */
+  private _lanceProp: { node: TransformNode; rest: Quaternion } | null | undefined = undefined;
+  private _couchLance(): void {
+    if (this._lanceProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "lance");
+      this._lanceProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+    }
+    const lance = this._lanceProp;
+    if (!lance) return;
+    const w = this._state === AnimState.Dead || this.walkStyle === "quadruped" ? 0 : 1 - Math.min(1, this._limp);
+    if (w <= 0.01) {
+      lance.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    const progress = this._state === AnimState.Attacking ? Math.min(1, this._attackTimer / Math.max(0.001, this._attackDuration)) : 0;
+    const drive = this._state === AnimState.Attacking ? Math.sin(Math.min(1, progress * 1.6) * Math.PI) : 0;
+    b.rightShoulder.rotation.x += (COUCH.raise - COUCH.drive * drive - b.rightShoulder.rotation.x) * w;
+    b.rightShoulder.rotation.z += (0.12 - b.rightShoulder.rotation.z) * w;
+    b.rightElbow.rotation.x += (COUCH.elbow + COUCH.drive * 1.6 * drive - b.rightElbow.rotation.x) * w;
+    b.torso.rotation.x += COUCH.pitch * drive * w;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    b.leftShoulder.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const right = b.rightShoulder.getAbsolutePosition().subtract(b.leftShoulder.getAbsolutePosition());
+    right.y = 0;
+    if (right.lengthSquared() < 1e-6) right.set(1, 0, 0);
+    right.normalize();
+    const axis = fwd.scale(Math.cos(COUCH.dip) * Math.cos(COUCH.across))
+      .subtractInPlace(right.scale(Math.sin(COUCH.across)))
+      .addInPlace(new Vector3(0, -Math.sin(COUCH.dip), 0)).normalize();
+    const x = Vector3.Cross(Vector3.Up(), axis).normalize();
+    const z = Vector3.Cross(x, axis).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, axis, z, world);
+    const parentRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, parentRot);
+    const parent = Matrix.Identity();
+    parentRot.toRotationMatrix(parent);
+    lance.node.rotationQuaternion = Quaternion.Slerp(lance.rest, Quaternion.FromRotationMatrix(world.multiply(parent.transpose())), w);
+  }
 
   // The painter's palette arm (see PALETTE_HOLD): held up at chest height over whatever the pose layers made of the off arm
   private _palette: TransformNode | null | undefined = undefined;
