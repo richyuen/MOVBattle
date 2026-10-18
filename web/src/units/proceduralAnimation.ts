@@ -161,6 +161,9 @@ const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25
 // The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
 // swing and elbow at each, the trunk's pitch and the off foot's step at the land, and the share of the attack it is held on the man
 const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown: -1.25, elbowDown: -0.15, pitch: 0.35, step: -0.4, hold: 0.1 };
+// The chop aimed onto its man (see _chopOnto): how far under his crown the axe lands (m at scale 1), the landing tilt's range from straight up (rad),
+// and the most of the axe head's reach the shaft may be drawn back through the fists
+const CHOP_ONTO = { below: 0.12, min: 0.9, max: 2.1, slide: 0.6 };
 /*
  * [S] palette held up (328; renaissance.painter.jpg: the off arm out from the shoulder and the forearm up, the palette flat at chest height beside him).
  * A palette in the off hand is held up in every state but death and limpness, laid over the stand, the walk and the swing (see _holdPalette): shoulder
@@ -514,7 +517,12 @@ export class ProceduralAnimator {
     this._blowMark = this._rapier() ? null : mark;
     this._blowLandsAt = landsIn;
     // nor is a halberd's chop: it comes down in his own plane (see CHOP)
-    if (this._halberd()) this._blowMark = null;
+    if (this._halberd()) {
+      // but it is aimed onto him (see _chopOnto)
+      this._chopMark = mark;
+      this._chopAim = null;
+      this._blowMark = null;
+    }
     this._blowClock = 0;
     this._blowStruck = null;
   }
@@ -1283,7 +1291,11 @@ export class ProceduralAnimator {
     this._lungeOut = 0;
 
     // a chop cut short leaves the halberd stood at its angle: back to its rest in the fist
-    if (this._halberdProp && this._halberdProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "thrust")) this._poseHalberd(0, 0);
+    if (this._halberdProp && this._halberdProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "thrust")) {
+      this._poseHalberd(0, 0);
+      this._slideHalberd(0);
+      this._chopAim = null;
+    }
 
     this._idleSink = 0;
     this._clubHold = 0;
@@ -3447,12 +3459,80 @@ export class ProceduralAnimator {
     b.leftKnee.rotation.x = pose(0.1, 0.3);
     b.rightHip.rotation.x = pose(0.1, 0.15);
     // the head: from the rest up and back over him, then down through the top onto the man
-    const theta = CHOP.raised + (CHOP.landed - CHOP.raised) * down;
-    this._poseHalberd(theta, smooth(progress / Math.max(commit * 0.4, 0.001)) * (1 - back));
+    this._slideHalberd(0);
+    const w = smooth(progress / Math.max(commit * 0.4, 0.001)) * (1 - back);
+    // [S] chop onto the man (334): the landing is aimed at his crown while the head comes down, then kept where it was at the land
+    if (progress > commit && progress <= land) this._chopAim = this._chopOnto();
+    const aim = this._chopAim;
+    const theta = CHOP.raised + ((aim ? aim.theta : CHOP.landed) - CHOP.raised) * down;
+    this._poseHalberd(theta, w);
+    if (aim) this._slideHalberd(aim.slide * down * w);
     if (progress >= 1) {
       this._poseHalberd(0, 0);
+      this._slideHalberd(0);
+      this._chopAim = null;
       this._state = AnimState.Idle;
     }
+  }
+
+  /**
+   * [S] chop onto the man (334; card Characteristics "a vertical chop"; the axe head is brought down onto him, not a pole-length past him). The man the
+   * chop is struck at (his head mark, from aimBlowAt) is read in the halberdier's own vertical plane from the weapon fist: the landing tilt is the line
+   * from the fist to CHOP_ONTO.below under his crown (clamped to CHOP_ONTO.min..max from straight up), and when he stands nearer than the axe head is
+   * from the fist the shaft is drawn back through both fists by the difference (at most CHOP_ONTO.slide of that reach), so the axe lands on his head and
+   * shoulders and the butt runs out behind. The fists stay where the swing put them; the off hand follows the shaft (_twoHandPole).
+   */
+  private _chopMark: TransformNode | null = null;
+  private _chopAim: { theta: number; slide: number } | null = null;
+  private _halberdRestAt: Vector3 | undefined;
+  private _chopOnto(): { theta: number; slide: number } | null {
+    const h = this._halberd();
+    const mark = this._chopMark;
+    if (!h || !mark || mark.isDisposed()) return this._chopAim;
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const marks: TransformNode[] = [];
+    for (let n: TransformNode | null = mark; n; n = n.parent as TransformNode | null) marks.unshift(n);
+    for (const n of marks) n.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) return this._chopAim;
+    fwd.normalize();
+    const fist = b.rightHand.getAbsolutePosition();
+    const scale = Math.max(0.001, b.rightHand.absoluteScaling.y);
+    const onto = this._crownOf(mark).subtract(new Vector3(0, CHOP_ONTO.below * scale, 0)).subtract(fist);
+    const ahead = Vector3.Dot(onto, fwd);
+    if (ahead < 0.05) return this._chopAim;
+    const theta = Math.max(CHOP_ONTO.min, Math.min(CHOP_ONTO.max, Math.atan2(ahead, onto.y)));
+    // the axe head's distance from the fist along the shaft, read off the shaft as it rests in the fist
+    h.node.computeWorldMatrix(true);
+    const axe = h.node.getChildren().find((c): c is Mesh => c.name === "haxe");
+    if (!axe) return { theta, slide: 0 };
+    axe.computeWorldMatrix(true);
+    const axis = Vector3.TransformNormal(Vector3.Up(), h.node.getWorldMatrix()).normalize();
+    const reach = Vector3.Dot(axe.getAbsolutePosition().subtract(fist), axis);
+    const slide = Math.max(0, Math.min(reach * CHOP_ONTO.slide, reach - Math.hypot(ahead, onto.y)));
+    return { theta, slide };
+  }
+
+  // The halberd drawn back through the fists by `by` (m, in the world) along its own shaft, from where it rests in the fist; 0 puts it back
+  private _slideHalberd(by: number): void {
+    const h = this._halberd();
+    if (!h) return;
+    const rest = (this._halberdRestAt ??= h.node.position.clone());
+    if (by <= 0.0001) {
+      h.node.position.copyFrom(rest);
+      return;
+    }
+    const hand = this._body.rightHand;
+    hand.computeWorldMatrix(true);
+    h.node.position.copyFrom(rest);
+    h.node.computeWorldMatrix(true);
+    const axis = Vector3.TransformNormal(Vector3.Up(), h.node.getWorldMatrix()).normalize();
+    const local = Vector3.TransformNormal(axis.scale(-by), hand.getWorldMatrix().clone().invert());
+    h.node.position.addInPlace(local);
   }
 
   private _animateThrust(dt: number): void {
