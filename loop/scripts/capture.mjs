@@ -386,7 +386,21 @@ async function main() {
           return true;
         };
         // Rig height, root to head top, for the camera's distance (a giant needs a wider frame)
-        window.__rig = (u) => { try { return Math.max(0.6, window.__wp(u.body.headTop).y - window.__wp(u.body.root).y); } catch { return 1.8; } };
+        // A war machine (vehicle sockets) by the top of its meshes too, not its crewman's head: a catapult's arm stands twice his height when thrown upright
+        window.__rig = (u) => {
+          try {
+            const base = window.__wp(u.body.root).y;
+            let top = window.__wp(u.body.headTop).y;
+            if (u.body.vehicleSockets) {
+              for (const m of u.body.root.getChildMeshes(false)) {
+                if (!m.isEnabled() || !m.isVisible) continue;
+                window.__wp(m);
+                top = Math.max(top, m.getBoundingInfo().boundingBox.maximumWorld.y);
+              }
+            }
+            return Math.max(0.6, top - base);
+          } catch { return 1.8; }
+        };
         // Frame across the line between the two men, level. `on`: 0 the midpoint, 1 the unit alone, 2 the struck man (the ally for a support unit),
         // 3 the unit and the first metres of its missile's path (a ranged unit's target is far off; the man and what leaves his hand are the evidence).
         window.__unitFrame = (on, s) => {
