@@ -196,7 +196,15 @@ const PAINTER_HOSE = new Color3(0.92, 0.6, 0.3);
 const PAINTER_SHOE = new Color3(0.66, 0.22, 0.12);
 const PAINTER_RUFF_COLOR = new Color3(1.0, 0.86, 0.55);
 const PAINTER_RUFF = 1.25;
-const PAINTER_RUFF_TIERS = 2;
+const PAINTER_RUFF_TIERS = 1;
+/*
+ * [S] jabot (333; renaissance.painter.blue.png: a large cream cravat wrapped at the throat and falling in stacked folds over the upper chest, as wide as the
+ * neck is twice over, standing well off the doublet; the ruff alone read as a thin grey ring). Under the one neck wrap, PAINTER_JABOT.layers faceted folds
+ * hang down the front of the chest, each PAINTER_JABOT.tall of the chest's height, the top one PAINTER_JABOT.wide of the chest across and each lower one
+ * PAINTER_JABOT.taper narrower, overlapping by a third, standing PAINTER_JABOT.proud of the chest's depth off it (so they read side-on too), tipped out at
+ * the hem PAINTER_JABOT.tip rad and turned a little each way (PAINTER_JABOT.twist) so the folds do not stack as one block; the last ends in a point.
+ */
+const PAINTER_JABOT = { layers: 3, wide: 0.62, tall: 0.16, taper: 0.17, proud: 0.42, tip: 0.3, twist: 0.12 };
 /*
  * The righteous paladin (units/good.righteous_paladin): white plate trimmed in gold over the team skin, not a plain team tunic. Read off the reference: white
  * chest, hips, thighs, greaves and feet; bare team-skin arms; bright orange-gold bands at the waist and round each knee with a pointed gold knee plate on the
@@ -855,14 +863,23 @@ function dressPainter(scene: Scene, body: ArticulatedBody, teamColor: Color3, pr
     tier.parent = body.torso;
     added.push(tier);
   }
-  // A cream bib falls from the ruff down the front of the chest, as on the reference
-  const bib = MeshBuilder.CreateCylinder(`${chest.name}_ruffBib`, { height: H * 0.32, diameterTop: W * 0.42, diameterBottom: 0, tessellation: 3 }, scene);
-  bib.rotation.y = Math.PI;
-  bib.scaling.z = 0.25;
-  bib.position.set(0, chest.position.y + H * 0.34, D * 0.5);
-  bib.material = ruffMat;
-  bib.parent = body.torso;
-  added.push(bib);
+  // The jabot's folds (spec at PAINTER_JABOT), top down from under the wrap
+  const J = PAINTER_JABOT;
+  for (let i = 0; i < J.layers; i++) {
+    const across = W * J.wide * (1 - J.taper * i);
+    const last = i === J.layers - 1;
+    const fold = MeshBuilder.CreateCylinder(`${chest.name}_jabot`, {
+      height: H * J.tall, diameterTop: across * 0.7, diameterBottom: last ? across * 0.25 : across, tessellation: 6,
+    }, scene);
+    fold.scaling.z = (D * J.proud * 2) / across;
+    fold.rotation.x = -J.tip;
+    fold.rotation.y = (i % 2 === 0 ? 1 : -1) * J.twist;
+    fold.position.set(0, chest.position.y + H * (0.5 - J.tall * 0.5 - J.tall * 0.67 * i), D * 0.5);
+    fold.material = ruffMat;
+    fold.convertToFlatShadedMesh();
+    fold.parent = body.torso;
+    added.push(fold);
+  }
   return added;
 }
 
