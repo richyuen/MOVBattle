@@ -2248,15 +2248,17 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // The spear point: a long four-sided spike standing off the shaft's top
       const point = MeshBuilder.CreateCylinder("hpoint", { height: HALBERD.point * L, diameterTop: 0, diameterBottom: HALBERD.thick * 1.8 * L, tessellation: 4 }, scene);
       point.position.y = top + HALBERD.point * L * 0.5;
-      point.scaling.z = 0.5;
+      point.scaling.x = 0.5;
       point.material = steel;
       point.convertToFlatShadedMesh();
       point.parent = shaft;
-      // The axe and the back spike: flat plates in the shaft's plane, the axe to +x and the spike to -x, both on the socket
+      // The axe and the back spike: flat plates on the socket, turned a quarter about the shaft so their broad faces lie across the hand's grip plane (in the
+      // x-y plane they faced the fist and showed edge-on from the side); the point is pressed flat the same way
       const at = top - HALBERD.socket * L * 0.5;
       const plate = (name: string, outline: number[][]): Mesh => {
         const m = flatPlate(scene, name, outline.map(([x, y]) => [x * L, y * L]), HALBERD.plate * L);
         m.position.y = at;
+        m.rotation.y = Math.PI / 2;
         m.material = steel;
         m.parent = shaft;
         return m;
