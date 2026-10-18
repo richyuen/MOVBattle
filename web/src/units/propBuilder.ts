@@ -223,9 +223,9 @@ const BRIM_HAT_FELT = new Color3(0.11, 0.1, 0.12);
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
  * heads across, turned up hard against the crown on the left side, a long pale team-coloured plume sweeping back over the turned-up side). Not a helm: the
  * old plume helm read as a grey stovepipe. Brim CAVALIER.brim heads across, CAVALIER.flap of it turned up CAVALIER.lift rad; crown CAVALIER.crown heads across,
- * CAVALIER.tall of the head high; felt the team colour at CAVALIER.shade; feather CAVALIER.feather heads long, CAVALIER.wide across, CAVALIER.pale toward white.
+ * CAVALIER.tall of the head high; felt the team colour at CAVALIER.shade; feather CAVALIER.feather heads long, CAVALIER.wide across, CAVALIER.pale toward white, raked CAVALIER.rake back at its root (it sweeps back, not up).
  */
-const CAVALIER = { brim: 2.25, flap: 0.3, lift: 1.25, crown: 1.1, tall: 0.55, shade: 0.75, feather: 2.3, wide: 0.55, pale: 0.4 };
+const CAVALIER = { brim: 2.25, flap: 0.3, lift: 1.25, crown: 1.1, tall: 0.55, shade: 0.75, feather: 2.3, wide: 0.55, pale: 0.4, rake: 1.15 };
 const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
@@ -904,7 +904,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       piece.convertToFlatShadedMesh();
       if (i === 0) {
         piece.position.set(u(-0.5 * crownHeads * W), u(0.1 * H) + pieceLong / 2, u(-0.18 * W));
-        piece.rotation.set(-FEATHER_RAKE, 0.7, 0.18);
+        piece.rotation.set(-(cav ? CAVALIER.rake : FEATHER_RAKE), 0.7, 0.18);
       } else {
         piece.position.y = pieceLong;
         piece.rotation.x = -FEATHER_CURL;
