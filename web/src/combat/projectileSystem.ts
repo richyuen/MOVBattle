@@ -19,6 +19,14 @@ import { buildFlyingSword } from "../units/propBuilder";
  */
 const FLYING_CROW = { long: 0.34, wide: 0.17, tall: 0.17, head: 0.13, beak: 0.08, span: 0.34, chord: 0.2, flat: 0.12, fingers: 4, feather: 0.1, tail: 0.16, fan: 0.16, glow: 0.12, beat: 0.6, lift: 0.15, rate: 15 };
 const CROW_FLY_BLACK = new Color3(0.07, 0.07, 0.1);
+/*
+ * [S] the potion's splash (342; farmer.potion_seller.jpg, card: Potion Throw explosion radius 2.2, "upon impact, the Potion will splash and effect anyone in
+ * the splash zone with drunkenness, making them green and confused; they may even splash themselves"). No blast and no fling: where it lands a burst of
+ * DRUNK_SPLASH.puffs green puffs .size across runs out over the splash radius .radius and thins away over .life s, one big puff over the middle; every man in
+ * the radius, of either side, takes the potion's small hurt with a push only .push of its own, and goes drunk for .seconds.
+ */
+const DRUNK_SPLASH = { radius: 2.2, puffs: 14, size: 0.9, life: 1.6, push: 0.15, seconds: 6 };
+const DRUNK_GREEN = new Color3(0.35, 0.95, 0.25);
 
 // The balloon arrow's ball (see _addBalloonBall): across (m), along the shaft from its middle (m), stretch along the shaft
 const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
@@ -59,6 +67,7 @@ interface ActiveProjectile {
   /** A hovering sword's rise: from the height it was lifted out of the ring at to this world height, over SWORD_RISE_IN of its hover. */
   riseFrom?: number;
   riseTo?: number;
+  drunk?: string;
 }
 
 // A sword lifted out of the swordcaster's ring stands point up; it is turned onto the man over this long of its hover
@@ -144,6 +153,8 @@ interface ProjectileSpawnOptions {
   arc?: number;
   /** A balloon arrow, carrying its shooter's unit id: the man it strikes floats up under balloons of the shooter's colour (RuntimeUnit.floatOnBalloons). */
   balloons?: string;
+  /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
+  drunk?: string;
 }
 
 interface MuzzleFlashOptions {
@@ -200,6 +211,7 @@ export class ProjectileSystem {
   private _flashes: MuzzleFlash[] = [];
   private _puffs: TrailPuff[] = [];
   private _puffMat: StandardMaterial | null = null;
+  private _greenPuffMat: StandardMaterial | null = null;
   private _puffCount = 0;
   /** Spent arrows, bolts and spears left standing in the bodies they hit or in the ground, oldest first. */
   private _litter: { mesh: TransformNode; owner: RuntimeUnit | null }[] = [];
@@ -329,7 +341,7 @@ export class ProjectileSystem {
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
-      balloons: options.balloons,
+      balloons: options.balloons, drunk: options.drunk,
       trailSystem, trailStarted,
       half: held?.half,
       rope: options.tether ? this._buildRope() : undefined,
@@ -647,6 +659,10 @@ export class ProjectileSystem {
   }
 
   private _onImpact(p: ActiveProjectile): void {
+    if (p.drunk) {
+      this._drunkSplash(p);
+      return;
+    }
     if (p.splashRadius > 0) {
       // Splash damage
       const radiusSq = p.splashRadius * p.splashRadius;
@@ -1141,7 +1157,32 @@ export class ProjectileSystem {
   }
 
   /** One soft wake puff at a ball's position: a feathered white disc that always faces the camera. Shared texture and material; each puff fades by its own visibility. */
-  private _leavePuff(at: Vector3, opts: { size?: number; life?: number; rise?: number; drift?: Vector3 } = {}): void {
+  /** The potion's splash (DRUNK_SPLASH): green puffs out over the radius, and every man in it hurt a little and drunk. */
+  private _drunkSplash(p: ActiveProjectile): void {
+    const D = DRUNK_SPLASH;
+    const at = p.targetPos.clone();
+    at.y = Math.max(0.3, at.y);
+    this._leavePuff(at, { size: D.size * 1.8, life: D.life, rise: 0.25, green: true });
+    for (let i = 0; i < D.puffs; i++) {
+      const a = (i / D.puffs) * Math.PI * 2;
+      const out = new Vector3(Math.sin(a), 0.35, Math.cos(a)).scale(D.radius * 1.4);
+      this._leavePuff(at.add(new Vector3(Math.sin(a) * 0.3, 0, Math.cos(a) * 0.3)), { size: D.size * (0.7 + (i % 3) * 0.2), life: D.life, rise: 0.1, drift: out, green: true });
+    }
+    let struck = false;
+    for (const unit of p.allUnits) {
+      if (unit.isDead) continue;
+      const d = unit.position.subtract(p.targetPos);
+      d.y = 0;
+      if (d.length() > D.radius) continue;
+      unit.applyDamage(p.damage, p.knockback.scale(D.push));
+      if (unit.isDead) continue;
+      unit.getDrunk(D.seconds);
+      struck = true;
+    }
+    if (struck) this.abilityHook?.(p.drunk!, "status:drunk", p.targetPos);
+  }
+
+  private _leavePuff(at: Vector3, opts: { size?: number; life?: number; rise?: number; drift?: Vector3; green?: boolean } = {}): void {
     if (!this._puffMat) {
       const tex = new DynamicTexture("trailPuffTex", { width: 64, height: 64 }, this._scene, false);
       const ctx = tex.getContext() as unknown as CanvasRenderingContext2D;
@@ -1163,12 +1204,17 @@ export class ProjectileSystem {
       m.disableDepthWrite = true;
       this._puffMat = m;
     }
+    if (opts.green && !this._greenPuffMat) {
+      const g = this._puffMat.clone("drunkPuffMat");
+      g.emissiveColor = DRUNK_GREEN.clone();
+      this._greenPuffMat = g;
+    }
     // Hashed, not drawn from Math.random, so the wake does not shift the battle's random stream
     const n = this._puffCount++;
     const h = (k: number): number => { const v = Math.sin(n * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
     const puff = MeshBuilder.CreatePlane("trailPuff", { size: 1 }, this._scene);
     puff.billboardMode = Mesh.BILLBOARDMODE_ALL;
-    puff.material = this._puffMat;
+    puff.material = opts.green ? this._greenPuffMat! : this._puffMat;
     puff.isPickable = false;
     puff.position.set(at.x + (h(1) - 0.5) * 0.12, at.y + (h(2) - 0.5) * 0.12, at.z + (h(3) - 0.5) * 0.12);
     const size = opts.size ?? TRAIL_PUFF_BORN * (0.8 + h(4) * 0.4);

@@ -16,6 +16,12 @@ const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
  * needs more arrows: each arrow's balloons add their share), to at most `top` m; then they pop and he falls.
  */
 const BALLOON_FLOAT = { seconds: 3, rise: 1.4, top: 3.2, per: 3, most: 9, size: 0.42, string: 0.55, swell: 0.12 };
+/*
+ * [S] drunk (342; farmer.potion_seller.jpg, card: "making them green and confused ... These tipsy units will fail to concentrate on attacking and wander about;
+ * they may even struggle to stand and walk"). While drunk his skin is DRUNK.dye of the way to DRUNK.green and lit .glow of it (his clothes .6 of that), his
+ * trunk rolls .roll rad side to side at .rate rad/s with the head lolling against it, and he goes at .slow of his pace; the simulation has him wander.
+ */
+const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 0.22, rate: 4.5, slow: 0.55 };
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
@@ -136,6 +142,10 @@ export class RuntimeUnit {
   private _chargeUntil = 0;
   private _cohesionMoveMultiplier = 1;
   private _slowUntil = 0;
+  // Drunk from a potion's splash (getDrunk, DRUNK): until when, and whether his skin is dyed green now
+  private _drunkUntil = 0;
+  private _drunkDyed = false;
+  private _skinBase: Color3 | null = null;
 
   // Spawn state for reset
   private _spawnPosition: Vector3;
@@ -868,6 +878,18 @@ export class RuntimeUnit {
     if (this._isDead) return;
     this._slowMultiplier = Math.min(this._slowMultiplier, Math.max(0.2, multiplier));
     this._slowUntil = Math.max(this._slowUntil, now + Math.max(0.1, durationSeconds));
+  }
+
+  /** Splashed by a potion (DRUNK): green and tottering, slowed, for `seconds`; the simulation has him wander instead of fight while isDrunk. */
+  getDrunk(seconds: number): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    const now = RuntimeUnit.timeNowSeconds();
+    this._drunkUntil = Math.max(this._drunkUntil, now + seconds);
+    this.applySlow(DRUNK.slow, seconds, now);
+  }
+
+  get isDrunk(): boolean {
+    return !this._isDead && RuntimeUnit.timeNowSeconds() < this._drunkUntil;
   }
 
   /** Struck by a balloon arrow (BALLOON_FLOAT): team balloons swell over his head and float him up until they pop. */
@@ -1656,7 +1678,30 @@ export class RuntimeUnit {
     }
   }
 
+  /** The drunk look (DRUNK): skin dyed green and lit green, the trunk rolling side to side and the head lolling; undone when it wears off. */
+  private _applyDrunk(now: number): boolean {
+    const drunk = this.isDrunk;
+    const skin = this.body.skinMaterial;
+    if (drunk && !this._drunkDyed) {
+      this._skinBase = skin.baseColor.clone();
+      skin.baseColor = Color3.Lerp(this._skinBase, DRUNK.green, DRUNK.dye);
+      this._drunkDyed = true;
+    } else if (!drunk && this._drunkDyed) {
+      if (this._skinBase) skin.baseColor = this._skinBase;
+      this._drunkDyed = false;
+    }
+    if (!drunk) return false;
+    skin.emissiveColor = this._skinGlow.add(DRUNK.green.scale(DRUNK.glow));
+    this.body.bodyMaterial.emissiveColor = DRUNK.green.scale(DRUNK.glow * 0.6);
+    const b = this.body;
+    b.torso.rotation.z += Math.sin(now * DRUNK.rate) * DRUNK.roll;
+    b.neck.rotation.z -= Math.sin(now * DRUNK.rate + 0.8) * DRUNK.roll * 1.4;
+    b.neck.rotation.x += DRUNK.roll * 0.6;
+    return true;
+  }
+
   private _applyFxPreset(fxPreset: FxPreset, isAttacking: boolean, now: number): void {
+    if (this._applyDrunk(now)) return;
     const pulse = 0.08 + (isAttacking ? 0.14 : 0.04) * (0.5 + 0.5 * Math.sin(now * 8));
     let color: Color3 | null = null;
     switch (fxPreset) {
@@ -1695,6 +1740,9 @@ export class RuntimeUnit {
   /** Reset unit to its original spawn state (position, health, alive). */
   resetToSpawn(): void {
     this._isDead = false;
+    this._drunkUntil = 0;
+    if (this._drunkDyed && this._skinBase) this.body.skinMaterial.baseColor = this._skinBase;
+    this._drunkDyed = false;
     this._maxHealth = this.definition.maxHealth;
     this._currentHealth = this._maxHealth;
     this._moveTarget = null;

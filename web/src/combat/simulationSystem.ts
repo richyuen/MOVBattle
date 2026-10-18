@@ -67,6 +67,10 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 // [S] ...and the potionseller's bottle (341; card Weapons: Potion Throw, a lobbed potion): the glass ball in her right hand is what flies, on the bomb's high lob
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
+// [S] the potionseller's potions splash men drunk instead of blowing up (342; ProjectileSystem DRUNK_SPLASH): drunk men stagger about, not fighting (DRUNK_WANDER)
+const DRUNK_POTIONS = new Set(["farmer.potion_seller"]);
+// A drunk man's wander: he reels off DRUNK_WANDER.reach m toward a heading that swings round at .swing rad/s from his own hashed start
+const DRUNK_WANDER = { reach: 2.5, swing: 0.9 };
 // Archers whose arrows carry a balloon: the man struck floats up under balloons (renaissance.balloon_archer; RuntimeUnit.floatOnBalloons)
 const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
 /**
@@ -603,6 +607,15 @@ export class SimulationSystem {
     const canAttack = unit.hasCapability("attack", now);
     const canMove = unit.hasCapability("move", now);
     unit.holdHeading(null);
+
+    // Drunk (RuntimeUnit.getDrunk): he does not fight, he reels about on a heading that keeps swinging round
+    if (unit.isDrunk) {
+      const seed = this._units.indexOf(unit) * 2.4;
+      const a = seed + now * DRUNK_WANDER.swing + Math.sin(now * 2.3 + seed) * 1.2;
+      unit.moveTo(unit.position.add(new Vector3(Math.sin(a), 0, Math.cos(a)).scale(DRUNK_WANDER.reach)));
+      this._clearPathState(unit);
+      return;
+    }
 
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
@@ -1741,7 +1754,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
           );
         }
       } else {
@@ -1866,7 +1879,7 @@ export class SimulationSystem {
       const from = (prop ?? attacker.body.rightHand).getAbsolutePosition().clone();
       this.projectileSystem.spawnProjectile(
         t.shape, from, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0,
-        { originLift: 0, heldProp: prop ?? undefined },
+        { originLift: 0, heldProp: prop ?? undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
       );
       if (prop) attacker.animator.letGoOfThrow(prop);
     }
