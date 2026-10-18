@@ -1852,6 +1852,16 @@ function flatPlate(scene: Scene, name: string, outline: number[][], thick: numbe
  *   BRUSH.long long, BRUSH.grip of it below the fist; handle BRUSH.butt across at the butt to BRUSH.neck at the ferrule; ferrule from BRUSH.ferrule up,
  *   BRUSH.collar long and across; tuft swells to BRUSH.tuft across BRUSH.swell along, then a point to the tip.
  */
+/*
+ * A matchlock musket (328; renaissance.musketeer.red.png, card Appearance "a matchlock musket": longer than the man who carries it, a light-grey octagonal
+ * barrel with a wider ring at the muzzle and a band round it, on an orange-brown wooden stock that runs under the barrel most of its length and ends behind
+ * the hand in a deep butt; a dark lock and match lever at the hand). Not a rod: the old gun was a short dark stick half the man's height, the flintlock's
+ * mesh grown. +y up the barrel from the fist at the origin, MUSKET.grip of the length behind it. Length MUSKET.long of the man's height; barrel MUSKET.bore
+ * of the length across; fore-stock to MUSKET.fore of the barrel; butt MUSKET.butt of the length deep. Shared by every "musket" (the deadeye too).
+ */
+const MUSKET = { long: 1.05, grip: 0.27, bore: 0.026, fore: 0.8, stock: 0.034, butt: 0.085, ring: 1.7 };
+const MUSKET_STEEL = new Color3(0.58, 0.58, 0.6);
+const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
 const BRUSH = { long: 0.34, grip: 0.16, butt: 0.05, neck: 0.085, ferrule: 0.6, collar: 0.1, tuft: 0.15, swell: 0.1 };
 const BRUSH_WOOD = new Color3(0.6, 0.3, 0.2);
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3): Mesh | null {
@@ -2432,10 +2442,63 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       barrel.position.y = 0.12 * s;
       return barrel;
     }
-    case "musket":
+    case "musket": {
+      // The matchlock, built to the spec at MUSKET: barrel, fore-stock and butt along +y from the fist; the wood lies on the barrel's +z side
+      const L = fit.stand * MUSKET.long;
+      const back = MUSKET.grip * L, front = (1 - MUSKET.grip) * L;
+      const steel = mat(scene, MUSKET_STEEL, 0.08, "metal");
+      const wood = mat(scene, MUSKET_WOOD, 0.12);
+      const bore = MUSKET.bore * L;
+      const barrel = MeshBuilder.CreateCylinder("barrel", { height: front + 0.04 * L, diameter: bore, tessellation: 8 }, scene);
+      barrel.position.y = (front - 0.04 * L) * 0.5;
+      barrel.material = steel;
+      barrel.convertToFlatShadedMesh();
+      // The barrel is the root: every other piece is placed from the fist and set back by the barrel's own lift
+      const lift = barrel.position.y;
+      const holder = barrel;
+      // The muzzle ring and a band two thirds of the way out
+      for (const [at, tall] of [[front - 0.02 * L, 0.04 * L], [front * 0.66, 0.015 * L]]) {
+        const ring = MeshBuilder.CreateCylinder("musketRing", { height: tall, diameter: bore * MUSKET.ring, tessellation: 8 }, scene);
+        ring.position.y = at - lift;
+        ring.material = steel;
+        ring.convertToFlatShadedMesh();
+        ring.parent = holder;
+      }
+      // The fore-stock: a wooden bar under the barrel from the hand most of the way to the muzzle
+      const foreLong = front * MUSKET.fore;
+      const fore = MeshBuilder.CreateBox("musketFore", { width: bore * 1.1, height: foreLong, depth: MUSKET.stock * L }, scene);
+      fore.position.set(0, foreLong * 0.5 - lift, bore * 0.4 + MUSKET.stock * L * 0.5);
+      fore.material = wood;
+      fore.parent = holder;
+      // The butt: a slim wrist at the hand deepening to the butt plate behind it, a tapered block flattened across
+      const butt = MeshBuilder.CreateCylinder("musketButt", { height: back + 0.04 * L, diameterTop: MUSKET.stock * L * 1.2, diameterBottom: MUSKET.butt * L * 1.4, tessellation: 4 }, scene);
+      butt.rotation.y = Math.PI / 4;
+      butt.scaling.x = 0.5;
+      butt.bakeCurrentTransformIntoVertices();
+      butt.position.set(0, -(back - 0.04 * L) * 0.5 - lift, MUSKET.stock * L * 0.6);
+      butt.rotation.x = 0.12;
+      butt.material = wood;
+      butt.convertToFlatShadedMesh();
+      butt.parent = holder;
+      // The lock plate and the match lever (the serpentine) curling up beside the barrel at the hand
+      const dark = mat(scene, new Color3(0.14, 0.14, 0.16), 0.05, "metal");
+      const lock = MeshBuilder.CreateBox("musketLock", { width: bore * 0.5, height: 0.07 * L, depth: MUSKET.stock * L }, scene);
+      lock.position.set(bore * 0.75, 0.02 * L - lift, bore * 0.5);
+      lock.material = dark;
+      lock.parent = holder;
+      const lever = MeshBuilder.CreateBox("musketSerpentine", { width: bore * 0.3, height: 0.06 * L, depth: bore * 0.4 }, scene);
+      lever.position.set(bore * 0.8, 0.05 * L - lift, -bore * 0.3);
+      lever.rotation.x = -0.6;
+      lever.material = dark;
+      lever.parent = holder;
+      // Tipped back a little about the fist, as the old gun was
+      barrel.setPivotPoint(new Vector3(0, -lift, 0));
+      barrel.rotation.x = -0.2;
+      return barrel;
+    }
     case "flintlock":
     case "cannon_hand": {
-      const len = type === "cannon_hand" ? 0.7 : type === "musket" ? 0.65 : 0.35;
+      const len = type === "cannon_hand" ? 0.7 : 0.35;
       const diam = type === "cannon_hand" ? 0.08 : 0.03;
       const barrel = MeshBuilder.CreateCylinder("barrel", { height: len * s, diameter: diam * s, tessellation: 8 }, scene);
       barrel.material = mat(scene, new Color3(0.3, 0.3, 0.35));
