@@ -188,7 +188,20 @@ const OFFHAND_GRIP_UP = 0.11;
  * the grip TWO_FIST_SWORD of the grip's length below where the weapon fist sits on it (toward the pommel), so the blade leads and the fists share the hilt.
  * Not the pole carry (POLE_GRIP): that turns the sword pommel-first (351). Held through idle, the march and the swing.
  */
-const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4 };
+const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4, zweiFists: 0.4 };
+/*
+ * [R] two fists on the long grip (354; medieval.king.jpg, .red.png: the King's Zweihander held in both fists, arms run down to the hilt before his belly).
+ * Spec read off the renders: the weapon fist closes on the grip right under the cross (the Zweihander's mount seats it there, propBuilder ZWEI.seat), the off
+ * fist sits stacked under it on the grip, about a fist apart (TWO_FIST_SWORD of the grip below the weapon fist), the pommel clear below both; never an off hand
+ * in the air beside the guard. The solve (see _swordInBothFists), every frame after the carry or the swing has placed the blade:
+ * 1. the wanted off-fist point on the grip, TWO_FIST_SWORD grip lengths under the weapon fist, kept between the pommel end and FISTS_ON_GRIP.gap of the drop
+ *    under the weapon fist;
+ * 2. when the off shoulder cannot reach it, the point of that range inside the off arm's reach (the reach sphere cut with the grip line) nearest it;
+ * 3. when no point of the range is in reach (a one-armed swing out at his side carries the grip 1.4-1.8 m off a 0.9 m arm), the weapon fist is drawn in toward
+ *    the off shoulder by the shortfall, the weapon arm re-solved with the blade keeping its attitude in the world, so the cut is swung in both fists before him;
+ *    then 2. again. FISTS_ON_GRIP.reach: the share of the arm's full length taken as its reach (the solver leaves the elbow a little bent).
+ */
+const FISTS_ON_GRIP = { gap: 0.75, reach: 0.96, pommel: 0.4 };
 // The couched lance (see _couchLance): weapon arm swing and elbow at rest, the shaft's dip below level and turn in across the horse (rad), the attack's drive and trunk pitch
 const COUCH = { raise: -0.35, elbow: -1.35, dip: 0.08, across: 0.12, drive: 0.5, pitch: 0.2 };
 // The couched lance turned onto its man (see aimLanceAt): seconds an aim holds after the last call, how fast the lance comes onto him and off (1/s)
@@ -1866,6 +1879,14 @@ export class ProceduralAnimator {
     // ...but the harvester's, pegged (SCYTHE_LOW), is carried low across him in both fists
     const lowScythe = scythe && !!node?.getChildren().some((c) => c.getChildren().some((g) => g.name === "snathPeg"));
     this._lowScythe = lowScythe;
+    // A slab sword marked two-fisted (TWO_FIST_SWORD) has the off fist on its grip under the weapon fist; it is mounted with its own line through the fist
+    // (FISTS_ON_GRIP): the grip preset set it off to the side of that line, so the fist closed on air beside the grip
+    const fists = node && /^(blade|gsblade)$/.test(node.name) ? node.getChildren().find((c) => c.name in TWO_FIST_SWORD) : undefined;
+    this._swordFists = fists ? TWO_FIST_SWORD[fists.name] : 0;
+    if (node && fists) {
+      const line = Vector3.Up().rotateByQuaternionToRef(Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), new Vector3());
+      node.position.copyFrom(line.scale(Vector3.Dot(node.position, line)));
+    }
     const prop = node ? {
       node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone(),
       spin: scythe ? Quaternion.RotationYawPitchRoll((lowScythe ? SCYTHE_LOW.spin : SCYTHE_SPIN) * side, 0, 0) : undefined,
@@ -1874,9 +1895,6 @@ export class ProceduralAnimator {
     // A club with nothing in the other hand is held in both (two-handed grip, see OFFHAND_GRIP_UP), and like the scythe it is in its carry from the first frame
     this._twoHanded = node?.name === "club" && !this._shieldBoard() && this._body.leftHand.getChildren().every((n) => /HandM$/.test(n.name));
     if (this._twoHanded) this._carryTurn = 1;
-    // A slab sword marked two-fisted (TWO_FIST_SWORD) has the off fist on its grip under the weapon fist
-    const fists = node && /^(blade|gsblade)$/.test(node.name) ? node.getChildren().find((c) => c.name in TWO_FIST_SWORD) : undefined;
-    this._swordFists = fists ? TWO_FIST_SWORD[fists.name] : 0;
     // The tree's bowed side (its own +x) is turned about the trunk to face back against the way the trunk runs out, which the carry's turn then brings round to face up
     if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side) + Math.PI, 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
@@ -2476,7 +2494,9 @@ export class ProceduralAnimator {
     if (k <= 0.01) {
       if (node.rotationQuaternion) {
         node.rotationQuaternion = null;
-        node.position.copyFrom(grip);
+        // (the quaternion has zeroed the Euler turn: let go, the prop runs up the fist +y) a two-fisted sword keeps that line through the fist (FISTS_ON_GRIP)
+        if (this._swordFists > 0) node.position.set(0, grip.length(), 0);
+        else node.position.copyFrom(grip);
       }
       return;
     }
@@ -2514,7 +2534,9 @@ export class ProceduralAnimator {
       held.y += (stood - held.y) * (1 - this._castLift);
     }
     held.rotateByQuaternionToRef(turn, held);
-    Vector3.LerpToRef(grip, held, k, node.position);
+    // A two-fisted sword stays on its line through the fist while it turns in (FISTS_ON_GRIP); a lerp of the offset would swing it off the fist part way
+    if (this._swordFists > 0) node.position.copyFrom(new Vector3(0, grip.length(), 0).rotateByQuaternionToRef(turn, new Vector3()));
+    else Vector3.LerpToRef(grip, held, k, node.position);
   }
 
   // The scarecrow's T-pose (TPOSE): whether this body takes it (a crow in the weapon fist), its perched crows, and how far in it he stands
@@ -2600,7 +2622,7 @@ export class ProceduralAnimator {
   private _twoHanded = false;
   // A two-fisted sword's off-fist drop, in grip lengths below the weapon fist (TWO_FIST_SWORD); 0 for any other weapon. Set by _buildCarry.
   private _swordFists = 0;
-  /** The off fist onto a two-fisted sword's grip, _swordFists of the grip below the weapon fist (TWO_FIST_SWORD), in idle, the march and the swing. */
+  /** Both fists on a two-fisted sword's grip, solved to the spec at FISTS_ON_GRIP, in idle, the march and the swing. */
   private _swordInBothFists(): void {
     const prop = this._carry?.weapon?.prop;
     if (!prop || this.walkStyle === "quadruped") return;
@@ -2608,19 +2630,61 @@ export class ProceduralAnimator {
     if (s !== AnimState.Idle && s !== AnimState.Walking && s !== AnimState.Attacking) return;
     const w = 1 - Math.min(1, this._limp);
     if (w <= 0.01) return;
+    const b = this._body;
     const blade = prop.node as Mesh;
     const grip = blade.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "grip");
     if (!grip) return;
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
-    for (const n of chain) n.computeWorldMatrix(true);
-    // Along the blade's own line (+y toward the point), measured from the grip's middle
-    const axis = Vector3.TransformNormal(Vector3.Up(), blade.getWorldMatrix()).normalize();
-    const half = grip.getBoundingInfo().boundingBox.extendSize.y * grip.absoluteScaling.y;
-    const mid = grip.getAbsolutePosition();
-    const fistAt = Math.max(-half, Math.min(half, Vector3.Dot(this._body.rightHand.getAbsolutePosition().subtract(mid), axis)));
-    const at = Math.max(-half * 0.85, fistAt - this._swordFists * half * 2);
-    this._offArmTo(mid.add(axis.scale(at)), w, 2);
+    // The grip's line as the arm has just been posed: its middle, the blade's own +y (toward the point), its half length; the weapon fist along it
+    const line = () => {
+      for (const n of chain) n.computeWorldMatrix(true);
+      const axis = Vector3.TransformNormal(Vector3.Up(), blade.getWorldMatrix()).normalize();
+      const half = grip.getBoundingInfo().boundingBox.extendSize.y * grip.absoluteScaling.y;
+      const mid = grip.getAbsolutePosition();
+      const fistAt = Math.max(-half, Math.min(half, Vector3.Dot(b.rightHand.getAbsolutePosition().subtract(mid), axis)));
+      // 1. the wanted point and the range it is kept in: the pommel end (a share of the drop clear of it) up to a share of the drop under the weapon fist
+      const drop = this._swordFists * half * 2;
+      const lo = -half + drop * FISTS_ON_GRIP.pommel;
+      const hi = Math.max(lo, fistAt - drop * FISTS_ON_GRIP.gap);
+      return { axis, mid, lo, hi, want: Math.max(lo, Math.min(hi, fistAt - drop)) };
+    };
+    b.leftShoulder.computeWorldMatrix(true);
+    const reach = (b.leftElbow.position.length() + b.leftHand.position.length()) * b.leftShoulder.absoluteScaling.y * FISTS_ON_GRIP.reach;
+    // 2. the stretch of the grip inside the off arm's reach, cut down to the range, or null when none of it is
+    const inReach = (g: ReturnType<typeof line>): [number, number] | null => {
+      const rel = b.leftShoulder.getAbsolutePosition().subtract(g.mid);
+      const c = Vector3.Dot(rel, g.axis);
+      const off2 = rel.lengthSquared() - c * c;
+      if (off2 >= reach * reach) return null;
+      const k = Math.sqrt(reach * reach - off2);
+      const from = Math.max(g.lo, c - k), to = Math.min(g.hi, c + k);
+      return from <= to ? [from, to] : null;
+    };
+    let g = line();
+    let span = inReach(g);
+    if (!span) {
+      // 3. the weapon fist drawn in toward the off shoulder by the shortfall, the blade held to its attitude in the world
+      const at = g.mid.add(g.axis.scale(g.want));
+      const toShoulder = b.leftShoulder.getAbsolutePosition().subtract(at);
+      const short = toShoulder.length() - reach;
+      const handQ = new Quaternion();
+      b.rightHand.getWorldMatrix().decompose(undefined, handQ);
+      const fist = b.rightHand.getAbsolutePosition().add(toShoulder.normalize().scale(short));
+      this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+      for (const n of [b.rightShoulder, b.rightElbow]) n.computeWorldMatrix(true);
+      const elbowQ = new Quaternion();
+      b.rightElbow.getWorldMatrix().decompose(undefined, elbowQ);
+      const local = Quaternion.Inverse(elbowQ).multiply(handQ);
+      const have = b.rightHand.rotationQuaternion ?? Quaternion.FromEulerAngles(b.rightHand.rotation.x, b.rightHand.rotation.y, b.rightHand.rotation.z);
+      const set = Quaternion.Slerp(have, local, w);
+      if (b.rightHand.rotationQuaternion) b.rightHand.rotationQuaternion.copyFrom(set);
+      else set.toEulerAnglesToRef(b.rightHand.rotation);
+      g = line();
+      span = inReach(g);
+    }
+    const at = span ? Math.max(span[0], Math.min(span[1], g.want)) : g.want;
+    this._offArmTo(g.mid.add(g.axis.scale(at)), w, 2);
   }
   /** The off hand onto the club's grip, just above the weapon fist, by the carry's own turn (two-handed grip). */
   private _offhandToGrip(): void {
