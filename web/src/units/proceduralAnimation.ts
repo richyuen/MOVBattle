@@ -153,6 +153,16 @@ const POLE_GRIP = {
  * swung forward PALETTE_HOLD.raise and out PALETTE_HOLD.out, elbow folded PALETTE_HOLD.elbow; it breathes PALETTE_HOLD.sway on its own beat.
  */
 const PALETTE_HOLD = { raise: -1.0, out: -0.55, elbow: -1.2, sway: 0.05 };
+/*
+ * [S] lunge (330; card Characteristics "thrusts forward to attack with its foil then steps back"; renaissance.fencer.png: the sword arm straight out level
+ * at the foe, the blade on its line, the front foot well in, the rear leg long). A rapier is not brought down on a man (no _aimBlow): it is thrust.
+ * Guard (to the commit): fist drawn in by the chest, elbow folded LUNGE.guardElbow, sword shoulder turned forward LUNGE.turn, the rapier turned point-first
+ * in the fist (the blade runs out past the fingers, not up the forearm). Lunge (commit to the land): arm out level (LUNGE.reach), elbow straight, trunk
+ * pitched in LUNGE.pitch, the sword-side leg out in front (LUNGE.front, knee LUNGE.knee), the rear leg long behind (LUNGE.back), the hip carried
+ * LUNGE.step of its height toward the foe and sunk. Held LUNGE.hold, then the step back: the hip LUNGE.back step behind its stand, arm back to the guard,
+ * and over the last LUNGE.unturn of the attack the rapier is turned back up the forearm.
+ */
+const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -0.85, knee: 0.6, back: 0.5, step: 0.45, retreat: 0.2, hold: 0.08, unturn: 0.2 };
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
 // cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
@@ -466,7 +476,8 @@ export class ProceduralAnimator {
 
   /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] target-aimed blow spec. */
   aimBlowAt(mark: TransformNode | null, landsIn = 0): void {
-    this._blowMark = mark;
+    // A rapier is thrust at him on its own line (see LUNGE), not brought down on his head
+    this._blowMark = this._rapier() ? null : mark;
     this._blowLandsAt = landsIn;
     this._blowClock = 0;
     this._blowStruck = null;
@@ -1201,6 +1212,12 @@ export class ProceduralAnimator {
       this._body.hip.position.subtractInPlace(this._thrownSeat);
       this._thrownSeat.setAll(0);
     }
+    // and last frame's lunge (see LUNGE); a lunge cut short leaves the rapier turned point-first: turned back as soon as it is over
+    if (this._lungeStep.z !== 0) {
+      this._body.hip.position.subtractInPlace(this._lungeStep);
+      this._lungeStep.setAll(0);
+    }
+    if (this._rapierProp && this._rapierProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "blade_slash")) this._turnRapier(0);
 
     this._idleSink = 0;
     this._clubHold = 0;
@@ -2997,7 +3014,79 @@ export class ProceduralAnimator {
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
+  // The fencer's rapier, looked up on first use (props go on after the animator is made), and its rest in the fist
+  private _rapierProp: { node: TransformNode; rest: Quaternion; grip: Vector3 } | null | undefined = undefined;
+  private _rapier(): { node: TransformNode; rest: Quaternion; grip: Vector3 } | null {
+    if (this._rapierProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "rapier");
+      this._rapierProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
+    }
+    return this._rapierProp;
+  }
+  private readonly _lungeStep = new Vector3(0, 0, 0);
+
+  // The rapier turned point-first in the fist by k (0 its rest up the forearm, 1 out past the fingers): a half turn about the hand's x through the fist
+  private _turnRapier(k: number): void {
+    const r = this._rapier();
+    if (!r) return;
+    if (k <= 0.001) {
+      if (r.node.rotationQuaternion) {
+        r.node.rotationQuaternion = null;
+        r.node.position.copyFrom(r.grip);
+      }
+      return;
+    }
+    const half = Quaternion.RotationAxis(Vector3.Right(), Math.PI * k);
+    r.node.rotationQuaternion = half.multiply(r.rest);
+    r.node.position.copyFrom(Vector3.TransformCoordinates(r.grip, Matrix.RotationAxis(Vector3.Right(), Math.PI * k)));
+  }
+
+  /** The fencer's thrust and step back (see LUNGE). */
+  private _animateLunge(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const commit = this._resolveReleasePoint(0.4);
+    const land = Math.max(commit + 0.05, this._blowLandFraction());
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
+    const smooth = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
+    // g: into the guard; e: out on the lunge; r: back off it
+    const g = smooth(progress / Math.max(commit, 0.001));
+    const e = progress < commit ? 0 : 1 - Math.pow(1 - Math.min(1, (progress - commit) / Math.max(land - commit, 0.001)), 2.2);
+    const r = smooth((progress - land - LUNGE.hold) / Math.max(1 - land - LUNGE.hold, 0.001));
+    const out = e * (1 - r);
+    b.rightShoulder.rotation.x = LUNGE.guardRaise * g + (LUNGE.reach - LUNGE.guardRaise) * out;
+    b.rightShoulder.rotation.z = 0.12 * g * (1 - out);
+    b.rightElbow.rotation.x = LUNGE.guardElbow * g * (1 - out) - 0.05 * out;
+    b.leftShoulder.rotation.x = 0.25 * g + 0.35 * out;
+    b.leftShoulder.rotation.z = -0.35 * g - 0.4 * out;
+    b.leftElbow.rotation.x = -0.6 * g;
+    b.torso.rotation.y = -side * (LUNGE.turn * g + 0.15 * out);
+    b.torso.rotation.x = -0.05 * g + LUNGE.pitch * out;
+    b.neck.rotation.x = -0.2 * out;
+    b.neck.rotation.y = side * LUNGE.turn * 0.7 * g;
+    b.rightHip.rotation.x = -0.25 * g + (LUNGE.front + 0.25) * out;
+    b.rightKnee.rotation.x = 0.2 * g + (LUNGE.knee - 0.2) * out;
+    b.leftHip.rotation.x = 0.15 * g + (LUNGE.back - 0.15) * out;
+    b.leftKnee.rotation.x = 0.1 * g * (1 - out);
+    // The hip goes in with the lunge and back past its stand on the step back (forward is the body's +z)
+    this._hipRest ??= b.hip.position.y;
+    const reach = this._hipRest * (LUNGE.step * out - LUNGE.retreat * r * (1 - smooth((progress - 0.85) / 0.15)));
+    this._lungeStep.set(0, 0, reach);
+    b.hip.position.addInPlace(this._lungeStep);
+    this._idleSink = Math.max(this._idleSink, this._hipRest * (1 - Math.cos(Math.abs(LUNGE.front) * 0.75)) * out);
+    this._turnRapier(Math.min(g * 1.5, 1) * (1 - smooth((progress - (1 - LUNGE.unturn)) / LUNGE.unturn)));
+    if (progress >= 1) {
+      this._turnRapier(0);
+      this._state = AnimState.Idle;
+    }
+  }
+
   private _animateBladeSlash(dt: number): void {
+    if (this._rapier()) {
+      this._animateLunge(dt);
+      return;
+    }
     this._attackTimer += dt;
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
