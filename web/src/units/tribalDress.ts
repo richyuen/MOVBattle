@@ -34,9 +34,18 @@ const BONE_NECKLACE = { drop: 0.16, bone: 0.55, middle: 1.25, thick: 0.13, gap: 
  *   its length the tip swings aside, .strap the strap's thickness in trunk heights, .off of the trunk's depth the fang stands off the chest.
  */
 const FANG_NECKLACE = { drop: 0.34, long: 0.8, thick: 0.2, curl: 0.3, strap: 0.03, off: 0.14 };
+/*
+ * The clubber's tusk necklace (tribal.clubber.blue.png, card Appearance: "a Tribal necklace made out of tusks that are tied together with a rope"): a
+ * red-brown rope from the nape over both shoulders, sagging in a shallow U across the top of the chest below the beard, and three short pale tusks hung
+ * from its front run side by side, point down, each curling outward and a little forward, the middle one longest, a turn of rope round each root.
+ *   TUSK_NECKLACE.drop of the trunk height below the neck for the U's foot, .long head heights for the middle tusk (the side ones .side times that),
+ *   .thick head widths across each root, .gap head widths between roots, .curl of its length each tip swings out, .strap the rope's thickness in trunk
+ *   heights, .off of the trunk's depth the tusks stand off the chest.
+ */
+const TUSK_NECKLACE = { drop: 0.3, long: 0.5, side: 0.8, thick: 0.17, gap: 0.3, curl: 0.3, strap: 0.03, off: 0.16 };
 // Which tribesmen wear which necklace (the furCollar is dropped for them)
-const NECKLACES: Record<string, "critter_skulls" | "bones" | "fang"> = {
-  "tribal.protector": "critter_skulls", "tribal.stoner": "bones", "tribal.bone_mage": "bones", "tribal.spear_thrower": "fang",
+const NECKLACES: Record<string, "critter_skulls" | "bones" | "fang" | "tusks"> = {
+  "tribal.protector": "critter_skulls", "tribal.stoner": "bones", "tribal.bone_mage": "bones", "tribal.spear_thrower": "fang", "tribal.clubber": "tusks",
 };
 
 export function hasTribalNecklace(unitId: string): boolean {
@@ -135,6 +144,7 @@ export function boneSkull(scene: Scene, name: string, wide: number, serial: numb
 export function dressTribalNecklace(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
   if (NECKLACES[unitId] === "bones") return boneNecklace(scene, body);
   if (NECKLACES[unitId] === "fang") return fangNecklace(scene, body);
+  if (NECKLACES[unitId] === "tusks") return tuskNecklace(scene, body);
   if (NECKLACES[unitId] !== "critter_skulls") return [];
   const added: Mesh[] = [];
   const band = trunkBand(body, 0.6, 0.9);
@@ -270,22 +280,74 @@ function fangNecklace(scene: Scene, body: ArticulatedBody): Mesh[] {
   const root = new Vector3(band.midX, footY - fangThick * 0.2, front + off);
   const tip = new Vector3(band.midX + long * FANG_NECKLACE.curl, footY - long, front + off * 0.7);
   const ctrl = new Vector3(band.midX - long * FANG_NECKLACE.curl * 0.35, footY - long * 0.6, front + off * 1.15);
+  added.push(...hornOnRope(scene, body, "necklaceFang", root, ctrl, tip, fangThick, thick));
+  return added;
+}
+
+/** A curved four-sided horn (fang, tusk) from a thick root down a quadratic curve to a point, a turn of rope round its root; parented to the torso joint. */
+function hornOnRope(scene: Scene, body: ArticulatedBody, name: string, root: Vector3, ctrl: Vector3, tip: Vector3, rootThick: number, ropeThick: number): Mesh[] {
   const curve: Vector3[] = [];
   for (let i = 0; i <= 8; i++) {
     const t = i / 8;
     curve.push(root.scale((1 - t) * (1 - t)).add(ctrl.scale(2 * t * (1 - t))).add(tip.scale(t * t)));
   }
-  const fang = MeshBuilder.CreateTube("necklaceFang", { path: curve, tessellation: 5, cap: Mesh.CAP_START, radiusFunction: (i) => fangThick * 0.5 * Math.max(0.05, 1 - i / 8) }, scene);
-  fang.convertToFlatShadedMesh();
-  fang.material = boneMaterial();
-  fang.parent = body.torso;
-  added.push(fang);
-  // ...tied on by a turn of rope round its root
-  const wrap = MeshBuilder.CreateTorus("necklaceFangRope", { diameter: fangThick * 1.1, thickness: thick * 1.1, tessellation: 8 }, scene);
+  const horn = MeshBuilder.CreateTube(name, { path: curve, tessellation: 5, cap: Mesh.CAP_START, radiusFunction: (i) => rootThick * 0.5 * Math.max(0.05, 1 - i / 8) }, scene);
+  horn.convertToFlatShadedMesh();
+  horn.material = boneMaterial();
+  horn.parent = body.torso;
+  const wrap = MeshBuilder.CreateTorus(`${name}Rope`, { diameter: rootThick * 1.1, thickness: ropeThick * 1.1, tessellation: 8 }, scene);
   wrap.position.copyFrom(curve[1]);
-  wrap.material = rope;
+  wrap.material = ropeMaterial();
   wrap.parent = body.torso;
-  added.push(wrap);
+  return [horn, wrap];
+}
+
+/** The tusk necklace (spec at TUSK_NECKLACE), parented to the torso joint. */
+function tuskNecklace(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const band = trunkBand(body, 0.6, 0.9);
+  const top = trunkBand(body, 0.9, 1.05);
+  const { trunk } = band;
+  const head = headWide(body);
+  const headTall = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2 * body.headMesh.scaling.y;
+  const thick = trunk * TUSK_NECKLACE.strap;
+  const neckX = head * 0.42;
+  const front = band.maxZ + thick;
+  const back = Math.min(top.minZ, band.minZ) - thick * 0.6;
+  const footY = trunk * (1 - TUSK_NECKLACE.drop);
+  const off = (band.maxZ - band.minZ) * TUSK_NECKLACE.off;
+  const step = head * TUSK_NECKLACE.gap;
+  // The rope: from the nape over each shoulder by the neck, down the chest and across it in a shallow U through the three roots
+  const path = [
+    new Vector3(0, trunk - thick, back),
+    new Vector3(neckX, trunk + thick * 0.5, (back + front) * 0.5),
+    new Vector3(neckX * 1.05, trunk * 0.95, front),
+    new Vector3(step * 1.6, footY + trunk * 0.05, front + off * 0.6),
+    new Vector3(step, footY + trunk * 0.015, front + off),
+    new Vector3(0, footY, front + off),
+    new Vector3(-step, footY + trunk * 0.015, front + off),
+    new Vector3(-step * 1.6, footY + trunk * 0.05, front + off * 0.6),
+    new Vector3(-neckX * 1.05, trunk * 0.95, front),
+    new Vector3(-neckX, trunk + thick * 0.5, (back + front) * 0.5),
+    new Vector3(0, trunk - thick, back),
+  ].map((p) => p.add(new Vector3(band.midX, 0, 0)));
+  const strap = MeshBuilder.CreateTube("necklaceStrap", { path, radius: thick * 0.5, tessellation: 5, cap: Mesh.CAP_ALL }, scene);
+  strap.material = ropeMaterial();
+  strap.parent = body.torso;
+  added.push(strap);
+  // The three tusks, point down, each tip curling out to its own side (the middle one forward) and a little toward the viewer
+  const tuskThick = head * TUSK_NECKLACE.thick;
+  for (const i of [-1, 0, 1]) {
+    const long = headTall * TUSK_NECKLACE.long * (i === 0 ? 1 : TUSK_NECKLACE.side);
+    const x = band.midX + i * step;
+    const y = footY + (i === 0 ? 0 : trunk * 0.015) - tuskThick * 0.2;
+    const z = front + off;
+    const swing = (i === 0 ? 0.15 : i) * long * TUSK_NECKLACE.curl;
+    const root = new Vector3(x, y, z);
+    const ctrl = new Vector3(x - swing * 0.3, y - long * 0.6, z + off * 0.3);
+    const tip = new Vector3(x + swing, y - long, z + off * 0.6);
+    added.push(...hornOnRope(scene, body, "necklaceTusk", root, ctrl, tip, tuskThick, thick));
+  }
   return added;
 }
 
