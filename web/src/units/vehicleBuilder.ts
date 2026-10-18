@@ -805,7 +805,7 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 // stood below the halberdier's head). The whole machine (drum, roof, cannons, base, wheels, Da Vinci, sockets, the pilot's seat) is built in the units
 // below and grown together by DAVINCI_SCALE, so the ~26 deg pitch of both tiers is kept (332 widened only the radii, 334 raised only the pitch).
 // The cap rises from its eave (capEaveR at capY) at the lower tier's pitch to a flat top capTopR across at capTop, a dark lid on it.
-export const DAVINCI_SCALE = 1.9;
+export const DAVINCI_SCALE = 2.3;
 const DAVINCI_ROOF = {
   planks: 16,
   eaveR: 1.25, eaveY: 0.74, topR: 0.42, topY: 1.12,

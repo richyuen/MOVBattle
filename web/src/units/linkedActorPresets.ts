@@ -173,8 +173,8 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         key: "pilot",
         label: "pilot",
         relation: "crew",
-        // his seat under the roof, grown with the machine (vehicleBuilder DAVINCI_SCALE 1.9; was 0, 0.98, 0.28)
-        offset: new Vector3(0, 1.86, 0.53),
+        // his seat under the roof, grown with the machine (vehicleBuilder DAVINCI_SCALE 2.3; was 0, 0.98, 0.28)
+        offset: new Vector3(0, 2.25, 0.64),
         syncFacing: true,
         semantics: {
           ...emittingCrew,
