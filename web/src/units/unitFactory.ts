@@ -905,11 +905,17 @@ function dressPainter(scene: Scene, body: ArticulatedBody, teamColor: Color3, pr
  * side of the doublet team; padded brown sleeves in HALBERD_DRESS.bands rolls to the upper arm and to the forearm; dark-grey gauntlets with a flared cuff
  * over the wrist; a brown belt round the waist over all of it). Sizes are shares of the chest (W, H, D) and of each arm mesh's own girth.
  *   tabard: HALBERD_DRESS.tabard of the chest across on the weapon side, over the chest front and back (HALBERD_DRESS.wrap of its depth), its flaps hanging
- *   HALBERD_DRESS.skirt of the chest's height below the waist; belt HALBERD_DRESS.belt tall; rolls HALBERD_DRESS.roll of the arm's girth proud;
+ *   HALBERD_DRESS.skirt of the chest's height below the waist; belt HALBERD_BELT_FIT; rolls HALBERD_DRESS.roll of the arm's girth proud;
  *   cuff HALBERD_DRESS.cuff of the forearm's girth, flared, over its last third.
  */
-const HALBERD_DRESS = { tabard: 0.55, wrap: 1.12, skirt: 0.45, belt: 0.1, bands: 3, roll: 1.22, cuff: 1.5 };
-const HALBERD_CREAM = new Color3(0.86, 0.72, 0.5);
+const HALBERD_DRESS = { tabard: 0.55, wrap: 1.12, skirt: 0.45, bands: 3, roll: 1.22, cuff: 1.5 };
+// [S] tan tabard and proud belt (336; renaissance.halberd.blue.png: the half-tabard is a warm tan, not white; a brown belt with a buckle stands out over
+// it at the waist): the tabard on self-lit tan cloth (HALBERD_TAN, HALBERD_TAN_GLOW; plain cream cloth greyed white), the belt HALBERD_BELT_FIT.proud of
+// the tabard round it and .tall of the chest high, a squared buckle .buckle of the chest across on its front.
+const HALBERD_TAN = new Color3(0.8, 0.56, 0.28);
+const HALBERD_TAN_GLOW = 0.3;
+const HALBERD_BELT_FIT = { proud: 1.14, tall: 0.14, buckle: 0.2 };
+const HALBERD_BUCKLE = new Color3(0.78, 0.62, 0.3);
 const HALBERD_SLEEVE = new Color3(0.5, 0.24, 0.16);
 const HALBERD_ROLL = new Color3(0.4, 0.18, 0.12);
 const HALBERD_GAUNTLET = new Color3(0.19, 0.2, 0.21);
@@ -924,7 +930,7 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
   const waist = chest.position.y - H * 0.5;
   const side = Math.sign(body.rightShoulder.position.x) || 1;
-  const cream = mf.getCloth(HALBERD_CREAM);
+  const cream = mf.get("cloth", HALBERD_TAN, { emissiveIntensity: HALBERD_TAN_GLOW });
   const tabW = W * D_.tabard;
   // Tabard over the chest, on the weapon side, from the shoulder to the waist
   const tabard = MeshBuilder.CreateBox("halberdTabard", { width: tabW, height: H * 0.96, depth: D * D_.wrap }, scene);
@@ -942,14 +948,27 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
     flap.parent = body.torso;
     added.push(flap);
   }
-  // Belt round the waist over the tabard
-  const belt = MeshBuilder.CreateCylinder("halberdBelt", { height: H * D_.belt, diameter: 1, tessellation: 8 }, scene);
-  belt.scaling.x = W * 1.06;
-  belt.scaling.z = D * D_.wrap * 1.04;
-  belt.position.set(0, waist + H * D_.belt * 0.5, 0);
+  // Belt round the waist, standing proud over the tabard, a squared buckle on its front
+  const B = HALBERD_BELT_FIT;
+  const belt = MeshBuilder.CreateCylinder("halberdBelt", { height: H * B.tall, diameter: 1, tessellation: 8 }, scene);
+  belt.scaling.x = W * B.proud;
+  belt.scaling.z = D * D_.wrap * B.proud;
+  belt.position.set(0, waist + H * B.tall * 0.5, 0);
   belt.material = mf.getCloth(HALBERD_BELT);
+  belt.convertToFlatShadedMesh();
   belt.parent = body.torso;
   added.push(belt);
+  const buckle = MeshBuilder.CreateBox("halberdBuckle", { width: W * B.buckle, height: H * B.tall * 1.25, depth: D * 0.08 }, scene);
+  buckle.position.set(0, waist + H * B.tall * 0.5, D * D_.wrap * B.proud * 0.5 + D * 0.02);
+  buckle.material = mf.get("cloth", HALBERD_BUCKLE, { emissiveIntensity: 0.15 });
+  buckle.parent = body.torso;
+  added.push(buckle);
+  const hole = MeshBuilder.CreateBox("halberdBuckleHole", { width: W * B.buckle * 0.55, height: H * B.tall * 0.7, depth: D * 0.09 }, scene);
+  hole.position.copyFrom(buckle.position);
+  hole.position.z += D * 0.005;
+  hole.material = mf.getCloth(HALBERD_BELT);
+  hole.parent = body.torso;
+  added.push(hole);
   // Sleeves: brown, rolled; gauntlets dark with a flared cuff
   const sleeve = mf.getCloth(HALBERD_SLEEVE);
   const rollMat = mf.getCloth(HALBERD_ROLL);
