@@ -14,7 +14,7 @@ export type WeaponType =
   | "bone_staff" | "lute" | "paintbrush" | "rapier"
   | "harpoon" | "cutlass" | "bomb" | "dynamite" | "torch"
   | "katana" | "nunchaku" | "shuriken_hand" | "bo_staff"
-  | "stone" | "hay_bale" | "potion" | "lightning_bolt" | "lockbox"
+  | "stone" | "hay_bale" | "potion" | "lightning_bolt" | "lockbox" | "crow"
   | "fan" | "flail" | "whip" | "present_box" | "pom_pom" | "tree_club";
 
 export type HatType =
@@ -269,7 +269,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.4, bulk: 1.5 }, "hammer", "straw_hat", "none", "cart", "#8B4513",
   ),
   "farmer.scarecrow": vis(
-    { scale: 1.3, bulk: 0.8, armLength: 1.3 }, "crossbow", "sack_mask", "none", "scarecrow_post", "#DAA520",
+    { scale: 1.3, bulk: 0.8, armLength: 1.3 }, "crow", "sack_mask", "none", "scarecrow_post", "#DAA520", "crow",
   ),
 
   // ═══════════════════════ MEDIEVAL ═══════════════════════
@@ -838,8 +838,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "vehicle", materialPreset: "secret_beast",
       });
     case "iconic_scarecrow":
-      // [S] full-head sack mask with team button eyes (340; farmer.scarecrow.blue.png), not a brim hat
-      return vis({ scale: 1.34, bulk: 0.76, armLength: 1.34, legLength: 1.05 }, "crossbow", "sack_mask", "none", "scarecrow_post", "#d5a743", undefined, {
+      // [S] full-head sack mask with team button eyes (340; farmer.scarecrow.blue.png), not a brim hat. [S] a black crow in each fist, no crossbow (341; farmer.scarecrow.red.png)
+      return vis({ scale: 1.34, bulk: 0.76, armLength: 1.34, legLength: 1.05 }, "crow", "sack_mask", "none", "scarecrow_post", "#d5a743", "crow", {
         posePreset: "archer", materialPreset: "secret_festive", attachmentPreset: "crow_swarm", fxPreset: "wind",
         stateVariants: { attacking: ["crow_swarm"], "ability-active": ["crow_swarm"] },
       });
@@ -1236,6 +1236,7 @@ export function inferWeaponPresentationFamily(weapon: WeaponType): WeaponPresent
     case "dynamite":
     case "stone":
     case "potion":
+    case "crow":
     case "shuriken_hand":
       return "throw";
     case "bow":

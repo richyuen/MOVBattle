@@ -1260,6 +1260,52 @@ function setTaggedVisibility(meshes: Mesh[], visible: boolean): void {
   }
 }
 
+/*
+ * [S] a crow held in the fist (341; farmer.scarecrow.red.png: in each hand a plump black bird a head long, gripped round its middle, its head and grey
+ * beak out past the fingers along the arm, the wings folded flat on its sides and a fanned tail behind the fist). Shares of s: body HELD_CROW.long long,
+ * .wide across, .tall deep; head .head across on the front end; beak .beak long; folded wings .wing long down each side; tail .tail long, fanned .fan
+ * wide. Black CROW_BLACK self-lit .glow so it reads black and not navy; two white bead eyes; the body's middle in the mitt (.seat).
+ */
+const HELD_CROW = { long: 0.24, wide: 0.11, tall: 0.12, head: 0.085, beak: 0.06, wing: 0.17, tail: 0.11, fan: 0.1, seat: 0.03, glow: 0.12 };
+const CROW_BLACK = new Color3(0.07, 0.07, 0.1);
+function heldCrow(scene: Scene, s: number): Mesh {
+  const C = HELD_CROW;
+  const black = mat(scene, CROW_BLACK, C.glow);
+  const grey = mat(scene, new Color3(0.32, 0.31, 0.34), 0.1);
+  const white = mat(scene, new Color3(0.95, 0.95, 0.92), 0.4);
+  // the body, its long axis out along the fist's +y (the fingers' way), the back toward +z
+  const body = MeshBuilder.CreateIcoSphere("crowHeldBody", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+  body.scaling.set(C.wide * s, C.long * s, C.tall * s);
+  body.material = black;
+  const child = (m: Mesh, mt: PBRMetallicRoughnessMaterial, x: number, y: number, z: number) => {
+    m.material = mt;
+    m.convertToFlatShadedMesh();
+    // children sit in the body's own unit frame: undo its scaling
+    m.scaling.set(1 / (C.wide * s), 1 / (C.long * s), 1 / (C.tall * s));
+    m.position.set(x / (C.wide * s), y / (C.long * s), z / (C.tall * s));
+    m.parent = body;
+    return m;
+  };
+  const headY = C.long * 0.5 * s + C.head * 0.25 * s;
+  const head = child(MeshBuilder.CreateIcoSphere("crowHeldHead", { radius: C.head * 0.5 * s, subdivisions: 1, flat: true }, scene), black, 0, headY, C.tall * 0.18 * s);
+  void head;
+  const beak = child(MeshBuilder.CreateCylinder("crowHeldBeak", { height: C.beak * s, diameterTop: 0, diameterBottom: C.head * 0.38 * s, tessellation: 4 }, scene), grey, 0, headY + C.head * 0.4 * s + C.beak * 0.4 * s, C.tall * 0.14 * s);
+  void beak;
+  for (const side of [-1, 1]) {
+    child(MeshBuilder.CreateSphere("crowHeldEye", { diameter: C.head * 0.26 * s, segments: 4 }, scene), white, side * C.head * 0.42 * s, headY + C.head * 0.1 * s, C.tall * 0.26 * s);
+    // a folded wing: a flat blade down the side, its tip trailing past the body's back end
+    const wing = child(MeshBuilder.CreateCylinder("crowHeldWing", { height: C.wing * s, diameterTop: C.tall * 0.85 * s, diameterBottom: 0, tessellation: 4 }, scene), black, side * C.wide * 0.5 * s, -C.long * 0.08 * s, C.tall * 0.1 * s);
+    wing.scaling.x *= 0.25;
+    wing.rotation.x = 0.12;
+  }
+  // the fanned tail behind the fist
+  const tail = child(MeshBuilder.CreateCylinder("crowHeldTail", { height: C.tail * s, diameterTop: 0, diameterBottom: C.fan * s, tessellation: 4 }, scene), black, 0, -C.long * 0.5 * s - C.tail * 0.3 * s, C.tall * 0.12 * s);
+  tail.rotation.x = Math.PI;
+  tail.scaling.z *= 0.3;
+  body.position.y = C.seat * s;
+  return body;
+}
+
 function mat(scene: Scene, color: Color3, emissive = 0, category: MatCategory = "wood"): PBRMetallicRoughnessMaterial {
   const mf = getMaterialFactory();
   if (emissive > 0) {
@@ -3094,6 +3140,10 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       band.material = mat(scene, new Color3(0.6, 0.45, 0.2));
       bale.position.y = 0.1 * s;
       return bale;
+    }
+    case "crow": {
+      // [S] the scarecrow's crow (341; farmer.scarecrow.red.png, card: Crow Throw in both hands): spec at HELD_CROW
+      return heldCrow(scene, s);
     }
     case "potion": {
       // The potionseller's bottle (339; farmer.potion_seller.red.png: a pale-blue faceted glass ball a fist and a half across in each hand, a short wide
