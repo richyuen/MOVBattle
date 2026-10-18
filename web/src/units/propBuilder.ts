@@ -945,7 +945,7 @@ export function attachProps(
 
   // A sword is cut to the man who carries it: his fist and his standing height, handed over in the weapon's own units, under the oversize.
   const bladeFit: BladeFit = { fist: (body.metrics.hand?.width ?? 0.058 * scale) / PROP_OVERSIZE, stand: body.metrics.overallHeight / PROP_OVERSIZE };
-  const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit);
+  const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit, teamColor);
   if (weapon) {
     weapon.parent = body.rightHand;
     weapon.scaling.scaleInPlace(PROP_OVERSIZE);
@@ -1702,7 +1702,16 @@ const JAVELIN_BARB_SWEEP = 0.45;
 const HARPOON_GUN_LONG = 0.24;
 const HARPOON_GUN_WIDE = 0.11;
 export const HARPOON_MUZZLE = "harpoonMuzzle";
-function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit): Mesh | null {
+/*
+ * The painter's brush (327; renaissance.painter.jpg: a short one-handed brush about a forearm and a half long, a red-brown handle thin at the butt and
+ * thickening to a grey ferrule, then a fat team-coloured tuft swelling out of it and running to a point; a fist's width of butt behind the hand).
+ * Not a rod: the old brush ran about two thirds of the man's height and read as a musket. In the man's heights, all the parts in brush lengths:
+ *   BRUSH.long long, BRUSH.grip of it below the fist; handle BRUSH.butt across at the butt to BRUSH.neck at the ferrule; ferrule from BRUSH.ferrule up,
+ *   BRUSH.collar long and across; tuft swells to BRUSH.tuft across BRUSH.swell along, then a point to the tip.
+ */
+const BRUSH = { long: 0.34, grip: 0.16, butt: 0.05, neck: 0.085, ferrule: 0.6, collar: 0.1, tuft: 0.15, swell: 0.1 };
+const BRUSH_WOOD = new Color3(0.6, 0.3, 0.2);
+function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
   switch (type) {
@@ -2461,17 +2470,32 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return body;
     }
     case "paintbrush": {
-      // A fat artist's brush (units/renaissance.painter): a tapered red-brown handle, a dark ferrule and a long pointed tuft of paint
-      const handle = MeshBuilder.CreateCylinder("brush", { height: 0.35 * s, diameterTop: 0.045 * s, diameterBottom: 0.025 * s, tessellation: 6 }, scene);
-      handle.material = mat(scene, new Color3(0.6, 0.3, 0.2));
-      const ferrule = MeshBuilder.CreateCylinder("brushFerrule", { height: 0.05 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
-      ferrule.position.y = 0.2 * s; ferrule.parent = handle;
-      ferrule.material = mat(scene, new Color3(0.3, 0.3, 0.34));
-      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.11 * s, diameterTop: 0, diameterBottom: 0.06 * s, tessellation: 6 }, scene);
-      tip.position.y = 0.3 * s; tip.parent = handle;
-      tip.material = mat(scene, accent, 0.2);
-      handle.position.y = 0.05 * s;
-      return handle;
+      // The painter's brush, built to the spec at BRUSH: +y up the brush from the fist at the origin, BRUSH.grip of it below the fist
+      const L = fit.stand * BRUSH.long;
+      const handleLong = BRUSH.ferrule * L;
+      const brush = MeshBuilder.CreateCylinder("brush", { height: handleLong, diameterTop: BRUSH.neck * L, diameterBottom: BRUSH.butt * L, tessellation: 7 }, scene);
+      brush.position.y = handleLong * 0.5 - BRUSH.grip * L;
+      brush.material = mat(scene, BRUSH_WOOD, 0.12);
+      brush.convertToFlatShadedMesh();
+      const ferrule = MeshBuilder.CreateCylinder("brushFerrule", { height: BRUSH.collar * L, diameterTop: BRUSH.collar * L, diameterBottom: BRUSH.neck * 1.05 * L, tessellation: 7 }, scene);
+      ferrule.position.y = handleLong * 0.5 + BRUSH.collar * L * 0.5;
+      ferrule.material = mat(scene, new Color3(0.42, 0.42, 0.46), 0.1);
+      ferrule.convertToFlatShadedMesh();
+      ferrule.parent = brush;
+      // The tuft: swells out of the ferrule, then runs to a point; in the team colour
+      const paint = mat(scene, teamColor ?? accent, 0.15);
+      const swell = MeshBuilder.CreateCylinder("brushTuft", { height: BRUSH.swell * L, diameterTop: BRUSH.tuft * L, diameterBottom: BRUSH.collar * L, tessellation: 7 }, scene);
+      swell.position.y = BRUSH.collar * L * 0.5 + BRUSH.swell * L * 0.5;
+      swell.material = paint;
+      swell.convertToFlatShadedMesh();
+      swell.parent = ferrule;
+      const pointLong = (1 - BRUSH.ferrule - BRUSH.collar - BRUSH.swell) * L;
+      const point = MeshBuilder.CreateCylinder("brushPoint", { height: pointLong, diameterTop: 0, diameterBottom: BRUSH.tuft * L, tessellation: 7 }, scene);
+      point.position.y = BRUSH.swell * L * 0.5 + pointLong * 0.5;
+      point.material = paint;
+      point.convertToFlatShadedMesh();
+      point.parent = swell;
+      return brush;
     }
     case "nunchaku": {
       const a = MeshBuilder.CreateCylinder("n1", { height: 0.18 * s, diameter: 0.025 * s }, scene);
