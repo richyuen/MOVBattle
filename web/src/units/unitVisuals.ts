@@ -254,8 +254,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "farmer.farmer": vis(
     { scale: 0.95, bulk: 0.95 }, "pitchfork", "pointed_cowl", "none", "none", "#4A7A2E",
   ),
+  // [S] the bale is worn, not carried (339): unitFactory's dressHayBale; no box in the hand
   "farmer.hay_baler": vis(
-    { scale: 1.25, bulk: 1.6 }, "hay_bale", "straw_hat", "none", "none", "#DAA520",
+    { scale: 1.25, bulk: 1.6 }, "none", "straw_hat", "none", "none", "#DAA520",
   ),
   // [S] a potion in each hand (339; farmer.potion_seller.red.png, card: Potion Throw main and off hand)
   "farmer.potion_seller": vis(

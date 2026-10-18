@@ -539,6 +539,9 @@ export class UnitFactory {
     if (definition.id === "renaissance.jouster" && !shouldUseVehicleBody) {
       propMeshes.push(...dressJouster(this._scene, body, teamColor));
     }
+    if (definition.id === "farmer.hay_baler" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressHayBale(this._scene, body));
+    }
     if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressCactus(this._scene, body, teamColor));
     }
@@ -923,6 +926,83 @@ const HALBERD_SLEEVE = new Color3(0.5, 0.24, 0.16);
 const HALBERD_ROLL = new Color3(0.4, 0.18, 0.12);
 const HALBERD_GAUNTLET = new Color3(0.19, 0.2, 0.21);
 const HALBERD_BELT = new Color3(0.32, 0.17, 0.1);
+/*
+ * [S] hay-bale armour (339; farmer.hay_baler.red.png, card Appearance: a thick tan bale worn over the whole torso from the shoulders to the knees, the
+ * arms and head out of it; its top edge breaks into big flat blades of hay standing up and out past the head, the bottom into a flared hem of pointed
+ * blades over the knees; two dark straps round its middle, at the lower chest and the waist; the top a darker brown than the sunlit lower bale).
+ * Sizes are shares of the chest (W, H, D):
+ *   barrel from the shoulder line HAY_BALE.drop of H below the waist, HAY_BALE.top of W across at the top and .bottom at the foot, .deep of D through;
+ *   HAY_BALE.blades top blades .blade of H long (every other one .short of that), .bladeWide of W at the root, leaning out .lean (rad);
+ *   HAY_BALE.hems hem blades .hem of H long, flaring out .flare; straps .strap of H tall at .straps (shares of the barrel down from its top), .proud round it.
+ * Self-lit tan cloth (HAY_TAN / HAY_TOP, HAY_GLOW): plain tan greys out under this light.
+ */
+const HAY_BALE = { drop: 0.55, top: 1.25, bottom: 1.4, deep: 1.7, blades: 10, blade: 0.62, short: 0.6, bladeWide: 0.42, lean: 0.45, hems: 12, hem: 0.5, flare: 0.5, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
+const HAY_TAN = new Color3(0.84, 0.6, 0.32);
+const HAY_TOP = new Color3(0.6, 0.4, 0.24);
+const HAY_STRAP = new Color3(0.26, 0.16, 0.11);
+const HAY_GLOW = 0.3;
+/** Dresses the hay baler (spec at HAY_BALE): the bale over his torso, its blade fringe top and bottom and two straps. */
+function dressHayBale(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const B = HAY_BALE;
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const top = chest.position.y + H * 0.5;
+  const foot = chest.position.y - H * 0.5 - H * B.drop;
+  const tall = top - foot;
+  const tan = mf.get("cloth", HAY_TAN, { emissiveIntensity: HAY_GLOW });
+  const dark = mf.get("cloth", HAY_TOP, { emissiveIntensity: HAY_GLOW * 0.8 });
+  // depth over width of the barrel's section: a round bale, a little deeper than the chest is
+  const deepK = (D * B.deep) / (W * B.top);
+  const barrel = MeshBuilder.CreateCylinder("hayBarrel", { height: tall, diameterTop: W * B.top, diameterBottom: W * B.bottom, tessellation: 10 }, scene);
+  barrel.scaling.z = deepK;
+  barrel.position.y = (top + foot) * 0.5;
+  barrel.material = tan;
+  barrel.convertToFlatShadedMesh();
+  barrel.parent = body.torso;
+  added.push(barrel);
+  // A ring of flat blades (a thin four-sided cone) round a rim at height y and half-widths rx, rz, each leaning out from upright by `lean` (down when > PI/2)
+  const ring = (name: string, n: number, y: number, rx: number, rz: number, long: (i: number) => number, wide: number, lean: number, material: typeof tan): void => {
+    for (let i = 0; i < n; i++) {
+      const a = (i + 0.5) * (Math.PI * 2) / n;
+      const at = new TransformNode(name + "At", scene);
+      at.parent = body.torso;
+      at.position.set(Math.sin(a) * rx, y, Math.cos(a) * rz);
+      at.rotation.y = a;
+      const L = long(i);
+      const blade = MeshBuilder.CreateCylinder(name, { height: L, diameterTop: 0, diameterBottom: wide, tessellation: 4 }, scene);
+      blade.scaling.z = 0.28;
+      blade.setPivotPoint(new Vector3(0, -L * 0.5, 0));
+      blade.position.y = L * 0.5;
+      blade.rotation.x = lean + ((i * 37) % 5 - 2) * 0.05;
+      blade.material = material;
+      blade.convertToFlatShadedMesh();
+      blade.parent = at;
+      added.push(blade);
+    }
+  };
+  // the top fringe, darker, standing up past the head (the blades over the shoulders the longest)
+  ring("hayBlade", B.blades, top - H * 0.08, W * B.top * 0.46, W * B.top * 0.46 * deepK, (i) => H * B.blade * (i % 2 ? B.short : 1), W * B.bladeWide, B.lean, dark);
+  // the hem over the knees, flaring out and down
+  ring("hayHem", B.hems, foot + H * 0.12, W * B.bottom * 0.47, W * B.bottom * 0.47 * deepK, (i) => H * B.hem * (i % 3 === 1 ? 0.75 : 1), W * B.bladeWide * 0.9, Math.PI - B.flare, tan);
+  // two dark straps round its middle
+  for (const share of B.straps) {
+    const y = top - tall * share;
+    const k = share;
+    const across = W * (B.top + (B.bottom - B.top) * k) * B.proud;
+    const strap = MeshBuilder.CreateCylinder("hayStrap", { height: H * B.strap, diameter: across, tessellation: 10 }, scene);
+    strap.scaling.z = deepK;
+    strap.position.y = y;
+    strap.material = mf.getCloth(HAY_STRAP);
+    strap.convertToFlatShadedMesh();
+    strap.parent = body.torso;
+    added.push(strap);
+  }
+  return added;
+}
+
 /** Dresses the halberdier (spec at HALBERD_DRESS): cream half-tabard, rolled brown sleeves, dark gauntlets, belt. */
 function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
   const added: Mesh[] = [];
