@@ -1859,7 +1859,7 @@ function flatPlate(scene: Scene, name: string, outline: number[][], thick: numbe
  * mesh grown. +y up the barrel from the fist at the origin, MUSKET.grip of the length behind it. Length MUSKET.long of the man's height; barrel MUSKET.bore
  * of the length across; fore-stock to MUSKET.fore of the barrel; butt MUSKET.butt of the length deep. Shared by every "musket" (the deadeye too).
  */
-const MUSKET = { long: 1.05, grip: 0.27, bore: 0.026, fore: 0.8, stock: 0.034, butt: 0.085, ring: 1.7 };
+const MUSKET = { long: 1.05, grip: 0.27, bore: 0.034, fore: 0.8, stock: 0.02, butt: 0.085, ring: 1.45 };
 const MUSKET_STEEL = new Color3(0.58, 0.58, 0.6);
 const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
 const BRUSH = { long: 0.34, grip: 0.16, butt: 0.05, neck: 0.085, ferrule: 0.6, collar: 0.1, tuft: 0.15, swell: 0.1 };
@@ -2466,12 +2466,13 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       }
       // The fore-stock: a wooden bar under the barrel from the hand most of the way to the muzzle
       const foreLong = front * MUSKET.fore;
-      const fore = MeshBuilder.CreateBox("musketFore", { width: bore * 1.1, height: foreLong, depth: MUSKET.stock * L }, scene);
-      fore.position.set(0, foreLong * 0.5 - lift, bore * 0.4 + MUSKET.stock * L * 0.5);
+      // narrower than the barrel and hung under it, so the grey barrel shows over the wood from every side
+      const fore = MeshBuilder.CreateBox("musketFore", { width: bore * 0.75, height: foreLong, depth: MUSKET.stock * L }, scene);
+      fore.position.set(0, foreLong * 0.5 - lift, bore * 0.45 + MUSKET.stock * L * 0.5);
       fore.material = wood;
       fore.parent = holder;
       // The butt: a slim wrist at the hand deepening to the butt plate behind it, a tapered block flattened across
-      const butt = MeshBuilder.CreateCylinder("musketButt", { height: back + 0.04 * L, diameterTop: MUSKET.stock * L * 1.2, diameterBottom: MUSKET.butt * L * 1.4, tessellation: 4 }, scene);
+      const butt = MeshBuilder.CreateCylinder("musketButt", { height: back + 0.04 * L, diameterTop: bore * 1.3, diameterBottom: MUSKET.butt * L * 1.4, tessellation: 4 }, scene);
       butt.rotation.y = Math.PI / 4;
       butt.scaling.x = 0.5;
       butt.bakeCurrentTransformIntoVertices();
