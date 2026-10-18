@@ -1880,6 +1880,14 @@ function flatPlate(scene: Scene, name: string, outline: number[][], thick: numbe
 const LANCE = { long: 1.75, grip: 0.14, thick: 0.045, taper: 0.45, pitch: 0.075, stripe: 0.55, vamp: 0.1, vampLong: 0.07, prongs: 3, prong: 0.03 };
 const LANCE_CREAM = new Color3(0.88, 0.8, 0.62);
 /*
+ * The fencer's rapier (330; renaissance.fencer.red.png, card Appearance "a Spanish cup-hilt Rapier"): a long thin matte-grey blade (RAPIER.blade, thick, taper),
+ * a deep grey octagonal cup over the fist about two fists across (cup, cupDeep, its far end cupTop of the mouth), a team rim round the mouth (rim), a cross
+ * quillon bar through the hilt (quillon), a dark grip and a round pommel (grip, pommel). In units of the prop scale.
+ */
+const RAPIER = { blade: 0.66, thick: 0.018, taper: 0.35, cup: 0.13, cupDeep: 0.055, cupTop: 0.3, rim: 0.014, quillon: 0.2, grip: 0.08, pommel: 0.035 };
+const RAPIER_STEEL = new Color3(0.56, 0.57, 0.6);
+const RAPIER_HILT = new Color3(0.45, 0.46, 0.5);
+/*
  * A matchlock musket (328; renaissance.musketeer.red.png, card Appearance "a matchlock musket": longer than the man who carries it, a light-grey octagonal
  * barrel with a wider ring at the muzzle and a band round it, on an orange-brown wooden stock that runs under the barrel most of its length and ends behind
  * the hand in a deep butt; a dark lock and match lever at the hand). Not a rod: the old gun was a short dark stick half the man's height, the flintlock's
@@ -2070,14 +2078,40 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return blade;
     }
     case "rapier": {
-      const blade = MeshBuilder.CreateCylinder("rapier", { height: 0.6 * s, diameter: 0.015 * s, tessellation: 6 }, scene);
-      blade.material = mat(scene, new Color3(0.85, 0.85, 0.9));
-      const guard = MeshBuilder.CreateTorus("rguard", { diameter: 0.08 * s, thickness: 0.01 * s, tessellation: 12 }, scene);
-      guard.position.y = -0.2 * s;
-      guard.rotation.x = Math.PI / 2;
-      guard.parent = blade;
-      guard.material = mat(scene, accent);
-      blade.position.y = 0.15 * s;
+      // The Spanish cup-hilt rapier, built to the spec at RAPIER: a long thin matte-grey blade up +y from the guard, a deep octagonal grey cup over the
+      // fist with its mouth toward the hand and a team rim round the mouth, a cross quillon bar through it, a dark grip and a round pommel under it
+      const B = RAPIER.blade * s;
+      const blade = MeshBuilder.CreateCylinder("rapier", { height: B, diameterBottom: RAPIER.thick * s, diameterTop: RAPIER.thick * RAPIER.taper * s, tessellation: 6 }, scene);
+      blade.material = mat(scene, RAPIER_STEEL, 0.1, "metal");
+      blade.convertToFlatShadedMesh();
+      const steel = mat(scene, RAPIER_HILT, 0.08, "metal");
+      const base = -B / 2;
+      const cupD = RAPIER.cup * s, cupH = RAPIER.cupDeep * s;
+      const cup = MeshBuilder.CreateCylinder("rguard", { height: cupH, diameterBottom: cupD, diameterTop: cupD * RAPIER.cupTop, tessellation: 8 }, scene);
+      cup.position.y = base - cupH * 0.5;
+      cup.material = steel;
+      cup.convertToFlatShadedMesh();
+      cup.parent = blade;
+      const rim = MeshBuilder.CreateTorus("rguardRim", { diameter: cupD, thickness: RAPIER.rim * s, tessellation: 8 }, scene);
+      rim.position.y = base - cupH;
+      rim.rotation.y = Math.PI / 8;
+      rim.material = mat(scene, teamColor ?? accent, 0.12, "cloth");
+      rim.parent = blade;
+      const quillon = MeshBuilder.CreateCylinder("rquillon", { height: RAPIER.quillon * s, diameter: RAPIER.thick * 0.9 * s, tessellation: 6 }, scene);
+      quillon.rotation.z = Math.PI / 2;
+      quillon.position.y = base - cupH * 1.15;
+      quillon.material = steel;
+      quillon.parent = blade;
+      const grip = MeshBuilder.CreateCylinder("rgrip", { height: RAPIER.grip * s, diameter: RAPIER.thick * 1.4 * s, tessellation: 6 }, scene);
+      grip.position.y = base - cupH - RAPIER.grip * s * 0.5;
+      grip.material = mat(scene, new Color3(0.2, 0.14, 0.1), 0.1);
+      grip.parent = blade;
+      const pommel = MeshBuilder.CreateSphere("rpommel", { diameter: RAPIER.pommel * s, segments: 3 }, scene);
+      pommel.position.y = base - cupH - RAPIER.grip * s;
+      pommel.material = steel;
+      pommel.parent = blade;
+      // the cup's mouth sits where the old ring guard did on the fist
+      blade.position.y = B / 2 + cupH - 0.05 * s;
       return blade;
     }
     case "katana": {
