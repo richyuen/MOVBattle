@@ -65,7 +65,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 }
 
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
-const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
+// [S] ...and the potionseller's bottle (341; card Weapons: Potion Throw, a lobbed potion): the glass ball in her right hand is what flies, on the bomb's high lob
+const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 // Archers whose arrows carry a balloon: the man struck floats up under balloons (renaissance.balloon_archer; RuntimeUnit.floatOnBalloons)
 const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
 /**
