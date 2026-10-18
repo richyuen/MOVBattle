@@ -1225,12 +1225,14 @@ function makeFactionGalleryScenario(
     spacingX?: number;
     spacingZ?: number;
     cameraOverride?: GalleryCameraOverride;
+    // extra metres of room beside the rank's last unit (a machine wider than a man's slot)
+    lastApart?: number;
   } = {},
 ): ScenarioSpec {
   const unitIds = getUnitsByFaction(faction).map((unit) => unit.id);
   // Eye level from the front, one rank wide where the faction fits, so the group fills the frame under a sky third
   const singleRank = unitIds.length <= 9;
-  return makeGalleryScenario(name, description, unitIds, {
+  const spec = makeGalleryScenario(name, description, unitIds, {
     columns: singleRank ? unitIds.length : undefined,
     spacingZ: 1.8, // shoulder room only: at the gallery default of 2.4 a seven-unit rank filled the width before the men filled a tenth of the height
     cameraOverride: {
@@ -1242,6 +1244,9 @@ function makeFactionGalleryScenario(
     ...options,
     focus: `${description} Every ${FACTION_NAMES[faction]} unit should be distinguishable at lineup distance without falling back to a generic silhouette read.`,
   });
+  const last = spec.units[unitIds.length - 1];
+  if (options.lastApart && last) last.position = { ...last.position, z: last.position.z + options.lastApart };
+  return spec;
 }
 
 function makePairGalleryScenario(
@@ -1312,7 +1317,8 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     "Close-read faction lineup for Renaissance.",
     // The da Vinci tank is wider than a man's shoulder room: at 1.8 m it stood behind the jouster's horse, cut at the frame's edge; the rank is opened out
     // and the camera drawn back so the whole tank stands beside the men
-    { spacingZ: 2.7, cameraOverride: { alpha: -0.2, beta: Math.PI / 2.15, radius: 15, target: { x: 0, y: 1.5, z: 0 } } },
+    // At TABS scale (337, DAVINCI_SCALE 1.9) the tank is some 6 m across its cannons: it stands lastApart further out and the camera takes in both
+    { spacingZ: 2.7, lastApart: 2.4, cameraOverride: { alpha: -0.2, beta: Math.PI / 2.15, radius: 18, target: { x: 0, y: 1.7, z: 1.4 } } },
   ),
   gallery_faction_pirate: makeFactionGalleryScenario(
     "gallery_faction_pirate",
