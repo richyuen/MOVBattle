@@ -26,6 +26,11 @@ for 25 iterations.
 318 | spear raised overhead (b194791, reverted 62d30bf) | tribal.spear_thrower.b | rejected
 318 | forward toss (9a15b0d) | tribal.stoner.c | approved
 318 | leaves along the spike line (000f0de) | tribal.bone_mage.c | approved
+319 | spear stood up out of the fist (c8f0e70) | tribal.spear_thrower.b | approved
+319 | lashing bands (c7ea0cc + 8c16992) | tribal.chieftain.b | approved
+319 | faceted boulder cradled two-handed (aa85160) | tribal.stoner.b | approved
+319 | spike loft (33e7601) | tribal.bone_mage.c | approved
+319 | skull helmet (e53ba02) | tribal.protector.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -38,9 +43,10 @@ propBuilder.ts:stone_axe AXE_LONG (of the man's height) | 0.4 | 316 | approved |
 propBuilder.ts:stone_axe AXE_GRIP | 0.25 | 316 | approved | (new)
 propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.78 | 318 | approved | 0.55 (317 [P]), 0.42 (316); the 318 [S] rebuilt the chunk and its lashing
 propBuilder.ts:stone_axe AXE_HEAD_SQUASH (height, thickness of the length) | 0.62, 0.5 | 318 | approved | 0.8, 0.6 (317), 0.62, 0.4 (316, inline)
-propBuilder.ts:stone_axe AXE_LASH (band thickness of L, tilt off the handle) | 0.03, 0.5 | 318 | approved | (new; tori the critic wants replaced by flat strips, blocker 3)
+propBuilder.ts:stone_axe AXE_LASH (strip wide, thick, proud, tilt, at, bed) | 0.055, 0.06, 0.012, 0.5, 0.1, 0.35 | 319 | approved | tori: thick 0.03, tilt 0.5 (318); the 319 [S] replaced the tori with bedded strips and damped the chunk's thin-axis jitter to bed
 propBuilder.ts:slab SLAB_MOSS (top, bottom chunk size, proud of the face) | 0.13, 0.08, 0.03 | 318 | approved | (new)
-proceduralAnimation.ts:throw JAVELIN_COCK (raise, out, elbow) | (reverted) | 318 | rejected | -2.8, 0.12, -0.1 (318; the javelin's +y runs toward the elbow, so a straight arm up hung it down the back)
+proceduralAnimation.ts:throw JAVELIN_COCK (raise, out, elbow) | -2.8, 0.12, -0.1 | 319 | approved | reverted (318: the same arm without the shaft turn hung the javelin down the back)
+proceduralAnimation.ts:throw JAVELIN_UNTURN (share of the whip where the stood shaft starts turning back) | 0.2 | 319 | approved | (new; square at THROW_LET_GO 0.5)
 propBuilder.ts:slab SLAB_WIDE | 0.34 | 316 | approved | 0.25
 propBuilder.ts:slab SLAB_TALL | 0.71 | 316 | approved | (unchanged by the 316 rebuild)
 propBuilder.ts:slab SLAB_EYE (opening across) | 0.12 | 316 | approved | (new)
@@ -57,3 +63,7 @@ visualEffects.ts:boneSpikes BONE_SPIKE_NEAR..FAR (m) | 0.45, 1.35 | 317 | approv
 visualEffects.ts:boneSpikes BONE_SPIKE_GIRTH (base, grow, m) | 0.32, 0.22 | 318 | approved | 0.14, 0.1 (317, inline)
 projectileSystem.ts:LAUNCH.stone speed, gravity (held only) | 18, 9.8 | 318 | approved | (new; the fixed lob flew at 10 with arc 0.4 m per metre, and still does for a catapult)
 simulationSystem.ts:LEAF_ROW (lift, at, arc per metre) | 0.6, 0.7, 0.03 | 318 | approved | (new; the leaves left the staff head with originLift 0, arc 0.12)
+projectileSystem.ts:SPIKE_LOFT (up, along m/s) | 10, 2.5 | 319 | approved | (new; before it the caught man had only applyDamage's capped 0.95 lift)
+propBuilder.ts:stone BOULDER_WIDE, BOULDER_JITTER, BOULDER_COLOR | 0.3, 0.2, (0.3, 0.27, 0.24) | 319 | approved | 0.26, smooth 80-face ball, (0.34, 0.31, 0.28) (pre-loop)
+proceduralAnimation.ts:boulder BOULDER_CARRY (raise, inward, elbow), BOULDER_HOLD | -0.75, 0.2, -0.6, 1.0 | 319 | approved | -0.6, 0.42, -0.75, no hold solve (pre-loop)
+propBuilder.ts:bone_mask SKULL_FACETED (heads, tall, under, jitter, socket, snout) | 1.45, 0.85, 0.35, 0.09, 0.3, 0.55 | 319 | approved | (new; the old cap: SKULL_HEADS 1.25 smooth dome, SKULL_SOCKET 0.26, SKULL_SNOUT 0.45, no emissive)
