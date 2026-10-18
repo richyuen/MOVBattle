@@ -654,7 +654,7 @@ export function dressBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * AFRO.deep head depths deep, its middle AFRO.up head heights above the head's middle and set back AFRO.back head depths so its front stays behind the
  * face, jittered AFRO.jitter so it reads tufted; brown self-lit so it reads brown and not black.
  */
-const AFRO = { wide: 1.6, tall: 1.1, deep: 1.5, up: 0.42, back: 0.3, jitter: 0.1 };
+const AFRO = { wide: 2.0, tall: 1.1, deep: 1.5, up: 0.32, back: 0.18, jitter: 0.1 };
 export function dressAfro(scene: Scene, body: ArticulatedBody): Mesh[] {
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const puff = MeshBuilder.CreateIcoSphere(`${body.headMesh.name}_afro`, { radius: 1, subdivisions: 2, flat: true }, scene);
