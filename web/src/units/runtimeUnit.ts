@@ -32,10 +32,10 @@ const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 
  * [S] gilded (351; medieval.healer card Appearance: "a golden beam connects to the unit the healer is curing, turning them gold for a moment"). While a
  * healer's beam is on him (gild) his skin is GILD.dye of the way to GILD.gold and lit .glow of it, his clothes lit .6 of that; no roll, no slow.
  */
-const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45 };
+const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45, coat: new Color3(0.95, 0.62, 0.08), coatGlow: 0.22 };
 /*
  * [S] full gild (352; card Appearance: "turning them gold for a moment"). While gilded every opaque mesh of him (skin, clothes, armour, helm, the props in
- * his hands) wears one shared gold material, GILD.gold lit .glow of it, the mesh's own material kept and put back when the beam lets go. Prop materials
+ * his hands) wears one shared gold material, GILD.coat lit .coatGlow of it (saturated: GILD.gold lit .glow washed out to cream), the mesh's own material kept and put back when the beam lets go. Prop materials
  * come from the shared cache, so they are swapped per mesh, never tinted in place.
  */
 import type { ImpactDelta } from "../combat/impactPresentation";
@@ -1792,7 +1792,7 @@ export class RuntimeUnit {
   /** The full gild (GILD): every opaque mesh of him onto the shared gold material while `on`, each back to its own when it goes off. */
   private _gildMeshes(on: boolean): void {
     if (on && !this._gildWorn) {
-      const gold = getMaterialFactory().get("stone", GILD.gold, { emissiveIntensity: GILD.glow });
+      const gold = getMaterialFactory().get("stone", GILD.coat, { emissiveIntensity: GILD.coatGlow });
       this._gildWorn = new Map();
       for (const mesh of this.body.root.getChildMeshes(false)) {
         const worn = mesh.material;
