@@ -51,9 +51,9 @@ const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: ne
  * [S] banjo music notes (354; medieval.bard.blue.png, card Appearance "Notes will appear above the Bard's head"): orange eighth notes over his head while he
  * plays his Banjo Walk. Each note is a glyph of flat self-lit pieces turned to face the camera: an oval head .head m across, tipped .tilt rad, a stem .stem m
  * up from its right side, a flag off the stem top swept down .flag; .size scales the whole. It rises .rise m/s, sways .sway m either side, and fades over the
- * last .fade of its .life s.
+ * last .fade of its .life s; it glows .glow of its colour (more and the glow layer turns it yellow).
  */
-const MUSIC_NOTE = { size: 1, head: 0.13, tilt: 0.45, stem: 0.26, flag: 0.12, rise: 0.45, sway: 0.08, life: 1.6, fade: 0.35, color: new Color3(1, 0.55, 0.08) };
+const MUSIC_NOTE = { size: 1, head: 0.13, tilt: 0.45, stem: 0.26, flag: 0.12, rise: 0.45, sway: 0.08, life: 1.6, fade: 0.35, color: new Color3(0.95, 0.4, 0.04), glow: 0.2 };
 const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
@@ -170,7 +170,7 @@ export class VisualEffects {
     glyph.parent = root;
     glyph.scaling.setAll(N.size);
     root.billboardMode = TransformNode.BILLBOARDMODE_ALL;
-    const mat = this._fxMat(N.color, N.color.scale(0.6));
+    const mat = this._fxMat(N.color, N.color.scale(N.glow));
     const head = MeshBuilder.CreateDisc("musicNoteHead", { radius: N.head / 2, tessellation: 10, sideOrientation: Mesh.DOUBLESIDE }, this._scene);
     head.scaling.y = 0.72;
     head.rotation.z = N.tilt;

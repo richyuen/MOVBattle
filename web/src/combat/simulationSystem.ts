@@ -243,7 +243,7 @@ const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
 const BANJO_WALK = { lure: 2.2, clear: 1.5, turn: 0.85, step: 1.2 };
 // He plays as he goes (354, medieval.bard.blue.png): a music note (visualEffects MUSIC_NOTE) off his head every .every s while the walk runs, .first at its start,
 // set .over m over his crown and .aside m to alternate sides
-const BANJO_NOTES = { every: 0.45, first: 2, over: 0.15, aside: 0.18 };
+const BANJO_NOTES = { every: 0.45, first: 2, over: 0.32, aside: 0.18, stack: 0.32 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
 const LANCE_AIM_REACH = 5;
@@ -981,7 +981,7 @@ export class SimulationSystem {
           turn = this._banjoTurns++ % 2 === 0 ? 1 : -1;
           this._banjoWalks.set(unit, turn);
           this._logAbility(unit, "banjo_walk", now, enemy.position);
-          for (let i = 0; i < BANJO_NOTES.first; i++) this._playBanjoNote(unit, i * 0.25);
+          for (let i = 0; i < BANJO_NOTES.first; i++) this._playBanjoNote(unit, i * BANJO_NOTES.stack);
           this._banjoNotes.set(unit, now + BANJO_NOTES.every);
         }
         if (now >= (this._banjoNotes.get(unit) ?? now)) {
