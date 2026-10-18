@@ -180,6 +180,14 @@ const STRIKE_LAG = 0.45;
  * closing on his enemy, once he is between HALFLING_JUMP.from and .reach metres past his striking distance, springs off the ground at .rise m/s and
  * comes down .short metres short of the man's middle, onto him (RuntimeUnit.leap), at most once every .cooldown seconds; harmless, logged "leap".
  */
+// The Healer's beam and gilding last this share of his heal cooldown, so one beam meets the next (HEAL_BEAM in visualEffects, GILD in runtimeUnit)
+const HEALER_BEAM_SHARE = 0.95;
+/** Refresh a node's world matrix from the root down: world matrices only refresh on render, and a capture replays a frame in one call. */
+function worldMatrixChain(node: TransformNode): void {
+  const chain: TransformNode[] = [];
+  for (let n: TransformNode | null = node; n; n = n.parent as TransformNode | null) chain.unshift(n);
+  for (const n of chain) n.computeWorldMatrix(true);
+}
 const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 };
 /**
  * [S] Halfling Grab (345; card Characteristics: he latches onto the man and is dragged along, even after the man dies; farmer.halfling.png): the halfling's
@@ -1061,6 +1069,30 @@ export class SimulationSystem {
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(ally.position);
     }
     ally.heal(healAmount);
+    // The Healer's Priest Staff: a gold beam from the staff's orb to the man, who goes gold while it holds (HEAL_BEAM, GILD), until near the next heal
+    if (supporter.definition.id === "medieval.healer") {
+      const beamFor = attackProfile.cooldown * cooldownMultiplier * HEALER_BEAM_SHARE;
+      ally.gild(beamFor);
+      if (this.visualEffects) {
+        const orb = supporter.body.root.getDescendants(false, (n) => n.name === "orb")[0] as TransformNode | undefined;
+        this.visualEffects.spawnHealBeam(
+          () => {
+            if (supporter.isDead) return null;
+            if (!orb) return supporter.position.add(new Vector3(0, 1.4, 0));
+            worldMatrixChain(orb);
+            return orb.getAbsolutePosition().clone();
+          },
+          () => {
+            if (ally.isDead) return null;
+            const torso = (ally.body as { torso?: TransformNode }).torso;
+            if (!torso) return ally.position.add(new Vector3(0, 1, 0));
+            worldMatrixChain(torso);
+            return torso.getAbsolutePosition().clone();
+          },
+          beamFor,
+        );
+      }
+    }
     this._logAbility(supporter, "heal", now, ally.position);
   }
 

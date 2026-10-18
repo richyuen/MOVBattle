@@ -22,6 +22,11 @@ const BALLOON_FLOAT = { seconds: 3, rise: 1.4, top: 3.2, per: 3, most: 9, size: 
  * trunk rolls .roll rad side to side at .rate rad/s with the head lolling against it, and he goes at .slow of his pace; the simulation has him wander.
  */
 const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 0.22, rate: 4.5, slow: 0.55 };
+/*
+ * [S] gilded (351; medieval.healer card Appearance: "a golden beam connects to the unit the healer is curing, turning them gold for a moment"). While a
+ * healer's beam is on him (gild) his skin is GILD.dye of the way to GILD.gold and lit .glow of it, his clothes lit .6 of that; no roll, no slow.
+ */
+const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45 };
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
@@ -145,6 +150,9 @@ export class RuntimeUnit {
   // Drunk from a potion's splash (getDrunk, DRUNK): until when, and whether his skin is dyed green now
   private _drunkUntil = 0;
   private _drunkDyed = false;
+  // Gilded by a healer's beam (gild, GILD): until when
+  private _gildUntil = 0;
+  private _dyedWith: Color3 | null = null;
   private _skinBase: Color3 | null = null;
 
   // Spawn state for reset
@@ -902,6 +910,16 @@ export class RuntimeUnit {
     const now = RuntimeUnit.timeNowSeconds();
     this._drunkUntil = Math.max(this._drunkUntil, now + seconds);
     this.applySlow(DRUNK.slow, seconds, now);
+  }
+
+  /** Under a healer's beam (GILD): gold for `seconds`. */
+  gild(seconds: number): void {
+    if (this._isDead) return;
+    this._gildUntil = Math.max(this._gildUntil, RuntimeUnit.timeNowSeconds() + seconds);
+  }
+
+  get isGilded(): boolean {
+    return !this._isDead && RuntimeUnit.timeNowSeconds() < this._gildUntil;
   }
 
   get isDrunk(): boolean {
@@ -1697,18 +1715,27 @@ export class RuntimeUnit {
   /** The drunk look (DRUNK): skin dyed green and lit green, the trunk rolling side to side and the head lolling; undone when it wears off. */
   private _applyDrunk(now: number): boolean {
     const drunk = this.isDrunk;
+    // A healer's beam gilds him (GILD) the same way, gold and lit, without the totter; drunk wins when both hold
+    const gilded = !drunk && this.isGilded;
+    const tint = drunk ? DRUNK.green : GILD.gold;
+    const dye = drunk ? DRUNK.dye : GILD.dye;
+    const glow = drunk ? DRUNK.glow : GILD.glow;
     const skin = this.body.skinMaterial;
-    if (drunk && !this._drunkDyed) {
-      this._skinBase = skin.baseColor.clone();
-      skin.baseColor = Color3.Lerp(this._skinBase, DRUNK.green, DRUNK.dye);
+    const dyed = drunk || gilded;
+    if (dyed && (!this._drunkDyed || this._dyedWith !== tint)) {
+      if (!this._drunkDyed) this._skinBase = skin.baseColor.clone();
+      skin.baseColor = Color3.Lerp(this._skinBase ?? skin.baseColor, tint, dye);
       this._drunkDyed = true;
-    } else if (!drunk && this._drunkDyed) {
+      this._dyedWith = tint;
+    } else if (!dyed && this._drunkDyed) {
       if (this._skinBase) skin.baseColor = this._skinBase;
       this._drunkDyed = false;
+      this._dyedWith = null;
     }
-    if (!drunk) return false;
-    skin.emissiveColor = this._skinGlow.add(DRUNK.green.scale(DRUNK.glow));
-    this.body.bodyMaterial.emissiveColor = DRUNK.green.scale(DRUNK.glow * 0.6);
+    if (!dyed) return false;
+    skin.emissiveColor = this._skinGlow.add(tint.scale(glow));
+    this.body.bodyMaterial.emissiveColor = tint.scale(glow * 0.6);
+    if (gilded) return true;
     const b = this.body;
     b.torso.rotation.z += Math.sin(now * DRUNK.rate) * DRUNK.roll;
     b.neck.rotation.z -= Math.sin(now * DRUNK.rate + 0.8) * DRUNK.roll * 1.4;
@@ -1757,8 +1784,10 @@ export class RuntimeUnit {
   resetToSpawn(): void {
     this._isDead = false;
     this._drunkUntil = 0;
+    this._gildUntil = 0;
     if (this._drunkDyed && this._skinBase) this.body.skinMaterial.baseColor = this._skinBase;
     this._drunkDyed = false;
+    this._dyedWith = null;
     this._maxHealth = this.definition.maxHealth;
     this._currentHealth = this._maxHealth;
     this._moveTarget = null;

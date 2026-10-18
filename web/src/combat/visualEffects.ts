@@ -41,6 +41,12 @@ const DUST_SPRITES = 10;
 const DUST_LIFE = 1.8;
 const SMOKE_SPRITES = 6;
 const SMOKE_LIFE = 2.4;
+/*
+ * [S] heal beam (351; medieval.healer.jpg, faction medieval.jpg: a thick glowing gold beam joins the staff's orb to the man being healed). A gold core
+ * HEAL_BEAM.core m thick inside a see-through halo .halo m thick at .haloAlpha, both self-lit (so the glow layer haloes them), re-aimed every frame from the orb to his
+ * chest; it fades out over the last .fade s of its life.
+ */
+const HEAL_BEAM = { core: 0.07, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
 const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
@@ -102,6 +108,51 @@ export class VisualEffects {
         this._effects.splice(i, 1);
       }
     }
+  }
+
+  /** A healer's gold beam (HEAL_BEAM) from `from()` to `to()`, both read every frame, for `seconds`. */
+  spawnHealBeam(from: () => Vector3 | null, to: () => Vector3 | null, seconds: number): void {
+    const root = new TransformNode("healBeam", this._scene);
+    const core = MeshBuilder.CreateCylinder("healBeamCore", { height: 1, diameter: HEAL_BEAM.core, tessellation: 8 }, this._scene);
+    const halo = MeshBuilder.CreateCylinder("healBeamHalo", { height: 1, diameter: HEAL_BEAM.halo, tessellation: 10 }, this._scene);
+    const coreMat = this._fxMat(HEAL_BEAM.gold, HEAL_BEAM.gold);
+    const haloMat = this._fxMat(HEAL_BEAM.glow, HEAL_BEAM.glow, HEAL_BEAM.haloAlpha);
+    core.material = coreMat;
+    halo.material = haloMat;
+    core.parent = root;
+    halo.parent = root;
+    for (const m of [core, halo]) m.isPickable = false;
+    root.rotationQuaternion = new Quaternion();
+    const aim = (): void => {
+      const a = from();
+      const b = to();
+      if (!a || !b) { root.setEnabled(false); return; }
+      const d = b.subtract(a);
+      const len = d.length();
+      if (len < 0.05) { root.setEnabled(false); return; }
+      root.setEnabled(true);
+      root.position.copyFrom(a.add(b).scale(0.5));
+      root.scaling.set(1, len, 1);
+      // +y of the cylinders onto the from -> to line
+      const up = Vector3.Up();
+      const axis = Vector3.Cross(up, d.normalize());
+      const angle = Math.acos(Math.max(-1, Math.min(1, Vector3.Dot(up, d))));
+      if (axis.lengthSquared() < 1e-8) root.rotationQuaternion!.copyFrom(angle > 1 ? Quaternion.RotationAxis(Vector3.Right(), Math.PI) : Quaternion.Identity());
+      else Quaternion.RotationAxisToRef(axis.normalize(), angle, root.rotationQuaternion!);
+    };
+    aim();
+    this._effects.push({
+      root,
+      remaining: seconds,
+      update: (_dt, remaining) => {
+        aim();
+        const k = Math.max(0, Math.min(1, remaining / HEAL_BEAM.fade));
+        coreMat.alpha = k;
+        if (k < 1) coreMat.transparencyMode = 2;
+        haloMat.alpha = HEAL_BEAM.haloAlpha * k;
+      },
+      dispose: () => { coreMat.dispose(); haloMat.dispose(); },
+    });
   }
 
   // ══════════════════ LIGHTNING ══════════════════
