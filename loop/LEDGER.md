@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-322 | loincloth (076f7fd) | tribal.spear_thrower.a | approved
-322 | bone necklace (55b683b) | tribal.stoner.a | approved
-322 | bone necklace and bracelets (a79b80b) | tribal.bone_mage.a | approved
-322 | skull pauldrons (dfa7bbc) | tribal.chieftain.a | approved
-322 | hair and beard (940436d) | tribal.clubber.a | approved
 323 | loincloth (914ddb9) | tribal.clubber.a | approved
 323 | fang necklace (eae473f) | tribal.spear_thrower.a | approved
 323 | chestnut beard (a743b12) | tribal.chieftain.a | approved
@@ -52,32 +47,27 @@ for 25 iterations.
 331 | palette out and face-up (413fb65) | renaissance.painter.b | approved
 331 | shouldered aim (0b9f1b9 +2) | renaissance.musketeer.c | approved
 331 | point-first rapier (d2b3a7b) | renaissance.fencer.c | approved
+332 | musket bullet fling (ac25108) | renaissance.musketeer.c | approved
+332 | paint splotches (f7538a3) | renaissance.painter.c | approved
+332 | lance on target (062a748) | renaissance.jouster.c | approved
+332 | long dark hair (cfb3c57) | renaissance.painter.a | approved
+332 | balloon float (c99a50c +1) | renaissance.balloon_archer.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
 
 ## Rows
-propBuilder.ts:club CLUB_LONG (of the man's height) | 0.6 | 316 | approved | -
-propBuilder.ts:club CLUB_GRIP (share below the fist) | 0.2 | 316 | approved | -
-propBuilder.ts:club CLUB_HEAD (head width, of CLUB_LONG) | 0.22 | 316 | approved | -
-propBuilder.ts:stone_axe AXE_LONG (of the man's height) | 0.4 | 316 | approved | -
-propBuilder.ts:stone_axe AXE_GRIP | 0.25 | 316 | approved | -
+propBuilder.ts:club CLUB_LONG (of height), CLUB_GRIP, CLUB_HEAD | 0.6, 0.2, 0.22 | 316 | approved | -
+propBuilder.ts:stone_axe AXE_LONG (of height), AXE_GRIP | 0.4, 0.25 | 316 | approved | -
 propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.78 | 318 | approved | -
 propBuilder.ts:stone_axe AXE_HEAD_SQUASH (height, thickness of the length) | 0.62, 0.5 | 318 | approved | -
 propBuilder.ts:stone_axe AXE_LASH (strip wide, thick, proud, tilt, at, bed) | 0.055, 0.06, 0.012, 0.5, 0.1, 0.35 | 319 | approved | -
 propBuilder.ts:slab SLAB_MOSS (top, bottom chunk size, proud of the face) | 0.13, 0.08, 0.03 | 318 | approved | -
 proceduralAnimation.ts:throw JAVELIN_COCK (raise, out, elbow) | -2.8, 0.12, -0.1 | 319 | approved | -
 proceduralAnimation.ts:throw JAVELIN_UNTURN (share of the whip where the stood shaft starts turning back) | 0.2 | 319 | approved | -
-propBuilder.ts:slab SLAB_WIDE | 0.34 | 316 | approved | 0.25
-propBuilder.ts:slab SLAB_TALL | 0.71 | 316 | approved | -
-propBuilder.ts:slab SLAB_EYE (opening across) | 0.12 | 316 | approved | -
-propBuilder.ts:slab SLAB_EYE_UP (of the height above the middle) | 0.22 | 316 | approved | -
-propBuilder.ts:bone_staff BONE_STAFF_LONG (prop units) | 0.62 | 316 | approved | -
-propBuilder.ts:bone_staff BONE_STAFF_GRIP | 0.4 | 316 | approved | -
-propBuilder.ts:bone_staff BONE_STAFF_SKULL | 0.1 | 316 | approved | -
-projectileSystem.ts:LAUNCH.spear speed | 20 | 316 | approved | -
-projectileSystem.ts:LAUNCH.spear gravity | 9.8 | 316 | approved | -
-projectileSystem.ts:LAUNCH.spear throw (staggerFromBlow force) | 220 | 317 | approved | -
+propBuilder.ts:slab SLAB_WIDE, SLAB_TALL, SLAB_EYE, SLAB_EYE_UP | 0.34, 0.71, 0.12, 0.22 | 316 | approved | wide 0.25
+propBuilder.ts:bone_staff BONE_STAFF_LONG, _GRIP, _SKULL | 0.62, 0.4, 0.1 | 316 | approved | -
+projectileSystem.ts:LAUNCH.spear (speed, gravity, throw force) | 20, 9.8, 220 | 317 | approved | -
 proceduralAnimation.ts:club OFFHAND_GRIP_UP (of the club's length) | 0.11 | 317 | approved | -
 proceduralAnimation.ts:bone_staff BONE_HOLD (raise, out, elbow) | -0.2, 0.18, -0.5 | 317 | approved | -
 visualEffects.ts:boneSpikes BONE_SPIKE_NEAR..FAR (m) | 0.45, 1.35 | 317 | approved | -
@@ -128,10 +118,15 @@ proceduralAnimation.ts:chop CHOP (raised, landed, armUp, elbowUp, armDown, elbow
 proceduralAnimation.ts:couch COUCH (raise, elbow, dip, across, drive, pitch) | -.35, -1.35, .08, .12, .5, .2 | 330 | approved | -
 propBuilder.ts:rapier RAPIER (blade, thick, taper, cup, cupDeep, cupTop, rim, quillon, grip, pommel) | .66, .018, .35, .13, .055, .3, .014, .2, .08, .035 | 330 | approved | -
 runtimeUnit.ts:drum DRUM_SPIN (rate, spinUp, spinDown, linger) | 3.5, 12, 1.5, 1.0 | 330 | approved | -
-vehicleBuilder.ts:DAVINCI_ROOF (planks, eaveR, topR, capEaveR, drumR) | 16, 1.25, .42, .6, 1.0 | 331 | approved | -
-vehicleBuilder.ts:DAVINCI_CANNON (count, out, bore, ringWide) | 16, 1.62, .2, 1.3 | 331 | approved | -
+vehicleBuilder.ts:DAVINCI_ROOF (planks, eaveR, topR, capEaveR, drumR) | 16, 1.25, .42, .6, 1.0 | 332 | rejected | 332 [P] x1.4 radii rejected (reversal, flat)
+vehicleBuilder.ts:DAVINCI_CANNON (count, out, bore, ringWide) | 16, 1.62, .2, 1.3 | 332 | rejected | 332 [P] out 2.27 rejected
 proceduralAnimation.ts:PALETTE_OUT (side, fwd, drop, tip) | .24, .1, .07, .35 | 331 | approved | -
 proceduralAnimation.ts:MUSKET_AIM (ahead, inward, drop, kick) | .17, .03, .03, .25 | 331 | approved | -
 proceduralAnimation.ts:RAPIER_POINT guard | 0.3 | 331 | approved | -
+simulationSystem.ts:GUN_FLING musket (speed, lift; deadeye shares) | 4.5, 5.5 | 332 | approved | -
+visualEffects.ts:PAINT_SPLOTCH (count, size, speed, spread, up, last) | 5, .09, 3.4, 1.6, 2.2, 1.0 | 332 | approved | -
+proceduralAnimation.ts:LANCE_AIM (hold, rate, maxDip); sim LANCE_AIM_REACH, LANCE_CHEST | .6, 4, .5; 5, .62 | 332 | approved | -
+tribalDress.ts:hair PAINTER_HAIR (long_dark, no fringe) | (.17, .11, .08) | 332 | approved | -
+runtimeUnit.ts:BALLOON_FLOAT (seconds, rise, top, per, most, size, string, swell) | 3, 1.4, 3.2, 3, 9, .42, .55, .12 | 332 | approved | -
 rosterManifest.ts:renaissance cost/hp/dmg/cd (painter, fencer, archer, musketeer) | 50/.94/.17/.35, 150/.46/.67/-, 200/.56/.36/1.36, 250/.54/-/3.33 | 327 | stats | 80, 160, 180, 220
 rosterManifest.ts:renaissance cost/hp/dmg/cd (halberd, jouster, da_vinci_tank) | 400/1.19/.58/.77, 1000/.47/-/-, 4000/3.65/.53/1.59 | 327 | stats | 200, 500, 1800 (cd .86)

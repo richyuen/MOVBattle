@@ -1,10 +1,10 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 331   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 7/139   Parked: 0
+Iteration: 332   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 7/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
-renaissance: painter -+-+ o | fencer -+-+ o | balloon_archer -+-+ o | musketeer -+-+ o | halberd -+-+ o | jouster ---+ o | da_vinci_tank -+++ o
+renaissance: painter -+++ o | fencer -+-+ o | balloon_archer -+-+ o | musketeer -+++ o | halberd -+-+ o | jouster ---+ o | da_vinci_tank -+++ o
 farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,16 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-331 (BASE 2729fab): [S] da_vinci_tank a plank roof + drum e4c2a2f approved | [S] da_vinci_tank b 16 barrels da39ed0 approved | [S] painter b palette out face-up 413fb65 approved | [S] musketeer c shouldered aim 0b9f1b9 + 4992778 + 12c8bc1 approved | [S] fencer c point-first rapier d2b3a7b approved. 5/5, no [P] (halberd CHOP [P] skipped: its suggested landed 1.6 lifts the head off the man).
-330 (BASE 0ef9201): 6/6 approved (fencer lunge + cup hilt, halberd chop, jouster couch, archer longbow [P], da vinci spin).
+332 (BASE 49f6b1a): [S] musketeer c bullet fling ac25108 approved | [S] painter c paint splotches f7538a3 approved | [S] jouster c lance on target 062a748 approved | [S] painter a long dark hair cfb3c57 approved | [S] balloon_archer c balloon float c99a50c + 08c4efd approved | [P] da_vinci_tank a scale caea7ba rejected (reverted 9e4f452). Evidence 71a3a47 + c1db599 (float ability shots). Fencer c legs skipped: override not found (rapier skips _aimBlow); musketeer a moustache swapped out (idle sees his back).
+331 (BASE 2729fab): 5/5 approved (da vinci roof + barrels, painter palette out, musketeer shouldered aim, fencer point-first rapier).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] renaissance.da_vinci_tank (e4c2a2f) VERDICT: APPROVE CRITERION: renaissance.da_vinci_tank.a FAIL (previous: FAIL) BLOCKERS: struck: 1, 2, 3. Remaining: 4.
-- GAP: [S] renaissance.da_vinci_tank (da39ed0) VERDICT: APPROVE CRITERION: renaissance.da_vinci_tank.b PASS (previous: FAIL) BLOCKERS: struck: 1.
-- GAP: [S] renaissance.painter (413fb65) VERDICT: APPROVE CRITERION: renaissance.painter.b PASS (previous: FAIL) BLOCKERS: struck: 3.
-- GAP: [S] renaissance.musketeer (0b9f1b9 + 4992778 + 12c8bc1) VERDICT: APPROVE CRITERION: renaissance.musketeer.c FAIL (previous: FAIL) BLOCKERS: struck: 1 (and b.2: b PASS). Remaining: 2.
-- GAP: [S] renaissance.fencer (d2b3a7b) VERDICT: APPROVE CRITERION: renaissance.fencer.c FAIL (previous: FAIL) BLOCKERS: struck: 2, 3. Remaining: 4.
-- REGRESSIONS: none. d PASS 7/7 (stats 331).
+- GAP: [S] renaissance.musketeer (ac25108) VERDICT: APPROVE CRITERION: renaissance.musketeer.c PASS (previous: FAIL) BLOCKERS: struck: 2 (list now empty)
+- GAP: [S] renaissance.painter (f7538a3) VERDICT: APPROVE CRITERION: renaissance.painter.c PASS (previous: FAIL) BLOCKERS: struck: 1 (list now empty)
+- GAP: [S] renaissance.jouster (062a748) VERDICT: APPROVE CRITERION: renaissance.jouster.c FAIL (previous: FAIL) BLOCKERS: struck: 2; added: 3 (lance dips ~30 deg out of the caparison)
+- GAP: [S] renaissance.painter (cfb3c57) VERDICT: APPROVE CRITERION: renaissance.painter.a FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
+- GAP: [S] renaissance.balloon_archer (c99a50c + 08c4efd) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.c FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
+- GAP: [P] renaissance.da_vinci_tank (caea7ba) VERDICT: REJECT CRITERION: renaissance.da_vinci_tank.a FAIL (previous: FAIL) BLOCKERS: 4 (ledger reversal; roof flattened; lineup cuts the tank off)
+- REGRESSIONS: none. d PASS 7/7 (stats 332).
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open picks: painter c splotches, musketeer c bullet fling, fencer c lunge legs (probe what overrides _animateLunge's legs first), a-criterion hair/dress gaps; balloon_archer c balloon float, halberd a, jouster c/a still untaken. Fallout [P]s: da vinci roof scale, painter PALETTE_OUT side, halberd CHOP, jouster HEATER.
+- Open picks: balloon_archer c arrow ball, painter a jabot, musketeer a facial hair (idle sees his back: make it proud in profile), jouster c level lance (yaw-only aim, dip ~COUCH.dip) and a horse, fencer c lunge legs (override not in _aimBlow; look at lines ~1318/1371/1514 layers), halberd a body; da vinci needs a lineup evidence commit (tank cut off) before a uniform proportions.scale [P].
 - A ranged shot fires at the very start of its attack (often from the march): a pose for the release frame must already be up before the attack (see _aimMusket).
 - Props turned in the fist: stand them in the world (Matrix.FromXYZAxesToRef, local = world * handRot^T) as _poseHalberd/_pointRapier/_aimMusket do; _armTo solves either arm onto a world point.
-- 1v1 melee shots: the squire often hits back on the release frame (flinch); a committed pose needs _aimWeight and to sit after the shove layer.
-- After any --iter capture rerun stats --batch <batch> --iter N. capture needs a clean tree (move probe scripts out first). Bash heredocs with apostrophes broke once: write memory files with Write.
+- A missile's mechanic is logged under its shooter via ProjectileSystem.abilityHook; capture frame 4 follows a floating man. Probes: console.log in source + vite build + playwright with Chrome (no scene on window.game).
+- After any --iter capture rerun stats --batch <batch> --iter N. capture needs a clean tree. Write memory files with Write or a node script file (bash eats backticks in inline node -e).
