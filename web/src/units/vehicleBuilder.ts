@@ -809,6 +809,8 @@ const DAVINCI_ROOF = {
   drumColor: new Color3(0.24, 0.13, 0.1), seamColor: new Color3(0.1, 0.06, 0.05),
 };
 
+const DAVINCI_CANNON = { count: 16, out: 1.62, bore: 0.2, ring: 0.07, ringWide: 1.3, color: new Color3(0.16, 0.16, 0.18) };
+
 function buildDaVinciRoof(scene: Scene, parent: TransformNode, team: PBRMetallicRoughnessMaterial, allMeshes: Mesh[]): Mesh {
   const R = DAVINCI_ROOF;
   const seamMat = makeMat(scene, R.seamColor);
@@ -886,7 +888,6 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.55, 0.42, 0.25));
-  const metal = makeMat(scene, new Color3(0.4, 0.4, 0.45));
   // The drum (330, card Characteristics "the machine spins around, launching cannonballs from the cannons"): the hull, its cannons, their muzzles and the
   // viewport ride one node that RuntimeUnit spins about the upright while the tank fights (DRUM_SPIN); the base, the wheels and Da Vinci stay put
   const drum = new TransformNode("davinci_spin", scene);
@@ -902,18 +903,28 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   basePlate.position.y = 0.15; basePlate.parent = root; basePlate.material = makeMat(scene, DAVINCI_ROOF.drumColor); allMeshes.push(basePlate);
 
   const muzzleSequence: TransformNode[] = [];
-  // Cannons poking out from sides (8 around the perimeter)
-  for (let i = 0; i < 8; i++) {
-    const angle = i * Math.PI * 2 / 8;
-    const barrel = MeshBuilder.CreateCylinder("tbarrel", { height: 0.4, diameter: 0.08, tessellation: 8 }, scene);
-    const rx = Math.cos(angle) * 1.15;
-    const rz = Math.sin(angle) * 1.15;
-    barrel.position.set(rx, DAVINCI_ROOF.drumMid, rz);
-    // Point barrel outward radially
-    barrel.rotation.x = Math.PI / 2;
-    barrel.rotation.y = -angle + Math.PI / 2;
-    barrel.parent = drum; barrel.material = metal; allMeshes.push(barrel);
-    muzzleSequence.push(makeSocket(scene, drum, `davinci_muzzle_${i}`, new Vector3(Math.cos(angle) * 1.35, DAVINCI_ROOF.drumMid, Math.sin(angle) * 1.35)));
+  // Cannons (331, renaissance.da_vinci_tank.red.png; card "sixteen cannons"): 16 thick dark-grey octagonal barrels standing out level round the
+  // drum about half the roof's radius, each with a breech ring at the drum and a muzzle ring at its mouth; a ball leaves from every mouth in turn
+  const C = DAVINCI_CANNON;
+  const gunMetal = makeMat(scene, C.color);
+  const along = C.out - DAVINCI_ROOF.drumR;
+  for (let i = 0; i < C.count; i++) {
+    const angle = i * Math.PI * 2 / C.count;
+    const dir = new Vector3(Math.cos(angle), 0, Math.sin(angle));
+    const at = (r: number) => dir.scale(r).add(new Vector3(0, DAVINCI_ROOF.drumMid, 0));
+    const piece = (name: string, long: number, wide: number, r: number) => {
+      const m = MeshBuilder.CreateCylinder(name, { height: long, diameter: wide, tessellation: 8 }, scene);
+      m.convertToFlatShadedMesh();
+      m.position = at(r);
+      // Point it out radially (cylinder y onto z, then about the upright)
+      m.rotation.x = Math.PI / 2;
+      m.rotation.y = -angle + Math.PI / 2;
+      m.parent = drum; m.material = gunMetal; allMeshes.push(m);
+    };
+    piece("tbarrel", along, C.bore, DAVINCI_ROOF.drumR + along / 2);
+    piece("tbarrel_breech", C.ring, C.bore * C.ringWide, DAVINCI_ROOF.drumR + C.ring / 2);
+    piece("tbarrel_muzzle", C.ring, C.bore * C.ringWide, C.out - C.ring / 2);
+    muzzleSequence.push(makeSocket(scene, drum, `davinci_muzzle_${i}`, at(C.out + 0.05)));
   }
 
   // Wheels (4, peeking out from base)
@@ -934,8 +945,8 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   const vehicleSockets: VehicleSocketSet = {
     primaryMuzzle: muzzleSequence[0],
     muzzleSequence,
-    smokeSocket: makeSocket(scene, root, "davinci_smoke_socket", new Vector3(0, 0.32, 1.02)),
-    impactOrigin: makeSocket(scene, root, "davinci_impact_socket", new Vector3(0, 0.3, 0.92)),
+    smokeSocket: makeSocket(scene, root, "davinci_smoke_socket", new Vector3(0, DAVINCI_ROOF.drumMid, DAVINCI_CANNON.out + 0.05)),
+    impactOrigin: makeSocket(scene, root, "davinci_impact_socket", new Vector3(0, DAVINCI_ROOF.drumMid, DAVINCI_CANNON.out)),
   };
 
   return wrapAsBody(
