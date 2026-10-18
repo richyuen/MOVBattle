@@ -467,7 +467,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.25, bulk: 1.25 }, "halberd", "sallet", "none", "none", "#4682B4",
   ),
   "renaissance.jouster": vis(
-    { scale: 1.4, bulk: 1.3 }, "lance", "plume_helmet", "heater", "mount_horse", "#C0C0C0",
+    { scale: 1.4, bulk: 1.3 }, "lance", "none", "heater", "mount_horse", "#C0C0C0",
   ),
   "renaissance.da_vinci_tank": vis(
     { scale: 2.0, bulk: 2.2, legLength: 0.5 }, "cannon_hand", "none", "none", "tank_body", "#8B7355",

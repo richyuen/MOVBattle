@@ -528,6 +528,9 @@ export class UnitFactory {
     if (definition.id === "renaissance.fencer" && !shouldUseVehicleBody) {
       propMeshes.push(...dressFencer(this._scene, body, teamColor));
     }
+    if (definition.id === "renaissance.jouster" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressJouster(this._scene, body, teamColor));
+    }
     if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressCactus(this._scene, body, teamColor));
     }
@@ -1034,6 +1037,98 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
       pane.position.set(Math.cos(a) * girth * F.puff * 0.75, top - long * 0.5, Math.sin(a) * girth * F.puff * 0.75);
       pane.rotation.y = Math.PI / 2 - a;
     }
+  }
+  return added;
+}
+
+/*
+ * [S] plate rider (335; renaissance.jouster.blue.png / .red.png, card Appearance "Renaissance-style armor ... colored feathers depending on the team"): the
+ * rider in grey plate from the neck to the feet, not plain team cloth: a rounded breastplate, a flared fauld over the hips, domed pauldrons with a lame
+ * under each, dark gauntlets and sabatons; a close helm in place of a hat: a grey dome down to the brow, a grey bevor up to under the eyes, cheek and back
+ * plates between, so only the face round the eyes shows through the slot; a tall team plume of stacked tufts rising off its crown. Sizes are shares of the
+ * chest (W, H, D), of each arm's girth and length, and of the head's half extents (in its own frame).
+ *   steel JOUSTER_STEEL, self-lit JOUSTER_GLOW (plain metal reads navy under the blue sky light); helm JOUSTER_HELM: dome .wide of the head round it, its
+ *   rim .brow of the half-height over the middle, bevor's top .chin under it; plume .tufts tufts, the first .tuft of the head across, each .rise half-heights up.
+ */
+const JOUSTER_STEEL = new Color3(0.6, 0.62, 0.66);
+const JOUSTER_GLOW = 0.22;
+const JOUSTER_HELM = { wide: 1.2, brow: 0.5, chin: -0.28, tufts: 5, tuft: 0.95, rise: 0.42 };
+const JOUSTER_PLATE = { breast: 1.2, fauld: 0.3, flare: 1.3, pauldron: 2.1, lame: 1.6 };
+/** Dresses the jouster's rider (spec at JOUSTER_HELM, JOUSTER_PLATE): grey plate, close helm, team plume. */
+function dressJouster(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const P = JOUSTER_PLATE, J = JOUSTER_HELM;
+  const put = (m: Mesh, mat: Material, parent: TransformNode): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  // The plate is the body's own material turned grey steel, a little self-lit
+  body.bodyMaterial.baseColor = JOUSTER_STEEL;
+  body.bodyMaterial.metallic = 0;
+  body.bodyMaterial.roughness = 0.5;
+  body.bodyMaterial.emissiveColor = JOUSTER_STEEL.scale(JOUSTER_GLOW);
+  const steel = mf.get("cloth", JOUSTER_STEEL, { emissiveIntensity: JOUSTER_GLOW });
+  const dark = mf.get("cloth", JOUSTER_STEEL.scale(0.62), { emissiveIntensity: JOUSTER_GLOW });
+  for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    limb.material = steel;
+  }
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = dark;
+  }
+  for (const hand of [body.leftHand, body.rightHand]) {
+    for (const m of hand.getChildMeshes(true)) if (/_[lr]HandM$/.test(m.name)) m.material = dark;
+  }
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const waist = chest.position.y - H * 0.5;
+  // the breastplate's round over the upper chest, and the fauld flaring over the hips
+  const breast = put(MeshBuilder.CreateSphere("jousterBreast", { diameterX: W * 1.04, diameterY: H * 0.72, diameterZ: D * P.breast, segments: 5 }, scene), steel, body.torso);
+  breast.position.set(0, chest.position.y + H * 0.1, D * 0.06);
+  const fauld = put(MeshBuilder.CreateCylinder("jousterFauld", { height: H * P.fauld, diameterTop: W * 1.06, diameterBottom: W * P.flare, tessellation: 8 }, scene), steel, body.torso);
+  fauld.scaling.z = (D * 1.12) / W;
+  fauld.position.y = waist - H * P.fauld * 0.3;
+  // domed pauldrons over the shoulders, a lame under each
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const cap = put(MeshBuilder.CreateSphere("jousterPauldron", { diameterX: girth * P.pauldron, diameterY: girth * 1.3, diameterZ: girth * P.pauldron, segments: 5, slice: 0.5 }, scene), steel, arm);
+    cap.position.y = long * 0.5 - long * 0.14;
+    const lame = put(MeshBuilder.CreateCylinder("jousterLame", { height: long * 0.13, diameterTop: girth * P.lame * 0.92, diameterBottom: girth * P.lame, tessellation: 7 }, scene), steel, arm);
+    lame.position.y = long * 0.5 - long * 0.27;
+  }
+  // The close helm, in the head's own frame
+  const head = body.headMesh;
+  const he = head.getBoundingInfo().boundingBox.extendSize;
+  const hx = he.x, hy = he.y, hz = he.z;
+  const top = hy * 1.22;
+  const dome = put(MeshBuilder.CreateSphere("jousterHelm", { diameterX: hx * 2 * J.wide, diameterY: (top - hy * J.brow) * 2, diameterZ: hz * 2 * J.wide, segments: 6, slice: 0.5 }, scene), steel, head);
+  dome.position.y = hy * J.brow;
+  const low = hy * 1.18;
+  const bevor = put(MeshBuilder.CreateSphere("jousterBevor", { diameterX: hx * 2 * (J.wide - 0.04), diameterY: (low + hy * J.chin) * 2, diameterZ: hz * 2 * (J.wide + 0.06), segments: 6, slice: 0.5 }, scene), steel, head);
+  bevor.rotation.x = Math.PI;
+  bevor.position.set(0, hy * J.chin, hz * 0.06);
+  // cheek plates and the back plate across the slot's height, so the slot is open at the face only
+  const slot = hy * (J.brow - J.chin);
+  for (const side of [-1, 1]) {
+    const cheek = put(MeshBuilder.CreateBox("jousterCheek", { width: hx * 0.14, height: slot * 1.04, depth: hz * 1.7 }, scene), steel, head);
+    cheek.position.set(side * hx * (J.wide - 0.08), hy * (J.brow + J.chin) * 0.5, -hz * 0.22);
+  }
+  const back = put(MeshBuilder.CreateBox("jousterHelmBack", { width: hx * 2 * (J.wide - 0.06), height: slot * 1.04, depth: hz * 0.16 }, scene), steel, head);
+  back.position.set(0, hy * (J.brow + J.chin) * 0.5, -hz * (J.wide - 0.1));
+  // the team plume: tufts stacked up off the crown, each smaller and set a little back
+  const plume = mf.get("cloth", teamColor, { emissiveIntensity: 0.2 });
+  for (let i = 0; i < J.tufts; i++) {
+    const r = hx * J.tuft * (1 - i * 0.13);
+    const tuft = MeshBuilder.CreateIcoSphere("jousterPlume", { radius: 1, subdivisions: 1, flat: true }, scene);
+    tuft.scaling.set(r * 0.62, r * 0.75, r * 0.7);
+    tuft.position.set(0, top + hy * J.rise * (i + 0.3), -hz * (0.12 + 0.07 * i));
+    tuft.rotation.set(0.3 * i, 0.7 * i, 0.15 * (i % 2 ? 1 : -1));
+    put(tuft, plume, head);
   }
   return added;
 }
