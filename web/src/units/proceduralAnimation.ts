@@ -565,6 +565,13 @@ export class ProceduralAnimator {
     }
     // A fencer out on his lunge is committed as a striker on his man is: a blow on him then snaps only his head back (see LUNGE)
     this._aimWeight = this._lungeOut;
+    // and the press's shove does not fold his sword arm back in: out on the lunge it stays straight and level at the man
+    if (this._lungeOut > 0.01) {
+      const b = this._body, lo = this._lungeOut;
+      b.rightShoulder.rotation.x += (LUNGE.reach - b.rightShoulder.rotation.x) * lo;
+      b.rightShoulder.rotation.z += (0 - b.rightShoulder.rotation.z) * lo;
+      b.rightElbow.rotation.x += (-0.05 - b.rightElbow.rotation.x) * lo;
+    }
     // Last frame's lunge comes off the hip first: nothing else poses the hip across the ground
     const lunged = this._blowLunge;
     if (lunged.x !== 0 || lunged.z !== 0) {
