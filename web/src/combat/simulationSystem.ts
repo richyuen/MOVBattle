@@ -180,6 +180,13 @@ const STRIKE_LAG = 0.45;
  * comes down .short metres short of the man's middle, onto him (RuntimeUnit.leap), at most once every .cooldown seconds; harmless, logged "leap".
  */
 const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 };
+/**
+ * [S] Halfling Grab (345; card Characteristics: he latches onto the man and is dragged along, even after the man dies; farmer.halfling.png): the halfling's
+ * first blow that lands takes hold. From then he is carried on the man: pinned every step on the man's front, HALFLING_CLING.round rad round from dead
+ * ahead to one side (his own hashed side), .off of the man's body radius out from his middle and .up of the man's height off the ground, facing him, out of
+ * the crowd solver, wherever the man is pushed, walks or is thrown. He keeps hold of a dead man for .afterDeath s, then drops off. Logged "grab".
+ */
+const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
 const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 3, contact: 0.5, damage: 30, fling: 5, lift: 6, cooldown: 6 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
@@ -238,6 +245,8 @@ export class SimulationSystem {
   private _closingFrom = new Map<RuntimeUnit, number>();
   // one-blow-per-man: when a striker who closed on his man may first bring his weapon down (see STRIKE_LAG)
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
+  // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
+  private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
   private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit> }>();
@@ -349,6 +358,7 @@ export class SimulationSystem {
 
   beginSimulation(now: number): void {
     this._pendingBlows = [];
+    this._clings.clear();
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
@@ -403,6 +413,7 @@ export class SimulationSystem {
 
     this._assignShieldSlots();
     this._resolveLivingCollisions();
+    if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     this._holdShieldFrames();
 
@@ -431,8 +442,31 @@ export class SimulationSystem {
     return count;
   }
 
+  /** Pins each holding halfling on his man (spec at HALFLING_CLING); lets go of a man dead .afterDeath s, or when the halfling dies. */
+  private _holdClings(now: number): void {
+    for (const [unit, cling] of this._clings) {
+      const man = cling.target;
+      if (unit.isDead || man.body.root.isDisposed()) {
+        this._clings.delete(unit);
+        continue;
+      }
+      if (man.isDead && cling.until === Infinity) cling.until = now + HALFLING_CLING.afterDeath;
+      if (now >= cling.until) {
+        this._clings.delete(unit);
+        continue;
+      }
+      const yaw = man.body.root.rotation.y + cling.side * HALFLING_CLING.round;
+      const out = man.collisionBodyRadius * HALFLING_CLING.off;
+      const at = man.position.add(new Vector3(Math.sin(yaw) * out, 0, Math.cos(yaw) * out));
+      at.y = Math.max(0, man.position.y) + man.body.metrics.overallHeight * HALFLING_CLING.up;
+      unit.stopMoving();
+      unit.teleportTo(at);
+      unit.faceTarget(man.position);
+    }
+  }
+
   private _resolveLivingCollisions(): void {
-    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent);
+    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent && !this._clings.has(unit));
     if (roots.length < 2) return;
 
     for (let pass = 0; pass < this.collisionResolutionPasses; pass++) {
@@ -1819,6 +1853,11 @@ export class SimulationSystem {
     // ...and he buckles under it on this same step (struck-man buckle, r2c3: knees give, head down, arms out of his guard) till the throw takes him
     if (dwells) target.animator.buckleUnder();
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
+    // A halfling's first blow that lands takes hold of the man (HALFLING_CLING)
+    if (attacker.definition.id === "farmer.halfling" && !this._clings.has(attacker) && !attacker.isDead) {
+      this._clings.set(attacker, { target, side: attacker.runtimeId % 2 === 0 ? 1 : -1, until: Infinity });
+      this._logAbility(attacker, "grab", now, target.position);
+    }
     // The harvester's level cut throws the man it leaves standing out across it and up (SCYTHE_FLING)
     const sweep = SCYTHE_FLING[attacker.definition.id];
     if (sweep && !target.isDead) {
