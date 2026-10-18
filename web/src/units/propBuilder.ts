@@ -1828,13 +1828,20 @@ interface BladeFit { fist: number; stand: number }
  * the fist: a bar guard twice the blade across, a grip the fist closes round, and a pommel block. Returns the blade and how far under its middle the guard sits.
  */
 /** A unit's own cut of the slab sword (weaponVariant): blade .long of his height, .wide of it across, grip .grip fists, the last .point drawn in */
-interface SlabCut { long: number; wide: number; grip: number; point: number }
+interface SlabCut { long: number; wide: number; grip: number; point: number; lug?: number; lugAt?: number }
 /*
  * [S] the squire's longsword (352; medieval.squire.red.png, card Appearance "a Longsword"): a long thin blade that runs from his hands to above his head, not a
  * short broad arming sword. LONGSWORD: blade .long of his height and .wide of it across, a hand-and-a-half grip .grip fists, drawn to a point over its last .point.
  * Same guard on the same fist as the plain sword (the sword case's mount), so only the blade above it and the grip below change.
  */
 const LONGSWORD: SlabCut = { long: 0.62, wide: 0.045, grip: 2.6, point: 0.14 };
+/*
+ * [S] the King's Zweihander, retried (352; medieval.king.red.png, card "a towering Great Sword", Appearance "German Zweihander"): sword and grip together
+ * longer than he is tall. ZWEI: blade .long of his height, .wide of it across (twice 351's hair-thin .024), drawn in over its last .point; parrying lugs .lug
+ * long off each side .lugAt above the guard; a long grip .grip fists. It is the greatsword case's slab on the greatsword case's mount, so the blade runs out of
+ * the fist on the same side the old blade did; no off-hand marker (351's zweiGrip put it through the two-handed pole carry, which trailed it pommel-first).
+ */
+const ZWEI: SlabCut = { long: 0.85, wide: 0.05, grip: 4.5, point: 0.12, lug: 0.045, lugAt: 0.07 };
 function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color3, great: boolean, cut?: SlabCut): { blade: Mesh; hilt: number } {
   const length = fit.stand * (cut ? cut.long : great ? 0.68 : 0.46);
   const width = cut ? fit.stand * cut.wide : Math.min(length / (great ? 5 : 4), Math.max(length / (great ? 6.5 : 5), fit.fist * 2.8));
@@ -1873,6 +1880,16 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
   pommel.position.y = grip.position.y - gripLength * 0.5 - fit.fist * 0.4;
   pommel.parent = blade;
   pommel.material = mat(scene, accent, 0, "metal");
+  if (cut?.lug && cut.lugAt) {
+    for (const side of [1, -1]) {
+      const lug = MeshBuilder.CreateCylinder(`${name}Lug`, { height: cut.lug * fit.stand, diameterBottom: width * 0.7, diameterTop: width * 0.12, tessellation: 4 }, scene);
+      lug.rotation.z = -side * (Math.PI / 2 - 0.35); // swept a little toward the point
+      lug.position.set(side * (width / 2 + cut.lug * fit.stand * 0.42), -flat / 2 + cut.lugAt * fit.stand, 0);
+      lug.scaling.z = 0.5;
+      lug.material = steel;
+      lug.parent = blade;
+    }
+  }
   return { blade, hilt };
 }
 
@@ -2263,7 +2280,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return blade;
     }
     case "greatsword": {
-      const { blade, hilt } = buildSlabSword(scene, "gsblade", fit, accent, true);
+      const { blade, hilt } = buildSlabSword(scene, "gsblade", fit, accent, true, variant === "zweihander" ? ZWEI : undefined);
       blade.position.y = hilt * PROP_OVERSIZE - 0.19 * _s;
       return blade;
     }
