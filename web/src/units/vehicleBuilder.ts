@@ -1393,7 +1393,7 @@ const FACE_PAINT = {
   path: [[0.18, 0.62], [0.42, 0.36], [0.4, 0.05], [0.22, -0.22]] as [number, number][],
   steps: 3, wide: 0.13, taper: 0.3, thick: 0.03, trunkDots: [1, 3, 5], dot: 0.12,
 };
-const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.05, wide: 0.64, dots: 8, dotAt: -0.33, dot: 0.11, dotOut: 0.29 };
+const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.035, wide: 0.61, dots: 8, dotAt: -0.33, dot: 0.11, dotOut: 0.29, dotFlat: 0.2 };
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
   // The whole rig under the root scales by the unit's giant scale with its footprint and reach (unitDefinitions), so hull, legs, tusks, trunk and seats keep their proportions
@@ -1737,7 +1737,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
       for (let i = 0; i < ANKLE_BAND.dots; i++) {
         const a = (i + 0.5) / ANKLE_BAND.dots * Math.PI * 2;
         const dot = MeshBuilder.CreateSphere("ankleDot", { diameter: ANKLE_BAND.dot, segments: 4 }, scene);
-        dot.scaling.set(1, 1, 0.45);
+        dot.scaling.set(1, 1, ANKLE_BAND.dotFlat);
         dot.position.set(Math.sin(a) * ANKLE_BAND.dotOut, ANKLE_BAND.dotAt, Math.cos(a) * ANKLE_BAND.dotOut);
         dot.rotation.y = a;
         dot.parent = kneeJoint; dot.material = tuskTipMat; allMeshes.push(dot);
