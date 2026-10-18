@@ -11,12 +11,14 @@ b FAIL (0 since 315)
 c PASS (317)
 d PASS (stats 317: cost 120=120, hp -12%, dmg 0%, cd 0%)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] b spear raised overhead — blocker 1: overhand throw pose, arm straight up, javelin above the head in the windup (proceduralAnimation throw) — ref: tribal.spear_thrower.red.png — ours: unit_tribal.spear_thrower_windup.png
-2. [S] b stone leaf head — blocker 2: broad grey stone leaf lashed to the shaft with rope — ref: tribal.spear_thrower.jpg — ours: unit_tribal.spear_thrower_release.png
+1. [S] b spear stood up out of the fist — blocker 1: turn the hand (or re-seat the "shaft" node) about pi at the cock so the shaft stands up out of the fist over the crown, head forward and pitched at the foe, un-turned through the swing (release unchanged) — ref: tribal.spear_thrower.red.png — ours: unit_tribal.spear_thrower_windup.png
+2. [S] b stone leaf head — blocker 2: broad grey faceted stone leaf lashed to the shaft with rope — ref: tribal.spear_thrower.jpg — ours: unit_tribal.spear_thrower_release.png
 ## Attempts (iter | gap | criterion | verdict)
 316 | flat javelin (a76560b) | c | approved
 317 | stick-and-launch (6f13b5a) | c | approved
+318 | spear raised overhead (b194791) | b | rejected
 ## Rejected (last 4)
+- spear raised overhead [S] [1] — 318: JAVELIN_COCK, the arm straight up (raise -2.8, elbow -0.1) — the javelin's +y runs toward the elbow, so the shaft hung DOWN the back of the head, leaf at the nape, point backward
 ## Notes (max 3 lines)
-- 316: projectileSystem LAUNCH table (spear: speed 20, gravity 9.8) + solveLowArc. 317: LAUNCH.spear.throw 220 -> target.staggerFromBlow(p.origin, throw) on a direct hit that leaves him alive; _leaveAsLitter keeps the shaft stuck in him. Keys on shape "spear" (harpooner and the plain-spear fallback share it).
-- Critic 317: the release is a level push from an extended arm (that is b blocker 1); the two b gaps are one criterion, one per iteration.
+- 316: LAUNCH spear 20, 9.8 + solveLowArc. 317: LAUNCH.spear.throw 220 -> staggerFromBlow; _leaveAsLitter. Keys on shape "spear".
+- The javelin rides the hand (no carry turn). Its +y runs fist -> elbow: turn the hand or node about pi at the cock, keep the let-go (a level point-first throw, fine). The two b gaps are one criterion.

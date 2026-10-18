@@ -6,20 +6,21 @@ a FAIL (0 since 315)
  2. loincloth in unit_tribal.bone_mage_idle is a plain dark box — TABS: brown loincloth with rope, a skull at the centre and a bone each side (ref: tribal.bone_mage.red.png)
  3. neck and wrists in unit_tribal.bone_mage_idle are a dark ring and bare — TABS: three bones on a strap and bone bracelets on both wrists (ref: tribal.bone_mage.blue.png, card Appearance)
 b PASS (317)
-c FAIL (1 since 315)
+c FAIL (2 since 315)
  1. (struck 317: bone spike row)
- 2. leaf shards in unit_tribal.bone_mage_flight spawn above the mage's head at the staff skull and climb away — TABS: leaves swirl low along the spike line at the target (ref: tribal.bone_mage.png)
- 3. squire in unit_tribal.bone_mage_struck strides on his feet among the spikes, lurching forward, never lifted — TABS: the spikes send caught units into the air (card Characteristics; ref: tribal.bone_mage.png)
+ 2. (struck 318: leaves along the spike line)
+ 3. squire in unit_tribal.bone_mage_struck stands bent over backward between two spikes, boots on the turf, never lifted — TABS: the spikes send caught units into the air (card Characteristics; ref: tribal.bone_mage.png)
 d PASS (stats 317: cost 300=300, hp -1%, dmg 0%, cd 0%)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c leaves along the spike line — blocker 2: the leaves projectile spawned low at the row's far end swirling at the target, not from the staff head — ref: tribal.bone_mage.png — ours: unit_tribal.bone_mage_flight.png
+1. [S] c spike loft — blocker 3: the row's hit lofts the caught man (an upward impulse with the knockback, as staggerFromBlow does along the line) so he rises off his feet above the spike tips — ref: tribal.bone_mage.png — ours: unit_tribal.bone_mage_struck.png
 2. [S] a hide cape — blocker 1: brown pointed-edge cape chunk over the shoulders to the thigh — ref: tribal.bone_mage.blue.png — ours: unit_tribal.bone_mage_idle.png
-3. [P] c spike girth — fallout of 7496412 (317): spawnBoneSpikeRow diameterBottom 0.14+0.1u -> 0.32+0.22u (a BONE_SPIKE_GIRTH row); NEXT: shows in unit_tribal.bone_mage_struck (the spikes around the squire) — ref: tribal.bone_mage.png
 ## Attempts (iter | gap | criterion | verdict)
 316 | deer-skull staff (9474ce7) | b | approved
 317 | bone spike row (7496412) | c | approved
 317 | upright carry (b6bc951) | b | approved
+318 | leaves along the spike line (000f0de) | c | approved
+318 | [P] spike girth (8b32ce8) | c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 316 staff: root "staff", child "orb", id boneStaff. 317: BONE_HOLD (planted hold, _carryTurn 1 at build); visualEffects.spawnBoneSpikeRow called from _launchPendingThrows at the cast for shape "leaves".
-- Critic 317: spikes are needles ([P] above); bone tint renders blue-grey (renderer); blocker 3 needs a launch of men caught by the row.
+- 316 staff: root "staff", child "orb", id boneStaff. 317: BONE_HOLD planted carry; visualEffects.spawnBoneSpikeRow at the cast. 318: the leaves spawn at boneSpikeRowNear (exported from visualEffects) with LEAF_ROW lift 0.6, targetLift 0.7, arc 0.03 (ProjectileSpawnOptions.arc override); BONE_SPIKE_GIRTH 0.32+0.22u.
+- Critic 318 (minor): leaves are flat diamonds on stalks in purple/red/tan, TABS elongated brown-red leaves; near spikes knee-high cones, TABS man-height from the first; cones smooth and regular, TABS jagged shards.
