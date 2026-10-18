@@ -13,14 +13,15 @@ import { jitterVertices } from "./tribalDress";
 /*
  * [S] the catapult's boulder (352; medieval.catapult.blue.png: a grey-brown rock of flat facets lying in the bucket, the same rock in flight). An ico rock
  * `diameter` across, BOULDER.facets subdivisions, flat-shaded, each corner pushed in or out up to BOULDER.lumpy of the radius (the same hash for a corner
- * every face shares, so no cracks) and squashed to BOULDER.squat of its height; matte grey-brown stone, no team tint. Built once for the bucket's payload
+ * every face shares, so no cracks) and squashed to BOULDER.squat of its height; matte grey-brown stone lit .lit of itself (its shaded facets went navy
+ * under the sky light at .5 grey), no team tint. Built once for the bucket's payload
  * and again for the shot that leaves it.
  */
-const BOULDER = { facets: 1, lumpy: 0.2, squat: 0.82, stone: new Color3(0.5, 0.45, 0.38) };
+const BOULDER = { facets: 1, lumpy: 0.2, squat: 0.82, stone: new Color3(0.66, 0.59, 0.5), lit: 0.18 };
 export function buildFacetedBoulder(scene: Scene, name: string, diameter: number): Mesh {
   const rock = MeshBuilder.CreateIcoSphere(name, { radius: diameter / 2, subdivisions: BOULDER.facets, flat: true }, scene);
   jitterVertices(rock, BOULDER.lumpy, 352, 1, BOULDER.squat, 1);
-  rock.material = getMaterialFactory().get("stone", BOULDER.stone);
+  rock.material = getMaterialFactory().get("stone", BOULDER.stone, { emissiveIntensity: BOULDER.lit });
   return rock;
 }
 
