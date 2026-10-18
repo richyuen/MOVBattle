@@ -26,8 +26,18 @@ const CRITTER_NECKLACE = { skull: 0.5, spread: 0.55, drop: 0.2, lift: 0.05, stra
  *   across each bone, .gap bone thicknesses between them, .strap the strap's thickness in trunk heights, .off of the trunk's depth the bones stand off the chest.
  */
 const BONE_NECKLACE = { drop: 0.16, bone: 0.55, middle: 1.25, thick: 0.13, gap: 2.4, strap: 0.03, off: 0.14 };
+/*
+ * The fang necklace (tribal.spear_thrower.blue.png, card Appearance: "a necklace made from a beast's fang tied with a strap and ropes"): a red-brown strap
+ * from the nape over both shoulders down in a long V to the middle of the chest, and one long pale fang hanging point down from its foot, curling to one
+ * side, a turn of rope round its root. It stands off the chest so it keeps its own silhouette in profile.
+ *   FANG_NECKLACE.drop of the trunk height below the neck for the V's foot, .long head heights for the fang, .thick head widths across its root, .curl of
+ *   its length the tip swings aside, .strap the strap's thickness in trunk heights, .off of the trunk's depth the fang stands off the chest.
+ */
+const FANG_NECKLACE = { drop: 0.34, long: 0.8, thick: 0.2, curl: 0.3, strap: 0.03, off: 0.14 };
 // Which tribesmen wear which necklace (the furCollar is dropped for them)
-const NECKLACES: Record<string, "critter_skulls" | "bones"> = { "tribal.protector": "critter_skulls", "tribal.stoner": "bones", "tribal.bone_mage": "bones" };
+const NECKLACES: Record<string, "critter_skulls" | "bones" | "fang"> = {
+  "tribal.protector": "critter_skulls", "tribal.stoner": "bones", "tribal.bone_mage": "bones", "tribal.spear_thrower": "fang",
+};
 
 export function hasTribalNecklace(unitId: string): boolean {
   return unitId in NECKLACES;
@@ -124,6 +134,7 @@ export function boneSkull(scene: Scene, name: string, wide: number, serial: numb
 /** Hangs the unit's necklace (spec at CRITTER_NECKLACE) on a bare tribesman, parented to the torso joint. Empty when he wears none. */
 export function dressTribalNecklace(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
   if (NECKLACES[unitId] === "bones") return boneNecklace(scene, body);
+  if (NECKLACES[unitId] === "fang") return fangNecklace(scene, body);
   if (NECKLACES[unitId] !== "critter_skulls") return [];
   const added: Mesh[] = [];
   const band = trunkBand(body, 0.6, 0.9);
@@ -221,6 +232,60 @@ function boneNecklace(scene: Scene, body: ArticulatedBody): Mesh[] {
     shaft.parent = body.torso;
     added.push(...parts);
   }
+  return added;
+}
+
+/** The fang necklace (spec at FANG_NECKLACE), parented to the torso joint. */
+function fangNecklace(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const band = trunkBand(body, 0.6, 0.9);
+  const top = trunkBand(body, 0.9, 1.05);
+  const { trunk } = band;
+  const head = headWide(body);
+  const headTall = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2 * body.headMesh.scaling.y;
+  const thick = trunk * FANG_NECKLACE.strap;
+  const neckX = head * 0.42;
+  const front = band.maxZ + thick;
+  const back = Math.min(top.minZ, band.minZ) - thick * 0.6;
+  const footY = trunk * (1 - FANG_NECKLACE.drop);
+  const off = (band.maxZ - band.minZ) * FANG_NECKLACE.off;
+  // The strap: from the nape over each shoulder by the neck and down in a long V to its foot on the middle of the chest
+  const path = [
+    new Vector3(0, trunk - thick, back),
+    new Vector3(neckX, trunk + thick * 0.5, (back + front) * 0.5),
+    new Vector3(neckX * 0.9, trunk * 0.97, front),
+    new Vector3(0, footY, front + off),
+    new Vector3(-neckX * 0.9, trunk * 0.97, front),
+    new Vector3(-neckX, trunk + thick * 0.5, (back + front) * 0.5),
+    new Vector3(0, trunk - thick, back),
+  ].map((p) => p.add(new Vector3(band.midX, 0, 0)));
+  const rope = ropeMaterial();
+  const strap = MeshBuilder.CreateTube("necklaceStrap", { path, radius: thick * 0.5, tessellation: 5, cap: Mesh.CAP_ALL }, scene);
+  strap.material = rope;
+  strap.parent = body.torso;
+  added.push(strap);
+  // The fang: a curved four-sided horn from a thick root at the V's foot down to a point, its tip swung aside and a little back toward the chest
+  const fangThick = head * FANG_NECKLACE.thick;
+  const long = headTall * FANG_NECKLACE.long;
+  const root = new Vector3(band.midX, footY - fangThick * 0.2, front + off);
+  const tip = new Vector3(band.midX + long * FANG_NECKLACE.curl, footY - long, front + off * 0.7);
+  const ctrl = new Vector3(band.midX - long * FANG_NECKLACE.curl * 0.35, footY - long * 0.6, front + off * 1.15);
+  const curve: Vector3[] = [];
+  for (let i = 0; i <= 8; i++) {
+    const t = i / 8;
+    curve.push(root.scale((1 - t) * (1 - t)).add(ctrl.scale(2 * t * (1 - t))).add(tip.scale(t * t)));
+  }
+  const fang = MeshBuilder.CreateTube("necklaceFang", { path: curve, tessellation: 5, cap: Mesh.CAP_START, radiusFunction: (i) => fangThick * 0.5 * Math.max(0.05, 1 - i / 8) }, scene);
+  fang.convertToFlatShadedMesh();
+  fang.material = boneMaterial();
+  fang.parent = body.torso;
+  added.push(fang);
+  // ...tied on by a turn of rope round its root
+  const wrap = MeshBuilder.CreateTorus("necklaceFangRope", { diameter: fangThick * 1.1, thickness: thick * 1.1, tessellation: 8 }, scene);
+  wrap.position.copyFrom(curve[1]);
+  wrap.material = rope;
+  wrap.parent = body.torso;
+  added.push(wrap);
   return added;
 }
 
