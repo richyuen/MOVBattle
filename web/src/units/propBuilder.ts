@@ -1812,7 +1812,7 @@ const CLUB_HEAD = 0.22;
  * across (barely tapering to STICK.tip of that at the far end), bent at STICK.kinks hashed points along its length by up to STICK.bend of its length
  * sideways and up/down, so it reads as a crooked branch, not a turned pole. Tipped STICK.ahead rad forward in the fist. Light red-brown wood, self-lit STICK.glow so it does not go black.
  */
-const STICK = { long: 0.75, grip: 0.12, thick: 0.045, tip: 0.8, kinks: 5, bend: 0.035, glow: 0.18, ahead: 1.45 };
+const STICK = { long: 0.75, grip: 0.12, thick: 0.045, tip: 0.8, kinks: 5, bend: 0.035, glow: 0.18, ahead: -1.45 };
 const STICK_WOOD = new Color3(0.68, 0.4, 0.26);
 // The chieftain's stone axe (units/tribal.chieftain), in the man's heights: handle length, the share below the fist, the stone's length across the top
 const AXE_LONG = 0.4;
