@@ -501,7 +501,8 @@ async function main() {
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
           if (RELOAD_SHOT[id]) await take(`unit_${id}_reload`, release.tick + RELOAD_SHOT[id], 1);
           // A running mechanic (the bard's Banjo Walk circles) shows over seconds, not in the motion pair: one more shot 90 ticks (1.5 s) on, both men framed
-          if (/^banjo_walk/.test(release.kind)) await take(`unit_${id}_walk`, release.tick + 90, 0);
+          const walk = /^banjo_walk/.test(release.kind) ? release : ability && /^banjo_walk/.test(ability.kind) ? ability : null;
+          if (walk) await take(`unit_${id}_walk`, walk.tick + 90, 0);
         }
         if (ability) {
           // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
