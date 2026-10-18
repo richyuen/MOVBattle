@@ -15,8 +15,8 @@ export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | 
 
 interface ActiveProjectile {
   mesh: TransformNode;
-  /** A balloon arrow (ProjectileSpawnOptions.balloons). */
-  balloons?: boolean;
+  /** A balloon arrow: its shooter's unit id (ProjectileSpawnOptions.balloons). */
+  balloons?: string;
   origin: Vector3;
   target: RuntimeUnit;
   targetPos: Vector3;       // snapshot in case target dies mid-flight
@@ -130,8 +130,8 @@ interface ProjectileSpawnOptions {
   riseTo?: number;
   /** The arc's height per metre of flight in place of the shape's own (a leaf whirl kept low along the ground). */
   arc?: number;
-  /** A balloon arrow: the man it strikes floats up under balloons of the shooter's colour (RuntimeUnit.floatOnBalloons). */
-  balloons?: boolean;
+  /** A balloon arrow, carrying its shooter's unit id: the man it strikes floats up under balloons of the shooter's colour (RuntimeUnit.floatOnBalloons). */
+  balloons?: string;
 }
 
 interface MuzzleFlashOptions {
@@ -363,6 +363,9 @@ export class ProjectileSystem {
   /**
    * Spawn a muzzle flash at the given position (for guns).
    */
+  /** Set by the simulation: records a mechanic a missile set off (a balloon arrow's float) in its ability log, under the shooter's unit id. */
+  abilityHook: ((unitId: string, kind: string, at: Vector3) => void) | null = null;
+
   spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1, options: MuzzleFlashOptions = {}): void {
     const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4 * scale, segments: 6 }, this._scene);
     flash.position = origin.clone();
@@ -676,7 +679,10 @@ export class ProjectileSystem {
         const launch = LAUNCH[p.shape];
         if (launch?.throw && !p.target.isDead) p.target.staggerFromBlow(p.origin, launch.throw);
         // A balloon arrow's ball swells into balloons on the man it strikes, and they float him up
-        if (p.balloons && !p.target.isDead) p.target.floatOnBalloons(this._getTeamProjectilePalette(p.attackerTeam).primary);
+        if (p.balloons && !p.target.isDead) {
+          p.target.floatOnBalloons(this._getTeamProjectilePalette(p.attackerTeam).primary);
+          this.abilityHook?.(p.balloons, "float", p.target.position);
+        }
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({

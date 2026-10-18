@@ -357,6 +357,7 @@ export class SimulationSystem {
   update(dt: number, now: number): void {
     if (!this._isRunning) return;
     this._now = now;
+    if (this.projectileSystem) this.projectileSystem.abilityHook ??= this._logMissileAbility;
 
     for (const unit of this._units) {
       unit.update(dt, now);
@@ -1739,7 +1740,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined },
           );
         }
       } else {
@@ -2169,6 +2170,12 @@ export class SimulationSystem {
   }
 
   /** One ability-log entry; the same kind on the same man within 0.5 s is folded into the last one (a spin or a volley fires every frame or shot). */
+  /** A mechanic a missile set off, logged under its shooter's unit id (ProjectileSystem.abilityHook). */
+  private _logMissileAbility = (unitId: string, kind: string, at: Vector3): void => {
+    if (this.abilityLog.length >= 200) this.abilityLog.shift();
+    this.abilityLog.push({ t: RuntimeUnit.timeNowSeconds(), unit: unitId, kind, x: at.x, y: at.y, z: at.z });
+  };
+
   private _logAbility(unit: RuntimeUnit, kind: string, t: number, at: Vector3 = unit.position): void {
     const id = unit.definition.id;
     for (let i = this.abilityLog.length - 1; i >= 0 && this.abilityLog[i].t > t - 0.5; i--) {
