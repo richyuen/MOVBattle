@@ -46,7 +46,7 @@ const SMOKE_LIFE = 2.4;
  * HEAL_BEAM.core m thick inside a see-through halo .halo m thick at .haloAlpha, both self-lit (so the glow layer haloes them), re-aimed every frame from the orb to his
  * chest; it fades out over the last .fade s of its life.
  */
-const HEAL_BEAM = { core: 0.07, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
+const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
 const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
