@@ -17,7 +17,7 @@ const ROPE_COLOR = new Color3(0.5, 0.26, 0.16);
  *   CRITTER_NECKLACE.skull head widths across each skull, .spread of the trunk's half width out from the middle for the side skulls, .drop of the trunk
  *   height below the neck for the middle one (the side ones ride .lift higher), .strap the strap's thickness in trunk heights.
  */
-const CRITTER_NECKLACE = { skull: 0.42, spread: 0.55, drop: 0.2, lift: 0.05, strap: 0.03 };
+const CRITTER_NECKLACE = { skull: 0.5, spread: 0.55, drop: 0.2, lift: 0.05, strap: 0.03 };
 // Which tribesmen wear which necklace (the furCollar is dropped for them)
 const NECKLACES: Record<string, "critter_skulls"> = { "tribal.protector": "critter_skulls" };
 
@@ -103,7 +103,7 @@ export function boneSkull(scene: Scene, name: string, wide: number, serial: numb
   snout.parent = cranium;
   const parts = [cranium, snout];
   for (const side of [-1, 1]) {
-    const socket = MeshBuilder.CreateIcoSphere(`${name}Socket`, { radius: wide * 0.13, subdivisions: 0, flat: true }, scene);
+    const socket = MeshBuilder.CreateIcoSphere(`${name}Socket`, { radius: wide * 0.13, subdivisions: 1, flat: true }, scene);
     socket.scaling.z = 0.5;
     socket.position.set(side * wide * 0.2, wide * 0.02, wide * 0.4);
     socket.material = getMaterialFactory().get("cloth", SOCKET_COLOR);
