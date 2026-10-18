@@ -150,12 +150,12 @@ const POLE_GRIP = {
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
 } as const;
 /*
- * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). While the musket fires (firearm_recoil)
- * the weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
- * butt behind the fist sits in the shoulder; the musket is stood level along his front over its rest (raised over the first .raise of the attack, lowered over
- * the last .lower), the off hand following it on the fore-stock (_twoHandPole), and the muzzle kicks up .kick (rad) at the shot.
+ * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
+ * butt behind the fist sits in the shoulder; the musket is stood level along his front over its rest, the off hand following it on the fore-stock
+ * (_twoHandPole). The shot leaves as the attack starts, so the aim is held whenever he stands (eased in and out at .rate per s, down on the march), and the
+ * muzzle kicks up .kick (rad) at the shot, settling at .settle per s.
  */
-const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, raise: 0.3, lower: 0.15, kick: 0.25 };
+const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25, settle: 6 };
 // The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
 // swing and elbow at each, the trunk's pitch and the off foot's step at the land, and the share of the attack it is held on the man
 const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown: -1.25, elbowDown: -0.15, pitch: 0.35, step: -0.4, hold: 0.1 };
@@ -1558,7 +1558,7 @@ export class ProceduralAnimator {
     this._carrySpear();
     this._carryProp(dt);
     this._offhandToGrip();
-    this._aimMusket();
+    this._aimMusket(dt);
     this._twoHandPole();
     this._carryBoulder();
     this._holdPalette();
@@ -2305,18 +2305,20 @@ export class ProceduralAnimator {
 
   // The matchlock in the weapon fist (the pole node carrying the musketFore mark) and its rest there, looked up once
   private _musket: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
-  /** The shouldered aim (see MUSKET_AIM): the weapon fist ahead of the shoulder, the musket level along his front, held through the shot. */
-  private _aimMusket(): void {
+  private _musketAim = 0;
+  /** The shouldered aim (see MUSKET_AIM): the weapon fist ahead of the shoulder, the musket level along his front, held while he stands and fires. */
+  private _aimMusket(dt: number): void {
     if (this._musket === undefined) {
       const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "musketFore"));
       this._musket = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
     }
     const gun = this._musket;
     if (!gun) return;
-    const firing = this._state === AnimState.Attacking && this._attackMotion === "firearm_recoil" && this.walkStyle !== "quadruped";
-    const progress = firing ? Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1) : 1;
-    const smooth = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
-    const w = firing ? smooth(progress / MUSKET_AIM.raise) * (1 - smooth((progress - (1 - MUSKET_AIM.lower)) / MUSKET_AIM.lower)) * (1 - Math.min(1, this._limp)) : 0;
+    // The shot leaves at the start of the attack, so the musket is already at the shoulder: up while he stands (to aim, fire and reload), down on the march
+    const firing = this._state === AnimState.Attacking && this._attackMotion === "firearm_recoil";
+    const standing = (firing || this._state === AnimState.Idle) && this.walkStyle !== "quadruped";
+    this._musketAim += ((standing ? 1 : 0) - this._musketAim) * Math.min(1, dt * MUSKET_AIM.rate);
+    const w = this._musketAim * (1 - Math.min(1, this._limp));
     if (w <= 0.001) {
       gun.node.rotationQuaternion = null;
       return;
@@ -2332,9 +2334,8 @@ export class ProceduralAnimator {
     const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(MUSKET_AIM.ahead * height))
       .addInPlace(outward.scale(-MUSKET_AIM.inward * height)).addInPlace(new Vector3(0, -MUSKET_AIM.drop * height, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
-    // The barrel (+y) level along his front, the muzzle kicked up by the shot after the release; the wood (+z) under it
-    const release = this._resolveReleasePoint(0.5);
-    const kick = progress > release ? MUSKET_AIM.kick * Math.exp(-(progress - release) * 12) : 0;
+    // The barrel (+y) level along his front, the muzzle kicked up by the shot as the attack starts; the wood (+z) under it
+    const kick = firing ? MUSKET_AIM.kick * Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * MUSKET_AIM.settle) : 0;
     const y = fwd.scale(Math.cos(kick)).addInPlace(new Vector3(0, Math.sin(kick), 0)).normalize();
     const z = Vector3.Cross(y, outward).normalize();
     const zDown = z.y > 0 ? z.scale(-1) : z;
