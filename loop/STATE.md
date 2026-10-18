@@ -1,11 +1,11 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 342   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
+Iteration: 343   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
-farmer: halfling -+-+ o | farmer ---+ o | hay_baler ---+ o | potion_seller -+++ o | harvester ---+ o | wheelbarrow ---+ o | scarecrow -+-+ o
+farmer: halfling ++-+ o | farmer ---+ o | hay_baler --++ o | potion_seller -+++ o | harvester ---+ o | wheelbarrow ---+ o | scarecrow -+-+ o
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
@@ -23,16 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-342 (BASE 403fb0d): [S] scarecrow c flying crows d8ad061 approved | [S] halfling a shorts+belt 439c08e approved | [S] farmer b fork carry 8c2de8f(+576a2bf,ee4bf48) rejected, reverted | [S] potion_seller c drunk splash 97ea8d4(+925e370) approved | [S] harvester b low scythe carry 0c87e29 approved | [P] harvester a braids 7017d25 approved
-341 (BASE edea5e2): hay_baler a bowl cut, hay_baler b STICK.thick, potion_seller c lobbed bottle, halfling a jacket, scarecrow b held crows, farmer a socks all approved.
+343 (BASE 856e2aa): [S] halfling a hairy feet 87e37b9 approved | [S] potion_seller a umber hair cap fb5c49e approved | [S] hay_baler c stick whack a4f19ae approved | [S] harvester b pegs rooted, snath/blade colours 0c7f22a approved | [P] scarecrow c FLYING_CROW wings flat d6343bd approved
+342 (BASE 403fb0d): scarecrow c flying crows, halfling a shorts, potion_seller c drunk splash, harvester b low scythe, harvester a braids [P] approved; farmer b fork carry rejected.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] farmer.scarecrow (d8ad061) VERDICT: APPROVE CRITERION: farmer.scarecrow.c FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3
-- GAP: [S] farmer.halfling (439c08e) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL) BLOCKERS: struck: 3. Remaining: 4
-- GAP: [S] farmer.farmer (8c2de8f + 576a2bf, ee4bf48) VERDICT: REJECT CRITERION: farmer.farmer.b FAIL (previous: FAIL) BLOCKERS: 1
-- GAP: [S] farmer.potion_seller (97ea8d4 + 925e370) VERDICT: APPROVE CRITERION: farmer.potion_seller.c PASS (previous: FAIL) BLOCKERS: struck: 2. Remaining: none
-- GAP: [S] farmer.harvester (0c87e29) VERDICT: APPROVE CRITERION: farmer.harvester.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2; added: 3 (pegs float off the snath)
-- GAP: [P] farmer.harvester (7017d25) VERDICT: APPROVE CRITERION: farmer.harvester.a FAIL (previous: FAIL) BLOCKERS: 2 partly cleared, 3. REGRESSIONS: none
+- GAP: [S] farmer.halfling (87e37b9) VERDICT: APPROVE CRITERION: farmer.halfling.a PASS (previous: FAIL) BLOCKERS: struck: 4. The list is now empty, so a flips to PASS.
+- GAP: [S] farmer.potion_seller (fb5c49e) VERDICT: APPROVE CRITERION: farmer.potion_seller.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3
+- GAP: [S] farmer.hay_baler (a4f19ae) VERDICT: APPROVE CRITERION: farmer.hay_baler.c PASS (previous: FAIL) BLOCKERS: struck: 1. The list is now empty, so c flips to PASS.
+- GAP: [S] farmer.harvester (0c7f22a) VERDICT: APPROVE CRITERION: farmer.harvester.b FAIL (previous: FAIL) BLOCKERS: struck: 2, 3. Remaining: added: 4 (grip wraps float off the bowed snath)
+- GAP: [P] farmer.scarecrow (d6343bd) VERDICT: APPROVE CRITERION: farmer.scarecrow.c FAIL (previous: FAIL) BLOCKERS: Remaining: 2, 3. REGRESSIONS: none
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Pickable [P] fallout: scarecrow c FLYING_CROW wings spread sideways (fallout of d8ad061, NEXT shot unit_farmer.scarecrow_flight). Wheelbarrow still untouched (crew likely over the [S] cap: split it); hay_baler untouched in 342.
-- Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissiveIntensity}). Cream/tan needs ~.2-.3; dark browns with glow read tan at lineup distance.
-- Carry (proceduralAnimation): only props whose root name is in the turnable regex (club|blade|handle|...|scytheCarry) are turned onto attitude.tip; others ride the fist. Tip frame: x weapon side, y up, z forward. Held throws: THROWS_HELD_PROP.
-- Look captures need a clean tree incl. untracked: git stash push -- <dirty paths> (only those paths!) around them; --units takes a comma list and wipes output/loop/look. Vehicles live in vehicleBuilder.ts. Scarecrow visuals live in preset iconic_scarecrow.
-- Write patches as scratchpad python files via the Write tool (open with newline='' to keep EOLs); bash heredocs containing apostrophes break here. After any --iter capture rerun stats --batch <batch> --iter N. Cloned StandardMaterials with DynamicTextures never get ready.
+- No [P] fallout pending. Wheelbarrow still untouched (its only ranked [S] is the 3-crew seating; split it); farmer b is at 1 rejected (a 2nd plateaus it).
+- Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissiveIntensity}). Cream/tan needs ~.2-.3.
+- Carry (proceduralAnimation): only props whose root name is in the turnable regex (club|blade|handle|...|scytheCarry) turn onto attitude.tip. Club blows go through _aimBlow (arm overhead) unless exempted like _whacks().
+- Look captures need a clean tree incl. untracked: git stash push -- <dirty paths> around them; --units takes a comma list and wipes output/loop/look. Vehicles live in vehicleBuilder.ts.
+- Patch via scratchpad python with io.open(..., newline='', encoding='utf-8') (cp1252 default breaks on unitVisuals). After any --iter capture rerun stats --batch <batch> --iter N.

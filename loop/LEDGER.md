@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-333 | lunge legs (90d850a) | renaissance.fencer.c | approved
-333 | level lance (eea51ad) | renaissance.jouster.c | approved
-333 | arrow ball (4e0e02c) | renaissance.balloon_archer.c | approved
-333 | jabot (b8f9dd8 +1) | renaissance.painter.a | approved
-333 | halberd dress (c23f17c) | renaissance.halberd.a | approved
 334 | chop onto the man (b6a163f) | renaissance.halberd.c | approved
 334 | heater held upright (69073a5) | renaissance.jouster.b | approved
 334 | domed drape, crenellated hem (73fd09c +1) | renaissance.jouster.a | approved
@@ -56,6 +51,10 @@ for 25 iterations.
 342 | fork across the hips in both fists (8c2de8f +2) | farmer.farmer.b | rejected
 342 | green drunk splash (97ea8d4 +1) | farmer.potion_seller.c | approved
 342 | low diagonal two-handed scythe, pegs (0c87e29) | farmer.harvester.b | approved
+343 | hairy feet (87e37b9) | farmer.halfling.a | approved
+343 | umber hair cap, hood dropped (fb5c49e) | farmer.potion_seller.a | approved
+343 | stick whack from the ear (a4f19ae) | farmer.hay_baler.c | approved
+343 | pegs rooted on the bow, snath and blade colours (0c7f22a) | farmer.harvester.b | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -79,10 +78,13 @@ tribalDress.ts:BOWL (dome, crown, fringe, hang, flare, face), COLOR | 1.3, .78, 
 unitFactory.ts:HALFLING_DRESS (jacket, drop, vest, proud, vee, veeDeep, lapel, vestLight, jacketShade) | 1.14,.12,.56,.03,.42,.42,.34,.5,.8 | 341 | approved | -
 propBuilder.ts:HELD_CROW (long, wide, tall, head, beak, wing, tail, fan, seat, glow) | .24,.11,.12,.085,.06,.17,.11,.1,.03,.12 | 341 | approved | -
 unitFactory.ts:FARMER_SOCK (sock, long, cuff, cuffTall, collar, collarTall, glow), SHOE | 1.14,.9,1.3,.12,1.36,.13,.22; (.5,.29,.18) | 341 | approved | -
-projectileSystem.ts:FLYING_CROW (long, wide, tall, head, beak, span, chord, flat, fingers, feather, tail, fan, glow, beat, lift, rate) | .34,.17,.17,.13,.08,.34,.2,.12,4,.1,.16,.16,.12,.6,.15,15 | 342 | approved | -
+projectileSystem.ts:FLYING_CROW (long, wide, tall, head, beak, span, chord, flat, fingers, feather, tail, fan, glow, beat, lift, rate) | .34,.17,.17,.13,.08,.34,.2,.12,4,.1,.16,.16,.12,.28,.04,15 | 343 | approved | beat .6, lift .15 (342); fallout only, never re-nudge
 unitFactory.ts:HALFLING_SHORTS (seat, seatTall, leg, flare, long, belt, buckle, dark, glow), BELT | 1.04,.3,1.3,1.12,.92,.1,.14,.45,.14; (.3,.18,.11) | 342 | approved | -
 projectileSystem.ts:DRUNK_SPLASH (radius, puffs, size, life, push, seconds) | 2.2, 14, .9, 1.6, .15, 6 | 342 | approved | replaced bomb blast for potion_seller
 runtimeUnit.ts:DRUNK (dye, glow, roll, rate, slow); simulationSystem DRUNK_WANDER (reach, swing) | .8, .35, .22, 4.5, .55; 2.5, .9 | 342 | approved | -
 proceduralAnimation.ts:SCYTHE_LOW (raise, out, elbow, tip, spin); POLE_GRIP.snathPeg | -.3,.12,-.75,(-.8,.5,.3),pi/2; [.28,.32] | 342 | approved | -
-unitFactory.ts:SNATH_PEG (low, high, long, thick), SNATH_WOOD | -.15, .15, .09, .03; (.5,.24,.17) | 342 | approved | -
+unitFactory.ts:SNATH_PEG (low, high, long, thick, sink), SNATH_WOOD, SNATH_STEEL | -.15,.15,.09,.03,.2; (.5,.24,.17); (.5,.51,.53) | 343 | approved | pegs on the chord z 0
 proceduralAnimation.ts:FORK_CARRY (raise, out, elbow, tip) | reverted | 342 | rejected | -.4,.04,-.55,(-.7,-.6,.72)
+unitFactory.ts:HALFLING_FEET (clump, clumpTall, rise, tufts, long, thick, splay, glow), HALFLING_FUR | 1.35,1.1,.9,9,.55,.28,1,.22; (.38,.21,.12) | 343 | approved | -
+tribalDress.ts:HAIR_CAP (dome, crown, fringe, hang, flare, face), HAIR_CAP_COLOR | 1.14,.62,.62,-.12,1.02,.42; (.36,.25,.17) | 343 | approved | -
+proceduralAnimation.ts:STICK_WHACK (cock,out,fold,twist,cockArc,hit,reach,pitch,hitArc,land,hold,offSwing) | -2.1,.55,-1.75,.4,-.9,-1.25,-.15,.3,1.9,.35,.6,.6 | 343 | approved | -
