@@ -2479,7 +2479,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
         const path = ts.map((t) => new Vector3(0, t * Lb * 0.5, zs - LONGBOW.bow * Lb * (1 - t * t)));
         const stave = MeshBuilder.CreateTube("bow", { path, radiusFunction: (i) => radius(ts[i]), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
-        stave.material = mat(scene, LONGBOW_GREY, 0.1, "metal");
+        stave.material = mat(scene, LONGBOW_GREY, 0.2);
         stave.convertToFlatShadedMesh();
         const band = (name: string, t: number, tall: number, grow: number, material: ReturnType<typeof mat>): void => {
           const m = MeshBuilder.CreateCylinder(name, { height: tall * Lb, diameter: radius(t) * 2 * grow, tessellation: 6 }, scene);
@@ -3455,8 +3455,8 @@ function roundBoardSeed(serial: number, k: number): number {
  * LONGBOW.thick of it across at the grip, tapering to LONGBOW.taper of that at the tips; bowed LONGBOW.bow of its length off the string; tan wraps
  * LONGBOW.wrap long at each of LONGBOW.wrapAt (shares of the half-length out from the grip); team grip LONGBOW.grip long.
  */
-const LONGBOW = { long: 0.85, thick: 0.035, taper: 0.45, bow: 0.05, wrapAt: [0.6, 0.72], wrap: 0.04, grip: 0.11 };
-const LONGBOW_GREY = new Color3(0.6, 0.6, 0.6);
+const LONGBOW = { long: 0.85, thick: 0.05, taper: 0.5, bow: 0.05, wrapAt: [0.6, 0.72], wrap: 0.04, grip: 0.11 };
+const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
 const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };
 const HEATER_YELLOW = new Color3(0.95, 0.72, 0.12);
