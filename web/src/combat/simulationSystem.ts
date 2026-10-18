@@ -187,7 +187,16 @@ const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 
  * the crowd solver, wherever the man is pushed, walks or is thrown. He keeps hold of a dead man for .afterDeath s, then drops off. Logged "grab".
  */
 const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
-const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 3, contact: 0.5, damage: 30, fling: 5, lift: 6, cooldown: 6 };
+const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 3, contact: 0.5, damage: 30, fling: 5, lift: 6, cooldown: 6, through: false, log: true };
+/*
+ * [S] Wheelbarrow ram (348; card Characteristics "It will ram and run over enemy units ... extremely fast speed ... running over units deal extremely low
+ * damage"): the mammoth's charge on the cart, driven through. An enemy WHEELBARROW_RAM.from to .reach metres past its reach sets the cart rolling at him at
+ * .speed times its pace; every enemy its body meets ahead of its middle is run over (.damage, flung aside and up .fling/.lift), each once per run. Running
+ * over its own man does not stop it: it drives on to .overrun metres past where he stood, then turns; .cooldown s between runs, so it keeps ramming
+ * back through the fight. Logged "trample" at each man run over (not "charge" at the start).
+ */
+const WHEELBARROW_RAM = { from: 0.6, reach: 16, speed: 1.7, seconds: 3, overrun: 4, contact: 0.35, damage: 6, fling: 4.5, lift: 4, cooldown: 2.2, through: true, log: false };
+type ChargeSpec = typeof MAMMOTH_CHARGE;
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
 const LANCE_AIM_REACH = 5;
@@ -249,7 +258,7 @@ export class SimulationSystem {
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
-  private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit> }>();
+  private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit>; spec: ChargeSpec; end: Vector3 | null }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
@@ -738,30 +747,46 @@ export class SimulationSystem {
       return;
     }
 
-    // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE)
-    if (preset === "iconic_mammoth" && canMove) {
+    // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE); the wheelbarrow's ram (WHEELBARROW_RAM)
+    const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM : null;
+    if (chargeSpec && canMove) {
       const run = this._charges.get(unit);
-      if (run && (!unit.isCharging || run.target.isDead)) {
+      if (run && (!unit.isCharging || (run.target.isDead && !run.end))) {
         unit.endCharge();
         this._charges.delete(unit);
-      } else if (!run && distance > engageDistance + MAMMOTH_CHARGE.from && distance < engageDistance + MAMMOTH_CHARGE.reach && now >= (this._chargeReadyAt.get(unit) ?? 0)) {
+      } else if (!run && distance > engageDistance + chargeSpec.from && distance < engageDistance + chargeSpec.reach && now >= (this._chargeReadyAt.get(unit) ?? 0)) {
         const dir = enemy.position.subtract(unit.position);
         dir.y = 0;
-        unit.startCharge(MAMMOTH_CHARGE.speed, now + MAMMOTH_CHARGE.seconds);
-        this._charges.set(unit, { target: enemy, dir: dir.normalize(), trampled: new Set() });
-        this._chargeReadyAt.set(unit, now + MAMMOTH_CHARGE.cooldown);
-        this._logAbility(unit, "charge", now, enemy.position);
+        unit.startCharge(chargeSpec.speed, now + chargeSpec.seconds);
+        this._charges.set(unit, { target: enemy, dir: dir.normalize(), trampled: new Set(), spec: chargeSpec, end: null });
+        this._chargeReadyAt.set(unit, now + chargeSpec.cooldown);
+        if (chargeSpec.log) this._logAbility(unit, "charge", now, enemy.position);
         if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position, CHARGE_DUST);
       }
       const charging = this._charges.get(unit);
       if (charging) {
-        const ahead = charging.target.position.subtract(unit.position);
-        ahead.y = 0;
-        if (ahead.lengthSquared() > 0.01) charging.dir = ahead.normalize();
-        unit.moveTo(charging.target.position.add(charging.dir.scale(MAMMOTH_CHARGE.overrun)));
-        this._clearPathState(unit);
-        unit.faceTarget(charging.target.position);
-        return;
+        if (charging.end) {
+          // driven through: on to the point past where its man stood, then the run is over
+          const left = charging.end.subtract(unit.position);
+          left.y = 0;
+          if (left.length() < 0.4) {
+            unit.endCharge();
+            this._charges.delete(unit);
+          } else {
+            unit.moveTo(charging.end);
+            this._clearPathState(unit);
+            unit.faceTarget(charging.end);
+            return;
+          }
+        } else {
+          const ahead = charging.target.position.subtract(unit.position);
+          ahead.y = 0;
+          if (ahead.lengthSquared() > 0.01) charging.dir = ahead.normalize();
+          unit.moveTo(charging.target.position.add(charging.dir.scale(chargeSpec.overrun)));
+          this._clearPathState(unit);
+          unit.faceTarget(charging.target.position);
+          return;
+        }
       }
     }
 
@@ -921,21 +946,27 @@ export class SimulationSystem {
         if (other.isDead || other.team === unit.team || !other.isTargetable || run.trampled.has(other)) continue;
         const off = other.position.subtract(unit.position);
         off.y = 0;
-        if (off.length() > unit.collisionBodyRadius + other.collisionBodyRadius + MAMMOTH_CHARGE.contact) continue;
+        const C = run.spec;
+        if (off.length() > unit.collisionBodyRadius + other.collisionBodyRadius + C.contact) continue;
         if (Vector3.Dot(off, run.dir) < 0) continue;
         run.trampled.add(other);
         // Aside off the charge's line, to whichever side of it he stood, and on ahead of it
         const across = new Vector3(run.dir.z, 0, -run.dir.x);
         const side = Vector3.Dot(off, across) >= 0 ? 1 : -1;
         const outward = across.scale(side * 0.8).add(run.dir.scale(0.6)).normalize();
-        other.applyDamage(MAMMOTH_CHARGE.damage, outward.scale(MAMMOTH_CHARGE.fling));
-        other.applyBlastLaunch(outward, MAMMOTH_CHARGE.fling, MAMMOTH_CHARGE.lift);
+        other.applyDamage(C.damage, outward.scale(C.fling));
+        other.applyBlastLaunch(outward, C.fling, C.lift);
         this._logAbility(unit, "trample", now, other.position);
         if (this.visualEffects) this.visualEffects.spawnSmokePuff(other.position, CHARGE_DUST);
       }
       if (run.trampled.has(run.target)) {
-        unit.endCharge();
-        this._charges.delete(unit);
+        if (run.spec.through) {
+          // the cart drives on through: fix the run's end past where its man stood
+          if (!run.end) run.end = unit.position.add(run.dir.scale(Vector3.Distance(unit.position, run.target.position) + run.spec.overrun));
+        } else {
+          unit.endCharge();
+          this._charges.delete(unit);
+        }
       }
     }
   }
