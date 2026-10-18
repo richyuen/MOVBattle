@@ -797,19 +797,19 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 }
 
 // ═══════════════════════ DA VINCI TANK ═══════════════════════
-// Roof spec, read off renaissance.da_vinci_tank.red.png: the lower tier is a wide shallow cone of 16 team planks (eave about 2.5 m across, rising
+// Roof spec, read off renaissance.da_vinci_tank.red.png: the lower tier is a wide shallow cone of 16 team planks (eave about 3.5 m across, four to five men, rising
 // about 25 deg) with a dark seam down every plank edge and a rivet at each seam's foot; above it a small second cone with its own short eave; under the
 // eave a dark plank drum a little narrower, banded at the middle, where the cannons sit.
 const DAVINCI_ROOF = {
   planks: 16,
-  eaveR: 1.25, eaveY: 0.74, topR: 0.42, topY: 1.12,
-  capEaveR: 0.6, capY: 1.1, capApex: 1.38, lip: 0.05,
+  eaveR: 1.75, eaveY: 0.74, topR: 0.59, topY: 1.12,
+  capEaveR: 0.84, capY: 1.1, capApex: 1.38, lip: 0.05,
   seam: 0.035, rivet: 0.06,
-  drumR: 1.0, drumBottom: 0.2, drumTop: 0.78, drumMid: 0.46,
+  drumR: 1.4, drumBottom: 0.2, drumTop: 0.78, drumMid: 0.46,
   drumColor: new Color3(0.24, 0.13, 0.1), seamColor: new Color3(0.1, 0.06, 0.05),
 };
 
-const DAVINCI_CANNON = { count: 16, out: 1.62, bore: 0.2, ring: 0.07, ringWide: 1.3, color: new Color3(0.16, 0.16, 0.18) };
+const DAVINCI_CANNON = { count: 16, out: 2.27, bore: 0.2, ring: 0.07, ringWide: 1.3, color: new Color3(0.16, 0.16, 0.18) };
 
 function buildDaVinciRoof(scene: Scene, parent: TransformNode, team: PBRMetallicRoughnessMaterial, allMeshes: Mesh[]): Mesh {
   const R = DAVINCI_ROOF;
