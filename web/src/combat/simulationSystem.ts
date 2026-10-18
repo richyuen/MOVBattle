@@ -66,6 +66,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
+// Archers whose arrows carry a balloon: the man struck floats up under balloons (renaissance.balloon_archer; RuntimeUnit.floatOnBalloons)
+const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
 /**
  * A firearm whose ball throws the man it hits (units/renaissance.musketeer, card Weapons: the musket's force is 1500, against a club's 20): a man the shot
  * leaves alive is knocked off his feet along its line and tumbles, as from a blast (RuntimeUnit.applyBlastLaunch), not merely flinched. Keyed by weaponHint, so
@@ -1737,7 +1739,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source) },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) },
           );
         }
       } else {

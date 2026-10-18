@@ -1,5 +1,6 @@
 import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
+import { getMaterialFactory } from "./materialFactory";
 
 /*
  * [S] spin while firing (330; card Characteristics "During battle, the machine spins around, launching cannonballs from the cannons"; renaissance.da_vinci_tank.jpg).
@@ -7,6 +8,14 @@ import { createFxAmbient } from "../combat/particleFactory";
  * spinUp and lost at spinDown per second, and keeps turning through the wait for the next volley and DRUM_SPIN.linger s past it.
  */
 const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
+/*
+ * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
+ * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
+ * (floatOnBalloons) has `per` team balloons swell over his head in `swell` s, `size` m across on `string` m strings, up to `most` from several arrows;
+ * while they hold (`seconds` from the last arrow) gravity is cancelled and he rises at `rise` m/s, divided by the square root of his mass (a heavy man
+ * needs more arrows: each arrow's balloons add their share), to at most `top` m; then they pop and he falls.
+ */
+const BALLOON_FLOAT = { seconds: 3, rise: 1.4, top: 3.2, per: 3, most: 9, size: 0.42, string: 0.55, swell: 0.12 };
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
@@ -861,7 +870,60 @@ export class RuntimeUnit {
     this._slowUntil = Math.max(this._slowUntil, now + Math.max(0.1, durationSeconds));
   }
 
+  /** Struck by a balloon arrow (BALLOON_FLOAT): team balloons swell over his head and float him up until they pop. */
+  floatOnBalloons(color: Color3): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    const now = RuntimeUnit.timeNowSeconds();
+    this._floatUntil = now + BALLOON_FLOAT.seconds;
+    this._grounded = false;
+    const scene = this.body.root.getScene();
+    this._balloonRig ??= new TransformNode("balloonRig", scene);
+    const paint = getMaterialFactory().get("bone", color, { emissiveIntensity: 0.12 });
+    const string = getMaterialFactory().get("cloth", new Color3(0.85, 0.85, 0.82));
+    for (let i = 0; i < BALLOON_FLOAT.per && this._balloons.length < BALLOON_FLOAT.most; i++) {
+      const k = this._balloons.length;
+      // Round the head in a loose bunch, each a little higher and further out than the last
+      const a = k * 2.4;
+      const out = 0.12 + 0.05 * (k % 3);
+      const up = BALLOON_FLOAT.string + 0.08 * (k % 3);
+      const holder = new TransformNode("balloon", scene);
+      holder.parent = this._balloonRig;
+      holder.rotation.set(Math.cos(a) * out, 0, Math.sin(a) * out);
+      const ball = MeshBuilder.CreateSphere("balloonBall", { diameter: BALLOON_FLOAT.size, segments: 6 }, scene);
+      ball.scaling.set(1, 1.18, 1);
+      ball.bakeCurrentTransformIntoVertices();
+      ball.convertToFlatShadedMesh();
+      ball.material = paint;
+      ball.position.y = up + BALLOON_FLOAT.size * 0.55;
+      ball.parent = holder;
+      const cord = MeshBuilder.CreateCylinder("balloonString", { height: up, diameter: 0.012, tessellation: 3 }, scene);
+      cord.material = string;
+      cord.position.y = up * 0.5;
+      cord.parent = holder;
+      holder.scaling.setAll(0.01);
+      this._balloons.push({ node: holder, born: now });
+    }
+  }
+  private _floatUntil = 0;
+  private _balloonRig: TransformNode | null = null;
+  private _balloons: { node: TransformNode; born: number }[] = [];
+
+  /** The balloons ride over his head, swelling in; dead or out of time, they pop. */
+  private _tendBalloons(now: number): void {
+    if (!this._balloonRig) return;
+    if (this._isDead || now >= this._floatUntil) {
+      this._balloonRig.dispose(false, false);
+      this._balloonRig = null;
+      this._balloons = [];
+      return;
+    }
+    this.body.headTop.computeWorldMatrix(true);
+    this._balloonRig.position.copyFrom(this.body.headTop.getAbsolutePosition());
+    for (const b of this._balloons) b.node.scaling.setAll(Math.max(0.01, Math.min(1, (now - b.born) / BALLOON_FLOAT.swell)));
+  }
+
   update(dt: number, now: number): void {
+    this._tendBalloons(now);
     // Animate
     // A blasted body stays limp for its whole flight, not just until the topple clock runs out mid-air.
     this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
@@ -915,14 +977,21 @@ export class RuntimeUnit {
 
     // ── Physics: gravity + velocity for knockback ──
     if (!this._grounded || this._velocity.lengthSquared() > 0.001) {
-      // Gravity
-      this._velocity.y -= 22 * dt;
+      // Gravity, or his balloons holding him up (BALLOON_FLOAT): rising to the top of the float and hanging there
+      if (now < this._floatUntil) {
+        this._grounded = false;
+        const lift = BALLOON_FLOAT.rise * Math.min(1, this._balloons.length / BALLOON_FLOAT.per) / Math.sqrt(Math.max(1, this.definition.mass));
+        const want = pos.y < BALLOON_FLOAT.top ? lift : 0;
+        this._velocity.y += (want - this._velocity.y) * Math.min(1, dt * 5);
+      } else {
+        this._velocity.y -= 22 * dt;
+      }
 
       // Apply velocity
       pos.addInPlace(this._velocity.scale(dt));
 
-      // Ground collision
-      if (pos.y <= 0) {
+      // Ground collision (not while the balloons lift him off it)
+      if (pos.y <= 0 && now >= this._floatUntil) {
         pos.y = 0;
         if (this._velocity.y < -1) {
           // Bounce slightly

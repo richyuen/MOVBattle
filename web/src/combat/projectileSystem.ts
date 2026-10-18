@@ -15,6 +15,8 @@ export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | 
 
 interface ActiveProjectile {
   mesh: TransformNode;
+  /** A balloon arrow (ProjectileSpawnOptions.balloons). */
+  balloons?: boolean;
   origin: Vector3;
   target: RuntimeUnit;
   targetPos: Vector3;       // snapshot in case target dies mid-flight
@@ -128,6 +130,8 @@ interface ProjectileSpawnOptions {
   riseTo?: number;
   /** The arc's height per metre of flight in place of the shape's own (a leaf whirl kept low along the ground). */
   arc?: number;
+  /** A balloon arrow: the man it strikes floats up under balloons of the shooter's colour (RuntimeUnit.floatOnBalloons). */
+  balloons?: boolean;
 }
 
 interface MuzzleFlashOptions {
@@ -312,6 +316,7 @@ export class ProjectileSystem {
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
+      balloons: options.balloons,
       trailSystem, trailStarted,
       half: held?.half,
       rope: options.tether ? this._buildRope() : undefined,
@@ -670,6 +675,8 @@ export class ProjectileSystem {
         // A thrown spear launches the man it sticks in (LAUNCH.throw): thrown back off his feet from where it was thrown, not merely nudged
         const launch = LAUNCH[p.shape];
         if (launch?.throw && !p.target.isDead) p.target.staggerFromBlow(p.origin, launch.throw);
+        // A balloon arrow's ball swells into balloons on the man it strikes, and they float him up
+        if (p.balloons && !p.target.isDead) p.target.floatOnBalloons(this._getTeamProjectilePalette(p.attackerTeam).primary);
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
