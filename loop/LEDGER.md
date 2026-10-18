@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-332 | musket bullet fling (ac25108) | renaissance.musketeer.c | approved
-332 | paint splotches (f7538a3) | renaissance.painter.c | approved
-332 | lance on target (062a748) | renaissance.jouster.c | approved
-332 | long dark hair (cfb3c57) | renaissance.painter.a | approved
-332 | balloon float (c99a50c +1) | renaissance.balloon_archer.c | approved
 333 | lunge legs (90d850a) | renaissance.fencer.c | approved
 333 | level lance (eea51ad) | renaissance.jouster.c | approved
 333 | arrow ball (4e0e02c) | renaissance.balloon_archer.c | approved
@@ -56,6 +51,11 @@ for 25 iterations.
 341 | jacket, vest, shirt V (76bdeb8) | farmer.halfling.a | approved
 341 | crow in each fist (6718e9a) | farmer.scarecrow.b | approved
 341 | socks and shoes (3c6b4c5) | farmer.farmer.a | approved
+342 | flying crow missiles (d8ad061) | farmer.scarecrow.c | approved
+342 | knee shorts and buckled belt (439c08e) | farmer.halfling.a | approved
+342 | fork across the hips in both fists (8c2de8f +2) | farmer.farmer.b | rejected
+342 | green drunk splash (97ea8d4 +1) | farmer.potion_seller.c | approved
+342 | low diagonal two-handed scythe, pegs (0c87e29) | farmer.harvester.b | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -73,9 +73,16 @@ propBuilder.ts:CROW_WINGS (span, raise, sweep, feathers, wrist, glow) | 2.7, .55
 propBuilder.ts:stick STICK (long, grip, thick, tip, kinks, bend, glow), WOOD | .75, .12, .085, .8, 5, .035, .18; (.68,.4,.26) | 341 | approved | thick .045
 propBuilder.ts:pointed_cowl LIRIPIPE (snug, root, end, path 7 pts, yoke, yokeDeep, dags, dag, dagWide, flare) | 1.18,.62,.14,-,1.5,.22,9,.32,.36,.25 | 340 | approved | replaced COWL_* cone
 tribalDress.ts:SHAGGY (cap, locks, long, front, thick, splay), COLOR | 1.32, 26, .5, .5, .3, .55; (.38,.21,.12) | 340 | approved | -
-propBuilder.ts:sun_hat FLOPPY (brim, droop, lift, tip, crown, crownTall, apart, ahead, root, braid, plaits, thick) | 2.25,.28,.12,.12,1.12,.42,.6,.08,.05,1.15,5,.26 | 340 | approved | replaced SUN_*
+propBuilder.ts:sun_hat FLOPPY (brim, droop, lift, tip, crown, crownTall, apart, ahead, root, braid, plaits, thick) | 2.25,.28,.12,.12,1.12,.42,.68,.08,.05,1.6,5,.42 | 342 | approved | 340: apart .6, braid 1.15, thick .26
 propBuilder.ts:SACK (wide, top, tall, crown, dome, button, eyes, eyeDrop, neck, glow), BROWN | 1.22,1.12,1.12,.06,.12,.24,.22,.1,1,.2; (.56,.36,.22) | 340 | approved | -
 tribalDress.ts:BOWL (dome, crown, fringe, hang, flare, face), COLOR | 1.3, .78, .5, .4, 1.08, .36; (.45,.22,.15) | 341 | approved | -
 unitFactory.ts:HALFLING_DRESS (jacket, drop, vest, proud, vee, veeDeep, lapel, vestLight, jacketShade) | 1.14,.12,.56,.03,.42,.42,.34,.5,.8 | 341 | approved | -
 propBuilder.ts:HELD_CROW (long, wide, tall, head, beak, wing, tail, fan, seat, glow) | .24,.11,.12,.085,.06,.17,.11,.1,.03,.12 | 341 | approved | -
 unitFactory.ts:FARMER_SOCK (sock, long, cuff, cuffTall, collar, collarTall, glow), SHOE | 1.14,.9,1.3,.12,1.36,.13,.22; (.5,.29,.18) | 341 | approved | -
+projectileSystem.ts:FLYING_CROW (long, wide, tall, head, beak, span, chord, flat, fingers, feather, tail, fan, glow, beat, lift, rate) | .34,.17,.17,.13,.08,.34,.2,.12,4,.1,.16,.16,.12,.6,.15,15 | 342 | approved | -
+unitFactory.ts:HALFLING_SHORTS (seat, seatTall, leg, flare, long, belt, buckle, dark, glow), BELT | 1.04,.3,1.3,1.12,.92,.1,.14,.45,.14; (.3,.18,.11) | 342 | approved | -
+projectileSystem.ts:DRUNK_SPLASH (radius, puffs, size, life, push, seconds) | 2.2, 14, .9, 1.6, .15, 6 | 342 | approved | replaced bomb blast for potion_seller
+runtimeUnit.ts:DRUNK (dye, glow, roll, rate, slow); simulationSystem DRUNK_WANDER (reach, swing) | .8, .35, .22, 4.5, .55; 2.5, .9 | 342 | approved | -
+proceduralAnimation.ts:SCYTHE_LOW (raise, out, elbow, tip, spin); POLE_GRIP.snathPeg | -.3,.12,-.75,(-.8,.5,.3),pi/2; [.28,.32] | 342 | approved | -
+unitFactory.ts:SNATH_PEG (low, high, long, thick), SNATH_WOOD | -.15, .15, .09, .03; (.5,.24,.17) | 342 | approved | -
+proceduralAnimation.ts:FORK_CARRY (raise, out, elbow, tip) | reverted | 342 | rejected | -.4,.04,-.55,(-.7,-.6,.72)
