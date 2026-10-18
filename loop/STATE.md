@@ -1,12 +1,12 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 350   Batch: medieval (4/18)   Consecutive empty: 0   Done: 21/139   Parked: 0
+Iteration: 351   Batch: medieval (4/18)   Consecutive empty: 0   Done: 21/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
-medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
+medieval: bard ---+ o | squire --++ o | archer ---+ o | healer ---+ o | knight -+++ o | catapult --++ o | king --++ o
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
@@ -23,14 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-350 (BASE 8ce9347): [S] farmer b fork head at hip height aecb1d9 approved | [S] wheelbarrow c stab aimed at the man b0cfd14+6b93c12 approved | [S] wheelbarrow a log drum wheel 6298fe0 approved | [P] wheelbarrow a AFRO 109f875 approved
-349: farmer [R] carry, wheelbarrow crew dressed + riders fight approved.
+351 (BASE 3df7001): [S] healer c gold heal beam 8407591 approved | [S] catapult c throwing arm df37545+a4cb4c1 approved | [S] knight c Knight Charge b806f45 approved | [S] bard b banjo e179db7 approved | [S] king b Zweihander 4c91ec8 rejected (reverted ce15b46)
+351.0: regression re-baseline 256a539, medieval stats 3df7001, evidence (war machines framed by mesh top) 65be27f.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] farmer.farmer (aecb1d9) VERDICT: APPROVE CRITERION: farmer.farmer.b PASS (previous: FAIL) BLOCKERS: struck: 2 (list now empty)
-- GAP: [S] farmer.wheelbarrow (b0cfd14 + 6b93c12) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.c PASS (previous: FAIL) BLOCKERS: struck: 2 (list now empty)
-- GAP: [S] farmer.wheelbarrow (6298fe0) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a PASS (previous: FAIL) BLOCKERS: struck: 3 (list now empty)
-- GAP: [P] farmer.wheelbarrow (109f875) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a PASS (previous: FAIL; flipped by 6298fe0)
+- GAP: [S] medieval.healer (8407591) VERDICT: APPROVE CRITERION: medieval.healer.c FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2. healed ally only partly gilded
+- GAP: [S] medieval.catapult (df37545 + a4cb4c1) VERDICT: APPROVE CRITERION: medieval.catapult.c PASS (previous: FAIL) BLOCKERS: struck: 1 (list cleared)
+- GAP: [S] medieval.knight (b806f45) VERDICT: APPROVE CRITERION: medieval.knight.c PASS (previous: FAIL) BLOCKERS: struck: 1 (list cleared)
+- GAP: [S] medieval.bard (e179db7) VERDICT: APPROVE CRITERION: medieval.bard.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2. grip both fists high on the neck
+- GAP: [S] medieval.king (4c91ec8) VERDICT: REJECT CRITERION: medieval.king.b FAIL (previous: FAIL) BLOCKERS: 1, 2 open; added 3 (pommel-first swing, from 4c91ec8)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -51,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- REQUIRED FIRST COMMIT (350 farmer batch checkpoint, 10/12): battlefeel_shield_wall_vs_light_swarm (tribal.protector moved 1.82 > 1.35) and battlefeel_spillover_chain (farmer.farmer dead, expected toppled|downed|recovering). Fix or re-baseline with cause.
-- medieval is unaudited: step 2 (capture --batch medieval, stats, AUDIT critic) next. Reread ITERATE step 2.
-- Off-camera checks: a scratch playwright probe on `vite preview` (seed Math.random as capture does; replay a frame with ONE advanceTime call, as shots do) beats guessing from shot angles.
-- Sim code reading joint positions must computeWorldMatrix the chain first: world matrices only refresh on render, and capture replays a frame in one call (350 wheelbarrow stab never fired in shots).
-- Plain browns go black under this light: mat(scene, c, glow ~.2). Patch via python io.open(..., newline=''). Never `git commit -a`. After any --iter capture rerun stats --batch <batch> --iter N.
+- Medieval audited 351 (d 7/7 PASS after stats). Squire/archer stats moved (both in regression scenarios): expect re-baselines at the medieval checkpoint.
+- King Zweihander retry: the greatsword's +y runs out of the fist toward his back in the carry/swing; mount the blade on the old slab sword's swing side (check unit_medieval.king_release) before widening it.
+- Pickable [P] fallout (351): HEAL_BEAM.core thicker (healer_flight), CATAPULT_ARM.cocked lower (catapult_idle).
+- Scratch probe: run scenarios on `node <web>/node_modules/vite/bin/vite.js preview` spawned without a shell (server.kill() works); npx+shell leaves vite alive on the port.
+- Bash eats backslashes in heredoc/inline python: write patch scripts with the Write tool; unitVisuals.ts is CRLF. Never `git commit -a`. After any --iter capture rerun stats --batch <batch> --iter N.
