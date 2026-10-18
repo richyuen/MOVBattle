@@ -3824,21 +3824,36 @@ const WING_FEATHER_FAN = [0.35, 1.25];
  * slab under it and a fan of flat pointed feathers below that, longest toward the tip, whose stepped points make the notched trailing edge. Sized off the torso it hangs
  * on, so the pair spans several torsos and stands over the head at lineup distance.
  */
-function buildFeatherWings(scene: Scene, body: ArticulatedBody): void {
+/*
+ * [S] big crow wings (339; farmer.scarecrow.red.png, card Big Crow Wings: two huge black feathered wings off his back, raised up and out past his
+ * T-posed hands, the leading edge near the root (the wrist) in the team colour, a ragged fan of long black primaries below). The valkyrie's build in
+ * black: the same bar, covert and feather fan, in CROW_WINGS' colours and sizes; the bar's first .wrist of its length is the team colour.
+ */
+type FeatherWingStyle = { span: number; raise: number; sweep: number; feathers: number; feather: Color3; covert: Color3; bar: Color3; glow: number; wrist: number };
+const VALKYRIE_WINGS: FeatherWingStyle = { span: WING_SPAN, raise: WING_RAISE, sweep: WING_SWEEP, feathers: WING_FEATHERS, feather: new Color3(0.8, 0.9, 0.98), covert: new Color3(0.9, 0.95, 1.0), bar: new Color3(0.42, 0.29, 0.19), glow: 0.04, wrist: 0 };
+const CROW_WINGS: FeatherWingStyle = { span: 2.7, raise: 0.55, sweep: 0.22, feathers: 9, feather: new Color3(0.09, 0.09, 0.13), covert: new Color3(0.13, 0.13, 0.18), bar: new Color3(0.1, 0.1, 0.14), glow: 0.06, wrist: 0.32 };
+function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWingStyle = VALKYRIE_WINGS, teamColor?: Color3): void {
   const torsoH = body.torsoMesh.position.y * 2;
-  const L = torsoH * WING_SPAN;
-  const featherMat = mat(scene, new Color3(0.8, 0.9, 0.98), 0.04);
-  const covertMat = mat(scene, new Color3(0.9, 0.95, 1.0), 0.04);
-  const barMat = mat(scene, new Color3(0.42, 0.29, 0.19));
+  const L = torsoH * style.span;
+  const featherMat = mat(scene, style.feather, style.glow);
+  const covertMat = mat(scene, style.covert, style.glow);
+  const barMat = mat(scene, style.bar, style.wrist > 0 ? style.glow : 0);
   for (const side of [-1, 1]) {
     const root = new TransformNode("wingRoot", scene);
     root.parent = body.torso;
     root.position.set(side * torsoH * 0.18, torsoH * 0.82, -torsoH * 0.3);
-    root.rotation.set(0, side * WING_SWEEP, side * WING_RAISE);
+    root.rotation.set(0, side * style.sweep, side * style.raise);
     const bar = MeshBuilder.CreateBox("wingBar", { width: L, height: torsoH * 0.11, depth: torsoH * 0.07 }, scene);
     bar.parent = root;
     bar.position.x = side * L * 0.5;
     bar.material = barMat;
+    if (style.wrist > 0 && teamColor) {
+      // the team-coloured wrist over the bar's root end, a little proud of it
+      const wrist = MeshBuilder.CreateBox("wingWrist", { width: L * style.wrist, height: torsoH * 0.15, depth: torsoH * 0.1 }, scene);
+      wrist.parent = root;
+      wrist.position.x = side * L * style.wrist * 0.5;
+      wrist.material = mat(scene, teamColor, 0.08);
+    }
     const covert = MeshBuilder.CreateCylinder("wingCovert", { height: L * 0.95, diameterTop: torsoH * 1.0, diameterBottom: torsoH * 0.35, tessellation: 4 }, scene);
     covert.rotation.z = -side * Math.PI / 2;
     covert.bakeCurrentTransformIntoVertices();
@@ -3846,8 +3861,8 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody): void {
     covert.parent = root;
     covert.position.set(side * L * 0.5, -torsoH * 0.3, -torsoH * 0.01);
     covert.material = covertMat;
-    for (let i = 0; i < WING_FEATHERS; i++) {
-      const t = (i + 1) / WING_FEATHERS;
+    for (let i = 0; i < style.feathers; i++) {
+      const t = (i + 1) / style.feathers;
       const len = L * (WING_FEATHER_LEN[0] + (WING_FEATHER_LEN[1] - WING_FEATHER_LEN[0]) * t);
       const a = WING_FEATHER_FAN[0] + (WING_FEATHER_FAN[1] - WING_FEATHER_FAN[0]) * t;
       const feather = MeshBuilder.CreateCylinder("wingFeather", { height: len, diameterTop: 0, diameterBottom: torsoH * 0.75, tessellation: 4 }, scene);
@@ -4411,6 +4426,8 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       return balloon;
     }
     case "scarecrow_post": {
+      // the scarecrow's big black crow wings ride on his special (see CROW_WINGS)
+      buildFeatherWings(scene, body, CROW_WINGS, teamColor ?? accent);
       const post = MeshBuilder.CreateCylinder("post", { height: 0.6 * s, diameter: 0.04 * s }, scene);
       post.position.set(0, -0.3 * s, -0.05 * s);
       post.parent = body.hip;
