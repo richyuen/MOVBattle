@@ -815,7 +815,7 @@ const DAVINCI_ROOF = {
  * heights are no longer set by hand (they made a ~17 deg roof): each tier is raised at a pitch, DAVINCI_PITCH.lower from the eave to the lower tier's
  * top and .cap from the cap's eave to its apex, and the cap sits on the lower tier's top. The radii stay as they were (DAVINCI_ROOF).
  */
-const DAVINCI_PITCH = { lower: 0.66, cap: 0.75 };
+const DAVINCI_PITCH = { lower: 0.72, cap: 0.95 };
 function daVinciTiers(): { topY: number; capY: number; capApex: number } {
   const R = DAVINCI_ROOF;
   const topY = R.eaveY + (R.eaveR - R.topR) * Math.tan(DAVINCI_PITCH.lower);
