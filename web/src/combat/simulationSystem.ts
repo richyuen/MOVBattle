@@ -205,6 +205,13 @@ const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 
  * back through the fight. Logged "trample" at each man run over (not "charge" at the start).
  */
 const WHEELBARROW_RAM = { from: 0.6, reach: 16, speed: 1.7, seconds: 3, overrun: 4, contact: 0.35, damage: 6, fling: 4.5, lift: 4, cooldown: 2.2, through: true, log: false };
+/*
+ * [S] Knight Charge (351; card Weapons "Knight Charge: damage 20; cooldown 5 s; range 2.5; force 2000", Characteristics "Upon at close range, the Knight
+ * will charge in and attack"): the mammoth's charge, short. An enemy KNIGHT_CHARGE.from to .reach metres past his reach sets the knight dashing at him at
+ * .speed times his pace for up to .seconds; the man he meets is battered aside and up hard (.fling/.lift) for a little .damage, which ends the dash, and he
+ * fights on with sword and shield. .cooldown s between charges. Logged "charge" at the start and "trample" at the hit.
+ */
+const KNIGHT_CHARGE = { from: 0.4, reach: 2.5, speed: 2.6, seconds: 1.0, overrun: 0.5, contact: 0.3, damage: 5, fling: 6, lift: 3.5, cooldown: 5, through: false, log: true };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -866,7 +873,8 @@ export class SimulationSystem {
     }
 
     // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE); the wheelbarrow's ram (WHEELBARROW_RAM)
-    const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM : null;
+    const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM
+      : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : null;
     if (chargeSpec && canMove) {
       const run = this._charges.get(unit);
       if (run && (!unit.isCharging || (run.target.isDead && !run.end))) {
