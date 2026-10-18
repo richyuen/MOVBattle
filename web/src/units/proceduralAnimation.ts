@@ -145,6 +145,7 @@ const OFFHAND_GRIP_UP = 0.11;
  */
 const POLE_GRIP = {
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
+  musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
 } as const;
 /*
  * [S] palette held up (328; renaissance.painter.jpg: the off arm out from the shoulder and the forearm up, the palette flat at chest height beside him).
