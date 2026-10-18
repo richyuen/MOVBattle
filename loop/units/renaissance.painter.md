@@ -10,13 +10,15 @@ c FAIL (0 since 327)
  1. missing: paint splotches flying from the brush in unit_renaissance.painter_release/_flight (ref: card Appearance)
 d PASS (cost 50, hp 0.75x, dmg 0.17x, cd 0.35x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [P] b palette out to the side (fallout of 328 palette [S]) — proceduralAnimation.ts PALETTE_HOLD out -0.55->-1.2, raise -1.0->-0.6 — NEXT shot: unit_renaissance.painter_windup.png
-2. [S] c paint splotches — blocker 1: team paint blobs flung from the brush on the hit — ref: card Appearance — ours: unit_renaissance.painter_release.png
+1. [S] b palette out and face-up — blocker 3: _offArmTo onto a world point beside the off shoulder (out ~0.5 m, chest height), palette face turned to world up — ref: renaissance.painter.jpg — ours: unit_renaissance.painter_windup.png
+2. [S] c paint splotches — blocker 1: team paint blobs flung from the brush tip on each swing — ref: card Appearance — ours: unit_renaissance.painter_release.png
 ## Attempts (iter | gap | criterion | verdict)
 327 | short one-handed brush [S] (34e0270 + 362af93) | b | approved
 328 | kidney palette held at chest [S] (642eb06) | b | approved
 328 | brush girth [P] (67edb37) | b | approved
+329 | palette out [P] (a8a09e2) | b | rejected
 ## Rejected (last 4)
+- palette out [P] [1] — 329: PALETTE_HOLD out -0.55->-1.2, raise -1.0->-0.6 — no visible change in _idle/_windup/_release; the euler swing does not take the arm out, face stays vertical
 ## Notes (max 3 lines)
 - The hand's +y runs up the forearm: a one-handed prop built along +y lies along the arm; the brush is turned end over end (rotation.x = PI).
-- Palette daubs sit on both faces; PALETTE_HOLD.out negative swings the left arm forward, not out (critic 328).
+- Probe 329: out -1.2 does put the idle hand 0.37 m out to the side; in the shots something later (the swing pose) keeps it before the chest.

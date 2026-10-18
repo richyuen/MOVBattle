@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 328   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 7/139   Parked: 0
+Iteration: 329   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 7/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,17 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-328 (BASE 3b4c2c2): [S] fencer b back slab 68ad77a approved | [S] halberd a sallet 0860943 approved | [S] musketeer b musket 9951a96 + 418ba56 approved | [S] painter b palette 642eb06 approved | [P] painter b brush girth 67edb37 approved | [S] jouster b lance 4a390e5 + b5ed844 approved. 6/6, no regressions.
-327 (BASE 738015e): 5/5 approved (balloon_archer brim hat, painter brush, fencer cavalier hat, halberd head, musketeer morion).
+329 (BASE 9e3e957): [S] halberd b two-handed grip 0f6980a + db2d934 approved | [S] musketeer b two-handed carry f4cff29 approved | [P] painter b palette out a8a09e2 rejected (reverted) | [S] jouster b heater shield fa71e96 + 9cb619c approved | [S] balloon_archer b longbow ea71dc1 + c2aff34 approved | [S] da_vinci_tank c cannonball 495e7d1 approved. 5/6, no regressions.
+328 (BASE 3b4c2c2): 6/6 approved (fencer back slab, halberd sallet, musketeer musket, painter palette + brush girth, jouster lance).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] renaissance.fencer (68ad77a) VERDICT: APPROVE CRITERION: renaissance.fencer.b FAIL (previous: FAIL) BLOCKERS: struck: 2. Remaining: 1.
-- GAP: [S] renaissance.halberd (0860943) VERDICT: APPROVE CRITERION: renaissance.halberd.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
-- GAP: [S] renaissance.musketeer (9951a96 + 418ba56) VERDICT: APPROVE CRITERION: renaissance.musketeer.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
-- GAP: [S] renaissance.painter (642eb06) VERDICT: APPROVE CRITERION: renaissance.painter.b FAIL (previous: FAIL) BLOCKERS: struck: 2; added: 3 (palette held square before the chest, hides the brush).
-- GAP: [P] renaissance.painter (67edb37) VERDICT: APPROVE CRITERION: renaissance.painter.b FAIL (previous: FAIL) BLOCKERS: 3.
-- GAP: [S] renaissance.jouster (4a390e5 + b5ed844) VERDICT: APPROVE CRITERION: renaissance.jouster.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
-- REGRESSIONS: none. d PASS 7/7 (stats 328).
+- GAP: [S] renaissance.halberd (0f6980a + db2d934) VERDICT: APPROVE CRITERION: renaissance.halberd.b FAIL (previous: FAIL) BLOCKERS: 2 not struck (half-cleared).
+- GAP: [S] renaissance.musketeer (f4cff29) VERDICT: APPROVE CRITERION: renaissance.musketeer.b FAIL (previous: FAIL) BLOCKERS: 2 not struck (one-handed half cleared, upright carry remains).
+- GAP: [P] renaissance.painter (a8a09e2) VERDICT: REJECT CRITERION: renaissance.painter.b FAIL (previous: FAIL) BLOCKERS: 3.
+- GAP: [S] renaissance.jouster (fa71e96 + 9cb619c) VERDICT: APPROVE CRITERION: renaissance.jouster.b FAIL (previous: FAIL) BLOCKERS: struck: 2. added: 3.
+- GAP: [S] renaissance.balloon_archer (ea71dc1 + c2aff34) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.b FAIL (previous: FAIL) BLOCKERS: struck: 1. added: 2.
+- GAP: [S] renaissance.da_vinci_tank (495e7d1) VERDICT: APPROVE CRITERION: renaissance.da_vinci_tank.c FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2.
+- REGRESSIONS: none. d PASS 7/7 (stats 329).
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- balloon_archer and da_vinci_tank had no pick in 328 (their files still hold ranked gaps; bow is shared by every archer: thread a variant, do not add a WeaponType). Fallout [P]s open: painter PALETTE_HOLD out, musketeer MUSKET long/bore.
-- LEDGER sits at ~13960/14000 bytes: keep new rows terse and trim old earlier-values notes before adding.
-- One-handed props: the hand's +y runs up the forearm; build along +y and turn rotation.x = PI (painter brush), or the prop lies along the arm.
-- After any --iter capture rerun stats --batch <batch> --iter N (the capture drops stats.json). capture.mjs --units takes a comma list.
-- Capture shade greys warm browns: dark saturated base with emissive 0.1 reads brown. Never put a bare `cat > file` (no heredoc) in a command.
+- fencer had no pick in 329 (ranked: lunge c, cup hilt b, hair a). Fallout [P]s open: balloon_archer LONGBOW long/thick, jouster HEATER size/upright, musketeer MUSKET long/bore.
+- LEDGER sits at ~13980/14000 bytes: trim old earlier-values notes before adding rows.
+- _offArmTo (shared off-arm solve) is ~20 deg off analytically; pass settle 2 for new callers. A prop child of a hand: probe in-page (spawnUnit + world matrices) before trusting a look shot.
+- One-handed props: the hand +y runs up the forearm. Shield turns go in shield.rotation (Euler); the shield layer rebuilds its rest from it.
+- After any --iter capture rerun stats --batch <batch> --iter N. capture.mjs --units takes a comma list. Never put a bare cat > file in a command.

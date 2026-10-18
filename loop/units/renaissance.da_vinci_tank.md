@@ -8,12 +8,14 @@ a FAIL (0 since 327)
  4. tank in lineup_renaissance is about two men wide — TABS: roof spans about four men (ref: reference/factions/renaissance.jpg)
 b FAIL (0 since 327)
  1. cannons in unit_renaissance.da_vinci_tank_idle are ~8 thin short team stubs on the cone — TABS: 16 thick dark-grey octagonal barrels with muzzle rings around the drum, out about half the roof radius (ref: renaissance.da_vinci_tank.red.png)
-c FAIL (0 since 327)
- 1. shots in unit_renaissance.da_vinci_tank_release/_flight are dark bolts with blue tips — TABS: cannonballs that shatter into fragments on impact (ref: card Characteristics)
+c FAIL (1 since 327)
  2. cannon stubs at the same angles in _release and _flight: not spinning — TABS: the machine spins while it fires (ref: card Characteristics; renaissance.da_vinci_tank.jpg)
 d PASS (cost 4000, hp 62.02x, dmg 0.58x, cd 1.75x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c cannonball — blocker 1: volley fires cannonballs that shatter into fragments on impact, replacing bolts — ref: card Characteristics — ours: unit_renaissance.da_vinci_tank_flight.png
+1. [S] c spin while firing — blocker 2: hull/barrel-ring yaw spin during the volley, balls launched from the muzzles — ref: renaissance.da_vinci_tank.jpg — ours: unit_renaissance.da_vinci_tank_release.png
+2. [S] a two-tier plank roof over a dark drum — blocker 1: low wide two-tier team-plank roof with seams, dark plank drum below — ref: renaissance.da_vinci_tank.red.png — ours: unit_renaissance.da_vinci_tank_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+329 | cannonballs that shatter on impact [S] (495e7d1) | c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
+- Critic 329 defect on the shot: streaks start on the cone's flank above the stubs, not at the muzzles (davinci_ball, spawnShatter).
