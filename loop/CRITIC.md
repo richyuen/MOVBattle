@@ -7,6 +7,7 @@ in your prompt on purpose. Judge only what you can see in the files you are give
 ## Ground rules
 - Compare MOVBattle screenshots against the TABS reference files for that unit. Never compare against earlier MOVBattle iterations; judge against TABS. Capture is seeded per scene, so a rerun of the same code gives the same frame, but any sim change reshuffles the timing, so a difference from the last iteration is neither a gain nor a loss by itself. Shots 150 ms apart (`_release`/`_flight`, `_ability`/`_ability_after`) are a motion pair: judge arcs, swing and lean from the pair.
 - Headless rendering uses swiftshader. Ignore shading, anti-aliasing and texture filtering. Judge proportion, silhouette, pose, motion state, prop shapes and colour choices.
+- Angles: `unit_<id>_idle` and `lineup_<f>` are shot from a front three-quarter on the weapon side, a little above eye level (the wiki render's angle); `_windup`, `_release`, `_flight`, `_struck` and the ability pair are side-on and level, so arcs and swing read. Judge headgear fronts, faces, chest ornaments and shield faces in the idle and lineup, never in the side shots.
 - Judge each gap on its own commit. One strong gap does not carry a weak one.
 - Reject scope creep (edits outside the gap), claims not visible in the evidence, and any gap with a regression attributed to it (a unit of the batch whose shot got worse on a criterion that was PASS).
 - Approve only a net improvement with no attributed regression. A small real step counts.
@@ -50,6 +51,8 @@ RANKED GAPS:
 1. [S|P] <id>.<letter> <gap> — blocker <n>: <mechanism> — ref: <file> — ours: <png>
 ... max 12 across the batch; at most 2 per unit; at least 8 [S] (fewer only when fewer FAIL criteria exist); at most 2 [P]; cheapest clear wins
 ```
+
+RE-AUDIT: when the prompt names criteria to re-audit (after an evidence change) you score only those from scratch, with a new closed list per FAIL, and copy the others from the unit file's Verdicts block you are given; a `<faction>:re` batch is a full AUDIT of every unit of that faction, done ones included.
 
 ## Gap review (every other iteration)
 One block per gap, in the order the prompt listed them (hard cap: 30 lines per gap, 20 lines for the tail):

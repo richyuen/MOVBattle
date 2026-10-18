@@ -1,12 +1,12 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
 Iteration: 354   Batch: medieval (4/18)   Consecutive empty: 0   Done: 21/139   Parked: 0
-Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
+Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
-medieval: bard --++ o | squire -+++ o | archer ---+ o | healer -+++ o | knight -+++ o | catapult --++ o | king -+++ o
+medieval: bard ??++ o | squire ??++ o | archer ??-+ o | healer ??++ o | knight ??++ o | catapult ??++ o | king ??++ o
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
@@ -55,5 +55,5 @@ d PASS|FAIL (<the stats.json line, shortened>)
 - Medieval audited 351 (d 7/7 PASS). Squire/archer stats moved in 351; archer arrow now leaves at the loose (354, ~1.5 s later); bard notes/walk 353-354: expect re-baselines at the medieval checkpoint.
 - Two-fisted swords (king, squire) run FISTS_ON_GRIP (354): blade mounted on its line through the fist, carry and let-go both keep it there.
 - Pickable [P] fallout: ARMET.rail 1.0 proud .12 (353, lineup_medieval); MUSIC_NOTE bigger/brighter (354, bard_ability); BOULDER warmer (354, catapult_windup).
-- Knight not captured since 353; its _idle faces away: helm front in lineup/_ability. Capture adds unit_<id>_walk for a banjo_walk.
-- Bash eats backslashes and some heredocs: write files with the Write tool; unitVisuals.ts is CRLF. Never git commit -a. Commit msgs via a file and git commit -F.
+- 355 first: RE-AUDIT a and b of every medieval unit (step 2; capture --batch medieval, critic given each unit file's Verdicts block). Evidence commit after 354 turned unit_<id>_idle and lineup_<f> to a front three-quarter (they were strict profile); a and b lists written from profile shots are void. c and d stand. Capture adds unit_<id>_walk for a banjo_walk.
+- tribal:re, renaissance:re, farmer:re follow medieval: full re-audits of the done batches under the new angles (ITERATE step 2).
