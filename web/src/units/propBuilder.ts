@@ -1043,6 +1043,18 @@ function seatInFist(mesh: Mesh, body: ArticulatedBody, scale: number): void {
   mesh.rotation.set(BOMB_SEAT_TURN, 0, 0);
 }
 
+/**
+ * A pole built along +y from the fist with its root lifted `lift` up its own length (the halberd, the matchlock): turned about that fist point, not its middle,
+ * and the fist point set on the hand mitt, so the grip preset's tilt leaves the shaft running through the fist (329: it hung ~0.4 m off the wrist).
+ */
+function seatPoleInFist(mesh: Mesh, body: ArticulatedBody, lift: number): void {
+  const mitt = body.rightHand.getChildren().find((n): n is TransformNode => /HandM$/.test(n.name));
+  mesh.setPivotPoint(new Vector3(0, -lift, 0));
+  mesh.position.copyFrom(mitt?.position ?? Vector3.Zero());
+  mesh.position.y += lift;
+}
+const SEATED_POLES = new Set<string>(["halberd"]);
+
 export function attachProps(
   scene: Scene,
   body: ArticulatedBody,
@@ -1057,11 +1069,13 @@ export function attachProps(
   const bladeFit: BladeFit = { fist: (body.metrics.hand?.width ?? 0.058 * scale) / PROP_OVERSIZE, stand: body.metrics.overallHeight / PROP_OVERSIZE };
   const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit, teamColor);
   if (weapon) {
+    const lift = weapon.position.y;
     weapon.parent = body.rightHand;
     weapon.scaling.scaleInPlace(PROP_OVERSIZE);
     applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
+    if (config.weapon && SEATED_POLES.has(config.weapon)) seatPoleInFist(weapon, body, lift);
     if (config.attachmentPreset === "fan_bearer") {
       tagVisualState(weapon, "fan_closed");
     }

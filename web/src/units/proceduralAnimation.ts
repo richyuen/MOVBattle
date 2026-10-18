@@ -1656,7 +1656,8 @@ export class ProceduralAnimator {
     // The tree's bowed side (its own +x) is turned about the trunk to face back against the way the trunk runs out, which the carry's turn then brings round to face up
     if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side) + Math.PI, 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
-    const pick = h(92);
+    // A pole held in both hands is carried upright before the chest (POLE_GRIP), the one attitude that keeps its shaft in the off hand's reach
+    const pick = this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";
@@ -2179,16 +2180,18 @@ export class ProceduralAnimator {
     for (let n: TransformNode | null = node; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
     const length = node.getBoundingInfo().boundingBox.extendSize.y * 2 * node.absoluteScaling.y;
-    const fist = this._body.rightHand.getAbsolutePosition();
+    // Along the shaft's own line (the grip preset sets it off the wrist), measured from where the weapon fist sits on it
+    const origin = node.getAbsolutePosition();
     const axis = Vector3.TransformNormal(Vector3.Up(), node.getWorldMatrix()).normalize();
+    const fistAt = Vector3.Dot(this._body.rightHand.getAbsolutePosition().subtract(origin), axis);
     this._body.leftShoulder.computeWorldMatrix(true);
-    const along = Vector3.Dot(this._body.leftShoulder.getAbsolutePosition().subtract(fist), axis);
-    const at = Math.max(span[0] * length, Math.min(span[1] * length, along));
-    this._offArmTo(fist.add(axis.scale(at)), w);
+    const along = Vector3.Dot(this._body.leftShoulder.getAbsolutePosition().subtract(origin), axis);
+    const at = Math.max(fistAt + span[0] * length, Math.min(fistAt + span[1] * length, along));
+    this._offArmTo(origin.add(axis.scale(at)), w, 2);
   }
 
   /** The off arm solved onto a world point: shoulder swing and elbow fold, the elbow out to his free side and down, eased in by `w`. */
-  private _offArmTo(grip: Vector3, w: number): void {
+  private _offArmTo(grip: Vector3, w: number, settle = 0): void {
     const b = this._body;
     // Into the off shoulder's frame: its parent's (the torso's) space, where the joint rotations act
     const frame = b.leftShoulder.parent as TransformNode;
@@ -2220,6 +2223,18 @@ export class ProceduralAnimator {
     b.leftElbow.rotation.x += (-fold - b.leftElbow.rotation.x) * w;
     b.leftElbow.rotation.y *= 1 - w;
     b.leftElbow.rotation.z *= 1 - w;
+    // Settled: the solved arm can leave the hand some way round off the point (~20 deg on a pole held across him), so the whole arm is swung about the
+    // shoulder from where the hand landed onto the point, `settle` times; the fold already set the reach
+    for (let i = 0; i < settle; i++) {
+      for (const n of [frame, b.leftShoulder, b.leftElbow, b.leftHand]) n.computeWorldMatrix(true);
+      const s = b.leftShoulder.getAbsolutePosition();
+      const landed = b.leftHand.getAbsolutePosition().subtract(s).normalize();
+      const aim = grip.subtract(s).normalize();
+      const fix = Quaternion.Slerp(Quaternion.Identity(), Quaternion.FromUnitVectorsToRef(landed, aim, new Quaternion()), w);
+      const parent = frame.absoluteRotationQuaternion;
+      const local = Quaternion.FromEulerAngles(b.leftShoulder.rotation.x, b.leftShoulder.rotation.y, b.leftShoulder.rotation.z);
+      Quaternion.Inverse(parent).multiply(fix).multiply(parent).multiply(local).toEulerAnglesToRef(b.leftShoulder.rotation);
+    }
   }
 
   // The spear in a shield man's weapon hand, with the turn and the offset it was strapped on with. Looked up on first use, like the board.
