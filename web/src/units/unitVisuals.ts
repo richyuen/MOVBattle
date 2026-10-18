@@ -18,7 +18,7 @@ export type WeaponType =
   | "fan" | "flail" | "whip" | "present_box" | "pom_pom" | "tree_club";
 
 export type HatType =
-  | "none" | "crown" | "helmet" | "viking_helmet" | "horned_helmet"
+  | "none" | "crown" | "royal_crown" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat"
   | "miner_hat"
@@ -312,7 +312,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "helmet", "none", "catapult_arm", "#8B4513",
   ),
   "medieval.king": vis(
-    { scale: 1.5, bulk: 1.3, headSize: 1.1 }, "greatsword", "crown", "none", "cape", "#FFD700",
+    { scale: 1.5, bulk: 1.3, headSize: 1.1 }, "greatsword", "royal_crown", "none", "cape", "#FFD700",
     undefined, { weaponVariant: "zweihander" },
   ),
 

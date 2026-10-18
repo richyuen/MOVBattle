@@ -43,7 +43,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -264,6 +264,12 @@ const MORION_IRON = new Color3(0.12, 0.12, 0.14);
  * band just above the eyes, a top rail .rail of the way up the dome's front, and .bars bars between them, all standing .proud W off the steel.
  */
 const ARMET = { heads: 1.22, deep: 1.1, dome: 0.5, drop: 1.0, plate: 0.09, bevor: 0.24, rail: 0.75, bars: 5, proud: 0.05, steel: new Color3(0.6, 0.6, 0.65) };
+/*
+ * [S] the King's crown (355; medieval.king.red.png, card Appearance "a golden bejeweled crown"). In head widths W and heights H: a closed gold band ROYAL_CROWN.heads
+ * W across and .band H tall, its foot .down H under the hat seat so it sits low on the brow just over the eyes (fitted, never floating); .points tall gold
+ * points .tall H high and .base W wide at the root round its top, leaning out .flare rad; a team gem on the band under each point; gold rims top and foot.
+ */
+const ROYAL_CROWN = { heads: 1.12, band: 0.3, down: 0.04, points: 8, tall: 0.42, base: 0.32, flare: 0.12, gem: 0.12, rim: 0.05, gold: new Color3(0.95, 0.72, 0.22) };
 const SALLET = { heads: 1.3, deep: 1.12, crown: 0.12, dome: 0.45, drop: 1.05, flare: 1.08, slit: 0.07, slitDown: 0.04, slitWide: 0.78, tail: 0.5, dip: 0.45 };
 /*
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
@@ -333,6 +339,40 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   const eyeTop = 0.44 * H - 0.18 * W;
   const seat = -eyeTop + HAT_EYE_CLEAR * H;
   const u = (v: number) => v / unit;
+  if (type === "royal_crown") {
+    // [S] the King's fitted crown (355; spec at ROYAL_CROWN), replacing the hat-scale torus that floated a head-width above him
+    const C = ROYAL_CROWN;
+    const gold = mat(scene, C.gold, 0.12, "stone");
+    const gem = mat(scene, teamColor ?? accent, 0.25);
+    const R = C.heads * W * 0.5, bandH = C.band * H, bottom = seat - C.down * H, mid = bottom + bandH * 0.5;
+    const band = MeshBuilder.CreateCylinder("royalCrown", { height: u(bandH), diameter: u(2 * R), tessellation: C.points }, scene);
+    band.position.y = u(mid);
+    band.material = gold;
+    band.convertToFlatShadedMesh();
+    for (let i = 0; i < C.points; i++) {
+      const a = (i + 0.5) * Math.PI * 2 / C.points;
+      const pt = MeshBuilder.CreateCylinder("royalCrownPoint", { height: u(C.tall * H), diameterTop: 0, diameterBottom: u(C.base * W), tessellation: 4 }, scene);
+      pt.position.set(u(Math.sin(a) * R * 0.94), u(bandH * 0.5 + C.tall * H * 0.5 - 0.02 * H), u(Math.cos(a) * R * 0.94));
+      pt.rotation.y = a; // yaw is applied last: the pitch leans the point out along its own +z, the yaw turns that out from the head
+      pt.rotation.x = C.flare;
+      pt.material = gold;
+      pt.convertToFlatShadedMesh();
+      pt.parent = band;
+      const g = MeshBuilder.CreateBox("royalCrownGem", { width: u(C.gem * W), height: u(C.gem * 1.3 * W), depth: u(0.04 * W) }, scene);
+      g.position.set(u(Math.sin(a) * (R + 0.015 * W)), 0, u(Math.cos(a) * (R + 0.015 * W)));
+      g.rotation.y = a;
+      g.rotation.z = Math.PI / 4;
+      g.material = gem;
+      g.parent = band;
+    }
+    for (const y of [-0.5, 0.5]) {
+      const rim = MeshBuilder.CreateTorus("royalCrownRim", { diameter: u(2 * R * 1.02), thickness: u(C.rim * H), tessellation: C.points }, scene);
+      rim.position.y = u(y * bandH);
+      rim.material = gold;
+      rim.parent = band;
+    }
+    return band;
+  }
   if (type === "pointed_cowl") {
     // [S] liripipe hood (340; farmer.farmer.png, .red/.blue.png; spec at LIRIPIPE): snug cowl, a soft tail curling up off the crown, back and down the
     // nape, and a short leaf-cut collar over the shoulders. Replaces the stiff cone and the flat collar disc that read as a brimmed wizard hat.
