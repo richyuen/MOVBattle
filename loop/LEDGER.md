@@ -41,6 +41,11 @@ for 25 iterations.
 321 | long hair (7fe93b7 + 2f5823c) | tribal.stoner.a | approved
 321 | tusk headband (36befcc) | tribal.spear_thrower.a | approved
 321 | ornamented loincloth (3fd478f) | tribal.bone_mage.a | approved
+322 | ornamented loincloth, joins LOINCLOTHS (076f7fd) | tribal.spear_thrower.a | approved
+322 | bone necklace (55b683b) | tribal.stoner.a | approved
+322 | bone necklace and bracelets (a79b80b) | tribal.bone_mage.a | approved
+322 | skull pauldrons (dfa7bbc) | tribal.chieftain.a | approved
+322 | hair and beard (940436d) | tribal.clubber.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -83,5 +88,9 @@ unitFactory.ts:tunic TUNIC (top, skirt, flare, tatters, strap), TUNIC_COLOR | 0.
 unitFactory.ts:cape HIDE_CAPE (wide, thick, tilt, jitter, points, drop), COLOR | 1.25, 0.35, 0.12, 0.12, 4, 0.55, (0.38, 0.23, 0.14) e0.16 | 320 | approved | (new; bone_mage)
 tribalDress.ts:necklace CRITTER_NECKLACE (skull, spread, drop, lift, strap) | 0.5, 0.55, 0.2, 0.05, 0.03 | 321 | approved | skull 0.42 (321 first commit); protector
 tribalDress.ts:hair LONG_HAIR (strands, face, fringe, long, thick), COLOR | 17, 0.8, 4, 1.05, 0.32, (0.3, 0.18, 0.1) e0.18 | 321 | approved | 13 strands, thick 0.24 (321 first commit); stoner
-tribalDress.ts:tusks TUSK_BAND (band, strap, rise, bow, thick) | 0.45, 0.1, 1.1, 0.22, 0.28 | 321 | approved | (new; spear_thrower; critic 321 asks rise 0.65, thick 0.4 as [P])
+tribalDress.ts:tusks TUSK_BAND (band, strap, rise, bow, thick) | 0.45, 0.1, 0.65, 0.22, 0.4 | 322 | approved | rise 1.1, thick 0.28 (321 [S]); 322 [P] fallout; do not re-nudge before 342
 tribalDress.ts:loincloth LOINCLOTH (ropes, flap, skull, bone, boneAt), FLAP_COLOR | 2, 0.85, 0.42, 0.62, 0.95, (0.5, 0.3, 0.18) e0.15 | 321 | approved | (new; bone_mage)
+tribalDress.ts:necklace BONE_NECKLACE (drop, bone, middle, thick, gap, strap, off) | 0.16, 0.55, 1.25, 0.13, 2.4, 0.03, 0.14 | 322 | approved | (new; stoner, bone_mage)
+tribalDress.ts:bracelets BRACELET (at, apart, bones, long, thick, proud) | 0.76, 0.16, 6, 0.3, 0.28, 0.18 | 322 | approved | (new; bone_mage)
+tribalDress.ts:pauldrons PAULDRON (wide, long, top, out) | 1.9, 0.95, 0.12, 0.55 | 322 | approved | (new; chieftain; critic 322: too white, sockets too big)
+tribalDress.ts:beard BEARD (down, wide, deep, locks, lockLong, jitter), CLUBBER_HAIR_COLOR | 0.32, 1.0, 0.5, 5, 0.3, 0.15, (0.4, 0.25, 0.15) e0.18 | 322 | approved | (new; clubber)

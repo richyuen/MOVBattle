@@ -1,9 +1,9 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 321   Batch: tribal (1/18)   Consecutive empty: 0   Done: 1/139   Parked: 0
+Iteration: 322   Batch: tribal (1/18)   Consecutive empty: 0   Done: 3/139   Parked: 0
 Batches, in order: tribal, farmer, medieval, ancient, viking, dynasty, renaissance, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber -+++ o | protector ++++ D | spear_thrower -+++ o | stoner -+++ o | bone_mage -+++ o | chieftain -+++ o | mammoth -+-+ o
+tribal: clubber -+++ o | protector ++++ D | spear_thrower -+++ o | stoner ++++ D | bone_mage ++++ D | chieftain -+++ o | mammoth -+-+ o
 farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,17 +23,18 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-321 (BASE 7e45d55): [S] protector a critter-skull necklace 3adbe16 + aec9799 approved (a -> PASS, protector D) | [S] stoner b charcoal lump 7f4d666 + 1595032 approved (b -> PASS) | [S] stoner a long hair 7fe93b7 + 2f5823c approved | [S] spear_thrower a tusk headband 36befcc approved (blocker 4 added: tusks read as horns) | [S] bone_mage a ornamented loincloth 3fd478f approved. 5/5 approved, no regressions.
-320 (BASE 548c3fd): 6/6 approved (spear leaf head 4e68c1c, protector cranium 12e7843, chieftain skull helmet f86e35f, stoner garment 586d90f+, protector garment b077ecf, bone_mage cape f5283a1).
+322 (BASE 89ee7f7): [S] spear_thrower a loincloth 076f7fd approved | [S] stoner a bone necklace 55b683b approved (a -> PASS, stoner D) | [S] bone_mage a bone necklace + bracelets a79b80b approved (a -> PASS, bone_mage D) | [P] spear_thrower a tusks 8acb32d approved | [S] chieftain a skull pauldrons dfa7bbc approved | [S] clubber a hair and beard 940436d approved. 6/6 approved, no regressions.
+321 (BASE 7e45d55): 5/5 approved (protector necklace, stoner lump + hair, spear_thrower tusk band, bone_mage loincloth).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.protector (3adbe16 + aec9799) VERDICT: APPROVE CRITERION: tribal.protector.a PASS (previous: FAIL) BLOCKERS: struck: 3 (critter-skull necklace). List empty → a PASS; with b, c, d PASS the unit is done.
-- GAP: [S] tribal.stoner (7f4d666 + 1595032) VERDICT: APPROVE CRITERION: tribal.stoner.b PASS (previous: FAIL) BLOCKERS: struck: 1 (charcoal lump). Blocker 2 was already struck. List empty → b PASS.
-- GAP: [S] tribal.stoner (7fe93b7 + 2f5823c) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL) BLOCKERS: struck: 1 (long hair). Remaining: 3.
-- GAP: [S] tribal.spear_thrower (36befcc) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3; added: 4 (tusks read as horns, introduced by 36befcc).
-- GAP: [S] tribal.bone_mage (3fd478f) VERDICT: APPROVE CRITERION: tribal.bone_mage.a FAIL (previous: FAIL) BLOCKERS: struck: 2 (ornamented loincloth). Remaining: 3.
+- GAP: [S] tribal.spear_thrower (076f7fd) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL) BLOCKERS: struck: 2 (ornamented loincloth); struck: 4 (see 8acb32d); remaining: 3.
+- GAP: [S] tribal.stoner (55b683b) VERDICT: APPROVE CRITERION: tribal.stoner.a PASS (previous: FAIL) BLOCKERS: struck: 3. List cleared.
+- GAP: [S] tribal.bone_mage (a79b80b) VERDICT: APPROVE CRITERION: tribal.bone_mage.a PASS (previous: FAIL) BLOCKERS: struck: 3. List cleared.
+- GAP: [P] tribal.spear_thrower (8acb32d) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL) BLOCKERS: struck: 4 (tusks reading as horns); remaining: 3 (fang necklace)
+- GAP: [S] tribal.chieftain (dfa7bbc) VERDICT: APPROVE CRITERION: tribal.chieftain.a FAIL (previous: FAIL) BLOCKERS: struck: 2 (skull pauldrons); remaining: 1, 3, 4.
+- GAP: [S] tribal.clubber (940436d) VERDICT: APPROVE CRITERION: tribal.clubber.a FAIL (previous: FAIL) BLOCKERS: struck: 1 (hair and beard); remaining: 2, 3, 4.
 - REGRESSIONS: none
-Batch ranked order (critic, 321): spear_thrower.a loincloth (add to LOINCLOTHS), stoner.a bone necklace ("bones" style), spear_thrower.a fang necklace ("fang" style), bone_mage.a bone necklace + wrist bracelets; then [P] spear_thrower.a tusks (fallout of 36befcc: TUSK_BAND rise 0.65, thick 0.4, shows in _idle). Still open in unit files: chieftain.a skull pauldrons, beard, hide cape, scale; clubber.a hair and beard; mammoth.a fur hide, mammoth.c Mammoth Charge.
+Batch ranked order (critic, 322): clubber.a loincloth (add to LOINCLOTHS), spear_thrower.a fang necklace ("fang" style), chieftain.a chestnut beard (BEARD chunk), clubber.a tusk necklace ("tusks" style), chieftain.a hide cape (dressTribalCape). No [P] this round. Still open in unit files: clubber.a bracelets, chieftain.a scale; mammoth.a fur hide, mammoth.c Mammoth Charge.
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +55,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- 322 starts at step 3: up to 5 [S] from the 321 ranked order (2 per unit max, different criteria) plus the one fallout [P] on TUSK_BAND. Spear_thrower has only criterion a open, so take one of its two [S] per iteration.
-- Tribal ornaments live in web/src/units/tribalDress.ts (boneSkull, boneStick, trunkBand, dressTribalNecklace/NECKLACES, dressTribalHair/HAIR_STYLES, tuskBand, dressTribalLoincloth/LOINCLOTHS), wired in unitFactory's bareSkinned branch; a unit in NECKLACES drops its furCollar. Tunic and cape are still unitFactory (dressTribalTunic, dressTribalCape).
-- Babylon CreateIcoSphere subdivisions 0 means the default 4 (a fine ball): use 1 for a twenty-face solid. Browns go near-black in the capture shade: emissive 0.15-0.2.
-- Close-ups: a temporary copy of inspect-prop.mjs (frameCamera dist ~2.2, four yaws; yaw pi is his front) shows ornaments the side-on _idle cannot; delete the copy before committing. Captures share port 4181, inspect 4183.
-- Two gaps in one file: edit, commit, then edit the next; stage by path, never -a. Do not chain shell commands. stats.json lives in iter-317. v1 is under loop/archive/v1/, tag loop-v1-final.
+- 323 starts at step 3: up to 5 [S] from the 322 ranked order (2 per unit max, different criteria: clubber and chieftain each have only a open, so one each), then mammoth.a fur hide and mammoth.c Mammoth Charge (two criteria, both pickable).
+- Tribal ornaments live in web/src/units/tribalDress.ts (boneSkull, boneStick, trunkBand, NECKLACES critter_skulls/bones, HAIR_STYLES long/long_beard/tusk_band, LOINCLOTHS, BRACELETS, PAULDRONS), wired in unitFactory's bareSkinned branch; a unit in NECKLACES drops its furCollar. Tunic and cape are still unitFactory (dressTribalTunic, dressTribalCape).
+- Babylon CreateIcoSphere subdivisions 0 means the default 4: use 1 for a twenty-face solid. Browns go near-black in the capture shade: emissive 0.15-0.2.
+- _idle is from behind/side for clubber and chieftain: face ornaments (beard) show in lineup_tribal, which every --units capture also shoots.
+- Two gaps in one file: edit, commit, then edit the next; stage by path, never -a. Do not chain shell commands. stats.json lives in iter-317.
