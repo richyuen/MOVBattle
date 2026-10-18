@@ -261,10 +261,6 @@ const BLOW_DRIVE_LOWEST = 0.75;
 // pointed at the foe); at the commit it whips over the top and forward, the elbow straightening, the chest turning through and pitching in, and the missile leaves
 // the fist THROW_LET_GO of the way through that swing, with the arm out ahead near shoulder height; the arm follows through low and the man comes back to the ready.
 const THROW_COCK = { raise: -2.9, out: 0.3, elbow: -1.6, turn: 0.4, lean: -0.15, lead: -1.3 };
-// A javelin's cock (tribal.spear_thrower.red.png: the arm reached straight up, the spear stood over the head, its point tipped a little forward): not the fist
-// behind the head but the whole arm up, elbow near straight, so the shaft runs on up out of the fist above the crown (JAVELIN_COCK; the javelin's +y continues
-// the forearm). The chest's turn, lean and the other arm are the overhand throw's. From there the swing comes over the top the same way.
-const JAVELIN_COCK = { raise: -2.8, out: 0.12, elbow: -0.1 };
 const THROW_FOLLOW = { raise: -0.35, lean: 0.35 };
 const THROW_SWING = 0.55;
 // Harpoon gun at the hip (units/pirate.harpooner): gun arm a little behind the hang (raise > 0 tips the nozzle down), off hand across onto the canister,
@@ -2977,8 +2973,7 @@ export class ProceduralAnimator {
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
     const releasePoint = this._resolveReleasePoint(0.45);
     const side = Math.sign(b.rightShoulder.position.x) || 1;
-    // A javelin is stood up over the head at the cock (JAVELIN_COCK); a bomb or any other missile is cocked behind the head
-    const c = this._throwsJavelin() ? { ...THROW_COCK, ...JAVELIN_COCK } : THROW_COCK;
+    const c = THROW_COCK;
     if (progress < releasePoint) {
       // Up and back: the fist behind the head, the chest turned off the line and leant away, the other arm out at the foe
       const u = progress / Math.max(releasePoint, 0.001);
@@ -3013,12 +3008,6 @@ export class ProceduralAnimator {
       b.rightHip.rotation.x = 0.2 * (1 - f) * k;
     }
     if (progress >= 1) this._state = AnimState.Idle;
-  }
-
-  // Whether the throwing hand holds a javelin (the prop named "shaft", units/tribal.spear_thrower), looked up once: it keeps its name hidden after the let-go
-  private _javelin: boolean | undefined = undefined;
-  private _throwsJavelin(): boolean {
-    return (this._javelin ??= this._body.rightHand.getChildren().some((n) => n.name === "shaft"));
   }
 
   /**
