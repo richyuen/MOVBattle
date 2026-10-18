@@ -182,7 +182,16 @@ const PALETTE_OUT = { side: 0.24, fwd: 0.1, drop: 0.07, tip: 0.35 };
  * pitched in LUNGE.pitch, the sword-side leg out in front (LUNGE.front, knee LUNGE.knee), the rear leg long behind (LUNGE.back), the hip carried
  * LUNGE.step of its height toward the foe and sunk. Held LUNGE.hold, then the step back: the hip LUNGE.back step behind its stand, arm back to the guard.
  */
-const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -0.85, knee: 0.6, back: 0.5, step: 0.45, retreat: 0.2, hold: 0.16 };
+/** Share of the hip's rest height the lunge legs give up: the mean drop of the bent front leg and the straight rear one (thigh = shin = half). */
+const lungeSinkShare = (): number => 1 - (0.5 * Math.cos(LUNGE.front) + 0.5 * Math.cos(LUNGE.front + LUNGE.knee) + Math.cos(LUNGE.back)) / 2;
+const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -1.25, knee: 1.35, back: 0.85, step: 0.45, retreat: 0.2, hold: 0.16 };
+/*
+ * [S] lunge legs (333; renaissance.fencer.png, read off the red fencer: the front thigh near level, ~70 deg forward of vertical, the shin dropped back
+ * under the knee near upright, ~80 deg of knee bend; the rear leg straight, ~50 deg back of vertical, its boot far behind; the hip sunk to about the
+ * height of the front knee, a third of the leg's height down). Laid as the last leg layer (_lungeLegs, after every pose, carry, limp and air layer), so
+ * nothing the press, the brace or the stride makes of the legs survives the lunge: thighs and knees go to LUNGE.front/knee/back by _lungeOut, and the
+ * hip comes down by what the spread legs give up in height, so both soles stay on the ground (thigh and shin taken as half the hip's rest height each).
+ */
 /*
  * [S] point-first rapier (331; renaissance.fencer.png: in guard the point is toward the foe; card "thrusts forward ... then steps back"). The rapier no longer
  * rests up the forearm and half-turns for the attack: over every living state it is stood in the world point-first along his front (_pointRapier, the last
@@ -1579,6 +1588,7 @@ export class ProceduralAnimator {
     this._holdPalette();
     this._couchLance();
     this._pointRapier();
+    this._lungeLegs();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -3275,6 +3285,19 @@ export class ProceduralAnimator {
     r.node.position.copyFrom(Vector3.TransformCoordinates(Vector3.TransformCoordinates(r.grip, restInv), turn));
   }
 
+  /** The lunge legs (spec at LUNGE): the last leg layer, laid over whatever the press, brace, stride, limp or air layers made of the legs. */
+  private _lungeLegs(): void {
+    const out = this._lungeOut * (1 - Math.min(1, this._limp));
+    if (out <= 0.01 || this._state === AnimState.Dead || this.walkStyle === "quadruped" || this._hipRest === null) return;
+    const b = this._body;
+    b.rightHip.rotation.x += (LUNGE.front - b.rightHip.rotation.x) * out;
+    b.rightKnee.rotation.x += (LUNGE.knee - b.rightKnee.rotation.x) * out;
+    b.leftHip.rotation.x += (LUNGE.back - b.leftHip.rotation.x) * out;
+    b.leftKnee.rotation.x += (0.05 - b.leftKnee.rotation.x) * out;
+    for (const hip of [b.leftHip, b.rightHip]) hip.rotation.z += (0 - hip.rotation.z) * out;
+    b.hip.position.y = Math.min(b.hip.position.y, this._hipRest - this._hipRest * lungeSinkShare() * out);
+  }
+
   /** The fencer's thrust and step back (see LUNGE). */
   private _animateLunge(dt: number): void {
     this._attackTimer += dt;
@@ -3309,7 +3332,7 @@ export class ProceduralAnimator {
     const reach = this._hipRest * (LUNGE.step * out - LUNGE.retreat * r * (1 - smooth((progress - 0.85) / 0.15)));
     this._lungeStep.set(0, 0, reach);
     b.hip.position.addInPlace(this._lungeStep);
-    this._idleSink = Math.max(this._idleSink, this._hipRest * (1 - Math.cos(Math.abs(LUNGE.front) * 0.75)) * out);
+    this._idleSink = Math.max(this._idleSink, this._hipRest * lungeSinkShare() * out);
     this._rapierLift = RAPIER_POINT.guard * (1 - out);
     if (progress >= 1) this._state = AnimState.Idle;
   }
