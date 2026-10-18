@@ -158,3 +158,60 @@ export function dressTribalNecklace(scene: Scene, body: ArticulatedBody, unitId:
   });
   return added;
 }
+
+/*
+ * Long messy hair (tribal.stoner.blue.png, card Appearance: "long, messy brown hair ... a darker shade of brown"): a jittered faceted cap over the crown and
+ * back of the head and LONG_HAIR.strands thick four-sided locks hanging from round its sides and back to the shoulders, the face's sector (LONG_HAIR.face
+ * radians either side of the front) left bare but for LONG_HAIR.fringe short locks over the brow. Locks LONG_HAIR.long head heights long (each its own share
+ * shorter or longer), LONG_HAIR.thick head widths across at the root. Dark brown, self-lit so it does not go black in the shade.
+ */
+const LONG_HAIR = { strands: 13, face: 0.8, fringe: 4, long: 1.05, thick: 0.24 };
+const LONG_HAIR_COLOR = new Color3(0.3, 0.18, 0.1);
+const HAIR_STYLES: Record<string, "long"> = { "tribal.stoner": "long" };
+
+/** The unit's own hair (spec at LONG_HAIR), parented to the head; null when he keeps the common mop. */
+export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] | null {
+  if (HAIR_STYLES[unitId] !== "long") return null;
+  const added: Mesh[] = [];
+  const hair = getMaterialFactory().get("cloth", LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const halfX = e.x, halfY = e.y, halfZ = e.z;
+  const W = halfX * 2, H = halfY * 2;
+  // The cap: a faceted dome over the crown, set back so the brow stays bare
+  const cap = MeshBuilder.CreateIcoSphere(`${body.headMesh.name}_hair`, { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(cap, 0.14, 7.7, halfX * 1.22, halfY * 0.62, halfZ * 1.2);
+  cap.position.set(0, halfY * 0.62, -halfZ * 0.08);
+  cap.material = hair;
+  cap.parent = body.headMesh;
+  added.push(cap);
+  const lock = (name: string, long: number, root: number) => {
+    const m = MeshBuilder.CreateCylinder(name, { height: long, diameterTop: root, diameterBottom: root * 0.45, tessellation: 4 }, scene);
+    m.convertToFlatShadedMesh();
+    m.material = hair;
+    m.parent = body.headMesh;
+    added.push(m);
+    return m;
+  };
+  // The locks: round the sides and back from the cap's rim, hanging to the shoulders, splayed a little outward
+  const sweep = Math.PI * 2 - LONG_HAIR.face * 2;
+  for (let i = 0; i < LONG_HAIR.strands; i++) {
+    const a = LONG_HAIR.face + (i + 0.5) / LONG_HAIR.strands * sweep;
+    const share = hashShare(3.1, i * 1.7, i * 0.3, 1);
+    const long = H * LONG_HAIR.long * (0.85 + 0.3 * share);
+    const m = lock("hairLock", long, W * LONG_HAIR.thick * (0.85 + 0.3 * hashShare(5.3, i, 2, i)));
+    const sx = Math.sin(a), cz = Math.cos(a);
+    const out = 0.12 + 0.1 * share;
+    m.rotation.set(-cz * out, 0, sx * out);
+    const rootY = halfY * (0.55 - 0.1 * share);
+    m.position.set(sx * halfX * 1.08 + sx * Math.sin(out) * long * 0.5, rootY - long * 0.5, cz * halfZ * 1.08 - cz * Math.sin(out) * long * 0.5 - halfZ * 0.05);
+  }
+  // The fringe: a few short locks over the brow, above the eyes
+  for (let i = 0; i < LONG_HAIR.fringe; i++) {
+    const x = ((i + 0.5) / LONG_HAIR.fringe - 0.5) * W * 0.9;
+    const long = H * 0.28 * (0.8 + 0.4 * hashShare(9.1, i, 1, 3));
+    const m = lock("hairFringe", long, W * LONG_HAIR.thick * 0.8);
+    m.rotation.set(-0.35, 0, x / W * 0.6);
+    m.position.set(x, halfY * 1.0 - long * 0.45, halfZ * 1.02);
+  }
+  return added;
+}
