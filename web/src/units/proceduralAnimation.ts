@@ -152,8 +152,8 @@ const POLE_GRIP = {
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
  * butt behind the fist sits in the shoulder; the musket is stood level along his front over its rest, the off hand following it on the fore-stock
- * (_twoHandPole). The shot leaves as the attack starts, so the aim is held whenever he stands (eased in and out at .rate per s, down on the march), and the
- * muzzle kicks up .kick (rad) at the shot, settling at .settle per s.
+ * (_twoHandPole). The shot leaves as the attack starts, often straight from the march, so the aim is held in every living state (eased back in at .rate
+ * per s after a fall), and the muzzle kicks up .kick (rad) at the shot, settling at .settle per s.
  */
 const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25, settle: 6 };
 // The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
@@ -2305,8 +2305,8 @@ export class ProceduralAnimator {
 
   // The matchlock in the weapon fist (the pole node carrying the musketFore mark) and its rest there, looked up once
   private _musket: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
-  private _musketAim = 0;
-  /** The shouldered aim (see MUSKET_AIM): the weapon fist ahead of the shoulder, the musket level along his front, held while he stands and fires. */
+  private _musketAim = 1;
+  /** The shouldered aim (see MUSKET_AIM): the weapon fist ahead of the shoulder, the musket level along his front, held in every living state. */
   private _aimMusket(dt: number): void {
     if (this._musket === undefined) {
       const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "musketFore"));
@@ -2314,10 +2314,10 @@ export class ProceduralAnimator {
     }
     const gun = this._musket;
     if (!gun) return;
-    // The shot leaves at the start of the attack, so the musket is already at the shoulder: up while he stands (to aim, fire and reload), down on the march
+    // The shot leaves at the very start of the attack, often from the march: the musket is kept at the shoulder in every living state, eased back up after a fall
     const firing = this._state === AnimState.Attacking && this._attackMotion === "firearm_recoil";
-    const standing = (firing || this._state === AnimState.Idle) && this.walkStyle !== "quadruped";
-    this._musketAim += ((standing ? 1 : 0) - this._musketAim) * Math.min(1, dt * MUSKET_AIM.rate);
+    const up = this._state !== AnimState.Dead && this.walkStyle !== "quadruped";
+    this._musketAim += ((up ? 1 : 0) - this._musketAim) * Math.min(1, dt * MUSKET_AIM.rate);
     const w = this._musketAim * (1 - Math.min(1, this._limp));
     if (w <= 0.001) {
       gun.node.rotationQuaternion = null;
