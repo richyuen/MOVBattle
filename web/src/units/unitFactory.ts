@@ -556,6 +556,7 @@ export class UnitFactory {
     if (definition.id === "farmer.harvester" && !shouldUseVehicleBody) {
       // [S] two peg handles on the snath, the upper one where his off fist takes it (342; SNATH_PEG, proceduralAnimation SCYTHE_LOW)
       propMeshes.push(...addSnathPegs(this._scene, body));
+      propMeshes = propMeshes.filter((m) => !m.isDisposed()); // its grip wraps are taken off (344)
     }
     if (definition.id === "farmer.hay_baler" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHayBale(this._scene, body));
@@ -1437,7 +1438,9 @@ const HALFLING_FUR = new Color3(0.38, 0.21, 0.12);
  * .thick across, standing out square to the snath. The upper is named "snathPeg", the POLE_GRIP mark that puts his off fist on the snath (_twoHandPole).
  * [S] rooted (343; farmer.harvester.red.png: the pegs grow out of a red-brown snath under a grey blade): the snath bows away from the blade (the prop's
  * SCYTHE_BOW), so each peg's root is set on the bow's own line at its height, sunk SNATH_PEG.sink of its length into the pole, not on the straight chord a
- * hand-width off it. His snath and its grip wraps are red-brown SNATH_WOOD, his blade, heel and collar a mid grey SNATH_STEEL (the reaper's scythe keeps its own).
+ * hand-width off it. His snath is red-brown SNATH_WOOD, his blade, heel and collar a mid grey SNATH_STEEL (the reaper's scythe keeps its own).
+ * [S] plain snath (344; farmer.harvester.red.png: no rings on the pole, only the two pegs): the shared scythe's grip-wrap hoops ride the straight chord,
+ * a hand-width off his bowed snath, so they hang beside it as loose rings; his are taken off, and the pegs are the only grips.
  */
 const SNATH_PEG = { low: -0.15, high: 0.15, long: 0.09, thick: 0.03, sink: 0.2 };
 const SNATH_WOOD = new Color3(0.5, 0.24, 0.17);
@@ -1454,7 +1457,10 @@ function addSnathPegs(scene: Scene, body: ArticulatedBody): Mesh[] {
   const wood = getMaterialFactory().get("wood", SNATH_WOOD, { emissiveIntensity: 0.18 });
   const steel = getMaterialFactory().get("metal", SNATH_STEEL, { emissiveIntensity: 0.12 });
   snath.material = wood;
-  for (const m of snath.getChildMeshes(false)) m.material = m.name === "gripWrap" ? wood : steel;
+  for (const m of snath.getChildMeshes(false)) {
+    if (m.name === "gripWrap") m.dispose(false, false);
+    else m.material = steel;
+  }
   const added: Mesh[] = [];
   for (const [name, at] of [["snathPegLow", SNATH_PEG.low], ["snathPeg", SNATH_PEG.high]] as const) {
     const peg = MeshBuilder.CreateCylinder(name, { height: L * SNATH_PEG.long, diameterTop: L * SNATH_PEG.thick * 0.8, diameterBottom: L * SNATH_PEG.thick, tessellation: 6 }, scene);
