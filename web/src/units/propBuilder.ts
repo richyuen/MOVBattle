@@ -1340,7 +1340,7 @@ export function attachProps(
   const head = body.metrics.head;
   const hatUnit = body.headTop.scaling.x;
   let helmFit: HelmFit | undefined;
-  if (config.hat === "great_helm" && head) {
+  if ((config.hat === "great_helm" || config.hat === "crusader_helm") && head) {
     const rim = Math.min(head.width * 1.3, body.metrics.shoulderWidth * 0.8);
     const height = head.height * 1.06 + head.neck;
     helmFit = {
@@ -1382,7 +1382,7 @@ export function attachProps(
   }
 
   // Hide eyes behind face-covering headgear
-  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bull_head", "dragon_head", "sallet"];
+  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "crusader_helm", "ninja_mask", "bull_head", "dragon_head", "sallet"];
   if (faceCoveringHats.includes(config.hat)) {
     body.leftEye?.setEnabled(false);
     body.rightEye?.setEnabled(false);
@@ -3590,6 +3590,70 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
 /** A great helm's cut: rim and crown diameters and height in the hat's own units, the height of its centre over the head top, and how far up from its centre the eye slit lies (as a share of its height) */
 interface HelmFit { rim: number; crown: number; height: number; y: number; slit: number }
 
+/*
+ * [S] the Squire's crusader great helm (355; medieval.squire.red.png, card Appearance "a flat-topped Great Helm ... with some holes around it"). On the fitted
+ * great helm bucket (flat top, front facet facing +z, eye slit across it): the iron CRUSADER_HELM.iron; a rivet band round the top .band of the height tall
+ * with .rivets rivets; a gold cross face plate, a brow bar .brow of the facet tall just over the slit and .browWide facets across, and a nasal bar .nasal
+ * of the facet wide from the band down to .chin of the height under the middle, standing .proud of the facet off the iron, so the slit shows as two eye
+ * slots either side of it; breathing holes, .holes rows of two each side of the nasal bar under the slit; a team panel down the weapon side facet.
+ */
+const CRUSADER_HELM = {
+  iron: new Color3(0.3, 0.3, 0.33), gold: new Color3(0.86, 0.66, 0.3), band: 0.1, rivets: 8, brow: 0.32, browWide: 1.9, nasal: 0.24, chin: 0.42,
+  proud: 0.07, holes: 3, panel: 0.62,
+};
+function dressCrusaderHelm(scene: Scene, helm: Mesh, fit: HelmFit, faceR: number, facet: number, slitY: number, slitH: number, team: Color3): void {
+  const C = CRUSADER_HELM;
+  helm.material = mat(scene, C.iron, 0.04, "stone");
+  const gold = mat(scene, C.gold, 0.1, "stone");
+  const dark = mat(scene, new Color3(0.06, 0.06, 0.06));
+  const top = fit.height * 0.5;
+  const crownR = fit.crown * 0.5;
+  const plate = facet * C.proud;
+  // rivet band round the top, a little proud of the iron, rivets standing on it
+  const band = MeshBuilder.CreateCylinder("chelmBand", { height: fit.height * C.band, diameter: fit.crown * 1.05, tessellation: 8 }, scene);
+  band.rotation.y = Math.PI / 8;
+  band.position.y = top - fit.height * C.band * 0.5;
+  band.material = mat(scene, C.iron.scale(1.35), 0.04, "stone");
+  band.convertToFlatShadedMesh();
+  band.parent = helm;
+  for (let i = 0; i < C.rivets; i++) {
+    const a = (i + 0.5) * Math.PI * 2 / C.rivets;
+    const rv = MeshBuilder.CreateSphere("chelmRivet", { diameter: facet * 0.14, segments: 3 }, scene);
+    rv.position.set(Math.sin(a) * crownR * 1.08, band.position.y, Math.cos(a) * crownR * 1.08);
+    rv.material = gold;
+    rv.parent = helm;
+  }
+  // the gold cross: brow bar over the eye slit, nasal bar down the middle
+  const browH = facet * C.brow;
+  const brow = MeshBuilder.CreateBox("chelmBrow", { width: facet * C.browWide, height: browH, depth: plate }, scene);
+  brow.position.set(0, slitY + slitH * 0.5 + browH * 0.5, faceR + plate * 0.5);
+  brow.material = gold;
+  brow.parent = helm;
+  const nasalTop = top - fit.height * C.band;
+  const nasalFoot = -fit.height * C.chin;
+  const nasal = MeshBuilder.CreateBox("chelmNasal", { width: facet * C.nasal, height: nasalTop - nasalFoot, depth: plate * 1.4 }, scene);
+  nasal.position.set(0, (nasalTop + nasalFoot) * 0.5, faceR + plate * 0.7);
+  nasal.material = gold;
+  nasal.parent = helm;
+  // breathing holes under the slit, either side of the nasal bar
+  const hole = facet * 0.1;
+  for (let r = 0; r < C.holes; r++) {
+    for (const x of [-0.36, -0.2, 0.2, 0.36]) {
+      const h = MeshBuilder.CreateBox("chelmHole", { width: hole, height: hole, depth: plate * 0.6 }, scene);
+      h.position.set(x * facet, slitY - slitH * 0.5 - hole * (1.6 + r * 1.9), faceR + plate * 0.2);
+      h.material = dark;
+      h.parent = helm;
+    }
+  }
+  // the team panel down the side facet
+  const sideR = (fit.rim + fit.crown) * 0.25 * Math.cos(Math.PI / 8);
+  const panel = MeshBuilder.CreateBox("chelmPanel", { width: facet * 0.8, height: fit.height * C.panel, depth: plate }, scene);
+  panel.position.set(sideR + plate * 0.5, -fit.height * 0.08, 0);
+  panel.rotation.y = Math.PI / 2;
+  panel.material = mat(scene, team, 0.1);
+  panel.parent = helm;
+}
+
 function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamColor?: Color3, helmFit?: HelmFit): Mesh | null {
   const s = _s * 1.1; // TABS-style hat exaggeration
   switch (type) {
@@ -3886,9 +3950,10 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       }
       return head;
     }
+    case "crusader_helm":
     case "great_helm": {
       // Fitted barrel helm: a tall, faceted, slightly tapered bucket pulled down over the head to the shoulders, cut from the head it covers. Off a body with no head
-      // to measure it keeps the old stock cut.
+      // to measure it keeps the old stock cut. The squire's crusader helm is the same bucket in dark iron, dressed by dressCrusaderHelm.
       const fit = helmFit ?? { rim: 0.164 * s, crown: 0.14 * s, height: 0.156 * s, y: -0.065 * s, slit: -0.09 };
       const helm = MeshBuilder.CreateCylinder("ghelm", { height: fit.height, diameterTop: fit.crown, diameterBottom: fit.rim, tessellation: 8 }, scene);
       // Turn a flat facet to the front so the eye slit lies on a face, not across an edge
@@ -3918,6 +3983,7 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
         wrap.parent = helm;
         wrap.material = slitMat;
       }
+      if (type === "crusader_helm") dressCrusaderHelm(scene, helm, fit, faceR, facet, slitY, slitH, teamColor ?? accent);
       return helm;
     }
     case "hood_liripipe": {

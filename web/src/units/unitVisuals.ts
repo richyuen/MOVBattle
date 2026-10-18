@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
+  | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
 export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette";
 
@@ -277,7 +277,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.85, bulk: 0.8 }, "lute", "floppy_hat", "none", "none", "#9B30FF",
   ),
   "medieval.squire": vis(
-    { scale: 1.0, bulk: 1.0, torsoLength: 0.86, torsoDepth: 0.75 }, "sword", "great_helm", "none", "none", "#C0C0C0",
+    { scale: 1.0, bulk: 1.0, torsoLength: 0.86, torsoDepth: 0.75 }, "sword", "crusader_helm", "none", "none", "#C0C0C0",
     undefined,
     {
       posePreset: "duelist",
