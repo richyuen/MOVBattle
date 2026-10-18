@@ -61,6 +61,9 @@ const BANDANA_SWEEP = 0.5;
  * a dent across its top. Two thick braids, FLOPPY.apart head widths out from the middle and FLOPPY.ahead forward (beside the face, over the collar,
  * not behind the ears), from FLOPPY.root of the head under the seat down FLOPPY.braid of the head in FLOPPY.plaits lobes FLOPPY.thick of the head
  * across; a team band and a tuft at each end. Felt and hair self-lit FLOPPY.glow so the browns do not go black.
+ * [S] (346; farmer.harvester.blue.png: the braids hang to the chest over the front of the shoulders): each braid runs down a curve that comes
+ * FLOPPY.fall head widths forward and FLOPPY.flare out by its end (square of the way down), so it lies over the collar and the chest instead of
+ * through the shoulder; its lobes lean along the curve; the team band sits FLOPPY.bandAt of the way down, a fat ring round the braid, the tuft below.
  */
 /*
  * [S] The scarecrow's sack mask (340; farmer.scarecrow.blue.png, card Appearance "a mask that covers their whole head, with team-colored buttons for
@@ -70,7 +73,7 @@ const BANDANA_SWEEP = 0.5;
  */
 const SACK = { wide: 1.22, top: 1.12, tall: 1.12, crown: 0.06, dome: 0.12, button: 0.24, eyes: 0.22, eyeDrop: 0.1, neck: 1.0, glow: 0.2 };
 const SACK_BROWN = new Color3(0.56, 0.36, 0.22);
-const FLOPPY = { brim: 2.25, droop: 0.28, lift: 0.12, tip: 0.12, crown: 1.12, crownTall: 0.42, apart: 0.68, ahead: 0.08, root: 0.05, braid: 1.6, plaits: 5, thick: 0.42, glow: 0.2 };
+const FLOPPY = { brim: 2.25, droop: 0.28, lift: 0.12, tip: 0.12, crown: 1.12, crownTall: 0.42, apart: 0.68, ahead: 0.08, root: 0.05, braid: 2.8, plaits: 8, thick: 0.42, fall: 0.62, flare: 0.14, bandAt: 0.8, glow: 0.2 };
 const FLOPPY_BROWN = new Color3(0.5, 0.3, 0.18);
 const FLOPPY_HAIR = new Color3(0.36, 0.2, 0.11);
 /*
@@ -495,20 +498,30 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     const step = (FLOPPY.braid * H) / FLOPPY.plaits;
     for (const side of [-1, 1]) {
       const x = side * u(FLOPPY.apart * W);
+      // the braid's curve at t (0 the root, 1 the end): down, forward over the collar, a little out
+      const along = (t: number): Vector3 => new Vector3(
+        x + side * u(FLOPPY.flare * W * t * t),
+        u(seat - FLOPPY.root * H - FLOPPY.braid * H * t),
+        u(FLOPPY.ahead * W + FLOPPY.fall * W * t * t),
+      );
+      const lean = (t: number): number => Math.atan2(2 * FLOPPY.fall * W * t, FLOPPY.braid * H);
       for (let k = 0; k < FLOPPY.plaits; k++) {
+        const t = (k + 0.5) / FLOPPY.plaits;
         const plait = MeshBuilder.CreateIcoSphere("sunHatBraid", { radiusX: u(FLOPPY.thick * W * 0.5), radiusY: u(step * 0.62), radiusZ: u(FLOPPY.thick * W * 0.42), subdivisions: 1, flat: true }, scene);
-        plait.position.set(x + (k % 2 ? 1 : -1) * u(FLOPPY.thick * W * 0.12), u(seat - FLOPPY.root * H - step * (k + 0.5)), u(FLOPPY.ahead * W));
-        plait.rotation.z = (k % 2 ? 1 : -1) * 0.4;
+        plait.position.copyFrom(along(t));
+        plait.position.x += (k % 2 ? 1 : -1) * u(FLOPPY.thick * W * 0.12);
+        plait.rotation.set(-lean(t), 0, (k % 2 ? 1 : -1) * 0.4);
         plait.material = hair;
         plait.parent = holder;
       }
-      const endY = u(seat - FLOPPY.root * H - step * FLOPPY.plaits);
-      const tie = MeshBuilder.CreateCylinder("sunHatBraidBand", { height: u(0.09 * H), diameter: u(FLOPPY.thick * W * 0.95), tessellation: 6 }, scene);
-      tie.position.set(x, endY, u(FLOPPY.ahead * W));
+      const tie = MeshBuilder.CreateCylinder("sunHatBraidBand", { height: u(0.16 * H), diameter: u(FLOPPY.thick * W * 1.15), tessellation: 7 }, scene);
+      tie.position.copyFrom(along(FLOPPY.bandAt));
+      tie.rotation.x = -lean(FLOPPY.bandAt);
       tie.material = band;
       tie.parent = holder;
       const tuft = MeshBuilder.CreateCylinder("sunHatBraidTuft", { height: u(0.16 * H), diameterTop: u(FLOPPY.thick * W * 0.7), diameterBottom: u(FLOPPY.thick * W * 0.25), tessellation: 5 }, scene);
-      tuft.position.set(x, endY - u(0.12 * H), u(FLOPPY.ahead * W));
+      tuft.position.copyFrom(along(1.04));
+      tuft.rotation.x = -lean(1);
       tuft.material = hair;
       tuft.convertToFlatShadedMesh();
       tuft.parent = holder;
