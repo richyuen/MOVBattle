@@ -217,3 +217,102 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   }
   return added;
 }
+
+/*
+ * The ornamented loincloth (tribal.bone_mage.red.png, card Appearance: "a brown loincloth crudely tied with a rope ... ornamented with a skull tied through its
+ * orbit with the rope at the center and two bones tied with thick strings on each side"): over the hide kilt, LOINCLOTH.ropes turns of red-brown rope round
+ * the hips just outside the kilt's waist, a brown flap hanging at the front LOINCLOTH.flap of the kilt's drop long, a faceted animal skull LOINCLOTH.skull
+ * pelvis widths across hung on the rope at the middle of the front, and a bone LOINCLOTH.bone pelvis widths long tied slanting on the rope at each front
+ * corner of the hips (LOINCLOTH.boneAt radians round from the front), standing proud of the hips so they show from the side too.
+ */
+const LOINCLOTH = { ropes: 2, flap: 0.85, skull: 0.42, bone: 0.62, boneAt: 0.95, kiltDrop: 0.5, kiltWaist: 1.15, kiltFlare: 1.45 };
+const FLAP_COLOR = new Color3(0.5, 0.3, 0.18);
+const LOINCLOTHS = new Set(["tribal.bone_mage"]);
+
+/** A bone `long` long along +y: a round shaft with a pair of knobs at each end. The first mesh is the shaft (the others are its children). */
+export function boneStick(scene: Scene, name: string, long: number, thick: number): Mesh[] {
+  const bone = boneMaterial();
+  const shaft = MeshBuilder.CreateCylinder(name, { height: long, diameter: thick, tessellation: 6 }, scene);
+  shaft.convertToFlatShadedMesh();
+  shaft.material = bone;
+  const parts = [shaft];
+  for (const end of [-1, 1]) {
+    for (const side of [-1, 1]) {
+      const knob = MeshBuilder.CreateIcoSphere(`${name}Knob`, { radius: thick * 0.85, subdivisions: 1, flat: true }, scene);
+      knob.position.set(side * thick * 0.6, end * long * 0.5, 0);
+      knob.material = bone;
+      knob.parent = shaft;
+      parts.push(knob);
+    }
+  }
+  return parts;
+}
+
+/** Ties the ornamented loincloth (spec at LOINCLOTH) round a bare tribesman's hips, parented to the hip joint. Empty when he wears the plain one. */
+export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
+  if (!LOINCLOTHS.has(unitId)) return [];
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  if (!pelvis) return [];
+  const added: Mesh[] = [];
+  const size = pelvis.getBoundingInfo().boundingBox.extendSize;
+  const top = pelvis.position.y + size.y;
+  const drop = Math.abs(body.leftKnee.position.y) * LOINCLOTH.kiltDrop;
+  // The kilt (unitFactory hangSkirt "hideKilt") is a six-sided sleeve from the pelvis top, size.x * kiltWaist round at the waist, its depth squashed by zk
+  const zk = Math.max(0.7, size.z / size.x * 1.25);
+  const waist = size.x * LOINCLOTH.kiltWaist;
+  const rope = ropeMaterial();
+  const ropeThick = size.x * 0.13;
+  const beltR = waist + ropeThick * 0.6;
+  const beltY = top - size.y * 0.35;
+  for (let i = 0; i < LOINCLOTH.ropes; i++) {
+    const ring = MeshBuilder.CreateTorus("loinRope", { diameter: beltR * 2, thickness: ropeThick, tessellation: 10 }, scene);
+    ring.scaling.z = zk;
+    ring.rotation.x = (i - 0.5) * 0.08;
+    ring.position.y = beltY - i * ropeThick * 0.9;
+    ring.material = rope;
+    ring.parent = body.hip;
+    added.push(ring);
+  }
+  const frontAt = (y: number) => {
+    const r = waist + (size.x * LOINCLOTH.kiltFlare - waist) * Math.min(1, Math.max(0, (top - y) / drop));
+    return r * zk;
+  };
+  // The flap: a brown hide panel down the front over the kilt, leaning out with the kilt's flare, its foot cut to a point
+  const flapLong = drop * LOINCLOTH.flap;
+  const flapTop = beltY;
+  const lean = Math.atan2(frontAt(flapTop - flapLong) - frontAt(flapTop), flapLong);
+  const flap = MeshBuilder.CreateBox("loinFlap", { width: size.x * 1.0, height: flapLong, depth: ropeThick * 0.5 }, scene);
+  flap.rotation.x = -lean;
+  flap.position.set(0, flapTop - flapLong * 0.5, (frontAt(flapTop) + frontAt(flapTop - flapLong)) * 0.5 + ropeThick * 0.5);
+  flap.material = getMaterialFactory().get("cloth", FLAP_COLOR, { emissiveIntensity: 0.15 });
+  flap.parent = body.hip;
+  added.push(flap);
+  const point = MeshBuilder.CreateCylinder("loinFlapPoint", { height: flapLong * 0.3, diameterTop: 0, diameterBottom: size.x * 1.0, tessellation: 3 }, scene);
+  point.convertToFlatShadedMesh();
+  point.scaling.z = 0.25;
+  point.rotation.x = Math.PI;
+  point.position.set(0, -flapLong * 0.5 - flapLong * 0.13, 0);
+  point.material = flap.material;
+  point.parent = flap;
+  added.push(point);
+  // The skull on the rope at the middle of the front, over the flap's head
+  const skullWide = size.x * 2 * LOINCLOTH.skull;
+  const skullParts = boneSkull(scene, "loinSkull", skullWide, 29.1);
+  skullParts[0].position.set(0, beltY - skullWide * 0.25, frontAt(beltY) + ropeThick + skullWide * 0.3);
+  skullParts[0].rotation.x = 0.1;
+  skullParts[0].parent = body.hip;
+  added.push(...skullParts);
+  // A bone slanting on the rope at each front corner of the hips, standing off it
+  const boneLong = size.x * 2 * LOINCLOTH.bone;
+  for (const side of [-1, 1]) {
+    const a = side * LOINCLOTH.boneAt;
+    const parts = boneStick(scene, "loinBone", boneLong, ropeThick * 0.9);
+    const shaft = parts[0];
+    const r = beltR + ropeThick * 0.9;
+    shaft.rotation.set(0, a, side * 0.9);
+    shaft.position.set(Math.sin(a) * r, beltY - ropeThick * 0.5, Math.cos(a) * r * zk);
+    shaft.parent = body.hip;
+    added.push(...parts);
+  }
+  return added;
+}

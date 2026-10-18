@@ -12,7 +12,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew } from "./vehicleBuild
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { dressTribalHair, dressTribalNecklace, hasTribalNecklace } from "./tribalDress";
+import { dressTribalHair, dressTribalLoincloth, dressTribalNecklace, hasTribalNecklace } from "./tribalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -450,6 +450,8 @@ export class UnitFactory {
         if (TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(...dressTribalCape(this._scene, body));
         // A strung necklace (tribalDress) in place of the dark fur collar
         propMeshes.push(...dressTribalNecklace(this._scene, body, definition.id));
+        // ...and the rope, skull and bones over the loincloth (tribalDress)
+        propMeshes.push(...dressTribalLoincloth(this._scene, body, definition.id));
       } else if (!shouldFavorTeamBodyColor(materialPreset)) {
         for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
