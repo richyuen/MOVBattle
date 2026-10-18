@@ -3849,13 +3849,18 @@ const HORSE_HOCK = 0.22;
 const HORSE_UPPER_SHOW = 0.32;
 const HORSE_UPPER_DEEP = 1.45;
 const HORSE_COAT_GLOW = 0.14;
-// The drape's chest and rump ends are squared (a superellipse of exponent HORSE_CAP_SQUARE, 1 = round) and run HORSE_CAP_LONG past the barrel, so they
-// overhang chest and rump; its back is domed over the barrel (HORSE_DRAPE, 334; the flat deck of 268 read as a box).
-const HORSE_CAP_LONG = 1.32;
 const HORSE_HOOF = 0.27;
 const HORSE_CAP_BULGE = 1.22;
-const HORSE_CAP_END = 0.55;
-const HORSE_CAP_SQUARE = 0.35;
+/*
+ * [S] caparison following the barrel (337; renaissance.jouster.png: the cloth lies over the back and flanks from behind the shoulder to over the rump,
+ * rounded at both ends in plan and side view, its sides swelling with the barrel and drawn in again under it; ahead of it the brown chest and the neck's
+ * foot stand out bare, a team breast strap across the chest; the 334 drape overhung chest and rump with square ends and plumb sides, a blue block).
+ *   HORSE_CAPARISON.fore of the barrel's half-length ahead of its middle (the front edge), .aft behind it (over the rump); in plan a superellipse of
+ *   exponent .plan (2 = an ellipse, higher squarer); below the barrel's middle the sides draw in by .tuck of the half-width at the hem, the ends by
+ *   .tuckLong of the half-length; breast strap .strap of H deep, .strapAt of the back's height below the middle, round .strapArc of the chest (radians
+ *   each side of ahead).
+ */
+const HORSE_CAPARISON = { fore: 0.55, aft: 1.12, plan: 2.6, tuck: 0.1, tuckLong: 0.06, strap: 0.07, strapAt: 0.1, strapArc: 1.15 };
 // The domed drape and its crenellated hem (334, see the caparison): rings in the quarter round, the swell of its sides, the barrel's middle (share of the
 // back's height) where the panels turn plumb, the ridge's length (share); the hem band's depth, merlon count and depth (of H), and the cream's self-light.
 // The cream is a warm tan: a paler cream renders grey-white under this light
@@ -4107,7 +4112,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const tail = part(MeshBuilder.CreateCylinder("htail", { height: H * 0.55, diameterTop: H * 0.1, diameterBottom: H * 0.03, tessellation: 5 }, scene), dark);
   tail.rotation.x = 0.35;
   // Out of the back of the barrel, or of the longer caparison over it
-  tail.position.set(0, H * HORSE_DEEP * 0.15 - H * 0.26, -L * 0.5 * (pinto ? 1 : HORSE_CAP_LONG) - H * 0.08);
+  tail.position.set(0, H * HORSE_DEEP * 0.15 - H * 0.26, -L * 0.5 * (pinto ? 1 : HORSE_CAPARISON.aft) - H * 0.08);
   // Down in the saddle: his shins and feet would stand between the horse's legs
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(false)) m.isVisible = false;
@@ -4121,70 +4126,75 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     loop.material = mat(scene, new Color3(0.86, 0.74, 0.52));
     return barrel;
   }
-  // The caparison: a drape over the barrel, a stadium in plan (see the spec): flat side panels falling plumb to a level hem HORSE_HEM_SHARE of
-  // the way up, squared chest and rump ends HORSE_CAP_END of the half-width deep, its back domed over the barrel (HORSE_DRAPE)
+  // The caparison (HORSE_CAPARISON): a drape over the barrel from behind the shoulder to over the rump, rounded in plan, domed over the back (HORSE_DRAPE)
+  const C = HORSE_CAPARISON;
   const clothMat = mat(scene, cloth.scale(0.85));
   const rCap = (W / 2) * HORSE_CAP_BULGE;
-  const capHalf = (L / 2) * HORSE_CAP_LONG;
-  const straight = capHalf - rCap * HORSE_CAP_END;
+  const zMid = (L / 2) * (C.fore - C.aft) / 2;
+  const capHalf = (L / 2) * (C.fore + C.aft) / 2;
   const backY = H * HORSE_DEEP / 2;
-  // A point on the stadium of half-width r at perimeter share u (from the rump end of the +x panel, round by the chest), with its outward heading.
-  // Its ends are squared superellipses: flat end panels with tight rounded corners.
-  const endLong = (r: number) => r * (2 + 2 * HORSE_CAP_END);
-  const sq = (v: number, p: number) => Math.sign(v) * Math.abs(v) ** p;
-  const endPoint = (r: number, y: number, a: number, z0: number): { at: Vector3; heading: number } => {
-    const c = Math.cos(a), s = Math.sin(a);
-    return {
-      at: new Vector3(r * sq(c, HORSE_CAP_SQUARE), y, z0 + r * HORSE_CAP_END * sq(s, HORSE_CAP_SQUARE)),
-      heading: Math.atan2(sq(c, 2 - HORSE_CAP_SQUARE) * HORSE_CAP_END, sq(s, 2 - HORSE_CAP_SQUARE)),
-    };
-  };
-  const stadium = (r: number, y: number, u: number): { at: Vector3; heading: number } => {
-    const side = 2 * straight, end = endLong(r);
-    let d = (((u % 1) + 1) % 1) * 2 * (side + end);
-    if (d < side) return { at: new Vector3(r, y, -straight + d), heading: Math.PI / 2 };
-    d -= side;
-    if (d < end) return endPoint(r, y, (d / end) * Math.PI, straight);
-    d -= end;
-    if (d < side) return { at: new Vector3(-r, y, straight - d), heading: -Math.PI / 2 };
-    return endPoint(r, y, Math.PI + ((d - side) / end) * Math.PI, -straight);
-  };
-  // A ring of the drape; `long` draws its chest and rump ends in toward the middle (the dome's upper rings, so the drape rounds over chest and rump too)
+  const sp = (v: number) => Math.sign(v) * Math.abs(v) ** (2 / C.plan);
+  // A ring of the drape: half-width r, half-length capHalf * long, at height y, round its own middle
   const ring = (r: number, y: number, long = 1): Vector3[] => {
     const pts: Vector3[] = [];
-    for (let i = 0; i < 40; i++) {
-      const at = stadium(r, y, i / 40).at;
-      at.z *= long;
-      pts.push(at);
+    for (let i = 0; i < 48; i++) {
+      const t = (i / 48) * Math.PI * 2;
+      pts.push(new Vector3(r * sp(Math.cos(t)), y, zMid + capHalf * long * sp(Math.sin(t))));
     }
     return pts;
   };
-  // [S] draped horse (334; renaissance.jouster.png: the cloth lies over the horse's back and follows the round of the barrel, then falls to the hem; the
-  // flat deck with its hard shoulder bevel read as a box). The drape's top is a dome: HORSE_DRAPE.rings rings from a ridge along the back down a quarter
-  // round (each ring's half-width the sine of its angle, raised to HORSE_DRAPE.round, so the sides swell out like the barrel's, and its length drawn in
-  // to HORSE_DRAPE.crest at the ridge, so it rounds over chest and rump in side view too) to the barrel's middle
-  // HORSE_DRAPE.waist of the back's height up, then the panels fall plumb to the hem
+  // The dome: HORSE_DRAPE.rings rings from a ridge along the back down a quarter round to the barrel's middle, each ring's half-width the sine of its
+  // angle raised to HORSE_DRAPE.round, its length drawn in to HORSE_DRAPE.crest at the ridge; then the sides follow the barrel in under it to the hem
   const profile: Array<readonly [number, number]> = [];
   for (let i = 0; i <= HORSE_DRAPE.rings; i++) {
-    const a = (i / HORSE_DRAPE.rings) * Math.PI * 0.5;
-    profile.push([Math.max(0.002, Math.sin(a) ** HORSE_DRAPE.round), HORSE_DRAPE.waist + (1.02 - HORSE_DRAPE.waist) * Math.cos(a)]);
+    const ang = (i / HORSE_DRAPE.rings) * Math.PI * 0.5;
+    profile.push([Math.max(0.002, Math.sin(ang) ** HORSE_DRAPE.round), HORSE_DRAPE.waist + (1.02 - HORSE_DRAPE.waist) * Math.cos(ang)]);
   }
   const rings = profile.map(([r, y]) => ring(rCap * r, backY * y, HORSE_DRAPE.crest + (1 - HORSE_DRAPE.crest) * r));
-  rings.push(ring(rCap, hemY));
+  const waistY = backY * HORSE_DRAPE.waist;
+  const tuckAt = (y: number) => Math.max(0, Math.min(1, (waistY - y) / (waistY - hemY)));
+  const hemR = rCap * (1 - C.tuck), hemLong = 1 - C.tuckLong;
+  for (const t of [0.35, 0.7, 1]) {
+    const y = waistY + (hemY - waistY) * t;
+    rings.push(ring(rCap * (1 - C.tuck * tuckAt(y) ** 2), y, 1 - C.tuckLong * tuckAt(y) ** 2));
+  }
   part(MeshBuilder.CreateRibbon("hcaparison", { pathArray: rings, closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
   // The hem is crenellated (renaissance.jouster.png: a broad cream band along the bottom with square merlons hanging off it, as wide as the gaps between
-  // them): a band HORSE_DRAPE.band of H deep, and HORSE_DRAPE.merlons square teeth HORSE_DRAPE.tooth of H deep evenly round it, each turned to face out.
-  // The cream is self-lit (HORSE_DRAPE.glow) so it stays cream in the shade instead of reading grey.
+  // them): a band HORSE_DRAPE.band of H deep, and HORSE_DRAPE.merlons square teeth HORSE_DRAPE.tooth of H deep evenly round it by length, each turned to
+  // face out. The cream is self-lit (HORSE_DRAPE.glow) so it stays cream in the shade instead of reading grey.
   const hemMat = mat(scene, HORSE_DRAPE_CREAM, HORSE_DRAPE.glow);
-  part(MeshBuilder.CreateRibbon("hhem", { pathArray: [ring(rCap * 1.02, hemY + H * HORSE_DRAPE.band), ring(rCap * 1.02, hemY)], closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), hemMat);
-  const perimeter = 2 * (2 * straight + endLong(rCap * 1.03));
+  part(MeshBuilder.CreateRibbon("hhem", { pathArray: [ring(hemR * 1.02, hemY + H * HORSE_DRAPE.band, hemLong * 1.005), ring(hemR * 1.02, hemY, hemLong * 1.005)], closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), hemMat);
+  const toothRing = ring(hemR * 1.03, hemY - H * HORSE_DRAPE.tooth * 0.5 + H * 0.005, hemLong * 1.01);
+  const along: number[] = [0];
+  for (let i = 1; i <= toothRing.length; i++) along.push(along[i - 1] + Vector3.Distance(toothRing[i - 1], toothRing[i % toothRing.length]));
+  const perimeter = along[toothRing.length];
   const toothWide = perimeter / HORSE_DRAPE.merlons / 2;
-  for (let i = 0; i < HORSE_DRAPE.merlons; i++) {
-    const { at, heading } = stadium(rCap * 1.03, hemY - H * HORSE_DRAPE.tooth * 0.5 + H * 0.005, (i + 0.5) / HORSE_DRAPE.merlons);
+  for (let k = 0; k < HORSE_DRAPE.merlons; k++) {
+    const want = ((k + 0.5) / HORSE_DRAPE.merlons) * perimeter;
+    let i = 0;
+    while (along[i + 1] < want) i++;
+    const p0 = toothRing[i], p1 = toothRing[(i + 1) % toothRing.length];
+    const at = Vector3.Lerp(p0, p1, (want - along[i]) / (along[i + 1] - along[i]));
+    // outward: square to the run of the hem, away from the drape's middle
+    const run = p1.subtract(p0);
+    let nx = run.z, nz = -run.x;
+    if (nx * at.x + nz * (at.z - zMid) < 0) { nx = -nx; nz = -nz; }
     const dag = part(MeshBuilder.CreateBox("hdag", { width: toothWide, height: H * HORSE_DRAPE.tooth, depth: H * 0.025 }, scene), hemMat);
     dag.position.copyFrom(at);
-    dag.rotation.y = heading;
+    dag.rotation.y = Math.atan2(nx, nz);
   }
+  // The breast strap: a team band laid round the bare chest ahead of the drape, on the barrel's surface a hair proud of it
+  const strapY = -backY * C.strapAt;
+  const strapPath = (y: number): Vector3[] => {
+    const pts: Vector3[] = [];
+    const k = Math.sqrt(Math.max(0, 1 - (y / backY) ** 2)) * 1.04;
+    for (let i = 0; i <= 12; i++) {
+      const phi = -C.strapArc + (i / 12) * 2 * C.strapArc;
+      pts.push(new Vector3((W / 2) * k * Math.sin(phi), y, (L / 2) * k * Math.cos(phi)));
+    }
+    return pts;
+  };
+  part(MeshBuilder.CreateRibbon("hpeytral", { pathArray: [strapPath(strapY + H * C.strap / 2), strapPath(strapY - H * C.strap / 2)], sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
   return barrel;
 }
 
