@@ -11,6 +11,9 @@ import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 import { buildFlyingSword } from "../units/propBuilder";
 
+// The balloon arrow's ball (see _addBalloonBall): across (m), along the shaft from its middle (m), stretch along the shaft
+const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
+
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
 interface ActiveProjectile {
@@ -275,6 +278,7 @@ export class ProjectileSystem {
     mesh.position = launchOrigin.clone();
     mesh.position.y += options.originLift ?? 1.0;
     if (options.size) mesh.scaling.setAll(options.size);
+    if (options.balloons && shape === "arrow" && !held) this._addBalloonBall(mesh, palette.primary, attackerTeam);
     if (held) {
       // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
       const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
@@ -679,6 +683,7 @@ export class ProjectileSystem {
         const launch = LAUNCH[p.shape];
         if (launch?.throw && !p.target.isDead) p.target.staggerFromBlow(p.origin, launch.throw);
         // A balloon arrow's ball swells into balloons on the man it strikes, and they float him up
+        if (p.balloons) p.mesh.getChildMeshes().find((m) => m.name === "balloonBall")?.setEnabled(false);
         if (p.balloons && !p.target.isDead) {
           p.target.floatOnBalloons(this._getTeamProjectilePalette(p.attackerTeam).primary);
           this.abilityHook?.(p.balloons, "float", p.target.position);
@@ -748,6 +753,19 @@ export class ProjectileSystem {
     if (includeShake) this.onShake?.(0.12 * scale);
     this.visualEffects?.spawnPersistentSmoke(pos);
     this.visualEffects?.spawnGroundScorch(pos);
+  }
+
+  /**
+   * [S] balloon arrow ball (333; card Appearance: "the arrows also have a team coloured ball behind the arrowhead, which disappear on hit and appear to
+   * expand into balloons"; renaissance.balloon_archer.jpg). A balloon arrow carries a team sphere BALLOON_BALL.size across, BALLOON_BALL.at along the
+   * shaft from its middle (just behind the head), a little squashed along the shaft; it is hidden the moment the arrow strikes, as the balloons swell.
+   */
+  private _addBalloonBall(root: TransformNode, color: Color3, team: number): void {
+    const ball = MeshBuilder.CreateSphere("balloonBall", { diameter: BALLOON_BALL.size, segments: 6 }, this._scene);
+    ball.scaling.z = BALLOON_BALL.long;
+    ball.position.z = BALLOON_BALL.at;
+    ball.material = this._getMat(`balloon_ball_${team}`, color);
+    ball.parent = root;
   }
 
   private _buildProjectileMesh(
