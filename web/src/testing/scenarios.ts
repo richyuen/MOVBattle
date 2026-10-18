@@ -1317,8 +1317,8 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     "Close-read faction lineup for Renaissance.",
     // The da Vinci tank is wider than a man's shoulder room: at 1.8 m it stood behind the jouster's horse, cut at the frame's edge; the rank is opened out
     // and the camera drawn back so the whole tank stands beside the men
-    // At TABS scale (337, DAVINCI_SCALE 1.9) the tank is some 6 m across its cannons: it stands lastApart further out and the camera takes in both
-    { spacingZ: 2.7, lastApart: 2.4, cameraOverride: { alpha: -0.2, beta: Math.PI / 2.15, radius: 18, target: { x: 0, y: 1.7, z: 1.4 } } },
+    // At TABS scale (338, DAVINCI_SCALE 2.3) the tank is some 7.5 m across its cannons: it stands lastApart further out and the camera takes in both
+    { spacingZ: 2.7, lastApart: 3.0, cameraOverride: { alpha: -0.2, beta: Math.PI / 2.15, radius: 20, target: { x: 0, y: 1.9, z: 1.9 } } },
   ),
   gallery_faction_pirate: makeFactionGalleryScenario(
     "gallery_faction_pirate",
