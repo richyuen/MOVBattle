@@ -1889,8 +1889,7 @@ const LONGSWORD: SlabCut = { long: 0.62, wide: 0.045, grip: 2.6, point: 0.14, fi
  * long off each side .lugAt above the guard; a long grip .grip fists. It is the greatsword case's slab on the greatsword case's mount, so the blade runs out of
  * the fist on the same side the old blade did; no off-hand marker (351's zweiGrip put it through the two-handed pole carry, which trailed it pommel-first).
  */
-// .fists (353): two-fisted, the off fist spaced a fist-span under the weapon fist on the long grip (proceduralAnimation TWO_FIST_SWORD)
-const ZWEI: SlabCut = { long: 0.85, wide: 0.05, grip: 4.5, point: 0.12, lug: 0.045, lugAt: 0.07, fists: "zweiFists" };
+const ZWEI: SlabCut = { long: 0.85, wide: 0.05, grip: 4.5, point: 0.12, lug: 0.045, lugAt: 0.07 };
 function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color3, great: boolean, cut?: SlabCut): { blade: Mesh; hilt: number } {
   const length = fit.stand * (cut ? cut.long : great ? 0.68 : 0.46);
   const width = cut ? fit.stand * cut.wide : Math.min(length / (great ? 5 : 4), Math.max(length / (great ? 6.5 : 5), fit.fist * 2.8));

@@ -188,8 +188,7 @@ const OFFHAND_GRIP_UP = 0.11;
  * the grip TWO_FIST_SWORD of the grip's length below where the weapon fist sits on it (toward the pommel), so the blade leads and the fists share the hilt.
  * Not the pole carry (POLE_GRIP): that turns the sword pommel-first (351). Held through idle, the march and the swing.
  */
-// The King's Zweihander (medieval.king.jpg): two fists spaced on the long grip, a fist's gap between them
-const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4, zweiFists: 0.5 };
+const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4 };
 // The couched lance (see _couchLance): weapon arm swing and elbow at rest, the shaft's dip below level and turn in across the horse (rad), the attack's drive and trunk pitch
 const COUCH = { raise: -0.35, elbow: -1.35, dip: 0.08, across: 0.12, drive: 0.5, pitch: 0.2 };
 // The couched lance turned onto its man (see aimLanceAt): seconds an aim holds after the last call, how fast the lance comes onto him and off (1/s)
