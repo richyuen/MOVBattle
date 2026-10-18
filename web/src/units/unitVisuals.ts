@@ -247,8 +247,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
 
   // ═══════════════════════ FARMER ═══════════════════════
+  // [S] empty hands (339; farmer.halfling.red.png, card: Halfling Grab in both hands): no pan, the mitts are the weapon
   "farmer.halfling": vis(
-    { scale: 0.55, headSize: 1.55, legLength: 0.7 }, "frying_pan", "none", "none", "none", "#696969",
+    { scale: 0.55, headSize: 1.55, legLength: 0.7 }, "none", "none", "none", "none", "#696969",
   ),
   "farmer.farmer": vis(
     { scale: 0.95, bulk: 0.95 }, "pitchfork", "pointed_cowl", "none", "none", "#4A7A2E",
