@@ -1435,21 +1435,31 @@ const HALFLING_FUR = new Color3(0.38, 0.21, 0.12);
  * [S] harvester's snath pegs (342; farmer.harvester.red.png: two short peg handles stand off the snath, one under each fist). Shares of the snath's length L
  * from its middle: the lower peg SNATH_PEG.low (the weapon fist's, which sits SCYTHE_GRIP below the middle), the upper .high; each .long of L long and
  * .thick across, standing out square to the snath. The upper is named "snathPeg", the POLE_GRIP mark that puts his off fist on the snath (_twoHandPole).
+ * [S] rooted (343; farmer.harvester.red.png: the pegs grow out of a red-brown snath under a grey blade): the snath bows away from the blade (the prop's
+ * SCYTHE_BOW), so each peg's root is set on the bow's own line at its height, sunk SNATH_PEG.sink of its length into the pole, not on the straight chord a
+ * hand-width off it. His snath and its grip wraps are red-brown SNATH_WOOD, his blade, heel and collar a mid grey SNATH_STEEL (the reaper's scythe keeps its own).
  */
-const SNATH_PEG = { low: -0.15, high: 0.15, long: 0.09, thick: 0.03 };
+const SNATH_PEG = { low: -0.15, high: 0.15, long: 0.09, thick: 0.03, sink: 0.2 };
 const SNATH_WOOD = new Color3(0.5, 0.24, 0.17);
+const SNATH_STEEL = new Color3(0.5, 0.51, 0.53);
 /** Adds the two peg handles to the harvester's scythe (spec at SNATH_PEG). */
 function addSnathPegs(scene: Scene, body: ArticulatedBody): Mesh[] {
   const carry = body.rightHand.getChildren().find((n) => n.name === "scytheCarry");
   const snath = carry?.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "shaft");
   if (!snath) return [];
-  const L = snath.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const box = snath.getBoundingInfo().boundingBox;
+  const L = box.extendSize.y * 2;
+  // the bow: the snath's line runs z = bow * (1 - 4 t^2) at t of its length from the middle (its ends on z 0), the pole's radius round it
+  const bow = box.maximum.z - box.extendSize.x;
   const wood = getMaterialFactory().get("wood", SNATH_WOOD, { emissiveIntensity: 0.18 });
+  const steel = getMaterialFactory().get("metal", SNATH_STEEL, { emissiveIntensity: 0.12 });
+  snath.material = wood;
+  for (const m of snath.getChildMeshes(false)) m.material = m.name === "gripWrap" ? wood : steel;
   const added: Mesh[] = [];
   for (const [name, at] of [["snathPegLow", SNATH_PEG.low], ["snathPeg", SNATH_PEG.high]] as const) {
     const peg = MeshBuilder.CreateCylinder(name, { height: L * SNATH_PEG.long, diameterTop: L * SNATH_PEG.thick * 0.8, diameterBottom: L * SNATH_PEG.thick, tessellation: 6 }, scene);
     peg.rotation.z = Math.PI / 2;
-    peg.position.set(-L * SNATH_PEG.long * 0.5, at * L, 0);
+    peg.position.set(-L * SNATH_PEG.long * (0.5 - SNATH_PEG.sink), at * L, bow * (1 - 4 * at * at));
     peg.material = wood;
     peg.convertToFlatShadedMesh();
     peg.parent = snath;
