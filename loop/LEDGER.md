@@ -11,10 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-337 | paned thigh rolls (d8407ce +1) | renaissance.fencer.a | approved
-337 | vest hem at the waist (780101e) | renaissance.musketeer.a | approved
-337 | caparison following the barrel (f277bbf) | renaissance.jouster.a | approved
-337 | whole-machine scale, flat cap (412d16c) | renaissance.da_vinci_tank.a | approved
 338 | upper tier as its own hat (60fa561) | renaissance.da_vinci_tank.a | approved
 339 | empty mitt hands (697a9c6) | farmer.halfling.b | approved
 339 | two-handed pitchfork carried low (151102b) | farmer.farmer.b | approved
@@ -55,6 +51,11 @@ for 25 iterations.
 346 | braids to the chest, team bands (909cf43) | farmer.harvester.a | rejected
 346 | fork low across front in both fists (e75d76c) | farmer.farmer.b | dropped
 346 | level sweep held through the cut + fling (1e4d069) | farmer.harvester.c | approved
+347 | braids retry: core plait to mid-chest, band at the end (514b71b) | farmer.harvester.a | approved
+347 | bolted team-painted plank tray, hay mound seat (07f763c +1) | farmer.wheelbarrow.a | approved
+347 | riders' fork and apple (b2fe249 +1) | farmer.wheelbarrow.b | approved
+347 | pitchfork stab, own clock, hit held to the drive (31530f7 +2) | farmer.farmer.c | approved
+347 | Big Crow Wings hover, wing beat (f0d8f77) | farmer.scarecrow.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -72,7 +73,7 @@ propBuilder.ts:CROW_WINGS (span, raise, sweep, feathers, wrist, glow) | 2.7, .55
 propBuilder.ts:stick STICK (long, grip, thick, tip, kinks, bend, glow), WOOD | .75, .12, .085, .8, 5, .035, .18; (.68,.4,.26) | 341 | approved | thick .045
 propBuilder.ts:pointed_cowl LIRIPIPE (snug, root, end, path 7 pts, yoke, yokeDeep, dags, dag, dagWide, flare) | 1.18,.62,.14,-,1.5,.22,9,.32,.36,.25 | 340 | approved | replaced COWL_* cone
 tribalDress.ts:SHAGGY (cap, locks, long, front, thick, splay), COLOR | 1.32, 26, .5, .5, .3, .55; (.38,.21,.12) | 340 | approved | -
-propBuilder.ts:sun_hat FLOPPY (brim, droop, lift, tip, crown, crownTall, apart, ahead, root, braid, plaits, thick, fall, flare, bandAt) | 2.25,.28,.12,.12,1.12,.42,.68,.08,.05,1.6,5,.42 (reverted) | 346 | rejected | 346 tried braid 2.8, plaits 8, fall .62, bandAt .8: overshot to the hip; critic wants ~1.8-2.0; 340: apart .6, braid 1.15
+propBuilder.ts:sun_hat FLOPPY (brim..root, braid, plaits, thick, fall, flare, core, overlap, bandTall) | ..,.05,1.95,8,.42,.3,.08,.62,1.45,.14 | 347 | approved | 346 rej braid 2.8 (hip); 340: braid 1.6, plaits 5
 propBuilder.ts:SACK (wide, top, tall, crown, dome, button, eyes, eyeDrop, neck, glow), BROWN | 1.22,1.12,1.12,.06,.12,.24,.22,.1,1,.2; (.56,.36,.22) | 340 | approved | -
 tribalDress.ts:BOWL (dome, crown, fringe, hang, flare, face), COLOR | 1.3, .78, .5, .4, 1.08, .36; (.45,.22,.15) | 341 | approved | -
 unitFactory.ts:HALFLING_DRESS (jacket, drop, vest, proud, vee, veeDeep, lapel, vestLight, jacketShade) | 1.14,.12,.56,.03,.42,.42,.34,.5,.8 | 341 | approved | -
@@ -97,3 +98,7 @@ simulationSystem.ts:HALFLING_CLING (round, off, up, afterDeath) | .55, .85, .32,
 vehicleBuilder.ts:WHEELBARROW (scale, trayY, trayWide, trayLong, trayZ, frontSeat, backSeat, pushZ, lean) | 2.2,.36,.44,.78,.08,.32,-.06,-.62,.28 | 346 | approved | replaced the .4 m cart and lone .46 pusher
 unitFactory.ts:SCARECROW_DRESS (strap, apart, button, patch, tufts, tuft, splay, glow), BROWN, STRAP, STRAW, ROPE | .13,.46,.14,.85,7,.3,.6,.22; (.5,.31,.2); (.42,.25,.16); (.86,.68,.3); (.72,.58,.36) | 346 | approved | no tunic skirt
 proceduralAnimation.ts:SCYTHE_SWEEP (roll,twist,cock,end,low,arm,crouch,through,hitAt,hold); SCYTHE_FLING (across,speed,lift) | pi/2,.75,2,-1.1,.12,-.55,.25,.55,.55,.75; .6,3.2,5 | 346 | approved | 345 rejected as is (a flinch tipped it up)
+vehicleBuilder.ts:TRAY_PLANK (planks, sideTall, seam, thick, bolt, heap, heapWide, glow), TRAY_WOOD, TRAY_STRAW | 3,.13,.008,.03,.016,.09,.92,.12; (.6,.34,.24); (.82,.62,.3) | 347 | approved | wood (.62,.4,.28) glow .22 read cream
+vehicleBuilder.ts:CREW_FORK (long, butt, thick, tines, tine, spread, curl, dir), CREW_APPLE (r, lift) | .72,.2,.013,3,.2,.055,.4,(-.42,.12,.9); .05,.035 | 347 | approved | tine .13 spread .035 too small
+proceduralAnimation.ts:FORK_STAB (land, commit, back, cock, dip, turn, drawRaise, drawElbow, reach, offReach, pitch, step, front, knee) | .7,.62,.3,.18,-.08,.35,-.25,-1.45,-1.3,-1.2,.28,.3,-.7,.55 | 347 | approved | -
+proceduralAnimation.ts:HOVER (lift, bob, rate, beat, rateIn) | .13, .025, 2.4, .28, 3 | 347 | approved | critic: lift small, legs stride while hovering
