@@ -880,6 +880,7 @@ export class SimulationSystem {
         unit.moveTo(unit.position.add(away.scale(0.5)));
         unit.setCohesionMoveMultiplier(FARMER_BACKSTEP.pace);
         unit.holdHeading(Math.atan2(-away.x, -away.z));
+        if (!this._backingOff.has(unit)) this._logAbility(unit, "backstep", now, enemy.position);
         this._backingOff.add(unit);
       } else if (this._backingOff.delete(unit)) {
         unit.holdHeading(null);
