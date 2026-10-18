@@ -1,4 +1,4 @@
-import { Matrix, Quaternion, Vector3, type Mesh, type TransformNode } from "@babylonjs/core";
+import { Matrix, Mesh, Quaternion, Vector3, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { SWORD_RING_BOB } from "./propBuilder";
 
@@ -283,8 +283,12 @@ const THROW_LET_GO = 0.5;
  * The throw is a heave, not an overarm toss: through the windup he folds forward ~30 deg at the waist on bent knees with both arms swung down and back so the
  * rock hangs low between his knees (BOULDER_DIP); at the commit both arms swing up and forward together, the trunk coming up and leaning back (BOULDER_HEAVE),
  * and the rock leaves both hands at chest height THROW_LET_GO of the way through that swing, the same let-go the sim times the missile on (throwReleasesIn).
+ * 319 (tribal.stoner.blue.png, the mitts on the chunk's sides): the arms hang forward a little more so the rock sits before the belly, and whatever the
+ * arm layer did, the mitts are spread about the shoulders to BOULDER_HOLD of the rock's width apart (see _carryBoulder), so a wide chunk is cradled between
+ * them and not swallowed over both fists.
  */
-const BOULDER_CARRY = { raise: -0.6, inward: 0.42, elbow: -0.75 };
+const BOULDER_CARRY = { raise: -0.75, inward: 0.2, elbow: -0.6 };
+const BOULDER_HOLD = 1.0;
 /*
  * [S] lockbox-belly-two-hand (vfx.p; units/spooky.swordcaster). Spec read off the reference: the chest is held square across the belly, its long side left to
  * right and close against him, just under the chest plate, a hand on each end. Upper arms hang near his sides with the elbows out (LOCKBOX_CARRY out), the
@@ -1870,10 +1874,25 @@ export class ProceduralAnimator {
     const anchor = chest ? this._lockboxAnchor(rock, w) : null;
     if (!rock.isEnabled()) return;
     // The rock between the two mitts: bring both chains up to this frame and set its middle on their midpoint, in the right hand's space
-    for (const hand of [b.rightHand, b.leftHand]) {
-      const chain: TransformNode[] = [];
-      for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
-      for (const n of chain) n.computeWorldMatrix(true);
+    const settle = (): void => {
+      for (const hand of [b.rightHand, b.leftHand]) {
+        const chain: TransformNode[] = [];
+        for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+        for (const n of chain) n.computeWorldMatrix(true);
+      }
+    };
+    settle();
+    if (!chest && rock instanceof Mesh) {
+      // The hands onto the rock's sides (tribal.stoner.blue.png: a mitt on each side of the chunk, not two fists buried in it): the mitts are spread or closed
+      // about the shoulders (rotation.z, each its own way) until they stand a rock's width apart, BOULDER_HOLD of it, by one solve a frame on the arms' length
+      const ext = rock.getBoundingInfo().boundingBox.extendSize;
+      const span = (ext.x + ext.y + ext.z) * (2 / 3) * rock.absoluteScaling.x * BOULDER_HOLD;
+      const r = b.rightHand.getAbsolutePosition(), l = b.leftHand.getAbsolutePosition();
+      const reach = (Vector3.Distance(r, b.rightShoulder.getAbsolutePosition()) + Vector3.Distance(l, b.leftShoulder.getAbsolutePosition())) * 0.5;
+      const spread = Math.max(-0.5, Math.min(0.5, (span - Vector3.Distance(r, l)) / Math.max(0.05, 2 * reach))) * w;
+      b.rightShoulder.rotation.z += spread;
+      b.leftShoulder.rotation.z -= spread;
+      settle();
     }
     const mid = anchor ?? Vector3.Center(b.rightHand.getAbsolutePosition(), b.leftHand.getAbsolutePosition());
     rock.position.copyFrom(Vector3.TransformCoordinates(mid, Matrix.Invert(b.rightHand.getWorldMatrix())));

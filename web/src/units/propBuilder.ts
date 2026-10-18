@@ -1541,9 +1541,11 @@ const DYNAMITE_BAND = 0.17;
 const DYNAMITE_SPARK = 0.075; // lit-fuse spark core, of s; rays 2.2x as long
 const DYNAMITE_SPARK_RAYS = 6;
 // The stoner's boulder (units/tribal.stoner), in prop units (x s, the man about .67 s tall): across, its height and depth as shares of that, colour
-const BOULDER_WIDE = 0.26;
+const BOULDER_WIDE = 0.3;
 const BOULDER_SQUASH = { y: 0.88, z: 0.94 };
-const BOULDER_COLOR = new Color3(0.34, 0.31, 0.28);
+// ...and how far each vertex is pushed in or out of the ball, as a share of its radius (tribal.stoner.blue.png: deep flat facets, no two faces in a line)
+const BOULDER_JITTER = 0.2;
+const BOULDER_COLOR = new Color3(0.3, 0.27, 0.24);
 // The swordcaster's lockbox (units/spooky.swordcaster): a chest about as wide as his torso, held across the belly in both hands; across, tall, deep (x s),
 // the domed lid's share of the height, dark iron body, lighter iron bands and a pale keyhole plate on the front
 const LOCKBOX_SIZE = { wide: 0.26, tall: 0.16, deep: 0.16 };
@@ -2362,11 +2364,24 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "shield_sword":
       return buildWeapon(scene, "sword", s, accent, bladeFit);
     case "stone": {
-      // The stoner's boulder (units/tribal.stoner): chest-sized, about .38 of his height across, a lumpy faceted rock in dark grey-brown, carried in both
-      // hands at the waist (ProceduralAnimator._carryBoulder sets it between the hands); the thrown one is a copy of it, so the same boulder flies
-      const rock = MeshBuilder.CreateIcoSphere("boulder", {
-        radiusX: BOULDER_WIDE * 0.5 * s, radiusY: BOULDER_WIDE * 0.5 * BOULDER_SQUASH.y * s, radiusZ: BOULDER_WIDE * 0.5 * BOULDER_SQUASH.z * s, subdivisions: 2, flat: true,
-      }, scene);
+      // The stoner's boulder (units/tribal.stoner; tribal.stoner.blue.png: a dark irregular chunk wider than his torso, a dozen big flat faces no two in a
+      // line, cradled before the belly in both hands): a coarse flat-faced ball BOULDER_WIDE across with every vertex pushed in or out by its own hashed
+      // share (BOULDER_JITTER), like the chieftain's axe head, not the smooth 80-face ball of before. Carried in both hands at the belly
+      // (ProceduralAnimator._carryBoulder sets it between the hands, the hands solved onto its sides); the thrown one is a copy of it, so the same chunk flies
+      const rock = MeshBuilder.CreateIcoSphere("boulder", { radius: BOULDER_WIDE * 0.5 * s, subdivisions: 1, flat: true }, scene);
+      const at = rock.getVerticesData(VertexBuffer.PositionKind);
+      if (at) {
+        for (let v = 0; v < at.length; v += 3) {
+          const k = 1 - BOULDER_JITTER + 2 * BOULDER_JITTER * roundBoardSeed(9.5, Math.round(at[v] * 83 + at[v + 1] * 47 + at[v + 2] * 29));
+          at[v] *= k; at[v + 1] *= k; at[v + 2] *= k;
+        }
+        rock.setVerticesData(VertexBuffer.PositionKind, at);
+        const normals: number[] = [];
+        VertexData.ComputeNormals(at, rock.getIndices() ?? [], normals);
+        rock.setVerticesData(VertexBuffer.NormalKind, normals);
+        rock.refreshBoundingInfo();
+      }
+      rock.scaling.set(1, BOULDER_SQUASH.y, BOULDER_SQUASH.z);
       rock.rotation.set(0.5, 0.8, 0.3);
       rock.material = mat(scene, BOULDER_COLOR, 0.15, "stone");
       return rock;
