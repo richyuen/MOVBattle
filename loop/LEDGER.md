@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-334 | chop onto the man (b6a163f) | renaissance.halberd.c | approved
-334 | heater held upright (69073a5) | renaissance.jouster.b | approved
-334 | domed drape, crenellated hem (73fd09c +1) | renaissance.jouster.a | approved
-334 | taller roof by tier pitch (519d913 +1) | renaissance.da_vinci_tank.a | rejected
-334 | doublet and paned breeches (c58861e) | renaissance.fencer.a | approved
 335 | blow held down, own clock (8899946) | renaissance.halberd.c | approved
 335 | plate rider, close helm (909f200 +1) | renaissance.jouster.a | approved
 335 | self-lit cravat (15c41f6 +1) | renaissance.painter.a | approved
@@ -55,6 +50,11 @@ for 25 iterations.
 343 | umber hair cap, hood dropped (fb5c49e) | farmer.potion_seller.a | approved
 343 | stick whack from the ear (a4f19ae) | farmer.hay_baler.c | approved
 343 | pegs rooted on the bow, snath and blade colours (0c7f22a) | farmer.harvester.b | approved
+344 | plain snath, grip wraps off (651d95a) | farmer.harvester.b | approved
+344 | Halfling Jump leap (2cb2be2) | farmer.halfling.c | approved
+344 | level stick carry across the front (cbcb6df) | farmer.hay_baler.b | approved
+344 | jerkin, undershirt V, laces, buttons, hem (2304369) | farmer.potion_seller.a | approved
+344 | T-pose, perched elbow crows (c3ffda9) | farmer.scarecrow.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -88,3 +88,7 @@ proceduralAnimation.ts:FORK_CARRY (raise, out, elbow, tip) | reverted | 342 | re
 unitFactory.ts:HALFLING_FEET (clump, clumpTall, rise, tufts, long, thick, splay, glow), HALFLING_FUR | 1.35,1.1,.9,9,.55,.28,1,.22; (.38,.21,.12) | 343 | approved | -
 tribalDress.ts:HAIR_CAP (dome, crown, fringe, hang, flare, face), HAIR_CAP_COLOR | 1.14,.62,.62,-.12,1.02,.42; (.36,.25,.17) | 343 | approved | -
 proceduralAnimation.ts:STICK_WHACK (cock,out,fold,twist,cockArc,hit,reach,pitch,hitArc,land,hold,offSwing) | -2.1,.55,-1.75,.4,-.9,-1.25,-.15,.3,1.9,.35,.6,.6 | 343 | approved | -
+simulationSystem.ts:HALFLING_JUMP (from, reach, cooldown, rise, short) | .6, 4, 8, 6.5, .3 | 344 | approved | -
+proceduralAnimation.ts:HAY_CARRY (raise, out, elbow, tip) | -.6, .1, -.85, (-.95,.02,.32) | 344 | approved | replaced fork low carry (pick .9) for hayStick
+unitFactory.ts:POTION_JERKIN (shell, dark, vee, veeDeep, laces, button, hem, light, glow), UNDERSHIRT, LACE, COPPER | 1.12,.42,.4,.62,3,.13,.14,.62,.16; (.66,.3,.24); (.88,.58,.34); (.86,.5,.26) | 344 | approved | -
+proceduralAnimation.ts:TPOSE (lift, ahead, rate, perch) | .04, .12, 8, .035 | 344 | approved | -

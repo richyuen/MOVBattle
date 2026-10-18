@@ -1,11 +1,11 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 343   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
+Iteration: 344   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
-farmer: halfling ++-+ o | farmer ---+ o | hay_baler --++ o | potion_seller -+++ o | harvester ---+ o | wheelbarrow ---+ o | scarecrow -+-+ o
+farmer: halfling ++-+ o | farmer ---+ o | hay_baler -+++ o | potion_seller -+++ o | harvester -+-+ o | wheelbarrow ---+ o | scarecrow -+-+ o
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
@@ -23,15 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-343 (BASE 856e2aa): [S] halfling a hairy feet 87e37b9 approved | [S] potion_seller a umber hair cap fb5c49e approved | [S] hay_baler c stick whack a4f19ae approved | [S] harvester b pegs rooted, snath/blade colours 0c7f22a approved | [P] scarecrow c FLYING_CROW wings flat d6343bd approved
-342 (BASE 403fb0d): scarecrow c flying crows, halfling a shorts, potion_seller c drunk splash, harvester b low scythe, harvester a braids [P] approved; farmer b fork carry rejected.
+344 (BASE af1f77a): [S] harvester b plain snath 651d95a approved | [S] halfling c Halfling Jump 2cb2be2 approved | [S] hay_baler b level carry cbcb6df approved | [S] potion_seller a jerkin 2304369 approved | [S] scarecrow a T-pose, perched crows c3ffda9 approved
+343 (BASE 856e2aa): halfling a feet, potion_seller a hair cap, hay_baler c whack, harvester b pegs [S], scarecrow c crow wings [P]: all approved.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] farmer.halfling (87e37b9) VERDICT: APPROVE CRITERION: farmer.halfling.a PASS (previous: FAIL) BLOCKERS: struck: 4. The list is now empty, so a flips to PASS.
-- GAP: [S] farmer.potion_seller (fb5c49e) VERDICT: APPROVE CRITERION: farmer.potion_seller.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3
-- GAP: [S] farmer.hay_baler (a4f19ae) VERDICT: APPROVE CRITERION: farmer.hay_baler.c PASS (previous: FAIL) BLOCKERS: struck: 1. The list is now empty, so c flips to PASS.
-- GAP: [S] farmer.harvester (0c7f22a) VERDICT: APPROVE CRITERION: farmer.harvester.b FAIL (previous: FAIL) BLOCKERS: struck: 2, 3. Remaining: added: 4 (grip wraps float off the bowed snath)
-- GAP: [P] farmer.scarecrow (d6343bd) VERDICT: APPROVE CRITERION: farmer.scarecrow.c FAIL (previous: FAIL) BLOCKERS: Remaining: 2, 3. REGRESSIONS: none
+- GAP: [S] farmer.harvester (651d95a) VERDICT: APPROVE CRITERION: farmer.harvester.b PASS (previous: FAIL) BLOCKERS: struck: 4 (list now empty, so b flips to PASS)
+- GAP: [S] farmer.halfling (2cb2be2) VERDICT: APPROVE CRITERION: farmer.halfling.c FAIL (previous: FAIL) BLOCKERS: struck: 1 | remaining: 2
+- GAP: [S] farmer.hay_baler (cbcb6df) VERDICT: APPROVE CRITERION: farmer.hay_baler.b PASS (previous: FAIL) BLOCKERS: struck: 2 (list now empty, so b flips to PASS)
+- GAP: [S] farmer.potion_seller (2304369) VERDICT: APPROVE CRITERION: farmer.potion_seller.a FAIL (previous: FAIL) BLOCKERS: struck: 2 | remaining: 3
+- GAP: [S] farmer.scarecrow (c3ffda9) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL) BLOCKERS: struck: 4 | remaining: 3. REGRESSIONS: none
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- No [P] fallout pending. Wheelbarrow still untouched (its only ranked [S] is the 3-crew seating; split it); farmer b is at 1 rejected (a 2nd plateaus it).
+- [P] fallout pending: scarecrow TPOSE.perch .035 -> ~.07 (approved [S] c3ffda9, 344). Wheelbarrow still untouched (split its 3-crew seating); farmer b is at 1 rejected (a 2nd plateaus it).
 - Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissiveIntensity}). Cream/tan needs ~.2-.3.
-- Carry (proceduralAnimation): only props whose root name is in the turnable regex (club|blade|handle|...|scytheCarry) turn onto attitude.tip. Club blows go through _aimBlow (arm overhead) unless exempted like _whacks().
-- Look captures need a clean tree incl. untracked: git stash push -- <dirty paths> around them; --units takes a comma list and wipes output/loop/look. Vehicles live in vehicleBuilder.ts.
-- Patch via scratchpad python with io.open(..., newline='', encoding='utf-8') (cp1252 default breaks on unitVisuals). After any --iter capture rerun stats --batch <batch> --iter N.
+- Unit capture idle shot is 100 ms after spawn: a carry must be set from frame one (_carryTurn = 1 in _buildCarry) or it shows the fist's rest angle. Idle is side-on; the lineup is the front view.
+- Look captures need a clean tree incl. untracked: git stash push -- <dirty paths> around them; --units takes a comma list and wipes output/loop/look. A playwright probe must live in loop/scripts/ (module resolution); delete it before captures.
+- Patch via a scratchpad .py file run with python (heredocs with quotes break); files are LF now, io.open(..., newline='', encoding='utf-8'). After any --iter capture rerun stats --batch <batch> --iter N.
