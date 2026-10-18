@@ -1,4 +1,4 @@
-import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode } from "@babylonjs/core";
+import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode, type Material } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -33,6 +33,11 @@ const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 
  * healer's beam is on him (gild) his skin is GILD.dye of the way to GILD.gold and lit .glow of it, his clothes lit .6 of that; no roll, no slow.
  */
 const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45 };
+/*
+ * [S] full gild (352; card Appearance: "turning them gold for a moment"). While gilded every opaque mesh of him (skin, clothes, armour, helm, the props in
+ * his hands) wears one shared gold material, GILD.gold lit .glow of it, the mesh's own material kept and put back when the beam lets go. Prop materials
+ * come from the shared cache, so they are swapped per mesh, never tinted in place.
+ */
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
@@ -160,6 +165,8 @@ export class RuntimeUnit {
   private _gildUntil = 0;
   private _dyedWith: Color3 | null = null;
   private _skinBase: Color3 | null = null;
+  // Gilded meshes and the material each wore before (full gild, GILD)
+  private _gildWorn: Map<Mesh, Material> | null = null;
 
   // Spawn state for reset
   private _spawnPosition: Vector3;
@@ -1755,6 +1762,7 @@ export class RuntimeUnit {
     const drunk = this.isDrunk;
     // A healer's beam gilds him (GILD) the same way, gold and lit, without the totter; drunk wins when both hold
     const gilded = !drunk && this.isGilded;
+    this._gildMeshes(gilded);
     const tint = drunk ? DRUNK.green : GILD.gold;
     const dye = drunk ? DRUNK.dye : GILD.dye;
     const glow = drunk ? DRUNK.glow : GILD.glow;
@@ -1779,6 +1787,23 @@ export class RuntimeUnit {
     b.neck.rotation.z -= Math.sin(now * DRUNK.rate + 0.8) * DRUNK.roll * 1.4;
     b.neck.rotation.x += DRUNK.roll * 0.6;
     return true;
+  }
+
+  /** The full gild (GILD): every opaque mesh of him onto the shared gold material while `on`, each back to its own when it goes off. */
+  private _gildMeshes(on: boolean): void {
+    if (on && !this._gildWorn) {
+      const gold = getMaterialFactory().get("stone", GILD.gold, { emissiveIntensity: GILD.glow });
+      this._gildWorn = new Map();
+      for (const mesh of this.body.root.getChildMeshes(false)) {
+        const worn = mesh.material;
+        if (!(mesh instanceof Mesh) || !worn || worn.alpha < 1) continue;
+        this._gildWorn.set(mesh, worn);
+        mesh.material = gold;
+      }
+    } else if (!on && this._gildWorn) {
+      for (const [mesh, worn] of this._gildWorn) if (!mesh.isDisposed()) mesh.material = worn;
+      this._gildWorn = null;
+    }
   }
 
   private _applyFxPreset(fxPreset: FxPreset, isAttacking: boolean, now: number): void {
@@ -1823,6 +1848,7 @@ export class RuntimeUnit {
     this._isDead = false;
     this._drunkUntil = 0;
     this._gildUntil = 0;
+    this._gildMeshes(false);
     this._throwT = -1;
     if (this._drunkDyed && this._skinBase) this.body.skinMaterial.baseColor = this._skinBase;
     this._drunkDyed = false;
