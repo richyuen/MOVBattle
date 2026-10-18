@@ -3883,6 +3883,47 @@ const PINTO_EYE = 0.075;
 const PINTO_EAR = 0.3;
 const PINTO_LOOP = 0.42;
 type HorseStyle = "barded" | "pinto";
+/*
+ * [S] chanfron (336; renaissance.jouster.red.png: the horse's face is cased in a grey faceted plate from the poll to above the nostrils, the brown muzzle
+ * showing below it; a round eye hole on each side with a white eye and black pupil looking out; brown ears standing up through it with team insides; a
+ * bushy team plume between them; the 268 plank read as a flat brown board). In the head's own frame (y from the poll to the muzzle, -z the face's top):
+ *   shell CHANFRON.long of the head long from the poll, CHANFRON.wide of H across at the poll tapering to .narrow, flattened sideways by .flat, a ridge
+ *   down the top; eye holes CHANFRON.eye of H round, .eyeAt of the head down from the poll; ears CHANFRON.ear of H tall; plume .tufts tufts .tuft of H.
+ */
+const CHANFRON = { long: 0.7, wide: 0.38, narrow: 0.27, flat: 0.88, eye: 0.075, eyeAt: 0.3, ear: 0.3, tufts: 4, tuft: 0.11, glow: 0.2 };
+const CHANFRON_STEEL = new Color3(0.5, 0.52, 0.56);
+function buildChanfron(scene: Scene, head: Mesh, headLong: number, H: number, part: (m: Mesh, material: PBRMetallicRoughnessMaterial) => Mesh, dark: PBRMetallicRoughnessMaterial): void {
+  const C = CHANFRON;
+  const steel = mat(scene, CHANFRON_STEEL, 0.16, "cloth");
+  const long = headLong * C.long;
+  const from = -headLong * 0.5;
+  const shell = part(MeshBuilder.CreateCylinder("hchanfron", { height: long, diameterTop: H * C.narrow, diameterBottom: H * C.wide, tessellation: 6 }, scene), steel);
+  shell.parent = head;
+  shell.scaling.x = C.flat;
+  shell.position.set(0, from + long * 0.5, -H * 0.015);
+  // the ridge down the top of the face
+  const ridge = part(MeshBuilder.CreateBox("hchanfronRidge", { width: H * 0.05, height: long * 0.95, depth: H * 0.04 }, scene), steel);
+  ridge.parent = head;
+  ridge.rotation.x = Math.atan2((C.wide - C.narrow) * H * 0.5, long);
+  ridge.position.set(0, from + long * 0.5, -H * ((C.wide + C.narrow) * 0.25 + 0.005));
+  // an eye hole on each side, a white eye in it with its black pupil looking out
+  const white = mat(scene, new Color3(0.97, 0.97, 0.95), 0.2, "cloth");
+  const at = from + headLong * C.eyeAt;
+  const halfAt = H * (C.wide - (C.wide - C.narrow) * (C.eyeAt / C.long)) * 0.5 * C.flat;
+  for (const x of [-1, 1]) {
+    const ring = part(MeshBuilder.CreateTorus("hchanfronEye", { diameter: H * C.eye * 2, thickness: H * 0.03, tessellation: 8 }, scene), dark);
+    ring.parent = head;
+    ring.rotation.z = Math.PI / 2;
+    ring.position.set(x * halfAt * 0.96, at, -H * 0.03);
+    const eye = part(MeshBuilder.CreateIcoSphere("hchanfronEyeball", { radius: H * C.eye * 0.8, subdivisions: 1 }, scene), white);
+    eye.parent = head;
+    eye.scaling.x = 0.6;
+    eye.position.set(x * halfAt * 0.96, at, -H * 0.03);
+    const pupil = part(MeshBuilder.CreateIcoSphere("hchanfronPupil", { radius: H * C.eye * 0.4, subdivisions: 1 }, scene), dark);
+    pupil.parent = head;
+    pupil.position.set(x * (halfAt * 0.96 + H * C.eye * 0.4), at + H * C.eye * 0.15, -H * 0.04);
+  }
+}
 function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: HorseStyle = "barded"): Mesh {
   const pinto = style === "pinto";
   const H = body.hip.position.y;
@@ -4008,19 +4049,30 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const head = part(MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.17, diameterBottom: H * 0.3, tessellation: 5 }, scene), coat);
   head.rotation.x = 2.05;
   head.position.set(0, poll.y + Math.cos(2.05) * headLong * 0.42, poll.z + Math.sin(2.05) * headLong * 0.42);
-  // The chanfron: a grey plate down the face, on top of the head and standing proud of it (the pinto's is a cream blaze instead)
-  const chanfron = part(MeshBuilder.CreateBox(pinto ? "hblaze" : "hchanfron", { width: H * (pinto ? 0.12 : 0.2), height: headLong * 0.85, depth: H * 0.05 }, scene), pinto ? cream : plate);
-  chanfron.parent = head;
-  chanfron.position.set(0, -headLong * 0.04, pinto ? -H * 0.085 : -H * 0.1);
+  if (pinto) {
+    // The pinto's cream blaze down the face
+    const blaze = part(MeshBuilder.CreateBox("hblaze", { width: H * 0.12, height: headLong * 0.85, depth: H * 0.05 }, scene), cream);
+    blaze.parent = head;
+    blaze.position.set(0, -headLong * 0.04, -H * 0.085);
+  } else {
+    buildChanfron(scene, head, headLong, H, part, dark);
+  }
   const pink = mat(scene, PINTO_PINK, PINTO_GLOW);
   const muzzle = part(MeshBuilder.CreateBox("hmuzzle", { width: H * (pinto ? 0.19 : 0.13), height: H * (pinto ? 0.15 : 0.1), depth: H * (pinto ? 0.17 : 0.12) }, scene), pinto ? pink : coat);
   muzzle.position.set(0, poll.y + Math.cos(2.05) * headLong * 0.95, poll.z + Math.sin(2.05) * headLong * 0.95);
-  const earTall = H * (pinto ? PINTO_EAR : 0.18);
+  const earTall = H * (pinto ? PINTO_EAR : CHANFRON.ear);
   for (const x of [-1, 1]) {
-    const ear = part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * (pinto ? 0.1 : 0.07), tessellation: 4 }, scene), coat);
-    ear.position.set(x * H * (pinto ? 0.08 : 0.07), poll.y + earTall * 0.45, poll.z - H * 0.02);
-    ear.rotation.set(-0.3, 0, -x * 0.25);
-    if (!pinto) continue;
+    const ear = part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * 0.1, tessellation: 4 }, scene), coat);
+    // the barded horse's ears stand up through the chanfron, so they root higher and splay wider
+    ear.position.set(x * H * (pinto ? 0.08 : 0.1), poll.y + earTall * 0.45 + (pinto ? 0 : H * 0.08), poll.z - H * 0.02);
+    ear.rotation.set(-0.3, 0, -x * (pinto ? 0.25 : 0.4));
+    if (!pinto) {
+      // team inside the ear, facing forward
+      const inner = part(MeshBuilder.CreateCylinder("hearInner", { height: earTall * 0.75, diameterTop: 0, diameterBottom: H * 0.065, tessellation: 4 }, scene), mat(scene, cloth, CHANFRON.glow, "cloth"));
+      inner.parent = ear;
+      inner.position.set(0, -earTall * 0.08, H * 0.03);
+      continue;
+    }
     // Pink inside the long ear, facing forward
     const inner = part(MeshBuilder.CreateCylinder("hearInner", { height: earTall * 0.8, diameterTop: 0, diameterBottom: H * 0.065, tessellation: 4 }, scene), pink);
     inner.parent = ear;
@@ -4042,9 +4094,15 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       tuft.rotation.x = -0.25;
     }
   } else {
-    const plume = part(MeshBuilder.CreateCylinder("hplume", { height: H * 0.3, diameterTop: H * 0.16, diameterBottom: H * 0.03, tessellation: 5 }, scene), mat(scene, cloth.scale(0.9)));
-    plume.position.set(0, poll.y + H * 0.16, poll.z + H * 0.04);
-    plume.rotation.x = -0.35;
+    // The team plume between the ears: a bushy stack of tufts off the poll, each smaller and curling back (CHANFRON.tufts)
+    const plumeMat = mat(scene, cloth, CHANFRON.glow, "cloth");
+    for (let i = 0; i < CHANFRON.tufts; i++) {
+      const r = H * CHANFRON.tuft * (1 - i * 0.14);
+      const tuft = part(MeshBuilder.CreateIcoSphere("hplume", { radius: 1, subdivisions: 1, flat: true }, scene), plumeMat);
+      tuft.scaling.set(r * 0.8, r, r * 0.9);
+      tuft.position.set(0, poll.y + H * 0.1 + r * 1.3 * i, poll.z + H * 0.02 - H * 0.05 * i * i * 0.5);
+      tuft.rotation.set(0.4 * i, 0.8 * i, 0.2 * (i % 2 ? 1 : -1));
+    }
   }
   const tail = part(MeshBuilder.CreateCylinder("htail", { height: H * 0.55, diameterTop: H * 0.1, diameterBottom: H * 0.03, tessellation: 5 }, scene), dark);
   tail.rotation.x = 0.35;
