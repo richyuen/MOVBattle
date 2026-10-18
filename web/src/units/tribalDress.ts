@@ -167,10 +167,56 @@ export function dressTribalNecklace(scene: Scene, body: ArticulatedBody, unitId:
  */
 const LONG_HAIR = { strands: 17, face: 0.8, fringe: 4, long: 1.05, thick: 0.32 };
 const LONG_HAIR_COLOR = new Color3(0.3, 0.18, 0.1);
-const HAIR_STYLES: Record<string, "long"> = { "tribal.stoner": "long" };
+/*
+ * The spear thrower's tusk headband (tribal.spear_thrower.blue.png, card Appearance: "a pair of animal tusks wrapped with straps and ropes on the side of
+ * their head like a headband"): a bare head (no mop), a brown strap round it TUSK_BAND.band of the head's height above its middle, and a pale curved tusk
+ * standing up each side from the cheek, bowed outward, its tip TUSK_BAND.rise head heights over its root and a little back; TUSK_BAND.thick head widths
+ * across at the root, tapering to a point; a turn of rope round each tusk where the strap crosses it.
+ */
+const TUSK_BAND = { band: 0.45, strap: 0.1, rise: 1.1, bow: 0.22, thick: 0.28 };
+const BAND_COLOR = new Color3(0.45, 0.27, 0.16);
+const HAIR_STYLES: Record<string, "long" | "tusk_band"> = { "tribal.stoner": "long", "tribal.spear_thrower": "tusk_band" };
 
-/** The unit's own hair (spec at LONG_HAIR), parented to the head; null when he keeps the common mop. */
+/** The tusk headband (spec at TUSK_BAND), parented to the head. */
+function tuskBand(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const W = e.x * 2, H = e.y * 2;
+  const bandY = e.y * TUSK_BAND.band;
+  const strap = MeshBuilder.CreateBox("tuskBandStrap", { width: W * 1.08, height: H * TUSK_BAND.strap, depth: e.z * 2 * 1.08 }, scene);
+  strap.position.y = bandY;
+  strap.material = getMaterialFactory().get("cloth", BAND_COLOR, { emissiveIntensity: 0.15 });
+  strap.parent = body.headMesh;
+  added.push(strap);
+  for (const side of [-1, 1]) {
+    // Root at the cheek beside the strap's side, bowing out, the tip over the head's side and a little back
+    const root = new Vector3(side * e.x * 1.12, -e.y * 0.25, e.z * 0.15);
+    const tip = new Vector3(side * e.x * 1.0, -e.y * 0.25 + H * TUSK_BAND.rise, -e.z * 0.25);
+    const ctrl = new Vector3(side * (e.x * 1.12 + W * TUSK_BAND.bow), (root.y + tip.y) * 0.5, e.z * 0.05);
+    const path: Vector3[] = [];
+    for (let i = 0; i <= 8; i++) {
+      const t = i / 8;
+      path.push(root.scale((1 - t) * (1 - t)).add(ctrl.scale(2 * t * (1 - t))).add(tip.scale(t * t)));
+    }
+    const tusk = MeshBuilder.CreateTube("tusk", { path, tessellation: 6, cap: Mesh.CAP_START, radiusFunction: (i) => W * TUSK_BAND.thick * 0.5 * Math.max(0.06, 1 - i / 8) }, scene);
+    tusk.convertToFlatShadedMesh();
+    tusk.material = boneMaterial();
+    tusk.parent = body.headMesh;
+    added.push(tusk);
+    // The rope turn round the tusk at the strap's height
+    const k = Math.min(8, Math.max(0, Math.round((bandY - root.y) / (tip.y - root.y) * 8)));
+    const wrap = MeshBuilder.CreateTorus("tuskRope", { diameter: W * TUSK_BAND.thick * (1 - k / 8) * 1.15, thickness: W * 0.05, tessellation: 8 }, scene);
+    wrap.position.copyFrom(path[k]);
+    wrap.material = ropeMaterial();
+    wrap.parent = body.headMesh;
+    added.push(wrap);
+  }
+  return added;
+}
+
+/** The unit's own hair or headgear (LONG_HAIR, TUSK_BAND), parented to the head; null when he keeps the common mop. */
 export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] | null {
+  if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
   if (HAIR_STYLES[unitId] !== "long") return null;
   const added: Mesh[] = [];
   const hair = getMaterialFactory().get("cloth", LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
