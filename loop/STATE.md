@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 354   Batch: medieval (4/18)   Consecutive empty: 0   Done: 21/139   Parked: 0
+Iteration: 354   Batch: medieval (4/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)

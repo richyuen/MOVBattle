@@ -522,7 +522,8 @@ async function main() {
             window.game.resetBattle();
             window.game.runScenarioGalleryValidation(n);
             // the rank runs along z and the camera sits nearly on +x (alpha -.25), so the men turn .35 rad toward -z to put it .6 rad off their front
-            for (const u of window.game.listLiveUnits()) u.holdHeading(Math.PI / 2 - 0.35);
+            for (const u of window.game.listLiveUnits()) if (!u.linkedParent) u.holdHeading(Math.PI / 2 - 0.35);
+            window.advanceTime(50); // riders and crews follow their parent's new yaw on the next tick
             const cam = window.game.getGalleryCamera(n);
             window.game.frameCamera(cam.target, cam.radius, -0.25, Math.PI / 2.25);
           }, `gallery_faction_${faction}`);
