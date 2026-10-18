@@ -1,9 +1,9 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 319   Batch: tribal (1/18)   Consecutive empty: 0   Done: 0/139   Parked: 0
+Iteration: 320   Batch: tribal (1/18)   Consecutive empty: 0   Done: 0/139   Parked: 0
 Batches, in order: tribal, farmer, medieval, ancient, viking, dynasty, renaissance, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber -+++ o | protector -+++ o | spear_thrower --++ o | stoner ---+ o | bone_mage -+++ o | chieftain -+++ o | mammoth -+-+ o
+tribal: clubber -+++ o | protector -+++ o | spear_thrower -+++ o | stoner --++ o | bone_mage -+++ o | chieftain -+++ o | mammoth -+-+ o
 farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,17 +23,18 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-319 (BASE cd9ae05 after the evidence commit): [S] spear_thrower b spear stood up out of the fist c8f0e70 approved | [S] chieftain b lashing bands c7ea0cc + 8c16992 approved (b -> PASS) | [S] stoner b faceted boulder cradled two-handed aa85160 approved | [S] bone_mage c spike loft 33e7601 approved (c -> PASS) | [S] protector a skull helmet e53ba02 approved. Evidence cd9ae05: a short throw's _struck from the far rig at impact+9. 5/5 approved, no regressions.
-318 (BASE e14fd1c): 5/6 approved (moss chunks af37ab3, lashed stone head 83bec0d + 069541b, forward toss 9a15b0d, leaves along the spike line 000f0de, [P] spike girth 8b32ce8; spear raised overhead b194791 rejected and reverted 62d30bf).
+320 (BASE 548c3fd): [S] spear_thrower b stone leaf head 4e68c1c approved (b -> PASS) | [P] protector a domed cranium 12e7843 approved | [S] chieftain a animal-skull helmet f86e35f approved | [S] stoner a one-shoulder garment 586d90f + f87534f + e16240e approved | [S] protector a one-shoulder garment b077ecf approved | [S] bone_mage a hide cape f5283a1 approved. Stoner c blocker 2 struck (c -> PASS). 6/6 approved, no regressions.
+319 (BASE cd9ae05): 5/5 approved (spear stood up c8f0e70, lashing bands c7ea0cc + 8c16992, faceted boulder aa85160, spike loft 33e7601, skull helmet e53ba02; evidence cd9ae05).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.spear_thrower (c8f0e70) VERDICT: APPROVE CRITERION: tribal.spear_thrower.b FAIL (previous: FAIL) BLOCKERS: struck: 1 (spear stood up out of the fist, arm straight up). Remaining: 2
-- GAP: [S] tribal.chieftain (c7ea0cc + 8c16992) VERDICT: APPROVE CRITERION: tribal.chieftain.b PASS (previous: FAIL) BLOCKERS: struck: 3 (lashing bands); 1 and 2 struck earlier (316, 318). List empty: b PASS.
-- GAP: [S] tribal.stoner (aa85160) VERDICT: APPROVE CRITERION: tribal.stoner.b FAIL (previous: FAIL) BLOCKERS: struck: 2 (both hands on the rock's sides before the belly). Remaining: 1 half cleared (faceted and wider than the torso, but an even twenty-face solid in mid grey)
-- GAP: [S] tribal.bone_mage (33e7601) VERDICT: APPROVE CRITERION: tribal.bone_mage.c PASS (previous: FAIL) BLOCKERS: struck: 3 (spike loft); 1 and 2 struck earlier (317, 318). List empty: c PASS.
-- GAP: [S] tribal.protector (e53ba02) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL) BLOCKERS: none struck. Remaining: 1 half cleared (pale bone with sockets and a snout, but a flat wide lid, not a cranium over the top half of the head), 2, 3
+- GAP: [S] tribal.spear_thrower (4e68c1c) VERDICT: APPROVE CRITERION: tribal.spear_thrower.b PASS (previous: FAIL) BLOCKERS: struck: 2 (1 struck 319). List cleared, so b flips to PASS.
+- GAP: [P] tribal.protector (12e7843) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 3.
+- GAP: [S] tribal.chieftain (f86e35f) VERDICT: APPROVE CRITERION: tribal.chieftain.a FAIL (previous: FAIL) BLOCKERS: 1 narrowed (the skull half is cleared; the beard half remains). Still open: 2, 3, 4.
+- GAP: [S] tribal.stoner (586d90f + f87534f + e16240e) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL) BLOCKERS: struck: 2. Remaining: 1, 3
+- GAP: [S] tribal.protector (b077ecf) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL) BLOCKERS: struck: 2. Remaining: 3 (neck).
+- GAP: [S] tribal.bone_mage (f5283a1) VERDICT: APPROVE CRITERION: tribal.bone_mage.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3
 - REGRESSIONS: none
-Batch ranked order (critic, 319): spear_thrower.b stone leaf head, [P] protector.a domed cranium (SKULL_FACETED.tall 0.85 -> 1.6, under 0.35 -> 0.7; fallout of e53ba02), [P] stoner.b irregular charcoal chunk (BOULDER_JITTER 0.2 -> 0.35, BOULDER_COLOR -> (0.2, 0.17, 0.15); fallout of aa85160), chieftain.a animal-skull helmet (the domed SKULL_FACETED over the crown above the beard), stoner.a one-shoulder garment, protector.a one-shoulder garment (same tunic mechanism), bone_mage.a hide cape, chieftain.a hide cape (same cape mechanism), clubber.a hair and beard, spear_thrower.a tusk headband, mammoth.a brown fur hide, mammoth.c Mammoth Charge. Stoner.c blocker 2: the critic says the re-aimed _struck reads cleared, to be struck at its next review.
+Batch ranked order (critic, 320): protector.a critter-skull necklace (finishes the protector), stoner.b charcoal lump ([S] new hull of 2-3 merged chunks; a [P] on BOULDER_* is a ledger reversal), stoner.a long hair, spear_thrower.a tusk headband, spear_thrower.a ornamented loincloth, bone_mage.a ornamented loincloth (shared mechanism), bone_mage.a bone necklace and bracelets, chieftain.a skull pauldrons, chieftain.a beard. Not re-ranked but still open in unit files: chieftain.a hide cape (dressTribalCape), clubber.a hair and beard, mammoth.a fur hide, mammoth.c Mammoth Charge.
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +55,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- 320 starts at step 3 (all tribal units audited, none done): take up to 5 [S] from the 319 ranked order (2 per unit max, different criteria) and 1 [P] (either protector.a domed cranium or stoner.b charcoal chunk; both are fallout of 319 [S]). The two b/a [P]s are the critic's own numbers; the [S] after them: chieftain.a helmet should reuse SKULL_FACETED, so do the protector [P] first in the same iteration.
-- Shared mechanisms the critic ranked twice: a one-shoulder tunic chunk (stoner.a, protector.a) and a hide cape wedge (bone_mage.a, chieftain.a); one mechanism in propBuilder, each unit's gap its own commit.
-- A look's output/loop/look/ is wiped by the next capture run: read a look's shots before starting another. Two captures cannot run at once (one preview port 4181); inspect-prop.mjs uses 4183 and `--no-build` serves the last capture's build, so it can run beside a capture. A look of 3 units ~4 min. Browns and greys go near-black in the capture's shade: prop materials get an emissive of 0.1-0.2.
-- The animator keys on prop names: a hafted weapon root must match the regex at proceduralAnimation.ts ~1620 (club|blade|handle|...), a caster's staff is "staff" with an "orb" child, a shield matches /shield$/; the javelin is "shaft" (_javelin/_standJavelin), the boulder "boulder" (_carryBoulder). A prop that must read in the placement frame needs _carryTurn = 1 at _buildCarry.
-- Two gaps in one file: edit, commit, then edit the next; stage by path, never -a (STATE/LEDGER stay dirty). Do not chain shell commands. stats.json lives in the last iteration that ran stats.mjs (iter-317). v1 is under loop/archive/v1/, tag loop-v1-final.
+- 321 starts at step 3 (tribal all audited, none done): up to 5 [S] from the 320 ranked order (2 per unit max, different criteria); no [P] is fallout-listed this time. The protector necklace finishes the protector (only a blocker 3 left).
+- Shared tribal dressing lives in unitFactory's bareSkinned branch: hair mop (skipped under bone_mask/antler_skull), furCollar (the dark neck ring), hangSkirt "hideKilt" + pelvis box (the loincloth), dressTribalTunic (TRIBAL_TUNIC_UNITS), dressTribalCape (TRIBAL_CAPE_UNITS). Necklaces, loincloth ornaments and hair replace those per unit id; size off torsoM + _yoke vertices in the torso frame (bounding boxes are stale; the trunk is a box in section).
+- Debug aid: a copy of inspect-prop.mjs walking body.torso (not the hands) with four camera yaws found the tunic sizing bug; the look shows placement only from one side. A look's output/loop/look/ is wiped by the next capture; captures share port 4181, inspect uses 4183.
+- Browns go near-black in the capture's shade: emissive 0.15-0.2. The animator keys on prop names (club|blade|handle..., "staff"+"orb", /shield$/, "shaft", "boulder"); the javelin's +y runs fist -> elbow.
+- Two gaps in one file: edit, commit, then edit the next; stage by path, never -a. Do not chain shell commands. stats.json lives in iter-317. v1 is under loop/archive/v1/, tag loop-v1-final.

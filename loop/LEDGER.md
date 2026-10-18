@@ -31,6 +31,11 @@ for 25 iterations.
 319 | faceted boulder cradled two-handed (aa85160) | tribal.stoner.b | approved
 319 | spike loft (33e7601) | tribal.bone_mage.c | approved
 319 | skull helmet (e53ba02) | tribal.protector.a | approved
+320 | stone leaf head (4e68c1c) | tribal.spear_thrower.b | approved
+320 | animal-skull helmet (f86e35f) | tribal.chieftain.a | approved
+320 | one-shoulder garment (586d90f + f87534f + e16240e) | tribal.stoner.a | approved
+320 | one-shoulder garment, shared tunic (b077ecf) | tribal.protector.a | approved
+320 | hide cape (f5283a1) | tribal.bone_mage.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -66,4 +71,8 @@ simulationSystem.ts:LEAF_ROW (lift, at, arc per metre) | 0.6, 0.7, 0.03 | 318 | 
 projectileSystem.ts:SPIKE_LOFT (up, along m/s) | 10, 2.5 | 319 | approved | (new; before it the caught man had only applyDamage's capped 0.95 lift)
 propBuilder.ts:stone BOULDER_WIDE, BOULDER_JITTER, BOULDER_COLOR | 0.3, 0.2, (0.3, 0.27, 0.24) | 319 | approved | 0.26, smooth 80-face ball, (0.34, 0.31, 0.28) (pre-loop)
 proceduralAnimation.ts:boulder BOULDER_CARRY (raise, inward, elbow), BOULDER_HOLD | -0.75, 0.2, -0.6, 1.0 | 319 | approved | -0.6, 0.42, -0.75, no hold solve (pre-loop)
-propBuilder.ts:bone_mask SKULL_FACETED (heads, tall, under, jitter, socket, snout) | 1.45, 0.85, 0.35, 0.09, 0.3, 0.55 | 319 | approved | (new; the old cap: SKULL_HEADS 1.25 smooth dome, SKULL_SOCKET 0.26, SKULL_SNOUT 0.45, no emissive)
+propBuilder.ts:bone_mask SKULL_FACETED (heads, tall, under, jitter, socket, snout) | 1.45, 1.6, 0.7, 0.09, 0.3, 0.55 | 320 | approved | tall 0.85, under 0.35 (319 [S]; 320 [P] was its fallout); old cap SKULL_HEADS 1.25 smooth dome
+propBuilder.ts:javelin JAVELIN_HEAD_LONG, JAVELIN_HEAD_WIDE | 0.15, 0.095 | 320 | approved | 0.13, 0.09 (the four-sided cone)
+propBuilder.ts:javelin JAVELIN_LEAF (thick, waist, root, jitter, wraps), JAVELIN_STONE | 0.3, 0.35, 0.4, 0.14, 3, (0.44, 0.43, 0.41) e0.15 | 320 | approved | (new; iron (0.2, 0.21, 0.24), red binding)
+unitFactory.ts:tunic TUNIC (top, skirt, flare, tatters, strap), TUNIC_COLOR | 0.88, 0.6, 1.25, 5, 0.22, (0.5, 0.29, 0.18) e0.15 | 320 | approved | (new; stoner, protector)
+unitFactory.ts:cape HIDE_CAPE (wide, thick, tilt, jitter, points, drop), COLOR | 1.25, 0.35, 0.12, 0.12, 4, 0.55, (0.38, 0.23, 0.14) e0.16 | 320 | approved | (new; bone_mage)
