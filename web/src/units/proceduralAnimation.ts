@@ -261,6 +261,16 @@ const BLOW_DRIVE_LOWEST = 0.75;
 // pointed at the foe); at the commit it whips over the top and forward, the elbow straightening, the chest turning through and pitching in, and the missile leaves
 // the fist THROW_LET_GO of the way through that swing, with the arm out ahead near shoulder height; the arm follows through low and the man comes back to the ready.
 const THROW_COCK = { raise: -2.9, out: 0.3, elbow: -1.6, turn: 0.4, lean: -0.15, lead: -1.3 };
+/*
+ * A javelin's cock (tribal.spear_thrower.red.png: the arm reached straight up, the spear stood on up out of the fist over the crown, its point tipped a little
+ * forward at the foe): not the fist folded behind the head but the whole arm up, elbow near straight (JAVELIN_COCK), with the shaft TURNED ABOUT in the fist
+ * (_standJavelin). The javelin is strapped on running from the fist up the forearm (a hand's +y runs wrist to elbow), so the raised arm alone hung it down
+ * the back of the head, leaf at the nape (318, rejected). At the cock the "shaft" is turned pi about the fist and seated the same way out past the fingers,
+ * so it stands on up out of the fist; it is turned back as the arm whips over the top, from JAVELIN_UNTURN of the swing to the let-go (THROW_LET_GO), where
+ * the missile is a copy of the prop in its own frame and the held one is hidden until the next windup. The chest's turn, lean and the other arm are the throw's.
+ */
+const JAVELIN_COCK = { raise: -2.8, out: 0.12, elbow: -0.1 };
+const JAVELIN_UNTURN = 0.2;
 const THROW_FOLLOW = { raise: -0.35, lean: 0.35 };
 const THROW_SWING = 0.55;
 // Harpoon gun at the hip (units/pirate.harpooner): gun arm a little behind the hang (raise > 0 tips the nozzle down), off hand across onto the canister,
@@ -1471,6 +1481,8 @@ export class ProceduralAnimator {
     this._carryProp(dt);
     this._offhandToGrip();
     this._carryBoulder();
+    // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
+    if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
     // Flinch overlay (additive), the very last pose layer: laid over the brace, the board's squaring and the carries, so a man behind a board still goes back
     // under the blow. It holds full for the first FLINCH_HOLD of its time, so the frame the blow lands on shows it whole.
@@ -2973,11 +2985,15 @@ export class ProceduralAnimator {
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
     const releasePoint = this._resolveReleasePoint(0.45);
     const side = Math.sign(b.rightShoulder.position.x) || 1;
-    const c = THROW_COCK;
+    // A javelin is stood up over the head at the cock (JAVELIN_COCK, the shaft turned about in the fist); a bomb or any other missile is cocked behind the head
+    const jav = this._javelin();
+    const c = jav ? { ...THROW_COCK, ...JAVELIN_COCK } : THROW_COCK;
+    let stand = 0;
     if (progress < releasePoint) {
       // Up and back: the fist behind the head, the chest turned off the line and leant away, the other arm out at the foe
       const u = progress / Math.max(releasePoint, 0.001);
       const w = u * (2 - u);
+      stand = w;
       b.rightShoulder.rotation.x = c.raise * w;
       b.rightShoulder.rotation.z = c.out * w;
       b.rightElbow.rotation.x = c.elbow * w;
@@ -2995,6 +3011,9 @@ export class ProceduralAnimator {
       const f = v * v * (3 - 2 * v);
       const r = s > THROW_SWING ? (s - THROW_SWING) / (1 - THROW_SWING) : 0;
       const k = 1 - r * r * (3 - 2 * r);
+      // The stood javelin turns back in the fist over the whip, square again at the let-go
+      const un = Math.max(0, Math.min(1, (v - JAVELIN_UNTURN) / Math.max(0.001, THROW_LET_GO - JAVELIN_UNTURN)));
+      stand = 1 - un * un * (3 - 2 * un);
       b.rightShoulder.rotation.x = (c.raise + (THROW_FOLLOW.raise - c.raise) * f) * k;
       b.rightShoulder.rotation.z = c.out * (1 - f) * k;
       b.rightElbow.rotation.x = c.elbow * Math.max(0, 1 - f * 1.5) * k - 0.1 * k;
@@ -3007,7 +3026,28 @@ export class ProceduralAnimator {
       b.leftHip.rotation.x = -0.25 * k;
       b.rightHip.rotation.x = 0.2 * (1 - f) * k;
     }
+    if (jav) this._standJavelin(jav, stand);
     if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  // The javelin in the throwing hand (the prop named "shaft", units/tribal.spear_thrower) with the turn and the seat it was strapped on with, looked up once:
+  // it keeps its name hidden after the let-go. null for any other hand.
+  private _javelinProp: { shaft: TransformNode; rest: Quaternion; grip: Vector3 } | null | undefined = undefined;
+  private _javelin(): { shaft: TransformNode; rest: Quaternion; grip: Vector3 } | null {
+    if (this._javelinProp === undefined) {
+      const shaft = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "shaft");
+      this._javelinProp = shaft ? { shaft, rest: Quaternion.FromEulerAngles(shaft.rotation.x, shaft.rotation.y, shaft.rotation.z), grip: shaft.position.clone() } : null;
+    }
+    return this._javelinProp;
+  }
+  // How far the javelin is turned about in the fist (0 strapped on, 1 stood up out of it); see JAVELIN_COCK
+  private _javelinStand = 0;
+  /** The javelin turned `k` of pi about the fist (the hand's x axis through the wrist), its seat carried round with it, so at 1 it runs out past the fingers. */
+  private _standJavelin(jav: { shaft: TransformNode; rest: Quaternion; grip: Vector3 }, k: number): void {
+    this._javelinStand = k;
+    const turn = Quaternion.RotationAxis(Vector3.Right(), Math.PI * k);
+    jav.shaft.rotationQuaternion = jav.rest.multiply(turn);
+    jav.grip.rotateByQuaternionToRef(turn, jav.shaft.position);
   }
 
   /**
