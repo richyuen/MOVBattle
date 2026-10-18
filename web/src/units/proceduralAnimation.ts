@@ -152,7 +152,7 @@ const POLE_GRIP = {
  * A palette in the off hand is held up in every state but death and limpness, laid over the stand, the walk and the swing (see _holdPalette): shoulder
  * swung forward PALETTE_HOLD.raise and out PALETTE_HOLD.out, elbow folded PALETTE_HOLD.elbow; it breathes PALETTE_HOLD.sway on its own beat.
  */
-const PALETTE_HOLD = { raise: -0.6, out: -1.2, elbow: -1.2, sway: 0.05 };
+const PALETTE_HOLD = { raise: -1.0, out: -0.55, elbow: -1.2, sway: 0.05 };
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
 // cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
