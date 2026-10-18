@@ -1800,6 +1800,14 @@ const SWORD_RING_REFILL = 1.4;
 const CLUB_LONG = 0.6;
 const CLUB_GRIP = 0.2;
 const CLUB_HEAD = 0.22;
+/*
+ * [S] The hay baler's stick (340; farmer.hay_baler.blue.png, card: Main Hand Stick, one-handed bludgeon): a long thin crooked branch, about as long as
+ * the bale is wide, held one-handed near its butt and run out ahead. STICK.long of the man's height, STICK.grip of it behind the fist, STICK.thick
+ * across (barely tapering to STICK.tip of that at the far end), bent at STICK.kinks hashed points along its length by up to STICK.bend of its length
+ * sideways and up/down, so it reads as a crooked branch, not a turned pole. Light red-brown wood, self-lit STICK.glow so it does not go black.
+ */
+const STICK = { long: 0.75, grip: 0.12, thick: 0.045, tip: 0.8, kinks: 5, bend: 0.035, glow: 0.18 };
+const STICK_WOOD = new Color3(0.68, 0.4, 0.26);
 // The chieftain's stone axe (units/tribal.chieftain), in the man's heights: handle length, the share below the fist, the stone's length across the top
 const AXE_LONG = 0.4;
 const AXE_GRIP = 0.25;
@@ -2863,6 +2871,23 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         }
       }
       return shaft;
+    }
+    case "stick": {
+      // The crooked branch (spec at STICK): +y out along it from the fist at the origin, named "handle" so the animator turns it in the one fist
+      const L = fit.stand * STICK.long;
+      const n = STICK.kinks + 1;
+      const line: Vector3[] = [];
+      for (let i = 0; i <= n; i++) {
+        const t = i / n;
+        const inner = i > 0 && i < n;
+        const bx = inner ? (roundBoardSeed(3.3, i * 7 + 1) - 0.5) * 2 * STICK.bend * L : 0;
+        const bz = inner ? (roundBoardSeed(5.9, i * 11 + 2) - 0.5) * 2 * STICK.bend * L : 0;
+        line.push(new Vector3(bx, (t - STICK.grip) * L, bz));
+      }
+      const stick = MeshBuilder.CreateTube("handle", { path: line, tessellation: 6, cap: Mesh.CAP_ALL, radiusFunction: (i) => STICK.thick * 0.5 * L / STICK.long * (1 - (1 - STICK.tip) * i / n) }, scene);
+      stick.material = mat(scene, STICK_WOOD, STICK.glow);
+      stick.convertToFlatShadedMesh();
+      return stick;
     }
     case "frying_pan": {
       const pan = MeshBuilder.CreateCylinder("pan", { height: 0.02 * s, diameter: 0.16 * s, tessellation: 12 }, scene);

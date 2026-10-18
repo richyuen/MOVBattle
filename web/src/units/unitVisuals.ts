@@ -10,7 +10,7 @@ export type WeaponType =
   | "blowgun"
   | "bow" | "crossbow" | "musket" | "flintlock" | "blunderbuss" | "cannon_hand"
   | "shield_sword" | "halberd" | "lance"
-  | "scythe" | "pitchfork" | "frying_pan" | "broom" | "wheelbarrow_weapon"
+  | "scythe" | "pitchfork" | "frying_pan" | "stick" | "broom" | "wheelbarrow_weapon"
   | "bone_staff" | "lute" | "paintbrush" | "rapier"
   | "harpoon" | "cutlass" | "bomb" | "dynamite" | "torch"
   | "katana" | "nunchaku" | "shuriken_hand" | "bo_staff"
@@ -254,9 +254,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "farmer.farmer": vis(
     { scale: 0.95, bulk: 0.95 }, "pitchfork", "pointed_cowl", "none", "none", "#4A7A2E",
   ),
-  // [S] the bale is worn, not carried (339): unitFactory's dressHayBale; no box in the hand
+  // [S] the bale is worn, not carried (339): unitFactory's dressHayBale. [S] a crooked stick in the main hand (340; farmer.hay_baler.blue.png)
   "farmer.hay_baler": vis(
-    { scale: 1.25, bulk: 1.6 }, "none", "straw_hat", "none", "none", "#DAA520",
+    { scale: 1.25, bulk: 1.6 }, "stick", "straw_hat", "none", "none", "#DAA520",
   ),
   // [S] a potion in each hand (339; farmer.potion_seller.red.png, card: Potion Throw main and off hand)
   "farmer.potion_seller": vis(
@@ -1205,6 +1205,7 @@ export function inferWeaponPresentationFamily(weapon: WeaponType): WeaponPresent
     case "pickaxe":
     case "frying_pan":
     case "hay_bale":
+    case "stick":
       return "heavy_swing";
     case "sword":
     case "greatsword":
