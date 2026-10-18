@@ -815,6 +815,13 @@ const DAVINCI_ROOF = {
   drumColor: new Color3(0.24, 0.13, 0.1), seamColor: new Color3(0.1, 0.06, 0.05),
 };
 
+// [S] The upper tier as its own hat (338; renaissance.da_vinci_tank.red.png: the small cone stands off the big one on a short dark collar, its
+// eave a proud dark lip overhanging the lower roof's top, so the peak rises by the collar without re-pitching either tier). The cap, its lip, seams
+// and lid are lifted by collar; the collar is a dark plank ring collarR across from the lower tier's top up to the cap's eave.
+const DAVINCI_HAT = { collar: 0.16, collarR: 0.34, lip: 0.08, proud: 0.05 };
+/** The roof's highest point (the cap's lid), in the machine's own units. */
+const DAVINCI_PEAK = DAVINCI_ROOF.capTop + DAVINCI_HAT.collar + DAVINCI_ROOF.lip;
+
 const DAVINCI_CANNON = { count: 16, out: 1.62, bore: 0.2, ring: 0.07, ringWide: 1.3, color: new Color3(0.16, 0.16, 0.18) };
 
 function buildDaVinciRoof(scene: Scene, parent: TransformNode, team: PBRMetallicRoughnessMaterial, allMeshes: Mesh[]): Mesh {
@@ -849,26 +856,31 @@ function buildDaVinciRoof(scene: Scene, parent: TransformNode, team: PBRMetallic
   eave.convertToFlatShadedMesh();
   eave.position.y = R.eaveY - 0.03;
   add(eave, seamMat);
-  // Upper tier: a small cone with its own eave sitting over the top of the lower one
-  const capLip = MeshBuilder.CreateCylinder("davinci_cap_lip", { height: R.lip, diameter: R.capEaveR * 2, tessellation: R.planks }, scene);
+  // Upper tier as its own hat (DAVINCI_HAT): a dark collar standing on the lower tier's top, the cap lifted onto it with a proud dark eave lip
+  const H = DAVINCI_HAT;
+  const collar = MeshBuilder.CreateCylinder("davinci_collar", { height: H.collar + 0.04, diameter: H.collarR * 2, tessellation: R.planks }, scene);
+  collar.convertToFlatShadedMesh();
+  collar.position.y = R.topY - 0.02 + (H.collar + 0.04) / 2;
+  add(collar, drumMat);
+  const capLip = MeshBuilder.CreateCylinder("davinci_cap_lip", { height: H.lip, diameter: (R.capEaveR + H.proud) * 2, tessellation: R.planks }, scene);
   capLip.convertToFlatShadedMesh();
-  capLip.position.y = R.capY - R.lip / 2;
+  capLip.position.y = R.capY + H.collar - H.lip / 2;
   add(capLip, seamMat);
   const cap = MeshBuilder.CreateCylinder("davinci_cap", {
     height: R.capTop - R.capY, diameterTop: R.capTopR * 2, diameterBottom: R.capEaveR * 2, tessellation: R.planks,
   }, scene);
   cap.convertToFlatShadedMesh();
-  cap.position.y = (R.capTop + R.capY) / 2;
+  cap.position.y = (R.capTop + R.capY) / 2 + H.collar;
   add(cap, team);
   // The flat top's dark lid
   const lid = MeshBuilder.CreateCylinder("davinci_cap_lid", { height: R.lip, diameter: R.capTopR * 2 + 0.03, tessellation: R.planks }, scene);
   lid.convertToFlatShadedMesh();
-  lid.position.y = R.capTop + R.lip / 2;
+  lid.position.y = R.capTop + H.collar + R.lip / 2;
   add(lid, seamMat);
   for (let i = 0; i < R.planks; i++) {
     const a = i * Math.PI * 2 / R.planks;
     seamAlong("davinci_seam", a, R.eaveR, R.eaveY, R.topR, R.topY, R.seam * 0.3);
-    seamAlong("davinci_cap_seam", a, R.capEaveR, R.capY, R.capTopR, R.capTop, R.seam * 0.3);
+    seamAlong("davinci_cap_seam", a, R.capEaveR, R.capY + H.collar, R.capTopR, R.capTop + H.collar, R.seam * 0.3);
     const rivet = MeshBuilder.CreateSphere("davinci_rivet", { diameter: R.rivet, segments: 3 }, scene);
     rivet.position.set(Math.cos(a + Math.PI / R.planks) * (R.eaveR - 0.08), R.eaveY + 0.04, Math.sin(a + Math.PI / R.planks) * (R.eaveR - 0.08));
     add(rivet, seamMat);
@@ -972,7 +984,7 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
     allMeshes,
     operator?.headMesh,
     // Its height is the roof's top, its widths the machine's, all at DAVINCI_SCALE
-    makeBodyMetrics(DAVINCI_ROOF.capTop * DAVINCI_SCALE, 0.8 * DAVINCI_SCALE, 0.5 * DAVINCI_SCALE, 0.7 * DAVINCI_SCALE),
+    makeBodyMetrics(DAVINCI_PEAK * DAVINCI_SCALE, 0.8 * DAVINCI_SCALE, 0.5 * DAVINCI_SCALE, 0.7 * DAVINCI_SCALE),
     vehicleSockets,
   );
 }
