@@ -125,7 +125,7 @@ const TUNIC_COLOR = new Color3(0.5, 0.29, 0.18);
  * shoulders down the back to the thigh, not cloth: a jittered faceted slab HIDE_CAPE.wide shoulder spans across and HIDE_CAPE.thick of the trunk's depth,
  * tilted HIDE_CAPE.tilt off the back, HIDE_CAPE.points pointed tatters off its hem, and a pointed flap forward over each shoulder. Self-lit dark brown.
  */
-const TRIBAL_CAPE_UNITS = new Set(["tribal.bone_mage"]);
+const TRIBAL_CAPE_UNITS = new Set(["tribal.bone_mage", "tribal.chieftain"]);
 const HIDE_CAPE = { wide: 1.25, thick: 0.35, tilt: 0.12, jitter: 0.12, points: 4, drop: 0.55 };
 const HIDE_CAPE_COLOR = new Color3(0.38, 0.23, 0.14);
 /*
@@ -608,7 +608,8 @@ export class UnitFactory {
             ? hangSkirt(this._scene, body, "armourKilt", 0.6, 1.55, getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(ARMOUR_SKIRT_SHADE)))
             : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
-      if (bareSkinned && !hasTribalNecklace(definition.id)) propMeshes.push(furCollar(this._scene, body));
+      // ...not under a hide cape: its flaps lie over the shoulders where the collar would (the chieftain)
+      if (bareSkinned && !hasTribalNecklace(definition.id) && !TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(furCollar(this._scene, body));
     }
 
     // Linked gun crew wear the same hooped shirt and brown trousers as the cannon's own operator, under their own headgear
