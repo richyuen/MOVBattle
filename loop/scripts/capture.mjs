@@ -483,8 +483,10 @@ async function main() {
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
         }
         if (ability) {
-          await take(`unit_${id}_ability`, ability.tick, far);
-          await take(`unit_${id}_ability_after`, ability.tick + 9, far);
+          // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
+          const slow = /^float/.test(ability.kind);
+          await take(`unit_${id}_ability`, ability.tick, slow ? 2 : far);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : 9), slow ? 2 : far);
         }
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
