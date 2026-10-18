@@ -27,7 +27,7 @@ const CRITTER_NECKLACE = { skull: 0.5, spread: 0.55, drop: 0.2, lift: 0.05, stra
  */
 const BONE_NECKLACE = { drop: 0.16, bone: 0.55, middle: 1.25, thick: 0.13, gap: 2.4, strap: 0.03, off: 0.14 };
 // Which tribesmen wear which necklace (the furCollar is dropped for them)
-const NECKLACES: Record<string, "critter_skulls" | "bones"> = { "tribal.protector": "critter_skulls", "tribal.stoner": "bones" };
+const NECKLACES: Record<string, "critter_skulls" | "bones"> = { "tribal.protector": "critter_skulls", "tribal.stoner": "bones", "tribal.bone_mage": "bones" };
 
 export function hasTribalNecklace(unitId: string): boolean {
   return unitId in NECKLACES;
@@ -425,6 +425,48 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
     shaft.position.set(Math.sin(a) * r, beltY - ropeThick * 0.5, Math.cos(a) * r * zk);
     shaft.parent = body.hip;
     added.push(...parts);
+  }
+  return added;
+}
+
+/*
+ * Bone bracelets (tribal.bone_mage.blue.png, card Appearance: "a pair of bracelets made out of bones bound to two straps"): round each forearm just above the
+ * wrist, two red-brown straps BRACELET.apart forearm lengths apart and BRACELET.bones short knobbed bones laid along the arm between and across them, evenly
+ * round it, standing BRACELET.proud forearm widths off the skin so the cuff reads as a chunky pale-and-red band at the wrist.
+ *   BRACELET.at of the forearm's length from the elbow for the cuff's middle, .long forearm lengths for each bone, .thick forearm widths across each bone.
+ */
+const BRACELET = { at: 0.76, apart: 0.16, bones: 6, long: 0.3, thick: 0.28, proud: 0.18 };
+const BRACELETS = new Set(["tribal.bone_mage"]);
+
+/** Binds the bone bracelets (spec at BRACELET) round both forearms, parented to the elbow joints. Empty when he wears none. */
+export function dressTribalBracelets(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
+  if (!BRACELETS.has(unitId)) return [];
+  const added: Mesh[] = [];
+  const rope = ropeMaterial();
+  for (const [elbow, arm, hand] of [[body.leftElbow, body.leftLowerArm, body.leftHand], [body.rightElbow, body.rightLowerArm, body.rightHand]] as const) {
+    const len = Math.abs(hand.position.y);
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const wide = Math.max(e.x * arm.scaling.x, e.z * arm.scaling.z) * 2;
+    const y = -len * BRACELET.at;
+    const r = wide * 0.5 * 1.05;
+    const proud = wide * BRACELET.proud;
+    for (const side of [-1, 1]) {
+      const strap = MeshBuilder.CreateTorus("braceletStrap", { diameter: (r + proud * 0.6) * 2, thickness: proud * 0.9, tessellation: 10 }, scene);
+      strap.position.y = y + side * len * BRACELET.apart * 0.5;
+      strap.material = rope;
+      strap.parent = elbow;
+      added.push(strap);
+    }
+    for (let i = 0; i < BRACELET.bones; i++) {
+      const a = (i + 0.5) / BRACELET.bones * Math.PI * 2;
+      const parts = boneStick(scene, "braceletBone", len * BRACELET.long, wide * BRACELET.thick);
+      const shaft = parts[0];
+      // Along the arm, its knob pairs lying round the arm's surface rather than standing out of it
+      shaft.rotation.y = a;
+      shaft.position.set(Math.sin(a) * (r + proud * 0.5), y, Math.cos(a) * (r + proud * 0.5));
+      shaft.parent = elbow;
+      added.push(...parts);
+    }
   }
   return added;
 }
