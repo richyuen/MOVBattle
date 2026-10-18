@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-340 | crooked stick, one-handed low carry (cef515a +4) | farmer.hay_baler.b | approved
-340 | liripipe hood, leaf collar (4ccaced) | farmer.farmer.a | approved
-340 | shaggy brown mop (9ccfb6c) | farmer.halfling.a | approved
-340 | floppy hat and side braids (e4fd698) | farmer.harvester.a | approved
-340 | full-head sack mask (44d5b86) | farmer.scarecrow.a | approved
 341 | bowl cut (f6567f9) | farmer.hay_baler.a | approved
 341 | lobbed held bottle (e8afe34) | farmer.potion_seller.c | approved
 341 | jacket, vest, shirt V (76bdeb8) | farmer.halfling.a | approved
@@ -58,6 +53,9 @@ for 25 iterations.
 349 | [R] two-fisted low carry, both arms solved onto one line (8407342) | farmer.farmer.b | approved
 349 | crew dressed: hood, socks, hem, beard, afro, overalls (fb4fe35) | farmer.wheelbarrow.a | approved
 349 | riders fight: held-apple throw, fork stab (81f76b1) | farmer.wheelbarrow.c | approved
+350 | fork head at hip height: world chord, tines rolled ahead and down (aecb1d9) | farmer.farmer.b | approved
+350 | stab aimed down shoulder->chest line, hit at drive end (b0cfd14 +6b93c12) | farmer.wheelbarrow.c | approved
+350 | cut-log drum wheel, bark staves (6298fe0) | farmer.wheelbarrow.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -106,9 +104,9 @@ proceduralAnimation.ts:FORK_STAB (land, commit, back, cock, dip, turn, drawRaise
 proceduralAnimation.ts:HOVER (lift, bob, rate, beat, rateIn) | .13, .025, 2.4, .28, 3 | 347 | approved | critic: lift small, legs stride while hovering
 unitFactory.ts:FARMER_SHIRT (dags, dag, dagLong, tilt, shade, strap, strapProud, tongue, glow), STRAP | 10,1.25,.24,.32,.82,.1,1.1,.22,.2; (.5,.27,.17) | 348 | approved | critic: tilt reads spiky
 unitFactory.ts:HARVESTER_TRIM (collar..glow), BEIGE, ROPE | 1.42,.26,.56,.3,.055,.42,.3,.45,3,.2; (.86,.76,.6); (.8,.66,.46) | 348 | approved | collar 1.22,.2,.5 (look); critic: collar near-white, wide
-vehicleBuilder.ts:LOG_WHEEL (d, thick, bark, ring, hub, brace, braceBack, leg, legFoot, legIn, splay, glow) | .34,.08,.02,.55,.05,.022,.16,.03,.02,.1,.04,.18 | 348 | approved | critic: thick should be a drum
+vehicleBuilder.ts:LOG_WHEEL (d, thick, bark, ring, hub, brace.., staves, staveShade) | .34,.36,.02,.55,.05,.022..; 12, .78 | 350 | approved | thick .08 (348); critic: drum a bit narrow
 simulationSystem.ts:WHEELBARROW_RAM (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | .6,16,1.7,3,4,.35,6,4.5,4,2.2 | 348 | approved | critic: speed reads ~2x walk
 simulationSystem.ts:FARMER_BACKSTEP (after, pace, margin) | .95, .5, .15 | 348 | approved | -
-proceduralAnimation.ts:FORK_HOLD (out, drop, ahead, across, dip, forward) | .16, -.1, .22, .72, -.08, .68 | 349 | approved | critic: head droops ~40 deg in battle shots
-unitFactory.ts:WHEELBARROW_OVERALLS (lo,hi,bib,shade,strap,backLo,proud,button,glow); tribalDress AFRO (wide,tall,deep,up,back,jitter) | .05,.62,.62,.55,.13,.35,.03,.07,.18; 1.6,1.1,1.5,.42,.3,.1 | 349 | approved | critic: afro small, set back
-simulationSystem.ts:WHEELBARROW_CREW (appleFrom,appleReach,appleEvery,appleDamage,applePush,stabReach,stabEvery,stabDamage,stabPush); vehicleBuilder CREW_FIGHT | 2.5,14,1.8,40,2,2.4,1.1,45,3; cock .3 whip .15 hold .25 back .4 draw .18 drive .12 | 349 | approved | critic: stab level, hit before drive
+proceduralAnimation.ts:FORK_HOLD (out, drop, ahead, across, up, forward, reach, curlAhead, curlDown) | .16,-.1,.22,.78,.04,.55,1.5,.6,.8 | 350 | approved | 349: dir (-.72,-.08,.68); fallout .up .12
+unitFactory.ts:WHEELBARROW_OVERALLS (..); tribalDress AFRO (wide,tall,deep,up,back,jitter) | as 349; 2.0,1.1,1.5,.32,.18,.1 | 350 | approved | 1.6,..,.42,.3; critic: ~2/3 render size
+simulationSystem.ts:WHEELBARROW_CREW (..stabReach..); CREW_FIGHT (turn, drawBack, drawFold) | as 349; .9,.55,-1.5, hit at draw+drive | 350 | approved | hit at draw end (349)
