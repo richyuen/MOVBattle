@@ -2684,7 +2684,10 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "bow":
     case "crossbow": {
-      if (type === "bow" && variant === "longbow") {
+      if (type === "bow" && (variant === "longbow" || variant === "brown_longbow")) {
+        // The medieval archer's (352; medieval.archer.red.png: a plain brown longbow as tall as he is, a pale wrap at the grip) is the same stave in
+        // BROWN_LONGBOW's colours: brown wood, no tip wraps, the grip wrapped pale and not in the team colour
+        const brown = variant === "brown_longbow";
         // The balloon archer's longbow, built to the spec at LONGBOW: one faceted light-grey stave along +y, thick at the grip and tapering to the tips, bowed a
         // little off its string; tan wraps near each tip and the team colour round the grip. Laid and seated as the plain bow (named "bow", string child).
         const Lb = fit.stand * LONGBOW.long;
@@ -2695,7 +2698,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
         const path = ts.map((t) => new Vector3(0, t * Lb * 0.5, zs - LONGBOW.bow * Lb * (1 - t * t)));
         const stave = MeshBuilder.CreateTube("bow", { path, radiusFunction: (i) => radius(ts[i]), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
-        stave.material = mat(scene, LONGBOW_GREY, 0.2);
+        stave.material = mat(scene, brown ? BROWN_LONGBOW.wood : LONGBOW_GREY, brown ? 0.12 : 0.2);
         stave.convertToFlatShadedMesh();
         const band = (name: string, t: number, tall: number, grow: number, material: ReturnType<typeof mat>): void => {
           const m = MeshBuilder.CreateCylinder(name, { height: tall * Lb, diameter: radius(t) * 2 * grow, tessellation: 6 }, scene);
@@ -2705,8 +2708,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
           m.parent = stave;
         };
         const tan = mat(scene, LONGBOW_WRAP, 0.12, "cloth");
-        for (const t of LONGBOW.wrapAt) for (const side of [1, -1]) band("bowWrap", t * side, LONGBOW.wrap, 1.3, tan);
-        band("bowGrip", 0, LONGBOW.grip, 1.25, mat(scene, teamColor ?? accent, 0.12, "cloth"));
+        if (!brown) for (const t of LONGBOW.wrapAt) for (const side of [1, -1]) band("bowWrap", t * side, LONGBOW.wrap, 1.3, tan);
+        band("bowGrip", 0, LONGBOW.grip, 1.25, brown ? mat(scene, BROWN_LONGBOW.wrap, 0.12, "cloth") : mat(scene, teamColor ?? accent, 0.12, "cloth"));
         const string = MeshBuilder.CreateCylinder("string", { height: Lb * 0.97, diameter: 0.005 * Lb, tessellation: 4 }, scene);
         string.position.z = zs;
         string.parent = stave;
@@ -3790,6 +3793,8 @@ const BANJO_SKIN = new Color3(0.86, 0.78, 0.6);
 const LONGBOW = { long: 1.2, thick: 0.065, taper: 0.5, bow: 0.05, wrapAt: [0.6, 0.72], wrap: 0.04, grip: 0.11 };
 const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
+/** The medieval archer's longbow colours (352; medieval.archer.red.png): brown wood, a pale leather wrap at the grip */
+const BROWN_LONGBOW = { wood: new Color3(0.45, 0.27, 0.14), wrap: new Color3(0.86, 0.78, 0.62) };
 const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };
 const HEATER_GRIP_SIZE = 1.3;
 const HEATER_YELLOW = new Color3(0.95, 0.72, 0.12);
