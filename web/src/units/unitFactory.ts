@@ -570,6 +570,8 @@ export class UnitFactory {
         perch.position.copyFrom(elbow.position);
         propMeshes.push(...perch.getChildMeshes(false).filter((m): m is Mesh => m instanceof Mesh));
       }
+      // [S] team shirt, patched brown trousers on team-buttoned suspenders, hay at the cuffs and ankles, brown shoes (346; SCARECROW_DRESS)
+      propMeshes.push(...dressScarecrow(this._scene, body, teamColor));
     }
     if (definition.id === "farmer.hay_baler" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHayBale(this._scene, body));
@@ -662,7 +664,8 @@ export class UnitFactory {
 
     // Every dressed man's garment ends in a skirt of its own: the tabard's long one, a tunic's short hem, a cloth kilt under a cuirass, and on a bare tribesman a hide
     // kilt in place of the painted loincloth, with a fur collar over his shoulders.
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew") {
+    // (not the scarecrow: his shirt is tucked into the trousers his suspenders hold up, SCARECROW_DRESS)
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const skirt = bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
@@ -1449,6 +1452,101 @@ function dressPotionSellerLegs(scene: Scene, body: ArticulatedBody, teamColor: C
   }
   for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
     if (/_[lr]FootM$/.test(mesh.name)) mesh.material = boot;
+  }
+  return added;
+}
+
+/*
+ * [S] scarecrow's clothes (346; farmer.scarecrow.red.png, card Appearance "a team-colored long sleeves shirt that has a patch on it, along with hay
+ * sticking out of their cuffs ... a pair of brown pants, with two patches, and are suspended with two straps on either side by a team-colored button
+ * ... brown shoes tightened with rope and hay sticking out"): shirt and sleeves plain team cloth; pelvis and both legs brown trousers; two brown
+ * suspender straps from the shoulders down the chest and back to the waistband, a team button at each strap's front foot; a team patch on the right
+ * thigh and the left shin, a darker team patch on the shirt; a fan of straw tufts out of each sleeve end and each trouser end; brown shoes with a
+ * rope tie. Shares (of the chest W/H/D or the limb's girth/length): straps SCARECROW_DRESS.strap of W wide, .apart of W apart; button .button of W;
+ * patch .patch of the limb girth; tufts .tufts per cuff, .tuft of the limb long, splayed .splay rad. Brown and straw self-lit (.glow).
+ */
+const SCARECROW_DRESS = { strap: 0.13, apart: 0.46, button: 0.14, patch: 0.85, tufts: 7, tuft: 0.3, splay: 0.6, glow: 0.22 };
+const SCARECROW_BROWN = new Color3(0.5, 0.31, 0.2);
+const SCARECROW_STRAP = new Color3(0.42, 0.25, 0.16);
+const SCARECROW_STRAW = new Color3(0.86, 0.68, 0.3);
+const SCARECROW_ROPE = new Color3(0.72, 0.58, 0.36);
+/** Dresses the scarecrow (spec at SCARECROW_DRESS). */
+function dressScarecrow(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const C = SCARECROW_DRESS;
+  const shirt = mf.get("cloth", teamColor, { emissiveIntensity: 0.12 });
+  const brown = mf.get("cloth", SCARECROW_BROWN, { emissiveIntensity: C.glow });
+  const strapMat = mf.get("cloth", SCARECROW_STRAP, { emissiveIntensity: C.glow });
+  const straw = mf.get("cloth", SCARECROW_STRAW, { emissiveIntensity: 0.28 });
+  const rope = mf.get("cloth", SCARECROW_ROPE, { emissiveIntensity: 0.25 });
+  const patchMat = mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), 0.2), { emissiveIntensity: 0.14 });
+  const shirtPatch = mf.get("cloth", teamColor.scale(0.62), { emissiveIntensity: 0.14 });
+  const put = (m: Mesh, mt: Material, parent: TransformNode): Mesh => {
+    m.material = mt;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  // the body's own cloth: trousers from the waist down, the shirt above
+  const legs = [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg];
+  for (const mesh of body.root.getChildMeshes(false)) {
+    if (mesh.material !== body.bodyMaterial) continue;
+    mesh.material = /_pelvis$/.test(mesh.name) || legs.includes(mesh as Mesh) ? brown : shirt;
+  }
+  for (const leg of legs) leg.material = brown;
+  // suspenders: a strap down the front and the back of each side of the chest, a team button at each front foot
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const face = D * 0.5 + D * 0.03;
+  for (const side of [-1, 1]) {
+    for (const front of [1, -1]) {
+      const strap = put(MeshBuilder.CreateBox("scarecrowStrap", { width: W * C.strap, height: H * 1.02, depth: D * 0.05 }, scene), strapMat, body.torso);
+      strap.position.set(side * W * C.apart * 0.5, chest.position.y, front * face);
+    }
+    const button = put(MeshBuilder.CreateCylinder("scarecrowButton", { height: D * 0.07, diameter: W * C.button, tessellation: 8 }, scene), shirt, body.torso);
+    button.rotation.x = Math.PI / 2;
+    button.position.set(side * W * C.apart * 0.5, chest.position.y - H * 0.42, face + D * 0.03);
+  }
+  // a darker team patch on the shirt, off the left strap
+  const sp = put(MeshBuilder.CreateBox("scarecrowShirtPatch", { width: W * 0.2, height: H * 0.18, depth: D * 0.03 }, scene), shirtPatch, body.torso);
+  sp.position.set(W * 0.08, chest.position.y + H * 0.05, face);
+  sp.rotation.z = 0.25;
+  // two team patches on the trousers: the right thigh and the left shin, on the front
+  for (const leg of [body.rightUpperLeg, body.leftLowerLeg]) {
+    const e = leg.getBoundingInfo().boundingBox.extendSize;
+    const g = Math.max(e.x, e.z) * 2;
+    const patch = put(MeshBuilder.CreateBox("scarecrowPatch", { width: g * C.patch * 0.5, height: g * C.patch * 0.5, depth: g * 0.05 }, scene), patchMat, leg);
+    patch.position.set(0, e.y * 0.1, e.z + g * 0.02);
+    patch.rotation.z = 0.35;
+  }
+  // straw out of each sleeve end and each trouser end, fanned outward round the limb's foot
+  const tufts = (limb: Mesh): void => {
+    const e = limb.getBoundingInfo().boundingBox.extendSize;
+    const g = Math.max(e.x, e.z), long = e.y * 2;
+    for (let i = 0; i < C.tufts; i++) {
+      const a = (i / C.tufts) * Math.PI * 2;
+      const pivot = new TransformNode("scarecrowStrawPivot", scene);
+      pivot.parent = limb;
+      pivot.position.set(Math.cos(a) * g * 0.7, -e.y * 0.92, Math.sin(a) * g * 0.7);
+      pivot.rotation.set(-Math.sin(a) * C.splay, 0, Math.cos(a) * C.splay);
+      const len = long * C.tuft * (0.8 + 0.4 * ((i * 37) % 7) / 7);
+      const tuft = put(MeshBuilder.CreateCylinder("scarecrowStraw", { height: len, diameterTop: 0, diameterBottom: g * 0.28, tessellation: 4 }, scene), straw, pivot);
+      tuft.rotation.x = Math.PI;
+      tuft.position.y = -len * 0.5;
+    }
+  };
+  for (const limb of [body.leftLowerArm, body.rightLowerArm, body.leftLowerLeg, body.rightLowerLeg]) tufts(limb);
+  // brown shoes tied with a rope round the ankle
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const e = shin.getBoundingInfo().boundingBox.extendSize;
+    const tie = put(MeshBuilder.CreateTorus("scarecrowRope", { diameter: Math.max(e.x, e.z) * 2.2, thickness: Math.max(e.x, e.z) * 0.22, tessellation: 10 }, scene), rope, shin);
+    tie.position.y = -e.y * 0.8;
+  }
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = brown;
   }
   return added;
 }
