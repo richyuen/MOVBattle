@@ -70,7 +70,7 @@ const BANDANA_SWEEP = 0.5;
  */
 const SACK = { wide: 1.22, top: 1.12, tall: 1.12, crown: 0.06, dome: 0.12, button: 0.24, eyes: 0.22, eyeDrop: 0.1, neck: 1.0, glow: 0.2 };
 const SACK_BROWN = new Color3(0.56, 0.36, 0.22);
-const FLOPPY = { brim: 2.25, droop: 0.28, lift: 0.12, tip: 0.12, crown: 1.12, crownTall: 0.42, apart: 0.6, ahead: 0.08, root: 0.05, braid: 1.15, plaits: 5, thick: 0.26, glow: 0.2 };
+const FLOPPY = { brim: 2.25, droop: 0.28, lift: 0.12, tip: 0.12, crown: 1.12, crownTall: 0.42, apart: 0.68, ahead: 0.08, root: 0.05, braid: 1.6, plaits: 5, thick: 0.42, glow: 0.2 };
 const FLOPPY_BROWN = new Color3(0.5, 0.3, 0.18);
 const FLOPPY_HAIR = new Color3(0.36, 0.2, 0.11);
 /*
