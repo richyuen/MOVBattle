@@ -228,6 +228,13 @@ const WHEELBARROW_CREW = { appleFrom: 2.5, appleReach: 14, appleEvery: 1.8, appl
  * him still facing him, at .pace of his walk, out to .margin short of his full reach; when the fork is ready again he lunges in with the next stab.
  */
 const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
+/*
+ * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
+ * in circles"; Appearance "It doesn't attack unless ... a unit gets particularly close"). The bard walks at his man until he is .lure m past his reach, then
+ * turns and runs, playing: each step heads .turn rad off straight away from the man, so he circles round him and out, alternate bards circling opposite
+ * ways. He keeps running until the man is .clear m beyond the lure line, then closes again (the lure). Only a man inside his reach gets the banjo swung at him.
+ */
+const BANJO_WALK = { lure: 2.2, clear: 1.5, turn: 1.15, step: 1.2 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
 const LANCE_AIM_REACH = 5;
@@ -296,6 +303,9 @@ export class SimulationSystem {
   // Farmer back-step (FARMER_BACKSTEP): when each farmer last stabbed, and the farmers backing off now (their heading held on the man)
   private _stabbedAt = new Map<RuntimeUnit, number>();
   private _backingOff = new Set<RuntimeUnit>();
+  // Banjo Walk (BANJO_WALK): the bards running their circles now, and which way each turns
+  private _banjoWalks = new Map<RuntimeUnit, number>();
+  private _banjoTurns = 0;
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
@@ -400,6 +410,7 @@ export class SimulationSystem {
     this._chargeReadyAt.delete(unit);
     this._stabbedAt.delete(unit);
     this._backingOff.delete(unit);
+    this._banjoWalks.delete(unit);
     this._jumpReadyAt.delete(unit);
   }
 
@@ -414,6 +425,8 @@ export class SimulationSystem {
     this._chargeReadyAt.clear();
     this._stabbedAt.clear();
     this._backingOff.clear();
+    this._banjoWalks.clear();
+    this._banjoTurns = 0;
     this._jumpReadyAt.clear();
     this._isRunning = true;
     this._now = now;
@@ -941,6 +954,29 @@ export class SimulationSystem {
       unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
       this._logAbility(unit, "leap", now);
       return;
+    }
+
+    // Banjo Walk: in close enough to be noticed, then off round him in circles, playing (BANJO_WALK)
+    if (unit.definition.id === "medieval.bard" && canMove) {
+      const side = this._banjoWalks.get(unit);
+      const lure = engageDistance + BANJO_WALK.lure;
+      if (distance > engageDistance && distance < (side === undefined ? lure : lure + BANJO_WALK.clear)) {
+        let turn = side;
+        if (turn === undefined) {
+          turn = this._banjoTurns++ % 2 === 0 ? 1 : -1;
+          this._banjoWalks.set(unit, turn);
+          this._logAbility(unit, "banjo_walk", now, enemy.position);
+        }
+        const away = unit.position.subtract(enemy.position);
+        away.y = 0;
+        away.normalize();
+        const a = turn * BANJO_WALK.turn;
+        const dir = new Vector3(away.x * Math.cos(a) - away.z * Math.sin(a), 0, away.x * Math.sin(a) + away.z * Math.cos(a));
+        unit.moveTo(unit.position.add(dir.scale(BANJO_WALK.step)));
+        this._clearPathState(unit);
+        return;
+      }
+      this._banjoWalks.delete(unit);
     }
 
     if (hasAbility(unit, "spin_move") && distance > engageDistance) {
