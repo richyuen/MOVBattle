@@ -246,9 +246,11 @@ const lungeSinkShare = (): number => 1 - (0.5 * Math.cos(LUNGE.front) + 0.5 * Ma
  * low-carried fork trailing in the turf behind a bare fist). The fork is turned in the fist level at the enemy, tines first (through _sweepTip/_clubHold, so
  * a blow on him cannot tip it): drawn back (0 -> commit) with the weapon fist at the hip, the trunk turned back FORK_STAB.turn and sat back, the tines
  * FORK_STAB.cock up; driven (commit -> the blow's landing) both arms out to FORK_STAB.reach, the trunk pitched FORK_STAB.pitch over a front leg stepped out
- * FORK_STAB.step of the hip height, the tines FORK_STAB.dip down onto the chest; held FORK_STAB.hold of the attack there, then eased back to the carry.
+ * FORK_STAB.step of the hip height, the tines FORK_STAB.dip down onto the chest, home FORK_STAB.land of the way through the attack, where the sim lands
+ * the hit (blowLandsIn holds it till then, as for the halberd's chop; the draw takes FORK_STAB.commit of that); held to the attack's end, then eased back to the carry over FORK_STAB.back of it. Run on its own clock as a pose layer (_holdForkStab), so the
+ * walk the farmer steps in on does not cut it short.
  */
-const FORK_STAB = { cock: 0.18, dip: -0.08, turn: 0.35, drawRaise: -0.25, drawElbow: -1.45, reach: -1.3, offReach: -1.2, pitch: 0.28, step: 0.3, front: -0.7, knee: 0.55, hold: 0.25 };
+const FORK_STAB = { land: 0.7, commit: 0.62, back: 0.3, cock: 0.18, dip: -0.08, turn: 0.35, drawRaise: -0.25, drawElbow: -1.45, reach: -1.3, offReach: -1.2, pitch: 0.28, step: 0.3, front: -0.7, knee: 0.55, hold: 0.25 };
 const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -1.25, knee: 1.35, back: 0.85, step: 0.45, retreat: 0.2, hold: 0.16 };
 /*
  * [S] lunge legs (333; renaissance.fencer.png, read off the red fencer: the front thigh near level, ~70 deg forward of vertical, the shin dropped back
@@ -551,6 +553,10 @@ export class ProceduralAnimator {
     this._attackDuration = windupTime + 0.25;
     this._attackMotion = motion ?? this.defaultAttackMotion;
     this._chopDown = null;
+    if (this._attackMotion === "thrust" && this._stabsFork()) {
+      this._stabClock = 0;
+      this._stabDuration = this._attackDuration;
+    }
     // The next one is in the hand at the windup
     if (this._thrownProp) {
       this._thrownProp.setEnabled(true);
@@ -590,7 +596,7 @@ export class ProceduralAnimator {
   /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] target-aimed blow spec. */
   aimBlowAt(mark: TransformNode | null, landsIn = 0): void {
     // A rapier is thrust at him on its own line (see LUNGE), not brought down on his head
-    this._blowMark = this._rapier() ? null : mark;
+    this._blowMark = this._rapier() || this._stabsFork() ? null : mark;
     this._blowLandsAt = landsIn;
     // nor is a halberd's chop: it comes down in his own plane (see CHOP)
     if (this._halberd()) {
@@ -634,7 +640,8 @@ export class ProceduralAnimator {
 
   /** A swing that lands on a man: heavy (club, hammer, axe) or a blade's slash. */
   private _strikesAtMan(): boolean {
-    const chop = this._attackMotion === "thrust" && this._halberd() !== null;
+    // a halberd's chop, and the farmer's stab (FORK_STAB): the sim holds the hit for the moment the tines go home
+    const chop = this._attackMotion === "thrust" && (this._halberd() !== null || this._stabsFork());
     return (this._attackMotion === "heavy_swing" || this._attackMotion === "blade_slash" || chop) && this.attackStyle !== "mammoth" && this.walkStyle !== "quadruped";
   }
 
@@ -646,6 +653,7 @@ export class ProceduralAnimator {
       return commit + (1 - commit) * 0.45 * BLOW_LAND;
     }
     // the halberd's chop is on the man 0.4 of the way from the top of its raise to the end
+    if (this._attackMotion === "thrust" && this._stabsFork()) return FORK_STAB.land;
     if (this._attackMotion === "thrust") {
       const top = this._resolveReleasePoint(0.5);
       return top + (1 - top) * 0.4;
@@ -1678,6 +1686,7 @@ export class ProceduralAnimator {
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
+    this._holdForkStab(dt);
     this._turnFork();
     this._offhandToGrip();
     this._holdChopDown(dt);
@@ -3489,7 +3498,7 @@ export class ProceduralAnimator {
     }
     const f = this._forkProp;
     if (!f) return;
-    const stabbing = this._state === AnimState.Attacking && this._attackMotion === "thrust" && this._sweepTip !== null;
+    const stabbing = this._stabClock >= 0 && this._sweepTip !== null;
     const w = stabbing ? Math.min(1, this._clubHold) * (1 - Math.min(1, this._limp)) : 0;
     if (w <= 0.001) {
       if (f.node.rotationQuaternion && !f.quat) f.node.rotationQuaternion = null;
@@ -3508,46 +3517,58 @@ export class ProceduralAnimator {
     Vector3.LerpToRef(f.pos, held, w, f.node.position);
   }
 
-  /** The farmer's pitchfork stab (spec at FORK_STAB). */
+  /** The farmer's pitchfork stab (spec at FORK_STAB): the attack's own state only runs out the time; the pose is _holdForkStab's, on its own clock. */
   private _animateForkStab(dt: number): void {
     this._attackTimer += dt;
+    if (this._attackTimer >= this._attackDuration) this._state = AnimState.Idle;
+  }
+
+  // The stab's own clock (s, -1 when none) and its length: a stab the walk cuts short in the animation still goes home on the man when the sim lands it
+  private _stabClock = -1;
+  private _stabDuration = 1;
+  /** The stab laid over whatever the legs and arms are doing (a pose layer, after locomotion), from the trigger to FORK_STAB.back past the attack's end. */
+  private _holdForkStab(dt: number): void {
+    if (this._stabClock < 0) return;
     const b = this._body;
     const F = FORK_STAB;
-    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
-    const commit = this._resolveReleasePoint(0.45);
-    const land = Math.max(commit + 0.05, this._blowLandFraction());
+    if (this._state === AnimState.Dead || this._stabClock > this._stabDuration * (1 + F.back)) {
+      this._stabClock = -1;
+      return;
+    }
+    const progress = this._stabClock / this._stabDuration;
+    this._stabClock += dt;
+    // the sim holds the blow for FORK_STAB.land of the attack (blowLandsIn): the drive is home on that frame
+    const land = F.land;
+    const commit = land * F.commit;
     const side = Math.sign(b.rightShoulder.position.x) || 1;
     const smooth = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
-    // g: drawn back; e: driven out; r: eased back off the hold
+    // g: drawn back; e: driven out; r: eased back off the hold after the attack's end
     const g = smooth(progress / Math.max(commit, 0.001));
     const e = progress < commit ? 0 : 1 - Math.pow(1 - Math.min(1, (progress - commit) / Math.max(land - commit, 0.001)), 2.4);
-    const r = smooth((progress - land - F.hold) / Math.max(1 - land - F.hold, 0.001));
-    const out = e * (1 - r);
-    const drawn = g * (1 - e) * (1 - r);
+    const r = smooth((progress - 1) / F.back);
+    const w = (1 - r) * (1 - Math.min(1, this._limp));
+    const out = e;
+    const drawn = g * (1 - e);
     // the fork level at him, tines a touch up when drawn and down onto his chest when driven home
     this._sweepTip = new Vector3(0, F.cock * drawn + F.dip * out, 1).normalize();
-    this._clubHold = Math.max(drawn, out, g * (1 - r));
-    b.rightShoulder.rotation.x = F.drawRaise * drawn + F.reach * out;
-    b.rightShoulder.rotation.z = 0.15 * drawn;
-    b.rightElbow.rotation.x = F.drawElbow * drawn - 0.12 * out;
-    b.leftShoulder.rotation.x = -0.75 * drawn + F.offReach * out;
-    b.leftShoulder.rotation.z = -0.3 * drawn - 0.15 * out;
-    b.leftElbow.rotation.x = -0.9 * drawn - 0.2 * out;
-    b.torso.rotation.y = side * F.turn * drawn - side * 0.12 * out;
-    b.torso.rotation.x = -0.1 * drawn + F.pitch * out;
-    b.neck.rotation.x = 0.08 * drawn - 0.15 * out;
-    b.rightHip.rotation.x = 0.2 * drawn + F.front * out;
-    b.rightKnee.rotation.x = 0.25 * drawn + F.knee * out;
-    b.leftHip.rotation.x = -0.15 * drawn + 0.35 * out;
-    b.leftKnee.rotation.x = 0.2 * drawn;
+    this._clubHold = Math.max(this._clubHold, w * Math.max(g, out));
+    const set = (j: TransformNode, axis: "x" | "y" | "z", v: number): void => { j.rotation[axis] += (v - j.rotation[axis]) * w; };
+    set(b.rightShoulder, "x", F.drawRaise * drawn + F.reach * out);
+    set(b.rightShoulder, "z", 0.15 * drawn);
+    set(b.rightElbow, "x", F.drawElbow * drawn - 0.12 * out);
+    set(b.leftShoulder, "x", -0.75 * drawn + F.offReach * out);
+    set(b.leftShoulder, "z", -0.3 * drawn - 0.15 * out);
+    set(b.leftElbow, "x", -0.9 * drawn - 0.2 * out);
+    set(b.torso, "y", side * F.turn * drawn - side * 0.12 * out);
+    set(b.torso, "x", -0.1 * drawn + F.pitch * out);
+    set(b.neck, "x", 0.08 * drawn - 0.15 * out);
+    set(b.rightHip, "x", 0.2 * drawn + F.front * out);
+    set(b.rightKnee, "x", 0.25 * drawn + F.knee * out);
+    set(b.leftHip, "x", -0.15 * drawn + 0.35 * out);
+    set(b.leftKnee, "x", 0.2 * drawn);
     this._hipRest ??= b.hip.position.y;
-    this._lungeStep.set(0, 0, this._hipRest * (F.step * out - 0.08 * drawn));
+    this._lungeStep.set(0, 0, this._hipRest * (F.step * out - 0.08 * drawn) * w);
     b.hip.position.addInPlace(this._lungeStep);
-    if (progress >= 1) {
-      this._state = AnimState.Idle;
-      this._sweepTip = null;
-      this._clubHold = 0;
-    }
   }
 
   /** The harvester's sweep (spec at SCYTHE_SWEEP). */
