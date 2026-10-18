@@ -509,8 +509,15 @@ export class SimulationSystem {
         const man = nearest(unit.position, C.appleFrom, C.appleReach);
         if (man) { fight.throwAt = now; fight.thrown = false; fight.appleAt = man; }
       }
+      // world matrices are only refreshed by a render: settle the chain before reading a joint, or a frame replayed in one long step reads the spawn spot
+      const fresh = (n: TransformNode): Vector3 => {
+        const chain: TransformNode[] = [];
+        for (let k: Node | null = n; k; k = k.parent) if (k instanceof TransformNode) chain.unshift(k);
+        for (const k of chain) k.computeWorldMatrix(true);
+        return n.getAbsolutePosition().clone();
+      };
       // the stab: the nearest man within reach of the Farmer's seat, ahead of the cart's side line
-      const seat = crew.farmer.root.getAbsolutePosition();
+      const seat = fresh(crew.farmer.root);
       if (now - fight.stabAt >= Math.max(C.stabEvery, stabSpan)) {
         const ahead = new Vector3(Math.sin(unit.body.root.rotation.y), 0, Math.cos(unit.body.root.rotation.y));
         const man = nearest(seat, 0, C.stabReach, (o) => (o.position.x - seat.x) * ahead.x + (o.position.z - seat.z) * ahead.z > -0.3);
@@ -520,7 +527,7 @@ export class SimulationSystem {
       const stabT = now - fight.stabAt < stabSpan ? now - fight.stabAt : -1;
       // the stab aimed at his chest, .6 of the way from his trunk joint to the top of his head
       const on = fight.stabOn && !fight.stabOn.body.root.isDisposed() ? fight.stabOn.body : null;
-      const chest = stabT >= 0 && on ? Vector3.Lerp(on.torso.getAbsolutePosition(), on.headTop.getAbsolutePosition(), 0.6) : null;
+      const chest = stabT >= 0 && on ? Vector3.Lerp(fresh(on.torso), fresh(on.headTop), 0.6) : null;
       const apple = poseWheelbarrowCrew(crew, throwT, stabT, chest);
       if (apple && !apple.isEnabled() && fight.thrown && throwT < 0) apple.setEnabled(true);
       if (!fight.thrown && throwT >= F.cock) {
