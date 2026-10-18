@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-328 | no back slab (68ad77a) | renaissance.fencer.b | approved
-328 | black sallet (0860943) | renaissance.halberd.a | approved
-328 | matchlock musket (9951a96 +1) | renaissance.musketeer.b | approved
-328 | kidney palette held up (642eb06) | renaissance.painter.b | approved
-328 | spiral-striped lance (4a390e5 +1) | renaissance.jouster.b | approved
 329 | two-handed grip (0f6980a +1) | renaissance.halberd.b | approved
 329 | two-handed musket carry (f4cff29) | renaissance.musketeer.b | approved
 329 | yellow heater shield (fa71e96 +1) | renaissance.jouster.b | approved
@@ -60,6 +55,7 @@ for 25 iterations.
 337 | vest hem at the waist (780101e) | renaissance.musketeer.a | approved
 337 | caparison following the barrel (f277bbf) | renaissance.jouster.a | approved
 337 | whole-machine scale, flat cap (412d16c) | renaissance.da_vinci_tank.a | approved
+338 | upper tier as its own hat (60fa561) | renaissance.da_vinci_tank.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -114,7 +110,8 @@ propBuilder.ts:CHANFRON (long, wide, narrow, flat, eye, eyeAt, ear, tufts, tuft,
 tribalDress.ts:GOATEE (wide, down, proud, tip) | .42, .55, .86, .35 | 336 | approved | -
 unitFactory.ts:FENCER_BOOTS (shaft, cuff, cuffLong), FENCER_BOOT | 1.3, 1.85, .36; (.42,.17,.12) | 336 | approved | -
 unitFactory.ts:ARCHER_DRESS (doublet, stripes, stripe, puff, slashes, belt, breech); TAN, GLOW | 1.1,3,.09,1.6,4,.12,1.45; (.8,.56,.28),.3 | 336 | approved | -
-vehicleBuilder.ts:DAVINCI_SCALE (whole machine; pilot offset, lineup lastApart follow) | 1.9 | 337 | approved | 1 (unscaled); critic NEXT 2.3
+vehicleBuilder.ts:DAVINCI_SCALE (whole machine; pilot offset, lineup lastApart follow) | 2.3 | 338 | approved | 1.9 (337), 1 (unscaled)
+vehicleBuilder.ts:DAVINCI_HAT (collar, collarR, lip, proud) | .16, .34, .08, .05 | 338 | approved | -
 unitFactory.ts:FENCER_ROLL (panes, long, swell, end, apart); FENCER_CREAM, GLOW | 8, .68, 2.1, 1.3, .9; (.8,.56,.28), .3 | 337 | approved | replaced panes/puff/long 8/.82/.95, cream (.84,.66,.42) unlit
 unitFactory.ts:MUSKETEER_VEST (shade, hem, flare, belt, beltOut, breech) | .95, .2, 1.28, .07, 1.06, .6 | 337 | approved | vest/breech .82
 propBuilder.ts:HORSE_CAPARISON (fore, aft, plan, tuck, tuckLong, strap, strapAt, strapArc) | .55, 1.12, 2.6, .1, .06, .07, .1, 1.15 | 337 | approved | CAP_LONG 1.32, END .55, SQUARE .35
