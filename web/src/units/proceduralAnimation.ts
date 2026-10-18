@@ -563,7 +563,8 @@ export class ProceduralAnimator {
       w = t <= land ? s * s * (3 - 2 * s) : Math.max(0, Math.min(1, (land + BLOW_HOLD - t) / BLOW_HOLD_FADE));
       if (w <= 0 && t > land) this._blowMark = null;
     }
-    this._aimWeight = 0;
+    // A fencer out on his lunge is committed as a striker on his man is: a blow on him then snaps only his head back (see LUNGE)
+    this._aimWeight = this._lungeOut;
     // Last frame's lunge comes off the hip first: nothing else poses the hip across the ground
     const lunged = this._blowLunge;
     if (lunged.x !== 0 || lunged.z !== 0) {
@@ -1230,6 +1231,7 @@ export class ProceduralAnimator {
       this._body.hip.position.subtractInPlace(this._lungeStep);
       this._lungeStep.setAll(0);
     }
+    this._lungeOut = 0;
     if (this._rapierProp && this._rapierProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "blade_slash")) this._turnRapier(0);
 
     // a chop cut short leaves the halberd stood at its angle: back to its rest in the fist
@@ -3092,6 +3094,7 @@ export class ProceduralAnimator {
     return this._rapierProp;
   }
   private readonly _lungeStep = new Vector3(0, 0, 0);
+  private _lungeOut = 0;
 
   // The rapier turned point-first in the fist by k (0 its rest up the forearm, 1 out past the fingers): a half turn about the hand's x through the fist
   private _turnRapier(k: number): void {
@@ -3123,6 +3126,7 @@ export class ProceduralAnimator {
     const e = progress < commit ? 0 : 1 - Math.pow(1 - Math.min(1, (progress - commit) / Math.max(land - commit, 0.001)), 2.2);
     const r = smooth((progress - land - LUNGE.hold) / Math.max(1 - land - LUNGE.hold, 0.001));
     const out = e * (1 - r);
+    this._lungeOut = out;
     b.rightShoulder.rotation.x = LUNGE.guardRaise * g + (LUNGE.reach - LUNGE.guardRaise) * out;
     b.rightShoulder.rotation.z = 0.12 * g * (1 - out);
     b.rightElbow.rotation.x = LUNGE.guardElbow * g * (1 - out) - 0.05 * out;
