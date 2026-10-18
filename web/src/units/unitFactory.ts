@@ -554,6 +554,8 @@ export class UnitFactory {
       propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
       // [S] dark team jerkin laced over a brown undershirt, copper buttons, light hem (344; POTION_JERKIN)
       propMeshes.push(...dressPotionSeller(this._scene, body, teamColor));
+      // [S] dark team hosen and brown cuffed boots (345; POTION_BOOT)
+      propMeshes.push(...dressPotionSellerLegs(this._scene, body, teamColor));
     }
     if (definition.id === "farmer.harvester" && !shouldUseVehicleBody) {
       // [S] two peg handles on the snath, the upper one where his off fist takes it (342; SNATH_PEG, proceduralAnimation SCYTHE_LOW)
@@ -1396,6 +1398,52 @@ function dressPotionSeller(scene: Scene, body: ArticulatedBody, teamColor: Color
     const button = put(MeshBuilder.CreateCylinder("potionButton", { height: D * 0.06, diameter: W * P.button, tessellation: 8 }, scene), copper);
     button.rotation.x = Math.PI / 2;
     button.position.set(side * W * P.vee * 0.5, neck - H * 0.05, face + D * 0.02);
+  }
+  return added;
+}
+
+/*
+ * [S] potionseller's hosen and boots (345; farmer.potion_seller.red.png, card Appearance "a pair of dark team-colored hosen along with a pair of brown
+ * boots"): both legs in dark team hosen from the hip to the ankle; over the lower shin a brown boot shaft standing a little off the leg, its top turned
+ * down in a fatter flared cuff with a dark band under its lip; the foot is the brown boot. Shares of the shin's girth and length: shaft POTION_BOOT.shaft
+ * round it and .long of the shin long; cuff .cuff round at its lip, .cuffTall long; band .band long. Hosen team shade .dark; all self-lit (.glow) so
+ * brown and dark team do not go black in the shade.
+ */
+const POTION_BOOT = { shaft: 1.24, long: 0.46, cuff: 1.62, cuffTall: 0.16, band: 0.035, dark: 0.42, glow: 0.18 };
+const POTION_BOOT_BROWN = new Color3(0.52, 0.3, 0.2);
+const POTION_BOOT_BAND = new Color3(0.26, 0.14, 0.1);
+/** Dresses the potionseller's legs (spec at POTION_BOOT): dark team hosen, brown boots with flared cuffs. */
+function dressPotionSellerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const B = POTION_BOOT;
+  const hosen = mf.get("cloth", teamColor.scale(B.dark), { emissiveIntensity: B.glow });
+  const boot = mf.get("cloth", POTION_BOOT_BROWN, { emissiveIntensity: B.glow });
+  const band = mf.get("cloth", POTION_BOOT_BAND, { emissiveIntensity: 0.12 });
+  const put = (m: Mesh, mt: Material, parent: TransformNode): Mesh => {
+    m.material = mt;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) thigh.material = hosen;
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = hosen;
+    const e = shin.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const foot = -long * 0.5;
+    const shaftTall = long * B.long;
+    const shaft = put(MeshBuilder.CreateCylinder("potionBootShaft", { height: shaftTall, diameterTop: girth * B.shaft, diameterBottom: girth * B.shaft * 1.04, tessellation: 7 }, scene), boot, shin);
+    shaft.position.y = foot + shaftTall * 0.5 - long * 0.02;
+    const top = foot + shaftTall - long * 0.02;
+    const cuff = put(MeshBuilder.CreateCylinder("potionBootCuff", { height: long * B.cuffTall, diameterTop: girth * B.cuff, diameterBottom: girth * B.shaft * 1.08, tessellation: 7 }, scene), boot, shin);
+    cuff.position.y = top + long * B.cuffTall * 0.5 - long * 0.03;
+    const lip = put(MeshBuilder.CreateCylinder("potionBootBand", { height: long * B.band, diameter: girth * B.shaft * 1.12, tessellation: 7 }, scene), band, shin);
+    lip.position.y = top - long * 0.04;
+  }
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = boot;
   }
   return added;
 }
