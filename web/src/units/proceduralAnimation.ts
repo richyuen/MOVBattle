@@ -182,6 +182,13 @@ const CLUB_LAND = 1.8;
  * coming down. The off arm is solved (shoulder swing and elbow fold) for that point every frame, its elbow stood out to his free side and down (see _offhandToGrip).
  */
 const OFFHAND_GRIP_UP = 0.11;
+/*
+ * [S] two-fisted sword (353; medieval.squire.blue.png: both fists stacked on the longsword's hilt; card Weapon Type Two-handed). A slab sword whose blade
+ * carries one of these markers (propBuilder SlabCut.fists) is held in both fists: wherever the carry or the swing has the blade, the off fist is reached onto
+ * the grip TWO_FIST_SWORD of the grip's length below where the weapon fist sits on it (toward the pommel), so the blade leads and the fists share the hilt.
+ * Not the pole carry (POLE_GRIP): that turns the sword pommel-first (351). Held through idle, the march and the swing.
+ */
+const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4 };
 // The couched lance (see _couchLance): weapon arm swing and elbow at rest, the shaft's dip below level and turn in across the horse (rad), the attack's drive and trunk pitch
 const COUCH = { raise: -0.35, elbow: -1.35, dip: 0.08, across: 0.12, drive: 0.5, pitch: 0.2 };
 // The couched lance turned onto its man (see aimLanceAt): seconds an aim holds after the last call, how fast the lance comes onto him and off (1/s)
@@ -1864,6 +1871,9 @@ export class ProceduralAnimator {
     // A club with nothing in the other hand is held in both (two-handed grip, see OFFHAND_GRIP_UP), and like the scythe it is in its carry from the first frame
     this._twoHanded = node?.name === "club" && !this._shieldBoard() && this._body.leftHand.getChildren().every((n) => /HandM$/.test(n.name));
     if (this._twoHanded) this._carryTurn = 1;
+    // A slab sword marked two-fisted (TWO_FIST_SWORD) has the off fist on its grip under the weapon fist
+    const fists = node && /^(blade|gsblade)$/.test(node.name) ? node.getChildren().find((c) => c.name in TWO_FIST_SWORD) : undefined;
+    this._swordFists = fists ? TWO_FIST_SWORD[fists.name] : 0;
     // The tree's bowed side (its own +x) is turned about the trunk to face back against the way the trunk runs out, which the carry's turn then brings round to face up
     if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side) + Math.PI, 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
@@ -2582,8 +2592,36 @@ export class ProceduralAnimator {
 
   // Whether the weapon hand's club is held in both hands (see the spec at OFFHAND_GRIP_UP): a club, no board and nothing else in the off hand. Set by _buildCarry.
   private _twoHanded = false;
+  // A two-fisted sword's off-fist drop, in grip lengths below the weapon fist (TWO_FIST_SWORD); 0 for any other weapon. Set by _buildCarry.
+  private _swordFists = 0;
+  /** The off fist onto a two-fisted sword's grip, _swordFists of the grip below the weapon fist (TWO_FIST_SWORD), in idle, the march and the swing. */
+  private _swordInBothFists(): void {
+    const prop = this._carry?.weapon?.prop;
+    if (!prop || this.walkStyle === "quadruped") return;
+    const s = this._state;
+    if (s !== AnimState.Idle && s !== AnimState.Walking && s !== AnimState.Attacking) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const blade = prop.node as Mesh;
+    const grip = blade.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "grip");
+    if (!grip) return;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    // Along the blade's own line (+y toward the point), measured from the grip's middle
+    const axis = Vector3.TransformNormal(Vector3.Up(), blade.getWorldMatrix()).normalize();
+    const half = grip.getBoundingInfo().boundingBox.extendSize.y * grip.absoluteScaling.y;
+    const mid = grip.getAbsolutePosition();
+    const fistAt = Math.max(-half, Math.min(half, Vector3.Dot(this._body.rightHand.getAbsolutePosition().subtract(mid), axis)));
+    const at = Math.max(-half * 0.85, fistAt - this._swordFists * half * 2);
+    this._offArmTo(mid.add(axis.scale(at)), w, 2);
+  }
   /** The off hand onto the club's grip, just above the weapon fist, by the carry's own turn (two-handed grip). */
   private _offhandToGrip(): void {
+    if (this._swordFists > 0) {
+      this._swordInBothFists();
+      return;
+    }
     const prop = this._carry?.weapon?.prop;
     if (!this._twoHanded || !prop) return;
     const s = this._state;

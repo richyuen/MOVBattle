@@ -1828,13 +1828,14 @@ interface BladeFit { fist: number; stand: number }
  * the fist: a bar guard twice the blade across, a grip the fist closes round, and a pommel block. Returns the blade and how far under its middle the guard sits.
  */
 /** A unit's own cut of the slab sword (weaponVariant): blade .long of his height, .wide of it across, grip .grip fists, the last .point drawn in */
-interface SlabCut { long: number; wide: number; grip: number; point: number; lug?: number; lugAt?: number }
+interface SlabCut { long: number; wide: number; grip: number; point: number; lug?: number; lugAt?: number; fists?: string }
 /*
  * [S] the squire's longsword (352; medieval.squire.red.png, card Appearance "a Longsword"): a long thin blade that runs from his hands to above his head, not a
  * short broad arming sword. LONGSWORD: blade .long of his height and .wide of it across, a hand-and-a-half grip .grip fists, drawn to a point over its last .point.
  * Same guard on the same fist as the plain sword (the sword case's mount), so only the blade above it and the grip below change.
  */
-const LONGSWORD: SlabCut = { long: 0.62, wide: 0.045, grip: 2.6, point: 0.14 };
+// .fists: the two-fisted grip marker (proceduralAnimation TWO_FIST_SWORD), the off fist stacked under the weapon fist on the long grip (353)
+const LONGSWORD: SlabCut = { long: 0.62, wide: 0.045, grip: 2.6, point: 0.14, fists: "longswordFists" };
 /*
  * [S] the King's Zweihander, retried (352; medieval.king.red.png, card "a towering Great Sword", Appearance "German Zweihander"): sword and grip together
  * longer than he is tall. ZWEI: blade .long of his height, .wide of it across (twice 351's hair-thin .024), drawn in over its last .point; parrying lugs .lug
@@ -1880,6 +1881,7 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
   pommel.position.y = grip.position.y - gripLength * 0.5 - fit.fist * 0.4;
   pommel.parent = blade;
   pommel.material = mat(scene, accent, 0, "metal");
+  if (cut?.fists) new TransformNode(cut.fists, scene).parent = blade;
   if (cut?.lug && cut.lugAt) {
     for (const side of [1, -1]) {
       const lug = MeshBuilder.CreateCylinder(`${name}Lug`, { height: cut.lug * fit.stand, diameterBottom: width * 0.7, diameterTop: width * 0.12, tessellation: 4 }, scene);
