@@ -528,6 +528,9 @@ export class UnitFactory {
       // ...and his dark hair from under the hat and a curled moustache (tribalDress)
       propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
     }
+    if (definition.id === "renaissance.musketeer" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressMusketeer(this._scene, body, teamColor));
+    }
     if (definition.id === "renaissance.jouster" && !shouldUseVehicleBody) {
       propMeshes.push(...dressJouster(this._scene, body, teamColor));
     }
@@ -1040,6 +1043,84 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
       pane.position.set(Math.cos(a) * girth * F.puff * 0.75, top - long * 0.5, Math.sin(a) * girth * F.puff * 0.75);
       pane.rotation.y = Math.PI / 2 - a;
     }
+  }
+  return added;
+}
+
+/*
+ * [S] musketeer's vest and blouse (335; renaissance.musketeer.red.png, card Appearance "a chestplate, a blouse, ruffled pants, boots"): a team vest over
+ * the chest, standing off it, with short team wings over the shoulders; the arms in cream blouse sleeves, puffed over the upper arm; a cream collar laid
+ * flat round the neck's foot; puffy team knee breeches swelling out to the knee and gathered there in a dark band; team stockings banded dark twice down
+ * the shin; tan shoes. Cream is self-lit (MUSKETEER_GLOW) so it stays cream and does not grey out. Sizes are shares of the chest (W, H, D), of each
+ * limb's girth and length, and of the head's height.
+ *   vest MUSKETEER_DRESS.vest of the chest round it; wings .wing of the arm's girth; sleeve puff .puff of the arm's girth; collar .collar heads across;
+ *   breeches .breech of the thigh's girth at the top swelling to .knee at the knee; stocking bands .bands.
+ */
+const MUSKETEER_DRESS = { vest: 1.1, wing: 1.5, puff: 1.4, collar: 1.25, breech: 1.3, knee: 1.65, bands: 2 };
+const MUSKETEER_CREAM = new Color3(0.84, 0.72, 0.52);
+const MUSKETEER_GLOW = 0.25;
+const MUSKETEER_SHOE = new Color3(0.72, 0.42, 0.22);
+/** Dresses the musketeer (spec at MUSKETEER_DRESS): team vest, cream blouse sleeves and collar, puffy team breeches, banded stockings, tan shoes. */
+function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const M = MUSKETEER_DRESS;
+  const team = mf.getCloth(teamColor.scale(0.82));
+  const deep = mf.getCloth(teamColor.scale(0.5));
+  const cream = mf.get("cloth", MUSKETEER_CREAM, { emissiveIntensity: MUSKETEER_GLOW });
+  const put = (m: Mesh, mat: Material, parent: TransformNode): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  // the vest over the chest, and the collar laid flat round the neck's foot
+  const vest = put(MeshBuilder.CreateBox("musketeerVest", { width: W * M.vest, height: H * 0.92, depth: D * M.vest }, scene), team, body.torso);
+  vest.position.set(0, chest.position.y - H * 0.03, 0);
+  const across = headSize * M.collar;
+  const collar = put(MeshBuilder.CreateCylinder("musketeerCollar", { height: headSize * 0.08, diameterTop: across * 0.75, diameterBottom: across, tessellation: 8 }, scene), cream, body.torso);
+  collar.scaling.z = Math.min(1, (D * 1.3) / across);
+  collar.position.set(0, chest.position.y + H * 0.5 + headSize * 0.02, D * 0.04);
+  // blouse sleeves, puffed over the upper arm, under a team wing at the shoulder
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    arm.material = cream;
+  }
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const puff = put(MeshBuilder.CreateCylinder("musketeerPuff", { height: long * 0.6, diameterTop: girth * M.puff * 0.9, diameterBottom: girth * M.puff, tessellation: 7 }, scene), cream, arm);
+    puff.position.y = -long * 0.08;
+    const wing = put(MeshBuilder.CreateCylinder("musketeerWing", { height: long * 0.18, diameter: girth * M.wing, tessellation: 7 }, scene), team, arm);
+    wing.position.y = long * 0.5 - long * 0.1;
+  }
+  // puffy breeches swelling to the knee and gathered there, over team thighs
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
+    leg.material = team;
+    const e = leg.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const breech = put(MeshBuilder.CreateCylinder("musketeerBreech", { height: long * 0.85, diameterTop: girth * M.breech, diameterBottom: girth * M.knee, tessellation: 8 }, scene), team, leg);
+    breech.position.y = long * 0.5 - long * 0.45;
+    const band = put(MeshBuilder.CreateCylinder("musketeerKneeBand", { height: long * 0.1, diameter: girth * M.knee * 0.86, tessellation: 8 }, scene), deep, leg);
+    band.position.y = -long * 0.5 + long * 0.04;
+  }
+  // stockings banded dark down the shin
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = team;
+    const e = shin.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    for (let i = 0; i < M.bands; i++) {
+      const ring = put(MeshBuilder.CreateCylinder("musketeerStockingBand", { height: long * 0.1, diameter: girth * 1.18, tessellation: 7 }, scene), deep, shin);
+      ring.position.y = long * 0.5 - long * (0.3 + 0.28 * i);
+    }
+  }
+  const shoe = mf.getCloth(MUSKETEER_SHOE);
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
   }
   return added;
 }
