@@ -470,3 +470,41 @@ export function dressTribalBracelets(scene: Scene, body: ArticulatedBody, unitId
   }
   return added;
 }
+
+/*
+ * The chieftain's skull pauldrons (tribal.chieftain.red.png, card Appearance: "a pair of animal skulls strapped to their arm as shoulder guards"): a big pale
+ * faceted animal skull on the outside of each upper arm, from the shoulder's top down most of the way to the elbow, its sockets looking out sideways and its
+ * snout pointing down the arm, a turn of rope round the arm through it. PAULDRON.wide upper-arm widths across, .long of the upper arm's length tall, .top of
+ * the upper arm's length above the shoulder joint for its crown, .out upper-arm widths it stands off the arm's middle.
+ */
+const PAULDRON = { wide: 1.9, long: 0.95, top: 0.12, out: 0.55 };
+const PAULDRONS = new Set(["tribal.chieftain"]);
+
+/** Straps a skull pauldron (spec at PAULDRON) to each upper arm, parented to the shoulder joints. Empty when he wears none. */
+export function dressTribalPauldrons(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
+  if (!PAULDRONS.has(unitId)) return [];
+  const added: Mesh[] = [];
+  for (const [shoulder, arm, elbow] of [[body.leftShoulder, body.leftUpperArm, body.leftElbow], [body.rightShoulder, body.rightUpperArm, body.rightElbow]] as const) {
+    const side = Math.sign(shoulder.position.x) || 1;
+    const len = Math.abs(elbow.position.y);
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const armWide = Math.max(e.x * arm.scaling.x, e.z * arm.scaling.z) * 2;
+    const wide = armWide * PAULDRON.wide;
+    const parts = boneSkull(scene, "pauldronSkull", wide, side > 0 ? 41.3 : 47.9);
+    const skull = parts[0];
+    // boneSkull stands about 1.2 widths tall from the crown's top to the snout's foot: stretch it down the arm
+    const tall = len * PAULDRON.long;
+    skull.scaling.set(1, tall / (wide * 1.2), 0.8);
+    skull.rotation.set(0, side * Math.PI / 2, side * 0.12);
+    skull.position.set(side * armWide * PAULDRON.out, len * PAULDRON.top - wide * 0.5 * (tall / (wide * 1.2)), 0);
+    skull.parent = shoulder;
+    added.push(...parts);
+    const rope = MeshBuilder.CreateTorus("pauldronRope", { diameter: armWide * 1.35, thickness: armWide * 0.16, tessellation: 10 }, scene);
+    rope.position.set(side * armWide * 0.15, -len * 0.45, 0);
+    rope.rotation.z = side * 0.15;
+    rope.material = ropeMaterial();
+    rope.parent = shoulder;
+    added.push(rope);
+  }
+  return added;
+}
