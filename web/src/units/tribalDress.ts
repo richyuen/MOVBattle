@@ -379,8 +379,14 @@ const BEARD = { down: 0.32, wide: 1.0, deep: 0.5, locks: 5, lockLong: 0.3, jitte
  * his crown), in a redder chestnut brown, under the eyes below the helm's snout.
  */
 const CHESTNUT = new Color3(0.52, 0.27, 0.14);
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard"> = {
+/*
+ * The painter's hair (332; renaissance.painter.red.png: long dark-brown hair falling from under the beret to the shoulders, round the sides and back, the
+ * face bare): the stoner's long locks in a near-black brown (PAINTER_HAIR), with no fringe (the beret sits on the brow) and the cap hidden under the beret.
+ */
+const PAINTER_HAIR = new Color3(0.17, 0.11, 0.08);
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark"> = {
   "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
+  "renaissance.painter": "long_dark",
 };
 
 /** The tusk headband (spec at TUSK_BAND), parented to the head. */
@@ -425,9 +431,9 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
   if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
   const style = HAIR_STYLES[unitId];
-  if (style !== "long" && style !== "long_beard") return null;
+  if (style !== "long" && style !== "long_beard" && style !== "long_dark") return null;
   const added: Mesh[] = [];
-  const hair = getMaterialFactory().get("cloth", style === "long_beard" ? CLUBBER_HAIR_COLOR : LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
+  const hair = getMaterialFactory().get("cloth", style === "long_beard" ? CLUBBER_HAIR_COLOR : style === "long_dark" ? PAINTER_HAIR : LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const halfX = e.x, halfY = e.y, halfZ = e.z;
   const W = halfX * 2, H = halfY * 2;
@@ -462,7 +468,7 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
     m.position.set(sx * halfX * 1.08 + sx * Math.sin(out) * long * 0.5, rootY - long * 0.5, cz * halfZ * 1.08 - cz * Math.sin(out) * long * 0.5 - halfZ * 0.05);
   }
   // The fringe: a few short locks over the brow, above the eyes
-  for (let i = 0; i < LONG_HAIR.fringe; i++) {
+  for (let i = 0; i < (style === "long_dark" ? 0 : LONG_HAIR.fringe); i++) {
     const x = ((i + 0.5) / LONG_HAIR.fringe - 0.5) * W * 0.9;
     const long = H * 0.28 * (0.8 + 0.4 * hashShare(9.1, i, 1, 3));
     const m = lock("hairFringe", long, W * LONG_HAIR.thick * 0.8);

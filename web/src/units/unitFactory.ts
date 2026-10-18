@@ -511,6 +511,8 @@ export class UnitFactory {
     }
     if (definition.id === "renaissance.painter" && !shouldUseVehicleBody) {
       propMeshes.push(...dressPainter(this._scene, body, teamColor, propMeshes));
+      // ...and his long dark hair from under the beret (tribalDress)
+      propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
     }
     if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressCactus(this._scene, body, teamColor));
