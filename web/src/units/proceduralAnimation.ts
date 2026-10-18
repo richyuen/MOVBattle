@@ -120,16 +120,6 @@ const SCYTHE_SPIN = Math.PI / 2;
 const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07, a: 0.5, after: 0.6 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 /*
- * [S] the harvester's sweep (345; card Characteristics "swing and cut ... sweep through groups of fragile units at once, with even enough power to send one
- * into the air"; farmer.harvester.png): not a chop from overhead but a low level cut across his front. The low-carried (pegged) scythe's attack:
- *   cock (0 -> commit): the trunk wound SCYTHE_SWEEP.twist (rad) round onto his weapon side, the snath swung back level to SCYTHE_SWEEP.cock (yaw from his
- *   front toward the weapon side, rad) at .low below level, both fists low before the hips (arms .arm forward), knees bent .crouch;
- *   cut (commit -> .through of the rest): the trunk unwinds to .twist the other way and the snath sweeps level through his front to .end (toward the off
- *   side), slow off the cock and fastest across the front; the blow is on the man where the snath crosses his front (.hitAt of the cut);
- *   hold to .hold of the rest, then eased back to the carry. The sim throws a man the sweep leaves alive up and away (simulationSystem SCYTHE_FLING).
- */
-const SCYTHE_SWEEP = { twist: 0.75, cock: 2.0, end: -1.45, low: 0.12, arm: -0.55, crouch: 0.25, through: 0.55, hitAt: 0.55, hold: 0.75 };
-/*
  * [S] the hay baler's level stick carry (344; farmer.hay_baler.blue.png: the stick held in the one weapon fist at hip height before the bale, run level
  * across his front to past the off hip). The stick (id hayStick) takes HAY_CARRY in place of the low fork carry: weapon arm .raise swing forward and .out,
  * elbow .elbow folded so the fist is ahead of the weapon hip clear of the bale's face; the stick's line from the fist .tip in his own frame (x toward the
@@ -635,10 +625,6 @@ export class ProceduralAnimator {
       const top = this._resolveReleasePoint(0.5);
       return top + (1 - top) * 0.4;
     }
-    if (this._attackMotion === "blade_slash" && this._sweeps()) {
-      const cocked = this._resolveReleasePoint(0.45);
-      return cocked + (1 - cocked) * SCYTHE_SWEEP.through * SCYTHE_SWEEP.hitAt;
-    }
     const commit = this._resolveReleasePoint(0.4);
     return commit + (1 - commit) * BLOW_LAND * 0.6;
   }
@@ -681,7 +667,7 @@ export class ProceduralAnimator {
       this._body.hip.position.subtractInPlace(lunged);
       lunged.setAll(0);
     }
-    if (w <= 0.01 || !mark || this._whacks() || this._sweeps()) return;
+    if (w <= 0.01 || !mark || this._whacks()) return;
     // How far past the landing the blow has followed through (BLOW_FOLLOW)
     const fu = Math.max(0, Math.min(1, (this._blowClock - this._blowLandsAt) / BLOW_FOLLOW));
     const follow = fu * fu * (3 - 2 * fu);
@@ -1097,9 +1083,6 @@ export class ProceduralAnimator {
   // swing and the press, zeroed every frame.
   private _clubArc = 0;
   private _clubHold = 0;
-  // The harvester's sweep (SCYTHE_SWEEP): the snath's line in his own frame while it runs, null otherwise; whether his scythe is the low-carried one
-  private _sweepTip: Vector3 | null = null;
-  private _lowScythe = false;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
   private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number; trail: number; stride: number } | null = null;
@@ -1368,7 +1351,6 @@ export class ProceduralAnimator {
 
     this._idleSink = 0;
     this._clubHold = 0;
-    this._sweepTip = null;
     this._pressLand = 0;
     this._castLift = 0;
     this._castReach = 0;
@@ -1819,7 +1801,6 @@ export class ProceduralAnimator {
     const scythe = node?.name === "scytheCarry";
     // ...but the harvester's, pegged (SCYTHE_LOW), is carried low across him in both fists
     const lowScythe = scythe && !!node?.getChildren().some((c) => c.getChildren().some((g) => g.name === "snathPeg"));
-    this._lowScythe = lowScythe;
     const prop = node ? {
       node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone(),
       spin: scythe ? Quaternion.RotationYawPitchRoll((lowScythe ? SCYTHE_LOW.spin : SCYTHE_SPIN) * side, 0, 0) : undefined,
@@ -2436,8 +2417,7 @@ export class ProceduralAnimator {
       const pressed = this._pressAim();
       const landed = this._pressLand > 0.001 && pressed ? this._pressLand : 0;
       if (landed > 0 && pressed) arc += (this._pressDownArc(pressed, hand.getAbsolutePosition()) - arc) * landed;
-      const swung = this._sweepTip ?? new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(arc), Math.sin(arc));
-      Vector3.LerpToRef(tip, swung, Math.min(1, club), tip).normalize();
+      Vector3.LerpToRef(tip, new Vector3(0.12 * (Math.sign(this._body.rightShoulder.position.x) || 1), Math.cos(arc), Math.sin(arc)), Math.min(1, club), tip).normalize();
       // ...and, as it comes down, swung round onto the man wherever he stands, the shaft resting across his crown or board top (press-landed-contact)
       if (landed > 0) Vector3.LerpToRef(tip, this._pressTip, landed * landed * Math.min(1, club), tip).normalize();
     }
@@ -3421,56 +3401,6 @@ export class ProceduralAnimator {
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
-  /** True for the harvester: his low-carried scythe sweeps level across his front (SCYTHE_SWEEP), not chopped from overhead. */
-  private _sweeps(): boolean {
-    this._carry ??= this._buildCarry();
-    return this._lowScythe;
-  }
-
-  /** The harvester's sweep (spec at SCYTHE_SWEEP). */
-  private _animateSweep(dt: number): void {
-    this._attackTimer += dt;
-    const b = this._body;
-    const S = SCYTHE_SWEEP;
-    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
-    const commit = this._resolveReleasePoint(0.45);
-    const through = commit + (1 - commit) * S.through;
-    const hold = commit + (1 - commit) * S.hold;
-    const side = Math.sign(b.rightShoulder.position.x) || 1;
-    // c: 0 at rest, 1 cocked; h: 0 cocked, 1 swept through
-    let c = 0, h = 0;
-    if (progress < commit) {
-      const u = progress / Math.max(commit, 0.001);
-      c = u * (2 - u);
-    } else {
-      const u = Math.min(1, (progress - commit) / Math.max(through - commit, 0.001));
-      c = 1;
-      h = u * u * (3 - 2 * u);
-    }
-    const r = progress > hold ? (progress - hold) / Math.max(1 - hold, 0.001) : 0;
-    const k = 1 - r * (2 - r);
-    const yaw = S.cock + (S.end - S.cock) * h;
-    this._sweepTip = new Vector3(Math.sin(yaw) * side, -S.low, Math.cos(yaw)).normalize();
-    const twist = S.twist * (1 - 2 * h) * side;
-    b.torso.rotation.y = twist * c * k;
-    b.torso.rotation.x = 0.18 * c * k;
-    b.rightShoulder.rotation.x = S.arm * c * k;
-    b.rightShoulder.rotation.z = 0.2 * c * k;
-    b.rightElbow.rotation.x = -0.35 * c * k;
-    b.leftShoulder.rotation.x = S.arm * c * k;
-    b.leftShoulder.rotation.z = -0.25 * c * k;
-    b.leftElbow.rotation.x = -0.45 * c * k;
-    b.leftHip.rotation.x = -S.crouch * 0.6 * c * k;
-    b.rightHip.rotation.x = -S.crouch * 0.6 * c * k;
-    b.leftKnee.rotation.x = S.crouch * c * k;
-    b.rightKnee.rotation.x = S.crouch * c * k;
-    this._clubHold = c * k;
-    if (progress >= 1) {
-      this._state = AnimState.Idle;
-      this._sweepTip = null;
-    }
-  }
-
   private _animateHeavySwing(dt: number): void {
     if (this._whacks()) {
       this._animateWhack(dt);
@@ -3641,10 +3571,6 @@ export class ProceduralAnimator {
   private _animateBladeSlash(dt: number): void {
     if (this._rapier()) {
       this._animateLunge(dt);
-      return;
-    }
-    if (this._sweeps()) {
-      this._animateSweep(dt);
       return;
     }
     this._attackTimer += dt;
