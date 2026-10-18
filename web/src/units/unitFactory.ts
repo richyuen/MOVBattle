@@ -7,7 +7,7 @@ import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfile
 import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody, crewProportions, type ArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
-import { attachProps } from "./propBuilder";
+import { attachProps, buildPerchedCrow } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody, dressCannonCrew } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
@@ -559,6 +559,15 @@ export class UnitFactory {
       // [S] two peg handles on the snath, the upper one where his off fist takes it (342; SNATH_PEG, proceduralAnimation SCYTHE_LOW)
       propMeshes.push(...addSnathPegs(this._scene, body));
       propMeshes = propMeshes.filter((m) => !m.isDisposed()); // its grip wraps are taken off (344)
+    }
+    if (definition.id === "farmer.scarecrow" && !shouldUseVehicleBody) {
+      // [S] a crow perched on each elbow (344; propBuilder buildPerchedCrow), kept upright by the animator's T-pose (proceduralAnimation TPOSE)
+      for (const [shoulder, elbow] of [[body.leftShoulder, body.leftElbow], [body.rightShoulder, body.rightElbow]] as const) {
+        const perch = buildPerchedCrow(this._scene, visual.proportions.scale ?? 1.0);
+        perch.parent = shoulder;
+        perch.position.copyFrom(elbow.position);
+        propMeshes.push(...perch.getChildMeshes(false).filter((m): m is Mesh => m instanceof Mesh));
+      }
     }
     if (definition.id === "farmer.hay_baler" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHayBale(this._scene, body));

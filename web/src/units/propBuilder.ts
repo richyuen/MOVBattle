@@ -1306,6 +1306,22 @@ function heldCrow(scene: Scene, s: number): Mesh {
   return body;
 }
 
+/*
+ * [S] a crow perched on the scarecrow's elbow (344; farmer.scarecrow.png, card Appearance "One Crow rests on each elbow as well"): the held crow (spec at
+ * HELD_CROW) at the held crow's size, its wings folded, sat on its belly at the node's origin with its back up the node's +y and its head along +z. The
+ * animator keeps the node upright and facing his front (proceduralAnimation TPOSE).
+ */
+export function buildPerchedCrow(scene: Scene, s: number): TransformNode {
+  const perch = new TransformNode("perchedCrow", scene);
+  const crow = heldCrow(scene, s);
+  crow.parent = perch;
+  // held frame: head +y, back +z; perched: head +z, back +y (x mirrored onto -x, a proper turn)
+  crow.rotationQuaternion = Quaternion.RotationQuaternionFromAxis(new Vector3(-1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
+  crow.position.set(0, HELD_CROW.tall * 0.42 * s, 0);
+  perch.scaling.setAll(PROP_OVERSIZE);
+  return perch;
+}
+
 function mat(scene: Scene, color: Color3, emissive = 0, category: MatCategory = "wood"): PBRMetallicRoughnessMaterial {
   const mf = getMaterialFactory();
   if (emissive > 0) {

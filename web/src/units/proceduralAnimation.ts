@@ -106,6 +106,14 @@ const SCYTHE_SPIN = Math.PI / 2;
  * before the weapon hip; the snath's line from the fist .tip in his own frame (x toward the weapon side, y up, z forward); the crescent turned .spin about
  * the snath. The off fist is put on the upper peg by _twoHandPole (POLE_GRIP.snathPeg).
  */
+/*
+ * [S] the scarecrow's T-pose (344; farmer.scarecrow.png: he stands with both arms held straight out level to the sides, a crow in each fist and one
+ * perched upright on each elbow; card Characteristics "back to the T-pose when reloaded, waiting for their crows to perch onto their arms"). A body with
+ * a crow in the weapon fist (propBuilder heldCrow, "crowHeldBody") stands and walks with both upper arms out to the sides TPOSE.lift short of level,
+ * swung TPOSE.ahead forward, elbows straight; it eases in and out at .rate (out of it to attack). Each perched crow (propBuilder buildPerchedCrow, on
+ * the shoulder at the elbow) is kept upright and facing his front whatever the arm does, sat .perch of his height above the elbow's middle.
+ */
+const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.035 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 /*
  * [S] the hay baler's level stick carry (344; farmer.hay_baler.blue.png: the stick held in the one weapon fist at hip height before the bale, run level
@@ -1643,6 +1651,7 @@ export class ProceduralAnimator {
     this._holdHeater();
     this._pointRapier();
     this._lungeLegs();
+    this._holdTPose(dt);
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -2426,6 +2435,47 @@ export class ProceduralAnimator {
     }
     held.rotateByQuaternionToRef(turn, held);
     Vector3.LerpToRef(grip, held, k, node.position);
+  }
+
+  // The scarecrow's T-pose (TPOSE): whether this body takes it (a crow in the weapon fist), its perched crows, and how far in it he stands
+  private _tPose: { perches: TransformNode[] } | null | undefined = undefined;
+  private _tPoseW = 1;
+  private _holdTPose(dt: number): void {
+    const b = this._body;
+    if (this._tPose === undefined) {
+      const on = b.rightHand.getChildren().some((n) => n.name === "crowHeldBody");
+      this._tPose = on ? { perches: [b.leftShoulder, b.rightShoulder].flatMap((sh) => sh.getChildren().filter((n): n is TransformNode => n.name === "perchedCrow")) } : null;
+    }
+    if (!this._tPose) return;
+    const standing = this._state === AnimState.Idle || this._state === AnimState.Walking;
+    this._tPoseW += ((standing ? 1 : 0) - this._tPoseW) * Math.min(1, dt * TPOSE.rate);
+    const w = this._tPoseW * (1 - Math.min(1, this._limp));
+    if (w > 0.01) {
+      for (const [shoulder, elbow, out] of [[b.leftShoulder, b.leftElbow, -1], [b.rightShoulder, b.rightElbow, 1]] as const) {
+        const side = Math.sign(shoulder.position.x) || out;
+        shoulder.rotation.x += (-TPOSE.ahead - shoulder.rotation.x) * w;
+        shoulder.rotation.y += (0 - shoulder.rotation.y) * w;
+        shoulder.rotation.z += (side * (Math.PI / 2 - TPOSE.lift) - shoulder.rotation.z) * w;
+        elbow.rotation.x += (0 - elbow.rotation.x) * w;
+        elbow.rotation.z += (0 - elbow.rotation.z) * w;
+      }
+    }
+    // The perched crows: upright, facing his front, sat on top of the arm at the elbow
+    if (!this._tPose.perches.length) return;
+    b.root.computeWorldMatrix(true);
+    const facing = Quaternion.RotationYawPitchRoll(b.root.rotation.y, 0, 0);
+    const lift = b.metrics.overallHeight * TPOSE.perch;
+    for (const perch of this._tPose.perches) {
+      const shoulder = perch.parent as TransformNode;
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = shoulder; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const inv = Quaternion.Inverse(shoulder.absoluteRotationQuaternion);
+      perch.rotationQuaternion = inv.multiply(facing);
+      const elbow = shoulder === b.leftShoulder ? b.leftElbow : b.rightElbow;
+      const up = new Vector3(0, lift, 0).rotateByQuaternionToRef(inv, new Vector3()).scaleInPlace(1 / Math.max(0.001, shoulder.absoluteScaling.y));
+      perch.position.copyFrom(elbow.position).addInPlace(up);
+    }
   }
 
   // Whether the weapon hand's club is held in both hands (see the spec at OFFHAND_GRIP_UP): a club, no board and nothing else in the off hand. Set by _buildCarry.
