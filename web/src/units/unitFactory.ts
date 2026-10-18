@@ -1673,25 +1673,36 @@ function dressTribalTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   const depth = chest.z * body.torsoMesh.scaling.z;
   // The trunk wrap: a faceted sleeve round the whole trunk (its bounding half widths a skin out, so no corner of the wedge pokes through), from just over the
   // waist to TUNIC.top of the trunk, a little narrower at the waist
-  // Read off the trunk's own vertices (the torso wedge and the shoulder yoke hull that is the trunk's real silhouette; bounding boxes go stale once the body
-  // builder reshapes the chest): the widest half width and depth overall for the wrap's top, and below the trunk's middle for its foot
-  let maxX = chest.x * body.torsoMesh.scaling.x, maxZ = depth, lowX = 0;
+  // Read off the trunk's own vertices in the torso joint's frame (the torso wedge and the shoulder yoke hull that is the trunk's real silhouette, each with its
+  // own offset, lean and scale; bounding boxes go stale once the body builder reshapes the chest): the box they fill below the shoulders, and the widest
+  // half width below the trunk's middle for the wrap's foot
+  let minX = Infinity, maxXs = -Infinity, minZ = Infinity, maxZs = -Infinity, lowX = 0;
+  body.torso.computeWorldMatrix(true);
+  const toTorso = body.torso.getWorldMatrix().clone().invert();
   for (const part of body.torso.getChildMeshes(true).filter((m) => m === body.torsoMesh || /_yoke$/.test(m.name))) {
+    const local = part.computeWorldMatrix(true).multiply(toTorso);
     const at = part.getVerticesData(VertexBuffer.PositionKind) ?? [];
     for (let v = 0; v < at.length; v += 3) {
-      const x = Math.abs(at[v] * part.scaling.x), z = Math.abs(at[v + 2] * part.scaling.z), y = at[v + 1] * part.scaling.y + part.position.y;
-      if (y > trunk * 0.92) continue;
-      maxX = Math.max(maxX, x);
-      maxZ = Math.max(maxZ, z + Math.abs(part.position.z));
-      if (y < trunk * 0.45) lowX = Math.max(lowX, x);
+      const p = Vector3.TransformCoordinates(new Vector3(at[v], at[v + 1], at[v + 2]), local);
+      if (p.y > trunk * 0.92) continue;
+      minX = Math.min(minX, p.x); maxXs = Math.max(maxXs, p.x);
+      minZ = Math.min(minZ, p.z); maxZs = Math.max(maxZs, p.z);
+      if (p.y < trunk * 0.45) lowX = Math.max(lowX, Math.abs(p.x));
     }
   }
-  const halfX = maxX * 1.08;
-  const halfZ = maxZ * 1.1;
+  if (!Number.isFinite(minX)) { minX = -chest.x; maxXs = chest.x; minZ = -depth; maxZs = depth; }
+  const midX = (minX + maxXs) * 0.5, midZ = (minZ + maxZs) * 0.5;
+  const maxX = (maxXs - minX) * 0.5, maxZ = (maxZs - minZ) * 0.5;
+  const halfX = maxX * 1.06;
+  const halfZ = maxZ * 1.08;
   const wrapLong = trunk * (TUNIC.top + 0.04);
-  const wrap = MeshBuilder.CreateCylinder("tunicWrap", { height: wrapLong, diameterTop: 2 * halfX, diameterBottom: 2 * Math.max(lowX * 1.1, halfX * 0.7), tessellation: 7 }, scene);
+  // Four-sided and turned an eighth so its faces lie on the trunk's faces: the trunk is a box in section, and a round sleeve its own width left the corners out
+  const SQ = Math.SQRT2;
+  const wrap = MeshBuilder.CreateCylinder("tunicWrap", { height: wrapLong, diameterTop: 2 * halfX * SQ, diameterBottom: 2 * Math.max(lowX * 1.06, halfX * 0.7) * SQ, tessellation: 4 }, scene);
+  wrap.rotation.y = Math.PI / 4;
+  wrap.bakeCurrentTransformIntoVertices();
   wrap.scaling.z = halfZ / halfX;
-  wrap.position.y = wrapLong * 0.5 - trunk * 0.04;
+  wrap.position.set(midX, wrapLong * 0.5 - trunk * 0.04, midZ);
   wrap.material = hide;
   wrap.convertToFlatShadedMesh();
   added.push(wrap);
@@ -1700,9 +1711,11 @@ function dressTribalTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   const pelvisHalf = pelvis ? pelvis.getBoundingInfo().boundingBox.extendSize : chest;
   const skirtTop = Math.max(halfX * 0.92, pelvisHalf.x * 1.12);
   const skirtLong = thigh * TUNIC.skirt + trunk * 0.06;
-  const skirt = MeshBuilder.CreateCylinder("tunicSkirt", { height: skirtLong, diameterTop: 2 * skirtTop, diameterBottom: 2 * skirtTop * TUNIC.flare, tessellation: 7 }, scene);
+  const skirt = MeshBuilder.CreateCylinder("tunicSkirt", { height: skirtLong, diameterTop: 2 * skirtTop * SQ, diameterBottom: 2 * skirtTop * TUNIC.flare * SQ, tessellation: 4 }, scene);
+  skirt.rotation.y = Math.PI / 4;
+  skirt.bakeCurrentTransformIntoVertices();
   skirt.scaling.z = Math.max(halfZ, pelvisHalf.z * 1.15) / skirtTop;
-  skirt.position.y = trunk * 0.06 - skirtLong * 0.5;
+  skirt.position.set(midX, trunk * 0.06 - skirtLong * 0.5, midZ);
   skirt.material = hide;
   skirt.convertToFlatShadedMesh();
   added.push(skirt);
