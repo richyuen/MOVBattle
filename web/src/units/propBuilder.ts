@@ -1853,6 +1853,16 @@ function flatPlate(scene: Scene, name: string, outline: number[][], thick: numbe
  *   BRUSH.collar long and across; tuft swells to BRUSH.tuft across BRUSH.swell along, then a point to the tip.
  */
 /*
+ * A jousting lance (328; renaissance.jouster.red.png, card Appearance "spirals of the lancer's team color and white": a lance well over the rider's height,
+ * thick at the hand and tapering to the tip, wound with a team stripe spiralling round a cream shaft; a grey steel cone (the vamplate) over the fist, and a
+ * crown of short splayed prongs at the tip in place of a point). Not a pole: the old lance was a plain grey rod with a spear point. +y up the shaft from the
+ * fist at the origin, LANCE.grip of it behind. Length LANCE.long of the man's height; shaft LANCE.thick of the length across at the hand, LANCE.taper of that
+ * at the tip; stripe one turn every LANCE.pitch of the length, LANCE.stripe of the shaft's radius thick; vamplate LANCE.vamp of the length across,
+ * LANCE.vampLong long; LANCE.prongs prongs LANCE.prong of the length long. Shared by every lance (the cavalry's too).
+ */
+const LANCE = { long: 1.75, grip: 0.14, thick: 0.03, taper: 0.4, pitch: 0.075, stripe: 0.55, vamp: 0.1, vampLong: 0.07, prongs: 3, prong: 0.03 };
+const LANCE_CREAM = new Color3(0.88, 0.8, 0.62);
+/*
  * A matchlock musket (328; renaissance.musketeer.red.png, card Appearance "a matchlock musket": longer than the man who carries it, a light-grey octagonal
  * barrel with a wider ring at the muzzle and a band round it, on an orange-brown wooden stock that runs under the barrel most of its length and ends behind
  * the hand in a deep butt; a dark lock and match lever at the hand). Not a rod: the old gun was a short dark stick half the man's height, the flintlock's
@@ -2328,12 +2338,53 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "lance": {
-      const shaft = MeshBuilder.CreateCylinder("lance", { height: 1.2 * s, diameter: 0.04 * s }, scene);
-      shaft.material = mat(scene, accent);
-      const tip = MeshBuilder.CreateCylinder("ltip", { height: 0.15 * s, diameterTop: 0, diameterBottom: 0.06 * s, tessellation: 4 }, scene);
-      tip.position.y = 0.65 * s; tip.parent = shaft;
-      tip.material = mat(scene, new Color3(0.8, 0.8, 0.85));
-      shaft.position.y = 0.2 * s;
+      // The jousting lance, built to the spec at LANCE: a tapered cream shaft from the fist, a team stripe wound round it, vamplate and crown
+      const L = fit.stand * LANCE.long;
+      const back = LANCE.grip * L, front = (1 - LANCE.grip) * L;
+      const r0 = LANCE.thick * L * 0.5;
+      const radius = (y: number) => r0 * (1 - (1 - LANCE.taper) * Math.max(0, y + back) / L);
+      const shaft = MeshBuilder.CreateCylinder("lance", { height: L, diameterBottom: 2 * r0, diameterTop: 2 * r0 * LANCE.taper, tessellation: 8 }, scene);
+      const lift = (0.5 - LANCE.grip) * L;
+      shaft.position.y = lift;
+      shaft.material = mat(scene, LANCE_CREAM, 0.12, "cloth");
+      shaft.convertToFlatShadedMesh();
+      // The stripe: a flat tube wound round the shaft on a helix, butt to just short of the crown, its own radius a share of the shaft's there
+      const helix: Vector3[] = [];
+      const steps = Math.ceil(L / (LANCE.pitch * L)) * 10;
+      for (let i = 0; i <= steps; i++) {
+        const y = -back + (i / steps) * (L * 0.97);
+        const a = ((y + back) / (LANCE.pitch * L)) * Math.PI * 2;
+        const r = radius(y) * 0.92;
+        helix.push(new Vector3(Math.cos(a) * r, y - lift, Math.sin(a) * r));
+      }
+      const stripe = MeshBuilder.CreateTube("lanceStripe", { path: helix, tessellation: 5, cap: Mesh.CAP_ALL, radiusFunction: (i) => radius(helix[Math.min(i, helix.length - 1)].y + lift) * LANCE.stripe }, scene);
+      stripe.material = mat(scene, teamColor ?? accent, 0.12, "cloth");
+      stripe.parent = shaft;
+      const steel = mat(scene, new Color3(0.55, 0.56, 0.6), 0.08, "metal");
+      // The vamplate: a steel cone over the fist, its mouth back toward the hand
+      const vamp = MeshBuilder.CreateCylinder("lanceVamplate", { height: LANCE.vampLong * L, diameterTop: 2 * r0 * 1.1, diameterBottom: LANCE.vamp * L, tessellation: 10 }, scene);
+      vamp.position.y = 0.02 * L + LANCE.vampLong * L * 0.5 - lift;
+      vamp.material = steel;
+      vamp.convertToFlatShadedMesh();
+      vamp.parent = shaft;
+      // The crown: a steel socket on the tip and short prongs splayed out of it
+      const tipR = r0 * LANCE.taper;
+      const socket = MeshBuilder.CreateCylinder("lanceCrown", { height: LANCE.prong * L, diameterTop: tipR * 3.2, diameterBottom: tipR * 2.2, tessellation: 6 }, scene);
+      socket.position.y = front + LANCE.prong * L * 0.5 - lift;
+      socket.material = steel;
+      socket.convertToFlatShadedMesh();
+      socket.parent = shaft;
+      for (let k = 0; k < LANCE.prongs; k++) {
+        const a = (k / LANCE.prongs) * Math.PI * 2;
+        const prong = MeshBuilder.CreateCylinder("lanceProng", { height: LANCE.prong * L, diameterTop: 0, diameterBottom: tipR * 1.1, tessellation: 4 }, scene);
+        prong.setPivotPoint(new Vector3(0, -LANCE.prong * L * 0.5, 0));
+        prong.position.set(Math.cos(a) * tipR * 1.1, LANCE.prong * L, Math.sin(a) * tipR * 1.1);
+        prong.rotation.set(Math.sin(a) * 0.45, 0, -Math.cos(a) * 0.45);
+        prong.material = steel;
+        prong.parent = socket;
+      }
+      // Tipped forward a little about the fist, as the old lance was
+      shaft.setPivotPoint(new Vector3(0, -lift, 0));
       shaft.rotation.x = -0.3;
       return shaft;
     }
