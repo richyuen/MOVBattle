@@ -1051,8 +1051,8 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
  *   steel JOUSTER_STEEL, self-lit JOUSTER_GLOW (plain metal reads navy under the blue sky light); helm JOUSTER_HELM: dome .wide of the head round it, its
  *   rim .brow of the half-height over the middle, bevor's top .chin under it; plume .tufts tufts, the first .tuft of the head across, each .rise half-heights up.
  */
-const JOUSTER_STEEL = new Color3(0.6, 0.62, 0.66);
-const JOUSTER_GLOW = 0.22;
+const JOUSTER_STEEL = new Color3(0.5, 0.52, 0.56);
+const JOUSTER_GLOW = 0.16;
 const JOUSTER_HELM = { wide: 1.2, brow: 0.5, chin: -0.28, tufts: 5, tuft: 0.95, rise: 0.42 };
 const JOUSTER_PLATE = { breast: 1.2, fauld: 0.3, flare: 1.3, pauldron: 2.1, lame: 1.6 };
 /** Dresses the jouster's rider (spec at JOUSTER_HELM, JOUSTER_PLATE): grey plate, close helm, team plume. */
