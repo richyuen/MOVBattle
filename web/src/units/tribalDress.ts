@@ -363,8 +363,9 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
  */
 const LOINCLOTH = { ropes: 2, flap: 0.85, skull: 0.42, bone: 0.62, boneAt: 0.95, kiltDrop: 0.5, kiltWaist: 1.15, kiltFlare: 1.45 };
 const FLAP_COLOR = new Color3(0.5, 0.3, 0.18);
-// The spear thrower wears the same (card Appearance: "a brown loincloth tied with a rope that is ornamented with bones and a skull")
-const LOINCLOTHS = new Set(["tribal.bone_mage", "tribal.spear_thrower"]);
+// The spear thrower and the clubber wear the same (cards: "a brown loincloth tied with a rope that is ornamented with bones and a skull"; the clubber's
+// "crudely tied with a rope ... a skull tied through its orbit with a rope at the center and two bones tied with thick strings on each side")
+const LOINCLOTHS = new Set(["tribal.bone_mage", "tribal.spear_thrower", "tribal.clubber"]);
 
 /** A bone `long` long along +y: a round shaft with a pair of knobs at each end. The first mesh is the shaft (the others are its children). */
 export function boneStick(scene: Scene, name: string, long: number, thick: number): Mesh[] {
