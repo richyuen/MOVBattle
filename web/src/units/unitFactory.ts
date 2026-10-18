@@ -520,6 +520,10 @@ export class UnitFactory {
       // ...and his long dark hair from under the beret (tribalDress)
       propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
     }
+    // [S] the halfling's shaggy brown mop (340; tribalDress SHAGGY)
+    if (definition.id === "farmer.halfling" && !shouldUseVehicleBody) {
+      propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
+    }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
     }

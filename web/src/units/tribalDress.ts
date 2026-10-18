@@ -400,7 +400,16 @@ const MOUSTACHE_COLOR = new Color3(0.07, 0.05, 0.04);
  * tipped out GOATEE.tip so it hangs clear of the jaw and shows from the side and from behind.
  */
 const GOATEE = { wide: 0.42, down: 0.55, proud: 0.86, tip: 0.35 };
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee"> = {
+/*
+ * [S] halfling's shaggy hair (340; farmer.halfling.red.png, card Appearance "a bushy brown hair"): a messy brown mop wider than the head, its locks
+ * sticking out every way. A jittered faceted cap SHAGGY.cap heads wide over the crown, and SHAGGY.locks short four-sided spikes all round its rim
+ * (SHAGGY.long of the head long, the front SHAGGY.front of that so a fringe sits over the brow above the eyes), each splayed out SHAGGY.splay rad plus
+ * its own hashed share and tilted a hashed bit sideways so no two lie alike. Brown SHAGGY_COLOR, self-lit so it reads brown in the shade.
+ */
+const SHAGGY = { cap: 1.32, locks: 26, long: 0.5, front: 0.5, thick: 0.3, splay: 0.55 };
+const SHAGGY_COLOR = new Color3(0.38, 0.21, 0.12);
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy"> = {
+  "farmer.halfling": "shaggy",
   "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
   "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache", "renaissance.musketeer": "moustache_goatee",
 };
@@ -442,11 +451,49 @@ function tuskBand(scene: Scene, body: ArticulatedBody): Mesh[] {
   return added;
 }
 
+/** The halfling's shaggy mop (spec at SHAGGY), parented to the head. */
+function shaggyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const hair = getMaterialFactory().get("cloth", SHAGGY_COLOR, { emissiveIntensity: 0.2 });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const W = e.x * 2, H = e.y * 2;
+  const cap = MeshBuilder.CreateIcoSphere(`${body.headMesh.name}_hair`, { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(cap, 0.2, 4.4, e.x * SHAGGY.cap, e.y * 0.78, e.z * SHAGGY.cap);
+  cap.position.set(0, e.y * 0.72, -e.z * 0.1);
+  cap.material = hair;
+  cap.parent = body.headMesh;
+  added.push(cap);
+  for (let i = 0; i < SHAGGY.locks; i++) {
+    const a = (i + 0.5) / SHAGGY.locks * Math.PI * 2; // 0 = the face (+z)
+    const share = hashShare(6.7, i * 1.3, i * 0.7, 2);
+    const facing = Math.max(0, Math.cos(a)); // 1 at the brow
+    const long = H * SHAGGY.long * (1 - (1 - SHAGGY.front) * facing) * (0.75 + 0.5 * share);
+    const root = W * SHAGGY.thick * (0.8 + 0.4 * hashShare(2.9, i, 3, i));
+    const m = MeshBuilder.CreateCylinder("hairShag", { height: long, diameterTop: root, diameterBottom: 0, tessellation: 4 }, scene);
+    m.rotation.y = share * 1.5;
+    m.bakeCurrentTransformIntoVertices();
+    m.convertToFlatShadedMesh();
+    m.material = hair;
+    m.parent = body.headMesh;
+    added.push(m);
+    const sx = Math.sin(a), cz = Math.cos(a);
+    const out = SHAGGY.splay * (0.7 + 0.6 * share) + 0.25 * facing;
+    const sway = (hashShare(8.3, i, i * 2, 5) - 0.5) * 0.6;
+    m.rotation.set(-cz * out + sx * sway, 0, sx * out + cz * sway);
+    // Roots round the cap's rim, the fringe's a little higher so the eyes stay clear
+    const rootY = e.y * (0.5 + 0.35 * facing);
+    const r = 1.05;
+    m.position.set(sx * e.x * r + sx * Math.sin(out) * long * 0.5, rootY - Math.cos(out) * long * 0.5, cz * e.z * r - e.z * 0.05 + cz * Math.sin(out) * long * 0.5);
+  }
+  return added;
+}
+
 /** The unit's own hair or headgear (LONG_HAIR, TUSK_BAND), parented to the head; null when he keeps the common mop. */
 export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] | null {
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
   if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
   const style = HAIR_STYLES[unitId];
+  if (style === "shaggy") return shaggyHair(scene, body);
   if (style === "moustache_goatee") return [...curledMoustache(scene, body), goatee(scene, body)];
   if (style !== "long" && style !== "long_beard" && style !== "long_dark" && style !== "long_dark_moustache") return null;
   const dark = style === "long_dark" || style === "long_dark_moustache";
