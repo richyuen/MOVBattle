@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-316 | club mesh (3af648b) | tribal.clubber.b | approved
-316 | stone axe heads (41a51fe) | tribal.chieftain.b | approved
-316 | plank shield with face hole (77c8352) | tribal.protector.b | approved
-316 | deer-skull staff (9474ce7) | tribal.bone_mage.b | approved
-316 | flat javelin (a76560b) | tribal.spear_thrower.c | approved
 317 | bone spike row (7496412) | tribal.bone_mage.c | approved
 317 | stick-and-launch (6f13b5a) | tribal.spear_thrower.c | approved
 317 | two-handed grip (6a1bbe4) | tribal.clubber.b | approved
@@ -56,6 +51,7 @@ for 25 iterations.
 324 | mane, jittered crest and locks (6d8c95a) | tribal.mammoth.a | approved
 325 | ankle bands (0207b28) | tribal.mammoth.a | approved
 325 | bracelets, joins BRACELETS (e8a2cc0) | tribal.clubber.a | approved
+326 | face marking (edf1fdb + 5594a38, 01bd5ef, 1f8384e, b9a7a89) | tribal.mammoth.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -111,4 +107,5 @@ simulationSystem.ts:MAMMOTH_CHARGE (from, reach, speed, seconds, overrun, contac
 unitVisuals.ts:tribal.chieftain proportions.scale | 1.15 | 324 | approved | 1.35 (pre-loop); card Size 1.15x
 tribalDress.ts:necklace TUSK_NECKLACE (drop, long, side, thick, gap, curl, strap, off) | 0.3, 0.5, 0.8, 0.17, 0.3, 0.3, 0.03, 0.16 | 324 | approved | (new; clubber; critic 324: sags too low, tusks short)
 vehicleBuilder.ts:mammoth MAMMOTH_MANE (jitter, locks, long, glow), COLOR | 0.2, 7, 0.42, 0.12, (0.2, 0.1, 0.06) | 324 | approved | (new; was an indigo crestMat cap; critic 324: barely darker than the coat)
-vehicleBuilder.ts:mammoth ANKLE_BAND (stripes, tall, wide, dots, dotAt, dot, dotOut) | -0.17/-0.25, 0.05, 0.64, 8, -0.33, 0.11, 0.29 | 325 | approved | (new; tuskTipMat; critic 325: stands proud like hardware, dots studs)
+vehicleBuilder.ts:mammoth ANKLE_BAND (stripes, tall, wide, dots, dotAt, dot, dotOut, dotFlat) | -0.17/-0.25, 0.035, 0.61, 8, -0.33, 0.11, 0.29, 0.2 | 326 | approved | tall 0.05, wide 0.64, flat 0.45 (325 [S]; 326 [P] fallout)
+vehicleBuilder.ts:mammoth FACE_PAINT (path yaw/pitch, steps, wide, taper, thick, trunkDots, dot) | .95/.56 .57/.37 .5/-.05 .42/-.3, 3, 0.17, 0.3, 0.03, 1/3/5, 0.12 | 326 | approved | (new; replaced browPaint)
