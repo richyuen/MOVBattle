@@ -238,7 +238,7 @@ const LONG_HAIR_COLOR = new Color3(0.3, 0.18, 0.1);
  * standing up each side from the cheek, bowed outward, its tip TUSK_BAND.rise head heights over its root and a little back; TUSK_BAND.thick head widths
  * across at the root, tapering to a point; a turn of rope round each tusk where the strap crosses it.
  */
-const TUSK_BAND = { band: 0.45, strap: 0.1, rise: 1.1, bow: 0.22, thick: 0.28 };
+const TUSK_BAND = { band: 0.45, strap: 0.1, rise: 0.65, bow: 0.22, thick: 0.4 };
 const BAND_COLOR = new Color3(0.45, 0.27, 0.16);
 const HAIR_STYLES: Record<string, "long" | "tusk_band"> = { "tribal.stoner": "long", "tribal.spear_thrower": "tusk_band" };
 
