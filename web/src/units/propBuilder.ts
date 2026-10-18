@@ -1599,9 +1599,16 @@ const DYNAMITE_SPARK_RAYS = 6;
 // The stoner's boulder (units/tribal.stoner), in prop units (x s, the man about .67 s tall): across, its height and depth as shares of that, colour
 const BOULDER_WIDE = 0.3;
 const BOULDER_SQUASH = { y: 0.88, z: 0.94 };
-// ...and how far each vertex is pushed in or out of the ball, as a share of its radius (tribal.stoner.blue.png: deep flat facets, no two faces in a line)
-const BOULDER_JITTER = 0.2;
-const BOULDER_COLOR = new Color3(0.3, 0.27, 0.24);
+// ...and how far each vertex is pushed in or out of its chunk, as a share of its radius (tribal.stoner.blue.png: deep flat facets of unequal size)
+const BOULDER_JITTER = 0.16;
+// The lump is not one ball but BOULDER_CHUNKS coarse twenty-face chunks run together (centre and radius as shares of BOULDER_WIDE, each squashed its own way
+// and turned its own way), so its faces come out unequal and its outline uneven; dark charcoal-brown, the darkest thing on the man
+const BOULDER_CHUNKS: { at: [number, number, number]; r: number; squash: [number, number, number]; turn: [number, number, number] }[] = [
+  { at: [0, 0, 0], r: 0.42, squash: [1, 0.92, 0.95], turn: [0.3, 0.2, 0.1] },
+  { at: [0.2, 0.1, -0.06], r: 0.34, squash: [1.1, 0.8, 1], turn: [0.9, 1.3, 0.4] },
+  { at: [-0.18, -0.1, 0.08], r: 0.3, squash: [0.95, 0.85, 1.15], turn: [1.7, 0.5, 2.1] },
+];
+const BOULDER_COLOR = new Color3(0.2, 0.18, 0.16);
 // The swordcaster's lockbox (units/spooky.swordcaster): a chest about as wide as his torso, held across the belly in both hands; across, tall, deep (x s),
 // the domed lid's share of the height, dark iron body, lighter iron bands and a pale keyhole plate on the front
 const LOCKBOX_SIZE = { wide: 0.26, tall: 0.16, deep: 0.16 };
@@ -2458,24 +2465,35 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "stone": {
       // The stoner's boulder (units/tribal.stoner; tribal.stoner.blue.png: a dark irregular chunk wider than his torso, a dozen big flat faces no two in a
       // line, cradled before the belly in both hands): a coarse flat-faced ball BOULDER_WIDE across with every vertex pushed in or out by its own hashed
-      // share (BOULDER_JITTER), like the chieftain's axe head, not the smooth 80-face ball of before. Carried in both hands at the belly
+      // share (BOULDER_JITTER), now BOULDER_CHUNKS such chunks run together into one uneven lump (unequal faces, not an even ball). Carried in both hands at the belly
       // (ProceduralAnimator._carryBoulder sets it between the hands, the hands solved onto its sides); the thrown one is a copy of it, so the same chunk flies
-      const rock = MeshBuilder.CreateIcoSphere("boulder", { radius: BOULDER_WIDE * 0.5 * s, subdivisions: 1, flat: true }, scene);
-      const at = rock.getVerticesData(VertexBuffer.PositionKind);
-      if (at) {
-        for (let v = 0; v < at.length; v += 3) {
-          const k = 1 - BOULDER_JITTER + 2 * BOULDER_JITTER * roundBoardSeed(9.5, Math.round(at[v] * 83 + at[v + 1] * 47 + at[v + 2] * 29));
-          at[v] *= k; at[v + 1] *= k; at[v + 2] *= k;
+      const chunks = BOULDER_CHUNKS.map((c, i) => {
+        const chunk = MeshBuilder.CreateIcoSphere("boulderChunk" + i, { radius: c.r * BOULDER_WIDE * s, subdivisions: 0, flat: true }, scene);
+        const at = chunk.getVerticesData(VertexBuffer.PositionKind);
+        if (at) {
+          for (let v = 0; v < at.length; v += 3) {
+            const k = 1 - BOULDER_JITTER + 2 * BOULDER_JITTER * roundBoardSeed(9.5 + i, Math.round((at[v] * 83 + at[v + 1] * 47 + at[v + 2] * 29) / (c.r * s)));
+            at[v] *= k * c.squash[0]; at[v + 1] *= k * c.squash[1]; at[v + 2] *= k * c.squash[2];
+          }
+          chunk.setVerticesData(VertexBuffer.PositionKind, at);
         }
-        rock.setVerticesData(VertexBuffer.PositionKind, at);
+        chunk.rotation.set(c.turn[0], c.turn[1], c.turn[2]);
+        chunk.position.set(c.at[0] * BOULDER_WIDE * s, c.at[1] * BOULDER_WIDE * s, c.at[2] * BOULDER_WIDE * s);
+        return chunk;
+      });
+      const rock = Mesh.MergeMeshes(chunks, true, true) ?? chunks[0];
+      rock.name = "boulder";
+      rock.id = "boulder";
+      const merged = rock.getVerticesData(VertexBuffer.PositionKind);
+      if (merged) {
         const normals: number[] = [];
-        VertexData.ComputeNormals(at, rock.getIndices() ?? [], normals);
+        VertexData.ComputeNormals(merged, rock.getIndices() ?? [], normals);
         rock.setVerticesData(VertexBuffer.NormalKind, normals);
         rock.refreshBoundingInfo();
       }
       rock.scaling.set(1, BOULDER_SQUASH.y, BOULDER_SQUASH.z);
       rock.rotation.set(0.5, 0.8, 0.3);
-      rock.material = mat(scene, BOULDER_COLOR, 0.15, "stone");
+      rock.material = mat(scene, BOULDER_COLOR, 0.1, "stone");
       return rock;
     }
     case "lockbox": {
