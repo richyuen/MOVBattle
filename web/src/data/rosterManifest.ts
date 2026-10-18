@@ -232,13 +232,13 @@ const tribal = makeFaction(FactionId.Tribal, "tribal", [
 ]);
 
 const farmer = makeFaction(FactionId.Farmer, "farmer", [
-  ["halfling", "Halfling", 65, "tiny_melee", { weaponHint: "frying_pan", size: "tiny" }],
-  ["farmer", "Farmer", 80, "polearm_melee", { weaponHint: "pitchfork", hatHint: "straw_hat" }],
-  ["hay_baler", "Hay Baler", 110, "shield_melee", { weaponHint: "hay_bale", hatHint: "straw_hat", size: "large" }],
-  ["potion_seller", "Potion Seller", 180, "thrower", { weaponHint: "potion", projectileHint: "bomb" }],
-  ["harvester", "Harvester", 260, "heavy_melee", { weaponHint: "scythe" }],
-  ["wheelbarrow", "Wheelbarrow", 520, "charge_melee", { specialHint: "cart", size: "large", abilities: ["charge_impact"] }],
-  ["scarecrow", "Scarecrow", 1000, "summoner", { abilities: ["volley_fire"], projectileHint: "crow", specialHint: "scarecrow", visualPreset: "iconic_scarecrow", behaviorPreset: "iconic_scarecrow", volleyCount: 8, cooldownMultiplier: 0.88 }],
+  ["halfling", "Halfling", 50, "tiny_melee", { weaponHint: "frying_pan", size: "tiny", healthMultiplier: 3.46, damageMultiplier: 0.17, cooldownMultiplier: 1.5 }],
+  ["farmer", "Farmer", 80, "polearm_melee", { weaponHint: "pitchfork", hatHint: "straw_hat", healthMultiplier: 0.6, damageMultiplier: 0.42 }],
+  ["hay_baler", "Hay Baler", 140, "shield_melee", { weaponHint: "hay_bale", hatHint: "straw_hat", size: "large", healthMultiplier: 0.34, damageMultiplier: 0.37, cooldownMultiplier: 0.29 }],
+  ["potion_seller", "Potion Seller", 340, "thrower", { weaponHint: "potion", projectileHint: "bomb", healthMultiplier: 0.25, damageMultiplier: 0.04, cooldownMultiplier: 1.59 }],
+  ["harvester", "Harvester", 500, "heavy_melee", { weaponHint: "scythe", healthMultiplier: 0.98, damageMultiplier: 0.5 }],
+  ["wheelbarrow", "Wheelbarrow", 1000, "charge_melee", { specialHint: "cart", size: "large", abilities: ["charge_impact"], healthMultiplier: 1.06 }],
+  ["scarecrow", "Scarecrow", 1200, "summoner", { abilities: ["volley_fire"], projectileHint: "crow", specialHint: "scarecrow", visualPreset: "iconic_scarecrow", behaviorPreset: "iconic_scarecrow", volleyCount: 8, healthMultiplier: 0.11, damageMultiplier: 2.72, cooldownMultiplier: 5 }],
 ]);
 
 const medieval = makeFaction(FactionId.Medieval, "medieval", [
