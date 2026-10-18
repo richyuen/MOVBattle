@@ -2879,7 +2879,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "stick": {
-      // The crooked branch (spec at STICK): +y out along it from the fist at the origin, named "handle" so the animator turns it in the one fist
+      // The crooked branch (spec at STICK): +y out along it from the fist at the origin; its own name, so it rides the fist at STICK.ahead (as "handle" the animator stood it up)
       const L = fit.stand * STICK.long;
       const n = STICK.kinks + 1;
       const line: Vector3[] = [];
@@ -2890,7 +2890,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         const bz = inner ? (roundBoardSeed(5.9, i * 11 + 2) - 0.5) * 2 * STICK.bend * L : 0;
         line.push(new Vector3(bx, (t - STICK.grip) * L, bz));
       }
-      const stick = MeshBuilder.CreateTube("handle", { path: line, tessellation: 6, cap: Mesh.CAP_ALL, radiusFunction: (i) => STICK.thick * 0.5 * L / STICK.long * (1 - (1 - STICK.tip) * i / n) }, scene);
+      const stick = MeshBuilder.CreateTube("stick", { path: line, tessellation: 6, cap: Mesh.CAP_ALL, radiusFunction: (i) => STICK.thick * 0.5 * L / STICK.long * (1 - (1 - STICK.tip) * i / n) }, scene);
       stick.material = mat(scene, STICK_WOOD, STICK.glow);
       stick.convertToFlatShadedMesh();
       // Run out ahead of the fist, near level (farmer.hay_baler.blue.png), not stood up behind the head
