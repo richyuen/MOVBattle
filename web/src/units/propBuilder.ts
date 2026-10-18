@@ -1657,8 +1657,14 @@ const BONE_STAFF_LONG = 0.62;
 const BONE_STAFF_GRIP = 0.4;
 const BONE_STAFF_SKULL = 0.1;
 const JAVELIN_LONG = 0.4;
-const JAVELIN_HEAD_LONG = 0.13;
-const JAVELIN_HEAD_WIDE = 0.09;
+const JAVELIN_HEAD_LONG = 0.15;
+const JAVELIN_HEAD_WIDE = 0.095;
+// The spear thrower's stone leaf (tribal.spear_thrower.jpg, critic 319): a knapped slab, not a cast cone: a jittered faceted ball pressed flat to
+// JAVELIN_LEAF.thick of its width, widest JAVELIN_LEAF.waist up from its root and running to a point, every vertex pushed by its own share (jitter);
+// grey stone self-lit so it is not a black spot in the shade; a rope wrap of JAVELIN_LEAF.wraps turns over the socket
+const JAVELIN_LEAF = { thick: 0.3, waist: 0.35, root: 0.4, jitter: 0.14, wraps: 3 };
+const JAVELIN_STONE = new Color3(0.44, 0.43, 0.41);
+const JAVELIN_ROPE = new Color3(0.5, 0.34, 0.2);
 const JAVELIN_BARB_LONG = 0.06;
 const JAVELIN_BARB_SWEEP = 0.45;
 // The harpoon gun (units/pirate.harpooner): a canister about a forearm long and half as wide again as the forearm is thick; the harpoon leaves from the node named HARPOON_MUZZLE
@@ -1919,22 +1925,41 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "javelin": {
       // A short throwing spear, not a pole (units/tribal.spear_thrower: gripped near the butt, the shaft about a forearm and a half ahead of the fist, under a
-      // big dark leaf head as long as his own head, two barbs swept back off its root, a red-brown binding at the socket). JAVELIN_LONG is shaft plus head,
+      // broad grey stone leaf as long as his own head, two barbs swept back off its root, a rope wrap at the socket). JAVELIN_LONG is shaft plus head,
       // about .6 of the man's height; the thrown missile is a copy of this (ProjectileSystem._buildHeldMissile), so it flies the same.
       const shaftLong = JAVELIN_LONG - JAVELIN_HEAD_LONG;
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: shaftLong * s, diameter: 0.028 * s, tessellation: 6 }, scene);
       shaft.material = mat(scene, new Color3(0.36, 0.2, 0.15));
-      const iron = mat(scene, new Color3(0.2, 0.21, 0.24), 0.05);
+      const iron = mat(scene, JAVELIN_STONE, 0.15);
       const top = shaftLong * 0.5;
-      // The leaf: a four-sided blade, broad in the prop's y-z plane (upright in flight, ProjectileSystem turns +y to the flight's +z), thin across x
-      const head = MeshBuilder.CreateCylinder("tip", { height: JAVELIN_HEAD_LONG * s, diameterTop: 0, diameterBottom: JAVELIN_HEAD_WIDE * s, tessellation: 4 }, scene);
-      head.scaling.x = 0.45;
-      head.position.y = (top + JAVELIN_HEAD_LONG * 0.5) * s;
+      // The leaf (spec at JAVELIN_LEAF): broad in the prop's y-z plane (upright in flight, ProjectileSystem turns +y to the flight's +z), thin across x.
+      // Built to size in its own vertices: t runs 0 at the root to 1 at the point; the half width swells from root share to full at the waist, then falls to 0.
+      const head = MeshBuilder.CreateIcoSphere("tip", { radius: 1, subdivisions: 1, flat: true }, scene);
+      const leafAt = head.getVerticesData(VertexBuffer.PositionKind);
+      if (leafAt) {
+        const halfWide = JAVELIN_HEAD_WIDE * 0.5;
+        for (let v = 0; v < leafAt.length; v += 3) {
+          const t = (leafAt[v + 1] + 1) * 0.5;
+          const k = 1 - JAVELIN_LEAF.jitter + 2 * JAVELIN_LEAF.jitter * roundBoardSeed(23.5, Math.round(leafAt[v] * 89 + leafAt[v + 1] * 53 + leafAt[v + 2] * 37));
+          const w = t < JAVELIN_LEAF.waist
+            ? JAVELIN_LEAF.root + (1 - JAVELIN_LEAF.root) * Math.sin((t / JAVELIN_LEAF.waist) * Math.PI * 0.5)
+            : 1 - (t - JAVELIN_LEAF.waist) / (1 - JAVELIN_LEAF.waist);
+          leafAt[v] = leafAt[v] * halfWide * JAVELIN_LEAF.thick * k * Math.max(0.35, w) * s;
+          leafAt[v + 1] = (t * JAVELIN_HEAD_LONG) * s;
+          leafAt[v + 2] = leafAt[v + 2] * halfWide * w * k * s;
+        }
+        head.setVerticesData(VertexBuffer.PositionKind, leafAt);
+        const leafNormals: number[] = [];
+        VertexData.ComputeNormals(leafAt, head.getIndices() ?? [], leafNormals);
+        head.setVerticesData(VertexBuffer.NormalKind, leafNormals);
+        head.refreshBoundingInfo();
+      }
+      head.position.y = (top - 0.01) * s;
       head.material = iron;
       head.parent = shaft;
-      // Barbs: two flat spikes off the leaf's root, pointing back down the shaft and out
+      // Barbs: two flat stone spikes off the leaf's root, pointing back down the shaft and out
       for (const side of [1, -1]) {
-        const barb = MeshBuilder.CreateCylinder("javelinBarb", { height: JAVELIN_BARB_LONG * s, diameterTop: 0, diameterBottom: 0.022 * s, tessellation: 4 }, scene);
+        const barb = MeshBuilder.CreateCylinder("javelinBarb", { height: JAVELIN_BARB_LONG * s, diameterTop: 0, diameterBottom: 0.026 * s, tessellation: 4 }, scene);
         barb.scaling.x = 0.5;
         // Its tip (+y) turned back down the shaft (-y) and out along z by the sweep, in the leaf's plane
         barb.rotation.x = Math.PI - side * JAVELIN_BARB_SWEEP;
@@ -1946,10 +1971,15 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         barb.material = iron;
         barb.parent = shaft;
       }
-      const binding = MeshBuilder.CreateCylinder("javelinBinding", { height: 0.05 * s, diameter: 0.042 * s, tessellation: 6 }, scene);
-      binding.position.y = (top - 0.035) * s;
-      binding.material = mat(scene, new Color3(0.45, 0.14, 0.11));
-      binding.parent = shaft;
+      // The rope wrap: turns of twine round the socket and over the leaf's root, each a little tilted so they read as wound rope and not a sleeve
+      const rope = mat(scene, JAVELIN_ROPE, 0.15);
+      for (let i = 0; i < JAVELIN_LEAF.wraps; i++) {
+        const turn = MeshBuilder.CreateTorus("javelinBinding", { diameter: (0.034 + i * 0.004) * s, thickness: 0.011 * s, tessellation: 8 }, scene);
+        turn.rotation.x = (i % 2 ? 1 : -1) * 0.3;
+        turn.position.y = (top - 0.03 + i * 0.016) * s;
+        turn.material = rope;
+        turn.parent = shaft;
+      }
       shaft.position.y = (shaftLong * 0.5 - 0.06) * s; // gripped near the butt, the shaft and head ahead of the fist
       return shaft;
     }
