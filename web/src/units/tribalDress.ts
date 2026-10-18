@@ -643,6 +643,28 @@ function goatee(scene: Scene, body: ArticulatedBody): Mesh {
 }
 
 /** The beard (spec at BEARD) in the given hair material, parented to the head. */
+/** [S] The wheelbarrow's Apple Thrower's brown beard (349; farmer.wheelbarrow.red.png): the tribal beard in chestnut, on any head. */
+export function dressBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
+}
+
+/*
+ * [S] The wheelbarrow's Traveller's afro (349; farmer.wheelbarrow.red.png/.blue.png: a big round brown puff standing up off the crown and out past the ears,
+ * about one and a half heads across, the face clear in front of it): one faceted ball AFRO.wide head widths across, AFRO.tall head heights tall and
+ * AFRO.deep head depths deep, its middle AFRO.up head heights above the head's middle and set back AFRO.back head depths so its front stays behind the
+ * face, jittered AFRO.jitter so it reads tufted; brown self-lit so it reads brown and not black.
+ */
+const AFRO = { wide: 1.6, tall: 1.1, deep: 1.5, up: 0.42, back: 0.3, jitter: 0.1 };
+export function dressAfro(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const puff = MeshBuilder.CreateIcoSphere(`${body.headMesh.name}_afro`, { radius: 1, subdivisions: 2, flat: true }, scene);
+  jitterVertices(puff, AFRO.jitter, 34.9, e.x * AFRO.wide, e.y * AFRO.tall, e.z * AFRO.deep);
+  puff.position.set(0, e.y * 2 * AFRO.up, -e.z * 2 * AFRO.back);
+  puff.material = getMaterialFactory().get("cloth", SHAGGY_COLOR, { emissiveIntensity: 0.2 });
+  puff.parent = body.headMesh;
+  return [puff];
+}
+
 function tribalBeard(scene: Scene, body: ArticulatedBody, hair: ReturnType<typeof boneMaterial>): Mesh[] {
   const added: Mesh[] = [];
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;

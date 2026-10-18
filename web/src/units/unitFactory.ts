@@ -8,11 +8,11 @@ import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody, crewProportions, type ArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
 import { attachProps, buildPerchedCrow } from "./propBuilder";
-import { isVehicleUnit, buildVehicleBody, dressCannonCrew } from "./vehicleBuilder";
+import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type WheelbarrowCrew } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace } from "./tribalDress";
+import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -412,6 +412,9 @@ export class UnitFactory {
       body = buildVehicleBody(this._scene, definition.id, bodyColor, {
         showOperators: options.suppressDecorativeOperators ? false : true,
       });
+      // [S] the wheelbarrow's three men dressed as themselves (349; WHEELBARROW_OVERALLS)
+      const crew = wheelbarrowCrew(body);
+      if (crew) propMeshes.push(...dressWheelbarrowCrew(this._scene, crew, teamColor));
     } else {
       // Build articulated humanoid body
       body = buildArticulatedBody(
@@ -1758,6 +1761,56 @@ function dressFarmerLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const FARMER_SHIRT = { dags: 10, dag: 1.25, dagLong: 0.24, tilt: 0.32, shade: 0.82, strap: 0.1, strapProud: 1.1, tongue: 0.22, glow: 0.2 };
 const FARMER_STRAP = new Color3(0.5, 0.27, 0.17);
+/*
+ * [S] The wheelbarrow's crew (349; farmer.wheelbarrow.red.png/.blue.png, card Characteristics "three sub-units: the Traveller, the Apple Thrower and the
+ * Farmer"): the front rider is the Farmer, in his own liripipe hood (the farmer's pointed_cowl, through attachProps), white socks and brown shoes
+ * (dressFarmerLegs) and leaf-cut hem with the strap belt (dressFarmerShirt); the Apple Thrower behind him is bald with a brown beard (dressBeard); the
+ * Traveller on the handles wears a big round brown afro (dressAfro) and overalls: a bib over the front of his trunk from WHEELBARROW_OVERALLS.lo to .hi of
+ * the neck's height, .bib of the trunk across, in the team colour darkened to .shade, two straps .strap of the trunk across from the bib's top corners up
+ * over the shoulders and down his back to .backLo, a pale button at the foot of each strap. Self-lit (.glow) so the dark shade stays cloth.
+ */
+const WHEELBARROW_OVERALLS = { lo: 0.05, hi: 0.62, bib: 0.62, shade: 0.55, strap: 0.13, backLo: 0.35, proud: 0.03, button: 0.07, glow: 0.18 };
+/** Dresses the wheelbarrow's three men (spec at WHEELBARROW_OVERALLS). */
+function dressWheelbarrowCrew(scene: Scene, crew: WheelbarrowCrew, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  added.push(...attachProps(scene, crew.farmer, { ...getUnitVisual("farmer.farmer"), weapon: "none" }, 0.46, teamColor));
+  added.push(...dressFarmerLegs(scene, crew.farmer));
+  added.push(...dressFarmerShirt(scene, crew.farmer, teamColor));
+  added.push(...dressBeard(scene, crew.thrower));
+  added.push(...dressAfro(scene, crew.traveller));
+  // the Traveller's overalls: bib, straps over the shoulders, buttons
+  const O = WHEELBARROW_OVERALLS;
+  const body = crew.traveller;
+  const dark = teamColor.scale(O.shade);
+  const cloth = getMaterialFactory().get("cloth", dark, { emissive: dark.scale(O.glow) });
+  const pale = getMaterialFactory().get("cloth", new Color3(0.86, 0.8, 0.66), { emissiveIntensity: 0.2 });
+  const band = trunkBand(body, O.lo, O.hi);
+  const top = trunkBand(body, O.hi, 1);
+  const across = band.halfX * 2;
+  const thin = O.proud * across;
+  const put = (m: Mesh, mt: Material): Mesh => { m.material = mt; m.parent = body.torso; added.push(m); return m; };
+  const tall = band.trunk * (O.hi - O.lo);
+  const bib = put(MeshBuilder.CreateBox("overallBib", { width: across * O.bib, height: tall, depth: thin }, scene), cloth);
+  bib.position.set(band.midX, band.trunk * (O.lo + O.hi) * 0.5, band.maxZ + thin * 0.5);
+  const strapW = across * O.strap;
+  for (const side of [-1, 1]) {
+    const x = band.midX + side * across * O.bib * 0.35;
+    const front = new Vector3(x, band.trunk * O.hi, top.maxZ + thin * 0.5);
+    const over = new Vector3(x, band.trunk * 1.02, (top.maxZ + top.minZ) * 0.5);
+    const back = new Vector3(x, band.trunk * O.backLo, top.minZ - thin * 0.5);
+    for (const [a, b] of [[front, over], [over, back]]) {
+      const span = b.subtract(a);
+      const strap = put(MeshBuilder.CreateBox("overallStrap", { width: strapW, height: span.length(), depth: thin }, scene), cloth);
+      strap.position.copyFrom(a.add(b).scale(0.5));
+      strap.rotation.x = Math.atan2(span.z, span.y);
+    }
+    const button = put(MeshBuilder.CreateCylinder("overallButton", { height: thin, diameter: across * O.button, tessellation: 6 }, scene), pale);
+    button.rotation.x = Math.PI / 2;
+    button.position.set(x, band.trunk * O.hi - strapW * 0.4, band.maxZ + thin * 1.2);
+  }
+  return added;
+}
+
 /** Dresses the farmer's shirt (spec at FARMER_SHIRT): leaf-cut dags round the skirt's hem, a brown strap belt at the waist. */
 function dressFarmerShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];

@@ -1238,6 +1238,12 @@ function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offs
   prop.rotationQuaternion = q;
   prop.scaling.copyFrom(sc);
 }
+/** The wheelbarrow's three men, kept on the cart's root (metadata.wheelbarrowCrew) so they can be dressed and moved after the build. */
+export interface WheelbarrowCrew { farmer: ArticulatedBody; thrower: ArticulatedBody; traveller: ArticulatedBody }
+/** The wheelbarrow's crew on a built body, or null for any other. */
+export function wheelbarrowCrew(body: ArticulatedBody): WheelbarrowCrew | null {
+  return (body.root.metadata as { wheelbarrowCrew?: WheelbarrowCrew } | null)?.wheelbarrowCrew ?? null;
+}
 function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const W = WHEELBARROW;
   const root = new TransformNode("wheelbarrow_root", scene);
@@ -1338,8 +1344,10 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   }
 
   const seatY = W.trayY + sideTall + P.heap * 0.85; // sat on top of the hay heaped over the rim, not down in the tray
+  const crew: Partial<WheelbarrowCrew> = {};
   // The Farmer, front: sat facing ahead, thighs out over the tray sides, shins hanging
   addOperator(scene, rig, allMeshes, 0, 0, W.frontSeat, color, (man) => {
+    crew.farmer = man;
     man.root.position.y = seatY - man.hip.position.y;
     man.leftHip.rotation.set(-1.45, 0, 0.45);
     man.rightHip.rotation.set(-1.45, 0, -0.45);
@@ -1372,6 +1380,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   });
   // The Apple Thrower, behind him: sat the same, his throwing arm up and back over his shoulder
   addOperator(scene, rig, allMeshes, 0, 0, W.backSeat, color, (man) => {
+    crew.thrower = man;
     man.root.position.y = seatY - man.hip.position.y;
     man.leftHip.rotation.set(-1.4, 0, 0.35);
     man.rightHip.rotation.set(-1.4, 0, -0.35);
@@ -1397,6 +1406,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   // The Traveller, rear: on his feet behind the cart, leaning in, fists down on the handle ends
   let travellerHeadTop = 0;
   const operator = addOperator(scene, rig, allMeshes, 0, 0, W.pushZ, color, (man) => {
+    crew.traveller = man;
     man.root.position.y = 0;
     man.hip.rotation.x = W.lean;
     man.leftShoulder.rotation.x = -0.75 - W.lean;
@@ -1407,6 +1417,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     man.rightHip.rotation.x = -W.lean;
   });
   travellerHeadTop = operator.headTopY * W.scale;
+  root.metadata = { ...(root.metadata ?? {}), wheelbarrowCrew: crew };
 
   const vehicleSockets: VehicleSocketSet = {
     impactOrigin: makeSocket(scene, rig, "wheelbarrow_impact_socket", new Vector3(0, 0.3, wheelZ)),
