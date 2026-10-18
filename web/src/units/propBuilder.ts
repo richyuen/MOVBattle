@@ -1849,6 +1849,9 @@ const HALBERD_STEEL = new Color3(0.2, 0.21, 0.24);
 const FORK = { long: 0.85, grip: 0.3, thick: 0.03, bar: 0.2, tine: 0.22, tineThick: 0.045, curl: 1.1, links: 4, glow: 0.18 };
 const FORK_WOOD = new Color3(0.5, 0.33, 0.18);
 const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
+// The potion bottle (see buildWeapon "potion"): ball width, its squash, neck width and length, cork length, seat in the fist (weapon units), glass self-light
+const POTION = { ball: 0.15, squash: 0.92, neck: 0.055, neckLong: 0.05, cork: 0.03, seat: 0.06, glow: 0.22 };
+const POTION_GLASS = new Color3(0.55, 0.74, 0.82);
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
   const n = outline.length;
@@ -3005,16 +3008,25 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return bale;
     }
     case "potion": {
-      const flask = MeshBuilder.CreateCylinder("flask", { height: 0.12 * s, diameterTop: 0.04 * s, diameterBottom: 0.07 * s, tessellation: 8 }, scene);
-      flask.material = mat(scene, accent, 0.2);
-      const stopper = MeshBuilder.CreateSphere("stopper", { diameter: 0.04 * s, segments: 6 }, scene);
-      stopper.position.y = 0.08 * s; stopper.parent = flask;
-      stopper.material = mat(scene, new Color3(0.55, 0.3, 0.15));
-      const neck = MeshBuilder.CreateCylinder("neck", { height: 0.04 * s, diameter: 0.025 * s, tessellation: 6 }, scene);
-      neck.position.y = 0.06 * s; neck.parent = flask;
-      neck.material = mat(scene, accent, 0.15);
-      flask.position.y = 0.08 * s;
-      return flask;
+      // The potionseller's bottle (339; farmer.potion_seller.red.png: a pale-blue faceted glass ball a fist and a half across in each hand, a short wide
+      // neck and a cork, held low at the hips): spec at POTION. Fixed glass colour, not the accent (the accent dyes his clothes)
+      const glass = mat(scene, POTION_GLASS, POTION.glow);
+      const ball = MeshBuilder.CreateIcoSphere("potionBall", { radius: POTION.ball * s * 0.5, subdivisions: 1, flat: true }, scene);
+      ball.scaling.y = POTION.squash;
+      ball.material = glass;
+      const neck = MeshBuilder.CreateCylinder("potionNeck", { height: POTION.neckLong * s, diameterTop: POTION.neck * s, diameterBottom: POTION.neck * 1.3 * s, tessellation: 6 }, scene);
+      neck.position.y = (POTION.ball * POTION.squash * 0.5 + POTION.neckLong * 0.4) * s / POTION.squash;
+      neck.scaling.y = 1 / POTION.squash;
+      neck.material = glass;
+      neck.convertToFlatShadedMesh();
+      neck.parent = ball;
+      const cork = MeshBuilder.CreateCylinder("potionCork", { height: POTION.cork * s, diameter: POTION.neck * 0.9 * s, tessellation: 6 }, scene);
+      cork.position.y = (POTION.neckLong * 0.5 + POTION.cork * 0.4) * s;
+      cork.material = mat(scene, new Color3(0.55, 0.36, 0.2));
+      cork.parent = neck;
+      // the ball sits in the mitt, the neck out past the fingers
+      ball.position.y = POTION.seat * s;
+      return ball;
     }
     case "lightning_bolt": {
       // A held bolt is the thrown one in the hand (trailer_2_sheet_03 r3c2): flat white jagged slabs, each a long four-sided shard pressed flat, laid end to end
