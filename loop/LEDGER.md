@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-335 | blow held down, own clock (8899946) | renaissance.halberd.c | approved
-335 | plate rider, close helm (909f200 +1) | renaissance.jouster.a | approved
-335 | self-lit cravat (15c41f6 +1) | renaissance.painter.a | approved
-335 | hair and curled moustache (370f635) | renaissance.fencer.a | approved
-335 | vest and blouse (f5030a9) | renaissance.musketeer.a | approved
 336 | chanfron (493017a) | renaissance.jouster.a | approved
 336 | moustache and goatee (3ce4ab9) | renaissance.musketeer.a | approved
 336 | cuffed knee boots (0267ef9) | renaissance.fencer.a | approved
@@ -55,6 +50,11 @@ for 25 iterations.
 344 | level stick carry across the front (cbcb6df) | farmer.hay_baler.b | approved
 344 | jerkin, undershirt V, laces, buttons, hem (2304369) | farmer.potion_seller.a | approved
 344 | T-pose, perched elbow crows (c3ffda9) | farmer.scarecrow.a | approved
+345 | dark team hosen, brown cuffed boots (edeb651) | farmer.potion_seller.a | approved
+345 | average man, bale fitted to his frame (492545d) | farmer.hay_baler.a | approved
+345 | low level sweep + fling (8bd49db +c11f873) | farmer.harvester.c | rejected
+345 | T held through the throw, A-pose reload (29f6cf4) | farmer.scarecrow.c | approved
+345 | Halfling Grab cling (b0d26ea) | farmer.halfling.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -67,7 +67,7 @@ rosterManifest.ts:farmer cost/hp/dmg/cd (halfling, farmer, hay_baler, potion_sel
 rosterManifest.ts:farmer cost/hp/dmg/cd (harvester, wheelbarrow, scarecrow) | 500/.98/.5/-, 1000/1.06/-/-, 1200/.11/2.72/5 | 339 | stats | 260, 520, 1000 (cd .88)
 propBuilder.ts:pitchfork FORK (long, grip, thick, bar, tine, tineThick, curl, links, glow) | .85, .3, .03, .2, .22, .045, 1.1, 4, .18 | 339 | approved | replaced .7s shaft, straight tines
 propBuilder.ts:potion POTION (ball, squash, neck, neckLong, cork, seat, glow), GLASS | .065,.92,.026,.026,.016,.035,.22; (.55,.74,.82) | 339 | approved | ball .15 (339 first)
-unitFactory.ts:HAY_BALE (drop, top, bottom, deep, blades, blade, hems, hem, flare); HAY_TAN, GLOW | .55,1.6,1.75,1.7,10,.62,12,.5,.5; (.7,.46,.22),.2 | 340 | approved | top/bottom 1.25/1.4; tan (.84,.6,.32) glow .3
+unitFactory.ts:HAY_BALE (knee, top, bottom, deep of shoulder span; blades, blade, hems, hem, flare); scale/bulk | .12,1.95,2.15,1.45,10,.62,12,.5,.5; 1/1 | 345 | approved | of chest: drop .55, 1.6,1.75,1.7; scale 1.25 bulk 1.6
 propBuilder.ts:CROW_WINGS (span, raise, sweep, feathers, wrist, glow) | 2.7, .55, .22, 9, .32, .06 | 339 | approved | -
 propBuilder.ts:stick STICK (long, grip, thick, tip, kinks, bend, glow), WOOD | .75, .12, .085, .8, 5, .035, .18; (.68,.4,.26) | 341 | approved | thick .045
 propBuilder.ts:pointed_cowl LIRIPIPE (snug, root, end, path 7 pts, yoke, yokeDeep, dags, dag, dagWide, flare) | 1.18,.62,.14,-,1.5,.22,9,.32,.36,.25 | 340 | approved | replaced COWL_* cone
@@ -91,4 +91,7 @@ proceduralAnimation.ts:STICK_WHACK (cock,out,fold,twist,cockArc,hit,reach,pitch,
 simulationSystem.ts:HALFLING_JUMP (from, reach, cooldown, rise, short) | .6, 4, 8, 6.5, .3 | 344 | approved | -
 proceduralAnimation.ts:HAY_CARRY (raise, out, elbow, tip) | -.6, .1, -.85, (-.95,.02,.32) | 344 | approved | replaced fork low carry (pick .9) for hayStick
 unitFactory.ts:POTION_JERKIN (shell, dark, vee, veeDeep, laces, button, hem, light, glow), UNDERSHIRT, LACE, COPPER | 1.12,.42,.4,.62,3,.13,.14,.62,.16; (.66,.3,.24); (.88,.58,.34); (.86,.5,.26) | 344 | approved | -
-proceduralAnimation.ts:TPOSE (lift, ahead, rate, perch) | .04, .12, 8, .035 | 344 | approved | -
+proceduralAnimation.ts:TPOSE (lift, ahead, rate, perch, a, after) | .04, .12, 8, .07, .5, .6 | 345 | approved | perch .035
+unitFactory.ts:POTION_BOOT (shaft, long, cuff, cuffTall, band, dark, glow), BROWN, BAND | 1.24,.46,1.62,.16,.035,.42,.18; (.52,.3,.2); (.26,.14,.1) | 345 | approved | -
+simulationSystem.ts:HALFLING_CLING (round, off, up, afterDeath) | .55, .85, .32, 2.5 | 345 | approved | -
+proceduralAnimation.ts:SCYTHE_SWEEP / simulationSystem SCYTHE_FLING | reverted | 345 | rejected | roll pi/2, twist .75, cock 2, end -1.1, low .12, through .55, hitAt .55; fling .6/3.2/5
