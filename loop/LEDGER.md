@@ -47,53 +47,17 @@ for 25 iterations.
 333 | arrow ball (4e0e02c) | renaissance.balloon_archer.c | approved
 333 | jabot (b8f9dd8 +1) | renaissance.painter.a | approved
 333 | halberd dress (c23f17c) | renaissance.halberd.a | approved
+334 | chop onto the man (b6a163f) | renaissance.halberd.c | approved
+334 | heater held upright (69073a5) | renaissance.jouster.b | approved
+334 | domed drape, crenellated hem (73fd09c +1) | renaissance.jouster.a | approved
+334 | taller roof by tier pitch (519d913 +1) | renaissance.da_vinci_tank.a | rejected
+334 | doublet and paned breeches (c58861e) | renaissance.fencer.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
 
 ## Rows
-propBuilder.ts:club CLUB_LONG (of height), CLUB_GRIP, CLUB_HEAD | 0.6, 0.2, 0.22 | 316 | approved | -
-propBuilder.ts:stone_axe AXE_LONG (of height), AXE_GRIP | 0.4, 0.25 | 316 | approved | -
-propBuilder.ts:stone_axe AXE_HEAD (stone length, of AXE_LONG) | 0.78 | 318 | approved | -
-propBuilder.ts:stone_axe AXE_HEAD_SQUASH (height, thickness of the length) | 0.62, 0.5 | 318 | approved | -
-propBuilder.ts:stone_axe AXE_LASH (strip wide, thick, proud, tilt, at, bed) | 0.055, 0.06, 0.012, 0.5, 0.1, 0.35 | 319 | approved | -
-propBuilder.ts:slab SLAB_MOSS (top, bottom chunk size, proud of the face) | 0.13, 0.08, 0.03 | 318 | approved | -
-proceduralAnimation.ts:throw JAVELIN_COCK (raise, out, elbow) | -2.8, 0.12, -0.1 | 319 | approved | -
-proceduralAnimation.ts:throw JAVELIN_UNTURN (share of the whip where the stood shaft starts turning back) | 0.2 | 319 | approved | -
-propBuilder.ts:slab SLAB_WIDE, SLAB_TALL, SLAB_EYE, SLAB_EYE_UP | 0.34, 0.71, 0.12, 0.22 | 316 | approved | wide 0.25
-propBuilder.ts:bone_staff BONE_STAFF_LONG, _GRIP, _SKULL | 0.62, 0.4, 0.1 | 316 | approved | -
-projectileSystem.ts:LAUNCH.spear (speed, gravity, throw force) | 20, 9.8, 220 | 317 | approved | -
-proceduralAnimation.ts:club OFFHAND_GRIP_UP (of the club's length) | 0.11 | 317 | approved | -
-proceduralAnimation.ts:bone_staff BONE_HOLD (raise, out, elbow) | -0.2, 0.18, -0.5 | 317 | approved | -
-visualEffects.ts:boneSpikes BONE_SPIKE_NEAR..FAR (m) | 0.45, 1.35 | 317 | approved | -
-visualEffects.ts:boneSpikes BONE_SPIKE_GIRTH (base, grow, m) | 0.32, 0.22 | 318 | approved | -
-projectileSystem.ts:LAUNCH.stone speed, gravity (held only) | 18, 9.8 | 318 | approved | -
-simulationSystem.ts:LEAF_ROW (lift, at, arc per metre) | 0.6, 0.7, 0.03 | 318 | approved | -
-projectileSystem.ts:SPIKE_LOFT (up, along m/s) | 10, 2.5 | 319 | approved | -
-propBuilder.ts:stone BOULDER_WIDE, BOULDER_JITTER, BOULDER_CHUNKS (3), BOULDER_COLOR | 0.3, 0.16, r 0.42/0.34/0.3, (0.2, 0.18, 0.16) e0.1 | 321 | approved | -
-proceduralAnimation.ts:boulder BOULDER_CARRY (raise, inward, elbow), BOULDER_HOLD | -0.75, 0.2, -0.6, 1.0 | 319 | approved | -
-propBuilder.ts:bone_mask SKULL_FACETED (heads, tall, under, jitter, socket, snout) | 1.45, 1.6, 0.7, 0.09, 0.3, 0.55 | 320 | approved | -
-propBuilder.ts:javelin JAVELIN_HEAD_LONG, JAVELIN_HEAD_WIDE | 0.15, 0.095 | 320 | approved | -
-propBuilder.ts:javelin JAVELIN_LEAF (thick, waist, root, jitter, wraps), JAVELIN_STONE | 0.3, 0.35, 0.4, 0.14, 3, (0.44, 0.43, 0.41) e0.15 | 320 | approved | -
-unitFactory.ts:tunic TUNIC (top, skirt, flare, tatters, strap), TUNIC_COLOR | 0.88, 0.6, 1.25, 5, 0.22, (0.5, 0.29, 0.18) e0.15 | 320 | approved | -
-unitFactory.ts:cape HIDE_CAPE (wide, thick, tilt, jitter, points, drop), COLOR | 1.25, 0.35, 0.12, 0.12, 4, 0.55, (0.38, 0.23, 0.14) e0.16 | 324 | approved | -
-tribalDress.ts:necklace CRITTER_NECKLACE (skull, spread, drop, lift, strap) | 0.5, 0.55, 0.2, 0.05, 0.03 | 321 | approved | -
-tribalDress.ts:hair LONG_HAIR (strands, face, fringe, long, thick), COLOR | 17, 0.8, 4, 1.05, 0.32, (0.3, 0.18, 0.1) e0.18 | 321 | approved | -
-tribalDress.ts:tusks TUSK_BAND (band, strap, rise, bow, thick) | 0.45, 0.1, 0.65, 0.22, 0.4 | 322 | approved | -
-tribalDress.ts:loincloth LOINCLOTH (ropes, flap, skull, bone, boneAt), FLAP_COLOR | 2, 0.85, 0.42, 0.62, 0.95, (0.5, 0.3, 0.18) e0.15 | 321 | approved | -
-tribalDress.ts:necklace BONE_NECKLACE (drop, bone, middle, thick, gap, strap, off) | 0.16, 0.55, 1.25, 0.13, 2.4, 0.03, 0.14 | 322 | approved | -
-tribalDress.ts:bracelets BRACELET (at, apart, bones, long, thick, proud) | 0.76, 0.16, 6, 0.3, 0.28, 0.18 | 325 | approved | -
-tribalDress.ts:pauldrons PAULDRON (wide, long, top, out) | 1.9, 0.95, 0.12, 0.55 | 322 | approved | -
-tribalDress.ts:beard BEARD (down, wide, deep, locks, lockLong, jitter), CLUBBER_HAIR_COLOR | 0.32, 1.0, 0.5, 5, 0.3, 0.15, (0.4, 0.25, 0.15) e0.18 | 322 | approved | -
-tribalDress.ts:necklace FANG_NECKLACE (drop, long, thick, curl, strap, off) | 0.34, 0.8, 0.2, 0.3, 0.03, 0.14 | 323 | approved | -
-tribalDress.ts:beard CHESTNUT (chieftain's beard colour) | (0.52, 0.27, 0.14) e0.18 | 323 | approved | -
-vehicleBuilder.ts:mammoth MAMMOTH_HIDE, MAMMOTH_FUR (jitter, glow, shag) | (0.34, 0.17, 0.1); 0.06, 0.1, 0.25 | 323 | approved | -
-simulationSystem.ts:MAMMOTH_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | 2, 14, 2.2, 2.5, 3, 0.5, 30, 5, 6, 6 | 323 | approved | -
-unitVisuals.ts:tribal.chieftain proportions.scale | 1.15 | 324 | approved | 1.35
-tribalDress.ts:necklace TUSK_NECKLACE (drop, long, side, thick, gap, curl, strap, off) | 0.3, 0.5, 0.8, 0.17, 0.3, 0.3, 0.03, 0.16 | 324 | approved | -
-vehicleBuilder.ts:mammoth MAMMOTH_MANE (jitter, locks, long, glow), COLOR | 0.2, 7, 0.42, 0.12, (0.2, 0.1, 0.06) | 324 | approved | -
-vehicleBuilder.ts:mammoth ANKLE_BAND (stripes, tall, wide, dots, dotAt, dot, dotOut, dotFlat) | -.17/-.25, .035, .61, 8, -.33, .11, .29, .2 | 326 | approved | -
-vehicleBuilder.ts:mammoth FACE_PAINT (path yaw/pitch, steps, wide, taper, thick, trunkDots, dot) | .95/.56 .57/.37 .5/-.05 .42/-.3, 3, 0.17, 0.3, 0.03, 1/3/5, 0.12 | 326 | approved | -
+tribal.* (42 knob rows, 316-326; batch done) | compacted 334 | 326 | approved | values: git show b4b44b1:loop/LEDGER.md
 propBuilder.ts:brim_hat BRIM_HAT (brim, crown, drop, tall), FELT | 1.75, 1.12, 0.16, 0.42, (0.11, 0.1, 0.12) | 327 | approved | -
 propBuilder.ts:paintbrush BRUSH (long, grip, butt, neck, ferrule, collar, tuft, swell) | 0.34, 0.16, 0.08, 0.12, 0.6, 0.1, 0.22, 0.1 | 328 | approved | -
 propBuilder.ts:cavalier_hat CAVALIER (brim, flap, lift, crown, tall, shade, feather, wide, pale, rake) | 2.25, .3, 1.25, 1.1, .55, .75, 2.3, .55, .4, 1.15 | 327 | approved | -
@@ -129,3 +93,8 @@ rosterManifest.ts:renaissance cost/hp/dmg/cd (halberd, jouster, da_vinci_tank) |
 projectileSystem.ts:BALLOON_BALL (size, at, long) | .2, .27, 1.15 | 333 | approved | -
 unitFactory.ts:PAINTER_JABOT (layers, wide, tall, taper, proud, tip, twist); PAINTER_RUFF_TIERS | 3, .85, .22, .15, .8, .35, .12; 1 | 333 | approved | first .62/.16/.42; tiers 2
 unitFactory.ts:HALBERD_DRESS (tabard, wrap, skirt, belt, bands, roll, cuff), HALBERD_CREAM | .55, 1.12, .45, .1, 3, 1.22, 1.5; (.86,.72,.5) | 333 | approved | -
+proceduralAnimation.ts:CHOP_ONTO (below, min, max, slide) | .12, .9, 2.1, .6 | 334 | approved | -
+proceduralAnimation.ts:HEATER_HOLD (fwd, side, drop, turn); propBuilder HEATER_GRIP_SIZE | .2, .08, .2, .35; 1.3 | 334 | approved | grip size 1.9
+propBuilder.ts:HORSE_DRAPE (rings, round, crest, waist, band, merlons, tooth, glow), CREAM | 6, .6, .72, .15, .08, 16, .16, .1; (.86,.66,.4) | 334 | approved | flat deck, bevel .07, 18 dags
+unitFactory.ts:FENCER_DRESS (doublet, tabs, tab, wing, band, panes, puff, long), CREAM | 1.08, 8, .2, 1.45, .12, 8, .82, .95; (.84,.66,.42) | 334 | approved | -
+unitFactory.ts:PAINTER_RUFF_COLOR | (1.0, .86, .55) | 334 | rejected | 334 [P] (.85,.68,.42) rejected: no visible change
