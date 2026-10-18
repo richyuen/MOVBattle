@@ -3781,6 +3781,13 @@ const gameApi = {
   frameCamera: (target: { x: number; y: number; z: number }, radius: number, alpha: number, beta: number) => {
     camCtrl.applyGalleryPreset("state_read_duel", { alpha, beta, radius, target });
   },
+  // Capture harness: the living units on the field (the lineup shot turns them to face its camera), and a gallery scenario's camera as applied.
+  listLiveUnits: () => placedUnits.filter((unit) => !unit.isDead),
+  getGalleryCamera: (name: string) => {
+    const scenario = getScenario(name);
+    if (!scenario?.gallery) return null;
+    return camCtrl.applyGalleryPreset(scenario.gallery.presetId, scenario.gallery.cameraOverride);
+  },
   // Resolves with what still was not ready, so a capture can say which meshes a shot may miss.
   renderWhenReady: async () => {
     let renders = 0;

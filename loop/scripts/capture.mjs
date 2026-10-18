@@ -403,10 +403,13 @@ async function main() {
         };
         // Frame across the line between the two men, level. `on`: 0 the midpoint, 1 the unit alone, 2 the struck man (the ally for a support unit),
         // 3 the unit and the first metres of its missile's path (a ranged unit's target is far off; the man and what leaves his hand are the evidence).
+        // 1 (the idle shot, the look and props evidence) is the wiki render's angle instead: a front three-quarter from the unit's own yaw
+        // (alpha yaw - pi/2 is dead ahead), swung .6 rad toward his weapon side, a little above eye level; the motion shots stay side-on so arcs read.
         window.__unitFrame = (on, s) => {
           const a = window.__ua, t = on === 2 && window.__ually ? window.__ually : window.__ut;
           const pa = a.body.root.position, pt = t.body.root.position;
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
+          if (on === 1) { window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 3.8 * s, a.body.root.rotation.y - Math.PI / 2 - 0.6, Math.PI / 2.3); return; }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
           if (on === 4) { window.game.frameCamera({ x: pt.x, y: pt.y + 0.55 * s + 0.85, z: pt.z }, 5.2 * s, Math.atan2(fx, -fz), Math.PI / 2.1); return; }
           const c = on === 1 ? { x: pa.x, z: pa.z } : on === 2 ? { x: pt.x, z: pt.z } : on === 3 ? { x: pa.x + fx * 1.4 * s, z: pa.z + fz * 1.4 * s } : { x: (pa.x + pt.x) / 2, z: (pa.z + pt.z) / 2 };
@@ -513,9 +516,15 @@ async function main() {
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
           lineupsDone.add(faction);
+          // The gallery scene places the rank (spacing, room for a machine, camera distance); the shot then turns every man to face +x and
+          // frames him as the idle shot does: a front three-quarter from his weapon side, a little above eye level (the TABS faction jpgs' angle)
           await page.evaluate((n) => {
             window.game.resetBattle();
             window.game.runScenarioGalleryValidation(n);
+            // the rank runs along z and the camera sits nearly on +x (alpha -.25), so the men turn .35 rad toward -z to put it .6 rad off their front
+            for (const u of window.game.listLiveUnits()) u.holdHeading(Math.PI / 2 - 0.35);
+            const cam = window.game.getGalleryCamera(n);
+            window.game.frameCamera(cam.target, cam.radius, -0.25, Math.PI / 2.25);
           }, `gallery_faction_${faction}`);
           await shot(page, `lineup_${faction}`);
         }
