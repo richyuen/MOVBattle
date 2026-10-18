@@ -414,10 +414,18 @@ const SHAGGY_COLOR = new Color3(0.38, 0.21, 0.12);
  * its rim at BOWL.fringe of the half-height (the fringe line), and a skirt wall round the sides and back from that rim down to BOWL.hang below the head's
  * middle, flaring BOWL.flare at its foot; the skirt leaves the face open across BOWL.face of the round. Auburn BOWL_COLOR, self-lit so it reads brown.
  */
-const BOWL = { dome: 1.3, crown: 0.78, fringe: 0.5, hang: 0.4, flare: 1.08, face: 0.36 };
+const BOWL_SHARES = { dome: 1.3, crown: 0.78, fringe: 0.5, hang: 0.4, flare: 1.08, face: 0.36 };
 const BOWL_COLOR = new Color3(0.45, 0.22, 0.15);
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy" | "bowl"> = {
-  "farmer.halfling": "shaggy", "farmer.hay_baler": "bowl",
+/*
+ * [S] potion seller's hair cap (343; farmer.potion_seller.red.png, card Appearance "an unusually round head with umber brown hair"): a close round cap of
+ * umber hair over the crown, a little fuller than the head, its edge level across the brow well above the eyes and down to the tops of the ears at the
+ * sides and back; no hood, no collar. The bowl cut's dome and skirt with its own shares: HAIR_CAP.dome round, .crown tall, rim at .fringe of the
+ * half-height, skirt down to .hang below the middle, face open across .face of the round. Umber HAIR_CAP_COLOR, self-lit so it reads brown, not black.
+ */
+const HAIR_CAP = { dome: 1.14, crown: 0.62, fringe: 0.62, hang: -0.12, flare: 1.02, face: 0.42 };
+const HAIR_CAP_COLOR = new Color3(0.36, 0.25, 0.17);
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy" | "bowl" | "cap"> = {
+  "farmer.halfling": "shaggy", "farmer.hay_baler": "bowl", "farmer.potion_seller": "cap",
   "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
   "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache", "renaissance.musketeer": "moustache_goatee",
 };
@@ -496,9 +504,9 @@ function shaggyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   return added;
 }
 
-/** The hay baler's bowl cut (spec at BOWL), parented to the head. */
-function bowlCut(scene: Scene, body: ArticulatedBody): Mesh[] {
-  const hair = getMaterialFactory().get("cloth", BOWL_COLOR, { emissiveIntensity: 0.2 });
+/** The hay baler's bowl cut (spec at BOWL), or with HAIR_CAP's shares the potion seller's close cap, parented to the head. */
+function bowlCut(scene: Scene, body: ArticulatedBody, BOWL = BOWL_SHARES, color = BOWL_COLOR): Mesh[] {
+  const hair = getMaterialFactory().get("cloth", color, { emissiveIntensity: 0.2 });
   hair.backFaceCulling = false;
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const rimY = e.y * BOWL.fringe;
@@ -533,6 +541,7 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   const style = HAIR_STYLES[unitId];
   if (style === "shaggy") return shaggyHair(scene, body);
   if (style === "bowl") return bowlCut(scene, body);
+  if (style === "cap") return bowlCut(scene, body, HAIR_CAP, HAIR_CAP_COLOR);
   if (style === "moustache_goatee") return [...curledMoustache(scene, body), goatee(scene, body)];
   if (style !== "long" && style !== "long_beard" && style !== "long_dark" && style !== "long_dark_moustache") return null;
   const dark = style === "long_dark" || style === "long_dark_moustache";

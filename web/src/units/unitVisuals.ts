@@ -258,9 +258,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "farmer.hay_baler": vis(
     { scale: 1.25, bulk: 1.6 }, "stick", "none", "none", "none", "#DAA520",
   ),
-  // [S] a potion in each hand (339; farmer.potion_seller.red.png, card: Potion Throw main and off hand)
+  // [S] a potion in each hand (339; farmer.potion_seller.red.png, card: Potion Throw main and off hand). [S] no hood: his own umber hair cap (343; tribalDress HAIR_CAP)
   "farmer.potion_seller": vis(
-    { scale: 0.95, headSize: 1.1 }, "potion", "hood", "none", "none", "#9932CC", "potion",
+    { scale: 0.95, headSize: 1.1 }, "potion", "none", "none", "none", "#9932CC", "potion",
   ),
   "farmer.harvester": vis(
     { scale: 1.2, bulk: 1.2, armLength: 1.1 }, "scythe", "sun_hat", "none", "none", "#556B2F",

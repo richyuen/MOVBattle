@@ -549,6 +549,10 @@ export class UnitFactory {
       // [S] white socks and brown slip-on shoes (341; FARMER_SOCK)
       propMeshes.push(...dressFarmerLegs(this._scene, body));
     }
+    if (definition.id === "farmer.potion_seller" && !shouldUseVehicleBody) {
+      // [S] a close umber hair cap, no hood (343; tribalDress HAIR_CAP)
+      propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
+    }
     if (definition.id === "farmer.harvester" && !shouldUseVehicleBody) {
       // [S] two peg handles on the snath, the upper one where his off fist takes it (342; SNATH_PEG, proceduralAnimation SCYTHE_LOW)
       propMeshes.push(...addSnathPegs(this._scene, body));
