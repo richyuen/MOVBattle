@@ -251,6 +251,7 @@ const lungeSinkShare = (): number => 1 - (0.5 * Math.cos(LUNGE.front) + 0.5 * Ma
  * walk the farmer steps in on does not cut it short.
  */
 const FORK_STAB = { land: 0.7, commit: 0.62, back: 0.3, cock: 0.18, dip: -0.08, turn: 0.35, drawRaise: -0.25, drawElbow: -1.45, reach: -1.3, offReach: -1.2, pitch: 0.28, step: 0.3, front: -0.7, knee: 0.55, hold: 0.25 };
+const FORK_HOLD = { out: 0.16, drop: -0.1, ahead: 0.22, across: 0.72, dip: -0.08, forward: 0.68 };
 const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -1.25, knee: 1.35, back: 0.85, step: 0.45, retreat: 0.2, hold: 0.16 };
 /*
  * [S] lunge legs (333; renaissance.fencer.png, read off the red fencer: the front thigh near level, ~70 deg forward of vertical, the shin dropped back
@@ -3485,9 +3486,19 @@ export class ProceduralAnimator {
     return this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name === "forkBar"));
   }
 
+  /*
+   * [R] The farmer's two-fisted low carry (349; farmer.farmer.red.png, .blue.png, farmer.farmer.png). Read off the renders: the weapon fist hangs at his
+   * own hip, a little ahead of the thigh and just under the hip joint; the shaft runs from it low and near level across the front of his thighs to his off
+   * side and forward, the head out past the off hip, tines forward; the off arm reaches across the belly and closes on the shaft a third of the way up.
+   * Not set by joint angles (342/346 left the off fist floating): the shaft is a line laid in his own frame, and both arms are solved onto it every frame.
+   *   weapon fist FORK_HOLD.out of the hip height out to his weapon side, .drop below the hip joint, .ahead in front of it;
+   *   shaft along (-.across to the off side, .dip, .forward), the fork turned in the fist onto that line (_turnFork, as the stab turns it onto its own);
+   *   off fist onto the shaft by _twoHandPole (POLE_GRIP.forkBar span). The stab blends the line over to its own by its weight, so the carry holds
+   *   in idle, walking, the back-step and the draw, and comes back after the drive.
+   */
   // The pitchfork in the weapon fist (the mesh carrying forkBar) and its strapped turn and seat there, looked up once
   private _forkProp: { node: TransformNode; rest: Quaternion; quat: boolean; pos: Vector3 } | null | undefined = undefined;
-  /** The fork turned in the fist onto the stab's line (FORK_STAB, _sweepTip) by the stab's weight; let go, back to its strap. The carry does not turn it. */
+  /** The fork turned in the fist onto the carry's line (FORK_HOLD, the weapon arm solved onto its seat) or the stab's (FORK_STAB, _sweepTip) by the stab's weight; limp, back to its strap. */
   private _turnFork(): void {
     if (this._forkProp === undefined) {
       const node = this._body.rightHand.getChildren().find((n) => n.getChildren().some((c) => c.name === "forkBar")) as TransformNode | undefined;
@@ -3498,19 +3509,40 @@ export class ProceduralAnimator {
     }
     const f = this._forkProp;
     if (!f) return;
+    const b = this._body;
     const stabbing = this._stabClock >= 0 && this._sweepTip !== null;
-    const w = stabbing ? Math.min(1, this._clubHold) * (1 - Math.min(1, this._limp)) : 0;
+    const live = 1 - Math.min(1, this._limp);
+    const st = this._state;
+    const carrying = st === AnimState.Idle || st === AnimState.Walking || st === AnimState.Attacking;
+    const stabW = stabbing ? Math.min(1, this._clubHold) : 0;
+    // the carry's weight (spec at FORK_HOLD): whatever of him the stab has not taken
+    const carryW = carrying ? (1 - stabW) * live : 0;
+    const w = Math.min(1, stabW * live + carryW);
     if (w <= 0.001) {
       if (f.node.rotationQuaternion && !f.quat) f.node.rotationQuaternion = null;
       else if (f.quat) f.node.rotationQuaternion = f.rest.clone();
       f.node.position.copyFrom(f.pos);
       return;
     }
-    const hand = this._body.rightHand;
+    const hand = b.rightHand;
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
-    const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, this._sweepTip!, new Quaternion()));
+    const yaw = Quaternion.RotationYawPitchRoll(b.root.rotation.y, 0, 0);
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
+    const C = FORK_HOLD;
+    if (carryW > 0.001) {
+      // the weapon fist onto its seat before the hip, in his own frame
+      b.hip.computeWorldMatrix(true);
+      const hipAt = b.hip.getAbsolutePosition();
+      const tall = Math.max(0.2, hipAt.y - b.root.getAbsolutePosition().y);
+      const seat = hipAt.add(new Vector3(side * C.out, C.drop, C.ahead).scale(tall).rotateByQuaternionToRef(yaw, new Vector3()));
+      this._armTo(b.rightShoulder, b.rightElbow, hand, seat, carryW, 2);
+      for (const n of chain) n.computeWorldMatrix(true);
+    }
+    const lay = Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, new Vector3(-side * C.across, C.dip, C.forward).normalize(), new Quaternion());
+    const line = stabbing ? Quaternion.Slerp(lay, Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, this._sweepTip!, new Quaternion()), stabW) : lay;
+    const attitude = yaw.multiply(line);
     const turn = Quaternion.Slerp(f.rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(attitude), w);
     f.node.rotationQuaternion = turn;
     const held = new Vector3(0, f.pos.length(), 0).rotateByQuaternionToRef(turn, new Vector3());
