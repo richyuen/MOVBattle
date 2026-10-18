@@ -2625,6 +2625,10 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       lever.rotation.x = -0.6;
       lever.material = dark;
       lever.parent = holder;
+      // The mouth of the barrel, where the shot's smoke leaves (RuntimeUnit.getSmokeOrigin)
+      const muzzle = new TransformNode("musketMuzzle", scene);
+      muzzle.position.y = front + 0.02 * L - lift;
+      muzzle.parent = holder;
       // Tipped back a little about the fist, as the old gun was
       barrel.setPivotPoint(new Vector3(0, -lift, 0));
       barrel.rotation.x = -0.2;

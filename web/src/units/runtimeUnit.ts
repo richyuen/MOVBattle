@@ -1828,12 +1828,27 @@ export class RuntimeUnit {
         socket: "smokeSocket",
       };
     }
+    // A long gun in the fist smokes at its own mouth, where the aim has put it, not at a point off the chest (renaissance.musketeer.jpg)
+    const muzzle = this._gunMuzzle();
+    if (muzzle) {
+      muzzle.computeWorldMatrix(true);
+      return { position: muzzle.getAbsolutePosition().clone(), source: "vehicle-socket", socket: "smokeSocket" };
+    }
     const emitter = this.getAttackEmitter();
     return {
       position: emitter._resolveCustomOrigin(emitter._smokeOriginOffset ?? emitter._attackOriginOffset),
       source: emitter === this ? "parent" : "linked-role",
       emitter,
     };
+  }
+
+  private _gunMuzzleNode: TransformNode | null | undefined = undefined;
+  private _gunMuzzle(): TransformNode | null {
+    if (this._gunMuzzleNode === undefined) {
+      const found = this.body.vehicleSockets ? undefined : this.body.rightHand?.getDescendants(false, (n) => n.name === "musketMuzzle")[0];
+      this._gunMuzzleNode = found instanceof TransformNode ? found : null;
+    }
+    return this._gunMuzzleNode && !this._gunMuzzleNode.isDisposed() ? this._gunMuzzleNode : null;
   }
 
   getImpactOrigin(advanceSequence = true): OriginInfo {

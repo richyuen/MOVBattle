@@ -149,6 +149,13 @@ const POLE_GRIP = {
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
 } as const;
+/*
+ * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). While the musket fires (firearm_recoil)
+ * the weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
+ * butt behind the fist sits in the shoulder; the musket is stood level along his front over its rest (raised over the first .raise of the attack, lowered over
+ * the last .lower), the off hand following it on the fore-stock (_twoHandPole), and the muzzle kicks up .kick (rad) at the shot.
+ */
+const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, raise: 0.3, lower: 0.15, kick: 0.25 };
 // The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
 // swing and elbow at each, the trunk's pitch and the off foot's step at the land, and the share of the attack it is held on the man
 const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown: -1.25, elbowDown: -0.15, pitch: 0.35, step: -0.4, hold: 0.1 };
@@ -1547,6 +1554,7 @@ export class ProceduralAnimator {
     this._carrySpear();
     this._carryProp(dt);
     this._offhandToGrip();
+    this._aimMusket();
     this._twoHandPole();
     this._carryBoulder();
     this._holdPalette();
@@ -2290,6 +2298,54 @@ export class ProceduralAnimator {
     this._offArmTo(grip, w);
   }
 
+  // The matchlock in the weapon fist (the pole node carrying the musketFore mark) and its rest there, looked up once
+  private _musket: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
+  /** The shouldered aim (see MUSKET_AIM): the weapon fist ahead of the shoulder, the musket level along his front, held through the shot. */
+  private _aimMusket(): void {
+    if (this._musket === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "musketFore"));
+      this._musket = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+    }
+    const gun = this._musket;
+    if (!gun) return;
+    const firing = this._state === AnimState.Attacking && this._attackMotion === "firearm_recoil" && this.walkStyle !== "quadruped";
+    const progress = firing ? Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1) : 1;
+    const smooth = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
+    const w = firing ? smooth(progress / MUSKET_AIM.raise) * (1 - smooth((progress - (1 - MUSKET_AIM.lower)) / MUSKET_AIM.lower)) * (1 - Math.min(1, this._limp)) : 0;
+    if (w <= 0.001) {
+      gun.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    // The fist where the stock's wrist sits with the butt in the shoulder: ahead of the shoulder, a little in toward the cheek and down
+    const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(MUSKET_AIM.ahead * height))
+      .addInPlace(outward.scale(-MUSKET_AIM.inward * height)).addInPlace(new Vector3(0, -MUSKET_AIM.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    // The barrel (+y) level along his front, the muzzle kicked up by the shot after the release; the wood (+z) under it
+    const release = this._resolveReleasePoint(0.5);
+    const kick = progress > release ? MUSKET_AIM.kick * Math.exp(-(progress - release) * 12) : 0;
+    const y = fwd.scale(Math.cos(kick)).addInPlace(new Vector3(0, Math.sin(kick), 0)).normalize();
+    const z = Vector3.Cross(y, outward).normalize();
+    const zDown = z.y > 0 ? z.scale(-1) : z;
+    const x = Vector3.Cross(y, zDown).normalize();
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, zDown, world);
+    const handRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    // Committed on his aim: a blow on him snaps only his head back
+    this._aimWeight = Math.max(this._aimWeight, w);
+  }
+
   // A pole or a long gun in the weapon fist (see POLE_GRIP), its span along the shaft from the fist, looked up once
   private _pole: { node: Mesh; span: readonly [number, number] } | null | undefined = undefined;
   /** The off hand onto the pole's shaft where it passes nearest the off shoulder, kept within POLE_GRIP's span (both fists on the shaft). */
@@ -2322,13 +2378,18 @@ export class ProceduralAnimator {
   /** The off arm solved onto a world point: shoulder swing and elbow fold, the elbow out to his free side and down, eased in by `w`. */
   private _offArmTo(grip: Vector3, w: number, settle = 0): void {
     const b = this._body;
+    this._armTo(b.leftShoulder, b.leftElbow, b.leftHand, grip, w, settle);
+  }
+
+  /** Either arm (shoulder, elbow, hand) solved onto a world point, as _offArmTo. */
+  private _armTo(shoulderJoint: TransformNode, elbowJoint: TransformNode, handJoint: TransformNode, grip: Vector3, w: number, settle = 0): void {
     // Into the off shoulder's frame: its parent's (the torso's) space, where the joint rotations act
-    const frame = b.leftShoulder.parent as TransformNode;
+    const frame = shoulderJoint.parent as TransformNode;
     frame.computeWorldMatrix(true);
     const target = Vector3.TransformCoordinates(grip, frame.getWorldMatrix().clone().invert());
-    const shoulder = b.leftShoulder.position;
-    const upper = b.leftElbow.position.length();
-    const fore = b.leftHand.position.length();
+    const shoulder = shoulderJoint.position;
+    const upper = elbowJoint.position.length();
+    const fore = handJoint.position.length();
     const toTarget = target.subtract(shoulder);
     const reach = Math.max(Math.abs(upper - fore) + 0.01, Math.min(upper + fore - 0.01, toTarget.length()));
     const line = toTarget.normalize();
@@ -2347,22 +2408,22 @@ export class ProceduralAnimator {
     const across = Vector3.Cross(bend, arm);
     const m = Matrix.FromValues(across.x, across.y, across.z, 0, -arm.x, -arm.y, -arm.z, 0, bend.x, bend.y, bend.z, 0, 0, 0, 0, 1);
     const want = Quaternion.FromRotationMatrix(m);
-    const have = Quaternion.FromEulerAngles(b.leftShoulder.rotation.x, b.leftShoulder.rotation.y, b.leftShoulder.rotation.z);
-    Quaternion.Slerp(have, want, w).toEulerAnglesToRef(b.leftShoulder.rotation);
-    b.leftElbow.rotation.x += (-fold - b.leftElbow.rotation.x) * w;
-    b.leftElbow.rotation.y *= 1 - w;
-    b.leftElbow.rotation.z *= 1 - w;
+    const have = Quaternion.FromEulerAngles(shoulderJoint.rotation.x, shoulderJoint.rotation.y, shoulderJoint.rotation.z);
+    Quaternion.Slerp(have, want, w).toEulerAnglesToRef(shoulderJoint.rotation);
+    elbowJoint.rotation.x += (-fold - elbowJoint.rotation.x) * w;
+    elbowJoint.rotation.y *= 1 - w;
+    elbowJoint.rotation.z *= 1 - w;
     // Settled: the solved arm can leave the hand some way round off the point (~20 deg on a pole held across him), so the whole arm is swung about the
     // shoulder from where the hand landed onto the point, `settle` times; the fold already set the reach
     for (let i = 0; i < settle; i++) {
-      for (const n of [frame, b.leftShoulder, b.leftElbow, b.leftHand]) n.computeWorldMatrix(true);
-      const s = b.leftShoulder.getAbsolutePosition();
-      const landed = b.leftHand.getAbsolutePosition().subtract(s).normalize();
+      for (const n of [frame, shoulderJoint, elbowJoint, handJoint]) n.computeWorldMatrix(true);
+      const s = shoulderJoint.getAbsolutePosition();
+      const landed = handJoint.getAbsolutePosition().subtract(s).normalize();
       const aim = grip.subtract(s).normalize();
       const fix = Quaternion.Slerp(Quaternion.Identity(), Quaternion.FromUnitVectorsToRef(landed, aim, new Quaternion()), w);
       const parent = frame.absoluteRotationQuaternion;
-      const local = Quaternion.FromEulerAngles(b.leftShoulder.rotation.x, b.leftShoulder.rotation.y, b.leftShoulder.rotation.z);
-      Quaternion.Inverse(parent).multiply(fix).multiply(parent).multiply(local).toEulerAnglesToRef(b.leftShoulder.rotation);
+      const local = Quaternion.FromEulerAngles(shoulderJoint.rotation.x, shoulderJoint.rotation.y, shoulderJoint.rotation.z);
+      Quaternion.Inverse(parent).multiply(fix).multiply(parent).multiply(local).toEulerAnglesToRef(shoulderJoint.rotation);
     }
   }
 
