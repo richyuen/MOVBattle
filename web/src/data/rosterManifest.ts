@@ -228,7 +228,7 @@ const tribal = makeFaction(FactionId.Tribal, "tribal", [
   ["bone_mage", "Bone Mage", 300, "special_magic", { weaponHint: "bone_staff", projectileHint: "leaves", healthMultiplier: 0.31, damageMultiplier: 0.65, cooldownMultiplier: 2.5 }],
   ["chieftain", "Chieftain", 400, "boss_melee", { weaponHint: "club", healthMultiplier: 0.4, damageMultiplier: 0.48, cooldownMultiplier: 0.13 }],
   // tabs_screenshot_01: a mammoth's back stands about three and a half men above the grass; at the colossal class's own size it stood two and three quarters
-  ["mammoth", "Mammoth", 2200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6, giantScale: 1.25, healthMultiplier: 0.23 }],
+  ["mammoth", "Mammoth", 2200, "giant_melee", { size: "colossal", abilities: ["giant_slam", "charge_impact"], specialHint: "mammoth", visualPreset: "iconic_mammoth", behaviorPreset: "iconic_mammoth", controlStrength: 1.6, cooldownMultiplier: 1.6, giantScale: 1.25, healthMultiplier: 0.23 }],
 ]);
 
 const farmer = makeFaction(FactionId.Farmer, "farmer", [

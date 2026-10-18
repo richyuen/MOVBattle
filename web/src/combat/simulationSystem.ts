@@ -146,6 +146,15 @@ const REAR_RANK_LANE = 0.7;
 const BLOW_DWELL = 0.12;
 // one-blow-per-man: the longest beat a striker takes, once at his man, before his first blow (each man his own share of it, RuntimeUnit.vary)
 const STRIKE_LAG = 0.45;
+/*
+ * Mammoth Charge (tribal.mammoth card: "they will charge at enemy units and trample anyone who comes close"; tribal.mammoth.jpg): an enemy between
+ * MAMMOTH_CHARGE.from and .reach metres past its reach sets the mammoth running at it, .speed times its walk for up to .seconds, a dust cloud kicked up at
+ * its feet. It does not stop at reach to swing: it runs on through the man to .overrun metres past him, and every enemy its body meets on the way
+ * (within .contact of body contact, ahead of its middle) is trampled: .damage, and flung aside off its line and up (applyBlastLaunch .fling sideways
+ * and forward, .lift up), each man once per charge. Trampling the man it charged ends the run; then it fights at reach as before. .cooldown s between charges.
+ */
+const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 3, contact: 0.5, damage: 30, fling: 5, lift: 6, cooldown: 6 };
+const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -200,6 +209,9 @@ export class SimulationSystem {
   // one-blow-per-man: when a striker who closed on his man may first bring his weapon down (see STRIKE_LAG)
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
+  // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
+  private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit> }>();
+  private _chargeReadyAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
   private _battleStartedAt = 0;
@@ -299,6 +311,8 @@ export class SimulationSystem {
     this._pathStates.delete(unit);
     this._closingFrom.delete(unit);
     this._strikeReadyAt.delete(unit);
+    this._charges.delete(unit);
+    this._chargeReadyAt.delete(unit);
   }
 
   beginSimulation(now: number): void {
@@ -307,6 +321,8 @@ export class SimulationSystem {
     this._pendingLaunches = [];
     this._closingFrom.clear();
     this._strikeReadyAt.clear();
+    this._charges.clear();
+    this._chargeReadyAt.clear();
     this._isRunning = true;
     this._now = now;
     this._battleStartedAt = now;
@@ -353,6 +369,7 @@ export class SimulationSystem {
 
     this._assignShieldSlots();
     this._resolveLivingCollisions();
+    if (this._charges.size > 0) this._trampleCharges(now);
     this._holdShieldFrames();
 
     for (const unit of this._units) {
@@ -640,6 +657,33 @@ export class SimulationSystem {
       return;
     }
 
+    // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE)
+    if (preset === "iconic_mammoth" && canMove) {
+      const run = this._charges.get(unit);
+      if (run && (!unit.isCharging || run.target.isDead)) {
+        unit.endCharge();
+        this._charges.delete(unit);
+      } else if (!run && distance > engageDistance + MAMMOTH_CHARGE.from && distance < engageDistance + MAMMOTH_CHARGE.reach && now >= (this._chargeReadyAt.get(unit) ?? 0)) {
+        const dir = enemy.position.subtract(unit.position);
+        dir.y = 0;
+        unit.startCharge(MAMMOTH_CHARGE.speed, now + MAMMOTH_CHARGE.seconds);
+        this._charges.set(unit, { target: enemy, dir: dir.normalize(), trampled: new Set() });
+        this._chargeReadyAt.set(unit, now + MAMMOTH_CHARGE.cooldown);
+        this._logAbility(unit, "charge", now, enemy.position);
+        if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position, CHARGE_DUST);
+      }
+      const charging = this._charges.get(unit);
+      if (charging) {
+        const ahead = charging.target.position.subtract(unit.position);
+        ahead.y = 0;
+        if (ahead.lengthSquared() > 0.01) charging.dir = ahead.normalize();
+        unit.moveTo(charging.target.position.add(charging.dir.scale(MAMMOTH_CHARGE.overrun)));
+        this._clearPathState(unit);
+        unit.faceTarget(charging.target.position);
+        return;
+      }
+    }
+
     if ((hasAbility(unit, "jump_charge") || hasAbility(unit, "leap_attack")) && distance > engageDistance && distance < engageDistance * 2.5 && unit.canAttack(now)) {
       const dir = enemy.position.subtract(unit.position).normalize();
       const leapDist = Math.min(distance - engageDistance * 0.4, 4.5);
@@ -767,6 +811,37 @@ export class SimulationSystem {
     }
     ally.heal(healAmount);
     this._logAbility(supporter, "heal", now, ally.position);
+  }
+
+  /** Every charging mammoth tramples the enemies its body meets ahead of its middle (MAMMOTH_CHARGE), each once per run; its own target ends the run. */
+  private _trampleCharges(now: number): void {
+    for (const [unit, run] of this._charges) {
+      if (unit.isDead || !unit.isCharging) {
+        unit.endCharge();
+        this._charges.delete(unit);
+        continue;
+      }
+      for (const other of this._units) {
+        if (other.isDead || other.team === unit.team || !other.isTargetable || run.trampled.has(other)) continue;
+        const off = other.position.subtract(unit.position);
+        off.y = 0;
+        if (off.length() > unit.collisionBodyRadius + other.collisionBodyRadius + MAMMOTH_CHARGE.contact) continue;
+        if (Vector3.Dot(off, run.dir) < 0) continue;
+        run.trampled.add(other);
+        // Aside off the charge's line, to whichever side of it he stood, and on ahead of it
+        const across = new Vector3(run.dir.z, 0, -run.dir.x);
+        const side = Vector3.Dot(off, across) >= 0 ? 1 : -1;
+        const outward = across.scale(side * 0.8).add(run.dir.scale(0.6)).normalize();
+        other.applyDamage(MAMMOTH_CHARGE.damage, outward.scale(MAMMOTH_CHARGE.fling));
+        other.applyBlastLaunch(outward, MAMMOTH_CHARGE.fling, MAMMOTH_CHARGE.lift);
+        this._logAbility(unit, "trample", now, other.position);
+        if (this.visualEffects) this.visualEffects.spawnSmokePuff(other.position, CHARGE_DUST);
+      }
+      if (run.trampled.has(run.target)) {
+        unit.endCharge();
+        this._charges.delete(unit);
+      }
+    }
   }
 
   private _moveUnitToward(unit: RuntimeUnit, desired: Vector3, engageDistance: number, now: number): void {

@@ -115,6 +115,9 @@ export class RuntimeUnit {
   private _spinning = false;
   private _headingHold: number | null = null;
   private _slowMultiplier = 1;
+  // A charge's run-in (startCharge): his walk times this until _chargeUntil
+  private _chargeMultiplier = 1;
+  private _chargeUntil = 0;
   private _cohesionMoveMultiplier = 1;
   private _slowUntil = 0;
 
@@ -810,6 +813,22 @@ export class RuntimeUnit {
     this._updateHealthBar();
   }
 
+  /** A charge: he runs in at `multiplier` times his walking speed until world time `until` (or endCharge). */
+  startCharge(multiplier: number, until: number): void {
+    if (this._isDead) return;
+    this._chargeMultiplier = Math.max(1, multiplier);
+    this._chargeUntil = until;
+  }
+
+  endCharge(): void {
+    this._chargeMultiplier = 1;
+    this._chargeUntil = 0;
+  }
+
+  get isCharging(): boolean {
+    return this._chargeMultiplier > 1;
+  }
+
   applySlow(multiplier: number, durationSeconds: number, now: number): void {
     if (this._isDead) return;
     this._slowMultiplier = Math.min(this._slowMultiplier, Math.max(0.2, multiplier));
@@ -864,6 +883,7 @@ export class RuntimeUnit {
     if (now >= this._slowUntil) {
       this._slowMultiplier = 1;
     }
+    if (now >= this._chargeUntil) this._chargeMultiplier = 1;
     const physicsState = this.physicsState;
 
     // ── Physics: gravity + velocity for knockback ──
@@ -943,7 +963,7 @@ export class RuntimeUnit {
           ? Math.max(0.22, 1 - this.pressureLoad * this._crowdPhysicsProfile.pressureMovePenalty)
           : 1;
         const appliedDistance = Math.min(
-          this.definition.moveSpeed * this._slowMultiplier * this._cohesionMoveMultiplier * recoveryMoveMultiplier * pressureMoveMultiplier * dt,
+          this.definition.moveSpeed * this._slowMultiplier * this._chargeMultiplier * this._cohesionMoveMultiplier * recoveryMoveMultiplier * pressureMoveMultiplier * dt,
           Math.sqrt(distSq),
         );
         const proposedPosition = pos.add(dir.scale(appliedDistance));
