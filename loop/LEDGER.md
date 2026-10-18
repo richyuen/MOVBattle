@@ -11,7 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-338 | upper tier as its own hat (60fa561) | renaissance.da_vinci_tank.a | approved
 339 | empty mitt hands (697a9c6) | farmer.halfling.b | approved
 339 | two-handed pitchfork carried low (151102b) | farmer.farmer.b | approved
 339 | potion bottle in each hand (a682e21 +1) | farmer.potion_seller.b | approved
@@ -56,6 +55,11 @@ for 25 iterations.
 347 | riders' fork and apple (b2fe249 +1) | farmer.wheelbarrow.b | approved
 347 | pitchfork stab, own clock, hit held to the drive (31530f7 +2) | farmer.farmer.c | approved
 347 | Big Crow Wings hover, wing beat (f0d8f77) | farmer.scarecrow.c | approved
+348 | leaf-cut hem dags, strap belt (84c655b) | farmer.farmer.a | approved
+348 | beige collar, rope belt, stitched patches (5824c3f +1) | farmer.harvester.a | approved
+348 | cut-log wheel, braces, two legs (adb75af) | farmer.wheelbarrow.a | approved
+348 | ram: mammoth charge driven through (10aa302) | farmer.wheelbarrow.c | approved
+348 | back-step between stabs (544512e +1) | farmer.farmer.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -102,3 +106,8 @@ vehicleBuilder.ts:TRAY_PLANK (planks, sideTall, seam, thick, bolt, heap, heapWid
 vehicleBuilder.ts:CREW_FORK (long, butt, thick, tines, tine, spread, curl, dir), CREW_APPLE (r, lift) | .72,.2,.013,3,.2,.055,.4,(-.42,.12,.9); .05,.035 | 347 | approved | tine .13 spread .035 too small
 proceduralAnimation.ts:FORK_STAB (land, commit, back, cock, dip, turn, drawRaise, drawElbow, reach, offReach, pitch, step, front, knee) | .7,.62,.3,.18,-.08,.35,-.25,-1.45,-1.3,-1.2,.28,.3,-.7,.55 | 347 | approved | -
 proceduralAnimation.ts:HOVER (lift, bob, rate, beat, rateIn) | .13, .025, 2.4, .28, 3 | 347 | approved | critic: lift small, legs stride while hovering
+unitFactory.ts:FARMER_SHIRT (dags, dag, dagLong, tilt, shade, strap, strapProud, tongue, glow), STRAP | 10,1.25,.24,.32,.82,.1,1.1,.22,.2; (.5,.27,.17) | 348 | approved | critic: tilt reads spiky
+unitFactory.ts:HARVESTER_TRIM (collar..glow), BEIGE, ROPE | 1.42,.26,.56,.3,.055,.42,.3,.45,3,.2; (.86,.76,.6); (.8,.66,.46) | 348 | approved | collar 1.22,.2,.5 (look); critic: collar near-white, wide
+vehicleBuilder.ts:LOG_WHEEL (d, thick, bark, ring, hub, brace, braceBack, leg, legFoot, legIn, splay, glow) | .34,.08,.02,.55,.05,.022,.16,.03,.02,.1,.04,.18 | 348 | approved | critic: thick should be a drum
+simulationSystem.ts:WHEELBARROW_RAM (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | .6,16,1.7,3,4,.35,6,4.5,4,2.2 | 348 | approved | critic: speed reads ~2x walk
+simulationSystem.ts:FARMER_BACKSTEP (after, pace, margin) | .95, .5, .15 | 348 | approved | -
