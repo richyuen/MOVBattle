@@ -162,6 +162,9 @@ const STRIKE_LAG = 0.45;
  */
 const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 3, contact: 0.5, damage: 30, fling: 5, lift: 6, cooldown: 6 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
+// A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
+const LANCE_AIM_REACH = 5;
+const LANCE_CHEST = 0.62;
 
 /** One carrier's place in its wall: `offset` is the sideways step from where it stands to its slot. */
 interface ShieldSlot {
@@ -625,6 +628,10 @@ export class SimulationSystem {
     const overRank = enemy.collisionBodyRadius > unit.collisionBodyRadius * 2 ? 1 : 0;
     const engageDistance = unit.definition.engageRange + this.attackRangePadding + Math.max(0, enemy.collisionBodyRadius - unit.collisionBodyRadius) + overRank;
     const distance = Vector3.Distance(unit.position, enemy.position);
+    // A lancer lays his couched lance on the man he rides at (aimLanceAt): at the man's chest, LANCE_AIM_REACH m out, at LANCE_CHEST of his height up
+    if (distance <= engageDistance + LANCE_AIM_REACH && unit.body.rightHand?.getChildren().some((n) => n.name === "lance")) {
+      unit.animator.aimLanceAt(new Vector3(enemy.position.x, enemy.position.y + (enemy.body.headTop.getAbsolutePosition().y - enemy.position.y) * LANCE_CHEST, enemy.position.z));
+    }
 
     if (hasAbility(unit, "teleport") && distance > engageDistance && distance < engageDistance * 3 && unit.canAttack(now)) {
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position);

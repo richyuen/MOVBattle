@@ -140,6 +140,9 @@ const CLUB_LAND = 1.8;
 const OFFHAND_GRIP_UP = 0.11;
 // The couched lance (see _couchLance): weapon arm swing and elbow at rest, the shaft's dip below level and turn in across the horse (rad), the attack's drive and trunk pitch
 const COUCH = { raise: -0.35, elbow: -1.35, dip: 0.08, across: 0.12, drive: 0.5, pitch: 0.2 };
+// The couched lance laid on its man (see aimLanceAt): seconds an aim holds after the last call, how fast the lance comes onto him and off (1/s), the
+// steepest it is dipped below level (rad)
+const LANCE_AIM = { hold: 0.6, rate: 4, maxDip: 0.5 };
 /*
  * [S] two-handed pole (329; renaissance.halberd.jpg: both fists on the shaft, spaced, the off hand nearer the head). A pole whose root carries one of these
  * marks is held in both hands in every living state but limpness: the weapon arm poses as before and the off hand is solved (as the club's, _offArmTo) onto
@@ -897,6 +900,18 @@ export class ProceduralAnimator {
     this._spearAimTimer = 0.6;
   }
   private _spearAim = new Vector3();
+  /**
+   * A lancer's man, called every decision while he closes on him (renaissance.jouster.png: the lance runs level at the foe's chest, across the horse's
+   * neck): the couched lance turns from its rest line onto that point, dipped down to it, and comes back to rest LANCE_AIM.hold s after the calls stop.
+   * `chest` is the man's chest point in the world.
+   */
+  aimLanceAt(chest: Vector3): void {
+    this._lanceAim.copyFrom(chest);
+    this._lanceAimTimer = LANCE_AIM.hold;
+  }
+  private _lanceAim = new Vector3();
+  private _lanceAimTimer = 0;
+  private _lanceOn = 0;
   /** Slotted into a shield wall, called every step while he stands in it: his spear goes up on the wall's heading at SPEAR_WALL_UP (see _carrySpear), until the calls stop. */
   holdSpearInWall(heading: number, boardPlane: number | null = null, slotAt: Vector3 | null = null): void {
     this._wallHeading = heading;
@@ -1817,6 +1832,19 @@ export class ProceduralAnimator {
     const axis = fwd.scale(Math.cos(COUCH.dip) * Math.cos(COUCH.across))
       .subtractInPlace(right.scale(Math.sin(COUCH.across)))
       .addInPlace(new Vector3(0, -Math.sin(COUCH.dip), 0)).normalize();
+    // On his man: from the fist straight at the man's chest, so it comes down across the horse's neck onto him (never steeper than LANCE_AIM.maxDip, never
+    // turned back behind the fist), eased on and off
+    this._lanceAimTimer -= this._lastDt;
+    this._lanceOn += ((this._lanceAimTimer > 0 ? 1 : 0) - this._lanceOn) * Math.min(1, this._lastDt * LANCE_AIM.rate);
+    if (this._lanceOn > 0.01) {
+      const at = this._lanceAim.subtract(b.rightHand.getAbsolutePosition());
+      const flat = Math.hypot(at.x, at.z);
+      if (flat > 0.3 && at.x * fwd.x + at.z * fwd.z > 0) {
+        const dip = Math.min(LANCE_AIM.maxDip, Math.max(-0.1, Math.atan2(-at.y, flat)));
+        const onto = new Vector3(at.x / flat * Math.cos(dip), -Math.sin(dip), at.z / flat * Math.cos(dip));
+        axis.scaleInPlace(1 - this._lanceOn).addInPlace(onto.scale(this._lanceOn)).normalize();
+      }
+    }
     const x = Vector3.Cross(Vector3.Up(), axis).normalize();
     const z = Vector3.Cross(x, axis).normalize();
     const world = Matrix.Identity();
