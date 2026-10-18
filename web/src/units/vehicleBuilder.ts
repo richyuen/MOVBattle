@@ -5,6 +5,7 @@ import {
 import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
+import { jitterVertices } from "./tribalDress";
 import { getUnit } from "../data/unitDefinitions";
 
 /**
@@ -1366,7 +1367,13 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
 
 const MAMMOTH_SCALE = 1.8;
 
-const MAMMOTH_HIDE = new Color3(0.43, 0.20, 0.25);
+/*
+ * The mammoth's hide (tribal.mammoth.blue.png, card Appearance: "covered in thick brown hair"): a warm dark brown, the same on both teams, its body one lumpy
+ * faceted fur mass (MAMMOTH_FUR.jitter of each vertex in or out); the team colour is only paint (brow, tusk tips), never the coat. Self-lit MAMMOTH_FUR.glow so
+ * the faces turned from the sun stay brown in the capture's shade; the shaggy pieces (hump, ridge, hem, cuffs, ears) MAMMOTH_FUR.shag of the way to near-black.
+ */
+const MAMMOTH_HIDE = new Color3(0.4, 0.25, 0.19);
+const MAMMOTH_FUR = { jitter: 0.06, glow: 0.18, shag: 0.25 };
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
   // The whole rig under the root scales by the unit's giant scale with its footprint and reach (unitDefinitions), so hull, legs, tusks, trunk and seats keep their proportions
@@ -1376,9 +1383,10 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   // The hide keeps its own colour: only the war paint is the team's. applyMaterialPreset()
   // repaints bodyMaterial/skinMaterial with the team tint, so those point at the paint.
   // Part self-lit, so the faces turned from the sun stay a brown hide and not near-black; the mammoth half as much as the sacred elephant, its plum-brown going grey with more; asked of the factory, whose plain wood is shared
-  const hideLight = { emissive: hide.scale(hide === MAMMOTH_HIDE ? 0.08 : 0.16) };
+  const mammoth = hide === MAMMOTH_HIDE;
+  const hideLight = { emissive: hide.scale(mammoth ? MAMMOTH_FUR.glow : 0.16) };
   const fur = getMaterialFactory().get("wood", Color3.Lerp(hide, color, teamTint), hideLight);
-  const shaggyFur = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), 0.45), hideLight);
+  const shaggyFur = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), mammoth ? MAMMOTH_FUR.shag : 0.45), hideLight);
   // Tusks are warm ivory and part self-lit, so the blue ambient does not grey them
   const tuskMat = getMaterialFactory().get("bone", new Color3(1.0, 0.82, 0.58), { emissive: new Color3(0.22, 0.16, 0.09) });
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
@@ -1433,6 +1441,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   torsoMesh.position.set(0, BODY_LIFT, BODY_BACK);
   torsoMesh.scaling.copyFrom(BODY_RADII);
   torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
+  // The mammoth's coat is lumpy fur, not a smooth balloon: every vertex pushed in or out by its own hashed share (the same mesh every spawn)
+  if (mammoth) jitterVertices(torsoMesh, MAMMOTH_FUR.jitter, 41.7);
 
   // A point on the body's surface at height y and length z, on one side, and the way out of the hide there
   const onHide = (side: number, y: number, z: number): { at: Vector3; out: Vector3 } => {
@@ -1444,17 +1454,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     return { at, out };
   };
 
-  // War paint: round daubs in the team colour on the shoulder and flank, each laid flat on the hide
-  for (const side of [-1, 1]) {
-    for (const [y, z, size] of [[0.3, 0.55, 0.3], [-0.05, 0.2, 0.24], [0.35, -0.2, 0.22], [0.0, -0.55, 0.26]]) {
-      const { at, out } = onHide(side, y, z);
-      const daub = MeshBuilder.CreateSphere("paintDaub", { diameter: size, segments: 3 }, scene);
-      daub.scaling.z = 0.25;
-      daub.rotationQuaternion = Quaternion.FromUnitVectorsToRef(new Vector3(0, 0, 1), out, new Quaternion());
-      daub.position = at.add(out.scale(0.01));
-      daub.parent = torso; daub.material = paintMat; allMeshes.push(daub);
-    }
-  }
+  // No war paint on the flank (the blue render: the coat is brown from shoulder to rump; the team colour is on the brow, the tusk tips and the legs)
 
   // Shaggy shoulder hump, standing well above the back line
   const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.6, segments: 4 }, scene);
