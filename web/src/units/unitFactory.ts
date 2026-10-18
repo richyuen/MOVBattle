@@ -563,6 +563,8 @@ export class UnitFactory {
       // [S] two peg handles on the snath, the upper one where his off fist takes it (342; SNATH_PEG, proceduralAnimation SCYTHE_LOW)
       propMeshes.push(...addSnathPegs(this._scene, body));
       propMeshes = propMeshes.filter((m) => !m.isDisposed()); // its grip wraps are taken off (344)
+      // [S] beige shoulder collar, rope belt and two stitched team patches on his tunic (348; HARVESTER_TRIM)
+      propMeshes.push(...dressHarvester(this._scene, body, teamColor));
     }
     if (definition.id === "farmer.scarecrow" && !shouldUseVehicleBody) {
       // [S] a crow perched on each elbow (344; propBuilder buildPerchedCrow), kept upright by the animator's T-pose (proceduralAnimation TPOSE)
@@ -1812,6 +1814,89 @@ function dressFarmerShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3
   const tongue = put(MeshBuilder.CreateBox("farmerStrapEnd", { width: strapTall * 0.7, height: tongueLong, depth: strapTall * 0.18 }, scene), strapMat, body.hip);
   tongue.position.set(size.x * 0.25 + strapTall * 0.4, waistY - strapTall * 0.6 - tongueLong * 0.5, front + strapTall * 0.12);
   tongue.rotation.z = 0.12;
+  return added;
+}
+
+/*
+ * [S] harvester's tunic trim (348; farmer.harvester.red.png, card Appearance "a team-colored ragged tunic with a beige collar that extends to their
+ * shoulders ... ragged pants that is belted with a rope ... patched with two light team-colored cloths stitched together with twine"): a beige collar
+ * laid over the top of the chest, a low faceted cone from round the neck out past the shoulders, its V dipping down the front; a beige rope round the
+ * waist, knotted at the front with two cord ends hanging down the tunic; a light team patch on the tunic's belly and one on the right thigh, each
+ * crossed with tan twine stitches at its edges. Shares of the chest (W, H, D) or the thigh: collar HARVESTER_TRIM.collar of W across at its foot,
+ * .collarTall of H tall, .neck of W at its top, its V .vee of H deep; rope .rope of H thick, ends .ends of H long; patches .patch of W (belly) and of the
+ * thigh's girth (leg), team lightened .light; .stitches stitches on each patch. Beige and tan self-lit (.glow) so they read light, not grey.
+ */
+const HARVESTER_TRIM = { collar: 1.22, collarTall: 0.2, neck: 0.5, vee: 0.3, rope: 0.055, ends: 0.42, patch: 0.3, light: 0.45, stitches: 3, glow: 0.2 };
+const HARVESTER_BEIGE = new Color3(0.86, 0.76, 0.6);
+const HARVESTER_ROPE = new Color3(0.8, 0.66, 0.46);
+/** Dresses the harvester's tunic (spec at HARVESTER_TRIM): beige shoulder collar, rope belt, two light team patches stitched with twine. */
+function dressHarvester(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const T = HARVESTER_TRIM;
+  const put = (m: Mesh, mt: Material, parent: TransformNode): Mesh => {
+    m.material = mt;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const top = chest.position.y + H * 0.5;
+  const foot = chest.position.y - H * 0.5;
+  const beige = mf.get("cloth", HARVESTER_BEIGE, { emissiveIntensity: T.glow });
+  const rope = mf.get("cloth", HARVESTER_ROPE, { emissiveIntensity: T.glow });
+  // the beige collar over the shoulders, a low cone round the neck
+  const collarTall = H * T.collarTall;
+  const collar = put(MeshBuilder.CreateCylinder("harvesterCollar", { height: collarTall, diameterTop: W * T.neck, diameterBottom: W * T.collar, tessellation: 8 }, scene), beige, body.torso);
+  collar.scaling.z = (D * 1.2) / W;
+  collar.position.y = top - collarTall * 0.35;
+  // ...its V dipping down the front of the chest
+  const vee = put(MeshBuilder.CreateDisc("harvesterCollarVee", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene), beige, body.torso);
+  vee.rotation.z = -Math.PI / 2;
+  vee.scaling.set(H * T.vee / 1.5, W * T.neck * 0.9 / Math.sqrt(3), 1);
+  vee.position.set(0, top - collarTall * 0.5 - H * T.vee / 3, D * 0.5 + D * 0.04);
+  // the rope round the waist, knotted at the front, two cord ends hanging
+  const ropeThick = H * T.rope;
+  const belt = put(MeshBuilder.CreateTorus("harvesterRope", { diameter: W * 1.08, thickness: ropeThick, tessellation: 10 }, scene), rope, body.torso);
+  belt.scaling.z = (D * 1.12) / (W * 1.08);
+  belt.position.y = foot + H * 0.04;
+  const front = D * 0.56;
+  const knot = put(MeshBuilder.CreateIcoSphere("harvesterRopeKnot", { radius: ropeThick * 1.2, subdivisions: 1, flat: true }, scene), rope, body.torso);
+  knot.position.set(-W * 0.16, foot + H * 0.04, front);
+  for (const [dx, lean] of [[-0.2, 0.12], [-0.1, -0.06]] as const) {
+    const endLong = H * T.ends;
+    const end = put(MeshBuilder.CreateCylinder("harvesterRopeEnd", { height: endLong, diameter: ropeThick * 0.8, tessellation: 5 }, scene), rope, body.torso);
+    end.position.set(W * dx, foot + H * 0.04 - endLong * 0.5, front + ropeThick * 0.3);
+    end.rotation.z = lean;
+    const tuft = put(MeshBuilder.CreateCylinder("harvesterRopeTuft", { height: ropeThick * 1.4, diameterTop: ropeThick * 0.8, diameterBottom: ropeThick * 1.5, tessellation: 5 }, scene), rope, body.torso);
+    tuft.position.set(W * dx + Math.sin(-lean) * endLong * 0.5, foot + H * 0.04 - endLong, front + ropeThick * 0.3);
+  }
+  // two light team patches, each stitched at its edges with tan twine
+  const patchMat = mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), T.light), { emissiveIntensity: 0.14 });
+  const patchOn = (parent: TransformNode, side: number, y: number, z: number, size: number, tilt: number) => {
+    const patch = put(MeshBuilder.CreateBox("harvesterPatch", { width: size, height: size * 0.9, depth: size * 0.06 }, scene), patchMat, parent);
+    patch.position.set(side, y, z);
+    patch.rotation.z = tilt;
+    for (let k = 0; k < T.stitches; k++) {
+      for (const edge of [-1, 1]) {
+        const stitch = put(MeshBuilder.CreateBox("harvesterStitch", { width: size * 0.3, height: size * 0.06, depth: size * 0.04 }, scene), rope, parent);
+        const along = (k - (T.stitches - 1) / 2) * size * 0.3;
+        stitch.position.set(side + Math.cos(tilt) * edge * size * 0.5 - Math.sin(tilt) * along, y + Math.sin(tilt) * edge * size * 0.5 + Math.cos(tilt) * along, z + size * 0.04);
+        stitch.rotation.z = tilt;
+      }
+    }
+  };
+  patchOn(body.torso, W * 0.18, foot + H * 0.32, D * 0.5 + D * 0.03, W * T.patch, 0.18);
+  const thigh = body.rightUpperLeg;
+  const te = thigh.getBoundingInfo().boundingBox.extendSize;
+  const girth = Math.max(te.x, te.z) * 2;
+  const legPatch = W * T.patch * 0.75;
+  // on the thigh: the patch rides the thigh mesh, on its front face below the skirt's hem
+  const legFront = te.z + girth * 0.12;
+  patchOn(thigh, 0, -te.y * 0.35, legFront, Math.min(legPatch, girth * 0.95), -0.15);
   return added;
 }
 
