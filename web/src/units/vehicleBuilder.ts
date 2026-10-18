@@ -800,10 +800,16 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 // Roof spec, read off renaissance.da_vinci_tank.red.png: the lower tier is a wide shallow cone of 16 team planks (eave about 2.5 m across, rising
 // about 25 deg) with a dark seam down every plank edge and a rivet at each seam's foot; above it a small second cone with its own short eave; under the
 // eave a dark plank drum a little narrower, banded at the middle, where the cannons sit.
+// [S] TABS scale (337; reference/factions/renaissance.jpg: the machine is a hut, its roof's top above the jouster's rider and about 1.5 men tall, the eave
+// some 2.5 men across; renaissance.da_vinci_tank.red.png: the small upper tier is a frustum with a flat top and a dark lid, not a spike; the 331 machine
+// stood below the halberdier's head). The whole machine (drum, roof, cannons, base, wheels, Da Vinci, sockets, the pilot's seat) is built in the units
+// below and grown together by DAVINCI_SCALE, so the ~26 deg pitch of both tiers is kept (332 widened only the radii, 334 raised only the pitch).
+// The cap rises from its eave (capEaveR at capY) at the lower tier's pitch to a flat top capTopR across at capTop, a dark lid on it.
+export const DAVINCI_SCALE = 1.9;
 const DAVINCI_ROOF = {
   planks: 16,
   eaveR: 1.25, eaveY: 0.74, topR: 0.42, topY: 1.12,
-  capEaveR: 0.6, capY: 1.1, capApex: 1.38, lip: 0.05,
+  capEaveR: 0.6, capY: 1.1, capTopR: 0.2, capTop: 1.3, lip: 0.05,
   seam: 0.035, rivet: 0.06,
   drumR: 1.0, drumBottom: 0.2, drumTop: 0.78, drumMid: 0.46,
   drumColor: new Color3(0.24, 0.13, 0.1), seamColor: new Color3(0.1, 0.06, 0.05),
@@ -849,15 +855,20 @@ function buildDaVinciRoof(scene: Scene, parent: TransformNode, team: PBRMetallic
   capLip.position.y = R.capY - R.lip / 2;
   add(capLip, seamMat);
   const cap = MeshBuilder.CreateCylinder("davinci_cap", {
-    height: R.capApex - R.capY, diameterTop: 0.08, diameterBottom: R.capEaveR * 2, tessellation: R.planks,
+    height: R.capTop - R.capY, diameterTop: R.capTopR * 2, diameterBottom: R.capEaveR * 2, tessellation: R.planks,
   }, scene);
   cap.convertToFlatShadedMesh();
-  cap.position.y = (R.capApex + R.capY) / 2;
+  cap.position.y = (R.capTop + R.capY) / 2;
   add(cap, team);
+  // The flat top's dark lid
+  const lid = MeshBuilder.CreateCylinder("davinci_cap_lid", { height: R.lip, diameter: R.capTopR * 2 + 0.03, tessellation: R.planks }, scene);
+  lid.convertToFlatShadedMesh();
+  lid.position.y = R.capTop + R.lip / 2;
+  add(lid, seamMat);
   for (let i = 0; i < R.planks; i++) {
     const a = i * Math.PI * 2 / R.planks;
     seamAlong("davinci_seam", a, R.eaveR, R.eaveY, R.topR, R.topY, R.seam * 0.3);
-    seamAlong("davinci_cap_seam", a, R.capEaveR, R.capY, 0.05, R.capApex, R.seam * 0.3);
+    seamAlong("davinci_cap_seam", a, R.capEaveR, R.capY, R.capTopR, R.capTop, R.seam * 0.3);
     const rivet = MeshBuilder.CreateSphere("davinci_rivet", { diameter: R.rivet, segments: 3 }, scene);
     rivet.position.set(Math.cos(a + Math.PI / R.planks) * (R.eaveR - 0.08), R.eaveY + 0.04, Math.sin(a + Math.PI / R.planks) * (R.eaveR - 0.08));
     add(rivet, seamMat);
@@ -892,6 +903,11 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   // viewport ride one node that RuntimeUnit spins about the upright while the tank fights (DRUM_SPIN); the base, the wheels and Da Vinci stay put
   const drum = new TransformNode("davinci_spin", scene);
   drum.parent = root;
+  drum.scaling.setAll(DAVINCI_SCALE);
+  // The parts that stay put (base, wheels, Da Vinci) ride a holder grown by the same scale
+  const chassis = new TransformNode("davinci_chassis", scene);
+  chassis.parent = root;
+  chassis.scaling.setAll(DAVINCI_SCALE);
 
   // Roof and drum (331, renaissance.da_vinci_tank.red.png): a low wide roof in two tiers of team planks with dark seams and rivets, its eave
   // overhanging a dark plank drum that carries the cannons. All of it rides the spinning drum node.
@@ -900,7 +916,7 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
 
   // Base plate
   const basePlate = MeshBuilder.CreateCylinder("basePlate", { height: 0.1, diameter: 2.1, tessellation: 16 }, scene);
-  basePlate.position.y = 0.15; basePlate.parent = root; basePlate.material = makeMat(scene, DAVINCI_ROOF.drumColor); allMeshes.push(basePlate);
+  basePlate.position.y = 0.15; basePlate.parent = chassis; basePlate.material = makeMat(scene, DAVINCI_ROOF.drumColor); allMeshes.push(basePlate);
 
   const muzzleSequence: TransformNode[] = [];
   // Cannons (331, renaissance.da_vinci_tank.red.png; card "sixteen cannons"): 16 thick dark-grey octagonal barrels standing out level round the
@@ -933,20 +949,20 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
       const wheel = MeshBuilder.CreateCylinder("twheel", { height: 0.06, diameter: 0.35, tessellation: 10 }, scene);
       wheel.position.set(x, 0.1, z);
       wheel.rotation.z = Math.PI / 2;
-      wheel.parent = root; wheel.material = wood; allMeshes.push(wheel);
+      wheel.parent = chassis; wheel.material = wood; allMeshes.push(wheel);
     }
   }
 
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
-    operator = addOperator(scene, root, allMeshes, 0, 1.08, -0.02, color);
+    operator = addOperator(scene, chassis, allMeshes, 0, 1.08, -0.02, color);
   }
 
   const vehicleSockets: VehicleSocketSet = {
     primaryMuzzle: muzzleSequence[0],
     muzzleSequence,
-    smokeSocket: makeSocket(scene, root, "davinci_smoke_socket", new Vector3(0, DAVINCI_ROOF.drumMid, DAVINCI_CANNON.out + 0.05)),
-    impactOrigin: makeSocket(scene, root, "davinci_impact_socket", new Vector3(0, DAVINCI_ROOF.drumMid, DAVINCI_CANNON.out)),
+    smokeSocket: makeSocket(scene, chassis, "davinci_smoke_socket", new Vector3(0, DAVINCI_ROOF.drumMid, DAVINCI_CANNON.out + 0.05)),
+    impactOrigin: makeSocket(scene, chassis, "davinci_impact_socket", new Vector3(0, DAVINCI_ROOF.drumMid, DAVINCI_CANNON.out)),
   };
 
   return wrapAsBody(
@@ -955,7 +971,8 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
     hull,
     allMeshes,
     operator?.headMesh,
-    makeBodyMetrics(operator?.headTopY ?? 1.8, 0.8, 0.5, 0.7),
+    // Its height is the roof's top, its widths the machine's, all at DAVINCI_SCALE
+    makeBodyMetrics(DAVINCI_ROOF.capTop * DAVINCI_SCALE, 0.8 * DAVINCI_SCALE, 0.5 * DAVINCI_SCALE, 0.7 * DAVINCI_SCALE),
     vehicleSockets,
   );
 }
