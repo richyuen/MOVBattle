@@ -46,6 +46,11 @@ for 25 iterations.
 322 | bone necklace and bracelets (a79b80b) | tribal.bone_mage.a | approved
 322 | skull pauldrons (dfa7bbc) | tribal.chieftain.a | approved
 322 | hair and beard (940436d) | tribal.clubber.a | approved
+323 | ornamented loincloth, joins LOINCLOTHS (914ddb9) | tribal.clubber.a | approved
+323 | fang necklace (eae473f) | tribal.spear_thrower.a | approved
+323 | chestnut beard, shared tribalBeard (a743b12) | tribal.chieftain.a | approved
+323 | brown fur hide, no flank daubs (85c87e9 + 11b021e) | tribal.mammoth.a | approved
+323 | Mammoth Charge, trample fling (7d01e90) | tribal.mammoth.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -94,3 +99,7 @@ tribalDress.ts:necklace BONE_NECKLACE (drop, bone, middle, thick, gap, strap, of
 tribalDress.ts:bracelets BRACELET (at, apart, bones, long, thick, proud) | 0.76, 0.16, 6, 0.3, 0.28, 0.18 | 322 | approved | (new; bone_mage)
 tribalDress.ts:pauldrons PAULDRON (wide, long, top, out) | 1.9, 0.95, 0.12, 0.55 | 322 | approved | (new; chieftain; critic 322: too white, sockets too big)
 tribalDress.ts:beard BEARD (down, wide, deep, locks, lockLong, jitter), CLUBBER_HAIR_COLOR | 0.32, 1.0, 0.5, 5, 0.3, 0.15, (0.4, 0.25, 0.15) e0.18 | 322 | approved | (new; clubber)
+tribalDress.ts:necklace FANG_NECKLACE (drop, long, thick, curl, strap, off) | 0.34, 0.8, 0.2, 0.3, 0.03, 0.14 | 323 | approved | (new; spear_thrower; critic 323: fang a little short)
+tribalDress.ts:beard CHESTNUT (chieftain's beard colour) | (0.52, 0.27, 0.14) e0.18 | 323 | approved | (new; BEARD shape shared with the clubber)
+vehicleBuilder.ts:mammoth MAMMOTH_HIDE, MAMMOTH_FUR (jitter, glow, shag) | (0.34, 0.17, 0.1); 0.06, 0.1, 0.25 | 323 | approved | (0.4, 0.25, 0.19) glow 0.18 (323 first commit); (0.43, 0.2, 0.25) glow 0.08, shag 0.45
+simulationSystem.ts:MAMMOTH_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | 2, 14, 2.2, 2.5, 3, 0.5, 30, 5, 6, 6 | 323 | approved | (new)
