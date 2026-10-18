@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-342 | flying crow missiles (d8ad061) | farmer.scarecrow.c | approved
-342 | knee shorts and buckled belt (439c08e) | farmer.halfling.a | approved
-342 | fork across the hips in both fists (8c2de8f +2) | farmer.farmer.b | rejected
-342 | green drunk splash (97ea8d4 +1) | farmer.potion_seller.c | approved
-342 | low diagonal two-handed scythe, pegs (0c87e29) | farmer.harvester.b | approved
 343 | hairy feet (87e37b9) | farmer.halfling.a | approved
 343 | umber hair cap, hood dropped (fb5c49e) | farmer.potion_seller.a | approved
 343 | stick whack from the ear (a4f19ae) | farmer.hay_baler.c | approved
@@ -56,6 +51,11 @@ for 25 iterations.
 351 | Knight Charge dash and batter (b806f45) | medieval.knight.c | approved
 351 | banjo: pot, fretted neck, headstock, laid across him (e179db7) | medieval.bard.b | approved
 351 | Zweihander variant (4c91ec8, reverted) | medieval.king.b | rejected
+352 | full gild: every opaque mesh on one shared gold material (9e3fce4 +afcc44c) | medieval.healer.c | approved
+352 | faceted grey-brown boulder, bucket and shot (639c5f4 +439f40c) | medieval.catapult.b | approved
+352 | brown longbow variant (a8bc13d) | medieval.archer.b | approved
+352 | longsword slab cut (4285473) | medieval.squire.b | approved
+352 | Zweihander retry on the greatsword mount, no marker (519c8af) | medieval.king.b | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -65,10 +65,13 @@ farmer.* (47 knob rows, 339-350; batch done) | compacted 351 | 350 | approved | 
 renaissance.* (51 knob rows, 327-338; batch done) | compacted 340 | 338 | approved | values: git show f525109:loop/LEDGER.md
 rosterManifest.ts:medieval cost/hp/dmg/cd (bard, squire, archer, healer) | 60/.79/.58/-, 100/1.26/1.33/-, 140/.4/1.94/3.64, 180/.19/-/- | 351 | stats | 65; -; -; -
 rosterManifest.ts:medieval cost/hp/dmg/cd (knight, catapult, king) | 650/.78/.4/.42, 1000/.79/.22/1.67, 1500/1.05/-/.54 | 351 | stats | 320; -; 1200
-visualEffects.ts:HEAL_BEAM (core, halo, haloAlpha, fade); simulationSystem HEALER_BEAM_SHARE | .07, .17, .35, .2; .95 | 351 | approved | critic: core thin next to the halo
-runtimeUnit.ts:GILD (gold, dye, glow) | (1,.78,.2), .85, .45 | 351 | approved | critic: only skin gilds, clothes stay team
+visualEffects.ts:HEAL_BEAM (core, halo, haloAlpha, fade); simulationSystem HEALER_BEAM_SHARE | .12, .17, .35, .2; .95 | 352 | approved | core .07 (351)
+runtimeUnit.ts:GILD (gold, dye, glow, coat, coatGlow) | (1,.78,.2), .85, .45, (.95,.62,.08), .22 | 352 | approved | critic: coat flat mustard, a bit olive
 vehicleBuilder.ts:CATAPULT_ARM (pivotY, long, short, cocked, thrown); runtimeUnit CATAPULT_THROW (swing, hold, lower) | 1.62,1,.7,.35,pi/2; .12,.5,.7 | 351 | approved | critic: cocked end only a little below level
 simulationSystem.ts:KNIGHT_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | .4,2.5,2.6,1,.5,.3,5,6,3.5,5 | 351 | approved | critic: reads as a brisk run
 propBuilder.ts:BANJO (pot, deep, head, front, neck, neckWide, frets, headLong, headWide, headTip, pegs) | .19,.28,.86,.05,.36,.032,9,.075,1.7,.25,4 | 351 | approved | -
 proceduralAnimation.ts:BANJO_HOLD (out, up, ahead, across, rise, forward); POLE_GRIP.banjoNeck | .2,.1,.32,.72,.66,.12; [.6,.95] | 351 | approved | critic: neck too upright, fists high on the neck
-propBuilder.ts:ZWEI (blade, wide, grip, ..) | reverted | 351 | rejected | .8, .024, .24: blade trailed pommel-first in the swing, hair-thin
+propBuilder.ts:ZWEI SlabCut (long, wide, grip, point, lug, lugAt) | .85, .05, 4.5, .12, .045, .07 | 352 | approved | 351 own mesh: .8, .024, .24 H grip (rejected)
+propBuilder.ts:LONGSWORD SlabCut (long, wide, grip, point) | .62, .045, 2.6, .14 | 352 | approved | -
+propBuilder.ts:BOULDER (facets, lumpy, squat, stone, lit); vehicleBuilder CATAPULT_BOULDER | 1, .2, .82, (.66,.59,.5), .18; .65 | 352 | approved | (.5,.45,.38) lit 0; critic: near white
+propBuilder.ts:BROWN_LONGBOW (wood, wrap) | (.45,.27,.14), (.86,.78,.62) | 352 | approved | critic: .8 of his height, wants long 1.4
