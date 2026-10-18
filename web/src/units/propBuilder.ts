@@ -1067,7 +1067,7 @@ export function attachProps(
 
   // A sword is cut to the man who carries it: his fist and his standing height, handed over in the weapon's own units, under the oversize.
   const bladeFit: BladeFit = { fist: (body.metrics.hand?.width ?? 0.058 * scale) / PROP_OVERSIZE, stand: body.metrics.overallHeight / PROP_OVERSIZE };
-  const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit, teamColor);
+  const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit, teamColor, config.weaponVariant);
   if (weapon) {
     const lift = weapon.position.y;
     weapon.parent = body.rightHand;
@@ -1888,7 +1888,7 @@ const MUSKET_STEEL = new Color3(0.58, 0.58, 0.6);
 const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
 const BRUSH = { long: 0.34, grip: 0.16, butt: 0.08, neck: 0.12, ferrule: 0.6, collar: 0.1, tuft: 0.22, swell: 0.1 };
 const BRUSH_WOOD = new Color3(0.6, 0.3, 0.2);
-function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3): Mesh | null {
+function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
   switch (type) {
@@ -2465,6 +2465,37 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "bow":
     case "crossbow": {
+      if (type === "bow" && variant === "longbow") {
+        // The balloon archer's longbow, built to the spec at LONGBOW: one faceted light-grey stave along +y, thick at the grip and tapering to the tips, bowed a
+        // little off its string; tan wraps near each tip and the team colour round the grip. Laid and seated as the plain bow (named "bow", string child).
+        const Lb = fit.stand * LONGBOW.long;
+        const r0 = LONGBOW.thick * Lb * 0.5;
+        const zs = 0.04 * s;
+        const radius = (t: number): number => r0 * (1 - (1 - LONGBOW.taper) * Math.abs(t));
+        const ts: number[] = [];
+        for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
+        const path = ts.map((t) => new Vector3(0, t * Lb * 0.5, zs - LONGBOW.bow * Lb * (1 - t * t)));
+        const stave = MeshBuilder.CreateTube("bow", { path, radiusFunction: (i) => radius(ts[i]), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+        stave.material = mat(scene, LONGBOW_GREY, 0.1, "metal");
+        stave.convertToFlatShadedMesh();
+        const band = (name: string, t: number, tall: number, grow: number, material: ReturnType<typeof mat>): void => {
+          const m = MeshBuilder.CreateCylinder(name, { height: tall * Lb, diameter: radius(t) * 2 * grow, tessellation: 6 }, scene);
+          m.position.set(0, t * Lb * 0.5, zs - LONGBOW.bow * Lb * (1 - t * t));
+          m.material = material;
+          m.convertToFlatShadedMesh();
+          m.parent = stave;
+        };
+        const tan = mat(scene, LONGBOW_WRAP, 0.12, "cloth");
+        for (const t of LONGBOW.wrapAt) for (const side of [1, -1]) band("bowWrap", t * side, LONGBOW.wrap, 1.3, tan);
+        band("bowGrip", 0, LONGBOW.grip, 1.25, mat(scene, teamColor ?? accent, 0.12, "cloth"));
+        const string = MeshBuilder.CreateCylinder("string", { height: Lb * 0.97, diameter: 0.005 * Lb, tessellation: 4 }, scene);
+        string.position.z = zs;
+        string.parent = stave;
+        string.material = mat(scene, new Color3(0.85, 0.8, 0.7));
+        stave.rotation.z = Math.PI / 2;
+        stave.position.y = 0.1 * s;
+        return stave;
+      }
       // The stave is an arc: its tips meet the string and its belly bows a third of its length away from it
       const bowHeight = type === "crossbow" ? 0.25 : 0.4;
       const stavePath: Vector3[] = [];
@@ -3415,6 +3446,15 @@ function roundBoardSeed(serial: number, k: number): number {
   return x - Math.floor(x);
 }
 
+/*
+ * The balloon archer's longbow (329; renaissance.balloon_archer.red.png, card Appearance: "colored light grey with pieces of leather wrapped around in a few
+ * places, as well as team colored leather around the handle"): nearly the archer's height, a thick faceted stave. In the man's heights: LONGBOW.long long;
+ * LONGBOW.thick of it across at the grip, tapering to LONGBOW.taper of that at the tips; bowed LONGBOW.bow of its length off the string; tan wraps
+ * LONGBOW.wrap long at each of LONGBOW.wrapAt (shares of the half-length out from the grip); team grip LONGBOW.grip long.
+ */
+const LONGBOW = { long: 0.85, thick: 0.035, taper: 0.45, bow: 0.05, wrapAt: [0.6, 0.72], wrap: 0.04, grip: 0.11 };
+const LONGBOW_GREY = new Color3(0.6, 0.6, 0.6);
+const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
 const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };
 const HEATER_YELLOW = new Color3(0.95, 0.72, 0.12);
 const HEATER_RIM = new Color3(0.62, 0.42, 0.08);

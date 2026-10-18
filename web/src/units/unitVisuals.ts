@@ -166,6 +166,8 @@ export interface UnitVisualConfig {
   releaseTimingPreset?: ReleaseTimingPreset;
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
+  /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
+  weaponVariant?: "longbow";
 }
 
 function vis(
@@ -443,6 +445,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     {
       posePreset: "archer",
       materialPreset: "renaissance_velvet",
+      weaponVariant: "longbow",
       attachmentPreset: "bow_ready",
       locomotionBiasPreset: "aimed",
       releaseTimingPreset: "bow_release",
