@@ -1100,8 +1100,8 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
  *   breeches .breech of the thigh's girth at the top swelling to .knee at the knee; stocking bands .bands.
  */
 const MUSKETEER_DRESS = { vest: 1.1, wing: 1.5, puff: 1.4, collar: 1.25, breech: 1.3, knee: 1.65, bands: 2 };
-const MUSKETEER_CREAM = new Color3(0.84, 0.72, 0.52);
-const MUSKETEER_GLOW = 0.25;
+const MUSKETEER_CREAM = new Color3(0.8, 0.6, 0.36);
+const MUSKETEER_GLOW = 0.15;
 const MUSKETEER_SHOE = new Color3(0.72, 0.42, 0.22);
 /** Dresses the musketeer (spec at MUSKETEER_DRESS): team vest, cream blouse sleeves and collar, puffy team breeches, banded stockings, tan shoes. */
 function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
