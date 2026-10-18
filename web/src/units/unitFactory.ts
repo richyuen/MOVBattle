@@ -194,7 +194,7 @@ const PAINTER_DOUBLET = 0.6;
 const PAINTER_BERET = 0.42;
 const PAINTER_HOSE = new Color3(0.92, 0.6, 0.3);
 const PAINTER_SHOE = new Color3(0.66, 0.22, 0.12);
-const PAINTER_RUFF_COLOR = new Color3(1.0, 0.86, 0.55);
+const PAINTER_RUFF_COLOR = new Color3(0.85, 0.68, 0.42);
 const PAINTER_RUFF = 1.25;
 const PAINTER_RUFF_TIERS = 1;
 /*
