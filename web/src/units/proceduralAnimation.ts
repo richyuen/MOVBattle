@@ -251,7 +251,7 @@ const lungeSinkShare = (): number => 1 - (0.5 * Math.cos(LUNGE.front) + 0.5 * Ma
  * walk the farmer steps in on does not cut it short.
  */
 const FORK_STAB = { land: 0.7, commit: 0.62, back: 0.3, cock: 0.18, dip: -0.08, turn: 0.35, drawRaise: -0.25, drawElbow: -1.45, reach: -1.3, offReach: -1.2, pitch: 0.28, step: 0.3, front: -0.7, knee: 0.55, hold: 0.25 };
-const FORK_HOLD = { out: 0.16, drop: -0.1, ahead: 0.22, across: 0.72, dip: -0.08, forward: 0.68 };
+const FORK_HOLD = { out: 0.16, drop: -0.1, ahead: 0.22, across: 0.78, up: 0.04, forward: 0.55, reach: 1.5, curlAhead: 0.6, curlDown: 0.8 };
 const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -1.25, knee: 1.35, back: 0.85, step: 0.45, retreat: 0.2, hold: 0.16 };
 /*
  * [S] lunge legs (333; renaissance.fencer.png, read off the red fencer: the front thigh near level, ~70 deg forward of vertical, the shin dropped back
@@ -3492,7 +3492,10 @@ export class ProceduralAnimator {
    * side and forward, the head out past the off hip, tines forward; the off arm reaches across the belly and closes on the shaft a third of the way up.
    * Not set by joint angles (342/346 left the off fist floating): the shaft is a line laid in his own frame, and both arms are solved onto it every frame.
    *   weapon fist FORK_HOLD.out of the hip height out to his weapon side, .drop below the hip joint, .ahead in front of it;
-   *   shaft along (-.across to the off side, .dip, .forward), the fork turned in the fist onto that line (_turnFork, as the stab turns it onto its own);
+   *   350 [S]: the shaft is the chord from that fist to a head seat at hip height (.up), FORK_HOLD.reach of the hip height out from the hip along
+   *   (-.across to the off side, .forward ahead), laid in the world from the solved fist, so no hip or trunk pitch tips it (349 left the head 0.2 m under
+   *   the hip at mid-thigh); turned about the shaft so the tines' curl faces (.curlAhead ahead, .curlDown down), hooked forward and down as on the
+   *   renders, not left at whatever roll the shortest turn gave; the fork turned in the fist onto that line (_turnFork, as the stab turns it onto its own);
    *   off fist onto the shaft by _twoHandPole (POLE_GRIP.forkBar span). The stab blends the line over to its own by its weight, so the carry holds
    *   in idle, walking, the back-step and the draw, and comes back after the drive.
    */
@@ -3540,9 +3543,21 @@ export class ProceduralAnimator {
       this._armTo(b.rightShoulder, b.rightElbow, hand, seat, carryW, 2);
       for (const n of chain) n.computeWorldMatrix(true);
     }
-    const lay = Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, new Vector3(-side * C.across, C.dip, C.forward).normalize(), new Quaternion());
-    const line = stabbing ? Quaternion.Slerp(lay, Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, this._sweepTip!, new Quaternion()), stabW) : lay;
-    const attitude = yaw.multiply(line);
+    // the carry's chord in the world: the solved fist to the head seat at hip height past the off hip
+    b.hip.computeWorldMatrix(true);
+    const hipNow = b.hip.getAbsolutePosition();
+    const tallNow = Math.max(0.2, hipNow.y - b.root.getAbsolutePosition().y);
+    const headSeat = hipNow.add(new Vector3(-side * C.across, C.up, C.forward).scale(C.reach * tallNow).rotateByQuaternionToRef(yaw, new Vector3()));
+    const shaftDir = headSeat.subtract(hand.getAbsolutePosition());
+    if (shaftDir.lengthSquared() < 1e-6) shaftDir.set(-side * C.across, 0, C.forward);
+    shaftDir.normalize();
+    // ...turned about it so the tines (the prop's +z curl) hook ahead and down
+    const curl = new Vector3(0, -C.curlDown, C.curlAhead).rotateByQuaternionToRef(yaw, new Vector3());
+    curl.subtractInPlace(shaftDir.scale(Vector3.Dot(curl, shaftDir)));
+    if (curl.lengthSquared() < 1e-6) curl.set(0, -1, 0);
+    curl.normalize();
+    const lay = Quaternion.RotationQuaternionFromAxis(Vector3.Cross(shaftDir, curl), shaftDir, curl);
+    const attitude = stabbing ? Quaternion.Slerp(lay, yaw.multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, this._sweepTip!, new Quaternion())), stabW) : lay;
     const turn = Quaternion.Slerp(f.rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(attitude), w);
     f.node.rotationQuaternion = turn;
     const held = new Vector3(0, f.pos.length(), 0).rotateByQuaternionToRef(turn, new Vector3());
