@@ -1860,7 +1860,7 @@ function flatPlate(scene: Scene, name: string, outline: number[][], thick: numbe
  * at the tip; stripe one turn every LANCE.pitch of the length, LANCE.stripe of the shaft's radius thick; vamplate LANCE.vamp of the length across,
  * LANCE.vampLong long; LANCE.prongs prongs LANCE.prong of the length long. Shared by every lance (the cavalry's too).
  */
-const LANCE = { long: 1.75, grip: 0.14, thick: 0.03, taper: 0.4, pitch: 0.075, stripe: 0.55, vamp: 0.1, vampLong: 0.07, prongs: 3, prong: 0.03 };
+const LANCE = { long: 1.75, grip: 0.14, thick: 0.045, taper: 0.45, pitch: 0.075, stripe: 0.55, vamp: 0.1, vampLong: 0.07, prongs: 3, prong: 0.03 };
 const LANCE_CREAM = new Color3(0.88, 0.8, 0.62);
 /*
  * A matchlock musket (328; renaissance.musketeer.red.png, card Appearance "a matchlock musket": longer than the man who carries it, a light-grey octagonal
