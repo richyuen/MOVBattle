@@ -1200,6 +1200,31 @@ const WHEELBARROW = {
 const TRAY_PLANK = { planks: 3, sideTall: 0.13, seam: 0.008, thick: 0.03, bolt: 0.016, heap: 0.09, heapWide: 0.92, glow: 0.22 };
 const TRAY_WOOD = new Color3(0.62, 0.4, 0.28);
 const TRAY_STRAW = new Color3(0.82, 0.62, 0.3);
+/*
+ * [S] The riders' props (347; farmer.wheelbarrow.blue.png/.red.png, card "the Apple Thrower throws apples and the Farmer stabs"): the front rider holds a
+ * pitchfork in his right fist, CREW_FORK.long rig units of shaft from CREW_FORK.butt behind the fist, pointing ahead and across his front (CREW_FORK.dir),
+ * three grey curled tines on a crossbar at its head; the Apple Thrower holds a red faceted apple CREW_APPLE.r across in his raised fist, a green leaf on it.
+ * Each prop is set in the cart's frame and parented to the fist (holdInFist), so it rides the man's arm.
+ */
+const CREW_FORK = { long: 0.78, butt: 0.2, thick: 0.012, tines: 3, tine: 0.13, spread: 0.035, curl: 0.35, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
+const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
+function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offset: Vector3, rigScale: number): void {
+  const chain: TransformNode[] = [];
+  for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+  for (const n of chain) n.computeWorldMatrix(true);
+  const handWorld = hand.getWorldMatrix();
+  const at = Vector3.TransformCoordinates(Vector3.Zero(), handWorld).add(offset.scale(rigScale));
+  const d = dir.normalizeToNew();
+  const turn = Quaternion.FromEulerAngles(-Math.asin(d.y), Math.atan2(d.x, d.z), 0);
+  const want = Matrix.Compose(new Vector3(rigScale, rigScale, rigScale), turn, at);
+  const local = want.multiply(Matrix.Invert(handWorld));
+  const sc = new Vector3(); const q = new Quaternion(); const pos = new Vector3();
+  local.decompose(sc, q, pos);
+  prop.parent = hand;
+  prop.position.copyFrom(pos);
+  prop.rotationQuaternion = q;
+  prop.scaling.copyFrom(sc);
+}
 function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const W = WHEELBARROW;
   const root = new TransformNode("wheelbarrow_root", scene);
@@ -1272,6 +1297,26 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     man.rightShoulder.rotation.x = -0.7;
     man.leftElbow.rotation.x = -0.6;
     man.rightElbow.rotation.x = -0.6;
+    // his pitchfork, in the right fist, ahead and across his front (spec at CREW_FORK)
+    const F = CREW_FORK;
+    const shaftWood = getMaterialFactory().get("cloth", new Color3(0.5, 0.26, 0.17), { emissive: new Color3(0.5, 0.26, 0.17).scale(F.glow) });
+    const steel = getMaterialFactory().get("cloth", new Color3(0.52, 0.53, 0.55), { emissive: new Color3(0.52, 0.53, 0.55).scale(F.glow) });
+    const fork = new TransformNode("crewFork", scene);
+    const shaft = MeshBuilder.CreateCylinder("crewForkShaft", { height: F.long, diameter: F.thick * 2, tessellation: 6 }, scene);
+    shaft.rotation.x = Math.PI / 2;
+    shaft.position.z = F.long / 2 - F.butt;
+    shaft.parent = fork; shaft.material = shaftWood; allMeshes.push(shaft);
+    const head = F.long - F.butt;
+    const bar = MeshBuilder.CreateBox("crewForkBar", { width: F.spread * (F.tines - 1) + F.thick * 2, height: F.thick * 1.4, depth: F.thick * 1.6 }, scene);
+    bar.position.z = head;
+    bar.parent = fork; bar.material = steel; allMeshes.push(bar);
+    for (let k = 0; k < F.tines; k++) {
+      const x = (k - (F.tines - 1) / 2) * F.spread;
+      const path = [0, 0.33, 0.66, 1].map((t) => new Vector3(x * (1 + 0.3 * t), F.curl * F.tine * t * t, head + F.tine * t));
+      const tine = MeshBuilder.CreateTube("crewForkTine", { path, radius: F.thick * 0.7, tessellation: 5 }, scene);
+      tine.parent = fork; tine.material = steel; allMeshes.push(tine);
+    }
+    holdInFist(man.rightHand, fork, F.dir, Vector3.Zero(), W.scale);
   });
   // The Apple Thrower, behind him: sat the same, his throwing arm up and back over his shoulder
   addOperator(scene, rig, allMeshes, 0, 0, W.backSeat, color, (man) => {
@@ -1283,6 +1328,19 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     man.rightShoulder.rotation.set(-2.5, 0, -0.3);
     man.rightElbow.rotation.x = -0.8;
     man.leftShoulder.rotation.x = -0.5;
+    // the apple in his raised fist (spec at CREW_FORK)
+    const A = CREW_APPLE;
+    const red = new Color3(0.78, 0.12, 0.1);
+    const apple = new TransformNode("crewApple", scene);
+    const ball = MeshBuilder.CreateIcoSphere("crewAppleBall", { radius: A.r, subdivisions: 1, flat: true }, scene);
+    ball.scaling.y = 0.9;
+    ball.parent = apple; ball.material = getMaterialFactory().get("cloth", red, { emissive: red.scale(A.glow) }); allMeshes.push(ball);
+    const leafGreen = new Color3(0.25, 0.55, 0.18);
+    const leaf = MeshBuilder.CreateBox("crewAppleLeaf", { width: A.r * 0.5, height: A.r * 0.12, depth: A.r * 0.9 }, scene);
+    leaf.position.set(A.r * 0.25, A.r * 0.92, A.r * 0.25);
+    leaf.rotation.set(0.5, 0.6, 0);
+    leaf.parent = apple; leaf.material = getMaterialFactory().get("cloth", leafGreen, { emissive: leafGreen.scale(A.glow) }); allMeshes.push(leaf);
+    holdInFist(man.rightHand, apple, new Vector3(0, 0, 1), new Vector3(0, A.lift, 0), W.scale);
   });
   // The Traveller, rear: on his feet behind the cart, leaning in, fists down on the handle ends
   let travellerHeadTop = 0;
