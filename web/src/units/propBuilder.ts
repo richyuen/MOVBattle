@@ -1827,11 +1827,19 @@ interface BladeFit { fist: number; stand: number }
  * across but never under a fifth nor over a quarter of its length, and a third as thick as it is wide, drawn in to a blunt point over its last fifth. The hilt is cut from
  * the fist: a bar guard twice the blade across, a grip the fist closes round, and a pommel block. Returns the blade and how far under its middle the guard sits.
  */
-function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color3, great: boolean): { blade: Mesh; hilt: number } {
-  const length = fit.stand * (great ? 0.68 : 0.46);
-  const width = Math.min(length / (great ? 5 : 4), Math.max(length / (great ? 6.5 : 5), fit.fist * 2.8));
+/** A unit's own cut of the slab sword (weaponVariant): blade .long of his height, .wide of it across, grip .grip fists, the last .point drawn in */
+interface SlabCut { long: number; wide: number; grip: number; point: number }
+/*
+ * [S] the squire's longsword (352; medieval.squire.red.png, card Appearance "a Longsword"): a long thin blade that runs from his hands to above his head, not a
+ * short broad arming sword. LONGSWORD: blade .long of his height and .wide of it across, a hand-and-a-half grip .grip fists, drawn to a point over its last .point.
+ * Same guard on the same fist as the plain sword (the sword case's mount), so only the blade above it and the grip below change.
+ */
+const LONGSWORD: SlabCut = { long: 0.62, wide: 0.045, grip: 2.6, point: 0.14 };
+function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color3, great: boolean, cut?: SlabCut): { blade: Mesh; hilt: number } {
+  const length = fit.stand * (cut ? cut.long : great ? 0.68 : 0.46);
+  const width = cut ? fit.stand * cut.wide : Math.min(length / (great ? 5 : 4), Math.max(length / (great ? 6.5 : 5), fit.fist * 2.8));
   const depth = width * 0.3;
-  const flat = length * 0.78;
+  const flat = length * (cut ? 1 - cut.point : 0.78);
   // Matte pale steel: a mirror-metal blade reflects the dark sky and ground and renders near-black
   const steel = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
   const blade = MeshBuilder.CreateBox(name, { width, height: flat, depth }, scene);
@@ -1855,7 +1863,7 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
   guard.position.y = -hilt;
   guard.parent = blade;
   guard.material = mat(scene, accent, 0, "metal");
-  const gripLength = fit.fist * (great ? 3.2 : 1.7);
+  const gripLength = fit.fist * (cut ? cut.grip : great ? 3.2 : 1.7);
   const grip = MeshBuilder.CreateCylinder("grip", { height: gripLength, diameter: fit.fist * 0.6, tessellation: 6 }, scene);
   grip.position.y = -hilt - guardHeight * 0.5 - gripLength * 0.5;
   grip.parent = blade;
@@ -2249,7 +2257,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "sword":
     case "cutlass": {
-      const { blade, hilt } = buildSlabSword(scene, "blade", fit, accent, false);
+      const { blade, hilt } = buildSlabSword(scene, "blade", fit, accent, false, type === "sword" && variant === "longsword" ? LONGSWORD : undefined);
       // The guard stays where the old one sat on the fist, whatever the blade above it is cut to
       blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
       return blade;

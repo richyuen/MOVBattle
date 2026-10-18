@@ -167,7 +167,7 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow" | "brown_longbow";
+  weaponVariant?: "longbow" | "brown_longbow" | "longsword";
 }
 
 function vis(
@@ -282,6 +282,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     {
       posePreset: "duelist",
       materialPreset: "medieval_steel",
+      weaponVariant: "longsword",
       weaponGripPreset: "blade_slash",
       locomotionBiasPreset: "braced",
       releaseTimingPreset: "melee_commit",
