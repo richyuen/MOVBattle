@@ -147,6 +147,9 @@ const POLE_GRIP = {
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
 } as const;
+// The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
+// swing and elbow at each, the trunk's pitch and the off foot's step at the land, and the share of the attack it is held on the man
+const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown: -1.25, elbowDown: -0.15, pitch: 0.35, step: -0.4, hold: 0.1 };
 /*
  * [S] palette held up (328; renaissance.painter.jpg: the off arm out from the shoulder and the forearm up, the palette flat at chest height beside him).
  * A palette in the off hand is held up in every state but death and limpness, laid over the stand, the walk and the swing (see _holdPalette): shoulder
@@ -479,6 +482,8 @@ export class ProceduralAnimator {
     // A rapier is thrust at him on its own line (see LUNGE), not brought down on his head
     this._blowMark = this._rapier() ? null : mark;
     this._blowLandsAt = landsIn;
+    // nor is a halberd's chop: it comes down in his own plane (see CHOP)
+    if (this._halberd()) this._blowMark = null;
     this._blowClock = 0;
     this._blowStruck = null;
   }
@@ -514,7 +519,8 @@ export class ProceduralAnimator {
 
   /** A swing that lands on a man: heavy (club, hammer, axe) or a blade's slash. */
   private _strikesAtMan(): boolean {
-    return (this._attackMotion === "heavy_swing" || this._attackMotion === "blade_slash") && this.attackStyle !== "mammoth" && this.walkStyle !== "quadruped";
+    const chop = this._attackMotion === "thrust" && this._halberd() !== null;
+    return (this._attackMotion === "heavy_swing" || this._attackMotion === "blade_slash" || chop) && this.attackStyle !== "mammoth" && this.walkStyle !== "quadruped";
   }
 
   // The share of the attack at which the blow is fully on the man: BLOW_LAND of the way through the drop after the commit
@@ -522,6 +528,11 @@ export class ProceduralAnimator {
     if (this._attackMotion === "heavy_swing") {
       const commit = this._resolveReleasePoint(0.45);
       return commit + (1 - commit) * 0.45 * BLOW_LAND;
+    }
+    // the halberd's chop is on the man 0.4 of the way from the top of its raise to the end
+    if (this._attackMotion === "thrust") {
+      const top = this._resolveReleasePoint(0.5);
+      return top + (1 - top) * 0.4;
     }
     const commit = this._resolveReleasePoint(0.4);
     return commit + (1 - commit) * BLOW_LAND * 0.6;
@@ -1218,6 +1229,9 @@ export class ProceduralAnimator {
       this._lungeStep.setAll(0);
     }
     if (this._rapierProp && this._rapierProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "blade_slash")) this._turnRapier(0);
+
+    // a chop cut short leaves the halberd stood at its angle: back to its rest in the fist
+    if (this._halberdProp && this._halberdProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "thrust")) this._poseHalberd(0, 0);
 
     this._idleSink = 0;
     this._clubHold = 0;
@@ -3119,7 +3133,90 @@ export class ProceduralAnimator {
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
+  // The halberd in the weapon fist (a shaft carrying the axe plate), looked up on first use, and its rest turn about the fist
+  private _halberdProp: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
+  private _halberd(): { node: Mesh; rest: Quaternion } | null {
+    if (this._halberdProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "haxe"));
+      this._halberdProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+    }
+    return this._halberdProp;
+  }
+
+  // The halberd stood in the world at `theta` from straight up toward his front (in the plane through his front and up), the axe's edge leading the way it
+  // swings, blended from its rest in the fist by w
+  private _poseHalberd(theta: number, w: number): void {
+    const h = this._halberd();
+    if (!h) return;
+    if (w <= 0.001) {
+      h.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const up = Vector3.Up();
+    const axis = up.scale(Math.cos(theta)).addInPlace(fwd.scale(Math.sin(theta)));
+    // the edge (the plate's -z) along the swing; its +z, the back spike, behind
+    const z = up.scale(Math.sin(theta)).subtractInPlace(fwd.scale(Math.cos(theta)));
+    const x = Vector3.Cross(axis, z).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, axis, z, world);
+    const parentRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, parentRot);
+    const parent = Matrix.Identity();
+    parentRot.toRotationMatrix(parent);
+    const local = Quaternion.FromRotationMatrix(world.multiply(parent.transpose()));
+    h.node.rotationQuaternion = Quaternion.Slerp(h.rest, local, w);
+  }
+
+  /**
+   * [S] vertical chop (330; card Characteristics "a vertical chop that can deal devastating damage"; renaissance.halberd.jpg: both fists on the shaft). The
+   * halberd is raised in both hands until its head stands back over his own head (CHOP.raised from straight up), the trunk leant back, then brought
+   * straight down in front of him in his own vertical plane, axe edge first, to CHOP.landed (past level, the head at the foe's chest), the trunk pitched
+   * into it and the off foot stepped in; the blow lands on the man there (blowLandsIn), held CHOP.hold, then carried back up to the rest in the fist.
+   * The off hand rides the shaft (_twoHandPole) throughout.
+   */
+  private _animateHalberdChop(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const commit = this._resolveReleasePoint(0.5);
+    const land = this._blowLandFraction();
+    const smooth = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
+    const up = smooth(progress / Math.max(commit, 0.001));
+    const s = Math.max(0, Math.min(1, (progress - commit) / Math.max(land - commit, 0.001)));
+    const down = s * s; // slow off the top, fastest onto the man
+    const back = smooth((progress - land - CHOP.hold) / Math.max(1 - land - CHOP.hold, 0.001));
+    // each joint from its raised value toward its landed one by `down`, the whole let back to the rest by `back`
+    const pose = (raised: number, landed: number): number => (raised * up + (landed - raised) * down) * (1 - back);
+    b.rightShoulder.rotation.x = pose(CHOP.armUp, CHOP.armDown);
+    b.rightShoulder.rotation.z = pose(0.1, 0.05);
+    b.rightElbow.rotation.x = pose(CHOP.elbowUp, CHOP.elbowDown);
+    b.torso.rotation.x = pose(-0.2, CHOP.pitch);
+    b.neck.rotation.x = pose(0.1, -0.15);
+    b.leftHip.rotation.x = pose(-0.15, CHOP.step);
+    b.leftKnee.rotation.x = pose(0.1, 0.3);
+    b.rightHip.rotation.x = pose(0.1, 0.15);
+    // the head: from the rest up and back over him, then down through the top onto the man
+    const theta = CHOP.raised + (CHOP.landed - CHOP.raised) * down;
+    this._poseHalberd(theta, smooth(progress / Math.max(commit * 0.4, 0.001)) * (1 - back));
+    if (progress >= 1) {
+      this._poseHalberd(0, 0);
+      this._state = AnimState.Idle;
+    }
+  }
+
   private _animateThrust(dt: number): void {
+    if (this._halberd()) {
+      this._animateHalberdChop(dt);
+      return;
+    }
     this._attackTimer += dt;
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
