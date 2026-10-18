@@ -241,6 +241,9 @@ const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
  * ways. He keeps running until the man is .clear m beyond the lure line, then closes again (the lure). Only a man inside his reach gets the banjo swung at him.
  */
 const BANJO_WALK = { lure: 2.2, clear: 1.5, turn: 0.85, step: 1.2 };
+// He plays as he goes (354, medieval.bard.blue.png): a music note (visualEffects MUSIC_NOTE) off his head every .every s while the walk runs, .first at its start,
+// set .over m over his crown and .aside m to alternate sides
+const BANJO_NOTES = { every: 0.45, first: 2, over: 0.15, aside: 0.18 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
 const LANCE_AIM_REACH = 5;
@@ -312,6 +315,9 @@ export class SimulationSystem {
   // Banjo Walk (BANJO_WALK): the bards running their circles now, and which way each turns
   private _banjoWalks = new Map<RuntimeUnit, number>();
   private _banjoTurns = 0;
+  // When each walking bard's next note is due (BANJO_NOTES), and a count to alternate their sides
+  private _banjoNotes = new Map<RuntimeUnit, number>();
+  private _banjoNoteCount = 0;
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
@@ -417,6 +423,7 @@ export class SimulationSystem {
     this._stabbedAt.delete(unit);
     this._backingOff.delete(unit);
     this._banjoWalks.delete(unit);
+    this._banjoNotes.delete(unit);
     this._jumpReadyAt.delete(unit);
   }
 
@@ -432,6 +439,8 @@ export class SimulationSystem {
     this._stabbedAt.clear();
     this._backingOff.clear();
     this._banjoWalks.clear();
+    this._banjoNotes.clear();
+    this._banjoNoteCount = 0;
     this._banjoTurns = 0;
     this._jumpReadyAt.clear();
     this._isRunning = true;
@@ -972,6 +981,12 @@ export class SimulationSystem {
           turn = this._banjoTurns++ % 2 === 0 ? 1 : -1;
           this._banjoWalks.set(unit, turn);
           this._logAbility(unit, "banjo_walk", now, enemy.position);
+          for (let i = 0; i < BANJO_NOTES.first; i++) this._playBanjoNote(unit, i * 0.25);
+          this._banjoNotes.set(unit, now + BANJO_NOTES.every);
+        }
+        if (now >= (this._banjoNotes.get(unit) ?? now)) {
+          this._playBanjoNote(unit, 0);
+          this._banjoNotes.set(unit, now + BANJO_NOTES.every);
         }
         const away = unit.position.subtract(enemy.position);
         away.y = 0;
@@ -983,6 +998,7 @@ export class SimulationSystem {
         return;
       }
       this._banjoWalks.delete(unit);
+      this._banjoNotes.delete(unit);
     }
 
     if (hasAbility(unit, "spin_move") && distance > engageDistance) {
@@ -2527,6 +2543,17 @@ export class SimulationSystem {
     if (this.abilityLog.length >= 200) this.abilityLog.shift();
     this.abilityLog.push({ t: RuntimeUnit.timeNowSeconds(), unit: unitId, kind, x: at.x, y: at.y, z: at.z });
   };
+
+  /** A music note off a playing bard's head (BANJO_NOTES), `lift` m higher still, to alternate sides. */
+  private _playBanjoNote(unit: RuntimeUnit, lift: number): void {
+    if (!this.visualEffects) return;
+    const head = unit.body.headTop;
+    head.computeWorldMatrix(true);
+    const side = this._banjoNoteCount++ % 2 === 0 ? 1 : -1;
+    const facing = unit.body.root.rotation.y;
+    const at = head.getAbsolutePosition().add(new Vector3(Math.cos(facing) * side * BANJO_NOTES.aside, BANJO_NOTES.over + lift, -Math.sin(facing) * side * BANJO_NOTES.aside));
+    this.visualEffects.spawnMusicNote(at, side);
+  }
 
   private _logAbility(unit: RuntimeUnit, kind: string, t: number, at: Vector3 = unit.position): void {
     const id = unit.definition.id;

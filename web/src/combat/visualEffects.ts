@@ -47,6 +47,13 @@ const SMOKE_LIFE = 2.4;
  * chest; it fades out over the last .fade s of its life.
  */
 const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
+/*
+ * [S] banjo music notes (354; medieval.bard.blue.png, card Appearance "Notes will appear above the Bard's head"): orange eighth notes over his head while he
+ * plays his Banjo Walk. Each note is a glyph of flat self-lit pieces turned to face the camera: an oval head .head m across, tipped .tilt rad, a stem .stem m
+ * up from its right side, a flag off the stem top swept down .flag; .size scales the whole. It rises .rise m/s, sways .sway m either side, and fades over the
+ * last .fade of its .life s.
+ */
+const MUSIC_NOTE = { size: 1, head: 0.13, tilt: 0.45, stem: 0.26, flag: 0.12, rise: 0.45, sway: 0.08, life: 1.6, fade: 0.35, color: new Color3(1, 0.55, 0.08) };
 const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
@@ -152,6 +159,41 @@ export class VisualEffects {
         haloMat.alpha = HEAL_BEAM.haloAlpha * k;
       },
       dispose: () => { coreMat.dispose(); haloMat.dispose(); },
+    });
+  }
+
+  /** One orange music note (MUSIC_NOTE) rising off `at`, swaying to `side` (+1 or -1) first. */
+  spawnMusicNote(at: Vector3, side = 1): void {
+    const N = MUSIC_NOTE;
+    const root = new TransformNode("musicNote", this._scene);
+    const glyph = new TransformNode("musicNoteGlyph", this._scene);
+    glyph.parent = root;
+    glyph.scaling.setAll(N.size);
+    root.billboardMode = TransformNode.BILLBOARDMODE_ALL;
+    const mat = this._fxMat(N.color, N.color.scale(0.6));
+    const head = MeshBuilder.CreateDisc("musicNoteHead", { radius: N.head / 2, tessellation: 10, sideOrientation: Mesh.DOUBLESIDE }, this._scene);
+    head.scaling.y = 0.72;
+    head.rotation.z = N.tilt;
+    const stem = MeshBuilder.CreatePlane("musicNoteStem", { width: N.head * 0.22, height: N.stem, sideOrientation: Mesh.DOUBLESIDE }, this._scene);
+    stem.position.set(N.head * 0.42, N.stem / 2, 0);
+    const flag = MeshBuilder.CreatePlane("musicNoteFlag", { width: N.flag, height: N.head * 0.24, sideOrientation: Mesh.DOUBLESIDE }, this._scene);
+    flag.rotation.z = -0.9;
+    flag.position.set(N.head * 0.42 + N.flag * 0.3, N.stem - N.flag * 0.35, 0);
+    for (const m of [head, stem, flag]) { m.material = mat; m.parent = glyph; m.isPickable = false; }
+    root.position.copyFrom(at);
+    const base = at.clone();
+    let t = 0;
+    this._effects.push({
+      root,
+      remaining: N.life,
+      update: (dt, remaining) => {
+        t += dt;
+        root.position.set(base.x, base.y + N.rise * t, base.z);
+        glyph.position.x = side * N.sway * Math.sin(t * 4);
+        const k = Math.max(0, Math.min(1, remaining / (N.life * N.fade)));
+        if (k < 1) { mat.alpha = k; mat.transparencyMode = 2; }
+      },
+      dispose: () => mat.dispose(),
     });
   }
 
