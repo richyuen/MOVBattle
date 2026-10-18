@@ -1,4 +1,5 @@
 import { Color3, Mesh, Node, TransformNode, Vector3 } from "@babylonjs/core";
+import { CREW_FIGHT, poseWheelbarrowCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import {
   AttackType, TargetPriority,
@@ -198,6 +199,15 @@ const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 
 const WHEELBARROW_RAM = { from: 0.6, reach: 16, speed: 1.7, seconds: 3, overrun: 4, contact: 0.35, damage: 6, fling: 4.5, lift: 4, cooldown: 2.2, through: true, log: false };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
+ * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
+ * the Farmer and the Apple Thrower's attacks makes it capable to deal moderately high damage", farmer.wheelbarrow.png): every step, whether the cart is
+ * ramming or turning, the Apple Thrower picks the nearest enemy WHEELBARROW_CREW.appleFrom to .appleReach m from the cart, cocks his arm and lets the apple go
+ * (the one in his fist flies: a held "stone" on its lob) for .appleDamage, logged "throw"; a new apple .appleEvery s after the last. The Farmer stabs the
+ * nearest enemy within .stabReach m of his own seat and ahead of the cart's side line, the blow landing at the end of his draw (.stabDamage, pushed off
+ * .stabPush), logged "stab", at most every .stabEvery s. Poses and timing: vehicleBuilder CREW_FIGHT.
+ */
+const WHEELBARROW_CREW = { appleFrom: 2.5, appleReach: 14, appleEvery: 1.8, appleDamage: 40, applePush: 2, stabReach: 2.4, stabEvery: 1.1, stabDamage: 45, stabPush: 3 };
+/*
  * [S] Farmer back-step (348; card Characteristics "They will also slowly back up while attacking, before swinging ahead with a much better stab"): once
  * his stab has gone home (FARMER_BACKSTEP.after s past it) and while his pitchfork is still cooling down, a farmer in reach of his man backs away from
  * him still facing him, at .pace of his walk, out to .margin short of his full reach; when the fork is ready again he lunges in with the next stab.
@@ -265,6 +275,8 @@ export class SimulationSystem {
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
   private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit>; spec: ChargeSpec; end: Vector3 | null }>();
+  // The wheelbarrow's riders (WHEELBARROW_CREW): each move's start and its man, and when the next may start
+  private _crewFights = new Map<RuntimeUnit, { throwAt: number; thrown: boolean; appleAt: RuntimeUnit | null; stabAt: number; stabbed: boolean; stabOn: RuntimeUnit | null }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
   // Farmer back-step (FARMER_BACKSTEP): when each farmer last stabbed, and the farmers backing off now (their heading held on the man)
   private _stabbedAt = new Map<RuntimeUnit, number>();
@@ -437,6 +449,7 @@ export class SimulationSystem {
     this._resolveLivingCollisions();
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
+    this._crewsFight(now);
     this._holdShieldFrames();
 
     for (const unit of this._units) {
@@ -462,6 +475,80 @@ export class SimulationSystem {
       if (!unit.isDead && unit.team === team && unit.countsTowardVictory) count++;
     }
     return count;
+  }
+
+  /** The wheelbarrow's riders throw and stab (spec at WHEELBARROW_CREW). */
+  private _crewsFight(now: number): void {
+    const C = WHEELBARROW_CREW, F = CREW_FIGHT;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "farmer.wheelbarrow") continue;
+      const crew = wheelbarrowCrew(unit.body);
+      if (!crew) continue;
+      let fight = this._crewFights.get(unit);
+      if (!fight) {
+        fight = { throwAt: -99, thrown: true, appleAt: null, stabAt: -99, stabbed: true, stabOn: null };
+        this._crewFights.set(unit, fight);
+      }
+      const throwSpan = F.cock + F.whip + F.hold + F.back;
+      const stabSpan = F.draw + F.drive + F.stabHold + F.stabBack;
+      if (unit.isDead) {
+        poseWheelbarrowCrew(crew, -1, -1);
+        continue;
+      }
+      const nearest = (from: Vector3, lo: number, hi: number, ok: (u: RuntimeUnit) => boolean = () => true): RuntimeUnit | null => {
+        let best: RuntimeUnit | null = null, bestD = hi;
+        for (const other of this._units) {
+          if (other.isDead || other.team === unit.team || !other.isTargetable) continue;
+          const d = Math.hypot(other.position.x - from.x, other.position.z - from.z);
+          if (d >= lo && d < bestD && ok(other)) { best = other; bestD = d; }
+        }
+        return best;
+      };
+      // the apple: start a throw at the nearest man in range, let it go at the end of the cock
+      if (now - fight.throwAt >= Math.max(C.appleEvery, throwSpan)) {
+        const man = nearest(unit.position, C.appleFrom, C.appleReach);
+        if (man) { fight.throwAt = now; fight.thrown = false; fight.appleAt = man; }
+      }
+      // the stab: the nearest man within reach of the Farmer's seat, ahead of the cart's side line
+      const seat = crew.farmer.root.getAbsolutePosition();
+      if (now - fight.stabAt >= Math.max(C.stabEvery, stabSpan)) {
+        const ahead = new Vector3(Math.sin(unit.body.root.rotation.y), 0, Math.cos(unit.body.root.rotation.y));
+        const man = nearest(seat, 0, C.stabReach, (o) => (o.position.x - seat.x) * ahead.x + (o.position.z - seat.z) * ahead.z > -0.3);
+        if (man) { fight.stabAt = now; fight.stabbed = false; fight.stabOn = man; }
+      }
+      const throwT = now - fight.throwAt < throwSpan ? now - fight.throwAt : -1;
+      const stabT = now - fight.stabAt < stabSpan ? now - fight.stabAt : -1;
+      const apple = poseWheelbarrowCrew(crew, throwT, stabT);
+      if (apple && !apple.isEnabled() && fight.thrown && throwT < 0) apple.setEnabled(true);
+      if (!fight.thrown && throwT >= F.cock) {
+        fight.thrown = true;
+        const man = fight.appleAt;
+        if (apple && man && !man.isDead && this.projectileSystem) {
+          const chain: TransformNode[] = [];
+          for (let n: Node | null = apple; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+          for (const n of chain) n.computeWorldMatrix(true);
+          const push = man.position.subtract(unit.position);
+          push.y = 0;
+          this.projectileSystem.spawnProjectile(
+            "stone", apple.getAbsolutePosition().clone(), man, C.appleDamage, push.normalize().scale(C.applePush), 0, unit.team, this._units, undefined, 0,
+            { originLift: 0, heldProp: apple },
+          );
+          apple.setEnabled(false);
+          this._logAbility(unit, "throw", now, man.position);
+        }
+      }
+      if (!fight.stabbed && stabT >= F.draw) {
+        fight.stabbed = true;
+        const man = fight.stabOn;
+        if (man && !man.isDead && Math.hypot(man.position.x - seat.x, man.position.z - seat.z) < C.stabReach + 0.6) {
+          const push = man.position.subtract(seat);
+          push.y = 0;
+          man.applyDamage(C.stabDamage, push.normalize().scale(C.stabPush));
+          man.animator.triggerFlinch();
+          this._logAbility(unit, "stab", now, man.position);
+        }
+      }
+    }
   }
 
   /** Pins each holding halfling on his man (spec at HALFLING_CLING); lets go of a man dead .afterDeath s, or when the halfling dies. */

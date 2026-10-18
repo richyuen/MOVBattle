@@ -1240,9 +1240,51 @@ function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offs
 }
 /** The wheelbarrow's three men, kept on the cart's root (metadata.wheelbarrowCrew) so they can be dressed and moved after the build. */
 export interface WheelbarrowCrew { farmer: ArticulatedBody; thrower: ArticulatedBody; traveller: ArticulatedBody }
+/*
+ * [S] The riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close", farmer.wheelbarrow.png):
+ * times in seconds from the start of each move, the sim's clock (simulationSystem WHEELBARROW_CREW picks the men and lands the blows).
+ *   Apple throw: the raised throwing arm (rest: shoulder CREW_REST.throwArm, elbow .throwElbow) cocked further back and folded over CREW_FIGHT.cock, the
+ *   apple let go at the end of it, the arm whipped forward and out to near level over .whip, held .hold, eased back up over .back; a new apple in the fist
+ *   once he is back (CREW_FIGHT.cock + whip + hold + back).
+ *   Stab: the Farmer's fork arm (rest: CREW_REST.forkArm, .forkElbow) drawn back, fist to the chest, over .draw; the blow lands at its end; driven straight
+ *   out ahead over .drive, the trunk leaning in .lean, held .stabHold, eased back over .stabBack.
+ */
+export const CREW_FIGHT = { cock: 0.3, whip: 0.15, hold: 0.25, back: 0.4, draw: 0.18, drive: 0.12, stabHold: 0.15, stabBack: 0.35, lean: 0.25 };
+const CREW_REST = { throwArm: -2.5, throwSpread: -0.3, throwElbow: -0.8, forkArm: -0.7, forkElbow: -0.6 };
 /** The wheelbarrow's crew on a built body, or null for any other. */
 export function wheelbarrowCrew(body: ArticulatedBody): WheelbarrowCrew | null {
   return (body.root.metadata as { wheelbarrowCrew?: WheelbarrowCrew } | null)?.wheelbarrowCrew ?? null;
+}
+/** The riders' arms set for the throw `throwT` and the stab `stabT` seconds in (-1: at rest); spec at CREW_FIGHT. Returns the thrower's apple. */
+export function poseWheelbarrowCrew(crew: WheelbarrowCrew, throwT: number, stabT: number): TransformNode | null {
+  const F = CREW_FIGHT, R = CREW_REST;
+  const ease = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
+  // the throw: k cocked (0..1), w whipped (0..1), r eased back (0..1)
+  let k = 0, w = 0;
+  if (throwT >= 0) {
+    k = ease(throwT / F.cock);
+    w = ease((throwT - F.cock) / F.whip);
+    const r = ease((throwT - F.cock - F.whip - F.hold) / F.back);
+    k *= 1 - w; w *= 1 - r;
+  }
+  const t = crew.thrower;
+  t.rightShoulder.rotation.set(R.throwArm - 0.45 * k + 1.15 * w, 0, R.throwSpread - 0.1 * k);
+  t.rightElbow.rotation.x = R.throwElbow - 0.8 * k + 0.65 * w;
+  t.torso.rotation.y = 0.35 * k - 0.3 * w;
+  // the stab: d drawn, o driven out, eased back by b
+  let d = 0, o = 0;
+  if (stabT >= 0) {
+    d = ease(stabT / F.draw);
+    o = ease((stabT - F.draw) / F.drive);
+    const b = ease((stabT - F.draw - F.drive - F.stabHold) / F.stabBack);
+    d *= 1 - o; o *= 1 - b;
+  }
+  const f = crew.farmer;
+  f.rightShoulder.rotation.x = R.forkArm + 0.35 * d - 0.85 * o;
+  f.rightElbow.rotation.x = R.forkElbow - 1.0 * d + 0.55 * o;
+  f.leftShoulder.rotation.x = R.forkArm + 0.25 * d - 0.6 * o;
+  f.torso.rotation.x = -0.1 * d + F.lean * o;
+  return t.rightHand.getChildren().find((n): n is TransformNode => n.name === "crewApple") ?? null;
 }
 function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const W = WHEELBARROW;
