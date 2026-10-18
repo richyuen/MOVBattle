@@ -2239,47 +2239,6 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return blade;
     }
     case "greatsword": {
-      if (variant === "zweihander") {
-        // The King's Zweihander, built to the spec at ZWEI: a long thin pale blade up +y from the guard (the root mesh), parrying lugs off its sides just
-        // above the guard, a short cross guard, a long dark grip below the fist and a pommel. Marked zweiGrip: the off fist goes down the grip (POLE_GRIP).
-        const H = fit.stand;
-        const Lb = ZWEI.blade * H, wide = ZWEI.wide * H;
-        const steel = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
-        const flat = Lb * (1 - ZWEI.point);
-        const zb = MeshBuilder.CreateBox("zweihander", { width: wide, height: flat, depth: wide * 0.3 }, scene);
-        zb.material = steel;
-        const tip = MeshBuilder.CreateCylinder("zweiPoint", { height: Lb * ZWEI.point, diameterBottom: wide * Math.SQRT2, diameterTop: wide * 0.1, tessellation: 4 }, scene);
-        tip.rotation.y = Math.PI / 4;
-        tip.bakeCurrentTransformIntoVertices();
-        tip.scaling.z = 0.3;
-        tip.position.y = flat / 2 + Lb * ZWEI.point / 2;
-        tip.material = steel;
-        tip.parent = zb;
-        const foot = -flat / 2;
-        for (const side of [1, -1]) {
-          const lug = MeshBuilder.CreateCylinder("zweiLug", { height: ZWEI.lug * H, diameterBottom: wide * 0.9, diameterTop: wide * 0.15, tessellation: 4 }, scene);
-          lug.rotation.z = -side * (Math.PI / 2 - ZWEI.lugTilt);
-          lug.position.set(side * (wide / 2 + ZWEI.lug * H * 0.45), foot + ZWEI.lugAt * H, 0);
-          lug.material = steel;
-          lug.parent = zb;
-        }
-        const guard = MeshBuilder.CreateBox("zweiGuard", { width: ZWEI.guard * H, height: ZWEI.guardThick * H, depth: ZWEI.guardThick * H }, scene);
-        guard.position.y = foot;
-        guard.material = steel;
-        guard.parent = zb;
-        const grip = MeshBuilder.CreateCylinder("zweiHilt", { height: ZWEI.grip * H, diameter: fit.fist * ZWEI.gripThick, tessellation: 6 }, scene);
-        grip.position.y = foot - ZWEI.grip * H / 2;
-        grip.material = mat(scene, ZWEI_GRIP, 0.18);
-        grip.parent = zb;
-        const pommel = MeshBuilder.CreateSphere("zweiPommel", { diameter: ZWEI.pommel * H, segments: 2 }, scene);
-        pommel.position.y = foot - ZWEI.grip * H;
-        pommel.material = steel;
-        pommel.parent = zb;
-        new TransformNode("zweiGrip", scene).parent = zb;
-        // the weapon fist closes on the grip just under the guard
-        zb.position.y = flat / 2 + fit.fist * 0.6;
-        return zb;
-      }
       const { blade, hilt } = buildSlabSword(scene, "gsblade", fit, accent, true);
       blade.position.y = hilt * PROP_OVERSIZE - 0.19 * _s;
       return blade;
@@ -3812,13 +3771,6 @@ const BANJO = { pot: 0.19, deep: 0.28, head: 0.86, front: 0.05, neck: 0.36, neck
 const BANJO_RIM = new Color3(0.42, 0.24, 0.14);
 const BANJO_NECK_WOOD = new Color3(0.36, 0.2, 0.12);
 const BANJO_SKIN = new Color3(0.86, 0.78, 0.6);
-/*
- * [S] Zweihander (351; medieval.king.red.png, .jpg, card "a towering Great Sword", Appearance "German Zweihander"): the whole sword longer than the king
- * is tall. A thin blade ZWEI.blade of his height and .wide across, its last .point drawn to a point; parrying lugs .lug long, .lugAt above the guard,
- * swept .lugTilt toward the point; a short cross guard .guard across; a long dark grip .grip, .gripThick fists thick; a pommel .pommel across.
- */
-const ZWEI = { blade: 0.8, wide: 0.024, point: 0.12, lug: 0.04, lugAt: 0.075, lugTilt: 0.35, guard: 0.13, guardThick: 0.022, grip: 0.24, gripThick: 0.8, pommel: 0.04 };
-const ZWEI_GRIP = new Color3(0.3, 0.2, 0.14);
 const LONGBOW = { long: 1.2, thick: 0.065, taper: 0.5, bow: 0.05, wrapAt: [0.6, 0.72], wrap: 0.04, grip: 0.11 };
 const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
