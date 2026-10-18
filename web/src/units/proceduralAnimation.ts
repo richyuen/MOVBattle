@@ -139,6 +139,14 @@ const CLUB_LAND = 1.8;
  */
 const OFFHAND_GRIP_UP = 0.11;
 /*
+ * [S] two-handed pole (329; renaissance.halberd.jpg: both fists on the shaft, spaced, the off hand nearer the head). A pole whose root carries one of these
+ * marks is held in both hands in every living state but limpness: the weapon arm poses as before and the off hand is solved (as the club's, _offArmTo) onto
+ * the shaft where it passes nearest the off shoulder, kept within the span [from, to] of the shaft's length out along it from the weapon fist (_twoHandPole).
+ */
+const POLE_GRIP = {
+  hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
+} as const;
+/*
  * [S] palette held up (328; renaissance.painter.jpg: the off arm out from the shoulder and the forearm up, the palette flat at chest height beside him).
  * A palette in the off hand is held up in every state but death and limpness, laid over the stand, the walk and the swing (see _holdPalette): shoulder
  * swung forward PALETTE_HOLD.raise and out PALETTE_HOLD.out, elbow folded PALETTE_HOLD.elbow; it breathes PALETTE_HOLD.sway on its own beat.
@@ -1490,6 +1498,7 @@ export class ProceduralAnimator {
     this._carrySpear();
     this._carryProp(dt);
     this._offhandToGrip();
+    this._twoHandPole();
     this._carryBoulder();
     this._holdPalette();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
@@ -2147,6 +2156,39 @@ export class ProceduralAnimator {
     for (const n of chain) n.computeWorldMatrix(true);
     const length = club.getBoundingInfo().boundingBox.extendSize.y * 2;
     const grip = Vector3.TransformCoordinates(new Vector3(0, length * OFFHAND_GRIP_UP, 0), club.getWorldMatrix());
+    this._offArmTo(grip, w);
+  }
+
+  // A pole or a long gun in the weapon fist (see POLE_GRIP), its span along the shaft from the fist, looked up once
+  private _pole: { node: Mesh; span: readonly [number, number] } | null | undefined = undefined;
+  /** The off hand onto the pole's shaft where it passes nearest the off shoulder, kept within POLE_GRIP's span (both fists on the shaft). */
+  private _twoHandPole(): void {
+    if (this._pole === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name in POLE_GRIP));
+      const mark = node?.getChildren().find((c) => c.name in POLE_GRIP);
+      this._pole = node && mark ? { node, span: POLE_GRIP[mark.name as keyof typeof POLE_GRIP] } : null;
+    }
+    if (!this._pole || this.walkStyle === "quadruped") return;
+    const s = this._state;
+    if (s !== AnimState.Idle && s !== AnimState.Walking && s !== AnimState.Attacking) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const { node, span } = this._pole;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = node; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const length = node.getBoundingInfo().boundingBox.extendSize.y * 2 * node.absoluteScaling.y;
+    const fist = this._body.rightHand.getAbsolutePosition();
+    const axis = Vector3.TransformNormal(Vector3.Up(), node.getWorldMatrix()).normalize();
+    this._body.leftShoulder.computeWorldMatrix(true);
+    const along = Vector3.Dot(this._body.leftShoulder.getAbsolutePosition().subtract(fist), axis);
+    const at = Math.max(span[0] * length, Math.min(span[1] * length, along));
+    this._offArmTo(fist.add(axis.scale(at)), w);
+  }
+
+  /** The off arm solved onto a world point: shoulder swing and elbow fold, the elbow out to his free side and down, eased in by `w`. */
+  private _offArmTo(grip: Vector3, w: number): void {
+    const b = this._body;
     // Into the off shoulder's frame: its parent's (the torso's) space, where the joint rotations act
     const frame = b.leftShoulder.parent as TransformNode;
     frame.computeWorldMatrix(true);
