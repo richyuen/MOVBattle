@@ -526,7 +526,7 @@ export class UnitFactory {
     }
     // Medieval units' own hair, cloth and ornaments (medievalDress)
     if (definition.faction === FactionId.Medieval && !shouldUseVehicleBody) {
-      propMeshes.push(...dressMedieval(this._scene, body, definition.id));
+      propMeshes.push(...dressMedieval(this._scene, body, definition.id, teamColor));
     }
     if (definition.id === "renaissance.painter" && !shouldUseVehicleBody) {
       propMeshes.push(...dressPainter(this._scene, body, teamColor, propMeshes));

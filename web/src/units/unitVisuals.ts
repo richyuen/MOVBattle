@@ -289,7 +289,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "medieval.archer": vis(
-    { scale: 0.95, armLength: 1.05 }, "bow", "hood_liripipe", "none", "quiver_hip", "#228B22",
+    { scale: 0.95, armLength: 1.05 }, "bow", "none", "none", "quiver_hip", "#228B22",
     undefined,
     {
       posePreset: "archer",
