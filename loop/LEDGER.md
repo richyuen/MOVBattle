@@ -11,10 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-343 | hairy feet (87e37b9) | farmer.halfling.a | approved
-343 | umber hair cap, hood dropped (fb5c49e) | farmer.potion_seller.a | approved
-343 | stick whack from the ear (a4f19ae) | farmer.hay_baler.c | approved
-343 | pegs rooted on the bow, snath and blade colours (0c7f22a) | farmer.harvester.b | approved
 344 | plain snath, grip wraps off (651d95a) | farmer.harvester.b | approved
 344 | Halfling Jump leap (2cb2be2) | farmer.halfling.c | approved
 344 | level stick carry across the front (cbcb6df) | farmer.hay_baler.b | approved
@@ -56,6 +52,11 @@ for 25 iterations.
 352 | brown longbow variant (a8bc13d) | medieval.archer.b | approved
 352 | longsword slab cut (4285473) | medieval.squire.b | approved
 352 | Zweihander retry on the greatsword mount, no marker (519c8af) | medieval.king.b | approved
+353 | two-fisted hilt, off fist onto the grip (7f4b61c) | medieval.squire.b | approved
+353 | two-fisted Zweihander, off fist .5 grip below (9e2fd04, reverted c9dd189) | medieval.king.b | rejected
+353 | priest staff: banded team orb, cross finial, gold fittings, upright planted hold (03b4e5c) | medieval.healer.b | approved
+353 | open armet: grey dome, plates, bevor, team barred visor frame (58cfa04 +4459ae6) | medieval.knight.a | approved
+353 | Banjo Walk: lure, then run off round his man (68d8302 +53c3633) | medieval.bard.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -74,4 +75,8 @@ proceduralAnimation.ts:BANJO_HOLD (out, up, ahead, across, rise, forward); POLE_
 propBuilder.ts:ZWEI SlabCut (long, wide, grip, point, lug, lugAt) | .85, .05, 4.5, .12, .045, .07 | 352 | approved | 351 own mesh: .8, .024, .24 H grip (rejected)
 propBuilder.ts:LONGSWORD SlabCut (long, wide, grip, point) | .62, .045, 2.6, .14 | 352 | approved | -
 propBuilder.ts:BOULDER (facets, lumpy, squat, stone, lit); vehicleBuilder CATAPULT_BOULDER | 1, .2, .82, (.66,.59,.5), .18; .65 | 352 | approved | (.5,.45,.38) lit 0; critic: near white
-propBuilder.ts:BROWN_LONGBOW (wood, wrap) | (.45,.27,.14), (.86,.78,.62) | 352 | approved | critic: .8 of his height, wants long 1.4
+propBuilder.ts:BROWN_LONGBOW (long, wood, wrap) | 1.4, (.45,.27,.14), (.86,.78,.62) | 353 | approved | long 1.2 (LONGBOW, 352); critic: grip wrap oversized
+proceduralAnimation.ts:TWO_FIST_SWORD (longswordFists) | .4 (zweiFists .5 rejected 353) | 353 | approved | critic: idle/release off fist short of grip
+propBuilder.ts:PRIEST_STAFF (long, thick, grip, sleeve, cap, orb, band, finial); PRIEST_HOLD | 1.2,.02,.45,.17,.05,.11,.012,.06 | 353 | approved | critic: orb half a head
+propBuilder.ts:ARMET (heads, deep, dome, drop, plate, bevor, rail, bars, proud) | 1.22,1.1,.5,1,.09,.24,.75,5,.05 | 353 | approved | critic: wants rail 1.0, proud .12
+simulationSystem.ts:BANJO_WALK (lure, clear, turn, step) | 2.2, 1.5, .85, 1.2 | 353 | approved | turn 1.15 (pre-review); critic: arc gentle
