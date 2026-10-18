@@ -204,7 +204,7 @@ const PAINTER_RUFF_TIERS = 1;
  * PAINTER_JABOT.taper narrower, overlapping by a third, standing PAINTER_JABOT.proud of the chest's depth off it (so they read side-on too), tipped out at
  * the hem PAINTER_JABOT.tip rad and turned a little each way (PAINTER_JABOT.twist) so the folds do not stack as one block; the last ends in a point.
  */
-const PAINTER_JABOT = { layers: 3, wide: 0.62, tall: 0.16, taper: 0.17, proud: 0.42, tip: 0.3, twist: 0.12 };
+const PAINTER_JABOT = { layers: 3, wide: 0.85, tall: 0.22, taper: 0.15, proud: 0.8, tip: 0.35, twist: 0.12 };
 /*
  * The righteous paladin (units/good.righteous_paladin): white plate trimmed in gold over the team skin, not a plain team tunic. Read off the reference: white
  * chest, hips, thighs, greaves and feet; bare team-skin arms; bright orange-gold bands at the waist and round each knee with a pointed gold knee plate on the
