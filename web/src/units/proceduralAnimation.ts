@@ -165,6 +165,12 @@ const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown:
 // and the most of the axe head's reach the shaft may be drawn back through the fists
 const CHOP_ONTO = { below: 0.12, min: 0.9, max: 2.1, slide: 0.6 };
 /*
+ * [S] blow held down (335; card Characteristics "a vertical chop that can deal devastating damage": the axe stays down on the man for a beat before it is
+ * raised). The chop keeps its own clock from the land, whatever the state does after it: the halberd, the weapon arm and the trunk are held at the landed
+ * pose for CHOP_DOWN.hold s, then eased back to the rest over CHOP_DOWN.rise s, laid over the walk or the stand that follows the attack (see _holdChopDown).
+ */
+const CHOP_DOWN = { hold: 0.35, rise: 0.3 };
+/*
  * [S] palette held up (328; renaissance.painter.jpg: the off arm out from the shoulder and the forearm up, the palette flat at chest height beside him).
  * A palette in the off hand is held up in every state but death and limpness, laid over the stand, the walk and the swing (see _holdPalette): shoulder
  * swung forward PALETTE_HOLD.raise and out PALETTE_HOLD.out, elbow folded PALETTE_HOLD.elbow; it breathes PALETTE_HOLD.sway on its own beat.
@@ -478,6 +484,7 @@ export class ProceduralAnimator {
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
     this._attackMotion = motion ?? this.defaultAttackMotion;
+    this._chopDown = null;
     // The next one is in the hand at the windup
     if (this._thrownProp) {
       this._thrownProp.setEnabled(true);
@@ -1294,7 +1301,7 @@ export class ProceduralAnimator {
     this._lungeOut = 0;
 
     // a chop cut short leaves the halberd stood at its angle: back to its rest in the fist
-    if (this._halberdProp && this._halberdProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "thrust")) {
+    if (this._halberdProp && this._halberdProp.node.rotationQuaternion && !this._chopDown && !(this._state === AnimState.Attacking && this._attackMotion === "thrust")) {
       this._poseHalberd(0, 0);
       this._slideHalberd(0);
       this._chopAim = null;
@@ -1597,6 +1604,7 @@ export class ProceduralAnimator {
     this._carrySpear();
     this._carryProp(dt);
     this._offhandToGrip();
+    this._holdChopDown(dt);
     this._aimMusket(dt);
     this._twoHandPole();
     this._carryBoulder();
@@ -3492,7 +3500,8 @@ export class ProceduralAnimator {
     const up = smooth(progress / Math.max(commit, 0.001));
     const s = Math.max(0, Math.min(1, (progress - commit) / Math.max(land - commit, 0.001)));
     const down = s * s; // slow off the top, fastest onto the man
-    const back = smooth((progress - land - CHOP.hold) / Math.max(1 - land - CHOP.hold, 0.001));
+    // [S] blow held down (335): from the land the chop's own clock (CHOP_DOWN) lets it back, not the attack's share
+    const back = this._chopDown ? 1 - this._chopDownWeight() : 0;
     // each joint from its raised value toward its landed one by `down`, the whole let back to the rest by `back`
     const pose = (raised: number, landed: number): number => (raised * up + (landed - raised) * down) * (1 - back);
     b.rightShoulder.rotation.x = pose(CHOP.armUp, CHOP.armDown);
@@ -3512,12 +3521,52 @@ export class ProceduralAnimator {
     const theta = CHOP.raised + ((aim ? aim.theta : CHOP.landed) - CHOP.raised) * down;
     this._poseHalberd(theta, w);
     if (aim) this._slideHalberd(aim.slide * down * w);
+    if (progress >= land && !this._chopDown) this._chopDown = { theta: aim ? aim.theta : CHOP.landed, slide: aim ? aim.slide : 0, t: 0 };
     if (progress >= 1) {
-      this._poseHalberd(0, 0);
-      this._slideHalberd(0);
+      // still held down on the man: _holdChopDown carries it on over the stand
+      if (!this._chopDown) {
+        this._poseHalberd(0, 0);
+        this._slideHalberd(0);
+      }
       this._chopAim = null;
       this._state = AnimState.Idle;
     }
+  }
+
+  // The landed chop's hold (spec at CHOP_DOWN): its tilt and slide at the land, and the seconds since
+  private _chopDown: { theta: number; slide: number; t: number } | null = null;
+  private _chopDownWeight(): number {
+    const d = this._chopDown;
+    if (!d) return 0;
+    const u = Math.max(0, Math.min(1, (d.t - CHOP_DOWN.hold) / CHOP_DOWN.rise));
+    return 1 - u * u * (3 - 2 * u);
+  }
+
+  // After the chop's attack is over, the blow stays on the man (CHOP_DOWN): the weapon arm, the trunk and the halberd are laid toward the landed pose by the
+  // hold's weight over whatever the walk or the stand made of them; the off hand follows the shaft (_twoHandPole runs after)
+  private _holdChopDown(dt: number): void {
+    const d = this._chopDown;
+    if (!d) return;
+    d.t += dt;
+    const w = this._chopDownWeight();
+    if (w <= 0.001 || this._state === AnimState.Dead || this._limp >= 0.5) {
+      this._chopDown = null;
+      this._poseHalberd(0, 0);
+      this._slideHalberd(0);
+      return;
+    }
+    // the chop itself is still running and poses itself by the same weight
+    if (this._state === AnimState.Attacking && this._attackMotion === "thrust") return;
+    const b = this._body;
+    const mix = (now: number, landed: number): number => now + (landed - now) * w;
+    b.rightShoulder.rotation.x = mix(b.rightShoulder.rotation.x, CHOP.armDown);
+    b.rightShoulder.rotation.z = mix(b.rightShoulder.rotation.z, 0.05);
+    b.rightElbow.rotation.x = mix(b.rightElbow.rotation.x, CHOP.elbowDown);
+    b.torso.rotation.x = mix(b.torso.rotation.x, CHOP.pitch);
+    b.neck.rotation.x = mix(b.neck.rotation.x, -0.15);
+    this._slideHalberd(0);
+    this._poseHalberd(d.theta, w);
+    this._slideHalberd(d.slide * w);
   }
 
   /**
