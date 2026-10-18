@@ -1826,7 +1826,7 @@ function dressFarmerShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3
  * .collarTall of H tall, .neck of W at its top, its V .vee of H deep; rope .rope of H thick, ends .ends of H long; patches .patch of W (belly) and of the
  * thigh's girth (leg), team lightened .light; .stitches stitches on each patch. Beige and tan self-lit (.glow) so they read light, not grey.
  */
-const HARVESTER_TRIM = { collar: 1.22, collarTall: 0.2, neck: 0.5, vee: 0.3, rope: 0.055, ends: 0.42, patch: 0.3, light: 0.45, stitches: 3, glow: 0.2 };
+const HARVESTER_TRIM = { collar: 1.42, collarTall: 0.26, neck: 0.56, vee: 0.3, rope: 0.055, ends: 0.42, patch: 0.3, light: 0.45, stitches: 3, glow: 0.2 };
 const HARVESTER_BEIGE = new Color3(0.86, 0.76, 0.6);
 const HARVESTER_ROPE = new Color3(0.8, 0.66, 0.46);
 /** Dresses the harvester's tunic (spec at HARVESTER_TRIM): beige shoulder collar, rope belt, two light team patches stitched with twine. */
@@ -1851,8 +1851,8 @@ function dressHarvester(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   // the beige collar over the shoulders, a low cone round the neck
   const collarTall = H * T.collarTall;
   const collar = put(MeshBuilder.CreateCylinder("harvesterCollar", { height: collarTall, diameterTop: W * T.neck, diameterBottom: W * T.collar, tessellation: 8 }, scene), beige, body.torso);
-  collar.scaling.z = (D * 1.2) / W;
-  collar.position.y = top - collarTall * 0.35;
+  collar.scaling.z = (D * 1.3) / W;
+  collar.position.y = top - collarTall * 0.1;
   // ...its V dipping down the front of the chest
   const vee = put(MeshBuilder.CreateDisc("harvesterCollarVee", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene), beige, body.torso);
   vee.rotation.z = -Math.PI / 2;
