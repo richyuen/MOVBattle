@@ -1070,7 +1070,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return dome;
   }
   if (type === "armet") {
-    const steel = mat(scene, ARMET.steel, 0.05, "metal");
+    const steel = mat(scene, ARMET.steel, 0.05, "stone"); // matte: as "metal" it mirrored the sky and read near-black
     const paint = mat(scene, teamColor ?? accent, 0.12);
     const R = ARMET.heads * W * 0.5, D = R * ARMET.deep, top = 0.06 * H;
     const domeBase = top - ARMET.dome * H;
