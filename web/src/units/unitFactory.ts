@@ -13,6 +13,7 @@ import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
+import { dressMedieval } from "./medievalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -522,6 +523,10 @@ export class UnitFactory {
     }
     if (definition.id === "secret.tree_giant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressTreeGiant(this._scene, body, teamColor));
+    }
+    // Medieval units' own hair, cloth and ornaments (medievalDress)
+    if (definition.faction === FactionId.Medieval && !shouldUseVehicleBody) {
+      propMeshes.push(...dressMedieval(this._scene, body, definition.id));
     }
     if (definition.id === "renaissance.painter" && !shouldUseVehicleBody) {
       propMeshes.push(...dressPainter(this._scene, body, teamColor, propMeshes));

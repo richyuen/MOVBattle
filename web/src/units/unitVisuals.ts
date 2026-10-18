@@ -301,7 +301,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "medieval.healer": vis(
-    { scale: 0.95, headSize: 1.05 }, "staff", "hood", "none", "none", "#FFD700",
+    { scale: 0.95, headSize: 1.05 }, "staff", "none", "none", "none", "#FFD700",
     undefined, { weaponVariant: "priest_staff" },
   ),
   "medieval.knight": vis(
