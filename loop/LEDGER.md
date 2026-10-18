@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-327 | brim hat (d747d43) | renaissance.balloon_archer.a | approved
-327 | short one-handed brush (34e0270 +1) | renaissance.painter.b | approved
-327 | cavalier hat (fbe32ce +1) | renaissance.fencer.a | approved
-327 | halberd head (547179c +1) | renaissance.halberd.b | approved
-327 | black iron morion (affc57f) | renaissance.musketeer.a | approved
 328 | no back slab (68ad77a) | renaissance.fencer.b | approved
 328 | black sallet (0860943) | renaissance.halberd.a | approved
 328 | matchlock musket (9951a96 +1) | renaissance.musketeer.b | approved
@@ -61,6 +56,10 @@ for 25 iterations.
 336 | cuffed knee boots (0267ef9) | renaissance.fencer.a | approved
 336 | tan tabard, proud belt (500f5e0) | renaissance.halberd.a | approved
 336 | striped doublet (921719c) | renaissance.balloon_archer.a | approved
+337 | paned thigh rolls (d8407ce +1) | renaissance.fencer.a | approved
+337 | vest hem at the waist (780101e) | renaissance.musketeer.a | approved
+337 | caparison following the barrel (f277bbf) | renaissance.jouster.a | approved
+337 | whole-machine scale, flat cap (412d16c) | renaissance.da_vinci_tank.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -86,7 +85,7 @@ proceduralAnimation.ts:chop CHOP (raised, landed, armUp, elbowUp, armDown, elbow
 proceduralAnimation.ts:couch COUCH (raise, elbow, dip, across, drive, pitch) | -.35, -1.35, .08, .12, .5, .2 | 330 | approved | -
 propBuilder.ts:rapier RAPIER (blade, thick, taper, cup, cupDeep, cupTop, rim, quillon, grip, pommel) | .66, .018, .35, .13, .055, .3, .014, .2, .08, .035 | 330 | approved | -
 runtimeUnit.ts:drum DRUM_SPIN (rate, spinUp, spinDown, linger) | 3.5, 12, 1.5, 1.0 | 330 | approved | -
-vehicleBuilder.ts:DAVINCI_ROOF (planks, eaveR, topR, capEaveR, drumR) | 16, 1.25, .42, .6, 1.0 | 332 | rejected | 332 [P] x1.4 radii rejected (reversal, flat)
+vehicleBuilder.ts:DAVINCI_ROOF (planks, eaveR, topR, capEaveR, capTopR, capTop, drumR) | 16, 1.25, .42, .6, .2, 1.3, 1.0 | 337 | approved | capApex 1.38 spike; 332 [P] x1.4 radii rejected
 vehicleBuilder.ts:DAVINCI_CANNON (count, out, bore, ringWide) | 16, 1.62, .2, 1.3 | 332 | rejected | 332 [P] out 2.27 rejected
 proceduralAnimation.ts:PALETTE_OUT (side, fwd, drop, tip) | .24, .1, .07, .35 | 331 | approved | -
 proceduralAnimation.ts:MUSKET_AIM (ahead, inward, drop, kick) | .17, .03, .03, .25 | 331 | approved | -
@@ -115,3 +114,7 @@ propBuilder.ts:CHANFRON (long, wide, narrow, flat, eye, eyeAt, ear, tufts, tuft,
 tribalDress.ts:GOATEE (wide, down, proud, tip) | .42, .55, .86, .35 | 336 | approved | -
 unitFactory.ts:FENCER_BOOTS (shaft, cuff, cuffLong), FENCER_BOOT | 1.3, 1.85, .36; (.42,.17,.12) | 336 | approved | -
 unitFactory.ts:ARCHER_DRESS (doublet, stripes, stripe, puff, slashes, belt, breech); TAN, GLOW | 1.1,3,.09,1.6,4,.12,1.45; (.8,.56,.28),.3 | 336 | approved | -
+vehicleBuilder.ts:DAVINCI_SCALE (whole machine; pilot offset, lineup lastApart follow) | 1.9 | 337 | approved | 1 (unscaled); critic NEXT 2.3
+unitFactory.ts:FENCER_ROLL (panes, long, swell, end, apart); FENCER_CREAM, GLOW | 8, .68, 2.1, 1.3, .9; (.8,.56,.28), .3 | 337 | approved | replaced panes/puff/long 8/.82/.95, cream (.84,.66,.42) unlit
+unitFactory.ts:MUSKETEER_VEST (shade, hem, flare, belt, beltOut, breech) | .95, .2, 1.28, .07, 1.06, .6 | 337 | approved | vest/breech .82
+propBuilder.ts:HORSE_CAPARISON (fore, aft, plan, tuck, tuckLong, strap, strapAt, strapArc) | .55, 1.12, 2.6, .1, .06, .07, .1, 1.15 | 337 | approved | CAP_LONG 1.32, END .55, SQUARE .35
