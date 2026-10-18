@@ -173,7 +173,9 @@ const wanted = only.length > 0 ? only : null;
 // Whether any of these shots is to be taken (every shot, in a full run)
 const wants = (...names) => wanted === null || names.some((n) => wanted.includes(n));
 // Loop v2: the shot set of one unit (the ability pair only when a second mechanic fires)
-const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after"].map((s) => `unit_${id}_${s}`);
+const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after", ...(RELOAD_SHOT[id] ? ["reload"] : [])].map((s) => `unit_${id}_${s}`);
+// A unit whose reload is a pose of its own (the scarecrow's A-pose after the volley): one more shot, on the unit alone, this many ticks past the release
+const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 void PAIRS;
 // --list: print the shots this run would take and stop
 if (flag("--list")) {
@@ -483,6 +485,7 @@ async function main() {
           const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : 9;
           await take(`unit_${id}_flight`, release.tick + flightAt, far);
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
+          if (RELOAD_SHOT[id]) await take(`unit_${id}_reload`, release.tick + RELOAD_SHOT[id], 1);
         }
         if (ability) {
           // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
