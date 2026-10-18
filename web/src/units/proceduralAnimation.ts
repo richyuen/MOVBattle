@@ -293,6 +293,18 @@ const PRESS_BLOW_CLUB = 1.2;
  * the drop, when the sim lands the damage (blowLandsIn).
  */
 const BLOW_LAND = 0.55;
+/*
+ * [S] the hay baler's stick whack (343; card: Stick, a bludgeon on a 0.75 s cooldown, "swing, beat and whack"; farmer.hay_baler.blue.png: a short crooked
+ * stick in one fist). Not the club's overhead blow from straight over the head (BLOW_OVERHEAD): a quick one-handed forearm whack from the shoulder.
+ * - Cock (0 -> commit): the weapon fist drawn back beside the ear, shoulder STICK_WHACK.cock (from hanging; -pi/2 is level ahead) and out .out, elbow folded
+ *   .fold, the trunk turned .twist onto the weapon side; the stick's head back over the shoulder, its arc .cockArc (0 up, + forward).
+ * - Whack (commit -> .land of what is left): accelerating all the way (squared), the arm thrown out ahead to shoulder .hit (a little under level), the
+ *   elbow near straight (.reach), the trunk turned back through .twist the other way and pitched .pitch into it; the stick's arc to .hitArc, its head
+ *   forward and down at the man's chest. The sim lands the blow on that frame (blowLandsIn), the stick's head on him.
+ * - Held there to .hold, then eased back to the carry by the end. The off arm swings back against the whack (.offSwing) and takes no part in it.
+ * The club's aimed overhead blow (_aimBlow) is left out for the stick: it would stand his arm straight up over his head and hang the stick down from it.
+ */
+const STICK_WHACK = { cock: -2.1, out: 0.55, fold: -1.75, twist: 0.4, cockArc: -0.9, hit: -1.25, reach: -0.15, pitch: 0.3, hitArc: 1.9, land: 0.35, hold: 0.6, offSwing: 0.6 };
 const BLOW_AIM_FROM = 0.75;
 const BLOW_HOLD = 0.6;
 const BLOW_HOLD_FADE = 0.15;
@@ -586,6 +598,7 @@ export class ProceduralAnimator {
   private _blowLandFraction(): number {
     if (this._attackMotion === "heavy_swing") {
       const commit = this._resolveReleasePoint(0.45);
+      if (this._whacks()) return commit + (1 - commit) * STICK_WHACK.land;
       return commit + (1 - commit) * 0.45 * BLOW_LAND;
     }
     // the halberd's chop is on the man 0.4 of the way from the top of its raise to the end
@@ -635,7 +648,7 @@ export class ProceduralAnimator {
       this._body.hip.position.subtractInPlace(lunged);
       lunged.setAll(0);
     }
-    if (w <= 0.01 || !mark) return;
+    if (w <= 0.01 || !mark || this._whacks()) return;
     // How far past the landing the blow has followed through (BLOW_FOLLOW)
     const fu = Math.max(0, Math.min(1, (this._blowClock - this._blowLandsAt) / BLOW_FOLLOW));
     const follow = fu * fu * (3 - 2 * fu);
@@ -3260,7 +3273,59 @@ export class ProceduralAnimator {
    *   club down on that man's board line (_pressLand) and the recover keeps it there, as the press beat does, instead of heaving it back up near vertical.
    * The club's arc is handed to _carryProp through _clubArc/_clubHold and turned in the fist there; the arm alone could not stand it up overhead.
    */
+  /** True for the hay baler: his stick (id hayStick) is whacked from the shoulder (STICK_WHACK), not brought down from overhead. */
+  private _whacks(): boolean {
+    return (this._carry ??= this._buildCarry()).weapon?.prop?.node.id === "hayStick";
+  }
+
+  /** The hay baler's stick whack (spec at STICK_WHACK). */
+  private _animateWhack(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const W = STICK_WHACK;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const commit = this._resolveReleasePoint(0.45);
+    const land = commit + (1 - commit) * W.land;
+    const hold = commit + (1 - commit) * W.hold;
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
+    // c: 0 at rest, 1 cocked; h: 0 cocked, 1 landed; r: how far eased back to the carry
+    let c = 0, h = 0;
+    if (progress < commit) {
+      const u = progress / Math.max(commit, 0.001);
+      c = u * (2 - u);
+    } else if (progress < land) {
+      const u = (progress - commit) / Math.max(land - commit, 0.001);
+      c = 1;
+      h = u * u;
+    } else {
+      c = 1;
+      h = 1;
+    }
+    const r = progress > hold ? (progress - hold) / Math.max(1 - hold, 0.001) : 0;
+    const k = 1 - r * (2 - r);
+    const shoulder = (W.cock + (W.hit - W.cock) * h) * c;
+    b.rightShoulder.rotation.x = shoulder * k;
+    b.rightShoulder.rotation.z = (W.out - W.out * 1.2 * h) * c * k;
+    b.rightElbow.rotation.x = (W.fold + (W.reach - W.fold) * h) * c * k;
+    b.leftShoulder.rotation.x = (-0.3 + (W.offSwing + 0.3) * h) * c * k;
+    b.leftShoulder.rotation.z = -0.2 * c * k;
+    b.leftElbow.rotation.x = -0.4 * c * k;
+    b.torso.rotation.x = (-0.1 + (W.pitch + 0.1) * h) * c * k;
+    b.torso.rotation.y = (W.twist - 2 * W.twist * h) * side * c * k;
+    b.rightHip.rotation.x = 0.15 * h * k;
+    b.leftHip.rotation.x = -0.25 * h * k;
+    b.leftKnee.rotation.x = 0.2 * h * k;
+    b.rightKnee.rotation.x = 0.1;
+    this._clubArc = W.cockArc + (W.hitArc - W.cockArc) * h;
+    this._clubHold = c * k;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
   private _animateHeavySwing(dt: number): void {
+    if (this._whacks()) {
+      this._animateWhack(dt);
+      return;
+    }
     this._attackTimer += dt;
     const b = this._body;
     const progress = Math.min(this._attackTimer / this._attackDuration, 1);
