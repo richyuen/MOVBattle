@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
+  | "great_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
 export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette";
 
@@ -305,7 +305,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     undefined, { weaponVariant: "priest_staff" },
   ),
   "medieval.knight": vis(
-    { scale: 1.25, bulk: 1.55 }, "sword", "great_helm", "kite", "cape", "#C0C0C0",
+    { scale: 1.25, bulk: 1.55 }, "sword", "armet", "kite", "cape", "#C0C0C0",
   ),
   "medieval.catapult": vis(
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "helmet", "none", "catapult_arm", "#8B4513",
@@ -1372,6 +1372,7 @@ function inferHat(hint: string | undefined, faction: FactionId, name: string): H
     case "pirate_hat":
     case "captain_hat":
     case "great_helm":
+    case "armet":
     case "hood_liripipe":
     case "pointed_cowl":
     case "sun_hat":

@@ -43,7 +43,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -257,6 +257,13 @@ const MORION_IRON = new Color3(0.12, 0.12, 0.14);
  * SALLET.slit of the head high, SALLET.slitDown of the head under the eye's top, SALLET.slitWide of the shell across; tail SALLET.tail head widths long,
  * dipped SALLET.dip rad. Iron the morion's near-black.
  */
+/*
+ * [S] the Knight's open armet (353; medieval.knight.red.png, .png, card Appearance "an open armet helmet"). In head widths W and heights H: a grey steel bowl
+ * ARMET.heads W across and .deep as deep over the skull, its dome .dome H tall; cheek plates down each side and a back plate to .drop H below the crown; a
+ * chin bevor .bevor H tall under the mouth; the face between left open (eyes showing). The raised visor is a team-painted barred frame over the brow: a brow
+ * band just above the eyes, a top rail .rail of the way up the dome's front, and .bars bars between them, all standing .proud W off the steel.
+ */
+const ARMET = { heads: 1.22, deep: 1.1, dome: 0.5, drop: 1.0, plate: 0.09, bevor: 0.24, rail: 0.75, bars: 5, proud: 0.05, steel: new Color3(0.6, 0.6, 0.65) };
 const SALLET = { heads: 1.3, deep: 1.12, crown: 0.12, dome: 0.45, drop: 1.05, flare: 1.08, slit: 0.07, slitDown: 0.04, slitWide: 0.78, tail: 0.5, dip: 0.45 };
 /*
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
@@ -1060,6 +1067,46 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     brim.material = iron;
     brim.convertToFlatShadedMesh();
     brim.parent = dome;
+    return dome;
+  }
+  if (type === "armet") {
+    const steel = mat(scene, ARMET.steel, 0.05, "metal");
+    const paint = mat(scene, teamColor ?? accent, 0.12);
+    const R = ARMET.heads * W * 0.5, D = R * ARMET.deep, top = 0.06 * H;
+    const domeBase = top - ARMET.dome * H;
+    const dome = MeshBuilder.CreateSphere("armetDome", { diameterX: u(2 * R), diameterY: u(ARMET.dome * H * 2), diameterZ: u(2 * D), segments: 6, slice: 0.5 }, scene);
+    dome.position.y = u(domeBase);
+    dome.material = steel;
+    dome.convertToFlatShadedMesh();
+    const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, m = steel, tilt = 0): Mesh => {
+      const b = MeshBuilder.CreateBox(name, { width: u(w), height: u(h), depth: u(d) }, scene);
+      b.position.set(u(x), u(y - domeBase), u(z));
+      b.rotation.x = tilt;
+      b.material = m;
+      b.convertToFlatShadedMesh();
+      b.parent = dome;
+      return b;
+    };
+    // Cheeks and back: from the dome's foot down to the jaw, wrapping the sides and the nape
+    const low = top - ARMET.drop * H, tall = domeBase - low, plate = ARMET.plate * W;
+    for (const side of [1, -1]) box("armetCheek", plate, tall, D * 1.7, side * (R - plate * 0.5), low + tall * 0.5, -D * 0.12);
+    box("armetBack", 2 * R, tall, plate, 0, low + tall * 0.5, -D + plate * 0.5);
+    // The bevor under the mouth, the face open above it
+    box("armetBevor", 2 * R * 0.92, ARMET.bevor * H, plate, 0, low + ARMET.bevor * H * 0.5, D * 0.88);
+    // The raised barred visor frame in the team paint
+    const brow = -eyeTop + 0.04 * H, rise = ARMET.dome * H * ARMET.rail, proud = ARMET.proud * W;
+    const front = (y: number): number => D * Math.sqrt(Math.max(0, 1 - ((y - domeBase) / (ARMET.dome * H)) ** 2)) + proud;
+    const yTop = domeBase + rise;
+    box("armetBrow", 2 * R * 0.95, 0.09 * H, plate, 0, brow, D + proud, paint);
+    box("armetRail", 2 * R * 0.62, 0.07 * H, plate, 0, yTop, front(yTop), paint);
+    for (let i = 0; i < ARMET.bars; i++) {
+      const t = i / (ARMET.bars - 1) - 0.5;
+      const x0 = t * 2 * R * 0.85, x1 = t * 2 * R * 0.55;
+      const z0 = D + proud, z1 = front(yTop);
+      const dy = yTop - brow, dz = z1 - z0, dx = x1 - x0;
+      const bar = box("armetBar", 0.06 * W, Math.hypot(dy, dz, dx), plate * 0.8, (x0 + x1) / 2, (brow + yTop) / 2, (z0 + z1) / 2, paint, Math.atan2(dz, dy));
+      bar.rotation.z = -Math.atan2(dx, dy);
+    }
     return dome;
   }
   if (type === "sallet") {

@@ -625,7 +625,7 @@ export class UnitFactory {
     }
 
     // Helmed medieval men-at-arms wear a tabard: team-coloured cloth down the chest and back with a pale cross on the front.
-    if (!shouldUseVehicleBody && definition.faction === FactionId.Medieval && (visual.hat === "great_helm" || visual.hat === "plume_helmet")) {
+    if (!shouldUseVehicleBody && definition.faction === FactionId.Medieval && (visual.hat === "great_helm" || visual.hat === "armet" || visual.hat === "plume_helmet")) {
       // It is the torso's own tapered shape, a skin thicker front and back, so it hugs the chest, narrows with the
       // waist and ends above the hip instead of standing off the body as a board.
       const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
