@@ -1159,7 +1159,8 @@ export function attachProps(
       shield.position.set(0.06 * scale, -0.02 * scale, 0.12 * scale);
     } else if (config.shield !== "buckler") {
       const round = config.shield === "round";
-      shield.scaling.scaleInPlace(round ? 2.0 : 1.9);
+      // A rider's heater is torso-sized (334: at 1.9 it stood taller than his trunk)
+      shield.scaling.scaleInPlace(round ? 2.0 : config.shield === "heater" ? HEATER_GRIP_SIZE : 1.9);
       // A kite is shoulder-wide at the top, not a plank
       if (config.shield === "kite") shield.scaling.x *= 1.4;
       // The slab's length runs up the man, not along the forearm that carries it (a lapped board is stood up by the wall instead)
@@ -3497,6 +3498,7 @@ const LONGBOW = { long: 1.2, thick: 0.065, taper: 0.5, bow: 0.05, wrapAt: [0.6, 
 const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
 const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };
+const HEATER_GRIP_SIZE = 1.3;
 const HEATER_YELLOW = new Color3(0.95, 0.72, 0.12);
 const HEATER_RIM = new Color3(0.62, 0.42, 0.08);
 function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {

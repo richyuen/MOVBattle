@@ -176,6 +176,9 @@ const PALETTE_HOLD = { raise: -1.0, out: -0.55, elbow: -1.2, sway: 0.05 };
  * below, in the body's frame (the swing's trunk twist does not bring it round in front), and the board stood in the world face-up, tipped .tip to his front.
  */
 const PALETTE_OUT = { side: 0.24, fwd: 0.1, drop: 0.07, tip: 0.35 };
+// The rider's heater (see _holdHeater): where the off fist is held off the off shoulder (shares of his height: forward, out, down) and how far the board's
+// face is turned from his off side toward his front (rad)
+const HEATER_HOLD = { fwd: 0.2, side: 0.08, drop: 0.2, turn: 0.35 };
 /*
  * [S] lunge (330; card Characteristics "thrusts forward to attack with its foil then steps back"; renaissance.fencer.png: the sword arm straight out level
  * at the foe, the blade on its line, the front foot well in, the rear leg long). A rapier is not brought down on a man (no _aimBlow): it is thrust.
@@ -1599,6 +1602,7 @@ export class ProceduralAnimator {
     this._carryBoulder();
     this._holdPalette();
     this._couchLance();
+    this._holdHeater();
     this._pointRapier();
     this._lungeLegs();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
@@ -1878,6 +1882,47 @@ export class ProceduralAnimator {
     const parent = Matrix.Identity();
     parentRot.toRotationMatrix(parent);
     lance.node.rotationQuaternion = Quaternion.Slerp(lance.rest, Quaternion.FromRotationMatrix(world.multiply(parent.transpose())), w);
+  }
+
+  /**
+   * [S] heater held up (334; renaissance.jouster.red.png: a torso-sized yellow heater upright on the off arm, its point down beside the horse's neck, its
+   * face out to his off side). The heater no longer rides the off hand at whatever angle the arm leaves it (it leant back ~30 deg with its point sunk behind
+   * the horse's back, edge-on from the side): the off fist is solved onto a point HEATER_HOLD.fwd ahead of the off shoulder, .side out and .drop down, and
+   * the board is stood in the world, its top up and its face turned HEATER_HOLD.turn from his off side toward his front. Limp or dead it rides the hand.
+   */
+  private _heater: { node: TransformNode; rest: Quaternion } | null | undefined = undefined;
+  private _holdHeater(): void {
+    if (this._heater === undefined) {
+      const node = this._body.leftHand.getChildren().find((n): n is TransformNode => n.name === "hshield");
+      this._heater = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+    }
+    if (!this._heater || this.walkStyle === "quadruped") return;
+    const k = this._state === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
+    if (k <= 0.01) {
+      this._heater.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const side = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.leftShoulder.position.x) || -1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const point = b.leftShoulder.getAbsolutePosition().add(fwd.scale(HEATER_HOLD.fwd * height)).addInPlace(side.scale(HEATER_HOLD.side * height))
+      .addInPlace(new Vector3(0, -HEATER_HOLD.drop * height, 0));
+    this._offArmTo(point, k, 2);
+    for (const n of [b.leftShoulder, b.leftElbow, b.leftHand]) n.computeWorldMatrix(true);
+    const y = Vector3.Up();
+    const z = side.scale(Math.cos(HEATER_HOLD.turn)).addInPlace(fwd.scale(Math.sin(HEATER_HOLD.turn))).normalize();
+    const x = Vector3.Cross(y, z).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, z, world);
+    const handRot = new Quaternion();
+    b.leftHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    this._heater.node.rotationQuaternion = Quaternion.Slerp(this._heater.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), k);
   }
 
   // The painter's palette arm (see PALETTE_HOLD and PALETTE_OUT): held out beside him over whatever the pose layers made of the off arm
