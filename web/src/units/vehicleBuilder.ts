@@ -1374,6 +1374,14 @@ const MAMMOTH_SCALE = 1.8;
  */
 const MAMMOTH_HIDE = new Color3(0.34, 0.17, 0.1);
 const MAMMOTH_FUR = { jitter: 0.06, glow: 0.1, shag: 0.25 };
+/*
+ * The mane (tribal.mammoth.red.png, card Appearance: "a majestic wood-brown mane"): one shaggy dark-brown mass from the brow back over the crown and the nape
+ * toward the hump, not a smooth cap: the forehead pad, the crest behind it and the three crown tufts are flat-faced balls with every vertex pushed in or out by
+ * MAMMOTH_MANE.jitter, and MAMMOTH_MANE.locks ragged four-sided locks hang off the crest's back and sides, MAMMOTH_MANE.long long, tips down and out.
+ * MAMMOTH_MANE_COLOR, self-lit MAMMOTH_MANE.glow so it stays brown, darker than the coat.
+ */
+const MAMMOTH_MANE = { jitter: 0.2, locks: 7, long: 0.42, glow: 0.12 };
+const MAMMOTH_MANE_COLOR = new Color3(0.2, 0.1, 0.06);
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
   // The whole rig under the root scales by the unit's giant scale with its footprint and reach (unitDefinitions), so hull, legs, tusks, trunk and seats keep their proportions
@@ -1488,25 +1496,38 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   headMesh.scaling.set(0.85, 1, 0.8);
   headMesh.parent = neck; headMesh.material = fur; allMeshes.push(headMesh);
 
-  // Forehead mop and the crest behind it: one dark indigo fur cap, a long wide pad sunk into the crest so no hide shows between them, overhanging the brow above the war paint and running back over the skull to the hump
-  const crestMat = makeMat(scene, Color3.Lerp(hide, new Color3(0.10, 0.05, 0.22), 0.75));
-  const dome = MeshBuilder.CreateSphere("dome", { diameter: 0.75, segments: 3 }, scene);
-  dome.position.set(0, 0.52, 0.27);
-  dome.scaling.set(1.2, 0.75, 1.5);
-  dome.parent = neck; dome.material = crestMat; allMeshes.push(dome);
-  const crest = MeshBuilder.CreateSphere("crest", { diameter: 1, segments: 3 }, scene);
-  crest.position.set(0, 0.5, -0.18);
-  crest.scaling.set(0.72, 0.62, 0.95);
-  crest.parent = neck; crest.material = crestMat; allMeshes.push(crest);
-  // Shaggy topknot: three fat blunt fur tufts standing off the crown, wider than tall and flat-topped, the middle one
-  // tallest and tipped forward, so the skull line is a lumpy mop and not a smooth dome or a row of spikes
-  for (const [x, y, z, h, lean] of [[0, 0.82, 0.12, 0.55, 0.35], [-0.14, 0.72, 0.0, 0.42, 0.1], [0.14, 0.72, 0.0, 0.42, 0.1]]) {
-    const tuft = MeshBuilder.CreateSphere("topknot", { diameter: 1, segments: 3 }, scene);
-    tuft.scaling.set(h * 1.0, h * 0.8, h * 1.0);
-    tuft.position.set(x, y, z);
+  // The mane (spec at MAMMOTH_MANE): the forehead pad overhanging the brow above the war paint, the crest behind it running back over the skull to the hump,
+  // three fat crown tufts, all lumpy faceted fur, and ragged locks off the crest's back and sides. The sacred elephant shaves all of it (ELEPHANT_SHAVED).
+  const crestMat = mammoth
+    ? getMaterialFactory().get("wood", MAMMOTH_MANE_COLOR, { emissive: MAMMOTH_MANE_COLOR.scale(MAMMOTH_MANE.glow) })
+    : makeMat(scene, Color3.Lerp(hide, new Color3(0.10, 0.05, 0.22), 0.75));
+  const maneBall = (name: string, radii: Vector3, at: Vector3, serial: number): Mesh => {
+    const m = MeshBuilder.CreateIcoSphere(name, { radius: 1, subdivisions: 2, flat: true }, scene);
+    jitterVertices(m, MAMMOTH_MANE.jitter, serial, radii.x, radii.y, radii.z);
+    m.position.copyFrom(at);
+    m.parent = neck; m.material = crestMat; allMeshes.push(m);
+    return m;
+  };
+  maneBall("dome", new Vector3(0.48, 0.3, 0.58), new Vector3(0, 0.52, 0.25), 3.3);
+  maneBall("crest", new Vector3(0.42, 0.36, 0.56), new Vector3(0, 0.5, -0.2), 5.9);
+  for (const [x, y, z, h, lean] of [[0, 0.82, 0.12, 0.55, 0.35], [-0.16, 0.72, 0.0, 0.44, 0.1], [0.16, 0.72, 0.0, 0.44, 0.1]]) {
+    const tuft = maneBall("topknot", new Vector3(h * 0.5, h * 0.42, h * 0.5), new Vector3(x, y, z), 7.1 + x * 10);
     tuft.rotation.x = lean;
     tuft.rotation.z = -x * 1.6;
-    tuft.parent = neck; tuft.material = crestMat; allMeshes.push(tuft);
+  }
+  // Ragged locks: four-sided spikes round the crest's back and sides, hanging down and out over the nape, each its own length
+  for (let i = 0; i < MAMMOTH_MANE.locks; i++) {
+    const a = -Math.PI * 0.75 + (i / (MAMMOTH_MANE.locks - 1)) * Math.PI * 1.5;
+    const share = 0.5 + 0.5 * Math.sin(i * 12.9898 + 4.1);
+    const long = MAMMOTH_MANE.long * (0.75 + 0.5 * share);
+    const lock = MeshBuilder.CreateCylinder("maneLock", { height: long, diameterTop: 0.2, diameterBottom: 0.02, tessellation: 4 }, scene);
+    lock.rotation.y = i * 0.7;
+    lock.bakeCurrentTransformIntoVertices();
+    lock.convertToFlatShadedMesh();
+    const sx = Math.sin(a), cz = -Math.cos(a);
+    lock.position.set(sx * 0.38, 0.38 - long * 0.35, -0.2 + cz * 0.42);
+    lock.rotation.set(-cz * 0.45, 0, sx * 0.45);
+    lock.parent = neck; lock.material = crestMat; allMeshes.push(lock);
   }
 
   // War paint stripe across the brow
@@ -1691,7 +1712,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
 const ELEPHANT_HIDE = new Color3(0.74, 0.75, 0.76);
 const ELEPHANT_GOLD = new Color3(0.95, 0.66, 0.16);
 const ELEPHANT_GEM = new Color3(0.16, 0.26, 0.85);
-const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "browPaint", "paintDaub", "hump"]);
+const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "paintDaub", "hump"]);
 const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
 const TUSK_RING_PIECE = 4;
 const BLANKET_RADII = new Vector3(0.92, 0.8, 0.74);
