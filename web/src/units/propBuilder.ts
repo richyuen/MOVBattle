@@ -17,7 +17,7 @@ import { jitterVertices } from "./tribalDress";
  * under the sky light at .5 grey), no team tint. Built once for the bucket's payload
  * and again for the shot that leaves it.
  */
-const BOULDER = { facets: 1, lumpy: 0.2, squat: 0.82, stone: new Color3(0.66, 0.59, 0.5), lit: 0.18 };
+const BOULDER = { facets: 1, lumpy: 0.2, squat: 0.82, stone: new Color3(0.6, 0.5, 0.4), lit: 0.1 };
 export function buildFacetedBoulder(scene: Scene, name: string, diameter: number): Mesh {
   const rock = MeshBuilder.CreateIcoSphere(name, { radius: diameter / 2, subdivisions: BOULDER.facets, flat: true }, scene);
   jitterVertices(rock, BOULDER.lumpy, 352, 1, BOULDER.squat, 1);
