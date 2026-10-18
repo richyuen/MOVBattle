@@ -234,6 +234,14 @@ const HEATER_HOLD = { fwd: 0.2, side: 0.08, drop: 0.2, turn: 0.35 };
  */
 /** Share of the hip's rest height the lunge legs give up: the mean drop of the bent front leg and the straight rear one (thigh = shin = half). */
 const lungeSinkShare = (): number => 1 - (0.5 * Math.cos(LUNGE.front) + 0.5 * Math.cos(LUNGE.front + LUNGE.knee) + Math.cos(LUNGE.back)) / 2;
+/*
+ * [S] The farmer's pitchfork stab (347; card Characteristics "swing and stab enemy units", farmer.farmer.png): not the generic thrust (whose arm drive left the
+ * low-carried fork trailing in the turf behind a bare fist). The fork is turned in the fist level at the enemy, tines first (through _sweepTip/_clubHold, so
+ * a blow on him cannot tip it): drawn back (0 -> commit) with the weapon fist at the hip, the trunk turned back FORK_STAB.turn and sat back, the tines
+ * FORK_STAB.cock up; driven (commit -> the blow's landing) both arms out to FORK_STAB.reach, the trunk pitched FORK_STAB.pitch over a front leg stepped out
+ * FORK_STAB.step of the hip height, the tines FORK_STAB.dip down onto the chest; held FORK_STAB.hold of the attack there, then eased back to the carry.
+ */
+const FORK_STAB = { cock: 0.18, dip: -0.08, turn: 0.35, drawRaise: -0.25, drawElbow: -1.45, reach: -1.3, offReach: -1.2, pitch: 0.28, step: 0.3, front: -0.7, knee: 0.55, hold: 0.25 };
 const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -1.25, knee: 1.35, back: 0.85, step: 0.45, retreat: 0.2, hold: 0.16 };
 /*
  * [S] lunge legs (333; renaissance.fencer.png, read off the red fencer: the front thigh near level, ~70 deg forward of vertical, the shin dropped back
@@ -3432,6 +3440,53 @@ export class ProceduralAnimator {
     return this._lowScythe;
   }
 
+  /** True for the farmer: his pitchfork (forkBar) is stabbed level at the enemy (FORK_STAB). */
+  private _stabsFork(): boolean {
+    return this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name === "forkBar"));
+  }
+
+  /** The farmer's pitchfork stab (spec at FORK_STAB). */
+  private _animateForkStab(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const F = FORK_STAB;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const commit = this._resolveReleasePoint(0.45);
+    const land = Math.max(commit + 0.05, this._blowLandFraction());
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
+    const smooth = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
+    // g: drawn back; e: driven out; r: eased back off the hold
+    const g = smooth(progress / Math.max(commit, 0.001));
+    const e = progress < commit ? 0 : 1 - Math.pow(1 - Math.min(1, (progress - commit) / Math.max(land - commit, 0.001)), 2.4);
+    const r = smooth((progress - land - F.hold) / Math.max(1 - land - F.hold, 0.001));
+    const out = e * (1 - r);
+    const drawn = g * (1 - e) * (1 - r);
+    // the fork level at him, tines a touch up when drawn and down onto his chest when driven home
+    this._sweepTip = new Vector3(0, F.cock * drawn + F.dip * out, 1).normalize();
+    this._clubHold = Math.max(drawn, out, g * (1 - r));
+    b.rightShoulder.rotation.x = F.drawRaise * drawn + F.reach * out;
+    b.rightShoulder.rotation.z = 0.15 * drawn;
+    b.rightElbow.rotation.x = F.drawElbow * drawn - 0.12 * out;
+    b.leftShoulder.rotation.x = -0.75 * drawn + F.offReach * out;
+    b.leftShoulder.rotation.z = -0.3 * drawn - 0.15 * out;
+    b.leftElbow.rotation.x = -0.9 * drawn - 0.2 * out;
+    b.torso.rotation.y = side * F.turn * drawn - side * 0.12 * out;
+    b.torso.rotation.x = -0.1 * drawn + F.pitch * out;
+    b.neck.rotation.x = 0.08 * drawn - 0.15 * out;
+    b.rightHip.rotation.x = 0.2 * drawn + F.front * out;
+    b.rightKnee.rotation.x = 0.25 * drawn + F.knee * out;
+    b.leftHip.rotation.x = -0.15 * drawn + 0.35 * out;
+    b.leftKnee.rotation.x = 0.2 * drawn;
+    this._hipRest ??= b.hip.position.y;
+    this._lungeStep.set(0, 0, this._hipRest * (F.step * out - 0.08 * drawn));
+    b.hip.position.addInPlace(this._lungeStep);
+    if (progress >= 1) {
+      this._state = AnimState.Idle;
+      this._sweepTip = null;
+      this._clubHold = 0;
+    }
+  }
+
   /** The harvester's sweep (spec at SCYTHE_SWEEP). */
   private _animateSweep(dt: number): void {
     this._attackTimer += dt;
@@ -3875,6 +3930,10 @@ export class ProceduralAnimator {
   private _animateThrust(dt: number): void {
     if (this._halberd()) {
       this._animateHalberdChop(dt);
+      return;
+    }
+    if (this._stabsFork()) {
+      this._animateForkStab(dt);
       return;
     }
     this._attackTimer += dt;
