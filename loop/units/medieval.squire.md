@@ -16,4 +16,4 @@ d PASS (cost 100, hp 1.63x, dmg 1.33x, cd 1.00x)
 353 | two-fisted hilt: off fist onto the grip under the weapon fist (SlabCut.fists, TWO_FIST_SWORD, _swordInBothFists) [S] (7f4b61c) | b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- critic 353: in _idle the off fist stops short of the grip (sword carried pommel-forward), in _release a forearm below it; clamp the target to the off arm's reach.
+- 354 king [R] FISTS_ON_GRIP reworked its two-fist hold (line through the fist, reach-solved off fist); critic: both fists still on the grip.

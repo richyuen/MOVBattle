@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-344 | plain snath, grip wraps off (651d95a) | farmer.harvester.b | approved
-344 | Halfling Jump leap (2cb2be2) | farmer.halfling.c | approved
-344 | level stick carry across the front (cbcb6df) | farmer.hay_baler.b | approved
-344 | jerkin, undershirt V, laces, buttons, hem (2304369) | farmer.potion_seller.a | approved
-344 | T-pose, perched elbow crows (c3ffda9) | farmer.scarecrow.a | approved
 345 | dark team hosen, brown cuffed boots (edeb651) | farmer.potion_seller.a | approved
 345 | average man, bale fitted to his frame (492545d) | farmer.hay_baler.a | approved
 345 | low level sweep + fling (8bd49db +c11f873) | farmer.harvester.c | rejected
@@ -72,11 +67,14 @@ vehicleBuilder.ts:CATAPULT_ARM (pivotY, long, short, cocked, thrown); runtimeUni
 simulationSystem.ts:KNIGHT_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | .4,2.5,2.6,1,.5,.3,5,6,3.5,5 | 351 | approved | critic: reads as a brisk run
 propBuilder.ts:BANJO (pot, deep, head, front, neck, neckWide, frets, headLong, headWide, headTip, pegs) | .19,.28,.86,.05,.36,.032,9,.075,1.7,.25,4 | 351 | approved | -
 proceduralAnimation.ts:BANJO_HOLD (out, up, ahead, across, rise, forward); POLE_GRIP.banjoNeck | .2,.1,.32,.72,.66,.12; [.6,.95] | 351 | approved | critic: neck too upright, fists high on the neck
-propBuilder.ts:ZWEI SlabCut (long, wide, grip, point, lug, lugAt) | .85, .05, 4.5, .12, .045, .07 | 352 | approved | 351 own mesh: .8, .024, .24 H grip (rejected)
+propBuilder.ts:ZWEI SlabCut (long, wide, grip, point, lug, lugAt, seat) | .85, .05, 4.5, .12, .045, .07, 2.5 | 354 | approved | seat - (352); 351 own mesh: .8, .024, .24 H grip (rejected)
 propBuilder.ts:LONGSWORD SlabCut (long, wide, grip, point) | .62, .045, 2.6, .14 | 352 | approved | -
-propBuilder.ts:BOULDER (facets, lumpy, squat, stone, lit); vehicleBuilder CATAPULT_BOULDER | 1, .2, .82, (.66,.59,.5), .18; .65 | 352 | approved | (.5,.45,.38) lit 0; critic: near white
+propBuilder.ts:BOULDER (facets, lumpy, squat, stone, lit); vehicleBuilder CATAPULT_BOULDER | 1, .2, .82, (.6,.5,.4), .1; .65 | 354 | approved | (.66,.59,.5) .18 (352; critic 354: still cool grey); (.5,.45,.38) lit 0; critic: near white
 propBuilder.ts:BROWN_LONGBOW (long, wood, wrap) | 1.4, (.45,.27,.14), (.86,.78,.62) | 353 | approved | long 1.2 (LONGBOW, 352); critic: grip wrap oversized
-proceduralAnimation.ts:TWO_FIST_SWORD (longswordFists) | .4 (zweiFists .5 rejected 353) | 353 | approved | critic: idle/release off fist short of grip
+proceduralAnimation.ts:TWO_FIST_SWORD (longswordFists, zweiFists); FISTS_ON_GRIP (gap, reach, pommel) | .4, .4; .75, .96, .4 | 354 | approved | zweiFists .5 rejected 353; critic: idle/release off fist short of grip
 propBuilder.ts:PRIEST_STAFF (long, thick, grip, sleeve, cap, orb, band, finial); PRIEST_HOLD | 1.2,.02,.45,.17,.05,.11,.012,.06 | 353 | approved | critic: orb half a head
 propBuilder.ts:ARMET (heads, deep, dome, drop, plate, bevor, rail, bars, proud) | 1.22,1.1,.5,1,.09,.24,.75,5,.05 | 353 | approved | critic: wants rail 1.0, proud .12
 simulationSystem.ts:BANJO_WALK (lure, clear, turn, step) | 2.2, 1.5, .85, 1.2 | 353 | approved | turn 1.15 (pre-review); critic: arc gentle
+visualEffects.ts:MUSIC_NOTE (size, head, tilt, stem, flag, rise, sway, life, fade, color, glow); simulationSystem BANJO_NOTES (every, first, over, aside, stack) | 1,.13,.45,.26,.12,.45,.08,1.6,.35,(.95,.4,.04),.2; .45,2,.32,.18,.32 | 354 | approved | glow .6, over .15 (pre-review); critic: thin, dim, small
+vehicleBuilder.ts:CATAPULT_CREW (z, y, raise, spread, elbow); CREW_DRESS colours | -.74, .5, -2.8, .12, -.2 | 354 | approved | z -.62 raise -2.6 (pre-review); critic: arms frozen up after the shot
+unitFactory.ts:HEALER_ROBE (long, hem) | 1.75, 1.5 | 354 | approved | -

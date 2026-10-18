@@ -7,17 +7,17 @@ a FAIL (0 since 351)
  3. hat in unit_medieval.bard_idle is a pale flat wide-brim disc with a stick quill — TABS: brown floppy hat, raised crown, broad team leaf feather (ref: medieval.bard.red.png)
 b FAIL (1 since 351)
  1. grip in unit_medieval.bard_idle/_windup: both fists high on the neck near the chin, nothing on the pot, neck near-upright — TABS: weapon hand strums on the pot, off hand frets mid-neck, neck ~45 deg to the off shoulder (ref: medieval.bard.png, .red.png)
-c FAIL (1 since 351)
- 2. no orange music notes around the bard in unit_medieval.bard_release/_flight/_ability — TABS: notes above the bard's head (ref: medieval.bard.blue.png)
+c PASS (354)
 d PASS (cost 60, hp 0.71x, dmg 0.58x, cd 1.00x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c music notes — blocker 2: orange note particles rising over his head while banjo_walk is active and he plays — ref: medieval.bard.blue.png — ours: unit_medieval.bard_ability.png
-2. [S] b strum grip — blocker 1: weapon fist on the pot face, off fist mid-neck, neck at ~45 deg (BANJO_HOLD) — ref: medieval.bard.png — ours: unit_medieval.bard_windup.png
+1. [S] b strum grip — blocker 1: weapon fist on the pot face, off fist mid-neck, neck at ~45 deg (BANJO_HOLD) — ref: medieval.bard.png — ours: unit_medieval.bard_windup.png
+2. [S] a floppy hat — blocker 3: brown floppy hat, raised crown, broad team leaf feather — ref: medieval.bard.red.png — ours: unit_medieval.bard_idle.png
 3. [S] a vest and tunic — blocker 1: dark laced vest over a team tunic and short skirt — ref: medieval.bard.red.png — ours: unit_medieval.bard_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-351 | banjo: drum pot, pale face, fretted neck, pegged headstock, laid across him (BANJO, BANJO_HOLD) [S] (e179db7) | b | approved
-353 | Banjo Walk: lure to 2.2 m past reach, run off round his man .85 rad off away, logged banjo_walk (BANJO_WALK) [S] (68d8302 +53c3633) | c | approved
+351 | banjo: drum pot, fretted neck, headstock, laid across him (BANJO, BANJO_HOLD) [S] (e179db7) | b | approved
+353 | Banjo Walk: lure, run off round his man (BANJO_WALK) [S] (68d8302 +53c3633) | c | approved
+354 | music notes: orange eighth notes off his head during the walk (MUSIC_NOTE, BANJO_NOTES) [S] (a20bb74 +3c65ac0) | c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- critic 351: in _flight he swings the banjo pot-first like a club (TABS: he plays it; c territory).
-- critic 353: the walk reads as running away more than circling (gentle arc). unit_medieval.bard_walk (evidence 8c94af9) is 1.5 s into the walk.
+- critic 354 (c PASS): notes thin, small, dim brown-orange (TABS chunky bright orange, about torso size).
+- critic 353: the walk reads as running away more than circling. unit_medieval.bard_walk is 1.5 s into the walk.

@@ -1,12 +1,12 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 353   Batch: medieval (4/18)   Consecutive empty: 0   Done: 21/139   Parked: 0
+Iteration: 354   Batch: medieval (4/18)   Consecutive empty: 0   Done: 21/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
-medieval: bard ---+ o | squire -+++ o | archer ---+ o | healer -+++ o | knight -+++ o | catapult --++ o | king --++ o
+medieval: bard --++ o | squire -+++ o | archer ---+ o | healer -+++ o | knight -+++ o | catapult --++ o | king -+++ o
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
@@ -23,15 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-353 (BASE 5d59ccc): [S] squire b two-fisted hilt 7f4b61c approved | [S] king b two-fisted Zweihander 9e2fd04 rejected (reverted c9dd189) | [S] healer b priest staff 03b4e5c approved | [S] knight a open armet 58cfa04+4459ae6 approved | [S] bard c Banjo Walk 68d8302+53c3633 approved | [P] archer b BROWN_LONGBOW.long 1.4 e1336bb approved | evidence 8c94af9+2f382aa (unit_<id>_walk)
+354 (BASE b536178): [R] king b two fists on the long grip 331adbd approved | [S] archer c planted full-draw release e9a6c71 approved | [S] bard c music notes a20bb74+3c65ac0 approved | [S] catapult b visible crewman 0264878+e6055d9 approved | [S] healer a priest robe 62b021b approved | [P] catapult b BOULDER tone 3cd7525 approved
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] medieval.squire (7f4b61c) VERDICT: APPROVE CRITERION: medieval.squire.b PASS (previous: FAIL) BLOCKERS: struck: 1
-- GAP: [S] medieval.king (9e2fd04) VERDICT: REJECT CRITERION: medieval.king.b FAIL (previous: FAIL) BLOCKERS: 1. off hand beside the guard, off the grip line
-- GAP: [S] medieval.healer (03b4e5c) VERDICT: APPROVE CRITERION: medieval.healer.b PASS (previous: FAIL) BLOCKERS: struck: 1
-- GAP: [S] medieval.knight (58cfa04 +4459ae6) VERDICT: APPROVE CRITERION: medieval.knight.a FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2, 3
-- GAP: [S] medieval.bard (68d8302 +53c3633) VERDICT: APPROVE CRITERION: medieval.bard.c FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
-- GAP: [P] medieval.archer (e1336bb) VERDICT: APPROVE CRITERION: medieval.archer.b FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
+- GAP: [R] medieval.king (331adbd) VERDICT: APPROVE CRITERION: medieval.king.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remaining)
+- GAP: [S] medieval.archer (e9a6c71) VERDICT: APPROVE CRITERION: medieval.archer.c FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
+- GAP: [S] medieval.bard (a20bb74 + 3c65ac0) VERDICT: APPROVE CRITERION: medieval.bard.c PASS (previous: FAIL) BLOCKERS: struck: 2 (none remaining)
+- GAP: [S] medieval.catapult (0264878 + e6055d9) VERDICT: APPROVE CRITERION: medieval.catapult.b FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
+- GAP: [S] medieval.healer (62b021b) VERDICT: APPROVE CRITERION: medieval.healer.a FAIL (previous: FAIL) BLOCKERS: struck: 2; remaining: 1, 3
+- GAP: [P] medieval.catapult (3cd7525) VERDICT: APPROVE CRITERION: medieval.catapult.b FAIL (previous: FAIL) BLOCKERS: blocker 2 tone cleared; remaining: 2 (spoon bucket)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Medieval audited 351 (d 7/7 PASS). Squire/archer stats moved in 351 (both in regression scenarios): expect re-baselines at the medieval checkpoint.
-- King b is plateau (rejected 351, 353): next pick on it is one [R]; reach-clamp the off fist on the long grip (TWO_FIST_SWORD/_swordInBothFists, squire approved 353).
-- Pickable [P] fallout: CATAPULT_ARM.cocked lower (351, catapult_idle); BOULDER.stone (.6,.5,.4) lit .1 (352, catapult_windup); ARMET.rail 1.0 proud .12 (353, lineup_medieval).
-- Bard Banjo Walk (353) may shift regression scenarios with bards; capture adds unit_<id>_walk for a banjo_walk. Knight _idle faces away: helm front in lineup/_ability.
-- Bash eats backslashes and some heredocs (apostrophes in heredoc bodies broke 353): write files with the Write tool; unitVisuals.ts is CRLF. Never `git commit -a`.
+- Medieval audited 351 (d 7/7 PASS). Squire/archer stats moved in 351; archer arrow now leaves at the loose (354, ~1.5 s later); bard notes/walk 353-354: expect re-baselines at the medieval checkpoint.
+- Two-fisted swords (king, squire) run FISTS_ON_GRIP (354): blade mounted on its line through the fist, carry and let-go both keep it there.
+- Pickable [P] fallout: ARMET.rail 1.0 proud .12 (353, lineup_medieval); MUSIC_NOTE bigger/brighter (354, bard_ability); BOULDER warmer (354, catapult_windup).
+- Knight not captured since 353; its _idle faces away: helm front in lineup/_ability. Capture adds unit_<id>_walk for a banjo_walk.
+- Bash eats backslashes and some heredocs: write files with the Write tool; unitVisuals.ts is CRLF. Never git commit -a. Commit msgs via a file and git commit -F.
