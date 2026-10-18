@@ -1,5 +1,12 @@
 import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
+
+/*
+ * [S] spin while firing (330; card Characteristics "During battle, the machine spins around, launching cannonballs from the cannons"; renaissance.da_vinci_tank.jpg).
+ * The da Vinci tank's drum (hull, cannons, muzzles) turns about the upright from its first volley on, DRUM_SPIN.rate rad/s at full speed, reached at
+ * spinUp and lost at spinDown per second, and keeps turning through the wait for the next volley and DRUM_SPIN.linger s past it.
+ */
+const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
 import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
@@ -442,6 +449,21 @@ export class RuntimeUnit {
     this._nextAttackAt = now + Math.max(0.05, cooldown);
     // Trigger attack animation
     this.animator.triggerAttack(this._resolvePrimaryAttackWindup(cooldown), this._resolvePrimaryAttackMotion());
+    // A spinning drum (the da Vinci tank) keeps turning from this volley through the wait for the next one
+    this._drumTimer = Math.max(this._drumTimer, cooldown + DRUM_SPIN.linger);
+  }
+
+  // The da Vinci tank's drum (see DRUM_SPIN), looked up once, its spin (0 still, 1 full speed) and how long it has left to keep turning
+  private _drum: TransformNode | null | undefined = undefined;
+  private _drumSpin = 0;
+  private _drumTimer = 0;
+  private _spinDrum(dt: number): void {
+    if (this._drum === undefined) this._drum = this.body.root.getChildren().find((n): n is TransformNode => n.name === "davinci_spin") ?? null;
+    if (!this._drum) return;
+    this._drumTimer -= dt;
+    const want = this._drumTimer > 0 && !this._isDead ? 1 : 0;
+    this._drumSpin += (want - this._drumSpin) * Math.min(1, dt * (want > this._drumSpin ? DRUM_SPIN.spinUp : DRUM_SPIN.spinDown));
+    this._drum.rotation.y += this._drumSpin * DRUM_SPIN.rate * dt;
   }
 
   moveTo(target: Vector3): void {
@@ -848,6 +870,7 @@ export class RuntimeUnit {
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
     this.animator.update(dt);
+    this._spinDrum(dt);
     if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3
       && now >= this._blowTarget._flinchHeldUntil) {
       this._blowTarget.animator.triggerFlinch();

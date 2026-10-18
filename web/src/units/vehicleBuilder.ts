@@ -804,12 +804,16 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.55, 0.42, 0.25));
   const metal = makeMat(scene, new Color3(0.4, 0.4, 0.45));
+  // The drum (330, card Characteristics "the machine spins around, launching cannonballs from the cannons"): the hull, its cannons, their muzzles and the
+  // viewport ride one node that RuntimeUnit spins about the upright while the tank fights (DRUM_SPIN); the base, the wheels and Da Vinci stay put
+  const drum = new TransformNode("davinci_spin", scene);
+  drum.parent = root;
 
   // Conical hull
   const hull = MeshBuilder.CreateCylinder("hull", {
     height: 0.9, diameterTop: 0.15, diameterBottom: 2.0, tessellation: 16,
   }, scene);
-  hull.position.y = 0.6; hull.parent = root; hull.material = teamPrimary; allMeshes.push(hull);
+  hull.position.y = 0.6; hull.parent = drum; hull.material = teamPrimary; allMeshes.push(hull);
 
   // Base plate
   const basePlate = MeshBuilder.CreateCylinder("basePlate", { height: 0.1, diameter: 2.1, tessellation: 16 }, scene);
@@ -826,13 +830,13 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
     // Point barrel outward radially
     barrel.rotation.x = Math.PI / 2;
     barrel.rotation.y = -angle + Math.PI / 2;
-    barrel.parent = root; barrel.material = metal; allMeshes.push(barrel);
-    muzzleSequence.push(makeSocket(scene, root, `davinci_muzzle_${i}`, new Vector3(Math.cos(angle) * 1.08, 0.3, Math.sin(angle) * 1.08)));
+    barrel.parent = drum; barrel.material = metal; allMeshes.push(barrel);
+    muzzleSequence.push(makeSocket(scene, drum, `davinci_muzzle_${i}`, new Vector3(Math.cos(angle) * 1.08, 0.3, Math.sin(angle) * 1.08)));
   }
 
   // Top viewport
   const viewport = MeshBuilder.CreateCylinder("viewport", { height: 0.15, diameter: 0.3, tessellation: 8 }, scene);
-  viewport.position.y = 1.1; viewport.parent = root; viewport.material = metal; allMeshes.push(viewport);
+  viewport.position.y = 1.1; viewport.parent = drum; viewport.material = metal; allMeshes.push(viewport);
 
   // Wheels (4, peeking out from base)
   for (const x of [-0.6, 0.6]) {
