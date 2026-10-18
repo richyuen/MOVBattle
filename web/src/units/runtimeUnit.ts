@@ -9,6 +9,12 @@ import { getMaterialFactory } from "./materialFactory";
  */
 const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
 /*
+ * [S] catapult throw (351; medieval.catapult.jpg). On a shot the arm (CATAPULT_ARM in vehicleBuilder) whips from cocked to upright in CATAPULT_THROW.swing s,
+ * easing out, stands there .hold s, then is hauled back down to cocked over .lower of the time left before the next shot. The shot in the bucket is
+ * hidden from the throw until the arm is back down.
+ */
+const CATAPULT_THROW = { swing: 0.12, hold: 0.5, lower: 0.7 };
+/*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
  * (floatOnBalloons) has `per` team balloons swell over his head in `swell` s, `size` m across on `string` m strings, up to `most` from several arrows;
@@ -31,7 +37,7 @@ import type { ImpactDelta } from "../combat/impactPresentation";
 import type { UnitDefinition } from "../data/unitDefinitions";
 import type { ContactRole, CrowdPhysicsProfile, RagdollProfile } from "../data/combatProfiles";
 import type { ArticulatedBody } from "./bodyBuilder";
-import { isVehicleUnit } from "./vehicleBuilder";
+import { isVehicleUnit, CATAPULT_ARM, CATAPULT_ARM_PIVOT } from "./vehicleBuilder";
 import { ProceduralAnimator, AnimState, type AttackMotion, type LocomotionBias } from "./proceduralAnimation";
 import { resolveObstacleCollisions, type Obstacle } from "../map/obstacles";
 import { isPointInsideHazard, type HazardRegion } from "../map/hazards";
@@ -484,6 +490,36 @@ export class RuntimeUnit {
     this.animator.noteReload(cooldown);
     // A spinning drum (the da Vinci tank) keeps turning from this volley through the wait for the next one
     this._drumTimer = Math.max(this._drumTimer, cooldown + DRUM_SPIN.linger);
+    // A catapult throws (CATAPULT_THROW)
+    this._throwT = 0;
+    this._throwCd = cooldown;
+  }
+
+  // A catapult's arm pivot and the shot in its bucket (CATAPULT_ARM), looked up once; time since its last throw (-1: none yet) and that shot's cooldown
+  private _catapultArm: TransformNode | null | undefined = undefined;
+  private _catapultShot: TransformNode | null = null;
+  private _throwT = -1;
+  private _throwCd = 1;
+  private _throwArm(dt: number): void {
+    if (this._catapultArm === undefined) {
+      this._catapultArm = this.body.root.getDescendants(false, (n) => n.name === CATAPULT_ARM_PIVOT)[0] as TransformNode | undefined ?? null;
+      this._catapultShot = this._catapultArm?.getChildren().find((n): n is TransformNode => n.name === "boulderPayload" || n.name === "pumpkinPayload") ?? null;
+    }
+    const pivot = this._catapultArm;
+    if (!pivot) return;
+    const C = CATAPULT_THROW;
+    let k = 0; // 0 cocked, 1 upright
+    if (this._throwT >= 0) {
+      this._throwT += dt;
+      const t = this._throwT;
+      const lower = Math.max(0.3, (this._throwCd - C.swing - C.hold) * C.lower);
+      if (t < C.swing) { const u = t / C.swing; k = 1 - (1 - u) * (1 - u); }
+      else if (t < C.swing + C.hold) k = 1;
+      else if (t < C.swing + C.hold + lower) { const u = (t - C.swing - C.hold) / lower; k = 1 - u * u * (3 - 2 * u); }
+      else { k = 0; this._throwT = -1; }
+    }
+    pivot.rotation.x = -CATAPULT_ARM.cocked + (CATAPULT_ARM.thrown + CATAPULT_ARM.cocked) * k;
+    this._catapultShot?.setEnabled(this._throwT < 0);
   }
 
   // The da Vinci tank's drum (see DRUM_SPIN), looked up once, its spin (0 still, 1 full speed) and how long it has left to keep turning
@@ -993,6 +1029,7 @@ export class RuntimeUnit {
     }
     this.animator.update(dt);
     this._spinDrum(dt);
+    this._throwArm(dt);
     if (this.animator.takeBlowsLanded() > 0 && this._blowTarget && !this._blowTarget.isDead && Vector3.Distance(this._blowTarget.position, this.position) < 3
       && now >= this._blowTarget._flinchHeldUntil) {
       this._blowTarget.animator.triggerFlinch();
@@ -1785,6 +1822,7 @@ export class RuntimeUnit {
     this._isDead = false;
     this._drunkUntil = 0;
     this._gildUntil = 0;
+    this._throwT = -1;
     if (this._drunkDyed && this._skinBase) this.body.skinMaterial.baseColor = this._skinBase;
     this._drunkDyed = false;
     this._dyedWith = null;

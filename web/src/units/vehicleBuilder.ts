@@ -218,6 +218,13 @@ function addOperator(
 // Fires FORWARD (+Z). Arm swings over the top toward +Z.
 // A siege machine stands over the men beside it: built at man height, then the whole rig is scaled under the root
 const CATAPULT_SCALE = 1.4;
+/*
+ * [S] throwing arm (351; medieval.catapult.jpg: the arm whips up to upright and the boulder leaves the bucket on a high arc). The arm turns about a pivot
+ * CATAPULT_ARM.pivotY up on the crossbar, .long to the bucket and .short to the counterweight. At rest it is cocked, the bucket end .cocked rad below
+ * level behind the frame; on a shot it turns forward over the top to .thrown rad (upright), in RuntimeUnit's catapult throw (CATAPULT_THROW).
+ */
+export const CATAPULT_ARM = { pivotY: 1.62, long: 1.0, short: 0.7, cocked: 0.35, thrown: Math.PI / 2 };
+export const CATAPULT_ARM_PIVOT = "catapult_arm_pivot";
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const rig = new TransformNode("catapult_rig", scene);
@@ -262,36 +269,40 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   crossbar.position.set(0, 1.5, 0);
   crossbar.parent = rig; crossbar.material = wood; allMeshes.push(crossbar);
 
-  // Throwing arm (pivots at crossbar, extends along Z)
-  const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: 1.8 }, scene);
-  arm.position.set(0, 1.65, 0.2);
-  arm.rotation.x = -0.1; // near level, bucket end a little up toward +Z (a positive turn about X drops the +Z end), lying on the crossbar: at -0.4 the raised arm set the height of the machine and it stood up like a goalpost
-  arm.parent = rig; arm.material = wood; allMeshes.push(arm);
+  // Throwing arm on its pivot at the crossbar (CATAPULT_ARM; swung by RuntimeUnit's catapult throw). Built along -Z from the pivot (bucket end back), the
+  // pivot then turned to the cocked pose: the bucket end pulled down behind the frame, the short end with the counterweight up over the front.
+  const pivot = new TransformNode(CATAPULT_ARM_PIVOT, scene);
+  pivot.parent = rig;
+  pivot.position.set(0, CATAPULT_ARM.pivotY, 0);
+  pivot.rotation.x = -CATAPULT_ARM.cocked;
+  const L = CATAPULT_ARM.long;
+  const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: L + CATAPULT_ARM.short }, scene);
+  arm.position.set(0, 0, (CATAPULT_ARM.short - L) / 2);
+  arm.parent = pivot; arm.material = wood; allMeshes.push(arm);
 
-  // Bucket on the tip of the arm (+Z): a wide tray three arms across with the shot lying in it, not a small empty box partway down
+  // Bucket on the long end: a wide tray three arms across with the shot lying in it, not a small empty box partway down
   const bucket = MeshBuilder.CreateBox("bucket", { width: 0.5, height: 0.16, depth: 0.45 }, scene);
-  bucket.position.set(0, 1.78, 0.99);
-  bucket.rotation.x = -0.1;
-  bucket.parent = rig; bucket.material = wood; allMeshes.push(bucket); // the arm's own timber: in iron it was a blue-grey slab
+  bucket.position.set(0, 0.13, -L + 0.03);
+  bucket.parent = pivot; bucket.material = wood; allMeshes.push(bucket); // the arm's own timber: in iron it was a blue-grey slab
 
   if (options.spooky) {
     const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.45, segments: 8 }, scene);
-    pumpkin.position.set(0, 2.03, 0.965);
-    pumpkin.parent = rig;
+    pumpkin.position.set(0, 0.38, -L + 0.03);
+    pumpkin.parent = pivot;
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
   } else {
     const boulder = MeshBuilder.CreateSphere("boulderPayload", { diameter: 0.65, segments: 2 }, scene); // wider than the tray it lies in: at 0.45 it was a small ball on a slab
-    boulder.position.set(0, 2.13, 0.955);
-    boulder.parent = rig;
+    boulder.position.set(0, 0.48, -L + 0.03);
+    boulder.parent = pivot;
     boulder.material = makeMat(scene, new Color3(0.2, 0.19, 0.2));
     allMeshes.push(boulder);
   }
 
-  // Counterweight at back end (-Z), hung under the arm: a big dark block of the wheels' timber. As the tinted main mesh it was a pale team-coloured card between the posts
+  // Counterweight on the short end, hung under the arm: a big dark block of the wheels' timber. As the tinted main mesh it was a pale team-coloured card between the posts
   const cw = MeshBuilder.CreateBox("cw", { width: 0.36, height: 0.44, depth: 0.4 }, scene);
-  cw.position.set(0, 1.28, -0.5);
-  cw.parent = rig; cw.material = wheelWood; allMeshes.push(cw);
+  cw.position.set(0, -0.3, CATAPULT_ARM.short - 0.2);
+  cw.parent = pivot; cw.material = wheelWood; allMeshes.push(cw);
 
   // Axle under the deck: the body mesh that takes the team tint, as on the cannon, so the timber keeps its own colours
   const axle = MeshBuilder.CreateCylinder("axle", { height: 1.1, diameter: 0.08, tessellation: 6 }, scene);
@@ -306,8 +317,9 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   });
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, 2.03, 0.965)),
-    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, 1.78, 0.99)),
+    // The shot leaves where the bucket is when the arm stands upright at the end of its swing (CATAPULT_ARM.thrown)
+    primaryMuzzle: makeSocket(scene, rig, "catapult_bucket_socket", new Vector3(0, CATAPULT_ARM.pivotY + CATAPULT_ARM.long + 0.1, 0.35)),
+    impactOrigin: makeSocket(scene, rig, "catapult_impact_socket", new Vector3(0, CATAPULT_ARM.pivotY + CATAPULT_ARM.long, 0.2)),
   };
 
   return wrapAsBody(
