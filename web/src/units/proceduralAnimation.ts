@@ -1,4 +1,4 @@
-import { Matrix, Mesh, Quaternion, Vector3, type TransformNode } from "@babylonjs/core";
+import { Matrix, Mesh, Quaternion, Vector3, type Node, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { SWORD_RING_BOB } from "./propBuilder";
 
@@ -99,6 +99,14 @@ const TREE_HIP_TIP = new Vector3(0.9, 0.02, 0.35);
 const SCYTHE_HIGH_ARM = { raise: -0.95, out: 0.22, elbow: -1.05 };
 const SCYTHE_HIGH_TIP = new Vector3(0.6, 0.78, 0.15);
 const SCYTHE_SPIN = Math.PI / 2;
+/*
+ * [S] the harvester's scythe carry (342; farmer.harvester.red.png: both fists on the snath at hip height, the snath run diagonally across his front from
+ * the butt low past his weapon hip up to the head beyond his off shoulder, the blade hanging down from its top end). A scythe whose snath carries the
+ * "snathPeg" mark (unitFactory SNATH_PEG) takes this carry in place of the high one: weapon arm SCYTHE_LOW.raise swing, .out, .elbow fold so the fist is
+ * before the weapon hip; the snath's line from the fist .tip in his own frame (x toward the weapon side, y up, z forward); the crescent turned .spin about
+ * the snath. The off fist is put on the upper peg by _twoHandPole (POLE_GRIP.snathPeg).
+ */
+const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -151,6 +159,7 @@ const POLE_GRIP = {
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
   forkBar: [0.2, 0.5], // the pitchfork: the off hand up the shaft toward the head (farmer.farmer.red.png)
+  snathPeg: [0.28, 0.32], // the harvester's scythe: the off hand on the upper peg (SCYTHE_LOW)
 } as const;
 /*
  * [S] pitchfork carried across the front in both fists (342; farmer.farmer.png: the farmers walk with the weapon fist low before the weapon thigh and the
@@ -1767,9 +1776,11 @@ export class ProceduralAnimator {
     const side = Math.sign(this._body.rightShoulder.position.x) || 1;
     // A scythe is carried one way, high, and like the tree he stands in it from the first frame, whatever phase the arm is in
     const scythe = node?.name === "scytheCarry";
+    // ...but the harvester's, pegged (SCYTHE_LOW), is carried low across him in both fists
+    const lowScythe = scythe && !!node?.getChildren().some((c) => c.getChildren().some((g) => g.name === "snathPeg"));
     const prop = node ? {
       node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone(),
-      spin: scythe ? Quaternion.RotationYawPitchRoll(SCYTHE_SPIN * side, 0, 0) : undefined,
+      spin: scythe ? Quaternion.RotationYawPitchRoll((lowScythe ? SCYTHE_LOW.spin : SCYTHE_SPIN) * side, 0, 0) : undefined,
     } : null;
     if (scythe) this._carryTurn = 1;
     // A club with nothing in the other hand is held in both (two-handed grip, see OFFHAND_GRIP_UP), and like the scythe it is in its carry from the first frame
@@ -1788,7 +1799,9 @@ export class ProceduralAnimator {
     const tree = node?.name === "treeClubCarry";
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
-    const attitude = scythe
+    const attitude = lowScythe
+      ? { raise: SCYTHE_LOW.raise, out: SCYTHE_LOW.out, elbow: SCYTHE_LOW.elbow, tip: new Vector3(SCYTHE_LOW.tip.x * side, SCYTHE_LOW.tip.y, SCYTHE_LOW.tip.z).normalize() }
+      : scythe
       ? { raise: SCYTHE_HIGH_ARM.raise, out: SCYTHE_HIGH_ARM.out, elbow: SCYTHE_HIGH_ARM.elbow, tip: new Vector3(SCYTHE_HIGH_TIP.x * side, SCYTHE_HIGH_TIP.y, SCYTHE_HIGH_TIP.z).normalize() }
       : fork
       ? { raise: FORK_CARRY.raise - h(81) * 0.1, out: FORK_CARRY.out + h(82) * 0.06, elbow: FORK_CARRY.elbow - h(83) * 0.15, tip: lean(...FORK_CARRY.tip) }
@@ -2478,7 +2491,9 @@ export class ProceduralAnimator {
   /** The off hand onto the pole's shaft where it passes nearest the off shoulder, kept within POLE_GRIP's span (both fists on the shaft). */
   private _twoHandPole(): void {
     if (this._pole === undefined) {
-      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name in POLE_GRIP));
+      const marked = (n: Node): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name in POLE_GRIP);
+      // the pole is in the fist, or one node down (a scythe's snath under its carry node, SCYTHE_LOW)
+      const node = this._body.rightHand.getChildren().flatMap((n) => [n, ...n.getChildren()]).find(marked);
       const mark = node?.getChildren().find((c) => c.name in POLE_GRIP);
       this._pole = node && mark ? { node, span: POLE_GRIP[mark.name as keyof typeof POLE_GRIP] } : null;
     }

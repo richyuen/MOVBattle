@@ -549,6 +549,10 @@ export class UnitFactory {
       // [S] white socks and brown slip-on shoes (341; FARMER_SOCK)
       propMeshes.push(...dressFarmerLegs(this._scene, body));
     }
+    if (definition.id === "farmer.harvester" && !shouldUseVehicleBody) {
+      // [S] two peg handles on the snath, the upper one where his off fist takes it (342; SNATH_PEG, proceduralAnimation SCYTHE_LOW)
+      propMeshes.push(...addSnathPegs(this._scene, body));
+    }
     if (definition.id === "farmer.hay_baler" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHayBale(this._scene, body));
       // [S] ...and his brown bowl cut, no hat (341; tribalDress BOWL)
@@ -1381,6 +1385,33 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
     tube.parent = leg;
     tube.position.y = long * 0.5 - long * S.long * 0.5;
     added.push(tube);
+  }
+  return added;
+}
+
+/*
+ * [S] harvester's snath pegs (342; farmer.harvester.red.png: two short peg handles stand off the snath, one under each fist). Shares of the snath's length L
+ * from its middle: the lower peg SNATH_PEG.low (the weapon fist's, which sits SCYTHE_GRIP below the middle), the upper .high; each .long of L long and
+ * .thick across, standing out square to the snath. The upper is named "snathPeg", the POLE_GRIP mark that puts his off fist on the snath (_twoHandPole).
+ */
+const SNATH_PEG = { low: -0.15, high: 0.15, long: 0.09, thick: 0.03 };
+const SNATH_WOOD = new Color3(0.5, 0.24, 0.17);
+/** Adds the two peg handles to the harvester's scythe (spec at SNATH_PEG). */
+function addSnathPegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const carry = body.rightHand.getChildren().find((n) => n.name === "scytheCarry");
+  const snath = carry?.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "shaft");
+  if (!snath) return [];
+  const L = snath.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const wood = getMaterialFactory().get("wood", SNATH_WOOD, { emissiveIntensity: 0.18 });
+  const added: Mesh[] = [];
+  for (const [name, at] of [["snathPegLow", SNATH_PEG.low], ["snathPeg", SNATH_PEG.high]] as const) {
+    const peg = MeshBuilder.CreateCylinder(name, { height: L * SNATH_PEG.long, diameterTop: L * SNATH_PEG.thick * 0.8, diameterBottom: L * SNATH_PEG.thick, tessellation: 6 }, scene);
+    peg.rotation.z = Math.PI / 2;
+    peg.position.set(-L * SNATH_PEG.long * 0.5, at * L, 0);
+    peg.material = wood;
+    peg.convertToFlatShadedMesh();
+    peg.parent = snath;
+    added.push(peg);
   }
   return added;
 }
