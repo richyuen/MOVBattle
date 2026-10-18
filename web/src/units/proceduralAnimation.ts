@@ -196,6 +196,7 @@ const POLE_GRIP = {
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
   forkBar: [0.2, 0.5], // the pitchfork: the off hand up the shaft toward the head (farmer.farmer.red.png)
   snathPeg: [0.28, 0.32], // the harvester's scythe: the off hand on the upper peg (SCYTHE_LOW)
+  banjoNeck: [0.6, 0.95], // the bard's banjo: the off hand fretting up the neck (medieval.bard.red.png)
 } as const;
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
@@ -251,6 +252,13 @@ const lungeSinkShare = (): number => 1 - (0.5 * Math.cos(LUNGE.front) + 0.5 * Ma
  * walk the farmer steps in on does not cut it short.
  */
 const FORK_STAB = { land: 0.7, commit: 0.62, back: 0.3, cock: 0.18, dip: -0.08, turn: 0.35, drawRaise: -0.25, drawElbow: -1.45, reach: -1.3, offReach: -1.2, pitch: 0.28, step: 0.3, front: -0.7, knee: 0.55, hold: 0.25 };
+/*
+ * [S] The bard's banjo carry (351; medieval.bard.red.png, .png: the pot at his weapon hip, the neck up across his chest to the off shoulder, the face out,
+ * the off hand fretting the neck). Laid in his own frame and both arms solved onto it, as the fork carry: the weapon fist BANJO_HOLD.out of the hip
+ * height out to his weapon side, .up above the hip joint, .ahead in front of it; the neck laid from it along (-.across to the off side, .rise up, .forward
+ * ahead), the pot's face turned out before him; the off fist on the neck by _twoHandPole (POLE_GRIP.banjoNeck). Idle and walking; the attack swings it.
+ */
+const BANJO_HOLD = { out: 0.2, up: 0.1, ahead: 0.32, across: 0.72, rise: 0.66, forward: 0.12 };
 const FORK_HOLD = { out: 0.16, drop: -0.1, ahead: 0.22, across: 0.78, up: 0.04, forward: 0.55, reach: 1.5, curlAhead: 0.6, curlDown: 0.8 };
 const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -1.25, knee: 1.35, back: 0.85, step: 0.45, retreat: 0.2, hold: 0.16 };
 /*
@@ -1689,6 +1697,7 @@ export class ProceduralAnimator {
     this._carryProp(dt);
     this._holdForkStab(dt);
     this._turnFork();
+    this._holdBanjo();
     this._offhandToGrip();
     this._holdChopDown(dt);
     this._aimMusket(dt);
@@ -3559,6 +3568,54 @@ export class ProceduralAnimator {
     const lay = Quaternion.RotationQuaternionFromAxis(Vector3.Cross(shaftDir, curl), shaftDir, curl);
     const attitude = stabbing ? Quaternion.Slerp(lay, yaw.multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, this._sweepTip!, new Quaternion())), stabW) : lay;
     const turn = Quaternion.Slerp(f.rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(attitude), w);
+    f.node.rotationQuaternion = turn;
+    const held = new Vector3(0, f.pos.length(), 0).rotateByQuaternionToRef(turn, new Vector3());
+    Vector3.LerpToRef(f.pos, held, w, f.node.position);
+  }
+
+  // The banjo in the weapon fist (the mesh carrying banjoNeck) and its strapped turn and seat there, looked up once
+  private _banjoProp: { node: TransformNode; rest: Quaternion; quat: boolean; pos: Vector3 } | null | undefined = undefined;
+  /** The banjo laid across him (BANJO_HOLD): the weapon arm solved onto its seat at the hip and the banjo turned in the fist onto the neck's line. */
+  private _holdBanjo(): void {
+    if (this._banjoProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n) => n.getChildren().some((c) => c.name === "banjoNeck")) as TransformNode | undefined;
+      this._banjoProp = node ? {
+        node, quat: !!node.rotationQuaternion, pos: node.position.clone(),
+        rest: node.rotationQuaternion?.clone() ?? Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z),
+      } : null;
+    }
+    const f = this._banjoProp;
+    if (!f) return;
+    const b = this._body;
+    const st = this._state;
+    const w = st === AnimState.Idle || st === AnimState.Walking ? 1 - Math.min(1, this._limp) : 0;
+    if (w <= 0.001) {
+      if (f.node.rotationQuaternion && !f.quat) f.node.rotationQuaternion = null;
+      else if (f.quat) f.node.rotationQuaternion = f.rest.clone();
+      f.node.position.copyFrom(f.pos);
+      return;
+    }
+    const hand = b.rightHand;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const yaw = Quaternion.RotationYawPitchRoll(b.root.rotation.y, 0, 0);
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
+    const C = BANJO_HOLD;
+    b.hip.computeWorldMatrix(true);
+    const hipAt = b.hip.getAbsolutePosition();
+    const tall = Math.max(0.2, hipAt.y - b.root.getAbsolutePosition().y);
+    const seat = hipAt.add(new Vector3(side * C.out, C.up, C.ahead).scale(tall).rotateByQuaternionToRef(yaw, new Vector3()));
+    this._armTo(b.rightShoulder, b.rightElbow, hand, seat, w, 2);
+    for (const n of chain) n.computeWorldMatrix(true);
+    // the neck up across his chest, the pot's face (the prop's +z) out before him
+    const neckDir = new Vector3(-side * C.across, C.rise, C.forward).normalize().rotateByQuaternionToRef(yaw, new Vector3());
+    const face = new Vector3(0, 0, 1).rotateByQuaternionToRef(yaw, new Vector3());
+    face.subtractInPlace(neckDir.scale(Vector3.Dot(face, neckDir)));
+    if (face.lengthSquared() < 1e-6) face.set(0, 0, 1);
+    face.normalize();
+    const lay = Quaternion.RotationQuaternionFromAxis(Vector3.Cross(neckDir, face), neckDir, face);
+    const turn = Quaternion.Slerp(f.rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(lay), w);
     f.node.rotationQuaternion = turn;
     const held = new Vector3(0, f.pos.length(), 0).rotateByQuaternionToRef(turn, new Vector3());
     Vector3.LerpToRef(f.pos, held, w, f.node.position);

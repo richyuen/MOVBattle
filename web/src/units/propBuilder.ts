@@ -3046,13 +3046,62 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return pan;
     }
     case "lute": {
-      const body = MeshBuilder.CreateSphere("lute", { diameter: 0.14 * s, segments: 8 }, scene);
-      body.scaling.z = 0.5;
-      body.material = mat(scene, new Color3(0.6, 0.4, 0.2));
-      const neck = MeshBuilder.CreateCylinder("luteneck", { height: 0.2 * s, diameter: 0.02 * s }, scene);
-      neck.position.y = 0.12 * s; neck.parent = body;
-      neck.material = mat(scene, new Color3(0.5, 0.35, 0.15));
-      return body;
+      // The bard's banjo, built to the spec at BANJO: the neck is the root mesh (+y up it from the pot), the fist at the pot's middle under it, the pot's
+      // face toward +z. Marked banjoNeck for the off hand (POLE_GRIP) and laid across him by the animator's banjo carry (BANJO_HOLD).
+      const H = fit.stand;
+      const D = BANJO.pot * H, N = BANJO.neck * H, Wn = BANJO.neckWide * H;
+      const neck = MeshBuilder.CreateBox("banjo", { width: Wn, height: N, depth: Wn * 0.7 }, scene);
+      neck.material = mat(scene, BANJO_NECK_WOOD, 0.2);
+      // the fist is at the pot's middle; the neck leaves the pot's rim
+      const base = -N / 2 - D / 2;
+      neck.position.y = N / 2 + D / 2;
+      new TransformNode("banjoNeck", scene).parent = neck;
+      const rimMat = mat(scene, BANJO_RIM, 0.2);
+      const pot = MeshBuilder.CreateCylinder("banjoPot", { height: BANJO.deep * D, diameter: D, tessellation: 14 }, scene);
+      pot.rotation.x = Math.PI / 2;
+      pot.position.set(0, base, BANJO.front * D);
+      pot.material = rimMat;
+      pot.convertToFlatShadedMesh();
+      pot.parent = neck;
+      const head = MeshBuilder.CreateCylinder("banjoHead", { height: 0.01 * D, diameter: D * BANJO.head, tessellation: 14 }, scene);
+      head.rotation.x = Math.PI / 2;
+      head.position.set(0, base, BANJO.front * D + BANJO.deep * D * 0.5 + 0.004 * D);
+      head.material = mat(scene, BANJO_SKIN, 0.3, "cloth");
+      head.parent = neck;
+      const bridge = MeshBuilder.CreateBox("banjoBridge", { width: D * 0.22, height: D * 0.04, depth: D * 0.04 }, scene);
+      bridge.position.set(0, base - D * 0.18, BANJO.front * D + BANJO.deep * D * 0.5 + D * 0.02);
+      bridge.material = rimMat;
+      bridge.parent = neck;
+      // the fretboard's face and its pale frets, up the neck on the pot's face side
+      const fretMat = mat(scene, BANJO_SKIN, 0.3, "cloth");
+      for (let i = 0; i < BANJO.frets; i++) {
+        const fret = MeshBuilder.CreateBox("banjoFret", { width: Wn * 1.02, height: N * 0.012, depth: Wn * 0.2 }, scene);
+        fret.position.set(0, -N / 2 + N * (i + 1) / (BANJO.frets + 1), Wn * 0.36);
+        fret.material = fretMat;
+        fret.parent = neck;
+      }
+      // the strings: thin pale lines up the neck's face
+      for (const x of [-0.25, 0, 0.25]) {
+        const string = MeshBuilder.CreateBox("banjoString", { width: Wn * 0.06, height: N, depth: Wn * 0.06 }, scene);
+        string.position.set(x * Wn, 0, Wn * 0.42);
+        string.material = fretMat;
+        string.parent = neck;
+      }
+      // the headstock, wider than the neck and tipped back, with the tuning pegs out of its sides
+      const headstock = MeshBuilder.CreateBox("banjoHeadstock", { width: Wn * BANJO.headWide, height: BANJO.headLong * H, depth: Wn * 0.6 }, scene);
+      headstock.position.set(0, N / 2 + BANJO.headLong * H * 0.45, -Wn * 0.15);
+      headstock.rotation.x = -BANJO.headTip;
+      headstock.material = mat(scene, BANJO_NECK_WOOD, 0.2);
+      headstock.parent = neck;
+      for (let i = 0; i < BANJO.pegs; i++) {
+        const side = i % 2 === 0 ? 1 : -1;
+        const peg = MeshBuilder.CreateCylinder("banjoPeg", { height: Wn * 0.7, diameter: Wn * 0.28, tessellation: 6 }, scene);
+        peg.rotation.z = Math.PI / 2;
+        peg.position.set(side * Wn * BANJO.headWide * 0.62, BANJO.headLong * H * (-0.25 + 0.5 * Math.floor(i / 2)), 0);
+        peg.material = fretMat;
+        peg.parent = headstock;
+      }
+      return neck;
     }
     case "paintbrush": {
       // The painter's brush, built to the spec at BRUSH: +y up the brush from the fist at the origin, BRUSH.grip of it below the fist
@@ -3713,6 +3762,15 @@ function roundBoardSeed(serial: number, k: number): number {
  * LONGBOW.thick of it across at the grip, tapering to LONGBOW.taper of that at the tips; bowed LONGBOW.bow of its length off the string; tan wraps
  * LONGBOW.wrap long at each of LONGBOW.wrapAt (shares of the half-length out from the grip); team grip LONGBOW.grip long.
  */
+/*
+ * [S] banjo (351; medieval.bard.red.png, .png, card Main Hand Banjo): a round drum pot BANJO.pot of the man's height across and .deep of that thick, its
+ * face a pale skin .head of it across with a little bridge, set .front of it before the fist; a long neck .neck of his height and .neckWide across with
+ * .frets pale frets and three strings up its face; a headstock .headLong long, .headWide of the neck across, tipped back .headTip rad, .pegs pegs.
+ */
+const BANJO = { pot: 0.19, deep: 0.28, head: 0.86, front: 0.05, neck: 0.36, neckWide: 0.032, frets: 9, headLong: 0.075, headWide: 1.7, headTip: 0.25, pegs: 4 };
+const BANJO_RIM = new Color3(0.42, 0.24, 0.14);
+const BANJO_NECK_WOOD = new Color3(0.36, 0.2, 0.12);
+const BANJO_SKIN = new Color3(0.86, 0.78, 0.6);
 const LONGBOW = { long: 1.2, thick: 0.065, taper: 0.5, bow: 0.05, wrapAt: [0.6, 0.72], wrap: 0.04, grip: 0.11 };
 const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
