@@ -1,11 +1,11 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 340   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
+Iteration: 341   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
-farmer: halfling -+-+ o | farmer ---+ o | hay_baler ---+ o | potion_seller -+-+ o | harvester ---+ o | wheelbarrow ---+ o | scarecrow ---+ o
+farmer: halfling -+-+ o | farmer ---+ o | hay_baler ---+ o | potion_seller -+-+ o | harvester ---+ o | wheelbarrow ---+ o | scarecrow -+-+ o
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
@@ -23,16 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-340 (BASE f525109): [S] hay_baler b crooked stick cef515a+4383754+3d12d35+3015a29+228fc78 approved | [P] hay_baler a HAY_BALE.top 1.6 d63de24 approved | [S] farmer a liripipe hood 4ccaced approved | [S] halfling a shaggy mop 9ccfb6c approved | [S] harvester a floppy hat + braids e4fd698 approved | [S] scarecrow a sack mask 44d5b86 approved
-339 (BASE f0fe549): halfling b, farmer b, potion_seller b, hay_baler a, scarecrow a all approved; stats commit + audit of 7 units.
+341 (BASE edea5e2): [S] hay_baler a bowl cut f6567f9 approved | [P] hay_baler b STICK.thick .085 ffd0fe6 approved | [S] potion_seller c lobbed bottle e8afe34 approved | [S] halfling a jacket 76bdeb8 approved | [S] scarecrow b crow in each hand 6718e9a approved | [S] farmer a socks and shoes 3c6b4c5 approved
+340 (BASE f525109): hay_baler b stick, hay_baler a bale top, farmer a liripipe, halfling a mop, harvester a floppy hat, scarecrow a sack mask all approved.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] farmer.hay_baler (cef515a +4383754 +3d12d35 +3015a29 +228fc78) VERDICT: APPROVE CRITERION: farmer.hay_baler.b FAIL (previous: FAIL) BLOCKERS: struck: 1. added: 2 stick stands up behind his back, pole-thin
-- GAP: [P] farmer.hay_baler (d63de24) VERDICT: APPROVE CRITERION: farmer.hay_baler.a FAIL (previous: FAIL) BLOCKERS: struck: 4. remaining: 2, 3
-- GAP: [S] farmer.farmer (4ccaced) VERDICT: APPROVE CRITERION: farmer.farmer.a FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2, 3
-- GAP: [S] farmer.halfling (9ccfb6c) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2, 3, 4
-- GAP: [S] farmer.harvester (e4fd698) VERDICT: APPROVE CRITERION: farmer.harvester.a FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2, 3
-- GAP: [S] farmer.scarecrow (44d5b86) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL) BLOCKERS: struck: 2. remaining: 3, 4. REGRESSIONS: none
+- GAP: [S] farmer.hay_baler (f6567f9) VERDICT: APPROVE CRITERION: farmer.hay_baler.a FAIL (previous: FAIL) BLOCKERS: struck: 2. remaining: 3
+- GAP: [P] farmer.hay_baler (ffd0fe6) VERDICT: APPROVE CRITERION: farmer.hay_baler.b FAIL (previous: FAIL) BLOCKERS: 2 rewritten (thickness cleared; carry remains)
+- GAP: [S] farmer.potion_seller (e8afe34) VERDICT: APPROVE CRITERION: farmer.potion_seller.c FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2
+- GAP: [S] farmer.halfling (76bdeb8) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL) BLOCKERS: struck: 2. remaining: 3, 4
+- GAP: [S] farmer.scarecrow (6718e9a) VERDICT: APPROVE CRITERION: farmer.scarecrow.b PASS (previous: FAIL) BLOCKERS: struck: 1. (list cleared)
+- GAP: [S] farmer.farmer (3c6b4c5) VERDICT: APPROVE CRITERION: farmer.farmer.a FAIL (previous: FAIL) BLOCKERS: struck: 2. remaining: 3. REGRESSIONS: none
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Pickable [P] (fallout of 340 [S]): hay_baler STICK.thick .085; harvester FLOPPY.thick .42 / braid 1.6 / apart .68. potion_seller and wheelbarrow untouched since the audit (wheelbarrow crew likely over the [S] cap: split it).
+- No pickable [P] fallout from 341 (critic listed only [S] NEXTs). Harvester and wheelbarrow untouched since 340 (wheelbarrow crew likely over the [S] cap: split it).
 - Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissiveIntensity}). Cream/tan needs ~.2-.3.
-- A right-hand prop named "handle" is turned by the animator to a hashed carry; force a carry via the pick line (fork/hayStick .9 = low level carry). Other names ride the fist and may hide.
-- Look captures need a clean tree incl. untracked: git stash push -- <dirty paths> around them; --units takes a comma list. Vehicles live in vehicleBuilder.ts.
-- Write patches as scratchpad python files (open with newline='' to keep EOLs); bash heredocs containing apostrophes break here. After any --iter capture rerun stats --batch <batch> --iter N.
+- A right-hand prop named "handle" is turned by the animator to a hashed carry; force a carry via the pick line (fork/hayStick .9 = low level carry). Held throws: weaponHint in simulationSystem THROWS_HELD_PROP flies the fist prop.
+- Look captures need a clean tree incl. untracked: git stash push -- <dirty paths> around them; --units takes a comma list. Vehicles live in vehicleBuilder.ts. Scarecrow visuals live in preset iconic_scarecrow.
+- Write patches as scratchpad python files via the Write tool (open with newline='' to keep EOLs); bash heredocs containing apostrophes break here. After any --iter capture rerun stats --batch <batch> --iter N.

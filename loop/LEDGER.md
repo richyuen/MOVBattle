@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-331 | plank roof, drum (e4c2a2f) | renaissance.da_vinci_tank.a | approved
-331 | 16 octagonal barrels (da39ed0) | renaissance.da_vinci_tank.b | approved
-331 | palette out and face-up (413fb65) | renaissance.painter.b | approved
-331 | shouldered aim (0b9f1b9 +2) | renaissance.musketeer.c | approved
-331 | point-first rapier (d2b3a7b) | renaissance.fencer.c | approved
 332 | musket bullet fling (ac25108) | renaissance.musketeer.c | approved
 332 | paint splotches (f7538a3) | renaissance.painter.c | approved
 332 | lance on target (062a748) | renaissance.jouster.c | approved
@@ -56,6 +51,11 @@ for 25 iterations.
 340 | shaggy brown mop (9ccfb6c) | farmer.halfling.a | approved
 340 | floppy hat and side braids (e4fd698) | farmer.harvester.a | approved
 340 | full-head sack mask (44d5b86) | farmer.scarecrow.a | approved
+341 | bowl cut (f6567f9) | farmer.hay_baler.a | approved
+341 | lobbed held bottle (e8afe34) | farmer.potion_seller.c | approved
+341 | jacket, vest, shirt V (76bdeb8) | farmer.halfling.a | approved
+341 | crow in each fist (6718e9a) | farmer.scarecrow.b | approved
+341 | socks and shoes (3c6b4c5) | farmer.farmer.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -70,8 +70,12 @@ propBuilder.ts:pitchfork FORK (long, grip, thick, bar, tine, tineThick, curl, li
 propBuilder.ts:potion POTION (ball, squash, neck, neckLong, cork, seat, glow), GLASS | .065,.92,.026,.026,.016,.035,.22; (.55,.74,.82) | 339 | approved | ball .15 (339 first)
 unitFactory.ts:HAY_BALE (drop, top, bottom, deep, blades, blade, hems, hem, flare); HAY_TAN, GLOW | .55,1.6,1.75,1.7,10,.62,12,.5,.5; (.7,.46,.22),.2 | 340 | approved | top/bottom 1.25/1.4; tan (.84,.6,.32) glow .3
 propBuilder.ts:CROW_WINGS (span, raise, sweep, feathers, wrist, glow) | 2.7, .55, .22, 9, .32, .06 | 339 | approved | -
-propBuilder.ts:stick STICK (long, grip, thick, tip, kinks, bend, glow), WOOD | .75, .12, .045, .8, 5, .035, .18; (.68,.4,.26) | 340 | approved | -
+propBuilder.ts:stick STICK (long, grip, thick, tip, kinks, bend, glow), WOOD | .75, .12, .085, .8, 5, .035, .18; (.68,.4,.26) | 341 | approved | thick .045
 propBuilder.ts:pointed_cowl LIRIPIPE (snug, root, end, path 7 pts, yoke, yokeDeep, dags, dag, dagWide, flare) | 1.18,.62,.14,-,1.5,.22,9,.32,.36,.25 | 340 | approved | replaced COWL_* cone
 tribalDress.ts:SHAGGY (cap, locks, long, front, thick, splay), COLOR | 1.32, 26, .5, .5, .3, .55; (.38,.21,.12) | 340 | approved | -
 propBuilder.ts:sun_hat FLOPPY (brim, droop, lift, tip, crown, crownTall, apart, ahead, root, braid, plaits, thick) | 2.25,.28,.12,.12,1.12,.42,.6,.08,.05,1.15,5,.26 | 340 | approved | replaced SUN_*
 propBuilder.ts:SACK (wide, top, tall, crown, dome, button, eyes, eyeDrop, neck, glow), BROWN | 1.22,1.12,1.12,.06,.12,.24,.22,.1,1,.2; (.56,.36,.22) | 340 | approved | -
+tribalDress.ts:BOWL (dome, crown, fringe, hang, flare, face), COLOR | 1.3, .78, .5, .4, 1.08, .36; (.45,.22,.15) | 341 | approved | -
+unitFactory.ts:HALFLING_DRESS (jacket, drop, vest, proud, vee, veeDeep, lapel, vestLight, jacketShade) | 1.14,.12,.56,.03,.42,.42,.34,.5,.8 | 341 | approved | -
+propBuilder.ts:HELD_CROW (long, wide, tall, head, beak, wing, tail, fan, seat, glow) | .24,.11,.12,.085,.06,.17,.11,.1,.03,.12 | 341 | approved | -
+unitFactory.ts:FARMER_SOCK (sock, long, cuff, cuffTall, collar, collarTall, glow), SHOE | 1.14,.9,1.3,.12,1.36,.13,.22; (.5,.29,.18) | 341 | approved | -
