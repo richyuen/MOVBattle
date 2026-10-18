@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab" | "palette";
 
@@ -437,7 +437,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { posePreset: "duelist", materialPreset: "renaissance_velvet" },
   ),
   "renaissance.balloon_archer": vis(
-    { scale: 0.9, armLength: 1.05 }, "bow", "beret", "none", "balloon", "#FFB6C1",
+    { scale: 0.9, armLength: 1.05 }, "bow", "brim_hat", "none", "none", "#FFB6C1",
     undefined,
     {
       posePreset: "archer",

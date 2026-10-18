@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -211,6 +211,14 @@ const FEATHER_PIECES = 4;
 const FEATHER_WIDE = 0.42;
 const FEATHER_RAKE = 0.3;
 const FEATHER_CURL = 0.22;
+/*
+ * A balloon archer's black felt hat (327; units/renaissance.balloon_archer: a round black hat pulled down to the brow, the bead eyes in full view under it, a
+ * low rounded crown and a short brim turned down all round, about one and a half heads across). Not a beret: the archer wore a flat disc under a lilac ball.
+ *   Brim: a skirt BRIM_HAT.brim heads across at its lip and BRIM_HAT.crown at its root, BRIM_HAT.drop of the head deep; crown BRIM_HAT.crown heads across,
+ *   BRIM_HAT.tall of the head over the seat; felt BRIM_HAT_FELT (near-black, the tricorn's).
+ */
+const BRIM_HAT = { brim: 1.75, crown: 1.12, drop: 0.16, tall: 0.42 };
+const BRIM_HAT_FELT = new Color3(0.11, 0.1, 0.12);
 const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
@@ -877,6 +885,22 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       parent = piece;
     }
     return brim;
+  }
+  if (type === "brim_hat") {
+    const felt = mat(scene, BRIM_HAT_FELT);
+    // The crown: a dome over the skull from the seat; the brim hangs off its foot, wider at the lip, open below so the face shows
+    const domeTall = eyeTop - HAT_EYE_CLEAR * H + BRIM_HAT.tall * H;
+    const crown = MeshBuilder.CreateSphere("brimHatCrown", { diameterX: u(BRIM_HAT.crown * W), diameterY: u(domeTall * 2), diameterZ: u(BRIM_HAT.crown * W * 1.04), segments: 7, slice: 0.5 }, scene);
+    crown.position.y = u(seat);
+    crown.material = felt;
+    crown.convertToFlatShadedMesh();
+    const drop = u(BRIM_HAT.drop * H);
+    const brim = MeshBuilder.CreateCylinder("brimHatBrim", { height: drop, diameterTop: u(BRIM_HAT.crown * 1.02 * W), diameterBottom: u(BRIM_HAT.brim * W), tessellation: 12, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    brim.position.y = -drop * 0.5 + u(0.04 * H);
+    brim.material = felt;
+    brim.convertToFlatShadedMesh();
+    brim.parent = crown;
+    return crown;
   }
   if (type === "beret") {
     const beret = MeshBuilder.CreateSphere("beret", { diameter: 1, segments: 10 }, scene);
