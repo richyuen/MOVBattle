@@ -1607,8 +1607,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
       const out = new Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
       const from = Vector3.TransformCoordinates(headAt.add(out.scale(3)), neck.getWorldMatrix());
       const dir = Vector3.TransformNormal(out.negate(), neck.getWorldMatrix()).normalize();
-      const hit = headMesh.intersects(new Ray(from, dir, 10), false);
-      if (!hit.hit || !hit.pickedPoint) return null;
+      const hit = scene.pickWithRay(new Ray(from, dir, 100), (m) => m === headMesh);
+      if (!hit?.hit || !hit.pickedPoint) return null;
       const n = hit.getNormal(true, false) ?? dir.negate();
       return { at: Vector3.TransformCoordinates(hit.pickedPoint, toNeck), up: Vector3.TransformNormal(n, toNeck).normalize() };
     };
