@@ -613,7 +613,7 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
  *   BRACELET.at of the forearm's length from the elbow for the cuff's middle, .long forearm lengths for each bone, .thick forearm widths across each bone.
  */
 const BRACELET = { at: 0.76, apart: 0.16, bones: 6, long: 0.3, thick: 0.28, proud: 0.18 };
-const BRACELETS = new Set(["tribal.bone_mage"]);
+const BRACELETS = new Set(["tribal.bone_mage", "tribal.clubber"]);
 
 /** Binds the bone bracelets (spec at BRACELET) round both forearms, parented to the elbow joints. Empty when he wears none. */
 export function dressTribalBracelets(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
