@@ -1810,9 +1810,9 @@ const CLUB_HEAD = 0.22;
  * [S] The hay baler's stick (340; farmer.hay_baler.blue.png, card: Main Hand Stick, one-handed bludgeon): a long thin crooked branch, about as long as
  * the bale is wide, held one-handed near its butt and run out ahead. STICK.long of the man's height, STICK.grip of it behind the fist, STICK.thick
  * across (barely tapering to STICK.tip of that at the far end), bent at STICK.kinks hashed points along its length by up to STICK.bend of its length
- * sideways and up/down, so it reads as a crooked branch, not a turned pole. Light red-brown wood, self-lit STICK.glow so it does not go black.
+ * sideways and up/down, so it reads as a crooked branch, not a turned pole. Tipped STICK.ahead rad forward in the fist. Light red-brown wood, self-lit STICK.glow so it does not go black.
  */
-const STICK = { long: 0.75, grip: 0.12, thick: 0.045, tip: 0.8, kinks: 5, bend: 0.035, glow: 0.18 };
+const STICK = { long: 0.75, grip: 0.12, thick: 0.045, tip: 0.8, kinks: 5, bend: 0.035, glow: 0.18, ahead: 1.45 };
 const STICK_WOOD = new Color3(0.68, 0.4, 0.26);
 // The chieftain's stone axe (units/tribal.chieftain), in the man's heights: handle length, the share below the fist, the stone's length across the top
 const AXE_LONG = 0.4;
@@ -2893,6 +2893,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const stick = MeshBuilder.CreateTube("handle", { path: line, tessellation: 6, cap: Mesh.CAP_ALL, radiusFunction: (i) => STICK.thick * 0.5 * L / STICK.long * (1 - (1 - STICK.tip) * i / n) }, scene);
       stick.material = mat(scene, STICK_WOOD, STICK.glow);
       stick.convertToFlatShadedMesh();
+      // Run out ahead of the fist, near level (farmer.hay_baler.blue.png), not stood up behind the head
+      stick.rotation.x = STICK.ahead;
       return stick;
     }
     case "frying_pan": {
