@@ -1589,9 +1589,11 @@ const AXE_GRIP = 0.25;
 const AXE_HEAD = 0.78;
 // ...and the stone's squash off a ball of AXE_HEAD across: its height and its thickness as shares of its length (a fat stone, not a lens)
 const AXE_HEAD_SQUASH = { y: 0.62, z: 0.5 };
-// ...and the lashing (tribal.chieftain.red.png: rope crossed over the stone and round the handle top): each band's thickness, in handle lengths, and its tilt
-// off the handle, the two bands tilted opposite ways so they cross at the joint
-const AXE_LASH = { thick: 0.03, tilt: 0.5 };
+// ...and the lashing (tribal.chieftain.red.png: twine bound tight over the stone and round the handle top, crossing in an X at the joint, hugging the
+// surfaces): flat strips bedded on the chunk's broad faces, in handle lengths: each strip's width and thickness, how far its outer face stands proud of the
+// chunk's face, its tilt off the handle (the two of a face tilted opposite ways so they cross), the X's centre out along the chunk from the handle, and
+// how much of the chunk's jitter is kept across its thin axis (damped, so a strip can lie on the face; the long faces keep the full jitter)
+const AXE_LASH = { wide: 0.07, thick: 0.06, proud: 0.012, tilt: 0.5, at: 0.1, bed: 0.35 };
 // The bone mage's staff (units/tribal.bone_mage), in prop units: its length, the share of it below the fist, the skull's width (the mage's own head is about 0.14)
 const BONE_STAFF_LONG = 0.62;
 const BONE_STAFF_GRIP = 0.4;
@@ -1642,7 +1644,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (at) {
         for (let v = 0; v < at.length; v += 3) {
           const k = 0.78 + 0.44 * roundBoardSeed(7.5, Math.round(at[v] * 97 + at[v + 1] * 57 + at[v + 2] * 31));
-          at[v] *= k; at[v + 1] *= k; at[v + 2] *= k;
+          // The thin axis (local z, turned onto the handle's x below) keeps only AXE_LASH.bed of the jitter, so the broad faces stay near enough flat for the lashing
+          at[v] *= k; at[v + 1] *= k; at[v + 2] *= 1 + (k - 1) * AXE_LASH.bed;
         }
         stone.setVerticesData(VertexBuffer.PositionKind, at);
         const normals: number[] = [];
@@ -1658,16 +1661,43 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       stone.position.set(0, 0.4 * L, AXE_HEAD * 0.24 * L);
       stone.material = mat(scene, new Color3(0.5, 0.5, 0.52), 0.12, "stone");
       stone.parent = handle;
-      // The lashing: two rope bands each in a plane through the handle and the chunk's thin axis, tilted AXE_LASH.tilt off the handle the opposite ways
-      // about the face's normal, wrapped over the chunk's top and under its bottom round the handle top, so they cross on the broad face in an X
-      const rope = mat(scene, new Color3(0.36, 0.22, 0.1), 0.08);
+      // The lashing (AXE_LASH): flat rope strips bedded on the chunk's two broad faces, a pair on each face tilted AXE_LASH.tilt off the handle the opposite
+      // ways so they cross in an X at the joint; each diagonal is carried over the chunk's top edge and under its bottom edge by a strip laid across the
+      // thickness (the pairs of the two faces joined), and the handle is bound with a sleeve above the stone and another where it enters below. Strips
+      // lying on the surfaces, not hoops: the 318 tori stood off the stone (critic 318, blocker 3)
+      const rope = mat(scene, new Color3(0.36, 0.22, 0.1), 0.12);
+      const faceX = AXE_HEAD * 0.5 * AXE_HEAD_SQUASH.z * L; // the chunk's half thickness, half height and half length, in the handle's frame
+      const tallY = AXE_HEAD * 0.5 * AXE_HEAD_SQUASH.y * L;
+      const longZ = AXE_HEAD * 0.5 * L;
+      const cy = 0.4 * L, cz = AXE_LASH.at * L, chunkZ = AXE_HEAD * 0.24 * L;
+      const wide = AXE_LASH.wide * L, thick = AXE_LASH.thick * L, proud = AXE_LASH.proud * L;
+      const diag = (2 * tallY) / Math.cos(AXE_LASH.tilt) + wide;
+      for (const side of [-1, 1]) {
+        for (const way of [-1, 1]) {
+          const band = MeshBuilder.CreateBox("stoneAxeLash", { width: thick, height: diag, depth: wide }, scene);
+          band.position.set(side * (faceX + proud - thick * 0.5), cy, cz);
+          band.rotation.x = way * AXE_LASH.tilt; // the strip's length leant in the face's plane: its top toward +z for way 1
+          band.material = rope;
+          band.parent = handle;
+        }
+      }
+      // Over the top and under the bottom edge, where each diagonal reaches it: a strip across the thickness, laid on the chunk's own height at that point
+      const reach = tallY * Math.tan(AXE_LASH.tilt);
       for (const way of [-1, 1]) {
-        const lash = MeshBuilder.CreateTorus("stoneAxeLash", { diameter: AXE_HEAD * AXE_HEAD_SQUASH.y * 1.02 * L, thickness: AXE_LASH.thick * L, tessellation: 10 }, scene);
-        // Stood up into the x-y plane first, then leant about z
-        lash.rotationQuaternion = Quaternion.RotationAxis(Vector3.Right(), Math.PI / 2).multiply(Quaternion.RotationAxis(Vector3.Forward(), way * AXE_LASH.tilt));
-        lash.position.set(0, 0.4 * L, 0.05 * L);
-        lash.material = rope;
-        lash.parent = handle;
+        for (const top of [-1, 1]) {
+          const z = cz + top * way * reach;
+          const rim = tallY * Math.sqrt(Math.max(0, 1 - ((z - chunkZ) / longZ) ** 2));
+          const cap = MeshBuilder.CreateBox("stoneAxeLashCap", { width: 2 * (faceX + proud), height: thick, depth: wide }, scene);
+          cap.position.set(0, cy + top * (rim + proud - thick * 0.5), z);
+          cap.material = rope;
+          cap.parent = handle;
+        }
+      }
+      for (const y of [cy + tallY + 0.06 * L, cy - tallY - 0.04 * L]) {
+        const sleeve = MeshBuilder.CreateCylinder("stoneAxeLashSleeve", { height: 0.08 * L, diameter: 0.09 * L, tessellation: 6 }, scene);
+        sleeve.position.y = y;
+        sleeve.material = rope;
+        sleeve.parent = handle;
       }
       return handle;
     }
