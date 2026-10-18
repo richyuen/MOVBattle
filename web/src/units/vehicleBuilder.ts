@@ -797,6 +797,89 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
 }
 
 // ═══════════════════════ DA VINCI TANK ═══════════════════════
+// Roof spec, read off renaissance.da_vinci_tank.red.png: the lower tier is a wide shallow cone of 16 team planks (eave about 2.5 m across, rising
+// about 25 deg) with a dark seam down every plank edge and a rivet at each seam's foot; above it a small second cone with its own short eave; under the
+// eave a dark plank drum a little narrower, banded at the middle, where the cannons sit.
+const DAVINCI_ROOF = {
+  planks: 16,
+  eaveR: 1.25, eaveY: 0.74, topR: 0.42, topY: 1.12,
+  capEaveR: 0.6, capY: 1.1, capApex: 1.38, lip: 0.05,
+  seam: 0.035, rivet: 0.06,
+  drumR: 1.0, drumBottom: 0.2, drumTop: 0.78, drumMid: 0.46,
+  drumColor: new Color3(0.24, 0.13, 0.1), seamColor: new Color3(0.1, 0.06, 0.05),
+};
+
+function buildDaVinciRoof(scene: Scene, parent: TransformNode, team: PBRMetallicRoughnessMaterial, allMeshes: Mesh[]): Mesh {
+  const R = DAVINCI_ROOF;
+  const seamMat = makeMat(scene, R.seamColor);
+  const drumMat = makeMat(scene, R.drumColor);
+  const add = (m: Mesh, mat: PBRMetallicRoughnessMaterial): Mesh => { m.parent = parent; m.material = mat; allMeshes.push(m); return m; };
+  // A seam strip laid along the cone surface from (r0, y0) to (r1, y1) at the plank edge angle a
+  const seamAlong = (name: string, a: number, r0: number, y0: number, r1: number, y1: number, proud: number): void => {
+    const p0 = new Vector3(Math.cos(a) * r0, y0, Math.sin(a) * r0);
+    const p1 = new Vector3(Math.cos(a) * r1, y1, Math.sin(a) * r1);
+    const along = p1.subtract(p0);
+    const seam = MeshBuilder.CreateBox(name, { width: R.seam, height: along.length(), depth: R.seam }, scene);
+    const out = new Vector3(Math.cos(a), 0, Math.sin(a));
+    const up = along.normalize();
+    const normal = Vector3.Cross(Vector3.Cross(up, out), up).normalize();
+    seam.position = Vector3.Lerp(p0, p1, 0.5).add(normal.scale(proud));
+    const side = Vector3.Cross(up, normal);
+    seam.rotationQuaternion = Quaternion.FromRotationMatrix(Matrix.FromValues(
+      side.x, side.y, side.z, 0, up.x, up.y, up.z, 0, normal.x, normal.y, normal.z, 0, 0, 0, 0, 1));
+    add(seam, seamMat);
+  };
+  // Lower tier: flat-faced planks, so each plank reads as its own board
+  const lower = MeshBuilder.CreateCylinder("hull", {
+    height: R.topY - R.eaveY, diameterTop: R.topR * 2, diameterBottom: R.eaveR * 2, tessellation: R.planks,
+  }, scene);
+  lower.convertToFlatShadedMesh();
+  lower.position.y = (R.topY + R.eaveY) / 2;
+  add(lower, team);
+  // The eave's thickness: a short team band under the plank ends
+  const eave = MeshBuilder.CreateCylinder("davinci_eave", { height: 0.06, diameter: R.eaveR * 2 + 0.02, tessellation: R.planks }, scene);
+  eave.convertToFlatShadedMesh();
+  eave.position.y = R.eaveY - 0.03;
+  add(eave, seamMat);
+  // Upper tier: a small cone with its own eave sitting over the top of the lower one
+  const capLip = MeshBuilder.CreateCylinder("davinci_cap_lip", { height: R.lip, diameter: R.capEaveR * 2, tessellation: R.planks }, scene);
+  capLip.convertToFlatShadedMesh();
+  capLip.position.y = R.capY - R.lip / 2;
+  add(capLip, seamMat);
+  const cap = MeshBuilder.CreateCylinder("davinci_cap", {
+    height: R.capApex - R.capY, diameterTop: 0.08, diameterBottom: R.capEaveR * 2, tessellation: R.planks,
+  }, scene);
+  cap.convertToFlatShadedMesh();
+  cap.position.y = (R.capApex + R.capY) / 2;
+  add(cap, team);
+  for (let i = 0; i < R.planks; i++) {
+    const a = i * Math.PI * 2 / R.planks;
+    seamAlong("davinci_seam", a, R.eaveR, R.eaveY, R.topR, R.topY, R.seam * 0.3);
+    seamAlong("davinci_cap_seam", a, R.capEaveR, R.capY, 0.05, R.capApex, R.seam * 0.3);
+    const rivet = MeshBuilder.CreateSphere("davinci_rivet", { diameter: R.rivet, segments: 3 }, scene);
+    rivet.position.set(Math.cos(a + Math.PI / R.planks) * (R.eaveR - 0.08), R.eaveY + 0.04, Math.sin(a + Math.PI / R.planks) * (R.eaveR - 0.08));
+    add(rivet, seamMat);
+  }
+  // The drum: dark boards standing round under the eave, an iron band at the middle
+  const drumWall = MeshBuilder.CreateCylinder("davinci_drum", {
+    height: R.drumTop - R.drumBottom, diameter: R.drumR * 2, tessellation: R.planks * 2,
+  }, scene);
+  drumWall.convertToFlatShadedMesh();
+  drumWall.position.y = (R.drumTop + R.drumBottom) / 2;
+  add(drumWall, drumMat);
+  for (let i = 0; i < R.planks * 2; i++) {
+    const a = i * Math.PI / R.planks;
+    const board = MeshBuilder.CreateBox("davinci_board_seam", { width: 0.02, height: R.drumTop - R.drumBottom, depth: 0.02 }, scene);
+    board.position.set(Math.cos(a) * R.drumR, drumWall.position.y, Math.sin(a) * R.drumR);
+    board.rotation.y = -a;
+    add(board, seamMat);
+  }
+  const band = MeshBuilder.CreateCylinder("davinci_band", { height: 0.05, diameter: R.drumR * 2 + 0.04, tessellation: R.planks * 2 }, scene);
+  band.position.y = R.drumBottom + 0.06;
+  add(band, seamMat);
+  return lower;
+}
+
 // Symmetrical design, fires in all directions, so orientation matters less.
 function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("tank_root", scene);
@@ -809,34 +892,29 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   const drum = new TransformNode("davinci_spin", scene);
   drum.parent = root;
 
-  // Conical hull
-  const hull = MeshBuilder.CreateCylinder("hull", {
-    height: 0.9, diameterTop: 0.15, diameterBottom: 2.0, tessellation: 16,
-  }, scene);
-  hull.position.y = 0.6; hull.parent = drum; hull.material = teamPrimary; allMeshes.push(hull);
+  // Roof and drum (331, renaissance.da_vinci_tank.red.png): a low wide roof in two tiers of team planks with dark seams and rivets, its eave
+  // overhanging a dark plank drum that carries the cannons. All of it rides the spinning drum node.
+  const roof = buildDaVinciRoof(scene, drum, teamPrimary, allMeshes);
+  const hull = roof;
 
   // Base plate
   const basePlate = MeshBuilder.CreateCylinder("basePlate", { height: 0.1, diameter: 2.1, tessellation: 16 }, scene);
-  basePlate.position.y = 0.15; basePlate.parent = root; basePlate.material = teamPrimary; allMeshes.push(basePlate);
+  basePlate.position.y = 0.15; basePlate.parent = root; basePlate.material = makeMat(scene, DAVINCI_ROOF.drumColor); allMeshes.push(basePlate);
 
   const muzzleSequence: TransformNode[] = [];
   // Cannons poking out from sides (8 around the perimeter)
   for (let i = 0; i < 8; i++) {
     const angle = i * Math.PI * 2 / 8;
     const barrel = MeshBuilder.CreateCylinder("tbarrel", { height: 0.4, diameter: 0.08, tessellation: 8 }, scene);
-    const rx = Math.cos(angle) * 0.9;
-    const rz = Math.sin(angle) * 0.9;
-    barrel.position.set(rx, 0.3, rz);
+    const rx = Math.cos(angle) * 1.15;
+    const rz = Math.sin(angle) * 1.15;
+    barrel.position.set(rx, DAVINCI_ROOF.drumMid, rz);
     // Point barrel outward radially
     barrel.rotation.x = Math.PI / 2;
     barrel.rotation.y = -angle + Math.PI / 2;
     barrel.parent = drum; barrel.material = metal; allMeshes.push(barrel);
-    muzzleSequence.push(makeSocket(scene, drum, `davinci_muzzle_${i}`, new Vector3(Math.cos(angle) * 1.08, 0.3, Math.sin(angle) * 1.08)));
+    muzzleSequence.push(makeSocket(scene, drum, `davinci_muzzle_${i}`, new Vector3(Math.cos(angle) * 1.35, DAVINCI_ROOF.drumMid, Math.sin(angle) * 1.35)));
   }
-
-  // Top viewport
-  const viewport = MeshBuilder.CreateCylinder("viewport", { height: 0.15, diameter: 0.3, tessellation: 8 }, scene);
-  viewport.position.y = 1.1; viewport.parent = drum; viewport.material = metal; allMeshes.push(viewport);
 
   // Wheels (4, peeking out from base)
   for (const x of [-0.6, 0.6]) {

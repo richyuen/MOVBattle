@@ -413,6 +413,10 @@ export class RuntimeUnit {
     for (const mesh of this.body.allMeshes) {
       mesh.isVisible = visible;
     }
+    // The skirt hung on a man is part of his body: a hidden crewman (the da Vinci tank's pilot) must not leave it floating over the machine
+    for (const mesh of this.propMeshes) {
+      if (/Skirt$|Kilt$|^furCollar$/.test(mesh.name)) mesh.isVisible = visible;
+    }
   }
 
   setHealthBarVisible(visible: boolean): void {
