@@ -115,7 +115,8 @@ const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
  * left shoulder bare. The trunk part is the torso's own wedge a skin wider, its top TUNIC.top of the trunk high; the skirt TUNIC.skirt of the thigh long,
  * flaring TUNIC.flare; TUNIC.tatters points hang off its hem. Self-lit so the brown does not go black in the shade.
  */
-const TRIBAL_TUNIC_UNITS = new Set(["tribal.stoner"]);
+// The protector wears the same garment (card Appearance: "a brown garment held by a shoulder strap on one side"; tribal.protector.png)
+const TRIBAL_TUNIC_UNITS = new Set(["tribal.stoner", "tribal.protector"]);
 const TUNIC = { top: 0.8, skirt: 0.6, flare: 1.25, tatters: 5, strap: 0.22 };
 const TUNIC_COLOR = new Color3(0.5, 0.29, 0.18);
 /*
