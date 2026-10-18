@@ -187,7 +187,7 @@ const SKULL_SNOUT = 0.45;
  * its underside cut flat SKULL_FACETED.under of its half height below the middle and seated on the brow line; sockets SKULL_FACETED.socket head widths across
  * and sunk; a snout SKULL_FACETED.snout head widths long. Pale bone self-lit a little: the smooth cap before it went grey in the capture's shade.
  */
-const SKULL_FACETED = { heads: 1.45, tall: 0.85, under: 0.35, jitter: 0.09, socket: 0.3, snout: 0.55 };
+const SKULL_FACETED = { heads: 1.45, tall: 1.6, under: 0.7, jitter: 0.09, socket: 0.3, snout: 0.55 };
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
 const BERET_TILT = 0.22;
