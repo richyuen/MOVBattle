@@ -226,6 +226,13 @@ const CATAPULT_SCALE = 1.4;
  */
 export const CATAPULT_ARM = { pivotY: 1.62, long: 1.0, short: 0.7, cocked: 0.35, thrown: Math.PI / 2 };
 export const CATAPULT_ARM_PIVOT = "catapult_arm_pivot";
+/*
+ * [S] the catapult's crewman (354; medieval.catapult.red.png, card Appearance "a Wobbler in a simple coif cap along with a shirt and a pair of belt-held pants
+ * and shoes holding onto the bucket"). He stands on the back of the deck (rig units: .z along the firing axis, .y his feet) facing the bucket, both arms
+ * raised .raise rad up to its underside, .spread apart, elbows .elbow; no counterweight block hangs in front of him. Dressed: a pale coif hood over his head
+ * and neck, the team shirt, a brown belt, brown breeches and dark shoes (dressCatapultCrew, CREW_DRESS).
+ */
+const CATAPULT_CREW = { z: -0.62, y: 0.5, raise: -2.6, spread: 0.12, elbow: -0.35 };
 /** The catapult's boulder across, in the bucket and in flight (buildFacetedBoulder) */
 export const CATAPULT_BOULDER = 0.65;
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
@@ -302,10 +309,13 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     allMeshes.push(boulder);
   }
 
-  // Counterweight on the short end, hung under the arm: a big dark block of the wheels' timber. As the tinted main mesh it was a pale team-coloured card between the posts
-  const cw = MeshBuilder.CreateBox("cw", { width: 0.36, height: 0.44, depth: 0.4 }, scene);
-  cw.position.set(0, -0.3, CATAPULT_ARM.short - 0.2);
-  cw.parent = pivot; cw.material = wheelWood; allMeshes.push(cw);
+  // Counterweight on the short end, hung under the arm: a big dark block of the wheels' timber (the pumpkin catapult's; the medieval one has none, 354: it read as a
+  // black cube hiding the crewman)
+  if (options.spooky) {
+    const cw = MeshBuilder.CreateBox("cw", { width: 0.36, height: 0.44, depth: 0.4 }, scene);
+    cw.position.set(0, -0.3, CATAPULT_ARM.short - 0.2);
+    cw.parent = pivot; cw.material = wheelWood; allMeshes.push(cw);
+  }
 
   // Axle under the deck: the body mesh that takes the team tint, as on the cannon, so the timber keeps its own colours
   const axle = MeshBuilder.CreateCylinder("axle", { height: 1.1, diameter: 0.08, tessellation: 6 }, scene);
@@ -315,9 +325,18 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 
   // Operator sitting beside, behind the frame
   // Dressed as a gun crewman: bare, he was a washed mannequin beside the machine
-  const operator = addOperator(scene, rig, allMeshes, 0.4, 0.72, -0.5, color, (body) => {
-    dressCannonCrew(scene, body, color);
-  });
+  const operator = options.spooky
+    ? addOperator(scene, rig, allMeshes, 0.4, 0.72, -0.5, color, (body) => {
+      dressCannonCrew(scene, body, color);
+    })
+    : addOperator(scene, rig, allMeshes, 0, CATAPULT_CREW.y, CATAPULT_CREW.z, color, (body) => {
+      body.root.rotation.y = Math.PI;
+      for (const [shoulder, elbow, side] of [[body.leftShoulder, body.leftElbow, -1], [body.rightShoulder, body.rightElbow, 1]] as const) {
+        shoulder.rotation.set(CATAPULT_CREW.raise, 0, side * CATAPULT_CREW.spread);
+        elbow.rotation.set(CATAPULT_CREW.elbow, 0, 0);
+      }
+      dressCatapultCrew(scene, body);
+    });
 
   const vehicleSockets: VehicleSocketSet = {
     // The shot leaves where the bucket is when the arm stands upright at the end of its swing (CATAPULT_ARM.thrown)
@@ -645,6 +664,47 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 // ═══════════════════════ CANNON ═══════════════════════
 // Fires FORWARD (+Z). Barrel points along +Z. Trail extends back (-Z).
 /** Pirate gun crew clothes on an operator body: mauve hoops round the team-coloured shirt, brown trousers and shoes, a dark peaked cap */
+// The catapult crewman's clothes (CATAPULT_CREW): coif linen, belt leather, breeches, shoes
+const CREW_DRESS = { coif: new Color3(0.86, 0.79, 0.64), belt: new Color3(0.3, 0.18, 0.09), breeches: new Color3(0.42, 0.26, 0.14), shoes: new Color3(0.22, 0.13, 0.07) };
+function dressCatapultCrew(scene: Scene, body: ArticulatedBody): void {
+  const mat = (c: Color3): PBRMetallicRoughnessMaterial => makeMat(scene, c);
+  const coifMat = mat(CREW_DRESS.coif), beltMat = mat(CREW_DRESS.belt), legMat = mat(CREW_DRESS.breeches), shoeMat = mat(CREW_DRESS.shoes);
+  const add = (mesh: Mesh, parent: TransformNode, material: PBRMetallicRoughnessMaterial): void => {
+    mesh.parent = parent; mesh.material = material; body.allMeshes.push(mesh);
+  };
+  // Breeches and shoes: the legs in brown, the feet darker, and a baggy tube on each thigh
+  const legJoints = new Set<unknown>([body.leftHip, body.leftKnee, body.rightHip, body.rightKnee]);
+  for (const mesh of body.allMeshes) {
+    if (legJoints.has(mesh.parent) || /_pelvis$/.test(mesh.name)) mesh.material = /FootM$/.test(mesh.name) ? shoeMat : legMat;
+  }
+  for (const [hip, thigh] of [[body.leftHip, body.leftUpperLeg], [body.rightHip, body.rightUpperLeg]] as const) {
+    const width = thigh.getBoundingInfo().boundingBox.extendSize.x * 2 * thigh.scaling.x;
+    const length = Math.abs(body.leftKnee.position.y);
+    const leg = MeshBuilder.CreateCylinder("crewBreeches", { height: length * 1.05, diameterTop: width * 1.6, diameterBottom: width * 1.25, tessellation: 6 }, scene);
+    leg.convertToFlatShadedMesh();
+    leg.position.y = -length * 0.5;
+    add(leg, hip, legMat);
+  }
+  // Belt: a brown band round the bottom of the shirt
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const belt = MeshBuilder.CreateCylinder("crewBelt", { height: chest.y * 0.16, diameter: Math.max(chest.x, chest.z) * 2 * 0.82, tessellation: 8 }, scene);
+  belt.position.y = chest.y * 0.12;
+  belt.scaling.z = body.torsoMesh.scaling.z;
+  add(belt, body.torso, beltMat);
+  // Coif: a close linen hood over the crown, sides and back of the head, the face open, falling to a short cape on the neck
+  const w = body.headMesh.getBoundingInfo().boundingBox.extendSize.x * 2 * body.headMesh.scaling.x;
+  const hood = MeshBuilder.CreateSphere("crewCoif", { diameter: w * 1.18, segments: 6, slice: 0.62 }, scene);
+  hood.convertToFlatShadedMesh();
+  hood.position.set(0, -w * 0.42, -w * 0.08);
+  add(hood, body.headTop, coifMat);
+  const back = MeshBuilder.CreateBox("crewCoifBack", { width: w * 1.05, height: w * 0.75, depth: w * 0.3 }, scene);
+  back.position.set(0, -w * 0.82, -w * 0.42);
+  add(back, body.headTop, coifMat);
+  const cape = MeshBuilder.CreateCylinder("crewCoifCape", { height: w * 0.3, diameterTop: w * 0.9, diameterBottom: w * 1.45, tessellation: 8 }, scene);
+  cape.position.set(0, -w * 1.3, -w * 0.05);
+  add(cape, body.headTop, coifMat);
+}
+
 export function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Color3, cap = true): void {
   const hoopMat = makeMat(scene, new Color3(0.66, 0.50, 0.36)); // at (0.74, 0.66, 0.72) the stripes were near white on the shirt, at (0.60, 0.50, 0.68) a violet no TABS crew wears, at (0.58, 0.45, 0.42) a cool grey on the blue, and at (0.55, 0.36, 0.24) too brown
   const trouserMat = makeMat(scene, new Color3(0.42, 0.24, 0.14));
