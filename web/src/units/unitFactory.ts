@@ -936,7 +936,7 @@ const HALBERD_BELT = new Color3(0.32, 0.17, 0.1);
  *   HAY_BALE.hems hem blades .hem of H long, flaring out .flare; straps .strap of H tall at .straps (shares of the barrel down from its top), .proud round it.
  * Self-lit tan cloth (HAY_TAN / HAY_TOP, HAY_GLOW): plain tan greys out under this light.
  */
-const HAY_BALE = { drop: 0.55, top: 1.25, bottom: 1.4, deep: 1.7, blades: 10, blade: 0.62, short: 0.6, bladeWide: 0.42, lean: 0.45, hems: 12, hem: 0.5, flare: 0.5, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
+const HAY_BALE = { drop: 0.55, top: 1.6, bottom: 1.75, deep: 1.7, blades: 10, blade: 0.62, short: 0.6, bladeWide: 0.42, lean: 0.45, hems: 12, hem: 0.5, flare: 0.5, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
 const HAY_TAN = new Color3(0.7, 0.46, 0.22);
 const HAY_TOP = new Color3(0.5, 0.32, 0.18);
 const HAY_STRAP = new Color3(0.26, 0.16, 0.11);
