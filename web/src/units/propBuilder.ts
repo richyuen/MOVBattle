@@ -2977,7 +2977,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "pitchfork": {
       // The farmer's pitchfork, built to the spec at FORK: +y up the shaft from the fist at the origin, FORK.grip of it below the fist
       const L = fit.stand * FORK.long;
-      const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: FORK.thick * L, tessellation: 7 }, scene);
+      // named forkShaft so the animator turns it in the fist to its carry (FORK_LOW), as it turns a club or the hay baler's stick
+      const shaft = MeshBuilder.CreateCylinder("forkShaft", { height: L, diameter: FORK.thick * L, tessellation: 7 }, scene);
       shaft.position.y = (0.5 - FORK.grip) * L;
       shaft.material = mat(scene, FORK_WOOD, 0.12);
       shaft.convertToFlatShadedMesh();
