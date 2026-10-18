@@ -1114,13 +1114,23 @@ const MUSKETEER_DRESS = { vest: 1.1, wing: 1.5, puff: 1.4, collar: 1.25, breech:
 const MUSKETEER_CREAM = new Color3(0.8, 0.6, 0.36);
 const MUSKETEER_GLOW = 0.15;
 const MUSKETEER_SHOE = new Color3(0.72, 0.42, 0.22);
+/*
+ * [S] vest hem (337; renaissance.musketeer.red.png: the team vest stops at the waist in a short skirt flaring out over the hips, a dark belt line at
+ * its top, and the breeches below it a deeper, duller team). Shares of the chest (W, D, H):
+ *   vest MUSKETEER_VEST.shade of the team; hem skirt .hem of H deep, .flare of the vest round at its foot; belt .belt of H deep, .beltOut of the vest
+ *   round; breeches and thighs .breech of the team.
+ */
+const MUSKETEER_VEST = { shade: 0.95, hem: 0.2, flare: 1.28, belt: 0.07, beltOut: 1.06, breech: 0.6 };
 /** Dresses the musketeer (spec at MUSKETEER_DRESS): team vest, cream blouse sleeves and collar, puffy team breeches, banded stockings, tan shoes. */
 function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
   const mf = getMaterialFactory();
   const M = MUSKETEER_DRESS;
+  const V = MUSKETEER_VEST;
   const team = mf.getCloth(teamColor.scale(0.82));
-  const deep = mf.getCloth(teamColor.scale(0.5));
+  const vestCloth = mf.getCloth(teamColor.scale(V.shade));
+  const breechCloth = mf.getCloth(teamColor.scale(V.breech));
+  const deep = mf.getCloth(teamColor.scale(0.4));
   const cream = mf.get("cloth", MUSKETEER_CREAM, { emissiveIntensity: MUSKETEER_GLOW });
   const put = (m: Mesh, mat: Material, parent: TransformNode): Mesh => {
     m.material = mat;
@@ -1134,8 +1144,19 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
   const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
   // the vest over the chest, and the collar laid flat round the neck's foot
-  const vest = put(MeshBuilder.CreateBox("musketeerVest", { width: W * M.vest, height: H * 0.92, depth: D * M.vest }, scene), team, body.torso);
+  const vest = put(MeshBuilder.CreateBox("musketeerVest", { width: W * M.vest, height: H * 0.92, depth: D * M.vest }, scene), vestCloth, body.torso);
   vest.position.set(0, chest.position.y - H * 0.03, 0);
+  // the vest's foot at the waist: a dark belt line, and under it a short skirt flaring out over the hips all round (MUSKETEER_VEST)
+  const vestFoot = vest.position.y - H * 0.46;
+  const round = (W * M.vest) * Math.SQRT2;
+  const hem = put(MeshBuilder.CreateCylinder("musketeerVestHem", { height: H * V.hem, diameterTop: round * 0.98, diameterBottom: round * V.flare, tessellation: 8 }, scene), vestCloth, body.torso);
+  hem.rotation.y = Math.PI / 8;
+  hem.scaling.z = D / W;
+  hem.position.y = vestFoot - H * V.hem * 0.45;
+  const belt = put(MeshBuilder.CreateCylinder("musketeerBelt", { height: H * V.belt, diameter: round * V.beltOut, tessellation: 8 }, scene), deep, body.torso);
+  belt.rotation.y = Math.PI / 8;
+  belt.scaling.z = D / W;
+  belt.position.y = vestFoot + H * V.belt * 0.3;
   const across = headSize * M.collar;
   const collar = put(MeshBuilder.CreateCylinder("musketeerCollar", { height: headSize * 0.08, diameterTop: across * 0.75, diameterBottom: across, tessellation: 8 }, scene), cream, body.torso);
   collar.scaling.z = Math.min(1, (D * 1.3) / across);
@@ -1154,10 +1175,10 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   }
   // puffy breeches swelling to the knee and gathered there, over team thighs
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
-    leg.material = team;
+    leg.material = breechCloth;
     const e = leg.getBoundingInfo().boundingBox.extendSize;
     const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
-    const breech = put(MeshBuilder.CreateCylinder("musketeerBreech", { height: long * 0.85, diameterTop: girth * M.breech, diameterBottom: girth * M.knee, tessellation: 8 }, scene), team, leg);
+    const breech = put(MeshBuilder.CreateCylinder("musketeerBreech", { height: long * 0.85, diameterTop: girth * M.breech, diameterBottom: girth * M.knee, tessellation: 8 }, scene), breechCloth, leg);
     breech.position.y = long * 0.5 - long * 0.45;
     const band = put(MeshBuilder.CreateCylinder("musketeerKneeBand", { height: long * 0.1, diameter: girth * M.knee * 0.86, tessellation: 8 }, scene), deep, leg);
     band.position.y = -long * 0.5 + long * 0.04;
