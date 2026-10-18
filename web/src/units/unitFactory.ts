@@ -548,6 +548,8 @@ export class UnitFactory {
     if (definition.id === "farmer.farmer" && !shouldUseVehicleBody) {
       // [S] white socks and brown slip-on shoes (341; FARMER_SOCK)
       propMeshes.push(...dressFarmerLegs(this._scene, body));
+      // [S] ...the leaf-cut hem of his shirt and the strap belt at his waist (348; FARMER_SHIRT)
+      propMeshes.push(...dressFarmerShirt(this._scene, body, teamColor));
     }
     if (definition.id === "farmer.potion_seller" && !shouldUseVehicleBody) {
       // [S] a close umber hair cap, no hood (343; tribalDress HAIR_CAP)
@@ -1741,6 +1743,75 @@ function dressFarmerLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
     if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
   }
+  return added;
+}
+
+/*
+ * [S] farmer's shirt hem and strap belt (348; farmer.farmer.blue.png, card Appearance "a team-colored shirt with its bottom cut into a leaf-like pattern
+ * ... knee-length shorts belted with straps"): round the hem of the team shirt's skirt hangs a ring of FARMER_SHIRT.dags pointed leaf dags, each a flat
+ * downward triangle standing out with the skirt's flare, alternate ones a shade darker so the cut reads; round the waist where the skirt meets the chest a
+ * brown leather strap, a buckle loop at the front and its tongue hanging down over the shirt. Sizes are shares of the pelvis (the skirt's own measure, as
+ * hangSkirt hangs it): dags .dag of the hem's circumference across each, .dagLong of the thigh long, tilted out .tilt rad; strap .strap of the thigh tall,
+ * .strapProud round the skirt's waist; tongue .tongue of the thigh long. Brown self-lit (.glow) so it reads brown and not black.
+ */
+const FARMER_SHIRT = { dags: 10, dag: 1.25, dagLong: 0.24, tilt: 0.32, shade: 0.82, strap: 0.1, strapProud: 1.1, tongue: 0.22, glow: 0.2 };
+const FARMER_STRAP = new Color3(0.5, 0.27, 0.17);
+/** Dresses the farmer's shirt (spec at FARMER_SHIRT): leaf-cut dags round the skirt's hem, a brown strap belt at the waist. */
+function dressFarmerShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const pelvis = body.allMeshes.find((m) => /_pelvis$/.test(m.name));
+  if (!pelvis) return added;
+  const mf = getMaterialFactory();
+  const S = FARMER_SHIRT;
+  const size = pelvis.getBoundingInfo().boundingBox.extendSize;
+  const thigh = Math.abs(body.leftKnee.position.y);
+  // the tunic skirt as hangSkirt hangs it (length .45, flare 1.5)
+  const drop = thigh * 0.45;
+  const depthScale = Math.max(0.7, size.z / size.x * 1.25);
+  const waistY = pelvis.position.y + size.y;
+  const hemY = waistY - drop;
+  const hemR = size.x * 1.5;
+  const put = (m: Mesh, mt: Material, parent: TransformNode): Mesh => {
+    m.material = mt;
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  // the leaf dags round the hem
+  const light = mf.get("cloth", teamColor, { emissiveIntensity: 0.12 });
+  const dark = mf.get("cloth", teamColor.scale(S.shade), { emissiveIntensity: 0.12 });
+  const across = 2 * Math.PI * hemR / S.dags * S.dag;
+  const long = thigh * S.dagLong;
+  for (let k = 0; k < S.dags; k++) {
+    const a = (k + 0.5) / S.dags * Math.PI * 2;
+    const seat = new TransformNode("farmerDagSeat", scene);
+    seat.parent = body.hip;
+    seat.position.set(Math.sin(a) * hemR, hemY + long * 0.12, Math.cos(a) * hemR * depthScale);
+    seat.rotation.y = a;
+    seat.rotation.x = S.tilt;
+    // a downward triangle: its flat top along the hem, its point below
+    const dag = MeshBuilder.CreateDisc("farmerDag", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    dag.rotation.z = -Math.PI / 2;
+    dag.scaling.set(long / 1.5, across / Math.sqrt(3), 1);
+    dag.position.y = -long / 3 + long * 0.1;
+    dag.convertToFlatShadedMesh();
+    put(dag, k % 2 ? dark : light, seat);
+  }
+  // the brown strap belt round the waist, its buckle loop at the front and the tongue hanging from it
+  const strapMat = mf.get("cloth", FARMER_STRAP, { emissiveIntensity: S.glow });
+  const strapTall = thigh * S.strap;
+  const strap = put(MeshBuilder.CreateCylinder("farmerStrap", { height: strapTall, diameter: size.x * 2 * SKIRT_WAIST * S.strapProud, tessellation: 8 }, scene), strapMat, body.hip);
+  strap.scaling.z = depthScale;
+  strap.position.y = waistY - strapTall * 0.5;
+  strap.convertToFlatShadedMesh();
+  const front = size.x * SKIRT_WAIST * S.strapProud * depthScale;
+  const loop = put(MeshBuilder.CreateTorus("farmerBuckle", { diameter: strapTall * 1.3, thickness: strapTall * 0.32, tessellation: 8 }, scene), strapMat, body.hip);
+  loop.rotation.x = Math.PI / 2;
+  loop.position.set(size.x * 0.25, waistY - strapTall * 0.5, front + strapTall * 0.1);
+  const tongueLong = thigh * S.tongue;
+  const tongue = put(MeshBuilder.CreateBox("farmerStrapEnd", { width: strapTall * 0.7, height: tongueLong, depth: strapTall * 0.18 }, scene), strapMat, body.hip);
+  tongue.position.set(size.x * 0.25 + strapTall * 0.4, waistY - strapTall * 0.6 - tongueLong * 0.5, front + strapTall * 0.12);
+  tongue.rotation.z = 0.12;
   return added;
 }
 
