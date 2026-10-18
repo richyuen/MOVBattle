@@ -809,24 +809,10 @@ const DAVINCI_ROOF = {
   drumColor: new Color3(0.24, 0.13, 0.1), seamColor: new Color3(0.1, 0.06, 0.05),
 };
 
-/*
- * [S] taller roof (334; reference/factions/renaissance.jpg: a tall conical roof whose peak stands over the jouster's rider, the tank about 1.5 men tall;
- * renaissance.da_vinci_tank.red.png: the lower tier rises from the eave to its top about half the eave's radius, the cap above it steeper still). The tiers'
- * heights are no longer set by hand (they made a ~17 deg roof): each tier is raised at a pitch, DAVINCI_PITCH.lower from the eave to the lower tier's
- * top and .cap from the cap's eave to its apex, and the cap sits on the lower tier's top. The radii stay as they were (DAVINCI_ROOF).
- */
-const DAVINCI_PITCH = { lower: 0.66, cap: 0.75 };
-function daVinciTiers(): { topY: number; capY: number; capApex: number } {
-  const R = DAVINCI_ROOF;
-  const topY = R.eaveY + (R.eaveR - R.topR) * Math.tan(DAVINCI_PITCH.lower);
-  const capY = topY - (R.topY - R.capY);
-  return { topY, capY, capApex: capY + (R.capEaveR - 0.04) * Math.tan(DAVINCI_PITCH.cap) };
-}
-
 const DAVINCI_CANNON = { count: 16, out: 1.62, bore: 0.2, ring: 0.07, ringWide: 1.3, color: new Color3(0.16, 0.16, 0.18) };
 
 function buildDaVinciRoof(scene: Scene, parent: TransformNode, team: PBRMetallicRoughnessMaterial, allMeshes: Mesh[]): Mesh {
-  const R = { ...DAVINCI_ROOF, ...daVinciTiers() };
+  const R = DAVINCI_ROOF;
   const seamMat = makeMat(scene, R.seamColor);
   const drumMat = makeMat(scene, R.drumColor);
   const add = (m: Mesh, mat: PBRMetallicRoughnessMaterial): Mesh => { m.parent = parent; m.material = mat; allMeshes.push(m); return m; };
