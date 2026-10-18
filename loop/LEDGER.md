@@ -52,6 +52,11 @@ for 25 iterations.
 325 | ankle bands (0207b28) | tribal.mammoth.a | approved
 325 | bracelets, joins BRACELETS (e8a2cc0) | tribal.clubber.a | approved
 326 | face marking (edf1fdb + 5594a38, 01bd5ef, 1f8384e, b9a7a89) | tribal.mammoth.a | approved
+327 | black brim hat, no head balloon (d747d43) | renaissance.balloon_archer.a | approved
+327 | short one-handed brush (34e0270 + 362af93) | renaissance.painter.b | approved
+327 | cavalier hat (fbe32ce + 0acead3) | renaissance.fencer.a | approved
+327 | halberd head: axe, spike, point (547179c + bc80d12) | renaissance.halberd.b | approved
+327 | black iron morion (affc57f) | renaissance.musketeer.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -109,3 +114,10 @@ tribalDress.ts:necklace TUSK_NECKLACE (drop, long, side, thick, gap, curl, strap
 vehicleBuilder.ts:mammoth MAMMOTH_MANE (jitter, locks, long, glow), COLOR | 0.2, 7, 0.42, 0.12, (0.2, 0.1, 0.06) | 324 | approved | (new; was an indigo crestMat cap; critic 324: barely darker than the coat)
 vehicleBuilder.ts:mammoth ANKLE_BAND (stripes, tall, wide, dots, dotAt, dot, dotOut, dotFlat) | -0.17/-0.25, 0.035, 0.61, 8, -0.33, 0.11, 0.29, 0.2 | 326 | approved | tall 0.05, wide 0.64, flat 0.45 (325 [S]; 326 [P] fallout)
 vehicleBuilder.ts:mammoth FACE_PAINT (path yaw/pitch, steps, wide, taper, thick, trunkDots, dot) | .95/.56 .57/.37 .5/-.05 .42/-.3, 3, 0.17, 0.3, 0.03, 1/3/5, 0.12 | 326 | approved | (new; replaced browPaint)
+propBuilder.ts:brim_hat BRIM_HAT (brim, crown, drop, tall), FELT | 1.75, 1.12, 0.16, 0.42, (0.11, 0.1, 0.12) | 327 | approved | (new; critic: bowler-like, TABS ~2 heads, flatter)
+propBuilder.ts:paintbrush BRUSH (long, grip, butt, neck, ferrule, collar, tuft, swell) | 0.34, 0.16, 0.05, 0.085, 0.6, 0.1, 0.15, 0.1 | 327 | approved | (new; was 0.46 s rod)
+propBuilder.ts:cavalier_hat CAVALIER (brim, flap, lift, crown, tall, shade, feather, wide, pale, rake) | 2.25, .3, 1.25, 1.1, .55, .75, 2.3, .55, .4, 1.15 | 327 | approved | (new)
+propBuilder.ts:halberd HALBERD (long, grip, thick, socket, point, axe, axeTall, axeRoot, spike), STEEL | 1.3, .3, .02, .1, .13, .13, .16, .07, .07, (.2,.21,.24) | 327 | approved | (new)
+propBuilder.ts:morion MORION (dome, tall, comb, combThick, brimX, brimZ, peak), IRON | 1.18, .3, .22, .1, 1.5, 2.05, .3, (.12,.12,.14) | 327 | approved | (new)
+rosterManifest.ts:renaissance cost/hp/dmg/cd (painter, fencer, archer, musketeer) | 50/.94/.17/.35, 150/.46/.67/-, 200/.56/.36/1.36, 250/.54/-/3.33 | 327 | stats | 80, 160, 180, 220
+rosterManifest.ts:renaissance cost/hp/dmg/cd (halberd, jouster, da_vinci_tank) | 400/1.19/.58/.77, 1000/.47/-/-, 4000/3.65/.53/1.59 | 327 | stats | 200, 500, 1800 (cd .86)

@@ -1,10 +1,10 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 326   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 7/139   Parked: 0
+Iteration: 327   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 7/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
-renaissance: painter ???? q | fencer ???? q | balloon_archer ???? q | musketeer ???? q | halberd ???? q | jouster ???? q | da_vinci_tank ???? q
+renaissance: painter ---+ o | fencer ---+ o | balloon_archer ---+ o | musketeer ---+ o | halberd ---+ o | jouster ---+ o | da_vinci_tank ---+ o
 farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,14 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-326 (BASE 53e09a5): [S] mammoth a face marking edf1fdb + 5594a38, 01bd5ef, 1f8384e, b9a7a89 approved | [P] mammoth a ankle band flush 86f8f39 approved (a -> PASS, mammoth D, tribal 7/7 D). 2/2 approved, no regressions.
-325 (BASE 75ad012): 2/2 approved (mammoth ankle bands, clubber bracelets -> D).
+327 (BASE 738015e; 327.0 stats 738015e): [S] balloon_archer a brim hat d747d43 approved | [S] painter b brush 34e0270 + 362af93 approved | [S] fencer a cavalier hat fbe32ce + 0acead3 approved | [S] halberd b halberd head 547179c + bc80d12 approved | [S] musketeer a morion affc57f approved. 5/5, no regressions.
+326 (BASE 53e09a5): 2/2 approved (mammoth face marking + ankle band flush -> tribal 7/7 D).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.mammoth (edf1fdb + 5594a38, 01bd5ef, 1f8384e, b9a7a89) VERDICT: APPROVE CRITERION: tribal.mammoth.a PASS (previous: FAIL) BLOCKERS: struck: 4. List empty.
-- GAP: [P] tribal.mammoth (86f8f39) VERDICT: APPROVE CRITERION: tribal.mammoth.a PASS (previous: FAIL)
-- REGRESSIONS: none. UNIT tribal.mammoth: a PASS b PASS c PASS d PASS (4/4). The unit is done.
-- Batch checkpoint 326 (tribal): regression-only 12/12 GREEN.
+- GAP: [S] renaissance.balloon_archer (d747d43) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
+- GAP: [S] renaissance.painter (34e0270 + 362af93) VERDICT: APPROVE CRITERION: renaissance.painter.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
+- GAP: [S] renaissance.fencer (fbe32ce + 0acead3) VERDICT: APPROVE CRITERION: renaissance.fencer.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3, 4.
+- GAP: [S] renaissance.halberd (547179c + bc80d12) VERDICT: APPROVE CRITERION: renaissance.halberd.b FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2.
+- GAP: [S] renaissance.musketeer (affc57f) VERDICT: APPROVE CRITERION: renaissance.musketeer.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2, 3.
+- REGRESSIONS: none. Audit 327: all 7 renaissance units a b c FAIL, d PASS after the 327.0 stats commit.
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -51,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- 327 starts at step 2: renaissance is unaudited (user asked 2026-10-17 to do renaissance right after tribal; batch list reordered).
-- Renaissance has da_vinci_tank (vehicleBuilder.ts); the rest are humanoids (bodyBuilder/propBuilder).
+- Renaissance is audited (327); jouster and da_vinci_tank have no picks yet but their files hold ranked gaps. The --iter capture of 5 units dropped their unit_* shots and stats.json from iter-327: rerun stats --iter N after any --iter capture.
+- One-handed props: the hand's +y runs up the forearm; build along +y and turn rotation.x = PI (painter brush), or the prop lies along the arm.
 - Head paint on faceted meshes: lay short strips where scene.pickWithRay(ray, m => m === mesh) hits; Mesh.intersects missed in-game.
-- Capture shade greys warm browns: dark saturated base with emissive 0.1 reads brown.
-- capture.mjs --units takes a comma list (a,b). stats.json lives in iter-317. Never put a bare `cat > file` (no heredoc) in a command: it waits on stdin.
+- Capture shade greys warm browns: dark saturated base with emissive 0.1 reads brown. Near-black (0.11-0.2) reads black.
+- capture.mjs --units takes a comma list (a,b). Never put a bare `cat > file` (no heredoc) in a command: it waits on stdin.
