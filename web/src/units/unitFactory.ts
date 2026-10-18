@@ -994,6 +994,10 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const FENCER_DRESS = { doublet: 1.08, tabs: 8, tab: 0.2, wing: 1.45, band: 0.12, panes: 8, puff: 0.82, long: 0.95 };
 const FENCER_CREAM = new Color3(0.84, 0.66, 0.42);
+// [S] boots (336; renaissance.fencer.blue.png: brown knee-high boots, a wide cuff turned down under the knee): shaft .shaft of the shin's girth at its
+// top, cuff .cuff of it at its rim, .cuffLong of the shin long
+const FENCER_BOOTS = { shaft: 1.3, cuff: 1.85, cuffLong: 0.36 };
+const FENCER_BOOT = new Color3(0.42, 0.17, 0.12);
 /** Dresses the fencer (spec at FENCER_DRESS): team doublet with cream shoulder bands and waist tabs, paned team-and-cream puffed breeches. */
 function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
@@ -1045,6 +1049,21 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
       pane.position.set(Math.cos(a) * girth * F.puff * 0.75, top - long * 0.5, Math.sin(a) * girth * F.puff * 0.75);
       pane.rotation.y = Math.PI / 2 - a;
     }
+  }
+  // knee-high brown boots: the shaft over the shin, a wide cuff turned down at its top under the knee, brown feet
+  const boot = mf.getCloth(FENCER_BOOT);
+  const bootCuff = mf.getCloth(FENCER_BOOT.scale(1.12));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = boot;
+    const e = shin.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const shaft = put(MeshBuilder.CreateCylinder("fencerBootShaft", { height: long * 0.75, diameterTop: girth * FENCER_BOOTS.shaft, diameterBottom: girth * 1.1, tessellation: 7 }, scene), boot, shin);
+    shaft.position.y = -long * 0.5 + long * 0.375;
+    const cuff = put(MeshBuilder.CreateCylinder("fencerBootCuff", { height: long * FENCER_BOOTS.cuffLong, diameterTop: girth * FENCER_BOOTS.cuff, diameterBottom: girth * FENCER_BOOTS.shaft * 1.04, tessellation: 7 }, scene), bootCuff, shin);
+    cuff.position.y = long * 0.5 - long * FENCER_BOOTS.cuffLong * 0.5 - long * 0.02;
+  }
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = boot;
   }
   return added;
 }
