@@ -1390,8 +1390,8 @@ const MAMMOTH_MANE_COLOR = new Color3(0.2, 0.1, 0.06);
 /** The mammoth's face marking: the band's path on the head as (yaw off the front, pitch up) per side, forehead first; strips per stretch; band width
  * (neck units, the head is 1.4 across), share it narrows by the trunk, paint thickness; the trunk pieces (of 8) that carry a dot, and the dot's size. */
 const FACE_PAINT = {
-  path: [[0.18, 0.62], [0.42, 0.36], [0.4, 0.05], [0.22, -0.22]] as [number, number][],
-  steps: 3, wide: 0.13, taper: 0.3, thick: 0.03, trunkDots: [1, 3, 5], dot: 0.12,
+  path: [[0.5, 0.6], [0.52, 0.32], [0.5, 0.06], [0.4, -0.24]] as [number, number][],
+  steps: 3, wide: 0.17, taper: 0.3, thick: 0.03, trunkDots: [1, 3, 5], dot: 0.12,
 };
 const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.035, wide: 0.61, dots: 8, dotAt: -0.33, dot: 0.11, dotOut: 0.29, dotFlat: 0.2 };
 
