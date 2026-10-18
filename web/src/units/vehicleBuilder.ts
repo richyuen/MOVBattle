@@ -1246,17 +1246,21 @@ export interface WheelbarrowCrew { farmer: ArticulatedBody; thrower: Articulated
  *   Apple throw: the raised throwing arm (rest: shoulder CREW_REST.throwArm, elbow .throwElbow) cocked further back and folded over CREW_FIGHT.cock, the
  *   apple let go at the end of it, the arm whipped forward and out to near level over .whip, held .hold, eased back up over .back; a new apple in the fist
  *   once he is back (CREW_FIGHT.cock + whip + hold + back).
- *   Stab: the Farmer's fork arm (rest: CREW_REST.forkArm, .forkElbow) drawn back, fist to the chest, over .draw; the blow lands at its end; driven straight
- *   out ahead over .drive, the trunk leaning in .lean, held .stabHold, eased back over .stabBack.
+ *   Stab: the Farmer's fork arm (rest: CREW_REST.forkArm, .forkElbow) drawn back, fist to the chest, over .draw; driven out over .drive, the trunk
+ *   leaning in .lean; the blow lands at the end of the drive; held .stabHold, eased back over .stabBack.
+ *   350 [S] aimed at the man (card "the Farmer stabs any enemy units up close"; 349 drove it level at shoulder height, over the head of a man at the
+ *   wheel): given the man's chest in the world, the trunk turns toward him (up to .turn), both arms are solved down the shoulder->chest line, drawn
+ *   back up that line (.drawBack of lift, elbow folded .drawFold) and driven out along it with the elbow straight, and the fork is turned in the fist
+ *   onto the same line, so the tines go down into him from the seat.
  */
-export const CREW_FIGHT = { cock: 0.3, whip: 0.15, hold: 0.25, back: 0.4, draw: 0.18, drive: 0.12, stabHold: 0.15, stabBack: 0.35, lean: 0.25 };
+export const CREW_FIGHT = { cock: 0.3, whip: 0.15, hold: 0.25, back: 0.4, draw: 0.18, drive: 0.12, stabHold: 0.15, stabBack: 0.35, lean: 0.25, turn: 0.9, drawBack: 0.55, drawFold: -1.5 };
 const CREW_REST = { throwArm: -2.5, throwSpread: -0.3, throwElbow: -0.8, forkArm: -0.7, forkElbow: -0.6 };
 /** The wheelbarrow's crew on a built body, or null for any other. */
 export function wheelbarrowCrew(body: ArticulatedBody): WheelbarrowCrew | null {
   return (body.root.metadata as { wheelbarrowCrew?: WheelbarrowCrew } | null)?.wheelbarrowCrew ?? null;
 }
-/** The riders' arms set for the throw `throwT` and the stab `stabT` seconds in (-1: at rest); spec at CREW_FIGHT. Returns the thrower's apple. */
-export function poseWheelbarrowCrew(crew: WheelbarrowCrew, throwT: number, stabT: number): TransformNode | null {
+/** The riders' arms set for the throw `throwT` and the stab `stabT` seconds in (-1: at rest), the stab aimed at `stabAt` (a world point) when given; spec at CREW_FIGHT. Returns the thrower's apple. */
+export function poseWheelbarrowCrew(crew: WheelbarrowCrew, throwT: number, stabT: number, stabAt: Vector3 | null = null): TransformNode | null {
   const F = CREW_FIGHT, R = CREW_REST;
   const ease = (u: number): number => { const c = Math.max(0, Math.min(1, u)); return c * c * (3 - 2 * c); };
   // the throw: k cocked (0..1), w whipped (0..1), r eased back (0..1)
@@ -1280,11 +1284,58 @@ export function poseWheelbarrowCrew(crew: WheelbarrowCrew, throwT: number, stabT
     d *= 1 - o; o *= 1 - b;
   }
   const f = crew.farmer;
-  f.rightShoulder.rotation.x = R.forkArm + 0.35 * d - 0.85 * o;
+  f.rightShoulder.rotation.set(R.forkArm + 0.35 * d - 0.85 * o, 0, 0);
   f.rightElbow.rotation.x = R.forkElbow - 1.0 * d + 0.55 * o;
-  f.leftShoulder.rotation.x = R.forkArm + 0.25 * d - 0.6 * o;
-  f.torso.rotation.x = -0.1 * d + F.lean * o;
+  f.leftShoulder.rotation.set(R.forkArm + 0.25 * d - 0.6 * o, 0, 0);
+  f.leftElbow.rotation.x = R.forkElbow;
+  f.torso.rotation.set(-0.1 * d + F.lean * o, 0, 0);
+  aimCrewStab(f, stabAt, d, o);
   return t.rightHand.getChildren().find((n): n is TransformNode => n.name === "crewApple") ?? null;
+}
+/** The Farmer's stab laid down the line to `at` (spec at CREW_FIGHT, 350): trunk turned to it, both arms solved down it, the fork turned onto it. */
+function aimCrewStab(f: ArticulatedBody, at: Vector3 | null, d: number, o: number): void {
+  const fork = f.rightHand.getChildren().find((n): n is TransformNode => n.name === "crewFork");
+  if (!fork) return;
+  const meta = (fork.metadata ??= {}) as { rest?: Quaternion };
+  meta.rest ??= fork.rotationQuaternion?.clone() ?? Quaternion.Identity();
+  const aim = Math.min(1, d + o);
+  if (!at || aim <= 0.001) { fork.rotationQuaternion = meta.rest.clone(); return; }
+  const F = CREW_FIGHT;
+  const settle = (n: TransformNode): void => {
+    const chain: TransformNode[] = [];
+    for (let k: TransformNode | null = n; k; k = k.parent as TransformNode | null) chain.unshift(k);
+    for (const k of chain) k.computeWorldMatrix(true);
+  };
+  // the trunk turned toward him, in the seat's frame
+  settle(f.root);
+  const inRoot = Vector3.TransformCoordinates(at, Matrix.Invert(f.root.getWorldMatrix()));
+  const turn = Math.max(-F.turn, Math.min(F.turn, Math.atan2(inRoot.x, inRoot.z)));
+  f.torso.rotation.y = turn * aim;
+  // each arm hung down its shoulder's -y: solved onto the shoulder->chest line, drawn back up it or driven out along it
+  const arm = (shoulder: TransformNode, elbow: TransformNode): void => {
+    settle(shoulder);
+    const parent = shoulder.parent as TransformNode;
+    const local = Vector3.TransformCoordinates(at, Matrix.Invert(parent.getWorldMatrix())).subtract(shoulder.position);
+    if (local.lengthSquared() < 1e-8) return;
+    local.normalize();
+    const roll = Math.asin(Math.max(-1, Math.min(1, local.x)));
+    const pitch = Math.atan2(-local.z, -local.y);
+    const want = (draw: number, drive: number): number => draw * d + drive * o;
+    const keep = 1 - aim;
+    shoulder.rotation.x = shoulder.rotation.x * keep + want(pitch + F.drawBack, pitch);
+    shoulder.rotation.z = shoulder.rotation.z * keep + want(roll, roll);
+    elbow.rotation.x = elbow.rotation.x * keep + want(F.drawFold, -0.05);
+  };
+  arm(f.rightShoulder, f.rightElbow);
+  arm(f.leftShoulder, f.leftElbow);
+  // the fork turned in the fist onto the same line, from the fist
+  settle(f.rightHand);
+  const dir = at.subtract(f.rightHand.getAbsolutePosition());
+  if (dir.lengthSquared() < 1e-8) return;
+  dir.normalize();
+  const world = Quaternion.FromEulerAngles(-Math.asin(Math.max(-1, Math.min(1, dir.y))), Math.atan2(dir.x, dir.z), 0);
+  const local = Quaternion.Inverse(f.rightHand.absoluteRotationQuaternion).multiply(world);
+  fork.rotationQuaternion = Quaternion.Slerp(meta.rest, local, aim);
 }
 function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const W = WHEELBARROW;

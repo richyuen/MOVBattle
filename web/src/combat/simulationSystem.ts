@@ -203,7 +203,7 @@ type ChargeSpec = typeof MAMMOTH_CHARGE;
  * the Farmer and the Apple Thrower's attacks makes it capable to deal moderately high damage", farmer.wheelbarrow.png): every step, whether the cart is
  * ramming or turning, the Apple Thrower picks the nearest enemy WHEELBARROW_CREW.appleFrom to .appleReach m from the cart, cocks his arm and lets the apple go
  * (the one in his fist flies: a held "stone" on its lob) for .appleDamage, logged "throw"; a new apple .appleEvery s after the last. The Farmer stabs the
- * nearest enemy within .stabReach m of his own seat and ahead of the cart's side line, the blow landing at the end of his draw (.stabDamage, pushed off
+ * nearest enemy within .stabReach m of his own seat and ahead of the cart's side line, the blow landing at the end of his drive (.stabDamage, pushed off
  * .stabPush), logged "stab", at most every .stabEvery s. Poses and timing: vehicleBuilder CREW_FIGHT.
  */
 const WHEELBARROW_CREW = { appleFrom: 2.5, appleReach: 14, appleEvery: 1.8, appleDamage: 40, applePush: 2, stabReach: 2.4, stabEvery: 1.1, stabDamage: 45, stabPush: 3 };
@@ -518,7 +518,10 @@ export class SimulationSystem {
       }
       const throwT = now - fight.throwAt < throwSpan ? now - fight.throwAt : -1;
       const stabT = now - fight.stabAt < stabSpan ? now - fight.stabAt : -1;
-      const apple = poseWheelbarrowCrew(crew, throwT, stabT);
+      // the stab aimed at his chest, .6 of the way from his trunk joint to the top of his head
+      const on = fight.stabOn && !fight.stabOn.body.root.isDisposed() ? fight.stabOn.body : null;
+      const chest = stabT >= 0 && on ? Vector3.Lerp(on.torso.getAbsolutePosition(), on.headTop.getAbsolutePosition(), 0.6) : null;
+      const apple = poseWheelbarrowCrew(crew, throwT, stabT, chest);
       if (apple && !apple.isEnabled() && fight.thrown && throwT < 0) apple.setEnabled(true);
       if (!fight.thrown && throwT >= F.cock) {
         fight.thrown = true;
@@ -537,7 +540,7 @@ export class SimulationSystem {
           this._logAbility(unit, "throw", now, man.position);
         }
       }
-      if (!fight.stabbed && stabT >= F.draw) {
+      if (!fight.stabbed && stabT >= F.draw + F.drive) {
         fight.stabbed = true;
         const man = fight.stabOn;
         if (man && !man.isDead && Math.hypot(man.position.x - seat.x, man.position.z - seat.z) < C.stabReach + 0.6) {
