@@ -240,7 +240,14 @@ const LONG_HAIR_COLOR = new Color3(0.3, 0.18, 0.1);
  */
 const TUSK_BAND = { band: 0.45, strap: 0.1, rise: 0.65, bow: 0.22, thick: 0.4 };
 const BAND_COLOR = new Color3(0.45, 0.27, 0.16);
-const HAIR_STYLES: Record<string, "long" | "tusk_band"> = { "tribal.stoner": "long", "tribal.spear_thrower": "tusk_band" };
+/*
+ * The clubber's hair and beard (tribal.clubber.blue.png, card Appearance: "long, unkempt Tribal brown hair"; the stoner's card: "reminiscent of that of the
+ * Clubber but without the beard and with a darker shade of brown"): the same long locks in a lighter brown (CLUBBER_HAIR_COLOR), and a full beard: a jittered
+ * faceted chunk over the jaw from cheek to cheek under the eyes, BEARD.down head heights below the chin, and BEARD.locks short locks hanging off its foot.
+ */
+const CLUBBER_HAIR_COLOR = new Color3(0.4, 0.25, 0.15);
+const BEARD = { down: 0.32, wide: 1.0, deep: 0.5, locks: 5, lockLong: 0.3, jitter: 0.15 };
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band"> = { "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band" };
 
 /** The tusk headband (spec at TUSK_BAND), parented to the head. */
 function tuskBand(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -282,9 +289,10 @@ function tuskBand(scene: Scene, body: ArticulatedBody): Mesh[] {
 /** The unit's own hair or headgear (LONG_HAIR, TUSK_BAND), parented to the head; null when he keeps the common mop. */
 export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] | null {
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
-  if (HAIR_STYLES[unitId] !== "long") return null;
+  const style = HAIR_STYLES[unitId];
+  if (style !== "long" && style !== "long_beard") return null;
   const added: Mesh[] = [];
-  const hair = getMaterialFactory().get("cloth", LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
+  const hair = getMaterialFactory().get("cloth", style === "long_beard" ? CLUBBER_HAIR_COLOR : LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const halfX = e.x, halfY = e.y, halfZ = e.z;
   const W = halfX * 2, H = halfY * 2;
@@ -325,6 +333,23 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
     const m = lock("hairFringe", long, W * LONG_HAIR.thick * 0.8);
     m.rotation.set(-0.35, 0, x / W * 0.6);
     m.position.set(x, halfY * 1.0 - long * 0.45, halfZ * 1.02);
+  }
+  if (style !== "long_beard") return added;
+  // The beard: a faceted chunk over the jaw and chin, from cheek to cheek under the eyes, hanging BEARD.down head heights below the chin and standing off the face
+  const beard = MeshBuilder.CreateIcoSphere("beard", { radius: 1, subdivisions: 1, flat: true }, scene);
+  const beardTall = halfY * 0.75 + H * BEARD.down;
+  jitterVertices(beard, BEARD.jitter, 13.9, halfX * 1.08 * BEARD.wide, beardTall * 0.5, halfZ * BEARD.deep);
+  beard.position.set(0, -halfY * 0.1 - beardTall * 0.5, halfZ * 0.85);
+  beard.material = hair;
+  beard.parent = body.headMesh;
+  added.push(beard);
+  // ...its ragged foot: short locks hanging off the chin, the middle ones longest, splayed a little
+  for (let i = 0; i < BEARD.locks; i++) {
+    const u = (i + 0.5) / BEARD.locks - 0.5;
+    const long = H * BEARD.lockLong * (1 - Math.abs(u) * 0.8) * (0.85 + 0.3 * hashShare(11.3, i, 4, 2));
+    const m = lock("beardLock", long, W * LONG_HAIR.thick * 0.7, i * 0.9);
+    m.rotation.set(0.25, 0, u * 0.6);
+    m.position.set(u * halfX * 1.4, -halfY * 0.1 - beardTall * 0.85 - long * 0.4, halfZ * (0.95 + 0.1 * (0.5 - Math.abs(u))));
   }
   return added;
 }
