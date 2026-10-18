@@ -36,6 +36,11 @@ for 25 iterations.
 320 | one-shoulder garment (586d90f + f87534f + e16240e) | tribal.stoner.a | approved
 320 | one-shoulder garment, shared tunic (b077ecf) | tribal.protector.a | approved
 320 | hide cape (f5283a1) | tribal.bone_mage.a | approved
+321 | critter-skull necklace (3adbe16 + aec9799) | tribal.protector.a | approved
+321 | charcoal lump, merged chunks (7f4d666 + 1595032) | tribal.stoner.b | approved
+321 | long hair (7fe93b7 + 2f5823c) | tribal.stoner.a | approved
+321 | tusk headband (36befcc) | tribal.spear_thrower.a | approved
+321 | ornamented loincloth (3fd478f) | tribal.bone_mage.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -69,10 +74,14 @@ visualEffects.ts:boneSpikes BONE_SPIKE_GIRTH (base, grow, m) | 0.32, 0.22 | 318 
 projectileSystem.ts:LAUNCH.stone speed, gravity (held only) | 18, 9.8 | 318 | approved | (new; the fixed lob flew at 10 with arc 0.4 m per metre, and still does for a catapult)
 simulationSystem.ts:LEAF_ROW (lift, at, arc per metre) | 0.6, 0.7, 0.03 | 318 | approved | (new; the leaves left the staff head with originLift 0, arc 0.12)
 projectileSystem.ts:SPIKE_LOFT (up, along m/s) | 10, 2.5 | 319 | approved | (new; before it the caught man had only applyDamage's capped 0.95 lift)
-propBuilder.ts:stone BOULDER_WIDE, BOULDER_JITTER, BOULDER_COLOR | 0.3, 0.2, (0.3, 0.27, 0.24) | 319 | approved | 0.26, smooth 80-face ball, (0.34, 0.31, 0.28) (pre-loop)
+propBuilder.ts:stone BOULDER_WIDE, BOULDER_JITTER, BOULDER_CHUNKS (3), BOULDER_COLOR | 0.3, 0.16, r 0.42/0.34/0.3, (0.2, 0.18, 0.16) e0.1 | 321 | approved | jitter 0.2, one ball, (0.3, 0.27, 0.24) e0.15 (319); (0.34, 0.31, 0.28) (pre-loop)
 proceduralAnimation.ts:boulder BOULDER_CARRY (raise, inward, elbow), BOULDER_HOLD | -0.75, 0.2, -0.6, 1.0 | 319 | approved | -0.6, 0.42, -0.75, no hold solve (pre-loop)
 propBuilder.ts:bone_mask SKULL_FACETED (heads, tall, under, jitter, socket, snout) | 1.45, 1.6, 0.7, 0.09, 0.3, 0.55 | 320 | approved | tall 0.85, under 0.35 (319 [S]; 320 [P] was its fallout); old cap SKULL_HEADS 1.25 smooth dome
 propBuilder.ts:javelin JAVELIN_HEAD_LONG, JAVELIN_HEAD_WIDE | 0.15, 0.095 | 320 | approved | 0.13, 0.09 (the four-sided cone)
 propBuilder.ts:javelin JAVELIN_LEAF (thick, waist, root, jitter, wraps), JAVELIN_STONE | 0.3, 0.35, 0.4, 0.14, 3, (0.44, 0.43, 0.41) e0.15 | 320 | approved | (new; iron (0.2, 0.21, 0.24), red binding)
 unitFactory.ts:tunic TUNIC (top, skirt, flare, tatters, strap), TUNIC_COLOR | 0.88, 0.6, 1.25, 5, 0.22, (0.5, 0.29, 0.18) e0.15 | 320 | approved | (new; stoner, protector)
 unitFactory.ts:cape HIDE_CAPE (wide, thick, tilt, jitter, points, drop), COLOR | 1.25, 0.35, 0.12, 0.12, 4, 0.55, (0.38, 0.23, 0.14) e0.16 | 320 | approved | (new; bone_mage)
+tribalDress.ts:necklace CRITTER_NECKLACE (skull, spread, drop, lift, strap) | 0.5, 0.55, 0.2, 0.05, 0.03 | 321 | approved | skull 0.42 (321 first commit); protector
+tribalDress.ts:hair LONG_HAIR (strands, face, fringe, long, thick), COLOR | 17, 0.8, 4, 1.05, 0.32, (0.3, 0.18, 0.1) e0.18 | 321 | approved | 13 strands, thick 0.24 (321 first commit); stoner
+tribalDress.ts:tusks TUSK_BAND (band, strap, rise, bow, thick) | 0.45, 0.1, 1.1, 0.22, 0.28 | 321 | approved | (new; spear_thrower; critic 321 asks rise 0.65, thick 0.4 as [P])
+tribalDress.ts:loincloth LOINCLOTH (ropes, flap, skull, bone, boneAt), FLAP_COLOR | 2, 0.85, 0.42, 0.62, 0.95, (0.5, 0.3, 0.18) e0.15 | 321 | approved | (new; bone_mage)
