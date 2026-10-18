@@ -79,6 +79,13 @@ const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
  * every "musket" (wild_west.deadeye too) throws its man. speed, lift: m/s of the throw.
  */
 const GUN_FLING: Record<string, { speed: number; lift: number }> = { musket: { speed: 4.5, lift: 5.5 } };
+/**
+ * [S] the harvester's sweep throws its man (345; card Characteristics "sweep through groups of fragile units at once, with even enough power to send one
+ * into the air", Weapons: the scythe's force is 65): a man the level cut (proceduralAnimation SCYTHE_SWEEP) leaves alive is thrown off his feet, out
+ * across the cut toward the harvester's off side and away from him, as from a blast (RuntimeUnit.applyBlastLaunch). across: share of the throw sideways;
+ * speed, lift: m/s.
+ */
+const SCYTHE_FLING: Record<string, { across: number; speed: number; lift: number }> = { "farmer.harvester": { across: 0.6, speed: 3.2, lift: 5 } };
 // The bone mage's leaf whirl (units/tribal.bone_mage, tribal.bone_mage.png: leaves swirling low among the spikes at the man, none over the caster's head): it rises
 // at the row's near end this high off the turf, runs at the man this high up him, on an arc this high per metre (near flat, under the spike tips)
 const LEAF_ROW = { lift: 0.6, at: 0.7, arc: 0.03 };
@@ -1812,6 +1819,17 @@ export class SimulationSystem {
     // ...and he buckles under it on this same step (struck-man buckle, r2c3: knees give, head down, arms out of his guard) till the throw takes him
     if (dwells) target.animator.buckleUnder();
     this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
+    // The harvester's level cut throws the man it leaves standing out across it and up (SCYTHE_FLING)
+    const sweep = SCYTHE_FLING[attacker.definition.id];
+    if (sweep && !target.isDead) {
+      const away = new Vector3(target.position.x - attacker.position.x, 0, target.position.z - attacker.position.z);
+      if (away.lengthSquared() < 1e-6) away.set(0, 0, 1);
+      away.normalize();
+      // the off side of a man facing `away` (the cut runs from his weapon side to his off side)
+      const offSide = new Vector3(-away.z, 0, away.x).scale(-(Math.sign(attacker.body.rightShoulder.position.x) || 1));
+      target.applyBlastLaunch(away.scale(1 - sweep.across).add(offSide.scale(sweep.across)).normalize(), sweep.speed, sweep.lift);
+      this._logAbility(attacker, "sweep", now);
+    }
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();
     // ...and under a heavy weapon he is thrown back off his feet as hard as the blow pushed, whether it was held for the drop or struck at once from a swing the
