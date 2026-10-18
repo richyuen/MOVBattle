@@ -1771,7 +1771,8 @@ export class ProceduralAnimator {
     // A pole held in both hands is carried upright before the chest (POLE_GRIP), the one attitude that keeps its shaft in the off hand's reach
     // The pitchfork (339) is carried low instead: the weapon arm hanging, the shaft out level before his hips (farmer.farmer.png), the last attitude below
     const fork = this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name === "forkBar"));
-    const pick = fork ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
+    // The hay baler's stick (340) takes the same low carry, run out level before him (farmer.hay_baler.blue.png)
+    const pick = fork || node?.id === "hayStick" ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";
