@@ -110,6 +110,15 @@ const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
 const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
 /*
+ * The tribal hide garment (tribal.stoner.jpg, card Appearance: "a simple brown garment held by a shoulder strap on their right side"): a brown tunic over
+ * the trunk from under the arms, hanging on below the waist as a skirt to mid-thigh with a ragged hem, held up by one strap over the right shoulder, the
+ * left shoulder bare. The trunk part is the torso's own wedge a skin wider, its top TUNIC.top of the trunk high; the skirt TUNIC.skirt of the thigh long,
+ * flaring TUNIC.flare; TUNIC.tatters points hang off its hem. Self-lit so the brown does not go black in the shade.
+ */
+const TRIBAL_TUNIC_UNITS = new Set(["tribal.stoner"]);
+const TUNIC = { top: 0.8, skirt: 0.6, flare: 1.25, tatters: 5, strap: 0.22 };
+const TUNIC_COLOR = new Color3(0.5, 0.29, 0.18);
+/*
  * Skeletons are bones, not men (250; units/spooky.skeleton_warrior: cream bone limbs about a third as thick as a man's, a rib cage of hoops round a thin
  * spine in place of the chest block, a bare skull for a head under a team-coloured hood, and a ragged team-coloured skirt from the hips to the knees with
  * tatters hanging off its hem). Team colour lives on the cloth: hood, skirt, shield.
@@ -424,6 +433,7 @@ export class UnitFactory {
           hair.parent = body.headMesh;
           propMeshes.push(hair);
         }
+        if (TRIBAL_TUNIC_UNITS.has(definition.id)) propMeshes.push(...dressTribalTunic(this._scene, body));
       } else if (!shouldFavorTeamBodyColor(materialPreset)) {
         for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
@@ -1639,4 +1649,58 @@ function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3, 
     default:
       return { ...base, bodyDiffuse: bodyColor, bodyEmissive: zero, skinDiffuse: skinBase, skinEmissive: zero, alpha: 1 };
   }
+}
+
+/** Hangs the tribal hide tunic on a bare man (spec at TUNIC): trunk wrap below the shoulders, skirt to mid-thigh with ragged points, one strap over the right shoulder. */
+function dressTribalTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const hide = getMaterialFactory().get("cloth", TUNIC_COLOR, { emissiveIntensity: 0.15 });
+  const trunk = body.neck.position.y;
+  const thigh = Math.abs(body.leftKnee.position.y);
+  const shoulderX = Math.abs(body.rightShoulder.position.x);
+  const side = Math.sign(body.rightShoulder.position.x) || 1;
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const depth = chest.z * body.torsoMesh.scaling.z;
+  // The trunk wrap: the torso wedge a skin bigger, squashed so its top sits under the arms and its foot at the waist
+  const wrap = body.torsoMesh.clone("tunicWrap");
+  wrap.scaling.set(body.torsoMesh.scaling.x * 1.08, body.torsoMesh.scaling.y * TUNIC.top, body.torsoMesh.scaling.z * 1.16);
+  wrap.position.y = body.torsoMesh.position.y - trunk * (1 - TUNIC.top) * 0.5;
+  wrap.material = hide;
+  added.push(wrap);
+  // The skirt: the torso wedge turned over, narrow at the waist and flaring to the hem at mid-thigh
+  const skirtLong = thigh * TUNIC.skirt + trunk * 0.08;
+  const skirt = body.torsoMesh.clone("tunicSkirt");
+  skirt.scaling.set(body.torsoMesh.scaling.x * 1.1, skirtLong / (chest.y * 2), body.torsoMesh.scaling.z * TUNIC.flare);
+  skirt.rotation.z = Math.PI;
+  skirt.position.y = trunk * 0.08 - skirtLong * 0.5;
+  skirt.material = hide;
+  added.push(skirt);
+  // Ragged hem: flat points hanging off the skirt's foot round its front, sides and back
+  for (let i = 0; i < TUNIC.tatters; i++) {
+    const a = (i / TUNIC.tatters) * Math.PI * 2 + 0.4;
+    const point = MeshBuilder.CreateCylinder("tunicTatter", { height: thigh * 0.22, diameterTop: 0, diameterBottom: chest.x * 0.55, tessellation: 3 }, scene);
+    point.scaling.z = 0.3;
+    point.rotation.set(Math.PI, -a, 0);
+    point.position.set(Math.sin(a) * chest.x * body.torsoMesh.scaling.x * 0.95, trunk * 0.08 - skirtLong - thigh * 0.09, Math.cos(a) * depth * TUNIC.flare * 0.9);
+    point.material = hide;
+    point.parent = body.torso;
+    point.convertToFlatShadedMesh();
+    added.push(point);
+  }
+  // The strap: a band over the right shoulder from the wrap's top at the chest to its top at the back
+  const strapWide = shoulderX * TUNIC.strap * 2;
+  const over = MeshBuilder.CreateBox("tunicStrap", { width: strapWide, height: trunk * 0.06, depth: depth * 2.5 }, scene);
+  over.position.set(side * shoulderX * 0.5, trunk * 1.0, 0);
+  over.material = hide;
+  over.parent = body.torso;
+  added.push(over);
+  for (const face of [-1, 1]) {
+    const drop = MeshBuilder.CreateBox("tunicStrap", { width: strapWide, height: trunk * 0.3, depth: trunk * 0.05 }, scene);
+    drop.position.set(side * shoulderX * 0.5, trunk * 0.86, face * depth * 1.2);
+    drop.material = hide;
+    drop.parent = body.torso;
+    added.push(drop);
+  }
+  for (const mesh of [wrap, skirt]) mesh.parent = body.torso;
+  return added;
 }
