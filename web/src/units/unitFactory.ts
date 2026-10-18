@@ -230,6 +230,11 @@ const VOID_WOOD = new Color3(0.36, 0.22, 0.15);
 const VOID_BEARD_COLOR = new Color3(0.62, 0.52, 0.4);
 const VOID_GLOW = 0.12;
 const VOID_BAND_GLOW = 0.3;
+/*
+ * [S] the healer's priest robe (354; medieval.healer.blue.png: one long team robe from the shoulders to the shins, not a shirt ending at the hip). The team
+ * shirt runs on into a robe skirt hung from the hips (hangSkirt), HEALER_ROBE.long thighs long and .hem pelvises wide at the hem, in the team cloth.
+ */
+const HEALER_ROBE = { long: 1.75, hem: 1.5 };
 const VOID_SKIRT = 1.75;
 const VOID_HEM = 1.6;
 const VOID_WHEEL = 2.1;
@@ -590,6 +595,10 @@ export class UnitFactory {
     }
     if (definition.id === "good.righteous_paladin" && !shouldUseVehicleBody) {
       propMeshes.push(...dressPaladin(this._scene, body, propMeshes));
+    }
+    if (definition.id === "medieval.healer" && !shouldUseVehicleBody) {
+      const robe = hangSkirt(this._scene, body, "healerRobe", HEALER_ROBE.long, HEALER_ROBE.hem, getMaterialFactory().get("cloth", teamColor));
+      if (robe) propMeshes.push(robe);
     }
     if (definition.id === "evil.void_cultist" && !shouldUseVehicleBody) {
       propMeshes.push(...dressVoidCultist(this._scene, body, teamColor, propMeshes));
