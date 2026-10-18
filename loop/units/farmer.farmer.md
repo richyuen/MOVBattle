@@ -2,12 +2,12 @@
 Status: open   Audited: 339   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
 a PASS (348)
-b FAIL (1 since 339) plateau
- 1. pitchfork in unit_farmer.farmer_idle/_windup in one fist at the butt, off hand off the shaft — TABS: both fists on the shaft at rest, held low across the front (ref: farmer.farmer.red.png)
+b FAIL (0 since 349) (plateau lifted: [R] 8407342 approved, blocker 1 struck)
+ 2. fork head droops to the grass in unit_farmer.farmer_idle and lineup_farmer: the shaft drops ~40 deg from the hip fist, tines on the ground by his off foot — TABS: shaft near level at upper-thigh height, head out past the off hip at hip height, tines forward (ref: farmer.farmer.red.png, farmer.farmer.blue.png)
 c PASS (348)
 d PASS (cost 80, hp 0.74x, dmg 0.67x, cd 1.30x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [R] b two-fisted low pitchfork carry — blocker 1: rebuild the rest/windup grip, both fists on the shaft, low across the front, tines forward, kept through the back-step (critic 348: "rebuild the grip, don't nudge it"; reuse _turnFork) — ref: farmer.farmer.red.png — ours: unit_farmer.farmer_idle.png
+1. [S] b level low carry — blocker 2: lay the FORK_HOLD line level in world space (cancel root/hip pitch, match the prop's real shaft axis), head at hip height past the off hip, tines forward — ref: farmer.farmer.red.png — ours: lineup_farmer.png, unit_farmer.farmer_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 339 | two-handed pitchfork carried low, curled grey tines (FORK) [S] (151102b) | b | approved
 340 | liripipe hood, leaf-cut collar (LIRIPIPE) [S] (4ccaced) | a | approved
@@ -17,8 +17,9 @@ d PASS (cost 80, hp 0.74x, dmg 0.67x, cd 1.30x)
 347 | pitchfork stab on its own clock, hit held to the drive (FORK_STAB) [S] (31530f7 +2) | c | approved
 348 | leaf-cut hem dags, strap belt (FARMER_SHIRT) [S] (84c655b) | a | approved
 348 | back-step between stabs, logged "backstep" (FARMER_BACKSTEP) [S] (544512e +9ea0c08) | c | approved
+349 | two-fisted low carry, both arms solved onto one line (FORK_HOLD) [R] (8407342) | b | approved
 ## Rejected (last 4)
 - fork carried across the hips [S] [1] — 342: FORK_CARRY attitude — off fist floats above the shaft, fork points forward like a couched lance, windup one-handed with tines in the dirt
 ## Notes (max 3 lines)
-- b plateau (348): 2 failed [S] (342 rejected, 346 dropped); next pick is one [R] on the carry pose (fork mesh "shaft" is not a carry node; turn it in the fist, 347 _turnFork).
-- 348 critic: hem dags tilt out into a spiky star (FARMER_SHIRT.tilt .32; TABS flat); tines point behind him while backing off (part of b).
+- 349 probe (fresh spawn, idle 0.5 s): shaft dir in his frame ~(-.77,-.15,.65), fists on it; the critic's 40 deg droop is in the battle shots: check hip/torso pitch and walk lean there, not the spawn pose.
+- FORK_HOLD lives in _turnFork: weapon arm _armTo a seat at the hip, fork turned onto the line, off fist by _twoHandPole (POLE_GRIP.forkBar).

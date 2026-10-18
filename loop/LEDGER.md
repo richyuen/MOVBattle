@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-339 | empty mitt hands (697a9c6) | farmer.halfling.b | approved
-339 | two-handed pitchfork carried low (151102b) | farmer.farmer.b | approved
-339 | potion bottle in each hand (a682e21 +1) | farmer.potion_seller.b | approved
-339 | hay-bale armour worn (5acc99a +1) | farmer.hay_baler.a | approved
-339 | big black crow wings (185ca19) | farmer.scarecrow.a | approved
 340 | crooked stick, one-handed low carry (cef515a +4) | farmer.hay_baler.b | approved
 340 | liripipe hood, leaf collar (4ccaced) | farmer.farmer.a | approved
 340 | shaggy brown mop (9ccfb6c) | farmer.halfling.a | approved
@@ -60,6 +55,9 @@ for 25 iterations.
 348 | cut-log wheel, braces, two legs (adb75af) | farmer.wheelbarrow.a | approved
 348 | ram: mammoth charge driven through (10aa302) | farmer.wheelbarrow.c | approved
 348 | back-step between stabs (544512e +1) | farmer.farmer.c | approved
+349 | [R] two-fisted low carry, both arms solved onto one line (8407342) | farmer.farmer.b | approved
+349 | crew dressed: hood, socks, hem, beard, afro, overalls (fb4fe35) | farmer.wheelbarrow.a | approved
+349 | riders fight: held-apple throw, fork stab (81f76b1) | farmer.wheelbarrow.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -111,3 +109,6 @@ unitFactory.ts:HARVESTER_TRIM (collar..glow), BEIGE, ROPE | 1.42,.26,.56,.3,.055
 vehicleBuilder.ts:LOG_WHEEL (d, thick, bark, ring, hub, brace, braceBack, leg, legFoot, legIn, splay, glow) | .34,.08,.02,.55,.05,.022,.16,.03,.02,.1,.04,.18 | 348 | approved | critic: thick should be a drum
 simulationSystem.ts:WHEELBARROW_RAM (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | .6,16,1.7,3,4,.35,6,4.5,4,2.2 | 348 | approved | critic: speed reads ~2x walk
 simulationSystem.ts:FARMER_BACKSTEP (after, pace, margin) | .95, .5, .15 | 348 | approved | -
+proceduralAnimation.ts:FORK_HOLD (out, drop, ahead, across, dip, forward) | .16, -.1, .22, .72, -.08, .68 | 349 | approved | critic: head droops ~40 deg in battle shots
+unitFactory.ts:WHEELBARROW_OVERALLS (lo,hi,bib,shade,strap,backLo,proud,button,glow); tribalDress AFRO (wide,tall,deep,up,back,jitter) | .05,.62,.62,.55,.13,.35,.03,.07,.18; 1.6,1.1,1.5,.42,.3,.1 | 349 | approved | critic: afro small, set back
+simulationSystem.ts:WHEELBARROW_CREW (appleFrom,appleReach,appleEvery,appleDamage,applePush,stabReach,stabEvery,stabDamage,stabPush); vehicleBuilder CREW_FIGHT | 2.5,14,1.8,40,2,2.4,1.1,45,3; cock .3 whip .15 hold .25 back .4 draw .18 drive .12 | 349 | approved | critic: stab level, hit before drive

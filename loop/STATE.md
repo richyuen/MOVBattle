@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 348   Batch: farmer (3/18)   Consecutive empty: 0   Done: 19/139   Parked: 0
+Iteration: 349   Batch: farmer (3/18)   Consecutive empty: 0   Done: 19/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,15 +23,13 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-348 (BASE 7aef804): [S] farmer a shirt 84c655b approved | [S] harvester a tunic 5824c3f+e00d256 approved | [S] wheelbarrow a wheel adb75af approved | [S] wheelbarrow c ram 10aa302 approved | [S] farmer c back-step 544512e+9ea0c08 approved
-347 (BASE 0b0814c): harvester a braids, wheelbarrow a tray + b props, farmer c stab, scarecrow c hover approved.
+349 (BASE cbee979): [R] farmer b two-fisted low carry 8407342 approved | [S] wheelbarrow a dress the crew fb4fe35 approved | [S] wheelbarrow c riders fight 81f76b1 approved
+348 (BASE 7aef804): farmer a shirt, harvester a tunic, wheelbarrow a wheel + c ram, farmer c back-step approved.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] farmer.farmer (84c655b) VERDICT: APPROVE CRITERION: farmer.farmer.a PASS (previous: FAIL) BLOCKERS: struck: 3 (list now empty)
-- GAP: [S] farmer.harvester (5824c3f + e00d256) VERDICT: APPROVE CRITERION: farmer.harvester.a PASS (previous: FAIL) BLOCKERS: struck: 3 (list now empty)
-- GAP: [S] farmer.wheelbarrow (adb75af) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL) BLOCKERS: 1 open; 3 narrowed (thin slice, want a wide log drum)
-- GAP: [S] farmer.wheelbarrow (10aa302) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.c FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 2
-- GAP: [S] farmer.farmer (544512e + 9ea0c08) VERDICT: APPROVE CRITERION: farmer.farmer.c PASS (previous: FAIL) BLOCKERS: struck: 2 (list now empty). REGRESSIONS: none
+- GAP: [R] farmer.farmer (8407342) VERDICT: APPROVE CRITERION: farmer.farmer.b FAIL (previous: FAIL) BLOCKERS: struck: 1 (the off hand is on the shaft now). added: 2. fork head droops to the grass
+- GAP: [S] farmer.wheelbarrow (fb4fe35) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL) BLOCKERS: struck: 1. Remaining: 3. wheel is a thin 8 cm log slice
+- GAP: [S] farmer.wheelbarrow (81f76b1) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.c FAIL (previous: FAIL) BLOCKERS: 2 narrowed (the apple throw is cleared; the stab is recorded but does not visibly land). REGRESSIONS: none
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +50,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open: farmer b only (plateau: one [R] rebuilding the two-fist low carry, via _turnFork), wheelbarrow (a crew dress, a log drum, c riders throw/stab).
-- Melee that the sim lands at the trigger shows nothing at release: make the animator report blowLandsIn (_strikesAtMan) so the hit waits for the pose (347 fork stab).
-- A mechanic that starts after the struck shot needs a _logAbility event so capture takes an ability pair (348 backstep, trample).
-- Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissive}). unitFactory.ts is LF, other files may be CRLF: patch EOL-aware.
+- Open: farmer b (plateau lifted by the approved [R]; [S] lay FORK_HOLD level in world space), wheelbarrow (a log drum, c aim the Farmer's stab, land it at the drive's end; [P] AFRO fallout).
+- Off-camera checks: a scratch playwright probe on `vite preview` (spawnUnit, read joint world positions) beats guessing from shot angles; measure in battle, not just at spawn.
+- A mechanic that starts after the struck shot needs a _logAbility event so capture takes an ability pair. Vehicle crews: body.root.metadata (wheelbarrowCrew).
+- Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissive}). Heredocs with apostrophes break the bash wrapper: write patch scripts with Write.
 - Patch via python with io.open(..., newline=''). Never `git commit -a` (STATE is dirty mid-iteration). After any --iter capture rerun stats --batch <batch> --iter N.
