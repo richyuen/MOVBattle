@@ -1197,8 +1197,8 @@ const WHEELBARROW = {
  * TRAY_PLANK.glow; the top board of each side and the floor are painted team colour; a dark bolt head at each board end; heaped with a faceted straw
  * mound TRAY_PLANK.heap above the rim, wider than it is tall, and the riders sit on the mound's top (seatY), not down in the tray.
  */
-const TRAY_PLANK = { planks: 3, sideTall: 0.13, seam: 0.008, thick: 0.03, bolt: 0.016, heap: 0.09, heapWide: 0.92, glow: 0.22 };
-const TRAY_WOOD = new Color3(0.62, 0.4, 0.28);
+const TRAY_PLANK = { planks: 3, sideTall: 0.13, seam: 0.008, thick: 0.03, bolt: 0.016, heap: 0.09, heapWide: 0.92, glow: 0.12 };
+const TRAY_WOOD = new Color3(0.6, 0.34, 0.24); // the reference's warm salmon timber: at (.62,.4,.28) glow .22 it read cream
 const TRAY_STRAW = new Color3(0.82, 0.62, 0.3);
 /*
  * [S] The riders' props (347; farmer.wheelbarrow.blue.png/.red.png, card "the Apple Thrower throws apples and the Farmer stabs"): the front rider holds a
