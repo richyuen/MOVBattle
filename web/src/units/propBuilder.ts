@@ -1850,7 +1850,7 @@ const FORK = { long: 0.85, grip: 0.3, thick: 0.03, bar: 0.2, tine: 0.22, tineThi
 const FORK_WOOD = new Color3(0.5, 0.33, 0.18);
 const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
 // The potion bottle (see buildWeapon "potion"): ball width, its squash, neck width and length, cork length, seat in the fist (weapon units), glass self-light
-const POTION = { ball: 0.15, squash: 0.92, neck: 0.055, neckLong: 0.05, cork: 0.03, seat: 0.06, glow: 0.22 };
+const POTION = { ball: 0.065, squash: 0.92, neck: 0.026, neckLong: 0.026, cork: 0.016, seat: 0.035, glow: 0.22 };
 const POTION_GLASS = new Color3(0.55, 0.74, 0.82);
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
