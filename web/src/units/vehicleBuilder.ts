@@ -6,6 +6,7 @@ import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
+import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
 /**
@@ -225,6 +226,8 @@ const CATAPULT_SCALE = 1.4;
  */
 export const CATAPULT_ARM = { pivotY: 1.62, long: 1.0, short: 0.7, cocked: 0.35, thrown: Math.PI / 2 };
 export const CATAPULT_ARM_PIVOT = "catapult_arm_pivot";
+/** The catapult's boulder across, in the bucket and in flight (buildFacetedBoulder) */
+export const CATAPULT_BOULDER = 0.65;
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const rig = new TransformNode("catapult_rig", scene);
@@ -292,10 +295,10 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     pumpkin.material = pumpkinMat;
     allMeshes.push(pumpkin);
   } else {
-    const boulder = MeshBuilder.CreateSphere("boulderPayload", { diameter: 0.65, segments: 2 }, scene); // wider than the tray it lies in: at 0.45 it was a small ball on a slab
+    // The faceted grey-brown boulder (BOULDER in propBuilder), the same rock the shot flies as; wider than the tray it lies in
+    const boulder = buildFacetedBoulder(scene, "boulderPayload", CATAPULT_BOULDER);
     boulder.position.set(0, 0.48, -L + 0.03);
     boulder.parent = pivot;
-    boulder.material = makeMat(scene, new Color3(0.2, 0.19, 0.2));
     allMeshes.push(boulder);
   }
 

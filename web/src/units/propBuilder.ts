@@ -8,6 +8,21 @@ import type {
 } from "./unitVisuals";
 import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisuals";
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
+import { jitterVertices } from "./tribalDress";
+
+/*
+ * [S] the catapult's boulder (352; medieval.catapult.blue.png: a grey-brown rock of flat facets lying in the bucket, the same rock in flight). An ico rock
+ * `diameter` across, BOULDER.facets subdivisions, flat-shaded, each corner pushed in or out up to BOULDER.lumpy of the radius (the same hash for a corner
+ * every face shares, so no cracks) and squashed to BOULDER.squat of its height; matte grey-brown stone, no team tint. Built once for the bucket's payload
+ * and again for the shot that leaves it.
+ */
+const BOULDER = { facets: 1, lumpy: 0.2, squat: 0.82, stone: new Color3(0.5, 0.45, 0.38) };
+export function buildFacetedBoulder(scene: Scene, name: string, diameter: number): Mesh {
+  const rock = MeshBuilder.CreateIcoSphere(name, { radius: diameter / 2, subdivisions: BOULDER.facets, flat: true }, scene);
+  jitterVertices(rock, BOULDER.lumpy, 352, 1, BOULDER.squat, 1);
+  rock.material = getMaterialFactory().get("stone", BOULDER.stone);
+  return rock;
+}
 
 /** Weapons are built three fifths over life size (TABS), so they still read as shapes from across the field: a quarter over, thin swords and staffs vanished at lineup distance */
 const PROP_OVERSIZE = 1.6;

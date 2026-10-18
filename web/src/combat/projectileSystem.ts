@@ -9,7 +9,8 @@ import type { ImpactPresentation } from "./impactPresentation";
 import { getMaterialFactory } from "../units/materialFactory";
 import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
-import { buildFlyingSword } from "../units/propBuilder";
+import { buildFlyingSword, buildFacetedBoulder } from "../units/propBuilder";
+import { CATAPULT_BOULDER } from "../units/vehicleBuilder";
 
 /*
  * [S] a flying crow (342; farmer.scarecrow.png: the scarecrow's crows fly at the enemy as big black birds, wings spread and beating). In metres: body
@@ -914,8 +915,8 @@ export class ProjectileSystem {
         break;
       }
       case "stone": {
-        const stone = MeshBuilder.CreateSphere("stone", { diameter: 0.35, segments: 6 }, this._scene);
-        stone.material = this._getMat(`stone_body_${attackerTeam}`, Color3.Lerp(palette.primary, new Color3(0.5, 0.48, 0.42), 0.4));
+        // The catapult's boulder (the only unthrown-by-hand stone): the bucket's faceted grey-brown rock at its size, no team tint
+        const stone = buildFacetedBoulder(this._scene, "stone", CATAPULT_BOULDER);
         stone.parent = root;
         break;
       }
