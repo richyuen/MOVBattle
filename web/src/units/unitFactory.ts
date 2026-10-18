@@ -964,13 +964,15 @@ const HALBERD_BELT = new Color3(0.32, 0.17, 0.1);
  * [S] hay-bale armour (339; farmer.hay_baler.red.png, card Appearance: a thick tan bale worn over the whole torso from the shoulders to the knees, the
  * arms and head out of it; its top edge breaks into big flat blades of hay standing up and out past the head, the bottom into a flared hem of pointed
  * blades over the knees; two dark straps round its middle, at the lower chest and the waist; the top a darker brown than the sunlit lower bale).
- * Sizes are shares of the chest (W, H, D):
- *   barrel from the shoulder line HAY_BALE.drop of H below the waist, HAY_BALE.top of W across at the top and .bottom at the foot, .deep of D through;
+ * [S] fitted to the man (345; factions/farmer.jpg: an average man, the farmer's height, inside a bale about twice his shoulders across): the barrel is
+ * measured off his own skeleton, not off the chest box (which bulk swells): from the shoulder line (the neck joint) down to HAY_BALE.knee of the thigh
+ * above the knee joint, HAY_BALE.top of the shoulder span S across at the top and .bottom at the foot, .deep of S through. W below is S.
+ * Other sizes are shares of S and of the chest height H:
  *   HAY_BALE.blades top blades .blade of H long (every other one .short of that), .bladeWide of W at the root, leaning out .lean (rad);
  *   HAY_BALE.hems hem blades .hem of H long, flaring out .flare; straps .strap of H tall at .straps (shares of the barrel down from its top), .proud round it.
  * Self-lit tan cloth (HAY_TAN / HAY_TOP, HAY_GLOW): plain tan greys out under this light.
  */
-const HAY_BALE = { drop: 0.55, top: 1.6, bottom: 1.75, deep: 1.7, blades: 10, blade: 0.62, short: 0.6, bladeWide: 0.42, lean: 0.45, hems: 12, hem: 0.5, flare: 0.5, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
+const HAY_BALE = { knee: 0.12, top: 1.95, bottom: 2.15, deep: 1.45, blades: 10, blade: 0.62, short: 0.6, bladeWide: 0.42, lean: 0.45, hems: 12, hem: 0.5, flare: 0.5, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
 const HAY_TAN = new Color3(0.7, 0.46, 0.22);
 const HAY_TOP = new Color3(0.5, 0.32, 0.18);
 const HAY_STRAP = new Color3(0.26, 0.16, 0.11);
@@ -982,14 +984,17 @@ function dressHayBale(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = HAY_BALE;
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;
-  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
-  const top = chest.position.y + H * 0.5;
-  const foot = chest.position.y - H * 0.5 - H * B.drop;
+  const H = ext.y * 2 * chest.scaling.y;
+  // the man's own frame, in torso space (the torso joint sits on the hip joint): shoulder span, shoulder line, knee line
+  const W = Math.abs(body.leftShoulder.position.x - body.rightShoulder.position.x);
+  const top = body.neck.position.y;
+  const kneeY = body.leftHip.position.y + body.leftKnee.position.y;
+  const foot = kneeY - body.leftKnee.position.y * B.knee;
   const tall = top - foot;
   const tan = mf.get("cloth", HAY_TAN, { emissiveIntensity: HAY_GLOW });
   const dark = mf.get("cloth", HAY_TOP, { emissiveIntensity: HAY_GLOW * 0.8 });
-  // depth over width of the barrel's section: a round bale, a little deeper than the chest is
-  const deepK = (D * B.deep) / (W * B.top);
+  // depth over width of the barrel's section: a round bale, a little shallower than wide
+  const deepK = B.deep / B.top;
   const barrel = MeshBuilder.CreateCylinder("hayBarrel", { height: tall, diameterTop: W * B.top, diameterBottom: W * B.bottom, tessellation: 10 }, scene);
   barrel.scaling.z = deepK;
   barrel.position.y = (top + foot) * 0.5;
