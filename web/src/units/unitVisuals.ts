@@ -431,8 +431,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     undefined,
     { materialPreset: "renaissance_velvet" },
   ),
+  // No "cape" special: the grey board it built hung on his back like a slab; TABS's fencer carries nothing there (renaissance.fencer.blue.png)
   "renaissance.fencer": vis(
-    { scale: 1.05, bulk: 0.9, armLength: 1.1 }, "rapier", "cavalier_hat", "none", "cape", "#FFFFFF",
+    { scale: 1.05, bulk: 0.9, armLength: 1.1 }, "rapier", "cavalier_hat", "none", "none", "#FFFFFF",
     undefined,
     { posePreset: "duelist", materialPreset: "renaissance_velvet" },
   ),
