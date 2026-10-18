@@ -107,6 +107,13 @@ const SCYTHE_SPIN = Math.PI / 2;
  * the snath. The off fist is put on the upper peg by _twoHandPole (POLE_GRIP.snathPeg).
  */
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
+/*
+ * [S] the hay baler's level stick carry (344; farmer.hay_baler.blue.png: the stick held in the one weapon fist at hip height before the bale, run level
+ * across his front to past the off hip). The stick (id hayStick) takes HAY_CARRY in place of the low fork carry: weapon arm .raise swing forward and .out,
+ * elbow .elbow folded so the fist is ahead of the weapon hip clear of the bale's face; the stick's line from the fist .tip in his own frame (x toward the
+ * weapon side, y up, z forward), level and across. Like the scythe he stands in it from the first frame, not eased round from the fist's strapped angle.
+ */
+const HAY_CARRY = { raise: -0.6, out: 0.1, elbow: -0.85, tip: new Vector3(-0.95, 0.02, 0.32) };
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -1795,14 +1802,18 @@ export class ProceduralAnimator {
     // A pole held in both hands is carried upright before the chest (POLE_GRIP), the one attitude that keeps its shaft in the off hand's reach
     // The pitchfork (339) is carried low instead: the weapon arm hanging, the shaft out level before his hips (farmer.farmer.png), the last attitude below
     const fork = this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name === "forkBar"));
-    // The hay baler's stick (340) takes the same low carry, run out level before him (farmer.hay_baler.blue.png)
-    const pick = fork || node?.id === "hayStick" ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
+    // The hay baler's stick (344) has its own level carry across his front (HAY_CARRY)
+    const hayStick = node?.id === "hayStick";
+    if (hayStick) this._carryTurn = 1;
+    const pick = fork ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
-    const attitude = lowScythe
+    const attitude = hayStick
+      ? { raise: HAY_CARRY.raise, out: HAY_CARRY.out, elbow: HAY_CARRY.elbow, tip: new Vector3(HAY_CARRY.tip.x * side, HAY_CARRY.tip.y, HAY_CARRY.tip.z).normalize() }
+      : lowScythe
       ? { raise: SCYTHE_LOW.raise, out: SCYTHE_LOW.out, elbow: SCYTHE_LOW.elbow, tip: new Vector3(SCYTHE_LOW.tip.x * side, SCYTHE_LOW.tip.y, SCYTHE_LOW.tip.z).normalize() }
       : scythe
       ? { raise: SCYTHE_HIGH_ARM.raise, out: SCYTHE_HIGH_ARM.out, elbow: SCYTHE_HIGH_ARM.elbow, tip: new Vector3(SCYTHE_HIGH_TIP.x * side, SCYTHE_HIGH_TIP.y, SCYTHE_HIGH_TIP.z).normalize() }
