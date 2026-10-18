@@ -1213,8 +1213,12 @@ const TRAY_STRAW = new Color3(0.82, 0.62, 0.3);
  * growth ring .ring of the face across on each, and a dark bolt hub through the middle; on each side of it a wooden brace runs from the hub up and back
  * to the tray's floor .braceBack behind its nose; under the tray's back end two wooden legs stand down to .legFoot off the ground, splayed out a little,
  * a bolt head where each meets the tray. Wood self-lit (.glow) so it reads wood and not black. Rig units.
+ * 350 [S] a drum, not a slice (farmer.wheelbarrow.red.png: a broad cut log almost as wide as the tray, its tread faceted bark): .thick is .82 of the
+ * tray's width; the tread is .staves bark staves round the log, alternate ones a shade darker (.staveShade), each a little proud of the core; the
+ * end-grain faces and growth rings show on both ends; the braces bolt to the hub at each end face and run up and out to the tray's side boards, and
+ * the handles start at the drum's end faces, not inside it.
  */
-const LOG_WHEEL = { d: 0.34, thick: 0.08, bark: 0.02, ring: 0.55, hub: 0.05, brace: 0.022, braceBack: 0.16, leg: 0.03, legFoot: 0.02, legIn: 0.1, splay: 0.04, glow: 0.18 };
+const LOG_WHEEL = { d: 0.34, thick: 0.36, bark: 0.02, ring: 0.55, hub: 0.05, brace: 0.022, braceBack: 0.16, leg: 0.03, legFoot: 0.02, legIn: 0.1, splay: 0.04, glow: 0.18, staves: 12, staveShade: 0.78 };
 const LOG_BARK = new Color3(0.36, 0.22, 0.14);
 const LOG_GRAIN = new Color3(0.82, 0.62, 0.42);
 const LOG_RING = new Color3(0.64, 0.42, 0.28);
@@ -1386,10 +1390,20 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   // ...a cut log: bark rim, end-grain faces with a growth ring, a bolted hub (spec at LOG_WHEEL)
   const L = LOG_WHEEL;
   const axleY = L.d / 2;
-  const wheel = MeshBuilder.CreateCylinder("wheel", { height: L.thick, diameter: L.d, tessellation: 11 }, scene);
+  const wheel = MeshBuilder.CreateCylinder("wheel", { height: L.thick, diameter: L.d - L.bark, tessellation: L.staves }, scene);
   wheel.position.set(0, axleY, wheelZ);
   wheel.rotation.z = Math.PI / 2;
   wheel.parent = rig; wheel.material = lit(LOG_BARK, L.glow); allMeshes.push(wheel);
+  // ...its tread a ring of bark staves the drum's width, alternate ones darker
+  const barkDark = lit(LOG_BARK.scale(L.staveShade), L.glow);
+  for (let k = 0; k < L.staves; k++) {
+    const a = (k / L.staves) * Math.PI * 2;
+    const r = L.d / 2 - L.bark / 2;
+    const stave = MeshBuilder.CreateBox("wheelStave", { width: (Math.PI * L.d / L.staves) * 1.04, height: L.thick, depth: L.bark * 1.4 }, scene);
+    stave.position.set(r * Math.cos(a), 0, r * Math.sin(a));
+    stave.rotation.y = Math.PI / 2 - a;
+    stave.parent = wheel; stave.material = k % 2 ? barkDark : wheel.material; allMeshes.push(stave);
+  }
   const face = MeshBuilder.CreateCylinder("wheelGrain", { height: L.thick + 0.008, diameter: L.d - L.bark * 2, tessellation: 11 }, scene);
   face.parent = wheel; face.material = lit(LOG_GRAIN, L.glow); allMeshes.push(face);
   const ring = MeshBuilder.CreateCylinder("wheelRing", { height: L.thick + 0.012, diameter: (L.d - L.bark * 2) * L.ring, tessellation: 9 }, scene);
@@ -1402,7 +1416,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const braceWood = lit(CART_WOOD, L.glow);
   for (const side of [-1, 1]) {
     const from = new Vector3(side * (L.thick / 2 + 0.035), axleY, wheelZ);
-    const to = new Vector3(side * (W.trayWide / 2 - 0.04), W.trayY - 0.02, W.trayZ + W.trayLong / 2 - L.braceBack);
+    const to = new Vector3(side * Math.max(W.trayWide / 2 - 0.04, L.thick / 2 + 0.05), W.trayY - 0.02, W.trayZ + W.trayLong / 2 - L.braceBack);
     const span = to.subtract(from);
     const brace = MeshBuilder.CreateBox("wheelBrace", { width: L.brace, height: L.brace * 1.6, depth: span.length() }, scene);
     brace.position.copyFrom(from.add(to).scale(0.5));
@@ -1430,7 +1444,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   // Handles: from the wheel's axle along under the tray, out the back to the Traveller's fists
   const handleBack = W.pushZ + 0.2;
   for (const xOff of [-0.17, 0.17]) {
-    const from = new Vector3(xOff * 0.4, axleY, wheelZ);
+    const from = new Vector3(Math.sign(xOff) * (L.thick / 2 + 0.03), axleY, wheelZ);
     const to = new Vector3(xOff, 0.4, handleBack);
     const handle = MeshBuilder.CreateTube("handle", { path: [from, new Vector3(xOff * 0.9, W.trayY - 0.04, W.trayZ - W.trayLong / 2), to], radius: 0.016, tessellation: 6 }, scene);
     handle.parent = rig; handle.material = wood; allMeshes.push(handle);
