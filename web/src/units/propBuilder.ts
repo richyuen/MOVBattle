@@ -2505,7 +2505,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const L = fit.stand * BRUSH.long;
       const handleLong = BRUSH.ferrule * L;
       const brush = MeshBuilder.CreateCylinder("brush", { height: handleLong, diameterTop: BRUSH.neck * L, diameterBottom: BRUSH.butt * L, tessellation: 7 }, scene);
-      brush.position.y = handleLong * 0.5 - BRUSH.grip * L;
+      // The hand's +y runs back up the forearm: the brush is turned end over end so the tuft leaves the fist away from the elbow, the butt behind it
+      brush.position.y = -(handleLong * 0.5 - BRUSH.grip * L);
+      brush.rotation.x = Math.PI;
       brush.material = mat(scene, BRUSH_WOOD, 0.12);
       brush.convertToFlatShadedMesh();
       const ferrule = MeshBuilder.CreateCylinder("brushFerrule", { height: BRUSH.collar * L, diameterTop: BRUSH.collar * L, diameterBottom: BRUSH.neck * 1.05 * L, tessellation: 7 }, scene);
