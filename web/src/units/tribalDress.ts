@@ -384,9 +384,18 @@ const CHESTNUT = new Color3(0.52, 0.27, 0.14);
  * face bare): the stoner's long locks in a near-black brown (PAINTER_HAIR), with no fringe (the beret sits on the brow) and the cap hidden under the beret.
  */
 const PAINTER_HAIR = new Color3(0.17, 0.11, 0.08);
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark"> = {
+/*
+ * [S] fencer's hair and moustache (335; renaissance.fencer.blue.png: dark-brown hair falling from under the hat brim to the shoulders round the sides and
+ * back, the face bare; a thin black moustache over the mouth, its ends curled up at the cheeks). The painter's dark locks (no fringe, under the hat), and
+ * a curled moustache: two tapering tubes from the middle of the upper lip MOUSTACHE.y half-heights under the head's middle, each swept out MOUSTACHE.span
+ * of the half-width and round the face, its last MOUSTACHE.turn of the way curled up MOUSTACHE.curl half-heights; MOUSTACHE.thick of the head across at
+ * the root, standing MOUSTACHE.proud of the half-depth off the middle so it shows side-on as a dark hook under the eye.
+ */
+const MOUSTACHE = { y: -0.38, span: 0.7, turn: 0.4, curl: 0.42, thick: 0.1, proud: 1.14 };
+const MOUSTACHE_COLOR = new Color3(0.07, 0.05, 0.04);
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache"> = {
   "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
-  "renaissance.painter": "long_dark",
+  "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache",
 };
 
 /** The tusk headband (spec at TUSK_BAND), parented to the head. */
@@ -431,9 +440,10 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
   if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
   const style = HAIR_STYLES[unitId];
-  if (style !== "long" && style !== "long_beard" && style !== "long_dark") return null;
+  if (style !== "long" && style !== "long_beard" && style !== "long_dark" && style !== "long_dark_moustache") return null;
+  const dark = style === "long_dark" || style === "long_dark_moustache";
   const added: Mesh[] = [];
-  const hair = getMaterialFactory().get("cloth", style === "long_beard" ? CLUBBER_HAIR_COLOR : style === "long_dark" ? PAINTER_HAIR : LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
+  const hair = getMaterialFactory().get("cloth", style === "long_beard" ? CLUBBER_HAIR_COLOR : dark ? PAINTER_HAIR : LONG_HAIR_COLOR, { emissiveIntensity: 0.18 });
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const halfX = e.x, halfY = e.y, halfZ = e.z;
   const W = halfX * 2, H = halfY * 2;
@@ -468,7 +478,7 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
     m.position.set(sx * halfX * 1.08 + sx * Math.sin(out) * long * 0.5, rootY - long * 0.5, cz * halfZ * 1.08 - cz * Math.sin(out) * long * 0.5 - halfZ * 0.05);
   }
   // The fringe: a few short locks over the brow, above the eyes
-  for (let i = 0; i < (style === "long_dark" ? 0 : LONG_HAIR.fringe); i++) {
+  for (let i = 0; i < (dark ? 0 : LONG_HAIR.fringe); i++) {
     const x = ((i + 0.5) / LONG_HAIR.fringe - 0.5) * W * 0.9;
     const long = H * 0.28 * (0.8 + 0.4 * hashShare(9.1, i, 1, 3));
     const m = lock("hairFringe", long, W * LONG_HAIR.thick * 0.8);
@@ -476,6 +486,36 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
     m.position.set(x, halfY * 1.0 - long * 0.45, halfZ * 1.02);
   }
   if (style === "long_beard") added.push(...tribalBeard(scene, body, hair));
+  if (style === "long_dark_moustache") added.push(...curledMoustache(scene, body));
+  return added;
+}
+
+/** The curled moustache (spec at MOUSTACHE), parented to the head. */
+function curledMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const halfX = e.x, halfY = e.y, halfZ = e.z;
+  const M = MOUSTACHE;
+  const mat = getMaterialFactory().get("cloth", MOUSTACHE_COLOR, { emissiveIntensity: 0.1 });
+  const steps = 8;
+  for (const side of [-1, 1]) {
+    const path: Vector3[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const out = Math.max(0, (t - (1 - M.turn)) / M.turn);
+      // out along the lip and round the face, dipping a little at the middle of its run, then curled up at the end
+      path.push(new Vector3(
+        side * halfX * (0.04 + M.span * t),
+        halfY * (M.y - 0.1 * Math.sin(Math.PI * Math.min(1, t / (1 - M.turn))) + M.curl * out * out),
+        halfZ * (M.proud - 0.32 * t * t),
+      ));
+    }
+    const tube = MeshBuilder.CreateTube("moustache", { path, tessellation: 5, cap: Mesh.CAP_ALL, radiusFunction: (i) => halfX * M.thick * (1 - 0.65 * i / steps) }, scene);
+    tube.convertToFlatShadedMesh();
+    tube.material = mat;
+    tube.parent = body.headMesh;
+    added.push(tube);
+  }
   return added;
 }
 
