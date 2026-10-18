@@ -522,6 +522,9 @@ export class UnitFactory {
       // ...and his long dark hair from under the beret (tribalDress)
       propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
     }
+    if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressHalberd(this._scene, body));
+    }
     if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressCactus(this._scene, body, teamColor));
     }
@@ -879,6 +882,90 @@ function dressPainter(scene: Scene, body: ArticulatedBody, teamColor: Color3, pr
     fold.convertToFlatShadedMesh();
     fold.parent = body.torso;
     added.push(fold);
+  }
+  return added;
+}
+
+/*
+ * [S] halberdier's dress (333; renaissance.halberd.blue.png: a cream half-tabard down the right side of the chest from the shoulder to mid-thigh, the left
+ * side of the doublet team; padded brown sleeves in HALBERD_DRESS.bands rolls to the upper arm and to the forearm; dark-grey gauntlets with a flared cuff
+ * over the wrist; a brown belt round the waist over all of it). Sizes are shares of the chest (W, H, D) and of each arm mesh's own girth.
+ *   tabard: HALBERD_DRESS.tabard of the chest across on the weapon side, over the chest front and back (HALBERD_DRESS.wrap of its depth), its flaps hanging
+ *   HALBERD_DRESS.skirt of the chest's height below the waist; belt HALBERD_DRESS.belt tall; rolls HALBERD_DRESS.roll of the arm's girth proud;
+ *   cuff HALBERD_DRESS.cuff of the forearm's girth, flared, over its last third.
+ */
+const HALBERD_DRESS = { tabard: 0.55, wrap: 1.12, skirt: 0.45, belt: 0.1, bands: 3, roll: 1.22, cuff: 1.5 };
+const HALBERD_CREAM = new Color3(0.86, 0.72, 0.5);
+const HALBERD_SLEEVE = new Color3(0.5, 0.24, 0.16);
+const HALBERD_ROLL = new Color3(0.4, 0.18, 0.12);
+const HALBERD_GAUNTLET = new Color3(0.19, 0.2, 0.21);
+const HALBERD_BELT = new Color3(0.32, 0.17, 0.1);
+/** Dresses the halberdier (spec at HALBERD_DRESS): cream half-tabard, rolled brown sleeves, dark gauntlets, belt. */
+function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const D_ = HALBERD_DRESS;
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const waist = chest.position.y - H * 0.5;
+  const side = Math.sign(body.rightShoulder.position.x) || 1;
+  const cream = mf.getCloth(HALBERD_CREAM);
+  const tabW = W * D_.tabard;
+  // Tabard over the chest, on the weapon side, from the shoulder to the waist
+  const tabard = MeshBuilder.CreateBox("halberdTabard", { width: tabW, height: H * 0.96, depth: D * D_.wrap }, scene);
+  tabard.position.set(side * (W * 0.5 - tabW * 0.5 + W * 0.03), chest.position.y - H * 0.02, 0);
+  tabard.material = cream;
+  tabard.parent = body.torso;
+  added.push(tabard);
+  // and its two flaps hanging below the belt, front and back, a little splayed
+  for (const face of [1, -1]) {
+    const flap = MeshBuilder.CreateBox("halberdTabardFlap", { width: tabW * 0.95, height: H * D_.skirt, depth: D * 0.07 }, scene);
+    flap.setPivotPoint(new Vector3(0, H * D_.skirt * 0.5, 0));
+    flap.position.set(side * (W * 0.5 - tabW * 0.5 + W * 0.03), waist - H * D_.skirt * 0.5, face * D * (D_.wrap * 0.5 - 0.04));
+    flap.rotation.x = face * 0.12;
+    flap.material = cream;
+    flap.parent = body.torso;
+    added.push(flap);
+  }
+  // Belt round the waist over the tabard
+  const belt = MeshBuilder.CreateCylinder("halberdBelt", { height: H * D_.belt, diameter: 1, tessellation: 8 }, scene);
+  belt.scaling.x = W * 1.06;
+  belt.scaling.z = D * D_.wrap * 1.04;
+  belt.position.set(0, waist + H * D_.belt * 0.5, 0);
+  belt.material = mf.getCloth(HALBERD_BELT);
+  belt.parent = body.torso;
+  added.push(belt);
+  // Sleeves: brown, rolled; gauntlets dark with a flared cuff
+  const sleeve = mf.getCloth(HALBERD_SLEEVE);
+  const rollMat = mf.getCloth(HALBERD_ROLL);
+  const steel = mf.getMetal(HALBERD_GAUNTLET, 0.6);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    arm.material = sleeve;
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2;
+    const long = e.y * 2;
+    const lower = arm === body.leftLowerArm || arm === body.rightLowerArm;
+    // the forearm's last third is the gauntlet's cuff, so its rolls stay above it
+    const span = lower ? 0.55 : 0.9;
+    for (let i = 0; i < D_.bands; i++) {
+      const roll = MeshBuilder.CreateCylinder("halberdRoll", { height: long * span / D_.bands * 0.55, diameter: girth * D_.roll, tessellation: 7 }, scene);
+      roll.position.y = long * 0.5 - long * span * (i + 0.5) / D_.bands;
+      roll.material = rollMat;
+      roll.parent = arm;
+      added.push(roll);
+    }
+    if (lower) {
+      const cuff = MeshBuilder.CreateCylinder("halberdCuff", { height: long * 0.36, diameterTop: girth * 1.05, diameterBottom: girth * D_.cuff, tessellation: 7 }, scene);
+      cuff.position.y = -long * 0.5 + long * 0.18;
+      cuff.material = steel;
+      cuff.convertToFlatShadedMesh();
+      cuff.parent = arm;
+      added.push(cuff);
+    }
+  }
+  for (const hand of [body.leftHand, body.rightHand]) {
+    for (const m of hand.getChildMeshes(true)) if (/_[lr]HandM$/.test(m.name)) m.material = steel;
   }
   return added;
 }
