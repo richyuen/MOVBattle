@@ -13,7 +13,7 @@ import { jitterVertices } from "./tribalDress";
  * head across, .down head heights below the chin, .deep of the half-depth thick; both TONSURE.grey, self-lit .glow so the grey stays grey in the sky light.
  */
 const TONSURE = {
-  ring: 1.0, open: 0.95, y: 0.18, thick: 0.26, out: 1.06, jitter: 0.12,
+  ring: 1.0, open: 0.95, y: 0.12, thick: 0.42, out: 1.1, jitter: 0.12,
   beard: { wide: 1.0, down: 0.22, deep: 0.55 }, grey: new Color3(0.66, 0.64, 0.62), glow: 0.15,
 };
 
