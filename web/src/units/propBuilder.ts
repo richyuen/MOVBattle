@@ -180,6 +180,14 @@ const CREST_HAIR_SHADE = 0.62;
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
 const SKULL_SNOUT = 0.45;
+/*
+ * The protector's skull helmet (319 [S]; units/tribal.protector, tribal.protector.png and .blue.png: a big pale faceted animal skull sat on top of the head over
+ * its top half, bulging out behind and to the sides, two deep dark sockets on its front and a short flat snout over the brow): a coarse flat-faced ball
+ * SKULL_FACETED.heads heads across, SKULL_FACETED.tall of the cap height above its middle, every vertex pushed in or out by its own hashed share (jitter),
+ * its underside cut flat SKULL_FACETED.under of its half height below the middle and seated on the brow line; sockets SKULL_FACETED.socket head widths across
+ * and sunk; a snout SKULL_FACETED.snout head widths long. Pale bone self-lit a little: the smooth cap before it went grey in the capture's shade.
+ */
+const SKULL_FACETED = { heads: 1.45, tall: 0.85, under: 0.35, jitter: 0.09, socket: 0.3, snout: 0.55 };
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
 const BERET_TILT = 0.22;
@@ -663,7 +671,55 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     }
     return shell;
   }
-  if (type === "bone_mask" || type === "antler_skull") {
+  if (type === "bone_mask") {
+    // The protector's faceted skull (spec at SKULL_FACETED). Built to size in its own vertices (no scaling on the node) so the sockets, cheeks and snout hung
+    // under it keep their shapes.
+    const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
+    const Rx = SKULL_FACETED.heads * W * 0.5, Rz = Rx * 1.12, Ry = tall * SKULL_FACETED.tall;
+    const under = SKULL_FACETED.under * Ry;
+    const bone = mat(scene, new Color3(0.93, 0.8, 0.58), 0.18);
+    const skull = MeshBuilder.CreateIcoSphere("bskull", { radius: 1, subdivisions: 2, flat: true }, scene);
+    const at = skull.getVerticesData(VertexBuffer.PositionKind);
+    if (at) {
+      for (let v = 0; v < at.length; v += 3) {
+        const k = 1 - SKULL_FACETED.jitter + 2 * SKULL_FACETED.jitter * roundBoardSeed(11.5, Math.round(at[v] * 89 + at[v + 1] * 53 + at[v + 2] * 37));
+        at[v] = u(at[v] * k * Rx);
+        at[v + 1] = u(Math.max(-under, at[v + 1] * k * Ry));
+        at[v + 2] = u(at[v + 2] * k * Rz);
+      }
+      skull.setVerticesData(VertexBuffer.PositionKind, at);
+      const normals: number[] = [];
+      VertexData.ComputeNormals(at, skull.getIndices() ?? [], normals);
+      skull.setVerticesData(VertexBuffer.NormalKind, normals);
+      skull.refreshBoundingInfo();
+    }
+    skull.position.y = u(seat + under);
+    skull.material = bone;
+    const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
+    for (const side of [-1, 1]) {
+      // A socket: a dark disc sunk into the front just above the middle, where the ball's face is, turned a little round to its own side
+      const hole = MeshBuilder.CreateCylinder("bskullEye", { height: u(0.12 * W), diameter: u(SKULL_FACETED.socket * W), tessellation: 6 }, scene);
+      hole.rotation.x = Math.PI / 2;
+      hole.position.set(side * u(0.3 * W), u(0.12 * Ry), u(Rz * 0.9));
+      hole.rotation.y = side * 0.4;
+      hole.material = socket;
+      hole.parent = skull;
+      const cheek = MeshBuilder.CreateBox("bskullCheek", { width: u(0.12 * W), height: u(0.45 * H), depth: u(0.3 * W) }, scene);
+      cheek.position.set(side * u(Rx * 0.88), u(-under - 0.15 * H), u(0.2 * W));
+      cheek.rotation.z = side * 0.12;
+      cheek.material = bone;
+      cheek.parent = skull;
+    }
+    const snoutLong = SKULL_FACETED.snout * W;
+    const snout = MeshBuilder.CreateCylinder("bskullSnout", { height: u(snoutLong), diameterTop: u(0.28 * W), diameterBottom: u(0.55 * W), tessellation: 5 }, scene);
+    snout.rotation.x = Math.PI / 2 - 0.2;
+    snout.position.set(0, u(-0.1 * Ry), u(Rz * 0.92 + snoutLong * 0.4));
+    snout.scaling.x = 1.25;
+    snout.material = bone;
+    snout.parent = skull;
+    return skull;
+  }
+  if (type === "antler_skull") {
     // An animal skull worn as a cap (242 [R]; units/tribal.protector): a bone cranium SKULL_HEADS heads across seated down to the brow, two dark eye holes on
     // its front over the wearer's own eyes, a short snout jutting forward over the brow, and cheek bones down the sides of the face. The face shows under it.
     const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
