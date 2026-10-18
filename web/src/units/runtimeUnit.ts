@@ -472,6 +472,8 @@ export class RuntimeUnit {
     this._nextAttackAt = now + Math.max(0.05, cooldown);
     // Trigger attack animation
     this.animator.triggerAttack(this._resolvePrimaryAttackWindup(cooldown), this._resolvePrimaryAttackMotion());
+    // ...and the reload it starts (the scarecrow's A-pose, TPOSE)
+    this.animator.noteReload(cooldown);
     // A spinning drum (the da Vinci tank) keeps turning from this volley through the wait for the next one
     this._drumTimer = Math.max(this._drumTimer, cooldown + DRUM_SPIN.linger);
   }

@@ -112,8 +112,12 @@ const SCYTHE_SPIN = Math.PI / 2;
  * a crow in the weapon fist (propBuilder heldCrow, "crowHeldBody") stands and walks with both upper arms out to the sides TPOSE.lift short of level,
  * swung TPOSE.ahead forward, elbows straight; it eases in and out at .rate (out of it to attack). Each perched crow (propBuilder buildPerchedCrow, on
  * the shoulder at the elbow) is kept upright and facing his front whatever the arm does, sat .perch of his height above the elbow's middle.
+ * [S] T-pose release, A-pose reload (345; card Characteristics "They will go into an A-pose when reloading, before going back to the T-pose when reloaded,
+ * waiting for their crows to perch onto their arms"): he keeps the T through the attack, so the crows leave from his outstretched arms; .after s past the
+ * volley (noteReload) his arms come down to the A, .a rad out from hanging, the perched crows gone, for the rest of the reload; reloaded, back up to the T
+ * with the crows on his elbows again.
  */
-const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07 };
+const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07, a: 0.5, after: 0.6 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 /*
  * [S] the harvester's sweep (345; card Characteristics "swing and cut ... sweep through groups of fragile units at once, with even enough power to send one
@@ -2460,6 +2464,15 @@ export class ProceduralAnimator {
   // The scarecrow's T-pose (TPOSE): whether this body takes it (a crow in the weapon fist), its perched crows, and how far in it he stands
   private _tPose: { perches: TransformNode[] } | null | undefined = undefined;
   private _tPoseW = 1;
+  // How far out from hanging his arms stand (rad), and the reload the last volley started: seconds left, seconds since it left
+  private _tPoseOut = Math.PI / 2 - TPOSE.lift;
+  private _reloadLeft = 0;
+  private _sinceVolley = 0;
+  /** An attack just went off and the next waits `seconds`: the scarecrow drops to his A-pose for that reload (TPOSE). */
+  noteReload(seconds: number): void {
+    this._reloadLeft = seconds;
+    this._sinceVolley = 0;
+  }
   private _holdTPose(dt: number): void {
     const b = this._body;
     if (this._tPose === undefined) {
@@ -2467,15 +2480,21 @@ export class ProceduralAnimator {
       this._tPose = on ? { perches: [b.leftShoulder, b.rightShoulder].flatMap((sh) => sh.getChildren().filter((n): n is TransformNode => n.name === "perchedCrow")) } : null;
     }
     if (!this._tPose) return;
-    const standing = this._state === AnimState.Idle || this._state === AnimState.Walking;
-    this._tPoseW += ((standing ? 1 : 0) - this._tPoseW) * Math.min(1, dt * TPOSE.rate);
+    // He holds his arms out through the attack too: only death lets them go
+    const posed = this._state !== AnimState.Dead;
+    this._tPoseW += ((posed ? 1 : 0) - this._tPoseW) * Math.min(1, dt * TPOSE.rate);
     const w = this._tPoseW * (1 - Math.min(1, this._limp));
+    this._sinceVolley += dt;
+    this._reloadLeft -= dt;
+    const reloading = this._reloadLeft > 0 && this._sinceVolley > TPOSE.after;
+    this._tPoseOut += ((reloading ? TPOSE.a : Math.PI / 2 - TPOSE.lift) - this._tPoseOut) * Math.min(1, dt * TPOSE.rate);
+    for (const perch of this._tPose.perches) perch.setEnabled(!reloading);
     if (w > 0.01) {
       for (const [shoulder, elbow, out] of [[b.leftShoulder, b.leftElbow, -1], [b.rightShoulder, b.rightElbow, 1]] as const) {
         const side = Math.sign(shoulder.position.x) || out;
         shoulder.rotation.x += (-TPOSE.ahead - shoulder.rotation.x) * w;
         shoulder.rotation.y += (0 - shoulder.rotation.y) * w;
-        shoulder.rotation.z += (side * (Math.PI / 2 - TPOSE.lift) - shoulder.rotation.z) * w;
+        shoulder.rotation.z += (side * this._tPoseOut - shoulder.rotation.z) * w;
         elbow.rotation.x += (0 - elbow.rotation.x) * w;
         elbow.rotation.z += (0 - elbow.rotation.z) * w;
       }
