@@ -1678,6 +1678,7 @@ export class ProceduralAnimator {
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
+    this._turnFork();
     this._offhandToGrip();
     this._holdChopDown(dt);
     this._aimMusket(dt);
@@ -3473,6 +3474,38 @@ export class ProceduralAnimator {
   /** True for the farmer: his pitchfork (forkBar) is stabbed level at the enemy (FORK_STAB). */
   private _stabsFork(): boolean {
     return this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name === "forkBar"));
+  }
+
+  // The pitchfork in the weapon fist (the mesh carrying forkBar) and its strapped turn and seat there, looked up once
+  private _forkProp: { node: TransformNode; rest: Quaternion; quat: boolean; pos: Vector3 } | null | undefined = undefined;
+  /** The fork turned in the fist onto the stab's line (FORK_STAB, _sweepTip) by the stab's weight; let go, back to its strap. The carry does not turn it. */
+  private _turnFork(): void {
+    if (this._forkProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n) => n.getChildren().some((c) => c.name === "forkBar")) as TransformNode | undefined;
+      this._forkProp = node ? {
+        node, quat: !!node.rotationQuaternion, pos: node.position.clone(),
+        rest: node.rotationQuaternion?.clone() ?? Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z),
+      } : null;
+    }
+    const f = this._forkProp;
+    if (!f) return;
+    const stabbing = this._state === AnimState.Attacking && this._attackMotion === "thrust" && this._sweepTip !== null;
+    const w = stabbing ? Math.min(1, this._clubHold) * (1 - Math.min(1, this._limp)) : 0;
+    if (w <= 0.001) {
+      if (f.node.rotationQuaternion && !f.quat) f.node.rotationQuaternion = null;
+      else if (f.quat) f.node.rotationQuaternion = f.rest.clone();
+      f.node.position.copyFrom(f.pos);
+      return;
+    }
+    const hand = this._body.rightHand;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const attitude = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y, 0, 0).multiply(Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, this._sweepTip!, new Quaternion()));
+    const turn = Quaternion.Slerp(f.rest, Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(attitude), w);
+    f.node.rotationQuaternion = turn;
+    const held = new Vector3(0, f.pos.length(), 0).rotateByQuaternionToRef(turn, new Vector3());
+    Vector3.LerpToRef(f.pos, held, w, f.node.position);
   }
 
   /** The farmer's pitchfork stab (spec at FORK_STAB). */
