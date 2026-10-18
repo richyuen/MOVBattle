@@ -197,6 +197,12 @@ const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 
  */
 const WHEELBARROW_RAM = { from: 0.6, reach: 16, speed: 1.7, seconds: 3, overrun: 4, contact: 0.35, damage: 6, fling: 4.5, lift: 4, cooldown: 2.2, through: true, log: false };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
+/*
+ * [S] Farmer back-step (348; card Characteristics "They will also slowly back up while attacking, before swinging ahead with a much better stab"): once
+ * his stab has gone home (FARMER_BACKSTEP.after s past it) and while his pitchfork is still cooling down, a farmer in reach of his man backs away from
+ * him still facing him, at .pace of his walk, out to .margin short of his full reach; when the fork is ready again he lunges in with the next stab.
+ */
+const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
 const LANCE_AIM_REACH = 5;
@@ -260,6 +266,9 @@ export class SimulationSystem {
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
   private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit>; spec: ChargeSpec; end: Vector3 | null }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
+  // Farmer back-step (FARMER_BACKSTEP): when each farmer last stabbed, and the farmers backing off now (their heading held on the man)
+  private _stabbedAt = new Map<RuntimeUnit, number>();
+  private _backingOff = new Set<RuntimeUnit>();
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
@@ -362,6 +371,8 @@ export class SimulationSystem {
     this._strikeReadyAt.delete(unit);
     this._charges.delete(unit);
     this._chargeReadyAt.delete(unit);
+    this._stabbedAt.delete(unit);
+    this._backingOff.delete(unit);
     this._jumpReadyAt.delete(unit);
   }
 
@@ -374,6 +385,8 @@ export class SimulationSystem {
     this._strikeReadyAt.clear();
     this._charges.clear();
     this._chargeReadyAt.clear();
+    this._stabbedAt.clear();
+    this._backingOff.clear();
     this._jumpReadyAt.clear();
     this._isRunning = true;
     this._now = now;
@@ -857,7 +870,24 @@ export class SimulationSystem {
       const standOff = !slot && !this._shieldSlots.get(enemy) && unit.swingsAtMan ? STRIKE_STAND : 0;
       const strikeDistance = contactDistance + standOff;
       const sidle = this._shieldSlotStep(unit, true);
-      if (canMove && slot?.hold) {
+      // Farmer back-step (FARMER_BACKSTEP): between stabs he backs off his man, facing him
+      const backing = unit.definition.id === "farmer.farmer" && canMove && !slot && !unit.canAttack(now)
+        && now - (this._stabbedAt.get(unit) ?? -1e9) > FARMER_BACKSTEP.after && distance < engageDistance - FARMER_BACKSTEP.margin;
+      if (backing) {
+        const away = unit.position.subtract(enemy.position);
+        away.y = 0;
+        away.normalize();
+        unit.moveTo(unit.position.add(away.scale(0.5)));
+        unit.setCohesionMoveMultiplier(FARMER_BACKSTEP.pace);
+        unit.holdHeading(Math.atan2(-away.x, -away.z));
+        this._backingOff.add(unit);
+      } else if (this._backingOff.delete(unit)) {
+        unit.holdHeading(null);
+        unit.stopMoving();
+      }
+      if (backing) {
+        // backing off: the step is set above
+      } else if (canMove && slot?.hold) {
         // A rear-rank man keeps his place behind the boards and fights over them: he does not press through the front.
         if (sidle) unit.moveTo(unit.position.add(sidle));
         else unit.stopMoving();
@@ -894,7 +924,9 @@ export class SimulationSystem {
         }
       }
       if (canAttack && !closing && !lagged) {
+        const ready = unit.canAttack(now);
         this._tryAttack(unit, enemy, attackProfile, now);
+        if (ready && !unit.canAttack(now) && unit.definition.id === "farmer.farmer") this._stabbedAt.set(unit, now);
       }
     } else {
       if (canMove) {
