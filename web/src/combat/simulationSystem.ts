@@ -167,6 +167,12 @@ const STRIKE_LAG = 0.45;
  * (within .contact of body contact, ahead of its middle) is trampled: .damage, and flung aside off its line and up (applyBlastLaunch .fling sideways
  * and forward, .lift up), each man once per charge. Trampling the man it charged ends the run; then it fights at reach as before. .cooldown s between charges.
  */
+/*
+ * [S] Halfling Jump (344; card Weapons "range 4, 8 second cooldown", Characteristics "the Halfling will jump into enemy unit when up-close"): a man
+ * closing on his enemy, once he is between HALFLING_JUMP.from and .reach metres past his striking distance, springs off the ground at .rise m/s and
+ * comes down .short metres short of the man's middle, onto him (RuntimeUnit.leap), at most once every .cooldown seconds; harmless, logged "leap".
+ */
+const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 };
 const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 3, contact: 0.5, damage: 30, fling: 5, lift: 6, cooldown: 6 };
 const CHARGE_DUST = new Color3(0.62, 0.48, 0.34);
 // A lancer's aim (see ProceduralAnimator.aimLanceAt): how far past his reach (m) he lays the lance on his man, and the share of the man's height it is aimed at
@@ -229,6 +235,7 @@ export class SimulationSystem {
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
   private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit> }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
+  private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
   private _battleStartedAt = 0;
@@ -330,6 +337,7 @@ export class SimulationSystem {
     this._strikeReadyAt.delete(unit);
     this._charges.delete(unit);
     this._chargeReadyAt.delete(unit);
+    this._jumpReadyAt.delete(unit);
   }
 
   beginSimulation(now: number): void {
@@ -340,6 +348,7 @@ export class SimulationSystem {
     this._strikeReadyAt.clear();
     this._charges.clear();
     this._chargeReadyAt.clear();
+    this._jumpReadyAt.clear();
     this._isRunning = true;
     this._now = now;
     this._battleStartedAt = now;
@@ -711,6 +720,21 @@ export class SimulationSystem {
         unit.moveTo(charging.target.position.add(charging.dir.scale(MAMMOTH_CHARGE.overrun)));
         this._clearPathState(unit);
         unit.faceTarget(charging.target.position);
+        return;
+      }
+    }
+
+    // Halfling Jump (HALFLING_JUMP): onto the man from up to 4 m off
+    if (unit.definition.id === "farmer.halfling" && canMove && distance > engageDistance + HALFLING_JUMP.from && distance < engageDistance + HALFLING_JUMP.reach
+      && now >= (this._jumpReadyAt.get(unit) ?? 0)) {
+      const dir = enemy.position.subtract(unit.position);
+      dir.y = 0;
+      dir.normalize();
+      unit.faceTarget(enemy.position);
+      if (unit.leap(dir, Math.max(0.5, distance - HALFLING_JUMP.short), HALFLING_JUMP.rise)) {
+        this._jumpReadyAt.set(unit, now + HALFLING_JUMP.cooldown);
+        this._clearPathState(unit);
+        this._logAbility(unit, "leap", now, enemy.position);
         return;
       }
     }

@@ -607,6 +607,20 @@ export class RuntimeUnit {
     this.body.root.position.copyFrom(pos);
   }
 
+  /**
+   * A leap (simulationSystem HALFLING_JUMP): thrown off the ground at `rise` m/s up and along flat `dir` fast enough that, under gravity (22) and the
+   * air drag of the physics step (1.5 per second), he comes down `dist` metres on. Only from the ground.
+   */
+  leap(dir: Vector3, dist: number, rise: number): boolean {
+    if (this._isDead || !this._grounded || this.position.y > 0.05) return false;
+    const airtime = 2 * rise / 22;
+    const v = dist / ((1 - Math.exp(-1.5 * airtime)) / 1.5);
+    this.stopMoving();
+    this._velocity.set(dir.x * v, rise, dir.z * v);
+    this._grounded = false;
+    return true;
+  }
+
   faceTarget(target: Vector3): void {
     const dx = target.x - this.body.root.position.x;
     const dz = target.z - this.body.root.position.z;
