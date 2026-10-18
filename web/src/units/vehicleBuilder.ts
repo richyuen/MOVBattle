@@ -1175,46 +1175,104 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
 
 // ═══════════════════════ WHEELBARROW ═══════════════════════
 // Pushed FORWARD (+Z). Wheel at front (+Z), pusher at back (-Z).
+/*
+ * Three men on one cart (card Appearance, farmer.wheelbarrow.red.png): the Farmer sits at the front of the tray facing ahead, legs out over
+ * its sides; the Apple Thrower sits behind him, one arm up; the Traveller stands at the rear on the ground, leaning into the two handles.
+ * The cart is built in operator units and the whole rig scaled by WHEELBARROW.scale, so the men (operator .46) come out man-sized (~1 m hip).
+ */
+const WHEELBARROW = {
+  scale: 2.2,          // rig scale: operator .46 x 2.2 = a full man
+  trayY: 0.36,         // tray floor centre height (rig units)
+  trayWide: 0.44,
+  trayLong: 0.78,
+  trayZ: 0.08,
+  frontSeat: 0.32,     // the Farmer's hips, z on the tray: knees out over the front board
+  backSeat: -0.06,     // the Apple Thrower's hips
+  pushZ: -0.62,        // the Traveller's feet
+  lean: 0.28,          // the Traveller's forward lean
+};
 function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
+  const W = WHEELBARROW;
   const root = new TransformNode("wheelbarrow_root", scene);
+  const rig = new TransformNode("wheelbarrow_rig", scene);
+  rig.parent = root;
+  rig.scaling.setAll(W.scale);
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
 
   // Tray
-  const tray = MeshBuilder.CreateBox("tray", { width: 0.4, height: 0.15, depth: 0.5 }, scene);
-  tray.position.set(0, 0.45, 0.15);
-  tray.parent = root; tray.material = teamPrimary; allMeshes.push(tray);
-
-  // Sides of tray
-  for (const xOff of [-0.18, 0.18]) {
-    const side = MeshBuilder.CreateBox("side", { width: 0.03, height: 0.15, depth: 0.5 }, scene);
-    side.position.set(xOff, 0.55, 0.15);
-    side.parent = root; side.material = wood; allMeshes.push(side);
+  const tray = MeshBuilder.CreateBox("tray", { width: W.trayWide, height: 0.06, depth: W.trayLong }, scene);
+  tray.position.set(0, W.trayY, W.trayZ);
+  tray.parent = rig; tray.material = teamPrimary; allMeshes.push(tray);
+  const sideTall = 0.1;
+  for (const xOff of [-W.trayWide / 2, W.trayWide / 2]) {
+    const side = MeshBuilder.CreateBox("side", { width: 0.03, height: sideTall, depth: W.trayLong }, scene);
+    side.position.set(xOff, W.trayY + sideTall / 2, W.trayZ);
+    side.parent = rig; side.material = wood; allMeshes.push(side);
   }
-  const front = MeshBuilder.CreateBox("front", { width: 0.4, height: 0.15, depth: 0.03 }, scene);
-  front.position.set(0, 0.55, 0.4);
-  front.parent = root; front.material = wood; allMeshes.push(front);
+  for (const zOff of [-W.trayLong / 2, W.trayLong / 2]) {
+    const end = MeshBuilder.CreateBox("front", { width: W.trayWide, height: sideTall, depth: 0.03 }, scene);
+    end.position.set(0, W.trayY + sideTall / 2, W.trayZ + zOff);
+    end.parent = rig; end.material = wood; allMeshes.push(end);
+  }
 
-  // Wheel at front (+Z)
-  const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.06, diameter: 0.4, tessellation: 12 }, scene);
-  wheel.position.set(0, 0.2, 0.45);
+  // Wheel at front (+Z), under the tray's nose
+  const wheelZ = W.trayZ + W.trayLong / 2 + 0.06;
+  const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.07, diameter: 0.34, tessellation: 12 }, scene);
+  wheel.position.set(0, 0.17, wheelZ);
   wheel.rotation.z = Math.PI / 2;
-  wheel.parent = root; wheel.material = wood; allMeshes.push(wheel);
+  wheel.parent = rig; wheel.material = wood; allMeshes.push(wheel);
 
-  // Handles extending back toward pusher (-Z)
-  for (const xOff of [-0.15, 0.15]) {
-    const handle = MeshBuilder.CreateCylinder("handle", { height: 0.7, diameter: 0.03, tessellation: 6 }, scene);
-    handle.position.set(xOff, 0.5, -0.25);
-    handle.rotation.x = -0.25; // angled back
-    handle.parent = root; handle.material = wood; allMeshes.push(handle);
+  // Handles: from the wheel's axle along under the tray, out the back to the Traveller's fists
+  const handleBack = W.pushZ + 0.2;
+  for (const xOff of [-0.17, 0.17]) {
+    const from = new Vector3(xOff * 0.4, 0.17, wheelZ);
+    const to = new Vector3(xOff, 0.4, handleBack);
+    const handle = MeshBuilder.CreateTube("handle", { path: [from, new Vector3(xOff * 0.9, W.trayY - 0.04, W.trayZ - W.trayLong / 2), to], radius: 0.016, tessellation: 6 }, scene);
+    handle.parent = rig; handle.material = wood; allMeshes.push(handle);
   }
 
-  // Pusher (the farmer, at -Z)
-  const operator = addOperator(scene, root, allMeshes, 0, 0.72, -0.55, color);
+  const seatY = W.trayY + 0.03 + sideTall; // sat up on the load, level with the rim, not down in the tray
+  // The Farmer, front: sat facing ahead, thighs out over the tray sides, shins hanging
+  addOperator(scene, rig, allMeshes, 0, 0, W.frontSeat, color, (man) => {
+    man.root.position.y = seatY - man.hip.position.y;
+    man.leftHip.rotation.set(-1.45, 0, 0.45);
+    man.rightHip.rotation.set(-1.45, 0, -0.45);
+    man.leftKnee.rotation.x = 1.1;
+    man.rightKnee.rotation.x = 1.1;
+    man.leftShoulder.rotation.x = -0.7;
+    man.rightShoulder.rotation.x = -0.7;
+    man.leftElbow.rotation.x = -0.6;
+    man.rightElbow.rotation.x = -0.6;
+  });
+  // The Apple Thrower, behind him: sat the same, his throwing arm up and back over his shoulder
+  addOperator(scene, rig, allMeshes, 0, 0, W.backSeat, color, (man) => {
+    man.root.position.y = seatY - man.hip.position.y;
+    man.leftHip.rotation.set(-1.4, 0, 0.35);
+    man.rightHip.rotation.set(-1.4, 0, -0.35);
+    man.leftKnee.rotation.x = 1.3;
+    man.rightKnee.rotation.x = 1.3;
+    man.rightShoulder.rotation.set(-2.5, 0, -0.3);
+    man.rightElbow.rotation.x = -0.8;
+    man.leftShoulder.rotation.x = -0.5;
+  });
+  // The Traveller, rear: on his feet behind the cart, leaning in, fists down on the handle ends
+  let travellerHeadTop = 0;
+  const operator = addOperator(scene, rig, allMeshes, 0, 0, W.pushZ, color, (man) => {
+    man.root.position.y = 0;
+    man.hip.rotation.x = W.lean;
+    man.leftShoulder.rotation.x = -0.75 - W.lean;
+    man.rightShoulder.rotation.x = -0.75 - W.lean;
+    man.leftElbow.rotation.x = -0.2;
+    man.rightElbow.rotation.x = -0.2;
+    man.leftHip.rotation.x = -W.lean;
+    man.rightHip.rotation.x = -W.lean;
+  });
+  travellerHeadTop = operator.headTopY * W.scale;
 
   const vehicleSockets: VehicleSocketSet = {
-    impactOrigin: makeSocket(scene, root, "wheelbarrow_impact_socket", new Vector3(0, 0.45, 0.38)),
+    impactOrigin: makeSocket(scene, rig, "wheelbarrow_impact_socket", new Vector3(0, 0.3, wheelZ)),
   };
 
   return wrapAsBody(
@@ -1223,10 +1281,11 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     tray,
     allMeshes,
     operator.headMesh,
-    makeBodyMetrics(operator.headTopY, 0.55, 0.34, 0.8),
+    makeBodyMetrics(travellerHeadTop, 0.55 * W.scale, 0.34 * W.scale, 0.8 * W.scale),
     vehicleSockets,
   );
 }
+
 
 function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("longship_root", scene);
