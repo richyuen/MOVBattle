@@ -136,13 +136,6 @@ const SCYTHE_SWEEP = { roll: Math.PI / 2, twist: 0.75, cock: 2.0, end: -1.1, low
  * weapon side, y up, z forward), level and across. Like the scythe he stands in it from the first frame, not eased round from the fist's strapped angle.
  */
 const HAY_CARRY = { raise: -0.6, out: 0.1, elbow: -0.85, tip: new Vector3(-0.95, 0.02, 0.32) };
-/*
- * [S] the farmer's pitchfork held low across him in both fists (346; farmer.farmer.red.png: the fork low before his hips, the shaft run across his front, the
- * tines out past the off hip). The fork's root (forkShaft) turns in the weapon fist like the hay baler's stick: weapon arm .raise forward and .out, elbow
- * .elbow, the fist ahead of the weapon hip; the shaft's line from the fist .tip in his own frame (x toward the weapon side, y up, z forward), near level and
- * across, a little down. The off hand is solved onto the shaft (_twoHandPole, POLE_GRIP.forkBar); he stands in it from the first frame.
- */
-const FORK_LOW = { raise: -0.55, out: 0.12, elbow: -0.8, tip: new Vector3(-0.95, -0.1, 0.3) };
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -1821,7 +1814,7 @@ export class ProceduralAnimator {
       : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb")));
     const held = this.locomotionBias !== "aimed" && !rod && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
-    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry|forkShaft)$/.test(n.name));
+    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry)$/.test(n.name));
     const side = Math.sign(this._body.rightShoulder.position.x) || 1;
     // A scythe is carried one way, high, and like the tree he stands in it from the first frame, whatever phase the arm is in
     const scythe = node?.name === "scytheCarry";
@@ -1844,16 +1837,14 @@ export class ProceduralAnimator {
     const fork = this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name === "forkBar"));
     // The hay baler's stick (344) has its own level carry across his front (HAY_CARRY)
     const hayStick = node?.id === "hayStick";
-    if (hayStick || fork) this._carryTurn = 1;
+    if (hayStick) this._carryTurn = 1;
     const pick = fork ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
-    const attitude = fork
-      ? { raise: FORK_LOW.raise, out: FORK_LOW.out, elbow: FORK_LOW.elbow, tip: new Vector3(FORK_LOW.tip.x * side, FORK_LOW.tip.y, FORK_LOW.tip.z).normalize() }
-      : hayStick
+    const attitude = hayStick
       ? { raise: HAY_CARRY.raise, out: HAY_CARRY.out, elbow: HAY_CARRY.elbow, tip: new Vector3(HAY_CARRY.tip.x * side, HAY_CARRY.tip.y, HAY_CARRY.tip.z).normalize() }
       : lowScythe
       ? { raise: SCYTHE_LOW.raise, out: SCYTHE_LOW.out, elbow: SCYTHE_LOW.elbow, tip: new Vector3(SCYTHE_LOW.tip.x * side, SCYTHE_LOW.tip.y, SCYTHE_LOW.tip.z).normalize() }
