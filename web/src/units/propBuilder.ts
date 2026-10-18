@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -227,6 +227,15 @@ const BRIM_HAT_FELT = new Color3(0.11, 0.1, 0.12);
  */
 const MORION = { dome: 1.18, tall: 0.3, comb: 0.22, combThick: 0.1, brimX: 1.5, brimZ: 2.05, peak: 0.3 };
 const MORION_IRON = new Color3(0.12, 0.12, 0.14);
+/*
+ * A halberdier's sallet (328; renaissance.halberd.red.png, card Appearance "a black sallet": a black iron helm closed over the whole head from a rounded top
+ * to below the chin, a little wider at its foot, a narrow slit across the eyes where the team colour shows, and a neck guard sweeping out behind and down).
+ * Not a cap: the old grey helm dome read as a flat cap over a bare face. Dome SALLET.dome of the head tall, its top SALLET.crown of the head over the skull;
+ * shell SALLET.heads heads across and SALLET.deep of that front to back, flaring SALLET.flare to its foot SALLET.drop of the head under the crown; slit
+ * SALLET.slit of the head high, SALLET.slitDown of the head under the eye's top, SALLET.slitWide of the shell across; tail SALLET.tail head widths long,
+ * dipped SALLET.dip rad. Iron the morion's near-black.
+ */
+const SALLET = { heads: 1.3, deep: 1.12, crown: 0.12, dome: 0.45, drop: 1.05, flare: 1.08, slit: 0.07, slitDown: 0.04, slitWide: 0.78, tail: 0.5, dip: 0.45 };
 /*
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
  * heads across, turned up hard against the crown on the left side, a long pale team-coloured plume sweeping back over the turned-up side). Not a helm: the
@@ -954,6 +963,39 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     brim.parent = dome;
     return dome;
   }
+  if (type === "sallet") {
+    // The sallet, built to the spec at SALLET: a dome over a shell to below the chin, a team slit at the eyes, a neck guard behind
+    const iron = mat(scene, MORION_IRON, 0.06, "metal");
+    const R = SALLET.heads * W * 0.5;
+    const skirtTop = SALLET.crown * H - SALLET.dome * H;
+    const skirtLong = skirtTop + SALLET.drop * H;
+    const dome = MeshBuilder.CreateSphere("salletDome", { diameterX: u(2 * R), diameterY: u(SALLET.dome * H * 2), diameterZ: u(2 * R * SALLET.deep), segments: 6, slice: 0.5 }, scene);
+    dome.position.y = u(skirtTop);
+    dome.material = iron;
+    dome.convertToFlatShadedMesh();
+    const shell = MeshBuilder.CreateCylinder("salletShell", { height: u(skirtLong), diameterTop: u(2 * R), diameterBottom: u(2 * R * SALLET.flare), tessellation: 12 }, scene);
+    shell.scaling.z = SALLET.deep;
+    shell.position.y = -u(skirtLong) * 0.5;
+    shell.material = iron;
+    shell.convertToFlatShadedMesh();
+    shell.parent = dome;
+    // The slit: a thin team band laid on the shell's front at the eyes, proud of the facets so it shows
+    const slitY = -(eyeTop + SALLET.slitDown * H);
+    const flareAt = 1 + (SALLET.flare - 1) * (skirtTop - slitY) / skirtLong;
+    const slit = MeshBuilder.CreateBox("salletSlit", { width: u(2 * R * SALLET.slitWide), height: u(SALLET.slit * H), depth: u(0.08 * W) }, scene);
+    slit.position.set(0, u(slitY - skirtTop), u(R * SALLET.deep * flareAt * 0.97));
+    slit.material = mat(scene, teamColor ?? accent, 0.35);
+    slit.parent = dome;
+    // The neck guard: a plate hinged on the shell's back near its foot, sweeping out behind and down
+    const tail = u(SALLET.tail * W);
+    const guard = MeshBuilder.CreateBox("salletTail", { width: u(2 * R * 0.9), height: u(0.05 * H), depth: tail }, scene);
+    guard.rotation.x = -SALLET.dip;
+    guard.position.set(0, u(-skirtLong * 0.78) - tail * 0.5 * Math.sin(SALLET.dip), -u(R * SALLET.deep * 0.95) - tail * 0.5 * Math.cos(SALLET.dip));
+    guard.material = iron;
+    guard.convertToFlatShadedMesh();
+    guard.parent = dome;
+    return dome;
+  }
   if (type === "brim_hat") {
     const felt = mat(scene, BRIM_HAT_FELT);
     // The crown: a dome over the skull from the seat; the brim hangs off its foot, wider at the lip, open below so the face shows
@@ -1084,7 +1126,7 @@ export function attachProps(
   }
 
   // Hide eyes behind face-covering headgear
-  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bull_head", "dragon_head"];
+  const faceCoveringHats: (HatType | undefined)[] = ["great_helm", "ninja_mask", "bull_head", "dragon_head", "sallet"];
   if (faceCoveringHats.includes(config.hat)) {
     body.leftEye?.setEnabled(false);
     body.rightEye?.setEnabled(false);

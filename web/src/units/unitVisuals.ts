@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet";
 
 export type ShieldType = "none" | "round" | "kite" | "tower" | "buckler" | "slab" | "palette";
 
@@ -461,7 +461,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "renaissance.halberd": vis(
-    { scale: 1.25, bulk: 1.25 }, "halberd", "helmet", "none", "none", "#4682B4",
+    { scale: 1.25, bulk: 1.25 }, "halberd", "sallet", "none", "none", "#4682B4",
   ),
   "renaissance.jouster": vis(
     { scale: 1.4, bulk: 1.3 }, "lance", "plume_helmet", "kite", "mount_horse", "#C0C0C0",
