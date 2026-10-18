@@ -1,5 +1,5 @@
 import {
-  Scene, TransformNode, Mesh, MeshBuilder, Color3, Quaternion, Vector3,
+  Scene, TransformNode, Mesh, MeshBuilder, Color3, Quaternion, Vector3, Ray, Matrix,
   PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core";
 import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
@@ -1387,6 +1387,12 @@ const MAMMOTH_MANE_COLOR = new Color3(0.2, 0.1, 0.06);
  * ring of round team dots, all flat paint on the brown fur. In knee space (lower leg 0.6 across, foot at -0.4): ANKLE_BAND.stripes the stripes'
  * heights, .stripeTall their height, .wide their diameter (just proud of the leg), .dots dots at .dotAt, .dot across, .dotOut from the leg's axis.
  */
+/** The mammoth's face marking: the band's path on the head as (yaw off the front, pitch up) per side, forehead first; strips per stretch; band width
+ * (neck units, the head is 1.4 across), share it narrows by the trunk, paint thickness; the trunk pieces (of 8) that carry a dot, and the dot's size. */
+const FACE_PAINT = {
+  path: [[0.18, 0.62], [0.42, 0.36], [0.4, 0.05], [0.22, -0.22]] as [number, number][],
+  steps: 3, wide: 0.13, taper: 0.3, thick: 0.03, trunkDots: [1, 3, 5], dot: 0.12,
+};
 const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.05, wide: 0.64, dots: 8, dotAt: -0.33, dot: 0.11, dotOut: 0.29 };
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
@@ -1536,11 +1542,6 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     lock.parent = neck; lock.material = crestMat; allMeshes.push(lock);
   }
 
-  // War paint stripe across the brow
-  const browPaint = MeshBuilder.CreateBox("browPaint", { width: 0.62, height: 0.13, depth: 0.2 }, scene);
-  browPaint.position.set(0, 0.3, 0.68);
-  browPaint.parent = neck; browPaint.material = paintMat; allMeshes.push(browPaint);
-
   // Eyes: flat discs of self-lit warm white, so the blue ambient does not grey them, kept out of the glow layer so each is a crisp disc with no halo, each turned out to lie on its side of the skull with a flat black pupil on the middle of its front
   const eyeWhite = getMaterialFactory().get("bone", new Color3(0.95, 0.95, 0.95), { emissive: new Color3(0.3, 0.28, 0.25) });
   const pupilMat = makeMat(scene, new Color3(0.03, 0.03, 0.03));
@@ -1570,6 +1571,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const TRUNK_ROOT = 0.5;
   const TRUNK_TIP = 0.22;
   const trunkAt = new Vector3(0, -0.12, 0.76);
+  const trunkPieces: { centre: Vector3; radius: number }[] = [];
   for (let i = 0; i < TRUNK_PITCH.length; i++) {
     const t = i / (TRUNK_PITCH.length - 1);
     const pitch = TRUNK_PITCH[i];
@@ -1583,12 +1585,65 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     seg.position = Vector3.Center(trunkAt, end);
     seg.rotation.x = Math.PI - pitch;
     seg.parent = neck; seg.material = trunkMat; allMeshes.push(seg);
+    trunkPieces.push({ centre: seg.position.clone(), radius: (diam + next) / 4 });
     trunkAt.copyFrom(end);
   }
   // Blunt cap closing the curled tip
   const trunkTip = MeshBuilder.CreateSphere("trunkTip", { diameter: TRUNK_TIP * 1.05, segments: 4 }, scene);
   trunkTip.position.copyFrom(trunkAt);
   trunkTip.parent = neck; trunkTip.material = trunkMat; allMeshes.push(trunkTip);
+
+  // Face marking (FACE_PAINT), read off tribal.mammoth.blue.png: on each side a flat team-colour band from the forehead under the mane,
+  // down in front of the eye and forward onto the top of the trunk root, then round paint dots spaced down the trunk's side.
+  // The band is short flat strips laid on the faceted head where a ray finds its skin, so it lies flush on every facet.
+  if (mammoth) {
+    const faceMat = getMaterialFactory().getCloth(color);
+    neck.computeWorldMatrix(true);
+    headMesh.computeWorldMatrix(true);
+    const toNeck = Matrix.Invert(neck.getWorldMatrix());
+    const headAt = new Vector3(0, 0, 0.25);
+    // A point on the head's skin seen from (yaw off the front, pitch up), and the skin's outward normal there, both in neck space
+    const onSkin = (yaw: number, pitch: number): { at: Vector3; up: Vector3 } | null => {
+      const out = new Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+      const from = Vector3.TransformCoordinates(headAt.add(out.scale(3)), neck.getWorldMatrix());
+      const dir = Vector3.TransformNormal(out.negate(), neck.getWorldMatrix()).normalize();
+      const hit = headMesh.intersects(new Ray(from, dir, 10), false);
+      if (!hit.hit || !hit.pickedPoint) return null;
+      const n = hit.getNormal(true, false) ?? dir.negate();
+      return { at: Vector3.TransformCoordinates(hit.pickedPoint, toNeck), up: Vector3.TransformNormal(n, toNeck).normalize() };
+    };
+    for (const side of [-1, 1]) {
+      const path = FACE_PAINT.path;
+      let last = onSkin(side * path[0][0], path[0][1]);
+      for (let i = 1; i < path.length * FACE_PAINT.steps; i++) {
+        const t = i / FACE_PAINT.steps, k = Math.min(path.length - 2, Math.floor(t)), u = t - k;
+        const next = onSkin(side * (path[k][0] + (path[k + 1][0] - path[k][0]) * u), path[k][1] + (path[k + 1][1] - path[k][1]) * u);
+        if (last && next) {
+          const along = next.at.subtract(last.at);
+          const long = along.length();
+          const z = along.normalize();
+          const y = last.up.add(next.up).normalize();
+          const x = Vector3.Cross(y, z).normalize();
+          const yy = Vector3.Cross(z, x).normalize();
+          const wide = FACE_PAINT.wide * (1 - FACE_PAINT.taper * t / (path.length - 1));
+          const strip = MeshBuilder.CreateBox("facePaint", { width: wide, height: FACE_PAINT.thick, depth: long + wide * 0.5 }, scene);
+          strip.rotation = Vector3.RotationFromAxis(x, yy, z);
+          strip.position = Vector3.Center(last.at, next.at).add(yy.scale(FACE_PAINT.thick * 0.2));
+          strip.parent = neck; strip.material = faceMat; allMeshes.push(strip);
+        }
+        last = next;
+        if (t >= path.length - 1) break;
+      }
+      // Dots down the trunk's outer side, flat on its skin
+      for (const piece of FACE_PAINT.trunkDots) {
+        const at = trunkPieces[piece];
+        const dot = MeshBuilder.CreateSphere("trunkDot", { diameter: FACE_PAINT.dot, segments: 4 }, scene);
+        dot.scaling.set(0.3, 1, 1);
+        dot.position.set(side * at.radius * 0.97, at.centre.y, at.centre.z);
+        dot.parent = neck; dot.material = faceMat; allMeshes.push(dot);
+      }
+    }
+  }
 
   // ── Tusks (parented to neck) ──
   // One long thick curve per side: down and well out of the jaw, forward past the trunk, then up and back in to a tip about level with the eye.
@@ -1735,7 +1790,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
 const ELEPHANT_HIDE = new Color3(0.74, 0.75, 0.76);
 const ELEPHANT_GOLD = new Color3(0.95, 0.66, 0.16);
 const ELEPHANT_GEM = new Color3(0.16, 0.26, 0.85);
-const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "paintDaub", "hump", "ankleStripe", "ankleDot"]);
+const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "facePaint", "trunkDot", "paintDaub", "hump", "ankleStripe", "ankleDot"]);
 const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
 const TUSK_RING_PIECE = 4;
 const BLANKET_RADII = new Vector3(0.92, 0.8, 0.74);
