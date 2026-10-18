@@ -156,10 +156,10 @@ const POLE_GRIP = {
  * [S] pitchfork carried across the front in both fists (342; farmer.farmer.png: the farmers walk with the weapon fist low before the weapon thigh and the
  * shaft run across the front of the hips toward the off side, the off fist further up it before the off hip, the tines out ahead past the off hip).
  * The weapon arm hangs a little forward (FORK_CARRY.raise swing, .out from the ribs, .elbow fold) so the fist is ahead of the thigh, and the shaft's
- * line from the fist is .tip in his own frame (x toward his weapon side, y up, z back): across to the off side, a touch down, and forward, so the off
+ * line from the fist is .tip in his own frame (x toward his weapon side, y up, z forward), the shaft turned onto it (named "shaft" with its forkBar mark): across to the off side, a touch down, and forward, so the off
  * hand's solve onto it (POLE_GRIP.forkBar, _twoHandPole) finds it before the hips instead of through the weapon hip.
  */
-const FORK_CARRY = { raise: -0.4, out: 0.04, elbow: -0.55, tip: [-0.72, -0.28, -0.72] as [number, number, number] };
+const FORK_CARRY = { raise: -0.4, out: 0.04, elbow: -0.55, tip: [-0.72, -0.28, 0.72] as [number, number, number] };
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
  * butt behind the fist sits in the shoulder; the musket is stood level along his front over its rest, the off hand following it on the fore-stock
@@ -1761,7 +1761,9 @@ export class ProceduralAnimator {
       : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb")));
     const held = this.locomotionBias !== "aimed" && !rod && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
-    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry)$/.test(n.name));
+    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry)$/.test(n.name)
+      // the pitchfork too (342, FORK_CARRY): its shaft turned across the front, not left at the fist's strapped angle
+      || (n.name === "shaft" && n.getChildren().some((c) => c.name === "forkBar")));
     const side = Math.sign(this._body.rightShoulder.position.x) || 1;
     // A scythe is carried one way, high, and like the tree he stands in it from the first frame, whatever phase the arm is in
     const scythe = node?.name === "scytheCarry";
