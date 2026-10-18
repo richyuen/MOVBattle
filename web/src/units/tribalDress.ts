@@ -18,8 +18,16 @@ const ROPE_COLOR = new Color3(0.5, 0.26, 0.16);
  *   height below the neck for the middle one (the side ones ride .lift higher), .strap the strap's thickness in trunk heights.
  */
 const CRITTER_NECKLACE = { skull: 0.5, spread: 0.55, drop: 0.2, lift: 0.05, strap: 0.03 };
+/*
+ * The bone necklace (tribal.stoner.red.png, card Appearance: "a necklace made out of three bones tied to a strap with twine"): a strap round the neck from the
+ * nape over both shoulders, meeting in a short V high on the chest, a twine bar across the V's foot and three knobbed pale bones hanging from it side by side,
+ * the middle one longest, standing a little off the chest (and off a tunic's front) so they keep their own silhouette in profile.
+ *   BONE_NECKLACE.drop of the trunk height below the neck for the V's foot, .bone head heights long (the middle one .middle times that), .thick head widths
+ *   across each bone, .gap bone thicknesses between them, .strap the strap's thickness in trunk heights, .off of the trunk's depth the bones stand off the chest.
+ */
+const BONE_NECKLACE = { drop: 0.16, bone: 0.55, middle: 1.25, thick: 0.13, gap: 2.4, strap: 0.03, off: 0.14 };
 // Which tribesmen wear which necklace (the furCollar is dropped for them)
-const NECKLACES: Record<string, "critter_skulls"> = { "tribal.protector": "critter_skulls" };
+const NECKLACES: Record<string, "critter_skulls" | "bones"> = { "tribal.protector": "critter_skulls", "tribal.stoner": "bones" };
 
 export function hasTribalNecklace(unitId: string): boolean {
   return unitId in NECKLACES;
@@ -115,6 +123,7 @@ export function boneSkull(scene: Scene, name: string, wide: number, serial: numb
 
 /** Hangs the unit's necklace (spec at CRITTER_NECKLACE) on a bare tribesman, parented to the torso joint. Empty when he wears none. */
 export function dressTribalNecklace(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
+  if (NECKLACES[unitId] === "bones") return boneNecklace(scene, body);
   if (NECKLACES[unitId] !== "critter_skulls") return [];
   const added: Mesh[] = [];
   const band = trunkBand(body, 0.6, 0.9);
@@ -156,6 +165,62 @@ export function dressTribalNecklace(scene: Scene, body: ArticulatedBody, unitId:
     skull.parent = body.torso;
     added.push(...parts);
   });
+  return added;
+}
+
+/** The bone necklace (spec at BONE_NECKLACE), parented to the torso joint. */
+function boneNecklace(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const band = trunkBand(body, 0.6, 0.9);
+  const top = trunkBand(body, 0.9, 1.05);
+  const { trunk } = band;
+  const head = headWide(body);
+  const headTall = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2 * body.headMesh.scaling.y;
+  const thick = trunk * BONE_NECKLACE.strap;
+  const neckX = head * 0.42;
+  // Over a tunic's front (its sleeve stands about 8% off the trunk), then the bones a little further out
+  const front = band.maxZ * 1.1 + thick;
+  const back = Math.min(top.minZ, band.minZ) - thick * 0.6;
+  const footY = trunk * (1 - BONE_NECKLACE.drop);
+  const boneThick = head * BONE_NECKLACE.thick;
+  const step = boneThick * BONE_NECKLACE.gap;
+  const off = (band.maxZ - band.minZ) * BONE_NECKLACE.off;
+  // The strap: from the nape over each shoulder by the neck and down in a short V to its foot high on the chest
+  const path = [
+    new Vector3(0, trunk - thick, back),
+    new Vector3(neckX, trunk + thick * 0.5, (back + front) * 0.5),
+    new Vector3(neckX * 0.9, trunk * 0.97, front),
+    new Vector3(step * 0.8, footY + trunk * 0.03, front + off * 0.5),
+    new Vector3(0, footY, front + off * 0.6),
+    new Vector3(-step * 0.8, footY + trunk * 0.03, front + off * 0.5),
+    new Vector3(-neckX * 0.9, trunk * 0.97, front),
+    new Vector3(-neckX, trunk + thick * 0.5, (back + front) * 0.5),
+    new Vector3(0, trunk - thick, back),
+  ].map((p) => p.add(new Vector3(band.midX, 0, 0)));
+  const rope = ropeMaterial();
+  const strap = MeshBuilder.CreateTube("necklaceStrap", { path, radius: thick * 0.5, tessellation: 5, cap: Mesh.CAP_ALL }, scene);
+  strap.material = rope;
+  strap.parent = body.torso;
+  added.push(strap);
+  // The twine bar across the V's foot that the three bones hang from
+  const barZ = front + off;
+  const bar = MeshBuilder.CreateTube("necklaceTwine", {
+    path: [new Vector3(band.midX - step * 1.35, footY + trunk * 0.015, barZ), new Vector3(band.midX, footY - trunk * 0.005, barZ), new Vector3(band.midX + step * 1.35, footY + trunk * 0.015, barZ)],
+    radius: thick * 0.45, tessellation: 5, cap: Mesh.CAP_ALL,
+  }, scene);
+  bar.material = rope;
+  bar.parent = body.torso;
+  added.push(bar);
+  // The three bones, hanging side by side from the bar, the middle one longest, fanned a little
+  for (const i of [-1, 0, 1]) {
+    const long = headTall * BONE_NECKLACE.bone * (i === 0 ? BONE_NECKLACE.middle : 1);
+    const parts = boneStick(scene, "necklaceBone", long, boneThick);
+    const shaft = parts[0];
+    shaft.rotation.set(-0.12, 0, i * 0.12);
+    shaft.position.set(band.midX + i * step + i * Math.sin(0.12) * long * 0.5, footY + boneThick * 0.6 - long * 0.5, barZ + boneThick * 0.3 + Math.sin(0.12) * long * 0.5);
+    shaft.parent = body.torso;
+    added.push(...parts);
+  }
   return added;
 }
 
