@@ -525,6 +525,9 @@ export class UnitFactory {
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
     }
+    if (definition.id === "renaissance.fencer" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressFencer(this._scene, body, teamColor));
+    }
     if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressCactus(this._scene, body, teamColor));
     }
@@ -966,6 +969,71 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   for (const hand of [body.leftHand, body.rightHand]) {
     for (const m of hand.getChildMeshes(true)) if (/_[lr]HandM$/.test(m.name)) m.material = steel;
+  }
+  return added;
+}
+
+/*
+ * [S] fencer's doublet and breeches (334; renaissance.fencer.red.png: a team doublet over the chest with a cream band round the top of each sleeve under a
+ * short team shoulder wing, a ring of short team tabs below the waist; puffed knee breeches paned in upright stripes, team and cream by turns). Sizes are
+ * shares of the chest (W, H, D) and of each limb mesh's own girth and length.
+ *   doublet FENCER_DRESS.doublet of the chest round it; FENCER_DRESS.tabs tabs FENCER_DRESS.tab of the chest's height long; shoulder wing FENCER_DRESS.wing of
+ *   the arm's girth round, its cream band FENCER_DRESS.band of the arm long under it; breeches FENCER_DRESS.panes panes round each thigh, standing out
+ *   FENCER_DRESS.puff of its girth from its middle, over FENCER_DRESS.long of it from the hip, on a team core.
+ */
+const FENCER_DRESS = { doublet: 1.08, tabs: 8, tab: 0.2, wing: 1.45, band: 0.12, panes: 8, puff: 0.82, long: 0.95 };
+const FENCER_CREAM = new Color3(0.84, 0.66, 0.42);
+/** Dresses the fencer (spec at FENCER_DRESS): team doublet with cream shoulder bands and waist tabs, paned team-and-cream puffed breeches. */
+function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const F = FENCER_DRESS;
+  const team = mf.getCloth(teamColor.scale(0.82));
+  const cream = mf.getCloth(FENCER_CREAM);
+  const put = (m: Mesh, mat: Material, parent: TransformNode): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const waist = chest.position.y - H * 0.5;
+  const doublet = put(MeshBuilder.CreateBox("fencerDoublet", { width: W * F.doublet, height: H * 0.9, depth: D * F.doublet }, scene), team, body.torso);
+  doublet.position.set(0, chest.position.y - H * 0.04, 0);
+  // the tabs below the waist, each turned to face out round an oval the doublet's size
+  for (let i = 0; i < F.tabs; i++) {
+    const a = (i + 0.5) / F.tabs * Math.PI * 2;
+    const tab = put(MeshBuilder.CreateBox("fencerTab", { width: W * 0.36, height: H * F.tab, depth: D * 0.05 }, scene), team, body.torso);
+    tab.position.set(Math.sin(a) * W * F.doublet * 0.52, waist - H * F.tab * 0.4, Math.cos(a) * D * F.doublet * 0.52);
+    tab.rotation.set(0.18 * Math.cos(a), a, -0.18 * Math.sin(a));
+  }
+  // shoulder wings and the cream sleeve bands under them
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const wing = put(MeshBuilder.CreateCylinder("fencerWing", { height: long * 0.16, diameter: girth * F.wing, tessellation: 7 }, scene), team, arm);
+    wing.position.y = long * 0.5 - long * 0.08;
+    const band = put(MeshBuilder.CreateCylinder("fencerBand", { height: long * F.band, diameter: girth * 1.2, tessellation: 7 }, scene), cream, arm);
+    band.position.y = long * 0.5 - long * (0.16 + F.band * 0.5);
+  }
+  // paned breeches round each thigh: a team core and upright panes, team and cream by turns, bowed out at the middle
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
+    const e = leg.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2 * F.long;
+    const top = e.y;
+    const core = put(MeshBuilder.CreateCylinder("fencerHose", { height: long, diameterTop: girth * 1.25, diameterBottom: girth * 1.2, tessellation: 8 }, scene), team, leg);
+    core.position.y = top - long * 0.5;
+    for (let i = 0; i < F.panes; i++) {
+      const a = (i / F.panes) * Math.PI * 2;
+      const pane = put(MeshBuilder.CreateCylinder("fencerPane", { height: long * 0.96, diameterTop: girth * 0.32, diameterBottom: girth * 0.3, tessellation: 6 }, scene), i % 2 ? team : cream, leg);
+      pane.scaling.set(1, 1, 0.45);
+      // bowed: the middle stands out F.puff of the girth, the ends tuck in to the core
+      pane.position.set(Math.cos(a) * girth * F.puff * 0.75, top - long * 0.5, Math.sin(a) * girth * F.puff * 0.75);
+      pane.rotation.y = Math.PI / 2 - a;
+    }
   }
   return added;
 }
