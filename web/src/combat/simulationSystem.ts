@@ -68,6 +68,12 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 // [S] ...and the potionseller's bottle (341; card Weapons: Potion Throw, a lobbed potion): the glass ball in her right hand is what flies, on the bomb's high lob
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
+/*
+ * [S] planted full-draw loose (354; medieval.archer.jpg: feet set, bow arm out, string at the cheek as the arrow leaves; card shoot delay 1.2 s). A bowman here
+ * does not loose at the decision with the bow at his hip: the draw (proceduralAnimation bow_draw_release) runs first and the arrow leaves the bow at its
+ * release point (bowReleasesIn), from where the bow is then. Logged "throw" at the loose, as a held throw is.
+ */
+const DRAWS_BEFORE_LOOSE = new Set(["medieval.archer"]);
 // [S] the potionseller's potions splash men drunk instead of blowing up (342; ProjectileSystem DRUNK_SPLASH): drunk men stagger about, not fighting (DRUNK_WANDER)
 const DRUNK_POTIONS = new Set(["farmer.potion_seller"]);
 // A drunk man's wander: he reels off DRUNK_WANDER.reach m toward a heading that swings round at .swing rad/s from his own hashed start
@@ -281,7 +287,7 @@ export class SimulationSystem {
   private _units: RuntimeUnit[] = [];
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
-  private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean }> = [];
+  private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean; fromBow?: boolean }> = [];
   private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
   // A landed heavy blow dwells on the man before it throws him (trailer_3_sheet_01 r2c3: the club head is on the red man, chest to chest, as he starts to go):
   // the damage, the striker's pinned aim and the flinch are the land step's, the push and the throw off his feet (staggerFromBlow) come BLOW_DWELL s later,
@@ -1996,6 +2002,12 @@ export class SimulationSystem {
             attacker, target, shape: resolveProjectileShape(attacker, attackProfile) ?? "spear", damage, splashRadius, knockback,
             leavesAt: now + attacker.animator.throwReleasesIn(),
           });
+        } else if (DRAWS_BEFORE_LOOSE.has(attacker.definition.id) && attacker.animator.bowReleasesIn() > 0) {
+          // The draw has only started: the arrow leaves the bow at the loose
+          this._pendingThrows.push({
+            attacker, target, shape: resolveProjectileShape(attacker, attackProfile) ?? "arrow", damage, splashRadius, knockback,
+            leavesAt: now + attacker.animator.bowReleasesIn(), fromBow: true,
+          });
         } else if (staffHeadOf(attacker) && /^(fireball|leaves)$/.test(resolveProjectileShape(attacker, attackProfile) ?? "") && attacker.animator.castReleasesIn() > 0) {
           // The cast has only started: the fireball leaves the staff's head when the staff is driven level at the man, the bone mage's leaves
           // when his staff is up over his head
@@ -2166,6 +2178,14 @@ export class SimulationSystem {
       const { attacker, target } = t;
       if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
       this._logAbility(attacker, t.fromStaff ? "cast" : "throw", now);
+      if (t.fromBow) {
+        // Loosed off the drawn bow: from the bow, where the draw has put it
+        const origin = attacker.getAttackOrigin();
+        this.projectileSystem.spawnProjectile(
+          t.shape, origin.position, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: originLiftForSource(origin.source) },
+        );
+        continue;
+      }
       const head = t.fromStaff ? staffHeadOf(attacker) : null;
       if (head && t.shape === "leaves") {
         // The bone mage's spell is in the ground, not the air (units/tribal.bone_mage): his row of bone spikes bursts up from his feet to the man as the staff

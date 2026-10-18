@@ -613,6 +613,12 @@ export class ProceduralAnimator {
     return Math.max(0.001, letGo * this._attackDuration - this._attackTimer);
   }
 
+  /** A bow draw just started: seconds until the loose (the release point, string at the cheek and bow arm out); 0 when no draw is running. See DRAWS_BEFORE_LOOSE. */
+  bowReleasesIn(): number {
+    if (this._state !== AnimState.Attacking || this._attackMotion !== "bow_draw_release") return 0;
+    return Math.max(0.001, this._resolveReleasePoint(0.72) * this._attackDuration - this._attackTimer);
+  }
+
   /** What the throwing hand holds now (its prop, not the mitt), or null when it is empty. */
   heldThrowProp(): TransformNode | null {
     // Not the mitt, and not a state glow riding the fist (a lit fuse's spark is tagged with a visual key): the weapon itself
