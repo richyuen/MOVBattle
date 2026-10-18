@@ -3857,8 +3857,10 @@ const HORSE_CAP_BULGE = 1.22;
 const HORSE_CAP_END = 0.55;
 const HORSE_CAP_SQUARE = 0.35;
 // The domed drape and its crenellated hem (334, see the caparison): rings in the quarter round, the swell of its sides, the barrel's middle (share of the
-// back's height) where the panels turn plumb; the hem band's depth, merlon count and depth (of H), and the cream's self-light
-const HORSE_DRAPE = { rings: 6, round: 0.6, waist: 0.15, band: 0.07, merlons: 22, tooth: 0.11, glow: 0.18 };
+// back's height) where the panels turn plumb, the ridge's length (share); the hem band's depth, merlon count and depth (of H), and the cream's self-light.
+// The cream is a warm tan: a paler cream renders grey-white under this light
+const HORSE_DRAPE_CREAM = new Color3(0.86, 0.66, 0.4);
+const HORSE_DRAPE = { rings: 6, round: 0.6, crest: 0.72, waist: 0.15, band: 0.08, merlons: 16, tooth: 0.16, glow: 0.1 };
 const HORSE_HEM_SHARE = 0.5;
 // The bare pinto keeps its legs as they were: its joint height was set from the old sack hem
 const HORSE_PINTO_HEM = 0.55;
@@ -4089,27 +4091,33 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     if (d < side) return { at: new Vector3(-r, y, straight - d), heading: -Math.PI / 2 };
     return endPoint(r, y, Math.PI + ((d - side) / end) * Math.PI, -straight);
   };
-  const ring = (r: number, y: number): Vector3[] => {
+  // A ring of the drape; `long` draws its chest and rump ends in toward the middle (the dome's upper rings, so the drape rounds over chest and rump too)
+  const ring = (r: number, y: number, long = 1): Vector3[] => {
     const pts: Vector3[] = [];
-    for (let i = 0; i < 40; i++) pts.push(stadium(r, y, i / 40).at);
+    for (let i = 0; i < 40; i++) {
+      const at = stadium(r, y, i / 40).at;
+      at.z *= long;
+      pts.push(at);
+    }
     return pts;
   };
   // [S] draped horse (334; renaissance.jouster.png: the cloth lies over the horse's back and follows the round of the barrel, then falls to the hem; the
   // flat deck with its hard shoulder bevel read as a box). The drape's top is a dome: HORSE_DRAPE.rings rings from a ridge along the back down a quarter
-  // round (each ring's half-width the sine of its angle, raised to HORSE_DRAPE.round, so the sides swell out like the barrel's) to the barrel's middle
+  // round (each ring's half-width the sine of its angle, raised to HORSE_DRAPE.round, so the sides swell out like the barrel's, and its length drawn in
+  // to HORSE_DRAPE.crest at the ridge, so it rounds over chest and rump in side view too) to the barrel's middle
   // HORSE_DRAPE.waist of the back's height up, then the panels fall plumb to the hem
   const profile: Array<readonly [number, number]> = [];
   for (let i = 0; i <= HORSE_DRAPE.rings; i++) {
     const a = (i / HORSE_DRAPE.rings) * Math.PI * 0.5;
     profile.push([Math.max(0.002, Math.sin(a) ** HORSE_DRAPE.round), HORSE_DRAPE.waist + (1.02 - HORSE_DRAPE.waist) * Math.cos(a)]);
   }
-  const rings = profile.map(([r, y]) => ring(rCap * r, backY * y));
+  const rings = profile.map(([r, y]) => ring(rCap * r, backY * y, HORSE_DRAPE.crest + (1 - HORSE_DRAPE.crest) * r));
   rings.push(ring(rCap, hemY));
   part(MeshBuilder.CreateRibbon("hcaparison", { pathArray: rings, closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
   // The hem is crenellated (renaissance.jouster.png: a broad cream band along the bottom with square merlons hanging off it, as wide as the gaps between
   // them): a band HORSE_DRAPE.band of H deep, and HORSE_DRAPE.merlons square teeth HORSE_DRAPE.tooth of H deep evenly round it, each turned to face out.
   // The cream is self-lit (HORSE_DRAPE.glow) so it stays cream in the shade instead of reading grey.
-  const hemMat = mat(scene, new Color3(0.93, 0.8, 0.56), HORSE_DRAPE.glow);
+  const hemMat = mat(scene, HORSE_DRAPE_CREAM, HORSE_DRAPE.glow);
   part(MeshBuilder.CreateRibbon("hhem", { pathArray: [ring(rCap * 1.02, hemY + H * HORSE_DRAPE.band), ring(rCap * 1.02, hemY)], closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), hemMat);
   const perimeter = 2 * (2 * straight + endLong(rCap * 1.03));
   const toothWide = perimeter / HORSE_DRAPE.merlons / 2;
