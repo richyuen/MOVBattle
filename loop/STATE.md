@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 339   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
+Iteration: 340   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,15 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-339 (BASE f0fe549; stats f0fe549, audit 7 units): [S] halfling b empty hands 697a9c6 approved | [S] farmer b low two-handed pitchfork 151102b approved | [S] potion_seller b bottle each hand a682e21+122ce87 approved | [S] hay_baler a hay-bale armour 5acc99a+56a8306 approved | [S] scarecrow a crow wings 185ca19 approved
-338 (BASE fb738c8): da_vinci_tank upper tier hat + scale 2.3 approved. Renaissance done; checkpoint 12/12 GREEN.
+340 (BASE f525109): [S] hay_baler b crooked stick cef515a+4383754+3d12d35+3015a29+228fc78 approved | [P] hay_baler a HAY_BALE.top 1.6 d63de24 approved | [S] farmer a liripipe hood 4ccaced approved | [S] halfling a shaggy mop 9ccfb6c approved | [S] harvester a floppy hat + braids e4fd698 approved | [S] scarecrow a sack mask 44d5b86 approved
+339 (BASE f0fe549): halfling b, farmer b, potion_seller b, hay_baler a, scarecrow a all approved; stats commit + audit of 7 units.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] farmer.halfling (697a9c6) VERDICT: APPROVE CRITERION: farmer.halfling.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remain)
-- GAP: [S] farmer.farmer (151102b) VERDICT: APPROVE CRITERION: farmer.farmer.b FAIL (previous: FAIL) BLOCKERS: 1. one fist at rest, off hand off the shaft; struck: 2
-- GAP: [S] farmer.potion_seller (a682e21 + 122ce87) VERDICT: APPROVE CRITERION: farmer.potion_seller.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remain)
-- GAP: [S] farmer.hay_baler (5acc99a + 56a8306) VERDICT: APPROVE CRITERION: farmer.hay_baler.a FAIL (previous: FAIL) BLOCKERS: struck: 1; 2, 3 open; added: 4 arms across the bale's face
-- GAP: [S] farmer.scarecrow (185ca19) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL) BLOCKERS: struck: 1; 2, 3, 4 open. REGRESSIONS: none
+- GAP: [S] farmer.hay_baler (cef515a +4383754 +3d12d35 +3015a29 +228fc78) VERDICT: APPROVE CRITERION: farmer.hay_baler.b FAIL (previous: FAIL) BLOCKERS: struck: 1. added: 2 stick stands up behind his back, pole-thin
+- GAP: [P] farmer.hay_baler (d63de24) VERDICT: APPROVE CRITERION: farmer.hay_baler.a FAIL (previous: FAIL) BLOCKERS: struck: 4. remaining: 2, 3
+- GAP: [S] farmer.farmer (4ccaced) VERDICT: APPROVE CRITERION: farmer.farmer.a FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2, 3
+- GAP: [S] farmer.halfling (9ccfb6c) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2, 3, 4
+- GAP: [S] farmer.harvester (e4fd698) VERDICT: APPROVE CRITERION: farmer.harvester.a FAIL (previous: FAIL) BLOCKERS: struck: 1. remaining: 2, 3
+- GAP: [S] farmer.scarecrow (44d5b86) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL) BLOCKERS: struck: 2. remaining: 3, 4. REGRESSIONS: none
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Farmer audited 339 (all a/b/c FAIL, d 7/7 PASS after the stats commit). Pickable [P]: hay_baler HAY_BALE.top ~1.6 (fallout of 5acc99a). harvester and wheelbarrow untouched yet.
-- getCloth colours grey out under this light: cream/tan needs self-lit cloth (mf.get("cloth", c, {emissiveIntensity})); ~.2 on (.7,.46,.22) reads tan, .3 on a pale tan reads cream.
-- Look captures (no --iter) need a clean tree incl. untracked files: git stash push -u -- loop/units around them; --units takes a comma list (a,b), not spaces.
-- Vehicles (wheelbarrow) are in vehicleBuilder.ts; a whole-machine scale node beats widening radii. Scarecrow uses visualPreset iconic_scarecrow (unitVisuals getPresetVisual), not its table entry.
-- After any --iter capture rerun stats --batch <batch> --iter N. Write patches as scratchpad python files (utf-8); heredocs with quotes break in bash here.
+- Pickable [P] (fallout of 340 [S]): hay_baler STICK.thick .085; harvester FLOPPY.thick .42 / braid 1.6 / apart .68. potion_seller and wheelbarrow untouched since the audit (wheelbarrow crew likely over the [S] cap: split it).
+- Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissiveIntensity}). Cream/tan needs ~.2-.3.
+- A right-hand prop named "handle" is turned by the animator to a hashed carry; force a carry via the pick line (fork/hayStick .9 = low level carry). Other names ride the fist and may hide.
+- Look captures need a clean tree incl. untracked: git stash push -- <dirty paths> around them; --units takes a comma list. Vehicles live in vehicleBuilder.ts.
+- Write patches as scratchpad python files (open with newline='' to keep EOLs); bash heredocs containing apostrophes break here. After any --iter capture rerun stats --batch <batch> --iter N.
