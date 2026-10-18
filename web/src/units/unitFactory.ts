@@ -1011,11 +1011,19 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
  * short team shoulder wing, a ring of short team tabs below the waist; puffed knee breeches paned in upright stripes, team and cream by turns). Sizes are
  * shares of the chest (W, H, D) and of each limb mesh's own girth and length.
  *   doublet FENCER_DRESS.doublet of the chest round it; FENCER_DRESS.tabs tabs FENCER_DRESS.tab of the chest's height long; shoulder wing FENCER_DRESS.wing of
- *   the arm's girth round, its cream band FENCER_DRESS.band of the arm long under it; breeches FENCER_DRESS.panes panes round each thigh, standing out
- *   FENCER_DRESS.puff of its girth from its middle, over FENCER_DRESS.long of it from the hip, on a team core.
+ *   the arm's girth round, its cream band FENCER_DRESS.band of the arm long under it; the breeches are the thigh rolls (FENCER_ROLL, 337).
  */
-const FENCER_DRESS = { doublet: 1.08, tabs: 8, tab: 0.2, wing: 1.45, band: 0.12, panes: 8, puff: 0.82, long: 0.95 };
-const FENCER_CREAM = new Color3(0.84, 0.66, 0.42);
+const FENCER_DRESS = { doublet: 1.08, tabs: 8, tab: 0.2, wing: 1.45, band: 0.12 };
+const FENCER_CREAM = new Color3(0.8, 0.56, 0.28);
+const FENCER_GLOW = 0.3;
+/*
+ * [S] thigh rolls (337; renaissance.fencer.red.png: each thigh in its own short puffed roll, round and fat, from the hip down about two thirds of the
+ * thigh, paned in upright panes team and tan by turns, a pane as wide as the gap beside it; the plain team thigh shows below it to the knee; the two
+ * rolls stand apart, not one skirt). Each roll is FENCER_ROLL.panes flat-faced pane slices of a lathe, the slices team and self-lit tan by turns:
+ *   FENCER_ROLL.long of the thigh long from the hip; .swell of the thigh's girth across at its middle, .end of it at top and foot; never wider than
+ *   .apart of the gap between the hips, so the two rolls never meet.
+ */
+const FENCER_ROLL = { panes: 8, long: 0.68, swell: 1.9, end: 1.25, apart: 0.92 };
 // [S] boots (336; renaissance.fencer.blue.png: brown knee-high boots, a wide cuff turned down under the knee): shaft .shaft of the shin's girth at its
 // top, cuff .cuff of it at its rim, .cuffLong of the shin long
 const FENCER_BOOTS = { shaft: 1.3, cuff: 1.85, cuffLong: 0.36 };
@@ -1026,7 +1034,7 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   const mf = getMaterialFactory();
   const F = FENCER_DRESS;
   const team = mf.getCloth(teamColor.scale(0.82));
-  const cream = mf.getCloth(FENCER_CREAM);
+  const cream = mf.get("cloth", FENCER_CREAM, { emissiveIntensity: FENCER_GLOW });
   const put = (m: Mesh, mat: Material, parent: TransformNode): Mesh => {
     m.material = mat;
     m.convertToFlatShadedMesh();
@@ -1056,20 +1064,23 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
     const band = put(MeshBuilder.CreateCylinder("fencerBand", { height: long * F.band, diameter: girth * 1.2, tessellation: 7 }, scene), cream, arm);
     band.position.y = long * 0.5 - long * (0.16 + F.band * 0.5);
   }
-  // paned breeches round each thigh: a team core and upright panes, team and cream by turns, bowed out at the middle
+  // a puffed roll round each thigh, paned team and tan by turns (FENCER_ROLL)
+  const R = FENCER_ROLL;
+  const hipsApart = Math.abs(body.leftHip.position.x - body.rightHip.position.x);
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
     const e = leg.getBoundingInfo().boundingBox.extendSize;
-    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2 * F.long;
-    const top = e.y;
-    const core = put(MeshBuilder.CreateCylinder("fencerHose", { height: long, diameterTop: girth * 1.25, diameterBottom: girth * 1.2, tessellation: 8 }, scene), team, leg);
-    core.position.y = top - long * 0.5;
-    for (let i = 0; i < F.panes; i++) {
-      const a = (i / F.panes) * Math.PI * 2;
-      const pane = put(MeshBuilder.CreateCylinder("fencerPane", { height: long * 0.96, diameterTop: girth * 0.32, diameterBottom: girth * 0.3, tessellation: 6 }, scene), i % 2 ? team : cream, leg);
-      pane.scaling.set(1, 1, 0.45);
-      // bowed: the middle stands out F.puff of the girth, the ends tuck in to the core
-      pane.position.set(Math.cos(a) * girth * F.puff * 0.75, top - long * 0.5, Math.sin(a) * girth * F.puff * 0.75);
-      pane.rotation.y = Math.PI / 2 - a;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2 * R.long;
+    const swell = Math.min(girth * R.swell, hipsApart * R.apart) / 2;
+    const end = Math.min(girth * R.end / 2, swell * 0.8);
+    // the roll's side in profile: tucked in at hip and foot, round and full at the middle
+    const shape = [
+      new Vector3(end, -long / 2, 0), new Vector3(swell * 0.9, -long * 0.28, 0), new Vector3(swell, 0, 0),
+      new Vector3(swell * 0.92, long * 0.28, 0), new Vector3(end, long / 2, 0),
+    ];
+    for (let i = 0; i < R.panes; i++) {
+      const pane = put(MeshBuilder.CreateLathe("fencerRollPane", { shape, arc: 1 / R.panes, tessellation: 1, sideOrientation: Mesh.DOUBLESIDE }, scene), i % 2 ? team : cream, leg);
+      pane.rotation.y = (i / R.panes) * Math.PI * 2 + Math.PI / R.panes;
+      pane.position.y = e.y - long / 2;
     }
   }
   // knee-high brown boots: the shaft over the shin, a wide cuff turned down at its top under the knee, brown feet
