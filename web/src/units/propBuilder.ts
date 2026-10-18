@@ -1862,7 +1862,7 @@ function flatPlate(scene: Scene, name: string, outline: number[][], thick: numbe
 const MUSKET = { long: 1.05, grip: 0.27, bore: 0.034, fore: 0.8, stock: 0.02, butt: 0.085, ring: 1.45 };
 const MUSKET_STEEL = new Color3(0.58, 0.58, 0.6);
 const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
-const BRUSH = { long: 0.34, grip: 0.16, butt: 0.05, neck: 0.085, ferrule: 0.6, collar: 0.1, tuft: 0.15, swell: 0.1 };
+const BRUSH = { long: 0.34, grip: 0.16, butt: 0.08, neck: 0.12, ferrule: 0.6, collar: 0.1, tuft: 0.22, swell: 0.1 };
 const BRUSH_WOOD = new Color3(0.6, 0.3, 0.2);
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
