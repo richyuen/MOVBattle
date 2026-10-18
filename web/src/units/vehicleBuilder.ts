@@ -1191,6 +1191,15 @@ const WHEELBARROW = {
   pushZ: -0.62,        // the Traveller's feet
   lean: 0.28,          // the Traveller's forward lean
 };
+/*
+ * [S] The tray (347; farmer.wheelbarrow.blue.png/.red.png, card "wooden planks bolted together to form a rectangular shape; crudely painted with the
+ * team's color and filled with hay"): each side and end is TRAY_PLANK.planks boards stacked with a dark seam between, light warm timber self-lit
+ * TRAY_PLANK.glow; the top board of each side and the floor are painted team colour; a dark bolt head at each board end; heaped with a faceted straw
+ * mound TRAY_PLANK.heap above the rim, wider than it is tall, and the riders sit on the mound's top (seatY), not down in the tray.
+ */
+const TRAY_PLANK = { planks: 3, sideTall: 0.13, seam: 0.008, thick: 0.03, bolt: 0.016, heap: 0.09, heapWide: 0.92, glow: 0.22 };
+const TRAY_WOOD = new Color3(0.62, 0.4, 0.28);
+const TRAY_STRAW = new Color3(0.82, 0.62, 0.3);
 function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const W = WHEELBARROW;
   const root = new TransformNode("wheelbarrow_root", scene);
@@ -1201,21 +1210,39 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const teamPrimary = makeMat(scene, color);
   const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
 
-  // Tray
-  const tray = MeshBuilder.CreateBox("tray", { width: W.trayWide, height: 0.06, depth: W.trayLong }, scene);
+  // Tray: the floor painted team colour, sides and ends of stacked boards (spec at TRAY_PLANK)
+  const P = TRAY_PLANK;
+  const lit = (c: Color3, glow: number) => getMaterialFactory().get("cloth", c, { emissive: c.scale(glow) });
+  const plankWood = lit(TRAY_WOOD, P.glow);
+  const paint = lit(color, 0.12);
+  const boltMat = makeMat(scene, new Color3(0.16, 0.14, 0.13));
+  const tray = MeshBuilder.CreateBox("tray", { width: W.trayWide, height: 0.04, depth: W.trayLong }, scene);
   tray.position.set(0, W.trayY, W.trayZ);
-  tray.parent = rig; tray.material = teamPrimary; allMeshes.push(tray);
-  const sideTall = 0.1;
-  for (const xOff of [-W.trayWide / 2, W.trayWide / 2]) {
-    const side = MeshBuilder.CreateBox("side", { width: 0.03, height: sideTall, depth: W.trayLong }, scene);
-    side.position.set(xOff, W.trayY + sideTall / 2, W.trayZ);
-    side.parent = rig; side.material = wood; allMeshes.push(side);
-  }
-  for (const zOff of [-W.trayLong / 2, W.trayLong / 2]) {
-    const end = MeshBuilder.CreateBox("front", { width: W.trayWide, height: sideTall, depth: 0.03 }, scene);
-    end.position.set(0, W.trayY + sideTall / 2, W.trayZ + zOff);
-    end.parent = rig; end.material = wood; allMeshes.push(end);
-  }
+  tray.parent = rig; tray.material = paint; allMeshes.push(tray);
+  const sideTall = P.sideTall;
+  const board = (P.sideTall - P.seam * (P.planks - 1)) / P.planks;
+  const addBoards = (name: string, w: number, d: number, x: number, z: number, alongX: boolean) => {
+    for (let k = 0; k < P.planks; k++) {
+      const top = k === P.planks - 1;
+      const plank = MeshBuilder.CreateBox(name, { width: w, height: board, depth: d }, scene);
+      plank.position.set(x, W.trayY + board / 2 + k * (board + P.seam), z);
+      plank.parent = rig; plank.material = top ? paint : plankWood; allMeshes.push(plank);
+      // a bolt head at each end of the board, on its outer face
+      for (const e of [-1, 1]) {
+        const bolt = MeshBuilder.CreateBox("trayBolt", { width: P.bolt, height: P.bolt, depth: P.bolt }, scene);
+        if (alongX) bolt.position.set(e * (w / 2 - P.bolt), plank.position.y, z + Math.sign(z) * d * 0.6);
+        else bolt.position.set(x + Math.sign(x) * w * 0.6, plank.position.y, z + e * (d / 2 - P.bolt * 1.5));
+        bolt.parent = rig; bolt.material = boltMat; allMeshes.push(bolt);
+      }
+    }
+  };
+  for (const xOff of [-W.trayWide / 2, W.trayWide / 2]) addBoards("side", P.thick, W.trayLong, xOff, W.trayZ, false);
+  for (const zOff of [-W.trayLong / 2, W.trayLong / 2]) addBoards("front", W.trayWide + P.thick, P.thick, 0, W.trayZ + zOff, true);
+  // The hay heaped in the tray and over its rim
+  const heap = MeshBuilder.CreateIcoSphere("trayHay", { radiusX: W.trayWide * P.heapWide * 0.5, radiusY: sideTall * 0.5 + P.heap, radiusZ: W.trayLong * 0.48, subdivisions: 2, flat: true }, scene);
+  heap.position.set(0, W.trayY + sideTall * 0.5, W.trayZ);
+  heap.parent = rig; heap.material = lit(TRAY_STRAW, 0.25); allMeshes.push(heap);
+  jitterVertices(heap, 0.012, 347);
 
   // Wheel at front (+Z), under the tray's nose
   const wheelZ = W.trayZ + W.trayLong / 2 + 0.06;
@@ -1233,7 +1260,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     handle.parent = rig; handle.material = wood; allMeshes.push(handle);
   }
 
-  const seatY = W.trayY + 0.03 + sideTall; // sat up on the load, level with the rim, not down in the tray
+  const seatY = W.trayY + sideTall + P.heap * 0.85; // sat on top of the hay heaped over the rim, not down in the tray
   // The Farmer, front: sat facing ahead, thighs out over the tray sides, shins hanging
   addOperator(scene, rig, allMeshes, 0, 0, W.frontSeat, color, (man) => {
     man.root.position.y = seatY - man.hip.position.y;
