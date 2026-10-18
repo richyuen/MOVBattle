@@ -490,9 +490,10 @@ export class RuntimeUnit {
     this.animator.noteReload(cooldown);
     // A spinning drum (the da Vinci tank) keeps turning from this volley through the wait for the next one
     this._drumTimer = Math.max(this._drumTimer, cooldown + DRUM_SPIN.linger);
-    // A catapult throws (CATAPULT_THROW)
-    this._throwT = 0;
+    // A catapult throws (CATAPULT_THROW): the shot leaves on this step, so the arm is already half way through its whip and the bucket empty
+    this._throwT = CATAPULT_THROW.swing * 0.5;
     this._throwCd = cooldown;
+    this._throwArm(0);
   }
 
   // A catapult's arm pivot and the shot in its bucket (CATAPULT_ARM), looked up once; time since its last throw (-1: none yet) and that shot's cooldown
