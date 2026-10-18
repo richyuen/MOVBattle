@@ -1,4 +1,4 @@
-import { Color3, Node, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, Mesh, Node, TransformNode, Vector3 } from "@babylonjs/core";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import {
   AttackType, TargetPriority,
@@ -1779,6 +1779,14 @@ export class SimulationSystem {
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z, head: { x: head.x, y: head.y, z: head.z } });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
+    // A painter's brush throws its paint as it lands (card Appearance): blobs of the tuft's own paint leave its point, on along the swing
+    const tuft = attacker.body.rightHand?.getDescendants(false, (n) => n.name === "brushPoint")[0];
+    if (this.visualEffects && tuft instanceof Mesh && tuft.material && tuft.isEnabled()) {
+      const chain: TransformNode[] = [];
+      for (let n: Node | null = tuft; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      this.visualEffects.spawnPaintSplotches(tuft.getAbsolutePosition(), target.position.subtract(attacker.position), tuft.material);
+    }
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
   }
 

@@ -1,6 +1,6 @@
 import {
   Scene, Vector3, Quaternion, Mesh, MeshBuilder, Color3, TransformNode,
-  PBRMetallicRoughnessMaterial, ParticleSystem, StandardMaterial, DynamicTexture,
+  PBRMetallicRoughnessMaterial, ParticleSystem, StandardMaterial, DynamicTexture, Material,
 } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
 import { createSmoke, createSparks, createFire, createDust } from "./particleFactory";
@@ -20,6 +20,8 @@ interface TimedEffect {
 // Shed gear (see VisualEffects.spawnGearLitter): how far off it lands, how far a board leans back off upright, and how far a weapon's grip end stands off the ground.
 // A da Vinci ball's break-up (see spawnShatter): shards, size (m), outward and upward speed (m/s), seconds
 const SHATTER = { count: 7, size: 0.11, speed: 3.2, up: 3.0, last: 0.9 };
+// Paint flung off the painter's brush (see spawnPaintSplotches): blobs, size (m), speed along the swing, spread across it and up (m/s), seconds
+const PAINT_SPLOTCH = { count: 5, size: 0.09, speed: 3.4, spread: 1.6, up: 2.2, last: 1.0 };
 const GEAR_TOSS_MIN = 0.6;
 const GEAR_TOSS_MAX = 1.1;
 const GEAR_BOARD_LEAN = 0.35;
@@ -695,6 +697,58 @@ export class VisualEffects {
     });
   }
   private _shatterMat: ReturnType<ReturnType<typeof getMaterialFactory>["createUnique"]> | undefined;
+  // ══════════════════ PAINT SPLOTCHES ══════════════════
+  /**
+   * Paint flying off the painter's brush as it lands (renaissance.painter card Appearance: "when the Painter attacks with its brush, splotches of paint fly
+   * through the air"): PAINT_SPLOTCH.count faceted blobs of the tuft's own paint, PAINT_SPLOTCH.size across and squashed flat, thrown on along the swing
+   * (along) at PAINT_SPLOTCH.speed, fanned across it and up, tumbling and falling under gravity; each one that reaches the ground lies there flat as a splat
+   * until the effect ends. paint is the brush's own material (shared, never disposed here).
+   */
+  spawnPaintSplotches(position: Vector3, along: Vector3, paint: Material): void {
+    const root = new TransformNode("paintSplotches", this._scene);
+    root.position = position.clone();
+    const floorY = -root.position.y + 0.02;
+    const fwd = new Vector3(along.x, 0, along.z);
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const across = new Vector3(-fwd.z, 0, fwd.x);
+    const blobs: { mesh: Mesh; velocity: Vector3; spin: Vector3; landed: boolean }[] = [];
+    for (let i = 0; i < PAINT_SPLOTCH.count; i++) {
+      const mesh = MeshBuilder.CreatePolyhedron("paintSplotch", { type: i % 2 === 0 ? 1 : 3, size: 0.5 }, this._scene);
+      mesh.material = paint;
+      mesh.parent = root;
+      const size = PAINT_SPLOTCH.size * (0.6 + Math.random() * 0.8);
+      mesh.scaling.set(size * 1.3, size * 0.7, size);
+      mesh.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
+      const fan = (i / Math.max(1, PAINT_SPLOTCH.count - 1) - 0.5) * 2 + (Math.random() - 0.5) * 0.4;
+      const speed = PAINT_SPLOTCH.speed * (0.6 + Math.random() * 0.6);
+      blobs.push({
+        mesh,
+        velocity: fwd.scale(speed).addInPlace(across.scale(fan * PAINT_SPLOTCH.spread)).addInPlace(new Vector3(0, PAINT_SPLOTCH.up * (0.6 + Math.random() * 0.8), 0)),
+        spin: new Vector3(4 + Math.random() * 6, Math.random() * 4, 4 + Math.random() * 6),
+        landed: false,
+      });
+    }
+    this._effects.push({
+      root,
+      remaining: PAINT_SPLOTCH.last,
+      update: (dt) => {
+        for (const b of blobs) {
+          if (b.landed) continue;
+          b.velocity.y -= 12 * dt;
+          b.mesh.position.addInPlace(b.velocity.scale(dt));
+          b.mesh.rotation.addInPlace(b.spin.scale(dt));
+          if (b.mesh.position.y < floorY) {
+            // A splat: flat on the grass where it fell
+            b.mesh.position.y = floorY;
+            b.mesh.rotation.set(0, b.mesh.rotation.y, 0);
+            b.mesh.scaling.set(b.mesh.scaling.x * 1.4, b.mesh.scaling.y * 0.25, b.mesh.scaling.z * 1.6);
+            b.landed = true;
+          }
+        }
+      },
+    });
+  }
 
   // ══════════════════ SHED GEAR ══════════════════
   /**
