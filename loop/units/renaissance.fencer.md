@@ -6,20 +6,20 @@ a FAIL (1 since 327)
  3. body in unit_renaissance.fencer_idle is a plain team tunic with skirt — TABS: team doublet with cream shoulder bands over puffed breeches striped team/cream (ref: renaissance.fencer.red.png)
  4. no boots in unit_renaissance.fencer_idle — TABS: brown knee-high cuffed boots (ref: renaissance.fencer.blue.png)
 b PASS (330)
-c FAIL (1 since 330)
- 2. in unit_renaissance.fencer_windup the rapier lies back along the forearm, point behind him — TABS: guard with the point toward the foe (ref: renaissance.fencer.png)
- 3. in unit_renaissance.fencer_flight the blade stands straight up on a raised arm — TABS: arm and blade stay level out on the lunge, then a step back (ref: card Characteristics)
+c FAIL (2 since 330)
  4. in unit_renaissance.fencer_release no lunge in the legs, rear leg not long — TABS: front foot well in, rear leg long behind (ref: renaissance.fencer.png)
 d PASS (cost 150, hp 0.82x vs 0.88x, dmg 0.67x, cd 1.00x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c point-first rapier — blocker 2: rapier rest point-forward out of the fist so guard, lunge and hold lead with the point, arm level through LUNGE.hold — ref: renaissance.fencer.png — ours: unit_renaissance.fencer_windup.png
+1. [S] c lunge legs — blocker 4: leg layer for the lunge (front knee bent forward, rear leg long behind, hip sunk) — ref: renaissance.fencer.png — ours: unit_renaissance.fencer_release.png
 2. [S] a hair and moustache — blocker 2 — ref: renaissance.fencer.blue.png — ours: unit_renaissance.fencer_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 327 | cavalier hat [S] (fbe32ce + 0acead3) | a | approved
 328 | no back slab [S] (68ad77a) | b | approved
 330 | lunge [S] (841edec + f287302 + fa4c27d) | c | approved
 330 | cup hilt [S] (d255f45) | b | approved
+331 | point-first rapier [S] (d2b3a7b) | c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- The rapier's rest runs blade-up the forearm (hand +y); _turnRapier half-turns it point-first only in the attack. Probe 330: in a 1v1 the squire's blow lands on the hit frame (flinch); _lungeOut carries it through.
+- _pointRapier (the last carry layer) stands the rapier point-first along his front in every living state (RAPIER_POINT.guard, level on the lunge); _turnRapier is gone.
+- _animateLunge sets the leg joints, yet the release shot shows the legs near together: probe what overrides them before an [S] on blocker 4.
 - Critic 330 nit on the hilt: cup small and cone-deep vs TABS's broad shallow bowl (RAPIER.cup, cupDeep).
