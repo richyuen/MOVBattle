@@ -174,13 +174,18 @@ const PALETTE_OUT = { side: 0.24, fwd: 0.1, drop: 0.07, tip: 0.35 };
 /*
  * [S] lunge (330; card Characteristics "thrusts forward to attack with its foil then steps back"; renaissance.fencer.png: the sword arm straight out level
  * at the foe, the blade on its line, the front foot well in, the rear leg long). A rapier is not brought down on a man (no _aimBlow): it is thrust.
- * Guard (to the commit): fist drawn in by the chest, elbow folded LUNGE.guardElbow, sword shoulder turned forward LUNGE.turn, the rapier turned point-first
- * in the fist (the blade runs out past the fingers, not up the forearm). Lunge (commit to the land): arm out level (LUNGE.reach), elbow straight, trunk
+ * Guard (to the commit): fist drawn in by the chest, elbow folded LUNGE.guardElbow, sword shoulder turned forward LUNGE.turn, the rapier point-first
+ * (see RAPIER_POINT). Lunge (commit to the land): arm out level (LUNGE.reach), elbow straight, trunk
  * pitched in LUNGE.pitch, the sword-side leg out in front (LUNGE.front, knee LUNGE.knee), the rear leg long behind (LUNGE.back), the hip carried
- * LUNGE.step of its height toward the foe and sunk. Held LUNGE.hold, then the step back: the hip LUNGE.back step behind its stand, arm back to the guard,
- * and over the last LUNGE.unturn of the attack the rapier is turned back up the forearm.
+ * LUNGE.step of its height toward the foe and sunk. Held LUNGE.hold, then the step back: the hip LUNGE.back step behind its stand, arm back to the guard.
  */
-const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -0.85, knee: 0.6, back: 0.5, step: 0.45, retreat: 0.2, hold: 0.08, unturn: 0.2 };
+const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pitch: 0.3, front: -0.85, knee: 0.6, back: 0.5, step: 0.45, retreat: 0.2, hold: 0.16 };
+/*
+ * [S] point-first rapier (331; renaissance.fencer.png: in guard the point is toward the foe; card "thrusts forward ... then steps back"). The rapier no longer
+ * rests up the forearm and half-turns for the attack: over every living state it is stood in the world point-first along his front (_pointRapier, the last
+ * carry layer), lifted RAPIER_POINT.guard above level in guard and brought level as the lunge goes out, the hilt kept in the fist. LUNGE.hold keeps the arm out.
+ */
+const RAPIER_POINT = { guard: 0.3 };
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
 // cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
@@ -1252,7 +1257,6 @@ export class ProceduralAnimator {
       this._lungeStep.setAll(0);
     }
     this._lungeOut = 0;
-    if (this._rapierProp && this._rapierProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "blade_slash")) this._turnRapier(0);
 
     // a chop cut short leaves the halberd stood at its angle: back to its rest in the fist
     if (this._halberdProp && this._halberdProp.node.rotationQuaternion && !(this._state === AnimState.Attacking && this._attackMotion === "thrust")) this._poseHalberd(0, 0);
@@ -1559,6 +1563,7 @@ export class ProceduralAnimator {
     this._carryBoulder();
     this._holdPalette();
     this._couchLance();
+    this._pointRapier();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -3199,20 +3204,46 @@ export class ProceduralAnimator {
   private readonly _lungeStep = new Vector3(0, 0, 0);
   private _lungeOut = 0;
 
-  // The rapier turned point-first in the fist by k (0 its rest up the forearm, 1 out past the fingers): a half turn about the hand's x through the fist
-  private _turnRapier(k: number): void {
+  // The blade's lift above level that the lunge last asked for (see RAPIER_POINT), read by _pointRapier while the lunge runs
+  private _rapierLift = 0;
+  /** The rapier stood in the world point-first along his front (see RAPIER_POINT), its hilt kept in the fist, over every living state. */
+  private _pointRapier(): void {
     const r = this._rapier();
     if (!r) return;
-    if (k <= 0.001) {
+    const w = this._state === AnimState.Dead || this.walkStyle === "quadruped" ? 0 : 1 - Math.min(1, this._limp);
+    if (w <= 0.001) {
       if (r.node.rotationQuaternion) {
         r.node.rotationQuaternion = null;
         r.node.position.copyFrom(r.grip);
       }
       return;
     }
-    const half = Quaternion.RotationAxis(Vector3.Right(), Math.PI * k);
-    r.node.rotationQuaternion = half.multiply(r.rest);
-    r.node.position.copyFrom(Vector3.TransformCoordinates(r.grip, Matrix.RotationAxis(Vector3.Right(), Math.PI * k)));
+    const lunging = this._state === AnimState.Attacking && this._attackMotion === "blade_slash";
+    const lift = lunging ? this._rapierLift : RAPIER_POINT.guard;
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    // The blade (+y) out along his front, lifted `lift`; the quillons (x) level across it
+    const y = fwd.scale(Math.cos(lift)).addInPlace(new Vector3(0, Math.sin(lift), 0)).normalize();
+    const x = Vector3.Cross(Vector3.Up(), y).normalize();
+    const z = Vector3.Cross(x, y).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, z, world);
+    const handRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    const q = Quaternion.Slerp(r.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    r.node.rotationQuaternion = q;
+    // The hilt stays where it sat in the fist: the point of the blade's frame that rested on the hand's origin is kept on it
+    const restInv = Matrix.Identity();
+    Quaternion.Inverse(r.rest).toRotationMatrix(restInv);
+    const turn = Matrix.Identity();
+    q.toRotationMatrix(turn);
+    r.node.position.copyFrom(Vector3.TransformCoordinates(Vector3.TransformCoordinates(r.grip, restInv), turn));
   }
 
   /** The fencer's thrust and step back (see LUNGE). */
@@ -3250,11 +3281,8 @@ export class ProceduralAnimator {
     this._lungeStep.set(0, 0, reach);
     b.hip.position.addInPlace(this._lungeStep);
     this._idleSink = Math.max(this._idleSink, this._hipRest * (1 - Math.cos(Math.abs(LUNGE.front) * 0.75)) * out);
-    this._turnRapier(Math.min(g * 1.5, 1) * (1 - smooth((progress - (1 - LUNGE.unturn)) / LUNGE.unturn)));
-    if (progress >= 1) {
-      this._turnRapier(0);
-      this._state = AnimState.Idle;
-    }
+    this._rapierLift = RAPIER_POINT.guard * (1 - out);
+    if (progress >= 1) this._state = AnimState.Idle;
   }
 
   private _animateBladeSlash(dt: number): void {
