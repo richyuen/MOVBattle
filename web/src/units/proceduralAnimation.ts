@@ -118,6 +118,13 @@ const SCYTHE_SPIN = Math.PI / 2;
  * with the crows on his elbows again.
  */
 const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07, a: 0.5, after: 0.6 };
+/*
+ * [S] Big Crow Wings hover (347; card "a pair of Big Crow Wings, keeping them hovered", farmer.scarecrow.png: he hangs in the air feet clear of the path, wings
+ * spread): the scarecrow's whole body is held HOVER.lift of his height off the turf (the hip carried up; the sim's footing is untouched, so blows and the
+ * crow throw still start where they did), bobbing HOVER.bob of his height at HOVER.rate rad/s, and each wing (its wingRoot on the torso) beats slowly about
+ * its spread, HOVER.beat rad up and down in time with the bob (down-beat lifts him). A knocked-down or dead scarecrow drops to the ground (limp, Dead).
+ */
+const HOVER = { lift: 0.13, bob: 0.025, rate: 2.4, beat: 0.28, rateIn: 3 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 /*
  * [S] the harvester's sweep (345; card Characteristics "swing and cut ... sweep through groups of fragile units at once, with even enough power to send one
@@ -2486,13 +2493,19 @@ export class ProceduralAnimator {
     this._reloadLeft = seconds;
     this._sinceVolley = 0;
   }
+  // The scarecrow's hover (HOVER): how far up he is now (0-1), the beat's clock, and his wings with their spread
+  private _hoverW = 0;
+  private _hoverT = 0;
+  private _wings: { node: TransformNode; spread: number }[] = [];
   private _holdTPose(dt: number): void {
     const b = this._body;
     if (this._tPose === undefined) {
       const on = b.rightHand.getChildren().some((n) => n.name === "crowHeldBody");
       this._tPose = on ? { perches: [b.leftShoulder, b.rightShoulder].flatMap((sh) => sh.getChildren().filter((n): n is TransformNode => n.name === "perchedCrow")) } : null;
+      if (on) this._wings = b.torso.getChildren().filter((n): n is TransformNode => n.name === "wingRoot").map((node) => ({ node, spread: node.rotation.z }));
     }
     if (!this._tPose) return;
+    this._hover(dt);
     // He holds his arms out through the attack too: only death lets them go
     const posed = this._state !== AnimState.Dead;
     this._tPoseW += ((posed ? 1 : 0) - this._tPoseW) * Math.min(1, dt * TPOSE.rate);
@@ -2527,6 +2540,23 @@ export class ProceduralAnimator {
       const elbow = shoulder === b.leftShoulder ? b.leftElbow : b.rightElbow;
       const up = new Vector3(0, lift, 0).rotateByQuaternionToRef(inv, new Vector3()).scaleInPlace(1 / Math.max(0.001, shoulder.absoluteScaling.y));
       perch.position.copyFrom(elbow.position).addInPlace(up);
+    }
+  }
+
+  /** The scarecrow held up on his wings (spec at HOVER). */
+  private _hover(dt: number): void {
+    const b = this._body;
+    const up = this._state !== AnimState.Dead ? 1 - Math.min(1, this._limp) : 0;
+    this._hoverW += (up - this._hoverW) * Math.min(1, dt * HOVER.rateIn);
+    this._hoverT += dt * HOVER.rate;
+    const beat = Math.sin(this._hoverT);
+    const height = b.metrics.overallHeight;
+    this._hipRest ??= b.hip.position.y;
+    // the hip is set from its rest every frame (update), so the lift is laid on afresh each frame
+    b.hip.position.y += height * (HOVER.lift + HOVER.bob * beat) * this._hoverW;
+    for (const wing of this._wings) {
+      const side = Math.sign(wing.node.position.x) || 1;
+      wing.node.rotation.z = wing.spread + side * HOVER.beat * Math.cos(this._hoverT) * this._hoverW;
     }
   }
 
