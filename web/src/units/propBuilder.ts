@@ -1,5 +1,5 @@
 import {
-  Scene, Mesh, MeshBuilder, Color3, Vector3, Quaternion, TransformNode,
+  Scene, Mesh, MeshBuilder, Color3, Vector3, Quaternion, Matrix, TransformNode,
   PBRMetallicRoughnessMaterial, VertexBuffer, VertexData,
 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
@@ -1164,6 +1164,9 @@ export function attachProps(
       if (config.shield === "kite") shield.scaling.x *= 1.4;
       // The slab's length runs up the man, not along the forearm that carries it (a lapped board is stood up by the wall instead)
       if (config.shield === "slab") shield.rotation.x = Math.PI / 2;
+      // A rider's heater is not laid along his forearm like a tray (329: face up, edge-on from the side): stood upright on the arm held out over the horse's
+      // neck, its point down and its face turned out to his off side (its +y onto the hand's +z, its face +z onto the hand's -x)
+      if (config.shield === "heater") Quaternion.FromRotationMatrix(Matrix.FromValues(0, -1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 1)).toEulerAnglesToRef(shield.rotation);
       // Strapped up the forearm and carried across the chest, not dangling at the hip
       shield.position.set(0.1 * scale, (round ? 0.22 : 0.14) * scale, 0.2 * scale);
     }
