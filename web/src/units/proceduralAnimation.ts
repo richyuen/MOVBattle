@@ -159,6 +159,12 @@ const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown:
  */
 const PALETTE_HOLD = { raise: -1.0, out: -0.55, elbow: -1.2, sway: 0.05 };
 /*
+ * [S] palette out and face-up (331; renaissance.painter.jpg: the palette out to his off side at shoulder height, tilted face-up, the body and the brush clear
+ * of it). Over PALETTE_HOLD the off hand is solved (_offArmTo) onto a point beside the off shoulder, PALETTE_OUT.side of his height out, .fwd ahead and .drop
+ * below, in the body's frame (the swing's trunk twist does not bring it round in front), and the board stood in the world face-up, tipped .tip to his front.
+ */
+const PALETTE_OUT = { side: 0.24, fwd: 0.1, drop: 0.07, tip: 0.35 };
+/*
  * [S] lunge (330; card Characteristics "thrusts forward to attack with its foil then steps back"; renaissance.fencer.png: the sword arm straight out level
  * at the foe, the blade on its line, the front foot well in, the rear leg long). A rapier is not brought down on a man (no _aimBlow): it is thrust.
  * Guard (to the commit): fist drawn in by the chest, elbow folded LUNGE.guardElbow, sword shoulder turned forward LUNGE.turn, the rapier turned point-first
@@ -1809,20 +1815,49 @@ export class ProceduralAnimator {
     lance.node.rotationQuaternion = Quaternion.Slerp(lance.rest, Quaternion.FromRotationMatrix(world.multiply(parent.transpose())), w);
   }
 
-  // The painter's palette arm (see PALETTE_HOLD): held up at chest height over whatever the pose layers made of the off arm
-  private _palette: TransformNode | null | undefined = undefined;
+  // The painter's palette arm (see PALETTE_HOLD and PALETTE_OUT): held out beside him over whatever the pose layers made of the off arm
+  private _palette: { node: TransformNode; rest: Quaternion } | null | undefined = undefined;
   private _holdPalette(): void {
     if (this._palette === undefined) {
-      this._palette = this._body.leftHand.getChildren().find((n): n is TransformNode => n.name === "palette") ?? null;
+      const node = this._body.leftHand.getChildren().find((n): n is TransformNode => n.name === "palette");
+      this._palette = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
     }
     if (!this._palette || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
     const k = 1 - Math.min(1, this._limp);
-    if (k <= 0.01) return;
+    if (k <= 0.01) {
+      this._palette.node.rotationQuaternion = null;
+      return;
+    }
     const b = this._body;
     const sway = Math.sin((this._time + this._wobblePhase) * 2.1) * PALETTE_HOLD.sway;
+    // The arm's rest first (the solve below starts from it), then the hand solved onto a point beside the off shoulder, set off the body's own frame and
+    // not the trunk's, so the swing's twist does not carry the board round in front of him
     b.leftShoulder.rotation.x += (PALETTE_HOLD.raise + sway - b.leftShoulder.rotation.x) * k;
     b.leftShoulder.rotation.z += (PALETTE_HOLD.out - b.leftShoulder.rotation.z) * k;
     b.leftElbow.rotation.x += (PALETTE_HOLD.elbow - sway - b.leftElbow.rotation.x) * k;
+    for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const side = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.leftShoulder.position.x) || -1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const shoulder = b.leftShoulder.getAbsolutePosition();
+    const point = shoulder.add(side.scale(PALETTE_OUT.side * height)).addInPlace(fwd.scale(PALETTE_OUT.fwd * height))
+      .addInPlace(new Vector3(0, -PALETTE_OUT.drop * height + sway * 0.05, 0));
+    this._offArmTo(point, k, 2);
+    // The board stood in the world: face (its +z) up and tipped PALETTE_OUT.tip toward his front, its long way (+x) out from him, the thumb notch at the hand
+    for (const n of [b.leftShoulder, b.leftElbow, b.leftHand]) n.computeWorldMatrix(true);
+    const z = Vector3.Up().scale(Math.cos(PALETTE_OUT.tip)).addInPlace(fwd.scale(Math.sin(PALETTE_OUT.tip)));
+    const x = side.subtract(z.scale(Vector3.Dot(side, z))).normalize();
+    const y = Vector3.Cross(z, x).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, z, world);
+    const handRot = new Quaternion();
+    b.leftHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    const local = Quaternion.FromRotationMatrix(world.multiply(hand.transpose()));
+    this._palette.node.rotationQuaternion = Quaternion.Slerp(this._palette.rest, local, k);
   }
 
   // The board strapped to the shield hand, if this body carries one big enough to stand behind (a buckler is not). Looked up on first use: props go on after the animator is made.
