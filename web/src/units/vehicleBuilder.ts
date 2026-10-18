@@ -1206,6 +1206,19 @@ const TRAY_STRAW = new Color3(0.82, 0.62, 0.3);
  * three grey curled tines on a crossbar at its head; the Apple Thrower holds a red faceted apple CREW_APPLE.r across in his raised fist, a green leaf on it.
  * Each prop is set in the cart's frame and parented to the fist (holdInFist), so it rides the man's arm.
  */
+/*
+ * [S] The wheel, braces and legs (348; farmer.wheelbarrow.red.png, card "a single wheel at the front with two supporting legs ... The handles, legs and
+ * braces are also made out of wood, bolted to the tray. The wheel is made out of a cut log, with its center bolted to the brace"): the wheel is a slice of
+ * log LOG_WHEEL.d across and .thick wide: a dark bark rim round a light end-grain face that stands a little proud of the bark on both sides, a darker
+ * growth ring .ring of the face across on each, and a dark bolt hub through the middle; on each side of it a wooden brace runs from the hub up and back
+ * to the tray's floor .braceBack behind its nose; under the tray's back end two wooden legs stand down to .legFoot off the ground, splayed out a little,
+ * a bolt head where each meets the tray. Wood self-lit (.glow) so it reads wood and not black. Rig units.
+ */
+const LOG_WHEEL = { d: 0.34, thick: 0.08, bark: 0.02, ring: 0.55, hub: 0.05, brace: 0.022, braceBack: 0.16, leg: 0.03, legFoot: 0.02, legIn: 0.1, splay: 0.04, glow: 0.18 };
+const LOG_BARK = new Color3(0.36, 0.22, 0.14);
+const LOG_GRAIN = new Color3(0.82, 0.62, 0.42);
+const LOG_RING = new Color3(0.64, 0.42, 0.28);
+const CART_WOOD = new Color3(0.52, 0.3, 0.2);
 const CREW_FORK = { long: 0.72, butt: 0.2, thick: 0.013, tines: 3, tine: 0.2, spread: 0.055, curl: 0.4, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
 const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
 function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offset: Vector3, rigScale: number): void {
@@ -1271,15 +1284,54 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
 
   // Wheel at front (+Z), under the tray's nose
   const wheelZ = W.trayZ + W.trayLong / 2 + 0.06;
-  const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.07, diameter: 0.34, tessellation: 12 }, scene);
-  wheel.position.set(0, 0.17, wheelZ);
+  // ...a cut log: bark rim, end-grain faces with a growth ring, a bolted hub (spec at LOG_WHEEL)
+  const L = LOG_WHEEL;
+  const axleY = L.d / 2;
+  const wheel = MeshBuilder.CreateCylinder("wheel", { height: L.thick, diameter: L.d, tessellation: 11 }, scene);
+  wheel.position.set(0, axleY, wheelZ);
   wheel.rotation.z = Math.PI / 2;
-  wheel.parent = rig; wheel.material = wood; allMeshes.push(wheel);
+  wheel.parent = rig; wheel.material = lit(LOG_BARK, L.glow); allMeshes.push(wheel);
+  const face = MeshBuilder.CreateCylinder("wheelGrain", { height: L.thick + 0.008, diameter: L.d - L.bark * 2, tessellation: 11 }, scene);
+  face.parent = wheel; face.material = lit(LOG_GRAIN, L.glow); allMeshes.push(face);
+  const ring = MeshBuilder.CreateCylinder("wheelRing", { height: L.thick + 0.012, diameter: (L.d - L.bark * 2) * L.ring, tessellation: 9 }, scene);
+  ring.parent = wheel; ring.material = lit(LOG_RING, L.glow); allMeshes.push(ring);
+  const inner = MeshBuilder.CreateCylinder("wheelGrainCore", { height: L.thick + 0.016, diameter: (L.d - L.bark * 2) * L.ring * 0.7, tessellation: 9 }, scene);
+  inner.parent = wheel; inner.material = face.material; allMeshes.push(inner);
+  const hub = MeshBuilder.CreateCylinder("wheelHub", { height: L.thick + 0.06, diameter: L.hub, tessellation: 6 }, scene);
+  hub.parent = wheel; hub.material = boltMat; allMeshes.push(hub);
+  // ...held on a brace each side, from the hub up and back to the tray's floor
+  const braceWood = lit(CART_WOOD, L.glow);
+  for (const side of [-1, 1]) {
+    const from = new Vector3(side * (L.thick / 2 + 0.035), axleY, wheelZ);
+    const to = new Vector3(side * (W.trayWide / 2 - 0.04), W.trayY - 0.02, W.trayZ + W.trayLong / 2 - L.braceBack);
+    const span = to.subtract(from);
+    const brace = MeshBuilder.CreateBox("wheelBrace", { width: L.brace, height: L.brace * 1.6, depth: span.length() }, scene);
+    brace.position.copyFrom(from.add(to).scale(0.5));
+    brace.rotation.set(-Math.atan2(span.y, Math.hypot(span.x, span.z)), Math.atan2(span.x, span.z), 0);
+    brace.parent = rig; brace.material = braceWood; allMeshes.push(brace);
+    const bolt = MeshBuilder.CreateBox("braceBolt", { width: 0.02, height: 0.02, depth: 0.02 }, scene);
+    bolt.position.set(to.x + side * 0.012, to.y, to.z);
+    bolt.parent = rig; bolt.material = boltMat; allMeshes.push(bolt);
+  }
+  // ...and two legs under the tray's back end, standing down to just off the ground
+  for (const side of [-1, 1]) {
+    const topAt = new Vector3(side * (W.trayWide / 2 - 0.05), W.trayY - 0.02, W.trayZ - W.trayLong / 2 + L.legIn);
+    const footAt = new Vector3(side * (W.trayWide / 2 - 0.05 + L.splay), L.legFoot, topAt.z - 0.02);
+    const span = footAt.subtract(topAt);
+    const leg = MeshBuilder.CreateBox("cartLeg", { width: L.leg, height: span.length(), depth: L.leg }, scene);
+    leg.position.copyFrom(topAt.add(footAt).scale(0.5));
+    leg.rotation.z = Math.atan2(span.x, -span.y) * -1;
+    leg.rotation.x = Math.atan2(span.z, -span.y);
+    leg.parent = rig; leg.material = braceWood; allMeshes.push(leg);
+    const bolt = MeshBuilder.CreateBox("legBolt", { width: 0.02, height: 0.02, depth: 0.02 }, scene);
+    bolt.position.set(topAt.x + side * (L.leg / 2 + 0.004), topAt.y - 0.03, topAt.z);
+    bolt.parent = rig; bolt.material = boltMat; allMeshes.push(bolt);
+  }
 
   // Handles: from the wheel's axle along under the tray, out the back to the Traveller's fists
   const handleBack = W.pushZ + 0.2;
   for (const xOff of [-0.17, 0.17]) {
-    const from = new Vector3(xOff * 0.4, 0.17, wheelZ);
+    const from = new Vector3(xOff * 0.4, axleY, wheelZ);
     const to = new Vector3(xOff, 0.4, handleBack);
     const handle = MeshBuilder.CreateTube("handle", { path: [from, new Vector3(xOff * 0.9, W.trayY - 0.04, W.trayZ - W.trayLong / 2), to], radius: 0.016, tessellation: 6 }, scene);
     handle.parent = rig; handle.material = wood; allMeshes.push(handle);
