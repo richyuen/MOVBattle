@@ -18,9 +18,10 @@ d PASS (cost 80, hp 0.74x, dmg 0.67x, cd 1.30x)
 340 | liripipe hood, leaf-cut collar (LIRIPIPE, pointed_cowl rebuilt) [S] (4ccaced) | a | approved
 341 | white cuffed socks, brown slip-on shoes (FARMER_SOCK) [S] (3c6b4c5) | a | approved
 342 | fork carried across the hips in both fists (FORK_CARRY) [S] (8c2de8f +576a2bf +ee4bf48) | b | rejected
+346 | forkShaft low carry (FORK_LOW) [S] (e75d76c) | b | dropped
 ## Rejected (last 4)
 - fork carried across the hips [S] [1] — 342: FORK_CARRY attitude, shaft "shaft" turned by the carry — off fist floats above the shaft, fork points forward like a couched lance, windup one-handed with tines in the dirt
 ## Notes (max 3 lines)
-- The fork's root mesh is named "shaft" (not in the carry's turnable-prop regex), so the carry tip never turns it; it rides the fist's angle. 342 found carry +z is forward.
+- Fork root "shaft" is not turned by the carry. 346: as forkShaft + FORK_LOW the shaft lay across the hips but both fists stayed off it.
 - 340 critic: liripipe tapers to a thin horn-like hook; TABS a fat sausage tail near the crown width along most of it.
 - 341 critic: shoes read grey-white at lineup distance (TABS brown), sock tops a bit bulky.

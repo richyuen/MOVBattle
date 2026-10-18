@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-336 | chanfron (493017a) | renaissance.jouster.a | approved
-336 | moustache and goatee (3ce4ab9) | renaissance.musketeer.a | approved
-336 | cuffed knee boots (0267ef9) | renaissance.fencer.a | approved
-336 | tan tabard, proud belt (500f5e0) | renaissance.halberd.a | approved
-336 | striped doublet (921719c) | renaissance.balloon_archer.a | approved
 337 | paned thigh rolls (d8407ce +1) | renaissance.fencer.a | approved
 337 | vest hem at the waist (780101e) | renaissance.musketeer.a | approved
 337 | caparison following the barrel (f277bbf) | renaissance.jouster.a | approved
@@ -55,6 +50,11 @@ for 25 iterations.
 345 | low level sweep + fling (8bd49db +c11f873) | farmer.harvester.c | rejected
 345 | T held through the throw, A-pose reload (29f6cf4) | farmer.scarecrow.c | approved
 345 | Halfling Grab cling (b0d26ea) | farmer.halfling.c | approved
+346 | three crew on the cart (4ecb105) | farmer.wheelbarrow.a | approved
+346 | scarecrow clothes (5cd3e3a) | farmer.scarecrow.a | approved
+346 | braids to the chest, team bands (909cf43) | farmer.harvester.a | rejected
+346 | fork low across front in both fists (e75d76c) | farmer.farmer.b | dropped
+346 | level sweep held through the cut + fling (1e4d069) | farmer.harvester.c | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -72,7 +72,7 @@ propBuilder.ts:CROW_WINGS (span, raise, sweep, feathers, wrist, glow) | 2.7, .55
 propBuilder.ts:stick STICK (long, grip, thick, tip, kinks, bend, glow), WOOD | .75, .12, .085, .8, 5, .035, .18; (.68,.4,.26) | 341 | approved | thick .045
 propBuilder.ts:pointed_cowl LIRIPIPE (snug, root, end, path 7 pts, yoke, yokeDeep, dags, dag, dagWide, flare) | 1.18,.62,.14,-,1.5,.22,9,.32,.36,.25 | 340 | approved | replaced COWL_* cone
 tribalDress.ts:SHAGGY (cap, locks, long, front, thick, splay), COLOR | 1.32, 26, .5, .5, .3, .55; (.38,.21,.12) | 340 | approved | -
-propBuilder.ts:sun_hat FLOPPY (brim, droop, lift, tip, crown, crownTall, apart, ahead, root, braid, plaits, thick) | 2.25,.28,.12,.12,1.12,.42,.68,.08,.05,1.6,5,.42 | 342 | approved | 340: apart .6, braid 1.15, thick .26
+propBuilder.ts:sun_hat FLOPPY (brim, droop, lift, tip, crown, crownTall, apart, ahead, root, braid, plaits, thick, fall, flare, bandAt) | 2.25,.28,.12,.12,1.12,.42,.68,.08,.05,1.6,5,.42 (reverted) | 346 | rejected | 346 tried braid 2.8, plaits 8, fall .62, bandAt .8: overshot to the hip; critic wants ~1.8-2.0; 340: apart .6, braid 1.15
 propBuilder.ts:SACK (wide, top, tall, crown, dome, button, eyes, eyeDrop, neck, glow), BROWN | 1.22,1.12,1.12,.06,.12,.24,.22,.1,1,.2; (.56,.36,.22) | 340 | approved | -
 tribalDress.ts:BOWL (dome, crown, fringe, hang, flare, face), COLOR | 1.3, .78, .5, .4, 1.08, .36; (.45,.22,.15) | 341 | approved | -
 unitFactory.ts:HALFLING_DRESS (jacket, drop, vest, proud, vee, veeDeep, lapel, vestLight, jacketShade) | 1.14,.12,.56,.03,.42,.42,.34,.5,.8 | 341 | approved | -
@@ -84,7 +84,7 @@ projectileSystem.ts:DRUNK_SPLASH (radius, puffs, size, life, push, seconds) | 2.
 runtimeUnit.ts:DRUNK (dye, glow, roll, rate, slow); simulationSystem DRUNK_WANDER (reach, swing) | .8, .35, .22, 4.5, .55; 2.5, .9 | 342 | approved | -
 proceduralAnimation.ts:SCYTHE_LOW (raise, out, elbow, tip, spin); POLE_GRIP.snathPeg | -.3,.12,-.75,(-.8,.5,.3),pi/2; [.28,.32] | 342 | approved | -
 unitFactory.ts:SNATH_PEG (low, high, long, thick, sink), SNATH_WOOD, SNATH_STEEL | -.15,.15,.09,.03,.2; (.5,.24,.17); (.5,.51,.53) | 343 | approved | pegs on the chord z 0
-proceduralAnimation.ts:FORK_CARRY (raise, out, elbow, tip) | reverted | 342 | rejected | -.4,.04,-.55,(-.7,-.6,.72)
+proceduralAnimation.ts:FORK_CARRY / FORK_LOW | reverted | 346 | rejected | 342: -.4,.04,-.55,(-.7,-.6,.72); 346 dropped at look (forkShaft turned, fists off the shaft)
 unitFactory.ts:HALFLING_FEET (clump, clumpTall, rise, tufts, long, thick, splay, glow), HALFLING_FUR | 1.35,1.1,.9,9,.55,.28,1,.22; (.38,.21,.12) | 343 | approved | -
 tribalDress.ts:HAIR_CAP (dome, crown, fringe, hang, flare, face), HAIR_CAP_COLOR | 1.14,.62,.62,-.12,1.02,.42; (.36,.25,.17) | 343 | approved | -
 proceduralAnimation.ts:STICK_WHACK (cock,out,fold,twist,cockArc,hit,reach,pitch,hitArc,land,hold,offSwing) | -2.1,.55,-1.75,.4,-.9,-1.25,-.15,.3,1.9,.35,.6,.6 | 343 | approved | -
@@ -94,4 +94,6 @@ unitFactory.ts:POTION_JERKIN (shell, dark, vee, veeDeep, laces, button, hem, lig
 proceduralAnimation.ts:TPOSE (lift, ahead, rate, perch, a, after) | .04, .12, 8, .07, .5, .6 | 345 | approved | perch .035
 unitFactory.ts:POTION_BOOT (shaft, long, cuff, cuffTall, band, dark, glow), BROWN, BAND | 1.24,.46,1.62,.16,.035,.42,.18; (.52,.3,.2); (.26,.14,.1) | 345 | approved | -
 simulationSystem.ts:HALFLING_CLING (round, off, up, afterDeath) | .55, .85, .32, 2.5 | 345 | approved | -
-proceduralAnimation.ts:SCYTHE_SWEEP / simulationSystem SCYTHE_FLING | reverted | 345 | rejected | roll pi/2, twist .75, cock 2, end -1.1, low .12, through .55, hitAt .55; fling .6/3.2/5
+vehicleBuilder.ts:WHEELBARROW (scale, trayY, trayWide, trayLong, trayZ, frontSeat, backSeat, pushZ, lean) | 2.2,.36,.44,.78,.08,.32,-.06,-.62,.28 | 346 | approved | replaced the .4 m cart and lone .46 pusher
+unitFactory.ts:SCARECROW_DRESS (strap, apart, button, patch, tufts, tuft, splay, glow), BROWN, STRAP, STRAW, ROPE | .13,.46,.14,.85,7,.3,.6,.22; (.5,.31,.2); (.42,.25,.16); (.86,.68,.3); (.72,.58,.36) | 346 | approved | no tunic skirt
+proceduralAnimation.ts:SCYTHE_SWEEP (roll,twist,cock,end,low,arm,crouch,through,hitAt,hold); SCYTHE_FLING (across,speed,lift) | pi/2,.75,2,-1.1,.12,-.55,.25,.55,.55,.75; .6,3.2,5 | 346 | approved | 345 rejected as is (a flinch tipped it up)

@@ -1,11 +1,11 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 345   Batch: farmer (3/18)   Consecutive empty: 0   Done: 17/139   Parked: 0
+Iteration: 346   Batch: farmer (3/18)   Consecutive empty: 0   Done: 17/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
-farmer: halfling ++++ D | farmer ---+ o | hay_baler ++++ D | potion_seller ++++ D | harvester -+-+ o | wheelbarrow ---+ o | scarecrow -+-+ o
+farmer: halfling ++++ D | farmer ---+ o | hay_baler ++++ D | potion_seller ++++ D | harvester -+++ o | wheelbarrow ---+ o | scarecrow ++-+ o
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
@@ -23,16 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-345 (BASE 2c5c9ce): [S] potion_seller a boots edeb651 approved | [S] hay_baler a fitted bale 492545d approved | [P] scarecrow a perch 06e5c87 approved | [S] harvester c sweep 8bd49db+c11f873 rejected (reverted 65a6e24, 0d5ca23) | [S] scarecrow c T release, A reload 29f6cf4 approved | [S] halfling c grab b0d26ea approved
-344 (BASE af1f77a): harvester b snath, halfling c jump, hay_baler b carry, potion_seller a jerkin, scarecrow a T-pose [S]: all approved.
+346 (BASE f006225): evidence scarecrow reload shot 18a8120 (c blocker 2 cleared) | [S] wheelbarrow a crew seated 4ecb105 approved | [S] scarecrow a dress 5cd3e3a approved | [S] harvester a braids 909cf43 rejected (reverted) | [S] farmer b fork carry e75d76c dropped at look (reverted) | [S] harvester c level sweep 1e4d069 approved
+345 (BASE 2c5c9ce): potion_seller a boots, hay_baler a bale, scarecrow a perch [P], scarecrow c T/A pose, halfling c grab approved; harvester c sweep rejected.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] farmer.potion_seller (edeb651) VERDICT: APPROVE CRITERION: farmer.potion_seller.a PASS (previous: FAIL) BLOCKERS: struck: 3 (list now empty)
-- GAP: [S] farmer.hay_baler (492545d) VERDICT: APPROVE CRITERION: farmer.hay_baler.a PASS (previous: FAIL) BLOCKERS: struck: 3 (list now empty)
-- GAP: [P] farmer.scarecrow (06e5c87) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL) BLOCKERS: 3 remaining
-- GAP: [S] farmer.harvester (8bd49db + c11f873) VERDICT: REJECT CRITERION: farmer.harvester.c FAIL (previous: FAIL) BLOCKERS: 1, 2 remaining
-- GAP: [S] farmer.scarecrow (29f6cf4) VERDICT: APPROVE CRITERION: farmer.scarecrow.c FAIL (previous: FAIL) BLOCKERS: 2 (A-pose half), 3 remaining
-- GAP: [S] farmer.halfling (b0d26ea) VERDICT: APPROVE CRITERION: farmer.halfling.c PASS (previous: FAIL) BLOCKERS: struck: 2 (list now empty). REGRESSIONS: none
+- GAP: [S] farmer.wheelbarrow (4ecb105) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL) BLOCKERS: 1 (reworded: crew identity), 2, 3 remaining
+- GAP: [S] farmer.scarecrow (5cd3e3a) VERDICT: APPROVE CRITERION: farmer.scarecrow.a PASS (previous: FAIL) BLOCKERS: struck: 3
+- scarecrow c (evidence 18a8120): blocker 2 CLEARED by unit_farmer.scarecrow_reload; c FAIL, BLOCKERS: 3 remaining
+- GAP: [S] farmer.harvester (909cf43) VERDICT: REJECT CRITERION: farmer.harvester.a FAIL (previous: FAIL) BLOCKERS: 2, 3 remaining
+- GAP: [S] farmer.harvester (1e4d069) VERDICT: APPROVE CRITERION: farmer.harvester.c PASS (previous: FAIL) BLOCKERS: struck: 1, 2. REGRESSIONS: none
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open: farmer (b at 1 rejected: a 2nd plateaus it), harvester (c at 1 rejected), wheelbarrow (untouched: split its 3-crew seating), scarecrow (a dress; c needs an evidence commit: reload shot ~1.2 s past the volley for the A-pose, then hover).
-- Harvester sweep retry: the scythe is blade_slash; time the level cut so the release (hit) tick shows the snath crossing his front; fling must show him airborne in _struck.
+- Open: farmer (b at 1 rejected + 1 dropped: off fist won't solve onto a low across-hips shaft; consider c stab first), harvester a (braids retry ~1.9 heads, tunic), wheelbarrow (b props, a tray, crew dress), scarecrow c (hover).
+- Struck-man flinch overlay tips a committed swing unless the swing counts as committed (346: sweep via _sweepTip/_clubHold); runtime post-anim layers matter too.
 - Plain browns go black under this light: use mat(scene, c, glow ~.2) or mf.get("cloth", c, {emissiveIntensity}). Cream/tan needs ~.2-.3.
-- Unit capture idle shot is 100 ms after spawn (side-on); the lineup is the front view. A probe copy of capture.mjs in loop/scripts/ can print animator fields per tick; delete it after (it wipes look/).
-- Patch via a scratchpad .py file run with python; io.open(..., newline='', encoding='utf-8'). A revert conflicting only by adjacency was resolved by hand (345). After any --iter capture rerun stats --batch <batch> --iter N.
+- Probe: a temp loop/scripts/probe.mjs (vite preview on 4189 + page.evaluate of a JS file, wrap animator methods to trace) found the flinch in minutes; delete it after.
+- Patch via python with io.open(..., newline=''); files are CRLF. After any --iter capture rerun stats --batch <batch> --iter N.
