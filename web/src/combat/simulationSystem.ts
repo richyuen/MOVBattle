@@ -66,6 +66,12 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone"]);
+/**
+ * A firearm whose ball throws the man it hits (units/renaissance.musketeer, card Weapons: the musket's force is 1500, against a club's 20): a man the shot
+ * leaves alive is knocked off his feet along its line and tumbles, as from a blast (RuntimeUnit.applyBlastLaunch), not merely flinched. Keyed by weaponHint, so
+ * every "musket" (wild_west.deadeye too) throws its man. speed, lift: m/s of the throw.
+ */
+const GUN_FLING: Record<string, { speed: number; lift: number }> = { musket: { speed: 4.5, lift: 5.5 } };
 // The bone mage's leaf whirl (units/tribal.bone_mage, tribal.bone_mage.png: leaves swirling low among the spikes at the man, none over the caster's head): it rises
 // at the row's near end this high off the turf, runs at the man this high up him, on an arc this high per metre (near flat, under the spike tips)
 const LEAF_ROW = { lift: 0.6, at: 0.7, arc: 0.03 };
@@ -1653,6 +1659,11 @@ export class SimulationSystem {
             { originLift: originLiftForSource(smokeOriginInfo.source) },
           );
           this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
+          const fling = GUN_FLING[attacker.definition.weaponHint ?? ""];
+          if (fling && !target.isDead) {
+            const along = new Vector3(impulseDir.x, 0, impulseDir.z);
+            if (along.lengthSquared() > 1e-6) target.applyBlastLaunch(along.normalize(), fling.speed, fling.lift);
+          }
         } else if (THROWS_HELD_PROP.has(attacker.definition.weaponHint ?? "") && attacker.animator.throwReleasesIn() > 0) {
           // The windup has only started: what he holds leaves his hand at the let-go
           this._pendingThrows.push({
