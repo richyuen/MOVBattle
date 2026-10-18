@@ -1,11 +1,11 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 338   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
+Iteration: 339   Batch: farmer (3/18)   Consecutive empty: 0   Done: 14/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
-farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
+farmer: halfling -+-+ o | farmer ---+ o | hay_baler ---+ o | potion_seller -+-+ o | harvester ---+ o | wheelbarrow ---+ o | scarecrow ---+ o
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
@@ -23,12 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-338 (BASE fb738c8): [S] da_vinci_tank a upper tier as its own hat 60fa561 approved | [P] da_vinci_tank a DAVINCI_SCALE 2.3 4f53c4b approved (evidence cf75f69 lineup lastApart 3.0). Renaissance done; checkpoint 12/12 GREEN.
-337 (BASE fb7c450): 4/4 approved (fencer thigh rolls, musketeer vest hem, jouster caparison, da_vinci_tank scale 1.9).
+339 (BASE f0fe549; stats f0fe549, audit 7 units): [S] halfling b empty hands 697a9c6 approved | [S] farmer b low two-handed pitchfork 151102b approved | [S] potion_seller b bottle each hand a682e21+122ce87 approved | [S] hay_baler a hay-bale armour 5acc99a+56a8306 approved | [S] scarecrow a crow wings 185ca19 approved
+338 (BASE fb738c8): da_vinci_tank upper tier hat + scale 2.3 approved. Renaissance done; checkpoint 12/12 GREEN.
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] renaissance.da_vinci_tank (60fa561) VERDICT: APPROVE CRITERION: renaissance.da_vinci_tank.a FAIL (previous: FAIL) BLOCKERS: 4 still open alone; cleared together with 4f53c4b.
-- GAP: [P] renaissance.da_vinci_tank (4f53c4b) VERDICT: APPROVE CRITERION: renaissance.da_vinci_tank.a PASS (previous: FAIL) BLOCKERS: struck: 4. REGRESSIONS: none. UNIT a PASS b PASS c PASS d PASS (4/4).
+- GAP: [S] farmer.halfling (697a9c6) VERDICT: APPROVE CRITERION: farmer.halfling.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remain)
+- GAP: [S] farmer.farmer (151102b) VERDICT: APPROVE CRITERION: farmer.farmer.b FAIL (previous: FAIL) BLOCKERS: 1. one fist at rest, off hand off the shaft; struck: 2
+- GAP: [S] farmer.potion_seller (a682e21 + 122ce87) VERDICT: APPROVE CRITERION: farmer.potion_seller.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remain)
+- GAP: [S] farmer.hay_baler (5acc99a + 56a8306) VERDICT: APPROVE CRITERION: farmer.hay_baler.a FAIL (previous: FAIL) BLOCKERS: struck: 1; 2, 3 open; added: 4 arms across the bale's face
+- GAP: [S] farmer.scarecrow (185ca19) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL) BLOCKERS: struck: 1; 2, 3, 4 open. REGRESSIONS: none
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -49,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Batch farmer is unaudited: step 2 (capture --batch farmer, stats, AUDIT critic) first. Renaissance checkpoint (338) was 12/12 GREEN.
-- getCloth colours grey out under this light: cream/tan needs self-lit cloth (mf.get("cloth", c, {emissiveIntensity})); ~.3 on a deeper tan (.8,.56,.28) reads tan.
-- Faction lineups take a cameraOverride and lastApart (scenarios.ts makeFactionGalleryScenario). Limb dress wider than the hip gap must push outward, not clamp.
-- Vehicles (wheelbarrow in farmer) are in vehicleBuilder.ts; a whole-machine scale node beats widening radii (da Vinci 332/334 rejects).
-- After any --iter capture rerun stats --batch <batch> --iter N. capture needs a clean tree: stash STATE.md around it. Write patches as scratchpad python files (utf-8); loop md files may be CRLF.
+- Farmer audited 339 (all a/b/c FAIL, d 7/7 PASS after the stats commit). Pickable [P]: hay_baler HAY_BALE.top ~1.6 (fallout of 5acc99a). harvester and wheelbarrow untouched yet.
+- getCloth colours grey out under this light: cream/tan needs self-lit cloth (mf.get("cloth", c, {emissiveIntensity})); ~.2 on (.7,.46,.22) reads tan, .3 on a pale tan reads cream.
+- Look captures (no --iter) need a clean tree incl. untracked files: git stash push -u -- loop/units around them; --units takes a comma list (a,b), not spaces.
+- Vehicles (wheelbarrow) are in vehicleBuilder.ts; a whole-machine scale node beats widening radii. Scarecrow uses visualPreset iconic_scarecrow (unitVisuals getPresetVisual), not its table entry.
+- After any --iter capture rerun stats --batch <batch> --iter N. Write patches as scratchpad python files (utf-8); heredocs with quotes break in bash here.

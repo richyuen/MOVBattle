@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-329 | two-handed grip (0f6980a +1) | renaissance.halberd.b | approved
-329 | two-handed musket carry (f4cff29) | renaissance.musketeer.b | approved
-329 | yellow heater shield (fa71e96 +1) | renaissance.jouster.b | approved
-329 | longbow (ea71dc1 +1) | renaissance.balloon_archer.b | approved
-329 | shattering cannonballs (495e7d1) | renaissance.da_vinci_tank.c | approved
 330 | rapier lunge (841edec +2) | renaissance.fencer.c | approved
 330 | halberd vertical chop (04be0ae) | renaissance.halberd.c | approved
 330 | couched lance, held level (fa74b0b) | renaissance.jouster.c | approved
@@ -56,6 +51,11 @@ for 25 iterations.
 337 | caparison following the barrel (f277bbf) | renaissance.jouster.a | approved
 337 | whole-machine scale, flat cap (412d16c) | renaissance.da_vinci_tank.a | approved
 338 | upper tier as its own hat (60fa561) | renaissance.da_vinci_tank.a | approved
+339 | empty mitt hands (697a9c6) | farmer.halfling.b | approved
+339 | two-handed pitchfork carried low (151102b) | farmer.farmer.b | approved
+339 | potion bottle in each hand (a682e21 +1) | farmer.potion_seller.b | approved
+339 | hay-bale armour worn (5acc99a +1) | farmer.hay_baler.a | approved
+339 | big black crow wings (185ca19) | farmer.scarecrow.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -72,7 +72,7 @@ propBuilder.ts:musket MUSKET (long, grip, bore, fore, stock, butt, ring) | 1.05,
 propBuilder.ts:lance LANCE (long, grip, thick, taper, pitch, stripe, vamp, vampLong, prongs, prong) | 1.75, .14, .045, .45, .075, .55, .1, .07, 3, .03 | 328 | approved | -
 propBuilder.ts:palette PALETTE_WIDE, PALETTE (deep, notch, hole, daub, proud, thick) | .34; .74, .42, .15, .27, .012, .016 | 328 | approved | wide .24
 proceduralAnimation.ts:palette PALETTE_HOLD (raise, out, elbow, sway) | -1.0, -0.55, -1.2, 0.05 | 329 | rejected | 329 [P] out -1.2 rejected
-proceduralAnimation.ts:pole POLE_GRIP (span from fist), carry pick, settle | hpoint .15-.45, musketFore .3-.7, 0.4, 2 | 329 | approved | -
+proceduralAnimation.ts:pole POLE_GRIP (span from fist), carry pick, settle | hpoint .15-.45, musketFore .3-.7, forkBar .2-.5; pick .4 (fork .9), 2 | 339 | approved | 329: no forkBar
 propBuilder.ts:longbow LONGBOW (long, thick, taper, bow, wrapAt, wrap, grip), GREY | 1.2, .065, .5, .05, .6/.72, .04, .11, (.74,.74,.72) | 330 | approved | long .85, thick .05
 propBuilder.ts:heater HEATER (wide, tall, side, rim, thick), YELLOW | .26, .36, .35, .012, .025, (.95,.72,.12) | 329 | approved | -
 visualEffects.ts:shatter SHATTER (count, size, speed, up, last), DAVINCI_BALL | 7, .11, 3.2, 3.0, .9; .24 | 329 | approved | -
@@ -115,3 +115,9 @@ vehicleBuilder.ts:DAVINCI_HAT (collar, collarR, lip, proud) | .16, .34, .08, .05
 unitFactory.ts:FENCER_ROLL (panes, long, swell, end, apart); FENCER_CREAM, GLOW | 8, .68, 2.1, 1.3, .9; (.8,.56,.28), .3 | 337 | approved | replaced panes/puff/long 8/.82/.95, cream (.84,.66,.42) unlit
 unitFactory.ts:MUSKETEER_VEST (shade, hem, flare, belt, beltOut, breech) | .95, .2, 1.28, .07, 1.06, .6 | 337 | approved | vest/breech .82
 propBuilder.ts:HORSE_CAPARISON (fore, aft, plan, tuck, tuckLong, strap, strapAt, strapArc) | .55, 1.12, 2.6, .1, .06, .07, .1, 1.15 | 337 | approved | CAP_LONG 1.32, END .55, SQUARE .35
+rosterManifest.ts:farmer cost/hp/dmg/cd (halfling, farmer, hay_baler, potion_seller) | 50/3.46/.17/1.5, 80/.6/.42/-, 140/.34/.37/.29, 340/.25/.04/1.59 | 339 | stats | 65, 80, 110, 180
+rosterManifest.ts:farmer cost/hp/dmg/cd (harvester, wheelbarrow, scarecrow) | 500/.98/.5/-, 1000/1.06/-/-, 1200/.11/2.72/5 | 339 | stats | 260, 520, 1000 (cd .88)
+propBuilder.ts:pitchfork FORK (long, grip, thick, bar, tine, tineThick, curl, links, glow) | .85, .3, .03, .2, .22, .045, 1.1, 4, .18 | 339 | approved | replaced .7s shaft, straight tines
+propBuilder.ts:potion POTION (ball, squash, neck, neckLong, cork, seat, glow), GLASS | .065,.92,.026,.026,.016,.035,.22; (.55,.74,.82) | 339 | approved | ball .15 (339 first)
+unitFactory.ts:HAY_BALE (drop, top, bottom, deep, blades, blade, hems, hem, flare); HAY_TAN, GLOW | .55,1.25,1.4,1.7,10,.62,12,.5,.5; (.7,.46,.22),.2 | 339 | approved | tan (.84,.6,.32) glow .3
+propBuilder.ts:CROW_WINGS (span, raise, sweep, feathers, wrist, glow) | 2.7, .55, .22, 9, .32, .06 | 339 | approved | -
