@@ -1734,6 +1734,39 @@ const HARPOON_GUN_LONG = 0.24;
 const HARPOON_GUN_WIDE = 0.11;
 export const HARPOON_MUZZLE = "harpoonMuzzle";
 /*
+ * The halberd (327; renaissance.halberd.jpg: a long red-brown shaft taller than the man, at its top a dark steel head: a broad axe blade out to one side, its
+ * edge bowed in an arc and its lower horn hanging below the upper, a short back spike opposite it, and a long spear point standing off the top). Not a pole:
+ * the old halberd was a thin rod with a slim grey tab. Shared by every halberd and glaive. In the man's heights, the parts in shaft lengths:
+ *   HALBERD.long long, HALBERD.grip of it below the fist, HALBERD.thick across; socket HALBERD.socket long; point HALBERD.point long; axe HALBERD.axe out from
+ *   the shaft, HALBERD.axeTall along it at the edge and HALBERD.axeRoot at the shaft; spike HALBERD.spike out; plates HALBERD.plate thick.
+ */
+const HALBERD = { long: 1.3, grip: 0.3, thick: 0.02, socket: 0.1, point: 0.13, axe: 0.13, axeTall: 0.16, axeRoot: 0.07, spike: 0.07, plate: 0.012 };
+const HALBERD_WOOD = new Color3(0.55, 0.3, 0.18);
+const HALBERD_STEEL = new Color3(0.2, 0.21, 0.24);
+/** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
+function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
+  const n = outline.length;
+  const cx = outline.reduce((a, p) => a + p[0], 0) / n, cy = outline.reduce((a, p) => a + p[1], 0) / n;
+  const positions: number[] = [cx, cy, thick / 2, cx, cy, -thick / 2];
+  for (const [x, y] of outline) positions.push(x, y, thick / 2, x, y, -thick / 2);
+  const indices: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = 2 + 2 * i, b = 2 + 2 * ((i + 1) % n);
+    indices.push(0, a, b, 0, b, a, 1, b + 1, a + 1, 1, a + 1, b + 1);
+    indices.push(a, a + 1, b + 1, a, b + 1, b, a, b + 1, a + 1, a, b, b + 1);
+  }
+  const mesh = new Mesh(name, scene);
+  const data = new VertexData();
+  data.positions = positions;
+  data.indices = indices;
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  data.normals = normals;
+  data.applyToMesh(mesh);
+  mesh.convertToFlatShadedMesh();
+  return mesh;
+}
+/*
  * The painter's brush (327; renaissance.painter.jpg: a short one-handed brush about a forearm and a half long, a red-brown handle thin at the butt and
  * thickening to a grey ferrule, then a fat team-coloured tuft swelling out of it and running to a point; a fist's width of butt behind the hand).
  * Not a rod: the old brush ran about two thirds of the man's height and read as a musket. In the man's heights, all the parts in brush lengths:
@@ -2161,14 +2194,46 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return cuff;
     }
     case "halberd": {
-      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.03 * s }, scene);
-      shaft.material = mat(scene, new Color3(0.5, 0.35, 0.2));
-      addGripWraps(scene, shaft, [-0.26 * s, -0.14 * s, -0.02 * s], 0.035 * s);
-      const blade = MeshBuilder.CreateBox("hblade", { width: 0.12 * s, height: 0.18 * s, depth: 0.01 * s }, scene);
-      blade.position.y = 0.45 * s; blade.position.x = 0.04 * s;
-      blade.parent = shaft;
-      blade.material = mat(scene, new Color3(0.7, 0.7, 0.75));
-      shaft.position.y = 0.2 * s;
+      // The halberd, built to the spec at HALBERD: +y up the shaft from the fist at the origin, HALBERD.grip of it below the fist
+      const L = fit.stand * HALBERD.long;
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: HALBERD.thick * L, tessellation: 7 }, scene);
+      shaft.position.y = (0.5 - HALBERD.grip) * L;
+      shaft.material = mat(scene, HALBERD_WOOD, 0.12);
+      shaft.convertToFlatShadedMesh();
+      const steel = mat(scene, HALBERD_STEEL, 0.08, "metal");
+      const top = L * 0.5;
+      // The socket: a dark collar over the shaft's top under the head
+      const socket = MeshBuilder.CreateCylinder("hsocket", { height: HALBERD.socket * L, diameter: HALBERD.thick * 1.5 * L, tessellation: 6 }, scene);
+      socket.position.y = top - HALBERD.socket * L * 0.5;
+      socket.material = steel;
+      socket.convertToFlatShadedMesh();
+      socket.parent = shaft;
+      // The spear point: a long four-sided spike standing off the shaft's top
+      const point = MeshBuilder.CreateCylinder("hpoint", { height: HALBERD.point * L, diameterTop: 0, diameterBottom: HALBERD.thick * 1.8 * L, tessellation: 4 }, scene);
+      point.position.y = top + HALBERD.point * L * 0.5;
+      point.scaling.z = 0.5;
+      point.material = steel;
+      point.convertToFlatShadedMesh();
+      point.parent = shaft;
+      // The axe and the back spike: flat plates in the shaft's plane, the axe to +x and the spike to -x, both on the socket
+      const at = top - HALBERD.socket * L * 0.5;
+      const plate = (name: string, outline: number[][]): Mesh => {
+        const m = flatPlate(scene, name, outline.map(([x, y]) => [x * L, y * L]), HALBERD.plate * L);
+        m.position.y = at;
+        m.material = steel;
+        m.parent = shaft;
+        return m;
+      };
+      const [aw, ah, ar] = [HALBERD.axe, HALBERD.axeTall, HALBERD.axeRoot];
+      const edge: number[][] = [];
+      for (let k = 0; k <= 6; k++) {
+        // The cutting edge bows out in an arc from the top horn to the lower horn, which hangs lower than the top one
+        const t = k / 6;
+        const y = ah * 0.42 - t * ah;
+        edge.push([aw * (0.82 + 0.18 * Math.sin(Math.PI * t)), y]);
+      }
+      plate("haxe", [[0, ar * 0.5], ...edge, [0, -ar * 0.5]]);
+      plate("hspike", [[0, HALBERD.thick * 0.9], [-HALBERD.spike, HALBERD.spike * 0.35], [0, -HALBERD.thick * 0.9]]);
       return shaft;
     }
     case "lance": {
