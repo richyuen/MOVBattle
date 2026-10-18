@@ -11,31 +11,21 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-323 | loincloth (914ddb9) | tribal.clubber.a | approved
-323 | fang necklace (eae473f) | tribal.spear_thrower.a | approved
-323 | chestnut beard (a743b12) | tribal.chieftain.a | approved
-323 | fur hide (85c87e9 + 11b021e) | tribal.mammoth.a | approved
-323 | Mammoth Charge (7d01e90) | tribal.mammoth.c | approved
-324 | hide cape (74de196) | tribal.chieftain.a | approved
-324 | tusk necklace (54f0b6b) | tribal.clubber.a | approved
-324 | mane (6d8c95a) | tribal.mammoth.a | approved
-325 | ankle bands (0207b28) | tribal.mammoth.a | approved
-325 | bracelets (e8a2cc0) | tribal.clubber.a | approved
-326 | face marking (edf1fdb +4) | tribal.mammoth.a | approved
+324-326 | tribal: six dress gaps (batch done) | tribal.* | approved
 327 | brim hat (d747d43) | renaissance.balloon_archer.a | approved
-327 | short one-handed brush (34e0270 + 362af93) | renaissance.painter.b | approved
-327 | cavalier hat (fbe32ce + 0acead3) | renaissance.fencer.a | approved
-327 | halberd head (547179c + bc80d12) | renaissance.halberd.b | approved
+327 | short one-handed brush (34e0270 +1) | renaissance.painter.b | approved
+327 | cavalier hat (fbe32ce +1) | renaissance.fencer.a | approved
+327 | halberd head (547179c +1) | renaissance.halberd.b | approved
 327 | black iron morion (affc57f) | renaissance.musketeer.a | approved
 328 | no back slab (68ad77a) | renaissance.fencer.b | approved
 328 | black sallet (0860943) | renaissance.halberd.a | approved
-328 | matchlock musket (9951a96 + 418ba56) | renaissance.musketeer.b | approved
+328 | matchlock musket (9951a96 +1) | renaissance.musketeer.b | approved
 328 | kidney palette held up (642eb06) | renaissance.painter.b | approved
-328 | spiral-striped lance (4a390e5 + b5ed844) | renaissance.jouster.b | approved
-329 | two-handed grip (0f6980a + db2d934) | renaissance.halberd.b | approved
+328 | spiral-striped lance (4a390e5 +1) | renaissance.jouster.b | approved
+329 | two-handed grip (0f6980a +1) | renaissance.halberd.b | approved
 329 | two-handed musket carry (f4cff29) | renaissance.musketeer.b | approved
-329 | yellow heater shield (fa71e96 + 9cb619c) | renaissance.jouster.b | approved
-329 | longbow (ea71dc1 + c2aff34) | renaissance.balloon_archer.b | approved
+329 | yellow heater shield (fa71e96 +1) | renaissance.jouster.b | approved
+329 | longbow (ea71dc1 +1) | renaissance.balloon_archer.b | approved
 329 | shattering cannonballs (495e7d1) | renaissance.da_vinci_tank.c | approved
 330 | rapier lunge (841edec +2) | renaissance.fencer.c | approved
 330 | halberd vertical chop (04be0ae) | renaissance.halberd.c | approved
@@ -52,6 +42,11 @@ for 25 iterations.
 332 | lance on target (062a748) | renaissance.jouster.c | approved
 332 | long dark hair (cfb3c57) | renaissance.painter.a | approved
 332 | balloon float (c99a50c +1) | renaissance.balloon_archer.c | approved
+333 | lunge legs (90d850a) | renaissance.fencer.c | approved
+333 | level lance (eea51ad) | renaissance.jouster.c | approved
+333 | arrow ball (4e0e02c) | renaissance.balloon_archer.c | approved
+333 | jabot (b8f9dd8 +1) | renaissance.painter.a | approved
+333 | halberd dress (c23f17c) | renaissance.halberd.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -113,7 +108,7 @@ proceduralAnimation.ts:pole POLE_GRIP (span from fist), carry pick, settle | hpo
 propBuilder.ts:longbow LONGBOW (long, thick, taper, bow, wrapAt, wrap, grip), GREY | 1.2, .065, .5, .05, .6/.72, .04, .11, (.74,.74,.72) | 330 | approved | long .85, thick .05
 propBuilder.ts:heater HEATER (wide, tall, side, rim, thick), YELLOW | .26, .36, .35, .012, .025, (.95,.72,.12) | 329 | approved | -
 visualEffects.ts:shatter SHATTER (count, size, speed, up, last), DAVINCI_BALL | 7, .11, 3.2, 3.0, .9; .24 | 329 | approved | -
-proceduralAnimation.ts:lunge LUNGE (guardRaise, guardElbow, turn, reach, pitch, front, knee, back, step, retreat, hold) | -.75, -1.35, .4, -1.5, .3, -.85, .6, .5, .45, .2, .16 | 331 | approved | hold .08
+proceduralAnimation.ts:lunge LUNGE (guardRaise, guardElbow, turn, reach, pitch, front, knee, back, step, retreat, hold) | -.75, -1.35, .4, -1.5, .3, -1.25, 1.35, .85, .45, .2, .16 | 333 | approved | front/knee/back -.85/.6/.5; hold .08
 proceduralAnimation.ts:chop CHOP (raised, landed, armUp, elbowUp, armDown, elbowDown, pitch, step, hold) | -.55, 1.95, -2.7, -.9, -1.25, -.15, .35, -.4, .1 | 330 | approved | -
 proceduralAnimation.ts:couch COUCH (raise, elbow, dip, across, drive, pitch) | -.35, -1.35, .08, .12, .5, .2 | 330 | approved | -
 propBuilder.ts:rapier RAPIER (blade, thick, taper, cup, cupDeep, cupTop, rim, quillon, grip, pommel) | .66, .018, .35, .13, .055, .3, .014, .2, .08, .035 | 330 | approved | -
@@ -125,8 +120,12 @@ proceduralAnimation.ts:MUSKET_AIM (ahead, inward, drop, kick) | .17, .03, .03, .
 proceduralAnimation.ts:RAPIER_POINT guard | 0.3 | 331 | approved | -
 simulationSystem.ts:GUN_FLING musket (speed, lift; deadeye shares) | 4.5, 5.5 | 332 | approved | -
 visualEffects.ts:PAINT_SPLOTCH (count, size, speed, spread, up, last) | 5, .09, 3.4, 1.6, 2.2, 1.0 | 332 | approved | -
-proceduralAnimation.ts:LANCE_AIM (hold, rate, maxDip); sim LANCE_AIM_REACH, LANCE_CHEST | .6, 4, .5; 5, .62 | 332 | approved | -
+proceduralAnimation.ts:LANCE_AIM (hold, rate; yaw only); sim LANCE_AIM_REACH, LANCE_CHEST | .6, 4; 5, .62 | 333 | approved | maxDip .5
 tribalDress.ts:hair PAINTER_HAIR (long_dark, no fringe) | (.17, .11, .08) | 332 | approved | -
 runtimeUnit.ts:BALLOON_FLOAT (seconds, rise, top, per, most, size, string, swell) | 3, 1.4, 3.2, 3, 9, .42, .55, .12 | 332 | approved | -
 rosterManifest.ts:renaissance cost/hp/dmg/cd (painter, fencer, archer, musketeer) | 50/.94/.17/.35, 150/.46/.67/-, 200/.56/.36/1.36, 250/.54/-/3.33 | 327 | stats | 80, 160, 180, 220
 rosterManifest.ts:renaissance cost/hp/dmg/cd (halberd, jouster, da_vinci_tank) | 400/1.19/.58/.77, 1000/.47/-/-, 4000/3.65/.53/1.59 | 327 | stats | 200, 500, 1800 (cd .86)
+
+projectileSystem.ts:BALLOON_BALL (size, at, long) | .2, .27, 1.15 | 333 | approved | -
+unitFactory.ts:PAINTER_JABOT (layers, wide, tall, taper, proud, tip, twist); PAINTER_RUFF_TIERS | 3, .85, .22, .15, .8, .35, .12; 1 | 333 | approved | first .62/.16/.42; tiers 2
+unitFactory.ts:HALBERD_DRESS (tabard, wrap, skirt, belt, bands, roll, cuff), HALBERD_CREAM | .55, 1.12, .45, .1, 3, 1.22, 1.5; (.86,.72,.5) | 333 | approved | -
