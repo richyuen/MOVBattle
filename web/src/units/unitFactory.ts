@@ -658,9 +658,10 @@ export class UnitFactory {
         limb.material = mailMaterial;
       }
       // The cross is two thin cream bars sunk into the front of the cloth, so only their faces show on the chest.
+      // Not on the knight (356; medieval.knight.png: his chest is plate, and the cream T read as a second sword hilt floating over his shield)
       const crossDepth = chest.z * body.torsoMesh.scaling.z * 0.3;
       const crossMaterial = getMaterialFactory().getCloth(TABARD_COLOR);
-      for (const [width, height] of [[0.2, 1.3], [1.0, 0.18]]) {
+      for (const [width, height] of definition.id === "medieval.knight" ? [] : [[0.2, 1.3], [1.0, 0.18]]) {
         const bar = MeshBuilder.CreateBox("tabardCross", {
           width: chest.x * body.torsoMesh.scaling.x * width, height: chest.y * height, depth: crossDepth,
         }, this._scene);
