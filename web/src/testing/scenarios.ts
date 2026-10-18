@@ -460,7 +460,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
       { kind: "battle-feel-state", value: "tribal.protector:steady|pressure-loaded|staggered" },
       { kind: "attack-interrupted-at-least", value: "tribal.clubber>=1, farmer.halfling>=1" },
       { kind: "position-shift-at-least", value: "tribal.clubber>=0.65, farmer.halfling>=0.45" },
-      { kind: "position-shift-at-most", value: "tribal.protector<=1.35" },
+      // Re-baselined 351 (was 1.35): since the Halfling Jump (344.2) the halfling leaps over the line onto the hoplite and the protector turns to swat him (1.82).
+      { kind: "position-shift-at-most", value: "tribal.protector<=2.0" },
       { kind: "comparison-focus", value: "The shield wall should hold formation better than the light swarm while the attackers show clearer disruption states." },
     ],
   },
@@ -518,7 +519,8 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     assertions: [
       { kind: "mode-is", value: "Simulation" },
       { kind: "chain-topple-count-at-least", value: "farmer.farmer+medieval.squire+ancient.hoplite>=2" },
-      { kind: "battle-feel-state", value: "farmer.farmer:toppled|downed|recovering, medieval.squire:staggered|toppled|downed|recovering" },
+      // Re-baselined 351: since the farmer stats (339.0, health x.6) the mammoth's blow kills the farmer outright.
+      { kind: "battle-feel-state", value: "farmer.farmer:toppled|downed|recovering|dead, medieval.squire:staggered|toppled|downed|recovering" },
       { kind: "attack-interrupted-at-least", value: "medieval.squire>=1" },
       { kind: "position-shift-at-least", value: "medieval.squire>=0.55, ancient.hoplite>=0.3" },
       { kind: "comparison-focus", value: "Mammoth contact should disrupt more than the primary target only once, not cascade into uncontrolled pinball behavior." },
