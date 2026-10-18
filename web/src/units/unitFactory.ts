@@ -545,6 +545,8 @@ export class UnitFactory {
     }
     if (definition.id === "farmer.hay_baler" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHayBale(this._scene, body));
+      // [S] ...and his brown bowl cut, no hat (341; tribalDress BOWL)
+      propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
     }
     if (definition.id === "wild_west.cactus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressCactus(this._scene, body, teamColor));

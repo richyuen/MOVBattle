@@ -256,7 +256,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   // [S] the bale is worn, not carried (339): unitFactory's dressHayBale. [S] a crooked stick in the main hand (340; farmer.hay_baler.blue.png)
   "farmer.hay_baler": vis(
-    { scale: 1.25, bulk: 1.6 }, "stick", "straw_hat", "none", "none", "#DAA520",
+    { scale: 1.25, bulk: 1.6 }, "stick", "none", "none", "none", "#DAA520",
   ),
   // [S] a potion in each hand (339; farmer.potion_seller.red.png, card: Potion Throw main and off hand)
   "farmer.potion_seller": vis(

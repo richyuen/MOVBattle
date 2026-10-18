@@ -408,8 +408,16 @@ const GOATEE = { wide: 0.42, down: 0.55, proud: 0.86, tip: 0.35 };
  */
 const SHAGGY = { cap: 1.32, locks: 26, long: 0.5, front: 0.5, thick: 0.3, splay: 0.55 };
 const SHAGGY_COLOR = new Color3(0.38, 0.21, 0.12);
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy"> = {
-  "farmer.halfling": "shaggy",
+/*
+ * [S] hay baler's bowl cut (341; farmer.hay_baler.blue.png, card Appearance "a brown bowl cut hair"): a round auburn-brown helmet of hair, fuller than the
+ * head, cut dead straight across the brow just over the eyes and hanging down over the ears and the nape. A faceted dome BOWL.dome heads wide over the crown,
+ * its rim at BOWL.fringe of the half-height (the fringe line), and a skirt wall round the sides and back from that rim down to BOWL.hang below the head's
+ * middle, flaring BOWL.flare at its foot; the skirt leaves the face open across BOWL.face of the round. Auburn BOWL_COLOR, self-lit so it reads brown.
+ */
+const BOWL = { dome: 1.3, crown: 0.78, fringe: 0.5, hang: 0.4, flare: 1.08, face: 0.36 };
+const BOWL_COLOR = new Color3(0.45, 0.22, 0.15);
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy" | "bowl"> = {
+  "farmer.halfling": "shaggy", "farmer.hay_baler": "bowl",
   "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
   "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache", "renaissance.musketeer": "moustache_goatee",
 };
@@ -488,12 +496,43 @@ function shaggyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   return added;
 }
 
+/** The hay baler's bowl cut (spec at BOWL), parented to the head. */
+function bowlCut(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const hair = getMaterialFactory().get("cloth", BOWL_COLOR, { emissiveIntensity: 0.2 });
+  hair.backFaceCulling = false;
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const rimY = e.y * BOWL.fringe;
+  const dome = MeshBuilder.CreateSphere(`${body.headMesh.name}_hair`, {
+    diameterX: 2 * e.x * BOWL.dome, diameterY: 2 * e.y * BOWL.crown, diameterZ: 2 * e.z * BOWL.dome, segments: 6, slice: 0.5,
+  }, scene);
+  dome.convertToFlatShadedMesh();
+  dome.position.set(0, rimY, -e.z * 0.04);
+  dome.material = hair;
+  dome.parent = body.headMesh;
+  // The skirt: an open wall round the sides and back, its gap centred on the face (+z)
+  const arc = 1 - BOWL.face;
+  const tall = rimY + e.y * BOWL.hang;
+  const skirt = MeshBuilder.CreateCylinder("hairBowl", {
+    height: tall, diameterTop: 2 * e.x * BOWL.dome, diameterBottom: 2 * e.x * BOWL.dome * BOWL.flare, tessellation: 12, arc, enclose: false,
+    sideOrientation: Mesh.DOUBLESIDE,
+  }, scene);
+  skirt.rotation.y = (1 - arc) * Math.PI - Math.PI / 2;
+  skirt.bakeCurrentTransformIntoVertices();
+  skirt.convertToFlatShadedMesh();
+  skirt.scaling.set(1, 1, e.z / e.x);
+  skirt.position.set(0, rimY - tall / 2, -e.z * 0.04);
+  skirt.material = hair;
+  skirt.parent = body.headMesh;
+  return [dome, skirt];
+}
+
 /** The unit's own hair or headgear (LONG_HAIR, TUSK_BAND), parented to the head; null when he keeps the common mop. */
 export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] | null {
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
   if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
   const style = HAIR_STYLES[unitId];
   if (style === "shaggy") return shaggyHair(scene, body);
+  if (style === "bowl") return bowlCut(scene, body);
   if (style === "moustache_goatee") return [...curledMoustache(scene, body), goatee(scene, body)];
   if (style !== "long" && style !== "long_beard" && style !== "long_dark" && style !== "long_dark_moustache") return null;
   const dark = style === "long_dark" || style === "long_dark_moustache";
