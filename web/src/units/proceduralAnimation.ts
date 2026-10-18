@@ -159,7 +159,7 @@ const POLE_GRIP = {
  * line from the fist is .tip in his own frame (x toward his weapon side, y up, z forward), the shaft turned onto it (named "shaft" with its forkBar mark): across to the off side, a touch down, and forward, so the off
  * hand's solve onto it (POLE_GRIP.forkBar, _twoHandPole) finds it before the hips instead of through the weapon hip.
  */
-const FORK_CARRY = { raise: -0.4, out: 0.04, elbow: -0.55, tip: [-0.72, -0.28, 0.72] as [number, number, number] };
+const FORK_CARRY = { raise: -0.4, out: 0.04, elbow: -0.55, tip: [-0.7, -0.6, 0.72] as [number, number, number] };
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
  * butt behind the fist sits in the shoulder; the musket is stood level along his front over its rest, the off hand following it on the fore-stock
