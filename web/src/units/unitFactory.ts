@@ -533,6 +533,9 @@ export class UnitFactory {
       // ...and his curled moustache and goatee (tribalDress)
       propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
     }
+    if (definition.id === "renaissance.balloon_archer" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressBalloonArcher(this._scene, body, teamColor));
+    }
     if (definition.id === "renaissance.jouster" && !shouldUseVehicleBody) {
       propMeshes.push(...dressJouster(this._scene, body, teamColor));
     }
@@ -1159,6 +1162,87 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
     }
   }
   const shoe = mf.getCloth(MUSKETEER_SHOE);
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
+  }
+  return added;
+}
+
+/*
+ * [S] balloon archer's striped doublet (336; renaissance.balloon_archer.blue.png, card Appearance "a 1300s style hat and tunic that have stripes"): a team
+ * doublet over the chest striped in upright tan bands all the way round (front, sides and back, so it reads from behind too); the upper arms in puffed
+ * team sleeves slashed with tan panes; a brown belt round the waist; puffed team knee breeches; tan stockings to the shoe; orange-tan shoes. Tan is
+ * self-lit (ARCHER_TAN_GLOW) so it stays tan. Sizes are shares of the chest (W, H, D) and of each limb's girth and length.
+ *   doublet ARCHER_DRESS.doublet of the chest round it; ARCHER_DRESS.stripes stripes on each broad face, one on each side, .stripe of the chest across;
+ *   sleeve puff .puff of the arm's girth with .slashes panes; belt .belt of the chest tall; breeches .breech of the thigh's girth.
+ */
+const ARCHER_DRESS = { doublet: 1.1, stripes: 3, stripe: 0.09, puff: 1.6, slashes: 4, belt: 0.12, breech: 1.45 };
+const ARCHER_TAN = new Color3(0.8, 0.56, 0.28);
+const ARCHER_TAN_GLOW = 0.3;
+const ARCHER_STOCKING = new Color3(0.66, 0.5, 0.32);
+const ARCHER_BELT = new Color3(0.36, 0.17, 0.1);
+const ARCHER_SHOE = new Color3(0.78, 0.36, 0.18);
+/** Dresses the balloon archer (spec at ARCHER_DRESS): tan-striped team doublet, slashed puffed sleeves, belt, puffed breeches, tan stockings. */
+function dressBalloonArcher(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const A = ARCHER_DRESS;
+  const team = mf.getCloth(teamColor.scale(0.82));
+  const tan = mf.get("cloth", ARCHER_TAN, { emissiveIntensity: ARCHER_TAN_GLOW });
+  const put = (m: Mesh, mat: Material, parent: TransformNode): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const waist = chest.position.y - H * 0.5;
+  const dW = W * A.doublet, dD = D * A.doublet, dH = H * 0.94;
+  const doublet = put(MeshBuilder.CreateBox("archerDoublet", { width: dW, height: dH, depth: dD }, scene), team, body.torso);
+  doublet.position.set(0, chest.position.y - H * 0.02, 0);
+  // the stripes: upright tan bands a hair proud of each face, front and back spread across, one down each side
+  const sw = W * A.stripe;
+  for (const face of [1, -1]) {
+    for (let i = 0; i < A.stripes; i++) {
+      const x = ((i + 0.5) / A.stripes - 0.5) * dW * 0.8;
+      const st = put(MeshBuilder.CreateBox("archerStripe", { width: sw, height: dH * 0.98, depth: D * 0.03 }, scene), tan, body.torso);
+      st.position.set(x, doublet.position.y, face * (dD * 0.5 + D * 0.012));
+    }
+    const side = put(MeshBuilder.CreateBox("archerStripe", { width: D * 0.03, height: dH * 0.98, depth: sw }, scene), tan, body.torso);
+    side.position.set(face * (dW * 0.5 + D * 0.012), doublet.position.y, 0);
+  }
+  // the belt round the waist
+  const belt = put(MeshBuilder.CreateBox("archerBelt", { width: dW * 1.05, height: H * A.belt, depth: dD * 1.08 }, scene), mf.getCloth(ARCHER_BELT), body.torso);
+  belt.position.set(0, waist + H * A.belt * 0.5, 0);
+  // puffed sleeves slashed with tan panes over the upper arm
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    arm.material = team;
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const puff = put(MeshBuilder.CreateSphere("archerPuff", { diameterX: girth * A.puff, diameterY: long * 0.62, diameterZ: girth * A.puff, segments: 5 }, scene), team, arm);
+    puff.position.y = long * 0.5 - long * 0.3;
+    for (let i = 0; i < A.slashes; i++) {
+      const a = (i + 0.5) / A.slashes * Math.PI * 2;
+      const pane = put(MeshBuilder.CreateBox("archerSlash", { width: girth * 0.22, height: long * 0.42, depth: girth * 0.08 }, scene), tan, arm);
+      pane.position.set(Math.sin(a) * girth * A.puff * 0.48, puff.position.y, Math.cos(a) * girth * A.puff * 0.48);
+      pane.rotation.y = a;
+    }
+  }
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) arm.material = team;
+  // puffed team breeches over the thighs, and tan stockings below
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
+    leg.material = team;
+    const e = leg.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const breech = put(MeshBuilder.CreateCylinder("archerBreech", { height: long * 0.95, diameterTop: girth * A.breech * 0.92, diameterBottom: girth * A.breech, tessellation: 8 }, scene), team, leg);
+    breech.position.y = long * 0.5 - long * 0.5;
+  }
+  const stocking = mf.get("cloth", ARCHER_STOCKING, { emissiveIntensity: 0.22 });
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) shin.material = stocking;
+  const shoe = mf.getCloth(ARCHER_SHOE);
   for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
     if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
   }
