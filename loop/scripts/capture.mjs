@@ -391,6 +391,8 @@ async function main() {
           const a = window.__ua, t = on === 2 && window.__ually ? window.__ually : window.__ut;
           const pa = a.body.root.position, pt = t.body.root.position;
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
+          // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
+          if (on === 4) { window.game.frameCamera({ x: pt.x, y: pt.y + 0.55 * s + 0.85, z: pt.z }, 5.2 * s, Math.atan2(fx, -fz), Math.PI / 2.1); return; }
           const c = on === 1 ? { x: pa.x, z: pa.z } : on === 2 ? { x: pt.x, z: pt.z } : on === 3 ? { x: pa.x + fx * 1.4 * s, z: pa.z + fz * 1.4 * s } : { x: (pa.x + pt.x) / 2, z: (pa.z + pt.z) / 2 };
           const radius = (on === 1 || on === 2 ? 3.8 : on === 3 ? 5.2 : 5.5) * s;
           window.game.frameCamera({ x: c.x, y: (on === 3 ? 0.8 : 0.55) * s + 0.45, z: c.z }, radius, Math.atan2(fx, -fz), on === 3 ? Math.PI / 2.2 : Math.PI / 2.1);
@@ -485,8 +487,8 @@ async function main() {
         if (ability) {
           // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
           const slow = /^float/.test(ability.kind);
-          await take(`unit_${id}_ability`, ability.tick, slow ? 2 : far);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : 9), slow ? 2 : far);
+          await take(`unit_${id}_ability`, ability.tick, slow ? 4 : far);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : 9), slow ? 4 : far);
         }
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
