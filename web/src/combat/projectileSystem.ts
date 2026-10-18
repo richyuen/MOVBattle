@@ -151,6 +151,10 @@ const FIREBALL_HEART = new Color3(1, 0.92, 0.55);
 const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
 // A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
 const LEAF_COUNT = 11;
+// ...and the loft of his spike row (card Characteristics: "sending fragile units who were caught in the attack into the air", force 800; tribal.bone_mage.png):
+// every man the row's hit catches is thrown up off his feet, `up` m/s, and `along` m/s on down the row's line, as a blast flings a body (RuntimeUnit.applyBlastLaunch,
+// past the living-hit lift cap that keeps a plain missile's knock shallow)
+const SPIKE_LOFT = { up: 10, along: 2.5 };
 const LEAF_LONG = 0.5;
 const LEAF_WIDE = 0.19;
 const LEAF_WHIRL = 0.55; // radius of the knot round its line of flight
@@ -629,6 +633,7 @@ export class ProjectileSystem {
         const distance = Math.sqrt(distanceSq);
         const falloff = p.splashRadius > 0 ? Math.max(0, 1 - distance / p.splashRadius) : 1;
         const delta = unit.applyDamage(p.damage, p.knockback);
+        if (p.shape === "leaves") this._loftFromSpikes(p, unit);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
             source: "projectile",
@@ -659,6 +664,7 @@ export class ProjectileSystem {
         // A thrown spear launches the man it sticks in (LAUNCH.throw): thrown back off his feet from where it was thrown, not merely nudged
         const launch = LAUNCH[p.shape];
         if (launch?.throw && !p.target.isDead) p.target.staggerFromBlow(p.origin, launch.throw);
+        if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
             source: "projectile",
@@ -676,6 +682,14 @@ export class ProjectileSystem {
         }
       }
     }
+  }
+
+  /** The bone mage's spike row throws a man it catches up into the air and on down its line (SPIKE_LOFT), the dead ones included: the spikes burst up under him. */
+  private _loftFromSpikes(p: ActiveProjectile, unit: RuntimeUnit): void {
+    const along = new Vector3(p.targetPos.x - p.origin.x, 0, p.targetPos.z - p.origin.z);
+    if (along.lengthSquared() < 0.0001) along.set(1, 0, 0);
+    along.normalize();
+    unit.applyBlastLaunch(along, SPIKE_LOFT.along, SPIKE_LOFT.up);
   }
 
   /** Throw every enemy body near the blast up and away from its centre, the dead ones included. */
