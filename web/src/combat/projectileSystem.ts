@@ -17,7 +17,7 @@ import { buildFlyingSword } from "../units/propBuilder";
  * shoulder, .chord wide at the root, with .fingers primary feathers .feather long splayed past its tip; tail .tail long fanned .fan wide. Black
  * CROW_FLY_BLACK self-lit .glow so it reads black, not team colour; wings beat .beat rad about a .lift raise at .rate rad/s.
  */
-const FLYING_CROW = { long: 0.34, wide: 0.17, tall: 0.17, head: 0.13, beak: 0.08, span: 0.34, chord: 0.2, flat: 0.12, fingers: 4, feather: 0.1, tail: 0.16, fan: 0.16, glow: 0.12, beat: 0.6, lift: 0.15, rate: 15 };
+const FLYING_CROW = { long: 0.34, wide: 0.17, tall: 0.17, head: 0.13, beak: 0.08, span: 0.34, chord: 0.2, flat: 0.12, fingers: 4, feather: 0.1, tail: 0.16, fan: 0.16, glow: 0.12, beat: 0.28, lift: 0.04, rate: 15 };
 const CROW_FLY_BLACK = new Color3(0.07, 0.07, 0.1);
 /*
  * [S] the potion's splash (342; farmer.potion_seller.jpg, card: Potion Throw explosion radius 2.2, "upon impact, the Potion will splash and effect anyone in
