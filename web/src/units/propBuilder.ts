@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -62,6 +62,14 @@ const BANDANA_SWEEP = 0.5;
  * not behind the ears), from FLOPPY.root of the head under the seat down FLOPPY.braid of the head in FLOPPY.plaits lobes FLOPPY.thick of the head
  * across; a team band and a tuft at each end. Felt and hair self-lit FLOPPY.glow so the browns do not go black.
  */
+/*
+ * [S] The scarecrow's sack mask (340; farmer.scarecrow.blue.png, card Appearance "a mask that covers their whole head, with team-colored buttons for
+ * eyes"): a brown cloth bag over the whole head, a little wider at the jaw (SACK.wide head widths) than at the crown (SACK.top), SACK.tall of the head
+ * tall from SACK.crown above the crown joint, its top a low dome SACK.dome high; two team buttons SACK.button across, SACK.eyes either side of the middle
+ * at the eyes' height (SACK.eyeDrop under the eye top), each sewn on with a dark thread cross; a seam up the face; a rope round the neck SACK.neck across.
+ */
+const SACK = { wide: 1.22, top: 1.12, tall: 1.12, crown: 0.06, dome: 0.12, button: 0.24, eyes: 0.22, eyeDrop: 0.1, neck: 1.0, glow: 0.2 };
+const SACK_BROWN = new Color3(0.56, 0.36, 0.22);
 const FLOPPY = { brim: 2.25, droop: 0.28, lift: 0.12, tip: 0.12, crown: 1.12, crownTall: 0.42, apart: 0.6, ahead: 0.08, root: 0.05, braid: 1.15, plaits: 5, thick: 0.26, glow: 0.2 };
 const FLOPPY_BROWN = new Color3(0.5, 0.3, 0.18);
 const FLOPPY_HAIR = new Color3(0.36, 0.2, 0.11);
@@ -416,6 +424,49 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       tail.parent = knot;
     }
     return wrap;
+  }
+  if (type === "sack_mask") {
+    // [S] the scarecrow's sack (340; spec at SACK): a brown cloth bag over the whole head, team buttons for eyes, a rope at the neck
+    const cloth = mat(scene, SACK_BROWN, SACK.glow);
+    const tall = u(SACK.tall * H);
+    const sack = MeshBuilder.CreateCylinder("sackMask", { height: tall, diameterTop: u(SACK.top * W), diameterBottom: u(SACK.wide * W), tessellation: 8 }, scene);
+    sack.position.y = u(SACK.crown * H) - tall * 0.5;
+    sack.material = cloth;
+    sack.convertToFlatShadedMesh();
+    const dome = MeshBuilder.CreateSphere("sackTop", { diameterX: u(SACK.top * W), diameterY: u(SACK.dome * 2 * H), diameterZ: u(SACK.top * W), segments: 4, slice: 0.5 }, scene);
+    dome.position.y = tall * 0.5;
+    dome.material = cloth;
+    dome.convertToFlatShadedMesh();
+    dome.parent = sack;
+    // The buttons: team discs on the face at the eyes' height, each with a dark thread cross
+    const eyeY = u(-eyeTop - SACK.eyeDrop * W) - sack.position.y;
+    const button = mat(scene, teamColor ?? accent, 0.2);
+    const thread = mat(scene, new Color3(0.12, 0.08, 0.06), 0.05);
+    const faceZ = u(SACK.wide * W * 0.5) * 0.97;
+    for (const side of [-1, 1]) {
+      const b = MeshBuilder.CreateCylinder("sackButton", { height: u(0.04 * W), diameter: u(SACK.button * W), tessellation: 10 }, scene);
+      b.rotation.x = Math.PI / 2;
+      b.position.set(side * u(SACK.eyes * W), eyeY, faceZ);
+      b.material = button;
+      b.parent = sack;
+      for (const turn of [Math.PI / 4, -Math.PI / 4]) {
+        const t = MeshBuilder.CreateBox("sackButtonThread", { width: u(SACK.button * W * 0.75), height: u(0.025 * W), depth: u(0.02 * W) }, scene);
+        t.rotation.z = turn;
+        t.position.set(side * u(SACK.eyes * W), eyeY, faceZ + u(0.025 * W));
+        t.material = thread;
+        t.parent = sack;
+      }
+    }
+    // The seam up the middle of the face, and the rope gathering the sack at the neck
+    const seam = MeshBuilder.CreateBox("sackSeam", { width: u(0.03 * W), height: tall * 0.85, depth: u(0.02 * W) }, scene);
+    seam.position.set(0, 0, faceZ + u(0.01 * W));
+    seam.material = mat(scene, SACK_BROWN.scale(0.6), SACK.glow);
+    seam.parent = sack;
+    const rope = MeshBuilder.CreateTorus("sackRope", { diameter: u(SACK.neck * W), thickness: u(0.07 * W), tessellation: 10 }, scene);
+    rope.position.y = -tall * 0.5 + u(0.04 * H);
+    rope.material = mat(scene, new Color3(0.62, 0.48, 0.3), SACK.glow);
+    rope.parent = sack;
+    return sack;
   }
   if (type === "sun_hat") {
     // [S] soft floppy hat and side braids (340; spec at FLOPPY): brim drooping all round like a bell, rounded soft crown, plaits beside the face

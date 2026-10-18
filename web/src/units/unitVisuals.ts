@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet";
+  | "great_helm" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
 export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette";
 
@@ -269,7 +269,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.4, bulk: 1.5 }, "hammer", "straw_hat", "none", "cart", "#8B4513",
   ),
   "farmer.scarecrow": vis(
-    { scale: 1.3, bulk: 0.8, armLength: 1.3 }, "crossbow", "straw_hat", "none", "scarecrow_post", "#DAA520",
+    { scale: 1.3, bulk: 0.8, armLength: 1.3 }, "crossbow", "sack_mask", "none", "scarecrow_post", "#DAA520",
   ),
 
   // ═══════════════════════ MEDIEVAL ═══════════════════════
@@ -838,7 +838,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "vehicle", materialPreset: "secret_beast",
       });
     case "iconic_scarecrow":
-      return vis({ scale: 1.34, bulk: 0.76, armLength: 1.34, legLength: 1.05 }, "crossbow", "straw_hat", "none", "scarecrow_post", "#d5a743", undefined, {
+      // [S] full-head sack mask with team button eyes (340; farmer.scarecrow.blue.png), not a brim hat
+      return vis({ scale: 1.34, bulk: 0.76, armLength: 1.34, legLength: 1.05 }, "crossbow", "sack_mask", "none", "scarecrow_post", "#d5a743", undefined, {
         posePreset: "archer", materialPreset: "secret_festive", attachmentPreset: "crow_swarm", fxPreset: "wind",
         stateVariants: { attacking: ["crow_swarm"], "ability-active": ["crow_swarm"] },
       });
