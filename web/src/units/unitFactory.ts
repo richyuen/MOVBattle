@@ -12,6 +12,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew } from "./vehicleBuild
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
+import { dressTribalNecklace, hasTribalNecklace } from "./tribalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -444,6 +445,8 @@ export class UnitFactory {
         }
         if (TRIBAL_TUNIC_UNITS.has(definition.id)) propMeshes.push(...dressTribalTunic(this._scene, body));
         if (TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(...dressTribalCape(this._scene, body));
+        // A strung necklace (tribalDress) in place of the dark fur collar
+        propMeshes.push(...dressTribalNecklace(this._scene, body, definition.id));
       } else if (!shouldFavorTeamBodyColor(materialPreset)) {
         for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
@@ -596,7 +599,7 @@ export class UnitFactory {
             ? hangSkirt(this._scene, body, "armourKilt", 0.6, 1.55, getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(ARMOUR_SKIRT_SHADE)))
             : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
-      if (bareSkinned) propMeshes.push(furCollar(this._scene, body));
+      if (bareSkinned && !hasTribalNecklace(definition.id)) propMeshes.push(furCollar(this._scene, body));
     }
 
     // Linked gun crew wear the same hooped shirt and brown trousers as the cannon's own operator, under their own headgear
