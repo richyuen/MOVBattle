@@ -2367,6 +2367,12 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const { blade, hilt } = buildSlabSword(scene, "blade", fit, accent, false, type === "sword" && variant === "longsword" ? LONGSWORD : undefined);
       // The guard stays where the old one sat on the fist, whatever the blade above it is cut to
       blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
+      // The Knight's arming sword (355): grey steel guard, grip and pommel (the metal accent rendered black at the hip), held out by its marker
+      if (type === "sword" && variant === "arming_sword") {
+        const hiltSteel = mat(scene, new Color3(0.62, 0.63, 0.67), 0, "stone");
+        for (const c of blade.getChildMeshes(true)) if (/^(guard|grip|pommel)$/.test(c.name)) c.material = hiltSteel;
+        new TransformNode("armingOut", scene).parent = blade;
+      }
       return blade;
     }
     case "greatsword": {

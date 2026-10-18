@@ -167,7 +167,7 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow" | "brown_longbow" | "longsword" | "zweihander" | "priest_staff";
+  weaponVariant?: "longbow" | "brown_longbow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword";
 }
 
 function vis(
@@ -306,6 +306,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "medieval.knight": vis(
     { scale: 1.25, bulk: 1.55 }, "sword", "armet", "kite", "cape", "#C0C0C0",
+    undefined, { weaponVariant: "arming_sword" },
   ),
   "medieval.catapult": vis(
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "helmet", "none", "catapult_arm", "#8B4513",

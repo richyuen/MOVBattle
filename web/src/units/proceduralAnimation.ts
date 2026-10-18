@@ -190,6 +190,12 @@ const OFFHAND_GRIP_UP = 0.11;
  */
 const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4, zweiFists: 0.4 };
 /*
+ * [S] the Knight's arming sword held out (355; medieval.knight.red.png: the sword arm out from his side at the waist, the whole grey blade stood up and a
+ * little out beside the shield, never shouldered along the arm). A blade marked `armingOut` (propBuilder, weaponVariant arming_sword) skips the four hashed
+ * carries: the weapon arm .raise forward, .out from the side, elbow .elbow, the blade's point toward .tip (body frame: x out to the weapon side, y up, z ahead).
+ */
+const ARMING_OUT = { raise: -0.35, out: 0.85, elbow: -0.55, tip: [0.35, 0.9, 0.25] as const };
+/*
  * [R] two fists on the long grip (354; medieval.king.jpg, .red.png: the King's Zweihander held in both fists, arms run down to the hilt before his belly).
  * Spec read off the renders: the weapon fist closes on the grip right under the cross (the Zweihander's mount seats it there, propBuilder ZWEI.seat), the off
  * fist sits stacked under it on the grip, about a fist apart (TWO_FIST_SWORD of the grip below the weapon fist), the pommel clear below both; never an off hand
@@ -1916,7 +1922,10 @@ export class ProceduralAnimator {
     const tree = node?.name === "treeClubCarry";
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
-    const attitude = hayStick
+    const armingOut = !!node?.getChildren().some((c) => c.name === "armingOut");
+    const attitude = armingOut
+      ? { raise: ARMING_OUT.raise, out: ARMING_OUT.out, elbow: ARMING_OUT.elbow, tip: new Vector3(ARMING_OUT.tip[0] * side, ARMING_OUT.tip[1], ARMING_OUT.tip[2]).normalize() }
+      : hayStick
       ? { raise: HAY_CARRY.raise, out: HAY_CARRY.out, elbow: HAY_CARRY.elbow, tip: new Vector3(HAY_CARRY.tip.x * side, HAY_CARRY.tip.y, HAY_CARRY.tip.z).normalize() }
       : lowScythe
       ? { raise: SCYTHE_LOW.raise, out: SCYTHE_LOW.out, elbow: SCYTHE_LOW.elbow, tip: new Vector3(SCYTHE_LOW.tip.x * side, SCYTHE_LOW.tip.y, SCYTHE_LOW.tip.z).normalize() }
