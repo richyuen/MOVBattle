@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode,
+  Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
@@ -119,6 +119,14 @@ const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
 const TRIBAL_TUNIC_UNITS = new Set(["tribal.stoner", "tribal.protector"]);
 const TUNIC = { top: 0.8, skirt: 0.6, flare: 1.25, tatters: 5, strap: 0.22 };
 const TUNIC_COLOR = new Color3(0.5, 0.29, 0.18);
+/*
+ * The tribal hide cape (tribal.bone_mage.blue.png, card Appearance: "a primitive hide cape that extends to their thigh"): a stiff brown hide hung from the
+ * shoulders down the back to the thigh, not cloth: a jittered faceted slab HIDE_CAPE.wide shoulder spans across and HIDE_CAPE.thick of the trunk's depth,
+ * tilted HIDE_CAPE.tilt off the back, HIDE_CAPE.points pointed tatters off its hem, and a pointed flap forward over each shoulder. Self-lit dark brown.
+ */
+const TRIBAL_CAPE_UNITS = new Set(["tribal.bone_mage"]);
+const HIDE_CAPE = { wide: 1.25, thick: 0.35, tilt: 0.12, jitter: 0.12, points: 4, drop: 0.55 };
+const HIDE_CAPE_COLOR = new Color3(0.38, 0.23, 0.14);
 /*
  * Skeletons are bones, not men (250; units/spooky.skeleton_warrior: cream bone limbs about a third as thick as a man's, a rib cage of hoops round a thin
  * spine in place of the chest block, a bare skull for a head under a team-coloured hood, and a ragged team-coloured skirt from the hips to the knees with
@@ -435,6 +443,7 @@ export class UnitFactory {
           propMeshes.push(hair);
         }
         if (TRIBAL_TUNIC_UNITS.has(definition.id)) propMeshes.push(...dressTribalTunic(this._scene, body));
+        if (TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(...dressTribalCape(this._scene, body));
       } else if (!shouldFavorTeamBodyColor(materialPreset)) {
         for (const limb of [body.leftUpperArm, body.rightUpperArm]) {
           limb.material = body.skinMaterial;
@@ -1703,5 +1712,68 @@ function dressTribalTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
     added.push(drop);
   }
   for (const mesh of [wrap, skirt]) mesh.parent = body.torso;
+  return added;
+}
+
+/** Hangs the tribal hide cape on a bare man's back (spec at HIDE_CAPE): a faceted slab from the shoulders to the thigh, pointed hem, a flap over each shoulder. */
+function dressTribalCape(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const hide = getMaterialFactory().get("cloth", HIDE_CAPE_COLOR, { emissiveIntensity: 0.16 });
+  const trunk = body.neck.position.y;
+  const thigh = Math.abs(body.leftKnee.position.y);
+  const shoulderX = Math.abs(body.rightShoulder.position.x);
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const depth = chest.z * body.torsoMesh.scaling.z;
+  const top = trunk * 1.02;
+  const foot = -thigh * HIDE_CAPE.drop;
+  const halfWide = shoulderX * HIDE_CAPE.wide;
+  const halfTall = (top - foot) * 0.5;
+  const halfThick = depth * HIDE_CAPE.thick * 0.5;
+  // The slab: a faceted ball pressed flat and stretched to the back's span, every vertex pushed in or out by its own share, narrower at the neck
+  const slab = MeshBuilder.CreateIcoSphere("hideCape", { radius: 1, subdivisions: 1, flat: true }, scene);
+  const at = slab.getVerticesData(VertexBuffer.PositionKind);
+  if (at) {
+    for (let v = 0; v < at.length; v += 3) {
+      const seed = Math.sin(Math.round(at[v] * 89 + at[v + 1] * 53 + at[v + 2] * 37) * 311.7 + 41.3) * 43758.5453;
+      const k = 1 - HIDE_CAPE.jitter + 2 * HIDE_CAPE.jitter * (seed - Math.floor(seed));
+      const neckIn = 0.8 + 0.2 * (1 - (at[v + 1] + 1) * 0.5);
+      at[v] = at[v] * halfWide * neckIn * k;
+      at[v + 1] = Math.max(-0.9, Math.min(0.95, at[v + 1])) * halfTall;
+      at[v + 2] = at[v + 2] * halfThick * k;
+    }
+    slab.setVerticesData(VertexBuffer.PositionKind, at);
+    const normals: number[] = [];
+    VertexData.ComputeNormals(at, slab.getIndices() ?? [], normals);
+    slab.setVerticesData(VertexBuffer.NormalKind, normals);
+    slab.refreshBoundingInfo();
+  }
+  slab.rotation.x = HIDE_CAPE.tilt;
+  slab.position.set(0, (top + foot) * 0.5, -(depth * 1.05 + halfThick) - Math.sin(HIDE_CAPE.tilt) * halfTall * 0.5);
+  slab.material = hide;
+  slab.parent = body.torso;
+  added.push(slab);
+  // Pointed tatters hanging off the hem, tips down
+  for (let i = 0; i < HIDE_CAPE.points; i++) {
+    const x = ((i + 0.5) / HIDE_CAPE.points - 0.5) * 2 * halfWide * 0.85;
+    const point = MeshBuilder.CreateCylinder("hideCapePoint", { height: thigh * 0.28, diameterTop: 0, diameterBottom: halfWide * 0.5, tessellation: 3 }, scene);
+    point.scaling.z = 0.3;
+    point.rotation.x = Math.PI;
+    point.position.set(x, foot * 0.9 - thigh * 0.12, 0);
+    point.material = hide;
+    point.parent = slab;
+    point.convertToFlatShadedMesh();
+    added.push(point);
+  }
+  // A pointed flap forward over each shoulder, the hide's corners falling onto the chest
+  for (const side of [-1, 1]) {
+    const flap = MeshBuilder.CreateCylinder("hideCapeFlap", { height: trunk * 0.4, diameterTop: 0, diameterBottom: shoulderX * 0.8, tessellation: 3 }, scene);
+    flap.scaling.z = 0.3;
+    flap.rotation.set(Math.PI - 0.45, 0, side * 0.15);
+    flap.position.set(side * shoulderX * 0.75, trunk * 0.92, depth * 0.55);
+    flap.material = hide;
+    flap.parent = body.torso;
+    flap.convertToFlatShadedMesh();
+    added.push(flap);
+  }
   return added;
 }
