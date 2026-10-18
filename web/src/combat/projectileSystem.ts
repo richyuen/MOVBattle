@@ -1205,8 +1205,14 @@ export class ProjectileSystem {
       this._puffMat = m;
     }
     if (opts.green && !this._greenPuffMat) {
-      const g = this._puffMat.clone("drunkPuffMat");
+      // its own material on the same feathered texture (a clone would copy the dynamic texture blank, and never be ready)
+      const g = new StandardMaterial("drunkPuffMat", this._scene);
+      g.diffuseTexture = this._puffMat.diffuseTexture;
+      g.useAlphaFromDiffuseTexture = true;
+      g.disableLighting = true;
       g.emissiveColor = DRUNK_GREEN.clone();
+      g.backFaceCulling = false;
+      g.disableDepthWrite = true;
       this._greenPuffMat = g;
     }
     // Hashed, not drawn from Math.random, so the wake does not shift the battle's random stream
