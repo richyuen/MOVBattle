@@ -188,23 +188,21 @@ const TREE_GIANT_RAGS = new Color3(0.56, 0.42, 0.28);
 /*
  * The painter (255; units/renaissance.painter): a two-tone man, not one team colour. A dark team doublet and sleeves, tan hose to the ankle, red-brown shoes, a
  * cream ruff in two stacked collars round the neck, a dark team beret; the palette rides in the off hand (propBuilder "palette").
- *   doublet PAINTER_DOUBLET of the team colour, beret PAINTER_BERET; ruff PAINTER_RUFF necks across in PAINTER_RUFF_TIERS tiers.
+ *   doublet PAINTER_DOUBLET of the team colour, beret PAINTER_BERET; cravat at the throat PAINTER_CRAVAT.
  */
 const PAINTER_DOUBLET = 0.6;
 const PAINTER_BERET = 0.42;
 const PAINTER_HOSE = new Color3(0.92, 0.6, 0.3);
 const PAINTER_SHOE = new Color3(0.66, 0.22, 0.12);
-const PAINTER_RUFF_COLOR = new Color3(1.0, 0.86, 0.55);
-const PAINTER_RUFF = 1.25;
-const PAINTER_RUFF_TIERS = 1;
 /*
- * [S] jabot (333; renaissance.painter.blue.png: a large cream cravat wrapped at the throat and falling in stacked folds over the upper chest, as wide as the
- * neck is twice over, standing well off the doublet; the ruff alone read as a thin grey ring). Under the one neck wrap, PAINTER_JABOT.layers faceted folds
- * hang down the front of the chest, each PAINTER_JABOT.tall of the chest's height, the top one PAINTER_JABOT.wide of the chest across and each lower one
- * PAINTER_JABOT.taper narrower, overlapping by a third, standing PAINTER_JABOT.proud of the chest's depth off it (so they read side-on too), tipped out at
- * the hem PAINTER_JABOT.tip rad and turned a little each way (PAINTER_JABOT.twist) so the folds do not stack as one block; the last ends in a point.
+ * [S] cravat (335; renaissance.painter.blue.png: a tan scarf wound thick round the throat, knotted at the front, one short tail falling from the knot to a
+ * point over the top of the chest; the 333 jabot's three stacked folds hung to mid-chest like a beard, and plain cloth greyed to white under the sky light).
+ * Self-lit tan (PAINTER_CRAVAT_COLOR, glow PAINTER_CRAVAT.glow) so it stays warm in every light. Sizes: the wrap PAINTER_CRAVAT.wrap heads across and
+ * .wrapTall heads high, standing over the doublet's top; the knot .knot heads across, proud of the wrap's front; the tail .fall of the chest's height long
+ * from the knot, .fallWide of the chest across at its root, narrowing to a point, flattened to .flat of its width, tipped out .tip rad at the point.
  */
-const PAINTER_JABOT = { layers: 3, wide: 0.85, tall: 0.22, taper: 0.15, proud: 0.8, tip: 0.35, twist: 0.12 };
+const PAINTER_CRAVAT_COLOR = new Color3(0.86, 0.68, 0.42);
+const PAINTER_CRAVAT = { wrap: 1.3, wrapTall: 0.28, knot: 0.36, fall: 0.3, fallWide: 0.5, flat: 0.35, tip: 0.3, glow: 0.3 };
 /*
  * The righteous paladin (units/good.righteous_paladin): white plate trimmed in gold over the team skin, not a plain team tunic. Read off the reference: white
  * chest, hips, thighs, greaves and feet; bare team-skin arms; bright orange-gold bands at the waist and round each knee with a pointed gold knee plate on the
@@ -856,39 +854,42 @@ function dressPainter(scene: Scene, body: ArticulatedBody, teamColor: Color3, pr
   }
   const beret = props.find((m) => m.name === "beret");
   if (beret) beret.material = getMaterialFactory().getCloth(teamColor.scale(PAINTER_BERET));
-  // Ruff: stacked faceted collars round the neck, each a little narrower than the one under it, wider than the neck so they stand off the doublet
+  // The cravat (spec at PAINTER_CRAVAT): the wrap round the throat, the knot at its front, one pointed tail over the top of the chest
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
   const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
-  const ruffMat = getMaterialFactory().getCloth(PAINTER_RUFF_COLOR);
-  for (let i = 0; i < PAINTER_RUFF_TIERS; i++) {
-    const across = headSize * PAINTER_RUFF * (1 - 0.18 * i);
-    const tier = MeshBuilder.CreateCylinder(`${chest.name}_ruff`, { height: headSize * 0.2, diameterTop: across * 0.82, diameterBottom: across, tessellation: 9 }, scene);
-    tier.scaling.z = Math.min(1, (D * 1.3) / across);
-    tier.position.set(0, chest.position.y + H * 0.5 + headSize * (0.02 + 0.17 * i), D * 0.06);
-    tier.material = ruffMat;
-    tier.convertToFlatShadedMesh();
-    tier.parent = body.torso;
-    added.push(tier);
-  }
-  // The jabot's folds (spec at PAINTER_JABOT), top down from under the wrap
-  const J = PAINTER_JABOT;
-  for (let i = 0; i < J.layers; i++) {
-    const across = W * J.wide * (1 - J.taper * i);
-    const last = i === J.layers - 1;
-    const fold = MeshBuilder.CreateCylinder(`${chest.name}_jabot`, {
-      height: H * J.tall, diameterTop: across * 0.7, diameterBottom: last ? across * 0.25 : across, tessellation: 6,
-    }, scene);
-    fold.scaling.z = (D * J.proud * 2) / across;
-    fold.rotation.x = -J.tip;
-    fold.rotation.y = (i % 2 === 0 ? 1 : -1) * J.twist;
-    fold.position.set(0, chest.position.y + H * (0.5 - J.tall * 0.5 - J.tall * 0.67 * i), D * 0.5);
-    fold.material = ruffMat;
-    fold.convertToFlatShadedMesh();
-    fold.parent = body.torso;
-    added.push(fold);
-  }
+  const C = PAINTER_CRAVAT;
+  const cravat = getMaterialFactory().get("cloth", PAINTER_CRAVAT_COLOR, { emissiveIntensity: C.glow });
+  const put = (m: Mesh): Mesh => {
+    m.material = cravat;
+    m.convertToFlatShadedMesh();
+    m.parent = body.torso;
+    added.push(m);
+    return m;
+  };
+  const neckFoot = chest.position.y + H * 0.5;
+  const across = headSize * C.wrap;
+  const wrapTall = headSize * C.wrapTall;
+  const wrap = put(MeshBuilder.CreateCylinder(`${chest.name}_cravatWrap`, { height: wrapTall, diameterTop: across * 0.8, diameterBottom: across, tessellation: 8 }, scene));
+  wrap.scaling.z = Math.min(1, (D * 1.25) / across);
+  wrap.position.set(0, neckFoot + wrapTall * 0.35, D * 0.04);
+  const frontZ = D * 0.04 + across * wrap.scaling.z * 0.5;
+  const knotSize = headSize * C.knot;
+  const knot = put(MeshBuilder.CreateIcoSphere(`${chest.name}_cravatKnot`, { radius: 0.5, subdivisions: 1, flat: true }, scene));
+  knot.scaling.set(knotSize, knotSize * 0.8, knotSize * 0.7);
+  knot.position.set(0, neckFoot + wrapTall * 0.05, frontZ);
+  // the tail: a flat four-sided cone, its root under the knot, its point down over the top of the chest and tipped out
+  const fallLong = H * C.fall;
+  const root = W * C.fallWide;
+  const tail = MeshBuilder.CreateCylinder(`${chest.name}_cravatTail`, { height: fallLong, diameterTop: root, diameterBottom: 0, tessellation: 4 }, scene);
+  tail.rotation.y = Math.PI / 4;
+  tail.bakeCurrentTransformIntoVertices();
+  tail.scaling.z = C.flat;
+  tail.setPivotPoint(new Vector3(0, fallLong * 0.5, 0));
+  tail.rotation.x = -C.tip;
+  tail.position.set(0, neckFoot - fallLong * 0.5 - knotSize * 0.1, frontZ - knotSize * 0.15);
+  put(tail);
   return added;
 }
 
