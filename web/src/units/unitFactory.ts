@@ -545,6 +545,10 @@ export class UnitFactory {
     if (definition.id === "renaissance.jouster" && !shouldUseVehicleBody) {
       propMeshes.push(...dressJouster(this._scene, body, teamColor));
     }
+    if (definition.id === "farmer.farmer" && !shouldUseVehicleBody) {
+      // [S] white socks and brown slip-on shoes (341; FARMER_SOCK)
+      propMeshes.push(...dressFarmerLegs(this._scene, body));
+    }
     if (definition.id === "farmer.hay_baler" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHayBale(this._scene, body));
       // [S] ...and his brown bowl cut, no hat (341; tribalDress BOWL)
@@ -1343,6 +1347,47 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
     const lapel = put(MeshBuilder.CreateBox("halflingLapel", { width: W * 0.09, height: H * J.lapel, depth: D * 0.06 }, scene), lapelCloth);
     lapel.rotation.z = side * 0.32;
     lapel.position.set(side * (W * J.vest * 0.5 + W * 0.03), top - H * 0.06 - H * J.lapel / 2, front + D * 0.02);
+  }
+  return added;
+}
+
+/*
+ * [S] farmer's socks and shoes (341; farmer.farmer.red.png, card Appearance "a pair of long white socks along with a pair of brown medieval slip-on
+ * shoes"): from under the knee-length shorts to the ankle a white sock, a tube standing a little off the shin, its top turned down in a fatter cuff just
+ * under the knee; at the ankle the brown shoe's raised collar wraps the foot of the sock, and the foot is the brown shoe. Shares of the shin's girth and
+ * length: sock FARMER_SOCK.sock round it and .long of the shin long; cuff .cuff round and .cuffTall long; shoe collar .collar round and .collarTall long.
+ * White is self-lit (.glow) so it reads white and not grey in the shade.
+ */
+const FARMER_SOCK = { sock: 1.14, long: 0.9, cuff: 1.3, cuffTall: 0.12, collar: 1.36, collarTall: 0.13, glow: 0.22 };
+const FARMER_SOCK_WHITE = new Color3(0.9, 0.88, 0.84);
+const FARMER_SHOE = new Color3(0.5, 0.29, 0.18);
+/** Dresses the farmer's lower legs (spec at FARMER_SOCK): white socks with turned cuffs, brown slip-on shoes with raised collars. */
+function dressFarmerLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const added: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const F = FARMER_SOCK;
+  const sock = mf.get("cloth", FARMER_SOCK_WHITE, { emissiveIntensity: F.glow });
+  const shoe = mf.get("cloth", FARMER_SHOE, { emissiveIntensity: 0.15 });
+  const put = (m: Mesh, mt: Material, parent: TransformNode): Mesh => {
+    m.material = mt;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = sock;
+    const e = shin.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const tube = put(MeshBuilder.CreateCylinder("farmerSock", { height: long * F.long, diameterTop: girth * F.sock, diameterBottom: girth * F.sock * 0.94, tessellation: 7 }, scene), sock, shin);
+    tube.position.y = long * 0.5 - long * F.long * 0.5 - long * 0.03;
+    const cuff = put(MeshBuilder.CreateCylinder("farmerSockCuff", { height: long * F.cuffTall, diameterTop: girth * F.cuff, diameterBottom: girth * F.cuff * 1.04, tessellation: 7 }, scene), sock, shin);
+    cuff.position.y = long * 0.5 - long * 0.03 - long * F.cuffTall * 0.5;
+    const collar = put(MeshBuilder.CreateCylinder("farmerShoeCollar", { height: long * F.collarTall, diameterTop: girth * F.collar, diameterBottom: girth * F.collar * 0.92, tessellation: 7 }, scene), shoe, shin);
+    collar.position.y = -long * 0.5 + long * F.collarTall * 0.35;
+  }
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
   }
   return added;
 }
