@@ -1651,7 +1651,7 @@ const AXE_HEAD_SQUASH = { y: 0.62, z: 0.5 };
 // surfaces): flat strips bedded on the chunk's broad faces, in handle lengths: each strip's width and thickness, how far its outer face stands proud of the
 // chunk's face, its tilt off the handle (the two of a face tilted opposite ways so they cross), the X's centre out along the chunk from the handle, and
 // how much of the chunk's jitter is kept across its thin axis (damped, so a strip can lie on the face; the long faces keep the full jitter)
-const AXE_LASH = { wide: 0.07, thick: 0.06, proud: 0.012, tilt: 0.5, at: 0.1, bed: 0.35 };
+const AXE_LASH = { wide: 0.055, thick: 0.06, proud: 0.012, tilt: 0.5, at: 0.1, bed: 0.35 };
 // The bone mage's staff (units/tribal.bone_mage), in prop units: its length, the share of it below the fist, the skull's width (the mage's own head is about 0.14)
 const BONE_STAFF_LONG = 0.62;
 const BONE_STAFF_GRIP = 0.4;
@@ -1723,30 +1723,36 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // ways so they cross in an X at the joint; each diagonal is carried over the chunk's top edge and under its bottom edge by a strip laid across the
       // thickness (the pairs of the two faces joined), and the handle is bound with a sleeve above the stone and another where it enters below. Strips
       // lying on the surfaces, not hoops: the 318 tori stood off the stone (critic 318, blocker 3)
-      const rope = mat(scene, new Color3(0.36, 0.22, 0.1), 0.12);
+      const rope = mat(scene, new Color3(0.3, 0.17, 0.07), 0.12);
       const faceX = AXE_HEAD * 0.5 * AXE_HEAD_SQUASH.z * L; // the chunk's half thickness, half height and half length, in the handle's frame
       const tallY = AXE_HEAD * 0.5 * AXE_HEAD_SQUASH.y * L;
       const longZ = AXE_HEAD * 0.5 * L;
       const cy = 0.4 * L, cz = AXE_LASH.at * L, chunkZ = AXE_HEAD * 0.24 * L;
       const wide = AXE_LASH.wide * L, thick = AXE_LASH.thick * L, proud = AXE_LASH.proud * L;
-      const diag = (2 * tallY) / Math.cos(AXE_LASH.tilt) + wide;
-      for (const side of [-1, 1]) {
-        for (const way of [-1, 1]) {
+      // The chunk's half height at a point z along it (its outline in the face's plane): each strip is cut to that rim at its own two ends, not run out past
+      // the stone's corners like a frame
+      const rim = (z: number): number => tallY * Math.sqrt(Math.max(0, 1 - ((z - chunkZ) / longZ) ** 2));
+      const reach = tallY * Math.tan(AXE_LASH.tilt);
+      const tan = Math.tan(AXE_LASH.tilt), cos = Math.cos(AXE_LASH.tilt);
+      for (const way of [-1, 1]) {
+        // Its top end toward +z for way 1: the rims there and at its bottom end, the strip run between them through (cy, cz)
+        const rimTop = rim(cz + way * reach), rimBot = rim(cz - way * reach);
+        const diag = (rimTop + rimBot) / cos - wide * 0.3;
+        const shift = (rimTop - rimBot) * 0.5;
+        for (const side of [-1, 1]) {
           const band = MeshBuilder.CreateBox("stoneAxeLash", { width: thick, height: diag, depth: wide }, scene);
-          band.position.set(side * (faceX + proud - thick * 0.5), cy, cz);
-          band.rotation.x = way * AXE_LASH.tilt; // the strip's length leant in the face's plane: its top toward +z for way 1
+          band.position.set(side * (faceX + proud - thick * 0.5), cy + shift, cz + way * shift * tan);
+          band.rotation.x = way * AXE_LASH.tilt; // the strip's length leant in the face's plane
           band.material = rope;
           band.parent = handle;
         }
       }
       // Over the top and under the bottom edge, where each diagonal reaches it: a strip across the thickness, laid on the chunk's own height at that point
-      const reach = tallY * Math.tan(AXE_LASH.tilt);
       for (const way of [-1, 1]) {
         for (const top of [-1, 1]) {
           const z = cz + top * way * reach;
-          const rim = tallY * Math.sqrt(Math.max(0, 1 - ((z - chunkZ) / longZ) ** 2));
           const cap = MeshBuilder.CreateBox("stoneAxeLashCap", { width: 2 * (faceX + proud), height: thick, depth: wide }, scene);
-          cap.position.set(0, cy + top * (rim + proud - thick * 0.5), z);
+          cap.position.set(0, cy + top * (rim(z) + proud - thick * 0.5), z);
           cap.material = rope;
           cap.parent = handle;
         }
