@@ -201,7 +201,7 @@ const PAINTER_SHOE = new Color3(0.66, 0.22, 0.12);
  * .wrapTall heads high, standing over the doublet's top; the knot .knot heads across, proud of the wrap's front; the tail .fall of the chest's height long
  * from the knot, .fallWide of the chest across at its root, narrowing to a point, flattened to .flat of its width, tipped out .tip rad at the point.
  */
-const PAINTER_CRAVAT_COLOR = new Color3(0.86, 0.68, 0.42);
+const PAINTER_CRAVAT_COLOR = new Color3(0.8, 0.56, 0.28);
 const PAINTER_CRAVAT = { wrap: 1.3, wrapTall: 0.28, knot: 0.36, fall: 0.3, fallWide: 0.5, flat: 0.35, tip: 0.3, glow: 0.3 };
 /*
  * The righteous paladin (units/good.righteous_paladin): white plate trimmed in gold over the team skin, not a plain team tunic. Read off the reference: white
