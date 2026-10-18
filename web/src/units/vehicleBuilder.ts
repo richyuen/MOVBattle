@@ -1372,8 +1372,8 @@ const MAMMOTH_SCALE = 1.8;
  * faceted fur mass (MAMMOTH_FUR.jitter of each vertex in or out); the team colour is only paint (brow, tusk tips), never the coat. Self-lit MAMMOTH_FUR.glow so
  * the faces turned from the sun stay brown in the capture's shade; the shaggy pieces (hump, ridge, hem, cuffs, ears) MAMMOTH_FUR.shag of the way to near-black.
  */
-const MAMMOTH_HIDE = new Color3(0.4, 0.25, 0.19);
-const MAMMOTH_FUR = { jitter: 0.06, glow: 0.18, shag: 0.25 };
+const MAMMOTH_HIDE = new Color3(0.34, 0.17, 0.1);
+const MAMMOTH_FUR = { jitter: 0.06, glow: 0.1, shag: 0.25 };
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
   // The whole rig under the root scales by the unit's giant scale with its footprint and reach (unitDefinitions), so hull, legs, tusks, trunk and seats keep their proportions
