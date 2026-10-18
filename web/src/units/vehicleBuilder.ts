@@ -232,7 +232,7 @@ export const CATAPULT_ARM_PIVOT = "catapult_arm_pivot";
  * raised .raise rad up to its underside, .spread apart, elbows .elbow; no counterweight block hangs in front of him. Dressed: a pale coif hood over his head
  * and neck, the team shirt, a brown belt, brown breeches and dark shoes (dressCatapultCrew, CREW_DRESS).
  */
-const CATAPULT_CREW = { z: -0.62, y: 0.5, raise: -2.6, spread: 0.12, elbow: -0.35 };
+const CATAPULT_CREW = { z: -0.74, y: 0.5, raise: -2.8, spread: 0.12, elbow: -0.2 };
 /** The catapult's boulder across, in the bucket and in flight (buildFacetedBoulder) */
 export const CATAPULT_BOULDER = 0.65;
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
