@@ -27,7 +27,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -219,6 +219,13 @@ const FEATHER_CURL = 0.22;
  */
 const BRIM_HAT = { brim: 1.75, crown: 1.12, drop: 0.16, tall: 0.42 };
 const BRIM_HAT_FELT = new Color3(0.11, 0.1, 0.12);
+/*
+ * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
+ * heads across, turned up hard against the crown on the left side, a long pale team-coloured plume sweeping back over the turned-up side). Not a helm: the
+ * old plume helm read as a grey stovepipe. Brim CAVALIER.brim heads across, CAVALIER.flap of it turned up CAVALIER.lift rad; crown CAVALIER.crown heads across,
+ * CAVALIER.tall of the head high; felt the team colour at CAVALIER.shade; feather CAVALIER.feather heads long, CAVALIER.wide across, CAVALIER.pale toward white.
+ */
+const CAVALIER = { brim: 2.25, flap: 0.3, lift: 1.25, crown: 1.1, tall: 0.55, shade: 0.75, feather: 2.3, wide: 0.55, pale: 0.4 };
 const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
@@ -836,34 +843,58 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     knob.parent = cone;
     return band;
   }
-  if (type === "feather_hat") {
-    const felt = mat(scene, teamColor ? Color3.Lerp(FEATHER_HAT_STRAW, teamColor, FEATHER_HAT_TEAM) : FEATHER_HAT_STRAW, 0.12);
-    const brim = MeshBuilder.CreateCylinder("featherHatBrim", { height: u(0.08 * H), diameter: u(FEATHER_HAT_BRIM * W), tessellation: 10 }, scene);
+  if (type === "feather_hat" || type === "cavalier_hat") {
+    // The cavalier's hat is the minstrel's hat cut wider in team felt, one side of its brim turned up against the crown (spec at CAVALIER)
+    const cav = type === "cavalier_hat";
+    const brimHeads = cav ? CAVALIER.brim : FEATHER_HAT_BRIM;
+    const felt = cav
+      ? mat(scene, (teamColor ?? accent).scale(CAVALIER.shade), 0.12)
+      : mat(scene, teamColor ? Color3.Lerp(FEATHER_HAT_STRAW, teamColor, FEATHER_HAT_TEAM) : FEATHER_HAT_STRAW, 0.12);
+    const brim = MeshBuilder.CreateCylinder("featherHatBrim", { height: u(0.08 * H), diameter: u(brimHeads * W), tessellation: cav ? 14 : 10, arc: cav ? 1 - CAVALIER.flap : 1, enclose: cav }, scene);
+    // An arc runs clockwise from +x seen from above; turned by its own share of a half turn, its gap faces -x (the wearer's left)
+    if (cav) {
+      brim.rotation.y = -Math.PI * (1 - CAVALIER.flap);
+      brim.bakeCurrentTransformIntoVertices();
+    }
     brim.position.y = u(seat + 0.04 * H);
-    brim.rotation.set(FEATHER_HAT_DIP, 0, FEATHER_HAT_COCK);
+    brim.rotation.set(FEATHER_HAT_DIP, 0, cav ? 0 : FEATHER_HAT_COCK);
     brim.material = felt;
     brim.convertToFlatShadedMesh();
+    if (cav) {
+      // The turned-up side: the missing wedge of brim, hinged on the brim's middle and stood up CAVALIER.lift against the crown
+      const hinge = new TransformNode("cavalierHinge", scene);
+      hinge.parent = brim;
+      hinge.rotation.z = -CAVALIER.lift;
+      const flap = MeshBuilder.CreateCylinder("cavalierFlap", { height: u(0.08 * H), diameter: u(brimHeads * W), tessellation: 6, arc: CAVALIER.flap, enclose: true }, scene);
+      flap.rotation.y = Math.PI * (1 - CAVALIER.flap);
+      flap.bakeCurrentTransformIntoVertices();
+      flap.material = felt;
+      flap.convertToFlatShadedMesh();
+      flap.parent = hinge;
+    }
     // A low puffed crown over the skull, a darker band round its foot
-    const crown = MeshBuilder.CreateSphere("featherHatCrown", { diameterX: u(FEATHER_HAT_CROWN * W), diameterY: u(FEATHER_HAT_TALL * H * 2), diameterZ: u(FEATHER_HAT_CROWN * 0.95 * W), segments: 6, slice: 0.5 }, scene);
+    const crownHeads = cav ? CAVALIER.crown : FEATHER_HAT_CROWN;
+    const crown = MeshBuilder.CreateSphere("featherHatCrown", { diameterX: u(crownHeads * W), diameterY: u((cav ? CAVALIER.tall : FEATHER_HAT_TALL) * H * 2), diameterZ: u(crownHeads * 0.95 * W), segments: 6, slice: 0.5 }, scene);
     crown.material = felt;
     crown.convertToFlatShadedMesh();
     crown.parent = brim;
-    const band = MeshBuilder.CreateCylinder("featherHatBand", { height: u(0.12 * H), diameter: u(FEATHER_HAT_CROWN * 1.01 * W), tessellation: 9 }, scene);
+    const band = MeshBuilder.CreateCylinder("featherHatBand", { height: u(0.12 * H), diameter: u(crownHeads * 1.01 * W), tessellation: 9 }, scene);
     band.position.y = u(0.06 * H);
-    band.material = mat(scene, FEATHER_HAT_STRAW.scale(0.45));
+    band.material = mat(scene, cav ? (teamColor ?? accent).scale(CAVALIER.shade * 0.5) : FEATHER_HAT_STRAW.scale(0.45));
     band.convertToFlatShadedMesh();
     band.parent = brim;
     // The feather: out of the band at the left side and back, a chain of flat tapering pieces, each raked further back than the one under it, its vane turned
     // half to the front so it shows broad from the front and from the side
-    const plume = teamColor ?? accent;
+    const plume = cav ? Color3.Lerp(teamColor ?? accent, Color3.White(), CAVALIER.pale) : teamColor ?? accent;
     const vane = mat(scene, plume, 0.15);
     const quill = mat(scene, plume.scale(0.45));
-    const pieceLong = u((FEATHER_LONG * H) / FEATHER_PIECES);
+    const featherWide = cav ? CAVALIER.wide : FEATHER_WIDE;
+    const pieceLong = u(((cav ? CAVALIER.feather : FEATHER_LONG) * H) / FEATHER_PIECES);
     let parent: Mesh = brim;
     for (let i = 0; i < FEATHER_PIECES; i++) {
       const t = i / FEATHER_PIECES, t1 = (i + 1) / FEATHER_PIECES;
       // Widest a third of the way up, a narrow root and a point at the tip
-      const across = (k: number) => FEATHER_WIDE * W * Math.min(1, 0.45 + k * 1.8) * (k > 0.4 ? (1 - k) / 0.6 : 1);
+      const across = (k: number) => featherWide * W * Math.min(1, 0.45 + k * 1.8) * (k > 0.4 ? (1 - k) / 0.6 : 1);
       const piece = MeshBuilder.CreateCylinder("featherHatPlume", { height: pieceLong, diameterBottom: u(across(t)), diameterTop: u(Math.max(across(t1), 0.02 * W)), tessellation: 4 }, scene);
       // Flattened into the vertices, so the next piece hangs off it unsquashed
       piece.scaling.z = 0.18;
@@ -872,7 +903,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       piece.material = vane;
       piece.convertToFlatShadedMesh();
       if (i === 0) {
-        piece.position.set(u(-0.5 * FEATHER_HAT_CROWN * W), u(0.1 * H) + pieceLong / 2, u(-0.18 * W));
+        piece.position.set(u(-0.5 * crownHeads * W), u(0.1 * H) + pieceLong / 2, u(-0.18 * W));
         piece.rotation.set(-FEATHER_RAKE, 0.7, 0.18);
       } else {
         piece.position.y = pieceLong;
