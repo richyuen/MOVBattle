@@ -18,7 +18,7 @@ export type WeaponType =
   | "fan" | "flail" | "whip" | "present_box" | "pom_pom" | "tree_club";
 
 export type HatType =
-  | "none" | "crown" | "royal_crown" | "helmet" | "viking_helmet" | "horned_helmet"
+  | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat"
   | "miner_hat"
@@ -274,7 +274,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ MEDIEVAL ═══════════════════════
   "medieval.bard": vis(
-    { scale: 0.85, bulk: 0.8 }, "lute", "feather_hat", "none", "none", "#9B30FF",
+    { scale: 0.85, bulk: 0.8 }, "lute", "floppy_hat", "none", "none", "#9B30FF",
   ),
   "medieval.squire": vis(
     { scale: 1.0, bulk: 1.0, torsoLength: 0.86, torsoDepth: 0.75 }, "sword", "great_helm", "none", "none", "#C0C0C0",

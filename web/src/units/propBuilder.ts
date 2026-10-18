@@ -43,7 +43,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -270,6 +270,16 @@ const ARMET = { heads: 1.22, deep: 1.1, dome: 0.5, drop: 1.0, plate: 0.09, bevor
  * points .tall H high and .base W wide at the root round its top, leaning out .flare rad; a team gem on the band under each point; gold rims top and foot.
  */
 const ROYAL_CROWN = { heads: 1.12, band: 0.3, down: 0.04, points: 8, tall: 0.42, base: 0.32, flare: 0.12, gem: 0.12, rim: 0.05, gold: new Color3(0.95, 0.72, 0.22) };
+/*
+ * [S] the Bard's floppy hat (355; medieval.bard.blue.png, .red.png, card Appearance "a feathered cap"). In head widths W and heights H: a brown felt brim
+ * FLOPPY_HAT.brim W across and .thick H thick, its edge let down .droop H (soft, floppy), dipped .dip forward and cocked .cock; a raised faceted crown .crown W
+ * across at the foot, narrowing to .taper of that, .tall H high, a darker band round its foot; broad flat team leaf feathers (.leaves: long H, wide W, raked
+ * back, leaned out, turned) out of the back of the crown, the team colour paled .pale.
+ */
+const FLOPPY_HAT = {
+  brim: 2.0, thick: 0.07, droop: 0.24, dip: 0.12, cock: -0.08, crown: 1.12, taper: 0.88, tall: 0.5, pale: 0.25, felt: new Color3(0.55, 0.3, 0.19),
+  leaves: [[0.85, 0.42, 0.55, 0.35, 0.4], [0.55, 0.3, 0.9, 0.7, -0.3]] as const,
+};
 const SALLET = { heads: 1.3, deep: 1.12, crown: 0.12, dome: 0.45, drop: 1.05, flare: 1.08, slit: 0.07, slitDown: 0.04, slitWide: 0.78, tail: 0.5, dip: 0.45 };
 /*
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
@@ -339,6 +349,52 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   const eyeTop = 0.44 * H - 0.18 * W;
   const seat = -eyeTop + HAT_EYE_CLEAR * H;
   const u = (v: number) => v / unit;
+  if (type === "floppy_hat") {
+    // [S] the Bard's floppy hat (355; spec at FLOPPY_HAT), replacing the pale flat straw disc with a stick quill
+    const F = FLOPPY_HAT;
+    const felt = mat(scene, F.felt, 0.12);
+    const brimR = F.brim * W * 0.5;
+    const brim = MeshBuilder.CreateCylinder("floppyHatBrim", { height: u(F.thick * H), diameter: u(2 * brimR), tessellation: 10, subdivisions: 1 }, scene);
+    // Droop: each vertex let down by the square of its share of the brim's radius, more at the front and sides than at the back
+    const pos = brim.getVerticesData(VertexBuffer.PositionKind);
+    if (pos) {
+      for (let i = 0; i < pos.length; i += 3) {
+        const r = Math.hypot(pos[i], pos[i + 2]) / u(brimR);
+        const front = 0.75 + 0.25 * (pos[i + 2] / (Math.hypot(pos[i], pos[i + 2]) || 1));
+        pos[i + 1] -= u(F.droop * H) * r * r * front;
+      }
+      brim.updateVerticesData(VertexBuffer.PositionKind, pos);
+    }
+    brim.refreshBoundingInfo();
+    brim.position.y = u(seat + 0.02 * H);
+    brim.rotation.set(F.dip, 0, F.cock);
+    brim.material = felt;
+    brim.convertToFlatShadedMesh();
+    const crown = MeshBuilder.CreateCylinder("floppyHatCrown", { height: u(F.tall * H), diameterBottom: u(F.crown * W), diameterTop: u(F.crown * F.taper * W), tessellation: 7 }, scene);
+    crown.position.y = u(F.tall * H * 0.5);
+    crown.rotation.set(0.08, 0.3, -0.06); // a little lopsided, soft felt
+    crown.material = felt;
+    crown.convertToFlatShadedMesh();
+    crown.parent = brim;
+    const band = MeshBuilder.CreateCylinder("floppyHatBand", { height: u(0.1 * H), diameter: u(F.crown * 1.03 * W), tessellation: 7 }, scene);
+    band.position.y = u(0.07 * H);
+    band.rotation.y = 0.3;
+    band.material = mat(scene, F.felt.scale(0.55));
+    band.convertToFlatShadedMesh();
+    band.parent = brim;
+    // The leaf feather: a broad flat team blade (and a smaller one beside it) out of the band at the back of the crown, raked back and out
+    const leafMat = mat(scene, Color3.Lerp(teamColor ?? accent, Color3.White(), F.pale), 0.18);
+    F.leaves.forEach(([long, wide, rake, out, turn], i) => {
+      const leaf = MeshBuilder.CreateSphere("floppyHatLeaf", { diameterX: u(wide * W), diameterY: u(long * H), diameterZ: u(0.05 * W), segments: 3 }, scene);
+      leaf.setPivotPoint(new Vector3(0, -u(long * H * 0.5), 0));
+      leaf.position.set(u(-0.12 * W - i * 0.06 * W), u(F.tall * H * 0.75 + long * H * 0.5), u(-F.crown * W * 0.3));
+      leaf.rotation.set(-rake, turn, out);
+      leaf.material = leafMat;
+      leaf.convertToFlatShadedMesh();
+      leaf.parent = brim;
+    });
+    return brim;
+  }
   if (type === "royal_crown") {
     // [S] the King's fitted crown (355; spec at ROYAL_CROWN), replacing the hat-scale torus that floated a head-width above him
     const C = ROYAL_CROWN;
