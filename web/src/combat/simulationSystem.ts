@@ -111,12 +111,13 @@ function muzzleScaleForProjectile(shape: ProjectileShape): number {
     case "bomb": return 1.4;
     case "rocket_arrow": return 0.65;
     case "bolt": return 0.7;
+    case "davinci_ball": return 0.8;
     default: return 1;
   }
 }
 
 function shouldSpawnProjectileMuzzleFx(shape: ProjectileShape): boolean {
-  return shape === "shell" || shape === "bomb" || shape === "rocket_arrow" || shape === "bolt";
+  return shape === "shell" || shape === "bomb" || shape === "rocket_arrow" || shape === "bolt" || shape === "davinci_ball";
 }
 
 function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
@@ -1554,8 +1555,9 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_da_vinci_tank") {
+      // Cannonballs (card: "launching cannonballs ... they shatter into fragments"), not bolts
       this._fireCustomVolley(attacker, target, damage, knockback, Math.max(6, attacker.definition.burstCount ?? 8), {
-        projectileShape: "bolt",
+        projectileShape: "davinci_ball",
         splashRadius: 0.45,
         spreadX: 1.0,
         spreadY: 0.5,

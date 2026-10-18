@@ -18,6 +18,8 @@ interface TimedEffect {
  */
 // A spell dome (see VisualEffects.spawnSpellDome): its life in seconds, the share of it spent swelling and fading, and its see-through-ness.
 // Shed gear (see VisualEffects.spawnGearLitter): how far off it lands, how far a board leans back off upright, and how far a weapon's grip end stands off the ground.
+// A da Vinci ball's break-up (see spawnShatter): shards, size (m), outward and upward speed (m/s), seconds
+const SHATTER = { count: 7, size: 0.11, speed: 3.2, up: 3.0, last: 0.9 };
 const GEAR_TOSS_MIN = 0.6;
 const GEAR_TOSS_MAX = 1.1;
 const GEAR_BOARD_LEAN = 0.35;
@@ -645,6 +647,54 @@ export class VisualEffects {
       dispose: () => { for (const chunk of chunks) if (!chunk.landed && !chunk.mesh.isDisposed()) settle(chunk); },
     });
   }
+
+  // ══════════════════ SHATTER ══════════════════
+  /**
+   * A da Vinci cannonball breaking up where it lands (renaissance.da_vinci_tank card: "the cannonballs ... shatter into fragments"): SHATTER.count black iron
+   * shards of mixed shape, SHATTER.size across, flung out all round at SHATTER.speed and up at SHATTER.up from the point of impact, tumbling, falling under
+   * gravity and bouncing once off the ground before they go (not litter: sixteen barrels would carpet the field).
+   */
+  spawnShatter(position: Vector3): void {
+    const root = new TransformNode("shatter", this._scene);
+    root.position = position.clone();
+    const floorY = -root.position.y + 0.04;
+    const iron = this._shatterMat ??= getMaterialFactory().createUnique("stone", new Color3(0.06, 0.06, 0.07));
+    const shards: { mesh: Mesh; velocity: Vector3; spin: Vector3; bounced: boolean }[] = [];
+    for (let i = 0; i < SHATTER.count; i++) {
+      const mesh = i % 3 === 2
+        ? MeshBuilder.CreateBox("shard", { width: 1, height: 0.5, depth: 0.7 }, this._scene)
+        : MeshBuilder.CreatePolyhedron("shard", { type: i % 3, size: 0.5 }, this._scene);
+      mesh.material = iron;
+      mesh.parent = root;
+      mesh.scaling.setAll(SHATTER.size * (0.7 + Math.random() * 0.6));
+      mesh.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
+      const angle = (i / SHATTER.count) * Math.PI * 2 + Math.random() * 0.6;
+      const speed = SHATTER.speed * (0.6 + Math.random() * 0.7);
+      shards.push({
+        mesh,
+        velocity: new Vector3(Math.cos(angle) * speed, SHATTER.up * (0.5 + Math.random() * 0.8), Math.sin(angle) * speed),
+        spin: new Vector3(6 + Math.random() * 8, Math.random() * 6, 6 + Math.random() * 8),
+        bounced: false,
+      });
+    }
+    this._effects.push({
+      root,
+      remaining: SHATTER.last,
+      update: (dt) => {
+        for (const s of shards) {
+          s.velocity.y -= 14 * dt;
+          s.mesh.position.addInPlace(s.velocity.scale(dt));
+          s.mesh.rotation.addInPlace(s.spin.scale(dt));
+          if (s.mesh.position.y < floorY) {
+            s.mesh.position.y = floorY;
+            if (s.bounced) s.velocity.setAll(0);
+            else { s.velocity.y = -s.velocity.y * 0.35; s.velocity.x *= 0.5; s.velocity.z *= 0.5; s.spin.scaleInPlace(0.4); s.bounced = true; }
+          }
+        }
+      },
+    });
+  }
+  private _shatterMat: ReturnType<ReturnType<typeof getMaterialFactory>["createUnique"]> | undefined;
 
   // ══════════════════ SHED GEAR ══════════════════
   /**

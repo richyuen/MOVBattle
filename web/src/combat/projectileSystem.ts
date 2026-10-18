@@ -11,7 +11,7 @@ import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 import { buildFlyingSword } from "../units/propBuilder";
 
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -144,6 +144,8 @@ function darken(color: Color3, amount: number): Color3 {
 
 // Arrow, bolt and spear shafts are dark wood for both teams; only the head and the fletching carry the team colour.
 const WOOD_SHAFT_COLOR = new Color3(0.3, 0.2, 0.11);
+// The da Vinci tank's cannonball, across (m): half the pirate cannon's ball, sixteen barrels' worth
+const DAVINCI_BALL = 0.24;
 // A caster's fireball (units/legacy.wizard): about a head and a half across, a white-yellow heart in an orange shell, a flame tail half a man long
 const FIREBALL_WIDE = 0.55;
 const FIREBALL_TAIL = 0.8;
@@ -236,6 +238,7 @@ export class ProjectileSystem {
       case "shell":   speed = 46; arcHeight = dist * 0.015; break;
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
       case "cannonball": speed = 10; arcHeight = dist * 0.4; break;
+      case "davinci_ball": speed = 30; arcHeight = dist * 0.06; break;
       case "firework": speed = 22; arcHeight = dist * 0.25; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
       case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
@@ -652,7 +655,10 @@ export class ProjectileSystem {
       this._flingFromBlast(p);
       // Spawn impact effect for explosive
       const explosionScale = p.shape === "shell" ? 1.8 : 1;
-      if (this.impactPresentation) {
+      if (p.shape === "davinci_ball") {
+        // A da Vinci ball does not explode: it shatters into iron fragments where it lands
+        this.visualEffects?.spawnShatter(p.mesh.position);
+      } else if (this.impactPresentation) {
         this.impactPresentation.presentExplosion(p.targetPos, explosionScale);
       } else {
         this._spawnExplosion(p.targetPos, explosionScale);
@@ -865,6 +871,17 @@ export class ProjectileSystem {
         ball.parent = root;
         this._scene.getGlowLayerByName("glow")?.addExcludedMesh(ball);
         this._addStreak(root, 0.23, 2.2, 0.14);
+        break;
+      }
+      case "davinci_ball": {
+        // The da Vinci tank's shot (card Characteristics: cannonballs that shatter into fragments on impact): a small faceted iron ball, black whichever side
+        // fired it, with a short white streak behind it (see visualEffects.spawnShatter for the burst)
+        const ball = MeshBuilder.CreateSphere("davinciBall", { diameter: DAVINCI_BALL, segments: 3 }, this._scene);
+        ball.convertToFlatShadedMesh();
+        ball.material = this._ironMat();
+        ball.parent = root;
+        this._scene.getGlowLayerByName("glow")?.addExcludedMesh(ball);
+        this._addStreak(root, DAVINCI_BALL * 0.5, 1.3, 0.09);
         break;
       }
       case "firework": {
