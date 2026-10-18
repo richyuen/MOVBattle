@@ -1224,6 +1224,7 @@ function makeFactionGalleryScenario(
     centerZ?: number;
     spacingX?: number;
     spacingZ?: number;
+    cameraOverride?: GalleryCameraOverride;
   } = {},
 ): ScenarioSpec {
   const unitIds = getUnitsByFaction(faction).map((unit) => unit.id);
@@ -1309,6 +1310,9 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     "gallery_faction_renaissance",
     FactionId.Renaissance,
     "Close-read faction lineup for Renaissance.",
+    // The da Vinci tank is wider than a man's shoulder room: at 1.8 m it stood behind the jouster's horse, cut at the frame's edge; the rank is opened out
+    // and the camera drawn back so the whole tank stands beside the men
+    { spacingZ: 2.7, cameraOverride: { alpha: -0.2, beta: Math.PI / 2.15, radius: 15, target: { x: 0, y: 1.5, z: 0 } } },
   ),
   gallery_faction_pirate: makeFactionGalleryScenario(
     "gallery_faction_pirate",
