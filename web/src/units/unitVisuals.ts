@@ -235,8 +235,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "tribal.bone_mage": vis(
     { scale: 1.1, headSize: 1.15 }, "bone_staff", "antler_skull", "none", "none", "#FFFFF0",
   ),
+  // The chieftain wears an animal skull strapped over his crown (tribal.chieftain.blue.png, card Appearance): the protector's faceted bone_mask, not a feathered cap
   "tribal.chieftain": vis(
-    { scale: 1.35, bulk: 1.3, headSize: 1.1 }, "stone_axe", "feather_headdress", "none", "cape", "#FFD700", "stone_axe",
+    { scale: 1.35, bulk: 1.3, headSize: 1.1 }, "stone_axe", "bone_mask", "none", "cape", "#FFD700", "stone_axe",
   ),
   "tribal.mammoth": vis(
     { scale: 2.8, bulk: 2.0, headSize: 1.6, legLength: 0.8 }, "none", "none", "none", "mount_mammoth", "#8B7355",
