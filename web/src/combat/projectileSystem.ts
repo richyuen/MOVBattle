@@ -11,6 +11,15 @@ import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 import { buildFlyingSword } from "../units/propBuilder";
 
+/*
+ * [S] a flying crow (342; farmer.scarecrow.png: the scarecrow's crows fly at the enemy as big black birds, wings spread and beating). In metres: body
+ * FLYING_CROW.long long, .wide across, .tall deep; head .head across on its front end; grey beak .beak long; each wing a flat blade .span out from the
+ * shoulder, .chord wide at the root, with .fingers primary feathers .feather long splayed past its tip; tail .tail long fanned .fan wide. Black
+ * CROW_FLY_BLACK self-lit .glow so it reads black, not team colour; wings beat .beat rad about a .lift raise at .rate rad/s.
+ */
+const FLYING_CROW = { long: 0.34, wide: 0.17, tall: 0.17, head: 0.13, beak: 0.08, span: 0.34, chord: 0.2, flat: 0.12, fingers: 4, feather: 0.1, tail: 0.16, fan: 0.16, glow: 0.12, beat: 0.6, lift: 0.15, rate: 15 };
+const CROW_FLY_BLACK = new Color3(0.07, 0.07, 0.1);
+
 // The balloon arrow's ball (see _addBalloonBall): across (m), along the shaft from its middle (m), stretch along the shaft
 const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
 
@@ -490,13 +499,13 @@ export class ProjectileSystem {
       }
       // Crow wing flapping
       if (p.shape === "crow") {
-        const flapAngle = Math.sin(p.elapsed * 15) * 0.5;
-        const children = p.mesh.getChildren();
-        for (const child of children) {
+        // each wing turns on its shoulder pivot about the line of flight: up and down through FLYING_CROW.beat around a slight lift
+        const flapAngle = Math.sin(p.elapsed * FLYING_CROW.rate) * FLYING_CROW.beat;
+        for (const child of p.mesh.getChildren()) {
           if ((child as any).name?.startsWith("wing")) {
-            const wing = child as Mesh;
+            const wing = child as TransformNode;
             const side = wing.position.x > 0 ? 1 : -1;
-            wing.rotation.z = side * (-0.3 + flapAngle);
+            wing.rotation.z = side * (FLYING_CROW.lift + flapAngle);
           }
         }
       }
@@ -968,25 +977,8 @@ export class ProjectileSystem {
         break;
       }
       case "crow": {
-        // Black crow shape - body + wings
-        const body = MeshBuilder.CreateSphere("crowbody", { diameter: 0.15, segments: 6 }, this._scene);
-        body.scaling.set(1, 0.7, 1.4);
-        body.material = this._getMat(`crow_body_${attackerTeam}`, palette.dark);
-        body.parent = root;
-        // Wings (flapping handled by rotation update)
-        for (const side of [-1, 1]) {
-          const wing = MeshBuilder.CreateBox("wing", { width: 0.2, height: 0.01, depth: 0.1 }, this._scene);
-          wing.position.set(side * 0.12, 0.02, 0);
-          wing.rotation.z = side * -0.3;
-          wing.material = this._getMat(`crow_wing_${attackerTeam}`, palette.primary);
-          wing.parent = root;
-        }
-        // Beak
-        const beak = MeshBuilder.CreateCylinder("beak", { height: 0.06, diameterTop: 0, diameterBottom: 0.03, tessellation: 4 }, this._scene);
-        beak.rotation.x = Math.PI / 2;
-        beak.position.z = 0.1;
-        beak.material = this._getMat("crow_beak", new Color3(0.4, 0.35, 0.1));
-        beak.parent = root;
+        // [S] a flying crow (342; farmer.scarecrow.png, card: Crow Throw, projectile Crow): spec at FLYING_CROW
+        this._buildFlyingCrow(root);
         break;
       }
       case "fireball": {
@@ -1092,6 +1084,49 @@ export class ProjectileSystem {
       this._matCache.set("iron_shot", m);
     }
     return m;
+  }
+
+  /** A flying crow under `root`, its +z the beak: spec at FLYING_CROW. Wings hang on pivots named "wing" so the flight update can beat them. */
+  private _buildFlyingCrow(root: TransformNode): void {
+    const C = FLYING_CROW;
+    const black = this._getMat("crow_black", CROW_FLY_BLACK, C.glow);
+    const grey = this._getMat("crow_beak_grey", new Color3(0.36, 0.35, 0.38), 0.12);
+    const white = this._getMat("crow_eye_white", new Color3(0.95, 0.95, 0.92), 0.4);
+    const part = (m: Mesh, mt: PBRMetallicRoughnessMaterial, parent: TransformNode, x: number, y: number, z: number): Mesh => {
+      m.material = mt;
+      m.position.set(x, y, z);
+      m.parent = parent;
+      return m;
+    };
+    // plump body along the line of flight, a round head on its front end, grey beak, two white bead eyes
+    const body = part(MeshBuilder.CreateIcoSphere("crowbody", { radius: 0.5, subdivisions: 1, flat: true }, this._scene), black, root, 0, 0, 0);
+    body.scaling.set(C.wide, C.tall, C.long);
+    const headZ = C.long * 0.5 + C.head * 0.2;
+    part(MeshBuilder.CreateIcoSphere("crowhead", { radius: C.head * 0.5, subdivisions: 1, flat: true }, this._scene), black, root, 0, C.tall * 0.22, headZ);
+    const beak = part(MeshBuilder.CreateCylinder("crowbeak", { height: C.beak, diameterTop: 0, diameterBottom: C.head * 0.4, tessellation: 4 }, this._scene), grey, root, 0, C.tall * 0.18, headZ + C.head * 0.42 + C.beak * 0.4);
+    beak.rotation.x = Math.PI / 2;
+    for (const side of [-1, 1]) {
+      part(MeshBuilder.CreateSphere("croweye", { diameter: C.head * 0.24, segments: 4 }, this._scene), white, root, side * C.head * 0.4, C.tall * 0.3, headZ + C.head * 0.18);
+      // a spread wing: a broad flat blade, wide at the shoulder and fingered at the tip, out from a shoulder pivot
+      const pivot = new TransformNode("wing", this._scene);
+      pivot.parent = root;
+      pivot.position.set(side * C.wide * 0.35, C.tall * 0.2, C.long * 0.05);
+      const blade = MeshBuilder.CreateCylinder("wingblade", { height: C.span, diameterTop: C.chord * 0.45, diameterBottom: C.chord, tessellation: 4 }, this._scene);
+      blade.rotation.z = -side * Math.PI / 2; // its height along the span, the wide end at the shoulder
+      blade.scaling.x = C.flat;
+      part(blade, black, pivot, side * C.span * 0.5, 0, -C.chord * 0.15);
+      for (let f = 0; f < C.fingers; f++) {
+        // primary feathers splayed past the tip
+        const feather = MeshBuilder.CreateBox("wingfeather", { width: C.feather, height: C.flat * C.chord * 0.3, depth: C.chord * 0.14 }, this._scene);
+        part(feather, black, pivot, side * (C.span + C.feather * 0.35), 0, -C.chord * 0.15 + (f - (C.fingers - 1) / 2) * C.chord * 0.16);
+        feather.rotation.y = side * (f - (C.fingers - 1) / 2) * 0.22;
+      }
+    }
+    // fanned tail behind
+    const tail = part(MeshBuilder.CreateCylinder("crowtail", { height: C.tail, diameterTop: 0, diameterBottom: C.fan, tessellation: 4 }, this._scene), black, root, 0, C.tall * 0.05, -C.long * 0.5 - C.tail * 0.35);
+    tail.rotation.x = Math.PI / 2; // point toward the body, the fan behind
+    tail.scaling.z = 0.25;
+    for (const m of root.getChildMeshes()) (m as Mesh).convertToFlatShadedMesh();
   }
 
   private _getMat(key: string, color: Color3, emissive = 0): PBRMetallicRoughnessMaterial {
