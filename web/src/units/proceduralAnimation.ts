@@ -150,6 +150,7 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
 const POLE_GRIP = {
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
+  forkBar: [0.2, 0.5], // the pitchfork: the off hand up the shaft toward the head (farmer.farmer.red.png)
 } as const;
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
@@ -1768,7 +1769,9 @@ export class ProceduralAnimator {
     if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side) + Math.PI, 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
     // A pole held in both hands is carried upright before the chest (POLE_GRIP), the one attitude that keeps its shaft in the off hand's reach
-    const pick = this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
+    // The pitchfork (339) is carried low instead: the weapon arm hanging, the shaft out level before his hips (farmer.farmer.png), the last attitude below
+    const fork = this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name === "forkBar"));
+    const pick = fork ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";

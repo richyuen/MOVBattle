@@ -1053,7 +1053,7 @@ function seatPoleInFist(mesh: Mesh, body: ArticulatedBody, lift: number): void {
   mesh.position.copyFrom(mitt?.position ?? Vector3.Zero());
   mesh.position.y += lift;
 }
-const SEATED_POLES = new Set<string>(["halberd"]);
+const SEATED_POLES = new Set<string>(["halberd", "pitchfork"]);
 
 export function attachProps(
   scene: Scene,
@@ -1840,6 +1840,15 @@ export const HARPOON_MUZZLE = "harpoonMuzzle";
 const HALBERD = { long: 1.3, grip: 0.3, thick: 0.02, socket: 0.1, point: 0.13, axe: 0.13, axeTall: 0.16, axeRoot: 0.07, spike: 0.07, plate: 0.012 };
 const HALBERD_WOOD = new Color3(0.55, 0.3, 0.18);
 const HALBERD_STEEL = new Color3(0.2, 0.21, 0.24);
+/*
+ * [S] two-handed pitchfork (339; farmer.farmer.red.png, farmer.farmer.png: a wooden shaft held low before him in both fists, the head a short grey bar with
+ * three thick grey tines curling forward like hooks). FORK.long of his standing height, FORK.grip of it behind the weapon fist; shaft FORK.thick of its length
+ * across; the bar FORK.bar of the length wide; tines FORK.tine long, FORK.tineThick across at the root tapering to a point, curled FORK.curl (rad) over
+ * FORK.links links; the steel self-lit FORK.glow so it reads grey, not black.
+ */
+const FORK = { long: 0.85, grip: 0.3, thick: 0.03, bar: 0.2, tine: 0.22, tineThick: 0.045, curl: 1.1, links: 4, glow: 0.18 };
+const FORK_WOOD = new Color3(0.5, 0.33, 0.18);
+const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
   const n = outline.length;
@@ -2819,15 +2828,37 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return carry;
     }
     case "pitchfork": {
-      const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.7 * s, diameter: 0.025 * s }, scene);
-      shaft.material = mat(scene, new Color3(0.5, 0.35, 0.2));
-      for (let i = -1; i <= 1; i++) {
-        const tine = MeshBuilder.CreateCylinder("tine", { height: 0.15 * s, diameter: 0.012 * s }, scene);
-        tine.position.y = 0.4 * s; tine.position.x = i * 0.03 * s;
-        tine.parent = shaft;
-        tine.material = mat(scene, new Color3(0.6, 0.6, 0.65));
+      // The farmer's pitchfork, built to the spec at FORK: +y up the shaft from the fist at the origin, FORK.grip of it below the fist
+      const L = fit.stand * FORK.long;
+      const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: FORK.thick * L, tessellation: 7 }, scene);
+      shaft.position.y = (0.5 - FORK.grip) * L;
+      shaft.material = mat(scene, FORK_WOOD, 0.12);
+      shaft.convertToFlatShadedMesh();
+      const steel = mat(scene, FORK_STEEL, FORK.glow, "metal");
+      const top = L * 0.5;
+      // The crossbar the tines grow from (its name marks the pole as held in both hands, POLE_GRIP)
+      const bar = MeshBuilder.CreateBox("forkBar", { width: FORK.bar * L, height: FORK.tine * 0.32 * L, depth: FORK.tineThick * L }, scene);
+      bar.position.y = top;
+      bar.material = steel;
+      bar.parent = shaft;
+      // Three thick tines off the bar, each a chain of tapering faceted links curling forward (+z) along its length
+      for (let k = -1; k <= 1; k++) {
+        let y = top + FORK.tine * 0.12 * L, z = 0, heading = 0;
+        const segLong = (FORK.tine * L) / FORK.links;
+        for (let i = 0; i < FORK.links; i++) {
+          const d0 = FORK.tineThick * L * (1 - (0.7 * i) / FORK.links), d1 = FORK.tineThick * L * (1 - (0.7 * (i + 1)) / FORK.links);
+          const link = MeshBuilder.CreateCylinder("forkTine", { height: segLong * 1.08, diameterBottom: d0, diameterTop: i === FORK.links - 1 ? 0 : d1, tessellation: 5 }, scene);
+          link.rotation.x = heading + FORK.curl / (2 * FORK.links);
+          const mid = heading + FORK.curl / (2 * FORK.links);
+          link.position.set(k * FORK.bar * 0.42 * L, y + Math.cos(mid) * segLong * 0.5, z + Math.sin(mid) * segLong * 0.5);
+          link.material = steel;
+          link.convertToFlatShadedMesh();
+          link.parent = shaft;
+          y += Math.cos(mid) * segLong;
+          z += Math.sin(mid) * segLong;
+          heading += FORK.curl / FORK.links;
+        }
       }
-      shaft.position.y = 0.15 * s;
       return shaft;
     }
     case "frying_pan": {
