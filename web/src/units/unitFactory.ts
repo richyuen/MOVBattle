@@ -1020,10 +1020,11 @@ const FENCER_GLOW = 0.3;
  * [S] thigh rolls (337; renaissance.fencer.red.png: each thigh in its own short puffed roll, round and fat, from the hip down about two thirds of the
  * thigh, paned in upright panes team and tan by turns, a pane as wide as the gap beside it; the plain team thigh shows below it to the knee; the two
  * rolls stand apart, not one skirt). Each roll is FENCER_ROLL.panes flat-faced pane slices of a lathe, the slices team and self-lit tan by turns:
- *   FENCER_ROLL.long of the thigh long from the hip; .swell of the thigh's girth across at its middle, .end of it at top and foot; never wider than
- *   .apart of the gap between the hips, so the two rolls never meet.
+ *   FENCER_ROLL.long of the thigh long from the hip; .swell of the thigh's girth across at its middle, .end of it at top and foot. The thighs stand
+ *   close, so a roll that would cross .apart of the half-gap between the hips is pushed out sideways by the overlap: the rolls swell out over the
+ *   hips, never into each other.
  */
-const FENCER_ROLL = { panes: 8, long: 0.68, swell: 1.9, end: 1.25, apart: 0.92 };
+const FENCER_ROLL = { panes: 8, long: 0.68, swell: 2.1, end: 1.3, apart: 0.9 };
 // [S] boots (336; renaissance.fencer.blue.png: brown knee-high boots, a wide cuff turned down under the knee): shaft .shaft of the shin's girth at its
 // top, cuff .cuff of it at its rim, .cuffLong of the shin long
 const FENCER_BOOTS = { shaft: 1.3, cuff: 1.85, cuffLong: 0.36 };
@@ -1067,11 +1068,12 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   // a puffed roll round each thigh, paned team and tan by turns (FENCER_ROLL)
   const R = FENCER_ROLL;
   const hipsApart = Math.abs(body.leftHip.position.x - body.rightHip.position.x);
-  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
+  for (const [leg, hipJoint] of [[body.leftUpperLeg, body.leftHip], [body.rightUpperLeg, body.rightHip]] as const) {
     const e = leg.getBoundingInfo().boundingBox.extendSize;
     const girth = Math.max(e.x, e.z) * 2, long = e.y * 2 * R.long;
-    const swell = Math.min(girth * R.swell, hipsApart * R.apart) / 2;
-    const end = Math.min(girth * R.end / 2, swell * 0.8);
+    const swell = girth * R.swell / 2;
+    const end = girth * R.end / 2;
+    const outward = Math.max(0, swell - hipsApart * 0.5 * R.apart) * Math.sign(hipJoint.position.x || 1);
     // the roll's side in profile: tucked in at hip and foot, round and full at the middle
     const shape = [
       new Vector3(end, -long / 2, 0), new Vector3(swell * 0.9, -long * 0.28, 0), new Vector3(swell, 0, 0),
@@ -1080,7 +1082,7 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
     for (let i = 0; i < R.panes; i++) {
       const pane = put(MeshBuilder.CreateLathe("fencerRollPane", { shape, arc: 1 / R.panes, tessellation: 1, sideOrientation: Mesh.DOUBLESIDE }, scene), i % 2 ? team : cream, leg);
       pane.rotation.y = (i / R.panes) * Math.PI * 2 + Math.PI / R.panes;
-      pane.position.y = e.y - long / 2;
+      pane.position.set(outward, e.y - long / 2, 0);
     }
   }
   // knee-high brown boots: the shaft over the shin, a wide cuff turned down at its top under the knee, brown feet
