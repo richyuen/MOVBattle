@@ -11,7 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-324-326 | tribal: six dress gaps (batch done) | tribal.* | approved
 327 | brim hat (d747d43) | renaissance.balloon_archer.a | approved
 327 | short one-handed brush (34e0270 +1) | renaissance.painter.b | approved
 327 | cavalier hat (fbe32ce +1) | renaissance.fencer.a | approved
@@ -57,6 +56,11 @@ for 25 iterations.
 335 | self-lit cravat (15c41f6 +1) | renaissance.painter.a | approved
 335 | hair and curled moustache (370f635) | renaissance.fencer.a | approved
 335 | vest and blouse (f5030a9) | renaissance.musketeer.a | approved
+336 | chanfron (493017a) | renaissance.jouster.a | approved
+336 | moustache and goatee (3ce4ab9) | renaissance.musketeer.a | approved
+336 | cuffed knee boots (0267ef9) | renaissance.fencer.a | approved
+336 | tan tabard, proud belt (500f5e0) | renaissance.halberd.a | approved
+336 | striped doublet (921719c) | renaissance.balloon_archer.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -96,7 +100,7 @@ rosterManifest.ts:renaissance cost/hp/dmg/cd (painter, fencer, archer, musketeer
 rosterManifest.ts:renaissance cost/hp/dmg/cd (halberd, jouster, da_vinci_tank) | 400/1.19/.58/.77, 1000/.47/-/-, 4000/3.65/.53/1.59 | 327 | stats | 200, 500, 1800 (cd .86)
 
 projectileSystem.ts:BALLOON_BALL (size, at, long) | .2, .27, 1.15 | 333 | approved | -
-unitFactory.ts:HALBERD_DRESS (tabard, wrap, skirt, belt, bands, roll, cuff), HALBERD_CREAM | .55, 1.12, .45, .1, 3, 1.22, 1.5; (.86,.72,.5) | 333 | approved | -
+unitFactory.ts:HALBERD_DRESS (tabard, wrap, skirt, bands, roll, cuff); TAN, GLOW; BELT_FIT (proud, tall, buckle) | .55,1.12,.45,3,1.22,1.5; (.8,.56,.28),.3; 1.14,.14,.2 | 336 | approved | CREAM (.86,.72,.5) unlit, belt .1
 proceduralAnimation.ts:CHOP_ONTO (below, min, max, slide) | .12, .9, 2.1, .6 | 334 | approved | -
 proceduralAnimation.ts:HEATER_HOLD (fwd, side, drop, turn); propBuilder HEATER_GRIP_SIZE | .2, .08, .2, .35; 1.3 | 334 | approved | grip size 1.9
 propBuilder.ts:HORSE_DRAPE (rings, round, crest, waist, band, merlons, tooth, glow), CREAM | 6, .6, .72, .15, .08, 16, .16, .1; (.86,.66,.4) | 334 | approved | flat deck, bevel .07, 18 dags
@@ -106,4 +110,8 @@ proceduralAnimation.ts:CHOP_DOWN (hold, rise) | .35, .3 | 335 | approved | -
 unitFactory.ts:JOUSTER_HELM (wide, brow, chin, tufts, tuft, rise); STEEL, GLOW | 1.2,.5,-.28,5,.95,.42; (.5,.52,.56), .16 | 335 | approved | steel .6 glow .22
 unitFactory.ts:JOUSTER_PLATE (breast, fauld, flare, pauldron, lame) | 1.2, .3, 1.3, 2.1, 1.6 | 335 | approved | -
 tribalDress.ts:MOUSTACHE (y, span, turn, curl, thick, proud) | -.38, .7, .4, .42, .1, 1.14 | 335 | approved | -
-unitFactory.ts:MUSKETEER_DRESS (vest, wing, puff, collar, breech, knee, bands); CREAM, GLOW | 1.1,1.5,1.4,1.25,1.3,1.65,2; (.84,.72,.52), .25 | 335 | approved | -
+unitFactory.ts:MUSKETEER_DRESS (vest, wing, puff, collar, breech, knee, bands); CREAM, GLOW | 1.1,1.5,1.4,1.25,1.3,1.65,2; (.8,.6,.36), .15 | 336 | approved | (.84,.72,.52), .25
+propBuilder.ts:CHANFRON (long, wide, narrow, flat, eye, eyeAt, ear, tufts, tuft, glow), STEEL | .7,.38,.27,.88,.075,.3,.3,4,.11,.2; (.5,.52,.56) | 336 | approved | plank box, ear .18
+tribalDress.ts:GOATEE (wide, down, proud, tip) | .42, .55, .86, .35 | 336 | approved | -
+unitFactory.ts:FENCER_BOOTS (shaft, cuff, cuffLong), FENCER_BOOT | 1.3, 1.85, .36; (.42,.17,.12) | 336 | approved | -
+unitFactory.ts:ARCHER_DRESS (doublet, stripes, stripe, puff, slashes, belt, breech); TAN, GLOW | 1.1,3,.09,1.6,4,.12,1.45; (.8,.56,.28),.3 | 336 | approved | -

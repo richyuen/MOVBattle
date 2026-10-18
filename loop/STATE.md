@@ -1,10 +1,10 @@
 # Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 335   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 8/139   Parked: 0
+Iteration: 336   Batch: renaissance (2/18)   Consecutive empty: 0   Done: 10/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
-renaissance: painter ++++ D | fencer -+++ o | balloon_archer -+++ o | musketeer -+++ o | halberd -+++ o | jouster -+++ o | da_vinci_tank -+++ o
+renaissance: painter ++++ D | fencer -+++ o | balloon_archer ++++ D | musketeer -+++ o | halberd ++++ D | jouster -+++ o | da_vinci_tank -+++ o
 farmer: halfling ???? q | farmer ???? q | hay_baler ???? q | potion_seller ???? q | harvester ???? q | wheelbarrow ???? q | scarecrow ???? q
 medieval: bard ???? q | squire ???? q | archer ???? q | healer ???? q | knight ???? q | catapult ???? q | king ???? q
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,15 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-335 (BASE 9ab6968): [S] halberd c blow held down 8899946 approved | [S] jouster a plate rider 909f200 + e5e55bd approved | [S] painter a cravat 15c41f6 + 6dfd9bc approved | [S] fencer a hair and moustache 370f635 approved | [S] musketeer a vest and blouse f5030a9 approved.
-334 (BASE b4b44b1): 4/6 approved (halberd chop onto, jouster heater, jouster drape, fencer doublet); da vinci roof [S] and painter jabot colour [P] rejected.
+336 (BASE 6be02ce): [S] jouster a chanfron 493017a approved | [S] musketeer a facial hair 3ce4ab9 approved | [S] fencer a boots 0267ef9 approved | [S] halberd a tan tabard + proud belt 500f5e0 approved | [S] balloon_archer a striped doublet 921719c approved | [P] musketeer a cream tone dae097a approved. Da Vinci a scale sat out (cap 5).
+335 (BASE 9ab6968): 5/5 approved (halberd blow held down, jouster plate rider, painter cravat, fencer hair, musketeer vest).
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] renaissance.halberd (8899946) VERDICT: APPROVE CRITERION: renaissance.halberd.c PASS (previous: FAIL) BLOCKERS: struck: 3 (none remain)
-- GAP: [S] renaissance.jouster (909f200 + e5e55bd) VERDICT: APPROVE CRITERION: renaissance.jouster.a FAIL (previous: FAIL) BLOCKERS: struck: 3. Remaining: 1, 2
-- GAP: [S] renaissance.painter (15c41f6 + 6dfd9bc) VERDICT: APPROVE CRITERION: renaissance.painter.a PASS (previous: FAIL) BLOCKERS: struck: 2 (none remain)
-- GAP: [S] renaissance.fencer (370f635) VERDICT: APPROVE CRITERION: renaissance.fencer.a FAIL (previous: FAIL) BLOCKERS: struck: 2. Remaining: 3, 4
-- GAP: [S] renaissance.musketeer (f5030a9) VERDICT: APPROVE CRITERION: renaissance.musketeer.a FAIL (previous: FAIL) BLOCKERS: 3 partly cleared, narrowed (cream reads white, vest has no hem); 2 remains. REGRESSIONS: none. d PASS 7/7 (stats 335).
+- GAP: [S] renaissance.jouster (493017a) VERDICT: APPROVE CRITERION: renaissance.jouster.a FAIL (previous: FAIL) BLOCKERS: struck: 2. Remaining: 1
+- GAP: [S] renaissance.musketeer (3ce4ab9) VERDICT: APPROVE CRITERION: renaissance.musketeer.a FAIL (previous: FAIL) BLOCKERS: struck: 2. Remaining: 3 (vest half only)
+- GAP: [S] renaissance.fencer (0267ef9) VERDICT: APPROVE CRITERION: renaissance.fencer.a FAIL (previous: FAIL) BLOCKERS: struck: 4. Remaining: 3
+- GAP: [S] renaissance.halberd (500f5e0) VERDICT: APPROVE CRITERION: renaissance.halberd.a PASS (previous: FAIL) BLOCKERS: struck: 2. List empty.
+- GAP: [S] renaissance.balloon_archer (921719c) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.a PASS (previous: FAIL) BLOCKERS: struck: 2. List empty.
+- GAP: [P] renaissance.musketeer (dae097a) VERDICT: APPROVE CRITERION: renaissance.musketeer.a FAIL (previous: FAIL) BLOCKERS: 3 stays (tone half met, vest half left). REGRESSIONS: none. d PASS 7/7 (stats 336).
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open picks: jouster a chanfron then horse body [S], musketeer a facial hair (reuse curledMoustache + goatee) [S], fencer a boots then paned breeches [S], halberd a self-lit tabard + proud belt [S], balloon_archer a striped doublet [S], da vinci a whole-machine scale [S] (one more rejected [S] = plateau); [P] fallout: musketeer cream tone (335), fencer puffed panes (334).
-- getCloth colours grey out under this light: cream/tan needs self-lit cloth (mf.get("cloth", c, {emissiveIntensity})); too much glow reads white (musketeer .25 on pale cream). ~.3 on a deeper tan (.8,.56,.28) read tan (painter 335).
+- Open picks (one per unit, all on a): jouster caparison body following the barrel, brown chest ahead [S]; fencer two paned thigh rolls [S]; musketeer vest hem at the waist [S]; da vinci whole-machine scale [S] (one more rejected [S] = plateau). No [P] fallout listed.
+- getCloth colours grey out under this light: cream/tan needs self-lit cloth (mf.get("cloth", c, {emissiveIntensity})); ~.3 on a deeper tan (.8,.56,.28) reads tan (painter 335, halberd and archer 336).
 - A ranged shot fires at the very start of its attack: a release pose must be up before the attack (see _aimMusket). Props stand in the world (Matrix.FromXYZAxesToRef); last-layer overrides (_lungeLegs, _holdChopDown) beat the pose stack.
 - The da Vinci vehicle root is not scaled by proportions.scale 2.0; its lineup height is the raw DAVINCI_ROOF metres. Faction lineups take a cameraOverride (scenarios.ts makeFactionGalleryScenario).
-- After any --iter capture rerun stats --batch <batch> --iter N. capture --units (look) needs a clean tree: stash STATE.md around it, and never `git commit -a` while STATE is dirty. Write patches as scratchpad python files (bash heredocs choke).
+- After any --iter capture rerun stats --batch <batch> --iter N. capture (look and --iter) needs a clean tree: stash STATE.md around it. Write patches as scratchpad python files with the Write tool (bash heredocs and inline backslashes break); loop md files may be CRLF.
