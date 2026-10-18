@@ -393,9 +393,16 @@ const PAINTER_HAIR = new Color3(0.17, 0.11, 0.08);
  */
 const MOUSTACHE = { y: -0.38, span: 0.7, turn: 0.4, curl: 0.42, thick: 0.1, proud: 1.14 };
 const MOUSTACHE_COLOR = new Color3(0.07, 0.05, 0.04);
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache"> = {
+/*
+ * [S] musketeer's moustache and goatee (336; renaissance.musketeer.blue.png, card Appearance "a black mustache": under the morion a dark moustache curled
+ * up at the cheeks and a pointed goatee hanging from the chin; no hair shows). The fencer's curled moustache (MOUSTACHE), and a goatee: a four-sided
+ * wedge GOATEE.wide of the head across at the lip, its point GOATEE.down half-heights under the chin, standing GOATEE.proud of the half-depth forward and
+ * tipped out GOATEE.tip so it hangs clear of the jaw and shows from the side and from behind.
+ */
+const GOATEE = { wide: 0.42, down: 0.55, proud: 0.86, tip: 0.35 };
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee"> = {
   "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
-  "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache",
+  "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache", "renaissance.musketeer": "moustache_goatee",
 };
 
 /** The tusk headband (spec at TUSK_BAND), parented to the head. */
@@ -440,6 +447,7 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
   if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
   const style = HAIR_STYLES[unitId];
+  if (style === "moustache_goatee") return [...curledMoustache(scene, body), goatee(scene, body)];
   if (style !== "long" && style !== "long_beard" && style !== "long_dark" && style !== "long_dark_moustache") return null;
   const dark = style === "long_dark" || style === "long_dark_moustache";
   const added: Mesh[] = [];
@@ -517,6 +525,26 @@ function curledMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
     added.push(tube);
   }
   return added;
+}
+
+/** The pointed goatee (spec at GOATEE), parented to the head. */
+function goatee(scene: Scene, body: ArticulatedBody): Mesh {
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const halfX = e.x, halfY = e.y, halfZ = e.z;
+  const G = GOATEE;
+  const long = halfY * (0.45 + G.down);
+  const m = MeshBuilder.CreateCylinder("goatee", { height: long, diameterTop: halfX * 2 * G.wide, diameterBottom: 0, tessellation: 4 }, scene);
+  m.rotation.y = Math.PI / 4;
+  m.bakeCurrentTransformIntoVertices();
+  m.scaling.z = 0.7;
+  m.convertToFlatShadedMesh();
+  m.material = getMaterialFactory().get("cloth", MOUSTACHE_COLOR, { emissiveIntensity: 0.1 });
+  m.parent = body.headMesh;
+  // its root under the lip, hanging down and tipped forward-out off the chin
+  m.setPivotPoint(new Vector3(0, long * 0.5, 0));
+  m.rotation.x = -G.tip;
+  m.position.set(0, -halfY * 0.55 - long * 0.5, halfZ * G.proud);
+  return m;
 }
 
 /** The beard (spec at BEARD) in the given hair material, parented to the head. */

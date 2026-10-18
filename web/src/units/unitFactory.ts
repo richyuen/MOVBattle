@@ -530,6 +530,8 @@ export class UnitFactory {
     }
     if (definition.id === "renaissance.musketeer" && !shouldUseVehicleBody) {
       propMeshes.push(...dressMusketeer(this._scene, body, teamColor));
+      // ...and his curled moustache and goatee (tribalDress)
+      propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
     }
     if (definition.id === "renaissance.jouster" && !shouldUseVehicleBody) {
       propMeshes.push(...dressJouster(this._scene, body, teamColor));
