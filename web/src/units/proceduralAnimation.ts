@@ -197,6 +197,7 @@ const POLE_GRIP = {
   forkBar: [0.2, 0.5], // the pitchfork: the off hand up the shaft toward the head (farmer.farmer.red.png)
   snathPeg: [0.28, 0.32], // the harvester's scythe: the off hand on the upper peg (SCYTHE_LOW)
   banjoNeck: [0.6, 0.95], // the bard's banjo: the off hand fretting up the neck (medieval.bard.red.png)
+  zweiGrip: [-0.2, -0.12], // the king's Zweihander: the off fist under the weapon fist, down the long grip (medieval.king.red.png, ZWEI)
 } as const;
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the

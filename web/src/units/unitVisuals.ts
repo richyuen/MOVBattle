@@ -167,7 +167,7 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow";
+  weaponVariant?: "longbow" | "zweihander";
 }
 
 function vis(
@@ -309,6 +309,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "medieval.king": vis(
     { scale: 1.5, bulk: 1.3, headSize: 1.1 }, "greatsword", "crown", "none", "cape", "#FFD700",
+    undefined, { weaponVariant: "zweihander" },
   ),
 
   // ═══════════════════════ ANCIENT ═══════════════════════
