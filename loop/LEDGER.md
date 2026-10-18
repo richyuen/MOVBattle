@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-345 | dark team hosen, brown cuffed boots (edeb651) | farmer.potion_seller.a | approved
-345 | average man, bale fitted to his frame (492545d) | farmer.hay_baler.a | approved
-345 | low level sweep + fling (8bd49db +c11f873) | farmer.harvester.c | rejected
-345 | T held through the throw, A-pose reload (29f6cf4) | farmer.scarecrow.c | approved
-345 | Halfling Grab cling (b0d26ea) | farmer.halfling.c | approved
 346 | three crew on the cart (4ecb105) | farmer.wheelbarrow.a | approved
 346 | scarecrow clothes (5cd3e3a) | farmer.scarecrow.a | approved
 346 | braids to the chest, team bands (909cf43) | farmer.harvester.a | rejected
@@ -52,6 +47,13 @@ for 25 iterations.
 353 | priest staff: banded team orb, cross finial, gold fittings, upright planted hold (03b4e5c) | medieval.healer.b | approved
 353 | open armet: grey dome, plates, bevor, team barred visor frame (58cfa04 +4459ae6) | medieval.knight.a | approved
 353 | Banjo Walk: lure, then run off round his man (68d8302 +53c3633) | medieval.bard.c | approved
+355 | spoon bucket: open flared cup, rim, boulder sunk in it (56a8ab6) | medieval.catapult.b | approved
+355 | hip quiver on the off hip, team band, team-fletched arrows (d75f622 +7078d43) | medieval.archer.b | approved
+355 | arming sword held out, blade stood up, grey hilt (1574c11) | medieval.knight.b | approved
+355 | fitted royal crown: low gold band, 8 points, team gems (0535fe4) | medieval.king.a | approved
+355 | tonsure: grey fringe sides/back, grey beard, cap dropped (e5f32a0 +cf8f774) | medieval.healer.a | approved
+355 | floppy hat: drooping brown brim, raised crown, leaf feathers (216bf92) | medieval.bard.a | approved
+355 | crusader great helm: iron, rivets, gold cross plate, holes, team panel (92256f8) | medieval.squire.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -78,3 +80,10 @@ simulationSystem.ts:BANJO_WALK (lure, clear, turn, step) | 2.2, 1.5, .85, 1.2 | 
 visualEffects.ts:MUSIC_NOTE (size, head, tilt, stem, flag, rise, sway, life, fade, color, glow); simulationSystem BANJO_NOTES (every, first, over, aside, stack) | 1,.13,.45,.26,.12,.45,.08,1.6,.35,(.95,.4,.04),.2; .45,2,.32,.18,.32 | 354 | approved | glow .6, over .15 (pre-review); critic: thin, dim, small
 vehicleBuilder.ts:CATAPULT_CREW (z, y, raise, spread, elbow); CREW_DRESS colours | -.74, .5, -2.8, .12, -.2 | 354 | approved | z -.62 raise -2.6 (pre-review); critic: arms frozen up after the shot
 unitFactory.ts:HEALER_ROBE (long, hem) | 1.75, 1.5 | 354 | approved | -
+vehicleBuilder.ts:CATAPULT_BUCKET (bottom, top, deep, rim, sink, tone) | .4, .68, .28, .06, .45, (.55,.26,.12) | 355 | approved | critic: smooth cup, TABS boxed timber
+propBuilder.ts:QUIVER_HIP (long, mouth, foot, top, side, back, tilt, proud, leather, fletch) | .6,.14,.11,.22,.27,.02,.12,.2,(.46,.22,.15),[.07,.1] | 355 | approved | right hip .52/.12/.24/.09 (pre-review, hidden)
+proceduralAnimation.ts:ARMING_OUT (raise, out, elbow, tip) | -.35, .85, -.55, [.35,.9,.25] | 355 | approved | critic: blade upright, TABS angled out
+propBuilder.ts:ROYAL_CROWN (heads, band, down, points, tall, base, flare, gem, rim, gold) | 1.12,.3,.04,8,.42,.32,.12,.12,.05,(.95,.72,.22) | 355 | approved | critic: points short, crown low
+medievalDress.ts:TONSURE (ring, open, y, thick, out, beard wide/down/deep, grey, glow) | 1,.95,.12,.42,1.1; 1,.22,.55; (.66,.64,.62),.15 | 355 | approved | thick .26 out 1.06 (pre-review)
+propBuilder.ts:FLOPPY_HAT (brim, thick, droop, dip, cock, crown, taper, tall, pale, felt, leaves) | 2,.07,.24,.12,-.08,1.12,.88,.5,.25,(.55,.3,.19) | 355 | approved | critic: sits low, brim half-hides the eyes
+propBuilder.ts:CRUSADER_HELM (iron, gold, band, rivets, brow, browWide, nasal, chin, proud, holes, panel) | (.3,.3,.33),(.86,.66,.3),.1,8,.32,1.9,.24,.42,.07,3,.62 | 355 | approved | critic: iron reads lilac-grey

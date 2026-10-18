@@ -1,12 +1,12 @@
-# Loop state (v2: one batch at a time, up to 5 structural gaps per iteration)
-Iteration: 354   Batch: medieval (4/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
+# Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
+Iteration: 355   Batch: medieval (4/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
-medieval: bard ??++ o | squire ??++ o | archer ??-+ o | healer ??++ o | knight ??++ o | catapult ??++ o | king ??++ o
+medieval: bard -+++ o | squire -+++ o | archer -+-+ o | healer -+++ o | knight --++ o | catapult -+++ o | king -+++ o
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
@@ -23,15 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-354 (BASE b536178): [R] king b two fists on the long grip 331adbd approved | [S] archer c planted full-draw release e9a6c71 approved | [S] bard c music notes a20bb74+3c65ac0 approved | [S] catapult b visible crewman 0264878+e6055d9 approved | [S] healer a priest robe 62b021b approved | [P] catapult b BOULDER tone 3cd7525 approved
+355 (BASE a1f7c4f; a/b re-audit of medieval on the 3/4 idle first): [S] catapult b spoon bucket 56a8ab6 approved | [S] archer b hip quiver d75f622+7078d43 approved | [S] knight b sword hold 1574c11 approved | [S] king a fitted crown 0535fe4 approved | [S] healer a tonsure head e5f32a0+cf8f774 approved | [S] bard a floppy hat 216bf92 approved | [S] squire a great helm face 92256f8 approved
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [R] medieval.king (331adbd) VERDICT: APPROVE CRITERION: medieval.king.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remaining)
-- GAP: [S] medieval.archer (e9a6c71) VERDICT: APPROVE CRITERION: medieval.archer.c FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
-- GAP: [S] medieval.bard (a20bb74 + 3c65ac0) VERDICT: APPROVE CRITERION: medieval.bard.c PASS (previous: FAIL) BLOCKERS: struck: 2 (none remaining)
-- GAP: [S] medieval.catapult (0264878 + e6055d9) VERDICT: APPROVE CRITERION: medieval.catapult.b FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
-- GAP: [S] medieval.healer (62b021b) VERDICT: APPROVE CRITERION: medieval.healer.a FAIL (previous: FAIL) BLOCKERS: struck: 2; remaining: 1, 3
-- GAP: [P] medieval.catapult (3cd7525) VERDICT: APPROVE CRITERION: medieval.catapult.b FAIL (previous: FAIL) BLOCKERS: blocker 2 tone cleared; remaining: 2 (spoon bucket)
+- GAP: [S] medieval.catapult (56a8ab6) VERDICT: APPROVE CRITERION: medieval.catapult.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remain)
+- GAP: [S] medieval.archer (d75f622 + 7078d43) VERDICT: APPROVE CRITERION: medieval.archer.b PASS (previous: FAIL) BLOCKERS: struck: 1 (none remain)
+- GAP: [S] medieval.knight (1574c11) VERDICT: APPROVE CRITERION: medieval.knight.b FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
+- GAP: [S] medieval.king (0535fe4) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2, 3, 4
+- GAP: [S] medieval.healer (e5f32a0 + cf8f774) VERDICT: APPROVE CRITERION: medieval.healer.a FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2
+- GAP: [S] medieval.bard (216bf92) VERDICT: APPROVE CRITERION: medieval.bard.a FAIL (previous: FAIL) BLOCKERS: struck: 3; remaining: 1, 2
+- GAP: [S] medieval.squire (92256f8) VERDICT: APPROVE CRITERION: medieval.squire.a FAIL (previous: FAIL) BLOCKERS: struck: 1; remaining: 2, 3, 4
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Medieval audited 351 (d 7/7 PASS). Squire/archer stats moved in 351; archer arrow now leaves at the loose (354, ~1.5 s later); bard notes/walk 353-354: expect re-baselines at the medieval checkpoint.
-- Two-fisted swords (king, squire) run FISTS_ON_GRIP (354): blade mounted on its line through the fist, carry and let-go both keep it there.
-- Pickable [P] fallout: ARMET.rail 1.0 proud .12 (353, lineup_medieval); MUSIC_NOTE bigger/brighter (354, bard_ability); BOULDER warmer (354, catapult_windup).
-- 355 first: RE-AUDIT a and b of every medieval unit (step 2; capture --batch medieval, critic given each unit file's Verdicts block). Evidence commit after 354 turned unit_<id>_idle and lineup_<f> to a front three-quarter (they were strict profile); a and b lists written from profile shots are void. c and d stand. Capture adds unit_<id>_walk for a banjo_walk.
+- 356 first: evidence commit - unit_medieval.archer_idle shows his back (bow ready stance yaw .6-.95 rad off the root; idle camera follows the root yaw): frame him by his body's facing so the hood (a.1) can be judged.
+- Knight b.2 "stray chest hilt" is the medieval tabard's cream cross (unitFactory tabardCross); the knight wears plate there. Pickable [P] fallout (355): FLOPPY_HAT dip/seat (bard_idle eyes), CRUSADER_HELM.iron darker (squire_idle), ROYAL_CROWN.tall (king_idle), QUIVER_HIP.leather warmer.
+- Medieval audited 351, a/b re-audited 355 on the 3/4 idle. Squire/archer stats moved in 351; archer arrow leaves at the loose (354); bard notes/walk 353-354; king's first hit 850 -> 1150 ms in the 355 capture: expect re-baselines at the medieval checkpoint.
+- Two-fisted swords (king, squire) run FISTS_ON_GRIP (354). Medieval dress lives in web/src/units/medievalDress.ts (dressMedieval, 355).
 - tribal:re, renaissance:re, farmer:re follow medieval: full re-audits of the done batches under the new angles (ITERATE step 2).
