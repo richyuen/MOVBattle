@@ -1206,7 +1206,7 @@ const TRAY_STRAW = new Color3(0.82, 0.62, 0.3);
  * three grey curled tines on a crossbar at its head; the Apple Thrower holds a red faceted apple CREW_APPLE.r across in his raised fist, a green leaf on it.
  * Each prop is set in the cart's frame and parented to the fist (holdInFist), so it rides the man's arm.
  */
-const CREW_FORK = { long: 0.78, butt: 0.2, thick: 0.012, tines: 3, tine: 0.13, spread: 0.035, curl: 0.35, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
+const CREW_FORK = { long: 0.72, butt: 0.2, thick: 0.013, tines: 3, tine: 0.2, spread: 0.055, curl: 0.4, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
 const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
 function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offset: Vector3, rigScale: number): void {
   const chain: TransformNode[] = [];
@@ -1313,7 +1313,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     for (let k = 0; k < F.tines; k++) {
       const x = (k - (F.tines - 1) / 2) * F.spread;
       const path = [0, 0.33, 0.66, 1].map((t) => new Vector3(x * (1 + 0.3 * t), F.curl * F.tine * t * t, head + F.tine * t));
-      const tine = MeshBuilder.CreateTube("crewForkTine", { path, radius: F.thick * 0.7, tessellation: 5 }, scene);
+      const tine = MeshBuilder.CreateTube("crewForkTine", { path, radius: F.thick * 1.1, tessellation: 5 }, scene);
       tine.parent = fork; tine.material = steel; allMeshes.push(tine);
     }
     holdInFist(man.rightHand, fork, F.dir, Vector3.Zero(), W.scale);
