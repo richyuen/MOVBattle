@@ -282,13 +282,13 @@ const dynasty = makeFaction(FactionId.Dynasty, "dynasty", [
 ]);
 
 const renaissance = makeFaction(FactionId.Renaissance, "renaissance", [
-  ["painter", "Painter", 80, "light_melee", { weaponHint: "paintbrush", hatHint: "beret" }],
-  ["fencer", "Fencer", 160, "light_melee", { abilities: ["parry"], weaponHint: "rapier", hatHint: "plume_helmet" }],
-  ["balloon_archer", "Balloon Archer", 180, "flying_ranged", { abilities: ["flying_hover"], weaponHint: "bow", specialHint: "balloon" }],
-  ["musketeer", "Musketeer", 220, "gunner", { weaponHint: "musket", hatHint: "plume_helmet" }],
-  ["halberd", "Halberd", 200, "polearm_melee", { weaponHint: "halberd", hatHint: "helmet" }],
-  ["jouster", "Jouster", 500, "charge_melee", { abilities: ["charge_impact"], weaponHint: "lance", specialHint: "horse", size: "large" }],
-  ["da_vinci_tank", "Da Vinci Tank", 1800, "artillery", { abilities: ["rapid_fire"], specialHint: "tank", size: "large", projectileHint: "bolt", visualPreset: "iconic_da_vinci_tank", behaviorPreset: "iconic_da_vinci_tank", burstCount: 8, cooldownMultiplier: 0.86, compositionParts: [{ relation: "crew", label: "pilot" }] }],
+  ["painter", "Painter", 50, "light_melee", { weaponHint: "paintbrush", hatHint: "beret", healthMultiplier: 0.94, damageMultiplier: 0.17, cooldownMultiplier: 0.35 }],
+  ["fencer", "Fencer", 150, "light_melee", { abilities: ["parry"], weaponHint: "rapier", hatHint: "plume_helmet", healthMultiplier: 0.46, damageMultiplier: 0.67 }],
+  ["balloon_archer", "Balloon Archer", 200, "flying_ranged", { abilities: ["flying_hover"], weaponHint: "bow", specialHint: "balloon", healthMultiplier: 0.56, damageMultiplier: 0.36, cooldownMultiplier: 1.36 }],
+  ["musketeer", "Musketeer", 250, "gunner", { weaponHint: "musket", hatHint: "plume_helmet", healthMultiplier: 0.54, cooldownMultiplier: 3.33 }],
+  ["halberd", "Halberd", 400, "polearm_melee", { weaponHint: "halberd", hatHint: "helmet", healthMultiplier: 1.19, damageMultiplier: 0.58, cooldownMultiplier: 0.77 }],
+  ["jouster", "Jouster", 1000, "charge_melee", { abilities: ["charge_impact"], weaponHint: "lance", specialHint: "horse", size: "large", healthMultiplier: 0.47 }],
+  ["da_vinci_tank", "Da Vinci Tank", 4000, "artillery", { abilities: ["rapid_fire"], specialHint: "tank", size: "large", projectileHint: "bolt", visualPreset: "iconic_da_vinci_tank", behaviorPreset: "iconic_da_vinci_tank", burstCount: 8, cooldownMultiplier: 1.59, compositionParts: [{ relation: "crew", label: "pilot" }], healthMultiplier: 3.65, damageMultiplier: 0.53 }],
 ]);
 
 const pirate = makeFaction(FactionId.Pirate, "pirate", [
