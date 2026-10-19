@@ -9,12 +9,14 @@ b FAIL (1 since 378)
 c PASS (378)
 d PASS (cost 100, hp 0.75x, dmg 0.33x, cd 1.30x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] b scutum at the chin (hold ~a head lower), orange rim, leafy laurel arcs — blocker 1: SCUTUM holeUp/trim, _holdSlab — ref: .red.png — ours: unit_ancient.shield_bearer_idle.png
+1. [S] b scutum seat — blocker 1: re-seat the board at full height (.74) so the fists grip its middle and its top lands at the chin; re-land the leafy laurels (SCUTUM_LAUREL of de5279a) — ref: .red.png — ours: unit_ancient.shield_bearer_idle.png
 2. [S] a legionary helmet with cheek guards — blocker 1: ancientDress — ref: .jpg — ours: lineup_ancient.png
 3. [S] a lorica segmentata plates, sandals — blocker 2: ancientDress — ref: .jpg — ours: lineup_ancient.png
 ## Attempts (iter | gap | criterion | verdict)
 378 | curved scutum upright in front, rim, laurels, iron boss; no sword (SCUTUM, _holdSlab) [S] (2940691) | b | approved (also cleared c: shield bash)
+379 | scutum .5 tall, chin .1, laurel sprays with a knot, trim lit .06 [S] (de5279a +3fd5e08, reverted) | b | rejected
 ## Rejected (last 4)
+- scutum chin to shin [S] [1] — 379: board shrunk .74 -> .5 and still seated high, its bottom rose to the waist; rim still beige (laurels themselves matched)
 ## Notes (max 3 lines)
-- Scutum root "scutumshield", metadata.holeUp = H/2 + SCUTUM.chin (too high: the rim stands over his head). Held by the protector's _holdSlab.
+- Scutum root "scutumshield", metadata.holeUp = H/2 + SCUTUM.chin; the mount scales it 1.9 on the hand. The capture camera sits below the rim, so his head hides behind it.
 - While the board hides him, judge a in lineup_ancient (critic 378).

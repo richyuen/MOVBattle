@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 378   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
+Iteration: 379   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -7,7 +7,7 @@ tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller +-++ o | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
-ancient: shield_bearer --++ o | sarissa ---+ o | hoplite ---+ o | snake_archer ---+ o | ballista ---+ o | minotaur ---+ o | zeus ---+ o
+ancient: shield_bearer --++ o | sarissa -+-+ o | hoplite ---+ o | snake_archer ---+ o | ballista ---+ o | minotaur -+-+ o | zeus ---+ o
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
@@ -23,16 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-378 (BASE 5715b05; evidence add9656: mammoth _idle, lineup_tribal, halfling _idle; ancient audited + stats 5715b05, tail overlap at 4 pickable): [S] mammoth a topline ad41648 +d33b7c6 approved | [S] mammoth a crest 97b036e approved | [S] potion_seller b neck in fist c1e205c approved | [S] wheelbarrow a bunched riders 9ea4314 approved | [S] minotaur a fur + gear 87155bc +8ac5a35 approved | [S] minotaur c charge 241b811 approved | [S] shield_bearer b scutum 2940691 approved (+ c PASS)
+379 (BASE d9e7ad6; halfling a re-audited from the re-aimed _idle: FAIL, 4 blockers): [S] minotaur b fists 4f9553c +c54ed63 +f07a183 +88e0d0a approved (b PASS) | [S] hoplite b aspis 66de83f approved | [S] sarissa b levelled pike 0311c85 approved (b PASS) | [S] shield_bearer b scutum chin-shin de5279a +3fd5e08 rejected (reverted 13b21c0, a61b230) | [S] zeus a beard + locks f708157 approved | [S] mammoth a dome 28bde95 approved | [S] potion_seller b flask hang 3535a13 rejected (reverted 9a9f0cc)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.mammoth (ad41648 + d33b7c6) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (97b036e) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [S] farmer.potion_seller (c1e205c) VERDICT: APPROVE CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
-- GAP: [S] farmer.wheelbarrow (9ea4314) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
-- GAP: [S] ancient.minotaur (87155bc + 8ac5a35) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
-- GAP: [S] ancient.minotaur (241b811) VERDICT: APPROVE CRITERION: ancient.minotaur.c FAIL (previous: FAIL)
-- GAP: [S] ancient.shield_bearer (2940691) VERDICT: APPROVE CRITERION: ancient.shield_bearer.b FAIL (previous: FAIL); also ancient.shield_bearer.c PASS (previous: FAIL)
+- GAP: [S] ancient.minotaur (4f9553c +c54ed63 +f07a183 +88e0d0a) VERDICT: APPROVE CRITERION: ancient.minotaur.b PASS (previous: FAIL); also c FAIL (blocker 2 struck)
+- GAP: [S] ancient.hoplite (66de83f) VERDICT: APPROVE CRITERION: ancient.hoplite.b FAIL (previous: FAIL)
+- GAP: [S] ancient.sarissa (0311c85, heading helper in f07a183) VERDICT: APPROVE CRITERION: ancient.sarissa.b PASS (previous: FAIL)
+- GAP: [S] ancient.shield_bearer (de5279a +3fd5e08) VERDICT: REJECT CRITERION: ancient.shield_bearer.b FAIL (previous: FAIL)
+- GAP: [S] ancient.zeus (f708157) VERDICT: APPROVE CRITERION: ancient.zeus.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (28bde95) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] farmer.potion_seller (3535a13) VERDICT: REJECT CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Re-audit owed (evidence add9656): halfling a from the re-aimed _idle (say so in the critic prompt with its Verdicts block). Mammoth a was judged afresh in 378.
-- Open in the old batches: mammoth a (head dome, tail), potion_seller b (flask size/orientation), wheelbarrow a (low rim, Thrower's legs splayed), halfling a. Ancient's ranked gaps are in its unit files.
-- Ancient cloth/hair/gear go in web/src/units/ancientDress.ts (dressMinotaur there). Scutum rides the protector's _holdSlab (metadata.holeUp).
+- Re-land owed: potion_seller b = 3535a13 without the POTION_GLASS/glow lines (critic: hang + size were right). Shield bearer b: keep .74 tall, seat it lower; re-use de5279a's SCUTUM_LAUREL sprays.
+- Open in the old batches: mammoth a (crest cap off the skull scale, tail), potion_seller b, wheelbarrow a (low rim, splayed legs), halfling a (re-audited 379: coat, vest/belt, hem, hair). Ancient's gaps are in its unit files.
+- Ancient cloth/hair/gear in web/src/units/ancientDress.ts (dressMinotaur, dressZeus). World-space holds in the animator: _levelPike, _applyBullFists (IK, sides via _heading()).
 - Scripts take faction names: --batch farmer for farmer:re, --batch ancient. A pose wrong only in the capture: probe the animator's own state (output/loop/probe_potion.mjs).
 - Capture replays are deterministic. Particles do not render on the stepped clock. Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool.
