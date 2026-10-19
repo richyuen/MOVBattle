@@ -543,8 +543,8 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   // [S] the Clubber's mop (361; tribal.clubber.red.png: an unkempt curly dreadlock mop wider than the head, framing the face over the beard): the same mop in
   // his lighter brown, the locks DREAD_MOP.clubber head heights, over his beard
   if (style === "dreads_beard") {
-    const hair = getMaterialFactory().get("cloth", CLUBBER_HAIR_COLOR, { emissiveIntensity: DREAD_MOP.glow });
-    return [...dreadMop(scene, body, CLUBBER_HAIR_COLOR, DREAD_MOP.clubber), ...tribalBeard(scene, body, hair)];
+    const hair = getMaterialFactory().get("cloth", DREAD_MOP.clubberColor, { emissiveIntensity: DREAD_MOP.glow });
+    return [...dreadMop(scene, body, DREAD_MOP.clubberColor, DREAD_MOP.clubber, DREAD_MOP.clubberSplay), ...tribalBeard(scene, body, hair)];
   }
   if (style === "shaggy") return shaggyHair(scene, body);
   if (style === "bowl") return bowlCut(scene, body);
@@ -616,10 +616,12 @@ const DREAD_MOP = {
   cap: [1.32, 0.66, 1.3] as const, capUp: 0.78, capBack: 0.2, jitter: 0.12,
   locks: 20, face: 0.85, splay: 0.42, kink: 0.35, long: 0.95, thick: 0.3,
   fringe: 5, fringeLong: 0.17, tufts: 7, glow: 0.18, clubber: 0.8,
+  // the clubber's mop splayed wider and in a darker brown (critic 361 fallout: a dark mop wider than the head), a shade lighter than the stoner's
+  clubberSplay: 0.62, clubberColor: new Color3(0.34, 0.2, 0.12),
 };
 
 /** A dreadlock mop (spec at DREAD_MOP), parented to the head; `long` overrides the locks' length in head heights. */
-function dreadMop(scene: Scene, body: ArticulatedBody, color: Color3, long = DREAD_MOP.long): Mesh[] {
+function dreadMop(scene: Scene, body: ArticulatedBody, color: Color3, long = DREAD_MOP.long, splayed = DREAD_MOP.splay): Mesh[] {
   const D = DREAD_MOP;
   const added: Mesh[] = [];
   const hair = getMaterialFactory().get("cloth", color, { emissiveIntensity: D.glow });
@@ -656,7 +658,7 @@ function dreadMop(scene: Scene, body: ArticulatedBody, color: Color3, long = DRE
     const root = W * D.thick * (0.85 + 0.3 * hashShare(5.3, i, 2, i));
     const rootY = halfY * (0.5 + 0.15 * hashShare(6.1, i, 3, 2));
     const from = new Vector3(sx * halfX * 1.12, rootY, cz * halfZ * 1.1 - halfZ * D.capBack * 0.5);
-    const splay = D.splay * (0.75 + 0.5 * share);
+    const splay = splayed * (0.75 + 0.5 * share);
     const outward = new Vector3(sx, 0, cz);
     const first = new Vector3(0, -Math.cos(splay), 0).addInPlace(outward.scale(Math.sin(splay)));
     const bend = clump("hairDread", from, first, total * 0.5, root, root * 0.8, 20 + i);
