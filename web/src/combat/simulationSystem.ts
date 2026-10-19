@@ -251,6 +251,7 @@ const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
  */
 const HOP_BACK: Record<string, { afterLand?: number; close?: number; dist: number; rise: number; cooldown: number; kind: string }> = {
   "renaissance.fencer": { afterLand: 0.12, dist: 1.5, rise: 3.2, cooldown: 1.5, kind: "backstep" },
+  "renaissance.halberd": { close: 0.75, dist: 1.9, rise: 2.6, cooldown: 3, kind: "dash_back" },
 };
 /*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
