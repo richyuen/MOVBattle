@@ -2756,7 +2756,9 @@ const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
  * from .ball * .shoulderFoot across to .neck, the neck .neck across and .neckLong tall, a lip ring .lip across it at the top, the cork .cork tall; the
  * bulb's middle .seat out past the fist's middle; the glass self-lit .glow.
  */
-const POTION = { ball: 0.12, squash: 0.85, shoulder: 0.042, shoulderFoot: 0.7, neck: 0.042, neckLong: 0.035, lip: 1.3, cork: 0.026, seat: 0.06, glow: 0.12 };
+// [S] 380 (with proceduralAnimation _hangFlasks): the bulb fist-sized, .12 -> .085, its shoulder, neck and cork shrunk with it (critic 378: near
+// head-sized). Glass and glow as approved 377.
+const POTION = { ball: 0.085, squash: 0.85, shoulder: 0.032, shoulderFoot: 0.7, neck: 0.034, neckLong: 0.03, lip: 1.3, cork: 0.022, seat: 0.06, glow: 0.12 };
 const POTION_GLASS = new Color3(0.64, 0.75, 0.72); // 377: TABS pale grey-green (184,200,195), with the glow .22 -> .12 it no longer washes to white
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
