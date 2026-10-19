@@ -175,6 +175,27 @@ export function musketeerHose(scene: Scene, body: ArticulatedBody, teamColor: Co
 }
 
 /*
+ * [S] the painter's sweater hem (374; renaissance.painter.red.png: the sweater ends at the hip in a snug ribbed band a little darker than the knit, the
+ * khaki hose running from there over half his height to the shoes. Not the flared tunic skirt to mid-thigh every clothed man gets). unitFactory hangs
+ * the knit from his hips PAINTER_SWEATER.long of the knee drop, flaring only to .flare of the waist; the band is .rib of that hem's height at its foot,
+ * .ribOut of its width round, team x .ribShade self-lit .ribGlow.
+ */
+export const PAINTER_SWEATER = { long: 0.2, flare: 1.12, rib: 0.45, ribOut: 1.06, ribShade: 0.36, ribGlow: 0.06 };
+
+/** The ribbed band at the foot of the painter's short sweater hem (spec at PAINTER_SWEATER). */
+export function painterSweaterRib(scene: Scene, hem: Mesh, team: Color3): Mesh[] {
+  const S = PAINTER_SWEATER;
+  const sb = hem.getBoundingInfo().boundingBox.extendSize;
+  const tall = sb.y * 2 * S.rib;
+  const rib = MeshBuilder.CreateCylinder("painterSweaterRib", { height: tall, diameter: sb.x * 2 * S.ribOut, tessellation: 12 }, scene);
+  rib.convertToFlatShadedMesh();
+  rib.parent = hem;
+  rib.position.y = -sb.y + tall / 2;
+  rib.material = getMaterialFactory().get("cloth", team.scale(S.ribShade), { emissiveIntensity: S.ribGlow });
+  return [rib];
+}
+
+/*
  * [S] the halberdier's hose and shoes (374; renaissance.halberd.blue.png: under the puffed team breeches a dark team stocking down the shin; low
  * orange-brown shoes, not boots, each with a turned cuff flaring out round the ankle in the same leather. Not the plain body boot, whose cuff stands
  * a third up the shin in team colour and read as blue blocky boots). Shares of the foot's own height and width:

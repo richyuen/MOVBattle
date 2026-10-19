@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { balloonArcherFront, featherClump, fencerTrim, halberdHose, heldBalloonArrow, musketeerHose, painterJabot } from "./renaissanceDress";
+import { balloonArcherFront, featherClump, fencerTrim, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -703,8 +703,12 @@ export class UnitFactory {
           ? hangSkirt(this._scene, body, "tabardSkirt", 0.7, 1.6, tabard.material)
           : isArmored
             ? hangSkirt(this._scene, body, "armourKilt", 0.6, 1.55, getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(ARMOUR_SKIRT_SHADE)))
-            : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
+            // the painter's sweater ends at the hip in a snug ribbed band, not a flared tunic to mid-thigh (374, renaissanceDress PAINTER_SWEATER)
+            : definition.id === "renaissance.painter"
+              ? hangSkirt(this._scene, body, "painterSweaterHem", PAINTER_SWEATER.long, PAINTER_SWEATER.flare, body.bodyMaterial)
+              : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
+      if (definition.id === "renaissance.painter" && skirt) propMeshes.push(...painterSweaterRib(this._scene, skirt, teamColor));
       if (knight && skirt) propMeshes.push(...knightCuirass(this._scene, body, skirt));
       if (definition.id === "medieval.bard" && skirt) propMeshes.push(...bardTunic(this._scene, skirt, teamColor));
       if (definition.id === "medieval.squire" && tabard && skirt) propMeshes.push(...squireTabardTrim(this._scene, body, tabard, skirt));

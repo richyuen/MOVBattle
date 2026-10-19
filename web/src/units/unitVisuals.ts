@@ -443,8 +443,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
 
   // ═══════════════════════ RENAISSANCE ═══════════════════════
+  // lanky (374; renaissance.painter.red.png: khaki legs over half his height under a sweater ending at the hip, renaissanceDress PAINTER_SWEATER)
   "renaissance.painter": vis(
-    { scale: 0.9, bulk: 0.9 }, "paintbrush", "beret", "palette", "none", "#FF69B4",
+    { scale: 0.9, bulk: 0.85, legLength: 1.2 }, "paintbrush", "beret", "palette", "none", "#FF69B4",
     undefined,
     { materialPreset: "renaissance_velvet" },
   ),
