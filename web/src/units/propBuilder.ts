@@ -4479,6 +4479,13 @@ const SLAB_EYE_UP = 0.22;
 // the opening, one hanging under the opening's side and one over the bottom corner, each a chunk this big (prop units), stood proud of the face by .proud
 /** The slab opening's lip (368, spec at SKULL_FACE): six flat sides in the slab's own stone, self-lit like it so its inner faces do not go dark. */
 const SLAB_LIP = { sides: 6, shade: 1.0, glow: 0.2 };
+/*
+ * [S] the window's bone surround (370; tribal.protector.red.png, .blue.png: the slab's window shows tan skull to its edges; critic 369: with the head turned
+ * to the weapon side the head's own backing plate slid left of the window and a red sliver and grass showed at its right edge). Parented to the slab, not
+ * the head: a flat six-sided ring turned with the lip, from SLAB_WINDOW_BONE.outer of SLAB_EYE across (under the lip) in to .inner (the skull's eyes and
+ * snout show through the middle), .thick thick, set .behind the slab's back face. Matte bone tan .color self-lit .glow (the skull helm's tan).
+ */
+const SLAB_WINDOW_BONE = { outer: 1.15, inner: 0.62, thick: 0.012, behind: 0.006, color: new Color3(0.68, 0.52, 0.34), glow: 0.2 };
 const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
 // ...and its stone (tribal.protector.red.png: one warm red-brown slab, not planks): SLAB_FACETS.deep thick (prop units), cut in three columns either side of
 // the opening and in .rows rows down the side columns; each corner of the face pushed in or out by its own hashed share (.front of the depth) so the face
@@ -4727,6 +4734,17 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       ring.convertToFlatShadedMesh();
       ring.material = mat(scene, stone.scale(SLAB_LIP.shade), SLAB_LIP.glow, "stone");
       ring.parent = shield;
+      // [S] 370 the window's bone surround (spec at SLAB_WINDOW_BONE): a flat six-sided tan ring just behind the slab, tucked under the lip and filling the
+      // window's edge, so whatever way his head turns the window shows tan bone round the skull's face, never his skin or the field
+      const WB = SLAB_WINDOW_BONE;
+      const outer = eye * WB.outer, inner = eye * WB.inner;
+      const bone = MeshBuilder.CreateTorus("slabWindowBone", { diameter: (outer + inner) * 0.5, thickness: (outer - inner) * 0.5, tessellation: SLAB_LIP.sides }, scene);
+      bone.rotation.set(Math.PI / 2, Math.PI / SLAB_LIP.sides, 0);
+      bone.scaling.y = (WB.thick * s) / ((outer - inner) * 0.5);
+      bone.position.set(0, eyeY, -D * 0.5 - WB.behind * s);
+      bone.convertToFlatShadedMesh();
+      bone.material = mat(scene, WB.color, WB.glow, "cloth");
+      bone.parent = shield;
       // Moss (spec at SLAB_MOSS): knobbly olive-grey patches, one draped along the top corner and slanting down toward the opening, one hanging under the
       // opening's side, one over the bottom corner; all stand off the face. Self-lit a little: a plain dark green went near-black in the field's shade.
       const moss = mat(scene, new Color3(0.42, 0.42, 0.27), 0.12, "stone");
