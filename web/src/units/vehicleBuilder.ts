@@ -1417,6 +1417,14 @@ const CREW_SEAT = { lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee:
  * and out (.shinOut) and forward (.shinAhead) from there. Replaces CREW_SEAT.backThigh/backSplay/backKnee/backRoll and LOW_RIM.back.
  */
 const THROWER_LEGS = { seat: -0.08, kneeOut: 0.07, kneeAhead: 0.04, kneeUp: 0.03, shinOut: 0.45, shinAhead: 0.35 };
+/*
+ * [S] the Thrower on a hay mound (382; farmer.wheelbarrow.red.png: the Apple Thrower sits behind and above the Farmer on the tray's back end, his chest
+ * and head clear over the Farmer's, his knees out round the Farmer's hips; critic 381: the rear quarter by the handles bare hay, the far knee hidden, the
+ * riders merged into one body). A lumpy straw mound .wide of the tray across, .deep long, standing .up over the hay bed, centred .at behind the tray's
+ * middle (its rear quarter); the Thrower's hips on its front slope .seat behind the tray's middle, .sit of the mound's height up. His legs still solved
+ * by THROWER_LEGS (its .seat no longer read). (Probe 382: hips at the mound's middle, -.15, left his knees .15 short of the Farmer's hips.)
+ */
+const HAY_MOUND = { wide: 0.85, deep: 0.26, up: 0.15, at: -0.13, seat: -0.04, sit: 0.85, lumps: 0.12 };
 /** World matrices of a node and every ancestor, root first, so a read made at build time is fresh. */
 function settleWorld(node: TransformNode): void {
   const chain: TransformNode[] = [];
@@ -1616,6 +1624,12 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   heap.convertToFlatShadedMesh();
   heap.parent = rig; heap.material = lit(TRAY_STRAW, 0.25); allMeshes.push(heap);
   jitterVertices(heap, HAY_BED.lumps, 347);
+  // [S] a hay mound heaped on the tray's rear quarter, the Apple Thrower's seat (spec at HAY_MOUND)
+  const M = HAY_MOUND;
+  const mound = MeshBuilder.CreateIcoSphere("trayHayMound", { radiusX: W.trayWide * M.wide * 0.5, radiusY: M.up, radiusZ: M.deep * 0.5, subdivisions: 1, flat: true }, scene);
+  mound.position.set(0, W.trayY + bedTall, W.trayZ + M.at);
+  mound.parent = rig; mound.material = heap.material; allMeshes.push(mound);
+  jitterVertices(mound, M.lumps, 353);
 
   // Wheel at front (+Z), under the tray's nose
   const wheelZ = W.trayZ + W.trayLong / 2 + 0.06;
@@ -1682,7 +1696,6 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     handle.parent = rig; handle.material = wood; allMeshes.push(handle);
   }
 
-  const seatY = W.trayY + sideTall; // the rim: the Apple Thrower sits astride the side boards (HAY_BED spec)
   const crew: Partial<WheelbarrowCrew> = {};
   const S = CREW_SEAT;
   // The Farmer, front: sat up on the tray's front lip, legs splayed forward and out over the wheel (spec at CREW_SEAT)
@@ -1722,9 +1735,10 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     holdInFist(man.rightHand, fork, F.dir, Vector3.Zero(), W.scale);
   });
   // The Apple Thrower, behind him: astride the narrow tray on its side boards, legs out over them and hanging outside, his throwing arm up and back
-  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + THROWER_LEGS.seat, color, (man) => {
+  // [S] ...sat up on the hay mound on the tray's rear quarter, raised so his chest shows over the Farmer (HAY_MOUND)
+  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + HAY_MOUND.seat, color, (man) => {
     crew.thrower = man;
-    man.root.position.y = seatY + S.astrideUp - man.hip.position.y;
+    man.root.position.y = W.trayY + sideTall * HAY_BED.fill + HAY_MOUND.up * HAY_MOUND.sit - man.hip.position.y;
     if (crew.farmer) legsRoundFarmer(rig, crew.farmer, man);
     man.rightShoulder.rotation.set(-2.5, 0, -0.3);
     man.rightElbow.rotation.x = -0.8;
