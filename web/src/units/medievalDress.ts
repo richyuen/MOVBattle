@@ -751,9 +751,10 @@ function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: 
  * - the thigh is drawn up to end at the hinge (KING_LEGS: scaled from its top, nothing of it past the knee), so the breeches lathe ends at the hinge too,
  *   its gold band on it, and no team knee end shows under the hem at any bend;
  * - the shin itself (its upper knee stub merged in) is the stocking, in warmCloth, out of the glow;
- * - the foot is squashed about its sole to a low shoe whose top is KING_LEGS.shoe of the shin's length over the shin's foot, the buckle kept its own height.
+ * - the foot is squashed about its sole to a low shoe whose top is KING_LEGS.shoe of the shin's length over the shin's foot, the buckle kept its own height;
+ * - the shin slimmed to KING_LEGS.slim across (x and z) so the stocking reads narrower than the knee band.
  */
-const KING_LEGS = { shoe: 0.1 };
+const KING_LEGS = { shoe: 0.1, slim: 0.84 };
 const KING_DRESS = {
   puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
   gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), shoe: new Color3(0.45, 0.27, 0.14),
@@ -784,6 +785,8 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   }
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     shin.material = beige;
+    shin.scaling.x *= KING_LEGS.slim;
+    shin.scaling.z *= KING_LEGS.slim;
     unglow(scene, [shin]);
   }
   // low brown shoes squashed about the sole, gold buckle on the instep
