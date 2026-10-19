@@ -231,8 +231,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "tribal.protector": vis(
     { scale: 1.0, bulk: 1.1 }, "none", "bone_mask", "slab", "none", "#D2B48C",
   ),
+  // [S] lanky (374; tribal.spear_thrower.red.png: long thin limbs, legs over half his height): thinner build, longer legs; his idle stands upright
+  // (proceduralAnimation JAVELIN_UPRIGHT)
   "tribal.spear_thrower": vis(
-    { scale: 0.95, armLength: 1.1 }, "javelin", "none", "none", "none", "#CD853F",
+    { scale: 0.95, bulk: 0.82, armLength: 1.12, legLength: 1.12 }, "javelin", "none", "none", "none", "#CD853F",
   ),
   "tribal.stoner": vis(
     { scale: 1.05, bulk: 1.15 }, "stone", "none", "none", "none", "#808080",

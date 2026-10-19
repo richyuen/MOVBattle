@@ -172,6 +172,8 @@ const BOW_TURN_MIN = 0.95;
 const BOW_TURN_MAX = 1.3;
 /** A caster does not hold his rod from a squat: of whatever crouch his rest stance has, he keeps this share. */
 const CASTER_CROUCH = 0.3;
+/** A javelin man's rest stance (374, _buildIdlePose): always hip-shot, crouch at most .crouch, forward lean .lean + up to .lean2. */
+const JAVELIN_UPRIGHT = { crouch: 0.04, lean: 0.08, lean2: 0.06 };
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
@@ -3133,14 +3135,18 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     const arm = (n: number) => ({ out: 0.08 + h(n) * 0.1, elbow: 0.4 + h(n + 1) * 0.4, swing: 0.14 + h(n + 2) * 0.18, rate: 0.9 + h(n + 3) * 0.7, phase: h(n + 4) * Math.PI * 2 });
-    const pick = h(121);
+    // [S] a javelin man stands tall (374; tribal.spear_thrower.red.png, tribal.jpg: a lanky Wobbler upright on long straight legs, never sunk on his
+    // knees): he always takes the hip-shot stance, its crouch at most JAVELIN_UPRIGHT.crouch, and leans JAVELIN_UPRIGHT.lean (+ .lean2 hashed)
+    const upright = Boolean(this._javelin());
+    const pick = upright ? h(121) * 0.35 : h(121);
     const stance = pick < 0.35
       ? { tilt: 0.17 + h(43) * 0.1, stride: 0.24 + h(46) * 0.14, crouch: 0.02 + h(122) * 0.08, chin: 0.05, cock: 0.14 + h(126) * 0.1, off: { raise: 0.3 + h(123) * 0.2, out: 0.5 + h(124) * 0.2, elbow: -1.5 - h(125) * 0.4 } }
       : pick < 0.7
         ? { tilt: 0.05 + h(43) * 0.06, stride: 0.1 + h(46) * 0.1, crouch: 0.25 + h(122) * 0.2, chin: -0.22, cock: 0.02 + h(126) * 0.06, off: { raise: -0.45 - h(123) * 0.3, out: 0.12 + h(124) * 0.2, elbow: -0.8 - h(125) * 0.5 } }
         : { tilt: 0.1 + h(43) * 0.07, stride: 0.14 + h(46) * 0.1, crouch: 0.16 + h(122) * 0.16, chin: -0.08, cock: -0.08 - h(126) * 0.08, off: { raise: 0.28 + h(123) * 0.22, out: 0.06 + h(124) * 0.12, elbow: -0.2 - h(125) * 0.3 } };
+    if (upright) stance.crouch = Math.min(stance.crouch, JAVELIN_UPRIGHT.crouch);
     return {
-      lean: 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
+      lean: upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,
