@@ -980,3 +980,36 @@ function shieldBearerSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 388 the ballista's crewman's helmet (re-landed from 387's 3b71139; ancient.ballista.blue.png: a helmeted team crewman behind the machine at its
+ * stock; critic 378: a bare team man). On the head, in its half extents e: a grey iron bowl BALLISTA_HELM.bowl of e across, cut at .cut of a sphere, its foot .foot of e.y over
+ * the head's middle; a brow rim .rim of e.y tall round its foot; a neck guard flaring out behind, .guard of e.y tall, .flare of the bowl's width; two
+ * cheek guards .cheek of e.y long down the sides. Iron cloth .iron, self-lit .glow.
+ */
+const BALLISTA_HELM = { bowl: 1.16, cut: 0.55, foot: 0.12, rim: 0.16, guard: 0.42, flare: 1.18, cheek: 0.8, iron: new Color3(0.42, 0.42, 0.45), glow: 0.14 };
+
+/** The ballista crewman's iron helmet (spec at BALLISTA_HELM), on his head. */
+export function dressBallistaCrew(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const H = BALLISTA_HELM;
+  const out: Mesh[] = [];
+  const iron = getMaterialFactory().get("cloth", H.iron, { emissive: H.iron.scale(H.glow) });
+  const head = body.headMesh;
+  const e = head.getBoundingInfo().boundingBox.extendSize;
+  const put = (m: Mesh) => { m.material = iron; m.convertToFlatShadedMesh(); m.parent = head; out.push(m); body.allMeshes.push(m); return m; };
+  const bowl = put(MeshBuilder.CreateSphere("ballistaCrewHelm", { diameterX: 2 * e.x * H.bowl, diameterY: 2 * e.y * H.bowl, diameterZ: 2 * e.z * H.bowl, segments: 7, slice: H.cut }, scene));
+  bowl.position.y = e.y * H.foot;
+  const rim = put(MeshBuilder.CreateCylinder("ballistaCrewRim", { height: e.y * H.rim, diameter: 2 * e.x * H.bowl * 1.04, tessellation: 10 }, scene));
+  rim.scaling.z = (e.z / e.x) * 1.0;
+  rim.position.y = e.y * (H.foot + H.rim * 0.5);
+  const guard = put(MeshBuilder.CreateCylinder("ballistaCrewGuard", { height: e.y * H.guard, diameterTop: 2 * e.x * H.bowl, diameterBottom: 2 * e.x * H.bowl * H.flare, tessellation: 10, arc: 0.5 }, scene));
+  guard.rotation.y = Math.PI / 2; // the half shell round the back
+  guard.scaling.z = e.z / e.x;
+  guard.position.set(0, e.y * (H.foot - H.guard * 0.4), -e.z * 0.05);
+  for (const sx of [-1, 1]) {
+    const cheek = put(MeshBuilder.CreateBox("ballistaCrewCheek", { width: e.x * 0.12, height: e.y * H.cheek, depth: e.z * 0.7 }, scene));
+    cheek.position.set(sx * e.x * H.bowl * 0.98, e.y * (H.foot - H.cheek * 0.45), e.z * 0.25);
+    cheek.rotation.z = sx * 0.08;
+  }
+  return out;
+}

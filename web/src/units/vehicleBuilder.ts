@@ -6,6 +6,7 @@ import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
+import { dressBallistaCrew } from "./ancientDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -561,6 +562,14 @@ const BALLISTA_ARMS = { reach: 1.75, thick: 0.1, tip: 0.6, bind: 0.13, bindAt: 0
 const BALLISTA_STOCK = { wide: 0.18, tall: 0.12, front: 0.5, back: 1.55 };
 const BALLISTA_WHEEL = { across: 0.62, rim: 0.07, wide: 0.08, hub: 0.12 };
 const BALLISTA_WOOD = new Color3(0.62, 0.3, 0.2);
+/*
+ * [S] 388 the crewman at the trough's rear end (ancient.ballista.blue.png: a helmeted team crewman close behind the machine, his helmeted head over the
+ * stock, both hands on it; critic 387: crouched beside the trough under the beam his head and helmet were buried in it, his hands not on the stock;
+ * critic 378: a bare team man standing 2 m off). BALLISTA_CREW: on the firing line, .gap m behind the stock's rear end, standing (hips at .y), facing
+ * the machine, his trunk leaning .lean rad in over the stock; each arm aimed (solved in world space, not Euler guesses) straight at the winch handle on
+ * its side, .grip m out from the axle's end; feet a little apart (.splay). His iron helmet is ancientDress dressBallistaCrew.
+ */
+const BALLISTA_CREW = { gap: 0.3, y: 0.72, lean: 0.3, grip: 0.06, splay: 0.08 };
 function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("ballista_root", scene);
   const allMeshes: Mesh[] = [];
@@ -679,8 +688,24 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
     }
   }
 
-  // Operator behind (-Z), clear of the frame's back
-  const operator = addOperator(scene, root, allMeshes, 0.25, 0.72, -halfD - 0.55, color);
+  // [S] 388 the crewman behind the trough's rear end, leaning in, both hands on the winch handles, helmeted (spec at BALLISTA_CREW)
+  const C = BALLISTA_CREW;
+  const operator = addOperator(scene, root, allMeshes, 0, C.y, -S.back - C.gap, color, (man) => {
+    man.torso.rotation.x = C.lean;
+    for (const [hip, side] of [[man.leftHip, -1], [man.rightHip, 1]] as const) hip.rotation.z = side * C.splay;
+    settleWorld(root);
+    for (const [shoulder, elbow] of [[man.leftShoulder, man.leftElbow], [man.rightShoulder, man.rightElbow]] as const) {
+      settleWorld(shoulder);
+      const from = shoulder.getAbsolutePosition();
+      const side = Math.sign(Vector3.TransformCoordinates(from, root.getWorldMatrix().clone().invert()).x) || 1;
+      const handle = Vector3.TransformCoordinates(new Vector3(side * (S.wide / 2 + 0.1 + C.grip), stockY, winchZ), root.getWorldMatrix());
+      const dir = handle.subtract(from);
+      aimLimb(shoulder, dir);
+      elbow.rotation.setAll(0);
+      aimLimb(elbow, dir);
+    }
+    dressBallistaCrew(scene, man);
+  });
 
   const vehicleSockets: VehicleSocketSet = {
     primaryMuzzle: makeSocket(scene, root, "ballista_bolt_socket", new Vector3(0, bolt.position.y, S.front + 0.4)),
