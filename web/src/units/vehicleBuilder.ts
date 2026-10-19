@@ -1992,12 +1992,16 @@ const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.035, wide: 0.61, dot
  *     joint to the sole; radii (neck units) read down the profiles .thigh and .shin as [radius, y]; every vertex jittered .jitter (the coat's lumps);
  *   - paint (the shin unjittered so it stays flush): each ANKLE_BAND stripe a ring at its height, .proud over the surface and ANKLE_BAND.stripeTall high; the dots flat
  *     discs laid on the surface at ANKLE_BAND.dotAt, turned to face out.
+ * [S] 372 tapering legs and a flared foot (critic: fat straight drums as wide as the head; tribal.mammoth.blue.png: stubby legs about half the body's depth,
+ * tapering from the hull to the ankle, ending in a slightly flared foot). The thigh narrows from its dome (.thigh) and the shin keeps narrowing to the
+ * ankle at .ankle; below it a separate foot lathe (.foot, its own jitter .footJitter so it reads as a pad) flares out to the flat sole.
  */
 const MAMMOTH_LEG = {
-  sides: 9, jitter: 0.035, proud: 1.012,
+  sides: 9, jitter: 0.035, proud: 1.012, ankle: -0.34, footJitter: 0.02,
   // the top a fur dome rising into the hull (366), not a flat cut
-  thigh: [[0.14, 0.46], [0.27, 0.36], [0.35, 0.2], [0.37, 0.06], [0.36, -0.05], [0.33, -0.3], [0.3, -0.5]] as [number, number][],
-  shin: [[0.3, 0.06], [0.285, -0.1], [0.28, -0.26], [0.295, -0.36], [0.31, -0.42]] as [number, number][],
+  thigh: [[0.14, 0.46], [0.25, 0.36], [0.31, 0.2], [0.305, 0.06], [0.29, -0.05], [0.265, -0.3], [0.245, -0.5]] as [number, number][],
+  shin: [[0.245, 0.06], [0.23, -0.1], [0.215, -0.26], [0.205, -0.34]] as [number, number][],
+  foot: [[0.205, -0.33], [0.215, -0.37], [0.245, -0.41], [0.255, -0.43]] as [number, number][],
 };
 /*
  * [S] the mammoth's barrel body (365; tribal.mammoth.red.png, .jpg, card "a big round belly"). Spec read off the renders: one rounded faceted barrel of
@@ -2137,6 +2141,8 @@ function mammothLeg(scene: Scene, hipJoint: TransformNode, kneeJoint: TransformN
   };
   lathe("uleg", L.thigh, hipJoint, 61.3 + serial);
   lathe("lleg", L.shin, kneeJoint, 67.9 + serial, 0);
+  // the flared foot under the ankle paint (372)
+  lathe("lfoot", L.foot, kneeJoint, 71.3 + serial, L.footJitter);
   for (const y of ANKLE_BAND.stripes) {
     const r = profileAt(L.shin, y) * L.proud;
     const stripe = MeshBuilder.CreateCylinder("ankleStripe", { height: ANKLE_BAND.stripeTall, diameter: 2 * r, tessellation: L.sides * 2 }, scene);
