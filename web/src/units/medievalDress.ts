@@ -548,8 +548,8 @@ function chestBack(body: ArticulatedBody): number {
   return back;
 }
 
-/** `skin` scales the back it hangs off (a cuirass over the chest stands that much deeper); `drop` overrides MEDIEVAL_CAPE.drop. */
-function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin = 1, drop = MEDIEVAL_CAPE.drop): Mesh[] {
+/** `skin` scales the back it hangs off (a cuirass over the chest stands that much deeper); `drop`, `hemWide`, `glow` override MEDIEVAL_CAPE.drop, .hem, .glow. */
+function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin = 1, drop = MEDIEVAL_CAPE.drop, hemWide = MEDIEVAL_CAPE.hem, glow = MEDIEVAL_CAPE.glow): Mesh[] {
   const C = MEDIEVAL_CAPE;
   const t = body.torsoMesh;
   const c = t.getBoundingInfo().boundingBox.extendSize;
@@ -562,7 +562,7 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
   for (let r = 0; r <= C.rows; r++) {
     const f = r / C.rows; // 0 at the collar, 1 at the hem
     const y = top + (hemY - top) * f;
-    const wide = cx * (C.top + (C.hem - C.top) * f);
+    const wide = cx * (C.top + (hemWide - C.top) * f);
     const deep = back * (1.06 + C.off * f);
     const row: Vector3[] = [];
     for (let i = 0; i <= 10; i++) {
@@ -571,7 +571,7 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
     }
     rows.push(row);
   }
-  const capeCloth = getMaterialFactory().get("cloth", cloth, { emissiveIntensity: C.glow });
+  const capeCloth = getMaterialFactory().get("cloth", cloth, { emissiveIntensity: glow });
   const cape = MeshBuilder.CreateRibbon("medievalCape", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene);
   cape.convertToFlatShadedMesh();
   cape.parent = body.torso;
@@ -598,7 +598,7 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
   return out;
 }
 
-const KNIGHT_CAPE = { shade: 0.85, clear: 1.03, drop: 0.95 };
+const KNIGHT_CAPE = { shade: 0.85, clear: 1.03, drop: 0.95, hem: 2.3, glow: 0.06 };
 
 /** `n` thin upright strips evenly round a limbShell of the same span, standing just proud of its faces (puffed-cloth folds or slashes). */
 function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: number, out: number, n: number, mat: Material): Mesh[] {
@@ -829,7 +829,7 @@ export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: strin
     case "medieval.squire": return [...squireLegs(scene, body), ...squireArms(scene, body)];
     // [S] the Knight's cape (358; medieval.knight.png, card "a team colored cape"): the king's cape in team cloth (x KNIGHT_CAPE.shade) off the backs of his
     // steel shoulders to the knee (.drop), hung KNIGHT_PLATE.deep x .clear off the back so it clears the cuirass
-    case "medieval.knight": return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop);
+    case "medieval.knight": return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop, KNIGHT_CAPE.hem, KNIGHT_CAPE.glow);
     default: return [];
   }
 }
