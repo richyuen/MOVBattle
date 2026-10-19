@@ -248,6 +248,68 @@ export function balloonArcherFront(scene: Scene, body: ArticulatedBody, teamColo
 }
 
 /*
+ * [S] 373 the fencer's shoulder wings and waist skirt (critic 372: a flat chest slab, a thin tan band on one upper arm, no wings, no tabs; the 334 wings
+ * were flat discs edge-on to the camera and the tabs thin chips under the doublet's hem; renaissance.fencer.red.png: over each shoulder top a rolled team
+ * wing standing out past the arm, a tan band round the sleeve under it; a dark belt at the waist and a ring of broad team tabs flaring out from it over
+ * the top of the striped breeches). Shares of the chest (W, H, D) and of each upper arm's girth and length:
+ *   wing: a flared team cap from .capTop to .capFoot of the girth round, .capTall of the arm long, its foot rolled in a team roll .roll of the girth thick
+ *   round it; under it a tan band .band of the arm long, .bandOut of the girth round. Belt .belt of H tall, .beltOut of the chest round it, dark brown.
+ *   Skirt: .tabs tabs, each a slice of a flared lathe (.gapShare of its slice left open) from .skirtTop to .skirtFoot of the chest's half-width out,
+ *   .skirtTall of H long, hanging from the belt; the ring squashed to the chest's depth.
+ */
+const FENCER_TRIM = {
+  capTop: 1.25, capFoot: 1.95, capTall: 0.3, roll: 0.34, band: 0.12, bandOut: 1.3,
+  belt: 0.09, beltOut: 1.14, tabs: 8, gapShare: 0.14, skirtTop: 1.1, skirtFoot: 1.45, skirtTall: 0.34,
+  leather: new Color3(0.3, 0.16, 0.09), tan: new Color3(0.8, 0.56, 0.28), glow: 0.3,
+};
+
+/** The fencer's rolled shoulder wings with tan bands, dark belt and flared skirt of tabs (spec at FENCER_TRIM). `waist` is the chest's foot in the torso's frame. */
+export function fencerTrim(scene: Scene, body: ArticulatedBody, teamColor: Color3, chest: { W: number; H: number; D: number; waist: number }): Mesh[] {
+  const T = FENCER_TRIM;
+  const mf = getMaterialFactory();
+  const team = mf.getCloth(teamColor.scale(0.82));
+  const tan = mf.get("cloth", T.tan, { emissiveIntensity: T.glow });
+  const belt = mf.getCloth(T.leather);
+  const added: Mesh[] = [];
+  const put = (m: Mesh, mat: ReturnType<typeof mf.getCloth>, parent: TransformNode): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const capTall = long * T.capTall;
+    const capY = long * 0.5 - capTall * 0.5;
+    const cap = put(MeshBuilder.CreateCylinder("fencerWingCap", { height: capTall, diameterTop: girth * T.capTop, diameterBottom: girth * T.capFoot, tessellation: 8 }, scene), team, arm);
+    cap.position.y = capY;
+    const roll = put(MeshBuilder.CreateTorus("fencerWingRoll", { diameter: girth * T.capFoot, thickness: girth * T.roll, tessellation: 8 }, scene), team, arm);
+    roll.position.y = capY - capTall * 0.5;
+    const band = put(MeshBuilder.CreateCylinder("fencerBand", { height: long * T.band, diameter: girth * T.bandOut, tessellation: 8 }, scene), tan, arm);
+    band.position.y = capY - capTall * 0.5 - girth * T.roll * 0.5 - long * T.band * 0.5;
+  }
+  const { W, H, D, waist } = chest;
+  const beltRing = put(MeshBuilder.CreateCylinder("fencerBelt", { height: H * T.belt, diameter: W * T.beltOut, tessellation: 10 }, scene), belt, body.torso);
+  beltRing.scaling.z = (D * T.beltOut) / (W * T.beltOut);
+  beltRing.position.y = waist;
+  // the skirt: a ring of broad tabs, each a slice of a flared lathe, squashed front to back to the chest's depth
+  const ring = new TransformNode("fencerSkirt", scene);
+  ring.parent = body.torso;
+  ring.position.y = waist - H * T.belt * 0.4;
+  ring.scaling.z = D / W;
+  const tall = H * T.skirtTall;
+  const shape = [new Vector3((W / 2) * T.skirtTop, 0, 0), new Vector3((W / 2) * (T.skirtTop + T.skirtFoot) * 0.5 * 1.02, -tall * 0.5, 0), new Vector3((W / 2) * T.skirtFoot, -tall, 0)];
+  const slice = 1 / T.tabs;
+  for (let i = 0; i < T.tabs; i++) {
+    const tab = put(MeshBuilder.CreateLathe("fencerTab", { shape, arc: slice * (1 - T.gapShare), tessellation: 2, sideOrientation: Mesh.DOUBLESIDE }, scene), team, ring);
+    tab.rotation.y = i * slice * Math.PI * 2;
+  }
+  return added;
+}
+
+/*
  * [S] the jouster's feather clump (371; renaissance.jouster.blue.png, .png, card "colored feathers": on the helm's crown and on the horse's poll a dense,
  * bushy plume in a deep saturated team colour, a packed column of fat lumps about a head across, rising and curling back at its top, no sky between the
  * lumps. Critic 370: the stacked single tufts read as a spiral horn, the flat fanned blades as a claw; team cloth self-lit .2 washed out to lavender).

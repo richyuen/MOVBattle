@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { balloonArcherFront, featherClump, heldBalloonArrow, musketeerHose, painterJabot } from "./renaissanceDress";
+import { balloonArcherFront, featherClump, fencerTrim, heldBalloonArrow, musketeerHose, painterJabot } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1143,10 +1143,10 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
  * [S] fencer's doublet and breeches (334; renaissance.fencer.red.png: a team doublet over the chest with a cream band round the top of each sleeve under a
  * short team shoulder wing, a ring of short team tabs below the waist; puffed knee breeches paned in upright stripes, team and cream by turns). Sizes are
  * shares of the chest (W, H, D) and of each limb mesh's own girth and length.
- *   doublet FENCER_DRESS.doublet of the chest round it; FENCER_DRESS.tabs tabs FENCER_DRESS.tab of the chest's height long; shoulder wing FENCER_DRESS.wing of
- *   the arm's girth round, its cream band FENCER_DRESS.band of the arm long under it; the breeches are the thigh rolls (FENCER_ROLL, 337).
+ *   doublet FENCER_DRESS.doublet of the chest round it; wings, bands, belt and tabs are renaissanceDress FENCER_TRIM (373); the breeches are the thigh
+ *   rolls (FENCER_ROLL, 337).
  */
-const FENCER_DRESS = { doublet: 1.08, tabs: 8, tab: 0.2, wing: 1.45, band: 0.12 };
+const FENCER_DRESS = { doublet: 1.08 };
 const FENCER_CREAM = new Color3(0.8, 0.56, 0.28);
 const FENCER_GLOW = 0.3;
 /*
@@ -1182,22 +1182,8 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   const waist = chest.position.y - H * 0.5;
   const doublet = put(MeshBuilder.CreateBox("fencerDoublet", { width: W * F.doublet, height: H * 0.9, depth: D * F.doublet }, scene), team, body.torso);
   doublet.position.set(0, chest.position.y - H * 0.04, 0);
-  // the tabs below the waist, each turned to face out round an oval the doublet's size
-  for (let i = 0; i < F.tabs; i++) {
-    const a = (i + 0.5) / F.tabs * Math.PI * 2;
-    const tab = put(MeshBuilder.CreateBox("fencerTab", { width: W * 0.36, height: H * F.tab, depth: D * 0.05 }, scene), team, body.torso);
-    tab.position.set(Math.sin(a) * W * F.doublet * 0.52, waist - H * F.tab * 0.4, Math.cos(a) * D * F.doublet * 0.52);
-    tab.rotation.set(0.18 * Math.cos(a), a, -0.18 * Math.sin(a));
-  }
-  // shoulder wings and the cream sleeve bands under them
-  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
-    const e = arm.getBoundingInfo().boundingBox.extendSize;
-    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
-    const wing = put(MeshBuilder.CreateCylinder("fencerWing", { height: long * 0.16, diameter: girth * F.wing, tessellation: 7 }, scene), team, arm);
-    wing.position.y = long * 0.5 - long * 0.08;
-    const band = put(MeshBuilder.CreateCylinder("fencerBand", { height: long * F.band, diameter: girth * 1.2, tessellation: 7 }, scene), cream, arm);
-    band.position.y = long * 0.5 - long * (0.16 + F.band * 0.5);
-  }
+  // rolled shoulder wings with tan bands, a dark belt and a flared skirt of tabs (373, renaissanceDress FENCER_TRIM)
+  added.push(...fencerTrim(scene, body, teamColor, { W: W * F.doublet, H, D: D * F.doublet, waist }));
   // a puffed roll round each thigh, paned team and tan by turns (FENCER_ROLL)
   const R = FENCER_ROLL;
   const hipsApart = Math.abs(body.leftHip.position.x - body.rightHip.position.x);
