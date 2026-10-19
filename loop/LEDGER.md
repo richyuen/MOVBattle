@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-377 | sallet visor: team eye-slot under iron brow + breath-slot (8f7c74f) | renaissance.halberd.a | approved
-377 | sack as a rounded lumpy lathe hood, seam, tan collar (5e14f8f) | farmer.scarecrow.a | approved
-377 | brown felt hat: creased pinched crown, closed drooping brim (84980cf) | farmer.harvester.a | approved
-377 | flask by the neck in a holder; both arms hang at the hips (eeb43aa) | farmer.potion_seller.b | approved
-377 | round head, umber cap on its curve (ccd37ad) | farmer.potion_seller.a | approved
-377 | liripipe: thick blunt tail bent over and down (9f5019c) | farmer.farmer.a | approved
-377 | narrow tray .2, flat hay bed, Thrower on the rim, knees rolled (aa835d7 +4f65905) | farmer.wheelbarrow.a | approved
 378 | topline: hull slope .45 to a lower, smaller rump, hump forward (ad41648 +d33b7c6) | tribal.mammoth.a | approved
 378 | mane as one near-black crest of 6 chunks, brow to nape (97b036e) | tribal.mammoth.a | approved
 378 | flask neck seated on the hand's mitt, in the fist through the windup (c1e205c) | farmer.potion_seller.b | approved
@@ -80,6 +73,13 @@ for 25 iterations.
 386 | girdle .24 tall, foot rim, outlined ram's-horn scrolls; no tunic skirt (20a8ed6 +ab2eb1a) | ancient.minotaur.a | approved
 386 | baldric, belt + gold buckle, knee boots over strap sandals (915b7e7) | ancient.snake_archer.a | approved
 386 | belt a dark ring under the coat .17 tall, dark-grey buckle right, keeper (08cf903) | farmer.halfling.a | approved
+387 | live snake on landing: slithers in an S, lunges, 2 bites / 30 s (c513c8f) | ancient.snake_archer.c | approved
+387 | Big Headbutt: stop, head down, 4.5 m burst flings men, 5 s cd (72be3fb +720dffe) | ancient.minotaur.c | approved
+387 | beard: jaw + bib masses under 6x7 flat zig-zag slabs (de591d4) | ancient.zeus.a | approved
+387 | crewman crouched beside the trough, arms up, iron helmet (3b71139, reverted) | ancient.ballista.a | rejected
+387 | collar fold: shoulder bulk, two chest drape folds, gold brooch (35cf884) | ancient.sarissa.a | approved
+387 | stance: square on straight wide legs, arms hung (fb699af) | farmer.halfling.a | approved
+387 | Thrower perched on the rear quarter on a hay tuft, knees outside the boards (51b7c67) | farmer.wheelbarrow.a | approved
 
 ## Spent (never retry as [P])
 
@@ -94,29 +94,15 @@ farmer.halfling (SHAGGY, no longer his; HALFLING_COAT, _SLEEVED) | compacted 382
 farmer.wheelbarrow (CREW_SEAT, LOW_RIM, THROWER_LEGS seat -.08, WHEELBARROW, LOG_WHEEL, HAY_BED, BUNCHED_CREW) | compacted 382 | 381 | approved | values: git show b359959:loop/LEDGER.md
 
 ancient.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 378 | stats | values: git show 5715b05
-ancientDress.ts:MINO_FUR, MINO_BELT, MINO_GEAR (pad, flap, rim, curls, buckle), MINO_SASH .3 | glow .16; pad 1.25x.18, flap .6; buckle .3 | 383 | approved | sash .16, dome pauldron +x
-ancient.minotaur b,c (MINOTAUR_CHARGE, BULL_CHARGE, BULL_FISTS) | compacted 382 | 379 | approved | values: git show b359959:loop/LEDGER.md
-proceduralAnimation.ts:PIKE_LEVEL (ahead, out, up, tilt, fistAt, offAhead, draw, stroke) | .7,.35,.2,.05,.3,.6,.3,.9 | 379 | approved | one-handed thrust grip
-ancientDress.ts:ZEUS_BEARD, ZEUS_LOCKS, ZEUS_HAIR | 13 strands .15 thick .75 long; 16 locks .2, 1.05; (.62,.48,.3) .16 | 379 | approved | -
-propBuilder.ts:CORINTH_HELM (wide, deep, brow, rise, arc, jaw, underEye, slit) | .62,.68,.26,.24,.76,1,.62,.1 | 381 | approved | dome + cheek boxes + crest on a stalk (244)
-propBuilder.ts:CORINTH_CREST (bands, band, wide, fill, sink, lean, shorten, segs) | 4,.19,.42,.95,.6,.06,.16,12 swept strips | 383 | approved | wide .32; blocks (382)
-propBuilder.ts:BULL_HEAD (skull, skullTall, face, tilt, snout, horn1, hornGirth, ear, neck, neckBottom) | .62,.5,1,.5,1,.9,.3,.36,.9,1.5 | 382 | approved | BULL_SHELL 1.15 etc. (243)
-farmerDress.ts:HALFLING_MOP (locks, hang, droop, spread, wild, top, side, root, flat) | 46,1.6,.55,.8,.35,.24,.57,.63,.38 | 383 | approved | .35,.4,.95,.42 (382)
-ancientDress.ts:SNAKE_HOOD (cap, capFoot, wrapTop, wrapFoot, collar, collarOut, point, shade) | 1.14,.3,-.16,-1.12,.42,1.08,.5,.82 | 382 | approved | pharaoh hat
-
-simulationSystem.ts:SARISSA_KEEP (near, pace) | .85, .7 | 380 | approved | -
-simulationSystem.ts:ZEUS_REARM | .6 of the cooldown | 384 | approved | - (bolt stayed in the fist)
-propBuilder.ts:BOLT_SPARK (branches, long, short, kinks, zig, core, rim) | 200/150/250/20, .14, .09, 3, .55, .022, 1.7 | 384 | approved | 5-joint shard bolt .68 s tall
-vehicleBuilder.ts:BALLISTA_FRAME/HOUSING/ARMS/STOCK/WHEEL, BALLISTA_WOOD | wide 1.5 top 1.02; wood (.62,.3,.2) glow .14 | 384 | approved | team slab deck .8x1.2
-propBuilder.ts:SNAKE_BOW (long, thick, bow, panel, head, hold) | .95, .06, .07, .8, .075, 1.1 | 384 | approved | plain short bow
-ancientDress.ts:SARISSA_KIT (tall, proud, band, hipOut, ahead, sheath, out) | .2, 1.1, .35, .92, .55, .42, 1.6 | 384 | approved | out 1.32, belt in trunkBand (hidden)
+ancient.* 379-386 rows (MINO_*, BULL_*, PIKE_LEVEL, CORINTH_*, SNAKE_*, SARISSA_KEEP/KIT, ZEUS_REARM/TOGA/SANDAL/CHAIN, BOLT_SPARK, BALLISTA_*, SB_SANDAL, HOPLITE_CREST, MINO_SHELL/SCROLL) | compacted 387 | 386 | approved | values: git show fad9e5c:loop/LEDGER.md
 ancient.shield_bearer + hoplite done (SCUTUM*, LEGION_HELM, LORICA, ASPIS*, DORY_*, HOPLITE_LEGS) | compacted 385 | 384 | approved | values: git show 522cb46:loop/LEDGER.md
-ancientDress.ts:SB_SANDAL (laces, lace, out) + propBuilder.ts:HOPLITE_CREST (stalk, tall, wide, deep) | .7/.82/.93,.045,1.12; .12,.9,.3,1 | 385 | approved | -
-propBuilder.ts:CORINTH_SLOTS (edge, browTall, browTilt, nose, noseOut, eyeSpread, eyeSize) | .38,.08,.32,.1,.07,1.45,.85 | 386 | approved | edge .35, no guard (385)
-ancientDress.ts:SNAKE (bands, head, neck, held, nock) + projectileSystem FLYING_SNAKE_LONG | 8,.4,1.0,.6,.42; 1.1 m | 386 | approved | .22,.72,.48 (385)
-ancientDress.ts:MINO_SHELL (radius, deep, low, over, thick, inX, atY, scroll) | .78,1.35,.55,.25,.1,.82,.86,.2 | 385 | approved | MINO_GEAR slab+flap
-ancientDress.ts:ZEUS_TOGA (proud, high, low, wide, top, rings, ring, beltAt) | 1.07,.9,.12,.5,1.04,3,.045,.05 | 385 | approved | grey vest + brown sash
-ancientDress.ts:ZEUS_SANDAL (laces, lace, out) + MINO_SCROLL (tall, foot, big, bigAt, line, outline, light) | .86/.95,.05,1.14; .24,.24,.32,.3,.075,.12,.55 | 386 | approved | -
-simulationSystem.ts:ZEUS_CHAIN (links, reach, share) + visualEffects zeus burstLife | 3, 2.2 m, .35; .6 s | 386 | approved | burst died with the bolt .3 s
-ancientDress.ts:SNAKE_KIT (wide, belt, bootOut, bootFrom, bootTo) | .11,.09,1.35,.12,.92 | 386 | approved | -
-farmerDress.ts:HALFLING_BELT (tall, up, buckle, bar, buckleDeep, ringOut, side) | .17,.16,.34,.24,.12,1.08,.07 | 386 | approved | box .13 at .08, buckle .3 light grey
+ancientDress.ts:ZEUS_BEARD (rows, perRow, slab, kink, tilt, jaw, bib) | 6, 7, .24/.3/.05, .55, .45, 1.22/.7/.72, .95/.95/.55 | 387 | approved | 13 strands .15 thick .75 long (379)
+ancientDress.ts:ZEUS_LOCKS, ZEUS_HAIR | 16 locks .2, 1.05; (.62,.48,.3) .16 | 379 | approved | -
+simulationSystem.ts:SNAKE_LIVE (long, speed, sway, reach, dash, bite, rest, bites, life) | 1.1, 3.2, .1, .8, 4.5, 30, 1.1, 2, 30 | 387 | approved | lodged like an arrow
+simulationSystem.ts:BIG_HEADBUTT (within, cooldown, windup, ahead, radius, damage, fling, lift, edge) | .6, 5, .35, .9, 4.5, 30, 9, 7, .35 | 387 | approved | -
+ancientDress.ts:SARISSA_FOLD (bulk, bulkWide, folds, drapeLong, drapeTall, drapeDeep, drapeTilt, brooch) | .2, 1.5, 2, .72, .13, .09, .42, .09 | 387 | approved | -
+vehicleBuilder.ts:BALLISTA_CREW (x, back, y, thigh, knee, lean, reach) | reverted | 387 | rejected | standing at .25, .72, -halfD-.55
+proceduralAnimation.ts:HALFLING_STANCE (tilt, stride, lean, spread, knee) | .02, .05, .03, .22, .04 | 387 | approved | hashed idle stance (sunk)
+farmerDress.ts:HALFLING_MOP (locks, hang, droop, spread, wild, top, side, root, flat) | 46,1.6,.55,.8,.35,.24,.57,.63,.38 | 383 | approved | .35,.4,.95,.42 (382)
+farmerDress.ts:HALFLING_BELT (tall, up, buckle, bar, buckleDeep, ringOut, side) | .17,.16,.34,.14,.12,1.08,.07 | 387 | approved | bar .24 (386); box .13 at .08 (381)
+vehicleBuilder.ts:THROWER_PERCH (seat, up, tuftDeep, lumps, wide, kneeUp) | -.15, .09, .13, .18, .09, .05 | 387 | approved | THROWER_LEGS seat -.08, knees at Farmer hips
