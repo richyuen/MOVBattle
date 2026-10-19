@@ -820,7 +820,7 @@ const RAGGED_LOIN = { strips: 6, wide: 0.95, long: 0.75, short: 0.7, skull: 0.5,
  * at its root, curving down and then forward through .curl radians with a little outward flare, bone-tan (.tan, self-lit .glow), a rope turn at its root.
  */
 const CHIEF_LOIN = {
-  tongues: 9, out: 1.1, long: 0.62, back: 0.45, hide: new Color3(0.66, 0.5, 0.32),
+  tongues: 9, out: 1.1, long: 0.62, back: 0.45, hide: new Color3(0.58, 0.4, 0.22),
   tusk: 0.72, thick: 0.24, tuskAt: 1.35, curl: 1.7, tan: new Color3(0.8, 0.66, 0.46), glow: 0.22,
 };
 
@@ -979,19 +979,28 @@ function chieftainLoin(scene: Scene, body: ArticulatedBody, beltY: number, beltR
     tip.parent = tongue;
     added.push(tip);
   }
+  // The rope tied round over the wrap's top
+  const ropeMat = ropeMaterial();
+  const over = MeshBuilder.CreateTorus("loinRope", { diameter: Math.max(beltR, kiltR(beltY) * C.out + rope * 0.5) * 2, thickness: rope, tessellation: 10 }, scene);
+  over.scaling.z = zk;
+  over.position.y = beltY - rope * 0.2;
+  over.material = ropeMat;
+  over.parent = body.hip;
+  added.push(over);
   // A big curved tusk off the rope at each hip: down, then forward, flaring out a little
   const tan = mats.get("cloth", C.tan, { emissiveIntensity: C.glow });
-  const ropeMat = ropeMaterial();
   const L = knee * C.tusk;
   const R = L / C.curl;
   const thick = half * 2 * C.thick;
   for (const side of [-1, 1]) {
     const a = side * C.tuskAt;
-    const root = new Vector3(Math.sin(a) * (beltR + rope), beltY - rope * 0.6, Math.cos(a) * (beltR + rope) * zk);
+    // Outside the hide wrap all the way down (the wrap flares as it drops), a little further out toward the tip
     const path: Vector3[] = [];
     for (let k = 0; k <= 10; k++) {
       const th = (k / 10) * C.curl;
-      path.push(root.add(new Vector3(side * R * 0.18 * (th / C.curl), -R * Math.sin(th), R * (1 - Math.cos(th)))));
+      const y = beltY - rope * 0.6 - R * Math.sin(th);
+      const rr = kiltR(y) * C.out + rope + thick * (0.55 + 0.25 * (k / 10));
+      path.push(new Vector3(Math.sin(a) * rr, y, Math.cos(a) * rr * zk + R * (1 - Math.cos(th))));
     }
     const tusk = MeshBuilder.CreateTube("hipTusk", { path, radiusFunction: (k) => thick * 0.5 * (1 - (k / 10) * 0.86), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
     tusk.convertToFlatShadedMesh();
