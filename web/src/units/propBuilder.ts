@@ -338,6 +338,10 @@ const DEER_RACK = {
   tine: [0.62, 0.58, 0.5, 0.36], inward: 0.18, brow: 0.38, tan: new Color3(0.72, 0.6, 0.45), glow: 0.15,
   // the staff skull's rack grown to the mask's (tribal.bone_mage.png: the staff's antlers as large as the pair on his head)
   staff: 1.4,
+  // [S] the staff rack spread wide (364; tribal.bone_mage.png: the staff's beams leave the skull nearly level, sweeping out about two skulls each side
+  // before curling up, the rack wider than tall): the staff's beams turned .staffBend from upright, leaning .staffBack behind the skull, so they read as a
+  // wide spread from the front and sweep back from the side; its cranium and face plate in the rack's own tan (propBuilder bone_staff)
+  staffBend: [1.52, 1.35, 1.0, 0.55], staffBack: 0.35,
 };
 /*
  * [S] the deer skull worn as a mask (361; tribal.bone_mage.red.png: the skull over the face, its long muzzle down to the chin, the wearer's eyes in its
@@ -429,7 +433,9 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
       // The brow tine, forward and out off the root
       stick(at, new Vector3(side * 0.5, 0.45, 1), u(R2.brow * H * rackScale), thick * 0.7, 0.35);
       for (let k = 0; k < R2.beam.length; k++) {
-        const dir = new Vector3(side * Math.sin(R2.bend[k]), Math.cos(R2.bend[k]), -R2.back);
+        const staff = rackScale !== 1;
+        const bend = staff ? R2.staffBend[k] : R2.bend[k];
+        const dir = new Vector3(side * Math.sin(bend), Math.cos(bend), -(staff ? R2.staffBack : R2.back));
         const next = R2.taper * thick;
         at = stick(at, dir, u(R2.beam[k] * H * rackScale), thick, next / thick);
         thick = next;
@@ -3077,13 +3083,13 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       shaft.convertToFlatShadedMesh();
       const top = line[line.length - 1];
       const W = BONE_STAFF_SKULL * s;
-      const bone = mat(scene, new Color3(0.86, 0.74, 0.52), 0.1);
       // [S] 363 (tribal.bone_mage.png: the staff's skull a long tapering deer skull like the mask, a googly eye in each socket, not a ball with a cone):
       // a low faceted cranium STAFF_SKULL.crown of W across, and the mask's own six-sided face plate (DEER_MASK) hung off its front down to STAFF_SKULL.chin
       // of W below it; dark sockets on the plate's brow, each with a white eye and a black pupil
       const skull = MeshBuilder.CreateSphere("orb", { diameterX: W * STAFF_SKULL.crown, diameterY: W * 0.7, diameterZ: W * 0.95, segments: 5 }, scene);
       skull.position.set(top.x, top.y + W * 0.4, top.z);
-      skull.material = bone;
+      // [S] 364: the cranium (and so the face plate, which takes its material) in the rack's tan (DEER_RACK.staffBend)
+      skull.material = mat(scene, DEER_RACK.tan, DEER_RACK.glow);
       skull.convertToFlatShadedMesh();
       skull.parent = shaft;
       const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
