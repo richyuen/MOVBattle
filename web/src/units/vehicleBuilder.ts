@@ -2018,74 +2018,23 @@ const MAMMOTH_BARREL = {
   rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.34, humpAt: 0.22, humpFront: 0.22, humpBack: 0.75, belly: 0.14, jitter: 0.035,
   haunch: 0.26, legAt: 0.44, legSpread: 0.32,
 };
-/*
- * [S] the fur hem over the leg roots (367; tribal.mammoth.red.png: the flank's fur drapes down over the tops of the legs, no leg top shows; critic 366: the
- * thighs' fur domes bulged out in front of the flank like pillars pressed on). Off the hull's lower flank, in the coat's fur:
- *   - a row of MAMMOTH_HEM.row jittered lobes along each lower flank from t = -.span to .span at the hull's angle .c (cos from the top), each .size
- *     (thick, tall, long) and pushed .proud out of the hull, the ones over a leg station (|t| near MAMMOTH_BARREL.legAt, width .near) .grow taller and hung
- *     .drop lower;
- *   - round each thigh's outer half, .skirt lobes on a ring .ring from the leg's axis at .skirtY (hip frame), from its front round the outside to its back,
- *     each .skirtSize (radial, tall, along), faced out from the leg, so the fur closes over the thigh's top from the front and back too.
- */
-const MAMMOTH_HEM = {
-  row: 9, span: 0.66, c: -0.55, size: [0.13, 0.2, 0.22] as const, proud: 0.03, near: 0.16, grow: 0.7, drop: 0.12, jitter: 0.14,
-  skirt: 5, ring: 0.36, skirtY: -0.42, skirtSize: [0.12, 0.24, 0.24] as const,
-};
-/** A point on the mammoth's hull (MAMMOTH_BARREL) at length t in [-1, 1] and angle a round from the top (+x at a = pi/2), about the hull's origin. */
-function barrelPoint(t: number, a: number): Vector3 {
-  const B = MAMMOTH_BARREL;
-  const s = Math.sqrt(Math.max(0, 1 - Math.abs(t) ** B.full));
-  const spread = t < B.humpAt ? B.humpBack : B.humpFront;
-  const hump = B.hump * Math.exp(-(((t - B.humpAt) / spread) ** 2)) * s;
-  const haunch = 1 + B.haunch * Math.exp(-(((Math.abs(t) - B.legAt) / B.legSpread) ** 2));
-  const c = Math.cos(a);
-  const up = c >= 0 ? B.tall * s + hump : B.tall * s + B.belly * (1 - t * t) * s;
-  const wide = c >= 0 ? B.wide * s : B.wide * s * (1 + (haunch - 1) * Math.min(1, -c * 2));
-  return new Vector3(wide * Math.sin(a), up * c, t * B.long);
-}
-/** The fur hem over the mammoth's leg roots (spec at MAMMOTH_HEM), on the torso joint; `hullAt` is the hull's offset there, `legs` the hip joints. */
-function mammothHem(scene: Scene, torso: TransformNode, hullAt: Vector3, legs: TransformNode[], fur: Material, allMeshes: Mesh[]): void {
-  const H = MAMMOTH_HEM;
-  let serial = 90;
-  const lobe = (at: Vector3, size: readonly [number, number, number], yaw: number) => {
-    const m = MeshBuilder.CreateIcoSphere("furHem", { radius: 1, subdivisions: 1, flat: true }, scene);
-    jitterVertices(m, H.jitter, serial++, size[0], size[1], size[2]);
-    m.rotation.y = yaw;
-    m.position.copyFrom(at);
-    m.parent = torso; m.material = fur; allMeshes.push(m);
-  };
-  const a0 = Math.acos(H.c);
-  for (const side of [-1, 1]) {
-    for (let i = 0; i < H.row; i++) {
-      const t = -H.span + (2 * H.span * i) / (H.row - 1);
-      const near = Math.exp(-(((Math.abs(t) - MAMMOTH_BARREL.legAt) / H.near) ** 2));
-      const p = barrelPoint(t, side * a0);
-      const out = new Vector3(side * Math.sin(a0), Math.cos(a0), 0);
-      const at = p.add(hullAt).add(out.scale(H.proud)).add(new Vector3(0, -H.drop * near, 0));
-      lobe(at, [H.size[0], H.size[1] * (1 + H.grow * near), H.size[2]], 0);
-    }
-  }
-  for (const leg of legs) {
-    const side = Math.sign(leg.position.x) || 1;
-    for (let k = 0; k < H.skirt; k++) {
-      // from the leg's front (phi 0) round its outside to its back (phi pi)
-      const phi = (k / (H.skirt - 1)) * Math.PI;
-      const dir = new Vector3(side * Math.sin(phi), 0, Math.cos(phi));
-      const at = new Vector3(leg.position.x, H.skirtY, leg.position.z).add(dir.scale(H.ring));
-      // the lobe's local +z turned to face out from the leg: its radial thickness on z
-      lobe(at, [H.skirtSize[2], H.skirtSize[1], H.skirtSize[0]], Math.atan2(dir.x, dir.z));
-    }
-  }
-}
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
   const B = MAMMOTH_BARREL;
   const pos: number[] = [], idx: number[] = [];
   const ring = (t: number): number[] => {
+    const s = Math.sqrt(Math.max(0, 1 - Math.abs(t) ** B.full));
+    const spread = t < B.humpAt ? B.humpBack : B.humpFront;
+    const hump = B.hump * Math.exp(-(((t - B.humpAt) / spread) ** 2)) * s;
+    const haunch = 1 + B.haunch * Math.exp(-(((Math.abs(t) - B.legAt) / B.legSpread) ** 2));
     const out: number[] = [];
     for (let k = 0; k < B.sides; k++) {
-      const p = barrelPoint(t, (k / B.sides) * Math.PI * 2);
-      out.push(p.x, p.y, p.z);
+      const a = (k / B.sides) * Math.PI * 2;
+      const c = Math.cos(a);
+      const up = c >= 0 ? B.tall * s + hump : B.tall * s + B.belly * (1 - t * t) * s;
+      // below the middle the flank swells over the leg roots, easing in from the waterline
+      const wide = c >= 0 ? B.wide * s : B.wide * s * (1 + (haunch - 1) * Math.min(1, -c * 2));
+      out.push(wide * Math.sin(a), up * c, t * B.long);
     }
     return out;
   };
@@ -2274,8 +2223,6 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   torsoMesh.position.set(0, BODY_LIFT, BODY_BACK);
   if (!mammoth) torsoMesh.scaling.copyFrom(BODY_RADII);
   torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
-  // [S] (367) the flank's fur hem over the leg roots (MAMMOTH_HEM)
-  if (mammoth) mammothHem(scene, torso, new Vector3(0, BODY_LIFT, BODY_BACK), [flHip, frHip, blHip, brHip], fur, allMeshes);
 
   // A point on the body's surface at height y and length z, on one side, and the way out of the hide there
   const onHide = (side: number, y: number, z: number): { at: Vector3; out: Vector3 } => {
