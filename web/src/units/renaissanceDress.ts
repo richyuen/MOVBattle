@@ -175,6 +175,44 @@ export function musketeerHose(scene: Scene, body: ArticulatedBody, teamColor: Co
 }
 
 /*
+ * [S] the halberdier's hose and shoes (374; renaissance.halberd.blue.png: under the puffed team breeches a dark team stocking down the shin; low
+ * orange-brown shoes, not boots, each with a turned cuff flaring out round the ankle in the same leather. Not the plain body boot, whose cuff stands
+ * a third up the shin in team colour and read as blue blocky boots). Shares of the foot's own height and width:
+ *   shoe: the foot boot squashed to HALBERD_SHOE.low of its height about the sole; cuff ring .cuffTall of the squashed shoe's height, from .cuffFoot
+ *   of the foot's width round at its foot to .cuffTop at its rim, its foot .cuffSink of its height down into the shoe top; stocking teamColor x .hose.
+ */
+const HALBERD_SHOE = { low: 0.55, cuffTall: 0.5, cuffFoot: 0.95, cuffTop: 1.4, cuffSink: 0.35, hose: 0.42, leather: new Color3(0.74, 0.36, 0.17), glow: 0.14 };
+
+/** The halberdier's dark team stockings and low leather shoes with a turned cuff (spec at HALBERD_SHOE). */
+export function halberdHose(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = HALBERD_SHOE;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", S.leather, { emissiveIntensity: S.glow });
+  const added: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) shin.material = mf.getCloth(teamColor.scale(S.hose));
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      foot.material = leather;
+      const bb = foot.getBoundingInfo().boundingBox;
+      const sole = bb.minimum.y, tall = (bb.maximum.y - sole) * S.low, wide = bb.maximum.x - bb.minimum.x;
+      // squash the boot to a low shoe about its sole
+      foot.setPivotPoint(new Vector3(0, sole, 0));
+      foot.scaling.y = S.low;
+      // the turned cuff: a leather ring flaring out from the shoe top round the ankle
+      const h = tall * S.cuffTall;
+      const cuff = MeshBuilder.CreateCylinder("halberdShoeCuff", { height: h, diameterTop: wide * S.cuffTop, diameterBottom: wide * S.cuffFoot, tessellation: 7 }, scene);
+      cuff.position.set(foot.position.x, foot.position.y + sole + tall + h * (0.5 - S.cuffSink), foot.position.z);
+      cuff.material = leather;
+      cuff.convertToFlatShadedMesh();
+      cuff.parent = knee;
+      added.push(cuff);
+    }
+  }
+  return added;
+}
+
+/*
  * [S] the balloon archer's doublet front and sleeve puffs (371; renaissance.balloon_archer.red.png: a solid team doublet, down its front a tan placket
  * of two upright bands either side of the middle with round buttons between them, a tan edge round the neck; at each shoulder a big round team puff
  * as wide as the head, slashed with tan points standing out of it all round. Not the 336 tan stripes all over the doublet, nor its arm-girth puffs,
