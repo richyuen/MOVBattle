@@ -33,9 +33,10 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   const out: Mesh[] = [];
   const mf = getMaterialFactory();
   const fur = mf.get("cloth", MINO_FUR, { emissive: MINO_FUR.scale(MINO_FUR_GLOW) });
-  // his whole body in fur: everything the body builder made, not his props, nor the eyes
+  // his whole body in fur: everything the body builder made, not his props (nor any piece of one: the hat's horns, the hammer's head), nor the eyes
+  const propParts = new Set<unknown>(props.flatMap((p) => [p, ...p.getChildMeshes(false)]));
   for (const m of body.root.getChildMeshes(false)) {
-    if (props.includes(m as Mesh) || /eye|pupil|brow/i.test(m.name)) continue;
+    if (propParts.has(m) || /eye|pupil|brow/i.test(m.name)) continue;
     m.material = fur;
   }
   const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.12) });
