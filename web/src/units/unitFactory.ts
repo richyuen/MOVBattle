@@ -15,6 +15,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingJacket, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
+import { dressMinotaur } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -537,6 +538,10 @@ export class UnitFactory {
       propMeshes.push(...dressHalfling(this._scene, body, teamColor));
       // [S] ...his long open jacket over a light vest, white shirt V, dark belt and big grey buckle (376; farmerDress HALFLING_COAT)
       propMeshes.push(...halflingJacket(this._scene, body, teamColor));
+    }
+    // [S] the minotaur in his own brown fur, team colour only on his belt and pauldron, a leather sash (378; ancientDress dressMinotaur)
+    if (definition.id === "ancient.minotaur" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressMinotaur(this._scene, body, teamColor, propMeshes));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
