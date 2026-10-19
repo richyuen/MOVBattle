@@ -276,7 +276,12 @@ const CORINTH_CREST = { bands: 4, band: 0.19, wide: 0.42, fill: 0.95, sink: 0.6,
  * side from .edge of W out (just outside the eye, which spans 0 to ~.34 W) to the opening's edge, set .back of W behind the face plates; over each slot a
  * brow bar .browLong of the slot across, .browTall of H, .browDrop of H under the brow line, tilted .browTilt rad (inner end low, a frown). Sarissa only.
  */
-const CORINTH_SLOTS = { edge: 0.35, back: 0.01, browLong: 1.05, browTall: 0.08, browDrop: 0.02, browTilt: 0.32 };
+/*
+ * [S] 386 the nose guard up between the eyes (critic 385: both eyes still sat in one band, the old nose bar hidden between two eye discs that touched): the
+ * wearer's eyes moved apart to .eyeSpread of their spacing and shrunk to .eyeSize, and a guard .nose of W wide standing .noseOut of W proud of the face
+ * plates from the brow bars down to the plates, so each eye looks out of its own slot between the guard and a temple plate.
+ */
+const CORINTH_SLOTS = { edge: 0.38, back: 0.01, browLong: 1.05, browTall: 0.08, browDrop: 0.02, browTilt: 0.32, nose: 0.1, noseOut: 0.07, eyeSpread: 1.45, eyeSize: 0.85 };
 const HOPLITE_CREST = { stalk: 0.12, sink: 0.08, stalkWide: 0.16, stalkDeep: 0.45, tall: 0.9, wide: 0.3, deep: 1.0, ahead: 0.04, lipTall: 0.18, lipWide: 0.9, lipDeep: 0.28 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
@@ -1485,6 +1490,10 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
         browBar.position.set(side * edge * 0.5, -u(S.browDrop * H), u(C.face * W) + u(C.plate * W) * 0.2);
         browBar.rotation.z = side * S.browTilt;
       }
+      // the nose guard from the brow bars down to the face plates, proud of the eyes
+      const guardTall = openTall + u(S.browTall * H);
+      const guard = put(MeshBuilder.CreateBox("chelmSlotNose", { width: u(S.nose * W), height: guardTall, depth: u(C.plate * W) + u(S.noseOut * W) }, scene));
+      guard.position.set(0, u(S.browTall * H) / 2 - guardTall / 2 - u(S.browDrop * H), u(C.face * W) + u(S.noseOut * W) / 2);
     }
     // [S] the crest as stacked bands (382, spec at CORINTH_CREST), offset out along the normal by the bands below it, so the crest is a fin about the
     // bowl's height with step lines, highest in front. [S] 383: each band one solid strip swept along the bowl's top line (sweptBar), square cut at
@@ -2020,6 +2029,15 @@ export function attachProps(
     }
   }
 
+  // [S] the sarissa's eye slots (386; spec at CORINTH_SLOTS): the eyes apart and smaller, one each side of the nose guard
+  if (config.hat === "crested_helm" && head) {
+    for (const eye of [body.leftEye, body.rightEye]) {
+      if (!eye) continue;
+      eye.position.x *= CORINTH_SLOTS.eyeSpread;
+      eye.scaling.x *= CORINTH_SLOTS.eyeSize;
+      eye.scaling.y *= CORINTH_SLOTS.eyeSize;
+    }
+  }
   // [S] the deer mask's eyes (361; spec at DEER_MASK): the wearer's own eyes come out onto the face plate, wide on its brow, a dark socket ring behind each
   if (config.hat === "antler_skull" && head) {
     const sock = mat(scene, new Color3(0.12, 0.09, 0.08));
