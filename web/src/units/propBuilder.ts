@@ -306,6 +306,18 @@ const DEER_SPLAY = [0.95, 0.4];
 const DEER_TINE = 0.58;
 const DEER_ANTLER = new Color3(0.66, 0.5, 0.33);
 /*
+ * [S] the stag's rack (362; tribal.bone_mage.red.png: each antler leaves the crown nearly sideways, its beam sweeping out about two heads and curling up and
+ * in toward its tip, four long tines standing up off its top side and a short brow tine forward; thick at the root, warm bone-tan, a shade darker than the
+ * skull). Replaces the two-length beam of thin dark sticks. The beam is DEER_RACK.beam.length lengths (head heights each), each turned .bend from upright
+ * (outward), leaning .back behind the skull; .thick head widths across at the root, each length .taper of the last, a knuckle ball at every joint. The tines
+ * leave the beam's joints and its tip: .tine head heights long (each a share shorter going out), pointing up and .inward toward the middle; the brow tine
+ * .brow long, forward and out. Antler .tan, self-lit .glow so it stays tan in the shade.
+ */
+const DEER_RACK = {
+  beam: [0.55, 0.55, 0.5, 0.42], bend: [1.3, 0.95, 0.6, 0.25], back: 0.12, thick: 0.24, taper: 0.82,
+  tine: [0.62, 0.58, 0.5, 0.36], inward: 0.18, brow: 0.38, tan: new Color3(0.72, 0.6, 0.45), glow: 0.15,
+};
+/*
  * [S] the deer skull worn as a mask (361; tribal.bone_mage.red.png: the skull over the face, its long muzzle down to the chin, the wearer's eyes in its
  * sockets). Replaces the muzzle jutting forward off the brow over a bare face: a faceted six-sided face plate in front of the face, DEER_MASK.top heads
  * across at the brow tapering to .tip at the muzzle end, .flat of its width deep, from .rise head heights above the hat's seat down to .drop below the chin,
@@ -338,11 +350,12 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
     face.material = bone;
     face.parent = skull;
   }
-  const antler = mat(scene, DEER_ANTLER);
+  const rack = chin !== undefined;
+  const antler = rack ? mat(scene, DEER_RACK.tan, DEER_RACK.glow) : mat(scene, DEER_ANTLER);
   const up = Vector3.Up();
-  const stick = (from: Vector3, dir: Vector3, long: number, thick: number) => {
+  const stick = (from: Vector3, dir: Vector3, long: number, thick: number, tip = 0.6) => {
     const d = dir.normalize();
-    const m = MeshBuilder.CreateCylinder("deerAntler", { height: long, diameterTop: thick * 0.6, diameterBottom: thick, tessellation: 5 }, scene);
+    const m = MeshBuilder.CreateCylinder("deerAntler", { height: long, diameterTop: thick * tip, diameterBottom: thick, tessellation: 5 }, scene);
     m.rotationQuaternion = Quaternion.Identity();
     Quaternion.FromUnitVectorsToRef(up, d, m.rotationQuaternion);
     m.position = from.add(d.scale(long / 2));
@@ -350,6 +363,30 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
     m.parent = skull;
     return from.add(d.scale(long));
   };
+  if (rack) {
+    // The rack (spec at DEER_RACK): a beam of lengths swept out and curling up, knuckled at the joints, tines up off the joints and the tip
+    const R2 = DEER_RACK;
+    for (const side of [-1, 1]) {
+      let at = new Vector3(side * u(0.3 * W), u(tall * 0.85), u(0.05 * W));
+      let thick = u(R2.thick * W);
+      // The brow tine, forward and out off the root
+      stick(at, new Vector3(side * 0.5, 0.45, 1), u(R2.brow * H), thick * 0.7, 0.35);
+      for (let k = 0; k < R2.beam.length; k++) {
+        const dir = new Vector3(side * Math.sin(R2.bend[k]), Math.cos(R2.bend[k]), -R2.back);
+        const next = R2.taper * thick;
+        at = stick(at, dir, u(R2.beam[k] * H), thick, next / thick);
+        thick = next;
+        const knuckle = MeshBuilder.CreateIcoSphere("deerAntler", { radius: thick * 0.55, subdivisions: 1, flat: true }, scene);
+        knuckle.position = at.clone();
+        knuckle.material = antler;
+        knuckle.parent = skull;
+        // A tine up off this joint (the last one forks off the tip a little outward)
+        const last = k === R2.beam.length - 1;
+        stick(at, new Vector3(-side * R2.inward + (last ? side * 0.35 : 0), 1, (k % 2 ? -0.15 : 0.15)), u(R2.tine[k] * H), thick * 0.85, 0.3);
+      }
+    }
+    return;
+  }
   const thick = u(0.17 * W);
   for (const side of [-1, 1]) {
     const root = new Vector3(side * u(0.3 * W), u(tall * 0.85), u(0.05 * W));
