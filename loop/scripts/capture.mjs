@@ -363,7 +363,8 @@ async function main() {
           document.body.classList.add("capture-mode");
           window.advanceTime(50);
           const a = game.spawnUnit(id, 1, { x: d, z: 0 });
-          const t = game.spawnUnit("medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
+          // the painter dodges missiles (Painter Dodge): he spars with an archer, whose arrows are what he sidesteps (evidence 373)
+          const t = game.spawnUnit(id === "renaissance.painter" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
           let ally = null;
           if (support) {
             ally = game.spawnUnit("medieval.squire", 1, { x: d + 2, z: 1.2 });
