@@ -770,6 +770,33 @@ function squireLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] the Squire's arms (358; medieval.squire.blue.png, card Appearance "plate greaves and couters"): beige cloth sleeves from the shoulder to the elbow, a rounded
+ * grey couter over each elbow and grey gauntlets over the forearm and hand. Shells, not recolours (unitFactory's tabard block paints the arms mail after the dress
+ * runs): sleeves SQUIRE_ARMS.sleeve of the upper arm's half-width round it, gauntlets .gauntlet of the forearm's, couters .couter of it across; steel SQUIRE_LEGS.iron.
+ */
+const SQUIRE_ARMS = { sleeve: 1.16, gauntlet: 1.4, couter: 1.5, beige: new Color3(0.82, 0.72, 0.52), glow: 0.1 };
+
+function squireArms(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const A = SQUIRE_ARMS;
+  const beige = getMaterialFactory().get("cloth", A.beige, { emissiveIntensity: A.glow });
+  const iron = getMaterialFactory().get("stone", SQUIRE_LEGS.iron, { emissiveIntensity: SQUIRE_LEGS.glow });
+  const out: Mesh[] = [];
+  for (const upper of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "squireSleeve", upper, 0, 0.96, A.sleeve, beige));
+  for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "squireGauntlet", fore, 0.12, 1, A.gauntlet, iron));
+    const L = limbBox(fore);
+    const couter = MeshBuilder.CreateIcoSphere("squireCouter", { radius: Math.max(L.wide, L.deep) * A.couter, subdivisions: 1, flat: true }, scene);
+    couter.scaling.set(1, 0.9, 0.85);
+    couter.parent = fore.parent;
+    couter.position.set(0, L.mid + L.half * 0.92, 0);
+    couter.material = iron;
+    out.push(couter);
+  }
+  for (const m of body.allMeshes) if (/_[lr]HandM$/.test(m.name)) m.material = iron;
+  return out;
+}
+
+/*
  * [S] the Archer's arms (357; medieval.archer.red.png): beige cloth sleeves on the upper arms, brown leather vambraces from the elbow to the wrist with a dark
  * strap at each end. Sleeves ARCHER_ARMS.beige on the upper arm itself; vambraces .out of the forearm's half-width round it, from .from to .to of its length.
  */
@@ -799,7 +826,7 @@ export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: strin
     case "medieval.archer": return [...archerHood(scene, body, team), ...archerArms(scene, body)];
     case "medieval.bard": return bardVest(scene, body, team);
     case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream), ...kingDress(scene, body, team)];
-    case "medieval.squire": return squireLegs(scene, body);
+    case "medieval.squire": return [...squireLegs(scene, body), ...squireArms(scene, body)];
     // [S] the Knight's cape (358; medieval.knight.png, card "a team colored cape"): the king's cape in team cloth (x KNIGHT_CAPE.shade) off the backs of his
     // steel shoulders to the knee (.drop), hung KNIGHT_PLATE.deep x .clear off the back so it clears the cuirass
     case "medieval.knight": return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop);
