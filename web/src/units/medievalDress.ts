@@ -993,8 +993,10 @@ function archerArms(scene: Scene, body: ArticulatedBody): Mesh[] {
   // it, the whole upper arm long; the arm itself (and so the elbow stub, which copies it) in the same cloth, ARCHER_ARMS.beige no longer read
   for (const upper of [body.leftUpperArm, body.rightUpperArm]) {
     upper.material = sleeve;
-    out.push(limbShell(scene, "archerSleeve", upper, 0, 0.98, ARCHER_SLEEVE.out, sleeve));
+    out.push(...unglow(scene, [upper, limbShell(scene, "archerSleeve", upper, 0, 0.98, ARCHER_SLEEVE.out, sleeve)]));
   }
+  // the elbow stubs take the upper arm's cloth later (unitFactory): out of the glow too
+  unglow(scene, body.allMeshes.filter((m) => /_[lr]LowerArm_stub$/.test(m.name)));
   for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
     out.push(limbShell(scene, "archerVambrace", fore, A.from, A.to, A.out, leather));
     for (const at of [A.from + 0.04, A.to - 0.1]) out.push(limbShell(scene, "archerVambraceStrap", fore, at, at + 0.07, A.out * 1.12, strap));
