@@ -923,13 +923,20 @@ const ARCHER_ARMS = {
   beige: new Color3(0.74, 0.58, 0.38), leather: new Color3(0.44, 0.27, 0.16), strap: new Color3(0.27, 0.16, 0.1), glow: 0.1,
 };
 
+const ARCHER_SLEEVE = { out: 1.15, tan: new Color3(0.84, 0.7, 0.48), glow: 0.14 };
+
 function archerArms(scene: Scene, body: ArticulatedBody): Mesh[] {
   const A = ARCHER_ARMS;
   const beige = getMaterialFactory().get("cloth", A.beige, { emissiveIntensity: A.glow });
   const leather = getMaterialFactory().get("cloth", A.leather, { emissiveIntensity: A.glow });
   const strap = getMaterialFactory().get("cloth", A.strap, { emissiveIntensity: A.glow });
   const out: Mesh[] = [];
-  for (const upper of [body.leftUpperArm, body.rightUpperArm]) upper.material = beige;
+  // [S] the sleeves as cloth shells (359; medieval.archer.red.png: beige-tan sleeves shoulder to elbow): the recoloured arm kept the body shader's grey cast, so
+  // each upper arm now wears a tan shell of its own cloth, ARCHER_SLEEVE.out of its half-width round it, the whole upper arm long
+  for (const upper of [body.leftUpperArm, body.rightUpperArm]) {
+    upper.material = beige;
+    out.push(limbShell(scene, "archerSleeve", upper, 0, 0.98, ARCHER_SLEEVE.out, getMaterialFactory().get("cloth", ARCHER_SLEEVE.tan, { emissiveIntensity: ARCHER_SLEEVE.glow })));
+  }
   for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
     out.push(limbShell(scene, "archerVambrace", fore, A.from, A.to, A.out, leather));
     for (const at of [A.from + 0.04, A.to - 0.1]) out.push(limbShell(scene, "archerVambraceStrap", fore, at, at + 0.07, A.out * 1.12, strap));
