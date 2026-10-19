@@ -53,8 +53,8 @@ function healerTonsure(scene: Scene, body: ArticulatedBody): Mesh[] {
  * heights long; capelet ARCHER_HOOD.cape: .wide of the chest across at its hem, .drop of the torso height down from the collar. Cloth: team x ARCHER_HOOD.shade.
  */
 const ARCHER_HOOD = {
-  out: 1.18, peak: 0.42, chin: 1.12, open: 0.95, brow: 0.62, jaw: -0.88, tail: 1.5,
-  cape: { wide: 1.3, drop: 0.3, neck: 0.72 }, shade: 0.62, glow: 0.05,
+  out: 1.38, peak: 0.4, chin: 1.12, open: 0.62, brow: 0.58, jaw: -0.82, tail: 1.5,
+  cape: { wide: 1.4, drop: 0.32, neck: 0.75 }, shade: 0.5, glow: 0.05, lining: 0.96,
 };
 
 function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
@@ -84,7 +84,6 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
     for (let i = 0; i < around; i++) {
       const a = r * (around + 1) + i, b = a + around + 1;
       indices.push(a, b, a + 1, a + 1, b, b + 1);
-      indices.push(a, a + 1, b, a + 1, b + 1, b); // the inside face too: the cloth is seen from within through the face opening
     }
   }
   const shell = new Mesh("archerHood", scene);
@@ -98,6 +97,12 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   shell.convertToFlatShadedMesh();
   shell.material = cloth;
   shell.parent = body.headMesh;
+  // the lining: the same shell turned inside out a little within, so the cloth is seen from inside through the face opening without fighting the outer faces
+  const lining = shell.clone("archerHoodLining");
+  lining.makeGeometryUnique();
+  lining.flipFaces(true);
+  lining.scaling.setAll(H.lining);
+  lining.parent = body.headMesh;
 
   // The liripipe: a tapering tail from the point down the back
   const top = new Vector3(0, e.y * (H.out + H.peak * 0.8), -e.z * 0.25);
@@ -122,7 +127,7 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   cape.material = cloth;
   cape.parent = t.parent;
   cape.position.y = t.position.y + c.y * t.scaling.y - tall * 0.42;
-  return [shell, tail, cape];
+  return [shell, lining, tail, cape];
 }
 
 /*
