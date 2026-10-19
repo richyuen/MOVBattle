@@ -312,7 +312,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "helmet", "none", "catapult_arm", "#8B4513",
   ),
   "medieval.king": vis(
-    { scale: 1.5, bulk: 1.3, headSize: 1.1 }, "greatsword", "royal_crown", "none", "cape", "#FFD700",
+    // No small "cape" special: his cream cape off the shoulders is medievalDress medievalCape (357)
+    { scale: 1.5, bulk: 1.3, headSize: 1.1 }, "greatsword", "royal_crown", "none", "none", "#FFD700",
     undefined, { weaponVariant: "zweihander" },
   ),
 

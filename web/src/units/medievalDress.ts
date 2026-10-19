@@ -480,13 +480,85 @@ export function knightCuirass(scene: Scene, body: ArticulatedBody, fauld: Mesh):
   return out;
 }
 
+/*
+ * [S] the King's cape (357; medieval.king.jpg, card Appearance "an elegant medium-sized cape with golden buttons and straps"): a cream cape hung off the shoulders
+ * down the back to mid-thigh, its top edge wrapped round the backs of the shoulders, falling in a gentle flare and standing off the back; over each shoulder a
+ * cream flap that comes forward onto the chest and ends in a gold button. In chest half-extents: top edge MEDIEVAL_CAPE.top wide round the back at the
+ * collar, hem .hem wide, .drop of the knee's depth below the hip, .off of the back's depth behind it; the arc .wrap rad either side of straight back; flaps
+ * .flap of the chest half-width wide; buttons .button of it across. Cloth MEDIEVAL_CAPE.cream, buttons .gold. Written for any medieval caped man (colour in).
+ */
+const MEDIEVAL_CAPE = {
+  top: 1.12, hem: 1.4, drop: 0.55, off: 0.35, wrap: 1.3, rows: 4, flap: 0.42, button: 0.2,
+  cream: new Color3(0.9, 0.84, 0.68), gold: new Color3(0.93, 0.7, 0.25), glow: 0.12,
+};
+
+/** The furthest-back point of the chest (the torso and the shoulder yoke), in the torso joint's units. */
+function chestBack(body: ArticulatedBody): number {
+  let back = 0;
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  for (const m of yoke ? [body.torsoMesh, yoke] : [body.torsoMesh]) {
+    const v = m.getVerticesData("position") ?? [];
+    for (let i = 2; i < v.length; i += 3) back = Math.min(back, v[i] * m.scaling.z + m.position.z);
+  }
+  return back;
+}
+
+function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh[] {
+  const C = MEDIEVAL_CAPE;
+  const t = body.torsoMesh;
+  const c = t.getBoundingInfo().boundingBox.extendSize;
+  const cx = c.x * t.scaling.x, cy = c.y * t.scaling.y;
+  const back = -chestBack(body);
+  const top = t.position.y + cy * 0.92;
+  const hipY = -body.torso.position.y; // the hip joint, in the torso joint's frame
+  const hemY = hipY - Math.abs(body.leftKnee.position.y) * C.drop;
+  const rows: Vector3[][] = [];
+  for (let r = 0; r <= C.rows; r++) {
+    const f = r / C.rows; // 0 at the collar, 1 at the hem
+    const y = top + (hemY - top) * f;
+    const wide = cx * (C.top + (C.hem - C.top) * f);
+    const deep = back * (1.06 + C.off * f);
+    const row: Vector3[] = [];
+    for (let i = 0; i <= 10; i++) {
+      const phi = -C.wrap + (i / 10) * 2 * C.wrap;
+      row.push(new Vector3(Math.sin(phi) * wide, y, -Math.cos(phi) * deep - back * C.off * f * 0.5));
+    }
+    rows.push(row);
+  }
+  const capeCloth = getMaterialFactory().get("cloth", cloth, { emissiveIntensity: C.glow });
+  const cape = MeshBuilder.CreateRibbon("medievalCape", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  cape.convertToFlatShadedMesh();
+  cape.parent = body.torso;
+  cape.material = capeCloth;
+  const out: Mesh[] = [cape];
+  // a flap over each shoulder from the cape's edge forward onto the chest, a gold button at its front end
+  const gold = getMaterialFactory().get("cloth", C.gold, { emissiveIntensity: C.glow });
+  const zFront = chestFrontAt(body, top - cy * 0.12);
+  for (const side of [-1, 1]) {
+    const x = side * cx * 0.72;
+    const flap = MeshBuilder.CreateBox("medievalCapeFlap", { width: cx * C.flap, height: cy * 0.1, depth: back + zFront }, scene);
+    flap.parent = body.torso;
+    flap.position.set(x, top + cy * 0.04, (zFront - back) / 2);
+    flap.rotation.z = -side * 0.3;
+    flap.material = capeCloth;
+    out.push(flap);
+    const button = MeshBuilder.CreateCylinder("medievalCapeButton", { height: cx * 0.06, diameter: cx * C.button, tessellation: 8 }, scene);
+    button.parent = body.torso;
+    button.rotation.x = Math.PI / 2;
+    button.position.set(x, top - cy * 0.1, zFront + cx * 0.04);
+    button.material = gold;
+    out.push(button);
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
     case "medieval.healer": return healerTonsure(scene, body);
     case "medieval.archer": return archerHood(scene, body, team);
     case "medieval.bard": return bardVest(scene, body, team);
-    case "medieval.king": return kingBeard(scene, body);
+    case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream)];
     default: return [];
   }
 }
