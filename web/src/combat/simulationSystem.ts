@@ -268,7 +268,7 @@ const MINOTAUR_CHARGE = { from: 1.5, reach: 14, speed: 2.3, seconds: 2.2, overru
  * headbutt ability like the Headbutter"; critic 378: missing). With a man within .within m past his reach and the butt ready (.cooldown s apart), he stops,
  * drops his head (the BULL_CHARGE pose) and drives it down over .windup s; at the blow the ground .ahead m before him bursts: every enemy within .radius m
  * takes .damage and is flung out from it and up (.fling/.lift m/s at its middle, .edge of that at the rim), a dust ring and kicked earth there. His head
- * comes back up .recover s later. Logged "headbutt" at the blow.
+ * comes back up .recover s later. The first is ready .cooldown s into the battle. Logged "headbutt" at the blow.
  */
 const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahead: 0.9, radius: 4.5, damage: 30, fling: 9, lift: 7, edge: 0.35 };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
@@ -1050,7 +1050,8 @@ export class SimulationSystem {
         unit.faceTarget(this._butts.get(unit)!.target.position);
         return;
       }
-      if (!this._charges.has(unit) && distance <= engageDistance + BIG_HEADBUTT.within && now >= (this._buttReadyAt.get(unit) ?? 0)) {
+      // the first butt is a cooldown into the battle, so he opens with his fists
+      if (!this._charges.has(unit) && distance <= engageDistance + BIG_HEADBUTT.within && now >= (this._buttReadyAt.get(unit) ?? this._battleStartedAt + BIG_HEADBUTT.cooldown)) {
         this._butts.set(unit, { target: enemy, blowAt: now + BIG_HEADBUTT.windup, endAt: now + BIG_HEADBUTT.windup + BIG_HEADBUTT.recover, done: false });
         this._buttReadyAt.set(unit, now + BIG_HEADBUTT.cooldown);
         unit.animator.setCharging(true, true);
