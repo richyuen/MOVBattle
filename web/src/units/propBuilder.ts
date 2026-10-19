@@ -2359,6 +2359,8 @@ const STONE_AXE = {
 const BONE_STAFF_LONG = 0.62;
 const BONE_STAFF_GRIP = 0.4;
 const BONE_STAFF_SKULL = 0.1;
+// The staff skull's cranium width, the face plate's foot below the cranium's middle, the eye and how far forward it sits (all in W, the skull's width)
+const STAFF_SKULL = { crown: 0.85, chin: 0.9, eye: 0.24, eyeAhead: 0.66 };
 const JAVELIN_LONG = 0.4;
 const JAVELIN_HEAD_LONG = 0.16;
 const JAVELIN_HEAD_WIDE = 0.15;
@@ -3042,22 +3044,33 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const top = line[line.length - 1];
       const W = BONE_STAFF_SKULL * s;
       const bone = mat(scene, new Color3(0.86, 0.74, 0.52), 0.1);
-      const skull = MeshBuilder.CreateSphere("orb", { diameterX: W, diameterY: W * 0.9, diameterZ: W * 1.05, segments: 6 }, scene);
+      // [S] 363 (tribal.bone_mage.png: the staff's skull a long tapering deer skull like the mask, a googly eye in each socket, not a ball with a cone):
+      // a low faceted cranium STAFF_SKULL.crown of W across, and the mask's own six-sided face plate (DEER_MASK) hung off its front down to STAFF_SKULL.chin
+      // of W below it; dark sockets on the plate's brow, each with a white eye and a black pupil
+      const skull = MeshBuilder.CreateSphere("orb", { diameterX: W * STAFF_SKULL.crown, diameterY: W * 0.7, diameterZ: W * 0.95, segments: 5 }, scene);
       skull.position.set(top.x, top.y + W * 0.4, top.z);
       skull.material = bone;
       skull.convertToFlatShadedMesh();
       skull.parent = shaft;
       const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
       for (const side of [-1, 1]) {
-        const hole = MeshBuilder.CreateCylinder("staffSkullEye", { height: W * 0.06, diameter: W * 0.3, tessellation: 6 }, scene);
+        const hole = MeshBuilder.CreateCylinder("staffSkullEye", { height: W * 0.06, diameter: W * STAFF_SKULL.eye * 1.35, tessellation: 6 }, scene);
         hole.rotation.x = Math.PI / 2;
-        hole.rotation.y = side * 0.4;
-        hole.position.set(side * W * 0.26, W * 0.05, W * 0.46);
+        hole.rotation.y = side * 0.35;
+        hole.position.set(side * W * 0.25, -W * 0.02, W * STAFF_SKULL.eyeAhead);
         hole.material = socket;
         hole.parent = skull;
+        const white = MeshBuilder.CreateCylinder("staffSkullEyeWhite", { height: W * 0.05, diameter: W * STAFF_SKULL.eye, tessellation: 12 }, scene);
+        white.position.y = W * 0.04;
+        white.material = mat(scene, new Color3(0.96, 0.95, 0.92), 0.4);
+        white.parent = hole;
+        const pupil = MeshBuilder.CreateCylinder("staffSkullPupil", { height: W * 0.03, diameter: W * STAFF_SKULL.eye * 0.45, tessellation: 10 }, scene);
+        pupil.position.set(0, W * 0.03, W * 0.03);
+        pupil.material = socket;
+        pupil.parent = white;
       }
-      // The muzzle and the antlers, cut from the mask's spec to this cranium (W across, a cranium-height tall): the bone material is read off the skull itself
-      addDeerSkull(scene, skull, skull, W, W * 0.9, W * 0.45, W * 0.5, (v) => v, undefined, DEER_RACK.staff);
+      // The face plate and the antlers, cut from the mask's spec to this cranium (W across, a cranium-height tall): the bone material is read off the skull itself
+      addDeerSkull(scene, skull, skull, W, W * 0.9, W * 0.45, W * 0.5, (v) => v, -STAFF_SKULL.chin * W, DEER_RACK.staff);
       const rope = MeshBuilder.CreateTorus("staffRope", { diameter: 0.07 * L, thickness: 0.016 * L, tessellation: 8 }, scene);
       rope.position.set(top.x, top.y - 0.02 * L, top.z);
       rope.material = mat(scene, new Color3(0.36, 0.22, 0.1));
