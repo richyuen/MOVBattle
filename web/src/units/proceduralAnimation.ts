@@ -309,6 +309,13 @@ const RAPIER_POINT = { guard: 0.3 };
  */
 const OFF_AXE = { out: 0.18, ahead: 0.22, face: [0.75, 0.65] as const };
 /*
+ * [S] the Mammoth Charge pose (363; tribal.mammoth.jpg, card "they will charge at enemy units": head down, tusks levelled ahead, galloping): eased in at
+ * .ease per second while the run lasts (setCharging); the head dropped .headDown rad and tossed .toss with the stride, the body pitched .pitch nose-down,
+ * a gallop over the walk (front pair and hind pair reaching together .stride rad, the front knees folding .fold on the back swing, the body rocking .rock)
+ * at .pace rad per second.
+ */
+const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
+/*
  * [S] the plank shield held square in front (361; tribal.protector.red.png, .png: the slab held upright square before his body, brow to knee, his face
  * looking through its round hole). The slab hung off his hand at his side. Over every living state (_holdSlab, after the carries) the board is stood in the
  * world square to his heading, its eye hole on his midline at his own eye height, SLAB_FRONT.reach of his stature ahead of his neck; his shield fist is
@@ -1016,6 +1023,34 @@ export class ProceduralAnimator {
     this._airTarget = airborne ? 1 : 0;
   }
 
+  /** A beast on a charge run (the mammoth's): eases into CHARGE_POSE while on, out of it after. */
+  setCharging(charging: boolean): void {
+    this._chargeTarget = charging ? 1 : 0;
+  }
+
+  private _chargeTarget = 0;
+  private _charge = 0;
+
+  /** [S] the charge pose (363; spec at CHARGE_POSE), over the quadruped's own walk or idle, by the eased charge weight. */
+  private _applyChargePose(dt: number): void {
+    this._charge += (this._chargeTarget - this._charge) * Math.min(1, dt * CHARGE_POSE.ease);
+    const c = this._charge;
+    if (c < 0.01 || this.walkStyle !== "quadruped" || this._state === AnimState.Dead) return;
+    const b = this._body;
+    const t = (this._time + this._wobblePhase) * CHARGE_POSE.pace;
+    b.neck.rotation.x += CHARGE_POSE.headDown * c + Math.sin(t * 2) * CHARGE_POSE.toss * c;
+    b.torso.rotation.x += CHARGE_POSE.pitch * c;
+    // the gallop: front pair and hind pair reach together, longer than the trot's swing
+    const reach = Math.sin(t) * CHARGE_POSE.stride * c;
+    b.leftShoulder.rotation.x += reach;
+    b.rightShoulder.rotation.x += reach * 0.8;
+    b.leftHip.rotation.x -= reach;
+    b.rightHip.rotation.x -= reach * 0.8;
+    b.leftElbow.rotation.x += Math.max(0, -Math.sin(t)) * CHARGE_POSE.fold * c;
+    b.rightElbow.rotation.x += Math.max(0, -Math.sin(t)) * CHARGE_POSE.fold * c;
+    b.hip.rotation.x += Math.sin(t * 2) * CHARGE_POSE.rock * c;
+  }
+
   /** Melee contact: called every decision while in reach; the shove pose decays on its own once the calls stop. */
   leanIntoShove(): void {
     this._shoveTimer = 0.5;
@@ -1469,6 +1504,7 @@ export class ProceduralAnimator {
         this._animateDead(dt);
         break;
     }
+    this._applyChargePose(dt);
 
     // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving;
     // between swings the arms windmill out from the shoulders instead of hanging at the sides.
