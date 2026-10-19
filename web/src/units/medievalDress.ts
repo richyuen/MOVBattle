@@ -1,4 +1,5 @@
 import { Scene, Vector3, Color3, Mesh, MeshBuilder, VertexData } from "@babylonjs/core";
+import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
@@ -552,6 +553,68 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh[
   return out;
 }
 
+/** A limb mesh's extent in its joint's frame: its middle height, half-height and half-width (x) and half-depth (z). */
+function limbBox(limb: Mesh): { mid: number; half: number; wide: number; deep: number } {
+  const b = limb.getBoundingInfo().boundingBox;
+  return {
+    mid: limb.position.y + b.center.y * limb.scaling.y, half: b.extendSize.y * limb.scaling.y,
+    wide: b.extendSize.x * limb.scaling.x, deep: b.extendSize.z * limb.scaling.z,
+  };
+}
+
+/** A tapered faceted sleeve round a limb, in its joint's frame, from `from` to `to` of the way down it (0 its top, 1 its foot). */
+function limbShell(scene: Scene, name: string, limb: Mesh, from: number, to: number, out: number, mat: Material): Mesh {
+  const L = limbBox(limb);
+  const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2;
+  const r = Math.max(L.wide, L.deep) * out;
+  const shell = MeshBuilder.CreateCylinder(name, { height: yTop - yBot, diameterTop: r * 2, diameterBottom: r * 2 * 0.86, tessellation: 6 }, scene);
+  shell.convertToFlatShadedMesh();
+  shell.scaling.z = L.deep / Math.max(L.wide, L.deep) * 1.08;
+  shell.parent = limb.parent;
+  shell.position.y = (yTop + yBot) / 2;
+  shell.material = mat;
+  return shell;
+}
+
+/*
+ * [S] the Squire's lower legs (357; medieval.squire.blue.png): grey steel greaves from the knee down into the shoe, a rounded grey knee cop over each knee,
+ * brown shoes. Greaves SQUIRE_LEGS.out of the shin's half-width round it, from .from of the shin down into the shoe; knee cops .cop of the shin's top across,
+ * standing .ahead in front of the knee; shoes .shoe brown, a darker strap round the ankle.
+ */
+const SQUIRE_LEGS = {
+  out: 1.32, from: 0.06, cop: 1.25, ahead: 0.55,
+  iron: new Color3(0.46, 0.47, 0.5), shoe: new Color3(0.5, 0.3, 0.17), strap: new Color3(0.32, 0.19, 0.11), glow: 0.08,
+};
+
+function squireLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = SQUIRE_LEGS;
+  const iron = getMaterialFactory().get("stone", S.iron, { emissiveIntensity: S.glow });
+  const shoe = getMaterialFactory().get("cloth", S.shoe, { emissiveIntensity: S.glow });
+  const strap = getMaterialFactory().get("cloth", S.strap, { emissiveIntensity: S.glow });
+  const out: Mesh[] = [];
+  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
+    out.push(limbShell(scene, "squireGreave", shin, S.from, 0.92, S.out, iron));
+    const L = limbBox(shin);
+    const cop = MeshBuilder.CreateIcoSphere("squireKneeCop", { radius: Math.max(L.wide, L.deep) * S.cop, subdivisions: 1, flat: true }, scene);
+    cop.scaling.set(1, 0.85, 0.7);
+    cop.parent = knee;
+    cop.position.set(0, L.mid + L.half * 0.95, L.deep * S.ahead);
+    cop.material = iron;
+    out.push(cop);
+    for (const m of knee.getChildMeshes(true)) {
+      if (!/_[lr]FootM$/.test(m.name)) continue;
+      m.material = shoe;
+      const fb = m.getBoundingInfo().boundingBox;
+      const band = MeshBuilder.CreateBox("squireShoeStrap", { width: fb.extendSize.x * 2.08, height: fb.extendSize.y * 0.22, depth: fb.extendSize.z * 0.9 }, scene);
+      band.parent = m;
+      band.position.set(fb.center.x, fb.maximum.y - fb.extendSize.y * 0.5, fb.minimum.z + fb.extendSize.z * 0.45);
+      band.material = strap;
+      out.push(band);
+    }
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
@@ -559,6 +622,7 @@ export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: strin
     case "medieval.archer": return archerHood(scene, body, team);
     case "medieval.bard": return bardVest(scene, body, team);
     case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream)];
+    case "medieval.squire": return squireLegs(scene, body);
     default: return [];
   }
 }
