@@ -220,11 +220,97 @@ export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh):
   return out;
 }
 
+/** The front of a torso-shaped mesh at a height: the furthest-forward vertex within a band of that height, in its parent's units. */
+function frontAt(mesh: Mesh, y: number, band: number): number {
+  const v = mesh.getVerticesData("position") ?? [];
+  let z = 0;
+  for (let i = 0; i < v.length; i += 3) {
+    const vy = v[i + 1] * mesh.scaling.y + mesh.position.y;
+    if (Math.abs(vy - y) <= band) z = Math.max(z, v[i + 2] * mesh.scaling.z + mesh.position.z);
+  }
+  return z;
+}
+
+/** One flat panel from corner points (a fan round the first), seen from both sides. */
+function panel(scene: Scene, name: string, pts: Vector3[]): Mesh {
+  const positions: number[] = [];
+  for (const p of pts) positions.push(p.x, p.y, p.z);
+  const indices: number[] = [];
+  for (let i = 1; i + 1 < pts.length; i++) indices.push(0, i, i + 1, 0, i + 1, i);
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  const data = new VertexData();
+  data.positions = positions; data.indices = indices; data.normals = normals;
+  const m = new Mesh(name, scene);
+  data.applyToMesh(m);
+  return m;
+}
+
+/*
+ * [S] the Bard's peasant vest (356; medieval.bard.red.png, card Appearance "peasant dress"): a dark vest over the team tunic from the shoulders to the hip, open
+ * down the front in a V that shows the tunic, the V laced across with brown cord and closed at its top by two beige toggles. The vest is the torso's own shape a
+ * skin larger (BARD_VEST.wide across, .deep front to back, .long of its height), team x BARD_VEST.shade; the V BARD_VEST.v of the chest's half-width across at the
+ * collar and BARD_VEST.down of the torso height deep, in the tunic's team; BARD_VEST.laces cords across it; toggles BARD_VEST.toggle of the chest half-width.
+ */
+const BARD_VEST = {
+  wide: 1.07, deep: 1.14, long: 1.0, shade: 0.5, v: 0.62, down: 0.62, laces: 2, toggle: 0.16, proud: 0.012,
+  cord: new Color3(0.4, 0.24, 0.14), bone: new Color3(0.86, 0.74, 0.55), glow: 0.06,
+};
+
+function bardVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const V = BARD_VEST;
+  const t = body.torsoMesh;
+  const c = t.getBoundingInfo().boundingBox.extendSize;
+  const cx = c.x * t.scaling.x, cy = c.y * t.scaling.y;
+  const vest = t.clone("bardVest", t.parent, true);
+  vest.makeGeometryUnique();
+  vest.scaling.set(t.scaling.x * V.wide, t.scaling.y * V.long, t.scaling.z * V.deep);
+  vest.material = getMaterialFactory().get("cloth", team.scale(V.shade), { emissiveIntensity: V.glow });
+  // The V: from the collar's two corners down to a point on the chest, laid on the vest's front (which leans back toward the collar)
+  const top = t.position.y + cy * 0.94, tip = top - cy * 2 * V.down;
+  const zTop = frontAt(vest, top - cy * 0.08, cy * 0.12) + V.proud * cx, zTip = frontAt(vest, tip, cy * 0.25) + V.proud * cx;
+  const half = cx * V.v;
+  const vee = panel(scene, "bardVestV", [new Vector3(0, tip, zTip), new Vector3(-half, top, zTop), new Vector3(half, top, zTop)]);
+  vee.parent = t.parent;
+  vee.material = getMaterialFactory().get("cloth", team, { emissiveIntensity: V.glow });
+  const out: Mesh[] = [vest, vee];
+  // cords laced across the V: an X of thin brown bars between its sides
+  const cord = getMaterialFactory().get("cloth", V.cord, { emissiveIntensity: V.glow });
+  const lean = Math.atan2(zTop - zTip, top - tip);
+  for (let i = 0; i < V.laces; i++) {
+    const f0 = 0.3 + i * 0.3, f1 = f0 + 0.3; // fractions of the way up the V
+    for (const side of [-1, 1]) {
+      const y0 = tip + (top - tip) * f0, y1 = tip + (top - tip) * Math.min(0.95, f1);
+      const x0 = side * half * f0 * 0.8, x1 = -side * half * Math.min(0.95, f1) * 0.8;
+      const len = Math.hypot(x1 - x0, (y1 - y0) / Math.cos(lean));
+      const bar = MeshBuilder.CreateBox("bardVestLace", { width: len, height: cx * 0.05, depth: cx * 0.03 }, scene);
+      bar.parent = t.parent;
+      const my = (y0 + y1) / 2;
+      bar.position.set((x0 + x1) / 2, my, zTip + (zTop - zTip) * ((my - tip) / (top - tip)) + cx * 0.02);
+      bar.rotation.set(-lean, 0, Math.atan2(y1 - y0, x1 - x0));
+      bar.material = cord;
+      out.push(bar);
+    }
+  }
+  // two beige toggles at the V's top corners
+  const bone = getMaterialFactory().get("cloth", V.bone, { emissiveIntensity: V.glow });
+  for (const side of [-1, 1]) {
+    const toggle = MeshBuilder.CreateCylinder("bardVestToggle", { height: cx * V.toggle * 1.6, diameter: cx * V.toggle * 0.7, tessellation: 6 }, scene);
+    toggle.parent = t.parent;
+    toggle.rotation.z = Math.PI / 2 + side * 0.25;
+    toggle.position.set(side * half * 0.75, top - cy * 0.14, zTop + cx * 0.04);
+    toggle.material = bone;
+    out.push(toggle);
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
     case "medieval.healer": return healerTonsure(scene, body);
     case "medieval.archer": return archerHood(scene, body, team);
+    case "medieval.bard": return bardVest(scene, body, team);
     default: return [];
   }
 }
