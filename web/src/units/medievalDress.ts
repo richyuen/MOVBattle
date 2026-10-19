@@ -745,9 +745,11 @@ function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: 
  * hangs no tunic skirt (unitFactory skips it for him), so the blouse ends at the brown belt with its gold front buckle and the lathed breeches show below it
  * to the knee; each stocking is one shell .hose (1.32, past the hexagon's flats, so no team shin shows through mid-shin) from the knee into the shoe, in light
  * warm cloth (warmCloth: the beige x glow cloth rendered pale grey-white under the cool sky light).
+ * [S] slim stockings (361; medieval.king.red.png: slim beige stockings, clearly narrower than the puffed breeches): the shin wears the stocking cloth
+ * itself, so the shell need not hide it and is cut slim, .hose 1.06 (1.32 read boot-thick).
  */
 const KING_DRESS = {
-  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.32, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
+  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.06, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
   gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), shoe: new Color3(0.45, 0.27, 0.14),
   shade: 0.92, glow: 0.12,
 };
@@ -770,7 +772,12 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
   // stockings from the knee to the shoe, clear of the pantaloons
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(...kingPantaloon(scene, thigh, cloth, gold));
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(...unglow(scene, [limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige)]));
+  // [S] slim stockings (361): the shin itself (its knee stub merged in) is dressed in the stocking cloth, so no team shows at the knee or through the
+  // shell's flats, and the shell is a slim .hose round it, narrower than the breeches' knee band; shin and shell out of the glow
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = beige;
+    out.push(...unglow(scene, [shin, limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige)]));
+  }
   // brown shoes, gold buckle on the instep
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(true)) {
