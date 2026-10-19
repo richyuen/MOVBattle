@@ -308,6 +308,13 @@ const RAPIER_POINT = { guard: 0.3 };
  * on the grip.
  */
 const OFF_AXE = { out: 0.18, ahead: 0.22, face: [0.75, 0.65] as const };
+/*
+ * [S] the plank shield held square in front (361; tribal.protector.red.png, .png: the slab held upright square before his body, brow to knee, his face
+ * looking through its round hole). The slab hung off his hand at his side. Over every living state (_holdSlab, after the carries) the board is stood in the
+ * world square to his heading, its eye hole on his midline at his own eye height, SLAB_FRONT.reach of his stature ahead of his neck; his shield fist is
+ * reached straight at the board's back (_gripBoard) .grip behind its middle. On each blow it is shoved out .bash further at the peak of the swing and back.
+ */
+const SLAB_FRONT = { reach: 0.2, grip: 0.08, bash: 0.22 };
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
 // cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
@@ -1751,6 +1758,7 @@ export class ProceduralAnimator {
     this._holdHeater();
     this._pointRapier();
     this._standOffhandAxe();
+    this._holdSlab();
     this._lungeLegs();
     this._holdTPose(dt);
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
@@ -4018,6 +4026,74 @@ export class ProceduralAnimator {
     const turn = Matrix.Identity();
     q.toRotationMatrix(turn);
     r.node.position.copyFrom(Vector3.TransformCoordinates(Vector3.TransformCoordinates(r.grip, restInv), turn));
+  }
+
+  /** The plank shield stood square before his face (see SLAB_FRONT), its eye hole at his eyes, over every living state. */
+  private _holdSlab(): void {
+    const shield = this._shieldBoard();
+    if (!shield || shield.name !== "slabshield") return;
+    const rest = (this._boardRest ??= shield.position.clone());
+    const w = this._state === AnimState.Dead || this.walkStyle === "quadruped" ? 0 : (1 - Math.min(1, this._limp)) * (1 - this._boardOffWeight());
+    if (w <= 0.001) {
+      if (shield.rotationQuaternion) {
+        shield.rotationQuaternion = null;
+        shield.position.copyFrom(rest);
+      }
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.neck]) n.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const scale = b.root.absoluteScaling.y || 1;
+    const stature = (b.metrics.overallHeight || 1.6) * scale / (b.root.scaling.y || 1);
+    const p = this._state === AnimState.Attacking ? Math.min(1, this._attackTimer / Math.max(this._attackDuration, 0.001)) : 0;
+    const reach = (SLAB_FRONT.reach + SLAB_FRONT.bash * Math.sin(Math.PI * p)) * stature;
+    // The eye hole's world point: on his midline under the neck, at his eye, out ahead
+    const neck = b.neck.getAbsolutePosition();
+    const eye = (b.leftEye ?? b.neck).getAbsolutePosition();
+    const hole = new Vector3(neck.x + fwd.x * reach, eye.y, neck.z + fwd.z * reach);
+    // Square to his heading, upright, its mossy face out to the front (the battens on its back toward him)
+    const world = Quaternion.FromLookDirectionLH(fwd.scale(-1), Vector3.Up());
+    // The board's middle from the hole: the hole sits up its own height's share above the middle (read off its planks' extent in its own frame)
+    shield.computeWorldMatrix(true);
+    const sc = shield.absoluteScaling;
+    const holeUp = (this._slabHoleUp ??= this._slabHole(shield));
+    const middle = hole.subtract(new Vector3(0, holeUp * sc.y, 0));
+    // His fist to the back of the board, then the board on it: the arm runs straight, so it is aimed down steeply enough that its whole length ends
+    // .grip behind the board, under the middle and in toward it, never through the planks
+    b.leftShoulder.computeWorldMatrix(true);
+    const sh = b.leftShoulder.getAbsolutePosition();
+    const arm = (b.leftElbow.position.length() + b.leftHand.position.length()) * b.leftShoulder.absoluteScaling.y;
+    const ahead = Math.max(0, Vector3.Dot(middle.subtract(sh), fwd) - SLAB_FRONT.grip * stature);
+    const lat = middle.subtract(sh);
+    lat.y = 0;
+    lat.subtractInPlace(fwd.scale(Vector3.Dot(lat, fwd))).scaleInPlace(0.6);
+    const drop = Math.sqrt(Math.max(0, arm * arm - ahead * ahead - lat.lengthSquared()));
+    this._gripBoard(sh.add(fwd.scale(ahead)).addInPlace(lat).addInPlace(new Vector3(0, -drop, 0)), w);
+    const hand = b.leftHand;
+    hand.computeWorldMatrix(true);
+    const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(world);
+    const strapped = Vector3.TransformCoordinates(rest, hand.getWorldMatrix());
+    // (the strapped attitude stays in the Euler rotation, which the quaternion overrides)
+    shield.rotationQuaternion = Quaternion.Slerp(Quaternion.FromEulerAngles(shield.rotation.x, shield.rotation.y, shield.rotation.z), square, w);
+    shield.position.copyFrom(Vector3.TransformCoordinates(Vector3.Lerp(strapped, middle, w), Matrix.Invert(hand.getWorldMatrix())));
+  }
+  // How far the slab's eye hole sits above its middle (its origin), in its own units: the gap between the middle planks' lower and upper pieces
+  private _slabHoleUp: number | null = null;
+  private _slabHole(shield: TransformNode): number {
+    const planks = shield.getChildren().filter((n): n is Mesh => n instanceof Mesh && n.name === "slabPlank");
+    const outer = Math.max(0, ...planks.map((m) => Math.abs(m.position.x)));
+    let gapLo = -Infinity, gapHi = Infinity;
+    for (const m of planks) {
+      if (Math.abs(m.position.x) > outer * 0.6) continue;
+      const half = m.getBoundingInfo().boundingBox.extendSize.y;
+      if (m.position.y < 0) gapLo = Math.max(gapLo, m.position.y + half);
+      else gapHi = Math.min(gapHi, m.position.y - half);
+    }
+    return Number.isFinite(gapLo) && Number.isFinite(gapHi) ? (gapLo + gapHi) * 0.5 : 0;
   }
 
   /** The lunge legs (spec at LUNGE): the last leg layer, laid over whatever the press, brace, stride, limp or air layers made of the legs. */
