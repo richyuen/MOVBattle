@@ -15,7 +15,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
-import { dressMinotaur, dressZeus } from "./ancientDress";
+import { dressMinotaur, dressSnakeArcher, dressZeus } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -547,6 +547,10 @@ export class UnitFactory {
     // [S] Zeus's dirty-blond bolt-hair beard and locks, olive leaves at the temples (379; ancientDress dressZeus)
     if (definition.id === "ancient.zeus" && !shouldUseVehicleBody) {
       propMeshes.push(...dressZeus(this._scene, body, propMeshes));
+    }
+    // [S] the snake archer's team hood, face wrap and tied collar, no khaki box (382; ancientDress dressSnakeArcher)
+    if (definition.id === "ancient.snake_archer" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressSnakeArcher(this._scene, body, teamColor));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
