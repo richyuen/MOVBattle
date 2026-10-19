@@ -532,7 +532,7 @@ const KING_BEARD = {
 function kingBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const B = KING_BEARD;
-  const hair = getMaterialFactory().get("cloth", B.blonde, { emissiveIntensity: B.glow });
+  const hair = kingHair();
   const tall = e.y * (1 - B.top) + e.y * 2 * B.down;
   const beard = MeshBuilder.CreateIcoSphere("kingBeard", { radius: 1, subdivisions: 1, flat: true }, scene);
   jitterVertices(beard, B.jitter, 37.3, e.x * 1.08 * B.wide, tall * 0.5, e.z * B.deep);
@@ -553,7 +553,29 @@ function kingBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
     tache.parent = body.headMesh;
     out.push(tache);
   }
+  // sideburns: a faceted strip up each cheek from the beard to the temple, so the beard frames the face as in the render
+  const H = KING_HAIR;
+  for (const side of [-1, 1]) {
+    const burn = MeshBuilder.CreateIcoSphere("kingSideburn", { radius: 1, subdivisions: 1, flat: true }, scene);
+    jitterVertices(burn, B.jitter, 41.9 + side, e.x * H.burnWide, e.y * H.burnTall, e.z * H.burnDeep);
+    burn.position.set(side * e.x * H.burnOut, -e.y * 0.05, e.z * 0.45);
+    burn.material = hair;
+    burn.parent = body.headMesh;
+    out.push(burn);
+  }
   return out;
+}
+
+/*
+ * [S] the King's hair material (359; medieval.king.red.png: a warm dirty-blonde beard, tan in light and shade alike): the beard's plain cloth went khaki/olive
+ * under the blue sky light, so beard, moustache and sideburns share a self-lit hair material of their own: diffuse KING_BEARD.blonde, fully rough (no sky
+ * sheen), and its own warm amber emissive KING_HAIR.warm, which holds the tan in shade against the blue ambient (as the eyes' self-lit white does). Sideburns .burnWide x .burnTall x .burnDeep head
+ * half-extents, .burnOut across.
+ */
+const KING_HAIR = { warm: new Color3(0.4, 0.24, 0.07), rough: 1, burnWide: 0.2, burnTall: 0.42, burnDeep: 0.45, burnOut: 0.98 };
+
+function kingHair(): Material {
+  return getMaterialFactory().get("cloth", KING_BEARD.blonde, { emissive: KING_HAIR.warm, roughness: KING_HAIR.rough });
 }
 
 /*
