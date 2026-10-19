@@ -305,6 +305,70 @@ function bardVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   return out;
 }
 
+/*
+ * [S] the Squire's tabard (356; medieval.squire.red.png, card Appearance "a basic tabard"): a beige cross pattee across the chest, its four arms flaring from a
+ * narrow middle to broad square ends, the side arms reaching nearly to the tabard's edges and the upright from the collar to the belt; a beige band round the hem of
+ * the tabard skirt; beige edging over each shoulder. Cross SQUIRE_TABARD.span of the tabard's half-width across, its arms SQUIRE_TABARD.waist of that at the middle
+ * and SQUIRE_TABARD.end at their ends; hem band SQUIRE_TABARD.hem of the skirt's length; shoulder edges SQUIRE_TABARD.edge of the chest half-width wide.
+ */
+const SQUIRE_TABARD = {
+  span: 0.86, up: 0.82, down: 0.7, waist: 0.1, end: 0.34, hem: 0.12, edge: 0.3, proud: 0.015,
+  beige: new Color3(0.88, 0.8, 0.62), glow: 0.08,
+};
+
+/** The trim, fitted to the tabard (a skin over the torso) and the tabard skirt unitFactory hangs from the hips. */
+export function squireTabardTrim(scene: Scene, body: ArticulatedBody, tabard: Mesh, skirt: Mesh): Mesh[] {
+  const S = SQUIRE_TABARD;
+  const beige = getMaterialFactory().get("cloth", S.beige, { emissiveIntensity: S.glow });
+  const tb = tabard.getBoundingInfo().boundingBox.extendSize;
+  const tx = tb.x * tabard.scaling.x, ty = tb.y * tabard.scaling.y;
+  const t = body.torsoMesh;
+  const cy = t.getBoundingInfo().boundingBox.extendSize.y * t.scaling.y;
+  const proud = S.proud * tx;
+  // the cross: its middle on the chest line, each arm a flat trapezoid laid on the tabard's front
+  const y0 = t.position.y + cy * 0.25;
+  const z = (y: number) => frontAt(tabard, y, cy * 0.2) + proud;
+  const z0 = z(y0);
+  const w0 = tx * S.waist, w1 = tx * S.end;
+  const yUp = y0 + (t.position.y + cy - y0) * S.up, yDown = y0 - (y0 - (t.position.y - cy)) * S.down;
+  const arms: Vector3[][] = [
+    [new Vector3(-w0, y0, z0), new Vector3(-w1, yUp, z(yUp)), new Vector3(w1, yUp, z(yUp)), new Vector3(w0, y0, z0)],
+    [new Vector3(-w0, y0, z0), new Vector3(w0, y0, z0), new Vector3(w1, yDown, z(yDown)), new Vector3(-w1, yDown, z(yDown))],
+  ];
+  const xs = tx * S.span, hy0 = w0 * (ty / tx) * 0.6, hy1 = w1 * 0.7;
+  for (const side of [-1, 1]) {
+    arms.push([new Vector3(0, y0 - hy0, z0), new Vector3(side * xs, y0 - hy1, z0), new Vector3(side * xs, y0 + hy1, z0), new Vector3(0, y0 + hy0, z0)]);
+  }
+  const out: Mesh[] = [];
+  for (const pts of arms) {
+    const arm = panel(scene, "squireCross", pts);
+    arm.parent = tabard.parent;
+    arm.material = beige;
+    out.push(arm);
+  }
+  // the hem band round the foot of the tabard skirt
+  const sb = skirt.getBoundingInfo().boundingBox.extendSize;
+  const hemTall = sb.y * 2 * S.hem;
+  const hem = MeshBuilder.CreateCylinder("squireHem", { height: hemTall, diameterTop: sb.x * 2 * 1.02, diameterBottom: sb.x * 2 * 1.05, tessellation: 6 }, scene);
+  hem.convertToFlatShadedMesh();
+  hem.parent = skirt;
+  hem.position.y = -sb.y + hemTall / 2;
+  hem.material = beige;
+  out.push(hem);
+  // beige edging over each shoulder, front to back across the tabard's top corners
+  const topY = t.position.y + cy * 0.82;
+  const zf = frontAt(tabard, topY, cy * 0.2);
+  for (const side of [-1, 1]) {
+    const edge = MeshBuilder.CreateBox("squireShoulderEdge", { width: tx * S.edge, height: cy * 0.12, depth: zf * 2.08 }, scene);
+    edge.parent = tabard.parent;
+    edge.position.set(side * tx * 0.82, topY, tabard.position.z);
+    edge.rotation.z = -side * 0.35;
+    edge.material = beige;
+    out.push(edge);
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {

@@ -13,7 +13,7 @@ import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
-import { dressMedieval, healerRobeTrim } from "./medievalDress";
+import { dressMedieval, healerRobeTrim, squireTabardTrim } from "./medievalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -661,7 +661,8 @@ export class UnitFactory {
       // Not on the knight (356; medieval.knight.png: his chest is plate, and the cream T read as a second sword hilt floating over his shield)
       const crossDepth = chest.z * body.torsoMesh.scaling.z * 0.3;
       const crossMaterial = getMaterialFactory().getCloth(TABARD_COLOR);
-      for (const [width, height] of definition.id === "medieval.knight" ? [] : [[0.2, 1.3], [1.0, 0.18]]) {
+      // ...nor on the squire, whose cross is his own pattee (medievalDress squireTabardTrim)
+      for (const [width, height] of definition.id === "medieval.knight" || definition.id === "medieval.squire" ? [] : [[0.2, 1.3], [1.0, 0.18]]) {
         const bar = MeshBuilder.CreateBox("tabardCross", {
           width: chest.x * body.torsoMesh.scaling.x * width, height: chest.y * height, depth: crossDepth,
         }, this._scene);
@@ -697,6 +698,7 @@ export class UnitFactory {
             ? hangSkirt(this._scene, body, "armourKilt", 0.6, 1.55, getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(ARMOUR_SKIRT_SHADE)))
             : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
+      if (definition.id === "medieval.squire" && tabard && skirt) propMeshes.push(...squireTabardTrim(this._scene, body, tabard, skirt));
       // ...not under a hide cape: its flaps lie over the shoulders where the collar would (the chieftain)
       if (bareSkinned && !hasTribalNecklace(definition.id) && !TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(furCollar(this._scene, body));
     }
