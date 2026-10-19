@@ -177,6 +177,8 @@ const HEALER_TRIM = {
   gold: new Color3(0.93, 0.66, 0.24), rope: new Color3(0.42, 0.4, 0.38), glow: 0.12,
 };
 
+const HEALER_FOLD = { inner: 0.05, outer: 0.14, stand: 0.2, flare: 1.25, neck: 0.42, from: 1.0 };
+
 /** The trim, fitted to the robe skirt hung from his hips (unitFactory HEALER_ROBE) and to his chest. */
 export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh): Mesh[] {
   const T = HEALER_TRIM;
@@ -232,20 +234,25 @@ export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh):
   // [S] the turned collar (357; medieval.healer.red.png: a broad gold collar lying open in a V over the shoulders, not a ring hidden in the yoke): a flat gold
   // lapel each side laid on the chest's visible front (chestFrontAt), from the neck out T.collar of the chest half-width and down to a point by the V's middle,
   // and a gold strip over each shoulder from the lapel's top to the back
+  // [S] the turned collar made solid (359; medieval.healer.red.png: the collar is a folded cloth with thickness, its lapels standing off the chest and rolled at
+  // their outer edge, and a band standing up round the back of the neck): each lapel is a closed slab from the chest's front out to HEALER_FOLD.inner of the
+  // chest half-width proud at the V and .outer at the rolled outer edge; a stand collar .stand of the chest height tall rings the back of the neck, flaring
+  // out .flare at its top edge, from the lapels' tops round the back.
   const top = t.position.y + cy * 0.93;
-  const zc = (y: number) => chestFrontAt(body, y) + cx * T.proud * 0.6;
+  const zb = (y: number) => chestFrontAt(body, y) - cx * 0.02;
+  const zc = (y: number, proud: number) => chestFrontAt(body, y) + cx * proud;
+  const F = HEALER_FOLD;
   for (const side of [-1, 1]) {
-    const pts = [
-      new Vector3(side * cx * 0.16, top, zc(top)),
-      new Vector3(side * cx * T.collar, top - cy * 0.04, zc(top - cy * 0.04)),
-      new Vector3(side * cx * T.collar * 0.85, top - cy * 0.42, zc(top - cy * 0.42)),
-      new Vector3(side * cx * 0.07, top - cy * 0.52, zc(top - cy * 0.52)),
+    const corners: [number, number, number][] = [
+      [0.16, 0, F.inner], [T.collar, -0.04, F.outer], [T.collar * 0.85, -0.42, F.outer], [0.07, -0.52, F.inner],
     ];
-    const lapel = panel(scene, "healerCollar", pts);
+    const front = corners.map(([x, dy, p]) => new Vector3(side * cx * x, top + cy * dy, zc(top + cy * dy, p)));
+    const back = corners.map(([x, dy]) => new Vector3(side * cx * x, top + cy * dy, zb(top + cy * dy)));
+    const lapel = slab(scene, "healerCollar", front, back);
     lapel.parent = t.parent;
     lapel.material = gold;
     out.push(lapel);
-    const zf = zc(top);
+    const zf = zc(top, T.proud * 0.6);
     const strip = MeshBuilder.CreateBox("healerCollarShoulder", { width: cx * (T.collar - 0.16), height: cy * 0.1, depth: zf * 1.9 }, scene);
     strip.parent = t.parent;
     strip.position.set(side * cx * (T.collar + 0.16) / 2, top + cy * 0.01, -zf * 0.05);
@@ -253,6 +260,22 @@ export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh):
     strip.material = gold;
     out.push(strip);
   }
+  // the stand collar round the back of the neck, from beside one lapel's top round the back to the other, flaring out at its top
+  const zf = zc(top, 0);
+  const rows: Vector3[][] = [];
+  for (const [dy, grow] of [[-0.02, 1], [F.stand, F.flare]] as const) {
+    const row: Vector3[] = [];
+    for (let i = 0; i <= 12; i++) {
+      const phi = F.from + (i / 12) * (2 * Math.PI - 2 * F.from);
+      row.push(new Vector3(Math.sin(phi) * cx * F.neck * grow, top + cy * dy, Math.cos(phi) * zf * 0.8 * grow));
+    }
+    rows.push(row);
+  }
+  const stand = MeshBuilder.CreateRibbon("healerCollarStand", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  stand.convertToFlatShadedMesh();
+  stand.parent = t.parent;
+  stand.material = gold;
+  out.push(stand);
   // the rope belt at the waist, its end hanging down the front
   const belt = MeshBuilder.CreateTorus("healerRopeBelt", { diameter: rTop * 2 * 1.02, thickness: cy * T.belt, tessellation: 10 }, scene);
   belt.convertToFlatShadedMesh();
@@ -312,6 +335,26 @@ function panel(scene: Scene, name: string, pts: Vector3[]): Mesh {
   data.positions = positions; data.indices = indices; data.normals = normals;
   const m = new Mesh(name, scene);
   data.applyToMesh(m);
+  return m;
+}
+
+/** A closed slab between two outlines of the same corners (front and back), each face wound both ways so it shows from any side. */
+function slab(scene: Scene, name: string, front: Vector3[], back: Vector3[]): Mesh {
+  const n = front.length;
+  const positions: number[] = [];
+  for (const p of [...front, ...back]) positions.push(p.x, p.y, p.z);
+  const tris: number[] = [];
+  for (let i = 1; i + 1 < n; i++) tris.push(0, i, i + 1, n, n + i, n + i + 1);
+  for (let i = 0; i < n; i++) { const j = (i + 1) % n; tris.push(i, j, n + j, i, n + j, n + i); }
+  const indices = [...tris];
+  for (let i = 0; i < tris.length; i += 3) indices.push(tris[i], tris[i + 2], tris[i + 1]);
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  const data = new VertexData();
+  data.positions = positions; data.indices = indices; data.normals = normals;
+  const m = new Mesh(name, scene);
+  data.applyToMesh(m);
+  m.convertToFlatShadedMesh();
   return m;
 }
 
