@@ -400,12 +400,9 @@ const FLOPPY_HAT = {
  * across the eyes with the bead eyes looking out of it, and a black bevor wrapping the chin and throat down onto the shoulders; critic 367: a round black
  * ball with a short peak and no eye slit). In head widths W and heights H: an .sides-sided shell .heads W across (.taper of that at its top) and .deep as deep,
  * from .crown H over the crown to .drop H under it; a low cap .dome H tall over it; the slit .slit H tall, .slitWide of the shell across, .slitDown H under
- * the eyes' top, with bead eyes .eye H across .eyeX W out. No neck-guard tail.
- * [S] 372 the bevor as a chin cup (critic 372: the 368 bevor flared to 1.3 of the shell onto the shoulders and read as a navy flap past the head's outline;
- * renaissance.halberd.red.png: the helm stops at the head's outline). A cup .bevor H tall under the shell, .bevorTop of the shell across at its top and
- * narrowing to .bevorChin of it at the throat, so nothing of the helm stands out past the shell.
+ * the eyes' top, with bead eyes .eye H across .eyeX W out; the bevor .bevor H tall, flaring to .bevorFlare of the shell. No neck-guard tail.
  */
-const SALLET_FACETED = { sides: 8, heads: 1.24, taper: 0.9, deep: 1.08, crown: 0.02, drop: 1.0, dome: 0.16, slit: 0.13, slitWide: 0.84, slitDown: 0.0, eye: 0.15, eyeX: 0.17, bevor: 0.26, bevorTop: 0.97, bevorChin: 0.72 };
+const SALLET_FACETED = { sides: 8, heads: 1.24, taper: 0.9, deep: 1.08, crown: 0.02, drop: 1.0, dome: 0.16, slit: 0.13, slitWide: 0.84, slitDown: 0.0, eye: 0.15, eyeX: 0.17, bevor: 0.34, bevorFlare: 1.3 };
 const SALLET = { heads: 1.3, deep: 1.12, crown: 0.12, dome: 0.45, drop: 1.05, flare: 1.08, slit: 0.07, slitDown: 0.04, slitWide: 0.78, tail: 0.5, dip: 0.45 };
 /*
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
@@ -1629,8 +1626,8 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       pupil.material = black;
       pupil.parent = eye;
     }
-    // The bevor (372): an eight-sided chin cup under the shell, narrowing toward the throat, inside the shell's outline
-    const bevor = MeshBuilder.CreateCylinder("salletBevor", { height: u(F.bevor * H), diameterTop: u(2 * R * F.bevorTop), diameterBottom: u(2 * R * F.bevorChin), tessellation: F.sides }, scene);
+    // The bevor: an eight-sided flared collar round the chin and throat, wider than the shell, sitting on the shoulders
+    const bevor = MeshBuilder.CreateCylinder("salletBevor", { height: u(F.bevor * H), diameterTop: u(2 * R * 1.02), diameterBottom: u(2 * R * F.bevorFlare), tessellation: F.sides }, scene);
     bevor.rotation.y = Math.PI / F.sides;
     bevor.bakeCurrentTransformIntoVertices();
     bevor.position.y = u(foot - (top + foot) * 0.5 - F.bevor * H * 0.35);
