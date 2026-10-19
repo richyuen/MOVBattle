@@ -259,7 +259,8 @@ const LEGION_HELM = {
   iron: new Color3(0.2, 0.21, 0.24), glow: 0.1,
 };
 // (382 looks: at .13 and .16 bands, .14 and .28 thick, the crest still read a thin comb from the front quarter)
-const CORINTH_CREST = { bands: 4, band: 0.19, wide: 0.32, fill: 0.95, sink: 0.6, lean: 0.06, shorten: 0.16, segs: 12, overlap: 1.15, narrow: 0.08 };
+// (383: each band one swept strip, .segs sections; .42 of W across, a third of the bowl, per critic 382)
+const CORINTH_CREST = { bands: 4, band: 0.19, wide: 0.42, fill: 0.95, sink: 0.6, lean: 0.06, shorten: 0.16, segs: 12, overlap: 1.15, narrow: 0.08 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
@@ -1453,8 +1454,9 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     ridge.position.set(0, u(C.ridge * H) * 0.3, u(C.face * W));
     const nose = put(MeshBuilder.CreateBox("chelmNose", { width: u(C.nose * W), height: u((C.underEye - C.brow) * H), depth: u(C.plate * W * 1.4) }, scene));
     nose.position.set(0, -u((C.underEye - C.brow) * H) / 2, u(C.face * W) + u(C.plate * W) * 0.3);
-    // [S] the crest as stacked bands (382, spec at CORINTH_CREST): each band a run of short blocks laid end to end along the bowl's top line, offset
-    // out along the normal by the bands below it, so the crest is a solid fin about the bowl's height with step lines, highest in front
+    // [S] the crest as stacked bands (382, spec at CORINTH_CREST), offset out along the normal by the bands below it, so the crest is a fin about the
+    // bowl's height with step lines, highest in front. [S] 383: each band one solid strip swept along the bowl's top line (sweptBar), square cut at
+    // both ends: the 382 run of short blocks read as layered blades, a mohawk, at its seams (critic 382)
     const ry = u(C.rise * H) - brow;
     const K = CORINTH_CREST;
     const bandH = u(K.band * H);
@@ -1463,20 +1465,16 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       const back = C.back + (C.front - C.back) * K.shorten * k;
       const front = C.front + K.lean * k;
       const lift = bandH * (k + 0.5) - bandH * K.sink;
-      const at = (phi: number): Vector3 => {
+      const pts: Vector3[] = [], outs: Vector3[] = [], sides: Vector3[] = [];
+      for (let i = 0; i <= K.segs; i++) {
+        const phi = front + ((back - front) * i) / K.segs;
         const normal = new Vector3(0, Math.cos(phi) / ry, Math.sin(phi) / rz).normalize();
-        return new Vector3(0, ry * Math.cos(phi), rz * Math.sin(phi)).add(normal.scale(lift));
-      };
-      for (let i = 0; i < K.segs; i++) {
-        const a = at(front + ((back - front) * i) / K.segs), b = at(front + ((back - front) * (i + 1)) / K.segs);
-        const along = b.subtract(a);
-        const block = MeshBuilder.CreateBox("chelmCrest", { width: u(K.wide * W) * (1 - K.narrow * k), height: bandH * K.fill, depth: along.length() * K.overlap }, scene);
-        block.position.copyFrom(a.add(b).scale(0.5));
-        // depth along the line, height out of the bowl
-        const out = new Vector3(0, -along.z, along.y).normalize();
-        block.rotationQuaternion = Quaternion.FromLookDirectionLH(along.normalize(), out);
-        blocks.push(block);
+        pts.push(new Vector3(0, ry * Math.cos(phi), rz * Math.sin(phi)).add(normal.scale(lift)));
+        outs.push(normal);
+        sides.push(new Vector3(1, 0, 0));
       }
+      const half = u(K.wide * W) * (1 - K.narrow * k) / 2;
+      blocks.push(sweptBar(scene, "chelmCrest", pts, sides, outs, pts.map(() => half), pts.map(() => bandH * K.fill / 2)));
     }
     const crest = Mesh.MergeMeshes(blocks, true);
     if (crest) {
@@ -2869,6 +2867,39 @@ const POTION_GLASS = new Color3(0.64, 0.75, 0.72); // 377: TABS pale grey-green 
 /** The potion in the bulb (381): its cap .over the glass radius, filled to .fill of the radius past the middle (bulb-local, neck side up), teal. */
 const POTION_LIQUID = { over: 1.04, fill: 0.5, color: new Color3(0.2, 0.48, 0.56), glow: 0.12 };
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
+/**
+ * A box section swept along a path (383): at point i its corners sit at pts[i] +- side x halfSide[i] +- outs[i] x halfOut[i]; four walls and two end
+ * caps, flat shaded. One solid strip, no seams along it (the crest bands, the aspis swirls).
+ */
+function sweptBar(scene: Scene, name: string, pts: Vector3[], side: Vector3[], outs: Vector3[], halfSide: number[], halfOut: number[]): Mesh {
+  const positions: number[] = [];
+  const indices: number[] = [];
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const s = side[i].scale(halfSide[i]), o = outs[i].scale(halfOut[i]);
+    for (const c of [s.add(o), s.subtract(o), s.scale(-1).subtract(o), s.scale(-1).add(o)]) {
+      const p = pts[i].add(c);
+      positions.push(p.x, p.y, p.z);
+    }
+  }
+  for (let i = 0; i < n - 1; i++) {
+    for (let k = 0; k < 4; k++) {
+      const a = 4 * i + k, b = 4 * i + ((k + 1) % 4), c = a + 4, d = b + 4;
+      indices.push(a, b, d, a, d, c, a, d, b, a, c, d);
+    }
+  }
+  for (const base of [0, 4 * (n - 1)]) indices.push(base, base + 1, base + 2, base, base + 2, base + 3, base, base + 2, base + 1, base, base + 3, base + 2);
+  const mesh = new Mesh(name, scene);
+  const data = new VertexData();
+  data.positions = positions;
+  data.indices = indices;
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  data.normals = normals;
+  data.applyToMesh(mesh);
+  mesh.convertToFlatShadedMesh();
+  return mesh;
+}
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
   const n = outline.length;
   const cx = outline.reduce((a, p) => a + p[0], 0) / n, cy = outline.reduce((a, p) => a + p[1], 0) / n;
