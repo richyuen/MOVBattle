@@ -4102,7 +4102,7 @@ const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
 // ...and its stone (tribal.protector.red.png: one warm red-brown slab, not planks): SLAB_FACETS.deep thick (prop units), cut in three columns either side of
 // the opening and in .rows rows down the side columns; each corner of the face pushed in or out by its own hashed share (.front of the depth) so the face
 // breaks into flat facets, the top corners bevelled back by .bevel of the depth, and one dark seam .seam wide down the slab from the opening's side
-const SLAB_FACETS = { deep: 0.06, rows: 3, front: 0.45, bevel: 0.7, seam: 0.006 };
+const SLAB_FACETS = { deep: 0.06, rows: 3, front: 1.0, bevel: 0.7, seam: 0.006 };
 let slabSerial = 0;
 /*
  * The painter's palette (328; renaissance.painter.jpg: a big flat red-brown kidney board wider than the torso, held out from the shoulder at chest height
@@ -4292,7 +4292,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       // no team colour in it, its face broken into flat facets, its top uneven and bevelled, a dark seam down it from the opening's side, and a round opening
       // SLAB_EYE across at face height (SLAB_EYE_UP of the height above the middle) rimmed by a round lip. The root is an empty node, so the opening is a true
       // hole and his face shows through it. The face is +z. The pieces round the opening keep the name slabPlank (the animator reads the opening off them).
-      const stone = new Color3(0.62, 0.35, 0.26);
+      const stone = new Color3(0.68, 0.36, 0.25);
       const r = (k: number) => roundBoardSeed(slabSerial + 0.5, k);
       slabSerial++;
       const shield = new Mesh("slabshield", scene);
@@ -4318,7 +4318,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
           box.setVerticesData(VertexBuffer.PositionKind, at);
         }
         box.convertToFlatShadedMesh();
-        box.material = mat(scene, stone.scale(0.92 + r(Math.round(cx / W * 9) + Math.round(cy / H * 9) * 7 + 20) * 0.16), 0.1, "stone");
+        box.material = mat(scene, stone.scale(0.92 + r(Math.round(cx / W * 9) + Math.round(cy / H * 9) * 7 + 20) * 0.16), 0.14, "stone");
         box.parent = shield;
       };
       const top = H * 0.48;
@@ -4349,7 +4349,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       // opening's side, one over the bottom corner; all stand off the face. Self-lit a little: a plain dark green went near-black in the field's shade.
       const moss = mat(scene, new Color3(0.42, 0.42, 0.27), 0.12, "stone");
       const lumps: [number, number, number, number, number, number][] = [
-        [0.26 * W, H * 0.43, SLAB_MOSS.top * s, 2.1, 0.75, -0.5],
+        [0.26 * W, H * 0.43, SLAB_MOSS.top * s, 1.6, 0.8, -0.5],
         [0.12 * W, eyeY - eye * 1.05, SLAB_MOSS.hole * s, 0.85, 1.6, 0.35],
         [-0.42 * W, -H * 0.36, SLAB_MOSS.bottom * s, 0.8, 1.5, 0.2],
       ];
