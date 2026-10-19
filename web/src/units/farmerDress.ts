@@ -274,3 +274,47 @@ export function potionJerkin(scene: Scene, body: ArticulatedBody, teamColor: Col
   }
   return added;
 }
+
+/*
+ * [S] the potionseller's round head (377; farmer.potion_seller.red.png, card Appearance "an unusually round head with umber brown hair"): his block
+ * head's vertices are laid on the ellipsoid of its own extents, so it keeps its size but reads as a faceted ball, not a box; the hair is a close cap
+ * following that curve: the top POTION_HEAD.slice of a shell POTION_HEAD.shell times the head, its axis tipped POTION_HEAD.tip back so its rim runs
+ * over the brow in front and down to the nape behind. Umber POTION_HAIR, self-lit POTION_HEAD.glow.
+ */
+const POTION_HEAD = { shell: 1.08, slice: 0.56, tip: 0.42, lift: 0.04, back: 0.04, glow: 0.2 };
+const POTION_HAIR = new Color3(0.36, 0.25, 0.17);
+
+/** Rounds the potionseller's head and caps it with his umber hair (spec at POTION_HEAD). */
+export function potionHead(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh;
+  const at = head.getVerticesData("position");
+  if (!at) return [];
+  let hx = 0, hy = 0, hz = 0;
+  for (let v = 0; v < at.length; v += 3) {
+    hx = Math.max(hx, Math.abs(at[v]));
+    hy = Math.max(hy, Math.abs(at[v + 1]));
+    hz = Math.max(hz, Math.abs(at[v + 2]));
+  }
+  for (let v = 0; v < at.length; v += 3) {
+    const x = at[v] / hx, y = at[v + 1] / hy, z = at[v + 2] / hz;
+    const r = Math.hypot(x, y, z) || 1;
+    at[v] = (x / r) * hx;
+    at[v + 1] = (y / r) * hy;
+    at[v + 2] = (z / r) * hz;
+  }
+  head.setVerticesData("position", at);
+  head.convertToFlatShadedMesh();
+  head.refreshBoundingInfo();
+  const H = POTION_HEAD;
+  const hair = getMaterialFactory().get("cloth", POTION_HAIR, { emissiveIntensity: H.glow });
+  hair.backFaceCulling = false;
+  const cap = MeshBuilder.CreateSphere(`${head.name}_hair`, {
+    diameterX: 2 * hx * H.shell, diameterY: 2 * hy * H.shell, diameterZ: 2 * hz * H.shell, segments: 6, slice: H.slice, sideOrientation: Mesh.DOUBLESIDE,
+  }, scene);
+  cap.convertToFlatShadedMesh();
+  cap.rotation.x = -H.tip;
+  cap.position.set(0, hy * H.lift, -hz * H.back);
+  cap.material = hair;
+  cap.parent = head;
+  return [cap];
+}

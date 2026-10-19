@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { halflingJacket, harvesterBraids, potionJerkin } from "./farmerDress";
+import { halflingJacket, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -570,8 +570,8 @@ export class UnitFactory {
       propMeshes.push(...dressFarmerShirt(this._scene, body, teamColor));
     }
     if (definition.id === "farmer.potion_seller" && !shouldUseVehicleBody) {
-      // [S] a close umber hair cap, no hood (343; tribalDress HAIR_CAP)
-      propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
+      // [S] a round head under a close umber hair cap following its curve, no hood (343; 377 farmerDress POTION_HEAD)
+      propMeshes.push(...potionHead(this._scene, body));
       // [S] a slim fitted dark team jerkin in place of the trunk, laced V, copper buttons, light skirt band (376; farmerDress POTION_FIT)
       propMeshes.push(...potionJerkin(this._scene, body, teamColor));
       // [S] dark team hosen and brown cuffed boots (345; POTION_BOOT)
