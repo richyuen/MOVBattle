@@ -1146,7 +1146,7 @@ export function dressTribalBracelets(scene: Scene, body: ArticulatedBody, unitId
  *   - all in the helm's tan (.tan, self-lit .glow), so it reads as the same bone as the beast skull on his head.
  */
 const PAULDRON = {
-  wide: 0.82, deep: 0.62, long: 1.08, top: 0.16, out: 0.42, snout: 0.45, eye: 0.42, look: 0.45,
+  wide: 1.0, deep: 0.62, long: 1.08, top: 0.16, out: 0.42, snout: 0.45, eye: 0.42, look: 0.45,
   tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
 };
 const PAULDRONS = new Set(["tribal.chieftain"]);
