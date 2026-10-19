@@ -398,13 +398,14 @@ export function dressHoplite(scene: Scene, body: ArticulatedBody): Mesh[] {
  * [S] the sarissa's belt, dagger and bracers (384; ancient.sarissa.red.png, card Appearance "a big brown belt around its hips, holding what seems to be an
  * Acinaces dagger": a broad brown belt round the hips over the tunic, a darker strap band along its foot, a dagger in a brown sheath hanging down his left
  * hip, brown leather bracers on the forearms). On the torso, in the trunk's box at the hips: the belt SARISSA_KIT.tall of the trunk tall at .at, .proud of
- * its half extents, .sides facets, its lower .band a darker brown; the sheath on his left (-x) at .hipOut of the half-width, .sheath of the trunk long hanging
+ * the body belt ring (hidden), .sides facets, its lower .band a darker brown; the sheath on his left (-x) at .hipOut of the belt half-width, .ahead of its
+ * half-depth forward (clear of the cape), .sheath of the trunk long hanging
  * from the belt, tilted .tilt rad out at the foot, a gold chape at its tip, the grip and a cross guard above the belt. On each forearm a bracer shell .out of
  * its half-width round it from .from to .to of its length, a dark strap at each end. Fixed browns, self-lit .glow.
  */
 const SARISSA_KIT = {
-  at: 0.06, tall: 0.2, proud: 1.14, sides: 8, band: 0.35, hipOut: 1.12, sheath: 0.42, tilt: 0.18,
-  out: 1.32, from: 0.12, to: 0.88,
+  at: 0.06, tall: 0.2, proud: 1.1, sides: 8, band: 0.35, hipOut: 0.92, ahead: 0.55, sheath: 0.42, tilt: 0.18,
+  out: 1.6, from: 0.12, to: 0.88,
   leather: new Color3(0.4, 0.24, 0.13), dark: new Color3(0.24, 0.14, 0.08), gold: new Color3(0.78, 0.6, 0.28), glow: 0.12,
 };
 
@@ -416,21 +417,28 @@ export function sarissaKit(scene: Scene, body: ArticulatedBody): Mesh[] {
   const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(K.glow) });
   const out: Mesh[] = [];
   const add = (m: Mesh, material = leather, parent: TransformNode = body.torso) => { m.parent = parent; m.material = material; m.convertToFlatShadedMesh(); out.push(m); return m; };
-  // the belt and its darker foot band
+  // the belt and its darker foot band, round the outside of the body's own team belt ring (which it replaces: inside the trunk's box it was hidden by it)
   const waist = trunkBand(body, K.at - K.tall / 2, K.at + K.tall / 2 + 0.05);
-  const midZ = (waist.minZ + waist.maxZ) / 2, halfZ = (waist.maxZ - waist.minZ) / 2;
+  const ring = body.torso.getChildMeshes(true).find((m) => /_belt$/.test(m.name));
+  const ringOut = ring ? ring.getBoundingInfo().boundingBox.extendSize : null;
+  const halfX = Math.max(waist.halfX, ringOut?.x ?? 0) * K.proud;
+  const halfZ = Math.max((waist.maxZ - waist.minZ) / 2, ringOut?.z ?? 0) * K.proud;
+  const midX = ring ? ring.position.x : waist.midX;
+  const midZ = ring ? ring.position.z : (waist.minZ + waist.maxZ) / 2;
+  if (ring) ring.setEnabled(false);
   const tall = waist.trunk * K.tall;
-  const beltY = waist.trunk * K.at;
+  const beltY = ring ? ring.position.y : waist.trunk * K.at;
   const belt = add(MeshBuilder.CreateCylinder("sarissaBelt", { height: tall, diameter: 2, tessellation: K.sides }, scene));
-  belt.scaling.set(waist.halfX * K.proud, 1, halfZ * K.proud);
-  belt.position.set(waist.midX, beltY, midZ);
+  belt.scaling.set(halfX, 1, halfZ);
+  belt.position.set(midX, beltY, midZ);
   const band = add(MeshBuilder.CreateCylinder("sarissaBeltBand", { height: tall * K.band, diameter: 2, tessellation: K.sides }, scene), dark);
-  band.scaling.set(waist.halfX * K.proud * 1.04, 1, halfZ * K.proud * 1.04);
-  band.position.set(waist.midX, beltY - tall * (0.5 - K.band / 2), midZ);
+  band.scaling.set(halfX * 1.04, 1, halfZ * 1.04);
+  band.position.set(midX, beltY - tall * (0.5 - K.band / 2), midZ);
   // the dagger down his left hip: sheath, chape, grip, guard, pommel, on a pivot at the belt
   const hang = new TransformNode("sarissaDaggerHang", scene);
   hang.parent = body.torso;
-  hang.position.set(waist.minX * K.hipOut, beltY, midZ + halfZ * 0.15);
+  // forward of the side, where the cape (open .44 of a turn at his front) does not cover it
+  hang.position.set(midX - halfX * K.hipOut, beltY, midZ + halfZ * K.ahead);
   hang.rotation.z = K.tilt;
   const L = waist.trunk * K.sheath;
   const w = L * 0.13;
