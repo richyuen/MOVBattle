@@ -15,7 +15,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
-import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit } from "./ancientDress";
+import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -657,6 +657,8 @@ export class UnitFactory {
       const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
       // [S] 385 the white toga over his left shoulder on a bare chest, gold bolt emblem, triple gold belt, in place of the brown sash (ancientDress ZEUS_TOGA)
       propMeshes.push(...dressZeusToga(this._scene, body));
+      // [S] 386 bare team legs in short brown strap sandals, no trousers or boots (ancientDress ZEUS_SANDAL)
+      propMeshes.push(...zeusLegs(this._scene, body));
       // The tunic hangs on below the waist as a skirt to just above the knee: the torso's own shape turned over,
       // so it is narrow at the waist and flares to the hem.
       const skirtLength = Math.abs(body.leftKnee.position.y) * 0.9;

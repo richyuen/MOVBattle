@@ -298,6 +298,26 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] Zeus's bare legs in strap sandals (386; ancient.zeus.red.png: bare team legs from the skirt's hem to the feet, short brown strap sandals with a
+ * strap round the ankle; card "Zeus also wears short sandals"; critic 378: dark-blue trousers and grey boots). The four leg meshes take the body's
+ * skin (the clothed branch had painted them trousers), the feet the hoplite's strapSandals in ZEUS_SANDAL.brown, plus ZEUS_SANDAL.laces thin brown
+ * bands round each shin at those shares of its length (the sandal's ankle wrap), .lace long, .out of its half-width; self-lit .glow.
+ */
+const ZEUS_SANDAL = { laces: [0.86, 0.95], lace: 0.05, out: 1.14, brown: new Color3(0.44, 0.24, 0.13), glow: 0.12 };
+
+/** Zeus's bare team legs and short brown strap sandals (spec at ZEUS_SANDAL). */
+export function zeusLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = ZEUS_SANDAL;
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = body.skinMaterial;
+  const lace = getMaterialFactory().get("cloth", S.brown, { emissive: S.brown.scale(S.glow) });
+  const out = strapSandals(scene, body, S.brown, S.glow, "zeus");
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    for (const at of S.laces) out.push(limbShell(scene, "zeusSandalLace", shin, at, at + S.lace, S.out, lace));
+  }
+  return out;
+}
+
 /** Zeus's dirty-blond bolt-hair beard, locks and temple leaves (spec at ZEUS_BEARD), on the head. */
 export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): Mesh[] {
   const out: Mesh[] = [];
