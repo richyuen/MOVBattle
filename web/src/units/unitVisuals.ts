@@ -24,7 +24,7 @@ export type HatType =
   | "miner_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
-  | "pharaoh" | "feather_headdress" | "bone_mask" | "antler_skull"
+  | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
@@ -237,10 +237,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "tribal.bone_mage": vis(
     { scale: 1.1, headSize: 1.15 }, "bone_staff", "antler_skull", "none", "none", "#FFFFF0",
   ),
-  // The chieftain wears an animal skull strapped over his crown (tribal.chieftain.blue.png, card Appearance): the protector's faceted bone_mask, not a feathered cap.
+  // The chieftain wears a beaked beast skull strapped over his crown (tribal.chieftain.red.png, card Appearance): beast_skull (363), not the protector's bone cap.
   // No small "cape" special: his hide cape to the thigh is unitFactory's dressTribalCape (TRIBAL_CAPE_UNITS)
   "tribal.chieftain": vis(
-    { scale: 1.15, bulk: 1.3, headSize: 1.1 }, "stone_axe", "bone_mask", "none", "none", "#FFD700", "stone_axe",
+    { scale: 1.15, bulk: 1.3, headSize: 1.1 }, "stone_axe", "beast_skull", "none", "none", "#FFD700", "stone_axe",
   ),
   "tribal.mammoth": vis(
     { scale: 2.8, bulk: 2.0, headSize: 1.6, legLength: 0.8 }, "none", "none", "none", "mount_mammoth", "#8B7355",

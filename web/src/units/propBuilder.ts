@@ -43,7 +43,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -210,6 +210,19 @@ const SKULL_SNOUT = 0.45;
  * and sunk; a snout SKULL_FACETED.snout head widths long. Pale bone self-lit a little: the smooth cap before it went grey in the capture's shade.
  */
 const SKULL_FACETED = { heads: 1.45, tall: 1.6, under: 0.7, jitter: 0.09, socket: 0.3, snout: 0.55 };
+/*
+ * The Chieftain's beast skull (363 [S]; tribal.chieftain.red.png, .png: a long tan-grey predator skull lying front to back on his crown, its beak jutting forward
+ * and down over his brow with the lower jaw hanging open under it, a googly eye in each socket on its front corners; his own face and eyes show under it):
+ * a faceted brain case .wide head widths across, .long head widths front to back, .tall head heights high (flat underside .under of its half height),
+ * seated .lift above the hat seat and set .back behind the head's middle, pitched .pitch nose down; upper beak .beak head widths long, .beakRoot to .beakTip
+ * across, .beakFlat deep, dipped .beakDip; the lower jaw gaped .gape below it; eyes .eye across, turned .eyeTurn out. Tan, darker and warmer than the bone
+ * cap that went white (.tan, self-lit .glow).
+ */
+const BEAST_SKULL = {
+  wide: 1.12, long: 1.35, tall: 0.62, under: 0.55, lift: 0.08, back: 0.12, pitch: 0.12, jitter: 0.07,
+  beak: 0.85, beakRoot: 0.62, beakTip: 0.16, beakFlat: 0.55, beakDip: 0.42, gape: 0.35, eye: 0.3, eyeTurn: 0.55,
+  tan: new Color3(0.66, 0.55, 0.4), glow: 0.12,
+};
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
 const BERET_TILT = 0.22;
@@ -966,6 +979,85 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       scallop.parent = train;
     }
     return shell;
+  }
+  if (type === "beast_skull") {
+    // [S] the Chieftain's beast skull (363; spec at BEAST_SKULL)
+    const B = BEAST_SKULL;
+    const bone = mat(scene, B.tan, B.glow);
+    const Rx = B.wide * W * 0.5, Ry = B.tall * H * 0.5, Rz = B.long * W * 0.5;
+    const skull = MeshBuilder.CreateIcoSphere("beastSkull", { radius: 1, subdivisions: 2, flat: true }, scene);
+    const at = skull.getVerticesData(VertexBuffer.PositionKind);
+    if (at) {
+      for (let v = 0; v < at.length; v += 3) {
+        const k = 1 - B.jitter + 2 * B.jitter * roundBoardSeed(17.5, Math.round(at[v] * 89 + at[v + 1] * 53 + at[v + 2] * 37));
+        // the back of the brain case swells, the front narrows into the beak's root
+        const swell = 1 + 0.12 * Math.max(0, -at[v + 2]) - 0.18 * Math.max(0, at[v + 2]);
+        at[v] = u(at[v] * k * Rx * swell);
+        at[v + 1] = u(Math.max(-B.under, at[v + 1]) * k * Ry);
+        at[v + 2] = u(at[v + 2] * k * Rz);
+      }
+      skull.setVerticesData(VertexBuffer.PositionKind, at);
+      const normals: number[] = [];
+      VertexData.ComputeNormals(at, skull.getIndices() ?? [], normals);
+      skull.setVerticesData(VertexBuffer.NormalKind, normals);
+      skull.refreshBoundingInfo();
+    }
+    skull.position.set(0, u(seat + B.under * Ry + B.lift * H), u(-B.back * W));
+    skull.rotation.x = B.pitch;
+    skull.material = bone;
+    const dark = mat(scene, new Color3(0.13, 0.09, 0.07));
+    // The beak: upper jaw a five-sided taper from the front of the brain case, pointed forward and down over the brow, flattened top to bottom, a ridge on top
+    const beakLong = B.beak * W;
+    const upper = MeshBuilder.CreateCylinder("beastSkullBeak", { height: u(beakLong), diameterTop: u(B.beakTip * W), diameterBottom: u(B.beakRoot * W), tessellation: 5 }, scene);
+    upper.convertToFlatShadedMesh();
+    upper.rotation.x = Math.PI / 2 + B.beakDip;
+    upper.scaling.z = B.beakFlat;
+    upper.position.set(0, u(-0.05 * Ry), u(Rz * 0.72 + beakLong * 0.42));
+    upper.material = bone;
+    upper.parent = skull;
+    const ridge = MeshBuilder.CreateBox("beastSkullRidge", { width: u(0.1 * W), height: u(beakLong * 0.9), depth: u(0.08 * W) }, scene);
+    ridge.position.set(0, u(-0.02 * beakLong), u(-B.beakRoot * W * B.beakFlat * 0.42));
+    ridge.rotation.x = 0.06;
+    ridge.material = bone;
+    ridge.parent = upper;
+    // The lower jaw hangs open under it: a shorter flat wedge dropped B.gape from the beak, the dark mouth between them
+    const lower = MeshBuilder.CreateCylinder("beastSkullJaw", { height: u(beakLong * 0.8), diameterTop: u(B.beakTip * 0.8 * W), diameterBottom: u(B.beakRoot * 0.75 * W), tessellation: 5 }, scene);
+    lower.convertToFlatShadedMesh();
+    lower.rotation.x = Math.PI / 2 + B.beakDip + B.gape;
+    lower.scaling.z = B.beakFlat * 0.7;
+    lower.position.set(0, u(-0.42 * Ry), u(Rz * 0.62 + beakLong * 0.32));
+    lower.material = bone;
+    lower.parent = skull;
+    const mouth = MeshBuilder.CreateBox("beastSkullMouth", { width: u(B.beakRoot * 0.7 * W), height: u(0.12 * H), depth: u(beakLong * 0.55) }, scene);
+    mouth.position.set(0, u(-0.3 * Ry), u(Rz * 0.7 + beakLong * 0.2));
+    mouth.rotation.x = B.beakDip + B.gape * 0.5;
+    mouth.material = dark;
+    mouth.parent = skull;
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 2; i++) {
+        // two fangs down from the beak's edge each side
+        const fang = MeshBuilder.CreateCylinder("beastSkullFang", { height: u(0.16 * H), diameterTop: 0, diameterBottom: u(0.07 * W), tessellation: 4 }, scene);
+        fang.rotation.x = Math.PI - B.beakDip;
+        fang.position.set(side * u(B.beakRoot * W * (0.28 - i * 0.1)), u(-0.2 * Ry - (0.08 + i * 0.12) * H), u(Rz * 0.8 + beakLong * (0.15 + i * 0.3)));
+        fang.material = bone;
+        fang.parent = skull;
+      }
+      // A googly eye in each socket on the skull's own front corners: a dark ring, the white, a black pupil looking ahead
+      const socket = MeshBuilder.CreateCylinder("beastSkullSocket", { height: u(0.06 * W), diameter: u(B.eye * 1.3 * W), tessellation: 6 }, scene);
+      socket.rotation.set(Math.PI / 2, side * B.eyeTurn, 0);
+      socket.position.set(side * u(Rx * 0.62), u(0.18 * Ry), u(Rz * 0.68));
+      socket.material = dark;
+      socket.parent = skull;
+      const white = MeshBuilder.CreateCylinder("beastSkullEye", { height: u(0.05 * W), diameter: u(B.eye * W), tessellation: 14 }, scene);
+      white.position.y = u(0.04 * W);
+      white.material = mat(scene, new Color3(0.96, 0.95, 0.92), 0.4);
+      white.parent = socket;
+      const pupil = MeshBuilder.CreateCylinder("beastSkullPupil", { height: u(0.03 * W), diameter: u(B.eye * 0.45 * W), tessellation: 10 }, scene);
+      pupil.position.set(0, u(0.03 * W), u(-0.04 * W));
+      pupil.material = dark;
+      pupil.parent = white;
+    }
+    return skull;
   }
   if (type === "bone_mask") {
     // The protector's faceted skull (spec at SKULL_FACETED). Built to size in its own vertices (no scaling on the node) so the sockets, cheeks and snout hung

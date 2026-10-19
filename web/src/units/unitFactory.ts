@@ -455,7 +455,7 @@ export class UnitFactory {
         // ...or his own hair (tribalDress: the stoner's long locks)
         const ownHair = dressTribalHair(this._scene, body, definition.id);
         if (ownHair) propMeshes.push(...ownHair);
-        else if (visual.hat !== "bone_mask" && visual.hat !== "antler_skull") {
+        else if (visual.hat !== "bone_mask" && visual.hat !== "beast_skull" && visual.hat !== "antler_skull") {
           const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
           const hair = MeshBuilder.CreateSphere(`${body.headMesh.name}_hair`, { diameter: headSize * 1.5, segments: 3 }, this._scene);
           hair.position.set(0, headSize * 0.24, -headSize * 0.14);
