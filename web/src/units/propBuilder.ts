@@ -43,8 +43,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   wherever that falls for this head, so it is low on the brow and the eyes stay clear.
  *   Beret (370; renaissance.painter.red.png, .jpg: a soft puffy team beret, a snug band round the brow and a fat faceted puff over it, slid to one side and
  *   pulled down over the brow there; critic 368: the old cut was a flat wide disc with a dark notch on top): a band BERET_PUFF.band heads across and .bandTall
- *   of the head high on the seat (.bandShade of the colour); on it a puff .puff heads across, .deep of that front to back, .puffTall of the head high, its
- *   middle .sit of its height over the band's top, slid .slide heads to one side and .ahead forward, tipped .tilt down on that side and .dip forward.
+ *   of the head high on the seat (.bandShade of the colour); on it the lumpy tam of BERET_TAM (373, spec there).
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
 const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
@@ -320,7 +319,18 @@ const BEAST_SKULL = {
   beak: 0.8, beakRoot: 0.62, beakTip: 0.2, beakFlat: 0.55, beakDip: 0.04, gape: 0.18, eye: 0.32, eyeTurn: 0.28, eyeUp: 0.42, eyeOut: 0.48, eyeTilt: 0.35,
   tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
 };
-const BERET_PUFF = { band: 1.04, bandTall: 0.1, bandShade: 0.75, puff: 1.45, deep: 0.95, puffTall: 0.5, sit: 0.35, slide: 0.16, ahead: 0.1, tilt: 0.32, dip: 0.15, glow: 0.12 };
+/*
+ * [S] 373 the beret as a lumpy tam (critic 372: a thin pale flat pancake; renaissance.painter.jpg: a thick soft beret in a dark team shade, wider than the
+ * head and overhanging the brow all round, a domed lumpy top, cocked down over one side). Not the 370 smooth sphere over the band: a lathe in head widths
+ * W and heights H, its profile (radius, height over the band's top) BERET_TAM.profile, turned .sides times round, every vertex pushed in or out by its own
+ * share (.lumps) so the felt reads lumpy; .deep of that front to back; slid .slide W to one side and .ahead forward, tipped .tilt down on that side and
+ * .dip forward. The felt is the team colour at .shade (the band at .bandShade), barely self-lit .glow.
+ */
+const BERET_PUFF = { band: 1.04, bandTall: 0.1, bandShade: 0.5, slide: 0.12, ahead: 0.08, tilt: 0.3, dip: 0.14, glow: 0.05 };
+const BERET_TAM = {
+  profile: [[0.5, 0], [0.74, 0.07], [0.84, 0.15], [0.8, 0.23], [0.62, 0.31], [0.34, 0.36], [0, 0.37]] as [number, number][],
+  sides: 9, lumps: 0.08, deep: 0.92, shade: 0.62,
+};
 /*
  * A minstrel's feathered hat (264; units/medieval.bard: a soft straw-tan hat, its brim about two heads across, a low puffed crown, the whole cocked over to
  * one side and dipped at the front; a long feather in the team colour, nearly twice the head's height, standing up out of the band at the side and back,
@@ -1674,11 +1684,15 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     const felt = teamColor ?? accent;
     band.material = mat(scene, felt.scale(P.bandShade), P.glow, "cloth");
     band.convertToFlatShadedMesh();
-    const puff = MeshBuilder.CreateSphere("beretPuff", { diameterX: u(P.puff * W), diameterY: u(P.puffTall * H), diameterZ: u(P.puff * W * P.deep), segments: 3 }, scene);
-    puff.position.set(u(P.slide * W), u(P.bandTall * H * 0.5 + P.puffTall * H * P.sit), u(P.ahead * W));
-    puff.rotation.set(P.dip, 0.3, -P.tilt);
-    puff.material = mat(scene, felt, P.glow, "cloth");
+    // the tam (373, spec at BERET_TAM): a lumpy lathe overhanging the band all round, cocked down to one side
+    const T = BERET_TAM;
+    const shape = T.profile.map(([r, y]) => new Vector3(u(r * W), u(y * H), 0));
+    const puff = MeshBuilder.CreateLathe("beretPuff", { shape, tessellation: T.sides, closed: true, sideOrientation: Mesh.DOUBLESIDE }, scene);
     puff.convertToFlatShadedMesh();
+    jitterVertices(puff, T.lumps, 41.3, 1, 1, T.deep);
+    puff.position.set(u(P.slide * W), u(P.bandTall * H * 0.5 - P.bandTall * H * 0.3), u(P.ahead * W));
+    puff.rotation.set(P.dip, 0.3, -P.tilt);
+    puff.material = mat(scene, felt.scale(T.shade), P.glow, "cloth");
     puff.parent = band;
     return band;
   }
