@@ -355,7 +355,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.5, bulk: 1.6, legLength: 0.7 }, "none", "helmet", "none", "ballista_frame", "#8B7355",
   ),
   "ancient.snake_archer": vis(
-    { scale: 1.0, armLength: 1.1 }, "bow", "none", "none", "quiver_back", "#2E8B57",
+    // [S] 388 his quiver is his own, high on the back on the baldric (ancientDress SNAKE_QUIVER), not the generic quiver_back at the hip
+    { scale: 1.0, armLength: 1.1 }, "bow", "none", "none", "none", "#2E8B57",
     undefined,
     {
       posePreset: "archer",

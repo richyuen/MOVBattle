@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, Quaternion } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, Quaternion, type Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { trunkBand, jitterVertices } from "./tribalDress";
@@ -792,6 +792,51 @@ export function snakeArcherKit(scene: Scene, body: ArticulatedBody): Mesh[] {
     out.push(limbShell(scene, "snakeBootRim", shin, K.bootFrom, K.bootFrom + K.rim, K.bootOut * 1.12, bootRim));
   }
   out.push(...strapSandals(scene, body, K.leather, K.glow, "snakeArcher"));
+  out.push(...snakeArcherQuiver(scene, body, band, tr, leather));
+  return out;
+}
+
+/*
+ * [S] 388 the quiver high on his back (ancient.snake_archer.red.png, .png: a brown quiver slung on the baldric across his back, its mouth over his left
+ * shoulder behind the head, arrow ends standing out of it; card "a quiver full of arrows despite not using them"; critic 388: a dark tube hung low at
+ * the hip, the generic quiver_back special). On the torso, against the back of the trunk's box: a tube from its foot at .footX of the half width out
+ * on his right (+x) at .footY of the trunk, up to its mouth at .mouthX out on his left (-x) at .mouthY, .wide of the half width across, standing .off
+ * of the half depth behind the back; a darker rim .rim of the length at the mouth; .arrows shafts standing .shaft of the length out of the mouth, each
+ * with light fletching. Brown SNAKE_KIT.leather.
+ */
+const SNAKE_QUIVER = { footX: 0.35, footY: 0.3, mouthX: 0.75, mouthY: 1.12, wide: 0.42, off: 0.25, rim: 0.08, arrows: 4, shaft: 0.22 };
+
+function snakeArcherQuiver(scene: Scene, body: ArticulatedBody, band: ReturnType<typeof trunkBand>, tr: number, leather: Material): Mesh[] {
+  const Q = SNAKE_QUIVER;
+  const out: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const dark = mf.get("cloth", SNAKE_KIT.leather.scale(0.6), { emissive: SNAKE_KIT.leather.scale(0.05) });
+  const fletchMat = mf.get("cloth", new Color3(0.9, 0.88, 0.8), { emissive: new Color3(0.12, 0.12, 0.1) });
+  const shaftMat = mf.get("cloth", new Color3(0.7, 0.55, 0.35), { emissive: new Color3(0.08, 0.06, 0.04) });
+  const halfZ = (band.maxZ - band.minZ) / 2;
+  const across = band.halfX * Q.wide;
+  const backZ = band.minZ - across / 2 - halfZ * Q.off * 0.4;
+  const foot = new Vector3(band.midX + band.halfX * Q.footX, tr * Q.footY, backZ);
+  const mouth = new Vector3(band.midX - band.halfX * Q.mouthX, tr * Q.mouthY, backZ);
+  const axis = mouth.subtract(foot);
+  const long = axis.length();
+  const holder = new TransformNode("snakeQuiver", scene);
+  holder.parent = body.torso;
+  holder.position.copyFrom(foot);
+  holder.rotation.z = -Math.atan2(axis.x, axis.y);
+  const put = (m: Mesh, mat: Material) => { m.material = mat; m.convertToFlatShadedMesh(); m.parent = holder; out.push(m); return m; };
+  const tube = put(MeshBuilder.CreateCylinder("snakeQuiver", { height: long, diameterTop: across * 1.08, diameterBottom: across * 0.9, tessellation: 8 }, scene), leather);
+  tube.position.y = long / 2;
+  const rimRing = put(MeshBuilder.CreateCylinder("snakeQuiverRim", { height: long * Q.rim, diameter: across * 1.2, tessellation: 8 }, scene), dark);
+  rimRing.position.y = long * (1 - Q.rim / 2);
+  for (let k = 0; k < Q.arrows; k++) {
+    const a = (Math.PI * 2 * k) / Q.arrows;
+    const shaft = put(MeshBuilder.CreateCylinder("snakeQuiverArrow", { height: long * Q.shaft, diameter: across * 0.12, tessellation: 5 }, scene), shaftMat);
+    shaft.position.set(Math.cos(a) * across * 0.22, long * (1 + Q.shaft / 2 - 0.05), Math.sin(a) * across * 0.22);
+    const fletch = put(MeshBuilder.CreateBox("snakeQuiverFletch", { width: across * 0.32, height: long * Q.shaft * 0.45, depth: across * 0.05 }, scene), fletchMat);
+    fletch.position.set(shaft.position.x, long * (1 + Q.shaft * 0.8 - 0.05), shaft.position.z);
+    fletch.rotation.y = a;
+  }
   return out;
 }
 
