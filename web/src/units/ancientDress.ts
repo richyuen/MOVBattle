@@ -252,6 +252,47 @@ export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): M
 }
 
 /*
+ * [S] the sarissa's cape (383; ancient.sarissa.png, .red.png: a dark team cape from the shoulders to the calves hanging down his back and out past
+ * both arms, a thick folded collar round the neck over the shoulders; critic 378: no cape). On the torso joint, in the trunk's box at the shoulders:
+ *   - the cape an open shell SARISSA_CAPE.arc of a turn round his back, .out of the trunk's half extents at the top, flaring .flare at the hem, from
+ *     .top of the trunk down to .hem of the leg's length under the hip line (the calves), .sides facets;
+ *   - the collar a frustum round the neck, .collar of the trunk tall, from .neck of the shoulder span across at its top out to .collarOut at its foot,
+ *     a roll .roll of the trunk thick round its foot;
+ * team cloth x .shade, self-lit .glow, double-sided.
+ */
+const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, sides: 9, collar: 0.16, neck: 0.42, collarOut: 1.12, roll: 0.06, shade: 0.62, glow: 0.12 };
+
+/** The sarissa's cape and folded collar (spec at SARISSA_CAPE), on the torso. */
+export function dressSarissa(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = SARISSA_CAPE;
+  const out: Mesh[] = [];
+  const tone = teamColor.scale(C.shade);
+  const cloth = getMaterialFactory().get("cloth", tone, { emissive: tone.scale(C.glow) });
+  cloth.backFaceCulling = false;
+  const put = (m: Mesh) => { m.material = cloth; m.convertToFlatShadedMesh(); m.parent = body.torso; out.push(m); return m; };
+  const chest = trunkBand(body, 0.7, 1.0);
+  const midZ = (chest.minZ + chest.maxZ) / 2, halfZ = (chest.maxZ - chest.minZ) / 2;
+  const leg = Math.abs(body.leftKnee.position.y) * 2;
+  const topY = chest.trunk * C.top, hemY = -leg * C.hem;
+  const tall = topY - hemY;
+  const cape = put(MeshBuilder.CreateCylinder("sarissaCape", { height: tall, diameterTop: 2, diameterBottom: 2 * C.flare, tessellation: C.sides, arc: C.arc, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene));
+  // the arc's gap to his front, the cloth round his back
+  cape.rotation.y = Math.PI / 2 - Math.PI * C.arc;
+  cape.scaling.set(chest.halfX * C.out, 1, halfZ * C.out);
+  cape.position.set(chest.midX, (topY + hemY) / 2, midZ);
+  const span = Math.abs(body.rightShoulder.position.x) + Math.abs(body.leftShoulder.position.x);
+  const collarTall = chest.trunk * C.collar;
+  const neckY = body.neck.position.y;
+  const collar = put(MeshBuilder.CreateCylinder("sarissaCollar", { height: collarTall, diameterTop: span * C.neck, diameterBottom: span * C.collarOut, tessellation: 10 }, scene));
+  collar.scaling.z = (halfZ * 2.4) / (span * C.collarOut);
+  collar.position.set(chest.midX, neckY - collarTall * 0.45, midZ);
+  const roll = put(MeshBuilder.CreateTorus("sarissaCollarRoll", { diameter: span * C.collarOut, thickness: chest.trunk * C.roll, tessellation: 12 }, scene));
+  roll.scaling.z = collar.scaling.z;
+  roll.position.set(chest.midX, neckY - collarTall * 0.95, midZ);
+  return out;
+}
+
+/*
  * [S] the snake archer's hood (382; ancient.snake_archer.red.png, .blue.png, card Appearance "a Chalcidian helmet and garb": a fitted team-cloth hood
  * over the whole head, its top rounded with a small peak, a wrap over the lower face up to just under the eyes so only the eye band shows, and a
  * draped collar round the neck over the shoulders, a point hanging at the front, tied at the throat with a tan cord; critic 378: a huge khaki box with
