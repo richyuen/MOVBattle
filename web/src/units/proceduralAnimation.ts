@@ -126,6 +126,11 @@ const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07, a: 0.5, after: 0.
  */
 const HOVER = { lift: 0.13, bob: 0.025, rate: 2.4, beat: 0.28, rateIn: 3 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
+/**
+ * [S] the potionseller's hang (377; farmer.potion_seller.red.png: both arms hang near straight at his sides, a flask in each fist at the hip, never
+ * raised to the chest): whatever the hashed carry, a flask in the fist takes this attitude for the weapon arm and the same for the off arm.
+ */
+const POTION_HANG = { raise: 0.04, out: 0.16, elbow: -0.14, tip: new Vector3(0, -1, 0.2), left: { raise: 0.04, out: 0.16, elbow: -0.14 } };
 /*
  * [S] the harvester's sweep (345; card Characteristics "swing and cut ... sweep through groups of fragile units at once, with even enough power to send one
  * into the air"; farmer.harvester.png): not a chop from overhead but a low level cut across his front. The low-carried (pegged) scythe's attack:
@@ -1268,6 +1273,7 @@ export class ProceduralAnimator {
   // The state a step asked for while the sweep ran (setState): taken up when it ends
   private _afterSweep: AnimState | null = null;
   private _lowScythe = false;
+  private _potionHang = false;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
   private _shovePose: { pitch: number; roll: number; stance: number; knee: number; rate: number; spread: number; elbow: number; trail: number; stride: number } | null = null;
@@ -2023,6 +2029,9 @@ export class ProceduralAnimator {
     // The hay baler's stick (344) has its own level carry across his front (HAY_CARRY)
     const hayStick = node?.id === "hayStick";
     if (hayStick) this._carryTurn = 1;
+    // A flask in the fist hangs at the hip (POTION_HANG)
+    const potion = this._body.rightHand.getChildren().some((n) => n.name === "potionBall");
+    this._potionHang = potion;
     const pick = fork ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
@@ -2030,7 +2039,9 @@ export class ProceduralAnimator {
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
     const armingOut = !!node?.getChildren().some((c) => c.name === "armingOut");
-    const attitude = armingOut
+    const attitude = potion
+      ? { raise: POTION_HANG.raise, out: POTION_HANG.out, elbow: POTION_HANG.elbow, tip: POTION_HANG.tip.clone() }
+      : armingOut
       ? { raise: ARMING_OUT.raise, out: ARMING_OUT.out, elbow: ARMING_OUT.elbow, tip: new Vector3(ARMING_OUT.tip[0] * side, ARMING_OUT.tip[1], ARMING_OUT.tip[2]).normalize() }
       : hayStick
       ? { raise: HAY_CARRY.raise, out: HAY_CARRY.out, elbow: HAY_CARRY.elbow, tip: new Vector3(HAY_CARRY.tip.x * side, HAY_CARRY.tip.y, HAY_CARRY.tip.z).normalize() }
@@ -3226,7 +3237,7 @@ export class ProceduralAnimator {
       b.rightShoulder.rotation.z += (grip.out - b.rightShoulder.rotation.z) * hold;
       b.rightElbow.rotation.x += (grip.elbow - b.rightElbow.rotation.x) * hold;
     }
-    const off = c.board ?? ready?.left ?? (this.locomotionBias !== "aimed" ? p.off : null);
+    const off = c.board ?? ready?.left ?? (this._potionHang ? POTION_HANG.left : this.locomotionBias !== "aimed" ? p.off : null);
     if (off) {
       b.leftShoulder.rotation.x += (off.raise + leftSwing * left.swing * 0.3 - b.leftShoulder.rotation.x) * hold;
       b.leftShoulder.rotation.z += (-off.out - b.leftShoulder.rotation.z) * hold;

@@ -2723,8 +2723,8 @@ const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
  * from .ball * .shoulderFoot across to .neck, the neck .neck across and .neckLong tall, a lip ring .lip across it at the top, the cork .cork tall; the
  * bulb's middle .seat out past the fist's middle; the glass self-lit .glow.
  */
-const POTION = { ball: 0.12, squash: 0.85, shoulder: 0.042, shoulderFoot: 0.7, neck: 0.042, neckLong: 0.035, lip: 1.3, cork: 0.026, seat: 0.06, glow: 0.22 };
-const POTION_GLASS = new Color3(0.55, 0.74, 0.82);
+const POTION = { ball: 0.12, squash: 0.85, shoulder: 0.042, shoulderFoot: 0.7, neck: 0.042, neckLong: 0.035, lip: 1.3, cork: 0.026, seat: 0.06, glow: 0.12 };
+const POTION_GLASS = new Color3(0.64, 0.75, 0.72); // 377: TABS pale grey-green (184,200,195), with the glow .22 -> .12 it no longer washes to white
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
   const n = outline.length;
@@ -4038,7 +4038,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // neck and a cork, held low at the hips): spec at POTION. Fixed glass colour, not the accent (the accent dyes his clothes)
       const P = POTION;
       const glass = mat(scene, POTION_GLASS, P.glow);
-      const ball = MeshBuilder.CreateIcoSphere("potionBall", { radius: P.ball * s * 0.5, subdivisions: 1, flat: true }, scene);
+      const ball = MeshBuilder.CreateIcoSphere("potionBulb", { radius: P.ball * s * 0.5, subdivisions: 1, flat: true }, scene);
       ball.scaling.y = P.squash;
       ball.material = glass;
       // children of the squashed bulb are drawn in its unsquashed frame: heights over P.squash keep them true
@@ -4065,9 +4065,13 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       cork.position.y = (P.neckLong * 0.5 + P.cork * 0.35) * s;
       cork.material = mat(scene, new Color3(0.55, 0.36, 0.2));
       cork.parent = neck;
-      // the bulb out past the fingers, the neck on out from it
-      ball.position.y = P.seat * s;
-      return ball;
+      // [S] held by the neck (377; farmer.potion_seller.red.png: the fist closes on the neck, the bulb hangs beyond it): the flask turned over so its
+      // neck runs back into the fist, the cork at the fist's middle and the bulb out past the fingers
+      const holder = new Mesh("potionBall", scene);
+      ball.rotation.x = Math.PI;
+      ball.position.y = (bulbTop + P.shoulder + P.neckLong + P.cork * 0.5) * s;
+      ball.parent = holder;
+      return holder;
     }
     case "lightning_bolt": {
       // A held bolt is the thrown one in the hand (trailer_2_sheet_03 r3c2): flat white jagged slabs, each a long four-sided shard pressed flat, laid end to end
