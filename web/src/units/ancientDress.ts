@@ -38,6 +38,8 @@ const MINO_SCROLL = {
   tall: 0.24, at: 0.04, foot: 0.24, top: 0.1, rimShade: 0.42, big: 0.32, bigAt: 0.3, turns: 1.3, tail: 0.3, small: 0.22, smallAt: 0.74,
   line: 0.075, outline: 0.12, light: 0.55, proud: 1.4, tuftX: 0.55, tuftY: 0.6,
 };
+/* [S] 389 the girdle's band (spec at its build in dressMinotaur): from .lo to .hi of the trunk, .proudX/.proudZ of the pelvis and thighs there, .flare */
+const MINO_GIRDLE = { lo: -0.3, hi: 0.03, proudX: 1.1, proudZ: 1.22, flare: 1.12 };
 const MINO_PAULDRON = { wide: 0.42, tall: 0.55 };
 const MINO_SASH = { sash: 0.3, thick: 0.03, buckle: 0.17, tuft: 0.22 };
 /*
@@ -78,30 +80,46 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   // the belt (MINO_BELT)
   const B = MINO_BELT;
   const K = MINO_SCROLL;
-  const waist = trunkBand(body, K.at - K.tall / 2, K.at + K.tall / 2 + 0.05);
-  const deep = (waist.maxZ - waist.minZ) / 2;
-  const tall = waist.trunk * K.tall;
-  const belt = MeshBuilder.CreateCylinder("minoBelt", { height: tall, diameter: 2, tessellation: B.sides }, scene);
-  belt.scaling.set(waist.halfX * B.proud, 1, deep * B.proud);
-  belt.position.set(waist.midX, waist.trunk * K.at, (waist.minZ + waist.maxZ) / 2);
-  belt.convertToFlatShadedMesh();
-  add(belt, body.torso);
+  // [S] 389 the girdle sized off what it wraps (MINO_GIRDLE): in the torso's frame the pelvis and thigh tops stand .34 out in front at the waist, past
+  // the 386 band (.24 out, sized off the trunk), which showed only as its rims and scroll tubes between the thighs; now a flared band from .hi of the
+  // trunk down to .lo (navel to crotch, ancient.minotaur.red.png), round the pelvis block, .proudX/.proudZ of it out (the idle's flexed thigh tops
+  // stand .33 out in front), the foot .flare wider; on the hip joint with the pelvis, so the trunk's idle lean does not swing it off the hips
+  const Gd = MINO_GIRDLE;
+  const trunk = body.neck.position.y;
+  const y0 = trunk * Gd.lo, y1 = trunk * Gd.hi;
+  const pelvis = body.root.getChildMeshes(false).find((m) => /_pelvis$/.test(m.name));
+  const hipNode = (pelvis?.parent as TransformNode | null) ?? body.torso;
+  let gx0 = -0.5, gx1 = 0.5, gz0 = -0.3, gz1 = 0.3;
+  if (pelvis) {
+    const bb = pelvis.getBoundingInfo().boundingBox;
+    gx0 = pelvis.position.x + bb.minimum.x * pelvis.scaling.x; gx1 = pelvis.position.x + bb.maximum.x * pelvis.scaling.x;
+    gz0 = pelvis.position.z + bb.minimum.z * pelvis.scaling.z; gz1 = pelvis.position.z + bb.maximum.z * pelvis.scaling.z;
+  }
+  const waist = { midX: (gx0 + gx1) / 2, halfX: ((gx1 - gx0) / 2) * Gd.proudX, midZ: (gz0 + gz1) / 2, halfZ: ((gz1 - gz0) / 2) * Gd.proudZ };
+  const tall = y1 - y0;
+  const beltY = (y0 + y1) / 2;
+  // the half extents at height y: the top's at y1, .flare of them at y0
+  const widen = (y: number) => 1 + (Gd.flare - 1) * Math.min(1, Math.max(0, (y1 - y) / tall));
+  const girdleRing = (name: string, top: number, bottom: number, grow: number, material: typeof team) => {
+    const m = MeshBuilder.CreateCylinder(name, { height: top - bottom, diameterTop: 2 * widen(top) * grow, diameterBottom: 2 * widen(bottom) * grow, tessellation: B.sides }, scene);
+    m.scaling.set(waist.halfX, 1, waist.halfZ);
+    m.position.set(waist.midX, (top + bottom) / 2, waist.midZ);
+    m.convertToFlatShadedMesh();
+    return add(m, hipNode, material);
+  };
+  girdleRing("minoBelt", y1, y0, 1, team);
   // [S] 386 (MINO_SCROLL): a deep rim along the foot and a thin one at the top, two big outlined scrolls wound out from the middle, a small one beyond
   const G = MINO_GEAR;
   const dark = mf.get("cloth", teamColor.scale(K.rimShade), { emissive: teamColor.scale(0.05) });
   const lightScroll = Color3.Lerp(teamColor, new Color3(1, 1, 1), K.light);
   const scrollMat = mf.get("cloth", lightScroll, { emissive: lightScroll.scale(0.2) });
-  const beltY = waist.trunk * K.at;
-  for (const [share, y] of [[K.foot, -1], [K.top, 1]]) {
-    const rimBand = MeshBuilder.CreateCylinder("minoBeltRim", { height: tall * share, diameter: 2, tessellation: B.sides }, scene);
-    rimBand.scaling.set(waist.halfX * B.proud * 1.05, 1, deep * B.proud * 1.05);
-    rimBand.position.set(waist.midX, beltY + y * tall * (0.5 - share / 2), (waist.minZ + waist.maxZ) / 2);
-    rimBand.convertToFlatShadedMesh();
-    add(rimBand, body.torso, dark);
-  }
-  const frontZ = (waist.minZ + waist.maxZ) / 2 + deep * B.proud;
-  // on the octagon's front faces: z falls .414 of the way out from its front ridge
-  const faceZ = (x: number, lift: number) => frontZ - 0.414 * Math.abs(x - waist.midX) * (deep / waist.halfX) + lift;
+  girdleRing("minoBeltRim", y0 + tall * K.foot, y0, 1.05, dark);
+  girdleRing("minoBeltRim", y1, y1 - tall * K.top, 1.05, dark);
+  // on the octagon's front faces: z falls .414 of the way out from its front ridge; the face leans out toward the foot with the flare
+  const faceZ = (x: number, y: number, lift: number) => {
+    const w = widen(y);
+    return waist.midZ + waist.halfZ * w - 0.414 * Math.abs(x - waist.midX) * (waist.halfZ / waist.halfX) + lift;
+  };
   // the band's open middle, between the rims
   const midY = beltY + tall * (K.foot - K.top) / 2;
   for (const mirror of [-1, 1]) {
@@ -118,8 +136,8 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
     for (const [cxShare, round, tail] of [[K.bigAt, K.big, true], [K.smallAt, K.small, false]] as const) {
       const pts = spiral(cxShare, round, tail);
       for (const [r, m, lift] of [[K.outline, dark, 1], [K.line, scrollMat, 1 + K.line * K.proud / K.outline]] as const) {
-        const path = pts.map((p) => new Vector3(p.x, p.y, faceZ(p.x, tall * r * lift)));
-        add(MeshBuilder.CreateTube("minoBeltScroll", { path, radius: tall * r, tessellation: 4, cap: 2 }, scene), body.torso, m);
+        const path = pts.map((p) => new Vector3(p.x, p.y, faceZ(p.x, p.y, tall * r * lift)));
+        add(MeshBuilder.CreateTube("minoBeltScroll", { path, radius: tall * r, tessellation: 4, cap: 2 }, scene), hipNode, m);
       }
     }
   }
