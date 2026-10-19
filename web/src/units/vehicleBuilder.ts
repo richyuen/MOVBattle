@@ -1531,6 +1531,16 @@ const CREW_SEAT = { lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee:
  * and out (.shinOut) and forward (.shinAhead) from there. Replaces CREW_SEAT.backThigh/backSplay/backKnee/backRoll and LOW_RIM.back.
  */
 const THROWER_LEGS = { seat: -0.08, kneeOut: 0.07, kneeAhead: 0.04, kneeUp: 0.03, shinOut: 0.45, shinAhead: 0.35 };
+/*
+ * [S] 387 the Thrower perched on the rear quarter (farmer.wheelbarrow.red.png: the Apple Thrower sits at the tray's back end over the handles, up higher
+ * than the Farmer so his chest and bearded head stand clear above the Farmer's, his knees splayed out round the Farmer's sides, shins outside the tray;
+ * critic 375/382: the rear quarter empty, the riders merged into one body, the far knee unseen). Replaces THROWER_LEGS.seat and the knee targets at
+ * the Farmer's hips (the thigh, ~.15 rig long, never reached them from behind). Rig units: his hips THROWER_PERCH.seat behind the tray's middle and .up
+ * above the rim, on a lumpy hay tuft (.tuftDeep fore and aft, filling the tray across, lumps .lumps) under them; each thigh aimed at a knee target
+ * .wide outside the tray's side board, .kneeUp above the rim, level with the Farmer's hip joint fore and aft plus .ahead; shins down and out
+ * (THROWER_LEGS.shinOut, .shinAhead).
+ */
+const THROWER_PERCH = { seat: -0.15, up: 0.09, tuftDeep: 0.13, lumps: 0.18, wide: 0.09, kneeUp: 0.05, ahead: 0 };
 /** World matrices of a node and every ancestor, root first, so a read made at build time is fresh. */
 function settleWorld(node: TransformNode): void {
   const chain: TransformNode[] = [];
@@ -1545,9 +1555,9 @@ function aimLimb(joint: TransformNode, worldDir: Vector3): void {
   joint.rotation.setAll(0);
   joint.rotationQuaternion = Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), local, new Quaternion());
 }
-/** The Thrower's thighs to knee targets outside the Farmer's hips, his shins down and out from there (spec at THROWER_LEGS). */
-function legsRoundFarmer(rig: TransformNode, farmer: ArticulatedBody, thrower: ArticulatedBody): void {
-  const T = THROWER_LEGS;
+/** The Thrower's thighs to knee targets wide outside the tray beside the Farmer's hips, his shins down and out from there (spec at THROWER_PERCH). */
+function legsRoundFarmer(rig: TransformNode, farmer: ArticulatedBody, thrower: ArticulatedBody, rimY: number): void {
+  const T = THROWER_LEGS, P = THROWER_PERCH;
   settleWorld(rig);
   const toRig = rig.getWorldMatrix().clone().invert();
   const fromRig = rig.getWorldMatrix();
@@ -1560,7 +1570,7 @@ function legsRoundFarmer(rig: TransformNode, farmer: ArticulatedBody, thrower: A
     const f = Vector3.TransformCoordinates(beside.getAbsolutePosition(), toRig);
     const h = Vector3.TransformCoordinates(hip.getAbsolutePosition(), toRig);
     const side = Math.sign(h.x) || 1;
-    const kneeAt = new Vector3(f.x + side * T.kneeOut, f.y + T.kneeUp, f.z + T.kneeAhead);
+    const kneeAt = new Vector3(side * (WHEELBARROW.trayWide / 2 + P.wide), rimY + P.kneeUp, f.z + P.ahead);
     aimLimb(hip, Vector3.TransformNormal(kneeAt.subtract(h), fromRig));
     aimLimb(knee, Vector3.TransformNormal(new Vector3(side * T.shinOut, -1, T.shinAhead), fromRig));
   }
@@ -1836,10 +1846,17 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     holdInFist(man.rightHand, fork, F.dir, Vector3.Zero(), W.scale);
   });
   // The Apple Thrower, behind him: astride the narrow tray on its side boards, legs out over them and hanging outside, his throwing arm up and back
-  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + THROWER_LEGS.seat, color, (man) => {
+  // ...perched on a hay tuft on the rear quarter, up over the Farmer (spec at THROWER_PERCH)
+  const TP = THROWER_PERCH;
+  const tuft = MeshBuilder.CreateBox("trayHayTuft", { width: W.trayWide - P.thick, height: TP.up + sideTall * 0.6, depth: TP.tuftDeep }, scene);
+  tuft.position.set(0, seatY + (TP.up - sideTall * 0.6) / 2, W.trayZ + TP.seat);
+  tuft.convertToFlatShadedMesh();
+  tuft.parent = rig; tuft.material = heap.material; allMeshes.push(tuft);
+  jitterVertices(tuft, TP.lumps, 391);
+  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + TP.seat, color, (man) => {
     crew.thrower = man;
-    man.root.position.y = seatY + S.astrideUp - man.hip.position.y;
-    if (crew.farmer) legsRoundFarmer(rig, crew.farmer, man);
+    man.root.position.y = seatY + S.astrideUp + TP.up - man.hip.position.y;
+    if (crew.farmer) legsRoundFarmer(rig, crew.farmer, man, seatY);
     man.rightShoulder.rotation.set(-2.5, 0, -0.3);
     man.rightElbow.rotation.x = -0.8;
     man.leftShoulder.rotation.x = -0.5;
