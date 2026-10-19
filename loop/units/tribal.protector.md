@@ -2,12 +2,11 @@
 Status: open   Audited: 360   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
 a FAIL (1 since 360)
- 1. helmet: the slab hides the head in unit_tribal.protector_idle and lineup_tribal (shot cannot show it); in _windup a tan close dome with a brow ridge now — TABS: a tan animal skull over the top half of the head, eye sockets and a snout ridge at the brow (ref: tribal.protector.png)
+ 1. helmet in unit_tribal.protector_idle (re-aimed 366: swung 1.35 rad to his side, the head shows beside the slab; RE-AUDIT next step 2) — TABS: a tan animal skull over the top half of the head, eye sockets and a snout ridge at the brow (ref: tribal.protector.png)
 b PASS (362)
 c PASS (360)
 d PASS (cost 80, hp 0.89x, dmg 0.25x, cd 0.75x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a evidence re-aim — blocker 1: re-frame unit_tribal.protector_idle so the head shows beside or above the slab (evidence commit, capture.mjs), then judge sockets and snout ridge — ref: tribal.protector.png — ours: unit_tribal.protector_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 317 | no back spear (3fd57a5) | b | approved
 318 | moss chunks (af37ab3) | b | approved
