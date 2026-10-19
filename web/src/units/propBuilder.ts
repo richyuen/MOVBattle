@@ -4090,9 +4090,13 @@ const SLAB_WIDE = 0.34;
 const SLAB_TALL = 0.71;
 const SLAB_EYE = 0.12;
 const SLAB_EYE_UP = 0.22;
-// ...and its moss (tribal.protector.blue.png): two faceted green chunks grown on the face, a long one draped over the top corner beside the opening and a
-// small one at the bottom edge, each a chunk this big (prop units) and stood proud of the planks by SLAB_MOSS.proud so it reads with the shield edge-on
-const SLAB_MOSS = { top: 0.13, bottom: 0.08, proud: 0.03 };
+// ...and its moss (tribal.protector.red.png): three knobbly olive-grey patches grown on the face, a long one draped over the top corner and slanting down toward
+// the opening, one hanging under the opening's side and one over the bottom corner, each a chunk this big (prop units), stood proud of the face by .proud
+const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
+// ...and its stone (tribal.protector.red.png: one warm red-brown slab, not planks): SLAB_FACETS.deep thick (prop units), cut in three columns either side of
+// the opening and in .rows rows down the side columns; each corner of the face pushed in or out by its own hashed share (.front of the depth) so the face
+// breaks into flat facets, the top corners bevelled back by .bevel of the depth, and one dark seam .seam wide down the slab from the opening's side
+const SLAB_FACETS = { deep: 0.06, rows: 3, front: 0.45, bevel: 0.7, seam: 0.006 };
 let slabSerial = 0;
 /*
  * The painter's palette (328; renaissance.painter.jpg: a big flat red-brown kidney board wider than the torso, held out from the shoulder at chest height
@@ -4278,62 +4282,79 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       return shield;
     }
     case "slab": {
-      // The protector's plank shield (units/tribal.protector, spec at SLAB_WIDE): four rough planks side by side, SLAB_TALL tall and SLAB_WIDE wide, their
-      // tops cut to a slant at different heights, bare brown wood with no team colour in it, and a round opening SLAB_EYE across at face height
-      // (SLAB_EYE_UP of the height above the middle) that the two middle planks stop short of above and below, framed by an eight-sided ring. The root is an
-      // empty node, so the opening is a true hole and his face shows through it. The face is +z; two battens hold the planks on the back.
-      const wood = new Color3(0.6, 0.36, 0.22);
+      // The protector's stone slab (units/tribal.protector, spec at SLAB_WIDE and SLAB_FACETS): one warm red-brown slab SLAB_TALL tall and SLAB_WIDE wide,
+      // no team colour in it, its face broken into flat facets, its top uneven and bevelled, a dark seam down it from the opening's side, and a round opening
+      // SLAB_EYE across at face height (SLAB_EYE_UP of the height above the middle) rimmed by a round lip. The root is an empty node, so the opening is a true
+      // hole and his face shows through it. The face is +z. The pieces round the opening keep the name slabPlank (the animator reads the opening off them).
+      const stone = new Color3(0.62, 0.35, 0.26);
       const r = (k: number) => roundBoardSeed(slabSerial + 0.5, k);
       slabSerial++;
       const shield = new Mesh("slabshield", scene);
-      const W = SLAB_WIDE * s, H = SLAB_TALL * s, eye = SLAB_EYE * s, eyeY = SLAB_EYE_UP * H;
-      const plankW = W / 4;
-      for (let i = 0; i < 4; i++) {
-        const x = (i - 1.5) * plankW;
-        const shade = mat(scene, wood.scale(0.9 + r(i + 1) * 0.2), 0.1);
-        // Each plank its own length and shade; its top a wedge. The middle two are a lower and an upper board with the opening between them.
-        const top = H * (0.44 + r(i + 5) * 0.06);
-        const pieces: [number, number][] = i === 1 || i === 2 ? [[-H * 0.5, eyeY - eye * 0.5], [eyeY + eye * 0.5, top]] : [[-H * 0.5, top]];
-        for (const [y0, y1] of pieces) {
-          const plank = MeshBuilder.CreateBox("slabPlank", { width: plankW * 0.96, height: y1 - y0, depth: 0.045 * s }, scene);
-          plank.position.set(x, (y0 + y1) * 0.5, 0);
-          plank.material = shade;
-          plank.parent = shield;
+      const W = SLAB_WIDE * s, H = SLAB_TALL * s, eye = SLAB_EYE * s, eyeY = SLAB_EYE_UP * H, D = SLAB_FACETS.deep * s;
+      const half = eye * 0.5;
+      // A corner's share in [-0.5, 0.5), keyed on where it sits on the slab, so neighbouring pieces move a shared corner alike
+      const bump = (x: number, y: number, k: number) => roundBoardSeed(slabSerial + 0.5, Math.round(x / W * 40) * 131 + Math.round(y / H * 40) * 17 + k) - 0.5;
+      const piece = (x0: number, x1: number, y0: number, y1: number, tops: boolean) => {
+        const box = MeshBuilder.CreateBox("slabPlank", { width: x1 - x0, height: y1 - y0, depth: D }, scene);
+        const cx = (x0 + x1) * 0.5, cy = (y0 + y1) * 0.5;
+        box.position.set(cx, cy, 0);
+        const at = box.getVerticesData(VertexBuffer.PositionKind);
+        if (at) {
+          for (let v = 0; v < at.length; v += 3) {
+            const x = at[v] + cx, y = at[v + 1] + cy;
+            if (at[v + 2] > 0) at[v + 2] += bump(x, y, 1) * D * SLAB_FACETS.front;
+            // The top edge: each corner its own height, the front ones bevelled back and down
+            if (tops && at[v + 1] > 0) {
+              at[v + 1] += bump(x, y, 2) * H * 0.05;
+              if (at[v + 2] > 0) { at[v + 1] -= D * SLAB_FACETS.bevel; at[v + 2] -= D * SLAB_FACETS.bevel * 0.4; }
+            }
+          }
+          box.setVerticesData(VertexBuffer.PositionKind, at);
         }
-        const cap = MeshBuilder.CreateCylinder("slabCap", { height: plankW * 0.96, diameter: 0.064 * s, tessellation: 3 }, scene);
-        cap.rotation.z = Math.PI / 2;
-        cap.scaling.z = 0.7;
-        cap.position.set(x, top, 0);
-        cap.material = shade;
-        cap.parent = shield;
+        box.convertToFlatShadedMesh();
+        box.material = mat(scene, stone.scale(0.92 + r(Math.round(cx / W * 9) + Math.round(cy / H * 9) * 7 + 20) * 0.16), 0.1, "stone");
+        box.parent = shield;
+      };
+      const top = H * 0.48;
+      // The side columns, cut in rows; the middle column above and below the opening
+      for (const [x0, x1] of [[-W * 0.5, -half], [half, W * 0.5]]) {
+        for (let k = 0; k < SLAB_FACETS.rows; k++) {
+          piece(x0, x1, -H * 0.5 + (top + H * 0.5) * k / SLAB_FACETS.rows, -H * 0.5 + (top + H * 0.5) * (k + 1) / SLAB_FACETS.rows, k === SLAB_FACETS.rows - 1);
+        }
       }
-      const ring = MeshBuilder.CreateTorus("slabEye", { diameter: eye * 1.3, thickness: eye * 0.3, tessellation: 8 }, scene);
+      piece(-half, half, -H * 0.5, eyeY - half, false);
+      piece(-half, half, eyeY + half, top, true);
+      // The seam: a dark crack down the face from under the opening's side to the foot, and above it to the top
+      const crack = mat(scene, stone.scale(0.45), 0.04, "stone");
+      for (const [y0, y1] of [[-H * 0.5, eyeY - half * 1.2], [eyeY + half * 1.2, top - D]]) {
+        const seam = MeshBuilder.CreateBox("slabSeam", { width: SLAB_FACETS.seam * s, height: y1 - y0, depth: D * 0.2 }, scene);
+        seam.position.set(half * 0.7, (y0 + y1) * 0.5, D * (0.5 + SLAB_FACETS.front * 0.5));
+        seam.material = crack;
+        seam.parent = shield;
+      }
+      // The opening's lip: a round, many-sided rim over the square cut, so the hole reads round
+      const ring = MeshBuilder.CreateTorus("slabEye", { diameter: eye * 1.3, thickness: eye * 0.3, tessellation: 16 }, scene);
       ring.rotation.x = Math.PI / 2;
+      ring.scaling.y = D / (eye * 0.3) * 1.3;
       ring.position.set(0, eyeY, 0);
-      ring.material = mat(scene, wood.scale(0.75), 0.08);
+      ring.material = mat(scene, stone.scale(0.8), 0.08, "stone");
       ring.parent = shield;
-      const batten = mat(scene, wood.scale(0.7), 0.06);
-      for (const y of [0.3, -0.3]) {
-        const bar = MeshBuilder.CreateBox("slabBatten", { width: W * 1.02, height: 0.035 * s, depth: 0.03 * s }, scene);
-        bar.position.set(0, y * H, -0.035 * s);
-        bar.material = batten;
-        bar.parent = shield;
-      }
-      // Moss (spec at SLAB_MOSS): irregular faceted lumps, one lying along the top corner on the side away from the opening and slanted down toward it, one
-      // clinging to the bottom edge on the other side; both stand off the face. Self-lit a little: a plain green went near-black in the field's shade.
-      const moss = mat(scene, new Color3(0.4, 0.5, 0.2), 0.15, "stone");
+      // Moss (spec at SLAB_MOSS): knobbly olive-grey patches, one draped along the top corner and slanting down toward the opening, one hanging under the
+      // opening's side, one over the bottom corner; all stand off the face. Self-lit a little: a plain dark green went near-black in the field's shade.
+      const moss = mat(scene, new Color3(0.42, 0.42, 0.27), 0.12, "stone");
       const lumps: [number, number, number, number, number, number][] = [
-        [0.28 * W, H * 0.45, SLAB_MOSS.top * s, 1.7, 0.6, -0.45],
-        [-0.36 * W, -H * 0.44, SLAB_MOSS.bottom * s, 1.2, 0.8, 0.3],
+        [0.26 * W, H * 0.43, SLAB_MOSS.top * s, 2.1, 0.75, -0.5],
+        [0.12 * W, eyeY - eye * 1.05, SLAB_MOSS.hole * s, 0.85, 1.6, 0.35],
+        [-0.42 * W, -H * 0.36, SLAB_MOSS.bottom * s, 0.8, 1.5, 0.2],
       ];
       for (let i = 0; i < lumps.length; i++) {
         const [x, y, size, wide, tall, roll] = lumps[i];
-        const lump = MeshBuilder.CreateIcoSphere("slabMoss", { radius: size * 0.5, subdivisions: 1, flat: true }, scene);
+        const lump = MeshBuilder.CreateIcoSphere("slabMoss", { radius: size * 0.5, subdivisions: 2, flat: true }, scene);
         // Knobbly, not a ball: every vertex pushed in or out by its own hashed share
         const at = lump.getVerticesData(VertexBuffer.PositionKind);
         if (at) {
           for (let v = 0; v < at.length; v += 3) {
-            const k = 0.8 + 0.4 * roundBoardSeed(slabSerial + i, Math.round(at[v] * 97 + at[v + 1] * 57 + at[v + 2] * 31));
+            const k = 0.72 + 0.56 * roundBoardSeed(slabSerial + i, Math.round(at[v] / size * 9) * 97 + Math.round(at[v + 1] / size * 9) * 57 + Math.round(at[v + 2] / size * 9) * 31);
             at[v] *= k; at[v + 1] *= k; at[v + 2] *= k;
           }
           lump.setVerticesData(VertexBuffer.PositionKind, at);
