@@ -52,7 +52,7 @@ export function heldBalloonArrow(scene: Scene, body: ArticulatedBody, teamColor:
  * top, the next blade starting .step of the last's foot (so the outline steps like a ragged feather), .thick of its width thin side to side. Matte team
  * cloth self-lit .glow.
  */
-export const FEATHER_PLUME = { feathers: 7, fan: 0.55, turn: 1.4, rake: 0.25, segs: 3, curl: [0.05, 0.6, 0.75], long: 2.6, outer: 0.65, wide: 0.42, tip: 0.55, step: 0.85, thick: 0.35, glow: 0.2 };
+export const FEATHER_PLUME = { feathers: 7, fan: 0.4, turn: 1.4, rake: 0.25, segs: 3, curl: [0.05, 0.6, 0.75], long: 3.4, outer: 0.7, wide: 0.85, tip: 0.6, step: 0.85, thick: 0.45, glow: 0.2 };
 
 /** A team feather plume (spec at FEATHER_PLUME) rooted at `at` in `parent`'s frame, `size` the unit length. Returns the blades. */
 export function featherPlume(scene: Scene, name: string, parent: TransformNode, at: Vector3, size: number, color: Color3): Mesh[] {
