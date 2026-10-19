@@ -2135,10 +2135,17 @@ const SWORD_RING_STAGGER = 0.06;
 export const SWORD_RING_BOB = { height: 0.025, rate: 1.7 };
 const SWORD_RING_REFILL = 1.4;
 // The javelin (units/tribal.spear_thrower), in prop units (x s): shaft plus head JAVELIN_LONG, a leaf head JAVELIN_HEAD_LONG x _WIDE, barbs swept back _SWEEP rad
-// The tribal club (units/tribal.clubber), in the man's heights: its length, the share of it below the fist, and the head's width (the grip is 0.056)
-const CLUB_LONG = 0.6;
-const CLUB_GRIP = 0.2;
-const CLUB_HEAD = 0.22;
+/*
+ * [S] the Clubber's cudgel (361; tribal.clubber.red.png, .jpg: a huge thick dark-brown club, head and torso long, its bulb wider than his head, swelling
+ * steadily from a thick grip to a broad rounded end). Replaces the thin tapered stick (a 7-sided tube 0.6 of his height, its head .13 across). A faceted lathe
+ * CLUB.long of his height, the fist CLUB.grip of it up from the butt; its radius (shares of the length) read off CLUB.profile (along, radius), the bulb
+ * near the end; CLUB.sides sides, every vertex pushed out or in by its own hashed share of CLUB.knob so it reads whittled and knobbly, not turned; dark
+ * brown wood CLUB.wood, self-lit CLUB.glow so it stays brown in the shade.
+ */
+const CLUB = {
+  long: 0.74, grip: 0.17, sides: 8, knob: 0.1, wood: new Color3(0.4, 0.25, 0.16), glow: 0.12,
+  profile: [[0, 0.03], [0.03, 0.045], [0.2, 0.048], [0.4, 0.064], [0.6, 0.088], [0.78, 0.118], [0.9, 0.124], [0.97, 0.09], [1, 0.02]] as const,
+};
 /*
  * [S] The hay baler's stick (340; farmer.hay_baler.blue.png, card: Main Hand Stick, one-handed bludgeon): a long thin crooked branch, about as long as
  * the bale is wide, held one-handed near its butt and run out ahead. STICK.long of the man's height, STICK.grip of it behind the fist, STICK.thick
@@ -2299,17 +2306,24 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "none": return null;
 
     case "club": {
-      // The tribal club (units/tribal.clubber, spec at CLUB_LONG): one faceted brown stick, wrist-thin where the fists hold it near the butt and swelling
-      // smoothly to a head CLUB_HEAD across (nearly three grips), rounded off at the end; a rope wrap above the hands. Self-lit a little: a plain brown
-      // went near-black in the field's shade. +y up the stick from the fist at the origin, CLUB_GRIP of its length below the fist.
-      const L = fit.stand * CLUB_LONG;
-      const along = [0, 0.1, 0.3, 0.5, 0.68, 0.84, 0.94, 1];
-      const across = [0.032, 0.032, 0.034, 0.05, 0.078, CLUB_HEAD * 0.5, 0.07, 0.025];
-      const line = along.map((u, i) => new Vector3(0, (u - CLUB_GRIP) * L, (i === 4 || i === 5 ? 0.015 : 0) * L));
-      const m = MeshBuilder.CreateTube("club", { path: line, tessellation: 7, cap: Mesh.CAP_ALL, radiusFunction: (i) => across[i] * L }, scene);
-      m.material = mat(scene, new Color3(0.55, 0.36, 0.2), 0.12);
+      // The tribal club (spec at CLUB): a knobbly faceted lathe, +y up the club from the fist at the origin, CLUB.grip of its length below the fist; named
+      // "club" (the animator's two-handed carry and off-hand grip key on it)
+      const L = fit.stand * CLUB.long;
+      const shape = CLUB.profile.map(([u, r]) => new Vector3(r * L, (u - CLUB.grip) * L, 0));
+      const m = MeshBuilder.CreateLathe("club", { shape, tessellation: CLUB.sides, cap: Mesh.CAP_ALL }, scene);
+      const at = m.getVerticesData(VertexBuffer.PositionKind);
+      if (at) {
+        for (let v = 0; v < at.length; v += 3) {
+          // the same point on a seam gets the same push (hashed off its rounded position), so the faces stay closed
+          const k = 1 + CLUB.knob * (2 * roundBoardSeed(4.3, Math.round(at[v] / L * 400) * 7 + Math.round(at[v + 1] / L * 400) * 131 + Math.round(at[v + 2] / L * 400) * 17) - 1);
+          at[v] *= k; at[v + 2] *= k;
+        }
+        m.setVerticesData(VertexBuffer.PositionKind, at);
+      }
+      m.material = mat(scene, CLUB.wood, CLUB.glow);
       m.convertToFlatShadedMesh();
-      addGripWraps(scene, m, [0.06 * L, 0.11 * L, 0.16 * L], 0.08 * L);
+      m.refreshBoundingInfo();
+      addGripWraps(scene, m, [0.08 * L, 0.13 * L, 0.18 * L], 0.1 * L);
       m.rotation.x = Math.PI * 0.14;
       return m;
     }
