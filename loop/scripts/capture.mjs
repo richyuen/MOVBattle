@@ -334,7 +334,10 @@ async function main() {
     await page.evaluate(() => {
       // Every scene starts with resetBattle: reseed there so each scene's frames are the same whichever scenes ran before it.
       const reset = window.game.resetBattle.bind(window.game);
-      window.game.resetBattle = (...args) => { window.reseed(); const out = reset(...args); window.game.resetClock?.(); return out; };
+      // ...and restart the unit id counter: units hash their runtimeId into per-man variation (RuntimeUnit noise, sidestep sides), so with the counter
+      // running on across replays the same scene played differently from one shot to the next (370: the fencer's ability_after replay had the squire's
+      // blow land first and his thrust never land, while the flight shot at the same tick showed it)
+      window.game.resetBattle = (...args) => { window.reseed(); const out = reset(...args); window.game.resetClock?.(); if (window.__RU) window.__RU._nextRuntimeId = 100000; return out; };
       window.game.skipTitleIntro();
       window.advanceTime(50);
     });
@@ -366,6 +369,8 @@ async function main() {
             ally = game.spawnUnit("medieval.squire", 1, { x: d + 2, z: 1.2 });
             if (ally) ally.applyDamage(ally.maxHealth * 0.6, ally.position.scale(0));
           }
+          // the unit class, so resetBattle can restart its id counter; the first scene is placed again once it is known, so every run has the same ids
+          if (a && !window.__RU) { window.__RU = a.constructor; return window.__unitPlace(id, d, support); }
           window.__ua = a; window.__ut = t; window.__ually = ally;
           window.advanceTime(50);
           return Boolean(a && t);
