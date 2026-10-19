@@ -419,7 +419,7 @@ const CAVALIER = { brim: 2.25, flap: 0.3, lift: 1.25, crown: 1.1, tall: 0.55, sh
  * .lift H per W out from the crown, scaled by how far left it lies (.spread: the share of the round it reaches). Felt the team colour at .shade, matte,
  * self-lit .glow. The plume CAVALIER_FELT.wide W across, .pale toward white.
  */
-const CAVALIER_FELT = { crown: 1.08, shoulder: 0.84, tall: 0.62, thick: 0.06, droop: 0.05, lift: 1.1, spread: 0.55, shade: 0.45, glow: 0.1, wide: 0.85, pale: 0.08, sides: 16 };
+const CAVALIER_FELT = { crown: 1.08, shoulder: 0.84, tall: 0.62, thick: 0.06, droop: 0.05, lift: 1.1, spread: 0.55, shade: 0.32, glow: 0.04, wide: 0.85, pale: 0.08, sides: 16 };
 const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
