@@ -12,7 +12,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
+import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 
 export interface SpawnVisualOptions {
@@ -699,6 +699,8 @@ export class UnitFactory {
       const knight = definition.id === "medieval.knight";
       const skirt = knight
         ? hangSkirt(this._scene, body, "knightFauld", KNIGHT_FAULD.long, KNIGHT_FAULD.flare, getMaterialFactory().get("stone", KNIGHT_FAULD.steel, { emissiveIntensity: 0.05 }))
+        : bareSkinned && wearsHideDress(definition.id)
+        ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
         : tabard
