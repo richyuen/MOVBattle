@@ -722,7 +722,8 @@ export class UnitFactory {
     // kilt in place of the painted loincloth, with a fur collar over his shoulders.
     // (not the scarecrow: his shirt is tucked into the trousers his suspenders hold up, SCARECROW_DRESS)
     // (nor the king: his short blouse ends at the belt over puffy breeches to the knee, medievalDress kingDress)
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king") {
+    // (nor the minotaur: bare fur under his scrolled team girdle, 386 ancientDress MINO_SCROLL; the tunic skirt hid the girdle as a plain flared band)
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const knight = definition.id === "medieval.knight";
       const skirt = knight
