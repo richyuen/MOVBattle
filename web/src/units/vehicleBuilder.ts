@@ -2109,6 +2109,11 @@ const MAMMOTH_BARREL = {
   rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.2, humpAt: 0.5, humpFront: 0.25, humpBack: 0.8, belly: 0.2, bellyNarrow: 0.38,
   jitter: 0.035, haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtFull: 5, slope: 0.45, slopeWide: 0.15,
 };
+/** The mammoth's tail on the torso joint: path [y, z] root to tip (root sunk in the rump's back face at y .12-.25, z -1.24), thickness per point. */
+const MAMMOTH_TAIL = {
+  path: [[0.2, -1.22], [0.12, -1.38], [-0.04, -1.47], [-0.24, -1.5], [-0.42, -1.5]] as [number, number][],
+  thick: [0.13, 0.1, 0.08, 0.065, 0.055], overlap: 0.04, tuftBalls: 4, tuft: 0.065, tuftOut: 0.035, tuftDrop: 0.07,
+};
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
   const B = MAMMOTH_BARREL;
@@ -2646,6 +2651,28 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     }
   }
 
+  // [S] the mammoth's tail (MAMMOTH_TAIL, 381; card Appearance "a skinny and fluffy tail at their rear"; critic 377: a small dark ball floated off the
+  // rump). Rooted on the rump's back face just above its middle (the barrel's end ring, BODY_LIFT/BODY_BACK applied), it hangs back and down in
+  // .chunks tapering fur pieces, bending plumb, to a fluffy tip tuft of .tuftBalls lumps in the mane's near-black, clear of the hull side-on.
+  if (mammoth) {
+    const T = MAMMOTH_TAIL;
+    const pts = T.path.map(([y, z]) => new Vector3(0, y, z));
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1], span = b.subtract(a);
+      const piece = MeshBuilder.CreateCylinder("tail", { height: span.length() + T.overlap, diameterBottom: T.thick[i], diameterTop: T.thick[i + 1], tessellation: 6 }, scene);
+      piece.position.copyFrom(a.add(b).scale(0.5));
+      piece.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), span.normalize(), new Quaternion());
+      piece.parent = torso; piece.material = fur; allMeshes.push(piece);
+    }
+    const tip = pts[pts.length - 1];
+    for (let i = 0; i < T.tuftBalls; i++) {
+      const a = (i / T.tuftBalls) * Math.PI * 2;
+      const lump = MeshBuilder.CreateIcoSphere("tuft", { radius: 1, subdivisions: 1, flat: true }, scene);
+      jitterVertices(lump, 0.2, 91 + i, T.tuft, T.tuft * 1.4, T.tuft);
+      lump.position.set(Math.sin(a) * T.tuftOut, tip.y - T.tuftDrop * (i % 2 ? 1 : 0.5), tip.z + Math.cos(a) * T.tuftOut);
+      lump.parent = torso; lump.material = crestMat; allMeshes.push(lump);
+    }
+  } else {
   // ── Tail (parented to torso) ──
   const tail = MeshBuilder.CreateCylinder("tail", {
     height: 0.5, diameterTop: 0.03, diameterBottom: 0.06, tessellation: 6,
@@ -2657,6 +2684,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const tuft = MeshBuilder.CreateSphere("tuft", { diameter: 0.1, segments: 4 }, scene);
   tuft.position.set(0, -0.45, -1.36);
   tuft.parent = torso; tuft.material = darkMat; allMeshes.push(tuft);
+  }
 
   // Map to ArticulatedBody: front legs = arms, back legs = legs
   const rHand = dummyJoint("m_rhand", frKnee, scene);
