@@ -208,8 +208,15 @@ const SKULL_SNOUT = 0.45;
  * SKULL_FACETED.heads heads across, SKULL_FACETED.tall of the cap height above its middle, every vertex pushed in or out by its own hashed share (jitter),
  * its underside cut flat SKULL_FACETED.under of its half height below the middle and seated on the brow line; sockets SKULL_FACETED.socket head widths across
  * and sunk; a snout SKULL_FACETED.snout head widths long. Pale bone self-lit a little: the smooth cap before it went grey in the capture's shade.
+ * 363 [S] re-seat (critic 360: a smooth round white mushroom cap): the dome no longer towers over the crown (tall 1.6 -> .95 of the cap height, underside
+ * .under of its half height, sunk .sink of a head height onto the brow), so it covers the top half of the head; sockets sunk low on its front .socketUp of its
+ * half height over the underside, a brow ridge over each, and the snout a narrow four-sided ridge running down between them past the rim over the nose
+ * (tilted .snoutTilt off plumb). Tan, darker and warmer than the near-white bone (.tan, self-lit .glow).
  */
-const SKULL_FACETED = { heads: 1.45, tall: 1.6, under: 0.7, jitter: 0.09, socket: 0.3, snout: 0.55 };
+const SKULL_FACETED = {
+  heads: 1.3, tall: 0.95, under: 0.3, sink: 0.04, jitter: 0.08, socket: 0.3, socketUp: 0.42, snout: 0.5, snoutTilt: 0.5,
+  tan: new Color3(0.7, 0.58, 0.42), glow: 0.12,
+};
 /*
  * The Chieftain's beast skull (363 [S]; tribal.chieftain.red.png, .png: a long tan-grey predator skull lying front to back on his crown, its beak jutting forward
  * and down over his brow with the lower jaw hanging open under it, a googly eye in each socket on its front corners; his own face and eyes show under it):
@@ -1060,17 +1067,18 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return skull;
   }
   if (type === "bone_mask") {
-    // The protector's faceted skull (spec at SKULL_FACETED). Built to size in its own vertices (no scaling on the node) so the sockets, cheeks and snout hung
-    // under it keep their shapes.
+    // [S] the protector's skull helmet re-seated (363; spec at SKULL_FACETED). Built to size in its own vertices (no scaling on the node) so the sockets, brows,
+    // cheeks and snout ridge hung under it keep their shapes.
+    const S = SKULL_FACETED;
     const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
-    const Rx = SKULL_FACETED.heads * W * 0.5, Rz = Rx * 1.12, Ry = tall * SKULL_FACETED.tall;
-    const under = SKULL_FACETED.under * Ry;
-    const bone = mat(scene, new Color3(0.93, 0.8, 0.58), 0.18);
+    const Rx = S.heads * W * 0.5, Rz = Rx * 1.12, Ry = tall * S.tall;
+    const under = S.under * Ry;
+    const bone = mat(scene, S.tan, S.glow);
     const skull = MeshBuilder.CreateIcoSphere("bskull", { radius: 1, subdivisions: 2, flat: true }, scene);
     const at = skull.getVerticesData(VertexBuffer.PositionKind);
     if (at) {
       for (let v = 0; v < at.length; v += 3) {
-        const k = 1 - SKULL_FACETED.jitter + 2 * SKULL_FACETED.jitter * roundBoardSeed(11.5, Math.round(at[v] * 89 + at[v + 1] * 53 + at[v + 2] * 37));
+        const k = 1 - S.jitter + 2 * S.jitter * roundBoardSeed(11.5, Math.round(at[v] * 89 + at[v + 1] * 53 + at[v + 2] * 37));
         at[v] = u(at[v] * k * Rx);
         at[v + 1] = u(Math.max(-under, at[v + 1] * k * Ry));
         at[v + 2] = u(at[v + 2] * k * Rz);
@@ -1081,28 +1089,39 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       skull.setVerticesData(VertexBuffer.NormalKind, normals);
       skull.refreshBoundingInfo();
     }
-    skull.position.y = u(seat + under);
+    // its flat underside on the brow line, so the dome covers the top half of the head down to just over the eyes
+    skull.position.y = u(seat + under - S.sink * H);
     skull.material = bone;
     const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
+    const socketY = -under + S.socketUp * Ry;
+    const frontAt = (y: number) => Rz * Math.sqrt(Math.max(0.05, 1 - (y / Ry) ** 2)) * 0.96;
     for (const side of [-1, 1]) {
-      // A socket: a dark disc sunk into the front just above the middle, where the ball's face is, turned a little round to its own side
-      const hole = MeshBuilder.CreateCylinder("bskullEye", { height: u(0.12 * W), diameter: u(SKULL_FACETED.socket * W), tessellation: 6 }, scene);
-      hole.rotation.x = Math.PI / 2;
-      hole.position.set(side * u(0.3 * W), u(0.12 * Ry), u(Rz * 0.9));
-      hole.rotation.y = side * 0.4;
+      // A socket: a dark hexagon sunk into the low front of the dome over each eye, turned round to its own side
+      const hole = MeshBuilder.CreateCylinder("bskullEye", { height: u(0.12 * W), diameter: u(S.socket * W), tessellation: 6 }, scene);
+      hole.rotation.set(Math.PI / 2, side * 0.38, 0);
+      hole.position.set(side * u(0.27 * W), u(socketY), u(frontAt(socketY)));
+      hole.scaling.z = 0.8;
       hole.material = socket;
       hole.parent = skull;
-      const cheek = MeshBuilder.CreateBox("bskullCheek", { width: u(0.12 * W), height: u(0.45 * H), depth: u(0.3 * W) }, scene);
-      cheek.position.set(side * u(Rx * 0.88), u(-under - 0.15 * H), u(0.2 * W));
+      // the brow ridge over it: a bony bar standing proud of the dome, sloping down to the temple
+      const brow = MeshBuilder.CreateBox("bskullBrow", { width: u(S.socket * 1.25 * W), height: u(0.09 * H), depth: u(0.14 * W) }, scene);
+      brow.position.set(side * u(0.28 * W), u(socketY + S.socket * 0.55 * W), u(frontAt(socketY) + 0.02 * W));
+      brow.rotation.set(-0.2, side * 0.38, side * -0.22);
+      brow.material = bone;
+      brow.parent = skull;
+      const cheek = MeshBuilder.CreateBox("bskullCheek", { width: u(0.12 * W), height: u(0.4 * H), depth: u(0.3 * W) }, scene);
+      cheek.position.set(side * u(Rx * 0.86), u(-under - 0.13 * H), u(0.22 * W));
       cheek.rotation.z = side * 0.12;
       cheek.material = bone;
       cheek.parent = skull;
     }
-    const snoutLong = SKULL_FACETED.snout * W;
-    const snout = MeshBuilder.CreateCylinder("bskullSnout", { height: u(snoutLong), diameterTop: u(0.28 * W), diameterBottom: u(0.55 * W), tessellation: 5 }, scene);
-    snout.rotation.x = Math.PI / 2 - 0.2;
-    snout.position.set(0, u(-0.1 * Ry), u(Rz * 0.92 + snoutLong * 0.4));
-    snout.scaling.x = 1.25;
+    // The snout ridge: a narrow four-sided bony wedge down the middle of the brow between the sockets, from the dome's front out and down past its rim over the nose
+    const snoutLong = S.snout * W;
+    const snout = MeshBuilder.CreateCylinder("bskullSnout", { height: u(snoutLong), diameterTop: u(0.12 * W), diameterBottom: u(0.3 * W), tessellation: 4 }, scene);
+    snout.convertToFlatShadedMesh();
+    snout.rotation.x = Math.PI - S.snoutTilt;
+    snout.position.set(0, u(socketY + 0.12 * Ry - snoutLong * 0.4 * Math.cos(S.snoutTilt)), u(frontAt(socketY) + snoutLong * 0.4 * Math.sin(S.snoutTilt)));
+    snout.scaling.z = 0.7;
     snout.material = bone;
     snout.parent = skull;
     return skull;
