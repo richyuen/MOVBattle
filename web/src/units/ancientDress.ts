@@ -486,9 +486,11 @@ export function dressShieldBearer(scene: Scene, body: ArticulatedBody): Mesh[] {
   const dark = mf.get("cloth", L.dark, { emissive: L.dark.scale(L.glow) });
   const put = (m: Mesh, material = plate) => { m.material = material; m.convertToFlatShadedMesh(); m.parent = body.torso; out.push(m); return m; };
   const share = (L.high - L.low) / L.hoops;
+  // one box over the whole trunk: the trunk is a straight box with vertices only at its ends, so a hoop-high slice found none and fell back to a box
+  // round the whole torso joint, belt ring included (384 probe: .23 deep on a .09 trunk), which stood the lower hoops off his chest as a drum
+  const band = trunkBand(body, 0, 1);
   for (let k = 0; k < L.hoops; k++) {
     const lo = L.low + share * k, hi = lo + share;
-    const band = trunkBand(body, lo, hi);
     const halfZ = (band.maxZ - band.minZ) / 2, midZ = (band.minZ + band.maxZ) / 2;
     const hoop = put(MeshBuilder.CreateCylinder("loricaHoop", { height: band.trunk * share * L.fill, diameter: 2, tessellation: L.sides }, scene));
     hoop.scaling.set(band.halfX * L.proud, 1, halfZ * L.proud);
