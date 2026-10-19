@@ -3,6 +3,7 @@
 //       ability pair when one fires) in a seeded one-on-one against a squire, plus lineup_<faction> once per faction; no scenarios
 //   node loop/scripts/capture.mjs --units a,b | --batch <name>             the same as a look, to output/loop/look/
 //   node loop/scripts/capture.mjs --iter N --regression-only               the scenario suite alone (loop v2 batch checkpoint)
+//   node loop/scripts/capture.mjs --palette                                 output/loop/palette.png alone (every --units/--batch run writes it too)
 //   node loop/scripts/capture.mjs --iter N [--showcase-only]               loop v1's showcase set (kept for reference)
 //   node loop/scripts/capture.mjs --only shot[,shot]                       quick look at v1 showcase shots, to output/loop/look/
 // Every run also writes output/loop/ours.json (game.listUnitDefinitions) for loop/scripts/stats.mjs.
@@ -41,9 +42,10 @@ const batchName = opt("--batch", "");
 const batch = batchName ? batchByName(loadRoster(), batchName) : null;
 const unitIds = batch ? batch.units : list(opt("--units", ""));
 const unitMode = unitIds.length > 0;
-const doRegression = flag("--regression-only") || (!flag("--showcase-only") && only.length === 0 && !unitMode);
-const doShowcase = !flag("--regression-only") && !unitMode;
-const outDir = only.length > 0 || (unitMode && iter === 0) ? path.join(root, "output", "loop", "look") : path.join(root, "output", "loop", `iter-${iter}`);
+const paletteOnly = flag("--palette") && !unitMode;
+const doRegression = flag("--regression-only") || (!flag("--showcase-only") && only.length === 0 && !unitMode && !paletteOnly);
+const doShowcase = !flag("--regression-only") && !unitMode && !paletteOnly;
+const outDir = paletteOnly ? path.join(root, "output", "loop", "palette") : only.length > 0 || (unitMode && iter === 0) ? path.join(root, "output", "loop", "look") : path.join(root, "output", "loop", `iter-${iter}`);
 const baseUrl = `http://127.0.0.1:${port}/MOVBattle/`;
 const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const KEEP_ITERS = 10;
@@ -179,6 +181,86 @@ const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // A unit whose card ability comes after its first logged special (the minotaur's charge at 17 ms): detection runs on until this kind is seen
 // and its _ability pair is taken on it (evidence 387)
 const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land" };
+
+// Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
+// swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
+// modules' usual self-light), the right wall "unlit" with emissive = colour, out of the glow layer. Rows are hues, columns the hue scaled by
+// PALETTE_STEPS. Every unit run writes output/loop/palette.png and palette.json (the grid with each swatch's code value); --palette alone does only that.
+const PALETTE_HUES = [["white", 1, 1, 1], ["red", 1, 0.12, 0.08], ["orange", 1, 0.42, 0.1], ["gold", 1, 0.7, 0.18], ["yellow", 1, 0.9, 0.3], ["green", 0.25, 0.8, 0.2], ["teal", 0.2, 0.8, 0.75], ["blue", 0.2, 0.4, 1], ["purple", 0.6, 0.2, 0.9], ["brown", 0.62, 0.3, 0.2], ["tan", 0.8, 0.6, 0.35]];
+const PALETTE_STEPS = [1, 0.7, 0.45, 0.25, 0.12, 0.05];
+const PALETTE_GLOW = 0.12;
+
+async function palette(page) {
+  const ok = await page.evaluate(({ hues, steps, glow }) => {
+    const game = window.game;
+    game.resetBattle();
+    document.body.classList.add("capture-mode");
+    window.advanceTime(50);
+    const blue = game.spawnUnit("medieval.squire", 1, { x: 0, z: -3.2 });
+    const red = game.spawnUnit("medieval.squire", 0, { x: 0, z: 3.2 });
+    if (!blue || !red) return false;
+    for (const u of [blue, red]) u.holdHeading(Math.PI / 2); // face +x, where the camera sits
+    window.advanceTime(50);
+    const src = blue.body.headMesh;
+    const scene = src.getScene();
+    const glowLayer = (scene.effectLayers || []).find((l) => l.getClassName && l.getClassName() === "GlowLayer") ?? null;
+    src.computeWorldMatrix(true);
+    const ext = src.getBoundingInfo().boundingBox.extendSize;
+    const size = 0.3, pitch = 0.36, base = 0.25;
+    const k = size / 2 / Math.max(ext.x, ext.y, ext.z);
+    const grid = [], meshes = [];
+    for (const [wall, unlit] of [[0, false], [1, true]]) {
+      const z0 = wall === 0 ? -2.35 : 0.55;
+      hues.forEach(([name, r, g, b], row) => {
+        steps.forEach((f, col) => {
+          const m = src.clone(`palette_${wall}_${row}_${col}`, null, true);
+          m.setParent(null);
+          m.rotationQuaternion = null;
+          m.rotation.set(0, 0, 0);
+          m.scaling.set(k, k, k);
+          m.position.set(0, base + size / 2 + (hues.length - 1 - row) * pitch, z0 + col * pitch);
+          const mat = src.material.clone(`palette_${wall}_${row}_${col}`);
+          const C = mat.baseColor.constructor;
+          mat.baseColor = new C(r * f, g * f, b * f);
+          mat.emissiveColor = unlit ? new C(r * f, g * f, b * f) : new C(r * f * glow, g * f * glow, b * f * glow);
+          mat.metallic = 0;
+          mat.roughness = unlit ? 1 : 0.9;
+          mat.disableLighting = unlit;
+          m.material = mat;
+          m.isVisible = true;
+          m.setEnabled(true);
+          if (unlit && glowLayer) glowLayer.addExcludedMesh(m);
+          meshes.push(m);
+          grid.push({ wall: unlit ? "unlit" : "cloth", hue: name, row, col, code: [+(r * f).toFixed(3), +(g * f).toFixed(3), +(b * f).toFixed(3)] });
+        });
+      });
+    }
+    const legend = document.createElement("div");
+    legend.id = "paletteLegend";
+    legend.style.cssText = "position:fixed;left:0;right:0;bottom:0;padding:8px 14px;background:rgba(0,0,0,.72);color:#fff;font:15px/1.35 monospace;z-index:9999;white-space:pre-wrap";
+    legend.textContent = `left wall: "cloth", emissive = colour x ${glow} (the dress modules' usual self-light) | right wall: "unlit", emissive = colour, out of the glow layer | squires: team blue skin (left), team red (right)\nrows top-down: ${hues.map(([n, r, g, b]) => `${n} (${r},${g},${b})`).join(", ")}\ncolumns left-right: the row's colour x ${steps.join(", ")}. Code values are linear; pick by what you see here, not by the number.`;
+    document.body.appendChild(legend);
+    const top = base + (hues.length - 1) * pitch + size;
+    game.frameCamera({ x: 0, y: top / 2, z: 0 }, 7.4, 0, Math.PI / 2);
+    window.__palette = { grid, meshes };
+    return true;
+  }, { hues: PALETTE_HUES, steps: PALETTE_STEPS, glow: PALETTE_GLOW });
+  if (!ok) { summary.notes.push("palette: spawn failed"); return; }
+  const state = await page.evaluate(() => Promise.race([window.game.renderWhenReady(), new Promise((r) => setTimeout(() => r({ ready: false, renders: -1, unready: ["timed out"] }), 120_000))]));
+  if (!state || !state.ready) summary.notes.push(`palette: scene not ready, shot may miss: ${state ? state.unready.join(", ") : "no state"}`);
+  await page.screenshot({ path: path.join(root, "output", "loop", "palette.png") });
+  const grid = await page.evaluate(() => {
+    document.getElementById("paletteLegend")?.remove();
+    const p = window.__palette;
+    for (const m of p.meshes) { m.material?.dispose(); m.dispose(); }
+    window.__palette = null;
+    window.game.resetBattle();
+    window.advanceTime(50);
+    return p.grid;
+  });
+  fs.writeFileSync(path.join(root, "output", "loop", "palette.json"), JSON.stringify({ hues: PALETTE_HUES, steps: PALETTE_STEPS, glow: PALETTE_GLOW, grid }));
+  log("shot palette.png -> output/loop/palette.png");
+}
 void PAIRS;
 // --list: print the shots this run would take and stop
 if (flag("--list")) {
@@ -588,6 +670,10 @@ async function main() {
         window.game.resetBattle();
         window.advanceTime(50);
       });
+    }
+    if (unitMode || paletteOnly) {
+      await palette(page);
+      await page.evaluate(() => { document.body.classList.remove("capture-mode"); });
     }
 
     if (doShowcase && wants("hud_placement", "ui_campaign_select")) {
