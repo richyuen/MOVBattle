@@ -409,7 +409,9 @@ async function main() {
           const a = window.__ua, t = on === 2 && window.__ually ? window.__ually : window.__ut;
           const pa = a.body.root.position, pt = t.body.root.position;
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
-          if (on === 1) { window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 3.8 * s, a.body.root.rotation.y - Math.PI / 2 - 0.6, Math.PI / 2.3); return; }
+          // the protector's slab hides his head from the front: his idle swings round to his side, where the head shows beside the slab (evidence 366)
+          const swing = a.definition.id === "tribal.protector" ? 1.35 : 0.6;
+          if (on === 1) { window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 3.8 * s, a.body.root.rotation.y - Math.PI / 2 - swing, Math.PI / 2.3); return; }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
           if (on === 4) { window.game.frameCamera({ x: pt.x, y: pt.y + 0.55 * s + 0.85, z: pt.z }, 5.2 * s, Math.atan2(fx, -fz), Math.PI / 2.1); return; }
           const c = on === 1 ? { x: pa.x, z: pa.z } : on === 2 ? { x: pt.x, z: pt.z } : on === 3 ? { x: pa.x + fx * 1.4 * s, z: pa.z + fz * 1.4 * s } : { x: (pa.x + pt.x) / 2, z: (pa.z + pt.z) / 2 };
