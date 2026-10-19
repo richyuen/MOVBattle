@@ -364,7 +364,8 @@ const FLASK_HANG = { down: 1, ahead: 0.3 };
  * .up above it; the shaft along fwd .fwd, right .side and down .down (normalised), the fist .fistAt of its length from the butt. Stood and marching;
  * the blow keeps its own pose.
  */
-const DORY_CARRY = { ahead: 0.2, out: 0.62, up: -0.05, fwd: 0.75, side: 0.18, down: 0.62, fistAt: 0.22 };
+// (380 follow-up: at .62 out, -.05 up the fist sat on the hip, arm akimbo, and the point went into the grass at .62 down)
+const DORY_CARRY = { ahead: 0.25, out: 0.9, up: -0.3, fwd: 0.8, side: 0.25, down: 0.4, fistAt: 0.15 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
