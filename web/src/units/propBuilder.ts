@@ -4688,7 +4688,16 @@ const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
  *   - two orange laurel sprays, .leaves leaf blades each, fanned on arcs: the upper bowed up over the boss (ends low), the lower bowed down under it;
  *   - in the middle a dark iron plate .plate across with .studs orange studs round it and a faceted iron boss .boss across standing out of it.
  */
-const SCUTUM = { tall: 0.74, wide: 0.42, deep: 0.03, strips: 7, curve: 0.08, rim: 0.022, chin: 0.05, leaves: 9, leaf: 0.075, spray: 0.3, plate: 0.13, studs: 8, boss: 0.08 };
+const SCUTUM = { tall: 0.5, wide: 0.36, deep: 0.025, strips: 7, curve: 0.06, rim: 0.02, chin: 0.06, plate: 0.1, studs: 8, boss: 0.065 };
+/*
+ * [S] chin to shin, leafy laurels (379; ancient.shield_bearer.red.png: the board's top at his chin with the helmet and eyes over it, its bottom at the
+ * shin, about three quarters as wide as tall; a deep orange rim; two laurel sprays, each a knot in the middle and a branch out each way feathered with
+ * pointed leaves that shrink toward the ends, the upper arched (ends low), the lower dished). Board .5 by .36 (x1.9 on the hand, see the mount), rim
+ * SCUTUM_TRIM (237,153,77) lit .06. Each spray: middle at .upperAt / .lowerAt of the height, arched .arch of it, spanning .spread of the width; knot
+ * .knot round; .steps stem bars .stem thick, a leaf each side of each, .leaf long shrinking by .shrink to the tip, .wide of their length across, leant .fan
+ * rad off the stem.
+ */
+const SCUTUM_LAUREL = { upperAt: 0.26, lowerAt: -0.3, arch: 0.07, spread: 0.72, knot: 0.018, steps: 6, stem: 0.006, leaf: 0.045, shrink: 0.45, wide: 0.42, fan: 0.75 };
 const SCUTUM_TRIM = new Color3(0.93, 0.6, 0.3);
 const SCUTUM_IRON = new Color3(0.27, 0.27, 0.28);
 /*
@@ -4894,7 +4903,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       const shield = new Mesh("scutumshield", scene);
       shield.metadata = { holeUp: H / 2 + S.chin * s };
       const boardMat = mat(scene, board, 0.12, "cloth");
-      const trim = mat(scene, SCUTUM_TRIM, 0.15, "cloth");
+      const trim = mat(scene, SCUTUM_TRIM, 0.06, "cloth");
       const iron = mat(scene, SCUTUM_IRON, 0.1, "cloth");
       // the arc the face lies on: x across, z back by the curve at the sides
       const arcZ = (x: number) => -S.curve * s * (2 * x / W) ** 2;
@@ -4924,17 +4933,34 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
           r.parent = shield; r.material = trim;
         }
       }
-      // the laurel sprays: blades fanned along an arc either side of the middle, the upper bowed up, the lower bowed down
-      for (const [y0, bow] of [[0.2, 1], [-0.24, -1]] as [number, number][]) {
-        for (let i = 0; i < S.leaves; i++) {
-          const u = (i / (S.leaves - 1)) * 2 - 1;
-          const x = u * S.spray * W * 1.15;
-          const y = (y0 + bow * 0.06 * (1 - u * u)) * H;
-          const leaf = MeshBuilder.CreateBox("scutumLeaf", { width: S.leaf * s * 0.35, height: S.leaf * s, depth: D * 0.5 }, scene);
-          leaf.position.set(x, y, arcZ(x) + D * 0.6);
-          // each blade leans out along the spray, the tips toward its ends
-          leaf.rotation.set(0, arcTurn(x), -u * 1.2 - (i % 2 ? 0.35 : -0.35) * bow);
-          leaf.parent = shield; leaf.material = trim;
+      // the laurel sprays (379, SCUTUM_LAUREL): a knot in the middle and a branch out each way along an arched stem, leaf pairs feathered off it
+      const L = SCUTUM_LAUREL;
+      for (const [y0, bow] of [[L.upperAt, 1], [L.lowerAt, -1]] as [number, number][]) {
+        const stemAt = (u: number): [number, number] => [u * L.spread * W / 2, (y0 + bow * L.arch * (1 - u * u)) * H];
+        const knot = MeshBuilder.CreateIcoSphere("scutumKnot", { radius: L.knot * s, subdivisions: 1, flat: true }, scene);
+        knot.scaling.set(1.5, 0.8, 0.45);
+        knot.position.set(0, stemAt(0)[1], arcZ(0) + D * 0.7);
+        knot.parent = shield; knot.material = trim;
+        for (const side of [-1, 1]) {
+          for (let i = 0; i < L.steps; i++) {
+            const u0 = (i / L.steps) * 0.92 + 0.08, u1 = ((i + 1) / L.steps) * 0.92 + 0.08;
+            const [x0, ya] = stemAt(side * u0), [x1, yb] = stemAt(side * u1);
+            const run = Math.atan2(yb - ya, x1 - x0);
+            const stem = MeshBuilder.CreateBox("scutumStem", { width: Math.hypot(x1 - x0, yb - ya) * 1.1, height: L.stem * s, depth: D * 0.5 }, scene);
+            stem.position.set((x0 + x1) / 2, (ya + yb) / 2, arcZ((x0 + x1) / 2) + D * 0.6);
+            stem.rotation.set(0, arcTurn((x0 + x1) / 2), run);
+            stem.parent = shield; stem.material = trim;
+            const len = L.leaf * s * (1 - L.shrink * u0);
+            for (const fan of [-1, 1]) {
+              // each leaf a pointed blade leaning out along the branch, one each side of the stem
+              const a = run + fan * L.fan;
+              const leaf = MeshBuilder.CreateCylinder("scutumLeaf", { height: len, diameterTop: 0, diameterBottom: len * L.wide, tessellation: 4 }, scene);
+              leaf.scaling.z = 0.3;
+              leaf.position.set(x0 + Math.cos(a) * len * 0.5, ya + Math.sin(a) * len * 0.5, arcZ(x0) + D * 0.65);
+              leaf.rotation.set(0, arcTurn(x0), a - Math.PI / 2);
+              leaf.parent = shield; leaf.material = trim;
+            }
+          }
         }
       }
       // the iron plate, its studs and the boss
