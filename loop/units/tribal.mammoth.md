@@ -7,7 +7,7 @@ b PASS (366)
 c PASS (364)
 d PASS (cost 2200, hp 31.76x; dmg, cd wiki none)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a body — blocker 1: evidence first (capture.mjs: pull the _windup and _ability cameras back so the back and hump are in frame), then judge the topline — ref: .red.png — ours: unit_tribal.mammoth_windup.png
+1. [S] a body — blocker 1: evidence done 376 (b0917e5: motion shots 1.5x back, aimed higher; back and hump now in frame). Next step 2 RE-AUDITS a only, then judge the topline — ref: .red.png — ours: unit_tribal.mammoth_windup.png
 ## Attempts (iter | gap | criterion | verdict)
 323-366 | fur, mane, ankles, paint, Charge; pillar legs, charge pose, trample; barrel, trunk; tusk paint, hump, domed thighs [S] | a,b,c | approved
 367 | ears (MAMMOTH_EAR) [S] approved; fur hem lobes (MAMMOTH_HEM) [S] (reverted) | a | rejected

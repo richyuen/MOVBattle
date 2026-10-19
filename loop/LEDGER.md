@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-366 | tusk paint: matte bone-tan, team tip, tan gap, stripe (ef98856 +ef94f97) | tribal.mammoth.b | approved
-366 | skewed hump, haunch flank, domed thigh tops (4bc74c3 +940f9b1) | tribal.mammoth.a | approved
-366 | pauldrons: head-wide tan beast skulls, googly eye (0a99945 +d78d6f7 +65e6573) | tribal.chieftain.a | approved
-366 | curly mop: 3-piece hooked locks, crown tufts (6ca5eb6) | tribal.clubber.a | approved
-366 | strap: solid dark band proud of shoulder, rolled hem (d06e5d0) | tribal.stoner.a | approved
-366 | worn rack: near-level beams 1.4x, bare first joint, own tan (1c62590 +8d1905d) | tribal.bone_mage.a | approved
 367 | skull face plate: rims, bridge, muzzle (8762812) | tribal.protector.a | approved
 367 | loin strips: 5 torn brown strips, tan skull (d0909d5) | tribal.clubber.a | approved
 367 | skirt: ring of torn tongues (de2744b +df9a744) | tribal.stoner.a | approved
@@ -74,6 +68,13 @@ for 25 iterations.
 375 | mop of hanging locks in two tiers to jaw and nape (d04eef6) | farmer.halfling.a | approved
 375 | crow wings: 3 layered feather rows, team wedge on the leading edge (730ae01) | farmer.scarecrow.a | approved
 375 | round belly between the legs, skirt dropped, fur collar per leg (4ee59f9) | tribal.mammoth.a | approved
+376 | square upright stance in a sallet, legs 1.18 (d66db47) | renaissance.halberd.a | approved
+376 | two braids hung from the torso down the chest, team bands (ca0eef1) | farmer.harvester.a | approved
+376 | perched crow as its own upright wingless bird (a5e59c1) | farmer.scarecrow.a | approved
+376 | open coat: back/side walls, hinged fronts, lapels, vest, V, belt (e8d2448) | farmer.halfling.a | approved
+376 | fitted 8-sided jerkin as the trunk, skirt band, lean build (bfd2385) | farmer.potion_seller.a | approved
+376 | tall hood: one lathe shoulders to cone, oval face window (5162e03) | farmer.farmer.a | approved
+376 | riders on the tray: Farmer on the lip legs forward, Thrower astride (78a73b0) | farmer.wheelbarrow.a | approved
 
 ## Spent (never retry as [P])
 
@@ -81,7 +82,6 @@ for 25 iterations.
 tribal.spear_thrower (JAVELIN_LEAF, TUSK_BAND, SPEAR_LOIN hide (.5,.38,.26) glow .08 rope (.58,.24,.13), JAVELIN_UPRIGHT; unit done) | compacted 374 | 374 | approved | values: git show e35255b:loop/LEDGER.md + 374 gap commits
 renaissance.painter (PAINTER_JABOT, BERET_TAM, PAINTER_DODGE, PAINTER_SWEATER .2,1.12,rib .45; legLength 1.2; unit done) | compacted 374 | 374 | approved | values: git show e35255b:loop/LEDGER.md + 374 gap commits
 renaissance.fencer (FENCER_RECOVER, FENCER_DODGE, CAVALIER_FELT, FENCER_TRIM hip .6 hipOut 1.1 foot 1.32, FENCER_ROLL drop .24; unit done) | compacted 374 | 374 | approved | values: git show e35255b:loop/LEDGER.md + 374 gap commits
-renaissanceDress.ts:HALBERD_SHOE (low, cuffTall, cuffFoot, cuffTop, cuffSink, hose, leather, glow) | .55,.5,.95,1.4,.35,.42,(.74,.36,.17),.14 | 374 | approved | body boot
 medieval.* (43 knob rows incl. stats, 351-365; batch done) | compacted 366 | 365 | approved | values: git show f142d6e:loop/LEDG..
 tribal.chieftain (OFF_AXE, MAIN_AXE, CHIEF_LOIN, STONE_AXE, BEAST_SKULL, PAULDRON, CHIEF_BEARD; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
 tribal.clubber (DREAD_MOP, CLUB, RAGGED_LOIN, visuals, CURLY_MOP, RAGGED_STRIPS; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
@@ -89,29 +89,25 @@ tribal.stoner (HIDE_DRESS, HIDE_SKIRT, HIDE_EDGE, SKIRT_TONGUES; unit done) | co
 tribal.bone_mage (DEER_RACK, worn, staff, MASK_LEAF, STAFF_SKULL, DEER_MASK; unit done) | compacted 368 | 366 | approved | values: git show 96d1c20:loop/LEDGER.md
 renaissance.jouster (BARDED_NECK, JOUSTER_CHARGE, HORSE_GAIT, LANCE_CANDY, FEATHER_CLUMP; unit done) | compacted 371 | 371 | approved | values: git show 58e64cc:loop/LEDGER.md + 371 gap commits
 renaissance.musketeer (MORION_CUT, MATCHLOCK, MUSKETEER_COLLAR, MUSKETEER_HOSE; unit done) | compacted 371 | 371 | approved | values: git show 58e64cc:loop/LEDGER.md + 371 gap commits
-visualEffects.ts:TRAMPLE_RING (sprites..peak, band, bandPeak, clods, toss, fling, clod) | 12,.25,1,.7,1.8,.4,1.2,.85,.22,.5,8,4.2,2.2,.16 | 364 | approved | -
-proceduralAnimation.ts:SLAB_FRONT (reach, grip, bash) | .2, .08, .22 | 361 | approved | -
-propBuilder.ts:SKULL_FACETED (heads, tall, under, sink, socket, socketUp, snout, snoutTilt, tan, glow) | 1.12,1.15,.45,.1,.3,.42,.5,.5,(.68,.52,.34),.2 | 363 | approved | 1.45,1.6,.7,-,.3,-,.55 white .18
+tribal.protector (SLAB_FACETS, SKULL_FACE, SLAB_LIP, SLAB_WINDOW_BONE, SKULL_BACK, SLAB_WINDOW_FACE, SLAB_FRONT, SKULL_FACETED; unit done) | compacted 376 | 373 | approved | values: git show b0e9788:loop/LEDGER.md
+renaissance.balloon_archer (HELD_BALLOON_ARROW, ARCHER_FRONT, BRIM_HAT; unit done) | compacted 373 | 373 | approved | values: git show 2703401:loop/LEDGER.md + 23dc915
+farmer.hay_baler (HAY_BALE, HAY_PLANK; unit done) | compacted 376 | 375 | approved | values: git show b0e9788:loop/LEDGER.md
+tribal.mammoth c (TRAMPLE_RING, CHARGE_POSE, MAMMOTH_DUST, KICK_DUST; c PASS 364) | compacted 376 | 364 | approved | values: git show b0e9788:loop/LEDGER.md
 vehicleBuilder.ts:MAMMOTH_LEG (thigh, shin, foot) | r .31->.245, .245->.205, foot lathe .205->.255 | 372 | approved | thigh .37->.3, shin .28-.31 (366); radius-only change now = reversal
-proceduralAnimation.ts:CHARGE_POSE (ease, headDown, toss, pitch, stride, fold, rock, pace) | 10,.42,.08,.1,.42,.4,.05,9 | 363 | approved | -
-simulationSystem.ts:MAMMOTH_DUST (every, size); visualEffects.ts:KICK_DUST (count..peak) | .12, 1.3; 5,.35,.25,.5,1.5,.6,.5,1.1,.75 | 363 | approved | one smoke puff at the start
-
 vehicleBuilder.ts:MAMMOTH_BARREL (..haunch, legAt, legSpread, belly, bellyNarrow, skirtFull; round, winding out) | ..,.26,.44,.32,.2,.38,5 | 375 | approved | skirtSquare .45, skirtDrop .16, belly .14 x (1-t^2) (374)
 vehicleBuilder.ts:MAMMOTH_TRUNK (pitch, piece, rootR, tipR, flare, hole) | [.75..0.9] x8, .21, .25, .13, .16, .62 | 365 | approved | 8 dark pieces .2, .5->.22 diam
 vehicleBuilder.ts:MAMMOTH_TUSK (tan, glow, tip, gap, stripe, proud) | (.8,.6,.36),.14,3,1,.45,1.08 cloth | 366 | approved | bone ivory (1,.82,.58) glow .22, 2-piece tip
 vehicleBuilder.ts:MAMMOTH_EAR (tall, long, thick, z, flare) | .48,.42,.15,.3,1.05 | 367 | approved | edge-on fan
 vehicleBuilder.ts:MAMMOTH_HEM (row, c, size, drop, skirt, ring, skirtY) | 9,-.55,[.08,.2,.22],.12,5,.36,-.42 | 367 | rejected (reverted) | -
-propBuilder.ts:SALLET_FACETED (sides, heads, taper, deep, drop, slit, slitWide, eye, bevor, bevorFlare) | 8,1.24,.9,1.08,1.0,.13,.84,.15,.34,1.3 | 368 | approved | SALLET ball
-
-simulationSystem.ts:HOP_BACK (halberd close, dist, rise, cd) | .75,1.9,2.6,3 | 370 | approved | fencer row removed 370 (was .12,1.5,3.2,1.5)
-unitFactory.ts:HALBERD_QUILT (upper, lower, swell, tall, glow, cuffLong, cuffFlare) | 5,3,1.6,1.25,.12,.48,1.75 | 370 | approved | 3 rolls 1.22, cuff 1.5
-tribal.protector (SLAB_FACETS, SKULL_FACE, SLAB_LIP, SLAB_WINDOW_BONE outer 1.3, SKULL_BACK, SLAB_WINDOW_FACE; unit done) | compacted 373 | 373 | approved | values: git show 2703401:loop/LEDGER.md + 41cba1a
-renaissance.balloon_archer (HELD_BALLOON_ARROW, ARCHER_FRONT, BRIM_HAT; unit done) | compacted 373 | 373 | approved | values: git show 2703401:loop/LEDGER.md + 23dc915
-proceduralAnimation.ts:HALBERD_REST (ahead, inward, drop, tilt) | .13,.12,.24,.05 | 373 | approved | -
-simulationSystem.ts:PAINTER_DODGE (warn, dist, seconds, cooldown) | .3,1.6,.2,1.2 | 373 | approved | -
 vehicleBuilder.ts:MAMMOTH_LEG collar ([r,y] foot..top, collarJitter) | [.28,-.36],[.35,-.3],[.37,-.2],[.33,-.1], .045 | 375 | approved | -
-renaissanceDress.ts:HALBERD_BREECH (bands, top, tall, swellTop, swellKnee, light, dark, slashes, slash, slashTall, glow) | 3,.04,1.3,1.35,1.6,.95,.7,3,.16,.5,.2 | 375 | approved | -
-unitFactory.ts:HAY_BALE (blades, blade, short, bladeWide, lean, hems, hem, hemWide, hemAt, flare); HAY_PLANK (flat, tip, hemTip) | 7,.8,.7,.72,.75,11,.75,.62,.3,.3; .14,.6,.3 | 375 | approved | cones: 10,.62,.6,.42,.45,12,.5,-,.12,.5 (345)
-propBuilder.ts:POTION (ball, squash, shoulder, shoulderFoot, neck, neckLong, lip, cork, seat, glow) | .12,.85,.042,.7,.042,.035,1.3,.026,.06,.22 | 375 | approved | ball .065 .92, neck .026, seat .035 (339)
+renaissance.halberd (SALLET_FACETED, HOP_BACK, HALBERD_QUILT, HALBERD_REST, HALBERD_SHOE, HALBERD_BREECH) | compacted 376 | 375 | approved | values: git show b0e9788:loop/LEDGER.md
+proceduralAnimation.ts:HALBERD_SQUARE (tilt, stride, lean, spread, knee); unitVisuals halberd legLength | .03,.12,.04,.09,.06; 1.18 | 376 | approved | hashed hip-shot stance; legLength .92
+propBuilder.ts:POTION (ball, squash, shoulder, shoulderFoot, neck, neckLong, lip, cork, seat, glow) | .12,.85,.042,.7,.042,.035,1.3,.026,.06,.22 | 376 | rejected 1x [P] | 376 seat -.02 glass (.45,.68,.72) rejected; ball .065 .92, seat .035 (339)
 tribalDress.ts:SHAGGY (cap, locks, long, front, fringeArc, thick, splay, locks2, long2, splay2, rootY2) | 1.3,22,.95,.32,.6,.42,.16,14,.5,.5,.85 | 375 | approved | 1.32,26,.5,.5,-,.3,.55 (340)
 propBuilder.ts:CROW_LAYERS (shrink, lift, wide, tip, bandFrom, band, bandTip, bandProud, bandShade); CROW_WINGS wrist, rows | .72,.035,.42,.3,.16,.3,.45,.07,.8; .48, 3 | 375 | approved | wrist box .32 (339)
+farmerDress.ts:CHEST_BRAID (apart, rootUp, rootAhead, footOut, footDrop, standOff, bow, plaits, thick) | .44,.45,.12,.5,1.05,.14,.18,7,.3 | 376 | approved | head-hung FLOPPY braid 1.95 (removed)
+propBuilder.ts:PERCH_CROW (wide, deep, tall, tip, head, beak, eye, tail, tailTip, leg) | .1,.12,.18,.3,.085,.06,.02,.12,.35,.035 | 376 | approved | held crow laid flat
+farmerDress.ts:HALFLING_COAT (neck, drop, out, front, gap, flare, lapel, vest, vee, belt, buckle) | .02,.32,.06,.3,.22,.08,.4,.46,.4,.12,.24 | 376 | approved | box jacket 1.14, drop .12
+farmerDress.ts:POTION_FIT (top, waist, deep, band, skirt, hips, light, dark); bulk, legLength | 1,.84,1.04,.1,.2,.94,.55,.42; .84, 1.08 | 376 | approved | box jerkin shell 1.12
+propBuilder.ts:TALL_HOOD (tip ring [y,r,back], sides, chin, brow, window) | [1.2,.01,.7], 12, -.92, -.1, .8 | 376 | approved | sphere cowl snug 1.18 + tube tail
+vehicleBuilder.ts:CREW_SEAT (lipIn, lipUp, frontThigh, frontSplay, frontKnee, astrideUp, backThigh, backSplay, backKnee) | .05,.03,-1.15,.62,.45,.02,-.75,1,.95 | 376 | approved | seat .32, -1.45/-1.4, splay .45/.35

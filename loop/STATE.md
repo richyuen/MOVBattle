@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 375   Batch: tribal:re+renaissance:re+farmer:re (5-7/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
+Iteration: 376   Batch: tribal:re+renaissance:re+farmer:re (5-7/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,17 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-375 (BASE d199817; farmer:re audited as tail overlap): [S] halberd a breeches a74b9af approved | [S] hay_baler a planks + tongue skirt d822dce approved | [S] harvester c sweep held through the press 3a94e9e approved | [S] potion_seller b chunky flask 5af9646 approved | [S] halfling a hanging mop d04eef6 approved | [S] scarecrow a layered wings + team band 730ae01 approved | [S] mammoth a round belly + leg collars 4ee59f9 approved
+376 (BASE b0e9788; evidence b0917e5 mammoth motion cameras): [S] halberd a square stance d66db47 approved | [S] harvester a chest braids ca0eef1 approved | [S] scarecrow a upright perched crows a5e59c1 approved | [S] halfling a open coat e8d2448 approved | [S] potion_seller a fitted jerkin bfd2385 approved | [S] farmer a tall hood 5162e03 approved | [S] wheelbarrow a riders on the tray 78a73b0 approved | [P] potion_seller b flask seat 665e5e0 rejected (reverted 508f32f)
 
 ## Last verdicts (critic header lines verbatim)
-- AUDIT farmer:re: halfling a FAIL (3/4) | farmer a FAIL (3/4) | hay_baler a FAIL (3/4) | potion_seller a FAIL b FAIL (2/4) | harvester a FAIL c FAIL (2/4) | wheelbarrow a FAIL (3/4) | scarecrow a FAIL (3/4)
-- GAP: [S] renaissance.halberd (a74b9af) VERDICT: APPROVE CRITERION: renaissance.halberd.a FAIL (previous: FAIL)
-- GAP: [S] farmer.hay_baler (d822dce) VERDICT: APPROVE CRITERION: farmer.hay_baler.a PASS (previous: FAIL)
-- GAP: [S] farmer.harvester (3a94e9e) VERDICT: APPROVE CRITERION: farmer.harvester.c PASS (previous: FAIL)
-- GAP: [S] farmer.potion_seller (5af9646) VERDICT: APPROVE CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
-- GAP: [S] farmer.halfling (d04eef6) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
-- GAP: [S] farmer.scarecrow (730ae01) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (4ee59f9) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.halberd (d66db47) VERDICT: APPROVE CRITERION: renaissance.halberd.a FAIL (previous: FAIL)
+- GAP: [S] farmer.harvester (ca0eef1) VERDICT: APPROVE CRITERION: farmer.harvester.a FAIL (previous: FAIL)
+- GAP: [S] farmer.scarecrow (a5e59c1) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL)
+- GAP: [S] farmer.halfling (e8d2448) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [S] farmer.potion_seller (bfd2385) VERDICT: APPROVE CRITERION: farmer.potion_seller.a FAIL (previous: FAIL)
+- GAP: [S] farmer.farmer (5162e03) VERDICT: APPROVE CRITERION: farmer.farmer.a FAIL (previous: FAIL)
+- GAP: [S] farmer.wheelbarrow (78a73b0) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
+- GAP: [P] farmer.potion_seller (665e5e0) VERDICT: REJECT CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Evidence first: farmer.farmer _idle is shot from behind (re-aim to front 3/4 before the hood gap); mammoth _windup/_ability crop the topline (pull back before blocker 1). hay_baler's Hay absorption is never exercised (melee sparring man).
-- [P] fallout pickable: potion_seller POTION.seat .06 -> -.02, glass (.45,.68,.72) (shot unit_farmer.potion_seller_idle). Scripts take faction names: --batch farmer for farmer:re.
-- New farmer cloth/dress functions go in web/src/units/farmerDress.ts (create it, after tribalDress.ts); halfling jacket is the next one.
-- A pose wrong only in the capture: log the capture's own tick timeline (state, timers) at the shot; seeded replays differ from ad hoc probes (375 harvester: moveTo cancelled the sweep).
+- Evidence b0917e5 re-aimed the mammoth's motion shots: next iteration's step 2 RE-AUDITS tribal.mammoth criterion a only (give the critic its Verdicts block), before any mammoth gap.
+- farmer.farmer _idle is his front (the old hood hid the face); no farmer camera change. [P] fallout pickable: farmer TALL_HOOD tip (5162e03), halfling belt/buckle (e8d2448).
+- Scripts take faction names: --batch farmer for farmer:re. Farmer cloth/hair goes in web/src/units/farmerDress.ts (exists since 376).
+- A pose wrong only in the capture: probe the animator's own state at the shot (376: _javelin() matched the halberd's "shaft", so a gate keyed on it was dead).
 - Capture replays are deterministic. Particles do not render on the stepped clock. Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool.
