@@ -359,8 +359,8 @@ const DEER_MASK = { top: 0.95, tip: 0.36, flat: 0.32, rise: 0.1, drop: 0.08, til
  * the shared pale bone rendered grey-white under the capture's sky.
  */
 const MASK_LEAF = {
-  long: 0.42, wide: 0.17, x: 0.36, ahead: 0.5, top: 0.3, lean: 0.25,
-  color: new Color3(0.72, 0.36, 0.13), glow: 0.22, tan: new Color3(0.8, 0.64, 0.42), tanGlow: 0.2,
+  long: 0.52, wide: 0.3, x: 0.46, ahead: 0.62, top: 0.32, lean: 0.25,
+  color: new Color3(0.8, 0.38, 0.12), glow: 0.25, tan: new Color3(0.76, 0.56, 0.34), tanGlow: 0.22,
 };
 
 function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: number, tall: number, R: number, u: (v: number) => number, chin?: number, rackScale = 1): void {
@@ -396,8 +396,8 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
       for (const side of [-1, 1]) {
         const topY = chin + L.top * H;
         const leaf = MeshBuilder.CreateIcoSphere("maskLeaf", { radius: 0.5, subdivisions: 1, flat: true }, scene);
-        leaf.scaling.set(u(L.wide * W), u(L.long * H), u(0.05 * W));
-        leaf.rotation.set(0.15, side * 0.35, side * L.lean);
+        leaf.scaling.set(u(L.wide * W), u(L.long * H), u(0.08 * W));
+        leaf.rotation.set(0.15, 0, side * L.lean);
         leaf.position.set(side * u(L.x * W), u(topY - L.long * H * 0.5), u(L.ahead * W));
         leaf.material = leafMat;
         leaf.parent = skull;
