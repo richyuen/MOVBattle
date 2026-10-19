@@ -593,7 +593,7 @@ const SNAKE_HOOD = {
   collar: 0.42, collarOut: 1.08, point: 0.5, cord: new Color3(0.72, 0.5, 0.3), shade: 0.82, glow: 0.12,
 };
 /* [S] 389 the hood's rounded shell (spec at its build in dressSnakeArcher); the wrap's foot .wrapTaper of its top across */
-const SNAKE_CAP = { cy: -0.35, rx: 1.12, ry: 1.38, rz: 1.12, rows: 6, segs: 16, nub: 0.26, nubLean: 0.55, wrapTaper: 0.86 };
+const SNAKE_CAP = { cy: 0, rx: 1.22, ry: 1.22, rz: 1.22, pow: 3, rows: 6, segs: 16, nub: 0.26, nubLean: 0.55, wrapTaper: 0.86 };
 
 /*
  * [S] the snake archer's snake (385; ancient.snake_archer.red.png, card Appearance "a bow ... loaded with a snake", Weapons projectile Snake: a big green
@@ -722,12 +722,13 @@ export function dressSnakeArcher(scene: Scene, body: ArticulatedBody, teamColor:
   const put = (m: Mesh, parent: TransformNode | Mesh, material = cloth) => { m.material = material; m.convertToFlatShadedMesh(); m.parent = parent; out.push(m); return m; };
   // [S] 389 the hood one rounded shell (SNAKE_CAP), not a half dome on a straight back cylinder over a flaring wrap (critic 388: a tall flat-sided
   // cylinder with a fin, a bucket helm; ancient.snake_archer.blue.png: a short round team cap hugging the crown, a small nub at its top front, the
-  // face wrap narrowing to the chin): rows of one ellipsoid (centre .cy of e.y, radii .rx/.ry/.rz of e) from its top down to the brow all round, and
+  // face wrap narrowing to the chin): rows of one superellipsoid (centre .cy of e.y, radii .rx/.ry/.rz of e, profile exponent .pow, so it clears the
+  // block head's chamfered corners and top ring: an ellipsoid short enough let them cut through it) from its top down to the brow all round, and
   // from the brow down to the wrap's top round the back only (.backArc of a turn), the gap at the eyes; a blunt nub .nub of e.y tall leaning .nubLean
   const Cp = SNAKE_CAP;
   const cy = e.y * Cp.cy;
   const shellRow = (y: number, a0: number, a1: number): Vector3[] => {
-    const k = Math.sqrt(Math.max(0, 1 - ((y - cy) / (e.y * Cp.ry)) ** 2));
+    const k = Math.max(0, 1 - Math.abs((y - cy) / (e.y * Cp.ry)) ** Cp.pow) ** (1 / Cp.pow);
     const row: Vector3[] = [];
     for (let i = 0; i <= Cp.segs; i++) {
       const a = a0 + ((a1 - a0) * i) / Cp.segs;
