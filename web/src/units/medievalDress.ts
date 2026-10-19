@@ -338,7 +338,7 @@ function bardVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
  * and SQUIRE_TABARD.end at their ends; hem band SQUIRE_TABARD.hem of the skirt's length; shoulder edges SQUIRE_TABARD.edge of the chest half-width wide.
  */
 const SQUIRE_TABARD = {
-  span: 0.86, up: 0.82, down: 0.7, waist: 0.1, end: 0.34, hem: 0.12, edge: 0.3, proud: 0.015,
+  span: 0.86, up: 0.85, down: 0.75, waist: 0.14, end: 0.42, hem: 0.12, edge: 0.3, proud: 0.015,
   beige: new Color3(0.88, 0.8, 0.62), glow: 0.08,
 };
 
@@ -353,7 +353,7 @@ export function squireTabardTrim(scene: Scene, body: ArticulatedBody, tabard: Me
   const proud = S.proud * tx;
   // the cross: its middle on the chest line, each arm a flat trapezoid laid on the tabard's front
   const y0 = t.position.y + cy * 0.25;
-  const z = (y: number) => frontAt(tabard, y, cy * 0.2) + proud;
+  const z = (y: number) => Math.max(frontAt(tabard, y), chestFrontAt(body, y)) + proud;
   const z0 = z(y0);
   const w0 = tx * S.waist, w1 = tx * S.end;
   const yUp = y0 + (t.position.y + cy - y0) * S.up, yDown = y0 - (y0 - (t.position.y - cy)) * S.down;
@@ -383,7 +383,7 @@ export function squireTabardTrim(scene: Scene, body: ArticulatedBody, tabard: Me
   out.push(hem);
   // beige edging over each shoulder, front to back across the tabard's top corners
   const topY = t.position.y + cy * 0.82;
-  const zf = frontAt(tabard, topY, cy * 0.2);
+  const zf = Math.max(frontAt(tabard, topY), chestFrontAt(body, topY));
   for (const side of [-1, 1]) {
     const edge = MeshBuilder.CreateBox("squireShoulderEdge", { width: tx * S.edge, height: cy * 0.12, depth: zf * 2.08 }, scene);
     edge.parent = tabard.parent;
