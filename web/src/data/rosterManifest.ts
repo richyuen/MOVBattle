@@ -252,13 +252,13 @@ const medieval = makeFaction(FactionId.Medieval, "medieval", [
 ]);
 
 const ancient = makeFaction(FactionId.Ancient, "ancient", [
-  ["shield_bearer", "Shield Bearer", 80, "shield_melee", { weaponHint: "sword", shieldHint: "tower" }],
-  ["sarissa", "Sarissa", 100, "polearm_melee", { weaponHint: "spear" }],
-  ["hoplite", "Hoplite", 140, "shield_melee", { weaponHint: "spear", shieldHint: "round", hatHint: "plume_helmet" }],
-  ["snake_archer", "Snake Archer", 220, "archer", { weaponHint: "bow", abilities: ["poison"], projectileHint: "arrow" }],
-  ["ballista", "Ballista", 900, "artillery", { size: "large", projectileHint: "bolt", specialHint: "ballista" }],
-  ["minotaur", "Minotaur", 700, "giant_melee", { size: "giant", abilities: ["charge_impact"], specialHint: "minotaur" }],
-  ["zeus", "Zeus", 2000, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt", visualPreset: "iconic_zeus", behaviorPreset: "iconic_zeus", controlStrength: 1.45, cooldownMultiplier: 0.85 }],
+  ["shield_bearer", "Shield Bearer", 100, "shield_melee", { weaponHint: "sword", shieldHint: "tower", healthMultiplier: 0.45, damageMultiplier: 0.21 }],
+  ["sarissa", "Sarissa", 120, "polearm_melee", { weaponHint: "spear", healthMultiplier: 0.29, damageMultiplier: 0.1, cooldownMultiplier: 0.77 }],
+  ["hoplite", "Hoplite", 180, "shield_melee", { weaponHint: "spear", shieldHint: "round", hatHint: "plume_helmet", healthMultiplier: 0.47, damageMultiplier: 0.31, cooldownMultiplier: 0.58 }],
+  ["snake_archer", "Snake Archer", 300, "archer", { weaponHint: "bow", abilities: ["poison"], projectileHint: "arrow", healthMultiplier: 0.27, damageMultiplier: 0.66, cooldownMultiplier: 6.36 }],
+  ["ballista", "Ballista", 900, "artillery", { size: "large", projectileHint: "bolt", specialHint: "ballista", healthMultiplier: 0.86, damageMultiplier: 5.75, cooldownMultiplier: 1.67 }],
+  ["minotaur", "Minotaur", 1600, "giant_melee", { size: "giant", abilities: ["charge_impact"], specialHint: "minotaur", healthMultiplier: 0.3, damageMultiplier: 0.5, cooldownMultiplier: 0.43 }],
+  ["zeus", "Zeus", 2000, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt", visualPreset: "iconic_zeus", behaviorPreset: "iconic_zeus", controlStrength: 1.45, cooldownMultiplier: 0.42, healthMultiplier: 0.61, damageMultiplier: 0.27 }],
 ]);
 
 const viking = makeFaction(FactionId.Viking, "viking", [
