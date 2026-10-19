@@ -968,13 +968,21 @@ const ARCHER_ARMS = {
   beige: new Color3(0.74, 0.58, 0.38), leather: new Color3(0.44, 0.27, 0.16), strap: new Color3(0.27, 0.16, 0.1), glow: 0.1,
 };
 
+const ARCHER_SLEEVE = { out: 1.15 };
+
 function archerArms(scene: Scene, body: ArticulatedBody): Mesh[] {
   const A = ARCHER_ARMS;
-  const beige = getMaterialFactory().get("cloth", A.beige, { emissiveIntensity: A.glow });
+  const sleeve = warmCloth();
   const leather = getMaterialFactory().get("cloth", A.leather, { emissiveIntensity: A.glow });
   const strap = getMaterialFactory().get("cloth", A.strap, { emissiveIntensity: A.glow });
   const out: Mesh[] = [];
-  for (const upper of [body.leftUpperArm, body.rightUpperArm]) upper.material = beige;
+  // [S] the sleeves as cloth shells (360; medieval.archer.red.png: beige-tan sleeves shoulder to elbow): each upper arm wears a shell of light warm cloth
+  // (warmCloth: the beige x glow cloth, on the arm or on a shell, rendered neutral grey under the cool sky light), ARCHER_SLEEVE.out of its half-width round
+  // it, the whole upper arm long; the arm itself (and so the elbow stub, which copies it) in the same cloth, ARCHER_ARMS.beige no longer read
+  for (const upper of [body.leftUpperArm, body.rightUpperArm]) {
+    upper.material = sleeve;
+    out.push(limbShell(scene, "archerSleeve", upper, 0, 0.98, ARCHER_SLEEVE.out, sleeve));
+  }
   for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
     out.push(limbShell(scene, "archerVambrace", fore, A.from, A.to, A.out, leather));
     for (const at of [A.from + 0.04, A.to - 0.1]) out.push(limbShell(scene, "archerVambraceStrap", fore, at, at + 0.07, A.out * 1.12, strap));
