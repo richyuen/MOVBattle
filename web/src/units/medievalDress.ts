@@ -749,7 +749,7 @@ function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: 
  * itself, so the shell need not hide it and is cut slim, .hose 1.06 (1.32 read boot-thick).
  */
 const KING_DRESS = {
-  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.06, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
+  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.06, knee: 1.12, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
   gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), shoe: new Color3(0.45, 0.27, 0.14),
   shade: 0.92, glow: 0.12,
 };
@@ -777,6 +777,14 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     shin.material = beige;
     out.push(...unglow(scene, [shin, limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige)]));
+    // the thigh's knee stub (merged into the team thigh) juts out of the hinge on the bent knee: a faceted ball of the stocking cloth on the hinge,
+    // .knee of the shin's half-width, closes it in stocking (361)
+    const L = limbBox(shin);
+    const knee = MeshBuilder.CreateIcoSphere("kingKnee", { radius: Math.max(L.wide, L.deep) * K.knee, subdivisions: 1, flat: true }, scene);
+    knee.parent = shin.parent;
+    knee.position.y = L.mid + L.half;
+    knee.material = beige;
+    out.push(...unglow(scene, [knee]));
   }
   // brown shoes, gold buckle on the instep
   for (const knee of [body.leftKnee, body.rightKnee]) {
