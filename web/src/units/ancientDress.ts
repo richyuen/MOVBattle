@@ -460,3 +460,54 @@ export function sarissaKit(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] the shield bearer's lorica segmentata (384, re-land of 383's a4076de; ancient.shield_bearer.jpg, card Appearance "a lorica segmentata (Roman
+ * segmented armor)": thin dark brown plates fitted to the team tunic round the trunk, flat shoulder strips; critic 383: the stepped hoops ballooned into a
+ * grey-mauve barrel twice his width). On the torso joint, in the trunk's box at each hoop's own height:
+ *   - LORICA.hoops straight bands from .low to .high of the trunk (under the shoulder yoke, whose width is the arms'), each .sides-sided, a fixed .proud of
+ *     the trunk's half extents (no step), .fill of its share tall, a thin darker .seam band .seamProud round the joint above it, so the plates read apart;
+ *   - on each shoulder .strips flat strips lying over the deltoid, each .stripWide of the shoulder joint's offset across, .stripThick of the trunk thick,
+ *     .stripDeep of the trunk's depth front to back, the k-th at .stripAt + .stripStep k of the shoulder offset out, dropping .drop k and tilting .tilt k rad;
+ * fixed browns (a team lerp read grey under blue), self-lit .glow.
+ */
+const LORICA = {
+  hoops: 4, low: 0.24, high: 0.74, sides: 8, proud: 1.05, fill: 0.92, seamProud: 1.07, seam: 0.018,
+  strips: 2, stripWide: 0.5, stripThick: 0.03, stripDeep: 1.02, stripAt: 0.62, stripStep: 0.32, drop: 0.07, tilt: 0.38,
+  plate: new Color3(0.3, 0.18, 0.12), dark: new Color3(0.17, 0.1, 0.07), glow: 0.1,
+};
+
+/** The shield bearer's segmented hoop armour and flat shoulder strips (spec at LORICA), on the torso. */
+export function dressShieldBearer(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const L = LORICA;
+  const out: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const plate = mf.get("cloth", L.plate, { emissive: L.plate.scale(L.glow) });
+  const dark = mf.get("cloth", L.dark, { emissive: L.dark.scale(L.glow) });
+  const put = (m: Mesh, material = plate) => { m.material = material; m.convertToFlatShadedMesh(); m.parent = body.torso; out.push(m); return m; };
+  const share = (L.high - L.low) / L.hoops;
+  for (let k = 0; k < L.hoops; k++) {
+    const lo = L.low + share * k, hi = lo + share;
+    const band = trunkBand(body, lo, hi);
+    const halfZ = (band.maxZ - band.minZ) / 2, midZ = (band.minZ + band.maxZ) / 2;
+    const hoop = put(MeshBuilder.CreateCylinder("loricaHoop", { height: band.trunk * share * L.fill, diameter: 2, tessellation: L.sides }, scene));
+    hoop.scaling.set(band.halfX * L.proud, 1, halfZ * L.proud);
+    hoop.position.set(band.midX, band.trunk * (lo + hi) / 2, midZ);
+    const seam = put(MeshBuilder.CreateCylinder("loricaSeam", { height: band.trunk * L.seam, diameter: 2, tessellation: L.sides }, scene), dark);
+    seam.scaling.set(band.halfX * L.seamProud, 1, halfZ * L.seamProud);
+    seam.position.set(band.midX, band.trunk * hi, midZ);
+  }
+  const top = trunkBand(body, 0.85, 1.0);
+  const deep = (top.maxZ - top.minZ) * L.stripDeep;
+  const midZ = (top.minZ + top.maxZ) / 2;
+  for (const shoulder of [body.leftShoulder, body.rightShoulder]) {
+    const sx = shoulder.position.x;
+    const side = Math.sign(sx) || 1;
+    for (let k = 0; k < L.strips; k++) {
+      const strip = put(MeshBuilder.CreateBox("loricaShoulder", { width: Math.abs(sx) * L.stripWide, height: top.trunk * L.stripThick, depth: deep }, scene));
+      strip.rotation.z = -side * L.tilt * (k + 0.5);
+      strip.position.set(sx * (L.stripAt + L.stripStep * k), shoulder.position.y - top.trunk * L.drop * k, midZ);
+    }
+  }
+  return out;
+}
