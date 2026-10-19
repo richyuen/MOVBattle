@@ -341,7 +341,8 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
 /*
  * [S] bare fists (379, the minotaur's; card Main Hand / Off Hand "Minotaur Grab", Unarmed; ancient.minotaur.red.png: no weapon, both fists balled before the
  * belly, elbows bent near square and out from the flanks; ancient.minotaur.png: one arm grabs a man while the other punches).
- * - Carry (stood or marching): each upper arm .lift rad forward and .out rad out from the side, each elbow folded .fold rad, so the fists ride before the belly.
+ * - Carry (stood or marching): each fist solved (_armTo) onto a point .carryAhead before his hip, .carryOut out to its side and .carryUp above it, in u
+ *   (his shoulder's height over his hip), so the fists ride out before the belly, elbows bent out; eased out under the charge run.
  * - Blow (grab then punch): to .grab of the blow both arms reach out together, shoulders .reach, elbows near straight (the grab); the off arm then holds
  *   there while the weapon arm draws back to .cock (elbow .cockFold) until .punch and drives straight out to .reach (elbow 0) with the trunk twisted .twist
  *   onto the off side and pitched .lean; the rest eases back to the carry.
@@ -354,7 +355,7 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
  * .stroke along the shaft's line, then eases back. No off-hand disc.
  */
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
-const BULL_FISTS = { lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
+const BULL_FISTS = { carryAhead: 0.45, carryOut: 0.6, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
 /*
  * [S] the jouster's canter (369; renaissance.jouster.png, card Speed 2.50x "the Jouster Horse ... create shockwaves wherever they canter"): the barded
@@ -1092,13 +1093,18 @@ export class ProceduralAnimator {
   /** The fists carry (BULL_FISTS), stood or marching, eased out under the charge run. */
   private _applyBullFists(): void {
     if (!this.bullFists || this.walkStyle === "quadruped" || (this._state !== AnimState.Idle && this._state !== AnimState.Walking)) return;
-    const b = this._body, F = BULL_FISTS, k = 1 - this._charge;
-    b.leftShoulder.rotation.x += F.lift * k;
-    b.rightShoulder.rotation.x += F.lift * k;
-    b.leftShoulder.rotation.z -= F.out * k;
-    b.rightShoulder.rotation.z += F.out * k;
-    b.leftElbow.rotation.x += F.fold * k;
-    b.rightElbow.rotation.x += F.fold * k;
+    const b = this._body, F = BULL_FISTS, k = (1 - this._charge) * (1 - Math.min(1, this._limp));
+    if (k <= 0.01) return;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const hip = b.hip.getAbsolutePosition();
+    const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
+    const yaw = b.root.rotation.y, sway = Math.sin((this._time + this._wobblePhase) * 3) * 0.04 * u;
+    const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw)), right = new Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    for (const side of [1, -1]) {
+      const fist = hip.add(fwd.scale(F.carryAhead * u)).add(right.scale(side * F.carryOut * u)).add(new Vector3(0, F.carryUp * u + side * sway, 0));
+      if (side > 0) this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, k, 1);
+      else this._offArmTo(fist, k, 1);
+    }
   }
 
   /** The grab and punch (BULL_FISTS). */
@@ -1642,7 +1648,6 @@ export class ProceduralAnimator {
         this._animateDead(dt);
         break;
     }
-    this._applyBullFists();
     this._applyChargePose(dt);
     this._applyHorseGait(dt);
 
@@ -1930,6 +1935,7 @@ export class ProceduralAnimator {
     this._restHalberd();
     this._twoHandPole();
     this._levelPike();
+    this._applyBullFists();
     this._carryBoulder();
     this._holdPalette();
     this._couchLance();
