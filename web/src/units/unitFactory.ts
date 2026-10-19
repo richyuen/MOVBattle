@@ -693,7 +693,7 @@ export class UnitFactory {
       const knight = definition.id === "medieval.knight";
       const skirt = knight
         ? hangSkirt(this._scene, body, "knightFauld", KNIGHT_FAULD.long, KNIGHT_FAULD.flare, getMaterialFactory().get("stone", KNIGHT_FAULD.steel, { emissiveIntensity: 0.05 }))
-        : bareSkinned && wearsHideDress(definition.id)
+        : bareSkinned && (wearsHideDress(definition.id) || definition.id === "tribal.spear_thrower")
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)

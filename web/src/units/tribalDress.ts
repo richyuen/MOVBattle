@@ -985,6 +985,78 @@ const CHIEF_LOIN = {
   tusk: 0.72, thick: 0.24, tuskAt: 1.35, curl: 1.7, tan: new Color3(0.8, 0.66, 0.46), glow: 0.22,
 };
 
+/*
+ * [S] 373 the spear thrower's own loincloth (critic 372: a wide dark-brown skirt all round under one thin belt; tribal.spear_thrower.blue.png, .red.png:
+ * bare legs, a thick red-brown rope coiled 3-4 times round the hips, one narrow tan hide flap down the front to mid-thigh, a tan skull on it under the
+ * rope over two crossed bones). No hide kilt under it (unitFactory leaves his out). In pelvis half-widths (P) and the knee's drop (K):
+ *   SPEAR_LOIN.coils turns of rope .rope P thick, .ringOut P round the hips (depth squashed to the pelvis's), each turn tilted .tilt rad its own way;
+ *   the flap .flapWide P across, .flapLong K long from the lowest turn, its foot torn into .teeth points (notches .tear of its length), leaning .lean
+ *   rad forward, in tan hide .hide self-lit .glow; the skull .skull P across, .skullDrop of its width under the rope; crossed bones .bone P long,
+ *   each .cross rad off upright, behind the skull.
+ */
+const SPEAR_LOIN = {
+  coils: 4, rope: 0.24, ringOut: 1.08, tilt: 0.09, flapWide: 0.8, flapLong: 0.55, teeth: 3, tear: 0.22, lean: 0.14,
+  hide: new Color3(0.7, 0.52, 0.32), glow: 0.16, skull: 0.62, skullDrop: 0.45, bone: 1.05, cross: 0.75,
+};
+
+/** The spear thrower's coiled rope, narrow tan front flap, skull and crossed bones (spec at SPEAR_LOIN), on the hip joint. */
+function spearThrowerLoin(scene: Scene, body: ArticulatedBody, top: number, size: Vector3): Mesh[] {
+  const S = SPEAR_LOIN;
+  const added: Mesh[] = [];
+  const P = size.x;
+  const knee = Math.abs(body.leftKnee.position.y);
+  const zk = Math.max(0.7, (size.z / size.x) * 1.1);
+  const rope = ropeMaterial();
+  const thick = P * S.rope;
+  const r = P * S.ringOut + thick * 0.5;
+  const beltY = top - size.y * 0.3;
+  for (let i = 0; i < S.coils; i++) {
+    const ring = MeshBuilder.CreateTorus("loinRope", { diameter: r * 2 * (1 + (i % 2) * 0.03), thickness: thick, tessellation: 12 }, scene);
+    ring.scaling.z = zk;
+    ring.rotation.set((hashShare(17.3, i, 1, 0) - 0.5) * 2 * S.tilt, 0, (hashShare(17.3, i, 2, 0) - 0.5) * 2 * S.tilt);
+    ring.position.y = beltY - i * thick * 0.8;
+    ring.material = rope;
+    ring.parent = body.hip;
+    added.push(ring);
+  }
+  const lowest = beltY - (S.coils - 1) * thick * 0.8;
+  const front = r * zk + thick * 0.35;
+  // the flap: a narrow tan hide panel from the lowest turn, its foot torn into points
+  const wide = P * S.flapWide, long = knee * S.flapLong;
+  const edge: Vector3[] = [], foot: Vector3[] = [];
+  const n = S.teeth * 2;
+  for (let k = 0; k <= n; k++) {
+    const u = k / n - 0.5;
+    edge.push(new Vector3(u * wide, 0, 0));
+    const deep = k % 2 === 1 ? 1 - S.tear * (0.7 + 0.6 * hashShare(23.1, k, 0, 0)) : 1;
+    foot.push(new Vector3(u * wide * 0.9, -long * deep, 0));
+  }
+  const flap = MeshBuilder.CreateRibbon("loinFlap", { pathArray: [edge, foot], sideOrientation: Mesh.DOUBLESIDE }, scene);
+  flap.convertToFlatShadedMesh();
+  flap.rotation.x = -S.lean;
+  flap.position.set(0, lowest + thick * 0.4, front);
+  flap.material = getMaterialFactory().get("cloth", S.hide, { emissiveIntensity: S.glow });
+  flap.parent = body.hip;
+  added.push(flap);
+  // the skull on the flap under the rope, two bones crossed behind it
+  const skullWide = P * S.skull;
+  const skullY = lowest - skullWide * S.skullDrop;
+  const skullZ = front + Math.sin(S.lean) * (lowest - skullY) + skullWide * 0.35;
+  const skullParts = boneSkull(scene, "loinSkull", skullWide, 31.7, getMaterialFactory().get("cloth", RAGGED_STRIPS.skullTan, { emissiveIntensity: RAGGED_STRIPS.skullGlow }));
+  skullParts[0].position.set(0, skullY, skullZ);
+  skullParts[0].rotation.x = 0.1;
+  skullParts[0].parent = body.hip;
+  added.push(...skullParts);
+  for (const side of [-1, 1]) {
+    const parts = boneStick(scene, "loinBone", P * S.bone, thick * 0.7);
+    parts[0].rotation.set(-S.lean, 0, side * S.cross);
+    parts[0].position.set(0, skullY + skullWide * 0.1, skullZ - skullWide * 0.3);
+    parts[0].parent = body.hip;
+    added.push(...parts);
+  }
+  return added;
+}
+
 /** A bone `long` long along +y: a round shaft with a pair of knobs at each end. The first mesh is the shaft (the others are its children). */
 export function boneStick(scene: Scene, name: string, long: number, thick: number): Mesh[] {
   const bone = boneMaterial();
@@ -1012,6 +1084,7 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
   const added: Mesh[] = [];
   const size = pelvis.getBoundingInfo().boundingBox.extendSize;
   const top = pelvis.position.y + size.y;
+  if (unitId === "tribal.spear_thrower") return spearThrowerLoin(scene, body, top, size);
   const drop = Math.abs(body.leftKnee.position.y) * LOINCLOTH.kiltDrop;
   // The kilt (unitFactory hangSkirt "hideKilt") is a six-sided sleeve from the pelvis top, size.x * kiltWaist round at the waist, its depth squashed by zk
   const zk = Math.max(0.7, size.z / size.x * 1.25);
