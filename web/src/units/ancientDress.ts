@@ -274,10 +274,11 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   const mf = getMaterialFactory();
   // a flat unlit white, out of the glow layer: the lit cloth read grey under the beard's shadow and the ribbon's turned faces (388 step 5)
   const white = mf.get("unlit", T.white, { emissive: T.white.scale(T.whiteGlow) });
-  white.backFaceCulling = false;
   const gold = mf.get("cloth", T.gold, { emissive: T.gold.scale(T.glow) });
   body.torsoMesh.material = body.skinMaterial;
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke$|zeusSash/.test(m.name)) m.material = body.skinMaterial;
+  // [S] 389 the body's off-white torus belt sat over the gold rings as a wide grey band: the rings are his only belt
+  for (const m of body.torso.getChildMeshes(true)) if (/_belt$/.test(m.name)) m.isVisible = false;
   const band = trunkBand(body, 0, 1);
   const halfZ = (band.maxZ - band.minZ) / 2, midZ = (band.minZ + band.maxZ) / 2;
   const tr = band.trunk;
@@ -299,7 +300,11 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
     upper.push(new Vector3(p.x, edgeAt(p.x), p.z));
     lower.push(new Vector3(p.x, tr * T.foot, p.z));
   }
-  const drape = MeshBuilder.CreateRibbon("zeusToga", { pathArray: [upper, lower], sideOrientation: Mesh.DOUBLESIDE }, scene);
+  // [S] 389 one side only, faces out: the double-sided ribbon laid an inward copy of every face at the same depth, and where it won, the SSAO pass
+  // read a normal pointing into the trunk and greyed the white in blotches (probe: white with SSAO off, grey with it on)
+  const drape = MeshBuilder.CreateRibbon("zeusToga", { pathArray: [upper, lower] }, scene);
+  const nrm = drape.getVerticesData("normal"), pos = drape.getVerticesData("position");
+  if (nrm && pos && nrm[0] * (pos[0] - band.midX) + nrm[2] * (pos[2] - midZ) < 0) drape.flipFaces(true);
   drape.convertToFlatShadedMesh();
   drape.material = white;
   scene.getGlowLayerByName("glow")?.addExcludedMesh(drape);
