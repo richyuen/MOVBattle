@@ -1222,6 +1222,8 @@ export class SimulationSystem {
         other.applyBlastLaunch(outward, C.fling, C.lift);
         this._logAbility(unit, "trample", now, other.position);
         if (this.visualEffects) this.visualEffects.spawnSmokePuff(other.position, CHARGE_DUST);
+        // [S] 364 ...and the ground he is trampled into throws its dust ring and earth (TRAMPLE_RING)
+        if (this.visualEffects && C === MAMMOTH_CHARGE) this.visualEffects.spawnTrampleRing(new Vector3(other.position.x, unit.position.y, other.position.z), 2);
       }
       if (run.trampled.has(run.target)) {
         if (run.spec.through) {
@@ -2185,6 +2187,10 @@ export class SimulationSystem {
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z, head: { x: head.x, y: head.y, z: head.z } });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
+    // [S] 364 the mammoth's stomp lands as a trample: a dust ring runs out over the ground and earth is thrown up (visualEffects TRAMPLE_RING)
+    if (this.visualEffects && attacker.definition.id === "tribal.mammoth") {
+      this.visualEffects.spawnTrampleRing(new Vector3(target.position.x, attacker.position.y, target.position.z), Math.max(2, splashRadius));
+    }
     // A painter's brush throws its paint as it lands (card Appearance): blobs of the tuft's own paint leave its point, on along the swing
     const tuft = attacker.body.rightHand?.getDescendants(false, (n) => n.name === "brushPoint")[0];
     if (this.visualEffects && tuft instanceof Mesh && tuft.material && tuft.isEnabled()) {

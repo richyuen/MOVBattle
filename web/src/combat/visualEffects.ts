@@ -41,6 +41,16 @@ const DUST_SPRITES = 10;
 const DUST_LIFE = 1.8;
 // The dust a charging beast's foot kicks up (spawnKickDust): sprites, ring spread and height, size from and to (m), drift out and up (m/s), life, peak alpha
 const KICK_DUST = { count: 5, spread: 0.35, lift: 0.25, born: 0.5, grown: 1.5, out: 0.6, rise: 0.5, life: 1.1, peak: 0.75 };
+/*
+ * [S] the mammoth's trample seen (364; tribal.mammoth card "trample anyone who comes close", tribal.mammoth.jpg: the ground thrown up under its feet):
+ * where a stomp lands, a ring of dust runs out across the ground and earth is thrown up. TRAMPLE_RING.sprites feathered tan dust sprites on a ring that
+ * spreads from .from to .to of the stomp's radius over .life s, each swelling .born -> .grown m and rising .rise m; a flat dust band on the ground under them
+ * (.band of the radius wide, alpha .bandPeak); .clods dark earth clods thrown up and out (.toss m/s up, .fling out) and falling back under .gravity.
+ */
+const TRAMPLE_RING = {
+  sprites: 12, from: 0.25, to: 1.0, born: 0.7, grown: 1.8, rise: 0.4, life: 1.2, peak: 0.85,
+  band: 0.22, bandPeak: 0.5, clods: 8, toss: 4.2, fling: 2.2, gravity: 9.8, clod: 0.16,
+};
 const SMOKE_SPRITES = 6;
 const SMOKE_LIFE = 2.4;
 /*
@@ -650,6 +660,88 @@ export class VisualEffects {
           glow?.removeExcludedMesh(sp.mesh);
           sp.mat.dispose();
         }
+      },
+    });
+  }
+
+  /** [S] 364 a stomp's dust ring and thrown earth on the ground at `center` (spec at TRAMPLE_RING), `radius` m out. Sprites and meshes, no particles. */
+  spawnTrampleRing(center: Vector3, radius: number): void {
+    const T = TRAMPLE_RING;
+    const root = new TransformNode("trampleRing", this._scene);
+    const glow = this._scene.getGlowLayerByName("glow");
+    const dust = new Color3(0.74, 0.6, 0.42);
+    const sprites: { mesh: Mesh; mat: StandardMaterial; a: number }[] = [];
+    for (let k = 0; k < T.sprites; k++) {
+      const a = (k / T.sprites) * Math.PI * 2 + center.x * 0.7;
+      const mesh = MeshBuilder.CreatePlane("trampleDust", { size: 1 }, this._scene);
+      mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+      mesh.isPickable = false;
+      mesh.parent = root;
+      const mat = this._envelopeMat(dust.scale(0.88 + 0.06 * (k % 3)), false);
+      mesh.material = mat;
+      mesh.alphaIndex = FIREBALL_ALPHA_INDEX - 2;
+      glow?.addExcludedMesh(mesh);
+      sprites.push({ mesh, mat, a });
+    }
+    // the flat band of dust on the ground under the ring
+    const band = MeshBuilder.CreateTorus("trampleBand", { diameter: 2, thickness: T.band * 2, tessellation: 24 }, this._scene);
+    band.scaling.y = 0.05;
+    band.isPickable = false;
+    band.parent = root;
+    band.position.set(center.x, center.y + 0.05, center.z);
+    const bandMat = this._envelopeMat(dust.scale(0.8), false);
+    band.material = bandMat;
+    glow?.addExcludedMesh(band);
+    // earth clods thrown up off the ring
+    const earth = new StandardMaterial("trampleClod", this._scene);
+    earth.diffuseColor = new Color3(0.38, 0.26, 0.16);
+    earth.emissiveColor = new Color3(0.12, 0.08, 0.05);
+    const clods: { mesh: Mesh; v: Vector3 }[] = [];
+    for (let k = 0; k < T.clods; k++) {
+      const a = ((k + 0.5) / T.clods) * Math.PI * 2 + center.z * 0.9;
+      const mesh = MeshBuilder.CreateIcoSphere("trampleClod", { radius: T.clod * (0.7 + 0.3 * (k % 3)), subdivisions: 1, flat: true }, this._scene);
+      mesh.isPickable = false;
+      mesh.parent = root;
+      mesh.material = earth;
+      mesh.position.set(center.x + Math.cos(a) * radius * T.from, center.y + 0.1, center.z + Math.sin(a) * radius * T.from);
+      clods.push({ mesh, v: new Vector3(Math.cos(a) * T.fling, T.toss * (0.75 + 0.25 * ((k * 7) % 4) / 3), Math.sin(a) * T.fling) });
+    }
+    let age = 0;
+    const pose = () => {
+      const u = Math.min(1, age / T.life);
+      const g = 1 - (1 - u) * (1 - u);
+      const r = radius * (T.from + (T.to - T.from) * g);
+      const fade = u < 0.08 ? u / 0.08 : 1 - (u - 0.08) / 0.92;
+      for (const sp of sprites) {
+        sp.mesh.position.set(center.x + Math.cos(sp.a) * r, center.y + 0.3 + T.rise * g, center.z + Math.sin(sp.a) * r);
+        sp.mesh.scaling.setAll(Math.max(0.001, T.born + (T.grown - T.born) * g));
+        sp.mat.alpha = T.peak * fade;
+      }
+      band.scaling.set(r, 0.05, r);
+      bandMat.alpha = T.bandPeak * fade;
+    };
+    pose();
+    this._effects.push({
+      root,
+      remaining: T.life,
+      update: (dt) => {
+        age += dt;
+        pose();
+        for (const c of clods) {
+          if (c.mesh.position.y < center.y && c.v.y < 0) continue;
+          c.v.y -= T.gravity * dt;
+          c.mesh.position.addInPlace(c.v.scale(dt));
+          c.mesh.rotation.x += dt * 6;
+        }
+      },
+      dispose: () => {
+        for (const sp of sprites) {
+          glow?.removeExcludedMesh(sp.mesh);
+          sp.mat.dispose();
+        }
+        glow?.removeExcludedMesh(band);
+        bandMat.dispose();
+        earth.dispose();
       },
     });
   }
