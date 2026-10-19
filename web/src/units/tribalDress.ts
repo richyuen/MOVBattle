@@ -803,7 +803,7 @@ const LOINCLOTH = { ropes: 2, flap: 0.85, skull: 0.42, bone: 0.62, boneAt: 0.95,
 const FLAP_COLOR = new Color3(0.5, 0.3, 0.18);
 // The spear thrower and the clubber wear the same (cards: "a brown loincloth tied with a rope that is ornamented with bones and a skull"; the clubber's
 // "crudely tied with a rope ... a skull tied through its orbit with a rope at the center and two bones tied with thick strings on each side")
-const LOINCLOTHS = new Set(["tribal.bone_mage", "tribal.spear_thrower", "tribal.clubber"]);
+const LOINCLOTHS = new Set(["tribal.bone_mage", "tribal.spear_thrower", "tribal.clubber", "tribal.chieftain"]);
 /*
  * The clubber's own cut (tribal.clubber.red.png: a ragged brown hide hanging to mid-thigh, a large tan skull on it below the rope, a bone slanting each side
  * of the skull): in place of the short pointed flap, RAGGED_LOIN.strips hide tongues side by side, together .wide pelvis widths across, each its own length
@@ -812,6 +812,17 @@ const LOINCLOTHS = new Set(["tribal.bone_mage", "tribal.spear_thrower", "tribal.
  * below the rope; the bones .boneAt radians round from the front, close beside the skull.
  */
 const RAGGED_LOIN = { strips: 6, wide: 0.95, long: 0.75, short: 0.7, skull: 0.5, snout: 1.3, hang: 0.55, boneAt: 0.42, hide: new Color3(0.62, 0.43, 0.27) };
+/*
+ * [S] the Chieftain's hide loincloth and hip tusks (364; tribal.chieftain.red.png, card Appearance: "a loincloth tied with ropes along with a pair of tusks
+ * tied to their hip"): on the rope belt, CHIEF_LOIN.tongues torn tan hide tongues all round the hips over the dark kilt (so none of it shows), each standing
+ * .out of the kilt's radius, the front ones .long of the knee's drop and the back ones .back of it, torn to a point; no skull or bones. At each hip
+ * (.tuskAt radians round from the front) a large curved tusk hangs off the rope: a tapered tube .tusk of the knee's drop long, .thick pelvis widths across
+ * at its root, curving down and then forward through .curl radians with a little outward flare, bone-tan (.tan, self-lit .glow), a rope turn at its root.
+ */
+const CHIEF_LOIN = {
+  tongues: 9, out: 1.1, long: 0.62, back: 0.45, hide: new Color3(0.66, 0.5, 0.32),
+  tusk: 0.72, thick: 0.24, tuskAt: 1.35, curl: 1.7, tan: new Color3(0.8, 0.66, 0.46), glow: 0.22,
+};
 
 /** A bone `long` long along +y: a round shaft with a pair of knobs at each end. The first mesh is the shaft (the others are its children). */
 export function boneStick(scene: Scene, name: string, long: number, thick: number): Mesh[] {
@@ -862,6 +873,10 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
     return r * zk;
   };
   const flapTop = beltY;
+  if (unitId === "tribal.chieftain") {
+    const kiltR = (y: number) => waist + (size.x * LOINCLOTH.kiltFlare - waist) * Math.min(1, Math.max(0, (top - y) / drop));
+    return [...added, ...chieftainLoin(scene, body, beltY, beltR, ropeThick, zk, size.x, kiltR)];
+  }
   const ragged = unitId === "tribal.clubber";
   if (ragged) {
     // The clubber's ragged hide (spec at RAGGED_LOIN): torn tongues of hide side by side down the front, each leaning out with the kilt's flare
@@ -928,6 +943,66 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
     shaft.position.set(Math.sin(a) * r, beltY - ropeThick * 0.5, Math.cos(a) * r * zk);
     shaft.parent = body.hip;
     added.push(...parts);
+  }
+  return added;
+}
+
+/** The Chieftain's hide wrap and hip tusks (spec at CHIEF_LOIN), on the rope at `beltY`; `kiltR(y)` is the kilt's radius at height y (its depth x zk). */
+function chieftainLoin(scene: Scene, body: ArticulatedBody, beltY: number, beltR: number, rope: number, zk: number, half: number, kiltR: (y: number) => number): Mesh[] {
+  const C = CHIEF_LOIN;
+  const added: Mesh[] = [];
+  const knee = Math.abs(body.leftKnee.position.y);
+  const mats = getMaterialFactory();
+  // The wrap: torn hide tongues all round, front ones long, back ones short, each leaning out with the kilt's flare
+  for (let i = 0; i < C.tongues; i++) {
+    const share = (k: number) => hashShare(61.9, i, k, 0);
+    const a = (i / C.tongues) * Math.PI * 2;
+    const front = (Math.cos(a) + 1) * 0.5;
+    const long = knee * (C.back + (C.long - C.back) * front) * (0.88 + 0.24 * share(1));
+    const rTop = kiltR(beltY) * C.out, rBot = kiltR(beltY - long) * C.out;
+    const wide = (2 * Math.PI * (rTop + rBot) * 0.5) / C.tongues * 1.18;
+    const lean = Math.atan2(rBot - rTop, long);
+    const tongue = MeshBuilder.CreateBox("loinFlap", { width: wide, height: long * 0.82, depth: rope * 0.45 }, scene);
+    tongue.convertToFlatShadedMesh();
+    tongue.rotation.set(-lean, a, (share(2) - 0.5) * 0.14);
+    const r = (rTop + rBot) * 0.5 + rope * 0.35;
+    tongue.position.set(Math.sin(a) * r, beltY - long * 0.41, Math.cos(a) * r * zk);
+    tongue.material = mats.get("cloth", C.hide.scale(0.88 + share(3) * 0.24), { emissiveIntensity: 0.28 });
+    tongue.parent = body.hip;
+    added.push(tongue);
+    const tip = MeshBuilder.CreateCylinder("loinFlapPoint", { height: long * 0.2, diameterTop: 0, diameterBottom: wide, tessellation: 3 }, scene);
+    tip.convertToFlatShadedMesh();
+    tip.scaling.z = 0.25;
+    tip.rotation.set(Math.PI, 0, (share(4) - 0.5) * 0.5);
+    tip.position.set(0, -long * 0.5, 0);
+    tip.material = tongue.material;
+    tip.parent = tongue;
+    added.push(tip);
+  }
+  // A big curved tusk off the rope at each hip: down, then forward, flaring out a little
+  const tan = mats.get("cloth", C.tan, { emissiveIntensity: C.glow });
+  const ropeMat = ropeMaterial();
+  const L = knee * C.tusk;
+  const R = L / C.curl;
+  const thick = half * 2 * C.thick;
+  for (const side of [-1, 1]) {
+    const a = side * C.tuskAt;
+    const root = new Vector3(Math.sin(a) * (beltR + rope), beltY - rope * 0.6, Math.cos(a) * (beltR + rope) * zk);
+    const path: Vector3[] = [];
+    for (let k = 0; k <= 10; k++) {
+      const th = (k / 10) * C.curl;
+      path.push(root.add(new Vector3(side * R * 0.18 * (th / C.curl), -R * Math.sin(th), R * (1 - Math.cos(th)))));
+    }
+    const tusk = MeshBuilder.CreateTube("hipTusk", { path, radiusFunction: (k) => thick * 0.5 * (1 - (k / 10) * 0.86), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+    tusk.convertToFlatShadedMesh();
+    tusk.material = tan;
+    tusk.parent = body.hip;
+    added.push(tusk);
+    const turn = MeshBuilder.CreateTorus("hipTuskRope", { diameter: thick * 1.15, thickness: rope * 0.7, tessellation: 8 }, scene);
+    turn.position.copyFrom(path[1]);
+    turn.material = ropeMat;
+    turn.parent = body.hip;
+    added.push(turn);
   }
   return added;
 }
