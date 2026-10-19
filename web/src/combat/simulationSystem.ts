@@ -206,10 +206,10 @@ const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 
 const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
 /*
  * [S] the charge seen (363; critic 360: "same pose and place, no lunge, no dust"; tribal.mammoth.jpg): every MAMMOTH_DUST.every s of the run a dust puff
- * goes up at a pair of its feet, alternating front-left/back-right and front-right/back-left (feet given as [ahead, across] in body radii), and the animator
+ * (sprite discs .size times the kick dust) goes up at a pair of its feet, alternating front-left/back-right and front-right/back-left (feet given as [ahead, across] in body radii), and the animator
  * drops its head into the run (ProceduralAnimator.setCharging, CHARGE_POSE).
  */
-const MAMMOTH_DUST = { every: 0.12, feet: [[[0.75, -0.5], [-0.75, 0.5]], [[0.75, 0.5], [-0.75, -0.5]]] as [number, number][][] };
+const MAMMOTH_DUST = { every: 0.12, size: 1.3, feet: [[[0.75, -0.5], [-0.75, 0.5]], [[0.75, 0.5], [-0.75, -0.5]]] as [number, number][][] };
 const MAMMOTH_CHARGE = { from: 2, reach: 14, speed: 2.2, seconds: 2.5, overrun: 3, contact: 0.5, damage: 30, fling: 5, lift: 6, cooldown: 6, through: false, log: true };
 /*
  * [S] Wheelbarrow ram (348; card Characteristics "It will ram and run over enemy units ... extremely fast speed ... running over units deal extremely low
@@ -317,6 +317,7 @@ export class SimulationSystem {
   // When a charging mammoth next kicks up dust, and how many kicks it has made (alternating feet) (MAMMOTH_DUST)
   private _chargeDustAt = new Map<RuntimeUnit, number>();
   private _chargeDustKick = new Map<RuntimeUnit, number>();
+  private _chargePosed = new Set<RuntimeUnit>();
   // The wheelbarrow's riders (WHEELBARROW_CREW): each move's start and its man, and when the next may start
   private _crewFights = new Map<RuntimeUnit, { throwAt: number; thrown: boolean; appleAt: RuntimeUnit | null; stabAt: number; stabbed: boolean; stabOn: RuntimeUnit | null }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
@@ -503,6 +504,12 @@ export class SimulationSystem {
     this._resolveLivingCollisions();
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
+    // a mammoth whose run is over eases back out of the charge pose
+    for (const u of this._chargePosed) {
+      if (this._charges.has(u)) continue;
+      u.animator.setCharging(false);
+      this._chargePosed.delete(u);
+    }
     this._crewsFight(now);
     this._holdShieldFrames();
 
@@ -1192,8 +1199,12 @@ export class SimulationSystem {
         for (const [ahead, side] of MAMMOTH_DUST.feet[k % 2]) {
           const at = unit.position.add(run.dir.scale(ahead * r)).add(across.scale(side * r));
           at.y = unit.position.y;
-          this.visualEffects.spawnSmokePuff(at, CHARGE_DUST);
+          this.visualEffects.spawnKickDust(at, MAMMOTH_DUST.size);
         }
+      }
+      if (run.spec === MAMMOTH_CHARGE) {
+        unit.animator.setCharging(true);
+        this._chargePosed.add(unit);
       }
       for (const other of this._units) {
         if (other.isDead || other.team === unit.team || !other.isTargetable || run.trampled.has(other)) continue;

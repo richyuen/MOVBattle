@@ -39,6 +39,8 @@ const FIREBALL_BEHIND = 1.6;
 const FIREBALL_ALPHA_INDEX = 1002;
 const DUST_SPRITES = 10;
 const DUST_LIFE = 1.8;
+// The dust a charging beast's foot kicks up (spawnKickDust): sprites, ring spread and height, size from and to (m), drift out and up (m/s), life, peak alpha
+const KICK_DUST = { count: 5, spread: 0.35, lift: 0.25, born: 0.5, grown: 1.5, out: 0.6, rise: 0.5, life: 1.1, peak: 0.75 };
 const SMOKE_SPRITES = 6;
 const SMOKE_LIFE = 2.4;
 /*
@@ -604,6 +606,53 @@ export class VisualEffects {
    * Returns "shuriken" as a projectile shape identifier.
    * The actual mesh is built in projectileSystem.
    */
+
+  // ══════════════════ KICKED DUST (mammoth charge) ══════════════════
+  /**
+   * [S] 363 dust kicked up by a charging beast's foot: KICK_DUST.count feathered tan discs on the ground round the foot (the cannon burst's dust sprites,
+   * smaller), each swelling from .born to .grown m (times `scale`) and drifting up and out, thinning away over .life s. Sprites, not particles: a
+   * deterministic capture steps time without the particle clock.
+   */
+  spawnKickDust(position: Vector3, scale = 1): void {
+    const K = KICK_DUST;
+    const root = new TransformNode("kickDust", this._scene);
+    const glow = this._scene.getGlowLayerByName("glow");
+    const sprites: { mesh: Mesh; mat: StandardMaterial; drift: Vector3 }[] = [];
+    for (let k = 0; k < K.count; k++) {
+      const a = (k / K.count) * Math.PI * 2 + position.x * 1.7 + position.z * 2.3;
+      const mesh = MeshBuilder.CreatePlane("kickDust", { size: 1 }, this._scene);
+      mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+      mesh.isPickable = false;
+      mesh.parent = root;
+      mesh.position.set(position.x + Math.cos(a) * K.spread * scale, position.y + K.lift * scale, position.z + Math.sin(a) * K.spread * scale);
+      const mat = this._envelopeMat(new Color3(0.74, 0.6, 0.42).scale(0.9 + 0.1 * (k % 3)), false);
+      mesh.material = mat;
+      mesh.alphaIndex = FIREBALL_ALPHA_INDEX - 2;
+      glow?.addExcludedMesh(mesh);
+      sprites.push({ mesh, mat, drift: new Vector3(Math.cos(a) * K.out, K.rise, Math.sin(a) * K.out).scale(scale) });
+    }
+    let age = 0;
+    this._effects.push({
+      root,
+      remaining: K.life,
+      update: (dt) => {
+        age += dt;
+        const u = Math.min(1, age / K.life);
+        const g = 1 - (1 - u) * (1 - u);
+        for (const sp of sprites) {
+          sp.mesh.scaling.setAll(Math.max(0.001, (K.born + (K.grown - K.born) * g) * scale));
+          sp.mesh.position.addInPlace(sp.drift.scale(dt * (1 - u)));
+          sp.mat.alpha = K.peak * (u < 0.1 ? u / 0.1 : 1 - (u - 0.1) / 0.9);
+        }
+      },
+      dispose: () => {
+        for (const sp of sprites) {
+          glow?.removeExcludedMesh(sp.mesh);
+          sp.mat.dispose();
+        }
+      },
+    });
+  }
 
   // ══════════════════ TORNADO / SPIN DUST ══════════════════
   /**

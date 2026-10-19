@@ -1029,7 +1029,6 @@ export class RuntimeUnit {
     this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
     const flung = !this._grounded && this.position.y > 0.35;
     this.animator.setAirborne(flung);
-    this.animator.setCharging(this.isCharging);
     // A flung body is drawn over the blast it is thrown through (FLUNG_RENDER_GROUP: after the fire and smoke sprites, still depth-tested against the solid
     // scene), so it stays a dark, solid figure against the fireball and the smoke instead of being lit pale by the additive fire in front of it
     if (flung !== this._drawnFlung) {
