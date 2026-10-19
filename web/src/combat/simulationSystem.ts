@@ -258,9 +258,16 @@ const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
  * between hops. Logged .kind.
  */
 const HOP_BACK: Record<string, { afterLand?: number; close?: number; dist: number; rise: number; cooldown: number; kind: string }> = {
-  "renaissance.fencer": { afterLand: 0.12, dist: 1.5, rise: 3.2, cooldown: 1.5, kind: "backstep" },
   "renaissance.halberd": { close: 0.75, dist: 1.9, rise: 2.6, cooldown: 3, kind: "dash_back" },
 };
+/*
+ * [S] Fencer recover (370; card Characteristics "thrusts forward to attack with its foil then steps back"; renaissance.fencer.png; critic 369: the 369
+ * hop fired 317 ms after the hit, read as a separate event, and the squire walked after him and closed the gap). The step back is part of the thrust: on
+ * the very step his thrust lands (_landMeleeBlow) he is committed to a ground slide straight back off the man, facing him, FENCER_RECOVER.dist m in
+ * .seconds s, fast at first and easing to a stop (speed falls linearly to zero), feet on the ground. The AI does not steer him while it runs, so nothing
+ * the man does can cancel it. Logged .kind at the land. Replaces the fencer's HOP_BACK row.
+ */
+const FENCER_RECOVER = { dist: 1.8, seconds: 0.16, kind: "backstep" };
 /*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
  * in circles"; Appearance "It doesn't attack unless ... a unit gets particularly close"). The bard walks at his man until he is .lure m past his reach, then
@@ -346,6 +353,8 @@ export class SimulationSystem {
   // Hop back (HOP_BACK): when each man's last blow landed, and when he may hop again
   private _landedAt = new Map<RuntimeUnit, number>();
   private _hopReadyAt = new Map<RuntimeUnit, number>();
+  // Fencer recover (FENCER_RECOVER): each sliding man, his flat way back, when it started and the man he faces
+  private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit }>();
   // [S] 369 balloon arrows loosed from the draw fist (renaissanceDress heldBalloonArrow): each held arrow and when the next is back in the hand
   private _arrowsAway = new Map<Node, number>();
   // Banjo Walk (BANJO_WALK): the bards running their circles now, and which way each turns
@@ -476,6 +485,7 @@ export class SimulationSystem {
     this._backingOff.clear();
     this._landedAt.clear();
     this._hopReadyAt.clear();
+    this._recovers.clear();
     for (const held of this._arrowsAway.keys()) if (!held.isDisposed()) held.setEnabled(true);
     this._arrowsAway.clear();
     this._banjoWalks.clear();
@@ -530,6 +540,7 @@ export class SimulationSystem {
 
     this._assignShieldSlots();
     this._resolveLivingCollisions();
+    if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     for (const [held, back] of this._arrowsAway) {
@@ -548,6 +559,8 @@ export class SimulationSystem {
 
     for (const unit of this._units) {
       if (unit.isDead || unit.isAnchoredActor) continue;
+      // a fencer sliding back off his thrust is committed to it: no decision steers him until it ends
+      if (this._recovers.has(unit)) continue;
 
       const nextDecision = this._nextDecisionAt.get(unit) ?? 0;
       if (now < nextDecision) continue;
@@ -2206,10 +2219,43 @@ export class SimulationSystem {
     this._landMeleeBlow(attacker, target, damage, splashRadius, knockback, now, impactOrigin);
   }
 
+  /** Fencer recover (FENCER_RECOVER): commits him to the slide back off `foe` from this step. */
+  private _startRecover(unit: RuntimeUnit, foe: RuntimeUnit, now: number): void {
+    const dir = unit.position.subtract(foe.position);
+    dir.y = 0;
+    if (dir.lengthSquared() < 1e-6) dir.set(Math.sin(unit.body.root.rotation.y + Math.PI), 0, Math.cos(unit.body.root.rotation.y + Math.PI));
+    dir.normalize();
+    unit.stopMoving();
+    this._clearPathState(unit);
+    unit.holdHeading(Math.atan2(-dir.x, -dir.z));
+    this._recovers.set(unit, { dir, from: now, foe });
+    this._logAbility(unit, FENCER_RECOVER.kind, now, foe.position);
+  }
+
+  /** Moves each recovering fencer along his slide: speed falling linearly from twice the mean to zero over FENCER_RECOVER.seconds. */
+  private _slideRecovers(dt: number, now: number): void {
+    const R = FENCER_RECOVER;
+    for (const [unit, r] of this._recovers) {
+      const t0 = Math.max(0, now - dt - r.from) / R.seconds, t1 = Math.min(1, (now - r.from) / R.seconds);
+      if (unit.isDead || t0 >= 1) {
+        this._recovers.delete(unit);
+        unit.holdHeading(null);
+        continue;
+      }
+      // distance covered between t0 and t1 under v(t) = 2 * dist * (1 - t): dist * ((2t - t^2) at t1 minus at t0)
+      const ease = (t: number) => 2 * t - t * t;
+      const step = R.dist * (ease(t1) - ease(t0));
+      unit.stopMoving();
+      unit.teleportTo(unit.position.add(r.dir.scale(step)));
+      if (!r.foe.isDead) unit.holdHeading(Math.atan2(r.foe.position.x - unit.position.x, r.foe.position.z - unit.position.z));
+    }
+  }
+
   private _landMeleeBlow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, splashRadius: number, knockback: Vector3, now: number, impactOrigin: Vector3): void {
     // The striker's aim is pinned where the blow lands before the man is thrown off that point
     attacker.animator.blowStruck();
     if (HOP_BACK[attacker.definition.id]) this._landedAt.set(attacker, now);
+    if (attacker.definition.id === "renaissance.fencer" && !attacker.isDead && !this._recovers.has(attacker)) this._startRecover(attacker, target, now);
     const heavy = attacker.animator.defaultAttackMotion === "heavy_swing";
     // A heavy blow that leaves him standing dwells on him (BLOW_DWELL): the push is withheld from the damage step and fired with the throw; the crowd
     // around him still takes the blow's shock now
