@@ -996,7 +996,7 @@ const CHIEF_LOIN = {
  */
 const SPEAR_LOIN = {
   coils: 4, rope: 0.24, ringOut: 1.08, tilt: 0.09, flapWide: 0.95, flapLong: 0.8, teeth: 3, tear: 0.22, lean: 0.3,
-  hide: new Color3(0.74, 0.56, 0.34), glow: 0.2, skull: 0.62, skullDrop: 0.05, bone: 1.05, cross: 0.75,
+  hide: new Color3(0.5, 0.38, 0.26), glow: 0.08, skull: 0.62, skullDrop: 0.05, bone: 1.05, cross: 0.75, ropeTint: new Color3(0.58, 0.24, 0.13), ropeGlow: 0.2,
 };
 
 /** The spear thrower's coiled rope, narrow tan front flap, skull and crossed bones (spec at SPEAR_LOIN), on the hip joint. */
@@ -1006,7 +1006,8 @@ function spearThrowerLoin(scene: Scene, body: ArticulatedBody, top: number, size
   const P = size.x;
   const knee = Math.abs(body.leftKnee.position.y);
   const zk = Math.max(0.7, (size.z / size.x) * 1.1);
-  const rope = ropeMaterial();
+  // his own red-brown rope (374: the shared rope greyed against the mid-brown flap)
+  const rope = getMaterialFactory().get("cloth", S.ropeTint, { emissiveIntensity: S.ropeGlow });
   const thick = P * S.rope;
   const r = P * S.ringOut + thick * 0.5;
   const beltY = top - size.y * 0.3;
