@@ -254,12 +254,13 @@ export function balloonArcherFront(scene: Scene, body: ArticulatedBody, teamColo
  * the top of the striped breeches). Shares of the chest (W, H, D) and of each upper arm's girth and length:
  *   wing: a flared team cap from .capTop to .capFoot of the girth round, .capTall of the arm long, its foot rolled in a team roll .roll of the girth thick
  *   round it; under it a tan band .band of the arm long, .bandOut of the girth round. Belt .belt of H tall, .beltOut of the chest round it, dark brown.
- *   Skirt: .tabs tabs, each a slice of a flared lathe (.gapShare of its slice left open) from .skirtTop to .skirtFoot of the chest's half-width out,
- *   .skirtTall of H long, hanging from the belt; the ring squashed to the chest's depth.
+ *   The doublet is a box, so the belt is a box band .beltOut of it round, and the skirt a four-sided frustum from .skirtTop of the doublet's
+ *   half-width and half-depth out at the belt to .skirtFoot at its foot, .skirtTall of H long, cut into .tabs tabs (.gapShare of each left open),
+ *   team at .tabShade so the tabs part from the doublet.
  */
 const FENCER_TRIM = {
   capTop: 1.25, capFoot: 1.95, capTall: 0.3, roll: 0.34, band: 0.12, bandOut: 1.3,
-  belt: 0.09, beltOut: 1.14, tabs: 8, gapShare: 0.14, skirtTop: 1.1, skirtFoot: 1.45, skirtTall: 0.34,
+  belt: 0.09, beltOut: 1.06, tabs: 8, gapShare: 0.1, skirtTop: 1.04, skirtFoot: 1.3, skirtTall: 0.34, tabShade: 0.7,
   leather: new Color3(0.3, 0.16, 0.09), tan: new Color3(0.8, 0.56, 0.28), glow: 0.3,
 };
 
@@ -291,20 +292,24 @@ export function fencerTrim(scene: Scene, body: ArticulatedBody, teamColor: Color
     band.position.y = capY - capTall * 0.5 - girth * T.roll * 0.5 - long * T.band * 0.5;
   }
   const { W, H, D, waist } = chest;
-  const beltRing = put(MeshBuilder.CreateCylinder("fencerBelt", { height: H * T.belt, diameter: W * T.beltOut, tessellation: 10 }, scene), belt, body.torso);
-  beltRing.scaling.z = (D * T.beltOut) / (W * T.beltOut);
-  beltRing.position.y = waist;
-  // the skirt: a ring of broad tabs, each a slice of a flared lathe, squashed front to back to the chest's depth
-  const ring = new TransformNode("fencerSkirt", scene);
-  ring.parent = body.torso;
-  ring.position.y = waist - H * T.belt * 0.4;
-  ring.scaling.z = D / W;
+  // the doublet is a box: the belt is a box band just proud of it, and the skirt a four-sided flared frustum round its hem, cut into tabs
+  const beltBand = put(MeshBuilder.CreateBox("fencerBelt", { width: W * T.beltOut, height: H * T.belt, depth: D * T.beltOut }, scene), belt, body.torso);
+  beltBand.position.y = waist;
   const tall = H * T.skirtTall;
-  const shape = [new Vector3((W / 2) * T.skirtTop, 0, 0), new Vector3((W / 2) * (T.skirtTop + T.skirtFoot) * 0.5 * 1.02, -tall * 0.5, 0), new Vector3((W / 2) * T.skirtFoot, -tall, 0)];
-  const slice = 1 / T.tabs;
-  for (let i = 0; i < T.tabs; i++) {
-    const tab = put(MeshBuilder.CreateLathe("fencerTab", { shape, arc: slice * (1 - T.gapShare), tessellation: 2, sideOrientation: Mesh.DOUBLESIDE }, scene), team, ring);
-    tab.rotation.y = i * slice * Math.PI * 2;
+  const a = (W / 2) * T.skirtTop, b = (D / 2) * T.skirtTop;
+  const corners = [new Vector3(a, 0, b), new Vector3(-a, 0, b), new Vector3(-a, 0, -b), new Vector3(a, 0, -b)];
+  const perFace = T.tabs / 4;
+  const flare = T.skirtFoot / T.skirtTop;
+  const tabCloth = mf.getCloth(teamColor.scale(T.tabShade));
+  const top = waist - H * T.belt * 0.4;
+  for (let f = 0; f < 4; f++) {
+    const c0 = corners[f], c1 = corners[(f + 1) % 4];
+    for (let j = 0; j < perFace; j++) {
+      const t0 = (j + T.gapShare * 0.5) / perFace, t1 = (j + 1 - T.gapShare * 0.5) / perFace;
+      const edge = [Vector3.Lerp(c0, c1, t0), Vector3.Lerp(c0, c1, t1)].map((v) => v.add(new Vector3(0, top, 0)));
+      const foot = [Vector3.Lerp(c0, c1, t0), Vector3.Lerp(c0, c1, t1)].map((v) => new Vector3(v.x * flare, top - tall, v.z * flare));
+      put(MeshBuilder.CreateRibbon("fencerTab", { pathArray: [edge, foot], sideOrientation: Mesh.DOUBLESIDE }, scene), tabCloth, body.torso);
+    }
   }
   return added;
 }
