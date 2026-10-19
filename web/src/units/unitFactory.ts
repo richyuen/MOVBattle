@@ -759,7 +759,9 @@ export class UnitFactory {
       if (side) mesh.material = (side === "l" ? body.leftUpperArm : body.rightUpperArm).material;
     }
     for (const mesh of [...body.allMeshes, ...propMeshes]) {
-      mesh.metadata = { runtimeUnit: unit };
+      // (380) a shield root keeps the hold's holeUp (propBuilder scutum): wiping it seated the scutum on his eyes, a head over him
+      const holeUp = (mesh.metadata as { holeUp?: number } | null)?.holeUp;
+      mesh.metadata = holeUp === undefined ? { runtimeUnit: unit } : { runtimeUnit: unit, holeUp };
     }
 
     // Register shadow casters
