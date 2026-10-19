@@ -741,10 +741,14 @@ function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: 
  * - a brown belt round the waist .belt of the chest height tall, a gold buckle .buckle of the chest half-width square at the front;
  * - puffy pantaloons: team shells .pants of the thigh's half-width round it, the same gold folds;
  * - beige stockings: shells .hose of the shin's half-width; brown shoes with a gold buckle on the instep.
+ * [S] blouse and breeches (360; medieval.king.red.png: a short blouse ending at the belt, puffy breeches to the knee, beige stockings knee to shoe): the king
+ * hangs no tunic skirt (unitFactory skips it for him), so the blouse ends at the brown belt with its gold front buckle and the lathed breeches show below it
+ * to the knee; each stocking is one shell .hose (1.32, past the hexagon's flats, so no team shin shows through mid-shin) from the knee into the shoe, in light
+ * warm cloth (warmCloth: the beige x glow cloth rendered pale grey-white under the cool sky light).
  */
 const KING_DRESS = {
-  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.1, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
-  gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), beige: new Color3(0.82, 0.72, 0.52), shoe: new Color3(0.45, 0.27, 0.14),
+  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.32, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
+  gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), shoe: new Color3(0.45, 0.27, 0.14),
   shade: 0.92, glow: 0.12,
 };
 
@@ -754,7 +758,7 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const cloth = mats.get("cloth", team.scale(K.shade), { emissiveIntensity: K.glow });
   const gold = mats.get("cloth", K.gold, { emissiveIntensity: K.glow });
   const leather = mats.get("cloth", K.leather, { emissiveIntensity: K.glow });
-  const beige = mats.get("cloth", K.beige, { emissiveIntensity: K.glow });
+  const beige = warmCloth();
   const shoe = mats.get("cloth", K.shoe, { emissiveIntensity: K.glow });
   const out: Mesh[] = [];
   // puffed sleeves, gold folds, gold cuff band
@@ -766,7 +770,7 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
   // stockings from the knee to the shoe, clear of the pantaloons
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(...kingPantaloon(scene, thigh, cloth, gold));
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "kingStocking", shin, 0, 0.96, K.hose, beige));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige));
   // brown shoes, gold buckle on the instep
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(true)) {

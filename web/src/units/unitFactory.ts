@@ -691,7 +691,8 @@ export class UnitFactory {
     // Every dressed man's garment ends in a skirt of its own: the tabard's long one, a tunic's short hem, a cloth kilt under a cuirass, and on a bare tribesman a hide
     // kilt in place of the painted loincloth, with a fur collar over his shoulders.
     // (not the scarecrow: his shirt is tucked into the trousers his suspenders hold up, SCARECROW_DRESS)
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow") {
+    // (nor the king: his short blouse ends at the belt over puffy breeches to the knee, medievalDress kingDress)
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const knight = definition.id === "medieval.knight";
       const skirt = knight
