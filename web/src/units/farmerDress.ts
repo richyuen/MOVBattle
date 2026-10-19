@@ -116,7 +116,7 @@ function chestBox(body: ArticulatedBody): { W: number; H: number; D: number; top
  */
 const HALFLING_COAT = {
   neck: 0.02, drop: 0.1, wall: 0.08, out: 0.06, front: 0.3, ahead: 0.08, gap: 0.22, flare: 0.08, lapel: 0.4, lapelWide: 0.2,
-  vest: 0.46, vestAhead: 0.03, vee: 0.4, veeDeep: 0.46, collar: 0.16, belt: 0.12, buckle: 0.24, buckleTall: 1.6, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
+  vest: 0.46, vestAhead: 0.03, vee: 0.4, veeDeep: 0.46, collar: 0.16, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
 };
 /*
  * [S] the jacket fitted on the shoulders with sleeves (380; farmer.halfling.red.png, .blue.png: the team jacket sits on his shoulders, sleeves down to
@@ -127,9 +127,16 @@ const HALFLING_COAT = {
  * .32 -> .1 of H below the trunk's foot.
  */
 const HALFLING_SLEEVED = { arc: 0.72, sides: 10, flare: 1.12, yoke: 0.14, puff: 1.45, cuffAt: 0.86, cuff: 1.2 };
+/*
+ * [S] the belt reads (381; farmer.halfling.red.png, .blue.png: a dark team belt across the vest a little above the jacket's hem, a big grey square-frame
+ * buckle in its middle; critic 379/380: no belt or buckle in _idle). The 376 belt sat at the trunk's foot, half inside the shorts' seat, in dark brown
+ * that read navy on a blue man, and its buckle was "metal", which renders black with no environment map. Now: a band .tall of H, its foot .up of H above
+ * the trunk's foot, .wide of W across, .deep of D thick standing off the vest, in team x .dark; the buckle a frame .buckle of W across and .buckleTall of
+ * the belt tall, bars .bar of its width, standing .buckleDeep of D proud, in light grey cloth (not metal) lit .buckleGlow, with a pin through it.
+ */
+const HALFLING_BELT = { tall: 0.13, up: 0.08, wide: 0.98, deep: 0.1, dark: 0.32, glow: 0.12, buckle: 0.3, buckleTall: 1.45, bar: 0.22, buckleDeep: 0.08, buckleGlow: 0.3 };
 const HALFLING_SHIRT_WHITE = new Color3(0.93, 0.89, 0.8);
-const HALFLING_BELT_DARK = new Color3(0.22, 0.12, 0.09);
-const HALFLING_BUCKLE_GREY = new Color3(0.6, 0.6, 0.62);
+const HALFLING_BUCKLE_GREY = new Color3(0.62, 0.62, 0.64);
 
 /** The halfling's open jacket, vest, white shirt V and buckled belt (spec at HALFLING_COAT), parented to the torso. */
 export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -209,14 +216,23 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
     point.scaling.set(W * J.collar * 0.8, W * J.collar * 0.6, 1);
     point.position.set(side * W * J.vee * 0.42, coatTop - H * 0.05, vestFace + D * 0.024);
   }
-  // the dark belt across the vest at the waist, a big grey square buckle with a dark middle
-  const beltTall = H * J.belt;
-  const belt = put(MeshBuilder.CreateBox("halflingBelt", { width: W * (J.vest * 2 + 0.1), height: beltTall, depth: D * 0.08 }, scene), mf.get("cloth", HALFLING_BELT_DARK, { emissiveIntensity: 0.1 }));
-  belt.position.set(0, foot + beltTall * 0.5, vestFace + D * 0.02);
-  const buckle = put(MeshBuilder.CreateBox("halflingBuckle", { width: W * J.buckle, height: beltTall * J.buckleTall, depth: D * 0.05 }, scene), mf.get("metal", HALFLING_BUCKLE_GREY, { emissiveIntensity: 0.25 }));
-  buckle.position.set(0, belt.position.y, belt.position.z + D * 0.05);
-  const hole = put(MeshBuilder.CreateBox("halflingBuckleHole", { width: W * J.buckle * 0.55, height: beltTall * J.buckleTall * 0.5, depth: D * 0.02 }, scene), mf.get("cloth", HALFLING_BELT_DARK, { emissiveIntensity: 0.1 }));
-  hole.position.set(0, belt.position.y, buckle.position.z + D * 0.025);
+  // [S] the belt and buckle (381, spec at HALFLING_BELT): a dark team band across the vest above the shorts, a light grey square frame buckle on it
+  const B = HALFLING_BELT;
+  const beltTall = H * B.tall;
+  const beltY = foot + H * B.up + beltTall * 0.5;
+  const beltCloth = mf.get("cloth", teamColor.scale(B.dark), { emissiveIntensity: B.glow });
+  const belt = put(MeshBuilder.CreateBox("halflingBelt", { width: W * B.wide, height: beltTall, depth: D * B.deep }, scene), beltCloth);
+  belt.position.set(0, beltY, vestFace + D * (B.deep * 0.5 - 0.03));
+  const beltFront = belt.position.z + D * B.deep * 0.5;
+  const grey = mf.get("cloth", HALFLING_BUCKLE_GREY, { emissiveIntensity: B.buckleGlow });
+  const bw = W * B.buckle, bh = beltTall * B.buckleTall, bar = bw * B.bar;
+  for (const [w, h, x, y] of [[bw, bar, 0, (bh - bar) / 2], [bw, bar, 0, -(bh - bar) / 2], [bar, bh, (bw - bar) / 2, 0], [bar, bh, -(bw - bar) / 2, 0]]) {
+    const piece = put(MeshBuilder.CreateBox("halflingBuckle", { width: w, height: h, depth: D * B.buckleDeep }, scene), grey);
+    piece.position.set(x, beltY + y, beltFront + D * B.buckleDeep * 0.5);
+  }
+  // the tongue through the frame, a grey pin across its middle
+  const pin = put(MeshBuilder.CreateBox("halflingBucklePin", { width: bar * 0.8, height: bh - bar * 2, depth: D * B.buckleDeep * 0.6 }, scene), grey);
+  pin.position.set(-bw * 0.12, beltY, beltFront + D * B.buckleDeep * 0.3);
   return added;
 }
 
