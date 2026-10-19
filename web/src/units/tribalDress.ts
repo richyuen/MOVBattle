@@ -801,7 +801,7 @@ const LOINCLOTHS = new Set(["tribal.bone_mage", "tribal.spear_thrower", "tribal.
  * than FLAP_COLOR so it stays brown in the capture's shade); the skull .skull pelvis widths across with its snout stretched by .snout, hung .hang of its width
  * below the rope; the bones .boneAt radians round from the front, close beside the skull.
  */
-const RAGGED_LOIN = { strips: 5, wide: 0.62, long: 0.62, short: 0.7, skull: 0.6, snout: 1.3, hang: 0.55, boneAt: 0.42, hide: new Color3(0.56, 0.38, 0.24) };
+const RAGGED_LOIN = { strips: 6, wide: 0.95, long: 0.75, short: 0.7, skull: 0.5, snout: 1.3, hang: 0.55, boneAt: 0.42, hide: new Color3(0.62, 0.43, 0.27) };
 
 /** A bone `long` long along +y: a round shaft with a pair of knobs at each end. The first mesh is the shaft (the others are its children). */
 export function boneStick(scene: Scene, name: string, long: number, thick: number): Mesh[] {
@@ -866,7 +866,7 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
       tongue.convertToFlatShadedMesh();
       tongue.rotation.set(-lean, 0, (share(2) - 0.5) * 0.16);
       tongue.position.set(x, flapTop - long * 0.4, (frontAt(flapTop) + frontAt(flapTop - long * 0.8)) * 0.5 + ropeThick * (0.45 + share(3) * 0.15));
-      tongue.material = getMaterialFactory().get("cloth", RAGGED_LOIN.hide.scale(0.88 + share(4) * 0.24), { emissiveIntensity: 0.2 });
+      tongue.material = getMaterialFactory().get("cloth", RAGGED_LOIN.hide.scale(0.88 + share(4) * 0.24), { emissiveIntensity: 0.3 });
       tongue.parent = body.hip;
       added.push(tongue);
       // ...torn to a point, off-centre
