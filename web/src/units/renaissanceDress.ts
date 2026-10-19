@@ -260,7 +260,7 @@ export function balloonArcherFront(scene: Scene, body: ArticulatedBody, teamColo
  */
 const FENCER_TRIM = {
   capTop: 1.25, capFoot: 1.95, capTall: 0.3, roll: 0.34, band: 0.12, bandOut: 1.3,
-  belt: 0.09, beltOut: 1.06, tabs: 8, gapShare: 0.1, skirtTop: 1.04, skirtFoot: 1.3, skirtTall: 0.34, tabShade: 0.7,
+  belt: 0.09, beltOut: 1.06, tabs: 8, gapShare: 0.1, skirtTop: 1.04, skirtFoot: 2.0, skirtTall: 0.32, tabShade: 0.7,
   leather: new Color3(0.3, 0.16, 0.09), tan: new Color3(0.8, 0.56, 0.28), glow: 0.3,
 };
 
