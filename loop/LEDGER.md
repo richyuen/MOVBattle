@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-352 | full gild: every opaque mesh on one shared (9e3fce4 +afcc44c) | medieval.healer.c | approved
-352 | faceted grey-brown boulder, bucket and shot (639c5f4 +439f40c) | medieval.catapult.b | approved
-352 | brown longbow variant (a8bc13d) | medieval.archer.b | approved
-352 | longsword slab cut (4285473) | medieval.squire.b | approved
-352 | Zweihander retry on the greatsword mount (519c8af) | medieval.king.b | approved
 353 | two-fisted hilt, off fist onto the grip (7f4b61c) | medieval.squire.b | approved
 353 | two-fisted Zweihander, off fist .5 grip (9e2fd04, reverted c9dd189) | medieval.king.b | rejected
 353 | priest staff: banded team orb, cross (03b4e5c) | medieval.healer.b | approved
@@ -67,6 +62,14 @@ for 25 iterations.
 361 | deer skull as a face mask, eyes on it (1edd0db +ca5ab06) | tribal.bone_mage.a | approved
 361 | slab held square in front, bash shove (fe4efa7) | tribal.protector.b | approved
 
+362 | stone slab: faceted columns, seam, round lip, 3 moss (27256cd +d38d4b0) | tribal.protector.b | approved
+362 | ragged hide loincloth, large skull (da977ab +20e52ec) | tribal.clubber.a | approved
+362 | knapped dark flint head, tan cord X (cf3ff8b) | tribal.spear_thrower.b | approved
+362 | one-strap hide dress, slanted bodice, torn skirt (3834142) | tribal.stoner.a | approved
+362 | stag rack on the mask: swept knuckled beam, tines (c66c10a) | tribal.bone_mage.a | approved
+362 | stag rack on the staff skull, grown 1.4 (42d26c9) | tribal.bone_mage.b | approved
+362 | stone axe re-hafted: charcoal, long red haft, X cords (c174af8) | tribal.chieftain.b | approved
+
 ## Spent (never retry as [P])
 
 ## Rows
@@ -80,7 +83,13 @@ propBuilder.ts:ROYAL_CROWN (heads, band, down, points, tall, base, flare, gem, r
 medievalDress.ts:KING_BEARD (wide..blonde, glow); KING_HAIR (warm, rough, burn*) | ...,(.88,.62,.28),.12; (.4,.24,.07),1 | 359 | approved | glow unused since kingHair (359)
 medievalDress.ts:KING_DRESS (puff..hose..buckle); KING_PANTS (knee, profile peak, band, folds) | 1.55,.7,4,1.5,1.32,..; .8,1.7,1.18,4 | 360 | approved | hose 1.1 (359); critic 360: 1.32 boot-thick
 proceduralAnimation.ts:OFF_AXE (out, ahead, face) | .18, .22, [.75,.65] | 361 | approved | critic: stone over the chest in windup
-tribalDress.ts:DREAD_MOP (cap, capUp, capBack, locks, face, splay, kink, long, thick, clubber) | ..,.78,.2,20,.85,.42,.35,.95,.3,.8 | 361 | approved | -
+tribalDress.ts:DREAD_MOP (..splay, kink, long, thick, clubber, clubberSplay, clubberColor) | ..,.42,.35,.95,.3,.8,.62,(.34,.2,.12) | 362 | approved | clubber colour .4,.25,.15, splay .42 (361)
 propBuilder.ts:CLUB (long, grip, sides, knob, wood, profile peak) | .74, .17, 8, .1, (.4,.25,.16), .124 | 361 | approved | CLUB_LONG .6 tube (before 361)
+propBuilder.ts:SLAB_FACETS (deep, rows, front, bevel, seam); SLAB_MOSS (top, hole, bottom) | .06,3,1.0,.7,.006; .17,.12,.1 | 362 | approved | planks (before 362); moss .13,.08
+tribalDress.ts:RAGGED_LOIN (strips, wide, long, short, skull, snout, hang, boneAt, hide) | 6,.95,.75,.7,.5,1.3,.55,.42,(.62,.43,.27) | 362 | approved | 5,.62,.62,..,.6 (362 first cut)
+propBuilder.ts:JAVELIN_LEAF (shoulder, flank, flankWide, ridge, jitter, glow); HEAD long/wide | .28,.62,.55,.13,.08,.14; .16/.15 | 362 | approved | ball leaf .15/.095 (320)
+tribalDress.ts:HIDE_DRESS (sides, top, low, strap, skirt, flare, rag, color) | 8,1.0,.56,.22,.62,1.4,.16,(.52,.3,.22) | 362 | approved | -
+propBuilder.ts:DEER_RACK (beam, bend, back, thick, taper, tine, inward, brow, tan, glow, staff) | ..,[1.3,.95,.6,.25],.12,.24,.82,..,(.72,.6,.45),.15,1.4 | 362 | approved | DEER_BEAM/SPLAY (251)
+propBuilder.ts:STONE_AXE (long, grip, thick, head, out, over, cord_, tilt) | .58,.2,.06,.31,.22,.25,.022,.55 | 362 | approved | AXE_LONG .4, GRIP .25, HEAD .78 of L
 propBuilder.ts:DEER_MASK (top, tip, flat, rise, drop, tilt, out, spread, socket) | .95,.36,.32,.1,.08,.2,.26,1.55,1.4 | 361 | approved | -
 proceduralAnimation.ts:SLAB_FRONT (reach, grip, bash) | .2, .08, .22 | 361 | approved | -
