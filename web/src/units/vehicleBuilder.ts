@@ -2063,15 +2063,17 @@ function mammothBarrel(scene: Scene): Mesh {
   for (let r = 1; r < B.rings - 1; r++) pos.push(...ring(-Math.cos((r / (B.rings - 1)) * Math.PI)));
   pos.push(0, 0, B.long);
   const last = 1 + (B.rings - 2) * B.sides;
+  // wound so the faces look out (374: the 365 winding faced them in, so the camera saw the far wall's inside and the thigh tops inside the hull
+  // drew in front of the near flank)
   for (let k = 0; k < B.sides; k++) {
     const k1 = (k + 1) % B.sides;
-    idx.push(0, 1 + k, 1 + k1);
+    idx.push(0, 1 + k1, 1 + k);
     for (let r = 0; r < B.rings - 3; r++) {
       const a = 1 + r * B.sides, b = a + B.sides;
-      idx.push(a + k, b + k, b + k1, a + k, b + k1, a + k1);
+      idx.push(a + k, b + k1, b + k, a + k, a + k1, b + k1);
     }
     const a = 1 + (B.rings - 3) * B.sides;
-    idx.push(a + k1, a + k, last);
+    idx.push(a + k, a + k1, last);
   }
   const m = new Mesh("torso", scene);
   const data = new VertexData();
