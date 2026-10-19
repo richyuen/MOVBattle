@@ -485,7 +485,7 @@ const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, 
  */
 const SARISSA_FOLD = {
   bulk: 0.2, bulkLong: 1.25, bulkWide: 1.5, bulkAt: 0.9, bulkUp: 0.05, bulkTilt: 0.25,
-  folds: 2, drapeFrom: 0.85, drapeLong: 0.72, drapeTall: 0.13, drapeDeep: 0.09, drapeTilt: 0.42, drapeDown: 0.08, brooch: 0.09, gold: new Color3(0.82, 0.62, 0.25),
+  folds: 2, drapeFrom: 0.85, drapeLong: 0.72, drapeTall: 0.22, drapeDeep: 0.09, drapeTilt: 0.6, drapeDown: 0.08, brooch: 0.09, gold: new Color3(0.82, 0.62, 0.25),
 };
 
 /** The sarissa's cape and folded collar (spec at SARISSA_CAPE), on the torso. */
