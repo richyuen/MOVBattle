@@ -119,9 +119,10 @@ function chestBox(body: ArticulatedBody): { W: number; H: number; D: number; top
  * light team vest fills the jacket's opening from the belt up and parts in a deep V at the chest, the white shirt showing only in that V and its
  * collar; critic 387: one flat white panel from the collar to the belt with a pale V inside it). The vest is now a lower block from its foot up to
  * the V's point (.veeDeep of H under the coat's top) and two shoulder panels from there, each from the jacket front's edge in to the V's side; the
- * shirt V sits in the gap. Vest cloth team lerped HALFLING_VEST_CUT.light toward white (was HALFLING_COAT.vestLight .45, which read white).
+ * shirt V sits in the gap. Vest cloth team lerped HALFLING_VEST_CUT.light toward white (was HALFLING_COAT.vestLight .45, which read white; the coat
+ * is team x .85, so the plain team vest is the lighter layer).
  */
-const HALFLING_VEST_CUT = { light: 0.18, glow: 0.12 };
+const HALFLING_VEST_CUT = { light: 0, glow: 0.08 };
 const HALFLING_COAT = {
   neck: 0.02, drop: 0.1, wall: 0.08, out: 0.06, front: 0.3, ahead: 0.08, gap: 0.22, flare: 0.08, lapel: 0.4, lapelWide: 0.2,
   vest: 0.46, vestAhead: 0.03, vee: 0.4, veeDeep: 0.46, collar: 0.16, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
