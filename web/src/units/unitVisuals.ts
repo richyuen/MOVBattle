@@ -364,7 +364,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "ancient.minotaur": vis(
-    { scale: 2.1, bulk: 1.5, headSize: 1.7, armLength: 1.15 }, "axe", "bull_head", "none", "none", "#8B0000",
+    // [S] bare-fisted, no sledgehammer (379; card Minotaur Grab both hands): fists and blow are proceduralAnimation BULL_FISTS
+    { scale: 2.1, bulk: 1.5, headSize: 1.7, armLength: 1.15 }, "none", "bull_head", "none", "none", "#8B0000",
   ),
   "ancient.zeus": vis(
     { scale: 1.9, bulk: 1.3, headSize: 1.3 }, "lightning_bolt", "laurel", "none", "cape", "#87CEEB",

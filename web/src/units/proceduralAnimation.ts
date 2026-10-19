@@ -338,6 +338,15 @@ const MAIN_AXE = { ease: 8 };
  * .pump with the stride, his legs striding .stride, all by the eased charge weight.
  */
 const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 0.5, pace: 11 };
+/*
+ * [S] bare fists (379, the minotaur's; card Main Hand / Off Hand "Minotaur Grab", Unarmed; ancient.minotaur.red.png: no weapon, both fists balled before the
+ * belly, elbows bent near square and out from the flanks; ancient.minotaur.png: one arm grabs a man while the other punches).
+ * - Carry (stood or marching): each upper arm .lift rad forward and .out rad out from the side, each elbow folded .fold rad, so the fists ride before the belly.
+ * - Blow (grab then punch): to .grab of the blow both arms reach out together, shoulders .reach, elbows near straight (the grab); the off arm then holds
+ *   there while the weapon arm draws back to .cock (elbow .cockFold) until .punch and drives straight out to .reach (elbow 0) with the trunk twisted .twist
+ *   onto the off side and pitched .lean; the rest eases back to the carry.
+ */
+const BULL_FISTS = { lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
 /*
  * [S] the jouster's canter (369; renaissance.jouster.png, card Speed 2.50x "the Jouster Horse ... create shockwaves wherever they canter"): the barded
@@ -1069,6 +1078,49 @@ export class ProceduralAnimator {
 
   // a man on two legs charging head down (BULL_CHARGE); the jouster's rider sits his horse's charge upright
   private _bullCharge = false;
+  /** Bare-fisted (BULL_FISTS): carries his fists before the belly and grabs then punches; set by the runtime for the minotaur. */
+  bullFists = false;
+
+  /** The fists carry (BULL_FISTS), stood or marching, eased out under the charge run. */
+  private _applyBullFists(): void {
+    if (!this.bullFists || this.walkStyle === "quadruped" || (this._state !== AnimState.Idle && this._state !== AnimState.Walking)) return;
+    const b = this._body, F = BULL_FISTS, k = 1 - this._charge;
+    b.leftShoulder.rotation.x += F.lift * k;
+    b.rightShoulder.rotation.x += F.lift * k;
+    b.leftShoulder.rotation.z -= F.out * k;
+    b.rightShoulder.rotation.z += F.out * k;
+    b.leftElbow.rotation.x += F.fold * k;
+    b.rightElbow.rotation.x += F.fold * k;
+  }
+
+  /** The grab and punch (BULL_FISTS). */
+  private _animateBullPunch(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body, F = BULL_FISTS;
+    const p = Math.min(this._attackTimer / this._attackDuration, 1);
+    const ease = (u: number) => u * u * (3 - 2 * u);
+    const grab = ease(Math.min(1, p / F.grab));
+    const back = p < F.grab ? 0 : p < F.punch ? ease((p - F.grab) / (F.punch - F.grab)) : 1;
+    const drive = p < F.punch ? 0 : ease(Math.min(1, (p - F.punch) / 0.12));
+    const rest = p > 0.85 ? ease((p - 0.85) / 0.15) : 0;
+    const hold = 1 - rest;
+    // the off arm: from the carry out to the grab, held there
+    b.leftShoulder.rotation.x = (F.lift + (F.reach - F.lift) * grab) * 1 * hold + F.lift * rest;
+    b.leftShoulder.rotation.z = -F.out * 0.5;
+    b.leftElbow.rotation.x = F.fold * (1 - grab) * hold + F.fold * rest - 0.15 * grab * hold;
+    // the weapon arm: out to the grab, drawn back to the cock, driven straight out
+    const wShoulder = F.lift + (F.reach - F.lift) * grab + (F.cock - F.reach) * back + (F.reach - F.cock) * drive;
+    const wElbow = F.fold * (1 - grab) + (F.cockFold - 0) * back * (1 - drive);
+    b.rightShoulder.rotation.x = wShoulder * hold + F.lift * rest;
+    b.rightShoulder.rotation.z = F.out * 0.5;
+    b.rightElbow.rotation.x = wElbow * hold + F.fold * rest;
+    b.torso.rotation.y = (-F.twist * back + F.twist * 2 * drive) * hold;
+    b.torso.rotation.x = (F.lean * grab - F.lean * 0.5 * back + F.lean * 1.5 * drive) * hold;
+    b.rightHip.rotation.x = -0.2 * drive * hold;
+    b.leftHip.rotation.x = 0.25 * drive * hold;
+    b.leftKnee.rotation.x = 0.2 * drive * hold;
+    if (p >= 1) this._state = AnimState.Idle;
+  }
   private _chargeTarget = 0;
   private _charge = 0;
 
@@ -1582,6 +1634,7 @@ export class ProceduralAnimator {
         this._animateDead(dt);
         break;
     }
+    this._applyBullFists();
     this._applyChargePose(dt);
     this._applyHorseGait(dt);
 
@@ -3521,6 +3574,10 @@ export class ProceduralAnimator {
     }
     if (this.attackStyle === "mammoth") {
       this._animateAttackMammoth(dt);
+      return;
+    }
+    if (this.bullFists && this._attackMotion === "strike") {
+      this._animateBullPunch(dt);
       return;
     }
     switch (this._attackMotion) {

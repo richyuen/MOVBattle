@@ -369,6 +369,8 @@ export class RuntimeUnit {
     this.animator.variety = this.vary(31);
     this.animator.defaultAttackMotion = this._resolvePrimaryAttackMotion();
     this.animator.locomotionBias = this._resolveLocomotionBias();
+    // [S] the minotaur fights bare-fisted: fists carried before the belly, grab then punch (379; proceduralAnimation BULL_FISTS)
+    this.animator.bullFists = definition.id === "ancient.minotaur";
     this._spawnPosition = body.root.position.clone();
     this._spawnRotationY = body.root.rotation.y;
   }
