@@ -1,25 +1,22 @@
 # ancient.sarissa
 Status: open   Audited: 378   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (4 since 378)
- 1. crest in unit_ancient.sarissa_idle: now a solid stepped arc, but the eye opening is still a band with a nose bar — TABS: narrow eye slots either side of the nose guard (ref: .red.png, .png)
- 2. cape in _idle: a shell shoulders to calves with a shoulder roll, but it reads pale grey-blue, lighter than the tunic, and hangs straight behind — TABS: darker team cape, a folded collar wrapping the left shoulder onto the chest (ref: .png, .red.png)
- 3. belt in _idle: thin team band — TABS: big brown belt, dagger on the left hip, brown bracers (ref: .red.png, card)
+a FAIL (5 since 378)
+ 1. crest in unit_ancient.sarissa_idle: a solid stepped arc, but the eye opening is still a band with a nose bar — TABS: narrow eye slots either side of the nose guard (ref: .red.png, .png)
+ 2. cape in _idle: dark now, but hangs straight behind — TABS: a folded collar wrapping the left shoulder onto the chest (ref: .png, .red.png)
 b PASS (379)
 c PASS (380)
 d PASS (cost 120, hp 0.49x, dmg 0.16x, cd 1.00x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a belt — blocker 3: big brown belt, dagger on the left hip, brown bracers (ancientDress dressSarissa) — ref: .red.png — ours: unit_ancient.sarissa_idle.png
-2. [S] a eye slots — blocker 1: two narrow eye slots either side of a nose guard in place of the band (CORINTH_HELM) — ref: .red.png — ours: unit_ancient.sarissa_idle.png
-3. [P] a cape colour (fallout of 3fd1971) — NEXT: [P] ancientDress.ts SARISSA_CAPE shade .62 -> .45, glow .12 -> .06; shows in unit_ancient.sarissa_idle.png, the cape at his sides darker than the tunic
+1. [S] a eye slots — blocker 1: two narrow eye slots either side of a nose guard in place of the band (CORINTH_HELM) — ref: .red.png — ours: unit_ancient.sarissa_idle.png
+2. [S] a cape collar — blocker 2: a folded collar chunk wrapping the left shoulder onto the chest (ancientDress SARISSA_CAPE) — ref: .png — ours: unit_ancient.sarissa_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-379 | pike levelled in both fists at the hip (PIKE_LEVEL) [S] (0311c85 +f07a183) | b | approved
-380 | backs up to keep pike distance (SARISSA_KEEP) [S] (9789cbd) | c | approved (c PASS)
-381-382 | Corinthian helm (CORINTH_HELM); crest as 4 stacked bands (CORINTH_CREST) [S] | a | approved
-383 | (via hoplite 376288d) crest bands one solid swept strip each | a | approved
-383 | dark team cape shoulders to calves, folded collar + roll (SARISSA_CAPE) [S] (3fd1971) | a | approved
+379-380 | pike levelled (PIKE_LEVEL) [S]; backs up (SARISSA_KEEP) [S] | b,c | approved (c PASS)
+381-383 | Corinthian helm; crest bands; dark team cape + collar (SARISSA_CAPE) [S] | a | approved
+384 | big brown belt round the body ring, dagger forward of the cape, bracers (SARISSA_KIT) [S] (b635f94 +5c01360) | a | approved (struck a.3)
+384 | cape shade .62 -> .45, glow .12 -> .06 (SARISSA_CAPE) [P] (26d6450) | a | approved (colour cleared)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Critic 379 minors: in _idle the arms cross over the shaft; the pike is ~1.2x his height (TABS ~2.5x).
-- crested_helm (propBuilder, CORINTH_HELM + CORINTH_CREST) is shared with the hoplite; a hoplite-only crest variant is ranked there. Head probe: output/loop/probe_head.mjs.
-- Cape is ancientDress dressSarissa on the torso (open shell arc .56, gap at his front).
+- crested_helm (propBuilder, CORINTH_HELM + CORINTH_CREST) is shared with the hoplite. Kit/cape in ancientDress sarissaKit/dressSarissa; probe output/loop/probe_sarissa.mjs (--unit= --pat=).
+- 384 minors: right bracer a long box nearly sheathing the pike grip (TABS short chunky cuffs); dagger faint.
+- trunkBand on a box trunk finds no vertices in a thin slice and falls back to a big box: size from trunkBand(body,0,1) or the body _belt ring.

@@ -12,11 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-374 | low leather shoes, turned cuff, dark stocking (b46132a) | renaissance.halberd.a | approved
-374 | upright stance for a javelin man, lankier body (9fcac3a) | tribal.spear_thrower.a | approved
-374 | sweater ends at hip in a ribbed band, legs 1.2x (0ee7192) | renaissance.painter.a | approved
-374 | tabs bent near-straight, thigh rolls dropped (0118f84) | renaissance.fencer.a | approved
-374 | hull lower half squared as a skirt; hull winding flipped outward (79f4083 +6910ac7) | tribal.mammoth.a | approved
 375 | breeches: 3 quilted team puffs hip to knee, tan slashes (a74b9af) | renaissance.halberd.a | approved
 375 | hay planks fanning above the shoulders, skirt of flat tongues (d822dce) | farmer.hay_baler.a | approved
 375 | sweep carried through a step in the press (setState _afterSweep) (3a94e9e) | farmer.harvester.c | approved
@@ -80,11 +75,18 @@ for 25 iterations.
 383 | lorica: 5 hoop bands, layered leather shoulder plates (a4076de, reverted) | ancient.shield_bearer.a | rejected
 383 | shorts end in a cuff at .78 of the thigh, foot fur low (d9365dd) | farmer.halfling.a | approved
 383 | Zeus bolt: one glowing zig-zag hand to chest, small burst (c0d24d5) | ancient.zeus.c | approved
+384 | held bolt leaves the fist at the throw, back .6 of the cooldown on (1eb7af4) | ancient.zeus.c | approved
+384 | small zig-zag sparks on a cyan rim in each fist, off hand too (d6d2a01) | ancient.zeus.b | approved
+384 | box frame, housings + team coil caps, bound arms, trough, 4 spoked wheels (2fe1946 +0b8f457) | ancient.ballista.a | approved
+384 | snake bow: green, white belly panels, snake head at the tip, stood up (cdddba0 +91a781d) | ancient.snake_archer.b | approved
+384 | dark brown greaves + rim, team foot in a brown sandal (d611ead) | ancient.hoplite.a | approved
+384 | brown belt round the body ring, dagger, bracers (b635f94 +5c01360) | ancient.sarissa.a | approved
+384 | lorica re-land: 4 fitted hoops at 1.05 + seams, flat deltoid strips (89b02e6 +8c5060d) | ancient.shield_bearer.a | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
-ancientDress.ts:SARISSA_CAPE (arc, hem, shade, glow) | .56, .72, .62, .12 | 383 | approved | LORICA 5 hoops proud 1.1+step, rejected 383 (barrel), reverted
+ancientDress.ts:SARISSA_CAPE (arc, hem, shade, glow) | .56, .72, .45, .06 | 384 | approved | shade .62 glow .12 (383)
 unitFactory.ts:HALFLING_SHORTS long, cuff + HALFLING_FEET clumpTall, rise | .78, .14; .7, .45 | 383 | approved | .92; 1.1, .9
 tribal.* (7 units' rows: JAVELIN, CHIEF, CLUB, HIDE, DEER, SLAB/SKULL, mammoth body; units done) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
 renaissance.* (painter, fencer, jouster, musketeer, balloon_archer, halberd rows; units done) | compacted 378 | 377 | approved | values: git show edb1692:loop/LEDGER.md
@@ -111,3 +113,10 @@ proceduralAnimation.ts:DORY_AIM (ahead, out, above) | 1.8,1.9,.1 | 382 | approve
 proceduralAnimation.ts:DORY_CARRY (ahead, out, up, fwd, side, down, fistAt) | .25,.9,-.3,.8,.25,.4,.15 | 380 | approved | level thrust grip
 proceduralAnimation.ts:DORY_THRUST (ahead, out, up, tilt, reach, draw, driven, held, home, blendOut) | .35,.6,-.05,-.06,.75,.45,.22,.5,.85,.15 | 381 | approved | -
 simulationSystem.ts:SARISSA_KEEP (near, pace) | .85, .7 | 380 | approved | -
+simulationSystem.ts:ZEUS_REARM | .6 of the cooldown | 384 | approved | - (bolt stayed in the fist)
+propBuilder.ts:BOLT_SPARK (branches, long, short, kinks, zig, core, rim) | 200/150/250/20, .14, .09, 3, .55, .022, 1.7 | 384 | approved | 5-joint shard bolt .68 s tall
+vehicleBuilder.ts:BALLISTA_FRAME/HOUSING/ARMS/STOCK/WHEEL, BALLISTA_WOOD | wide 1.5 top 1.02; wood (.62,.3,.2) glow .14 | 384 | approved | team slab deck .8x1.2
+propBuilder.ts:SNAKE_BOW (long, thick, bow, panel, head, hold) | .95, .06, .07, .8, .075, 1.1 | 384 | approved | plain short bow
+ancientDress.ts:HOPLITE_LEGS (out, from, to, rim, sole, instep) | 1.3, .06, .86, .07, .22, .55 | 384 | approved | grey boots
+ancientDress.ts:SARISSA_KIT (tall, proud, band, hipOut, ahead, sheath, out) | .2, 1.1, .35, .92, .55, .42, 1.6 | 384 | approved | out 1.32, belt in trunkBand (hidden)
+ancientDress.ts:LORICA (hoops, low, high, proud, fill, seamProud, strips, tilt) | 4, .24, .74, 1.05, .92, 1.07, 2, .38 | 384 | approved | 5 hoops 1.1+step (383 rejected)
