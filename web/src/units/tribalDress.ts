@@ -1231,6 +1231,7 @@ export function dressTribalPauldrons(scene: Scene, body: ArticulatedBody, unitId
  */
 const HIDE_SKIRT = { bandDrop: 0.16, panelOut: 1.45, panelFlare: 1.12, sides: 7 };
 const HIDE_DRESS = { sides: 8, top: 1.0, low: 0.56, strapAt: 0.55, strapWide: 0.13, strapRise: 0.45, skirt: 0.62, flare: 1.4, rag: 0.16, color: new Color3(0.52, 0.3, 0.22), glow: 0.15 };
+const HIDE_EDGE = { color: new Color3(0.34, 0.19, 0.12), wide: 0.2, thick: 0.05, lift: 0.12, rimPoints: 24 };
 const HIDE_DRESSES = new Set(["tribal.stoner"]);
 /** Whether the unit wears the hide dress (and so no skin kilt under it). */
 export function wearsHideDress(unitId: string): boolean {
@@ -1288,14 +1289,33 @@ export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId
     }
     return pts;
   };
-  const halfW = shoulderX * D.strapWide;
-  for (const [name, grow] of [["tunicStrap", 1.0], ["tunicStrapInner", 0.93]] as const) {
-    const strap = MeshBuilder.CreateRibbon(name, { pathArray: [arc(-halfW, grow), arc(halfW, grow)], sideOrientation: Mesh.DOUBLESIDE }, scene);
-    strap.convertToFlatShadedMesh();
-    strap.material = hide;
-    strap.parent = body.torso;
-    added.push(strap);
+  // [S] 366 (critic 365: the strap hid under the locks and the bodice's slant barely read against the skin): the strap is a solid band of HIDE_EDGE.thick
+  // of the trunk, HIDE_EDGE.wide of the shoulder span across, in the darker edge hide, lifted .lift of the half-depth proud of the shoulder so its front leg
+  // stands clear on the chest below the hair; and a rolled hem of the same dark hide runs round the bodice's slanted top rim, so the diagonal reads plain.
+  const E = HIDE_EDGE;
+  const edge = getMaterialFactory().get("cloth", E.color, { emissiveIntensity: D.glow });
+  const halfW = shoulderX * E.wide;
+  const lift = 1 + E.lift;
+  const thickness = trunk * E.thick;
+  const outer = lift + thickness / Math.max(1e-3, halfZ);
+  const section = [arc(-halfW, outer), arc(halfW, outer), arc(halfW, lift), arc(-halfW, lift), arc(-halfW, outer)];
+  const strap = MeshBuilder.CreateRibbon("tunicStrap", { pathArray: section, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  strap.convertToFlatShadedMesh();
+  strap.material = edge;
+  strap.parent = body.torso;
+  added.push(strap);
+  const rim: Vector3[] = [];
+  for (let k = 0; k <= E.rimPoints; k++) {
+    const a = (k / E.rimPoints) * Math.PI * 2;
+    const x = Math.cos(a), z = Math.sin(a);
+    const strapSide = (x * side + 1) * 0.5;
+    rim.push(new Vector3(band.midX + x * halfX * 1.03, trunk * (D.low + (D.top - D.low) * strapSide), midZ + z * halfZ * 1.03));
   }
+  const hem = MeshBuilder.CreateTube("tunicHem", { path: rim, radius: thickness * 0.5, tessellation: 5 }, scene);
+  hem.convertToFlatShadedMesh();
+  hem.material = edge;
+  hem.parent = body.torso;
+  added.push(hem);
   // The skirt: flared, its foot torn into points
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
   const pelvisX = pelvis ? pelvis.getBoundingInfo().boundingBox.extendSize.x : halfX;
