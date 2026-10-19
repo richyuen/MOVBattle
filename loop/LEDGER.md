@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-370 | candy lance: team band helix half each turn on tan shaft (14e00d6) | renaissance.jouster.b | approved
-370 | feather plume: 7 flat stepped-blade feathers, helm + poll (38081d7 +1edcdf2, reverted) | renaissance.jouster.a | rejected
-370 | falling collar: tan 8-sided cape on the vest top, 2 tabs (6bc67f7 +62c3f84) | renaissance.musketeer.a | approved
-370 | quilted sleeves: packed puffs both arms, flared black cuff (9295c61) | renaissance.halberd.a | approved
-370 | puffed beret: band + faceted puff slid aside, team colour (8139915 +afefe3a) | renaissance.painter.a | approved
-370 | tan bone ring on the slab behind the window (37d76c7) | tribal.protector.a | approved
-370 | step back: committed slide from the land, 1.8 m in .16 s (e2f2190) | renaissance.fencer.c | approved
 371 | hose: garter + bow, tan sock tops, orange shoes (e7a49eb) | renaissance.musketeer.a | approved
 371 | solid doublet, tan placket + buttons, slashed shoulder puffs (58d2ee9) | renaissance.balloon_archer.a | approved
 371 | cavalier hat as one felt lathe, left brim swept up (47ab317 +4b357d0) | renaissance.fencer.a | approved
@@ -77,6 +70,13 @@ for 25 iterations.
 379 | blond bolt beard + locks, temple leaves (f708157) | ancient.zeus.a | approved
 379 | head a great dome on a skull node, eyes up (28bde95) | tribal.mammoth.a | approved
 379 | flasks hung bulb-down by _hangFlasks, bulb .085, glass re-tinted (3535a13, reverted) | farmer.potion_seller.b | rejected
+380 | flasks hung bulb-down by the neck, bulb .085, re-land of 3535a13 minus glass (e6efab4) | farmer.potion_seller.b | approved
+380 | scutum chin to shin: hold reads holeUp (unitFactory wiped it), laurels, trim (f87fef0) | ancient.shield_bearer.b | approved
+380 | dory carried low at the weapon hip outside the aspis, point down (41000a8 +dcff49a) | ancient.hoplite.b | approved
+380 | crest laid on the dome's skin brow to nape, no cap (61181b3) | tribal.mammoth.a | approved
+380 | low rim (one board), seats on the tray middle, Thrower splayed (fe764b2 +f78cb48) | farmer.wheelbarrow.a | approved
+380 | jacket shell + yoke from the shoulders, sleeves to the wrist, hem .1 (b0e0351 +b52f817) | farmer.halfling.a | approved
+380 | backs up to keep pike distance inside .85 of reach, logged backstep (9789cbd) | ancient.sarissa.c | approved
 
 ## Spent (never retry as [P])
 
@@ -96,22 +96,25 @@ vehicleBuilder.ts:MAMMOTH_BARREL (hump, humpAt, humpFront, humpBack, slope, slop
 tribal.mammoth a (MAMMOTH_TRUNK, MAMMOTH_TUSK, MAMMOTH_EAR; MAMMOTH_HEM rejected 367) | compacted 379 | 367 | approved | values: git show d9e7ad6:loop/LEDGER.md
 vehicleBuilder.ts:MAMMOTH_LEG collar ([r,y] foot..top, collarJitter) | [.28,-.36],[.35,-.3],[.37,-.2],[.33,-.1], .045 | 375 | approved | -
 tribalDress.ts:SHAGGY (cap, locks, long, front, fringeArc, thick, splay, locks2, long2, splay2, rootY2) | 1.3,22,.95,.32,.6,.42,.16,14,.5,.5,.85 | 375 | approved | 1.32,26,.5,.5,-,.3,.55 (340)
-farmerDress.ts:HALFLING_COAT (neck, drop, out, front, gap, flare, lapel, vest, vee, belt, buckle) | .02,.32,.06,.3,.22,.08,.4,.46,.4,.12,.24 | 376 | approved | box jacket 1.14, drop .12
-vehicleBuilder.ts:CREW_SEAT (lipIn, lipUp, frontThigh, frontSplay, frontKnee, astrideUp, backThigh, backSplay, backKnee+roll) | .05,.03,-1.15,.62,.45,.04,-.3,1.3,.2 | 377 | approved | back .02,-.75,1,.95 on the hay (376)
-vehicleBuilder.ts:WHEELBARROW (trayWide, trayLong, backSeat), LOG_WHEEL thick, HAY_BED fill | .2,.5,.1, .196, .92 | 378 | approved | .44,.78,-.06, .36, ico mound (377)
+farmerDress.ts:HALFLING_COAT (fronts, lapel, vest, vee, belt; drop), HALFLING_SLEEVED (arc, flare, yoke, puff, cuff) | drop .1; .72,1.12,.14,1.45,1.2 | 380 | approved | box walls, drop .32
+vehicleBuilder.ts:CREW_SEAT (lipUp, front thigh/splay/knee, astrideUp, backThigh, backSplay, backKnee, backRoll), LOW_RIM | .03,-1.15,.62,.45,.04,-1.1,.85,1,-.5; rim .06 seats .06,-.11 | 380 | approved | back -.3,1.3,.2 (377)
+vehicleBuilder.ts:WHEELBARROW (trayWide, trayLong), LOG_WHEEL thick, HAY_BED fill | .2,.5, .196, .92 | 378 | approved | backSeat .1 replaced by LOW_RIM 380
 farmer.scarecrow (CROW_LAYERS, PERCH_CROW, SACK_HOOD; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 5e14f8f
 farmer.harvester (CHEST_BRAID, FELT_HAT; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 84980cf
 farmer.farmer (TALL_HOOD rings to .86, LIRIPIPE_TAIL; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 9f5019c
 
-farmer.potion_seller (POTION, POTION_GLASS, POTION_FIT, POTION_HANG, POTION_HEAD; seatNeckInFist 378) | compacted 378 | 379 | approved (379 POTION .085 + glass (.5,.68,.64) .06 rejected, reverted) | values: git show edb1692:loop/LEDGER.md + c1e205c
-vehicleBuilder.ts:MAMMOTH_CREST chunks, MAMMOTH_MANE_COLOR | 6 chunks brow .62 to nape .72, (.09,.055,.04) | 378 | approved | dome + 3 topknots, (.2,.1,.06)
+farmer.potion_seller (POTION ball .085 shoulder .032 neck .034 cork .022 glow .12, POTION_GLASS (.64,.75,.72), FLASK_HANG 1,.3) | compacted 380 | 380 | approved | git show edb1692:loop/LEDGER.md
+vehicleBuilder.ts:MAMMOTH_CREST (on the skin: head .7,.56, sink .35, 7 chunks phi -.7..1.65), MAMMOTH_MANE_COLOR | (.09,.055,.04) | 380 | approved | 6 balls .62-.92 up (378)
 vehicleBuilder.ts:BUNCHED_CREW (recline, nod) | -.5, .3 | 378 | approved | -
 ancient.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 378 | stats | values: git show 5715b05
 ancientDress.ts:MINO_FUR, MINO_BELT, MINO_PAULDRON, MINO_SASH | (.42,.24,.17) glow .16; belt .16 tall; pauldron .42 wide | 378 | approved | -
 simulationSystem.ts:MINOTAUR_CHARGE; proceduralAnimation.ts:BULL_CHARGE | from 1.5 reach 14 speed 2.3 fling 7; lean .6 head .35 | 378 | approved | -
-propBuilder.ts:SCUTUM (tall, wide, curve, chin), SCUTUM_TRIM | .74,.42,.08,.05; (.93,.6,.3) | 379 | approved (379 .5,.36,.06,.1 + trim .06 rejected) | tower box
+propBuilder.ts:SCUTUM (tall, wide, curve, chin), SCUTUM_TRIM, SCUTUM_LAUREL | .5,.36,.06,.06; (.9,.45,.16) lit .06; leafy sprays | 380 | approved | .74,.42,.08,.05; (.93,.6,.3) .15
 proceduralAnimation.ts:BULL_FISTS (carryAhead, carryOut of half shoulder span, carryUp; grab, punch) | .5, 1.1, .3; .35, .62 | 379 | approved | -
 propBuilder.ts:ASPIS (radius, notch, notchAt, rim, swirlR, swirlAt, mount x,y,z) | .36,.42,.64,.025,.2,.52; -.04,.12,.24 | 379 | approved | round disc on the hand
 proceduralAnimation.ts:PIKE_LEVEL (ahead, out, up, tilt, fistAt, offAhead, draw, stroke) | .7,.35,.2,.05,.3,.6,.3,.9 | 379 | approved | one-handed thrust grip
 ancientDress.ts:ZEUS_BEARD, ZEUS_LOCKS, ZEUS_HAIR | 13 strands .15 thick .75 long; 16 locks .2, 1.05; (.62,.48,.3) .16 | 379 | approved | -
 vehicleBuilder.ts:MAMMOTH_DOME (lift, grow, eyeUp, eyeOut) | .32, 1.28, .12, .03 | 379 | approved | head on the neck, sphere 1.4
+
+proceduralAnimation.ts:DORY_CARRY (ahead, out, up, fwd, side, down, fistAt) | .25,.9,-.3,.8,.25,.4,.15 | 380 | approved | level thrust grip
+simulationSystem.ts:SARISSA_KEEP (near, pace) | .85, .7 | 380 | approved | -

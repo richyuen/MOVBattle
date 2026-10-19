@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 379   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
+Iteration: 380   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -7,7 +7,7 @@ tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller +-++ o | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
-ancient: shield_bearer --++ o | sarissa -+-+ o | hoplite ---+ o | snake_archer ---+ o | ballista ---+ o | minotaur -+-+ o | zeus ---+ o
+ancient: shield_bearer --++ o | sarissa -+++ o | hoplite ---+ o | snake_archer ---+ o | ballista ---+ o | minotaur -+-+ o | zeus ---+ o
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
@@ -23,16 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-379 (BASE d9e7ad6; halfling a re-audited from the re-aimed _idle: FAIL, 4 blockers): [S] minotaur b fists 4f9553c +c54ed63 +f07a183 +88e0d0a approved (b PASS) | [S] hoplite b aspis 66de83f approved | [S] sarissa b levelled pike 0311c85 approved (b PASS) | [S] shield_bearer b scutum chin-shin de5279a +3fd5e08 rejected (reverted 13b21c0, a61b230) | [S] zeus a beard + locks f708157 approved | [S] mammoth a dome 28bde95 approved | [S] potion_seller b flask hang 3535a13 rejected (reverted 9a9f0cc)
+380 (BASE 3474541): [S] potion_seller b flask hang re-land e6efab4 approved | [S] shield_bearer b scutum chin-shin (holeUp fix) f87fef0 approved | [S] hoplite b dory low 41000a8 +dcff49a approved | [S] mammoth a crest on the dome 61181b3 approved (a.3 struck) | [S] wheelbarrow a low rim + seats fe764b2 +f78cb48 approved | [S] halfling a sleeved jacket b0e0351 +b52f817 approved (a.1 struck) | [S] sarissa c back-up 9789cbd approved (c PASS)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] ancient.minotaur (4f9553c +c54ed63 +f07a183 +88e0d0a) VERDICT: APPROVE CRITERION: ancient.minotaur.b PASS (previous: FAIL); also c FAIL (blocker 2 struck)
-- GAP: [S] ancient.hoplite (66de83f) VERDICT: APPROVE CRITERION: ancient.hoplite.b FAIL (previous: FAIL)
-- GAP: [S] ancient.sarissa (0311c85, heading helper in f07a183) VERDICT: APPROVE CRITERION: ancient.sarissa.b PASS (previous: FAIL)
-- GAP: [S] ancient.shield_bearer (de5279a +3fd5e08) VERDICT: REJECT CRITERION: ancient.shield_bearer.b FAIL (previous: FAIL)
-- GAP: [S] ancient.zeus (f708157) VERDICT: APPROVE CRITERION: ancient.zeus.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (28bde95) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [S] farmer.potion_seller (3535a13) VERDICT: REJECT CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
+- GAP: [S] farmer.potion_seller (e6efab4) VERDICT: APPROVE CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
+- GAP: [S] ancient.shield_bearer (f87fef0) VERDICT: APPROVE CRITERION: ancient.shield_bearer.b FAIL (previous: FAIL)
+- GAP: [S] ancient.hoplite (41000a8 + dcff49a) VERDICT: APPROVE CRITERION: ancient.hoplite.b FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (61181b3) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] farmer.wheelbarrow (fe764b2 + f78cb48) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
+- GAP: [S] farmer.halfling (b0e0351 + b52f817) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [S] ancient.sarissa (9789cbd) VERDICT: APPROVE CRITERION: ancient.sarissa.c PASS (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Re-land owed: potion_seller b = 3535a13 without the POTION_GLASS/glow lines (critic: hang + size were right). Shield bearer b: keep .74 tall, seat it lower; re-use de5279a's SCUTUM_LAUREL sprays.
-- Open in the old batches: mammoth a (crest cap off the skull scale, tail), potion_seller b, wheelbarrow a (low rim, splayed legs), halfling a (re-audited 379: coat, vest/belt, hem, hair). Ancient's gaps are in its unit files.
-- Ancient cloth/hair/gear in web/src/units/ancientDress.ts (dressMinotaur, dressZeus). World-space holds in the animator: _levelPike, _applyBullFists (IK, sides via _heading()).
-- Scripts take faction names: --batch farmer for farmer:re, --batch ancient. A pose wrong only in the capture: probe the animator's own state (output/loop/probe_potion.mjs).
+- Open in the old batches: mammoth a (tail only), potion_seller b (teal liquid inside the glass; POTION_GLASS locked), wheelbarrow a (Thrower knees to world targets outside the Farmer), halfling a (belt/vest, shins, hair). Ancient gaps in its unit files.
+- unitFactory keeps a prop root's metadata.holeUp (scutum hold); other prop metadata is still replaced by { runtimeUnit }. Orange trims render tan under "cloth": try a flat self-lit material path, not a colour nudge.
+- Ancient cloth/hair/gear in web/src/units/ancientDress.ts. World-space holds in the animator: _levelPike, _carryDory, _applyBullFists, _hangFlasks (all via _heading()).
+- Scripts take faction names: --batch farmer for farmer:re. Probes: output/loop/probe_shield.mjs, probe_potion.mjs, probe_mino.mjs (--build first).
 - Capture replays are deterministic. Particles do not render on the stepped clock. Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool.
