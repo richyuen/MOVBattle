@@ -346,6 +346,8 @@ export class SimulationSystem {
   // Hop back (HOP_BACK): when each man's last blow landed, and when he may hop again
   private _landedAt = new Map<RuntimeUnit, number>();
   private _hopReadyAt = new Map<RuntimeUnit, number>();
+  // [S] 369 balloon arrows loosed from the draw fist (renaissanceDress heldBalloonArrow): each held arrow and when the next is back in the hand
+  private _arrowsAway = new Map<Node, number>();
   // Banjo Walk (BANJO_WALK): the bards running their circles now, and which way each turns
   private _banjoWalks = new Map<RuntimeUnit, number>();
   private _banjoTurns = 0;
@@ -474,6 +476,8 @@ export class SimulationSystem {
     this._backingOff.clear();
     this._landedAt.clear();
     this._hopReadyAt.clear();
+    for (const held of this._arrowsAway.keys()) if (!held.isDisposed()) held.setEnabled(true);
+    this._arrowsAway.clear();
     this._banjoWalks.clear();
     this._banjoNotes.clear();
     this._banjoNoteCount = 0;
@@ -528,6 +532,11 @@ export class SimulationSystem {
     this._resolveLivingCollisions();
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
+    for (const [held, back] of this._arrowsAway) {
+      if (now < back) continue;
+      if (!held.isDisposed()) held.setEnabled(true);
+      this._arrowsAway.delete(held);
+    }
     // a mammoth whose run is over eases back out of the charge pose
     for (const u of this._chargePosed) {
       if (this._charges.has(u)) continue;
@@ -2173,6 +2182,12 @@ export class SimulationSystem {
             0,
             { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
           );
+          // [S] 369 the balloon arrow in his draw fist is the one that flew: gone from the hand until half the reload is past (renaissanceDress HELD_BALLOON_ARROW)
+          const held = BALLOON_ARROWS.has(attacker.definition.id) ? attacker.body.leftHand?.getChildren((n) => n.name === "heldArrow")[0] : undefined;
+          if (held) {
+            held.setEnabled(false);
+            this._arrowsAway.set(held, now + attackProfile.cooldown * cooldownMultiplier * 0.5);
+          }
         }
       } else {
         this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);

@@ -14,6 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
+import { heldBalloonArrow } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -558,6 +559,8 @@ export class UnitFactory {
     }
     if (definition.id === "renaissance.balloon_archer" && !shouldUseVehicleBody) {
       propMeshes.push(...dressBalloonArcher(this._scene, body, teamColor));
+      // ...and the balloon arrow in his draw fist (renaissanceDress HELD_BALLOON_ARROW)
+      propMeshes.push(...heldBalloonArrow(this._scene, body, teamColor));
     }
     if (definition.id === "renaissance.jouster" && !shouldUseVehicleBody) {
       propMeshes.push(...dressJouster(this._scene, body, teamColor));
