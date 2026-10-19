@@ -1,7 +1,7 @@
 # ancient.zeus
 Status: open   Audited: 378   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (6 since 378)
+a FAIL (6 since 378) [plateau]
  3. toga trim in unit_ancient.zeus_idle: drape bright white now, but the shoulder bolt a faint peach zig-zag; the gold rings only two small tan stacks under the drape's hem; the skirt pale grey-blue - TABS: bright orange-gold bolt, gold triple belt fully round the waist over the drape, white skirt (ref: .red.png)
 b PASS (384)
 c PASS (386)
@@ -19,4 +19,4 @@ d PASS (cost 2000, hp 14.04x, dmg 0.55x, cd 0.76x)
 ## Notes (max 3 lines)
 - Look comes from the iconic_zeus preset (unitVisuals getPresetVisual), not the "ancient.zeus" map entry. Toga ancientDress dressZeusToga + zeusLegs (unitFactory isZeus block).
 - 389: the grey was the SSAO pass reading the double-sided ribbon's inward faces; dress meshes stay one-sided facing out. Body torus _belt hidden.
-- Probes: output/loop/probe_mat.mjs (unit meshes + materials), probe_near.mjs (scene meshes and particle systems near the unit).
+- Probes: loop/scripts/probes/probe_mat.mjs (unit meshes + materials), probe_near.mjs (scene meshes and particle systems near the unit).

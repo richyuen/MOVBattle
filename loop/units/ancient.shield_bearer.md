@@ -16,6 +16,6 @@ d PASS (cost 100, hp 0.76x, dmg 0.33x, cd 1.30x)
 - scutum chin to shin [S] [1] — 379: still seated high (cause: unitFactory wiped metadata.holeUp, fixed 380)
 - lorica [S] [1] — 383: hoops + shoulder shells — bands too proud, cumulative step ballooned into a barrel twice the body's width, grey-mauve; the man reads hunchbacked
 ## Notes (max 3 lines)
-- Scutum root "scutumshield", metadata.holeUp = H/2 + chin; unitFactory keeps holeUp. Probe: output/loop/probe_shield.mjs (--build); torso-local extents: output/loop/probe_local.mjs.
+- Scutum root "scutumshield", metadata.holeUp = H/2 + chin; unitFactory keeps holeUp. Probe: loop/scripts/probes/probe_shield.mjs (--build); torso-local extents: loop/scripts/probes/probe_local.mjs.
 - Flat colour recipe: "unlit" material, emissive set for ACES (red >1, blue ~0), glow.addExcludedMesh; LEGION_HELM reuses it.
 - Critic 385 minors: straps read grey-brown under swiftshader; shin above the laces is dark team cloth.

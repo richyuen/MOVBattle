@@ -20,6 +20,6 @@ d PASS (cost 50, hp 1.50x, dmg 0.17x, cd 1.50x)
 389 | foot fur a compact dark tuft inside the foot, farmerDress (HALFLING_TUFT) [S] (cd0bed8 +b505810) | a | approved (narrowed a.2)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- dressHalfling (unitFactory) keeps shorts + feet; coat, sleeves, vest, V, belt are farmerDress halflingJacket; hair halflingMop. Stance proceduralAnimation HALFLING_STANCE. Probes: output/loop/probe_halfling.mjs, probe_mat.mjs <unit> <name regex>.
+- dressHalfling (unitFactory) keeps shorts + feet; coat, sleeves, vest, V, belt are farmerDress halflingJacket; hair halflingMop. Stance proceduralAnimation HALFLING_STANCE. Probes: loop/scripts/probes/probe_halfling.mjs, probe_mat.mjs <unit> <name regex>.
 - 388 probe: vest (.41,.58,.95) vs coat (.36,.51,.83): the front light washes the flat lower block; a lighter vest needs more contrast than x .97 vs x .85.
 - "metal" renders black: use cloth + glow.

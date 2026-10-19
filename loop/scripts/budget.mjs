@@ -7,20 +7,21 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CAPS = {
-  "loop/ITERATE.md": 12_000,
+  "loop/ITERATE.md": 14_000,
   "loop/STATE.md": 12_000,
-  "loop/LEDGER.md": 14_000,
+  "loop/LEDGER.md": 16_000,
+  "loop/LESSONS.md": 8_000,
   "loop/REFERENCE_DIGEST.md": 8_200,
   "loop/CRITIC.md": 15_500,
 };
 const CARD_CAP = 3_200;
-const UNIT_CAP = 2_600;
+const UNIT_CAP = 3_200;
 const STATS_CAP = 60_000;
-// What one iteration reads: the three memory files, plus up to a batch of unit files and the cards of the units it picks gaps on
-const PER_ITERATION = ["loop/ITERATE.md", "loop/STATE.md", "loop/LEDGER.md"];
-const BATCH_UNITS = 17; // two batches overlap at a tail (ITERATE step 3)
+// What one iteration reads: the four memory files, plus up to a batch of unit files and the cards of the units it picks gaps on
+const PER_ITERATION = ["loop/ITERATE.md", "loop/STATE.md", "loop/LEDGER.md", "loop/LESSONS.md"];
+const BATCH_UNITS = 17; // two batches overlap at a tail (ITERATE step 3); done units are not read, so more names cost nothing
 const PICKED_CARDS = 7;
-const PER_ITERATION_WARN = 100_000;
+const PER_ITERATION_WARN = 130_000;
 
 let failed = false;
 let perIteration = 0;

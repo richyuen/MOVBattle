@@ -1,6 +1,6 @@
-# Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 389   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 28/139   Parked: 0
-Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
+# Loop state (v3: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D)
+Iteration: 389   Batch: farmer:re+ancient (5-6/19)   Consecutive empty: 0   Done: 28/139   Parked: 0
+Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
@@ -35,7 +35,7 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 - GAP: [S] ancient.ballista (246a014) VERDICT: APPROVE CRITERION: ancient.ballista.b FAIL (previous: FAIL)
 - GAP: [P] farmer.wheelbarrow (a63c351) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
 
-## Unit file template (loop/units/<id>.md, cap 2600 bytes)
+## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>
 Status: open|done|parked   Audited: <iter>   Done: <iter or ->
@@ -54,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Critic 389 ranked: ballista frame taller + flying bolt from BALLISTA_BOLT, zeus rings outside the drape + gold bolt, snake_archer stance + wrap/cord, minotaur flat light scroll inlays, sarissa chunk in cape material, halfling vest, wheelbarrow knees at the Farmer's waist. [P] fallout: HALFLING_TUFT inX 0 clump .8, SARISSA_CHUNK tip .1.
-- Grey/washed cloth: SSAO (main.ts, radius 1.5) reads DOUBLESIDE ribbons' inward faces as occlusion; build dress shells one-sided facing out (flipFaces check). PBR colours are linear: an sRGB target c needs ~c^2.2 (wood .62/.3/.2 showed taupe).
-- Capture ABILITY_PREF (capture.mjs): minotaur headbutt, snake_archer snake_land (framed on the struck man). stats.json is written by stats.mjs, not capture: rerun stats --iter N after the last capture.
-- Flat colour that survives ACES: "unlit" material, emissive red >1 / blue ~0, glow.addExcludedMesh. "metal" renders black: use cloth + glow. Generic tunicSkirt covers waist gear: exclude the unit in unitFactory's skirt condition.
-- Probes (output/loop/, --build first): probe_bbox (--unit --pat --frame=torso --ylo --yhi: vertex bboxes), probe_zeus_shot (--unit --aim=head|torso|root --dist --yaw: close-up PNGs), probe_zeus, _mat, _near, _mino, _halfling, _wheelbarrow, _sarissa.
+- Rules v3 landed after the 389 review (ITERATE/CRITIC): blockers struck or verbatim, plateau at 3 approved [S] without a strike, CONFIRM critic before D, checkpoint per batch name, starvation pick, 2 follow-ups per gap, palette.png, LESSONS.md (read it at step 1; rendering notes moved there).
+- Checkpoint for tribal:re and renaissance:re ran at 390 (12/12 scenarios green); both dropped from Batch. farmer:re is the last :re batch.
+- Critic 389 ranked: ballista frame taller + flying bolt from BALLISTA_BOLT (c unpicked since 378: starvation pick), zeus rings outside the drape + gold bolt, snake_archer stance + wrap/cord, minotaur flat light scroll inlays, sarissa chunk in cape material, halfling vest, wheelbarrow knees. [P] fallout: HALFLING_TUFT inX 0 clump .8, SARISSA_CHUNK tip .1.
+- Under the new plateau rule wheelbarrow.a (7 approved, no strike), sarissa.a (9), zeus.a (6), minotaur.a (6) are plateau: their next pick is one [R] each from a spec off the render (wheelbarrow: TABS stacks three riders on the barrow, no pusher visible).
+- Capture ABILITY_PREF (capture.mjs): minotaur headbutt, snake_archer snake_land (framed on the struck man).

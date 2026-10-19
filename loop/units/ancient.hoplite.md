@@ -14,6 +14,6 @@ d PASS (cost 180, hp 1.26x, dmg 0.49x, cd 0.75x)
 385 | crest: one flat-topped box on a stalk, own hat type hoplite_helm (HOPLITE_CREST) [S] (f6b09dd +79ce333) | a | approved (a PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Hat "hoplite_helm" = CORINTH_HELM bowl + HOPLITE_CREST (sarissa keeps crested_helm + CORINTH_CREST). Aspis on body.torso at ASPIS; probe output/loop/probe_hoplite.mjs.
+- Hat "hoplite_helm" = CORINTH_HELM bowl + HOPLITE_CREST (sarissa keeps crested_helm + CORINTH_CREST). Aspis on body.torso at ASPIS; probe loop/scripts/probes/probe_hoplite.mjs.
 - Legs: ancientDress dressHoplite; sandals are the shared strapSandals (shield bearer uses it too).
 - Critic 385 minor: crest box stands ~.45 of the bowl above it (TABS ~.65).

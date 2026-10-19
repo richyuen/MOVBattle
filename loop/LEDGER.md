@@ -10,43 +10,8 @@ pending and keeps the old value under earlier values. Stats knobs set by a `loop
 a value column is at most 80 characters. The worker updates rows at commit time (pending) and after verdicts. Drop rows untouched
 for 25 iterations.
 
-## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
+## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-380 | flasks hung bulb-down by the neck, bulb .085, re-land of 3535a13 minus glass (e6efab4) | farmer.potion_seller.b | approved
-380 | scutum chin to shin: hold reads holeUp (unitFactory wiped it), laurels, trim (f87fef0) | ancient.shield_bearer.b | approved
-380 | dory carried low at the weapon hip outside the aspis, point down (41000a8 +dcff49a) | ancient.hoplite.b | approved
-380 | crest laid on the dome's skin brow to nape, no cap (61181b3) | tribal.mammoth.a | approved
-380 | low rim (one board), seats on the tray middle, Thrower splayed (fe764b2 +f78cb48) | farmer.wheelbarrow.a | approved
-380 | jacket shell + yoke from the shoulders, sleeves to the wrist, hem .1 (b0e0351 +b52f817) | farmer.halfling.a | approved
-380 | backs up to keep pike distance inside .85 of reach, logged backstep (9789cbd) | ancient.sarissa.c | approved
-381 | tail rooted on the rump's back face, 4 tapering pieces, near-black tuft (dff7370) | tribal.mammoth.a | approved
-381 | teal liquid cap in the bulb under a level surface (acfb585 +7af06ac) | farmer.potion_seller.b | approved
-381 | Thrower's thighs solved to knee targets outside the Farmer's hips (fd3d2e2) | farmer.wheelbarrow.a | approved
-381 | dark team belt, grey square-frame cloth buckle + pin (8cb455f) | farmer.halfling.a | approved
-381 | scutum trim on a flat unlit material out of the glow layer (0550f5d +a2d3543) | ancient.shield_bearer.b | approved
-381 | dory thrust: level line, drawn at the blow, driven out by .22 (52a1b5c +512e06f) | ancient.hoplite.c | approved
-381 | Corinthian helm enclosing the head, 9-slab crest on the bowl (bf11d67) | ancient.sarissa.a | approved
-382 | crest as 4 stacked bands of short blocks along the bowl (bc537dc +5dcf082 +f61cdaa) | ancient.sarissa.a | approved
-382 | dory carry aimed at a ground point ahead and out (e3ebcbd) | ancient.hoplite.b | approved
-382 | legionary helm: iron bowl, orange band, neck guard, edged cheek guards (c7d3111) | ancient.shield_bearer.a | approved
-382 | bushy mop of 46 flat splayed locks on a cap (1a97f99 +fd22501) | farmer.halfling.a | approved
-382 | bull head: cranium, long face, muzzle, curved horns, ears, neck (4c7d9fb) | ancient.minotaur.a | approved
-382 | team hood: cap + peak, face wrap, collar + point, cord (7a7a3fb) | ancient.snake_archer.a | approved
-382 | hay mound on the rear quarter, Thrower on it .2 higher (ed5a3b5, reverted) | farmer.wheelbarrow.a | rejected
-383 | crest bands each one solid strip swept along the bowl's top, wide .42 (376288d) | ancient.hoplite.a | approved
-383 | aspis rim on flat unlit trim; three big tapered wave swirls (0c3eee8) | ancient.hoplite.b | approved
-383 | gear: angular pauldron on his left, broad tan sash, frame buckle, scrolled belt (9779a54) | ancient.minotaur.a | approved
-383 | dark team cape shoulders to calves, folded collar (3fd1971) | ancient.sarissa.a | approved
-383 | lorica: 5 hoop bands, layered leather shoulder plates (a4076de, reverted) | ancient.shield_bearer.a | rejected
-383 | shorts end in a cuff at .78 of the thigh, foot fur low (d9365dd) | farmer.halfling.a | approved
-383 | Zeus bolt: one glowing zig-zag hand to chest, small burst (c0d24d5) | ancient.zeus.c | approved
-384 | held bolt leaves the fist at the throw, back .6 of the cooldown on (1eb7af4) | ancient.zeus.c | approved
-384 | small zig-zag sparks on a cyan rim in each fist, off hand too (d6d2a01) | ancient.zeus.b | approved
-384 | box frame, housings + team coil caps, bound arms, trough, 4 spoked wheels (2fe1946 +0b8f457) | ancient.ballista.a | approved
-384 | snake bow: green, white belly panels, snake head at the tip, stood up (cdddba0 +91a781d) | ancient.snake_archer.b | approved
-384 | dark brown greaves + rim, team foot in a brown sandal (d611ead) | ancient.hoplite.a | approved
-384 | brown belt round the body ring, dagger, bracers (b635f94 +5c01360) | ancient.sarissa.a | approved
-384 | lorica re-land: 4 fitted hoops at 1.05 + seams, flat deltoid strips (89b02e6 +8c5060d) | ancient.shield_bearer.a | approved
 385 | sandals: strapSandals on bare team feet + 3 shin laces, no boots (9c57271) | ancient.shield_bearer.a | approved
 385 | crest: one flat-topped box on a stalk, own hat hoplite_helm (f6b09dd +79ce333) | ancient.hoplite.a | approved
 385 | eye slots: temple plates + slanted brow bars over each eye (fd2a912) | ancient.sarissa.a | approved
