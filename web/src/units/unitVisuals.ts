@@ -479,8 +479,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
       releaseTimingPreset: "firearm_recoil",
     },
   ),
+  // [S] long legs (376; renaissance.halberd.red.png: over half his height below the belt); his idle stands upright (proceduralAnimation _salletHalberd)
   "renaissance.halberd": vis(
-    { scale: 1.25, bulk: 1.25 }, "halberd", "sallet", "none", "none", "#4682B4",
+    { scale: 1.25, bulk: 1.25, legLength: 1.18 }, "halberd", "sallet", "none", "none", "#4682B4",
   ),
   "renaissance.jouster": vis(
     { scale: 1.4, bulk: 1.3 }, "lance", "none", "heater", "mount_horse", "#C0C0C0",
