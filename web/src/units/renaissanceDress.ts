@@ -234,6 +234,56 @@ export function halberdHose(scene: Scene, body: ArticulatedBody, teamColor: Colo
 }
 
 /*
+ * [S] the halberdier's puffed breeches (375; renaissance.halberd.red.png, .blue.png: from the hip to the knee each thigh is a team breech quilted in
+ * puffed bands like his sleeves, wider than the thigh and baggiest at the knee, where it ends over the slimmer dark stocking. Not the plain team thigh
+ * tube). Shares of each thigh's own girth and length:
+ *   HALBERD_BREECH.bands puffs packed down the thigh from .top of its length below the hip to its foot; a puff .tall of its band long (overlapping the
+ *   next), from .swellTop of the girth across at the hip to .swellKnee at the knee; light and dark team by turns (.light, .dark), each slashed by
+ *   .slashes upright pale panes (.slash of the girth across, .slashTall of the band, tan self-lit .slashGlow) on its front half.
+ */
+const HALBERD_BREECH = { bands: 3, top: 0.04, tall: 1.3, swellTop: 1.35, swellKnee: 1.6, light: 0.95, dark: 0.7, slashes: 3, slash: 0.16, slashTall: 0.5, slashGlow: 0.2 };
+const HALBERD_SLASH_TAN = new Color3(0.82, 0.66, 0.42);
+
+/** The halberdier's quilted puffed team breeches from hip to knee, slashed with pale panes (spec at HALBERD_BREECH). */
+export function halberdBreeches(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = HALBERD_BREECH;
+  const mf = getMaterialFactory();
+  const light = mf.getCloth(teamColor.scale(B.light));
+  const dark = mf.getCloth(teamColor.scale(B.dark));
+  const tan = mf.get("cloth", HALBERD_SLASH_TAN, { emissiveIntensity: B.slashGlow });
+  const added: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    thigh.material = light;
+    const e = thigh.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const step = (long * (1 - B.top)) / B.bands;
+    for (let i = 0; i < B.bands; i++) {
+      const t = B.bands > 1 ? i / (B.bands - 1) : 1;
+      const wide = girth * (B.swellTop + (B.swellKnee - B.swellTop) * t);
+      const puff = MeshBuilder.CreateSphere("halberdBreech", { diameterX: wide, diameterY: step * B.tall, diameterZ: wide, segments: 3 }, scene);
+      const y = long * 0.5 - long * B.top - step * (i + 0.5);
+      puff.position.y = y;
+      puff.rotation.y = (i % 2) * 0.4;
+      puff.material = i % 2 ? dark : light;
+      puff.convertToFlatShadedMesh();
+      puff.parent = thigh;
+      added.push(puff);
+      // the slashes: upright pale panes laid on the puff's front half, spread round it
+      for (let k = 0; k < B.slashes; k++) {
+        const a = (k - (B.slashes - 1) / 2) * 0.75;
+        const pane = MeshBuilder.CreateBox("halberdBreechSlash", { width: girth * B.slash, height: step * B.slashTall, depth: girth * 0.04 }, scene);
+        pane.position.set(Math.sin(a) * wide * 0.47, y, Math.cos(a) * wide * 0.47);
+        pane.rotation.y = a;
+        pane.material = tan;
+        pane.parent = thigh;
+        added.push(pane);
+      }
+    }
+  }
+  return added;
+}
+
+/*
  * [S] the balloon archer's doublet front and sleeve puffs (371; renaissance.balloon_archer.red.png: a solid team doublet, down its front a tan placket
  * of two upright bands either side of the middle with round buttons between them, a tan edge round the neck; at each shoulder a big round team puff
  * as wide as the head, slashed with tan points standing out of it all round. Not the 336 tan stripes all over the doublet, nor its arm-girth puffs,

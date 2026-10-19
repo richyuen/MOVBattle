@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { balloonArcherFront, featherClump, fencerTrim, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
+import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -539,6 +539,8 @@ export class UnitFactory {
       propMeshes.push(...dressHalberd(this._scene, body));
       // ...and his dark stockings and low leather shoes with a turned cuff (374, renaissanceDress halberdHose)
       propMeshes.push(...halberdHose(this._scene, body, teamColor));
+      // ...and puffed, slashed team breeches from the hip to the knee (375, renaissanceDress halberdBreeches)
+      propMeshes.push(...halberdBreeches(this._scene, body, teamColor));
     }
     if (definition.id === "renaissance.fencer" && !shouldUseVehicleBody) {
       propMeshes.push(...dressFencer(this._scene, body, teamColor));
