@@ -355,8 +355,6 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
  * length from the butt; the off fist on the shaft .offAhead further along it. The thrust draws both fists back .draw of .stroke and drives them out a whole
  * .stroke along the shaft's line, then eases back. No off-hand disc.
  */
-// the flask's bulb from the fist, in the world: down and a little ahead (see _hangFlasks)
-const FLASK_HANG = { down: 1, ahead: 0.3 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
@@ -1941,7 +1939,6 @@ export class ProceduralAnimator {
     this._twoHandPole();
     this._levelPike();
     this._applyBullFists();
-    this._hangFlasks();
     this._carryBoulder();
     this._holdPalette();
     this._couchLance();
@@ -3058,33 +3055,6 @@ export class ProceduralAnimator {
     right.subtractInPlace(fwd.scale(Vector3.Dot(right, fwd)));
     if (right.lengthSquared() < 1e-6) right.set(fwd.z, 0, -fwd.x);
     return { fwd, right: right.normalize() };
-  }
-
-  /**
-   * [S] the flask hangs from the fist by its neck (379; farmer.potion_seller.red.png: a fist-sized pale-teal flask gripped by the neck, the bulb below and
-   * a little ahead of the fist at the hip; critic 378: bulbs riding on top of or beside the fists, the off-hand one inverted in the windup). Whatever the
-   * hand's angle, each flask holder in a fist (potionBall: origin the cork, the bulb along its +y) is turned so the bulb runs FLASK_HANG.down below the
-   * fist and .ahead before it in the world, eased in by how far he stands (not limp or dead); a flask out of the fist (thrown) is left alone.
-   */
-  private _hangFlasks(): void {
-    if (this.walkStyle === "quadruped") return;
-    const w = this._state === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
-    const b = this._body;
-    for (const hand of [b.rightHand, b.leftHand]) {
-      const holder = hand.getChildren().find((n): n is TransformNode => n.name === "potionBall");
-      if (!holder) continue;
-      if (w <= 0.01) {
-        holder.rotationQuaternion = null;
-        continue;
-      }
-      for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder, hand]) n.computeWorldMatrix(true);
-      const { fwd } = this._heading();
-      const want = new Vector3(fwd.x * FLASK_HANG.ahead, -FLASK_HANG.down, fwd.z * FLASK_HANG.ahead).normalize();
-      const along = Vector3.TransformNormal(want, Matrix.Invert(hand.getWorldMatrix())).normalize();
-      const turn = Quaternion.FromUnitVectorsToRef(Vector3.Up(), along, new Quaternion());
-      const rest = Quaternion.FromEulerAngles(holder.rotation.x, holder.rotation.y, holder.rotation.z);
-      holder.rotationQuaternion = Quaternion.Slerp(rest, turn, w);
-    }
   }
 
   /** Levels the pike in both fists (PIKE_LEVEL); set by the runtime for the sarissa. */
