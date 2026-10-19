@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-353 | two-fisted hilt, off fist onto the grip (7f4b61c) | medieval.squire.b | approved
-353 | two-fisted Zweihander, off fist .5 grip (9e2fd04, reverted c9dd189) | medieval.king.b | rejected
-353 | priest staff: banded team orb, cross (03b4e5c) | medieval.healer.b | approved
-353 | open armet: grey dome, plates, bevor, team (58cfa04 +4459ae6) | medieval.knight.a | approved
-353 | Banjo Walk: lure, then run off round his man (68d8302 +53c3633) | medieval.bard.c | approved
 355 | spoon bucket: open flared cup, rim, boulder (56a8ab6) | medieval.catapult.b | approved
 355 | hip quiver on the off hip, team band (d75f622 +7078d43) | medieval.archer.b | approved
 355 | arming sword held out, blade stood up, grey (1574c11) | medieval.knight.b | approved
@@ -69,6 +64,13 @@ for 25 iterations.
 362 | stag rack on the mask: swept knuckled beam, tines (c66c10a) | tribal.bone_mage.a | approved
 362 | stag rack on the staff skull, grown 1.4 (42d26c9) | tribal.bone_mage.b | approved
 362 | stone axe re-hafted: charcoal, long red haft, X cords (c174af8) | tribal.chieftain.b | approved
+363 | beast skull helm: tan brain case, beak, open jaw, googly eyes (03e92ab +e52aaa4) | tribal.chieftain.a | approved
+363 | skull helm re-seated: tan dome on brow, sockets, brows, ridge (d6d6c79 +c60ed20) | tribal.protector.a | approved
+363 | hung tusks: down from the band to the cheeks, rope turns (09199c4) | tribal.spear_thrower.a | approved
+363 | staff skull: mask face plate on low cranium, googly eyes (f270dce) | tribal.bone_mage.b | approved
+363 | curved shoulder strap: two ribbons over the shoulder (205e839) | tribal.stoner.a | approved
+363 | fur pillar legs: lathes, flush paint, no caps (5d518c2 +7c6a257 +9b9ed17) | tribal.mammoth.a | approved
+363 | charge seen: head-down gallop pose, sprite dust at feet (baea514 +d0548b0) | tribal.mammoth.c | approved
 
 ## Spent (never retry as [P])
 
@@ -88,8 +90,15 @@ propBuilder.ts:CLUB (long, grip, sides, knob, wood, profile peak) | .74, .17, 8,
 propBuilder.ts:SLAB_FACETS (deep, rows, front, bevel, seam); SLAB_MOSS (top, hole, bottom) | .06,3,1.0,.7,.006; .17,.12,.1 | 362 | approved | planks (before 362); moss .13,.08
 tribalDress.ts:RAGGED_LOIN (strips, wide, long, short, skull, snout, hang, boneAt, hide) | 6,.95,.75,.7,.5,1.3,.55,.42,(.62,.43,.27) | 362 | approved | 5,.62,.62,..,.6 (362 first cut)
 propBuilder.ts:JAVELIN_LEAF (shoulder, flank, flankWide, ridge, jitter, glow); HEAD long/wide | .28,.62,.55,.13,.08,.14; .16/.15 | 362 | approved | ball leaf .15/.095 (320)
-tribalDress.ts:HIDE_DRESS (sides, top, low, strap, skirt, flare, rag, color) | 8,1.0,.56,.22,.62,1.4,.16,(.52,.3,.22) | 362 | approved | -
-propBuilder.ts:DEER_RACK (beam, bend, back, thick, taper, tine, inward, brow, tan, glow, staff) | ..,[1.3,.95,.6,.25],.12,.24,.82,..,(.72,.6,.45),.15,1.4 | 362 | approved | DEER_BEAM/SPLAY (251)
+tribalDress.ts:HIDE_DRESS (sides,top,low,strapAt,strapWide,strapRise,skirt,flare,rag,color) | 8,1.0,.56,.55,.13,.45,.62,1.4,.16,(.52,.3,.22) | 363 | approved | strap box .22 (362)
+propBuilder.ts:DEER_RACK (beam, bend, back, thick, taper, tine, inward, brow, tan, glow, staff) | ..,[1.3,.95,.6,.25],.12,.24,.82,..,(.72,.6,.45),.15,1.4 | 363 | approved | [P] tan .62,.46,.3 glow .22 rejected 363 (reversal)
 propBuilder.ts:STONE_AXE (long, grip, thick, head, out, over, cord_, tilt) | .58,.2,.06,.31,.22,.25,.022,.55 | 362 | approved | AXE_LONG .4, GRIP .25, HEAD .78 of L
 propBuilder.ts:DEER_MASK (top, tip, flat, rise, drop, tilt, out, spread, socket) | .95,.36,.32,.1,.08,.2,.26,1.55,1.4 | 361 | approved | -
 proceduralAnimation.ts:SLAB_FRONT (reach, grip, bash) | .2, .08, .22 | 361 | approved | -
+propBuilder.ts:BEAST_SKULL (wide,long,tall,under,lift,back,pitch,beak,beakDip,gape,eye,tan,glow) | 1.12,1.35,.62,.55,.08,.12,.12,.8,.12,.35,.3,(.68,.52,.34),.2 | 363 | approved | beakDip .42 (look)
+propBuilder.ts:SKULL_FACETED (heads, tall, under, sink, socket, socketUp, snout, snoutTilt, tan, glow) | 1.12,1.15,.45,.1,.3,.42,.5,.5,(.68,.52,.34),.2 | 363 | approved | 1.45,1.6,.7,-,.3,-,.55 white .18
+tribalDress.ts:TUSK_BAND (band, strap, rootOut, rootAhead, drop, bow, hook, thick, turns, tan, glow) | .45,.1,1.06,.2,.78,.16,.55,.34,2,(.78,.66,.48),.22 | 363 | approved | rise .65 bow .22 thick .4 (322)
+propBuilder.ts:STAFF_SKULL (crown, chin, eye, eyeAhead) | .85, .9, .24, .66 | 363 | approved | sphere W across, muzzle cone
+vehicleBuilder.ts:MAMMOTH_LEG (sides, jitter, proud, thigh, shin) | 9,.035 (thigh only),1.012,r .37->.3,r .3->.31 | 363 | approved | drums .6/.56, cuff .72
+proceduralAnimation.ts:CHARGE_POSE (ease, headDown, toss, pitch, stride, fold, rock, pace) | 10,.42,.08,.1,.42,.4,.05,9 | 363 | approved | -
+simulationSystem.ts:MAMMOTH_DUST (every, size); visualEffects.ts:KICK_DUST (count..peak) | .12, 1.3; 5,.35,.25,.5,1.5,.6,.5,1.1,.75 | 363 | approved | one smoke puff at the start

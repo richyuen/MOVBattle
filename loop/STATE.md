@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 362   Batch: medieval+tribal:re (4/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
+Iteration: 363   Batch: medieval+tribal:re (4/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,17 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-362 (BASE 9fb2a91): [S] protector b stone slab 27256cd+d38d4b0 approved | [S] clubber a ragged loincloth da977ab+20e52ec approved | [S] spear_thrower b flint head cf3ff8b approved | [P] clubber a mop darker/wider e4f3774 approved | [S] stoner a one-strap dress 3834142 approved | [S] bone_mage a mask rack c66c10a approved | [S] bone_mage b staff rack 42d26c9 approved | [S] chieftain b axe re-haft c174af8 approved; king [R] and mammoth deferred
+363 (BASE b62c597): [S] chieftain a beast skull 03e92ab+e52aaa4 approved | [S] protector a skull re-seat d6d6c79+c60ed20 approved | [S] spear_thrower a hung tusks 09199c4 approved | [S] bone_mage b staff skull f270dce approved | [S] stoner a curved strap 205e839 approved | [P] bone_mage a DEER_RACK.tan 326d648 rejected (reverted 5c0429d) | [S] mammoth a fur legs 5d518c2+7c6a257+9b9ed17 approved | [S] mammoth c charge pose+dust baea514+d0548b0 approved; king [R] deferred (7 [S] taken)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.protector (27256cd + d38d4b0) VERDICT: APPROVE CRITERION: tribal.protector.b PASS (previous: FAIL)
-- GAP: [S] tribal.clubber (da977ab + 20e52ec) VERDICT: APPROVE CRITERION: tribal.clubber.a FAIL (previous: FAIL)
-- GAP: [S] tribal.spear_thrower (cf3ff8b) VERDICT: APPROVE CRITERION: tribal.spear_thrower.b PASS (previous: FAIL)
-- GAP: [P] tribal.clubber (e4f3774) VERDICT: APPROVE CRITERION: tribal.clubber.a FAIL (previous: FAIL)
-- GAP: [S] tribal.stoner (3834142) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL)
-- GAP: [S] tribal.bone_mage (c66c10a) VERDICT: APPROVE CRITERION: tribal.bone_mage.a FAIL (previous: FAIL)
-- GAP: [S] tribal.bone_mage (42d26c9) VERDICT: APPROVE CRITERION: tribal.bone_mage.b FAIL (previous: FAIL)
-- GAP: [S] tribal.chieftain (c174af8) VERDICT: APPROVE CRITERION: tribal.chieftain.b FAIL (previous: FAIL)
+- GAP: [S] tribal.chieftain (03e92ab + e52aaa4) VERDICT: APPROVE CRITERION: tribal.chieftain.a FAIL (previous: FAIL)
+- GAP: [S] tribal.protector (d6d6c79 + c60ed20) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL)
+- GAP: [S] tribal.spear_thrower (09199c4) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL)
+- GAP: [S] tribal.bone_mage (f270dce) VERDICT: APPROVE CRITERION: tribal.bone_mage.b FAIL (previous: FAIL)
+- GAP: [S] tribal.stoner (205e839) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL)
+- GAP: [P] tribal.bone_mage (326d648) VERDICT: REJECT CRITERION: tribal.bone_mage.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (5d518c2 + 7c6a257 + 9b9ed17) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (baea514 + d0548b0) VERDICT: APPROVE CRITERION: tribal.mammoth.c FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- king a is plateau (2 rejected [S] since 355): next pick on it is one [R] of the legs from the breeches down (the breeches' gathered hem hung past the knee hinge over the team knee end, slim shin under it); the thigh is not covered by the breeches (361: recolouring it read beige).
-- Pick next: chieftain skull helm (idle is front three-quarter now) + off-hand hold upright, protector skull helm, spear tusks, bone_mage staff skull (DEER_MASK profile), stoner strap band + close skirt, clubber stance/curl, mammoth legs and charge (ability at 17 ms: check _ability shot timing first); [P] fallout: DEER_RACK.tan, RAGGED_LOIN.long.
-- Evidence owed: unit_tribal.mammoth_idle frames only legs and a tusk; bone_mage_idle: staff rack covers the mask's (judge it in lineup_tribal). King belt buckle hidden in king_idle.
-- Light warm cloth: medievalDress warmCloth (own amber emissive) + unglow every mesh in it; a limb under a slim shell must be recoloured too. Tan bone/antler renders grey in the capture's shade: go darker and warmer with more glow.
+- FIRST pick: king [R] of the legs from the breeches down (a plateau; deferred 361-363, medieval cannot checkpoint while it is open): the breeches' gathered hem hung past the knee hinge over the team knee end, slim shin under it; the thigh is not covered by the breeches (361: recolouring it read beige).
+- Pick next: protector idle evidence re-aim (capture.mjs, head beside/above the slab), mammoth trample ring (sprites) + barrel body, chieftain loincloth+hip tusks, bone_mage cheek leaves + wide tan staff rack, stoner close skirt; [P] fallout: BEAST_SKULL lift/pitch, TUSK_BAND thick/tan, MAMMOTH_LEG radii.
+- Capture: particle systems do not render on the stepped clock (use sprite meshes, as spawnKickDust / the fireball dust). Lathes wound top-down face inward.
+- Light warm cloth: medievalDress warmCloth (own amber emissive) + unglow every mesh in it. Tan bone/antler renders grey in the capture's shade: go darker and warmer with more glow, inside an [S] (DEER_RACK colour [P] was a ledger reversal).
 - Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose and broadhead (354, 358), bard walk, catapult frame/wheels/paint, knight plate+legs+cape, king skirt removed (360).
