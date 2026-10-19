@@ -1,5 +1,5 @@
 import { Scene, Vector3, Color3, Mesh, MeshBuilder, VertexData } from "@babylonjs/core";
-import type { Material } from "@babylonjs/core";
+import type { Material, TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
@@ -745,9 +745,17 @@ function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: 
  * hangs no tunic skirt (unitFactory skips it for him), so the blouse ends at the brown belt with its gold front buckle and the lathed breeches show below it
  * to the knee; each stocking is one shell .hose (1.32, past the hexagon's flats, so no team shin shows through mid-shin) from the knee into the shoe, in light
  * warm cloth (warmCloth: the beige x glow cloth rendered pale grey-white under the cool sky light).
+ * [R] legs, second rebuild (365; medieval.king.red.png). Spec read off the render, belt to sole: puffed breeches about 40% of the leg, ballooning to about
+ * 1.7 thigh half-widths and gathered in a narrow gold band AT the knee; slim beige stockings about 50%, the shin's own width (no shell); low brown shoes about
+ * 10%, the shoe top just over the ankle. Our body has a thigh mesh that runs ~.11 past the knee hinge (its knee stub) and a 0.41-tall boot foot. So:
+ * - the thigh is drawn up to end at the hinge (KING_LEGS: scaled from its top, nothing of it past the knee), so the breeches lathe ends at the hinge too,
+ *   its gold band on it, and no team knee end shows under the hem at any bend;
+ * - the shin itself (its upper knee stub merged in) is the stocking, in warmCloth, out of the glow;
+ * - the foot is squashed about its sole to a low shoe whose top is KING_LEGS.shoe of the shin's length over the shin's foot, the buckle kept its own height.
  */
+const KING_LEGS = { shoe: 0.1 };
 const KING_DRESS = {
-  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.32, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
+  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
   gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), shoe: new Color3(0.45, 0.27, 0.14),
   shade: 0.92, glow: 0.12,
 };
@@ -769,16 +777,31 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   }
   // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
   // stockings from the knee to the shoe, clear of the pantaloons
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(...kingPantaloon(scene, thigh, cloth, gold));
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(...unglow(scene, [limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige)]));
-  // brown shoes, gold buckle on the instep
+  // [R] (365): the thigh drawn up to the knee hinge, the breeches lathe ending on it; the shin itself is the stocking
+  for (const [thigh, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as [Mesh, TransformNode][]) {
+    endAtHinge(thigh, knee.position.y);
+    out.push(...kingPantaloon(scene, thigh, knee.position.y, cloth, gold));
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = beige;
+    unglow(scene, [shin]);
+  }
+  // low brown shoes squashed about the sole, gold buckle on the instep
   for (const knee of [body.leftKnee, body.rightKnee]) {
+    const shin = knee === body.leftKnee ? body.leftLowerLeg : body.rightLowerLeg;
+    const S = limbBox(shin);
+    const shinFoot = S.mid - S.half;
     for (const m of knee.getChildMeshes(true)) {
       if (!/_[lr]FootM$/.test(m.name)) continue;
       m.material = shoe;
       const fb = m.getBoundingInfo().boundingBox;
-      const buckle = MeshBuilder.CreateBox("kingShoeBuckle", { width: fb.extendSize.x * 0.9, height: fb.extendSize.y * 0.5, depth: fb.extendSize.z * 0.3 }, scene);
+      const sole = m.position.y + fb.minimum.y * m.scaling.y, top = m.position.y + fb.maximum.y * m.scaling.y;
+      const f = Math.min(1, (shinFoot + KING_LEGS.shoe * S.half * 2 - sole) / (top - sole));
+      m.scaling.y *= f;
+      m.position.y = sole - fb.minimum.y * m.scaling.y;
+      const buckle = MeshBuilder.CreateBox("kingShoeBuckle", { width: fb.extendSize.x * 0.9, height: fb.extendSize.y * 0.5 * f, depth: fb.extendSize.z * 0.3 }, scene);
       buckle.parent = m;
+      buckle.scaling.y = 1 / f;
       buckle.position.set(fb.center.x, fb.maximum.y, fb.center.z + fb.extendSize.z * 0.35);
       buckle.material = gold;
       out.push(buckle);
@@ -822,14 +845,24 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   return out;
 }
 
-/** The puff of a pantaloon leg, top to foot: [share of the thigh's length down, radius in thigh half-widths]; it ends KING_PANTS.knee down at a gold band. */
-const KING_PANTS = { knee: 0.8, profile: [[0, 1.15], [0.2, 1.45], [0.5, 1.7], [0.78, 1.5], [1, 1.1]] as [number, number][], band: 1.18, folds: 4 };
+/** Draws a thigh up from its top so its foot (knee stub included) ends at the knee hinge, kneeY in its joint's frame. */
+function endAtHinge(thigh: Mesh, kneeY: number): void {
+  const b = thigh.getBoundingInfo().boundingBox;
+  const top = thigh.position.y + b.maximum.y * thigh.scaling.y, foot = thigh.position.y + b.minimum.y * thigh.scaling.y;
+  if (foot >= kneeY) return;
+  thigh.scaling.y *= (top - kneeY) / (top - foot);
+  thigh.position.y = top - b.maximum.y * thigh.scaling.y;
+}
 
-function kingPantaloon(scene: Scene, thigh: Mesh, cloth: Material, gold: Material): Mesh[] {
+/** The puff of a pantaloon leg, top to foot: [share of the way from the thigh's top to the knee hinge, radius in thigh half-widths]; gathered at the hinge to a
+ *  gold band .band of the half-width, its foot on the hinge. */
+const KING_PANTS = { profile: [[0, 1.15], [0.2, 1.45], [0.5, 1.7], [0.78, 1.5], [0.93, 1.1], [1, 1.0]] as [number, number][], band: 1.12, folds: 4 };
+
+function kingPantaloon(scene: Scene, thigh: Mesh, kneeY: number, cloth: Material, gold: Material): Mesh[] {
   const P = KING_PANTS;
   const L = limbBox(thigh);
   const r0 = Math.max(L.wide, L.deep);
-  const yTop = L.mid + L.half, len = L.half * 2 * P.knee;
+  const yTop = L.mid + L.half, len = yTop - kneeY;
   const zs = L.deep / r0 * 1.08;
   const shape = P.profile.map(([f, r]) => new Vector3(r * r0, -f * len, 0));
   const puff = MeshBuilder.CreateLathe("kingPantaloon", { shape, tessellation: 8, cap: Mesh.CAP_ALL }, scene);
