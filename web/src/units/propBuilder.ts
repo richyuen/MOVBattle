@@ -105,11 +105,21 @@ const FLOPPY_HAIR = new Color3(0.36, 0.2, 0.11);
  * flared out .flare rad. Cloth: team colour x COWL_SHADE.
  */
 const LIRIPIPE = {
-  snug: 1.18, root: 0.62, end: 0.14,
-  path: [[0.0, 0.02], [0.32, 0.08], [0.6, 0.25], [0.72, 0.5], [0.62, 0.75], [0.35, 0.9], [0.0, 0.95]] as [number, number][],
+  // (the cowl and tail are TALL_HOOD since 376)
   yoke: 1.5, yokeDeep: 0.22, dags: 9, dag: 0.32, dagWide: 0.36, flare: 0.25,
 };
 const COWL_SHADE = 0.78;
+/*
+ * [S] the farmer's tall hood (376; farmer.farmer.png, .red.png, card Appearance "a team-colored hood with a long liripipe": a faceted team hood from the
+ * shoulders, snug round the head with an oval opening showing the eyes and mouth, drawn up off the crown into a tall tapering cone whose tip leans back).
+ * One lathe: TALL_HOOD.rings [head heights up from the crown joint, head widths round, head widths back] from the shoulders to the tip, .sides facets
+ * round, .deep front-to-back over side-to-side; the face window from .chin to .brow (head heights), .window rad either side of his front at its widest.
+ */
+const TALL_HOOD = {
+  rings: [[-1.05, 0.74, 0], [-0.86, 0.66, 0], [-0.5, 0.64, 0.02], [-0.18, 0.62, 0.04], [0.04, 0.54, 0.08], [0.3, 0.4, 0.16], [0.58, 0.27, 0.28],
+    [0.86, 0.16, 0.44], [1.08, 0.07, 0.6], [1.2, 0.01, 0.7]] as [number, number, number][],
+  sides: 12, deep: 1.0, chin: -0.92, brow: -0.1, window: 0.8,
+};
 /*
  * A monk's kasa (247; units/dynasty.monk: a wide shallow straw cone in the accent orange, about 2.4 heads across and half a head high, pulled low over
  * the brow so the bead eyes look out from just under its rim, a darker woven band round its edge; strings of fist-sized orange prayer beads hang from
@@ -694,23 +704,26 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     // nape, and a short leaf-cut collar over the shoulders. Replaces the stiff cone and the flat collar disc that read as a brimmed wizard hat.
     const cloth = mat(scene, teamColor ? teamColor.scale(COWL_SHADE) : accent);
     const holder = new Mesh("pointedCowl", scene);
-    const cowl = MeshBuilder.CreateSphere("cowlShell", { diameter: 1, segments: 10, arc: 1 - HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
-    cowl.scaling.set(u(LIRIPIPE.snug * W), u(1.2 * H), u(LIRIPIPE.snug * W));
-    cowl.rotation.y = Math.PI / 2 + Math.PI * HOOD_OPEN;
-    cowl.position.y = u(-0.42 * H);
+    // [S] one tall faceted hood (376, spec at TALL_HOOD): a lathe from the shoulders up round the head into a cone tipped back, an oval window at the face.
+    // Replaces the 340 sphere cowl (its gap never met the face: from the front the head was a closed ball) and the thin curled tail tube.
+    const T = TALL_HOOD;
+    const rings: Vector3[][] = [];
+    for (const [y, r, back] of T.rings) {
+      // the face window's half-angle at this height: an oval from the chin to the brow, closed above and below
+      const t = (y - T.chin) / (T.brow - T.chin);
+      const half = t > 0 && t < 1 ? T.window * Math.pow(Math.sin(Math.PI * t), 0.6) : 0;
+      const ring: Vector3[] = [];
+      for (let k = 0; k <= T.sides; k++) {
+        // round from the window's left edge, behind the head, to its right edge; 0 is his front (+z)
+        const a = half + (2 * Math.PI - 2 * half) * (k / T.sides);
+        ring.push(new Vector3(u(Math.sin(a) * r * W), u(y * H), u(Math.cos(a) * r * W * T.deep - back * W)));
+      }
+      rings.push(ring);
+    }
+    const cowl = MeshBuilder.CreateRibbon("cowlShell", { pathArray: rings, sideOrientation: Mesh.DOUBLESIDE }, scene);
     cowl.material = cloth;
     cowl.convertToFlatShadedMesh();
     cowl.parent = holder;
-    // The tail: one tapering tube through LIRIPIPE.path (head heights up, head widths back), its root as wide as the crown
-    const path = LIRIPIPE.path.map(([y, z]) => new Vector3(0, u(y * H), u(-z * W)));
-    const last = path.length - 1;
-    const tail = MeshBuilder.CreateTube("liripipe", {
-      path, tessellation: 7, cap: Mesh.CAP_ALL,
-      radiusFunction: (i) => u(W * 0.5 * (LIRIPIPE.root + (LIRIPIPE.end - LIRIPIPE.root) * Math.pow(i / last, 0.8))),
-    }, scene);
-    tail.material = cloth;
-    tail.convertToFlatShadedMesh();
-    tail.parent = holder;
     // The collar: a short frustum on the shoulders and LIRIPIPE.dags leaf points hanging round its hem, the longest over the chest
     const yoke = MeshBuilder.CreateCylinder("cowlCollar", { height: u(LIRIPIPE.yokeDeep * H), diameterTop: u(0.9 * W), diameterBottom: u(LIRIPIPE.yoke * W), tessellation: 9 }, scene);
     yoke.position.y = u(-0.98 * H);
