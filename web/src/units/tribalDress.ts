@@ -1254,9 +1254,9 @@ const HIDE_SKIRT = { bandDrop: 0.16, panelOut: 1.45, panelFlare: 1.12, sides: 7 
  * SKIRT_TONGUES.tongues hide tongues all round, each its arc plus .overlap of its neighbours, from the band down to .long of the thigh below the hip joint
  * (each .vary of the thigh longer or shorter), the foot torn into .points points with notches .tear of the thigh deep. The front and side tongues hang on
  * the hip joint of their side, round the thigh (.legOut of its half-width, flared .flare) so they swing with the leg; the rear ones (cos of their middle
- * under .rearBelow) hang on the pelvis, straight down from the band (.rearFlare), so nothing stands off the buttock when the leg swings.
+ * under .rearBelow) hang on the pelvis round its own depth (.rearOut of its half-depth), straight down (.rearFlare), so nothing stands off the buttock.
  */
-const SKIRT_TONGUES = { tongues: 12, overlap: 0.12, long: 0.55, vary: 0.08, points: 2, tear: 0.2, legOut: 1.35, flare: 1.04, rearBelow: -0.35, rearFlare: 1.02 };
+const SKIRT_TONGUES = { tongues: 12, overlap: 0.12, long: 0.55, vary: 0.08, points: 2, tear: 0.2, legOut: 1.35, flare: 1.04, rearBelow: -0.35, rearFlare: 1.02, rearOut: 1.2 };
 const HIDE_DRESS = { sides: 8, top: 1.0, low: 0.56, strapAt: 0.55, strapWide: 0.13, strapRise: 0.45, skirt: 0.62, flare: 1.4, rag: 0.16, color: new Color3(0.52, 0.3, 0.22), glow: 0.15 };
 const HIDE_EDGE = { color: new Color3(0.34, 0.19, 0.12), wide: 0.2, thick: 0.05, lift: 0.12, rimPoints: 24 };
 const HIDE_DRESSES = new Set(["tribal.stoner"]);
@@ -1349,7 +1349,6 @@ export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId
   const skirtTop = Math.max(halfX * 0.95, pelvisX * 1.12);
   // [S] 365 the skirt hung close: a snug waist band, then a torn panel round each thigh on its own hip joint
   const S = HIDE_SKIRT;
-  sleeve("tunicSkirt", (x, z, top) => [band.midX + x * skirtTop, top ? trunk * 0.06 : -thigh * S.bandDrop, midZ + z * halfZ * 0.9]);
   // [S] 367 the skirt as a ring of torn tongues (spec at SKIRT_TONGUES), replacing the square per-thigh panel sleeves
   const T = SKIRT_TONGUES;
   for (const j of [body.torso, body.hip, body.leftHip, body.rightHip]) j.computeWorldMatrix(true);
@@ -1363,6 +1362,20 @@ export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId
   const topRX = skirtTop * 1.03, topRZ = halfZ * 0.9 * 1.05;
   const footRX = Math.max(topRX, Math.abs(hipAt.x) + legX * T.legOut) * T.flare;
   const footRZ = Math.max(topRZ, legZ * T.legOut) * T.flare;
+  const pelvisZ = { mid: midZ, half: topRZ / T.rearOut };
+  if (pelvis) {
+    pelvis.computeWorldMatrix(true);
+    const pb = pelvis.getBoundingInfo().boundingBox;
+    const c = Vector3.TransformCoordinates(Vector3.TransformCoordinates(pb.center, pelvis.getWorldMatrix()), toTorso);
+    pelvisZ.mid = c.z;
+    pelvisZ.half = pb.extendSize.z * Math.abs(pelvis.scaling.z);
+  }
+  // the waist band rides the pelvis (367), not the trunk: on the torso its rear swung out behind the buttock when he leaned into the windup; its rear half round the pelvis's own depth, as the rear tongues
+  const bandToHip = torsoW.multiply(body.hip.getWorldMatrix().clone().invert());
+  sleeve("tunicSkirt", (x, z, top) => {
+    const p = Vector3.TransformCoordinates(new Vector3(band.midX + x * skirtTop, top ? trunk * 0.06 : -thigh * S.bandDrop, z >= 0 ? midZ + z * halfZ * 0.9 : pelvisZ.mid + z * pelvisZ.half * T.rearOut), bandToHip);
+    return [p.x, p.y, p.z];
+  }, body.hip);
   const tongueArc = (Math.PI * 2) / T.tongues;
   for (let i = 0; i < T.tongues; i++) {
     const share = (k: number) => hashShare(9.7, i, k, 3);
@@ -1373,15 +1386,18 @@ export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId
     parent.computeWorldMatrix(true);
     const toLocal = torsoW.multiply(parent.getWorldMatrix().clone().invert());
     // the rear tongues hang straight from the band on the buttock (no stand-off); the rest flare out round the thighs
-    const fx = rear ? topRX * T.rearFlare : footRX, fz = rear ? topRZ * T.rearFlare : footRZ;
+    // the rear ones round the pelvis's own depth (the trunk's is the chest's, which stood them off the buttock)
+    const cz = rear ? pelvisZ.mid : midZ;
+    const tz = rear ? pelvisZ.half * T.rearOut : topRZ;
+    const fx = rear ? topRX * T.rearFlare : footRX, fz = rear ? tz * T.rearFlare : footRZ;
     const longer = (share(1) - 0.5) * 2 * T.vary * thigh;
     const top: Vector3[] = [], foot: Vector3[] = [];
     for (let k = 0; k <= T.points * 2; k++) {
       const u = k / (T.points * 2);
       const a = a0 + (a1 - a0) * u;
-      top.push(Vector3.TransformCoordinates(new Vector3(band.midX + Math.sin(a) * topRX, topY, midZ + Math.cos(a) * topRZ), toLocal));
+      top.push(Vector3.TransformCoordinates(new Vector3(band.midX + Math.sin(a) * topRX, topY, cz + Math.cos(a) * tz), toLocal));
       const notch = k % 2 === 0 ? T.tear * thigh * (0.7 + 0.6 * share(10 + k)) : 0;
-      foot.push(Vector3.TransformCoordinates(new Vector3(band.midX + Math.sin(a) * fx, footY - longer + notch, midZ + Math.cos(a) * fz), toLocal));
+      foot.push(Vector3.TransformCoordinates(new Vector3(band.midX + Math.sin(a) * fx, footY - longer + notch, cz + Math.cos(a) * fz), toLocal));
     }
     const tongue = MeshBuilder.CreateRibbon("tunicSkirtTongue", { pathArray: [top, foot], sideOrientation: Mesh.DOUBLESIDE }, scene);
     tongue.convertToFlatShadedMesh();
