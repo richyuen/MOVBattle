@@ -305,7 +305,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     undefined, { weaponVariant: "priest_staff" },
   ),
   "medieval.knight": vis(
-    { scale: 1.25, bulk: 1.55 }, "sword", "armet", "kite", "cape", "#C0C0C0",
+    // No small "cape" special: his team cape off the shoulders to the knee is medievalDress medievalCape (358)
+    { scale: 1.25, bulk: 1.55 }, "sword", "armet", "kite", "none", "#C0C0C0",
     undefined, { weaponVariant: "arming_sword" },
   ),
   "medieval.catapult": vis(

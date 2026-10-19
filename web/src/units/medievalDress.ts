@@ -548,15 +548,16 @@ function chestBack(body: ArticulatedBody): number {
   return back;
 }
 
-function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh[] {
+/** `skin` scales the back it hangs off (a cuirass over the chest stands that much deeper); `drop` overrides MEDIEVAL_CAPE.drop. */
+function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin = 1, drop = MEDIEVAL_CAPE.drop): Mesh[] {
   const C = MEDIEVAL_CAPE;
   const t = body.torsoMesh;
   const c = t.getBoundingInfo().boundingBox.extendSize;
   const cx = c.x * t.scaling.x, cy = c.y * t.scaling.y;
-  const back = -chestBack(body);
+  const back = -chestBack(body) * skin;
   const top = t.position.y + cy * 0.92;
   const hipY = -body.torso.position.y; // the hip joint, in the torso joint's frame
-  const hemY = hipY - Math.abs(body.leftKnee.position.y) * C.drop;
+  const hemY = hipY - Math.abs(body.leftKnee.position.y) * drop;
   const rows: Vector3[][] = [];
   for (let r = 0; r <= C.rows; r++) {
     const f = r / C.rows; // 0 at the collar, 1 at the hem
@@ -596,6 +597,8 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3): Mesh[
   }
   return out;
 }
+
+const KNIGHT_CAPE = { shade: 0.85, clear: 1.03, drop: 0.95 };
 
 /** A limb mesh's extent in its joint's frame: its middle height, half-height and half-width (x) and half-depth (z). */
 function limbBox(limb: Mesh): { mid: number; half: number; wide: number; deep: number } {
@@ -690,6 +693,9 @@ export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: strin
     case "medieval.bard": return bardVest(scene, body, team);
     case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream)];
     case "medieval.squire": return squireLegs(scene, body);
+    // [S] the Knight's cape (358; medieval.knight.png, card "a team colored cape"): the king's cape in team cloth (x KNIGHT_CAPE.shade) off the backs of his
+    // steel shoulders to the knee (.drop), hung KNIGHT_PLATE.deep x .clear off the back so it clears the cuirass
+    case "medieval.knight": return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop);
     default: return [];
   }
 }
