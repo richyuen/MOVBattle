@@ -2760,6 +2760,8 @@ const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
 // head-sized). Glass and glow as approved 377.
 const POTION = { ball: 0.085, squash: 0.85, shoulder: 0.032, shoulderFoot: 0.7, neck: 0.034, neckLong: 0.03, lip: 1.3, cork: 0.022, seat: 0.06, glow: 0.12 };
 const POTION_GLASS = new Color3(0.64, 0.75, 0.72); // 377: TABS pale grey-green (184,200,195), with the glow .22 -> .12 it no longer washes to white
+/** The potion in the bulb (381): its cap .over the glass radius, filled to .fill of the radius past the middle (bulb-local, neck side up), teal. */
+const POTION_LIQUID = { over: 1.04, fill: 0.25, color: new Color3(0.3, 0.6, 0.6), glow: 0.1 };
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
   const n = outline.length;
@@ -4076,6 +4078,24 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const ball = MeshBuilder.CreateIcoSphere("potionBulb", { radius: P.ball * s * 0.5, subdivisions: 1, flat: true }, scene);
       ball.scaling.y = P.squash;
       ball.material = glass;
+      // [S] the potion inside (381; farmer.potion_seller.red.png, .blue.png, factions/farmer.jpg: the flask reads pale teal, blue-green at lineup distance;
+      // critic 380: our glass near-white blue-grey, POTION_GLASS locked). A teal liquid fills the bulb's far end from the neck (the bottom as he holds it
+      // hung bulb-down): the bulb's own facets a hair proud of the glass (.over), every vertex past the fill line pressed flat onto it, so the liquid
+      // shows as a teal cap under a level surface, pale glass above it and in the shoulder and neck.
+      const liquid = MeshBuilder.CreateIcoSphere("potionLiquid", { radius: P.ball * s * 0.5 * POTION_LIQUID.over, subdivisions: 1, flat: true }, scene);
+      const lp = liquid.getVerticesData(VertexBuffer.PositionKind);
+      const li = liquid.getIndices();
+      if (lp && li) {
+        const fill = P.ball * s * 0.5 * POTION_LIQUID.over * POTION_LIQUID.fill;
+        for (let i = 1; i < lp.length; i += 3) lp[i] = Math.min(lp[i], fill);
+        const ln: number[] = [];
+        VertexData.ComputeNormals(lp, li, ln);
+        liquid.setVerticesData(VertexBuffer.PositionKind, lp);
+        liquid.setVerticesData(VertexBuffer.NormalKind, ln);
+        liquid.refreshBoundingInfo();
+      }
+      liquid.material = mat(scene, POTION_LIQUID.color, POTION_LIQUID.glow);
+      liquid.parent = ball;
       // children of the squashed bulb are drawn in its unsquashed frame: heights over P.squash keep them true
       const up = (h: number) => h / P.squash;
       const bulbTop = P.ball * P.squash * 0.5 * 0.8;
