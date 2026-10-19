@@ -1180,14 +1180,13 @@ export function dressTribalPauldrons(scene: Scene, body: ArticulatedBody, unitId
     // the muzzle, tapering down the arm from under it
     const snoutLong = Math.max(wide * 0.3, tall - wide * 0.55);
     const snout = MeshBuilder.CreateCylinder("pauldronSkullSnout", { height: snoutLong, diameterTop: wide * 0.82, diameterBottom: wide * P.snout, tessellation: 6 }, scene);
+    jitterVertices(snout, 0.05, seed + 3);
+    snout.convertToFlatShadedMesh();
     snout.scaling.x = P.deep * 0.9;
     snout.position.set(caseX - side * deep * 0.08, caseY - wide * 0.2 - snoutLong * 0.5, wide * 0.02);
     snout.rotation.z = side * 0.06;
     snout.material = tan;
     snout.parent = shoulder;
-    snout.bakeCurrentTransformIntoVertices();
-    jitterVertices(snout, 0.05, seed + 3);
-    snout.convertToFlatShadedMesh();
     // the googly eye on the brain case's outer face, looking out and ahead
     const ring = MeshBuilder.CreateCylinder("pauldronSkullSocket", { height: wide * 0.05, diameter: wide * P.eye * 1.25, tessellation: 8 }, scene);
     ring.rotation.set(0, -side * P.look, -side * Math.PI / 2);
