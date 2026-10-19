@@ -233,6 +233,8 @@ const POLE_GRIP = {
 const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25, settle: 6 };
 // The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
 // swing and elbow at each, the trunk's pitch and the off foot's step at the land, and the share of the attack it is held on the man
+// The halberd at rest (see _restHalberd): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt toward his front (rad)
+const HALBERD_REST = { ahead: 0.13, inward: 0.12, drop: 0.24, tilt: 0.05 };
 const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown: -1.25, elbowDown: -0.15, pitch: 0.35, step: -0.4, hold: 0.1 };
 // The chop aimed onto its man (see _chopOnto): how far under his crown the axe lands (m at scale 1), the landing tilt's range from straight up (rad),
 // and the most of the axe head's reach the shaft may be drawn back through the fists
@@ -1824,6 +1826,7 @@ export class ProceduralAnimator {
     this._offhandToGrip();
     this._holdChopDown(dt);
     this._aimMusket(dt);
+    this._restHalberd();
     this._twoHandPole();
     this._carryBoulder();
     this._holdPalette();
@@ -2862,6 +2865,35 @@ export class ProceduralAnimator {
     gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     // Committed on his aim: a blow on him snaps only his head back
     this._aimWeight = Math.max(this._aimWeight, w);
+  }
+
+  /**
+   * [S] 373 the halberd at rest (critic 372: the upper gauntlet gripped the shaft at helm height and hid the slit and eyes, the shaft slanting off his
+   * weapon side; renaissance.halberd.blue.png: the shaft stood upright in front of his middle, the lower fist across the belly, the upper one on the
+   * shaft at the collar, the helm's front clear). Standing or walking (not in a chop, nor held down after one), the weapon fist is solved (_armTo) onto
+   * a point HALBERD_REST.ahead of his height before the weapon shoulder, .inward of it toward his middle and .drop below it, and the halberd stood
+   * .tilt rad off straight up toward his front (_poseHalberd); the off hand then rides the shaft where it passes the off shoulder (_twoHandPole), at the
+   * collar. Eased off as he goes limp.
+   */
+  private _restHalberd(): void {
+    const h = this._halberd();
+    if (!h || this._chopDown || this.walkStyle === "quadruped") return;
+    const s = this._state;
+    if (s !== AnimState.Idle && s !== AnimState.Walking) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const R = HALBERD_REST;
+    const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(R.ahead * height))
+      .addInPlace(outward.scale(-R.inward * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    this._poseHalberd(R.tilt, w);
   }
 
   // A pole or a long gun in the weapon fist (see POLE_GRIP), its span along the shaft from the fist, looked up once
