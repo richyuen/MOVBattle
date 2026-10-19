@@ -1904,13 +1904,42 @@ function heldCrow(scene: Scene, s: number): Mesh {
  * HELD_CROW) at the held crow's size, its wings folded, sat on its belly at the node's origin with its back up the node's +y and its head along +z. The
  * animator keeps the node upright and facing his front (proceduralAnimation TPOSE).
  */
+/*
+ * [S] the perched crow stands up (376; farmer.scarecrow.red.png: on each upper arm a wingless crow sits upright like a bird on a branch, its breast to his
+ * front, round head on top with a grey beak forward, small pale bead eyes, its tail hanging down behind the arm; the 344 one was the held crow laid on
+ * its belly, a black blob with glowing eyes lost against the wing). Shares of s, the node's origin on the arm, +y up, +z his front:
+ *   body an egg PERCH_CROW.wide across, .deep deep, .tall tall, its middle .body up, its top tipped .tip forward; head .head across .neck up
+ *   and .ahead forward; beak .beak long, tipped .beakDown down; eyes .eye across, pale, not self-lit; tail .tail long, .fan wide, hanging .tailTip back
+ *   from straight down behind; two legs .leg long to the origin. Black CROW_BLACK self-lit .glow.
+ */
+const PERCH_CROW = { wide: 0.1, deep: 0.12, tall: 0.18, body: 0.11, tip: 0.3, head: 0.085, neck: 0.215, ahead: 0.03, beak: 0.06, beakDown: 0.25, eye: 0.02, tail: 0.12, fan: 0.08, tailTip: 0.35, leg: 0.035, glow: 0.12 };
 export function buildPerchedCrow(scene: Scene, s: number): TransformNode {
+  const P = PERCH_CROW;
   const perch = new TransformNode("perchedCrow", scene);
-  const crow = heldCrow(scene, s);
-  crow.parent = perch;
-  // held frame: head +y, back +z; perched: head +z, back +y (x mirrored onto -x, a proper turn)
-  crow.rotationQuaternion = Quaternion.RotationQuaternionFromAxis(new Vector3(-1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
-  crow.position.set(0, HELD_CROW.tall * 0.42 * s, 0);
+  const black = mat(scene, CROW_BLACK, P.glow);
+  const grey = mat(scene, new Color3(0.36, 0.35, 0.38), 0.08);
+  const pale = mat(scene, new Color3(0.8, 0.8, 0.76));
+  const put = (m: Mesh, mt: PBRMetallicRoughnessMaterial, x: number, y: number, z: number): Mesh => {
+    m.material = mt;
+    m.convertToFlatShadedMesh();
+    m.position.set(x * s, y * s, z * s);
+    m.parent = perch;
+    return m;
+  };
+  const body = put(MeshBuilder.CreateIcoSphere("perchCrowBody", { radiusX: P.wide * 0.5 * s, radiusY: P.tall * 0.5 * s, radiusZ: P.deep * 0.5 * s, subdivisions: 1, flat: true }, scene), black, 0, P.body, 0);
+  body.rotation.x = P.tip;
+  put(MeshBuilder.CreateIcoSphere("perchCrowHead", { radius: P.head * 0.5 * s, subdivisions: 1, flat: true }, scene), black, 0, P.neck, P.ahead);
+  const beak = put(MeshBuilder.CreateCylinder("perchCrowBeak", { height: P.beak * s, diameterTop: 0, diameterBottom: P.head * 0.4 * s, tessellation: 4 }, scene), grey, 0, P.neck - P.head * 0.08, P.ahead + P.head * 0.45 + P.beak * 0.4);
+  beak.rotation.x = Math.PI / 2 + P.beakDown;
+  for (const side of [-1, 1]) {
+    put(MeshBuilder.CreateSphere("perchCrowEye", { diameter: P.eye * s, segments: 4 }, scene), pale, side * P.head * 0.36, P.neck + P.head * 0.1, P.ahead + P.head * 0.32);
+    const leg = put(MeshBuilder.CreateCylinder("perchCrowLeg", { height: P.leg * s, diameter: P.wide * 0.12 * s, tessellation: 4 }, scene), grey, side * P.wide * 0.22, P.leg * 0.5, 0.005);
+    void leg;
+  }
+  // the tail hangs down behind, flat and fanned
+  const tail = put(MeshBuilder.CreateCylinder("perchCrowTail", { height: P.tail * s, diameterTop: P.wide * 0.4 * s, diameterBottom: P.fan * s, tessellation: 4 }, scene), black, 0, P.body - P.tall * 0.42, -P.deep * 0.45);
+  tail.scaling.z = 0.3;
+  tail.rotation.x = P.tailTip;
   perch.scaling.setAll(PROP_OVERSIZE);
   return perch;
 }
