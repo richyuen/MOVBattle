@@ -261,7 +261,7 @@ export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): M
  *     a roll .roll of the trunk thick round its foot;
  * team cloth x .shade, self-lit .glow, double-sided.
  */
-const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, sides: 9, collar: 0.16, neck: 0.42, collarOut: 1.12, roll: 0.06, shade: 0.62, glow: 0.12 };
+const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, sides: 9, collar: 0.16, neck: 0.42, collarOut: 1.12, roll: 0.06, shade: 0.45, glow: 0.06 };
 
 /** The sarissa's cape and folded collar (spec at SARISSA_CAPE), on the torso. */
 export function dressSarissa(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
