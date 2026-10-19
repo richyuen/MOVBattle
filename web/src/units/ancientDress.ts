@@ -35,6 +35,12 @@ const MINO_SASH = { sash: 0.3, thick: 0.03, buckle: 0.17, tuft: 0.22 };
  * .thick of it thick; the sash MINO_SASH.sash of the trunk wide in MINO_LEATHER; the buckle .buckle of the trunk across, its bars .bar of that.
  */
 const MINO_GEAR = { padWide: 1.25, padThick: 0.18, padDeep: 1.15, padTilt: 0.32, flap: 0.6, flapTilt: 0.35, rim: 0.2, curls: [0.22, 0.62], curl: 0.3, turns: 1.1, thick: 0.06, buckle: 0.3, bar: 0.24 };
+/*
+ * [S] the pauldron as one curved shell seated on the deltoid (385; ancient.minotaur.red.png: a team plate wrapped over his left shoulder top and down its
+ * outer side, a darker rim along its foot, a lighter team scroll on its face; critic 383: a tilted plank sticking up off the shoulder with a dark block
+ * standing off behind it). Spec at the build (dressMinotaur): radius, deep, low, over, thick, inX, atY, rim, scroll, scrollAt.
+ */
+const MINO_SHELL = { radius: 0.5, deep: 1.1, low: 0.55, over: 0.25, thick: 0.1, inX: 0.82, atY: 0.86, rim: 0.16, scroll: 0.2, scrollAt: 0.45 };
 const MINO_LEATHER = new Color3(0.66, 0.46, 0.3);
 const MINO_IRON = new Color3(0.42, 0.44, 0.47);
 
@@ -99,42 +105,61 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   const front = chest.maxZ;
   // the tuft of chest hair on the breastbone
   const S = MINO_SASH;
-  const tuft = MeshBuilder.CreateIcoSphere("minoChestHair", { radius: 1, subdivisions: 1, flat: true }, scene);
-  tuft.scaling.set(chest.halfX * S.tuft, chest.trunk * 0.12, 0.02);
-  tuft.position.set(chest.midX - chest.halfX * 0.2, chest.trunk * 0.7, front + 0.005);
-  add(tuft, body.torso, darkFur);
+  // [S] 385: a ragged clump of dark spikes fanned out from the breastbone (ancient.minotaur.red.png), not a flat chip hidden under the sash
+  for (let k = 0; k < 7; k++) {
+    const ang = -Math.PI / 2 + (Math.PI * 2 * k) / 7 + 0.3;
+    const len = chest.halfX * S.tuft * (k % 2 ? 1.6 : 2.3);
+    const spike = MeshBuilder.CreateCylinder("minoChestHair", { height: len, diameterTop: 0, diameterBottom: len * 0.55, tessellation: 3 }, scene);
+    spike.scaling.z = 0.25;
+    spike.rotation.z = ang - Math.PI / 2;
+    spike.position.set(chest.midX + chest.halfX * 0.12 + Math.cos(ang) * len * 0.45, chest.trunk * 0.62 + Math.sin(ang) * len * 0.45, front + 0.01);
+    add(spike, body.torso, darkFur);
+  }
 
   // the pauldron on his left shoulder (the render's right) (MINO_PAULDRON)
   const P = MINO_PAULDRON;
   // [S] 383: body -x is his left (the 378 +x put it on his right in _idle, critic 382)
   const side = -1;
   const pw = chest.halfX * 2 * P.wide;
-  // [S] 383 (MINO_GEAR): an angular plate, not a dome: a flat top slab over the shoulder and an outer flap bent down off its edge, a darker rim on
-  // the flap's foot, a light scroll curl on the flap's face
-  const pauldron = MeshBuilder.CreateBox("minoPauldron", { width: pw * G.padWide, height: pw * G.padThick, depth: pw * G.padDeep }, scene);
-  pauldron.position.set(side * chest.halfX * 0.85 + chest.midX, chest.trunk * 1.0, (chest.minZ + chest.maxZ) / 2);
-  pauldron.rotation.z = side * G.padTilt;
-  add(pauldron, body.torso);
-  const flapTall = pw * G.flap;
-  const flap = MeshBuilder.CreateBox("minoPauldronFlap", { width: pw * G.padThick, height: flapTall, depth: pw * G.padDeep * 1.05 }, scene);
-  const edgeX = pauldron.position.x + side * Math.cos(G.padTilt) * pw * G.padWide / 2;
-  const edgeY = pauldron.position.y - Math.sin(G.padTilt) * pw * G.padWide / 2;
-  flap.rotation.z = side * G.flapTilt;
-  flap.position.set(edgeX + side * Math.sin(G.flapTilt) * flapTall / 2, edgeY - Math.cos(G.flapTilt) * flapTall / 2, pauldron.position.z);
-  add(flap, body.torso);
-  const flapRim = MeshBuilder.CreateBox("minoPauldronRim", { width: pw * G.padThick * 1.3, height: flapTall * 0.18, depth: pw * G.padDeep * 1.1 }, scene);
-  flapRim.rotation.z = flap.rotation.z;
-  flapRim.position.set(edgeX + side * Math.sin(G.flapTilt) * flapTall * 0.95, edgeY - Math.cos(G.flapTilt) * flapTall * 0.95, pauldron.position.z);
-  add(flapRim, body.torso, dark);
-  const padPath: Vector3[] = [];
-  for (let i = 0; i <= 12; i++) {
-    const t = i / 12, rho = pw * 0.22 * (1 - 0.7 * t), phi = Math.PI * 2 * 0.9 * t;
-    padPath.push(new Vector3(0, Math.sin(phi) * rho, Math.cos(phi) * rho));
+  // [S] 385 (MINO_SHELL): one curved team shell seated on the deltoid, not a slab tilted up off it: a quarter-round plate from over the shoulder top
+  // round and down its outer side, its axis front to back through the shoulder; a darker rim flush along its lower edge, a lighter scroll inlaid on its
+  // outer face. In the plate's width pw: radius .radius, .deep front to back, from .low rad under the horizontal outside to .over rad past the top
+  // toward the neck, .thick thick; the centre .inX of the chest half width out at .atY of the trunk; the scroll .scroll of pw round at .scrollAt rad up.
+  const M = MINO_SHELL;
+  const R = pw * M.radius, D = pw * M.deep;
+  const cx = chest.midX + side * chest.halfX * M.inX, cy = chest.trunk * M.atY, cz = (chest.minZ + chest.maxZ) / 2;
+  // angles in the torso's xy plane measured from straight out (side x) toward up (+y)
+  const a0 = -M.low, a1 = Math.PI / 2 + M.over;
+  const rimPath = (r: number, a: number) => new Vector3(cx + side * Math.cos(a) * r, cy + Math.sin(a) * r, 0);
+  const shellPaths: Vector3[][] = [];
+  for (const z of [-D / 2, D / 2]) {
+    for (const r of [R, R + pw * M.thick]) {
+      const row: Vector3[] = [];
+      for (let i = 0; i <= 8; i++) row.push(rimPath(r, a0 + ((a1 - a0) * i) / 8).add(new Vector3(0, 0, cz + z)));
+      shellPaths.push(row);
+    }
   }
-  const scroll = MeshBuilder.CreateTube("minoPauldronScroll", { path: padPath, radius: pw * 0.04, tessellation: 4, cap: 2 }, scene);
-  scroll.rotation.z = flap.rotation.z;
-  scroll.position.set(edgeX + side * (Math.sin(G.flapTilt) * flapTall * 0.5 + pw * G.padThick * 0.55), edgeY - Math.cos(G.flapTilt) * flapTall * 0.5, pauldron.position.z);
-  add(scroll, body.torso, light);
+  // a closed slab bent round the shoulder: inner front, outer front, outer back, inner back, back to the inner front
+  const ring = [shellPaths[0], shellPaths[1], shellPaths[3], shellPaths[2], shellPaths[0]];
+  const shell = MeshBuilder.CreateRibbon("minoPauldron", { pathArray: ring, closeArray: false, closePath: false, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  shell.convertToFlatShadedMesh();
+  add(shell, body.torso);
+  const rimBox = MeshBuilder.CreateBox("minoPauldronRim", { width: pw * M.thick * 1.6, height: pw * M.rim, depth: D * 1.02 }, scene);
+  const rimAt = rimPath(R + pw * M.thick * 0.5, a0 + M.rim * 0.5);
+  rimBox.position.set(rimAt.x, rimAt.y, cz);
+  rimBox.rotation.z = side * a0;
+  add(rimBox, body.torso, dark);
+  // the scroll inlaid on the outer face, wound in the face's own plane (front-back and along the arc)
+  const sa = M.scrollAt;
+  const out1 = new Vector3(side * Math.cos(sa), Math.sin(sa), 0);
+  const along = new Vector3(-side * Math.sin(sa), Math.cos(sa), 0);
+  const centre = rimPath(R + pw * M.thick * 1.15, sa).add(new Vector3(0, 0, cz));
+  const padPath: Vector3[] = [];
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16, rho = pw * M.scroll * (1 - 0.75 * t), phi = Math.PI * 2 * 1.1 * t;
+    padPath.push(centre.add(new Vector3(0, 0, Math.cos(phi) * rho)).add(along.scale(Math.sin(phi) * rho)).add(out1.scale(pw * 0.01)));
+  }
+  add(MeshBuilder.CreateTube("minoPauldronScroll", { path: padPath, radius: pw * 0.045, tessellation: 4, cap: 2 }, scene), body.torso, light);
 
   // the sash, from that shoulder across the chest down to the other hip, laid on the chest's front
   const top = { x: chest.midX + side * chest.halfX * 0.75, y: chest.trunk * 0.95 };
