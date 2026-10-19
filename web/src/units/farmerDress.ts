@@ -119,7 +119,7 @@ const HALFLING_COAT = {
   vest: 0.46, vestAhead: 0.03, vee: 0.4, veeDeep: 0.46, collar: 0.16, belt: 0.12, buckle: 0.24, buckleTall: 1.6, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
 };
 const HALFLING_SHIRT_WHITE = new Color3(0.93, 0.89, 0.8);
-const HALFLING_BELT_DARK = new Color3(0.14, 0.08, 0.06); // 377: (.22,.12,.09) glow .1 read tan-ochre
+const HALFLING_BELT_DARK = new Color3(0.22, 0.12, 0.09);
 const HALFLING_BUCKLE_GREY = new Color3(0.6, 0.6, 0.62);
 
 /** The halfling's open jacket, vest, white shirt V and buckled belt (spec at HALFLING_COAT), parented to the torso. */
@@ -183,11 +183,11 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   }
   // the dark belt across the vest at the waist, a big grey square buckle with a dark middle
   const beltTall = H * J.belt;
-  const belt = put(MeshBuilder.CreateBox("halflingBelt", { width: W * (J.vest * 2 + 0.1), height: beltTall, depth: D * 0.08 }, scene), mf.get("cloth", HALFLING_BELT_DARK, { emissiveIntensity: 0.04 }));
+  const belt = put(MeshBuilder.CreateBox("halflingBelt", { width: W * (J.vest * 2 + 0.1), height: beltTall, depth: D * 0.08 }, scene), mf.get("cloth", HALFLING_BELT_DARK, { emissiveIntensity: 0.1 }));
   belt.position.set(0, foot + beltTall * 0.5, vestFace + D * 0.02);
   const buckle = put(MeshBuilder.CreateBox("halflingBuckle", { width: W * J.buckle, height: beltTall * J.buckleTall, depth: D * 0.05 }, scene), mf.get("metal", HALFLING_BUCKLE_GREY, { emissiveIntensity: 0.25 }));
-  buckle.position.set(0, belt.position.y, belt.position.z + D * 0.09);
-  const hole = put(MeshBuilder.CreateBox("halflingBuckleHole", { width: W * J.buckle * 0.55, height: beltTall * J.buckleTall * 0.5, depth: D * 0.02 }, scene), mf.get("cloth", HALFLING_BELT_DARK, { emissiveIntensity: 0.04 }));
+  buckle.position.set(0, belt.position.y, belt.position.z + D * 0.05);
+  const hole = put(MeshBuilder.CreateBox("halflingBuckleHole", { width: W * J.buckle * 0.55, height: beltTall * J.buckleTall * 0.5, depth: D * 0.02 }, scene), mf.get("cloth", HALFLING_BELT_DARK, { emissiveIntensity: 0.1 }));
   hole.position.set(0, belt.position.y, buckle.position.z + D * 0.025);
   return added;
 }
