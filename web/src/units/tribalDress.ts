@@ -1064,28 +1064,74 @@ export function dressTribalBracelets(scene: Scene, body: ArticulatedBody, unitId
  * snout pointing down the arm, a turn of rope round the arm through it. PAULDRON.wide upper-arm widths across, .long of the upper arm's length tall, .top of
  * the upper arm's length above the shoulder joint for its crown, .out upper-arm widths it stands off the arm's middle.
  */
-const PAULDRON = { wide: 1.9, long: 0.95, top: 0.12, out: 0.55 };
+/*
+ * [S] the pauldron skulls re-cut (366; tribal.chieftain.red.png: on each arm a big tan beast skull as wide as most of his head, from over the shoulder down
+ * past the middle of the upper arm nearly to the elbow, its rounded brain case up at the shoulder and its long muzzle tapering down the arm, a white googly
+ * eye with a dark pupil on its outer face looking out and ahead; critic 360: small white skulls with black sockets). Replaces the small boneSkull:
+ *   - brain case: a jittered faceted ellipsoid PAULDRON.wide head widths across (front to back), .deep of that out from the arm, its top .top of the upper
+ *     arm above the shoulder joint, standing .out of its depth off the arm's outer face;
+ *   - muzzle: a flattened six-sided taper from under the brain case down the arm, the whole skull .long of the upper arm, .snout of the width at its foot;
+ *   - eye: a dark ring .eye of the width across on the brain case's outer face, the white in it and a pupil turned .look ahead;
+ *   - all in the helm's tan (.tan, self-lit .glow), so it reads as the same bone as the beast skull on his head.
+ */
+const PAULDRON = {
+  wide: 0.82, deep: 0.62, long: 1.08, top: 0.16, out: 0.42, snout: 0.45, eye: 0.42, look: 0.45,
+  tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
+};
 const PAULDRONS = new Set(["tribal.chieftain"]);
 
 /** Straps a skull pauldron (spec at PAULDRON) to each upper arm, parented to the shoulder joints. Empty when he wears none. */
 export function dressTribalPauldrons(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
   if (!PAULDRONS.has(unitId)) return [];
   const added: Mesh[] = [];
+  const P = PAULDRON;
+  const mats = getMaterialFactory();
+  const tan = mats.get("cloth", P.tan, { emissiveIntensity: P.glow });
+  const dark = mats.get("cloth", SOCKET_COLOR);
+  const white = mats.get("cloth", new Color3(0.96, 0.95, 0.92), { emissiveIntensity: 0.4 });
   for (const [shoulder, arm, elbow] of [[body.leftShoulder, body.leftUpperArm, body.leftElbow], [body.rightShoulder, body.rightUpperArm, body.rightElbow]] as const) {
     const side = Math.sign(shoulder.position.x) || 1;
     const len = Math.abs(elbow.position.y);
     const e = arm.getBoundingInfo().boundingBox.extendSize;
     const armWide = Math.max(e.x * arm.scaling.x, e.z * arm.scaling.z) * 2;
-    const wide = armWide * PAULDRON.wide;
-    const parts = boneSkull(scene, "pauldronSkull", wide, side > 0 ? 41.3 : 47.9);
-    const skull = parts[0];
-    // boneSkull stands about 1.2 widths tall from the crown's top to the snout's foot: stretch it down the arm
-    const tall = len * PAULDRON.long;
-    skull.scaling.set(1, tall / (wide * 1.2), 0.8);
-    skull.rotation.set(0, side * Math.PI / 2, side * 0.12);
-    skull.position.set(side * armWide * PAULDRON.out, len * PAULDRON.top - wide * 0.5 * (tall / (wide * 1.2)), 0);
-    skull.parent = shoulder;
-    added.push(...parts);
+    const wide = headWide(body) * P.wide;
+    const deep = wide * P.deep;
+    const tall = len * P.long;
+    const seed = side > 0 ? 41.3 : 47.9;
+    // the brain case, up at the shoulder
+    const caseX = side * (armWide * 0.5 + deep * P.out);
+    const caseY = len * P.top - wide * 0.45;
+    const cranium = MeshBuilder.CreateIcoSphere("pauldronSkull", { radius: 1, subdivisions: 1, flat: true }, scene);
+    jitterVertices(cranium, 0.1, seed, deep * 0.5, wide * 0.45, wide * 0.5);
+    cranium.position.set(caseX, caseY, 0);
+    cranium.material = tan;
+    cranium.parent = shoulder;
+    // the muzzle, tapering down the arm from under it
+    const snoutLong = Math.max(wide * 0.3, tall - wide * 0.55);
+    const snout = MeshBuilder.CreateCylinder("pauldronSkullSnout", { height: snoutLong, diameterTop: wide * 0.82, diameterBottom: wide * P.snout, tessellation: 6 }, scene);
+    snout.scaling.x = P.deep * 0.9;
+    snout.position.set(caseX - side * deep * 0.08, caseY - wide * 0.2 - snoutLong * 0.5, wide * 0.02);
+    snout.rotation.z = side * 0.06;
+    snout.material = tan;
+    snout.parent = shoulder;
+    snout.bakeCurrentTransformIntoVertices();
+    jitterVertices(snout, 0.05, seed + 3);
+    snout.convertToFlatShadedMesh();
+    // the googly eye on the brain case's outer face, looking out and ahead
+    const ring = MeshBuilder.CreateCylinder("pauldronSkullSocket", { height: wide * 0.05, diameter: wide * P.eye * 1.25, tessellation: 8 }, scene);
+    ring.rotation.set(0, -side * P.look, -side * Math.PI / 2);
+    ring.position.set(caseX + side * deep * 0.46, caseY + wide * 0.04, wide * 0.12);
+    ring.material = dark;
+    ring.parent = shoulder;
+    const ball = MeshBuilder.CreateCylinder("pauldronSkullEye", { height: wide * 0.05, diameter: wide * P.eye, tessellation: 14 }, scene);
+    ball.position.y = wide * 0.03;
+    ball.material = white;
+    ball.parent = ring;
+    const pupil = MeshBuilder.CreateCylinder("pauldronSkullPupil", { height: wide * 0.03, diameter: wide * P.eye * 0.42, tessellation: 10 }, scene);
+    pupil.position.set(0, wide * 0.03, wide * P.eye * 0.12);
+    pupil.material = dark;
+    pupil.parent = ball;
+    added.push(cranium, snout, ring, ball, pupil);
     const rope = MeshBuilder.CreateTorus("pauldronRope", { diameter: armWide * 1.35, thickness: armWide * 0.16, tessellation: 10 }, scene);
     rope.position.set(side * armWide * 0.15, -len * 0.45, 0);
     rope.rotation.z = side * 0.15;
