@@ -2016,7 +2016,7 @@ const MAMMOTH_LEG = {
  */
 const MAMMOTH_BARREL = {
   rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.34, humpAt: 0.22, humpFront: 0.22, humpBack: 0.75, belly: 0.14, jitter: 0.035,
-  haunch: 0.14, legAt: 0.44, legSpread: 0.28,
+  haunch: 0.26, legAt: 0.44, legSpread: 0.32,
 };
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
