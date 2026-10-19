@@ -1,22 +1,21 @@
 # ancient.shield_bearer
 Status: open   Audited: 378   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (1 since 378)
- 2. armour in lineup_ancient: plain team box tunic — TABS: dark brown lorica segmentata plates over the team tunic, sandals (ref: .jpg, card)
+a FAIL (1 since 378; 1 rejected [S] since 378)
+ 2. armour in unit_ancient.shield_bearer_windup (idle and lineup can't show it behind the scutum): plain team tunic (383's hoops a fat grey-mauve barrel, reverted) — TABS: thin dark brown lorica plates fitted to the team tunic, flat shoulder strips, sandals (ref: .jpg, card)
 b PASS (381)
 c PASS (378)
 d PASS (cost 100, hp 0.76x, dmg 0.33x, cd 1.30x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a lorica segmentata — blocker 2: dark brown overlapping hoop plates round the trunk, shoulder plates, over the team tunic (ancientDress) — ref: .jpg — ours: lineup_ancient.png
+1. [S] a lorica — blocker 2: re-land LORICA (git show a4076de) as fitted hoops at a fixed 1.04-1.06 of the trunk (no cumulative step), dark brown (~.3,.18,.12) low glow, flat shoulder strips lying on the deltoid (ancientDress dressShieldBearer) — ref: .jpg — ours: unit_ancient.shield_bearer_windup.png
 ## Attempts (iter | gap | criterion | verdict)
-378 | curved scutum upright in front, rim, laurels, boss; no sword (SCUTUM, _holdSlab) [S] (2940691) | b | approved
-379 | scutum .5, chin .1, laurel sprays, trim lit .06 [S] (de5279a +3fd5e08, reverted) | b | rejected
-380 | scutum chin-shin: hold reads holeUp, laurels re-landed, trim (.9,.45,.16) [S] (f87fef0) | b | approved
-381 | trim + laurels on a flat unlit material out of the glow layer (SCUTUM_TRIM_FLAT) [S] (0550f5d +a2d3543) | b | approved (b PASS)
-382 | legionary helmet: iron bowl, orange band, neck guard, edged cheek guards + studs (LEGION_HELM) [S] (c7d3111) | a | approved (struck a.1)
+378-381 | scutum upright, chin to shin, laurels, flat trim (SCUTUM, SCUTUM_TRIM_FLAT) [S] | b | approved (379 one rejected)
+382 | legionary helmet (LEGION_HELM) [S] (c7d3111) | a | approved (struck a.1)
+383 | lorica: 5 hoops proud 1.1 + .04 step, 3 leather half-shells per shoulder (LORICA) [S] (a4076de, reverted 4c77e18) | a | rejected
 ## Rejected (last 4)
 - scutum chin to shin [S] [1] — 379: still seated high (cause: unitFactory wiped metadata.holeUp, fixed 380)
+- lorica [S] [1] — 383: hoops + shoulder shells — bands too proud, cumulative step ballooned into a barrel twice the body's width, grey-mauve (haze + glow); the man reads hunchbacked
 ## Notes (max 3 lines)
 - Scutum root "scutumshield", metadata.holeUp = H/2 + chin; unitFactory keeps holeUp. Probe: output/loop/probe_shield.mjs (--build).
 - Flat colour recipe: "unlit" material, emissive set for ACES (red >1, blue ~0), glow.addExcludedMesh; LEGION_HELM reuses it.
-- Critic 382 minor: helm bowl sits a little high and round like a pot (TABS lower, flatter).
+- Trunk armour is judged in _windup/_release (side-on); the trunk's lerp to brown under blue reads grey: use a fixed brown, not team lerp.

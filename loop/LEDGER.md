@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-373 | flat-topped wide-brim hat, cherry-pick of 401d70e (23dc915) | renaissance.balloon_archer.a | approved
-373 | rolled wings + tan band, belt, flared skirt of tabs (909da65 +a7d213f +8669b5c) | renaissance.fencer.a | approved
-373 | own loincloth: rope coils, narrow flap, skull + crossed bones, no kilt (cd8403d +bdad788 +483efeb) | tribal.spear_thrower.a | approved
-373 | beret as lumpy lathe tam, dark team (6b5ac3c) | renaissance.painter.a | approved
-373 | halberd at rest upright, fists belly + collar (a10c9e5) | renaissance.halberd.a | approved
-373 | solid bone face plate in the window, own eyes + nose (41cba1a) | tribal.protector.a | approved
-373 | Painter Dodge: sidestep off a missile, it lands on air (89dc959) | renaissance.painter.c | approved
 374 | low leather shoes, turned cuff, dark stocking (b46132a) | renaissance.halberd.a | approved
 374 | upright stance for a javelin man, lankier body (9fcac3a) | tribal.spear_thrower.a | approved
 374 | sweater ends at hip in a ribbed band, legs 1.2x (0ee7192) | renaissance.painter.a | approved
@@ -80,39 +73,38 @@ for 25 iterations.
 382 | bull head: cranium, long face, muzzle, curved horns, ears, neck (4c7d9fb) | ancient.minotaur.a | approved
 382 | team hood: cap + peak, face wrap, collar + point, cord (7a7a3fb) | ancient.snake_archer.a | approved
 382 | hay mound on the rear quarter, Thrower on it .2 higher (ed5a3b5, reverted) | farmer.wheelbarrow.a | rejected
+383 | crest bands each one solid strip swept along the bowl's top, wide .42 (376288d) | ancient.hoplite.a | approved
+383 | aspis rim on flat unlit trim; three big tapered wave swirls (0c3eee8) | ancient.hoplite.b | approved
+383 | gear: angular pauldron on his left, broad tan sash, frame buckle, scrolled belt (9779a54) | ancient.minotaur.a | approved
+383 | dark team cape shoulders to calves, folded collar (3fd1971) | ancient.sarissa.a | approved
+383 | lorica: 5 hoop bands, layered leather shoulder plates (a4076de, reverted) | ancient.shield_bearer.a | rejected
+383 | shorts end in a cuff at .78 of the thigh, foot fur low (d9365dd) | farmer.halfling.a | approved
+383 | Zeus bolt: one glowing zig-zag hand to chest, small burst (c0d24d5) | ancient.zeus.c | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
-tribal.spear_thrower (JAVELIN_LEAF, TUSK_BAND, SPEAR_LOIN hide (.5,.38,.26) glow .08 rope (.58,.24,.13), JAVELIN_UPRIGHT; unit done) | compacted 374 | 374 | approved | values: git show e35255b:loop/LEDGER.md + 374 gap commits
+ancientDress.ts:SARISSA_CAPE (arc, hem, shade, glow) | .56, .72, .62, .12 | 383 | approved | LORICA 5 hoops proud 1.1+step, rejected 383 (barrel), reverted
+unitFactory.ts:HALFLING_SHORTS long, cuff + HALFLING_FEET clumpTall, rise | .78, .14; .7, .45 | 383 | approved | .92; 1.1, .9
+tribal.* (7 units' rows: JAVELIN, CHIEF, CLUB, HIDE, DEER, SLAB/SKULL, mammoth body; units done) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
 renaissance.* (painter, fencer, jouster, musketeer, balloon_archer, halberd rows; units done) | compacted 378 | 377 | approved | values: git show edb1692:loop/LEDGER.md
 medieval.* (43 knob rows incl. stats, 351-365; batch done) | compacted 366 | 365 | approved | values: git show f142d6e:loop/LEDG..
-tribal.chieftain (OFF_AXE, MAIN_AXE, CHIEF_LOIN, STONE_AXE, BEAST_SKULL, PAULDRON, CHIEF_BEARD; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
-tribal.clubber (DREAD_MOP, CLUB, RAGGED_LOIN, visuals, CURLY_MOP, RAGGED_STRIPS; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
-tribal.stoner (HIDE_DRESS, HIDE_SKIRT, HIDE_EDGE, SKIRT_TONGUES; unit done) | compacted 369 | 368 | approved | values: git show 706894b:loop/LEDGER.md
-tribal.bone_mage (DEER_RACK, worn, staff, MASK_LEAF, STAFF_SKULL, DEER_MASK; unit done) | compacted 368 | 366 | approved | values: git show 96d1c20:loop/LEDGER.md
-tribal.protector (SLAB_FACETS, SKULL_FACE, SLAB_LIP, SLAB_WINDOW_BONE, SKULL_BACK, SLAB_WINDOW_FACE, SLAB_FRONT, SKULL_FACETED; unit done) | compacted 376 | 373 | approved | values: git show b0e9788:loop/LEDGER.md
-farmer.hay_baler (HAY_BALE, HAY_PLANK; unit done) | compacted 376 | 375 | approved | values: git show b0e9788:loop/LEDGER.md
-tribal.mammoth (LEG, collar, BARREL, CREST, DOME, TAIL; trunk, tusk, ear, c knobs; unit done) | compacted 381 | 381 | approved | values: git show 0d6efb0:loop/LEDGER.md + dff7370
+farmer.* done (hay_baler, scarecrow, harvester, farmer, potion_seller rows) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
 farmer.halfling (SHAGGY, no longer his; HALFLING_COAT, _SLEEVED, _BELT up .08 tall .13 buckle .3) | compacted 382 | 381 | approved | values: git show b359959:loop/LEDGER.md
 farmer.wheelbarrow (CREW_SEAT, LOW_RIM, THROWER_LEGS seat -.08, WHEELBARROW, LOG_WHEEL, HAY_BED, BUNCHED_CREW) | compacted 382 | 381 | approved | values: git show b359959:loop/LEDGER.md
-farmer.scarecrow (CROW_LAYERS, PERCH_CROW, SACK_HOOD; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 5e14f8f
-farmer.harvester (CHEST_BRAID, FELT_HAT; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 84980cf
-farmer.farmer (TALL_HOOD rings to .86, LIRIPIPE_TAIL; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 9f5019c
 
-farmer.potion_seller (POTION, POTION_GLASS, FLASK_HANG, POTION_LIQUID over 1.04 fill .5 (.2,.48,.56) glow .12; unit done) | compacted 381 | 381 | approved | git show edb1692:loop/LEDGER.md + 7af06ac
 ancient.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 378 | stats | values: git show 5715b05
-ancientDress.ts:MINO_FUR, MINO_BELT, MINO_PAULDRON, MINO_SASH | (.42,.24,.17) glow .16; belt .16 tall; pauldron .42 wide | 378 | approved | -
+ancientDress.ts:MINO_FUR, MINO_BELT, MINO_GEAR (pad, flap, rim, curls, buckle), MINO_SASH .3 | glow .16; pad 1.25x.18, flap .6; buckle .3 | 383 | approved | sash .16, dome pauldron +x
 ancient.minotaur b,c (MINOTAUR_CHARGE, BULL_CHARGE, BULL_FISTS) | compacted 382 | 379 | approved | values: git show b359959:loop/LEDGER.md
 propBuilder.ts:SCUTUM (tall, wide, curve, chin), SCUTUM_TRIM, SCUTUM_TRIM_FLAT (unlit emissive), SCUTUM_LAUREL | .5,.36,.06,.06; (.9,.45,.16); (1.5,.35,0) | 381 | approved | trim lit cloth .06 (380)
-propBuilder.ts:ASPIS (radius, notch, notchAt, rim, swirlR, swirlAt, mount x,y,z) | .36,.42,.64,.025,.2,.52; -.04,.12,.24 | 379 | approved | round disc on the hand
+propBuilder.ts:ASPIS (radius, notch, notchAt, rim, mount x,y,z) + ASPIS_WAVE (at, from, size, turns, band) | .36,.42,.64,.025; 100/220/335,.5,.36,.85,.2 | 383 | approved | swirlR .2 bar chains, lit rim
 proceduralAnimation.ts:PIKE_LEVEL (ahead, out, up, tilt, fistAt, offAhead, draw, stroke) | .7,.35,.2,.05,.3,.6,.3,.9 | 379 | approved | one-handed thrust grip
 ancientDress.ts:ZEUS_BEARD, ZEUS_LOCKS, ZEUS_HAIR | 13 strands .15 thick .75 long; 16 locks .2, 1.05; (.62,.48,.3) .16 | 379 | approved | -
 propBuilder.ts:CORINTH_HELM (wide, deep, brow, rise, arc, jaw, underEye, slit) | .62,.68,.26,.24,.76,1,.62,.1 | 381 | approved | dome + cheek boxes + crest on a stalk (244)
-propBuilder.ts:CORINTH_CREST (bands, band, wide, fill, sink, lean, shorten, segs) | 4,.19,.32,.95,.6,.06,.16,12 | 382 | approved | band .13/.16, wide .14/.28; 9 slabs (381)
+propBuilder.ts:CORINTH_CREST (bands, band, wide, fill, sink, lean, shorten, segs) | 4,.19,.42,.95,.6,.06,.16,12 swept strips | 383 | approved | wide .32; blocks (382)
 propBuilder.ts:LEGION_HELM (wide, deep, rise, neckArc, neckDrop, neckFlare, cheekWide, cheekTall, cheekTurn) | .6,.64,.12,.42,.16,1.3,.3,.46,.45 | 382 | approved | grey "helmet" dome
 propBuilder.ts:BULL_HEAD (skull, skullTall, face, tilt, snout, horn1, hornGirth, ear, neck, neckBottom) | .62,.5,1,.5,1,.9,.3,.36,.9,1.5 | 382 | approved | BULL_SHELL 1.15 etc. (243)
-farmerDress.ts:HALFLING_MOP (locks, hang, droop, spread, wild, top, side, root, flat) | 46,1.6,.35,.8,.35,.4,.95,.42,.38 | 382 | approved | hang 1.25, no spread/droop (382.4)
+farmerDress.ts:HALFLING_MOP (locks, hang, droop, spread, wild, top, side, root, flat) | 46,1.6,.55,.8,.35,.24,.57,.63,.38 | 383 | approved | .35,.4,.95,.42 (382)
 ancientDress.ts:SNAKE_HOOD (cap, capFoot, wrapTop, wrapFoot, collar, collarOut, point, shade) | 1.14,.3,-.16,-1.12,.42,1.08,.5,.82 | 382 | approved | pharaoh hat
 proceduralAnimation.ts:DORY_AIM (ahead, out, above) | 1.8,1.9,.1 | 382 | approved | DORY_CARRY fwd/side/down .8,.25,.4
 
