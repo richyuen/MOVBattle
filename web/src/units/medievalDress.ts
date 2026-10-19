@@ -819,12 +819,71 @@ function archerArms(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/** A belt round the waist (the torso's foot) in `mat`, `tall` of the chest height, and its front z; a buckle goes at the returned front. */
+function waistBelt(scene: Scene, body: ArticulatedBody, name: string, mat: Material, tall: number): { belt: Mesh; y: number; front: number } {
+  const t = body.torsoMesh;
+  const cy = t.getBoundingInfo().boundingBox.extendSize.y * t.scaling.y;
+  const y = t.position.y - cy * 0.82;
+  let half = 0;
+  const v = t.getVerticesData("position") ?? [];
+  for (let i = 0; i < v.length; i += 3) half = Math.max(half, Math.abs(v[i] * t.scaling.x));
+  const front = chestFrontAt(body, y) * 1.08;
+  const belt = MeshBuilder.CreateCylinder(name, { height: cy * tall, diameter: half * 2 * 1.04, tessellation: 8 }, scene);
+  belt.convertToFlatShadedMesh();
+  belt.scaling.z = front / (half * 1.04);
+  belt.parent = t.parent;
+  belt.position.set(0, y, t.position.z);
+  belt.material = mat;
+  return { belt, y, front };
+}
+
+/** The foot meshes under the knees. */
+function feet(body: ArticulatedBody): Mesh[] {
+  return [body.leftKnee, body.rightKnee].flatMap((k) => k.getChildMeshes(true).filter((m): m is Mesh => /_[lr]FootM$/.test(m.name)));
+}
+
+/*
+ * [S] the Bard's legs (358; medieval.bard.blue.png: cream knee socks from the knee down, brown shoes, a team-coloured bow on each ankle). Socks BARD_LEGS.sock
+ * shells .out of the shin's half-width round it from .from of it down; shoes .shoe; a bow of two flat loops .bow of the foot's width across and a knot at the
+ * front of the ankle, in team x .bowShade.
+ */
+const BARD_LEGS = { out: 1.16, from: 0.04, bow: 0.55, bowShade: 0.85, sock: new Color3(0.88, 0.84, 0.7), shoe: new Color3(0.5, 0.3, 0.17), glow: 0.12 };
+
+function bardLegs(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const B = BARD_LEGS;
+  const sock = getMaterialFactory().get("cloth", B.sock, { emissiveIntensity: B.glow });
+  const shoe = getMaterialFactory().get("cloth", B.shoe, { emissiveIntensity: B.glow });
+  const ribbon = getMaterialFactory().get("cloth", team.scale(B.bowShade), { emissiveIntensity: B.glow });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "bardSock", shin, B.from, 0.96, B.out, sock));
+  for (const f of feet(body)) {
+    f.material = shoe;
+    const fb = f.getBoundingInfo().boundingBox;
+    const ex = fb.extendSize;
+    const y = fb.maximum.y + ex.y * 0.1, z = fb.center.z + ex.z * 0.15;
+    for (const side of [-1, 1]) {
+      const loop = MeshBuilder.CreateBox("bardShoeBow", { width: ex.x * B.bow, height: ex.y * 0.7, depth: ex.z * 0.12 }, scene);
+      loop.parent = f;
+      loop.position.set(fb.center.x + side * ex.x * B.bow * 0.55, y, z);
+      loop.rotation.z = side * 0.35;
+      loop.material = ribbon;
+      out.push(loop);
+    }
+    const knot = MeshBuilder.CreateBox("bardShoeBowKnot", { width: ex.x * 0.3, height: ex.y * 0.4, depth: ex.z * 0.16 }, scene);
+    knot.parent = f;
+    knot.position.set(fb.center.x, y, z + ex.z * 0.02);
+    knot.material = ribbon;
+    out.push(knot);
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
     case "medieval.healer": return healerTonsure(scene, body);
     case "medieval.archer": return [...archerHood(scene, body, team), ...archerArms(scene, body)];
-    case "medieval.bard": return bardVest(scene, body, team);
+    case "medieval.bard": return [...bardVest(scene, body, team), ...bardLegs(scene, body, team)];
     case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream), ...kingDress(scene, body, team)];
     case "medieval.squire": return [...squireLegs(scene, body), ...squireArms(scene, body)];
     // [S] the Knight's cape (358; medieval.knight.png, card "a team colored cape"): the king's cape in team cloth (x KNIGHT_CAPE.shade) off the backs of his
