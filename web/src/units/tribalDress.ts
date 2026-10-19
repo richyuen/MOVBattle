@@ -545,7 +545,7 @@ function bowlCut(scene: Scene, body: ArticulatedBody, BOWL = BOWL_SHARES, color 
 /** The unit's own hair or headgear (LONG_HAIR, TUSK_BAND), parented to the head; null when he keeps the common mop. */
 export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] | null {
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
-  if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
+  if (HAIR_STYLES[unitId] === "beard") return chieftainBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: CHIEF_BEARD.glow }));
   const style = HAIR_STYLES[unitId];
   if (style === "dreads") return dreadMop(scene, body, LONG_HAIR_COLOR);
   // [S] the Clubber's mop (361; tribal.clubber.red.png: an unkempt curly dreadlock mop wider than the head, framing the face over the beard): the same mop in
@@ -830,6 +830,67 @@ export function dressAfro(scene: Scene, body: ArticulatedBody): Mesh[] {
   puff.material = getMaterialFactory().get("cloth", SHAGGY_COLOR, { emissiveIntensity: 0.2 });
   puff.parent = body.headMesh;
   return [puff];
+}
+
+/*
+ * [S] the Chieftain's full beard (367; tribal.chieftain.red.png, card Appearance "a chestnut beard": a full faceted chestnut beard from sideburn to sideburn,
+ * up the cheeks under the skull helm, covering the jaw and chin and hanging in a broad ragged point onto the upper chest, a moustache over the mouth; critic
+ * 360/366: the shared beard chunk read as a wisp at the chin). Replaces tribalBeard for him alone (the clubber and the wheelbarrow keep it). In the head's
+ * half extents (+z his front):
+ *   - sideburns: a tapered five-sided column each side from the temple (.burnTop of the half height up) down the cheek to the jaw, .burn head widths across;
+ *   - jaw mass: a jittered faceted ball .jaw (x, y, z) of the half extents, its middle .jawY down and .jawZ ahead, wider than the head so it reads past its
+ *     silhouette, its top under the eyes;
+ *   - bib: a jittered five-sided wedge under the chin, .bib head widths across at the top narrowing to .bibTip of that, .down head heights long, leaning
+ *     .lean forward off the chest; .locks pointed locks off its foot, the middle ones longest;
+ *   - moustache: a drooping faceted bar across the upper lip, .stache head widths across, its ends hanging into the beard.
+ * Self-lit .glow so the chestnut stays warm in the shade.
+ */
+const CHIEF_BEARD = {
+  burnTop: 0.2, burn: 0.24, jaw: [1.22, 0.55, 0.62] as const, jawY: 0.72, jawZ: 0.62, bib: 0.95, bibTip: 0.35, down: 0.62, lean: 0.25,
+  locks: 5, lockLong: 0.24, stache: 0.78, jitter: 0.14, glow: 0.18,
+};
+/** The Chieftain's full beard (spec at CHIEF_BEARD), parented to the head. */
+function chieftainBeard(scene: Scene, body: ArticulatedBody, hair: ReturnType<typeof boneMaterial>): Mesh[] {
+  const C = CHIEF_BEARD;
+  const added: Mesh[] = [];
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const halfX = e.x, halfY = e.y, halfZ = e.z;
+  const W = halfX * 2, H = halfY * 2;
+  const up = Vector3.Up();
+  const put = (m: Mesh) => { m.material = hair; m.parent = body.headMesh; added.push(m); return m; };
+  // a tapered five-sided length from `from` to `to`, its wide end at `from`
+  const column = (name: string, from: Vector3, to: Vector3, root: number, tip: number, serial: number) => {
+    const d = to.subtract(from);
+    const m = MeshBuilder.CreateCylinder(name, { height: d.length(), diameterTop: root, diameterBottom: tip, tessellation: 5 }, scene);
+    jitterVertices(m, C.jitter * 0.7, serial);
+    m.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, d.normalize().scale(-1), m.rotationQuaternion);
+    m.position = Vector3.Center(from, to);
+    return put(m);
+  };
+  for (const side of [-1, 1]) {
+    column("beardBurn", new Vector3(side * halfX * 1.02, halfY * C.burnTop, halfZ * 0.1), new Vector3(side * halfX * 0.98, -halfY * 0.6, halfZ * 0.55), W * C.burn, W * C.burn * 1.1, 40 + side);
+  }
+  const jaw = MeshBuilder.CreateIcoSphere("beard", { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(jaw, C.jitter, 47.3, halfX * C.jaw[0], halfY * C.jaw[1], halfZ * C.jaw[2]);
+  jaw.position.set(0, -halfY * C.jawY, halfZ * C.jawZ);
+  put(jaw);
+  // the bib: from under the chin down onto the chest, leaning forward
+  const bibTop = new Vector3(0, -halfY * (C.jawY + C.jaw[1] * 0.6), halfZ * C.jawZ);
+  const bibFoot = bibTop.add(new Vector3(0, -Math.cos(C.lean) * H * C.down, Math.sin(C.lean) * H * C.down));
+  const bib = column("beardBib", bibTop, bibFoot, W * C.bib, W * C.bib * C.bibTip, 49.1);
+  bib.scaling.z = 0.55;
+  for (let i = 0; i < C.locks; i++) {
+    const u = (i + 0.5) / C.locks - 0.5;
+    const long = H * C.lockLong * (1 - Math.abs(u) * 0.9) * (0.85 + 0.3 * hashShare(51.7, i, 2, 4));
+    const from = Vector3.Lerp(bibTop, bibFoot, 0.75).add(new Vector3(u * W * C.bib * 0.6, 0, 0));
+    column("beardLock", from, from.add(new Vector3(u * W * 0.3, -long, long * 0.25)), W * 0.16, W * 0.02, 53 + i);
+  }
+  // the moustache: a drooping bar over the mouth, its ends hanging into the beard
+  for (const side of [-1, 1]) {
+    column("beardStache", new Vector3(0, -halfY * 0.24, halfZ * 1.12), new Vector3(side * W * C.stache * 0.5, -halfY * 0.42, halfZ * 0.98), W * 0.14, W * 0.08, 57 + side);
+  }
+  return added;
 }
 
 function tribalBeard(scene: Scene, body: ArticulatedBody, hair: ReturnType<typeof boneMaterial>): Mesh[] {
