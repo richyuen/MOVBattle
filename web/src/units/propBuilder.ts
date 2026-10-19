@@ -342,12 +342,14 @@ const FEATHER_WIDE = 0.42;
 const FEATHER_RAKE = 0.3;
 const FEATHER_CURL = 0.22;
 /*
- * A balloon archer's black felt hat (327; units/renaissance.balloon_archer: a round black hat pulled down to the brow, the bead eyes in full view under it, a
- * low rounded crown and a short brim turned down all round, about one and a half heads across). Not a beret: the archer wore a flat disc under a lilac ball.
- *   Brim: a skirt BRIM_HAT.brim heads across at its lip and BRIM_HAT.crown at its root, BRIM_HAT.drop of the head deep; crown BRIM_HAT.crown heads across,
- *   BRIM_HAT.tall of the head over the seat; felt BRIM_HAT_FELT (near-black, the tricorn's).
+ * [S] a balloon archer's flat-topped black hat (372; renaissance.balloon_archer.red.png, .jpg: a black felt hat pulled down to the brow, the bead eyes in
+ * full view under it; a low crown with near-upright sides and a flat top, its top edge only a little rounded; a wide flat brim straight out all round,
+ * its lip turned up a little, the whole about 1.9 heads across. Not the 327 bowler: a half-sphere dome over a short brim skirt turned down).
+ *   Crown: BRIM_HAT.sides-sided, BRIM_HAT.crown heads across at its foot and .taper of that at its shoulder, from the seat to .tall of the head over it;
+ *   a bevel .bevel of the crown's height on top, narrowing to .top of the crown across. Brim: a flat plate .brim heads across, .plate of the head thick,
+ *   at the crown's foot; its lip a ring .lip of the head high, flaring out to .flare of the brim. Felt BRIM_HAT_FELT (near-black, the tricorn's).
  */
-const BRIM_HAT = { brim: 1.75, crown: 1.12, drop: 0.16, tall: 0.42 };
+const BRIM_HAT = { sides: 10, crown: 1.1, taper: 0.95, tall: 0.4, bevel: 0.16, top: 0.74, brim: 1.9, plate: 0.035, lip: 0.07, flare: 1.08 };
 const BRIM_HAT_FELT = new Color3(0.11, 0.1, 0.12);
 /*
  * A musketeer's morion (327; renaissance.musketeer.red.png, card Appearance: a black iron helmet, a round dome over the skull with a thin comb standing along
@@ -1622,19 +1624,31 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return shell;
   }
   if (type === "brim_hat") {
+    // [S] the flat-topped hat (372, spec at BRIM_HAT): near-upright crown sides from the seat, a bevelled flat top, a wide flat brim with its lip turned up
+    const B = BRIM_HAT;
     const felt = mat(scene, BRIM_HAT_FELT);
-    // The crown: a dome over the skull from the seat; the brim hangs off its foot, wider at the lip, open below so the face shows
-    const domeTall = eyeTop - HAT_EYE_CLEAR * H + BRIM_HAT.tall * H;
-    const crown = MeshBuilder.CreateSphere("brimHatCrown", { diameterX: u(BRIM_HAT.crown * W), diameterY: u(domeTall * 2), diameterZ: u(BRIM_HAT.crown * W * 1.04), segments: 7, slice: 0.5 }, scene);
-    crown.position.y = u(seat);
+    const crownTall = eyeTop - HAT_EYE_CLEAR * H + B.tall * H;
+    const sideTall = crownTall * (1 - B.bevel), bevelTall = crownTall * B.bevel;
+    const crown = MeshBuilder.CreateCylinder("brimHatCrown", { height: u(sideTall), diameterTop: u(B.crown * B.taper * W), diameterBottom: u(B.crown * W), tessellation: B.sides }, scene);
+    crown.scaling.z = 1.04;
+    crown.position.y = u(seat + sideTall * 0.5);
     crown.material = felt;
     crown.convertToFlatShadedMesh();
-    const drop = u(BRIM_HAT.drop * H);
-    const brim = MeshBuilder.CreateCylinder("brimHatBrim", { height: drop, diameterTop: u(BRIM_HAT.crown * 1.02 * W), diameterBottom: u(BRIM_HAT.brim * W), tessellation: 12, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene);
-    brim.position.y = -drop * 0.5 + u(0.04 * H);
-    brim.material = felt;
-    brim.convertToFlatShadedMesh();
-    brim.parent = crown;
+    const bevel = MeshBuilder.CreateCylinder("brimHatTop", { height: u(bevelTall), diameterTop: u(B.crown * B.top * W), diameterBottom: u(B.crown * B.taper * W), tessellation: B.sides }, scene);
+    bevel.position.y = u(sideTall * 0.5 + bevelTall * 0.5);
+    bevel.material = felt;
+    bevel.convertToFlatShadedMesh();
+    bevel.parent = crown;
+    const plate = MeshBuilder.CreateCylinder("brimHatBrim", { height: u(B.plate * H), diameter: u(B.brim * W), tessellation: 16 }, scene);
+    plate.position.y = u(-sideTall * 0.5 + B.plate * H * 0.5);
+    plate.material = felt;
+    plate.convertToFlatShadedMesh();
+    plate.parent = crown;
+    const lip = MeshBuilder.CreateCylinder("brimHatLip", { height: u(B.lip * H), diameterTop: u(B.brim * B.flare * W), diameterBottom: u(B.brim * W), tessellation: 16, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    lip.position.y = u(-sideTall * 0.5 + B.plate * H + B.lip * H * 0.5);
+    lip.material = felt;
+    lip.convertToFlatShadedMesh();
+    lip.parent = crown;
     return crown;
   }
   if (type === "beret") {
