@@ -1995,7 +1995,8 @@ const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.035, wide: 0.61, dot
  */
 const MAMMOTH_LEG = {
   sides: 9, jitter: 0.035, proud: 1.012,
-  thigh: [[0.37, 0.12], [0.36, -0.05], [0.33, -0.3], [0.3, -0.5]] as [number, number][],
+  // the top a fur dome rising into the hull (366), not a flat cut
+  thigh: [[0.14, 0.46], [0.27, 0.36], [0.35, 0.2], [0.37, 0.06], [0.36, -0.05], [0.33, -0.3], [0.3, -0.5]] as [number, number][],
   shin: [[0.3, 0.06], [0.285, -0.1], [0.28, -0.26], [0.295, -0.36], [0.31, -0.42]] as [number, number][],
 };
 /*
@@ -2005,23 +2006,35 @@ const MAMMOTH_LEG = {
  * 4-segment ellipsoid with a stuck-on hump sphere, back ridge and hem lobes, which read as flat boxy slabs (critic 360).
  *   - MAMMOTH_BARREL.rings rings of .sides sides along the body from rump to chest, .long either side of the middle; each ring an ellipse .wide by .tall
  *     shrunk by s(t) = (1 - |t|^.full)^(1/2) toward the ends (full > 2: barrel, not egg);
- *   - the top of each ring raised by .hump, peaking .humpAt of the way forward (width .humpSpread); its foot lowered by .belly x (1 - t^2) (the belly);
+ *   - the top of each ring raised by .hump, peaking .humpAt of the way forward (skewed, 366); its foot lowered by .belly x (1 - t^2) (the belly);
  *   - every vertex jittered .jitter (the coat's lumps, as the legs), flat-shaded with the rest of the rig.
+ * [S] the hump set back and the hull full over the leg roots (366; tribal.mammoth.red.png: the back highest just behind the mane and sloping away to the
+ * rump; the legs grow out of the body under the fur; critic 365: from the side the back ran straight from the mane to the rump, and the legs' flat drum tops
+ * stood clear of the hull where it narrows). The hump is skewed: it rises over .humpFront behind the mane and falls over .humpBack to the rump, peaking
+ * .humpAt; the lower half of the rings bulges .haunch wider about the leg stations (|t| = .legAt, width .legSpread), so the flank runs over the leg roots;
+ * the thighs end in a fur dome up into the hull (MAMMOTH_LEG.thigh's top), not a flat cut.
  */
-const MAMMOTH_BARREL = { rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.24, humpAt: 0.42, humpSpread: 0.4, belly: 0.14, jitter: 0.035 };
+const MAMMOTH_BARREL = {
+  rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.34, humpAt: 0.22, humpFront: 0.22, humpBack: 0.75, belly: 0.14, jitter: 0.035,
+  haunch: 0.14, legAt: 0.44, legSpread: 0.28,
+};
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
   const B = MAMMOTH_BARREL;
   const pos: number[] = [], idx: number[] = [];
   const ring = (t: number): number[] => {
     const s = Math.sqrt(Math.max(0, 1 - Math.abs(t) ** B.full));
-    const hump = B.hump * Math.exp(-(((t - B.humpAt) / B.humpSpread) ** 2)) * s;
+    const spread = t < B.humpAt ? B.humpBack : B.humpFront;
+    const hump = B.hump * Math.exp(-(((t - B.humpAt) / spread) ** 2)) * s;
+    const haunch = 1 + B.haunch * Math.exp(-(((Math.abs(t) - B.legAt) / B.legSpread) ** 2));
     const out: number[] = [];
     for (let k = 0; k < B.sides; k++) {
       const a = (k / B.sides) * Math.PI * 2;
       const c = Math.cos(a);
       const up = c >= 0 ? B.tall * s + hump : B.tall * s + B.belly * (1 - t * t) * s;
-      out.push(B.wide * s * Math.sin(a), up * c, t * B.long);
+      // below the middle the flank swells over the leg roots, easing in from the waterline
+      const wide = c >= 0 ? B.wide * s : B.wide * s * (1 + (haunch - 1) * Math.min(1, -c * 2));
+      out.push(wide * Math.sin(a), up * c, t * B.long);
     }
     return out;
   };
