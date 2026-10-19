@@ -208,14 +208,14 @@ const SKULL_SNOUT = 0.45;
  * SKULL_FACETED.heads heads across, SKULL_FACETED.tall of the cap height above its middle, every vertex pushed in or out by its own hashed share (jitter),
  * its underside cut flat SKULL_FACETED.under of its half height below the middle and seated on the brow line; sockets SKULL_FACETED.socket head widths across
  * and sunk; a snout SKULL_FACETED.snout head widths long. Pale bone self-lit a little: the smooth cap before it went grey in the capture's shade.
- * 363 [S] re-seat (critic 360: a smooth round white mushroom cap): the dome no longer towers over the crown (tall 1.6 -> .95 of the cap height, underside
+ * 363 [S] re-seat (critic 360: a smooth round white mushroom cap): the dome no longer towers over the crown (tall 1.6 -> 1.15 of the cap height, 1.45 -> 1.12 heads across, underside
  * .under of its half height, sunk .sink of a head height onto the brow), so it covers the top half of the head; sockets sunk low on its front .socketUp of its
  * half height over the underside, a brow ridge over each, and the snout a narrow four-sided ridge running down between them past the rim over the nose
  * (tilted .snoutTilt off plumb). Tan, darker and warmer than the near-white bone (.tan, self-lit .glow).
  */
 const SKULL_FACETED = {
-  heads: 1.3, tall: 0.95, under: 0.3, sink: 0.04, jitter: 0.08, socket: 0.3, socketUp: 0.42, snout: 0.5, snoutTilt: 0.5,
-  tan: new Color3(0.7, 0.58, 0.42), glow: 0.12,
+  heads: 1.12, tall: 1.15, under: 0.45, sink: 0.1, jitter: 0.08, socket: 0.3, socketUp: 0.42, snout: 0.5, snoutTilt: 0.5,
+  tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
 };
 /*
  * The Chieftain's beast skull (363 [S]; tribal.chieftain.red.png, .png: a long tan-grey predator skull lying front to back on his crown, its beak jutting forward
