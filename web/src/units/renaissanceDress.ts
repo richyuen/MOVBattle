@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3, VertexBuffer } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3, VertexBuffer, VertexData } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -182,11 +182,13 @@ export function musketeerHose(scene: Scene, body: ArticulatedBody, teamColor: Co
  * which read as tight sleeves). Shares of the chest (W, H, D) and of each upper arm's girth and length:
  *   placket bands ARCHER_FRONT.band of W across, .gap of W either side of the middle, .tall of H; buttons .buttons of .button of W round; neck edge
  *   .neck of W across, .neckTall of H; puff .puff of the girth round, .puffTall of the arm long, its middle .puffAt of it down from the shoulder;
- *   .points tan points .point of the puff's height long, .pointWide of the girth across at the root.
+ *   .points tan slashes laid flush on the puff's skin (372; critic 371: the radial cones stood out as spikes): each a pointed pane from .rootLat rad
+ *   of the puff's latitude (up by the shoulder) down to its tip at .tipLat, .paneWide rad of the puff's azimuth across at the root, .waist of that
+ *   at the middle, lifted .proud off the skin; spaced evenly round the puff.
  */
 const ARCHER_FRONT = {
   band: 0.08, gap: 0.09, tall: 0.92, buttons: 4, button: 0.07, neck: 0.62, neckTall: 0.07,
-  puff: 2.5, puffTall: 0.55, puffAt: 0.24, points: 7, point: 0.85, pointWide: 0.8,
+  puff: 2.5, puffTall: 0.55, puffAt: 0.24, points: 7, rootLat: 0.75, tipLat: -0.45, paneWide: 0.42, waist: 0.75, proud: 1.03,
   tan: new Color3(0.82, 0.6, 0.32), glow: 0.3,
 };
 
@@ -224,17 +226,23 @@ export function balloonArcherFront(scene: Scene, body: ArticulatedBody, teamColo
     const tall = long * F.puffTall;
     const puff = put(MeshBuilder.CreateSphere("archerPuff", { diameterX: girth * F.puff, diameterY: tall, diameterZ: girth * F.puff, segments: 5 }, scene), team, arm);
     puff.position.y = long * 0.5 - long * F.puffAt;
-    // the slashes: tan points standing out of the puff's waist all round, each tipped up a little, like the render's star of tan
+    // the slashes: tan panes laid on the puff's skin all round, wide by the shoulder, pointed at the bottom (372)
+    const rx = girth * F.puff * 0.5, ry = tall * 0.5;
+    const skin = (lat: number, az: number): number[] => [rx * F.proud * Math.cos(lat) * Math.sin(az), ry * F.proud * Math.sin(lat), rx * F.proud * Math.cos(lat) * Math.cos(az)];
+    const midLat = (F.rootLat + F.tipLat) * 0.5;
     for (let i = 0; i < F.points; i++) {
-      const a = ((i + 0.5) / F.points) * Math.PI * 2;
-      const pivot = new TransformNode("archerSlashPivot", scene);
-      pivot.parent = puff;
-      pivot.rotation.y = a;
-      const pt = put(MeshBuilder.CreateCylinder("archerSlash", { height: tall * F.point, diameterTop: 0, diameterBottom: girth * F.pointWide, tessellation: 4 }, scene), tan, pivot);
-      pt.scaling.z = 0.3;
-      // out along the pivot's +z on the puff's skin, its point up
-      pt.position.set(0, tall * 0.1, girth * F.puff * 0.5);
-      pt.rotation.x = 0.45;
+      const a = ((i + 0.5) / F.points) * Math.PI * 2, hw = F.paneWide * 0.5;
+      const v = [skin(F.rootLat, a - hw), skin(F.rootLat, a + hw), skin(midLat, a + hw * F.waist), skin(midLat, a - hw * F.waist), skin(F.tipLat, a)];
+      const vd = new VertexData();
+      vd.positions = v.flat();
+      // both faces: outward first, then the same panes wound the other way
+      vd.indices = [0, 1, 2, 0, 2, 3, 3, 2, 4, 2, 1, 0, 3, 2, 0, 4, 2, 3];
+      const normals: number[] = [];
+      VertexData.ComputeNormals(vd.positions, vd.indices, normals);
+      vd.normals = normals;
+      const pane = new Mesh("archerSlash", scene);
+      vd.applyToMesh(pane);
+      put(pane, tan, puff);
     }
   }
   return added;
