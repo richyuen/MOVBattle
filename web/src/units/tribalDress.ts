@@ -117,8 +117,8 @@ function headWide(body: ArticulatedBody): number {
  * A small faceted animal skull, snout down and facing +z, `wide` across: a jittered cranium ball, a tapering snout under its front, two dark sockets.
  * The first mesh is the cranium (the others are its children); its origin is the cranium's middle.
  */
-export function boneSkull(scene: Scene, name: string, wide: number, serial: number): Mesh[] {
-  const bone = boneMaterial();
+export function boneSkull(scene: Scene, name: string, wide: number, serial: number, material?: ReturnType<typeof boneMaterial>): Mesh[] {
+  const bone = material ?? boneMaterial();
   const cranium = MeshBuilder.CreateIcoSphere(name, { radius: wide * 0.5, subdivisions: 1, flat: true }, scene);
   jitterVertices(cranium, 0.1, serial, 1, 0.85, 0.9);
   cranium.material = bone;
@@ -884,6 +884,21 @@ const LOINCLOTHS = new Set(["tribal.bone_mage", "tribal.spear_thrower", "tribal.
  */
 const RAGGED_LOIN = { strips: 6, wide: 0.95, long: 0.75, short: 0.7, skull: 0.5, snout: 1.3, hang: 0.55, boneAt: 0.42, hide: new Color3(0.62, 0.43, 0.27) };
 /*
+ * [S] the clubber's hide re-cut as strips (367; tribal.clubber.red.png, .jpg: ragged mid-brown hide strips hanging from the rope to mid-thigh, each torn at
+ * its foot, skin showing between them, a large tan skull on the middle and a bone each side; critic 362/366: the box tongues overlapped into one pale beige
+ * card to the top of the thigh, the skull white). Replaces the overlapping boxes and their cone tips:
+ *   - RAGGED_STRIPS.strips flat strips at a pitch of .wide pelvis widths / strips, each .fill of the pitch wide (the rest a gap), hung off the rope;
+ *   - each strip's length between .short and .long of the knee's drop, the middle ones longest; the sides narrowing to .taper at the foot; the foot
+ *     torn into .teeth points, the notches between them .tear of the length deep (each its own share);
+ *   - leaning out only .lean of the kilt's flare, so they hang rather than stand off; each a little turned;
+ *   - mid-brown hide .hide (each its own shade), barely self-lit .glow (at .3 the light hide read beige-white);
+ *   - the skull in matte tan .skullTan, self-lit .skullGlow, not the necklace bone.
+ */
+const RAGGED_STRIPS = {
+  strips: 5, wide: 1.0, fill: 0.74, short: 0.62, long: 0.95, taper: 0.85, teeth: 2, tear: 0.22, lean: 0.5,
+  hide: new Color3(0.42, 0.26, 0.15), glow: 0.1, skullTan: new Color3(0.68, 0.52, 0.34), skullGlow: 0.18,
+};
+/*
  * [S] the Chieftain's hide loincloth and hip tusks (364; tribal.chieftain.red.png, card Appearance: "a loincloth tied with ropes along with a pair of tusks
  * tied to their hip"): on the rope belt, CHIEF_LOIN.tongues torn tan hide tongues all round the hips over the dark kilt (so none of it shows), each standing
  * .out of the kilt's radius, the front ones .long of the knee's drop and the back ones .back of it, torn to a point; no skull or bones. At each hip
@@ -950,30 +965,33 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
   }
   const ragged = unitId === "tribal.clubber";
   if (ragged) {
-    // The clubber's ragged hide (spec at RAGGED_LOIN): torn tongues of hide side by side down the front, each leaning out with the kilt's flare
+    // [S] 367 the clubber's hide re-cut (spec at RAGGED_STRIPS): separate torn strips with gaps between them, mid-brown, down to mid-thigh
+    const R = RAGGED_STRIPS;
     const knee = Math.abs(body.leftKnee.position.y);
-    const stripW = size.x * 2 * RAGGED_LOIN.wide / RAGGED_LOIN.strips;
-    for (let i = 0; i < RAGGED_LOIN.strips; i++) {
+    const pitch = size.x * 2 * R.wide / R.strips;
+    const stripW = pitch * R.fill;
+    for (let i = 0; i < R.strips; i++) {
       const share = (k: number) => hashShare(83.7, i, k, 0);
-      const long = knee * RAGGED_LOIN.long * (RAGGED_LOIN.short + (1 - RAGGED_LOIN.short) * share(1));
-      const x = (i - (RAGGED_LOIN.strips - 1) * 0.5) * stripW * 0.92;
-      const lean = Math.atan2(frontAt(flapTop - long) - frontAt(flapTop), long);
-      const tongue = MeshBuilder.CreateBox("loinFlap", { width: stripW * 1.05, height: long * 0.8, depth: ropeThick * 0.45 }, scene);
+      const mid = 1 - Math.abs(i - (R.strips - 1) * 0.5) / ((R.strips - 1) * 0.5);
+      const long = knee * (R.short + (R.long - R.short) * (0.55 * mid + 0.45 * share(1)));
+      const x = (i - (R.strips - 1) * 0.5) * pitch;
+      const lean = Math.atan2(frontAt(flapTop - long) - frontAt(flapTop), long) * R.lean;
+      // its outline: straight top on the rope, the sides narrowing a little, the hem torn into R.teeth ragged points of their own depths
+      const top: Vector3[] = [], foot: Vector3[] = [];
+      const n = R.teeth * 2;
+      for (let k = 0; k <= n; k++) {
+        const u = k / n - 0.5;
+        top.push(new Vector3(u * stripW, 0, 0));
+        const deep = k % 2 === 1 ? 1 : 1 - R.tear * (0.6 + 0.8 * share(10 + k));
+        foot.push(new Vector3(u * stripW * R.taper, -long * deep, 0));
+      }
+      const tongue = MeshBuilder.CreateRibbon("loinFlap", { pathArray: [top, foot], sideOrientation: Mesh.DOUBLESIDE }, scene);
       tongue.convertToFlatShadedMesh();
-      tongue.rotation.set(-lean, 0, (share(2) - 0.5) * 0.16);
-      tongue.position.set(x, flapTop - long * 0.4, (frontAt(flapTop) + frontAt(flapTop - long * 0.8)) * 0.5 + ropeThick * (0.45 + share(3) * 0.15));
-      tongue.material = getMaterialFactory().get("cloth", RAGGED_LOIN.hide.scale(0.88 + share(4) * 0.24), { emissiveIntensity: 0.3 });
+      tongue.rotation.set(-lean, (share(2) - 0.5) * 0.3, (share(3) - 0.5) * 0.12);
+      tongue.position.set(x, flapTop + ropeThick * 0.3, frontAt(flapTop) + ropeThick * (0.6 + share(4) * 0.4));
+      tongue.material = getMaterialFactory().get("cloth", R.hide.scale(0.85 + share(5) * 0.3), { emissiveIntensity: R.glow });
       tongue.parent = body.hip;
       added.push(tongue);
-      // ...torn to a point, off-centre
-      const tip = MeshBuilder.CreateCylinder("loinFlapPoint", { height: long * 0.2, diameterTop: 0, diameterBottom: stripW * 1.05, tessellation: 3 }, scene);
-      tip.convertToFlatShadedMesh();
-      tip.scaling.z = 0.25;
-      tip.rotation.set(Math.PI, 0, (share(5) - 0.5) * 0.5);
-      tip.position.set(0, -long * 0.5, 0);
-      tip.material = tongue.material;
-      tip.parent = tongue;
-      added.push(tip);
     }
   } else {
     // The flap: a brown hide panel down the front over the kilt, leaning out with the kilt's flare, its foot cut to a point
@@ -996,7 +1014,7 @@ export function dressTribalLoincloth(scene: Scene, body: ArticulatedBody, unitId
   }
   // The skull on the rope at the middle of the front, over the flap's head (the clubber's large, long-snouted and hung lower on the hide)
   const skullWide = size.x * 2 * (ragged ? RAGGED_LOIN.skull : LOINCLOTH.skull);
-  const skullParts = boneSkull(scene, "loinSkull", skullWide, 29.1);
+  const skullParts = boneSkull(scene, "loinSkull", skullWide, 29.1, ragged ? getMaterialFactory().get("cloth", RAGGED_STRIPS.skullTan, { emissiveIntensity: RAGGED_STRIPS.skullGlow }) : undefined);
   const skullY = beltY - skullWide * (ragged ? RAGGED_LOIN.hang : 0.25);
   skullParts[0].position.set(0, skullY, frontAt(skullY) + ropeThick + skullWide * 0.3);
   if (ragged) skullParts[0].scaling.set(1, RAGGED_LOIN.snout, 0.8);
