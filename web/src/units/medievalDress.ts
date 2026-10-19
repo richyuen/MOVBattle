@@ -56,12 +56,12 @@ function healerTonsure(scene: Scene, body: ArticulatedBody): Mesh[] {
 /*
  * [S] the hood's tight face opening and its capelet layer (359; medieval.archer.blue.png: the navy cloth comes down over the forehead to just above the eyes and
  * closes round the face in a narrow oval, brow to chin; the capelet a dark layer of its own over the shoulders with a visible lower edge): the opening now
- * ARCHER_HOOD.open rad either side at the eyes, from ARCHER_HOOD.brow (just over the eyes) to .jaw; a rolled cloth rim (.rim of the head half-width thick) runs
+ * ARCHER_HOOD.open rad either side at the eyes, from ARCHER_HOOD.brow (just over the eyes) to .jaw, the shell wound both ways (one-sided it was culled from outside and showed the self-lit head through it); a rolled cloth rim (.rim of the head half-width thick) runs
  * round the opening's edge so the oval reads as a hem; hood and capelet a dark navy (team x .shade), the capelet ringed at its foot by a hem .hemTall of its
  * height in team x .hemShade so it reads as a separate layer over the chest. Shell rings 16 so the opening's edge is smooth.
  */
 const ARCHER_HOOD = {
-  out: 1.38, peak: 0.4, chin: 1.12, open: 0.46, brow: 0.38, jaw: -0.8, tail: 1.5, rim: 0.1,
+  out: 1.38, peak: 0.4, chin: 1.12, open: 0.56, brow: 0.38, jaw: -0.8, tail: 1.5, rim: 0.1,
   cape: { wide: 1.4, drop: 0.32, neck: 0.75, hemTall: 0.22, hemShade: 0.2 }, shade: 0.3, glow: 0.02, lining: 0.96,
 };
 
@@ -97,7 +97,8 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   for (let r = 0; r < rings; r++) {
     for (let i = 0; i < around; i++) {
       const a = r * (around + 1) + i, b = a + around + 1;
-      indices.push(a, b, a + 1, a + 1, b, b + 1);
+      // both windings, so the cloth shows from outside and from within through the face opening
+      indices.push(a, b, a + 1, a + 1, b, b + 1, a, a + 1, b, a + 1, b + 1, b);
     }
   }
   const shell = new Mesh("archerHood", scene);
