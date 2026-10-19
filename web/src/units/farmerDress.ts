@@ -373,7 +373,9 @@ export function potionHead(scene: Scene, body: ArticulatedBody): Mesh[] {
  * across, flattened to .flat. Colour .color, self-lit .glow. One merged mesh, parented to the head.
  */
 const HALFLING_MOP = {
-  cap: 1.22, locks: 46, lowest: -0.45, faceY: 0.42, faceZ: 0.35, hang: 1.25, wild: 0.45, top: 0.5, side: 0.95, fringe: 0.38, root: 0.36, flat: 0.45,
+  // (382 look: with no .spread or .droop the crown locks stood straight up, a hedgehog)
+  cap: 1.22, locks: 46, lowest: -0.45, faceY: 0.42, faceZ: 0.35, hang: 1.6, droop: 0.35, spread: 0.8, wild: 0.35, top: 0.4, side: 0.95, fringe: 0.38,
+  root: 0.42, flat: 0.38,
   color: new Color3(0.3, 0.14, 0.1), glow: 0.2,
 };
 
@@ -400,8 +402,10 @@ export function halflingMop(scene: Scene, body: ArticulatedBody): Mesh[] {
     const share = hash(i, 1), sway = hash(i, 2) - 0.5, twist = hash(i, 3);
     const root = new Vector3(n.x * e.x * M.cap * 0.92, e.y * 0.35 + n.y * e.y * 0.75, n.z * e.z * M.cap * 0.92 - e.z * 0.12);
     // out along the normal, bent toward hanging the lower it sits; the fringe falls forward over the brow
-    const down = fringe ? 1.1 : M.hang * Math.max(0, 1 - y) * (0.7 + 0.6 * share);
-    const dir = n.add(new Vector3(-n.z * sway * M.wild, -down, n.x * sway * M.wild)).normalize();
+    const down = fringe ? 1.1 : (M.droop + M.hang * Math.max(0, 1 - y)) * (0.7 + 0.6 * share);
+    // every lock also kicked out level along its own bearing, so the crown's lie out and over rather than standing up
+    const level = new Vector3(Math.sin(a), 0, Math.cos(a)).scale(M.spread);
+    const dir = n.add(level).add(new Vector3(-n.z * sway * M.wild, -down, n.x * sway * M.wild)).normalize();
     const long = H * (fringe ? M.fringe : M.top + (M.side - M.top) * Math.max(0, 1 - y)) * (0.75 + 0.5 * hash(i, 4));
     const r = W * M.root * (0.75 + 0.5 * hash(i, 5));
     const lock = MeshBuilder.CreateCylinder("halflingMopLock", { height: long, diameterTop: r, diameterBottom: r * 0.1, tessellation: 4 }, scene);
