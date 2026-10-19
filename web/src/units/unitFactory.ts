@@ -15,7 +15,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
-import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, heldSnake, sarissaKit } from "./ancientDress";
+import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -111,7 +111,6 @@ const KNIGHT_FAULD = { long: 0.42, flare: 1.4, steel: new Color3(0.6, 0.6, 0.65)
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
 // Zeus wears a plain off-white tunic with a red sash from one shoulder to the other hip, not a breastplate.
 const ZEUS_TUNIC_COLOR = new Color3(0.94, 0.92, 0.86);
-const ZEUS_SASH_COLOR = new Color3(0.8, 0.2, 0.2);
 // Tribal units wear nothing but a hide loincloth: the only part of them that is not team-coloured skin.
 const LOINCLOTH_COLOR = new Color3(0.42, 0.27, 0.15);
 // ...and a dark shaggy mop of hair over the crown and the back of the head.
@@ -656,14 +655,8 @@ export class UnitFactory {
       body.bodyMaterial.baseColor = ZEUS_TUNIC_COLOR;
       body.bodyMaterial.metallic = 0;
       const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
-      const sash = MeshBuilder.CreateBox("zeusSash", {
-        width: chest.x * body.torsoMesh.scaling.x * 2.3, height: chest.y * 0.3, depth: chest.z * body.torsoMesh.scaling.z * 2.12,
-      }, this._scene);
-      sash.parent = body.torsoMesh.parent;
-      sash.position.y = body.torsoMesh.position.y;
-      sash.rotation.z = 0.75;
-      sash.material = getMaterialFactory().getCloth(ZEUS_SASH_COLOR);
-      propMeshes.push(sash);
+      // [S] 385 the white toga over his left shoulder on a bare chest, gold bolt emblem, triple gold belt, in place of the brown sash (ancientDress ZEUS_TOGA)
+      propMeshes.push(...dressZeusToga(this._scene, body));
       // The tunic hangs on below the waist as a skirt to just above the knee: the torso's own shape turned over,
       // so it is narrow at the waist and flares to the hem.
       const skirtLength = Math.abs(body.leftKnee.position.y) * 0.9;

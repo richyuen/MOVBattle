@@ -211,6 +211,93 @@ function shareOf(seed: number, i: number): number {
   return v - Math.floor(v);
 }
 
+/*
+ * [S] Zeus's toga (385; ancient.zeus.red.png: a bright white toga over his left shoulder only, draped diagonally across the chest to the right hip, the
+ * right shoulder and chest bare team skin; a gold lightning emblem on the left shoulder; a triple gold belt round the waist over the white knee skirt;
+ * critic 378: a grey box vest over both shoulders and a brown strap). The trunk turns to bare skin; on the torso joint, round the trunk's box (one box
+ * over the whole trunk, trunkBand 0-1):
+ *   - the drape: a band round the trunk .proud of its half extents (a rounded box section, exponent .round), its middle line falling from .high of the
+ *     trunk at his left side (-x) to .low at his right, .wide of the trunk tall, clamped under .top of the trunk so it lies over the shoulder;
+ *   - the emblem: a gold zig-zag of .bolt links .boltLong of the trunk long on the drape's front at his left shoulder;
+ *   - the belt: .rings gold rings .ring of the trunk tall at .beltAt of it, .ringProud out, a hair's gap between them.
+ * White and gold fixed (not team), self-lit .glow. The pelvis and skirt keep the white body cloth.
+ */
+const ZEUS_TOGA = {
+  proud: 1.07, round: 4, high: 0.9, low: 0.12, wide: 0.5, top: 1.04, segs: 28,
+  bolt: 3, boltLong: 0.3, rings: 3, ring: 0.045, beltAt: 0.05, ringProud: 1.12,
+  white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.86, 0.56, 0.24), glow: 0.14,
+};
+
+/** Zeus's white toga over the left shoulder, gold bolt emblem and triple gold belt (spec at ZEUS_TOGA), on the torso. */
+export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = ZEUS_TOGA;
+  const out: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const white = mf.get("cloth", T.white, { emissive: T.white.scale(T.glow) });
+  white.backFaceCulling = false;
+  const gold = mf.get("cloth", T.gold, { emissive: T.gold.scale(T.glow) });
+  body.torsoMesh.material = body.skinMaterial;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke$|zeusSash/.test(m.name)) m.material = body.skinMaterial;
+  const band = trunkBand(body, 0, 1);
+  const halfZ = (band.maxZ - band.minZ) / 2, midZ = (band.minZ + band.maxZ) / 2;
+  const tr = band.trunk;
+  // a rounded-box section point at angle a, x .proud of the half width
+  const rim = (a: number, p: number) => {
+    const c = Math.cos(a), s = Math.sin(a);
+    const e = 2 / T.round;
+    return { x: band.midX + band.halfX * p * Math.sign(c) * Math.abs(c) ** e, z: midZ + halfZ * p * Math.sign(s) * Math.abs(s) ** e };
+  };
+  const lineAt = (x: number) => {
+    const u = (x - band.midX) / band.halfX; // -1 his left, +1 his right
+    return tr * (T.high + (T.low - T.high) * (u + 1) / 2);
+  };
+  const upper: Vector3[] = [], lower: Vector3[] = [];
+  for (let i = 0; i <= T.segs; i++) {
+    const a = (Math.PI * 2 * i) / T.segs;
+    const p = rim(a, T.proud);
+    const mid = lineAt(p.x);
+    upper.push(new Vector3(p.x, Math.min(mid + tr * T.wide / 2, tr * T.top), p.z));
+    lower.push(new Vector3(p.x, Math.min(mid - tr * T.wide / 2, tr * T.top - tr * 0.08), p.z));
+  }
+  const drape = MeshBuilder.CreateRibbon("zeusToga", { pathArray: [upper, lower], sideOrientation: Mesh.DOUBLESIDE }, scene);
+  drape.convertToFlatShadedMesh();
+  drape.material = white;
+  drape.parent = body.torso;
+  out.push(drape);
+  // the shoulder cap: the drape's top closed over his left shoulder
+  const cap = MeshBuilder.CreateBox("zeusTogaShoulder", { width: band.halfX * 0.9, height: tr * 0.06, depth: halfZ * 2 * T.proud }, scene);
+  cap.position.set(band.midX - band.halfX * 0.55, tr * T.top, midZ);
+  cap.material = white;
+  cap.parent = body.torso;
+  out.push(cap);
+  // the gold bolt emblem on the front at his left shoulder
+  const frontZ = midZ + halfZ * T.proud + 0.004;
+  const step = tr * T.boltLong / T.bolt;
+  let at = new Vector3(band.midX - band.halfX * 0.5, tr * 0.92, frontZ);
+  for (let k = 0; k < T.bolt; k++) {
+    const to = at.add(new Vector3((k % 2 ? 1 : -1) * step * 0.55, -step, 0));
+    const d = to.subtract(at);
+    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: step * 0.28, height: d.length() * 1.15, depth: 0.012 }, scene);
+    link.position.set((at.x + to.x) / 2, (at.y + to.y) / 2, frontZ);
+    link.rotation.z = -Math.atan2(d.x, -d.y);
+    link.material = gold;
+    link.parent = body.torso;
+    out.push(link);
+    at = to;
+  }
+  // the triple gold belt
+  for (let k = 0; k < T.rings; k++) {
+    const ring = MeshBuilder.CreateCylinder("zeusBelt", { height: tr * T.ring, diameter: 2, tessellation: 10 }, scene);
+    ring.scaling.set(band.halfX * T.ringProud, 1, halfZ * T.ringProud);
+    ring.position.set(band.midX, tr * (T.beltAt + (k - 1) * T.ring * 1.25), midZ);
+    ring.convertToFlatShadedMesh();
+    ring.material = gold;
+    ring.parent = body.torso;
+    out.push(ring);
+  }
+  return out;
+}
+
 /** Zeus's dirty-blond bolt-hair beard, locks and temple leaves (spec at ZEUS_BEARD), on the head. */
 export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): Mesh[] {
   const out: Mesh[] = [];
