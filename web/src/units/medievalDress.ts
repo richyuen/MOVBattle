@@ -139,7 +139,7 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
  * belt HEALER_TRIM.belt of the chest's half-height thick, its end HEALER_TRIM.knot of the robe's length long.
  */
 const HEALER_TRIM = {
-  band: 0.17, apart: 0.42, proud: 0.05, hem: 0.08, cuff: 0.75, collar: 0.72, belt: 0.13, knot: 0.42,
+  band: 0.17, apart: 0.42, proud: 0.05, hem: 0.08, cuff: 0.75, collar: 0.95, belt: 0.13, knot: 0.42,
   gold: new Color3(0.93, 0.66, 0.24), rope: new Color3(0.42, 0.4, 0.38), glow: 0.12,
 };
 
@@ -204,7 +204,7 @@ export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh):
     const pts = [
       new Vector3(side * cx * 0.16, top, zc(top)),
       new Vector3(side * cx * T.collar, top - cy * 0.04, zc(top - cy * 0.04)),
-      new Vector3(side * cx * T.collar * 0.72, top - cy * 0.34, zc(top - cy * 0.34)),
+      new Vector3(side * cx * T.collar * 0.85, top - cy * 0.42, zc(top - cy * 0.42)),
       new Vector3(side * cx * 0.07, top - cy * 0.52, zc(top - cy * 0.52)),
     ];
     const lapel = panel(scene, "healerCollar", pts);
@@ -212,7 +212,7 @@ export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh):
     lapel.material = gold;
     out.push(lapel);
     const zf = zc(top);
-    const strip = MeshBuilder.CreateBox("healerCollarShoulder", { width: cx * (T.collar - 0.16), height: cy * 0.06, depth: zf * 1.9 }, scene);
+    const strip = MeshBuilder.CreateBox("healerCollarShoulder", { width: cx * (T.collar - 0.16), height: cy * 0.1, depth: zf * 1.9 }, scene);
     strip.parent = t.parent;
     strip.position.set(side * cx * (T.collar + 0.16) / 2, top + cy * 0.01, -zf * 0.05);
     strip.rotation.z = -side * 0.22;
