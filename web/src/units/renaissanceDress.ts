@@ -53,7 +53,7 @@ export function heldBalloonArrow(scene: Scene, body: ArticulatedBody, teamColor:
  * its height more. A darker fold (.under) just under each tier's foot. Matte warm tan (.color, self-lit .glow).
  */
 const PAINTER_JABOT = {
-  tiers: 3, gap: 0.04, step: 0.25, tall: 0.36, across: 1.0, grow: 0.3, lip: 0.72, arc: 0.56, bulge: 0.55, tuck: 0.12, points: 7, ragged: 0.3, vee: 0.45,
+  tiers: 3, gap: 0.04, step: 0.16, tall: 0.3, across: 1.2, grow: 0.06, lip: 0.72, arc: 0.56, bulge: 0.75, tuck: 0.12, points: 7, ragged: 0.3, vee: 0.45,
   under: new Color3(0.46, 0.3, 0.16), underTall: 0.25, color: new Color3(0.8, 0.58, 0.34), glow: 0.16,
 };
 
