@@ -1,5 +1,5 @@
 import {
-  Scene, TransformNode, Mesh, MeshBuilder, Color3, Quaternion, Vector3, Ray, Matrix,
+  Scene, TransformNode, Mesh, MeshBuilder, Color3, Quaternion, Vector3, Ray, Matrix, VertexData,
   PBRMetallicRoughnessMaterial, type Material,
 } from "@babylonjs/core";
 import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
@@ -1998,6 +1998,59 @@ const MAMMOTH_LEG = {
   thigh: [[0.37, 0.12], [0.36, -0.05], [0.33, -0.3], [0.3, -0.5]] as [number, number][],
   shin: [[0.3, 0.06], [0.285, -0.1], [0.28, -0.26], [0.295, -0.36], [0.31, -0.42]] as [number, number][],
 };
+/*
+ * [S] the mammoth's barrel body (365; tribal.mammoth.red.png, .jpg, card "a big round belly"). Spec read off the renders: one rounded faceted barrel of
+ * small facets, fuller than an egg (flat-ish flanks, round ends), a touch taller than wide, its underside sagging into a round belly between the legs, the
+ * back line rising to a shoulder hump just behind the head and falling away to a round rump; the dark mane sits on top in front of the hump. It replaces the
+ * 4-segment ellipsoid with a stuck-on hump sphere, back ridge and hem lobes, which read as flat boxy slabs (critic 360).
+ *   - MAMMOTH_BARREL.rings rings of .sides sides along the body from rump to chest, .long either side of the middle; each ring an ellipse .wide by .tall
+ *     shrunk by s(t) = (1 - |t|^.full)^(1/2) toward the ends (full > 2: barrel, not egg);
+ *   - the top of each ring raised by .hump, peaking .humpAt of the way forward (width .humpSpread); its foot lowered by .belly x (1 - t^2) (the belly);
+ *   - every vertex jittered .jitter (the coat's lumps, as the legs), flat-shaded with the rest of the rig.
+ */
+const MAMMOTH_BARREL = { rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.24, humpAt: 0.42, humpSpread: 0.4, belly: 0.14, jitter: 0.035 };
+/** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
+function mammothBarrel(scene: Scene): Mesh {
+  const B = MAMMOTH_BARREL;
+  const pos: number[] = [], idx: number[] = [];
+  const ring = (t: number): number[] => {
+    const s = Math.sqrt(Math.max(0, 1 - Math.abs(t) ** B.full));
+    const hump = B.hump * Math.exp(-(((t - B.humpAt) / B.humpSpread) ** 2)) * s;
+    const out: number[] = [];
+    for (let k = 0; k < B.sides; k++) {
+      const a = (k / B.sides) * Math.PI * 2;
+      const c = Math.cos(a);
+      const up = c >= 0 ? B.tall * s + hump : B.tall * s + B.belly * (1 - t * t) * s;
+      out.push(B.wide * s * Math.sin(a), up * c, t * B.long);
+    }
+    return out;
+  };
+  // the rump and chest points, the rings between them at cosine spacing (closer at the round ends)
+  pos.push(0, 0, -B.long);
+  for (let r = 1; r < B.rings - 1; r++) pos.push(...ring(-Math.cos((r / (B.rings - 1)) * Math.PI)));
+  pos.push(0, 0, B.long);
+  const last = 1 + (B.rings - 2) * B.sides;
+  for (let k = 0; k < B.sides; k++) {
+    const k1 = (k + 1) % B.sides;
+    idx.push(0, 1 + k, 1 + k1);
+    for (let r = 0; r < B.rings - 3; r++) {
+      const a = 1 + r * B.sides, b = a + B.sides;
+      idx.push(a + k, b + k, b + k1, a + k, b + k1, a + k1);
+    }
+    const a = 1 + (B.rings - 3) * B.sides;
+    idx.push(a + k1, a + k, last);
+  }
+  const m = new Mesh("torso", scene);
+  const data = new VertexData();
+  data.positions = pos;
+  data.indices = idx;
+  const normals: number[] = [];
+  VertexData.ComputeNormals(pos, idx, normals);
+  data.normals = normals;
+  data.applyToMesh(m, true);
+  jitterVertices(m, B.jitter, 41.7);
+  return m;
+}
 /** Radius of a lathe profile at height y (linear between its points). */
 function profileAt(profile: [number, number][], y: number): number {
   for (let i = 0; i < profile.length - 1; i++) {
@@ -2097,12 +2150,11 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const BODY_RADII = new Vector3(0.85, 0.68, 1.16);
   const BODY_LIFT = 0.12;
   const BODY_BACK = -0.05;
-  const torsoMesh = MeshBuilder.CreateSphere("torso", { diameter: 2, segments: 4 }, scene);
+  // [S] (365) the mammoth is one barrel hull (MAMMOTH_BARREL) with its hump and belly in it; the elephant keeps the ellipsoid
+  const torsoMesh = mammoth ? mammothBarrel(scene) : MeshBuilder.CreateSphere("torso", { diameter: 2, segments: 4 }, scene);
   torsoMesh.position.set(0, BODY_LIFT, BODY_BACK);
-  torsoMesh.scaling.copyFrom(BODY_RADII);
+  if (!mammoth) torsoMesh.scaling.copyFrom(BODY_RADII);
   torsoMesh.parent = torso; torsoMesh.material = fur; allMeshes.push(torsoMesh);
-  // The mammoth's coat is lumpy fur, not a smooth balloon: every vertex pushed in or out by its own hashed share (the same mesh every spawn)
-  if (mammoth) jitterVertices(torsoMesh, MAMMOTH_FUR.jitter, 41.7);
 
   // A point on the body's surface at height y and length z, on one side, and the way out of the hide there
   const onHide = (side: number, y: number, z: number): { at: Vector3; out: Vector3 } => {
@@ -2116,7 +2168,8 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
 
   // No war paint on the flank (the blue render: the coat is brown from shoulder to rump; the team colour is on the brow, the tusk tips and the legs)
 
-  // Shaggy shoulder hump, standing well above the back line
+  // Shaggy shoulder hump, standing well above the back line (not the mammoth: his barrel carries it)
+  if (!mammoth) {
   const hump = MeshBuilder.CreateSphere("hump", { diameter: 1.6, segments: 4 }, scene);
   hump.position.set(0, 0.6, 0.4);
   hump.scaling.set(0.82, 0.82, 0.8);
@@ -2140,6 +2193,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
       lobe.position = at.subtract(out.scale(0.08));
       lobe.parent = torso; lobe.material = shaggyFur; allMeshes.push(lobe);
     }
+  }
   }
 
   // ── Head (parented to neck joint) ──
