@@ -7,6 +7,7 @@ import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfile
 import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody, crewProportions, type ArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
+import { dressShieldBearer } from "./ancientDress";
 import { attachProps, buildPerchedCrow } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type WheelbarrowCrew } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
@@ -562,6 +563,10 @@ export class UnitFactory {
       propMeshes.push(...halberdHose(this._scene, body, teamColor));
       // ...and puffed, slashed team breeches from the hip to the knee (375, renaissanceDress halberdBreeches)
       propMeshes.push(...halberdBreeches(this._scene, body, teamColor));
+    }
+    // [S] the shield bearer's lorica segmentata: hoop plates round the trunk, layered leather shoulder plates (383; ancientDress dressShieldBearer)
+    if (definition.id === "ancient.shield_bearer" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressShieldBearer(this._scene, body, teamColor));
     }
     if (definition.id === "renaissance.fencer" && !shouldUseVehicleBody) {
       propMeshes.push(...dressFencer(this._scene, body, teamColor));

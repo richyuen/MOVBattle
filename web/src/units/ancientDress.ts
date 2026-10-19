@@ -164,6 +164,60 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
 }
 
 /*
+ * [S] the shield bearer's lorica segmentata (383; ancient.shield_bearer.jpg, card Appearance "a lorica segmentata (Roman segmented armor)": dark
+ * red-brown hoop plates round the trunk from the waist to under the arms, each a step proud of the one below, curved brown shoulder plates layered
+ * over each shoulder, over the team tunic; critic 378: a plain team box tunic). On the torso joint, in the trunk's box at each height:
+ *   - LORICA.hoops hoops from .low to .high of the trunk, each an .sides-sided band .proud of the trunk's half extents (every other one .step more), its
+ *     height .overlap of its share so the bands lap, in team lerped .brown toward LORICA.dark;
+ *   - on each shoulder .plates curved strips of leather, each a half shell .plateWide of the trunk's half width across the shoulder, .plateDeep of the
+ *     trunk's depth front to back, fanning .fan rad more outward and stepping down .drop of the trunk each, from .shoulderAt of the trunk.
+ */
+const LORICA = {
+  hoops: 5, low: 0.28, high: 0.86, sides: 8, proud: 1.1, step: 0.04, overlap: 1.12, brown: 0.8, dark: new Color3(0.3, 0.17, 0.12),
+  plates: 3, plateWide: 0.4, plateDeep: 1.2, fan: 0.32, drop: 0.07, shoulderAt: 0.98, leather: new Color3(0.38, 0.23, 0.14),
+};
+
+/** The shield bearer's segmented hoop armour and layered shoulder plates (spec at LORICA), on the torso. */
+export function dressShieldBearer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const L = LORICA;
+  const out: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const plateTone = Color3.Lerp(teamColor, L.dark, L.brown);
+  const plate = mf.get("cloth", plateTone, { emissive: plateTone.scale(0.12) });
+  const leather = mf.get("cloth", L.leather, { emissive: L.leather.scale(0.12) });
+  leather.backFaceCulling = false;
+  const put = (m: Mesh, material = plate) => { m.material = material; m.convertToFlatShadedMesh(); m.parent = body.torso; out.push(m); return m; };
+  const share = (L.high - L.low) / L.hoops;
+  for (let k = 0; k < L.hoops; k++) {
+    const lo = L.low + share * k, hi = lo + share;
+    const band = trunkBand(body, lo, hi);
+    const tall = band.trunk * share * L.overlap;
+    const grow = L.proud + (k % 2) * L.step;
+    const hoop = put(MeshBuilder.CreateCylinder("loricaHoop", { height: tall, diameterTop: 2, diameterBottom: 2 * (1 + L.step), tessellation: L.sides }, scene));
+    hoop.scaling.set(band.halfX * grow, 1, ((band.maxZ - band.minZ) / 2) * grow);
+    hoop.position.set(band.midX, band.trunk * (lo + hi) / 2, (band.minZ + band.maxZ) / 2);
+  }
+  const top = trunkBand(body, 0.8, 1.0);
+  const deep = (top.maxZ - top.minZ) * L.plateDeep;
+  for (const side of [-1, 1]) {
+    const sx = side > 0 ? top.maxX : top.minX;
+    for (let k = 0; k < L.plates; k++) {
+      const r = top.halfX * L.plateWide * (1 + 0.12 * k);
+      const piece = MeshBuilder.CreateCylinder("loricaShoulder", { height: deep, diameter: 2 * r, tessellation: 10, arc: 0.5, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene);
+      // the shell's axis front to back, its arch (the arc's +z half) turned up over the shoulder, baked before it is parented
+      piece.rotation.x = -Math.PI / 2;
+      piece.bakeCurrentTransformIntoVertices();
+      const shell = put(piece, leather);
+      // fanning outward plate by plate
+      shell.rotation.z = -side * L.fan * k;
+      shell.scaling.y = 0.6;
+      shell.position.set(sx - side * r * (0.55 - 0.35 * k), top.trunk * (L.shoulderAt - L.drop * k) - r * 0.3, (top.minZ + top.maxZ) / 2);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] Zeus's beard and locks (379; ancient.zeus.red.png, card Appearance "luscious locks of dirty blond hair and grand beard with hairs that resemble
  * lightning bolts ... an olive wreath around the sides of their head"; critic 378: no beard, a short brown cap, a flat green band). In the head's half
  * extents (x across, y up, z his front), all dirty blond ZEUS_HAIR self-lit .glow:
