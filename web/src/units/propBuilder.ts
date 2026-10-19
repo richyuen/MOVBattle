@@ -218,6 +218,62 @@ const SKULL_FACETED = {
   tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
 };
 /*
+ * [S] the skull's face plate (367; tribal.protector.red.png, .blue.png: through the slab's window the face is all tan skull, the bead eyes looking out of two
+ * sockets, a snout ridge running down between them to a blunt muzzle over the mouth; critic 366: the window framed pink skin and a bead eye under the dome).
+ * Hung under the dome in the hat's frame (crown at 0, the eyes' middle .eyeY head heights down, the face's flat .face head widths ahead):
+ *   - rims: a faceted tan ring round each eye (.rim head widths across, .rimThick thick, .eyeX head widths out), proud of the face: the sockets;
+ *   - bridge: a four-sided bony ridge between the rims from the brow down to the muzzle (.bridge head widths across);
+ *   - muzzle: a faceted tan block over the nose and upper lip, .muzzle head widths across, its foot near .muzzleY head heights down;
+ *   - cheeks: a tan plate under each rim, out to the temple, down to the muzzle's foot (.cheek head widths across, turned .cheekTurn round the face);
+ *   the bridge starts .browY head heights down, under the dome's rim.
+ * It replaces the dark hexagon sockets on the dome's front. .on gates it.
+ */
+const SKULL_FACE = {
+  on: true, eyeY: 0.44, face: 0.47, eyeX: 0.16, rim: 0.44, rimThick: 0.09, bridge: 0.12, muzzle: 0.34, muzzleY: 0.8, cheek: 0.26, cheekTurn: 0.35, browY: 0.25,
+};
+/** The protector's skull face plate (spec at SKULL_FACE), parented to the skull dome sitting at `domeY` (hat units before u) from the crown. */
+function skullFacePlate(scene: Scene, skull: Mesh, bone: PBRMetallicRoughnessMaterial, W: number, H: number, u: (v: number) => number, domeY: number): void {
+  const F = SKULL_FACE;
+  const at = (x: number, y: number, z: number) => new Vector3(u(x), u(y - domeY), u(z));
+  const eyeY = -F.eyeY * H, face = F.face * W;
+  const part = (m: Mesh, p: Vector3, jitterSeed = 0) => {
+    if (jitterSeed) {
+      const v = m.getVerticesData(VertexBuffer.PositionKind);
+      if (v) {
+        for (let i = 0; i < v.length; i += 3) {
+          const k = 0.9 + 0.2 * roundBoardSeed(jitterSeed, Math.round(v[i] * 997 + v[i + 1] * 613 + v[i + 2] * 389));
+          v[i] *= k; v[i + 1] *= k; v[i + 2] *= k;
+        }
+        m.setVerticesData(VertexBuffer.PositionKind, v);
+        m.refreshBoundingInfo();
+      }
+    }
+    m.convertToFlatShadedMesh();
+    m.position.copyFrom(p);
+    m.material = bone;
+    m.parent = skull;
+  };
+  const cheekTall = (F.muzzleY - F.eyeY - F.rim * 0.3) * H;
+  for (const side of [-1, 1]) {
+    const rim = MeshBuilder.CreateTorus("bskullRim", { diameter: u(F.rim * W), thickness: u(F.rimThick * W), tessellation: 7 }, scene);
+    rim.rotation.set(Math.PI / 2, 0, 0);
+    rim.bakeCurrentTransformIntoVertices();
+    rim.rotation.y = side * 0.2;
+    part(rim, at(side * F.eyeX * W, eyeY, face + 0.02 * W));
+    const cheek = MeshBuilder.CreateBox("bskullFaceCheek", { width: u(F.cheek * W), height: u(cheekTall), depth: u(0.08 * W) }, scene);
+    cheek.rotation.y = side * F.cheekTurn;
+    part(cheek, at(side * (F.eyeX + 0.08) * W, eyeY - F.rim * 0.3 * H - cheekTall * 0.5, face - 0.04 * W), 31.7 + side);
+  }
+  const bridgeLong = (F.muzzleY - F.browY) * H * 0.8;
+  const bridge = MeshBuilder.CreateCylinder("bskullBridge", { height: u(bridgeLong), diameterTop: u(F.bridge * W), diameterBottom: u(F.bridge * 1.6 * W), tessellation: 4 }, scene);
+  bridge.rotation.y = Math.PI / 4;
+  bridge.bakeCurrentTransformIntoVertices();
+  part(bridge, at(0, -F.browY * H - bridgeLong * 0.5, face + 0.03 * W));
+  const muzzle = MeshBuilder.CreateIcoSphere("bskullMuzzle", { radius: 1, subdivisions: 1, flat: true }, scene);
+  muzzle.scaling.set(u(F.muzzle * W * 0.5), u(0.11 * H), u(0.13 * W));
+  part(muzzle, at(0, -(F.muzzleY - 0.08) * H, face + 0.02 * W), 35.9);
+}
+/*
  * The Chieftain's beast skull (363 [S]; tribal.chieftain.red.png, .png: a long tan-grey predator skull lying front to back on his crown, its beak jutting forward
  * and down over his brow with the lower jaw hanging open under it, a googly eye in each socket on its front corners; his own face and eyes show under it):
  * a faceted brain case .wide head widths across, .long head widths front to back, .tall head heights high (flat underside .under of its half height),
@@ -1155,13 +1211,16 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     const socketY = -under + S.socketUp * Ry;
     const frontAt = (y: number) => Rz * Math.sqrt(Math.max(0.05, 1 - (y / Ry) ** 2)) * 0.96;
     for (const side of [-1, 1]) {
-      // A socket: a dark hexagon sunk into the low front of the dome over each eye, turned round to its own side
-      const hole = MeshBuilder.CreateCylinder("bskullEye", { height: u(0.12 * W), diameter: u(S.socket * W), tessellation: 6 }, scene);
-      hole.rotation.set(Math.PI / 2, side * 0.38, 0);
-      hole.position.set(side * u(0.27 * W), u(socketY), u(frontAt(socketY)));
-      hole.scaling.z = 0.8;
-      hole.material = socket;
-      hole.parent = skull;
+      // A socket: a dark hexagon sunk into the low front of the dome over each eye, turned round to its own side (367: the face plate's rims are the
+      // sockets now, round his own eyes, so the dome no longer carries a second pair)
+      if (!SKULL_FACE.on) {
+        const hole = MeshBuilder.CreateCylinder("bskullEye", { height: u(0.12 * W), diameter: u(S.socket * W), tessellation: 6 }, scene);
+        hole.rotation.set(Math.PI / 2, side * 0.38, 0);
+        hole.position.set(side * u(0.27 * W), u(socketY), u(frontAt(socketY)));
+        hole.scaling.z = 0.8;
+        hole.material = socket;
+        hole.parent = skull;
+      }
       // the brow ridge over it: a bony bar standing proud of the dome, sloping down to the temple
       const brow = MeshBuilder.CreateBox("bskullBrow", { width: u(S.socket * 1.25 * W), height: u(0.09 * H), depth: u(0.14 * W) }, scene);
       brow.position.set(side * u(0.28 * W), u(socketY + S.socket * 0.55 * W), u(frontAt(socketY) + 0.02 * W));
@@ -1183,6 +1242,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     snout.scaling.z = 0.7;
     snout.material = bone;
     snout.parent = skull;
+    if (SKULL_FACE.on) skullFacePlate(scene, skull, bone, W, H, u, seat + under - S.sink * H);
     return skull;
   }
   if (type === "antler_skull") {
