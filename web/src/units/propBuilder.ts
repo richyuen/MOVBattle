@@ -4979,9 +4979,19 @@ const WING_FEATHER_FAN = [0.35, 1.25];
  * T-posed hands, the leading edge near the root (the wrist) in the team colour, a ragged fan of long black primaries below). The valkyrie's build in
  * black: the same bar, covert and feather fan, in CROW_WINGS' colours and sizes; the bar's first .wrist of its length is the team colour.
  */
-type FeatherWingStyle = { span: number; raise: number; sweep: number; feathers: number; feather: Color3; covert: Color3; bar: Color3; glow: number; wrist: number };
+/*
+ * [S] layered crow feathers and a team leading edge (375; farmer.scarecrow.red.png, card "each of their wings has a team-colored wrist": each wing is
+ * rows of long overlapping black feathers, flat blades with blunt tips, the rows stepped so the trailing edge is a layered fringe; along the leading
+ * edge from over the shoulder out to near half the span a broad team band. Not the 339 single fan of pointed four-sided cones, which read as saw-toothed
+ * black blades, nor its short team box at the root, hidden behind the shoulders from the front). With .rows set: .rows rows of .feathers each, row r
+ * CROW_LAYERS.shrink^r as long, set off half a step along the bar and CROW_LAYERS.lift of the torso in front of the row behind; each feather .wide of
+ * the torso across, its tip .tip of that; the band a flat wedge from .bandFrom to .wrist of the span, .band of the torso tall at its root end narrowing to .bandTip of that, standing
+ * .bandProud in front, team x .bandShade.
+ */
+type FeatherWingStyle = { span: number; raise: number; sweep: number; feathers: number; feather: Color3; covert: Color3; bar: Color3; glow: number; wrist: number; rows?: number };
+const CROW_LAYERS = { shrink: 0.72, lift: 0.035, wide: 0.42, tip: 0.3, bandFrom: 0.16, band: 0.3, bandTip: 0.45, bandProud: 0.07, bandUp: 0.0, bandShade: 0.8 };
 const VALKYRIE_WINGS: FeatherWingStyle = { span: WING_SPAN, raise: WING_RAISE, sweep: WING_SWEEP, feathers: WING_FEATHERS, feather: new Color3(0.8, 0.9, 0.98), covert: new Color3(0.9, 0.95, 1.0), bar: new Color3(0.42, 0.29, 0.19), glow: 0.04, wrist: 0 };
-const CROW_WINGS: FeatherWingStyle = { span: 2.7, raise: 0.55, sweep: 0.22, feathers: 9, feather: new Color3(0.09, 0.09, 0.13), covert: new Color3(0.13, 0.13, 0.18), bar: new Color3(0.1, 0.1, 0.14), glow: 0.06, wrist: 0.32 };
+const CROW_WINGS: FeatherWingStyle = { span: 2.7, raise: 0.55, sweep: 0.22, feathers: 9, feather: new Color3(0.09, 0.09, 0.13), covert: new Color3(0.13, 0.13, 0.18), bar: new Color3(0.1, 0.1, 0.14), glow: 0.06, wrist: 0.48, rows: 3 };
 function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWingStyle = VALKYRIE_WINGS, teamColor?: Color3): void {
   const torsoH = body.torsoMesh.position.y * 2;
   const L = torsoH * style.span;
@@ -4997,7 +5007,21 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWi
     bar.parent = root;
     bar.position.x = side * L * 0.5;
     bar.material = barMat;
-    if (style.wrist > 0 && teamColor) {
+    if (style.rows && teamColor) {
+      // the team band along the leading edge, from over the shoulder out (CROW_LAYERS)
+      const C = CROW_LAYERS;
+      const long = L * (style.wrist - C.bandFrom);
+      // a flat wedge, broad at the root end, narrowing outward along the edge
+      const band = MeshBuilder.CreateCylinder("wingWrist", { height: long, diameterTop: torsoH * C.band * C.bandTip * Math.SQRT2, diameterBottom: torsoH * C.band * Math.SQRT2, tessellation: 4 }, scene);
+      band.rotation.y = Math.PI / 4;
+      band.bakeCurrentTransformIntoVertices();
+      band.rotation.z = -side * Math.PI / 2;
+      band.bakeCurrentTransformIntoVertices();
+      band.scaling.z = 0.3;
+      band.parent = root;
+      band.position.set(side * L * (C.bandFrom + (style.wrist - C.bandFrom) * 0.5), torsoH * C.bandUp, torsoH * C.bandProud);
+      band.material = mat(scene, teamColor.scale(C.bandShade), 0.08);
+    } else if (style.wrist > 0 && teamColor) {
       // the team-coloured wrist over the bar's root end, a little proud of it
       const wrist = MeshBuilder.CreateBox("wingWrist", { width: L * style.wrist, height: torsoH * 0.15, depth: torsoH * 0.1 }, scene);
       wrist.parent = root;
@@ -5011,6 +5035,28 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWi
     covert.parent = root;
     covert.position.set(side * L * 0.5, -torsoH * 0.3, -torsoH * 0.01);
     covert.material = covertMat;
+    if (style.rows) {
+      // rows of flat blunt-tipped feathers, stepped and overlapping, the shorter rows in front (CROW_LAYERS)
+      const C = CROW_LAYERS;
+      for (let r = 0; r < style.rows; r++) {
+        const k = Math.pow(C.shrink, r);
+        for (let i = 0; i < style.feathers; i++) {
+          const t = Math.min(1, (i + 1 - (r % 2) * 0.5) / style.feathers);
+          const len = L * (WING_FEATHER_LEN[0] + (WING_FEATHER_LEN[1] - WING_FEATHER_LEN[0]) * t) * k;
+          const a = WING_FEATHER_FAN[0] + (WING_FEATHER_FAN[1] - WING_FEATHER_FAN[0]) * t;
+          const feather = MeshBuilder.CreateCylinder("wingFeather", { height: len, diameterTop: torsoH * C.wide * C.tip * Math.SQRT2, diameterBottom: torsoH * C.wide * Math.SQRT2, tessellation: 4 }, scene);
+          feather.rotation.y = Math.PI / 4;
+          feather.bakeCurrentTransformIntoVertices();
+          feather.scaling.z = 0.08;
+          feather.parent = root;
+          feather.rotation.z = Math.PI + side * a;
+          const ax = side * L * (0.08 + 0.9 * t);
+          feather.position.set(ax + side * Math.sin(a) * len * 0.5, -torsoH * 0.06 - Math.cos(a) * len * 0.5, torsoH * C.lift * r);
+          feather.material = (i + r) % 2 === 0 ? featherMat : covertMat;
+        }
+      }
+      continue;
+    }
     for (let i = 0; i < style.feathers; i++) {
       const t = (i + 1) / style.feathers;
       const len = L * (WING_FEATHER_LEN[0] + (WING_FEATHER_LEN[1] - WING_FEATHER_LEN[0]) * t);
