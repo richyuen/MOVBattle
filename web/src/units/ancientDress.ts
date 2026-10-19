@@ -40,7 +40,7 @@ const MINO_GEAR = { padWide: 1.25, padThick: 0.18, padDeep: 1.15, padTilt: 0.32,
  * outer side, a darker rim along its foot, a lighter team scroll on its face; critic 383: a tilted plank sticking up off the shoulder with a dark block
  * standing off behind it). Spec at the build (dressMinotaur): radius, deep, low, over, thick, inX, atY, rim, scroll, scrollAt.
  */
-const MINO_SHELL = { radius: 0.5, deep: 1.1, low: 0.55, over: 0.25, thick: 0.1, inX: 0.82, atY: 0.86, rim: 0.16, scroll: 0.2, scrollAt: 0.45 };
+const MINO_SHELL = { radius: 0.78, deep: 1.35, low: 0.55, over: 0.25, thick: 0.1, inX: 0.82, atY: 0.86, rim: 0.16, scroll: 0.2, scrollAt: 0.45 };
 const MINO_LEATHER = new Color3(0.66, 0.46, 0.3);
 const MINO_IRON = new Color3(0.42, 0.44, 0.47);
 
