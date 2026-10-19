@@ -26,7 +26,7 @@ export type HatType =
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
   | "pirate_hat" | "captain_hat"
-  | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "legion_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
+  | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "hoplite_helm" | "legion_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
 export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis";
 
@@ -347,7 +347,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "ancient.hoplite": vis(
     // [S] the aspis stood upright before him chin to knee (379; propBuilder ASPIS)
-    { scale: 1.15, bulk: 1.2 }, "spear", "crested_helm", "aspis", "none", "#DAA520",
+    { scale: 1.15, bulk: 1.2 }, "spear", "hoplite_helm", "aspis", "none", "#DAA520",
     undefined,
     { materialPreset: "ancient_bronze" },
   ),

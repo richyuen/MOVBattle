@@ -48,7 +48,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   of the head high on the seat (.bandShade of the colour); on it the lumpy tam of BERET_TAM (373, spec there).
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "hoplite_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -263,6 +263,14 @@ const LEGION_HELM = {
 // (382 looks: at .13 and .16 bands, .14 and .28 thick, the crest still read a thin comb from the front quarter)
 // (383: each band one swept strip, .segs sections; .42 of W across, a third of the bowl, per critic 382)
 const CORINTH_CREST = { bands: 4, band: 0.19, wide: 0.42, fill: 0.95, sink: 0.6, lean: 0.06, shorten: 0.16, segs: 12, overlap: 1.15, narrow: 0.08 };
+/*
+ * [S] the hoplite's crest (385; ancient.hoplite.red.png: a tall boxy horse-hair crest standing up off the bowl's top on a short stalk, flat-topped and
+ * square in profile, a small raised lip at its front; critic 384: a stepped fin hugging the bowl brow to nape). On the Corinthian bowl (half height ry,
+ * half depth rz): a stalk .stalk of H tall over the crown (sunk .sink of ry into it), .stalkWide of W across, .stalkDeep of the box deep; on it one box
+ * .tall of ry tall, .wide of W across, .deep of the bowl's depth front to back, set .ahead of W forward; a lip .lipTall of the box tall on its top front,
+ * .lipWide across, .lipDeep of it long. Team x CORINTH_HELM.crestShade like the sarissa's. The sarissa keeps CORINTH_CREST.
+ */
+const HOPLITE_CREST = { stalk: 0.12, sink: 0.08, stalkWide: 0.16, stalkDeep: 0.45, tall: 0.62, wide: 0.24, deep: 0.95, ahead: 0.04, lipTall: 0.18, lipWide: 0.9, lipDeep: 0.28 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
@@ -1425,8 +1433,8 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     snout.dispose();
     return skull;
   }
-  if (type === "crested_helm") {
-    // [S] the Corinthian helm enclosing the head (381, spec at CORINTH_HELM)
+  if (type === "crested_helm" || type === "hoplite_helm") {
+    // [S] the Corinthian helm enclosing the head (381, spec at CORINTH_HELM); the hoplite's carries HOPLITE_CREST in place of the banded arc
     const C = CORINTH_HELM;
     const bronzeBase = new Color3(0.74, 0.5, 0.22);
     const metal = mat(scene, teamColor ? Color3.Lerp(teamColor, bronzeBase, C.bronze).scale(C.shade) : Color3.Lerp(bronzeBase, accent, 0.2), C.glow);
@@ -1460,6 +1468,18 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     // bowl's height with step lines, highest in front. [S] 383: each band one solid strip swept along the bowl's top line (sweptBar), square cut at
     // both ends: the 382 run of short blocks read as layered blades, a mohawk, at its seams (critic 382)
     const ry = u(C.rise * H) - brow;
+    if (type === "hoplite_helm") {
+      // [S] the hoplite's crest (385, spec at HOPLITE_CREST): a stalk at the crown carrying one tall flat-topped box brow to nape
+      const Q = HOPLITE_CREST;
+      const stalkH = u(Q.stalk * H), boxH = ry * Q.tall, boxD = 2 * rz * Q.deep, boxW = u(Q.wide * W);
+      const stalk = put(MeshBuilder.CreateBox("chelmCrestStalk", { width: u(Q.stalkWide * W), height: stalkH + ry * Q.sink, depth: boxD * Q.stalkDeep }, scene), hair);
+      stalk.position.set(0, ry + (stalkH - ry * Q.sink) / 2, u(Q.ahead * W));
+      const box = put(MeshBuilder.CreateBox("chelmCrest", { width: boxW, height: boxH, depth: boxD }, scene), hair);
+      box.position.set(0, ry + stalkH + boxH / 2, u(Q.ahead * W));
+      const lip = put(MeshBuilder.CreateBox("chelmCrestLip", { width: boxW * Q.lipWide, height: boxH * Q.lipTall, depth: boxD * Q.lipDeep }, scene), hair);
+      lip.position.set(0, ry + stalkH + boxH + boxH * Q.lipTall / 2, u(Q.ahead * W) + boxD * (0.5 - Q.lipDeep / 2));
+      return helm;
+    }
     const K = CORINTH_CREST;
     const bandH = u(K.band * H);
     const blocks: Mesh[] = [];
