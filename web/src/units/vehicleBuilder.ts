@@ -1989,7 +1989,20 @@ const MAMMOTH_FUR = { jitter: 0.06, glow: 0.1, shag: 0.25 };
  * MAMMOTH_MANE_COLOR, self-lit MAMMOTH_MANE.glow so it stays brown, darker than the coat.
  */
 const MAMMOTH_MANE = { jitter: 0.2, locks: 7, long: 0.42, glow: 0.12 };
-const MAMMOTH_MANE_COLOR = new Color3(0.2, 0.1, 0.06);
+const MAMMOTH_MANE_COLOR = new Color3(0.09, 0.055, 0.04);
+/*
+ * [S] the mane as one crest (378; tribal.mammoth.red.png, .jpg: a near-black shaggy crest rising from the brow, running over the crown and down the nape onto
+ * the shoulders, swept back, no brim and no knob; critic 377: a mid-brown flat cap with a brim over the brow and a bun knob). It replaces the forehead dome
+ * (the brim) and the three crown tufts (the bun) on the mammoth; the sacred elephant shaves them all the same. MAMMOTH_CREST.chunks: [y, z, half-width,
+ * half-height, half-length, tilt back] in neck units (head centre (0, 0, .25), .7 tall), flat-faced jittered balls overlapping along the centre line,
+ * the brow's narrow and pitched down, the crown's widest and highest, the nape's long and lying on the hull's top; MAMMOTH_MANE_COLOR now near-black.
+ */
+const MAMMOTH_CREST = {
+  chunks: [
+    [0.62, 0.6, 0.26, 0.15, 0.2, 0.7], [0.8, 0.44, 0.36, 0.2, 0.26, 0.35], [0.92, 0.18, 0.42, 0.24, 0.32, 0.05],
+    [0.88, -0.12, 0.44, 0.23, 0.32, -0.2], [0.8, -0.4, 0.42, 0.2, 0.32, -0.35], [0.72, -0.68, 0.36, 0.17, 0.3, -0.4],
+  ] as [number, number, number, number, number, number][],
+};
 /*
  * Ankle bands (TABS blue render): on each leg, a hand above the foot, two thin team-colour stripes close together round the pillar and under them a
  * ring of round team dots, all flat paint on the brown fur. In knee space (lower leg 0.6 across, foot at -0.4): ANKLE_BAND.stripes the stripes'
@@ -2338,12 +2351,20 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     m.parent = neck; m.material = crestMat; allMeshes.push(m);
     return m;
   };
-  maneBall("dome", new Vector3(0.48, 0.3, 0.58), new Vector3(0, 0.52, 0.25), 3.3);
-  maneBall("crest", new Vector3(0.42, 0.36, 0.56), new Vector3(0, 0.5, -0.2), 5.9);
-  for (const [x, y, z, h, lean] of [[0, 0.82, 0.12, 0.55, 0.35], [-0.16, 0.72, 0.0, 0.44, 0.1], [0.16, 0.72, 0.0, 0.44, 0.1]]) {
-    const tuft = maneBall("topknot", new Vector3(h * 0.5, h * 0.42, h * 0.5), new Vector3(x, y, z), 7.1 + x * 10);
-    tuft.rotation.x = lean;
-    tuft.rotation.z = -x * 1.6;
+  if (mammoth) {
+    // [S] the crest (378, spec at MAMMOTH_CREST): flat chunks overlapping along the head's centre line, brow to crown to nape, each swept back
+    MAMMOTH_CREST.chunks.forEach(([y, z, w, h, l, tilt], i) => {
+      const c = maneBall("crest", new Vector3(w, h, l), new Vector3(0, y, z), 3.3 + i * 2.7);
+      c.rotation.x = tilt;
+    });
+  } else {
+    maneBall("dome", new Vector3(0.48, 0.3, 0.58), new Vector3(0, 0.52, 0.25), 3.3);
+    maneBall("crest", new Vector3(0.42, 0.36, 0.56), new Vector3(0, 0.5, -0.2), 5.9);
+    for (const [x, y, z, h, lean] of [[0, 0.82, 0.12, 0.55, 0.35], [-0.16, 0.72, 0.0, 0.44, 0.1], [0.16, 0.72, 0.0, 0.44, 0.1]]) {
+      const tuft = maneBall("topknot", new Vector3(h * 0.5, h * 0.42, h * 0.5), new Vector3(x, y, z), 7.1 + x * 10);
+      tuft.rotation.x = lean;
+      tuft.rotation.z = -x * 1.6;
+    }
   }
   // Ragged locks: four-sided spikes round the crest's back and sides, hanging down and out over the nape, each its own length
   for (let i = 0; i < MAMMOTH_MANE.locks; i++) {
