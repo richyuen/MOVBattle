@@ -11,9 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-360 | sleeve material: warmCloth amber self-light, unglow (ca82190 +def8b50) | medieval.squire.a | approved
-360 | sleeve shells in warmCloth, arm+stub too, unglow (6c6eb29 +3d9f92d) | medieval.archer.a | approved
-360 | no skirt: blouse to belt, breeches show; stockings 1.32 warm (774e5c3 +0dd77b3) | medieval.king.a | approved
 361 | slim stockings: shin recoloured, hose 1.06 (e7c3c5c, reverted) | medieval.king.a | rejected
 361 | off-hand Stone Axe stood up in the world (e919c23) | tribal.chieftain.b | approved
 361 | dreadlock mop: set-back cap, kinked clumps (a7be412) | tribal.stoner.a | approved
@@ -75,6 +72,13 @@ for 25 iterations.
 369 | balloon arrow in the draw fist, hidden at the loose (1dafd49 +2c4f0d0) | renaissance.balloon_archer.b | approved
 369 | jabot under the jaw: 3 tiers below the head, fold rings (9f0bd3c) | renaissance.painter.a | approved
 369 | skull backing plate filling the window (a321a18) | tribal.protector.a | approved
+370 | candy lance: team band helix half each turn on tan shaft (14e00d6) | renaissance.jouster.b | approved
+370 | feather plume: 7 flat stepped-blade feathers, helm + poll (38081d7 +1edcdf2, reverted) | renaissance.jouster.a | rejected
+370 | falling collar: tan 8-sided cape on the vest top, 2 tabs (6bc67f7 +62c3f84) | renaissance.musketeer.a | approved
+370 | quilted sleeves: packed puffs both arms, flared black cuff (9295c61) | renaissance.halberd.a | approved
+370 | puffed beret: band + faceted puff slid aside, team colour (8139915 +afefe3a) | renaissance.painter.a | approved
+370 | tan bone ring on the slab behind the window (37d76c7) | tribal.protector.a | approved
+370 | step back: committed slide from the land, 1.8 m in .16 s (e2f2190) | renaissance.fencer.c | approved
 
 ## Spent (never retry as [P])
 
@@ -106,8 +110,13 @@ propBuilder.ts:BARDED_NECK (low, rake0, high, rake1, mid, pitch, coat, glow); CH
 propBuilder.ts:MORION_CUT (dome, tall, segments, comb, combLong, brimX, brimZ, peak, droop) | 1.16,.42,6,.3,.95,1.45,2.1,.42,.2 | 368 | approved | MORION .3 tall
 renaissanceDress.ts:PAINTER_JABOT (tiers, gap, below, across, grow, lip, flat, ahead, under, glow) | 3,.04,.12,.95,.25,.6,1.3,.12,(.46,.3,.16) .3 .9,.14 | 369 | approved | 368 cut over .3 (reverted)
 
-simulationSystem.ts:HOP_BACK (fencer afterLand, dist, rise, cd; halberd close, dist, rise, cd) | .12,1.5,3.2,1.5; .75,1.9,2.6,3 | 369 | fencer rejected-kept; halberd approved | fencer 2.1/2.6 (reverted)
-simulationSystem.ts:JOUSTER_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cd) | 1.5,16,1.5,3.5,4,1.0,20,4,2.5,3 | 369 | approved | -
+simulationSystem.ts:HOP_BACK (halberd close, dist, rise, cd) | .75,1.9,2.6,3 | 370 | approved | fencer row removed 370 (was .12,1.5,3.2,1.5)
+simulationSystem.ts:FENCER_RECOVER (dist, seconds) | 1.8, .16 | 370 | approved | HOP_BACK fencer leap (369)
+propBuilder.ts:LANCE_CANDY (pitch, band, proud, perTurn, glow); LANCE_TAN | 2.4,.5,1.05,16,.16; (.9,.72,.4) | 370 | approved | tube pitch .075 stripe .55, cream
+unitFactory.ts:MUSKETEER_COLLAR (tall, neck, out, deep, over, tab, tabWide, tabAt, splay, glow) | .17,.75,1.55,1.7,.1,.3,.34,.13,.3,.22 | 370 | approved | disc .collar 1.25
+unitFactory.ts:HALBERD_QUILT (upper, lower, swell, tall, glow, cuffLong, cuffFlare) | 5,3,1.6,1.25,.12,.48,1.75 | 370 | approved | 3 rolls 1.22, cuff 1.5
+propBuilder.ts:BERET_PUFF (band, bandTall, puff, deep, puffTall, sit, slide, ahead, tilt, dip, glow) | 1.04,.1,1.45,.95,.5,.35,.16,.1,.32,.15,.12 | 370 | approved | disc 2.0/.32 tilt .22
+propBuilder.ts:SLAB_WINDOW_BONE (outer, inner, thick, behind, glow) | 1.15,.62,.012,.006,.2 | 370 | approved | -simulationSystem.ts:JOUSTER_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cd) | 1.5,16,1.5,3.5,4,1.0,20,4,2.5,3 | 369 | approved | -
 proceduralAnimation.ts:HORSE_GAIT (ease, walk, run, walkPace, runPace, beats hl/hr/fl/fr) | 8,.32,.62,8,12,0/.3/.3/.6 | 369 | approved | legs static
 propBuilder.ts:MATCHLOCK (long, grip, bore, fore, stock, butt, glow, bands, steel, wood) | 1.3,.26,.042,.86,.9,.11,.18,3,(.74,.74,.72),(.64,.31,.14) | 369 | approved | MUSKET 1.05,.034 metal
 renaissanceDress.ts:HELD_BALLOON_ARROW (long, shaft, grip, head, ball, squash, glow) | .42,.018,.3,.06,.13,1.15,.25 | 369 | approved | ball .1 glow .12, along forearm
