@@ -1,10 +1,10 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 367   Batch: tribal:re (5/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
+Iteration: 368   Batch: tribal:re+renaissance:re (5-6/21)   Consecutive empty: 0   Done: 19/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber ++++ D | protector -+++ o | spear_thrower -+++ o | stoner -+++ o | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
-renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
+tribal: clubber ++++ D | protector -+++ o | spear_thrower -+++ o | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
+renaissance: painter -+-+ o | fencer -+-+ o | balloon_archer --++ o | musketeer --++ o | halberd -+-+ o | jouster ---+ o | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,15 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-367 (BASE b00e7e6): [S] protector a face plate 8762812 approved | [S] clubber a loin strips d0909d5 approved (D) | [S] stoner a skirt tongues de2744b+df9a744 approved | [S] mammoth a ears 0d9c3d0+b40c498 approved | [S] mammoth a fur hem c69689e+d55dff7 rejected (reverted) | [S] chieftain a beard 6c66d85 approved (D); step 2 re-audit protector.a (look shots); no [P]
+368 (BASE 96d1c20): step 2 tail-overlap audit renaissance:re (6 of 7 reopen; da_vinci_tank D) | [S] protector a jaw + hex lip b544fb9 approved | [S] stoner a rear box (pelvis block) 8e46f46 approved (D) | [S] halberd a sallet c52c267 approved | [S] jouster a arched neck, eyes, coat f271f4d approved | [S] painter a jabot 53e6e78 rejected (reverted) | [S] musketeer a morion 965f103 approved; no [P]
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.protector (8762812) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL)
-- GAP: [S] tribal.clubber (d0909d5) VERDICT: APPROVE CRITERION: tribal.clubber.a PASS (previous: FAIL)
-- GAP: [S] tribal.stoner (de2744b + df9a744) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (0d9c3d0 + b40c498) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (c69689e + d55dff7) VERDICT: REJECT CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [S] tribal.chieftain (6c66d85) VERDICT: APPROVE CRITERION: tribal.chieftain.a PASS (previous: FAIL)
+- GAP: [S] tribal.protector (b544fb9) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL)
+- GAP: [S] tribal.stoner (8e46f46) VERDICT: APPROVE CRITERION: tribal.stoner.a PASS (previous: FAIL)
+- GAP: [S] renaissance.halberd (c52c267) VERDICT: APPROVE CRITERION: renaissance.halberd.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.jouster (f271f4d) VERDICT: APPROVE CRITERION: renaissance.jouster.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.painter (53e6e78) VERDICT: REJECT CRITERION: renaissance.painter.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.musketeer (965f103) VERDICT: APPROVE CRITERION: renaissance.musketeer.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Pick next: protector jaw plate + brown arcs; stoner rear box (not the skirt: did not move with band/tongues; colour-probe meshes first); mammoth continuous barrel skirt over leg roots (one more reject plateaus mammoth.a), mammoth tapered legs; mammoth hump needs an evidence re-aim first.
-- spear_thrower has only a [P] (TUSK_BAND reversal): give it a fresh audit entry when picks run short (fewer than 5 [S] left: tail-overlap renaissance:re audit).
-- Capture: particle systems do not render on the stepped clock. Lathes wound top-down face inward. Tans on bone/wood PBR read grey: matte cloth. Same-colour flaps flush on a surface vanish: stand them off, darker.
-- Never bakeCurrentTransformIntoVertices after parenting (bakes the world matrix). Light warm cloth: medievalDress warmCloth + unglow.
-- [P] fallouts re-nudging rows approved in the last 20 iterations get rejected as ledger reversals: skip them.
+- Pick from both batches: jouster canter charge (c), halberd dash back (c), fencer step back (c), painter jabot under the jaw, musketeer matchlock (b), balloon_archer arrow in hand (b), protector window fill; mammoth leg tops / legs (one more reject plateaus mammoth.a).
+- Evidence first: fencer idle is shot from behind (re-aim before his hat); halberd "blue shape behind the helm" may be the field rock (colour-probe, then re-aim); painter/fencer dodges need an _ability shot vs an archer/blow.
+- spear_thrower has only a [P] outside the fallout window: give it a fresh audit entry when picks run short. Scripts take faction names: --batch renaissance for renaissance:re.
+- Capture: particles do not render on the stepped clock. Tans on bone/wood PBR read grey: matte cloth. Colour-probe a mystery mesh (paint it green, look) before cutting.
+- Never bakeCurrentTransformIntoVertices after parenting; children inherit a parent's scaling.z. [P] re-nudges of rows approved in the last 20 iterations are rejected as ledger reversals.

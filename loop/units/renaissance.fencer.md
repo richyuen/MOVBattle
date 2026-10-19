@@ -1,12 +1,17 @@
 # renaissance.fencer
-Status: done   Audited: 327   Done: 337
+Status: open   Audited: 368 (re)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (337)
-b PASS (330)
-c PASS (333)
+a FAIL (0 since 368)
+ 1. cavalier hat in unit_renaissance.fencer_idle: pale sky-blue brim under a separate ribbed dome — TABS: dark team-felt broad brim to the brow, one piece with the crown, big team plume (ref: renaissance.fencer.red.png, .png). Idle is shot from behind: re-aim first (evidence commit)
+ 2. doublet shoulders in unit_renaissance.fencer_idle: plain — TABS: tan-banded shoulder wings over team sleeves (ref: renaissance.fencer.red.png)
+b PASS (368)
+c FAIL (0 since 368)
+ 1. missing: the step back after the thrust; in unit_renaissance.fencer_flight he stays bent in on the knight (card Characteristics)
+ 2. missing: Fencer Dodge (hop or sidestep from melee blows; card Abilities)
 d PASS (cost 150, hp 0.82x vs 0.88x, dmg 0.67x, cd 1.00x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-(none)
+1. [S] c step back — blocker 1: after the lunge lands he recovers and steps back out of reach, facing the foe — ref: card Characteristics, renaissance.fencer.png — ours: unit_renaissance.fencer_flight.png
+2. [S] a cavalier hat — blocker 1: dark team-felt broad brim, one piece with the crown, big team plume (idle re-aim first) — ref: renaissance.fencer.red.png — ours: unit_renaissance.fencer_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 327 | cavalier hat [S] (fbe32ce + 0acead3) | a | approved
 328 | no back slab [S] (68ad77a) | b | approved

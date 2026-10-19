@@ -1,9 +1,9 @@
 # renaissance.da_vinci_tank
-Status: done   Audited: 327   Done: 338
+Status: done   Audited: 368 (re)   Done: 338
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (338)
-b PASS (331)
-c PASS (330)
+a PASS (368)
+b PASS (368)
+c PASS (368) (minor: balls stream from one muzzle; TABS sprays every side)
 d PASS (cost 4000, hp 62.02x, dmg 0.58x, cd 1.75x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
 (none; unit done)

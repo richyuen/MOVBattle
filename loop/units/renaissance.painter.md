@@ -1,23 +1,25 @@
 # renaissance.painter
-Status: done   Audited: 327   Done: 335
+Status: open   Audited: 368 (re)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (335)
-b PASS (331)
-c PASS (332)
+a FAIL (0 since 368; 1 [S] rejected)
+ 1. beret in unit_renaissance.painter_idle: a flat wide disc with a dark notch on top — TABS: a soft puffy beret pulled to one side over the brow (ref: .red.png, .jpg)
+ 2. jabot in unit_renaissance.painter_idle: a small tan triangle on the chest — TABS: a broad tan ruffle in stacked tiers wrapping the throat out to the collar, the face clear above it (ref: renaissance.painter.jpg)
+ 3. figure in unit_renaissance.painter_idle: hunched, short-legged, grey-brown trousers — TABS: lanky upright, long khaki-tan legs (ref: .red.png)
+b PASS (368)
+c FAIL (0 since 368)
+ 1. missing: Painter Dodge (sidestep off an incoming projectile; card Abilities); needs an _ability shot vs an archer
 d PASS (cost 50, hp 0.75x, dmg 0.17x, cd 0.35x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] a jabot under the jaw — blocker 2: tiers seated with the top at the jaw line (under the head, not over it), flared tiers with a step and darker underside between, warm tan, less glow — ref: renaissance.painter.jpg — ours: unit_renaissance.painter_idle.png
+2. [S] a puffy beret — blocker 1: a puffed faceted beret pulled down to one side over the brow — ref: .red.png — ours: unit_renaissance.painter_idle.png
+3. [S] c Painter Dodge — blocker 1: projectile-dodge sidestep (log it), capture vs an archer — ref: card Abilities — ours: unit_renaissance.painter_release.png
 ## Attempts (iter | gap | criterion | verdict)
-328 | kidney palette held at chest [S] (642eb06) | b | approved
-329 | palette out [P] (a8a09e2) | b | rejected
-331 | palette out and face-up [S] (413fb65) | b | approved
-332 | paint splotches [S] (f7538a3) | c | approved
-332 | long dark hair [S] (cfb3c57) | a | approved
-333 | jabot: three stacked folds [S] (b8f9dd8 + d307b07) | a | approved
-334 | jabot colour PAINTER_RUFF_COLOR [P] (135a0e6) | a | rejected
-335 | cravat: self-lit tan wrap, knot, pointed tail [S] (15c41f6 + 6dfd9bc) | a | approved
+333-335 | jabot folds, then cravat wrap, knot, tail [S] (15c41f6) | a | approved
+328-334 | palette, splotches, hair [S]; palette-out and ruff-colour [P] rejected | b,c,a | approved
+368 | stacked-tier jabot, 3 ragged ruffles (painterJabot, renaissanceDress.ts) [S] (53e6e78, reverted) | a | rejected
 ## Rejected (last 4)
-- palette out [P] [1] — 329: PALETTE_HOLD out/raise — no visible change; the euler swing does not take the arm out
-- jabot colour [P] [1] — 334: PAINTER_RUFF_COLOR (0.85, 0.68, 0.42) — no visible change, the cloth renders neutral grey (85, 80, 84)
+- jabot colour [P] [1] — 334: PAINTER_RUFF_COLOR — no visible change, plain cloth renders grey
+- stacked-tier jabot [S] [1] — 368: top tier .over .3 head over the chest top — covered chin and lower face, read as a beard; tiers merged into one cone; pale cream
 ## Notes (max 3 lines)
 - dressPainter: PAINTER_CRAVAT (self-lit wrap, knot, tail) on the torso; _holdPalette solves the off hand beside the shoulder (PALETTE_OUT).
-- Critic 335 nit: the wrap is narrow and hidden by the hair side-on; TABS's cravat is broad, near shoulder to shoulder.
+- Jabot twice read as a beard (333 to mid-chest, 368 over the chin): keep every tier below the head mesh's bottom; new code in renaissanceDress.ts.
