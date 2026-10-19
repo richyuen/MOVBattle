@@ -488,8 +488,8 @@ export function knightCuirass(scene: Scene, body: ArticulatedBody, fauld: Mesh):
  * .flap of the chest half-width wide; buttons .button of it across. Cloth MEDIEVAL_CAPE.cream, buttons .gold. Written for any medieval caped man (colour in).
  */
 const MEDIEVAL_CAPE = {
-  top: 1.12, hem: 1.4, drop: 0.55, off: 0.35, wrap: 1.3, rows: 4, flap: 0.42, button: 0.2,
-  cream: new Color3(0.9, 0.84, 0.68), gold: new Color3(0.93, 0.7, 0.25), glow: 0.12,
+  top: 1.2, hem: 1.75, drop: 0.6, off: 0.35, wrap: 1.45, rows: 4, flap: 0.5, button: 0.24,
+  cream: new Color3(0.95, 0.88, 0.7), gold: new Color3(0.93, 0.7, 0.25), glow: 0.28,
 };
 
 /** The furthest-back point of the chest (the torso and the shoulder yoke), in the torso joint's units. */
