@@ -4550,7 +4550,16 @@ const SLAB_LIP = { sides: 6, shade: 1.0, glow: 0.2 };
  * the head: a flat six-sided ring turned with the lip, from SLAB_WINDOW_BONE.outer of SLAB_EYE across (under the lip) in to .inner (the skull's eyes and
  * snout show through the middle), .thick thick, set .behind the slab's back face. Matte bone tan .color self-lit .glow (the skull helm's tan).
  */
-const SLAB_WINDOW_BONE = { outer: 1.15, inner: 0.62, thick: 0.012, behind: 0.006, color: new Color3(0.68, 0.52, 0.34), glow: 0.2 };
+const SLAB_WINDOW_BONE = { outer: 1.3, inner: 0.62, thick: 0.012, behind: 0.006, color: new Color3(0.68, 0.52, 0.34), glow: 0.2 };
+/*
+ * [S] 373 the window's face plate (critic 372: tan to the window's edges, but a dark nub at the lip's upper left and pink specks of his face beside the
+ * eye between the ring and the eyes; tribal.protector.red.png: the window shows only the skull's tan face, two googly eyes in it and a dark nose). The head
+ * turns behind the slab, so no hole lines up with his own eyes: a solid tan disc fills the window (SLAB_WINDOW_FACE.sides sides, as
+ * wide as the ring's outer edge, inside the opening .inset of the slab's depth behind its middle, its rim buried in the lip, clear of the head), carrying its own pair of googly eyes: dark tan sockets (.socketShade of the bone, .socket of
+ * SLAB_EYE across, .flat thick) .eyeX of SLAB_EYE either side of the middle and .eyeY up, a white eye .eye across and a black pupil .pupil across in each,
+ * and a dark three-sided nose .nose across .noseY under them. The ring's outer edge widened to 1.3 of SLAB_EYE (from 1.15) to close the lip's upper left.
+ */
+const SLAB_WINDOW_FACE = { sides: 12, inset: 0.2, socket: 0.3, flat: 0.03, socketShade: 0.55, socketGlow: 0.1, eyeX: 0.17, eyeY: 0.06, eye: 0.22, pupil: 0.1, nose: 0.12, noseY: -0.17 };
 const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
 // ...and its stone (tribal.protector.red.png: one warm red-brown slab, not planks): SLAB_FACETS.deep thick (prop units), cut in three columns either side of
 // the opening and in .rows rows down the side columns; each corner of the face pushed in or out by its own hashed share (.front of the depth) so the face
@@ -4810,6 +4819,44 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       bone.convertToFlatShadedMesh();
       bone.material = mat(scene, WB.color, WB.glow, "cloth");
       bone.parent = shield;
+      // [S] 373 the window's face plate (spec at SLAB_WINDOW_FACE): a solid tan disc behind the ring with its own googly eyes in dark sockets and a nose
+      const WF = SLAB_WINDOW_FACE;
+      const plateZ = -D * WF.inset;
+      const plate = MeshBuilder.CreateCylinder("slabWindowFace", { height: WB.thick * s, diameter: outer, tessellation: WF.sides }, scene);
+      plate.rotation.x = Math.PI / 2;
+      plate.position.set(0, eyeY, plateZ);
+      plate.convertToFlatShadedMesh();
+      plate.material = bone.material;
+      plate.parent = shield;
+      const socketMat = mat(scene, WB.color.scale(WF.socketShade), WF.socketGlow, "cloth");
+      const white = mat(scene, new Color3(0.95, 0.95, 0.92), 0.35, "cloth");
+      const black = mat(scene, new Color3(0.04, 0.04, 0.05), 0, "cloth");
+      const front = plateZ + WB.thick * s * 0.5;
+      for (const side of [-1, 1]) {
+        const at = (z: number) => new Vector3(side * WF.eyeX * eye, eyeY + WF.eyeY * eye, front + z * eye);
+        const socket = MeshBuilder.CreateCylinder("slabWindowSocket", { height: WF.flat * eye, diameter: WF.socket * eye, tessellation: 7 }, scene);
+        socket.rotation.x = Math.PI / 2;
+        socket.position.copyFrom(at(WF.flat * 0.5));
+        socket.convertToFlatShadedMesh();
+        socket.material = socketMat;
+        socket.parent = shield;
+        const ball = MeshBuilder.CreateSphere("slabWindowEye", { diameter: WF.eye * eye, segments: 6 }, scene);
+        ball.scaling.z = 0.45;
+        ball.position.copyFrom(at(WF.flat + WF.eye * 0.2));
+        ball.material = white;
+        ball.parent = shield;
+        const pupil = MeshBuilder.CreateSphere("slabWindowPupil", { diameter: WF.pupil * eye, segments: 5 }, scene);
+        pupil.scaling.z = 0.4;
+        pupil.position.copyFrom(at(WF.flat + WF.eye * 0.42));
+        pupil.material = black;
+        pupil.parent = shield;
+      }
+      const nose = MeshBuilder.CreateCylinder("slabWindowNose", { height: WF.flat * eye, diameterTop: WF.nose * eye, diameterBottom: WF.nose * eye, tessellation: 3 }, scene);
+      nose.rotation.set(Math.PI / 2, 0, Math.PI);
+      nose.position.set(0, eyeY + WF.noseY * eye, front + WF.flat * 0.5 * eye);
+      nose.convertToFlatShadedMesh();
+      nose.material = socketMat;
+      nose.parent = shield;
       // Moss (spec at SLAB_MOSS): knobbly olive-grey patches, one draped along the top corner and slanting down toward the opening, one hanging under the
       // opening's side, one over the bottom corner; all stand off the face. Self-lit a little: a plain dark green went near-black in the field's shade.
       const moss = mat(scene, new Color3(0.42, 0.42, 0.27), 0.12, "stone");
