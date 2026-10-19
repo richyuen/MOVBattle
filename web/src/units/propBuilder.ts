@@ -9,6 +9,7 @@ import type {
 import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisuals";
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
+import { featherClump } from "./renaissanceDress";
 
 /*
  * [S] the catapult's boulder (352; medieval.catapult.blue.png: a grey-brown rock of flat facets lying in the bucket, the same rock in flight). An ico rock
@@ -4989,9 +4990,9 @@ type HorseStyle = "barded" | "pinto";
  * showing below it; a round eye hole on each side with a white eye and black pupil looking out; brown ears standing up through it with team insides; a
  * bushy team plume between them; the 268 plank read as a flat brown board). In the head's own frame (y from the poll to the muzzle, -z the face's top):
  *   shell CHANFRON.long of the head long from the poll, CHANFRON.wide of H across at the poll tapering to .narrow, flattened sideways by .flat, a ridge
- *   down the top; eye holes CHANFRON.eye of H round, .eyeAt of the head down from the poll; ears CHANFRON.ear of H tall; plume .tufts tufts .tuft of H.
+ *   down the top; eye holes CHANFRON.eye of H round, .eyeAt of the head down from the poll; ears CHANFRON.ear of H tall; plume a feather clump .clump of H across (renaissanceDress FEATHER_CLUMP, 371).
  */
-const CHANFRON = { long: 0.7, wide: 0.38, narrow: 0.27, flat: 0.88, eye: 0.085, eyeAt: 0.3, eyeTurn: 0.75, ear: 0.3, tufts: 4, tuft: 0.11, glow: 0.2 };
+const CHANFRON = { long: 0.7, wide: 0.38, narrow: 0.27, flat: 0.88, eye: 0.085, eyeAt: 0.3, eyeTurn: 0.75, ear: 0.3, clump: 0.2, glow: 0.2 };
 /*
  * [S] the barded horse's arched neck and coat (368; renaissance.jouster.red.png, .png: the neck leaves the chest arched forward and the head hangs low ahead
  * of the rider's chest under the grey chanfron, two googly eyes looking out of its front; a dark chestnut coat; critic 367: a tall vertical giraffe neck,
@@ -5236,15 +5237,8 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       tuft.rotation.x = -0.25;
     }
   } else {
-    // The team plume between the ears: a bushy stack of tufts off the poll, each smaller and curling back (CHANFRON.tufts)
-    const plumeMat = mat(scene, cloth, CHANFRON.glow, "cloth");
-    for (let i = 0; i < CHANFRON.tufts; i++) {
-      const r = H * CHANFRON.tuft * (1 - i * 0.14);
-      const tuft = part(MeshBuilder.CreateIcoSphere("hplume", { radius: 1, subdivisions: 1, flat: true }, scene), plumeMat);
-      tuft.scaling.set(r * 0.8, r, r * 0.9);
-      tuft.position.set(0, poll.y + H * 0.1 + r * 1.3 * i, poll.z + H * 0.02 - H * 0.05 * i * i * 0.5);
-      tuft.rotation.set(0.4 * i, 0.8 * i, 0.2 * (i % 2 ? 1 : -1));
-    }
+    // The team plume between the ears: a packed clump of fat lumps off the poll, curling back (371, renaissanceDress featherClump)
+    featherClump(scene, frame, new Vector3(0, poll.y + H * 0.08, poll.z + H * 0.02), H * CHANFRON.clump, cloth, "hplume");
   }
   const tail = part(MeshBuilder.CreateCylinder("htail", { height: H * 0.55, diameterTop: H * 0.1, diameterBottom: H * 0.03, tessellation: 5 }, scene), dark);
   tail.rotation.x = 0.35;

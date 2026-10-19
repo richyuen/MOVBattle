@@ -239,3 +239,43 @@ export function balloonArcherFront(scene: Scene, body: ArticulatedBody, teamColo
   }
   return added;
 }
+
+/*
+ * [S] the jouster's feather clump (371; renaissance.jouster.blue.png, .png, card "colored feathers": on the helm's crown and on the horse's poll a dense,
+ * bushy plume in a deep saturated team colour, a packed column of fat lumps about a head across, rising and curling back at its top, no sky between the
+ * lumps. Critic 370: the stacked single tufts read as a spiral horn, the flat fanned blades as a claw; team cloth self-lit .2 washed out to lavender).
+ * In the clump's size S (its base across): FEATHER_CLUMP.tiers rings of lumps, ring k holding .ring[k] lumps .spread[k] S out from the axis, each lump
+ * .lump S round squashed to .squash front to back and stretched .stretch tall, the rings .rise S apart, ring k set .curl * k * k S back; one crowning
+ * lump on top bent furthest back. Lumps lean out .lean rad from the axis. Matte team at .shade, self-lit .glow.
+ */
+const FEATHER_CLUMP = { tiers: 3, ring: [4, 4, 3], spread: [0.22, 0.2, 0.15], lump: 0.42, squash: 0.85, stretch: 1.3, rise: 0.3, curl: 0.07, lean: 0.35, shade: 0.85, glow: 0.08 };
+
+/** A packed team feather clump on `parent` (spec at FEATHER_CLUMP): its base middle at `base`, +y up, -z back, `size` across at the base. */
+export function featherClump(scene: Scene, parent: TransformNode, base: Vector3, size: number, teamColor: Color3, name: string): Mesh[] {
+  const C = FEATHER_CLUMP;
+  const mat = getMaterialFactory().get("cloth", teamColor.scale(C.shade), { emissiveIntensity: C.glow });
+  const added: Mesh[] = [];
+  const lump = (x: number, y: number, z: number, scale: number, tiltX: number, tiltZ: number, spin: number) => {
+    const m = MeshBuilder.CreateIcoSphere(name, { radius: 1, subdivisions: 1, flat: true }, scene);
+    const r = size * C.lump * scale;
+    m.scaling.set(r, r * C.stretch, r * C.squash);
+    m.position.set(base.x + x, base.y + y, base.z + z);
+    m.rotation.set(tiltX, spin, tiltZ);
+    m.material = mat;
+    m.parent = parent;
+    added.push(m);
+  };
+  let y = size * C.lump * 0.5;
+  for (let k = 0; k < C.tiers; k++) {
+    const n = C.ring[k], out = size * C.spread[k], back = -size * C.curl * k * k, scale = 1 - k * 0.12;
+    for (let i = 0; i < n; i++) {
+      const a = ((i + (k % 2) * 0.5) / n) * Math.PI * 2;
+      const sx = Math.sin(a), sz = Math.cos(a);
+      lump(sx * out, y, back + sz * out, scale, sz * C.lean - k * 0.25, -sx * C.lean, a);
+    }
+    y += size * C.rise;
+  }
+  // the crowning lump, bent furthest back
+  lump(0, y - size * C.rise * 0.2, -size * C.curl * C.tiers * C.tiers, 0.75, -0.9, 0, 0.4);
+  return added;
+}
