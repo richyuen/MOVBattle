@@ -247,6 +247,12 @@ export const CATAPULT_BOULDER = 0.65;
  * under the arm's pivot, braced at half height; .bolt hex bolts on the front beam; a .deck plank deck at the back where the crewman stands.
  */
 const CATAPULT_FRAME = { long: 1.6, half: 0.42, railY: 0.42, beam: 0.16, cap: 0.24, spread: 0.55, bolt: 0.09, deck: 0.5 };
+/*
+ * [S] wheels (357; medieval.catapult.red.png: small wooden wheels with grey iron rims tucked in at the frame corners, not big black tyres out at the sides). Each
+ * wheel CATAPULT_WHEEL.across tall (its top near the rail caps), a .facets-sided timber drum in the orange .tone .face of it across standing .proud of a grey
+ * .iron tyre .tyreWide thick, a small iron hub .hub of it across; at each rail end beside its corner cap.
+ */
+const CATAPULT_WHEEL = { across: 0.56, face: 0.8, tyreWide: 0.13, proud: 0.015, hub: 0.22, facets: 10, tone: new Color3(0.6, 0.3, 0.13), iron: new Color3(0.42, 0.43, 0.46) };
 const CATAPULT_BUCKET = { bottom: 0.4, top: 0.68, deep: 0.28, rim: 0.06, sink: 0.45, tone: new Color3(0.55, 0.26, 0.12) };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
@@ -279,21 +285,25 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   }
   beam("base", F.half * 2, 0.08, F.deck, 0, F.railY + F.beam / 2 - 0.04, -(F.long - F.deck) / 2);
 
-  // Wheels (on the sides, X axis): as tall as the deck and thick, standing clear of its edges
-  for (const xOff of [-0.58, 0.58]) {
-    for (const zOff of [-0.5, 0.5]) {
-      const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.7, tessellation: 12 }, scene); // thinner than the rim round it, so the rim stands proud of the face
-      wheel.position.set(xOff, 0.35, zOff);
-      wheel.rotation.z = Math.PI / 2;
-      wheel.parent = rig; wheel.material = wood; allMeshes.push(wheel); // the face is the frame's timber: the dark is the rim and hub on it, as on the cannon
-      const wheelRim = MeshBuilder.CreateTorus("wheelRim", { diameter: 0.64, thickness: 0.12, tessellation: 12 }, scene);
-      wheelRim.position.set(xOff, 0.35, zOff);
-      wheelRim.rotation.z = Math.PI / 2;
-      wheelRim.parent = rig; wheelRim.material = wheelWood; allMeshes.push(wheelRim);
-      const wheelHub = MeshBuilder.CreateCylinder("wheelHub", { height: 0.24, diameter: 0.2, tessellation: 8 }, scene);
-      wheelHub.position.set(xOff, 0.35, zOff);
-      wheelHub.rotation.z = Math.PI / 2;
-      wheelHub.parent = rig; wheelHub.material = wheelWood; allMeshes.push(wheelHub);
+  // Wheels (CATAPULT_WHEEL): a short faceted timber drum on a grey iron tyre at each rail end, tucked in beside the corner caps
+  const W = CATAPULT_WHEEL;
+  const wheelTimber = getMaterialFactory().get("wood", W.tone, { emissive: W.tone.scale(0.18) });
+  const iron = makeMat(scene, W.iron);
+  for (const side of [-1, 1]) {
+    for (const end of [-1, 1]) {
+      const x = side * (F.half + F.cap / 2 + W.tyreWide / 2 + 0.01), z = end * (F.long / 2 - F.cap / 2), y = W.across / 2;
+      const tyre = MeshBuilder.CreateCylinder("wheelRim", { height: W.tyreWide, diameter: W.across, tessellation: W.facets }, scene);
+      tyre.convertToFlatShadedMesh();
+      tyre.position.set(x, y, z); tyre.rotation.z = Math.PI / 2;
+      tyre.parent = rig; tyre.material = iron; allMeshes.push(tyre);
+      // the timber face stands proud of the tyre each side, so the iron reads as a band round it
+      const face = MeshBuilder.CreateCylinder("wheel", { height: W.tyreWide + W.proud * 2, diameter: W.across * W.face, tessellation: W.facets }, scene);
+      face.convertToFlatShadedMesh();
+      face.position.set(x, y, z); face.rotation.z = Math.PI / 2;
+      face.parent = rig; face.material = wheelTimber; allMeshes.push(face);
+      const hub = MeshBuilder.CreateCylinder("wheelHub", { height: W.tyreWide + W.proud * 4, diameter: W.across * W.hub, tessellation: 6 }, scene);
+      hub.position.set(x, y, z); hub.rotation.z = Math.PI / 2;
+      hub.parent = rig; hub.material = iron; allMeshes.push(hub);
     }
   }
 
