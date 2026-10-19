@@ -11,12 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-349 | [R] two-fisted low carry, both arms solved (8407342) | farmer.farmer.b | approved
-349 | crew dressed: hood, socks, hem, beard (fb4fe35) | farmer.wheelbarrow.a | approved
-349 | riders fight: held-apple throw, fork stab (81f76b1) | farmer.wheelbarrow.c | approved
-350 | fork head at hip height: world chord, tines (aecb1d9) | farmer.farmer.b | approved
-350 | stab aimed down shoulder->chest line, hit (b0cfd14 +6b93c12) | farmer.wheelbarrow.c | approved
-350 | cut-log drum wheel, bark staves (6298fe0) | farmer.wheelbarrow.a | approved
 351 | gold heal beam orb to chest, ally gilded (8407591) | medieval.healer.c | approved
 351 | catapult arm on a pivot, whips upright on (df37545 +a4cb4c1) | medieval.catapult.c | approved
 351 | Knight Charge dash and batter (b806f45) | medieval.knight.c | approved
@@ -60,9 +54,16 @@ for 25 iterations.
 358 | legs: cream knee socks, brown shoes, team (bef3298) | medieval.bard.a | approved
 358 | belt and cuffed knee boots, sleeves tan (dbfaa66) | medieval.archer.a | approved
 358 | arrow: red shaft, large black broadhead (f886865) | medieval.archer.c | approved
+359 | hood: tight oval, rim, two-sided shell, capelet (cdc15b5 +e8bbf78) | medieval.archer.a | approved
+359 | turned collar: solid lapel slabs, stand (1173ec2) | medieval.healer.a | approved
+359 | plate legs: cuisses, greaves, cops, sabatons (3dd532f) | medieval.knight.a | approved
+359 | dress re-land: lathed pantaloons, stockings (44f8443) | medieval.king.a | approved
+359 | sleeves: tan cloth shells (a43c08b, reverted) | medieval.archer.a | rejected
+359 | cape cut: shoulder-line top, wrap, no flaps (d2850fe) | medieval.knight.a | approved
+359 | beard: own hair material, sideburns (8801b8c) | medieval.king.a | approved
 
 ## Spent (never retry as [P])
-(none yet)
+medievalDress.ts:SQUIRE_ARMS.beige (359: second nudge, no visible change)
 
 ## Rows
 farmer.* (47 knob rows, 339-350; batch done) | compacted 351 | 350 | approved | values: git show b3524d7:loop/LEDGER.md
@@ -93,19 +94,20 @@ propBuilder.ts:ROYAL_CROWN (heads, band, down, points, tall, base, flare, gem, r
 medievalDress.ts:TONSURE (ring, open, y, thick, out, beard wide/down/deep, grey, glow) | 1,.95,.12,.42,1.1; 1,.22,.55; (.66,.64,.62),.15 | 355 | approved | thick .26 out 1.06 (pre-review)
 propBuilder.ts:FLOPPY_HAT (brim, thick, droop, dip, cock, crown, taper, tall, pale, felt, leaves) | 2,.07,.24,.12,-.08,1.12,.88,.5,.25,(.55,.3,.19) | 355 | approved | critic: sits low, brim half-hides the eyes
 propBuilder.ts:CRUSADER_HELM (iron, gold, band, rivets, brow, browWide, nasal, chin, proud, holes, panel) | (.3,.3,.33),(.86,.66,.3),.1,8,.32,1.9,.24,.42,.07,3,.62 | 355 | approved | critic: iron reads lilac-grey
-medievalDress.ts:ARCHER_HOOD (out, peak, chin, open, brow, jaw, tail, cape wide/drop/neck, shade, lining) | 1.38,.4,1.12,.62,.58,-.82,1.5; 1.4,.32,.75; .5, .96 | 356 | approved | out 1.18 open .95 shade .62 (pre-review); critic: near skin tone, brow bare
-medievalDress.ts:HEALER_TRIM (band, apart, proud, hem, cuff, collar, belt, knot) | .17,.42,.05,.08,.75,.95,.13,.42 | 358 | approved | collar .72 (357); critic 358: no further [P], lapels need depth
+medievalDress.ts:ARCHER_HOOD (out, peak, chin, open, brow, jaw, rim, cape hemTall/hemShade, shade, glow) | 1.38,.4,1.12,.56,.38,-.8,.1; .22,.2; .3,.02 | 359 | approved | open .62 brow .58 shade .5 (356)
+medievalDress.ts:HEALER_TRIM (band..collar); HEALER_FOLD (inner, outer, stand, flare, neck, from) | ...,.95,...; .05,.14,.2,1.25,.42,1 | 359 | approved | flat lapels (358)
 medievalDress.ts:BARD_VEST (wide, deep, long, shade, v, down, laces, toggle, proud, tunicPale, tunicGlow) | 1.05,1.12,1,.5,.62,.62,2,.22,.06,.04,.16 | 357 | approved | toggle .16 pale .12 glow .3 (356); critic 357: toggles pale grey
 medievalDress.ts:SQUIRE_TABARD (span, up, down, waist, end, hem, edge, proud, beige) | .86,.85,.75,.14,.42,.12,.3,.015,(.88,.8,.62) | 356 | approved | waist .1 end .34 (pre-review); critic: cross pale grey
-medievalDress.ts:KING_BEARD (wide, down, deep, top, tache, lip, droop, blonde, glow) | 1.6,.5,.9,.12,.5,.2,.4,(.84,.54,.2),.2 | 358 | rejected | live value rejected-kept (ededbdd): restore (.88,.62,.28) .12; no [P]
+medievalDress.ts:KING_BEARD (wide..blonde, glow); KING_HAIR (warm, rough, burn*) | ...,(.88,.62,.28),.12; (.4,.24,.07),1 | 359 | approved | glow unused since kingHair (359)
 vehicleBuilder.ts:CATAPULT_FRAME (long, half, railY, beam, cap, spread, bolt, deck) | 1.6,.42,.42,.16,.24,.55,.09,.5 | 356 | approved | slab bed + 2 posts (before 356)
 vehicleBuilder.ts:CATAPULT_WHEEL (across, face, tyreWide, proud, hub, facets, tone, iron) | .56,.8,.13,.015,.22,10,(.6,.3,.13),(.42,.43,.46) | 357 | approved | .7 dark-rimmed wheels at x .58 (before 357)
 medievalDress.ts:KNIGHT_PLATE (wide, deep, lames, proud, rim, steel, edge); unitFactory KNIGHT_FAULD (long, flare) | 1.07,1.1,2,1.05,.12; .42,1.4 | 357 | approved | critic: cuirass boxy, a skin wide
 medievalDress.ts:MEDIEVAL_CAPE (top, hem, drop, off, wrap, flap, button, cream, glow) | 1.2,1.75,.6,.35,1.45,.5,.24,(.95,.88,.7),.28 | 357 | approved | 1.12/1.4/1.3 glow .12 (pre-review); critic: collar flap a flat board
-medievalDress.ts:SQUIRE_LEGS (out, from, cop, ahead); ARCHER_ARMS (out, from, to, beige) | 1.32,.06,1.25,.55; 1.3,.08,.94,(.74,.58,.38) | 358 | approved | beige (.86,.78,.6) (357); no more [P] on ARCHER_ARMS
+medievalDress.ts:SQUIRE_LEGS (out, from, cop, ahead); ARCHER_ARMS (out, from, to, beige) | 1.32,.06,1.25,.55; 1.3,.08,.94,(.74,.58,.38) | 358 | approved | no more [P] on ARCHER_ARMS
 medievalDress.ts:BARD_TUNIC (long, hem, hemShade) | 1.45, .16, .62 | 357 | approved | -
-medievalDress.ts:KNIGHT_CAPE (shade, clear, drop, hem, glow); SQUIRE_ARMS (sleeve, gauntlet, couter, beige, glow) | .85,1.03,.95,2.3,.06; 1.16,1.4,1.5,(.82,.72,.52),.1 | 358 | approved | -
-medievalDress.ts:KING_DRESS (puff, sleeve, stripes, pants, hose, collar, vee, belt, buckle) | 1.55,.7,4,1.5,1.1,.5,.42,.16,.28 | 358 | rejected | kept (revert conflicted)
+medievalDress.ts:KNIGHT_CAPE; KNIGHT_CAPE_CUT (rise, wrap); KNIGHT_LEGS (cuisse, greave, from, cop) | ..; 1,1.75; 1.2,1.28,.05,1.3 | 359 | approved | -
+medievalDress.ts:SQUIRE_ARMS (sleeve, gauntlet, couter, beige, glow) | 1.16,1.4,1.5,(.82,.72,.52),.1 | 359 | spent | (.74,.6,.4) .04 rejected 359
+medievalDress.ts:KING_DRESS (puff..buckle); KING_PANTS (knee, profile peak, band, folds) | 1.55,.7,4,1.5,1.1,..; .8,1.7,1.18,4 | 359 | approved | thigh tube to .98 (358)
 vehicleBuilder.ts:CATAPULT_PAINT (wood, woodGlow, paintGlow, long, short, strip, shift) | (.66,.32,.14),.16,.12,.62,.4,.5,.14 | 358 | approved | wood (.36,.13,.09)
 medievalDress.ts:BARD_LEGS (out, from, bow, bowShade, sock); ARCHER_KIT (belt, boot, from, cuff) | 1.16,.04,.55,.85,(.88,.84,.7); .15,1.24,.22,1.45 | 358 | approved | -
 projectileSystem.ts:BROADHEAD (wide, long, thick, shaft, iron) | .17,.2,.3,(.62,.16,.1),(.08,.08,.09) | 358 | approved | -

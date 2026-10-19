@@ -1,12 +1,12 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 358   Batch: medieval (4/21)   Consecutive empty: 0   Done: 23/139   Parked: 0
+Iteration: 359   Batch: medieval (4/21)   Consecutive empty: 0   Done: 25/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
-medieval: bard ++++ D | squire -+++ o | archer -+++ o | healer -+++ o | knight -+++ o | catapult ++++ D | king -+++ o
+medieval: bard ++++ D | squire -+++ o | archer -+++ o | healer ++++ D | knight ++++ D | catapult ++++ D | king -+++ o
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
@@ -23,17 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-358 (BASE e11f674): [S] knight a cape 929b00a+d7037c7 approved | [S] king a royal dress ededbdd rejected-kept | [S] squire a arms 56aed0c approved | [S] catapult a wood b246560 approved | [S] bard a legs bef3298 approved | [S] archer a belt+boots dbfaa66 approved | [S] archer c arrow f886865 approved | [P] healer a collar width 3aa2c45 approved
+359 (BASE 46c19a5): [S] archer a hood cdc15b5+e8bbf78 approved | [S] healer a turned collar 1173ec2 approved | [S] knight a plate legs 3dd532f approved | [S] king a dress re-land 44f8443 approved | [S] archer a sleeves a43c08b rejected (reverted f1af07a) | [S] knight a cape cut d2850fe approved | [S] king a beard 8801b8c approved | [P] squire a sleeve tone caa7905 rejected (reverted e6c54e8)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] medieval.knight (929b00a + d7037c7) VERDICT: APPROVE CRITERION: medieval.knight.a FAIL (previous: FAIL)
-- GAP: [S] medieval.king (ededbdd) VERDICT: REJECT CRITERION: medieval.king.a FAIL (previous: FAIL)
-- GAP: [S] medieval.squire (56aed0c) VERDICT: APPROVE CRITERION: medieval.squire.a FAIL (previous: FAIL)
-- GAP: [S] medieval.catapult (b246560) VERDICT: APPROVE CRITERION: medieval.catapult.a PASS (previous: FAIL)
-- GAP: [S] medieval.bard (bef3298) VERDICT: APPROVE CRITERION: medieval.bard.a PASS (previous: FAIL)
-- GAP: [S] medieval.archer (dbfaa66) VERDICT: APPROVE CRITERION: medieval.archer.a FAIL (previous: FAIL)
-- GAP: [S] medieval.archer (f886865) VERDICT: APPROVE CRITERION: medieval.archer.c PASS (previous: FAIL)
-- GAP: [P] medieval.healer (3aa2c45) VERDICT: APPROVE CRITERION: medieval.healer.a FAIL (previous: FAIL)
+- GAP: [S] medieval.archer (cdc15b5 + e8bbf78) VERDICT: APPROVE CRITERION: medieval.archer.a FAIL (previous: FAIL)
+- GAP: [S] medieval.healer (1173ec2) VERDICT: APPROVE CRITERION: medieval.healer.a PASS (previous: FAIL)
+- GAP: [S] medieval.knight (3dd532f) VERDICT: APPROVE CRITERION: medieval.knight.a FAIL (previous: FAIL)
+- GAP: [S] medieval.king (44f8443) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL)
+- GAP: [S] medieval.archer (a43c08b) VERDICT: REJECT CRITERION: medieval.archer.a FAIL (previous: FAIL)
+- GAP: [S] medieval.knight (d2850fe) VERDICT: APPROVE CRITERION: medieval.knight.a PASS (previous: FAIL)
+- GAP: [S] medieval.king (8801b8c) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL)
+- GAP: [P] medieval.squire (caa7905) VERDICT: REJECT CRITERION: medieval.squire.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- King: kingDress is live but rejected-kept (revert conflicted); its re-land must restore KING_BEARD (.88,.62,.28) glow .12 and end the pantaloons at the knee.
+- Light cloth greys out: archer's tan sleeve shell (359) and squire's beige sleeves render neutral grey while brown leather renders brown. First step: read the sleeve material back in the browser (later arm repaint in unitFactory? cloth cache key?); likely the king's stockings too.
 - Arm/leg dress over the tabard block's mail must be shells (limbShell, shellStripes), not recolours: dressMedieval runs before unitFactory paints the arms.
-- Healer idle is side-on: the collar blocker is judged in lineup_medieval; an evidence commit could re-aim healer_idle to the front three-quarter.
-- Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose and broadhead arrow (354, 358), bard walk, catapult frame/wheels/paint, knight plate+cape.
+- One-sided custom meshes get culled from outside (archer hood until 359): wind both ways (slab helper, hood shell).
+- Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose and broadhead arrow (354, 358), bard walk, catapult frame/wheels/paint, knight plate+legs+cape.
 - tribal:re, renaissance:re, farmer:re follow medieval: full re-audits of the done batches under the new angles (ITERATE step 2).
