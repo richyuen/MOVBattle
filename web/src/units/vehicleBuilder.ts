@@ -1574,7 +1574,7 @@ const THROWER_PERCH = { seat: -0.15, up: 0.09, tuftDeep: 0.13, lumps: 0.18, wide
  * far knee unseen). Each knee target is now read off the Farmer's own trunk on that side: .chest of the way from his hip joint up to his shoulder
  * (height and fore-aft), .out rig units outside that shoulder; the shin then hangs down and out from the knee (.shinOut, .shinDown, .shinAhead).
  */
-const THROWER_KNEES = { chest: 0.55, out: 0.07, shinOut: 0.35, shinDown: 1, shinAhead: 0.15 };
+const THROWER_KNEES = { chest: 0.55, out: 0.2, shinOut: 0.6, shinDown: 1, shinAhead: 0.15 };
 /** World matrices of a node and every ancestor, root first, so a read made at build time is fresh. */
 function settleWorld(node: TransformNode): void {
   const chain: TransformNode[] = [];
