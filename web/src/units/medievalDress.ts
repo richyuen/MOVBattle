@@ -448,7 +448,7 @@ export function squireTabardTrim(scene: Scene, body: ArticulatedBody, tabard: Me
  */
 const KING_BEARD = {
   wide: 1.6, down: 0.5, deep: 0.9, top: 0.12, tache: 0.5, lip: 0.2, droop: 0.4, jitter: 0.14,
-  blonde: new Color3(0.88, 0.62, 0.28), glow: 0.12,
+  blonde: new Color3(0.84, 0.54, 0.2), glow: 0.2,
 };
 
 function kingBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -600,6 +600,113 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
 
 const KNIGHT_CAPE = { shade: 0.85, clear: 1.03, drop: 0.95 };
 
+/** `n` thin upright strips evenly round a limbShell of the same span, standing just proud of its faces (puffed-cloth folds or slashes). */
+function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: number, out: number, n: number, mat: Material): Mesh[] {
+  const L = limbBox(limb);
+  const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2;
+  const r = Math.max(L.wide, L.deep) * out * 0.93;
+  const zs = L.deep / Math.max(L.wide, L.deep) * 1.08;
+  const strips: Mesh[] = [];
+  for (let k = 0; k < n; k++) {
+    const a = ((k + 0.5) / n) * Math.PI * 2;
+    const s = MeshBuilder.CreateBox(name, { width: r * 0.2, height: (yTop - yBot) * 0.96, depth: r * 0.22 }, scene);
+    s.parent = limb.parent;
+    s.position.set(Math.sin(a) * r, (yTop + yBot) / 2, Math.cos(a) * r * zs);
+    s.rotation.y = a;
+    s.material = mat;
+    strips.push(s);
+  }
+  return strips;
+}
+
+/*
+ * [S] the King's royal dress (358; medieval.king.red.png, card Appearance "a short-sleeved blouse with golden-yellow designs around the collar and sleeves ... a
+ * thick basic leather brown belt with a golden buckle ... puffy pantaloons with golden yellow folds ... leggings with brown, buckled shoes"):
+ * - puffed short sleeves: team shells KING_DRESS.puff of the upper arm's half-width round it, to .sleeve of its length, KING_DRESS.stripes gold folds round
+ *   each and a gold cuff band at the foot;
+ * - a gold collar opening in a V on the chest's visible front (chestFrontAt), from the neck .collar of the chest half-width out and .vee of its height down;
+ * - a brown belt round the waist .belt of the chest height tall, a gold buckle .buckle of the chest half-width square at the front;
+ * - puffy pantaloons: team shells .pants of the thigh's half-width round it, the same gold folds;
+ * - beige stockings: shells .hose of the shin's half-width; brown shoes with a gold buckle on the instep.
+ */
+const KING_DRESS = {
+  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.1, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
+  gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), beige: new Color3(0.82, 0.72, 0.52), shoe: new Color3(0.45, 0.27, 0.14),
+  shade: 0.92, glow: 0.12,
+};
+
+function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = KING_DRESS;
+  const mats = getMaterialFactory();
+  const cloth = mats.get("cloth", team.scale(K.shade), { emissiveIntensity: K.glow });
+  const gold = mats.get("cloth", K.gold, { emissiveIntensity: K.glow });
+  const leather = mats.get("cloth", K.leather, { emissiveIntensity: K.glow });
+  const beige = mats.get("cloth", K.beige, { emissiveIntensity: K.glow });
+  const shoe = mats.get("cloth", K.shoe, { emissiveIntensity: K.glow });
+  const out: Mesh[] = [];
+  // puffed sleeves, gold folds, gold cuff band
+  for (const upper of [body.leftUpperArm, body.rightUpperArm]) {
+    out.push(limbShell(scene, "kingSleeve", upper, 0, K.sleeve, K.puff, cloth));
+    out.push(...shellStripes(scene, "kingSleeveFold", upper, 0.04, K.sleeve - 0.08, K.puff, K.stripes, gold));
+    out.push(limbShell(scene, "kingSleeveCuff", upper, K.sleeve - 0.1, K.sleeve, K.puff * 1.06, gold));
+  }
+  // pantaloons with gold folds, stockings
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    out.push(limbShell(scene, "kingPantaloon", thigh, 0, 0.98, K.pants, cloth));
+    out.push(...shellStripes(scene, "kingPantaloonFold", thigh, 0.06, 0.92, K.pants, K.stripes, gold));
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "kingStocking", shin, 0.02, 0.95, K.hose, beige));
+  // brown shoes, gold buckle on the instep
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const m of knee.getChildMeshes(true)) {
+      if (!/_[lr]FootM$/.test(m.name)) continue;
+      m.material = shoe;
+      const fb = m.getBoundingInfo().boundingBox;
+      const buckle = MeshBuilder.CreateBox("kingShoeBuckle", { width: fb.extendSize.x * 0.9, height: fb.extendSize.y * 0.5, depth: fb.extendSize.z * 0.3 }, scene);
+      buckle.parent = m;
+      buckle.position.set(fb.center.x, fb.maximum.y, fb.center.z + fb.extendSize.z * 0.35);
+      buckle.material = gold;
+      out.push(buckle);
+    }
+  }
+  // gold collar in a V on the chest
+  const t = body.torsoMesh;
+  const c = t.getBoundingInfo().boundingBox.extendSize;
+  const cx = c.x * t.scaling.x, cy = c.y * t.scaling.y;
+  const top = t.position.y + cy * 0.93;
+  const zc = (y: number) => chestFrontAt(body, y) + cx * 0.03;
+  for (const side of [-1, 1]) {
+    const lapel = panel(scene, "kingCollar", [
+      new Vector3(side * cx * 0.14, top, zc(top)),
+      new Vector3(side * cx * K.collar, top - cy * 0.03, zc(top - cy * 0.03)),
+      new Vector3(side * cx * K.collar * 0.55, top - cy * K.vee * 0.6, zc(top - cy * K.vee * 0.6)),
+      new Vector3(side * cx * 0.04, top - cy * K.vee, zc(top - cy * K.vee)),
+    ]);
+    lapel.parent = t.parent;
+    lapel.material = gold;
+    out.push(lapel);
+  }
+  // brown belt round the waist, gold buckle at the front
+  const beltY = t.position.y - cy * 0.82;
+  let half = 0;
+  const v = t.getVerticesData("position") ?? [];
+  for (let i = 0; i < v.length; i += 3) half = Math.max(half, Math.abs(v[i] * t.scaling.x));
+  const zFront = chestFrontAt(body, beltY);
+  const belt = MeshBuilder.CreateCylinder("kingBelt", { height: cy * K.belt, diameter: half * 2 * 1.04, tessellation: 8 }, scene);
+  belt.convertToFlatShadedMesh();
+  belt.scaling.z = (zFront * 1.08) / (half * 1.04);
+  belt.parent = t.parent;
+  belt.position.set(0, beltY, t.position.z);
+  belt.material = leather;
+  out.push(belt);
+  const buckle = MeshBuilder.CreateBox("kingBeltBuckle", { width: cx * K.buckle, height: cy * K.belt * 1.35, depth: cx * 0.06 }, scene);
+  buckle.parent = t.parent;
+  buckle.position.set(0, beltY, zFront * 1.08 + cx * 0.02);
+  buckle.material = gold;
+  out.push(buckle);
+  return out;
+}
+
 /** A limb mesh's extent in its joint's frame: its middle height, half-height and half-width (x) and half-depth (z). */
 function limbBox(limb: Mesh): { mid: number; half: number; wide: number; deep: number } {
   const b = limb.getBoundingInfo().boundingBox;
@@ -691,7 +798,7 @@ export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: strin
     case "medieval.healer": return healerTonsure(scene, body);
     case "medieval.archer": return [...archerHood(scene, body, team), ...archerArms(scene, body)];
     case "medieval.bard": return bardVest(scene, body, team);
-    case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream)];
+    case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream), ...kingDress(scene, body, team)];
     case "medieval.squire": return squireLegs(scene, body);
     // [S] the Knight's cape (358; medieval.knight.png, card "a team colored cape"): the king's cape in team cloth (x KNIGHT_CAPE.shade) off the backs of his
     // steel shoulders to the knee (.drop), hung KNIGHT_PLATE.deep x .clear off the back so it clears the cuirass
