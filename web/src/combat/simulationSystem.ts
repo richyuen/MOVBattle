@@ -269,6 +269,14 @@ const HOP_BACK: Record<string, { afterLand?: number; close?: number; dist: numbe
  */
 const FENCER_RECOVER = { dist: 1.8, seconds: 0.16, kind: "backstep" };
 /*
+ * [S] Fencer Dodge (371; card Abilities "evade most melee attacks by prompting the unit to hop or sidestep away", Characteristics "their AI will use it
+ * to try and dodge close-range melee attacks"). When a man's swing goes up at a fencer (the blow is struck at him and still to come down), the fencer,
+ * unless his own thrust is on its way or he is already sliding, sidesteps out of its arc: a ground slide FENCER_DODGE.dist m off to one side of the line
+ * between them, turned back off the man by .back of the side step (1: half way between side and straight back), in .seconds s, fast at first and easing (the recover slide), facing the man throughout. His sides
+ * alternate. .cooldown s between dodges. The blow he dodged was struck at where he stood: it comes down on air. Logged .kind.
+ */
+const FENCER_DODGE = { dist: 2.2, back: 1.0, seconds: 0.22, cooldown: 2.5, kind: "dodge" };
+/*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
  * in circles"; Appearance "It doesn't attack unless ... a unit gets particularly close"). The bard walks at his man until he is .lure m past his reach, then
  * turns and runs, playing: each step heads .turn rad off straight away from the man, so he circles round him and out, alternate bards circling opposite
@@ -354,7 +362,10 @@ export class SimulationSystem {
   private _landedAt = new Map<RuntimeUnit, number>();
   private _hopReadyAt = new Map<RuntimeUnit, number>();
   // Fencer recover (FENCER_RECOVER): each sliding man, his flat way back, when it started and the man he faces
-  private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit }>();
+  private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit; dist: number; seconds: number }>();
+  // Fencer Dodge (FENCER_DODGE): when each fencer may dodge again, and which side he goes next
+  private _dodgeReadyAt = new Map<RuntimeUnit, number>();
+  private _dodgeSide = new Map<RuntimeUnit, number>();
   // [S] 369 balloon arrows loosed from the draw fist (renaissanceDress heldBalloonArrow): each held arrow and when the next is back in the hand
   private _arrowsAway = new Map<Node, number>();
   // Banjo Walk (BANJO_WALK): the bards running their circles now, and which way each turns
@@ -486,6 +497,8 @@ export class SimulationSystem {
     this._landedAt.clear();
     this._hopReadyAt.clear();
     this._recovers.clear();
+    this._dodgeReadyAt.clear();
+    this._dodgeSide.clear();
     for (const held of this._arrowsAway.keys()) if (!held.isDisposed()) held.setEnabled(true);
     this._arrowsAway.clear();
     this._banjoWalks.clear();
@@ -2214,6 +2227,8 @@ export class SimulationSystem {
     if (landIn > 0) {
       attacker.aimBlowAt(target, landIn);
       this._pendingBlows.push({ attacker, target, damage, splashRadius, knockback, landAt: now + landIn });
+      // a fencer at the end of it may sidestep out of its arc (FENCER_DODGE)
+      this._tryDodge(target, attacker, now);
       return;
     }
     this._landMeleeBlow(attacker, target, damage, splashRadius, knockback, now, impactOrigin);
@@ -2228,15 +2243,36 @@ export class SimulationSystem {
     unit.stopMoving();
     this._clearPathState(unit);
     unit.holdHeading(Math.atan2(-dir.x, -dir.z));
-    this._recovers.set(unit, { dir, from: now, foe });
+    this._recovers.set(unit, { dir, from: now, foe, dist: FENCER_RECOVER.dist, seconds: FENCER_RECOVER.seconds });
     this._logAbility(unit, FENCER_RECOVER.kind, now, foe.position);
   }
 
-  /** Moves each recovering fencer along his slide: speed falling linearly from twice the mean to zero over FENCER_RECOVER.seconds. */
+  /** Fencer Dodge (FENCER_DODGE): a swing has gone up at this fencer; if ready, he sidesteps out of its arc on the recover slide. */
+  private _tryDodge(unit: RuntimeUnit, foe: RuntimeUnit, now: number): void {
+    const D = FENCER_DODGE;
+    if (unit.definition.id !== "renaissance.fencer" || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit)) return;
+    if (now < (this._dodgeReadyAt.get(unit) ?? 0) || this._pendingBlows.some((b) => b.attacker === unit)) return;
+    const away = unit.position.subtract(foe.position);
+    away.y = 0;
+    if (away.lengthSquared() < 1e-6) return;
+    away.normalize();
+    const side = this._dodgeSide.get(unit) ?? 1;
+    this._dodgeSide.set(unit, -side);
+    const dir = new Vector3(-away.z * side, 0, away.x * side).add(away.scale(D.back)).normalize();
+    unit.stopMoving();
+    this._clearPathState(unit);
+    unit.holdHeading(Math.atan2(-away.x, -away.z));
+    this._recovers.set(unit, { dir, from: now, foe, dist: D.dist, seconds: D.seconds });
+    this._dodgeReadyAt.set(unit, now + D.cooldown);
+    // the blow was struck at where he stood: it comes down on air
+    this._pendingBlows = this._pendingBlows.filter((b) => !(b.attacker === foe && b.target === unit));
+    this._logAbility(unit, D.kind, now, foe.position);
+  }
+
+  /** Moves each sliding fencer (recover or dodge) along his slide: speed falling linearly from twice the mean to zero over the slide's seconds. */
   private _slideRecovers(dt: number, now: number): void {
-    const R = FENCER_RECOVER;
     for (const [unit, r] of this._recovers) {
-      const t0 = Math.max(0, now - dt - r.from) / R.seconds, t1 = Math.min(1, (now - r.from) / R.seconds);
+      const t0 = Math.max(0, now - dt - r.from) / r.seconds, t1 = Math.min(1, (now - r.from) / r.seconds);
       if (unit.isDead || t0 >= 1) {
         this._recovers.delete(unit);
         unit.holdHeading(null);
@@ -2244,7 +2280,7 @@ export class SimulationSystem {
       }
       // distance covered between t0 and t1 under v(t) = 2 * dist * (1 - t): dist * ((2t - t^2) at t1 minus at t0)
       const ease = (t: number) => 2 * t - t * t;
-      const step = R.dist * (ease(t1) - ease(t0));
+      const step = r.dist * (ease(t1) - ease(t0));
       unit.stopMoving();
       unit.teleportTo(unit.position.add(r.dir.scale(step)));
       if (!r.foe.isDead) unit.holdHeading(Math.atan2(r.foe.position.x - unit.position.x, r.foe.position.z - unit.position.z));
