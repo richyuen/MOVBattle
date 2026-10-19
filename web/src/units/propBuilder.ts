@@ -4724,10 +4724,11 @@ const SCUTUM_LAUREL = { upperAt: 0.26, lowerAt: -0.3, arch: 0.07, spread: 0.72, 
 const SCUTUM_TRIM = new Color3(0.9, 0.45, 0.16);
 /**
  * [S] the scutum's rim and laurels on their own flat self-lit material (381; ancient.shield_bearer.red.png: a saturated orange rim ~(237,153,77) and
- * laurels the same; critic 379/380: under the lit "cloth" path the trim read tan/ochre, beige-gold, whatever its colour). An unlit material whose
- * emissive is SCUTUM_TRIM x .flat shows the colour itself, shading or no. The aspis keeps its lit rim.
+ * laurels the same; critic 379/380: under the lit "cloth" path the trim read tan/ochre, beige-gold, whatever its colour). An unlit material, out of the
+ * glow layer, whose emissive SCUTUM_TRIM_FLAT is set past 1 in red and near 0 in blue so that after ACES tone mapping and the haze it lands on that
+ * orange (look 381: (1.5,.36,.02) read 232,153,96; SCUTUM_TRIM itself read cream with a glow halo). The aspis keeps its lit rim.
  */
-const SCUTUM_TRIM_FLAT = 1;
+const SCUTUM_TRIM_FLAT = new Color3(1.5, 0.35, 0);
 const SCUTUM_IRON = new Color3(0.27, 0.27, 0.28);
 /*
  * [S] the aspis (379; ancient.hoplite.red.png, card Appearance "holding an aspis"; critic 378: an octagonal disc held flat at the chest). A big round
@@ -4933,7 +4934,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       shield.metadata = { holeUp: H / 2 + S.chin * s };
       const boardMat = mat(scene, board, 0.12, "cloth");
       // [S] the trim self-lit and flat (381, SCUTUM_TRIM_FLAT): lit "cloth" shaded the orange to tan in every shot (critic 379, 380)
-      const trim = getMaterialFactory().get("unlit", SCUTUM_TRIM, { emissive: SCUTUM_TRIM.scale(SCUTUM_TRIM_FLAT) });
+      const trim = getMaterialFactory().get("unlit", SCUTUM_TRIM, { emissive: SCUTUM_TRIM_FLAT });
       const iron = mat(scene, SCUTUM_IRON, 0.1, "cloth");
       // the arc the face lies on: x across, z back by the curve at the sides
       const arcZ = (x: number) => -S.curve * s * (2 * x / W) ** 2;
@@ -5007,6 +5008,8 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       boss.scaling.z = 0.6;
       boss.position.set(0, plate.position.y, D * 1.2);
       boss.parent = shield; boss.material = iron;
+      const glow = scene.getGlowLayerByName("glow");
+      for (const m of shield.getChildMeshes()) if (m.material === trim) glow?.addExcludedMesh(m as Mesh);
       return shield;
     }
     case "aspis": {
