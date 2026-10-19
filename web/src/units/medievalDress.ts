@@ -856,6 +856,19 @@ function kingPantaloon(scene: Scene, thigh: Mesh, cloth: Material, gold: Materia
   return out;
 }
 
+/*
+ * [S] light warm cloth (360; medieval.squire.blue.png, medieval.archer.red.png: beige-tan sleeves about RGB 211,191,160). A material readback in the browser
+ * (360) showed the sleeve shells' baseColor intact: nothing repaints them. The grey is the lighting: the cool hemi ground light (main.ts hemi.groundColor
+ * .3,.3,.42) and ACES tone mapping flatten a pale, low-saturation tan to neutral grey, while the more saturated brown leather beside it holds. So light warm
+ * cloth takes an explicit amber self-light of its own (the king's beard recipe, kingHair) in place of colour x glow: WARM_CLOTH.tan diffuse, .warm emissive;
+ * calibrated by pixel readback of a squire row (.tan/.warm render about 205-212, 185-192, 145-165 front-lit).
+ */
+const WARM_CLOTH = { tan: new Color3(0.9, 0.72, 0.44), warm: new Color3(0.45, 0.27, 0.06) };
+
+function warmCloth(color = WARM_CLOTH.tan, warm = WARM_CLOTH.warm): Material {
+  return getMaterialFactory().get("cloth", color, { emissive: warm });
+}
+
 /** A limb mesh's extent in its joint's frame: its middle height, half-height and half-width (x) and half-depth (z). */
 function limbBox(limb: Mesh): { mid: number; half: number; wide: number; deep: number } {
   const b = limb.getBoundingInfo().boundingBox;
@@ -923,11 +936,12 @@ function squireLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
  * grey couter over each elbow and grey gauntlets over the forearm and hand. Shells, not recolours (unitFactory's tabard block paints the arms mail after the dress
  * runs): sleeves SQUIRE_ARMS.sleeve of the upper arm's half-width round it, gauntlets .gauntlet of the forearm's, couters .couter of it across; steel SQUIRE_LEGS.iron.
  */
-const SQUIRE_ARMS = { sleeve: 1.16, gauntlet: 1.4, couter: 1.5, beige: new Color3(0.82, 0.72, 0.52), glow: 0.1 };
+const SQUIRE_ARMS = { sleeve: 1.16, gauntlet: 1.4, couter: 1.5 };
 
 function squireArms(scene: Scene, body: ArticulatedBody): Mesh[] {
   const A = SQUIRE_ARMS;
-  const beige = getMaterialFactory().get("cloth", A.beige, { emissiveIntensity: A.glow });
+  // sleeves in light warm cloth (360: the beige x glow cloth rendered neutral grey, warmCloth)
+  const beige = warmCloth();
   const iron = getMaterialFactory().get("stone", SQUIRE_LEGS.iron, { emissiveIntensity: SQUIRE_LEGS.glow });
   const out: Mesh[] = [];
   for (const upper of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "squireSleeve", upper, 0, 0.96, A.sleeve, beige));
