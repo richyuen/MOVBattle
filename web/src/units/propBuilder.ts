@@ -217,20 +217,22 @@ const HELM_CROWN = 0.12;
 const PLUME_TALL = 0.45;
 const HAT_EYE_CLEAR = 0.05;
 /*
- * A crested Corinthian helm (244; units/ancient.hoplite: the helm closes over the whole head to the jaw, a T-shaped opening leaving the eyes and nose bar,
- * cheek guards down both sides of the face, a neck guard behind, and a tall crest standing on a short stalk, front to back, its top arched over the head):
- *   dome CREST_HELM_HEADS heads across; cheek guards CREST_CHEEK_DROP of the head below the seat, CREST_CHEEK_WIDE head widths each, set out past the eyes;
- *   crest CREST_TALL of the head high, CREST_LONG head widths front to back, on a stalk CREST_STALK of the head over the dome's top.
+ * [S] the Corinthian helm enclosing the head (381; ancient.sarissa.red.png, .png, ancient.hoplite.red.png, .jpg: a team-coloured helm closed over the
+ * whole head to the jaw, the eyes looking out of a T-shaped opening with a nose guard between them, a narrow slit down the face below, and a tall crest
+ * seated on the bowl from brow to nape, stepped, highest in front; critic 378/380: a flat dome on the crown, flat cheek plates, a thin crest floating
+ * on a stalk over it). In the head's width W and height H, below the crown: the bowl the upper half of an ellipsoid .wide x .deep of W across and deep,
+ * its rim at the brow line .brow of H down, rising .rise of H over the crown; a shell round the sides and back .arc of a turn (its gap to the front)
+ * from the brow to the jaw .jaw of H down, flaring .flare; under the eyes (.underEye of H down) two face plates .face of W ahead of the head's centre
+ * from the shell's edge in to a slit .slit of W, .plate of W thick, turned .wrap rad; a brow ridge .ridge of H tall; a nose guard .nose of W wide
+ * from the brow to the plates; the crest .slabs slabs from .front to .back rad round the bowl's top (0 the crown, + the brow), each standing .crest of
+ * H out along the bowl's normal less .fall of that toward the nape, .crestWide of W thick, sunk .sink of its height, overlapping .overlap. Colours:
+ * team + .bronze of bronze x .shade, crest team x .crestShade, both lit .glow (the blue helm read grey under the light).
  */
-const CREST_HELM_HEADS = 1.28;
-const CREST_CHEEK_DROP = 0.62;
-const CREST_CHEEK_WIDE = 0.24;
-const CREST_TALL = 1.05;
-const CREST_LONG = 1.25;
-const CREST_STALK = 0.14;
-// Team paint (245): the helm is the team colour with CREST_HELM_BRONZE of bronze mixed in; the crest is the team colour at CREST_HAIR_SHADE
-const CREST_HELM_BRONZE = 0.18;
-const CREST_HAIR_SHADE = 0.62;
+const CORINTH_HELM = {
+  wide: 0.62, deep: 0.68, brow: 0.26, rise: 0.24, arc: 0.76, flare: 1.05, jaw: 1.0, underEye: 0.62, face: 0.48, slit: 0.1, plate: 0.08, wrap: 0.3,
+  ridge: 0.09, nose: 0.07, slabs: 9, front: 1.15, back: -1.35, crest: 0.5, fall: 0.45, crestWide: 0.14, sink: 0.25, overlap: 1.3,
+  bronze: 0.1, shade: 0.9, crestShade: 0.6, glow: 0.1,
+};
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
@@ -1388,46 +1390,50 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return skull;
   }
   if (type === "crested_helm") {
-    const tall = eyeTop - HAT_EYE_CLEAR * H + HELM_CROWN * H;
-    const R = CREST_HELM_HEADS * W * 0.5;
-    // The helm is painted in the team colour like the skin under it, a shade deeper, with only a touch of bronze (units/ancient.hoplite: red helm on a red
-    // man); the crest is the team colour deeper still, so a blue hoplite wears a blue helm and crest and never the other side's red
+    // [S] the Corinthian helm enclosing the head (381, spec at CORINTH_HELM)
+    const C = CORINTH_HELM;
     const bronzeBase = new Color3(0.74, 0.5, 0.22);
-    const bronze = mat(scene, teamColor ? Color3.Lerp(teamColor, bronzeBase, CREST_HELM_BRONZE).scale(0.88) : Color3.Lerp(bronzeBase, accent, 0.2), 0.06);
-    const helm = MeshBuilder.CreateSphere("chelm", { diameterX: u(2 * R), diameterY: u(tall * 2.1), diameterZ: u(2 * R * 1.08), segments: 8, slice: 0.5 }, scene);
-    helm.position.y = u(seat);
-    helm.material = bronze;
-    // Brow band over the eyes, a nose bar down from it, cheek guards closing the sides of the face to the jaw, and a neck guard behind
-    const brow = MeshBuilder.CreateBox("chelmBrow", { width: u(1.05 * W), height: u(0.1 * H), depth: u(0.2 * W) }, scene);
-    brow.position.set(0, u(0.02 * H), u(R * 0.88));
-    brow.material = bronze;
-    brow.parent = helm;
-    const nose = MeshBuilder.CreateBox("chelmNose", { width: u(0.1 * W), height: u(0.3 * H), depth: u(0.08 * W) }, scene);
-    nose.position.set(0, u(-0.15 * H), u(R * 1.0));
-    nose.material = bronze;
-    nose.parent = helm;
+    const metal = mat(scene, teamColor ? Color3.Lerp(teamColor, bronzeBase, C.bronze).scale(C.shade) : Color3.Lerp(bronzeBase, accent, 0.2), C.glow);
+    const hair = mat(scene, teamColor ? teamColor.scale(C.crestShade) : new Color3(0.62, 0.12, 0.1), C.glow);
+    const rx = u(C.wide * W), rz = u(C.deep * W), brow = -u(C.brow * H), jaw = -u(C.jaw * H);
+    // the bowl: the upper half of an ellipsoid from the brow line, rising .rise of the head over the crown
+    const helm = MeshBuilder.CreateSphere("chelm", { diameterX: 2 * rx, diameterY: 2 * (u(C.rise * H) - brow), diameterZ: 2 * rz, segments: 10, slice: 0.5 }, scene);
+    helm.position.y = brow;
+    helm.material = metal;
+    helm.convertToFlatShadedMesh();
+    const put = (m: Mesh, material: PBRMetallicRoughnessMaterial = metal): Mesh => { m.material = material; m.convertToFlatShadedMesh(); m.parent = helm; return m; };
+    // the cheek and neck guards: one shell round the sides and back from the brow to the jaw, open at the front for the face (arc gap centred on +z)
+    const shell = put(MeshBuilder.CreateCylinder("chelmShell", { height: brow - jaw, diameterTop: 2, diameterBottom: 2 * C.flare, tessellation: 12, arc: C.arc, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene));
+    shell.rotation.y = Math.PI / 2 - Math.PI * C.arc;
+    shell.scaling.set(rx, 1, rz);
+    shell.position.y = -(brow - jaw) / 2;
+    // the face closed under the eyes: a plate each side from the shell's edge in to a narrow slit down the middle, turned to follow the face
+    const gapX = rx * Math.sin(Math.PI * (1 - C.arc)), plateW = gapX - u(C.slit * W) / 2;
+    const plateTall = u((C.jaw - C.underEye) * H);
     for (const side of [-1, 1]) {
-      const cheek = MeshBuilder.CreateBox("chelmCheek", { width: u(CREST_CHEEK_WIDE * W), height: u(CREST_CHEEK_DROP * H), depth: u(0.75 * W) }, scene);
-      cheek.position.set(side * u(R - CREST_CHEEK_WIDE * W * 0.45), u(-CREST_CHEEK_DROP * H * 0.5), u(0.12 * W));
-      cheek.rotation.y = side * 0.25;
-      cheek.material = bronze;
-      cheek.parent = helm;
+      const plate = put(MeshBuilder.CreateBox("chelmCheek", { width: plateW, height: plateTall, depth: u(C.plate * W) }, scene));
+      plate.position.set(side * (u(C.slit * W) / 2 + plateW / 2), -u(C.underEye * H) - plateTall / 2 - brow, u(C.face * W));
+      plate.rotation.y = -side * C.wrap;
     }
-    const neck = MeshBuilder.CreateBox("chelmNeck", { width: u(1.1 * W), height: u(0.5 * H), depth: u(0.16 * W) }, scene);
-    neck.position.set(0, u(-0.25 * H), u(-R * 0.92));
-    neck.rotation.x = -0.15;
-    neck.material = bronze;
-    neck.parent = helm;
-    // The crest: a stalk on the dome's top and a horsehair fan on it, an ellipsoid half sunk in its base so only the arch stands
-    const hair = mat(scene, teamColor ? teamColor.scale(CREST_HAIR_SHADE) : new Color3(0.62, 0.12, 0.1), 0.05);
-    const stalk = MeshBuilder.CreateBox("chelmStalk", { width: u(0.1 * W), height: u(CREST_STALK * H), depth: u(0.5 * W) }, scene);
-    stalk.position.y = u(tall + CREST_STALK * H * 0.4);
-    stalk.material = bronze;
-    stalk.parent = helm;
-    const crest = MeshBuilder.CreateSphere("chelmCrest", { diameterX: u(0.26 * W), diameterY: u(CREST_TALL * H * 2), diameterZ: u(CREST_LONG * W), segments: 8, slice: 0.5 }, scene);
-    crest.position.y = u(tall + CREST_STALK * H * 0.8);
-    crest.material = hair;
-    crest.parent = helm;
+    // the brow ridge over the eyes and the nose guard down between them
+    const ridge = put(MeshBuilder.CreateBox("chelmBrow", { width: 2 * gapX, height: u(C.ridge * H), depth: u(C.plate * W * 1.6) }, scene));
+    ridge.position.set(0, u(C.ridge * H) * 0.3, u(C.face * W));
+    const nose = put(MeshBuilder.CreateBox("chelmNose", { width: u(C.nose * W), height: u((C.underEye - C.brow) * H), depth: u(C.plate * W * 1.4) }, scene));
+    nose.position.set(0, -u((C.underEye - C.brow) * H) / 2, u(C.face * W) + u(C.plate * W) * 0.3);
+    // the crest: .slabs slabs set on the bowl's top line from the brow to the nape, each sunk in it and standing out along the bowl's normal, tallest in
+    // front, so it reads as a stepped crest seated on the helm (no stalk, no gap)
+    const ry = u(C.rise * H) - brow;
+    for (let i = 0; i < C.slabs; i++) {
+      const t = i / (C.slabs - 1);
+      const phi = C.front + (C.back - C.front) * t;
+      const on = new Vector3(0, ry * Math.cos(phi), rz * Math.sin(phi));
+      const normal = new Vector3(0, Math.cos(phi) / ry, Math.sin(phi) / rz).normalize();
+      const tallness = u(C.crest * H) * (1 - C.fall * t);
+      const step = ((C.back - C.front) / (C.slabs - 1)) * Math.hypot(ry, rz) * 0.5;
+      const slab = put(MeshBuilder.CreateBox("chelmCrest", { width: u(C.crestWide * W), height: tallness, depth: Math.abs(step) * C.overlap }, scene), hair);
+      slab.position.copyFrom(on.add(normal.scale(tallness * (0.5 - C.sink))));
+      slab.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), normal, new Quaternion());
+    }
     return helm;
   }
   if (type === "helmet" || type === "plume_helmet") {
