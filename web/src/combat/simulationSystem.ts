@@ -243,6 +243,16 @@ const WHEELBARROW_CREW = { appleFrom: 2.5, appleReach: 14, appleEvery: 1.8, appl
  */
 const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
 /*
+ * [S] Hop back (369). The fencer (card Characteristics "thrusts forward to attack with its foil then steps back ... a dedicated back step"): .afterLand s
+ * after his thrust lands on the man he hops straight back off him, still facing him, .dist m along the ground at .rise m/s up. The halberd (card
+ * Characteristics "when an enemy unit gets too close, they can dash back for a better angle and strike"): a man come within .close m of his hide (hide to
+ * hide) sends him dashing back .dist m in a low hop, then he chops from his pole's length. Never while his own blow is still coming down; .cooldown s
+ * between hops. Logged .kind.
+ */
+const HOP_BACK: Record<string, { afterLand?: number; close?: number; dist: number; rise: number; cooldown: number; kind: string }> = {
+  "renaissance.fencer": { afterLand: 0.12, dist: 1.5, rise: 3.2, cooldown: 1.5, kind: "backstep" },
+};
+/*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
  * in circles"; Appearance "It doesn't attack unless ... a unit gets particularly close"). The bard walks at his man until he is .lure m past his reach, then
  * turns and runs, playing: each step heads .turn rad off straight away from the man, so he circles round him and out, alternate bards circling opposite
@@ -324,6 +334,9 @@ export class SimulationSystem {
   // Farmer back-step (FARMER_BACKSTEP): when each farmer last stabbed, and the farmers backing off now (their heading held on the man)
   private _stabbedAt = new Map<RuntimeUnit, number>();
   private _backingOff = new Set<RuntimeUnit>();
+  // Hop back (HOP_BACK): when each man's last blow landed, and when he may hop again
+  private _landedAt = new Map<RuntimeUnit, number>();
+  private _hopReadyAt = new Map<RuntimeUnit, number>();
   // Banjo Walk (BANJO_WALK): the bards running their circles now, and which way each turns
   private _banjoWalks = new Map<RuntimeUnit, number>();
   private _banjoTurns = 0;
@@ -450,6 +463,8 @@ export class SimulationSystem {
     this._chargeReadyAt.clear();
     this._stabbedAt.clear();
     this._backingOff.clear();
+    this._landedAt.clear();
+    this._hopReadyAt.clear();
     this._banjoWalks.clear();
     this._banjoNotes.clear();
     this._banjoNoteCount = 0;
@@ -974,6 +989,29 @@ export class SimulationSystem {
         this._clearPathState(unit);
         this._logAbility(unit, "leap", now, enemy.position);
         return;
+      }
+    }
+
+    // Hop back (HOP_BACK): the fencer off his man after the thrust, the halberd off a man come inside his pole
+    const hop = HOP_BACK[unit.definition.id];
+    if (hop && canMove && now >= (this._hopReadyAt.get(unit) ?? 0) && !this._pendingBlows.some((b) => b.attacker === unit)) {
+      const landed = this._landedAt.get(unit);
+      const due = hop.afterLand !== undefined
+        ? landed !== undefined && now - landed >= hop.afterLand && now - landed < hop.afterLand + 0.6 && distance < engageDistance
+        : distance - unit.collisionBodyRadius - enemy.collisionBodyRadius < (hop.close ?? 0);
+      if (due) {
+        const away = unit.position.subtract(enemy.position);
+        away.y = 0;
+        if (away.lengthSquared() < 1e-6) away.set(Math.sin(unit.body.root.rotation.y + Math.PI), 0, Math.cos(unit.body.root.rotation.y + Math.PI));
+        away.normalize();
+        unit.faceTarget(enemy.position);
+        if (unit.leap(away, hop.dist, hop.rise)) {
+          this._hopReadyAt.set(unit, now + hop.cooldown);
+          this._landedAt.delete(unit);
+          this._clearPathState(unit);
+          this._logAbility(unit, hop.kind, now, enemy.position);
+          return;
+        }
       }
     }
 
@@ -2145,6 +2183,7 @@ export class SimulationSystem {
   private _landMeleeBlow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, splashRadius: number, knockback: Vector3, now: number, impactOrigin: Vector3): void {
     // The striker's aim is pinned where the blow lands before the man is thrown off that point
     attacker.animator.blowStruck();
+    if (HOP_BACK[attacker.definition.id]) this._landedAt.set(attacker, now);
     const heavy = attacker.animator.defaultAttackMotion === "heavy_swing";
     // A heavy blow that leaves him standing dwells on him (BLOW_DWELL): the push is withheld from the damage step and fired with the throw; the crowd
     // around him still takes the blow's shock now
