@@ -923,7 +923,7 @@ function squireLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
  * grey couter over each elbow and grey gauntlets over the forearm and hand. Shells, not recolours (unitFactory's tabard block paints the arms mail after the dress
  * runs): sleeves SQUIRE_ARMS.sleeve of the upper arm's half-width round it, gauntlets .gauntlet of the forearm's, couters .couter of it across; steel SQUIRE_LEGS.iron.
  */
-const SQUIRE_ARMS = { sleeve: 1.16, gauntlet: 1.4, couter: 1.5, beige: new Color3(0.82, 0.72, 0.52), glow: 0.1 };
+const SQUIRE_ARMS = { sleeve: 1.16, gauntlet: 1.4, couter: 1.5, beige: new Color3(0.74, 0.6, 0.4), glow: 0.04 };
 
 function squireArms(scene: Scene, body: ArticulatedBody): Mesh[] {
   const A = SQUIRE_ARMS;
