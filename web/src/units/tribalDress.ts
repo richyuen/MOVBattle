@@ -1003,3 +1003,75 @@ export function dressTribalPauldrons(scene: Scene, body: ArticulatedBody, unitId
   }
   return added;
 }
+
+/*
+ * [S] The stoner's one-strap hide dress (362; tribal.stoner.red.png, card Appearance: "a simple brown garment held by a shoulder strap on their right side"):
+ * a reddish-brown hide dress whose top edge runs on a slant from over the right shoulder across the chest to under the left arm, the left shoulder and the
+ * top of the left chest bare, hanging on below the waist as a flared skirt to mid-thigh with a ragged, zig-zag hem. Replaces the tunic that wrapped the whole
+ * trunk to the yoke (it covered both shoulders).
+ *   - bodice: a HIDE_DRESS.sides-sided open sleeve round the trunk's box (its half widths a skin out), its foot just under the waist; its top edge
+ *     .top of the trunk high at the strap side, falling to .low of the trunk at the bare side;
+ *   - strap: a band .strap of the shoulder span wide over the strap shoulder from the bodice's front to its back;
+ *   - skirt: an open sleeve from the waist .skirt of the thigh long, flaring .flare at the foot, every other foot corner hung .rag of the thigh lower (each
+ *     its own share) so the hem is torn into points;
+ *   - hide .color, self-lit .glow so it stays brown in the shade.
+ */
+const HIDE_DRESS = { sides: 8, top: 1.0, low: 0.56, strap: 0.22, skirt: 0.62, flare: 1.4, rag: 0.16, color: new Color3(0.52, 0.3, 0.22), glow: 0.15 };
+const HIDE_DRESSES = new Set(["tribal.stoner"]);
+
+/** Dresses a bare tribesman in the one-strap hide dress (spec at HIDE_DRESS), parented to the torso joint. Empty when he wears none. */
+export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
+  if (!HIDE_DRESSES.has(unitId)) return [];
+  const added: Mesh[] = [];
+  const D = HIDE_DRESS;
+  const hide = getMaterialFactory().get("cloth", D.color, { emissiveIntensity: D.glow });
+  const band = trunkBand(body, 0, 0.95);
+  const trunk = band.trunk;
+  const thigh = Math.abs(body.leftKnee.position.y);
+  const side = Math.sign(body.rightShoulder.position.x) || 1;
+  const halfX = band.halfX * 1.08;
+  const halfZ = (band.maxZ - band.minZ) * 0.5 * 1.12;
+  const midZ = (band.minZ + band.maxZ) * 0.5;
+  // An open sleeve with its rim reshaped vertex by vertex: `place` gets the unit circle's (x, z) and whether the vertex is on the top rim
+  const sleeve = (name: string, place: (x: number, z: number, top: boolean) => [number, number, number]) => {
+    const m = MeshBuilder.CreateCylinder(name, { height: 1, diameter: 2, tessellation: D.sides, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    const at = m.getVerticesData(VertexBuffer.PositionKind);
+    if (at) {
+      for (let v = 0; v < at.length; v += 3) {
+        const [x, y, z] = place(at[v], at[v + 2], at[v + 1] > 0);
+        at[v] = x; at[v + 1] = y; at[v + 2] = z;
+      }
+      m.setVerticesData(VertexBuffer.PositionKind, at);
+    }
+    m.convertToFlatShadedMesh();
+    m.material = hide;
+    m.parent = body.torso;
+    added.push(m);
+    return m;
+  };
+  // The bodice: its top rim on a slant, high at the strap side, low at the bare side
+  sleeve("tunicWrap", (x, z, top) => {
+    const strapSide = (x * side + 1) * 0.5;
+    const y = top ? trunk * (D.low + (D.top - D.low) * strapSide) : -trunk * 0.04;
+    return [band.midX + x * halfX, y, midZ + z * halfZ];
+  });
+  // The strap over the strap shoulder
+  const shoulderX = Math.abs(body.rightShoulder.position.x);
+  const strap = MeshBuilder.CreateBox("tunicStrap", { width: shoulderX * D.strap * 2, height: trunk * 0.07, depth: halfZ * 2.1 }, scene);
+  strap.position.set(side * shoulderX * 0.55, trunk * D.top, midZ);
+  strap.material = hide;
+  strap.parent = body.torso;
+  added.push(strap);
+  // The skirt: flared, its foot torn into points
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  const pelvisX = pelvis ? pelvis.getBoundingInfo().boundingBox.extendSize.x : halfX;
+  const skirtTop = Math.max(halfX * 0.95, pelvisX * 1.12);
+  const skirtLong = thigh * D.skirt + trunk * 0.06;
+  sleeve("tunicSkirt", (x, z, top) => {
+    if (top) return [band.midX + x * skirtTop, trunk * 0.06, midZ + z * halfZ * 0.95];
+    const k = ((Math.round(Math.atan2(x, z) / (Math.PI * 2) * D.sides) % D.sides) + D.sides) % D.sides;
+    const torn = (k % 2) * thigh * D.rag * (0.6 + 0.8 * hashShare(5.9, k, 1, 2));
+    return [band.midX + x * skirtTop * D.flare, trunk * 0.06 - skirtLong - torn, midZ + z * halfZ * 0.95 * D.flare];
+  });
+  return added;
+}

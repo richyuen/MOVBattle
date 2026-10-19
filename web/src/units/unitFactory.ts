@@ -12,7 +12,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
+import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 
 export interface SpawnVisualOptions {
@@ -120,7 +120,8 @@ const TRIBAL_HAIR_COLOR = new Color3(0.16, 0.1, 0.06);
  * flaring TUNIC.flare; TUNIC.tatters points hang off its hem. Self-lit so the brown does not go black in the shade.
  */
 // The protector wears the same garment (card Appearance: "a brown garment held by a shoulder strap on one side"; tribal.protector.png)
-const TRIBAL_TUNIC_UNITS = new Set(["tribal.stoner", "tribal.protector"]);
+// (the stoner wears her own one-strap hide dress since 362: tribalDress dressTribalHideDress)
+const TRIBAL_TUNIC_UNITS = new Set(["tribal.protector"]);
 const TUNIC = { top: 0.88, skirt: 0.6, flare: 1.25, tatters: 5, strap: 0.22 };
 const TUNIC_COLOR = new Color3(0.5, 0.29, 0.18);
 /*
@@ -464,6 +465,7 @@ export class UnitFactory {
           propMeshes.push(hair);
         }
         if (TRIBAL_TUNIC_UNITS.has(definition.id)) propMeshes.push(...dressTribalTunic(this._scene, body));
+        propMeshes.push(...dressTribalHideDress(this._scene, body, definition.id));
         if (TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(...dressTribalCape(this._scene, body));
         // A strung necklace (tribalDress) in place of the dark fur collar
         propMeshes.push(...dressTribalNecklace(this._scene, body, definition.id));
