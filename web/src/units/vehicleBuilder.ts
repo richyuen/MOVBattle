@@ -1,6 +1,6 @@
 import {
   Scene, TransformNode, Mesh, MeshBuilder, Color3, Quaternion, Vector3, Ray, Matrix,
-  PBRMetallicRoughnessMaterial,
+  PBRMetallicRoughnessMaterial, type Material,
 } from "@babylonjs/core";
 import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
@@ -1984,6 +1984,55 @@ const FACE_PAINT = {
   steps: 3, wide: 0.17, taper: 0.3, thick: 0.03, trunkDots: [1, 3, 5], dot: 0.12,
 };
 const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.035, wide: 0.61, dots: 8, dotAt: -0.33, dot: 0.11, dotOut: 0.29, dotFlat: 0.2 };
+/*
+ * [S] the mammoth's legs (363; tribal.mammoth.blue.png: stubby pillars of the same lumpy brown fur as the body, thick where they leave it and narrowing a
+ * little to the ankle, the foot flaring just a touch and ending flat in the fur colour; two team stripes and a ring of team dots painted flush round the
+ * ankle). Replaces the octagonal drums (a fur cuff hoop, two posts, a black sole cap) whose stripes stood proud as raised hoops (critic 360).
+ *   - each leg two lathes of MAMMOTH_LEG.sides sides in the fur, the thigh on the hip joint from .top over it down past the knee and the shin on the knee
+ *     joint to the sole; radii (neck units) read down the profiles .thigh and .shin as [radius, y]; every vertex jittered .jitter (the coat's lumps);
+ *   - paint: each ANKLE_BAND stripe a ring of the shin's own sides at its height, .proud over the surface and ANKLE_BAND.stripeTall high; the dots flat
+ *     discs laid on the surface at ANKLE_BAND.dotAt, turned to face out.
+ */
+const MAMMOTH_LEG = {
+  sides: 9, jitter: 0.035, proud: 1.035,
+  thigh: [[0.37, 0.12], [0.36, -0.05], [0.33, -0.3], [0.3, -0.5]] as [number, number][],
+  shin: [[0.3, 0.06], [0.285, -0.1], [0.28, -0.26], [0.295, -0.36], [0.31, -0.42]] as [number, number][],
+};
+/** Radius of a lathe profile at height y (linear between its points). */
+function profileAt(profile: [number, number][], y: number): number {
+  for (let i = 0; i < profile.length - 1; i++) {
+    const [r0, y0] = profile[i], [r1, y1] = profile[i + 1];
+    if (y <= y0 && y >= y1) return r0 + (r1 - r0) * ((y0 - y) / (y0 - y1 || 1));
+  }
+  return profile[y > profile[0][1] ? 0 : profile.length - 1][0];
+}
+/** One mammoth leg (spec at MAMMOTH_LEG): the fur thigh and shin lathes, the flush ankle stripes and dots. */
+function mammothLeg(scene: Scene, hipJoint: TransformNode, kneeJoint: TransformNode, fur: Material, paint: Material, allMeshes: Mesh[], serial: number): void {
+  const L = MAMMOTH_LEG;
+  const lathe = (name: string, profile: [number, number][], parent: TransformNode, seed: number) => {
+    const top = profile[0][1], foot = profile[profile.length - 1][1];
+    const shape = [new Vector3(0, top, 0), ...profile.map(([r, y]) => new Vector3(r, y, 0)), new Vector3(0, foot, 0)];
+    const m = MeshBuilder.CreateLathe(name, { shape, tessellation: L.sides, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    jitterVertices(m, L.jitter, seed);
+    m.parent = parent; m.material = fur; allMeshes.push(m);
+  };
+  lathe("uleg", L.thigh, hipJoint, 61.3 + serial);
+  lathe("lleg", L.shin, kneeJoint, 67.9 + serial);
+  for (const y of ANKLE_BAND.stripes) {
+    const r = profileAt(L.shin, y) * L.proud;
+    const stripe = MeshBuilder.CreateCylinder("ankleStripe", { height: ANKLE_BAND.stripeTall, diameter: 2 * r, tessellation: L.sides * 2 }, scene);
+    stripe.position.set(0, y, 0);
+    stripe.parent = kneeJoint; stripe.material = paint; allMeshes.push(stripe);
+  }
+  const dotR = profileAt(L.shin, ANKLE_BAND.dotAt) * L.proud;
+  for (let i = 0; i < ANKLE_BAND.dots; i++) {
+    const a = (i + 0.5) / ANKLE_BAND.dots * Math.PI * 2;
+    const dot = MeshBuilder.CreateCylinder("ankleDot", { height: 0.012, diameter: ANKLE_BAND.dot, tessellation: 8 }, scene);
+    dot.rotation.set(Math.PI / 2, a, 0);
+    dot.position.set(Math.sin(a) * dotR, ANKLE_BAND.dotAt, Math.cos(a) * dotR);
+    dot.parent = kneeJoint; dot.material = paint; allMeshes.push(dot);
+  }
+}
 
 function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, teamTint = 0, giant = 1): ArticulatedBody {
   // The whole rig under the root scales by the unit's giant scale with its footprint and reach (unitDefinitions), so hull, legs, tusks, trunk and seats keep their proportions
@@ -2288,6 +2337,10 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   ];
 
   for (const [hipJoint, kneeJoint] of legJoints) {
+    if (mammoth) {
+      mammothLeg(scene, hipJoint, kneeJoint, fur, tuskTipMat, allMeshes, legJoints.findIndex(([h]) => h === hipJoint));
+      continue;
+    }
     // Upper leg
     const upper = MeshBuilder.CreateCylinder("uleg", {
       height: 0.55, diameterTop: 0.6, diameterBottom: 0.56, tessellation: 6,
