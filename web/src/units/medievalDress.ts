@@ -775,9 +775,9 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
   // stockings from the knee to the shoe, clear of the pantaloons
   // [R] (364): the thigh itself in the breeches cloth, the breeches past the knee hinge; the shin itself is the stocking (no shell), out of the glow
-  for (const [thigh, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as const) {
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
     thigh.material = cloth;
-    out.push(...kingPantaloon(scene, thigh, knee.position.y, cloth, gold));
+    out.push(...kingPantaloon(scene, thigh, cloth, gold));
   }
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     shin.material = beige;
@@ -834,16 +834,15 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   return out;
 }
 
-/** The puff of a pantaloon leg, top to foot: [share of its length down, radius in thigh half-widths]; it runs KING_PANTS.knee of the way from the thigh's
- *  top to the knee hinge (`kneeY`, in the hip joint's frame; past 1, so the hem hangs just below the hinge) and is gathered at its foot to the gold band,
- *  .band of the half-width. The thigh's knee stub below the hinge wears the breeches cloth, so a bent knee shows breeches. */
-const KING_PANTS = { knee: 1.06, profile: [[0, 1.15], [0.2, 1.45], [0.48, 1.68], [0.72, 1.48], [0.88, 1.05], [1, 0.95]] as [number, number][], band: 1.0, folds: 4 };
+/** The puff of a pantaloon leg, top to foot: [share of its length down, radius in thigh half-widths]; it runs KING_PANTS.knee of the thigh's length (knee
+ *  stub included, so past the hinge) and is gathered at its foot to the gold band, .band of the half-width. */
+const KING_PANTS = { knee: 1.04, profile: [[0, 1.15], [0.2, 1.45], [0.48, 1.68], [0.72, 1.48], [0.88, 1.05], [1, 0.95]] as [number, number][], band: 1.0, folds: 4 };
 
-function kingPantaloon(scene: Scene, thigh: Mesh, kneeY: number, cloth: Material, gold: Material): Mesh[] {
+function kingPantaloon(scene: Scene, thigh: Mesh, cloth: Material, gold: Material): Mesh[] {
   const P = KING_PANTS;
   const L = limbBox(thigh);
   const r0 = Math.max(L.wide, L.deep);
-  const yTop = L.mid + L.half, len = (yTop - kneeY) * P.knee;
+  const yTop = L.mid + L.half, len = L.half * 2 * P.knee;
   const zs = L.deep / r0 * 1.08;
   const shape = P.profile.map(([f, r]) => new Vector3(r * r0, -f * len, 0));
   const puff = MeshBuilder.CreateLathe("kingPantaloon", { shape, tessellation: 8, cap: Mesh.CAP_ALL }, scene);
