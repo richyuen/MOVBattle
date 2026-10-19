@@ -134,9 +134,19 @@ const HALFLING_SLEEVED = { arc: 0.72, sides: 10, flare: 1.12, yoke: 0.14, puff: 
  * the trunk's foot, .wide of W across, .deep of D thick standing off the vest, in team x .dark; the buckle a frame .buckle of W across and .buckleTall of
  * the belt tall, bars .bar of its width, standing .buckleDeep of D proud, in light grey cloth (not metal) lit .buckleGlow, with a pin through it.
  */
-const HALFLING_BELT = { tall: 0.13, up: 0.08, wide: 0.98, deep: 0.1, dark: 0.32, glow: 0.12, buckle: 0.3, buckleTall: 1.45, bar: 0.22, buckleDeep: 0.08, buckleGlow: 0.3 };
+/*
+ * [S] 386 the belt as a broad band round him (critic 383: a thin pale band, the buckle a small white bar on the shorts' waistline; farmer.halfling.red.png:
+ * a broad dark team belt across the vest well above the shorts, a big dark-grey square-frame buckle a little to his right, the strap's end through a
+ * keeper beside it). The belt is now a ring round the trunk under the coat (.ringOut of W across, standing .ringAhead of D past the vest's face), .tall
+ * of H, its foot .up of H above the trunk's foot; the buckle .buckle of W across, .buckleTall of the belt tall, .side of W to his right (+x), .buckleDeep
+ * of D proud, dark grey (light grey cloth glowing read white) lit .buckleGlow; a keeper .keeper of W wide beside it on the far side, team x .dark x .7.
+ */
+const HALFLING_BELT = {
+  tall: 0.17, up: 0.16, wide: 0.98, deep: 0.1, dark: 0.3, glow: 0.08, buckle: 0.34, buckleTall: 1.35, bar: 0.24, buckleDeep: 0.12, buckleGlow: 0.12,
+  ringOut: 1.08, ringAhead: 0.06, side: 0.07, keeper: 0.07,
+};
 const HALFLING_SHIRT_WHITE = new Color3(0.93, 0.89, 0.8);
-const HALFLING_BUCKLE_GREY = new Color3(0.62, 0.62, 0.64);
+const HALFLING_BUCKLE_GREY = new Color3(0.4, 0.41, 0.44);
 
 /** The halfling's open jacket, vest, white shirt V and buckled belt (spec at HALFLING_COAT), parented to the torso. */
 export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -221,18 +231,25 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   const beltTall = H * B.tall;
   const beltY = foot + H * B.up + beltTall * 0.5;
   const beltCloth = mf.get("cloth", teamColor.scale(B.dark), { emissiveIntensity: B.glow });
-  const belt = put(MeshBuilder.CreateBox("halflingBelt", { width: W * B.wide, height: beltTall, depth: D * B.deep }, scene), beltCloth);
-  belt.position.set(0, beltY, vestFace + D * (B.deep * 0.5 - 0.03));
-  const beltFront = belt.position.z + D * B.deep * 0.5;
+  // a ring round the trunk under the coat, its front standing past the vest
+  const ringHalfZ = vestFace - z + D * B.ringAhead;
+  const belt = put(MeshBuilder.CreateCylinder("halflingBelt", { height: beltTall, diameter: 2, tessellation: 10 }, scene), beltCloth);
+  belt.scaling.set(W * 0.5 * B.ringOut, 1, ringHalfZ);
+  belt.position.set(0, beltY, z);
+  const beltFront = z + ringHalfZ;
   const grey = mf.get("cloth", HALFLING_BUCKLE_GREY, { emissiveIntensity: B.buckleGlow });
-  const bw = W * B.buckle, bh = beltTall * B.buckleTall, bar = bw * B.bar;
+  const bw = W * B.buckle, bh = beltTall * B.buckleTall, bar = bw * B.bar, bx = W * B.side;
   for (const [w, h, x, y] of [[bw, bar, 0, (bh - bar) / 2], [bw, bar, 0, -(bh - bar) / 2], [bar, bh, (bw - bar) / 2, 0], [bar, bh, -(bw - bar) / 2, 0]]) {
     const piece = put(MeshBuilder.CreateBox("halflingBuckle", { width: w, height: h, depth: D * B.buckleDeep }, scene), grey);
-    piece.position.set(x, beltY + y, beltFront + D * B.buckleDeep * 0.5);
+    piece.position.set(bx + x, beltY + y, beltFront + D * B.buckleDeep * 0.5);
   }
   // the tongue through the frame, a grey pin across its middle
   const pin = put(MeshBuilder.CreateBox("halflingBucklePin", { width: bar * 0.8, height: bh - bar * 2, depth: D * B.buckleDeep * 0.6 }, scene), grey);
-  pin.position.set(-bw * 0.12, beltY, beltFront + D * B.buckleDeep * 0.3);
+  pin.position.set(bx - bw * 0.12, beltY, beltFront + D * B.buckleDeep * 0.3);
+  // the strap's end through a keeper on the far side of the buckle
+  const keeperCloth = mf.get("cloth", teamColor.scale(B.dark * 0.7), { emissiveIntensity: B.glow });
+  const keeper = put(MeshBuilder.CreateBox("halflingBeltKeeper", { width: W * B.keeper, height: beltTall * 1.12, depth: D * B.buckleDeep * 0.5 }, scene), keeperCloth);
+  keeper.position.set(bx - bw * 0.5 - W * B.keeper, beltY, beltFront + D * B.buckleDeep * 0.25);
   return added;
 }
 
