@@ -1,11 +1,11 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 374   Batch: tribal:re+renaissance:re (5-6/21)   Consecutive empty: 0   Done: 26/139   Parked: 0
+Iteration: 375   Batch: tribal:re+renaissance:re+farmer:re (5-7/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd -+++ o | jouster ++++ D | da_vinci_tank ++++ D
-farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
+farmer: halfling -+++ o | farmer -+++ o | hay_baler ++++ D | potion_seller --++ o | harvester -+++ o | wheelbarrow -+++ o | scarecrow -+++ o
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
@@ -23,16 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-374 (BASE e35255b; evidence 6b5cef8 halberd idle from his other side): [S] halberd a shoes b46132a approved | [S] spear_thrower a stance 9fcac3a approved | [S] painter a sweater to the hip 0ee7192 approved | [S] fencer a tabs bent close 0118f84 approved | [S] mammoth a hull skirt 79f4083+6910ac7 approved | [P] spear_thrower a flap colour 5780739 approved
+375 (BASE d199817; farmer:re audited as tail overlap): [S] halberd a breeches a74b9af approved | [S] hay_baler a planks + tongue skirt d822dce approved | [S] harvester c sweep held through the press 3a94e9e approved | [S] potion_seller b chunky flask 5af9646 approved | [S] halfling a hanging mop d04eef6 approved | [S] scarecrow a layered wings + team band 730ae01 approved | [S] mammoth a round belly + leg collars 4ee59f9 approved
 
 ## Last verdicts (critic header lines verbatim)
-- RE-AUDIT renaissance.halberd (evidence 6b5cef8): blocker 1 struck; UNIT renaissance.halberd: a FAIL b PASS c PASS d PASS (3/4)
-- GAP: [S] renaissance.halberd (b46132a) VERDICT: APPROVE CRITERION: renaissance.halberd.a FAIL (previous: FAIL)
-- GAP: [S] tribal.spear_thrower (9fcac3a) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL)
-- GAP: [S] renaissance.painter (0ee7192) VERDICT: APPROVE CRITERION: renaissance.painter.a PASS (previous: FAIL)
-- GAP: [S] renaissance.fencer (0118f84) VERDICT: APPROVE CRITERION: renaissance.fencer.a PASS (previous: FAIL)
-- GAP: [S] tribal.mammoth (79f4083 +6910ac7) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [P] tribal.spear_thrower (5780739) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a PASS (previous: FAIL)
+- AUDIT farmer:re: halfling a FAIL (3/4) | farmer a FAIL (3/4) | hay_baler a FAIL (3/4) | potion_seller a FAIL b FAIL (2/4) | harvester a FAIL c FAIL (2/4) | wheelbarrow a FAIL (3/4) | scarecrow a FAIL (3/4)
+- GAP: [S] renaissance.halberd (a74b9af) VERDICT: APPROVE CRITERION: renaissance.halberd.a FAIL (previous: FAIL)
+- GAP: [S] farmer.hay_baler (d822dce) VERDICT: APPROVE CRITERION: farmer.hay_baler.a PASS (previous: FAIL)
+- GAP: [S] farmer.harvester (3a94e9e) VERDICT: APPROVE CRITERION: farmer.harvester.c PASS (previous: FAIL)
+- GAP: [S] farmer.potion_seller (5af9646) VERDICT: APPROVE CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
+- GAP: [S] farmer.halfling (d04eef6) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [S] farmer.scarecrow (730ae01) VERDICT: APPROVE CRITERION: farmer.scarecrow.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (4ee59f9) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open: halberd a (breeches, stance, visor slit) and mammoth a (round belly + leg-root collars, then body after an evidence re-aim). Under 5 pickable [S]: tail overlap - audit farmer:re at step 2 and pick from both.
-- Mammoth hull is now wound outward (6910ac7): check a mesh's winding before tuning what shows through it. Probe: copy inspect-prop.mjs, filter meshes by name, delete after.
-- Critic 374 for a later renaissance:re: fencer thigh rolls read as round pumpkin globes wider than the hips (TABS boxy panel breeches to the knee).
-- Capture replays are deterministic. Particles do not render on the stepped clock. Team cloth glow .2 washes to lavender; pale tans merge with bone.
-- Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool; printf %s args keep %% literal.
+- Evidence first: farmer.farmer _idle is shot from behind (re-aim to front 3/4 before the hood gap); mammoth _windup/_ability crop the topline (pull back before blocker 1). hay_baler's Hay absorption is never exercised (melee sparring man).
+- [P] fallout pickable: potion_seller POTION.seat .06 -> -.02, glass (.45,.68,.72) (shot unit_farmer.potion_seller_idle). Scripts take faction names: --batch farmer for farmer:re.
+- New farmer cloth/dress functions go in web/src/units/farmerDress.ts (create it, after tribalDress.ts); halfling jacket is the next one.
+- A pose wrong only in the capture: log the capture's own tick timeline (state, timers) at the shot; seeded replays differ from ad hoc probes (375 harvester: moveTo cancelled the sweep).
+- Capture replays are deterministic. Particles do not render on the stepped clock. Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool.

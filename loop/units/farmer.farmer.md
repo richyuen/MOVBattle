@@ -1,12 +1,13 @@
 # farmer.farmer
-Status: done   Audited: 339   Done: 350
+Status: open   Audited: 375 (re)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (348)
-b PASS (350)
-c PASS (348)
+a FAIL (0 since 375)
+ 1. hood in unit_farmer.farmer_windup (also lineup_farmer, _ability): a round ball round the head topped by a thin curled spike — TABS: tall faceted hood tapering from the shoulders into a long liripipe cone flopping back, open face (ref: .red.png, .png)
+b PASS (375)
+c PASS (375)
 d PASS (cost 80, hp 0.74x, dmg 0.67x, cd 1.30x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-(none; fallout if revisited: [P] FORK_HOLD.up .04 -> .12, head to upper thigh, shows in unit_farmer.farmer_idle)
+1. [S] a tall cone hood with liripipe — blocker 1: faceted hood tapering from the shoulders into a long cone flopping back, open face — ref: .png — ours: unit_farmer.farmer_ability.png. Critic: _idle is shot from behind; re-aim to front three-quarter (evidence) before judging the hood front
 ## Attempts (iter | gap | criterion | verdict)
 342 | fork carried across the hips in both fists (FORK_CARRY) [S] (8c2de8f +2) | b | rejected
 346 | forkShaft low carry (FORK_LOW) [S] (e75d76c) | b | dropped

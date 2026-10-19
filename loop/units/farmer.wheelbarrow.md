@@ -1,12 +1,13 @@
 # farmer.wheelbarrow
-Status: done   Audited: 339   Done: 350
+Status: open   Audited: 375 (re)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (350)
-b PASS (347)
-c PASS (350)
+a FAIL (0 since 375)
+ 1. riders in unit_farmer.wheelbarrow_idle (also _windup): sit waist-deep in the hay like in a tub, legs hidden — TABS: riders straddle the narrow tray in line, loom large; Farmer on the front lip, white-socked legs splayed forward over the wheel, Apple Thrower astride behind (ref: .red.png, .png)
+b PASS (375)
+c PASS (375)
 d PASS (cost 1000, hp 18.69x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-(none; minor if revisited: drum .82 of tray width vs nearly full; afro ~2/3 the render's size)
+1. [S] a riders seated on the tray — blocker 1: Farmer on the front lip, legs splayed forward over the wheel, Apple Thrower astride behind, not sunk in hay — ref: .red.png — ours: unit_farmer.wheelbarrow_windup.png
 ## Attempts (iter | gap | criterion | verdict)
 346 | three crew on the cart, cart at man scale (WHEELBARROW) [S] (4ecb105) | a | approved
 347 | bolted team-painted plank tray, hay mound seat (TRAY_PLANK) [S] (07f763c +45203bc) | a | approved
