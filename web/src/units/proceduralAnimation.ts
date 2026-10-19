@@ -369,11 +369,11 @@ const DORY_CARRY = { ahead: 0.25, out: 0.9, up: -0.3, fwd: 0.8, side: 0.25, down
 /*
  * [S] the dory thrust (381; ancient.hoplite.jpg, card Weapons "Short Spear: Polearm - Melee, range 2.2": the spear held level under the arm at the hip,
  * point well ahead, and driven straight out past the aspis; critic 378/380: the blow was a shield shove, the dory trailing point-down). Through every
- * blow the carry blends (over .blendIn of the blow, back over its last .blendOut) to a line .tilt rad off level along his heading, the fist .ahead of
- * the hip, .out to the weapon side, .up above it (in u, as DORY_CARRY); along that line the fist draws back .draw of .reach to the release, is driven
- * out the full .reach past it, and eases home.
+ * blow the dory lies on a line .tilt rad off level along his heading (blending back to the carry over the blow's last .blendOut), the fist .ahead of
+ * the hip, .out to the weapon side, .up above it (in u, as DORY_CARRY). The sim logs the blow as it starts and the hit lands ~80 ms on, so the stroke
+ * runs from drawn back .draw of .reach at the start to the full .reach out by .driven of the blow, holds to .held and eases home by .home.
  */
-const DORY_THRUST = { ahead: 0.35, out: 0.6, up: -0.05, tilt: -0.06, reach: 0.75, draw: 0.45, blendIn: 0.2, blendOut: 0.15 };
+const DORY_THRUST = { ahead: 0.35, out: 0.6, up: -0.05, tilt: -0.06, reach: 0.75, draw: 0.45, driven: 0.22, held: 0.5, home: 0.85, blendOut: 0.15 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
@@ -3191,14 +3191,13 @@ export class ProceduralAnimator {
     // [S] the thrust (381, spec at DORY_THRUST): from the carry the dory comes up level under the arm, draws back, and is driven out past the aspis
     if (st === AnimState.Attacking) {
       const T = DORY_THRUST;
+      // the blow is logged as the attack starts (its hit lands ~80 ms on): drawn at the start, driven home by .driven of the blow, held, eased back
       const p = Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1);
-      const ext = this._resolveReleasePoint(0.5);
       const ease = (x: number) => { const c = Math.max(0, Math.min(1, x)); return c * c * (3 - 2 * c); };
-      const q = (p - ext) / Math.max(1 - ext, 0.001);
-      const stroke = p < ext ? -T.draw * ease(p / Math.max(ext, 0.001)) : q < 0.4 ? -T.draw + (T.draw + 1) * ease(q / 0.4) : 1 - ease((q - 0.4) / 0.6);
+      const stroke = p < T.held ? -T.draw + (T.draw + 1) * ease(p / T.driven) : 1 - ease((p - T.held) / (T.home - T.held));
       const line = new Vector3(fwd.x * Math.cos(T.tilt), Math.sin(T.tilt), fwd.z * Math.cos(T.tilt));
       const drive = hip.add(fwd.scale(T.ahead * u)).add(right.scale(T.out * u)).add(new Vector3(0, T.up * u, 0)).add(line.scale(T.reach * u * stroke));
-      const k = ease(p / T.blendIn) * (1 - ease((p - 1 + T.blendOut) / T.blendOut));
+      const k = 1 - ease((p - 1 + T.blendOut) / T.blendOut);
       fist = Vector3.Lerp(fist, drive, k);
       dir = Vector3.Lerp(dir, line, k).normalize();
     }
