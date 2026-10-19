@@ -2095,7 +2095,7 @@ function mammothTrunk(scene: Scene, neck: TransformNode, fur: Material, dark: Ma
  * the last .tip pieces of each are the team tip; .gap pieces short of the tip a team ring .stripe of that piece long and .proud of its girth across
  * sits at the piece's root. The sacred elephant keeps its own ivory tusks (two-piece tips, no stripe).
  */
-const MAMMOTH_TUSK = { tan: new Color3(0.74, 0.62, 0.46), glow: 0.06, tip: 3, gap: 1, stripe: 0.45, proud: 1.08 };
+const MAMMOTH_TUSK = { tan: new Color3(0.8, 0.6, 0.36), glow: 0.14, tip: 3, gap: 1, stripe: 0.45, proud: 1.08 };
 /** Radius of a lathe profile at height y (linear between its points). */
 function profileAt(profile: [number, number][], y: number): number {
   for (let i = 0; i < profile.length - 1; i++) {
@@ -2148,7 +2148,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   // Tusks are warm ivory and part self-lit, so the blue ambient does not grey them
   // The mammoth's are bone-tan and barely self-lit (MAMMOTH_TUSK), the elephant's stay warm ivory
   const tuskMat = mammoth
-    ? getMaterialFactory().get("bone", MAMMOTH_TUSK.tan, { emissive: MAMMOTH_TUSK.tan.scale(MAMMOTH_TUSK.glow) })
+    ? getMaterialFactory().get("cloth", MAMMOTH_TUSK.tan, { emissive: MAMMOTH_TUSK.tan.scale(MAMMOTH_TUSK.glow) })
     : getMaterialFactory().get("bone", new Color3(1.0, 0.82, 0.58), { emissive: new Color3(0.22, 0.16, 0.09) });
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
   const paintMat = getMaterialFactory().createUnique("cloth", color);
