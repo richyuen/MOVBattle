@@ -102,6 +102,15 @@ const SACK_BROWN = new Color3(0.56, 0.36, 0.22);
 const FLOPPY = { brim: 2.25, droop: 0.28, lift: 0.12, tip: 0.12, crown: 1.12, crownTall: 0.42, apart: 0.68, ahead: 0.08, root: 0.05, braid: 1.95, plaits: 8, thick: 0.42, fall: 0.3, flare: 0.08, core: 0.62, overlap: 1.45, bandTall: 0.14, glow: 0.2 };
 const FLOPPY_BROWN = new Color3(0.5, 0.3, 0.18);
 const FLOPPY_HAIR = new Color3(0.36, 0.2, 0.11);
+/**
+ * [S] The harvester's felt hat (377; farmer.harvester.red.png: a brown felt hat, crown pinched front-to-back with a crease over the top, a soft brim
+ * drooping at the front and sides). Heights in head heights from the crown joint, radii in head widths. Crown: one 10-sided lathe from FELT_HAT.base
+ * round on the brim up to FELT_HAT.top over the crown, squeezed to FELT_HAT.pinch deep, its top creased FELT_HAT.crease down along the middle and its
+ * front pinched in FELT_HAT.frontPinch near the top. Brim: a closed lathe ring FELT_HAT.thick thick out to FELT_HAT.brim, falling FELT_HAT.droop to the
+ * rim, the back half lifted FELT_HAT.backLift so only the front and sides droop. Matte brown felt (FELT_BROWN), no double-sided shells.
+ */
+const FELT_HAT = { sides: 10, base: 0.5, top: 0.46, lift: 0.08, pinch: 0.84, crease: 0.1, creaseWide: 0.16, frontPinch: 0.3, brim: 0.86, droop: 0.2, thick: 0.035, backLift: 0.14, glow: 0.08 };
+const FELT_BROWN = new Color3(0.4, 0.25, 0.16);
 /*
  * [S] The farmer's liripipe hood (340; farmer.farmer.png: a close team hood, its crown drawn into a soft rounded tail that stands up off the head and
  * flops back; .red/.blue.png: the cowl snug to the jaw, a collar of leaf points over the chest and shoulders). Cowl LIRIPIPE.snug heads across; tail a
@@ -891,26 +900,49 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return sack;
   }
   if (type === "sun_hat") {
-    // [S] soft floppy hat and side braids (340; spec at FLOPPY): brim drooping all round like a bell, rounded soft crown, plaits beside the face
-    const felt = mat(scene, FLOPPY_BROWN, FLOPPY.glow);
+    // [S] the felt hat (377, spec at FELT_HAT): a creased crown pinched front-to-back over a brim drooping at the front and sides
+    const F = FELT_HAT;
+    const felt = mat(scene, FELT_BROWN, F.glow, "cloth");
     const holder = new Mesh("sunHat", scene);
-    const droop = u(FLOPPY.droop * H);
-    const brim = MeshBuilder.CreateCylinder("sunHatBrim", { height: droop, diameterTop: u(FLOPPY.crown * 1.08 * W), diameterBottom: u(FLOPPY.brim * W), tessellation: 10, sideOrientation: Mesh.DOUBLESIDE }, scene);
-    brim.position.y = u(seat + FLOPPY.lift * H) - droop * 0.5;
-    brim.rotation.x = -FLOPPY.tip;
+    const baseY = seat + F.lift * H;
+    const tall = F.top * H - baseY;
+    const crownShape = [[F.base, 0], [F.base * 0.97, 0.45], [F.base * 0.9, 0.78], [F.base * 0.72, 0.95], [F.base * 0.4, 1.0], [0, 1.0]].map(([r, t]) => new Vector3(u(r * W), u(t * tall), 0));
+    const crown = MeshBuilder.CreateLathe("sunHatCrown", { shape: crownShape, tessellation: F.sides, cap: Mesh.CAP_START }, scene);
+    const at = crown.getVerticesData(VertexBuffer.PositionKind);
+    if (at) {
+      const rTop = u(F.base * W);
+      for (let v = 0; v < at.length; v += 3) {
+        const x = at[v], y = at[v + 1], z = at[v + 2];
+        const high = Math.max(0, y / u(tall) - 0.5) * 2; // 0 below half height, 1 at the top
+        // the crease along the middle of the top, front to back
+        at[v + 1] = y - u(F.crease * H) * high * Math.exp(-((x / u(F.creaseWide * W)) ** 2));
+        // squeezed front-to-back, and pinched in at the front near the top
+        at[v + 2] = z * F.pinch * (z > 0 ? 1 - F.frontPinch * high * Math.min(1, Math.abs(x) / rTop + 0.2) : 1);
+      }
+      crown.updateVerticesData(VertexBuffer.PositionKind, at);
+    }
+    crown.position.y = u(baseY);
+    crown.material = felt;
+    crown.convertToFlatShadedMesh();
+    crown.parent = holder;
+    // the brim: a closed ring falling to the rim, its back half lifted
+    const rIn = F.base * 0.92, drop = F.droop * H, th = F.thick * H;
+    const brimShape = [[rIn, th], [rIn, 0], [F.brim, -drop], [F.brim, th - drop], [rIn, th]].map(([r, y]) => new Vector3(u(r * W), u(y), 0));
+    const brim = MeshBuilder.CreateLathe("sunHatBrim", { shape: brimShape, tessellation: F.sides * 2 }, scene);
+    const bt = brim.getVerticesData(VertexBuffer.PositionKind);
+    if (bt) {
+      const rOut = u(F.brim * W);
+      for (let v = 0; v < bt.length; v += 3) {
+        const back = Math.max(0, -bt[v + 2] / rOut);
+        const out = Math.hypot(bt[v], bt[v + 2]) / rOut;
+        bt[v + 1] += u(F.backLift * H) * back * out;
+      }
+      brim.updateVerticesData(VertexBuffer.PositionKind, bt);
+    }
+    brim.position.y = u(baseY);
     brim.material = felt;
     brim.convertToFlatShadedMesh();
     brim.parent = holder;
-    const crown = MeshBuilder.CreateSphere("sunHatCrown", { diameterX: u(FLOPPY.crown * W), diameterY: u(FLOPPY.crownTall * 2 * H), diameterZ: u(FLOPPY.crown * W), segments: 5, slice: 0.5 }, scene);
-    crown.position.y = droop * 0.5;
-    crown.material = felt;
-    crown.convertToFlatShadedMesh();
-    crown.parent = brim;
-    // A dent across the crown's top, as a soft felt hat has
-    const dent = MeshBuilder.CreateBox("sunHatDent", { width: u(FLOPPY.crown * 0.75 * W), height: u(0.05 * H), depth: u(0.12 * W) }, scene);
-    dent.position.y = droop * 0.5 + u(FLOPPY.crownTall * H * 0.96);
-    dent.material = mat(scene, FLOPPY_BROWN.scale(0.7), FLOPPY.glow);
-    dent.parent = brim;
     // The braids hang from the torso, not the hat, since 376 (farmerDress CHEST_BRAID): off the head they ended at the side of the neck
     return holder;
   }
