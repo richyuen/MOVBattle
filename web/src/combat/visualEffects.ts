@@ -330,10 +330,18 @@ export class VisualEffects {
    * (the hand, used as is) to the target's chest: ZEUS_BOLT.kinks joints thrown alternately .amp m off the line square to the camera, each link a flat
    * four-sided blade .core m across (thinning to .tip at the strike), white and in the glow layer so it blooms cyan, on a cyan blade .rim times as
    * broad; at the strike a small burst of .sparks short white spikes .spark m long, no shock ring. Gone after .life s.
+   * [S] 386 (card Characteristics: the thunderbolt "will conduct to nearby units, causing a lightning chain"; critic 378/385: in _struck the man just
+   * falls, no burst or arcs): the burst at the strike is its own effect that stays .burstLife s, and `chain` draws a chain arc instead, from one man's
+   * chest to the next: .chainScale of the bolt's size, .chainKinks joints, .chainSparks spikes at its end, the whole arc staying .burstLife s.
    */
-  spawnZeusBolt(from: Vector3, target: Vector3): void {
-    const Z = { kinks: 7, amp: 0.28, core: 0.075, tip: 0.03, rim: 2.2, chest: 0.9, sparks: 6, spark: 0.35, life: 0.3 };
+  spawnZeusBolt(from: Vector3, target: Vector3, chain = false): void {
+    const Z = { kinks: 7, amp: 0.28, core: 0.075, tip: 0.03, rim: 2.2, chest: 0.9, sparks: 6, spark: 0.35, life: 0.3, burstLife: 0.6, chainScale: 0.6, chainKinks: 5, chainSparks: 3 };
+    if (chain) {
+      Z.kinks = Z.chainKinks; Z.amp *= Z.chainScale; Z.core *= Z.chainScale; Z.tip *= Z.chainScale; Z.sparks = Z.chainSparks; Z.spark *= Z.chainScale;
+      Z.life = Z.burstLife;
+    }
     const root = new TransformNode("zeusBolt", this._scene);
+    const burst = new TransformNode("zeusBurst", this._scene);
     const mf = getMaterialFactory();
     const coreMat = mf.createUnique("cloth", new Color3(1, 1, 1));
     coreMat.emissiveColor = new Color3(1, 1, 1);
@@ -344,6 +352,7 @@ export class VisualEffects {
     rimMat.disableLighting = true;
     rimMat.backFaceCulling = false;
     const start = from.clone();
+    if (chain) start.y += Z.chest;
     const end = target.clone();
     end.y += Z.chest;
     const dir = end.subtract(start);
@@ -361,7 +370,7 @@ export class VisualEffects {
     }
     points.push(end);
     // a flat blade from a to b, `wide` across at a and `narrow` at b, lying square to the camera
-    const blade = (a: Vector3, b: Vector3, wide: number, narrow: number, mat: typeof coreMat, back: number): void => {
+    const blade = (a: Vector3, b: Vector3, wide: number, narrow: number, mat: typeof coreMat, back: number, parent: TransformNode = root): void => {
       const along = b.subtract(a), across = Vector3.Cross(along, facing).normalize();
       const off = facing.scale(-back);
       const p = [a.add(across.scale(wide / 2)), a.subtract(across.scale(wide / 2)), b.subtract(across.scale(narrow / 2)), b.add(across.scale(narrow / 2))].map((v) => v.add(off));
@@ -374,7 +383,7 @@ export class VisualEffects {
       data.normals = normals;
       data.applyToMesh(mesh);
       mesh.material = mat;
-      mesh.parent = root;
+      mesh.parent = parent;
     };
     for (let i = 0; i < points.length - 1; i++) {
       const w0 = Z.core + (Z.tip - Z.core) * (i / (points.length - 1)), w1 = Z.core + (Z.tip - Z.core) * ((i + 1) / (points.length - 1));
@@ -386,11 +395,14 @@ export class VisualEffects {
       const a = (k / Z.sparks) * Math.PI * 2 + Math.random() * 0.5;
       const up = Vector3.Cross(side, facing).normalize();
       const tip = end.add(side.scale(Math.cos(a) * Z.spark)).add(up.scale(Math.sin(a) * Z.spark));
-      blade(end, tip, Z.core * 1.4, 0, coreMat, 0);
+      blade(end, tip, Z.core * 1.4, 0, coreMat, 0, burst);
+      blade(end, tip, Z.core * 1.4 * Z.rim, 0, rimMat, 0.03, burst);
     }
+    // the bolt and its burst go separately; the materials with whichever goes last (the burst)
+    this._effects.push({ root, remaining: Z.life, update: () => {}, dispose: () => {} });
     this._effects.push({
-      root,
-      remaining: Z.life,
+      root: burst,
+      remaining: Math.max(Z.life, Z.burstLife),
       update: () => {},
       dispose: () => { coreMat.dispose(); rimMat.dispose(); },
     });

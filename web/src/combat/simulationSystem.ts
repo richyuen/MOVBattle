@@ -126,6 +126,10 @@ function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
 
 /** Zeus's thrown bolt is back in his fist this share of the cooldown after the throw (384; until then the fist is empty). */
 const ZEUS_REARM = 0.6;
+// [S] 386 Zeus's lightning chain (card Characteristics: the thunderbolt "will conduct to nearby units"): from the struck man the bolt hops to the nearest
+// living enemy within .reach m of the last man it reached, up to .links hops, each a chain arc (visualEffects spawnZeusBolt chain) and .share of the
+// bolt's damage to the man it reaches, logged once as "lightning_chain"
+const ZEUS_CHAIN = { links: 3, reach: 2.2, share: 0.35 };
 
 function isFirearmUnit(unit: RuntimeUnit): boolean {
   const hint = unit.definition.weaponHint ?? "";
@@ -2018,6 +2022,7 @@ export class SimulationSystem {
       const held = attacker.animator.heldThrowProp();
       if (held) attacker.animator.letGoOfThrow(held, attackProfile.cooldown * cooldownMultiplier * ZEUS_REARM);
       this._applyDirectOrSplash(target, damage * 1.12, Math.max(3.3, splashRadius + 1.1), attacker.team, knockback.scale(1.95 * controlStrength));
+      this._zeusChain(attacker, target, damage, now);
       return;
     }
 
@@ -2811,6 +2816,29 @@ export class SimulationSystem {
     const facing = unit.body.root.rotation.y;
     const at = head.getAbsolutePosition().add(new Vector3(Math.cos(facing) * side * BANJO_NOTES.aside, BANJO_NOTES.over + lift, -Math.sin(facing) * side * BANJO_NOTES.aside));
     this.visualEffects.spawnMusicNote(at, side);
+  }
+
+  /** Zeus's lightning chain off the struck man (spec at ZEUS_CHAIN). */
+  private _zeusChain(attacker: RuntimeUnit, struck: RuntimeUnit, damage: number, now: number): void {
+    const C = ZEUS_CHAIN;
+    const reached = new Set<RuntimeUnit>([struck]);
+    let from = struck;
+    for (let k = 0; k < C.links; k++) {
+      let next: RuntimeUnit | null = null;
+      let best = C.reach * C.reach;
+      for (const unit of this._units) {
+        if (unit.isDead || unit.team === attacker.team || !unit.isTargetable || reached.has(unit)) continue;
+        const dx = unit.position.x - from.position.x, dz = unit.position.z - from.position.z;
+        const dSq = dx * dx + dz * dz;
+        if (dSq < best) { best = dSq; next = unit; }
+      }
+      if (!next) break;
+      if (k === 0) this._logAbility(attacker, "lightning_chain", now, next.position);
+      this.visualEffects?.spawnZeusBolt(from.position, next.position, true);
+      next.applyDamage(damage * C.share, Vector3.Zero());
+      reached.add(next);
+      from = next;
+    }
   }
 
   private _logAbility(unit: RuntimeUnit, kind: string, t: number, at: Vector3 = unit.position): void {
