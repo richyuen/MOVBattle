@@ -156,8 +156,8 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   const shell = put(MeshBuilder.CreateCylinder("halflingCoatShell", {
     height: tall, diameterTop: 1, diameterBottom: K.flare, tessellation: K.sides, arc: K.arc, enclose: false, sideOrientation: Mesh.DOUBLESIDE,
   }, scene), coat);
-  // the arc's gap turned to the front (the arc starts at +x and runs toward -z)
-  shell.rotation.y = -Math.PI / 2 - Math.PI * (1 - K.arc);
+  // the arc's gap turned to the front (+z): Babylon lays the arc from +x round through -z, its gap centred at pi (1 - arc) past +x
+  shell.rotation.y = Math.PI / 2 - Math.PI * K.arc;
   shell.scaling.set(W * (1 + 2 * J.out), 1, D * (1 + J.out + J.ahead));
   shell.position.set(0, mid, z);
   const yoke = put(MeshBuilder.CreateCylinder("halflingCoatYoke", { height: H * K.yoke, diameterTop: 0.7, diameterBottom: 1, tessellation: K.sides }, scene), coat);
