@@ -497,7 +497,15 @@ const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, 
  */
 const SARISSA_FOLD = {
   bulk: 0.2, bulkLong: 1.25, bulkWide: 1.5, bulkAt: 0.9, bulkUp: 0.05, bulkTilt: 0.25,
-  folds: 2, drapeFrom: 0.85, drapeLong: 0.72, drapeTall: 0.22, drapeDeep: 0.09, drapeTilt: 0.6, drapeDown: 0.08, brooch: 0.09, gold: new Color3(0.82, 0.62, 0.25),
+  drapeFrom: 0.85, drapeTall: 0.22, drapeDeep: 0.09, drapeDown: 0.08, brooch: 0.09, gold: new Color3(0.82, 0.62, 0.25),
+};
+/*
+ * [S] 389 the drape as one chunk (spec at its build): the spine's points [x of the left shoulder's x, y over the shoulder in trunks, z: < 0 a share of
+ * the chest half depth behind its middle, else trunks out from the chest front]; .wide x .thick trunks in section, the last two points tapering to .tip.
+ */
+const SARISSA_CHUNK = {
+  path: [[0.95, 0.06, -0.2], [0.88, 0.05, 0.02], [0.7, -0.09, 0.05], [0.35, -0.22, 0.055], [-0.05, -0.33, 0.05], [-0.4, -0.4, 0.04]],
+  wide: 0.3, thick: 0.11, tip: 0.45,
 };
 
 /** The sarissa's cape and folded collar (spec at SARISSA_CAPE), on the torso. */
@@ -538,15 +546,29 @@ export function dressSarissa(scene: Scene, body: ArticulatedBody, teamColor: Col
   bulk.scaling.x = F.bulkWide;
   bulk.position.set(lx * F.bulkAt, sy + chest.trunk * F.bulkUp, midZ + halfZ * 0.1);
   jitterVertices(bulk, 0.12, 33.1);
-  // the drape: a thick sash off the shoulder's front down across the upper chest past the breastbone, two folds stacked
-  for (let k = 0; k < F.folds; k++) {
-    const w = span * F.drapeLong * (1 - 0.18 * k);
-    const t = chest.trunk * F.drapeTall;
-    const fold = put(MeshBuilder.CreateBox("sarissaFoldDrape", { width: w, height: t, depth: chest.trunk * F.drapeDeep }, scene));
-    jitterVertices(fold, 0.08, 41.7 + k);
-    fold.rotation.z = -side * F.drapeTilt;
-    fold.position.set(lx * F.drapeFrom - side * w * 0.42, sy - chest.trunk * (F.drapeDown + k * F.drapeTall * 0.8), chest.maxZ + chest.trunk * (F.drapeDeep * 0.4 + 0.012 * k));
+  // [S] 389 the drape one bent chunk (SARISSA_CHUNK), not two stacked boxes (critic 388: two grey-blue boxes, stepped edges, not joined to the bulk):
+  // a flattened closed tube in the cape's cloth swept from inside the shoulder bulk, over the shoulder's front and down across the chest past the
+  // breastbone, its flat lying on the body (the across axis the path's tangent crossed with the body's outward normal: up on the shoulder, out on
+  // the chest), .wide of the trunk wide and .thick thick, tapering to .tip at its end
+  const Ck = SARISSA_CHUNK;
+  const T = chest.trunk, fz = chest.maxZ;
+  const spine = Ck.path.map(([xs, ys, zs]) => new Vector3(lx * xs, sy + T * ys, zs < 0 ? midZ + halfZ * zs : fz + T * zs));
+  const ups = Ck.path.map(([, , zs], i) => (zs < 0 || i === 1 ? new Vector3(0, 1, 0.4 * i) : new Vector3(0, 0.25, 1)).normalize());
+  const ringPts: Vector3[][] = [];
+  const hex = [[1, 0], [0.5, 1], [-0.5, 1], [-1, 0], [-0.5, -1], [0.5, -1]];
+  for (let i = 0; i < spine.length; i++) {
+    const tan = spine[Math.min(i + 1, spine.length - 1)].subtract(spine[Math.max(i - 1, 0)]).normalize();
+    const across = Vector3.Cross(tan, ups[i]).normalize();
+    const nrm = Vector3.Cross(across, tan).normalize();
+    const taper = 1 - (1 - Ck.tip) * Math.max(0, (i - spine.length + 3) / 2);
+    ringPts.push(hex.map(([a, n]) => spine[i].add(across.scale(a * T * Ck.wide * 0.5 * taper)).add(nrm.scale(n * T * Ck.thick * 0.5 * taper))));
   }
+  const pathArray = hex.map((_, j) => ringPts.map((r) => r[j]));
+  const chunk = MeshBuilder.CreateRibbon("sarissaFoldDrape", { pathArray, closeArray: true, closePath: false }, scene);
+  const cn = chunk.getVerticesData("normal"), cp = chunk.getVerticesData("position");
+  if (cn && cp && cn[0] * (cp[0] - spine[0].x) + cn[1] * (cp[1] - spine[0].y) + cn[2] * (cp[2] - spine[0].z) < 0) chunk.flipFaces(true);
+  put(chunk);
+  jitterVertices(chunk, 0.06, 41.7);
   // the brooch pinning it on the shoulder's front
   const brooch = MeshBuilder.CreateCylinder("sarissaFoldBrooch", { height: chest.trunk * 0.03, diameter: chest.trunk * F.brooch, tessellation: 8 }, scene);
   brooch.material = getMaterialFactory().get("cloth", F.gold, { emissive: F.gold.scale(0.2) });
