@@ -421,6 +421,8 @@ async function main() {
             // the idle look-around can turn the face to the far side (the painter, the spear thrower): when the face points more than .9 rad off
             // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
             let alpha = a.body.root.rotation.y - Math.PI / 2 - swing;
+            // the halberdier's idle swings to his other side: from the weapon side a navy backdrop boulder sat right beside his helm (evidence 374)
+            if (a.definition.id === "renaissance.halberd") alpha += 2 * swing;
             const b = a.body;
             if (a.definition.id !== "tribal.protector" && b.leftEye && b.rightEye && b.headMesh) {
               const le = window.__wp(b.leftEye), re = window.__wp(b.rightEye);
