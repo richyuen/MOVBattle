@@ -372,6 +372,14 @@ const FLOPPY_HAT = {
   brim: 2.0, thick: 0.07, droop: 0.24, dip: 0.12, cock: -0.08, crown: 1.12, taper: 0.88, tall: 0.5, pale: 0.25, felt: new Color3(0.55, 0.3, 0.19),
   leaves: [[0.85, 0.42, 0.55, 0.35, 0.4], [0.55, 0.3, 0.9, 0.7, -0.3]] as const,
 };
+/*
+ * [S] the sallet re-cut (368; renaissance.halberd.red.png, .jpg: a tall faceted black helm, near straight-sided, its top a low flat dome, a team-red visor slit
+ * across the eyes with the bead eyes looking out of it, and a black bevor wrapping the chin and throat down onto the shoulders; critic 367: a round black
+ * ball with a short peak and no eye slit). In head widths W and heights H: an .sides-sided shell .heads W across (.taper of that at its top) and .deep as deep,
+ * from .crown H over the crown to .drop H under it; a low cap .dome H tall over it; the slit .slit H tall, .slitWide of the shell across, .slitDown H under
+ * the eyes' top, with bead eyes .eye H across .eyeX W out; the bevor .bevor H tall, flaring to .bevorFlare of the shell. No neck-guard tail.
+ */
+const SALLET_FACETED = { sides: 8, heads: 1.24, taper: 0.9, deep: 1.08, crown: 0.02, drop: 1.0, dome: 0.16, slit: 0.13, slitWide: 0.84, slitDown: 0.0, eye: 0.15, eyeX: 0.17, bevor: 0.34, bevorFlare: 1.3 };
 const SALLET = { heads: 1.3, deep: 1.12, crown: 0.12, dome: 0.45, drop: 1.05, flare: 1.08, slit: 0.07, slitDown: 0.04, slitWide: 0.78, tail: 0.5, dip: 0.45 };
 /*
  * A fencer's cavalier hat (327; renaissance.fencer.red.png, renaissance.fencer.png: a wide dark team-felt hat pulled to the brow, its brim about two and a quarter
@@ -1505,37 +1513,55 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return dome;
   }
   if (type === "sallet") {
-    // The sallet, built to the spec at SALLET: a dome over a shell to below the chin, a team slit at the eyes, a neck guard behind
-    const iron = mat(scene, MORION_IRON, 0.06, "metal");
-    const R = SALLET.heads * W * 0.5;
-    const skirtTop = SALLET.crown * H - SALLET.dome * H;
-    const skirtLong = skirtTop + SALLET.drop * H;
-    const dome = MeshBuilder.CreateSphere("salletDome", { diameterX: u(2 * R), diameterY: u(SALLET.dome * H * 2), diameterZ: u(2 * R * SALLET.deep), segments: 6, slice: 0.5 }, scene);
-    dome.position.y = u(skirtTop);
-    dome.material = iron;
-    dome.convertToFlatShadedMesh();
-    const shell = MeshBuilder.CreateCylinder("salletShell", { height: u(skirtLong), diameterTop: u(2 * R), diameterBottom: u(2 * R * SALLET.flare), tessellation: 12 }, scene);
-    shell.scaling.z = SALLET.deep;
-    shell.position.y = -u(skirtLong) * 0.5;
+    // [S] the sallet re-cut as a tall faceted helm (368, spec at SALLET_FACETED): an eight-sided iron bucket from a low flat dome to the chin, a team visor
+    // slit across it with the bead eyes looking out, a flared bevor round the chin and throat
+    const F = SALLET_FACETED;
+    const iron = mat(scene, MORION_IRON, 0.08, "metal");
+    const R = F.heads * W * 0.5;
+    const top = F.crown * H, foot = -F.drop * H, tall = top - foot;
+    const shell = MeshBuilder.CreateCylinder("salletShell", { height: u(tall), diameterTop: u(2 * R * F.taper), diameterBottom: u(2 * R), tessellation: F.sides }, scene);
+    shell.rotation.y = Math.PI / F.sides;
+    shell.bakeCurrentTransformIntoVertices();
+    shell.scaling.z = F.deep;
+    shell.position.y = u((top + foot) * 0.5);
     shell.material = iron;
     shell.convertToFlatShadedMesh();
-    shell.parent = dome;
-    // The slit: a thin team band laid on the shell's front at the eyes, proud of the facets so it shows
-    const slitY = -(eyeTop + SALLET.slitDown * H);
-    const flareAt = 1 + (SALLET.flare - 1) * (skirtTop - slitY) / skirtLong;
-    const slit = MeshBuilder.CreateBox("salletSlit", { width: u(2 * R * SALLET.slitWide), height: u(SALLET.slit * H), depth: u(0.08 * W) }, scene);
-    slit.position.set(0, u(slitY - skirtTop), u(R * SALLET.deep * flareAt * 0.97));
+    const cap = MeshBuilder.CreateCylinder("salletDome", { height: u(F.dome * H), diameterTop: u(2 * R * F.taper * 0.55), diameterBottom: u(2 * R * F.taper), tessellation: F.sides }, scene);
+    cap.rotation.y = Math.PI / F.sides;
+    cap.bakeCurrentTransformIntoVertices();
+    cap.position.y = u(tall * 0.5 + F.dome * H * 0.5);
+    cap.material = iron;
+    cap.convertToFlatShadedMesh();
+    cap.parent = shell;
+    // The slit: a team band across the front at the eyes, standing a little proud; two bead eyes in it
+    const slitY = -(eyeTop + F.slitDown * H) - (top + foot) * 0.5;
+    const frontZ = R * Math.cos(Math.PI / F.sides) * (1 - (1 - F.taper) * 0.5);
+    const slit = MeshBuilder.CreateBox("salletSlit", { width: u(2 * R * F.slitWide), height: u(F.slit * H), depth: u(0.06 * W) }, scene);
+    slit.position.set(0, u(slitY), u(frontZ));
     slit.material = mat(scene, teamColor ?? accent, 0.35);
-    slit.parent = dome;
-    // The neck guard: a plate hinged on the shell's back near its foot, sweeping out behind and down
-    const tail = u(SALLET.tail * W);
-    const guard = MeshBuilder.CreateBox("salletTail", { width: u(2 * R * 0.9), height: u(0.05 * H), depth: tail }, scene);
-    guard.rotation.x = -SALLET.dip;
-    guard.position.set(0, u(-skirtLong * 0.78) - tail * 0.5 * Math.sin(SALLET.dip), -u(R * SALLET.deep * 0.95) - tail * 0.5 * Math.cos(SALLET.dip));
-    guard.material = iron;
-    guard.convertToFlatShadedMesh();
-    guard.parent = dome;
-    return dome;
+    slit.parent = shell;
+    const white = mat(scene, new Color3(0.95, 0.95, 0.95), 0.4);
+    const black = mat(scene, new Color3(0.03, 0.03, 0.03));
+    for (const side of [-1, 1]) {
+      const eye = MeshBuilder.CreateSphere("salletEye", { diameter: u(F.eye * H), segments: 6 }, scene);
+      eye.scaling.z = 0.5;
+      eye.position.set(side * u(F.eyeX * W), u(slitY), u(frontZ + 0.03 * W));
+      eye.material = white;
+      eye.parent = shell;
+      const pupil = MeshBuilder.CreateSphere("salletPupil", { diameter: u(F.eye * H * 0.5), segments: 5 }, scene);
+      pupil.position.set(0, 0, u(F.eye * H * 0.22));
+      pupil.material = black;
+      pupil.parent = eye;
+    }
+    // The bevor: an eight-sided flared collar round the chin and throat, wider than the shell, sitting on the shoulders
+    const bevor = MeshBuilder.CreateCylinder("salletBevor", { height: u(F.bevor * H), diameterTop: u(2 * R * 1.02), diameterBottom: u(2 * R * F.bevorFlare), tessellation: F.sides }, scene);
+    bevor.rotation.y = Math.PI / F.sides;
+    bevor.bakeCurrentTransformIntoVertices();
+    bevor.position.y = u(foot - (top + foot) * 0.5 - F.bevor * H * 0.35);
+    bevor.material = iron;
+    bevor.convertToFlatShadedMesh();
+    bevor.parent = shell;
+    return shell;
   }
   if (type === "brim_hat") {
     const felt = mat(scene, BRIM_HAT_FELT);
