@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 381   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 26/139   Parked: 0
+Iteration: 382   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 26/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,16 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-381 (BASE 0d6efb0): [S] mammoth a tail dff7370 approved (a PASS, D) | [S] potion_seller b teal liquid acfb585 +7af06ac approved (b PASS, D) | [S] wheelbarrow a Thrower legs fd3d2e2 approved | [S] halfling a belt+buckle 8cb455f approved | [S] shield_bearer b flat trim 0550f5d +a2d3543 approved (b PASS) | [S] hoplite c dory thrust 52a1b5c +512e06f approved (c PASS) | [S] sarissa a Corinthian helm bf11d67 approved
+382 (BASE b359959): [S] sarissa a crest bands bc537dc +5dcf082 +f61cdaa approved | [S] hoplite b dory aim e3ebcbd approved (struck b.2) | [S] shield_bearer a legion helm c7d3111 approved (struck a.1) | [S] halfling a mop 1a97f99 +fd22501 approved | [S] minotaur a bull head 4c7d9fb approved (struck a.1) | [S] snake_archer a hood 7a7a3fb approved (struck a.1) | [S] wheelbarrow a hay mound ed5a3b5 rejected, reverted e797cb9
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.mammoth (dff7370) VERDICT: APPROVE CRITERION: tribal.mammoth.a PASS (previous: FAIL)
-- GAP: [S] farmer.potion_seller (acfb585 + 7af06ac) VERDICT: APPROVE CRITERION: farmer.potion_seller.b PASS (previous: FAIL)
-- GAP: [S] farmer.wheelbarrow (fd3d2e2) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
-- GAP: [S] farmer.halfling (8cb455f) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
-- GAP: [S] ancient.shield_bearer (0550f5d + a2d3543) VERDICT: APPROVE CRITERION: ancient.shield_bearer.b PASS (previous: FAIL)
-- GAP: [S] ancient.hoplite (52a1b5c + 512e06f) VERDICT: APPROVE CRITERION: ancient.hoplite.c PASS (previous: FAIL)
-- GAP: [S] ancient.sarissa (bf11d67) VERDICT: APPROVE CRITERION: ancient.sarissa.a FAIL (previous: FAIL)
+- GAP: [S] ancient.sarissa (bc537dc +5dcf082 +f61cdaa) VERDICT: APPROVE CRITERION: ancient.sarissa.a FAIL (previous: FAIL)
+- GAP: [S] ancient.hoplite (e3ebcbd) VERDICT: APPROVE CRITERION: ancient.hoplite.b FAIL (previous: FAIL)
+- GAP: [S] ancient.shield_bearer (c7d3111) VERDICT: APPROVE CRITERION: ancient.shield_bearer.a FAIL (previous: FAIL)
+- GAP: [S] farmer.halfling (1a97f99 +fd22501) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [S] ancient.minotaur (4c7d9fb) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
+- GAP: [S] ancient.snake_archer (7a7a3fb) VERDICT: APPROVE CRITERION: ancient.snake_archer.a FAIL (previous: FAIL)
+- GAP: [S] farmer.wheelbarrow (ed5a3b5) VERDICT: REJECT CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open in the old batches: wheelbarrow a (Thrower raised on the rear quarter, both knees past the Farmer), halfling a (hair [S]; belt [P] fallout of 8cb455f). Ancient gaps in its unit files; the sarissa crest gap also clears hoplite a.1.
+- Open in the old batches: wheelbarrow a (Thrower back + up, knees wide; probe numbers in its Notes), halfling a ([P] hair + belt fallout; first an evidence commit: _idle shows him turned away). Ancient gaps in its unit files.
+- Minotaur Big Headbutt needs an evidence commit first: capture takes the first special event (charge at 17 ms) as _ability. Crest blades: one solid strip per band.
 - Flat colour that survives ACES: "unlit" material, emissive red >1 / blue ~0, glow.addExcludedMesh (SCUTUM_TRIM_FLAT). "metal" renders black (no env map): use cloth + glow.
 - Melee blows are logged as the attack starts: _release is a tick before the animator's attack; motion shows in _flight. Ancient world-space holds: _levelPike, _carryDory (+thrust), _applyBullFists, _hangFlasks.
-- Probes (output/loop/, --build first): probe_shield, probe_potion, probe_mino, probe_wheelbarrow, probe_halfling, probe_hoplite, probe_head.
-- Capture replays are deterministic. Particles do not render on the stepped clock. Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool.
+- Probes (output/loop/, --build first): probe_shield, _potion, _mino, _wheelbarrow, _halfling, _hoplite, _head. Capture replays are deterministic. Particles do not render on the stepped clock. Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool.
