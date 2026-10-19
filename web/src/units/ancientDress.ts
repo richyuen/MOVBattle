@@ -472,7 +472,7 @@ const SNAKE_HOOD = {
  * The draw fist holds it nocked (heldSnake, named "heldArrow" so the sim hides it at the loose, SNAKE_ARROWS); the arrow that flies is dressed as it.
  */
 const SNAKE = {
-  bands: 8, body: 0.72, tail: 0.25, neck: 0.72, head: 0.22, headLong: 1.45, flat: 0.75, eye: 0.42, glow: 0.18, nock: 0.42, held: 0.48,
+  bands: 8, body: 0.72, tail: 0.25, neck: 1.0, head: 0.4, headLong: 1.45, flat: 0.75, eye: 0.42, glow: 0.18, nock: 0.42, held: 0.6,
   green: new Color3(0.2, 0.42, 0.2), red: new Color3(0.45, 0.1, 0.12), white: new Color3(0.95, 0.95, 0.92), black: new Color3(0.05, 0.05, 0.05),
 };
 
