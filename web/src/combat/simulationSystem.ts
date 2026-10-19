@@ -226,6 +226,14 @@ const WHEELBARROW_RAM = { from: 0.6, reach: 16, speed: 1.7, seconds: 3, overrun:
  * fights on with sword and shield. .cooldown s between charges. Logged "charge" at the start and "trample" at the hit.
  */
 const KNIGHT_CHARGE = { from: 0.4, reach: 2.5, speed: 2.6, seconds: 1.0, overrun: 0.5, contact: 0.3, damage: 5, fling: 6, lift: 3.5, cooldown: 5, through: false, log: true };
+/*
+ * [S] the jouster's canter charge (369; card Characteristics "can trample smaller units under hoof ... the lance rapidly does damage to enemies it's in
+ * contact with ... shockwaves wherever they canter ... within their 2 radius"; renaissance.jouster.png: the horses canter into each other, lances level).
+ * An enemy JOUSTER_CHARGE.from to .reach m past his reach sets him cantering at the man at .speed times his pace (the horse's run gait, HORSE_GAIT) and
+ * on through him .overrun m; the man he meets takes the lance (his plain attack, if it is ready) and every enemy within .contact m of the horse's hide
+ * ahead of its middle is trampled (.damage, flung .fling/.lift). .cooldown s between runs. Logged "charge" at the start and "trample" at each man.
+ */
+const JOUSTER_CHARGE = { from: 1.5, reach: 16, speed: 1.5, seconds: 3.5, overrun: 4, contact: 1.0, damage: 20, fling: 4, lift: 2.5, cooldown: 3, through: true, log: true };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -936,7 +944,7 @@ export class SimulationSystem {
 
     // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE); the wheelbarrow's ram (WHEELBARROW_RAM)
     const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM
-      : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : null;
+      : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : unit.definition.id === "renaissance.jouster" ? JOUSTER_CHARGE : null;
     if (chargeSpec && canMove) {
       const run = this._charges.get(unit);
       if (run && (!unit.isCharging || (run.target.isDead && !run.end))) {
@@ -1241,7 +1249,7 @@ export class SimulationSystem {
           this.visualEffects.spawnKickDust(at, MAMMOTH_DUST.size);
         }
       }
-      if (run.spec === MAMMOTH_CHARGE) {
+      if (run.spec === MAMMOTH_CHARGE || run.spec === JOUSTER_CHARGE) {
         unit.animator.setCharging(true);
         this._chargePosed.add(unit);
       }
@@ -1253,6 +1261,8 @@ export class SimulationSystem {
         if (off.length() > unit.collisionBodyRadius + other.collisionBodyRadius + C.contact) continue;
         if (Vector3.Dot(off, run.dir) < 0) continue;
         run.trampled.add(other);
+        // The jouster's lance goes into the man he rides at as the horse reaches him (JOUSTER_CHARGE)
+        if (C === JOUSTER_CHARGE && other === run.target && unit.canAttack(now)) this._tryAttack(unit, other, getAttackProfile(unit.definition.attackProfileId), now);
         // Aside off the charge's line, to whichever side of it he stood, and on ahead of it
         const across = new Vector3(run.dir.z, 0, -run.dir.x);
         const side = Vector3.Dot(off, across) >= 0 ? 1 : -1;

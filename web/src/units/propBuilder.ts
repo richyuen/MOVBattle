@@ -5049,6 +5049,17 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       // A big flared hoof, as wide as the upper leg
       const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: hoofTall, diameterTop: H * HORSE_HOOF * 0.72, diameterBottom: H * HORSE_HOOF, tessellation: 6 }, scene), dark);
       hoof.position.set(legX, floor + hoofTall / 2, hoofAt.z + H * 0.02);
+      // [S] 369 the barded horse's canter (proceduralAnimation HORSE_GAIT): the whole leg hangs off a pivot at its top inside the barrel, so the
+      // animator can swing it fore and aft; named hgait_<fore|hind>_<l|r>
+      if (!pinto) {
+        const pivot = new TransformNode(`hgait_${z > 0 ? "fore" : "hind"}_${x < 0 ? "l" : "r"}`, scene);
+        pivot.parent = frame;
+        pivot.position.copyFrom(upper);
+        for (const m of [holder, cannon, fetlock, hoof]) {
+          m.parent = pivot;
+          m.position.subtractInPlace(upper);
+        }
+      }
     }
   }
   const neckRoot = new Vector3(0, H * HORSE_DEEP * 0.25, L * 0.38);

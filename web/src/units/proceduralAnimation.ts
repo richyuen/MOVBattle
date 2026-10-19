@@ -323,6 +323,13 @@ const MAIN_AXE = { ease: 8 };
  */
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
 /*
+ * [S] the jouster's canter (369; renaissance.jouster.png, card Speed 2.50x "the Jouster Horse ... create shockwaves wherever they canter"): the barded
+ * horse's four legs (propBuilder hgait_* pivots) swing fore and aft about their tops whenever he moves, a three-beat canter: hind lead first, then the
+ * other hind with the diagonal fore together, then the leading fore (.beats, share of the stride). .walk / .run rad of swing at .walkPace / .runPace rad
+ * per second (run on a charge, setCharging). Eased in and out at .ease per second.
+ */
+const HORSE_GAIT = { ease: 8, walk: 0.32, run: 0.62, walkPace: 8, runPace: 12, beats: { hind_l: 0, hind_r: 0.3, fore_l: 0.3, fore_r: 0.6 } as Record<string, number> };
+/*
  * [S] the plank shield held square in front (361; tribal.protector.red.png, .png: the slab held upright square before his body, brow to knee, his face
  * looking through its round hole). The slab hung off his hand at his side. Over every living state (_holdSlab, after the carries) the board is stood in the
  * world square to his heading, its eye hole on his midline at his own eye height, SLAB_FRONT.reach of his stature ahead of his neck; his shield fist is
@@ -1058,6 +1065,28 @@ export class ProceduralAnimator {
     b.hip.rotation.x += Math.sin(t * 2) * CHARGE_POSE.rock * c;
   }
 
+  // The barded horse's leg pivots (HORSE_GAIT), found once; empty for every other body
+  private _gaitLegs: TransformNode[] | null = null;
+  private _horseGait = 0;
+
+  /** [S] the canter (369; spec at HORSE_GAIT): the horse's legs swung on their pivots while he moves. */
+  private _applyHorseGait(dt: number): void {
+    if (!this._gaitLegs || (this._gaitLegs.length === 0 && this._time < 0.5)) {
+      const nodes = this._body.hip.getDescendants(false) as TransformNode[];
+      this._gaitLegs = nodes.filter((n) => n.name.startsWith("hgait_"));
+    }
+    if (this._gaitLegs.length === 0) return;
+    const moving = this._state !== AnimState.Dead && (this._state === AnimState.Walking || this._chargeTarget > 0);
+    this._horseGait += ((moving ? 1 : 0) - this._horseGait) * Math.min(1, dt * HORSE_GAIT.ease);
+    const c = this._charge;
+    const amp = (HORSE_GAIT.walk + (HORSE_GAIT.run - HORSE_GAIT.walk) * c) * this._horseGait;
+    const t = (this._time + this._wobblePhase) * (HORSE_GAIT.walkPace + (HORSE_GAIT.runPace - HORSE_GAIT.walkPace) * c);
+    for (const leg of this._gaitLegs) {
+      const beat = HORSE_GAIT.beats[leg.name.slice(6)] ?? 0;
+      leg.rotation.x = Math.sin(t - beat * Math.PI * 2) * amp;
+    }
+  }
+
   /** Melee contact: called every decision while in reach; the shove pose decays on its own once the calls stop. */
   leanIntoShove(): void {
     this._shoveTimer = 0.5;
@@ -1512,6 +1541,7 @@ export class ProceduralAnimator {
         break;
     }
     this._applyChargePose(dt);
+    this._applyHorseGait(dt);
 
     // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving;
     // between swings the arms windmill out from the shoulders instead of hanging at the sides.
