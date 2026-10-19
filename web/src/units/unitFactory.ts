@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
+import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
@@ -1574,46 +1574,10 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
     cuff.position.y = long * 0.5 - long * S.long + long * S.cuff * 0.5;
     added.push(cuff);
   }
-  // [S] his hairy feet (343; spec at HALFLING_FEET)
-  const F = HALFLING_FEET;
-  const fur = mf.get("cloth", HALFLING_FUR, { emissiveIntensity: F.glow });
-  const feet = [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)].filter((m): m is Mesh => m instanceof Mesh && /_[lr]FootM$/.test(m.name));
-  feet.forEach((foot, f) => {
-    const e = foot.getBoundingInfo().boundingBox.extendSize;
-    const c = foot.getBoundingInfo().boundingBox.center;
-    const wide = Math.max(e.x, e.z) * 2;
-    // the clump: a jittered faceted lump over the instep, wider than the foot
-    const clump = MeshBuilder.CreateIcoSphere("halflingFootFur", { radius: 1, subdivisions: 1, flat: true }, scene);
-    clump.scaling.set(e.x * F.clump, e.y * F.clumpTall, e.z * F.clump * 0.8);
-    clump.position.set(c.x, c.y + e.y * F.rise, c.z - e.z * 0.1);
-    clump.material = fur;
-    clump.parent = foot;
-    added.push(clump);
-    // tufts sticking out every way round the clump's rim
-    for (let i = 0; i < F.tufts; i++) {
-      const a = (i + 0.5 * f) / F.tufts * Math.PI * 2;
-      const sx = Math.sin(a), cz = Math.cos(a);
-      const long = wide * F.long * (0.75 + 0.5 * ((i * 7 + f * 3) % 5) / 4);
-      const tuft = MeshBuilder.CreateCylinder("halflingFootTuft", { height: long, diameterTop: wide * F.thick, diameterBottom: 0, tessellation: 4 }, scene);
-      tuft.convertToFlatShadedMesh();
-      tuft.material = fur;
-      tuft.parent = foot;
-      const out = F.splay + 0.25 * ((i * 3 + f) % 3) / 2;
-      tuft.rotation.set(-cz * out, 0, sx * out);
-      tuft.position.set(c.x + sx * (e.x * 0.9 + Math.sin(out) * long * 0.5), c.y + e.y * F.rise + Math.cos(out) * long * 0.3, c.z + cz * (e.z * 0.7 + Math.sin(out) * long * 0.5));
-      added.push(tuft);
-    }
-  });
+  // [S] 389 his hairy feet: a compact dark tuft on top of each foot (farmerDress HALFLING_TUFT; the 343 splayed clump HALFLING_FEET retired)
+  added.push(...halflingFootFur(scene, body));
   return added;
 }
-/*
- * [S] halfling's hairy feet (343; farmer.halfling.red.png, card Appearance "distinctively hairy feet"): a shaggy brown clump of hair over the top of each
- * bare foot, from the ankle down over the instep, wider than the foot, its tufts sticking out every way round it. Shares of the foot's own box: the clump
- * HALFLING_FEET.clump of the foot across and .clumpTall of its height, its middle .rise of the half-height above the foot's middle; .tufts spikes .long of
- * the foot's width long, .thick at the root, splayed .splay rad out. Brown like his mop, self-lit .glow so it reads brown at lineup distance.
- */
-const HALFLING_FEET = { clump: 1.35, clumpTall: 0.7, rise: 0.45, tufts: 9, long: 0.55, thick: 0.28, splay: 1.0, glow: 0.22 };
-const HALFLING_FUR = new Color3(0.38, 0.21, 0.12);
 
 /*
  * [S] harvester's snath pegs (342; farmer.harvester.red.png: two short peg handles stand off the snath, one under each fist). Shares of the snath's length L

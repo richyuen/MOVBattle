@@ -462,3 +462,59 @@ export function halflingMop(scene: Scene, body: ArticulatedBody): Mesh[] {
   mop.parent = body.headMesh;
   return [mop];
 }
+
+/*
+ * [S] 389 the halfling's foot fur as a compact tuft (farmer.halfling.red.png: a small dark-brown shock of short shards on top of each bare team foot over
+ * the instep, inside the foot's outline; critic 388: a wide starburst of long tan spikes splayed past each foot; replaces unitFactory's HALFLING_FEET).
+ * In shares of the foot's own box (half extents e, middle c): .clumps faceted lumps .clump of the foot's width round, jittered, packed over the instep
+ * from .from to .to of its length (rear to front) on its top, sunk .sink of a lump into it, .inX of the half width out at most; .spikes short shards
+ * .spike of the width long, .spikeWide at the root, leaning at most .lean rad off upright, rooted in the lumps. Dark brown .fur, self-lit .glow.
+ */
+const HALFLING_TUFT = {
+  clumps: 5, clump: 0.42, from: -0.55, to: 0.25, sink: 0.35, inX: 0.45, spikes: 9, spike: 0.34, spikeWide: 0.16, lean: 0.55,
+  fur: new Color3(0.3, 0.16, 0.09), glow: 0.2,
+};
+
+/** The halfling's hairy feet: a compact dark tuft on top of each foot (spec at HALFLING_TUFT). */
+export function halflingFootFur(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = HALFLING_TUFT;
+  const out: Mesh[] = [];
+  const fur = getMaterialFactory().get("cloth", T.fur, { emissive: T.fur.scale(T.glow) });
+  const feet = [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)].filter((m): m is Mesh => m instanceof Mesh && /_[lr]FootM$/.test(m.name));
+  // a fixed hash so both teams' feet match and the capture stays deterministic
+  const hash = (i: number) => { const v = Math.sin(i * 12.9898 + 4.1) * 43758.5453; return v - Math.floor(v); };
+  feet.forEach((foot, f) => {
+    const e = foot.getBoundingInfo().boundingBox.extendSize;
+    const c = foot.getBoundingInfo().boundingBox.center;
+    const wide = e.x * 2;
+    const topY = c.y + e.y;
+    const tops: Vector3[] = [];
+    for (let k = 0; k < T.clumps; k++) {
+      const u = T.clumps === 1 ? 0.5 : k / (T.clumps - 1);
+      const r = wide * T.clump * 0.5 * (0.8 + 0.4 * hash(f * 31 + k));
+      const x = c.x + e.x * T.inX * (k % 2 ? 1 : -1) * (0.4 + 0.6 * hash(f * 17 + k));
+      const z = c.z + e.z * (T.from + (T.to - T.from) * u);
+      const lump = MeshBuilder.CreateIcoSphere("halflingFootFur", { radius: 1, subdivisions: 1, flat: true }, scene);
+      lump.scaling.set(r, r * 0.8, r * 1.1);
+      lump.rotation.set(hash(f * 7 + k) * 2, hash(f * 11 + k) * 3, 0);
+      lump.position.set(Math.max(c.x - e.x + r * 0.6, Math.min(c.x + e.x - r * 0.6, x)), topY + r * (0.8 - T.sink * 2), z);
+      lump.material = fur;
+      lump.parent = foot;
+      out.push(lump);
+      tops.push(lump.position.add(new Vector3(0, r * 0.5, 0)));
+    }
+    for (let i = 0; i < T.spikes; i++) {
+      const root = tops[i % tops.length];
+      const long = wide * T.spike * (0.7 + 0.6 * hash(f * 53 + i));
+      const spike = MeshBuilder.CreateCylinder("halflingFootTuft", { height: long, diameterTop: 0, diameterBottom: wide * T.spikeWide, tessellation: 4 }, scene);
+      spike.convertToFlatShadedMesh();
+      const a = hash(f * 71 + i) * Math.PI * 2, tilt = T.lean * (0.3 + 0.7 * hash(f * 91 + i));
+      spike.rotation.set(Math.cos(a) * tilt, 0, -Math.sin(a) * tilt);
+      spike.position.set(root.x + Math.sin(a) * Math.sin(tilt) * long * 0.4, root.y + Math.cos(tilt) * long * 0.35, root.z + Math.cos(a) * Math.sin(tilt) * long * 0.4);
+      spike.material = fur;
+      spike.parent = foot;
+      out.push(spike);
+    }
+  });
+  return out;
+}
