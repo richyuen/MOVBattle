@@ -367,6 +367,13 @@ const FLASK_HANG = { down: 1, ahead: 0.3 };
 // (380 follow-up: at .62 out, -.05 up the fist sat on the hip, arm akimbo, and the point went into the grass at .62 down)
 const DORY_CARRY = { ahead: 0.25, out: 0.9, up: -0.3, fwd: 0.8, side: 0.25, down: 0.4, fistAt: 0.15 };
 /*
+ * [S] the carry aimed at the ground (382; ancient.hoplite.red.png: from the front the shaft runs from the fist at his hip out past his weapon side and
+ * down about 40 deg, the point well ahead of and outside his feet; critic 381: near-vertical, point by his feet, as the fwd/side/down line foreshortened
+ * toward the camera). The shaft points from the fist at a spot .above of u over the ground (his root), .ahead of u before his hip and .out of u to the
+ * weapon side (u as DORY_CARRY); DORY_CARRY's fwd/side/down are no longer read.
+ */
+const DORY_AIM = { ahead: 1.8, out: 1.9, above: 0.1 };
+/*
  * [S] the dory thrust (381; ancient.hoplite.jpg, card Weapons "Short Spear: Polearm - Melee, range 2.2": the spear held level under the arm at the hip,
  * point well ahead, and driven straight out past the aspis; critic 378/380: the blow was a shield shove, the dory trailing point-down). Through every
  * blow the dory lies on a line .tilt rad off level along his heading (blending back to the carry over the blow's last .blendOut), the fist .ahead of
@@ -3187,7 +3194,11 @@ export class ProceduralAnimator {
     const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
     const { fwd, right } = this._heading();
     let fist = hip.add(fwd.scale(D.ahead * u)).add(right.scale(D.out * u)).add(new Vector3(0, D.up * u, 0));
-    let dir = fwd.scale(D.fwd).add(right.scale(D.side)).add(new Vector3(0, -D.down, 0)).normalize();
+    // [S] the line solved to a point on the ground (382, spec at DORY_AIM), so the shaft falls ~40 deg from the fist out past his weapon side
+    const A = DORY_AIM;
+    const ground = b.root.getAbsolutePosition().y;
+    const aim = new Vector3(hip.x, ground + A.above * u, hip.z).add(fwd.scale(A.ahead * u)).add(right.scale(A.out * u));
+    let dir = aim.subtract(fist).normalize();
     // [S] the thrust (381, spec at DORY_THRUST): from the carry the dory comes up level under the arm, draws back, and is driven out past the aspis
     if (st === AnimState.Attacking) {
       const T = DORY_THRUST;
