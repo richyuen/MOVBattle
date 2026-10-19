@@ -1,4 +1,4 @@
-import { Scene, Vector3, Color3, Mesh, MeshBuilder, VertexBuffer, VertexData } from "@babylonjs/core";
+import { Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, VertexBuffer, VertexData } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -424,9 +424,9 @@ const BOWL_COLOR = new Color3(0.45, 0.22, 0.15);
  */
 const HAIR_CAP = { dome: 1.14, crown: 0.62, fringe: 0.62, hang: -0.12, flare: 1.02, face: 0.42 };
 const HAIR_CAP_COLOR = new Color3(0.36, 0.25, 0.17);
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy" | "bowl" | "cap"> = {
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "dreads" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy" | "bowl" | "cap"> = {
   "farmer.halfling": "shaggy", "farmer.hay_baler": "bowl", "farmer.potion_seller": "cap",
-  "tribal.stoner": "long", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
+  "tribal.stoner": "dreads", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
   "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache", "renaissance.musketeer": "moustache_goatee",
 };
 
@@ -539,6 +539,7 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   if (HAIR_STYLES[unitId] === "tusk_band") return tuskBand(scene, body);
   if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
   const style = HAIR_STYLES[unitId];
+  if (style === "dreads") return dreadMop(scene, body, LONG_HAIR_COLOR);
   if (style === "shaggy") return shaggyHair(scene, body);
   if (style === "bowl") return bowlCut(scene, body);
   if (style === "cap") return bowlCut(scene, body, HAIR_CAP, HAIR_CAP_COLOR);
@@ -590,6 +591,85 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   }
   if (style === "long_beard") added.push(...tribalBeard(scene, body, hair));
   if (style === "long_dark_moustache") added.push(...curledMoustache(scene, body));
+  return added;
+}
+
+/*
+ * [S] the dreadlock mop (361; tribal.stoner.red.png: a messy dark-brown dreadlock mop wider than the head, framing an open face, eyes clear, locks to the
+ * shoulders; the old long hair hung straight flat strands from a cap that ran down over the brow, so with the head bowed it read as a slab over the face).
+ *   - cap: a jittered faceted dome DREAD_MOP.cap (x, y, z) of the head's half extents, its middle .capUp of the half height up and .capBack of the half depth
+ *     back, so its front edge stops above the brow;
+ *   - locks: DREAD_MOP.locks thick kinked clumps round the sides and back (the face's sector, .face rad either side of the front, left open), each two
+ *     tapered five-sided lengths: the first out and down from the cap's rim, splayed .splay off the hang so the mop stands wider than the head, the second
+ *     bent .kink back toward the hang, the pair .long head heights in all (its own share shorter or longer), .thick head widths across at the root;
+ *   - fringe: .fringe short clumps over the brow tilted forward, ending above the eyes (.fringeLong head heights);
+ *   - tufts: .tufts short clumps standing out of the crown at odd angles for a ragged top.
+ * Self-lit (.glow) so it stays brown in the shade.
+ */
+const DREAD_MOP = {
+  cap: [1.32, 0.66, 1.3] as const, capUp: 0.78, capBack: 0.2, jitter: 0.12,
+  locks: 20, face: 0.85, splay: 0.42, kink: 0.35, long: 0.95, thick: 0.3,
+  fringe: 5, fringeLong: 0.17, tufts: 7, glow: 0.18,
+};
+
+/** A dreadlock mop (spec at DREAD_MOP), parented to the head; `long` overrides the locks' length in head heights. */
+function dreadMop(scene: Scene, body: ArticulatedBody, color: Color3, long = DREAD_MOP.long): Mesh[] {
+  const D = DREAD_MOP;
+  const added: Mesh[] = [];
+  const hair = getMaterialFactory().get("cloth", color, { emissiveIntensity: D.glow });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const halfX = e.x, halfY = e.y, halfZ = e.z;
+  const W = halfX * 2, H = halfY * 2;
+  const cap = MeshBuilder.CreateIcoSphere(`${body.headMesh.name}_hair`, { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(cap, D.jitter, 13.3, halfX * D.cap[0], halfY * D.cap[1], halfZ * D.cap[2]);
+  cap.position.set(0, halfY * D.capUp, -halfZ * D.capBack);
+  cap.material = hair;
+  cap.parent = body.headMesh;
+  added.push(cap);
+  const up = Vector3.Up();
+  // One tapered five-sided length from `from` along `dir`; returns its far end
+  const clump = (name: string, from: Vector3, dir: Vector3, length: number, root: number, tip: number, serial: number): Vector3 => {
+    const d = dir.normalize();
+    const m = MeshBuilder.CreateCylinder(name, { height: length, diameterTop: root, diameterBottom: tip, tessellation: 5 }, scene);
+    jitterVertices(m, 0.1, serial);
+    // the cylinder's +y (its root, the wide end) points back up the clump: it hangs from `from` toward `from + d * length`
+    m.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, d.scale(-1), m.rotationQuaternion);
+    m.position = from.add(d.scale(length * 0.5));
+    m.material = hair;
+    m.parent = body.headMesh;
+    added.push(m);
+    return from.add(d.scale(length));
+  };
+  const sweep = Math.PI * 2 - D.face * 2;
+  for (let i = 0; i < D.locks; i++) {
+    const a = D.face + (i + 0.5) / D.locks * sweep + (hashShare(2.7, i, 4, 1) - 0.5) * 0.15;
+    const share = hashShare(3.1, i * 1.7, i * 0.3, 1);
+    const sx = Math.sin(a), cz = Math.cos(a);
+    const total = H * long * (0.8 + 0.4 * share);
+    const root = W * D.thick * (0.85 + 0.3 * hashShare(5.3, i, 2, i));
+    const rootY = halfY * (0.5 + 0.15 * hashShare(6.1, i, 3, 2));
+    const from = new Vector3(sx * halfX * 1.12, rootY, cz * halfZ * 1.1 - halfZ * D.capBack * 0.5);
+    const splay = D.splay * (0.75 + 0.5 * share);
+    const outward = new Vector3(sx, 0, cz);
+    const first = new Vector3(0, -Math.cos(splay), 0).addInPlace(outward.scale(Math.sin(splay)));
+    const bend = clump("hairDread", from, first, total * 0.5, root, root * 0.8, 20 + i);
+    const kink = Math.max(0, splay - D.kink * (0.6 + 0.8 * hashShare(7.7, i, 5, 3)));
+    const second = new Vector3(0, -Math.cos(kink), 0).addInPlace(outward.scale(Math.sin(kink)));
+    clump("hairDread", bend, second, total * 0.5, root * 0.8, root * 0.45, 60 + i);
+  }
+  for (let i = 0; i < D.fringe; i++) {
+    const x = ((i + 0.5) / D.fringe - 0.5) * W * 0.95;
+    const length = H * D.fringeLong * (0.8 + 0.4 * hashShare(9.1, i, 1, 3));
+    const from = new Vector3(x, halfY * 0.9, halfZ * 0.95);
+    clump("hairFringe", from, new Vector3(x / W * 0.8, -1, 0.7), length, W * D.thick * 0.8, W * D.thick * 0.4, 100 + i);
+  }
+  for (let i = 0; i < D.tufts; i++) {
+    const a = (i + 0.5) / D.tufts * Math.PI * 2;
+    const from = new Vector3(Math.sin(a) * halfX * 0.6, halfY * (D.capUp + D.cap[1] * 0.75), Math.cos(a) * halfZ * 0.55 - halfZ * D.capBack);
+    const dir = new Vector3(Math.sin(a) * 0.9, 0.45 + 0.4 * hashShare(4.4, i, 7, 1), Math.cos(a) * 0.9 - 0.2);
+    clump("hairTuft", from, dir, H * 0.2 * (0.8 + 0.4 * hashShare(8.8, i, 2, 5)), W * D.thick * 0.7, W * D.thick * 0.3, 140 + i);
+  }
   return added;
 }
 
