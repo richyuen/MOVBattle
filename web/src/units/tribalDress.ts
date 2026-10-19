@@ -364,8 +364,13 @@ const LONG_HAIR_COLOR = new Color3(0.3, 0.18, 0.1);
  * their head like a headband"): a bare head (no mop), a brown strap round it TUSK_BAND.band of the head's height above its middle, and a pale curved tusk
  * standing up each side from the cheek, bowed outward, its tip TUSK_BAND.rise head heights over its root and a little back; TUSK_BAND.thick head widths
  * across at the root, tapering to a point; a turn of rope round each tusk where the strap crosses it.
+ * 363 [S] hung tusks (critic 360: small white nubs pointing up off the band; tribal.spear_thrower.red.png: large tan tusks strapped to the band's sides,
+ * hanging down past the eyes to the cheeks): each tusk's thick root now sits on the band at the side of the head, .rootOut of the half-width out and
+ * .rootAhead of the half-depth forward, and the tusk hangs down .drop head heights to its point by the cheek, bowed out .bow head widths at its middle and
+ * the point hooked forward .hook of the half-depth; .thick head widths across at the root. Strapped on with .turns rope turns down its root.
+ * Tan (.tan, self-lit .glow), not the white bone.
  */
-const TUSK_BAND = { band: 0.45, strap: 0.1, rise: 0.65, bow: 0.22, thick: 0.4 };
+const TUSK_BAND = { band: 0.45, strap: 0.1, rootOut: 1.06, rootAhead: 0.2, drop: 0.78, bow: 0.16, hook: 0.55, thick: 0.34, turns: 2, tan: new Color3(0.78, 0.66, 0.48), glow: 0.22 };
 const BAND_COLOR = new Color3(0.45, 0.27, 0.16);
 /*
  * The clubber's hair and beard (tribal.clubber.blue.png, card Appearance: "long, unkempt Tribal brown hair"; the stoner's card: "reminiscent of that of the
@@ -442,27 +447,30 @@ function tuskBand(scene: Scene, body: ArticulatedBody): Mesh[] {
   strap.parent = body.headMesh;
   added.push(strap);
   for (const side of [-1, 1]) {
-    // Root at the cheek beside the strap's side, bowing out, the tip over the head's side and a little back
-    const root = new Vector3(side * e.x * 1.12, -e.y * 0.25, e.z * 0.15);
-    const tip = new Vector3(side * e.x * 1.0, -e.y * 0.25 + H * TUSK_BAND.rise, -e.z * 0.25);
-    const ctrl = new Vector3(side * (e.x * 1.12 + W * TUSK_BAND.bow), (root.y + tip.y) * 0.5, e.z * 0.05);
+    // Root on the band at the head's side, a little above it; hanging down past the eye, bowed out, the point hooked forward by the cheek
+    const T = TUSK_BAND;
+    const root = new Vector3(side * e.x * T.rootOut, bandY + H * 0.08, e.z * T.rootAhead);
+    const tip = new Vector3(side * e.x * (T.rootOut + 0.05), root.y - H * T.drop, e.z * T.hook);
+    const ctrl = new Vector3(side * (e.x * T.rootOut + W * T.bow), (root.y + tip.y) * 0.5, e.z * (T.rootAhead - 0.1));
     const path: Vector3[] = [];
     for (let i = 0; i <= 8; i++) {
       const t = i / 8;
       path.push(root.scale((1 - t) * (1 - t)).add(ctrl.scale(2 * t * (1 - t))).add(tip.scale(t * t)));
     }
-    const tusk = MeshBuilder.CreateTube("tusk", { path, tessellation: 6, cap: Mesh.CAP_START, radiusFunction: (i) => W * TUSK_BAND.thick * 0.5 * Math.max(0.06, 1 - i / 8) }, scene);
+    const tusk = MeshBuilder.CreateTube("tusk", { path, tessellation: 6, cap: Mesh.CAP_START, radiusFunction: (i) => W * T.thick * 0.5 * Math.max(0.08, 1 - (i / 8) ** 1.5) }, scene);
     tusk.convertToFlatShadedMesh();
-    tusk.material = boneMaterial();
+    tusk.material = getMaterialFactory().get("cloth", T.tan, { emissiveIntensity: T.glow });
     tusk.parent = body.headMesh;
     added.push(tusk);
-    // The rope turn round the tusk at the strap's height
-    const k = Math.min(8, Math.max(0, Math.round((bandY - root.y) / (tip.y - root.y) * 8)));
-    const wrap = MeshBuilder.CreateTorus("tuskRope", { diameter: W * TUSK_BAND.thick * (1 - k / 8) * 1.15, thickness: W * 0.05, tessellation: 8 }, scene);
-    wrap.position.copyFrom(path[k]);
-    wrap.material = ropeMaterial();
-    wrap.parent = body.headMesh;
-    added.push(wrap);
+    // The rope turns strapping its root to the band: the first where the strap crosses it, the next a little lower
+    for (let r = 0; r < T.turns; r++) {
+      const k = Math.min(8, r + 1);
+      const wrap = MeshBuilder.CreateTorus("tuskRope", { diameter: W * T.thick * Math.max(0.08, 1 - (k / 8) ** 1.5) * 1.12, thickness: W * 0.05, tessellation: 8 }, scene);
+      wrap.position.copyFrom(path[k]);
+      wrap.material = ropeMaterial();
+      wrap.parent = body.headMesh;
+      added.push(wrap);
+    }
   }
   return added;
 }
