@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-378 | topline: hull slope .45 to a lower, smaller rump, hump forward (ad41648 +d33b7c6) | tribal.mammoth.a | approved
-378 | mane as one near-black crest of 6 chunks, brow to nape (97b036e) | tribal.mammoth.a | approved
-378 | flask neck seated on the hand's mitt, in the fist through the windup (c1e205c) | farmer.potion_seller.b | approved
-378 | short tray .5, riders bunched, Farmer reclined into the Thrower (9ea4314) | farmer.wheelbarrow.a | approved
-378 | brown fur body, team belt + pauldron, sash + buckle (87155bc +8ac5a35) | ancient.minotaur.a | approved
-378 | Minotaur Charge: head-down run, butts the man aside (241b811) | ancient.minotaur.c | approved
-378 | curved scutum upright before him via the slab hold, no sword (2940691) | ancient.shield_bearer.b | approved
 379 | bare fists out at the flanks, grab then punch, no hammer (4f9553c +c54ed63 +f07a183 +88e0d0a) | ancient.minotaur.b | approved
 379 | aspis on the trunk upright, notch, rim, swirls (66de83f) | ancient.hoplite.b | approved
 379 | pike levelled in both fists at the hip, no disc (0311c85) | ancient.sarissa.b | approved
@@ -80,6 +73,13 @@ for 25 iterations.
 387 | collar fold: shoulder bulk, two chest drape folds, gold brooch (35cf884) | ancient.sarissa.a | approved
 387 | stance: square on straight wide legs, arms hung (fb699af) | farmer.halfling.a | approved
 387 | Thrower perched on the rear quarter on a hay tuft, knees outside the boards (51b7c67) | farmer.wheelbarrow.a | approved
+388 | ground snake: own 2 m thin banded build in a travelling S, head on a neck (3afbc34) | ancient.snake_archer.c | approved
+388 | toga fill to the belt, bigger unlit bolt, no cape, unlit white, no solar fx (cdf9011 +4 follow-ups) | ancient.zeus.a | approved
+388 | sash foot raised to the right flank + side wrap, off the girdle (8b1943a, reverted 55b56d1) | ancient.minotaur.a | rejected
+388 | Thrower's knee targets off the Farmer's trunk, .55 hip to shoulder, outside it (450e263) | farmer.wheelbarrow.a | approved
+388 | crewman standing behind the trough's end, arms aimed at the winch handles, iron helmet (44de2f1) | ancient.ballista.a | approved
+388 | vest cut in a deep V: lower block + two shoulder panels, team x .97 (ad8de9a +e1a75a4 +c549a26) | farmer.halfling.a | approved
+388 | quiver high on the back, mouth over the left shoulder, arrows; no hip quiver (2f31243) | ancient.snake_archer.a | approved
 
 ## Spent (never retry as [P])
 
@@ -98,11 +98,18 @@ ancient.* 379-386 rows (MINO_*, BULL_*, PIKE_LEVEL, CORINTH_*, SNAKE_*, SARISSA_
 ancient.shield_bearer + hoplite done (SCUTUM*, LEGION_HELM, LORICA, ASPIS*, DORY_*, HOPLITE_LEGS) | compacted 385 | 384 | approved | values: git show 522cb46:loop/LEDGER.md
 ancientDress.ts:ZEUS_BEARD (rows, perRow, slab, kink, tilt, jaw, bib) | 6, 7, .24/.3/.05, .55, .45, 1.22/.7/.72, .95/.95/.55 | 387 | approved | 13 strands .15 thick .75 long (379)
 ancientDress.ts:ZEUS_LOCKS, ZEUS_HAIR | 16 locks .2, 1.05; (.62,.48,.3) .16 | 379 | approved | -
-simulationSystem.ts:SNAKE_LIVE (long, speed, sway, reach, dash, bite, rest, bites, life) | 1.1, 3.2, .1, .8, 4.5, 30, 1.1, 2, 30 | 387 | approved | lodged like an arrow
+simulationSystem.ts:SNAKE_LIVE (long, speed, wave, waves, sway, reach, dash, bite, rest, bites, life) | 2.0, 3.2, 7, 1.4, .24, .8, 4.5, 30, 1.1, 2, 30 | 388 | approved | long 1.1 wave 10 waves 1.5 sway .1 (387)
 simulationSystem.ts:BIG_HEADBUTT (within, cooldown, windup, ahead, radius, damage, fling, lift, edge) | .6, 5, .35, .9, 4.5, 30, 9, 7, .35 | 387 | approved | -
-ancientDress.ts:SARISSA_FOLD (bulk, bulkWide, folds, drapeLong, drapeTall, drapeDeep, drapeTilt, brooch) | .2, 1.5, 2, .72, .13, .09, .42, .09 | 387 | approved | -
-vehicleBuilder.ts:BALLISTA_CREW (x, back, y, thigh, knee, lean, reach) | reverted | 387 | rejected | standing at .25, .72, -halfD-.55
+ancientDress.ts:SARISSA_FOLD (bulk, bulkWide, folds, drapeLong, drapeTall, drapeDeep, drapeTilt, brooch) | .2, 1.5, 2, .72, .22, .09, .6, .09 | 388 | approved | drapeTall .13 drapeTilt .42 (387); no further [P]
+vehicleBuilder.ts:BALLISTA_CREW (gap, y, lean, grip, splay) + ancientDress BALLISTA_HELM | .3, .72, .3, .06, .08 | 388 | approved | 387 crouched x .3 back .3 y .42 (rejected); standing .25, .72, -halfD-.55
 proceduralAnimation.ts:HALFLING_STANCE (tilt, stride, lean, spread, knee) | .02, .05, .03, .22, .04 | 387 | approved | hashed idle stance (sunk)
 farmerDress.ts:HALFLING_MOP (locks, hang, droop, spread, wild, top, side, root, flat) | 46,1.6,.55,.8,.35,.24,.57,.63,.38 | 383 | approved | .35,.4,.95,.42 (382)
 farmerDress.ts:HALFLING_BELT (tall, up, buckle, bar, buckleDeep, ringOut, side) | .17,.16,.34,.14,.12,1.08,.07 | 387 | approved | bar .24 (386); box .13 at .08 (381)
-vehicleBuilder.ts:THROWER_PERCH (seat, up, tuftDeep, lumps, wide, kneeUp) | -.15, .09, .13, .18, .09, .05 | 387 | approved | THROWER_LEGS seat -.08, knees at Farmer hips
+vehicleBuilder.ts:THROWER_PERCH (seat, up, tuftDeep, lumps, wide, kneeUp) | -.15, .09, .13, .18, .09, .05 | 387 | approved | THROWER_LEGS seat -.08 (retired 388)
+
+ancientDress.ts:GROUND_SNAKE (segs, thick, tail, taper, rise, neckUp, headLong, headWide, flat, eye) | 18, .075, .3, .3, .22, .14, .17, .115, .7, .42 | 388 | approved | -
+ancientDress.ts:ZEUS_TOGA (foot, edgeHigh, edgeLow, boltLong, boltWide, boltX, boltGold, whiteGlow) + iconic_zeus special/fx none | 0, 1.45, .24, .36, .5, .62, (1.25,.72,.2), 1 unlit | 388 | approved | high .9 low .12 wide .5 band (385); cape, solar fx
+vehicleBuilder.ts:THROWER_KNEES (chest, out, shinOut, shinDown, shinAhead) | .55, .07, .35, 1, .15 | 388 | approved | knee targets at the Farmer's hips (THROWER_LEGS kneeOut .07, shinOut .45, shinAhead .35)
+farmerDress.ts:HALFLING_VEST_CUT (light, shade, glow) | 0, .97, .04 | 388 | approved | vest box, HALFLING_COAT.vestLight .45; .18/.12; 0/.08
+ancientDress.ts:SNAKE_QUIVER (footX, footY, mouthX, mouthY, wide, off, rim, arrows, shaft) | .35, .3, .75, 1.12, .42, .25, .08, 4, .22 | 388 | approved | generic quiver_back at the hip
+ancientDress.ts:MINO_SASH_FOOT (footX, footY, wrap, wrapTilt) | reverted | 388 | rejected | sash foot (-.85, .12)
