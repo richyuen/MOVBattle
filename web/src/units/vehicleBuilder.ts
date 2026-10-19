@@ -2009,6 +2009,15 @@ const MAMMOTH_MANE_COLOR = new Color3(0.09, 0.055, 0.04);
  * half-height, half-length, tilt back] in neck units (head centre (0, 0, .25), .7 tall), flat-faced jittered balls overlapping along the centre line,
  * the brow's narrow and pitched down, the crown's widest and highest, the nape's long and lying on the hull's top; MAMMOTH_MANE_COLOR now near-black.
  */
+/*
+ * [S] the head as a great dome (379; tribal.mammoth.red.png: the head the highest thing on him, a dome about as tall as the front of the body, the crest on
+ * its crown, the googly eye set high on it; critic 378: head a third of the body's height, tucked under the front, its crown below the hull behind it, eye
+ * mid-face). The head and everything that rides it (crest, mane locks, eyes, ears, face paint) hang off a skull node on the neck whose origin is the
+ * head's centre (0, 0, .25): raised MAMMOTH_DOME.lift and grown .grow; the eyes .eyeUp higher on it and .eyeOut further out onto its skin. Trunk and
+ * tusks stay on the neck, rooted inside the bigger face. The sacred elephant keeps its head.
+ */
+const MAMMOTH_DOME = { lift: 0.32, grow: 1.28, eyeUp: 0.12, eyeOut: 0.03 };
+const MAMMOTH_DOME_PARTS = new Set(["head", "crest", "maneLock", "eye", "pupil", "facePaint", "ear"]);
 const MAMMOTH_CREST = {
   chunks: [
     [0.62, 0.6, 0.26, 0.15, 0.2, 0.7], [0.8, 0.44, 0.36, 0.2, 0.26, 0.35], [0.92, 0.18, 0.42, 0.24, 0.32, 0.05],
@@ -2632,6 +2641,23 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const rHand = dummyJoint("m_rhand", frKnee, scene);
   const lHand = dummyJoint("m_lhand", flKnee, scene);
   const headTop = dummyJoint("m_headtop", neck, scene);
+
+  // [S] the great dome (MAMMOTH_DOME): the head and what rides it lifted and grown about the head's centre on a skull node
+  if (mammoth) {
+    const skull = dummyJoint("m_skull", neck, scene);
+    const centre = new Vector3(0, 0, 0.25);
+    skull.position.set(0, MAMMOTH_DOME.lift, centre.z);
+    skull.scaling.setAll(MAMMOTH_DOME.grow);
+    for (const m of allMeshes) {
+      if (m.parent !== neck || !MAMMOTH_DOME_PARTS.has(m.name)) continue;
+      m.parent = skull;
+      m.position.subtractInPlace(centre);
+      if (m.name === "eye" || m.name === "pupil") {
+        m.position.y += MAMMOTH_DOME.eyeUp;
+        m.position.z += MAMMOTH_DOME.eyeOut;
+      }
+    }
+  }
 
   // Faceted low-poly read instead of smooth cylinders
   for (const mesh of allMeshes) mesh.convertToFlatShadedMesh();
