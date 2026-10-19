@@ -341,7 +341,8 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
 /*
  * [S] bare fists (379, the minotaur's; card Main Hand / Off Hand "Minotaur Grab", Unarmed; ancient.minotaur.red.png: no weapon, both fists balled before the
  * belly, elbows bent near square and out from the flanks; ancient.minotaur.png: one arm grabs a man while the other punches).
- * - Carry (stood or marching): each fist solved (_armTo) onto a point .carryAhead before his hip, .carryOut out to its side and .carryUp above it, in u
+ * - Carry (stood or marching): each fist solved (_armTo) onto a point .carryAhead before his hip and .carryUp above it in u, and out to its side .carryOut
+ *   of half his shoulder span (379: at .6 u the fists sat inside his shoulders and the forearms crossed before the belly)
  *   (his shoulder's height over his hip), so the fists ride out before the belly, elbows bent out; eased out under the charge run.
  * - Blow (grab then punch): to .grab of the blow both arms reach out together, shoulders .reach, elbows near straight (the grab); the off arm then holds
  *   there while the weapon arm draws back to .cock (elbow .cockFold) until .punch and drives straight out to .reach (elbow 0) with the trunk twisted .twist
@@ -357,7 +358,7 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
 // the flask's bulb from the fist, in the world: down and a little ahead (see _hangFlasks)
 const FLASK_HANG = { down: 1, ahead: 0.3 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
-const BULL_FISTS = { carryAhead: 0.45, carryOut: 0.6, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
+const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
 /*
  * [S] the jouster's canter (369; renaissance.jouster.png, card Speed 2.50x "the Jouster Horse ... create shockwaves wherever they canter"): the barded
@@ -1102,8 +1103,10 @@ export class ProceduralAnimator {
     const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
     const sway = Math.sin((this._time + this._wobblePhase) * 3) * 0.04 * u;
     const { fwd, right } = this._heading();
+    // out to his flanks: shares of half his shoulder span (the bull is far wider than he is tall in the trunk)
+    const half = Math.abs(Vector3.Dot(b.rightShoulder.getAbsolutePosition().subtract(b.leftShoulder.getAbsolutePosition()), right)) * 0.5;
     for (const side of [1, -1]) {
-      const fist = hip.add(fwd.scale(F.carryAhead * u)).add(right.scale(side * F.carryOut * u)).add(new Vector3(0, F.carryUp * u + side * sway, 0));
+      const fist = hip.add(fwd.scale(F.carryAhead * u)).add(right.scale(side * F.carryOut * half)).add(new Vector3(0, F.carryUp * u + side * sway, 0));
       if (side > 0) this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, k, 1);
       else this._offArmTo(fist, k, 1);
     }
