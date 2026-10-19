@@ -282,7 +282,21 @@ function skullFacePlate(scene: Scene, skull: Mesh, bone: PBRMetallicRoughnessMat
   const jaw = MeshBuilder.CreateIcoSphere("bskullJaw", { radius: 1, subdivisions: 1, flat: true }, scene);
   jaw.scaling.set(u(F.jaw * W * 0.5), u(F.jawTall * H * 0.5), u(0.16 * W));
   part(jaw, at(0, -F.jawY * H, face - 0.05 * W), 37.3);
+  // [S] 369 the backing plate (spec at SKULL_BACK): a flat six-sided tan plate behind the rims, cheeks and jaw, filling the slab's window to its edges
+  const B = SKULL_BACK;
+  const back = MeshBuilder.CreateCylinder("bskullBack", { height: 1, diameter: 1, tessellation: 6 }, scene);
+  back.rotation.set(Math.PI / 2, Math.PI / 6, 0);
+  back.bakeCurrentTransformIntoVertices();
+  back.scaling.set(u(B.wide * W), u(B.tall * H), u(B.thick * W));
+  part(back, at(0, -(B.top * H + B.tall * H * 0.5), face - B.behind * W), 39.1);
 }
+/*
+ * [S] the window fill (369; tribal.protector.red.png: through the slab's hexagonal window the skull is tan from edge to edge and down past the chin; critic
+ * 368: pink skin at the lower left chin, a red sliver at the right edge by the eye, a dark edge at the upper left): a flat six-sided tan plate behind the
+ * face's parts, SKULL_BACK.wide head widths across and .tall head heights tall from .top head heights under the crown, .thick head widths thick, set .behind
+ * head widths back from the face's flat (in front of the skin, behind the rims, cheeks and jaw). Same bone as the face.
+ */
+const SKULL_BACK = { wide: 1.2, tall: 0.86, top: 0.24, thick: 0.05, behind: 0.09 };
 /*
  * The Chieftain's beast skull (363 [S]; tribal.chieftain.red.png, .png: a long tan-grey predator skull lying front to back on his crown, its beak jutting forward
  * and down over his brow with the lower jaw hanging open under it, a googly eye in each socket on its front corners; his own face and eyes show under it):
