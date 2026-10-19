@@ -220,23 +220,41 @@ export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh):
   return out;
 }
 
-/** The front of a torso-shaped mesh at a height: the furthest-forward vertex within a band of that height, in its parent's units. */
-function frontAt(mesh: Mesh, y: number, band: number): number {
+/** The front of a torso-shaped mesh at a height, in its parent's units: the furthest-forward vertex of each ring of the mesh, interpolated between the rings
+ *  above and below that height (a faceted torso has only a few rings, so a band round the height can hold none). `band` is unused, kept for the call sites. */
+function frontAt(mesh: Mesh, y: number, _band?: number): number {
   const v = mesh.getVerticesData("position") ?? [];
-  let z = 0;
+  const rows = new Map<number, number>();
   for (let i = 0; i < v.length; i += 3) {
-    const vy = v[i + 1] * mesh.scaling.y + mesh.position.y;
-    if (Math.abs(vy - y) <= band) z = Math.max(z, v[i + 2] * mesh.scaling.z + mesh.position.z);
+    const vy = Math.round((v[i + 1] * mesh.scaling.y + mesh.position.y) * 1e4) / 1e4;
+    rows.set(vy, Math.max(rows.get(vy) ?? -Infinity, v[i + 2] * mesh.scaling.z + mesh.position.z));
   }
-  return z;
+  const ys = [...rows.keys()].sort((a, b) => a - b);
+  if (!ys.length) return 0;
+  if (y <= ys[0]) return rows.get(ys[0])!;
+  for (let i = 1; i < ys.length; i++) {
+    if (y <= ys[i]) {
+      const f = (y - ys[i - 1]) / (ys[i] - ys[i - 1]);
+      return rows.get(ys[i - 1])! * (1 - f) + rows.get(ys[i])! * f;
+    }
+  }
+  return rows.get(ys[ys.length - 1])!;
+}
+
+/** The chest's visible front at a height: the torso's swell or the shoulder yoke's hull over it, whichever stands further forward (both on the torso joint). */
+function chestFrontAt(body: ArticulatedBody, y: number): number {
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  return Math.max(frontAt(body.torsoMesh, y), yoke ? frontAt(yoke, y) : 0);
 }
 
 /** One flat panel from corner points (a fan round the first), seen from both sides. */
 function panel(scene: Scene, name: string, pts: Vector3[]): Mesh {
+  // each side its own copy of the corners, so the two faces' normals do not cancel at shared vertices
   const positions: number[] = [];
-  for (const p of pts) positions.push(p.x, p.y, p.z);
+  for (let copy = 0; copy < 2; copy++) for (const p of pts) positions.push(p.x, p.y, p.z);
+  const n = pts.length;
   const indices: number[] = [];
-  for (let i = 1; i + 1 < pts.length; i++) indices.push(0, i, i + 1, 0, i + 1, i);
+  for (let i = 1; i + 1 < n; i++) indices.push(0, i + 1, i, n, n + i, n + i + 1);
   const normals: number[] = [];
   VertexData.ComputeNormals(positions, indices, normals);
   const data = new VertexData();
@@ -253,8 +271,8 @@ function panel(scene: Scene, name: string, pts: Vector3[]): Mesh {
  * collar and BARD_VEST.down of the torso height deep, in the tunic's team; BARD_VEST.laces cords across it; toggles BARD_VEST.toggle of the chest half-width.
  */
 const BARD_VEST = {
-  wide: 1.07, deep: 1.14, long: 1.0, shade: 0.5, v: 0.62, down: 0.62, laces: 2, toggle: 0.16, proud: 0.012,
-  cord: new Color3(0.4, 0.24, 0.14), bone: new Color3(0.86, 0.74, 0.55), glow: 0.06,
+  wide: 1.05, deep: 1.12, long: 1.0, shade: 0.5, v: 0.62, down: 0.62, laces: 2, toggle: 0.16, proud: 0.06,
+  cord: new Color3(0.4, 0.24, 0.14), bone: new Color3(0.86, 0.74, 0.55), glow: 0.06, tunicPale: 0.12, tunicGlow: 0.3,
 };
 
 function bardVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
@@ -262,18 +280,26 @@ function bardVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const t = body.torsoMesh;
   const c = t.getBoundingInfo().boundingBox.extendSize;
   const cx = c.x * t.scaling.x, cy = c.y * t.scaling.y;
-  const vest = t.clone("bardVest", t.parent, true);
-  vest.makeGeometryUnique();
-  vest.scaling.set(t.scaling.x * V.wide, t.scaling.y * V.long, t.scaling.z * V.deep);
-  vest.material = getMaterialFactory().get("cloth", team.scale(V.shade), { emissiveIntensity: V.glow });
+  // the vest is the chest's own two solids (the torso's swell and the shoulder yoke's hull over it) a skin larger
+  const vestCloth = getMaterialFactory().get("cloth", team.scale(V.shade), { emissiveIntensity: V.glow });
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  const shells: Mesh[] = [];
+  for (const src of yoke ? [t, yoke] : [t]) {
+    const shell = src.clone(src === t ? "bardVest" : "bardVestYoke", src.parent, true);
+    shell.makeGeometryUnique();
+    shell.scaling.set(src.scaling.x * V.wide, src.scaling.y * V.long, src.scaling.z * V.deep);
+    shell.material = vestCloth;
+    shells.push(shell);
+  }
+  const vestFront = (y: number) => Math.max(...shells.map((m) => frontAt(m, y)));
   // The V: from the collar's two corners down to a point on the chest, laid on the vest's front (which leans back toward the collar)
   const top = t.position.y + cy * 0.94, tip = top - cy * 2 * V.down;
-  const zTop = frontAt(vest, top - cy * 0.08, cy * 0.12) + V.proud * cx, zTip = frontAt(vest, tip, cy * 0.25) + V.proud * cx;
+  const zTop = vestFront(top - cy * 0.08) + V.proud * cx, zTip = vestFront(tip) + V.proud * cx;
   const half = cx * V.v;
   const vee = panel(scene, "bardVestV", [new Vector3(0, tip, zTip), new Vector3(-half, top, zTop), new Vector3(half, top, zTop)]);
   vee.parent = t.parent;
-  vee.material = getMaterialFactory().get("cloth", team, { emissiveIntensity: V.glow });
-  const out: Mesh[] = [vest, vee];
+  vee.material = getMaterialFactory().get("cloth", Color3.Lerp(team, Color3.White(), V.tunicPale), { emissiveIntensity: V.tunicGlow });
+  const out: Mesh[] = [...shells, vee];
   // cords laced across the V: an X of thin brown bars between its sides
   const cord = getMaterialFactory().get("cloth", V.cord, { emissiveIntensity: V.glow });
   const lean = Math.atan2(zTop - zTip, top - tip);
