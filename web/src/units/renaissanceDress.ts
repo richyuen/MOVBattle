@@ -174,3 +174,68 @@ export function musketeerHose(scene: Scene, body: ArticulatedBody, teamColor: Co
   }
   return added;
 }
+
+/*
+ * [S] the balloon archer's doublet front and sleeve puffs (371; renaissance.balloon_archer.red.png: a solid team doublet, down its front a tan placket
+ * of two upright bands either side of the middle with round buttons between them, a tan edge round the neck; at each shoulder a big round team puff
+ * as wide as the head, slashed with tan points standing out of it all round. Not the 336 tan stripes all over the doublet, nor its arm-girth puffs,
+ * which read as tight sleeves). Shares of the chest (W, H, D) and of each upper arm's girth and length:
+ *   placket bands ARCHER_FRONT.band of W across, .gap of W either side of the middle, .tall of H; buttons .buttons of .button of W round; neck edge
+ *   .neck of W across, .neckTall of H; puff .puff of the girth round, .puffTall of the arm long, its middle .puffAt of it down from the shoulder;
+ *   .points tan points .point of the puff's height long, .pointWide of the girth across at the root.
+ */
+const ARCHER_FRONT = {
+  band: 0.08, gap: 0.09, tall: 0.92, buttons: 4, button: 0.07, neck: 0.62, neckTall: 0.07,
+  puff: 2.5, puffTall: 0.55, puffAt: 0.24, points: 7, point: 0.85, pointWide: 0.8,
+  tan: new Color3(0.82, 0.6, 0.32), glow: 0.3,
+};
+
+/** The balloon archer's tan placket, buttons and neck edge on a solid team doublet, and his slashed shoulder puffs (spec at ARCHER_FRONT). */
+export function balloonArcherFront(scene: Scene, body: ArticulatedBody, teamColor: Color3, doublet: { W: number; H: number; D: number; y: number }): Mesh[] {
+  const F = ARCHER_FRONT;
+  const mf = getMaterialFactory();
+  const tan = mf.get("cloth", F.tan, { emissiveIntensity: F.glow });
+  const team = mf.getCloth(teamColor.scale(0.82));
+  const added: Mesh[] = [];
+  const put = (m: Mesh, mat: ReturnType<typeof mf.getCloth>, parent: TransformNode): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  const { W, H, D, y } = doublet;
+  const front = D * 0.5 + D * 0.015;
+  for (const side of [-1, 1]) {
+    const band = put(MeshBuilder.CreateBox("archerPlacket", { width: W * F.band, height: H * F.tall, depth: D * 0.04 }, scene), tan, body.torso);
+    band.position.set(side * W * F.gap, y, front);
+  }
+  for (let i = 0; i < F.buttons; i++) {
+    const b = put(MeshBuilder.CreateSphere("archerButton", { diameter: W * F.button, segments: 3 }, scene), tan, body.torso);
+    b.scaling.z = 0.6;
+    b.position.set(0, y + H * F.tall * (0.38 - (0.76 * i) / Math.max(1, F.buttons - 1)), front + D * 0.01);
+  }
+  const neck = put(MeshBuilder.CreateCylinder("archerNeckEdge", { height: H * F.neckTall, diameter: W * F.neck, tessellation: 8 }, scene), tan, body.torso);
+  neck.scaling.z = Math.min(1, (D * 1.05) / (W * F.neck));
+  neck.position.set(0, y + H * 0.5 - H * F.neckTall * 0.3, 0);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const e = arm.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    const tall = long * F.puffTall;
+    const puff = put(MeshBuilder.CreateSphere("archerPuff", { diameterX: girth * F.puff, diameterY: tall, diameterZ: girth * F.puff, segments: 5 }, scene), team, arm);
+    puff.position.y = long * 0.5 - long * F.puffAt;
+    // the slashes: tan points standing out of the puff's waist all round, each tipped up a little, like the render's star of tan
+    for (let i = 0; i < F.points; i++) {
+      const a = ((i + 0.5) / F.points) * Math.PI * 2;
+      const pivot = new TransformNode("archerSlashPivot", scene);
+      pivot.parent = puff;
+      pivot.rotation.y = a;
+      const pt = put(MeshBuilder.CreateCylinder("archerSlash", { height: tall * F.point, diameterTop: 0, diameterBottom: girth * F.pointWide, tessellation: 4 }, scene), tan, pivot);
+      pt.scaling.z = 0.3;
+      // out along the pivot's +z on the puff's skin, its point up
+      pt.position.set(0, tall * 0.1, girth * F.puff * 0.5);
+      pt.rotation.x = 0.45;
+    }
+  }
+  return added;
+}
