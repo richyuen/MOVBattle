@@ -131,9 +131,15 @@ const COWL_SHADE = 0.78;
  */
 const TALL_HOOD = {
   rings: [[-1.05, 0.74, 0], [-0.86, 0.66, 0], [-0.5, 0.64, 0.02], [-0.18, 0.62, 0.04], [0.04, 0.54, 0.08], [0.3, 0.4, 0.16], [0.58, 0.27, 0.28],
-    [0.86, 0.16, 0.44], [1.08, 0.07, 0.6], [1.2, 0.01, 0.7]] as [number, number, number][],
+    [0.86, 0.16, 0.44]] as [number, number, number][],
   sides: 12, deep: 1.0, chin: -0.92, brow: -0.1, window: 0.8,
 };
+/*
+ * [S] the liripipe (377; farmer.farmer.png: the hood's cone does not end in a point; it runs on into a thick blunt tube that bends over and flops down
+ * behind, about as thick as a wrist all the way): the cone stops at its .16 ring and LIRIPIPE_TAIL.path [head heights up, head widths back] carries
+ * on up and back, over the bend and down; radius .root head widths at the cone tapering to .end at the blunt capped tip, .sides facets.
+ */
+const LIRIPIPE_TAIL = { path: [[0.8, 0.4], [0.98, 0.55], [1.12, 0.74], [1.15, 0.92], [1.06, 1.08], [0.92, 1.17]] as [number, number][], root: 0.17, end: 0.1, sides: 8 };
 /*
  * A monk's kasa (247; units/dynasty.monk: a wide shallow straw cone in the accent orange, about 2.4 heads across and half a head high, pulled low over
  * the brow so the bead eyes look out from just under its rim, a darker woven band round its edge; strings of fist-sized orange prayer beads hang from
@@ -738,6 +744,16 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     cowl.material = cloth;
     cowl.convertToFlatShadedMesh();
     cowl.parent = holder;
+    // The liripipe: a thick blunt tube off the cone's top, up and back, over and down (LIRIPIPE_TAIL)
+    const L = LIRIPIPE_TAIL;
+    const tailPath = L.path.map(([y, back]) => new Vector3(0, u(y * H), u(-back * W)));
+    const tail = MeshBuilder.CreateTube("cowlTail", {
+      path: tailPath, tessellation: L.sides, cap: Mesh.CAP_END,
+      radiusFunction: (i: number) => u((L.root + (L.end - L.root) * (i / (L.path.length - 1))) * W),
+    }, scene);
+    tail.material = cloth;
+    tail.convertToFlatShadedMesh();
+    tail.parent = holder;
     // The collar: a short frustum on the shoulders and LIRIPIPE.dags leaf points hanging round its hem, the longest over the chest
     const yoke = MeshBuilder.CreateCylinder("cowlCollar", { height: u(LIRIPIPE.yokeDeep * H), diameterTop: u(0.9 * W), diameterBottom: u(LIRIPIPE.yoke * W), tessellation: 9 }, scene);
     yoke.position.y = u(-0.98 * H);
