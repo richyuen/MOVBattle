@@ -5,7 +5,7 @@ one unit (a rendering behaviour, a probe, a pattern that failed twice, a camera 
 drop a lesson once it is a comment at the code it describes.
 
 ## Rendering (swiftshader + PBR + SSAO + ACES + glow)
-- PBR colours are linear: an sRGB target c needs about c^2.2 as the code value (wood (.62,.3,.2) displayed taupe; terracotta needed (.55,.15,.075)). Pick code values off `output/loop/palette.png` (every capture rewrites it; `capture.mjs --palette` renders it alone).
+- PBR colours are linear: an sRGB target c needs about c^2.2 as the code value (wood (.62,.3,.2) displayed taupe; terracotta needed (.55,.15,.075)). Pick code values off `output/loop/palette.png` (every unit capture rewrites it; `capture.mjs --palette` renders it alone).
 - SSAO (main.ts, radius 1.5) reads a DOUBLESIDE ribbon's inward faces as occlusion and greys the cloth: build dress shells one-sided facing out (check flipFaces), never double-sided at the same depth.
 - Flat colour that survives ACES: an "unlit" material with emissive = the colour, excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - "metal" renders near black under swiftshader: use "cloth" with a small emissive instead.

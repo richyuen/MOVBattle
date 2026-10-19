@@ -88,4 +88,4 @@ at the same bar (would the still pass as that TABS unit at lineup distance), wit
 Output the AUDIT block per unit and no RANKED GAPS tail. You are not asked to find something; a unit that passes, passes.
 
 A REJECT without a NEXT, a FAIL without BLOCKERS, a block without two EVIDENCE lines naming both a reference file and a MOVBattle png, or
-a RANKED GAPS list under the minimum `[S]` count is invalid: rewrite it before answering.
+a RANKED GAPS list under the minimum `[S]` count (CONFIRM has no tail) is invalid: rewrite it before answering.
