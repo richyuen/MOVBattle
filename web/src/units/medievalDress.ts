@@ -918,7 +918,7 @@ function unglow(scene: Scene, meshes: Mesh[]): Mesh[] {
 }
 
 /** A limb mesh's extent in its joint's frame: its middle height, half-height and half-width (x) and half-depth (z). */
-function limbBox(limb: Mesh): { mid: number; half: number; wide: number; deep: number } {
+export function limbBox(limb: Mesh): { mid: number; half: number; wide: number; deep: number } {
   const b = limb.getBoundingInfo().boundingBox;
   return {
     mid: limb.position.y + b.center.y * limb.scaling.y, half: b.extendSize.y * limb.scaling.y,
@@ -927,7 +927,7 @@ function limbBox(limb: Mesh): { mid: number; half: number; wide: number; deep: n
 }
 
 /** A tapered faceted sleeve round a limb, in its joint's frame, from `from` to `to` of the way down it (0 its top, 1 its foot). */
-function limbShell(scene: Scene, name: string, limb: Mesh, from: number, to: number, out: number, mat: Material): Mesh {
+export function limbShell(scene: Scene, name: string, limb: Mesh, from: number, to: number, out: number, mat: Material): Mesh {
   const L = limbBox(limb);
   const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2;
   const r = Math.max(L.wide, L.deep) * out;

@@ -2,6 +2,7 @@ import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, Quaternion } 
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { trunkBand, jitterVertices } from "./tribalDress";
+import { limbShell } from "./medievalDress";
 
 /*
  * Ancient dress (units/ancient.*): fur, cloth and ornaments built per unit id by unitFactory, sized off the body's own metrics and joints. Pieces worn on
@@ -354,6 +355,41 @@ export function dressSnakeArcher(scene: Scene, body: ArticulatedBody, teamColor:
     const loop = put(MeshBuilder.CreateTorus("snakeHoodCord", { diameter: W * 0.18, thickness: W * 0.04, tessellation: 8 }, scene), torso, cord);
     loop.rotation.set(Math.PI / 2, 0, side * 0.6);
     loop.position.set(side * W * 0.09, neckY + collarTall * 0.1, W * S.wrap * S.flare * 0.5 * 0.75 + W * 0.03);
+  }
+  return out;
+}
+
+/*
+ * [S] the hoplite's greaves and sandals (384; ancient.hoplite.red.png: dark brown greaves from under the knee to the ankle, the bare team foot below in a
+ * brown strapped sandal; critic 378: grey boots). On each shin a faceted shell HOPLITE_LEGS.out of its half-width round it from .from to .to of its length,
+ * a rim band .rim long round its top, in a fixed dark brown (not a team lerp, which read grey under blue) self-lit .glow; the foot the team skin, with a
+ * brown sandal: a sole .sole of the foot's height under it, a strap over the instep at .instep of its length and one round the ankle at its back.
+ */
+const HOPLITE_LEGS = {
+  out: 1.3, from: 0.06, to: 0.86, rim: 0.07, sole: 0.22, instep: 0.55, strap: 0.18,
+  greave: new Color3(0.3, 0.17, 0.1), sandal: new Color3(0.42, 0.25, 0.14), glow: 0.12,
+};
+
+export function dressHoplite(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const H = HOPLITE_LEGS;
+  const mf = getMaterialFactory();
+  const greave = mf.get("cloth", H.greave, { emissive: H.greave.scale(H.glow) });
+  const rim = mf.get("cloth", H.greave.scale(1.35), { emissive: H.greave.scale(H.glow) });
+  const sandal = mf.get("cloth", H.sandal, { emissive: H.sandal.scale(H.glow) });
+  const out: Mesh[] = [];
+  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
+    out.push(limbShell(scene, "hopliteGreave", shin, H.from, H.to, H.out, greave));
+    out.push(limbShell(scene, "hopliteGreaveRim", shin, H.from, H.from + H.rim, H.out * 1.1, rim));
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      foot.material = body.skinMaterial;
+      const fb = foot.getBoundingInfo().boundingBox;
+      const ex = fb.extendSize;
+      const put = (m: Mesh, x: number, y: number, z: number) => { m.parent = foot; m.position.set(x, y, z); m.material = sandal; out.push(m); };
+      put(MeshBuilder.CreateBox("hopliteSole", { width: ex.x * 2.1, height: ex.y * 2 * H.sole, depth: ex.z * 2.06 }, scene), fb.center.x, fb.minimum.y + ex.y * H.sole, fb.center.z);
+      put(MeshBuilder.CreateBox("hopliteStrap", { width: ex.x * 2.12, height: ex.y * 2.02, depth: ex.z * 2 * H.strap }, scene), fb.center.x, fb.center.y, fb.minimum.z + ex.z * 2 * H.instep);
+      put(MeshBuilder.CreateBox("hopliteStrap", { width: ex.x * 2.12, height: ex.y * 2 * 0.4, depth: ex.z * 2 * H.strap }, scene), fb.center.x, fb.maximum.y - ex.y * 0.3, fb.minimum.z + ex.z * 2 * 0.12);
+    }
   }
   return out;
 }
