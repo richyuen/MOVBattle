@@ -44,22 +44,20 @@ export function heldBalloonArrow(scene: Scene, body: ArticulatedBody, teamColor:
 }
 
 /*
- * [S] the Painter's jabot (369; renaissance.painter.jpg: three tan ruffles stacked at the throat from under the jaw to the top of the chest, each a little
- * wider than the one above and out past the neck toward the collar, a darker fold under each so the steps read; the face clear above it. Critic 368: the
- * last cut rose over the chin and read as a beard, its tiers merged into one pale cone). The stack is measured off the body: its top PAINTER_JABOT.gap of a
- * head height under the head mesh's lowest point (taken into the torso's frame), its foot .below of a head height under the chest's top; the span is split
- * into .tiers even bands. Tier i (top first) is (.across + i * .grow) head widths across at its foot, its top .lip of that, flattened to .flat of the chest's
- * depth front to back and pushed .ahead of the chest's depth forward, its foot rim cut in .points ragged points (every other one dropped .ragged of the
- * tier). Just under each tier's foot a darker ring (.under colour), .underTall of the tier tall and .underWide of its foot across (inside the ragged
- * points, over the next tier's narrow top), reads as the fold's shadow between the steps. Matte warm tan
- * (.color, self-lit .glow).
+ * [S] 372 the jabot as a front bib (critic 372: a scrunched ring under the chin no wider than the neck, stopping at the throat; renaissance.painter.jpg:
+ * three warm-tan ruffles hanging down the front over the chest top, each lower one wider, the last out toward the collar edges and dropping to a point in
+ * the middle). Not rings round the neck: each tier is a half-round flared panel on the chest's front only. Tier i (top first) hangs from .gap of a head
+ * height under the head's lowest point plus i * .step, .tall head heights long, (.across + i * .grow) head widths across at its foot and .lip of that at its
+ * top; half a round (.arc) turned to face forward, flattened so it bulges .bulge of the chest's depth ahead of its sides, its sides set .tuck of the depth
+ * ahead of the chest's middle; foot rim in .points ragged points (every other one dropped .ragged of the tier), the last tier's middle dropping .vee of
+ * its height more. A darker fold (.under) just under each tier's foot. Matte warm tan (.color, self-lit .glow).
  */
 const PAINTER_JABOT = {
-  tiers: 3, gap: 0.04, below: 0.12, across: 0.95, grow: 0.25, lip: 0.6, flat: 1.3, ahead: 0.12, points: 10, ragged: 0.4,
-  under: new Color3(0.46, 0.3, 0.16), underTall: 0.3, underWide: 0.9, color: new Color3(0.78, 0.57, 0.34), glow: 0.14,
+  tiers: 3, gap: 0.04, step: 0.25, tall: 0.36, across: 1.0, grow: 0.3, lip: 0.72, arc: 0.56, bulge: 0.55, tuck: 0.12, points: 7, ragged: 0.3, vee: 0.45,
+  under: new Color3(0.46, 0.3, 0.16), underTall: 0.25, color: new Color3(0.8, 0.58, 0.34), glow: 0.16,
 };
 
-/** The Painter's stacked-tier jabot (spec at PAINTER_JABOT), parented to the torso, every tier below the head. */
+/** The Painter's jabot bib (spec at PAINTER_JABOT), parented to the torso, every tier below the head. */
 export function painterJabot(scene: Scene, body: ArticulatedBody): Mesh[] {
   const J = PAINTER_JABOT;
   const chest = body.torsoMesh;
@@ -75,44 +73,45 @@ export function painterJabot(scene: Scene, body: ArticulatedBody): Mesh[] {
   const toTorso = body.torso.getWorldMatrix().clone().invert();
   const chin = Math.min(...head.vectorsWorld.map((v) => Vector3.TransformCoordinates(v, toTorso).y));
   const top = Math.min(chin, chestTop + headTall * 0.6) - headTall * J.gap;
-  const foot = chestTop - headTall * J.below;
-  const band = (top - foot) / J.tiers;
   const cloth = getMaterialFactory().get("cloth", J.color, { emissiveIntensity: J.glow });
   const shade = getMaterialFactory().get("cloth", J.under, { emissiveIntensity: J.glow * 0.5 });
   const added: Mesh[] = [];
-  for (let i = 0; i < J.tiers; i++) {
-    const across = headWide * (J.across + i * J.grow);
-    const tier = MeshBuilder.CreateCylinder(`${chest.name}_jabot${i}`, {
-      height: band, diameterTop: across * J.lip, diameterBottom: across, tessellation: J.points * 2, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    const at = tier.getVerticesData(VertexBuffer.PositionKind);
-    if (at) {
-      // the foot rim's every other vertex hangs lower: ragged ruffle points
+  const tall = headTall * J.tall;
+  // a half-round panel facing forward: the cylinder's arc runs from +x round the back, so it is turned half a turn to face +z
+  const panel = (name: string, height: number, foot: number, lip: number, last: boolean, ragged: boolean): Mesh => {
+    const m = MeshBuilder.CreateCylinder(name, { height, diameterTop: lip, diameterBottom: foot, tessellation: J.points * 2, arc: J.arc, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    const at = m.getVerticesData(VertexBuffer.PositionKind);
+    if (at && ragged) {
+      const step = (2 * Math.PI * J.arc) / (J.points * 2);
       for (let v = 0; v < at.length; v += 3) {
         if (at[v + 1] > 0) continue;
-        const k = Math.round(((Math.atan2(at[v + 2], at[v]) + Math.PI) / (2 * Math.PI)) * J.points * 2);
-        if (k % 2 === 0) at[v + 1] -= band * J.ragged;
+        const k = Math.round(Math.atan2(-at[v + 2], at[v]) / step);
+        if (k % 2 === 1) at[v + 1] -= height * J.ragged;
+        // the last tier drops to a point in the middle (the back of the arc, which faces forward once turned)
+        const r = Math.hypot(at[v], at[v + 2]) || 1;
+        if (last) at[v + 1] -= height * J.vee * Math.max(0, -at[v + 2] / r) ** 2;
       }
-      tier.setVerticesData(VertexBuffer.PositionKind, at);
+      m.setVerticesData(VertexBuffer.PositionKind, at);
     }
-    tier.convertToFlatShadedMesh();
-    const flat = Math.min(1, (D * J.flat) / across);
-    tier.scaling.z = flat;
-    const y = top - band * (i + 0.5);
-    tier.position.set(0, y, D * J.ahead);
+    m.rotation.y = Math.PI;
+    m.convertToFlatShadedMesh();
+    m.scaling.z = Math.min(1, (D * J.bulge) / (foot * 0.5));
+    m.parent = body.torso;
+    added.push(m);
+    return m;
+  };
+  for (let i = 0; i < J.tiers; i++) {
+    const across = headWide * (J.across + i * J.grow);
+    const y = top - headTall * J.step * i - tall * 0.5;
+    const tier = panel(`${chest.name}_jabot${i}`, tall, across, across * J.lip, i === J.tiers - 1, true);
+    // each lower tier a touch further back, so the one above hangs over its top
+    tier.position.set(0, y, D * J.tuck - i * D * 0.03);
     tier.material = cloth;
-    tier.parent = body.torso;
-    added.push(tier);
-    // the fold's shadow under this tier's foot
-    const under = MeshBuilder.CreateCylinder(`${chest.name}_jabotFold${i}`, {
-      height: band * J.underTall, diameterTop: across * J.underWide, diameterBottom: across * J.underWide * 0.88, tessellation: J.points * 2, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    under.convertToFlatShadedMesh();
-    under.scaling.z = flat;
-    under.position.set(0, y - band * 0.5 - band * J.underTall * 0.5, D * J.ahead);
-    under.material = shade;
-    under.parent = body.torso;
-    added.push(under);
+    if (i < J.tiers - 1) {
+      const under = panel(`${chest.name}_jabotFold${i}`, tall * J.underTall, across * 0.92, across * 0.86, false, false);
+      under.position.set(0, y - tall * 0.5 - tall * J.underTall * 0.3, D * J.tuck - i * D * 0.03 - D * 0.02);
+      under.material = shade;
+    }
   }
   return added;
 }
