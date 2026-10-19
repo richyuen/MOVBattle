@@ -526,7 +526,7 @@ export function squireTabardTrim(scene: Scene, body: ArticulatedBody, tabard: Me
  */
 const KING_BEARD = {
   wide: 1.6, down: 0.5, deep: 0.9, top: 0.12, tache: 0.5, lip: 0.2, droop: 0.4, jitter: 0.14,
-  blonde: new Color3(0.84, 0.54, 0.2), glow: 0.2,
+  blonde: new Color3(0.88, 0.62, 0.28), glow: 0.12,
 };
 
 function kingBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -732,12 +732,10 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
     out.push(...shellStripes(scene, "kingSleeveFold", upper, 0.04, K.sleeve - 0.08, K.puff, K.stripes, gold));
     out.push(limbShell(scene, "kingSleeveCuff", upper, K.sleeve - 0.1, K.sleeve, K.puff * 1.06, gold));
   }
-  // pantaloons with gold folds, stockings
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
-    out.push(limbShell(scene, "kingPantaloon", thigh, 0, 0.98, K.pants, cloth));
-    out.push(...shellStripes(scene, "kingPantaloonFold", thigh, 0.06, 0.92, K.pants, K.stripes, gold));
-  }
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "kingStocking", shin, 0.02, 0.95, K.hose, beige));
+  // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
+  // stockings from the knee to the shoe, clear of the pantaloons
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(...kingPantaloon(scene, thigh, cloth, gold));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "kingStocking", shin, 0, 0.96, K.hose, beige));
   // brown shoes, gold buckle on the instep
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(true)) {
@@ -786,6 +784,44 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   buckle.position.set(0, beltY, zFront * 1.08 + cx * 0.02);
   buckle.material = gold;
   out.push(buckle);
+  return out;
+}
+
+/** The puff of a pantaloon leg, top to foot: [share of the thigh's length down, radius in thigh half-widths]; it ends KING_PANTS.knee down at a gold band. */
+const KING_PANTS = { knee: 0.8, profile: [[0, 1.15], [0.2, 1.45], [0.5, 1.7], [0.78, 1.5], [1, 1.1]] as [number, number][], band: 1.18, folds: 4 };
+
+function kingPantaloon(scene: Scene, thigh: Mesh, cloth: Material, gold: Material): Mesh[] {
+  const P = KING_PANTS;
+  const L = limbBox(thigh);
+  const r0 = Math.max(L.wide, L.deep);
+  const yTop = L.mid + L.half, len = L.half * 2 * P.knee;
+  const zs = L.deep / r0 * 1.08;
+  const shape = P.profile.map(([f, r]) => new Vector3(r * r0, -f * len, 0));
+  const puff = MeshBuilder.CreateLathe("kingPantaloon", { shape, tessellation: 8, cap: Mesh.CAP_ALL }, scene);
+  puff.convertToFlatShadedMesh();
+  puff.scaling.z = zs;
+  puff.parent = thigh.parent;
+  puff.position.y = yTop;
+  puff.material = cloth;
+  const out: Mesh[] = [puff];
+  // gold folds down the puff, just proud of it
+  for (let k = 0; k < P.folds; k++) {
+    const a = ((k + 0.5) / P.folds) * Math.PI * 2;
+    const path = P.profile.slice(0, -1).map(([f, r]) => new Vector3(Math.sin(a) * r * r0 * 1.02, yTop - f * len, Math.cos(a) * r * r0 * 1.02 * zs));
+    const fold = MeshBuilder.CreateTube("kingPantaloonFold", { path, radius: r0 * 0.09, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
+    fold.convertToFlatShadedMesh();
+    fold.parent = thigh.parent;
+    fold.material = gold;
+    out.push(fold);
+  }
+  // the gathered gold band at the foot
+  const band = MeshBuilder.CreateCylinder("kingPantaloonBand", { height: len * 0.09, diameter: r0 * 2 * P.band, tessellation: 8 }, scene);
+  band.convertToFlatShadedMesh();
+  band.scaling.z = zs;
+  band.parent = thigh.parent;
+  band.position.y = yTop - len * 0.96;
+  band.material = gold;
+  out.push(band);
   return out;
 }
 
