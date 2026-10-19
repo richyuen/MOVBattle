@@ -2145,9 +2145,10 @@ function mammothTrunk(scene: Scene, neck: TransformNode, fur: Material, dark: Ma
  * above the eye, about a third of the head high, its back edge standing out from the skull; critic 360/366: none visible: the old fans sat edge-on at the back
  * of the head inside the hull). Spec in neck units (the head 1.4 high, centred .25 ahead):
  *   - each ear a jittered faceted flap MAMMOTH_EAR.tall high, .long front to back, .thick thick, its middle at (.out, .y, .z) on the head's side;
- *   - swung .flare rad about the vertical so its front edge tucks into the skull and its back edge stands out, drooped .droop rad, in the coat's fur.
+ *   - swung .flare rad about the vertical so its front edge tucks into the skull and its back edge stands well out, drooped .droop rad, in the darker
+ *     shaggy fur so it reads against the head (in the coat's own fur it lay flush and vanished).
  */
-const MAMMOTH_EAR = { tall: 0.46, long: 0.4, thick: 0.08, out: 0.62, y: 0.14, z: 0.17, flare: 0.55, droop: 0.15, jitter: 0.12 };
+const MAMMOTH_EAR = { tall: 0.48, long: 0.42, thick: 0.15, out: 0.62, y: 0.12, z: 0.3, flare: 1.05, droop: 0.15, jitter: 0.12 };
 /** The mammoth's ears (spec at MAMMOTH_EAR). */
 function mammothEars(scene: Scene, neck: TransformNode, fur: Material, allMeshes: Mesh[]): void {
   const E = MAMMOTH_EAR;
@@ -2512,7 +2513,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
 
   // ── Ears (parented to neck): faceted fur fans flaring off the skull, not team slabs ──
   // [S] the mammoth's ears (367; spec at MAMMOTH_EAR): a small rounded fur flap on each side of the head behind the eye; the elephant keeps the fans below
-  if (mammoth) mammothEars(scene, neck, fur, allMeshes);
+  if (mammoth) mammothEars(scene, neck, shaggyFur, allMeshes);
   else for (const side of [-1, 1]) {
     const ear = MeshBuilder.CreateCylinder("ear", { height: 0.1, diameter: 0.95, tessellation: 7 }, scene);
     ear.position.set(side * 0.74, 0.0, 0.0);
