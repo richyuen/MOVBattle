@@ -2761,7 +2761,7 @@ const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
 const POTION = { ball: 0.085, squash: 0.85, shoulder: 0.032, shoulderFoot: 0.7, neck: 0.034, neckLong: 0.03, lip: 1.3, cork: 0.022, seat: 0.06, glow: 0.12 };
 const POTION_GLASS = new Color3(0.64, 0.75, 0.72); // 377: TABS pale grey-green (184,200,195), with the glow .22 -> .12 it no longer washes to white
 /** The potion in the bulb (381): its cap .over the glass radius, filled to .fill of the radius past the middle (bulb-local, neck side up), teal. */
-const POTION_LIQUID = { over: 1.04, fill: 0.25, color: new Color3(0.3, 0.6, 0.6), glow: 0.1 };
+const POTION_LIQUID = { over: 1.04, fill: 0.5, color: new Color3(0.2, 0.48, 0.56), glow: 0.12 };
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
   const n = outline.length;
