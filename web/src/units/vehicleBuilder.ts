@@ -1340,7 +1340,6 @@ const WHEELBARROW = {
   trayWide: 0.2,       // 377: a rider's hips and a little more (farmer.wheelbarrow.red.png), so the riders straddle it and loom over it; was .44
   trayLong: 0.5,       // 378: a short tray the riders loom over, bunched in line (BUNCHED_CREW); was .78
   trayZ: 0.08,
-  backSeat: 0.1,       // the Apple Thrower's hips, right behind the Farmer's back (378; was -.06)
   pushZ: -0.62,        // the Traveller's feet
   lean: 0.28,          // the Traveller's forward lean
 };
@@ -1399,7 +1398,16 @@ const HAY_BED = { fill: 0.92, lumps: 0.02, inset: 0.5 };
  * BUNCHED_CREW.nod forward again so he looks ahead, so his shoulders rest on the Thrower's chest.
  */
 const BUNCHED_CREW = { recline: -0.5, nod: 0.3 };
-const CREW_SEAT = { lipIn: 0.05, lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.04, backThigh: -0.3, backSplay: 1.3, backKnee: 0.2 };
+/*
+ * [S] the riders overfill a low-rimmed tray (380; farmer.wheelbarrow.red.png, .png: the two riders fill the short tray from end to end and sit up over a
+ * low rim, the Apple Thrower's legs splayed forward and out round the Farmer on both sides; critic 378: they sat at the wheel end over empty hay, hips
+ * sunk below a deep three-board side, the Thrower's legs hanging plumb). Each side and end is one board LOW_RIM.tall high (team paint, bolted), the hay
+ * bed under its top; the riders' hips on the middle of the tray, the Farmer's LOW_RIM.front ahead of its middle and the Thrower's .back behind it; the
+ * Thrower's thighs run forward CREW_SEAT.backThigh and out .backSplay past the Farmer's hips, his knees bent .backKnee and rolled .backRoll so the shins
+ * hang down outside the tray. Replaces WHEELBARROW.backSeat .1 and CREW_SEAT.lipIn .05 (seats off the tray's front lip).
+ */
+const LOW_RIM = { tall: 0.06, front: 0.11, back: -0.07 };
+const CREW_SEAT = { lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.04, backThigh: -1.2, backSplay: 0.55, backKnee: 1.0, backRoll: -0.3 };
 const CREW_FORK = { long: 0.72, butt: 0.2, thick: 0.013, tines: 3, tine: 0.2, spread: 0.055, curl: 0.4, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
 const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
 function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offset: Vector3, rigScale: number): void {
@@ -1538,11 +1546,12 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const tray = MeshBuilder.CreateBox("tray", { width: W.trayWide, height: 0.04, depth: W.trayLong }, scene);
   tray.position.set(0, W.trayY, W.trayZ);
   tray.parent = rig; tray.material = paint; allMeshes.push(tray);
-  const sideTall = P.sideTall;
-  const board = (P.sideTall - P.seam * (P.planks - 1)) / P.planks;
+  // one low board a side (LOW_RIM), not three stacked
+  const sideTall = LOW_RIM.tall;
+  const board = sideTall;
   const addBoards = (name: string, w: number, d: number, x: number, z: number, alongX: boolean) => {
-    for (let k = 0; k < P.planks; k++) {
-      const top = k === P.planks - 1;
+    for (let k = 0; k < 1; k++) {
+      const top = true;
       const plank = MeshBuilder.CreateBox(name, { width: w, height: board, depth: d }, scene);
       plank.position.set(x, W.trayY + board / 2 + k * (board + P.seam), z);
       plank.parent = rig; plank.material = top ? paint : plankWood; allMeshes.push(plank);
@@ -1634,7 +1643,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   const crew: Partial<WheelbarrowCrew> = {};
   const S = CREW_SEAT;
   // The Farmer, front: sat up on the tray's front lip, legs splayed forward and out over the wheel (spec at CREW_SEAT)
-  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + W.trayLong / 2 - S.lipIn, color, (man) => {
+  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + LOW_RIM.front, color, (man) => {
     crew.farmer = man;
     man.root.position.y = W.trayY + sideTall + S.lipUp - man.hip.position.y;
     man.leftHip.rotation.set(S.frontThigh, 0, S.frontSplay);
@@ -1670,13 +1679,13 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     holdInFist(man.rightHand, fork, F.dir, Vector3.Zero(), W.scale);
   });
   // The Apple Thrower, behind him: astride the narrow tray on its side boards, legs out over them and hanging outside, his throwing arm up and back
-  addOperator(scene, rig, allMeshes, 0, 0, W.backSeat, color, (man) => {
+  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + LOW_RIM.back, color, (man) => {
     crew.thrower = man;
     man.root.position.y = seatY + S.astrideUp - man.hip.position.y;
     man.leftHip.rotation.set(S.backThigh, 0, S.backSplay);
     man.rightHip.rotation.set(S.backThigh, 0, -S.backSplay);
-    man.leftKnee.rotation.set(S.backKnee, 0, -S.backSplay);
-    man.rightKnee.rotation.set(S.backKnee, 0, S.backSplay);
+    man.leftKnee.rotation.set(S.backKnee, 0, S.backRoll);
+    man.rightKnee.rotation.set(S.backKnee, 0, -S.backRoll);
     man.rightShoulder.rotation.set(-2.5, 0, -0.3);
     man.rightElbow.rotation.x = -0.8;
     man.leftShoulder.rotation.x = -0.5;
