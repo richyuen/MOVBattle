@@ -424,9 +424,9 @@ const BOWL_COLOR = new Color3(0.45, 0.22, 0.15);
  */
 const HAIR_CAP = { dome: 1.14, crown: 0.62, fringe: 0.62, hang: -0.12, flare: 1.02, face: 0.42 };
 const HAIR_CAP_COLOR = new Color3(0.36, 0.25, 0.17);
-const HAIR_STYLES: Record<string, "long" | "long_beard" | "dreads" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy" | "bowl" | "cap"> = {
+const HAIR_STYLES: Record<string, "long" | "long_beard" | "dreads" | "dreads_beard" | "tusk_band" | "beard" | "long_dark" | "long_dark_moustache" | "moustache_goatee" | "shaggy" | "bowl" | "cap"> = {
   "farmer.halfling": "shaggy", "farmer.hay_baler": "bowl", "farmer.potion_seller": "cap",
-  "tribal.stoner": "dreads", "tribal.clubber": "long_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
+  "tribal.stoner": "dreads", "tribal.clubber": "dreads_beard", "tribal.spear_thrower": "tusk_band", "tribal.chieftain": "beard",
   "renaissance.painter": "long_dark", "renaissance.fencer": "long_dark_moustache", "renaissance.musketeer": "moustache_goatee",
 };
 
@@ -540,6 +540,12 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   if (HAIR_STYLES[unitId] === "beard") return tribalBeard(scene, body, getMaterialFactory().get("cloth", CHESTNUT, { emissiveIntensity: 0.18 }));
   const style = HAIR_STYLES[unitId];
   if (style === "dreads") return dreadMop(scene, body, LONG_HAIR_COLOR);
+  // [S] the Clubber's mop (361; tribal.clubber.red.png: an unkempt curly dreadlock mop wider than the head, framing the face over the beard): the same mop in
+  // his lighter brown, the locks DREAD_MOP.clubber head heights, over his beard
+  if (style === "dreads_beard") {
+    const hair = getMaterialFactory().get("cloth", CLUBBER_HAIR_COLOR, { emissiveIntensity: DREAD_MOP.glow });
+    return [...dreadMop(scene, body, CLUBBER_HAIR_COLOR, DREAD_MOP.clubber), ...tribalBeard(scene, body, hair)];
+  }
   if (style === "shaggy") return shaggyHair(scene, body);
   if (style === "bowl") return bowlCut(scene, body);
   if (style === "cap") return bowlCut(scene, body, HAIR_CAP, HAIR_CAP_COLOR);
@@ -609,7 +615,7 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
 const DREAD_MOP = {
   cap: [1.32, 0.66, 1.3] as const, capUp: 0.78, capBack: 0.2, jitter: 0.12,
   locks: 20, face: 0.85, splay: 0.42, kink: 0.35, long: 0.95, thick: 0.3,
-  fringe: 5, fringeLong: 0.17, tufts: 7, glow: 0.18,
+  fringe: 5, fringeLong: 0.17, tufts: 7, glow: 0.18, clubber: 0.8,
 };
 
 /** A dreadlock mop (spec at DREAD_MOP), parented to the head; `long` overrides the locks' length in head heights. */
