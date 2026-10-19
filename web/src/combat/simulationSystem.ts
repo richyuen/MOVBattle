@@ -263,6 +263,14 @@ const JOUSTER_CHARGE = { from: 1.5, reach: 16, speed: 1.5, seconds: 3.5, overrun
  * Logged "charge" at the start and "trample" at the hit.
  */
 const MINOTAUR_CHARGE = { from: 1.5, reach: 14, speed: 2.3, seconds: 2.2, overrun: 1, contact: 0.4, damage: 30, fling: 7, lift: 5, cooldown: 6, through: false, log: true };
+/*
+ * [S] 387 Big Headbutt (card Weapons "Big Headbutt: Ability - Melee; damage 30; cooldown 5 s; ... force 32500; explosion radius 4.5", Characteristics "a
+ * headbutt ability like the Headbutter"; critic 378: missing). With a man within .within m past his reach and the butt ready (.cooldown s apart), he stops,
+ * drops his head (the BULL_CHARGE pose) and drives it down over .windup s; at the blow the ground .ahead m before him bursts: every enemy within .radius m
+ * takes .damage and is flung out from it and up (.fling/.lift m/s at its middle, .edge of that at the rim), a dust ring and kicked earth there. His head
+ * comes back up .recover s later. Logged "headbutt" at the blow.
+ */
+const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahead: 0.9, radius: 4.5, damage: 30, fling: 9, lift: 7, edge: 0.35 };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -396,6 +404,9 @@ export class SimulationSystem {
   private _chargeDustAt = new Map<RuntimeUnit, number>();
   private _chargeDustKick = new Map<RuntimeUnit, number>();
   private _chargePosed = new Set<RuntimeUnit>();
+  // Big Headbutt (BIG_HEADBUTT): each minotaur's butt under way (blow and end times) and when the next is ready
+  private _butts = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean }>();
+  private _buttReadyAt = new Map<RuntimeUnit, number>();
   // The wheelbarrow's riders (WHEELBARROW_CREW): each move's start and its man, and when the next may start
   private _crewFights = new Map<RuntimeUnit, { throwAt: number; thrown: boolean; appleAt: RuntimeUnit | null; stabAt: number; stabbed: boolean; stabOn: RuntimeUnit | null }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
@@ -548,6 +559,8 @@ export class SimulationSystem {
     for (const held of this._arrowsAway.keys()) if (!held.isDisposed()) held.setEnabled(true);
     this._arrowsAway.clear();
     this._clearSnakes();
+    this._butts.clear();
+    this._buttReadyAt.clear();
     this._banjoWalks.clear();
     this._banjoNotes.clear();
     this._banjoNoteCount = 0;
@@ -607,6 +620,7 @@ export class SimulationSystem {
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
+    if (this._butts.size > 0) this._landButts(now);
     for (const [held, back] of this._arrowsAway) {
       if (now < back) continue;
       if (!held.isDisposed()) held.setEnabled(true);
@@ -1026,6 +1040,25 @@ export class SimulationSystem {
       unit.setAttackCooldown(now, attackProfile.cooldown * (preset === "iconic_super_peasant" ? 0.18 : 0.32));
       this._logAbility(unit, "blink", now);
       return;
+    }
+
+    // Big Headbutt (BIG_HEADBUTT): a minotaur butting stands over it; one in reach with it ready starts one
+    if (unit.definition.id === "ancient.minotaur") {
+      if (this._butts.has(unit)) {
+        unit.stopMoving();
+        this._clearPathState(unit);
+        unit.faceTarget(this._butts.get(unit)!.target.position);
+        return;
+      }
+      if (!this._charges.has(unit) && distance <= engageDistance + BIG_HEADBUTT.within && now >= (this._buttReadyAt.get(unit) ?? 0)) {
+        this._butts.set(unit, { target: enemy, blowAt: now + BIG_HEADBUTT.windup, endAt: now + BIG_HEADBUTT.windup + BIG_HEADBUTT.recover, done: false });
+        this._buttReadyAt.set(unit, now + BIG_HEADBUTT.cooldown);
+        unit.animator.setCharging(true, true);
+        unit.stopMoving();
+        this._clearPathState(unit);
+        unit.faceTarget(enemy.position);
+        return;
+      }
     }
 
     // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE); the wheelbarrow's ram (WHEELBARROW_RAM)
@@ -2855,6 +2888,38 @@ export class SimulationSystem {
       next.applyDamage(damage * C.share, Vector3.Zero());
       reached.add(next);
       from = next;
+    }
+  }
+
+  /** Each butt under way (spec at BIG_HEADBUTT): the burst at its blow, the head back up at its end. */
+  private _landButts(now: number): void {
+    const B = BIG_HEADBUTT;
+    for (const [unit, butt] of this._butts) {
+      if (unit.isDead) { unit.animator.setCharging(false); this._butts.delete(unit); continue; }
+      if (!butt.done && now >= butt.blowAt) {
+        butt.done = true;
+        const yaw = unit.body.root.rotation.y;
+        const center = unit.position.add(new Vector3(Math.sin(yaw), 0, Math.cos(yaw)).scale(B.ahead + unit.collisionBodyRadius * 0.5));
+        center.y = unit.position.y;
+        for (const other of this._units) {
+          if (other.isDead || other.team === unit.team || !other.isTargetable) continue;
+          const off = other.position.subtract(center);
+          off.y = 0;
+          const d = off.length();
+          if (d > B.radius) continue;
+          const out = d > 0.05 ? off.scale(1 / d) : new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+          const k = 1 - (1 - B.edge) * (d / B.radius);
+          other.applyDamage(B.damage, out.scale(B.fling * k));
+          other.applyBlastLaunch(out, B.fling * k, B.lift * k);
+        }
+        this._logAbility(unit, "headbutt", now, center);
+        this.visualEffects?.spawnTrampleRing(center, B.radius * 0.6);
+        this.visualEffects?.spawnKickDust(center, 2);
+      }
+      if (now >= butt.endAt) {
+        unit.animator.setCharging(false);
+        this._butts.delete(unit);
+      }
     }
   }
 
