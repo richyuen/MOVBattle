@@ -420,9 +420,14 @@ const CAVALIER = { brim: 2.25, flap: 0.3, lift: 1.25, crown: 1.1, tall: 0.55, sh
  * under a separate ribbed dome). In head widths W and heights H, one lathe: crown CAVALIER_FELT.crown W across at its foot, .shoulder of that at
  * .tall H up, a flat top; brim out to CAVALIER.brim W across, .thick H thick, its edge dropped .droop H. The brim on his left side (-x) is lifted
  * .lift H per W out from the crown, scaled by how far left it lies (.spread: the share of the round it reaches). Felt the team colour at .shade, matte,
- * self-lit .glow. The plume CAVALIER_FELT.wide W across, .pale toward white.
+ * self-lit .glow.
+ * [S] 372 re-seated, rounded and plumed (critic 372: a tall flat-topped stovepipe crown on a level brim pulled down over the eyes, the plume one flat pale
+ * blade; renaissance.fencer.red.png, .png: a low rounded crown, the brim cocked up on one side with the eyes clear beneath it, a big fluffy team plume).
+ * The brim sits .raise H higher than the 371 seat, dipped forward only .dip rad and cocked .cock rad up on his left; the crown .tall H over the brim, its
+ * top rounded down from .round of the crown's half-width (no flat lid). The plume is a team feather clump (renaissanceDress featherClump) .plume W across
+ * at the crown's left back, leaning .plumeBack rad back and .plumeOut rad out over the turned-up side.
  */
-const CAVALIER_FELT = { crown: 1.08, shoulder: 0.84, tall: 0.62, thick: 0.06, droop: 0.05, lift: 1.1, spread: 0.55, shade: 0.32, glow: 0.04, wide: 0.85, pale: 0.08, sides: 16 };
+const CAVALIER_FELT = { crown: 1.08, shoulder: 0.84, tall: 0.4, thick: 0.06, droop: 0.05, lift: 1.1, spread: 0.55, shade: 0.32, glow: 0.04, sides: 16, raise: 0.13, dip: 0.03, cock: 0.16, round: 0.55, plume: 0.95, plumeBack: 0.75, plumeOut: 0.4 };
 const CONE_BRIM_HEADS = 2.1;
 const CONE_HEADS = 1.5;
 const CONE_TALL = 1.05;
@@ -1418,8 +1423,10 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       const F = CAVALIER_FELT;
       crownHeads = F.crown;
       const cr = u((F.crown * W) / 2), br = u((CAVALIER.brim * W) / 2), top = u(F.tall * H), th = u(F.thick * H), dr = u(F.droop * H);
+      // a rounded top: from the middle out over the shoulder in a quarter round, no flat lid
       const shape = [
-        new Vector3(0, top, 0), new Vector3(cr * F.shoulder, top, 0), new Vector3(cr * 0.98, top * 0.55, 0), new Vector3(cr, th, 0),
+        new Vector3(0, top, 0), new Vector3(cr * F.round * 0.6, top * 0.98, 0), new Vector3(cr * F.round, top * 0.93, 0), new Vector3(cr * F.shoulder, top * 0.8, 0),
+        new Vector3(cr * 0.97, top * 0.5, 0), new Vector3(cr, th, 0),
         new Vector3(br * 0.75, th * 0.6 - dr * 0.4, 0), new Vector3(br, -dr, 0), new Vector3(br, -dr - th, 0), new Vector3(br * 0.75, -th * 0.4 - dr * 0.4, 0),
         new Vector3(cr * 0.9, 0, 0), new Vector3(0, 0, 0),
       ];
@@ -1435,10 +1442,18 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
         }
         brim.setVerticesData(VertexBuffer.PositionKind, at);
       }
-      brim.position.y = u(seat + 0.04 * H);
-      brim.rotation.set(FEATHER_HAT_DIP, 0, 0);
+      brim.position.y = u(seat + (0.04 + F.raise) * H);
+      // cocked: the left side (-x) up, so the whole brim slopes up toward the turned-up side
+      brim.rotation.set(F.dip, 0, -F.cock);
       brim.material = mat(scene, (teamColor ?? accent).scale(F.shade), F.glow, "cloth");
       brim.convertToFlatShadedMesh();
+      // the plume (372): a bushy team feather clump at the crown's left back, leaning back and out over the turned-up side
+      const lean = new TransformNode("cavalierPlume", scene);
+      lean.parent = brim;
+      lean.position.set(u(-0.42 * F.crown * W), u(F.tall * H * 0.55), u(-0.2 * W));
+      lean.rotation.set(-F.plumeBack, 0, F.plumeOut);
+      featherClump(scene, lean, Vector3.Zero(), u(F.plume * W), teamColor ?? accent, "featherHatPlume");
+      return brim;
     } else {
       brim = MeshBuilder.CreateCylinder("featherHatBrim", { height: u(0.08 * H), diameter: u(brimHeads * W), tessellation: 10 }, scene);
       brim.position.y = u(seat + 0.04 * H);
@@ -1458,10 +1473,10 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     }
     // The feather: out of the band at the left side and back, a chain of flat tapering pieces, each raked further back than the one under it, its vane turned
     // half to the front so it shows broad from the front and from the side
-    const plume = cav ? Color3.Lerp(teamColor ?? accent, Color3.White(), CAVALIER_FELT.pale) : teamColor ?? accent;
+    const plume = teamColor ?? accent;
     const vane = mat(scene, plume, 0.15);
     const quill = mat(scene, plume.scale(0.45));
-    const featherWide = cav ? CAVALIER_FELT.wide : FEATHER_WIDE;
+    const featherWide = FEATHER_WIDE;
     const pieceLong = u(((cav ? CAVALIER.feather : FEATHER_LONG) * H) / FEATHER_PIECES);
     let parent: Mesh = brim;
     for (let i = 0; i < FEATHER_PIECES; i++) {
