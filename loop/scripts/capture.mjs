@@ -428,7 +428,9 @@ async function main() {
               const ex = (le.x + re.x) / 2 - hc.x, ez = (le.z + re.z) / 2 - hc.z, el = Math.hypot(ex, ez) || 1;
               if ((ex * Math.cos(alpha) + ez * Math.sin(alpha)) / el < Math.cos(0.9)) alpha += 2 * swing;
             }
-            window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 3.8 * s, alpha, Math.PI / 2.3);
+            // the fencer's wide brim hides his face from above: his idle camera sits level with the head, so the brow shows under the brim (evidence 372)
+            const fencer = a.definition.id === "renaissance.fencer";
+            window.game.frameCamera({ x: pa.x, y: (fencer ? 0.75 : 0.55) * s + 0.45, z: pa.z }, 3.8 * s, alpha, fencer ? Math.PI / 1.97 : Math.PI / 2.3);
             return;
           }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
