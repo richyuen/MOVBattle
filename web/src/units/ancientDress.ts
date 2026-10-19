@@ -375,20 +375,33 @@ export function dressHoplite(scene: Scene, body: ArticulatedBody): Mesh[] {
   const mf = getMaterialFactory();
   const greave = mf.get("cloth", H.greave, { emissive: H.greave.scale(H.glow) });
   const rim = mf.get("cloth", H.greave.scale(1.35), { emissive: H.greave.scale(H.glow) });
-  const sandal = mf.get("cloth", H.sandal, { emissive: H.sandal.scale(H.glow) });
   const out: Mesh[] = [];
-  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     out.push(limbShell(scene, "hopliteGreave", shin, H.from, H.to, H.out, greave));
     out.push(limbShell(scene, "hopliteGreaveRim", shin, H.from, H.from + H.rim, H.out * 1.1, rim));
+  }
+  out.push(...strapSandals(scene, body, H.sandal, H.glow));
+  return out;
+}
+
+/**
+ * Brown strapped sandals on bare team feet (HOPLITE_LEGS sole, instep, strap; shared by the hoplite and the shield bearer): each foot mesh takes the
+ * body's skin, a sole under it, a strap over the instep and one round the ankle at its back.
+ */
+export function strapSandals(scene: Scene, body: ArticulatedBody, colour: Color3, glow: number, prefix = "hoplite"): Mesh[] {
+  const H = HOPLITE_LEGS;
+  const sandal = getMaterialFactory().get("cloth", colour, { emissive: colour.scale(glow) });
+  const out: Mesh[] = [];
+  for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const foot of knee.getChildMeshes(true)) {
       if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
       foot.material = body.skinMaterial;
       const fb = foot.getBoundingInfo().boundingBox;
       const ex = fb.extendSize;
       const put = (m: Mesh, x: number, y: number, z: number) => { m.parent = foot; m.position.set(x, y, z); m.material = sandal; out.push(m); };
-      put(MeshBuilder.CreateBox("hopliteSole", { width: ex.x * 2.1, height: ex.y * 2 * H.sole, depth: ex.z * 2.06 }, scene), fb.center.x, fb.minimum.y + ex.y * H.sole, fb.center.z);
-      put(MeshBuilder.CreateBox("hopliteStrap", { width: ex.x * 2.12, height: ex.y * 2.02, depth: ex.z * 2 * H.strap }, scene), fb.center.x, fb.center.y, fb.minimum.z + ex.z * 2 * H.instep);
-      put(MeshBuilder.CreateBox("hopliteStrap", { width: ex.x * 2.12, height: ex.y * 2 * 0.4, depth: ex.z * 2 * H.strap }, scene), fb.center.x, fb.maximum.y - ex.y * 0.3, fb.minimum.z + ex.z * 2 * 0.12);
+      put(MeshBuilder.CreateBox(`${prefix}Sole`, { width: ex.x * 2.1, height: ex.y * 2 * H.sole, depth: ex.z * 2.06 }, scene), fb.center.x, fb.minimum.y + ex.y * H.sole, fb.center.z);
+      put(MeshBuilder.CreateBox(`${prefix}Strap`, { width: ex.x * 2.12, height: ex.y * 2.02, depth: ex.z * 2 * H.strap }, scene), fb.center.x, fb.center.y, fb.minimum.z + ex.z * 2 * H.instep);
+      put(MeshBuilder.CreateBox(`${prefix}Strap`, { width: ex.x * 2.12, height: ex.y * 2 * 0.4, depth: ex.z * 2 * H.strap }, scene), fb.center.x, fb.maximum.y - ex.y * 0.3, fb.minimum.z + ex.z * 2 * 0.12);
     }
   }
   return out;
@@ -510,6 +523,24 @@ export function dressShieldBearer(scene: Scene, body: ArticulatedBody): Mesh[] {
       strip.rotation.z = -side * L.tilt * (k + 0.5);
       strip.position.set(sx * (L.stripAt + L.stripStep * k), shoulder.position.y - top.trunk * L.drop * k, midZ);
     }
+  }
+  out.push(...shieldBearerSandals(scene, body));
+  return out;
+}
+
+/*
+ * [S] the shield bearer's sandals (385; ancient.shield_bearer.jpg: bare team feet in brown strapped sandals, the laces wound up round the lower shin, no
+ * boots; critic 378/384: dark team/grey boots). The hoplite's strapSandals (sole, instep, ankle strap, the foot in skin) without his greaves, plus
+ * SB_SANDAL.laces thin brown bands round each shin at those shares of its length, .lace long, .out of its half-width; fixed brown, self-lit .glow.
+ */
+const SB_SANDAL = { laces: [0.7, 0.82, 0.93], lace: 0.045, out: 1.12, brown: new Color3(0.4, 0.23, 0.13), glow: 0.12 };
+
+function shieldBearerSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = SB_SANDAL;
+  const lace = getMaterialFactory().get("cloth", S.brown, { emissive: S.brown.scale(S.glow) });
+  const out = strapSandals(scene, body, S.brown, S.glow, "shieldBearer");
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    for (const at of S.laces) out.push(limbShell(scene, "shieldBearerLace", shin, at, at + S.lace, S.out, lace));
   }
   return out;
 }
