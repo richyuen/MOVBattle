@@ -1163,7 +1163,9 @@ const FENCER_GLOW = 0.3;
  *   close, so a roll that would cross .apart of the half-gap between the hips is pushed out sideways by the overlap: the rolls swell out over the
  *   hips, never into each other.
  */
-const FENCER_ROLL = { panes: 8, long: 0.68, swell: 2.1, end: 1.3, apart: 0.9 };
+// 374 (critic 373: the tabs had to flare 2x to clear rolls swelling from the hip): each roll starts .drop of the thigh long below the hip, so the
+// waist tabs hang near-straight over its top (renaissanceDress FENCER_TRIM hip)
+const FENCER_ROLL = { panes: 8, long: 0.68, swell: 2.1, end: 1.3, apart: 0.9, drop: 0.24 };
 // [S] boots (336; renaissance.fencer.blue.png: brown knee-high boots, a wide cuff turned down under the knee): shaft .shaft of the shin's girth at its
 // top, cuff .cuff of it at its rim, .cuffLong of the shin long
 const FENCER_BOOTS = { shaft: 1.3, cuff: 1.85, cuffLong: 0.36 };
@@ -1207,7 +1209,7 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
     for (let i = 0; i < R.panes; i++) {
       const pane = put(MeshBuilder.CreateLathe("fencerRollPane", { shape, arc: 1 / R.panes, tessellation: 1, sideOrientation: Mesh.DOUBLESIDE }, scene), i % 2 ? team : cream, leg);
       pane.rotation.y = (i / R.panes) * Math.PI * 2 + Math.PI / R.panes;
-      pane.position.set(outward, e.y - long / 2, 0);
+      pane.position.set(outward, e.y - e.y * 2 * R.drop - long / 2, 0);
     }
   }
   // knee-high brown boots: the shaft over the shin, a wide cuff turned down at its top under the knee, brown feet

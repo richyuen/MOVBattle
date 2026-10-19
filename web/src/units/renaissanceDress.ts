@@ -316,10 +316,13 @@ export function balloonArcherFront(scene: Scene, body: ArticulatedBody, teamColo
  *   The doublet is a box, so the belt is a box band .beltOut of it round, and the skirt a four-sided frustum from .skirtTop of the doublet's
  *   half-width and half-depth out at the belt to .skirtFoot at its foot, .skirtTall of H long, cut into .tabs tabs (.gapShare of each left open),
  *   team at .tabShade so the tabs part from the doublet.
+ *   374 (critic 373: the frustum to 2x stood off the breeches as a tutu of stiff fins): each tab is bent in two, hanging near-straight from the belt
+ *   to .hip of its length at .hipOut of the belt's spread, then turned out only to .skirtFoot at its foot, lying over the thigh rolls' tops, which
+ *   now start lower (unitFactory FENCER_ROLL drop).
  */
 const FENCER_TRIM = {
   capTop: 1.25, capFoot: 1.95, capTall: 0.3, roll: 0.34, band: 0.12, bandOut: 1.3,
-  belt: 0.09, beltOut: 1.06, tabs: 8, gapShare: 0.1, skirtTop: 1.04, skirtFoot: 2.0, skirtTall: 0.32, tabShade: 0.7,
+  belt: 0.09, beltOut: 1.06, tabs: 8, gapShare: 0.1, skirtTop: 1.04, skirtFoot: 1.32, skirtTall: 0.32, tabShade: 0.7, hip: 0.6, hipOut: 1.1,
   leather: new Color3(0.3, 0.16, 0.09), tan: new Color3(0.8, 0.56, 0.28), glow: 0.3,
 };
 
@@ -365,9 +368,9 @@ export function fencerTrim(scene: Scene, body: ArticulatedBody, teamColor: Color
     const c0 = corners[f], c1 = corners[(f + 1) % 4];
     for (let j = 0; j < perFace; j++) {
       const t0 = (j + T.gapShare * 0.5) / perFace, t1 = (j + 1 - T.gapShare * 0.5) / perFace;
-      const edge = [Vector3.Lerp(c0, c1, t0), Vector3.Lerp(c0, c1, t1)].map((v) => v.add(new Vector3(0, top, 0)));
-      const foot = [Vector3.Lerp(c0, c1, t0), Vector3.Lerp(c0, c1, t1)].map((v) => new Vector3(v.x * flare, top - tall, v.z * flare));
-      put(MeshBuilder.CreateRibbon("fencerTab", { pathArray: [edge, foot], sideOrientation: Mesh.DOUBLESIDE }, scene), tabCloth, body.torso);
+      const row = (k: number, y: number) => [Vector3.Lerp(c0, c1, t0), Vector3.Lerp(c0, c1, t1)].map((v) => new Vector3(v.x * k, y, v.z * k));
+      const edge = row(1, top), hip = row(T.hipOut, top - tall * T.hip), foot = row(flare, top - tall);
+      put(MeshBuilder.CreateRibbon("fencerTab", { pathArray: [edge, hip, foot], sideOrientation: Mesh.DOUBLESIDE }, scene), tabCloth, body.torso);
     }
   }
   return added;
