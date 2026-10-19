@@ -25,8 +25,16 @@ const MINO_FUR = new Color3(0.42, 0.24, 0.17);
 const MINO_FUR_GLOW = 0.16;
 const MINO_BELT = { sides: 8, tall: 0.16, at: 0.06, proud: 1.1, swirls: 3, lighter: 0.35 };
 const MINO_PAULDRON = { wide: 0.42, tall: 0.55 };
-const MINO_SASH = { sash: 0.16, thick: 0.03, buckle: 0.17, tuft: 0.22 };
-const MINO_LEATHER = new Color3(0.5, 0.3, 0.19);
+const MINO_SASH = { sash: 0.3, thick: 0.03, buckle: 0.17, tuft: 0.22 };
+/*
+ * [S] the minotaur's gear redone (383; ancient.minotaur.red.png: a patterned team pauldron on his left shoulder, a broad tan sash with a chunky grey
+ * square buckle, a scrolled team belt; critic 382: a plain light-blue dome on the wrong shoulder, a thin fur-toned sash, a tiny white diamond buckle, a
+ * plain belt). In the pauldron's width pw: the top slab .padWide x .padThick x .padDeep tilted .padTilt rad down outward, the flap .flap of pw tall bent
+ * .flapTilt rad; the belt's rims .rim of its height, .curls scroll pairs at those shares of its half width, each .curl of its height round, wound .turns,
+ * .thick of it thick; the sash MINO_SASH.sash of the trunk wide in MINO_LEATHER; the buckle .buckle of the trunk across, its bars .bar of that.
+ */
+const MINO_GEAR = { padWide: 1.25, padThick: 0.18, padDeep: 1.15, padTilt: 0.32, flap: 0.6, flapTilt: 0.35, rim: 0.2, curls: [0.22, 0.62], curl: 0.3, turns: 1.1, thick: 0.06, buckle: 0.3, bar: 0.24 };
+const MINO_LEATHER = new Color3(0.66, 0.46, 0.3);
 const MINO_IRON = new Color3(0.42, 0.44, 0.47);
 
 export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Color3, props: Mesh[]): Mesh[] {
@@ -57,12 +65,32 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   belt.position.set(waist.midX, waist.trunk * B.at, (waist.minZ + waist.maxZ) / 2);
   belt.convertToFlatShadedMesh();
   add(belt, body.torso);
-  for (let i = 0; i < B.swirls; i++) {
-    const x = waist.midX + (i - (B.swirls - 1) / 2) * waist.halfX * 0.55;
-    const tile = MeshBuilder.CreateBox("minoBeltSwirl", { width: waist.halfX * 0.4, height: tall * 0.55, depth: 0.01 }, scene);
-    tile.position.set(x, waist.trunk * B.at, waist.maxZ * B.proud + 0.004);
-    tile.rotation.z = i % 2 ? 0.35 : -0.35;
-    add(tile, body.torso, light);
+  // [S] 383 (MINO_GEAR): a darker team rim round the belt's top and foot, and lighter scroll curls on its front in mirrored pairs (tubes wound along
+  // a spiral, pressed flat on the band), not flat tiles
+  const G = MINO_GEAR;
+  const dark = mf.get("cloth", teamColor.scale(0.55), { emissive: teamColor.scale(0.06) });
+  for (const end of [-1, 1]) {
+    const rimBand = MeshBuilder.CreateCylinder("minoBeltRim", { height: tall * G.rim, diameter: 2, tessellation: B.sides }, scene);
+    rimBand.scaling.set(waist.halfX * B.proud * 1.04, 1, deep * B.proud * 1.04);
+    rimBand.position.set(waist.midX, waist.trunk * B.at + end * tall * (0.5 - G.rim / 2), (waist.minZ + waist.maxZ) / 2);
+    rimBand.convertToFlatShadedMesh();
+    add(rimBand, body.torso, dark);
+  }
+  const frontZ = (waist.minZ + waist.maxZ) / 2 + deep * B.proud;
+  for (const at of G.curls) {
+    for (const mirror of [-1, 1]) {
+      const cx = waist.midX + mirror * at * waist.halfX, cy = waist.trunk * B.at;
+      const path: Vector3[] = [];
+      for (let i = 0; i <= 14; i++) {
+        const t = i / 14, rho = tall * G.curl * (1 - 0.75 * t), phi = Math.PI * 2 * G.turns * t;
+        // on the octagon's front faces: z falls .414 of the way out from its front ridge, plus the tube's own thickness
+        const px = cx + mirror * Math.cos(phi) * rho;
+        path.push(new Vector3(px, cy + Math.sin(phi) * rho, frontZ - 0.414 * Math.abs(px - waist.midX) * (deep / waist.halfX) + tall * G.thick * 1.2));
+      }
+      const curl = MeshBuilder.CreateTube("minoBeltSwirl", { path, radius: tall * G.thick, tessellation: 4, cap: 2 }, scene);
+      curl.scaling.z = 1;
+      add(curl, body.torso, light);
+    }
   }
 
   // the chest: its box at the breastbone, for the sash, buckle and tuft
@@ -77,19 +105,34 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
 
   // the pauldron on his left shoulder (the render's right) (MINO_PAULDRON)
   const P = MINO_PAULDRON;
-  const side = 1; // body +x is his left
+  // [S] 383: body -x is his left (the 378 +x put it on his right in _idle, critic 382)
+  const side = -1;
   const pw = chest.halfX * 2 * P.wide;
-  const pauldron = MeshBuilder.CreateSphere("minoPauldron", { diameter: 1, segments: 4, slice: 0.5 }, scene);
-  pauldron.scaling.set(pw * 1.1, pw * P.tall * 1.6, pw);
-  pauldron.position.set(side * chest.halfX * 0.9 + chest.midX, chest.trunk * 0.96, (chest.minZ + chest.maxZ) / 2);
-  pauldron.rotation.z = -side * 0.35;
-  pauldron.convertToFlatShadedMesh();
+  // [S] 383 (MINO_GEAR): an angular plate, not a dome: a flat top slab over the shoulder and an outer flap bent down off its edge, a darker rim on
+  // the flap's foot, a light scroll curl on the flap's face
+  const pauldron = MeshBuilder.CreateBox("minoPauldron", { width: pw * G.padWide, height: pw * G.padThick, depth: pw * G.padDeep }, scene);
+  pauldron.position.set(side * chest.halfX * 0.85 + chest.midX, chest.trunk * 1.0, (chest.minZ + chest.maxZ) / 2);
+  pauldron.rotation.z = side * G.padTilt;
   add(pauldron, body.torso);
-  const scroll = MeshBuilder.CreateCylinder("minoPauldronScroll", { height: pw * 0.16, diameter: 1, tessellation: 8 }, scene);
-  scroll.scaling.set(pw * 1.13, 1, pw * 1.03);
-  scroll.position.copyFrom(pauldron.position);
-  scroll.position.y += pw * 0.08;
-  scroll.rotation.z = pauldron.rotation.z;
+  const flapTall = pw * G.flap;
+  const flap = MeshBuilder.CreateBox("minoPauldronFlap", { width: pw * G.padThick, height: flapTall, depth: pw * G.padDeep * 1.05 }, scene);
+  const edgeX = pauldron.position.x + side * Math.cos(G.padTilt) * pw * G.padWide / 2;
+  const edgeY = pauldron.position.y - Math.sin(G.padTilt) * pw * G.padWide / 2;
+  flap.rotation.z = side * G.flapTilt;
+  flap.position.set(edgeX + side * Math.sin(G.flapTilt) * flapTall / 2, edgeY - Math.cos(G.flapTilt) * flapTall / 2, pauldron.position.z);
+  add(flap, body.torso);
+  const flapRim = MeshBuilder.CreateBox("minoPauldronRim", { width: pw * G.padThick * 1.3, height: flapTall * 0.18, depth: pw * G.padDeep * 1.1 }, scene);
+  flapRim.rotation.z = flap.rotation.z;
+  flapRim.position.set(edgeX + side * Math.sin(G.flapTilt) * flapTall * 0.95, edgeY - Math.cos(G.flapTilt) * flapTall * 0.95, pauldron.position.z);
+  add(flapRim, body.torso, dark);
+  const padPath: Vector3[] = [];
+  for (let i = 0; i <= 12; i++) {
+    const t = i / 12, rho = pw * 0.22 * (1 - 0.7 * t), phi = Math.PI * 2 * 0.9 * t;
+    padPath.push(new Vector3(0, Math.sin(phi) * rho, Math.cos(phi) * rho));
+  }
+  const scroll = MeshBuilder.CreateTube("minoPauldronScroll", { path: padPath, radius: pw * 0.04, tessellation: 4, cap: 2 }, scene);
+  scroll.rotation.z = flap.rotation.z;
+  scroll.position.set(edgeX + side * (Math.sin(G.flapTilt) * flapTall * 0.5 + pw * G.padThick * 0.55), edgeY - Math.cos(G.flapTilt) * flapTall * 0.5, pauldron.position.z);
   add(scroll, body.torso, light);
 
   // the sash, from that shoulder across the chest down to the other hip, laid on the chest's front
@@ -100,16 +143,23 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   sash.position.set((top.x + foot.x) / 2, (top.y + foot.y) / 2, front + S.thick * chest.halfX * 0.5);
   sash.rotation.z = Math.atan2(top.x - foot.x, top.y - foot.y) * -1;
   add(sash, body.torso, leather);
-  // the iron buckle square on the sash, a frame with a dark middle
-  const bw = chest.halfX * 2 * S.buckle;
-  const buckle = MeshBuilder.CreateBox("minoBuckle", { width: bw, height: bw, depth: S.thick * chest.halfX * 1.6 }, scene);
-  buckle.position.set(chest.midX + side * chest.halfX * 0.15, chest.trunk * 0.62, front + S.thick * chest.halfX);
-  buckle.rotation.z = sash.rotation.z;
-  add(buckle, body.torso, iron);
-  const hole = MeshBuilder.CreateBox("minoBuckleHole", { width: bw * 0.5, height: bw * 0.5, depth: 0.004 }, scene);
-  hole.position.set(buckle.position.x, buckle.position.y, buckle.position.z + S.thick * chest.halfX * 0.8 + 0.002);
-  hole.rotation.z = sash.rotation.z;
-  add(hole, body.torso, leather);
+  // [S] 383 (MINO_GEAR): a chunky grey square frame buckle, four bars round an open middle the sash shows through, and a prong, high on the sash
+  // toward the pauldron
+  const bw = chest.halfX * 2 * G.buckle, bar = bw * G.bar, bd = S.thick * chest.halfX * 3;
+  const bu = 0.68;
+  const bx = foot.x + (top.x - foot.x) * bu, by = foot.y + (top.y - foot.y) * bu;
+  const holder = new TransformNode("minoBuckle", scene);
+  holder.parent = body.torso;
+  holder.position.set(bx, by, front + S.thick * chest.halfX + bd / 2);
+  holder.rotation.z = sash.rotation.z;
+  for (const [w, h, x, y] of [[bw, bar, 0, (bw - bar) / 2], [bw, bar, 0, -(bw - bar) / 2], [bar, bw, (bw - bar) / 2, 0], [bar, bw, -(bw - bar) / 2, 0]]) {
+    const b = MeshBuilder.CreateBox("minoBuckle", { width: w, height: h, depth: bd }, scene);
+    b.position.set(x, y, 0);
+    add(b, holder, iron);
+  }
+  const prong = MeshBuilder.CreateBox("minoBuckleProng", { width: bw * 0.55, height: bar * 0.6, depth: bd * 0.7 }, scene);
+  prong.position.set(bw * 0.15, 0, bd * 0.1);
+  add(prong, holder, iron);
   return out;
 }
 
