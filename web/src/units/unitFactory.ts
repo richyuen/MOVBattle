@@ -957,7 +957,14 @@ const HALBERD_TAN_GLOW = 0.3;
 const HALBERD_BELT_FIT = { proud: 1.14, tall: 0.14, buckle: 0.2 };
 const HALBERD_BUCKLE = new Color3(0.78, 0.62, 0.3);
 const HALBERD_SLEEVE = new Color3(0.5, 0.24, 0.16);
-const HALBERD_ROLL = new Color3(0.4, 0.18, 0.12);
+/*
+ * [S] quilted sleeves (370; renaissance.halberd.jpg: both sleeves are fat quilted rust-brown padding, puffed bands packed edge to edge from the shoulder
+ * to the gauntlet, light and dark by turns, the arm twice as thick as bare; black gauntlets flaring wide toward the elbow over the forearm's lower half).
+ * Not the 333 rolls: three thin dark rings spaced down a plain arm. Each arm mesh in its own frame: the upper arm HALBERD_QUILT.upper puffs over its whole
+ * length, the forearm .lower puffs over its top (1 - .cuffLong); a puff .swell of the arm's girth across and .tall of its band long (overlapping the next);
+ * colours .light / .dark self-lit .glow; the cuff .cuffLong of the forearm long, .cuffFlare of its girth across at the elbow end.
+ */
+const HALBERD_QUILT = { upper: 5, lower: 3, swell: 1.6, tall: 1.25, light: new Color3(0.66, 0.32, 0.2), dark: new Color3(0.48, 0.21, 0.13), glow: 0.12, cuffLong: 0.48, cuffFlare: 1.75 };
 const HALBERD_GAUNTLET = new Color3(0.19, 0.2, 0.21);
 const HALBERD_BELT = new Color3(0.32, 0.17, 0.1);
 /*
@@ -1093,7 +1100,8 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
   added.push(hole);
   // Sleeves: brown, rolled; gauntlets dark with a flared cuff
   const sleeve = mf.getCloth(HALBERD_SLEEVE);
-  const rollMat = mf.getCloth(HALBERD_ROLL);
+  const quiltLight = mf.get("cloth", HALBERD_QUILT.light, { emissiveIntensity: HALBERD_QUILT.glow });
+  const quiltDark = mf.get("cloth", HALBERD_QUILT.dark, { emissiveIntensity: HALBERD_QUILT.glow });
   const steel = mf.getMetal(HALBERD_GAUNTLET, 0.6);
   for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
     arm.material = sleeve;
@@ -1101,18 +1109,24 @@ function dressHalberd(scene: Scene, body: ArticulatedBody): Mesh[] {
     const girth = Math.max(e.x, e.z) * 2;
     const long = e.y * 2;
     const lower = arm === body.leftLowerArm || arm === body.rightLowerArm;
-    // the forearm's last third is the gauntlet's cuff, so its rolls stay above it
-    const span = lower ? 0.55 : 0.9;
-    for (let i = 0; i < D_.bands; i++) {
-      const roll = MeshBuilder.CreateCylinder("halberdRoll", { height: long * span / D_.bands * 0.55, diameter: girth * D_.roll, tessellation: 7 }, scene);
-      roll.position.y = long * 0.5 - long * span * (i + 0.5) / D_.bands;
-      roll.material = rollMat;
-      roll.parent = arm;
-      added.push(roll);
+    // the quilted sleeve (370, HALBERD_QUILT): puffed bands packed edge to edge down the arm, light and dark rust by turns; on the forearm they stop
+    // where the gauntlet's cuff starts
+    const Q = HALBERD_QUILT;
+    const span = lower ? 1 - Q.cuffLong : 1;
+    const count = lower ? Q.lower : Q.upper;
+    const step = (long * span) / count;
+    for (let i = 0; i < count; i++) {
+      const puff = MeshBuilder.CreateSphere("halberdQuilt", { diameterX: girth * Q.swell, diameterY: step * Q.tall, diameterZ: girth * Q.swell, segments: 3 }, scene);
+      puff.position.y = long * 0.5 - step * (i + 0.5);
+      puff.rotation.y = (i % 2) * 0.4;
+      puff.material = i % 2 ? quiltDark : quiltLight;
+      puff.convertToFlatShadedMesh();
+      puff.parent = arm;
+      added.push(puff);
     }
     if (lower) {
-      const cuff = MeshBuilder.CreateCylinder("halberdCuff", { height: long * 0.36, diameterTop: girth * 1.05, diameterBottom: girth * D_.cuff, tessellation: 7 }, scene);
-      cuff.position.y = -long * 0.5 + long * 0.18;
+      const cuff = MeshBuilder.CreateCylinder("halberdCuff", { height: long * Q.cuffLong, diameterTop: girth * Q.cuffFlare, diameterBottom: girth * 1.05, tessellation: 7 }, scene);
+      cuff.position.y = -long * 0.5 + long * Q.cuffLong * 0.5;
       cuff.material = steel;
       cuff.convertToFlatShadedMesh();
       cuff.parent = arm;
