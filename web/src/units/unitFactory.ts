@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { heldBalloonArrow, painterJabot } from "./renaissanceDress";
+import { featherPlume, heldBalloonArrow, painterJabot } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -2031,11 +2031,11 @@ function dressBalloonArcher(scene: Scene, body: ArticulatedBody, teamColor: Colo
  * plates between, so only the face round the eyes shows through the slot; a tall team plume of stacked tufts rising off its crown. Sizes are shares of the
  * chest (W, H, D), of each arm's girth and length, and of the head's half extents (in its own frame).
  *   steel JOUSTER_STEEL, self-lit JOUSTER_GLOW (plain metal reads navy under the blue sky light); helm JOUSTER_HELM: dome .wide of the head round it, its
- *   rim .brow of the half-height over the middle, bevor's top .chin under it; plume .tufts tufts, the first .tuft of the head across, each .rise half-heights up.
+ *   rim .brow of the half-height over the middle, bevor's top .chin under it; plume (370, FEATHER_PLUME) in units of .plume half-heights.
  */
 const JOUSTER_STEEL = new Color3(0.5, 0.52, 0.56);
 const JOUSTER_GLOW = 0.16;
-const JOUSTER_HELM = { wide: 1.2, brow: 0.5, chin: -0.28, tufts: 5, tuft: 0.95, rise: 0.42 };
+const JOUSTER_HELM = { wide: 1.2, brow: 0.5, chin: -0.28, plume: 1.0 };
 const JOUSTER_PLATE = { breast: 1.2, fauld: 0.3, flare: 1.3, pauldron: 2.1, lame: 1.6 };
 /** Dresses the jouster's rider (spec at JOUSTER_HELM, JOUSTER_PLATE): grey plate, close helm, team plume. */
 function dressJouster(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -2103,16 +2103,8 @@ function dressJouster(scene: Scene, body: ArticulatedBody, teamColor: Color3): M
   }
   const back = put(MeshBuilder.CreateBox("jousterHelmBack", { width: hx * 2 * (J.wide - 0.06), height: slot * 1.04, depth: hz * 0.16 }, scene), steel, head);
   back.position.set(0, hy * (J.brow + J.chin) * 0.5, -hz * (J.wide - 0.1));
-  // the team plume: tufts stacked up off the crown, each smaller and set a little back
-  const plume = mf.get("cloth", teamColor, { emissiveIntensity: 0.2 });
-  for (let i = 0; i < J.tufts; i++) {
-    const r = hx * J.tuft * (1 - i * 0.13);
-    const tuft = MeshBuilder.CreateIcoSphere("jousterPlume", { radius: 1, subdivisions: 1, flat: true }, scene);
-    tuft.scaling.set(r * 0.62, r * 0.75, r * 0.7);
-    tuft.position.set(0, top + hy * J.rise * (i + 0.3), -hz * (0.12 + 0.07 * i));
-    tuft.rotation.set(0.3 * i, 0.7 * i, 0.15 * (i % 2 ? 1 : -1));
-    put(tuft, plume, head);
-  }
+  // the team plume (370): a spray of feathers off the crown, curling back (renaissanceDress featherPlume), J.plume half-heights the unit
+  added.push(...featherPlume(scene, "jousterPlume", head, new Vector3(0, top * 0.92, -hz * 0.1), hy * J.plume, teamColor));
   return added;
 }
 

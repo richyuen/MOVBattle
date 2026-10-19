@@ -44,6 +44,57 @@ export function heldBalloonArrow(scene: Scene, body: ArticulatedBody, teamColor:
 }
 
 /*
+ * [S] the feather plume (370; renaissance.jouster.png, card Appearance "Both the rider and the horse have colored feathers": a spray of broad team
+ * feathers off the helm's crown and off the horse's poll, rising and curling back over like a cock's tail, their edges stepped). Not the 335 stack of
+ * tufts, which read as a twisted spiral horn. In the parent's frame (+y up, -z back), all sizes in `size` units: FEATHER_PLUME.feathers feathers fanned
+ * .fan side to side about the root (the outer ones turned .turn toward the front), each leaning .rake back and built of .segs flat diamond blades on a chain of joints, each blade bent .curl[k] further
+ * back than the last; the middle feather .long long, the outer ones .outer of that; a blade .wide across at its foot narrowing to .tip of that at its
+ * top, the next blade starting .step of the last's foot (so the outline steps like a ragged feather), .thick of its width thin side to side. Matte team
+ * cloth self-lit .glow.
+ */
+export const FEATHER_PLUME = { feathers: 7, fan: 0.55, turn: 1.4, rake: 0.25, segs: 3, curl: [0.05, 0.6, 0.75], long: 2.6, outer: 0.65, wide: 0.42, tip: 0.55, step: 0.85, thick: 0.35, glow: 0.2 };
+
+/** A team feather plume (spec at FEATHER_PLUME) rooted at `at` in `parent`'s frame, `size` the unit length. Returns the blades. */
+export function featherPlume(scene: Scene, name: string, parent: TransformNode, at: Vector3, size: number, color: Color3): Mesh[] {
+  const F = FEATHER_PLUME;
+  const material = getMaterialFactory().get("cloth", color, { emissiveIntensity: F.glow });
+  const root = new TransformNode(name, scene);
+  root.parent = parent;
+  root.position.copyFrom(at);
+  const blades: Mesh[] = [];
+  for (let f = 0; f < F.feathers; f++) {
+    const t = F.feathers > 1 ? f / (F.feathers - 1) - 0.5 : 0;
+    const len = F.long * size * (1 - (1 - F.outer) * Math.abs(2 * t));
+    const seg = len / F.segs;
+    let joint = new TransformNode(`${name}Feather`, scene);
+    joint.parent = root;
+    // the outer feathers turn their flat faces toward the front, so the spray reads as a fan from ahead and from the side
+    joint.rotation.set(-F.rake - Math.abs(t) * 0.3, t * F.turn, -t * 2 * F.fan);
+    let wide = F.wide * size * (1 - Math.abs(t) * 0.3);
+    for (let k = 0; k < F.segs; k++) {
+      if (k > 0) {
+        const next = new TransformNode(`${name}Joint`, scene);
+        next.parent = joint;
+        next.position.y = seg;
+        joint = next;
+      }
+      joint.rotation.x += -F.curl[Math.min(k, F.curl.length - 1)];
+      // a little twist per blade, alternating, so the stepped edges catch the light
+      joint.rotation.y += (k % 2 ? 1 : -1) * 0.18 * (f % 2 ? 1 : -1);
+      const blade = MeshBuilder.CreateCylinder(`${name}Blade`, { height: seg * 1.08, diameterTop: wide * F.tip, diameterBottom: wide, tessellation: 4 }, scene);
+      blade.position.y = seg * 0.5;
+      blade.scaling.x = F.thick;
+      blade.material = material;
+      blade.convertToFlatShadedMesh();
+      blade.parent = joint;
+      blades.push(blade);
+      wide *= F.step;
+    }
+  }
+  return blades;
+}
+
+/*
  * [S] the Painter's jabot (369; renaissance.painter.jpg: three tan ruffles stacked at the throat from under the jaw to the top of the chest, each a little
  * wider than the one above and out past the neck toward the collar, a darker fold under each so the steps read; the face clear above it. Critic 368: the
  * last cut rose over the chin and read as a beard, its tiers merged into one pale cone). The stack is measured off the body: its top PAINTER_JABOT.gap of a
