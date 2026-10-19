@@ -224,10 +224,16 @@ const SKULL_FACETED = {
  * seated .lift above the hat seat and set .back behind the head's middle, pitched .pitch nose down; upper beak .beak head widths long, .beakRoot to .beakTip
  * across, .beakFlat deep, dipped .beakDip; the lower jaw gaped .gape below it; eyes .eye across, turned .eyeTurn out. Tan, darker and warmer than the bone
  * cap that went white (.tan, self-lit .glow).
+ * [S] re-seated on the crown (365; tribal.chieftain.red.png: the skull rests on top of his head above the brow like a cap, its snout jutting straight forward,
+ * two googly eyes on its front looking ahead, his whole face clear under it; critic 364: it sat low, pitched nose-down, the beak over the middle of his face).
+ * The skull is no longer seated off the hat seat over the eyes and pitched: it lies level, its flat underside .sink head heights below the crown (the
+ * head's top joint), so its foot stays above the brow. The beak leaves the brain case's measured front (its foremost vertex) at mid height and runs
+ * level forward, dipped only .beakDip; the jaw hangs .gape under it, short of the eyes. The two googly eyes sit on the brain case's top-front, .eyeUp of
+ * its half height up and .eyeOut of its half width out, turned out .eyeTurn and up .eyeTilt so both face the viewer.
  */
 const BEAST_SKULL = {
-  wide: 1.12, long: 1.35, tall: 0.62, under: 0.55, lift: 0.08, back: 0.12, pitch: 0.12, jitter: 0.07,
-  beak: 0.8, beakRoot: 0.62, beakTip: 0.2, beakFlat: 0.55, beakDip: 0.12, gape: 0.35, eye: 0.3, eyeTurn: 0.55,
+  wide: 1.12, long: 1.35, tall: 0.62, under: 0.55, sink: 0.08, back: 0.12, jitter: 0.07,
+  beak: 0.8, beakRoot: 0.62, beakTip: 0.2, beakFlat: 0.55, beakDip: 0.04, gape: 0.18, eye: 0.32, eyeTurn: 0.28, eyeUp: 0.42, eyeOut: 0.48, eyeTilt: 0.35,
   tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
 };
 const BERET_HEADS = 2.0;
@@ -1054,9 +1060,13 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       skull.setVerticesData(VertexBuffer.NormalKind, normals);
       skull.refreshBoundingInfo();
     }
-    skull.position.set(0, u(seat + B.under * Ry + B.lift * H), u(-B.back * W));
-    skull.rotation.x = B.pitch;
+    // level on the crown (365), its flat foot B.sink below the head's top; the beak off its measured front
+    skull.position.set(0, u(-B.sink * H + B.under * Ry), u(-B.back * W));
     skull.material = bone;
+    let front = 0;
+    const sv = skull.getVerticesData(VertexBuffer.PositionKind) ?? [];
+    for (let v = 0; v < sv.length; v += 3) if (Math.abs(sv[v + 1]) < u(0.4 * Ry)) front = Math.max(front, sv[v + 2]);
+    const frontW = front * unit;
     const dark = mat(scene, new Color3(0.13, 0.09, 0.07));
     // The beak: upper jaw a five-sided taper from the front of the brain case, pointed forward and down over the brow, flattened top to bottom, a ridge on top
     const beakLong = B.beak * W;
@@ -1064,7 +1074,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     upper.convertToFlatShadedMesh();
     upper.rotation.x = Math.PI / 2 + B.beakDip;
     upper.scaling.z = B.beakFlat;
-    upper.position.set(0, u(-0.05 * Ry), u(Rz * 0.72 + beakLong * 0.42));
+    upper.position.set(0, u(-0.05 * Ry), u(frontW * 0.85 + beakLong * 0.42));
     upper.material = bone;
     upper.parent = skull;
     const ridge = MeshBuilder.CreateBox("beastSkullRidge", { width: u(0.1 * W), height: u(beakLong * 0.9), depth: u(0.08 * W) }, scene);
@@ -1077,11 +1087,11 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     lower.convertToFlatShadedMesh();
     lower.rotation.x = Math.PI / 2 + B.beakDip + B.gape;
     lower.scaling.z = B.beakFlat * 0.7;
-    lower.position.set(0, u(-0.42 * Ry), u(Rz * 0.62 + beakLong * 0.32));
+    lower.position.set(0, u(-0.42 * Ry), u(frontW * 0.8 + beakLong * 0.32));
     lower.material = bone;
     lower.parent = skull;
     const mouth = MeshBuilder.CreateBox("beastSkullMouth", { width: u(B.beakRoot * 0.7 * W), height: u(0.12 * H), depth: u(beakLong * 0.55) }, scene);
-    mouth.position.set(0, u(-0.3 * Ry), u(Rz * 0.7 + beakLong * 0.2));
+    mouth.position.set(0, u(-0.3 * Ry), u(frontW * 0.85 + beakLong * 0.2));
     mouth.rotation.x = B.beakDip + B.gape * 0.5;
     mouth.material = dark;
     mouth.parent = skull;
@@ -1090,14 +1100,14 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
         // two fangs down from the beak's edge each side
         const fang = MeshBuilder.CreateCylinder("beastSkullFang", { height: u(0.16 * H), diameterTop: 0, diameterBottom: u(0.07 * W), tessellation: 4 }, scene);
         fang.rotation.x = Math.PI - B.beakDip;
-        fang.position.set(side * u(B.beakRoot * W * (0.28 - i * 0.1)), u(-0.2 * Ry - (0.08 + i * 0.12) * H), u(Rz * 0.8 + beakLong * (0.15 + i * 0.3)));
+        fang.position.set(side * u(B.beakRoot * W * (0.28 - i * 0.1)), u(-0.2 * Ry - (0.05 + i * 0.05) * H), u(frontW * 0.9 + beakLong * (0.15 + i * 0.3)));
         fang.material = bone;
         fang.parent = skull;
       }
-      // A googly eye in each socket on the skull's own front corners: a dark ring, the white, a black pupil looking ahead
+      // A googly eye in each socket on the skull's top-front (365), facing the viewer: a dark ring, the white, a black pupil looking ahead
       const socket = MeshBuilder.CreateCylinder("beastSkullSocket", { height: u(0.06 * W), diameter: u(B.eye * 1.3 * W), tessellation: 6 }, scene);
-      socket.rotation.set(Math.PI / 2, side * B.eyeTurn, 0);
-      socket.position.set(side * u(Rx * 0.62), u(0.18 * Ry), u(Rz * 0.68));
+      socket.rotation.set(Math.PI / 2 - B.eyeTilt, side * B.eyeTurn, 0);
+      socket.position.set(side * u(B.eyeOut * Rx), u(B.eyeUp * Ry), u(frontW * Math.sqrt(Math.max(0.2, 1 - B.eyeUp * B.eyeUp - B.eyeOut * B.eyeOut))));
       socket.material = dark;
       socket.parent = skull;
       const white = MeshBuilder.CreateCylinder("beastSkullEye", { height: u(0.05 * W), diameter: u(B.eye * W), tessellation: 14 }, scene);
