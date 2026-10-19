@@ -570,6 +570,77 @@ export function dressSnakeArcher(scene: Scene, body: ArticulatedBody, teamColor:
 }
 
 /*
+ * [S] the snake archer's kit (386; ancient.snake_archer.red.png: a brown baldric from the quiver over his left shoulder diagonally across the chest to
+ * the right hip, a brown belt with a gold buckle round the tunic's waist, brown knee boots from under the knee to the ankle over a team foot in a
+ * strapped sandal; card "a quiver full of arrows"; critic 378: team legs, a dark bar). On the torso, round the trunk's box (trunkBand 0-1):
+ *   - the baldric: a band round the trunk .proud of its half extents (rounded box section, exponent 4), its middle line from .high of the trunk at
+ *     his left (-x) to .low at his right, .wide of the trunk tall, clamped under .top of the trunk so it crosses the shoulder;
+ *   - the belt: a ring .belt of the trunk tall at .beltAt, .beltProud out, a gold buckle .buckle of the trunk square on its front;
+ *   - on each shin a boot shell .bootOut of its half-width from .bootFrom to .bootTo of its length, a turned rim .rim long at its top, darker;
+ *     the feet the hoplite's strapSandals.
+ * Fixed browns, self-lit .glow.
+ */
+const SNAKE_KIT = {
+  proud: 1.08, high: 0.95, low: 0.12, wide: 0.11, top: 1.03, segs: 28,
+  belt: 0.09, beltAt: 0.05, beltProud: 1.12, buckle: 0.11,
+  bootOut: 1.35, bootFrom: 0.12, bootTo: 0.92, rim: 0.1,
+  leather: new Color3(0.42, 0.25, 0.14), boot: new Color3(0.3, 0.17, 0.11), gold: new Color3(0.8, 0.58, 0.26), glow: 0.12,
+};
+
+/** The snake archer's baldric, belt and knee boots over strap sandals (spec at SNAKE_KIT). */
+export function snakeArcherKit(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = SNAKE_KIT;
+  const out: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", K.leather, { emissive: K.leather.scale(K.glow) });
+  leather.backFaceCulling = false;
+  const boot = mf.get("cloth", K.boot, { emissive: K.boot.scale(K.glow) });
+  const bootRim = mf.get("cloth", K.boot.scale(0.75), { emissive: K.boot.scale(K.glow * 0.5) });
+  const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(K.glow) });
+  const band = trunkBand(body, 0, 1);
+  const halfZ = (band.maxZ - band.minZ) / 2, midZ = (band.minZ + band.maxZ) / 2;
+  const tr = band.trunk;
+  const rim = (a: number, p: number) => {
+    const c = Math.cos(a), s = Math.sin(a);
+    return { x: band.midX + band.halfX * p * Math.sign(c) * Math.abs(c) ** 0.5, z: midZ + halfZ * p * Math.sign(s) * Math.abs(s) ** 0.5 };
+  };
+  // the baldric
+  const upper: Vector3[] = [], lower: Vector3[] = [];
+  for (let i = 0; i <= K.segs; i++) {
+    const p = rim((Math.PI * 2 * i) / K.segs, K.proud);
+    const u = (p.x - band.midX) / band.halfX;
+    const mid = tr * (K.high + (K.low - K.high) * (u + 1) / 2);
+    upper.push(new Vector3(p.x, Math.min(mid + tr * K.wide / 2, tr * K.top), p.z));
+    lower.push(new Vector3(p.x, Math.min(mid - tr * K.wide / 2, tr * K.top - tr * 0.05), p.z));
+  }
+  const baldric = MeshBuilder.CreateRibbon("snakeBaldric", { pathArray: [upper, lower], sideOrientation: Mesh.DOUBLESIDE }, scene);
+  baldric.convertToFlatShadedMesh();
+  baldric.material = leather;
+  baldric.parent = body.torso;
+  out.push(baldric);
+  // the belt and its buckle
+  const belt = MeshBuilder.CreateCylinder("snakeBelt", { height: tr * K.belt, diameter: 2, tessellation: 10 }, scene);
+  belt.scaling.set(band.halfX * K.beltProud, 1, halfZ * K.beltProud);
+  belt.position.set(band.midX, tr * K.beltAt, midZ);
+  belt.convertToFlatShadedMesh();
+  belt.material = leather;
+  belt.parent = body.torso;
+  out.push(belt);
+  const buckle = MeshBuilder.CreateBox("snakeBuckle", { width: tr * K.buckle, height: tr * K.buckle, depth: tr * 0.03 }, scene);
+  buckle.position.set(band.midX, tr * K.beltAt, midZ + halfZ * K.beltProud * 1.02);
+  buckle.material = gold;
+  buckle.parent = body.torso;
+  out.push(buckle);
+  // knee boots over strap sandals
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "snakeBoot", shin, K.bootFrom, K.bootTo, K.bootOut, boot));
+    out.push(limbShell(scene, "snakeBootRim", shin, K.bootFrom, K.bootFrom + K.rim, K.bootOut * 1.12, bootRim));
+  }
+  out.push(...strapSandals(scene, body, K.leather, K.glow, "snakeArcher"));
+  return out;
+}
+
+/*
  * [S] the hoplite's greaves and sandals (384; ancient.hoplite.red.png: dark brown greaves from under the knee to the ankle, the bare team foot below in a
  * brown strapped sandal; critic 378: grey boots). On each shin a faceted shell HOPLITE_LEGS.out of its half-width round it from .from to .to of its length,
  * a rim band .rim long round its top, in a fixed dark brown (not a team lerp, which read grey under blue) self-lit .glow; the foot the team skin, with a

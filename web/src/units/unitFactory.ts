@@ -15,7 +15,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
-import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, zeusLegs } from "./ancientDress";
+import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -566,6 +566,8 @@ export class UnitFactory {
       propMeshes.push(...dressSnakeArcher(this._scene, body, teamColor));
       // [S] the snake nocked in his draw fist (385; ancientDress SNAKE)
       propMeshes.push(...heldSnake(this._scene, body).getChildMeshes() as Mesh[]);
+      // [S] ...a brown baldric to the back quiver, brown belt and gold buckle, brown knee boots over strap sandals (386; ancientDress SNAKE_KIT)
+      propMeshes.push(...snakeArcherKit(this._scene, body));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
