@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { harvesterBraids } from "./farmerDress";
+import { halflingJacket, harvesterBraids } from "./farmerDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -533,8 +533,10 @@ export class UnitFactory {
     // [S] the halfling's shaggy brown mop (340; tribalDress SHAGGY)
     if (definition.id === "farmer.halfling" && !shouldUseVehicleBody) {
       propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
-      // [S] ...and his jacket, vest and white shirt (341; HALFLING_DRESS)
+      // [S] ...and his shorts and hairy feet (342-343; HALFLING_SHORTS, HALFLING_FEET)
       propMeshes.push(...dressHalfling(this._scene, body, teamColor));
+      // [S] ...his long open jacket over a light vest, white shirt V, dark belt and big grey buckle (376; farmerDress HALFLING_COAT)
+      propMeshes.push(...halflingJacket(this._scene, body, teamColor));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
@@ -1351,24 +1353,12 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
 }
 
 /*
- * [S] halfling's three layers (341; farmer.halfling.blue.png, card Appearance "a team-colored jacket, a light team-colored vest and a white shirt
- * underneath"): an open team jacket over the chest, hanging a little past the waist, its fronts parted so a light team vest shows down the middle, and
- * at the neck of the vest a white shirt in a V with two collar points laid out over it; short dark lapels turned back beside the V. Sizes are shares of
- * the chest (W, H, D): jacket HALFLING_DRESS.jacket round it and .drop of H below its foot; vest .vest of W across, standing .proud of D out of the
- * jacket's front; shirt V .vee of W across at the neck, .veeDeep of H deep; lapels .lapel of H long. The vest and shirt are self-lit so they read light.
+ * [S] halfling's shorts (342; farmer.halfling.red.png, card Appearance "a pair of dark team-colored shorts"): dark team shorts from the waist over the
+ * hips and down each thigh to the knee, a little flared at the hem (the jacket, vest, shirt and buckled belt are farmerDress HALFLING_COAT, 376). Shares
+ * of the chest (W, H, D) and of the thigh: seat HALFLING_SHORTS.seat round the chest and .seatTall of H tall; leg .leg of the thigh's girth, .flare more
+ * at the hem, .long of the thigh long. Team shade .dark, self-lit .glow so it reads dark team, not black.
  */
-const HALFLING_DRESS = { jacket: 1.14, drop: 0.12, vest: 0.56, proud: 0.03, vee: 0.42, veeDeep: 0.42, lapel: 0.34, vestLight: 0.5, jacketShade: 0.8 };
-const HALFLING_SHIRT = new Color3(0.93, 0.89, 0.8);
-/*
- * [S] halfling's shorts (342; farmer.halfling.red.png, card Appearance "a pair of dark team-colored shorts buckled with a buckle belt"): dark team shorts
- * from the waist over the hips and down each thigh to the knee, a little flared at the hem; a dark brown belt across the waist where the jacket parts,
- * a grey buckle at its middle. Shares of the chest (W, H, D) and of the thigh: seat HALFLING_SHORTS.seat round the chest and .seatTall of H tall; leg
- * .leg of the thigh's girth, .flare more at the hem, .long of the thigh long; belt .belt of H tall; buckle .buckle of W across. Team shade .dark, self-lit
- * .glow so it reads dark team, not black.
- */
-const HALFLING_SHORTS = { seat: 1.04, seatTall: 0.3, leg: 1.3, flare: 1.12, long: 0.92, belt: 0.1, buckle: 0.14, dark: 0.45, glow: 0.14 };
-const HALFLING_BELT = new Color3(0.3, 0.18, 0.11);
-const HALFLING_BUCKLE = new Color3(0.62, 0.62, 0.64);
+const HALFLING_SHORTS = { seat: 1.04, seatTall: 0.3, leg: 1.3, flare: 1.12, long: 0.92, dark: 0.45, glow: 0.14 };
 /*
  * [S] potionseller's jerkin (344; farmer.potion_seller.blue.png, card Appearance "a dark team-colored jerkin with a light team-colored bottom tighten with
  * four rope. Each side has a copper button above the chest of the vest. They also wear a brown undershirt"): a dark team jerkin round the chest, its
@@ -1577,15 +1567,10 @@ function dressScarecrow(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   return added;
 }
 
-/** Dresses the halfling's torso (spec at HALFLING_DRESS): open team jacket, light team vest, white shirt V with collar points. */
+/** Dresses the halfling below the jacket (spec at HALFLING_SHORTS, HALFLING_FEET): dark team shorts, hairy feet. */
 function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
   const mf = getMaterialFactory();
-  const J = HALFLING_DRESS;
-  const jacketCloth = mf.getCloth(teamColor.scale(J.jacketShade));
-  const lapelCloth = mf.getCloth(teamColor.scale(J.jacketShade * 0.62));
-  const vestCloth = mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), J.vestLight), { emissiveIntensity: 0.12 });
-  const shirt = mf.get("cloth", HALFLING_SHIRT, { emissiveIntensity: 0.25 });
   const put = (m: Mesh, mat: Material): Mesh => {
     m.material = mat;
     m.convertToFlatShadedMesh();
@@ -1596,44 +1581,14 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
-  const top = chest.position.y + H * 0.5;
-  // the jacket: a shell round the chest, hanging on past the waist
-  const jacketTall = H * (0.96 + J.drop);
-  const jacket = put(MeshBuilder.CreateBox("halflingJacket", { width: W * J.jacket, height: jacketTall, depth: D * J.jacket }, scene), jacketCloth);
-  jacket.position.set(0, top - H * 0.04 - jacketTall / 2, 0);
-  const front = D * J.jacket * 0.5;
-  // the vest down the middle where the fronts part, standing out of the jacket's front
-  const vestTall = H * 0.86;
-  const vest = put(MeshBuilder.CreateBox("halflingVest", { width: W * J.vest, height: vestTall, depth: D * 0.1 }, scene), vestCloth);
-  vest.position.set(0, top - H * 0.06 - vestTall / 2, front - D * 0.05 + D * J.proud);
-  const vestFace = vest.position.z + D * 0.05;
-  // the shirt's V at the vest's neck: a downward triangle, flat edge along the neckline
-  const vee = put(MeshBuilder.CreateDisc("halflingShirtVee", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene), shirt);
-  vee.rotation.z = -Math.PI / 2;
-  vee.scaling.set(H * J.veeDeep / 1.5, W * J.vee / Math.sqrt(3), 1);
-  vee.position.set(0, top - H * 0.06 - H * J.veeDeep / 3, vestFace + D * 0.012);
-  // two collar points laid out over the vest at either side of the V, and the jacket's dark lapels turned back beside them
-  for (const side of [-1, 1]) {
-    const point = put(MeshBuilder.CreateDisc("halflingCollar", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene), shirt);
-    point.rotation.z = -Math.PI / 2 + side * 0.5;
-    point.scaling.set(H * 0.1, W * 0.1, 1);
-    point.position.set(side * W * J.vee * 0.42, top - H * 0.1, vestFace + D * 0.02);
-    const lapel = put(MeshBuilder.CreateBox("halflingLapel", { width: W * 0.09, height: H * J.lapel, depth: D * 0.06 }, scene), lapelCloth);
-    lapel.rotation.z = side * 0.32;
-    lapel.position.set(side * (W * J.vest * 0.5 + W * 0.03), top - H * 0.06 - H * J.lapel / 2, front + D * 0.02);
-  }
-  // [S] dark team knee shorts and a buckled belt (342; spec at HALFLING_SHORTS)
+  // the jacket, vest, shirt V and buckled belt are farmerDress halflingJacket since 376 (HALFLING_COAT)
+  // [S] dark team knee shorts (342; spec at HALFLING_SHORTS)
   const S = HALFLING_SHORTS;
   const shortsCloth = mf.get("cloth", teamColor.scale(S.dark), { emissiveIntensity: S.glow });
   const waist = chest.position.y - H * 0.5;
   // the seat of the shorts under the jacket's hem, from the waist down over the hips
   const seat = put(MeshBuilder.CreateBox("halflingShortsSeat", { width: W * S.seat, height: H * S.seatTall, depth: D * S.seat }, scene), shortsCloth);
   seat.position.set(0, waist - H * S.seatTall * 0.5 + H * 0.06, 0);
-  // the belt round the waist, showing between the jacket's open fronts, with a grey buckle in the middle
-  const belt = put(MeshBuilder.CreateBox("halflingBelt", { width: W * J.vest * 1.12, height: H * S.belt, depth: D * 0.08 }, scene), mf.get("cloth", HALFLING_BELT, { emissiveIntensity: 0.15 }));
-  belt.position.set(0, waist + H * S.belt * 0.5, front + D * J.proud + D * 0.02);
-  const buckle = put(MeshBuilder.CreateBox("halflingBuckle", { width: W * S.buckle, height: H * S.belt * 1.3, depth: D * 0.05 }, scene), mf.get("metal", HALFLING_BUCKLE, { emissiveIntensity: 0.25 }));
-  buckle.position.set(0, belt.position.y, belt.position.z + D * 0.04);
   // a short flared leg of the shorts down each thigh to the knee
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
     leg.material = shortsCloth;
