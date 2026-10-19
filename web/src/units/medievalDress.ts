@@ -53,32 +53,45 @@ function healerTonsure(scene: Scene, body: ArticulatedBody): Mesh[] {
  * ARCHER_HOOD.open rad either side of the face at its widest, from ARCHER_HOOD.brow down to ARCHER_HOOD.jaw of the half-height; tail ARCHER_HOOD.tail head
  * heights long; capelet ARCHER_HOOD.cape: .wide of the chest across at its hem, .drop of the torso height down from the collar. Cloth: team x ARCHER_HOOD.shade.
  */
+/*
+ * [S] the hood's tight face opening and its capelet layer (359; medieval.archer.blue.png: the navy cloth comes down over the forehead to just above the eyes and
+ * closes round the face in a narrow oval, brow to chin; the capelet a dark layer of its own over the shoulders with a visible lower edge): the opening now
+ * ARCHER_HOOD.open rad either side at the eyes, from ARCHER_HOOD.brow (just over the eyes) to .jaw; a rolled cloth rim (.rim of the head half-width thick) runs
+ * round the opening's edge so the oval reads as a hem; hood and capelet a dark navy (team x .shade), the capelet ringed at its foot by a hem .hemTall of its
+ * height in team x .hemShade so it reads as a separate layer over the chest. Shell rings 16 so the opening's edge is smooth.
+ */
 const ARCHER_HOOD = {
-  out: 1.38, peak: 0.4, chin: 1.12, open: 0.62, brow: 0.58, jaw: -0.82, tail: 1.5,
-  cape: { wide: 1.4, drop: 0.32, neck: 0.75 }, shade: 0.5, glow: 0.05, lining: 0.96,
+  out: 1.38, peak: 0.4, chin: 1.12, open: 0.46, brow: 0.38, jaw: -0.8, tail: 1.5, rim: 0.1,
+  cape: { wide: 1.4, drop: 0.32, neck: 0.75, hemTall: 0.22, hemShade: 0.2 }, shade: 0.3, glow: 0.02, lining: 0.96,
 };
 
 function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const H = ARCHER_HOOD;
   const cloth = getMaterialFactory().get("cloth", team.scale(H.shade), { emissiveIntensity: H.glow });
-  // The shell: rings from the crown (t 0) down to under the chin (t 1); each ring runs from one side of the face round the back to the other.
-  const rings = 10, around = 16;
+  // A point on the shell: theta from the crown (0) to under the chin (.82 pi), phi round from the face (0)
+  const span = (H.brow - H.jaw) / 2, mid = (H.brow + H.jaw) / 2;
+  const at = (theta: number, phi: number, grow = 1): Vector3 => {
+    const t = theta / (Math.PI * 0.82);
+    const y = Math.cos(theta) * e.y * H.out + (t < 0.2 ? (1 - t / 0.2) * e.y * H.peak : 0) - (t > 0.6 ? (t - 0.6) / 0.4 * e.y * (H.chin - 1) : 0);
+    const ring = Math.sin(theta) * grow;
+    return new Vector3(Math.sin(phi) * ring * e.x * H.out, y, Math.cos(phi) * ring * e.z * H.out);
+  };
+  // the face opening's half-angle at a ring: widest at the eyes, shut above the brow and below the jaw
+  const openAt = (theta: number): number => {
+    const k = 1 - ((Math.cos(theta) - mid) / span) ** 2;
+    return k > 0 ? H.open * Math.sqrt(k) : 0;
+  };
+  // The shell: rings from the crown down to under the chin; each ring runs from one side of the face round the back to the other.
+  const rings = 16, around = 16;
   const positions: number[] = [];
   const indices: number[] = [];
   for (let r = 0; r <= rings; r++) {
-    const t = r / rings;
-    const theta = t * Math.PI * 0.82;
-    const y = Math.cos(theta) * e.y * H.out + (t < 0.2 ? (1 - t / 0.2) * e.y * H.peak : 0) - (t > 0.6 ? (t - 0.6) / 0.4 * e.y * (H.chin - 1) : 0);
-    const ring = Math.sin(theta);
-    // the face opening: widest at the eyes, shut above the brow and below the jaw
-    const yRel = Math.cos(theta);
-    const span = (H.brow - H.jaw) / 2, mid = (H.brow + H.jaw) / 2;
-    const k = 1 - ((yRel - mid) / span) ** 2;
-    const open = k > 0 ? H.open * Math.sqrt(k) : 0;
+    const theta = (r / rings) * Math.PI * 0.82;
+    const open = openAt(theta);
     for (let i = 0; i <= around; i++) {
-      const phi = open + (i / around) * (2 * Math.PI - 2 * open);
-      positions.push(Math.sin(phi) * ring * e.x * H.out, y, Math.cos(phi) * ring * e.z * H.out);
+      const p = at(theta, open + (i / around) * (2 * Math.PI - 2 * open));
+      positions.push(p.x, p.y, p.z);
     }
   }
   for (let r = 0; r < rings; r++) {
@@ -104,6 +117,17 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   lining.flipFaces(true);
   lining.scaling.setAll(H.lining);
   lining.parent = body.headMesh;
+  // the rolled rim round the face opening: down one edge from the brow to the jaw and back up the other
+  const th0 = Math.acos(Math.min(1, H.brow)), th1 = Math.acos(Math.max(-1, H.jaw));
+  const edge: Vector3[] = [];
+  const steps = 10;
+  for (let s = 0; s <= steps; s++) { const th = th0 + (th1 - th0) * (s / steps); edge.push(at(th, openAt(th))); }
+  for (let s = steps - 1; s >= 1; s--) { const th = th0 + (th1 - th0) * (s / steps); edge.push(at(th, -openAt(th))); }
+  edge.push(edge[0].clone());
+  const rim = MeshBuilder.CreateTube("archerHoodRim", { path: edge, tessellation: 5, radius: e.x * H.rim, cap: Mesh.NO_CAP }, scene);
+  rim.convertToFlatShadedMesh();
+  rim.material = cloth;
+  rim.parent = body.headMesh;
 
   // The liripipe: a tapering tail from the point down the back
   const top = new Vector3(0, e.y * (H.out + H.peak * 0.8), -e.z * 0.25);
@@ -128,7 +152,17 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   cape.material = cloth;
   cape.parent = t.parent;
   cape.position.y = t.position.y + c.y * t.scaling.y - tall * 0.42;
-  return [shell, lining, tail, cape];
+  // its hem: a darker band round the capelet's foot, standing a little proud, so the capelet's lower edge reads over the chest
+  const hemTall = tall * H.cape.hemTall;
+  const hem = MeshBuilder.CreateCylinder("archerCapeletHem", {
+    height: hemTall, diameterTop: wide * (H.cape.wide - (H.cape.wide - H.cape.neck) * H.cape.hemTall) * 1.04, diameterBottom: wide * H.cape.wide * 1.05, tessellation: 8,
+  }, scene);
+  hem.scaling.z = cape.scaling.z;
+  hem.convertToFlatShadedMesh();
+  hem.material = getMaterialFactory().get("cloth", team.scale(H.cape.hemShade), { emissiveIntensity: H.glow });
+  hem.parent = t.parent;
+  hem.position.y = cape.position.y - tall / 2 + hemTall / 2;
+  return [shell, lining, rim, tail, cape, hem];
 }
 
 /*
