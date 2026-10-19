@@ -772,12 +772,6 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
   // stockings from the knee to the shoe, clear of the pantaloons
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(...kingPantaloon(scene, thigh, cloth, gold));
-  // the thigh's knee stub (merged into it) shows below the breeches' knee band when the knee bends: the thigh, hidden under the breeches, wears the
-  // stocking cloth too, so the bent knee reads stocking and not team (361)
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
-    thigh.material = beige;
-    unglow(scene, [thigh]);
-  }
   // [S] slim stockings (361): the shin itself (its knee stub merged in) is dressed in the stocking cloth, so no team shows at the knee or through the
   // shell's flats, and the shell is a slim .hose round it, narrower than the breeches' knee band; shin and shell out of the glow
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
