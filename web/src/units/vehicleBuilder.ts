@@ -2090,6 +2090,25 @@ function mammothTrunk(scene: Scene, neck: TransformNode, fur: Material, dark: Ma
   return path.slice(0, n).map((p, i) => ({ centre: Vector3.Center(p, path[i + 1]), radius: (radius(i) + radius(i + 1)) / 2 }));
 }
 /*
+ * [S] the mammoth's ears (367; tribal.mammoth.red.png, card "a pair of small flappy ears": a small rounded fur flap on each side of the head just behind and
+ * above the eye, about a third of the head high, its back edge standing out from the skull; critic 360/366: none visible: the old fans sat edge-on at the back
+ * of the head inside the hull). Spec in neck units (the head 1.4 high, centred .25 ahead):
+ *   - each ear a jittered faceted flap MAMMOTH_EAR.tall high, .long front to back, .thick thick, its middle at (.out, .y, .z) on the head's side;
+ *   - swung .flare rad about the vertical so its front edge tucks into the skull and its back edge stands out, drooped .droop rad, in the coat's fur.
+ */
+const MAMMOTH_EAR = { tall: 0.46, long: 0.4, thick: 0.08, out: 0.62, y: 0.14, z: 0.17, flare: 0.55, droop: 0.15, jitter: 0.12 };
+/** The mammoth's ears (spec at MAMMOTH_EAR). */
+function mammothEars(scene: Scene, neck: TransformNode, fur: Material, allMeshes: Mesh[]): void {
+  const E = MAMMOTH_EAR;
+  for (const side of [-1, 1]) {
+    const ear = MeshBuilder.CreateIcoSphere("ear", { radius: 1, subdivisions: 1, flat: true }, scene);
+    jitterVertices(ear, E.jitter, 71.3 + side, E.thick * 0.5, E.tall * 0.5, E.long * 0.5);
+    ear.rotation.set(0, -side * E.flare, side * E.droop);
+    ear.position.set(side * E.out, E.y, E.z);
+    ear.parent = neck; ear.material = fur; allMeshes.push(ear);
+  }
+}
+/*
  * [S] the mammoth's tusk paint (366; tribal.mammoth.blue.png: dull bone-tan tusks, not glowing ivory; from the tip back a team-coloured tip about a quarter of
  * the tusk, a short bare tan gap, a thin team stripe round the tusk, then tan to the root). The tusk's pieces are MAMMOTH_TUSK.tan, self-lit only .glow;
  * the last .tip pieces of each are the team tip; .gap pieces short of the tip a team ring .stripe of that piece long and .proud of its girth across
@@ -2439,7 +2458,9 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   }
 
   // ── Ears (parented to neck): faceted fur fans flaring off the skull, not team slabs ──
-  for (const side of [-1, 1]) {
+  // [S] the mammoth's ears (367; spec at MAMMOTH_EAR): a small rounded fur flap on each side of the head behind the eye; the elephant keeps the fans below
+  if (mammoth) mammothEars(scene, neck, fur, allMeshes);
+  else for (const side of [-1, 1]) {
     const ear = MeshBuilder.CreateCylinder("ear", { height: 0.1, diameter: 0.95, tessellation: 7 }, scene);
     ear.position.set(side * 0.74, 0.0, 0.0);
     ear.scaling.set(0.8, 1, 1.1);
