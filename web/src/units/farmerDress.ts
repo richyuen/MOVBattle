@@ -374,8 +374,9 @@ export function potionHead(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const HALFLING_MOP = {
   // (382 look: with no .spread or .droop the crown locks stood straight up, a hedgehog)
-  cap: 1.22, locks: 46, lowest: -0.45, faceY: 0.42, faceZ: 0.35, hang: 1.6, droop: 0.35, spread: 0.8, wild: 0.35, top: 0.4, side: 0.95, fringe: 0.38,
-  root: 0.42, flat: 0.38,
+  // (383 [P], critic 382 fallout: locks ~40% shorter, 50% wider, more droop, so they hug the head rather than spike out twice its width)
+  cap: 1.22, locks: 46, lowest: -0.45, faceY: 0.42, faceZ: 0.35, hang: 1.6, droop: 0.55, spread: 0.8, wild: 0.35, top: 0.24, side: 0.57, fringe: 0.38,
+  root: 0.63, flat: 0.38,
   color: new Color3(0.3, 0.14, 0.1), glow: 0.2,
 };
 
