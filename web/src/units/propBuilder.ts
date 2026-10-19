@@ -353,7 +353,7 @@ const DEER_RACK = {
   // read as pale as the skull). The worn beams are turned .wornBend from upright (the first two at or just under level), each .wornLong of its .beam
   // length, leaning .wornBack; no tine stands off the first .wornBare joints (upright tines there read as the beam curling up), the rest lean out
   // .wornLean; all in their own antler .wornTan, self-lit only .wornGlow.
-  wornBend: [1.62, 1.52, 1.12, 0.6], wornLong: 1.4, wornBack: 0.05, wornBare: 1, wornLean: 0.3, wornTan: new Color3(0.58, 0.42, 0.26), wornGlow: 0.08,
+  wornBend: [1.62, 1.52, 1.12, 0.6], wornLong: 1.4, wornBack: 0.05, wornBare: 1, wornLean: 0.3, wornTan: new Color3(0.56, 0.37, 0.2), wornGlow: 0.14,
 };
 /*
  * [S] the deer skull worn as a mask (361; tribal.bone_mage.red.png: the skull over the face, its long muzzle down to the chin, the wearer's eyes in its
@@ -425,7 +425,7 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
   // The rack on the mask and on the staff (the staff's grown by rackScale to the mask's own size: DEER_RACK.staff)
   const rack = chin !== undefined || rackScale !== 1;
   const worn = chin !== undefined && rackScale === 1;
-  const antler = worn ? mat(scene, DEER_RACK.wornTan, DEER_RACK.wornGlow) : rack ? mat(scene, DEER_RACK.tan, DEER_RACK.glow) : mat(scene, DEER_ANTLER);
+  const antler = worn ? mat(scene, DEER_RACK.wornTan, DEER_RACK.wornGlow, "cloth") : rack ? mat(scene, DEER_RACK.tan, DEER_RACK.glow) : mat(scene, DEER_ANTLER);
   const up = Vector3.Up();
   const stick = (from: Vector3, dir: Vector3, long: number, thick: number, tip = 0.6) => {
     const d = dir.normalize();
