@@ -71,6 +71,8 @@ interface ActiveProjectile {
   riseFrom?: number;
   riseTo?: number;
   drunk?: string;
+  /** Dodged (Painter Dodge): it no longer follows its man and comes down where he stood; it strikes him only if he is still there. */
+  loose?: boolean;
 }
 
 // A sword lifted out of the swordcaster's ring stands point up; it is turned onto the man over this long of its hover
@@ -230,6 +232,26 @@ export class ProjectileSystem {
   }
 
   get activeCount(): number { return this._active.length; }
+
+  /**
+   * Painter Dodge (simulationSystem PAINTER_DODGE): the first missile in flight at `unit` (past its delay, not yet dodged) that will reach him within
+   * `within` s, with its line of flight on the ground; null when none.
+   */
+  incomingAt(unit: RuntimeUnit, within: number): { dir: Vector3 } | null {
+    for (const p of this._active) {
+      if (p.target !== unit || p.loose || p.elapsed < 0 || p.drunk) continue;
+      if (p.flightTime - p.elapsed > within) continue;
+      const dir = new Vector3(p.targetPos.x - p.origin.x, 0, p.targetPos.z - p.origin.z);
+      if (dir.lengthSquared() < 1e-6) continue;
+      return { dir: dir.normalize() };
+    }
+    return null;
+  }
+
+  /** Every missile flying at `unit` stops following him: each comes down where he stood (Painter Dodge). */
+  loseTarget(unit: RuntimeUnit): void {
+    for (const p of this._active) if (p.target === unit) p.loose = true;
+  }
 
   private _getTeamProjectilePalette(team: number): { primary: Color3; bright: Color3; dark: Color3 } {
     const primary = (TEAM_COLORS[team] ?? new Color3(0.7, 0.7, 0.7)).clone();
@@ -468,8 +490,8 @@ export class ProjectileSystem {
 
       const t = Math.min(p.elapsed / p.flightTime, 1);
 
-      // Update target position if target is alive (track moving targets)
-      if (!p.target.isDead) {
+      // Update target position if target is alive (track moving targets), unless he dodged it
+      if (!p.target.isDead && !p.loose) {
         p.targetPos.copyFrom(p.target.position);
       }
 
@@ -547,8 +569,13 @@ export class ProjectileSystem {
 
       // Arrival
       if (t >= 1 || earlyHit) {
-        const struck = !p.target.isDead;
-        this._onImpact(p);
+        // a dodged missile strikes its man only if he is still where it comes down (a splash still catches whoever is in it)
+        const away = p.target.position.subtract(p.targetPos);
+        away.y = 0;
+        const missed = !earlyHit && p.loose === true && p.splashRadius <= 0 && away.length() > p.target.definition.collisionRadius + 0.3;
+        const struck = !p.target.isDead && !missed;
+        if (missed) this.visualEffects?.spawnImpactDust(p.targetPos);
+        else this._onImpact(p);
         if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
         p.rope?.dispose();
         p.mesh.getChildMeshes().find((m) => m.name === "streak")?.dispose(); // the streak is of the flight: a shaft left standing has none

@@ -277,6 +277,14 @@ const FENCER_RECOVER = { dist: 1.8, seconds: 0.16, kind: "backstep" };
  */
 const FENCER_DODGE = { dist: 2.2, back: 1.0, seconds: 0.22, cooldown: 2.5, kind: "dodge" };
 /*
+ * [S] 373 Painter Dodge (card Abilities "makes units instinctively sidestep whenever a projectile comes into their way"; Characteristics "They can dodge
+ * incoming projectiles"). When a missile flying at a painter is PAINTER_DODGE.warn s from reaching him (ProjectileSystem.incomingAt), the painter, unless
+ * he is already sliding or downed, sidesteps square to its line of flight: a ground slide .dist m in .seconds s on the fencer's slide (fast at first,
+ * easing), facing his nearest foe; his sides alternate; .cooldown s between dodges. The missile stops following him and comes down where he stood
+ * (ProjectileSystem.loseTarget). Logged .kind.
+ */
+const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
+/*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
  * in circles"; Appearance "It doesn't attack unless ... a unit gets particularly close"). The bard walks at his man until he is .lure m past his reach, then
  * turns and runs, playing: each step heads .turn rad off straight away from the man, so he circles round him and out, alternate bards circling opposite
@@ -553,6 +561,7 @@ export class SimulationSystem {
 
     this._assignShieldSlots();
     this._resolveLivingCollisions();
+    this._painterDodges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
@@ -2267,6 +2276,35 @@ export class SimulationSystem {
     // the blow was struck at where he stood: it comes down on air
     this._pendingBlows = this._pendingBlows.filter((b) => !(b.attacker === foe && b.target === unit));
     this._logAbility(unit, D.kind, now, foe.position);
+  }
+
+  /** Painter Dodge (PAINTER_DODGE): each ready painter with a missile about to reach him sidesteps off its line, and it comes down on air. */
+  private _painterDodges(now: number): void {
+    const D = PAINTER_DODGE;
+    const missiles = this.projectileSystem;
+    if (!missiles) return;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "renaissance.painter" || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit)) continue;
+      if (now < (this._dodgeReadyAt.get(unit) ?? 0)) continue;
+      const incoming = missiles.incomingAt(unit, D.warn);
+      if (!incoming) continue;
+      let foe: RuntimeUnit | null = null, best = Infinity;
+      for (const u of this._units) {
+        if (u.isDead || u.team === unit.team) continue;
+        const d = Vector3.DistanceSquared(u.position, unit.position);
+        if (d < best) { best = d; foe = u; }
+      }
+      if (!foe) continue;
+      const side = this._dodgeSide.get(unit) ?? 1;
+      this._dodgeSide.set(unit, -side);
+      const dir = new Vector3(-incoming.dir.z * side, 0, incoming.dir.x * side);
+      unit.stopMoving();
+      this._clearPathState(unit);
+      this._recovers.set(unit, { dir, from: now, foe, dist: D.dist, seconds: D.seconds });
+      this._dodgeReadyAt.set(unit, now + D.cooldown);
+      missiles.loseTarget(unit);
+      this._logAbility(unit, D.kind, now, unit.position);
+    }
   }
 
   /** Moves each sliding fencer (recover or dodge) along his slide: speed falling linearly from twice the mean to zero over the slide's seconds. */
