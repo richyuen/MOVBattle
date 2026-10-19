@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { heldBalloonArrow, painterJabot } from "./renaissanceDress";
+import { heldBalloonArrow, musketeerHose, painterJabot } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1243,12 +1243,11 @@ function dressFencer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
  * the shin; tan shoes. Cream is self-lit (MUSKETEER_GLOW) so it stays cream and does not grey out. Sizes are shares of the chest (W, H, D), of each
  * limb's girth and length, and of the head's height.
  *   vest MUSKETEER_DRESS.vest of the chest round it; wings .wing of the arm's girth; sleeve puff .puff of the arm's girth; collar .collar heads across;
- *   breeches .breech of the thigh's girth at the top swelling to .knee at the knee; stocking bands .bands.
+ *   breeches .breech of the thigh's girth at the top swelling to .knee at the knee. The hose below is renaissanceDress MUSKETEER_HOSE (371).
  */
-const MUSKETEER_DRESS = { vest: 1.1, wing: 1.5, puff: 1.4, collar: 1.25, breech: 1.3, knee: 1.65, bands: 2 };
+const MUSKETEER_DRESS = { vest: 1.1, wing: 1.5, puff: 1.4, collar: 1.25, breech: 1.3, knee: 1.65 };
 const MUSKETEER_CREAM = new Color3(0.8, 0.6, 0.36);
 const MUSKETEER_GLOW = 0.15;
-const MUSKETEER_SHOE = new Color3(0.72, 0.42, 0.22);
 /*
  * [S] vest hem (337; renaissance.musketeer.red.png: the team vest stops at the waist in a short skirt flaring out over the hips, a dark belt line at
  * its top, and the breeches below it a deeper, duller team). Shares of the chest (W, D, H):
@@ -1337,20 +1336,8 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
     const band = put(MeshBuilder.CreateCylinder("musketeerKneeBand", { height: long * 0.1, diameter: girth * M.knee * 0.86, tessellation: 8 }, scene), deep, leg);
     band.position.y = -long * 0.5 + long * 0.04;
   }
-  // stockings banded dark down the shin
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
-    shin.material = team;
-    const e = shin.getBoundingInfo().boundingBox.extendSize;
-    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
-    for (let i = 0; i < M.bands; i++) {
-      const ring = put(MeshBuilder.CreateCylinder("musketeerStockingBand", { height: long * 0.1, diameter: girth * 1.18, tessellation: 7 }, scene), deep, shin);
-      ring.position.y = long * 0.5 - long * (0.3 + 0.28 * i);
-    }
-  }
-  const shoe = mf.getCloth(MUSKETEER_SHOE);
-  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
-    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
-  }
+  // the hose below the knee band: garter and bow, tan sock tops, orange shoes (371, renaissanceDress musketeerHose)
+  added.push(...musketeerHose(scene, body, teamColor));
   return added;
 }
 

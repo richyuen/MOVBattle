@@ -116,3 +116,61 @@ export function painterJabot(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return added;
 }
+
+/*
+ * [S] the musketeer's hose (371; renaissance.musketeer.red.png: under the breeches' knee band the shin is a team stocking, a dark garter wrapped just
+ * below the knee and tied in a small bow on the outer side; at the ankle a pale tan sock top turned down over the shoe, flaring a little; low orange
+ * shoes. Not the 335 pair of dark rings down the shin, which read as dark boots). Shares of the shin's girth and length:
+ *   garter MUSKETEER_HOSE.garter of the shin long, .garterAt of it down from the knee, .garterOut of the girth round; bow loops .loop of the girth long,
+ *   splayed .splay rad, two tails .tail of the shin long; sock top .sock of the shin long, from .sockTop to .sockFoot of the girth round at its foot;
+ *   shoe MUSKETEER_HOSE.shoe self-lit .shoeGlow, sock .tan self-lit .tanGlow.
+ */
+const MUSKETEER_HOSE = {
+  garter: 0.09, garterAt: 0.1, garterOut: 1.16, loop: 0.55, splay: 0.6, tail: 0.18,
+  sock: 0.2, sockTop: 1.04, sockFoot: 1.32, tan: new Color3(0.86, 0.72, 0.5), tanGlow: 0.24, shoe: new Color3(0.86, 0.42, 0.18), shoeGlow: 0.16,
+};
+
+/** The musketeer's stockings below the breeches: garter and bow under the knee, turned-down tan sock tops, orange shoes (spec at MUSKETEER_HOSE). */
+export function musketeerHose(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = MUSKETEER_HOSE;
+  const mf = getMaterialFactory();
+  const dark = mf.getCloth(teamColor.scale(0.35));
+  const tan = mf.get("cloth", S.tan, { emissiveIntensity: S.tanGlow });
+  const added: Mesh[] = [];
+  const put = (m: Mesh, mat: ReturnType<typeof mf.getCloth>, parent: TransformNode): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = parent;
+    added.push(m);
+    return m;
+  };
+  for (const [shin, out] of [[body.leftLowerLeg, -1], [body.rightLowerLeg, 1]] as const) {
+    shin.material = mf.getCloth(teamColor.scale(0.82));
+    const e = shin.getBoundingInfo().boundingBox.extendSize;
+    const girth = Math.max(e.x, e.z) * 2, long = e.y * 2;
+    // the garter under the knee, and its bow on the outer side: two flat loops splayed up and down from a knot, two short tails hanging
+    const gy = long * 0.5 - long * (S.garterAt + S.garter * 0.5);
+    put(MeshBuilder.CreateCylinder("musketeerGarter", { height: long * S.garter, diameter: girth * S.garterOut, tessellation: 8 }, scene), dark, shin).position.y = gy;
+    const knot = put(MeshBuilder.CreateBox("musketeerGarterKnot", { width: girth * 0.16, height: long * S.garter * 1.1, depth: girth * 0.2 }, scene), dark, shin);
+    knot.position.set(out * girth * S.garterOut * 0.52, gy, 0);
+    for (const k of [-1, 1]) {
+      const loop = put(MeshBuilder.CreateCylinder("musketeerGarterLoop", { height: girth * S.loop, diameterTop: girth * 0.26, diameterBottom: girth * 0.08, tessellation: 4 }, scene), dark, shin);
+      loop.scaling.x = 0.35;
+      loop.rotation.z = out * (Math.PI / 2 - k * S.splay);
+      loop.position.set(out * (girth * S.garterOut * 0.52 + girth * S.loop * 0.4), gy + k * girth * S.loop * 0.25, 0);
+    }
+    for (const k of [-1, 1]) {
+      const tail = put(MeshBuilder.CreateBox("musketeerGarterTail", { width: girth * 0.05, height: long * S.tail, depth: girth * 0.13 }, scene), dark, shin);
+      tail.rotation.z = out * 0.18 * k;
+      tail.position.set(out * girth * S.garterOut * 0.56, gy - long * S.tail * 0.5, k * girth * 0.08);
+    }
+    // the sock top turned down over the ankle, flared at its foot
+    const sock = put(MeshBuilder.CreateCylinder("musketeerSockTop", { height: long * S.sock, diameterTop: girth * S.sockTop, diameterBottom: girth * S.sockFoot, tessellation: 8 }, scene), tan, shin);
+    sock.position.y = -long * 0.5 + long * S.sock * 0.5;
+  }
+  const shoe = mf.get("cloth", S.shoe, { emissiveIntensity: S.shoeGlow });
+  for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (/_[lr]FootM$/.test(mesh.name)) mesh.material = shoe;
+  }
+  return added;
+}
