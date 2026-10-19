@@ -453,6 +453,18 @@ export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): M
  * team cloth x .shade, self-lit .glow, double-sided.
  */
 const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, sides: 9, collar: 0.16, neck: 0.42, collarOut: 1.12, roll: 0.06, shade: 0.45, glow: 0.06 };
+/*
+ * [S] 387 the cape's folded collar (ancient.sarissa.red.png, .png: the cape's top gathered in a thick fold over his left shoulder and wrapped round onto
+ * his chest, pinned there, the cape hanging down his back from it; critic 386: the cape hangs straight behind). In trunk heights and the shoulder span,
+ * on the torso, the cape's cloth: a lumpy bulk .bulk of the trunk thick lying over the left shoulder top front to back (.bulkLong of the trunk's
+ * depth, .bulkWide wide, at .bulkAt of the shoulder's x, .bulkUp over it, tipped .bulkTilt toward the neck); .folds thick drape folds off the
+ * shoulder's front (.drapeFrom of its x) down across the upper chest past the breastbone, each .drapeLong of the span long, .drapeTall tall, .drapeDeep
+ * proud, tilted .drapeTilt (high at the shoulder), from .drapeDown under the shoulder; a gold brooch .brooch across pinning it at the shoulder.
+ */
+const SARISSA_FOLD = {
+  bulk: 0.2, bulkLong: 1.25, bulkWide: 1.5, bulkAt: 0.9, bulkUp: 0.05, bulkTilt: 0.25,
+  folds: 2, drapeFrom: 0.85, drapeLong: 0.72, drapeTall: 0.13, drapeDeep: 0.09, drapeTilt: 0.42, drapeDown: 0.08, brooch: 0.09, gold: new Color3(0.82, 0.62, 0.25),
+};
 
 /** The sarissa's cape and folded collar (spec at SARISSA_CAPE), on the torso. */
 export function dressSarissa(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -481,6 +493,33 @@ export function dressSarissa(scene: Scene, body: ArticulatedBody, teamColor: Col
   const roll = put(MeshBuilder.CreateTorus("sarissaCollarRoll", { diameter: span * C.collarOut, thickness: chest.trunk * C.roll, tessellation: 12 }, scene));
   roll.scaling.z = collar.scaling.z;
   roll.position.set(chest.midX, neckY - collarTall * 0.95, midZ);
+  // [S] 387 the folded collar over his left shoulder onto the chest (spec at SARISSA_FOLD)
+  const F = SARISSA_FOLD;
+  const lx = body.leftShoulder.position.x;
+  const side = Math.sign(lx) || -1;
+  const sy = body.leftShoulder.position.y;
+  // the bulk lying over the shoulder top, front to back
+  const bulk = put(MeshBuilder.CreateCylinder("sarissaFoldBulk", { height: halfZ * 2 * F.bulkLong, diameter: chest.trunk * F.bulk, tessellation: 7 }, scene));
+  bulk.rotation.set(Math.PI / 2, 0, side * F.bulkTilt);
+  bulk.scaling.x = F.bulkWide;
+  bulk.position.set(lx * F.bulkAt, sy + chest.trunk * F.bulkUp, midZ + halfZ * 0.1);
+  jitterVertices(bulk, 0.12, 33.1);
+  // the drape: a thick sash off the shoulder's front down across the upper chest past the breastbone, two folds stacked
+  for (let k = 0; k < F.folds; k++) {
+    const w = span * F.drapeLong * (1 - 0.18 * k);
+    const t = chest.trunk * F.drapeTall;
+    const fold = put(MeshBuilder.CreateBox("sarissaFoldDrape", { width: w, height: t, depth: chest.trunk * F.drapeDeep }, scene));
+    jitterVertices(fold, 0.08, 41.7 + k);
+    fold.rotation.z = -side * F.drapeTilt;
+    fold.position.set(lx * F.drapeFrom - side * w * 0.42, sy - chest.trunk * (F.drapeDown + k * F.drapeTall * 0.8), chest.maxZ + chest.trunk * (F.drapeDeep * 0.4 + 0.012 * k));
+  }
+  // the brooch pinning it on the shoulder's front
+  const brooch = MeshBuilder.CreateCylinder("sarissaFoldBrooch", { height: chest.trunk * 0.03, diameter: chest.trunk * F.brooch, tessellation: 8 }, scene);
+  brooch.material = getMaterialFactory().get("cloth", F.gold, { emissive: F.gold.scale(0.2) });
+  brooch.parent = body.torso;
+  brooch.rotation.x = Math.PI / 2;
+  brooch.position.set(lx * F.drapeFrom, sy - chest.trunk * (F.drapeDown - F.drapeTall * 0.3), chest.maxZ + chest.trunk * (F.drapeDeep + 0.02));
+  out.push(brooch);
   return out;
 }
 
