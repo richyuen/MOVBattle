@@ -93,6 +93,11 @@ const BANDANA_SWEEP = 0.5;
  * at the eyes' height (SACK.eyeDrop under the eye top), each sewn on with a dark thread cross; a seam up the face; a rope round the neck SACK.neck across.
  */
 const SACK = { wide: 1.22, top: 1.12, tall: 1.12, crown: 0.06, dome: 0.12, button: 0.24, eyes: 0.22, eyeDrop: 0.1, neck: 1.0, glow: 0.2 };
+// [S] the sack as a rounded hood (377, farmer.scarecrow.png): one 10-sided lathe, [radius in head widths, height in head heights above the crown joint],
+// gathered narrow at the neck, full at the cheeks, tapering over the temples into a domed top a quarter head above the crown; lumpy like cloth;
+// a narrow tan collar flaring off the gather onto the shoulders, tied by the rope
+const SACK_HOOD = { profile: [[0.34, -1.1], [0.56, -0.98], [0.64, -0.72], [0.63, -0.42], [0.58, -0.12], [0.48, 0.08], [0.34, 0.2], [0.16, 0.26], [0, 0.27]] as [number, number][], sides: 10, lumps: 0.025, collarTop: 0.72, collarFoot: 1.05, collarTall: 0.14 };
+const SACK_COLLAR = new Color3(0.78, 0.66, 0.46);
 const SACK_BROWN = new Color3(0.56, 0.36, 0.22);
 const FLOPPY = { brim: 2.25, droop: 0.28, lift: 0.12, tip: 0.12, crown: 1.12, crownTall: 0.42, apart: 0.68, ahead: 0.08, root: 0.05, braid: 1.95, plaits: 8, thick: 0.42, fall: 0.3, flare: 0.08, core: 0.62, overlap: 1.45, bandTall: 0.14, glow: 0.2 };
 const FLOPPY_BROWN = new Color3(0.5, 0.3, 0.18);
@@ -823,44 +828,64 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return wrap;
   }
   if (type === "sack_mask") {
-    // [S] the scarecrow's sack (340; spec at SACK): a brown cloth bag over the whole head, team buttons for eyes, a rope at the neck
+    // [S] the scarecrow's sack (340; 377 spec at SACK_HOOD): a rounded brown cloth hood over the whole head, a seam up the face, team buttons for eyes,
+    // gathered at the neck by a rope over a narrow tan collar
     const cloth = mat(scene, SACK_BROWN, SACK.glow);
-    const tall = u(SACK.tall * H);
-    const sack = MeshBuilder.CreateCylinder("sackMask", { height: tall, diameterTop: u(SACK.top * W), diameterBottom: u(SACK.wide * W), tessellation: 8 }, scene);
-    sack.position.y = u(SACK.crown * H) - tall * 0.5;
-    sack.material = cloth;
+    const K = SACK_HOOD;
+    const shape = K.profile.map(([r, y]) => new Vector3(u(r * W), u(y * H), 0));
+    const sack = MeshBuilder.CreateLathe("sackMask", { shape, tessellation: K.sides, closed: true, sideOrientation: Mesh.DOUBLESIDE }, scene);
     sack.convertToFlatShadedMesh();
-    const dome = MeshBuilder.CreateSphere("sackTop", { diameterX: u(SACK.top * W), diameterY: u(SACK.dome * 2 * H), diameterZ: u(SACK.top * W), segments: 4, slice: 0.5 }, scene);
-    dome.position.y = tall * 0.5;
-    dome.material = cloth;
-    dome.convertToFlatShadedMesh();
-    dome.parent = sack;
+    jitterVertices(sack, K.lumps, 77.7);
+    sack.material = cloth;
+    // the face: the lathe's facet straight ahead lies at the apothem of the cheek ring
+    const ahead = Math.cos(Math.PI / K.sides);
+    const rAt = (y: number) => {
+      for (let i = 1; i < K.profile.length; i++) {
+        const [r0, y0] = K.profile[i - 1], [r1, y1] = K.profile[i];
+        if (y >= y0 && y <= y1) return r0 + (r1 - r0) * ((y - y0) / (y1 - y0 || 1));
+      }
+      return K.profile[0][0];
+    };
     // The buttons: team discs on the face at the eyes' height, each with a dark thread cross
-    const eyeY = u(-eyeTop - SACK.eyeDrop * W) - sack.position.y;
+    const eyeY = u(-eyeTop - SACK.eyeDrop * W);
+    const eyeYH = eyeY / u(H);
     const button = mat(scene, teamColor ?? accent, 0.2);
     const thread = mat(scene, new Color3(0.12, 0.08, 0.06), 0.05);
-    const faceZ = u(SACK.wide * W * 0.5) * 0.97;
+    const faceZ = u(rAt(eyeYH) * W) * ahead + u(0.015 * W);
     for (const side of [-1, 1]) {
       const b = MeshBuilder.CreateCylinder("sackButton", { height: u(0.04 * W), diameter: u(SACK.button * W), tessellation: 10 }, scene);
       b.rotation.x = Math.PI / 2;
-      b.position.set(side * u(SACK.eyes * W), eyeY, faceZ);
+      b.position.set(side * u(SACK.eyes * W), eyeY, faceZ - u(0.02 * W));
       b.material = button;
       b.parent = sack;
       for (const turn of [Math.PI / 4, -Math.PI / 4]) {
         const t = MeshBuilder.CreateBox("sackButtonThread", { width: u(SACK.button * W * 0.75), height: u(0.025 * W), depth: u(0.02 * W) }, scene);
         t.rotation.z = turn;
-        t.position.set(side * u(SACK.eyes * W), eyeY, faceZ + u(0.025 * W));
+        t.position.set(side * u(SACK.eyes * W), eyeY, faceZ + u(0.005 * W));
         t.material = thread;
         t.parent = sack;
       }
     }
-    // The seam up the middle of the face, and the rope gathering the sack at the neck
-    const seam = MeshBuilder.CreateBox("sackSeam", { width: u(0.03 * W), height: tall * 0.85, depth: u(0.02 * W) }, scene);
-    seam.position.set(0, 0, faceZ + u(0.01 * W));
-    seam.material = mat(scene, SACK_BROWN.scale(0.6), SACK.glow);
-    seam.parent = sack;
-    const rope = MeshBuilder.CreateTorus("sackRope", { diameter: u(SACK.neck * W), thickness: u(0.07 * W), tessellation: 10 }, scene);
-    rope.position.y = -tall * 0.5 + u(0.04 * H);
+    // The seam: dark stitched strips up the face and over the dome, each laid on its facet of the profile
+    const seamMat = mat(scene, SACK_BROWN.scale(0.6), SACK.glow);
+    for (let i = 2; i < K.profile.length - 1; i++) {
+      const [r0, y0] = K.profile[i - 1], [r1, y1] = K.profile[i];
+      const z0 = u(r0 * W) * ahead, z1 = u(r1 * W) * ahead, h0 = u(y0 * H), h1 = u(y1 * H);
+      const seg = MeshBuilder.CreateBox("sackSeam", { width: u(0.035 * W), height: Math.hypot(z1 - z0, h1 - h0), depth: u(0.02 * W) }, scene);
+      seg.position.set(0, (h0 + h1) / 2, (z0 + z1) / 2 + u(0.012 * W));
+      seg.rotation.x = Math.atan2(z1 - z0, h1 - h0);
+      seg.material = seamMat;
+      seg.parent = sack;
+    }
+    // The collar: a narrow tan cloth flaring off the gather onto the shoulders, and the rope tying the sack over it
+    const neckY = u(K.profile[0][1] * H);
+    const collar = MeshBuilder.CreateCylinder("sackCollar", { height: u(K.collarTall * H), diameterTop: u(K.collarTop * W), diameterBottom: u(K.collarFoot * W), tessellation: K.sides }, scene);
+    collar.position.y = neckY - u(K.collarTall * H * 0.4);
+    collar.material = mat(scene, SACK_COLLAR, SACK.glow, "cloth");
+    collar.convertToFlatShadedMesh();
+    collar.parent = sack;
+    const rope = MeshBuilder.CreateTorus("sackRope", { diameter: u((K.profile[0][0] * 2 + 0.06) * W), thickness: u(0.07 * W), tessellation: 10 }, scene);
+    rope.position.y = neckY + u(0.03 * H);
     rope.material = mat(scene, new Color3(0.62, 0.48, 0.3), SACK.glow);
     rope.parent = sack;
     return sack;
