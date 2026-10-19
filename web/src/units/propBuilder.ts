@@ -41,7 +41,10 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  * So a soft hat is built in its wearer's head units, not the hat scale (see buildFittedHat):
  *   Seat: its lowest edge stands HAT_EYE_CLEAR of the head's height above the top of the eye (the eyes are 0.56 of the head up, EYE_OF_FACE x EYE_RIM wide),
  *   wherever that falls for this head, so it is low on the brow and the eyes stay clear.
- *   Beret: a soft disc BERET_HEADS heads across, BERET_THICK of the head high, cocked BERET_TILT to one side, its rim on the seat.
+ *   Beret (370; renaissance.painter.red.png, .jpg: a soft puffy team beret, a snug band round the brow and a fat faceted puff over it, slid to one side and
+ *   pulled down over the brow there; critic 368: the old cut was a flat wide disc with a dark notch on top): a band BERET_PUFF.band heads across and .bandTall
+ *   of the head high on the seat (.bandShade of the colour); on it a puff .puff heads across, .deep of that front to back, .puffTall of the head high, its
+ *   middle .sit of its height over the band's top, slid .slide heads to one side and .ahead forward, tipped .tilt down on that side and .dip forward.
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
 const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
@@ -317,9 +320,7 @@ const BEAST_SKULL = {
   beak: 0.8, beakRoot: 0.62, beakTip: 0.2, beakFlat: 0.55, beakDip: 0.04, gape: 0.18, eye: 0.32, eyeTurn: 0.28, eyeUp: 0.42, eyeOut: 0.48, eyeTilt: 0.35,
   tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
 };
-const BERET_HEADS = 2.0;
-const BERET_THICK = 0.32;
-const BERET_TILT = 0.22;
+const BERET_PUFF = { band: 1.04, bandTall: 0.1, bandShade: 0.75, puff: 1.45, deep: 0.95, puffTall: 0.5, sit: 0.35, slide: 0.16, ahead: 0.1, tilt: 0.32, dip: 0.15, glow: 0.12 };
 /*
  * A minstrel's feathered hat (264; units/medieval.bard: a soft straw-tan hat, its brim about two heads across, a low puffed crown, the whole cocked over to
  * one side and dipped at the front; a long feather in the team colour, nearly twice the head's height, standing up out of the band at the side and back,
@@ -1616,12 +1617,19 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return crown;
   }
   if (type === "beret") {
-    const beret = MeshBuilder.CreateSphere("beret", { diameter: 1, segments: 10 }, scene);
-    beret.scaling.set(u(BERET_HEADS * W), u(BERET_THICK * H), u(BERET_HEADS * W * 0.95));
-    beret.position.y = u(seat + BERET_THICK * H * 0.5);
-    beret.rotation.z = BERET_TILT;
-    beret.material = mat(scene, accent);
-    return beret;
+    // [S] the puffed beret (370, spec at BERET_PUFF): a headband on the seat, a faceted puff over it slid to one side and pulled down there
+    const P = BERET_PUFF;
+    const band = MeshBuilder.CreateCylinder("beret", { height: u(P.bandTall * H), diameter: u(P.band * W), tessellation: 8 }, scene);
+    band.position.y = u(seat + P.bandTall * H * 0.5);
+    band.material = mat(scene, accent.scale(P.bandShade), P.glow, "cloth");
+    band.convertToFlatShadedMesh();
+    const puff = MeshBuilder.CreateSphere("beretPuff", { diameterX: u(P.puff * W), diameterY: u(P.puffTall * H), diameterZ: u(P.puff * W * P.deep), segments: 3 }, scene);
+    puff.position.set(u(P.slide * W), u(P.bandTall * H * 0.5 + P.puffTall * H * P.sit), u(P.ahead * W));
+    puff.rotation.set(P.dip, 0.3, -P.tilt);
+    puff.material = mat(scene, accent, P.glow, "cloth");
+    puff.convertToFlatShadedMesh();
+    puff.parent = band;
+    return band;
   }
   const brim = MeshBuilder.CreateCylinder("conehatBrim", { height: 1, diameter: 1, tessellation: 18 }, scene);
   brim.scaling.set(u(CONE_BRIM_HEADS * W), u(0.05 * H), u(CONE_BRIM_HEADS * W));
