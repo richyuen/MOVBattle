@@ -115,9 +115,18 @@ function chestBox(body: ArticulatedBody): { W: number; H: number; D: number; top
  *   and .buckleTall of the belt tall with a dark middle. Coat team x .coat, lapels x .lapelShade, vest .vestLight toward white.
  */
 const HALFLING_COAT = {
-  neck: 0.02, drop: 0.32, wall: 0.08, out: 0.06, front: 0.3, ahead: 0.08, gap: 0.22, flare: 0.08, lapel: 0.4, lapelWide: 0.2,
+  neck: 0.02, drop: 0.1, wall: 0.08, out: 0.06, front: 0.3, ahead: 0.08, gap: 0.22, flare: 0.08, lapel: 0.4, lapelWide: 0.2,
   vest: 0.46, vestAhead: 0.03, vee: 0.4, veeDeep: 0.46, collar: 0.16, belt: 0.12, buckle: 0.24, buckleTall: 1.6, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
 };
+/*
+ * [S] the jacket fitted on the shoulders with sleeves (380; farmer.halfling.red.png, .blue.png: the team jacket sits on his shoulders, sleeves down to
+ * the wrist, open to just past the belt over dark knee shorts; critic 379: a rigid open-topped box off the trunk, its rim showing at the neck, bare arms
+ * outside it, the hem near the knee). Replaces HALFLING_COAT's back panel and side walls: one shell round the back and sides, .arc of a full turn,
+ * .sides facets, as wide as the walls stood at the shoulders and .flare of that at the hem; a yoke .yoke of H tall over the shoulders closing its
+ * top; on each arm a sleeve tube .puff of the arm's girth, the forearm's to .cuffAt of its length, flaring .cuff at the cuff. Hem HALFLING_COAT.drop
+ * .32 -> .1 of H below the trunk's foot.
+ */
+const HALFLING_SLEEVED = { arc: 0.72, sides: 10, flare: 1.12, yoke: 0.14, puff: 1.45, cuffAt: 0.86, cuff: 1.2 };
 const HALFLING_SHIRT_WHITE = new Color3(0.93, 0.89, 0.8);
 const HALFLING_BELT_DARK = new Color3(0.22, 0.12, 0.09);
 const HALFLING_BUCKLE_GREY = new Color3(0.6, 0.6, 0.62);
@@ -141,12 +150,31 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   };
   const coatTop = top - H * J.neck, hem = foot - H * J.drop, tall = coatTop - hem, mid = (coatTop + hem) / 2;
   const wall = D * J.wall;
-  // back and sides: the coat hangs loose off the trunk
-  const back = put(MeshBuilder.CreateBox("halflingCoatBack", { width: W * (1 + 2 * J.out) + wall * 2, height: tall, depth: wall }, scene), coat);
-  back.position.set(0, mid, z - D * (0.5 + J.out) - wall * 0.5);
-  for (const side of [-1, 1]) {
-    const sideWall = put(MeshBuilder.CreateBox("halflingCoatSide", { width: wall, height: tall, depth: D * (1 + J.out + J.ahead) + wall }, scene), coat);
-    sideWall.position.set(side * (W * (0.5 + J.out) + wall * 0.5), mid, z + D * (J.ahead - J.out) * 0.5);
+  // [S] back and sides hung from the shoulders (380, spec at HALFLING_SLEEVED): a shell round the back and sides, open at the front, narrow at the
+  // shoulders and loose at the hem, a yoke over the shoulders closing its top, and a sleeve down each arm to the wrist
+  const K = HALFLING_SLEEVED;
+  const shell = put(MeshBuilder.CreateCylinder("halflingCoatShell", {
+    height: tall, diameterTop: 1, diameterBottom: K.flare, tessellation: K.sides, arc: K.arc, enclose: false, sideOrientation: Mesh.DOUBLESIDE,
+  }, scene), coat);
+  // the arc's gap turned to the front (the arc starts at +x and runs toward -z)
+  shell.rotation.y = -Math.PI / 2 - Math.PI * (1 - K.arc);
+  shell.scaling.set(W * (1 + 2 * J.out), 1, D * (1 + J.out + J.ahead));
+  shell.position.set(0, mid, z);
+  const yoke = put(MeshBuilder.CreateCylinder("halflingCoatYoke", { height: H * K.yoke, diameterTop: 0.7, diameterBottom: 1, tessellation: K.sides }, scene), coat);
+  yoke.scaling.set(W * (1 + 2 * J.out) * 1.04, 1, D * (1 + J.out + J.ahead) * 1.04);
+  yoke.position.set(0, coatTop - H * K.yoke * 0.5 + H * 0.02, z);
+  for (const [shoulder, upper, elbow, lower, hand] of [
+    [body.leftShoulder, body.leftUpperArm, body.leftElbow, body.leftLowerArm, body.leftHand],
+    [body.rightShoulder, body.rightUpperArm, body.rightElbow, body.rightLowerArm, body.rightHand],
+  ] as [TransformNode, Mesh, TransformNode, Mesh, TransformNode][]) {
+    const armR = (m: Mesh) => { const e = m.getBoundingInfo().boundingBox.extendSize; return Math.max(e.x * m.scaling.x, e.z * m.scaling.z); };
+    const upLong = elbow.position.length(), lowLong = hand.position.length() * K.cuffAt;
+    const up = MeshBuilder.CreateCylinder("halflingSleeve", { height: upLong * 1.08, diameterTop: armR(upper) * 2 * K.puff, diameterBottom: armR(upper) * 2 * K.puff * 0.95, tessellation: 7 }, scene);
+    put(up, coat).parent = shoulder;
+    up.position.set(0, -upLong * 0.5 + upLong * 0.04, 0);
+    const low = MeshBuilder.CreateCylinder("halflingSleeve", { height: lowLong, diameterTop: armR(lower) * 2 * K.puff, diameterBottom: armR(lower) * 2 * K.puff * K.cuff, tessellation: 7 }, scene);
+    put(low, coat).parent = elbow;
+    low.position.set(0, -lowLong * 0.5, 0);
   }
   // the two fronts, open down the middle, each hanging from its shoulder and swung a little out at the hem
   const face = z + D * (0.5 + J.ahead);
