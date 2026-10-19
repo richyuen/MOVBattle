@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 356   Batch: medieval (4/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
+Iteration: 357   Batch: medieval (4/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,16 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-356 (BASE 8544fbb; no evidence commit: the archer faces the idle camera, his old cap hid his face): [S] knight b stray chest hilt cc7912d approved | [S] archer a hood e32ac81+ee64656 approved | [S] healer a robe trim 7462491 approved | [S] bard a peasant vest ffdb80c+df7b94b approved | [S] squire a tabard 3122a04+78cf8cc approved | [S] king a beard 63043f4 approved | [S] catapult a trestle frame 4375f6d approved
+357 (BASE d8d48cb): [S] catapult a wheels 4c16604 approved | [S] knight a cuirass 4604755 approved | [S] king a cape 377de2a+808aa53 approved | [S] squire a lower legs 74fa206 approved | [S] archer a arms 825dee2 approved | [S] healer a collar 3ab7173 approved | [S] bard a tunic cfd130d approved | [P] king a beard 8b73d7d approved
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] medieval.knight (cc7912d) VERDICT: APPROVE CRITERION: medieval.knight.b PASS (previous: FAIL) BLOCKERS: struck: 2 (list empty -> b PASS)
-- GAP: [S] medieval.archer (e32ac81 + ee64656) VERDICT: APPROVE CRITERION: medieval.archer.a FAIL (previous: FAIL) BLOCKERS: 1 narrowed; 2, 3 unchanged
-- GAP: [S] medieval.healer (7462491) VERDICT: APPROVE CRITERION: medieval.healer.a FAIL (previous: FAIL) BLOCKERS: 2 narrowed (collar only)
-- GAP: [S] medieval.bard (ffdb80c + df7b94b) VERDICT: APPROVE CRITERION: medieval.bard.a FAIL (previous: FAIL) BLOCKERS: 1 narrowed; 2 unchanged
-- GAP: [S] medieval.squire (3122a04 + 78cf8cc) VERDICT: APPROVE CRITERION: medieval.squire.a FAIL (previous: FAIL) BLOCKERS: 2, 4 unchanged; struck: 3
-- GAP: [S] medieval.king (63043f4) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL) BLOCKERS: 2 narrowed; 3, 4 unchanged
-- GAP: [S] medieval.catapult (4375f6d) VERDICT: APPROVE CRITERION: medieval.catapult.a FAIL (previous: FAIL) BLOCKERS: 2, 3 unchanged; struck: 1
+- GAP: [S] medieval.catapult (4c16604) VERDICT: APPROVE CRITERION: medieval.catapult.a FAIL (previous: FAIL) BLOCKERS: 2 unchanged; struck: 3
+- GAP: [S] medieval.knight (4604755) VERDICT: APPROVE CRITERION: medieval.knight.a FAIL (previous: FAIL) BLOCKERS: 2, 3 unchanged; struck: 1
+- GAP: [S] medieval.king (377de2a + 808aa53) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL) BLOCKERS: 2 narrowed (gap 8); 3 unchanged; struck: 4
+- GAP: [S] medieval.squire (74fa206) VERDICT: APPROVE CRITERION: medieval.squire.a FAIL (previous: FAIL) BLOCKERS: 2 unchanged; struck: 4
+- GAP: [S] medieval.archer (825dee2) VERDICT: APPROVE CRITERION: medieval.archer.a FAIL (previous: FAIL) BLOCKERS: 1, 3 unchanged; 2 narrowed
+- GAP: [S] medieval.healer (3ab7173) VERDICT: APPROVE CRITERION: medieval.healer.a FAIL (previous: FAIL) BLOCKERS: 2 narrowed
+- GAP: [S] medieval.bard (cfd130d) VERDICT: APPROVE CRITERION: medieval.bard.a FAIL (previous: FAIL) BLOCKERS: 2 unchanged; struck: 1
+- GAP: [P] medieval.king (8b73d7d) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL) BLOCKERS: 2 narrowed; 3 unchanged
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- The visible chest is the shoulder yoke hull (body.allMeshes /_yoke$/), not torsoMesh: lay chest dress on medievalDress chestFrontAt / frontAt (356). panel() is two-sided with its own normals.
-- Pickable [P] fallout (356): ARCHER_HOOD.shade/brow (archer_idle), KING_BEARD.wide/deep/blonde (king_idle); (355) FLOPPY_HAT dip/seat, CRUSADER_HELM.iron, ROYAL_CROWN.tall, QUIVER_HIP.leather.
-- Medieval audited 351, a/b re-audited 355. Squire/archer stats moved in 351; archer arrow leaves at the loose (354); bard notes/walk 353-354; catapult frame 356: expect re-baselines at the medieval checkpoint.
-- Two-fisted swords (king, squire) run FISTS_ON_GRIP (354). Medieval dress lives in web/src/units/medievalDress.ts (dressMedieval(scene, body, id, team), 355-356).
+- Chest dress goes on the shoulder yoke hull (medievalDress chestFrontAt / chestBack); panel() two-sided. limbShell(limb, from, to, out) shells a limb in its joint frame (357).
+- Pickable [P] fallout: (357) HEALER_TRIM collar width x2.5 (healer_idle); (356) ARCHER_HOOD.shade/brow (archer_idle). KING_BEARD: no more [P] (critic 357).
+- medievalCape (357, king) is written for reuse: the knight cape gap passes team colour and drops his "cape" special (shared propBuilder box, ~30 units: never edit it).
+- Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose (354), bard walk (353-354), catapult frame/wheels (356-357), knight plate (357).
 - tribal:re, renaissance:re, farmer:re follow medieval: full re-audits of the done batches under the new angles (ITERATE step 2).
