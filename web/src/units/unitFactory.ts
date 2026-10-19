@@ -13,7 +13,7 @@ import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
-import { dressMedieval, healerRobeTrim, squireTabardTrim } from "./medievalDress";
+import { dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -103,6 +103,8 @@ const TABARD_LENGTH = 1.6;
 const TABARD_DEPTH = 1.18;
 // Under the tabard the arms are sleeves of pale grey mail, not bare team-coloured skin.
 const MAIL_COLOR = new Color3(0.78, 0.8, 0.84);
+// [S] the knight's steel fauld (357; medieval.knight.png): a short steel skirt over the hips under his cuirass, .long thighs long, .flare pelvises wide at the hem
+const KNIGHT_FAULD = { long: 0.42, flare: 1.4, steel: new Color3(0.6, 0.6, 0.65) };
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
 // Zeus wears a plain off-white tunic with a red sash from one shoulder to the other hip, not a breastplate.
 const ZEUS_TUNIC_COLOR = new Color3(0.94, 0.92, 0.86);
@@ -652,7 +654,8 @@ export class UnitFactory {
         ? Color3.HSVtoRGBToRef(teamHsv.r + COOL_TABARD_HUE_SHIFT, Math.max(teamHsv.g, COOL_ARMOUR_SATURATION), teamHsv.b, new Color3())
         : teamColor;
       tabard.material = getMaterialFactory().getCloth(tabardColor.scale(coolTabard ? COOL_TABARD_SHADE : TABARD_SHADE));
-      propMeshes.push(tabard);
+      // ...not on the knight (357; medieval.knight.png: his chest is grey plate, medievalDress knightCuirass), who keeps only the mail arms
+      if (definition.id === "medieval.knight") tabard.dispose(); else propMeshes.push(tabard);
       const mailMaterial = getMaterialFactory().getCloth(MAIL_COLOR);
       for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
         limb.material = mailMaterial;
@@ -682,7 +685,7 @@ export class UnitFactory {
       belt.parent = body.torsoMesh.parent;
       belt.position.y = body.torsoMesh.position.y - chest.y * 0.85;
       belt.material = getMaterialFactory().getCloth(BELT_COLOR);
-      propMeshes.push(belt);
+      if (definition.id === "medieval.knight") belt.dispose(); else propMeshes.push(belt);
     }
 
     // Every dressed man's garment ends in a skirt of its own: the tabard's long one, a tunic's short hem, a cloth kilt under a cuirass, and on a bare tribesman a hide
@@ -690,7 +693,10 @@ export class UnitFactory {
     // (not the scarecrow: his shirt is tucked into the trousers his suspenders hold up, SCARECROW_DRESS)
     if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
-      const skirt = bareSkinned
+      const knight = definition.id === "medieval.knight";
+      const skirt = knight
+        ? hangSkirt(this._scene, body, "knightFauld", KNIGHT_FAULD.long, KNIGHT_FAULD.flare, getMaterialFactory().get("stone", KNIGHT_FAULD.steel, { emissiveIntensity: 0.05 }))
+        : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
         : tabard
           ? hangSkirt(this._scene, body, "tabardSkirt", 0.7, 1.6, tabard.material)
@@ -698,6 +704,7 @@ export class UnitFactory {
             ? hangSkirt(this._scene, body, "armourKilt", 0.6, 1.55, getMaterialFactory().getCloth(body.bodyMaterial.baseColor.scale(ARMOUR_SKIRT_SHADE)))
             : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
+      if (knight && skirt) propMeshes.push(...knightCuirass(this._scene, body, skirt));
       if (definition.id === "medieval.squire" && tabard && skirt) propMeshes.push(...squireTabardTrim(this._scene, body, tabard, skirt));
       // ...not under a hide cape: its flaps lie over the shoulders where the collar would (the chieftain)
       if (bareSkinned && !hasTribalNecklace(definition.id) && !TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(furCollar(this._scene, body));

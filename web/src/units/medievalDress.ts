@@ -433,6 +433,53 @@ function kingBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] the Knight's cuirass (357; medieval.knight.png, card Appearance "plate armor covering most of its body"): a grey steel breastplate over the whole chest in
+ * place of the team tabard, and below the waist a fauld of overlapping steel lames over the hips. The breastplate is the chest's own two solids (the torso's
+ * swell and the shoulder yoke's hull) a skin larger: KNIGHT_PLATE.wide across, .deep front to back; the fauld is the steel skirt unitFactory hangs from the hips,
+ * banded by KNIGHT_PLATE.lames rings each standing .proud of it in a darker steel (.edge) so the lames read; a waist rim the same. Steel the armet's (ARMET.steel).
+ */
+const KNIGHT_PLATE = {
+  wide: 1.07, deep: 1.1, lames: 2, proud: 1.05, rim: 0.12,
+  steel: new Color3(0.6, 0.6, 0.65), edge: new Color3(0.44, 0.44, 0.48), glow: 0.05,
+};
+
+/** The plate, fitted to the chest and to the steel fauld hung from his hips. */
+export function knightCuirass(scene: Scene, body: ArticulatedBody, fauld: Mesh): Mesh[] {
+  const K = KNIGHT_PLATE;
+  const steel = getMaterialFactory().get("stone", K.steel, { emissiveIntensity: K.glow });
+  const edge = getMaterialFactory().get("stone", K.edge, { emissiveIntensity: K.glow });
+  const t = body.torsoMesh;
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  const out: Mesh[] = [];
+  for (const src of yoke ? [t, yoke] : [t]) {
+    const shell = src.clone(src === t ? "knightCuirass" : "knightCuirassYoke", src.parent, true);
+    shell.makeGeometryUnique();
+    shell.scaling.set(src.scaling.x * K.wide, src.scaling.y, src.scaling.z * K.deep);
+    shell.material = steel;
+    out.push(shell);
+  }
+  // the fauld's lames: darker steel rings round the skirt, evenly down it, and a rim at the waist
+  const fb = fauld.getBoundingInfo().boundingBox.extendSize;
+  const verts = fauld.getVerticesData("position") ?? [];
+  let rTop = 0;
+  for (let i = 0; i < verts.length; i += 3) if (verts[i + 1] > fb.y * 0.99) rTop = Math.max(rTop, Math.hypot(verts[i], verts[i + 2]));
+  const rBot = fb.x;
+  const tall = fb.y * 2 * K.rim;
+  for (let k = 0; k <= K.lames; k++) {
+    const f = k / (K.lames + 1); // 0 at the waist
+    const y = fb.y - tall / 2 - f * (fb.y * 2 - tall);
+    const r = rTop + (rBot - rTop) * (fb.y - y) / (fb.y * 2);
+    const ring = MeshBuilder.CreateCylinder("knightLame", { height: tall, diameterTop: r * 2 * K.proud, diameterBottom: (r + (rBot - rTop) * K.rim) * 2 * K.proud, tessellation: 6 }, scene);
+    ring.convertToFlatShadedMesh();
+    ring.parent = fauld;
+    ring.position.y = y;
+    ring.material = edge;
+    out.push(ring);
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
