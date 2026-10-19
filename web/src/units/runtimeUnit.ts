@@ -373,6 +373,8 @@ export class RuntimeUnit {
     this.animator.bullFists = definition.id === "ancient.minotaur";
     // [S] the sarissa levels his pike in both fists (379; proceduralAnimation PIKE_LEVEL)
     this.animator.levelsPike = definition.id === "ancient.sarissa";
+    // [S] the hoplite carries his dory low at the weapon hip, point forward and down (380; proceduralAnimation DORY_CARRY)
+    this.animator.carriesDory = definition.id === "ancient.hoplite";
     this._spawnPosition = body.root.position.clone();
     this._spawnRotationY = body.root.rotation.y;
   }

@@ -357,6 +357,14 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
  */
 // the flask's bulb from the fist, in the world: down and a little ahead (see _hangFlasks)
 const FLASK_HANG = { down: 1, ahead: 0.3 };
+/*
+ * [S] the dory carried low (380, the hoplite's; ancient.hoplite.red.png: the short spear in his weapon fist at the hip, the arm hanging near straight out
+ * at his side clear of the aspis, the shaft running forward and down from the fist, its point near the ground ahead of his feet; critic 378: level at
+ * the waist through the aspis face). In u, his weapon shoulder's height over his hip: the fist DORY_CARRY.ahead before the hip, .out to the weapon side,
+ * .up above it; the shaft along fwd .fwd, right .side and down .down (normalised), the fist .fistAt of its length from the butt. Stood and marching;
+ * the blow keeps its own pose.
+ */
+const DORY_CARRY = { ahead: 0.2, out: 0.62, up: -0.05, fwd: 0.75, side: 0.18, down: 0.62, fistAt: 0.22 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
@@ -1940,6 +1948,7 @@ export class ProceduralAnimator {
     this._restHalberd();
     this._twoHandPole();
     this._levelPike();
+    this._carryDory();
     this._applyBullFists();
     this._hangFlasks();
     this._carryBoulder();
@@ -3136,6 +3145,48 @@ export class ProceduralAnimator {
     shaft.rotationQuaternion = turn;
     const len = shaft.getBoundingInfo().boundingBox.extendSize.y * 2 * shaft.scaling.y;
     const held = new Vector3(0, len * (0.5 - P.fistAt), 0);
+    held.rotateByQuaternionToRef(turn, held);
+    shaft.position.copyFrom(held);
+  }
+
+  /** Carries the dory low at the weapon hip (DORY_CARRY); set by the runtime for the hoplite. */
+  carriesDory = false;
+  private _dory: { shaft: Mesh; grip: Vector3 } | null | undefined = undefined;
+
+  /** [S] the hoplite's dory low at his weapon hip, point forward and down (spec at DORY_CARRY), stood and marching. */
+  private _carryDory(): void {
+    if (!this.carriesDory || this.walkStyle === "quadruped") return;
+    if (this._dory === undefined) {
+      const find = (n: Node): Mesh | undefined => (n instanceof Mesh && n.name === "shaft" ? n : n.getChildren().map(find).find((m) => m));
+      const shaft = find(this._body.rightHand);
+      this._dory = shaft ? { shaft, grip: shaft.position.clone() } : null;
+    }
+    if (!this._dory) return;
+    const { shaft, grip } = this._dory;
+    const st = this._state;
+    const w = st === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
+    if (w <= 0.01 || (st !== AnimState.Idle && st !== AnimState.Walking)) {
+      if (shaft.rotationQuaternion) {
+        shaft.rotationQuaternion = null;
+        shaft.position.copyFrom(grip);
+      }
+      return;
+    }
+    const b = this._body, D = DORY_CARRY;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const hip = b.hip.getAbsolutePosition();
+    const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
+    const { fwd, right } = this._heading();
+    const fist = hip.add(fwd.scale(D.ahead * u)).add(right.scale(D.out * u)).add(new Vector3(0, D.up * u, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    const dir = fwd.scale(D.fwd).add(right.scale(D.side)).add(new Vector3(0, -D.down, 0)).normalize();
+    const hand = (shaft.parent as TransformNode) ?? b.rightHand;
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand, hand]) n.computeWorldMatrix(true);
+    const along = Vector3.TransformNormal(dir, Matrix.Invert(hand.getWorldMatrix())).normalize();
+    const turn = Quaternion.FromUnitVectorsToRef(Vector3.Up(), along, new Quaternion());
+    shaft.rotationQuaternion = turn;
+    const len = shaft.getBoundingInfo().boundingBox.extendSize.y * 2 * shaft.scaling.y;
+    const held = new Vector3(0, len * (0.5 - D.fistAt), 0);
     held.rotateByQuaternionToRef(turn, held);
     shaft.position.copyFrom(held);
   }
