@@ -233,6 +233,13 @@ const CORINTH_HELM = {
   ridge: 0.09, nose: 0.07, slabs: 9, front: 1.15, back: -1.35, crest: 0.5, fall: 0.45, crestWide: 0.14, sink: 0.25, overlap: 1.3,
   bronze: 0.1, shade: 0.9, crestShade: 0.6, glow: 0.1,
 };
+/*
+ * [S] the crest as stacked bands (382; ancient.sarissa.png, .red.png, ancient.hoplite.red.png: a tall boxy horse-hair crest about as tall as the bowl,
+ * seated brow to nape, stepped in layers, highest over the brow; critic 381: a thin row of knuckle blocks a quarter of the bowl's height, a fan of
+ * spikes side-on). .bands bands, each .band of H tall (.fill of it solid, so a step line shows between them), sunk .sink of a band into the bowl; band k
+ * runs from CORINTH_HELM.front + .lean x k to the back end pulled forward .shorten x k of the run, .segs blocks overlapping .overlap, .narrow x k thinner.
+ */
+const CORINTH_CREST = { bands: 4, band: 0.13, fill: 0.9, sink: 0.6, lean: 0.06, shorten: 0.16, segs: 12, overlap: 1.15, narrow: 0.08 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
@@ -1420,19 +1427,35 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     ridge.position.set(0, u(C.ridge * H) * 0.3, u(C.face * W));
     const nose = put(MeshBuilder.CreateBox("chelmNose", { width: u(C.nose * W), height: u((C.underEye - C.brow) * H), depth: u(C.plate * W * 1.4) }, scene));
     nose.position.set(0, -u((C.underEye - C.brow) * H) / 2, u(C.face * W) + u(C.plate * W) * 0.3);
-    // the crest: .slabs slabs set on the bowl's top line from the brow to the nape, each sunk in it and standing out along the bowl's normal, tallest in
-    // front, so it reads as a stepped crest seated on the helm (no stalk, no gap)
+    // [S] the crest as stacked bands (382, spec at CORINTH_CREST): each band a run of short blocks laid end to end along the bowl's top line, offset
+    // out along the normal by the bands below it, so the crest is a solid fin about the bowl's height with step lines, highest in front
     const ry = u(C.rise * H) - brow;
-    for (let i = 0; i < C.slabs; i++) {
-      const t = i / (C.slabs - 1);
-      const phi = C.front + (C.back - C.front) * t;
-      const on = new Vector3(0, ry * Math.cos(phi), rz * Math.sin(phi));
-      const normal = new Vector3(0, Math.cos(phi) / ry, Math.sin(phi) / rz).normalize();
-      const tallness = u(C.crest * H) * (1 - C.fall * t);
-      const step = ((C.back - C.front) / (C.slabs - 1)) * Math.hypot(ry, rz) * 0.5;
-      const slab = put(MeshBuilder.CreateBox("chelmCrest", { width: u(C.crestWide * W), height: tallness, depth: Math.abs(step) * C.overlap }, scene), hair);
-      slab.position.copyFrom(on.add(normal.scale(tallness * (0.5 - C.sink))));
-      slab.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), normal, new Quaternion());
+    const K = CORINTH_CREST;
+    const bandH = u(K.band * H);
+    const blocks: Mesh[] = [];
+    for (let k = 0; k < K.bands; k++) {
+      const back = C.back + (C.front - C.back) * K.shorten * k;
+      const front = C.front + K.lean * k;
+      const lift = bandH * (k + 0.5) - bandH * K.sink;
+      const at = (phi: number): Vector3 => {
+        const normal = new Vector3(0, Math.cos(phi) / ry, Math.sin(phi) / rz).normalize();
+        return new Vector3(0, ry * Math.cos(phi), rz * Math.sin(phi)).add(normal.scale(lift));
+      };
+      for (let i = 0; i < K.segs; i++) {
+        const a = at(front + ((back - front) * i) / K.segs), b = at(front + ((back - front) * (i + 1)) / K.segs);
+        const along = b.subtract(a);
+        const block = MeshBuilder.CreateBox("chelmCrest", { width: u(C.crestWide * W) * (1 - K.narrow * k), height: bandH * K.fill, depth: along.length() * K.overlap }, scene);
+        block.position.copyFrom(a.add(b).scale(0.5));
+        // depth along the line, height out of the bowl
+        const out = new Vector3(0, -along.z, along.y).normalize();
+        block.rotationQuaternion = Quaternion.FromLookDirectionLH(along.normalize(), out);
+        blocks.push(block);
+      }
+    }
+    const crest = Mesh.MergeMeshes(blocks, true);
+    if (crest) {
+      crest.name = "chelmCrest";
+      put(crest, hair);
     }
     return helm;
   }
