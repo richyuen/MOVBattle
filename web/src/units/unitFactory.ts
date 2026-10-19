@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { halflingJacket, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
+import { halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressMinotaur, dressZeus } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
@@ -533,7 +533,8 @@ export class UnitFactory {
     }
     // [S] the halfling's shaggy brown mop (340; tribalDress SHAGGY)
     if (definition.id === "farmer.halfling" && !shouldUseVehicleBody) {
-      propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
+      // [S] ...now a bushy mop of splayed locks (382; farmerDress HALFLING_MOP)
+      propMeshes.push(...halflingMop(this._scene, body));
       // [S] ...and his shorts and hairy feet (342-343; HALFLING_SHORTS, HALFLING_FEET)
       propMeshes.push(...dressHalfling(this._scene, body, teamColor));
       // [S] ...his long open jacket over a light vest, white shirt V, dark belt and big grey buckle (376; farmerDress HALFLING_COAT)

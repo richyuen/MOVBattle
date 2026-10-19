@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Node, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -361,4 +361,63 @@ export function potionHead(scene: Scene, body: ArticulatedBody): Mesh[] {
   cap.material = hair;
   cap.parent = head;
   return [cap];
+}
+
+/*
+ * [S] the halfling's bushy mop (382; farmer.halfling.red.png: a big messy mop of dark reddish-brown locks, wider than the head, chunky flat locks
+ * sticking up and out every way over the crown, hanging past the ears to the jaw at the sides with their tips kicked out, a ragged fringe over the
+ * brow; critic 379/381: a smooth mid-brown slab bob, the 375 hanging wedges lying side by side as one surface). A jittered cap .cap of the head over
+ * the crown, and .locks flat tapering locks rooted on it at golden-spiral points above .lowest of the head's half height (the face left clear below
+ * .faceY in front of .faceZ): each points out along the cap's normal, bent down toward hanging by .hang x its depth down the head (crown spikes up,
+ * side locks hang), plus a hashed .wild of tilt; .top of the head long on the crown, .side at the sides, the fringe .fringe; roots .root of the head
+ * across, flattened to .flat. Colour .color, self-lit .glow. One merged mesh, parented to the head.
+ */
+const HALFLING_MOP = {
+  cap: 1.22, locks: 46, lowest: -0.45, faceY: 0.42, faceZ: 0.35, hang: 1.25, wild: 0.45, top: 0.5, side: 0.95, fringe: 0.38, root: 0.36, flat: 0.45,
+  color: new Color3(0.3, 0.14, 0.1), glow: 0.2,
+};
+
+/** The halfling's bushy mop (spec at HALFLING_MOP), parented to the head. */
+export function halflingMop(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const M = HALFLING_MOP;
+  const hair = getMaterialFactory().get("cloth", M.color, { emissiveIntensity: M.glow });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const H = e.y * 2, W = e.x * 2;
+  const hash = (a: number, b: number): number => { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); };
+  const pieces: Mesh[] = [];
+  const cap = MeshBuilder.CreateIcoSphere("halflingMopCap", { radius: 1, subdivisions: 1, flat: true }, scene);
+  cap.scaling.set(e.x * M.cap, e.y * 0.75, e.z * M.cap);
+  cap.position.set(0, e.y * 0.6, -e.z * 0.12);
+  pieces.push(cap);
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < M.locks; i++) {
+    // golden-spiral directions over the sphere, from the crown down to .lowest
+    const y = 1 - ((i + 0.5) / M.locks) * (1 - M.lowest);
+    const ring = Math.sqrt(Math.max(0, 1 - y * y)), a = i * golden;
+    const n = new Vector3(Math.sin(a) * ring, y, Math.cos(a) * ring);
+    const fringe = n.z > M.faceZ && y > M.faceY - 0.15 && y < M.faceY + 0.3;
+    if (n.z > M.faceZ && y <= M.faceY - 0.15) continue;
+    const share = hash(i, 1), sway = hash(i, 2) - 0.5, twist = hash(i, 3);
+    const root = new Vector3(n.x * e.x * M.cap * 0.92, e.y * 0.35 + n.y * e.y * 0.75, n.z * e.z * M.cap * 0.92 - e.z * 0.12);
+    // out along the normal, bent toward hanging the lower it sits; the fringe falls forward over the brow
+    const down = fringe ? 1.1 : M.hang * Math.max(0, 1 - y) * (0.7 + 0.6 * share);
+    const dir = n.add(new Vector3(-n.z * sway * M.wild, -down, n.x * sway * M.wild)).normalize();
+    const long = H * (fringe ? M.fringe : M.top + (M.side - M.top) * Math.max(0, 1 - y)) * (0.75 + 0.5 * hash(i, 4));
+    const r = W * M.root * (0.75 + 0.5 * hash(i, 5));
+    const lock = MeshBuilder.CreateCylinder("halflingMopLock", { height: long, diameterTop: r, diameterBottom: r * 0.1, tessellation: 4 }, scene);
+    lock.scaling.x = M.flat;
+    lock.rotation.y = twist * Math.PI;
+    lock.bakeCurrentTransformIntoVertices();
+    // the wide end at the root: the cylinder's -y (narrow) end points along dir
+    lock.rotationQuaternion = Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), dir, new Quaternion());
+    lock.position.copyFrom(root.add(dir.scale(long * 0.42)));
+    pieces.push(lock);
+  }
+  const mop = Mesh.MergeMeshes(pieces, true);
+  if (!mop) return [];
+  mop.name = `${body.headMesh.name}_hair`;
+  mop.convertToFlatShadedMesh();
+  mop.material = hair;
+  mop.parent = body.headMesh;
+  return [mop];
 }
