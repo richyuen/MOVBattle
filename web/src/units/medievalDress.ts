@@ -677,6 +677,10 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
 
 const KNIGHT_CAPE = { shade: 0.85, clear: 1.03, drop: 0.95, hem: 2.3, glow: 0.06 };
 
+function knightCape(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop, KNIGHT_CAPE.hem, KNIGHT_CAPE.glow);
+}
+
 /** `n` thin upright strips evenly round a limbShell of the same span, standing just proud of its faces (puffed-cloth folds or slashes). */
 function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: number, out: number, n: number, mat: Material): Mesh[] {
   const L = limbBox(limb);
@@ -974,6 +978,43 @@ function archerKit(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] the Knight's plate legs (359; medieval.knight.red.png, card "plate armor covering most of its body"): grey steel cuisses over the thighs and greaves
+ * over the shins, a rounded knee cop over each knee, grey steel sabatons over the feet with a lame ridge across the instep, and a darker steel lame ring at
+ * the top of each greave. Shells (the legs are team cloth under them): cuisses KNIGHT_LEGS.cuisse of the thigh's half-width round it, greaves .greave of the
+ * shin's from .from down into the foot, cops .cop of the shin's top across standing .ahead in front of the knee; steel and edge KNIGHT_PLATE's.
+ */
+const KNIGHT_LEGS = { cuisse: 1.2, greave: 1.28, from: 0.05, cop: 1.3, ahead: 0.5 };
+
+function knightLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = KNIGHT_LEGS, P = KNIGHT_PLATE;
+  const steel = getMaterialFactory().get("stone", P.steel, { emissiveIntensity: P.glow });
+  const edge = getMaterialFactory().get("stone", P.edge, { emissiveIntensity: P.glow });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "knightCuisse", thigh, 0.02, 0.98, K.cuisse, steel));
+  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
+    out.push(limbShell(scene, "knightGreave", shin, K.from, 0.95, K.greave, steel));
+    out.push(limbShell(scene, "knightGreaveLame", shin, K.from, K.from + 0.1, K.greave * 1.1, edge));
+    const L = limbBox(shin);
+    const cop = MeshBuilder.CreateIcoSphere("knightKneeCop", { radius: Math.max(L.wide, L.deep) * K.cop, subdivisions: 1, flat: true }, scene);
+    cop.scaling.set(1, 0.85, 0.7);
+    cop.parent = knee;
+    cop.position.set(0, L.mid + L.half * 0.95, L.deep * K.ahead);
+    cop.material = steel;
+    out.push(cop);
+  }
+  for (const f of feet(body)) {
+    f.material = steel;
+    const fb = f.getBoundingInfo().boundingBox;
+    const ridge = MeshBuilder.CreateBox("knightSabatonLame", { width: fb.extendSize.x * 2.1, height: fb.extendSize.y * 0.3, depth: fb.extendSize.z * 0.25 }, scene);
+    ridge.parent = f;
+    ridge.position.set(fb.center.x, fb.maximum.y - fb.extendSize.y * 0.2, fb.center.z + fb.extendSize.z * 0.25);
+    ridge.material = edge;
+    out.push(ridge);
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
@@ -984,7 +1025,7 @@ export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: strin
     case "medieval.squire": return [...squireLegs(scene, body), ...squireArms(scene, body)];
     // [S] the Knight's cape (358; medieval.knight.png, card "a team colored cape"): the king's cape in team cloth (x KNIGHT_CAPE.shade) off the backs of his
     // steel shoulders to the knee (.drop), hung KNIGHT_PLATE.deep x .clear off the back so it clears the cuirass
-    case "medieval.knight": return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop, KNIGHT_CAPE.hem, KNIGHT_CAPE.glow);
+    case "medieval.knight": return [...knightCape(scene, body, team), ...knightLegs(scene, body)];
     default: return [];
   }
 }
