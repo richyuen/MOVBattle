@@ -4241,7 +4241,8 @@ export class ProceduralAnimator {
   /** The plank shield stood square before his face (see SLAB_FRONT), its eye hole at his eyes, over every living state. */
   private _holdSlab(): void {
     const shield = this._shieldBoard();
-    if (!shield || shield.name !== "slabshield") return;
+    // ...and the scutum (378): the same hold, its top rim under his eyes (its own holeUp, propBuilder SCUTUM)
+    if (!shield || (shield.name !== "slabshield" && shield.name !== "scutumshield")) return;
     const rest = (this._boardRest ??= shield.position.clone());
     const w = this._state === AnimState.Dead || this.walkStyle === "quadruped" ? 0 : (1 - Math.min(1, this._limp)) * (1 - this._boardOffWeight());
     if (w <= 0.001) {
@@ -4270,7 +4271,7 @@ export class ProceduralAnimator {
     // The board's middle from the hole: the hole sits up its own height's share above the middle (read off its planks' extent in its own frame)
     shield.computeWorldMatrix(true);
     const sc = shield.absoluteScaling;
-    const holeUp = (this._slabHoleUp ??= this._slabHole(shield));
+    const holeUp = (this._slabHoleUp ??= (shield.metadata as { holeUp?: number } | null)?.holeUp ?? this._slabHole(shield));
     const middle = hole.subtract(new Vector3(0, holeUp * sc.y, 0));
     // His fist to the back of the board, then the board on it: the arm runs straight, so it is aimed down steeply enough that its whole length ends
     // .grip behind the board, under the middle and in toward it, never through the planks

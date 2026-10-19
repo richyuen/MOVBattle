@@ -1915,7 +1915,7 @@ export function attachProps(
       // A kite is shoulder-wide at the top, not a plank
       if (config.shield === "kite") shield.scaling.x *= 1.4;
       // The slab's length runs up the man, not along the forearm that carries it (a lapped board is stood up by the wall instead)
-      if (config.shield === "slab") shield.rotation.x = Math.PI / 2;
+      if (config.shield === "slab" || config.shield === "scutum") shield.rotation.x = Math.PI / 2;
       // A rider's heater is not laid along his forearm like a tray (329: face up, edge-on from the side): stood upright on the arm held out over the horse's
       // neck, its point down and its face turned out to his off side (its +y onto the hand's +z, its face +z onto the hand's -x)
       if (config.shield === "heater") Quaternion.FromRotationMatrix(Matrix.FromValues(0, -1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 1)).toEulerAnglesToRef(shield.rotation);
@@ -4675,6 +4675,18 @@ const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
 // ...and its stone (tribal.protector.red.png: one warm red-brown slab, not planks): SLAB_FACETS.deep thick (prop units), cut in three columns either side of
 // the opening and in .rows rows down the side columns; each corner of the face pushed in or out by its own hashed share (.front of the depth) so the face
 // breaks into flat facets, the top corners bevelled back by .bevel of the depth, and one dark seam .seam wide down the slab from the opening's side
+/*
+ * [S] the scutum (378; ancient.shield_bearer.red.png, .jpg, card Appearance "With both hands, it holds an Scutum with a small steel boss"; critic 378: a
+ * flat team tray held level at the waist). A tall curved rectangle stood upright before him chin to shin (held by the slab's hold, _holdSlab: its top
+ * rim SCUTUM.chin under his eyes), in units of s:
+ *   - the board SCUTUM.tall by .wide, .strips vertical strips laid on an arc so its sides curve back .curve toward him, team colour, .deep thick;
+ *   - an orange rim (SCUTUM_TRIM) .rim wide round its edge, a little proud of the face, the top and bottom rims following the curve;
+ *   - two orange laurel sprays, .leaves leaf blades each, fanned on arcs: the upper bowed up over the boss (ends low), the lower bowed down under it;
+ *   - in the middle a dark iron plate .plate across with .studs orange studs round it and a faceted iron boss .boss across standing out of it.
+ */
+const SCUTUM = { tall: 0.74, wide: 0.42, deep: 0.03, strips: 7, curve: 0.08, rim: 0.022, chin: 0.05, leaves: 9, leaf: 0.075, spray: 0.3, plate: 0.13, studs: 8, boss: 0.08 };
+const SCUTUM_TRIM = new Color3(0.93, 0.6, 0.3);
+const SCUTUM_IRON = new Color3(0.27, 0.27, 0.28);
 const SLAB_FACETS = { deep: 0.06, rows: 3, front: 1.0, bevel: 0.7, seam: 0.006 };
 let slabSerial = 0;
 /*
@@ -4858,6 +4870,71 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         band.parent = shield;
         band.material = mat(scene, new Color3(0.56, 0.42, 0.22));
       }
+      return shield;
+    }
+    case "scutum": {
+      const S = SCUTUM, H = S.tall * s, W = S.wide * s, D = S.deep * s;
+      // the root an empty mesh named for the hold (proceduralAnimation _holdSlab); its rim's top S.chin under the eyes it is held at
+      const shield = new Mesh("scutumshield", scene);
+      shield.metadata = { holeUp: H / 2 + S.chin * s };
+      const boardMat = mat(scene, board, 0.12, "cloth");
+      const trim = mat(scene, SCUTUM_TRIM, 0.15, "cloth");
+      const iron = mat(scene, SCUTUM_IRON, 0.1, "cloth");
+      // the arc the face lies on: x across, z back by the curve at the sides
+      const arcZ = (x: number) => -S.curve * s * (2 * x / W) ** 2;
+      const arcTurn = (x: number) => Math.atan(2 * S.curve * s * 2 * x / (W * W) * 2);
+      const strip = W / S.strips;
+      for (let i = 0; i < S.strips; i++) {
+        const x = -W / 2 + strip * (i + 0.5);
+        const b = MeshBuilder.CreateBox("scutumBoard", { width: strip * 1.04, height: H, depth: D }, scene);
+        b.position.set(x, 0, arcZ(x));
+        b.rotation.y = arcTurn(x);
+        b.parent = shield; b.material = boardMat;
+      }
+      // the rim: sides upright, top and bottom along the arc
+      for (const side of [-1, 1]) {
+        const x = side * (W / 2 - S.rim * s / 2);
+        const r = MeshBuilder.CreateBox("scutumRim", { width: S.rim * s, height: H, depth: D * 1.5 }, scene);
+        r.position.set(x, 0, arcZ(x) + D * 0.3);
+        r.rotation.y = arcTurn(x);
+        r.parent = shield; r.material = trim;
+      }
+      for (const end of [-1, 1]) {
+        for (let i = 0; i < S.strips; i++) {
+          const x = -W / 2 + strip * (i + 0.5);
+          const r = MeshBuilder.CreateBox("scutumRim", { width: strip * 1.05, height: S.rim * s, depth: D * 1.5 }, scene);
+          r.position.set(x, end * (H / 2 - S.rim * s / 2), arcZ(x) + D * 0.3);
+          r.rotation.y = arcTurn(x);
+          r.parent = shield; r.material = trim;
+        }
+      }
+      // the laurel sprays: blades fanned along an arc either side of the middle, the upper bowed up, the lower bowed down
+      for (const [y0, bow] of [[0.2, 1], [-0.24, -1]] as [number, number][]) {
+        for (let i = 0; i < S.leaves; i++) {
+          const u = (i / (S.leaves - 1)) * 2 - 1;
+          const x = u * S.spray * W * 1.15;
+          const y = (y0 + bow * 0.06 * (1 - u * u)) * H;
+          const leaf = MeshBuilder.CreateBox("scutumLeaf", { width: S.leaf * s * 0.35, height: S.leaf * s, depth: D * 0.5 }, scene);
+          leaf.position.set(x, y, arcZ(x) + D * 0.6);
+          // each blade leans out along the spray, the tips toward its ends
+          leaf.rotation.set(0, arcTurn(x), -u * 1.2 - (i % 2 ? 0.35 : -0.35) * bow);
+          leaf.parent = shield; leaf.material = trim;
+        }
+      }
+      // the iron plate, its studs and the boss
+      const plate = MeshBuilder.CreateBox("scutumPlate", { width: S.plate * s * 1.2, height: S.plate * s, depth: D * 0.6 }, scene);
+      plate.position.set(0, -0.02 * H, D * 0.7);
+      plate.parent = shield; plate.material = iron;
+      for (let k = 0; k < S.studs; k++) {
+        const a = (k / S.studs) * Math.PI * 2;
+        const stud = MeshBuilder.CreateBox("scutumStud", { size: S.plate * s * 0.09 }, scene);
+        stud.position.set(Math.cos(a) * S.plate * s * 0.52, plate.position.y + Math.sin(a) * S.plate * s * 0.4, D * 1.05);
+        stud.parent = shield; stud.material = trim;
+      }
+      const boss = MeshBuilder.CreateIcoSphere("scutumBoss", { radius: S.boss * s / 2, subdivisions: 1, flat: true }, scene);
+      boss.scaling.z = 0.6;
+      boss.position.set(0, plate.position.y, D * 1.2);
+      boss.parent = shield; boss.material = iron;
       return shield;
     }
     case "slab": {

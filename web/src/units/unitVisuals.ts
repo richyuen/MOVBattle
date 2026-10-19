@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
-export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette";
+export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -326,7 +326,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ ANCIENT ═══════════════════════
   "ancient.shield_bearer": vis(
-    { scale: 1.0, bulk: 1.1 }, "sword", "helmet", "tower", "none", "#CD853F",
+    // [S] the scutum held upright in front in both hands, no sword (378; propBuilder SCUTUM, proceduralAnimation _holdSlab)
+    { scale: 1.0, bulk: 1.1 }, "none", "helmet", "scutum", "none", "#CD853F",
     undefined,
     { materialPreset: "ancient_bronze" },
   ),
