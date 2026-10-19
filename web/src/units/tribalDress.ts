@@ -414,8 +414,13 @@ const GOATEE = { wide: 0.42, down: 0.55, proud: 0.86, tip: 0.35 };
  * sticking out every way. A jittered faceted cap SHAGGY.cap heads wide over the crown, and SHAGGY.locks short four-sided spikes all round its rim
  * (SHAGGY.long of the head long, the front SHAGGY.front of that so a fringe sits over the brow above the eyes), each splayed out SHAGGY.splay rad plus
  * its own hashed share and tilted a hashed bit sideways so no two lie alike. Brown SHAGGY_COLOR, self-lit so it reads brown in the shade.
+ * [S] hanging locks (375; farmer.halfling.red.png: the mop hangs, shaggy locks falling from the crown past the ears to the jaw at the sides and to the
+ * nape behind, a short ragged fringe over the brow, the outline jagged all round. Not the 340 rim of short spikes splayed out .55 rad, which read from
+ * across the field as a brimmed straw cap). Two tiers of clumps round the cap: the lower SHAGGY.locks hang SHAGGY.long of the head long (the front arc
+ * cut to SHAGGY.front of that, by cos(a)^.fringeArc), splayed only SHAGGY.splay out from hanging, roots .thick of the head across; the upper .locks2
+ * from higher on the crown, .long2 long, splayed .splay2, so the top stays bushy.
  */
-const SHAGGY = { cap: 1.32, locks: 26, long: 0.5, front: 0.5, thick: 0.3, splay: 0.55 };
+const SHAGGY = { cap: 1.3, locks: 22, long: 0.95, front: 0.32, fringeArc: 0.6, thick: 0.42, splay: 0.16, locks2: 14, long2: 0.5, splay2: 0.5, rootY2: 0.85 };
 const SHAGGY_COLOR = new Color3(0.38, 0.21, 0.12);
 /*
  * [S] hay baler's bowl cut (341; farmer.hay_baler.blue.png, card Appearance "a brown bowl cut hair"): a round auburn-brown helmet of hair, fuller than the
@@ -501,28 +506,33 @@ function shaggyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   cap.material = hair;
   cap.parent = body.headMesh;
   added.push(cap);
-  for (let i = 0; i < SHAGGY.locks; i++) {
-    const a = (i + 0.5) / SHAGGY.locks * Math.PI * 2; // 0 = the face (+z)
-    const share = hashShare(6.7, i * 1.3, i * 0.7, 2);
-    const facing = Math.max(0, Math.cos(a)); // 1 at the brow
-    const long = H * SHAGGY.long * (1 - (1 - SHAGGY.front) * facing) * (0.75 + 0.5 * share);
-    const root = W * SHAGGY.thick * (0.8 + 0.4 * hashShare(2.9, i, 3, i));
-    const m = MeshBuilder.CreateCylinder("hairShag", { height: long, diameterTop: root, diameterBottom: 0, tessellation: 4 }, scene);
-    m.rotation.y = share * 1.5;
-    m.bakeCurrentTransformIntoVertices();
-    m.convertToFlatShadedMesh();
-    m.material = hair;
-    m.parent = body.headMesh;
-    added.push(m);
-    const sx = Math.sin(a), cz = Math.cos(a);
-    const out = SHAGGY.splay * (0.7 + 0.6 * share) + 0.25 * facing;
-    const sway = (hashShare(8.3, i, i * 2, 5) - 0.5) * 0.6;
-    m.rotation.set(-cz * out + sx * sway, 0, sx * out + cz * sway);
-    // Roots round the cap's rim, the fringe's a little higher so the eyes stay clear
-    const rootY = e.y * (0.5 + 0.35 * facing);
-    const r = 1.05;
-    m.position.set(sx * e.x * r + sx * Math.sin(out) * long * 0.5, rootY - Math.cos(out) * long * 0.5, cz * e.z * r - e.z * 0.05 + cz * Math.sin(out) * long * 0.5);
-  }
+  // one tier of clumps round the head: n locks, `long` of the head long at the back and sides, splayed `splay` out from hanging, rooted at rootY
+  const tier = (n: number, long0: number, splay: number, rootY0: number, r: number, salt: number): void => {
+    for (let i = 0; i < n; i++) {
+      const a = (i + 0.5 + salt * 0.37) / n * Math.PI * 2; // 0 = the face (+z)
+      const share = hashShare(6.7 + salt, i * 1.3, i * 0.7, 2);
+      const facing = Math.pow(Math.max(0, Math.cos(a)), SHAGGY.fringeArc); // 1 at the brow
+      const long = H * long0 * (1 - (1 - SHAGGY.front) * facing) * (0.8 + 0.4 * share);
+      const root = W * SHAGGY.thick * (0.8 + 0.4 * hashShare(2.9 + salt, i, 3, i));
+      const m = MeshBuilder.CreateCylinder("hairShag", { height: long, diameterTop: root, diameterBottom: root * 0.12, tessellation: 4 }, scene);
+      m.rotation.y = share * 1.5;
+      m.bakeCurrentTransformIntoVertices();
+      m.convertToFlatShadedMesh();
+      m.material = hair;
+      m.parent = body.headMesh;
+      added.push(m);
+      const sx = Math.sin(a), cz = Math.cos(a);
+      // hanging, kicked out a little at the tips; the fringe tipped forward off the brow
+      const out = splay * (0.6 + 0.8 * share) + 0.3 * facing;
+      const sway = (hashShare(8.3 + salt, i, i * 2, 5) - 0.5) * 0.4;
+      m.rotation.set(-cz * out + sx * sway, 0, sx * out + cz * sway);
+      // roots round the cap's rim, the fringe's a little higher so the eyes stay clear
+      const rootY = e.y * (rootY0 + 0.3 * facing);
+      m.position.set(sx * e.x * r + sx * Math.sin(out) * long * 0.5, rootY - Math.cos(out) * long * 0.5, cz * e.z * r - e.z * 0.05 + cz * Math.sin(out) * long * 0.5);
+    }
+  };
+  tier(SHAGGY.locks, SHAGGY.long, SHAGGY.splay, 0.55, 1.05, 0);
+  tier(SHAGGY.locks2, SHAGGY.long2, SHAGGY.splay2, SHAGGY.rootY2, 0.9, 1);
   return added;
 }
 
