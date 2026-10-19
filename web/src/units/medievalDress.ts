@@ -770,7 +770,7 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
   // stockings from the knee to the shoe, clear of the pantaloons
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(...kingPantaloon(scene, thigh, cloth, gold));
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(...unglow(scene, [limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige)]));
   // brown shoes, gold buckle on the instep
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(true)) {
