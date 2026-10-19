@@ -253,6 +253,7 @@ const CATAPULT_FRAME = { long: 1.6, half: 0.42, railY: 0.42, beam: 0.16, cap: 0.
  * .iron tyre .tyreWide thick, a small iron hub .hub of it across; at each rail end beside its corner cap.
  */
 const CATAPULT_WHEEL = { across: 0.56, face: 0.8, tyreWide: 0.13, proud: 0.015, hub: 0.22, facets: 10, tone: new Color3(0.6, 0.3, 0.13), iron: new Color3(0.42, 0.43, 0.46) };
+const CATAPULT_PAINT = { wood: new Color3(0.66, 0.32, 0.14), woodGlow: 0.16, paintGlow: 0.12, long: 0.62, short: 0.4, strip: 0.5, shift: 0.14 };
 const CATAPULT_BUCKET = { bottom: 0.4, top: 0.68, deep: 0.28, rim: 0.06, sink: 0.45, tone: new Color3(0.55, 0.26, 0.12) };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
@@ -261,7 +262,14 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   rig.scaling.setAll(CATAPULT_SCALE);
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
-  const wood = getMaterialFactory().get("wood", new Color3(0.36, 0.13, 0.09), { emissive: new Color3(0.08, 0.04, 0.035) }); // the cannon carriage's dark red-brown timber: the old tan went khaki-olive under the sky light
+  // [S] painted timber (358; medieval.catapult.blue.png: orange timber with team paint streaked along the beams and uprights). The medieval catapult's wood is
+  // CATAPULT_PAINT.wood (self-lit .woodGlow); on each long beam two team streaks (.team self-lit .paintGlow): one .long of the beam down two opposite faces, the
+  // other .short of it down the other two, set off-centre in opposite directions (.shift) so the paint reads as worn streaks, not bands. The pumpkin keeps its own.
+  const P = CATAPULT_PAINT;
+  const wood = options.spooky
+    ? getMaterialFactory().get("wood", new Color3(0.36, 0.13, 0.09), { emissive: new Color3(0.08, 0.04, 0.035) }) // the cannon carriage's dark red-brown timber
+    : getMaterialFactory().get("wood", P.wood, { emissive: P.wood.scale(P.woodGlow) });
+  const paint = options.spooky ? null : getMaterialFactory().get("wood", color, { emissive: color.scale(P.paintGlow) });
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
   const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09)); // the cannon's dark wheel timber, so the wheels stand off the frame
   const pumpkinMat = makeMat(scene, new Color3(0.88, 0.42, 0.12));
@@ -272,6 +280,24 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   const beam = (name: string, w: number, h: number, d: number, x: number, y: number, z: number): Mesh => {
     const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
     m.position.set(x, y, z); m.parent = rig; m.material = wood; allMeshes.push(m);
+    if (paint && name !== "frameCap" && name !== "base") {
+      // the beam's long axis and its two short ones, as box dimensions [w, h, d]
+      const dims = [w, h, d];
+      const long = dims.indexOf(Math.max(...dims));
+      const [a, b] = [0, 1, 2].filter((i) => i !== long);
+      for (const [cover, strip, along, shift] of [[a, b, P.long, P.shift], [b, a, P.short, -P.shift]] as const) {
+        const size = [0, 0, 0];
+        size[long] = dims[long] * along;
+        size[cover] = dims[cover] * 1.04;
+        size[strip] = dims[strip] * P.strip;
+        const s = MeshBuilder.CreateBox("framePaint", { width: size[0], height: size[1], depth: size[2] }, scene);
+        const off = [0, 0, 0];
+        off[long] = dims[long] * shift;
+        off[strip] = dims[strip] * (shift > 0 ? 0.12 : -0.12);
+        s.position.set(off[0], off[1], off[2]);
+        s.parent = m; s.material = paint; allMeshes.push(s);
+      }
+    }
     return m;
   };
   for (const side of [-1, 1]) beam("frameRail", F.beam, F.beam, F.long, side * F.half, F.railY, 0);
