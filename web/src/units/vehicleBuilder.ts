@@ -1337,7 +1337,7 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
 const WHEELBARROW = {
   scale: 2.2,          // rig scale: operator .46 x 2.2 = a full man
   trayY: 0.36,         // tray floor centre height (rig units)
-  trayWide: 0.44,
+  trayWide: 0.3,       // 377: a rider's hips and a little more (farmer.wheelbarrow.red.png), so the riders straddle it and loom over it; was .44
   trayLong: 0.78,
   trayZ: 0.08,
   backSeat: -0.06,     // the Apple Thrower's hips
@@ -1371,7 +1371,7 @@ const TRAY_STRAW = new Color3(0.82, 0.62, 0.3);
  * end-grain faces and growth rings show on both ends; the braces bolt to the hub at each end face and run up and out to the tray's side boards, and
  * the handles start at the drum's end faces, not inside it.
  */
-const LOG_WHEEL = { d: 0.34, thick: 0.36, bark: 0.02, ring: 0.55, hub: 0.05, brace: 0.022, braceBack: 0.16, leg: 0.03, legFoot: 0.02, legIn: 0.1, splay: 0.04, glow: 0.18, staves: 12, staveShade: 0.78 };
+const LOG_WHEEL = { d: 0.34, thick: 0.36 * (0.3 / 0.44), bark: 0.02, ring: 0.55, hub: 0.05, brace: 0.022, braceBack: 0.16, leg: 0.03, legFoot: 0.02, legIn: 0.1, splay: 0.04, glow: 0.18, staves: 12, staveShade: 0.78 };
 const LOG_BARK = new Color3(0.36, 0.22, 0.14);
 const LOG_GRAIN = new Color3(0.82, 0.62, 0.42);
 const LOG_RING = new Color3(0.64, 0.42, 0.28);
@@ -1383,6 +1383,13 @@ const CART_WOOD = new Color3(0.52, 0.3, 0.2);
  * units and radians: Farmer's hips .lipIn behind the tray's front end and .lipUp above its rim, thighs pitched .frontThigh (forward and a little down),
  * splayed .frontSplay out, knees .frontKnee; Apple Thrower .astrideUp above the hay seat, thighs .backThigh, splayed .backSplay, knees .backKnee.
  */
+/*
+ * [S] a narrow tray the Apple Thrower straddles (377; farmer.wheelbarrow.red.png: the tray is barely wider than a man's hips; the riders sit up on it,
+ * legs hanging outside its side boards, and loom over it): WHEELBARROW.trayWide .44 -> .3 with the drum wheel kept at its share of the tray; the hay is
+ * a flat bed filling the tray to HAY_BED.fill of its sides, lumpy on top, not a mound over the rim; the Apple Thrower's hips sit on the side boards'
+ * top (the rim) + CREW_SEAT.astrideUp, so his splayed thighs run out over the boards and his shins hang outside the tray.
+ */
+const HAY_BED = { fill: 0.92, lumps: 0.02, inset: 0.5 };
 const CREW_SEAT = { lipIn: 0.05, lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.02, backThigh: -0.75, backSplay: 1.0, backKnee: 0.95 };
 const CREW_FORK = { long: 0.72, butt: 0.2, thick: 0.013, tines: 3, tine: 0.2, spread: 0.055, curl: 0.4, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
 const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
@@ -1540,11 +1547,13 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   };
   for (const xOff of [-W.trayWide / 2, W.trayWide / 2]) addBoards("side", P.thick, W.trayLong, xOff, W.trayZ, false);
   for (const zOff of [-W.trayLong / 2, W.trayLong / 2]) addBoards("front", W.trayWide + P.thick, P.thick, 0, W.trayZ + zOff, true);
-  // The hay heaped in the tray and over its rim
-  const heap = MeshBuilder.CreateIcoSphere("trayHay", { radiusX: W.trayWide * P.heapWide * 0.5, radiusY: sideTall * 0.5 + P.heap, radiusZ: W.trayLong * 0.48, subdivisions: 2, flat: true }, scene);
-  heap.position.set(0, W.trayY + sideTall * 0.5, W.trayZ);
+  // The hay: a flat lumpy bed filling the tray to just under its rim (HAY_BED), not heaped over it
+  const bedTall = sideTall * HAY_BED.fill;
+  const heap = MeshBuilder.CreateBox("trayHay", { width: W.trayWide - P.thick * HAY_BED.inset * 2, height: bedTall, depth: W.trayLong - P.thick * HAY_BED.inset * 2 }, scene);
+  heap.position.set(0, W.trayY + bedTall * 0.5, W.trayZ);
+  heap.convertToFlatShadedMesh();
   heap.parent = rig; heap.material = lit(TRAY_STRAW, 0.25); allMeshes.push(heap);
-  jitterVertices(heap, 0.012, 347);
+  jitterVertices(heap, HAY_BED.lumps, 347);
 
   // Wheel at front (+Z), under the tray's nose
   const wheelZ = W.trayZ + W.trayLong / 2 + 0.06;
@@ -1611,7 +1620,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     handle.parent = rig; handle.material = wood; allMeshes.push(handle);
   }
 
-  const seatY = W.trayY + sideTall + P.heap * 0.85; // sat on top of the hay heaped over the rim, not down in the tray
+  const seatY = W.trayY + sideTall; // the rim: the Apple Thrower sits astride the side boards (HAY_BED spec)
   const crew: Partial<WheelbarrowCrew> = {};
   const S = CREW_SEAT;
   // The Farmer, front: sat up on the tray's front lip, legs splayed forward and out over the wheel (spec at CREW_SEAT)
@@ -1647,7 +1656,7 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     }
     holdInFist(man.rightHand, fork, F.dir, Vector3.Zero(), W.scale);
   });
-  // The Apple Thrower, behind him: astride the hay, legs out over the tray's sides and hanging outside them, his throwing arm up and back
+  // The Apple Thrower, behind him: astride the narrow tray on its side boards, legs out over them and hanging outside, his throwing arm up and back
   addOperator(scene, rig, allMeshes, 0, 0, W.backSeat, color, (man) => {
     crew.thrower = man;
     man.root.position.y = seatY + S.astrideUp - man.hip.position.y;
