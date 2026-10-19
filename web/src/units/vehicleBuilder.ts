@@ -2063,11 +2063,11 @@ const MAMMOTH_LEG = {
  * [S] the topline falls from the head to the rump (378; tribal.mammoth.red.png, .jpg, factions/tribal.jpg: the domed head and its mane are the summit, the
  * back highest just behind them and sloping down to a lower, smaller rump; critic 377: the egg hull peaked over the mid-back, above the head). The hump
  * moves forward to just behind the head (.humpAt .5) and drops to .hump .2, so the mane tops it; the upper half of every ring is scaled 1 + .slope x t
- * (taller at the chest, lower at the rump: the back's top about .95 under the mane, .67 over the rump), and the whole ring 1 + .slopeWide x t (a smaller rump).
+ * (taller at the chest, lower at the rump: the back's top about .95 under the mane, under .6 over the rump; .25 read level, look 378), and the whole ring 1 + .slopeWide x t (a smaller rump).
  */
 const MAMMOTH_BARREL = {
   rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.2, humpAt: 0.5, humpFront: 0.25, humpBack: 0.8, belly: 0.2, bellyNarrow: 0.38,
-  jitter: 0.035, haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtFull: 5, slope: 0.25, slopeWide: 0.1,
+  jitter: 0.035, haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtFull: 5, slope: 0.45, slopeWide: 0.15,
 };
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
