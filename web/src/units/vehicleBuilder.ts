@@ -542,56 +542,146 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
 
 // ═══════════════════════ BALLISTA ═══════════════════════
 // Fires FORWARD (+Z). Bolt points along +Z. Bow arms at the front.
+/*
+ * [S] box frame (384; ancient.ballista.red.png, .blue.png: a tall open box of red-brown timber on four spoked wheels, two torsion-spring housings on its top
+ * with team coil caps, small iron plates on the top plank, bow arms out of the sides bound in black, a long trough to the rear). Metres, +z the firing line:
+ *   - BALLISTA_FRAME: a top plank .wide across, .deep fore and aft, .plank thick, its top at .top; four corner posts .post square from .floor up to it and
+ *     two inner posts either side of the trough slot (.slot across); a bottom plank at .floor; front and back rails at mid height. Open between the posts,
+ *     so the two spring columns (.spring across) stand inside the box under the housings, seen through the front.
+ *   - BALLISTA_HOUSING: on the top plank at x = +-.at, an eight-sided collar .base across, .baseTall, a drum .drum across, .drumTall above it, and a lumpy
+ *     team coil cap .cap across on the drum; .plates dark iron plates .plate long on the top plank in two rows.
+ *   - BALLISTA_ARMS: from the frame's sides out to .reach of half-width each way, .thick square, tapering to .tip; a black binding .bind long at .bindAt.
+ *   - BALLISTA_STOCK: a trough .wide across from .front ahead of the frame back to .back behind it, its top at the plank's; two dark cords along it; a winch
+ *     axle across its rear end with four handle spokes on each side.
+ *   - BALLISTA_WHEEL: four wheels .across tall at the frame's corners, outside the posts: an open ten-sided rim .rim thick on four spokes round a hub.
+ */
+const BALLISTA_FRAME = { wide: 1.5, deep: 0.62, plank: 0.11, top: 1.02, post: 0.13, slot: 0.24, floor: 0.34, spring: 0.17 };
+const BALLISTA_HOUSING = { at: 0.48, base: 0.34, baseTall: 0.07, drum: 0.24, drumTall: 0.13, cap: 0.24, plates: 8, plate: 0.13 };
+const BALLISTA_ARMS = { reach: 1.75, thick: 0.1, tip: 0.6, bind: 0.13, bindAt: 0.72 };
+const BALLISTA_STOCK = { wide: 0.18, tall: 0.12, front: 0.5, back: 1.55 };
+const BALLISTA_WHEEL = { across: 0.62, rim: 0.07, wide: 0.08, hub: 0.12 };
+const BALLISTA_WOOD = new Color3(0.62, 0.3, 0.2);
 function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("ballista_root", scene);
   const allMeshes: Mesh[] = [];
-  const teamPrimary = makeMat(scene, color);
-  const wood = makeMat(scene, new Color3(0.5, 0.35, 0.18));
-  const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
+  const mf = getMaterialFactory();
+  const wood = mf.get("wood", BALLISTA_WOOD, { emissive: BALLISTA_WOOD.scale(0.14) });
+  const darkWood = mf.get("wood", BALLISTA_WOOD.scale(0.7), { emissive: BALLISTA_WOOD.scale(0.08) });
+  const iron = mf.get("cloth", new Color3(0.36, 0.32, 0.3), { emissive: new Color3(0.05, 0.045, 0.04) });
+  const black = mf.get("cloth", new Color3(0.12, 0.12, 0.13));
+  const team = mf.get("cloth", color, { emissive: color.scale(0.14) });
+  const add = <T extends Mesh>(m: T, material: Material, parent: TransformNode = root): T => {
+    m.parent = parent; m.material = material; allMeshes.push(m); return m;
+  };
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, material: Material = wood): Mesh => {
+    const m = add(MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene), material);
+    m.position.set(x, y, z);
+    return m;
+  };
 
-  // Base (longer along Z)
-  const base = MeshBuilder.CreateBox("base", { width: 0.8, height: 0.15, depth: 1.2 }, scene);
-  base.position.y = 0.35; base.parent = root; base.material = teamPrimary; allMeshes.push(base);
-
-  // Wheels (on sides, X axis)
-  for (const xOff of [-0.35, 0.35]) {
-    const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.07, diameter: 0.45, tessellation: 12 }, scene);
-    wheel.position.set(xOff, 0.22, -0.2);
-    wheel.rotation.z = Math.PI / 2;
-    wheel.parent = root; wheel.material = wood; allMeshes.push(wheel);
+  // Frame: top plank, corner and inner posts, bottom plank, front and back rails
+  const F = BALLISTA_FRAME;
+  const halfW = F.wide / 2;
+  const halfD = F.deep / 2;
+  const base = box("base", F.wide, F.plank, F.deep, 0, F.top - F.plank / 2, 0);
+  const postTall = F.top - F.plank - F.floor;
+  const postY = F.floor + postTall / 2;
+  for (const x of [-halfW + F.post / 2, halfW - F.post / 2, -(F.slot / 2 + F.post / 2), F.slot / 2 + F.post / 2]) {
+    for (const z of [-halfD + F.post / 2, halfD - F.post / 2]) box("ballistaPost", F.post, postTall, F.post, x, postY, z);
   }
-
-  // Track/rail along Z
-  const rail = MeshBuilder.CreateBox("rail", { width: 0.1, height: 0.08, depth: 1.4 }, scene);
-  rail.position.set(0, 0.52, 0);
-  rail.parent = root; rail.material = wood; allMeshes.push(rail);
-
-  // Bow arms at the front (+Z), angling outward on X
+  box("ballistaFloor", F.wide - 0.1, F.plank, F.deep - 0.06, 0, F.floor + F.plank / 2, 0);
+  for (const z of [-halfD + 0.03, halfD - 0.03]) box("ballistaRail", F.wide - 0.06, 0.1, 0.06, 0, F.floor + postTall * 0.4, z, darkWood);
+  // the spring columns inside the box, under each housing
   for (const side of [-1, 1]) {
-    const bowArm = MeshBuilder.CreateBox("bowarm", { width: 0.5, height: 0.06, depth: 0.06 }, scene);
-    bowArm.position.set(side * 0.15, 0.7, 0.5);
-    bowArm.rotation.y = side * 0.3;
-    bowArm.parent = root; bowArm.material = wood; allMeshes.push(bowArm);
+    const spring = add(MeshBuilder.CreateCylinder("ballistaSpring", { height: postTall, diameter: F.spring, tessellation: 8 }, scene), darkWood);
+    spring.position.set(side * BALLISTA_HOUSING.at, postY, 0);
   }
 
-  // String (horizontal across bow arms, along X)
-  const string = MeshBuilder.CreateCylinder("string", { height: 0.65, diameter: 0.015, tessellation: 4 }, scene);
-  string.position.set(0, 0.55, 0.45);
-  string.rotation.z = Math.PI / 2; // along X
-  string.parent = root; string.material = makeMat(scene, new Color3(0.7, 0.6, 0.4)); allMeshes.push(string);
+  // Torsion housings with team coil caps, iron plates on the plank
+  const H = BALLISTA_HOUSING;
+  for (const side of [-1, 1]) {
+    const collar = add(MeshBuilder.CreateCylinder("ballistaCollar", { height: H.baseTall, diameter: H.base, tessellation: 8 }, scene), darkWood);
+    collar.position.set(side * H.at, F.top + H.baseTall / 2, 0);
+    const drum = add(MeshBuilder.CreateCylinder("ballistaDrum", { height: H.drumTall, diameterTop: H.drum * 1.08, diameterBottom: H.drum, tessellation: 8 }, scene), darkWood);
+    drum.position.set(side * H.at, F.top + H.baseTall + H.drumTall / 2, 0);
+    const cap = add(MeshBuilder.CreateIcoSphere("ballistaCoil", { radius: H.cap / 2, subdivisions: 1, flat: true }, scene), team);
+    cap.scaling.set(1, 0.62, 0.9);
+    cap.position.set(side * H.at, F.top + H.baseTall + H.drumTall + H.cap * 0.18, 0);
+    jitterVertices(cap, 0.18, 7 + side);
+  }
+  for (let i = 0; i < H.plates; i++) {
+    const col = i % 4;
+    const row = Math.floor(i / 4);
+    const x = (col - 1.5) * (F.wide / 4.2);
+    if (Math.abs(Math.abs(x) - H.at) < H.base * 0.6) continue;
+    box("ballistaPlate", H.plate * 0.5, 0.02, H.plate, x, F.top + 0.01, (row ? 1 : -1) * F.deep * 0.25, iron);
+  }
 
-  // Loaded bolt (points along +Z)
-  const bolt = MeshBuilder.CreateCylinder("bolt", { height: 0.8, diameter: 0.04, tessellation: 4 }, scene);
-  bolt.position.set(0, 0.58, 0.1);
-  bolt.rotation.x = Math.PI / 2; // along Z
-  bolt.parent = root; bolt.material = metal; allMeshes.push(bolt);
+  // Bow arms out of the sides, black bindings
+  const A = BALLISTA_ARMS;
+  for (const side of [-1, 1]) {
+    const length = A.reach - halfW;
+    const arm = add(MeshBuilder.CreateCylinder("ballistaArm", { height: length, diameterTop: A.thick * A.tip, diameterBottom: A.thick, tessellation: 4 }, scene), wood);
+    arm.rotation.z = -side * Math.PI / 2;
+    arm.position.set(side * (halfW + length / 2), F.top - F.plank * 0.6, halfD * 0.4);
+    const bind = add(MeshBuilder.CreateCylinder("ballistaBind", { height: A.bind, diameter: A.thick * 1.35, tessellation: 6 }, scene), black);
+    bind.rotation.z = Math.PI / 2;
+    bind.position.set(side * (halfW + length * (A.bindAt - 0.5) + length / 2), arm.position.y, arm.position.z);
+  }
 
-  // Operator behind (-Z)
-  const operator = addOperator(scene, root, allMeshes, 0.25, 0.72, -0.5, color);
+  // Trough to the rear, cords along it, winch at its end
+  const S = BALLISTA_STOCK;
+  const stockLong = S.front + S.back;
+  const stockZ = (S.front - S.back) / 2;
+  const stockY = F.top + S.tall / 2 - 0.02;
+  box("ballistaStock", S.wide, S.tall, stockLong, 0, stockY, stockZ);
+  for (const side of [-1, 1]) box("ballistaCord", 0.02, 0.02, stockLong * 0.85, side * S.wide * 0.22, stockY + S.tall / 2 + 0.012, stockZ - stockLong * 0.05, black);
+  const winchZ = -S.back + 0.08;
+  const axle = add(MeshBuilder.CreateCylinder("ballistaWinch", { height: S.wide + 0.24, diameter: 0.06, tessellation: 6 }, scene), darkWood);
+  axle.rotation.z = Math.PI / 2;
+  axle.position.set(0, stockY, winchZ);
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < 4; k++) {
+      const spoke = add(MeshBuilder.CreateBox("ballistaHandle", { width: 0.025, height: 0.26, depth: 0.025 }, scene), black);
+      spoke.position.set(side * (S.wide / 2 + 0.1), stockY, winchZ);
+      spoke.rotation.x = (k * Math.PI) / 4;
+    }
+  }
+
+  // Loaded bolt in the trough, its leaf head past the frame's front
+  const bolt = add(MeshBuilder.CreateCylinder("bolt", { height: 1.5, diameter: 0.05, tessellation: 6 }, scene), darkWood);
+  bolt.rotation.x = Math.PI / 2;
+  bolt.position.set(0, stockY + S.tall / 2 + 0.03, S.front - 0.55);
+  const head = add(MeshBuilder.CreateCylinder("boltHead", { height: 0.3, diameterTop: 0, diameterBottom: 0.13, tessellation: 4 }, scene), black);
+  head.scaling.z = 0.35;
+  head.rotation.x = Math.PI / 2;
+  head.position.set(0, bolt.position.y, S.front + 0.35);
+
+  // Four spoked wheels at the corners, outside the posts
+  const W = BALLISTA_WHEEL;
+  for (const x of [-(halfW + W.wide / 2 + 0.01), halfW + W.wide / 2 + 0.01]) {
+    for (const z of [-halfD + 0.05, halfD - 0.05]) {
+      const rim = add(MeshBuilder.CreateTorus("ballistaWheel", { diameter: W.across - W.rim, thickness: W.rim, tessellation: 10 }, scene), wood);
+      rim.rotation.z = Math.PI / 2;
+      rim.scaling.y = W.wide / W.rim;
+      rim.position.set(x, W.across / 2, z);
+      for (let k = 0; k < 2; k++) {
+        const spoke = add(MeshBuilder.CreateBox("ballistaSpoke", { width: 0.04, height: W.across - W.rim, depth: 0.04 }, scene), wood);
+        spoke.position.set(x, W.across / 2, z);
+        spoke.rotation.x = (k * Math.PI) / 2 + Math.PI / 4;
+      }
+      const hub = add(MeshBuilder.CreateCylinder("ballistaHub", { height: W.wide * 1.3, diameter: W.hub, tessellation: 8 }, scene), darkWood);
+      hub.rotation.z = Math.PI / 2;
+      hub.position.set(x, W.across / 2, z);
+    }
+  }
+
+  // Operator behind (-Z), clear of the frame's back
+  const operator = addOperator(scene, root, allMeshes, 0.25, 0.72, -halfD - 0.55, color);
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, root, "ballista_bolt_socket", new Vector3(0, 0.58, 0.54)),
-    impactOrigin: makeSocket(scene, root, "ballista_impact_socket", new Vector3(0, 0.58, 0.3)),
+    primaryMuzzle: makeSocket(scene, root, "ballista_bolt_socket", new Vector3(0, bolt.position.y, S.front + 0.4)),
+    impactOrigin: makeSocket(scene, root, "ballista_impact_socket", new Vector3(0, bolt.position.y, S.front)),
   };
 
   return wrapAsBody(
