@@ -316,6 +316,8 @@ const DEER_ANTLER = new Color3(0.66, 0.5, 0.33);
 const DEER_RACK = {
   beam: [0.55, 0.55, 0.5, 0.42], bend: [1.3, 0.95, 0.6, 0.25], back: 0.12, thick: 0.24, taper: 0.82,
   tine: [0.62, 0.58, 0.5, 0.36], inward: 0.18, brow: 0.38, tan: new Color3(0.72, 0.6, 0.45), glow: 0.15,
+  // the staff skull's rack grown to the mask's (tribal.bone_mage.png: the staff's antlers as large as the pair on his head)
+  staff: 1.4,
 };
 /*
  * [S] the deer skull worn as a mask (361; tribal.bone_mage.red.png: the skull over the face, its long muzzle down to the chin, the wearer's eyes in its
@@ -326,7 +328,7 @@ const DEER_RACK = {
  */
 const DEER_MASK = { top: 0.95, tip: 0.36, flat: 0.32, rise: 0.1, drop: 0.08, tilt: 0.2, out: 0.26, spread: 1.55, socket: 1.4 };
 
-function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: number, tall: number, R: number, u: (v: number) => number, chin?: number): void {
+function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: number, tall: number, R: number, u: (v: number) => number, chin?: number, rackScale = 1): void {
   const bone = snout.material;
   // The staff's skull (no chin handed over) keeps its muzzle running forward and down
   if (chin === undefined) {
@@ -350,7 +352,8 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
     face.material = bone;
     face.parent = skull;
   }
-  const rack = chin !== undefined;
+  // The rack on the mask and on the staff (the staff's grown by rackScale to the mask's own size: DEER_RACK.staff)
+  const rack = chin !== undefined || rackScale !== 1;
   const antler = rack ? mat(scene, DEER_RACK.tan, DEER_RACK.glow) : mat(scene, DEER_ANTLER);
   const up = Vector3.Up();
   const stick = (from: Vector3, dir: Vector3, long: number, thick: number, tip = 0.6) => {
@@ -368,13 +371,13 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
     const R2 = DEER_RACK;
     for (const side of [-1, 1]) {
       let at = new Vector3(side * u(0.3 * W), u(tall * 0.85), u(0.05 * W));
-      let thick = u(R2.thick * W);
+      let thick = u(R2.thick * W * rackScale);
       // The brow tine, forward and out off the root
-      stick(at, new Vector3(side * 0.5, 0.45, 1), u(R2.brow * H), thick * 0.7, 0.35);
+      stick(at, new Vector3(side * 0.5, 0.45, 1), u(R2.brow * H * rackScale), thick * 0.7, 0.35);
       for (let k = 0; k < R2.beam.length; k++) {
         const dir = new Vector3(side * Math.sin(R2.bend[k]), Math.cos(R2.bend[k]), -R2.back);
         const next = R2.taper * thick;
-        at = stick(at, dir, u(R2.beam[k] * H), thick, next / thick);
+        at = stick(at, dir, u(R2.beam[k] * H * rackScale), thick, next / thick);
         thick = next;
         const knuckle = MeshBuilder.CreateIcoSphere("deerAntler", { radius: thick * 0.55, subdivisions: 1, flat: true }, scene);
         knuckle.position = at.clone();
@@ -382,7 +385,7 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
         knuckle.parent = skull;
         // A tine up off this joint (the last one forks off the tip a little outward)
         const last = k === R2.beam.length - 1;
-        stick(at, new Vector3(-side * R2.inward + (last ? side * 0.35 : 0), 1, (k % 2 ? -0.15 : 0.15)), u(R2.tine[k] * H), thick * 0.85, 0.3);
+        stick(at, new Vector3(-side * R2.inward + (last ? side * 0.35 : 0), 1, (k % 2 ? -0.15 : 0.15)), u(R2.tine[k] * H * rackScale), thick * 0.85, 0.3);
       }
     }
     return;
@@ -2962,7 +2965,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         hole.parent = skull;
       }
       // The muzzle and the antlers, cut from the mask's spec to this cranium (W across, a cranium-height tall): the bone material is read off the skull itself
-      addDeerSkull(scene, skull, skull, W, W * 0.9, W * 0.45, W * 0.5, (v) => v);
+      addDeerSkull(scene, skull, skull, W, W * 0.9, W * 0.45, W * 0.5, (v) => v, undefined, DEER_RACK.staff);
       const rope = MeshBuilder.CreateTorus("staffRope", { diameter: 0.07 * L, thickness: 0.016 * L, tessellation: 8 }, scene);
       rope.position.set(top.x, top.y - 0.02 * L, top.z);
       rope.material = mat(scene, new Color3(0.36, 0.22, 0.1));
