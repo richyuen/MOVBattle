@@ -12,7 +12,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
+import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 
 export interface SpawnVisualOptions {
@@ -694,7 +694,8 @@ export class UnitFactory {
     // kilt in place of the painted loincloth, with a fur collar over his shoulders.
     // (not the scarecrow: his shirt is tucked into the trousers his suspenders hold up, SCARECROW_DRESS)
     // (nor the king: his short blouse ends at the belt over puffy breeches to the knee, medievalDress kingDress)
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king") {
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king"
+      && !wearsHideDress(definition.id)) {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const knight = definition.id === "medieval.knight";
       const skirt = knight

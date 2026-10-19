@@ -1110,6 +1110,14 @@ export function dressTribalPauldrons(scene: Scene, body: ArticulatedBody, unitId
  */
 const HIDE_DRESS = { sides: 8, top: 1.0, low: 0.56, strapAt: 0.55, strapWide: 0.13, strapRise: 0.45, skirt: 0.62, flare: 1.4, rag: 0.16, color: new Color3(0.52, 0.3, 0.22), glow: 0.15 };
 const HIDE_DRESSES = new Set(["tribal.stoner"]);
+/*
+ * [S] the skirt hung close (364; tribal.stoner.red.png: a reddish-brown skirt hanging close round the hips to mid-thigh, its hem torn into points; critic
+ * 362-363: a stiff dark panel flaring like a lampshade). Replaces the flared sleeve on the trunk (and the skin kilt under it, which unitFactory no longer hangs
+ * for her: wearsHideDress): off the hips, a snug band HIDE_SKIRT.band of the thigh tall round the waist (.waist pelvis half-widths round), and .tongues
+ * torn hide tongues side by side round it, overlapping, each between .short and 1 of .long of the thigh long and hanging nearly straight (.flare at the
+ * foot), its foot torn to an off-centre point .tear of its length; each tongue its own shade of the dress's hide.
+ */
+const HIDE_SKIRT = { band: 0.12, waist: 1.18, tongues: 10, long: 0.62, short: 0.78, flare: 1.1, tear: 0.22 };
 
 /** Dresses a bare tribesman in the one-strap hide dress (spec at HIDE_DRESS), parented to the torso joint. Empty when he wears none. */
 export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId: string): Mesh[] {
@@ -1170,16 +1178,50 @@ export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId
     strap.parent = body.torso;
     added.push(strap);
   }
-  // The skirt: flared, its foot torn into points
+  // [S] 364 the skirt hung close (spec at HIDE_SKIRT), off the hips, in place of the stiff flared sleeve on the trunk
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
-  const pelvisX = pelvis ? pelvis.getBoundingInfo().boundingBox.extendSize.x : halfX;
-  const skirtTop = Math.max(halfX * 0.95, pelvisX * 1.12);
-  const skirtLong = thigh * D.skirt + trunk * 0.06;
-  sleeve("tunicSkirt", (x, z, top) => {
-    if (top) return [band.midX + x * skirtTop, trunk * 0.06, midZ + z * halfZ * 0.95];
-    const k = ((Math.round(Math.atan2(x, z) / (Math.PI * 2) * D.sides) % D.sides) + D.sides) % D.sides;
-    const torn = (k % 2) * thigh * D.rag * (0.6 + 0.8 * hashShare(5.9, k, 1, 2));
-    return [band.midX + x * skirtTop * D.flare, trunk * 0.06 - skirtLong - torn, midZ + z * halfZ * 0.95 * D.flare];
-  });
+  if (!pelvis) return added;
+  const S = HIDE_SKIRT;
+  const size = pelvis.getBoundingInfo().boundingBox.extendSize;
+  const waistY = pelvis.position.y + size.y;
+  const zk = Math.max(0.7, size.z / size.x * 1.25);
+  const r0 = size.x * S.waist;
+  // a snug band round the waist under the tongues' tops
+  const belt = MeshBuilder.CreateCylinder("tunicSkirt", { height: thigh * S.band, diameterTop: r0 * 2, diameterBottom: r0 * 2 * 1.04, tessellation: D.sides }, scene);
+  belt.convertToFlatShadedMesh();
+  belt.scaling.z = zk;
+  belt.position.y = waistY - thigh * S.band * 0.5;
+  belt.material = hide;
+  belt.parent = body.hip;
+  added.push(belt);
+  for (let i = 0; i < S.tongues; i++) {
+    const share = (k: number) => hashShare(47.3, i, k, 0);
+    const a = ((i + 0.5) / S.tongues) * Math.PI * 2;
+    const long = thigh * S.long * (S.short + (1 - S.short) * share(1));
+    const rBot = r0 * S.flare;
+    const wide = (2 * Math.PI * (r0 + rBot) * 0.5) / S.tongues * 1.22;
+    const tongue = MeshBuilder.CreateBox("tunicSkirt", { width: wide, height: long * 0.85, depth: thigh * 0.03 }, scene);
+    tongue.convertToFlatShadedMesh();
+    tongue.rotation.set(-Math.atan2(rBot - r0, long), a, (share(2) - 0.5) * 0.12);
+    const r = (r0 + rBot) * 0.5 * 1.03;
+    tongue.position.set(Math.sin(a) * r, waistY - long * 0.425, Math.cos(a) * r * zk);
+    tongue.material = getMaterialFactory().get("cloth", D.color.scale(0.9 + share(3) * 0.2), { emissiveIntensity: D.glow });
+    tongue.parent = body.hip;
+    added.push(tongue);
+    // ...torn to an off-centre point
+    const tip = MeshBuilder.CreateCylinder("tunicSkirt", { height: long * S.tear, diameterTop: 0, diameterBottom: wide, tessellation: 3 }, scene);
+    tip.convertToFlatShadedMesh();
+    tip.scaling.z = 0.25;
+    tip.rotation.set(Math.PI, 0, (share(4) - 0.5) * 0.6);
+    tip.position.set(0, -long * 0.425 - long * S.tear * 0.5 + long * 0.02, 0);
+    tip.material = tongue.material;
+    tip.parent = tongue;
+    added.push(tip);
+  }
   return added;
+}
+
+/** Whether this unit wears the one-strap hide dress (its own close skirt: unitFactory hangs no kilt under it). */
+export function wearsHideDress(unitId: string): boolean {
+  return HIDE_DRESSES.has(unitId);
 }
