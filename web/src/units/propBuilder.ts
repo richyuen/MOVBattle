@@ -227,8 +227,8 @@ const SKULL_FACETED = {
  */
 const BEAST_SKULL = {
   wide: 1.12, long: 1.35, tall: 0.62, under: 0.55, lift: 0.08, back: 0.12, pitch: 0.12, jitter: 0.07,
-  beak: 0.85, beakRoot: 0.62, beakTip: 0.16, beakFlat: 0.55, beakDip: 0.42, gape: 0.35, eye: 0.3, eyeTurn: 0.55,
-  tan: new Color3(0.66, 0.55, 0.4), glow: 0.12,
+  beak: 0.8, beakRoot: 0.62, beakTip: 0.2, beakFlat: 0.55, beakDip: 0.12, gape: 0.35, eye: 0.3, eyeTurn: 0.55,
+  tan: new Color3(0.68, 0.52, 0.34), glow: 0.2,
 };
 const BERET_HEADS = 2.0;
 const BERET_THICK = 0.32;
