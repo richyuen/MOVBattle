@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 385   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 28/139   Parked: 0
+Iteration: 386   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 28/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -7,7 +7,7 @@ tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
-ancient: shield_bearer ++++ D | sarissa -+++ o | hoplite ++++ D | snake_archer ---+ o | ballista ---+ o | minotaur -+-+ o | zeus -+-+ o
+ancient: shield_bearer ++++ D | sarissa -+++ o | hoplite ++++ D | snake_archer -+-+ o | ballista ---+ o | minotaur -+-+ o | zeus -+++ o
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
@@ -23,15 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-385 (BASE 522cb46): [S] shield_bearer a sandals 9c57271 approved (a PASS, D) | [S] hoplite a crest box f6b09dd +79ce333 approved (a PASS, D) | [S] sarissa a eye slots fd2a912 approved (narrowed) | [S] snake_archer b nocked snake 100ea4a approved (struck c.1) | [S] minotaur a pauldron shell 3131dbb +ac045b2 approved | [S] zeus a toga 3d11834 approved
+386 (BASE f712e55): [S] zeus a legs fd8eb0f approved (struck a.4) | [S] zeus c chain ff36ed0 (evidence 7d839dd) approved (c PASS) | [S] sarissa a nose guard 041521a approved (struck a.1) | [S] minotaur a scrolled belt 20a8ed6 +ab2eb1a approved (narrowed) | [S] snake_archer a kit 915b7e7 approved (narrowed) | [S] halfling a belt 08cf903 approved (narrowed) | [P] snake_archer b snake size 789d171 approved (b PASS)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] ancient.shield_bearer (9c57271) VERDICT: APPROVE CRITERION: ancient.shield_bearer.a PASS (previous: FAIL)
-- GAP: [S] ancient.hoplite (f6b09dd +79ce333) VERDICT: APPROVE CRITERION: ancient.hoplite.a PASS (previous: FAIL)
-- GAP: [S] ancient.sarissa (fd2a912) VERDICT: APPROVE CRITERION: ancient.sarissa.a FAIL (previous: FAIL)
-- GAP: [S] ancient.snake_archer (100ea4a) VERDICT: APPROVE CRITERION: ancient.snake_archer.b FAIL (previous: FAIL)
-- GAP: [S] ancient.minotaur (3131dbb +ac045b2) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
-- GAP: [S] ancient.zeus (3d11834) VERDICT: APPROVE CRITERION: ancient.zeus.a FAIL (previous: FAIL)
+- GAP: [S] ancient.zeus (fd8eb0f) VERDICT: APPROVE CRITERION: ancient.zeus.a FAIL (previous: FAIL)
+- GAP: [S] ancient.zeus (ff36ed0) VERDICT: APPROVE CRITERION: ancient.zeus.c PASS (previous: FAIL)
+- GAP: [S] ancient.sarissa (041521a) VERDICT: APPROVE CRITERION: ancient.sarissa.a FAIL (previous: FAIL)
+- GAP: [S] ancient.minotaur (20a8ed6 + ab2eb1a) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
+- GAP: [S] ancient.snake_archer (915b7e7) VERDICT: APPROVE CRITERION: ancient.snake_archer.a FAIL (previous: FAIL)
+- GAP: [S] farmer.halfling (08cf903) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [P] ancient.snake_archer (789d171) VERDICT: APPROVE CRITERION: ancient.snake_archer.b PASS (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open in the old batches: wheelbarrow a (Thrower back + up, knees wide; probe numbers in its Notes), halfling a (evidence first: 383 _idle pitch PI/2.9 too steep; then belt [S], feet [P]). Ancient gaps in its unit files (critic 385 ranked: sarissa nose guard up between the eyes, zeus bare legs + strapSandals, sarissa cape collar, zeus toga to the belt, minotaur scrolled belt, snake summon). Ballista operator needs an _idle framed on the machine's rear first.
-- Minotaur Big Headbutt needs an evidence commit first: capture takes the first special event (charge at 17 ms) as _ability.
-- Flat colour that survives ACES: "unlit" material, emissive red >1 / blue ~0, glow.addExcludedMesh. "metal" renders black: use cloth + glow. Vehicle wrapAsBody team-tints every mesh sharing its main mesh's material.
-- Melee blows are logged as the attack starts: _release is a tick before the animator's attack; motion shows in _flight. trunkBand on a thin slice of a box trunk falls back to an oversized box: use trunkBand(body,0,1).
-- Probes (output/loop/, --build first): probe_shield, _potion, _mino, _wheelbarrow, _halfling, _hoplite, _head, _sarissa (--unit= --pat=), _local (torso-local extents). Particles do not render on the stepped clock. Write node scripts with the Write tool.
+- Open: wheelbarrow a (Thrower back + up, knees wide; probe numbers in its Notes), halfling a (evidence first: _idle pitch; then stance [S], feet [S], buckle bar [P]). Ancient gaps in unit files (critic 386 ranked: minotaur Big Headbutt, snake summon as a sim actor, zeus beard, sarissa cape collar, zeus toga fill, minotaur girdle face).
+- Evidence first: minotaur Big Headbutt (capture takes the charge at 17 ms as _ability); snake_archer _idle re-aim above the held snake (baldric/belt hidden); ballista operator needs an _idle on the machine rear.
+- LEDGER is at 13995/14000: compact it first next iteration (fold zeus/sarissa/snake/mino rows into one compacted ancient row with a git show pointer).
+- Flat colour that survives ACES: "unlit" material, emissive red >1 / blue ~0, glow.addExcludedMesh. "metal" renders black: use cloth + glow. Generic tunicSkirt covers waist gear: exclude the unit in unitFactory's skirt condition.
+- Probes (output/loop/, --build first): probe_shield, _potion, _mino, _wheelbarrow, _halfling, _hoplite, _head, _sarissa (--unit= --pat=), _local. Python edits: set PYTHONUTF8=1 (cp1252 default breaks on visualEffects.ts). Write node/python scripts with the Write tool.
