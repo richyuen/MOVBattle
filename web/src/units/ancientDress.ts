@@ -41,13 +41,6 @@ const MINO_SCROLL = {
 const MINO_PAULDRON = { wide: 0.42, tall: 0.55 };
 const MINO_SASH = { sash: 0.3, thick: 0.03, buckle: 0.17, tuft: 0.22 };
 /*
- * [S] 388 the sash ends on his flank, the girdle's face clear (ancient.minotaur.red.png: the sash runs from the pauldron down across the chest to his
- * right side at the bottom of the ribs, well above the tall team girdle, whose light scrolls and dark foot rim show whole; critic 387: the sash's low
- * end lies over the girdle's front). Its foot now at .footX of the chest half width out on his right at .footY of the trunk; from there a wrap
- * piece goes round that flank, .wrap of the trunk's depth back, on the side face, tilted .wrapTilt rad down toward the back.
- */
-const MINO_SASH_FOOT = { footX: 0.98, footY: 0.4, wrap: 0.9, wrapTilt: 0.35 };
-/*
  * [S] the minotaur's gear redone (383; ancient.minotaur.red.png: a patterned team pauldron on his left shoulder, a broad tan sash with a chunky grey
  * square buckle, a scrolled team belt; critic 382: a plain light-blue dome on the wrong shoulder, a thin fur-toned sash, a tiny white diamond buckle, a
  * plain belt). In the pauldron's width pw: the top slab .padWide x .padThick x .padDeep tilted .padTilt rad down outward, the flap .flap of pw tall bent
@@ -194,19 +187,12 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
 
   // the sash, from that shoulder across the chest down to the other hip, laid on the chest's front
   const top = { x: chest.midX + side * chest.halfX * 0.75, y: chest.trunk * 0.95 };
-  const SF = MINO_SASH_FOOT;
-  const foot = { x: chest.midX - side * chest.halfX * SF.footX, y: chest.trunk * SF.footY };
+  const foot = { x: chest.midX - side * chest.halfX * 0.85, y: chest.trunk * 0.12 };
   const len = Math.hypot(top.x - foot.x, top.y - foot.y);
   const sash = MeshBuilder.CreateBox("minoSash", { width: chest.halfX * 2 * S.sash, height: len, depth: S.thick * chest.halfX }, scene);
   sash.position.set((top.x + foot.x) / 2, (top.y + foot.y) / 2, front + S.thick * chest.halfX * 0.5);
   sash.rotation.z = Math.atan2(top.x - foot.x, top.y - foot.y) * -1;
   add(sash, body.torso, leather);
-  // the wrap round his right flank, on the side face of the trunk at the sash's foot
-  const flankDeep = (chest.maxZ - chest.minZ) * SF.wrap;
-  const wrapPiece = MeshBuilder.CreateBox("minoSashWrap", { width: S.thick * chest.halfX, height: chest.halfX * 2 * S.sash * 0.9, depth: flankDeep }, scene);
-  wrapPiece.position.set(chest.midX - side * (chest.halfX * 1.02 + S.thick * chest.halfX * 0.5), foot.y, front - flankDeep / 2 + S.thick * chest.halfX);
-  wrapPiece.rotation.x = -SF.wrapTilt;
-  add(wrapPiece, body.torso, leather);
   // [S] 383 (MINO_GEAR): a chunky grey square frame buckle, four bars round an open middle the sash shows through, and a prong, high on the sash
   // toward the pauldron
   const bw = chest.halfX * 2 * G.buckle, bar = bw * G.bar, bd = S.thick * chest.halfX * 3;
