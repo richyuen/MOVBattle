@@ -11,13 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-357 | wheels: small timber drums, grey iron (4c16604) | medieval.catapult.a | approved
-357 | cuirass: steel shells of torso+yoke, steel (4604755) | medieval.knight.a | approved
-357 | cape: cream cape off the shoulders (377de2a +808aa53) | medieval.king.a | approved
-357 | lower legs: grey greaves, knee cops, brown (74fa206) | medieval.squire.a | approved
-357 | arms: beige upper sleeves, brown vambraces (825dee2) | medieval.archer.a | approved
-357 | collar: gold lapels on chestFrontAt in a V (3ab7173) | medieval.healer.a | approved
-357 | tunic: V and a mid-thigh skirt in one tunic (cfd130d) | medieval.bard.a | approved
 358 | knight cape: team medievalCape off the (929b00a +d7037c7) | medieval.knight.a | approved
 358 | royal dress: puffed sleeves, collar, belt (ededbdd) | medieval.king.a | rejected-kept
 358 | arms: beige sleeve shells, couters (56aed0c) | medieval.squire.a | approved
@@ -77,6 +70,12 @@ for 25 iterations.
 366 | curly mop: 3-piece hooked locks, crown tufts (6ca5eb6) | tribal.clubber.a | approved
 366 | strap: solid dark band proud of shoulder, rolled hem (d06e5d0) | tribal.stoner.a | approved
 366 | worn rack: near-level beams 1.4x, bare first joint, own tan (1c62590 +8d1905d) | tribal.bone_mage.a | approved
+367 | skull face plate: rims, bridge, muzzle (8762812) | tribal.protector.a | approved
+367 | loin strips: 5 torn brown strips, tan skull (d0909d5) | tribal.clubber.a | approved
+367 | skirt: ring of torn tongues (de2744b +df9a744) | tribal.stoner.a | approved
+367 | ears: shaggy flap behind the eye (0d9c3d0 +b40c498) | tribal.mammoth.a | approved
+367 | fur hem over leg roots (c69689e +d55dff7) | tribal.mammoth.a | rejected
+367 | full beard to the chest (6c66d85) | tribal.chieftain.a | approved
 
 ## Spent (never retry as [P])
 
@@ -116,3 +115,9 @@ tribalDress.ts:PAULDRON (wide, deep, long, top, out, snout, eye, look, tan, glow
 tribalDress.ts:CURLY_MOP (cap, locks, face, out, curl, long, thick, crown) | (1.4,.72,1.36),22,.72,1.05,.75,.78,.27,9 | 366 | approved | DREAD_MOP.clubber/.clubberSplay now unused
 tribalDress.ts:HIDE_EDGE (color, wide, thick, lift, rimPoints) | (.34,.19,.12),.2,.05,.12,24 | 366 | approved | HIDE_DRESS.strapWide .13 ribbons (363)
 propBuilder.ts:DEER_RACK worn (wornBend, wornLong, wornBack, wornBare, wornLean, wornTan, wornGlow) | [1.62,1.52,1.12,.6],1.4,.05,1,.3,(.56,.37,.2) cloth,.14 | 366 | approved | shared bend [1.3,.95,.6,.25] (363)
+propBuilder.ts:SKULL_FACE (eyeY, face, eyeX, rim, muzzle, muzzleY, cheek) | .44,.47,.16,.44,.34,.8,.26 | 367 | approved | dome hex sockets (363)
+tribalDress.ts:RAGGED_STRIPS (strips, fill, short, long, tear, lean, hide, glow) | 5,.74,.62,.95,.22,.5,(.42,.26,.15),.1 | 367 | approved | RAGGED_LOIN boxes
+tribalDress.ts:SKIRT_TONGUES (tongues, long, tear, legOut, rearOut) | 12,.55,.2,1.35,1.2 | 367 | approved | HIDE_SKIRT panels (365)
+vehicleBuilder.ts:MAMMOTH_EAR (tall, long, thick, z, flare) | .48,.42,.15,.3,1.05 | 367 | approved | edge-on fan
+vehicleBuilder.ts:MAMMOTH_HEM (row, c, size, drop, skirt, ring, skirtY) | 9,-.55,[.08,.2,.22],.12,5,.36,-.42 | 367 | rejected (reverted) | -
+tribalDress.ts:CHIEF_BEARD (burn, jaw, jawY, bib, down, lean) | .24,[1.22,.55,.62],.72,.95,.62,.25 | 367 | approved | shared BEARD

@@ -1,9 +1,9 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 366   Batch: tribal:re (5/21)   Consecutive empty: 0   Done: 22/139   Parked: 0
+Iteration: 367   Batch: tribal:re (5/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber -+++ o | protector -+++ o | spear_thrower -+++ o | stoner -+++ o | bone_mage ++++ D | chieftain -+++ o | mammoth -+++ o
+tribal: clubber ++++ D | protector -+++ o | spear_thrower -+++ o | stoner -+++ o | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
@@ -23,15 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-366 (BASE f142d6e): [S] mammoth b tusk paint ef98856+ef94f97 approved | [S] mammoth a hump + leg roots 4bc74c3+940f9b1 approved | [S] chieftain a pauldrons 0a99945+d78d6f7+65e6573 approved | [S] clubber a curly mop 6ca5eb6 approved | [S] stoner a strap d06e5d0 approved | [S] bone_mage a worn rack 1c62590+8d1905d approved (D) | evidence 59fcbb0 protector idle swing; no [P] (fallouts re-nudge rows approved 363/365)
+367 (BASE b00e7e6): [S] protector a face plate 8762812 approved | [S] clubber a loin strips d0909d5 approved (D) | [S] stoner a skirt tongues de2744b+df9a744 approved | [S] mammoth a ears 0d9c3d0+b40c498 approved | [S] mammoth a fur hem c69689e+d55dff7 rejected (reverted) | [S] chieftain a beard 6c66d85 approved (D); step 2 re-audit protector.a (look shots); no [P]
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.mammoth (ef98856 + ef94f97) VERDICT: APPROVE CRITERION: tribal.mammoth.b PASS (previous: FAIL)
-- GAP: [S] tribal.mammoth (4bc74c3 + 940f9b1) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [S] tribal.chieftain (0a99945 + d78d6f7 + 65e6573) VERDICT: APPROVE CRITERION: tribal.chieftain.a FAIL (previous: FAIL)
-- GAP: [S] tribal.clubber (6ca5eb6) VERDICT: APPROVE CRITERION: tribal.clubber.a FAIL (previous: FAIL)
-- GAP: [S] tribal.stoner (d06e5d0) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL)
-- GAP: [S] tribal.bone_mage (1c62590 + 8d1905d) VERDICT: APPROVE CRITERION: tribal.bone_mage.a PASS (previous: FAIL)
+- GAP: [S] tribal.protector (8762812) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL)
+- GAP: [S] tribal.clubber (d0909d5) VERDICT: APPROVE CRITERION: tribal.clubber.a PASS (previous: FAIL)
+- GAP: [S] tribal.stoner (de2744b + df9a744) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (0d9c3d0 + b40c498) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (c69689e + d55dff7) VERDICT: REJECT CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] tribal.chieftain (6c66d85) VERDICT: APPROVE CRITERION: tribal.chieftain.a PASS (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Step 2 next: RE-AUDIT protector.a only (evidence 59fcbb0 swung his idle 1.35 rad to his side; the head shows beside the slab, skull from the side-rear; .6 hid it, 1.0 and -.9 tried and worse). Give the critic his Verdicts block.
-- Pick next: chieftain beard, clubber loincloth, stoner skirt (ring of tongues, rear tied), mammoth ears, mammoth leg-top fur hem; mammoth hump needs an evidence re-aim first (side frame showing the whole topline). spear_thrower has only a [P] (TUSK_BAND reversal): needs a fresh audit entry.
-- Capture: particle systems do not render on the stepped clock (sprite meshes). Lathes wound top-down face inward. Tans on bone/wood PBR read grey: use matte cloth, darker and warmer.
+- Pick next: protector jaw plate + brown arcs; stoner rear box (not the skirt: did not move with band/tongues; colour-probe meshes first); mammoth continuous barrel skirt over leg roots (one more reject plateaus mammoth.a), mammoth tapered legs; mammoth hump needs an evidence re-aim first.
+- spear_thrower has only a [P] (TUSK_BAND reversal): give it a fresh audit entry when picks run short (fewer than 5 [S] left: tail-overlap renaissance:re audit).
+- Capture: particle systems do not render on the stepped clock. Lathes wound top-down face inward. Tans on bone/wood PBR read grey: matte cloth. Same-colour flaps flush on a surface vanish: stand them off, darker.
 - Never bakeCurrentTransformIntoVertices after parenting (bakes the world matrix). Light warm cloth: medievalDress warmCloth + unglow.
 - [P] fallouts re-nudging rows approved in the last 20 iterations get rejected as ledger reversals: skip them.
