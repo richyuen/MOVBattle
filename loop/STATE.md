@@ -1,9 +1,9 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 363   Batch: medieval+tribal:re (4/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
+Iteration: 364   Batch: medieval+tribal:re (4/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber -+++ o | protector -+++ o | spear_thrower -+++ o | stoner -+++ o | bone_mage --++ o | chieftain --++ o | mammoth ---+ o
+tribal: clubber -+++ o | protector -+++ o | spear_thrower -+++ o | stoner -+++ o | bone_mage -+++ o | chieftain -+++ o | mammoth --++ o
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king -+++ o
@@ -23,17 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-363 (BASE b62c597): [S] chieftain a beast skull 03e92ab+e52aaa4 approved | [S] protector a skull re-seat d6d6c79+c60ed20 approved | [S] spear_thrower a hung tusks 09199c4 approved | [S] bone_mage b staff skull f270dce approved | [S] stoner a curved strap 205e839 approved | [P] bone_mage a DEER_RACK.tan 326d648 rejected (reverted 5c0429d) | [S] mammoth a fur legs 5d518c2+7c6a257+9b9ed17 approved | [S] mammoth c charge pose+dust baea514+d0548b0 approved; king [R] deferred (7 [S] taken)
+364 (BASE a39969a): [R] king a legs 3d7e9c8+675c79f+ea41917 rejected (reverted 03653c2..c45bc84) | [S] chieftain a hide wrap+hip tusks 61aea7d+85d9e0a approved | [S] chieftain b main axe upright bee41ad approved | [S] bone_mage a cheek leaves 0456062+23d1047 approved | [S] bone_mage b wide tan staff rack ad6c3d7+3600f5d approved | [S] mammoth c trample ring 96d2c06 approved | [S] stoner a close skirt 6ebde62 rejected (reverted 70b3659); no [P] (fallouts all re-nudge 363 rows)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] tribal.chieftain (03e92ab + e52aaa4) VERDICT: APPROVE CRITERION: tribal.chieftain.a FAIL (previous: FAIL)
-- GAP: [S] tribal.protector (d6d6c79 + c60ed20) VERDICT: APPROVE CRITERION: tribal.protector.a FAIL (previous: FAIL)
-- GAP: [S] tribal.spear_thrower (09199c4) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL)
-- GAP: [S] tribal.bone_mage (f270dce) VERDICT: APPROVE CRITERION: tribal.bone_mage.b FAIL (previous: FAIL)
-- GAP: [S] tribal.stoner (205e839) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL)
-- GAP: [P] tribal.bone_mage (326d648) VERDICT: REJECT CRITERION: tribal.bone_mage.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (5d518c2 + 7c6a257 + 9b9ed17) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (baea514 + d0548b0) VERDICT: APPROVE CRITERION: tribal.mammoth.c FAIL (previous: FAIL)
+- GAP: [R] medieval.king (3d7e9c8 +675c79f +ea41917) VERDICT: REJECT CRITERION: medieval.king.a FAIL (previous: FAIL)
+- GAP: [S] tribal.chieftain (61aea7d +85d9e0a) VERDICT: APPROVE CRITERION: tribal.chieftain.a FAIL (previous: FAIL)
+- GAP: [S] tribal.chieftain (bee41ad) VERDICT: APPROVE CRITERION: tribal.chieftain.b PASS (previous: FAIL)
+- GAP: [S] tribal.bone_mage (0456062 +23d1047) VERDICT: APPROVE CRITERION: tribal.bone_mage.a FAIL (previous: FAIL)
+- GAP: [S] tribal.bone_mage (ad6c3d7 +3600f5d) VERDICT: APPROVE CRITERION: tribal.bone_mage.b PASS (previous: FAIL)
+- GAP: [S] tribal.mammoth (96d2c06) VERDICT: APPROVE CRITERION: tribal.mammoth.c PASS (previous: FAIL)
+- GAP: [S] tribal.stoner (6ebde62) VERDICT: REJECT CRITERION: tribal.stoner.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- FIRST pick: king [R] of the legs from the breeches down (a plateau; deferred 361-363, medieval cannot checkpoint while it is open): the breeches' gathered hem hung past the knee hinge over the team knee end, slim shin under it; the thigh is not covered by the breeches (361: recolouring it read beige).
-- Pick next: protector idle evidence re-aim (capture.mjs, head beside/above the slab), mammoth trample ring (sprites) + barrel body, chieftain loincloth+hip tusks, bone_mage cheek leaves + wide tan staff rack, stoner close skirt; [P] fallout: BEAST_SKULL lift/pitch, TUSK_BAND thick/tan, MAMMOTH_LEG radii.
-- Capture: particle systems do not render on the stepped clock (use sprite meshes, as spawnKickDust / the fireball dust). Lathes wound top-down face inward.
-- Light warm cloth: medievalDress warmCloth (own amber emissive) + unglow every mesh in it. Tan bone/antler renders grey in the capture's shade: go darker and warmer with more glow, inside an [S] (DEER_RACK colour [P] was a ledger reversal).
+- FIRST pick: king [R] #2 (a plateau; a second rejection parks it): breeches end AT the knee hinge (shorten or hide the thigh's ~0.11 knee stub, fold it into the beige shin), shin itself as the slim stocking (364: clean), low ankle shoes replacing the 0.41-tall _FootM shells. Medieval cannot checkpoint while it is open.
+- Pick next: stoner skirt per thigh (panels on each upper leg, not the pelvis box; drop the skin kilt), stoner strap, mammoth barrel body + trunk, chieftain helm seat (mechanism) + big shoulder skulls, bone_mage mask rack own wide bend, protector idle evidence re-aim (capture.mjs, head beside the slab).
+- Capture: particle systems do not render on the stepped clock (sprite meshes: spawnKickDust, spawnTrampleRing). Lathes wound top-down face inward. Pale tan self-lit reads grey/cream: go darker and warmer (.76,.56,.34 / .22 reads tan).
+- Light warm cloth: medievalDress warmCloth + unglow every mesh in it. [P] fallouts re-nudging rows approved in the last 20 iterations get rejected as ledger reversals: skip them.
 - Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose and broadhead (354, 358), bard walk, catapult frame/wheels/paint, knight plate+legs+cape, king skirt removed (360).

@@ -71,12 +71,18 @@ for 25 iterations.
 363 | curved shoulder strap: two ribbons over the shoulder (205e839) | tribal.stoner.a | approved
 363 | fur pillar legs: lathes, flush paint, no caps (5d518c2 +7c6a257 +9b9ed17) | tribal.mammoth.a | approved
 363 | charge seen: head-down gallop pose, sprite dust at feet (baea514 +d0548b0) | tribal.mammoth.c | approved
+364 | [R] legs: breeches past knee stub, shin as stocking (3d7e9c8 +675c79f +ea41917, reverted) | medieval.king.a | rejected
+364 | hide wrap on rope, curved hip tusks (61aea7d +85d9e0a) | tribal.chieftain.a | approved
+364 | main axe stood upright at his side, arm mirrored (bee41ad) | tribal.chieftain.b | approved
+364 | cheek leaves on straps, mask in warm tan (0456062 +23d1047) | tribal.bone_mage.a | approved
+364 | staff rack: near-level beams swept back, tan cranium (ad6c3d7 +3600f5d) | tribal.bone_mage.b | approved
+364 | trample: dust ring sprites, ground band, earth clods (96d2c06) | tribal.mammoth.c | approved
+364 | close skirt: hip band + torn tongues, no kilt (6ebde62, reverted) | tribal.stoner.a | rejected
 
 ## Spent (never retry as [P])
 
 ## Rows
 farmer.* (47 knob rows, 339-350; batch done) | compacted 351 | 350 | approved | values: git show b3524d7:loop/LEDG..
-renaissance.* (51 knob rows, 327-338; batch done) | compacted 340 | 338 | approved | values: git show f525109:loop/LEDG..
 medieval.* bard..catapult (37 knob rows, 351-360; units done) | compacted 361 | 360 | approved | values: git show d1d01df:loop/LEDG..
 rosterManifest.ts:medieval cost/hp/dmg/cd (knight, catapult, king) | 650/.78/.4/.42, 1000/.79/.22/1.67, 1500/1.05/-/.54 | 351 | stats | 320; -; 1200
 propBuilder.ts:ZWEI SlabCut (long, wide, grip, point, lug, lugAt, seat) | .85, .05, 4.5, .12, .045, .07, 2.5 | 354 | approved | seat - (352); 351 own mesh: .8, .0..
@@ -92,6 +98,11 @@ tribalDress.ts:RAGGED_LOIN (strips, wide, long, short, skull, snout, hang, boneA
 propBuilder.ts:JAVELIN_LEAF (shoulder, flank, flankWide, ridge, jitter, glow); HEAD long/wide | .28,.62,.55,.13,.08,.14; .16/.15 | 362 | approved | ball leaf .15/.095 (320)
 tribalDress.ts:HIDE_DRESS (sides,top,low,strapAt,strapWide,strapRise,skirt,flare,rag,color) | 8,1.0,.56,.55,.13,.45,.62,1.4,.16,(.52,.3,.22) | 363 | approved | strap box .22 (362)
 propBuilder.ts:DEER_RACK (beam, bend, back, thick, taper, tine, inward, brow, tan, glow, staff) | ..,[1.3,.95,.6,.25],.12,.24,.82,..,(.72,.6,.45),.15,1.4 | 363 | approved | [P] tan .62,.46,.3 glow .22 rejected 363 (reversal)
+propBuilder.ts:DEER_RACK (staffBend, staffBack) | [1.52,1.35,1.0,.55], .35 | 364 | approved | staff used bend/back
+propBuilder.ts:MASK_LEAF (long, wide, x, ahead, top, lean, color, glow, tan, tanGlow) | .52,.3,.46,.62,.32,.25,(.8,.38,.12),.25,(.76,.56,.34),.22 | 364 | approved | look: .42,.17,.36,.5
+tribalDress.ts:CHIEF_LOIN (tongues, out, long, back, hide, tusk, thick, tuskAt, curl, tan, glow) | 9,1.1,.62,.45,(.58,.4,.22),.72,.24,1.35,1.7,(.8,.66,.46),.22 | 364 | approved | hide .66,.5,.32 (look)
+proceduralAnimation.ts:MAIN_AXE (ease) | 8 | 364 | approved | -
+visualEffects.ts:TRAMPLE_RING (sprites..peak, band, bandPeak, clods, toss, fling, clod) | 12,.25,1,.7,1.8,.4,1.2,.85,.22,.5,8,4.2,2.2,.16 | 364 | approved | -
 propBuilder.ts:STONE_AXE (long, grip, thick, head, out, over, cord_, tilt) | .58,.2,.06,.31,.22,.25,.022,.55 | 362 | approved | AXE_LONG .4, GRIP .25, HEAD .78 of L
 propBuilder.ts:DEER_MASK (top, tip, flat, rise, drop, tilt, out, spread, socket) | .95,.36,.32,.1,.08,.2,.26,1.55,1.4 | 361 | approved | -
 proceduralAnimation.ts:SLAB_FRONT (reach, grip, bash) | .2, .08, .22 | 361 | approved | -

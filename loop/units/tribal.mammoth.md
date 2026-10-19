@@ -8,19 +8,20 @@ a FAIL (1 since 360)
 b FAIL (0 since 360)
  1. tusks in unit_tribal.mammoth_windup glowing ivory-white, plain team tip — TABS: bone-tan, team tip, tan gap, stripe (ref: tribal.mammoth.blue.png)
  2. trunk in unit_tribal.mammoth_windup near-black, raised team knobs — TABS: body brown, reaching the ground, flat painted dots (ref: tribal.mammoth.red.png, .jpg)
-c FAIL (1 since 360)
- 2. trample not visible in unit_tribal.mammoth_release/_flight: no ground shake, dust or ring (ref: card Characteristics, tribal.mammoth.jpg)
+c PASS (364)
 d PASS (cost 2200, hp 31.76x; dmg, cd wiki none)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c trample seen — blocker 2: a dust ring and ground shake at the hit or trample point, spawned as sprites — ref: card Characteristics, tribal.mammoth.jpg — ours: unit_tribal.mammoth_release.png
-2. [S] a barrel body — blocker 1: rounded faceted barrel hull, round belly, hump behind the head, dark mane chunk — ref: tribal.mammoth.red.png — ours: unit_tribal.mammoth_windup.png
+1. [S] a barrel body — blocker 1: rounded faceted barrel hull, round belly, hump behind the head, dark mane chunk — ref: tribal.mammoth.red.png — ours: unit_tribal.mammoth_windup.png
+2. [S] b trunk — blocker 2: trunk in body brown, reaching the ground, flat painted dots — ref: tribal.mammoth.red.png — ours: unit_tribal.mammoth_release.png
 3. [P] a leg taper (fallout of 5d518c2) — blocker 2: MAMMOTH_LEG thigh .37 -> .28, shin .3 -> .22 (radii x.75); NEXT shows in unit_tribal.mammoth_idle as legs tapering under the body
 ## Attempts (iter | gap | criterion | verdict)
 323-326 | fur, mane, ankle bands, face paint | a | approved
 323 | Mammoth Charge (7d01e90) | c | approved
 363 | fur pillar legs (MAMMOTH_LEG) [S] (5d518c2 +7c6a257 +9b9ed17) | a | approved
 363 | charge pose + sprite dust (CHARGE_POSE, MAMMOTH_DUST) [S] (baea514 +d0548b0) | c | approved
+364 | trample ring: dust ring, band, earth clods (spawnTrampleRing, TRAMPLE_RING) [S] (96d2c06) | c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Particles never show in the capture: use sprites (spawnKickDust). Legs mammoth only (elephant keeps old); pose set by the sim (_chargePosed).
+- Particles never show in the capture: use sprites (spawnKickDust, spawnTrampleRing). Legs mammoth only (elephant keeps old); pose set by the sim (_chargePosed).
+- critic 364 (minor): the trample ring reads as low haze more than a distinct ring.
 - 326 face: FACE_PAINT.
