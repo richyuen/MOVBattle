@@ -564,6 +564,11 @@ const BALLISTA_WHEEL = { across: 0.62, rim: 0.07, wide: 0.08, hub: 0.12 };
 // [S] 389 a warm terracotta in the PBR's linear space (ancient.ballista.blue.png ~ sRGB .78/.4/.28): the 384 (.62,.3,.2) displayed as a pale taupe
 const BALLISTA_WOOD = new Color3(0.55, 0.15, 0.075);
 /* [S] 389 the top plank's iron plates: columns at .cols of the half width each side, rows .edge in from its front and back edges, .wide x .thick x .deep */
+/*
+ * [S] 389 the loaded bolt (spec at its build): a shaft .shaft long, .thick across at the head, .tail of that at its butt; its leaf head .head long with
+ * the point .past ahead of the trough's front, widest (.wide) .waist of the way back from the socket end, .flat of that thick; a socket .socket long.
+ */
+const BALLISTA_BOLT = { shaft: 1.45, thick: 0.1, tail: 0.7, head: 0.62, past: 0.75, wide: 0.24, waist: 0.3, flat: 0.3, socket: 0.1, iron: new Color3(0.03, 0.03, 0.04) };
 const BALLISTA_PLATES = { cols: [0.2, 0.83], edge: 0.08, wide: 0.075, thick: 0.022, deep: 0.12, iron: new Color3(0.08, 0.08, 0.09) };
 /*
  * [S] 388 the crewman at the trough's rear end (ancient.ballista.blue.png: a helmeted team crewman close behind the machine, his helmeted head over the
@@ -666,13 +671,26 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   }
 
   // Loaded bolt in the trough, its leaf head past the frame's front
-  const bolt = add(MeshBuilder.CreateCylinder("bolt", { height: 1.5, diameter: 0.05, tessellation: 6 }, scene), darkWood);
+  // [S] 389 a huge bolt (BALLISTA_BOLT; ancient.ballista.red.png, .png: a thick wooden shaft tapering to the rear, a long flat near-black leaf head
+  // well past the frame's front, a socket where it meets the shaft; critic 388: a thin rod), not the 5 cm rod with a small spike
+  const Bt = BALLISTA_BOLT;
+  const boltIron = mf.get("cloth", Bt.iron, { emissive: Bt.iron.scale(0.2) });
+  const shaftFront = S.front + Bt.past - Bt.head;
+  const bolt = add(MeshBuilder.CreateCylinder("bolt", { height: Bt.shaft, diameterTop: Bt.thick, diameterBottom: Bt.thick * Bt.tail, tessellation: 8 }, scene), wood);
   bolt.rotation.x = Math.PI / 2;
-  bolt.position.set(0, stockY + S.tall / 2 + 0.03, S.front - 0.55);
-  const head = add(MeshBuilder.CreateCylinder("boltHead", { height: 0.3, diameterTop: 0, diameterBottom: 0.13, tessellation: 4 }, scene), black);
-  head.scaling.z = 0.35;
-  head.rotation.x = Math.PI / 2;
-  head.position.set(0, bolt.position.y, S.front + 0.35);
+  bolt.position.set(0, stockY + S.tall / 2 + Bt.thick / 2, shaftFront - Bt.shaft / 2);
+  const socket = add(MeshBuilder.CreateCylinder("boltSocket", { height: Bt.socket, diameterTop: Bt.thick * 1.25, diameterBottom: Bt.thick * 1.1, tessellation: 8 }, scene), boltIron);
+  socket.rotation.x = Math.PI / 2;
+  socket.position.set(0, bolt.position.y, shaftFront + Bt.socket / 2 - 0.01);
+  // the leaf: a long front blade to the point and a short back taper to the socket, flat (wide across, thin up and down)
+  const blade = add(MeshBuilder.CreateCylinder("boltHead", { height: Bt.head * (1 - Bt.waist), diameterTop: 0, diameterBottom: Bt.wide, tessellation: 4 }, scene), boltIron);
+  blade.rotation.x = Math.PI / 2;
+  blade.scaling.z = Bt.flat;
+  blade.position.set(0, bolt.position.y, shaftFront + Bt.head * Bt.waist + (Bt.head * (1 - Bt.waist)) / 2);
+  const back = add(MeshBuilder.CreateCylinder("boltHead", { height: Bt.head * Bt.waist, diameterTop: Bt.wide, diameterBottom: Bt.thick * 1.1, tessellation: 4 }, scene), boltIron);
+  back.rotation.x = Math.PI / 2;
+  back.scaling.z = Bt.flat;
+  back.position.set(0, bolt.position.y, shaftFront + (Bt.head * Bt.waist) / 2);
 
   // Four spoked wheels at the corners, outside the posts
   const W = BALLISTA_WHEEL;
