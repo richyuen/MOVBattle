@@ -1,6 +1,7 @@
 import { Color3, Mesh, Node, TransformNode, Vector3 } from "@babylonjs/core";
 import { CREW_FIGHT, poseWheelbarrowCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
 import { RuntimeUnit } from "../units/runtimeUnit";
+import { AnimState } from "../units/proceduralAnimation";
 import {
   AttackType, TargetPriority,
   getAttackProfile, getAIProfile,
@@ -258,6 +259,13 @@ const WHEELBARROW_CREW = { appleFrom: 2.5, appleReach: 14, appleEvery: 1.8, appl
  * him still facing him, at .pace of his walk, out to .margin short of his full reach; when the fork is ready again he lunges in with the next stab.
  */
 const FARMER_BACKSTEP = { after: 0.95, pace: 0.5, margin: 0.15 };
+/*
+ * [S] Sarissa keeps pike distance (380; card Characteristics "They will also back up to maintain spearing distance"; critic 378: at 2.5 m he lunged in
+ * and stood). Whenever his man is nearer than SARISSA_KEEP.near of his engage distance and he is not mid-thrust, the sarissa backs away from him still
+ * facing him, pike levelled (proceduralAnimation PIKE_LEVEL holds while he walks), at .pace of his walk, and thrusts again from the edge of his reach.
+ * Logged "backstep" as each back-off starts (the farmer's back-step branch, its own trigger).
+ */
+const SARISSA_KEEP = { near: 0.85, pace: 0.7 };
 /*
  * [S] Hop back (369). The fencer (card Characteristics "thrusts forward to attack with its foil then steps back ... a dedicated back step"): .afterLand s
  * after his thrust lands on the man he hops straight back off him, still facing him, .dist m along the ground at .rise m/s up. The halberd (card
@@ -1160,14 +1168,18 @@ export class SimulationSystem {
       const strikeDistance = contactDistance + standOff;
       const sidle = this._shieldSlotStep(unit, true);
       // Farmer back-step (FARMER_BACKSTEP): between stabs he backs off his man, facing him
-      const backing = unit.definition.id === "farmer.farmer" && canMove && !slot && !unit.canAttack(now)
+      const farmerBacks = unit.definition.id === "farmer.farmer" && canMove && !slot && !unit.canAttack(now)
         && now - (this._stabbedAt.get(unit) ?? -1e9) > FARMER_BACKSTEP.after && distance < engageDistance - FARMER_BACKSTEP.margin;
+      // ...and the sarissa keeps his pike's distance (SARISSA_KEEP)
+      const sarissaKeeps = unit.definition.id === "ancient.sarissa" && canMove && !slot && unit.animator.state !== AnimState.Attacking
+        && distance < engageDistance * SARISSA_KEEP.near;
+      const backing = farmerBacks || sarissaKeeps;
       if (backing) {
         const away = unit.position.subtract(enemy.position);
         away.y = 0;
         away.normalize();
         unit.moveTo(unit.position.add(away.scale(0.5)));
-        unit.setCohesionMoveMultiplier(FARMER_BACKSTEP.pace);
+        unit.setCohesionMoveMultiplier(sarissaKeeps ? SARISSA_KEEP.pace : FARMER_BACKSTEP.pace);
         unit.holdHeading(Math.atan2(-away.x, -away.z));
         if (!this._backingOff.has(unit)) this._logAbility(unit, "backstep", now, enemy.position);
         this._backingOff.add(unit);
