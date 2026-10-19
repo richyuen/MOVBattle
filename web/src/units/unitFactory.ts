@@ -1246,10 +1246,10 @@ const MUSKETEER_VEST = { shade: 0.95, hem: 0.2, flare: 1.28, belt: 0.07, beltOut
  * [S] falling collar (370; renaissance.musketeer.red.png, .jpg: a broad pale tan collar turned down over the top of the team breastplate, from the neck
  * out to near the shoulders, two points down the front). Not the 335 flat cream disc at the neck's foot, which the head hid. Shares of the chest (W, H,
  * D): an eight-sided cape .tall of H tall from .neck of W across at the neck to .out of W at its foot, .deep of D front to back, its foot .over of its
- * height down over the vest's top edge; two front tabs .tab of H long, .tabWide of W across at the top, .tabAt of W either side of the middle, splayed
+ * height down over the vest's top edge; two front tabs from under its front foot, .tab of H long, .tabWide of W across at the top, .tabAt of W either side of the middle, splayed
  * .splay out at the foot. Matte pale tan .color self-lit .glow.
  */
-const MUSKETEER_COLLAR = { tall: 0.2, neck: 0.5, out: 1.2, deep: 1.32, over: 0.55, tab: 0.24, tabWide: 0.26, tabAt: 0.13, splay: 0.3, color: new Color3(0.86, 0.74, 0.55), glow: 0.22 };
+const MUSKETEER_COLLAR = { tall: 0.17, neck: 0.75, out: 1.55, deep: 1.7, over: 0.1, tab: 0.3, tabWide: 0.34, tabAt: 0.13, splay: 0.3, color: new Color3(0.86, 0.74, 0.55), glow: 0.22 };
 /** Dresses the musketeer (spec at MUSKETEER_DRESS): team vest, cream blouse sleeves and collar, puffy team breeches, banded stockings, tan shoes. */
 function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
@@ -1298,7 +1298,8 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
     const tab = put(MeshBuilder.CreateCylinder("musketeerCollarTab", { height: H * C.tab, diameterTop: W * C.tabWide, diameterBottom: 0, tessellation: 4 }, scene), collarCloth, body.torso);
     tab.scaling.z = 0.22;
     tab.rotation.z = side * C.splay;
-    tab.position.set(side * W * C.tabAt, vestTop - H * C.tab * 0.45, D * M.vest * 0.5 + D * 0.03);
+    // hung from under the cape's front foot, down the breastplate
+    tab.position.set(side * W * C.tabAt, vestTop - H * C.tall * C.over - H * C.tab * 0.4, D * M.vest * 0.5 + D * 0.04);
   }
   // blouse sleeves, puffed over the upper arm, under a team wing at the shoulder
   for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
