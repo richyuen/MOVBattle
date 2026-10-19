@@ -2076,6 +2076,13 @@ function mammothTrunk(scene: Scene, neck: TransformNode, fur: Material, dark: Ma
   hole.parent = neck; hole.material = dark; allMeshes.push(hole);
   return path.slice(0, n).map((p, i) => ({ centre: Vector3.Center(p, path[i + 1]), radius: (radius(i) + radius(i + 1)) / 2 }));
 }
+/*
+ * [S] the mammoth's tusk paint (366; tribal.mammoth.blue.png: dull bone-tan tusks, not glowing ivory; from the tip back a team-coloured tip about a quarter of
+ * the tusk, a short bare tan gap, a thin team stripe round the tusk, then tan to the root). The tusk's pieces are MAMMOTH_TUSK.tan, self-lit only .glow;
+ * the last .tip pieces of each are the team tip; .gap pieces short of the tip a team ring .stripe of that piece long and .proud of its girth across
+ * sits at the piece's root. The sacred elephant keeps its own ivory tusks (two-piece tips, no stripe).
+ */
+const MAMMOTH_TUSK = { tan: new Color3(0.74, 0.62, 0.46), glow: 0.06, tip: 3, gap: 1, stripe: 0.45, proud: 1.08 };
 /** Radius of a lathe profile at height y (linear between its points). */
 function profileAt(profile: [number, number][], y: number): number {
   for (let i = 0; i < profile.length - 1; i++) {
@@ -2126,7 +2133,10 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const fur = getMaterialFactory().get("wood", Color3.Lerp(hide, color, teamTint), hideLight);
   const shaggyFur = getMaterialFactory().get("wood", Color3.Lerp(hide, new Color3(0.08, 0.06, 0.05), mammoth ? MAMMOTH_FUR.shag : 0.45), hideLight);
   // Tusks are warm ivory and part self-lit, so the blue ambient does not grey them
-  const tuskMat = getMaterialFactory().get("bone", new Color3(1.0, 0.82, 0.58), { emissive: new Color3(0.22, 0.16, 0.09) });
+  // The mammoth's are bone-tan and barely self-lit (MAMMOTH_TUSK), the elephant's stay warm ivory
+  const tuskMat = mammoth
+    ? getMaterialFactory().get("bone", MAMMOTH_TUSK.tan, { emissive: MAMMOTH_TUSK.tan.scale(MAMMOTH_TUSK.glow) })
+    : getMaterialFactory().get("bone", new Color3(1.0, 0.82, 0.58), { emissive: new Color3(0.22, 0.16, 0.09) });
   const darkMat = makeMat(scene, new Color3(0.25, 0.18, 0.12));
   const paintMat = getMaterialFactory().createUnique("cloth", color);
 
@@ -2400,8 +2410,17 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
       seg.position = Vector3.Center(start, end);
       seg.rotation.x = Math.PI - pitch;
       seg.rotation.z = -side * splay / length;
-      // The last two pieces are painted: a short team-coloured tusk tip
-      seg.parent = neck; seg.material = i >= tuskPieces - 2 ? tuskTipMat : tuskMat; allMeshes.push(seg);
+      // The last pieces are painted: a team-coloured tusk tip (the mammoth's MAMMOTH_TUSK.tip pieces long, the elephant's two)
+      const tipPieces = mammoth ? MAMMOTH_TUSK.tip : 2;
+      seg.parent = neck; seg.material = i >= tuskPieces - tipPieces ? tuskTipMat : tuskMat; allMeshes.push(seg);
+      // ...and on the mammoth a team stripe round the tusk MAMMOTH_TUSK.gap pieces short of the tip, bare tan between
+      if (mammoth && i === tuskPieces - tipPieces - MAMMOTH_TUSK.gap) {
+        const girth = tuskAt(tuskGirths, i / 2);
+        const stripe = MeshBuilder.CreateCylinder("tuskStripe", { height: length * MAMMOTH_TUSK.stripe, diameter: girth * MAMMOTH_TUSK.proud, tessellation: 8 }, scene);
+        stripe.position = start.add(end.subtract(start).scale(0.5 * MAMMOTH_TUSK.stripe));
+        stripe.rotation.copyFrom(seg.rotation);
+        stripe.parent = neck; stripe.material = tuskTipMat; allMeshes.push(stripe);
+      }
       start.copyFrom(end);
     }
   }
