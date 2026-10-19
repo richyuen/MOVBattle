@@ -1340,7 +1340,6 @@ const WHEELBARROW = {
   trayWide: 0.44,
   trayLong: 0.78,
   trayZ: 0.08,
-  frontSeat: 0.32,     // the Farmer's hips, z on the tray: knees out over the front board
   backSeat: -0.06,     // the Apple Thrower's hips
   pushZ: -0.62,        // the Traveller's feet
   lean: 0.28,          // the Traveller's forward lean
@@ -1377,6 +1376,14 @@ const LOG_BARK = new Color3(0.36, 0.22, 0.14);
 const LOG_GRAIN = new Color3(0.82, 0.62, 0.42);
 const LOG_RING = new Color3(0.64, 0.42, 0.28);
 const CART_WOOD = new Color3(0.52, 0.3, 0.2);
+/*
+ * [S] the riders sit on the tray, not in it (376; farmer.wheelbarrow.red.png, .png: the Farmer sits up on the tray's front lip, his thighs splayed wide
+ * forward and his white-socked shins out over the wheel, feet below the rim either side of it; the Apple Thrower sits astride the hay behind him, thighs
+ * out over the side boards, shins hanging down outside the tray; the 346-349 seats sank both to the waist in the hay, shins folded down inside it). Rig
+ * units and radians: Farmer's hips .lipIn behind the tray's front end and .lipUp above its rim, thighs pitched .frontThigh (forward and a little down),
+ * splayed .frontSplay out, knees .frontKnee; Apple Thrower .astrideUp above the hay seat, thighs .backThigh, splayed .backSplay, knees .backKnee.
+ */
+const CREW_SEAT = { lipIn: 0.05, lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.02, backThigh: -0.75, backSplay: 1.0, backKnee: 0.95 };
 const CREW_FORK = { long: 0.72, butt: 0.2, thick: 0.013, tines: 3, tine: 0.2, spread: 0.055, curl: 0.4, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
 const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
 function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offset: Vector3, rigScale: number): void {
@@ -1606,14 +1613,15 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
 
   const seatY = W.trayY + sideTall + P.heap * 0.85; // sat on top of the hay heaped over the rim, not down in the tray
   const crew: Partial<WheelbarrowCrew> = {};
-  // The Farmer, front: sat facing ahead, thighs out over the tray sides, shins hanging
-  addOperator(scene, rig, allMeshes, 0, 0, W.frontSeat, color, (man) => {
+  const S = CREW_SEAT;
+  // The Farmer, front: sat up on the tray's front lip, legs splayed forward and out over the wheel (spec at CREW_SEAT)
+  addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + W.trayLong / 2 - S.lipIn, color, (man) => {
     crew.farmer = man;
-    man.root.position.y = seatY - man.hip.position.y;
-    man.leftHip.rotation.set(-1.45, 0, 0.45);
-    man.rightHip.rotation.set(-1.45, 0, -0.45);
-    man.leftKnee.rotation.x = 1.1;
-    man.rightKnee.rotation.x = 1.1;
+    man.root.position.y = W.trayY + sideTall + S.lipUp - man.hip.position.y;
+    man.leftHip.rotation.set(S.frontThigh, 0, S.frontSplay);
+    man.rightHip.rotation.set(S.frontThigh, 0, -S.frontSplay);
+    man.leftKnee.rotation.x = S.frontKnee;
+    man.rightKnee.rotation.x = S.frontKnee;
     man.leftShoulder.rotation.x = -0.7;
     man.rightShoulder.rotation.x = -0.7;
     man.leftElbow.rotation.x = -0.6;
@@ -1639,14 +1647,14 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     }
     holdInFist(man.rightHand, fork, F.dir, Vector3.Zero(), W.scale);
   });
-  // The Apple Thrower, behind him: sat the same, his throwing arm up and back over his shoulder
+  // The Apple Thrower, behind him: astride the hay, legs out over the tray's sides and hanging outside them, his throwing arm up and back
   addOperator(scene, rig, allMeshes, 0, 0, W.backSeat, color, (man) => {
     crew.thrower = man;
-    man.root.position.y = seatY - man.hip.position.y;
-    man.leftHip.rotation.set(-1.4, 0, 0.35);
-    man.rightHip.rotation.set(-1.4, 0, -0.35);
-    man.leftKnee.rotation.x = 1.3;
-    man.rightKnee.rotation.x = 1.3;
+    man.root.position.y = seatY + S.astrideUp - man.hip.position.y;
+    man.leftHip.rotation.set(S.backThigh, 0, S.backSplay);
+    man.rightHip.rotation.set(S.backThigh, 0, -S.backSplay);
+    man.leftKnee.rotation.x = S.backKnee;
+    man.rightKnee.rotation.x = S.backKnee;
     man.rightShoulder.rotation.set(-2.5, 0, -0.3);
     man.rightElbow.rotation.x = -0.8;
     man.leftShoulder.rotation.x = -0.5;
