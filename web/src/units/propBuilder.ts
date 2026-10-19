@@ -999,7 +999,9 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     snout.scaling.x = 1.2;
     snout.material = bone;
     snout.parent = skull;
-    if (type === "antler_skull") addDeerSkull(scene, skull, snout, W, H, tall, R, u, -(H - eyeTop + HAT_EYE_CLEAR * H));
+    addDeerSkull(scene, skull, snout, W, H, tall, R, u, -(H - eyeTop + HAT_EYE_CLEAR * H));
+    // the face plate is the muzzle now (DEER_MASK): the short snout off the brow would jut out over its sockets (361)
+    snout.dispose();
     return skull;
   }
   if (type === "crested_helm") {
