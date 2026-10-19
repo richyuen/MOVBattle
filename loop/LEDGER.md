@@ -12,8 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-362 | tribal: slab facets, ragged loin, flint head, hide dress, stag racks, re-hafted axe (7 gaps) | tribal.* | approved
-363 | tribal: beast/skull helms, hung tusks, staff skull, strap, pillar legs, charge pose (6 gaps) | tribal.* | approved
 364 | [R] legs: breeches past knee stub, shin as stocking (3d7e9c8 +675c79f +ea41917, reverted) | medieval.king.a | rejected
 364 | hide wrap on rope, curved hip tusks (61aea7d +85d9e0a) | tribal.chieftain.a | approved
 364 | main axe stood upright at his side, arm mirrored (bee41ad) | tribal.chieftain.b | approved
@@ -71,6 +69,13 @@ for 25 iterations.
 372 | jabot as a front bib: 3 half-round flared panels, last to a point (0a0238a) | renaissance.painter.a | approved
 372 | tapering legs, separate flared foot lathe (721d839) | tribal.mammoth.a | approved
 372 | sallet bevor as a chin cup (512e743, reverted) | renaissance.halberd.a | dropped
+373 | flat-topped wide-brim hat, cherry-pick of 401d70e (23dc915) | renaissance.balloon_archer.a | approved
+373 | rolled wings + tan band, belt, flared skirt of tabs (909da65 +a7d213f +8669b5c) | renaissance.fencer.a | approved
+373 | own loincloth: rope coils, narrow flap, skull + crossed bones, no kilt (cd8403d +bdad788 +483efeb) | tribal.spear_thrower.a | approved
+373 | beret as lumpy lathe tam, dark team (6b5ac3c) | renaissance.painter.a | approved
+373 | halberd at rest upright, fists belly + collar (a10c9e5) | renaissance.halberd.a | approved
+373 | solid bone face plate in the window, own eyes + nose (41cba1a) | tribal.protector.a | approved
+373 | Painter Dodge: sidestep off a missile, it lands on air (89dc959) | renaissance.painter.c | approved
 
 ## Spent (never retry as [P])
 
@@ -79,7 +84,6 @@ farmer.* (47 knob rows, 339-350; batch done) | compacted 351 | 350 | approved | 
 medieval.* (43 knob rows incl. stats, 351-365; batch done) | compacted 366 | 365 | approved | values: git show f142d6e:loop/LEDG..
 tribal.chieftain (OFF_AXE, MAIN_AXE, CHIEF_LOIN, STONE_AXE, BEAST_SKULL, PAULDRON, CHIEF_BEARD; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
 tribal.clubber (DREAD_MOP, CLUB, RAGGED_LOIN, visuals, CURLY_MOP, RAGGED_STRIPS; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
-propBuilder.ts:SLAB_FACETS (deep, rows, front, bevel, seam); SLAB_MOSS (top, hole, bottom) | .06,3,1.0,.7,.006; .17,.12,.1 | 362 | approved | planks (before 362); moss .13,.08
 propBuilder.ts:JAVELIN_LEAF (shoulder, flank, flankWide, ridge, jitter, glow); HEAD long/wide | .28,.62,.55,.13,.08,.14; .16/.15 | 362 | approved | ball leaf .15/.095 (320)
 tribal.stoner (HIDE_DRESS, HIDE_SKIRT, HIDE_EDGE, SKIRT_TONGUES; unit done) | compacted 369 | 368 | approved | values: git show 706894b:loop/LEDGER.md
 tribal.bone_mage (DEER_RACK, worn, staff, MASK_LEAF, STAFF_SKULL, DEER_MASK; unit done) | compacted 368 | 366 | approved | values: git show 96d1c20:loop/LEDGER.md
@@ -96,19 +100,20 @@ simulationSystem.ts:MAMMOTH_DUST (every, size); visualEffects.ts:KICK_DUST (coun
 vehicleBuilder.ts:MAMMOTH_BARREL (..hump, humpAt, humpFront, humpBack, belly, haunch, legAt, legSpread) | ..,.34,.22,.22,.75,.14,.26,.44,.32 | 366 | approved | hump .24 at .42 spread .4 (365)
 vehicleBuilder.ts:MAMMOTH_TRUNK (pitch, piece, rootR, tipR, flare, hole) | [.75..0.9] x8, .21, .25, .13, .16, .62 | 365 | approved | 8 dark pieces .2, .5->.22 diam
 vehicleBuilder.ts:MAMMOTH_TUSK (tan, glow, tip, gap, stripe, proud) | (.8,.6,.36),.14,3,1,.45,1.08 cloth | 366 | approved | bone ivory (1,.82,.58) glow .22, 2-piece tip
-propBuilder.ts:SKULL_FACE (eyeY, face, eyeX, rim, muzzle, muzzleY, cheek, jaw, jawY, jawTall); SLAB_LIP | ..,.6,.93,.26; 6 sides,1.0,.2 | 368 | approved | 16-side lip .8 shade
 vehicleBuilder.ts:MAMMOTH_EAR (tall, long, thick, z, flare) | .48,.42,.15,.3,1.05 | 367 | approved | edge-on fan
 vehicleBuilder.ts:MAMMOTH_HEM (row, c, size, drop, skirt, ring, skirtY) | 9,-.55,[.08,.2,.22],.12,5,.36,-.42 | 367 | rejected (reverted) | -
 propBuilder.ts:SALLET_FACETED (sides, heads, taper, deep, drop, slit, slitWide, eye, bevor, bevorFlare) | 8,1.24,.9,1.08,1.0,.13,.84,.15,.34,1.3 | 368 | approved | SALLET ball
-renaissanceDress.ts:PAINTER_JABOT (step, tall, across, grow, lip, arc, bulge, tuck, vee) | .25,.36,1.0,.3,.72,.56,.55,.12,.45 | 372 | approved | 369 neck rings .95+.25 (below .12)
+renaissanceDress.ts:PAINTER_JABOT (step, tall, across, grow, lip, arc, bulge, tuck, vee) | .16,.3,1.2,.06,.72,.56,.75,.12,.45 | 373 | approved | .25,.36,1.0,.3,..,.55 (372); 369 neck rings
 
 simulationSystem.ts:HOP_BACK (halberd close, dist, rise, cd) | .75,1.9,2.6,3 | 370 | approved | fencer row removed 370 (was .12,1.5,3.2,1.5)
 simulationSystem.ts:FENCER_RECOVER (dist, seconds) | 1.8, .16 | 370 | approved | HOP_BACK fencer leap (369)
 simulationSystem.ts:FENCER_DODGE (dist, back, seconds, cooldown) | 2.2,1.0,.22,2.5 | 371 | approved | -
 unitFactory.ts:HALBERD_QUILT (upper, lower, swell, tall, glow, cuffLong, cuffFlare) | 5,3,1.6,1.25,.12,.48,1.75 | 370 | approved | 3 rolls 1.22, cuff 1.5
-propBuilder.ts:BERET_PUFF (band, bandTall, puff, deep, puffTall, sit, slide, ahead, tilt, dip, glow) | 1.04,.1,1.45,.95,.5,.35,.16,.1,.32,.15,.12 | 370 | approved | disc 2.0/.32 tilt .22
-propBuilder.ts:SLAB_WINDOW_BONE (outer, inner, thick, behind, glow) | 1.15,.62,.012,.006,.2 | 370 | approved | -
-renaissanceDress.ts:HELD_BALLOON_ARROW (long, shaft, grip, head, ball, squash, glow) | .42,.018,.3,.06,.13,1.15,.25 | 369 | approved | ball .1 glow .12, along forearm
-propBuilder.ts:SKULL_BACK (wide, tall, top, thick, behind) | 1.2,.86,.24,.05,.09 | 369 | approved | -
-renaissanceDress.ts:ARCHER_FRONT (band, gap, buttons, puff, puffTall, points, rootLat, tipLat, paneWide, proud) | .08,.09,4,2.5,.55,7,.75,-.45,.42,1.03 | 372 | approved | cones point .85 wide .8 (371)
+propBuilder.ts:BERET_PUFF+BERET_TAM (bandShade, glow; tam profile, sides, lumps, deep, shade) | .5,.05; 7-pt lathe,9,.08,.92,.62 | 373 | approved | sphere puff 1.45/.5 glow .12 (370)
 propBuilder.ts:CAVALIER_FELT (crown, tall, lift, shade, raise, dip, cock, round, plume, plumeBack, plumeOut) | 1.08,.4,1.1,.32,.13,.03,.16,.55,.95,.75,.4 | 372 | approved | tall .62 dip .14 blade plume (371)
+tribal.protector (SLAB_FACETS, SKULL_FACE, SLAB_LIP, SLAB_WINDOW_BONE outer 1.3, SKULL_BACK, SLAB_WINDOW_FACE; unit done) | compacted 373 | 373 | approved | values: git show 2703401:loop/LEDGER.md + 41cba1a
+renaissance.balloon_archer (HELD_BALLOON_ARROW, ARCHER_FRONT, BRIM_HAT; unit done) | compacted 373 | 373 | approved | values: git show 2703401:loop/LEDGER.md + 23dc915
+renaissanceDress.ts:FENCER_TRIM (capTop, capFoot, capTall, roll, band, beltOut, skirtTop, skirtFoot, skirtTall, tabShade) | 1.25,1.95,.3,.34,.12,1.06,1.04,2.0,.32,.7 | 373 | approved | disc wings 1.45, box tabs .2 (334)
+tribalDress.ts:SPEAR_LOIN (coils, rope, flapWide, flapLong, lean, hide, glow, skull, skullDrop) | 4,.24,.95,.8,.3,(.74,.56,.34),.2,.62,.05 | 373 | approved | shared LOINCLOTH (322)
+proceduralAnimation.ts:HALBERD_REST (ahead, inward, drop, tilt) | .13,.12,.24,.05 | 373 | approved | -
+simulationSystem.ts:PAINTER_DODGE (warn, dist, seconds, cooldown) | .3,1.6,.2,1.2 | 373 | approved | -

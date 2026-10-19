@@ -1,10 +1,10 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 372   Batch: tribal:re+renaissance:re (5-6/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
+Iteration: 373   Batch: tribal:re+renaissance:re (5-6/21)   Consecutive empty: 0   Done: 23/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber ++++ D | protector -+++ o | spear_thrower -+++ o | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
-renaissance: painter -+-+ o | fencer -+++ o | balloon_archer -+++ o | musketeer ++++ D | halberd -+++ o | jouster ++++ D | da_vinci_tank ++++ D
+tribal: clubber ++++ D | protector ++++ D | spear_thrower -+++ o | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
+renaissance: painter -+++ o | fencer -+++ o | balloon_archer ++++ D | musketeer ++++ D | halberd -+++ o | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,15 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-372 (BASE ce8fa88; evidence ce8fa88 fencer idle level camera; re-audit a,b of spear_thrower, painter, fencer, a of halberd): [S] balloon_archer a flat slashes 25a752d approved | [S] fencer a hat re-seat + clump plume a8b654e approved | [S] spear_thrower a chunky tusks e59b231 approved | [S] painter a jabot bib 0a0238a approved | [S] mammoth a tapering legs + foot 721d839 approved | [S] halberd a bevor cup 512e743 dropped (no change in shot); no [P]
+373 (BASE 2703401; evidence 7c27b4e painter spars with an archer): [S] balloon_archer a flat-brim hat 23dc915 approved | [S] fencer a wings+belt+tabs 909da65+a7d213f+8669b5c approved | [S] spear_thrower a loincloth cd8403d+bdad788+483efeb approved | [S] painter a beret tam 6b5ac3c approved | [S] halberd a rest grip a10c9e5 approved | [S] protector a window face plate 41cba1a approved | [S] painter c Painter Dodge 89dc959 approved | [P] painter a jabot b30db36 approved
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] renaissance.balloon_archer (25a752d) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.a FAIL (previous: FAIL)
-- Re-judge, renaissance.balloon_archer.b: PASS (previous: FAIL)
-- GAP: [S] renaissance.fencer (a8b654e) VERDICT: APPROVE CRITERION: renaissance.fencer.a FAIL (previous: FAIL)
-- GAP: [S] tribal.spear_thrower (e59b231) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL)
-- GAP: [S] renaissance.painter (0a0238a) VERDICT: APPROVE CRITERION: renaissance.painter.a FAIL (previous: FAIL)
-- GAP: [S] tribal.mammoth (721d839) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.balloon_archer (23dc915) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.a PASS (previous: FAIL)
+- GAP: [S] renaissance.fencer (909da65 +a7d213f +8669b5c) VERDICT: APPROVE CRITERION: renaissance.fencer.a FAIL (previous: FAIL)
+- GAP: [S] tribal.spear_thrower (cd8403d +bdad788 +483efeb) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.painter (6b5ac3c) VERDICT: APPROVE CRITERION: renaissance.painter.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.halberd (a10c9e5) VERDICT: APPROVE CRITERION: renaissance.halberd.a FAIL (previous: FAIL)
+- GAP: [S] tribal.protector (41cba1a) VERDICT: APPROVE CRITERION: tribal.protector.a PASS (previous: FAIL)
+- GAP: [S] renaissance.painter (89dc959) VERDICT: APPROVE CRITERION: renaissance.painter.c PASS (previous: FAIL)
+- GAP: [P] renaissance.painter (b30db36) VERDICT: APPROVE CRITERION: renaissance.painter.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -52,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- 401d70e (balloon_archer flat-topped wide-brim hat, BRIM_HAT) was reverted unreviewed in 372 for the one-gap-per-criterion rule: cherry-pick it as his hat gap.
-- halberd blocker 1 is the backdrop boulder behind his head (probe 372; bevor cut changed nothing): re-aim his idle by an evidence commit (then re-audit a) or ask the critic to strike it; his pickable gap is the idle grip.
-- Then: fencer doublet wings + tabs, spear_thrower loincloth/stance, painter [P] jabot fallout + beret, mammoth leg tops sunk under a hull skirt (one more reject plateaus mammoth.a), protector window, painter dodge (archer scene).
-- Capture replays are deterministic. Particles do not render on the stepped clock. Probe: copy inspect-prop.mjs into loop/scripts, list meshes' world extents; delete it after. Team cloth glow .2 washes to lavender.
+- First: evidence commit re-aiming unit_renaissance.halberd_idle off the navy backdrop boulder (critic 373: blocker 1 is the rock), then ask the critic to strike it.
+- Then: halberd shoes, spear_thrower stance + [P] flap colour, painter figure (sweater to the hip, longer legs), fencer rolls lowered under near-straight tabs, mammoth leg tops under a hull skirt (one more reject plateaus mammoth.a).
+- Look shots can lie by omission: probe world extents before a second blind tweak (373: fencer tabs inside the thigh rolls, spear flap behind the skull). Probe: copy inspect-prop.mjs, filter meshes by name, delete after.
+- Capture replays are deterministic. Particles do not render on the stepped clock. Team cloth glow .2 washes to lavender; pale tans merge with bone.
 - Never bakeCurrentTransformIntoVertices after parenting. Bash heredocs with quotes/backticks break: write node scripts with the Write tool. printf %s args keep %% literal.
