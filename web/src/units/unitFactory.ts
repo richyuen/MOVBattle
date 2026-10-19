@@ -15,7 +15,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingJacket, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
-import { dressMinotaur } from "./ancientDress";
+import { dressMinotaur, dressZeus } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -542,6 +542,10 @@ export class UnitFactory {
     // [S] the minotaur in his own brown fur, team colour only on his belt and pauldron, a leather sash (378; ancientDress dressMinotaur)
     if (definition.id === "ancient.minotaur" && !shouldUseVehicleBody) {
       propMeshes.push(...dressMinotaur(this._scene, body, teamColor, propMeshes));
+    }
+    // [S] Zeus's dirty-blond bolt-hair beard and locks, olive leaves at the temples (379; ancientDress dressZeus)
+    if (definition.id === "ancient.zeus" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressZeus(this._scene, body, propMeshes));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));

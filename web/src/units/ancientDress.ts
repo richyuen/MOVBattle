@@ -1,7 +1,7 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, Quaternion } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
-import { trunkBand } from "./tribalDress";
+import { trunkBand, jitterVertices } from "./tribalDress";
 
 /*
  * Ancient dress (units/ancient.*): fur, cloth and ornaments built per unit id by unitFactory, sized off the body's own metrics and joints. Pieces worn on
@@ -110,5 +110,93 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   hole.position.set(buckle.position.x, buckle.position.y, buckle.position.z + S.thick * chest.halfX * 0.8 + 0.002);
   hole.rotation.z = sash.rotation.z;
   add(hole, body.torso, leather);
+  return out;
+}
+
+/*
+ * [S] Zeus's beard and locks (379; ancient.zeus.red.png, card Appearance "luscious locks of dirty blond hair and grand beard with hairs that resemble
+ * lightning bolts ... an olive wreath around the sides of their head"; critic 378: no beard, a short brown cap, a flat green band). In the head's half
+ * extents (x across, y up, z his front), all dirty blond ZEUS_HAIR self-lit .glow:
+ *   - the jaw mass: a jittered faceted ball ZEUS_BEARD.jaw of the half extents, its middle .jawY down and .jawZ ahead, from cheek to cheek under the eyes;
+ *   - .strands bolt strands off its lower front, rooted round an arc of .arc rad, each a zig-zag of .kinks tapered four-sided links, kinked .zig of a
+ *     link's length side to side, .long head heights long (shorter toward the sides), hanging down and out onto the chest, .thick head widths at the root;
+ *   - ZEUS_LOCKS.strands bolt locks all round the back and sides from .rootY of the half height (none over the face, a gap of .face rad each side of
+ *     the front), .long head heights long to the shoulders, .thick at the root;
+ *   - the laurel hat's cap recoloured blond (it carries the wreath), and .leaves olive leaf clumps along each temple under the wreath.
+ */
+const ZEUS_HAIR = new Color3(0.62, 0.48, 0.3);
+const ZEUS_HAIR_GLOW = 0.16;
+const ZEUS_BEARD = { jaw: [1.12, 0.52, 0.6] as const, jawY: 0.72, jawZ: 0.58, strands: 13, arc: 1.25, kinks: 3, zig: 0.55, long: 0.75, thick: 0.15 };
+const ZEUS_LOCKS = { strands: 16, rootY: 0.3, face: 0.95, long: 1.05, thick: 0.2 };
+const ZEUS_LEAF = { leaves: 4, size: 0.16, color: new Color3(0.38, 0.52, 0.2) };
+
+function shareOf(seed: number, i: number): number {
+  const v = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+/** Zeus's dirty-blond bolt-hair beard, locks and temple leaves (spec at ZEUS_BEARD), on the head. */
+export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): Mesh[] {
+  const out: Mesh[] = [];
+  const mf = getMaterialFactory();
+  const hair = mf.get("cloth", ZEUS_HAIR, { emissive: ZEUS_HAIR.scale(ZEUS_HAIR_GLOW) });
+  const head = body.headMesh;
+  const e = head.getBoundingInfo().boundingBox.extendSize;
+  const W = e.x * 2, H = e.y * 2;
+  const put = (m: Mesh, material = hair) => { m.material = material; m.parent = head; out.push(m); return m; };
+  // a zig-zag bolt of tapered links from `from` along `dir`, kinked side to side along `side`
+  const bolt = (from: Vector3, dir: Vector3, side: Vector3, long: number, thick: number, kinks: number, zig: number, seed: number) => {
+    let at = from;
+    const step = long / kinks;
+    for (let k = 0; k < kinks; k++) {
+      const flip = (k % 2 === 0 ? 1 : -1) * (shareOf(seed, k) > 0.15 ? 1 : -1);
+      const to = at.add(dir.scale(step)).add(side.scale(flip * zig * step));
+      const d = to.subtract(at);
+      const link = MeshBuilder.CreateCylinder("zeusBolt", { height: d.length() * 1.08, diameterTop: thick * (1 - k / kinks), diameterBottom: thick * (1 - (k + 0.8) / kinks), tessellation: 4 }, scene);
+      link.rotationQuaternion = Quaternion.Identity();
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.normalize().scale(-1), link.rotationQuaternion);
+      link.position = Vector3.Center(at, to);
+      put(link);
+      at = to;
+    }
+  };
+  // the jaw mass
+  const B = ZEUS_BEARD;
+  const jaw = MeshBuilder.CreateIcoSphere("zeusBeard", { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(jaw, 0.16, 61.7, e.x * B.jaw[0], e.y * B.jaw[1], e.z * B.jaw[2]);
+  jaw.position.set(0, -e.y * B.jawY, e.z * B.jawZ);
+  put(jaw);
+  // the bolt strands off its foot, down onto the chest
+  for (let i = 0; i < B.strands; i++) {
+    const a = ((i + 0.5) / B.strands - 0.5) * 2 * B.arc;
+    const root = new Vector3(Math.sin(a) * e.x * B.jaw[0] * 0.8, -e.y * (B.jawY + B.jaw[1] * 0.5), Math.cos(a) * e.z * B.jaw[2] * 0.9 + e.z * B.jawZ * 0.5);
+    const dir = new Vector3(Math.sin(a) * 0.3, -1, 0.3 * Math.cos(a)).normalize();
+    const side = new Vector3(Math.cos(a), 0, -Math.sin(a));
+    const long = H * B.long * (1 - 0.4 * Math.abs(a) / B.arc) * (0.8 + 0.4 * shareOf(7.1, i));
+    bolt(root, dir, side, long, W * B.thick, B.kinks, B.zig, 9.3 + i);
+  }
+  // the locks round the back and sides, to the shoulders
+  const L = ZEUS_LOCKS;
+  for (let i = 0; i < L.strands; i++) {
+    const a = L.face + ((i + 0.5) / L.strands) * (Math.PI * 2 - 2 * L.face); // 0 = the face
+    const root = new Vector3(Math.sin(a) * e.x * 1.0, e.y * L.rootY, Math.cos(a) * e.z * 1.0);
+    const dir = new Vector3(Math.sin(a) * 0.3, -1, Math.cos(a) * 0.3).normalize();
+    const side = new Vector3(Math.cos(a), 0, -Math.sin(a));
+    bolt(root, dir, side, H * L.long * (0.8 + 0.4 * shareOf(3.3, i)), W * L.thick, 3, 0.45, 21.1 + i);
+  }
+  // the laurel hat's cap in his own blond (the wreath stays on it)
+  for (const p of props) for (const m of [p, ...p.getChildMeshes(false)]) if (m.name === "laurelHair") m.material = hair;
+  // olive leaf clumps along each temple
+  const leaf = mf.get("cloth", ZEUS_LEAF.color, { emissive: ZEUS_LEAF.color.scale(0.12) });
+  for (const sx of [-1, 1]) {
+    for (let i = 0; i < ZEUS_LEAF.leaves; i++) {
+      const u = i / (ZEUS_LEAF.leaves - 1);
+      const m = MeshBuilder.CreateIcoSphere("zeusLeaf", { radius: W * ZEUS_LEAF.size * 0.5, subdivisions: 1, flat: true }, scene);
+      m.scaling.set(0.55, 0.8, 1.3);
+      m.rotation.set(0.4 - u * 0.8, sx * 0.3, sx * 0.5);
+      m.position.set(sx * e.x * 1.04, e.y * (0.5 + 0.12 * Math.sin(u * Math.PI)), e.z * (0.55 - u * 0.95));
+      put(m, leaf);
+    }
+  }
   return out;
 }
