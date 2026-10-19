@@ -4873,7 +4873,14 @@ type HorseStyle = "barded" | "pinto";
  *   shell CHANFRON.long of the head long from the poll, CHANFRON.wide of H across at the poll tapering to .narrow, flattened sideways by .flat, a ridge
  *   down the top; eye holes CHANFRON.eye of H round, .eyeAt of the head down from the poll; ears CHANFRON.ear of H tall; plume .tufts tufts .tuft of H.
  */
-const CHANFRON = { long: 0.7, wide: 0.38, narrow: 0.27, flat: 0.88, eye: 0.075, eyeAt: 0.3, ear: 0.3, tufts: 4, tuft: 0.11, glow: 0.2 };
+const CHANFRON = { long: 0.7, wide: 0.38, narrow: 0.27, flat: 0.88, eye: 0.085, eyeAt: 0.3, eyeTurn: 0.75, ear: 0.3, tufts: 4, tuft: 0.11, glow: 0.2 };
+/*
+ * [S] the barded horse's arched neck and coat (368; renaissance.jouster.red.png, .png: the neck leaves the chest arched forward and the head hangs low ahead
+ * of the rider's chest under the grey chanfron, two googly eyes looking out of its front; a dark chestnut coat; critic 367: a tall vertical giraffe neck,
+ * a box head with one ring eye, a pale tan coat). Two segments: .low H long raked .rake0, then .high H raked .rake1 (forward of the first), .mid H thick
+ * at the bend; the head pitched .pitch. Coat .coat in matte cloth, self-lit .glow. The pinto keeps its own straight neck.
+ */
+const BARDED_NECK = { low: 0.6, rake0: 0.6, high: 0.38, rake1: 1.15, mid: 0.32, pitch: 2.45, coat: new Color3(0.4, 0.2, 0.11), glow: 0.12 };
 const CHANFRON_STEEL = new Color3(0.5, 0.52, 0.56);
 function buildChanfron(scene: Scene, head: Mesh, headLong: number, H: number, part: (m: Mesh, material: PBRMetallicRoughnessMaterial) => Mesh, dark: PBRMetallicRoughnessMaterial): void {
   const C = CHANFRON;
@@ -4894,17 +4901,18 @@ function buildChanfron(scene: Scene, head: Mesh, headLong: number, H: number, pa
   const at = from + headLong * C.eyeAt;
   const halfAt = H * (C.wide - (C.wide - C.narrow) * (C.eyeAt / C.long)) * 0.5 * C.flat;
   for (const x of [-1, 1]) {
+    // [S] 368: the eyes sit on the face's front corners, turned .eyeTurn from the side toward the face's top, so both look out ahead (the render's googly pair)
+    const ex = x * halfAt * Math.cos(C.eyeTurn), ez = -H * 0.03 - halfAt * Math.sin(C.eyeTurn);
     const ring = part(MeshBuilder.CreateTorus("hchanfronEye", { diameter: H * C.eye * 2, thickness: H * 0.03, tessellation: 8 }, scene), dark);
     ring.parent = head;
-    ring.rotation.z = Math.PI / 2;
-    ring.position.set(x * halfAt * 0.96, at, -H * 0.03);
-    const eye = part(MeshBuilder.CreateIcoSphere("hchanfronEyeball", { radius: H * C.eye * 0.8, subdivisions: 1 }, scene), white);
+    ring.rotation.set(0, -x * C.eyeTurn, Math.PI / 2);
+    ring.position.set(ex, at, ez);
+    const eye = part(MeshBuilder.CreateIcoSphere("hchanfronEyeball", { radius: H * C.eye * 0.9, subdivisions: 1 }, scene), white);
     eye.parent = head;
-    eye.scaling.x = 0.6;
-    eye.position.set(x * halfAt * 0.96, at, -H * 0.03);
-    const pupil = part(MeshBuilder.CreateIcoSphere("hchanfronPupil", { radius: H * C.eye * 0.4, subdivisions: 1 }, scene), dark);
+    eye.position.set(ex, at, ez);
+    const pupil = part(MeshBuilder.CreateIcoSphere("hchanfronPupil", { radius: H * C.eye * 0.42, subdivisions: 1 }, scene), dark);
     pupil.parent = head;
-    pupil.position.set(x * (halfAt * 0.96 + H * C.eye * 0.4), at + H * C.eye * 0.15, -H * 0.04);
+    pupil.position.set(ex + x * H * C.eye * 0.5 * Math.cos(C.eyeTurn), at + H * C.eye * 0.2, ez - H * C.eye * 0.5 * Math.sin(C.eyeTurn));
   }
 }
 function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: HorseStyle = "barded"): Mesh {
@@ -4916,7 +4924,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const L = H * HORSE_LONG;
   const W = Math.max(body.metrics.hipWidth * 2.2, H * HORSE_WIDE);
   // The paint's coat and patches are a little self-lit, so they stay orange and cream in the blue shade instead of greying
-  const coat = pinto ? mat(scene, PINTO_COAT, PINTO_GLOW) : mat(scene, new Color3(0.55, 0.3, 0.18), HORSE_COAT_GLOW);
+  const coat = pinto ? mat(scene, PINTO_COAT, PINTO_GLOW) : mat(scene, BARDED_NECK.coat, BARDED_NECK.glow, "cloth");
   const dark = mat(scene, new Color3(0.16, 0.1, 0.07));
   const plate = mat(scene, new Color3(0.66, 0.68, 0.7));
   const cream = pinto ? mat(scene, PINTO_CREAM, PINTO_GLOW) : mat(scene, new Color3(0.93, 0.84, 0.64));
@@ -5022,16 +5030,38 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       hoof.position.set(legX, floor + hoofTall / 2, hoofAt.z + H * 0.02);
     }
   }
-  const neckTall = H * 1.05;
-  const neck = part(MeshBuilder.CreateCylinder("hneck", { height: neckTall, diameterTop: H * 0.24, diameterBottom: H * 0.42, tessellation: 6 }, scene), coat);
-  neck.rotation.x = HORSE_NECK_RAKE;
   const neckRoot = new Vector3(0, H * HORSE_DEEP * 0.25, L * 0.38);
-  neck.position.set(0, neckRoot.y + Math.cos(HORSE_NECK_RAKE) * neckTall * 0.5, neckRoot.z + Math.sin(HORSE_NECK_RAKE) * neckTall * 0.5);
-  const poll = new Vector3(0, neckRoot.y + Math.cos(HORSE_NECK_RAKE) * neckTall, neckRoot.z + Math.sin(HORSE_NECK_RAKE) * neckTall);
+  let poll: Vector3;
+  let headPitch = 2.05;
+  const neckTall = H * 1.05;
+  let neck: Mesh | null = null;
+  if (pinto) {
+    neck = part(MeshBuilder.CreateCylinder("hneck", { height: neckTall, diameterTop: H * 0.24, diameterBottom: H * 0.42, tessellation: 6 }, scene), coat);
+    neck.rotation.x = HORSE_NECK_RAKE;
+    neck.position.set(0, neckRoot.y + Math.cos(HORSE_NECK_RAKE) * neckTall * 0.5, neckRoot.z + Math.sin(HORSE_NECK_RAKE) * neckTall * 0.5);
+    poll = new Vector3(0, neckRoot.y + Math.cos(HORSE_NECK_RAKE) * neckTall, neckRoot.z + Math.sin(HORSE_NECK_RAKE) * neckTall);
+  } else {
+    // [S] the arched neck (spec at BARDED_NECK): a thick lower segment raked forward, a crest segment bent further forward over it, the poll low
+    const N = BARDED_NECK;
+    let at = neckRoot;
+    const segs: [number, number, number, number][] = [[N.low, N.rake0, 0.42, N.mid], [N.high, N.rake1, N.mid, 0.24]];
+    for (const [len, rake, d0, d1] of segs) {
+      const seg = part(MeshBuilder.CreateCylinder("hneck", { height: H * len, diameterTop: H * d1, diameterBottom: H * d0, tessellation: 6 }, scene), coat);
+      seg.rotation.x = rake;
+      const end = at.add(new Vector3(0, Math.cos(rake) * H * len, Math.sin(rake) * H * len));
+      seg.position.copyFrom(at.add(end).scale(0.5));
+      // a knuckle of coat over the joint so the bend reads as one arched neck
+      const knot = part(MeshBuilder.CreateIcoSphere("hneckJoin", { radius: H * d1 * 0.5, subdivisions: 1 }, scene), coat);
+      knot.position.copyFrom(end);
+      at = end;
+    }
+    poll = at;
+    headPitch = N.pitch;
+  }
   const headLong = H * 0.72;
   const head = part(MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.17, diameterBottom: H * 0.3, tessellation: 5 }, scene), coat);
-  head.rotation.x = 2.05;
-  head.position.set(0, poll.y + Math.cos(2.05) * headLong * 0.42, poll.z + Math.sin(2.05) * headLong * 0.42);
+  head.rotation.x = headPitch;
+  head.position.set(0, poll.y + Math.cos(headPitch) * headLong * 0.42, poll.z + Math.sin(headPitch) * headLong * 0.42);
   if (pinto) {
     // The pinto's cream blaze down the face
     const blaze = part(MeshBuilder.CreateBox("hblaze", { width: H * 0.12, height: headLong * 0.85, depth: H * 0.05 }, scene), cream);
@@ -5042,7 +5072,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   }
   const pink = mat(scene, PINTO_PINK, PINTO_GLOW);
   const muzzle = part(MeshBuilder.CreateBox("hmuzzle", { width: H * (pinto ? 0.19 : 0.13), height: H * (pinto ? 0.15 : 0.1), depth: H * (pinto ? 0.17 : 0.12) }, scene), pinto ? pink : coat);
-  muzzle.position.set(0, poll.y + Math.cos(2.05) * headLong * 0.95, poll.z + Math.sin(2.05) * headLong * 0.95);
+  muzzle.position.set(0, poll.y + Math.cos(headPitch) * headLong * 0.95, poll.z + Math.sin(headPitch) * headLong * 0.95);
   const earTall = H * (pinto ? PINTO_EAR : CHANFRON.ear);
   for (const x of [-1, 1]) {
     const ear = part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * 0.1, tessellation: 4 }, scene), coat);
@@ -5072,7 +5102,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     // The mane: dark tufts down the top of the neck, a forelock at the poll
     for (let i = 0; i < 5; i++) {
       const tuft = part(MeshBuilder.CreateBox("hmane", { width: H * 0.06, height: neckTall * 0.2, depth: H * 0.13 }, scene), dark);
-      tuft.parent = neck;
+      tuft.parent = neck!;
       tuft.position.set(0, neckTall * (0.4 - i * 0.18), -H * (0.12 + i * 0.018));
       tuft.rotation.x = -0.25;
     }
