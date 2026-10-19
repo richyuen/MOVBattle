@@ -305,17 +305,39 @@ const DEER_BEAM = [1.05, 0.9];
 const DEER_SPLAY = [0.95, 0.4];
 const DEER_TINE = 0.58;
 const DEER_ANTLER = new Color3(0.66, 0.5, 0.33);
+/*
+ * [S] the deer skull worn as a mask (361; tribal.bone_mage.red.png: the skull over the face, its long muzzle down to the chin, the wearer's eyes in its
+ * sockets). Replaces the muzzle jutting forward off the brow over a bare face: a faceted six-sided face plate in front of the face, DEER_MASK.top heads
+ * across at the brow tapering to .tip at the muzzle end, .flat of its width deep, from .rise head heights above the hat's seat down to .drop below the chin,
+ * its foot tilted .tilt forward; no sockets on the cranium. The eyes come out onto it (attachProps): each pushed .out head widths forward of the face and
+ * .spread of its own way out to the side, a dark socket ring .socket of the eye across behind it.
+ */
+const DEER_MASK = { top: 0.95, tip: 0.36, flat: 0.32, rise: 0.1, drop: 0.08, tilt: 0.2, out: 0.26, spread: 1.55, socket: 1.4 };
 
-function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: number, tall: number, R: number, u: (v: number) => number): void {
+function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: number, tall: number, R: number, u: (v: number) => number, chin?: number): void {
   const bone = snout.material;
-  const muzzleLong = u(DEER_MUZZLE * W);
-  const muzzle = MeshBuilder.CreateCylinder("deerMuzzle", { height: muzzleLong, diameterTop: u(0.2 * W), diameterBottom: u(0.5 * W), tessellation: 6 }, scene);
-  const down = Math.PI / 2 + DEER_MUZZLE_DIP;
-  muzzle.rotation.x = down;
-  muzzle.position.set(0, u(tall * 0.35) - Math.sin(DEER_MUZZLE_DIP) * muzzleLong * 0.5, u(R * 0.9) + Math.cos(DEER_MUZZLE_DIP) * muzzleLong * 0.5);
-  muzzle.scaling.x = 1.15;
-  muzzle.material = bone;
-  muzzle.parent = skull;
+  // The staff's skull (no chin handed over) keeps its muzzle running forward and down
+  if (chin === undefined) {
+    const muzzleLong = u(DEER_MUZZLE * W);
+    const muzzle = MeshBuilder.CreateCylinder("deerMuzzle", { height: muzzleLong, diameterTop: u(0.2 * W), diameterBottom: u(0.5 * W), tessellation: 6 }, scene);
+    const down = Math.PI / 2 + DEER_MUZZLE_DIP;
+    muzzle.rotation.x = down;
+    muzzle.position.set(0, u(tall * 0.35) - Math.sin(DEER_MUZZLE_DIP) * muzzleLong * 0.5, u(R * 0.9) + Math.cos(DEER_MUZZLE_DIP) * muzzleLong * 0.5);
+    muzzle.scaling.x = 1.15;
+    muzzle.material = bone;
+    muzzle.parent = skull;
+  } else {
+    // The face plate (DEER_MASK): from the brow over the face to below the chin, wide at the brow, its foot the muzzle
+    const M = DEER_MASK;
+    const top = M.rise * H, foot = chin - M.drop * H;
+    const face = MeshBuilder.CreateCylinder("deerMask", { height: u(top - foot), diameterTop: u(M.top * W), diameterBottom: u(M.tip * W), tessellation: 6 }, scene);
+    face.convertToFlatShadedMesh();
+    face.scaling.z = M.flat;
+    face.rotation.x = -M.tilt;
+    face.position.set(0, u((top + foot) * 0.5), u(R * 0.62 + M.top * W * M.flat * 0.5) + Math.sin(M.tilt) * u(top - foot) * 0.25);
+    face.material = bone;
+    face.parent = skull;
+  }
   const antler = mat(scene, DEER_ANTLER);
   const up = Vector3.Up();
   const stick = (from: Vector3, dir: Vector3, long: number, thick: number) => {
@@ -964,12 +986,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     skull.material = bone;
     const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
     for (const side of [-1, 1]) {
-      const hole = MeshBuilder.CreateCylinder("bskullEye", { height: u(0.04 * W), diameter: u(SKULL_SOCKET * W), tessellation: 6 }, scene);
-      hole.rotation.x = Math.PI / 2;
-      hole.position.set(side * u(0.24 * W), u(tall * 0.42), u(R * 1.02));
-      hole.rotation.y = side * 0.35;
-      hole.material = socket;
-      hole.parent = skull;
+      // no sockets on the cranium: the mask carries the eyes (DEER_MASK)
       const cheek = MeshBuilder.CreateBox("bskullCheek", { width: u(0.12 * W), height: u(0.45 * H), depth: u(0.3 * W) }, scene);
       cheek.position.set(side * u(R * 0.92), u(-0.18 * H), u(0.2 * W));
       cheek.rotation.z = side * 0.12;
@@ -982,7 +999,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     snout.scaling.x = 1.2;
     snout.material = bone;
     snout.parent = skull;
-    if (type === "antler_skull") addDeerSkull(scene, skull, snout, W, H, tall, R, u);
+    if (type === "antler_skull") addDeerSkull(scene, skull, snout, W, H, tall, R, u, -(H - eyeTop + HAT_EYE_CLEAR * H));
     return skull;
   }
   if (type === "crested_helm") {
@@ -1378,6 +1395,24 @@ export function attachProps(
       b.material = beadMat;
       b.parent = body.torso;
       props.push(b);
+    }
+  }
+
+  // [S] the deer mask's eyes (361; spec at DEER_MASK): the wearer's own eyes come out onto the face plate, wide on its brow, a dark socket ring behind each
+  if (config.hat === "antler_skull" && head) {
+    const sock = mat(scene, new Color3(0.12, 0.09, 0.08));
+    for (const eye of [body.leftEye, body.rightEye]) {
+      if (!eye) continue;
+      eye.position.x *= DEER_MASK.spread;
+      eye.position.z += head.width * DEER_MASK.out;
+      const across = eye.getBoundingInfo().boundingBox.extendSize.x * 2 * eye.scaling.x;
+      const ring = MeshBuilder.CreateCylinder("deerMaskSocket", { height: across * 0.12, diameter: across * DEER_MASK.socket, tessellation: 6 }, scene);
+      ring.rotation.x = Math.PI / 2;
+      ring.parent = eye.parent;
+      ring.position.copyFrom(eye.position);
+      ring.position.z -= across * 0.12;
+      ring.material = sock;
+      props.push(ring);
     }
   }
 
