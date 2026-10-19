@@ -31,6 +31,8 @@ const DRUNK_GREEN = new Color3(0.35, 0.95, 0.25);
 
 // The balloon arrow's ball (see _addBalloonBall): across (m), along the shaft from its middle (m), stretch along the shaft
 const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
+// The medieval archer's broadhead arrow (see _dressBroadhead): head across, along the shaft (m), flatness; shaft and head colours
+const BROADHEAD = { wide: 0.17, long: 0.2, thick: 0.3, shaft: new Color3(0.62, 0.16, 0.1), iron: new Color3(0.08, 0.08, 0.09) };
 
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
@@ -154,6 +156,8 @@ interface ProjectileSpawnOptions {
   arc?: number;
   /** A balloon arrow, carrying its shooter's unit id: the man it strikes floats up under balloons of the shooter's colour (RuntimeUnit.floatOnBalloons). */
   balloons?: string;
+  /** An arrow with a red shaft and a large black broadhead (the medieval archer's, _dressBroadhead). */
+  broadhead?: boolean;
   /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
   drunk?: string;
 }
@@ -301,6 +305,7 @@ export class ProjectileSystem {
     mesh.position.y += options.originLift ?? 1.0;
     if (options.size) mesh.scaling.setAll(options.size);
     if (options.balloons && shape === "arrow" && !held) this._addBalloonBall(mesh, palette.primary, attackerTeam);
+    if (options.broadhead && shape === "arrow" && !held) this._dressBroadhead(mesh);
     if (held) {
       // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
       const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
@@ -786,6 +791,25 @@ export class ProjectileSystem {
    * expand into balloons"; renaissance.balloon_archer.jpg). A balloon arrow carries a team sphere BALLOON_BALL.size across, BALLOON_BALL.at along the
    * shaft from its middle (just behind the head), a little squashed along the shaft; it is hidden the moment the arrow strikes, as the balloons swell.
    */
+  /*
+   * [S] the medieval archer's arrow (358; medieval.archer.blue.png: a red shaft and a large black broadhead, not a dark shaft with a small team tip). The shaft
+   * recoloured BROADHEAD.shaft; the small tip replaced by a flat black barbed head BROADHEAD.wide across, .long along the shaft, .thick flat, at its front end.
+   */
+  private _dressBroadhead(root: TransformNode): void {
+    const B = BROADHEAD;
+    for (const child of root.getChildMeshes(true)) {
+      if (child.name === "shaft") child.material = this._getMat("broadhead_shaft", B.shaft, 0.12);
+      if (child.name === "tip") child.dispose();
+    }
+    const head = MeshBuilder.CreateCylinder("broadhead", { height: B.long, diameterTop: 0, diameterBottom: B.wide, tessellation: 4 }, this._scene);
+    head.convertToFlatShadedMesh();
+    head.rotation.x = Math.PI / 2;
+    head.scaling.x = B.thick;
+    head.position.z = 0.375 + B.long / 2;
+    head.material = this._getMat("broadhead_iron", B.iron, 0.04);
+    head.parent = root;
+  }
+
   private _addBalloonBall(root: TransformNode, color: Color3, team: number): void {
     const ball = MeshBuilder.CreateSphere("balloonBall", { diameter: BALLOON_BALL.size, segments: 6 }, this._scene);
     ball.scaling.z = BALLOON_BALL.long;

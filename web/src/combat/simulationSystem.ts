@@ -80,6 +80,8 @@ const DRUNK_POTIONS = new Set(["farmer.potion_seller"]);
 const DRUNK_WANDER = { reach: 2.5, swing: 0.9 };
 // Archers whose arrows carry a balloon: the man struck floats up under balloons (renaissance.balloon_archer; RuntimeUnit.floatOnBalloons)
 const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
+// Bowmen whose arrows fly with a red shaft and a large black broadhead (ProjectileSystem._dressBroadhead; medieval.archer.blue.png)
+const BROADHEAD_ARROWS = new Set(["medieval.archer"]);
 /**
  * A firearm whose ball throws the man it hits (units/renaissance.musketeer, card Weapons: the musket's force is 1500, against a club's 20): a man the shot
  * leaves alive is knocked off his feet along its line and tumbles, as from a blast (RuntimeUnit.applyBlastLaunch), not merely flinched. Keyed by weaponHint, so
@@ -2084,7 +2086,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
           );
         }
       } else {
@@ -2198,7 +2200,7 @@ export class SimulationSystem {
         // Loosed off the drawn bow: from the bow, where the draw has put it
         const origin = attacker.getAttackOrigin();
         this.projectileSystem.spawnProjectile(
-          t.shape, origin.position, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: originLiftForSource(origin.source) },
+          t.shape, origin.position, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: originLiftForSource(origin.source), broadhead: BROADHEAD_ARROWS.has(attacker.definition.id) },
         );
         continue;
       }
