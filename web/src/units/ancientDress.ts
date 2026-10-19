@@ -307,6 +307,60 @@ const SNAKE_HOOD = {
   collar: 0.42, collarOut: 1.08, point: 0.5, cord: new Color3(0.72, 0.5, 0.3), shade: 0.82, glow: 0.12,
 };
 
+/*
+ * [S] the snake archer's snake (385; ancient.snake_archer.red.png, card Appearance "a bow ... loaded with a snake", Weapons projectile Snake: a big green
+ * snake head with two white bead eyes on top, a body banded dark red and green tapering back to the tail; critic 378/384: a plain dark arrow on the
+ * string and in flight). Built along +y, tail at 0 and the head's tip at `long`: the body .bands bands from .tail to .neck of the head's width across,
+ * alternating red and green, .body of the length; the head an ellipsoid .head of the length across, .headLong of it long, flattened .flat; the eyes
+ * white beads .eye of the head across on its top with black pupils; a forked red tongue. Fixed colours self-lit .glow (the same snake on both teams).
+ * The draw fist holds it nocked (heldSnake, named "heldArrow" so the sim hides it at the loose, SNAKE_ARROWS); the arrow that flies is dressed as it.
+ */
+const SNAKE = {
+  bands: 8, body: 0.72, tail: 0.25, neck: 0.72, head: 0.22, headLong: 1.45, flat: 0.75, eye: 0.42, glow: 0.18, nock: 0.42, held: 0.48,
+  green: new Color3(0.2, 0.42, 0.2), red: new Color3(0.45, 0.1, 0.12), white: new Color3(0.95, 0.95, 0.92), black: new Color3(0.05, 0.05, 0.05),
+};
+
+/** A banded snake along +y, tail at 0, head tip at `long` (spec at SNAKE). */
+export function buildSnake(scene: Scene, name: string, long: number): TransformNode {
+  const S = SNAKE;
+  const mf = getMaterialFactory();
+  const lit = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(S.glow) });
+  const root = new TransformNode(name, scene);
+  const headW = long * S.head, headL = headW * S.headLong;
+  const bodyL = long - headL * 0.85;
+  const put = (m: Mesh, c: Color3) => { m.material = lit(c); m.convertToFlatShadedMesh(); m.parent = root; return m; };
+  for (let k = 0; k < S.bands; k++) {
+    const t0 = k / S.bands, t1 = (k + 1) / S.bands;
+    const d = (t: number) => headW * (S.tail + (S.neck - S.tail) * t);
+    const band = put(MeshBuilder.CreateCylinder(`${name}Band`, { height: bodyL / S.bands * 1.02, diameterBottom: d(t0), diameterTop: d(t1), tessellation: 7 }, scene), k % 2 ? S.red : S.green);
+    band.position.y = bodyL * (t0 + t1) / 2;
+  }
+  const head = put(MeshBuilder.CreateSphere(`${name}Head`, { diameterX: headW, diameterY: headL, diameterZ: headW * S.flat, segments: 7 }, scene), S.green);
+  head.position.y = long - headL / 2;
+  for (const side of [-1, 1]) {
+    const eye = put(MeshBuilder.CreateSphere(`${name}Eye`, { diameter: headW * S.eye, segments: 6 }, scene), S.white);
+    eye.position.set(side * headW * 0.24, long - headL * 0.32, headW * S.flat * 0.38);
+    const pupil = put(MeshBuilder.CreateSphere(`${name}Pupil`, { diameter: headW * S.eye * 0.5, segments: 5 }, scene), S.black);
+    pupil.position.set(side * headW * 0.26, long - headL * 0.3, headW * S.flat * 0.38 + headW * S.eye * 0.32);
+    const fork = put(MeshBuilder.CreateBox(`${name}Tongue`, { width: headW * 0.05, height: headL * 0.32, depth: headW * 0.02 }, scene), S.red);
+    fork.position.set(side * headW * 0.05, long + headL * 0.12, 0);
+    fork.rotation.z = -side * 0.35;
+  }
+  return root;
+}
+
+/** The snake nocked in the snake archer's draw fist (spec at SNAKE), held like the balloon archer's arrow: across the fist, the head out to his off side. */
+export function heldSnake(scene: Scene, body: ArticulatedBody): TransformNode {
+  const long = SNAKE.held * body.metrics.overallHeight;
+  const holder = new TransformNode("heldArrow", scene);
+  holder.parent = body.leftHand;
+  holder.rotation.z = Math.PI / 2;
+  const snake = buildSnake(scene, "heldSnake", long);
+  snake.parent = holder;
+  snake.position.y = -long * SNAKE.nock;
+  return holder;
+}
+
 /** The snake archer's hood, face wrap, collar and cord (spec at SNAKE_HOOD): head pieces on the head, the collar on the torso. */
 export function dressSnakeArcher(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = SNAKE_HOOD;

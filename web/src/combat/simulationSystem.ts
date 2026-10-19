@@ -83,6 +83,8 @@ const DRUNK_WANDER = { reach: 2.5, swing: 0.9 };
 const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
 // Bowmen whose arrows fly with a red shaft and a large black broadhead (ProjectileSystem._dressBroadhead; medieval.archer.blue.png)
 const BROADHEAD_ARROWS = new Set(["medieval.archer"]);
+// [S] 385 bowmen who loose a snake: the nocked snake (ancientDress heldSnake) leaves the fist, and the arrow flies dressed as it (ProjectileSystem _dressSnake)
+const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
 /**
  * A firearm whose ball throws the man it hits (units/renaissance.musketeer, card Weapons: the musket's force is 1500, against a club's 20): a man the shot
  * leaves alive is knocked off his feet along its line and tumbles, as from a blast (RuntimeUnit.applyBlastLaunch), not merely flinched. Keyed by weaponHint, so
@@ -2243,10 +2245,11 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
           );
           // [S] 369 the balloon arrow in his draw fist is the one that flew: gone from the hand until half the reload is past (renaissanceDress HELD_BALLOON_ARROW)
-          const held = BALLOON_ARROWS.has(attacker.definition.id) ? attacker.body.leftHand?.getChildren((n) => n.name === "heldArrow")[0] : undefined;
+          // (385: the snake archer's nocked snake too, ancientDress heldSnake)
+          const held = BALLOON_ARROWS.has(attacker.definition.id) || SNAKE_ARROWS.has(attacker.definition.id) ? attacker.body.leftHand?.getChildren((n) => n.name === "heldArrow")[0] : undefined;
           if (held) {
             held.setEnabled(false);
             this._arrowsAway.set(held, now + attackProfile.cooldown * cooldownMultiplier * 0.5);

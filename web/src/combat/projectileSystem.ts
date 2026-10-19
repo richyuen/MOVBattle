@@ -11,6 +11,9 @@ import { TEAM_COLORS } from "../data/factionColors";
 import { createTrail } from "./particleFactory";
 import { buildFlyingSword, buildFacetedBoulder } from "../units/propBuilder";
 import { CATAPULT_BOULDER } from "../units/vehicleBuilder";
+import { buildSnake } from "../units/ancientDress";
+// The snake archer's flying snake, head to tail (m; ancient.snake_archer.png: about as long as a man is tall to his chest)
+const FLYING_SNAKE_LONG = 1.1;
 
 /*
  * [S] a flying crow (342; farmer.scarecrow.png: the scarecrow's crows fly at the enemy as big black birds, wings spread and beating). In metres: body
@@ -160,6 +163,8 @@ interface ProjectileSpawnOptions {
   balloons?: string;
   /** An arrow with a red shaft and a large black broadhead (the medieval archer's, _dressBroadhead). */
   broadhead?: boolean;
+  /** An arrow flown as the snake archer's banded snake (ancientDress buildSnake), head first. */
+  snake?: boolean;
   /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
   drunk?: string;
 }
@@ -328,6 +333,7 @@ export class ProjectileSystem {
     if (options.size) mesh.scaling.setAll(options.size);
     if (options.balloons && shape === "arrow" && !held) this._addBalloonBall(mesh, palette.primary, attackerTeam);
     if (options.broadhead && shape === "arrow" && !held) this._dressBroadhead(mesh);
+    if (options.snake && shape === "arrow" && !held) this._dressSnake(mesh);
     if (held) {
       // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
       const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
@@ -835,6 +841,17 @@ export class ProjectileSystem {
     head.position.z = 0.375 + B.long / 2;
     head.material = this._getMat("broadhead_iron", B.iron, 0.04);
     head.parent = root;
+  }
+
+  /** [S] 385 the snake archer's arrow flies as his snake (ancientDress SNAKE): shaft, tip and fletching gone, the snake laid along +z head first. */
+  private _dressSnake(root: TransformNode): void {
+    for (const child of root.getChildMeshes(true)) {
+      if (child.name === "shaft" || child.name === "tip" || child.name === "fletch") child.dispose();
+    }
+    const snake = buildSnake(this._scene, "flyingSnake", FLYING_SNAKE_LONG);
+    snake.parent = root;
+    snake.rotation.x = Math.PI / 2;
+    snake.position.z = -FLYING_SNAKE_LONG / 2;
   }
 
   private _addBalloonBall(root: TransformNode, color: Color3, team: number): void {
