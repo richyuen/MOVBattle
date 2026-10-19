@@ -3631,6 +3631,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "bow":
     case "crossbow": {
+      if (type === "bow" && variant === "snake_bow") return buildSnakeBow(scene, s, fit.stand);
       if (type === "bow" && (variant === "longbow" || variant === "brown_longbow")) {
         // The medieval archer's (352; medieval.archer.red.png: a plain brown longbow as tall as he is, a pale wrap at the grip) is the same stave in
         // BROWN_LONGBOW's colours: brown wood, no tip wraps, the grip wrapped pale and not in the team colour
@@ -4937,6 +4938,76 @@ const BANJO_NECK_WOOD = new Color3(0.36, 0.2, 0.12);
 const BANJO_SKIN = new Color3(0.86, 0.78, 0.6);
 const LONGBOW = { long: 1.2, thick: 0.065, taper: 0.5, bow: 0.05, wrapAt: [0.6, 0.72], wrap: 0.04, grip: 0.11 };
 const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
+/*
+ * [S] the snake bow (384; ancient.snake_archer.red.png: a bow nearly as tall as he is, green, a white panel down the belly of each limb, a little snake head
+ * with white bead eyes and a red forked tongue at the top tip). SNAKE_BOW.long of his height, one faceted green stave .thick of it at the grip tapering to
+ * .taper, bowed .bow off its string; on each limb from .panelFrom to .panelTo of its length a flat white panel .panel of the stave's width on the string side;
+ * a brown wrap .grip long at the grip; at the top tip a green head .head of the length, two white bead eyes, a red tongue forked in two. Laid and seated
+ * as the longbow (named "bow", string child).
+ */
+const SNAKE_BOW = {
+  long: 0.95, thick: 0.06, taper: 0.55, bow: 0.07, panelFrom: 0.18, panelTo: 0.88, panel: 0.8, grip: 0.1, head: 0.075,
+  green: new Color3(0.24, 0.47, 0.26), white: new Color3(0.9, 0.92, 0.88), wrap: new Color3(0.42, 0.26, 0.14), tongue: new Color3(0.85, 0.12, 0.1),
+};
+function buildSnakeBow(scene: Scene, s: number, stand: number): Mesh {
+  const B = SNAKE_BOW;
+  const L = stand * B.long;
+  const r0 = B.thick * L * 0.5;
+  const zs = 0.04 * s;
+  const radius = (t: number): number => r0 * (1 - (1 - B.taper) * Math.abs(t));
+  const zAt = (t: number): number => zs - B.bow * L * (1 - t * t);
+  const ts: number[] = [];
+  for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
+  const path = ts.map((t) => new Vector3(0, t * L * 0.5, zAt(t)));
+  const stave = MeshBuilder.CreateTube("bow", { path, radiusFunction: (i) => radius(ts[i]), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+  stave.material = mat(scene, B.green, 0.14, "cloth");
+  stave.convertToFlatShadedMesh();
+  const white = mat(scene, B.white, 0.2, "cloth");
+  // belly panels: short flat slabs laid along each limb on the string side, each tilted to the limb's slope
+  for (const side of [1, -1]) {
+    const steps = 6;
+    for (let k = 0; k < steps; k++) {
+      const t0 = side * (B.panelFrom + ((B.panelTo - B.panelFrom) * k) / steps);
+      const t1 = side * (B.panelFrom + ((B.panelTo - B.panelFrom) * (k + 1)) / steps);
+      const y0 = t0 * L * 0.5, y1 = t1 * L * 0.5, z0 = zAt(t0), z1 = zAt(t1);
+      const tm = (t0 + t1) / 2;
+      const seg = MeshBuilder.CreateBox("snakeBowPanel", { width: radius(tm) * 2 * B.panel, height: Math.hypot(y1 - y0, z1 - z0) * 1.04, depth: radius(tm) * 0.5 }, scene);
+      seg.position.set(0, (y0 + y1) / 2, (z0 + z1) / 2 + radius(tm) * 0.75);
+      seg.rotation.x = -Math.atan2(z1 - z0, y1 - y0);
+      seg.material = white;
+      seg.parent = stave;
+    }
+  }
+  const grip = MeshBuilder.CreateCylinder("bowGrip", { height: B.grip * L, diameter: radius(0) * 2.5, tessellation: 6 }, scene);
+  grip.position.z = zAt(0);
+  grip.material = mat(scene, B.wrap, 0.1, "cloth");
+  grip.parent = stave;
+  // the snake's head at the top tip, looking up the bow's line, eyes on its crown, tongue out of its snout
+  const h = B.head * L;
+  const head = MeshBuilder.CreateIcoSphere("snakeBowHead", { radius: h * 0.5, subdivisions: 1, flat: true }, scene);
+  head.scaling.set(0.8, 1.3, 0.7);
+  head.position.set(0, L * 0.5 + h * 0.45, zAt(1));
+  head.material = stave.material;
+  head.parent = stave;
+  for (const side of [1, -1]) {
+    const eye = MeshBuilder.CreateSphere("snakeBowEye", { diameter: h * 0.42, segments: 4 }, scene);
+    eye.position.set(side * h * 0.3, L * 0.5 + h * 0.6, zAt(1) + h * 0.12);
+    eye.material = white;
+    eye.parent = stave;
+    const fork = MeshBuilder.CreateBox("snakeBowTongue", { width: h * 0.08, height: h * 0.55, depth: h * 0.06 }, scene);
+    fork.position.set(side * h * 0.1, L * 0.5 + h * 1.25, zAt(1) + h * 0.15);
+    fork.rotation.z = -side * 0.35;
+    fork.material = mat(scene, B.tongue, 0.25, "cloth");
+    fork.parent = stave;
+  }
+  const string = MeshBuilder.CreateCylinder("string", { height: L * 0.97, diameter: 0.005 * L, tessellation: 4 }, scene);
+  string.position.z = zs;
+  string.parent = stave;
+  string.material = mat(scene, new Color3(0.85, 0.8, 0.7));
+  stave.rotation.z = Math.PI / 2;
+  stave.position.y = 0.1 * s;
+  return stave;
+}
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
 /** The medieval archer's longbow colours (352; medieval.archer.red.png): brown wood, a pale leather wrap at the grip */
 const BROWN_LONGBOW = { long: 1.4, wood: new Color3(0.45, 0.27, 0.14), wrap: new Color3(0.86, 0.78, 0.62) };
