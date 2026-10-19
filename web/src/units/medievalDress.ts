@@ -395,12 +395,51 @@ export function squireTabardTrim(scene: Scene, body: ArticulatedBody, tabard: Me
   return out;
 }
 
+/*
+ * [S] the King's beard (356; medieval.king.red.png, card Appearance "a dirty blonde beard"): a full faceted dirty-blonde beard over the jaw and chin, wider than
+ * the chin and hanging below it in a blunt point, and a moustache across the upper lip whose two halves droop out to the beard at the mouth's corners. In head
+ * half-extents: beard KING_BEARD.wide of the head across, KING_BEARD.down head heights below the chin, KING_BEARD.deep of the half-depth thick, its top at
+ * KING_BEARD.top of the half-height below the head's middle; moustache halves KING_BEARD.tache long, at KING_BEARD.lip below the middle, drooping KING_BEARD.droop.
+ */
+const KING_BEARD = {
+  wide: 1.2, down: 0.5, deep: 0.7, top: 0.12, tache: 0.5, lip: 0.2, droop: 0.4, jitter: 0.14,
+  blonde: new Color3(0.8, 0.6, 0.36), glow: 0.12,
+};
+
+function kingBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const B = KING_BEARD;
+  const hair = getMaterialFactory().get("cloth", B.blonde, { emissiveIntensity: B.glow });
+  const tall = e.y * (1 - B.top) + e.y * 2 * B.down;
+  const beard = MeshBuilder.CreateIcoSphere("kingBeard", { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(beard, B.jitter, 37.3, e.x * 1.08 * B.wide, tall * 0.5, e.z * B.deep);
+  // drawn to a blunt point under the chin: the lower half narrows toward its foot
+  const pos = beard.getVerticesData("position")!;
+  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i] *= 1 + (pos[i + 1] / (tall * 0.5)) * 0.45;
+  beard.setVerticesData("position", pos);
+  beard.position.set(0, -e.y * B.top - tall * 0.5, e.z * 0.82);
+  beard.material = hair;
+  beard.parent = body.headMesh;
+  const out = [beard];
+  for (const side of [-1, 1]) {
+    const tache = MeshBuilder.CreateCylinder("kingMoustache", { height: e.x * B.tache, diameterTop: e.y * 0.2, diameterBottom: e.y * 0.08, tessellation: 5 }, scene);
+    tache.convertToFlatShadedMesh();
+    tache.rotation.z = side * (Math.PI / 2 - B.droop);
+    tache.position.set(side * e.x * B.tache * 0.42, -e.y * B.lip - e.x * B.tache * 0.2, e.z * 1.04);
+    tache.material = hair;
+    tache.parent = body.headMesh;
+    out.push(tache);
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
     case "medieval.healer": return healerTonsure(scene, body);
     case "medieval.archer": return archerHood(scene, body, team);
     case "medieval.bard": return bardVest(scene, body, team);
+    case "medieval.king": return kingBeard(scene, body);
     default: return [];
   }
 }
