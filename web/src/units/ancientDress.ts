@@ -217,16 +217,25 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
  * [S] Zeus's beard and locks (379; ancient.zeus.red.png, card Appearance "luscious locks of dirty blond hair and grand beard with hairs that resemble
  * lightning bolts ... an olive wreath around the sides of their head"; critic 378: no beard, a short brown cap, a flat green band). In the head's half
  * extents (x across, y up, z his front), all dirty blond ZEUS_HAIR self-lit .glow:
- *   - the jaw mass: a jittered faceted ball ZEUS_BEARD.jaw of the half extents, its middle .jawY down and .jawZ ahead, from cheek to cheek under the eyes;
- *   - .strands bolt strands off its lower front, rooted round an arc of .arc rad, each a zig-zag of .kinks tapered four-sided links, kinked .zig of a
- *     link's length side to side, .long head heights long (shorter toward the sides), hanging down and out onto the chest, .thick head widths at the root;
+ *   - the beard (rebuilt 387, spec at ZEUS_BEARD);
  *   - ZEUS_LOCKS.strands bolt locks all round the back and sides from .rootY of the half height (none over the face, a gap of .face rad each side of
  *     the front), .long head heights long to the shoulders, .thick at the root;
  *   - the laurel hat's cap recoloured blond (it carries the wreath), and .leaves olive leaf clumps along each temple under the wreath.
  */
 const ZEUS_HAIR = new Color3(0.62, 0.48, 0.3);
 const ZEUS_HAIR_GLOW = 0.16;
-const ZEUS_BEARD = { jaw: [1.12, 0.52, 0.6] as const, jawY: 0.72, jawZ: 0.58, strands: 13, arc: 1.25, kinks: 3, zig: 0.55, long: 0.75, thick: 0.15 };
+/*
+ * [S] 387 the beard rebuilt as a dense shaggy mass (ancient.zeus.red.png: a huge dirty-blond beard from the cheeks under the eyes and the chin down to
+ * mid-chest, a heap of jagged bolt-like flakes; critic 386: a sparse fringe of thin pale needle strands). In the head's half extents e:
+ *   - the jaw mass ZEUS_BEARD.jaw of e, its middle .jawY down and .jawZ ahead; a bib mass .bib of e below it, its middle .bibY down, .bibZ ahead;
+ *   - .rows rows of .perRow broad flat zig-zag slabs over them, from .top to .foot of e.y, each round an arc of .arc rad (narrowing .narrow toward
+ *     the foot), .halfW of e.x out to a side; a slab two flat links .slab (W across, H long, W thick), the lower one bent .kink rad aside, tilted
+ *     up to .tilt rad at random, leaning its foot out .lean rad; every other slab a shade .dark darker.
+ */
+const ZEUS_BEARD = {
+  jaw: [1.22, 0.7, 0.72] as const, jawY: 0.62, jawZ: 0.5, bib: [0.95, 0.95, 0.55] as const, bibY: 1.75, bibZ: 0.62,
+  rows: 6, perRow: 7, top: -0.25, foot: -2.65, arc: 1.45, narrow: 0.45, halfW: 1.22, slab: [0.24, 0.3, 0.05] as const, kink: 0.55, tilt: 0.45, lean: 0.3, dark: 0.82,
+};
 const ZEUS_LOCKS = { strands: 16, rootY: 0.3, face: 0.95, long: 1.05, thick: 0.2 };
 const ZEUS_LEAF = { leaves: 4, size: 0.16, color: new Color3(0.38, 0.52, 0.2) };
 
@@ -367,20 +376,46 @@ export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): M
       at = to;
     }
   };
-  // the jaw mass
+  // the jaw and bib masses (spec at ZEUS_BEARD)
   const B = ZEUS_BEARD;
+  const darkHair = mf.get("cloth", ZEUS_HAIR.scale(B.dark), { emissive: ZEUS_HAIR.scale(B.dark * ZEUS_HAIR_GLOW) });
   const jaw = MeshBuilder.CreateIcoSphere("zeusBeard", { radius: 1, subdivisions: 1, flat: true }, scene);
   jitterVertices(jaw, 0.16, 61.7, e.x * B.jaw[0], e.y * B.jaw[1], e.z * B.jaw[2]);
   jaw.position.set(0, -e.y * B.jawY, e.z * B.jawZ);
   put(jaw);
-  // the bolt strands off its foot, down onto the chest
-  for (let i = 0; i < B.strands; i++) {
-    const a = ((i + 0.5) / B.strands - 0.5) * 2 * B.arc;
-    const root = new Vector3(Math.sin(a) * e.x * B.jaw[0] * 0.8, -e.y * (B.jawY + B.jaw[1] * 0.5), Math.cos(a) * e.z * B.jaw[2] * 0.9 + e.z * B.jawZ * 0.5);
-    const dir = new Vector3(Math.sin(a) * 0.3, -1, 0.3 * Math.cos(a)).normalize();
-    const side = new Vector3(Math.cos(a), 0, -Math.sin(a));
-    const long = H * B.long * (1 - 0.4 * Math.abs(a) / B.arc) * (0.8 + 0.4 * shareOf(7.1, i));
-    bolt(root, dir, side, long, W * B.thick, B.kinks, B.zig, 9.3 + i);
+  const bib = MeshBuilder.CreateIcoSphere("zeusBeardBib", { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(bib, 0.2, 17.3, e.x * B.bib[0], e.y * B.bib[1], e.z * B.bib[2]);
+  bib.position.set(0, -e.y * B.bibY, e.z * B.bibZ);
+  put(bib, darkHair);
+  // the shag: rows of broad flat zig-zag slabs over both, cheeks to mid-chest
+  for (let r = 0; r < B.rows; r++) {
+    const u = r / (B.rows - 1);
+    const y = e.y * (B.top + (B.foot - B.top) * u);
+    const arc = B.arc * (1 - B.narrow * u);
+    // the surface ahead: the jaw's front at the top rows, the bib's below
+    const depth = u < 0.35 ? e.z * (B.jawZ + B.jaw[2] * 0.85) : e.z * (B.bibZ + B.bib[2] * 0.85);
+    for (let i = 0; i < B.perRow; i++) {
+      const k = r * B.perRow + i;
+      const a = ((i + 0.5 + (r % 2) * 0.5) / (B.perRow + 0.5) - 0.5) * 2 * arc;
+      const slab = new TransformNode("zeusBeardSlab", scene);
+      slab.parent = head;
+      slab.position.set(Math.sin(a) * e.x * B.halfW * (1 - 0.3 * u), y, Math.cos(a) * depth);
+      slab.rotation.set(-B.lean, a, (shareOf(5.7, k) - 0.5) * 2 * B.tilt);
+      const mat = k % 2 ? darkHair : hair;
+      const sw = W * B.slab[0] * (0.8 + 0.4 * shareOf(2.9, k)), sl = H * B.slab[1] * (0.85 + 0.3 * shareOf(8.1, k)), st = W * B.slab[2];
+      const upper = MeshBuilder.CreateBox("zeusBeardFlake", { width: sw, height: sl, depth: st }, scene);
+      upper.position.y = -sl * 0.4;
+      upper.parent = slab;
+      upper.material = mat;
+      out.push(upper);
+      const side = shareOf(4.4, k) > 0.5 ? 1 : -1;
+      const lower = MeshBuilder.CreateBox("zeusBeardFlake", { width: sw * 0.7, height: sl * 0.8, depth: st }, scene);
+      lower.position.set(side * sw * 0.25, -sl * 1.15, st * 0.3);
+      lower.rotation.z = side * B.kink;
+      lower.parent = slab;
+      lower.material = mat;
+      out.push(lower);
+    }
   }
   // the locks round the back and sides, to the shoulders
   const L = ZEUS_LOCKS;
