@@ -122,7 +122,7 @@ function chestBox(body: ArticulatedBody): { W: number; H: number; D: number; top
  * shirt V sits in the gap. Vest cloth team lerped HALFLING_VEST_CUT.light toward white (was HALFLING_COAT.vestLight .45, which read white; the coat
  * is team x .85, so the plain team vest is the lighter layer).
  */
-const HALFLING_VEST_CUT = { light: 0, glow: 0.08 };
+const HALFLING_VEST_CUT = { light: 0, shade: 0.97, glow: 0.04 };
 const HALFLING_COAT = {
   neck: 0.02, drop: 0.1, wall: 0.08, out: 0.06, front: 0.3, ahead: 0.08, gap: 0.22, flare: 0.08, lapel: 0.4, lapelWide: 0.2,
   vest: 0.46, vestAhead: 0.03, vee: 0.4, veeDeep: 0.46, collar: 0.16, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
@@ -163,7 +163,7 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   const mf = getMaterialFactory();
   const coat = mf.get("cloth", teamColor.scale(J.coat), { emissiveIntensity: 0.1 });
   const lapelCloth = mf.get("cloth", teamColor.scale(J.coat * J.lapelShade), { emissiveIntensity: 0.1 });
-  const vestCloth = mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), HALFLING_VEST_CUT.light), { emissiveIntensity: HALFLING_VEST_CUT.glow });
+  const vestCloth = mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), HALFLING_VEST_CUT.light).scale(HALFLING_VEST_CUT.shade), { emissiveIntensity: HALFLING_VEST_CUT.glow });
   vestCloth.backFaceCulling = false;
   const shirt = mf.get("cloth", HALFLING_SHIRT_WHITE, { emissiveIntensity: 0.25 });
   const { W, H, D, top, foot, z } = chestBox(body);
