@@ -2002,6 +2002,8 @@ const MAMMOTH_LEG = {
   thigh: [[0.14, 0.46], [0.25, 0.36], [0.31, 0.2], [0.305, 0.06], [0.29, -0.05], [0.265, -0.3], [0.245, -0.5]] as [number, number][],
   shin: [[0.245, 0.06], [0.23, -0.1], [0.215, -0.26], [0.205, -0.34]] as [number, number][],
   foot: [[0.205, -0.33], [0.215, -0.37], [0.245, -0.41], [0.255, -0.43]] as [number, number][],
+  // the fur collar where the leg leaves the hull (375): a jittered ring round the thigh, [radius, y] from its foot to its top, hip-joint units
+  collar: [[0.28, -0.36], [0.35, -0.3], [0.37, -0.2], [0.33, -0.1]] as [number, number][], collarJitter: 0.045,
 };
 /*
  * [S] the mammoth's barrel body (365; tribal.mammoth.red.png, .jpg, card "a big round belly"). Spec read off the renders: one rounded faceted barrel of
@@ -2022,10 +2024,15 @@ const MAMMOTH_LEG = {
  * domes stood out in front of and below it; the 367 hem of separate lobes read as boulders). Below the waterline each ring is squared: its width goes
  * as |sin|^.skirtSquare (a flank that hangs plumb, then turns under), its end-taper eases with the steeper .skirtFull (the lower hull stays full out
  * past the front and back legs), and over the leg stations (|t| = .legAt, width .legSpread) the flank's foot hangs .skirtDrop lower, its hem.
+ * [S] a round belly over legs that show (375; tribal.mammoth.red.png, .blue.png: the underside is round, sagging between the front and back legs, and
+ * the legs show for about two thirds of the body's depth, slimmer than the head; critic 374: the squared skirt hung plumb to a straight hem and left the
+ * legs as stubs a third of the body's depth). The lower rings are round again (no .skirtSquare, no .skirtDrop): the hull's foot over the legs rises from
+ * ~1.07 to ~.77 below its middle; the belly sags .belly between the legs, as exp(-(t/.bellyNarrow)^2), so it is round and lowest mid-body. Each leg
+ * leaves the hull through a jittered fur collar (MAMMOTH_LEG.collar), so no thigh dome shows under the flank.
  */
 const MAMMOTH_BARREL = {
-  rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.34, humpAt: 0.22, humpFront: 0.22, humpBack: 0.75, belly: 0.14, jitter: 0.035,
-  haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtSquare: 0.45, skirtFull: 5, skirtDrop: 0.16,
+  rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.34, humpAt: 0.22, humpFront: 0.22, humpBack: 0.75, belly: 0.2, bellyNarrow: 0.38,
+  jitter: 0.035, haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtFull: 5,
 };
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
@@ -2047,13 +2054,12 @@ function mammothBarrel(scene: Scene): Mesh {
         out.push(B.wide * s * sn, (B.tall * s + hump) * c, t * B.long);
         continue;
       }
-      // below the middle: the flank swells over the leg roots, easing in from the waterline, and is squared so it hangs plumb before turning
-      // under; over the leg stations its foot hangs lower still, a hem over the thigh tops (374)
+      // below the middle: the flank swells over the leg roots, easing in from the waterline, and rounds under into the belly (375)
       // (the steeper taper eased in from the waterline, so no ledge where the halves meet)
       const sl = s + (sLow - s) * Math.min(1, -c * 1.5);
       const wide = B.wide * sl * (1 + (haunch - 1) * Math.min(1, -c * 2));
-      const x = wide * Math.sign(sn) * Math.abs(sn) ** B.skirtSquare;
-      const up = (B.tall * sl + B.belly * (1 - t * t) * sl) * c - B.skirtDrop * atLeg * sl * Math.abs(sn) * -c * 2;
+      const x = wide * sn;
+      const up = (B.tall * sl + B.belly * Math.exp(-((t / B.bellyNarrow) ** 2)) * sl) * c;
       out.push(x, up, t * B.long);
     }
     return out;
@@ -2158,6 +2164,8 @@ function mammothLeg(scene: Scene, hipJoint: TransformNode, kneeJoint: TransformN
     m.parent = parent; m.material = fur; allMeshes.push(m);
   };
   lathe("uleg", L.thigh, hipJoint, 61.3 + serial);
+  // the fur collar round the thigh's top, under the hull's rounded foot (375)
+  lathe("legCollar", L.collar, hipJoint, 83.1 + serial, L.collarJitter);
   lathe("lleg", L.shin, kneeJoint, 67.9 + serial, 0);
   // the flared foot under the ankle paint (372)
   lathe("lfoot", L.foot, kneeJoint, 71.3 + serial, L.footJitter);
