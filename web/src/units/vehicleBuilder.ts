@@ -2018,11 +2018,20 @@ const MAMMOTH_MANE_COLOR = new Color3(0.09, 0.055, 0.04);
  */
 const MAMMOTH_DOME = { lift: 0.32, grow: 1.28, eyeUp: 0.12, eyeOut: 0.03 };
 const MAMMOTH_DOME_PARTS = new Set(["head", "crest", "maneLock", "eye", "pupil", "facePaint", "ear"]);
+/*
+ * [S] the crest laid on the dome (380; tribal.mammoth.red.png: a near-black mane lying on the crown, from the brow over the top and down the back of the
+ * head to the nape, hugging the skull, no wider than it; critic 379: the crest a huge black cap wider than the dome riding on top like a beret, its
+ * chunks at .62-.92 up with the head's top at .7, then grown with the skull). Each chunk sits on the head's own ellipsoid (MAMMOTH_CREST.head: the half
+ * height and half depth of the head sphere as scaled), on the centre line at pitch phi rad from straight up (minus toward the brow, plus back toward the
+ * nape), its middle .sink of its thickness out from the skin and its flat face laid along the skin: [phi, half-width, half-thickness, half-length].
+ */
 const MAMMOTH_CREST = {
+  head: [0.7, 0.56] as [number, number],
+  sink: 0.35,
   chunks: [
-    [0.62, 0.6, 0.26, 0.15, 0.2, 0.7], [0.8, 0.44, 0.36, 0.2, 0.26, 0.35], [0.92, 0.18, 0.42, 0.24, 0.32, 0.05],
-    [0.88, -0.12, 0.44, 0.23, 0.32, -0.2], [0.8, -0.4, 0.42, 0.2, 0.32, -0.35], [0.72, -0.68, 0.36, 0.17, 0.3, -0.4],
-  ] as [number, number, number, number, number, number][],
+    [-0.7, 0.26, 0.1, 0.18], [-0.35, 0.34, 0.12, 0.22], [0.05, 0.38, 0.13, 0.24], [0.45, 0.38, 0.13, 0.24],
+    [0.85, 0.36, 0.12, 0.24], [1.25, 0.32, 0.11, 0.22], [1.65, 0.26, 0.1, 0.2],
+  ] as [number, number, number, number][],
 };
 /*
  * Ankle bands (TABS blue render): on each leg, a hand above the foot, two thin team-colour stripes close together round the pillar and under them a
@@ -2373,10 +2382,12 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
     return m;
   };
   if (mammoth) {
-    // [S] the crest (378, spec at MAMMOTH_CREST): flat chunks overlapping along the head's centre line, brow to crown to nape, each swept back
-    MAMMOTH_CREST.chunks.forEach(([y, z, w, h, l, tilt], i) => {
-      const c = maneBall("crest", new Vector3(w, h, l), new Vector3(0, y, z), 3.3 + i * 2.7);
-      c.rotation.x = tilt;
+    // [S] the crest laid on the dome (380, spec at MAMMOTH_CREST): flat chunks on the head's skin along its centre line, brow over the crown to the nape
+    const [hy, hz] = MAMMOTH_CREST.head;
+    MAMMOTH_CREST.chunks.forEach(([phi, w, t, l], i) => {
+      const out = t * MAMMOTH_CREST.sink;
+      const c = maneBall("crest", new Vector3(w, t, l), new Vector3(0, (hy + out) * Math.cos(phi), 0.25 - (hz + out) * Math.sin(phi)), 3.3 + i * 2.7);
+      c.rotation.x = -phi;
     });
   } else {
     maneBall("dome", new Vector3(0.48, 0.3, 0.58), new Vector3(0, 0.52, 0.25), 3.3);
