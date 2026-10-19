@@ -627,13 +627,14 @@ function chestBack(body: ArticulatedBody): number {
 }
 
 /** `skin` scales the back it hangs off (a cuirass over the chest stands that much deeper); `drop`, `hemWide`, `glow` override MEDIEVAL_CAPE.drop, .hem, .glow. */
-function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin = 1, drop = MEDIEVAL_CAPE.drop, hemWide = MEDIEVAL_CAPE.hem, glow = MEDIEVAL_CAPE.glow): Mesh[] {
+function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin = 1, drop = MEDIEVAL_CAPE.drop, hemWide = MEDIEVAL_CAPE.hem, glow = MEDIEVAL_CAPE.glow, opts: CapeCut = {}): Mesh[] {
   const C = MEDIEVAL_CAPE;
   const t = body.torsoMesh;
   const c = t.getBoundingInfo().boundingBox.extendSize;
   const cx = c.x * t.scaling.x, cy = c.y * t.scaling.y;
   const back = -chestBack(body) * skin;
-  const top = t.position.y + cy * 0.92;
+  const top = opts.top ?? t.position.y + cy * 0.92;
+  const wrap = opts.wrap ?? C.wrap;
   const hipY = -body.torso.position.y; // the hip joint, in the torso joint's frame
   const hemY = hipY - Math.abs(body.leftKnee.position.y) * drop;
   const rows: Vector3[][] = [];
@@ -644,7 +645,7 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
     const deep = back * (1.06 + C.off * f);
     const row: Vector3[] = [];
     for (let i = 0; i <= 10; i++) {
-      const phi = -C.wrap + (i / 10) * 2 * C.wrap;
+      const phi = -wrap + (i / 10) * 2 * wrap;
       row.push(new Vector3(Math.sin(phi) * wide, y, -Math.cos(phi) * deep - back * C.off * f * 0.5));
     }
     rows.push(row);
@@ -655,6 +656,7 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
   cape.parent = body.torso;
   cape.material = capeCloth;
   const out: Mesh[] = [cape];
+  if (opts.flaps === false) return out;
   // a flap over each shoulder from the cape's edge forward onto the chest, a gold button at its front end
   const gold = getMaterialFactory().get("cloth", C.gold, { emissiveIntensity: C.glow });
   const zFront = chestFrontAt(body, top - cy * 0.12);
@@ -678,8 +680,15 @@ function medievalCape(scene: Scene, body: ArticulatedBody, cloth: Color3, skin =
 
 const KNIGHT_CAPE = { shade: 0.85, clear: 1.03, drop: 0.95, hem: 2.3, glow: 0.06 };
 
+/** A cape's cut: `top` its collar height in the torso joint's frame (default the chest top), `wrap` its arc either side of straight back, `flaps` false drops
+ *  the shoulder flaps and buttons. [S] the Knight's cut (359; medieval.knight.png: the cape starts at the shoulder line, nothing above it, its edges coming
+ *  forward over the shoulders beside the arms, no collar flap): top KNIGHT_CAPE_CUT.rise of the shoulder joints' height, arc .wrap rad, no flaps. */
+interface CapeCut { top?: number; wrap?: number; flaps?: boolean }
+const KNIGHT_CAPE_CUT = { rise: 1.0, wrap: 1.75 };
+
 function knightCape(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop, KNIGHT_CAPE.hem, KNIGHT_CAPE.glow);
+  return medievalCape(scene, body, team.scale(KNIGHT_CAPE.shade), KNIGHT_PLATE.deep * KNIGHT_CAPE.clear, KNIGHT_CAPE.drop, KNIGHT_CAPE.hem, KNIGHT_CAPE.glow,
+    { top: body.leftShoulder.position.y * KNIGHT_CAPE_CUT.rise, wrap: KNIGHT_CAPE_CUT.wrap, flaps: false });
 }
 
 /** `n` thin upright strips evenly round a limbShell of the same span, standing just proud of its faces (puffed-cloth folds or slashes). */
