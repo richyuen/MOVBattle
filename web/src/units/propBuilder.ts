@@ -342,6 +342,13 @@ const BRIM_HAT_FELT = new Color3(0.11, 0.1, 0.12);
 const MORION = { dome: 1.18, tall: 0.3, comb: 0.22, combThick: 0.1, brimX: 1.5, brimZ: 2.05, peak: 0.3 };
 const MORION_IRON = new Color3(0.12, 0.12, 0.14);
 /*
+ * [S] the morion re-cut (368; renaissance.musketeer.red.png, card Appearance "morion helmet": a tall domed iron crown with a comb along its top, the brim
+ * swept up to points at the front and back and hanging down over the ears at the sides; critic 367: a flat black cap). In head widths W and heights H:
+ * bowl .dome W across (1.1x deep), .tall H over the hat seat, .segments facets; comb a half disc .comb H high, .combLong of the bowl long, .combThick W thick;
+ * brim .brimX W across by .brimZ W long, its points lifted .peak H, its sides dropped .droop H.
+ */
+const MORION_CUT = { dome: 1.16, tall: 0.42, segments: 6, comb: 0.3, combLong: 0.95, combThick: 0.06, brimX: 1.45, brimZ: 2.1, peak: 0.42, droop: 0.2 };
+/*
  * A halberdier's sallet (328; renaissance.halberd.red.png, card Appearance "a black sallet": a black iron helm closed over the whole head from a rounded top
  * to below the chin, a little wider at its foot, a narrow slit across the eyes where the team colour shows, and a neck guard sweeping out behind and down).
  * Not a cap: the old grey helm dome read as a flat cap over a bare face. Dome SALLET.dome of the head tall, its top SALLET.crown of the head over the skull;
@@ -1444,26 +1451,40 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return brim;
   }
   if (type === "morion") {
-    // The morion, built to the spec at MORION: a dome from the seat, a comb along its crown, a boat brim peaked up front and back
-    const iron = mat(scene, MORION_IRON, 0.06, "metal");
-    const domeTall = eyeTop - HAT_EYE_CLEAR * H + MORION.tall * H;
-    const dome = MeshBuilder.CreateSphere("morionDome", { diameterX: u(MORION.dome * W), diameterY: u(domeTall * 2), diameterZ: u(MORION.dome * 1.08 * W), segments: 7, slice: 0.5 }, scene);
+    // [S] the morion re-cut (368, spec at MORION_CUT): a tall faceted iron bowl, a thin half-disc comb standing on its crown front to back, and a boat brim
+    // swept up to points at the front and back and drooping at the sides
+    const M = MORION_CUT;
+    const iron = mat(scene, MORION_IRON, 0.1, "metal");
+    const domeTall = eyeTop - HAT_EYE_CLEAR * H + M.tall * H;
+    const dome = MeshBuilder.CreateSphere("morionDome", { diameterX: u(M.dome * W), diameterY: u(domeTall * 2), diameterZ: u(M.dome * 1.1 * W), segments: M.segments, slice: 0.5 }, scene);
     dome.position.y = u(seat);
     dome.material = iron;
     dome.convertToFlatShadedMesh();
-    const comb = MeshBuilder.CreateSphere("morionComb", { diameterX: u(MORION.combThick * W), diameterY: u(MORION.comb * H * 2), diameterZ: u(MORION.dome * 0.9 * W), segments: 6, slice: 0.5 }, scene);
-    comb.position.y = u(domeTall * 0.82);
+    // The comb: a half disc on edge, its flat side down along the crown, M.comb H high and M.combLong of the bowl long
+    const combR = u(M.dome * 1.1 * W * M.combLong * 0.5);
+    const comb = MeshBuilder.CreateCylinder("morionComb", { height: u(M.combThick * W), diameter: combR * 2, tessellation: 10, arc: 0.5 }, scene);
+    comb.rotation.set(0, 0, Math.PI / 2);
+    comb.bakeCurrentTransformIntoVertices();
+    // the arc lies on +x after the turn: stand it up so its round edge is on top
+    comb.rotation.set(0, Math.PI / 2, Math.PI / 2);
+    comb.bakeCurrentTransformIntoVertices();
+    comb.scaling.y = u(M.comb * H) / combR;
+    comb.position.y = u(domeTall * 0.9);
     comb.material = iron;
     comb.convertToFlatShadedMesh();
     comb.parent = dome;
-    // The brim: a thin oval plate wider front to back than across, every point lifted by the square of how far forward or back it lies
-    const brim = MeshBuilder.CreateCylinder("morionBrim", { height: u(0.05 * H), diameter: 1, tessellation: 18 }, scene);
-    brim.scaling.set(u(MORION.brimX * W), 1, u(MORION.brimZ * W));
+    // The brim: a thin oval plate longer front to back than across; each point lifted by the square of how far forward or back it lies, and dropped by
+    // the square of how far out to the side
+    const brim = MeshBuilder.CreateCylinder("morionBrim", { height: u(0.05 * H), diameter: 1, tessellation: 20 }, scene);
+    brim.scaling.set(u(M.brimX * W), 1, u(M.brimZ * W));
     brim.bakeCurrentTransformIntoVertices();
     const pos = brim.getVerticesData(VertexBuffer.PositionKind);
     if (pos) {
-      const rz = u(MORION.brimZ * W) * 0.5;
-      for (let i = 0; i < pos.length; i += 3) pos[i + 1] += u(MORION.peak * H) * (pos[i + 2] / rz) ** 2;
+      const rz = u(M.brimZ * W) * 0.5, rx = u(M.brimX * W) * 0.5;
+      for (let k = 0; k < pos.length; k += 3) {
+        const fz = (pos[k + 2] / rz) ** 2, fx = (pos[k] / rx) ** 2;
+        pos[k + 1] += u(M.peak * H) * fz ** 1.5 - u(M.droop * H) * fx * (1 - fz);
+      }
       brim.updateVerticesData(VertexBuffer.PositionKind, pos);
     }
     brim.position.y = u(0.02 * H);
