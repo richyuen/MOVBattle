@@ -447,8 +447,8 @@ export function squireTabardTrim(scene: Scene, body: ArticulatedBody, tabard: Me
  * KING_BEARD.top of the half-height below the head's middle; moustache halves KING_BEARD.tache long, at KING_BEARD.lip below the middle, drooping KING_BEARD.droop.
  */
 const KING_BEARD = {
-  wide: 1.2, down: 0.5, deep: 0.7, top: 0.12, tache: 0.5, lip: 0.2, droop: 0.4, jitter: 0.14,
-  blonde: new Color3(0.8, 0.6, 0.36), glow: 0.12,
+  wide: 1.6, down: 0.5, deep: 0.9, top: 0.12, tache: 0.5, lip: 0.2, droop: 0.4, jitter: 0.14,
+  blonde: new Color3(0.88, 0.62, 0.28), glow: 0.12,
 };
 
 function kingBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
