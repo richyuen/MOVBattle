@@ -300,6 +300,14 @@ const LUNGE = { guardRaise: -0.75, guardElbow: -1.35, turn: 0.4, reach: -1.5, pi
  * carry layer), lifted RAPIER_POINT.guard above level in guard and brought level as the lunge goes out, the hilt kept in the fist. LUNGE.hold keeps the arm out.
  */
 const RAPIER_POINT = { guard: 0.3 };
+/*
+ * [S] the off-hand Stone Axe stood up (361; tribal.chieftain.red.png: a Stone Axe in each fist, both carried upright at his sides, the heads above the
+ * shoulders; card Off Hand Stone Axe). The off axe hung in the left fist by its grip preset ran level forward behind the body and was never seen. Over every
+ * living state (_standOffhandAxe, after the rapier) the off-hand axe is stood in the world: its handle (+y) up, leant OFF_AXE.out to his off side and
+ * OFF_AXE.ahead forward, the stone (the handle's +z) turned out OFF_AXE.face (ahead, out) so its broad face shows from the front three-quarter; the fist stays
+ * on the grip.
+ */
+const OFF_AXE = { out: 0.18, ahead: 0.22, face: [0.75, 0.65] as const };
 // The press blow (see _pressBlow): the beat a clubber in contact strikes on, and the shares of it spent resting landed on the man in front, heaving up off him,
 // cocked, slamming down and held on the impact. Landed (rest + impact) is most of the beat: trailer_3_sheet_01 r2c3 catches clubs down on men, not raised.
 /*
@@ -1742,6 +1750,7 @@ export class ProceduralAnimator {
     this._couchLance();
     this._holdHeater();
     this._pointRapier();
+    this._standOffhandAxe();
     this._lungeLegs();
     this._holdTPose(dt);
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
@@ -3950,6 +3959,60 @@ export class ProceduralAnimator {
     const q = Quaternion.Slerp(r.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     r.node.rotationQuaternion = q;
     // The hilt stays where it sat in the fist: the point of the blade's frame that rested on the hand's origin is kept on it
+    const restInv = Matrix.Identity();
+    Quaternion.Inverse(r.rest).toRotationMatrix(restInv);
+    const turn = Matrix.Identity();
+    q.toRotationMatrix(turn);
+    r.node.position.copyFrom(Vector3.TransformCoordinates(Vector3.TransformCoordinates(r.grip, restInv), turn));
+  }
+
+  // The off-hand stone axe, looked up on first use (props go on after the animator is made), and its rest in the fist
+  private _offAxeProp: { node: TransformNode; rest: Quaternion; grip: Vector3 } | null | undefined = undefined;
+  private _offAxe(): { node: TransformNode; rest: Quaternion; grip: Vector3 } | null {
+    if (this._offAxeProp === undefined) {
+      const node = this._body.leftHand.getChildren().find((n): n is TransformNode => n.name === "handle" && n.getChildren().some((c) => c.name === "stoneAxeHead"));
+      this._offAxeProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
+    }
+    return this._offAxeProp;
+  }
+  /** The off-hand stone axe stood up in the world at his off side (see OFF_AXE), its grip kept in the fist, over every living state. */
+  private _standOffhandAxe(): void {
+    const r = this._offAxe();
+    if (!r) return;
+    const w = this._state === AnimState.Dead || this.walkStyle === "quadruped" ? 0 : 1 - Math.min(1, this._limp);
+    if (w <= 0.001) {
+      if (r.node.rotationQuaternion) {
+        r.node.rotationQuaternion = null;
+        r.node.position.copyFrom(r.grip);
+      }
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.leftElbow, b.leftHand]) n.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    // His off side, level: the way the left shoulder sits from the middle
+    const side = Math.sign(b.leftShoulder.position.x) || -1;
+    const out = Vector3.TransformNormal(new Vector3(side, 0, 0), b.root.getWorldMatrix());
+    out.y = 0;
+    if (out.lengthSquared() < 1e-6) out.copyFrom(Vector3.Cross(fwd, Vector3.Up()));
+    out.normalize();
+    // The handle up, leant out and forward; the stone (+z) turned out ahead of him, squared off the handle
+    const y = new Vector3(0, 1, 0).addInPlace(out.scale(OFF_AXE.out)).addInPlace(fwd.scale(OFF_AXE.ahead)).normalize();
+    const face = fwd.scale(OFF_AXE.face[0]).addInPlace(out.scale(OFF_AXE.face[1]));
+    const x = Vector3.Cross(y, face).normalize();
+    const z = Vector3.Cross(x, y).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, z, world);
+    const handRot = new Quaternion();
+    b.leftHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    const q = Quaternion.Slerp(r.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    r.node.rotationQuaternion = q;
+    // The grip stays where it sat in the fist
     const restInv = Matrix.Identity();
     Quaternion.Inverse(r.rest).toRotationMatrix(restInv);
     const turn = Matrix.Identity();
