@@ -142,7 +142,7 @@ const HALFLING_SLEEVED = { arc: 0.72, sides: 10, flare: 1.12, yoke: 0.14, puff: 
  * of D proud, dark grey (light grey cloth glowing read white) lit .buckleGlow; a keeper .keeper of W wide beside it on the far side, team x .dark x .7.
  */
 const HALFLING_BELT = {
-  tall: 0.17, up: 0.16, wide: 0.98, deep: 0.1, dark: 0.3, glow: 0.08, buckle: 0.34, buckleTall: 1.35, bar: 0.24, buckleDeep: 0.12, buckleGlow: 0.12,
+  tall: 0.17, up: 0.16, wide: 0.98, deep: 0.1, dark: 0.3, glow: 0.08, buckle: 0.34, buckleTall: 1.35, bar: 0.14, buckleDeep: 0.12, buckleGlow: 0.12,
   ringOut: 1.08, ringAhead: 0.06, side: 0.07, keeper: 0.07,
 };
 const HALFLING_SHIRT_WHITE = new Color3(0.93, 0.89, 0.8);
