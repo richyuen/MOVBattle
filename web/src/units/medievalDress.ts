@@ -139,7 +139,7 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
  * belt HEALER_TRIM.belt of the chest's half-height thick, its end HEALER_TRIM.knot of the robe's length long.
  */
 const HEALER_TRIM = {
-  band: 0.17, apart: 0.42, proud: 0.05, hem: 0.08, cuff: 0.75, collar: 0.62, belt: 0.13, knot: 0.42,
+  band: 0.17, apart: 0.42, proud: 0.05, hem: 0.08, cuff: 0.75, collar: 0.72, belt: 0.13, knot: 0.42,
   gold: new Color3(0.93, 0.66, 0.24), rope: new Color3(0.42, 0.4, 0.38), glow: 0.12,
 };
 
@@ -195,14 +195,30 @@ export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh):
     cuff.material = gold;
     out.push(cuff);
   }
-  // the turned collar: a flat gold ring laid round the neck on the shoulders
-  const collar = MeshBuilder.CreateTorus("healerCollar", { diameter: cx * 2 * T.collar, thickness: cy * 0.16, tessellation: 8 }, scene);
-  collar.convertToFlatShadedMesh();
-  collar.scaling.set(1, 0.7, Math.max(0.75, cz / cx * 1.25));
-  collar.parent = t.parent;
-  collar.position.y = t.position.y + cy * 0.9;
-  collar.material = gold;
-  out.push(collar);
+  // [S] the turned collar (357; medieval.healer.red.png: a broad gold collar lying open in a V over the shoulders, not a ring hidden in the yoke): a flat gold
+  // lapel each side laid on the chest's visible front (chestFrontAt), from the neck out T.collar of the chest half-width and down to a point by the V's middle,
+  // and a gold strip over each shoulder from the lapel's top to the back
+  const top = t.position.y + cy * 0.93;
+  const zc = (y: number) => chestFrontAt(body, y) + cx * T.proud * 0.6;
+  for (const side of [-1, 1]) {
+    const pts = [
+      new Vector3(side * cx * 0.16, top, zc(top)),
+      new Vector3(side * cx * T.collar, top - cy * 0.04, zc(top - cy * 0.04)),
+      new Vector3(side * cx * T.collar * 0.72, top - cy * 0.34, zc(top - cy * 0.34)),
+      new Vector3(side * cx * 0.07, top - cy * 0.52, zc(top - cy * 0.52)),
+    ];
+    const lapel = panel(scene, "healerCollar", pts);
+    lapel.parent = t.parent;
+    lapel.material = gold;
+    out.push(lapel);
+    const zf = zc(top);
+    const strip = MeshBuilder.CreateBox("healerCollarShoulder", { width: cx * (T.collar - 0.16), height: cy * 0.06, depth: zf * 1.9 }, scene);
+    strip.parent = t.parent;
+    strip.position.set(side * cx * (T.collar + 0.16) / 2, top + cy * 0.01, -zf * 0.05);
+    strip.rotation.z = -side * 0.22;
+    strip.material = gold;
+    out.push(strip);
+  }
   // the rope belt at the waist, its end hanging down the front
   const belt = MeshBuilder.CreateTorus("healerRopeBelt", { diameter: rTop * 2 * 1.02, thickness: cy * T.belt, tessellation: 10 }, scene);
   belt.convertToFlatShadedMesh();
