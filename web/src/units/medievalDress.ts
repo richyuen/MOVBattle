@@ -615,11 +615,34 @@ function squireLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] the Archer's arms (357; medieval.archer.red.png): beige cloth sleeves on the upper arms, brown leather vambraces from the elbow to the wrist with a dark
+ * strap at each end. Sleeves ARCHER_ARMS.beige on the upper arm itself; vambraces .out of the forearm's half-width round it, from .from to .to of its length.
+ */
+const ARCHER_ARMS = {
+  out: 1.3, from: 0.08, to: 0.94,
+  beige: new Color3(0.86, 0.78, 0.6), leather: new Color3(0.44, 0.27, 0.16), strap: new Color3(0.27, 0.16, 0.1), glow: 0.1,
+};
+
+function archerArms(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const A = ARCHER_ARMS;
+  const beige = getMaterialFactory().get("cloth", A.beige, { emissiveIntensity: A.glow });
+  const leather = getMaterialFactory().get("cloth", A.leather, { emissiveIntensity: A.glow });
+  const strap = getMaterialFactory().get("cloth", A.strap, { emissiveIntensity: A.glow });
+  const out: Mesh[] = [];
+  for (const upper of [body.leftUpperArm, body.rightUpperArm]) upper.material = beige;
+  for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "archerVambrace", fore, A.from, A.to, A.out, leather));
+    for (const at of [A.from + 0.04, A.to - 0.1]) out.push(limbShell(scene, "archerVambraceStrap", fore, at, at + 0.07, A.out * 1.12, strap));
+  }
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
     case "medieval.healer": return healerTonsure(scene, body);
-    case "medieval.archer": return archerHood(scene, body, team);
+    case "medieval.archer": return [...archerHood(scene, body, team), ...archerArms(scene, body)];
     case "medieval.bard": return bardVest(scene, body, team);
     case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream)];
     case "medieval.squire": return squireLegs(scene, body);
