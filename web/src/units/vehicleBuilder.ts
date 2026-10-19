@@ -561,7 +561,10 @@ const BALLISTA_HOUSING = { at: 0.48, base: 0.34, baseTall: 0.07, drum: 0.24, dru
 const BALLISTA_ARMS = { reach: 1.75, thick: 0.1, tip: 0.6, bind: 0.13, bindAt: 0.72 };
 const BALLISTA_STOCK = { wide: 0.18, tall: 0.12, front: 0.5, back: 1.55 };
 const BALLISTA_WHEEL = { across: 0.62, rim: 0.07, wide: 0.08, hub: 0.12 };
-const BALLISTA_WOOD = new Color3(0.62, 0.3, 0.2);
+// [S] 389 a warm terracotta in the PBR's linear space (ancient.ballista.blue.png ~ sRGB .78/.4/.28): the 384 (.62,.3,.2) displayed as a pale taupe
+const BALLISTA_WOOD = new Color3(0.55, 0.15, 0.075);
+/* [S] 389 the top plank's iron plates: columns at .cols of the half width each side, rows .edge in from its front and back edges, .wide x .thick x .deep */
+const BALLISTA_PLATES = { cols: [0.2, 0.83], edge: 0.08, wide: 0.075, thick: 0.022, deep: 0.12, iron: new Color3(0.08, 0.08, 0.09) };
 /*
  * [S] 388 the crewman at the trough's rear end (ancient.ballista.blue.png: a helmeted team crewman close behind the machine, his helmeted head over the
  * stock, both hands on it; critic 387: crouched beside the trough under the beam his head and helmet were buried in it, his hands not on the stock;
@@ -621,12 +624,14 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
     jitterVertices(cap, 0.18, 7 + side);
     caps.push(cap);
   }
-  for (let i = 0; i < H.plates; i++) {
-    const col = i % 4;
-    const row = Math.floor(i / 4);
-    const x = (col - 1.5) * (F.wide / 4.2);
-    if (Math.abs(Math.abs(x) - H.at) < H.base * 0.6) continue;
-    box("ballistaPlate", H.plate * 0.5, 0.02, H.plate, x, F.top + 0.01, (row ? 1 : -1) * F.deep * 0.25, iron);
+  // [S] 389 the iron plates in two rows of four along the plank's front and back edges (BALLISTA_PLATES; ancient.ballista.blue.png: dark slabs at
+  // .2 and .83 of the half width each side, clear of the housings), not one grid row that skipped six of its eight under the housings
+  const P = BALLISTA_PLATES;
+  const plateIron = mf.get("cloth", P.iron, { emissive: P.iron.scale(0.1) });
+  for (const zs of [-1, 1]) {
+    for (const xs of P.cols) {
+      for (const side of [-1, 1]) box("ballistaPlate", P.wide, P.thick, P.deep, side * xs * halfW, F.top + P.thick / 2, zs * (halfD - P.edge), plateIron);
+    }
   }
 
   // Bow arms out of the sides, black bindings
