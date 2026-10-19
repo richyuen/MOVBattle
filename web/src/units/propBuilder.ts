@@ -270,6 +270,13 @@ const CORINTH_CREST = { bands: 4, band: 0.19, wide: 0.42, fill: 0.95, sink: 0.6,
  * .tall of ry tall, .wide of W across, .deep of the bowl's depth front to back, set .ahead of W forward; a lip .lipTall of the box tall on its top front,
  * .lipWide across, .lipDeep of it long. Team x CORINTH_HELM.crestShade like the sarissa's. The sarissa keeps CORINTH_CREST.
  */
+/*
+ * [S] the sarissa's eye slots (385; ancient.sarissa.red.png: the googly eyes look out of two narrow slots either side of the nose guard, under a slanted
+ * brow, the helm closed round them; critic 384: one open band the face's width with a nose bar). Within the T opening (CORINTH_HELM): a temple plate each
+ * side from .edge of W out (just outside the eye, which spans 0 to ~.34 W) to the opening's edge, set .back of W behind the face plates; over each slot a
+ * brow bar .browLong of the slot across, .browTall of H, .browDrop of H under the brow line, tilted .browTilt rad (inner end low, a frown). Sarissa only.
+ */
+const CORINTH_SLOTS = { edge: 0.35, back: 0.01, browLong: 1.05, browTall: 0.08, browDrop: 0.02, browTilt: 0.32 };
 const HOPLITE_CREST = { stalk: 0.12, sink: 0.08, stalkWide: 0.16, stalkDeep: 0.45, tall: 0.62, wide: 0.24, deep: 0.95, ahead: 0.04, lipTall: 0.18, lipWide: 0.9, lipDeep: 0.28 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
@@ -1464,6 +1471,21 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     ridge.position.set(0, u(C.ridge * H) * 0.3, u(C.face * W));
     const nose = put(MeshBuilder.CreateBox("chelmNose", { width: u(C.nose * W), height: u((C.underEye - C.brow) * H), depth: u(C.plate * W * 1.4) }, scene));
     nose.position.set(0, -u((C.underEye - C.brow) * H) / 2, u(C.face * W) + u(C.plate * W) * 0.3);
+    if (type === "crested_helm") {
+      // [S] the sarissa's eye slots (385, spec at CORINTH_SLOTS): the band closed at the temples and a slanted brow over each eye
+      const S = CORINTH_SLOTS;
+      const openTall = u((C.underEye - C.brow) * H), edge = u(S.edge * W);
+      for (const side of [-1, 1]) {
+        if (gapX > edge) {
+          const temple = put(MeshBuilder.CreateBox("chelmTemple", { width: gapX - edge, height: openTall, depth: u(C.plate * W) }, scene));
+          temple.position.set(side * (edge + gapX) / 2, -openTall / 2, u(C.face * W) - u(S.back * W));
+          temple.rotation.y = -side * C.wrap;
+        }
+        const browBar = put(MeshBuilder.CreateBox("chelmSlotBrow", { width: edge * S.browLong, height: u(S.browTall * H), depth: u(C.plate * W * 1.4) }, scene));
+        browBar.position.set(side * edge * 0.5, -u(S.browDrop * H), u(C.face * W) + u(C.plate * W) * 0.2);
+        browBar.rotation.z = side * S.browTilt;
+      }
+    }
     // [S] the crest as stacked bands (382, spec at CORINTH_CREST), offset out along the normal by the bands below it, so the crest is a fin about the
     // bowl's height with step lines, highest in front. [S] 383: each band one solid strip swept along the bowl's top line (sweptBar), square cut at
     // both ends: the 382 run of short blocks read as layered blades, a mohawk, at its seams (critic 382)
