@@ -421,8 +421,8 @@ async function main() {
             // the idle look-around can turn the face to the far side (the painter, the spear thrower): when the face points more than .9 rad off
             // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
             let alpha = a.body.root.rotation.y - Math.PI / 2 - swing;
-            // the halberdier's idle swings to his other side: from the weapon side a navy backdrop boulder sat right beside his helm (evidence 374)
-            if (a.definition.id === "renaissance.halberd") alpha += 2 * swing;
+            // the halberdier's idle swings to his other side: from the weapon side a navy backdrop boulder sat right beside his helm (evidence 374); the halfling's too: from the weapon side the boulder sat on his head like a beret (evidence 378)
+            if (a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling") alpha += 2 * swing;
             const b = a.body;
             if (a.definition.id !== "tribal.protector" && b.leftEye && b.rightEye && b.headMesh) {
               const le = window.__wp(b.leftEye), re = window.__wp(b.rightEye);
@@ -433,7 +433,11 @@ async function main() {
             }
             // the fencer's wide brim hides his face from above: his idle camera sits level with the head, so the brow shows under the brim (evidence 372)
             const fencer = a.definition.id === "renaissance.fencer";
-            window.game.frameCamera({ x: pa.x, y: (fencer ? 0.75 : 0.55) * s + 0.45, z: pa.z }, 3.8 * s, alpha, fencer ? Math.PI / 1.97 : Math.PI / 2.3);
+            // the mammoth's idle sat on his legs (evidence 378): pulled back 2x and aimed at .75 of the rig, as his motion shots are
+            const big = a.definition.id === "tribal.mammoth" ? 2 : 1;
+            // a rig under 1.2 m (the halfling, .69 m) gets an idle scale below 1, target and radius both, so his waist reads (evidence 378)
+            const si = window.__rig(a) < 1.2 ? Math.max(0.4, window.__rig(a) / 1.8) : s;
+            window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 ? 0.75 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big, alpha, fencer ? Math.PI / 1.97 : Math.PI / 2.3);
             return;
           }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
@@ -553,7 +557,13 @@ async function main() {
             for (const u of window.game.listLiveUnits()) if (!u.linkedParent) u.holdHeading(Math.PI / 2 - 0.35);
             window.advanceTime(50); // riders and crews follow their parent's new yaw on the next tick
             const cam = window.game.getGalleryCamera(n);
-            window.game.frameCamera(cam.target, cam.radius, -0.25, Math.PI / 2.25);
+            // the tribal rank ends in the mammoth, which the centred camera cropped at the frame's edge (evidence 378): aim at the rank's
+            // middle along z, the mammoth's bulk counted, and pull back so he is whole
+            if (n === "gallery_faction_tribal") {
+              const zs = window.game.listLiveUnits().filter((u) => !u.linkedParent).map((u) => u.body.root.position.z);
+              const lo = Math.min(...zs), hi = Math.max(...zs) + 3.5;
+              window.game.frameCamera({ ...cam.target, z: (lo + hi) / 2, y: cam.target.y + 0.5 }, cam.radius * 1.35, -0.25, Math.PI / 2.25);
+            } else window.game.frameCamera(cam.target, cam.radius, -0.25, Math.PI / 2.25);
           }, `gallery_faction_${faction}`);
           await shot(page, `lineup_${faction}`);
         }
