@@ -416,7 +416,21 @@ async function main() {
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
           // the protector's slab hides his head from the front: his idle swings round to his side, where the head shows beside the slab (evidence 366)
           const swing = a.definition.id === "tribal.protector" ? 1.35 : 0.6;
-          if (on === 1) { window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 3.8 * s, a.body.root.rotation.y - Math.PI / 2 - swing, Math.PI / 2.3); return; }
+          if (on === 1) {
+            // the idle look-around can turn the face to the far side (the painter, the spear thrower): when the face points more than .9 rad off
+            // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
+            let alpha = a.body.root.rotation.y - Math.PI / 2 - swing;
+            const b = a.body;
+            if (a.definition.id !== "tribal.protector" && b.leftEye && b.rightEye && b.headMesh) {
+              const le = window.__wp(b.leftEye), re = window.__wp(b.rightEye);
+              b.headMesh.computeWorldMatrix(true);
+              const hc = b.headMesh.getBoundingInfo().boundingBox.centerWorld;
+              const ex = (le.x + re.x) / 2 - hc.x, ez = (le.z + re.z) / 2 - hc.z, el = Math.hypot(ex, ez) || 1;
+              if ((ex * Math.cos(alpha) + ez * Math.sin(alpha)) / el < Math.cos(0.9)) alpha += 2 * swing;
+            }
+            window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 3.8 * s, alpha, Math.PI / 2.3);
+            return;
+          }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
           if (on === 4) { window.game.frameCamera({ x: pt.x, y: pt.y + 0.55 * s + 0.85, z: pt.z }, 5.2 * s, Math.atan2(fx, -fz), Math.PI / 2.1); return; }
           const c = on === 1 ? { x: pa.x, z: pa.z } : on === 2 ? { x: pt.x, z: pt.z } : on === 3 ? { x: pa.x + fx * 1.4 * s, z: pa.z + fz * 1.4 * s } : { x: (pa.x + pt.x) / 2, z: (pa.z + pt.z) / 2 };
