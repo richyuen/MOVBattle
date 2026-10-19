@@ -7,13 +7,14 @@ b PASS (375)
 c PASS (375)
 d PASS (cost 50, hp 1.50x, dmg 0.17x, cd 1.50x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [P] a jacket — blocker 2 (fallout of e8d2448): HALFLING_COAT belt colour dark brown with a lower glow, buckle proud of the vest — NEXT shot: lineup_farmer, unit_farmer.halfling_idle (the waist)
+1. evidence first: re-aim unit_farmer.halfling_idle closer (capture.mjs camera for a .69 m rig) so the waist reads; then [P] a jacket — blocker 2 (fallout of e8d2448): belt dark brown lower glow, buckle proud — NEXT shot: unit_farmer.halfling_idle
 ## Attempts (iter | gap | criterion | verdict)
 339-345 | mitts, mop, jacket/vest/shirt, shorts + belt, hairy feet, Jump, Grab [S] | a,b,c | approved
 375 | mop of hanging locks in two tiers to the jaw and nape (SHAGGY) [S] (d04eef6) | a | approved
 376 | open coat: walls, hinged fronts, lapels, vest, V, belt + buckle (farmerDress HALFLING_COAT) [S] (e8d2448) | a | approved
+377 | belt (.14,.08,.06) glow .04, buckle proud .09 (HALFLING_COAT) [P] (ee71b48, reverted 4d8f47c) | a | dropped (waist unreadable in both shots)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- He is tiny in unit_farmer.halfling_idle (rig .69 m, camera s clamps at 1); lineup_farmer shows the coat best.
+- He is tiny in unit_farmer.halfling_idle (rig .69 m, camera s clamps at 1; ~1/6 frame tall, crouched) and ~50 px in lineup_farmer: the belt cannot show. Re-aim _idle closer (evidence commit) before any waist gap.
 - Critic 375 minor: fringe low enough to clip the top of the eyes. 345: he floats against the man rather than gripping (_holdClings).
 - dressHalfling (unitFactory) keeps only the shorts and feet; coat, vest, V, belt are farmerDress halflingJacket.

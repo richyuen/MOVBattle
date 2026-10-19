@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-367 | skull face plate: rims, bridge, muzzle (8762812) | tribal.protector.a | approved
-367 | loin strips: 5 torn brown strips, tan skull (d0909d5) | tribal.clubber.a | approved
-367 | skirt: ring of torn tongues (de2744b +df9a744) | tribal.stoner.a | approved
-367 | ears: shaggy flap behind the eye (0d9c3d0 +b40c498) | tribal.mammoth.a | approved
-367 | fur hem over leg roots (c69689e +d55dff7) | tribal.mammoth.a | rejected
-367 | full beard to the chest (6c66d85) | tribal.chieftain.a | approved
 368 | skull jaw, cheeks to it; slab lip 6-sided lit stone (b544fb9) | tribal.protector.a | approved
 368 | rear box: pelvis block inside the skirt, in hide (8e46f46) | tribal.stoner.a | approved
 368 | sallet: 8-sided bucket, slit + bead eyes, bevor (c52c267) | renaissance.halberd.a | approved
@@ -75,6 +69,13 @@ for 25 iterations.
 376 | fitted 8-sided jerkin as the trunk, skirt band, lean build (bfd2385) | farmer.potion_seller.a | approved
 376 | tall hood: one lathe shoulders to cone, oval face window (5162e03) | farmer.farmer.a | approved
 376 | riders on the tray: Farmer on the lip legs forward, Thrower astride (78a73b0) | farmer.wheelbarrow.a | approved
+377 | sallet visor: team eye-slot under iron brow + breath-slot (8f7c74f) | renaissance.halberd.a | approved
+377 | sack as a rounded lumpy lathe hood, seam, tan collar (5e14f8f) | farmer.scarecrow.a | approved
+377 | brown felt hat: creased pinched crown, closed drooping brim (84980cf) | farmer.harvester.a | approved
+377 | flask by the neck in a holder; both arms hang at the hips (eeb43aa) | farmer.potion_seller.b | approved
+377 | round head, umber cap on its curve (ccd37ad) | farmer.potion_seller.a | approved
+377 | liripipe: thick blunt tail bent over and down (9f5019c) | farmer.farmer.a | approved
+377 | narrow tray .2, flat hay bed, Thrower on the rim, knees rolled (aa835d7 +4f65905) | farmer.wheelbarrow.a | approved
 
 ## Spent (never retry as [P])
 
@@ -100,14 +101,15 @@ vehicleBuilder.ts:MAMMOTH_TUSK (tan, glow, tip, gap, stripe, proud) | (.8,.6,.36
 vehicleBuilder.ts:MAMMOTH_EAR (tall, long, thick, z, flare) | .48,.42,.15,.3,1.05 | 367 | approved | edge-on fan
 vehicleBuilder.ts:MAMMOTH_HEM (row, c, size, drop, skirt, ring, skirtY) | 9,-.55,[.08,.2,.22],.12,5,.36,-.42 | 367 | rejected (reverted) | -
 vehicleBuilder.ts:MAMMOTH_LEG collar ([r,y] foot..top, collarJitter) | [.28,-.36],[.35,-.3],[.37,-.2],[.33,-.1], .045 | 375 | approved | -
-renaissance.halberd (SALLET_FACETED, HOP_BACK, HALBERD_QUILT, HALBERD_REST, HALBERD_SHOE, HALBERD_BREECH) | compacted 376 | 375 | approved | values: git show b0e9788:loop/LEDGER.md
-proceduralAnimation.ts:HALBERD_SQUARE (tilt, stride, lean, spread, knee); unitVisuals halberd legLength | .03,.12,.04,.09,.06; 1.18 | 376 | approved | hashed hip-shot stance; legLength .92
-propBuilder.ts:POTION (ball, squash, shoulder, shoulderFoot, neck, neckLong, lip, cork, seat, glow) | .12,.85,.042,.7,.042,.035,1.3,.026,.06,.22 | 376 | rejected 1x [P] | 376 seat -.02 glass (.45,.68,.72) rejected; ball .065 .92, seat .035 (339)
+propBuilder.ts:POTION (..neckLong, lip, cork, glow); POTION_GLASS; holder neck-in-fist | ..,.035,1.3,.026,.12; (.64,.75,.72) | 377 | approved | glow .22, glass (.55,.74,.82), seat .06 bulb out; 376 [P] seat/glass rejected
 tribalDress.ts:SHAGGY (cap, locks, long, front, fringeArc, thick, splay, locks2, long2, splay2, rootY2) | 1.3,22,.95,.32,.6,.42,.16,14,.5,.5,.85 | 375 | approved | 1.32,26,.5,.5,-,.3,.55 (340)
-propBuilder.ts:CROW_LAYERS (shrink, lift, wide, tip, bandFrom, band, bandTip, bandProud, bandShade); CROW_WINGS wrist, rows | .72,.035,.42,.3,.16,.3,.45,.07,.8; .48, 3 | 375 | approved | wrist box .32 (339)
-farmerDress.ts:CHEST_BRAID (apart, rootUp, rootAhead, footOut, footDrop, standOff, bow, plaits, thick) | .44,.45,.12,.5,1.05,.14,.18,7,.3 | 376 | approved | head-hung FLOPPY braid 1.95 (removed)
-propBuilder.ts:PERCH_CROW (wide, deep, tall, tip, head, beak, eye, tail, tailTip, leg) | .1,.12,.18,.3,.085,.06,.02,.12,.35,.035 | 376 | approved | held crow laid flat
 farmerDress.ts:HALFLING_COAT (neck, drop, out, front, gap, flare, lapel, vest, vee, belt, buckle) | .02,.32,.06,.3,.22,.08,.4,.46,.4,.12,.24 | 376 | approved | box jacket 1.14, drop .12
 farmerDress.ts:POTION_FIT (top, waist, deep, band, skirt, hips, light, dark); bulk, legLength | 1,.84,1.04,.1,.2,.94,.55,.42; .84, 1.08 | 376 | approved | box jerkin shell 1.12
-propBuilder.ts:TALL_HOOD (tip ring [y,r,back], sides, chin, brow, window) | [1.2,.01,.7], 12, -.92, -.1, .8 | 376 | approved | sphere cowl snug 1.18 + tube tail
-vehicleBuilder.ts:CREW_SEAT (lipIn, lipUp, frontThigh, frontSplay, frontKnee, astrideUp, backThigh, backSplay, backKnee) | .05,.03,-1.15,.62,.45,.02,-.75,1,.95 | 376 | approved | seat .32, -1.45/-1.4, splay .45/.35
+vehicleBuilder.ts:CREW_SEAT (lipIn, lipUp, frontThigh, frontSplay, frontKnee, astrideUp, backThigh, backSplay, backKnee+roll) | .05,.03,-1.15,.62,.45,.04,-.3,1.3,.2 | 377 | approved | back .02,-.75,1,.95 on the hay (376)
+renaissance.halberd (SALLET_FACETED visor, HOP_BACK, QUILT, REST, SHOE, BREECH, HALBERD_SQUARE; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 8f7c74f
+vehicleBuilder.ts:WHEELBARROW trayWide, LOG_WHEEL thick, HAY_BED (fill, lumps) | .2, .196, .92,.02 | 377 | approved | .44, .36, ico mound heap .09
+proceduralAnimation.ts:POTION_HANG (raise, out, elbow; left same) | .04,.16,-.14 | 377 | approved | hashed carries (chest)
+farmerDress.ts:POTION_HEAD (shell, slice, tip, lift, back, glow) | 1.08,.56,.42,.04,.04,.2 | 377 | approved | tribalDress HAIR_CAP bowl on a block head
+farmer.scarecrow (CROW_LAYERS, PERCH_CROW, SACK_HOOD; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 5e14f8f
+farmer.harvester (CHEST_BRAID, FELT_HAT; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 84980cf
+farmer.farmer (TALL_HOOD rings to .86, LIRIPIPE_TAIL; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 9f5019c
