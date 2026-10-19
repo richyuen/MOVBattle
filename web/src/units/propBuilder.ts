@@ -334,7 +334,7 @@ const DEER_ANTLER = new Color3(0.66, 0.5, 0.33);
  * .brow long, forward and out. Antler .tan, self-lit .glow so it stays tan in the shade.
  */
 const DEER_RACK = {
-  beam: [0.55, 0.55, 0.5, 0.42], bend: [1.3, 0.95, 0.6, 0.25], back: 0.12, thick: 0.24, taper: 0.82,
+  beam: [0.55, 0.55, 0.5, 0.42], back: 0.12, thick: 0.24, taper: 0.82,
   tine: [0.62, 0.58, 0.5, 0.36], inward: 0.18, brow: 0.38, tan: new Color3(0.72, 0.6, 0.45), glow: 0.15,
   // the staff skull's rack grown to the mask's (tribal.bone_mage.png: the staff's antlers as large as the pair on his head)
   staff: 1.4,
@@ -342,6 +342,10 @@ const DEER_RACK = {
   // before curling up, the rack wider than tall): the staff's beams turned .staffBend from upright, leaning .staffBack behind the skull, so they read as a
   // wide spread from the front and sweep back from the side; its cranium and face plate in the rack's own tan (propBuilder bone_staff)
   staffBend: [1.52, 1.35, 1.0, 0.55], staffBack: 0.35,
+  // [S] the worn rack's own wide sweep (365; tribal.bone_mage.red.png: the head's beams leave the skull low and nearly sideways, run out about two heads
+  // each side and only then curl up, tines standing up off them; warm tan like the mask): the mask's beams turned .maskBend from upright (replacing the
+  // shared .bend [1.3,.95,.6,.25] that stood them up about one head out), each .maskLong of its .beam length, leaning .back; in the mask's tan (MASK_LEAF.tan)
+  maskBend: [1.5, 1.3, 0.95, 0.45], maskLong: 1.3,
 };
 /*
  * [S] the deer skull worn as a mask (361; tribal.bone_mage.red.png: the skull over the face, its long muzzle down to the chin, the wearer's eyes in its
@@ -412,7 +416,8 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
   }
   // The rack on the mask and on the staff (the staff's grown by rackScale to the mask's own size: DEER_RACK.staff)
   const rack = chin !== undefined || rackScale !== 1;
-  const antler = rack ? mat(scene, DEER_RACK.tan, DEER_RACK.glow) : mat(scene, DEER_ANTLER);
+  const worn = chin !== undefined && rackScale === 1;
+  const antler = worn ? mat(scene, MASK_LEAF.tan, MASK_LEAF.tanGlow) : rack ? mat(scene, DEER_RACK.tan, DEER_RACK.glow) : mat(scene, DEER_ANTLER);
   const up = Vector3.Up();
   const stick = (from: Vector3, dir: Vector3, long: number, thick: number, tip = 0.6) => {
     const d = dir.normalize();
@@ -434,10 +439,10 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
       stick(at, new Vector3(side * 0.5, 0.45, 1), u(R2.brow * H * rackScale), thick * 0.7, 0.35);
       for (let k = 0; k < R2.beam.length; k++) {
         const staff = rackScale !== 1;
-        const bend = staff ? R2.staffBend[k] : R2.bend[k];
+        const bend = staff ? R2.staffBend[k] : R2.maskBend[k];
         const dir = new Vector3(side * Math.sin(bend), Math.cos(bend), -(staff ? R2.staffBack : R2.back));
         const next = R2.taper * thick;
-        at = stick(at, dir, u(R2.beam[k] * H * rackScale), thick, next / thick);
+        at = stick(at, dir, u(R2.beam[k] * H * rackScale * (staff ? 1 : R2.maskLong)), thick, next / thick);
         thick = next;
         const knuckle = MeshBuilder.CreateIcoSphere("deerAntler", { radius: thick * 0.55, subdivisions: 1, flat: true }, scene);
         knuckle.position = at.clone();
