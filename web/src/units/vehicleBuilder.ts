@@ -2011,8 +2011,9 @@ function mammothLeg(scene: Scene, hipJoint: TransformNode, kneeJoint: TransformN
   const L = MAMMOTH_LEG;
   const lathe = (name: string, profile: [number, number][], parent: TransformNode, seed: number, jitter = L.jitter) => {
     const top = profile[0][1], foot = profile[profile.length - 1][1];
-    const shape = [new Vector3(0, top, 0), ...profile.map(([r, y]) => new Vector3(r, y, 0)), new Vector3(0, foot, 0)];
-    const m = MeshBuilder.CreateLathe(name, { shape, tessellation: L.sides, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    // wound from the sole up: a lathe drawn top-down faces its normals inward and the leg reads near-black
+    const shape = [new Vector3(0, top, 0), ...profile.map(([r, y]) => new Vector3(r, y, 0)), new Vector3(0, foot, 0)].reverse();
+    const m = MeshBuilder.CreateLathe(name, { shape, tessellation: L.sides }, scene);
     if (jitter > 0) jitterVertices(m, jitter, seed);
     m.parent = parent; m.material = fur; allMeshes.push(m);
   };
