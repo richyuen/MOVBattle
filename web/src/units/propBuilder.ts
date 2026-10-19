@@ -1764,6 +1764,17 @@ function seatInFist(mesh: Mesh, body: ArticulatedBody, scale: number): void {
 }
 
 /**
+ * [S] the flask's neck closed in the fist (378; farmer.potion_seller.red.png, .jpg: each fist grips a flask by its neck, through the walk and the throw;
+ * critic 377: in the windup the flask floated clear of both hands beside the head). The holder's origin is the cork (see the "potion" prop), and the
+ * grip preset left it .17 m off the hand (hand-local (.02, .11, .13)), so with the arm raised the flask hung in the air under the fist. The holder now sits
+ * on the hand's mitt, cork in the fist, keeping the preset's tilt: wherever the arm goes, the neck is in the hand and the bulb runs out past the fingers.
+ */
+function seatNeckInFist(mesh: Mesh, hand: TransformNode): void {
+  const mitt = hand.getChildren().find((n): n is TransformNode => /HandM$/.test(n.name));
+  mesh.position.copyFrom(mitt?.position ?? Vector3.Zero());
+}
+
+/**
  * A pole built along +y from the fist with its root lifted `lift` up its own length (the halberd, the matchlock): turned about that fist point, not its middle,
  * and the fist point set on the hand mitt, so the grip preset's tilt leaves the shaft running through the fist (329: it hung ~0.4 m off the wrist).
  */
@@ -1795,6 +1806,7 @@ export function attachProps(
     applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
+    if (config.weapon === "potion") seatNeckInFist(weapon, body.rightHand);
     if (config.weapon && SEATED_POLES.has(config.weapon)) seatPoleInFist(weapon, body, lift);
     if (config.attachmentPreset === "fan_bearer") {
       tagVisualState(weapon, "fan_closed");
@@ -1809,6 +1821,7 @@ export function attachProps(
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
+      if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
       props.push(offhand);
     }
   }
