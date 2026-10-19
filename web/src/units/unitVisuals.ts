@@ -332,7 +332,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { materialPreset: "ancient_bronze" },
   ),
   "ancient.sarissa": vis(
-    { scale: 1.05, armLength: 1.3 }, "spear", "crested_helm", "buckler", "none", "#B8860B",
+    // [S] no off-hand disc: the pike is two-handed (379; card Off Hand N/A; proceduralAnimation PIKE_LEVEL)
+    { scale: 1.05, armLength: 1.3 }, "spear", "crested_helm", "none", "none", "#B8860B",
     undefined,
     {
       posePreset: "support",

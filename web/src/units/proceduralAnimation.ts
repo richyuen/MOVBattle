@@ -346,6 +346,14 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
  *   there while the weapon arm draws back to .cock (elbow .cockFold) until .punch and drives straight out to .reach (elbow 0) with the trunk twisted .twist
  *   onto the off side and pitched .lean; the rest eases back to the carry.
  */
+/*
+ * [S] the levelled pike (379, the sarissa's; ancient.sarissa.png: a rank marching with the long pikes run level forward at the hip, both fists on the
+ * shaft, the off hand ahead; card Weapon Type Two-handed, Off Hand N/A). In u, the height of his weapon shoulder over his hip joint: the weapon fist at
+ * PIKE_LEVEL.ahead before the hip, .out to the weapon side, .up above it; the shaft run along his heading tilted .tilt rad up, the fist .fistAt of its
+ * length from the butt; the off fist on the shaft .offAhead further along it. The thrust draws both fists back .draw of .stroke and drives them out a whole
+ * .stroke along the shaft's line, then eases back. No off-hand disc.
+ */
+const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
 /*
@@ -1921,6 +1929,7 @@ export class ProceduralAnimator {
     this._aimMusket(dt);
     this._restHalberd();
     this._twoHandPole();
+    this._levelPike();
     this._carryBoulder();
     this._holdPalette();
     this._couchLance();
@@ -3023,6 +3032,61 @@ export class ProceduralAnimator {
     const along = Vector3.Dot(this._body.leftShoulder.getAbsolutePosition().subtract(origin), axis);
     const at = Math.max(fistAt + span[0] * length, Math.min(fistAt + span[1] * length, along));
     this._offArmTo(origin.add(axis.scale(at)), w, 2);
+  }
+
+  /** Levels the pike in both fists (PIKE_LEVEL); set by the runtime for the sarissa. */
+  levelsPike = false;
+  private _pike: { shaft: Mesh; grip: Vector3 } | null | undefined = undefined;
+
+  /** [S] the sarissa's pike levelled in both fists (spec at PIKE_LEVEL), every living state; the thrust runs both fists along its line. */
+  private _levelPike(): void {
+    if (!this.levelsPike || this.walkStyle === "quadruped") return;
+    if (this._pike === undefined) {
+      const find = (n: Node): Mesh | undefined => (n instanceof Mesh && n.name === "shaft" ? n : n.getChildren().map(find).find((m) => m));
+      const shaft = find(this._body.rightHand);
+      this._pike = shaft ? { shaft, grip: shaft.position.clone() } : null;
+    }
+    if (!this._pike) return;
+    const { shaft, grip } = this._pike;
+    const s = this._state;
+    const w = s === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
+    if (w <= 0.01 || (s !== AnimState.Idle && s !== AnimState.Walking && s !== AnimState.Attacking)) {
+      if (shaft.rotationQuaternion) {
+        shaft.rotationQuaternion = null;
+        shaft.position.copyFrom(grip);
+      }
+      return;
+    }
+    const b = this._body, P = PIKE_LEVEL;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const hip = b.hip.getAbsolutePosition();
+    const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
+    const yaw = b.root.rotation.y;
+    const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+    const right = new Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    // the stroke: drawn back to the windup, driven out past the rest at the release, eased back after
+    let stroke = 0;
+    if (s === AnimState.Attacking && this._attackMotion === "thrust") {
+      const p = Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1);
+      const ext = this._resolveReleasePoint(0.5);
+      const ease = (x: number) => x * x * (3 - 2 * x);
+      const q = (p - ext) / Math.max(1 - ext, 0.001);
+      stroke = p < ext ? -P.draw * ease(p / Math.max(ext, 0.001)) : q < 0.4 ? -P.draw + (P.draw + 1) * ease(q / 0.4) : 1 - ease((q - 0.4) / 0.6);
+    }
+    const dir = new Vector3(fwd.x * Math.cos(P.tilt), Math.sin(P.tilt), fwd.z * Math.cos(P.tilt));
+    const fist = hip.add(fwd.scale(P.ahead * u)).add(right.scale(P.out * u)).add(new Vector3(0, P.up * u, 0)).add(dir.scale(P.stroke * u * stroke));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    this._offArmTo(fist.add(dir.scale(P.offAhead * u)), w, 2);
+    // the shaft along that line through the fist, the fist .fistAt of its length up from the butt
+    const hand = (shaft.parent as TransformNode) ?? b.rightHand;
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand, hand]) n.computeWorldMatrix(true);
+    const along = Vector3.TransformNormal(dir, Matrix.Invert(hand.getWorldMatrix())).normalize();
+    const turn = Quaternion.FromUnitVectorsToRef(Vector3.Up(), along, new Quaternion());
+    shaft.rotationQuaternion = turn;
+    const len = shaft.getBoundingInfo().boundingBox.extendSize.y * 2 * shaft.scaling.y;
+    const held = new Vector3(0, len * (0.5 - P.fistAt), 0);
+    held.rotateByQuaternionToRef(turn, held);
+    shaft.position.copyFrom(held);
   }
 
   /** The off arm solved onto a world point: shoulder swing and elbow fold, the elbow out to his free side and down, eased in by `w`. */
