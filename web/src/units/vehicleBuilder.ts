@@ -2051,6 +2051,31 @@ function mammothBarrel(scene: Scene): Mesh {
   jitterVertices(m, B.jitter, 41.7);
   return m;
 }
+/*
+ * [S] the mammoth's trunk (365; tribal.mammoth.red.png, .jpg: one long thick trunk in the body's own brown, as wide at the face as the gap between the eyes,
+ * reaching forward and down to the ground, its end a blunt flared snout with a dark opening; team dots painted flat on its sides). It replaces eight
+ * near-black cylinder pieces ending well above the ground with raised paint knobs (critic 360).
+ *   - one tube on the neck from MAMMOTH_TRUNK.root (neck frame) along .pitch (each piece's tilt from straight down, + forward), pieces .piece long; radius
+ *     .rootR easing to .tipR, the last point flared to .flare; the snout's opening a dark disc .hole of the end across;
+ *   - returns its pieces' centres and radii, where the face paint lays its dots (FACE_PAINT.trunkDots).
+ */
+const MAMMOTH_TRUNK = { root: [0, -0.12, 0.74], pitch: [0.75, 0.55, 0.4, 0.3, 0.25, 0.3, 0.5, 0.9], piece: 0.21, rootR: 0.25, tipR: 0.13, flare: 0.16, hole: 0.62 };
+/** The mammoth's trunk (spec at MAMMOTH_TRUNK). */
+function mammothTrunk(scene: Scene, neck: TransformNode, fur: Material, dark: Material, allMeshes: Mesh[]): { centre: Vector3; radius: number }[] {
+  const T = MAMMOTH_TRUNK;
+  const path = [new Vector3(T.root[0], T.root[1], T.root[2])];
+  for (const p of T.pitch) path.push(path[path.length - 1].add(new Vector3(0, -Math.cos(p) * T.piece, Math.sin(p) * T.piece)));
+  const n = path.length - 1;
+  const radius = (i: number): number => (i >= n ? T.flare : T.rootR + (T.tipR - T.rootR) * (i / (n - 1)));
+  const tube = MeshBuilder.CreateTube("trunk", { path, radiusFunction: (i) => radius(i), tessellation: 10, cap: Mesh.CAP_ALL }, scene);
+  tube.parent = neck; tube.material = fur; allMeshes.push(tube);
+  const dir = path[n].subtract(path[n - 1]).normalize();
+  const hole = MeshBuilder.CreateCylinder("trunkTip", { height: 0.02, diameter: T.flare * 2 * T.hole, tessellation: 10 }, scene);
+  hole.position = path[n].add(dir.scale(0.012));
+  hole.rotation = Vector3.RotationFromAxis(Vector3.Cross(dir, Vector3.Right()).normalize(), dir, Vector3.Right());
+  hole.parent = neck; hole.material = dark; allMeshes.push(hole);
+  return path.slice(0, n).map((p, i) => ({ centre: Vector3.Center(p, path[i + 1]), radius: (radius(i) + radius(i + 1)) / 2 }));
+}
 /** Radius of a lathe profile at height y (linear between its points). */
 function profileAt(profile: [number, number][], y: number): number {
   for (let i = 0; i < profile.length - 1; i++) {
@@ -2266,6 +2291,9 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const TRUNK_TIP = 0.22;
   const trunkAt = new Vector3(0, -0.12, 0.76);
   const trunkPieces: { centre: Vector3; radius: number }[] = [];
+  // [S] (365) the mammoth's trunk is one tube in his own fur, down to the ground (mammothTrunk); the elephant keeps the pieces below
+  if (mammoth) trunkPieces.push(...mammothTrunk(scene, neck, fur, darkMat, allMeshes));
+  else {
   for (let i = 0; i < TRUNK_PITCH.length; i++) {
     const t = i / (TRUNK_PITCH.length - 1);
     const pitch = TRUNK_PITCH[i];
@@ -2286,6 +2314,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   const trunkTip = MeshBuilder.CreateSphere("trunkTip", { diameter: TRUNK_TIP * 1.05, segments: 4 }, scene);
   trunkTip.position.copyFrom(trunkAt);
   trunkTip.parent = neck; trunkTip.material = trunkMat; allMeshes.push(trunkTip);
+  }
 
   // Face marking (FACE_PAINT), read off tribal.mammoth.blue.png: on each side a flat team-colour band from the forehead under the mane,
   // down in front of the eye and forward onto the top of the trunk root, then round paint dots spaced down the trunk's side.
@@ -2331,9 +2360,10 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
       // Dots down the trunk's outer side, flat on its skin
       for (const piece of FACE_PAINT.trunkDots) {
         const at = trunkPieces[piece];
-        const dot = MeshBuilder.CreateSphere("trunkDot", { diameter: FACE_PAINT.dot, segments: 4 }, scene);
-        dot.scaling.set(0.3, 1, 1);
-        dot.position.set(side * at.radius * 0.97, at.centre.y, at.centre.z);
+        // flat painted discs on the trunk's side (365), not raised knobs
+        const dot = MeshBuilder.CreateCylinder("trunkDot", { height: 0.012, diameter: FACE_PAINT.dot, tessellation: 8 }, scene);
+        dot.rotation.z = Math.PI / 2;
+        dot.position.set(side * at.radius * 1.0, at.centre.y, at.centre.z);
         dot.parent = neck; dot.material = faceMat; allMeshes.push(dot);
       }
     }
