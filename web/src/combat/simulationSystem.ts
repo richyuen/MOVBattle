@@ -13,7 +13,7 @@ import type { ImpactPresentation } from "./impactPresentation";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
 import { HARPOON_MUZZLE, launchRingSword } from "../units/propBuilder";
-import { buildSnake } from "../units/ancientDress";
+import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
 import type { PlacementZone } from "../map/placementValidator";
@@ -93,9 +93,11 @@ const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
  * nearest enemy, and slithers at .speed m/s, its body thrown in a travelling S (.wave rad/s, .waves bends along it, .sway m to a side at the tail, half
  * at the head). Within .reach m it lunges: head reared .rear rad, it darts .dash m/s for .lunge s and bites at the end for .bite damage, .rest s apart.
  * After .bites bites or .life s it goes in a smoke puff. Logged snake_land and snake_bite under the shooter. Not a roster unit: nothing targets it.
+ * [S] 388: the ground snake its own long thin build (ancientDress buildGroundSnake, .long m), laid flat; each band thrown .sway m to a side by the S
+ * and turned along the curve's slope, so the body lies in bends; the head on its neck held up, swinging with the front, reared .rear rad to lunge.
  */
-const SNAKE_LIVE = { long: 1.1, speed: 3.2, wave: 10, waves: 1.5, sway: 0.1, reach: 0.8, rear: 0.45, dash: 4.5, lunge: 0.25, bite: 30, rest: 1.1, bites: 2, life: 30 };
-type LiveSnake = { root: TransformNode; snake: TransformNode; born: number; bites: number; restUntil: number; lungeUntil: number; phase: number };
+const SNAKE_LIVE = { long: 2.0, speed: 3.2, wave: 7, waves: 1.4, sway: 0.24, reach: 0.8, rear: 0.45, dash: 4.5, lunge: 0.25, bite: 30, rest: 1.1, bites: 2, life: 30 };
+type LiveSnake = { root: TransformNode; snake: GroundSnake; born: number; bites: number; restUntil: number; lungeUntil: number; phase: number };
 /**
  * A firearm whose ball throws the man it hits (units/renaissance.musketeer, card Weapons: the musket's force is 1500, against a club's 20): a man the shot
  * leaves alive is knocked off his feet along its line and tumbles, as from a blast (RuntimeUnit.applyBlastLaunch), not merely flinched. Keyed by weaponHint, so
@@ -2946,11 +2948,9 @@ export class SimulationSystem {
     // laid head on toward the nearest foe, or on along its line of flight
     const to = foe ? foe.position.subtract(at) : at.subtract(from);
     root.rotation.y = Math.atan2(to.x, to.z);
-    const snake = buildSnake(scene, "liveSnakeBody", L.long);
-    snake.parent = root;
-    snake.rotation.x = Math.PI / 2; // +y (tail to head) laid along +z
-    snake.position.set(0, L.long * 0.16, -L.long * 0.55);
-    for (const m of snake.getChildMeshes()) m.metadata = { ...(m.metadata ?? {}), snakeX: m.position.x, snakeY: m.position.y };
+    const snake = buildGroundSnake(scene, "liveSnakeBody", L.long);
+    snake.root.parent = root;
+    snake.root.position.set(0, 0, -snake.bodyL);
     const now = RuntimeUnit.timeNowSeconds();
     this._snakes.push({ s: { root, snake, born: now, bites: 0, restUntil: now + 0.15, lungeUntil: 0, phase: 0 }, team });
     this._logMissileAbility("ancient.snake_archer", "snake_land", root.position);
@@ -2985,14 +2985,20 @@ export class SimulationSystem {
       s.root.position.y = foe.position.y;
       // the travelling S: each piece thrown to a side by where it lies along the body, the tail most
       s.phase += dt * L.wave * (lunging ? 0.4 : step > 0 ? 1 : 0.35);
-      for (const m of s.snake.getChildMeshes()) {
-        const md = m.metadata as { snakeX?: number; snakeY?: number } | null;
-        if (md?.snakeX === undefined || md.snakeY === undefined) continue;
-        const along = md.snakeY / L.long;
-        m.position.x = md.snakeX + Math.sin(s.phase - along * L.waves * Math.PI * 2) * L.sway * (1 - 0.5 * along);
+      const k = L.waves * Math.PI * 2;
+      const side = (along: number) => Math.sin(s.phase - along * k) * L.sway * (1 - 0.45 * along);
+      const slope = (along: number) => (-Math.cos(s.phase - along * k) * k * L.sway * (1 - 0.45 * along) - 0.45 * L.sway * Math.sin(s.phase - along * k)) / s.snake.bodyL;
+      for (const m of s.snake.segs) {
+        const along = (m.metadata as { snakeAlong: number }).snakeAlong;
+        m.position.x = side(along);
+        m.rotation.y = Math.atan(slope(along));
+        // stretched by the bend so the bands still meet along the curve
+        m.scaling.y = Math.sqrt(1 + slope(along) ** 2);
       }
-      // the head rears through the lunge
-      s.snake.rotation.x = Math.PI / 2 - (lunging ? L.rear : 0);
+      // the head rides the body's front, held up, and rears through the lunge
+      s.snake.neck.position.x = side(1);
+      s.snake.neck.rotation.y = Math.atan(slope(1));
+      s.snake.neck.rotation.x = lunging ? -L.rear : 0;
       if (lunging && now + dt >= s.lungeUntil) {
         if (dist <= reach + 0.2) {
           foe.applyDamage(L.bite, to.normalize().scale(1.5));

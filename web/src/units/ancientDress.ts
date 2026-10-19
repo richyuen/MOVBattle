@@ -579,6 +579,65 @@ export function buildSnake(scene: Scene, name: string, long: number): TransformN
   return root;
 }
 
+/*
+ * [S] 388 the live snake on the turf (ancient.snake_archer.png: a long thin snake some two metres long, banded red and green its whole length, laid in
+ * S bends, the green head held up off the ground with two big white eyes on top; critic 387: a short fat green log a thigh thick, red bands only on a
+ * cone tail, lying straight). Laid along +z on the ground, tail at z 0: .segs body pieces end to end over the length less the head, each .thick across
+ * (tapering to .tail of that over the last .taper of the length at the tail), alternating green and red; the last .rise of the body curving up to
+ * .neckUp m off the ground; on a neck node at the body's front end the head, .headLong m long and .headWide across, flattened .flat, eyes .eye of
+ * the head across on its top, a forked red tongue. Each piece keeps its laid z, y and share of the length in metadata (snakeZ, snakeY, snakeAlong) so
+ * the sim can throw the body in a travelling S; the neck carries the head and rears for the lunge. Colours SNAKE's.
+ */
+const GROUND_SNAKE = { segs: 18, thick: 0.075, tail: 0.3, taper: 0.3, rise: 0.22, neckUp: 0.14, headLong: 0.17, headWide: 0.115, flat: 0.7, eye: 0.42 };
+export type GroundSnake = { root: TransformNode; segs: Mesh[]; neck: TransformNode; bodyL: number };
+
+/** The live snake laid along +z on the ground (spec at GROUND_SNAKE). */
+export function buildGroundSnake(scene: Scene, name: string, long: number): GroundSnake {
+  const G = GROUND_SNAKE;
+  const S = SNAKE;
+  const mf = getMaterialFactory();
+  const lit = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(S.glow) });
+  const root = new TransformNode(name, scene);
+  const bodyL = long - G.headLong * 0.8;
+  const segL = bodyL / G.segs;
+  const lift = (t: number) => {
+    const r = Math.max(0, (t - (1 - G.rise)) / G.rise);
+    return G.neckUp * r * r * (3 - 2 * r);
+  };
+  const segs: Mesh[] = [];
+  for (let k = 0; k < G.segs; k++) {
+    const t0 = k / G.segs, t1 = (k + 1) / G.segs, tm = (t0 + t1) / 2;
+    const d = (t: number) => G.thick * (t >= G.taper ? 1 : G.tail + (1 - G.tail) * t / G.taper);
+    const seg = MeshBuilder.CreateCylinder(`${name}Band`, { height: segL * 1.12, diameterBottom: d(t0), diameterTop: d(t1), tessellation: 7 }, scene);
+    seg.material = lit(k % 2 ? S.red : S.green);
+    seg.convertToFlatShadedMesh();
+    seg.parent = root;
+    const y = G.thick / 2 + lift(tm);
+    const pitch = Math.atan2(lift(t1) - lift(t0), segL);
+    seg.position.set(0, y, bodyL * tm);
+    seg.rotation.x = Math.PI / 2 - pitch;
+    seg.metadata = { snakeZ: seg.position.z, snakeY: y, snakeAlong: tm };
+    segs.push(seg);
+  }
+  const neck = new TransformNode(`${name}Neck`, scene);
+  neck.parent = root;
+  neck.position.set(0, G.thick / 2 + G.neckUp, bodyL - segL * 0.3);
+  const put = (m: Mesh, c: Color3) => { m.material = lit(c); m.convertToFlatShadedMesh(); m.parent = neck; return m; };
+  const hw = G.headWide, hl = G.headLong;
+  const head = put(MeshBuilder.CreateSphere(`${name}Head`, { diameterX: hw, diameterY: hw * G.flat, diameterZ: hl, segments: 7 }, scene), S.green);
+  head.position.z = hl * 0.42;
+  for (const side of [-1, 1]) {
+    const eye = put(MeshBuilder.CreateSphere(`${name}Eye`, { diameter: hw * G.eye, segments: 6 }, scene), S.white);
+    eye.position.set(side * hw * 0.22, hw * G.flat * 0.38, hl * 0.3);
+    const pupil = put(MeshBuilder.CreateSphere(`${name}Pupil`, { diameter: hw * G.eye * 0.5, segments: 5 }, scene), S.black);
+    pupil.position.set(side * hw * 0.23, hw * G.flat * 0.38 + hw * G.eye * 0.18, hl * 0.3 + hw * G.eye * 0.22);
+    const fork = put(MeshBuilder.CreateBox(`${name}Tongue`, { width: hw * 0.06, height: hw * 0.02, depth: hl * 0.4 }, scene), S.red);
+    fork.position.set(side * hw * 0.05, 0, hl * 0.95);
+    fork.rotation.y = side * 0.35;
+  }
+  return { root, segs, neck, bodyL };
+}
+
 /** The snake nocked in the snake archer's draw fist (spec at SNAKE), held like the balloon archer's arrow: across the fist, the head out to his off side. */
 export function heldSnake(scene: Scene, body: ArticulatedBody): TransformNode {
   const long = SNAKE.held * body.metrics.overallHeight;
