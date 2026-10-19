@@ -13,7 +13,7 @@ import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
-import { dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
+import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -705,6 +705,7 @@ export class UnitFactory {
             : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
       if (knight && skirt) propMeshes.push(...knightCuirass(this._scene, body, skirt));
+      if (definition.id === "medieval.bard" && skirt) propMeshes.push(...bardTunic(this._scene, skirt, teamColor));
       if (definition.id === "medieval.squire" && tabard && skirt) propMeshes.push(...squireTabardTrim(this._scene, body, tabard, skirt));
       // ...not under a hide cape: its flaps lie over the shoulders where the collar would (the chieftain)
       if (bareSkinned && !hasTribalNecklace(definition.id) && !TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(furCollar(this._scene, body));

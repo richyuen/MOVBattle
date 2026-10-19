@@ -288,9 +288,37 @@ function panel(scene: Scene, name: string, pts: Vector3[]): Mesh {
  * collar and BARD_VEST.down of the torso height deep, in the tunic's team; BARD_VEST.laces cords across it; toggles BARD_VEST.toggle of the chest half-width.
  */
 const BARD_VEST = {
-  wide: 1.05, deep: 1.12, long: 1.0, shade: 0.5, v: 0.62, down: 0.62, laces: 2, toggle: 0.16, proud: 0.06,
-  cord: new Color3(0.4, 0.24, 0.14), bone: new Color3(0.86, 0.74, 0.55), glow: 0.06, tunicPale: 0.12, tunicGlow: 0.3,
+  wide: 1.05, deep: 1.12, long: 1.0, shade: 0.5, v: 0.62, down: 0.62, laces: 2, toggle: 0.22, proud: 0.06,
+  cord: new Color3(0.4, 0.24, 0.14), bone: new Color3(0.86, 0.74, 0.55), glow: 0.06, tunicPale: 0.04, tunicGlow: 0.16,
 };
+
+/*
+ * [S] the Bard's tunic (357; medieval.bard.red.png: the team tunic shows in the vest's V and runs on below the vest as a short skirt to mid-thigh). One tunic
+ * cloth for the V panel and the skirt (team barely paled, BARD_VEST.tunicPale/.tunicGlow); the skirt unitFactory hangs from his hips lengthened to
+ * BARD_TUNIC.long of its own length (its top kept at the waist) and ended in a darker hem band .hem of its length (team x .hemShade).
+ */
+const BARD_TUNIC = { long: 1.45, hem: 0.16, hemShade: 0.62 };
+
+function bardTunicCloth(team: Color3) {
+  return getMaterialFactory().get("cloth", Color3.Lerp(team, Color3.White(), BARD_VEST.tunicPale), { emissiveIntensity: BARD_VEST.tunicGlow });
+}
+
+/** The tunic skirt, fitted to the skirt hung from his hips. */
+export function bardTunic(scene: Scene, skirt: Mesh, team: Color3): Mesh[] {
+  const T = BARD_TUNIC;
+  const sb = skirt.getBoundingInfo().boundingBox.extendSize;
+  const drop = sb.y * 2;
+  skirt.scaling.y *= T.long;
+  skirt.position.y -= (drop * T.long - drop) / 2;
+  skirt.material = bardTunicCloth(team);
+  const hemTall = sb.y * 2 * T.hem;
+  const hem = MeshBuilder.CreateCylinder("bardTunicHem", { height: hemTall, diameterTop: sb.x * 2 * 1.02, diameterBottom: sb.x * 2 * 1.05, tessellation: 6 }, scene);
+  hem.convertToFlatShadedMesh();
+  hem.parent = skirt;
+  hem.position.y = -sb.y + hemTall / 2;
+  hem.material = getMaterialFactory().get("cloth", team.scale(T.hemShade), { emissiveIntensity: BARD_VEST.glow });
+  return [hem];
+}
 
 function bardVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const V = BARD_VEST;
@@ -315,7 +343,7 @@ function bardVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const half = cx * V.v;
   const vee = panel(scene, "bardVestV", [new Vector3(0, tip, zTip), new Vector3(-half, top, zTop), new Vector3(half, top, zTop)]);
   vee.parent = t.parent;
-  vee.material = getMaterialFactory().get("cloth", Color3.Lerp(team, Color3.White(), V.tunicPale), { emissiveIntensity: V.tunicGlow });
+  vee.material = bardTunicCloth(team);
   const out: Mesh[] = [...shells, vee];
   // cords laced across the V: an X of thin brown bars between its sides
   const cord = getMaterialFactory().get("cloth", V.cord, { emissiveIntensity: V.glow });
