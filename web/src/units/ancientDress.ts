@@ -592,6 +592,8 @@ const SNAKE_HOOD = {
   cap: 1.14, capFoot: 0.3, backArc: 0.62, wrapTop: -0.16, wrapFoot: -1.12, wrap: 1.1, flare: 1.12, peak: 0.42, peakLean: 0.5,
   collar: 0.42, collarOut: 1.08, point: 0.5, cord: new Color3(0.72, 0.5, 0.3), shade: 0.82, glow: 0.12,
 };
+/* [S] 389 the hood's rounded shell (spec at its build in dressSnakeArcher); the wrap's foot .wrapTaper of its top across */
+const SNAKE_CAP = { cy: -0.35, rx: 1.12, ry: 1.38, rz: 1.12, rows: 6, segs: 16, nub: 0.26, nubLean: 0.55, wrapTaper: 0.86 };
 
 /*
  * [S] the snake archer's snake (385; ancient.snake_archer.red.png, card Appearance "a bow ... loaded with a snake", Weapons projectile Snake: a big green
@@ -718,23 +720,37 @@ export function dressSnakeArcher(scene: Scene, body: ArticulatedBody, teamColor:
   const head = body.headMesh;
   const e = head.getBoundingInfo().boundingBox.extendSize;
   const put = (m: Mesh, parent: TransformNode | Mesh, material = cloth) => { m.material = material; m.convertToFlatShadedMesh(); m.parent = parent; out.push(m); return m; };
-  // the cap over the crown
-  const capFoot = e.y * S.capFoot;
-  const cap = put(MeshBuilder.CreateSphere("snakeHoodCap", { diameterX: 2 * e.x * S.cap, diameterY: 2 * (e.y * S.cap - capFoot) * 1.1, diameterZ: 2 * e.z * S.cap, segments: 7, slice: 0.5 }, scene), head);
-  cap.position.y = capFoot;
-  // the small peak on top, leaning forward
-  const peak = put(MeshBuilder.CreateCylinder("snakeHoodPeak", { height: e.y * S.peak, diameterTop: 0, diameterBottom: e.x * 0.7, tessellation: 5 }, scene), head);
-  peak.rotation.x = S.peakLean;
-  peak.position.set(0, e.y * S.cap * 1.05 + e.y * S.peak * 0.25, e.z * 0.25);
-  // the back shell from the cap's foot down to the wrap, its gap at the eyes
-  const backTall = capFoot - e.y * S.wrapTop;
-  const back = put(MeshBuilder.CreateCylinder("snakeHoodBack", { height: backTall, diameter: 2, tessellation: 12, arc: S.backArc, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene), head);
-  back.rotation.y = Math.PI / 2 - Math.PI * S.backArc;
-  back.scaling.set(e.x * S.cap, 1, e.z * S.cap);
-  back.position.y = capFoot - backTall / 2;
-  // the wrap over the lower face and round the neck, under the eyes
+  // [S] 389 the hood one rounded shell (SNAKE_CAP), not a half dome on a straight back cylinder over a flaring wrap (critic 388: a tall flat-sided
+  // cylinder with a fin, a bucket helm; ancient.snake_archer.blue.png: a short round team cap hugging the crown, a small nub at its top front, the
+  // face wrap narrowing to the chin): rows of one ellipsoid (centre .cy of e.y, radii .rx/.ry/.rz of e) from its top down to the brow all round, and
+  // from the brow down to the wrap's top round the back only (.backArc of a turn), the gap at the eyes; a blunt nub .nub of e.y tall leaning .nubLean
+  const Cp = SNAKE_CAP;
+  const cy = e.y * Cp.cy;
+  const shellRow = (y: number, a0: number, a1: number): Vector3[] => {
+    const k = Math.sqrt(Math.max(0, 1 - ((y - cy) / (e.y * Cp.ry)) ** 2));
+    const row: Vector3[] = [];
+    for (let i = 0; i <= Cp.segs; i++) {
+      const a = a0 + ((a1 - a0) * i) / Cp.segs;
+      row.push(new Vector3(Math.sin(a) * e.x * Cp.rx * k, y, Math.cos(a) * e.z * Cp.rz * k));
+    }
+    return row;
+  };
+  const top = cy + e.y * Cp.ry, brow = e.y * S.capFoot, foot = e.y * S.wrapTop;
+  const capRows: Vector3[][] = [];
+  for (let r = 0; r <= Cp.rows; r++) capRows.push(shellRow(top - ((top - brow) * r) / Cp.rows - (r === 0 ? 1e-4 : 0), 0, Math.PI * 2));
+  put(MeshBuilder.CreateRibbon("snakeHoodCap", { pathArray: capRows }, scene), head);
+  // the back: the gap of 1 - .backArc of a turn centred on his front (+z)
+  const gap = Math.PI * (1 - S.backArc);
+  const backRows: Vector3[][] = [];
+  for (let r = 0; r <= 3; r++) backRows.push(shellRow(brow - ((brow - foot) * r) / 3, gap, Math.PI * 2 - gap));
+  put(MeshBuilder.CreateRibbon("snakeHoodBack", { pathArray: backRows }, scene), head);
+  // the nub on the crown, a touch forward, leaning forward
+  const peak = put(MeshBuilder.CreateCylinder("snakeHoodPeak", { height: e.y * Cp.nub, diameterTop: e.x * 0.18, diameterBottom: e.x * 0.5, tessellation: 6 }, scene), head);
+  peak.rotation.x = Cp.nubLean;
+  peak.position.set(0, top - e.y * 0.06 + e.y * Cp.nub * 0.3, e.z * 0.2);
+  // the wrap over the lower face and round the neck, under the eyes, narrowing to the chin (.wrapTaper at its foot)
   const wrapTall = e.y * (S.wrapTop - S.wrapFoot);
-  const wrap = put(MeshBuilder.CreateCylinder("snakeHoodWrap", { height: wrapTall, diameterTop: 2, diameterBottom: 2 * S.flare, tessellation: 10 }, scene), head);
+  const wrap = put(MeshBuilder.CreateCylinder("snakeHoodWrap", { height: wrapTall, diameterTop: 2, diameterBottom: 2 * Cp.wrapTaper, tessellation: 10 }, scene), head);
   wrap.scaling.set(e.x * S.wrap, 1, e.z * S.wrap);
   wrap.position.y = e.y * S.wrapTop - wrapTall / 2;
   // the collar on the shoulders, a point hanging at the front, and the cord tied at the throat
