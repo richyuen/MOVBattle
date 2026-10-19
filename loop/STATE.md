@@ -1,9 +1,9 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 360   Batch: medieval+tribal:re (4/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
+Iteration: 361   Batch: medieval+tribal:re (4/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber --++ o | protector --++ o | spear_thrower --++ o | stoner -+++ o | bone_mage --++ o | chieftain --++ o | mammoth ---+ o
+tribal: clubber -+++ o | protector --++ o | spear_thrower --++ o | stoner -+++ o | bone_mage --++ o | chieftain --++ o | mammoth ---+ o
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king -+++ o
@@ -23,12 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-360 (BASE 61a9760): [S] squire a sleeve material ca82190+def8b50 approved | [S] archer a sleeve material 6c6eb29+3d9f92d approved | [S] king a blouse/breeches/stockings 774e5c3+0dd77b3 approved; tribal:re audited (tail overlap, 3 pickable medieval [S])
+361 (BASE d1d01df): [S] king a slim stockings e7c3c5c rejected (reverted b2c74a6; follow-ups 0173371, fd2c068 dropped) | [S] chieftain b off-hand axe e919c23 approved | [S] stoner a dreadlock mop a7be412 approved | [S] clubber b cudgel 6b4a076 approved | [S] clubber a mop d59089b approved | [S] bone_mage a skull mask 1edd0db+ca5ab06 approved | [S] protector b shield hold fe4efa7 approved; mammoth charge deferred (ability at 17 ms)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] medieval.squire (ca82190 + def8b50) VERDICT: APPROVE CRITERION: medieval.squire.a PASS (previous: FAIL)
-- GAP: [S] medieval.archer (6c6eb29 + 3d9f92d) VERDICT: APPROVE CRITERION: medieval.archer.a PASS (previous: FAIL)
-- GAP: [S] medieval.king (774e5c3 + 0dd77b3) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL)
+- GAP: [S] medieval.king (e7c3c5c) VERDICT: REJECT CRITERION: medieval.king.a FAIL (previous: FAIL)
+- GAP: [S] tribal.chieftain (e919c23) VERDICT: APPROVE CRITERION: tribal.chieftain.b FAIL (previous: FAIL)
+- GAP: [S] tribal.stoner (a7be412) VERDICT: APPROVE CRITERION: tribal.stoner.a FAIL (previous: FAIL)
+- GAP: [S] tribal.clubber (6b4a076) VERDICT: APPROVE CRITERION: tribal.clubber.b PASS (previous: FAIL)
+- GAP: [S] tribal.clubber (d59089b) VERDICT: APPROVE CRITERION: tribal.clubber.a FAIL (previous: FAIL)
+- GAP: [S] tribal.bone_mage (1edd0db + ca5ab06) VERDICT: APPROVE CRITERION: tribal.bone_mage.a FAIL (previous: FAIL)
+- GAP: [S] tribal.protector (fe4efa7) VERDICT: APPROVE CRITERION: tribal.protector.b FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -49,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Pick from both batches: king a slim stockings, then tribal ranked gaps (chieftain off-hand axe, stoner hair, clubber club, bone_mage skull mask, protector shield hold, mammoth charge, spear head). Tribal evidence of the audit: output/loop/iter-360-tribal/.
-- Evidence commits owed (critic 360 DEFECTs): unit_tribal.chieftain_idle shot from behind his weapon side; unit_tribal.mammoth_idle frames only legs and a tusk. King's belt buckle hidden in king_idle.
-- Light warm cloth greys under the cool hemi ground light + ACES (material readback 360: nothing repaints it): use medievalDress warmCloth (own amber emissive) and unglow every mesh in it, or the glow layer haloes it. A limb under a slim shell must be recoloured too.
-- Arm/leg dress over the tabard block's mail must be shells (limbShell), not recolours; one-sided custom meshes get culled from outside (wind both ways).
+- king a is plateau (2 rejected [S] since 355): next pick on it is one [R] of the legs from the breeches down (cuff/hem past the knee hinge over the team knee end, slim shin shell); the thigh is not covered by the breeches (361: recolouring it read beige).
+- Pick next: clubber loincloth, protector slab look, protector/chieftain skull helms, chieftain axe head, stoner garment, bone_mage antlers (head and staff), mammoth charge (ability at 17 ms: check the _ability shot timing first), spear head; [P] clubber mop dark + wider splay (fallout of d59089b).
+- Evidence commits owed: unit_tribal.chieftain_idle shot from behind his weapon side; unit_tribal.mammoth_idle frames only legs and a tusk. King belt buckle hidden in king_idle.
+- Light warm cloth: medievalDress warmCloth (own amber emissive) + unglow every mesh in it; a limb under a slim shell must be recoloured too. Arm/leg dress over mail: shells (limbShell).
 - Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose and broadhead (354, 358), bard walk, catapult frame/wheels/paint, knight plate+legs+cape, king skirt removed (360).
