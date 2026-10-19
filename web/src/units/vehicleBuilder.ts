@@ -2017,10 +2017,15 @@ const MAMMOTH_LEG = {
  * stood clear of the hull where it narrows). The hump is skewed: it rises over .humpFront behind the mane and falls over .humpBack to the rump, peaking
  * .humpAt; the lower half of the rings bulges .haunch wider about the leg stations (|t| = .legAt, width .legSpread), so the flank runs over the leg roots;
  * the thighs end in a fur dome up into the hull (MAMMOTH_LEG.thigh's top), not a flat cut.
+ * [S] the hull's lower half as one fur skirt over the leg tops (374; tribal.mammoth.red.png: the flank's fur hangs straight down over the leg roots and
+ * stops in one hem line, no thigh top shows; critic 372: an egg-round underside curved in under the flank and in toward chest and rump, so the thigh
+ * domes stood out in front of and below it; the 367 hem of separate lobes read as boulders). Below the waterline each ring is squared: its width goes
+ * as |sin|^.skirtSquare (a flank that hangs plumb, then turns under), its end-taper eases with the steeper .skirtFull (the lower hull stays full out
+ * past the front and back legs), and over the leg stations (|t| = .legAt, width .legSpread) the flank's foot hangs .skirtDrop lower, its hem.
  */
 const MAMMOTH_BARREL = {
   rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.34, humpAt: 0.22, humpFront: 0.22, humpBack: 0.75, belly: 0.14, jitter: 0.035,
-  haunch: 0.26, legAt: 0.44, legSpread: 0.32,
+  haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtSquare: 0.45, skirtFull: 5, skirtDrop: 0.16,
 };
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
@@ -2030,15 +2035,26 @@ function mammothBarrel(scene: Scene): Mesh {
     const s = Math.sqrt(Math.max(0, 1 - Math.abs(t) ** B.full));
     const spread = t < B.humpAt ? B.humpBack : B.humpFront;
     const hump = B.hump * Math.exp(-(((t - B.humpAt) / spread) ** 2)) * s;
-    const haunch = 1 + B.haunch * Math.exp(-(((Math.abs(t) - B.legAt) / B.legSpread) ** 2));
+    const atLeg = Math.exp(-(((Math.abs(t) - B.legAt) / B.legSpread) ** 2));
+    const haunch = 1 + B.haunch * atLeg;
+    // the lower hull's own end-taper, steeper, so it stays full out over the front and back legs (374)
+    const sLow = Math.sqrt(Math.max(0, 1 - Math.abs(t) ** B.skirtFull));
     const out: number[] = [];
     for (let k = 0; k < B.sides; k++) {
       const a = (k / B.sides) * Math.PI * 2;
-      const c = Math.cos(a);
-      const up = c >= 0 ? B.tall * s + hump : B.tall * s + B.belly * (1 - t * t) * s;
-      // below the middle the flank swells over the leg roots, easing in from the waterline
-      const wide = c >= 0 ? B.wide * s : B.wide * s * (1 + (haunch - 1) * Math.min(1, -c * 2));
-      out.push(wide * Math.sin(a), up * c, t * B.long);
+      const c = Math.cos(a), sn = Math.sin(a);
+      if (c >= 0) {
+        out.push(B.wide * s * sn, (B.tall * s + hump) * c, t * B.long);
+        continue;
+      }
+      // below the middle: the flank swells over the leg roots, easing in from the waterline, and is squared so it hangs plumb before turning
+      // under; over the leg stations its foot hangs lower still, a hem over the thigh tops (374)
+      // (the steeper taper eased in from the waterline, so no ledge where the halves meet)
+      const sl = s + (sLow - s) * Math.min(1, -c * 1.5);
+      const wide = B.wide * sl * (1 + (haunch - 1) * Math.min(1, -c * 2));
+      const x = wide * Math.sign(sn) * Math.abs(sn) ** B.skirtSquare;
+      const up = (B.tall * sl + B.belly * (1 - t * t) * sl) * c - B.skirtDrop * atLeg * sl * Math.abs(sn) * -c * 2;
+      out.push(x, up, t * B.long);
     }
     return out;
   };
