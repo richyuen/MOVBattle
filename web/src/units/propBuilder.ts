@@ -2659,8 +2659,14 @@ const HALBERD_STEEL = new Color3(0.2, 0.21, 0.24);
 const FORK = { long: 0.85, grip: 0.3, thick: 0.03, bar: 0.2, tine: 0.22, tineThick: 0.045, curl: 1.1, links: 4, glow: 0.18 };
 const FORK_WOOD = new Color3(0.5, 0.33, 0.18);
 const FORK_STEEL = new Color3(0.55, 0.56, 0.6);
-// The potion bottle (see buildWeapon "potion"): ball width, its squash, neck width and length, cork length, seat in the fist (weapon units), glass self-light
-const POTION = { ball: 0.065, squash: 0.92, neck: 0.026, neckLong: 0.026, cork: 0.016, seat: 0.035, glow: 0.22 };
+/*
+ * [S] the potion flask re-cut (375; farmer.potion_seller.red.png: a chunky pale-teal faceted flask in each fist, its bulb wider than the fist and as long
+ * as half the forearm, a sloped shoulder up to a short wide neck with a lip, readable at the hips from across the field. Not the 339 6.5 cm ball inside
+ * the mitt). Sizes in units of s: the bulb POTION.ball across (a flat-shaded ico sphere squashed to .squash tall), its shoulder a frustum .shoulder tall
+ * from .ball * .shoulderFoot across to .neck, the neck .neck across and .neckLong tall, a lip ring .lip across it at the top, the cork .cork tall; the
+ * bulb's middle .seat out past the fist's middle; the glass self-lit .glow.
+ */
+const POTION = { ball: 0.12, squash: 0.85, shoulder: 0.042, shoulderFoot: 0.7, neck: 0.042, neckLong: 0.035, lip: 1.3, cork: 0.026, seat: 0.06, glow: 0.22 };
 const POTION_GLASS = new Color3(0.55, 0.74, 0.82);
 /** A flat convex plate in the x-y plane, `thick` deep in z, fanned from its outline's centre and flat shaded */
 function flatPlate(scene: Scene, name: string, outline: number[][], thick: number): Mesh {
@@ -3973,22 +3979,37 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "potion": {
       // The potionseller's bottle (339; farmer.potion_seller.red.png: a pale-blue faceted glass ball a fist and a half across in each hand, a short wide
       // neck and a cork, held low at the hips): spec at POTION. Fixed glass colour, not the accent (the accent dyes his clothes)
-      const glass = mat(scene, POTION_GLASS, POTION.glow);
-      const ball = MeshBuilder.CreateIcoSphere("potionBall", { radius: POTION.ball * s * 0.5, subdivisions: 1, flat: true }, scene);
-      ball.scaling.y = POTION.squash;
+      const P = POTION;
+      const glass = mat(scene, POTION_GLASS, P.glow);
+      const ball = MeshBuilder.CreateIcoSphere("potionBall", { radius: P.ball * s * 0.5, subdivisions: 1, flat: true }, scene);
+      ball.scaling.y = P.squash;
       ball.material = glass;
-      const neck = MeshBuilder.CreateCylinder("potionNeck", { height: POTION.neckLong * s, diameterTop: POTION.neck * s, diameterBottom: POTION.neck * 1.3 * s, tessellation: 6 }, scene);
-      neck.position.y = (POTION.ball * POTION.squash * 0.5 + POTION.neckLong * 0.4) * s / POTION.squash;
-      neck.scaling.y = 1 / POTION.squash;
+      // children of the squashed bulb are drawn in its unsquashed frame: heights over P.squash keep them true
+      const up = (h: number) => h / P.squash;
+      const bulbTop = P.ball * P.squash * 0.5 * 0.8;
+      const shoulder = MeshBuilder.CreateCylinder("potionShoulder", { height: P.shoulder * s, diameterTop: P.neck * s, diameterBottom: P.ball * P.shoulderFoot * s, tessellation: 7 }, scene);
+      shoulder.position.y = up((bulbTop + P.shoulder * 0.5) * s);
+      shoulder.scaling.y = 1 / P.squash;
+      shoulder.material = glass;
+      shoulder.convertToFlatShadedMesh();
+      shoulder.parent = ball;
+      const neck = MeshBuilder.CreateCylinder("potionNeck", { height: P.neckLong * s, diameter: P.neck * s, tessellation: 7 }, scene);
+      neck.position.y = up((bulbTop + P.shoulder + P.neckLong * 0.5) * s);
+      neck.scaling.y = 1 / P.squash;
       neck.material = glass;
       neck.convertToFlatShadedMesh();
       neck.parent = ball;
-      const cork = MeshBuilder.CreateCylinder("potionCork", { height: POTION.cork * s, diameter: POTION.neck * 0.9 * s, tessellation: 6 }, scene);
-      cork.position.y = (POTION.neckLong * 0.5 + POTION.cork * 0.4) * s;
+      const lip = MeshBuilder.CreateCylinder("potionLip", { height: P.neckLong * 0.35 * s, diameter: P.neck * P.lip * s, tessellation: 7 }, scene);
+      lip.position.y = P.neckLong * 0.35 * s;
+      lip.material = glass;
+      lip.convertToFlatShadedMesh();
+      lip.parent = neck;
+      const cork = MeshBuilder.CreateCylinder("potionCork", { height: P.cork * s, diameterTop: P.neck * 0.95 * s, diameterBottom: P.neck * 0.8 * s, tessellation: 6 }, scene);
+      cork.position.y = (P.neckLong * 0.5 + P.cork * 0.35) * s;
       cork.material = mat(scene, new Color3(0.55, 0.36, 0.2));
       cork.parent = neck;
-      // the ball sits in the mitt, the neck out past the fingers
-      ball.position.y = POTION.seat * s;
+      // the bulb out past the fingers, the neck on out from it
+      ball.position.y = P.seat * s;
       return ball;
     }
     case "lightning_bolt": {
