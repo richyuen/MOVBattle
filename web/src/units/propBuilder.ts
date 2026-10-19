@@ -4722,6 +4722,12 @@ const SCUTUM = { tall: 0.5, wide: 0.36, deep: 0.025, strips: 7, curve: 0.06, rim
 const SCUTUM_LAUREL = { upperAt: 0.26, lowerAt: -0.3, arch: 0.07, spread: 0.72, knot: 0.018, steps: 6, stem: 0.006, leaf: 0.045, shrink: 0.45, wide: 0.42, fan: 0.75 };
 // 380: (.93,.6,.3) rendered beige in the capture (critic 378, 379 on the scutum and the aspis); set as saturated as the approved musketeer shoe (renaissanceDress)
 const SCUTUM_TRIM = new Color3(0.9, 0.45, 0.16);
+/**
+ * [S] the scutum's rim and laurels on their own flat self-lit material (381; ancient.shield_bearer.red.png: a saturated orange rim ~(237,153,77) and
+ * laurels the same; critic 379/380: under the lit "cloth" path the trim read tan/ochre, beige-gold, whatever its colour). An unlit material whose
+ * emissive is SCUTUM_TRIM x .flat shows the colour itself, shading or no. The aspis keeps its lit rim.
+ */
+const SCUTUM_TRIM_FLAT = 1;
 const SCUTUM_IRON = new Color3(0.27, 0.27, 0.28);
 /*
  * [S] the aspis (379; ancient.hoplite.red.png, card Appearance "holding an aspis"; critic 378: an octagonal disc held flat at the chest). A big round
@@ -4926,7 +4932,8 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       const shield = new Mesh("scutumshield", scene);
       shield.metadata = { holeUp: H / 2 + S.chin * s };
       const boardMat = mat(scene, board, 0.12, "cloth");
-      const trim = mat(scene, SCUTUM_TRIM, 0.06, "cloth");
+      // [S] the trim self-lit and flat (381, SCUTUM_TRIM_FLAT): lit "cloth" shaded the orange to tan in every shot (critic 379, 380)
+      const trim = getMaterialFactory().get("unlit", SCUTUM_TRIM, { emissive: SCUTUM_TRIM.scale(SCUTUM_TRIM_FLAT) });
       const iron = mat(scene, SCUTUM_IRON, 0.1, "cloth");
       // the arc the face lies on: x across, z back by the curve at the sides
       const arcZ = (x: number) => -S.curve * s * (2 * x / W) ** 2;
