@@ -2028,8 +2028,8 @@ const MAMMOTH_BARREL = {
  *     each .skirtSize (radial, tall, along), faced out from the leg, so the fur closes over the thigh's top from the front and back too.
  */
 const MAMMOTH_HEM = {
-  row: 9, span: 0.66, c: -0.55, size: [0.08, 0.2, 0.22] as const, proud: 0.02, near: 0.16, grow: 0.7, drop: 0.12, jitter: 0.1,
-  skirt: 5, ring: 0.36, skirtY: -0.42, skirtSize: [0.08, 0.24, 0.24] as const,
+  row: 9, span: 0.66, c: -0.55, size: [0.13, 0.2, 0.22] as const, proud: 0.03, near: 0.16, grow: 0.7, drop: 0.12, jitter: 0.14,
+  skirt: 5, ring: 0.36, skirtY: -0.42, skirtSize: [0.12, 0.24, 0.24] as const,
 };
 /** A point on the mammoth's hull (MAMMOTH_BARREL) at length t in [-1, 1] and angle a round from the top (+x at a = pi/2), about the hull's origin. */
 function barrelPoint(t: number, a: number): Vector3 {
