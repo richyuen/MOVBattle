@@ -277,7 +277,7 @@ const CORINTH_CREST = { bands: 4, band: 0.19, wide: 0.42, fill: 0.95, sink: 0.6,
  * brow bar .browLong of the slot across, .browTall of H, .browDrop of H under the brow line, tilted .browTilt rad (inner end low, a frown). Sarissa only.
  */
 const CORINTH_SLOTS = { edge: 0.35, back: 0.01, browLong: 1.05, browTall: 0.08, browDrop: 0.02, browTilt: 0.32 };
-const HOPLITE_CREST = { stalk: 0.12, sink: 0.08, stalkWide: 0.16, stalkDeep: 0.45, tall: 0.62, wide: 0.24, deep: 0.95, ahead: 0.04, lipTall: 0.18, lipWide: 0.9, lipDeep: 0.28 };
+const HOPLITE_CREST = { stalk: 0.12, sink: 0.08, stalkWide: 0.16, stalkDeep: 0.45, tall: 0.9, wide: 0.3, deep: 1.0, ahead: 0.04, lipTall: 0.18, lipWide: 0.9, lipDeep: 0.28 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
