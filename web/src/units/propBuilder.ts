@@ -228,8 +228,15 @@ const SKULL_FACETED = {
  *   the bridge starts .browY head heights down, under the dome's rim.
  * It replaces the dark hexagon sockets on the dome's front. .on gates it.
  */
+/*
+ * [S] the jaw (368; tribal.protector.red.png: the window is tan skull edge to edge, down to the chin; critic 367: pink skin under the muzzle at the chin and
+ * dark brown arcs down both sides of the face): a faceted tan lower jaw .jaw head widths across and .jawTall head heights tall, its middle .jawY head
+ * heights down, under the muzzle and round the chin; the cheek plates run down to it. The slab's opening lip (the arcs) goes six-sided in the slab's own
+ * lit stone (SLAB_LIP), its inner faces flat like the render's hexagonal window.
+ */
 const SKULL_FACE = {
   on: true, eyeY: 0.44, face: 0.47, eyeX: 0.16, rim: 0.44, rimThick: 0.09, bridge: 0.12, muzzle: 0.34, muzzleY: 0.8, cheek: 0.26, cheekTurn: 0.35, browY: 0.25,
+  jaw: 0.6, jawY: 0.93, jawTall: 0.26,
 };
 /** The protector's skull face plate (spec at SKULL_FACE), parented to the skull dome sitting at `domeY` (hat units before u) from the crown. */
 function skullFacePlate(scene: Scene, skull: Mesh, bone: PBRMetallicRoughnessMaterial, W: number, H: number, u: (v: number) => number, domeY: number): void {
@@ -253,7 +260,7 @@ function skullFacePlate(scene: Scene, skull: Mesh, bone: PBRMetallicRoughnessMat
     m.material = bone;
     m.parent = skull;
   };
-  const cheekTall = (F.muzzleY - F.eyeY - F.rim * 0.3) * H;
+  const cheekTall = (F.jawY - F.eyeY - F.rim * 0.3) * H;
   for (const side of [-1, 1]) {
     const rim = MeshBuilder.CreateTorus("bskullRim", { diameter: u(F.rim * W), thickness: u(F.rimThick * W), tessellation: 7 }, scene);
     rim.rotation.set(Math.PI / 2, 0, 0);
@@ -272,6 +279,9 @@ function skullFacePlate(scene: Scene, skull: Mesh, bone: PBRMetallicRoughnessMat
   const muzzle = MeshBuilder.CreateIcoSphere("bskullMuzzle", { radius: 1, subdivisions: 1, flat: true }, scene);
   muzzle.scaling.set(u(F.muzzle * W * 0.5), u(0.11 * H), u(0.13 * W));
   part(muzzle, at(0, -(F.muzzleY - 0.08) * H, face + 0.02 * W), 35.9);
+  const jaw = MeshBuilder.CreateIcoSphere("bskullJaw", { radius: 1, subdivisions: 1, flat: true }, scene);
+  jaw.scaling.set(u(F.jaw * W * 0.5), u(F.jawTall * H * 0.5), u(0.16 * W));
+  part(jaw, at(0, -F.jawY * H, face - 0.05 * W), 37.3);
 }
 /*
  * The Chieftain's beast skull (363 [S]; tribal.chieftain.red.png, .png: a long tan-grey predator skull lying front to back on his crown, its beak jutting forward
@@ -4362,6 +4372,8 @@ const SLAB_EYE = 0.12;
 const SLAB_EYE_UP = 0.22;
 // ...and its moss (tribal.protector.red.png): three knobbly olive-grey patches grown on the face, a long one draped over the top corner and slanting down toward
 // the opening, one hanging under the opening's side and one over the bottom corner, each a chunk this big (prop units), stood proud of the face by .proud
+/** The slab opening's lip (368, spec at SKULL_FACE): six flat sides in the slab's own stone, self-lit like it so its inner faces do not go dark. */
+const SLAB_LIP = { sides: 6, shade: 1.0, glow: 0.2 };
 const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
 // ...and its stone (tribal.protector.red.png: one warm red-brown slab, not planks): SLAB_FACETS.deep thick (prop units), cut in three columns either side of
 // the opening and in .rows rows down the side columns; each corner of the face pushed in or out by its own hashed share (.front of the depth) so the face
@@ -4603,11 +4615,12 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         seam.parent = shield;
       }
       // The opening's lip: a round, many-sided rim over the square cut, so the hole reads round
-      const ring = MeshBuilder.CreateTorus("slabEye", { diameter: eye * 1.3, thickness: eye * 0.3, tessellation: 16 }, scene);
-      ring.rotation.x = Math.PI / 2;
+      const ring = MeshBuilder.CreateTorus("slabEye", { diameter: eye * 1.3, thickness: eye * 0.3, tessellation: SLAB_LIP.sides }, scene);
+      ring.rotation.set(Math.PI / 2, Math.PI / SLAB_LIP.sides, 0);
       ring.scaling.y = D / (eye * 0.3) * 1.3;
       ring.position.set(0, eyeY, 0);
-      ring.material = mat(scene, stone.scale(0.8), 0.08, "stone");
+      ring.convertToFlatShadedMesh();
+      ring.material = mat(scene, stone.scale(SLAB_LIP.shade), SLAB_LIP.glow, "stone");
       ring.parent = shield;
       // Moss (spec at SLAB_MOSS): knobbly olive-grey patches, one draped along the top corner and slanting down toward the opening, one hanging under the
       // opening's side, one over the bottom corner; all stand off the face. Self-lit a little: a plain dark green went near-black in the field's shade.
