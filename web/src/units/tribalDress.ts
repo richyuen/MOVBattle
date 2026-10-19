@@ -995,8 +995,8 @@ const CHIEF_LOIN = {
  *   each .cross rad off upright, behind the skull.
  */
 const SPEAR_LOIN = {
-  coils: 4, rope: 0.24, ringOut: 1.08, tilt: 0.09, flapWide: 0.95, flapLong: 0.55, teeth: 3, tear: 0.22, lean: 0.45,
-  hide: new Color3(0.7, 0.52, 0.32), glow: 0.16, skull: 0.62, skullDrop: 0.45, bone: 1.05, cross: 0.75,
+  coils: 4, rope: 0.24, ringOut: 1.08, tilt: 0.09, flapWide: 0.95, flapLong: 0.8, teeth: 3, tear: 0.22, lean: 0.3,
+  hide: new Color3(0.74, 0.56, 0.34), glow: 0.2, skull: 0.62, skullDrop: 0.05, bone: 1.05, cross: 0.75,
 };
 
 /** The spear thrower's coiled rope, narrow tan front flap, skull and crossed bones (spec at SPEAR_LOIN), on the hip joint. */
