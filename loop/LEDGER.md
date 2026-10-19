@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-368 | skull jaw, cheeks to it; slab lip 6-sided lit stone (b544fb9) | tribal.protector.a | approved
-368 | rear box: pelvis block inside the skirt, in hide (8e46f46) | tribal.stoner.a | approved
-368 | sallet: 8-sided bucket, slit + bead eyes, bevor (c52c267) | renaissance.halberd.a | approved
-368 | horse: arched 2-segment neck, low head, front eyes, chestnut (f271f4d) | renaissance.jouster.a | approved
-368 | jabot: 3 stacked ragged tiers (53e6e78, reverted) | renaissance.painter.a | rejected
-368 | morion: tall 6-facet bowl, half-disc comb, brim points (965f103) | renaissance.musketeer.a | approved
 369 | step back: hop off his man after the thrust (fbd58e7, rejected-kept; follow-up a285bea reverted) | renaissance.fencer.c | rejected
 369 | dash back: hop back from a man inside the pole (e399131) | renaissance.halberd.c | approved
 369 | canter charge through the man, lance on contact, trample; leg pivots + 3-beat canter (5ac2a1e) | renaissance.jouster.c | approved
@@ -76,40 +70,46 @@ for 25 iterations.
 377 | round head, umber cap on its curve (ccd37ad) | farmer.potion_seller.a | approved
 377 | liripipe: thick blunt tail bent over and down (9f5019c) | farmer.farmer.a | approved
 377 | narrow tray .2, flat hay bed, Thrower on the rim, knees rolled (aa835d7 +4f65905) | farmer.wheelbarrow.a | approved
+378 | topline: hull slope .45 to a lower, smaller rump, hump forward (ad41648 +d33b7c6) | tribal.mammoth.a | approved
+378 | mane as one near-black crest of 6 chunks, brow to nape (97b036e) | tribal.mammoth.a | approved
+378 | flask neck seated on the hand's mitt, in the fist through the windup (c1e205c) | farmer.potion_seller.b | approved
+378 | short tray .5, riders bunched, Farmer reclined into the Thrower (9ea4314) | farmer.wheelbarrow.a | approved
+378 | brown fur body, team belt + pauldron, sash + buckle (87155bc +8ac5a35) | ancient.minotaur.a | approved
+378 | Minotaur Charge: head-down run, butts the man aside (241b811) | ancient.minotaur.c | approved
+378 | curved scutum upright before him via the slab hold, no sword (2940691) | ancient.shield_bearer.b | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
 tribal.spear_thrower (JAVELIN_LEAF, TUSK_BAND, SPEAR_LOIN hide (.5,.38,.26) glow .08 rope (.58,.24,.13), JAVELIN_UPRIGHT; unit done) | compacted 374 | 374 | approved | values: git show e35255b:loop/LEDGER.md + 374 gap commits
-renaissance.painter (PAINTER_JABOT, BERET_TAM, PAINTER_DODGE, PAINTER_SWEATER .2,1.12,rib .45; legLength 1.2; unit done) | compacted 374 | 374 | approved | values: git show e35255b:loop/LEDGER.md + 374 gap commits
-renaissance.fencer (FENCER_RECOVER, FENCER_DODGE, CAVALIER_FELT, FENCER_TRIM hip .6 hipOut 1.1 foot 1.32, FENCER_ROLL drop .24; unit done) | compacted 374 | 374 | approved | values: git show e35255b:loop/LEDGER.md + 374 gap commits
+renaissance.* (painter, fencer, jouster, musketeer, balloon_archer, halberd rows; units done) | compacted 378 | 377 | approved | values: git show edb1692:loop/LEDGER.md
 medieval.* (43 knob rows incl. stats, 351-365; batch done) | compacted 366 | 365 | approved | values: git show f142d6e:loop/LEDG..
 tribal.chieftain (OFF_AXE, MAIN_AXE, CHIEF_LOIN, STONE_AXE, BEAST_SKULL, PAULDRON, CHIEF_BEARD; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
 tribal.clubber (DREAD_MOP, CLUB, RAGGED_LOIN, visuals, CURLY_MOP, RAGGED_STRIPS; unit done) | compacted 369 | 367 | approved | values: git show 706894b:loop/LEDGER.md
 tribal.stoner (HIDE_DRESS, HIDE_SKIRT, HIDE_EDGE, SKIRT_TONGUES; unit done) | compacted 369 | 368 | approved | values: git show 706894b:loop/LEDGER.md
 tribal.bone_mage (DEER_RACK, worn, staff, MASK_LEAF, STAFF_SKULL, DEER_MASK; unit done) | compacted 368 | 366 | approved | values: git show 96d1c20:loop/LEDGER.md
-renaissance.jouster (BARDED_NECK, JOUSTER_CHARGE, HORSE_GAIT, LANCE_CANDY, FEATHER_CLUMP; unit done) | compacted 371 | 371 | approved | values: git show 58e64cc:loop/LEDGER.md + 371 gap commits
-renaissance.musketeer (MORION_CUT, MATCHLOCK, MUSKETEER_COLLAR, MUSKETEER_HOSE; unit done) | compacted 371 | 371 | approved | values: git show 58e64cc:loop/LEDGER.md + 371 gap commits
 tribal.protector (SLAB_FACETS, SKULL_FACE, SLAB_LIP, SLAB_WINDOW_BONE, SKULL_BACK, SLAB_WINDOW_FACE, SLAB_FRONT, SKULL_FACETED; unit done) | compacted 376 | 373 | approved | values: git show b0e9788:loop/LEDGER.md
-renaissance.balloon_archer (HELD_BALLOON_ARROW, ARCHER_FRONT, BRIM_HAT; unit done) | compacted 373 | 373 | approved | values: git show 2703401:loop/LEDGER.md + 23dc915
 farmer.hay_baler (HAY_BALE, HAY_PLANK; unit done) | compacted 376 | 375 | approved | values: git show b0e9788:loop/LEDGER.md
 tribal.mammoth c (TRAMPLE_RING, CHARGE_POSE, MAMMOTH_DUST, KICK_DUST; c PASS 364) | compacted 376 | 364 | approved | values: git show b0e9788:loop/LEDGER.md
 vehicleBuilder.ts:MAMMOTH_LEG (thigh, shin, foot) | r .31->.245, .245->.205, foot lathe .205->.255 | 372 | approved | thigh .37->.3, shin .28-.31 (366); radius-only change now = reversal
-vehicleBuilder.ts:MAMMOTH_BARREL (..haunch, legAt, legSpread, belly, bellyNarrow, skirtFull; round, winding out) | ..,.26,.44,.32,.2,.38,5 | 375 | approved | skirtSquare .45, skirtDrop .16, belly .14 x (1-t^2) (374)
+vehicleBuilder.ts:MAMMOTH_BARREL (hump, humpAt, humpFront, humpBack, slope, slopeWide; round, winding out) | .2,.5,.25,.8,.45,.15 | 378 | approved | .34,.22,.22,.75,-,- (375)
 vehicleBuilder.ts:MAMMOTH_TRUNK (pitch, piece, rootR, tipR, flare, hole) | [.75..0.9] x8, .21, .25, .13, .16, .62 | 365 | approved | 8 dark pieces .2, .5->.22 diam
 vehicleBuilder.ts:MAMMOTH_TUSK (tan, glow, tip, gap, stripe, proud) | (.8,.6,.36),.14,3,1,.45,1.08 cloth | 366 | approved | bone ivory (1,.82,.58) glow .22, 2-piece tip
 vehicleBuilder.ts:MAMMOTH_EAR (tall, long, thick, z, flare) | .48,.42,.15,.3,1.05 | 367 | approved | edge-on fan
 vehicleBuilder.ts:MAMMOTH_HEM (row, c, size, drop, skirt, ring, skirtY) | 9,-.55,[.08,.2,.22],.12,5,.36,-.42 | 367 | rejected (reverted) | -
 vehicleBuilder.ts:MAMMOTH_LEG collar ([r,y] foot..top, collarJitter) | [.28,-.36],[.35,-.3],[.37,-.2],[.33,-.1], .045 | 375 | approved | -
-propBuilder.ts:POTION (..neckLong, lip, cork, glow); POTION_GLASS; holder neck-in-fist | ..,.035,1.3,.026,.12; (.64,.75,.72) | 377 | approved | glow .22, glass (.55,.74,.82), seat .06 bulb out; 376 [P] seat/glass rejected
 tribalDress.ts:SHAGGY (cap, locks, long, front, fringeArc, thick, splay, locks2, long2, splay2, rootY2) | 1.3,22,.95,.32,.6,.42,.16,14,.5,.5,.85 | 375 | approved | 1.32,26,.5,.5,-,.3,.55 (340)
 farmerDress.ts:HALFLING_COAT (neck, drop, out, front, gap, flare, lapel, vest, vee, belt, buckle) | .02,.32,.06,.3,.22,.08,.4,.46,.4,.12,.24 | 376 | approved | box jacket 1.14, drop .12
-farmerDress.ts:POTION_FIT (top, waist, deep, band, skirt, hips, light, dark); bulk, legLength | 1,.84,1.04,.1,.2,.94,.55,.42; .84, 1.08 | 376 | approved | box jerkin shell 1.12
 vehicleBuilder.ts:CREW_SEAT (lipIn, lipUp, frontThigh, frontSplay, frontKnee, astrideUp, backThigh, backSplay, backKnee+roll) | .05,.03,-1.15,.62,.45,.04,-.3,1.3,.2 | 377 | approved | back .02,-.75,1,.95 on the hay (376)
-renaissance.halberd (SALLET_FACETED visor, HOP_BACK, QUILT, REST, SHOE, BREECH, HALBERD_SQUARE; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 8f7c74f
-vehicleBuilder.ts:WHEELBARROW trayWide, LOG_WHEEL thick, HAY_BED (fill, lumps) | .2, .196, .92,.02 | 377 | approved | .44, .36, ico mound heap .09
-proceduralAnimation.ts:POTION_HANG (raise, out, elbow; left same) | .04,.16,-.14 | 377 | approved | hashed carries (chest)
-farmerDress.ts:POTION_HEAD (shell, slice, tip, lift, back, glow) | 1.08,.56,.42,.04,.04,.2 | 377 | approved | tribalDress HAIR_CAP bowl on a block head
+vehicleBuilder.ts:WHEELBARROW (trayWide, trayLong, backSeat), LOG_WHEEL thick, HAY_BED fill | .2,.5,.1, .196, .92 | 378 | approved | .44,.78,-.06, .36, ico mound (377)
 farmer.scarecrow (CROW_LAYERS, PERCH_CROW, SACK_HOOD; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 5e14f8f
 farmer.harvester (CHEST_BRAID, FELT_HAT; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 84980cf
 farmer.farmer (TALL_HOOD rings to .86, LIRIPIPE_TAIL; unit done) | compacted 377 | 377 | approved | values: git show 2903f04:loop/LEDGER.md + 9f5019c
+
+farmer.potion_seller (POTION, POTION_GLASS, POTION_FIT, POTION_HANG, POTION_HEAD; seatNeckInFist 378) | compacted 378 | 378 | approved | values: git show edb1692:loop/LEDGER.md + c1e205c
+vehicleBuilder.ts:MAMMOTH_CREST chunks, MAMMOTH_MANE_COLOR | 6 chunks brow .62 to nape .72, (.09,.055,.04) | 378 | approved | dome + 3 topknots, (.2,.1,.06)
+vehicleBuilder.ts:BUNCHED_CREW (recline, nod) | -.5, .3 | 378 | approved | -
+ancient.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 378 | stats | values: git show 5715b05
+ancientDress.ts:MINO_FUR, MINO_BELT, MINO_PAULDRON, MINO_SASH | (.42,.24,.17) glow .16; belt .16 tall; pauldron .42 wide | 378 | approved | -
+simulationSystem.ts:MINOTAUR_CHARGE; proceduralAnimation.ts:BULL_CHARGE | from 1.5 reach 14 speed 2.3 fling 7; lean .6 head .35 | 378 | approved | -
+propBuilder.ts:SCUTUM (tall, wide, curve, chin), SCUTUM_TRIM | .74,.42,.08,.05; (.93,.6,.3) | 378 | approved | tower box

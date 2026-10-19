@@ -1,5 +1,5 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 377   Batch: tribal:re+renaissance:re+farmer:re (5-7/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
+Iteration: 378   Batch: tribal:re+renaissance:re+farmer:re+ancient (5-8/21)   Consecutive empty: 0   Done: 24/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -7,7 +7,7 @@ tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller +-++ o | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
-ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
+ancient: shield_bearer --++ o | sarissa ---+ o | hoplite ---+ o | snake_archer ---+ o | ballista ---+ o | minotaur ---+ o | zeus ---+ o
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
@@ -23,16 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-377 (BASE 2903f04; mammoth a re-audited: FAIL, 4 new blockers, queued): [S] halberd a visor slit 8f7c74f approved | [S] scarecrow a sack hood 5e14f8f approved | [S] harvester a felt hat 84980cf approved | [S] potion_seller b flask by the neck eeb43aa approved | [S] potion_seller a round head ccd37ad approved | [S] farmer a liripipe tail 9f5019c approved | [S] wheelbarrow a narrow tray, Thrower on the rim aa835d7 +4f65905 approved | [P] halfling a belt ee71b48 dropped (reverted 4d8f47c: waist unreadable)
+378 (BASE 5715b05; evidence add9656: mammoth _idle, lineup_tribal, halfling _idle; ancient audited + stats 5715b05, tail overlap at 4 pickable): [S] mammoth a topline ad41648 +d33b7c6 approved | [S] mammoth a crest 97b036e approved | [S] potion_seller b neck in fist c1e205c approved | [S] wheelbarrow a bunched riders 9ea4314 approved | [S] minotaur a fur + gear 87155bc +8ac5a35 approved | [S] minotaur c charge 241b811 approved | [S] shield_bearer b scutum 2940691 approved (+ c PASS)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] renaissance.halberd (8f7c74f) VERDICT: APPROVE CRITERION: renaissance.halberd.a PASS (previous: FAIL)
-- GAP: [S] farmer.scarecrow (5e14f8f) VERDICT: APPROVE CRITERION: farmer.scarecrow.a PASS (previous: FAIL)
-- GAP: [S] farmer.harvester (84980cf) VERDICT: APPROVE CRITERION: farmer.harvester.a PASS (previous: FAIL)
-- GAP: [S] farmer.potion_seller (eeb43aa) VERDICT: APPROVE CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
-- GAP: [S] farmer.potion_seller (ccd37ad) VERDICT: APPROVE CRITERION: farmer.potion_seller.a PASS (previous: FAIL)
-- GAP: [S] farmer.farmer (9f5019c) VERDICT: APPROVE CRITERION: farmer.farmer.a PASS (previous: FAIL)
-- GAP: [S] farmer.wheelbarrow (aa835d7 + 4f65905) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (ad41648 + d33b7c6) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (97b036e) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
+- GAP: [S] farmer.potion_seller (c1e205c) VERDICT: APPROVE CRITERION: farmer.potion_seller.b FAIL (previous: FAIL)
+- GAP: [S] farmer.wheelbarrow (9ea4314) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
+- GAP: [S] ancient.minotaur (87155bc + 8ac5a35) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
+- GAP: [S] ancient.minotaur (241b811) VERDICT: APPROVE CRITERION: ancient.minotaur.c FAIL (previous: FAIL)
+- GAP: [S] ancient.shield_bearer (2940691) VERDICT: APPROVE CRITERION: ancient.shield_bearer.b FAIL (previous: FAIL); also ancient.shield_bearer.c PASS (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -53,8 +53,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Open: mammoth a (4 blockers from the 377 re-audit: topline, mane, head dome, tail), potion_seller b (2 [S]), wheelbarrow a (2 [S]), halfling a (evidence first).
-- Evidence owed: mammoth _idle ~3x too close + lineup_tribal crops the mammoth; halfling _idle too small for the waist. One evidence commit each re-opens those shots' criteria.
-- Scripts take faction names: --batch farmer for farmer:re. Farmer cloth/hair goes in web/src/units/farmerDress.ts.
-- A pose wrong only in the capture: probe the animator's own state at the shot. A splayed leg needs its knee rolled (z), not just bent (x).
+- Re-audit owed (evidence add9656): halfling a from the re-aimed _idle (say so in the critic prompt with its Verdicts block). Mammoth a was judged afresh in 378.
+- Open in the old batches: mammoth a (head dome, tail), potion_seller b (flask size/orientation), wheelbarrow a (low rim, Thrower's legs splayed), halfling a. Ancient's ranked gaps are in its unit files.
+- Ancient cloth/hair/gear go in web/src/units/ancientDress.ts (dressMinotaur there). Scutum rides the protector's _holdSlab (metadata.holeUp).
+- Scripts take faction names: --batch farmer for farmer:re, --batch ancient. A pose wrong only in the capture: probe the animator's own state (output/loop/probe_potion.mjs).
 - Capture replays are deterministic. Particles do not render on the stepped clock. Never bakeCurrentTransformIntoVertices after parenting. Write node scripts with the Write tool.
