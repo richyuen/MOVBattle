@@ -552,7 +552,7 @@ export function dressTribalHair(scene: Scene, body: ArticulatedBody, unitId: str
   // his lighter brown, the locks DREAD_MOP.clubber head heights, over his beard
   if (style === "dreads_beard") {
     const hair = getMaterialFactory().get("cloth", DREAD_MOP.clubberColor, { emissiveIntensity: DREAD_MOP.glow });
-    return [...dreadMop(scene, body, DREAD_MOP.clubberColor, DREAD_MOP.clubber, DREAD_MOP.clubberSplay), ...tribalBeard(scene, body, hair)];
+    return [...curlyMop(scene, body, hair), ...tribalBeard(scene, body, hair)];
   }
   if (style === "shaggy") return shaggyHair(scene, body);
   if (style === "bowl") return bowlCut(scene, body);
@@ -685,6 +685,77 @@ function dreadMop(scene: Scene, body: ArticulatedBody, color: Color3, long = DRE
     const from = new Vector3(Math.sin(a) * halfX * 0.6, halfY * (D.capUp + D.cap[1] * 0.75), Math.cos(a) * halfZ * 0.55 - halfZ * D.capBack);
     const dir = new Vector3(Math.sin(a) * 0.9, 0.45 + 0.4 * hashShare(4.4, i, 7, 1), Math.cos(a) * 0.9 - 0.2);
     clump("hairTuft", from, dir, H * 0.2 * (0.8 + 0.4 * hashShare(8.8, i, 2, 5)), W * D.thick * 0.7, W * D.thick * 0.3, 140 + i);
+  }
+  return added;
+}
+
+/*
+ * [S] the Clubber's curly mop (366; tribal.clubber.red.png: an unkempt mop of short curly locks, dark brown, standing out round the head to about half a head
+ * each side and down to the jaw, framing the face over the beard, a bushy crown; critic 362/365: the dreadlock mop hung as a straight curtain about head-wide).
+ * Replaces his dreadMop with:
+ *   - cap: the dread mop's dome, CURLY_MOP.cap of the head's half extents;
+ *   - curls: CURLY_MOP.locks locks round the sides and back (the face's .face rad either side of the front left open), each three short tapered pieces of
+ *     .long head heights in all (its own share longer or shorter): out from the cap's rim nearly level (.out rad off the hang), then down and round the head
+ *     (.curl of the way sideways, alternating), then hooked back up and out, so every lock ends in a kink outward;
+ *   - crown: .crown short two-piece tufts out of the top of the cap, out and up then over, so the top stands bushy and wider than the head.
+ */
+const CURLY_MOP = { cap: [1.4, 0.72, 1.36] as const, locks: 22, face: 0.72, out: 1.05, curl: 0.75, long: 0.78, thick: 0.27, crown: 9 };
+
+/** The Clubber's curly mop (spec at CURLY_MOP), parented to the head. */
+function curlyMop(scene: Scene, body: ArticulatedBody, hair: ReturnType<typeof boneMaterial>): Mesh[] {
+  const C = CURLY_MOP;
+  const added: Mesh[] = [];
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const halfX = e.x, halfY = e.y, halfZ = e.z;
+  const W = halfX * 2, H = halfY * 2;
+  const back = halfZ * DREAD_MOP.capBack;
+  const cap = MeshBuilder.CreateIcoSphere(`${body.headMesh.name}_hair`, { radius: 1, subdivisions: 1, flat: true }, scene);
+  jitterVertices(cap, DREAD_MOP.jitter, 17.9, halfX * C.cap[0], halfY * C.cap[1], halfZ * C.cap[2]);
+  cap.position.set(0, halfY * DREAD_MOP.capUp, -back);
+  cap.material = hair;
+  cap.parent = body.headMesh;
+  added.push(cap);
+  const up = Vector3.Up();
+  // One tapered five-sided piece from `from` along `dir`, its wide end at `from`; returns its far end
+  const piece = (name: string, from: Vector3, dir: Vector3, length: number, root: number, tip: number, serial: number): Vector3 => {
+    const d = dir.normalize();
+    const m = MeshBuilder.CreateCylinder(name, { height: length, diameterTop: root, diameterBottom: tip, tessellation: 5 }, scene);
+    jitterVertices(m, 0.12, serial);
+    m.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, d.scale(-1), m.rotationQuaternion);
+    m.position = from.add(d.scale(length * 0.5));
+    m.material = hair;
+    m.parent = body.headMesh;
+    added.push(m);
+    return from.add(d.scale(length * 0.9));
+  };
+  const sweep = Math.PI * 2 - C.face * 2;
+  for (let i = 0; i < C.locks; i++) {
+    const a = C.face + (i + 0.5) / C.locks * sweep + (hashShare(2.9, i, 4, 1) - 0.5) * 0.18;
+    const share = hashShare(3.7, i * 1.3, i * 0.7, 1);
+    const sx = Math.sin(a), cz = Math.cos(a);
+    const outward = new Vector3(sx, 0, cz);
+    const round = new Vector3(cz, 0, -sx).scale(i % 2 ? 1 : -1);
+    const total = H * C.long * (0.8 + 0.4 * share);
+    const root = W * C.thick * (0.85 + 0.3 * hashShare(5.7, i, 2, i));
+    const rootY = halfY * (0.35 + 0.35 * hashShare(6.3, i, 3, 2));
+    const from = new Vector3(sx * halfX * 1.15, rootY, cz * halfZ * 1.12 - back * 0.5);
+    const out = C.out * (0.85 + 0.3 * share);
+    const first = outward.scale(Math.sin(out)).addInPlace(new Vector3(0, -Math.cos(out), 0));
+    const p1 = piece("hairCurl", from, first, total * 0.4, root, root * 0.85, 200 + i);
+    const second = new Vector3(0, -1, 0).addInPlace(round.scale(C.curl)).addInPlace(outward.scale(0.3));
+    const p2 = piece("hairCurl", p1, second, total * 0.34, root * 0.85, root * 0.65, 240 + i);
+    const third = outward.scale(0.85).addInPlace(new Vector3(0, 0.45, 0)).addInPlace(round.scale(-0.4));
+    piece("hairCurl", p2, third, total * 0.26, root * 0.65, root * 0.35, 280 + i);
+  }
+  for (let i = 0; i < C.crown; i++) {
+    const a = (i + 0.5) / C.crown * Math.PI * 2 + 0.3;
+    const sx = Math.sin(a), cz = Math.cos(a);
+    const outward = new Vector3(sx, 0, cz);
+    const from = new Vector3(sx * halfX * 0.75, halfY * (DREAD_MOP.capUp + C.cap[1] * 0.6), cz * halfZ * 0.7 - back);
+    const long = H * 0.2 * (0.8 + 0.4 * hashShare(8.3, i, 2, 5));
+    const tip = piece("hairTuft", from, outward.scale(0.9).addInPlace(new Vector3(0, 0.55, 0)), long, W * C.thick * 0.8, W * C.thick * 0.6, 320 + i);
+    piece("hairTuft", tip, outward.scale(0.8).addInPlace(new Vector3(0, -0.6, 0)), long * 0.8, W * C.thick * 0.6, W * C.thick * 0.3, 340 + i);
   }
   return added;
 }
