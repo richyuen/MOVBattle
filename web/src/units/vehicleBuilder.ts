@@ -569,7 +569,8 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const darkWood = mf.get("wood", BALLISTA_WOOD.scale(0.7), { emissive: BALLISTA_WOOD.scale(0.08) });
   const iron = mf.get("cloth", new Color3(0.36, 0.32, 0.3), { emissive: new Color3(0.05, 0.045, 0.04) });
   const black = mf.get("cloth", new Color3(0.12, 0.12, 0.13));
-  const team = mf.get("cloth", color, { emissive: color.scale(0.14) });
+  // the coil caps wear the team paint the vehicle wrapper tints (its main mesh's material), so the timber keeps its own brown
+  const team = makeMat(scene, color);
   const add = <T extends Mesh>(m: T, material: Material, parent: TransformNode = root): T => {
     m.parent = parent; m.material = material; allMeshes.push(m); return m;
   };
@@ -583,7 +584,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const F = BALLISTA_FRAME;
   const halfW = F.wide / 2;
   const halfD = F.deep / 2;
-  const base = box("base", F.wide, F.plank, F.deep, 0, F.top - F.plank / 2, 0);
+  box("ballistaTop", F.wide, F.plank, F.deep, 0, F.top - F.plank / 2, 0);
   const postTall = F.top - F.plank - F.floor;
   const postY = F.floor + postTall / 2;
   for (const x of [-halfW + F.post / 2, halfW - F.post / 2, -(F.slot / 2 + F.post / 2), F.slot / 2 + F.post / 2]) {
@@ -599,6 +600,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
 
   // Torsion housings with team coil caps, iron plates on the plank
   const H = BALLISTA_HOUSING;
+  const caps: Mesh[] = [];
   for (const side of [-1, 1]) {
     const collar = add(MeshBuilder.CreateCylinder("ballistaCollar", { height: H.baseTall, diameter: H.base, tessellation: 8 }, scene), darkWood);
     collar.position.set(side * H.at, F.top + H.baseTall / 2, 0);
@@ -608,6 +610,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
     cap.scaling.set(1, 0.62, 0.9);
     cap.position.set(side * H.at, F.top + H.baseTall + H.drumTall + H.cap * 0.18, 0);
     jitterVertices(cap, 0.18, 7 + side);
+    caps.push(cap);
   }
   for (let i = 0; i < H.plates; i++) {
     const col = i % 4;
@@ -687,7 +690,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   return wrapAsBody(
     scene,
     root,
-    base,
+    caps[0],
     allMeshes,
     operator.headMesh,
     makeBodyMetrics(operator.headTopY, 0.72, 0.4, 0.78),
