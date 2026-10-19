@@ -212,11 +212,14 @@ function vis(
  */
 export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ TRIBAL ═══════════════════════
+  // [S] upright Wobbler (365; tribal.jpg, card Size 1.00x: an average Wobbler with long thin limbs, as tall as the spear thrower, standing straight): the
+  // stooped "brute" pose (torso pitched forward, shoulders splayed) is dropped for the default upright stance, and the body is cut lanky - the spear
+  // thrower's scale, longer legs and arms, a thinner build and the default head - in place of the short, stocky 0.9 body
   "tribal.clubber": vis(
-    { scale: 0.9, bulk: 0.9, headSize: 1.1 }, "club", "none", "none", "none", "#8B4513",
+    { scale: 0.95, bulk: 0.8, headSize: 1.0, legLength: 1.08, armLength: 1.1 }, "club", "none", "none", "none", "#8B4513",
     undefined,
     {
-      posePreset: "brute",
+      posePreset: "default",
       weaponGripPreset: "heavy_swing",
       locomotionBiasPreset: "heavy_carry",
       releaseTimingPreset: "melee_commit",
