@@ -1406,8 +1406,9 @@ const BUNCHED_CREW = { recline: -0.5, nod: 0.3 };
  * Thrower's thighs run forward CREW_SEAT.backThigh and out .backSplay past the Farmer's hips, his knees bent .backKnee and rolled .backRoll so the shins
  * hang down outside the tray. Replaces WHEELBARROW.backSeat .1 and CREW_SEAT.lipIn .05 (seats off the tray's front lip).
  */
-const LOW_RIM = { tall: 0.06, front: 0.11, back: -0.07 };
-const CREW_SEAT = { lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.04, backThigh: -1.2, backSplay: 0.55, backKnee: 1.0, backRoll: -0.3 };
+// (380 follow-up: at front .11, back -.07, splay .55 the tray's rear quarter stayed empty and the Thrower's knees hid behind the Farmer)
+const LOW_RIM = { tall: 0.06, front: 0.06, back: -0.11 };
+const CREW_SEAT = { lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.04, backThigh: -1.1, backSplay: 0.85, backKnee: 1.0, backRoll: -0.5 };
 const CREW_FORK = { long: 0.72, butt: 0.2, thick: 0.013, tines: 3, tine: 0.2, spread: 0.055, curl: 0.4, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
 const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
 function holdInFist(hand: TransformNode, prop: TransformNode, dir: Vector3, offset: Vector3, rigScale: number): void {
