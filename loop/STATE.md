@@ -1,10 +1,10 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 371   Batch: tribal:re+renaissance:re (5-6/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
+Iteration: 372   Batch: tribal:re+renaissance:re (5-6/21)   Consecutive empty: 0   Done: 21/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector -+++ o | spear_thrower -+++ o | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth -+++ o
-renaissance: painter -+-+ o | fencer -+++ o | balloon_archer --++ o | musketeer ++++ D | halberd -+++ o | jouster ++++ D | da_vinci_tank ++++ D
+renaissance: painter -+-+ o | fencer -+++ o | balloon_archer -+++ o | musketeer ++++ D | halberd -+++ o | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
@@ -23,14 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-371 (BASE fac4c91; evidence fac4c91 idle face-side swing): [S] musketeer a hose e7a49eb approved | [S] balloon_archer a placket + shoulder puffs 58d2ee9 approved | [S] fencer a one-piece felt hat 47ab317 +4b357d0 approved | [S] jouster a feather clump ae2a04b approved | [S] fencer c Fencer Dodge c88c308 approved; no [P]
+372 (BASE ce8fa88; evidence ce8fa88 fencer idle level camera; re-audit a,b of spear_thrower, painter, fencer, a of halberd): [S] balloon_archer a flat slashes 25a752d approved | [S] fencer a hat re-seat + clump plume a8b654e approved | [S] spear_thrower a chunky tusks e59b231 approved | [S] painter a jabot bib 0a0238a approved | [S] mammoth a tapering legs + foot 721d839 approved | [S] halberd a bevor cup 512e743 dropped (no change in shot); no [P]
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] renaissance.musketeer (e7a49eb) VERDICT: APPROVE CRITERION: renaissance.musketeer.a PASS (previous: FAIL)
-- GAP: [S] renaissance.balloon_archer (58d2ee9) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.a FAIL (previous: FAIL)
-- GAP: [S] renaissance.fencer (47ab317 + 4b357d0) VERDICT: APPROVE CRITERION: renaissance.fencer.a FAIL (previous: FAIL)
-- GAP: [S] renaissance.jouster (ae2a04b) VERDICT: APPROVE CRITERION: renaissance.jouster.a PASS (previous: FAIL)
-- GAP: [S] renaissance.fencer (c88c308) VERDICT: APPROVE CRITERION: renaissance.fencer.c PASS (previous: FAIL)
+- GAP: [S] renaissance.balloon_archer (25a752d) VERDICT: APPROVE CRITERION: renaissance.balloon_archer.a FAIL (previous: FAIL)
+- Re-judge, renaissance.balloon_archer.b: PASS (previous: FAIL)
+- GAP: [S] renaissance.fencer (a8b654e) VERDICT: APPROVE CRITERION: renaissance.fencer.a FAIL (previous: FAIL)
+- GAP: [S] tribal.spear_thrower (e59b231) VERDICT: APPROVE CRITERION: tribal.spear_thrower.a FAIL (previous: FAIL)
+- GAP: [S] renaissance.painter (0a0238a) VERDICT: APPROVE CRITERION: renaissance.painter.a FAIL (previous: FAIL)
+- GAP: [S] tribal.mammoth (721d839) VERDICT: APPROVE CRITERION: tribal.mammoth.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -51,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Step 2 first: RE-AUDIT a and b of painter and spear_thrower only (fac4c91 swung their idle camera to the face side; give the critic their Verdicts blocks). Fencer idle still hides his face under brim and braids though it points at the camera: needs another re-aim rule before his hat plume gap.
-- halberd blocker 2 (team flat shape behind the helm) is the backdrop's dark boulder, probe 371: no mesh there; the pale rod is the sallet slit (TABS shows team through it). Ask the critic to strike it at the re-audit.
-- Then: balloon_archer flat slashes + flat hat, fencer plume/crown + shoulder wings, painter dodge (needs an archer scene) or figure, protector window disc, mammoth legs (one more reject plateaus mammoth.a), spear_thrower fresh entry.
-- Capture replays are deterministic (f9da668). Particles do not render on the stepped clock. Scratch probe pattern: spawn alone, game.frameCamera, screenshot; freeze requestAnimationFrame. Team cloth glow .2 washes to lavender.
-- Never bakeCurrentTransformIntoVertices after parenting. [P] re-nudges of rows approved in the last 20 iterations are ledger reversals. Bash heredoc/node -e eats backticks: write TS via files.
+- 401d70e (balloon_archer flat-topped wide-brim hat, BRIM_HAT) was reverted unreviewed in 372 for the one-gap-per-criterion rule: cherry-pick it as his hat gap.
+- halberd blocker 1 is the backdrop boulder behind his head (probe 372; bevor cut changed nothing): re-aim his idle by an evidence commit (then re-audit a) or ask the critic to strike it; his pickable gap is the idle grip.
+- Then: fencer doublet wings + tabs, spear_thrower loincloth/stance, painter [P] jabot fallout + beret, mammoth leg tops sunk under a hull skirt (one more reject plateaus mammoth.a), protector window, painter dodge (archer scene).
+- Capture replays are deterministic. Particles do not render on the stepped clock. Probe: copy inspect-prop.mjs into loop/scripts, list meshes' world extents; delete it after. Team cloth glow .2 washes to lavender.
+- Never bakeCurrentTransformIntoVertices after parenting. Bash heredocs with quotes/backticks break: write node scripts with the Write tool. printf %s args keep %% literal.

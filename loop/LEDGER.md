@@ -12,20 +12,8 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-362 | stone slab: faceted columns, seam, round lip, 3 moss (27256cd +d38d4b0) | tribal.protector.b | approved
-362 | ragged hide loincloth, large skull (da977ab +20e52ec) | tribal.clubber.a | approved
-362 | knapped dark flint head, tan cord X (cf3ff8b) | tribal.spear_thrower.b | approved
-362 | one-strap hide dress, slanted bodice, torn skirt (3834142) | tribal.stoner.a | approved
-362 | stag rack on the mask: swept knuckled beam, tines (c66c10a) | tribal.bone_mage.a | approved
-362 | stag rack on the staff skull, grown 1.4 (42d26c9) | tribal.bone_mage.b | approved
-362 | stone axe re-hafted: charcoal, long red haft, X cords (c174af8) | tribal.chieftain.b | approved
-363 | beast skull helm: tan brain case, beak, open jaw, googly eyes (03e92ab +e52aaa4) | tribal.chieftain.a | approved
-363 | skull helm re-seated: tan dome on brow, sockets, brows, ridge (d6d6c79 +c60ed20) | tribal.protector.a | approved
-363 | hung tusks: down from the band to the cheeks, rope turns (09199c4) | tribal.spear_thrower.a | approved
-363 | staff skull: mask face plate on low cranium, googly eyes (f270dce) | tribal.bone_mage.b | approved
-363 | curved shoulder strap: two ribbons over the shoulder (205e839) | tribal.stoner.a | approved
-363 | fur pillar legs: lathes, flush paint, no caps (5d518c2 +7c6a257 +9b9ed17) | tribal.mammoth.a | approved
-363 | charge seen: head-down gallop pose, sprite dust at feet (baea514 +d0548b0) | tribal.mammoth.c | approved
+362 | tribal: slab facets, ragged loin, flint head, hide dress, stag racks, re-hafted axe (7 gaps) | tribal.* | approved
+363 | tribal: beast/skull helms, hung tusks, staff skull, strap, pillar legs, charge pose (6 gaps) | tribal.* | approved
 364 | [R] legs: breeches past knee stub, shin as stocking (3d7e9c8 +675c79f +ea41917, reverted) | medieval.king.a | rejected
 364 | hide wrap on rope, curved hip tusks (61aea7d +85d9e0a) | tribal.chieftain.a | approved
 364 | main axe stood upright at his side, arm mirrored (bee41ad) | tribal.chieftain.b | approved
@@ -77,6 +65,12 @@ for 25 iterations.
 371 | cavalier hat as one felt lathe, left brim swept up (47ab317 +4b357d0) | renaissance.fencer.a | approved
 371 | feather clump: packed rings of fat icos, helm + poll (ae2a04b) | renaissance.jouster.a | approved
 371 | Fencer Dodge: sidestep slide as a swing goes up, blow on air (c88c308) | renaissance.fencer.c | approved
+372 | sleeve slashes laid flat: tan panes on the puff skin, tips down (25a752d) | renaissance.balloon_archer.a | approved
+372 | cavalier hat re-seated, cocked, rounded crown, team feather clump (a8b654e) | renaissance.fencer.a | approved
+372 | chunky tusks: full girth, blunt point, root knob over the band (e59b231) | tribal.spear_thrower.a | approved
+372 | jabot as a front bib: 3 half-round flared panels, last to a point (0a0238a) | renaissance.painter.a | approved
+372 | tapering legs, separate flared foot lathe (721d839) | tribal.mammoth.a | approved
+372 | sallet bevor as a chin cup (512e743, reverted) | renaissance.halberd.a | dropped
 
 ## Spent (never retry as [P])
 
@@ -94,8 +88,8 @@ renaissance.musketeer (MORION_CUT, MATCHLOCK, MUSKETEER_COLLAR, MUSKETEER_HOSE; 
 visualEffects.ts:TRAMPLE_RING (sprites..peak, band, bandPeak, clods, toss, fling, clod) | 12,.25,1,.7,1.8,.4,1.2,.85,.22,.5,8,4.2,2.2,.16 | 364 | approved | -
 proceduralAnimation.ts:SLAB_FRONT (reach, grip, bash) | .2, .08, .22 | 361 | approved | -
 propBuilder.ts:SKULL_FACETED (heads, tall, under, sink, socket, socketUp, snout, snoutTilt, tan, glow) | 1.12,1.15,.45,.1,.3,.42,.5,.5,(.68,.52,.34),.2 | 363 | approved | 1.45,1.6,.7,-,.3,-,.55 white .18
-tribalDress.ts:TUSK_BAND (band, strap, rootOut, rootAhead, drop, bow, hook, thick, turns, tan, glow) | .45,.1,1.06,.2,.78,.16,.55,.34,2,(.78,.66,.48),.22 | 363 | approved | rise .65 bow .22 thick .4 (322)
-vehicleBuilder.ts:MAMMOTH_LEG (sides, jitter, proud, thigh, shin) | 9,.035 (thigh only),1.012,dome .14@.46->.37@.06->.3,r .3->.31 | 366 | approved | flat top r .37@.12 (363); drums .6/.56
+tribalDress.ts:TUSK_BAND (band..hook, thick, full, point, above, knob, tan, glow) | .45,.1,1.1,.2,.8,.14,.55,.44,.55,.22,.14,1.1,(.74,.57,.36),.24 | 372 | approved | thick .34 tan (.78,.66,.48) (363)
+vehicleBuilder.ts:MAMMOTH_LEG (thigh, shin, foot) | r .31->.245, .245->.205, foot lathe .205->.255 | 372 | approved | thigh .37->.3, shin .28-.31 (366); radius-only change now = reversal
 proceduralAnimation.ts:CHARGE_POSE (ease, headDown, toss, pitch, stride, fold, rock, pace) | 10,.42,.08,.1,.42,.4,.05,9 | 363 | approved | -
 simulationSystem.ts:MAMMOTH_DUST (every, size); visualEffects.ts:KICK_DUST (count..peak) | .12, 1.3; 5,.35,.25,.5,1.5,.6,.5,1.1,.75 | 363 | approved | one smoke puff at the start
 
@@ -106,7 +100,7 @@ propBuilder.ts:SKULL_FACE (eyeY, face, eyeX, rim, muzzle, muzzleY, cheek, jaw, j
 vehicleBuilder.ts:MAMMOTH_EAR (tall, long, thick, z, flare) | .48,.42,.15,.3,1.05 | 367 | approved | edge-on fan
 vehicleBuilder.ts:MAMMOTH_HEM (row, c, size, drop, skirt, ring, skirtY) | 9,-.55,[.08,.2,.22],.12,5,.36,-.42 | 367 | rejected (reverted) | -
 propBuilder.ts:SALLET_FACETED (sides, heads, taper, deep, drop, slit, slitWide, eye, bevor, bevorFlare) | 8,1.24,.9,1.08,1.0,.13,.84,.15,.34,1.3 | 368 | approved | SALLET ball
-renaissanceDress.ts:PAINTER_JABOT (tiers, gap, below, across, grow, lip, flat, ahead, under, glow) | 3,.04,.12,.95,.25,.6,1.3,.12,(.46,.3,.16) .3 .9,.14 | 369 | approved | 368 cut over .3 (reverted)
+renaissanceDress.ts:PAINTER_JABOT (step, tall, across, grow, lip, arc, bulge, tuck, vee) | .25,.36,1.0,.3,.72,.56,.55,.12,.45 | 372 | approved | 369 neck rings .95+.25 (below .12)
 
 simulationSystem.ts:HOP_BACK (halberd close, dist, rise, cd) | .75,1.9,2.6,3 | 370 | approved | fencer row removed 370 (was .12,1.5,3.2,1.5)
 simulationSystem.ts:FENCER_RECOVER (dist, seconds) | 1.8, .16 | 370 | approved | HOP_BACK fencer leap (369)
@@ -116,5 +110,5 @@ propBuilder.ts:BERET_PUFF (band, bandTall, puff, deep, puffTall, sit, slide, ahe
 propBuilder.ts:SLAB_WINDOW_BONE (outer, inner, thick, behind, glow) | 1.15,.62,.012,.006,.2 | 370 | approved | -
 renaissanceDress.ts:HELD_BALLOON_ARROW (long, shaft, grip, head, ball, squash, glow) | .42,.018,.3,.06,.13,1.15,.25 | 369 | approved | ball .1 glow .12, along forearm
 propBuilder.ts:SKULL_BACK (wide, tall, top, thick, behind) | 1.2,.86,.24,.05,.09 | 369 | approved | -
-renaissanceDress.ts:ARCHER_FRONT (band, gap, buttons, puff, puffTall, points, point, pointWide) | .08,.09,4,2.5,.55,7,.85,.8 | 371 | approved | stripes; puff 1.6
-propBuilder.ts:CAVALIER_FELT (crown, shoulder, tall, lift, spread, shade, glow, wide, pale) | 1.08,.84,.62,1.1,.55,.32,.04,.85,.08 | 371 | approved | CAVALIER flap
+renaissanceDress.ts:ARCHER_FRONT (band, gap, buttons, puff, puffTall, points, rootLat, tipLat, paneWide, proud) | .08,.09,4,2.5,.55,7,.75,-.45,.42,1.03 | 372 | approved | cones point .85 wide .8 (371)
+propBuilder.ts:CAVALIER_FELT (crown, tall, lift, shade, raise, dip, cock, round, plume, plumeBack, plumeOut) | 1.08,.4,1.1,.32,.13,.03,.16,.55,.95,.75,.4 | 372 | approved | tall .62 dip .14 blade plume (371)
