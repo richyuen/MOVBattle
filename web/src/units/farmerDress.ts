@@ -1,0 +1,94 @@
+import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
+import type { ArticulatedBody } from "./bodyBuilder";
+import { getMaterialFactory } from "./materialFactory";
+
+/*
+ * Farmer dress (units/farmer.*): cloth, hair and ornaments built per unit id by unitFactory, sized off the body's own metrics and joints. Pieces worn on
+ * the trunk are parented to the torso joint (+z his front, +y up).
+ */
+
+/** The head's box in the torso joint's frame: its lowest point, its middle's height and depth, its width and height. */
+function headInTorso(body: ArticulatedBody): { chin: number; midY: number; midZ: number; wide: number; tall: number; deep: number } {
+  for (let n: Node | null = body.headMesh; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+  body.torso.computeWorldMatrix(true);
+  const box = body.headMesh.getBoundingInfo().boundingBox;
+  const toTorso = body.torso.getWorldMatrix().clone().invert();
+  const pts = box.vectorsWorld.map((v) => Vector3.TransformCoordinates(v, toTorso));
+  const ys = pts.map((p) => p.y), zs = pts.map((p) => p.z), xs = pts.map((p) => p.x);
+  return {
+    chin: Math.min(...ys),
+    midY: (Math.min(...ys) + Math.max(...ys)) / 2,
+    midZ: (Math.min(...zs) + Math.max(...zs)) / 2,
+    wide: Math.max(...xs) - Math.min(...xs),
+    tall: Math.max(...ys) - Math.min(...ys),
+    deep: Math.max(...zs) - Math.min(...zs),
+  };
+}
+
+/*
+ * [S] the harvester's braids down the chest (376; farmer.harvester.red.png, .png, card Appearance "two long braids tied with team-colored bands": from
+ * under the hat beside each cheek two thick brown plaits hang down the front of the shoulders onto the upper chest, ending about a third of the way from
+ * the collar to the rope belt in a team band and a short tuft; the 340-347 braids hung off the head and ended at the side of the neck). Hung from the
+ * torso, not the head, so they lie on the chest whatever the neck does. In the head's own size (head heights H, head widths W), torso frame:
+ *   root CHEST_BRAID.apart W out from the middle, .rootUp H above the chin (beside the cheek, under the brim), .rootAhead W ahead of the head's middle;
+ *   foot .footOut W out, .footDrop H below the chin, laid .standOff W ahead of the chest's front; the path bows forward .bow W over the shoulder line;
+ *   .plaits lobes .thick W across on a hair core .core of that, overlapping .overlap of a step, tipped alternately (one rope plait, not beads);
+ *   a team band .band H tall, .bandWide of the braid round, at the foot, a tuft .tuft H long below it. Hair self-lit .glow.
+ */
+const CHEST_BRAID = {
+  apart: 0.44, rootUp: 0.45, rootAhead: 0.12, footOut: 0.5, footDrop: 1.05, standOff: 0.14, bow: 0.18,
+  plaits: 7, thick: 0.3, core: 0.62, overlap: 1.5, band: 0.16, bandWide: 1.15, tuft: 0.18, glow: 0.2,
+};
+const BRAID_HAIR = new Color3(0.36, 0.2, 0.11);
+
+/** The harvester's two braids from beside the cheeks down onto the upper chest, a team band and tuft at each end (spec at CHEST_BRAID). */
+export function harvesterBraids(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = CHEST_BRAID;
+  const mf = getMaterialFactory();
+  const hair = mf.get("cloth", BRAID_HAIR, { emissiveIntensity: B.glow });
+  const band = mf.get("cloth", teamColor, { emissiveIntensity: 0.06 });
+  const head = headInTorso(body);
+  const H = head.tall, W = head.wide;
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const front = chest.position.z + ext.z * chest.scaling.z;
+  const thick = B.thick * W;
+  const added: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof hair): Mesh => {
+    m.material = mat;
+    m.parent = body.torso;
+    added.push(m);
+    return m;
+  };
+  for (const side of [-1, 1]) {
+    const root = new Vector3(side * B.apart * W, head.chin + B.rootUp * H, head.midZ + B.rootAhead * W);
+    const foot = new Vector3(side * B.footOut * W, head.chin - B.footDrop * H, front + B.standOff * W + thick * 0.5);
+    // a quadratic from the root to the foot, bowed forward over the shoulder line so it lies on the collar and chest, not through them
+    const mid = Vector3.Lerp(root, foot, 0.5);
+    mid.z = Math.max(mid.z, foot.z) + B.bow * W;
+    const along = (t: number): Vector3 => root.scale((1 - t) ** 2).add(mid.scale(2 * t * (1 - t))).add(foot.scale(t * t));
+    const tangent = (t: number): Vector3 => mid.subtract(root).scale(2 * (1 - t)).add(foot.subtract(mid).scale(2 * t)).normalize();
+    // a piece's +y turned onto the braid's line, its top end up and back toward the root
+    const lean = (t: number): number => Math.atan2(-tangent(t).z, -tangent(t).y);
+    const path: Vector3[] = [];
+    for (let k = 0; k <= 10; k++) path.push(along(k / 10));
+    put(MeshBuilder.CreateTube("chestBraidCore", { path, radius: thick * 0.5 * B.core, tessellation: 6 }, scene), hair);
+    const step = 1 / B.plaits;
+    const len = Vector3.Distance(root, foot) * 1.05;
+    for (let k = 0; k < B.plaits; k++) {
+      const t = (k + 0.5) * step * 0.92;
+      const lobe = put(MeshBuilder.CreateIcoSphere("chestBraid", { radiusX: thick * 0.5, radiusY: len * step * 0.5 * B.overlap, radiusZ: thick * 0.42, subdivisions: 1, flat: true }, scene), hair);
+      lobe.position.copyFrom(along(t));
+      lobe.position.x += (k % 2 ? 1 : -1) * thick * 0.08;
+      lobe.rotation.set(lean(t), 0, (k % 2 ? 1 : -1) * 0.35);
+    }
+    const tie = put(MeshBuilder.CreateCylinder("chestBraidBand", { height: B.band * H, diameter: thick * B.bandWide, tessellation: 7 }, scene), band);
+    tie.position.copyFrom(foot);
+    tie.rotation.x = lean(1);
+    const tuft = put(MeshBuilder.CreateCylinder("chestBraidTuft", { height: B.tuft * H, diameterTop: thick * 0.7, diameterBottom: thick * 0.25, tessellation: 5 }, scene), hair);
+    tuft.convertToFlatShadedMesh();
+    tuft.position.copyFrom(foot.add(tangent(1).scale((B.band + B.tuft) * H * 0.5)));
+    tuft.rotation.x = lean(1);
+  }
+  return added;
+}

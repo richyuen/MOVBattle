@@ -14,6 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
+import { harvesterBraids } from "./farmerDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -580,6 +581,8 @@ export class UnitFactory {
       propMeshes = propMeshes.filter((m) => !m.isDisposed()); // its grip wraps are taken off (344)
       // [S] beige shoulder collar, rope belt and two stitched team patches on his tunic (348; HARVESTER_TRIM)
       propMeshes.push(...dressHarvester(this._scene, body, teamColor));
+      // [S] ...and two braids from beside the cheeks down onto the chest, hung from the torso (376; farmerDress CHEST_BRAID)
+      propMeshes.push(...harvesterBraids(this._scene, body, teamColor));
     }
     if (definition.id === "farmer.scarecrow" && !shouldUseVehicleBody) {
       // [S] a crow perched on each elbow (344; propBuilder buildPerchedCrow), kept upright by the animator's T-pose (proceduralAnimation TPOSE)

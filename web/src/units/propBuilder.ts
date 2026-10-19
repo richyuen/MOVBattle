@@ -873,47 +873,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     dent.position.y = droop * 0.5 + u(FLOPPY.crownTall * H * 0.96);
     dent.material = mat(scene, FLOPPY_BROWN.scale(0.7), FLOPPY.glow);
     dent.parent = brim;
-    // The braids: FLOPPY.plaits lobes each side, tipped alternately left and right so they read plaited, a team band and a tuft at the end
-    const hair = mat(scene, FLOPPY_HAIR, FLOPPY.glow);
-    const band = mat(scene, teamColor ?? accent, 0.06); // low glow: at .15 the band read pale
-    const step = (FLOPPY.braid * H) / FLOPPY.plaits;
-    for (const side of [-1, 1]) {
-      const x = side * u(FLOPPY.apart * W);
-      // the braid's curve at t (0 the root, 1 the end): down, a little forward over the collar and out
-      const along = (t: number): Vector3 => new Vector3(
-        x + side * u(FLOPPY.flare * W * t * t),
-        u(seat - FLOPPY.root * H - FLOPPY.braid * H * t),
-        u(FLOPPY.ahead * W + FLOPPY.fall * W * t * t),
-      );
-      const lean = (t: number): number => Math.atan2(2 * FLOPPY.fall * W * t, FLOPPY.braid * H);
-      const path: Vector3[] = [];
-      for (let k = 0; k <= 8; k++) path.push(along((k / 8) * 0.96));
-      const core = MeshBuilder.CreateTube("sunHatBraidCore", { path, radius: u(FLOPPY.thick * W * 0.5 * FLOPPY.core), tessellation: 6 }, scene);
-      core.material = hair;
-      core.parent = holder;
-      const lobes = FLOPPY.plaits - 1; // the last place is the band
-      for (let k = 0; k < lobes; k++) {
-        const t = (k + 0.5) / FLOPPY.plaits;
-        const plait = MeshBuilder.CreateIcoSphere("sunHatBraid", { radiusX: u(FLOPPY.thick * W * 0.5), radiusY: u(step * 0.5 * FLOPPY.overlap), radiusZ: u(FLOPPY.thick * W * 0.42), subdivisions: 1, flat: true }, scene);
-        plait.position.copyFrom(along(t));
-        plait.position.x += (k % 2 ? 1 : -1) * u(FLOPPY.thick * W * 0.08);
-        plait.rotation.set(-lean(t), 0, (k % 2 ? 1 : -1) * 0.35);
-        plait.material = hair;
-        plait.parent = holder;
-      }
-      const bandT = (lobes + 0.4) / FLOPPY.plaits;
-      const tie = MeshBuilder.CreateCylinder("sunHatBraidBand", { height: u(FLOPPY.bandTall * H), diameter: u(FLOPPY.thick * W * 1.05), tessellation: 7 }, scene);
-      tie.position.copyFrom(along(bandT));
-      tie.rotation.x = -lean(bandT);
-      tie.material = band;
-      tie.parent = holder;
-      const tuft = MeshBuilder.CreateCylinder("sunHatBraidTuft", { height: u(0.14 * H), diameterTop: u(FLOPPY.thick * W * 0.7), diameterBottom: u(FLOPPY.thick * W * 0.25), tessellation: 5 }, scene);
-      tuft.position.copyFrom(along(bandT + 0.09));
-      tuft.rotation.x = -lean(1);
-      tuft.material = hair;
-      tuft.convertToFlatShadedMesh();
-      tuft.parent = holder;
-    }
+    // The braids hang from the torso, not the hat, since 376 (farmerDress CHEST_BRAID): off the head they ended at the side of the neck
     return holder;
   }
   if (type === "hood_liripipe" || type === "hood") {
