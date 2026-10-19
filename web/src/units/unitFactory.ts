@@ -986,8 +986,15 @@ const HALBERD_BELT = new Color3(0.32, 0.17, 0.1);
  *   HAY_BALE.blades top blades .blade of H long (every other one .short of that), .bladeWide of W at the root, leaning out .lean (rad);
  *   HAY_BALE.hems hem blades .hem of H long, flaring out .flare; straps .strap of H tall at .straps (shares of the barrel down from its top), .proud round it.
  * Self-lit tan cloth (HAY_TAN / HAY_TOP, HAY_GLOW): plain tan greys out under this light.
+ * [S] flat planks, not spikes (375; farmer.hay_baler.red.png: the top breaks into a few broad flat hay planks, each about half the shoulders wide,
+ * squared off at a slant at the tip, fanning up and out past the head; below the lower strap a flared skirt of wide flat tongues overlapping round
+ * the bale and hanging to mid-shin. Not the 339 rings of thin diamond cones, which read as spikes). Each blade is a flat four-sided plank, its
+ * section HAY_PLANK.flat of its width deep, narrowing to .tip of its root width at the tip:
+ *   top: HAY_BALE.blades planks .bladeWide of W across, .blade of H long (every other one .short of that), leaning out .lean;
+ *   skirt: HAY_BALE.hems tongues .hemWide of W across, .hem of H long (every third .75 of that), from .hemAt of H above the bale's foot, leaning .flare.
  */
-const HAY_BALE = { knee: 0.12, top: 1.95, bottom: 2.15, deep: 1.45, blades: 10, blade: 0.62, short: 0.6, bladeWide: 0.42, lean: 0.45, hems: 12, hem: 0.5, flare: 0.5, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
+const HAY_BALE = { knee: 0.12, top: 1.95, bottom: 2.15, deep: 1.45, blades: 7, blade: 0.8, short: 0.7, bladeWide: 0.72, lean: 0.75, hems: 11, hem: 0.75, hemWide: 0.62, hemAt: 0.3, flare: 0.3, strap: 0.09, straps: [0.38, 0.68], proud: 1.05 };
+const HAY_PLANK = { flat: 0.14, tip: 0.6, hemTip: 0.3 };
 const HAY_TAN = new Color3(0.7, 0.46, 0.22);
 const HAY_TOP = new Color3(0.5, 0.32, 0.18);
 const HAY_STRAP = new Color3(0.26, 0.16, 0.11);
@@ -1017,8 +1024,9 @@ function dressHayBale(scene: Scene, body: ArticulatedBody): Mesh[] {
   barrel.convertToFlatShadedMesh();
   barrel.parent = body.torso;
   added.push(barrel);
-  // A ring of flat blades (a thin four-sided cone) round a rim at height y and half-widths rx, rz, each leaning out from upright by `lean` (down when > PI/2)
-  const ring = (name: string, n: number, y: number, rx: number, rz: number, long: (i: number) => number, wide: number, lean: number, material: typeof tan): void => {
+  // A ring of flat planks round a rim at height y and half-widths rx, rz, each leaning out from upright by `lean` (down when > PI/2): a four-sided
+  // frustum turned square to the rim and flattened to HAY_PLANK.flat, narrowing to `tip` of its root width
+  const ring = (name: string, n: number, y: number, rx: number, rz: number, long: (i: number) => number, wide: number, lean: number, material: typeof tan, tip: number): void => {
     for (let i = 0; i < n; i++) {
       const a = (i + 0.5) * (Math.PI * 2) / n;
       const at = new TransformNode(name + "At", scene);
@@ -1026,8 +1034,10 @@ function dressHayBale(scene: Scene, body: ArticulatedBody): Mesh[] {
       at.position.set(Math.sin(a) * rx, y, Math.cos(a) * rz);
       at.rotation.y = a;
       const L = long(i);
-      const blade = MeshBuilder.CreateCylinder(name, { height: L, diameterTop: 0, diameterBottom: wide, tessellation: 4 }, scene);
-      blade.scaling.z = 0.28;
+      const blade = MeshBuilder.CreateCylinder(name, { height: L, diameterTop: wide * Math.SQRT2 * tip, diameterBottom: wide * Math.SQRT2, tessellation: 4 }, scene);
+      blade.rotation.y = Math.PI / 4;
+      blade.bakeCurrentTransformIntoVertices();
+      blade.scaling.z = HAY_PLANK.flat;
       blade.setPivotPoint(new Vector3(0, -L * 0.5, 0));
       blade.position.y = L * 0.5;
       blade.rotation.x = lean + ((i * 37) % 5 - 2) * 0.05;
@@ -1038,9 +1048,9 @@ function dressHayBale(scene: Scene, body: ArticulatedBody): Mesh[] {
     }
   };
   // the top fringe, darker, standing up past the head (the blades over the shoulders the longest)
-  ring("hayBlade", B.blades, top - H * 0.08, W * B.top * 0.46, W * B.top * 0.46 * deepK, (i) => H * B.blade * (i % 2 ? B.short : 1), W * B.bladeWide, B.lean, dark);
-  // the hem over the knees, flaring out and down
-  ring("hayHem", B.hems, foot + H * 0.12, W * B.bottom * 0.47, W * B.bottom * 0.47 * deepK, (i) => H * B.hem * (i % 3 === 1 ? 0.75 : 1), W * B.bladeWide * 0.9, Math.PI - B.flare, tan);
+  ring("hayBlade", B.blades, top - H * 0.08, W * B.top * 0.46, W * B.top * 0.46 * deepK, (i) => H * B.blade * (i % 2 ? B.short : 1), W * B.bladeWide, B.lean, dark, HAY_PLANK.tip);
+  // the skirt below the lower strap: wide flat tongues overlapping round the bale, flaring out and hanging to mid-shin
+  ring("hayHem", B.hems, foot + H * B.hemAt, W * B.bottom * 0.47, W * B.bottom * 0.47 * deepK, (i) => H * B.hem * (i % 3 === 1 ? 0.75 : 1), W * B.hemWide, Math.PI - B.flare, tan, HAY_PLANK.hemTip);
   // two dark straps round its middle
   for (const share of B.straps) {
     const y = top - tall * share;
