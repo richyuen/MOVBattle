@@ -1,11 +1,18 @@
 # tribal.bone_mage
-Status: done   Audited: 315   Done: 322
+Status: open   Audited: 360   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (322)
-b PASS (317)
-c PASS (319)
-d PASS (stats 317: cost 300=300, hp -1%, dmg 0%, cd 0%)
+a FAIL (0 since 360)
+ 1. deer skull in unit_tribal.bone_mage_idle sits on the head like a cap, face bare — TABS: worn over the face as a mask, snout to the chin, eyes in the sockets (ref: tribal.bone_mage.red.png)
+ 2. antlers in unit_tribal.bone_mage_idle: thin dark sticks, 1-2 tines — TABS: wide many-branched tan antlers, each about two heads out and up (ref: tribal.bone_mage.red.png, .png)
+ 3. skull colour in unit_tribal.bone_mage_idle grey-white — TABS: warm bone-tan (ref: tribal.bone_mage.red.png)
+ 4. missing in unit_tribal.bone_mage_idle: an orange-brown leaf hanging by each cheek (ref: tribal.bone_mage.red.png, card Appearance)
+b FAIL (0 since 360)
+ 1. staff head in unit_tribal.bone_mage_windup: small grey skull, one thin tine — TABS: deer skull with a full spread of branching tan antlers, as large as the head pair (ref: tribal.bone_mage.png)
+c PASS (360)
+d PASS (cost 300, hp 1.23x, dmg 1.33x, cd 4.50x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] a skull mask — blocker 1: deer skull worn over the face, snout to chin, eyes in the sockets, bone-tan — ref: tribal.bone_mage.red.png — ours: unit_tribal.bone_mage_idle.png
+2. [S] b staff antlers — blocker 1: branching tan antlers on the staff skull, as large as the head pair — ref: tribal.bone_mage.png — ours: unit_tribal.bone_mage_windup.png
 ## Attempts (iter | gap | criterion | verdict)
 318 | leaves along the spike line (000f0de) | c | approved
 319 | spike loft (33e7601) | c | approved

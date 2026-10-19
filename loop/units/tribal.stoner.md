@@ -1,11 +1,14 @@
 # tribal.stoner
-Status: done   Audited: 315   Done: 322
+Status: open   Audited: 360   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (322)
-b PASS (321)
-c PASS (320)
-d PASS (stats 315: cost 160=160, hp +1%, dmg 0%, cd 0%)
+a FAIL (0 since 360)
+ 1. hair in unit_tribal.stoner_idle: a flat brown slab covering the whole face, no eyes — TABS: messy dark-brown dreadlock mop framing an open face, eyes visible, locks to the shoulders (ref: tribal.stoner.red.png, .jpg)
+ 2. garment in unit_tribal.stoner_idle: grey-brown tunic over both shoulders, flared skirt — TABS: reddish-brown one-strap hide dress, other shoulder bare, ragged hem mid-thigh (ref: tribal.stoner.red.png, card Appearance)
+b PASS (360)
+c PASS (360)
+d PASS (cost 160, hp 0.63x, dmg 1.66x, cd 4.99x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] a hair — blocker 1: replace the face-covering slab with a dreadlock mop chunk that frames an open face, eyes visible — ref: tribal.stoner.red.png — ours: unit_tribal.stoner_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 318 | forward toss (9a15b0d) | c | approved
 319 | faceted boulder cradled two-handed (aa85160) | b | approved

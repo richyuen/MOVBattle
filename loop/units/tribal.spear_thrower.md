@@ -1,11 +1,14 @@
 # tribal.spear_thrower
-Status: done   Audited: 315   Done: 323
+Status: open   Audited: 360   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (323)
-b PASS (320)
-c PASS (317)
-d PASS (stats 317: cost 120=120, hp -12%, dmg 0%, cd 0%)
+a FAIL (0 since 360)
+ 1. tusks in unit_tribal.spear_thrower_idle: small white nubs pointing up off the headband — TABS: large tan tusks strapped to the band, curving down past the eyes to cheek level (ref: tribal.spear_thrower.red.png, .jpg)
+b FAIL (0 since 360)
+ 1. spearhead in unit_tribal.spear_thrower_windup/_idle: small narrow pale-grey point — TABS: large dark charcoal leaf head, wider than the hand, lashed with tan cord (ref: tribal.spear_thrower.red.png, .jpg)
+c PASS (360)
+d PASS (cost 120, hp 0.55x, dmg 2.23x, cd 4.00x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] b spearhead — blocker 1: a large dark charcoal leaf-shaped head lashed with tan cord — ref: tribal.spear_thrower.red.png — ours: unit_tribal.spear_thrower_windup.png
 ## Attempts (iter | gap | criterion | verdict)
 318 | spear raised overhead (b194791) | b | rejected
 319 | spear stood up out of the fist (c8f0e70) | b | approved

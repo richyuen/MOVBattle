@@ -1,12 +1,12 @@
 # Loop state (v2: one batch at a time, up to 7 structural gaps per iteration)
-Iteration: 359   Batch: medieval (4/21)   Consecutive empty: 0   Done: 25/139   Parked: 0
+Iteration: 360   Batch: medieval+tribal:re (4/21)   Consecutive empty: 0   Done: 20/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, tribal:re, renaissance:re, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
+tribal: clubber --++ o | protector --++ o | spear_thrower --++ o | stoner -+++ o | bone_mage --++ o | chieftain --++ o | mammoth ---+ o
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow ++++ D | scarecrow ++++ D
-medieval: bard ++++ D | squire -+++ o | archer -+++ o | healer ++++ D | knight ++++ D | catapult ++++ D | king -+++ o
+medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king -+++ o
 ancient: shield_bearer ???? q | sarissa ???? q | hoplite ???? q | snake_archer ???? q | ballista ???? q | minotaur ???? q | zeus ???? q
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
@@ -23,17 +23,12 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-359 (BASE 46c19a5): [S] archer a hood cdc15b5+e8bbf78 approved | [S] healer a turned collar 1173ec2 approved | [S] knight a plate legs 3dd532f approved | [S] king a dress re-land 44f8443 approved | [S] archer a sleeves a43c08b rejected (reverted f1af07a) | [S] knight a cape cut d2850fe approved | [S] king a beard 8801b8c approved | [P] squire a sleeve tone caa7905 rejected (reverted e6c54e8)
+360 (BASE 61a9760): [S] squire a sleeve material ca82190+def8b50 approved | [S] archer a sleeve material 6c6eb29+3d9f92d approved | [S] king a blouse/breeches/stockings 774e5c3+0dd77b3 approved; tribal:re audited (tail overlap, 3 pickable medieval [S])
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] medieval.archer (cdc15b5 + e8bbf78) VERDICT: APPROVE CRITERION: medieval.archer.a FAIL (previous: FAIL)
-- GAP: [S] medieval.healer (1173ec2) VERDICT: APPROVE CRITERION: medieval.healer.a PASS (previous: FAIL)
-- GAP: [S] medieval.knight (3dd532f) VERDICT: APPROVE CRITERION: medieval.knight.a FAIL (previous: FAIL)
-- GAP: [S] medieval.king (44f8443) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL)
-- GAP: [S] medieval.archer (a43c08b) VERDICT: REJECT CRITERION: medieval.archer.a FAIL (previous: FAIL)
-- GAP: [S] medieval.knight (d2850fe) VERDICT: APPROVE CRITERION: medieval.knight.a PASS (previous: FAIL)
-- GAP: [S] medieval.king (8801b8c) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL)
-- GAP: [P] medieval.squire (caa7905) VERDICT: REJECT CRITERION: medieval.squire.a FAIL (previous: FAIL)
+- GAP: [S] medieval.squire (ca82190 + def8b50) VERDICT: APPROVE CRITERION: medieval.squire.a PASS (previous: FAIL)
+- GAP: [S] medieval.archer (6c6eb29 + 3d9f92d) VERDICT: APPROVE CRITERION: medieval.archer.a PASS (previous: FAIL)
+- GAP: [S] medieval.king (774e5c3 + 0dd77b3) VERDICT: APPROVE CRITERION: medieval.king.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 2600 bytes)
 ```
@@ -54,8 +49,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Light cloth greys out: archer's tan sleeve shell (359) and squire's beige sleeves render neutral grey while brown leather renders brown. First step: read the sleeve material back in the browser (later arm repaint in unitFactory? cloth cache key?); likely the king's stockings too.
-- Arm/leg dress over the tabard block's mail must be shells (limbShell, shellStripes), not recolours: dressMedieval runs before unitFactory paints the arms.
-- One-sided custom meshes get culled from outside (archer hood until 359): wind both ways (slab helper, hood shell).
-- Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose and broadhead arrow (354, 358), bard walk, catapult frame/wheels/paint, knight plate+legs+cape.
-- tribal:re, renaissance:re, farmer:re follow medieval: full re-audits of the done batches under the new angles (ITERATE step 2).
+- Pick from both batches: king a slim stockings, then tribal ranked gaps (chieftain off-hand axe, stoner hair, clubber club, bone_mage skull mask, protector shield hold, mammoth charge, spear head). Tribal evidence of the audit: output/loop/iter-360-tribal/.
+- Evidence commits owed (critic 360 DEFECTs): unit_tribal.chieftain_idle shot from behind his weapon side; unit_tribal.mammoth_idle frames only legs and a tusk. King's belt buckle hidden in king_idle.
+- Light warm cloth greys under the cool hemi ground light + ACES (material readback 360: nothing repaints it): use medievalDress warmCloth (own amber emissive) and unglow every mesh in it, or the glow layer haloes it. A limb under a slim shell must be recoloured too.
+- Arm/leg dress over the tabard block's mail must be shells (limbShell), not recolours; one-sided custom meshes get culled from outside (wind both ways).
+- Expect re-baselines at the medieval checkpoint: squire/archer stats (351), archer loose and broadhead (354, 358), bard walk, catapult frame/wheels/paint, knight plate+legs+cape, king skirt removed (360).

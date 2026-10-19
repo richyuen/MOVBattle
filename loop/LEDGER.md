@@ -61,31 +61,33 @@ for 25 iterations.
 359 | sleeves: tan cloth shells (a43c08b, reverted) | medieval.archer.a | rejected
 359 | cape cut: shoulder-line top, wrap, no flaps (d2850fe) | medieval.knight.a | approved
 359 | beard: own hair material, sideburns (8801b8c) | medieval.king.a | approved
+360 | sleeve material: warmCloth amber self-light, unglow (ca82190 +def8b50) | medieval.squire.a | approved
+360 | sleeve shells in warmCloth, arm+stub too, unglow (6c6eb29 +3d9f92d) | medieval.archer.a | approved
+360 | no skirt: blouse to belt, breeches show; stockings 1.32 warm (774e5c3 +0dd77b3) | medieval.king.a | approved
 
 ## Spent (never retry as [P])
-medievalDress.ts:SQUIRE_ARMS.beige (359: second nudge, no visible change)
 
 ## Rows
-farmer.* (47 knob rows, 339-350; batch done) | compacted 351 | 350 | approved | values: git show b3524d7:loop/LEDGER.md
-renaissance.* (51 knob rows, 327-338; batch done) | compacted 340 | 338 | approved | values: git show f525109:loop/LEDGER.md
+farmer.* (47 knob rows, 339-350; batch done) | compacted 351 | 350 | approved | values: git show b3524d7:loop/LEDG..
+renaissance.* (51 knob rows, 327-338; batch done) | compacted 340 | 338 | approved | values: git show f525109:loop/LEDG..
 rosterManifest.ts:medieval cost/hp/dmg/cd (bard, squire, archer, healer) | 60/.79/.58/-, 100/1.26/1.33/-, 140/.4/1.94/3.64, 180/.19/-/- | 351 | stats | 65; -; -; -
 rosterManifest.ts:medieval cost/hp/dmg/cd (knight, catapult, king) | 650/.78/.4/.42, 1000/.79/.22/1.67, 1500/1.05/-/.54 | 351 | stats | 320; -; 1200
 visualEffects.ts:HEAL_BEAM (core, halo, haloAlpha, fade); simulationSystem HEALER_BEAM_SHARE | .12, .17, .35, .2; .95 | 352 | approved | core .07 (351)
-runtimeUnit.ts:GILD (gold, dye, glow, coat, coatGlow) | (1,.78,.2), .85, .45, (.95,.62,.08), .22 | 352 | approved | critic: coat flat mustard, a bit olive
-vehicleBuilder.ts:CATAPULT_ARM (pivotY, long, short, cocked, thrown); runtimeUnit CATAPULT_THROW (swing, hold, lower) | 1.62,1,.7,.35,pi/2; .12,.5,.7 | 351 | approved | critic: cocked end only a little below level
+runtimeUnit.ts:GILD (gold, dye, glow, coat, coatGlow) | (1,.78,.2), .85, .45, (.95,.62,.08), .22 | 352 | approved | critic: coat flat mustard, a bit o..
+vehicleBuilder.ts:CATAPULT_ARM (pivotY, long, short, cocked, thrown); runtimeUnit CATAPULT_THROW (swing, hold, lower) | 1.62,1,.7,.35,pi/2; .12,.5,.7 | 351 | approved | critic: cocked end only a little b..
 simulationSystem.ts:KNIGHT_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cooldown) | .4,2.5,2.6,1,.5,.3,5,6,3.5,5 | 351 | approved | critic: reads as a brisk run
 propBuilder.ts:BANJO (pot, deep, head, front, neck, neckWide, frets, headLong, headWide, headTip, pegs) | .19,.28,.86,.05,.36,.032,9,.075,1.7,.25,4 | 351 | approved | -
-proceduralAnimation.ts:BANJO_HOLD (out, up, ahead, across, rise, forward); POLE_GRIP.banjoNeck | .2,.1,.32,.72,.66,.12; [.6,.95] | 351 | approved | critic: neck too upright, fists high on the neck
-propBuilder.ts:ZWEI SlabCut (long, wide, grip, point, lug, lugAt, seat) | .85, .05, 4.5, .12, .045, .07, 2.5 | 354 | approved | seat - (352); 351 own mesh: .8, .024, .24 H grip (rejected)
+proceduralAnimation.ts:BANJO_HOLD (out, up, ahead, across, rise, forward); POLE_GRIP.banjoNeck | .2,.1,.32,.72,.66,.12; [.6,.95] | 351 | approved | critic: neck too upright, fists hi..
+propBuilder.ts:ZWEI SlabCut (long, wide, grip, point, lug, lugAt, seat) | .85, .05, 4.5, .12, .045, .07, 2.5 | 354 | approved | seat - (352); 351 own mesh: .8, .0..
 propBuilder.ts:LONGSWORD SlabCut (long, wide, grip, point) | .62, .045, 2.6, .14 | 352 | approved | -
-propBuilder.ts:BOULDER (facets, lumpy, squat, stone, lit); vehicleBuilder CATAPULT_BOULDER | 1, .2, .82, (.6,.5,.4), .1; .65 | 354 | approved | (.66,.59,.5) .18 (352; critic 354: still cool grey); (.5,.45,.38) lit 0; critic: near white
-propBuilder.ts:BROWN_LONGBOW (long, wood, wrap) | 1.4, (.45,.27,.14), (.86,.78,.62) | 353 | approved | long 1.2 (LONGBOW, 352); critic: grip wrap oversized
-proceduralAnimation.ts:TWO_FIST_SWORD (longswordFists, zweiFists); FISTS_ON_GRIP (gap, reach, pommel) | .4, .4; .75, .96, .4 | 354 | approved | zweiFists .5 rejected 353; critic: idle/release off fist short of grip
+propBuilder.ts:BOULDER (facets, lumpy, squat, stone, lit); vehicleBuilder CATAPULT_BOULDER | 1, .2, .82, (.6,.5,.4), .1; .65 | 354 | approved | (.66,.59,.5) .18 (352; critic 354:..
+propBuilder.ts:BROWN_LONGBOW (long, wood, wrap) | 1.4, (.45,.27,.14), (.86,.78,.62) | 353 | approved | long 1.2 (LONGBOW, 352); critic: g..
+proceduralAnimation.ts:TWO_FIST_SWORD (longswordFists, zweiFists); FISTS_ON_GRIP (gap, reach, pommel) | .4, .4; .75, .96, .4 | 354 | approved | zweiFists .5 rejected 353; critic:..
 propBuilder.ts:PRIEST_STAFF (long, thick, grip, sleeve, cap, orb, band, finial); PRIEST_HOLD | 1.2,.02,.45,.17,.05,.11,.012,.06 | 353 | approved | critic: orb half a head
 propBuilder.ts:ARMET (heads, deep, dome, drop, plate, bevor, rail, bars, proud) | 1.22,1.1,.5,1,.09,.24,.75,5,.05 | 353 | approved | critic: wants rail 1.0, proud .12
-simulationSystem.ts:BANJO_WALK (lure, clear, turn, step) | 2.2, 1.5, .85, 1.2 | 353 | approved | turn 1.15 (pre-review); critic: arc gentle
-visualEffects.ts:MUSIC_NOTE (size, head, tilt, stem, flag, rise, sway, life, fade, color, glow); simulationSystem BANJO_NOTES (every, first, over, aside, stack) | 1,.13,.45,.26,.12,.45,.08,1.6,.35,(.95,.4,.04),.2; .45,2,.32,.18,.32 | 354 | approved | glow .6, over .15 (pre-review); critic: thin, dim, small
-vehicleBuilder.ts:CATAPULT_CREW (z, y, raise, spread, elbow); CREW_DRESS colours | -.74, .5, -2.8, .12, -.2 | 354 | approved | z -.62 raise -2.6 (pre-review); critic: arms frozen up after the shot
+simulationSystem.ts:BANJO_WALK (lure, clear, turn, step) | 2.2, 1.5, .85, 1.2 | 353 | approved | turn 1.15 (pre-review); critic: ar..
+visualEffects.ts:MUSIC_NOTE (size, head, tilt, stem, flag, rise, sway, life, fade, color, glow); simulationSystem BANJO_NOTES (every, first, over, aside, stack) | 1,.13,.45,.26,.12,.45,.08,1.6,.35,(.95,.4,.04),.2; .45,2,.32,.18,.32 | 354 | approved | glow .6, over .15 (pre-review); cr..
+vehicleBuilder.ts:CATAPULT_CREW (z, y, raise, spread, elbow); CREW_DRESS colours | -.74, .5, -2.8, .12, -.2 | 354 | approved | z -.62 raise -2.6 (pre-review); cr..
 unitFactory.ts:HEALER_ROBE (long, hem) | 1.75, 1.5 | 354 | approved | -
 vehicleBuilder.ts:CATAPULT_BUCKET (bottom, top, deep, rim, sink, tone) | .4, .68, .28, .06, .45, (.55,.26,.12) | 355 | approved | critic: smooth cup, TABS boxed timber
 propBuilder.ts:QUIVER_HIP (long, mouth, foot, top, side, back, tilt, proud, leather, fletch) | .6,.14,.11,.22,.27,.02,.12,.2,(.46,.22,.15),[.07,.1] | 355 | approved | right hip .52/.12/.24/.09 (pre-review, hidden)
@@ -103,11 +105,11 @@ vehicleBuilder.ts:CATAPULT_FRAME (long, half, railY, beam, cap, spread, bolt, de
 vehicleBuilder.ts:CATAPULT_WHEEL (across, face, tyreWide, proud, hub, facets, tone, iron) | .56,.8,.13,.015,.22,10,(.6,.3,.13),(.42,.43,.46) | 357 | approved | .7 dark-rimmed wheels at x .58 (before 357)
 medievalDress.ts:KNIGHT_PLATE (wide, deep, lames, proud, rim, steel, edge); unitFactory KNIGHT_FAULD (long, flare) | 1.07,1.1,2,1.05,.12; .42,1.4 | 357 | approved | critic: cuirass boxy, a skin wide
 medievalDress.ts:MEDIEVAL_CAPE (top, hem, drop, off, wrap, flap, button, cream, glow) | 1.2,1.75,.6,.35,1.45,.5,.24,(.95,.88,.7),.28 | 357 | approved | 1.12/1.4/1.3 glow .12 (pre-review); critic: collar flap a flat board
-medievalDress.ts:SQUIRE_LEGS (out, from, cop, ahead); ARCHER_ARMS (out, from, to, beige) | 1.32,.06,1.25,.55; 1.3,.08,.94,(.74,.58,.38) | 358 | approved | no more [P] on ARCHER_ARMS
+medievalDress.ts:SQUIRE_LEGS (out, from, cop, ahead); ARCHER_ARMS (out, from, to) | 1.32,.06,1.25,.55; 1.3,.08,.94 | 360 | approved | ARCHER_ARMS.beige unread since 360 (warmCloth); no [P]
 medievalDress.ts:BARD_TUNIC (long, hem, hemShade) | 1.45, .16, .62 | 357 | approved | -
 medievalDress.ts:KNIGHT_CAPE; KNIGHT_CAPE_CUT (rise, wrap); KNIGHT_LEGS (cuisse, greave, from, cop) | ..; 1,1.75; 1.2,1.28,.05,1.3 | 359 | approved | -
-medievalDress.ts:SQUIRE_ARMS (sleeve, gauntlet, couter, beige, glow) | 1.16,1.4,1.5,(.82,.72,.52),.1 | 359 | spent | (.74,.6,.4) .04 rejected 359
-medievalDress.ts:KING_DRESS (puff..buckle); KING_PANTS (knee, profile peak, band, folds) | 1.55,.7,4,1.5,1.1,..; .8,1.7,1.18,4 | 359 | approved | thigh tube to .98 (358)
+medievalDress.ts:SQUIRE_ARMS (sleeve, gauntlet, couter); WARM_CLOTH (tan, warm) + unglow | 1.16,1.4,1.5; (.92,.74,.46),(.6,.36,.08) | 360 | approved | beige (.82,.72,.52) glow .1 (359, spent)
+medievalDress.ts:KING_DRESS (puff..hose..buckle); KING_PANTS (knee, profile peak, band, folds) | 1.55,.7,4,1.5,1.32,..; .8,1.7,1.18,4 | 360 | approved | hose 1.1 (359); critic 360: 1.32 boot-thick
 vehicleBuilder.ts:CATAPULT_PAINT (wood, woodGlow, paintGlow, long, short, strip, shift) | (.66,.32,.14),.16,.12,.62,.4,.5,.14 | 358 | approved | wood (.36,.13,.09)
 medievalDress.ts:BARD_LEGS (out, from, bow, bowShade, sock); ARCHER_KIT (belt, boot, from, cuff) | 1.16,.04,.55,.85,(.88,.84,.7); .15,1.24,.22,1.45 | 358 | approved | -
 projectileSystem.ts:BROADHEAD (wide, long, thick, shaft, iron) | .17,.2,.3,(.62,.16,.1),(.08,.08,.09) | 358 | approved | -
