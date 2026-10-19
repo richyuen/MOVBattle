@@ -1338,9 +1338,9 @@ const WHEELBARROW = {
   scale: 2.2,          // rig scale: operator .46 x 2.2 = a full man
   trayY: 0.36,         // tray floor centre height (rig units)
   trayWide: 0.2,       // 377: a rider's hips and a little more (farmer.wheelbarrow.red.png), so the riders straddle it and loom over it; was .44
-  trayLong: 0.78,
+  trayLong: 0.5,       // 378: a short tray the riders loom over, bunched in line (BUNCHED_CREW); was .78
   trayZ: 0.08,
-  backSeat: -0.06,     // the Apple Thrower's hips
+  backSeat: 0.1,       // the Apple Thrower's hips, right behind the Farmer's back (378; was -.06)
   pushZ: -0.62,        // the Traveller's feet
   lean: 0.28,          // the Traveller's forward lean
 };
@@ -1391,6 +1391,14 @@ const CART_WOOD = new Color3(0.52, 0.3, 0.2);
  * so his shins hang plumb outside the tray (a knee bent only about its own x turned the shin round the thigh, back inside the tray).
  */
 const HAY_BED = { fill: 0.92, lumps: 0.02, inset: 0.5 };
+/*
+ * [S] the riders bunched in line, the Farmer reclined against the Thrower (378; farmer.wheelbarrow.red.png: a short tray, the two riders one behind the
+ * other with no gap, the Farmer leaning back into the Apple Thrower's chest, legs splayed forward over the wheel; critic 377: the riders sat far apart
+ * along a long deep tray and looked small). WHEELBARROW.trayLong .78 -> .5 (wheel, braces, legs and hay follow it) and the Thrower's hips moved up to
+ * WHEELBARROW.backSeat .1, about .18 rig units behind the Farmer's; the Farmer's torso leans back BUNCHED_CREW.recline rad about his hip, his head
+ * BUNCHED_CREW.nod forward again so he looks ahead, so his shoulders rest on the Thrower's chest.
+ */
+const BUNCHED_CREW = { recline: -0.5, nod: 0.3 };
 const CREW_SEAT = { lipIn: 0.05, lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.04, backThigh: -0.3, backSplay: 1.3, backKnee: 0.2 };
 const CREW_FORK = { long: 0.72, butt: 0.2, thick: 0.013, tines: 3, tine: 0.2, spread: 0.055, curl: 0.4, dir: new Vector3(-0.42, 0.12, 0.9), glow: 0.2 };
 const CREW_APPLE = { r: 0.05, lift: 0.035, glow: 0.18 };
@@ -1461,7 +1469,8 @@ export function poseWheelbarrowCrew(crew: WheelbarrowCrew, throwT: number, stabT
   f.rightElbow.rotation.x = R.forkElbow - 1.0 * d + 0.55 * o;
   f.leftShoulder.rotation.set(R.forkArm + 0.25 * d - 0.6 * o, 0, 0);
   f.leftElbow.rotation.x = R.forkElbow;
-  f.torso.rotation.set(-0.1 * d + F.lean * o, 0, 0);
+  // at rest reclined into the Thrower (BUNCHED_CREW), sitting up as the stab drives out
+  f.torso.rotation.set(BUNCHED_CREW.recline * (1 - o) - 0.1 * d + F.lean * o, 0, 0);
   aimCrewStab(f, stabAt, d, o);
   return t.rightHand.getChildren().find((n): n is TransformNode => n.name === "crewApple") ?? null;
 }
@@ -1632,6 +1641,9 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
     man.rightHip.rotation.set(S.frontThigh, 0, -S.frontSplay);
     man.leftKnee.rotation.x = S.frontKnee;
     man.rightKnee.rotation.x = S.frontKnee;
+    // reclined back into the Apple Thrower's chest, head brought forward to look ahead (BUNCHED_CREW)
+    man.torso.rotation.x = BUNCHED_CREW.recline;
+    man.neck.rotation.x = BUNCHED_CREW.nod;
     man.leftShoulder.rotation.x = -0.7;
     man.rightShoulder.rotation.x = -0.7;
     man.leftElbow.rotation.x = -0.6;
