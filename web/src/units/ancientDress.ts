@@ -393,3 +393,62 @@ export function dressHoplite(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] the sarissa's belt, dagger and bracers (384; ancient.sarissa.red.png, card Appearance "a big brown belt around its hips, holding what seems to be an
+ * Acinaces dagger": a broad brown belt round the hips over the tunic, a darker strap band along its foot, a dagger in a brown sheath hanging down his left
+ * hip, brown leather bracers on the forearms). On the torso, in the trunk's box at the hips: the belt SARISSA_KIT.tall of the trunk tall at .at, .proud of
+ * its half extents, .sides facets, its lower .band a darker brown; the sheath on his left (-x) at .hipOut of the half-width, .sheath of the trunk long hanging
+ * from the belt, tilted .tilt rad out at the foot, a gold chape at its tip, the grip and a cross guard above the belt. On each forearm a bracer shell .out of
+ * its half-width round it from .from to .to of its length, a dark strap at each end. Fixed browns, self-lit .glow.
+ */
+const SARISSA_KIT = {
+  at: 0.06, tall: 0.2, proud: 1.14, sides: 8, band: 0.35, hipOut: 1.12, sheath: 0.42, tilt: 0.18,
+  out: 1.32, from: 0.12, to: 0.88,
+  leather: new Color3(0.4, 0.24, 0.13), dark: new Color3(0.24, 0.14, 0.08), gold: new Color3(0.78, 0.6, 0.28), glow: 0.12,
+};
+
+export function sarissaKit(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = SARISSA_KIT;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", K.leather, { emissive: K.leather.scale(K.glow) });
+  const dark = mf.get("cloth", K.dark, { emissive: K.dark.scale(K.glow) });
+  const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(K.glow) });
+  const out: Mesh[] = [];
+  const add = (m: Mesh, material = leather, parent: TransformNode = body.torso) => { m.parent = parent; m.material = material; m.convertToFlatShadedMesh(); out.push(m); return m; };
+  // the belt and its darker foot band
+  const waist = trunkBand(body, K.at - K.tall / 2, K.at + K.tall / 2 + 0.05);
+  const midZ = (waist.minZ + waist.maxZ) / 2, halfZ = (waist.maxZ - waist.minZ) / 2;
+  const tall = waist.trunk * K.tall;
+  const beltY = waist.trunk * K.at;
+  const belt = add(MeshBuilder.CreateCylinder("sarissaBelt", { height: tall, diameter: 2, tessellation: K.sides }, scene));
+  belt.scaling.set(waist.halfX * K.proud, 1, halfZ * K.proud);
+  belt.position.set(waist.midX, beltY, midZ);
+  const band = add(MeshBuilder.CreateCylinder("sarissaBeltBand", { height: tall * K.band, diameter: 2, tessellation: K.sides }, scene), dark);
+  band.scaling.set(waist.halfX * K.proud * 1.04, 1, halfZ * K.proud * 1.04);
+  band.position.set(waist.midX, beltY - tall * (0.5 - K.band / 2), midZ);
+  // the dagger down his left hip: sheath, chape, grip, guard, pommel, on a pivot at the belt
+  const hang = new TransformNode("sarissaDaggerHang", scene);
+  hang.parent = body.torso;
+  hang.position.set(waist.minX * K.hipOut, beltY, midZ + halfZ * 0.15);
+  hang.rotation.z = K.tilt;
+  const L = waist.trunk * K.sheath;
+  const w = L * 0.13;
+  const sheath = add(MeshBuilder.CreateCylinder("sarissaSheath", { height: L, diameterTop: w, diameterBottom: w * 0.6, tessellation: 6 }, scene), leather, hang);
+  sheath.scaling.z = 0.55;
+  sheath.position.y = -L * 0.5;
+  const chape = add(MeshBuilder.CreateCylinder("sarissaChape", { height: L * 0.14, diameterTop: w * 0.66, diameterBottom: w * 0.2, tessellation: 6 }, scene), gold, hang);
+  chape.position.y = -L * 1.05;
+  const guard = add(MeshBuilder.CreateBox("sarissaGuard", { width: w * 1.9, height: L * 0.06, depth: w * 0.6 }, scene), gold, hang);
+  guard.position.y = L * 0.04;
+  const grip = add(MeshBuilder.CreateCylinder("sarissaGrip", { height: L * 0.24, diameter: w * 0.5, tessellation: 6 }, scene), dark, hang);
+  grip.position.y = L * 0.18;
+  const pommel = add(MeshBuilder.CreateBox("sarissaPommel", { width: w * 1.3, height: L * 0.05, depth: w * 0.5 }, scene), gold, hang);
+  pommel.position.y = L * 0.32;
+  // bracers on the forearms, a dark strap at each end
+  for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "sarissaBracer", fore, K.from, K.to, K.out, leather));
+    for (const at of [K.from, K.to - 0.08]) out.push(limbShell(scene, "sarissaBracerStrap", fore, at, at + 0.08, K.out * 1.1, dark));
+  }
+  return out;
+}

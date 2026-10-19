@@ -15,7 +15,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
-import { dressHoplite, dressMinotaur, dressSarissa, dressSnakeArcher, dressZeus } from "./ancientDress";
+import { dressHoplite, dressMinotaur, dressSarissa, dressSnakeArcher, dressZeus, sarissaKit } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -547,6 +547,8 @@ export class UnitFactory {
     // [S] the sarissa's dark team cape to the calves and folded collar (383; ancientDress dressSarissa)
     if (definition.id === "ancient.sarissa" && !shouldUseVehicleBody) {
       propMeshes.push(...dressSarissa(this._scene, body, teamColor));
+      // [S] big brown belt, a dagger down his left hip, brown bracers (384; ancientDress sarissaKit)
+      propMeshes.push(...sarissaKit(this._scene, body));
     }
     // [S] the hoplite's dark brown greaves over brown strapped sandals (384; ancientDress dressHoplite)
     if (definition.id === "ancient.hoplite" && !shouldUseVehicleBody) {
