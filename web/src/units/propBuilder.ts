@@ -1903,7 +1903,11 @@ export function attachProps(
   if (shield) {
     shield.parent = body.leftHand;
     // TABS shields cover neck to knee and overlap along a line; bucklers stay small on purpose
-    if (config.shield === "palette") {
+    if (config.shield === "aspis") {
+      // strapped to the trunk, upright and face-forward whatever the arm does (ASPIS)
+      shield.parent = body.torso;
+      shield.position.set(ASPIS.x * scale, ASPIS.y * scale, ASPIS.z * scale);
+    } else if (config.shield === "palette") {
       // The palette is held out flat off the hand, its face tipped up and toward the viewer, not strapped across the chest
       shield.scaling.scaleInPlace(PROP_OVERSIZE);
       shield.rotation.set(PALETTE_TIP, PALETTE_TURN, 0);
@@ -4687,6 +4691,18 @@ const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
 const SCUTUM = { tall: 0.74, wide: 0.42, deep: 0.03, strips: 7, curve: 0.08, rim: 0.022, chin: 0.05, leaves: 9, leaf: 0.075, spray: 0.3, plate: 0.13, studs: 8, boss: 0.08 };
 const SCUTUM_TRIM = new Color3(0.93, 0.6, 0.3);
 const SCUTUM_IRON = new Color3(0.27, 0.27, 0.28);
+/*
+ * [S] the aspis (379; ancient.hoplite.red.png, card Appearance "holding an aspis"; critic 378: an octagonal disc held flat at the chest). A big round
+ * shield stood upright face-forward before him, strapped to his trunk (not the hand, whose angle laid it flat): its top at his chin, its bottom above the
+ * knee, a little to his off side. In units of s, the face +z:
+ *   - the board ASPIS.radius round, .thick deep, team colour, a crescent bite out of its rim on his weapon side high up (.notchAt rad from +x; a circle
+ *     .notch of the radius across centred on the rim), every rim point inside it pushed out onto that circle;
+ *   - an orange rim (SCUTUM_TRIM) .rim proud of the board's outline all round, notch included, set behind the board;
+ *   - three pale team swirls (the board lightened .pale toward white): each a chain of .links short flat bars along a spiral from .swirlR of the radius
+ *     out, wound .turns, its middle .swirlAt of the radius from the centre at 90, 210 and 330 degrees;
+ *   - mounted on the trunk at (.x, .y, .z) from the hip joint.
+ */
+const ASPIS = { radius: 0.36, thick: 0.035, notch: 0.42, notchAt: 0.64, rim: 0.025, pale: 0.45, links: 9, swirlR: 0.2, turns: 1.3, swirlAt: 0.52, x: -0.04, y: 0.12, z: 0.24 };
 const SLAB_FACETS = { deep: 0.06, rows: 3, front: 1.0, bevel: 0.7, seam: 0.006 };
 let slabSerial = 0;
 /*
@@ -4935,6 +4951,46 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       boss.scaling.z = 0.6;
       boss.position.set(0, plate.position.y, D * 1.2);
       boss.parent = shield; boss.material = iron;
+      return shield;
+    }
+    case "aspis": {
+      const A = ASPIS, R = A.radius * s;
+      const notchC = new Vector3(Math.cos(A.notchAt) * R, Math.sin(A.notchAt) * R, 0);
+      const outline = (grow: number): number[][] => {
+        const pts: number[][] = [];
+        const rn = A.notch * R - grow;
+        for (let k = 0; k < 48; k++) {
+          const a = (k / 48) * Math.PI * 2;
+          let x = Math.cos(a) * (R + grow), y = Math.sin(a) * (R + grow);
+          const dx = x - notchC.x, dy = y - notchC.y, d = Math.hypot(dx, dy);
+          if (d < rn) { x = notchC.x - (notchC.x / R) * rn; y = notchC.y - (notchC.y / R) * rn; if (d > 1e-6) { x = notchC.x + dx / d * rn; y = notchC.y + dy / d * rn; } }
+          pts.push([x, y]);
+        }
+        return pts;
+      };
+      const shield = flatPlate(scene, "aspisShield", outline(0), A.thick * s);
+      shield.material = mat(scene, board, 0.12, "cloth");
+      const rim = flatPlate(scene, "aspisRim", outline(A.rim * s), A.thick * 0.7 * s);
+      rim.position.z = -A.thick * 0.4 * s;
+      rim.parent = shield;
+      rim.material = mat(scene, SCUTUM_TRIM, 0.15, "cloth");
+      const pale = mat(scene, Color3.Lerp(board, Color3.White(), A.pale), 0.15, "cloth");
+      for (const deg of [90, 210, 330]) {
+        const c = deg * Math.PI / 180;
+        const cx = Math.cos(c) * A.swirlAt * R, cy = Math.sin(c) * A.swirlAt * R;
+        const at = (t: number) => {
+          const rho = A.swirlR * R * (1 - 0.8 * t), phi = c + Math.PI * 2 * A.turns * t;
+          return [cx + Math.cos(phi) * rho, cy + Math.sin(phi) * rho];
+        };
+        for (let i = 0; i < A.links; i++) {
+          const [x0, y0] = at(i / A.links), [x1, y1] = at((i + 1) / A.links);
+          const len = Math.hypot(x1 - x0, y1 - y0);
+          const bar = MeshBuilder.CreateBox("aspisSwirl", { width: len * 1.15, height: R * 0.07 * (1 - 0.4 * i / A.links), depth: A.thick * 0.5 * s }, scene);
+          bar.position.set((x0 + x1) / 2, (y0 + y1) / 2, A.thick * 0.55 * s);
+          bar.rotation.z = Math.atan2(y1 - y0, x1 - x0);
+          bar.parent = shield; bar.material = pale;
+        }
+      }
       return shield;
     }
     case "slab": {
