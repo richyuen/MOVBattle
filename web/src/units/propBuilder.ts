@@ -4946,7 +4946,7 @@ const LONGBOW_GREY = new Color3(0.74, 0.74, 0.72);
  * as the longbow (named "bow", string child).
  */
 const SNAKE_BOW = {
-  long: 0.95, thick: 0.06, taper: 0.55, bow: 0.07, panelFrom: 0.18, panelTo: 0.88, panel: 0.8, grip: 0.1, head: 0.075,
+  long: 0.95, thick: 0.06, taper: 0.55, bow: 0.07, panelFrom: 0.18, panelTo: 0.88, panel: 0.8, grip: 0.1, head: 0.075, hold: 1.1,
   green: new Color3(0.24, 0.47, 0.26), white: new Color3(0.9, 0.92, 0.88), wrap: new Color3(0.42, 0.26, 0.14), tongue: new Color3(0.85, 0.12, 0.1),
 };
 function buildSnakeBow(scene: Scene, s: number, stand: number): Mesh {
@@ -5004,7 +5004,8 @@ function buildSnakeBow(scene: Scene, s: number, stand: number): Mesh {
   string.position.z = zs;
   string.parent = stave;
   string.material = mat(scene, new Color3(0.85, 0.8, 0.7));
-  stave.rotation.z = Math.PI / 2;
+  // stood up .hold rad off the level the plain bow lies at, so it is carried upright across him and not flat
+  stave.rotation.z = Math.PI / 2 - B.hold;
   stave.position.y = 0.1 * s;
   return stave;
 }
