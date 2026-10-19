@@ -4688,7 +4688,7 @@ const SLAB_MOSS = { top: 0.17, hole: 0.12, bottom: 0.1, proud: 0.03 };
  *   - two orange laurel sprays, .leaves leaf blades each, fanned on arcs: the upper bowed up over the boss (ends low), the lower bowed down under it;
  *   - in the middle a dark iron plate .plate across with .studs orange studs round it and a faceted iron boss .boss across standing out of it.
  */
-const SCUTUM = { tall: 0.5, wide: 0.36, deep: 0.025, strips: 7, curve: 0.06, rim: 0.02, chin: 0.1, plate: 0.1, studs: 8, boss: 0.065 };
+const SCUTUM = { tall: 0.5, wide: 0.36, deep: 0.025, strips: 7, curve: 0.06, rim: 0.02, chin: 0.06, plate: 0.1, studs: 8, boss: 0.065 };
 /*
  * [S] chin to shin, leafy laurels (379; ancient.shield_bearer.red.png: the board's top at his chin with the helmet and eyes over it, its bottom at the
  * shin, about three quarters as wide as tall; a deep orange rim; two laurel sprays, each a knot in the middle and a branch out each way feathered with
