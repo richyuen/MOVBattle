@@ -865,12 +865,20 @@ function kingPantaloon(scene: Scene, thigh: Mesh, cloth: Material, gold: Materia
  * (360) showed the sleeve shells' baseColor intact: nothing repaints them. The grey is the lighting: the cool hemi ground light (main.ts hemi.groundColor
  * .3,.3,.42) and ACES tone mapping flatten a pale, low-saturation tan to neutral grey, while the more saturated brown leather beside it holds. So light warm
  * cloth takes an explicit amber self-light of its own (the king's beard recipe, kingHair) in place of colour x glow: WARM_CLOTH.tan diffuse, .warm emissive;
- * calibrated by pixel readback of a squire row (.tan/.warm render about 205-212, 185-192, 145-165 front-lit).
+ * calibrated by pixel readback of a squire row (.tan/.warm render about 195-200, 177-185, 147-161 front-lit). The scene's glow layer blooms any emissive into
+ * a pale haze round the mesh, so every mesh in it is left out of the glow (unglow).
  */
-const WARM_CLOTH = { tan: new Color3(0.9, 0.72, 0.44), warm: new Color3(0.45, 0.27, 0.06) };
+const WARM_CLOTH = { tan: new Color3(0.92, 0.74, 0.46), warm: new Color3(0.6, 0.36, 0.08) };
 
 function warmCloth(color = WARM_CLOTH.tan, warm = WARM_CLOTH.warm): Material {
   return getMaterialFactory().get("cloth", color, { emissive: warm });
+}
+
+/** Leaves meshes out of the scene's glow layer (self-lit cloth is lit, not a light), and returns them. */
+function unglow(scene: Scene, meshes: Mesh[]): Mesh[] {
+  const glow = scene.getGlowLayerByName("glow");
+  for (const m of meshes) glow?.addExcludedMesh(m);
+  return meshes;
 }
 
 /** A limb mesh's extent in its joint's frame: its middle height, half-height and half-width (x) and half-depth (z). */
@@ -948,7 +956,7 @@ function squireArms(scene: Scene, body: ArticulatedBody): Mesh[] {
   const beige = warmCloth();
   const iron = getMaterialFactory().get("stone", SQUIRE_LEGS.iron, { emissiveIntensity: SQUIRE_LEGS.glow });
   const out: Mesh[] = [];
-  for (const upper of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "squireSleeve", upper, 0, 0.96, A.sleeve, beige));
+  for (const upper of [body.leftUpperArm, body.rightUpperArm]) out.push(...unglow(scene, [limbShell(scene, "squireSleeve", upper, 0, 0.96, A.sleeve, beige)]));
   for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
     out.push(limbShell(scene, "squireGauntlet", fore, 0.12, 1, A.gauntlet, iron));
     const L = limbBox(fore);
