@@ -619,6 +619,12 @@ export class ProceduralAnimator {
 
   setState(state: AnimState): void {
     if (this._state === state) return;
+    // The harvester's sweep is carried through to its end (SCYTHE_SWEEP.through): a step he takes in the press, mid-cut, waits for it (375; the sim's
+    // moveTo had cut the sweep off just past the cock while its blow still landed, so the hit frame showed him in the press with the scythe stood up)
+    if (this._state === AnimState.Attacking && this._lowScythe && this._attackMotion === "blade_slash" && state !== AnimState.Dead) {
+      this._afterSweep = state;
+      return;
+    }
     this._state = state;
     if (state === AnimState.Dead) {
       this._initDeathRagdoll();
@@ -626,6 +632,7 @@ export class ProceduralAnimator {
   }
 
   triggerAttack(windupTime: number, motion?: AttackMotion): void {
+    this._afterSweep = null;
     this._state = AnimState.Attacking;
     this._attackTimer = 0;
     this._attackDuration = windupTime + 0.25;
@@ -1256,6 +1263,8 @@ export class ProceduralAnimator {
   private _clubHold = 0;
   // The harvester's sweep (SCYTHE_SWEEP): the snath's line in his own frame while it runs, null otherwise; whether his scythe is the low-carried one
   private _sweepTip: Vector3 | null = null;
+  // The state a step asked for while the sweep ran (setState): taken up when it ends
+  private _afterSweep: AnimState | null = null;
   private _lowScythe = false;
   // Per-unit shove pose so a rank in contact does not share one silhouette. Hashed from the wobble
   // phase rather than drawn fresh, so spawning consumes no extra random numbers.
@@ -3966,7 +3975,8 @@ export class ProceduralAnimator {
     b.rightKnee.rotation.x = S.crouch * c * k;
     this._clubHold = c * k;
     if (progress >= 1) {
-      this._state = AnimState.Idle;
+      this._state = this._afterSweep ?? AnimState.Idle;
+      this._afterSweep = null;
       this._sweepTip = null;
     }
   }
