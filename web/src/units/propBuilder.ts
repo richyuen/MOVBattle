@@ -2632,6 +2632,20 @@ const RAPIER_HILT = new Color3(0.45, 0.46, 0.5);
 const MUSKET = { long: 1.05, grip: 0.27, bore: 0.034, fore: 0.8, stock: 0.02, butt: 0.085, ring: 1.45 };
 const MUSKET_STEEL = new Color3(0.58, 0.58, 0.6);
 const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
+/*
+ * [S] the matchlock re-cut (369; renaissance.musketeer.red.png, read off the red musketeer: the gun runs from behind his hip past his feet, longer than
+ * he is tall; the barrel is a fat light-grey octagon about as wide as his fist the whole way, with a long dark octagonal sleeve at the muzzle a little
+ * wider than the barrel and a thin dark band at the lock; the orange-brown stock is a deep slab under the barrel from the lock nearly to the muzzle sleeve,
+ * and behind the hand a butt that deepens to a heel). In the man's heights (fit.stand): MATCHLOCK.long long, the fist .grip of it from the butt; barrel
+ * .bore of the length across, light grey matte (.steel, self-lit .glow so it stays pale, never the near-black metal); dark bands as [at, long, wide] (share
+ * of the barrel ahead of the fist, share of the length, times the bore); the stock .stock of the bore deep under the barrel to .fore of the barrel, its
+ * butt .butt of the length deep at the heel, both matte .wood.
+ */
+const MATCHLOCK = {
+  long: 1.3, grip: 0.26, bore: 0.042, fore: 0.86, stock: 0.9, butt: 0.11, glow: 0.18,
+  bands: [[0.955, 0.09, 1.3], [0.62, 0.012, 1.18], [0.04, 0.02, 1.18]] as [number, number, number][],
+  steel: new Color3(0.74, 0.74, 0.72), wood: new Color3(0.64, 0.31, 0.14), band: new Color3(0.22, 0.22, 0.24),
+};
 const BRUSH = { long: 0.34, grip: 0.16, butt: 0.08, neck: 0.12, ferrule: 0.6, collar: 0.1, tuft: 0.22, swell: 0.1 };
 const BRUSH_WOOD = new Color3(0.6, 0.3, 0.2);
 /*
@@ -3357,12 +3371,15 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return barrel;
     }
     case "musket": {
-      // The matchlock, built to the spec at MUSKET: barrel, fore-stock and butt along +y from the fist; the wood lies on the barrel's +z side
-      const L = fit.stand * MUSKET.long;
-      const back = MUSKET.grip * L, front = (1 - MUSKET.grip) * L;
-      const steel = mat(scene, MUSKET_STEEL, 0.08, "metal");
-      const wood = mat(scene, MUSKET_WOOD, 0.12);
-      const bore = MUSKET.bore * L;
+      // [S] 369 the matchlock, built to the spec at MATCHLOCK: barrel, stock and butt along +y from the fist; the wood lies on the barrel's +z side
+      const M = MATCHLOCK;
+      const L = fit.stand * M.long;
+      const back = M.grip * L, front = (1 - M.grip) * L;
+      const steel = mat(scene, M.steel, M.glow, "cloth");
+      const wood = mat(scene, M.wood, M.glow * 0.6, "cloth");
+      const bandMat = mat(scene, M.band, 0.04, "cloth");
+      const bore = M.bore * L;
+      // A fat octagonal barrel from just behind the fist to the muzzle
       const barrel = MeshBuilder.CreateCylinder("barrel", { height: front + 0.04 * L, diameter: bore, tessellation: 8 }, scene);
       barrel.position.y = (front - 0.04 * L) * 0.5;
       barrel.material = steel;
@@ -3370,28 +3387,36 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // The barrel is the root: every other piece is placed from the fist and set back by the barrel's own lift
       const lift = barrel.position.y;
       const holder = barrel;
-      // The muzzle ring and a band two thirds of the way out
-      for (const [at, tall] of [[front - 0.02 * L, 0.04 * L], [front * 0.66, 0.015 * L]]) {
-        const ring = MeshBuilder.CreateCylinder("musketRing", { height: tall, diameter: bore * MUSKET.ring, tessellation: 8 }, scene);
-        ring.position.y = at - lift;
-        ring.material = steel;
+      // Dark octagonal bands: the long muzzle sleeve, a thin band out along the barrel, one at the lock
+      for (const [at, long, wide] of M.bands) {
+        const ring = MeshBuilder.CreateCylinder("musketRing", { height: long * L, diameter: bore * wide, tessellation: 8 }, scene);
+        ring.position.y = Math.min(at * front, front - long * L * 0.5) - lift;
+        ring.material = bandMat;
         ring.convertToFlatShadedMesh();
         ring.parent = holder;
       }
-      // The fore-stock: a wooden bar under the barrel from the hand most of the way to the muzzle
-      const foreLong = front * MUSKET.fore;
-      // narrower than the barrel and hung under it, so the grey barrel shows over the wood from every side
-      const fore = MeshBuilder.CreateBox("musketFore", { width: bore * 0.75, height: foreLong, depth: MUSKET.stock * L }, scene);
-      fore.position.set(0, foreLong * 0.5 - lift, bore * 0.45 + MUSKET.stock * L * 0.5);
+      // The stock: a deep slab under the barrel from behind the lock nearly to the muzzle sleeve, as wide as the barrel's flats
+      const foreLong = front * M.fore + 0.04 * L;
+      const deep = bore * M.stock;
+      const fore = MeshBuilder.CreateBox("musketFore", { width: bore * 0.8, height: foreLong, depth: deep }, scene);
+      fore.position.set(0, foreLong * 0.5 - 0.04 * L - lift, bore * 0.35 + deep * 0.5);
       fore.material = wood;
+      fore.convertToFlatShadedMesh();
       fore.parent = holder;
-      // The butt: a slim wrist at the hand deepening to the butt plate behind it, a tapered block flattened across
-      const butt = MeshBuilder.CreateCylinder("musketButt", { height: back + 0.04 * L, diameterTop: bore * 1.3, diameterBottom: MUSKET.butt * L * 1.4, tessellation: 4 }, scene);
-      butt.rotation.y = Math.PI / 4;
-      butt.scaling.x = 0.5;
-      butt.bakeCurrentTransformIntoVertices();
-      butt.position.set(0, -(back - 0.04 * L) * 0.5 - lift, MUSKET.stock * L * 0.6);
-      butt.rotation.x = 0.12;
+      // The butt: from the stock's depth at the wrist down to a deep heel behind the hand, a flat wedge as wide as the stock
+      const heel = M.butt * L;
+      const buttLong = back + 0.04 * L;
+      const butt = MeshBuilder.CreateBox("musketButt", { width: bore * 0.85, height: buttLong, depth: 1 }, scene);
+      const bp = butt.getVerticesData(VertexBuffer.PositionKind)!;
+      for (let i = 0; i < bp.length; i += 3) {
+        // depth grows from the stock's at the wrist (top, +y) to the heel's at the plate (bottom), hung from the barrel's underside
+        const k = 0.5 - bp[i + 1] / buttLong;
+        const d = deep + (heel - deep) * k;
+        bp[i + 2] = bp[i + 2] > 0 ? bore * 0.35 + d : bore * 0.35;
+      }
+      butt.setVerticesData(VertexBuffer.PositionKind, bp);
+      butt.refreshBoundingInfo();
+      butt.position.set(0, -buttLong * 0.5 + 0.04 * L * 0.5 - lift, 0);
       butt.material = wood;
       butt.convertToFlatShadedMesh();
       butt.parent = holder;
