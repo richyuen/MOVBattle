@@ -14,7 +14,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
-import { halflingJacket, harvesterBraids } from "./farmerDress";
+import { halflingJacket, harvesterBraids, potionJerkin } from "./farmerDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 
 export interface SpawnVisualOptions {
@@ -572,8 +572,8 @@ export class UnitFactory {
     if (definition.id === "farmer.potion_seller" && !shouldUseVehicleBody) {
       // [S] a close umber hair cap, no hood (343; tribalDress HAIR_CAP)
       propMeshes.push(...(dressTribalHair(this._scene, body, definition.id) ?? []));
-      // [S] dark team jerkin laced over a brown undershirt, copper buttons, light hem (344; POTION_JERKIN)
-      propMeshes.push(...dressPotionSeller(this._scene, body, teamColor));
+      // [S] a slim fitted dark team jerkin in place of the trunk, laced V, copper buttons, light skirt band (376; farmerDress POTION_FIT)
+      propMeshes.push(...potionJerkin(this._scene, body, teamColor));
       // [S] dark team hosen and brown cuffed boots (345; POTION_BOOT)
       propMeshes.push(...dressPotionSellerLegs(this._scene, body, teamColor));
     }
@@ -1359,73 +1359,6 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
  * at the hem, .long of the thigh long. Team shade .dark, self-lit .glow so it reads dark team, not black.
  */
 const HALFLING_SHORTS = { seat: 1.04, seatTall: 0.3, leg: 1.3, flare: 1.12, long: 0.92, dark: 0.45, glow: 0.14 };
-/*
- * [S] potionseller's jerkin (344; farmer.potion_seller.blue.png, card Appearance "a dark team-colored jerkin with a light team-colored bottom tighten with
- * four rope. Each side has a copper button above the chest of the vest. They also wear a brown undershirt"): a dark team jerkin round the chest, its
- * fronts parted in a deep V from the neck to the belly where the red-brown undershirt shows, laced across the V in crossed tan cord; a round copper button
- * at each top corner of the V; under the jerkin's hem a light team band of the shirt. Shares of the chest (W, H, D): jerkin POTION_JERKIN.shell round it,
- * team shade .dark; V .vee of W across at the neck and .veeDeep of H deep; .laces crossings; buttons .button of W across; hem .hem of H tall, team
- * lightened .light. Self-lit (.glow) so the dark team reads team and not black.
- */
-const POTION_JERKIN = { shell: 1.12, dark: 0.42, vee: 0.4, veeDeep: 0.62, laces: 3, button: 0.13, hem: 0.14, light: 0.62, glow: 0.16 };
-const POTION_UNDERSHIRT = new Color3(0.66, 0.3, 0.24);
-const POTION_LACE = new Color3(0.88, 0.58, 0.34);
-const POTION_COPPER = new Color3(0.86, 0.5, 0.26);
-/** Dresses the potionseller's torso (spec at POTION_JERKIN). */
-function dressPotionSeller(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
-  const added: Mesh[] = [];
-  const mf = getMaterialFactory();
-  const P = POTION_JERKIN;
-  const put = (m: Mesh, mat: Material): Mesh => {
-    m.material = mat;
-    m.convertToFlatShadedMesh();
-    m.parent = body.torso;
-    added.push(m);
-    return m;
-  };
-  const chest = body.torsoMesh;
-  const ext = chest.getBoundingInfo().boundingBox.extendSize;
-  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
-  const top = chest.position.y + H * 0.5;
-  const foot = chest.position.y - H * 0.5;
-  // the light team hem of the shirt showing under the jerkin
-  const hemCloth = mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), P.light), { emissiveIntensity: 0.14 });
-  const hem = put(MeshBuilder.CreateBox("potionHem", { width: W * (P.shell + 0.04), height: H * P.hem, depth: D * (P.shell + 0.04) }, scene), hemCloth);
-  hem.position.set(0, foot + H * P.hem * 0.5 - H * 0.02, 0);
-  // the jerkin: a dark team shell over the chest, from the shoulders down to just above the hem
-  const jerkinTall = H * (0.98 - P.hem * 0.6);
-  const jerkin = put(MeshBuilder.CreateBox("potionJerkin", { width: W * P.shell, height: jerkinTall, depth: D * P.shell }, scene),
-    mf.get("cloth", teamColor.scale(P.dark), { emissiveIntensity: P.glow }));
-  jerkin.position.set(0, top - H * 0.02 - jerkinTall / 2, 0);
-  const face = D * P.shell * 0.5 + D * 0.012;
-  // the undershirt in the parted V: a downward triangle, its flat edge along the neckline
-  const neck = top - H * 0.04;
-  const vee = put(MeshBuilder.CreateDisc("potionUndershirt", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene),
-    mf.get("cloth", POTION_UNDERSHIRT, { emissiveIntensity: 0.2 }));
-  vee.rotation.z = -Math.PI / 2;
-  vee.scaling.set(H * P.veeDeep / 1.5, W * P.vee / Math.sqrt(3), 1);
-  vee.position.set(0, neck - H * P.veeDeep / 3, face);
-  // crossed cord laced over the V, narrowing with it
-  const lace = mf.get("cloth", POTION_LACE, { emissiveIntensity: 0.25 });
-  for (let i = 0; i < P.laces; i++) {
-    const t = (i + 0.6) / (P.laces + 0.6);
-    const across = W * P.vee * (1 - t) * 0.9;
-    for (const lean of [-1, 1]) {
-      const cord = put(MeshBuilder.CreateBox("potionLace", { width: Math.hypot(across, H * 0.08), height: H * 0.022, depth: D * 0.02 }, scene), lace);
-      cord.rotation.z = lean * Math.atan2(H * 0.08, across);
-      cord.position.set(0, neck - H * P.veeDeep * t, face + D * 0.012);
-    }
-  }
-  // a round copper button at each top corner of the V
-  const copper = mf.get("metal", POTION_COPPER, { emissiveIntensity: 0.3 });
-  for (const side of [-1, 1]) {
-    const button = put(MeshBuilder.CreateCylinder("potionButton", { height: D * 0.06, diameter: W * P.button, tessellation: 8 }, scene), copper);
-    button.rotation.x = Math.PI / 2;
-    button.position.set(side * W * P.vee * 0.5, neck - H * 0.05, face + D * 0.02);
-  }
-  return added;
-}
-
 /*
  * [S] potionseller's hosen and boots (345; farmer.potion_seller.red.png, card Appearance "a pair of dark team-colored hosen along with a pair of brown
  * boots"): both legs in dark team hosen from the hip to the ankle; over the lower shin a brown boot shaft standing a little off the leg, its top turned

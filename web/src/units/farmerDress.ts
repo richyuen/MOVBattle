@@ -191,3 +191,86 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   hole.position.set(0, belt.position.y, buckle.position.z + D * 0.025);
   return added;
 }
+
+/*
+ * [S] the potionseller's fitted jerkin (376; farmer.potion_seller.red.png, card Appearance "a dark team-colored jerkin with a light team-colored bottom
+ * tighten with four rope. Each side has a copper button above the chest of the vest. They also wear a brown undershirt": a slim dark team jerkin fitted
+ * to a lean trunk, no wider than his shoulders and narrowing to the waist, a deep laced V down its front showing the brown undershirt, a copper button at
+ * each top corner, a band at its foot, and under it a light team skirt band over the hips; the 344 jerkin was a box 1.12 of the trunk round it, a broad
+ * square block wider than the shoulders). The trunk mesh is hidden; the jerkin is his trunk. Shares of the trunk box (W, H, D):
+ *   jerkin an eight-sided lathe, flats to the front and sides, .top of W across the flats at the shoulders and .waist at its foot, .deep of D front to
+ *   back, from the trunk's top down to .foot of H above its foot; band at its foot .band of H tall, .bandOut round, team x .bandShade; skirt below
+ *   .skirt of H tall flaring from .waist to .hips, team .light toward white, a brown hem .hem of H under it; V .vee of W across at the neck, .veeDeep of H
+ *   deep; .laces crossings of tan cord; buttons .button of W across. Jerkin team x .dark, self-lit .glow.
+ */
+const POTION_FIT = {
+  top: 1.0, waist: 0.84, deep: 1.04, foot: 0.02, band: 0.1, bandOut: 1.04, bandShade: 0.75, skirt: 0.2, hips: 0.94, light: 0.55, hem: 0.05,
+  vee: 0.4, veeDeep: 0.6, laces: 3, button: 0.13, dark: 0.42, glow: 0.16,
+};
+const POTION_BROWN = new Color3(0.5, 0.26, 0.17);
+const POTION_CORD = new Color3(0.88, 0.58, 0.34);
+const POTION_BUTTON = new Color3(0.86, 0.5, 0.26);
+
+/** The potionseller's fitted jerkin, laced V, copper buttons and light skirt band, in place of the trunk mesh (spec at POTION_FIT). */
+export function potionJerkin(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const P = POTION_FIT;
+  const mf = getMaterialFactory();
+  const { W, H, D, top, foot, z } = chestBox(body);
+  body.torsoMesh.isVisible = false;
+  const added: Mesh[] = [];
+  const put = (m: Mesh, mat: ReturnType<typeof mf.getCloth>): Mesh => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = body.torso;
+    added.push(m);
+    return m;
+  };
+  const flat = Math.cos(Math.PI / 8); // an octagon's flat-to-flat over corner-to-corner
+  const zs = (D * P.deep) / W; // depth over width
+  // an eight-sided band of the trunk, flats front and sides: `a`/`b` the flat-to-flat widths at its top and foot
+  const lathe = (name: string, tall: number, a: number, b: number, y: number, mat: ReturnType<typeof mf.getCloth>): Mesh => {
+    const m = MeshBuilder.CreateCylinder(name, { height: tall, diameterTop: a / flat, diameterBottom: b / flat, tessellation: 8 }, scene);
+    // the eighth-turn baked in before the depth squash (scaling acts before rotation), and before any parenting
+    m.rotation.y = Math.PI / 8;
+    m.bakeCurrentTransformIntoVertices();
+    m.scaling.z = zs;
+    m.position.set(0, y, z);
+    return put(m, mat);
+  };
+  const jerkinCloth = mf.get("cloth", teamColor.scale(P.dark), { emissiveIntensity: P.glow });
+  const jTop = top, jFoot = foot + H * P.foot, jTall = jTop - jFoot;
+  lathe("potionJerkin", jTall, W * P.top, W * P.waist, (jTop + jFoot) / 2, jerkinCloth);
+  lathe("potionJerkinBand", H * P.band, W * P.waist * P.bandOut * 1.02, W * P.waist * P.bandOut, jFoot + H * P.band * 0.5, mf.get("cloth", teamColor.scale(P.dark * P.bandShade), { emissiveIntensity: P.glow }));
+  const skirtTall = H * P.skirt;
+  lathe("potionSkirt", skirtTall, W * P.waist * 0.98, W * P.hips, jFoot - skirtTall * 0.5, mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), P.light), { emissiveIntensity: 0.14 }));
+  lathe("potionHem", H * P.hem, W * P.hips * 0.99, W * P.hips * 1.01, jFoot - skirtTall - H * P.hem * 0.5, mf.get("cloth", POTION_BROWN, { emissiveIntensity: 0.18 }));
+  // the front face's depth at height y (the jerkin narrows from the shoulders to the waist)
+  const faceAt = (y: number): number => z + ((W * (P.waist + (P.top - P.waist) * (y - jFoot) / jTall)) / 2) * zs + D * 0.012;
+  // the brown undershirt in the parted V: a downward triangle, flat edge along the neckline
+  const neck = jTop - H * 0.04;
+  const veeMid = neck - H * P.veeDeep / 3;
+  const vee = put(MeshBuilder.CreateDisc("potionUndershirt", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene), mf.get("cloth", POTION_BROWN, { emissiveIntensity: 0.2 }));
+  vee.rotation.z = -Math.PI / 2;
+  vee.scaling.set(H * P.veeDeep / 1.5, W * P.vee / Math.sqrt(3), 1);
+  vee.position.set(0, veeMid, faceAt(veeMid));
+  // crossed tan cord laced over the V, narrowing with it
+  const cord = mf.get("cloth", POTION_CORD, { emissiveIntensity: 0.25 });
+  for (let i = 0; i < P.laces; i++) {
+    const t = (i + 0.6) / (P.laces + 0.6);
+    const across = W * P.vee * (1 - t) * 0.9;
+    const y = neck - H * P.veeDeep * t;
+    for (const lean of [-1, 1]) {
+      const lace = put(MeshBuilder.CreateBox("potionLace", { width: Math.hypot(across, H * 0.08), height: H * 0.022, depth: D * 0.02 }, scene), cord);
+      lace.rotation.z = lean * Math.atan2(H * 0.08, across);
+      lace.position.set(0, y, faceAt(y) + D * 0.012);
+    }
+  }
+  // a round copper button at each top corner of the V
+  const copper = mf.get("metal", POTION_BUTTON, { emissiveIntensity: 0.3 });
+  for (const side of [-1, 1]) {
+    const button = put(MeshBuilder.CreateCylinder("potionButton", { height: D * 0.06, diameter: W * P.button, tessellation: 8 }, scene), copper);
+    button.rotation.x = Math.PI / 2;
+    button.position.set(side * W * P.vee * 0.5, neck - H * 0.05, faceAt(neck - H * 0.05) + D * 0.02);
+  }
+  return added;
+}
