@@ -6,7 +6,6 @@ import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
 import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
-import { dressBallistaCrew } from "./ancientDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -562,13 +561,6 @@ const BALLISTA_ARMS = { reach: 1.75, thick: 0.1, tip: 0.6, bind: 0.13, bindAt: 0
 const BALLISTA_STOCK = { wide: 0.18, tall: 0.12, front: 0.5, back: 1.55 };
 const BALLISTA_WHEEL = { across: 0.62, rim: 0.07, wide: 0.08, hub: 0.12 };
 const BALLISTA_WOOD = new Color3(0.62, 0.3, 0.2);
-/*
- * [S] 387 the crewman (ancient.ballista.blue.png, card: a helmeted team crewman crouched close behind the frame beside the trough, his hands on the stock;
- * critic 378: a bare team man standing 2 m off). BALLISTA_CREW: .x beside the trough, .back m behind the frame's back, his hips let down to .y; thighs
- * forward .thigh rad and splayed .splay, knees folded .knee, the trunk leaning .lean in over them, turned .turn toward the trough; arms up and forward
- * .reach rad, .spread out, elbows .elbow. His iron helmet is ancientDress dressBallistaCrew.
- */
-const BALLISTA_CREW = { x: 0.3, back: 0.3, y: 0.42, thigh: -1.35, splay: 0.18, knee: 1.95, lean: 0.45, turn: -0.3, reach: -1.75, spread: 0.12, elbow: -0.3 };
 function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("ballista_root", scene);
   const allMeshes: Mesh[] = [];
@@ -687,21 +679,8 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
     }
   }
 
-  // [S] 387 the crewman crouched at the stock behind the frame, helmeted, both hands up on the trough (spec at BALLISTA_CREW)
-  const C = BALLISTA_CREW;
-  const operator = addOperator(scene, root, allMeshes, C.x, C.y, -halfD - C.back, color, (man) => {
-    man.root.rotation.y = C.turn;
-    man.torso.rotation.x = C.lean;
-    for (const [hip, knee, side] of [[man.leftHip, man.leftKnee, -1], [man.rightHip, man.rightKnee, 1]] as const) {
-      hip.rotation.set(C.thigh, 0, side * C.splay);
-      knee.rotation.x = C.knee;
-    }
-    for (const [shoulder, elbow, side] of [[man.leftShoulder, man.leftElbow, -1], [man.rightShoulder, man.rightElbow, 1]] as const) {
-      shoulder.rotation.set(C.reach, 0, side * C.spread);
-      elbow.rotation.x = C.elbow;
-    }
-    dressBallistaCrew(scene, man);
-  });
+  // Operator behind (-Z), clear of the frame's back
+  const operator = addOperator(scene, root, allMeshes, 0.25, 0.72, -halfD - 0.55, color);
 
   const vehicleSockets: VehicleSocketSet = {
     primaryMuzzle: makeSocket(scene, root, "ballista_bolt_socket", new Vector3(0, bolt.position.y, S.front + 0.4)),
