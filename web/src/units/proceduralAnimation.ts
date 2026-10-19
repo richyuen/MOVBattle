@@ -366,6 +366,14 @@ const FLASK_HANG = { down: 1, ahead: 0.3 };
  */
 // (380 follow-up: at .62 out, -.05 up the fist sat on the hip, arm akimbo, and the point went into the grass at .62 down)
 const DORY_CARRY = { ahead: 0.25, out: 0.9, up: -0.3, fwd: 0.8, side: 0.25, down: 0.4, fistAt: 0.15 };
+/*
+ * [S] the dory thrust (381; ancient.hoplite.jpg, card Weapons "Short Spear: Polearm - Melee, range 2.2": the spear held level under the arm at the hip,
+ * point well ahead, and driven straight out past the aspis; critic 378/380: the blow was a shield shove, the dory trailing point-down). Through every
+ * blow the carry blends (over .blendIn of the blow, back over its last .blendOut) to a line .tilt rad off level along his heading, the fist .ahead of
+ * the hip, .out to the weapon side, .up above it (in u, as DORY_CARRY); along that line the fist draws back .draw of .reach to the release, is driven
+ * out the full .reach past it, and eases home.
+ */
+const DORY_THRUST = { ahead: 0.35, out: 0.6, up: -0.05, tilt: -0.06, reach: 0.75, draw: 0.45, blendIn: 0.2, blendOut: 0.15 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
@@ -3166,7 +3174,7 @@ export class ProceduralAnimator {
     const { shaft, grip } = this._dory;
     const st = this._state;
     const w = st === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
-    if (w <= 0.01 || (st !== AnimState.Idle && st !== AnimState.Walking)) {
+    if (w <= 0.01 || (st !== AnimState.Idle && st !== AnimState.Walking && st !== AnimState.Attacking)) {
       if (shaft.rotationQuaternion) {
         shaft.rotationQuaternion = null;
         shaft.position.copyFrom(grip);
@@ -3178,9 +3186,23 @@ export class ProceduralAnimator {
     const hip = b.hip.getAbsolutePosition();
     const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
     const { fwd, right } = this._heading();
-    const fist = hip.add(fwd.scale(D.ahead * u)).add(right.scale(D.out * u)).add(new Vector3(0, D.up * u, 0));
+    let fist = hip.add(fwd.scale(D.ahead * u)).add(right.scale(D.out * u)).add(new Vector3(0, D.up * u, 0));
+    let dir = fwd.scale(D.fwd).add(right.scale(D.side)).add(new Vector3(0, -D.down, 0)).normalize();
+    // [S] the thrust (381, spec at DORY_THRUST): from the carry the dory comes up level under the arm, draws back, and is driven out past the aspis
+    if (st === AnimState.Attacking) {
+      const T = DORY_THRUST;
+      const p = Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1);
+      const ext = this._resolveReleasePoint(0.5);
+      const ease = (x: number) => { const c = Math.max(0, Math.min(1, x)); return c * c * (3 - 2 * c); };
+      const q = (p - ext) / Math.max(1 - ext, 0.001);
+      const stroke = p < ext ? -T.draw * ease(p / Math.max(ext, 0.001)) : q < 0.4 ? -T.draw + (T.draw + 1) * ease(q / 0.4) : 1 - ease((q - 0.4) / 0.6);
+      const line = new Vector3(fwd.x * Math.cos(T.tilt), Math.sin(T.tilt), fwd.z * Math.cos(T.tilt));
+      const drive = hip.add(fwd.scale(T.ahead * u)).add(right.scale(T.out * u)).add(new Vector3(0, T.up * u, 0)).add(line.scale(T.reach * u * stroke));
+      const k = ease(p / T.blendIn) * (1 - ease((p - 1 + T.blendOut) / T.blendOut));
+      fist = Vector3.Lerp(fist, drive, k);
+      dir = Vector3.Lerp(dir, line, k).normalize();
+    }
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
-    const dir = fwd.scale(D.fwd).add(right.scale(D.side)).add(new Vector3(0, -D.down, 0)).normalize();
     const hand = (shaft.parent as TransformNode) ?? b.rightHand;
     for (const n of [b.rightShoulder, b.rightElbow, b.rightHand, hand]) n.computeWorldMatrix(true);
     const along = Vector3.TransformNormal(dir, Matrix.Invert(hand.getWorldMatrix())).normalize();
