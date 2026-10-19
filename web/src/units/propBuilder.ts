@@ -2623,11 +2623,15 @@ function flatPlate(scene: Scene, name: string, outline: number[][], thick: numbe
  * thick at the hand and tapering to the tip, wound with a team stripe spiralling round a cream shaft; a grey steel cone (the vamplate) over the fist, and a
  * crown of short splayed prongs at the tip in place of a point). Not a pole: the old lance was a plain grey rod with a spear point. +y up the shaft from the
  * fist at the origin, LANCE.grip of it behind. Length LANCE.long of the man's height; shaft LANCE.thick of the length across at the hand, LANCE.taper of that
- * at the tip; stripe one turn every LANCE.pitch of the length, LANCE.stripe of the shaft's radius thick; vamplate LANCE.vamp of the length across,
- * LANCE.vampLong long; LANCE.prongs prongs LANCE.prong of the length long. Shared by every lance (the cavalry's too).
+ * at the tip; vamplate LANCE.vamp of the length across, LANCE.vampLong long; LANCE.prongs prongs LANCE.prong of the length long. Shared by every lance
+ * (the cavalry's too).
+ * [S] candy stripes (370; renaissance.jouster.png: the lance is barber-poled end to end, team and warm tan in equal dense diagonal bands, about one
+ * shaft-width each). Not the 328 thin team cord on a cream rod: a flat band LANCE_CANDY.band of each turn wide, wound on a helix one turn every
+ * LANCE_CANDY.pitch shaft diameters, LANCE_CANDY.proud of the radius off the shaft, over a warm tan shaft (LANCE_TAN, self-lit LANCE_CANDY.glow).
  */
-const LANCE = { long: 1.75, grip: 0.14, thick: 0.045, taper: 0.45, pitch: 0.075, stripe: 0.55, vamp: 0.1, vampLong: 0.07, prongs: 3, prong: 0.03 };
-const LANCE_CREAM = new Color3(0.88, 0.8, 0.62);
+const LANCE = { long: 1.75, grip: 0.14, thick: 0.045, taper: 0.45, vamp: 0.1, vampLong: 0.07, prongs: 3, prong: 0.03 };
+const LANCE_CANDY = { pitch: 2.4, band: 0.5, proud: 1.05, perTurn: 16, glow: 0.16 };
+const LANCE_TAN = new Color3(0.9, 0.72, 0.4);
 /*
  * The fencer's rapier (330; renaissance.fencer.red.png, card Appearance "a Spanish cup-hilt Rapier"): a long thin matte-grey blade (RAPIER.blade, thick, taper),
  * a deep grey octagonal cup over the fist about two fists across (cup, cupDeep, its far end cupTop of the mouth), a team rim round the mouth (rim), a cross
@@ -3183,7 +3187,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "lance": {
-      // The jousting lance, built to the spec at LANCE: a tapered cream shaft from the fist, a team stripe wound round it, vamplate and crown
+      // The jousting lance, built to the spec at LANCE: a tapered tan shaft from the fist, a team band wound round it (LANCE_CANDY), vamplate and crown
       const L = fit.stand * LANCE.long;
       const back = LANCE.grip * L, front = (1 - LANCE.grip) * L;
       const r0 = LANCE.thick * L * 0.5;
@@ -3191,19 +3195,25 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const shaft = MeshBuilder.CreateCylinder("lance", { height: L, diameterBottom: 2 * r0, diameterTop: 2 * r0 * LANCE.taper, tessellation: 8 }, scene);
       const lift = (0.5 - LANCE.grip) * L;
       shaft.position.y = lift;
-      shaft.material = mat(scene, LANCE_CREAM, 0.12, "cloth");
+      shaft.material = mat(scene, LANCE_TAN, LANCE_CANDY.glow, "cloth");
       shaft.convertToFlatShadedMesh();
-      // The stripe: a flat tube wound round the shaft on a helix, butt to just short of the crown, its own radius a share of the shaft's there
-      const helix: Vector3[] = [];
-      const steps = Math.ceil(L / (LANCE.pitch * L)) * 10;
-      for (let i = 0; i <= steps; i++) {
-        const y = -back + (i / steps) * (L * 0.97);
-        const a = ((y + back) / (LANCE.pitch * L)) * Math.PI * 2;
-        const r = radius(y) * 0.92;
-        helix.push(new Vector3(Math.cos(a) * r, y - lift, Math.sin(a) * r));
+      // The candy band: a flat ribbon on the shaft's skin between two helices LANCE_CANDY.band of a turn apart along the shaft, butt to just short of the
+      // crown; the pitch follows the shaft's local width so the bands stay square-ish as it tapers
+      const edgeA: Vector3[] = [], edgeB: Vector3[] = [];
+      let y = -back, a = 0;
+      const stop = -back + L * 0.97;
+      while (y < stop) {
+        const pitch = LANCE_CANDY.pitch * 2 * radius(y);
+        const r = radius(y) * LANCE_CANDY.proud;
+        const rB = radius(y + pitch * LANCE_CANDY.band) * LANCE_CANDY.proud;
+        edgeA.push(new Vector3(Math.cos(a) * r, y - lift, Math.sin(a) * r));
+        edgeB.push(new Vector3(Math.cos(a) * rB, y + pitch * LANCE_CANDY.band - lift, Math.sin(a) * rB));
+        y += pitch / LANCE_CANDY.perTurn;
+        a += (Math.PI * 2) / LANCE_CANDY.perTurn;
       }
-      const stripe = MeshBuilder.CreateTube("lanceStripe", { path: helix, tessellation: 5, cap: Mesh.CAP_ALL, radiusFunction: (i) => radius(helix[Math.min(i, helix.length - 1)].y + lift) * LANCE.stripe }, scene);
-      stripe.material = mat(scene, teamColor ?? accent, 0.12, "cloth");
+      const stripe = MeshBuilder.CreateRibbon("lanceStripe", { pathArray: [edgeA, edgeB], sideOrientation: Mesh.DOUBLESIDE }, scene);
+      stripe.material = mat(scene, teamColor ?? accent, LANCE_CANDY.glow, "cloth");
+      stripe.convertToFlatShadedMesh();
       stripe.parent = shaft;
       const steel = mat(scene, new Color3(0.55, 0.56, 0.6), 0.08, "metal");
       // The vamplate: a steel cone over the fist, its mouth back toward the hand
