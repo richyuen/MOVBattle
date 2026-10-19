@@ -277,7 +277,7 @@ function shareOf(seed: number, i: number): number {
 const ZEUS_TOGA = {
   proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
   bolt: 3, boltLong: 0.36, boltWide: 0.5, boltX: 0.62, rings: 3, ring: 0.045, beltAt: 0.05, ringProud: 1.12,
-  boltGold: new Color3(1.25, 0.72, 0.2),
+  boltGold: new Color3(1.25, 0.72, 0.2), whiteGlow: 0.4,
   white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.86, 0.56, 0.24), glow: 0.14,
 };
 
@@ -286,7 +286,7 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   const T = ZEUS_TOGA;
   const out: Mesh[] = [];
   const mf = getMaterialFactory();
-  const white = mf.get("cloth", T.white, { emissive: T.white.scale(T.glow) });
+  const white = mf.get("cloth", T.white, { emissive: T.white.scale(T.whiteGlow) });
   white.backFaceCulling = false;
   const gold = mf.get("cloth", T.gold, { emissive: T.gold.scale(T.glow) });
   body.torsoMesh.material = body.skinMaterial;
