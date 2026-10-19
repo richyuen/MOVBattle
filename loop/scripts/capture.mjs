@@ -422,14 +422,16 @@ async function main() {
             // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
             let alpha = a.body.root.rotation.y - Math.PI / 2 - swing;
             // the halberdier's idle swings to his other side: from the weapon side a navy backdrop boulder sat right beside his helm (evidence 374); the halfling's too: from the weapon side the boulder sat on his head like a beret (evidence 378)
-            if (a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling") alpha += 2 * swing;
+            const swapped = a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling";
+            if (swapped) alpha += 2 * swing;
             const b = a.body;
             if (a.definition.id !== "tribal.protector" && b.leftEye && b.rightEye && b.headMesh) {
               const le = window.__wp(b.leftEye), re = window.__wp(b.rightEye);
               b.headMesh.computeWorldMatrix(true);
               const hc = b.headMesh.getBoundingInfo().boundingBox.centerWorld;
               const ex = (le.x + re.x) / 2 - hc.x, ez = (le.z + re.z) / 2 - hc.z, el = Math.hypot(ex, ez) || 1;
-              if ((ex * Math.cos(alpha) + ez * Math.sin(alpha)) / el < Math.cos(0.9)) alpha += 2 * swing;
+              // the flip goes back to the other side of his front, never a second swing on (the halfling's swapped idle went round behind him, evidence 383)
+              if ((ex * Math.cos(alpha) + ez * Math.sin(alpha)) / el < Math.cos(0.9)) alpha += (swapped ? -2 : 2) * swing;
             }
             // the fencer's wide brim hides his face from above: his idle camera sits level with the head, so the brow shows under the brim (evidence 372)
             const fencer = a.definition.id === "renaissance.fencer";
@@ -437,7 +439,8 @@ async function main() {
             const big = a.definition.id === "tribal.mammoth" ? 2 : 1;
             // a rig under 1.2 m (the halfling, .69 m) gets an idle scale below 1, target and radius both, so his waist reads (evidence 378)
             const si = window.__rig(a) < 1.2 ? Math.max(0.4, window.__rig(a) / 1.8) : s;
-            window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 ? 0.75 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big, alpha, fencer ? Math.PI / 1.97 : Math.PI / 2.3);
+            // the small rig looks down steeper, so the ground and not the horizon's boulder sits behind his head (evidence 383: a navy beret again)
+            window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 ? 0.75 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big, alpha, fencer ? Math.PI / 1.97 : si < s ? Math.PI / 2.9 : Math.PI / 2.3);
             return;
           }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
