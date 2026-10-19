@@ -234,6 +234,14 @@ const KNIGHT_CHARGE = { from: 0.4, reach: 2.5, speed: 2.6, seconds: 1.0, overrun
  * ahead of its middle is trampled (.damage, flung .fling/.lift). .cooldown s between runs. Logged "charge" at the start and "trample" at each man.
  */
 const JOUSTER_CHARGE = { from: 1.5, reach: 16, speed: 1.5, seconds: 3.5, overrun: 4, contact: 1.0, damage: 20, fling: 4, lift: 2.5, cooldown: 3, through: true, log: true };
+/*
+ * [S] Minotaur Charge (378; card Characteristics "It attacks by charging at its opponents ... If hit with a projectile, it will charge sooner", ability
+ * "charges, headbutting the enemy"; ancient.minotaur.png: head down, horns first, men flung off him). The mammoth's charge on two legs: an enemy
+ * MINOTAUR_CHARGE.from to .reach m past his reach sets him sprinting at the man at .speed times his pace, head down (BULL_CHARGE pose); the man he
+ * meets is butted aside and up hard (.fling/.lift) for .damage, which ends the run, and he fights on with his fists. .cooldown s between charges.
+ * Logged "charge" at the start and "trample" at the hit.
+ */
+const MINOTAUR_CHARGE = { from: 1.5, reach: 14, speed: 2.3, seconds: 2.2, overrun: 1, contact: 0.4, damage: 30, fling: 7, lift: 5, cooldown: 6, through: false, log: true };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -988,7 +996,8 @@ export class SimulationSystem {
 
     // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE); the wheelbarrow's ram (WHEELBARROW_RAM)
     const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM
-      : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : unit.definition.id === "renaissance.jouster" ? JOUSTER_CHARGE : null;
+      : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : unit.definition.id === "renaissance.jouster" ? JOUSTER_CHARGE
+      : unit.definition.id === "ancient.minotaur" ? MINOTAUR_CHARGE : null;
     if (chargeSpec && canMove) {
       const run = this._charges.get(unit);
       if (run && (!unit.isCharging || (run.target.isDead && !run.end))) {
@@ -1293,8 +1302,8 @@ export class SimulationSystem {
           this.visualEffects.spawnKickDust(at, MAMMOTH_DUST.size);
         }
       }
-      if (run.spec === MAMMOTH_CHARGE || run.spec === JOUSTER_CHARGE) {
-        unit.animator.setCharging(true);
+      if (run.spec === MAMMOTH_CHARGE || run.spec === JOUSTER_CHARGE || run.spec === MINOTAUR_CHARGE) {
+        unit.animator.setCharging(true, run.spec === MINOTAUR_CHARGE);
         this._chargePosed.add(unit);
       }
       for (const other of this._units) {

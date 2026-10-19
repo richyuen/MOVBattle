@@ -332,6 +332,12 @@ const MAIN_AXE = { ease: 8 };
  * a gallop over the walk (front pair and hind pair reaching together .stride rad, the front knees folding .fold on the back swing, the body rocking .rock)
  * at .pace rad per second.
  */
+/*
+ * [S] the bull's charge on two legs (378, the minotaur's; ancient.minotaur.png: bent at the waist, head down and horns forward, arms swept back): a
+ * humanoid on a charge run leans his trunk BULL_CHARGE.lean rad forward and drops his head .head more, his arms .armsBack rad back behind him and pumping
+ * .pump with the stride, his legs striding .stride, all by the eased charge weight.
+ */
+const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 0.5, pace: 11 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
 /*
  * [S] the jouster's canter (369; renaissance.jouster.png, card Speed 2.50x "the Jouster Horse ... create shockwaves wherever they canter"): the barded
@@ -1056,10 +1062,13 @@ export class ProceduralAnimator {
   }
 
   /** A beast on a charge run (the mammoth's): eases into CHARGE_POSE while on, out of it after. */
-  setCharging(charging: boolean): void {
+  setCharging(charging: boolean, bull = false): void {
     this._chargeTarget = charging ? 1 : 0;
+    if (charging) this._bullCharge = bull;
   }
 
+  // a man on two legs charging head down (BULL_CHARGE); the jouster's rider sits his horse's charge upright
+  private _bullCharge = false;
   private _chargeTarget = 0;
   private _charge = 0;
 
@@ -1067,8 +1076,20 @@ export class ProceduralAnimator {
   private _applyChargePose(dt: number): void {
     this._charge += (this._chargeTarget - this._charge) * Math.min(1, dt * CHARGE_POSE.ease);
     const c = this._charge;
-    if (c < 0.01 || this.walkStyle !== "quadruped" || this._state === AnimState.Dead) return;
+    if (c < 0.01 || this._state === AnimState.Dead) return;
     const b = this._body;
+    if (this.walkStyle !== "quadruped") {
+      // the bull's head-down run (BULL_CHARGE); not the jouster's rider
+      if (!this._bullCharge) return;
+      const B = BULL_CHARGE, s = Math.sin((this._time + this._wobblePhase) * B.pace);
+      b.torso.rotation.x += B.lean * c;
+      b.neck.rotation.x += B.head * c;
+      b.leftShoulder.rotation.x += (B.armsBack + s * B.pump) * c;
+      b.rightShoulder.rotation.x += (B.armsBack - s * B.pump) * c;
+      b.leftHip.rotation.x -= s * B.stride * c;
+      b.rightHip.rotation.x += s * B.stride * c;
+      return;
+    }
     const t = (this._time + this._wobblePhase) * CHARGE_POSE.pace;
     b.neck.rotation.x += CHARGE_POSE.headDown * c + Math.sin(t * 2) * CHARGE_POSE.toss * c;
     b.torso.rotation.x += CHARGE_POSE.pitch * c;
