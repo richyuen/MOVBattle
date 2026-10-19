@@ -1019,12 +1019,12 @@ export function dressTribalPauldrons(scene: Scene, body: ArticulatedBody, unitId
  * trunk to the yoke (it covered both shoulders).
  *   - bodice: a HIDE_DRESS.sides-sided open sleeve round the trunk's box (its half widths a skin out), its foot just under the waist; its top edge
  *     .top of the trunk high at the strap side, falling to .low of the trunk at the bare side;
- *   - strap: a band .strap of the shoulder span wide over the strap shoulder from the bodice's front to its back;
+ *   - strap: a curved band .strapWide of the shoulder span each way of .strapAt along it, arched .strapRise over the shoulder (363), front to back;
  *   - skirt: an open sleeve from the waist .skirt of the thigh long, flaring .flare at the foot, every other foot corner hung .rag of the thigh lower (each
  *     its own share) so the hem is torn into points;
  *   - hide .color, self-lit .glow so it stays brown in the shade.
  */
-const HIDE_DRESS = { sides: 8, top: 1.0, low: 0.56, strap: 0.22, skirt: 0.62, flare: 1.4, rag: 0.16, color: new Color3(0.52, 0.3, 0.22), glow: 0.15 };
+const HIDE_DRESS = { sides: 8, top: 1.0, low: 0.56, strapAt: 0.55, strapWide: 0.13, strapRise: 0.45, skirt: 0.62, flare: 1.4, rag: 0.16, color: new Color3(0.52, 0.3, 0.22), glow: 0.15 };
 const HIDE_DRESSES = new Set(["tribal.stoner"]);
 
 /** Dresses a bare tribesman in the one-strap hide dress (spec at HIDE_DRESS), parented to the torso joint. Empty when he wears none. */
@@ -1063,13 +1063,29 @@ export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId
     const y = top ? trunk * (D.low + (D.top - D.low) * strapSide) : -trunk * 0.04;
     return [band.midX + x * halfX, y, midZ + z * halfZ];
   });
-  // The strap over the strap shoulder
+  // [S] 363 the strap (critic 362: a flat plank standing off the shoulder): a narrow curved band from the bodice's front top edge up over the strap
+  // shoulder and down to its back edge, hugging the shoulder: a half-ellipse .strapWide of the shoulder span across, its crown .strapRise of the half-depth
+  // over the shoulder joint, laid as two stacked ribbons (outer and inner skin) so it has a little thickness
   const shoulderX = Math.abs(body.rightShoulder.position.x);
-  const strap = MeshBuilder.CreateBox("tunicStrap", { width: shoulderX * D.strap * 2, height: trunk * 0.07, depth: halfZ * 2.1 }, scene);
-  strap.position.set(side * shoulderX * 0.55, trunk * D.top, midZ);
-  strap.material = hide;
-  strap.parent = body.torso;
-  added.push(strap);
+  const strapX = side * shoulderX * D.strapAt;
+  const foot = trunk * D.top * 0.94;
+  const crown = Math.max(trunk * D.top, body.rightShoulder.position.y) + halfZ * D.strapRise;
+  const arc = (dx: number, grow: number): Vector3[] => {
+    const pts: Vector3[] = [];
+    for (let i = 0; i <= 10; i++) {
+      const a = (i / 10) * Math.PI;
+      pts.push(new Vector3(strapX + dx, foot + (crown - foot) * grow * Math.sin(a), midZ + halfZ * 1.02 * grow * Math.cos(a)));
+    }
+    return pts;
+  };
+  const halfW = shoulderX * D.strapWide;
+  for (const [name, grow] of [["tunicStrap", 1.0], ["tunicStrapInner", 0.93]] as const) {
+    const strap = MeshBuilder.CreateRibbon(name, { pathArray: [arc(-halfW, grow), arc(halfW, grow)], sideOrientation: Mesh.DOUBLESIDE }, scene);
+    strap.convertToFlatShadedMesh();
+    strap.material = hide;
+    strap.parent = body.torso;
+    added.push(strap);
+  }
   // The skirt: flared, its foot torn into points
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
   const pelvisX = pelvis ? pelvis.getBoundingInfo().boundingBox.extendSize.x : halfX;
