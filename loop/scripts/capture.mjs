@@ -176,6 +176,9 @@ const wants = (...names) => wanted === null || names.some((n) => wanted.includes
 const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after", ...(RELOAD_SHOT[id] ? ["reload"] : [])].map((s) => `unit_${id}_${s}`);
 // A unit whose reload is a pose of its own (the scarecrow's A-pose after the volley): one more shot, on the unit alone, this many ticks past the release
 const RELOAD_SHOT = { "farmer.scarecrow": 72 };
+// A unit whose card ability comes after its first logged special (the minotaur's charge at 17 ms): detection runs on until this kind is seen
+// and its _ability pair is taken on it (evidence 387)
+const ABILITY_PREF = { "ancient.minotaur": "headbutt" };
 void PAIRS;
 // --list: print the shots this run would take and stop
 if (flag("--list")) {
@@ -424,8 +427,11 @@ async function main() {
             // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
             let alpha = a.body.root.rotation.y - Math.PI / 2 - swing;
             // the halberdier's idle swings to his other side: from the weapon side a navy backdrop boulder sat right beside his helm (evidence 374); the halfling's too: from the weapon side the boulder sat on his head like a beret (evidence 378)
-            const swapped = a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling";
+            // the snake archer's held snake covered his chest from the weapon side (evidence 387: baldric and belt hidden): his other side
+            const swapped = a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling" || a.definition.id === "ancient.snake_archer";
             if (swapped) alpha += 2 * swing;
+            // the ballista's crewman works the stock at its rear: a rear three-quarter, the wiki render's angle (evidence 387)
+            if (a.definition.id === "ancient.ballista") alpha += Math.PI;
             const b = a.body;
             if (a.definition.id !== "tribal.protector" && b.leftEye && b.rightEye && b.headMesh) {
               const le = window.__wp(b.leftEye), re = window.__wp(b.rightEye);
@@ -442,7 +448,8 @@ async function main() {
             // a rig under 1.2 m (the halfling, .69 m) gets an idle scale below 1, target and radius both, so his waist reads (evidence 378)
             const si = window.__rig(a) < 1.2 ? Math.max(0.4, window.__rig(a) / 1.8) : s;
             // the small rig looks down steeper, so the ground and not the horizon's boulder sits behind his head (evidence 383: a navy beret again)
-            window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 ? 0.75 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big, alpha, fencer ? Math.PI / 1.97 : si < s ? Math.PI / 2.9 : Math.PI / 2.3);
+            // evidence 387: PI/2.9 (28 deg down) foreshortened his legs to a crouch; PI/2.45 is 17 deg down
+            window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 ? 0.75 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big, alpha, fencer ? Math.PI / 1.97 : si < s ? Math.PI / 2.45 : Math.PI / 2.3);
             return;
           }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
@@ -466,7 +473,7 @@ async function main() {
         const d = def.archetype === "artillery" ? 9 : charger ? 8 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
         // Detection steps 6 ticks (one render) at a time; a logged event's frame comes from its world-time stamp, exact to the tick. Only the
         // projectile-count fallback (a missile with no fire log) is 6 ticks coarse.
-        const det = await page.evaluate(({ id, d, support }) => {
+        const det = await page.evaluate(({ id, d, support, want }) => {
           if (!window.__unitStart(id, d, support)) return { error: "spawn failed", events: [], rig: 1.8 };
           const rig = window.__rig(window.__ua);
           const game = window.game;
@@ -495,15 +502,16 @@ async function main() {
             if (now > before && !seen.has("missile") && !seen.has("fire") && !seen.has("throw") && !seen.has("cast")) { events.push({ kind: "missile", tick }); seen.add("missile"); }
             before = now;
             // Done once a plain attack, its impact and a special mechanic are all seen, or 3 s after the first event
+            if (want && !seen.has(want)) continue;
             if (events.some((e) => plain(e.kind)) && events.some((e) => special(e.kind)) && seen.has("impact")) break;
             if (events.length && tick >= Math.min(...events.map((e) => e.tick)) + 180) break;
           }
           events.sort((a, b) => a.tick - b.tick);
           return { events, rig };
-        }, { id, d, support });
+        }, { id, d, support, want: ABILITY_PREF[id] ?? null });
         // A thrower or caster logs "fire" at the decision and "throw"/"cast" at the let-go: the let-go is the release
         const release = det.events.find((e) => /^(throw|cast)/.test(e.kind)) ?? det.events.find((e) => PLAIN.test(e.kind)) ?? det.events[0] ?? null;
-        const ability = det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
+        const ability = det.events.find((e) => e.kind === ABILITY_PREF[id] && e !== release) ?? det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
         const impact = det.events.find((e) => e.kind === "impact") ?? null;
         // The struck frame: 20 ticks (336 ms) after a blow, the top of the thrown man's arc; for a missile, 6 ticks after it first costs the target health.
         // A short throw (the stoner's boulder at a man who has closed in, landing inside 15 ticks of the let-go): 9 ticks after the landing, and framed from
