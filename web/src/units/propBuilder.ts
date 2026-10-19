@@ -335,7 +335,7 @@ const DEER_ANTLER = new Color3(0.66, 0.5, 0.33);
  */
 const DEER_RACK = {
   beam: [0.55, 0.55, 0.5, 0.42], bend: [1.3, 0.95, 0.6, 0.25], back: 0.12, thick: 0.24, taper: 0.82,
-  tine: [0.62, 0.58, 0.5, 0.36], inward: 0.18, brow: 0.38, tan: new Color3(0.72, 0.6, 0.45), glow: 0.15,
+  tine: [0.62, 0.58, 0.5, 0.36], inward: 0.18, brow: 0.38, tan: new Color3(0.62, 0.46, 0.3), glow: 0.22,
   // the staff skull's rack grown to the mask's (tribal.bone_mage.png: the staff's antlers as large as the pair on his head)
   staff: 1.4,
 };
