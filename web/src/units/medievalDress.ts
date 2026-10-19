@@ -802,7 +802,7 @@ function squireArms(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const ARCHER_ARMS = {
   out: 1.3, from: 0.08, to: 0.94,
-  beige: new Color3(0.86, 0.78, 0.6), leather: new Color3(0.44, 0.27, 0.16), strap: new Color3(0.27, 0.16, 0.1), glow: 0.1,
+  beige: new Color3(0.74, 0.58, 0.38), leather: new Color3(0.44, 0.27, 0.16), strap: new Color3(0.27, 0.16, 0.1), glow: 0.1,
 };
 
 function archerArms(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -878,11 +878,30 @@ function bardLegs(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   return out;
 }
 
+/*
+ * [S] the Archer's belt and boots (358; medieval.archer.red.png: a brown belt at the waist, brown knee boots with a turned-down cuff). Belt ARCHER_KIT.belt of the
+ * chest height in .leather; boots shells .boot of the shin's half-width from .from of it down, a cuff .cuff round its top; feet .leather.
+ */
+const ARCHER_KIT = { belt: 0.15, boot: 1.24, from: 0.22, cuff: 1.45, leather: new Color3(0.42, 0.25, 0.14), cuffTone: new Color3(0.5, 0.31, 0.18), glow: 0.1 };
+
+function archerKit(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ARCHER_KIT;
+  const leather = getMaterialFactory().get("cloth", K.leather, { emissiveIntensity: K.glow });
+  const cuffMat = getMaterialFactory().get("cloth", K.cuffTone, { emissiveIntensity: K.glow });
+  const out: Mesh[] = [waistBelt(scene, body, "archerBelt", leather, K.belt).belt];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "archerBoot", shin, K.from, 1, K.boot, leather));
+    out.push(limbShell(scene, "archerBootCuff", shin, K.from - 0.04, K.from + 0.1, K.cuff, cuffMat));
+  }
+  for (const f of feet(body)) f.material = leather;
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {
     case "medieval.healer": return healerTonsure(scene, body);
-    case "medieval.archer": return [...archerHood(scene, body, team), ...archerArms(scene, body)];
+    case "medieval.archer": return [...archerHood(scene, body, team), ...archerArms(scene, body), ...archerKit(scene, body)];
     case "medieval.bard": return [...bardVest(scene, body, team), ...bardLegs(scene, body, team)];
     case "medieval.king": return [...kingBeard(scene, body), ...medievalCape(scene, body, MEDIEVAL_CAPE.cream), ...kingDress(scene, body, team)];
     case "medieval.squire": return [...squireLegs(scene, body), ...squireArms(scene, body)];
