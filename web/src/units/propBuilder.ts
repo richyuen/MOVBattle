@@ -1621,12 +1621,13 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     const P = BERET_PUFF;
     const band = MeshBuilder.CreateCylinder("beret", { height: u(P.bandTall * H), diameter: u(P.band * W), tessellation: 8 }, scene);
     band.position.y = u(seat + P.bandTall * H * 0.5);
-    band.material = mat(scene, accent.scale(P.bandShade), P.glow, "cloth");
+    const felt = teamColor ?? accent;
+    band.material = mat(scene, felt.scale(P.bandShade), P.glow, "cloth");
     band.convertToFlatShadedMesh();
     const puff = MeshBuilder.CreateSphere("beretPuff", { diameterX: u(P.puff * W), diameterY: u(P.puffTall * H), diameterZ: u(P.puff * W * P.deep), segments: 3 }, scene);
     puff.position.set(u(P.slide * W), u(P.bandTall * H * 0.5 + P.puffTall * H * P.sit), u(P.ahead * W));
     puff.rotation.set(P.dip, 0.3, -P.tilt);
-    puff.material = mat(scene, accent, P.glow, "cloth");
+    puff.material = mat(scene, felt, P.glow, "cloth");
     puff.convertToFlatShadedMesh();
     puff.parent = band;
     return band;
