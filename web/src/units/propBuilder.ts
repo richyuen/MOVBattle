@@ -170,19 +170,23 @@ const DRAGON_HORN_RAKE = 1.05;
 const DRAGON_TAIL = 2.6;
 const DRAGON_SCALLOPS = 7;
 /*
- * A bull's head in place of the man's (243; units/ancient.minotaur: a long hide head, brow to muzzle about 1.4 of its width, the muzzle jutting forward and
- * down to a dark nose, two big round white eyes set wide on the front corners under a heavy brow, ears flat out to the sides, and pale horns leaving the
- * crown's sides level then sweeping up past it). The shell covers the head, so the man's own eyes are hidden and the bull's are the face.
- *   Shell BULL_SHELL heads across; muzzle BULL_MUZZLE heads long, tipped BULL_MUZZLE_DIP down; eyes BULL_EYE of the width; horn root BULL_HORN_ROOT and
- *   tip BULL_HORN_TIP heads long, the tip turned BULL_HORN_TURN off level toward the sky.
+ * [S] the bull head (382, the minotaur's; ancient.minotaur.red.png, .png: a big bull head as wide as half his shoulders, a faceted cranium with two big
+ * round eyes on its upper front corners, a long broad face running down and forward to a wide muzzle with dark nostrils, short thick tan horns leaving
+ * the crown's sides level and curving up, floppy ears under them out and down with pale insides, all on a thick neck that comes forward out of the
+ * shoulders; critic 378/379: a small bull mask on a man's head, straight white cone horns, a brow box reading as a hat brim). In the head's width W and
+ * height H, the crown at 0: the cranium .skull x .skullTall x .skullDeep (radii), its middle .skullY of H down; the face from the brow (.browY of H over
+ * the cranium's middle, .browZ of W ahead) .face of H long, tipped .tilt rad forward of plumb, .brow of W across at the top to .snout at the muzzle,
+ * flattened .faceFlat; the muzzle pad .pad of H tall; eyes .eye of W across at .eyeX, .eyeY; horns .hornGirth of W thick, .horn1 of W long in all,
+ * bent through .hornBends (x out, y up, z ahead, share of the length), each piece tapering .hornTaper; ears .ear of W long at .earY, drooping .earDroop;
+ * the neck .neck of H long, .neckTop to .neckBottom of W across, leaning back .neckLean. Fur as the body's (ancientDress MINO_FUR), horns tan.
  */
-const BULL_SHELL = 1.15;
-const BULL_MUZZLE = 0.75;
-const BULL_MUZZLE_DIP = 0.4;
-const BULL_EYE = 0.34;
-const BULL_HORN_ROOT = 0.42;
-const BULL_HORN_TIP = 0.85;
-const BULL_HORN_TURN = 1.05;
+const BULL_HEAD = {
+  skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, browY: 0.12, browZ: 0.32, face: 1.0, tilt: 0.5, brow: 0.95, snout: 1.0, faceFlat: 0.75,
+  pad: 0.2, eye: 0.34, eyeX: 0.36, eyeY: 0.2, hornGirth: 0.3, horn1: 0.9, hornTaper: 0.72, hornY: 0.32,
+  hornBends: [[1, 0.1, 0.1, 0.4], [1, 0.7, 0.15, 0.32], [0.35, 1, 0.25, 0.28]] as [number, number, number, number][],
+  ear: 0.36, earY: 0.06, earDroop: 0.4, neck: 0.9, neckTop: 0.9, neckBottom: 1.5, neckLean: 0.35,
+  fur: new Color3(0.42, 0.24, 0.17), muzzle: new Color3(0.5, 0.31, 0.23), horn: new Color3(0.86, 0.7, 0.52), inner: new Color3(0.78, 0.52, 0.42), glow: 0.16,
+};
 /*
  * A horned helm fitted to the head (241; factions/viking, units/viking.jarl: a dark iron cap domed down to the brow, two horns leaving its sides level and
  * turning up past the crown like a pair of tusks, a nose bar over the face, and a faceted orange beard chunk hanging from under the eyes to the chest). Not
@@ -1050,69 +1054,75 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return helm;
   }
   if (type === "bull_head") {
-    const hide = mat(scene, Color3.Lerp(accent, new Color3(0.42, 0.24, 0.16), 0.55).scale(0.85));
-    const snoutHide = mat(scene, Color3.Lerp(accent, new Color3(0.62, 0.42, 0.3), 0.6));
+    // [S] the bull head (382, spec at BULL_HEAD): cranium, long face to a broad muzzle, curved horns, floppy ears, thick neck
+    const B = BULL_HEAD;
+    const hide = mat(scene, B.fur, B.glow, "cloth");
+    const pale = mat(scene, B.muzzle, B.glow, "cloth");
+    const hornMat = mat(scene, B.horn, 0.15, "cloth");
+    const earIn = mat(scene, B.inner, 0.15, "cloth");
     const dark = mat(scene, new Color3(0.1, 0.07, 0.06));
-    const shell = MeshBuilder.CreateSphere("bullShell", { diameterX: u(BULL_SHELL * W), diameterY: u(1.08 * H), diameterZ: u(BULL_SHELL * W * 1.05), segments: 7 }, scene);
-    shell.position.y = u(-0.5 * H);
+    const shell = MeshBuilder.CreateIcoSphere("bullShell", { radiusX: u(B.skull * W), radiusY: u(B.skullTall * H), radiusZ: u(B.skullDeep * W), subdivisions: 1 }, scene);
+    shell.position.y = u(-B.skullY * H);
     shell.material = hide;
-    // Heavy brow across the front, the eyes peering from under it
-    const brow = MeshBuilder.CreateBox("bullBrow", { width: u(1.05 * W), height: u(0.16 * H), depth: u(0.35 * W) }, scene);
-    brow.position.set(0, u(0.18 * H), u(0.36 * W));
-    brow.rotation.x = 0.2;
-    brow.material = hide;
-    brow.parent = shell;
-    // The muzzle: a long wedge forward and down from under the eyes to a flat dark nose with two nostrils
-    const muzzleLong = u(BULL_MUZZLE * W);
-    const muzzle = MeshBuilder.CreateCylinder("bullMuzzle", { height: muzzleLong, diameterTop: u(0.62 * W), diameterBottom: u(0.78 * W), tessellation: 6 }, scene);
-    muzzle.rotation.x = Math.PI / 2 + BULL_MUZZLE_DIP;
-    muzzle.scaling.z = 0.8;
-    muzzle.position.set(0, u(-0.2 * H) - Math.sin(BULL_MUZZLE_DIP) * muzzleLong * 0.5, u(0.42 * W) + Math.cos(BULL_MUZZLE_DIP) * muzzleLong * 0.5);
-    muzzle.material = snoutHide;
-    muzzle.parent = shell;
-    const nose = MeshBuilder.CreateCylinder("bullNose", { height: u(0.08 * W), diameter: u(0.64 * W), tessellation: 6 }, scene);
-    nose.position.y = muzzleLong * 0.5;
-    nose.scaling.z = 0.8;
-    nose.material = mat(scene, Color3.Lerp(accent, new Color3(0.3, 0.17, 0.13), 0.7).scale(0.7));
-    nose.parent = muzzle;
+    shell.convertToFlatShadedMesh();
+    const put = (m: Mesh, material: PBRMetallicRoughnessMaterial): Mesh => { m.material = material; m.convertToFlatShadedMesh(); m.parent = shell; return m; };
+    // a piece laid along a direction from a start point, in the shell's frame
+    const along = (m: Mesh, from: Vector3, dir: Vector3, long: number): Mesh => {
+      const d = dir.normalize();
+      m.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, new Quaternion());
+      m.position.copyFrom(from.add(d.scale(long / 2)));
+      return m;
+    };
+    // the face: a tapered eight-sided block from the brow down and forward to a broad muzzle pad with two nostrils
+    const faceLong = u(B.face * H);
+    const faceDir = new Vector3(0, -Math.cos(B.tilt), Math.sin(B.tilt));
+    const browAt = new Vector3(0, u(B.browY * H), u(B.browZ * W));
+    const face = put(MeshBuilder.CreateCylinder("bullFace", { height: faceLong, diameterTop: u(B.snout * W), diameterBottom: u(B.brow * W), tessellation: 8 }, scene), hide);
+    face.scaling.z = B.faceFlat;
+    along(face, browAt, faceDir, faceLong);
+    const tip = browAt.add(faceDir.scale(faceLong));
+    const pad = put(MeshBuilder.CreateIcoSphere("bullMuzzle", { radiusX: u(B.snout * W * 0.55), radiusY: u(B.pad * H), radiusZ: u(B.snout * W * 0.4), subdivisions: 1 }, scene), pale);
+    pad.position.copyFrom(tip);
     for (const side of [-1, 1]) {
-      const nostril = MeshBuilder.CreateCylinder("bullNostril", { height: u(0.04 * W), diameter: u(0.14 * W), tessellation: 6 }, scene);
-      nostril.position.set(side * u(0.15 * W), u(0.03 * W), 0);
-      nostril.material = dark;
-      nostril.parent = nose;
-      // Big round eyes on the front corners, turned a little outward
-      const eye = MeshBuilder.CreateCylinder("bullEye", { height: u(0.05 * W), diameter: u(BULL_EYE * W), tessellation: 12 }, scene);
+      const nostril = put(MeshBuilder.CreateCylinder("bullNostril", { height: u(0.05 * W), diameter: u(0.15 * W), tessellation: 6 }, scene), dark);
+      along(nostril, tip.add(new Vector3(side * u(0.17 * W), u(-0.02 * H), u(B.snout * W * 0.36))), new Vector3(0, -0.3, 1), u(0.05 * W));
+      // big round eyes on the cranium's upper front corners, turned a little outward
+      const eye = put(MeshBuilder.CreateCylinder("bullEye", { height: u(0.05 * W), diameter: u(B.eye * W), tessellation: 12 }, scene), mat(scene, new Color3(0.95, 0.95, 0.92), 0.3));
       eye.rotation.set(Math.PI / 2, side * 0.45, 0);
-      eye.position.set(side * u(0.3 * W), u(0.02 * H), u(0.5 * W));
-      eye.material = mat(scene, new Color3(0.95, 0.95, 0.92), 0.3);
-      eye.parent = shell;
-      const pupil = MeshBuilder.CreateCylinder("bullPupil", { height: u(0.02 * W), diameter: u(BULL_EYE * 0.5 * W), tessellation: 10 }, scene);
+      eye.position.set(side * u(B.eyeX * W), u(B.eyeY * H), u(B.skullDeep * W * 0.86));
+      eye.convertToFlatShadedMesh();
+      const pupil = MeshBuilder.CreateCylinder("bullPupil", { height: u(0.02 * W), diameter: u(B.eye * 0.5 * W), tessellation: 10 }, scene);
       pupil.position.y = u(0.03 * W);
       pupil.material = dark;
       pupil.parent = eye;
-      // Ears flat out to the sides, drooping a little, below the horns
-      const ear = MeshBuilder.CreateCylinder("bullEar", { height: u(0.5 * W), diameterTop: 0, diameterBottom: u(0.26 * W), tessellation: 4 }, scene);
-      ear.scaling.z = 0.4;
-      ear.rotation.z = -side * (Math.PI / 2 + 0.3);
-      ear.position.set(side * u(0.72 * W), u(0.0 * H), u(-0.05 * W));
-      ear.material = hide;
-      ear.parent = shell;
-      // Horns: a root out of the crown's side, level, then a tip turned up toward the sky
-      const horn = mat(scene, new Color3(0.9, 0.82, 0.64), 0.15);
-      const rootLong = u(BULL_HORN_ROOT * W);
-      const root = MeshBuilder.CreateCylinder("bullHornRoot", { height: rootLong, diameterTop: u(0.26 * W), diameterBottom: u(0.36 * W), tessellation: 6 }, scene);
-      root.rotation.z = -side * Math.PI / 2;
-      root.position.set(side * (u(0.45 * W) + rootLong * 0.5), u(0.3 * H), 0);
-      root.material = horn;
-      root.parent = shell;
-      const tipLong = u(BULL_HORN_TIP * W);
-      const tip = MeshBuilder.CreateCylinder("bullHornTip", { height: tipLong, diameterTop: 0, diameterBottom: u(0.26 * W), tessellation: 6 }, scene);
-      const turn = side * BULL_HORN_TURN;
-      tip.rotation.set(0, 0, turn);
-      tip.position.set(-Math.sin(turn) * tipLong * 0.5, rootLong * 0.5 + Math.cos(turn) * tipLong * 0.5, 0);
-      tip.material = horn;
-      tip.parent = root;
+      // horns: three tapering pieces from the crown's side, out level, then curving up, the tip turned up and a little forward
+      let at = new Vector3(side * u(B.skull * W * 0.75), u(B.hornY * H), u(0.05 * W));
+      let girth = u(B.hornGirth * W);
+      for (const [dx, dy, dz, share] of B.hornBends) {
+        const long = u(B.horn1 * W) * share;
+        const dir = new Vector3(side * dx, dy, dz).normalize();
+        const end = girth * B.hornTaper;
+        const piece = put(MeshBuilder.CreateCylinder("bullHorn", { height: long * 1.1, diameterTop: end, diameterBottom: girth, tessellation: 6 }, scene), hornMat);
+        along(piece, at, dir, long);
+        at = at.add(dir.scale(long));
+        girth = end;
+      }
+      // floppy ears under the horns: a long flat leaf out and down, its pale inside facing forward
+      const ear = put(MeshBuilder.CreateIcoSphere("bullEar", { radiusX: u(B.ear * W), radiusY: u(0.09 * H), radiusZ: u(0.15 * W), subdivisions: 1 }, scene), hide);
+      ear.position.set(side * u((B.skull + B.ear * 0.7) * W), u(B.earY * H), u(0.02 * W));
+      ear.rotation.set(0, 0, -side * B.earDroop);
+      const inside = put(MeshBuilder.CreateIcoSphere("bullEarIn", { radiusX: u(B.ear * W * 0.75), radiusY: u(0.06 * H), radiusZ: u(0.08 * W), subdivisions: 1 }, scene), earIn);
+      inside.position.set(ear.position.x, ear.position.y + u(0.005 * H), ear.position.z + u(0.08 * W));
+      inside.rotation.copyFrom(ear.rotation);
     }
+    // the thick neck from under the cranium down to the shoulders, so the head sits forward on it, not on a man's neck
+    const neckLong = u(B.neck * H);
+    const neck = put(MeshBuilder.CreateCylinder("bullNeck", { height: neckLong, diameterTop: u(B.neckTop * W), diameterBottom: u(B.neckBottom * W), tessellation: 8 }, scene), hide);
+    neck.scaling.z = 0.85;
+    // its narrow top at the head, its wide foot down and back toward the shoulders
+    const neckDown = new Vector3(0, -1, -B.neckLean).normalize();
+    neck.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), neckDown.scale(-1), new Quaternion());
+    neck.position.copyFrom(new Vector3(0, u(-B.skullTall * H * 0.3), u(-0.05 * W)).add(neckDown.scale(neckLong / 2)));
     return shell;
   }
   if (type === "dragon_head") {
