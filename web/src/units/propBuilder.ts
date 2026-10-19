@@ -46,7 +46,7 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   of the head high on the seat (.bandShade of the colour); on it the lumpy tam of BERET_TAM (373, spec there).
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -239,6 +239,21 @@ const CORINTH_HELM = {
  * spikes side-on). .bands bands, each .band of H tall (.fill of it solid, so a step line shows between them), sunk .sink of a band into the bowl; band k
  * runs from CORINTH_HELM.front + .lean x k to the back end pulled forward .shorten x k of the run, .segs blocks overlapping .overlap, .narrow x k thinner.
  */
+/*
+ * [S] the legionary helmet (382, the shield bearer's; ancient.shield_bearer.red.png, .jpg, card "roman legionnaire helmet": a dark iron bowl seated on the
+ * brow just over the eyes, an orange band round its rim, a short neck guard flaring out at the back, and a dark iron cheek guard hung from each temple
+ * down the face's side to the jaw, orange edged, two orange studs; critic 378: a flat grey beret dome). In the head's width W and height H: the bowl
+ * .wide x .deep of W across (radii), its rim .sink of H under the hat seat, rising .rise of H over the crown; the band .band of H tall, .bandOut of the
+ * bowl; the neck guard .neckArc of a turn round the back, .neckDrop of H down, flaring .neckFlare; each cheek guard .cheekWide of W x .cheekTall of H,
+ * .cheekThick thick, hung at .cheekX of the bowl's half width out and .cheekZ of its depth forward, turned .cheekTurn toward the face and splayed
+ * .cheekSplay at the foot, an orange edge .edge of W proud of it behind, studs .stud of W. Iron lit "cloth" (metal renders black), the orange on
+ * the scutum's flat trim (SCUTUM_TRIM_FLAT).
+ */
+const LEGION_HELM = {
+  wide: 0.6, deep: 0.64, sink: -0.02, rise: 0.12, band: 0.07, bandOut: 1.03, neckArc: 0.42, neckDrop: 0.16, neckFlare: 1.3,
+  cheekWide: 0.3, cheekTall: 0.46, cheekThick: 0.06, cheekX: 0.88, cheekZ: 0.35, cheekTurn: 0.45, cheekSplay: 0.1, edge: 0.035, stud: 0.035,
+  iron: new Color3(0.2, 0.21, 0.24), glow: 0.1,
+};
 const CORINTH_CREST = { bands: 4, band: 0.13, fill: 0.9, sink: 0.6, lean: 0.06, shorten: 0.16, segs: 12, overlap: 1.15, narrow: 0.08 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
@@ -1457,6 +1472,57 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       crest.name = "chelmCrest";
       put(crest, hair);
     }
+    return helm;
+  }
+  if (type === "legion_helm") {
+    // [S] the legionary helmet (382, spec at LEGION_HELM)
+    const L = LEGION_HELM;
+    const iron = mat(scene, L.iron, L.glow, "cloth");
+    const trim = getMaterialFactory().get("unlit", SCUTUM_TRIM, { emissive: SCUTUM_TRIM_FLAT });
+    const rx = u(L.wide * W), rz = u(L.deep * W), rim = u(seat + L.sink * H), top = u(L.rise * H);
+    const helm = MeshBuilder.CreateSphere("lhelm", { diameterX: 2 * rx, diameterY: 2 * (top - rim), diameterZ: 2 * rz, segments: 10, slice: 0.5 }, scene);
+    helm.position.y = rim;
+    helm.material = iron;
+    helm.convertToFlatShadedMesh();
+    const trimmed: Mesh[] = [];
+    const put = (m: Mesh, material: typeof iron | typeof trim): Mesh => { m.material = material; m.convertToFlatShadedMesh(); m.parent = helm; if (material === trim) trimmed.push(m); return m; };
+    // the brow band round the rim
+    const band = put(MeshBuilder.CreateCylinder("lhelmBand", { height: u(L.band * H), diameter: 2, tessellation: 12 }, scene), trim);
+    band.scaling.set(rx * L.bandOut, 1, rz * L.bandOut);
+    band.position.y = u(L.band * H) * 0.3;
+    // the neck guard: a flared skirt round the back from the rim, out and down
+    const guardH = u(L.neckDrop * H);
+    const guard = put(MeshBuilder.CreateCylinder("lhelmNeck", { height: guardH, diameterTop: 2, diameterBottom: 2 * L.neckFlare, tessellation: 12, arc: L.neckArc, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene), iron);
+    guard.rotation.y = Math.PI / 2 - Math.PI * L.neckArc;
+    guard.scaling.set(rx, 1, rz);
+    guard.position.y = -guardH / 2;
+    const lip = put(MeshBuilder.CreateCylinder("lhelmNeckLip", { height: u(0.03 * H), diameter: 2 * L.neckFlare, tessellation: 12, arc: L.neckArc, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene), trim);
+    lip.rotation.y = guard.rotation.y;
+    lip.scaling.set(rx * 1.02, 1, rz * 1.02);
+    lip.position.y = -guardH;
+    // the cheek guards: an iron plate hung from each temple down the side of the face to the jaw, orange edged behind, two studs
+    const cw = u(L.cheekWide * W), ch = u(L.cheekTall * H), cd = u(L.cheekThick * W), edge = u(L.edge * W);
+    for (const side of [-1, 1]) {
+      const pivot = new Mesh("lhelmCheekPivot", scene);
+      pivot.parent = helm;
+      pivot.position.set(side * rx * L.cheekX, 0, rz * L.cheekZ);
+      // the plate stands in the side plane (thin across x), its front edge turned in toward the face, its foot splayed out
+      pivot.rotation.set(0, -side * L.cheekTurn, side * L.cheekSplay);
+      const plate = put(MeshBuilder.CreateBox("lhelmCheek", { width: cd, height: ch, depth: cw }, scene), iron);
+      plate.parent = pivot;
+      plate.position.y = -ch / 2;
+      const rimPlate = put(MeshBuilder.CreateBox("lhelmCheekEdge", { width: cd * 0.6, height: ch + edge, depth: cw + 2 * edge }, scene), trim);
+      rimPlate.parent = pivot;
+      rimPlate.position.set(-side * cd * 0.4, -ch / 2 - edge / 2, 0);
+      for (const at of [0.3, 0.7]) {
+        const stud = put(MeshBuilder.CreateIcoSphere("lhelmStud", { radius: u(L.stud * W), subdivisions: 1, flat: true }, scene), trim);
+        stud.parent = pivot;
+        stud.position.set(side * cd * 0.55, -ch * at, 0);
+        stud.scaling.set(0.6, 1, 1);
+      }
+    }
+    const glow = scene.getGlowLayerByName("glow");
+    for (const m of trimmed) glow?.addExcludedMesh(m);
     return helm;
   }
   if (type === "helmet" || type === "plume_helmet") {
