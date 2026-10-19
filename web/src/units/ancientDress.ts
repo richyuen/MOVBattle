@@ -277,7 +277,7 @@ function shareOf(seed: number, i: number): number {
 const ZEUS_TOGA = {
   proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
   bolt: 3, boltLong: 0.36, boltWide: 0.5, boltX: 0.62, rings: 3, ring: 0.045, beltAt: 0.05, ringProud: 1.12,
-  boltGold: new Color3(1.25, 0.72, 0.2), whiteGlow: 0.85,
+  boltGold: new Color3(1.25, 0.72, 0.2), whiteGlow: 1,
   white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.86, 0.56, 0.24), glow: 0.14,
 };
 
@@ -286,7 +286,8 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   const T = ZEUS_TOGA;
   const out: Mesh[] = [];
   const mf = getMaterialFactory();
-  const white = mf.get("cloth", T.white, { emissive: T.white.scale(T.whiteGlow) });
+  // a flat unlit white, out of the glow layer: the lit cloth read grey under the beard's shadow and the ribbon's turned faces (388 step 5)
+  const white = mf.get("unlit", T.white, { emissive: T.white.scale(T.whiteGlow) });
   white.backFaceCulling = false;
   const gold = mf.get("cloth", T.gold, { emissive: T.gold.scale(T.glow) });
   body.torsoMesh.material = body.skinMaterial;
@@ -315,12 +316,14 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   const drape = MeshBuilder.CreateRibbon("zeusToga", { pathArray: [upper, lower], sideOrientation: Mesh.DOUBLESIDE }, scene);
   drape.convertToFlatShadedMesh();
   drape.material = white;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(drape);
   drape.parent = body.torso;
   out.push(drape);
   // the shoulder cap: the drape's top closed over his left shoulder
   const cap = MeshBuilder.CreateBox("zeusTogaShoulder", { width: band.halfX * 0.9, height: tr * 0.06, depth: halfZ * 2 * T.proud }, scene);
   cap.position.set(band.midX - band.halfX * 0.55, tr * T.top, midZ);
   cap.material = white;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(cap);
   cap.parent = body.torso;
   out.push(cap);
   // the gold bolt emblem on the front at his left shoulder
