@@ -4971,7 +4971,7 @@ type HorseStyle = "barded" | "pinto";
  *   shell CHANFRON.long of the head long from the poll, CHANFRON.wide of H across at the poll tapering to .narrow, flattened sideways by .flat, a ridge
  *   down the top; eye holes CHANFRON.eye of H round, .eyeAt of the head down from the poll; ears CHANFRON.ear of H tall; plume (370, FEATHER_PLUME) in units of .plume of H.
  */
-const CHANFRON = { long: 0.7, wide: 0.38, narrow: 0.27, flat: 0.88, eye: 0.085, eyeAt: 0.3, eyeTurn: 0.75, ear: 0.3, plume: 0.2, glow: 0.2 };
+const CHANFRON = { long: 0.7, wide: 0.38, narrow: 0.27, flat: 0.88, eye: 0.085, eyeAt: 0.3, eyeTurn: 0.75, ear: 0.3, plume: 0.15, glow: 0.2 };
 /*
  * [S] the barded horse's arched neck and coat (368; renaissance.jouster.red.png, .png: the neck leaves the chest arched forward and the head hangs low ahead
  * of the rider's chest under the grey chanfron, two googly eyes looking out of its front; a dark chestnut coat; critic 367: a tall vertical giraffe neck,
