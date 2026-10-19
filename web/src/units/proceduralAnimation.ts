@@ -309,6 +309,13 @@ const RAPIER_POINT = { guard: 0.3 };
  */
 const OFF_AXE = { out: 0.18, ahead: 0.22, face: [0.75, 0.65] as const };
 /*
+ * [S] both Stone Axes carried upright at his sides (364; tribal.chieftain.red.png, .png: a Stone Axe in each fist, forearms forward at hip height, both
+ * hafts upright beside his body, the stones above the shoulders). Outside an attack the main-hand axe lay level across his chest from the heavy-swing guard.
+ * Now, while he is not attacking (_standMainAxe, eased in and out at MAIN_AXE.ease per second so the swing itself is untouched), the main arm takes the off
+ * arm's pose mirrored across his midline and the main axe is stood up at his main side exactly as the off one (OFF_AXE mirrored), its grip kept in the fist.
+ */
+const MAIN_AXE = { ease: 8 };
+/*
  * [S] the Mammoth Charge pose (363; tribal.mammoth.jpg, card "they will charge at enemy units": head down, tusks levelled ahead, galloping): eased in at
  * .ease per second while the run lasts (setCharging); the head dropped .headDown rad and tossed .toss with the stride, the body pitched .pitch nose-down,
  * a gallop over the walk (front pair and hind pair reaching together .stride rad, the front knees folding .fold on the back swing, the body rocking .rock)
@@ -1794,6 +1801,7 @@ export class ProceduralAnimator {
     this._holdHeater();
     this._pointRapier();
     this._standOffhandAxe();
+    this._standMainAxe(dt);
     this._holdSlab();
     this._lungeLegs();
     this._holdTPose(dt);
@@ -4031,14 +4039,51 @@ export class ProceduralAnimator {
       }
       return;
     }
+    this._standAxe(r, this._body.leftShoulder, this._body.leftElbow, this._body.leftHand, w);
+  }
+
+  // The main-hand stone axe (looked up as the off one) and how far it is stood up (see MAIN_AXE)
+  private _mainAxeProp: { node: TransformNode; rest: Quaternion; grip: Vector3 } | null | undefined = undefined;
+  private _mainAxeUp = 0;
+  /** The main-hand stone axe stood up at his main side, the main arm mirrored off the off arm, while he is not attacking (see MAIN_AXE). */
+  private _standMainAxe(dt: number): void {
+    if (this._mainAxeProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "handle" && n.getChildren().some((c) => c.name === "stoneAxeHead"));
+      this._mainAxeProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
+    }
+    const r = this._mainAxeProp;
+    if (!r) return;
+    const live = this._state !== AnimState.Dead && this.walkStyle !== "quadruped";
+    const target = live && this._state !== AnimState.Attacking ? 1 - Math.min(1, this._limp) : 0;
+    this._mainAxeUp += (target - this._mainAxeUp) * Math.min(1, dt * MAIN_AXE.ease);
+    const w = this._mainAxeUp;
+    if (w <= 0.001) {
+      if (r.node.rotationQuaternion) {
+        r.node.rotationQuaternion = null;
+        r.node.position.copyFrom(r.grip);
+      }
+      return;
+    }
     const b = this._body;
-    for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.leftElbow, b.leftHand]) n.computeWorldMatrix(true);
+    // The main arm takes the off arm's pose mirrored across his midline
+    for (const [main, off] of [[b.rightShoulder, b.leftShoulder], [b.rightElbow, b.leftElbow]] as const) {
+      main.rotation.x += (off.rotation.x - main.rotation.x) * w;
+      main.rotation.y += (-off.rotation.y - main.rotation.y) * w;
+      main.rotation.z += (-off.rotation.z - main.rotation.z) * w;
+    }
+    this._standAxe(r, b.rightShoulder, b.rightElbow, b.rightHand, w);
+  }
+
+  /** Stands a stone axe up in the world at the side of `shoulder` (see OFF_AXE), its grip kept in `hand`'s fist, `w` of the way from its rest. */
+  private _standAxe(r: { node: TransformNode; rest: Quaternion; grip: Vector3 }, shoulder: TransformNode, elbow: TransformNode, handNode: TransformNode, w: number): void {
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, shoulder, elbow, handNode]) n.computeWorldMatrix(true);
     const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
     fwd.y = 0;
     if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
     fwd.normalize();
-    // His off side, level: the way the left shoulder sits from the middle
-    const side = Math.sign(b.leftShoulder.position.x) || -1;
+    // His side, level: the way that shoulder sits from the middle
+    const side = Math.sign(shoulder.position.x) || -1;
     const out = Vector3.TransformNormal(new Vector3(side, 0, 0), b.root.getWorldMatrix());
     out.y = 0;
     if (out.lengthSquared() < 1e-6) out.copyFrom(Vector3.Cross(fwd, Vector3.Up()));
@@ -4051,7 +4096,7 @@ export class ProceduralAnimator {
     const world = Matrix.Identity();
     Matrix.FromXYZAxesToRef(x, y, z, world);
     const handRot = new Quaternion();
-    b.leftHand.getWorldMatrix().decompose(undefined, handRot);
+    handNode.getWorldMatrix().decompose(undefined, handRot);
     const hand = Matrix.Identity();
     handRot.toRotationMatrix(hand);
     const q = Quaternion.Slerp(r.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
