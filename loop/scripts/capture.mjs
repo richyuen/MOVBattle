@@ -178,7 +178,7 @@ const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ab
 const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // A unit whose card ability comes after its first logged special (the minotaur's charge at 17 ms): detection runs on until this kind is seen
 // and its _ability pair is taken on it (evidence 387)
-const ABILITY_PREF = { "ancient.minotaur": "headbutt" };
+const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land" };
 void PAIRS;
 // --list: print the shots this run would take and stop
 if (flag("--list")) {
@@ -555,8 +555,10 @@ async function main() {
         if (ability) {
           // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
           const slow = /^float/.test(ability.kind);
-          await take(`unit_${id}_ability`, ability.tick, slow ? 4 : far);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : 9), slow ? 4 : far);
+          // a landed snake lies at the struck man's feet, 7 m off: framed on him, its after shot 30 ticks (.5 s) on, at its first lunge (evidence 387)
+          const snake = ability.kind === "snake_land";
+          await take(`unit_${id}_ability`, ability.tick, slow ? 4 : snake ? 2 : far);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), slow ? 4 : snake ? 2 : far);
         }
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
