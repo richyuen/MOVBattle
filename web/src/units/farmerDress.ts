@@ -471,7 +471,7 @@ export function halflingMop(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .spike of the width long, .spikeWide at the root, leaning at most .lean rad off upright, rooted in the lumps. Dark brown .fur, self-lit .glow.
  */
 const HALFLING_TUFT = {
-  clumps: 5, clump: 0.42, from: -0.55, to: 0.25, sink: 0.35, inX: 0.45, spikes: 9, spike: 0.34, spikeWide: 0.16, lean: 0.55,
+  clumps: 5, clump: 0.6, from: -0.5, to: 0.3, sink: 0.22, inX: 0.45, spikes: 10, spike: 0.42, spikeWide: 0.2, lean: 0.55,
   fur: new Color3(0.3, 0.16, 0.09), glow: 0.2,
 };
 
