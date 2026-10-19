@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
 
-375 | breeches: 3 quilted team puffs hip to knee, tan slashes (a74b9af) | renaissance.halberd.a | approved
-375 | hay planks fanning above the shoulders, skirt of flat tongues (d822dce) | farmer.hay_baler.a | approved
-375 | sweep carried through a step in the press (setState _afterSweep) (3a94e9e) | farmer.harvester.c | approved
-375 | chunky faceted flask: bulb, shoulder, neck, lip, cork (5af9646) | farmer.potion_seller.b | approved
-375 | mop of hanging locks in two tiers to jaw and nape (d04eef6) | farmer.halfling.a | approved
-375 | crow wings: 3 layered feather rows, team wedge on the leading edge (730ae01) | farmer.scarecrow.a | approved
-375 | round belly between the legs, skirt dropped, fur collar per leg (4ee59f9) | tribal.mammoth.a | approved
 376 | square upright stance in a sallet, legs 1.18 (d66db47) | renaissance.halberd.a | approved
 376 | two braids hung from the torso down the chest, team bands (ca0eef1) | farmer.harvester.a | approved
 376 | perched crow as its own upright wingless bird (a5e59c1) | farmer.scarecrow.a | approved
@@ -82,6 +75,12 @@ for 25 iterations.
 384 | dark brown greaves + rim, team foot in a brown sandal (d611ead) | ancient.hoplite.a | approved
 384 | brown belt round the body ring, dagger, bracers (b635f94 +5c01360) | ancient.sarissa.a | approved
 384 | lorica re-land: 4 fitted hoops at 1.05 + seams, flat deltoid strips (89b02e6 +8c5060d) | ancient.shield_bearer.a | approved
+385 | sandals: strapSandals on bare team feet + 3 shin laces, no boots (9c57271) | ancient.shield_bearer.a | approved
+385 | crest: one flat-topped box on a stalk, own hat hoplite_helm (f6b09dd +79ce333) | ancient.hoplite.a | approved
+385 | eye slots: temple plates + slanted brow bars over each eye (fd2a912) | ancient.sarissa.a | approved
+385 | nocked snake in the draw fist, flies as the same snake (100ea4a) | ancient.snake_archer.b | approved
+385 | pauldron one curved shell on the deltoid, flush rim, scroll; spiky tuft (3131dbb +ac045b2) | ancient.minotaur.a | approved
+385 | toga: bare trunk, white diagonal drape, gold bolt, triple gold belt (3d11834) | ancient.zeus.a | approved
 
 ## Spent (never retry as [P])
 
@@ -98,25 +97,23 @@ farmer.wheelbarrow (CREW_SEAT, LOW_RIM, THROWER_LEGS seat -.08, WHEELBARROW, LOG
 ancient.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 378 | stats | values: git show 5715b05
 ancientDress.ts:MINO_FUR, MINO_BELT, MINO_GEAR (pad, flap, rim, curls, buckle), MINO_SASH .3 | glow .16; pad 1.25x.18, flap .6; buckle .3 | 383 | approved | sash .16, dome pauldron +x
 ancient.minotaur b,c (MINOTAUR_CHARGE, BULL_CHARGE, BULL_FISTS) | compacted 382 | 379 | approved | values: git show b359959:loop/LEDGER.md
-propBuilder.ts:SCUTUM (tall, wide, curve, chin), SCUTUM_TRIM, SCUTUM_TRIM_FLAT (unlit emissive), SCUTUM_LAUREL | .5,.36,.06,.06; (.9,.45,.16); (1.5,.35,0) | 381 | approved | trim lit cloth .06 (380)
-propBuilder.ts:ASPIS (radius, notch, notchAt, rim, mount x,y,z) + ASPIS_WAVE (at, from, size, turns, band) | .36,.42,.64,.025; 100/220/335,.5,.36,.85,.2 | 383 | approved | swirlR .2 bar chains, lit rim
 proceduralAnimation.ts:PIKE_LEVEL (ahead, out, up, tilt, fistAt, offAhead, draw, stroke) | .7,.35,.2,.05,.3,.6,.3,.9 | 379 | approved | one-handed thrust grip
 ancientDress.ts:ZEUS_BEARD, ZEUS_LOCKS, ZEUS_HAIR | 13 strands .15 thick .75 long; 16 locks .2, 1.05; (.62,.48,.3) .16 | 379 | approved | -
 propBuilder.ts:CORINTH_HELM (wide, deep, brow, rise, arc, jaw, underEye, slit) | .62,.68,.26,.24,.76,1,.62,.1 | 381 | approved | dome + cheek boxes + crest on a stalk (244)
 propBuilder.ts:CORINTH_CREST (bands, band, wide, fill, sink, lean, shorten, segs) | 4,.19,.42,.95,.6,.06,.16,12 swept strips | 383 | approved | wide .32; blocks (382)
-propBuilder.ts:LEGION_HELM (wide, deep, rise, neckArc, neckDrop, neckFlare, cheekWide, cheekTall, cheekTurn) | .6,.64,.12,.42,.16,1.3,.3,.46,.45 | 382 | approved | grey "helmet" dome
 propBuilder.ts:BULL_HEAD (skull, skullTall, face, tilt, snout, horn1, hornGirth, ear, neck, neckBottom) | .62,.5,1,.5,1,.9,.3,.36,.9,1.5 | 382 | approved | BULL_SHELL 1.15 etc. (243)
 farmerDress.ts:HALFLING_MOP (locks, hang, droop, spread, wild, top, side, root, flat) | 46,1.6,.55,.8,.35,.24,.57,.63,.38 | 383 | approved | .35,.4,.95,.42 (382)
 ancientDress.ts:SNAKE_HOOD (cap, capFoot, wrapTop, wrapFoot, collar, collarOut, point, shade) | 1.14,.3,-.16,-1.12,.42,1.08,.5,.82 | 382 | approved | pharaoh hat
-proceduralAnimation.ts:DORY_AIM (ahead, out, above) | 1.8,1.9,.1 | 382 | approved | DORY_CARRY fwd/side/down .8,.25,.4
 
-proceduralAnimation.ts:DORY_CARRY (ahead, out, up, fwd, side, down, fistAt) | .25,.9,-.3,.8,.25,.4,.15 | 380 | approved | level thrust grip
-proceduralAnimation.ts:DORY_THRUST (ahead, out, up, tilt, reach, draw, driven, held, home, blendOut) | .35,.6,-.05,-.06,.75,.45,.22,.5,.85,.15 | 381 | approved | -
 simulationSystem.ts:SARISSA_KEEP (near, pace) | .85, .7 | 380 | approved | -
 simulationSystem.ts:ZEUS_REARM | .6 of the cooldown | 384 | approved | - (bolt stayed in the fist)
 propBuilder.ts:BOLT_SPARK (branches, long, short, kinks, zig, core, rim) | 200/150/250/20, .14, .09, 3, .55, .022, 1.7 | 384 | approved | 5-joint shard bolt .68 s tall
 vehicleBuilder.ts:BALLISTA_FRAME/HOUSING/ARMS/STOCK/WHEEL, BALLISTA_WOOD | wide 1.5 top 1.02; wood (.62,.3,.2) glow .14 | 384 | approved | team slab deck .8x1.2
 propBuilder.ts:SNAKE_BOW (long, thick, bow, panel, head, hold) | .95, .06, .07, .8, .075, 1.1 | 384 | approved | plain short bow
-ancientDress.ts:HOPLITE_LEGS (out, from, to, rim, sole, instep) | 1.3, .06, .86, .07, .22, .55 | 384 | approved | grey boots
 ancientDress.ts:SARISSA_KIT (tall, proud, band, hipOut, ahead, sheath, out) | .2, 1.1, .35, .92, .55, .42, 1.6 | 384 | approved | out 1.32, belt in trunkBand (hidden)
-ancientDress.ts:LORICA (hoops, low, high, proud, fill, seamProud, strips, tilt) | 4, .24, .74, 1.05, .92, 1.07, 2, .38 | 384 | approved | 5 hoops 1.1+step (383 rejected)
+ancient.shield_bearer + hoplite done (SCUTUM*, LEGION_HELM, LORICA, ASPIS*, DORY_*, HOPLITE_LEGS) | compacted 385 | 384 | approved | values: git show 522cb46:loop/LEDGER.md
+ancientDress.ts:SB_SANDAL (laces, lace, out) + propBuilder.ts:HOPLITE_CREST (stalk, tall, wide, deep) | .7/.82/.93,.045,1.12; .12,.9,.3,1 | 385 | approved | -
+propBuilder.ts:CORINTH_SLOTS (edge, back, browLong, browTall, browDrop, browTilt) | .35,.01,1.05,.08,.02,.32 | 385 | approved | open band
+ancientDress.ts:SNAKE (bands, head, neck, held, nock) + projectileSystem FLYING_SNAKE_LONG | 8,.22,.72,.48,.42; 1.1 m | 385 | approved | plain arrow
+ancientDress.ts:MINO_SHELL (radius, deep, low, over, thick, inX, atY, scroll) | .78,1.35,.55,.25,.1,.82,.86,.2 | 385 | approved | MINO_GEAR slab+flap
+ancientDress.ts:ZEUS_TOGA (proud, high, low, wide, top, rings, ring, beltAt) | 1.07,.9,.12,.5,1.04,3,.045,.05 | 385 | approved | grey vest + brown sash
