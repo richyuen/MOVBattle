@@ -28,6 +28,8 @@ export function buildFacetedBoulder(scene: Scene, name: string, diameter: number
 
 /** Weapons are built three fifths over life size (TABS), so they still read as shapes from across the field: a quarter over, thin swords and staffs vanished at lineup distance */
 const PROP_OVERSIZE = 1.6;
+/** Zeus's fist sparks (384; spec at the lightning_bolt case): branch angles in degrees from the fist's +y, reach, zig-zag, white core and cyan rim. */
+const BOLT_SPARK = { branches: [200, 150, 250, 20] as const, long: 0.14, short: 0.09, kinks: 3, zig: 0.55, core: 0.022, rim: 1.7 };
 /** Hats are a third over: three fifths over, a bucket helm was wider than the shoulders under it */
 const HAT_OVERSIZE = 1.3;
 /** Cone and brim hats keep the weapons' three fifths: they sit on top of the head and not round it, and at a third over a wizard's cone and a farmer's brim were no wider than the head */
@@ -4269,25 +4271,39 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // A held bolt is the thrown one in the hand (trailer_2_sheet_03 r3c2): flat white jagged slabs, each a long four-sided shard pressed flat, laid end to end
       // in a zigzag, every one backed by the same shard half again as broad in cyan, a hair behind it, so it reads as a white blade with a cyan rim and not a
       // glowing yellow block.
+      // [S] 384 (ancient.zeus.red.png: small jagged white sparks crackle out of each fist, about a forearm long, no great spike): BOLT_SPARK.branches
+      // short zig-zags fanned round the fist in its own plane, each .kinks links that step .zig of its length off its line in turn, .long (the first)
+      // and .short (the rest) of s from the fist; a white core .core of s broad, backed a hair behind by a cyan rim .rim times broader.
       const bolt = new TransformNode("bolt", scene) as unknown as Mesh;
       const white = mat(scene, new Color3(1, 1, 1), 1.2);
       const cyan = mat(scene, new Color3(0.35, 0.9, 1), 1.0);
-      // Joints of the zigzag, bottom (the fist) to top, as x, y in units of s
-      const joints: [number, number][] = [[0, -0.08], [0.07, 0.12], [-0.05, 0.3], [0.08, 0.5], [-0.02, 0.68]];
-      for (let k = 0; k < joints.length - 1; k++) {
-        const [x0, y0] = joints[k];
-        const [x1, y1] = joints[k + 1];
-        const length = Math.hypot(x1 - x0, y1 - y0) * s * 1.15;
-        const broad = (0.07 - 0.012 * k) * s;
-        for (const [layer, material, scale, z] of [[0, white, 1, 0], [1, cyan, 1.55, -0.012]] as const) {
-          const shard = MeshBuilder.CreateCylinder(`boltShard${layer}`, { height: length, diameterTop: 0, diameterBottom: broad * scale, tessellation: 4 }, scene);
-          shard.scaling.z = 0.18; // pressed flat: a slab, not a spike
-          shard.position.set(((x0 + x1) / 2) * s, ((y0 + y1) / 2) * s, z * s);
-          shard.rotation.z = -Math.atan2(x1 - x0, y1 - y0);
-          shard.material = material;
-          shard.parent = bolt;
+      const B = BOLT_SPARK;
+      B.branches.forEach((deg, b) => {
+        const a = (deg * Math.PI) / 180;
+        const reach = (b === 0 ? B.long : B.short) * s;
+        const dir = [Math.sin(a), Math.cos(a)];
+        const side = [dir[1], -dir[0]];
+        const pts: [number, number][] = [[0, 0]];
+        for (let k = 1; k <= B.kinks; k++) {
+          const along = (reach * k) / B.kinks;
+          const off = k === B.kinks ? 0 : (k % 2 ? 1 : -1) * B.zig * (reach / B.kinks);
+          pts.push([dir[0] * along + side[0] * off, dir[1] * along + side[1] * off]);
         }
-      }
+        for (let k = 0; k < pts.length - 1; k++) {
+          const [x0, y0] = pts[k];
+          const [x1, y1] = pts[k + 1];
+          const length = Math.hypot(x1 - x0, y1 - y0) * 1.12;
+          const broad = B.core * s * (1 - (0.5 * k) / B.kinks);
+          for (const [layer, material, scale, z] of [[0, white, 1, 0], [1, cyan, B.rim, -0.006]] as const) {
+            const shard = MeshBuilder.CreateCylinder(`boltShard${layer}`, { height: length, diameterTop: k === pts.length - 2 ? 0 : broad * scale * 0.7, diameterBottom: broad * scale, tessellation: 4 }, scene);
+            shard.scaling.z = 0.2; // pressed flat: a blade, not a spike
+            shard.position.set((x0 + x1) / 2, (y0 + y1) / 2, z * s);
+            shard.rotation.z = -Math.atan2(x1 - x0, y1 - y0);
+            shard.material = material;
+            shard.parent = bolt;
+          }
+        }
+      });
       return bolt;
     }
     case "fan": {
