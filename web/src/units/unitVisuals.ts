@@ -844,7 +844,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
   switch (preset) {
     case "iconic_zeus":
       // [S] a bolt crackling in each fist (384; card Off Hand Thunderbolt Throw)
-      return vis({ scale: 1.7, bulk: 1.08, headSize: 1.16, armLength: 1.16 }, "lightning_bolt", "laurel", "none", "cape", "#f7dd6f", "lightning_bolt", {
+      // [S] 388 no cape (ancient.zeus.red.png: the toga alone over his left shoulder; critic 387: a dark slab off that shoulder)
+      return vis({ scale: 1.7, bulk: 1.08, headSize: 1.16, armLength: 1.16 }, "lightning_bolt", "laurel", "none", "none", "#f7dd6f", "lightning_bolt", {
         posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "storm_halo", fxPreset: "solar",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },

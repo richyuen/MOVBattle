@@ -254,10 +254,16 @@ function shareOf(seed: number, i: number): number {
  *   - the emblem: a gold zig-zag of .bolt links .boltLong of the trunk long on the drape's front at his left shoulder;
  *   - the belt: .rings gold rings .ring of the trunk tall at .beltAt of it, .ringProud out, a hair's gap between them.
  * White and gold fixed (not team), self-lit .glow. The pelvis and skirt keep the white body cloth.
+ * [S] 388 the toga filled (ancient.zeus.red.png: the white covers all the trunk below the diagonal, from over his left shoulder down to his right hip,
+ * to the belt; the bolt a bright orange-gold zig-zag on the shoulder; critic 387: a band half the trunk wide, bare belly above the belt, emblem thin
+ * and dark): the drape's lower edge now runs level at .foot of the trunk (just under the belt), its upper edge the diagonal from .edgeHigh of the trunk
+ * at his left side to .edgeLow at his right (clamped under .top); the bolt .bolt links .boltLong of the trunk long, .boltWide of a link step wide, at
+ * .boltX of the half width out on his left, on a flat unlit material (out of ACES) in .boltGold.
  */
 const ZEUS_TOGA = {
-  proud: 1.07, round: 4, high: 0.9, low: 0.12, wide: 0.5, top: 1.04, segs: 28,
-  bolt: 3, boltLong: 0.3, rings: 3, ring: 0.045, beltAt: 0.05, ringProud: 1.12,
+  proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
+  bolt: 3, boltLong: 0.36, boltWide: 0.5, boltX: 0.62, rings: 3, ring: 0.045, beltAt: 0.05, ringProud: 1.12,
+  boltGold: new Color3(1.25, 0.72, 0.2),
   white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.86, 0.56, 0.24), glow: 0.14,
 };
 
@@ -280,17 +286,17 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
     const e = 2 / T.round;
     return { x: band.midX + band.halfX * p * Math.sign(c) * Math.abs(c) ** e, z: midZ + halfZ * p * Math.sign(s) * Math.abs(s) ** e };
   };
-  const lineAt = (x: number) => {
+  // the upper edge: the diagonal, high at his left (-x), low at his right
+  const edgeAt = (x: number) => {
     const u = (x - band.midX) / band.halfX; // -1 his left, +1 his right
-    return tr * (T.high + (T.low - T.high) * (u + 1) / 2);
+    return tr * Math.min(T.top, T.edgeHigh + (T.edgeLow - T.edgeHigh) * (u + 1) / 2);
   };
   const upper: Vector3[] = [], lower: Vector3[] = [];
   for (let i = 0; i <= T.segs; i++) {
     const a = (Math.PI * 2 * i) / T.segs;
     const p = rim(a, T.proud);
-    const mid = lineAt(p.x);
-    upper.push(new Vector3(p.x, Math.min(mid + tr * T.wide / 2, tr * T.top), p.z));
-    lower.push(new Vector3(p.x, Math.min(mid - tr * T.wide / 2, tr * T.top - tr * 0.08), p.z));
+    upper.push(new Vector3(p.x, edgeAt(p.x), p.z));
+    lower.push(new Vector3(p.x, tr * T.foot, p.z));
   }
   const drape = MeshBuilder.CreateRibbon("zeusToga", { pathArray: [upper, lower], sideOrientation: Mesh.DOUBLESIDE }, scene);
   drape.convertToFlatShadedMesh();
@@ -306,14 +312,16 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   // the gold bolt emblem on the front at his left shoulder
   const frontZ = midZ + halfZ * T.proud + 0.004;
   const step = tr * T.boltLong / T.bolt;
-  let at = new Vector3(band.midX - band.halfX * 0.5, tr * 0.92, frontZ);
+  const boltMat = mf.get("unlit", T.boltGold, { emissive: T.boltGold });
+  let at = new Vector3(band.midX - band.halfX * T.boltX, tr * 0.97, frontZ);
   for (let k = 0; k < T.bolt; k++) {
     const to = at.add(new Vector3((k % 2 ? 1 : -1) * step * 0.55, -step, 0));
     const d = to.subtract(at);
-    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: step * 0.28, height: d.length() * 1.15, depth: 0.012 }, scene);
+    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: step * T.boltWide, height: d.length() * 1.15, depth: 0.012 }, scene);
     link.position.set((at.x + to.x) / 2, (at.y + to.y) / 2, frontZ);
     link.rotation.z = -Math.atan2(d.x, -d.y);
-    link.material = gold;
+    link.material = boltMat;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(link);
     link.parent = body.torso;
     out.push(link);
     at = to;
