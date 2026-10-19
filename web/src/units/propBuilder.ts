@@ -254,7 +254,8 @@ const LEGION_HELM = {
   cheekWide: 0.3, cheekTall: 0.46, cheekThick: 0.06, cheekX: 0.88, cheekZ: 0.35, cheekTurn: 0.45, cheekSplay: 0.1, edge: 0.035, stud: 0.035,
   iron: new Color3(0.2, 0.21, 0.24), glow: 0.1,
 };
-const CORINTH_CREST = { bands: 4, band: 0.13, fill: 0.9, sink: 0.6, lean: 0.06, shorten: 0.16, segs: 12, overlap: 1.15, narrow: 0.08 };
+// (382 look: at .13 bands and the helm's .14 crestWide the crest still read a thin comb from the front quarter; .wide of W thick now)
+const CORINTH_CREST = { bands: 4, band: 0.16, wide: 0.28, fill: 0.9, sink: 0.6, lean: 0.06, shorten: 0.16, segs: 12, overlap: 1.15, narrow: 0.08 };
 // The bone skull cap (bone_mask): cranium width in heads, eye-hole width and snout length in head widths
 const SKULL_HEADS = 1.25;
 const SKULL_SOCKET = 0.26;
@@ -1459,7 +1460,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       for (let i = 0; i < K.segs; i++) {
         const a = at(front + ((back - front) * i) / K.segs), b = at(front + ((back - front) * (i + 1)) / K.segs);
         const along = b.subtract(a);
-        const block = MeshBuilder.CreateBox("chelmCrest", { width: u(C.crestWide * W) * (1 - K.narrow * k), height: bandH * K.fill, depth: along.length() * K.overlap }, scene);
+        const block = MeshBuilder.CreateBox("chelmCrest", { width: u(K.wide * W) * (1 - K.narrow * k), height: bandH * K.fill, depth: along.length() * K.overlap }, scene);
         block.position.copyFrom(a.add(b).scale(0.5));
         // depth along the line, height out of the bowl
         const out = new Vector3(0, -along.z, along.y).normalize();
