@@ -745,9 +745,14 @@ function shellStripes(scene: Scene, name: string, limb: Mesh, from: number, to: 
  * hangs no tunic skirt (unitFactory skips it for him), so the blouse ends at the brown belt with its gold front buckle and the lathed breeches show below it
  * to the knee; each stocking is one shell .hose (1.32, past the hexagon's flats, so no team shin shows through mid-shin) from the knee into the shoe, in light
  * warm cloth (warmCloth: the beige x glow cloth rendered pale grey-white under the cool sky light).
+ * [R] legs from the breeches down (364; medieval.king.red.png: puffed breeches gathered at the knee, slim beige stockings below them, clearly narrower than
+ * the breeches, knee into brown shoes). Spec read off the render: the breeches balloon to about 1.7 thigh half-widths at mid-thigh and gather in to a narrow
+ * hem just below the knee, no thigh or knee of the body showing under them at any bend; each stocking is about the shin's own width, so no shell at all.
+ * So: the thigh (its knee stub merged in) wears the breeches cloth, and the breeches lathe (KING_PANTS) runs the whole thigh and stub long, past the knee
+ * hinge, gathered to KING_PANTS.hem at its foot with the gold band there; the shin (its knee stub merged in) is the stocking itself, in warmCloth, unglowed.
  */
 const KING_DRESS = {
-  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, hose: 1.32, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
+  puff: 1.55, sleeve: 0.7, stripes: 4, pants: 1.5, collar: 0.5, vee: 0.42, belt: 0.16, buckle: 0.28,
   gold: new Color3(0.95, 0.7, 0.22), leather: new Color3(0.42, 0.24, 0.12), shoe: new Color3(0.45, 0.27, 0.14),
   shade: 0.92, glow: 0.12,
 };
@@ -769,8 +774,15 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   }
   // [S] re-land (359): puffy pantaloons ballooning out round the thigh and gathered at a gold band just above the knee, gold folds following the puff; beige
   // stockings from the knee to the shoe, clear of the pantaloons
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(...kingPantaloon(scene, thigh, cloth, gold));
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(...unglow(scene, [limbShell(scene, "kingStocking", shin, 0, 1, K.hose, beige)]));
+  // [R] (364): the thigh itself in the breeches cloth, the breeches past the knee hinge; the shin itself is the stocking (no shell), out of the glow
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    thigh.material = cloth;
+    out.push(...kingPantaloon(scene, thigh, cloth, gold));
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = beige;
+    unglow(scene, [shin]);
+  }
   // brown shoes, gold buckle on the instep
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const m of knee.getChildMeshes(true)) {
@@ -822,8 +834,9 @@ function kingDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   return out;
 }
 
-/** The puff of a pantaloon leg, top to foot: [share of the thigh's length down, radius in thigh half-widths]; it ends KING_PANTS.knee down at a gold band. */
-const KING_PANTS = { knee: 0.8, profile: [[0, 1.15], [0.2, 1.45], [0.5, 1.7], [0.78, 1.5], [1, 1.1]] as [number, number][], band: 1.18, folds: 4 };
+/** The puff of a pantaloon leg, top to foot: [share of its length down, radius in thigh half-widths]; it runs KING_PANTS.knee of the thigh's length (knee
+ *  stub included, so past the hinge) and is gathered at its foot to the gold band, .band of the half-width. */
+const KING_PANTS = { knee: 1.04, profile: [[0, 1.15], [0.2, 1.45], [0.48, 1.68], [0.72, 1.48], [0.88, 1.05], [1, 0.95]] as [number, number][], band: 1.0, folds: 4 };
 
 function kingPantaloon(scene: Scene, thigh: Mesh, cloth: Material, gold: Material): Mesh[] {
   const P = KING_PANTS;
