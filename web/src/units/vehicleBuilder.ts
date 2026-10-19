@@ -240,6 +240,13 @@ export const CATAPULT_BOULDER = 0.65;
  * long end: .bottom across at the base on the arm, flaring to .top at the mouth, .deep tall, both faces drawn so the inside wall shows; a chunky .rim
  * ring round the mouth in a lighter timber (.tone) so the cup reads against the arm. The boulder sits .sink of its height down inside it.
  */
+/*
+ * [S] box trestle frame (356; medieval.catapult.red.png: an open timber box on the wheels, not a slab; A-frame uprights; thick crossbeams; a block cap on every
+ * corner; bolts through the front beam). Side rails CATAPULT_FRAME.long along the firing axis at x = +-.half, .railY up, beams .beam square; front, middle and back
+ * crossbeams; .cap block caps on the rail ends and the crossbar's ends; each upright an A of two legs from .spread fore and aft of the middle up to the crossbar
+ * under the arm's pivot, braced at half height; .bolt hex bolts on the front beam; a .deck plank deck at the back where the crewman stands.
+ */
+const CATAPULT_FRAME = { long: 1.6, half: 0.42, railY: 0.42, beam: 0.16, cap: 0.24, spread: 0.55, bolt: 0.09, deck: 0.5 };
 const CATAPULT_BUCKET = { bottom: 0.4, top: 0.68, deep: 0.28, rim: 0.06, sink: 0.45, tone: new Color3(0.55, 0.26, 0.12) };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
@@ -253,9 +260,24 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09)); // the cannon's dark wheel timber, so the wheels stand off the frame
   const pumpkinMat = makeMat(scene, new Color3(0.88, 0.42, 0.12));
 
-  // Base platform (longer along Z = firing axis)
-  const base = MeshBuilder.CreateBox("base", { width: 1.0, height: 0.2, depth: 1.6 }, scene);
-  base.position.y = 0.4; base.parent = rig; base.material = wood; allMeshes.push(base);
+  // Box trestle (CATAPULT_FRAME): no slab bed. Two side rails along the firing axis tied by a front, a middle and a back crossbeam, a block cap on each
+  // rail end, two bolts through the front beam; a short plank deck at the back for the crewman to stand on.
+  const F = CATAPULT_FRAME;
+  const beam = (name: string, w: number, h: number, d: number, x: number, y: number, z: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z); m.parent = rig; m.material = wood; allMeshes.push(m);
+    return m;
+  };
+  for (const side of [-1, 1]) beam("frameRail", F.beam, F.beam, F.long, side * F.half, F.railY, 0);
+  for (const z of [-1, 0, 1]) beam("frameCrossbeam", F.half * 2 + F.beam, F.beam * (z === 0 ? 0.8 : 1), F.beam, 0, F.railY, z * (F.long / 2 - F.beam / 2));
+  for (const side of [-1, 1]) for (const end of [-1, 1]) beam("frameCap", F.cap, F.cap, F.cap, side * F.half, F.railY, end * (F.long / 2 - F.cap / 2 + 0.02));
+  for (const side of [-1, 1]) {
+    const bolt = MeshBuilder.CreateCylinder("frameBolt", { height: 0.04, diameter: F.bolt, tessellation: 6 }, scene);
+    bolt.rotation.x = Math.PI / 2;
+    bolt.position.set(side * F.half * 0.45, F.railY, F.long / 2 + 0.01);
+    bolt.parent = rig; bolt.material = metal; allMeshes.push(bolt);
+  }
+  beam("base", F.half * 2, 0.08, F.deck, 0, F.railY + F.beam / 2 - 0.04, -(F.long - F.deck) / 2);
 
   // Wheels (on the sides, X axis): as tall as the deck and thick, standing clear of its edges
   for (const xOff of [-0.58, 0.58]) {
@@ -275,15 +297,20 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     }
   }
 
-  // Upright frame (straddles the base, perpendicular to firing direction)
-  for (const xOff of [-0.35, 0.35]) {
-    const post = MeshBuilder.CreateBox("post", { width: 0.16, height: 1.0, depth: 0.16 }, scene);
-    post.position.set(xOff, 1.0, 0);
-    post.parent = rig; post.material = wood; allMeshes.push(post);
+  // A-frame uprights: on each rail two legs lean in from its front and back to meet under the crossbar, braced across at half height; the crossbar over
+  // both, a block cap at each end of it
+  const topY = CATAPULT_ARM.pivotY - 0.12;
+  for (const side of [-1, 1]) {
+    for (const end of [-1, 1]) {
+      const footZ = end * F.spread, rise = topY - F.railY;
+      const len = Math.hypot(rise, footZ);
+      const leg = beam("frameLeg", F.beam, len, F.beam, side * F.half, F.railY + rise / 2, footZ / 2);
+      leg.rotation.x = -end * Math.atan2(F.spread, rise);
+    }
+    beam("frameBrace", F.beam * 0.8, F.beam * 0.8, F.spread * 1.05, side * F.half, F.railY + (topY - F.railY) * 0.45, 0);
   }
-  const crossbar = MeshBuilder.CreateBox("crossbar", { width: 0.86, height: 0.16, depth: 0.16 }, scene); // as thick as the posts it caps
-  crossbar.position.set(0, 1.5, 0);
-  crossbar.parent = rig; crossbar.material = wood; allMeshes.push(crossbar);
+  beam("crossbar", F.half * 2 + F.beam, F.beam, F.beam, 0, topY, 0);
+  for (const side of [-1, 1]) beam("frameCap", F.cap, F.cap, F.cap, side * (F.half + F.beam * 0.25), topY + 0.04, 0);
 
   // Throwing arm on its pivot at the crossbar (CATAPULT_ARM; swung by RuntimeUnit's catapult throw). Built along -Z from the pivot (bucket end back), the
   // pivot then turned to the cocked pose: the bucket end pulled down behind the frame, the short end with the counterweight up over the front.
