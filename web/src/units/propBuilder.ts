@@ -347,6 +347,17 @@ const DEER_RACK = {
  * .spread of its own way out to the side, a dark socket ring .socket of the eye across behind it.
  */
 const DEER_MASK = { top: 0.95, tip: 0.36, flat: 0.32, rise: 0.1, drop: 0.08, tilt: 0.2, out: 0.26, spread: 1.55, socket: 1.4 };
+/*
+ * [S] the mask's cheek leaves (364; tribal.bone_mage.red.png, card Appearance: "the deer skull, braced with a strap and two brown leaves dangling from each
+ * side"): off a dark strap at each side of the head a leaf hangs by the cheek beside the muzzle, its foot below the mask's chin: a flat faceted blade
+ * MASK_LEAF.long head heights long, .wide head widths across, .x head widths out from the middle and .ahead forward, its top .top head heights above the
+ * chin, leant out .lean; orange-brown (.color, self-lit .glow). The mask (cranium, cheeks, face plate) is put in warm bone-tan (.tan, self-lit .tanGlow):
+ * the shared pale bone rendered grey-white under the capture's sky.
+ */
+const MASK_LEAF = {
+  long: 0.42, wide: 0.17, x: 0.36, ahead: 0.5, top: 0.3, lean: 0.25,
+  color: new Color3(0.72, 0.36, 0.13), glow: 0.22, tan: new Color3(0.8, 0.64, 0.42), tanGlow: 0.2,
+};
 
 function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: number, tall: number, R: number, u: (v: number) => number, chin?: number, rackScale = 1): void {
   const bone = snout.material;
@@ -371,6 +382,29 @@ function addDeerSkull(scene: Scene, skull: Mesh, snout: Mesh, W: number, H: numb
     face.position.set(0, u((top + foot) * 0.5), u(R * 0.62 + M.top * W * M.flat * 0.5) + Math.sin(M.tilt) * u(top - foot) * 0.25);
     face.material = bone;
     face.parent = skull;
+    if (rackScale === 1) {
+      // The worn mask (spec at MASK_LEAF): warm tan bone, a leaf hung by each cheek
+      const L = MASK_LEAF;
+      const tan = mat(scene, L.tan, L.tanGlow);
+      for (const m of [skull, ...skull.getChildMeshes(true)]) if (m.material === bone) m.material = tan;
+      const leafMat = mat(scene, L.color, L.glow);
+      const strap = mat(scene, new Color3(0.32, 0.2, 0.12));
+      for (const side of [-1, 1]) {
+        const topY = chin + L.top * H;
+        const leaf = MeshBuilder.CreateIcoSphere("maskLeaf", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+        leaf.scaling.set(u(L.wide * W), u(L.long * H), u(0.05 * W));
+        leaf.rotation.set(0.15, side * 0.35, side * L.lean);
+        leaf.position.set(side * u(L.x * W), u(topY - L.long * H * 0.5), u(L.ahead * W));
+        leaf.material = leafMat;
+        leaf.parent = skull;
+        // ...on a short dark strap from the side of the head down to its stalk
+        const tie = MeshBuilder.CreateCylinder("maskLeafStrap", { height: u(0.22 * H), diameter: u(0.05 * W), tessellation: 4 }, scene);
+        tie.position.set(side * u((L.x + 0.03) * W), u(topY + 0.08 * H), u(L.ahead * W * 0.9));
+        tie.rotation.z = side * 0.2;
+        tie.material = strap;
+        tie.parent = skull;
+      }
+    }
   }
   // The rack on the mask and on the staff (the staff's grown by rackScale to the mask's own size: DEER_RACK.staff)
   const rack = chin !== undefined || rackScale !== 1;
