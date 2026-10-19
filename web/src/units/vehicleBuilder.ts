@@ -1990,11 +1990,11 @@ const ANKLE_BAND = { stripes: [-0.17, -0.25], stripeTall: 0.035, wide: 0.61, dot
  * ankle). Replaces the octagonal drums (a fur cuff hoop, two posts, a black sole cap) whose stripes stood proud as raised hoops (critic 360).
  *   - each leg two lathes of MAMMOTH_LEG.sides sides in the fur, the thigh on the hip joint from .top over it down past the knee and the shin on the knee
  *     joint to the sole; radii (neck units) read down the profiles .thigh and .shin as [radius, y]; every vertex jittered .jitter (the coat's lumps);
- *   - paint: each ANKLE_BAND stripe a ring of the shin's own sides at its height, .proud over the surface and ANKLE_BAND.stripeTall high; the dots flat
+ *   - paint (the shin unjittered so it stays flush): each ANKLE_BAND stripe a ring at its height, .proud over the surface and ANKLE_BAND.stripeTall high; the dots flat
  *     discs laid on the surface at ANKLE_BAND.dotAt, turned to face out.
  */
 const MAMMOTH_LEG = {
-  sides: 9, jitter: 0.035, proud: 1.035,
+  sides: 9, jitter: 0.035, proud: 1.012,
   thigh: [[0.37, 0.12], [0.36, -0.05], [0.33, -0.3], [0.3, -0.5]] as [number, number][],
   shin: [[0.3, 0.06], [0.285, -0.1], [0.28, -0.26], [0.295, -0.36], [0.31, -0.42]] as [number, number][],
 };
@@ -2009,15 +2009,15 @@ function profileAt(profile: [number, number][], y: number): number {
 /** One mammoth leg (spec at MAMMOTH_LEG): the fur thigh and shin lathes, the flush ankle stripes and dots. */
 function mammothLeg(scene: Scene, hipJoint: TransformNode, kneeJoint: TransformNode, fur: Material, paint: Material, allMeshes: Mesh[], serial: number): void {
   const L = MAMMOTH_LEG;
-  const lathe = (name: string, profile: [number, number][], parent: TransformNode, seed: number) => {
+  const lathe = (name: string, profile: [number, number][], parent: TransformNode, seed: number, jitter = L.jitter) => {
     const top = profile[0][1], foot = profile[profile.length - 1][1];
     const shape = [new Vector3(0, top, 0), ...profile.map(([r, y]) => new Vector3(r, y, 0)), new Vector3(0, foot, 0)];
     const m = MeshBuilder.CreateLathe(name, { shape, tessellation: L.sides, sideOrientation: Mesh.DOUBLESIDE }, scene);
-    jitterVertices(m, L.jitter, seed);
+    if (jitter > 0) jitterVertices(m, jitter, seed);
     m.parent = parent; m.material = fur; allMeshes.push(m);
   };
   lathe("uleg", L.thigh, hipJoint, 61.3 + serial);
-  lathe("lleg", L.shin, kneeJoint, 67.9 + serial);
+  lathe("lleg", L.shin, kneeJoint, 67.9 + serial, 0);
   for (const y of ANKLE_BAND.stripes) {
     const r = profileAt(L.shin, y) * L.proud;
     const stripe = MeshBuilder.CreateCylinder("ankleStripe", { height: ANKLE_BAND.stripeTall, diameter: 2 * r, tessellation: L.sides * 2 }, scene);
