@@ -1095,11 +1095,11 @@ export class ProceduralAnimator {
     if (!this.bullFists || this.walkStyle === "quadruped" || (this._state !== AnimState.Idle && this._state !== AnimState.Walking)) return;
     const b = this._body, F = BULL_FISTS, k = (1 - this._charge) * (1 - Math.min(1, this._limp));
     if (k <= 0.01) return;
-    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
     const hip = b.hip.getAbsolutePosition();
     const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
-    const yaw = b.root.rotation.y, sway = Math.sin((this._time + this._wobblePhase) * 3) * 0.04 * u;
-    const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw)), right = new Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    const sway = Math.sin((this._time + this._wobblePhase) * 3) * 0.04 * u;
+    const { fwd, right } = this._heading();
     for (const side of [1, -1]) {
       const fist = hip.add(fwd.scale(F.carryAhead * u)).add(right.scale(side * F.carryOut * u)).add(new Vector3(0, F.carryUp * u + side * sway, 0));
       if (side > 0) this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, k, 1);
@@ -3040,6 +3040,20 @@ export class ProceduralAnimator {
     this._offArmTo(origin.add(axis.scale(at)), w, 2);
   }
 
+  /** His heading in the world, level: forward off the root's +z, his right from his left shoulder to his right one (world matrices already computed). */
+  private _heading(): { fwd: Vector3; right: Vector3 } {
+    const b = this._body;
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const right = b.rightShoulder.getAbsolutePosition().subtract(b.leftShoulder.getAbsolutePosition());
+    right.y = 0;
+    right.subtractInPlace(fwd.scale(Vector3.Dot(right, fwd)));
+    if (right.lengthSquared() < 1e-6) right.set(fwd.z, 0, -fwd.x);
+    return { fwd, right: right.normalize() };
+  }
+
   /** Levels the pike in both fists (PIKE_LEVEL); set by the runtime for the sarissa. */
   levelsPike = false;
   private _pike: { shaft: Mesh; grip: Vector3 } | null | undefined = undefined;
@@ -3064,12 +3078,10 @@ export class ProceduralAnimator {
       return;
     }
     const b = this._body, P = PIKE_LEVEL;
-    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
     const hip = b.hip.getAbsolutePosition();
     const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
-    const yaw = b.root.rotation.y;
-    const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-    const right = new Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    const { fwd, right } = this._heading();
     // the stroke: drawn back to the windup, driven out past the rest at the release, eased back after
     let stroke = 0;
     if (s === AnimState.Attacking && this._attackMotion === "thrust") {
