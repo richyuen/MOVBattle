@@ -125,6 +125,96 @@ function archerHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   return [shell, tail, cape];
 }
 
+/*
+ * [S] the Healer's robe trim (356; medieval.healer.red.png, .blue.png, card Appearance "a priest robe decorated with two crossed bands"): two gold bands run down
+ * the front from the collar to the knee, either side of the middle; a gold band round the hem and round each cuff; a gold turned collar round the neck; a grey rope
+ * belt at the waist with its end hanging down the front. Bands HEALER_TRIM.band of the chest's half-width wide at HEALER_TRIM.apart of it off the middle, sunk so
+ * only their faces stand HEALER_TRIM.proud proud of the cloth; hem band HEALER_TRIM.hem of the robe's length tall; cuffs at HEALER_TRIM.cuff of the forearm;
+ * belt HEALER_TRIM.belt of the chest's half-height thick, its end HEALER_TRIM.knot of the robe's length long.
+ */
+const HEALER_TRIM = {
+  band: 0.17, apart: 0.42, proud: 0.05, hem: 0.08, cuff: 0.75, collar: 0.62, belt: 0.13, knot: 0.42,
+  gold: new Color3(0.93, 0.66, 0.24), rope: new Color3(0.42, 0.4, 0.38), glow: 0.12,
+};
+
+/** The trim, fitted to the robe skirt hung from his hips (unitFactory HEALER_ROBE) and to his chest. */
+export function healerRobeTrim(scene: Scene, body: ArticulatedBody, robe: Mesh): Mesh[] {
+  const T = HEALER_TRIM;
+  const gold = getMaterialFactory().get("cloth", T.gold, { emissiveIntensity: T.glow });
+  const rope = getMaterialFactory().get("cloth", T.rope, { emissiveIntensity: T.glow });
+  const out: Mesh[] = [];
+  const t = body.torsoMesh;
+  const c = t.getBoundingInfo().boundingBox.extendSize;
+  const cx = c.x * t.scaling.x, cy = c.y * t.scaling.y, cz = c.z * t.scaling.z;
+  // Robe skirt: its hexagon's front face stands at the apothem (cos 30) of its radius, flaring from the waist to the hem
+  const verts = robe.getVerticesData("position") ?? [];
+  const rb = robe.getBoundingInfo().boundingBox.extendSize;
+  let rTop = 0;
+  for (let i = 0; i < verts.length; i += 3) if (verts[i + 1] > rb.y * 0.99) rTop = Math.max(rTop, Math.hypot(verts[i], verts[i + 2]));
+  const rBot = rb.x;
+  const ap = Math.cos(Math.PI / 6);
+  const depth = cz * 0.3;
+  for (const side of [-1, 1]) {
+    // down the chest from the collar to the waist...
+    const chestBand = MeshBuilder.CreateBox("healerBand", { width: cx * T.band, height: cy * 1.9, depth }, scene);
+    chestBand.parent = t.parent;
+    chestBand.position.set(side * cx * T.apart, t.position.y - cy * 0.02, cz * (1 + T.proud) - depth / 2);
+    chestBand.material = gold;
+    out.push(chestBand);
+    // ...and on down the robe's front face to the hem, leaning out with its flare
+    const fall = rb.y * 2;
+    const lean = Math.atan2((rBot - rTop) * ap, fall);
+    const robeBand = MeshBuilder.CreateBox("healerRobeBand", { width: cx * T.band / robe.scaling.x, height: fall / Math.cos(lean), depth: depth / robe.scaling.z }, scene);
+    robeBand.parent = robe;
+    robeBand.rotation.x = lean;
+    robeBand.position.set(side * cx * T.apart, 0, ((rTop + rBot) / 2) * ap * (1 + T.proud) - depth / robe.scaling.z / 2);
+    robeBand.material = gold;
+    out.push(robeBand);
+  }
+  // hem band round the foot of the robe
+  const hemTall = rb.y * 2 * T.hem;
+  const hem = MeshBuilder.CreateCylinder("healerHem", { height: hemTall, diameterTop: rBot * 2 * 1.02, diameterBottom: rBot * 2 * 1.05, tessellation: 6 }, scene);
+  hem.convertToFlatShadedMesh();
+  hem.parent = robe;
+  hem.position.y = -rb.y + hemTall / 2;
+  hem.material = gold;
+  out.push(hem);
+  // cuffs round the wrists
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    const a = arm.getBoundingInfo().boundingBox.extendSize;
+    const cuff = MeshBuilder.CreateCylinder("healerCuff", { height: a.y * 0.28, diameter: Math.max(a.x, a.z) * 2.35, tessellation: 6 }, scene);
+    cuff.convertToFlatShadedMesh();
+    cuff.parent = arm;
+    cuff.position.y = -a.y * T.cuff;
+    cuff.material = gold;
+    out.push(cuff);
+  }
+  // the turned collar: a flat gold ring laid round the neck on the shoulders
+  const collar = MeshBuilder.CreateTorus("healerCollar", { diameter: cx * 2 * T.collar, thickness: cy * 0.16, tessellation: 8 }, scene);
+  collar.convertToFlatShadedMesh();
+  collar.scaling.set(1, 0.7, Math.max(0.75, cz / cx * 1.25));
+  collar.parent = t.parent;
+  collar.position.y = t.position.y + cy * 0.9;
+  collar.material = gold;
+  out.push(collar);
+  // the rope belt at the waist, its end hanging down the front
+  const belt = MeshBuilder.CreateTorus("healerRopeBelt", { diameter: rTop * 2 * 1.02, thickness: cy * T.belt, tessellation: 10 }, scene);
+  belt.convertToFlatShadedMesh();
+  belt.parent = robe;
+  belt.position.y = rb.y - cy * T.belt * 0.3;
+  belt.material = rope;
+  out.push(belt);
+  const end = MeshBuilder.CreateCylinder("healerRopeEnd", { height: rb.y * 2 * T.knot, diameter: cy * T.belt * 0.85, tessellation: 5 }, scene);
+  end.convertToFlatShadedMesh();
+  end.parent = robe;
+  const endLean = Math.atan2((rBot - rTop) * ap * T.knot, rb.y * 2);
+  end.rotation.x = endLean;
+  end.position.set(cx * 0.08, rb.y * (1 - T.knot), (rTop + (rBot - rTop) * T.knot * 0.5) * ap * 1.06);
+  end.material = rope;
+  out.push(end);
+  return out;
+}
+
 /** Every medieval unit's own dress; an empty list for a unit with none. */
 export function dressMedieval(scene: Scene, body: ArticulatedBody, unitId: string, team: Color3): Mesh[] {
   switch (unitId) {

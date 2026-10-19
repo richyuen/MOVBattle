@@ -13,7 +13,7 @@ import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand } from "./tribalDress";
-import { dressMedieval } from "./medievalDress";
+import { dressMedieval, healerRobeTrim } from "./medievalDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -603,7 +603,7 @@ export class UnitFactory {
     }
     if (definition.id === "medieval.healer" && !shouldUseVehicleBody) {
       const robe = hangSkirt(this._scene, body, "healerRobe", HEALER_ROBE.long, HEALER_ROBE.hem, getMaterialFactory().get("cloth", teamColor));
-      if (robe) propMeshes.push(robe);
+      if (robe) propMeshes.push(robe, ...healerRobeTrim(this._scene, body, robe));
     }
     if (definition.id === "evil.void_cultist" && !shouldUseVehicleBody) {
       propMeshes.push(...dressVoidCultist(this._scene, body, teamColor, propMeshes));
