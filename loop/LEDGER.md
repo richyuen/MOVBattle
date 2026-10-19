@@ -11,11 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-346 | three crew on the cart (4ecb105) | farmer.wheelbarrow.a | approved
-346 | scarecrow clothes (5cd3e3a) | farmer.scarecrow.a | approved
-346 | braids to the chest, team bands (909cf43) | farmer.harvester.a | rejected
-346 | fork low across front in both fists (e75d76c) | farmer.farmer.b | dropped
-346 | level sweep held through the cut + fling (1e4d069) | farmer.harvester.c | approved
 347 | braids retry: core plait to mid-chest, band at the end (514b71b) | farmer.harvester.a | approved
 347 | bolted team-painted plank tray, hay mound seat (07f763c +1) | farmer.wheelbarrow.a | approved
 347 | riders' fork and apple (b2fe249 +1) | farmer.wheelbarrow.b | approved
@@ -54,6 +49,13 @@ for 25 iterations.
 355 | tonsure: grey fringe sides/back, grey beard, cap dropped (e5f32a0 +cf8f774) | medieval.healer.a | approved
 355 | floppy hat: drooping brown brim, raised crown, leaf feathers (216bf92) | medieval.bard.a | approved
 355 | crusader great helm: iron, rivets, gold cross plate, holes, team panel (92256f8) | medieval.squire.a | approved
+356 | stray chest hilt: tabard cross left off the knight (cc7912d) | medieval.knight.b | approved
+356 | hood: dark team cowl open at the face, liripipe, capelet (e32ac81 +ee64656) | medieval.archer.a | approved
+356 | robe trim: gold bands, hem, cuffs, collar torus, rope belt (7462491) | medieval.healer.a | approved
+356 | peasant vest: torso+yoke shells, V panel, lacing, toggles (ffdb80c +df7b94b) | medieval.bard.a | approved
+356 | tabard: beige cross pattee, hem band, shoulder edges (3122a04 +78cf8cc) | medieval.squire.a | approved
+356 | beard: faceted dirty-blonde beard, drooping moustache (63043f4) | medieval.king.a | approved
+356 | box trestle: rails, crossbeams, caps, bolts, A-frame uprights, deck (4375f6d) | medieval.catapult.a | approved
 
 ## Spent (never retry as [P])
 (none yet)
@@ -87,3 +89,9 @@ propBuilder.ts:ROYAL_CROWN (heads, band, down, points, tall, base, flare, gem, r
 medievalDress.ts:TONSURE (ring, open, y, thick, out, beard wide/down/deep, grey, glow) | 1,.95,.12,.42,1.1; 1,.22,.55; (.66,.64,.62),.15 | 355 | approved | thick .26 out 1.06 (pre-review)
 propBuilder.ts:FLOPPY_HAT (brim, thick, droop, dip, cock, crown, taper, tall, pale, felt, leaves) | 2,.07,.24,.12,-.08,1.12,.88,.5,.25,(.55,.3,.19) | 355 | approved | critic: sits low, brim half-hides the eyes
 propBuilder.ts:CRUSADER_HELM (iron, gold, band, rivets, brow, browWide, nasal, chin, proud, holes, panel) | (.3,.3,.33),(.86,.66,.3),.1,8,.32,1.9,.24,.42,.07,3,.62 | 355 | approved | critic: iron reads lilac-grey
+medievalDress.ts:ARCHER_HOOD (out, peak, chin, open, brow, jaw, tail, cape wide/drop/neck, shade, lining) | 1.38,.4,1.12,.62,.58,-.82,1.5; 1.4,.32,.75; .5, .96 | 356 | approved | out 1.18 open .95 shade .62 (pre-review); critic: near skin tone, brow bare
+medievalDress.ts:HEALER_TRIM (band, apart, proud, hem, cuff, collar, belt, knot, gold, rope) | .17,.42,.05,.08,.75,.62,.13,.42,(.93,.66,.24),(.42,.4,.38) | 356 | approved | critic: collar torus hidden in yoke
+medievalDress.ts:BARD_VEST (wide, deep, long, shade, v, down, laces, toggle, proud, tunicPale, tunicGlow) | 1.05,1.12,1,.5,.62,.62,2,.16,.06,.12,.3 | 356 | approved | wide 1.07 deep 1.14 (pre-review); critic: V pale grey
+medievalDress.ts:SQUIRE_TABARD (span, up, down, waist, end, hem, edge, proud, beige) | .86,.85,.75,.14,.42,.12,.3,.015,(.88,.8,.62) | 356 | approved | waist .1 end .34 (pre-review); critic: cross pale grey
+medievalDress.ts:KING_BEARD (wide, down, deep, top, tache, lip, droop, blonde) | 1.2,.5,.7,.12,.5,.2,.4,(.8,.6,.36) | 356 | approved | wide 1.12 (pre-review); critic: narrow beak, ashen
+vehicleBuilder.ts:CATAPULT_FRAME (long, half, railY, beam, cap, spread, bolt, deck) | 1.6,.42,.42,.16,.24,.55,.09,.5 | 356 | approved | slab bed + 2 posts (before 356)
