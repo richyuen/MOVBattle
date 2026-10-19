@@ -1317,7 +1317,7 @@ const HIDE_SKIRT = { bandDrop: 0.16, panelOut: 1.45, panelFlare: 1.12, sides: 7 
  * the hip joint of their side, round the thigh (.legOut of its half-width, flared .flare) so they swing with the leg; the rear ones (cos of their middle
  * under .rearBelow) hang on the pelvis round its own depth (.rearOut of its half-depth), straight down (.rearFlare), so nothing stands off the buttock.
  */
-const SKIRT_TONGUES = { tongues: 12, overlap: 0.12, long: 0.55, vary: 0.08, points: 2, tear: 0.2, legOut: 1.35, flare: 1.04, rearBelow: -0.35, rearFlare: 1.02, rearOut: 1.2 };
+const SKIRT_TONGUES = { tongues: 12, overlap: 0.12, long: 0.55, vary: 0.08, points: 2, tear: 0.2, legOut: 1.35, flare: 1.04, rearBelow: -0.35, rearFlare: 1.02, rearOut: 1.2, pelvisWide: 0.9, pelvisDeep: 0.6 };
 const HIDE_DRESS = { sides: 8, top: 1.0, low: 0.56, strapAt: 0.55, strapWide: 0.13, strapRise: 0.45, skirt: 0.62, flare: 1.4, rag: 0.16, color: new Color3(0.52, 0.3, 0.22), glow: 0.15 };
 const HIDE_EDGE = { color: new Color3(0.34, 0.19, 0.12), wide: 0.2, thick: 0.05, lift: 0.12, rimPoints: 24 };
 const HIDE_DRESSES = new Set(["tribal.stoner"]);
@@ -1465,6 +1465,15 @@ export function dressTribalHideDress(scene: Scene, body: ArticulatedBody, unitId
     tongue.material = hide;
     tongue.parent = parent;
     added.push(tongue);
+  }
+  // [S] 368 the pelvis block (critic 367: a dark square box standing off behind the buttock in the windup, straight edges, a lighter rim; a colour probe
+  // showed it is the bare body's pelvis block in loincloth brown, deeper than the skirt): pulled in to .pelvisDeep of its depth and .pelvisWide of its
+  // width so it sits inside the band and tongues, in the dress's own hide
+  for (const m of body.hip.getChildMeshes(true)) {
+    if (!/_pelvis$/.test(m.name)) continue;
+    m.scaling.set(T.pelvisWide, 1, T.pelvisDeep);
+    m.material = hide;
+    added.push(m as Mesh);
   }
   return added;
 }
