@@ -3089,7 +3089,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const skull = MeshBuilder.CreateSphere("orb", { diameterX: W * STAFF_SKULL.crown, diameterY: W * 0.7, diameterZ: W * 0.95, segments: 5 }, scene);
       skull.position.set(top.x, top.y + W * 0.4, top.z);
       // [S] 364: the cranium (and so the face plate, which takes its material) in the rack's tan (DEER_RACK.staffBend)
-      skull.material = mat(scene, DEER_RACK.tan, DEER_RACK.glow);
+      skull.material = mat(scene, MASK_LEAF.tan, MASK_LEAF.tanGlow);
       skull.convertToFlatShadedMesh();
       skull.parent = shaft;
       const socket = mat(scene, new Color3(0.12, 0.09, 0.08));
