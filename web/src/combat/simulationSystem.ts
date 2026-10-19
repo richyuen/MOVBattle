@@ -13,6 +13,7 @@ import type { ImpactPresentation } from "./impactPresentation";
 import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
 import { HARPOON_MUZZLE, launchRingSword } from "../units/propBuilder";
+import { buildSnake } from "../units/ancientDress";
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
 import type { PlacementZone } from "../map/placementValidator";
@@ -85,6 +86,16 @@ const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
 const BROADHEAD_ARROWS = new Set(["medieval.archer"]);
 // [S] 385 bowmen who loose a snake: the nocked snake (ancientDress heldSnake) leaves the fist, and the arrow flies dressed as it (ProjectileSystem _dressSnake)
 const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
+/*
+ * [S] 387 the snake comes down alive (card Characteristics: "After impact these snakes become units and move quickly, lunge at enemies to attack them ...
+ * snakes will die after successfully biting twice, or after a 30 second lifetime"; critic 378: it stayed lodged in the man like an arrow). Where the
+ * flying snake lands (ProjectileSystem.snakeLand) a ground snake of the same build (ancientDress buildSnake, .long m) lies on the turf, head toward the
+ * nearest enemy, and slithers at .speed m/s, its body thrown in a travelling S (.wave rad/s, .waves bends along it, .sway m to a side at the tail, half
+ * at the head). Within .reach m it lunges: head reared .rear rad, it darts .dash m/s for .lunge s and bites at the end for .bite damage, .rest s apart.
+ * After .bites bites or .life s it goes in a smoke puff. Logged snake_land and snake_bite under the shooter. Not a roster unit: nothing targets it.
+ */
+const SNAKE_LIVE = { long: 1.1, speed: 3.2, wave: 10, waves: 1.5, sway: 0.1, reach: 0.8, rear: 0.45, dash: 4.5, lunge: 0.25, bite: 30, rest: 1.1, bites: 2, life: 30 };
+type LiveSnake = { root: TransformNode; snake: TransformNode; born: number; bites: number; restUntil: number; lungeUntil: number; phase: number };
 /**
  * A firearm whose ball throws the man it hits (units/renaissance.musketeer, card Weapons: the musket's force is 1500, against a club's 20): a man the shot
  * leaves alive is knocked off his feet along its line and tumbles, as from a blast (RuntimeUnit.applyBlastLaunch), not merely flinched. Keyed by weaponHint, so
@@ -401,6 +412,8 @@ export class SimulationSystem {
   private _dodgeSide = new Map<RuntimeUnit, number>();
   // [S] 369 balloon arrows loosed from the draw fist (renaissanceDress heldBalloonArrow): each held arrow and when the next is back in the hand
   private _arrowsAway = new Map<Node, number>();
+  // Live snakes on the ground (SNAKE_LIVE), by team
+  private _snakes: { s: LiveSnake; team: number }[] = [];
   // Banjo Walk (BANJO_WALK): the bards running their circles now, and which way each turns
   private _banjoWalks = new Map<RuntimeUnit, number>();
   private _banjoTurns = 0;
@@ -534,6 +547,7 @@ export class SimulationSystem {
     this._dodgeSide.clear();
     for (const held of this._arrowsAway.keys()) if (!held.isDisposed()) held.setEnabled(true);
     this._arrowsAway.clear();
+    this._clearSnakes();
     this._banjoWalks.clear();
     this._banjoNotes.clear();
     this._banjoNoteCount = 0;
@@ -551,6 +565,7 @@ export class SimulationSystem {
       this._lastBattleDuration = now - this._battleStartedAt;
     }
     this._isRunning = false;
+    this._clearSnakes();
     for (const unit of this._units) {
       unit.stopMoving();
       unit.setSpinning(false);
@@ -562,6 +577,7 @@ export class SimulationSystem {
     if (!this._isRunning) return;
     this._now = now;
     if (this.projectileSystem) this.projectileSystem.abilityHook ??= this._logMissileAbility;
+    if (this.projectileSystem) this.projectileSystem.snakeLand ??= this._landSnake;
 
     for (const unit of this._units) {
       unit.update(dt, now);
@@ -590,6 +606,7 @@ export class SimulationSystem {
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
+    if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     for (const [held, back] of this._arrowsAway) {
       if (now < back) continue;
       if (!held.isDisposed()) held.setEnabled(true);
@@ -2839,6 +2856,94 @@ export class SimulationSystem {
       reached.add(next);
       from = next;
     }
+  }
+
+  /** The nearest living, targetable man not of `team` to `at` on the ground, or null. */
+  private _nearestFoe(at: Vector3, team: number): RuntimeUnit | null {
+    let best: RuntimeUnit | null = null, bestSq = Infinity;
+    for (const unit of this._units) {
+      if (unit.isDead || unit.team === team || !unit.isTargetable) continue;
+      const dSq = (unit.position.x - at.x) ** 2 + (unit.position.z - at.z) ** 2;
+      if (dSq < bestSq) { bestSq = dSq; best = unit; }
+    }
+    return best;
+  }
+
+  /** A flying snake has landed (ProjectileSystem.snakeLand): it goes on as a live snake on the turf there (spec at SNAKE_LIVE). */
+  private _landSnake = (at: Vector3, from: Vector3, team: number): void => {
+    const scene = this._units[0]?.body.root.getScene();
+    if (!scene) return;
+    const L = SNAKE_LIVE;
+    const foe = this._nearestFoe(at, team);
+    const root = new TransformNode("liveSnake", scene);
+    root.position.set(at.x, foe ? foe.position.y : 0, at.z);
+    // laid head on toward the nearest foe, or on along its line of flight
+    const to = foe ? foe.position.subtract(at) : at.subtract(from);
+    root.rotation.y = Math.atan2(to.x, to.z);
+    const snake = buildSnake(scene, "liveSnakeBody", L.long);
+    snake.parent = root;
+    snake.rotation.x = Math.PI / 2; // +y (tail to head) laid along +z
+    snake.position.set(0, L.long * 0.16, -L.long * 0.55);
+    for (const m of snake.getChildMeshes()) m.metadata = { ...(m.metadata ?? {}), snakeX: m.position.x, snakeY: m.position.y };
+    const now = RuntimeUnit.timeNowSeconds();
+    this._snakes.push({ s: { root, snake, born: now, bites: 0, restUntil: now + 0.15, lungeUntil: 0, phase: 0 }, team });
+    this._logMissileAbility("ancient.snake_archer", "snake_land", root.position);
+  };
+
+  /** Every live snake slithers at its nearest foe, lunges and bites (spec at SNAKE_LIVE); spent ones go in a puff. */
+  private _slitherSnakes(dt: number, now: number): void {
+    const L = SNAKE_LIVE;
+    for (let i = this._snakes.length - 1; i >= 0; i--) {
+      const { s, team } = this._snakes[i];
+      const foe = this._nearestFoe(s.root.position, team);
+      if (s.bites >= L.bites || now - s.born >= L.life || !foe) {
+        this.visualEffects?.spawnSmokePuff(s.root.position.clone());
+        s.root.dispose();
+        this._snakes.splice(i, 1);
+        continue;
+      }
+      const to = foe.position.subtract(s.root.position);
+      to.y = 0;
+      const dist = to.length();
+      const lunging = now < s.lungeUntil;
+      if (!lunging) s.root.rotation.y = Math.atan2(to.x, to.z);
+      const reach = L.reach + foe.definition.collisionRadius;
+      let step = 0;
+      if (lunging) step = L.dash;
+      else if (dist > reach * 0.7) step = L.speed;
+      if (step > 0 && dist > 0.05) {
+        const go = Math.min(step * dt, Math.max(0, dist - foe.definition.collisionRadius * 0.6));
+        s.root.position.x += Math.sin(s.root.rotation.y) * go;
+        s.root.position.z += Math.cos(s.root.rotation.y) * go;
+      }
+      s.root.position.y = foe.position.y;
+      // the travelling S: each piece thrown to a side by where it lies along the body, the tail most
+      s.phase += dt * L.wave * (lunging ? 0.4 : step > 0 ? 1 : 0.35);
+      for (const m of s.snake.getChildMeshes()) {
+        const md = m.metadata as { snakeX?: number; snakeY?: number } | null;
+        if (md?.snakeX === undefined || md.snakeY === undefined) continue;
+        const along = md.snakeY / L.long;
+        m.position.x = md.snakeX + Math.sin(s.phase - along * L.waves * Math.PI * 2) * L.sway * (1 - 0.5 * along);
+      }
+      // the head rears through the lunge
+      s.snake.rotation.x = Math.PI / 2 - (lunging ? L.rear : 0);
+      if (lunging && now + dt >= s.lungeUntil) {
+        if (dist <= reach + 0.2) {
+          foe.applyDamage(L.bite, to.normalize().scale(1.5));
+          s.bites++;
+          this._logMissileAbility("ancient.snake_archer", "snake_bite", foe.position);
+        }
+        s.restUntil = now + L.rest;
+        s.lungeUntil = 0;
+      } else if (!lunging && dist <= reach && now >= s.restUntil) {
+        s.lungeUntil = now + L.lunge;
+      }
+    }
+  }
+
+  private _clearSnakes(): void {
+    for (const { s } of this._snakes) if (!s.root.isDisposed()) s.root.dispose();
+    this._snakes = [];
   }
 
   private _logAbility(unit: RuntimeUnit, kind: string, t: number, at: Vector3 = unit.position): void {

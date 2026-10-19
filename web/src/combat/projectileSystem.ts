@@ -74,6 +74,8 @@ interface ActiveProjectile {
   riseFrom?: number;
   riseTo?: number;
   drunk?: string;
+  /** A snake archer's snake: where it lands it is handed to the simulation as a live snake (snakeLand), not left standing as a shaft. */
+  snake?: boolean;
   /** Dodged (Painter Dodge): it no longer follows its man and comes down where he stood; it strikes him only if he is still there. */
   loose?: boolean;
 }
@@ -375,7 +377,7 @@ export class ProjectileSystem {
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
-      balloons: options.balloons, drunk: options.drunk,
+      balloons: options.balloons, drunk: options.drunk, snake: options.snake && shape === "arrow" && !held,
       trailSystem, trailStarted,
       half: held?.half,
       rope: options.tether ? this._buildRope() : undefined,
@@ -424,6 +426,8 @@ export class ProjectileSystem {
    */
   /** Set by the simulation: records a mechanic a missile set off (a balloon arrow's float) in its ability log, under the shooter's unit id. */
   abilityHook: ((unitId: string, kind: string, at: Vector3) => void) | null = null;
+  /** Set by the simulation: a snake archer's snake has come down at `at` (on its man or the ground), flown from `from`; it goes on as a live snake there. */
+  snakeLand: ((at: Vector3, from: Vector3, team: number) => void) | null = null;
 
   spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1, options: MuzzleFlashOptions = {}): void {
     const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4 * scale, segments: 6 }, this._scene);
@@ -585,7 +589,11 @@ export class ProjectileSystem {
         if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
         p.rope?.dispose();
         p.mesh.getChildMeshes().find((m) => m.name === "streak")?.dispose(); // the streak is of the flight: a shaft left standing has none
-        if (!this._leaveAsLitter(p, struck)) p.mesh.dispose();
+        // [S] 387 a snake is not left lodged like a shaft: it drops at its man's feet and slithers on (SimulationSystem SNAKE_LIVE)
+        if (p.snake && this.snakeLand) {
+          this.snakeLand(p.mesh.position.clone(), p.origin, p.attackerTeam);
+          p.mesh.dispose();
+        } else if (!this._leaveAsLitter(p, struck)) p.mesh.dispose();
         this._active.splice(i, 1);
       }
     }
