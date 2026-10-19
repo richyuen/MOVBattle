@@ -11,13 +11,6 @@ a value column is at most 80 characters. The worker updates rows at commit time 
 for 25 iterations.
 
 ## Structural attempts (last 10 iterations; `iter | gap | unit.criterion | verdict`)
-361 | slim stockings: shin recoloured, hose 1.06 (e7c3c5c, reverted) | medieval.king.a | rejected
-361 | off-hand Stone Axe stood up in the world (e919c23) | tribal.chieftain.b | approved
-361 | dreadlock mop: set-back cap, kinked clumps (a7be412) | tribal.stoner.a | approved
-361 | cudgel: knobbly faceted lathe, bulb (6b4a076) | tribal.clubber.b | approved
-361 | dreadlock mop over the beard (d59089b) | tribal.clubber.a | approved
-361 | deer skull as a face mask, eyes on it (1edd0db +ca5ab06) | tribal.bone_mage.a | approved
-361 | slab held square in front, bash shove (fe4efa7) | tribal.protector.b | approved
 
 362 | stone slab: faceted columns, seam, round lip, 3 moss (27256cd +d38d4b0) | tribal.protector.b | approved
 362 | ragged hide loincloth, large skull (da977ab +20e52ec) | tribal.clubber.a | approved
@@ -79,6 +72,11 @@ for 25 iterations.
 370 | puffed beret: band + faceted puff slid aside, team colour (8139915 +afefe3a) | renaissance.painter.a | approved
 370 | tan bone ring on the slab behind the window (37d76c7) | tribal.protector.a | approved
 370 | step back: committed slide from the land, 1.8 m in .16 s (e2f2190) | renaissance.fencer.c | approved
+371 | hose: garter + bow, tan sock tops, orange shoes (e7a49eb) | renaissance.musketeer.a | approved
+371 | solid doublet, tan placket + buttons, slashed shoulder puffs (58d2ee9) | renaissance.balloon_archer.a | approved
+371 | cavalier hat as one felt lathe, left brim swept up (47ab317 +4b357d0) | renaissance.fencer.a | approved
+371 | feather clump: packed rings of fat icos, helm + poll (ae2a04b) | renaissance.jouster.a | approved
+371 | Fencer Dodge: sidestep slide as a swing goes up, blow on air (c88c308) | renaissance.fencer.c | approved
 
 ## Spent (never retry as [P])
 
@@ -91,6 +89,8 @@ propBuilder.ts:SLAB_FACETS (deep, rows, front, bevel, seam); SLAB_MOSS (top, hol
 propBuilder.ts:JAVELIN_LEAF (shoulder, flank, flankWide, ridge, jitter, glow); HEAD long/wide | .28,.62,.55,.13,.08,.14; .16/.15 | 362 | approved | ball leaf .15/.095 (320)
 tribal.stoner (HIDE_DRESS, HIDE_SKIRT, HIDE_EDGE, SKIRT_TONGUES; unit done) | compacted 369 | 368 | approved | values: git show 706894b:loop/LEDGER.md
 tribal.bone_mage (DEER_RACK, worn, staff, MASK_LEAF, STAFF_SKULL, DEER_MASK; unit done) | compacted 368 | 366 | approved | values: git show 96d1c20:loop/LEDGER.md
+renaissance.jouster (BARDED_NECK, JOUSTER_CHARGE, HORSE_GAIT, LANCE_CANDY, FEATHER_CLUMP; unit done) | compacted 371 | 371 | approved | values: git show 58e64cc:loop/LEDGER.md + 371 gap commits
+renaissance.musketeer (MORION_CUT, MATCHLOCK, MUSKETEER_COLLAR, MUSKETEER_HOSE; unit done) | compacted 371 | 371 | approved | values: git show 58e64cc:loop/LEDGER.md + 371 gap commits
 visualEffects.ts:TRAMPLE_RING (sprites..peak, band, bandPeak, clods, toss, fling, clod) | 12,.25,1,.7,1.8,.4,1.2,.85,.22,.5,8,4.2,2.2,.16 | 364 | approved | -
 proceduralAnimation.ts:SLAB_FRONT (reach, grip, bash) | .2, .08, .22 | 361 | approved | -
 propBuilder.ts:SKULL_FACETED (heads, tall, under, sink, socket, socketUp, snout, snoutTilt, tan, glow) | 1.12,1.15,.45,.1,.3,.42,.5,.5,(.68,.52,.34),.2 | 363 | approved | 1.45,1.6,.7,-,.3,-,.55 white .18
@@ -106,18 +106,15 @@ propBuilder.ts:SKULL_FACE (eyeY, face, eyeX, rim, muzzle, muzzleY, cheek, jaw, j
 vehicleBuilder.ts:MAMMOTH_EAR (tall, long, thick, z, flare) | .48,.42,.15,.3,1.05 | 367 | approved | edge-on fan
 vehicleBuilder.ts:MAMMOTH_HEM (row, c, size, drop, skirt, ring, skirtY) | 9,-.55,[.08,.2,.22],.12,5,.36,-.42 | 367 | rejected (reverted) | -
 propBuilder.ts:SALLET_FACETED (sides, heads, taper, deep, drop, slit, slitWide, eye, bevor, bevorFlare) | 8,1.24,.9,1.08,1.0,.13,.84,.15,.34,1.3 | 368 | approved | SALLET ball
-propBuilder.ts:BARDED_NECK (low, rake0, high, rake1, mid, pitch, coat, glow); CHANFRON.eyeTurn | .6,.6,.38,1.15,.32,2.45,(.4,.2,.11),.12; .75 | 368 | approved | neck 1.05 @.75
-propBuilder.ts:MORION_CUT (dome, tall, segments, comb, combLong, brimX, brimZ, peak, droop) | 1.16,.42,6,.3,.95,1.45,2.1,.42,.2 | 368 | approved | MORION .3 tall
 renaissanceDress.ts:PAINTER_JABOT (tiers, gap, below, across, grow, lip, flat, ahead, under, glow) | 3,.04,.12,.95,.25,.6,1.3,.12,(.46,.3,.16) .3 .9,.14 | 369 | approved | 368 cut over .3 (reverted)
 
 simulationSystem.ts:HOP_BACK (halberd close, dist, rise, cd) | .75,1.9,2.6,3 | 370 | approved | fencer row removed 370 (was .12,1.5,3.2,1.5)
 simulationSystem.ts:FENCER_RECOVER (dist, seconds) | 1.8, .16 | 370 | approved | HOP_BACK fencer leap (369)
-propBuilder.ts:LANCE_CANDY (pitch, band, proud, perTurn, glow); LANCE_TAN | 2.4,.5,1.05,16,.16; (.9,.72,.4) | 370 | approved | tube pitch .075 stripe .55, cream
-unitFactory.ts:MUSKETEER_COLLAR (tall, neck, out, deep, over, tab, tabWide, tabAt, splay, glow) | .17,.75,1.55,1.7,.1,.3,.34,.13,.3,.22 | 370 | approved | disc .collar 1.25
+simulationSystem.ts:FENCER_DODGE (dist, back, seconds, cooldown) | 2.2,1.0,.22,2.5 | 371 | approved | -
 unitFactory.ts:HALBERD_QUILT (upper, lower, swell, tall, glow, cuffLong, cuffFlare) | 5,3,1.6,1.25,.12,.48,1.75 | 370 | approved | 3 rolls 1.22, cuff 1.5
 propBuilder.ts:BERET_PUFF (band, bandTall, puff, deep, puffTall, sit, slide, ahead, tilt, dip, glow) | 1.04,.1,1.45,.95,.5,.35,.16,.1,.32,.15,.12 | 370 | approved | disc 2.0/.32 tilt .22
-propBuilder.ts:SLAB_WINDOW_BONE (outer, inner, thick, behind, glow) | 1.15,.62,.012,.006,.2 | 370 | approved | -simulationSystem.ts:JOUSTER_CHARGE (from, reach, speed, seconds, overrun, contact, damage, fling, lift, cd) | 1.5,16,1.5,3.5,4,1.0,20,4,2.5,3 | 369 | approved | -
-proceduralAnimation.ts:HORSE_GAIT (ease, walk, run, walkPace, runPace, beats hl/hr/fl/fr) | 8,.32,.62,8,12,0/.3/.3/.6 | 369 | approved | legs static
-propBuilder.ts:MATCHLOCK (long, grip, bore, fore, stock, butt, glow, bands, steel, wood) | 1.3,.26,.042,.86,.9,.11,.18,3,(.74,.74,.72),(.64,.31,.14) | 369 | approved | MUSKET 1.05,.034 metal
+propBuilder.ts:SLAB_WINDOW_BONE (outer, inner, thick, behind, glow) | 1.15,.62,.012,.006,.2 | 370 | approved | -
 renaissanceDress.ts:HELD_BALLOON_ARROW (long, shaft, grip, head, ball, squash, glow) | .42,.018,.3,.06,.13,1.15,.25 | 369 | approved | ball .1 glow .12, along forearm
 propBuilder.ts:SKULL_BACK (wide, tall, top, thick, behind) | 1.2,.86,.24,.05,.09 | 369 | approved | -
+renaissanceDress.ts:ARCHER_FRONT (band, gap, buttons, puff, puffTall, points, point, pointWide) | .08,.09,4,2.5,.55,7,.85,.8 | 371 | approved | stripes; puff 1.6
+propBuilder.ts:CAVALIER_FELT (crown, shoulder, tall, lift, spread, shade, glow, wide, pale) | 1.08,.84,.62,1.1,.55,.32,.04,.85,.08 | 371 | approved | CAVALIER flap
