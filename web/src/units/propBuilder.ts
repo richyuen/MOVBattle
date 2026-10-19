@@ -4879,6 +4879,13 @@ const SCUTUM_IRON = new Color3(0.27, 0.27, 0.28);
  *   - mounted on the trunk at (.x, .y, .z) from the hip joint.
  */
 const ASPIS = { radius: 0.36, thick: 0.035, notch: 0.42, notchAt: 0.64, rim: 0.025, pale: 0.45, links: 9, swirlR: 0.2, turns: 1.3, swirlAt: 0.52, x: -0.04, y: 0.12, z: 0.24 };
+/*
+ * [S] the aspis's wave swirls (383; ancient.hoplite.red.png: three big pale curls filling the face, upper middle, right and low, each a broad pointed
+ * tail sweeping round into a rounded curl). In the radius R: each swirl's spiral centred .from of R out at .at degrees, starting .size of R from that
+ * centre at .lead rad on and winding .turns in, shrinking .shrink; its band .band of R wide, grown over the first .tail of its length from a point,
+ * thinning .thin toward the curl, .steps sections; a round end on the curl.
+ */
+const ASPIS_WAVE = { at: [100, 220, 335], from: 0.5, size: 0.36, lead: 0.4, turns: 0.85, shrink: 0.72, band: 0.2, tail: 0.3, thin: 0.35, steps: 22 };
 const SLAB_FACETS = { deep: 0.06, rows: 3, front: 1.0, bevel: 0.7, seam: 0.006 };
 let slabSerial = 0;
 /*
@@ -5169,23 +5176,33 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       const rim = flatPlate(scene, "aspisRim", outline(A.rim * s), A.thick * 0.7 * s);
       rim.position.z = -A.thick * 0.4 * s;
       rim.parent = shield;
-      rim.material = mat(scene, SCUTUM_TRIM, 0.15, "cloth");
+      // [S] the rim on the scutum's flat trim (383, SCUTUM_TRIM_FLAT): lit, it read tan/khaki (critic 378-382)
+      rim.material = getMaterialFactory().get("unlit", SCUTUM_TRIM, { emissive: SCUTUM_TRIM_FLAT });
+      scene.getGlowLayerByName("glow")?.addExcludedMesh(rim);
+      // [S] three big pale wave swirls (383, ASPIS_WAVE): each one solid band swept along a spiral, a pointed tail broad toward the rim curling in to
+      // a round blunt curl; the 379 chains of thin bars read as small pellet spirals (critic 378-382)
       const pale = mat(scene, Color3.Lerp(board, Color3.White(), A.pale), 0.15, "cloth");
-      for (const deg of [90, 210, 330]) {
+      const Wv = ASPIS_WAVE;
+      for (const deg of Wv.at) {
         const c = deg * Math.PI / 180;
-        const cx = Math.cos(c) * A.swirlAt * R, cy = Math.sin(c) * A.swirlAt * R;
-        const at = (t: number) => {
-          const rho = A.swirlR * R * (1 - 0.8 * t), phi = c + Math.PI * 2 * A.turns * t;
-          return [cx + Math.cos(phi) * rho, cy + Math.sin(phi) * rho];
-        };
-        for (let i = 0; i < A.links; i++) {
-          const [x0, y0] = at(i / A.links), [x1, y1] = at((i + 1) / A.links);
-          const len = Math.hypot(x1 - x0, y1 - y0);
-          const bar = MeshBuilder.CreateBox("aspisSwirl", { width: len * 1.15, height: R * 0.07 * (1 - 0.4 * i / A.links), depth: A.thick * 0.5 * s }, scene);
-          bar.position.set((x0 + x1) / 2, (y0 + y1) / 2, A.thick * 0.55 * s);
-          bar.rotation.z = Math.atan2(y1 - y0, x1 - x0);
-          bar.parent = shield; bar.material = pale;
+        const cx = Math.cos(c) * Wv.from * R, cy = Math.sin(c) * Wv.from * R;
+        const pts: Vector3[] = [], sides: Vector3[] = [], outs: Vector3[] = [], halfW: number[] = [];
+        for (let i = 0; i <= Wv.steps; i++) {
+          const t = i / Wv.steps;
+          const rho = Wv.size * R * (1 - Wv.shrink * t), phi = c + Wv.lead + Math.PI * 2 * Wv.turns * t;
+          pts.push(new Vector3(cx + Math.cos(phi) * rho, cy + Math.sin(phi) * rho, A.thick * 0.55 * s));
+          // the band's width lies across the spiral, in the face's plane
+          outs.push(new Vector3(Math.cos(phi), Math.sin(phi), 0));
+          sides.push(new Vector3(0, 0, 1));
+          halfW.push(Wv.band * R * 0.5 * Math.min(1, t / Wv.tail) * (1 - Wv.thin * t));
         }
+        const wave = sweptBar(scene, "aspisSwirl", pts, sides, outs, pts.map(() => A.thick * 0.25 * s), halfW);
+        wave.parent = shield; wave.material = pale;
+        // the curl's blunt round end
+        const end = MeshBuilder.CreateCylinder("aspisSwirlEnd", { height: A.thick * 0.5 * s, diameter: halfW[Wv.steps] * 2.4, tessellation: 10 }, scene);
+        end.rotation.x = Math.PI / 2;
+        end.position.copyFrom(pts[Wv.steps]);
+        end.parent = shield; end.material = pale;
       }
       return shield;
     }
