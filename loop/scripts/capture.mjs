@@ -439,8 +439,10 @@ async function main() {
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
           if (on === 4) { window.game.frameCamera({ x: pt.x, y: pt.y + 0.55 * s + 0.85, z: pt.z }, 5.2 * s, Math.atan2(fx, -fz), Math.PI / 2.1); return; }
           const c = on === 1 ? { x: pa.x, z: pa.z } : on === 2 ? { x: pt.x, z: pt.z } : on === 3 ? { x: pa.x + fx * 1.4 * s, z: pa.z + fz * 1.4 * s } : { x: (pa.x + pt.x) / 2, z: (pa.z + pt.z) / 2 };
-          const radius = (on === 1 || on === 2 ? 3.8 : on === 3 ? 5.2 : 5.5) * s;
-          window.game.frameCamera({ x: c.x, y: (on === 3 ? 0.8 : 0.55) * s + 0.45, z: c.z }, radius, Math.atan2(fx, -fz), on === 3 ? Math.PI / 2.2 : Math.PI / 2.1);
+          // the mammoth's motion shots cropped his back and hump (evidence 376): pulled back and aimed higher, so the whole topline is in frame
+          const pull = a.definition.id === "tribal.mammoth" && on !== 2 ? 1.5 : 1;
+          const radius = (on === 1 || on === 2 ? 3.8 : on === 3 ? 5.2 : 5.5) * s * pull;
+          window.game.frameCamera({ x: c.x, y: (on === 3 ? 0.8 : pull > 1 ? 0.75 : 0.55) * s + 0.45, z: c.z }, radius, Math.atan2(fx, -fz), on === 3 ? Math.PI / 2.2 : Math.PI / 2.1);
         };
       });
       const PLAIN = /^(missile|melee hit|fire|throw|cast|burst|volley|shotgun)/;
