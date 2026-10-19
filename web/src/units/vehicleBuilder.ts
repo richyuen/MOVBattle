@@ -556,10 +556,17 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
  *     axle across its rear end with four handle spokes on each side.
  *   - BALLISTA_WHEEL: four wheels .across tall at the frame's corners, outside the posts: an open ten-sided rim .rim thick on four spokes round a hub.
  */
-const BALLISTA_FRAME = { wide: 1.5, deep: 0.62, plank: 0.11, top: 1.02, post: 0.13, slot: 0.24, floor: 0.34, spring: 0.17 };
+/*
+ * [S] 390 the frame stands above a man (ancient.ballista.png, factions/ancient.jpg: the box's top plank over the crew's heads, ~1.3 of a man, the bow
+ * arms and the bolt passing through the box at mid height between the spring columns, a beam across at that height; critic 389: top about .8 of a
+ * man). BALLISTA_FRAME.top 1.02 -> 1.7 (taller corner and inner posts lift the top plank and housings); the trough no longer lies on the top plank:
+ * its top at BALLISTA_STOCK.y, through the slot between the inner posts, the arms out of the sides at that height on a cross beam .beam tall front
+ * and back, so the crewman still works the winch at chest height.
+ */
+const BALLISTA_FRAME = { wide: 1.5, deep: 0.62, plank: 0.11, top: 1.7, post: 0.13, slot: 0.24, floor: 0.34, spring: 0.17, beam: 0.12 };
 const BALLISTA_HOUSING = { at: 0.48, base: 0.34, baseTall: 0.07, drum: 0.24, drumTall: 0.13, cap: 0.24, plates: 8, plate: 0.13 };
 const BALLISTA_ARMS = { reach: 1.75, thick: 0.1, tip: 0.6, bind: 0.13, bindAt: 0.72 };
-const BALLISTA_STOCK = { wide: 0.18, tall: 0.12, front: 0.5, back: 1.55 };
+const BALLISTA_STOCK = { wide: 0.18, tall: 0.12, front: 0.5, back: 1.55, y: 1.0 };
 const BALLISTA_WHEEL = { across: 0.62, rim: 0.07, wide: 0.08, hub: 0.12 };
 // [S] 389 a warm terracotta in the PBR's linear space (ancient.ballista.blue.png ~ sRGB .78/.4/.28): the 384 (.62,.3,.2) displayed as a pale taupe
 const BALLISTA_WOOD = new Color3(0.55, 0.15, 0.075);
@@ -608,7 +615,15 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
     for (const z of [-halfD + F.post / 2, halfD - F.post / 2]) box("ballistaPost", F.post, postTall, F.post, x, postY, z);
   }
   box("ballistaFloor", F.wide - 0.1, F.plank, F.deep - 0.06, 0, F.floor + F.plank / 2, 0);
-  for (const z of [-halfD + 0.03, halfD - 0.03]) box("ballistaRail", F.wide - 0.06, 0.1, 0.06, 0, F.floor + postTall * 0.4, z, darkWood);
+  for (const z of [-halfD + 0.03, halfD - 0.03]) box("ballistaRail", F.wide - 0.06, 0.1, 0.06, 0, F.floor + (BALLISTA_STOCK.y - F.floor) * 0.45, z, darkWood);
+  // [S] 390 the cross beams at the arms' height, front and back, the trough's slot left open between the inner posts
+  const armY = BALLISTA_STOCK.y - BALLISTA_STOCK.tall * 0.5;
+  for (const z of [-halfD + 0.04, halfD - 0.04]) {
+    for (const side of [-1, 1]) {
+      const span = halfW - F.slot / 2 - F.post;
+      box("ballistaBeam", span, F.beam, 0.08, side * (halfW + F.slot / 2) / 2, armY, z, darkWood);
+    }
+  }
   // the spring columns inside the box, under each housing
   for (const side of [-1, 1]) {
     const spring = add(MeshBuilder.CreateCylinder("ballistaSpring", { height: postTall, diameter: F.spring, tessellation: 8 }, scene), darkWood);
@@ -645,7 +660,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
     const length = A.reach - halfW;
     const arm = add(MeshBuilder.CreateCylinder("ballistaArm", { height: length, diameterTop: A.thick * A.tip, diameterBottom: A.thick, tessellation: 4 }, scene), wood);
     arm.rotation.z = -side * Math.PI / 2;
-    arm.position.set(side * (halfW + length / 2), F.top - F.plank * 0.6, halfD * 0.4);
+    arm.position.set(side * (halfW + length / 2), armY, halfD * 0.4);
     const bind = add(MeshBuilder.CreateCylinder("ballistaBind", { height: A.bind, diameter: A.thick * 1.35, tessellation: 6 }, scene), black);
     bind.rotation.z = Math.PI / 2;
     bind.position.set(side * (halfW + length * (A.bindAt - 0.5) + length / 2), arm.position.y, arm.position.z);
@@ -655,7 +670,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const S = BALLISTA_STOCK;
   const stockLong = S.front + S.back;
   const stockZ = (S.front - S.back) / 2;
-  const stockY = F.top + S.tall / 2 - 0.02;
+  const stockY = S.y - S.tall / 2;
   box("ballistaStock", S.wide, S.tall, stockLong, 0, stockY, stockZ);
   for (const side of [-1, 1]) box("ballistaCord", 0.02, 0.02, stockLong * 0.85, side * S.wide * 0.22, stockY + S.tall / 2 + 0.012, stockZ - stockLong * 0.05, black);
   const winchZ = -S.back + 0.08;
@@ -741,7 +756,7 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
     caps[0],
     allMeshes,
     operator.headMesh,
-    makeBodyMetrics(operator.headTopY, 0.72, 0.4, 0.78),
+    makeBodyMetrics(Math.max(operator.headTopY, F.top + H.baseTall + H.drumTall), 0.72, 0.4, 0.78),
     vehicleSockets,
   );
 }
