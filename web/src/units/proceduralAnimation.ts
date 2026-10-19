@@ -737,9 +737,21 @@ export class ProceduralAnimator {
   }
 
   /** The held prop has left the hand: it is not drawn there again until the next windup. */
-  letGoOfThrow(prop: TransformNode): void {
+  letGoOfThrow(prop: TransformNode, rearmIn = 0): void {
     prop.setEnabled(false);
     this._thrownProp = prop;
+    this._rearmIn = rearmIn;
+  }
+  // [S] 384: a held bolt that left the hand comes back after this many seconds (Zeus throws on the attack step, so the next windup would be the next
+  // throw: without it his fist stayed empty from the first throw on); 0 waits for the next windup
+  private _rearmIn = 0;
+  private _tickRearm(dt: number): void {
+    if (this._rearmIn <= 0 || !this._thrownProp) return;
+    this._rearmIn -= dt;
+    if (this._rearmIn > 0) return;
+    this._rearmIn = 0;
+    this._thrownProp.setEnabled(true);
+    this._thrownProp = null;
   }
 
   /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] target-aimed blow spec. */
@@ -1633,6 +1645,7 @@ export class ProceduralAnimator {
   update(dt: number): void {
     this._lastDt = dt;
     this._time += dt;
+    this._tickRearm(dt);
 
     if (this._state !== AnimState.Dead) {
       this._resetPose();

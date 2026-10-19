@@ -122,6 +122,9 @@ function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
   return null;
 }
 
+/** Zeus's thrown bolt is back in his fist this share of the cooldown after the throw (384; until then the fist is empty). */
+const ZEUS_REARM = 0.6;
+
 function isFirearmUnit(unit: RuntimeUnit): boolean {
   const hint = unit.definition.weaponHint ?? "";
   return hint === "flintlock" || hint === "musket" || hint === "blunderbuss" || hint === "cannon_hand";
@@ -2009,6 +2012,9 @@ export class SimulationSystem {
         const from = hand ? (hand.computeWorldMatrix(true), hand.getAbsolutePosition().clone()) : attackOrigin.add(new Vector3(0, 1.5, 0));
         this.visualEffects.spawnZeusBolt(from, target.position);
       }
+      // [S] 384 (ancient.zeus.png): the held bolt is the one thrown, it leaves the raised fist empty and is back in it .6 of the cooldown on
+      const held = attacker.animator.heldThrowProp();
+      if (held) attacker.animator.letGoOfThrow(held, attackProfile.cooldown * cooldownMultiplier * ZEUS_REARM);
       this._applyDirectOrSplash(target, damage * 1.12, Math.max(3.3, splashRadius + 1.1), attacker.team, knockback.scale(1.95 * controlStrength));
       return;
     }
