@@ -1,6 +1,6 @@
 import {
   Scene, Vector3, Quaternion, Mesh, MeshBuilder, Color3, TransformNode,
-  PBRMetallicRoughnessMaterial, ParticleSystem, StandardMaterial, DynamicTexture, Material,
+  PBRMetallicRoughnessMaterial, ParticleSystem, StandardMaterial, DynamicTexture, Material, VertexData,
 } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
 import { createSmoke, createSparks, createFire, createDust } from "./particleFactory";
@@ -321,6 +321,78 @@ export class VisualEffects {
         boltMat.dispose();
         rimMat.dispose();
       },
+    });
+  }
+
+  /**
+   * [S] Zeus's thrown bolt (383; ancient.zeus.png: one glowing white-cyan zig-zag from the throwing hand straight at the target, hard kinks along it,
+   * pointed at the strike; critic 378: three huge flat blue sheets fanning along the ground from head height, white rings hiding the man). From `from`
+   * (the hand, used as is) to the target's chest: ZEUS_BOLT.kinks joints thrown alternately .amp m off the line square to the camera, each link a flat
+   * four-sided blade .core m across (thinning to .tip at the strike), white and in the glow layer so it blooms cyan, on a cyan blade .rim times as
+   * broad; at the strike a small burst of .sparks short white spikes .spark m long, no shock ring. Gone after .life s.
+   */
+  spawnZeusBolt(from: Vector3, target: Vector3): void {
+    const Z = { kinks: 7, amp: 0.28, core: 0.075, tip: 0.03, rim: 2.2, chest: 0.9, sparks: 6, spark: 0.35, life: 0.3 };
+    const root = new TransformNode("zeusBolt", this._scene);
+    const mf = getMaterialFactory();
+    const coreMat = mf.createUnique("cloth", new Color3(1, 1, 1));
+    coreMat.emissiveColor = new Color3(1, 1, 1);
+    coreMat.disableLighting = true;
+    coreMat.backFaceCulling = false;
+    const rimMat = mf.createUnique("cloth", new Color3(0.35, 0.85, 1));
+    rimMat.emissiveColor = new Color3(0.35, 0.85, 1);
+    rimMat.disableLighting = true;
+    rimMat.backFaceCulling = false;
+    const start = from.clone();
+    const end = target.clone();
+    end.y += Z.chest;
+    const dir = end.subtract(start);
+    const eye = this._scene.activeCamera?.globalPosition;
+    const toEye = eye ? eye.subtract(Vector3.Center(start, end)) : Vector3.Up();
+    const side = Vector3.Cross(dir, toEye);
+    if (side.lengthSquared() < 1e-6) side.copyFrom(Vector3.Cross(dir, Vector3.Up()));
+    if (side.lengthSquared() < 1e-6) side.set(1, 0, 0);
+    side.normalize();
+    const facing = toEye.lengthSquared() > 1e-6 ? toEye.normalize() : Vector3.Up();
+    const points: Vector3[] = [start];
+    for (let i = 1; i < Z.kinks; i++) {
+      const at = Vector3.Lerp(start, end, (i + (Math.random() - 0.5) * 0.5) / Z.kinks);
+      points.push(at.add(side.scale((i % 2 ? 1 : -1) * Z.amp * (0.6 + Math.random() * 0.8))));
+    }
+    points.push(end);
+    // a flat blade from a to b, `wide` across at a and `narrow` at b, lying square to the camera
+    const blade = (a: Vector3, b: Vector3, wide: number, narrow: number, mat: typeof coreMat, back: number): void => {
+      const along = b.subtract(a), across = Vector3.Cross(along, facing).normalize();
+      const off = facing.scale(-back);
+      const p = [a.add(across.scale(wide / 2)), a.subtract(across.scale(wide / 2)), b.subtract(across.scale(narrow / 2)), b.add(across.scale(narrow / 2))].map((v) => v.add(off));
+      const mesh = new Mesh("zeusBoltBlade", this._scene);
+      const data = new VertexData();
+      data.positions = p.flatMap((v) => [v.x, v.y, v.z]);
+      data.indices = [0, 1, 2, 0, 2, 3];
+      const normals: number[] = [];
+      VertexData.ComputeNormals(data.positions, data.indices, normals);
+      data.normals = normals;
+      data.applyToMesh(mesh);
+      mesh.material = mat;
+      mesh.parent = root;
+    };
+    for (let i = 0; i < points.length - 1; i++) {
+      const w0 = Z.core + (Z.tip - Z.core) * (i / (points.length - 1)), w1 = Z.core + (Z.tip - Z.core) * ((i + 1) / (points.length - 1));
+      // each link a touch broader where it leaves its joint, so the bolt steps at every kink
+      blade(points[i], points[i + 1], w0 * 1.3, i === points.length - 2 ? 0 : w1, coreMat, 0);
+      blade(points[i], points[i + 1], w0 * 1.3 * Z.rim, i === points.length - 2 ? 0 : w1 * Z.rim, rimMat, 0.03);
+    }
+    for (let k = 0; k < Z.sparks; k++) {
+      const a = (k / Z.sparks) * Math.PI * 2 + Math.random() * 0.5;
+      const up = Vector3.Cross(side, facing).normalize();
+      const tip = end.add(side.scale(Math.cos(a) * Z.spark)).add(up.scale(Math.sin(a) * Z.spark));
+      blade(end, tip, Z.core * 1.4, 0, coreMat, 0);
+    }
+    this._effects.push({
+      root,
+      remaining: Z.life,
+      update: () => {},
+      dispose: () => { coreMat.dispose(); rimMat.dispose(); },
     });
   }
 

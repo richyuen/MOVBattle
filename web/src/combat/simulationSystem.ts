@@ -2004,9 +2004,10 @@ export class SimulationSystem {
     if (preset === "iconic_zeus") {
       this._logAbility(attacker, "lightning", now, target.position);
       if (this.visualEffects) {
-        this.visualEffects.spawnLightning(attackOrigin, target.position);
-        this.visualEffects.spawnLightning(attackOrigin, target.position.add(new Vector3(0.8, 0, 0.6)));
-        this.visualEffects.spawnLightning(attackOrigin, target.position.add(new Vector3(-0.8, 0, -0.6)));
+        // [S] 383: one glowing zig-zag from his throwing hand to the man (visualEffects spawnZeusBolt), not three ground-level sheets from head height
+        const hand = attacker.body.rightHand;
+        const from = hand ? (hand.computeWorldMatrix(true), hand.getAbsolutePosition().clone()) : attackOrigin.add(new Vector3(0, 1.5, 0));
+        this.visualEffects.spawnZeusBolt(from, target.position);
       }
       this._applyDirectOrSplash(target, damage * 1.12, Math.max(3.3, splashRadius + 1.1), attacker.team, knockback.scale(1.95 * controlStrength));
       return;
