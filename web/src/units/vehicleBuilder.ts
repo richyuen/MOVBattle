@@ -2047,10 +2047,14 @@ const MAMMOTH_LEG = {
  * legs as stubs a third of the body's depth). The lower rings are round again (no .skirtSquare, no .skirtDrop): the hull's foot over the legs rises from
  * ~1.07 to ~.77 below its middle; the belly sags .belly between the legs, as exp(-(t/.bellyNarrow)^2), so it is round and lowest mid-body. Each leg
  * leaves the hull through a jittered fur collar (MAMMOTH_LEG.collar), so no thigh dome shows under the flank.
+ * [S] the topline falls from the head to the rump (378; tribal.mammoth.red.png, .jpg, factions/tribal.jpg: the domed head and its mane are the summit, the
+ * back highest just behind them and sloping down to a lower, smaller rump; critic 377: the egg hull peaked over the mid-back, above the head). The hump
+ * moves forward to just behind the head (.humpAt .5) and drops to .hump .2, so the mane tops it; the upper half of every ring is scaled 1 + .slope x t
+ * (taller at the chest, lower at the rump: the back's top about .95 under the mane, .67 over the rump), and the whole ring 1 + .slopeWide x t (a smaller rump).
  */
 const MAMMOTH_BARREL = {
-  rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.34, humpAt: 0.22, humpFront: 0.22, humpBack: 0.75, belly: 0.2, bellyNarrow: 0.38,
-  jitter: 0.035, haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtFull: 5,
+  rings: 13, sides: 14, long: 1.24, wide: 0.86, tall: 0.7, full: 2.8, hump: 0.2, humpAt: 0.5, humpFront: 0.25, humpBack: 0.8, belly: 0.2, bellyNarrow: 0.38,
+  jitter: 0.035, haunch: 0.26, legAt: 0.44, legSpread: 0.32, skirtFull: 5, slope: 0.25, slopeWide: 0.1,
 };
 /** The mammoth's barrel hull (spec at MAMMOTH_BARREL), its vertices about its own origin. */
 function mammothBarrel(scene: Scene): Mesh {
@@ -2064,19 +2068,21 @@ function mammothBarrel(scene: Scene): Mesh {
     const haunch = 1 + B.haunch * atLeg;
     // the lower hull's own end-taper, steeper, so it stays full out over the front and back legs (374)
     const sLow = Math.sqrt(Math.max(0, 1 - Math.abs(t) ** B.skirtFull));
+    // the topline sloping from the chest down to a smaller rump (378)
+    const rise = 1 + B.slope * t, narrow = 1 + B.slopeWide * t;
     const out: number[] = [];
     for (let k = 0; k < B.sides; k++) {
       const a = (k / B.sides) * Math.PI * 2;
       const c = Math.cos(a), sn = Math.sin(a);
       if (c >= 0) {
-        out.push(B.wide * s * sn, (B.tall * s + hump) * c, t * B.long);
+        out.push(B.wide * s * sn * narrow, (B.tall * s * rise + hump) * c, t * B.long);
         continue;
       }
       // below the middle: the flank swells over the leg roots, easing in from the waterline, and rounds under into the belly (375)
       // (the steeper taper eased in from the waterline, so no ledge where the halves meet)
       const sl = s + (sLow - s) * Math.min(1, -c * 1.5);
       const wide = B.wide * sl * (1 + (haunch - 1) * Math.min(1, -c * 2));
-      const x = wide * sn;
+      const x = wide * sn * narrow;
       const up = (B.tall * sl + B.belly * Math.exp(-((t / B.bellyNarrow) ** 2)) * sl) * c;
       out.push(x, up, t * B.long);
     }
