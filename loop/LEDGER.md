@@ -44,6 +44,13 @@ for 25 iterations.
 392 | Super Jump: throw arc logged "leap" + live-air pose (af3f259 +bd48ae1) | viking.berserker.c | approved
 392 | flight: hover .34 H + swoop before the strike (ee733ae, reverted cd88c7e) | viking.valkyrie.c | rejected
 392 | clinker hull: keel, 3 lapstrakes a side, stems, dragon head, curled stern (b90ffb3) | viking.longship.a | approved
+393 | braids: two tan plaits from the ear flaps onto the chest, dark tie and tuft (52066c2) | viking.headbutter.a | approved
+393 | own round board: light/dark halves, big faceted boss, brown rim (b76e2fe) | viking.brawler.b | approved
+393 | bearded crescents on both hafts at .78 size (6cfe8b5 + 671a758) | viking.berserker.b | approved
+393 | icicle fringe down both limbs, bigger tip crowns (1e0549d) | viking.ice_archer.b | approved
+393 | rig: sail out, short bare mast, yard, sheets (fe36dfc + 9980e94, reverted 62d09d2/c7c8c0a) | viking.longship.a | rejected
+393 | bear-head hood and fur drape, horned helm off (b7b4463 + 1df50c9) | viking.jarl.a | approved
+393 | flight: hover full weight from spawn + wall clamp, swoop gated to flying_melee (455eece) | viking.valkyrie.c | approved
 
 ## Spent (never retry as [P])
 
@@ -82,6 +89,11 @@ ancientDress.ts:SNAKE_WRAP (tuck, r, narrowFrom, chin, cordAt, thick, knot, loop
 propBuilder.ts:BEARDED_AXE (long, butt, head, wide) | .8, .2, .28, .22 | 392 | approved | .8, .12, .34, .19 (392)
 proceduralAnimation.ts:BEARDED_AXE_CARRY (raise, out, elbow, tip x) | -.2, .55, -1.45, .42 | 392 | approved | hanging hashed carry (391)
 propBuilder.ts:JARL_AXE (long, grip, wide, tall) | .95, .3, .24, .21 | 392 | approved | .95, .22, .3, .42 (392)
-simulationSystem.ts:JUMP_CHARGE (rise, swoopRise) | 8, 4.5 | 392 | approved | teleport (391); swoopRise retired with the valkyrie revert
+simulationSystem.ts:JUMP_CHARGE (rise, swoopRise) | 8, 4.5 | 393 | pending | swoopRise retired with the valkyrie revert (392); teleport (391)
+proceduralAnimation.ts:FLY (lift, bob, rate, beat, thigh, knee) | .34, .02, 2, .34, .5, 1.0 | 393 | pending | 392 weight eased up from 0 (rejected)
+propBuilder.ts:ICE_BOW (long, thick, taper, shards, shard, crown, fringe, fringeLen) | 1, .062, .45, 4, .16, 2.6, 6, .15 | 393 | pending | 3, .085, 1.9, no fringe (392)
+vikingDress.ts:HEADBUTTER_BRAID (apart, rootUp, footOut, footDrop, plaits, thick, band, tuft) | .52, .1, .64, 1.02, 5, .34, .13, .22 | 393 | pending
+vikingDress.ts:JARL_PELT (skull, muzzleLong, eyeOut, drape, drapeDeep, glow) | 1.1, 1.8, .5, .12, .55, .2 | 393 | pending | 1.04, 1.15, .28, .26, .9, .16 (393 first cut)
+propBuilder.ts:Brawler board (face, rim, boss) | .36, .43, .17 | 393 | pending
 proceduralAnimation.ts:LEAP_AIR (thigh, knee, armOut, armBack) | .8, 1.15, 1.0, .35 | 392 | approved | flung sprawl only (limp gate, 391)
 vehicleBuilder.ts:LONGSHIP_TIMBER (wood, dark) | .62/.42/.25, .44/.29/.17 | 392 | approved | .46/.3/.16, .3/.18/.1 (392)

@@ -16,6 +16,7 @@ drop a lesson once it is a comment at the code it describes.
 - ExtrudeShape with closeShape and cap CAP_ALL builds a closed thin slab from a 2D polygon: use it for flat emblems (Zeus's bolt) where a double-sided disc/ribbon would lose a face to culling or SSAO.
 - A vehicle's body material IS the team colour (unitFactory tints `bodyMaterial`): a timber hull needs its own material, and a team-trim mesh goes in as the body source (392 longship).
 - Timber under a deck's overhang reads black even at .62/.42/.25: give it a small emissive (392).
+- A ship's rig must be read off the reference, not invented: the longship has no mast or yard at all, and its verticals are the crew's oars. A plausible addition (sail, then yard) reads as foreign hardware and is rejected whole (393).
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
@@ -27,6 +28,7 @@ drop a lesson once it is a comment at the code it describes.
 - The idle look-around can flip the idle camera to the other side between builds (zeus 391): the eye-flip follows the face at that idle phase, which shifts with the scene's readiness, so a one-sided chest ornament must read from both sides or the camera must be pinned.
 - Every capture run clears iter-N including stats.json: rerun `stats.mjs` for the units named in the CONFIRM/critic prompt after the final capture.
 - A unit that logs a spawn-time mechanic first (spins, swoops at tick 1) needs its own ABILITY_PREF entry, or the ability pair is shot on the spawn event (392 berserker).
+- The idle shot is taken ~100 ms after spawn: a lift or pose eased in from zero reads as absent. Start it at full weight from spawn, and keep it in every later hip re-solve (the wall clamp) (393 valkyrie).
 - The critic judges the named shot: an element hidden behind another mesh (the brawler's axe head behind the shield) is not there. Check the named shot, not just a later one (392).
 
 ## Rig and dress

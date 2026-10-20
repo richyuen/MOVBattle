@@ -1,5 +1,5 @@
 # Loop state (v3: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D)
-Iteration: 392   Batch: farmer:re+ancient+viking (5-7/19)   Consecutive empty: 0   Done: 31/139   Parked: 0
+Iteration: 393   Batch: farmer:re+ancient+viking (5-7/19)   Consecutive empty: 0   Done: 31/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -8,7 +8,7 @@ renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer 
 farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur -+++ o | zeus -+++ o
-viking: headbutter -+-+ o | ice_archer ---+ o | brawler --++ o | berserker --++ o | valkyrie -+-+ o | longship ---+ o | jarl -+-+ o
+viking: headbutter -+-+ o | ice_archer -+-+ o | brawler -+++ o | berserker --++ o | valkyrie -+++ o | longship ---+ o | jarl -+-+ o
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
@@ -23,16 +23,16 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-392 (BASE cd1581b): [S] headbutter helmet fb91bba approved (struck a.1, a.3) | [S] ice_archer Ice Bow dd3caf1 approved (b.1 stands) | [S] brawler axe 8bcbb27 +8289d53 approved (struck b.1) | [S] jarl Jarl Axe 0b6bed2 +92c5442 approved (b PASS) | [S] berserker Super Jump af3f259 +bd48ae1 approved (c PASS) | [S] valkyrie flight ee733ae rejected (reverted cd88c7e) | [S] longship hull b90ffb3 approved (a.1 stands) - 6/7
+393 (BASE 9ef919c): [S] headbutter braids 52066c2 approved (struck a.2) | [S] brawler shield b76e2fe approved (b PASS) | [S] berserker axe heads 6cfe8b5+671a758 approved (struck b.1) | [S] ice_archer icicle fringe 1e0549d approved (b PASS) | [S] longship rig fe36dfc+9980e94 rejected (reverted 62d09d2/c7c8c0a) | [S] jarl bear pelt b7b4463+1df50c9 approved (no strike) | [S] valkyrie flight 455eece approved (c PASS) - 6/7
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] viking.headbutter (fb91bba) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)
-- GAP: [S] viking.ice_archer (dd3caf1) VERDICT: APPROVE CRITERION: viking.ice_archer.b FAIL (previous: FAIL)
-- GAP: [S] viking.brawler (8bcbb27 + 8289d53) VERDICT: APPROVE CRITERION: viking.brawler.b FAIL (previous: FAIL)
-- GAP: [S] viking.jarl (0b6bed2 + 92c5442) VERDICT: APPROVE CRITERION: viking.jarl.b PASS (previous: FAIL)
-- GAP: [S] viking.berserker (af3f259) VERDICT: APPROVE CRITERION: viking.berserker.c PASS (previous: FAIL)
-- GAP: [S] viking.valkyrie (ee733ae) VERDICT: REJECT CRITERION: viking.valkyrie.c FAIL (previous: FAIL)
-- GAP: [S] viking.longship (b90ffb3) VERDICT: APPROVE CRITERION: viking.longship.a FAIL (previous: FAIL)
+- GAP: [S] viking.headbutter (52066c2) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)
+- GAP: [S] viking.brawler (b76e2fe) VERDICT: APPROVE CRITERION: viking.brawler.b PASS (previous: FAIL)
+- GAP: [S] viking.berserker (6cfe8b5 + 671a758) VERDICT: APPROVE CRITERION: viking.berserker.b FAIL (previous: FAIL)
+- GAP: [S] viking.ice_archer (1e0549d) VERDICT: APPROVE CRITERION: viking.ice_archer.b PASS (previous: FAIL)
+- GAP: [S] viking.longship (fe36dfc + 9980e94) VERDICT: REJECT CRITERION: viking.longship.a FAIL (previous: FAIL)
+- GAP: [S] viking.jarl (b7b4463 + 1df50c9) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
+- GAP: [S] viking.valkyrie (455eece) VERDICT: APPROVE CRITERION: viking.valkyrie.c PASS (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
@@ -54,7 +54,7 @@ d PASS|FAIL (<the stats.json line, shortened>)
 
 ## Notes for next iteration (max 5 lines)
 - Batch farmer:re+ancient+viking; open: halfling, wheelbarrow, minotaur, zeus and all 7 viking. Done 31 (ballista 391).
-- valkyrie: flight redo = swoop gated to melee flyers + hover at full weight from spawn (balloon_archer shares flying_hover). Second rejected [S] on c would plateau it.
-- Next ranked: ice_archer icicle fringe, brawler shield, jarl bear pelt, berserker axe heads, headbutter braids, longship hull sheer; minotaur/zeus/wheelbarrow a are plateau ([R] only).
-- zeus [R] retry is still owed (a second rejected [R] parks a); halfling a.1 legs; longship's a.1 stands after a partly approved hull.
-- 392.5b gated the leap pose to jump_charge units after the critic flagged the halfling/fencer hop-backs.
+- 393 6/7 approved; longship rig rejected (the reference has no rig): next is three upright black oars, no mast.
+- Next ranked: longship oars, jarl bear head, brawler helm, berserker idle grip, ice_archer freeze, valkyrie wings, headbutter gear then headbutt.
+- zeus [R] retry is still owed (a second rejected [R] parks a); halfling a.1 legs; minotaur/zeus/wheelbarrow a are plateau ([R] only).
+- brawler b, ice_archer b, valkyrie c now PASS; each has a alone failing. 393.7 starts the hover at full weight and clamps it into the wall solve.
