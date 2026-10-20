@@ -424,7 +424,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "viking.jarl": vis(
     // [S] 392 the Jarl Axe: a long-hafted bearded poleaxe with a bronze collar, held two-handed (propBuilder JARL_AXE); the halberd's own chop swings it
-    { scale: 1.55, bulk: 1.4, headSize: 1.1 }, "halberd", "horned_helmet", "none", "cape", "#FFD700",
+    // [S] 393 the horned helm is off: his bear-head hood covers the crown (vikingDress JARL_PELT), so the helm's horns are not under it
+    { scale: 1.55, bulk: 1.4, headSize: 1.1 }, "halberd", "none", "none", "cape", "#FFD700",
     undefined,
     { posePreset: "monarch", materialPreset: "viking_fur", bodyDetailLevel: "hero", weaponVariant: "jarl_axe" },
   ),
