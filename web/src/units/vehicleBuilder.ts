@@ -2042,24 +2042,24 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     }
   }
 
-  // [S] 393 the rig is a bare short mast with its yard (viking.longship.jpg: no sail - the tall parts are the dragon prow and the stern post, with the
-  // oars; critic 392: a flat opaque grey rectangular sail on a bare mast). The sail plane is gone; the mast stops below the dragon's skull so the prow
-  // still tops the ship, a yard crosses it near the top, and two short sheets hang from the yard's ends.
-  const mast = MeshBuilder.CreateCylinder("longshipMast", { height: 0.82, diameter: 0.07, tessellation: 10 }, scene);
-  mast.position.set(0, 1.0, -0.05);
+  const mast = MeshBuilder.CreateCylinder("longshipMast", { height: 1.65, diameter: 0.08, tessellation: 10 }, scene);
+  mast.position.set(0, 1.28, -0.05);
   mast.parent = root;
   mast.material = darkWood;
   allMeshes.push(mast);
 
-  const yard = MeshBuilder.CreateCylinder("longshipYard", { height: 1.02, diameter: 0.06, tessellation: 8 }, scene);
+  // [S] 393 the rig is a bare mast with its yard (viking.longship.jpg: no sail - the tall parts are the dragon prow, the stern post and the oars; critic
+  // 392: a flat opaque grey rectangular sail on a bare mast). The sail plane is gone; a yard crosses the mast near its top, its sheets hanging as two
+  // short ropes.
+  const yard = MeshBuilder.CreateCylinder("longshipYard", { height: 1.34, diameter: 0.07, tessellation: 8 }, scene);
   yard.rotation.z = Math.PI / 2;
-  yard.position.set(0, 1.32, -0.05);
+  yard.position.set(0, 1.94, -0.05);
   yard.parent = root;
   yard.material = darkWood;
   allMeshes.push(yard);
   for (const side of [-1, 1]) {
-    const sheet = MeshBuilder.CreateCylinder("longshipSheet", { height: 0.5, diameter: 0.024, tessellation: 5 }, scene);
-    sheet.position.set(side * 0.44, 1.07, -0.05);
+    const sheet = MeshBuilder.CreateCylinder("longshipSheet", { height: 0.92, diameter: 0.028, tessellation: 5 }, scene);
+    sheet.position.set(side * 0.6, 1.44, -0.05);
     sheet.rotation.z = side * 0.16;
     sheet.parent = root;
     sheet.material = darkWood;
