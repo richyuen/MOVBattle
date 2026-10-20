@@ -223,6 +223,13 @@ const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4, zweiFists:
  */
 const ARMING_OUT = { raise: -0.35, out: 0.85, elbow: -0.55, tip: [0.35, 0.9, 0.25] as const };
 /*
+ * [S] the Brawler's axe held up beside the board (392b; viking.brawler.red.png: the axe in the weapon fist at the hip, arm a little out, the haft stood
+ * up and out so the bearded head reads at helm height clear of the shield's rim; critic 392: the hanging carry buried the new head behind the board).
+ * A fist marked `beardedAxeCarry` (propBuilder BEARDED_AXE) takes this attitude instead of the four hashed carries: the arm .raise forward, .out from
+ * the side, elbow .elbow, the haft's head toward .tip (body frame: x out to the weapon side, y up, z ahead).
+ */
+const BEARDED_AXE_CARRY = { raise: -0.2, out: 0.55, elbow: -1.45, tip: [0.42, 1, 0.08] as const };
+/*
  * [R] two fists on the long grip (354; medieval.king.jpg, .red.png: the King's Zweihander held in both fists, arms run down to the hilt before his belly).
  * Spec read off the renders: the weapon fist closes on the grip right under the cross (the Zweihander's mount seats it there, propBuilder ZWEI.seat), the off
  * fist sits stacked under it on the grip, about a fist apart (TWO_FIST_SWORD of the grip below the weapon fist), the pommel clear below both; never an off hand
@@ -2190,10 +2197,13 @@ export class ProceduralAnimator {
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
     const armingOut = !!node?.getChildren().some((c) => c.name === "armingOut");
+    const sideAxe = !!node?.getChildren().some((c) => c.name === "beardedAxeCarry");
     const attitude = potion
       ? { raise: POTION_HANG.raise, out: POTION_HANG.out, elbow: POTION_HANG.elbow, tip: POTION_HANG.tip.clone() }
       : armingOut
       ? { raise: ARMING_OUT.raise, out: ARMING_OUT.out, elbow: ARMING_OUT.elbow, tip: new Vector3(ARMING_OUT.tip[0] * side, ARMING_OUT.tip[1], ARMING_OUT.tip[2]).normalize() }
+      : sideAxe
+      ? { raise: BEARDED_AXE_CARRY.raise, out: BEARDED_AXE_CARRY.out, elbow: BEARDED_AXE_CARRY.elbow, tip: new Vector3(BEARDED_AXE_CARRY.tip[0] * side, BEARDED_AXE_CARRY.tip[1], BEARDED_AXE_CARRY.tip[2]).normalize() }
       : hayStick
       ? { raise: HAY_CARRY.raise, out: HAY_CARRY.out, elbow: HAY_CARRY.elbow, tip: new Vector3(HAY_CARRY.tip.x * side, HAY_CARRY.tip.y, HAY_CARRY.tip.z).normalize() }
       : lowScythe

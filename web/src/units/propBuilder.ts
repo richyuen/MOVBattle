@@ -3079,7 +3079,9 @@ function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * short poll behind the haft. Steel is cloth with a small emissive: "metal" reads near black under the swiftshader light.
  */
 const BEARDED_AXE = {
-  long: 0.8, butt: 0.12, thick: 0.028, head: 0.34, wide: 0.19, tall: 0.29, beard: 0.17, poll: 0.05, plate: 0.022, glow: 0.12,
+  // 392b: the head sat a whole arm above the fist and the idle board hid it; the fist is now .2 up from the butt and the head .28 above it,
+  // so the blade rides at shoulder height clear of the board (viking.brawler.red.png: the axe head beside the helm, above the shield's rim)
+  long: 0.8, butt: 0.2, thick: 0.028, head: 0.28, wide: 0.22, tall: 0.29, beard: 0.17, poll: 0.05, plate: 0.022, glow: 0.12,
   steel: new Color3(0.46, 0.47, 0.52), wood: new Color3(0.3, 0.19, 0.12),
 };
 function buildBeardedAxe(scene: Scene, s: number): Mesh {
@@ -3109,6 +3111,10 @@ function buildBeardedAxe(scene: Scene, s: number): Mesh {
   poll.material = steel;
   poll.convertToFlatShadedMesh();
   poll.parent = handle;
+  // the carry mark: the idle attitude that stands this axe up beside the board instead of letting it hang behind it (proceduralAnimation
+  // BEARDED_AXE_CARRY; a marker only, no geometry)
+  const carryMark = new TransformNode("beardedAxeCarry", scene);
+  carryMark.parent = handle;
   handle.position.y = (A.long * 0.5 - A.butt) * s;
   return handle;
 }
