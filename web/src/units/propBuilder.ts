@@ -3126,7 +3126,9 @@ function buildBeardedAxe(scene: Scene, s: number): Mesh {
  * stands in his fists at rest and comes down in a two-handed chop.
  */
 const JARL_AXE = {
-  long: 0.95, thick: 0.022, grip: 0.22, wide: 0.3, tall: 0.42, plate: 0.028, collar: 0.07, knob: 0.05, glow: 0.1,
+  // 392b: the blade was .44 of the haft long (a head taller than his own) and the fist .22 up from the butt put its top over the frame edge in both
+  // rest and windup; the fist is now .3 up and the head .21 of the haft, so the crescent reads whole beside him (viking.jarl.red.png)
+  long: 0.95, thick: 0.022, grip: 0.3, wide: 0.24, tall: 0.21, plate: 0.028, collar: 0.07, knob: 0.05, glow: 0.1,
   wood: new Color3(0.3, 0.19, 0.12), steel: new Color3(0.4, 0.41, 0.45), bronze: new Color3(0.55, 0.36, 0.16),
 };
 function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
@@ -3146,15 +3148,15 @@ function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
   collar.convertToFlatShadedMesh();
   collar.parent = shaft;
   // the blade: a broad bearded crescent, its top horn level with the collar, the beard hooking down under the eye
-  const w = A.wide * L, beard = -0.26 * L;
-  const outline: number[][] = [[0.02 * L, 0.18 * L], [w * 0.55, 0.18 * L], [w * 0.84, 0.1 * L], [w, 0]];
+  const w = A.wide * L, beard = -0.12 * L;
+  const outline: number[][] = [[0.02 * L, 0.09 * L], [w * 0.55, 0.09 * L], [w * 0.84, 0.05 * L], [w, 0]];
   for (let k = 1; k <= 4; k++) {
     const u = k / 4;
-    outline.push([w * (0.99 - 0.34 * u * u), -0.06 * L - (Math.abs(beard) - 0.06 * L) * u * 0.86]);
+    outline.push([w * (0.99 - 0.34 * u * u), -0.03 * L - (Math.abs(beard) - 0.03 * L) * u * 0.86]);
   }
-  outline.push([w * 0.4, beard], [w * 0.22, beard + 0.07 * L], [w * 0.1, -0.06 * L], [0.03 * L, 0.0], [0.015 * L, 0.08 * L]);
+  outline.push([w * 0.4, beard], [w * 0.22, beard + 0.035 * L], [w * 0.1, -0.03 * L], [0.03 * L, 0.0], [0.015 * L, 0.04 * L]);
   const blade = flatPlate(scene, "haxe", outline, A.plate * L);
-  blade.position.y = top - 0.16 * L;
+  blade.position.y = top - 0.07 * L;
   blade.rotation.y = Math.PI / 2;
   blade.material = steel;
   blade.parent = shaft;
