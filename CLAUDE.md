@@ -57,6 +57,7 @@ When the first message of an empty conversation is just `continue` (or `go`, `ne
 - **Dev server**: `cd web && npm run dev` (runs on localhost:5173)
 - **Type check**: `cd web && npx tsc --noEmit`
 - **Build**: `cd web && npm run build`
+- **Autoloop (OpenCode TUI)**: `/autoloop on [max] [prompt]` runs one loop iteration per fresh session; `/autoloop off` and `/autoloop status` control it. The plugin lives in `.opencode/plugins/autoloop/`.
 
 ## Conventions
 - Working directory is `web/` — git paths are relative to repo root, but build commands run from `web/`
