@@ -402,8 +402,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "viking.berserker": vis(
     { scale: 1.15, bulk: 1.2, armLength: 1.1 }, "axe", "horned_helmet", "none", "none", "#8B0000", "axe",
   ),
+  // [S] 391 the off hand is a second Valkyrie sword, not a round shield (viking.valkyrie.red.png, card Off Hand Valkyrie Sword; critic 391:
+  // one sword and a big blue round shield). The shield comes off and the left hand takes the same sword prop as the right.
   "viking.valkyrie": vis(
-    { scale: 1.2, bulk: 1.0, armLength: 1.05 }, "sword", "plume_helmet", "round", "wings", "#E6E6FA",
+    { scale: 1.2, bulk: 1.0, armLength: 1.05 }, "sword", "plume_helmet", "none", "wings", "#E6E6FA", "sword",
   ),
   "viking.longship": vis(
     { scale: 1.8, bulk: 2.0, legLength: 0.6 }, "axe", "viking_helmet", "round", "longship_body", "#8B7355",
