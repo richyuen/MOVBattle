@@ -512,8 +512,11 @@ async function main() {
             // the snake archer's held snake covered his chest from the weapon side (evidence 387: baldric and belt hidden): his other side
             const swapped = a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling" || a.definition.id === "ancient.snake_archer";
             if (swapped) alpha += 2 * swing;
-            // the ballista's crewman works the stock at its rear: a rear three-quarter, the wiki render's angle (evidence 387)
-            if (a.definition.id === "ancient.ballista") alpha += Math.PI;
+            // [evidence 391] the ballista's idle is the wiki render's front three-quarter, high enough to see over the frame: the loaded bolt's leaf
+            // head clears the front and the crewman's head shows beyond the rear rail. The 387 rear three-quarter framed the crewman but hid the
+            // leaf head behind the far housing, so the b.1 idle half could not be evidenced.
+            const ballista = a.definition.id === "ancient.ballista";
+            if (ballista) alpha = a.body.root.rotation.y - Math.PI / 2 - 1.55;
             const b = a.body;
             if (a.definition.id !== "tribal.protector" && b.leftEye && b.rightEye && b.headMesh) {
               const le = window.__wp(b.leftEye), re = window.__wp(b.rightEye);
@@ -531,7 +534,7 @@ async function main() {
             const si = window.__rig(a) < 1.2 ? Math.max(0.4, window.__rig(a) / 1.8) : s;
             // the small rig looks down steeper, so the ground and not the horizon's boulder sits behind his head (evidence 383: a navy beret again)
             // evidence 387: PI/2.9 (28 deg down) foreshortened his legs to a crouch; PI/2.45 is 17 deg down
-            window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 ? 0.75 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big, alpha, fencer ? Math.PI / 1.97 : si < s ? Math.PI / 2.45 : Math.PI / 2.3);
+            window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 || ballista ? 0.72 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big * (ballista ? 1.12 : 1), alpha, ballista ? Math.PI / 2.65 : fencer ? Math.PI / 1.97 : si < s ? Math.PI / 2.45 : Math.PI / 2.3);
             return;
           }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
