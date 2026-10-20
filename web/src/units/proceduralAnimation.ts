@@ -125,6 +125,14 @@ const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07, a: 0.5, after: 0.
  * its spread, HOVER.beat rad up and down in time with the bob (down-beat lifts him). A knocked-down or dead scarecrow drops to the ground (limp, Dead).
  */
 const HOVER = { lift: 0.13, bob: 0.025, rate: 2.4, beat: 0.28, rateIn: 3 };
+/*
+ * [S] the Valkyrie's flight (392; viking.jpg, viking.valkyrie.png, card Characteristics "flies": she hangs above the ground, the boots drawn up under
+ * her, and beats the big pale wings once a second or so). A body marked `valkyrieFly` on the torso (propBuilder, the valkyrie's wing build) stands
+ * .lift of its height off the ground, bobbing .bob, its thighs drawn up .thigh and its knees folded .knee so the boots tuck behind it, and each wing
+ * (its wingRoot) beats .beat about its own rest angle at .rate rad/s, all eased in .rateIn. The root stays on the ground, so the game's own cast
+ * shadow falls under her.
+ */
+const FLY = { lift: 0.34, bob: 0.02, rate: 2, rateIn: 4, beat: 0.34, thigh: 0.5, knee: 1.0 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 /**
  * [S] the potionseller's hang (377; farmer.potion_seller.red.png: both arms hang near straight at his sides, a flask in each fist at the hip, never
@@ -1842,7 +1850,9 @@ export class ProceduralAnimator {
         }
       }
     }
-    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink;
+    // A flying body hangs off the ground (FLY): the lift is laid on the hip after its rest has been set for this frame
+    this._flyHover(dt);
+    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink + this._flyLift;
     // Upright in the wall (tabs_screenshot_06: every man stands upright behind his board, face over the rim): whatever the brace, the press and the stride made of him,
     // a man held in a wall carries his trunk no further over than WALL_TRUNK_MAX, his neck brings his face back up level over the rim, and his knees stay under
     // his hips with no splay out to the side. The shove is in his stride and his shoulder, not a fold at the waist.
@@ -2927,6 +2937,37 @@ export class ProceduralAnimator {
     for (const wing of this._wings) {
       const side = Math.sign(wing.node.position.x) || 1;
       wing.node.rotation.z = wing.spread + side * HOVER.beat * Math.cos(this._hoverT) * this._hoverW;
+    }
+  }
+
+  /** The Valkyrie's flight (spec at FLY): weight, beat clock and the wings' rest angles, looked up once. */
+  private _fly: { wings: Array<{ node: TransformNode; rest: number }>; w: number; t: number } | null | undefined = undefined;
+  private _flyLift = 0;
+  private _flyHover(dt: number): void {
+    if (this._fly === undefined) {
+      const torso = this._body.torso;
+      const flies = torso.getChildren().some((n) => n.name === "valkyrieFly");
+      const wings = torso.getChildren().filter((n): n is TransformNode => n.name === "wingRoot");
+      this._fly = flies && wings.length ? { wings: wings.map((node) => ({ node, rest: node.rotation.z })), w: 0, t: 0 } : null;
+    }
+    const F = this._fly;
+    if (!F) { this._flyLift = 0; return; }
+    const live = this._state !== AnimState.Dead ? 1 - Math.min(1, this._limp) : 0;
+    F.w += (live - F.w) * Math.min(1, dt * FLY.rateIn);
+    F.t += dt * FLY.rate;
+    const height = this._body.metrics.overallHeight;
+    this._flyLift = height * (FLY.lift + FLY.bob * Math.sin(F.t)) * F.w;
+    const a = F.w * (1 - Math.min(1, this._limp));
+    if (a > 0.01) {
+      const b = this._body;
+      b.leftHip.rotation.x += (-FLY.thigh - b.leftHip.rotation.x) * a * 0.7;
+      b.rightHip.rotation.x += (-FLY.thigh - b.rightHip.rotation.x) * a * 0.7;
+      b.leftKnee.rotation.x += (FLY.knee - b.leftKnee.rotation.x) * a;
+      b.rightKnee.rotation.x += (FLY.knee - b.rightKnee.rotation.x) * a;
+    }
+    for (const wing of F.wings) {
+      const side = Math.sign(wing.node.position.x) || 1;
+      wing.node.rotation.z = wing.rest + side * FLY.beat * Math.cos(F.t) * F.w;
     }
   }
 

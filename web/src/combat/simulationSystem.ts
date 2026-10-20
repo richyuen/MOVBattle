@@ -281,7 +281,7 @@ const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahe
  * standing; it is a thrown arc now (RuntimeUnit.leap, the halfling's Jump): .rise m/s up and the flat speed that carries him the leap's distance
  * under gravity (22) and the air drag (1.5/s), an apex of about 1.4 m. Logged "leap" at the take-off.
  */
-const JUMP_CHARGE = { rise: 8 };
+const JUMP_CHARGE = { rise: 8, swoopRise: 4.5 };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -1156,7 +1156,9 @@ export class SimulationSystem {
       }
     }
 
-    if ((hasAbility(unit, "jump_charge") || hasAbility(unit, "leap_attack")) && distance > engageDistance && distance < engageDistance * 2.5 && unit.canAttack(now)) {
+    // ...and a flying melee unit (the Valkyrie's flying_hover) dives on the man from the same band, a flatter arc logged "swoop"
+    const flies = hasAbility(unit, "flying_hover");
+    if ((hasAbility(unit, "jump_charge") || hasAbility(unit, "leap_attack") || flies) && distance > engageDistance && distance < engageDistance * 2.5 && unit.canAttack(now)) {
       // [S] Super Jump (392; viking.berserker.jpg, card "Super Jump: leaps towards the enemy", viking.berserker.red.png: mid-air with the legs
       // kicked and both axes out). The leap used to be a teleport to the landing spot, so no shot ever caught him off the ground; it is thrown
       // now by RuntimeUnit.leap (the halfling's arc: rise .rise m/s up, flat speed for `leapDist` under gravity and the air drag), the air pose
@@ -1164,10 +1166,10 @@ export class SimulationSystem {
       const dir = new Vector3(enemy.position.x - unit.position.x, 0, enemy.position.z - unit.position.z);
       if (dir.lengthSquared() > 1e-6) dir.normalize();
       const leapDist = Math.min(distance - engageDistance * 0.4, 4.5);
-      if (unit.leap(dir, leapDist, JUMP_CHARGE.rise)) {
+      if (unit.leap(dir, leapDist, flies ? JUMP_CHARGE.swoopRise : JUMP_CHARGE.rise)) {
         this._clearPathState(unit);
         unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
-        this._logAbility(unit, "leap", now);
+        this._logAbility(unit, flies ? "swoop" : "leap", now);
         return;
       }
     }

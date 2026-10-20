@@ -5737,6 +5737,13 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWi
   const featherMat = mat(scene, style.feather, style.glow);
   const covertMat = mat(scene, style.covert, style.glow);
   const barMat = mat(scene, style.bar, style.wrist > 0 ? style.glow : 0);
+  // [S] the Valkyrie hovers on these wings (392; viking.jpg, card Characteristics "flies": she hangs off the ground with her knees drawn up, beating
+  // them, and swoops on the enemy). The marker lets proceduralAnimation's FLY hover find a winged body that flies in her own right; the scarecrow's crow
+  // wings are a T-pose prop and keep their own beat.
+  if (style === VALKYRIE_WINGS) {
+    const flyMark = new TransformNode("valkyrieFly", scene);
+    flyMark.parent = body.torso;
+  }
   for (const side of [-1, 1]) {
     const root = new TransformNode("wingRoot", scene);
     root.parent = body.torso;
