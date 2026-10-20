@@ -668,7 +668,9 @@ export class UnitFactory {
       skirt.scaling.set(body.torsoMesh.scaling.x * 1.08, skirtLength / (chest.y * 2), body.torsoMesh.scaling.z * 1.15);
       skirt.rotation.z = Math.PI;
       skirt.position.y = body.torsoMesh.position.y - chest.y * 0.92 - skirtLength / 2;
-      skirt.material = getMaterialFactory().getCloth(ZEUS_TUNIC_COLOR);
+      // [R] 391 the skirt is the toga's bright white, not the lit grey-blue cloth (ancient.zeus.red.png: the knee skirt is white like the drape)
+      skirt.material = getMaterialFactory().get("unlit", ZEUS_TUNIC_COLOR, { emissive: ZEUS_TUNIC_COLOR });
+      this._scene.getGlowLayerByName("glow")?.addExcludedMesh(skirt);
       propMeshes.push(skirt);
     }
 

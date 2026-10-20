@@ -278,11 +278,22 @@ function shareOf(seed: number, i: number): number {
  * at his left side to .edgeLow at his right (clamped under .top); the bolt .bolt links .boltLong of the trunk long, .boltWide of a link step wide, at
  * .boltX of the half width out on his left, on a flat unlit material (out of ACES) in .boltGold.
  */
+/*
+ * [R] 391 the toga trim rebuilt (ancient.zeus.red.png: the golden lightning emblem is a bright orange-gold broad zig-zag on the front at his left
+ * shoulder; the belt is three thin gold bands all the way round the waist over the white drape; the knee skirt is the same bright white as the toga;
+ * critic 390: the bolt a faint peach zig-zag, only two tan ring ends under the drape's hem, the skirt pale grey-blue). Spec, shares of the trunk height
+ * tr (band = the trunk's box, halfX/halfZ): the belt three gold bands each .04 tr tall, their middles at .12/.18/.24 tr above the trunk's foot, .06 tr
+ * apart, a radius 1.16 of halfX/halfZ (the drape at 1.07) so they stand past the cloth all the way round; the emblem a flat lightning bolt .5 tr tall
+ * and .42 tr across, its seven-point zig-zag outline (points at x .02/.5/.14/.46/-.06/.02/-.34, y .5/.5/.1/.1/-.5/-.04/-.04) extruded .012 thick, in
+ * unlit gold (1,.7,.18) at .72 of halfX to his left with its middle .9 tr up, on the drape's front; the skirt below the belt is the drape's unlit white
+ * (unitFactory). Gold cloth lit with a .25 emissive so it reads gold, not tan.
+ */
 const ZEUS_TOGA = {
   proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
-  bolt: 3, boltLong: 0.36, boltWide: 0.5, boltX: 0.62, rings: 3, ring: 0.045, beltAt: 0.05, ringProud: 1.12,
-  boltGold: new Color3(1.25, 0.72, 0.2), whiteGlow: 1,
-  white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.86, 0.56, 0.24), glow: 0.14,
+  boltLong: 0.5, boltWide: 0.42, boltX: 0.72, boltAt: 0.9, boltThick: 0.012,
+  rings: 3, ring: 0.04, ringGap: 1.5, beltAt: 0.18, ringProud: 1.16,
+  boltGold: new Color3(1, 0.7, 0.18), whiteGlow: 1,
+  white: new Color3(0.94, 0.94, 0.92), gold: new Color3(1, 0.62, 0.14), glow: 0.25,
 };
 
 /** Zeus's white toga over the left shoulder, gold bolt emblem and triple gold belt (spec at ZEUS_TOGA), on the torso. */
@@ -335,28 +346,26 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   scene.getGlowLayerByName("glow")?.addExcludedMesh(cap);
   cap.parent = body.torso;
   out.push(cap);
-  // the gold bolt emblem on the front at his left shoulder
+  // [R] 391 the gold emblem: one flat seven-point lightning bolt, extruded .012 thick, unlit gold, on the drape's front at his left shoulder
   const frontZ = midZ + halfZ * T.proud + 0.004;
-  const step = tr * T.boltLong / T.bolt;
+  const bh = tr * T.boltLong, bw = tr * T.boltWide;
+  const boltShape = [
+    [0.02, 0.5], [0.5, 0.5], [0.14, 0.1], [0.46, 0.1], [-0.06, -0.5], [0.02, -0.04], [-0.34, -0.04],
+  ].map(([x, y]) => new Vector3(x * bw, y * bh, 0));
   const boltMat = mf.get("unlit", T.boltGold, { emissive: T.boltGold });
-  let at = new Vector3(band.midX - band.halfX * T.boltX, tr * 0.97, frontZ);
-  for (let k = 0; k < T.bolt; k++) {
-    const to = at.add(new Vector3((k % 2 ? 1 : -1) * step * 0.55, -step, 0));
-    const d = to.subtract(at);
-    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: step * T.boltWide, height: d.length() * 1.15, depth: 0.012 }, scene);
-    link.position.set((at.x + to.x) / 2, (at.y + to.y) / 2, frontZ);
-    link.rotation.z = -Math.atan2(d.x, -d.y);
-    link.material = boltMat;
-    scene.getGlowLayerByName("glow")?.addExcludedMesh(link);
-    link.parent = body.torso;
-    out.push(link);
-    at = to;
-  }
-  // the triple gold belt
+  const bolt = MeshBuilder.ExtrudeShape("zeusTogaBolt", {
+    shape: boltShape, path: [Vector3.Zero(), new Vector3(0, 0, T.boltThick)], closeShape: true, cap: Mesh.CAP_ALL,
+  }, scene);
+  bolt.position.set(band.midX - band.halfX * T.boltX, tr * T.boltAt, frontZ);
+  bolt.material = boltMat;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(bolt);
+  bolt.parent = body.torso;
+  out.push(bolt);
+  // [R] 391 the triple gold belt: three thin bands round the waist over the drape, a radius past the cloth, so they read all the way round
   for (let k = 0; k < T.rings; k++) {
     const ring = MeshBuilder.CreateCylinder("zeusBelt", { height: tr * T.ring, diameter: 2, tessellation: 10 }, scene);
     ring.scaling.set(band.halfX * T.ringProud, 1, halfZ * T.ringProud);
-    ring.position.set(band.midX, tr * (T.beltAt + (k - 1) * T.ring * 1.25), midZ);
+    ring.position.set(band.midX, tr * (T.beltAt + (k - 1) * T.ring * T.ringGap), midZ);
     ring.convertToFlatShadedMesh();
     ring.material = gold;
     ring.parent = body.torso;
