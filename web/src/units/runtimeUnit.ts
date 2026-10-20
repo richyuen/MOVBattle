@@ -126,6 +126,8 @@ export class RuntimeUnit {
   // Physics velocity (used for knockback while alive AND death slide)
   private _velocity = Vector3.Zero();
   private _grounded = true;
+  // [S] 392 the last leap was a jump-charge (Super Jump): only that leap takes the live-air pose, not a hop back or a halfling's vault
+  private _leapAir = false;
 
   // Death physics
   private _physicsActive = false;
@@ -678,6 +680,7 @@ export class RuntimeUnit {
     this.stopMoving();
     this._velocity.set(dir.x * v, rise, dir.z * v);
     this._grounded = false;
+    this._leapAir = (this.definition.abilities ?? []).includes("jump_charge" as never);
     return true;
   }
 
@@ -1035,6 +1038,8 @@ export class RuntimeUnit {
     this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
     const flung = !this._grounded && this.position.y > 0.35;
     this.animator.setAirborne(flung);
+    // the live-air shape is only for a jump-charge arc (the leap pose), not for a hop back or a blasted body (that one is limp and takes its own)
+    this.animator.setLeapAir(this._leapAir && !this._grounded);
     // A flung body is drawn over the blast it is thrown through (FLUNG_RENDER_GROUP: after the fire and smoke sprites, still depth-tested against the solid
     // scene), so it stays a dark, solid figure against the fireball and the smoke instead of being lit pale by the additive fire in front of it
     if (flung !== this._drawnFlung) {
@@ -1106,6 +1111,7 @@ export class RuntimeUnit {
         } else {
           this._velocity.y = 0;
           this._grounded = true;
+          this._leapAir = false;
           if (this._pendingBlastSprawlSeconds > 0 && !this._isDead) {
             // The topple clocks ran out mid-flight: restart the downed window where the body comes to rest.
             const now = RuntimeUnit.timeNowSeconds();

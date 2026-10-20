@@ -1143,6 +1143,12 @@ export class ProceduralAnimator {
     this._airTarget = airborne ? 1 : 0;
   }
 
+  /** [S] 392 a jump-charge leap in flight takes the live-air shape (the runtime sets this for its own leaps only; see LEAP_AIR). */
+  private _leapAirOn = false;
+  setLeapAir(on: boolean): void {
+    this._leapAirOn = on;
+  }
+
   /** A beast on a charge run (the mammoth's): eases into CHARGE_POSE while on, out of it after. */
   setCharging(charging: boolean, bull = false): void {
     this._chargeTarget = charging ? 1 : 0;
@@ -1962,10 +1968,11 @@ export class ProceduralAnimator {
         joint.rotation.z += (z - joint.rotation.z) * a;
       }
       this._flailInAir(a);
-    } else if (this._air > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
-      // [S] a live man thrown by a leap (392; viking.berserker.red.png: caught mid-leap, knees kicked up under him, an axe wide in each hand): not
-      // the flung sprawl above (that one is for limp bodies) but his own air shape, both thighs drawn up, the knees folded and split, the arms flung
-      // out from the sides and a little back, so the walk's pose does not glide through the arc.
+    } else if (this._leapAirOn && this._air > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+      // [S] a live man thrown by a jump-charge (392; viking.berserker.red.png: caught mid-leap, knees kicked up under him, an axe wide in each hand):
+      // not the flung sprawl above (that one is for limp bodies) but his own air shape, both thighs drawn up, the knees folded and split, the arms
+      // flung out from the sides and a little back, so the walk's pose does not glide through the arc. Only a jump-charge leap takes it (LEAP_AIR):
+      // a hop back or a halfling's vault keeps the pose it had.
       const a = this._air;
       const b = this._body;
       b.leftHip.rotation.x += (-0.8 - b.leftHip.rotation.x) * a;
