@@ -3112,6 +3112,54 @@ function buildBeardedAxe(scene: Scene, s: number): Mesh {
   handle.position.y = (A.long * 0.5 - A.butt) * s;
   return handle;
 }
+/*
+ * [S] the Jarl's poleaxe (392; viking.jarl.red.png, card Main Hand Jarl Axe "Polearm"; critic 391: a long grey greatsword with a black crossguard). A
+ * long haft .long of his height, the fist .grip of the way up from the butt, a broad dark crescent blade at the top: a flat bearded plate (edge toward +x,
+ * turned a quarter about the shaft so its broad face leads the swing as the halberd's does), a bronze collar under it, and a bronze knob at the top named
+ * "hpoint", the mark that puts his off fist on the haft (proceduralAnimation POLE_GRIP). The haxe plate is the halberd's own chop machinery, so the axe
+ * stands in his fists at rest and comes down in a two-handed chop.
+ */
+const JARL_AXE = {
+  long: 0.95, thick: 0.022, grip: 0.22, wide: 0.3, tall: 0.42, plate: 0.028, collar: 0.07, knob: 0.05, glow: 0.1,
+  wood: new Color3(0.3, 0.19, 0.12), steel: new Color3(0.4, 0.41, 0.45), bronze: new Color3(0.55, 0.36, 0.16),
+};
+function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
+  const A = JARL_AXE;
+  const L = fit.stand * A.long;
+  const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: A.thick * L, tessellation: 7 }, scene);
+  shaft.material = mat(scene, A.wood, 0.1, "cloth");
+  shaft.convertToFlatShadedMesh();
+  shaft.position.y = (0.5 - A.grip) * L;
+  const top = L * 0.5;
+  const steel = mat(scene, A.steel, A.glow, "cloth");
+  const bronze = mat(scene, A.bronze, 0.14, "cloth");
+  // the collar: a bronze band round the shaft's top under the blade
+  const collar = MeshBuilder.CreateCylinder("jcollar", { height: A.collar * L, diameterTop: A.thick * L * 1.9, diameterBottom: A.thick * L * 2.4, tessellation: 6 }, scene);
+  collar.position.y = top - A.collar * L * 0.62;
+  collar.material = bronze;
+  collar.convertToFlatShadedMesh();
+  collar.parent = shaft;
+  // the blade: a broad bearded crescent, its top horn level with the collar, the beard hooking down under the eye
+  const w = A.wide * L, beard = -0.26 * L;
+  const outline: number[][] = [[0.02 * L, 0.18 * L], [w * 0.55, 0.18 * L], [w * 0.84, 0.1 * L], [w, 0]];
+  for (let k = 1; k <= 4; k++) {
+    const u = k / 4;
+    outline.push([w * (0.99 - 0.34 * u * u), -0.06 * L - (Math.abs(beard) - 0.06 * L) * u * 0.86]);
+  }
+  outline.push([w * 0.4, beard], [w * 0.22, beard + 0.07 * L], [w * 0.1, -0.06 * L], [0.03 * L, 0.0], [0.015 * L, 0.08 * L]);
+  const blade = flatPlate(scene, "haxe", outline, A.plate * L);
+  blade.position.y = top - 0.16 * L;
+  blade.rotation.y = Math.PI / 2;
+  blade.material = steel;
+  blade.parent = shaft;
+  // the knob at the top: the off-fist mark (hpoint)
+  const knob = MeshBuilder.CreateCylinder("hpoint", { height: A.knob * L, diameterTop: A.thick * L * 1.4, diameterBottom: A.thick * L * 2.2, tessellation: 6 }, scene);
+  knob.position.y = top + A.knob * L * 0.4;
+  knob.material = bronze;
+  knob.convertToFlatShadedMesh();
+  knob.parent = shaft;
+  return shaft;
+}
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -3556,6 +3604,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return cuff;
     }
     case "halberd": {
+      if (variant === "jarl_axe") return buildJarlAxe(scene, fit);
       // The halberd, built to the spec at HALBERD: +y up the shaft from the fist at the origin, HALBERD.grip of it below the fist
       const L = fit.stand * HALBERD.long;
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: HALBERD.thick * L, tessellation: 7 }, scene);

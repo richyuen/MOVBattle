@@ -167,7 +167,7 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe";
+  weaponVariant?: "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "jarl_axe";
 }
 
 function vis(
@@ -415,9 +415,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.8, bulk: 2.0, legLength: 0.6 }, "axe", "viking_helmet", "round", "longship_body", "#8B7355",
   ),
   "viking.jarl": vis(
-    { scale: 1.55, bulk: 1.4, headSize: 1.1 }, "greatsword", "horned_helmet", "none", "cape", "#FFD700",
+    // [S] 392 the Jarl Axe: a long-hafted bearded poleaxe with a bronze collar, held two-handed (propBuilder JARL_AXE); the halberd's own chop swings it
+    { scale: 1.55, bulk: 1.4, headSize: 1.1 }, "halberd", "horned_helmet", "none", "cape", "#FFD700",
     undefined,
-    { posePreset: "monarch", materialPreset: "viking_fur", bodyDetailLevel: "hero" },
+    { posePreset: "monarch", materialPreset: "viking_fur", bodyDetailLevel: "hero", weaponVariant: "jarl_axe" },
   ),
 
   // ═══════════════════════ DYNASTY ═══════════════════════
