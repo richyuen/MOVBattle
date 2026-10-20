@@ -468,11 +468,12 @@ export function halflingMop(scene: Scene, body: ArticulatedBody): Mesh[] {
  * [S] 389 the halfling's foot fur as a compact tuft (farmer.halfling.red.png: a small dark-brown shock of short shards on top of each bare team foot over
  * the instep, inside the foot's outline; critic 388: a wide starburst of long tan spikes splayed past each foot; replaces unitFactory's HALFLING_FEET).
  * In shares of the foot's own box (half extents e, middle c): .clumps faceted lumps .clump of the foot's width round, jittered, packed over the instep
- * from .from to .to of its length (rear to front) on its top, sunk .sink of a lump into it, .inX of the half width out at most; .spikes short shards
- * .spike of the width long, .spikeWide at the root, leaning at most .lean rad off upright, rooted in the lumps. Dark brown .fur, self-lit .glow.
+ * from .from to .to of its length (rear to front) on the toe's top face at c.y (the box's own top is the ankle cuff, half a cuff higher), sunk .sink of
+ * a lump into it, .inX of the half width out at most; .spikes short shards .spike of the width long, .spikeWide at the root, leaning at most .lean rad
+ * off upright, rooted in the lumps. Dark brown .fur, self-lit .glow. [S] 391 roots at c.y over the instep, not c.y + e.y on the ankle.
  */
 const HALFLING_TUFT = {
-  clumps: 5, clump: 0.6, from: -0.5, to: 0.3, sink: 0.22, inX: 0.45, spikes: 10, spike: 0.42, spikeWide: 0.2, lean: 0.55,
+  clumps: 5, clump: 0.62, from: -0.5, to: 0.3, sink: 0.22, inX: 0.55, spikes: 10, spike: 0.42, spikeWide: 0.2, lean: 0.55,
   fur: new Color3(0.3, 0.16, 0.09), glow: 0.2,
 };
 
@@ -488,7 +489,9 @@ export function halflingFootFur(scene: Scene, body: ArticulatedBody): Mesh[] {
     const e = foot.getBoundingInfo().boundingBox.extendSize;
     const c = foot.getBoundingInfo().boundingBox.center;
     const wide = e.x * 2;
-    const topY = c.y + e.y;
+    // [S] 391 the foot box is the cuff plus the toe: its top is the ankle cuff, half a cuff above the instep. The toe's top face is at the box's own
+    // middle (toeHeight .5 of the cuff), so the tuft roots at c.y, over the instep, not at c.y + e.y on the ankle; inX spreads the clumps across the foot.
+    const topY = c.y;
     const tops: Vector3[] = [];
     for (let k = 0; k < T.clumps; k++) {
       const u = T.clumps === 1 ? 0.5 : k / (T.clumps - 1);
