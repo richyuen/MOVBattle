@@ -710,6 +710,12 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const back = add(MeshBuilder.CreateCylinder("boltHead", { height: Bt.head * Bt.waist, diameterTop: Bt.wide, diameterBottom: Bt.thick * 1.1, tessellation: 4 }, scene), boltIron, loaded);
   back.scaling.z = Bt.flat;
   back.position.y = (Bt.head * Bt.waist) / 2;
+  // [S] 390 the leaf crossed by an upright copy, so it shows its broad face from the side as well as from above (ancient.ballista.png: the flying head
+  // broad side-on; in the look capture the flat leaf flew edge-on, a thin spike)
+  for (const piece of [blade, back]) {
+    const upright = add(piece.clone("boltHead", loaded) as Mesh, boltIron, loaded);
+    upright.scaling.set(Bt.flat, 1, 1);
+  }
 
   // Four spoked wheels at the corners, outside the posts
   const W = BALLISTA_WHEEL;
