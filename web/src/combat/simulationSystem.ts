@@ -86,6 +86,8 @@ const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
 const BROADHEAD_ARROWS = new Set(["medieval.archer"]);
 // [S] 385 bowmen who loose a snake: the nocked snake (ancientDress heldSnake) leaves the fist, and the arrow flies dressed as it (ProjectileSystem _dressSnake)
 const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
+// [S] 390 engines that fly the bolt they have loaded: a copy of the named node leaves the muzzle and the loaded one is gone until half the reload is past (vehicleBuilder ballistaLoadedBolt)
+const LOADED_BOLTS: Record<string, string> = { "ancient.ballista": "ballistaLoadedBolt" };
 /*
  * [S] 387 the snake comes down alive (card Characteristics: "After impact these snakes become units and move quickly, lunge at enemies to attack them ...
  * snakes will die after successfully biting twice, or after a 30 second lifetime"; critic 378: it stayed lodged in the man like an arrow). Where the
@@ -2292,6 +2294,13 @@ export class SimulationSystem {
             attacker.team, this._units, undefined, 0, { originLift: 0, tether: muzzle },
           );
         } else {
+          const boltName = LOADED_BOLTS[attacker.definition.id];
+          const loadedBolt = boltName ? attacker.body.root.getChildren((n) => n.name === boltName)[0] as TransformNode | undefined : undefined;
+          if (loadedBolt) {
+            const chain: TransformNode[] = [];
+            for (let n: Node | null = loadedBolt; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+            for (const n of chain) n.computeWorldMatrix(true);
+          }
           this.projectileSystem.spawnProjectile(
             resolveProjectileShape(attacker, attackProfile) ?? "arrow",
             attackOrigin,
@@ -2303,8 +2312,12 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
           );
+          if (loadedBolt?.isEnabled()) {
+            loadedBolt.setEnabled(false);
+            this._arrowsAway.set(loadedBolt, now + attackProfile.cooldown * cooldownMultiplier * 0.5);
+          }
           // [S] 369 the balloon arrow in his draw fist is the one that flew: gone from the hand until half the reload is past (renaissanceDress HELD_BALLOON_ARROW)
           // (385: the snake archer's nocked snake too, ancientDress heldSnake)
           const held = BALLOON_ARROWS.has(attacker.definition.id) || SNAKE_ARROWS.has(attacker.definition.id) ? attacker.body.leftHand?.getChildren((n) => n.name === "heldArrow")[0] : undefined;

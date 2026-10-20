@@ -691,21 +691,25 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   const Bt = BALLISTA_BOLT;
   const boltIron = mf.get("cloth", Bt.iron, { emissive: Bt.iron.scale(0.2) });
   const shaftFront = S.front + Bt.past - Bt.head;
-  const bolt = add(MeshBuilder.CreateCylinder("bolt", { height: Bt.shaft, diameterTop: Bt.thick, diameterBottom: Bt.thick * Bt.tail, tessellation: 8 }, scene), wood);
-  bolt.rotation.x = Math.PI / 2;
-  bolt.position.set(0, stockY + S.tall / 2 + Bt.thick / 2, shaftFront - Bt.shaft / 2);
-  const socket = add(MeshBuilder.CreateCylinder("boltSocket", { height: Bt.socket, diameterTop: Bt.thick * 1.25, diameterBottom: Bt.thick * 1.1, tessellation: 8 }, scene), boltIron);
-  socket.rotation.x = Math.PI / 2;
-  socket.position.set(0, bolt.position.y, shaftFront + Bt.socket / 2 - 0.01);
+  // [S] 390 the bolt is one node, "ballistaLoadedBolt", its +y the point (turned onto the firing line), origin where shaft meets socket: the sim flies a
+  // copy of it (simulationSystem LOADED_BOLTS, ProjectileSystem._buildHeldMissile) and hides this one until the reload is half done (ancient.ballista.png:
+  // the bolt in flight is the same massive shaft and black leaf head; critic 389: a thin dark rod flew while the loaded bolt stayed in the trough)
+  const boltY = stockY + S.tall / 2 + Bt.thick / 2;
+  const loaded = new TransformNode("ballistaLoadedBolt", scene);
+  loaded.parent = root;
+  loaded.rotation.x = Math.PI / 2;
+  loaded.position.set(0, boltY, shaftFront);
+  const bolt = add(MeshBuilder.CreateCylinder("bolt", { height: Bt.shaft, diameterTop: Bt.thick, diameterBottom: Bt.thick * Bt.tail, tessellation: 8 }, scene), wood, loaded);
+  bolt.position.y = -Bt.shaft / 2;
+  const socket = add(MeshBuilder.CreateCylinder("boltSocket", { height: Bt.socket, diameterTop: Bt.thick * 1.25, diameterBottom: Bt.thick * 1.1, tessellation: 8 }, scene), boltIron, loaded);
+  socket.position.y = Bt.socket / 2 - 0.01;
   // the leaf: a long front blade to the point and a short back taper to the socket, flat (wide across, thin up and down)
-  const blade = add(MeshBuilder.CreateCylinder("boltHead", { height: Bt.head * (1 - Bt.waist), diameterTop: 0, diameterBottom: Bt.wide, tessellation: 4 }, scene), boltIron);
-  blade.rotation.x = Math.PI / 2;
+  const blade = add(MeshBuilder.CreateCylinder("boltHead", { height: Bt.head * (1 - Bt.waist), diameterTop: 0, diameterBottom: Bt.wide, tessellation: 4 }, scene), boltIron, loaded);
   blade.scaling.z = Bt.flat;
-  blade.position.set(0, bolt.position.y, shaftFront + Bt.head * Bt.waist + (Bt.head * (1 - Bt.waist)) / 2);
-  const back = add(MeshBuilder.CreateCylinder("boltHead", { height: Bt.head * Bt.waist, diameterTop: Bt.wide, diameterBottom: Bt.thick * 1.1, tessellation: 4 }, scene), boltIron);
-  back.rotation.x = Math.PI / 2;
+  blade.position.y = Bt.head * Bt.waist + (Bt.head * (1 - Bt.waist)) / 2;
+  const back = add(MeshBuilder.CreateCylinder("boltHead", { height: Bt.head * Bt.waist, diameterTop: Bt.wide, diameterBottom: Bt.thick * 1.1, tessellation: 4 }, scene), boltIron, loaded);
   back.scaling.z = Bt.flat;
-  back.position.set(0, bolt.position.y, shaftFront + (Bt.head * Bt.waist) / 2);
+  back.position.y = (Bt.head * Bt.waist) / 2;
 
   // Four spoked wheels at the corners, outside the posts
   const W = BALLISTA_WHEEL;
@@ -746,8 +750,8 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
   });
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, root, "ballista_bolt_socket", new Vector3(0, bolt.position.y, S.front + 0.4)),
-    impactOrigin: makeSocket(scene, root, "ballista_impact_socket", new Vector3(0, bolt.position.y, S.front)),
+    primaryMuzzle: makeSocket(scene, root, "ballista_bolt_socket", new Vector3(0, boltY, S.front + 0.4)),
+    impactOrigin: makeSocket(scene, root, "ballista_impact_socket", new Vector3(0, boltY, S.front)),
   };
 
   return wrapAsBody(
