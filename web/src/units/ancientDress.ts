@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, Quaternion, type Material } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexBuffer, Quaternion, type Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { trunkBand, jitterVertices } from "./tribalDress";
@@ -486,26 +486,24 @@ export function dressZeus(scene: Scene, body: ArticulatedBody, props: Mesh[]): M
  *     a roll .roll of the trunk thick round its foot;
  * team cloth x .shade, self-lit .glow, double-sided.
  */
-const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, sides: 9, collar: 0.16, neck: 0.42, collarOut: 1.12, roll: 0.06, shade: 0.45, glow: 0.06 };
+const SARISSA_CAPE = { arc: 0.56, out: 1.18, flare: 1.45, top: 0.98, hem: 0.72, sides: 9, shade: 0.45, glow: 0.06 };
 /*
- * [S] 387 the cape's folded collar (ancient.sarissa.red.png, .png: the cape's top gathered in a thick fold over his left shoulder and wrapped round onto
- * his chest, pinned there, the cape hanging down his back from it; critic 386: the cape hangs straight behind). In trunk heights and the shoulder span,
- * on the torso, the cape's cloth: a lumpy bulk .bulk of the trunk thick lying over the left shoulder top front to back (.bulkLong of the trunk's
- * depth, .bulkWide wide, at .bulkAt of the shoulder's x, .bulkUp over it, tipped .bulkTilt toward the neck); .folds thick drape folds off the
- * shoulder's front (.drapeFrom of its x) down across the upper chest past the breastbone, each .drapeLong of the span long, .drapeTall tall, .drapeDeep
- * proud, tilted .drapeTilt (high at the shoulder), from .drapeDown under the shoulder; a gold brooch .brooch across pinning it at the shoulder.
+ * [R] 390 the mantle (rebuilds the 383 collar frustum + roll, the 387 SARISSA_FOLD shoulder bulk and the 389 SARISSA_CHUNK drape; critic 389: the fold
+ * grey-blue and lighter than the dark cape, ending in a leaf point, a separate horizontal bar above it). Read off ancient.sarissa.blue.png, .red.png
+ * and .png: the cape's top is one dark wedge of cloth lying over his left shoulder, from behind it (where the cape hangs) over the shoulder top and
+ * down his chest; its upper edge runs along the neckline from the left shoulder across to his right collarbone, its lower edge from the outside of the
+ * left upper arm down to the left armpit (about .4 of the trunk under the shoulder) and up across the chest to the same collarbone, where a small gold
+ * ring pins the two edges; the lower edge reads as a thick rolled fold; his right shoulder bare tunic. No collar ring round the neck, no point.
+ * Shape: one sheet between two six-point edge paths (.top, .foot), each point [x as a share of the chest's half width toward his left, y trunks over
+ * the shoulder joint, z: >= 0 trunks proud of the chest front, < 0 the shoulder's top and back (-1 the trunk's middle, -1.5 half way to its back)],
+ * .rows rows bulged .bulge trunks out in the middle; a rolled tube .roll trunks thick along the foot, .rollOut proud; a gold ring .brooch trunks across
+ * at the pinned end. Cloth: the cape's tone x .shade (lit face on to the front light, the cape's own tone read lighter than the cape in its shade),
+ * one-sided facing out (SSAO greys a double-sided sheet).
  */
-const SARISSA_FOLD = {
-  bulk: 0.2, bulkLong: 1.25, bulkWide: 1.5, bulkAt: 0.9, bulkUp: 0.05, bulkTilt: 0.25,
-  drapeFrom: 0.85, drapeTall: 0.22, drapeDeep: 0.09, drapeDown: 0.08, brooch: 0.09, gold: new Color3(0.82, 0.62, 0.25),
-};
-/*
- * [S] 389 the drape as one chunk (spec at its build): the spine's points [x of the left shoulder's x, y over the shoulder in trunks, z: < 0 a share of
- * the chest half depth behind its middle, else trunks out from the chest front]; .wide x .thick trunks in section, the last two points tapering to .tip.
- */
-const SARISSA_CHUNK = {
-  path: [[0.95, 0.06, -0.2], [0.88, 0.05, 0.02], [0.7, -0.09, 0.05], [0.35, -0.22, 0.055], [-0.05, -0.33, 0.05], [-0.4, -0.4, 0.04]],
-  wide: 0.3, thick: 0.11, tip: 0.45,
+const SARISSA_MANTLE = {
+  top: [[0.7, 0.05, -1.55], [0.78, 0.09, -1.0], [0.7, 0.07, -0.3], [0.55, 0.04, 0.03], [0.2, 0.0, 0.03], [-0.38, -0.05, 0.03]],
+  foot: [[1.1, -0.14, -1.5], [1.16, -0.04, -1.0], [1.12, -0.18, -0.35], [1.0, -0.42, 0.05], [0.25, -0.38, 0.05], [-0.45, -0.15, 0.04]],
+  rows: 4, bulge: 0.025, roll: 0.045, rollOut: 0.02, brooch: 0.08, shade: 0.7, gold: new Color3(0.82, 0.62, 0.25),
 };
 
 /** The sarissa's cape and folded collar (spec at SARISSA_CAPE), on the torso. */
@@ -526,55 +524,45 @@ export function dressSarissa(scene: Scene, body: ArticulatedBody, teamColor: Col
   cape.rotation.y = Math.PI / 2 - Math.PI * C.arc;
   cape.scaling.set(chest.halfX * C.out, 1, halfZ * C.out);
   cape.position.set(chest.midX, (topY + hemY) / 2, midZ);
-  const span = Math.abs(body.rightShoulder.position.x) + Math.abs(body.leftShoulder.position.x);
-  const collarTall = chest.trunk * C.collar;
-  const neckY = body.neck.position.y;
-  const collar = put(MeshBuilder.CreateCylinder("sarissaCollar", { height: collarTall, diameterTop: span * C.neck, diameterBottom: span * C.collarOut, tessellation: 10 }, scene));
-  collar.scaling.z = (halfZ * 2.4) / (span * C.collarOut);
-  collar.position.set(chest.midX, neckY - collarTall * 0.45, midZ);
-  const roll = put(MeshBuilder.CreateTorus("sarissaCollarRoll", { diameter: span * C.collarOut, thickness: chest.trunk * C.roll, tessellation: 12 }, scene));
-  roll.scaling.z = collar.scaling.z;
-  roll.position.set(chest.midX, neckY - collarTall * 0.95, midZ);
-  // [S] 387 the folded collar over his left shoulder onto the chest (spec at SARISSA_FOLD)
-  const F = SARISSA_FOLD;
-  const lx = body.leftShoulder.position.x;
-  const side = Math.sign(lx) || -1;
-  const sy = body.leftShoulder.position.y;
-  // the bulk lying over the shoulder top, front to back
-  const bulk = put(MeshBuilder.CreateCylinder("sarissaFoldBulk", { height: halfZ * 2 * F.bulkLong, diameter: chest.trunk * F.bulk, tessellation: 7 }, scene));
-  bulk.rotation.set(Math.PI / 2, 0, side * F.bulkTilt);
-  bulk.scaling.x = F.bulkWide;
-  bulk.position.set(lx * F.bulkAt, sy + chest.trunk * F.bulkUp, midZ + halfZ * 0.1);
-  jitterVertices(bulk, 0.12, 33.1);
-  // [S] 389 the drape one bent chunk (SARISSA_CHUNK), not two stacked boxes (critic 388: two grey-blue boxes, stepped edges, not joined to the bulk):
-  // a flattened closed tube in the cape's cloth swept from inside the shoulder bulk, over the shoulder's front and down across the chest past the
-  // breastbone, its flat lying on the body (the across axis the path's tangent crossed with the body's outward normal: up on the shoulder, out on
-  // the chest), .wide of the trunk wide and .thick thick, tapering to .tip at its end
-  const Ck = SARISSA_CHUNK;
+  // [R] 390 the mantle over the left shoulder and across the chest (spec at SARISSA_MANTLE)
+  const M = SARISSA_MANTLE;
   const T = chest.trunk, fz = chest.maxZ;
-  const spine = Ck.path.map(([xs, ys, zs]) => new Vector3(lx * xs, sy + T * ys, zs < 0 ? midZ + halfZ * zs : fz + T * zs));
-  const ups = Ck.path.map(([, , zs], i) => (zs < 0 || i === 1 ? new Vector3(0, 1, 0.4 * i) : new Vector3(0, 0.25, 1)).normalize());
-  const ringPts: Vector3[][] = [];
-  const hex = [[1, 0], [0.5, 1], [-0.5, 1], [-1, 0], [-0.5, -1], [0.5, -1]];
-  for (let i = 0; i < spine.length; i++) {
-    const tan = spine[Math.min(i + 1, spine.length - 1)].subtract(spine[Math.max(i - 1, 0)]).normalize();
-    const across = Vector3.Cross(tan, ups[i]).normalize();
-    const nrm = Vector3.Cross(across, tan).normalize();
-    const taper = 1 - (1 - Ck.tip) * Math.max(0, (i - spine.length + 3) / 2);
-    ringPts.push(hex.map(([a, n]) => spine[i].add(across.scale(a * T * Ck.wide * 0.5 * taper)).add(nrm.scale(n * T * Ck.thick * 0.5 * taper))));
+  const L = -(Math.sign(body.rightShoulder.position.x) || 1); // his left's sign on x
+  const sy = body.leftShoulder.position.y;
+  const at = ([xs, ys, zs]: readonly number[], lift: number): Vector3 => {
+    const x = chest.midX + L * chest.halfX * xs;
+    // zs < 0: a share of the half depth behind the middle (the shoulder's top and back); else the chest front, trunks proud of it
+    if (zs < 0) return new Vector3(x, sy + T * (ys + lift), midZ + halfZ * (zs + 1));
+    return new Vector3(x, sy + T * ys, fz + T * (zs + lift));
+  };
+  const darker = teamColor.scale(C.shade * M.shade);
+  const mantleCloth = getMaterialFactory().get("cloth", darker, { emissive: darker.scale(C.glow) });
+  const rows: Vector3[][] = [];
+  for (let r = 0; r <= M.rows; r++) {
+    const v = r / M.rows;
+    const bulge = Math.sin(v * Math.PI) * M.bulge;
+    rows.push(M.top.map((p, i) => Vector3.Lerp(at(p, bulge), at(M.foot[i], bulge), v)));
   }
-  const pathArray = hex.map((_, j) => ringPts.map((r) => r[j]));
-  const chunk = MeshBuilder.CreateRibbon("sarissaFoldDrape", { pathArray, closeArray: true, closePath: false }, scene);
-  const cn = chunk.getVerticesData("normal"), cp = chunk.getVerticesData("position");
-  if (cn && cp && cn[0] * (cp[0] - spine[0].x) + cn[1] * (cp[1] - spine[0].y) + cn[2] * (cp[2] - spine[0].z) < 0) chunk.flipFaces(true);
-  put(chunk);
-  jitterVertices(chunk, 0.06, 41.7);
-  // the brooch pinning it on the shoulder's front
-  const brooch = MeshBuilder.CreateCylinder("sarissaFoldBrooch", { height: chest.trunk * 0.03, diameter: chest.trunk * F.brooch, tessellation: 8 }, scene);
-  brooch.material = getMaterialFactory().get("cloth", F.gold, { emissive: F.gold.scale(0.2) });
+  const mantle = MeshBuilder.CreateRibbon("sarissaMantle", { pathArray: rows }, scene);
+  const mn = mantle.getVerticesData(VertexBuffer.NormalKind), mp = mantle.getVerticesData(VertexBuffer.PositionKind);
+  if (mn && mp) {
+    let dot = 0;
+    for (let v = 0; v < mp.length; v += 3) dot += mn[v] * (mp[v] - chest.midX) + mn[v + 2] * (mp[v + 2] - midZ);
+    if (dot < 0) mantle.flipFaces(true);
+  }
+  put(mantle).material = mantleCloth;
+  // the rolled fold along its lower edge, in the same cloth
+  const edge = M.foot.map((p) => at(p, M.rollOut));
+  const roll = put(MeshBuilder.CreateTube("sarissaMantleRoll", { path: edge, radius: T * M.roll, tessellation: 7, cap: Mesh.CAP_ALL }, scene));
+  roll.material = mantleCloth;
+  jitterVertices(roll, 0.05, 41.7);
+  // the gold ring pinning its end at his right collarbone
+  const end = at(M.top[M.top.length - 1], 0.02);
+  const brooch = MeshBuilder.CreateTorus("sarissaMantleBrooch", { diameter: T * M.brooch, thickness: T * M.brooch * 0.3, tessellation: 10 }, scene);
+  brooch.material = getMaterialFactory().get("cloth", M.gold, { emissive: M.gold.scale(0.2) });
   brooch.parent = body.torso;
   brooch.rotation.x = Math.PI / 2;
-  brooch.position.set(lx * F.drapeFrom, sy - chest.trunk * (F.drapeDown - F.drapeTall * 0.3), chest.maxZ + chest.trunk * (F.drapeDeep + 0.02));
+  brooch.position.set(end.x, (end.y + at(M.foot[M.foot.length - 1], 0).y) / 2, fz + T * 0.06);
   out.push(brooch);
   return out;
 }
