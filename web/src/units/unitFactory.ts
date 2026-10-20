@@ -17,6 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
+import { headbutterCap } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -568,6 +569,10 @@ export class UnitFactory {
       propMeshes.push(...heldSnake(this._scene, body).getChildMeshes() as Mesh[]);
       // [S] ...a brown baldric to the back quiver, brown belt and gold buckle, brown knee boots over strap sandals (386; ancientDress SNAKE_KIT)
       propMeshes.push(...snakeArcherKit(this._scene, body));
+    }
+    // [S] the Headbutter's own spiked team cap in place of the shared horned viking helmet (392; vikingDress HEADBUTTER_CAP)
+    if (definition.id === "viking.headbutter" && !shouldUseVehicleBody) {
+      propMeshes.push(...headbutterCap(this._scene, body, teamColor));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
