@@ -188,6 +188,17 @@ const HALBERD_SQUARE = { tilt: 0.03, stride: 0.12, lean: 0.04, spread: 0.09, kne
  * hung .raise/.out/.elbow; never sunk. Found by his shorts (unitFactory halflingShortsSeat).
  */
 const HALFLING_STANCE = { tilt: 0.02, stride: 0.05, lean: 0.03, spread: 0.22, knee: 0.04, raise: 0.04, out: 0.12, elbow: -0.15 };
+/*
+ * [S] 390 the snake archer stands upright with the bow across him (ancient.snake_archer.red.png, .blue.png: tall on straight legs, feet side by side,
+ * chest over the hips facing the front, the bow slanted across his body from the shoulder down past the far hip in the bow fist, the draw fist on
+ * the nocked snake at the belly; critic 389: a deep forward lunge, front knee bent, rear leg trailing, trunk pitched forward). Found by his nocked
+ * snake (ancientDress heldSnake). The bowman's ready stance with his own numbers: half side-on only .yaw, feet staggered .stagger, knees .give, no
+ * crouch, lean .lean, hip tilt .tilt; the bow arm .raise/.out/.elbow, the stave slanted along .tip; the draw arm .left.
+ */
+const SNAKE_UPRIGHT = {
+  yaw: 0.12, stagger: 0.06, give: 0.02, lean: 0.04, tilt: 0.03,
+  raise: -0.75, out: -0.22, elbow: -1.35, tip: [-0.75, 0.7, 0.2] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
+};
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
@@ -2233,7 +2244,9 @@ export class ProceduralAnimator {
     } : null;
     return {
       weapon: held ? { ...attitude, prop } : null,
-      ready: armed ? { ...hold, prop: stave, yaw: 0.6 + h(89) * 0.35, stagger: 0.4 + h(90) * 0.2, give: 0.1 + h(91) * 0.16 }
+      ready: armed && this._snakeNocked()
+        ? { raise: SNAKE_UPRIGHT.raise, out: SNAKE_UPRIGHT.out, elbow: SNAKE_UPRIGHT.elbow, tip: lean(...SNAKE_UPRIGHT.tip), left: { ...SNAKE_UPRIGHT.left }, prop: stave, yaw: SNAKE_UPRIGHT.yaw, stagger: SNAKE_UPRIGHT.stagger, give: SNAKE_UPRIGHT.give }
+        : armed ? { ...hold, prop: stave, yaw: 0.6 + h(89) * 0.35, stagger: 0.4 + h(90) * 0.2, give: 0.1 + h(91) * 0.16 }
         : rodHold ? { ...rodHold, prop: rodProp, yaw: 0.1 + h(89) * 0.25, stagger: 0, give: 0, cast: true, overhead: rod?.id === "boneStaff" } : null,
       board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
       bob: 0.08 + h(84) * 0.1,
@@ -3468,10 +3481,13 @@ export class ProceduralAnimator {
     if (square) Object.assign(stance, { tilt: HALBERD_SQUARE.tilt, stride: HALBERD_SQUARE.stride, crouch: 0 });
     // the halfling's own square: wide feet, arms hung (HALFLING_STANCE)
     if (wide) Object.assign(stance, { tilt: HALFLING_STANCE.tilt, stride: HALFLING_STANCE.stride, off: { raise: HALFLING_STANCE.raise, out: HALFLING_STANCE.out, elbow: HALFLING_STANCE.elbow } });
+    // the snake archer upright, never sunk (SNAKE_UPRIGHT)
+    const snake = this._snakeNocked();
+    if (snake) Object.assign(stance, { tilt: SNAKE_UPRIGHT.tilt, crouch: 0, chin: 0 });
     return {
       square,
       wide,
-      lean: wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
+      lean: snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,
@@ -4687,6 +4703,13 @@ export class ProceduralAnimator {
   /** The halberdier proper: a halberd in the fist and a sallet on the head (good.radiant_glaive carries the halberd under a laurel). */
   private _salletHalberd(): boolean {
     return this._halberd() !== null && this._body.root.getChildMeshes(false).some((m) => m.name === "salletShell");
+  }
+
+  /** The snake archer (SNAKE_UPRIGHT), found by his nocked snake; looked up once. */
+  private _snakeFound: boolean | undefined = undefined;
+  private _snakeNocked(): boolean {
+    this._snakeFound ??= this._body.leftHand.getChildMeshes(false).some((m) => m.name === "heldSnakeHead");
+    return this._snakeFound;
   }
 
   /** The halfling (HALFLING_STANCE), found by his shorts; looked up once. */
