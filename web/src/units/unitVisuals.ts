@@ -167,8 +167,13 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "jarl_axe";
+  weaponVariant?: WeaponVariant;
+  /** ...and its own cut of the off-hand weapon (the Berserker's second bearded axe is still an "axe") */
+  offhandVariant?: WeaponVariant;
 }
+
+export type WeaponVariant =
+  | "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "jarl_axe";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -406,6 +411,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "viking.berserker": vis(
     { scale: 1.15, bulk: 1.2, armLength: 1.1 }, "axe", "horned_helmet", "none", "none", "#8B0000", "axe",
+    // [S] 393 the two black hammer heads are the Brawler's bearded crescents: a broad grey blade on a long haft, one in each fist (propBuilder BEARDED_AXE)
+    { weaponVariant: "bearded_axe", offhandVariant: "bearded_axe" },
   ),
   // [S] 391 the off hand is a second Valkyrie sword, not a round shield (viking.valkyrie.red.png, card Off Hand Valkyrie Sword; critic 391:
   // one sword and a big blue round shield). The shield comes off and the left hand takes the same sword prop as the right.

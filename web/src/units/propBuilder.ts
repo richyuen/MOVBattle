@@ -1972,7 +1972,7 @@ export function attachProps(
   }
 
   if (config.offhandWeapon) {
-    const offhand = buildWeapon(scene, config.offhandWeapon, scale, accent, bladeFit);
+    const offhand = buildWeapon(scene, config.offhandWeapon, scale, accent, bladeFit, teamColor, config.offhandVariant);
     if (offhand) {
       offhand.parent = body.leftHand;
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
