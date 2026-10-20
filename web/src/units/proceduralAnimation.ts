@@ -125,6 +125,15 @@ const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07, a: 0.5, after: 0.
  * its spread, HOVER.beat rad up and down in time with the bob (down-beat lifts him). A knocked-down or dead scarecrow drops to the ground (limp, Dead).
  */
 const HOVER = { lift: 0.13, bob: 0.025, rate: 2.4, beat: 0.28, rateIn: 3 };
+/*
+ * [S] the Valkyrie's flight (392 re-run 393; viking.valkyrie.png, card Characteristics "flies": she hangs above the ground, the boots drawn up under her,
+ * and beats the big pale wings once a second or so; critic 392: no flight/leap event and both boots planted in every shot). A body marked `valkyrieFly`
+ * on the torso (propBuilder, the valkyrie's own wing build) stands .lift of its height off the ground, bobbing .bob, its thighs drawn up .thigh and its
+ * knees folded .knee so the boots tuck behind it, and each wing (its wingRoot) beats .beat about its own rest angle at .rate rad/s. The weight starts at
+ * full (w: 1) so she is off the ground from the first frame the idle shot is taken in, not eased up over a second. The root stays on the ground, so the
+ * game's own cast shadow falls under her.
+ */
+const FLY = { lift: 0.34, bob: 0.02, rate: 2, rateIn: 4, beat: 0.34, thigh: 0.5, knee: 1.0 };
 const SCYTHE_LOW = { raise: -0.3, out: 0.12, elbow: -0.75, tip: new Vector3(-0.8, 0.5, 0.3), spin: Math.PI / 2 };
 /**
  * [S] the potionseller's hang (377; farmer.potion_seller.red.png: both arms hang near straight at his sides, a flask in each fist at the hip, never
@@ -1848,7 +1857,9 @@ export class ProceduralAnimator {
         }
       }
     }
-    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink;
+    // the Valkyrie hangs off the ground on her wings (FLY): its lift is laid on the hip after the rest height has been set for this frame
+    this._flyHover(dt);
+    if (this._hipRest !== null) this._body.hip.position.y = this._hipRest - this._braceSink - this._idleSink + this._flyLift;
     // Upright in the wall (tabs_screenshot_06: every man stands upright behind his board, face over the rim): whatever the brace, the press and the stride made of him,
     // a man held in a wall carries his trunk no further over than WALL_TRUNK_MAX, his neck brings his face back up level over the rim, and his knees stay under
     // his hips with no splay out to the side. The shove is in his stride and his shoulder, not a fold at the waist.
@@ -1863,7 +1874,7 @@ export class ProceduralAnimator {
       // carried at WALL_SINK_SHARE of the brace's sink, so he stands about his height behind the board and not crouched under its rim
       for (const knee of [b.leftKnee, b.rightKnee]) knee.rotation.x -= Math.max(0, knee.rotation.x - WALL_KNEE_MAX) * upright;
       for (const hip of [b.leftHip, b.rightHip]) hip.rotation.x -= (hip.rotation.x - Math.max(-WALL_HIP_MAX, Math.min(WALL_HIP_MAX, hip.rotation.x))) * upright;
-      if (this._hipRest !== null) b.hip.position.y = this._hipRest - (this._braceSink * (1 - upright * (1 - WALL_SINK_SHARE))) - this._idleSink;
+      if (this._hipRest !== null) b.hip.position.y = this._hipRest - (this._braceSink * (1 - upright * (1 - WALL_SINK_SHARE))) - this._idleSink + this._flyLift;
     }
     // Spear carry: a shield man on the march does not pump his spear arm. It hangs at his side with the elbow a little bent, the shaft stood up in the fist.
     if (this._state === AnimState.Walking && this._spearShaft()) {
@@ -2917,6 +2928,41 @@ export class ProceduralAnimator {
       const elbow = shoulder === b.leftShoulder ? b.leftElbow : b.rightElbow;
       const up = new Vector3(0, lift, 0).rotateByQuaternionToRef(inv, new Vector3()).scaleInPlace(1 / Math.max(0.001, shoulder.absoluteScaling.y));
       perch.position.copyFrom(elbow.position).addInPlace(up);
+    }
+  }
+
+  /** The Valkyrie's flight (spec at FLY): weight, beat clock and the wings' rest angles, looked up once. */
+  private _fly: { wings: Array<{ node: TransformNode; rest: number }>; w: number; t: number } | null | undefined = undefined;
+  private _flyLift = 0;
+  private _flyHover(dt: number): void {
+    if (this._fly === undefined) {
+      const torso = this._body.torso;
+      const flies = torso.getChildren().some((n) => n.name === "valkyrieFly");
+      const wings = torso.getChildren().filter((n): n is TransformNode => n.name === "wingRoot");
+      // full weight from the start: she is already off the ground in the idle shot, not easing up as it is taken
+      this._fly = flies && wings.length ? { wings: wings.map((node) => ({ node, rest: node.rotation.z })), w: 1, t: 0 } : null;
+    }
+    const F = this._fly;
+    if (!F) {
+      this._flyLift = 0;
+      return;
+    }
+    const live = this._state !== AnimState.Dead ? 1 - Math.min(1, this._limp) : 0;
+    F.w += (live - F.w) * Math.min(1, dt * FLY.rateIn);
+    F.t += dt * FLY.rate;
+    const height = this._body.metrics.overallHeight;
+    this._flyLift = height * (FLY.lift + FLY.bob * Math.sin(F.t)) * F.w;
+    const a = F.w * (1 - Math.min(1, this._limp));
+    if (a > 0.01) {
+      const b = this._body;
+      b.leftHip.rotation.x += (-FLY.thigh - b.leftHip.rotation.x) * a * 0.7;
+      b.rightHip.rotation.x += (-FLY.thigh - b.rightHip.rotation.x) * a * 0.7;
+      b.leftKnee.rotation.x += (FLY.knee - b.leftKnee.rotation.x) * a;
+      b.rightKnee.rotation.x += (FLY.knee - b.rightKnee.rotation.x) * a;
+    }
+    for (const wing of F.wings) {
+      const side = Math.sign(wing.node.position.x) || 1;
+      wing.node.rotation.z = wing.rest + side * FLY.beat * Math.cos(F.t) * F.w;
     }
   }
 
