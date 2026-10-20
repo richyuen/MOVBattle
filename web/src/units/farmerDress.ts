@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Node, Quaternion, TransformNode, Vector3, VertexBuffer } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Node, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -122,27 +122,11 @@ function chestBox(body: ArticulatedBody): { W: number; H: number; D: number; top
  * shirt V sits in the gap. Vest cloth team lerped HALFLING_VEST_CUT.light toward white (was HALFLING_COAT.vestLight .45, which read white; the coat
  * is team x .85, so the plain team vest is the lighter layer).
  */
-/*
- * [S] 390 the V to the belt and the vest a lighter layer (farmer.halfling.red.png: the white shirt's V runs from the collar nearly down to the belt,
- * the vest's light team panels either side of it, plainly lighter than the coat; critic 389: a short grey-white V to mid-chest on a grey square bib,
- * the vest the coat's blue). The V's point now HALFLING_COAT.veeDeep .46 -> .6 of H under the coat's top (just over the belt), .vee .4 -> .3 of W
- * across at the neck so vest shows either side inside the coat's fronts; the panels, V and collar points are one-sided cloth facing out (the SSAO
- * pass read the double-sided ribbons' inward faces as occlusion: the grey bib); vest team lerped .light toward white.
- */
-const HALFLING_VEST_CUT = { light: 0.3, shade: 1, glow: 0.1 };
+const HALFLING_VEST_CUT = { light: 0, shade: 0.97, glow: 0.04 };
 const HALFLING_COAT = {
   neck: 0.02, drop: 0.1, wall: 0.08, out: 0.06, front: 0.3, ahead: 0.08, gap: 0.22, flare: 0.08, lapel: 0.4, lapelWide: 0.2,
-  vest: 0.46, vestAhead: 0.03, vee: 0.3, veeDeep: 0.6, collar: 0.16, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
+  vest: 0.46, vestAhead: 0.03, vee: 0.4, veeDeep: 0.46, collar: 0.16, coat: 0.85, lapelShade: 0.55, vestLight: 0.45,
 };
-/** Turns a flat cloth piece's single face to the torso's front (+z), whichever way its builder wound it. */
-function faceFront(m: Mesh): Mesh {
-  const n = m.getVerticesData(VertexBuffer.NormalKind);
-  if (!n) return m;
-  let z = 0;
-  for (let i = 2; i < n.length; i += 3) z += n[i];
-  if (z < 0) m.flipFaces(true);
-  return m;
-}
 /*
  * [S] the jacket fitted on the shoulders with sleeves (380; farmer.halfling.red.png, .blue.png: the team jacket sits on his shoulders, sleeves down to
  * the wrist, open to just past the belt over dark knee shorts; critic 379: a rigid open-topped box off the trunk, its rim showing at the neck, bare arms
@@ -180,6 +164,7 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   const coat = mf.get("cloth", teamColor.scale(J.coat), { emissiveIntensity: 0.1 });
   const lapelCloth = mf.get("cloth", teamColor.scale(J.coat * J.lapelShade), { emissiveIntensity: 0.1 });
   const vestCloth = mf.get("cloth", Color3.Lerp(teamColor, new Color3(1, 1, 1), HALFLING_VEST_CUT.light).scale(HALFLING_VEST_CUT.shade), { emissiveIntensity: HALFLING_VEST_CUT.glow });
+  vestCloth.backFaceCulling = false;
   const shirt = mf.get("cloth", HALFLING_SHIRT_WHITE, { emissiveIntensity: 0.25 });
   const { W, H, D, top, foot, z } = chestBox(body);
   const added: Mesh[] = [];
@@ -247,15 +232,15 @@ export function halflingJacket(scene: Scene, body: ArticulatedBody, teamColor: C
   for (const side of [-1, 1]) {
     const outer = [new Vector3(side * vestHalf, coatTop, vestFace), new Vector3(side * vestHalf, veeY, vestFace)];
     const inner = [new Vector3(side * veeHalf, coatTop, vestFace), new Vector3(0, veeY, vestFace)];
-    faceFront(put(MeshBuilder.CreateRibbon("halflingVest", { pathArray: side < 0 ? [outer, inner] : [inner, outer] }, scene), vestCloth));
+    put(MeshBuilder.CreateRibbon("halflingVest", { pathArray: side < 0 ? [outer, inner] : [inner, outer], sideOrientation: Mesh.DOUBLESIDE }, scene), vestCloth);
   }
   // the white shirt in a deep V at the vest's neck, and its two collar points turned out over the vest
-  const vee = faceFront(put(MeshBuilder.CreateDisc("halflingShirtVee", { radius: 1, tessellation: 3 }, scene), shirt));
+  const vee = put(MeshBuilder.CreateDisc("halflingShirtVee", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene), shirt);
   vee.rotation.z = -Math.PI / 2;
   vee.scaling.set(H * J.veeDeep / 1.5, W * J.vee / Math.sqrt(3), 1);
   vee.position.set(0, coatTop - H * J.veeDeep / 3, vestFace + D * 0.012);
   for (const side of [-1, 1]) {
-    const point = faceFront(put(MeshBuilder.CreateDisc("halflingCollar", { radius: 1, tessellation: 3 }, scene), shirt));
+    const point = put(MeshBuilder.CreateDisc("halflingCollar", { radius: 1, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene), shirt);
     point.rotation.z = -Math.PI / 2 + side * 0.55;
     point.scaling.set(W * J.collar * 0.8, W * J.collar * 0.6, 1);
     point.position.set(side * W * J.vee * 0.42, coatTop - H * 0.05, vestFace + D * 0.024);
