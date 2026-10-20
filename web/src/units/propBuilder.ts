@@ -5174,9 +5174,12 @@ const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
  * pale-ice stave .long of his height, .thick of it at the grip tapering to .taper, bowed .bow off its string; a shard crown of .shards jagged icicle
  * cones off each tip, the longest down the limb's line, the shorter ones splayed; a white snowball at the top nock; a dark wrap at the grip and a pale
  * string. Laid and seated as the snake bow (named "bow", string child), carried upright across him at .hold.
+ * [S] 393 the icicle fringe (viking.ice_archer.jpg: the bow is a jagged length of ice, big triangular shards growing off both limbs, not two smooth
+ * tubes with nubs at the ends). .fringe shards grow down each limb between the grip and the tip, alternating to its two faces, each about .fringeLen
+ * of the bow long, longer toward the tip and proud of the limb; the tip crowns are .shard long (nearly twice the old .085) and their base is .crown of the limb.
  */
 const ICE_BOW = {
-  long: 1.0, thick: 0.062, taper: 0.45, bow: 0.06, grip: 0.1, hold: 1.02, shards: 3, shard: 0.085, snow: 0.105, glow: 0.16,
+  long: 1.0, thick: 0.062, taper: 0.45, bow: 0.06, grip: 0.1, hold: 1.02, shards: 4, shard: 0.16, crown: 2.6, fringe: 6, fringeLen: 0.15, snow: 0.105, glow: 0.16,
   ice: new Color3(0.3, 0.72, 0.95), pale: new Color3(0.72, 0.9, 1.0), wrap: new Color3(0.3, 0.24, 0.2), string: new Color3(0.82, 0.94, 1.0),
 };
 function buildIceBow(scene: Scene, s: number, stand: number): Mesh {
@@ -5195,9 +5198,25 @@ function buildIceBow(scene: Scene, s: number, stand: number): Mesh {
   const pale = mat(scene, B.pale, 0.2, "cloth");
   // the icicle crowns: cones off each tip, the longest running on down the limb's line, the others splayed out and forward
   for (const side of [1, -1]) {
+    // [S] 393 the fringe down the limb: shards growing out of both faces between the grip and the tip, longer toward the tip, so the limb is a
+    // jagged length of ice and not a smooth tube (viking.ice_archer.jpg)
+    for (let k = 1; k <= B.fringe; k++) {
+      const t = (k / (B.fringe + 1)) * 0.94;
+      const dir = k % 2 ? 1 : -1;
+      const long = L * B.fringeLen * (0.72 + 0.55 * (((k * 7) % 5) / 4) * (0.5 + t * 0.5));
+      const spike = MeshBuilder.CreateCylinder("iceBowFringe", {
+        height: long, diameterTop: 0, diameterBottom: radius(t) * 3.4, tessellation: 4,
+      }, scene);
+      spike.material = k % 3 === 0 ? pale : stave.material;
+      spike.convertToFlatShadedMesh();
+      spike.position.set(0, side * t * L * 0.5, zAt(t) + dir * (radius(t) * 0.9 + long * 0.38));
+      spike.rotation.x = dir * 1.15;
+      spike.rotation.z = dir * 0.1;
+      spike.parent = stave;
+    }
     for (let k = 0; k < B.shards; k++) {
-      const long = L * B.shard * (1 - k * 0.28);
-      const shard = MeshBuilder.CreateCylinder("iceBowShard", { height: long, diameterTop: 0, diameterBottom: radius(1) * 1.9 * (1 - k * 0.2), tessellation: 4 }, scene);
+      const long = L * B.shard * (1 - k * 0.22);
+      const shard = MeshBuilder.CreateCylinder("iceBowShard", { height: long, diameterTop: 0, diameterBottom: radius(1) * B.crown * (1 - k * 0.18), tessellation: 4 }, scene);
       shard.material = k === 0 ? pale : stave.material;
       shard.convertToFlatShadedMesh();
       shard.position.set(0, side * (L * 0.5 + long * 0.42), zAt(1));
