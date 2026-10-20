@@ -1,5 +1,5 @@
 # Loop state (v3: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D)
-Iteration: 389   Batch: farmer:re+ancient (5-6/19)   Consecutive empty: 0   Done: 28/139   Parked: 0
+Iteration: 390   Batch: farmer:re+ancient (5-6/19)   Consecutive empty: 0   Done: 30/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -7,7 +7,7 @@ tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
 farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
-ancient: shield_bearer ++++ D | sarissa -+++ o | hoplite ++++ D | snake_archer -+++ o | ballista ---+ o | minotaur -+++ o | zeus -+++ o
+ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista +-++ o | minotaur -+++ o | zeus -+++ o
 viking: headbutter ???? q | ice_archer ???? q | brawler ???? q | berserker ???? q | valkyrie ???? q | longship ???? q | jarl ???? q
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
@@ -23,17 +23,17 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-389 (BASE f31835b): [S] zeus a toga colour fdab7e5 approved (narrowed) | [S] minotaur a girdle f835112 approved (narrowed) | [S] sarissa a collar 9c2d24b approved (narrowed) | [S] snake_archer a headgear d561c70 +0390b63 approved (narrowed) | [S] halfling a foot fur cd0bed8 +b505810 approved (narrowed) | [S] ballista a timber 532010f approved (struck a.2) | [S] ballista b loaded bolt 246a014 approved (struck b.2) | [P] wheelbarrow a knees a63c351 approved (narrowed)
+390 (BASE 836aeef): [S] ballista a frame 0c52227 approved (a PASS) | [S] ballista c flying bolt cf436a3 +1d34d1a approved (c PASS) | [S] halfling a vest 66faf9b rejected (reverted b0bb4eb) | [S] snake_archer a stance 73c3474 approved | [S] snake_archer a face wrap ee39078 approved (a PASS) | [P] halfling a foot fur 3eda79e rejected (reverted bc7df7e) | [R] sarissa a mantle 5c44ced approved (a PASS) | CONFIRM: snake_archer, sarissa 4/4 -> D
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] ancient.zeus (fdab7e5) VERDICT: APPROVE CRITERION: ancient.zeus.a FAIL (previous: FAIL)
-- GAP: [S] ancient.minotaur (f835112) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
-- GAP: [S] ancient.sarissa (9c2d24b) VERDICT: APPROVE CRITERION: ancient.sarissa.a FAIL (previous: FAIL)
-- GAP: [S] ancient.snake_archer (d561c70 +0390b63) VERDICT: APPROVE CRITERION: ancient.snake_archer.a FAIL (previous: FAIL)
-- GAP: [S] farmer.halfling (cd0bed8 +b505810) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
-- GAP: [S] ancient.ballista (532010f) VERDICT: APPROVE CRITERION: ancient.ballista.a FAIL (previous: FAIL)
-- GAP: [S] ancient.ballista (246a014) VERDICT: APPROVE CRITERION: ancient.ballista.b FAIL (previous: FAIL)
-- GAP: [P] farmer.wheelbarrow (a63c351) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
+- GAP: [S] ancient.ballista (0c52227) VERDICT: APPROVE CRITERION: ancient.ballista.a PASS (previous: FAIL)
+- GAP: [S] ancient.ballista (cf436a3 +1d34d1a) VERDICT: APPROVE CRITERION: ancient.ballista.c PASS (previous: FAIL)
+- GAP: [S] farmer.halfling (66faf9b) VERDICT: REJECT CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [S] ancient.snake_archer (73c3474) VERDICT: APPROVE CRITERION: ancient.snake_archer.a FAIL (previous: FAIL)
+- GAP: [S] ancient.snake_archer (ee39078) VERDICT: APPROVE CRITERION: ancient.snake_archer.a PASS (previous: FAIL)
+- GAP: [P] farmer.halfling (3eda79e) VERDICT: REJECT CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [R] ancient.sarissa (5c44ced) VERDICT: APPROVE CRITERION: ancient.sarissa.a PASS (previous: FAIL)
+- CONFIRM: UNIT ancient.snake_archer: a PASS b PASS c PASS d PASS (4/4) | UNIT ancient.sarissa: a PASS b PASS c PASS d PASS (4/4)
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
@@ -54,8 +54,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Rules v3 landed after the 389 review (ITERATE/CRITIC): blockers struck or verbatim, plateau at 3 approved [S] without a strike, CONFIRM critic before D, checkpoint per batch name, starvation pick, 2 follow-ups per gap, palette.png, LESSONS.md (read it at step 1; rendering notes moved there).
-- Checkpoint for tribal:re and renaissance:re ran at 390 (12/12 scenarios green); both dropped from Batch. farmer:re is the last :re batch.
-- Critic 389 ranked: ballista frame taller + flying bolt from BALLISTA_BOLT (c unpicked since 378: starvation pick), zeus rings outside the drape + gold bolt, snake_archer stance + wrap/cord, minotaur flat light scroll inlays, sarissa chunk in cape material, halfling vest, wheelbarrow knees. [P] fallout: HALFLING_TUFT inX 0 clump .8, SARISSA_CHUNK tip .1.
-- Under the new plateau rule wheelbarrow.a (7 approved, no strike), sarissa.a (9), zeus.a (6), minotaur.a (6) are plateau: their next pick is one [R] each from a spec off the render (wheelbarrow: TABS stacks three riders on the barrow, no pusher visible).
-- Capture ABILITY_PREF (capture.mjs): minotaur headbutt, snake_archer snake_land (framed on the struck man).
+- farmer:re is the last :re batch (tribal:re, renaissance:re checkpointed). Open: halfling, wheelbarrow (farmer:re); ballista, minotaur, zeus (ancient).
+- Plateau, next pick one [R] each (one [R] per iteration): wheelbarrow.a (TABS stacks three riders on the barrow, no pusher visible), zeus.a (rings outside the drape, unlit gold bolt, white skirt), minotaur.a (flat light scroll inlays + scale ~ Zeus height). The 390 sarissa [R] (spec at SARISSA_MANTLE) cleared its plateau first time.
+- ballista.b: only the idle half of b.1 stands, because _idle is shot from behind the engine: an evidence commit (capture.mjs camera or engine yaw) first, then rewrite the blocker's shot.
+- halfling 390: vest [S] and tuft [P] rejected; the vest read lighter at team .3 toward white (keep), but faceFront hid the white V: rebuild V/panels as closed slabs; re-root the tuft in the foot's own frame.
+- stats.mjs takes one unit id or one batch name (no farmer+ancient): run the batch last so stats.json covers it; stats.json is overwritten per run.

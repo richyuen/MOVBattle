@@ -27,4 +27,6 @@ drop a lesson once it is a comment at the code it describes.
 - A preset look (iconic_zeus) comes from getPresetVisual, not the faction map entry in unitVisuals.
 - Body -x is a humanoid's left in the dress modules; a unit faces -x in the probes, so compare world bboxes along x.
 - A knee target is only a direction: the knee lands one thigh length along it (aimLimb); solve knees off the thing they should straddle, not off the seat.
+- Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
+- An engine's projectile can be a copy of a named node on the build (LOADED_BOLTS + heldProp/_buildHeldMissile): the flying shape then matches the loaded one for free.
 - A hood or cap over the block head needs a superellipsoid profile (exponent about 3, 1.2 of the head) to clear the chamfered corners and the top ring.

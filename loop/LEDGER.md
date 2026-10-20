@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-385 | sandals: strapSandals on bare team feet + 3 shin laces, no boots (9c57271) | ancient.shield_bearer.a | approved
-385 | crest: one flat-topped box on a stalk, own hat hoplite_helm (f6b09dd +79ce333) | ancient.hoplite.a | approved
-385 | eye slots: temple plates + slanted brow bars over each eye (fd2a912) | ancient.sarissa.a | approved
-385 | nocked snake in the draw fist, flies as the same snake (100ea4a) | ancient.snake_archer.b | approved
-385 | pauldron one curved shell on the deltoid, flush rim, scroll; spiky tuft (3131dbb +ac045b2) | ancient.minotaur.a | approved
-385 | toga: bare trunk, white diagonal drape, gold bolt, triple gold belt (3d11834) | ancient.zeus.a | approved
 386 | bare team legs, strapSandals + 2 ankle laces (fd8eb0f) | ancient.zeus.a | approved
 386 | lightning chain: 3 hops within 2.2 m, arcs + burst stay .6 s (ff36ed0) | ancient.zeus.c | approved
 386 | eyes apart x1.45, .85 size, proud nose guard brow to plates (041521a) | ancient.sarissa.a | approved
@@ -45,15 +39,20 @@ for 25 iterations.
 389 | foot fur a compact dark tuft of lumps + short shards inside the foot, farmerDress (cd0bed8 +b505810) | farmer.halfling.a | approved
 389 | timber terracotta in linear space, plates two rows of four on the plank edges (532010f) | ancient.ballista.a | approved
 389 | loaded bolt: thick tapered shaft, socket, long flat black leaf head .75 past the front (246a014) | ancient.ballista.b | approved
+390 | frame top 1.7 m, trough/bolt/arms through the box at mid height on cross beams (0c52227) | ancient.ballista.a | approved
+390 | flying bolt a copy of the loaded node, loaded one hidden half the reload; upright leaf copy (cf436a3 +1d34d1a) | ancient.ballista.c | approved
+390 | vest V to the belt, one-sided faceFront panels and V, vest .3 toward white (66faf9b, reverted) | farmer.halfling.a | rejected
+390 | stance upright on straight legs, bow across him, found by the nocked snake (73c3474) | ancient.snake_archer.a | approved
+390 | face wrap one rounded shell tucked under the rim, narrowing, dark cord + knot (ee39078) | ancient.snake_archer.a | approved
+390 | [R] mantle: one dark wedge over the left shoulder onto the chest, rolled edge, gold ring; collar/bulk/chunk retired (5c44ced) | ancient.sarissa.a | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
-ancientDress.ts:SARISSA_CAPE (arc, hem, shade, glow) | .56, .72, .45, .06 | 384 | approved | shade .62 glow .12 (383)
+ancientDress.ts:SARISSA_CAPE (arc, hem, shade, glow) collar/roll retired 390 | .56, .72, .45, .06 | 390 | approved | shade .62 glow .12 (383); collar .16 neck .42 out 1.12 roll .06
 unitFactory.ts:HALFLING_SHORTS long, cuff + HALFLING_FEET clumpTall, rise | .78, .14; .7, .45 | 383 | approved | .92; 1.1, .9
 tribal.* (7 units' rows: JAVELIN, CHIEF, CLUB, HIDE, DEER, SLAB/SKULL, mammoth body; units done) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
 renaissance.* (painter, fencer, jouster, musketeer, balloon_archer, halberd rows; units done) | compacted 378 | 377 | approved | values: git show edb1692:loop/LEDGER.md
-medieval.* (43 knob rows incl. stats, 351-365; batch done) | compacted 366 | 365 | approved | values: git show f142d6e:loop/LEDG..
 farmer.* done (hay_baler, scarecrow, harvester, farmer, potion_seller rows) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
 farmer.halfling (SHAGGY, no longer his; HALFLING_COAT, _SLEEVED) | compacted 382 | 381 | approved | values: git show b359959:loop/LEDGER.md
 farmer.wheelbarrow (CREW_SEAT, LOW_RIM, THROWER_LEGS seat -.08, WHEELBARROW, LOG_WHEEL, HAY_BED, BUNCHED_CREW) | compacted 382 | 381 | approved | values: git show b359959:loop/LEDGER.md
@@ -69,10 +68,14 @@ vehicleBuilder.ts:THROWER_PERCH (seat, up, tuftDeep, lumps, wide, kneeUp) | -.15
 
 ancientDress.ts:ZEUS_TOGA (foot, edgeHigh, edgeLow, boltLong, boltWide, boltX, boltGold, whiteGlow) one-sided, body belt hidden | 0, 1.45, .24, .36, .5, .62, (1.25,.72,.2), 1 unlit | 389 | approved | 388 double-sided; high .9 low .12 wide .5 band (385); cape, solar fx
 vehicleBuilder.ts:THROWER_KNEES (chest, out, shinOut, shinDown, shinAhead) | .55, .2, .6, 1, .15 | 389 | approved | out .07 shinOut .35 (388); knee targets at the Farmer's hips (THROWER_LEGS kneeOut .07, shinOut .45, shinAhead .35)
-farmerDress.ts:HALFLING_VEST_CUT (light, shade, glow) | 0, .97, .04 | 388 | approved | vest box, HALFLING_COAT.vestLight .45; .18/.12; 0/.08
+farmerDress.ts:HALFLING_VEST_CUT (light, shade, glow) | 0, .97, .04 | 390 | approved | 390 rej (with the [S]): .3, 1, .1 + veeDeep .6 vee .3; vest box, vestLight .45
 ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare) on the hip joint | -.3, .03, 1.1, 1.22, 1.12 | 389 | approved | 386 band round the trunk base (MINO_SCROLL tall .24 at .04)
-ancientDress.ts:SARISSA_CHUNK (path 6 pts, wide, thick, tip) | wide .3 thick .11 tip .45 | 389 | approved | SARISSA_FOLD folds 2 drapeLong .72 tall .22 tilt .6 (boxes)
+ancientDress.ts:SARISSA_MANTLE (top/foot 6-pt edges, rows, bulge, roll, rollOut, brooch, shade) | 4, .025, .045, .02, .08, .7 | 390 | approved | [R] replaced SARISSA_CHUNK (wide .3 thick .11 tip .45) + SARISSA_FOLD bulk
 ancientDress.ts:SNAKE_CAP (cy, rx, ry, rz, pow, nub, nubLean, wrapTaper) | 0, 1.22, 1.22, 1.22, 3, .26, .55, .86 | 389 | approved | half dome cap 1.14 + back cylinder, peak .42 lean .5, wrap flare 1.12
-farmerDress.ts:HALFLING_TUFT (clumps, clump, from, to, sink, inX, spikes, spike, spikeWide, lean) | 5,.6,-.5,.3,.22,.45,10,.42,.2,.55 | 389 | approved | unitFactory HALFLING_FEET clump 1.35 tufts 9 long .55 splay 1
+farmerDress.ts:HALFLING_TUFT (clumps, clump, from, to, sink, inX, spikes, spike, spikeWide, lean) | 5,.6,-.5,.3,.22,.45,10,.42,.2,.55 | 390 | rejected | [P] 390 inX 0 clump .8 rejected (1 of 2); HALFLING_FEET clump 1.35 tufts 9
 vehicleBuilder.ts:BALLISTA_WOOD + BALLISTA_PLATES (cols, edge, wide, deep, iron) | (.55,.15,.075); .2/.83, .08, .075, .12, .08 | 389 | approved | wood (.62,.3,.2); plates grid H.plates 8 (2 shown)
-vehicleBuilder.ts:BALLISTA_BOLT (shaft, thick, tail, head, past, wide, waist, flat) | 1.45, .1, .7, .62, .75, .24, .3, .3 | 389 | approved | rod 1.5 x .05, head .3 x .13
+vehicleBuilder.ts:BALLISTA_BOLT (shaft, thick, tail, head, past, wide, waist, flat) one node + upright leaf copy | 1.45, .1, .7, .62, .75, .24, .3, .3 | 390 | approved | rod 1.5 x .05, head .3 x .13
+vehicleBuilder.ts:BALLISTA_FRAME (top, beam) + BALLISTA_STOCK y | 1.7, .12; 1.0 | 390 | approved | top 1.02, stock on the top plank
+simulationSystem.ts:LOADED_BOLTS (ballista: ballistaLoadedBolt flies, hidden cooldown x .5) | 1 entry | 390 | approved | projectile "bolt" rod .4 x .04
+proceduralAnimation.ts:SNAKE_UPRIGHT (yaw, stagger, give, lean, tilt, raise, out, elbow, tip, left) | .12,.06,.02,.04,.03,-.75,-.22,-1.35 | 390 | approved | bowman ready: yaw .6-.95, stagger .4-.6
+ancientDress.ts:SNAKE_WRAP (tuck, r, narrowFrom, chin, cordAt, thick, knot, loop, end) | .12,1.19,-.75,.72,-.36,.09,.2,.22,.22 | 390 | approved | 10-sided wrap cylinder 1.1, taper .86
