@@ -594,6 +594,15 @@ const SNAKE_HOOD = {
 };
 /* [S] 389 the hood's rounded shell (spec at its build in dressSnakeArcher); the wrap's foot .wrapTaper of its top across */
 const SNAKE_CAP = { cy: 0, rx: 1.22, ry: 1.22, rz: 1.22, pow: 3, rows: 6, segs: 16, nub: 0.26, nubLean: 0.55, wrapTaper: 0.86 };
+/*
+ * [S] 390 the face wrap (ancient.snake_archer.blue.png, .red.png: the cloth over the lower face rounds smoothly up under the hood's rim with no skin
+ * between, narrows to the chin, and a dark cord is tied across it under the eyes, a small knot and bow at the nose; critic 389: a square block under
+ * the cap, jagged light-skin gaps between them, no cord). Replaces the 10-sided cylinder (radius 1.1 of e, which the block head's chamfered corners
+ * cut through): rows of a rounded shell, .r of e across (inside the hood's back shell, so its top tucks under the rim) from .tuck of e.y above
+ * SNAKE_HOOD.wrapTop down to .wrapFoot, easing in from .narrowFrom of e.y to .chin of its width at the foot. The cord a band round it at .cordAt of
+ * e.y, .thick m thick, a knot .knot of e.x on the front, two loops .loop of e.x across, two ends .end of e.y long; dark brown.
+ */
+const SNAKE_WRAP = { tuck: 0.12, r: 1.19, narrowFrom: -0.75, chin: 0.72, rows: 7, cordAt: -0.36, thick: 0.09, knot: 0.2, loop: 0.22, end: 0.22, cord: new Color3(0.2, 0.09, 0.04) };
 
 /*
  * [S] the snake archer's snake (385; ancient.snake_archer.red.png, card Appearance "a bow ... loaded with a snake", Weapons projectile Snake: a big green
@@ -749,11 +758,41 @@ export function dressSnakeArcher(scene: Scene, body: ArticulatedBody, teamColor:
   const peak = put(MeshBuilder.CreateCylinder("snakeHoodPeak", { height: e.y * Cp.nub, diameterTop: e.x * 0.18, diameterBottom: e.x * 0.5, tessellation: 6 }, scene), head);
   peak.rotation.x = Cp.nubLean;
   peak.position.set(0, top - e.y * 0.06 + e.y * Cp.nub * 0.3, e.z * 0.2);
-  // the wrap over the lower face and round the neck, under the eyes, narrowing to the chin (.wrapTaper at its foot)
-  const wrapTall = e.y * (S.wrapTop - S.wrapFoot);
-  const wrap = put(MeshBuilder.CreateCylinder("snakeHoodWrap", { height: wrapTall, diameterTop: 2, diameterBottom: 2 * Cp.wrapTaper, tessellation: 10 }, scene), head);
-  wrap.scaling.set(e.x * S.wrap, 1, e.z * S.wrap);
-  wrap.position.y = e.y * S.wrapTop - wrapTall / 2;
+  // [S] 390 the wrap one rounded shell under the cap's rim, narrowing to the chin, tied with a dark cord (spec at SNAKE_WRAP)
+  const Wr = SNAKE_WRAP;
+  const wrapRows: Vector3[][] = [];
+  const wrapTop = e.y * (S.wrapTop + Wr.tuck), wrapFoot = e.y * S.wrapFoot;
+  const wrapR = (y: number): number => {
+    const t = Math.max(0, Math.min(1, (e.y * Wr.narrowFrom - y) / (e.y * Wr.narrowFrom - wrapFoot)));
+    return Wr.r * (1 - (1 - Wr.chin) * t * t * (3 - 2 * t));
+  };
+  for (let r = 0; r <= Wr.rows; r++) {
+    const y = wrapTop - ((wrapTop - wrapFoot) * r) / Wr.rows;
+    const row: Vector3[] = [];
+    for (let i = 0; i <= Cp.segs; i++) {
+      const a = (Math.PI * 2 * i) / Cp.segs;
+      row.push(new Vector3(Math.sin(a) * e.x * wrapR(y), y, Math.cos(a) * e.z * wrapR(y)));
+    }
+    wrapRows.push(row);
+  }
+  put(MeshBuilder.CreateRibbon("snakeHoodWrap", { pathArray: wrapRows }, scene), head);
+  // the cord: a dark band round the wrap, a knot on the front at the nose, two loops and two short ends hanging from it
+  const dark = mf.get("cloth", Wr.cord, { emissive: Wr.cord.scale(0.1) });
+  const cordY = e.y * Wr.cordAt, cordR = wrapR(cordY) + 0.025;
+  const band = put(MeshBuilder.CreateTorus("snakeWrapCord", { diameter: 2, thickness: Wr.thick / cordR, tessellation: 18 }, scene), head, dark);
+  band.scaling.set(e.x * cordR, e.x * cordR, e.z * cordR);
+  band.position.y = cordY;
+  const front = e.z * cordR;
+  const knot = put(MeshBuilder.CreateIcoSphere("snakeWrapKnot", { radius: e.x * Wr.knot * 0.5, subdivisions: 1, flat: true }, scene), head, dark);
+  knot.position.set(0, cordY, front + e.x * Wr.knot * 0.2);
+  for (const side of [-1, 1]) {
+    const loop = put(MeshBuilder.CreateTorus("snakeWrapLoop", { diameter: e.x * Wr.loop, thickness: e.x * Wr.thick * 0.8, tessellation: 8 }, scene), head, dark);
+    loop.rotation.set(Math.PI / 2, 0, side * 0.5);
+    loop.position.set(side * e.x * Wr.loop * 0.55, cordY + e.y * 0.03, front + e.x * 0.03);
+    const end = put(MeshBuilder.CreateBox("snakeWrapEnd", { width: e.x * Wr.thick, height: e.y * Wr.end, depth: e.x * Wr.thick }, scene), head, dark);
+    end.rotation.z = side * 0.35;
+    end.position.set(side * e.x * 0.08, cordY - e.y * Wr.end * 0.5, front + e.x * 0.04);
+  }
   // the collar on the shoulders, a point hanging at the front, and the cord tied at the throat
   const torso = body.torso;
   const neckY = body.neck.position.y;
