@@ -3692,6 +3692,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "bow":
     case "crossbow": {
       if (type === "bow" && variant === "snake_bow") return buildSnakeBow(scene, s, fit.stand);
+      if (type === "bow" && variant === "ice_bow") return buildIceBow(scene, s, fit.stand);
       if (type === "bow" && (variant === "longbow" || variant === "brown_longbow")) {
         // The medieval archer's (352; medieval.archer.red.png: a plain brown longbow as tall as he is, a pale wrap at the grip) is the same stave in
         // BROWN_LONGBOW's colours: brown wood, no tip wraps, the grip wrapped pale and not in the team colour
@@ -5070,6 +5071,62 @@ function buildSnakeBow(scene: Scene, s: number, stand: number): Mesh {
   return stave;
 }
 const LONGBOW_WRAP = new Color3(0.7, 0.47, 0.27);
+/*
+ * [S] the Ice Archer's Ice Bow (392; viking.ice_archer.jpg, card Main Hand Ice Bow; critic 391: a small dark-wood C-bow at waist height). A faceted
+ * pale-ice stave .long of his height, .thick of it at the grip tapering to .taper, bowed .bow off its string; a shard crown of .shards jagged icicle
+ * cones off each tip, the longest down the limb's line, the shorter ones splayed; a white snowball at the top nock; a dark wrap at the grip and a pale
+ * string. Laid and seated as the snake bow (named "bow", string child), carried upright across him at .hold.
+ */
+const ICE_BOW = {
+  long: 1.0, thick: 0.062, taper: 0.45, bow: 0.06, grip: 0.1, hold: 1.02, shards: 3, shard: 0.085, snow: 0.105, glow: 0.16,
+  ice: new Color3(0.3, 0.72, 0.95), pale: new Color3(0.72, 0.9, 1.0), wrap: new Color3(0.3, 0.24, 0.2), string: new Color3(0.82, 0.94, 1.0),
+};
+function buildIceBow(scene: Scene, s: number, stand: number): Mesh {
+  const B = ICE_BOW;
+  const L = stand * B.long;
+  const r0 = B.thick * L * 0.5;
+  const zs = 0.04 * s;
+  const radius = (t: number): number => r0 * (1 - (1 - B.taper) * Math.abs(t));
+  const zAt = (t: number): number => zs - B.bow * L * (1 - t * t);
+  const ts: number[] = [];
+  for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
+  const path = ts.map((t) => new Vector3(0, t * L * 0.5, zAt(t)));
+  const stave = MeshBuilder.CreateTube("bow", { path, radiusFunction: (i) => radius(ts[i]), tessellation: 5, cap: Mesh.CAP_ALL }, scene);
+  stave.material = mat(scene, B.ice, B.glow, "cloth");
+  stave.convertToFlatShadedMesh();
+  const pale = mat(scene, B.pale, 0.2, "cloth");
+  // the icicle crowns: cones off each tip, the longest running on down the limb's line, the others splayed out and forward
+  for (const side of [1, -1]) {
+    for (let k = 0; k < B.shards; k++) {
+      const long = L * B.shard * (1 - k * 0.28);
+      const shard = MeshBuilder.CreateCylinder("iceBowShard", { height: long, diameterTop: 0, diameterBottom: radius(1) * 1.9 * (1 - k * 0.2), tessellation: 4 }, scene);
+      shard.material = k === 0 ? pale : stave.material;
+      shard.convertToFlatShadedMesh();
+      shard.position.set(0, side * (L * 0.5 + long * 0.42), zAt(1));
+      shard.rotation.x = (k - 1) * 0.34;
+      shard.rotation.z = (k - 1) * 0.3;
+      shard.parent = stave;
+    }
+    // the snowball at the top nock
+    if (side === 1) {
+      const snow = MeshBuilder.CreateIcoSphere("iceBowSnow", { radius: L * B.snow * 0.5, subdivisions: 1, flat: true }, scene);
+      snow.position.set(0, L * 0.5 + L * B.snow * 0.05, zAt(1) + radius(1) * 0.6);
+      snow.material = pale;
+      snow.parent = stave;
+    }
+  }
+  const grip = MeshBuilder.CreateCylinder("bowGrip", { height: B.grip * L, diameter: radius(0) * 2.6, tessellation: 6 }, scene);
+  grip.position.z = zAt(0);
+  grip.material = mat(scene, B.wrap, 0.1, "cloth");
+  grip.parent = stave;
+  const string = MeshBuilder.CreateCylinder("string", { height: L * 0.97, diameter: 0.005 * L, tessellation: 4 }, scene);
+  string.position.z = zs;
+  string.parent = stave;
+  string.material = mat(scene, B.string, 0.2, "cloth");
+  stave.rotation.z = Math.PI / 2 - B.hold;
+  stave.position.y = 0.1 * s;
+  return stave;
+}
 /** The medieval archer's longbow colours (352; medieval.archer.red.png): brown wood, a pale leather wrap at the grip */
 const BROWN_LONGBOW = { long: 1.4, wood: new Color3(0.45, 0.27, 0.14), wrap: new Color3(0.86, 0.78, 0.62) };
 const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };

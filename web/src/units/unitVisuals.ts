@@ -167,7 +167,7 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow" | "brown_longbow" | "snake_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword";
+  weaponVariant?: "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword";
 }
 
 function vis(
@@ -387,6 +387,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.95, armLength: 1.05 }, "bow", "hood", "none", "quiver_back", "#ADD8E6",
     undefined,
     {
+      // [S] 392 the Ice Bow: a body-height pale-ice stave with jagged icicle tips and a snowball at the upper nock (propBuilder ICE_BOW)
+      weaponVariant: "ice_bow",
       posePreset: "archer",
       attachmentPreset: "bow_ready",
       materialPreset: "viking_fur",
