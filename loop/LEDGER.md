@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-386 | bare team legs, strapSandals + 2 ankle laces (fd8eb0f) | ancient.zeus.a | approved
-386 | lightning chain: 3 hops within 2.2 m, arcs + burst stay .6 s (ff36ed0) | ancient.zeus.c | approved
-386 | eyes apart x1.45, .85 size, proud nose guard brow to plates (041521a) | ancient.sarissa.a | approved
-386 | girdle .24 tall, foot rim, outlined ram's-horn scrolls; no tunic skirt (20a8ed6 +ab2eb1a) | ancient.minotaur.a | approved
-386 | baldric, belt + gold buckle, knee boots over strap sandals (915b7e7) | ancient.snake_archer.a | approved
-386 | belt a dark ring under the coat .17 tall, dark-grey buckle right, keeper (08cf903) | farmer.halfling.a | approved
 387 | live snake on landing: slithers in an S, lunges, 2 bites / 30 s (c513c8f) | ancient.snake_archer.c | approved
 387 | Big Headbutt: stop, head down, 4.5 m burst flings men, 5 s cd (72be3fb +720dffe) | ancient.minotaur.c | approved
 387 | beard: jaw + bib masses under 6x7 flat zig-zag slabs (de591d4) | ancient.zeus.a | approved
@@ -45,6 +39,11 @@ for 25 iterations.
 390 | stance upright on straight legs, bow across him, found by the nocked snake (73c3474) | ancient.snake_archer.a | approved
 390 | face wrap one rounded shell tucked under the rim, narrowing, dark cord + knot (ee39078) | ancient.snake_archer.a | approved
 390 | [R] mantle: one dark wedge over the left shoulder onto the chest, rolled edge, gold ring; collar/bulk/chunk retired (5c44ced) | ancient.sarissa.a | approved
+391 | idle camera high rear-side, loaded leaf head past the frame front, crewman at the winch (03a5bdc) | ancient.ballista.b | approved
+391 | vest one light panel + closed white V slab to the belt, team .3 toward white (6eefbb3) | farmer.halfling.a | approved
+391 | foot fur rooted on the toe top face, spread over the instep (bef7e5f) | farmer.halfling.a | approved
+391 | off hand a second Valkyrie sword, shield off (54ae174) | viking.valkyrie.b | approved
+391 | [R] toga trim: three waist bands + flat gold bolt + white skirt (e30be40, reverted 86c09ff) | ancient.zeus.a | rejected
 
 ## Spent (never retry as [P])
 
@@ -58,6 +57,7 @@ farmer.halfling (SHAGGY, no longer his; HALFLING_COAT, _SLEEVED) | compacted 382
 farmer.wheelbarrow (CREW_SEAT, LOW_RIM, THROWER_LEGS seat -.08, WHEELBARROW, LOG_WHEEL, HAY_BED, BUNCHED_CREW) | compacted 382 | 381 | approved | values: git show b359959:loop/LEDGER.md
 
 ancient.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 378 | stats | values: git show 5715b05
+viking.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 391 | stats | values: git show e5a0cb5
 ancient.* 379-386 rows (MINO_*, BULL_*, PIKE_LEVEL, CORINTH_*, SNAKE_*, SARISSA_KEEP/KIT, ZEUS_REARM/TOGA/SANDAL/CHAIN, BOLT_SPARK, BALLISTA_*, SB_SANDAL, HOPLITE_CREST, MINO_SHELL/SCROLL) | compacted 387 | 386 | approved | values: git show fad9e5c:loop/LEDGER.md
 ancient.shield_bearer + hoplite done (SCUTUM*, LEGION_HELM, LORICA, ASPIS*, DORY_*, HOPLITE_LEGS) | compacted 385 | 384 | approved | values: git show 522cb46:loop/LEDGER.md
 ancient.* 387-388 rows (ZEUS_BEARD/LOCKS/HAIR, SNAKE_LIVE, BIG_HEADBUTT, SARISSA_FOLD, BALLISTA_CREW/HELM, GROUND_SNAKE, SNAKE_QUIVER, MINO_SASH_FOOT rej) | compacted 389 | 388 | approved | values: git show f31835b:loop/LEDGER.md
@@ -68,11 +68,11 @@ vehicleBuilder.ts:THROWER_PERCH (seat, up, tuftDeep, lumps, wide, kneeUp) | -.15
 
 ancientDress.ts:ZEUS_TOGA (foot, edgeHigh, edgeLow, boltLong, boltWide, boltX, boltGold, whiteGlow) one-sided, body belt hidden | 0, 1.45, .24, .36, .5, .62, (1.25,.72,.2), 1 unlit | 389 | approved | 388 double-sided; high .9 low .12 wide .5 band (385); cape, solar fx
 vehicleBuilder.ts:THROWER_KNEES (chest, out, shinOut, shinDown, shinAhead) | .55, .2, .6, 1, .15 | 389 | approved | out .07 shinOut .35 (388); knee targets at the Farmer's hips (THROWER_LEGS kneeOut .07, shinOut .45, shinAhead .35)
-farmerDress.ts:HALFLING_VEST_CUT (light, shade, glow) | 0, .97, .04 | 390 | approved | 390 rej (with the [S]): .3, 1, .1 + veeDeep .6 vee .3; vest box, vestLight .45
+farmerDress.ts:HALFLING_VEST_CUT (light, shade, glow) | .3, 1, .1 | 391 | approved | 0,.97,.04 (390); .3,1,.1 + veeDeep .6 vee .3 [S] 390 rejected (one-sided V vanished); vest box, vestLight .45
 ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare) on the hip joint | -.3, .03, 1.1, 1.22, 1.12 | 389 | approved | 386 band round the trunk base (MINO_SCROLL tall .24 at .04)
 ancientDress.ts:SARISSA_MANTLE (top/foot 6-pt edges, rows, bulge, roll, rollOut, brooch, shade) | 4, .025, .045, .02, .08, .7 | 390 | approved | [R] replaced SARISSA_CHUNK (wide .3 thick .11 tip .45) + SARISSA_FOLD bulk
 ancientDress.ts:SNAKE_CAP (cy, rx, ry, rz, pow, nub, nubLean, wrapTaper) | 0, 1.22, 1.22, 1.22, 3, .26, .55, .86 | 389 | approved | half dome cap 1.14 + back cylinder, peak .42 lean .5, wrap flare 1.12
-farmerDress.ts:HALFLING_TUFT (clumps, clump, from, to, sink, inX, spikes, spike, spikeWide, lean) | 5,.6,-.5,.3,.22,.45,10,.42,.2,.55 | 390 | rejected | [P] 390 inX 0 clump .8 rejected (1 of 2); HALFLING_FEET clump 1.35 tufts 9
+farmerDress.ts:HALFLING_TUFT (clumps, clump, from, to, sink, inX, spikes, spike, spikeWide, lean) | 5,.62,-.5,.3,.22,.55,10,.42,.2,.55 | 391 | approved | rooted at c.y on the toe top (391); 5,.6,-.5,.3,.22,.45 (390 rejected [P]); HALFLING_FEET clump 1.35 tufts 9
 vehicleBuilder.ts:BALLISTA_WOOD + BALLISTA_PLATES (cols, edge, wide, deep, iron) | (.55,.15,.075); .2/.83, .08, .075, .12, .08 | 389 | approved | wood (.62,.3,.2); plates grid H.plates 8 (2 shown)
 vehicleBuilder.ts:BALLISTA_BOLT (shaft, thick, tail, head, past, wide, waist, flat) one node + upright leaf copy | 1.45, .1, .7, .62, .75, .24, .3, .3 | 390 | approved | rod 1.5 x .05, head .3 x .13
 vehicleBuilder.ts:BALLISTA_FRAME (top, beam) + BALLISTA_STOCK y | 1.7, .12; 1.0 | 390 | approved | top 1.02, stock on the top plank

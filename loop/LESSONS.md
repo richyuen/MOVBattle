@@ -13,6 +13,7 @@ drop a lesson once it is a comment at the code it describes.
 - A preset's particle emitter at the chest (iconic_zeus "solar" fx) hazes everything behind it in a still: strip per-unit fx the render does not show.
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it: timber, iron and leather need their own materials.
 - A front light washes a flat lower block: a lighter layer next to a darker one needs more than x.97 vs x.85 in team colour to read apart.
+- ExtrudeShape with closeShape and cap CAP_ALL builds a closed thin slab from a 2D polygon: use it for flat emblems (Zeus's bolt) where a double-sided disc/ribbon would lose a face to culling or SSAO.
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
@@ -21,6 +22,8 @@ drop a lesson once it is a comment at the code it describes.
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
 - A ParticleSystem shares one texture: dispose(false), or later particles never render.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
+- The idle look-around can flip the idle camera to the other side between builds (zeus 391): the eye-flip follows the face at that idle phase, which shifts with the scene's readiness, so a one-sided chest ornament must read from both sides or the camera must be pinned.
+- Every capture run clears iter-N including stats.json: rerun `stats.mjs` for the units named in the CONFIRM/critic prompt after the final capture.
 
 ## Rig and dress
 - The generic tunicSkirt covers waist gear: exclude the unit in unitFactory's skirt condition.
