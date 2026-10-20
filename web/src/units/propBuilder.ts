@@ -2079,7 +2079,7 @@ export function attachProps(
       shield.rotation.set(PALETTE_TIP, PALETTE_TURN, 0);
       shield.position.set(0.06 * scale, -0.02 * scale, 0.12 * scale);
     } else if (config.shield !== "buckler") {
-      const round = config.shield === "round";
+      const round = config.shield === "round" || config.shield === "norse";
       // A rider's heater is torso-sized (334: at 1.9 it stood taller than his trunk)
       shield.scaling.scaleInPlace(round ? 2.0 : config.shield === "heater" ? HEATER_GRIP_SIZE : 1.9);
       // A kite is shoulder-wide at the top, not a plank
@@ -5262,6 +5262,40 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
       rim.position.z = -HEATER.thick * 0.5 * s;
       rim.material = mat(scene, HEATER_RIM, 0.08);
       rim.parent = shield;
+      return shield;
+    }
+    /*
+     * [S] the Brawler's own round board (393; viking.brawler.red.png, card Off Hand Brawler Shield; critic 391: an all-blue face with two grooves and a
+     * small grey knob high on the face). Carried at the round board's scale: a twelve-sided disc with the light team paint on one half and a dark slate
+     * on the other, a wide brown wooden rim ring behind it, and a big eight-sided faceted boss over the middle.
+     */
+    case "norse": {
+      const disc = (name: string, diameter: number, depth: number, arc = 1): Mesh => {
+        const m = MeshBuilder.CreateCylinder(name, { height: depth * s, diameter: diameter * s, tessellation: 12, arc, enclose: arc < 1 }, scene);
+        m.rotation.x = Math.PI / 2;
+        m.bakeCurrentTransformIntoVertices();
+        return m;
+      };
+      const shield = disc("nshield", 0.36, 0.03);
+      shield.material = mat(scene, Color3.Lerp(board, Color3.White(), 0.35), 0.08, "cloth");
+      const rim = disc("nshieldRim", 0.43, 0.022);
+      rim.position.z = -0.007 * s;
+      rim.parent = shield;
+      rim.material = mat(scene, new Color3(0.34, 0.2, 0.12), 0.1, "wood");
+      // the dark half of the face: a half disc over the team paint, its split down the middle, the +x half
+      const dark = disc("nshieldDark", 0.355, 0.008, 0.5);
+      dark.rotation.z = -Math.PI / 2;
+      dark.position.z = 0.016 * s;
+      dark.parent = shield;
+      dark.material = mat(scene, new Color3(0.1, 0.11, 0.16), 0.08, "cloth");
+      const boss = MeshBuilder.CreateCylinder("nshieldBoss", { height: 0.06 * s, diameter: 0.17 * s, tessellation: 8 }, scene);
+      boss.rotation.x = Math.PI / 2;
+      boss.rotation.z = Math.PI / 8;
+      boss.bakeCurrentTransformIntoVertices();
+      boss.position.z = 0.03 * s;
+      boss.parent = shield;
+      boss.material = mat(scene, new Color3(0.5, 0.47, 0.42), 0.14, "cloth");
+      boss.convertToFlatShadedMesh();
       return shield;
     }
     case "round": {

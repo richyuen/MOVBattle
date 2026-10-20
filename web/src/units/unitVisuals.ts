@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "hoplite_helm" | "legion_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
-export type ShieldType = "none" | "round" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis";
+export type ShieldType = "none" | "round" | "norse" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -398,9 +398,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "viking.brawler": vis(
-    { scale: 1.1, bulk: 1.2 }, "axe", "viking_helmet", "round", "none", "#A0522D",
+    { scale: 1.1, bulk: 1.2 }, "axe", "viking_helmet", "norse", "none", "#A0522D",
     undefined,
     // [S] 392 a bearded grey crescent on a longer haft, the head at shoulder height (propBuilder BEARDED_AXE)
+    // [S] 393 his round board's own cut: a two-tone team/dark face, a big faceted boss, a brown wooden rim (propBuilder Brawler Shield)
     { materialPreset: "viking_fur", weaponVariant: "bearded_axe" },
   ),
   "viking.berserker": vis(
