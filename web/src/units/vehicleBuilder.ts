@@ -2045,11 +2045,31 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   /*
    * [S] the oars, not a rig (394; viking.longship.jpg, card Appearance "3 Long-Boaters holding oars"; critic 393: no mast or yard at all — the deck's
    * verticals are three upright black flat-bladed oars, plus the dragon prow and the stern post). The mast, yard and sail are gone: three long dark oars
-   * stand out of the deck amidships, each a thin shaft with a flat pointed blade standing up over the hull, one forward, one aft and one between, leaning
-   * a little fore and aft of each other so the three read apart. .long of the hull's height, blade .blade of it, .lean rad off upright.
+   * stand out of the deck amidships, each a thin shaft with a broad flat leaf blade standing up over the hull, one forward, one aft and one between,
+   * leaning a little fore and aft of each other so the three read apart. .long of the hull's height, the blade .blade of it and .bladeWide across at its
+   * middle (a leaf: a widening foot and a point, not a spearhead), .lean rad off upright.
    */
-  const OARS = { long: 1.75, thick: 0.045, blade: 0.42, bladeWide: 0.17, flat: 0.18, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
+  const OARS = { long: 1.75, thick: 0.055, blade: 0.44, bladeWide: 0.26, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
   const oarMat = makeMat(scene, new Color3(0.1, 0.09, 0.09));
+  const oarLeaf = (parent: TransformNode, top: number): void => {
+    // the leaf's two halves: a widening foot to the blade's middle, then a point, both flattened in z
+    const foot = MeshBuilder.CreateCylinder("longshipOarBladeFoot", { height: OARS.blade * 0.45, diameterBottom: OARS.stem, diameterTop: OARS.bladeWide, tessellation: 4 }, scene);
+    foot.rotation.y = Math.PI / 4;
+    foot.bakeCurrentTransformIntoVertices();
+    foot.scaling.z = OARS.flat;
+    foot.position.y = top + OARS.blade * 0.225;
+    foot.parent = parent;
+    foot.material = oarMat;
+    allMeshes.push(foot);
+    const tip = MeshBuilder.CreateCylinder("longshipOarBladeTip", { height: OARS.blade * 0.55, diameterBottom: OARS.bladeWide, diameterTop: 0, tessellation: 4 }, scene);
+    tip.rotation.y = Math.PI / 4;
+    tip.bakeCurrentTransformIntoVertices();
+    tip.scaling.z = OARS.flat;
+    tip.position.y = top + OARS.blade * 0.725;
+    tip.parent = parent;
+    tip.material = oarMat;
+    allMeshes.push(tip);
+  };
   for (let i = 0; i < 3; i++) {
     const oar = new TransformNode("longshipOar", scene);
     oar.parent = root;
@@ -2061,14 +2081,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     shaft.parent = oar;
     shaft.material = oarMat;
     allMeshes.push(shaft);
-    const blade = MeshBuilder.CreateCylinder("longshipOarBlade", { height: OARS.blade, diameterBottom: OARS.bladeWide, diameterTop: 0, tessellation: 4 }, scene);
-    blade.rotation.y = Math.PI / 4;
-    blade.bakeCurrentTransformIntoVertices();
-    blade.scaling.z = OARS.flat;
-    blade.position.y = OARS.long - 0.28 + OARS.blade * 0.5 - 0.02;
-    blade.parent = oar;
-    blade.material = oarMat;
-    allMeshes.push(blade);
+    oarLeaf(oar, OARS.long - 0.28);
   }
 
   for (const zOff of [-1.32, 1.34]) {

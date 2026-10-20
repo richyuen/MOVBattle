@@ -4569,6 +4569,7 @@ export class ProceduralAnimator {
   // The main-hand stone axe (looked up as the off one) and how far it is stood up (see MAIN_AXE)
   private _mainAxeProp: { node: TransformNode; rest: Quaternion; grip: Vector3 } | null | undefined = undefined;
   private _mainAxeUp = 0;
+  private _pairAxeSpawned = false;
   /** The main-hand stone axe stood up at his main side, the main arm mirrored off the off arm, while he is not attacking (see MAIN_AXE). */
   private _standMainAxe(dt: number): void {
     if (this._mainAxeProp === undefined) {
@@ -4578,6 +4579,11 @@ export class ProceduralAnimator {
     }
     const r = this._mainAxeProp;
     if (!r) return;
+    // A stood pair is already up on the first frame: the idle shot is taken ~100 ms in and an ease from zero reads as absent (LESSONS 393)
+    if (this._standsPairAxes() && !this._pairAxeSpawned) {
+      this._pairAxeSpawned = true;
+      this._mainAxeUp = 1;
+    }
     const live = this._state !== AnimState.Dead && this.walkStyle !== "quadruped";
     const target = live && this._state !== AnimState.Attacking ? 1 - Math.min(1, this._limp) : 0;
     this._mainAxeUp += (target - this._mainAxeUp) * Math.min(1, dt * MAIN_AXE.ease);
