@@ -1975,18 +1975,58 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("longship_root", scene);
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
-  const wood = makeMat(scene, new Color3(0.46, 0.3, 0.16));
-  const darkWood = makeMat(scene, new Color3(0.3, 0.18, 0.1));
+  // 392: the hull's timber is a warm mid-brown, two steps up from the old .46/.30/.16, and self-lit a little: under the deck's shadow the plain wood
+  // read near black (LESSONS: lit timber under an overhang loses its colour; give it a small emissive)
+  const woodColor = new Color3(0.62, 0.42, 0.25);
+  const darkColor = new Color3(0.44, 0.29, 0.17);
+  const wood = getMaterialFactory().get("wood", woodColor, { emissive: woodColor.scale(0.18) });
+  const darkWood = getMaterialFactory().get("wood", darkColor, { emissive: darkColor.scale(0.12) });
   const shieldMat = makeMat(scene, brighten(color, 0.08));
   const sailMat = makeMat(scene, new Color3(0.86, 0.82, 0.7));
 
-  const hull = MeshBuilder.CreateBox("longshipHull", { width: 1.05, height: 0.34, depth: 2.7 }, scene);
-  hull.position.set(0, 0.4, 0);
-  hull.parent = root;
-  hull.material = teamPrimary;
-  allMeshes.push(hull);
+  /*
+   * [S] the clinker hull (392; viking.longship.red.png, viking.jpg: a brown lapstrake hull, pointed at the bow under a carved dragon head and curled at
+   * the stern; critic 391: "a plain blue rectangular box hull with square ends"). Three strakes a side lap outward over a dark keel, each row shorter
+   * than the one below, so the side is a stepped brown wall with the light in the laps; a flat three-sided stem closes each end to a point. The hull is
+   * its own timber material (not the vehicle body material, which is the team colour): the team reads on the gunwale rails, the shields and the
+   * operator. Brown .46/.30/.16 in linear space, dark keel .30/.18/.10 (LESSONS: timber keeps its own material).
+   */
+  const keel = MeshBuilder.CreateBox("longshipKeel", { width: 0.18, height: 0.16, depth: 2.62 }, scene);
+  keel.position.set(0, 0.2, 0);
+  keel.parent = root;
+  keel.material = darkWood;
+  allMeshes.push(keel);
+  for (const side of [-1, 1]) {
+    for (let row = 0; row < 3; row++) {
+      const strake = MeshBuilder.CreateBox("longshipStrake", { width: 0.09, height: 0.18, depth: 2.56 - row * 0.2 }, scene);
+      strake.position.set(side * (0.32 + row * 0.095), 0.29 + row * 0.15, 0);
+      strake.rotation.z = -side * 0.18;
+      strake.parent = root;
+      strake.material = wood;
+      allMeshes.push(strake);
+    }
+  }
+  for (const end of [-1, 1]) {
+    const stem = MeshBuilder.CreateCylinder("longshipStem", { height: 0.62, diameterBottom: 0.5, diameterTop: 0, tessellation: 3 }, scene);
+    stem.rotation.x = end * Math.PI / 2;
+    stem.scaling.x = 0.55;
+    stem.position.set(0, 0.44, end * 1.28);
+    stem.parent = root;
+    stem.material = darkWood;
+    allMeshes.push(stem);
+  }
+  // the gunwale rails: the one piece of the ship in the team colour (the vehicle body material is taken from this mesh)
+  let gunwale: Mesh | null = null;
+  for (const side of [-1, 1]) {
+    const rail = MeshBuilder.CreateBox("longshipGunwale", { width: 0.12, height: 0.08, depth: 2.42 }, scene);
+    rail.position.set(side * 0.55, 0.66, 0);
+    rail.parent = root;
+    rail.material = teamPrimary;
+    allMeshes.push(rail);
+    gunwale ??= rail;
+  }
 
-  const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.9, height: 0.05, depth: 2.4 }, scene);
+  const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.94, height: 0.05, depth: 2.34 }, scene);
   deck.position.set(0, 0.6, 0);
   deck.parent = root;
   deck.material = darkWood;
@@ -2025,26 +2065,73 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     allMeshes.push(post);
   }
 
-  const prow = MeshBuilder.CreateCylinder("longshipProw", { height: 0.48, diameterTop: 0, diameterBottom: 0.12, tessellation: 8 }, scene);
-  prow.position.set(0, 1.0, 1.48);
-  prow.rotation.x = -0.58;
-  prow.parent = root;
-  prow.material = darkWood;
-  allMeshes.push(prow);
-
-  const stern = MeshBuilder.CreateCylinder("longshipStern", { height: 0.36, diameterTop: 0, diameterBottom: 0.1, tessellation: 8 }, scene);
-  stern.position.set(0, 0.96, -1.46);
-  stern.rotation.x = 0.42;
-  stern.parent = root;
-  stern.material = darkWood;
-  allMeshes.push(stern);
+  /*
+   * [S] the carved dragon head over the bow and the curled stern (392; viking.longship.red.png: a tall brown head on the stem, a white eye on each side
+   * of it, an open jaw with a row of white teeth; the stern post curls back over the deck). A neck block off the stem, the skull box tipped forward, a
+   * tapered snout over a dropped lower jaw with four teeth, two bead eyes, two horns; three short segments bent back make the curl.
+   */
+  const boneWhite = makeMat(scene, new Color3(0.93, 0.92, 0.86));
+  const neck = MeshBuilder.CreateBox("longshipDragonNeck", { width: 0.22, height: 0.66, depth: 0.16 }, scene);
+  neck.position.set(0, 0.9, 1.3);
+  neck.rotation.x = -0.22;
+  neck.parent = root;
+  neck.material = darkWood;
+  allMeshes.push(neck);
+  const skull = MeshBuilder.CreateBox("longshipDragonHead", { width: 0.32, height: 0.28, depth: 0.36 }, scene);
+  skull.position.set(0, 1.22, 1.42);
+  skull.rotation.x = -0.12;
+  skull.parent = root;
+  skull.material = wood;
+  allMeshes.push(skull);
+  const snout = MeshBuilder.CreateCylinder("longshipDragonSnout", { height: 0.32, diameterBottom: 0.26, diameterTop: 0.1, tessellation: 4 }, scene);
+  snout.rotation.x = Math.PI / 2 - 0.12;
+  snout.position.set(0, 1.2, 1.66);
+  snout.parent = root;
+  snout.material = wood;
+  allMeshes.push(snout);
+  const jaw = MeshBuilder.CreateBox("longshipDragonJaw", { width: 0.2, height: 0.06, depth: 0.3 }, scene);
+  jaw.position.set(0, 1.06, 1.64);
+  jaw.rotation.x = 0.14;
+  jaw.parent = root;
+  jaw.material = darkWood;
+  allMeshes.push(jaw);
+  for (let i = 0; i < 4; i++) {
+    const tooth = MeshBuilder.CreateCylinder("longshipDragonTooth", { height: 0.07, diameterTop: 0, diameterBottom: 0.035, tessellation: 4 }, scene);
+    tooth.rotation.x = Math.PI;
+    tooth.position.set(-0.06 + i * 0.04, 1.09, 1.72 - (i % 2) * 0.05);
+    tooth.parent = root;
+    tooth.material = boneWhite;
+    allMeshes.push(tooth);
+  }
+  for (const side of [-1, 1]) {
+    const eye = MeshBuilder.CreateSphere("longshipDragonEye", { diameter: 0.1, segments: 6 }, scene);
+    eye.position.set(side * 0.16, 1.27, 1.5);
+    eye.parent = root;
+    eye.material = boneWhite;
+    allMeshes.push(eye);
+    const horn = MeshBuilder.CreateCylinder("longshipDragonHorn", { height: 0.16, diameterTop: 0, diameterBottom: 0.05, tessellation: 4 }, scene);
+    horn.position.set(side * 0.11, 1.4, 1.34);
+    horn.rotation.x = 0.5;
+    horn.rotation.z = -side * 0.25;
+    horn.parent = root;
+    horn.material = darkWood;
+    allMeshes.push(horn);
+  }
+  for (let i = 0; i < 3; i++) {
+    const curl = MeshBuilder.CreateCylinder("longshipSternCurl", { height: 0.26, diameter: 0.1, tessellation: 6 }, scene);
+    curl.position.set(0, 0.74 + i * 0.2, -1.34 - i * 0.08);
+    curl.rotation.x = -(0.45 + i * 0.42);
+    curl.parent = root;
+    curl.material = darkWood;
+    allMeshes.push(curl);
+  }
 
   const operator = addOperator(scene, root, allMeshes, 0, 0.76, -0.42, color);
 
   return wrapAsBody(
     scene,
     root,
-    hull,
+    gunwale!,
     allMeshes,
     operator.headMesh,
     makeBodyMetrics(operator.headTopY, 0.92, 0.56, 0.84),
