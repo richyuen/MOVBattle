@@ -1982,6 +1982,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   const wood = getMaterialFactory().get("wood", woodColor, { emissive: woodColor.scale(0.18) });
   const darkWood = getMaterialFactory().get("wood", darkColor, { emissive: darkColor.scale(0.12) });
   const shieldMat = makeMat(scene, brighten(color, 0.08));
+  const sailMat = makeMat(scene, new Color3(0.86, 0.82, 0.7));
 
   /*
    * [S] the clinker hull (392; viking.longship.red.png, viking.jpg: a brown lapstrake hull, pointed at the bow under a carved dragon head and curled at
@@ -2048,23 +2049,12 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   mast.material = darkWood;
   allMeshes.push(mast);
 
-  // [S] 393 the rig is a bare mast with its yard (viking.longship.jpg: no sail - the tall parts are the dragon prow, the stern post and the oars; critic
-  // 392: a flat opaque grey rectangular sail on a bare mast). The sail plane is gone; a yard crosses the mast near its top, its sheets hanging as two
-  // short ropes.
-  const yard = MeshBuilder.CreateCylinder("longshipYard", { height: 1.34, diameter: 0.07, tessellation: 8 }, scene);
-  yard.rotation.z = Math.PI / 2;
-  yard.position.set(0, 1.94, -0.05);
-  yard.parent = root;
-  yard.material = darkWood;
-  allMeshes.push(yard);
-  for (const side of [-1, 1]) {
-    const sheet = MeshBuilder.CreateCylinder("longshipSheet", { height: 0.92, diameter: 0.028, tessellation: 5 }, scene);
-    sheet.position.set(side * 0.6, 1.44, -0.05);
-    sheet.rotation.z = side * 0.16;
-    sheet.parent = root;
-    sheet.material = darkWood;
-    allMeshes.push(sheet);
-  }
+  const sail = MeshBuilder.CreatePlane("longshipSail", { width: 1.2, height: 1.0 }, scene);
+  sail.position.set(0, 1.22, 0.08);
+  sail.rotation.y = Math.PI;
+  sail.parent = root;
+  sail.material = sailMat;
+  allMeshes.push(sail);
 
   for (const zOff of [-1.32, 1.34]) {
     const post = MeshBuilder.CreateCylinder("longshipPost", { height: 0.7, diameter: 0.1, tessellation: 8 }, scene);
