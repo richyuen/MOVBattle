@@ -3072,6 +3072,46 @@ function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   shaft.position.y = (0.5 - P.grip) * L;
   return shaft;
 }
+/*
+ * [S] the Brawler's bearded axe (392; viking.brawler.red.png, card Main Hand Brawler Axe; critic 391: a black rectangular hammer block on a haft, only the
+ * haft in frame). A dark haft .long of his height with the butt .butt of it below the fist and the head at the top, a broad grey blade with a bearded
+ * lower horn: a flat plate in the x-y plane (edge toward +x) whose cutting edge bows out from the top horn to the beard .beard below the haft's line, and a
+ * short poll behind the haft. Steel is cloth with a small emissive: "metal" reads near black under the swiftshader light.
+ */
+const BEARDED_AXE = {
+  long: 0.8, butt: 0.12, thick: 0.028, head: 0.34, wide: 0.19, tall: 0.29, beard: 0.17, poll: 0.05, plate: 0.022, glow: 0.12,
+  steel: new Color3(0.46, 0.47, 0.52), wood: new Color3(0.3, 0.19, 0.12),
+};
+function buildBeardedAxe(scene: Scene, s: number): Mesh {
+  const A = BEARDED_AXE;
+  const H = A.long * s;
+  const handle = MeshBuilder.CreateCylinder("handle", { height: H, diameter: A.thick * s, tessellation: 7 }, scene);
+  handle.material = mat(scene, A.wood, 0.1, "cloth");
+  handle.convertToFlatShadedMesh();
+  const fistY = -(A.long * 0.5 - A.butt) * s;
+  addGripWraps(scene, handle, [fistY - 0.05 * s, fistY, fistY + 0.05 * s], 0.032 * s);
+  const steel = mat(scene, A.steel, A.glow, "cloth");
+  // the blade: an eye at the haft, a bowed cutting edge out front, the beard hanging under it
+  const w = A.wide * s, top = 0.12 * s, beard = -A.beard * s;
+  const outline: number[][] = [[0, top], [w * 0.3, top * 1.06], [w * 0.62, top * 0.9], [w * 0.86, top * 0.5], [w, -0.02 * s]];
+  for (let k = 1; k <= 4; k++) {
+    const t = k / 4;
+    outline.push([w * (0.98 - 0.36 * t * t), -0.02 * s - (Math.abs(beard) - 0.02 * s) * t]);
+  }
+  outline.push([w * 0.34, beard * 1.04], [w * 0.16, beard * 0.72], [0.02 * s, -0.04 * s], [0, 0.03 * s]);
+  const blade = flatPlate(scene, "axehead", outline, A.plate * s);
+  blade.position.y = A.head * s;
+  blade.material = steel;
+  blade.parent = handle;
+  // the poll: a short grey block behind the eye
+  const poll = MeshBuilder.CreateBox("axePoll", { width: A.poll * s, height: 0.075 * s, depth: A.plate * 1.6 * s }, scene);
+  poll.position.set(-A.poll * s * 0.55, A.head * s, 0);
+  poll.material = steel;
+  poll.convertToFlatShadedMesh();
+  poll.parent = handle;
+  handle.position.y = (A.long * 0.5 - A.butt) * s;
+  return handle;
+}
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -3421,6 +3461,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "axe": {
+      if (variant === "bearded_axe") return buildBeardedAxe(scene, s);
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.03 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
       addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.035 * s);

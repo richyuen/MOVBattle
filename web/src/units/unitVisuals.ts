@@ -167,7 +167,7 @@ export interface UnitVisualConfig {
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
-  weaponVariant?: "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword";
+  weaponVariant?: "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe";
 }
 
 function vis(
@@ -400,7 +400,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "viking.brawler": vis(
     { scale: 1.1, bulk: 1.2 }, "axe", "viking_helmet", "round", "none", "#A0522D",
     undefined,
-    { materialPreset: "viking_fur" },
+    // [S] 392 a bearded grey crescent on a longer haft, the head at shoulder height (propBuilder BEARDED_AXE)
+    { materialPreset: "viking_fur", weaponVariant: "bearded_axe" },
   ),
   "viking.berserker": vis(
     { scale: 1.15, bulk: 1.2, armLength: 1.1 }, "axe", "horned_helmet", "none", "none", "#8B0000", "axe",
