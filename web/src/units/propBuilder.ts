@@ -3084,6 +3084,12 @@ const BEARDED_AXE = {
   long: 0.8, butt: 0.2, thick: 0.028, head: 0.28, wide: 0.22, tall: 0.29, beard: 0.17, poll: 0.05, plate: 0.022, glow: 0.12,
   steel: new Color3(0.46, 0.47, 0.52), wood: new Color3(0.3, 0.19, 0.12),
 };
+/*
+ * [S] the Berserker's pair of axes (393; viking.berserker.red.png: two broad grey crescent blades on long hafts, the heads above the shoulders, one in
+ * each fist). The Brawler's bearded cut, .scale of it: at full size the blade was as long as his trunk and, swung overhead in the leap, its head left the
+ * release frame; .78 keeps both heads in shot and the pair read as the reference's hand axes on long hafts.
+ */
+const BERSERKER_AXE = { scale: 0.78 };
 function buildBeardedAxe(scene: Scene, s: number): Mesh {
   const A = BEARDED_AXE;
   const H = A.long * s;
@@ -3518,6 +3524,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "axe": {
       if (variant === "bearded_axe") return buildBeardedAxe(scene, s);
+      if (variant === "berserker_axe") return buildBeardedAxe(scene, s * BERSERKER_AXE.scale);
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.03 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
       addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.035 * s);
