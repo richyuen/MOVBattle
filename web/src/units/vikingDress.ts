@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Vector3 } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -82,4 +82,94 @@ export function headbutterCap(scene: Scene, body: ArticulatedBody, teamColor: Co
   }, scene), leather);
   foot.position.set(0, crown + e.x * C.stud * 0.2, e.z * C.bandProud * 0.75);
   return out;
+}
+
+/** The head's box in the torso joint's frame: its lowest point, its middle's height and depth, its width, height and depth. */
+function headInTorso(body: ArticulatedBody): { chin: number; midY: number; midZ: number; wide: number; tall: number; deep: number } {
+  for (let n: Node | null = body.headMesh; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+  body.torso.computeWorldMatrix(true);
+  const box = body.headMesh.getBoundingInfo().boundingBox;
+  const toTorso = body.torso.getWorldMatrix().clone().invert();
+  const pts = box.vectorsWorld.map((v) => Vector3.TransformCoordinates(v, toTorso));
+  const ys = pts.map((p) => p.y), zs = pts.map((p) => p.z), xs = pts.map((p) => p.x);
+  return {
+    chin: Math.min(...ys),
+    midY: (Math.min(...ys) + Math.max(...ys)) / 2,
+    midZ: (Math.min(...zs) + Math.max(...zs)) / 2,
+    wide: Math.max(...xs) - Math.min(...xs),
+    tall: Math.max(...ys) - Math.min(...ys),
+    deep: Math.max(...zs) - Math.min(...zs),
+  };
+}
+
+/*
+ * [S] the Headbutter's two braids (393; viking.headbutter.red.png, viking.headbutter.png, card "long, braided hair"; critic 392: none, a bare blue head).
+ * Two thick tan plaits hang from under the cap's ear flaps beside each cheek, down the front of the shoulders and over the chest, ending about a third
+ * of the way to the belt in a dark ring tie and a short tuft. Hung from the torso, not the head, so they lie on the chest whatever the neck does. In the
+ * head's own size (head heights H, head widths W), torso frame:
+ *   root HEADBUTTER_BRAID.apart W out from the middle, .rootUp H above the chin (under the flap), .rootAhead of the head's depth ahead of its middle;
+ *   foot .footOut W out, .footDrop H below the chin, laid .standOff W ahead of the chest's front; the path bows forward .bow W over the shoulder line;
+ *   .plaits lobes .thick W across on a hair core .core of that, overlapping .overlap of a step, tipped alternately; a tie .band H tall and .bandWide
+ *   of the braid round, then a tuft .tuft H long. Tan hair self-lit .glow.
+ */
+const HEADBUTTER_BRAID = {
+  apart: 0.52, rootUp: 0.1, rootAhead: 0.3, footOut: 0.64, footDrop: 1.02, standOff: 0.16, bow: 0.16,
+  plaits: 5, thick: 0.34, core: 0.6, overlap: 1.55, band: 0.13, bandWide: 1.35, tuft: 0.22, glow: 0.22,
+};
+const HEADBUTTER_HAIR = new Color3(0.6, 0.38, 0.2);
+const HEADBUTTER_TIE = new Color3(0.34, 0.1, 0.08);
+
+/** The Headbutter's two tan braids from under the ear flaps down onto the chest, a dark tie and tuft at each end (spec at HEADBUTTER_BRAID). */
+export function headbutterBraids(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = HEADBUTTER_BRAID;
+  const mf = getMaterialFactory();
+  const hair = mf.get("cloth", HEADBUTTER_HAIR, { emissiveIntensity: B.glow });
+  const tieMat = mf.get("cloth", HEADBUTTER_TIE, { emissiveIntensity: 0.1 });
+  const head = headInTorso(body);
+  const H = head.tall, W = head.wide;
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const front = chest.position.z + ext.z * chest.scaling.z;
+  const thick = B.thick * W;
+  const added: Mesh[] = [];
+  const put = (m: Mesh, material: typeof hair): Mesh => {
+    m.material = material;
+    m.parent = body.torso;
+    added.push(m);
+    return m;
+  };
+  for (const side of [-1, 1]) {
+    const root = new Vector3(side * B.apart * W, head.chin + B.rootUp * H, head.midZ + head.deep * B.rootAhead);
+    const foot = new Vector3(side * B.footOut * W, head.chin - B.footDrop * H, front + B.standOff * W + thick * 0.5);
+    // a quadratic from the root to the foot, bowed forward over the shoulder line so it lies on the collar and chest, not through them
+    const mid = Vector3.Lerp(root, foot, 0.5);
+    mid.z = Math.max(mid.z, foot.z) + B.bow * W;
+    const along = (t: number): Vector3 => root.scale((1 - t) ** 2).add(mid.scale(2 * t * (1 - t))).add(foot.scale(t * t));
+    const tangent = (t: number): Vector3 => mid.subtract(root).scale(2 * (1 - t)).add(foot.subtract(mid).scale(2 * t)).normalize();
+    const lean = (t: number): number => Math.atan2(-tangent(t).z, -tangent(t).y);
+    const path: Vector3[] = [];
+    for (let k = 0; k <= 10; k++) path.push(along(k / 10));
+    put(MeshBuilder.CreateTube("headbutterBraidCore", { path, radius: thick * 0.5 * B.core, tessellation: 6 }, scene), hair);
+    const step = 1 / B.plaits;
+    const len = Vector3.Distance(root, foot) * 1.05;
+    for (let k = 0; k < B.plaits; k++) {
+      const t = (k + 0.5) * step * 0.92;
+      const lobe = put(MeshBuilder.CreateIcoSphere("headbutterBraid", {
+        radiusX: thick * 0.5, radiusY: len * step * 0.5 * B.overlap, radiusZ: thick * 0.42, subdivisions: 1, flat: true,
+      }, scene), hair);
+      lobe.position.copyFrom(along(t));
+      lobe.position.x += (k % 2 ? 1 : -1) * thick * 0.08;
+      lobe.rotation.set(lean(t), 0, (k % 2 ? 1 : -1) * 0.35);
+    }
+    const tie = put(MeshBuilder.CreateCylinder("headbutterBraidTie", { height: B.band * H, diameter: thick * B.bandWide, tessellation: 7 }, scene), tieMat);
+    tie.position.copyFrom(foot);
+    tie.rotation.x = lean(1);
+    const tuft = put(MeshBuilder.CreateCylinder("headbutterBraidTuft", {
+      height: B.tuft * H, diameterTop: thick * 0.7, diameterBottom: thick * 0.25, tessellation: 5,
+    }, scene), hair);
+    tuft.convertToFlatShadedMesh();
+    tuft.position.copyFrom(foot.add(tangent(1).scale((B.band + B.tuft) * H * 0.5)));
+    tuft.rotation.x = lean(1);
+  }
+  return added;
 }
