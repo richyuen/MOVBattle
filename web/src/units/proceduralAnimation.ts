@@ -1962,6 +1962,22 @@ export class ProceduralAnimator {
         joint.rotation.z += (z - joint.rotation.z) * a;
       }
       this._flailInAir(a);
+    } else if (this._air > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+      // [S] a live man thrown by a leap (392; viking.berserker.red.png: caught mid-leap, knees kicked up under him, an axe wide in each hand): not
+      // the flung sprawl above (that one is for limp bodies) but his own air shape, both thighs drawn up, the knees folded and split, the arms flung
+      // out from the sides and a little back, so the walk's pose does not glide through the arc.
+      const a = this._air;
+      const b = this._body;
+      b.leftHip.rotation.x += (-0.8 - b.leftHip.rotation.x) * a;
+      b.rightHip.rotation.x += (-0.35 - b.rightHip.rotation.x) * a;
+      b.leftKnee.rotation.x += (1.15 - b.leftKnee.rotation.x) * a;
+      b.rightKnee.rotation.x += (0.7 - b.rightKnee.rotation.x) * a;
+      b.leftShoulder.rotation.x += (-0.35 - b.leftShoulder.rotation.x) * a;
+      b.rightShoulder.rotation.x += (-0.35 - b.rightShoulder.rotation.x) * a;
+      b.leftShoulder.rotation.z += (-1.0 - b.leftShoulder.rotation.z) * a;
+      b.rightShoulder.rotation.z += (1.0 - b.rightShoulder.rotation.z) * a;
+      b.leftElbow.rotation.x += (-0.45 - b.leftElbow.rotation.x) * a;
+      b.rightElbow.rotation.x += (-0.45 - b.rightElbow.rotation.x) * a;
     }
     // Waist break (additive): the legs carry the body's lean while the torso bends part-way back against it and
     // the head hangs the way the body is going, so a pressed, running or toppling body is an S, not one plank.

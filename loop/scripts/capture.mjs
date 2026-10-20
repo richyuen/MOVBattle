@@ -180,7 +180,7 @@ const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ab
 const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // A unit whose card ability comes after its first logged special (the minotaur's charge at 17 ms): detection runs on until this kind is seen
 // and its _ability pair is taken on it (evidence 387)
-const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land" };
+const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap" };
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress

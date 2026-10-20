@@ -275,6 +275,13 @@ const MINOTAUR_CHARGE = { from: 1.5, reach: 14, speed: 2.3, seconds: 2.2, overru
  * comes back up .recover s later. The first is ready .cooldown s into the battle. Logged "headbutt" at the blow.
  */
 const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahead: 0.9, radius: 4.5, damage: 30, fling: 9, lift: 7, edge: 0.35 };
+/*
+ * [S] Super Jump (392; viking.berserker.jpg, card Weapons "Super Jump: Ability - Melee; leaps towards the enemy"; viking.berserker.red.png: caught in
+ * the air, legs kicked, an axe wide in each hand). The berserker's jump_charge used to teleport him to the landing spot, so every shot caught him
+ * standing; it is a thrown arc now (RuntimeUnit.leap, the halfling's Jump): .rise m/s up and the flat speed that carries him the leap's distance
+ * under gravity (22) and the air drag (1.5/s), an apex of about 1.4 m. Logged "leap" at the take-off.
+ */
+const JUMP_CHARGE = { rise: 8 };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -1150,15 +1157,19 @@ export class SimulationSystem {
     }
 
     if ((hasAbility(unit, "jump_charge") || hasAbility(unit, "leap_attack")) && distance > engageDistance && distance < engageDistance * 2.5 && unit.canAttack(now)) {
-      const dir = enemy.position.subtract(unit.position).normalize();
+      // [S] Super Jump (392; viking.berserker.jpg, card "Super Jump: leaps towards the enemy", viking.berserker.red.png: mid-air with the legs
+      // kicked and both axes out). The leap used to be a teleport to the landing spot, so no shot ever caught him off the ground; it is thrown
+      // now by RuntimeUnit.leap (the halfling's arc: rise .rise m/s up, flat speed for `leapDist` under gravity and the air drag), the air pose
+      // taking the legs and the arms over for the flight. The leap is logged at its take-off as "leap", the event the capture shoots.
+      const dir = new Vector3(enemy.position.x - unit.position.x, 0, enemy.position.z - unit.position.z);
+      if (dir.lengthSquared() > 1e-6) dir.normalize();
       const leapDist = Math.min(distance - engageDistance * 0.4, 4.5);
-      const newPos = unit.position.add(dir.scale(leapDist));
-      newPos.y = 0;
-      unit.teleportTo(newPos);
-      this._clearPathState(unit);
-      unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
-      this._logAbility(unit, "leap", now);
-      return;
+      if (unit.leap(dir, leapDist, JUMP_CHARGE.rise)) {
+        this._clearPathState(unit);
+        unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
+        this._logAbility(unit, "leap", now);
+        return;
+      }
     }
 
     // Banjo Walk: in close enough to be noticed, then off round him in circles, playing (BANJO_WALK)
