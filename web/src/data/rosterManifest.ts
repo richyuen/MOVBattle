@@ -262,13 +262,13 @@ const ancient = makeFaction(FactionId.Ancient, "ancient", [
 ]);
 
 const viking = makeFaction(FactionId.Viking, "viking", [
-  ["headbutter", "Headbutter", 90, "charge_melee", { abilities: ["charge_impact"], hatHint: "viking_helmet" }],
-  ["ice_archer", "Ice Archer", 160, "archer", { weaponHint: "bow", abilities: ["freeze"] }],
-  ["brawler", "Brawler", 140, "shield_melee", { weaponHint: "axe", shieldHint: "round", hatHint: "viking_helmet" }],
-  ["berserker", "Berserker", 220, "charge_melee", { abilities: ["jump_charge", "spin_move"], weaponHint: "axe", hatHint: "horned_helmet" }],
-  ["valkyrie", "Valkyrie", 420, "flying_melee", { abilities: ["flying_hover"], weaponHint: "sword", shieldHint: "round", specialHint: "wings" }],
-  ["longship", "Longship", 500, "charge_melee", { size: "large", weaponHint: "axe", specialHint: "longship" }],
-  ["jarl", "Jarl", 1200, "boss_melee", { weaponHint: "greatsword", hatHint: "horned_helmet" }],
+  ["headbutter", "Headbutter", 90, "charge_melee", { abilities: ["charge_impact"], hatHint: "viking_helmet", healthMultiplier: 0.41, damageMultiplier: 0.1, cooldownMultiplier: 0.42 }],
+  ["ice_archer", "Ice Archer", 160, "archer", { weaponHint: "bow", abilities: ["freeze"], healthMultiplier: 0.45, cooldownMultiplier: 1.36 }],
+  ["brawler", "Brawler", 220, "shield_melee", { weaponHint: "axe", shieldHint: "round", hatHint: "viking_helmet", healthMultiplier: 0.75, damageMultiplier: 0.68, cooldownMultiplier: 0.46 }],
+  ["berserker", "Berserker", 250, "charge_melee", { abilities: ["jump_charge", "spin_move"], weaponHint: "axe", hatHint: "horned_helmet", healthMultiplier: 0.42, damageMultiplier: 0.43, cooldownMultiplier: 0.42 }],
+  ["valkyrie", "Valkyrie", 500, "flying_melee", { abilities: ["flying_hover"], weaponHint: "sword", shieldHint: "round", specialHint: "wings", healthMultiplier: 0.36, damageMultiplier: 0.67, cooldownMultiplier: 0.28 }],
+  ["longship", "Longship", 1000, "charge_melee", { size: "large", weaponHint: "axe", specialHint: "longship", healthMultiplier: 0.99 }],
+  ["jarl", "Jarl", 1500, "boss_melee", { weaponHint: "greatsword", hatHint: "horned_helmet", healthMultiplier: 0.49, damageMultiplier: 0.58, cooldownMultiplier: 0.54 }],
 ]);
 
 const dynasty = makeFaction(FactionId.Dynasty, "dynasty", [
