@@ -53,6 +53,8 @@ web/                         # Web app root
 ## Default action: one loop iteration
 When the first message of an empty conversation is just `continue` (or `go`, `next`, or blank), it means: run one improvement-loop iteration. Read `loop/ITERATE.md` and follow it exactly; the current batch is the `Batch:` field of `loop/STATE.md`. This is how `/autoloop on` drives the loop with its default prompt. Mid-conversation, `continue` keeps its ordinary meaning.
 
+All loop critic subagents — the batch AUDIT, the gap review, and the CONFIRM — run on `anthropic/claude-opus-5-5` (`model: "anthropic/claude-opus-5-5"` on the Agent call), unless the user says otherwise. This survives autoloop's fresh-session clears because it lives in this file, which every session loads.
+
 ## Commands
 - **Dev server**: `cd web && npm run dev` (runs on localhost:5173)
 - **Type check**: `cd web && npx tsc --noEmit`
