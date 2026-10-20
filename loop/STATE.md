@@ -23,7 +23,7 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-393 (BASE 9ef919c): [S] headbutter braids 52066c2 approved (struck a.2) | [S] brawler shield b76e2fe approved (b PASS) | [S] berserker axe heads 6cfe8b5+671a758 approved (struck b.1) | [S] ice_archer icicle fringe 1e0549d approved (b PASS) | [S] longship rig fe36dfc+9980e94 rejected (reverted 62d09d2/c7c8c0a) | [S] jarl bear pelt b7b4463+1df50c9 approved (no strike) | [S] valkyrie flight 455eece approved (c PASS) - 6/7
+394 (BASE 2b5c824): [S] longship rig (a.2, mast/sail out, three upright oars) | [S] berserker idle grip (b.2, pair stood at the sides) | [S] brawler helmet (a.1, full-face norse helm) | [S] valkyrie wings (a.1, layered feather wings) | [S] jarl bear pelt (a.1 retry, rounded skull) | [S] headbutter headbutt (c.1, ram logged headbutt)
 
 ## Last verdicts (critic header lines verbatim)
 - GAP: [S] viking.headbutter (52066c2) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)

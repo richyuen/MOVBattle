@@ -1982,7 +1982,6 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   const wood = getMaterialFactory().get("wood", woodColor, { emissive: woodColor.scale(0.18) });
   const darkWood = getMaterialFactory().get("wood", darkColor, { emissive: darkColor.scale(0.12) });
   const shieldMat = makeMat(scene, brighten(color, 0.08));
-  const sailMat = makeMat(scene, new Color3(0.86, 0.82, 0.7));
 
   /*
    * [S] the clinker hull (392; viking.longship.red.png, viking.jpg: a brown lapstrake hull, pointed at the bow under a carved dragon head and curled at
@@ -2043,18 +2042,34 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     }
   }
 
-  const mast = MeshBuilder.CreateCylinder("longshipMast", { height: 1.65, diameter: 0.08, tessellation: 10 }, scene);
-  mast.position.set(0, 1.28, -0.05);
-  mast.parent = root;
-  mast.material = darkWood;
-  allMeshes.push(mast);
-
-  const sail = MeshBuilder.CreatePlane("longshipSail", { width: 1.2, height: 1.0 }, scene);
-  sail.position.set(0, 1.22, 0.08);
-  sail.rotation.y = Math.PI;
-  sail.parent = root;
-  sail.material = sailMat;
-  allMeshes.push(sail);
+  /*
+   * [S] the oars, not a rig (394; viking.longship.jpg, card Appearance "3 Long-Boaters holding oars"; critic 393: no mast or yard at all — the deck's
+   * verticals are three upright black flat-bladed oars, plus the dragon prow and the stern post). The mast, yard and sail are gone: three long dark oars
+   * stand out of the deck amidships, each a thin shaft with a flat pointed blade standing up over the hull, one forward, one aft and one between, leaning
+   * a little fore and aft of each other so the three read apart. .long of the hull's height, blade .blade of it, .lean rad off upright.
+   */
+  const OARS = { long: 1.75, thick: 0.045, blade: 0.42, bladeWide: 0.17, flat: 0.18, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
+  const oarMat = makeMat(scene, new Color3(0.1, 0.09, 0.09));
+  for (let i = 0; i < 3; i++) {
+    const oar = new TransformNode("longshipOar", scene);
+    oar.parent = root;
+    oar.position.set(OARS.across[i], 0.5, OARS.spread[i]);
+    oar.rotation.x = OARS.lean[i];
+    oar.rotation.z = OARS.across[i] * 0.5;
+    const shaft = MeshBuilder.CreateCylinder("longshipOarShaft", { height: OARS.long, diameter: OARS.thick, tessellation: 6 }, scene);
+    shaft.position.y = OARS.long * 0.5 - 0.28;
+    shaft.parent = oar;
+    shaft.material = oarMat;
+    allMeshes.push(shaft);
+    const blade = MeshBuilder.CreateCylinder("longshipOarBlade", { height: OARS.blade, diameterBottom: OARS.bladeWide, diameterTop: 0, tessellation: 4 }, scene);
+    blade.rotation.y = Math.PI / 4;
+    blade.bakeCurrentTransformIntoVertices();
+    blade.scaling.z = OARS.flat;
+    blade.position.y = OARS.long - 0.28 + OARS.blade * 0.5 - 0.02;
+    blade.parent = oar;
+    blade.material = oarMat;
+    allMeshes.push(blade);
+  }
 
   for (const zOff of [-1.32, 1.34]) {
     const post = MeshBuilder.CreateCylinder("longshipPost", { height: 0.7, diameter: 0.1, tessellation: 8 }, scene);
