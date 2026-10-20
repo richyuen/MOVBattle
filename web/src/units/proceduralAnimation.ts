@@ -4526,9 +4526,25 @@ export class ProceduralAnimator {
 
   // The off-hand stone axe, looked up on first use (props go on after the animator is made), and its rest in the fist
   private _offAxeProp: { node: TransformNode; rest: Quaternion; grip: Vector3 } | null | undefined = undefined;
+  /*
+   * [S] the Berserker's pair of axes stood up at his sides (394; viking.berserker.red.png, card "two axes": both fists at his hips, both hafts upright,
+   * the blades out beside his shoulders; critic 393: the right haft ran diagonally behind his back so its blade hid behind the helmet). A bearded axe in
+   * each fist (a handle with the BEARDED_AXE's carry mark, in both hands) is stood in the world like the chieftain's off-hand stone axe rather than turned
+   * in the fist by the arm's carry attitude: one upright at each side, mirrored about his midline, over every living state. A lone bearded axe with a board
+   * in the off hand (the Brawler's) keeps BEARDED_AXE_CARRY.
+   */
+  private _axePair: boolean | undefined = undefined;
+  private _standsPairAxes(): boolean {
+    if (this._axePair === undefined) {
+      const bearded = (hand: TransformNode): boolean => hand.getChildren().some((n) => n.name === "handle" && n.getChildren().some((c) => c.name === "beardedAxeCarry"));
+      this._axePair = bearded(this._body.leftHand) && bearded(this._body.rightHand);
+    }
+    return this._axePair;
+  }
   private _offAxe(): { node: TransformNode; rest: Quaternion; grip: Vector3 } | null {
     if (this._offAxeProp === undefined) {
-      const node = this._body.leftHand.getChildren().find((n): n is TransformNode => n.name === "handle" && n.getChildren().some((c) => c.name === "stoneAxeHead"));
+      const node = this._body.leftHand.getChildren().find((n): n is TransformNode => n.name === "handle"
+        && n.getChildren().some((c) => c.name === "stoneAxeHead" || (this._standsPairAxes() && c.name === "beardedAxeCarry")));
       this._offAxeProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
     }
     return this._offAxeProp;
@@ -4537,7 +4553,9 @@ export class ProceduralAnimator {
   private _standOffhandAxe(): void {
     const r = this._offAxe();
     if (!r) return;
-    const w = this._state === AnimState.Dead || this.walkStyle === "quadruped" ? 0 : 1 - Math.min(1, this._limp);
+    // A paired bearded axe stands only while he is not attacking, with the main one (see _standsPairAxes), so the pair swings together
+    const pair = this._standsPairAxes() ? this._mainAxeUp : 1;
+    const w = this._state === AnimState.Dead || this.walkStyle === "quadruped" ? 0 : (1 - Math.min(1, this._limp)) * pair;
     if (w <= 0.001) {
       if (r.node.rotationQuaternion) {
         r.node.rotationQuaternion = null;
@@ -4554,7 +4572,8 @@ export class ProceduralAnimator {
   /** The main-hand stone axe stood up at his main side, the main arm mirrored off the off arm, while he is not attacking (see MAIN_AXE). */
   private _standMainAxe(dt: number): void {
     if (this._mainAxeProp === undefined) {
-      const node = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "handle" && n.getChildren().some((c) => c.name === "stoneAxeHead"));
+      const node = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "handle"
+        && n.getChildren().some((c) => c.name === "stoneAxeHead" || (this._standsPairAxes() && c.name === "beardedAxeCarry")));
       this._mainAxeProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: node.position.clone() } : null;
     }
     const r = this._mainAxeProp;
