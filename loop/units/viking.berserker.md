@@ -9,13 +9,18 @@ a FAIL (0 since 391)
 b FAIL (0 since 391)
  1. axe heads in _release/_struck — TABS: two broad steel-grey crescent axe blades on long hafts, heads above the shoulders (ref: .jpg, .red.png, card Berserker Axe x2); ours: two black rectangular hammer heads on hafts
  2. idle grip in _idle — TABS: both axes held upright at the sides, heads clear of the hands (ref: .red.png); ours: both hafts horizontal at the hips, the heads at/off the frame edges
-c FAIL (0 since 391)
- 1. Super Jump in _ability/_ability_after — TABS: leaps a long distance towards the enemy, legs kicked, axes wide (ref: .jpg, card Super Jump); ours: the pair is shot on the spawn-time spin at 17 ms on empty ground; the leap at tick 75 appears in no shot and `ability` logs "spin"
+c PASS (392)
 d PASS (cost 250, hp 1.55x, dmg 1.07x, cd 0.76x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c Super Jump — blocker 1: the ability log takes the spawn-time "spin" (tick 1), so the pair is shot on empty ground; log the leap at tick 75 as the ability and shoot _ability/_ability_after on the apex — ref: .jpg — ours: unit_viking.berserker_ability.png
-## Attempts (iter | gap | criterion | verdict)
+1. [S] b axe heads - blocker 1: BEARDED_AXE heads on both hafts, wider grey crescents above the fists - ref: .red.png - ours: unit_viking.berserker_release.png
+2. [S] b idle grip - blocker 2: both axes stood upright at the sides, heads clear of the hands - ref: .red.png - ours: unit_viking.berserker_idle.png
+3. [S] a beard - blocker 1: a big dark beard and moustache with a tied braid - ref: .red.png - ours: unit_viking.berserker_idle.png
+4. [S] a fur belt - blocker 2: a thick cream fur belt, big navy round Landfall buckle - ref: .jpg - ours: unit_viking.berserker_idle.png
+5. [S] a armpit hair - blocker 3: dark tufts under both arms - ref: card - ours: unit_viking.berserker_idle.png
+6. [S] a fur cuffs - blocker 4: cream fur calf cuffs over brown boots - ref: .red.png - ours: unit_viking.berserker_flight.png
+## Attempts (iter | gap | criterion | verdict: approved, rejected, rejected-kept, dropped)
+392 | Super Jump: a real leap arc (rise 8) logged "leap", live-air pose [S] (af3f259 +bd48ae1) | c | approved (c PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Both abilities (spin_move, jump_charge) fire; the capture picks the first logged event, the spin at tick 1.
-- Axe props are the generic black heads, shared with the brawler's axe.
+- 392 c: `ability leap at 1250 ms`; _ability is the take-off and _ability_after catches him airborne (shadow separate).
+- bd48ae1 gates the leap pose on jump_charge (the runtime marks its own leaps), so hop-backs and the halfling jump keep their poses.

@@ -14,6 +14,8 @@ drop a lesson once it is a comment at the code it describes.
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it: timber, iron and leather need their own materials.
 - A front light washes a flat lower block: a lighter layer next to a darker one needs more than x.97 vs x.85 in team colour to read apart.
 - ExtrudeShape with closeShape and cap CAP_ALL builds a closed thin slab from a 2D polygon: use it for flat emblems (Zeus's bolt) where a double-sided disc/ribbon would lose a face to culling or SSAO.
+- A vehicle's body material IS the team colour (unitFactory tints `bodyMaterial`): a timber hull needs its own material, and a team-trim mesh goes in as the body source (392 longship).
+- Timber under a deck's overhang reads black even at .62/.42/.25: give it a small emissive (392).
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
@@ -24,6 +26,8 @@ drop a lesson once it is a comment at the code it describes.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle look-around can flip the idle camera to the other side between builds (zeus 391): the eye-flip follows the face at that idle phase, which shifts with the scene's readiness, so a one-sided chest ornament must read from both sides or the camera must be pinned.
 - Every capture run clears iter-N including stats.json: rerun `stats.mjs` for the units named in the CONFIRM/critic prompt after the final capture.
+- A unit that logs a spawn-time mechanic first (spins, swoops at tick 1) needs its own ABILITY_PREF entry, or the ability pair is shot on the spawn event (392 berserker).
+- The critic judges the named shot: an element hidden behind another mesh (the brawler's axe head behind the shield) is not there. Check the named shot, not just a later one (392).
 
 ## Rig and dress
 - The generic tunicSkirt covers waist gear: exclude the unit in unitFactory's skirt condition.
@@ -33,3 +37,5 @@ drop a lesson once it is a comment at the code it describes.
 - Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
 - An engine's projectile can be a copy of a named node on the build (LOADED_BOLTS + heldProp/_buildHeldMissile): the flying shape then matches the loaded one for free.
 - A hood or cap over the block head needs a superellipsoid profile (exponent about 3, 1.2 of the head) to clear the chamfered corners and the top ring.
+- A pose keyed off `_air` reaches every airborne humanoid (hop-backs, the halfling's jump): gate it on a runtime flag set by the one mechanic it belongs to (392 leap pose).
+- A hook on a shared ability name (`flying_hover`) hits every unit that lists it, including done units outside the batch (balloon_archer): gate on the unit's own kind (392 valkyrie).

@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-387 | live snake on landing: slithers in an S, lunges, 2 bites / 30 s (c513c8f) | ancient.snake_archer.c | approved
-387 | Big Headbutt: stop, head down, 4.5 m burst flings men, 5 s cd (72be3fb +720dffe) | ancient.minotaur.c | approved
-387 | beard: jaw + bib masses under 6x7 flat zig-zag slabs (de591d4) | ancient.zeus.a | approved
-387 | crewman crouched beside the trough, arms up, iron helmet (3b71139, reverted) | ancient.ballista.a | rejected
-387 | collar fold: shoulder bulk, two chest drape folds, gold brooch (35cf884) | ancient.sarissa.a | approved
-387 | stance: square on straight wide legs, arms hung (fb699af) | farmer.halfling.a | approved
-387 | Thrower perched on the rear quarter on a hay tuft, knees outside the boards (51b7c67) | farmer.wheelbarrow.a | approved
 388 | ground snake: own 2 m thin banded build in a travelling S, head on a neck (3afbc34) | ancient.snake_archer.c | approved
 388 | toga fill to the belt, bigger unlit bolt, no cape, unlit white, no solar fx (cdf9011 +4 follow-ups) | ancient.zeus.a | approved
 388 | sash foot raised to the right flank + side wrap, off the girdle (8b1943a, reverted 55b56d1) | ancient.minotaur.a | rejected
@@ -44,6 +37,13 @@ for 25 iterations.
 391 | foot fur rooted on the toe top face, spread over the instep (bef7e5f) | farmer.halfling.a | approved
 391 | off hand a second Valkyrie sword, shield off (54ae174) | viking.valkyrie.b | approved
 391 | [R] toga trim: three waist bands + flat gold bolt + white skirt (e30be40, reverted 86c09ff) | ancient.zeus.a | rejected
+392 | spiked team cap: dome, studded brow band, ear flaps, one tall spike (fb91bba) | viking.headbutter.a | approved
+392 | ice bow: body-height pale-ice limbs, snowball nock (dd3caf1) | viking.ice_archer.b | approved
+392 | bearded axe: dark haft, grey crescent, poll; up beside the board in idle (8bcbb27 +8289d53) | viking.brawler.b | approved
+392 | Jarl poleaxe: long haft, dark crescent, bronze collar, two fists (0b6bed2 +92c5442) | viking.jarl.b | approved
+392 | Super Jump: throw arc logged "leap" + live-air pose (af3f259 +bd48ae1) | viking.berserker.c | approved
+392 | flight: hover .34 H + swoop before the strike (ee733ae, reverted cd88c7e) | viking.valkyrie.c | rejected
+392 | clinker hull: keel, 3 lapstrakes a side, stems, dragon head, curled stern (b90ffb3) | viking.longship.a | approved
 
 ## Spent (never retry as [P])
 
@@ -79,3 +79,9 @@ vehicleBuilder.ts:BALLISTA_FRAME (top, beam) + BALLISTA_STOCK y | 1.7, .12; 1.0 
 simulationSystem.ts:LOADED_BOLTS (ballista: ballistaLoadedBolt flies, hidden cooldown x .5) | 1 entry | 390 | approved | projectile "bolt" rod .4 x .04
 proceduralAnimation.ts:SNAKE_UPRIGHT (yaw, stagger, give, lean, tilt, raise, out, elbow, tip, left) | .12,.06,.02,.04,.03,-.75,-.22,-1.35 | 390 | approved | bowman ready: yaw .6-.95, stagger .4-.6
 ancientDress.ts:SNAKE_WRAP (tuck, r, narrowFrom, chin, cordAt, thick, knot, loop, end) | .12,1.19,-.75,.72,-.36,.09,.2,.22,.22 | 390 | approved | 10-sided wrap cylinder 1.1, taper .86
+propBuilder.ts:BEARDED_AXE (long, butt, head, wide) | .8, .2, .28, .22 | 392 | approved | .8, .12, .34, .19 (392)
+proceduralAnimation.ts:BEARDED_AXE_CARRY (raise, out, elbow, tip x) | -.2, .55, -1.45, .42 | 392 | approved | hanging hashed carry (391)
+propBuilder.ts:JARL_AXE (long, grip, wide, tall) | .95, .3, .24, .21 | 392 | approved | .95, .22, .3, .42 (392)
+simulationSystem.ts:JUMP_CHARGE (rise, swoopRise) | 8, 4.5 | 392 | approved | teleport (391); swoopRise retired with the valkyrie revert
+proceduralAnimation.ts:LEAP_AIR (thigh, knee, armOut, armBack) | .8, 1.15, 1.0, .35 | 392 | approved | flung sprawl only (limp gate, 391)
+vehicleBuilder.ts:LONGSHIP_TIMBER (wood, dark) | .62/.42/.25, .44/.29/.17 | 392 | approved | .46/.3/.16, .3/.18/.1 (392)
