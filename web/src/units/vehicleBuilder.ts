@@ -2051,37 +2051,94 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    */
   const OARS = { long: 1.75, thick: 0.055, blade: 0.52, bladeWide: 0.36, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
   const oarMat = makeMat(scene, new Color3(0.1, 0.09, 0.09));
-  const oarLeaf = (parent: TransformNode, top: number): void => {
-    // the leaf's two halves: a widening foot to the blade's middle, then a point, both flattened in z
-    const foot = MeshBuilder.CreateCylinder("longshipOarBladeFoot", { height: OARS.blade * 0.45, diameterBottom: OARS.stem, diameterTop: OARS.bladeWide, tessellation: 4 }, scene);
-    foot.rotation.y = Math.PI / 4;
-    foot.bakeCurrentTransformIntoVertices();
-    foot.scaling.z = OARS.flat;
-    foot.position.y = top + OARS.blade * 0.225;
-    foot.parent = parent;
-    foot.material = oarMat;
-    allMeshes.push(foot);
-    const tip = MeshBuilder.CreateCylinder("longshipOarBladeTip", { height: OARS.blade * 0.55, diameterBottom: OARS.bladeWide, diameterTop: 0, tessellation: 4 }, scene);
-    tip.rotation.y = Math.PI / 4;
-    tip.bakeCurrentTransformIntoVertices();
-    tip.scaling.z = OARS.flat;
-    tip.position.y = top + OARS.blade * 0.725;
-    tip.parent = parent;
-    tip.material = oarMat;
-    allMeshes.push(tip);
+  /*
+   * [S] three Long-Boaters on their oars (395; viking.longship.jpg, card Appearance "3 Long-Boaters holding oars", card "The people riding it are called
+   * oarmen"; critic 394: "an empty deck and three thin dark rods, one reading as a spear, no blades or hands"). The single operator is replaced by three
+   * small crew bodies standing along the hull amidships (at .at z, .across x, their feet .feet up on the deck, facing the bow), each in a horned team cap
+   * over a dark belt, and each gripping one of the three oars in one fist (.hand alternates so the oars stand either side of the line): the oar node is
+   * hung off that fist (holdInFist) and the shaft runs .butt below the grip, .top above it, the leaf blade over his head and the butt down by the deck.
+   * The fist is raised .raise at the shoulder, .spread out, elbow .elbow, so the hand is at his chest and the oar stands beside him.
+   */
+  const LONGSHIP_CREW = {
+    at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.64, hand: [1, -1, 1] as const,
+    raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.13, clutch: 0.03, glow: 0.08,
   };
-  for (let i = 0; i < 3; i++) {
-    const oar = new TransformNode("longshipOar", scene);
-    oar.parent = root;
-    oar.position.set(OARS.across[i], 0.5, OARS.spread[i]);
-    oar.rotation.x = OARS.lean[i];
-    oar.rotation.z = OARS.across[i] * 0.5;
-    const shaft = MeshBuilder.CreateCylinder("longshipOarShaft", { height: OARS.long, diameter: OARS.thick, tessellation: 6 }, scene);
-    shaft.position.y = OARS.long * 0.5 - 0.28;
-    shaft.parent = oar;
-    shaft.material = oarMat;
-    allMeshes.push(shaft);
-    oarLeaf(oar, OARS.long - 0.28);
+  const crewCap = makeMat(scene, color.scale(0.78));
+  const crewDark = makeMat(scene, new Color3(0.2, 0.13, 0.09));
+  const crewHorn = makeMat(scene, new Color3(0.82, 0.8, 0.72));
+  /** A horned team cap and a dark belt on a longship crewman (the oarsman's own cut, not the shared viking helmet). */
+  const dressBoatSman = (body: ArticulatedBody): void => {
+    const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+    const dome = MeshBuilder.CreateSphere("longshipCrewCap", { diameterX: 2.1 * e.x, diameterY: 1.7 * e.y, diameterZ: 2.1 * e.z, segments: 8, slice: 0.6 }, scene);
+    dome.position.y = e.y * 0.18;
+    dome.parent = body.headMesh;
+    dome.material = crewCap;
+    dome.convertToFlatShadedMesh();
+    allMeshes.push(dome);
+    for (const side of [-1, 1]) {
+      const horn = MeshBuilder.CreateCylinder("longshipCrewHorn", { height: 1.5 * e.y, diameterTop: 0, diameterBottom: 0.42 * e.y, tessellation: 4 }, scene);
+      horn.position.set(side * e.x * 1.15, e.y * 0.72, -e.z * 0.1);
+      horn.rotation.z = -side * 0.62;
+      horn.parent = body.headMesh;
+      horn.material = crewHorn;
+      horn.convertToFlatShadedMesh();
+      allMeshes.push(horn);
+    }
+    const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+    const belt = MeshBuilder.CreateCylinder("longshipCrewBelt", { height: chest.y * 0.22, diameter: Math.max(chest.x, chest.z) * 2 * 0.86, tessellation: 8 }, scene);
+    belt.position.y = chest.y * 0.14;
+    belt.scaling.z = body.torsoMesh.scaling.z;
+    belt.parent = body.torso;
+    belt.material = crewDark;
+    belt.convertToFlatShadedMesh();
+    allMeshes.push(belt);
+  };
+  const crew: VehicleOperator[] = [];
+  for (let i = 0; i < LONGSHIP_CREW.at.length; i++) {
+    const C = LONGSHIP_CREW;
+    const side = C.hand[i];
+    const operator = addOperator(scene, root, allMeshes, C.across[i], C.feet, C.at[i], color, (body) => {
+      dressBoatSman(body);
+      const shoulder = side > 0 ? body.rightShoulder : body.leftShoulder;
+      const elbow = side > 0 ? body.rightElbow : body.leftElbow;
+      const hand = side > 0 ? body.rightHand : body.leftHand;
+      shoulder.rotation.set(C.raise, 0, -side * C.spread);
+      elbow.rotation.set(C.elbow, 0, 0);
+      // the oar: a node hung off the fist (unscaled, in the ship's own units) with the shaft and the leaf blade standing out of it
+      const mount = new TransformNode("longshipOar", scene);
+      holdInFist(hand, mount, new Vector3(0.04 * side, 1, OARS.lean[i]), new Vector3(0, 0, C.clutch), 1);
+      mount.parent = hand;
+      // the oar's own frame: +Z of the mount is the way the shaft points (the fist's grip), so the geometry is built up +Y and stood on the mount
+      const oarBody = new TransformNode("longshipOarBody", scene);
+      oarBody.parent = mount;
+      oarBody.rotation.x = Math.PI / 2;
+      const shaft = MeshBuilder.CreateCylinder("longshipOarShaft", { height: C.butt + C.top, diameter: OARS.thick, tessellation: 6 }, scene);
+      shaft.position.y = (C.top - C.butt) * 0.5;
+      shaft.parent = oarBody;
+      shaft.material = oarMat;
+      allMeshes.push(shaft);
+      const oarLeaf = (top: number): void => {
+        // the leaf's two halves: a widening foot to the blade's middle, then a point, both flattened in z
+        const foot = MeshBuilder.CreateCylinder("longshipOarBladeFoot", { height: OARS.blade * 0.45, diameterBottom: OARS.stem, diameterTop: OARS.bladeWide, tessellation: 4 }, scene);
+        foot.rotation.y = Math.PI / 4;
+        foot.bakeCurrentTransformIntoVertices();
+        foot.scaling.z = OARS.flat;
+        foot.position.y = top + OARS.blade * 0.225;
+        foot.parent = oarBody;
+        foot.material = oarMat;
+        allMeshes.push(foot);
+        const tip = MeshBuilder.CreateCylinder("longshipOarBladeTip", { height: OARS.blade * 0.55, diameterBottom: OARS.bladeWide, diameterTop: 0, tessellation: 4 }, scene);
+        tip.rotation.y = Math.PI / 4;
+        tip.bakeCurrentTransformIntoVertices();
+        tip.scaling.z = OARS.flat;
+        tip.position.y = top + OARS.blade * 0.725;
+        tip.parent = oarBody;
+        tip.material = oarMat;
+        allMeshes.push(tip);
+      };
+      oarLeaf(C.top);
+    });
+    crew.push(operator);
   }
 
   for (const zOff of [-1.32, 1.34]) {
@@ -2154,7 +2211,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     allMeshes.push(curl);
   }
 
-  const operator = addOperator(scene, root, allMeshes, 0, 0.76, -0.42, color);
+  const operator = crew[1];
 
   return wrapAsBody(
     scene,
