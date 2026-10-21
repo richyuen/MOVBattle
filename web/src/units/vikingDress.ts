@@ -337,8 +337,8 @@ export function berserkerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, {
-    color: new Color3(0.24, 0.12, 0.1), glow: 0.18, down: 0.9, wide: 1.05, tip: 0.5, braid: true, stache: true,
-    jaw: [1.12, 0.6, 0.7], jawY: 1.12, jawZ: 0.78, stacheLow: 1.0, stacheZ: 1.22, burns: false,
+    color: new Color3(0.24, 0.12, 0.1), glow: 0.18, down: 0.9, wide: 1.15, tip: 0.5, braid: true, stache: true,
+    jaw: [1.38, 0.74, 0.82], jawY: 1.06, jawZ: 0.78, stacheLow: 0.98, stacheZ: 1.24, burns: false,
   });
 }
 
