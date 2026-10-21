@@ -36,6 +36,8 @@ const DRUNK_GREEN = new Color3(0.35, 0.95, 0.25);
 const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
 // The medieval archer's broadhead arrow (see _dressBroadhead): head across, along the shaft (m), flatness; shaft and head colours
 const BROADHEAD = { wide: 0.17, long: 0.2, thick: 0.3, shaft: new Color3(0.62, 0.16, 0.1), iron: new Color3(0.08, 0.08, 0.09) };
+// The Ice Archer's arrow (see _dressIceArrow): head along the shaft and across at its base (m), barbs either side, frost flakes behind the head; colours
+const ICE_ARROW = { head: 0.34, wide: 0.18, frost: 4, frostSize: 0.055, shaft: new Color3(0.58, 0.82, 0.96), ice: new Color3(0.78, 0.94, 1) };
 
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
@@ -167,6 +169,8 @@ interface ProjectileSpawnOptions {
   broadhead?: boolean;
   /** An arrow flown as the snake archer's banded snake (ancientDress buildSnake), head first. */
   snake?: boolean;
+  /** An arrow flown as the Ice Archer's: a pale ice shaft, a jagged ice head and a trail of frost behind it (_dressIceArrow). */
+  iceArrow?: boolean;
   /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
   drunk?: string;
 }
@@ -336,6 +340,7 @@ export class ProjectileSystem {
     if (options.balloons && shape === "arrow" && !held) this._addBalloonBall(mesh, palette.primary, attackerTeam);
     if (options.broadhead && shape === "arrow" && !held) this._dressBroadhead(mesh);
     if (options.snake && shape === "arrow" && !held) this._dressSnake(mesh);
+    if (options.iceArrow && shape === "arrow" && !held) this._dressIceArrow(mesh);
     if (held) {
       // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
       const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
@@ -849,6 +854,43 @@ export class ProjectileSystem {
     head.position.z = 0.375 + B.long / 2;
     head.material = this._getMat("broadhead_iron", B.iron, 0.04);
     head.parent = root;
+  }
+
+  /**
+   * [S] 397 the Ice Archer's arrow (viking.ice_archer.jpg: a long pale-blue arrow with a jagged ice head trailing frost; critic 396: a dark-brown shaft
+   * with a small blue cone). The shaft is recoloured pale ice ICE_ARROW.shaft self-lit, the fletching whitened, and the small tip replaced by a jagged
+   * head: a faceted ice spike ICE_ARROW.head long and .wide across at its base, a barb swept back either side of it, and .frost white flakes strung back
+   * along the shaft, so the arrow reads as ice in flight.
+   */
+  private _dressIceArrow(root: TransformNode): void {
+    const I = ICE_ARROW;
+    for (const child of root.getChildMeshes(true)) {
+      if (child.name === "shaft") child.material = this._getMat("iceArrow_shaft", I.shaft, 0.4);
+      if (child.name === "tip") child.dispose();
+      if (child.name === "fletch") child.material = this._getMat("iceArrow_fletch", I.ice, 0.3);
+    }
+    const ice = this._getMat("iceArrow_head", I.ice, 0.55);
+    const head = MeshBuilder.CreateCylinder("iceArrowHead", { height: I.head, diameterTop: 0, diameterBottom: I.wide, tessellation: 4 }, this._scene);
+    head.convertToFlatShadedMesh();
+    head.rotation.x = Math.PI / 2;
+    head.position.z = 0.375 + I.head / 2;
+    head.material = ice;
+    head.parent = root;
+    for (const side of [-1, 1]) {
+      const barb = MeshBuilder.CreateCylinder("iceArrowBarb", { height: I.head * 0.52, diameterTop: 0, diameterBottom: I.wide * 0.44, tessellation: 4 }, this._scene);
+      barb.convertToFlatShadedMesh();
+      barb.rotation.x = Math.PI / 2;
+      barb.rotation.z = -side * 0.8;
+      barb.position.set(side * I.wide * 0.4, 0, 0.375 + I.head * 0.42);
+      barb.material = ice;
+      barb.parent = root;
+    }
+    for (let i = 0; i < I.frost; i++) {
+      const flake = MeshBuilder.CreateIcoSphere("iceArrowFrost", { radius: I.frostSize * (1 - i * 0.14), subdivisions: 0, flat: true }, this._scene);
+      flake.position.set((i % 2 ? 1 : -1) * I.frostSize * 0.9, (i % 3 ? 1 : -1) * I.frostSize * 0.6, 0.2 - i * 0.15);
+      flake.material = ice;
+      flake.parent = root;
+    }
   }
 
   /** [S] 385 the snake archer's arrow flies as his snake (ancientDress SNAKE): shaft, tip and fletching gone, the snake laid along +z head first. */

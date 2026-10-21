@@ -86,6 +86,8 @@ const BALLOON_ARROWS = new Set(["renaissance.balloon_archer"]);
 const BROADHEAD_ARROWS = new Set(["medieval.archer"]);
 // [S] 385 bowmen who loose a snake: the nocked snake (ancientDress heldSnake) leaves the fist, and the arrow flies dressed as it (ProjectileSystem _dressSnake)
 const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
+// [S] 397 the Ice Archer's arrow: a pale ice shaft with a jagged ice head and a trail of frost (ProjectileSystem _dressIceArrow)
+const ICE_ARROWS = new Set(["viking.ice_archer"]);
 // [S] 390 engines that fly the bolt they have loaded: a copy of the named node leaves the muzzle and the loaded one is gone until half the reload is past (vehicleBuilder ballistaLoadedBolt)
 const LOADED_BOLTS: Record<string, string> = { "ancient.ballista": "ballistaLoadedBolt" };
 /*
@@ -2364,7 +2366,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
           );
           if (loadedBolt?.isEnabled()) {
             loadedBolt.setEnabled(false);
@@ -2579,7 +2581,7 @@ export class SimulationSystem {
         // Loosed off the drawn bow: from the bow, where the draw has put it
         const origin = attacker.getAttackOrigin();
         this.projectileSystem.spawnProjectile(
-          t.shape, origin.position, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: originLiftForSource(origin.source), broadhead: BROADHEAD_ARROWS.has(attacker.definition.id) },
+          t.shape, origin.position, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: originLiftForSource(origin.source), broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id) },
         );
         continue;
       }
