@@ -1,6 +1,7 @@
 import { Scene, Color3, Mesh, MeshBuilder, Node, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
+import { limbBox, limbShell } from "./medievalDress";
 
 /*
  * Viking dress (units/viking.*): cloth, hair and ornaments built per unit id by unitFactory, sized off the body's own metrics and joints.
@@ -280,6 +281,76 @@ export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, {
     color: new Color3(0.26, 0.12, 0.1), glow: 0.2, down: 0.5, wide: 1.08, tip: 0.52, braid: false, stache: false, burns: false, under: 0.17,
   });
+}
+
+/*
+ * [S] the Headbutter's kit (395; viking.headbutter.red.png, viking.headbutter.png, card Appearance "thick furry boots"; critic 391: "a plain blue tunic,
+ * bare hands and boots, no belt"). In the trunk's and the limbs' own frames:
+ *   belt: a brown band round the hips .tall of the trunk's height at .at up, .proud of it, a dark buckle box on its front;
+ *   bracers: a dark leather shell .out of the forearm's half-width from .from to .to down it, a ring of cream fur spikes standing up at its top;
+ *   boots: a brown shell .out of the shin from .bootFrom down to the foot, a wide cream fur cuff .cuffOut of it from .cuffFrom to .cuffTo, fringed with
+ *   spikes that stand up out of its top edge.
+ * Fur and leather self-lit so the cream reads cream and the brown stays warm in the shade.
+ */
+const HEADBUTTER_KIT = {
+  beltTall: 0.26, beltAt: 0.1, beltOut: 1.24, buckle: 0.22,
+  bracerFrom: 0.06, bracerTo: 0.78, bracerOut: 1.24, furFrom: -0.06, furTo: 0.24, furOut: 1.54, furSpikes: 6, furSpike: 0.3,
+  bootFrom: 0.48, bootTo: 1.0, bootOut: 1.16, cuffFrom: 0.1, cuffTo: 0.46, cuffOut: 1.48, cuffSpikes: 7, cuffSpike: 0.26, glow: 0.12,
+};
+/** The Headbutter's brown belt and buckle, dark fur-cuffed bracers, and cream fur boot cuffs over brown boots (spec at HEADBUTTER_KIT). */
+export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = HEADBUTTER_KIT;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", new Color3(0.3, 0.17, 0.09), { emissiveIntensity: K.glow * 0.5 });
+  const boot = mf.get("cloth", new Color3(0.36, 0.21, 0.12), { emissiveIntensity: K.glow * 0.5 });
+  const fur = mf.get("cloth", new Color3(0.82, 0.68, 0.46), { emissiveIntensity: K.glow });
+  const buckleMat = mf.get("cloth", new Color3(0.62, 0.5, 0.26), { emissiveIntensity: K.glow * 0.6 });
+  const out: Mesh[] = [];
+  // the belt round the hips, a buckle on its front
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const band = MeshBuilder.CreateCylinder("headbutterBelt", { height: chest.y * 2 * K.beltTall, diameter: Math.max(chest.x, chest.z) * 2 * K.beltOut, tessellation: 8 }, scene);
+  band.position.y = chest.y * K.beltAt;
+  band.scaling.z = body.torsoMesh.scaling.z * 0.98;
+  band.parent = body.torso;
+  band.material = leather;
+  band.convertToFlatShadedMesh();
+  out.push(band);
+  const buckle = MeshBuilder.CreateBox("headbutterBuckle", {
+    width: chest.x * K.buckle, height: chest.y * 2 * K.beltTall * 1.15, depth: chest.z * 0.14,
+  }, scene);
+  buckle.position.set(0, chest.y * K.beltAt, Math.max(chest.x, chest.z) * K.beltOut);
+  buckle.parent = body.torso;
+  buckle.material = buckleMat;
+  buckle.convertToFlatShadedMesh();
+  out.push(buckle);
+  /** A ring of spiky fur round a limb, at `at` of the way down it, its spikes standing up `long` toward the joint. */
+  const furRing = (limb: Mesh, at: number, outOf: number, count: number, long: number): void => {
+    const L = limbBox(limb);
+    const r = Math.max(L.wide, L.deep) * outOf;
+    const y = L.mid + L.half - at * L.half * 2;
+    const flat = L.deep / Math.max(L.wide, L.deep);
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + (i % 2 ? 0.25 : 0);
+      const spike = MeshBuilder.CreateCylinder("headbutterFur", {
+        height: long * L.half * 2, diameterTop: 0, diameterBottom: r * 0.62, tessellation: 4,
+      }, scene);
+      spike.parent = limb.parent;
+      spike.position.set(Math.cos(a) * r * 0.82, y + long * L.half * 2 * 0.4, Math.sin(a) * r * flat * 0.82);
+      spike.rotation.z = -Math.cos(a) * 0.42;
+      spike.rotation.x = Math.sin(a) * 0.42;
+      spike.material = fur;
+      spike.convertToFlatShadedMesh();
+      out.push(spike);
+    }
+  };
+  for (const [fore, shin] of [[body.leftLowerArm, body.leftLowerLeg], [body.rightLowerArm, body.rightLowerLeg]] as const) {
+    out.push(limbShell(scene, "headbutterBracer", fore, K.bracerFrom, K.bracerTo, K.bracerOut, leather));
+    furRing(fore, K.furFrom, K.furOut, K.furSpikes, K.furSpike);
+    out.push(limbShell(scene, "headbutterBoot", shin, K.bootFrom, K.bootTo, K.bootOut, boot));
+    out.push(limbShell(scene, "headbutterCuff", shin, K.cuffFrom, K.cuffTo, K.cuffOut, fur));
+    furRing(shin, K.cuffFrom, K.cuffOut, K.cuffSpikes, K.cuffSpike);
+  }
+  return out;
 }
 
 /*

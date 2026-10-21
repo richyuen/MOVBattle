@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, brawlerHelm, jarlPelt, berserkerBeard, brawlerBeard } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, jarlPelt, berserkerBeard, brawlerBeard } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -575,6 +575,8 @@ export class UnitFactory {
       propMeshes.push(...headbutterCap(this._scene, body, teamColor));
       // [S] ...and two tan braids from under the ear flaps down onto the chest, a dark tie at each end (393; vikingDress HEADBUTTER_BRAID)
       propMeshes.push(...headbutterBraids(this._scene, body));
+      // [S] ...and his belt, fur-cuffed bracers and cream fur boot cuffs over brown boots (395; vikingDress HEADBUTTER_KIT)
+      propMeshes.push(...headbutterKit(this._scene, body));
     }
     // [S] the Jarl's bear-head hood and the pelt draping to his hips, in place of the horned helm (393; vikingDress JARL_PELT)
     if (definition.id === "viking.jarl" && !shouldUseVehicleBody) {
