@@ -476,28 +476,35 @@ export function berserkerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
- * [S] 397 the Berserker's armpit hair (card "both of their armpits are hairy"; viking.berserker.red.png, .jpg: a bare chest with a dark tuft in each
- * armpit). In the trunk's frame: on each side .at of the chest's half height up (just under the shoulder joint), .out of the chest's half width and
- * .front of its half depth toward the camera, so it reads past the hanging arm; .tufts tapered shards fan .spread apart fore and aft, each hanging
- * .lean out under its own pivot, .len of the chest's half height long, .wide of half its width across, in the beard's dark brown self-lit at .glow.
+ * [S] 397 the Berserker's armpit hair (card "both of their armpits are hairy"; viking.berserker.red.png, .jpg: a bare chest with a dark tuft high in
+ * each armpit). In the trunk's frame, read off the trunk mesh's own box so the hair sits at the TOP of the chest and not down by the belt: on each
+ * side .in of the way across from the flank (the front face, where the camera sees the armpit), .drop below the trunk's top (just under the shoulder
+ * joint) and on its front face; .tufts tapered shards fan .spread apart, each hanging .lean out and down under its own pivot, .len of the trunk's
+ * height long, .wide of its half width across, in the beard's dark brown self-lit at .glow so they read against the pale team skin.
  */
-const BERSERKER_ARMPITS = { at: 0.54, out: 0.9, front: 0.5, tufts: 5, len: 0.34, wide: 0.16, lean: 0.42, spread: 0.32, glow: 0.24 };
+const BERSERKER_ARMPITS = { in: 0.82, drop: 0.16, front: 0.99, tufts: 6, len: 0.34, wide: 0.22, lean: 0.55, spread: 0.22, glow: 0.24 };
 /** The Berserker's dark armpit tufts (spec at BERSERKER_ARMPITS). */
 export function berserkerArmpits(scene: Scene, body: ArticulatedBody): Mesh[] {
   const A = BERSERKER_ARMPITS;
-  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const bb = body.torsoMesh.getBoundingInfo().boundingBox;
+  const origin = body.torsoMesh.position;
+  const halfX = bb.extendSize.x, halfZ = bb.extendSize.z, tall = bb.extendSize.y * 2;
   const hair = getMaterialFactory().get("cloth", new Color3(0.3, 0.12, 0.1), { emissiveIntensity: A.glow });
   const out: Mesh[] = [];
   for (const side of [-1, 1]) {
     for (let i = 0; i < A.tufts; i++) {
-      const u = i / (A.tufts - 1) - 0.5; // -0.5 (rear) .. 0.5 (front) across the flank
-      const long = chest.y * A.len * (1 - 0.3 * Math.abs(u) * 2);
+      const u = i / (A.tufts - 1) - 0.5; // -0.5 (inner) .. 0.5 (outer) across the armpit
+      const long = tall * A.len * (1 - 0.3 * Math.abs(u) * 2);
       const pivot = new TransformNode("berserkerArmpitPivot", scene);
       pivot.parent = body.torso;
-      pivot.position.set(side * chest.x * A.out, chest.y * A.at, chest.z * A.front + u * chest.z * A.spread * 2);
-      pivot.rotation.z = side * (A.lean + u * 0.2);
-      pivot.rotation.x = -u * 0.35;
-      const shard = MeshBuilder.CreateCylinder("berserkerArmpitHair", { height: long, diameterTop: chest.x * A.wide, diameterBottom: 0, tessellation: 4 }, scene);
+      pivot.position.set(
+        origin.x + side * halfX * (A.in + u * A.spread * 2),
+        origin.y + bb.maximum.y - tall * A.drop,
+        origin.z + halfZ * A.front,
+      );
+      pivot.rotation.z = side * (A.lean + u * 0.25);
+      pivot.rotation.x = -0.18 - u * 0.3;
+      const shard = MeshBuilder.CreateCylinder("berserkerArmpitHair", { height: long, diameterTop: halfX * A.wide, diameterBottom: 0, tessellation: 4 }, scene);
       shard.position.y = -long * 0.5;
       shard.parent = pivot;
       shard.material = hair;
