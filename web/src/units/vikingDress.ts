@@ -195,7 +195,7 @@ export function headbutterBraids(scene: Scene, body: ArticulatedBody): Mesh[] {
 const JARL_PELT = {
   skullWide: 1.16, skullTall: 0.84, skullDeep: 1.2, skullRise: 0.76, skullAhead: 0.22,
   muzzleWide: 0.34, muzzleDeep: 0.62, muzzleDrop: 0.22, nose: 0.34,
-  eye: 0.17, eyeUp: 0.3, eyeOut: 0.5, pupil: 0.42, teeth: 3, tooth: 0.13, ear: 0.24, earOut: 0.66, earUp: 0.62,
+  eye: 0.2, eyeUp: 0.18, eyeOut: 0.5, pupil: 0.42, teeth: 3, tooth: 0.13, ear: 0.24, earOut: 0.66, earUp: 0.62,
   curtains: 2, curtainWide: 0.52, curtainDrop: 1.5, curtainOut: 0.86, curtainAhead: 0.22, curtainTufts: 3, curtainTuft: 0.26,
   mantle: 1.14, mantleTall: 0.3, mantleDeep: 1.3, mantleLump: 0.34,
   drape: 0.26, drapeOut: 0.44, drapeDrop: 0.78, drapeDeep: 0.5, back: 0.85, backDeep: 0.16, tufts: 3, tuft: 0.2, glow: 0.2,
@@ -261,7 +261,7 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
       const w = wide * (1 - k * 0.22), dropK = drop * (1 - k * 0.12);
       const panel = put(MeshBuilder.CreateBox("jarlBearCurtain", {
         width: w, height: dropK, depth: e.z * (1.5 - k * 0.2),
-      }, scene), k ? darkFur : fur, body.headMesh);
+      }, scene), fur, body.headMesh);
       panel.position.set(
         side * (e.x * P.curtainOut + k * w * 0.36),
         skullY - dropK * 0.5 + e.y * 0.12,
@@ -289,7 +289,7 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
     tooth.position.set((i - (P.teeth - 1) / 2) * e.x * 0.28, muzzleTip.y + e.y * 0.06, muzzleTip.z - e.z * 0.12);
     tooth.rotation.z = Math.PI;
   }
-  // the pelt: a thick mantle over both shoulders with a fur lump on each, a drape off each shoulder down the chest, and one over the spine
+  // the pelt: a rounded fur mass over both shoulders with a lump on each, a drape off each shoulder down the chest, and one over the spine
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
@@ -297,12 +297,12 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const shoulderW = body.metrics.shoulderWidth ?? W * 1.3;
   const drapeH = H * P.drapeDrop;
   const mantleH = H * P.mantleTall;
-  const mantle = put(MeshBuilder.CreateBox("jarlPeltMantle", {
-    width: shoulderW * P.mantle, height: mantleH, depth: D * P.mantleDeep,
+  const mantle = put(MeshBuilder.CreateIcoSphere("jarlPeltMantle", {
+    radiusX: shoulderW * P.mantle * 0.5, radiusY: mantleH, radiusZ: D * P.mantleDeep * 0.5, subdivisions: 2, flat: true,
   }, scene), fur, body.torso);
-  mantle.position.set(0, top - mantleH * 0.35, chest.position.z + D * 0.04);
+  mantle.position.set(0, top - mantleH * 0.45, chest.position.z + D * 0.04);
   for (const side of [-1, 1]) {
-    // the fur lump over the shoulder, so the mantle rounds off his shoulder line rather than ending in a plank
+    // the fur lump over the shoulder, so the pelt rounds off his shoulder line rather than ending in a plank
     const lump = put(MeshBuilder.CreateIcoSphere("jarlPeltShoulder", {
       radiusX: shoulderW * P.mantleLump * 0.5, radiusY: mantleH * 0.9, radiusZ: D * P.mantleLump * 0.5, subdivisions: 1, flat: true,
     }, scene), fur, body.torso);
@@ -310,14 +310,15 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
     const panel = put(MeshBuilder.CreateBox("jarlPeltSide", {
       width: shoulderW * P.drape, height: drapeH, depth: D * P.drapeDeep,
     }, scene), fur, body.torso);
-    panel.position.set(side * shoulderW * P.drapeOut, top - mantleH * 0.8 - drapeH * 0.5, chest.position.z + D * 0.3);
+    panel.position.set(side * shoulderW * P.drapeOut, top - mantleH * 0.9 - drapeH * 0.5, chest.position.z + D * 0.3);
+    panel.rotation.z = side * 0.05;
     for (let k = 0; k < P.tufts; k++) {
       const tuft = put(MeshBuilder.CreateCylinder("jarlPeltTuft", {
         height: H * P.tuft, diameterTop: shoulderW * P.drape * 0.7, diameterBottom: 0, tessellation: 4,
       }, scene), darkFur, body.torso);
       tuft.position.set(
         side * shoulderW * P.drapeOut + (k - (P.tufts - 1) / 2) * shoulderW * P.drape * 0.4,
-        top - mantleH * 0.8 - drapeH - H * P.tuft * 0.4,
+        top - mantleH * 0.9 - drapeH - H * P.tuft * 0.4,
         chest.position.z + D * 0.3,
       );
       tuft.rotation.z = Math.PI;

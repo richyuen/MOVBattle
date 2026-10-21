@@ -5805,7 +5805,7 @@ const VALKYRIE_WINGS: FeatherWingStyle = { span: WING_SPAN, raise: WING_RAISE, s
  * Her flight keeps the marker (fly), so FLY finds her wings.
  */
 const VALKYRIE_WINGS_LAYERED: FeatherWingStyle = {
-  span: 2.9, raise: WING_RAISE, sweep: WING_SWEEP, feathers: 8, rows: 2,
+  span: 2.9, raise: 0.32, sweep: WING_SWEEP, feathers: 8, rows: 2,
   feather: new Color3(0.6, 0.79, 0.95), covert: new Color3(0.72, 0.87, 0.98),
   bar: new Color3(0.36, 0.24, 0.15), glow: 0.1, wrist: 0, fly: true,
   barTall: 0.16, barDeep: 0.14, len: [0.5, 0.95], wide: 0.5, tip: 0.6,
