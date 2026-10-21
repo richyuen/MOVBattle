@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, berserkerBeard, berserkerBelt, iceArcherCap } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -598,6 +598,8 @@ export class UnitFactory {
       propMeshes.push(...berserkerBeard(this._scene, body));
       // [S] ...and his thick cream fur belt with the big navy Landfall buckle (396; vikingDress BERSERKER_BELT)
       propMeshes.push(...berserkerBelt(this._scene, body));
+      // [S] ...and the dark tuft in each armpit (397; vikingDress BERSERKER_ARMPITS)
+      propMeshes.push(...berserkerArmpits(this._scene, body));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));

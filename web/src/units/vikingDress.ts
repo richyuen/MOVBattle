@@ -471,6 +471,39 @@ export function berserkerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 397 the Berserker's armpit hair (card "both of their armpits are hairy"; viking.berserker.red.png, .jpg: a bare chest with a dark tuft in each
+ * armpit). In the trunk's frame: on each side .at of the chest's half height up (just under the shoulder joint), .out of the chest's half width and
+ * .front of its half depth toward the camera, so it reads past the hanging arm; .tufts tapered shards fan .spread apart fore and aft, each hanging
+ * .lean out under its own pivot, .len of the chest's half height long, .wide of half its width across, in the beard's dark brown self-lit at .glow.
+ */
+const BERSERKER_ARMPITS = { at: 0.54, out: 0.9, front: 0.5, tufts: 5, len: 0.34, wide: 0.16, lean: 0.42, spread: 0.32, glow: 0.24 };
+/** The Berserker's dark armpit tufts (spec at BERSERKER_ARMPITS). */
+export function berserkerArmpits(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const A = BERSERKER_ARMPITS;
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const hair = getMaterialFactory().get("cloth", new Color3(0.3, 0.12, 0.1), { emissiveIntensity: A.glow });
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < A.tufts; i++) {
+      const u = i / (A.tufts - 1) - 0.5; // -0.5 (rear) .. 0.5 (front) across the flank
+      const long = chest.y * A.len * (1 - 0.3 * Math.abs(u) * 2);
+      const pivot = new TransformNode("berserkerArmpitPivot", scene);
+      pivot.parent = body.torso;
+      pivot.position.set(side * chest.x * A.out, chest.y * A.at, chest.z * A.front + u * chest.z * A.spread * 2);
+      pivot.rotation.z = side * (A.lean + u * 0.2);
+      pivot.rotation.x = -u * 0.35;
+      const shard = MeshBuilder.CreateCylinder("berserkerArmpitHair", { height: long, diameterTop: chest.x * A.wide, diameterBottom: 0, tessellation: 4 }, scene);
+      shard.position.y = -long * 0.5;
+      shard.parent = pivot;
+      shard.material = hair;
+      shard.convertToFlatShadedMesh();
+      out.push(shard);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] the Headbutter's kit (395; viking.headbutter.red.png, viking.headbutter.png, card Appearance "thick furry boots"; critic 391: "a plain blue tunic,
  * bare hands and boots, no belt"). In the trunk's and the limbs' own frames:
  *   belt: a brown band round the hips .tall of the trunk's height at .at up, .proud of it, a dark buckle box on its front;
