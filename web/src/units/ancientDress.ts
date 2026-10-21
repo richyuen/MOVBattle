@@ -22,21 +22,9 @@ import { limbShell } from "./medievalDress";
  *     middle of the chest;
  *   - a dark chest-hair tuft on the breastbone, .tuft of the trunk across.
  */
-/*
- * [R] 396 the Minotaur at Zeus's height, his girdle and pauldron flat (MINO_GEAR/MINO_SCROLL/MINO_SHELL rebuilt on this spec; ancient.minotaur.red.png: a
- * lean bull-headed brute with the head of a man's-and-a-half, bare furred chest and a wide team girdle at the hips; the girdle is one continuous band round
- * the pelvis with a dark rim along its foot and a thin one at its top, and two big LIGHTER team scrolls wound out from its middle on the band's own face,
- * drawn flat like paint, a small one beyond each; a brown leather sash runs from his left shoulder across the chest to his right hip with a grey square
- * buckle; his left shoulder carries a team pauldron shell with a lighter scroll curled on its FACE toward the front; the wiki gives him 1.2x a man against
- * Zeus's 1.5x, so his build is 1.92 (not 2.10) and he stands level with Zeus in the lineup).
- *   band: a twelve-sided ring from .hi of the trunk to .lo (navel to crotch), .proudX/.proudZ of the pelvis, flared .flare at the foot; rims flush (.02);
- *   inlays: the 386 spirals kept as their path, drawn as a flat ribbon .1 of the band's height wide, standing .025 of it proud, no dark outline tube;
- *   pauldron scroll: a flat spiral ribbon on the plate's front face (front = +z of the torso), not a tube standing off its outer edge;
- *   pauldron rim: a thin curved band along the shell's lower edge, bent with it, not a straight box.
- */
 const MINO_FUR = new Color3(0.42, 0.24, 0.17);
 const MINO_FUR_GLOW = 0.16;
-const MINO_BELT = { sides: 12, tall: 0.16, at: 0.06, proud: 1.1, swirls: 3, lighter: 0.35 };
+const MINO_BELT = { sides: 8, tall: 0.16, at: 0.06, proud: 1.1, swirls: 3, lighter: 0.35 };
 /*
  * [S] 386 the scrolled belt (ancient.minotaur.red.png: a tall team girdle at the hips, a dark brown-red rim band along its foot and a thin one at its
  * top, and on its front two big lighter scrolls wound outward from the middle like a ram's horns, each outlined darker, a small scroll beyond each;
@@ -120,34 +108,20 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
     return add(m, hipNode, material);
   };
   girdleRing("minoBelt", y1, y0, 1, team);
-  // [R] 396 (spec at MINO_GEAR): the rims sit flush on the band, so its side wraps into its front as one belt, and the scrolls are flat lighter inlays.
+  // [S] 386 (MINO_SCROLL): a deep rim along the foot and a thin one at the top, two big outlined scrolls wound out from the middle, a small one beyond
   const G = MINO_GEAR;
   const dark = mf.get("cloth", teamColor.scale(K.rimShade), { emissive: teamColor.scale(0.05) });
   const lightScroll = Color3.Lerp(teamColor, new Color3(1, 1, 1), K.light);
   const scrollMat = mf.get("cloth", lightScroll, { emissive: lightScroll.scale(0.2) });
-  girdleRing("minoBeltRim", y0 + tall * K.foot, y0, 1.02, dark);
-  girdleRing("minoBeltRim", y1, y1 - tall * K.top, 1.02, dark);
-  // the band's front face: z falls .414 of the way out from its front ridge; the face leans out toward the foot with the flare
+  girdleRing("minoBeltRim", y0 + tall * K.foot, y0, 1.05, dark);
+  girdleRing("minoBeltRim", y1, y1 - tall * K.top, 1.05, dark);
+  // on the octagon's front faces: z falls .414 of the way out from its front ridge; the face leans out toward the foot with the flare
   const faceZ = (x: number, y: number, lift: number) => {
     const w = widen(y);
     return waist.midZ + waist.halfZ * w - 0.414 * Math.abs(x - waist.midX) * (waist.halfZ / waist.halfX) + lift;
   };
   // the band's open middle, between the rims
   const midY = beltY + tall * (K.foot - K.top) / 2;
-  /** A flat inlay ribbon along `pts` in the band's face plane: `wide` of the band's height across, `lift` proud of the face. */
-  const faceInlay = (pts: Vector3[], wide: number, lift: number): void => {
-    const left: Vector3[] = [], right: Vector3[] = [];
-    for (let i = 0; i < pts.length; i++) {
-      const prev = pts[Math.max(0, i - 1)], next = pts[Math.min(pts.length - 1, i + 1)];
-      const tx = next.x - prev.x, ty = next.y - prev.y;
-      const len = Math.hypot(tx, ty) || 1;
-      const nx = (-ty / len) * wide * 0.5, ny = (tx / len) * wide * 0.5;
-      const p = pts[i];
-      left.push(new Vector3(p.x + nx, p.y + ny, faceZ(p.x + nx, p.y + ny, lift)));
-      right.push(new Vector3(p.x - nx, p.y - ny, faceZ(p.x - nx, p.y - ny, lift)));
-    }
-    add(MeshBuilder.CreateRibbon("minoBeltInlay", { pathArray: [left, right], sideOrientation: Mesh.DOUBLESIDE }, scene), hipNode, scrollMat);
-  };
   for (const mirror of [-1, 1]) {
     const spiral = (cxShare: number, round: number, tail: boolean): Vector3[] => {
       const cx = waist.midX + mirror * cxShare * waist.halfX;
@@ -160,8 +134,11 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
       return pts;
     };
     for (const [cxShare, round, tail] of [[K.bigAt, K.big, true], [K.smallAt, K.small, false]] as const) {
-      // the 386 path, drawn on the face as a flat strip .1 of the band's height wide, standing .025 of it proud (no outline tube: it read as 3D curls)
-      faceInlay(spiral(cxShare, round, tail), tall * 0.1, tall * 0.025);
+      const pts = spiral(cxShare, round, tail);
+      for (const [r, m, lift] of [[K.outline, dark, 1], [K.line, scrollMat, 1 + K.line * K.proud / K.outline]] as const) {
+        const path = pts.map((p) => new Vector3(p.x, p.y, faceZ(p.x, p.y, tall * r * lift)));
+        add(MeshBuilder.CreateTube("minoBeltScroll", { path, radius: tall * r, tessellation: 4, cap: 2 }, scene), hipNode, m);
+      }
     }
   }
 
@@ -209,38 +186,22 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   const shell = MeshBuilder.CreateRibbon("minoPauldron", { pathArray: ring, closeArray: false, closePath: false, sideOrientation: Mesh.DOUBLESIDE }, scene);
   shell.convertToFlatShadedMesh();
   add(shell, body.torso);
-  // [R] 396 the rim bent with the shell's lower edge (a straight box read as a flap at the flank off the front)
-  const rimPaths: Vector3[][] = [];
-  for (const z of [-D / 2, D / 2]) {
-    for (const r of [R + pw * M.thick * 1.01, R + pw * M.thick * 1.01 + pw * 0.008]) {
-      const row: Vector3[] = [];
-      for (let i = 0; i <= 3; i++) row.push(rimPath(r, a0 + (M.rim * i) / 3).add(new Vector3(0, 0, cz + z)));
-      rimPaths.push(row);
-    }
-  }
-  const rimRing = [rimPaths[0], rimPaths[1], rimPaths[3], rimPaths[2], rimPaths[0]];
-  const rim = MeshBuilder.CreateRibbon("minoPauldronRim", { pathArray: rimRing, closeArray: false, closePath: false, sideOrientation: Mesh.DOUBLESIDE }, scene);
-  rim.convertToFlatShadedMesh();
-  add(rim, body.torso, dark);
-  // [R] 396 the scroll as a flat lighter ribbon on the plate's FRONT face (it was a tube on the outer edge, invisible from the front)
-  const frontZ = cz + D / 2 + pw * 0.014;
+  const rimBox = MeshBuilder.CreateBox("minoPauldronRim", { width: pw * M.thick * 1.6, height: pw * M.rim, depth: D * 1.02 }, scene);
+  const rimAt = rimPath(R + pw * M.thick * 0.5, a0 + M.rim * 0.5);
+  rimBox.position.set(rimAt.x, rimAt.y, cz);
+  rimBox.rotation.z = side * a0;
+  add(rimBox, body.torso, dark);
+  // the scroll inlaid on the outer face, wound in the face's own plane (front-back and along the arc)
   const sa = M.scrollAt;
-  const sx = cx + side * Math.cos(sa) * R * 0.62, sy = cy + Math.sin(sa) * R * 0.62;
-  const curl: Vector3[] = [];
-  for (let i = 0; i <= 18; i++) {
-    const t = i / 18, rho = pw * M.scroll * 0.8 * (1 - 0.72 * t), phi = Math.PI * 2 * 1.15 * t + 0.4;
-    curl.push(new Vector3(sx + Math.cos(phi) * rho, sy + Math.sin(phi) * rho, frontZ));
+  const out1 = new Vector3(side * Math.cos(sa), Math.sin(sa), 0);
+  const along = new Vector3(-side * Math.sin(sa), Math.cos(sa), 0);
+  const centre = rimPath(R + pw * M.thick * 1.15, sa).add(new Vector3(0, 0, cz));
+  const padPath: Vector3[] = [];
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16, rho = pw * M.scroll * (1 - 0.75 * t), phi = Math.PI * 2 * 1.1 * t;
+    padPath.push(centre.add(new Vector3(0, 0, Math.cos(phi) * rho)).add(along.scale(Math.sin(phi) * rho)).add(out1.scale(pw * 0.01)));
   }
-  const curlL: Vector3[] = [], curlR: Vector3[] = [];
-  for (let i = 0; i < curl.length; i++) {
-    const prev = curl[Math.max(0, i - 1)], next = curl[Math.min(curl.length - 1, i + 1)];
-    const tx = next.x - prev.x, ty = next.y - prev.y;
-    const len = Math.hypot(tx, ty) || 1;
-    const w = pw * 0.05;
-    curlL.push(new Vector3(curl[i].x - (ty / len) * w * 0.5, curl[i].y + (tx / len) * w * 0.5, frontZ));
-    curlR.push(new Vector3(curl[i].x + (ty / len) * w * 0.5, curl[i].y - (tx / len) * w * 0.5, frontZ));
-  }
-  add(MeshBuilder.CreateRibbon("minoPauldronScroll", { pathArray: [curlL, curlR], sideOrientation: Mesh.DOUBLESIDE }, scene), body.torso, light);
+  add(MeshBuilder.CreateTube("minoPauldronScroll", { path: padPath, radius: pw * 0.045, tessellation: 4, cap: 2 }, scene), body.torso, light);
 
   // the sash, from that shoulder across the chest down to the other hip, laid on the chest's front
   const top = { x: chest.midX + side * chest.halfX * 0.75, y: chest.trunk * 0.95 };
