@@ -1,5 +1,5 @@
 # Loop state (v3: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D)
-Iteration: 393   Batch: farmer:re+ancient+viking (5-7/19)   Consecutive empty: 0   Done: 31/139   Parked: 0
+Iteration: 394   Batch: farmer:re+ancient+viking (5-7/19)   Consecutive empty: 0   Done: 31/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -8,7 +8,7 @@ renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer 
 farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur -+++ o | zeus -+++ o
-viking: headbutter -+-+ o | ice_archer -+-+ o | brawler -+++ o | berserker --++ o | valkyrie -+++ o | longship ---+ o | jarl -+-+ o
+viking: headbutter -+-+ o | ice_archer -+-+ o | brawler -+++ o | berserker -+++ o | valkyrie -+++ o | longship ---+ o | jarl -+-+ o
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
@@ -23,16 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-394 (BASE 2b5c824): [S] longship rig (a.2, mast/sail out, three upright oars) | [S] berserker idle grip (b.2, pair stood at the sides) | [S] brawler helmet (a.1, full-face norse helm) | [S] valkyrie wings (a.1, layered feather wings) | [S] jarl bear pelt (a.1 retry, rounded skull) | [S] headbutter headbutt (c.1, ram logged headbutt)
+394 (BASE 2b5c824): [S] longship a.2 rig 708a90c+a61028b approved (struck a.2) | [S] berserker b.2 idle grip ab4c5e2+1add642 approved (b PASS) | [S] brawler a.1 helmet df2b922 approved (struck a.1) | [S] valkyrie a.1 wings df2b922+bae3bb7 approved (struck a.1) | [S] jarl a.1 bear pelt retry df2b922+bae3bb7+a5904a5 rejected (reverted 1ec0c3a) | [S] headbutter c.1 headbutt a5904a5 approved (narrowed c.1) - 5/6
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] viking.headbutter (52066c2) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)
-- GAP: [S] viking.brawler (b76e2fe) VERDICT: APPROVE CRITERION: viking.brawler.b PASS (previous: FAIL)
-- GAP: [S] viking.berserker (6cfe8b5 + 671a758) VERDICT: APPROVE CRITERION: viking.berserker.b FAIL (previous: FAIL)
-- GAP: [S] viking.ice_archer (1e0549d) VERDICT: APPROVE CRITERION: viking.ice_archer.b PASS (previous: FAIL)
-- GAP: [S] viking.longship (fe36dfc + 9980e94) VERDICT: REJECT CRITERION: viking.longship.a FAIL (previous: FAIL)
-- GAP: [S] viking.jarl (b7b4463 + 1df50c9) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
-- GAP: [S] viking.valkyrie (455eece) VERDICT: APPROVE CRITERION: viking.valkyrie.c PASS (previous: FAIL)
+- GAP: [S] viking.longship (708a90c, a61028b) VERDICT: APPROVE CRITERION: viking.longship.a FAIL (previous: FAIL)
+- GAP: [S] viking.berserker (ab4c5e2, 1add642) VERDICT: APPROVE CRITERION: viking.berserker.b PASS (previous: FAIL)
+- GAP: [S] viking.brawler (df2b922) VERDICT: APPROVE CRITERION: viking.brawler.a FAIL (previous: FAIL)
+- GAP: [S] viking.valkyrie (df2b922, bae3bb7) VERDICT: APPROVE CRITERION: viking.valkyrie.a FAIL (previous: FAIL)
+- GAP: [S] viking.jarl (df2b922, bae3bb7, a5904a5) VERDICT: REJECT CRITERION: viking.jarl.a FAIL (previous: FAIL)
+- GAP: [S] viking.headbutter (a5904a5) VERDICT: APPROVE CRITERION: viking.headbutter.c FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
@@ -53,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Batch farmer:re+ancient+viking; open: halfling, wheelbarrow, minotaur, zeus and all 7 viking. Done 31 (ballista 391).
-- 393 6/7 approved; longship rig rejected (the reference has no rig): next is three upright black oars, no mast.
-- Next ranked: longship oars, jarl bear head, brawler helm, berserker idle grip, ice_archer freeze, valkyrie wings, headbutter gear then headbutt.
-- zeus [R] retry is still owed (a second rejected [R] parks a); halfling a.1 legs; minotaur/zeus/wheelbarrow a are plateau ([R] only).
-- brawler b, ice_archer b, valkyrie c now PASS; each has a alone failing. 393.7 starts the hover at full weight and clamps it into the wall solve.
+- Batch unchanged; open: halfling, wheelbarrow, minotaur, zeus, ice_archer and all 7 viking. Done 31 (ballista 391). 394: 5/6 approved.
+- Mixed commits made the jarl reject un-revertable by sha (the pelt shared df2b922/a5904a5 with approved gaps): it was undone by hand, deep-edited in vikingDress. Commit one gap per sha.
+- Next ranked: jarl bear pelt (recipe in its unit file: curtains behind the face, eyes high on the skull front), headbutter prone dive, valkyrie helm, brawler beard, berserker beard, longship crew oars, longship shields.
+- zeus [R] retry is still owed (a second rejected [R] parks a); halfling a.1 legs; minotaur/zeus/wheelbarrow a are plateau ([R] only); ice_archer a needs an evidence commit first (its idle/lineup show its back).
+- brawler a, valkyrie a, longship a, headbutter c each still FAIL with 1-3 blockers; berserker b is now PASS (a alone failing).

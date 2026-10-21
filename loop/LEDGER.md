@@ -12,26 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-388 | ground snake: own 2 m thin banded build in a travelling S, head on a neck (3afbc34) | ancient.snake_archer.c | approved
-388 | toga fill to the belt, bigger unlit bolt, no cape, unlit white, no solar fx (cdf9011 +4 follow-ups) | ancient.zeus.a | approved
-388 | sash foot raised to the right flank + side wrap, off the girdle (8b1943a, reverted 55b56d1) | ancient.minotaur.a | rejected
-388 | Thrower's knee targets off the Farmer's trunk, .55 hip to shoulder, outside it (450e263) | farmer.wheelbarrow.a | approved
-388 | crewman standing behind the trough's end, arms aimed at the winch handles, iron helmet (44de2f1) | ancient.ballista.a | approved
-388 | vest cut in a deep V: lower block + two shoulder panels, team x .97 (ad8de9a +e1a75a4 +c549a26) | farmer.halfling.a | approved
-388 | quiver high on the back, mouth over the left shoulder, arrows; no hip quiver (2f31243) | ancient.snake_archer.a | approved
-389 | toga drape one-sided facing out (SSAO read the inward double faces), body torus belt hidden (fdab7e5) | ancient.zeus.a | approved
-389 | girdle rebuilt round the pelvis on the hip joint, navel to crotch, flared, scrolls on its face (f835112) | ancient.minotaur.a | approved
-389 | chest drape one bent chunk (flat closed tube) from the shoulder bulk across the chest (9c2d24b) | ancient.sarissa.a | approved
-389 | hood one rounded superellipsoid shell, blunt nub, wrap narrowing to the chin (d561c70 +0390b63) | ancient.snake_archer.a | approved
-389 | foot fur a compact dark tuft of lumps + short shards inside the foot, farmerDress (cd0bed8 +b505810) | farmer.halfling.a | approved
-389 | timber terracotta in linear space, plates two rows of four on the plank edges (532010f) | ancient.ballista.a | approved
-389 | loaded bolt: thick tapered shaft, socket, long flat black leaf head .75 past the front (246a014) | ancient.ballista.b | approved
-390 | frame top 1.7 m, trough/bolt/arms through the box at mid height on cross beams (0c52227) | ancient.ballista.a | approved
-390 | flying bolt a copy of the loaded node, loaded one hidden half the reload; upright leaf copy (cf436a3 +1d34d1a) | ancient.ballista.c | approved
-390 | vest V to the belt, one-sided faceFront panels and V, vest .3 toward white (66faf9b, reverted) | farmer.halfling.a | rejected
-390 | stance upright on straight legs, bow across him, found by the nocked snake (73c3474) | ancient.snake_archer.a | approved
-390 | face wrap one rounded shell tucked under the rim, narrowing, dark cord + knot (ee39078) | ancient.snake_archer.a | approved
-390 | [R] mantle: one dark wedge over the left shoulder onto the chest, rolled edge, gold ring; collar/bulk/chunk retired (5c44ced) | ancient.sarissa.a | approved
 391 | idle camera high rear-side, loaded leaf head past the frame front, crewman at the winch (03a5bdc) | ancient.ballista.b | approved
 391 | vest one light panel + closed white V slab to the belt, team .3 toward white (6eefbb3) | farmer.halfling.a | approved
 391 | foot fur rooted on the toe top face, spread over the instep (bef7e5f) | farmer.halfling.a | approved
@@ -51,6 +31,13 @@ for 25 iterations.
 393 | rig: sail out, short bare mast, yard, sheets (fe36dfc + 9980e94, reverted 62d09d2/c7c8c0a) | viking.longship.a | rejected
 393 | bear-head hood and fur drape, horned helm off (b7b4463 + 1df50c9) | viking.jarl.a | approved
 393 | flight: hover full weight from spawn + wall clamp, swoop gated to flying_melee (455eece) | viking.valkyrie.c | approved
+394 | oars, not a rig: mast/sail/yard out, three dark oars with broad leaf blades (708a90c + a61028b) | viking.longship.a | approved
+394 | idle grip: both bearded axes stood upright at his sides, gated on a pair (ab4c5e2 + 1add642) | viking.berserker.b | approved
+394 | full-face Norse helm: dome, brow band, mask, cheek guards, nasal (df2b922) | viking.brawler.a | approved
+394 | layered feather wings: two rows of blunt feathers on a thick dark spar (df2b922 + bae3bb7) | viking.valkyrie.a | approved
+394 | bear pelt retry: rounded skull, eyes on its front, curtains, rounded shoulder mass (df2b922 + bae3bb7 + a5904a5, reverted 1ec0c3a) | viking.jarl.a | rejected
+394 | Headbutt: ready at the start, head-down drive with a step, logged "headbutt" (a5904a5) | viking.headbutter.c | approved
+
 
 ## Spent (never retry as [P])
 
@@ -97,3 +84,10 @@ vikingDress.ts:JARL_PELT (skull, muzzleLong, eyeOut, drape, drapeDeep, glow) | 1
 propBuilder.ts:Brawler board (face, rim, boss) | .36, .43, .17 | 393 | pending
 proceduralAnimation.ts:LEAP_AIR (thigh, knee, armOut, armBack) | .8, 1.15, 1.0, .35 | 392 | approved | flung sprawl only (limp gate, 391)
 vehicleBuilder.ts:LONGSHIP_TIMBER (wood, dark) | .62/.42/.25, .44/.29/.17 | 392 | approved | .46/.3/.16, .3/.18/.1 (392)
+vehicleBuilder.ts:LONGSHIP_OARS (long, thick, blade, bladeWide, stem, flat, lean, spread) | 1.75, .055, .52, .36, .07, .17, -.13/.05/.16, -.52/.02/.56 | 394 | approved | mast+yard+sail (rejected 393); .26 blade read as a spearhead (394)
+proceduralAnimation.ts:PAIR_AXE_FACE (ahead, out) for a matched pair of bearded axes | 1, .12 | 394 | approved | OFF_AXE.face .75/.65 turned the off-side blade edge-on (394)
+proceduralAnimation.ts:OFF_AXE (out, ahead, face) + MAIN_AXE.ease: now also stands a bearded-axe PAIR | .18, .22, .75/.65; ease 8 | 394 | approved | stone axe only (361)
+vikingDress.ts:BRAWLER_HELM (domeWide, domeTall, domeRise, domeSlice, band, bandProud, eyeTop, maskTop, maskBottom, maskWide, maskDepth, cheek, cheekTop, cheekDeep, nasal, nasalLow, nasalProud, glow) | 1.14, .7, .5, .6, .14, 1.08, .42, -.18, -1.02, 1.03, 1.04, .16, .3, .92, .24, -.2, .11, .1 | 394 | pending
+propBuilder.ts:VALKYRIE_WINGS_LAYERED (span, raise, sweep, feathers, rows, len, wide, tip, barTall, barDeep) | 2.9, .32, .3, 8, 2, .5/.95, .5, .6, .16, .14 | 394 | pending | VALKYRIE_WINGS shard fan (span 2.4, raise .5, 7 pointed cones)
+vikingDress.ts:JARL_PELT (skull, muzzleLong, eyeOut, drape, drapeDeep, glow) | 1.1, 1.8, .5, .12, .55, .2 | 394 | approved | the 394 rebuilt pelt (rounded skull/curtains/shoulder mass) rejected and reverted; 1.04, 1.15, .28, .26, .9, .16 (393 first cut)
+simulationSystem.ts:HEADBUTT (within, cooldown, windup, recover, ahead, radius, damage, fling, lift, edge, lunge) | .55, 6, .28, .5, .5, 1.15, 18, 5, 4.5, .5, .5 | 394 | pending

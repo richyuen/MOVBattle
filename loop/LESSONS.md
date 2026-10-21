@@ -20,6 +20,7 @@ drop a lesson once it is a comment at the code it describes.
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
+- `release` is the first PLAIN event (missile|melee hit|fire|throw|cast|burst|volley|shotgun) anywhere in the event list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow, or its shot shows whatever plain attack came first (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture: rerun `stats.mjs --iter N` after the last capture of the iteration.
 - Probes live in `loop/scripts/probes/` (run from the repo root, `--build` after a source change, each starts its own vite preview on its own port): probe_bbox (--unit --pat --frame=torso --ylo --yhi: vertex bboxes), probe_mat <unit> <name regex> (meshes + materials), probe_near (scene meshes and particle systems near the unit), probe_zeus_shot (--unit --aim=head|torso|root --dist --yaw: close-up PNGs), probe_head, probe_local, and per-unit ones (_halfling, _wheelbarrow, _sarissa, _mino, _hoplite, _shield, _potion).
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
@@ -28,7 +29,8 @@ drop a lesson once it is a comment at the code it describes.
 - The idle look-around can flip the idle camera to the other side between builds (zeus 391): the eye-flip follows the face at that idle phase, which shifts with the scene's readiness, so a one-sided chest ornament must read from both sides or the camera must be pinned.
 - Every capture run clears iter-N including stats.json: rerun `stats.mjs` for the units named in the CONFIRM/critic prompt after the final capture.
 - A unit that logs a spawn-time mechanic first (spins, swoops at tick 1) needs its own ABILITY_PREF entry, or the ability pair is shot on the spawn event (392 berserker).
-- The idle shot is taken ~100 ms after spawn: a lift or pose eased in from zero reads as absent. Start it at full weight from spawn, and keep it in every later hip re-solve (the wall clamp) (393 valkyrie).
+- The idle shot is taken ~100 ms after spawn: a lift or pose eased in from zero reads as absent. Start it at full weight from spawn, and keep it in every later hip re-solve (the wall clamp) (393 valkyrie). Same trap for a weight the code eases in (394 berserker stood pair: set the weight on the first frame, not by easing 0 -> 1).
+- One gap, one commit: gaps bundled into a single sha cannot be reverted singly, so a REJECT takes the approved gaps with it (394: the jarl pelt retry shared a commit with the brawler helm and the headbutt, and the curb had to be undone by hand).
 - The critic judges the named shot: an element hidden behind another mesh (the brawler's axe head behind the shield) is not there. Check the named shot, not just a later one (392).
 
 ## Rig and dress
@@ -39,5 +41,6 @@ drop a lesson once it is a comment at the code it describes.
 - Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
 - An engine's projectile can be a copy of a named node on the build (LOADED_BOLTS + heldProp/_buildHeldMissile): the flying shape then matches the loaded one for free.
 - A hood or cap over the block head needs a superellipsoid profile (exponent about 3, 1.2 of the head) to clear the chamfered corners and the top ring.
+- A shared prop that marks its mechanic by the style OBJECT (`style === VALKYRIE_WINGS`) loses the mechanic the moment one unit gets its own style: key the marker on a flag in the style (`fly: true`) so a per-unit fork keeps the flight/beat (394 valkyrie wings).
 - A pose keyed off `_air` reaches every airborne humanoid (hop-backs, the halfling's jump): gate it on a runtime flag set by the one mechanic it belongs to (392 leap pose).
 - A hook on a shared ability name (`flying_hover`) hits every unit that lists it, including done units outside the batch (balloon_archer): gate on the unit's own kind (392 valkyrie).
