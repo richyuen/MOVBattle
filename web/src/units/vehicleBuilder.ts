@@ -1594,15 +1594,12 @@ const CREW_SEAT = { lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee:
  */
 const THROWER_PERCH = { seat: -0.15, up: 0.09, tuftDeep: 0.13, lumps: 0.18, wide: 0.09, kneeUp: 0.05, ahead: 0 };
 /*
- * [R] 397 the Thrower's legs, solved to a reachable POINT (farmer.wheelbarrow.red.png: the rear rider's knees stand well out PAST the front rider's
- * arms, level with his belt, the thighs long and near level, the shins dropping outside the tray's side boards). 388-389 only aimed a fixed-length
- * thigh at a knee target, so the knee stopped a whole thigh short of it and hugged the Farmer's upper arms whatever the target said (critic 396:
- * shins outside the rim now, knees still close to his arms). The rebuild solves the knee itself: the target is .clear rig units outside the Farmer's
- * shoulder, .waist of the way up his trunk (his belt line) and .ahead in front of his hip; the thigh is STRETCHED along its length axis until the
- * knee reaches it (.reach clamps that), aimed at it, and the shin then hangs .shinOut out and .shinDown down from the knee, its foot outside the
- * board. .kneeOut keeps the knee clear of the tray's side board.
+ * [S] 388 the Thrower's knees round the Farmer's chest (farmer.wheelbarrow.red.png: the rear rider's thighs run forward and up either side of the front
+ * rider, both knees out beside the Farmer's chest, shins hanging outside; critic 387: the near leg dropped nearly straight down outside the board, the
+ * far knee unseen). Each knee target is now read off the Farmer's own trunk on that side: .chest of the way from his hip joint up to his shoulder
+ * (height and fore-aft), .out rig units outside that shoulder; the shin then hangs down and out from the knee (.shinOut, .shinDown, .shinAhead).
  */
-const THROWER_KNEES = { waist: 0.42, clear: 0.14, ahead: 0.06, rise: 0.02, reach: 2.4, shinOut: 0.55, shinDown: 1, shinAhead: 0.1 };
+const THROWER_KNEES = { chest: 0.55, out: 0.2, shinOut: 0.6, shinDown: 1, shinAhead: 0.15 };
 /** World matrices of a node and every ancestor, root first, so a read made at build time is fresh. */
 function settleWorld(node: TransformNode): void {
   const chain: TransformNode[] = [];
@@ -1617,8 +1614,9 @@ function aimLimb(joint: TransformNode, worldDir: Vector3): void {
   joint.rotation.setAll(0);
   joint.rotationQuaternion = Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), local, new Quaternion());
 }
-/** The Thrower's thighs stretched to knee targets wide outside the Farmer's arms on his belt line, his shins down and out from there (spec at THROWER_KNEES). */
+/** The Thrower's thighs to knee targets wide outside the tray beside the Farmer's hips, his shins down and out from there (spec at THROWER_PERCH). */
 function legsRoundFarmer(rig: TransformNode, farmer: ArticulatedBody, thrower: ArticulatedBody, rimY: number): void {
+  const P = THROWER_PERCH;
   settleWorld(rig);
   const toRig = rig.getWorldMatrix().clone().invert();
   const fromRig = rig.getWorldMatrix();
@@ -1634,13 +1632,10 @@ function legsRoundFarmer(rig: TransformNode, farmer: ArticulatedBody, thrower: A
     const sh = Vector3.TransformCoordinates(shoulder.getAbsolutePosition(), toRig);
     const h = Vector3.TransformCoordinates(hip.getAbsolutePosition(), toRig);
     const side = Math.sign(h.x) || 1;
-    // the Farmer's belt line on this side, out past his shoulder (and so past the arm hanging from it)
-    const waist = Vector3.Lerp(f, sh, K.waist);
-    const kneeAt = new Vector3(side * (Math.abs(sh.x) + K.clear), Math.max(waist.y, rimY + K.rise), waist.z + K.ahead);
-    // the knee can only sit one thigh from the hip: stretch the thigh until it reaches the target, then aim it there
-    const rest = Math.abs(knee.position.y) || 0.001;
-    const want = kneeAt.subtract(h).length();
-    hip.scaling.y = Math.min(K.reach, Math.max(1, want / rest));
+    // beside the Farmer's chest on this side, outside his shoulder and never inside the tray's board
+    const chest = Vector3.Lerp(f, sh, K.chest);
+    const outX = Math.max(Math.abs(sh.x) + K.out, WHEELBARROW.trayWide / 2 + P.wide * 0.5);
+    const kneeAt = new Vector3(side * outX, Math.max(chest.y, rimY + P.kneeUp), chest.z + P.ahead);
     aimLimb(hip, Vector3.TransformNormal(kneeAt.subtract(h), fromRig));
     aimLimb(knee, Vector3.TransformNormal(new Vector3(side * K.shinOut, -K.shinDown, K.shinAhead), fromRig));
   }
