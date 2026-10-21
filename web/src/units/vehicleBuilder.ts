@@ -192,15 +192,19 @@ function addOperator(
     // A small man in the cut of the infantry: his own height, head and limb lengths, their shirt and trouser widths
     crewProportions({
       scale: 0.46,
-      headSize: 1.04,
-      armLength: 0.9,
+      bulk: 1.3,
+      torsoWidth: 1.16,
+      headSize: 1.35,
+      armLength: 0.86,
       legLength: 0.92,
-      headLength: 1.28,
-      headWidth: 0.82,
+      headLength: 1.16,
+      headWidth: 1.05,
       torsoRoundness: 1.1,
-      handSize: 1.06,
+      upperArmWidth: 1.2,
+      upperLegWidth: 1.15,
+      handSize: 1.1,
       footLength: 1.1,
-      footWidth: 0.94,
+      footWidth: 0.98,
       footHeight: 0.86,
     }),
     color,
@@ -2089,9 +2093,11 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * stand out of the deck amidships, each a thin shaft with a broad flat leaf blade standing up over the hull, one forward, one aft and one between,
    * leaning a little fore and aft of each other so the three read apart. .long of the hull's height, the blade .blade of it and .bladeWide across at its
    * middle (a leaf: a widening foot and a point, not a spearhead), .lean rad off upright.
+   * [S] 398 the critic read the blades as near-black discs taller than the crew: the oar's timber is now the hull's own warm brown, self-lit, and the
+   * blade is narrower (.bladeWide .3, about a head wide on the small crew) and shorter (.blade .5).
    */
-  const OARS = { long: 1.75, thick: 0.055, blade: 0.5, bladeWide: 0.42, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
-  const oarMat = makeMat(scene, new Color3(0.1, 0.09, 0.09));
+  const OARS = { long: 1.75, thick: 0.055, blade: 0.5, bladeWide: 0.3, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
+  const oarMat = getMaterialFactory().get("wood", new Color3(0.52, 0.34, 0.19), { emissive: new Color3(0.52, 0.34, 0.19).scale(0.16) });
   /*
    * [S] three Long-Boaters on their oars (395; viking.longship.jpg, card Appearance "3 Long-Boaters holding oars", card "The people riding it are called
    * oarmen"; critic 394: "an empty deck and three thin dark rods, one reading as a spear, no blades or hands"). The single operator is replaced by three
@@ -2099,10 +2105,13 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * over a dark belt, and each gripping one of the three oars in one fist (.hand alternates so the oars stand either side of the line): the oar node is
    * hung off that fist (holdInFist) and the shaft runs .butt below the grip, .top above it, the leaf blade over his head and the butt down by the deck.
    * The fist is raised .raise at the shoulder, .spread out, elbow .elbow, so the hand is at his chest and the oar stands beside him.
+   * [S] 398 the critic read the crew as slim mannequins with pinhead horns standing ON the deck, not stocky oarsmen sunk to the chest in the hull:
+   * .feet drops to .16 (the deck's plank cuts them at the ribs, the gunwale rail at the chest) and they are built stout (bulk 1.3, broad trunk, thick
+   * arms and legs, big head) with tall horns (.horn of the head's height) leaned out over the rail.
    */
   const LONGSHIP_CREW = {
-    at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.64, hand: [1, -1, 1] as const,
-    raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.13, clutch: 0.03, glow: 0.08,
+    at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.44, hand: [1, -1, 1] as const,
+    raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.05, clutch: 0.03, glow: 0.08, horn: 3.2,
   };
   /**
    * [S] the oarsmen getting off the ship (396; viking.longship.jpg, card Characteristics: thrown at the enemies, its oarsmen disembark). Kept on the ship's
@@ -2124,9 +2133,9 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     dome.convertToFlatShadedMesh();
     allMeshes.push(dome);
     for (const side of [-1, 1]) {
-      const horn = MeshBuilder.CreateCylinder("longshipCrewHorn", { height: 1.5 * e.y, diameterTop: 0, diameterBottom: 0.42 * e.y, tessellation: 4 }, scene);
-      horn.position.set(side * e.x * 1.15, e.y * 0.72, -e.z * 0.1);
-      horn.rotation.z = -side * 0.62;
+      const horn = MeshBuilder.CreateCylinder("longshipCrewHorn", { height: LONGSHIP_CREW.horn * e.y, diameterTop: 0, diameterBottom: 0.6 * e.y, tessellation: 4 }, scene);
+      horn.position.set(side * e.x * 1.2, e.y * (0.5 + LONGSHIP_CREW.horn * 0.28), -e.z * 0.1);
+      horn.rotation.z = -side * 0.5;
       horn.parent = body.headMesh;
       horn.material = crewHorn;
       horn.convertToFlatShadedMesh();
