@@ -9,18 +9,15 @@ drop a lesson once it is a comment at the code it describes.
 - SSAO (main.ts, radius 1.5) reads a DOUBLESIDE ribbon's inward faces as occlusion and greys the cloth: build dress shells one-sided facing out (check flipFaces), never double-sided at the same depth.
 - Flat colour that survives ACES: an "unlit" material with emissive = the colour, excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - "metal" renders near black under swiftshader: use "cloth" with a small emissive instead.
-- Lit cloth under a beard, a brim or a held prop reads grey however white its material: self-light it (emissive) or go unlit.
+- Lit cloth under a beard, a brim or a held prop reads grey however white its material: self-light it or go unlit. A cream fur at (0.9, 0.7, 0.42) with a small emissive still displays pale-white, so fur that must read cream wants an unlit material (396 headbutter).
 - A preset's particle emitter at the chest (iconic_zeus "solar" fx) hazes everything behind it in a still: strip per-unit fx the render does not show.
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it: timber, iron and leather need their own materials.
 - A front light washes a flat lower block: a lighter layer next to a darker one needs more than x.97 vs x.85 in team colour to read apart.
-- ExtrudeShape with closeShape and cap CAP_ALL builds a closed thin slab from a 2D polygon: use it for flat emblems (Zeus's bolt) where a double-sided disc/ribbon would lose a face to culling or SSAO.
 - A vehicle's body material IS the team colour (unitFactory tints `bodyMaterial`): a timber hull needs its own material, and a team-trim mesh goes in as the body source (392 longship).
-- Timber under a deck's overhang reads black even at .62/.42/.25: give it a small emissive (392).
 - A ship's rig must be read off the reference, not invented: the longship has no mast or yard at all, and its verticals are the crew's oars. A plausible addition (sail, then yard) reads as foreign hardware and is rejected whole (393).
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 - Ice or fur spikes sized off a part's smallest half-extent come out a few cm and vanish at lineup distance: key them on the mean half-extent times ~2.4, and crop the named shot to check before the critic runs (395 frost).
 - A freeze is applied at the FIRE tick, not the arrow's impact (ice archer: status:freeze at 383 ms, target hurt at 700 ms): its visual has to live on the target from the fire.
-- Dress hung off a head frame is buried if a mask box already covers the jaw: start a beard below the mask's bottom edge and stand it proud of the mask's face (brawler 395); a crew body out of addOperator has no leg dress and reads as a slim mannequin at lineup distance.
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
@@ -33,6 +30,8 @@ drop a lesson once it is a comment at the code it describes.
 - The idle look-around can flip the idle camera to the other side between builds (zeus 391): the eye-flip follows the face at that idle phase, which shifts with the scene's readiness, so a one-sided chest ornament must read from both sides or the camera must be pinned.
 - Every capture run clears iter-N including stats.json: rerun `stats.mjs` for the units named in the CONFIRM/critic prompt after the final capture.
 - A unit that logs a spawn-time mechanic first (spins, swoops at tick 1) needs its own ABILITY_PREF entry, or the ability pair is shot on the spawn event (392 berserker).
+- A two-stage mechanic that logs its special at the take-off and a plain hit at the impact gets its ability pair shot on the first half and its release pair on the second: use that to show both halves of one throw (396 longship: `hurl` at 2117 ms, `ship_crash` + the hit at 2967 ms).
+- `RuntimeUnit.landings` counts ground touchdowns: read the counter before a leap and compare each step instead of testing a per-frame grounded flag to time a landing (396 longship).
 - The idle shot is taken ~100 ms after spawn: a lift or pose eased in from zero reads as absent. Start it at full weight from spawn, and keep it in every later hip re-solve (the wall clamp) (393 valkyrie). Same trap for a weight the code eases in (394 berserker stood pair: set the weight on the first frame, not by easing 0 -> 1).
 - One gap, one commit: gaps bundled into a single sha cannot be reverted singly, so a REJECT takes the approved gaps with it (394: the jarl pelt retry shared a commit with the brawler helm and the headbutt, and the curb had to be undone by hand).
 - The critic judges the named shot: an element hidden behind another mesh (the brawler's axe head behind the shield) is not there. Check the named shot, not just a later one (392).

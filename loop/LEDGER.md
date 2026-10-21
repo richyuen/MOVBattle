@@ -12,11 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-391 | idle camera high rear-side, loaded leaf head past the frame front, crewman at the winch (03a5bdc) | ancient.ballista.b | approved
-391 | vest one light panel + closed white V slab to the belt, team .3 toward white (6eefbb3) | farmer.halfling.a | approved
-391 | foot fur rooted on the toe top face, spread over the instep (bef7e5f) | farmer.halfling.a | approved
-391 | off hand a second Valkyrie sword, shield off (54ae174) | viking.valkyrie.b | approved
-391 | [R] toga trim: three waist bands + flat gold bolt + white skirt (e30be40, reverted 86c09ff) | ancient.zeus.a | rejected
 392 | spiked team cap: dome, studded brow band, ear flaps, one tall spike (fb91bba) | viking.headbutter.a | approved
 392 | ice bow: body-height pale-ice limbs, snowball nock (dd3caf1) | viking.ice_archer.b | approved
 392 | bearded axe: dark haft, grey crescent, poll; up beside the board in idle (8bcbb27 +8289d53) | viking.brawler.b | approved
@@ -43,6 +38,13 @@ for 25 iterations.
 395 | dark beard from under the mask (d4bac61, reverted 0922c08) | viking.brawler.a | rejected
 395 | belt, fur-cuffed bracers, cream fur boot cuffs over brown boots (607fd74) | viking.headbutter.a | approved
 395 | ice crust: 4 pale-blue shards on trunk/head/arms/thighs while frozen (9400138) | viking.ice_archer.c | approved
+396 | boots over the feet + warm puffy fur rolls (cb83fbe) | viking.headbutter.a | approved
+396 | cream fur belt + big navy Landfall buckle (180a267 + 97c6946) | viking.berserker.a | approved
+396 | round team cap, pale fur brim, snow pom (d84c723) | viking.ice_archer.a | approved
+396 | beard hung under the mask, jaw wider than the cheek guards (3c8562d + 0ae74ce) | viking.brawler.a | approved
+396 | own chop: lands .42 m under the crown, trunk over the man (6b98556) | viking.jarl.c | approved
+396 | hurl + AoE crush + oarsmen disembark (1946694) | viking.longship.c | approved
+396 | [R] 1.92 build, flat girdle inlays, front pauldron scroll (a76c891, reverted 32577c2) | ancient.minotaur.a | rejected
 
 
 ## Spent (never retry as [P])
@@ -100,7 +102,11 @@ vehicleBuilder.ts:LONGSHIP_OARS (long, thick, blade, bladeWide, stem, flat, lean
 simulationSystem.ts:HEADBUTT (within, cooldown, windup, recover, ahead, radius, damage, fling, lift, edge, lunge) | .55, 6, .28, .5, .5, 1.15, 18, 5, 4.5, .5, .5 | 394 | approved
 vehicleBuilder.ts:LONGSHIP_CREW (at z, across x, feet, raise, spread, elbow, butt, top, clutch) | -.62/.02/.66, -.1/.06/-.02, .64, -.5, .34, -.55, .62, 1.13, .03 | 395 | approved
 vehicleBuilder.ts:LONGSHIP_SHIELDS (face, rim, boss, across, y, first, spread, count) | .46, .51, .17, .62, .58, -.9, .6, 4 | 395 | approved | flat .28 discs, 4 a side, no boss (391-394)
-vikingDress.ts:VIKING_BEARD (burnTop, burn, jaw, jawY, jawZ, locks, lockLong, braidLong, band, tuft) | .2, .22, 1.2/.6/.62, .66, .6, 5, .26, .3, .09, .16 | 395 | approved | berserker cut down .9 wide 1.12 tip .48 braid; brawler cut (under .17) rejected 395
-vikingDress.ts:HEADBUTTER_KIT (beltTall, beltAt, beltOut, buckle; bracer from/to/out; boot from/to/out; cuff from/to/out; spikes, spike, glow) | .26, .1, 1.24, .22; .06/.78/1.24; .48/1.0/1.16; .1/.46/1.48; 6, .3, .12 | 395 | approved | first cut: beltOut 1.06 hidden, spikes .62 of a limb (395)
+vikingDress.ts:VIKING_BEARD (burnTop, burn, jaw, jawY, jawZ, locks, lockLong, braidLong, band, tuft; per cut jaw/jawY/jawZ, stacheLow/stacheZ, burns) | .2, .22, 1.2/.6/.62, .66, .6, 5, .26, .3, .09, .16; brawler 1.38/.74/.82 at 1.06 z .78, stache .98/1.24, no burns | 396 | approved | berserker cut down .9 wide 1.12 tip .48 braid; brawler cut (under .17) rejected 395
+vikingDress.ts:HEADBUTTER_KIT (belt; bracer; boot; cuff; fur/cuff rolls; sole) | .26, .1, 1.24, .22; .06/.78/1.24; .48/1.0/1.16; .1/.46/1.5; thick .22/.28, lumps 6/7; .06 | 396 | approved | 395: cuff .1/.46/1.48, spikes 6/.3; first cut beltOut 1.06 hidden, spikes .62 of a limb
+vikingDress.ts:BERSERKER_BELT (at, out, thick, lumps, face, deep, mark) | 0, 1.16, .66, 9, 1.5, .08, .6 | 396 | approved | buckle inside the roll's opening, face 1.3 (396b)
+vikingDress.ts:ICE_ARCHER_CAP (dome, tall, rise, slice, brim, brimOut, pom, pomLump) | 1.26, 1.12, .12, .58, .26, 1.3, .62, .36 | 396 | approved
+proceduralAnimation.ts:CHOP_JARL (below, pitch, step) | .42, .52, -.56 | 396 | approved
+simulationSystem.ts:LONGSHIP_HURL (reach, short, rise, radius, crush, fling, lift, edge, cooldown) | 5.5, .9, 7.5, 3.1, 1.35, 6.5, 5, .55, 6 | 396 | approved
 runtimeUnit.ts:FROST (shards, wide, color, glow) | 4, .42, (.5,.82,1), .28 | 395 | approved | first cut shards min(extent)*1.24 too small to see (395)
 
