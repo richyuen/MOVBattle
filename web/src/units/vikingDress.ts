@@ -486,31 +486,31 @@ export function berserkerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * on its front face (.front of its depth). .tufts tapered shards fan .spread apart about the vertical, each .len of the upper arm's height long,
  * .wide of its half width across at the root, leaning .lean in under the arm, in the beard's dark brown self-lit at .glow.
  */
-const BERSERKER_ARMPITS = { in: 0.86, drop: 0.1, front: 0.92, tufts: 6, len: 0.66, wide: 0.5, lean: 0.5, spread: 0.34, glow: 0.24 };
+const BERSERKER_ARMPITS = { in: 0.95, across: 0.16, drop: 0.02, arc: 0.12, front: 0.95, tufts: 6, len: 0.52, wide: 0.26, lean: 0.3, splay: 0.5, glow: 0.24 };
 /** The Berserker's dark armpit tufts, hung off each shoulder joint (spec at BERSERKER_ARMPITS). */
 export function berserkerArmpits(scene: Scene, body: ArticulatedBody): Mesh[] {
   const A = BERSERKER_ARMPITS;
   const hair = getMaterialFactory().get("cloth", new Color3(0.3, 0.12, 0.1), { emissiveIntensity: A.glow });
   const out: Mesh[] = [];
-  const chestDeep = body.torsoMesh.getBoundingInfo().boundingBox.extendSize.z * body.torsoMesh.scaling.z;
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
   for (const side of [-1, 1]) {
     const shoulder = side < 0 ? body.leftShoulder : body.rightShoulder;
     const arm = side < 0 ? body.leftUpperArm : body.rightUpperArm;
     const L = limbBox(arm);
     const tall = L.half * 2;
     for (let i = 0; i < A.tufts; i++) {
-      const u = i / (A.tufts - 1) - 0.5; // -0.5 (forward of the crease) .. 0.5 (back under the arm)
-      const long = tall * A.len * (1 - 0.26 * Math.abs(u) * 2);
+      const u = i / (A.tufts - 1) - 0.5; // -0.5 (by the arm) .. 0.5 (in toward the sternum)
+      const long = tall * A.len * (1 - 0.34 * Math.abs(u) * 2);
       const pivot = new TransformNode("berserkerArmpitPivot", scene);
       pivot.parent = shoulder;
       pivot.position.set(
-        -side * L.wide * (A.in - u * 0.14),
-        L.mid + L.half - tall * (A.drop + Math.abs(u) * 0.06),
-        chestDeep * (A.front - u * A.spread),
+        -side * (L.wide * A.in + (u + 0.5) * chest.x * A.across),
+        L.mid + L.half - tall * (A.drop + (1 - Math.abs(u) * 2) * A.arc),
+        chest.z * (A.front - Math.abs(u) * 0.26),
       );
-      pivot.rotation.z = -side * (A.lean + u * 0.3);
-      pivot.rotation.x = -0.16 + u * 0.34; // the fan swings back into the crease at its inner end
-      const shard = MeshBuilder.CreateCylinder("berserkerArmpitHair", { height: long, diameterTop: L.wide * A.wide, diameterBottom: 0, tessellation: 4 }, scene);
+      pivot.rotation.z = -side * (A.lean - u * A.splay);
+      pivot.rotation.x = -0.1 + u * 0.2;
+      const shard = MeshBuilder.CreateCylinder("berserkerArmpitHair", { height: long, diameterTop: chest.x * A.wide, diameterBottom: 0, tessellation: 4 }, scene);
       shard.position.y = -long * 0.5;
       shard.parent = pivot;
       shard.material = hair;
