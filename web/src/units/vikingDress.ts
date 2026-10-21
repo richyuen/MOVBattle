@@ -186,7 +186,7 @@ export function headbutterBraids(scene: Scene, body: ArticulatedBody): Mesh[] {
  *   braid: two ties and a tuft at the bib's foot (a plaited point), when the cut wears one.
  * Self-lit .glow so the dark hair stays warm in the shade.
  */
-interface VikingBeardCut { color: Color3; glow: number; down: number; wide: number; tip: number; braid: boolean; stache: boolean }
+interface VikingBeardCut { color: Color3; glow: number; down: number; wide: number; tip: number; braid: boolean; stache: boolean; burns?: boolean; under?: number }
 const VIKING_BEARD = {
   burnTop: 0.2, burn: 0.22, jaw: [1.2, 0.6, 0.62] as const, jawY: 0.66, jawZ: 0.6,
   locks: 5, lockLong: 0.26, braidLong: 0.3, band: 0.09, tuft: 0.16,
@@ -199,6 +199,7 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
   const e = headExtents(body);
   const halfX = e.x, halfY = e.y, halfZ = e.z;
   const W = halfX * 2, H = halfY * 2;
+  const drop = (cut.under ?? 0) * H;
   const added: Mesh[] = [];
   const put = (m: Mesh): Mesh => {
     m.material = hair;
@@ -216,16 +217,18 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
     m.position = Vector3.Center(from, to);
     return put(m);
   };
-  for (const side of [-1, 1]) {
-    column("vikingBeardBurn", new Vector3(side * halfX * 1.0, halfY * B.burnTop, halfZ * 0.12), new Vector3(side * halfX * 0.96, -halfY * 0.6, halfZ * 0.5),
-      W * B.burn, W * B.burn * 1.05);
+  if (cut.burns !== false) {
+    for (const side of [-1, 1]) {
+      column("vikingBeardBurn", new Vector3(side * halfX * 1.0, halfY * B.burnTop, halfZ * 0.12), new Vector3(side * halfX * 0.96, -halfY * 0.6, halfZ * 0.5),
+        W * B.burn, W * B.burn * 1.05);
+    }
   }
   const jaw = MeshBuilder.CreateIcoSphere("vikingBeardJaw", { radius: 1, subdivisions: 1, flat: true }, scene);
   jaw.scaling.set(halfX * B.jaw[0], halfY * B.jaw[1], halfZ * B.jaw[2]);
-  jaw.position.set(0, -halfY * B.jawY, halfZ * B.jawZ);
+  jaw.position.set(0, -halfY * B.jawY - drop, halfZ * B.jawZ);
   put(jaw);
   // the bib: from under the chin down onto the chest, leaning forward off it
-  const bibTop = new Vector3(0, -halfY * (B.jawY + B.jaw[1] * 0.55), halfZ * B.jawZ);
+  const bibTop = new Vector3(0, -halfY * (B.jawY + B.jaw[1] * 0.55) - drop, halfZ * B.jawZ);
   const lean = 0.12;
   const bibFoot = bibTop.add(new Vector3(0, -Math.cos(lean) * H * cut.down, Math.sin(lean) * H * cut.down));
   const bib = column("vikingBeardBib", bibTop, bibFoot, W * cut.wide, W * cut.wide * cut.tip);
@@ -272,9 +275,11 @@ export function berserkerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, { color: new Color3(0.3, 0.12, 0.1), glow: 0.2, down: 0.9, wide: 1.12, tip: 0.48, braid: true, stache: true });
 }
 
-/** The Brawler's dark beard, hung from under his full-face helm's mask onto the chest (spec at VIKING_BEARD). */
+/** The Brawler's dark beard, hung from under the mask's eye line over the jaw and onto the chest (spec at VIKING_BEARD). */
 export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
-  return vikingBeard(scene, body, { color: new Color3(0.24, 0.12, 0.1), glow: 0.18, down: 0.55, wide: 0.94, tip: 0.42, braid: false, stache: false });
+  return vikingBeard(scene, body, {
+    color: new Color3(0.26, 0.12, 0.1), glow: 0.2, down: 0.5, wide: 1.08, tip: 0.52, braid: false, stache: false, burns: false, under: 0.17,
+  });
 }
 
 /*
