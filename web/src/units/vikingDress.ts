@@ -351,10 +351,10 @@ export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  *   .mark of that disc's width on its face.
  * Fur self-lit like the rest of the viking fur, the navy and the red a little brighter so they read under the belly's shade.
  */
-const BERSERKER_BELT = { at: 0.0, out: 1.16, thick: 0.66, lumps: 9, face: 1.3, deep: 0.09, mark: 0.46, glow: 0.14 };
+const BERSERKER_BELT = { at: 0.0, out: 1.16, thick: 0.66, lumps: 9, face: 1.5, deep: 0.08, mark: 0.6, proud: 2.2, glow: 0.14 };
 const BERSERKER_FUR = new Color3(0.9, 0.7, 0.42);
-const BERSERKER_NAVY = new Color3(0.1, 0.14, 0.3);
-const BERSERKER_RED = new Color3(0.7, 0.09, 0.09);
+const BERSERKER_NAVY = new Color3(0.05, 0.07, 0.2);
+const BERSERKER_RED = new Color3(0.62, 0.06, 0.06);
 /** The Berserker's cream fur belt with its big navy Landfall buckle (spec at BERSERKER_BELT). */
 export function berserkerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = BERSERKER_BELT;
@@ -382,20 +382,21 @@ export function berserkerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
     lump.material = fur;
     out.push(lump);
   }
-  // the buckle: a navy disc on the roll's front, the red mark flat on its face
+  // the buckle: a navy disc standing proud of the fur roll, the red mark flat on its face
+  const buckleZ = round * B.out * flat + chest.y * B.thick * 0.5;
   const buckle = MeshBuilder.CreateCylinder("berserkerBuckle", { height: round * B.deep, diameter: round * B.face, tessellation: 10 }, scene);
   buckle.rotation.x = Math.PI / 2;
   buckle.bakeCurrentTransformIntoVertices();
-  buckle.position.set(0, y, round * B.out * flat + round * B.deep * 0.5);
+  buckle.position.set(0, y, buckleZ);
   buckle.parent = body.torso;
   buckle.material = navy;
   buckle.convertToFlatShadedMesh();
   out.push(buckle);
-  const mark = MeshBuilder.CreateCylinder("berserkerBuckleMark", { height: round * B.deep * 0.5, diameter: round * B.face * B.mark, tessellation: 3 }, scene);
+  const mark = MeshBuilder.CreateCylinder("berserkerBuckleMark", { height: round * B.deep * 0.6, diameter: round * B.face * B.mark, tessellation: 3 }, scene);
   mark.rotation.x = Math.PI / 2;
   mark.rotation.z = Math.PI / 2;
   mark.bakeCurrentTransformIntoVertices();
-  mark.position.set(0, y, round * B.out * flat + round * B.deep * 1.05);
+  mark.position.set(0, y, buckleZ + round * B.deep * 0.5);
   mark.parent = body.torso;
   mark.material = red;
   mark.convertToFlatShadedMesh();
