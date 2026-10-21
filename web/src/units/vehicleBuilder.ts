@@ -2104,6 +2104,13 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.64, hand: [1, -1, 1] as const,
     raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.13, clutch: 0.03, glow: 0.08,
   };
+  /**
+   * [S] the oarsmen getting off the ship (396; viking.longship.jpg, card Characteristics: thrown at the enemies, its oarsmen disembark). Kept on the ship's
+   * root so the sim can move them after the hurl: at the hurl they heave the hull up (both arms overhead), and at the crash they drop their oars and step
+   * off the deck onto the ground either side of the hull (their feet at the root's own floor, the three spread fore and aft).
+   */
+  interface LongshipCrewman { body: ArticulatedBody; oar: TransformNode; landed: boolean }
+  const crewBodies: LongshipCrewman[] = [];
   const crewCap = makeMat(scene, color.scale(0.78));
   const crewDark = makeMat(scene, new Color3(0.2, 0.13, 0.09));
   const crewHorn = makeMat(scene, new Color3(0.82, 0.8, 0.72));
@@ -2178,9 +2185,11 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
         allMeshes.push(tip);
       };
       oarLeaf(C.top);
+      crewBodies.push({ body, oar: mount, landed: false });
     });
     crew.push(operator);
   }
+  root.metadata = { ...(root.metadata ?? {}), longshipCrew: crewBodies };
 
   for (const zOff of [-1.32, 1.34]) {
     const post = MeshBuilder.CreateCylinder("longshipPost", { height: 0.7, diameter: 0.1, tessellation: 8 }, scene);
@@ -2263,6 +2272,47 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     makeBodyMetrics(operator.headTopY, 0.92, 0.56, 0.84),
     { impactOrigin: makeSocket(scene, root, "longship_impact_socket", new Vector3(0, 0.72, 1.28)) },
   );
+}
+
+/** The Longship's crew, kept on its root (metadata.longshipCrew) so the sim can heave and land them after the hurl (spec at LONGSHIP_CREW). */
+type LongshipCrew = Array<{ body: ArticulatedBody; oar: TransformNode; landed: boolean }>;
+function longshipCrewOf(body: ArticulatedBody): LongshipCrew | null {
+  return (body.root.metadata as { longshipCrew?: LongshipCrew } | null)?.longshipCrew ?? null;
+}
+
+/** The oarsmen heave the hull up over their heads at the hurl's take-off (both arms overhead, elbows a little bent). */
+export function heaveLongshipCrew(body: ArticulatedBody): void {
+  for (const man of longshipCrewOf(body) ?? []) {
+    if (man.landed) continue;
+    man.body.leftShoulder.rotation.set(-2.4, 0, -0.22);
+    man.body.rightShoulder.rotation.set(-2.4, 0, 0.22);
+    man.body.leftElbow.rotation.set(-0.28, 0, 0);
+    man.body.rightElbow.rotation.set(-0.28, 0, 0);
+  }
+}
+
+/**
+ * [S] the oarsmen disembark (396; card Characteristics: the thrown ship's oarsmen get off). At the crash each man still aboard drops the oar he holds
+ * (the oar node hangs off his fist) and steps off the deck onto the ground either side of the hull, fore and aft, arms down at his sides. One call lands
+ * them all; a second call on an already landed crew does nothing.
+ */
+export function landLongshipCrew(body: ArticulatedBody): boolean {
+  const crew = longshipCrewOf(body);
+  if (!crew) return false;
+  let moved = false;
+  crew.forEach((man, i) => {
+    if (man.landed) return;
+    man.landed = true;
+    moved = true;
+    man.oar.setEnabled(false);
+    const side = i % 2 === 0 ? -1 : 1;
+    man.body.root.position.set(side * (0.86 + (i === 2 ? 0.16 : 0)), 0, -0.34 + i * 0.52);
+    man.body.leftShoulder.rotation.set(0.1, 0, -0.16);
+    man.body.rightShoulder.rotation.set(0.1, 0, 0.16);
+    man.body.leftElbow.rotation.set(0, 0, 0);
+    man.body.rightElbow.rotation.set(0, 0, 0);
+  });
+  return moved;
 }
 
 /*

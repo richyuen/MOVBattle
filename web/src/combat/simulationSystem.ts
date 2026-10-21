@@ -1,5 +1,5 @@
 import { Color3, Mesh, Node, TransformNode, Vector3 } from "@babylonjs/core";
-import { CREW_FIGHT, poseWheelbarrowCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
+import { CREW_FIGHT, heaveLongshipCrew, landLongshipCrew, poseWheelbarrowCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import { AnimState } from "../units/proceduralAnimation";
 import {
@@ -293,6 +293,18 @@ const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead:
  * under gravity (22) and the air drag (1.5/s), an apex of about 1.4 m. Logged "leap" at the take-off.
  */
 const JUMP_CHARGE = { rise: 8, swoopRise: 4.5 };
+/*
+ * [S] the Longship hurl (396; viking.longship.jpg, card Characteristics "the Longship is thrown at the enemies ... the impact crushes them ... the oarsmen
+ * disembark"; critic 391: only a melee hit). Instead of a swing, a longship whose man is within .reach m throws ITSELF at him: the hull leaps (RuntimeUnit.leap)
+ * .rise m/s up with .short m left between it and him, its crew heaving it up overhead at the take-off, and it comes down in a crush of .radius m round where
+ * it lands: every enemy in the ring takes the melee blow's damage at .crush of it, flung out at .fling and up at .lift, the first of them logged as the hit.
+ * The crash logs "ship_crash"; the take-off logs "hurl" (the shot's ability pair). The crew step off the deck at the crash (vehicleBuilder landLongshipCrew).
+ * .cooldown s before the next hurl. Dust: .dust.
+ */
+const LONGSHIP_HURL = {
+  reach: 5.5, short: 0.9, rise: 7.5, radius: 3.1, crush: 1.35, fling: 6.5, lift: 5, edge: 0.55, cooldown: 6,
+  dust: new Color3(0.44, 0.33, 0.2),
+};
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -438,6 +450,8 @@ export class SimulationSystem {
   // Hop back (HOP_BACK): when each man's last blow landed, and when he may hop again
   private _landedAt = new Map<RuntimeUnit, number>();
   private _hopReadyAt = new Map<RuntimeUnit, number>();
+  // [S] the Longship's hurl (LONGSHIP_HURL): each ship in flight, the ground landings it had at take-off, and the blow it carries
+  private _hurled = new Map<RuntimeUnit, { landed: number; damage: number }>();
   // Fencer recover (FENCER_RECOVER): each sliding man, his flat way back, when it started and the man he faces
   private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit; dist: number; seconds: number }>();
   // Fencer Dodge (FENCER_DODGE): when each fencer may dodge again, and which side he goes next
@@ -575,6 +589,7 @@ export class SimulationSystem {
     this._backingOff.clear();
     this._landedAt.clear();
     this._hopReadyAt.clear();
+    this._hurled.clear();
     this._recovers.clear();
     this._dodgeReadyAt.clear();
     this._dodgeSide.clear();
@@ -643,6 +658,7 @@ export class SimulationSystem {
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
+    if (this._hurled.size > 0) this._landHurledShips(now);
     for (const [held, back] of this._arrowsAway) {
       if (now < back) continue;
       if (!held.isDisposed()) held.setEnabled(true);
@@ -1966,6 +1982,9 @@ export class SimulationSystem {
     let knockback = impulseDir.scale(attackProfile.knockback);
     const controlStrength = attacker.definition.controlStrength ?? 1;
 
+    // [S] a longship hurls itself instead of swinging (LONGSHIP_HURL)
+    if (this._tryHurlLongship(attacker, target, damage, now)) return;
+
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {
       splashRadius = Math.max(splashRadius, 3.0);
@@ -2981,6 +3000,67 @@ export class SimulationSystem {
         unit.animator.setCharging(false);
         this._butts.delete(unit);
       }
+    }
+  }
+
+  /**
+   * [S] the Longship's hurl (spec at LONGSHIP_HURL): the hull leaps at the man, logged "hurl" with its crew heaving it up. Only in reach of him.
+   * Returns true when it has taken the attack in place of a swing.
+   */
+  private _tryHurlLongship(unit: RuntimeUnit, target: RuntimeUnit, damage: number, now: number): boolean {
+    if (unit.definition.id !== "viking.longship" || this._hurled.has(unit)) return false;
+    const dir = target.position.subtract(unit.position);
+    dir.y = 0;
+    const distance = dir.length();
+    if (distance < 0.4 || distance > LONGSHIP_HURL.reach) return false;
+    dir.normalize();
+    unit.faceTarget(target.position);
+    const dist = Math.max(1.6, distance - LONGSHIP_HURL.short);
+    if (!unit.leap(dir, dist, LONGSHIP_HURL.rise)) return false;
+    this._hurled.set(unit, { landed: unit.landings, damage: damage * LONGSHIP_HURL.crush });
+    unit.setAttackCooldown(now, LONGSHIP_HURL.cooldown);
+    unit.stopMoving();
+    heaveLongshipCrew(unit.body);
+    this._logAbility(unit, "hurl", now, target.position);
+    if (this.visualEffects) this.visualEffects.spawnKickDust(unit.position, 2);
+    return true;
+  }
+
+  /** Each hurled hull's touchdown (spec at LONGSHIP_HURL): the crush round where it lands, the hit log, the crew off the deck. */
+  private _landHurledShips(now: number): void {
+    for (const [unit, hurl] of this._hurled) {
+      if (unit.isDead) { this._hurled.delete(unit); continue; }
+      if (unit.landings <= hurl.landed) continue;
+      this._hurled.delete(unit);
+      const center = unit.position.clone();
+      center.y = 0;
+      const yaw = unit.body.root.rotation.y;
+      let logged = false;
+      for (const other of this._units) {
+        if (other.isDead || other.team === unit.team || !other.isTargetable) continue;
+        const off = other.position.subtract(center);
+        off.y = 0;
+        const d = off.length();
+        if (d > LONGSHIP_HURL.radius) continue;
+        const out = d > 0.05 ? off.scale(1 / d) : new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+        const k = 1 - (1 - LONGSHIP_HURL.edge) * (d / LONGSHIP_HURL.radius);
+        other.applyDamage(hurl.damage, out.scale(LONGSHIP_HURL.fling * k));
+        other.applyBlastLaunch(out, LONGSHIP_HURL.fling * k, LONGSHIP_HURL.lift * k);
+        if (!logged) {
+          logged = true;
+          const chain: TransformNode[] = [];
+          for (let n: Node | null = other.body.headTop; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+          for (const n of chain) n.computeWorldMatrix(true);
+          const head = other.body.headTop.getAbsolutePosition();
+          if (this.hitLog.length >= 200) this.hitLog.shift();
+          this.hitLog.push({ t: now, attackerUnit: unit.definition.id, targetUnit: other.definition.id, x: center.x, y: center.y, z: center.z, head: { x: head.x, y: head.y, z: head.z } });
+        }
+      }
+      landLongshipCrew(unit.body);
+      this._logAbility(unit, "ship_crash", now, center);
+      this.visualEffects?.spawnTrampleRing(center, LONGSHIP_HURL.radius * 0.62);
+      this.visualEffects?.spawnKickDust(center, 3);
+      this.visualEffects?.spawnSmokePuff(center, LONGSHIP_HURL.dust);
     }
   }
 

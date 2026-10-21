@@ -130,6 +130,8 @@ export class RuntimeUnit {
   // Physics velocity (used for knockback while alive AND death slide)
   private _velocity = Vector3.Zero();
   private _grounded = true;
+  /** Ground landings since spawn: the touchdown of a leap (the Longship's hurl reads it, LONGSHIP_HURL). */
+  landings = 0;
   // [S] 392 the last leap was a jump-charge (Super Jump): only that leap takes the live-air pose, not a hop back or a halfling's vault
   private _leapAir = false;
 
@@ -1114,6 +1116,7 @@ export class RuntimeUnit {
           this._velocity.y *= -0.25;
         } else {
           this._velocity.y = 0;
+          if (!this._grounded) this.landings += 1;
           this._grounded = true;
           this._leapAir = false;
           if (this._pendingBlastSprawlSeconds > 0 && !this._isDead) {
