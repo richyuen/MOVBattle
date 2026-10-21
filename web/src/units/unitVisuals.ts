@@ -261,7 +261,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ FARMER ═══════════════════════
   // [S] empty hands (339; farmer.halfling.red.png, card: Halfling Grab in both hands): no pan, the mitts are the weapon
   "farmer.halfling": vis(
-    { scale: 0.55, headSize: 1.55, legLength: 0.7 }, "none", "none", "none", "none", "#696969",
+    // [S] 397 a longer bare shin (shinLength) between the shorts' cuff and the foot fur: TABS shows shins about as long as the shorts (farmer.halfling.blue.png)
+    { scale: 0.55, headSize: 1.55, legLength: 0.7, shinLength: 1.5 }, "none", "none", "none", "none", "#696969",
   ),
   "farmer.farmer": vis(
     { scale: 0.95, bulk: 0.95 }, "pitchfork", "pointed_cowl", "none", "none", "#4A7A2E",

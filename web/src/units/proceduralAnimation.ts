@@ -196,7 +196,7 @@ const HALBERD_SQUARE = { tilt: 0.03, stride: 0.12, lean: 0.04, spread: 0.09, kne
  * (HALBERD_SQUARE) with his own numbers: hips turned out .spread rad each so the feet stand apart, knees .knee, a .stride stagger, .lean, the off arm
  * hung .raise/.out/.elbow; never sunk. Found by his shorts (unitFactory halflingShortsSeat).
  */
-const HALFLING_STANCE = { tilt: 0.02, stride: 0.05, lean: 0.03, spread: 0.22, knee: 0.04, raise: 0.04, out: 0.12, elbow: -0.15 };
+const HALFLING_STANCE = { tilt: 0.02, stride: 0.05, lean: 0.03, spread: 0.34, knee: 0.02, raise: 0.04, out: 0.12, elbow: -0.15 };
 /*
  * [S] 390 the snake archer stands upright with the bow across him (ancient.snake_archer.red.png, .blue.png: tall on straight legs, feet side by side,
  * chest over the hips facing the front, the bow slanted across his body from the shoulder down past the far hip in the bow fist, the draw fist on

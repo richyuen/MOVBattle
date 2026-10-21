@@ -94,6 +94,8 @@ export interface BodyProportions {
   armLength: number;
   /** Leg length multiplier */
   legLength: number;
+  /** Optional shin-only stretch: the lower leg segment, on top of legLength (bare shins between a cuff and the foot) */
+  shinLength?: number;
   /** Optional head stretch and shaping controls */
   headLength?: number;
   headWidth?: number;
@@ -567,7 +569,7 @@ export function buildArticulatedBody(
   const handLength = handWidth * MITT_LENGTH;
 
   const upperLegH = 0.308 * LIMB_STRETCH * p.legLength;
-  const lowerLegH = 0.275 * LIMB_STRETCH * p.legLength;
+  const lowerLegH = 0.275 * LIMB_STRETCH * p.legLength * (p.shinLength ?? 1);
   const upperLegTop = Math.max(0.12 * LIMB_THIN * SLEEVE_BULK * p.bulk * (p.upperLegWidth ?? 1.0), (upperLegH + lowerLegH) * THIGH_OF_LEG);
   const upperLegBottom = upperLegTop * Math.max(0.72, 0.9 - limbTaper * 0.1);
   const lowerLegTop = upperLegBottom;
