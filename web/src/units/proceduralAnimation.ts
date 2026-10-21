@@ -354,6 +354,12 @@ const RAPIER_POINT = { guard: 0.3 };
  */
 const OFF_AXE = { out: 0.18, ahead: 0.22, face: [0.75, 0.65] as const };
 /*
+ * [S] a matched pair's blades face his front (394; viking.berserker.red.png: both blades' broad faces to the camera, the edges out). OFF_AXE.face turns the
+ * stone (.75 ahead, .65 out) so one stone reads from a front three-quarter; on a matched pair the off-side blade then turned nearly edge-on. The pair turns
+ * both blades nearly square to his front (PAIR_AXE_FACE ahead, out).
+ */
+const PAIR_AXE_FACE = [1, 0.12] as const;
+/*
  * [S] both Stone Axes carried upright at his sides (364; tribal.chieftain.red.png, .png: a Stone Axe in each fist, forearms forward at hip height, both
  * hafts upright beside his body, the stones above the shoulders). Outside an attack the main-hand axe lay level across his chest from the heavy-swing guard.
  * Now, while he is not attacking (_standMainAxe, eased in and out at MAIN_AXE.ease per second so the swing itself is untouched), the main arm takes the off
@@ -4563,7 +4569,7 @@ export class ProceduralAnimator {
       }
       return;
     }
-    this._standAxe(r, this._body.leftShoulder, this._body.leftElbow, this._body.leftHand, w);
+    this._standAxe(r, this._body.leftShoulder, this._body.leftElbow, this._body.leftHand, w, this._standsPairAxes() ? PAIR_AXE_FACE : OFF_AXE.face);
   }
 
   // The main-hand stone axe (looked up as the off one) and how far it is stood up (see MAIN_AXE)
@@ -4602,11 +4608,11 @@ export class ProceduralAnimator {
       main.rotation.y += (-off.rotation.y - main.rotation.y) * w;
       main.rotation.z += (-off.rotation.z - main.rotation.z) * w;
     }
-    this._standAxe(r, b.rightShoulder, b.rightElbow, b.rightHand, w);
+    this._standAxe(r, b.rightShoulder, b.rightElbow, b.rightHand, w, this._standsPairAxes() ? PAIR_AXE_FACE : OFF_AXE.face);
   }
 
   /** Stands a stone axe up in the world at the side of `shoulder` (see OFF_AXE), its grip kept in `hand`'s fist, `w` of the way from its rest. */
-  private _standAxe(r: { node: TransformNode; rest: Quaternion; grip: Vector3 }, shoulder: TransformNode, elbow: TransformNode, handNode: TransformNode, w: number): void {
+  private _standAxe(r: { node: TransformNode; rest: Quaternion; grip: Vector3 }, shoulder: TransformNode, elbow: TransformNode, handNode: TransformNode, w: number, face: readonly [number, number] = OFF_AXE.face): void {
     const b = this._body;
     for (const n of [b.root, b.hip, b.torso, shoulder, elbow, handNode]) n.computeWorldMatrix(true);
     const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
@@ -4621,8 +4627,8 @@ export class ProceduralAnimator {
     out.normalize();
     // The handle up, leant out and forward; the stone (+z) turned out ahead of him, squared off the handle
     const y = new Vector3(0, 1, 0).addInPlace(out.scale(OFF_AXE.out)).addInPlace(fwd.scale(OFF_AXE.ahead)).normalize();
-    const face = fwd.scale(OFF_AXE.face[0]).addInPlace(out.scale(OFF_AXE.face[1]));
-    const x = Vector3.Cross(y, face).normalize();
+    const faceDir = fwd.scale(face[0]).addInPlace(out.scale(face[1]));
+    const x = Vector3.Cross(y, faceDir).normalize();
     const z = Vector3.Cross(x, y).normalize();
     const world = Matrix.Identity();
     Matrix.FromXYZAxesToRef(x, y, z, world);

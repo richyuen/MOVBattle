@@ -2049,7 +2049,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * leaning a little fore and aft of each other so the three read apart. .long of the hull's height, the blade .blade of it and .bladeWide across at its
    * middle (a leaf: a widening foot and a point, not a spearhead), .lean rad off upright.
    */
-  const OARS = { long: 1.75, thick: 0.055, blade: 0.44, bladeWide: 0.26, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
+  const OARS = { long: 1.75, thick: 0.055, blade: 0.52, bladeWide: 0.36, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
   const oarMat = makeMat(scene, new Color3(0.1, 0.09, 0.09));
   const oarLeaf = (parent: TransformNode, top: number): void => {
     // the leaf's two halves: a widening foot to the blade's middle, then a point, both flattened in z
