@@ -2095,7 +2095,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * leaning a little fore and aft of each other so the three read apart. .long of the hull's height, the blade .blade of it and .bladeWide across at its
    * middle (a leaf: a widening foot and a point, not a spearhead), .lean rad off upright.
    */
-  const OARS = { long: 1.75, thick: 0.055, blade: 0.52, bladeWide: 0.36, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
+  const OARS = { long: 1.75, thick: 0.055, blade: 0.5, bladeWide: 0.42, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
   const oarMat = makeMat(scene, new Color3(0.1, 0.09, 0.09));
   /*
    * [S] three Long-Boaters on their oars (395; viking.longship.jpg, card Appearance "3 Long-Boaters holding oars", card "The people riding it are called
@@ -2171,23 +2171,17 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
       shaft.material = oarMat;
       allMeshes.push(shaft);
       const oarLeaf = (top: number): void => {
-        // the leaf's two halves: a widening foot to the blade's middle, then a point, both flattened in z
-        const foot = MeshBuilder.CreateCylinder("longshipOarBladeFoot", { height: OARS.blade * 0.45, diameterBottom: OARS.stem, diameterTop: OARS.bladeWide, tessellation: 4 }, scene);
-        foot.rotation.y = Math.PI / 4;
-        foot.bakeCurrentTransformIntoVertices();
-        foot.scaling.z = OARS.flat;
-        foot.position.y = top + OARS.blade * 0.225;
-        foot.parent = oarBody;
-        foot.material = oarMat;
-        allMeshes.push(foot);
-        const tip = MeshBuilder.CreateCylinder("longshipOarBladeTip", { height: OARS.blade * 0.55, diameterBottom: OARS.bladeWide, diameterTop: 0, tessellation: 4 }, scene);
-        tip.rotation.y = Math.PI / 4;
-        tip.bakeCurrentTransformIntoVertices();
-        tip.scaling.z = OARS.flat;
-        tip.position.y = top + OARS.blade * 0.725;
-        tip.parent = oarBody;
-        tip.material = oarMat;
-        allMeshes.push(tip);
+        // [S] 397 a flat ROUNDED paddle, not a spearhead (viking.longship.jpg: every oar ends in a broad, round-shouldered paddle blade). One faceted
+        // oval slab across the shaft's head: wide in x, long in y down the shaft, thin through z, lit flat like the shaft.
+        const blade = MeshBuilder.CreateCylinder("longshipOarBlade", { height: 1, diameter: 1, tessellation: 8 }, scene);
+        blade.rotation.x = Math.PI / 2;
+        blade.bakeCurrentTransformIntoVertices();
+        blade.scaling.set(OARS.bladeWide, OARS.blade, OARS.bladeWide * OARS.flat);
+        blade.position.y = top + OARS.blade * 0.44;
+        blade.parent = oarBody;
+        blade.material = oarMat;
+        blade.convertToFlatShadedMesh();
+        allMeshes.push(blade);
       };
       oarLeaf(C.top);
       crewBodies.push({ body, oar: mount, landed: false });
