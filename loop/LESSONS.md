@@ -17,6 +17,10 @@ drop a lesson once it is a comment at the code it describes.
 - A vehicle's body material IS the team colour (unitFactory tints `bodyMaterial`): a timber hull needs its own material, and a team-trim mesh goes in as the body source (392 longship).
 - Timber under a deck's overhang reads black even at .62/.42/.25: give it a small emissive (392).
 - A ship's rig must be read off the reference, not invented: the longship has no mast or yard at all, and its verticals are the crew's oars. A plausible addition (sail, then yard) reads as foreign hardware and is rejected whole (393).
+- A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
+- Ice or fur spikes sized off a part's smallest half-extent come out a few cm and vanish at lineup distance: key them on the mean half-extent times ~2.4, and crop the named shot to check before the critic runs (395 frost).
+- A freeze is applied at the FIRE tick, not the arrow's impact (ice archer: status:freeze at 383 ms, target hurt at 700 ms): its visual has to live on the target from the fire.
+- Dress hung off a head frame is buried if a mask box already covers the jaw: start a beard below the mask's bottom edge and stand it proud of the mask's face (brawler 395); a crew body out of addOperator has no leg dress and reads as a slim mannequin at lineup distance.
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).

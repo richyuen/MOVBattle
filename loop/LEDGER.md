@@ -37,6 +37,12 @@ for 25 iterations.
 394 | layered feather wings: two rows of blunt feathers on a thick dark spar (df2b922 + bae3bb7) | viking.valkyrie.a | approved
 394 | bear pelt retry: rounded skull, eyes on its front, curtains, rounded shoulder mass (df2b922 + bae3bb7 + a5904a5, reverted 1ec0c3a) | viking.jarl.a | rejected
 394 | Headbutt: ready at the start, head-down drive with a step, logged "headbutt" (a5904a5) | viking.headbutter.c | approved
+395 | three Long-Boaters standing at their oars, each oar hung off a fist (ffa5a93) | viking.longship.b | approved
+395 | team shields: dark half, thin brown rim, bronze boss, four a side (512a007) | viking.longship.a | approved
+395 | big dark beard + moustache, plaited braid and ties (ad8f6cf) | viking.berserker.a | approved
+395 | dark beard from under the mask (d4bac61, reverted 0922c08) | viking.brawler.a | rejected
+395 | belt, fur-cuffed bracers, cream fur boot cuffs over brown boots (607fd74) | viking.headbutter.a | approved
+395 | ice crust: 4 pale-blue shards on trunk/head/arms/thighs while frozen (9400138) | viking.ice_archer.c | approved
 
 
 ## Spent (never retry as [P])
@@ -90,4 +96,11 @@ proceduralAnimation.ts:OFF_AXE (out, ahead, face) + MAIN_AXE.ease: now also stan
 vikingDress.ts:BRAWLER_HELM (domeWide, domeTall, domeRise, domeSlice, band, bandProud, eyeTop, maskTop, maskBottom, maskWide, maskDepth, cheek, cheekTop, cheekDeep, nasal, nasalLow, nasalProud, glow) | 1.14, .7, .5, .6, .14, 1.08, .42, -.18, -1.02, 1.03, 1.04, .16, .3, .92, .24, -.2, .11, .1 | 394 | pending
 propBuilder.ts:VALKYRIE_WINGS_LAYERED (span, raise, sweep, feathers, rows, len, wide, tip, barTall, barDeep) | 2.9, .32, .3, 8, 2, .5/.95, .5, .6, .16, .14 | 394 | pending | VALKYRIE_WINGS shard fan (span 2.4, raise .5, 7 pointed cones)
 vikingDress.ts:JARL_PELT (skull, muzzleLong, eyeOut, drape, drapeDeep, glow) | 1.1, 1.8, .5, .12, .55, .2 | 394 | approved | the 394 rebuilt pelt (rounded skull/curtains/shoulder mass) rejected and reverted; 1.04, 1.15, .28, .26, .9, .16 (393 first cut)
-simulationSystem.ts:HEADBUTT (within, cooldown, windup, recover, ahead, radius, damage, fling, lift, edge, lunge) | .55, 6, .28, .5, .5, 1.15, 18, 5, 4.5, .5, .5 | 394 | pending
+vehicleBuilder.ts:LONGSHIP_OARS (long, thick, blade, bladeWide, stem, flat, lean; spread/across retired to LONGSHIP_CREW) | 1.75, .055, .52, .36, .07, .17, -.13/.05/.16 | 395 | approved | spread -.52/.02/.56, across .16/-.12/.08 (394)
+simulationSystem.ts:HEADBUTT (within, cooldown, windup, recover, ahead, radius, damage, fling, lift, edge, lunge) | .55, 6, .28, .5, .5, 1.15, 18, 5, 4.5, .5, .5 | 394 | approved
+vehicleBuilder.ts:LONGSHIP_CREW (at z, across x, feet, raise, spread, elbow, butt, top, clutch) | -.62/.02/.66, -.1/.06/-.02, .64, -.5, .34, -.55, .62, 1.13, .03 | 395 | approved
+vehicleBuilder.ts:LONGSHIP_SHIELDS (face, rim, boss, across, y, first, spread, count) | .46, .51, .17, .62, .58, -.9, .6, 4 | 395 | approved | flat .28 discs, 4 a side, no boss (391-394)
+vikingDress.ts:VIKING_BEARD (burnTop, burn, jaw, jawY, jawZ, locks, lockLong, braidLong, band, tuft) | .2, .22, 1.2/.6/.62, .66, .6, 5, .26, .3, .09, .16 | 395 | approved | berserker cut down .9 wide 1.12 tip .48 braid; brawler cut (under .17) rejected 395
+vikingDress.ts:HEADBUTTER_KIT (beltTall, beltAt, beltOut, buckle; bracer from/to/out; boot from/to/out; cuff from/to/out; spikes, spike, glow) | .26, .1, 1.24, .22; .06/.78/1.24; .48/1.0/1.16; .1/.46/1.48; 6, .3, .12 | 395 | approved | first cut: beltOut 1.06 hidden, spikes .62 of a limb (395)
+runtimeUnit.ts:FROST (shards, wide, color, glow) | 4, .42, (.5,.82,1), .28 | 395 | approved | first cut shards min(extent)*1.24 too small to see (395)
+
