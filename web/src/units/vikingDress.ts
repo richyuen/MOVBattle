@@ -232,9 +232,17 @@ export function headbutterBraids(scene: Scene, body: ArticulatedBody): Mesh[] {
  *   braid: two ties and a tuft at the bib's foot (a plaited point), when the cut wears one.
  * Self-lit .glow so the dark hair stays warm in the shade.
  */
-interface VikingBeardCut { color: Color3; glow: number; down: number; wide: number; tip: number; braid: boolean; stache: boolean }
+interface VikingBeardCut {
+  color: Color3; glow: number; down: number; wide: number; tip: number; braid: boolean; stache: boolean;
+  /** The jaw mass's half extents in head units, its drop and its stand-off (defaults read off VIKING_BEARD). */
+  jaw?: readonly [number, number, number]; jawY?: number; jawZ?: number;
+  /** Where the moustache sits (H down) and how far it stands out (D), so a helmed cut can hang it under the mask's edge. */
+  stacheLow?: number; stacheZ?: number;
+  /** Sideburns from the temple: off under a full-face helm, whose mask covers them. */
+  burns?: boolean;
+}
 const VIKING_BEARD = {
-  burnTop: 0.2, burn: 0.22, jaw: [1.2, 0.6, 0.62] as const, jawY: 0.66, jawZ: 0.6,
+  burnTop: 0.2, burn: 0.22, jaw: 1.2, jawY: 0.66, jawZ: 0.6,
   locks: 5, lockLong: 0.26, braidLong: 0.3, band: 0.09, tuft: 0.16,
 };
 function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): Mesh[] {
@@ -263,15 +271,18 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
     return put(m);
   };
   for (const side of [-1, 1]) {
+    if (cut.burns === false) break;
     column("vikingBeardBurn", new Vector3(side * halfX * 1.0, halfY * B.burnTop, halfZ * 0.12), new Vector3(side * halfX * 0.96, -halfY * 0.6, halfZ * 0.5),
       W * B.burn, W * B.burn * 1.05);
   }
+  const jawScale = cut.jaw ?? ([B.jaw, B.jawY, B.jawZ] as const);
   const jaw = MeshBuilder.CreateIcoSphere("vikingBeardJaw", { radius: 1, subdivisions: 1, flat: true }, scene);
-  jaw.scaling.set(halfX * B.jaw[0], halfY * B.jaw[1], halfZ * B.jaw[2]);
-  jaw.position.set(0, -halfY * B.jawY, halfZ * B.jawZ);
+  jaw.scaling.set(halfX * jawScale[0], halfY * jawScale[1], halfZ * jawScale[2]);
+  jaw.position.set(0, -halfY * (cut.jawY ?? B.jawY), halfZ * (cut.jawZ ?? B.jawZ));
   put(jaw);
   // the bib: from under the chin down onto the chest, leaning forward off it
-  const bibTop = new Vector3(0, -halfY * (B.jawY + B.jaw[1] * 0.55), halfZ * B.jawZ);
+  const jawDrop = cut.jawY ?? B.jawY, jawTall = jawScale[1];
+  const bibTop = new Vector3(0, -halfY * (jawDrop + jawTall * 0.55), halfZ * (cut.jawZ ?? B.jawZ));
   const lean = 0.12;
   const bibFoot = bibTop.add(new Vector3(0, -Math.cos(lean) * H * cut.down, Math.sin(lean) * H * cut.down));
   const bib = column("vikingBeardBib", bibTop, bibFoot, W * cut.wide, W * cut.wide * cut.tip);
@@ -283,8 +294,9 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
     column("vikingBeardLock", from, from.add(new Vector3(u * W * 0.28, -long, long * 0.25)), W * 0.15, W * 0.02);
   }
   if (cut.stache) {
+    const low = cut.stacheLow ?? 0.2, ahead = cut.stacheZ ?? 1.08;
     for (const side of [-1, 1]) {
-      column("vikingBeardStache", new Vector3(0, -halfY * 0.2, halfZ * 1.08), new Vector3(side * W * 0.38, -halfY * 0.46, halfZ * 0.96), W * 0.14, W * 0.07);
+      column("vikingBeardStache", new Vector3(0, -halfY * low, halfZ * ahead), new Vector3(side * W * 0.38, -halfY * (low + 0.26), halfZ * (ahead - 0.12)), W * 0.14, W * 0.07);
     }
   }
   if (cut.braid) {
@@ -318,9 +330,16 @@ export function berserkerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, { color: new Color3(0.3, 0.12, 0.1), glow: 0.2, down: 0.9, wide: 1.12, tip: 0.48, braid: true, stache: true });
 }
 
-/** The Brawler's dark beard, hung from under his full-face helm's mask onto the chest (spec at VIKING_BEARD). */
+/**
+ * The Brawler's dark beard, hung from under his full-face helm's mask: the jaw mass starts BELOW the mask's bottom edge (-1.02 H) and stands proud of the
+ * mask's face (1.04 D), so it spills out under the helmet instead of sitting inside it (critic 395: nearly all of it was buried in the mask), with the
+ * moustache hung at the mask's foot and the bib .9 head heights down onto the chest.
+ */
 export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
-  return vikingBeard(scene, body, { color: new Color3(0.24, 0.12, 0.1), glow: 0.18, down: 0.55, wide: 0.94, tip: 0.42, braid: false, stache: false });
+  return vikingBeard(scene, body, {
+    color: new Color3(0.24, 0.12, 0.1), glow: 0.18, down: 0.9, wide: 1.05, tip: 0.5, braid: true, stache: true,
+    jaw: [1.12, 0.6, 0.7], jawY: 1.12, jawZ: 0.78, stacheLow: 1.0, stacheZ: 1.22, burns: false,
+  });
 }
 
 /*
