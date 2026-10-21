@@ -45,12 +45,18 @@ for 25 iterations.
 396 | own chop: lands .42 m under the crown, trunk over the man (6b98556) | viking.jarl.c | approved
 396 | hurl + AoE crush + oarsmen disembark (1946694) | viking.longship.c | approved
 396 | [R] 1.92 build, flat girdle inlays, front pauldron scroll (a76c891, reverted 32577c2) | ancient.minotaur.a | rejected
+397 | [R] thrower's thigh stretched to a knee point, shins hanging (2e73091 + 2c2cc8b, reverted 8f53efc) | farmer.wheelbarrow.a | rejected
+397 | shinLength 1.5 lower leg + hip offset .34 (4fe6fd1) | farmer.halfling.a | approved
+397 | one faceted oval paddle blade per oar (4d811b7) | viking.longship.b | approved
+397 | iceArrow: pale shaft, ice spike + two barbs, frost flakes (0fc57f6 + 636060c) | viking.ice_archer.c | approved
+397 | brawlerLegs: puffy trousers, fur calf rolls, brown boots (707a5b0 + df9e860) | viking.brawler.a | approved
+397 | armpit tufts high on the chest front (6904e0d + e5927fe) | viking.berserker.a | approved
 
 
 ## Spent (never retry as [P])
 
 ## Rows
-ancientDress.ts:SARISSA_CAPE (arc, hem, shade, glow) collar/roll retired 390 | .56, .72, .45, .06 | 390 | approved | shade .62 glow .12 (383); collar .16 neck .42 out 1.12 roll .06
+ancient done units (SARISSA_CAPE/MANTLE, SNAKE_CAP/WRAP/UPRIGHT, BALLISTA_WOOD/PLATES/BOLT/FRAME/STOCK, LOADED_BOLTS) | compacted 397 | 397 | approved | values: git show 8f53efc:loop/LEDGER.md
 unitFactory.ts:HALFLING_SHORTS long, cuff + HALFLING_FEET clumpTall, rise | .78, .14; .7, .45 | 383 | approved | .92; 1.1, .9
 tribal.* (7 units' rows: JAVELIN, CHIEF, CLUB, HIDE, DEER, SLAB/SKULL, mammoth body; units done) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
 renaissance.* (painter, fencer, jouster, musketeer, balloon_archer, halberd rows; units done) | compacted 378 | 377 | approved | values: git show edb1692:loop/LEDGER.md
@@ -63,24 +69,16 @@ viking.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 
 ancient.* 379-386 rows (MINO_*, BULL_*, PIKE_LEVEL, CORINTH_*, SNAKE_*, SARISSA_KEEP/KIT, ZEUS_REARM/TOGA/SANDAL/CHAIN, BOLT_SPARK, BALLISTA_*, SB_SANDAL, HOPLITE_CREST, MINO_SHELL/SCROLL) | compacted 387 | 386 | approved | values: git show fad9e5c:loop/LEDGER.md
 ancient.shield_bearer + hoplite done (SCUTUM*, LEGION_HELM, LORICA, ASPIS*, DORY_*, HOPLITE_LEGS) | compacted 385 | 384 | approved | values: git show 522cb46:loop/LEDGER.md
 ancient.* 387-388 rows (ZEUS_BEARD/LOCKS/HAIR, SNAKE_LIVE, BIG_HEADBUTT, SARISSA_FOLD, BALLISTA_CREW/HELM, GROUND_SNAKE, SNAKE_QUIVER, MINO_SASH_FOOT rej) | compacted 389 | 388 | approved | values: git show f31835b:loop/LEDGER.md
-proceduralAnimation.ts:HALFLING_STANCE (tilt, stride, lean, spread, knee) | .02, .05, .03, .22, .04 | 387 | approved | hashed idle stance (sunk)
+proceduralAnimation.ts:HALFLING_STANCE (tilt, stride, lean, spread, knee) | .02, .05, .03, .34, .02 | 397 | approved | .22, .04 (387); hashed idle stance (sunk)
 farmerDress.ts:HALFLING_MOP (locks, hang, droop, spread, wild, top, side, root, flat) | 46,1.6,.55,.8,.35,.24,.57,.63,.38 | 383 | approved | .35,.4,.95,.42 (382)
 farmerDress.ts:HALFLING_BELT (tall, up, buckle, bar, buckleDeep, ringOut, side) | .17,.16,.34,.14,.12,1.08,.07 | 387 | approved | bar .24 (386); box .13 at .08 (381)
 vehicleBuilder.ts:THROWER_PERCH (seat, up, tuftDeep, lumps, wide, kneeUp) | -.15, .09, .13, .18, .09, .05 | 387 | approved | THROWER_LEGS seat -.08 (retired 388)
 
 ancientDress.ts:ZEUS_TOGA (foot, edgeHigh, edgeLow, boltLong, boltWide, boltX, boltGold, whiteGlow) one-sided, body belt hidden | 0, 1.45, .24, .36, .5, .62, (1.25,.72,.2), 1 unlit | 389 | approved | 388 double-sided; high .9 low .12 wide .5 band (385); cape, solar fx
-vehicleBuilder.ts:THROWER_KNEES (chest, out, shinOut, shinDown, shinAhead) | .55, .2, .6, 1, .15 | 389 | approved | out .07 shinOut .35 (388); knee targets at the Farmer's hips (THROWER_LEGS kneeOut .07, shinOut .45, shinAhead .35)
+vehicleBuilder.ts:THROWER_KNEES (chest, out, shinOut, shinDown, shinAhead) | .55, .2, .6, 1, .15 | 397 | rejected | [R] reached-point cut reverted (8f53efc/0e9756d); out .07 shinOut .35 (388)
 farmerDress.ts:HALFLING_VEST_CUT (light, shade, glow) | .3, 1, .1 | 391 | approved | 0,.97,.04 (390); .3,1,.1 + veeDeep .6 vee .3 [S] 390 rejected (one-sided V vanished); vest box, vestLight .45
 ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare) on the hip joint | -.3, .03, 1.1, 1.22, 1.12 | 389 | approved | 386 band round the trunk base (MINO_SCROLL tall .24 at .04)
-ancientDress.ts:SARISSA_MANTLE (top/foot 6-pt edges, rows, bulge, roll, rollOut, brooch, shade) | 4, .025, .045, .02, .08, .7 | 390 | approved | [R] replaced SARISSA_CHUNK (wide .3 thick .11 tip .45) + SARISSA_FOLD bulk
-ancientDress.ts:SNAKE_CAP (cy, rx, ry, rz, pow, nub, nubLean, wrapTaper) | 0, 1.22, 1.22, 1.22, 3, .26, .55, .86 | 389 | approved | half dome cap 1.14 + back cylinder, peak .42 lean .5, wrap flare 1.12
 farmerDress.ts:HALFLING_TUFT (clumps, clump, from, to, sink, inX, spikes, spike, spikeWide, lean) | 5,.62,-.5,.3,.22,.55,10,.42,.2,.55 | 391 | approved | rooted at c.y on the toe top (391); 5,.6,-.5,.3,.22,.45 (390 rejected [P]); HALFLING_FEET clump 1.35 tufts 9
-vehicleBuilder.ts:BALLISTA_WOOD + BALLISTA_PLATES (cols, edge, wide, deep, iron) | (.55,.15,.075); .2/.83, .08, .075, .12, .08 | 389 | approved | wood (.62,.3,.2); plates grid H.plates 8 (2 shown)
-vehicleBuilder.ts:BALLISTA_BOLT (shaft, thick, tail, head, past, wide, waist, flat) one node + upright leaf copy | 1.45, .1, .7, .62, .75, .24, .3, .3 | 390 | approved | rod 1.5 x .05, head .3 x .13
-vehicleBuilder.ts:BALLISTA_FRAME (top, beam) + BALLISTA_STOCK y | 1.7, .12; 1.0 | 390 | approved | top 1.02, stock on the top plank
-simulationSystem.ts:LOADED_BOLTS (ballista: ballistaLoadedBolt flies, hidden cooldown x .5) | 1 entry | 390 | approved | projectile "bolt" rod .4 x .04
-proceduralAnimation.ts:SNAKE_UPRIGHT (yaw, stagger, give, lean, tilt, raise, out, elbow, tip, left) | .12,.06,.02,.04,.03,-.75,-.22,-1.35 | 390 | approved | bowman ready: yaw .6-.95, stagger .4-.6
-ancientDress.ts:SNAKE_WRAP (tuck, r, narrowFrom, chin, cordAt, thick, knot, loop, end) | .12,1.19,-.75,.72,-.36,.09,.2,.22,.22 | 390 | approved | 10-sided wrap cylinder 1.1, taper .86
 propBuilder.ts:BEARDED_AXE (long, butt, head, wide) | .8, .2, .28, .22 | 392 | approved | .8, .12, .34, .19 (392)
 proceduralAnimation.ts:BEARDED_AXE_CARRY (raise, out, elbow, tip x) | -.2, .55, -1.45, .42 | 392 | approved | hanging hashed carry (391)
 propBuilder.ts:JARL_AXE (long, grip, wide, tall) | .95, .3, .24, .21 | 392 | approved | .95, .22, .3, .42 (392)
@@ -98,7 +96,7 @@ proceduralAnimation.ts:OFF_AXE (out, ahead, face) + MAIN_AXE.ease: now also stan
 vikingDress.ts:BRAWLER_HELM (domeWide, domeTall, domeRise, domeSlice, band, bandProud, eyeTop, maskTop, maskBottom, maskWide, maskDepth, cheek, cheekTop, cheekDeep, nasal, nasalLow, nasalProud, glow) | 1.14, .7, .5, .6, .14, 1.08, .42, -.18, -1.02, 1.03, 1.04, .16, .3, .92, .24, -.2, .11, .1 | 394 | pending
 propBuilder.ts:VALKYRIE_WINGS_LAYERED (span, raise, sweep, feathers, rows, len, wide, tip, barTall, barDeep) | 2.9, .32, .3, 8, 2, .5/.95, .5, .6, .16, .14 | 394 | pending | VALKYRIE_WINGS shard fan (span 2.4, raise .5, 7 pointed cones)
 vikingDress.ts:JARL_PELT (skull, muzzleLong, eyeOut, drape, drapeDeep, glow) | 1.1, 1.8, .5, .12, .55, .2 | 394 | approved | the 394 rebuilt pelt (rounded skull/curtains/shoulder mass) rejected and reverted; 1.04, 1.15, .28, .26, .9, .16 (393 first cut)
-vehicleBuilder.ts:LONGSHIP_OARS (long, thick, blade, bladeWide, stem, flat, lean; spread/across retired to LONGSHIP_CREW) | 1.75, .055, .52, .36, .07, .17, -.13/.05/.16 | 395 | approved | spread -.52/.02/.56, across .16/-.12/.08 (394)
+vehicleBuilder.ts:LONGSHIP_OARS (long, thick, blade, bladeWide, stem, flat, lean; spread/across retired to LONGSHIP_CREW) | 1.75, .055, .5, .42, .07, .17, -.13/.05/.16 | 397 | approved | blade .52 wide .36, two-cone spearhead (394); spread -.52/.02/.56, across .16/-.12/.08 (394)
 simulationSystem.ts:HEADBUTT (within, cooldown, windup, recover, ahead, radius, damage, fling, lift, edge, lunge) | .55, 6, .28, .5, .5, 1.15, 18, 5, 4.5, .5, .5 | 394 | approved
 vehicleBuilder.ts:LONGSHIP_CREW (at z, across x, feet, raise, spread, elbow, butt, top, clutch) | -.62/.02/.66, -.1/.06/-.02, .64, -.5, .34, -.55, .62, 1.13, .03 | 395 | approved
 vehicleBuilder.ts:LONGSHIP_SHIELDS (face, rim, boss, across, y, first, spread, count) | .46, .51, .17, .62, .58, -.9, .6, 4 | 395 | approved | flat .28 discs, 4 a side, no boss (391-394)
@@ -109,4 +107,8 @@ vikingDress.ts:ICE_ARCHER_CAP (dome, tall, rise, slice, brim, brimOut, pom, pomL
 proceduralAnimation.ts:CHOP_JARL (below, pitch, step) | .42, .52, -.56 | 396 | approved
 simulationSystem.ts:LONGSHIP_HURL (reach, short, rise, radius, crush, fling, lift, edge, cooldown) | 5.5, .9, 7.5, 3.1, 1.35, 6.5, 5, .55, 6 | 396 | approved
 runtimeUnit.ts:FROST (shards, wide, color, glow) | 4, .42, (.5,.82,1), .28 | 395 | approved | first cut shards min(extent)*1.24 too small to see (395)
+bodyBuilder.ts:shinLength (optional lower-leg stretch on top of legLength) | halfling 1.5 | 397 | approved
+projectileSystem.ts:ICE_ARROW (head, wide, frost, frostSize, shaft, ice) | .34, .18, 4, .055, (.34,.6,.86), (.46,.74,.98) | 397 | approved | shaft .58/.82/.96 ice .78/.94/1 emissive .55 (397, blew out white)
+vikingDress.ts:BRAWLER_LEGS (thighFrom/To/Out, hemFrom/To/Out, cuffFrom/To/Out, cuffThick, cuffLumps, bootFrom/To/Out, sole, soleOut, glow) | .06/.98/1.3, 0/.34/1.36, .26/.5/1.52, .36, 7, .46/1.0/1.14, .07, 1.06, .14 | 397 | approved | lit cream fur read grey (397, unlit + glow-excluded)
+vikingDress.ts:BERSERKER_ARMPITS (in, drop, front, tufts, len, wide, lean, spread, glow) | .82, .16, .99, 6, .34, .22, .55, .22, .24 | 397 | approved | at .54/out .9 on the flank read as waist hair; at .88/.6 sat by the belt (397)
 

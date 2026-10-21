@@ -1,5 +1,5 @@
 # Loop state (v3: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D)
-Iteration: 396   Batch: farmer:re+ancient+viking (5-7/19)   Consecutive empty: 0   Done: 31/139   Parked: 0
+Iteration: 397   Batch: farmer:re+ancient+viking (5-8/19)   Consecutive empty: 0   Done: 31/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,16 +23,15 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict)
-396 (BASE 54952a5): [S] headbutter a.4 boots + fur cb83fbe approved (narrowed a.4) | [S] berserker a.2 fur belt 180a267+97c6946 approved (struck a.2) | [S] ice_archer a.1 cap d84c723 approved (struck a.1) | [S] brawler a.2 beard 3c8562d+0ae74ce approved (narrowed a.2) | [S] jarl c.1 chop 6b98556 approved (c PASS) | [S] longship c.1 hurl 1946694 approved (c PASS) | [R] minotaur a.2/a.3 a76c891 rejected (reverted 32577c2) - 6/7
+397 (BASE cb0a2ac): [R] farmer.wheelbarrow a.riders 2e73091+2c2cc8b REJECTED (reverted 8f53efc, 0e9756d) | [S] farmer.halfling a.1 legs 4fe6fd1 approved (narrowed a.1) | [S] viking.longship b.1 paddle blades 4d811b7 approved (narrowed b.1) | [S] viking.ice_archer c.1 ice arrow 0fc57f6+636060c approved (narrowed c.1) | [S] viking.brawler a.3 boots 707a5b0+df9e860 approved (struck a.3) | [S] viking.berserker a.3 armpit tufts 6904e0d+e5927fe approved (narrowed a.3) - 5/6
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] viking.headbutter (cb83fbe) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)
-- GAP: [S] viking.berserker (180a267+97c6946) VERDICT: APPROVE CRITERION: viking.berserker.a FAIL (previous: FAIL)
-- GAP: [S] viking.ice_archer (d84c723) VERDICT: APPROVE CRITERION: viking.ice_archer.a FAIL (previous: FAIL)
-- GAP: [S] viking.brawler (3c8562d+0ae74ce) VERDICT: APPROVE CRITERION: viking.brawler.a FAIL (previous: FAIL)
-- GAP: [S] viking.jarl (6b98556) VERDICT: APPROVE CRITERION: viking.jarl.c PASS (previous: FAIL)
-- GAP: [S] viking.longship (1946694) VERDICT: APPROVE CRITERION: viking.longship.c PASS (previous: FAIL)
-- GAP: [R] ancient.minotaur (a76c891) VERDICT: REJECT CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
+- GAP: [R] farmer.wheelbarrow (2e73091+2c2cc8b) VERDICT: REJECT CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
+- GAP: [S] farmer.halfling (4fe6fd1) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [S] viking.longship (4d811b7) VERDICT: APPROVE CRITERION: viking.longship.b FAIL (previous: FAIL)
+- GAP: [S] viking.ice_archer (0fc57f6+636060c) VERDICT: APPROVE CRITERION: viking.ice_archer.c FAIL (previous: FAIL)
+- GAP: [S] viking.brawler (707a5b0+df9e860) VERDICT: APPROVE CRITERION: viking.brawler.a FAIL (previous: FAIL)
+- GAP: [S] viking.berserker (6904e0d+e5927fe) VERDICT: APPROVE CRITERION: viking.berserker.a FAIL (previous: FAIL)
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
@@ -53,8 +52,8 @@ d PASS|FAIL (<the stats.json line, shortened>)
 ```
 
 ## Notes for next iteration (max 5 lines)
-- Batch unchanged; open: halfling, wheelbarrow, minotaur, zeus and all 7 viking. Done 31. 396: 6/7 approved, no unit closed; jarl and longship c now PASS.
-- The critic default is now `opencode-go/grok-4.7` (CLAUDE.md, user's call): both Claude routes failed with insufficient funds at 396 and grok ran that review.
-- Next ranked: berserker armpit tufts, berserker cuffs, ice_archer ice arrow, ice_archer mantle, headbutter ram, headbutter fur/belt, brawler boots, brawler beard; then longship hull + paddle blades, jarl bear pelt; halfling legs, zeus toga.
-- The minotaur [R] was rejected: the height must come from the head and horns (headSize 1.7), the flank box must go, the pauldron scroll must face the camera; a second rejected [R] parks the criterion.
-- Wheelbarrow [R] is next in line after the minotaur; one [R] per iteration. ice_archer a.4 needs its evidence commit (back view) before it can be judged.
+- Batch unchanged; open: halfling, wheelbarrow, minotaur, zeus and all 7 viking. Done 31. 397: 5/6 approved, no unit closed; the wheelbarrow [R] was rejected (its knees-only solve was not the front rider's split).
+- Wheelbarrow is a plateau with one rejected [R] since 375: its next pick is one [R] on the FRONT rider's seated split (thighs near-horizontal, knees at his waist outside the tray), and a second rejected [R] parks criterion a.
+- Next ranked: halfling legs (shinLength > 1.5 + a planted wide stance) and foot fur; longship crew (stocky horned oarsmen sunk in the hull) then hull; ice_archer arrow head/frost spray then mantle, cuffs, front view (evidence commit); brawler beard; berserker armpit tufts off the arm joint, then calf cuffs.
+- ice_archer a.4 still needs its evidence commit (idle/lineup are a back view) before the face and cap can be judged; zeus a.3 and minotaur a.2 wait behind the one-[R]-per-iteration rule.
+- The brawler's beard is the last blocker on a; its shield covers the bib, so the beard must clear the mask's bottom edge and the shield's top rim in _idle.

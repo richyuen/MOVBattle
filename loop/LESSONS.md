@@ -10,14 +10,12 @@ drop a lesson once it is a comment at the code it describes.
 - Flat colour that survives ACES: an "unlit" material with emissive = the colour, excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - "metal" renders near black under swiftshader: use "cloth" with a small emissive instead.
 - Lit cloth under a beard, a brim or a held prop reads grey however white its material: self-light it or go unlit. A cream fur at (0.9, 0.7, 0.42) with a small emissive still displays pale-white, so fur that must read cream wants an unlit material (396 headbutter).
-- A preset's particle emitter at the chest (iconic_zeus "solar" fx) hazes everything behind it in a still: strip per-unit fx the render does not show.
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it: timber, iron and leather need their own materials.
-- A front light washes a flat lower block: a lighter layer next to a darker one needs more than x.97 vs x.85 in team colour to read apart.
 - A vehicle's body material IS the team colour (unitFactory tints `bodyMaterial`): a timber hull needs its own material, and a team-trim mesh goes in as the body source (392 longship).
 - A ship's rig must be read off the reference, not invented: the longship has no mast or yard at all, and its verticals are the crew's oars. A plausible addition (sail, then yard) reads as foreign hardware and is rejected whole (393).
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 - Ice or fur spikes sized off a part's smallest half-extent come out a few cm and vanish at lineup distance: key them on the mean half-extent times ~2.4, and crop the named shot to check before the critic runs (395 frost).
-- A freeze is applied at the FIRE tick, not the arrow's impact (ice archer: status:freeze at 383 ms, target hurt at 700 ms): its visual has to live on the target from the fire.
+- An unlit dress mesh still blooms in the glow layer: exclude it per mesh (glow.addExcludedMesh) or its flat cream washes out what it sits on (397 brawler cuffs).
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
@@ -37,10 +35,10 @@ drop a lesson once it is a comment at the code it describes.
 - The critic judges the named shot: an element hidden behind another mesh (the brawler's axe head behind the shield) is not there. Check the named shot, not just a later one (392).
 
 ## Rig and dress
+- aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
 - The generic tunicSkirt covers waist gear: exclude the unit in unitFactory's skirt condition.
 - A preset look (iconic_zeus) comes from getPresetVisual, not the faction map entry in unitVisuals.
 - Body -x is a humanoid's left in the dress modules; a unit faces -x in the probes, so compare world bboxes along x.
-- A knee target is only a direction: the knee lands one thigh length along it (aimLimb); solve knees off the thing they should straddle, not off the seat.
 - Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
 - An engine's projectile can be a copy of a named node on the build (LOADED_BOLTS + heldProp/_buildHeldMissile): the flying shape then matches the loaded one for free.
 - A hood or cap over the block head needs a superellipsoid profile (exponent about 3, 1.2 of the head) to clear the chamfered corners and the top ring.
