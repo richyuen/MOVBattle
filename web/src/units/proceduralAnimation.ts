@@ -283,6 +283,13 @@ const CHOP = { raised: -0.55, landed: 1.95, armUp: -2.7, elbowUp: -0.9, armDown:
 // and the most of the axe head's reach the shaft may be drawn back through the fists
 const CHOP_ONTO = { below: 0.12, min: 0.9, max: 2.1, slide: 0.6 };
 /*
+ * [S] the Jarl's own chop (396; viking.jarl.jpg: the poleaxe in both fists, swung down through the man). His rig is far taller than the men he fights and
+ * his axe's head lands where a halberd's would only graze the crown: the axe is brought down .below m (at scale 1) under the crown, onto the man's chest,
+ * the trunk pitched further over him (.pitch) and the off foot stepping in deeper (.step), so the shaft reads as a downward chop onto the man and not as a
+ * poke at his head (critic 391: the blade planted beside the downed target). Found by his bear pelt's skull (jarlBearSkull).
+ */
+const CHOP_JARL = { below: 0.42, pitch: 0.52, step: -0.56 };
+/*
  * [S] blow held down (335; card Characteristics "a vertical chop that can deal devastating damage": the axe stays down on the man for a beat before it is
  * raised). The chop keeps its own clock from the land, whatever the state does after it: the halberd, the weapon arm and the trunk are held at the landed
  * pose for CHOP_DOWN.hold s, then eased back to the rest over CHOP_DOWN.rise s, laid over the walk or the stand that follows the attack (see _holdChopDown).
@@ -4837,6 +4844,13 @@ export class ProceduralAnimator {
     return this._halberdProp;
   }
 
+  /** The Jarl (CHOP_JARL), found by his bear pelt's skull; looked up once. */
+  private _jarlFound: boolean | undefined = undefined;
+  private _jarlPelted(): boolean {
+    this._jarlFound ??= this._body.root.getChildMeshes(false).some((m) => m.name === "jarlBearSkull");
+    return this._jarlFound;
+  }
+
   // The halberd stood in the world at `theta` from straight up toward his front (in the plane through his front and up), the axe's edge leading the way it
   // swings, blended from its rest in the fist by w
   private _poseHalberd(theta: number, w: number): void {
@@ -4893,9 +4907,9 @@ export class ProceduralAnimator {
     b.rightShoulder.rotation.x = pose(CHOP.armUp, CHOP.armDown);
     b.rightShoulder.rotation.z = pose(0.1, 0.05);
     b.rightElbow.rotation.x = pose(CHOP.elbowUp, CHOP.elbowDown);
-    b.torso.rotation.x = pose(-0.2, CHOP.pitch);
+    b.torso.rotation.x = pose(-0.2, this._jarlPelted() ? CHOP_JARL.pitch : CHOP.pitch);
     b.neck.rotation.x = pose(0.1, -0.15);
-    b.leftHip.rotation.x = pose(-0.15, CHOP.step);
+    b.leftHip.rotation.x = pose(-0.15, this._jarlPelted() ? CHOP_JARL.step : CHOP.step);
     b.leftKnee.rotation.x = pose(0.1, 0.3);
     b.rightHip.rotation.x = pose(0.1, 0.15);
     // the head: from the rest up and back over him, then down through the top onto the man
@@ -4982,7 +4996,8 @@ export class ProceduralAnimator {
     fwd.normalize();
     const fist = b.rightHand.getAbsolutePosition();
     const scale = Math.max(0.001, b.rightHand.absoluteScaling.y);
-    const onto = this._crownOf(mark).subtract(new Vector3(0, CHOP_ONTO.below * scale, 0)).subtract(fist);
+    const below = this._jarlPelted() ? CHOP_JARL.below : CHOP_ONTO.below;
+    const onto = this._crownOf(mark).subtract(new Vector3(0, below * scale, 0)).subtract(fist);
     const ahead = Vector3.Dot(onto, fwd);
     if (ahead < 0.05) return this._chopAim;
     const theta = Math.max(CHOP_ONTO.min, Math.min(CHOP_ONTO.max, Math.atan2(ahead, onto.y)));
