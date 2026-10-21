@@ -196,7 +196,7 @@ const HALBERD_SQUARE = { tilt: 0.03, stride: 0.12, lean: 0.04, spread: 0.09, kne
  * (HALBERD_SQUARE) with his own numbers: hips turned out .spread rad each so the feet stand apart, knees .knee, a .stride stagger, .lean, the off arm
  * hung .raise/.out/.elbow; never sunk. Found by his shorts (unitFactory halflingShortsSeat).
  */
-const HALFLING_STANCE = { tilt: 0.02, stride: 0.05, lean: 0.03, spread: 0.34, knee: 0.02, raise: 0.04, out: 0.12, elbow: -0.15 };
+const HALFLING_STANCE = { tilt: 0.02, stride: 0.03, lean: 0.03, spread: 0.52, ankle: 0.34, knee: 0.03, raise: 0.04, out: 0.12, elbow: -0.15 };
 /*
  * [S] 390 the snake archer stands upright with the bow across him (ancient.snake_archer.red.png, .blue.png: tall on straight legs, feet side by side,
  * chest over the hips facing the front, the bow slanted across his body from the shoulder down past the far hip in the bow fist, the draw fist on
@@ -3680,17 +3680,22 @@ export class ProceduralAnimator {
       this._idleSink = this._hipRest * (1 - Math.cos(reach) * Math.cos(give));
     }
     // The halberdier square on both legs (HALBERD_SQUARE): feet a little apart side by side, both knees all but straight, hips not let down
+    // The halfling plants both feet well outside his hips (critic 397: a walk stride): no fore/aft stagger, the splay taken in the hip, and the shin
+    // turned back toward upright at the knee (.ankle of the splay back), so the soles lie flat instead of standing on their outer edges.
     if (p.square) {
       const sway = Math.sin(t * 0.9) * wobble * 0.4;
-      b.leftHip.rotation.x = -p.stride * 0.5 + sway;
-      b.rightHip.rotation.x = p.stride * 0.3 - sway;
+      b.leftHip.rotation.x = (p.wide ? 0 : -p.stride * 0.5) + sway;
+      b.rightHip.rotation.x = (p.wide ? 0 : p.stride * 0.3) - sway;
       const spread = p.wide ? HALFLING_STANCE.spread : HALBERD_SQUARE.spread, knee = p.wide ? HALFLING_STANCE.knee : HALBERD_SQUARE.knee;
+      const ankle = p.wide ? spread * HALFLING_STANCE.ankle : 0;
       b.leftHip.rotation.z = -tilt - spread;
       b.rightHip.rotation.z = -tilt + spread;
       b.leftKnee.rotation.x = knee;
       b.rightKnee.rotation.x = knee;
+      b.leftKnee.rotation.z = ankle;
+      b.rightKnee.rotation.z = -ankle;
       // feet set wide: the hips come down by what the splay takes off the legs' height, so the soles stay on the ground
-      this._idleSink = p.wide ? (this._hipRest ?? b.hip.position.y) * (1 - Math.cos(spread)) : 0;
+      this._idleSink = p.wide ? (this._hipRest ?? b.hip.position.y) * (1 - Math.cos(spread * (1 - HALFLING_STANCE.ankle * 0.5))) : 0;
     }
   }
 
