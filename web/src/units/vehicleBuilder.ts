@@ -1602,7 +1602,7 @@ const THROWER_PERCH = { seat: -0.15, up: 0.09, tuftDeep: 0.13, lumps: 0.18, wide
  * knee reaches it (.reach clamps that), aimed at it, and the shin then hangs .shinOut out and .shinDown down from the knee, its foot outside the
  * board. .kneeOut keeps the knee clear of the tray's side board.
  */
-const THROWER_KNEES = { waist: 0.42, clear: 0.14, ahead: 0.06, rise: 0.02, reach: 2.4, shinOut: 0.55, shinDown: 1, shinAhead: 0.1 };
+const THROWER_KNEES = { waist: 0.42, clear: 0.12, ahead: 0.06, rise: 0.02, reach: 2.0, shinOut: 0.34, shinDown: 1.15, shinAhead: 0.05 };
 /** World matrices of a node and every ancestor, root first, so a read made at build time is fresh. */
 function settleWorld(node: TransformNode): void {
   const chain: TransformNode[] = [];
