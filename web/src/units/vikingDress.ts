@@ -361,7 +361,9 @@ export function brawlerLegs(scene: Scene, body: ArticulatedBody, teamColor: Colo
   const pants = mf.get("cloth", teamColor.scale(0.84), { emissiveIntensity: B.glow * 0.5 });
   const boot = mf.get("cloth", new Color3(0.36, 0.21, 0.12), { emissiveIntensity: B.glow * 0.5 });
   const soleMat = mf.get("cloth", new Color3(0.2, 0.12, 0.07), { emissiveIntensity: B.glow * 0.35 });
-  const fur = mf.get("cloth", new Color3(0.9, 0.7, 0.42), { emissiveIntensity: B.glow });
+  // cream fur that has to read cream and not grey in the shade (LESSONS: a lit fur under the tunic reads grey): flat, out of the glow layer
+  const furColor = new Color3(0.9, 0.7, 0.42);
+  const fur = mf.get("unlit", furColor, { emissive: furColor });
   const out: Mesh[] = [];
   /** A puffy roll of fur round a limb at `at` of the way down it (a faceted torus plus `lumps` rounded clumps on its face). */
   const furRoll = (limb: Mesh, at: number, outOf: number, thick: number, lumps: number): void => {
@@ -405,6 +407,9 @@ export function brawlerLegs(scene: Scene, body: ArticulatedBody, teamColor: Colo
     sole.convertToFlatShadedMesh();
     out.push(sole);
   }
+  // the fur is unlit, so keep it out of the glow layer or its flat cream blooms to white (the brawler's cuffs washed out the knees)
+  const glow = scene.getGlowLayerByName("glow");
+  for (const m of out) if (m.material === fur) glow?.addExcludedMesh(m);
   return out;
 }
 
