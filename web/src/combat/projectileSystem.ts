@@ -37,7 +37,7 @@ const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
 // The medieval archer's broadhead arrow (see _dressBroadhead): head across, along the shaft (m), flatness; shaft and head colours
 const BROADHEAD = { wide: 0.17, long: 0.2, thick: 0.3, shaft: new Color3(0.62, 0.16, 0.1), iron: new Color3(0.08, 0.08, 0.09) };
 // The Ice Archer's arrow (see _dressIceArrow): head along the shaft and across at its base (m), barbs either side, frost flakes behind the head; colours
-const ICE_ARROW = { head: 0.34, wide: 0.18, frost: 4, frostSize: 0.055, shaft: new Color3(0.58, 0.82, 0.96), ice: new Color3(0.78, 0.94, 1) };
+const ICE_ARROW = { head: 0.34, wide: 0.18, frost: 4, frostSize: 0.055, shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98) };
 
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
@@ -865,11 +865,11 @@ export class ProjectileSystem {
   private _dressIceArrow(root: TransformNode): void {
     const I = ICE_ARROW;
     for (const child of root.getChildMeshes(true)) {
-      if (child.name === "shaft") child.material = this._getMat("iceArrow_shaft", I.shaft, 0.4);
+      if (child.name === "shaft") child.material = this._getMat("iceArrow_shaft", I.shaft, 0.22);
       if (child.name === "tip") child.dispose();
-      if (child.name === "fletch") child.material = this._getMat("iceArrow_fletch", I.ice, 0.3);
+      if (child.name === "fletch") child.material = this._getMat("iceArrow_fletch", I.ice, 0.16);
     }
-    const ice = this._getMat("iceArrow_head", I.ice, 0.55);
+    const ice = this._getMat("iceArrow_head", I.ice, 0.26);
     const head = MeshBuilder.CreateCylinder("iceArrowHead", { height: I.head, diameterTop: 0, diameterBottom: I.wide, tessellation: 4 }, this._scene);
     head.convertToFlatShadedMesh();
     head.rotation.x = Math.PI / 2;
