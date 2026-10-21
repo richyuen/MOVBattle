@@ -700,7 +700,9 @@ export class UnitFactory {
       skirt.scaling.set(body.torsoMesh.scaling.x * 1.08, skirtLength / (chest.y * 2), body.torsoMesh.scaling.z * 1.15);
       skirt.rotation.z = Math.PI;
       skirt.position.y = body.torsoMesh.position.y - chest.y * 0.92 - skirtLength / 2;
-      skirt.material = getMaterialFactory().getCloth(ZEUS_TUNIC_COLOR);
+      skirt.material = getMaterialFactory().get("unlit", new Color3(0.94, 0.94, 0.92), { emissive: new Color3(0.94, 0.94, 0.92) });
+      // [R] 398 the skirt white, out of the glow (391: the belt read khaki against a grey-blue skirt)
+      this._scene.getGlowLayerByName("glow")?.addExcludedMesh(skirt);
       propMeshes.push(skirt);
     }
 

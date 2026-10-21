@@ -21,7 +21,7 @@ const chromePath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const browser = await chromium.launch({ headless: true, executablePath: fs.existsSync(chromePath) ? chromePath : undefined, args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 const page = await browser.newPage({ viewport: { width: 640, height: 640 } });
 page.on("pageerror", (e) => console.log("PAGEERROR", e.message));
-await page.addInitScript(() => { window.requestAnimationFrame = () => 1; window.cancelAnimationFrame = () => {}; });
+await page.addInitScript((noglow) => { window.requestAnimationFrame = () => 1; window.cancelAnimationFrame = () => {}; window.__noglow = noglow; }, process.argv.includes("--noglow"));
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.waitForFunction(() => window.game && typeof window.game.runScenarioCheck === "function", undefined, { polling: 100, timeout: 60_000 });
 const info = await page.evaluate(([unit, aim, dist, yaw, drop, team]) => {
@@ -38,6 +38,7 @@ const info = await page.evaluate(([unit, aim, dist, yaw, drop, team]) => {
   const h = aim === "head" ? a.body.headMesh.getAbsolutePosition().y - p.y : aim === "torso" ? a.body.torso.getAbsolutePosition().y - p.y : aim === "root" ? 0.5 : +aim.slice(2);
   const alpha = root.rotation.y - Math.PI / 2 + yaw;
   game.frameCamera({ x: p.x, y: p.y + h, z: p.z }, dist, alpha, Math.PI / 2 - drop);
+  if (window.__noglow) { const g = root.getScene().getGlowLayerByName("glow"); if (g) g.intensity = 0; }
   return `aim y=${h.toFixed(2)} alpha=${alpha.toFixed(2)} pos=${p.x.toFixed(2)},${p.z.toFixed(2)}`;
 }, [unit, aim, dist, yaw, drop, team]);
 console.log(info);

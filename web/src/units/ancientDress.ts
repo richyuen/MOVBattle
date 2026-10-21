@@ -249,10 +249,12 @@ const ZEUS_HAIR_GLOW = 0.16;
  *   - .rows rows of .perRow broad flat zig-zag slabs over them, from .top to .foot of e.y, each round an arc of .arc rad (narrowing .narrow toward
  *     the foot), .halfW of e.x out to a side; a slab two flat links .slab (W across, H long, W thick), the lower one bent .kink rad aside, tilted
  *     up to .tilt rad at random, leaning its foot out .lean rad; every other slab a shade .dark darker.
+ * [R] 398 the mass ends at the collarbone (.foot -1.95, bib .78 tall at 1.42 down) as it does in ancient.zeus.red.png, not at the belt: it was hanging
+ * over the whole drape and hid the bolt emblem the toga needs to show.
  */
 const ZEUS_BEARD = {
-  jaw: [1.22, 0.7, 0.72] as const, jawY: 0.62, jawZ: 0.5, bib: [0.95, 0.95, 0.55] as const, bibY: 1.75, bibZ: 0.62,
-  rows: 6, perRow: 7, top: -0.25, foot: -2.65, arc: 1.45, narrow: 0.45, halfW: 1.22, slab: [0.24, 0.3, 0.05] as const, kink: 0.55, tilt: 0.45, lean: 0.3, dark: 0.82,
+  jaw: [1.22, 0.7, 0.72] as const, jawY: 0.62, jawZ: 0.5, bib: [0.95, 0.78, 0.55] as const, bibY: 1.42, bibZ: 0.62,
+  rows: 6, perRow: 7, top: -0.25, foot: -1.95, arc: 1.45, narrow: 0.45, halfW: 1.22, slab: [0.24, 0.3, 0.05] as const, kink: 0.55, tilt: 0.45, lean: 0.3, dark: 0.82,
 };
 const ZEUS_LOCKS = { strands: 16, rootY: 0.3, face: 0.95, long: 1.05, thick: 0.2 };
 const ZEUS_LEAF = { leaves: 4, size: 0.16, color: new Color3(0.38, 0.52, 0.2) };
@@ -280,9 +282,10 @@ function shareOf(seed: number, i: number): number {
  */
 const ZEUS_TOGA = {
   proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
-  bolt: 3, boltLong: 0.36, boltWide: 0.5, boltX: 0.62, rings: 3, ring: 0.045, beltAt: 0.05, ringProud: 1.12,
-  boltGold: new Color3(1.25, 0.72, 0.2), whiteGlow: 1,
-  white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.86, 0.56, 0.24), glow: 0.14,
+  bolt: 4, boltTop: 0.9, boltTr: 0.34, boltX: 0.62, boltOut: 0.95, boltWide: 0.11,
+  rings: 3, ring: 0.075, beltAt: 0.06, ringProud: 1.14,
+  boltGold: new Color3(0.95, 0.22, 0.03), whiteGlow: 1,
+  white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.88, 0.58, 0.1), glow: 0.14,
 };
 
 /** Zeus's white toga over the left shoulder, gold bolt emblem and triple gold belt (spec at ZEUS_TOGA), on the torso. */
@@ -335,30 +338,48 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   scene.getGlowLayerByName("glow")?.addExcludedMesh(cap);
   cap.parent = body.torso;
   out.push(cap);
-  // the gold bolt emblem on the front at his left shoulder
-  const frontZ = midZ + halfZ * T.proud + 0.004;
-  const step = tr * T.boltLong / T.bolt;
-  const boltMat = mf.get("unlit", T.boltGold, { emissive: T.boltGold });
-  let at = new Vector3(band.midX - band.halfX * T.boltX, tr * 0.97, frontZ);
+  // [R] 398 the emblem, belt and skirt rebuilt against the critic's 391 rejection ("a pale sliver half under the beard, the bands khaki"):
+  //  - the emblem: .bolt chunky links of the trunk's .boltWide across, zig-zagging from .boltTop of the trunk up down .boltTr, out to .boltX/.boltOut of
+  //    the half width on his left, laid on the drape's own surface (the rounded-box section sampled at each node's x) so it can never sink into the
+  //    ribbon or the trunk; the beard's foot was raised to the collarbone (ZEUS_BEARD) so the chest it sits on is clear;
+  //  - its colour: lit cloth self-lit .55 of a deep orange-red (0.95, 0.22, 0.03). An "unlit" emissive washed pale under ACES, and the Zeus bolts'
+  //    bloom veils anything small and light on this chest, so the emblem is cut deep and large to hold its hue in the shot;
+  //  - the belt: .rings gold rings .ring of the trunk tall at .beltAt up, .ringProud proud, self-lit .85 so they read gold and not khaki.
+  const top = tr * T.boltTop, tall = tr * T.boltTr;
+  const surfaceZ = (x: number): number => {
+    let best = midZ + halfZ * T.proud, bestDx = Infinity;
+    for (let s = 0; s <= 48; s++) {
+      const p = rim(Math.PI * s / 48, T.proud);
+      const dx = Math.abs(p.x - x);
+      if (dx < bestDx) { bestDx = dx; best = p.z; }
+    }
+    return best + 0.035;
+  };
+  const at = (i: number): Vector3 => {
+    const x = band.midX - band.halfX * (i % 2 ? T.boltOut : T.boltX);
+    return new Vector3(x, top - tall * (i / T.bolt), surfaceZ(x));
+  };
+  const boltMat = mf.get("cloth", T.boltGold, { emissive: T.boltGold.scale(0.55) });
   for (let k = 0; k < T.bolt; k++) {
-    const to = at.add(new Vector3((k % 2 ? 1 : -1) * step * 0.55, -step, 0));
-    const d = to.subtract(at);
-    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: step * T.boltWide, height: d.length() * 1.15, depth: 0.012 }, scene);
-    link.position.set((at.x + to.x) / 2, (at.y + to.y) / 2, frontZ);
+    const from = at(k), to = at(k + 1);
+    const d = to.subtract(from);
+    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: tr * T.boltWide, height: d.length() * 1.25, depth: 0.014 }, scene);
+    link.position.copyFrom(Vector3.Center(from, to));
     link.rotation.z = -Math.atan2(d.x, -d.y);
     link.material = boltMat;
     scene.getGlowLayerByName("glow")?.addExcludedMesh(link);
     link.parent = body.torso;
     out.push(link);
-    at = to;
   }
-  // the triple gold belt
+  // the triple gold belt, self-lit so it reads gold and not khaki (391)
+  const goldUnlit = mf.get("cloth", T.gold, { emissive: T.gold.scale(0.85) });
   for (let k = 0; k < T.rings; k++) {
-    const ring = MeshBuilder.CreateCylinder("zeusBelt", { height: tr * T.ring, diameter: 2, tessellation: 10 }, scene);
+    const ring = MeshBuilder.CreateCylinder("zeusBelt", { height: tr * T.ring, diameter: 2, tessellation: 12 }, scene);
     ring.scaling.set(band.halfX * T.ringProud, 1, halfZ * T.ringProud);
-    ring.position.set(band.midX, tr * (T.beltAt + (k - 1) * T.ring * 1.25), midZ);
+    ring.position.set(band.midX, tr * (T.beltAt + (k - 1) * T.ring * 1.2), midZ);
     ring.convertToFlatShadedMesh();
-    ring.material = gold;
+    ring.material = goldUnlit;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(ring);
     ring.parent = body.torso;
     out.push(ring);
   }
