@@ -54,7 +54,7 @@ d PASS|FAIL (<the stats.json line, shortened>)
 
 ## Notes for next iteration (max 5 lines)
 - Batch unchanged; open: halfling, wheelbarrow, minotaur, zeus and all 7 viking. Done 31. 396: 6/7 approved, no unit closed; jarl and longship c now PASS.
-- The critic ran on `opencode-go/grok-4.7`: `anthropic/claude-opus-5-5` and `opencode/claude-opus-5-5` both failed with insufficient funds; restore the default when credit is back.
+- The critic default is now `opencode-go/grok-4.7` (CLAUDE.md, user's call): both Claude routes failed with insufficient funds at 396 and grok ran that review.
 - Next ranked: berserker armpit tufts, berserker cuffs, ice_archer ice arrow, ice_archer mantle, headbutter ram, headbutter fur/belt, brawler boots, brawler beard; then longship hull + paddle blades, jarl bear pelt; halfling legs, zeus toga.
 - The minotaur [R] was rejected: the height must come from the head and horns (headSize 1.7), the flank box must go, the pauldron scroll must face the camera; a second rejected [R] parks the criterion.
 - Wheelbarrow [R] is next in line after the minotaur; one [R] per iteration. ice_archer a.4 needs its evidence commit (back view) before it can be judged.
