@@ -343,6 +343,72 @@ export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 397 the Brawler's puffy pants, fur calf cuffs and brown boots (viking.brawler.red.png, viking.brawler.jpg, card Appearance: puffy team trousers
+ * with big cream fur cuffs over brown boots; critic 396: slim blue legs and plain blue boots). In the legs' own frames: a fat team trouser shell round
+ * each thigh from the hip down past the knee (.thighFrom-.thighTo, .thighOut of the limb), a flared trouser hem over the shin's top, a puffy cream fur
+ * roll round the calf (.cuffFrom-.cuffTo, .cuffOut, .cuffThick, .cuffLumps rounded clumps so it reads as fur), a brown boot shell over the shin below
+ * it, and the foot mesh itself in the boot's leather with a dark sole slab standing proud all round, so the boot runs on over the toe.
+ */
+const BRAWLER_LEGS = {
+  thighFrom: 0.06, thighTo: 0.98, thighOut: 1.3, hemFrom: 0.0, hemTo: 0.34, hemOut: 1.36,
+  cuffFrom: 0.26, cuffTo: 0.5, cuffOut: 1.52, cuffThick: 0.36, cuffLumps: 7,
+  bootFrom: 0.46, bootTo: 1.0, bootOut: 1.14, sole: 0.07, soleOut: 1.06, glow: 0.14,
+};
+/** The Brawler's puffy team trousers, cream fur calf cuffs and brown boots (spec at BRAWLER_LEGS). */
+export function brawlerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = BRAWLER_LEGS;
+  const mf = getMaterialFactory();
+  const pants = mf.get("cloth", teamColor.scale(0.84), { emissiveIntensity: B.glow * 0.5 });
+  const boot = mf.get("cloth", new Color3(0.36, 0.21, 0.12), { emissiveIntensity: B.glow * 0.5 });
+  const soleMat = mf.get("cloth", new Color3(0.2, 0.12, 0.07), { emissiveIntensity: B.glow * 0.35 });
+  const fur = mf.get("cloth", new Color3(0.9, 0.7, 0.42), { emissiveIntensity: B.glow });
+  const out: Mesh[] = [];
+  /** A puffy roll of fur round a limb at `at` of the way down it (a faceted torus plus `lumps` rounded clumps on its face). */
+  const furRoll = (limb: Mesh, at: number, outOf: number, thick: number, lumps: number): void => {
+    const L = limbBox(limb);
+    const r = Math.max(L.wide, L.deep) * outOf;
+    const y = L.mid + L.half - at * L.half * 2;
+    const flat = L.deep / Math.max(L.wide, L.deep);
+    const ring = MeshBuilder.CreateTorus("brawlerCuffRoll", { diameter: r * 2, thickness: r * 2 * thick, tessellation: 8 }, scene);
+    ring.parent = limb.parent;
+    ring.position.set(0, y, 0);
+    ring.scaling.z = flat;
+    ring.material = fur;
+    ring.convertToFlatShadedMesh();
+    out.push(ring);
+    for (let i = 0; i < lumps; i++) {
+      const a = (i / lumps) * Math.PI * 2 + (i % 2 ? 0.22 : 0);
+      const lump = MeshBuilder.CreateIcoSphere("brawlerCuffFur", { radius: r * thick * 0.9, subdivisions: 1, flat: true }, scene);
+      lump.parent = limb.parent;
+      lump.position.set(Math.cos(a) * r * 0.98, y + (i % 2 ? r * thick * 0.34 : -r * thick * 0.2), Math.sin(a) * r * flat * 0.98);
+      lump.material = fur;
+      out.push(lump);
+    }
+  };
+  for (const [thigh, shin] of [[body.leftUpperLeg, body.leftLowerLeg], [body.rightUpperLeg, body.rightLowerLeg]] as const) {
+    out.push(limbShell(scene, "brawlerPants", thigh, B.thighFrom, B.thighTo, B.thighOut, pants));
+    out.push(limbShell(scene, "brawlerPantsHem", shin, B.hemFrom, B.hemTo, B.hemOut, pants));
+    out.push(limbShell(scene, "brawlerFurCuff", shin, B.cuffFrom, B.cuffTo, B.cuffOut, fur));
+    furRoll(shin, B.cuffFrom, B.cuffOut, B.cuffThick, B.cuffLumps);
+    out.push(limbShell(scene, "brawlerBoot", shin, B.bootFrom, B.bootTo, B.bootOut, boot));
+  }
+  for (const foot of body.root.getChildMeshes(false)) {
+    if (!/_[lr]FootM$/.test(foot.name)) continue;
+    foot.material = boot;
+    const bb = foot.getBoundingInfo().boundingBox;
+    const wide = (bb.maximum.x - bb.minimum.x) * B.soleOut;
+    const deep = (bb.maximum.z - bb.minimum.z) * B.soleOut;
+    const sole = MeshBuilder.CreateBox("brawlerSole", { width: wide, height: bb.extendSize.y * B.sole, depth: deep }, scene);
+    sole.parent = foot.parent;
+    sole.position.set(foot.position.x, bb.minimum.y + bb.extendSize.y * B.sole * 0.5, foot.position.z + bb.center.z);
+    sole.material = soleMat;
+    sole.convertToFlatShadedMesh();
+    out.push(sole);
+  }
+  return out;
+}
+
+/*
  * [S] the Berserker's fur belt (395; viking.berserker.red.png: a thick cream fur roll round the hips with a big navy round buckle carrying the red
  * Landfall mark; critic 394: a thin plain belt with a small square buckle). In the torso's frame:
  *   roll: a faceted torus round the hips .at of the chest's half height up, .out of the chest proud, its tube .thick of that, with .lumps rounded
