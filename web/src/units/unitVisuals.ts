@@ -170,6 +170,8 @@ export interface UnitVisualConfig {
   weaponVariant?: WeaponVariant;
   /** ...and its own cut of the off-hand weapon (the Berserker's second bearded axe is still an "axe") */
   offhandVariant?: WeaponVariant;
+  /** A unit's own cut of the shared "wings" special (the Valkyrie's layered feathers; the shard fan is the default) */
+  wingStyle?: "layered";
 }
 
 export type WeaponVariant =
@@ -403,7 +405,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "viking.brawler": vis(
-    { scale: 1.1, bulk: 1.2 }, "axe", "viking_helmet", "norse", "none", "#A0522D",
+    // [S] 394 his own full-face Norse helm (vikingDress BRAWLER_HELM): no horns, no nasal strip of the shared helm
+    { scale: 1.1, bulk: 1.2 }, "axe", "none", "norse", "none", "#A0522D",
     undefined,
     // [S] 392 a bearded grey crescent on a longer haft, the head at shoulder height (propBuilder BEARDED_AXE)
     // [S] 393 his round board's own cut: a two-tone team/dark face, a big faceted boss, a brown wooden rim (propBuilder Brawler Shield)
@@ -418,6 +421,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // one sword and a big blue round shield). The shield comes off and the left hand takes the same sword prop as the right.
   "viking.valkyrie": vis(
     { scale: 1.2, bulk: 1.0, armLength: 1.05 }, "sword", "plume_helmet", "none", "wings", "#E6E6FA", "sword",
+    // [S] 394 her own layered feather wings (propBuilder VALKYRIE_WINGS_LAYERED), not the shared shard fan
+    { wingStyle: "layered" },
   ),
   "viking.longship": vis(
     { scale: 1.8, bulk: 2.0, legLength: 0.6 }, "axe", "viking_helmet", "round", "longship_body", "#8B7355",

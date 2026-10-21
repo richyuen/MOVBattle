@@ -2096,7 +2096,7 @@ export function attachProps(
   }
 
   // The western rider sits a bare paint horse, not the barded charger
-  const special = buildSpecial(scene, config.special, scale, accent, body, teamColor, config.materialPreset === "wildwest_leather" ? "pinto" : "barded");
+  const special = buildSpecial(scene, config.special, scale, accent, body, teamColor, config.materialPreset === "wildwest_leather" ? "pinto" : "barded", config.wingStyle);
   if (special) {
     props.push(special);
   }
@@ -5787,9 +5787,29 @@ const WING_FEATHER_FAN = [0.35, 1.25];
  * the torso across, its tip .tip of that; the band a flat wedge from .bandFrom to .wrist of the span, .band of the torso tall at its root end narrowing to .bandTip of that, standing
  * .bandProud in front, team x .bandShade.
  */
-type FeatherWingStyle = { span: number; raise: number; sweep: number; feathers: number; feather: Color3; covert: Color3; bar: Color3; glow: number; wrist: number; rows?: number };
+type FeatherWingStyle = {
+  span: number; raise: number; sweep: number; feathers: number; feather: Color3; covert: Color3; bar: Color3; glow: number; wrist: number;
+  rows?: number; fly?: boolean;
+  /** the leading-edge bar's thickness: tall and deep, shares of the torso */
+  barTall?: number; barDeep?: number;
+  /** the feathers' length (share of the bar, root to tip), width and blunt tip (shares of the torso) */
+  len?: readonly [number, number]; wide?: number; tip?: number;
+};
 const CROW_LAYERS = { shrink: 0.72, lift: 0.035, wide: 0.42, tip: 0.3, bandFrom: 0.16, band: 0.3, bandTip: 0.45, bandProud: 0.07, bandUp: 0.0, bandShade: 0.8 };
-const VALKYRIE_WINGS: FeatherWingStyle = { span: WING_SPAN, raise: WING_RAISE, sweep: WING_SWEEP, feathers: WING_FEATHERS, feather: new Color3(0.8, 0.9, 0.98), covert: new Color3(0.9, 0.95, 1.0), bar: new Color3(0.42, 0.29, 0.19), glow: 0.04, wrist: 0 };
+const VALKYRIE_WINGS: FeatherWingStyle = { span: WING_SPAN, raise: WING_RAISE, sweep: WING_SWEEP, feathers: WING_FEATHERS, feather: new Color3(0.8, 0.9, 0.98), covert: new Color3(0.9, 0.95, 1.0), bar: new Color3(0.42, 0.29, 0.19), glow: 0.04, wrist: 0, fly: true };
+/*
+ * [S] the Valkyrie's own layered wings (394; viking.valkyrie.png, .red.png: broad pale-blue wings each wider than she is tall, long overlapping feather
+ * planks with blunt tips in stepped rows, a thick dark bone spar along the leading edge; critic 391: two fans of flat pale-blue shards threaded on one thin
+ * dark rod, no feathers). The crow build's rows (CROW_LAYERS) in her own lengths and widths: .span torso heights a side, the bar .barTall/.barDeep, two rows
+ * of .feathers broad feathers .wide of the torso across and .tip of that at the tip, the longer row behind and lifted .lift so the trailing edge steps.
+ * Her flight keeps the marker (fly), so FLY finds her wings.
+ */
+const VALKYRIE_WINGS_LAYERED: FeatherWingStyle = {
+  span: 2.9, raise: WING_RAISE, sweep: WING_SWEEP, feathers: 8, rows: 2,
+  feather: new Color3(0.6, 0.79, 0.95), covert: new Color3(0.72, 0.87, 0.98),
+  bar: new Color3(0.36, 0.24, 0.15), glow: 0.1, wrist: 0, fly: true,
+  barTall: 0.16, barDeep: 0.14, len: [0.5, 0.95], wide: 0.5, tip: 0.6,
+};
 const CROW_WINGS: FeatherWingStyle = { span: 2.7, raise: 0.55, sweep: 0.22, feathers: 9, feather: new Color3(0.09, 0.09, 0.13), covert: new Color3(0.13, 0.13, 0.18), bar: new Color3(0.1, 0.1, 0.14), glow: 0.06, wrist: 0.48, rows: 3 };
 function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWingStyle = VALKYRIE_WINGS, teamColor?: Color3): void {
   const torsoH = body.torsoMesh.position.y * 2;
@@ -5800,7 +5820,7 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWi
   // [S] the Valkyrie hovers on these wings (393; viking.valkyrie.png, card Characteristics "flies": she hangs off the ground with her knees drawn up,
   // beating them, and swoops on the enemy). The marker lets proceduralAnimation's FLY hover find a winged body that flies in her own right; the
   // scarecrow's crow wings are a T-pose prop and keep their own beat.
-  if (style === VALKYRIE_WINGS) {
+  if (style.fly) {
     const flyMark = new TransformNode("valkyrieFly", scene);
     flyMark.parent = body.torso;
   }
@@ -5809,7 +5829,7 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWi
     root.parent = body.torso;
     root.position.set(side * torsoH * 0.18, torsoH * 0.82, -torsoH * 0.3);
     root.rotation.set(0, side * style.sweep, side * style.raise);
-    const bar = MeshBuilder.CreateBox("wingBar", { width: L, height: torsoH * 0.11, depth: torsoH * 0.07 }, scene);
+    const bar = MeshBuilder.CreateBox("wingBar", { width: L, height: torsoH * (style.barTall ?? 0.11), depth: torsoH * (style.barDeep ?? 0.07) }, scene);
     bar.parent = root;
     bar.position.x = side * L * 0.5;
     bar.material = barMat;
@@ -5844,20 +5864,21 @@ function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWi
     if (style.rows) {
       // rows of flat blunt-tipped feathers, stepped and overlapping, the shorter rows in front (CROW_LAYERS)
       const C = CROW_LAYERS;
+      const wide = style.wide ?? C.wide, tip = style.tip ?? C.tip, len = style.len ?? WING_FEATHER_LEN;
       for (let r = 0; r < style.rows; r++) {
         const k = Math.pow(C.shrink, r);
         for (let i = 0; i < style.feathers; i++) {
           const t = Math.min(1, (i + 1 - (r % 2) * 0.5) / style.feathers);
-          const len = L * (WING_FEATHER_LEN[0] + (WING_FEATHER_LEN[1] - WING_FEATHER_LEN[0]) * t) * k;
+          const fl = L * (len[0] + (len[1] - len[0]) * t) * k;
           const a = WING_FEATHER_FAN[0] + (WING_FEATHER_FAN[1] - WING_FEATHER_FAN[0]) * t;
-          const feather = MeshBuilder.CreateCylinder("wingFeather", { height: len, diameterTop: torsoH * C.wide * C.tip * Math.SQRT2, diameterBottom: torsoH * C.wide * Math.SQRT2, tessellation: 4 }, scene);
+          const feather = MeshBuilder.CreateCylinder("wingFeather", { height: fl, diameterTop: torsoH * wide * tip * Math.SQRT2, diameterBottom: torsoH * wide * Math.SQRT2, tessellation: 4 }, scene);
           feather.rotation.y = Math.PI / 4;
           feather.bakeCurrentTransformIntoVertices();
           feather.scaling.z = 0.08;
           feather.parent = root;
           feather.rotation.z = Math.PI + side * a;
           const ax = side * L * (0.08 + 0.9 * t);
-          feather.position.set(ax + side * Math.sin(a) * len * 0.5, -torsoH * 0.06 - Math.cos(a) * len * 0.5, torsoH * C.lift * r);
+          feather.position.set(ax + side * Math.sin(a) * fl * 0.5, -torsoH * 0.06 - Math.cos(a) * fl * 0.5, torsoH * C.lift * r);
           feather.material = (i + r) % 2 === 0 ? featherMat : covertMat;
         }
       }
@@ -6299,7 +6320,7 @@ const QUIVER_HIP = {
   arrows: [[-0.03, -0.02, 0.12], [0.0, 0.03, -0.05], [0.03, -0.01, -0.16], [0.01, -0.035, 0.02]] as const,
 };
 
-function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody, teamColor?: Color3, horse: HorseStyle = "barded"): Mesh | null {
+function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody, teamColor?: Color3, horse: HorseStyle = "barded", wingStyle?: "layered"): Mesh | null {
   switch (type) {
     case "none": return null;
 
@@ -6360,7 +6381,8 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
           wing.material = mat(scene, new Color3(0.12, 0.12, 0.15), 0.05);
         }
       } else {
-        buildFeatherWings(scene, body);
+        // [S] 394 the Valkyrie's own cut: broad layered feathers on a thick dark spar; the other winged units keep the shard fan
+        buildFeatherWings(scene, body, wingStyle === "layered" ? VALKYRIE_WINGS_LAYERED : VALKYRIE_WINGS);
       }
       // Return a dummy mesh for disposal tracking
       const marker = MeshBuilder.CreateBox("wingMarker", { width: 0.01, height: 0.01, depth: 0.01 }, scene);
