@@ -274,7 +274,18 @@ const MINOTAUR_CHARGE = { from: 1.5, reach: 14, speed: 2.3, seconds: 2.2, overru
  * takes .damage and is flung out from it and up (.fling/.lift m/s at its middle, .edge of that at the rim), a dust ring and kicked earth there. His head
  * comes back up .recover s later. The first is ready .cooldown s into the battle. Logged "headbutt" at the blow.
  */
-const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahead: 0.9, radius: 4.5, damage: 30, fling: 9, lift: 7, edge: 0.35 };
+const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahead: 0.9, radius: 4.5, damage: 30, fling: 9, lift: 7, edge: 0.35, lunge: 0 };
+/*
+ * [S] 394 the Headbutter's Headbutt (viking.headbutter.png, card Weapons "Headbutt (ability): the headbutt involves two separate attributes, one for the
+ * headbutting movement and one for the damage on head impact"; Characteristics "they attack by ramming the opponent with their spiked helmets ... they can be
+ * seen flipping over enemy units from time to time ... After the initial attack, they get up and attack by slapping their opponents, until the next headbutt
+ * is ready"; critic 393: `release = melee hit at 1900 ms`, ability null, the pair an upright slap). With a man within .within m past his reach and the butt
+ * ready (.cooldown s apart, and the first READY at the start: it is his opening attack), he drops his head and drives it into him over .windup s, stepping
+ * .lunge m onto him: the man in front takes .damage and is flipped up and out from the buried head (.fling/.lift m/s at its middle, .edge of that at the rim).
+ * The blow is logged "headbutt" and as a hit on the man, so his opening attack is the butt and the slaps are what follows. His head comes back up .recover s
+ * later and he slaps until the next.
+ */
+const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead: 0.5, radius: 1.15, damage: 18, fling: 5, lift: 4.5, edge: 0.5, lunge: 0.5 };
 /*
  * [S] Super Jump (392; viking.berserker.jpg, card Weapons "Super Jump: Ability - Melee; leaps towards the enemy"; viking.berserker.red.png: caught in
  * the air, legs kicked, an axe wide in each hand). The berserker's jump_charge used to teleport him to the landing spot, so every shot caught him
@@ -416,7 +427,7 @@ export class SimulationSystem {
   private _chargeDustKick = new Map<RuntimeUnit, number>();
   private _chargePosed = new Set<RuntimeUnit>();
   // Big Headbutt (BIG_HEADBUTT): each minotaur's butt under way (blow and end times) and when the next is ready
-  private _butts = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean }>();
+  private _butts = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; spec: typeof BIG_HEADBUTT }>();
   private _buttReadyAt = new Map<RuntimeUnit, number>();
   // The wheelbarrow's riders (WHEELBARROW_CREW): each move's start and its man, and when the next may start
   private _crewFights = new Map<RuntimeUnit, { throwAt: number; thrown: boolean; appleAt: RuntimeUnit | null; stabAt: number; stabbed: boolean; stabOn: RuntimeUnit | null }>();
@@ -1053,22 +1064,30 @@ export class SimulationSystem {
       return;
     }
 
-    // Big Headbutt (BIG_HEADBUTT): a minotaur butting stands over it; one in reach with it ready starts one
-    if (unit.definition.id === "ancient.minotaur") {
+    // Big Headbutt (BIG_HEADBUTT): a minotaur butting stands over it; one in reach with it ready starts one. ...and the Headbutter's own (HEADBUTT)
+    const buttSpec = unit.definition.id === "ancient.minotaur" ? BIG_HEADBUTT : unit.definition.id === "viking.headbutter" ? HEADBUTT : null;
+    if (buttSpec) {
       if (this._butts.has(unit)) {
         unit.stopMoving();
         this._clearPathState(unit);
         unit.faceTarget(this._butts.get(unit)!.target.position);
         return;
       }
-      // the first butt is a cooldown into the battle, so he opens with his fists
-      if (!this._charges.has(unit) && distance <= engageDistance + BIG_HEADBUTT.within && now >= (this._buttReadyAt.get(unit) ?? this._battleStartedAt + BIG_HEADBUTT.cooldown)) {
-        this._butts.set(unit, { target: enemy, blowAt: now + BIG_HEADBUTT.windup, endAt: now + BIG_HEADBUTT.windup + BIG_HEADBUTT.recover, done: false });
-        this._buttReadyAt.set(unit, now + BIG_HEADBUTT.cooldown);
+      // the minotaur's first butt is a cooldown into the battle, so he opens with his fists; the headbutter opens with his
+      const readyAt = this._buttReadyAt.get(unit) ?? (buttSpec === HEADBUTT ? 0 : this._battleStartedAt + BIG_HEADBUTT.cooldown);
+      if (!this._charges.has(unit) && distance <= engageDistance + buttSpec.within && now >= readyAt) {
+        this._butts.set(unit, { target: enemy, blowAt: now + buttSpec.windup, endAt: now + buttSpec.windup + buttSpec.recover, done: false, spec: buttSpec });
+        this._buttReadyAt.set(unit, now + buttSpec.cooldown);
         unit.animator.setCharging(true, true);
         unit.stopMoving();
         this._clearPathState(unit);
         unit.faceTarget(enemy.position);
+        // the headbutter drives a step onto him with the head: the ram is a movement as much as a blow (card)
+        if (buttSpec.lunge > 0) {
+          const step = enemy.position.subtract(unit.position);
+          step.y = 0;
+          if (step.lengthSquared() > 1e-4) unit.moveTo(unit.position.add(step.normalize().scale(buttSpec.lunge)));
+        }
         return;
       }
     }
@@ -2921,16 +2940,17 @@ export class SimulationSystem {
     }
   }
 
-  /** Each butt under way (spec at BIG_HEADBUTT): the burst at its blow, the head back up at its end. */
+  /** Each butt under way (spec at BIG_HEADBUTT / HEADBUTT): the burst at its blow, the head back up at its end. */
   private _landButts(now: number): void {
-    const B = BIG_HEADBUTT;
     for (const [unit, butt] of this._butts) {
+      const B = butt.spec;
       if (unit.isDead) { unit.animator.setCharging(false); this._butts.delete(unit); continue; }
       if (!butt.done && now >= butt.blowAt) {
         butt.done = true;
         const yaw = unit.body.root.rotation.y;
         const center = unit.position.add(new Vector3(Math.sin(yaw), 0, Math.cos(yaw)).scale(B.ahead + unit.collisionBodyRadius * 0.5));
         center.y = unit.position.y;
+        let logged = false;
         for (const other of this._units) {
           if (other.isDead || other.team === unit.team || !other.isTargetable) continue;
           const off = other.position.subtract(center);
@@ -2941,6 +2961,16 @@ export class SimulationSystem {
           const k = 1 - (1 - B.edge) * (d / B.radius);
           other.applyDamage(B.damage, out.scale(B.fling * k));
           other.applyBlastLaunch(out, B.fling * k, B.lift * k);
+          // a head in a man's face is a hit on that man, not only an ability: the sim's hit log records it at the blow
+          if (!logged && B.lunge > 0) {
+            logged = true;
+            const chain: TransformNode[] = [];
+            for (let n: Node | null = other.body.headTop; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+            for (const n of chain) n.computeWorldMatrix(true);
+            const head = other.body.headTop.getAbsolutePosition();
+            if (this.hitLog.length >= 200) this.hitLog.shift();
+            this.hitLog.push({ t: now, attackerUnit: unit.definition.id, targetUnit: other.definition.id, x: center.x, y: center.y, z: center.z, head: { x: head.x, y: head.y, z: head.z } });
+          }
         }
         this._logAbility(unit, "headbutt", now, center);
         this.visualEffects?.spawnTrampleRing(center, B.radius * 0.6);

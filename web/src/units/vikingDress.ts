@@ -298,9 +298,9 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const drapeH = H * P.drapeDrop;
   const mantleH = H * P.mantleTall;
   const mantle = put(MeshBuilder.CreateIcoSphere("jarlPeltMantle", {
-    radiusX: shoulderW * P.mantle * 0.5, radiusY: mantleH, radiusZ: D * P.mantleDeep * 0.5, subdivisions: 2, flat: true,
+    radiusX: shoulderW * P.mantle * 0.5, radiusY: mantleH * 0.5, radiusZ: D * P.mantleDeep * 0.5, subdivisions: 2, flat: true,
   }, scene), fur, body.torso);
-  mantle.position.set(0, top - mantleH * 0.45, chest.position.z + D * 0.04);
+  mantle.position.set(0, top - mantleH * 0.3, chest.position.z + D * 0.04);
   for (const side of [-1, 1]) {
     // the fur lump over the shoulder, so the pelt rounds off his shoulder line rather than ending in a plank
     const lump = put(MeshBuilder.CreateIcoSphere("jarlPeltShoulder", {
