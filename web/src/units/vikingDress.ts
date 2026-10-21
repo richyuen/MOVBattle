@@ -334,11 +334,14 @@ export function berserkerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * The Brawler's dark beard, hung from under his full-face helm's mask: the jaw mass starts BELOW the mask's bottom edge (-1.02 H) and stands proud of the
  * mask's face (1.04 D), so it spills out under the helmet instead of sitting inside it (critic 395: nearly all of it was buried in the mask), with the
  * moustache hung at the mask's foot and the bib .9 head heights down onto the chest.
+ * [S] 398 the critic read 396's cut as a short dark mass, not a jaw-wide beard. The mask now ends at the cheek line (maskBottom -0.52, the cheek guards
+ * kept long) so the lower face is open, and the beard fills it: a jaw mass 1.5 H across and .95 H tall hung at 1.0 H, wider than the face it sits on,
+ * with a bigger moustache under the mask's foot and the bib wider down onto the chest.
  */
 export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, {
-    color: new Color3(0.24, 0.12, 0.1), glow: 0.18, down: 0.9, wide: 1.15, tip: 0.5, braid: true, stache: true,
-    jaw: [1.38, 0.74, 0.82], jawY: 1.06, jawZ: 0.78, stacheLow: 0.98, stacheZ: 1.24, burns: false,
+    color: new Color3(0.32, 0.15, 0.11), glow: 0.22, down: 0.95, wide: 1.4, tip: 0.55, braid: true, stache: true,
+    jaw: [1.5, 0.95, 0.8], jawY: 1.0, jawZ: 0.55, stacheLow: 0.62, stacheZ: 1.25, burns: false,
   });
 }
 
@@ -727,16 +730,17 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * In the head's own size (W across, H high; the bead eyes sit on the face's plane .12 H above its middle and are .3 W across):
  *   dome: a team shell over the crown, .domeWide W across and .domeTall H deep (a sphere sliced .domeSlice), its middle .domeRise H up so its rim comes
  *   down onto the brow; a darker team brow band .band H tall round it .bandProud proud, its foot on the eye line (.eyeTop H up);
- *   mask: a team plate over the lower face from just under the eyes (.maskTop H) to the chin (.maskBottom H), .maskWide W wide and .maskDepth D deep, stood
- *   a hair proud of the face; a cheek guard down each side of it (.cheek W wide, .cheekTop H up) so the jaw is boxed in;
+ *   mask: a team plate over the lower face from just under the eyes (.maskTop H) to the cheek line (.maskBottom H), .maskWide W wide and .maskDepth D
+ *   deep, stood a hair proud of the face; a cheek guard down each side of it (.cheek W wide, from .cheekTop H down past the mask to .cheekBottom H) so
+ *   the jaw is boxed in - 398: the mask ends at the cheek line and the beard fills the open mouth and chin under it; the guards run on to the chin;
  *   nasal: a dark strip from the brow band down between the eyes to the mask's top, .nasal W wide, stood .nasalProud D proud, so the eye slots read as two
  *   holes either side of it. Team cloth self-lit .glow (LESSONS: metal reads near black under swiftshader).
  */
 const BRAWLER_HELM = {
   domeWide: 1.14, domeTall: 0.7, domeRise: 0.5, domeSlice: 0.6,
   band: 0.14, bandProud: 1.08, eyeTop: 0.42,
-  maskTop: -0.18, maskBottom: -1.02, maskWide: 1.03, maskDepth: 1.04, maskProud: 0.06,
-  cheek: 0.16, cheekTop: 0.3, cheekDeep: 0.92, cheekOut: 1.0,
+  maskTop: -0.18, maskBottom: -0.52, maskWide: 1.03, maskDepth: 1.04, maskProud: 0.06,
+  cheek: 0.16, cheekTop: 0.3, cheekDeep: 0.92, cheekOut: 1.0, cheekBottom: -1.02,
   nasal: 0.24, nasalLow: -0.2, nasalProud: 0.11,
   glow: 0.1, darkGlow: 0.06,
 };
@@ -776,9 +780,9 @@ export function brawlerHelm(scene: Scene, body: ArticulatedBody, teamColor: Colo
   // a cheek guard down each side of the mask, boxing the jaw in
   for (const side of [-1, 1]) {
     const cheek = put(MeshBuilder.CreateBox("brawlerHelmCheek", {
-      width: e.x * B.cheek, height: (B.cheekTop - B.maskBottom) * e.y, depth: 2 * e.z * B.cheekDeep,
+      width: e.x * B.cheek, height: (B.cheekTop - B.cheekBottom) * e.y, depth: 2 * e.z * B.cheekDeep,
     }, scene), dark);
-    cheek.position.set(side * e.x * (B.maskWide + B.cheek * 0.35), e.y * (B.cheekTop + B.maskBottom) * 0.5, 0);
+    cheek.position.set(side * e.x * (B.maskWide + B.cheek * 0.35), e.y * (B.cheekTop + B.cheekBottom) * 0.5, 0);
   }
   // the nasal: from the brow band down between the eyes onto the mask
   const nasal = put(MeshBuilder.CreateBox("brawlerHelmNasal", {
