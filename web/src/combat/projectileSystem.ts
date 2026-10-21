@@ -1,7 +1,7 @@
 import {
   Scene, Vector3, MeshBuilder, Color3, Mesh, TransformNode, Node,
   PBRMetallicRoughnessMaterial, ParticleSystem, VertexBuffer, Ray,
-  StandardMaterial, DynamicTexture,
+  StandardMaterial, DynamicTexture, Quaternion,
 } from "@babylonjs/core";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 import type { VisualEffects } from "./visualEffects";
@@ -36,8 +36,14 @@ const DRUNK_GREEN = new Color3(0.35, 0.95, 0.25);
 const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
 // The medieval archer's broadhead arrow (see _dressBroadhead): head across, along the shaft (m), flatness; shaft and head colours
 const BROADHEAD = { wide: 0.17, long: 0.2, thick: 0.3, shaft: new Color3(0.62, 0.16, 0.1), iron: new Color3(0.08, 0.08, 0.09) };
-// The Ice Archer's arrow (see _dressIceArrow): head along the shaft and across at its base (m), barbs either side, frost flakes behind the head; colours
-const ICE_ARROW = { head: 0.34, wide: 0.18, frost: 4, frostSize: 0.055, shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98) };
+// The Ice Archer's arrow (see _dressIceArrow): shaft along the flight, the ice crown at its end -- spikes off the shaft's end, .head the longest on the
+// axis, .wide across at the foot; .spike of it for the ring round it, leaned .spikeOut; .barbs swept back .barb of .head; and a frost spray of .frost
+// flakes, .frostSize at the crown's foot, shrinking .frostShrink down a .frostLong cone that opens .frostOpen wide
+const ICE_ARROW = {
+  head: 0.34, wide: 0.2, spikes: 4, spike: 0.66, spikeOut: 0.42, barbs: 3, barb: 0.5,
+  frost: 10, frostSize: 0.05, frostLong: 0.52, frostOpen: 2.4, frostShrink: 0.6,
+  shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98),
+};
 
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
@@ -858,9 +864,12 @@ export class ProjectileSystem {
 
   /**
    * [S] 397 the Ice Archer's arrow (viking.ice_archer.jpg: a long pale-blue arrow with a jagged ice head trailing frost; critic 396: a dark-brown shaft
-   * with a small blue cone). The shaft is recoloured pale ice ICE_ARROW.shaft self-lit, the fletching whitened, and the small tip replaced by a jagged
-   * head: a faceted ice spike ICE_ARROW.head long and .wide across at its base, a barb swept back either side of it, and .frost white flakes strung back
-   * along the shaft, so the arrow reads as ice in flight.
+   * with a small blue cone). The shaft is recoloured pale ice ICE_ARROW.shaft self-lit, the fletching whitened, and the small tip replaced by an ice
+   * crown. [S] 398 the critic read that crown as a clean pyramid with four balls on the shaft, not a jagged head with a frost spray: the head is now
+   * .spikes shards off the shaft's end, the longest .head long on the axis and the rest .spike of it, leaned .spikeOut of the way out from the base and
+   * turned round it in a ring, each faceted with 4 sides and a different length, so the crown is irregular from every angle; .barbs shards are swept back
+   * .barb of .head at the crown's foot; and behind them a spray of .frost tetra flakes, .frostSize at the crown's foot shrinking .frostShrink down a
+   * .frostLong cone whose mouth opens .frostOpen wide, so the tail reads as frost and not as beads on the shaft.
    */
   private _dressIceArrow(root: TransformNode): void {
     const I = ICE_ARROW;
@@ -870,24 +879,35 @@ export class ProjectileSystem {
       if (child.name === "fletch") child.material = this._getMat("iceArrow_fletch", I.ice, 0.16);
     }
     const ice = this._getMat("iceArrow_head", I.ice, 0.26);
-    const head = MeshBuilder.CreateCylinder("iceArrowHead", { height: I.head, diameterTop: 0, diameterBottom: I.wide, tessellation: 4 }, this._scene);
-    head.convertToFlatShadedMesh();
-    head.rotation.x = Math.PI / 2;
-    head.position.z = 0.375 + I.head / 2;
-    head.material = ice;
-    head.parent = root;
-    for (const side of [-1, 1]) {
-      const barb = MeshBuilder.CreateCylinder("iceArrowBarb", { height: I.head * 0.52, diameterTop: 0, diameterBottom: I.wide * 0.44, tessellation: 4 }, this._scene);
-      barb.convertToFlatShadedMesh();
-      barb.rotation.x = Math.PI / 2;
-      barb.rotation.z = -side * 0.8;
-      barb.position.set(side * I.wide * 0.4, 0, 0.375 + I.head * 0.42);
-      barb.material = ice;
-      barb.parent = root;
+    const foot = 0.375; // the shaft's end, in the arrow's own frame (head first along +z)
+    const shard = (name: string, len: number, wide: number, dir: Vector3, at: Vector3): void => {
+      const spike = MeshBuilder.CreateCylinder(name, { height: len, diameterTop: 0, diameterBottom: wide, tessellation: 4 }, this._scene);
+      spike.convertToFlatShadedMesh();
+      spike.rotationQuaternion = Quaternion.Identity();
+      Quaternion.FromUnitVectorsToRef(new Vector3(0, 1, 0), dir.normalize(), spike.rotationQuaternion);
+      spike.position.copyFrom(at.add(dir.normalize().scale(len * 0.5)));
+      spike.material = ice;
+      spike.parent = root;
+    };
+    for (let k = 0; k < I.spikes; k++) {
+      const a = 0.7 + k * 2.39 + (k % 2) * 0.4;
+      const axis = k === 0;
+      const lean = axis ? 0 : I.spikeOut;
+      const dir = new Vector3(Math.cos(a) * lean, Math.sin(a) * lean * 0.8, 1);
+      const len = axis ? I.head : I.head * I.spike * (0.72 + 0.24 * ((k * 5) % 3) / 2);
+      shard("iceArrowHead", len, I.wide * (axis ? 0.52 : 0.4), dir, new Vector3(Math.cos(a) * I.wide * lean * 0.7, Math.sin(a) * I.wide * lean * 0.55, foot - 0.02));
+    }
+    for (let b = 0; b < I.barbs; b++) {
+      const a = 1.6 + b * 2.1;
+      const back = new Vector3(Math.cos(a), Math.sin(a) * 0.8, -0.55);
+      shard("iceArrowBarb", I.head * I.barb, I.wide * 0.3, back, new Vector3(Math.cos(a) * I.wide * 0.32, Math.sin(a) * I.wide * 0.26, foot - 0.03));
     }
     for (let i = 0; i < I.frost; i++) {
-      const flake = MeshBuilder.CreateIcoSphere("iceArrowFrost", { radius: I.frostSize * (1 - i * 0.14), subdivisions: 0, flat: true }, this._scene);
-      flake.position.set((i % 2 ? 1 : -1) * I.frostSize * 0.9, (i % 3 ? 1 : -1) * I.frostSize * 0.6, 0.2 - i * 0.15);
+      const t = I.frost > 1 ? i / (I.frost - 1) : 0;
+      const a = i * 2.4;
+      const reach = I.frostSize * (0.4 + I.frostOpen * t);
+      const flake = MeshBuilder.CreateIcoSphere("iceArrowFrost", { radius: I.frostSize * (1 - I.frostShrink * t) * (0.75 + 0.25 * (i % 3) / 2), subdivisions: 0, flat: true }, this._scene);
+      flake.position.set(Math.cos(a) * reach, Math.sin(a) * reach * 0.8, foot - 0.05 - t * I.frostLong);
       flake.material = ice;
       flake.parent = root;
     }
