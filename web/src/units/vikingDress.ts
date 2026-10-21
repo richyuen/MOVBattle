@@ -279,6 +279,67 @@ export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] the Berserker's fur belt (395; viking.berserker.red.png: a thick cream fur roll round the hips with a big navy round buckle carrying the red
+ * Landfall mark; critic 394: a thin plain belt with a small square buckle). In the torso's frame:
+ *   roll: a faceted torus round the hips .at of the chest's half height up, .out of the chest proud, its tube .thick of that, with .lumps rounded
+ *   clumps standing round its front;
+ *   buckle: a navy ten-sided disc .face across the chest's half width on the roll's front, .deep proud, and the mark a flat red three-sided plate
+ *   .mark of that disc's width on its face.
+ * Fur self-lit like the rest of the viking fur, the navy and the red a little brighter so they read under the belly's shade.
+ */
+const BERSERKER_BELT = { at: 0.0, out: 1.16, thick: 0.66, lumps: 9, face: 1.3, deep: 0.09, mark: 0.46, glow: 0.14 };
+const BERSERKER_FUR = new Color3(0.9, 0.7, 0.42);
+const BERSERKER_NAVY = new Color3(0.1, 0.14, 0.3);
+const BERSERKER_RED = new Color3(0.7, 0.09, 0.09);
+/** The Berserker's cream fur belt with its big navy Landfall buckle (spec at BERSERKER_BELT). */
+export function berserkerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BERSERKER_BELT;
+  const mf = getMaterialFactory();
+  const fur = mf.get("cloth", BERSERKER_FUR, { emissiveIntensity: B.glow });
+  const navy = mf.get("cloth", BERSERKER_NAVY, { emissiveIntensity: B.glow * 0.8 });
+  const red = mf.get("cloth", BERSERKER_RED, { emissiveIntensity: B.glow * 1.1 });
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const round = Math.max(chest.x, chest.z);
+  const flat = chest.z / Math.max(chest.x, chest.z);
+  const out: Mesh[] = [];
+  const y = chest.y * B.at;
+  const ring = MeshBuilder.CreateTorus("berserkerBelt", { diameter: round * 2 * B.out, thickness: chest.y * B.thick, tessellation: 9 }, scene);
+  ring.parent = body.torso;
+  ring.position.y = y;
+  ring.scaling.z = flat;
+  ring.material = fur;
+  ring.convertToFlatShadedMesh();
+  out.push(ring);
+  for (let i = 0; i < B.lumps; i++) {
+    const a = (i / B.lumps) * Math.PI * 2 + (i % 2 ? 0.18 : 0);
+    const lump = MeshBuilder.CreateIcoSphere("berserkerBeltFur", { radius: chest.y * B.thick * 0.48, subdivisions: 1, flat: true }, scene);
+    lump.parent = body.torso;
+    lump.position.set(Math.cos(a) * round * B.out, y + (i % 2 ? chest.y * B.thick * 0.22 : -chest.y * B.thick * 0.12), Math.sin(a) * round * B.out * flat);
+    lump.material = fur;
+    out.push(lump);
+  }
+  // the buckle: a navy disc on the roll's front, the red mark flat on its face
+  const buckle = MeshBuilder.CreateCylinder("berserkerBuckle", { height: round * B.deep, diameter: round * B.face, tessellation: 10 }, scene);
+  buckle.rotation.x = Math.PI / 2;
+  buckle.bakeCurrentTransformIntoVertices();
+  buckle.position.set(0, y, round * B.out * flat + round * B.deep * 0.5);
+  buckle.parent = body.torso;
+  buckle.material = navy;
+  buckle.convertToFlatShadedMesh();
+  out.push(buckle);
+  const mark = MeshBuilder.CreateCylinder("berserkerBuckleMark", { height: round * B.deep * 0.5, diameter: round * B.face * B.mark, tessellation: 3 }, scene);
+  mark.rotation.x = Math.PI / 2;
+  mark.rotation.z = Math.PI / 2;
+  mark.bakeCurrentTransformIntoVertices();
+  mark.position.set(0, y, round * B.out * flat + round * B.deep * 1.05);
+  mark.parent = body.torso;
+  mark.material = red;
+  mark.convertToFlatShadedMesh();
+  out.push(mark);
+  return out;
+}
+
+/*
  * [S] the Headbutter's kit (395; viking.headbutter.red.png, viking.headbutter.png, card Appearance "thick furry boots"; critic 391: "a plain blue tunic,
  * bare hands and boots, no belt"). In the trunk's and the limbs' own frames:
  *   belt: a brown band round the hips .tall of the trunk's height at .at up, .proud of it, a dark buckle box on its front;

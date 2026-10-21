@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, jarlPelt, berserkerBeard } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, jarlPelt, berserkerBeard, berserkerBelt } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -589,6 +589,8 @@ export class UnitFactory {
     // [S] the Berserker's own big dark beard with a braid tied at the end (395; vikingDress VIKING_BEARD)
     if (definition.id === "viking.berserker" && !shouldUseVehicleBody) {
       propMeshes.push(...berserkerBeard(this._scene, body));
+      // [S] ...and his thick cream fur belt with the big navy Landfall buckle (396; vikingDress BERSERKER_BELT)
+      propMeshes.push(...berserkerBelt(this._scene, body));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
