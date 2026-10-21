@@ -2031,14 +2031,55 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   deck.material = darkWood;
   allMeshes.push(deck);
 
+  /*
+   * [S] the team shields on the gunwales (395; viking.longship.jpg "having Brawler shields on each side", viking.longship.red.png: big round shields
+   * hanging over each side with a dark half, a brown rim and a boss; critic 394: "flat olive-grey discs, no boss or team colour"). Each shield is the
+   * Brawler's board cut down to a plainer one: a twelve-sided disc .face across in the light team paint, a dark slate half over it with its split down the
+   * middle, a wide brown wooden rim ring behind, and a bronze eight-sided boss proud of the face. Four a side, hung just outside the rail (at .across x,
+   * .y up, spaced .spread apart from .first), facing outboard, so the hull's side is a row of boards.
+   */
+  const SHIELDS = { face: 0.46, rim: 0.51, boss: 0.17, across: 0.62, y: 0.58, first: -0.9, spread: 0.6, count: 4 };
+  const shieldDark = makeMat(scene, new Color3(0.1, 0.11, 0.16));
+  const shieldWood = makeMat(scene, new Color3(0.34, 0.2, 0.12));
+  const shieldBoss = makeMat(scene, new Color3(0.56, 0.36, 0.15));
+  const shieldDisc = (name: string, diameter: number, depth: number, arc = 1): Mesh => {
+    const m = MeshBuilder.CreateCylinder(name, { height: depth, diameter, tessellation: 12, arc, enclose: arc < 1 }, scene);
+    m.rotation.x = Math.PI / 2;
+    m.bakeCurrentTransformIntoVertices();
+    return m;
+  };
   for (const side of [-1, 1]) {
-    for (let i = 0; i < 4; i++) {
-      const shield = MeshBuilder.CreateCylinder("longshipShield", { height: 0.05, diameter: 0.28, tessellation: 14 }, scene);
-      shield.position.set(side * 0.58, 0.56, -0.84 + i * 0.56);
-      shield.rotation.z = Math.PI / 2;
-      shield.parent = root;
-      shield.material = i % 2 === 0 ? shieldMat : makeMat(scene, new Color3(0.56, 0.44, 0.2));
-      allMeshes.push(shield);
+    for (let i = 0; i < SHIELDS.count; i++) {
+      const holder = new TransformNode("longshipShieldMount", scene);
+      holder.parent = root;
+      holder.position.set(side * SHIELDS.across, SHIELDS.y, SHIELDS.first + i * SHIELDS.spread);
+      holder.rotation.y = side * Math.PI / 2;
+      holder.rotation.z = (i % 2 ? 1 : -1) * 0.06;
+      const face = shieldDisc("longshipShield", SHIELDS.face, 0.035);
+      face.parent = holder;
+      face.material = shieldMat;
+      allMeshes.push(face);
+      const rim = shieldDisc("longshipShieldRim", SHIELDS.rim, 0.026);
+      rim.position.z = -0.008;
+      rim.parent = holder;
+      rim.material = shieldWood;
+      allMeshes.push(rim);
+      // the dark half of the face, its split down the middle
+      const dark = shieldDisc("longshipShieldDark", SHIELDS.face * 0.985, 0.01, 0.5);
+      dark.rotation.z = -Math.PI / 2;
+      dark.position.z = 0.021;
+      dark.parent = holder;
+      dark.material = shieldDark;
+      allMeshes.push(dark);
+      const boss = MeshBuilder.CreateCylinder("longshipShieldBoss", { height: 0.07, diameter: SHIELDS.boss, tessellation: 8 }, scene);
+      boss.rotation.x = Math.PI / 2;
+      boss.rotation.z = Math.PI / 8;
+      boss.bakeCurrentTransformIntoVertices();
+      boss.position.z = 0.04;
+      boss.parent = holder;
+      boss.material = shieldBoss;
+      boss.convertToFlatShadedMesh();
+      allMeshes.push(boss);
     }
   }
 
