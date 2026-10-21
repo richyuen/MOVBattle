@@ -1,4 +1,4 @@
-import { Vector3, Mesh, MeshBuilder, Color3, Scene, ParticleSystem, TransformNode, type Material } from "@babylonjs/core";
+import { Vector3, Mesh, MeshBuilder, Color3, Quaternion, Scene, ParticleSystem, TransformNode, type Material } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -33,6 +33,10 @@ const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 
  * healer's beam is on him (gild) his skin is GILD.dye of the way to GILD.gold and lit .glow of it, his clothes lit .6 of that; no roll, no slow.
  */
 const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45, coat: new Color3(0.95, 0.62, 0.08), coatGlow: 0.22 };
+/*
+ * [S] the ice crust a freeze leaves on its target (395, see _applyFrostCrust): shards of pale ice on the trunk, head, arms and thighs.
+ */
+const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 0.28 };
 /*
  * [S] full gild (352; card Appearance: "turning them gold for a moment"). While gilded every opaque mesh of him (skin, clothes, armour, helm, the props in
  * his hands) wears one shared gold material, GILD.coat lit .coatGlow of it (saturated: GILD.gold lit .glow washed out to cream), the mesh's own material kept and put back when the beam lets go. Prop materials
@@ -1643,6 +1647,7 @@ export class RuntimeUnit {
 
     this._applyPoseOverlay(isAttacking);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
+    this._applyFrostCrust(now);
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {
@@ -1815,6 +1820,53 @@ export class RuntimeUnit {
     } else if (!on && this._gildWorn) {
       for (const [mesh, worn] of this._gildWorn) if (!mesh.isDisposed()) mesh.material = worn;
       this._gildWorn = null;
+    }
+  }
+
+  /** Frozen by an ice arrow (FROST): the crust is worn until `_frostUntil`. */
+  private _frostUntil = 0;
+  private _frostCrust: Mesh[] = [];
+  /**
+   * [S] the ice crust a freeze leaves on the man it hits (395; viking.ice_archer card Characteristics "it will freeze enemy units, causing them to move
+   * slower", viking.ice_archer.jpg; critic 391: the target only recoiled, `status:freeze` showed no frost). Pale-blue faceted shards stand out of the
+   * trunk, the head, both upper arms and both thighs for the status's length: FROST.shards spikes per part, each a four-sided cone .long of that part's
+   * smaller half-extent standing out along a fixed spiral so the ring reads all the way round, self-lit ice so it stays pale blue under the ACES curve.
+   */
+  applyFrost(seconds: number, now: number): void {
+    this._frostUntil = Math.max(this._frostUntil, now + Math.max(0.1, seconds));
+  }
+  private _applyFrostCrust(now: number): void {
+    const on = now < this._frostUntil;
+    if (!on) {
+      if (this._frostCrust.length > 0) {
+        for (const m of this._frostCrust) m.dispose(false, false);
+        this._frostCrust = [];
+      }
+      return;
+    }
+    if (this._frostCrust.length > 0) return;
+    const ice = getMaterialFactory().get("cloth", FROST.color, { emissiveIntensity: FROST.glow });
+    const parts: Mesh[] = [this.body.torsoMesh, this.body.headMesh, this.body.leftUpperArm, this.body.rightUpperArm, this.body.leftUpperLeg, this.body.rightUpperLeg];
+    for (let pi = 0; pi < parts.length; pi++) {
+      const parent = parts[pi];
+      if (!parent || parent.isDisposed()) continue;
+      const e = parent.getBoundingInfo().boundingBox.extendSize;
+      const size = (e.x + e.y + e.z) / 3;
+      const n = FROST.shards;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + pi * 0.8;
+        const high = 0.85 - (i / Math.max(1, n - 1)) * 1.5;
+        const long = Math.max(0.12, size * 2.4 * (0.8 + 0.2 * i));
+        const shard = MeshBuilder.CreateCylinder("frostShard", { height: long, diameterTop: 0, diameterBottom: long * FROST.wide, tessellation: 4 }, parent.getScene());
+        shard.parent = parent;
+        shard.position.set(e.x * Math.cos(a) * 1.02, e.y * high, e.z * Math.sin(a) * 1.02);
+        const out = new Vector3(Math.cos(a), high * 0.8, Math.sin(a)).normalize();
+        shard.rotationQuaternion = Quaternion.FromUnitVectorsToRef(new Vector3(0, 1, 0), out, new Quaternion());
+        shard.material = ice;
+        shard.convertToFlatShadedMesh();
+        shard.isPickable = false;
+        this._frostCrust.push(shard);
+      }
     }
   }
 

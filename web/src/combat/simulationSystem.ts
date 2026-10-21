@@ -2880,6 +2880,7 @@ export class SimulationSystem {
     if (abilities.has("freeze")) {
       const freezeStrength = preset === "secret_ice_giant" ? 0.4 : 0.55;
       target.applySlow(freezeStrength, statusDuration, now);
+      target.applyFrost(statusDuration, now);
       this._logAbility(attacker, "status:freeze", now, target.position);
     }
     if (abilities.has("fire_dot")) {
