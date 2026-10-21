@@ -25,22 +25,36 @@ Examples:
 2. focuses that session in the current tab or router,
 3. sends the loop prompt.
 
-## Stop conditions (same as the Claude Code version)
+## Stop conditions
 
 - a file named `STOP` in the working directory,
 - the iteration limit passed to `on`,
 - a turn that ends without a new commit, after a 60 second grace period,
-- a prompt you type yourself (`/autoloop on` starts it again),
 - a failed or interrupted turn (the loop reports the reason instead of retrying).
 
 A commit made during the grace period counts as the iteration finishing, so the loop continues
-instead of stopping.
+instead of stopping. A prompt you type while the loop runs no longer stops it: the turn is
+answered in its own session and the loop carries on when that turn ends.
+
+## State and log
+
+The loop keeps its own state in `~/.local/share/opencode/autoloop.json` and appends one line per
+arm, start, turn end, verdict and stop to `~/.local/share/opencode/autoloop.log` (rotated at
+256 KB). Both live outside the project on purpose: the loop's preflight needs a clean
+`git status`, so the plugin writes nothing into the repository. When the log says why a loop
+stopped, that is the answer.
+
+An armed loop survives a TUI restart. On load it resumes at the next iteration when the last
+iteration ended with a commit, and switches itself off with a reason when it did not. A turn-end
+event that never arrives is caught by a 10 second watchdog on the tracked session, which judges
+that turn by hand instead of waiting forever.
 
 ## Files
 
 - `logic.ts` - pure argument parsing and end-of-turn decisions.
 - `logic.test.ts` - `bun test ./.opencode/plugins/autoloop/logic.test.ts`.
-- `tui.ts` - the TUI entrypoint: `/autoloop`, session creation, event handling, grace timer.
+- `tui.ts` - the TUI entrypoint: `/autoloop`, session creation, event handling, grace timer,
+  state file, debug log, watchdog.
 - `index.ts` - no-op server entrypoint so the directory is a discoverable plugin.
 
 ## Differences from the Claude Code plugin
@@ -48,4 +62,5 @@ instead of stopping.
 - The loop clears context by creating a new OpenCode session instead of issuing `/clear`.
 - Background-task and cron wake-ups are not exposed to the TUI plugin API, so those two
   "wait" decisions are passed as zero. A failed or interrupted turn stops the loop instead.
-- The armed flag is not restored across a TUI restart; the plugin starts off on every load.
+- The loop resumes across a TUI restart from its own state file, and a typed prompt pauses
+  rather than ends it.

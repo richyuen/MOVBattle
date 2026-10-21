@@ -1,12 +1,14 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
 
 import { Plugin } from '@opencode/plugin/tui'
 import type { Context } from '@opencode/plugin/tui/context'
 
 import {
   decide,
+  DEFAULT_PROMPT,
   describe,
   GRACE_MS,
   KEY,
@@ -27,6 +29,10 @@ let turns = 0
 let trackedSessionID: string | undefined
 /** A turn that ended while `startNext` was still running. */
 let pendingEnd: string | undefined
+/** An execution.started was seen for the tracked session since the last `startNext`. */
+let sawStart = false
+/** That turn's end was handled (event or watchdog), so the watchdog must keep off it. */
+let sawEnd = false
 /** The agent and model the loop was started with. */
 let agent: string | undefined
 let model: { providerID: string; id: string; variant?: string } | undefined
@@ -36,6 +42,79 @@ let loop: Loop = { ...OFF }
 let persist: (next: Loop) => Promise<void> = async () => {}
 
 let graceTimer: ReturnType<typeof setTimeout> | undefined
+let watchdogTimer: ReturnType<typeof setInterval> | undefined
+let resumeTimer: ReturnType<typeof setTimeout> | undefined
+
+/**
+ * Where the loop keeps its own state and its debug log. Both live outside the repository on
+ * purpose: the loop's preflight requires a clean `git status`, so nothing may be written into it.
+ */
+function openCodeDir(): string {
+  const data = join(homedir(), '.local', 'share', 'opencode')
+  try {
+    if (existsSync(data)) return data
+  } catch {
+    // fall through to the temporary directory
+  }
+  return tmpdir()
+}
+
+function statePath(): string {
+  return join(openCodeDir(), 'autoloop.json')
+}
+
+function logPath(): string {
+  return join(openCodeDir(), 'autoloop.log')
+}
+
+const LOG_LIMIT = 256 * 1024
+
+/** Append one line to the debug log. Logging must never break the loop. */
+function log(message: string): void {
+  const line = `${new Date().toISOString()} ${message}\n`
+  try {
+    const file = logPath()
+    try {
+      if (statSync(file).size > LOG_LIMIT) writeFileSync(file, `${new Date().toISOString()} log rotated\n`)
+    } catch {
+      // no log file yet
+    }
+    appendFileSync(file, line)
+  } catch {
+    // a read-only home or a sandboxed plugin: the loop still runs without its log
+  }
+}
+
+function readStored(): { loop: Loop; agent?: string; model?: { providerID: string; id: string; variant?: string } } | undefined {
+  try {
+    const raw = JSON.parse(readFileSync(statePath(), 'utf8')) as Partial<Loop> & {
+      agent?: string
+      model?: { providerID: string; id: string; variant?: string }
+    }
+    return {
+      loop: {
+        armed: raw.armed === true,
+        prompt: typeof raw.prompt === 'string' && raw.prompt !== '' ? raw.prompt : DEFAULT_PROMPT,
+        count: Number.isFinite(raw.count) ? Number(raw.count) : 0,
+        max: Number.isFinite(raw.max) ? Number(raw.max) : 0,
+        head: typeof raw.head === 'string' ? raw.head : '',
+      },
+      agent: typeof raw.agent === 'string' ? raw.agent : undefined,
+      model: raw.model && typeof raw.model.providerID === 'string' && typeof raw.model.id === 'string' ? raw.model : undefined,
+    }
+  } catch {
+    return undefined
+  }
+}
+
+function writeStored(next: Loop): void {
+  try {
+    mkdirSync(dirname(statePath()), { recursive: true })
+    writeFileSync(statePath(), JSON.stringify({ ...next, agent, model }))
+  } catch (error) {
+    log(`state write failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
 
 function toast(context: Context, message: string, variant: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
   context.ui.toast.show({ title: 'autoloop', message, variant, duration: 6000 })
@@ -50,7 +129,12 @@ function clearGrace(): void {
 
 async function save(next: Loop): Promise<void> {
   loop = next
-  await persist(next)
+  writeStored(next)
+  try {
+    await persist(next)
+  } catch {
+    // plugin storage is a diagnostic mirror only; the state file above is the source of truth
+  }
 }
 
 function head(directory: string): string {
@@ -75,6 +159,7 @@ function currentSessionID(context: Context): string | undefined {
 }
 
 async function stopLoop(context: Context, why: string): Promise<void> {
+  log(`stop: ${why}`)
   clearGrace()
   await save({ ...loop, armed: false })
   isRunning = false
@@ -93,6 +178,8 @@ async function startNext(context: Context, location: { directory: string; worksp
 
     const next: Loop = { ...loop, count: loop.count + 1, head: head(location.directory) }
     await save(next)
+    sawStart = false
+    sawEnd = false
 
     const session = await context.client.session.create({
       location,
@@ -103,6 +190,7 @@ async function startNext(context: Context, location: { directory: string; worksp
     })
 
     trackedSessionID = session.id
+    log(`start: iteration ${next.count} session ${session.id} head ${next.head || '(none)'} prompt "${next.prompt}"`)
     if (context.ui.tabs.enabled()) context.ui.tabs.focus(session.id)
     else context.ui.router.navigate({ type: 'session', sessionID: session.id })
 
@@ -115,6 +203,7 @@ async function startNext(context: Context, location: { directory: string; worksp
     toast(context, `iteration ${next.count} started.`, 'info')
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    log(`start failed: ${message}`)
     await stopLoop(context, `the next iteration could not start (${message})`)
   } finally {
     isStarting = false
@@ -136,7 +225,10 @@ async function judge(context: Context, location: { directory: string; workspaceI
     pendingEnd = sessionID
     return
   }
-  if (!loop.armed) return
+  if (!loop.armed) {
+    log('judge: the loop is off')
+    return
+  }
 
   const verdict = decide(loop, {
     background: 0,
@@ -144,6 +236,7 @@ async function judge(context: Context, location: { directory: string; workspaceI
     hasStopFile: hasStopFile(location.directory),
     head: head(location.directory),
   })
+  log(`judge: ${verdict.act}${'why' in verdict ? ` (${verdict.why})` : ''}; iteration ${loop.count} head ${loop.head || '(none)'}`)
 
   if (verdict.act === 'stop') {
     await stopLoop(context, verdict.why)
@@ -186,10 +279,28 @@ export default Plugin.define({
       })
     }
 
-    // A new TUI session starts with the loop off: an armed flag left in storage by a TUI that
-    // was closed must not start clearing the next one.
-    loop = { ...OFF }
-    await persist(loop)
+    // The state file, not the plugin storage, is what survives a TUI restart: a loop that is
+    // still armed comes back armed instead of silently disappearing overnight.
+    const restored = readStored()
+    loop = restored?.loop ?? { ...OFF }
+    agent = restored?.agent
+    model = restored?.model
+    await save(loop)
+    log(`setup: ${loop.armed ? 'armed' : 'off'} count=${loop.count} max=${loop.max} log=${logPath()}`)
+
+    if (loop.armed) {
+      const now = head(location.directory)
+      const moved = loop.head === '' || now === '' || now !== loop.head
+      if (moved) {
+        toast(context, `resumed at iteration ${loop.count}; next starts in 2 s.`, 'success')
+        resumeTimer = setTimeout(() => {
+          resumeTimer = undefined
+          if (loop.armed && !isRunning && !isStarting) void startNext(context, location)
+        }, 2000)
+      } else {
+        await stopLoop(context, `iteration ${loop.count} ended without a commit (resumed off)`)
+      }
+    }
 
     const captureSelection = () => {
       const activeID = currentSessionID(context)
@@ -199,6 +310,7 @@ export default Plugin.define({
       model = info?.model ?? (selected === undefined
         ? undefined
         : { providerID: selected.providerID, id: selected.modelID, variant: selected.variant })
+      log(`agent ${agent ?? '(default)'} model ${model ? `${model.providerID}/${model.id}` : '(default)'}`)
     }
 
     context.keymap.layer(() => ({
@@ -223,12 +335,14 @@ export default Plugin.define({
             }
             if (ask.verb === 'off') {
               clearGrace()
+              log('off: requested')
               void save({ ...loop, armed: false })
               toast(context, loop.armed ? 'off. The running turn, if any, finishes and nothing follows it.' : 'was already off.', 'info')
               return
             }
             captureSelection()
             void (async () => {
+              log(`on: max=${ask.max} prompt="${ask.prompt}"`)
               await save({ armed: true, prompt: ask.prompt, count: 0, max: ask.max, head: '' })
               if (!isRunning) {
                 const activeID = currentSessionID(context)
@@ -254,40 +368,65 @@ export default Plugin.define({
       if (event.data.sessionID !== trackedSessionID) return
       turns++
       isRunning = true
+      sawStart = true
       clearGrace()
+      log(`execution.started ${event.data.sessionID}`)
     }))
 
     unsubscribe.push(context.data.on('session.execution.succeeded', event => {
       if (event.data.sessionID !== trackedSessionID) return
       isRunning = false
+      sawEnd = true
+      log(`execution.succeeded ${event.data.sessionID}`)
       void judge(context, location, event.data.sessionID)
     }))
 
     unsubscribe.push(context.data.on('session.execution.failed', event => {
       if (event.data.sessionID !== trackedSessionID) return
       isRunning = false
+      sawEnd = true
       void stopLoop(context, `iteration ${loop.count} failed (${event.data.error.message})`)
     }))
 
     unsubscribe.push(context.data.on('session.execution.interrupted', event => {
       if (event.data.sessionID !== trackedSessionID) return
       isRunning = false
+      sawEnd = true
       void stopLoop(context, `iteration ${loop.count} was interrupted (${event.data.reason})`)
     }))
 
-    // A prompt the person types is theirs to have answered and read: the loop goes off instead of
-    // clearing the answer away. The loop's own prompts carry `autoloop` metadata.
+    // A prompt the person types is theirs to have answered. It no longer disarms the loop: the
+    // turn is answered in its own session, and the loop carries on when that turn ends.
     unsubscribe.push(context.data.on('session.inbox.enqueued', event => {
       const item = event.data.item
       if (item.type !== 'user') return
       if (item.payload.metadata?.autoloop === true) return
-      if (item.payload.text.trim().startsWith('/autoloop')) return
-      if (!loop.armed) return
-      void stopLoop(context, 'you sent a prompt (/autoloop on starts it again)')
+      log(`inbox: a typed prompt, loop ${loop.armed ? 'stays armed' : 'is off'}`)
+      if (loop.armed) toast(context, 'you typed a prompt; the loop keeps its place and continues after this turn.', 'info')
     }))
+
+    // A turn-end event can go missing (a reloaded TUI, a dropped subscription). While an
+    // iteration is in flight, poll the tracked session: once it is no longer running and its
+    // end was never seen, judge that end by hand instead of waiting forever.
+    watchdogTimer = setInterval(() => {
+      if (!loop.armed || isStarting || !trackedSessionID || !sawStart || sawEnd) return
+      let status = 'unknown'
+      try {
+        status = context.data.session.status(trackedSessionID)
+      } catch {
+        return
+      }
+      if (status === 'running') return
+      log(`watchdog: ${trackedSessionID} is ${status} with no end event; judging`)
+      sawEnd = true
+      isRunning = false
+      void judge(context, location, trackedSessionID)
+    }, 10_000)
 
     return () => {
       clearGrace()
+      if (resumeTimer !== undefined) clearTimeout(resumeTimer)
+      if (watchdogTimer !== undefined) clearInterval(watchdogTimer)
       for (const off of unsubscribe) off()
     }
   },
