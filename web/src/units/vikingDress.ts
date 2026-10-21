@@ -85,6 +85,51 @@ export function headbutterCap(scene: Scene, body: ArticulatedBody, teamColor: Co
   return out;
 }
 
+/*
+ * [S] the Ice Archer's round cap (396; viking.ice_archer.red.png, viking.jpg: a round team cap over the crown with a pale fur brim and a pale
+ * fur/snow pom; critic 391: a smooth blue cone with a bare point, which was the shared hood). In the head's half extents (W across, H high, D deep):
+ *   dome: a sliced sphere 1.26 W across and 1.12 H high, its middle .rise H up, its rim just over the eyes;
+ *   brim: a pale fur roll round the rim, .brim of H thick, the head's own depth across;
+ *   pom: a faceted pale ball .pom of W across on the crown, with two smaller clumps at its foot.
+ */
+const ICE_ARCHER_CAP = { dome: 1.26, tall: 1.12, rise: 0.12, slice: 0.58, brim: 0.26, brimOut: 1.3, pom: 0.62, pomLump: 0.36, glow: 0.1 };
+const ICE_ARCHER_FUR = new Color3(0.9, 0.74, 0.5);
+/** The Ice Archer's round team cap with its pale fur brim and snow pom (spec at ICE_ARCHER_CAP). */
+export function iceArcherCap(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = ICE_ARCHER_CAP;
+  const mf = getMaterialFactory();
+  const e = headExtents(body);
+  const cap = mf.get("cloth", teamColor.scale(0.94), { emissiveIntensity: C.glow });
+  const fur = mf.get("cloth", ICE_ARCHER_FUR, { emissiveIntensity: C.glow * 1.2 });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, material: typeof cap): Mesh => {
+    m.material = material;
+    m.convertToFlatShadedMesh();
+    m.parent = body.headMesh;
+    out.push(m);
+    return m;
+  };
+  const rise = e.y * C.rise;
+  const dome = put(MeshBuilder.CreateSphere("iceArcherCap", {
+    diameterX: 2 * e.x * C.dome, diameterY: 2 * e.y * C.tall, diameterZ: 2 * e.z * C.dome, segments: 10, slice: C.slice,
+  }, scene), cap);
+  dome.position.y = rise;
+  // the fur brim: a roll round the dome's rim, its own depth matched to the head's
+  const rimY = rise - (2 * C.slice - 1) * e.y * C.tall;
+  const brim = put(MeshBuilder.CreateTorus("iceArcherCapBrim", { diameter: 2 * e.x * C.brimOut, thickness: e.y * C.brim, tessellation: 9 }, scene), fur);
+  brim.position.y = rimY;
+  brim.scaling.z = e.z / e.x;
+  // the snow pom on the crown, two clumps at its foot
+  const crown = rise + e.y * C.tall - e.y * 0.06;
+  const pom = put(MeshBuilder.CreateIcoSphere("iceArcherCapPom", { radius: e.x * C.pom, subdivisions: 1, flat: true }, scene), fur);
+  pom.position.set(0, crown, 0);
+  for (const side of [-1, 1]) {
+    const lump = put(MeshBuilder.CreateIcoSphere("iceArcherCapPomLump", { radius: e.x * C.pomLump, subdivisions: 1, flat: true }, scene), fur);
+    lump.position.set(side * e.x * C.pomLump * 1.15, crown - e.y * 0.08, e.z * 0.1);
+  }
+  return out;
+}
+
 /** The head's box in the torso joint's frame: its lowest point, its middle's height and depth, its width, height and depth. */
 function headInTorso(body: ArticulatedBody): { chin: number; midY: number; midZ: number; wide: number; tall: number; deep: number } {
   for (let n: Node | null = body.headMesh; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);

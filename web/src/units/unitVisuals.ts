@@ -391,7 +391,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { posePreset: "brute", materialPreset: "viking_fur" },
   ),
   "viking.ice_archer": vis(
-    { scale: 0.95, armLength: 1.05 }, "bow", "hood", "none", "quiver_back", "#ADD8E6",
+    // [S] 396 her own round cap with a pale fur brim and snow pom is vikingDress iceArcherCap; the shared hood cone is off
+    { scale: 0.95, armLength: 1.05 }, "bow", "none", "none", "quiver_back", "#ADD8E6",
     undefined,
     {
       // [S] 392 the Ice Bow: a body-height pale-ice stave with jagged icicle tips and a snowball at the upper nock (propBuilder ICE_BOW)
