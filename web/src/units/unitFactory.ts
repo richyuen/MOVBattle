@@ -600,6 +600,9 @@ export class UnitFactory {
       propMeshes.push(...berserkerBelt(this._scene, body));
       // [S] ...and the dark tuft in each armpit (397; vikingDress BERSERKER_ARMPITS)
       propMeshes.push(...berserkerArmpits(this._scene, body));
+      // [S] 399 ...and the Brawler's leg kit: puffy team trousers, cream fur calf cuffs over brown boots (viking.berserker.red.png, card Appearance
+      // "Like other members of the Viking faction"; critic 398: slim blue legs and plain blue boots). The same BRAWLER_LEGS cut, shared.
+      propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
     }
     if (definition.id === "renaissance.halberd" && !shouldUseVehicleBody) {
       propMeshes.push(...dressHalberd(this._scene, body));
