@@ -467,17 +467,22 @@ export function halflingMop(scene: Scene, body: ArticulatedBody): Mesh[] {
 /*
  * [S] 389 the halfling's foot fur as a compact tuft (farmer.halfling.red.png: a small dark-brown shock of short shards on top of each bare team foot over
  * the instep, inside the foot's outline; critic 388: a wide starburst of long tan spikes splayed past each foot; replaces unitFactory's HALFLING_FEET).
- * In shares of the foot's own box (half extents e, middle c): .clumps faceted lumps .clump of the foot's width round, jittered, packed over the instep
- * from .from to .to of its length (rear to front) on the toe's top face at c.y (the box's own top is the ankle cuff, half a cuff higher), sunk .sink of
- * a lump into it, .inX of the half width out at most; .spikes short shards .spike of the width long, .spikeWide at the root, leaning at most .lean rad
- * off upright, rooted in the lumps. Dark brown .fur, self-lit .glow. [S] 391 roots at c.y over the instep, not c.y + e.y on the ankle.
+ * [S] 399 the critic still read a small dark lump on the outer ankle, not a tuft across the foot: the 389 cut rooted its clumps at the box's middle
+ * height, which is the middle of the ankle cuff, so only one side of one lump cleared the boot. The tuft is now a BAND over the instep, in the foot's
+ * own box (half extents e, middle c, top = the box's bottom plus .top of its height, which is the toe's top face):
+ *   pad: a flattened faceted lump .padX of the foot's width across, .padY tall, .padZ long, over the instep from the cuff's face to the toe;
+ *   clumps: .across faceted lumps .clump of the foot's width round, spread .spread of the half width to either side of the middle, jittered, in .rows
+ *   rows down the pad from .from to .to of its length;
+ *   spikes: .spikes short shards .spike of the foot's width long, .spikeWide at the root, leaning at most .lean rad off upright, rooted in the clumps.
+ * Dark brown .fur, self-lit .glow.
  */
 const HALFLING_TUFT = {
-  clumps: 5, clump: 0.62, from: -0.5, to: 0.3, sink: 0.22, inX: 0.55, spikes: 10, spike: 0.42, spikeWide: 0.2, lean: 0.55,
+  top: 0.42, padX: 1.15, padY: 0.34, padZ: 0.62, across: 5, rows: 2, clump: 0.34, spread: 0.82,
+  from: 0.08, to: 0.82, spikes: 14, spike: 0.36, spikeWide: 0.17, lean: 0.8,
   fur: new Color3(0.3, 0.16, 0.09), glow: 0.2,
 };
 
-/** The halfling's hairy feet: a compact dark tuft on top of each foot (spec at HALFLING_TUFT). */
+/** The halfling's hairy feet: a dark fur band across the top of each foot (spec at HALFLING_TUFT). */
 export function halflingFootFur(scene: Scene, body: ArticulatedBody): Mesh[] {
   const T = HALFLING_TUFT;
   const out: Mesh[] = [];
@@ -488,24 +493,35 @@ export function halflingFootFur(scene: Scene, body: ArticulatedBody): Mesh[] {
   feet.forEach((foot, f) => {
     const e = foot.getBoundingInfo().boundingBox.extendSize;
     const c = foot.getBoundingInfo().boundingBox.center;
+    const lo = foot.getBoundingInfo().boundingBox.minimum;
     const wide = e.x * 2;
-    // [S] 391 the foot box is the cuff plus the toe: its top is the ankle cuff, half a cuff above the instep. The toe's top face is at the box's own
-    // middle (toeHeight .5 of the cuff), so the tuft roots at c.y, over the instep, not at c.y + e.y on the ankle; inX spreads the clumps across the foot.
-    const topY = c.y;
+    // [S] 399 the toe's top face, not the box's middle (which is the middle of the ankle cuff, where the 389 tuft was buried)
+    const topY = lo.y + (e.y * 2) * T.top;
+    const padZ = c.z + e.z * T.padZ * 0.35;
+    const pad = MeshBuilder.CreateIcoSphere("halflingFootFur", { radius: 1, subdivisions: 1, flat: true }, scene);
+    pad.scaling.set(e.x * T.padX, e.y * T.padY, e.z * T.padZ);
+    pad.rotation.set(0.1 * f, 0.2 * f, 0);
+    pad.position.set(c.x, topY - e.y * T.padY * 0.15, padZ);
+    pad.material = fur;
+    pad.parent = foot;
+    out.push(pad);
     const tops: Vector3[] = [];
-    for (let k = 0; k < T.clumps; k++) {
-      const u = T.clumps === 1 ? 0.5 : k / (T.clumps - 1);
-      const r = wide * T.clump * 0.5 * (0.8 + 0.4 * hash(f * 31 + k));
-      const x = c.x + e.x * T.inX * (k % 2 ? 1 : -1) * (0.4 + 0.6 * hash(f * 17 + k));
-      const z = c.z + e.z * (T.from + (T.to - T.from) * u);
-      const lump = MeshBuilder.CreateIcoSphere("halflingFootFur", { radius: 1, subdivisions: 1, flat: true }, scene);
-      lump.scaling.set(r, r * 0.8, r * 1.1);
-      lump.rotation.set(hash(f * 7 + k) * 2, hash(f * 11 + k) * 3, 0);
-      lump.position.set(Math.max(c.x - e.x + r * 0.6, Math.min(c.x + e.x - r * 0.6, x)), topY + r * (0.8 - T.sink * 2), z);
-      lump.material = fur;
-      lump.parent = foot;
-      out.push(lump);
-      tops.push(lump.position.add(new Vector3(0, r * 0.5, 0)));
+    for (let row = 0; row < T.rows; row++) {
+      const v = T.rows === 1 ? 0.5 : row / (T.rows - 1);
+      for (let k = 0; k < T.across; k++) {
+        const u = T.across === 1 ? 0.5 : k / (T.across - 1);
+        const r = wide * T.clump * 0.5 * (0.82 + 0.36 * hash(f * 31 + k + row * 7));
+        const x = c.x + e.x * T.spread * (u * 2 - 1) * (0.9 + 0.1 * hash(f * 17 + k));
+        const z = padZ + e.z * T.padZ * (T.from + (T.to - T.from) * v - 0.35);
+        const lump = MeshBuilder.CreateIcoSphere("halflingFootFur", { radius: 1, subdivisions: 1, flat: true }, scene);
+        lump.scaling.set(r, r * 0.8, r * 1.1);
+        lump.rotation.set(hash(f * 7 + k + row) * 2, hash(f * 11 + k + row) * 3, 0);
+        lump.position.set(Math.max(c.x - e.x * 1.02, Math.min(c.x + e.x * 1.02, x)), topY + r * (0.55 - 0.1 * row), z);
+        lump.material = fur;
+        lump.parent = foot;
+        out.push(lump);
+        tops.push(lump.position.add(new Vector3(0, r * 0.5, 0)));
+      }
     }
     for (let i = 0; i < T.spikes; i++) {
       const root = tops[i % tops.length];
