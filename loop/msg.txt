@@ -1,0 +1,6 @@
+loop(398): viking+farmer+ancient 6/6 gaps approved
+
+Six gaps attempted, six approved, no unit closed. Consecutive empty 0.
+Memory updated for the six touched units, LEDGER rows set to the critic's
+verdicts and the viking 392-394 rows compacted, LESSONS gains the bloom/colour
+lesson and probe_close.
