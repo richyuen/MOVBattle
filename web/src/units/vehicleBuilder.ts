@@ -2096,7 +2096,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * [S] 398 the critic read the blades as near-black discs taller than the crew: the oar's timber is now the hull's own warm brown, self-lit, and the
    * blade is narrower (.bladeWide .3, about a head wide on the small crew) and shorter (.blade .5).
    */
-  const OARS = { long: 1.75, thick: 0.055, blade: 0.5, bladeWide: 0.3, stem: 0.07, flat: 0.17, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
+  const OARS = { long: 1.75, thick: 0.055, blade: 0.34, bladeWide: 0.2, neck: 0.1, stem: 0.07, flat: 0.25, lean: [-0.13, 0.05, 0.16], spread: [-0.52, 0.02, 0.56], across: [0.16, -0.12, 0.08] };
   const oarMat = getMaterialFactory().get("wood", new Color3(0.52, 0.34, 0.19), { emissive: new Color3(0.52, 0.34, 0.19).scale(0.16) });
   /*
    * [S] three Long-Boaters on their oars (395; viking.longship.jpg, card Appearance "3 Long-Boaters holding oars", card "The people riding it are called
@@ -2108,10 +2108,12 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * [S] 398 the critic read the crew as slim mannequins with pinhead horns standing ON the deck, not stocky oarsmen sunk to the chest in the hull:
    * .feet drops to .16 (the deck's plank cuts them at the ribs, the gunwale rail at the chest) and they are built stout (bulk 1.3, broad trunk, thick
    * arms and legs, big head) with tall horns (.horn of the head's height) leaned out over the rail.
+   * [S] 399 .feet drops again, .44 -> .2, so the gunwale cuts them at the chest rather than the belt; .top rises with them (1.05 -> 1.29) so the oar
+   * heads keep their height over the hull, and the blade is a paddle head on a neck (OARS).
    */
   const LONGSHIP_CREW = {
-    at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.44, hand: [1, -1, 1] as const,
-    raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.05, clutch: 0.03, glow: 0.08, horn: 3.2,
+    at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.2, hand: [1, -1, 1] as const,
+    raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.29, clutch: 0.03, glow: 0.08, horn: 3.2,
   };
   /**
    * [S] the oarsmen getting off the ship (396; viking.longship.jpg, card Characteristics: thrown at the enemies, its oarsmen disembark). Kept on the ship's
@@ -2177,11 +2179,18 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
       const oarLeaf = (top: number): void => {
         // [S] 397 a flat ROUNDED paddle, not a spearhead (viking.longship.jpg: every oar ends in a broad, round-shouldered paddle blade). One faceted
         // oval slab across the shaft's head: wide in x, long in y down the shaft, thin through z, lit flat like the shaft.
+        // [S] 399 the critic read the oval as 1.5 heads wide and two crew-heights tall: the head is now one head wide (.bladeWide .2), shorter
+        // (.blade .34), and stands on a .neck of thin shaft, so it reads as a paddle's head rather than a leaf on a stick.
+        const neck = MeshBuilder.CreateCylinder("longshipOarNeck", { height: OARS.neck, diameter: OARS.thick * 0.9, tessellation: 6 }, scene);
+        neck.position.y = top + OARS.neck * 0.5;
+        neck.parent = oarBody;
+        neck.material = oarMat;
+        allMeshes.push(neck);
         const blade = MeshBuilder.CreateCylinder("longshipOarBlade", { height: 1, diameter: 1, tessellation: 8 }, scene);
         blade.rotation.x = Math.PI / 2;
         blade.bakeCurrentTransformIntoVertices();
         blade.scaling.set(OARS.bladeWide, OARS.blade, OARS.bladeWide * OARS.flat);
-        blade.position.y = top + OARS.blade * 0.44;
+        blade.position.y = top + OARS.neck + OARS.blade * 0.5;
         blade.parent = oarBody;
         blade.material = oarMat;
         blade.convertToFlatShadedMesh();
