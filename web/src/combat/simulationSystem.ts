@@ -291,7 +291,7 @@ const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahe
  * 2*rise/22 ~= the windup) with the animator's dive pose on from the first frame (proceduralAnimation DIVE), and at the blow he goes down in a short
  * forward sprawl (RuntimeUnit.headbuttSprawl) - the head-first dive, the cap's spike into him, then prone and up again.
  */
-const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead: 0.5, radius: 1.15, damage: 18, fling: 5, lift: 4.5, edge: 0.5, lunge: 0.5, dive: 3.0, reach: 0.45 };
+const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead: 0.5, radius: 1.15, damage: 18, fling: 5, lift: 4.5, edge: 0.5, lunge: 0.5, dive: 3.0, reach: 0.75 };
 /*
  * [S] 401 the ram reaches him and the blow frame keeps the dive (critic 400 c.1: "the spike stops short, one hand planted"): the leap now covers the
  * gap between them plus .reach, so the cap's spike lands inside the man rather than a forearm short, and the sprawl waits .sprawlDelay s after the blow -

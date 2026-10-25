@@ -389,8 +389,10 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
  * [S] the Headbutter's ram dive (400; spec at setDive): the pelvis tipped .tip rad forward (the trunk level, the legs trailing in line), the trunk a
  * further .trunk, the neck lifted .head so the spiked cap leads, the arms swept .arms back along the body with the elbows .elbow eased, the knees .knee;
  * eased in at .in and out at .out per second.
+ * [S] 401 the arms swept right back (critic 400: "one hand planted"): .arms 2.3 rad carries them over the shoulders so they lie along the body's line
+ * toward the feet - at .45 they hung straight down from the horizontal trunk and the near hand propped on the ground like a brace.
  */
-const DIVE = { tip: 1.22, trunk: 0.16, head: 0.62, arms: 0.45, elbow: 0.5, knee: 0.18, in: 18, out: 26 };
+const DIVE = { tip: 1.22, trunk: 0.16, head: 0.62, arms: 2.3, elbow: 0.35, knee: 0.18, in: 18, out: 26 };
 /*
  * [S] bare fists (379, the minotaur's; card Main Hand / Off Hand "Minotaur Grab", Unarmed; ancient.minotaur.red.png: no weapon, both fists balled before the
  * belly, elbows bent near square and out from the flanks; ancient.minotaur.png: one arm grabs a man while the other punches).
