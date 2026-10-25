@@ -653,9 +653,10 @@ const JARL_PELT = {
   muzzle: 0.44, muzzleTall: 0.32, muzzleLong: 0.34, muzzleY: 0.12, muzzleZ: 1.24, muzzleDrop: 0.34,
   nose: 0.26, noseTall: 0.13, noseZ: 1.24, teeth: 3, tooth: 0.1, toothY: -0.2, toothZ: 1.16,
   ear: 0.2, earOut: 0.85, earY: 1.3, earZ: -0.2,
-  curtainW: 0.42, curtainD: 0.8, curtainOut: 1.12, curtainZ: 0.12, curtainTop: 0.52, curtainFoot: -3.3,
+  curtainW: 0.42, curtainD: 0.8, curtainOut: 1.12, curtainZ: -0.06, curtainTop: 0.52, curtainFoot: -1.1,
   drape: 0.18, drapeOut: 0.58, drapeDrop: 0.88, drapeDeep: 0.6, back: 0.85, backDeep: 0.14, tufts: 4, tuft: 0.2, glow: 0.2,
   mantleWide: 0.86, mantleTall: 0.24, mantleDeep: 0.68, mantleY: 0.94,
+  chestW: 0.2, chestOut: 0.23, chestDeep: 0.12, chestProud: 0.54, chestDrop: 0.98, chestTufts: 3,
 };
 const JARL_FUR = new Color3(0.42, 0.21, 0.14);
 const JARL_FUR_DARK = new Color3(0.29, 0.14, 0.09);
@@ -737,6 +738,26 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const mantle = put(MeshBuilder.CreateIcoSphere("jarlPeltMantle", { radius: 1, subdivisions: 1, flat: true }, scene), fur, body.torso);
   mantle.scaling.set(shoulderW * P.mantleWide, H * P.mantleTall, D * P.mantleDeep);
   mantle.position.set(0, top - H * (1 - P.mantleY), chest.position.z);
+  // [S] 401b the fur curtains down the chest front (the hood's own curtains hang at the head's z, so run on down the torso): a strip either side of the
+  // chest from under the mantle to the belt, stood proud of the chest's front face, ending in jagged tufts
+  const chestH = H * P.chestDrop;
+  for (const side of [-1, 1]) {
+    const strip = put(MeshBuilder.CreateBox("jarlPeltChest", {
+      width: W * P.chestW, height: chestH, depth: D * P.chestDeep,
+    }, scene), fur, body.torso);
+    strip.position.set(side * W * P.chestOut, top - H * 0.1 - chestH * 0.5, chest.position.z + D * P.chestProud);
+    for (let k = 0; k < P.chestTufts; k++) {
+      const tuft = put(MeshBuilder.CreateCylinder("jarlPeltChestTuft", {
+        height: H * P.tuft, diameterTop: W * P.chestW * 0.6, diameterBottom: 0, tessellation: 4,
+      }, scene), darkFur, body.torso);
+      tuft.position.set(
+        side * W * P.chestOut + (k - (P.chestTufts - 1) / 2) * W * P.chestW * 0.5,
+        top - H * 0.1 - chestH - H * P.tuft * 0.4,
+        chest.position.z + D * P.chestProud,
+      );
+      tuft.rotation.z = Math.PI;
+    }
+  }
   for (const side of [-1, 1]) {
     const panel = put(MeshBuilder.CreateBox("jarlPeltSide", {
       width: shoulderW * P.drape, height: drapeH, depth: D * P.drapeDeep,
