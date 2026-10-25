@@ -291,7 +291,13 @@ const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahe
  * 2*rise/22 ~= the windup) with the animator's dive pose on from the first frame (proceduralAnimation DIVE), and at the blow he goes down in a short
  * forward sprawl (RuntimeUnit.headbuttSprawl) - the head-first dive, the cap's spike into him, then prone and up again.
  */
-const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead: 0.5, radius: 1.15, damage: 18, fling: 5, lift: 4.5, edge: 0.5, lunge: 0.5, dive: 3.0 };
+const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead: 0.5, radius: 1.15, damage: 18, fling: 5, lift: 4.5, edge: 0.5, lunge: 0.5, dive: 3.0, reach: 0.45 };
+/*
+ * [S] 401 the ram reaches him and the blow frame keeps the dive (critic 400 c.1: "the spike stops short, one hand planted"): the leap now covers the
+ * gap between them plus .reach, so the cap's spike lands inside the man rather than a forearm short, and the sprawl waits .sprawlDelay s after the blow -
+ * the frame the hit is logged (and the release shot taken) still shows him flat out with both arms swept back, and the flip onto his face follows.
+ */
+const HEADBUTT_SPRAWL = { delay: 0.14 };
 /*
  * [S] Super Jump (392; viking.berserker.jpg, card Weapons "Super Jump: Ability - Melee; leaps towards the enemy"; viking.berserker.red.png: caught in
  * the air, legs kicked, an axe wide in each hand). The berserker's jump_charge used to teleport him to the landing spot, so every shot caught him
@@ -445,7 +451,7 @@ export class SimulationSystem {
   private _chargeDustKick = new Map<RuntimeUnit, number>();
   private _chargePosed = new Set<RuntimeUnit>();
   // Big Headbutt (BIG_HEADBUTT): each minotaur's butt under way (blow and end times) and when the next is ready
-  private _butts = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; spec: typeof BIG_HEADBUTT }>();
+  private _butts = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; spec: typeof BIG_HEADBUTT; sprawlAt?: number }>();
   private _buttReadyAt = new Map<RuntimeUnit, number>();
   // The wheelbarrow's riders (WHEELBARROW_CREW): each move's start and its man, and when the next may start
   private _crewFights = new Map<RuntimeUnit, { throwAt: number; thrown: boolean; appleAt: RuntimeUnit | null; stabAt: number; stabbed: boolean; stabOn: RuntimeUnit | null }>();
@@ -1111,7 +1117,8 @@ export class SimulationSystem {
           step.y = 0;
           const gap = step.length() - unit.collisionBodyRadius - enemy.collisionBodyRadius;
           unit.animator.setDive(true);
-          const dist = Math.min(1.25, Math.max(0.35, gap));
+          // [S] 401 the leap covers the gap plus .reach, so the spike meets him (critic 400: "the spike stops short")
+          const dist = Math.min(1.7, Math.max(0.5, gap + HEADBUTT.reach));
           if (step.lengthSquared() > 1e-4 && !unit.leap(step.normalize(), dist, HEADBUTT.dive)) {
             unit.moveTo(unit.position.add(step.normalize().scale(HEADBUTT.lunge)));
           }
@@ -2982,6 +2989,12 @@ export class SimulationSystem {
     for (const [unit, butt] of this._butts) {
       const B = butt.spec;
       if (unit.isDead) { unit.animator.setCharging(false); unit.animator.setDive(false); this._butts.delete(unit); continue; }
+      // [S] 401 the headbutter's sprawl after the dive (HEADBUTT_SPRAWL): the dive holds through the blow's own frame
+      if (butt.sprawlAt !== undefined && now >= butt.sprawlAt) {
+        butt.sprawlAt = undefined;
+        unit.animator.setDive(false);
+        unit.headbuttSprawl(now);
+      }
       if (!butt.done && now >= butt.blowAt) {
         butt.done = true;
         const yaw = unit.body.root.rotation.y;
@@ -3013,9 +3026,9 @@ export class SimulationSystem {
         this.visualEffects?.spawnTrampleRing(center, B.radius * 0.6);
         this.visualEffects?.spawnKickDust(center, 2);
         // [S] 400 the ram leaves him on the floor (card "After the initial attack, they get up"): a short forward sprawl from the blow
+        // [S] 401 ...which starts HEADBUTT_SPRAWL.delay s after it, so the blow's own frame still shows the dive (critic 400: one hand planted)
         if (B === HEADBUTT) {
-          unit.animator.setDive(false);
-          unit.headbuttSprawl(now);
+          butt.sprawlAt = now + HEADBUTT_SPRAWL.delay;
         }
       }
       if (now >= butt.endAt) {
