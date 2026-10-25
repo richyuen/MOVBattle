@@ -529,10 +529,13 @@ export function berserkerArmpits(scene: Scene, body: ArticulatedBody): Mesh[] {
  *   boots: a brown shell .out of the shin from .bootFrom down to the foot, the foot mesh itself in the boot's leather, a wide cream fur roll .cuffOut of
  *   it from .cuffFrom to .cuffTo round its top, and a dark sole under the boot.
  * Fur and leather self-lit so the cream reads cream and the brown stays warm in the shade.
+ * [S] 401 the belt at the waist and fur on the bracers (critic 400: "bracers bare, belt a thin hidden band"): the band drops from the belly to the hips
+ * (.beltAt -0.42) and stands wider, under the braids' ends instead of behind them, and each bracer's fur roll moves off the elbow (where the upper arm
+ * buried it) down onto the bracer's own top, fatter and proud of the leather shell, so the cream cuff shows on the arm.
  */
 const HEADBUTTER_KIT = {
-  beltTall: 0.26, beltAt: 0.1, beltOut: 1.24, buckle: 0.5, buckleProud: 1.35, buckleGlow: 0.1,
-  bracerFrom: 0.06, bracerTo: 0.78, bracerOut: 1.24, furFrom: -0.06, furTo: 0.24, furOut: 1.54, furThick: 0.22, furLumps: 6,
+  beltTall: 0.3, beltAt: -0.42, beltOut: 1.3, buckle: 0.5, buckleProud: 1.35, buckleGlow: 0.1,
+  bracerFrom: 0.06, bracerTo: 0.78, bracerOut: 1.24, furFrom: 0.16, furTo: 0.24, furOut: 1.62, furThick: 0.26, furLumps: 6,
   bootFrom: 0.48, bootTo: 1.0, bootOut: 1.16, cuffFrom: 0.1, cuffTo: 0.46, cuffOut: 1.5, cuffThick: 0.28, cuffLumps: 7,
   sole: 0.06, soleOut: 1.06, glow: 0.14,
 };
