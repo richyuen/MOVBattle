@@ -37,11 +37,11 @@ const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
 // The medieval archer's broadhead arrow (see _dressBroadhead): head across, along the shaft (m), flatness; shaft and head colours
 const BROADHEAD = { wide: 0.17, long: 0.2, thick: 0.3, shaft: new Color3(0.62, 0.16, 0.1), iron: new Color3(0.08, 0.08, 0.09) };
 // The Ice Archer's arrow (see _dressIceArrow): shaft along the flight, the ice crown at its end -- spikes off the shaft's end, .head the longest on the
-// axis, .wide across at the foot; .spike of it for the ring round it, leaned .spikeOut; .barbs swept back .barb of .head; and a frost ribbon of .trail
-// tetra shards, .trailLong long and .trailWide at the root, .trailFlat thin toward the camera, .trailGap apart down the shaft behind the crown
+// axis, .wide across at the foot; .spike of it for the ring round it, leaned .spikeOut; .barbs swept back .barb of .head; and a frost spray of .frost
+// flakes, .frostSize at the crown's foot, shrinking .frostShrink down a .frostLong cone that opens .frostOpen wide
 const ICE_ARROW = {
   head: 0.34, wide: 0.2, spikes: 4, spike: 0.66, spikeOut: 0.42, barbs: 3, barb: 0.5,
-  trail: 3, trailLong: 0.3, trailWide: 0.1, trailFlat: 0.42, trailGap: 0.15, trailSweep: 0.1,
+  frost: 10, frostSize: 0.05, frostLong: 0.52, frostOpen: 2.4, frostShrink: 0.6,
   shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98),
 };
 
@@ -868,7 +868,8 @@ export class ProjectileSystem {
    * crown. [S] 398 the critic read that crown as a clean pyramid with four balls on the shaft, not a jagged head with a frost spray: the head is now
    * .spikes shards off the shaft's end, the longest .head long on the axis and the rest .spike of it, leaned .spikeOut of the way out from the base and
    * turned round it in a ring, each faceted with 4 sides and a different length, so the crown is irregular from every angle; .barbs shards are swept back
-   * .barb of .head at the crown's foot; and behind them a frost ribbon of .trail tetra shards (see ICE_ARROW), the tail a jagged pale streak.
+   * .barb of .head at the crown's foot; and behind them a spray of .frost tetra flakes, .frostSize at the crown's foot shrinking .frostShrink down a
+   * .frostLong cone whose mouth opens .frostOpen wide, so the tail reads as frost and not as beads on the shaft.
    */
   private _dressIceArrow(root: TransformNode): void {
     const I = ICE_ARROW;
@@ -901,21 +902,14 @@ export class ProjectileSystem {
       const back = new Vector3(Math.cos(a), Math.sin(a) * 0.8, -0.55);
       shard("iceArrowBarb", I.head * I.barb, I.wide * 0.3, back, new Vector3(Math.cos(a) * I.wide * 0.32, Math.sin(a) * I.wide * 0.26, foot - 0.03));
     }
-    // [S] 399 the critic read the 398 spray as .frost flakes strung along the shaft like beads: the trail is now a ribbon of .trail tetra shards, the
-    // widest at the crown's foot and each smaller one behind it, .trailGap apart, flattened .trailFlat toward the camera and swept a little off the
-    // shaft, so the tail is a jagged pale streak rather than a line of balls.
-    for (let t = 0; t < I.trail; t++) {
-      const u = I.trail > 1 ? t / (I.trail - 1) : 0;
-      const len = I.trailLong * (1 - 0.2 * u);
-      const dir = new Vector3(Math.sin(t * 2.3) * I.trailSweep, Math.cos(t * 1.7) * I.trailSweep * 0.7, -1).normalize();
-      const shardMesh = MeshBuilder.CreateCylinder("iceArrowFrost", { height: len, diameterTop: 0, diameterBottom: I.trailWide * (1 - 0.18 * u), tessellation: 4 }, this._scene);
-      shardMesh.convertToFlatShadedMesh();
-      shardMesh.rotationQuaternion = Quaternion.Identity();
-      Quaternion.FromUnitVectorsToRef(new Vector3(0, 1, 0), dir, shardMesh.rotationQuaternion);
-      shardMesh.scaling.x = I.trailFlat;
-      shardMesh.position.set(Math.cos(t * 2.4) * I.trailWide * 0.45, Math.sin(t * 2.4) * I.trailWide * 0.3, foot - 0.04 - u * I.trailGap * 2).addInPlace(dir.scale(len * 0.5));
-      shardMesh.material = ice;
-      shardMesh.parent = root;
+    for (let i = 0; i < I.frost; i++) {
+      const t = I.frost > 1 ? i / (I.frost - 1) : 0;
+      const a = i * 2.4;
+      const reach = I.frostSize * (0.4 + I.frostOpen * t);
+      const flake = MeshBuilder.CreateIcoSphere("iceArrowFrost", { radius: I.frostSize * (1 - I.frostShrink * t) * (0.75 + 0.25 * (i % 3) / 2), subdivisions: 0, flat: true }, this._scene);
+      flake.position.set(Math.cos(a) * reach, Math.sin(a) * reach * 0.8, foot - 0.05 - t * I.frostLong);
+      flake.material = ice;
+      flake.parent = root;
     }
   }
 
