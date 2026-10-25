@@ -641,6 +641,9 @@ export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
  *   curtains: a fur panel down each side of his own face, hung OUT at .curtainOut of the head's half width (>= 1.0, outside his cheeks) and BEHIND the
  *     face plane (.curtainZ <= 0, no part of it in front of the eyes), from .curtainTop down to .curtainFoot, .curtainW wide and .curtainD deep, ending
  *     in .tufts jagged points; this is the fur that drapes to his hips over the shoulder panels below;
+ * [S] 401 the curtains run on to the hips (critic 400 a.5: "fur curtains from the hood down to the hips ... the shoulder fur is boxy pads that stop at the
+ * chest"): .curtainFoot -3.3 head half-heights down (the belt's line) and .curtainW .42 of the head's half width, .curtainZ +0.12 so they hang over the
+ * chest front, and the torso's shoulder fur is a rounded faceted mass (JARL_PELT.mantle*) rather than two flat pads; the side panels drop behind the arms.
  * and, hung from the torso: the mantle over both shoulders, a drape panel off each shoulder to the hips (.drapeDrop of the trunk) and a back panel over
  * the spine, each ending in jagged fur tufts. Fur self-lit .glow so the hood does not read grey under its own overhang.
  */
@@ -650,8 +653,9 @@ const JARL_PELT = {
   muzzle: 0.44, muzzleTall: 0.32, muzzleLong: 0.34, muzzleY: 0.12, muzzleZ: 1.24, muzzleDrop: 0.34,
   nose: 0.26, noseTall: 0.13, noseZ: 1.24, teeth: 3, tooth: 0.1, toothY: -0.2, toothZ: 1.16,
   ear: 0.2, earOut: 0.85, earY: 1.3, earZ: -0.2,
-  curtainW: 0.3, curtainD: 0.8, curtainOut: 1.12, curtainZ: -0.16, curtainTop: 0.52, curtainFoot: -1.1,
-  drape: 0.14, drapeOut: 0.56, drapeDrop: 1.0, drapeDeep: 0.6, back: 0.85, backDeep: 0.14, tufts: 3, tuft: 0.2, glow: 0.2,
+  curtainW: 0.42, curtainD: 0.8, curtainOut: 1.12, curtainZ: 0.12, curtainTop: 0.52, curtainFoot: -3.3,
+  drape: 0.18, drapeOut: 0.58, drapeDrop: 0.88, drapeDeep: 0.6, back: 0.85, backDeep: 0.14, tufts: 4, tuft: 0.2, glow: 0.2,
+  mantleWide: 0.86, mantleTall: 0.24, mantleDeep: 0.68, mantleY: 0.94,
 };
 const JARL_FUR = new Color3(0.42, 0.21, 0.14);
 const JARL_FUR_DARK = new Color3(0.29, 0.14, 0.09);
@@ -722,18 +726,22 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
       tuft.rotation.z = Math.PI;
     }
   }
-  // the drape: a mantle over both shoulders, a panel off each shoulder to the hips, and one over the spine, ending in fur tufts
+  // the drape: a rounded mantle over both shoulders, a panel off each shoulder down the back to the hips, and one over the spine, ending in fur tufts
+  // [S] 401 the shoulder fur is a rounded fur mass, not two boxy pads (critic 400 a.5), and the side panels hang behind the arms as the pelt's back edge
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
   const top = chest.position.y + H * 0.5;
   const shoulderW = body.metrics.shoulderWidth ?? W * 1.3;
   const drapeH = H * P.drapeDrop;
+  const mantle = put(MeshBuilder.CreateIcoSphere("jarlPeltMantle", { radius: 1, subdivisions: 1, flat: true }, scene), fur, body.torso);
+  mantle.scaling.set(shoulderW * P.mantleWide, H * P.mantleTall, D * P.mantleDeep);
+  mantle.position.set(0, top - H * (1 - P.mantleY), chest.position.z);
   for (const side of [-1, 1]) {
     const panel = put(MeshBuilder.CreateBox("jarlPeltSide", {
       width: shoulderW * P.drape, height: drapeH, depth: D * P.drapeDeep,
     }, scene), fur, body.torso);
-    panel.position.set(side * shoulderW * P.drapeOut, top - drapeH * 0.5 - H * 0.02, chest.position.z + D * 0.2);
+    panel.position.set(side * shoulderW * P.drapeOut, top - drapeH * 0.5 - H * 0.02, chest.position.z - D * 0.22);
     for (let k = 0; k < P.tufts; k++) {
       const tuft = put(MeshBuilder.CreateCylinder("jarlPeltTuft", {
         height: H * P.tuft, diameterTop: shoulderW * P.drape * 0.6, diameterBottom: 0, tessellation: 4,
@@ -741,7 +749,7 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
       tuft.position.set(
         side * shoulderW * P.drapeOut + (k - (P.tufts - 1) / 2) * shoulderW * P.drape * 0.4,
         top - drapeH - H * 0.02 - H * P.tuft * 0.4,
-        chest.position.z + D * 0.2,
+        chest.position.z - D * 0.22,
       );
       tuft.rotation.z = Math.PI;
     }
