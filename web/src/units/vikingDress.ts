@@ -627,23 +627,31 @@ export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
- * [S] the Jarl's bear pelt (393; viking.jarl.red.png, viking.jarl.jpg, card "most notable": a bear-head hood over his helm with two googly eyes and
- * teeth, the brown fur draping to the hips; critic 392: no pelt, a blue horned helm over a barrel torso). The horned helm is off and a bear's skin is on:
- *   skull: a wide flat fur block over the crown, .skull of the head across and .skullTall of it high, its middle .skullRise up;
- *   muzzle: a narrow lighter fur block out of the skull's front over his brow, .muzzle of the head across and .muzzleLong of its depth long, tipped down
- *   .muzzleDrop, a dark nose on its tip;
- *   eyes: two pale googly eyes .eye of the head across, set wide .eyeOut either side at the skull's front .eyeUp up, a black pupil .pupil of the eye;
- *   teeth: .teeth white teeth under the muzzle's tip;
- *   ears: two fur balls .ear of the head at the skull's top corners;
- *   side fur: a panel down each side of his own face from the skull past the jaw, .side of the head across;
- * and, hung from the torso: a fur mantle over both shoulders, a drape panel off each shoulder to the hips, a back panel over the spine, each ending in
- * jagged fur tufts. Fur self-lit .glow so the hood does not read grey under its own overhang.
+ * [R] 400 the Jarl's bear pelt, rebuilt head to hips (viking.jarl.red.png, viking.jarl.jpg, card "the most notable piece of clothing on the Jarl is their
+ * bear pelt ... the pelt itself has googly eyes, brown fur, teeth, and claws"). The 393 cut's flat crate skull and its side panels, whose depth ran past
+ * the face plane, hid the bear's eyes from the three-quarter view and left the snout a pale block off to one side (critic 394), so the head is rebuilt
+ * from the reference, and the horned helm stays off:
+ *   skull: a rounded fur mass over his crown - a faceted ellipsoid .skullW of the head across, .skullH of it tall and .skullD deep, its middle .skullY up
+ *     and .skullZ back, so the bear's face stands over his forehead and its mass overhangs the back of his head;
+ *   eyes: two big pale googly balls .eye of the head across on the skull's FRONT, .eyeOut either side of its middle and .eyeY up, each with a black
+ *     pupil on its face; they stand .eyeProud ahead of the fur, and nothing else is allowed in front of that plane;
+ *   muzzle: a short fur wedge out of the skull's front below the eyes, .muzzle of the head across, .muzzleLong deep, tipped down .muzzleDrop, a dark nose
+ *     box on its tip and .teeth white teeth under it;
+ *   ears: a dark fur ball .ear across at each top corner of the skull;
+ *   curtains: a fur panel down each side of his own face, hung OUT at .curtainOut of the head's half width (>= 1.0, outside his cheeks) and BEHIND the
+ *     face plane (.curtainZ <= 0, no part of it in front of the eyes), from .curtainTop down to .curtainFoot, .curtainW wide and .curtainD deep, ending
+ *     in .tufts jagged points; this is the fur that drapes to his hips over the shoulder panels below;
+ * and, hung from the torso: the mantle over both shoulders, a drape panel off each shoulder to the hips (.drapeDrop of the trunk) and a back panel over
+ * the spine, each ending in jagged fur tufts. Fur self-lit .glow so the hood does not read grey under its own overhang.
  */
 const JARL_PELT = {
-  skull: 1.1, skullTall: 0.3, skullRise: 1.08, muzzle: 0.3, muzzleTall: 0.22, muzzleAhead: 1.34, muzzleLong: 1.8, muzzleDrop: 0.25,
-  eye: 0.16, eyeUp: 1.3, eyeOut: 0.5, pupil: 0.42, teeth: 3, tooth: 0.14, ear: 0.22, earOut: 0.72, earUp: 0.32,
-  side: 0.3, sideDrop: 1.3, sideOut: 0.92, sideAhead: 0.02,
-  drape: 0.12, drapeOut: 0.56, drapeDrop: 0.78, drapeDeep: 0.55, back: 0.85, backDeep: 0.14, tufts: 3, tuft: 0.18, glow: 0.2,
+  skullW: 1.3, skullH: 0.95, skullD: 1.3, skullY: 0.58, skullZ: -0.1,
+  eye: 0.24, eyeOut: 0.48, eyeY: 0.6, eyeProud: 1.2, pupil: 0.45,
+  muzzle: 0.44, muzzleTall: 0.32, muzzleLong: 0.34, muzzleY: 0.12, muzzleZ: 1.24, muzzleDrop: 0.34,
+  nose: 0.26, noseTall: 0.13, noseZ: 1.24, teeth: 3, tooth: 0.1, toothY: -0.2, toothZ: 1.16,
+  ear: 0.2, earOut: 0.85, earY: 1.3, earZ: -0.2,
+  curtainW: 0.3, curtainD: 0.8, curtainOut: 1.12, curtainZ: -0.16, curtainTop: 0.52, curtainFoot: -1.1,
+  drape: 0.14, drapeOut: 0.56, drapeDrop: 1.0, drapeDeep: 0.6, back: 0.85, backDeep: 0.14, tufts: 3, tuft: 0.2, glow: 0.2,
 };
 const JARL_FUR = new Color3(0.42, 0.21, 0.14);
 const JARL_FUR_DARK = new Color3(0.29, 0.14, 0.09);
@@ -666,42 +674,53 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
     added.push(m);
     return m;
   };
-  // the skull: a wide flat block over his crown
-  const skull = put(MeshBuilder.CreateBox("jarlBearSkull", {
-    width: e.x * 2 * P.skull, height: e.y * 2 * P.skullTall, depth: e.z * 2 * P.skull,
-  }, scene), fur, body.headMesh);
-  skull.position.set(0, e.y * P.skullRise, 0);
-  // the muzzle: a narrow snout out of the skull's front, tipped down, with a dark nose on its tip
+  // the skull: a rounded fur mass over his crown, its face over his forehead
+  const skull = put(MeshBuilder.CreateIcoSphere("jarlBearSkull", { radius: 1, subdivisions: 1, flat: true }, scene), fur, body.headMesh);
+  skull.scaling.set(e.x * P.skullW, e.y * P.skullH, e.z * P.skullD);
+  skull.position.set(0, e.y * P.skullY, e.z * P.skullZ);
+  // the muzzle: a short centred wedge out of the skull's front below the eyes, nose on its tip, teeth under it
   const muzzle = put(MeshBuilder.CreateBox("jarlBearMuzzle", {
-    width: e.x * 2 * P.muzzle, height: e.y * 2 * P.muzzleTall, depth: e.z * P.muzzleLong,
+    width: e.x * P.muzzle, height: e.y * P.muzzleTall, depth: e.z * P.muzzleLong,
   }, scene), muzzleMat, body.headMesh);
-  muzzle.position.set(0, e.y * (P.skullRise - 0.08), e.z * P.muzzleAhead);
+  muzzle.position.set(0, e.y * P.muzzleY, e.z * P.muzzleZ);
   muzzle.rotation.x = P.muzzleDrop;
   const nose = put(MeshBuilder.CreateBox("jarlBearNose", {
-    width: e.x * 2 * P.muzzle * 0.8, height: e.y * P.muzzleTall * 1.1, depth: e.z * 0.22,
+    width: e.x * P.nose, height: e.y * P.noseTall, depth: e.z * 0.1,
   }, scene), pupilMat, body.headMesh);
-  nose.position.set(0, e.y * (P.skullRise - 0.24), e.z * (P.muzzleAhead + P.muzzleLong * 0.48));
-  // the googly eyes set wide on the skull's front, and the ears on its top corners
-  for (const side of [-1, 1]) {
-    const eye = put(MeshBuilder.CreateIcoSphere("jarlBearEye", { radius: e.x * P.eye, subdivisions: 2 }, scene), bone, body.headMesh, false);
-    eye.position.set(side * e.x * P.eyeOut, e.y * P.eyeUp, e.z * 0.46);
-    const pupil = put(MeshBuilder.CreateIcoSphere("jarlBearPupil", { radius: e.x * P.eye * P.pupil, subdivisions: 1 }, scene), pupilMat, body.headMesh, false);
-    pupil.position.set(side * e.x * P.eyeOut, e.y * P.eyeUp, e.z * 0.46 + e.x * P.eye * 0.8);
-    const ear = put(MeshBuilder.CreateIcoSphere("jarlBearEar", { radius: e.x * P.ear, subdivisions: 1, flat: true }, scene), darkFur, body.headMesh);
-    ear.position.set(side * e.x * P.earOut, e.y * (P.skullRise + P.earUp), -e.z * 0.1);
-    // a strip of fur down the side of his face, from the skull past the jaw
-    const cheek = put(MeshBuilder.CreateBox("jarlBearCheek", {
-      width: e.x * P.side, height: e.y * P.sideDrop, depth: e.z * 1.25,
-    }, scene), fur, body.headMesh);
-    cheek.position.set(side * e.x * P.sideOut, -e.y * 0.15, e.z * P.sideAhead);
-    cheek.rotation.z = side * 0.05;
-  }
+  nose.position.set(0, e.y * (P.muzzleY - P.muzzleTall * 0.55), e.z * P.noseZ);
   for (let i = 0; i < P.teeth; i++) {
     const tooth = put(MeshBuilder.CreateCylinder("jarlBearTooth", {
-      height: e.y * P.tooth, diameterTop: 0, diameterBottom: e.x * 0.13, tessellation: 4,
+      height: e.y * P.tooth, diameterTop: 0, diameterBottom: e.x * 0.05, tessellation: 4,
     }, scene), bone, body.headMesh);
-    tooth.position.set((i - (P.teeth - 1) / 2) * e.x * 0.3, e.y * (P.skullRise - 0.44), e.z * (P.muzzleAhead + P.muzzleLong * 0.3));
+    tooth.position.set((i - (P.teeth - 1) / 2) * e.x * 0.09, e.y * P.toothY, e.z * P.toothZ);
     tooth.rotation.z = Math.PI;
+  }
+  for (const side of [-1, 1]) {
+    // the googly eyes on the skull's front, proud of the fur so nothing can stand in front of them
+    const eye = put(MeshBuilder.CreateIcoSphere("jarlBearEye", { radius: e.x * P.eye, subdivisions: 2 }, scene), bone, body.headMesh, false);
+    eye.position.set(side * e.x * P.eyeOut, e.y * P.eyeY, e.z * P.eyeProud);
+    const pupil = put(MeshBuilder.CreateIcoSphere("jarlBearPupil", { radius: e.x * P.eye * P.pupil, subdivisions: 1 }, scene), pupilMat, body.headMesh, false);
+    pupil.position.set(side * e.x * P.eyeOut, e.y * P.eyeY, e.z * P.eyeProud + e.x * P.eye * 0.8);
+    const ear = put(MeshBuilder.CreateIcoSphere("jarlBearEar", { radius: e.x * P.ear, subdivisions: 1, flat: true }, scene), darkFur, body.headMesh);
+    ear.position.set(side * e.x * P.earOut, e.y * P.earY, e.z * P.earZ);
+    // the curtain down the side of his own face: out past his cheek, behind the eyes' plane
+    const tall = e.y * (P.curtainTop - P.curtainFoot);
+    const curtain = put(MeshBuilder.CreateBox("jarlBearCurtain", {
+      width: e.x * P.curtainW, height: tall, depth: e.z * P.curtainD,
+    }, scene), fur, body.headMesh);
+    curtain.position.set(side * e.x * P.curtainOut, e.y * (P.curtainTop + P.curtainFoot) * 0.5, e.z * P.curtainZ);
+    curtain.rotation.z = side * 0.04;
+    for (let k = 0; k < P.tufts; k++) {
+      const tuft = put(MeshBuilder.CreateCylinder("jarlBearTuft", {
+        height: e.y * P.tuft * 2, diameterTop: e.x * P.curtainW * 0.5, diameterBottom: 0, tessellation: 4,
+      }, scene), darkFur, body.headMesh);
+      tuft.position.set(
+        side * e.x * P.curtainOut + (k - (P.tufts - 1) / 2) * e.x * P.curtainW * 0.55,
+        e.y * P.curtainFoot - e.y * P.tuft * 0.6,
+        e.z * P.curtainZ,
+      );
+      tuft.rotation.z = Math.PI;
+    }
   }
   // the drape: a mantle over both shoulders, a panel off each shoulder to the hips, and one over the spine, ending in fur tufts
   const chest = body.torsoMesh;
