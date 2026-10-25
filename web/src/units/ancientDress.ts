@@ -286,6 +286,7 @@ const ZEUS_TOGA = {
   rings: 3, ring: 0.075, beltAt: 0.06, ringProud: 1.14,
   whiteGlow: 1,
   white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.88, 0.58, 0.1), glow: 0.14,
+  boltGold: new Color3(0.62, 0.26, 0.03),
 };
 
 /** Zeus's white toga over the left shoulder, gold bolt emblem and triple gold belt (spec at ZEUS_TOGA), on the torso. */
@@ -365,7 +366,10 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
     return new Vector3(x, top - tall * (i / T.bolt), surfaceZ(x));
   };
   // [S] 400 the belt's own .85 gold, not a softer self-light: the two read side by side in the idle, so they must be one hue
-  const boltMat = mf.get("cloth", T.gold, { emissive: T.gold.scale(0.85) });
+  // [S] 400b the lit gold blew out to pale cream up at the shoulder (the belt's own material reads gold only in the trunk's shade): the emblem is an
+  // unlit plate with emissive = its colour, the palette's right wall (a PBR "unlit" without emissive renders black), at a deeper code value so ACES
+  // lands on a saturated orange-gold in full sun
+  const boltMat = mf.get("unlit", T.boltGold, { emissive: T.boltGold });
   for (let k = 0; k < T.bolt; k++) {
     const from = at(k), to = at(k + 1);
     const d = to.subtract(from);
