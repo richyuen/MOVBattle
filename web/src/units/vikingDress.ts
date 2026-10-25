@@ -240,8 +240,6 @@ interface VikingBeardCut {
   stacheLow?: number; stacheZ?: number;
   /** Sideburns from the temple: off under a full-face helm, whose mask covers them. */
   burns?: boolean;
-  /** [S] 401 a second, wider bib hung under the first down the chest (H long, W wide), for a beard that must reach the belt. */
-  bib2?: number; bib2Wide?: number;
 }
 const VIKING_BEARD = {
   burnTop: 0.2, burn: 0.22, jaw: 1.2, jawY: 0.66, jawZ: 0.6,
@@ -289,15 +287,6 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
   const bibFoot = bibTop.add(new Vector3(0, -Math.cos(lean) * H * cut.down, Math.sin(lean) * H * cut.down));
   const bib = column("vikingBeardBib", bibTop, bibFoot, W * cut.wide, W * cut.wide * cut.tip);
   bib.scaling.z = 0.6;
-  // [S] 401 the second, wider bib down the chest (critic 400 a.4: the beard "stops at the top of the chest under the shield rim"): a broad slab hung from
-  // the first bib's middle, .bib2 H long and .bib2Wide W across at its root, just behind the first so the two read as one beard with a fuller chest
-  if (cut.bib2) {
-    const top = Vector3.Lerp(bibTop, bibFoot, 0.45);
-    const foot = top.add(new Vector3(0, -Math.cos(lean) * H * cut.bib2, Math.sin(lean) * H * cut.bib2));
-    const chest = column("vikingBeardChest", top, foot, W * (cut.bib2Wide ?? cut.wide * 1.1), W * (cut.bib2Wide ?? cut.wide * 1.1) * 0.86);
-    chest.scaling.z = 0.52;
-    chest.position.z -= halfZ * 0.08;
-  }
   for (let i = 0; i < B.locks; i++) {
     const u = (i + 0.5) / B.locks - 0.5;
     const long = H * B.lockLong * (1 - Math.abs(u) * 0.85) * (0.85 + 0.3 * ((i * 7) % 5) / 5);
@@ -353,7 +342,6 @@ export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, {
     color: new Color3(0.32, 0.15, 0.11), glow: 0.22, down: 0.95, wide: 1.4, tip: 0.55, braid: true, stache: true,
     jaw: [1.5, 0.95, 0.8], jawY: 1.0, jawZ: 0.55, stacheLow: 0.62, stacheZ: 1.25, burns: false,
-    bib2: 0.95, bib2Wide: 1.6,
   });
 }
 
