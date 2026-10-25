@@ -278,13 +278,13 @@ function shareOf(seed: number, i: number): number {
  * to the belt; the bolt a bright orange-gold zig-zag on the shoulder; critic 387: a band half the trunk wide, bare belly above the belt, emblem thin
  * and dark): the drape's lower edge now runs level at .foot of the trunk (just under the belt), its upper edge the diagonal from .edgeHigh of the trunk
  * at his left side to .edgeLow at his right (clamped under .top); the bolt .bolt links .boltLong of the trunk long, .boltWide of a link step wide, at
- * .boltX of the half width out on his left, on a flat unlit material (out of ACES) in .boltGold.
+ * .boltX of the half width out on his left, on the belt's own gold at .85 self-light (400; the flat unlit cut washed pale under ACES).
  */
 const ZEUS_TOGA = {
   proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
-  bolt: 4, boltTop: 0.9, boltTr: 0.34, boltX: 0.62, boltOut: 0.95, boltWide: 0.11,
+  bolt: 4, boltTop: 0.98, boltTr: 0.3, boltX: 0.66, boltOut: 0.98, boltWide: 0.15, boltStand: 0.075,
   rings: 3, ring: 0.075, beltAt: 0.06, ringProud: 1.14,
-  boltGold: new Color3(0.95, 0.22, 0.03), whiteGlow: 1,
+  whiteGlow: 1,
   white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.88, 0.58, 0.1), glow: 0.14,
 };
 
@@ -345,6 +345,11 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   //  - its colour: lit cloth self-lit .55 of a deep orange-red (0.95, 0.22, 0.03). An "unlit" emissive washed pale under ACES, and the Zeus bolts'
   //    bloom veils anything small and light on this chest, so the emblem is cut deep and large to hold its hue in the shot;
   //  - the belt: .rings gold rings .ring of the trunk tall at .beltAt up, .ringProud proud, self-lit .85 so they read gold and not khaki.
+  // [S] 400 the critic's 399 rejection ("at .55 the emblem still reads dusty pink-grey beside the belt's .85 gold, and the hand's bloom veils its lower
+  // half") answered on three levers at once: the SAME gold and self-light as the belt (.85 is the value that survives ACES here), the emblem lifted off
+  // the chest by .boltStand (7.5 cm: the ribbon's chords dip inside the rim the plate is sampled from, so a bolt a few cm proud still read as a ghost at
+  // 398/399), and the whole zig-zag held high on the open shoulder line (.boltTop .98 down .boltTr .30), above the lowered hand's bolt at his hip whose
+  // bloom washed the bottom of the old .72-cut emblem. Links are thicker across and in depth so the cut reads as a plate, not a decal.
   const top = tr * T.boltTop, tall = tr * T.boltTr;
   const surfaceZ = (x: number): number => {
     let best = midZ + halfZ * T.proud, bestDx = Infinity;
@@ -353,17 +358,18 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
       const dx = Math.abs(p.x - x);
       if (dx < bestDx) { bestDx = dx; best = p.z; }
     }
-    return best + 0.035;
+    return best + T.boltStand;
   };
   const at = (i: number): Vector3 => {
     const x = band.midX - band.halfX * (i % 2 ? T.boltOut : T.boltX);
     return new Vector3(x, top - tall * (i / T.bolt), surfaceZ(x));
   };
-  const boltMat = mf.get("cloth", T.boltGold, { emissive: T.boltGold.scale(0.55) });
+  // [S] 400 the belt's own .85 gold, not a softer self-light: the two read side by side in the idle, so they must be one hue
+  const boltMat = mf.get("cloth", T.gold, { emissive: T.gold.scale(0.85) });
   for (let k = 0; k < T.bolt; k++) {
     const from = at(k), to = at(k + 1);
     const d = to.subtract(from);
-    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: tr * T.boltWide, height: d.length() * 1.25, depth: 0.014 }, scene);
+    const link = MeshBuilder.CreateBox("zeusTogaBolt", { width: tr * T.boltWide, height: d.length() * 1.3, depth: 0.03 }, scene);
     link.position.copyFrom(Vector3.Center(from, to));
     link.rotation.z = -Math.atan2(d.x, -d.y);
     link.material = boltMat;
