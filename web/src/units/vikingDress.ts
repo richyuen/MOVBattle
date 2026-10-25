@@ -531,13 +531,17 @@ export function berserkerArmpits(scene: Scene, body: ArticulatedBody): Mesh[] {
  * Fur and leather self-lit so the cream reads cream and the brown stays warm in the shade.
  */
 const HEADBUTTER_KIT = {
-  beltTall: 0.26, beltAt: 0.1, beltOut: 1.24, buckle: 0.22,
+  beltTall: 0.26, beltAt: 0.1, beltOut: 1.24, buckle: 0.5, buckleProud: 1.35, buckleGlow: 0.1,
   bracerFrom: 0.06, bracerTo: 0.78, bracerOut: 1.24, furFrom: -0.06, furTo: 0.24, furOut: 1.54, furThick: 0.22, furLumps: 6,
   bootFrom: 0.48, bootTo: 1.0, bootOut: 1.16, cuffFrom: 0.1, cuffTo: 0.46, cuffOut: 1.5, cuffThick: 0.28, cuffLumps: 7,
   sole: 0.06, soleOut: 1.06, glow: 0.14,
 };
-/** The kit's warm cream fur: the critic's (0.9, 0.7, 0.42) (the palette's tan row shows as cream, not the old pale grey). */
-const HEADBUTTER_FUR = new Color3(0.9, 0.7, 0.42);
+/**
+ * The kit's warm cream fur (0.78, 0.58, 0.34). [S] 400 the critic still read the lit cloth fur pale grey-white under the cuffs and the belt (395/396
+ * tried warm lit cloth twice): it is an UNLIT plate with emissive = its colour, out of the glow layer (LESSONS: lit cloth under an overhang reads grey
+ * however white it is, and an unlit PBR without emissive renders black) - the palette's right wall, read as the reference's cream.
+ */
+const HEADBUTTER_FUR = new Color3(0.78, 0.58, 0.34);
 /** The Headbutter's brown belt and buckle, dark fur-cuffed bracers, and cream fur boot cuffs over brown boots (spec at HEADBUTTER_KIT). */
 export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = HEADBUTTER_KIT;
@@ -545,7 +549,8 @@ export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
   const leather = mf.get("cloth", new Color3(0.3, 0.17, 0.09), { emissiveIntensity: K.glow * 0.5 });
   const boot = mf.get("cloth", new Color3(0.36, 0.21, 0.12), { emissiveIntensity: K.glow * 0.5 });
   const soleMat = mf.get("cloth", new Color3(0.2, 0.12, 0.07), { emissiveIntensity: K.glow * 0.35 });
-  const fur = mf.get("cloth", HEADBUTTER_FUR, { emissiveIntensity: K.glow });
+  // [S] 400 the fur is unlit with emissive = its colour (spec at HEADBUTTER_FUR), so it holds cream in the cuff's shade
+  const fur = mf.get("unlit", HEADBUTTER_FUR, { emissive: HEADBUTTER_FUR });
   const buckleMat = mf.get("cloth", new Color3(0.62, 0.5, 0.26), { emissiveIntensity: K.glow * 0.6 });
   const out: Mesh[] = [];
   // the belt round the hips, a buckle on its front
@@ -557,10 +562,12 @@ export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
   band.material = leather;
   band.convertToFlatShadedMesh();
   out.push(band);
+  // [S] 400 the buckle stood in front of the braids (critic 396/399: the belt was hidden by the braids and the stoop, the buckle behind them): a broad
+  // square plate .buckle of the chest's half width across, stood .buckleProud of the belt's own front, so it clears the braids' forward bow
   const buckle = MeshBuilder.CreateBox("headbutterBuckle", {
-    width: chest.x * K.buckle, height: chest.y * 2 * K.beltTall * 1.15, depth: chest.z * 0.14,
+    width: chest.x * K.buckle, height: chest.y * 2 * K.beltTall * 1.05, depth: chest.z * 0.16,
   }, scene);
-  buckle.position.set(0, chest.y * K.beltAt, Math.max(chest.x, chest.z) * K.beltOut);
+  buckle.position.set(0, chest.y * K.beltAt, Math.max(chest.x, chest.z) * K.beltOut * K.buckleProud);
   buckle.parent = body.torso;
   buckle.material = buckleMat;
   buckle.convertToFlatShadedMesh();
@@ -613,6 +620,9 @@ export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
     sole.convertToFlatShadedMesh();
     out.push(sole);
   }
+  // the unlit fur sits out of the glow layer, so the bloom does not veil its cream (LESSONS 10)
+  const glow = scene.getGlowLayerByName("glow");
+  for (const m of out) if (m.material === fur) glow?.addExcludedMesh(m);
   return out;
 }
 
