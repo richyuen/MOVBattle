@@ -477,8 +477,8 @@ export function halflingMop(scene: Scene, body: ArticulatedBody): Mesh[] {
  * Dark brown .fur, self-lit .glow.
  */
 const HALFLING_TUFT = {
-  top: 0.42, padX: 1.15, padY: 0.34, padZ: 0.62, across: 5, rows: 2, clump: 0.34, spread: 0.82,
-  from: 0.08, to: 0.82, spikes: 14, spike: 0.36, spikeWide: 0.17, lean: 0.8,
+  top: 0.42, padX: 1.3, padY: 0.34, padZ: 0.9, across: 5, rows: 3, clump: 0.44, spread: 0.92,
+  from: 0.05, to: 0.86, spikes: 16, spike: 0.4, spikeWide: 0.17, lean: 0.8,
   fur: new Color3(0.3, 0.16, 0.09), glow: 0.2,
 };
 
