@@ -422,8 +422,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   // [S] 391 the off hand is a second Valkyrie sword, not a round shield (viking.valkyrie.red.png, card Off Hand Valkyrie Sword; critic 391:
   // one sword and a big blue round shield). The shield comes off and the left hand takes the same sword prop as the right.
+  // [S] 400 the shared plume_helmet is off: her own winged helm is vikingDress valkyrieHelm (dark team dome, bronze brow band and mounts, tall crest)
   "viking.valkyrie": vis(
-    { scale: 1.2, bulk: 1.0, armLength: 1.05 }, "sword", "plume_helmet", "none", "wings", "#E6E6FA", "sword",
+    { scale: 1.2, bulk: 1.0, armLength: 1.05 }, "sword", "none", "none", "wings", "#E6E6FA", "sword",
     // [S] 394 her own layered feather wings (propBuilder VALKYRIE_WINGS_LAYERED), not the shared shard fan
     { wingStyle: "layered" },
   ),

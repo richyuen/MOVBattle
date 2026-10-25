@@ -791,3 +791,61 @@ export function brawlerHelm(scene: Scene, body: ArticulatedBody, teamColor: Colo
   nasal.position.set(0, e.y * (B.eyeTop + B.nasalLow) * 0.5, e.z * 0.98);
   return out;
 }
+
+/*
+ * [S] the Valkyrie's own winged helm (400; viking.valkyrie.png, viking.valkyrie.red.png: a dark team dome over the crown, a bronze brow band across it
+ * with a gold frame over the face, cream feathers sprouting from the frame at each side, and a tall pointed crest in the team's dark red on the crown;
+ * critic 398: "flat pale fins on a grey-blue dome, no crest or brow band" - the shared plume_helmet's grey shell and pale plume). In the head's half
+ * extents (W across, H high, D deep):
+ *   dome: a team shell .domeWide W across and .domeTall H deep (a sphere sliced .domeSlice), its middle .domeRise H up so its rim comes down onto the brow;
+ *   band: a bronze brow band .band H tall round the head .bandProud proud, its foot on the eye line (.eyeTop H up), the metal frame the feathers sit on;
+ *   crest: a four-sided team-dark spike .crestTall H tall off the crown, its base .crestWide W across, the helm's point;
+ *   mounts: a bronze plate .mountWide W wide and .mountTall H tall at each temple, tilted .mountCant up and back, where the wings leave the helm.
+ * Cloth, not "metal": metal reads near black under swiftshader (LESSONS); the bronze is self-lit a little.
+ */
+const VALKYRIE_HELM = {
+  domeWide: 1.16, domeTall: 0.72, domeRise: 0.46, domeSlice: 0.55,
+  band: 0.13, bandProud: 1.07, eyeTop: 0.42,
+  crestTall: 0.58, crestWide: 0.15, crestRise: 1.12,
+  mountWide: 0.1, mountTall: 0.5, mountOut: 1.04, mountUp: 0.36, mountBack: 0.12, mountCant: 0.3,
+  glow: 0.1, crestGlow: 0.12, bronzeGlow: 0.24,
+};
+const VALKYRIE_BRONZE = new Color3(0.72, 0.52, 0.2);
+
+/** The Valkyrie's winged helm: dark team dome, bronze brow band and wing mounts, and a tall pointed team-dark crest (spec at VALKYRIE_HELM). */
+export function valkyrieHelm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const V = VALKYRIE_HELM;
+  const mf = getMaterialFactory();
+  const e = headExtents(body);
+  const helm = mf.get("cloth", teamColor.scale(0.72), { emissiveIntensity: V.glow });
+  const crest = mf.get("cloth", teamColor.scale(0.5), { emissiveIntensity: V.crestGlow });
+  const bronze = mf.get("cloth", VALKYRIE_BRONZE, { emissiveIntensity: V.bronzeGlow });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, material: typeof helm): Mesh => {
+    m.material = material;
+    m.convertToFlatShadedMesh();
+    m.parent = body.headMesh;
+    out.push(m);
+    return m;
+  };
+  const dome = put(MeshBuilder.CreateSphere("valkyrieHelmDome", {
+    diameterX: 2 * e.x * V.domeWide, diameterY: 2 * e.y * V.domeTall, diameterZ: 2 * e.z * V.domeWide, segments: 10, slice: V.domeSlice,
+  }, scene), helm);
+  dome.position.y = e.y * V.domeRise;
+  const band = put(MeshBuilder.CreateBox("valkyrieHelmBand", {
+    width: 2 * e.x * V.bandProud, height: e.y * V.band, depth: 2 * e.z * V.bandProud,
+  }, scene), bronze);
+  band.position.y = e.y * V.eyeTop + e.y * V.band * 0.5;
+  const spike = put(MeshBuilder.CreateCylinder("valkyrieHelmCrest", {
+    height: e.y * V.crestTall, diameterTop: 0, diameterBottom: 2 * e.x * V.crestWide, tessellation: 4,
+  }, scene), crest);
+  spike.position.y = e.y * V.crestRise + e.y * V.crestTall * 0.5;
+  for (const side of [-1, 1]) {
+    const mount = put(MeshBuilder.CreateBox("valkyrieHelmMount", {
+      width: e.x * V.mountWide, height: e.y * V.mountTall, depth: e.z * 0.9,
+    }, scene), bronze);
+    mount.position.set(side * e.x * V.mountOut, e.y * V.mountUp, -e.z * V.mountBack);
+    mount.rotation.z = side * V.mountCant;
+  }
+  return out;
+}
