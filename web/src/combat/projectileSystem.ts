@@ -39,9 +39,13 @@ const BROADHEAD = { wide: 0.17, long: 0.2, thick: 0.3, shaft: new Color3(0.62, 0
 // The Ice Archer's arrow (see _dressIceArrow): shaft along the flight, the ice crown at its end -- spikes off the shaft's end, .head the longest on the
 // axis, .wide across at the foot; .spike of it for the ring round it, leaned .spikeOut; .barbs swept back .barb of .head; and a frost spray of .frost
 // flakes, .frostSize at the crown's foot, shrinking .frostShrink down a .frostLong cone that opens .frostOpen wide
+// [S] 400 the icicles: .icles tapered spikes hung UNDER the shaft behind the crown (perpendicular to it, not laid along it), rooted .icleDrop below the
+// shaft's line at .icleFrom back of the crown's foot and spread .icleSpan down the shaft, each .icleLong long (uneven by .icleVary) and .icleWide at
+// its root, so the fringe breaks the arrow's silhouette below the shaft as TABS's frost does (viking.ice_archer.jpg).
 const ICE_ARROW = {
   head: 0.34, wide: 0.2, spikes: 4, spike: 0.66, spikeOut: 0.42, barbs: 3, barb: 0.5,
   frost: 10, frostSize: 0.05, frostLong: 0.52, frostOpen: 2.4, frostShrink: 0.6,
+  icles: 4, icleFrom: 0.3, icleSpan: 0.6, icleLong: 0.17, icleVary: 0.6, icleWide: 0.062, icleOut: 0.3, icleRake: 0.28, icleDrop: 0.02,
   shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98),
 };
 
@@ -870,6 +874,9 @@ export class ProjectileSystem {
    * turned round it in a ring, each faceted with 4 sides and a different length, so the crown is irregular from every angle; .barbs shards are swept back
    * .barb of .head at the crown's foot; and behind them a spray of .frost tetra flakes, .frostSize at the crown's foot shrinking .frostShrink down a
    * .frostLong cone whose mouth opens .frostOpen wide, so the tail reads as frost and not as beads on the shaft.
+   * [S] 400 the critic read that spray as beads strung along the shaft still, and TABS's frost as icicles hanging UNDER it: .icles tapered spikes now hang
+   * off the shaft's underside behind the crown, perpendicular to it (raked .icleRake back), spread .icleSpan along the shaft with uneven lengths, each
+   * .icleWide at its root and .icleLong long, so the fringe breaks the arrow's silhouette below the line.
    */
   private _dressIceArrow(root: TransformNode): void {
     const I = ICE_ARROW;
@@ -901,6 +908,15 @@ export class ProjectileSystem {
       const a = 1.6 + b * 2.1;
       const back = new Vector3(Math.cos(a), Math.sin(a) * 0.8, -0.55);
       shard("iceArrowBarb", I.head * I.barb, I.wide * 0.3, back, new Vector3(Math.cos(a) * I.wide * 0.32, Math.sin(a) * I.wide * 0.26, foot - 0.03));
+    }
+    // [S] 400 the icicles under the shaft (spec at ICE_ARROW): each one hangs off the shaft's underside behind the crown, raked back along the flight
+    for (let i = 0; i < I.icles; i++) {
+      const t = I.icles > 1 ? i / (I.icles - 1) : 0;
+      const side = i % 2 ? 1 : -1;
+      const len = I.icleLong * (1 - I.icleVary * 0.5 + I.icleVary * ((i * 7) % 5) / 4);
+      const dir = new Vector3(side * I.icleOut * 0.4, -1, -I.icleRake);
+      shard("iceArrowIcic", len, I.icleWide * (0.72 + 0.28 * ((i * 3) % 3) / 2), dir,
+        new Vector3(side * I.icleWide * 0.35, -I.icleDrop - I.icleWide * 0.25, foot - I.icleFrom - t * I.icleSpan));
     }
     for (let i = 0; i < I.frost; i++) {
       const t = I.frost > 1 ? i / (I.frost - 1) : 0;
