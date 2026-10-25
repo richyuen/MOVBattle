@@ -282,9 +282,9 @@ function shareOf(seed: number, i: number): number {
  */
 const ZEUS_TOGA = {
   proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
-  bolt: 4, boltTop: 0.8, boltTr: 0.34, boltX: 0.62, boltOut: 0.95, boltWide: 0.11,
+  bolt: 4, boltTop: 0.9, boltTr: 0.34, boltX: 0.62, boltOut: 0.95, boltWide: 0.11,
   rings: 3, ring: 0.075, beltAt: 0.06, ringProud: 1.14,
-  boltGold: new Color3(1, 0.55, 0.1), whiteGlow: 1,
+  boltGold: new Color3(0.95, 0.22, 0.03), whiteGlow: 1,
   white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.88, 0.58, 0.1), glow: 0.14,
 };
 
@@ -344,8 +344,6 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   //    ribbon or the trunk; the beard's foot was raised to the collarbone (ZEUS_BEARD) so the chest it sits on is clear;
   //  - its colour: lit cloth self-lit .55 of a deep orange-red (0.95, 0.22, 0.03). An "unlit" emissive washed pale under ACES, and the Zeus bolts'
   //    bloom veils anything small and light on this chest, so the emblem is cut deep and large to hold its hue in the shot;
-  //  - [S] 399 the critic read that hue as red-pink and the bolt's top touching the beard's foot: the colour is now an orange-gold (1, .55, .1) at the
-  //    same self-light and .boltTop drops .9 -> .8, so the top link clears the beard and the whole emblem sits on the open chest;
   //  - the belt: .rings gold rings .ring of the trunk tall at .beltAt up, .ringProud proud, self-lit .85 so they read gold and not khaki.
   const top = tr * T.boltTop, tall = tr * T.boltTr;
   const surfaceZ = (x: number): number => {
