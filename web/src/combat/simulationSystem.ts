@@ -286,8 +286,12 @@ const BIG_HEADBUTT = { within: 0.6, cooldown: 5, windup: 0.35, recover: 0.4, ahe
  * .lunge m onto him: the man in front takes .damage and is flipped up and out from the buried head (.fling/.lift m/s at its middle, .edge of that at the rim).
  * The blow is logged "headbutt" and as a hit on the man, so his opening attack is the butt and the slaps are what follows. His head comes back up .recover s
  * later and he slaps until the next.
+ * [S] 400 the ram is a dive (critic 399: "bowing about 90 at the waist with both feet planted, his head a forearm short of the foe; he never leaves the
+ * vertical or ends on the ground"): instead of a step, he throws himself at the man with RuntimeUnit.leap over the .windup (rise .dive m/s, airtime
+ * 2*rise/22 ~= the windup) with the animator's dive pose on from the first frame (proceduralAnimation DIVE), and at the blow he goes down in a short
+ * forward sprawl (RuntimeUnit.headbuttSprawl) - the head-first dive, the cap's spike into him, then prone and up again.
  */
-const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead: 0.5, radius: 1.15, damage: 18, fling: 5, lift: 4.5, edge: 0.5, lunge: 0.5 };
+const HEADBUTT = { within: 0.55, cooldown: 6, windup: 0.28, recover: 0.5, ahead: 0.5, radius: 1.15, damage: 18, fling: 5, lift: 4.5, edge: 0.5, lunge: 0.5, dive: 3.0 };
 /*
  * [S] Super Jump (392; viking.berserker.jpg, card Weapons "Super Jump: Ability - Melee; leaps towards the enemy"; viking.berserker.red.png: caught in
  * the air, legs kicked, an axe wide in each hand). The berserker's jump_charge used to teleport him to the landing spot, so every shot caught him
@@ -1096,12 +1100,23 @@ export class SimulationSystem {
       if (!this._charges.has(unit) && distance <= engageDistance + buttSpec.within && now >= readyAt) {
         this._butts.set(unit, { target: enemy, blowAt: now + buttSpec.windup, endAt: now + buttSpec.windup + buttSpec.recover, done: false, spec: buttSpec });
         this._buttReadyAt.set(unit, now + buttSpec.cooldown);
-        unit.animator.setCharging(true, true);
+        unit.animator.setCharging(true, buttSpec === BIG_HEADBUTT);
         unit.stopMoving();
         this._clearPathState(unit);
         unit.faceTarget(enemy.position);
-        // the headbutter drives a step onto him with the head: the ram is a movement as much as a blow (card)
-        if (buttSpec.lunge > 0) {
+        // [S] 400 the headbutter dives head first (critic 399: "bowing about 90 at the waist with both feet planted ... he never leaves the vertical"):
+        // he throws himself at the man over the windup, the dive pose on from the first frame, so the ram lands at the blow with him off the ground
+        if (buttSpec === HEADBUTT) {
+          const step = enemy.position.subtract(unit.position);
+          step.y = 0;
+          const gap = step.length() - unit.collisionBodyRadius - enemy.collisionBodyRadius;
+          unit.animator.setDive(true);
+          const dist = Math.min(1.25, Math.max(0.35, gap));
+          if (step.lengthSquared() > 1e-4 && !unit.leap(step.normalize(), dist, HEADBUTT.dive)) {
+            unit.moveTo(unit.position.add(step.normalize().scale(HEADBUTT.lunge)));
+          }
+        } else if (buttSpec.lunge > 0) {
+          // the minotaur drives a step onto him with the head
           const step = enemy.position.subtract(unit.position);
           step.y = 0;
           if (step.lengthSquared() > 1e-4) unit.moveTo(unit.position.add(step.normalize().scale(buttSpec.lunge)));
@@ -2966,7 +2981,7 @@ export class SimulationSystem {
   private _landButts(now: number): void {
     for (const [unit, butt] of this._butts) {
       const B = butt.spec;
-      if (unit.isDead) { unit.animator.setCharging(false); this._butts.delete(unit); continue; }
+      if (unit.isDead) { unit.animator.setCharging(false); unit.animator.setDive(false); this._butts.delete(unit); continue; }
       if (!butt.done && now >= butt.blowAt) {
         butt.done = true;
         const yaw = unit.body.root.rotation.y;
@@ -2997,9 +3012,15 @@ export class SimulationSystem {
         this._logAbility(unit, "headbutt", now, center);
         this.visualEffects?.spawnTrampleRing(center, B.radius * 0.6);
         this.visualEffects?.spawnKickDust(center, 2);
+        // [S] 400 the ram leaves him on the floor (card "After the initial attack, they get up"): a short forward sprawl from the blow
+        if (B === HEADBUTT) {
+          unit.animator.setDive(false);
+          unit.headbuttSprawl(now);
+        }
       }
       if (now >= butt.endAt) {
         unit.animator.setCharging(false);
+        unit.animator.setDive(false);
         this._butts.delete(unit);
       }
     }

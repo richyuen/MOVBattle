@@ -386,6 +386,12 @@ const MAIN_AXE = { ease: 8 };
  */
 const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 0.5, pace: 11 };
 /*
+ * [S] the Headbutter's ram dive (400; spec at setDive): the pelvis tipped .tip rad forward (the trunk level, the legs trailing in line), the trunk a
+ * further .trunk, the neck lifted .head so the spiked cap leads, the arms swept .arms back along the body with the elbows .elbow eased, the knees .knee;
+ * eased in at .in and out at .out per second.
+ */
+const DIVE = { tip: 1.22, trunk: 0.16, head: 0.62, arms: 0.45, elbow: 0.5, knee: 0.18, in: 18, out: 26 };
+/*
  * [S] bare fists (379, the minotaur's; card Main Hand / Off Hand "Minotaur Grab", Unarmed; ancient.minotaur.red.png: no weapon, both fists balled before the
  * belly, elbows bent near square and out from the flanks; ancient.minotaur.png: one arm grabs a man while the other punches).
  * - Carry (stood or marching): each fist solved (_armTo) onto a point .carryAhead before his hip and .carryUp above it in u, and out to its side .carryOut
@@ -1179,6 +1185,34 @@ export class ProceduralAnimator {
 
   // a man on two legs charging head down (BULL_CHARGE); the jouster's rider sits his horse's charge upright
   private _bullCharge = false;
+
+  /**
+   * [S] 400 the Headbutter's ram (viking.headbutter.png, card Characteristics "they attack by ramming the opponent with their spiked helmets ... they can be
+   * seen flipping over enemy units from time to time ... After the initial attack, they get up"): while the butt is under way the whole body tips over the
+   * hips into a head-first dive - the pelvis carried .DIVE.tip rad forward so the trunk runs level and the legs trail in line behind it, the neck lifted
+   * .DIVE.head so the cap's spike leads, the arms swept back along the body and the knees eased. Eased in at .DIVE.in per second from the first frame of
+   * the butt (the idle shot is ~100 ms after spawn: a dive eased in from zero would read as absent, LESSONS 393) and out at .DIVE.out at the blow.
+   */
+  private _dive = 0;
+  private _diveTarget = 0;
+  setDive(on: boolean): void {
+    this._diveTarget = on ? 1 : 0;
+  }
+  private _applyDive(dt: number): void {
+    this._dive += (this._diveTarget - this._dive) * Math.min(1, dt * (this._diveTarget > this._dive ? DIVE.in : DIVE.out));
+    const d = this._dive * (this._state === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp));
+    if (d < 0.01 || this.walkStyle === "quadruped") return;
+    const b = this._body;
+    b.hip.rotation.x += DIVE.tip * d;
+    b.torso.rotation.x += DIVE.trunk * d;
+    b.neck.rotation.x -= DIVE.head * d;
+    b.leftShoulder.rotation.x -= DIVE.arms * d;
+    b.rightShoulder.rotation.x -= DIVE.arms * d;
+    b.leftElbow.rotation.x += DIVE.elbow * d;
+    b.rightElbow.rotation.x += DIVE.elbow * d;
+    b.leftKnee.rotation.x += DIVE.knee * d;
+    b.rightKnee.rotation.x += DIVE.knee * d;
+  }
   /** Bare-fisted (BULL_FISTS): carries his fists before the belly and grabs then punches; set by the runtime for the minotaur. */
   bullFists = false;
 
@@ -1744,6 +1778,7 @@ export class ProceduralAnimator {
         break;
     }
     this._applyChargePose(dt);
+    this._applyDive(dt);
     this._applyHorseGait(dt);
 
     // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving;

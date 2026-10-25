@@ -1540,6 +1540,20 @@ export class RuntimeUnit {
     }
   }
 
+  /**
+   * [S] 400 the Headbutter's ram ends on the ground (viking.headbutter.png, card "they can be seen flipping over enemy units from time to time ... After the
+   * initial attack, they get up and attack"): a forward topple from the blow, with the sprawl shortened to the butt's own beat - the crowd profile's whole
+   * topple + down + recover would leave him on the floor for some 2.6 s - so the dive lands prone and he is up again inside the butt's .5 s recover.
+   */
+  headbuttSprawl(now: number): void {
+    if (this._isDead || this.isToppled || this.isDowned) return;
+    this._enterTopple(now, this._crowdPhysicsProfile.launchThreshold, this._getFacingVector(), true);
+    const flat = now + 0.36;
+    this._toppledUntil = flat;
+    this._downedUntil = flat + 0.22;
+    this._recoveringUntil = flat + 0.5;
+  }
+
   private _enterTopple(now: number, pressure: number, direction: Vector3, launched: boolean): void {
     const toppleDirection = direction.lengthSquared() > 0.0001
       ? direction
