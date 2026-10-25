@@ -2108,12 +2108,13 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * [S] 398 the critic read the crew as slim mannequins with pinhead horns standing ON the deck, not stocky oarsmen sunk to the chest in the hull:
    * .feet drops to .16 (the deck's plank cuts them at the ribs, the gunwale rail at the chest) and they are built stout (bulk 1.3, broad trunk, thick
    * arms and legs, big head) with tall horns (.horn of the head's height) leaned out over the rail.
-   * [S] 399 .feet drops again, .44 -> .2, so the gunwale cuts them at the chest rather than the belt; .top rises with them (1.05 -> 1.29) so the oar
-   * heads keep their height over the hull, and the blade is a paddle head on a neck (OARS).
+   * [S] 399 .feet drops again, .44 -> .3, so the gunwale cuts them at the chest rather than the belt (probe: with .44 the torso sat above
+   * the .70 rail, with .2 only the neck and head cleared it); .top falls with them (1.05 -> 1.19, the fist .1 higher) so the oar heads keep their
+   * height over the hull, and the blade is a paddle head on a neck (OARS).
    */
   const LONGSHIP_CREW = {
-    at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.2, hand: [1, -1, 1] as const,
-    raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.29, clutch: 0.03, glow: 0.08, horn: 3.2,
+    at: [-0.62, 0.02, 0.66], across: [-0.1, 0.06, -0.02], feet: 0.3, hand: [1, -1, 1] as const,
+    raise: -0.5, spread: 0.34, elbow: -0.55, butt: 0.62, top: 1.19, clutch: 0.03, glow: 0.08, horn: 3.2,
   };
   /**
    * [S] the oarsmen getting off the ship (396; viking.longship.jpg, card Characteristics: thrown at the enemies, its oarsmen disembark). Kept on the ship's
