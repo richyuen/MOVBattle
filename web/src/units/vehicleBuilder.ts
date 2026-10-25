@@ -3,7 +3,7 @@ import {
   PBRMetallicRoughnessMaterial, type Material,
 } from "@babylonjs/core";
 import { buildArticulatedBody, crewProportions } from "./bodyBuilder";
-import type { ArticulatedBody, BodyMetrics, VehicleSocketSet } from "./bodyBuilder";
+import type { ArticulatedBody, BodyMetrics, BodyProportions, VehicleSocketSet } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
 import { dressBallistaCrew } from "./ancientDress";
@@ -178,35 +178,39 @@ function wrapAsBody(
 interface VehicleOperator {
   headMesh: Mesh;
   headTopY: number;
+  body: ArticulatedBody;
 }
+
+/** A gun crewman: a small man in the cut of the infantry, his own height, head and limb lengths, their shirt and trouser widths. */
+const OPERATOR_PROPORTIONS: Partial<BodyProportions> = crewProportions({
+  scale: 0.46,
+  bulk: 1.3,
+  torsoWidth: 1.16,
+  headSize: 1.35,
+  armLength: 0.86,
+  legLength: 0.92,
+  headLength: 1.16,
+  headWidth: 1.05,
+  torsoRoundness: 1.1,
+  upperArmWidth: 1.2,
+  upperLegWidth: 1.15,
+  handSize: 1.1,
+  footLength: 1.1,
+  footWidth: 0.98,
+  footHeight: 0.86,
+});
 
 // Helper to add an operator (small person) at a given position
 function addOperator(
   scene: Scene, root: TransformNode, allMeshes: Mesh[],
   x: number, y: number, z: number, color: Color3,
   pose?: (body: ArticulatedBody) => void,
+  proportions: Partial<BodyProportions> = OPERATOR_PROPORTIONS,
 ): VehicleOperator {
   const operator = buildArticulatedBody(
     scene,
     `vehicle_operator_${Math.random().toString(36).slice(2, 6)}`,
-    // A small man in the cut of the infantry: his own height, head and limb lengths, their shirt and trouser widths
-    crewProportions({
-      scale: 0.46,
-      bulk: 1.3,
-      torsoWidth: 1.16,
-      headSize: 1.35,
-      armLength: 0.86,
-      legLength: 0.92,
-      headLength: 1.16,
-      headWidth: 1.05,
-      torsoRoundness: 1.1,
-      upperArmWidth: 1.2,
-      upperLegWidth: 1.15,
-      handSize: 1.1,
-      footLength: 1.1,
-      footWidth: 0.98,
-      footHeight: 0.86,
-    }),
+    proportions,
     color,
     { detailLevel: "operator" },
   );
@@ -217,6 +221,7 @@ function addOperator(
   return {
     headMesh: operator.headMesh,
     headTopY: operator.root.position.y + operator.metrics.headTopY,
+    body: operator,
   };
 }
 
@@ -2298,7 +2303,42 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   }
   // 400: the bent stick is gone - the stern post and its rolled scroll are built with the bow stem above
 
+  /*
+   * [S] 401 the ship carried overhead by two Longship Carriers, at 1.8x (critic 400 a.4: "a ground-level box ~1.5x a man"; card Characteristics "three
+   * Oarsmen aboard carried by 2 Longship Carriers", viking.longship.jpg: the hull rides on the carriers' shoulders/overhead, about three men long).
+   * Everything built so far - hull, shields, oars, crew, prow - goes under one `ship` node, scaled SHIP.scale and stood at the carriers' hands, so the
+   * whole boat grows together and its crew grow with it. Two full-size carriers stand under the keel (one fore, one aft), both arms straight up, hands at
+   * the hull's underside: the ship's own height is read off a carrier's fist after the pose, so the hands always meet the keel. At the hurl the carriers
+   * let go (heaveLongshipCrew drops the hull to the root's floor and hides them), so the boat, not the men, is what flies and crashes.
+   */
+  const SHIP = { scale: 1.8, at: [-0.98, 0.98], carrier: 0.98, raise: -2.62, spread: 0.2, elbow: -0.1 };
+  const ship = new TransformNode("longship_ship", scene);
+  ship.parent = root;
+  ship.scaling.setAll(SHIP.scale);
+  for (const child of [...root.getChildren()]) {
+    if (child !== ship) child.parent = ship;
+  }
+  const CARRIER_PROPORTIONS: Partial<BodyProportions> = {
+    scale: SHIP.carrier, bulk: 1.1, headSize: 1.2, armLength: 1.02, legLength: 0.96, torsoWidth: 1.05, headLength: 1.05,
+  };
+  const carriers: ArticulatedBody[] = [];
+  for (const z of SHIP.at) {
+    const carrier = addOperator(scene, root, allMeshes, 0, 0, z, color, (man) => {
+      dressBoatSman(man);
+      man.leftShoulder.rotation.set(SHIP.raise, 0, -SHIP.spread);
+      man.rightShoulder.rotation.set(SHIP.raise, 0, SHIP.spread);
+      man.leftElbow.rotation.set(SHIP.elbow, 0, 0);
+      man.rightElbow.rotation.set(SHIP.elbow, 0, 0);
+    }, CARRIER_PROPORTIONS);
+    carriers.push(carrier.body);
+  }
+  settleWorld(carriers[0].rightHand);
+  const keelFoot = (HULL.keelY - 0.08) * SHIP.scale;
+  ship.position.y = Math.max(1.2, carriers[0].rightHand.getAbsolutePosition().y - keelFoot + 0.03);
+  root.metadata = { ...(root.metadata ?? {}), longshipRig: { ship, carriers } };
+
   const operator = crew[1];
+  const shipTop = ship.position.y + 2.05 * SHIP.scale;
 
   return wrapAsBody(
     scene,
@@ -2306,8 +2346,8 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     gunwale!,
     allMeshes,
     operator.headMesh,
-    makeBodyMetrics(operator.headTopY, 0.92, 0.56, 0.84),
-    { impactOrigin: makeSocket(scene, root, "longship_impact_socket", new Vector3(0, 0.72, 1.28)) },
+    makeBodyMetrics(shipTop, 1.1 * SHIP.scale, 0.6 * SHIP.scale, ship.position.y + 0.6),
+    { impactOrigin: makeSocket(scene, root, "longship_impact_socket", new Vector3(0, ship.position.y + 0.72 * SHIP.scale, 1.28 * SHIP.scale)) },
   );
 }
 
@@ -2316,9 +2356,23 @@ type LongshipCrew = Array<{ body: ArticulatedBody; oar: TransformNode; landed: b
 function longshipCrewOf(body: ArticulatedBody): LongshipCrew | null {
   return (body.root.metadata as { longshipCrew?: LongshipCrew } | null)?.longshipCrew ?? null;
 }
+/** The carried ship and the two carriers under it (spec at SHIP in buildLongship). */
+type LongshipRig = { ship: TransformNode; carriers: ArticulatedBody[] };
+function longshipRigOf(body: ArticulatedBody): LongshipRig | null {
+  return (body.root.metadata as { longshipRig?: LongshipRig } | null)?.longshipRig ?? null;
+}
 
-/** The oarsmen heave the hull up over their heads at the hurl's take-off (both arms overhead, elbows a little bent). */
+/**
+ * The oarsmen heave the hull up over their heads at the hurl's take-off (both arms overhead, elbows a little bent), and the two carriers let go: the
+ * hull drops to the root's own floor so the boat itself is what leaps and crashes, and the carriers stand off (they stay behind in TABS, card
+ * Characteristics "the carriers will throw the Longship on them").
+ */
 export function heaveLongshipCrew(body: ArticulatedBody): void {
+  const rig = longshipRigOf(body);
+  if (rig) {
+    rig.ship.position.y = 0;
+    for (const carrier of rig.carriers) carrier.root.setEnabled(false);
+  }
   for (const man of longshipCrewOf(body) ?? []) {
     if (man.landed) continue;
     man.body.leftShoulder.rotation.set(-2.4, 0, -0.22);
