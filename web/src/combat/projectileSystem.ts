@@ -37,15 +37,15 @@ const BALLOON_BALL = { size: 0.2, at: 0.27, long: 1.15 };
 // The medieval archer's broadhead arrow (see _dressBroadhead): head across, along the shaft (m), flatness; shaft and head colours
 const BROADHEAD = { wide: 0.17, long: 0.2, thick: 0.3, shaft: new Color3(0.62, 0.16, 0.1), iron: new Color3(0.08, 0.08, 0.09) };
 // The Ice Archer's arrow (see _dressIceArrow): shaft along the flight, the ice crown at its end -- spikes off the shaft's end, .head the longest on the
-// axis, .wide across at the foot; .spike of it for the ring round it, leaned .spikeOut; .barbs swept back .barb of .head; and a frost spray of .frost
-// flakes, .frostSize at the crown's foot, shrinking .frostShrink down a .frostLong cone that opens .frostOpen wide
-// [S] 400 the icicles: .icles tapered spikes hung UNDER the shaft behind the crown (perpendicular to it, not laid along it), rooted .icleDrop below the
-// shaft's line at .icleFrom back of the crown's foot and spread .icleSpan down the shaft, each .icleLong long (uneven by .icleVary) and .icleWide at
-// its root, so the fringe breaks the arrow's silhouette below the shaft as TABS's frost does (viking.ice_archer.jpg).
+// axis, .wide across at the foot; .spike of it for the ring round it, leaned .spikeOut; .barbs swept back .barb of .head; and, under the shaft behind the
+// crown, a fringe of icicles: .icles tapered spikes hung perpendicular to the shaft, rooted .icleDrop below its line at .icleFrom back of the crown's foot
+// and spread .icleSpan down it, each .icleLong long (uneven by .icleVary) and .icleWide at its root, raked .icleRake back along the flight, fanned
+// .icleOut across it.
+// [S] 401 the fringe is the frost: the 398-400 .frost tetra flakes read as beads strung along the shaft (critic 400), so the bead loop is gone and the
+// icicles are denser - .icles 9 over a shorter span, nearly touching at their roots, so the arrow trails a solid jagged comb of ice.
 const ICE_ARROW = {
   head: 0.34, wide: 0.2, spikes: 4, spike: 0.66, spikeOut: 0.42, barbs: 3, barb: 0.5,
-  frost: 10, frostSize: 0.05, frostLong: 0.52, frostOpen: 2.4, frostShrink: 0.6,
-  icles: 4, icleFrom: 0.3, icleSpan: 0.6, icleLong: 0.17, icleVary: 0.6, icleWide: 0.062, icleOut: 0.3, icleRake: 0.28, icleDrop: 0.02,
+  icles: 9, icleFrom: 0.16, icleSpan: 0.62, icleLong: 0.21, icleVary: 0.62, icleWide: 0.075, icleOut: 0.55, icleRake: 0.24, icleDrop: 0.02,
   shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98),
 };
 
@@ -910,22 +910,14 @@ export class ProjectileSystem {
       shard("iceArrowBarb", I.head * I.barb, I.wide * 0.3, back, new Vector3(Math.cos(a) * I.wide * 0.32, Math.sin(a) * I.wide * 0.26, foot - 0.03));
     }
     // [S] 400 the icicles under the shaft (spec at ICE_ARROW): each one hangs off the shaft's underside behind the crown, raked back along the flight
+    // [S] 401 denser and longer, and the bead flakes are gone (critic 400): nine icicles root nearly touching along the shaft, so the fringe is a comb
     for (let i = 0; i < I.icles; i++) {
       const t = I.icles > 1 ? i / (I.icles - 1) : 0;
       const side = i % 2 ? 1 : -1;
       const len = I.icleLong * (1 - I.icleVary * 0.5 + I.icleVary * ((i * 7) % 5) / 4);
       const dir = new Vector3(side * I.icleOut * 0.4, -1, -I.icleRake);
       shard("iceArrowIcic", len, I.icleWide * (0.72 + 0.28 * ((i * 3) % 3) / 2), dir,
-        new Vector3(side * I.icleWide * 0.35, -I.icleDrop - I.icleWide * 0.25, foot - I.icleFrom - t * I.icleSpan));
-    }
-    for (let i = 0; i < I.frost; i++) {
-      const t = I.frost > 1 ? i / (I.frost - 1) : 0;
-      const a = i * 2.4;
-      const reach = I.frostSize * (0.4 + I.frostOpen * t);
-      const flake = MeshBuilder.CreateIcoSphere("iceArrowFrost", { radius: I.frostSize * (1 - I.frostShrink * t) * (0.75 + 0.25 * (i % 3) / 2), subdivisions: 0, flat: true }, this._scene);
-      flake.position.set(Math.cos(a) * reach, Math.sin(a) * reach * 0.8, foot - 0.05 - t * I.frostLong);
-      flake.material = ice;
-      flake.parent = root;
+        new Vector3(side * I.icleWide * 0.5, -I.icleDrop - I.icleWide * 0.25, foot - I.icleFrom - t * I.icleSpan));
     }
   }
 
