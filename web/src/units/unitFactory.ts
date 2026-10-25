@@ -1421,13 +1421,19 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
 
 /*
  * [S] halfling's shorts (342; farmer.halfling.red.png, card Appearance "a pair of dark team-colored shorts"): dark team shorts from the waist over the
- * hips and down each thigh to the knee, a little flared at the hem (the jacket, vest, shirt and buckled belt are farmerDress HALFLING_COAT, 376). Shares
+ * hips and down each thigh past the knee, a little flared at the hem (the jacket, vest, shirt and buckled belt are farmerDress HALFLING_COAT, 376). Shares
  * of the chest (W, H, D) and of the thigh: seat HALFLING_SHORTS.seat round the chest and .seatTall of H tall; leg .leg of the thigh's girth, .flare more
  * at the hem, .long of the thigh long. Team shade .dark, self-lit .glow so it reads dark team, not black.
+ * [S] 400 the hem to just below the knee (critic 399 a.5: the bare shin read about twice the shorts): the thigh tube runs .long (to the knee) and a hem
+ * tube hangs off each shin's top, .hemLift of the shin above its knee and .hemLong of the shin long, .hemFlare wider at its foot, with the turned cuff
+ * .cuff of the shin tall and .cuffOut proud at the hem's lip. So the shorts read knee-length and the bare shin under them about the shorts' own length.
  */
-// 383 [S]: the legs end .long .78 of the thigh in a turned cuff .cuff of the thigh tall, .cuffOut proud, team x .cuffShade, and the foot fur sits low
-// on the foot (HALFLING_FEET clumpTall, rise), so the bare shin shows between them (critic 379: shins barely visible above the hairy feet)
-const HALFLING_SHORTS = { seat: 1.04, seatTall: 0.3, leg: 1.3, flare: 1.12, long: 0.78, dark: 0.45, glow: 0.14, cuff: 0.14, cuffOut: 1.08, cuffShade: 0.62 };
+// 383 [S]: the cuff a step proud and lighter, team x .cuffShade, and the foot fur sits low on the foot (HALFLING_FEET clumpTall, rise), so the bare
+// shin shows between them (critic 379: shins barely visible above the hairy feet)
+const HALFLING_SHORTS = {
+  seat: 1.04, seatTall: 0.3, leg: 1.3, flare: 1.12, long: 0.99, dark: 0.45, glow: 0.14,
+  hemLift: 0.03, hemLong: 0.22, hemWide: 0.98, hemFlare: 1.05, cuff: 0.06, cuffOut: 1.1, cuffShade: 0.62,
+};
 /*
  * [S] potionseller's hosen and boots (345; farmer.potion_seller.red.png, card Appearance "a pair of dark team-colored hosen along with a pair of brown
  * boots"): both legs in dark team hosen from the hip to the ankle; over the lower shin a brown boot shaft standing a little off the leg, its top turned
@@ -1593,6 +1599,7 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
   const seat = put(MeshBuilder.CreateBox("halflingShortsSeat", { width: W * S.seat, height: H * S.seatTall, depth: D * S.seat }, scene), shortsCloth);
   seat.position.set(0, waist - H * S.seatTall * 0.5 + H * 0.06, 0);
   // a short flared leg of the shorts down each thigh to the knee
+  let hemGirth = 0;
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
     leg.material = shortsCloth;
     const e = leg.getBoundingInfo().boundingBox.extendSize;
@@ -1603,12 +1610,28 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
     tube.parent = leg;
     tube.position.y = long * 0.5 - long * S.long * 0.5;
     added.push(tube);
-    // [S] 383: a turned cuff round the hem, a step proud and lighter, so the shorts end in a clear line above the knee and the bare shin shows under it
-    const cuff = MeshBuilder.CreateCylinder("halflingShortsCuff", { height: long * S.cuff, diameter: girth * S.leg * S.flare * S.cuffOut, tessellation: 8 }, scene);
+    hemGirth = Math.max(hemGirth, girth * S.leg * S.flare);
+  }
+  // [S] 400 the hem below the knee: a tube off each shin's top carrying the turned cuff at its lip (spec at HALFLING_SHORTS)
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const e = shin.getBoundingInfo().boundingBox.extendSize;
+    const long = e.y * 2;
+    const top = long * 0.5 + long * S.hemLift, tall = long * S.hemLong;
+    const tube = MeshBuilder.CreateCylinder("halflingShortsHem", {
+      height: tall, diameterTop: hemGirth * S.hemWide, diameterBottom: hemGirth * S.hemFlare, tessellation: 8,
+    }, scene);
+    tube.material = shortsCloth;
+    tube.convertToFlatShadedMesh();
+    tube.parent = shin;
+    tube.position.y = top - tall * 0.5;
+    added.push(tube);
+    const cuff = MeshBuilder.CreateCylinder("halflingShortsCuff", {
+      height: long * S.cuff, diameter: hemGirth * S.hemFlare * S.cuffOut, tessellation: 8,
+    }, scene);
     cuff.material = cuffCloth;
     cuff.convertToFlatShadedMesh();
-    cuff.parent = leg;
-    cuff.position.y = long * 0.5 - long * S.long + long * S.cuff * 0.5;
+    cuff.parent = shin;
+    cuff.position.y = top - tall - long * S.cuff * 0.5;
     added.push(cuff);
   }
   // [S] 389 his hairy feet: a compact dark tuft on top of each foot (farmerDress HALFLING_TUFT; the 343 splayed clump HALFLING_FEET retired)
