@@ -866,8 +866,8 @@ const VALKYRIE_HELM = {
   band: 0.14, bandProud: 1.07, eyeTop: 0.56,
   crestTall: 0.95, crestWide: 0.2, crestRise: 1.12, crestFlat: 0.55,
   mountWide: 0.16, mountTall: 0.6, mountOut: 1.04, mountUp: 0.36, mountBack: 0.12, mountCant: 0.3,
-  feathers: 5, featherLen: 1.15, featherWide: 0.22, featherFlat: 0.34, featherSpread: 0.2, featherFan: 0.62,
-  featherBack: 0.1, featherSweep: 0.5, featherUp: 0.42,
+  feathers: 5, featherLen: 2.1, featherWide: 0.3, featherFlat: 0.34, featherSpread: 0.24, featherFan: 0.78,
+  featherBack: 0.08, featherSweep: 0.42, featherUp: 0.5,
   glow: 0.1, crestGlow: 0.12, bronzeGlow: 0.24,
 };
 const VALKYRIE_BRONZE = new Color3(0.72, 0.52, 0.2);
