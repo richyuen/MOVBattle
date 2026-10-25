@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-393 | braids: two tan plaits from the ear flaps onto the chest, dark tie and tuft (52066c2) | viking.headbutter.a | approved
-393 | own round board: light/dark halves, big faceted boss, brown rim (b76e2fe) | viking.brawler.b | approved
-393 | bearded crescents on both hafts at .78 size (6cfe8b5 + 671a758) | viking.berserker.b | approved
-393 | icicle fringe down both limbs, bigger tip crowns (1e0549d) | viking.ice_archer.b | approved
-393 | rig: sail out, short bare mast, yard, sheets (fe36dfc + 9980e94, reverted 62d09d2/c7c8c0a) | viking.longship.a | rejected
-393 | bear-head hood and fur drape, horned helm off (b7b4463 + 1df50c9) | viking.jarl.a | approved
-393 | flight: hover full weight from spawn + wall clamp, swoop gated to flying_melee (455eece) | viking.valkyrie.c | approved
 394 | oars, not a rig: mast/sail/yard out, three dark oars with broad leaf blades (708a90c + a61028b) | viking.longship.a | approved
 394 | idle grip: both bearded axes stood upright at his sides, gated on a pair (ab4c5e2 + 1add642) | viking.berserker.b | approved
 394 | full-face Norse helm: dome, brow band, mask, cheek guards, nasal (df2b922) | viking.brawler.a | approved
@@ -50,6 +43,11 @@ for 25 iterations.
 398 | ice crown of 4 uneven shards + 3 barbs + 10 tetra flakes (42cf51c) | viking.ice_archer.c | approved
 398 | brown oar timber, narrower blade, stout crew sunk to the deck plank (b94068d) | viking.longship.b | approved
 398 | [R] beard foot to the collarbone, 4-link bolt on the drape, gold rings, white skirt (4778c43) | ancient.zeus.a | approved
+399 | the Brawler's leg kit on his own limb boxes (52ba964) | viking.berserker.a | approved
+399 | orange-gold hue, boltTop .72, links 7.5 cm proud (feff7d2 + 860ea63, reverted aa36ed2/9849d90) | ancient.zeus.a | rejected
+399 | frost ribbon of three flat tetra shards swept along the shaft (2684991, reverted 084f002) | viking.ice_archer.c | rejected
+399 | fur band over the instep: pad 1.3/.34/.9, 5x3 lumps .44, 16 shards .4 (d901df3 + 661f909) | farmer.halfling.a | approved
+399 | paddle head .34/.2 on a .neck .1, flat .25; crew feet .3, top 1.19 (4aec762 + 116f015) | viking.longship.b | approved
 
 ## Spent (never retry as [P])
 
@@ -68,18 +66,18 @@ ancient.* 387-388 rows (ZEUS_BEARD/LOCKS/HAIR, SNAKE_LIVE, BIG_HEADBUTT, SARISSA
 viking.* 392-394 rows (BEARDED_AXE + _CARRY, JARL_AXE, LEAP_AIR, HEADBUTT, LONGSHIP_TIMBER/SHIELDS, HEADBUTTER_KIT/BRAID, BERSERKER_BELT, ICE_ARCHER_CAP, CHOP_JARL, LONGSHIP_HURL, FROST, BRAWLER_LEGS, PAIR_AXE_FACE, OFF_AXE, BRAWLER_HELM, JARL_PELT, VALKYRIE_WINGS_LAYERED, Brawler board) | compacted 398 | 397 | approved | values: git show 4778c43:loop/LEDGER.md
 proceduralAnimation.ts:HALFLING_STANCE (tilt, stride, lean, spread, ankle, knee) | .02, .03, .03, .52, .34, .03 | 398 | approved | .02, .05, .03, .34, no ankle, .02 (397); hashed idle stance (sunk)
 bodyBuilder.ts:shinLength (optional lower-leg stretch on top of legLength) | halfling 1.95 | 398 | approved | halfling 1.5 (397)
-farmerDress.ts:HALFLING_TUFT (clumps, clump, from, to, sink, inX, spikes, spike, spikeWide, lean) | 5,.62,-.5,.3,.22,.55,10,.42,.2,.55 | 391 | approved | rooted at c.y on the toe top (391); 5,.6,-.5,.3,.22,.45 (390 rejected [P]); HALFLING_FEET clump 1.35 tufts 9
+farmerDress.ts:HALFLING_TUFT (top, padX/padY/padZ, across, rows, clump, spread, from/to, spikes, spike, lean) | .42, 1.3/.34/.9, 5, 3, .44, .92, .05/.86, 16, .4, .8 | 399 | approved | 5,.62,-.5,.3,.22,.55,10,.42,.2,.55 (391, rooted at c.y on the toe top); 5,.6,-.5,.3,.22,.45 (390 rejected [P]); HALFLING_FEET clump 1.35 tufts 9
 farmerDress.ts:HALFLING_VEST_CUT (light, shade, glow) | .3, 1, .1 | 391 | approved | 0,.97,.04 (390); .3,1,.1 + veeDeep .6 vee .3 [S] 390 rejected (one-sided V vanished); vest box, vestLight .45
 proceduralAnimation.ts:JUMP_CHARGE (rise, swoopRise) | 8, 4.5 | 393 | pending | swoopRise retired with the valkyrie revert (392); teleport (391)
 proceduralAnimation.ts:FLY (lift, bob, rate, beat, thigh, knee) | .34, .02, 2, .34, .5, 1.0 | 393 | pending | 392 weight eased up from 0 (rejected)
-vehicleBuilder.ts:LONGSHIP_OARS (long, thick, blade, bladeWide, stem, flat, lean, timber) | 1.75, .055, .5, .3, .07, .17, -.13/.05/.16, .52/.34/.19 self-lit .16 | 398 | approved | bladeWide .42 near-black (397); spread/across retired to LONGSHIP_CREW (394)
-vehicleBuilder.ts:LONGSHIP_CREW (at z, across x, feet, raise, spread, elbow, butt, top, horn, stock) | -.62/.02/.66, -.1/.06/-.02, .44, -.5, .34, -.55, .62, 1.05, 3.2, bulk 1.3 head 1.35 | 398 | approved | feet .64, top 1.13, horn 1.5, slim (395)
+vehicleBuilder.ts:LONGSHIP_OARS (long, thick, blade, bladeWide, neck, stem, flat, lean, timber) | 1.75, .055, .34, .2, .1, .07, .25, -.13/.05/.16, .52/.34/.19 self-lit .16 | 399 | approved | 1.75, .055, .5, .3, -.07, .17 (398); bladeWide .42 near-black (397); spread/across retired to LONGSHIP_CREW (394)
+vehicleBuilder.ts:LONGSHIP_CREW (at z, across x, feet, raise, spread, elbow, butt, top, horn, stock) | -.62/.02/.66, -.1/.06/-.02, .3, -.5, .34, -.55, .62, 1.19, 3.2, bulk 1.3 head 1.35 | 399 | approved | feet .44, top 1.05 (398); feet .64, top 1.13, horn 1.5, slim (395)
 propBuilder.ts:ICE_BOW (long, thick, taper, shards, shard, crown, fringe, fringeLen) | 1, .062, .45, 4, .16, 2.6, 6, .15 | 393 | pending | 3, .085, 1.9, no fringe (392)
 ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare) on the hip joint | -.3, .03, 1.1, 1.22, 1.12 | 389 | approved | 386 band round the trunk base (MINO_SCROLL tall .24 at .04)
 vikingDress.ts:BERSERKER_ARMPITS (in, across, drop, arc, front, tufts, len, wide, lean, splay, glow) | .95, .16, .02, .12, .95, 6, .52, .26, .3, .5, .24 | 398 | approved | .82, -.16, .99 on the trunk's front face (397)
 vikingDress.ts:VIKING_BEARD (burnTop, burn, jaw, jawY, jawZ, locks, lockLong, braidLong, band, tuft; per cut jaw/jawY/jawZ, stacheLow/stacheZ, burns) | .2, .22, 1.2/.6/.62, .66, .6, 5, .26, .3, .09, .16; brawler 1.5/.95/.8 at 1.0 z .55, stache .62/1.25, no burns | 398 | approved | brawler 1.38/.74/.82 at 1.06 z .78 (396); berserker cut .9 wide 1.12 tip .48 braid
 vikingDress.ts:BRAWLER_HELM (domeWide, domeTall, domeRise, domeSlice, band, bandProud, eyeTop, maskTop, maskBottom, maskWide, maskDepth, cheek, cheekTop, cheekDeep, nasal, nasalLow, nasalProud, cheekBottom, glow) | 1.14, .7, .5, .6, .14, 1.08, .42, -.18, -.52, 1.03, 1.04, .16, .3, .92, .24, -.2, .11, -1.02, .1 | 398 | approved | maskBottom -1.02 (394)
-projectileSystem.ts:ICE_ARROW (head, wide, spikes, spike, spikeOut, barbs, barb, frost, frostSize, frostLong, frostOpen, frostShrink) | .34, .2, 4, .66, .42, 3, .5, 10, .05, .52, 2.4, .6 | 398 | approved | .34, .18, 4 balls on the shaft (397)
-ancientDress.ts:ZEUS_TOGA (boltTop, boltTr, boltX, boltOut, boltWide, boltGold; rings, ring, beltAt, ringProud; gold) | .9, .34, .62, .95, .11, (.95,.22,.03) self-lit .55; 3, .075, .06, 1.14, (.88,.58,.1) .85 | 398 | approved | 389-391: unlit 1.25/.72/.2 bolt, rings .045 at 1.12, 3 bands (391)
+projectileSystem.ts:ICE_ARROW (head, wide, spikes, spike, spikeOut, barbs, barb, frost, frostSize, frostLong, frostOpen, frostShrink) | .34, .2, 4, .66, .42, 3, .5, 10, .05, .52, 2.4, .6 | 398 | approved | 399 trail 3/trailLong .3/trailWide .1/flat .42 as a ribbon (rejected, reverted 084f002); .34, .18, 4 balls on the shaft (397)
+ancientDress.ts:ZEUS_TOGA (boltTop, boltTr, boltX, boltOut, boltWide, boltGold; rings, ring, beltAt, ringProud; gold) | .9, .34, .62, .95, .11, (.95,.22,.03) self-lit .55; 3, .075, .06, 1.14, (.88,.58,.1) .85 | 398 | approved | 399 boltTop .72, (1,.55,.1) at .55, links .075 proud (rejected, reverted aa36ed2/9849d90); 389-391: unlit 1.25/.72/.2 bolt, rings .045 at 1.12, 3 bands (391)
 ancientDress.ts:ZEUS_BEARD (jaw, jawY, jawZ, bib, bibY, bibZ, rows, perRow, top, foot) | 1.22/.7/.72, .62, .5, .95/.78/.55, 1.42, .62, 6, 7, -.25, -1.95 | 398 | approved | foot -2.65, bib .95 at 1.75 (387)
 unitFactory.ts:zeusSkirt (material) | unlit white, out of the glow | 398 | approved | ZEUS_TUNIC_COLOR cloth (385)

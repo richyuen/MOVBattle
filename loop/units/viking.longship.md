@@ -1,19 +1,17 @@
 # viking.longship
-Status: open   Audited: 391 (re), 395, 396, 397, 398   Done: -
+Status: open   Audited: 391 (re), 395, 396, 397, 398, 399   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (3 since 391)
+a FAIL (4 since 391)
  1. hull/prow in _idle: the dragon head reads, but the hull is a pale flat raft of stacked beams, the deck at gunwale height, the stern a bent stick - TABS: a deep dark-brown clinker hull curving up into the stem and a rolled scroll stern (ref: .jpg, .red.png)
  4. composition/scale in _idle/lineup_viking: a ground-level box ~1.5x a man - TABS: held overhead by carriers, ~3x a man, three oarsmen aboard (ref: .jpg, card "six units")
- (struck 2 at 394: the rig; struck 3 at 395: the shields)
-b FAIL (2 since 391)
- 1. crew oars in _idle: the oars are warm brown now and the men stouter with long horns, but the blades are still about 1.5 heads wide and two crew-heights tall, and the crew are cut off at the belt by the deck, not sunk to the chest in the hull - TABS: a brown paddle about a head wide, stocky horned oarsmen sunk to the chest in the hull (ref: .jpg)
+  (struck 2 at 394: the rig; struck 3 at 395: the shields)
+b PASS (399) [[S] 399 the paddle head on a neck + crew sunk to the chest (4aec762 + 116f015) struck b.1]
 c PASS (396)
  1. throw + AoE + disembark in _release/_flight (struck 396: the hull is hurled, the crash crushes and the oarsmen stand off the deck)
 d PASS (cost 1000, hp 17.46x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] b crew - blocker 1: a rounded paddle head one head wide on a neck in place of the leaf blade, and the crew sunk deeper (to the chest, not the belt) - ref: .jpg - ours: unit_viking.longship_idle.png
-2. [S] a deep hull - blocker 1: a deep dark clinker hull curving up into the stem, a rolled stern - ref: .jpg - ours: unit_viking.longship_idle.png
-3. [S] a composition - blocker 4: a ship ~3x a man held overhead by carriers - ref: .jpg - ours: lineup_viking.png
+1. [S] a deep hull - blocker 1: dark clinker hull sides rising above the deck into a curved stem and a rolled scroll stern - ref: .jpg - ours: unit_viking.longship_idle.png
+2. [S] a composition - blocker 4: the hull at ~3x a man held overhead between two carriers in the lineup - ref: .jpg - ours: lineup_viking.png
 ## Attempts (iter | gap | criterion | verdict)
 392 | clinker hull [S] (b90ffb3) | a | approved (a.1 stands)
 393 | rig [S] (fe36dfc + 9980e94, reverted) | a | rejected
@@ -22,10 +20,11 @@ d PASS (cost 1000, hp 17.46x)
 395 | team shields, dark half, rim, bronze boss [S] (512a007) | a | approved (struck a.3)
 396 | hurl + AoE crush + oarsmen disembark [S] (1946694) | c | approved (c PASS)
 397 | one faceted oval paddle blade, not a two-cone spearhead [S] (4d811b7) | b | approved (b.1 narrowed)
-398 | brown oar timber, narrower blade, stout crew sunk to the deck plank, tall horns (b94068d) | b | approved (b.1 stands: blades too big, crew cut at the belt)
+398 | brown oar timber, narrower blade, stout crew sunk to the deck plank (b94068d) | b | approved (b.1 stands)
+399 | paddle head one head wide on a .neck + crew feet .44 -> .3 (4aec762 + 116f015) | b | approved (b PASS)
 ## Rejected (last 4)
 - rig [S] [1] - 393: a short mast, yard and two sheets - the rig is not in the reference at all; the T-frame reads as a gallows
 ## Notes (max 3 lines)
-- 398: LONGSHIP_CREW feet .44 (the deck plank at .625 and the gunwale at .70 cut them at the waist), horn 3.2, crew bulk 1.3/head 1.35; OARS blade .5 wide .3 in the hull's brown, self-lit.
-- The critic wants the deck's cut at the chest, so feet must drop further (to ~.2) with the oars re-hung; LONGSHIP_OARS row 397 must not be nudged.
+- 399: OARS blade .34 tall/.2 wide on a .neck .1, flat .25; LONGSHIP_CREW feet .3, top 1.19 (probe: the torso is .509..721, the gunwale .70 cuts the chest now).
+- 399 critic: the crew are cut by a flat deck at gunwale height, not a hull wall rising above it (that is a.1's element), and the oar shafts are shorter than TABS's 2.5 crew heights (not b).
 - Carriers are still absent: that is a.4, not b.
