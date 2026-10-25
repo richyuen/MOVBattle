@@ -842,14 +842,18 @@ export function brawlerHelm(scene: Scene, body: ArticulatedBody, teamColor: Colo
  */
 const VALKYRIE_HELM = {
   domeWide: 1.16, domeTall: 0.72, domeRise: 0.46, domeSlice: 0.55,
-  band: 0.13, bandProud: 1.07, eyeTop: 0.42,
-  crestTall: 0.58, crestWide: 0.15, crestRise: 1.12,
-  mountWide: 0.1, mountTall: 0.5, mountOut: 1.04, mountUp: 0.36, mountBack: 0.12, mountCant: 0.3,
+  band: 0.14, bandProud: 1.07, eyeTop: 0.56,
+  crestTall: 0.95, crestWide: 0.2, crestRise: 1.12, crestFlat: 0.55,
+  mountWide: 0.16, mountTall: 0.6, mountOut: 1.04, mountUp: 0.36, mountBack: 0.12, mountCant: 0.3,
+  feathers: 5, featherLen: 1.15, featherWide: 0.22, featherFlat: 0.34, featherSpread: 0.2, featherFan: 0.62,
+  featherBack: 0.1, featherSweep: 0.5, featherUp: 0.42,
   glow: 0.1, crestGlow: 0.12, bronzeGlow: 0.24,
 };
 const VALKYRIE_BRONZE = new Color3(0.72, 0.52, 0.2);
+/** The helm's cream feathers (viking.valkyrie.red.png): unlit with emissive = colour so they hold cream in the dome's shade (LESSONS). */
+const VALKYRIE_FEATHER = new Color3(0.86, 0.74, 0.5);
 
-/** The Valkyrie's winged helm: dark team dome, bronze brow band and wing mounts, and a tall pointed team-dark crest (spec at VALKYRIE_HELM). */
+/** The Valkyrie's winged helm: dark team dome, bronze brow band and wing mounts, cream feather wings, and a tall pointed team-dark crest (spec at VALKYRIE_HELM). */
 export function valkyrieHelm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const V = VALKYRIE_HELM;
   const mf = getMaterialFactory();
@@ -857,6 +861,7 @@ export function valkyrieHelm(scene: Scene, body: ArticulatedBody, teamColor: Col
   const helm = mf.get("cloth", teamColor.scale(0.72), { emissiveIntensity: V.glow });
   const crest = mf.get("cloth", teamColor.scale(0.5), { emissiveIntensity: V.crestGlow });
   const bronze = mf.get("cloth", VALKYRIE_BRONZE, { emissiveIntensity: V.bronzeGlow });
+  const feather = mf.get("unlit", VALKYRIE_FEATHER, { emissive: VALKYRIE_FEATHER });
   const out: Mesh[] = [];
   const put = (m: Mesh, material: typeof helm): Mesh => {
     m.material = material;
@@ -873,9 +878,12 @@ export function valkyrieHelm(scene: Scene, body: ArticulatedBody, teamColor: Col
     width: 2 * e.x * V.bandProud, height: e.y * V.band, depth: 2 * e.z * V.bandProud,
   }, scene), bronze);
   band.position.y = e.y * V.eyeTop + e.y * V.band * 0.5;
+  // [S] 401 the crest a tall flat fin off the crown (critic 400: "a nub"): a four-sided blade, .crestFlat through it, leaning back a hair
   const spike = put(MeshBuilder.CreateCylinder("valkyrieHelmCrest", {
     height: e.y * V.crestTall, diameterTop: 0, diameterBottom: 2 * e.x * V.crestWide, tessellation: 4,
   }, scene), crest);
+  spike.scaling.z = V.crestFlat;
+  spike.rotation.x = -0.12;
   spike.position.y = e.y * V.crestRise + e.y * V.crestTall * 0.5;
   for (const side of [-1, 1]) {
     const mount = put(MeshBuilder.CreateBox("valkyrieHelmMount", {
@@ -883,6 +891,31 @@ export function valkyrieHelm(scene: Scene, body: ArticulatedBody, teamColor: Col
     }, scene), bronze);
     mount.position.set(side * e.x * V.mountOut, e.y * V.mountUp, -e.z * V.mountBack);
     mount.rotation.z = side * V.mountCant;
+    /*
+     * [S] 401 the cream feather wings (critic 400: "no cream feathers"; viking.valkyrie.red.png: a fan of five broad cream feathers per side, springing
+     * from the bronze mount at the temple and sweeping up and back over the dome). Each feather is a flat four-sided blade .featherLen H long, .featherWide
+     * W across at its root and .featherFlat through it, fanned .featherFan rad apart from the mount and swept .featherSweep back, so the five overlap into
+     * one wing. Their roots sit at the mount's top, .featherUp H above the eye line.
+     */
+    for (let i = 0; i < V.feathers; i++) {
+      const t = V.feathers > 1 ? i / (V.feathers - 1) : 0;
+      const len = e.y * V.featherLen * (1 - 0.3 * t);
+      const fan = V.featherSpread + V.featherFan * t;
+      const back = V.featherBack + V.featherSweep * t;
+      const dir = new Vector3(side * Math.sin(fan) * Math.cos(back), Math.cos(fan) * Math.cos(back), -Math.sin(back)).normalize();
+      const blade = put(MeshBuilder.CreateCylinder("valkyrieHelmFeather", {
+        height: len, diameterTop: 0, diameterBottom: 2 * e.x * V.featherWide * (1 - 0.18 * t), tessellation: 4,
+      }, scene), feather);
+      blade.scaling.z = V.featherFlat;
+      blade.rotation.z = -side * fan;
+      blade.rotation.x = -back;
+      blade.position.set(
+        side * e.x * V.mountOut + dir.x * len * 0.5,
+        e.y * V.mountUp + e.y * V.featherUp + dir.y * len * 0.5,
+        -e.z * V.mountBack + dir.z * len * 0.5,
+      );
+      scene.getGlowLayerByName("glow")?.addExcludedMesh(blade);
+    }
   }
   return out;
 }
