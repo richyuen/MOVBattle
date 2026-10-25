@@ -20,7 +20,7 @@ drop a lesson once it is a comment at the code it describes.
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture: rerun `stats.mjs` after the final capture.
-- Probes live in `loop/scripts/probes/` (run from the repo root, `--build` after a source change, each starts its own vite preview on its own port): probe_bbox (--unit --pat --frame=torso --ylo --yhi: vertex bboxes), probe_mat <unit> <name regex> (meshes + materials), probe_near (scene meshes and particle systems near the unit), probe_zeus_shot (--unit --aim=head|torso|root --dist --yaw: close-up PNGs), probe_close (--unit --aim=head|torso|y:<root y> --dist --yaw, UI hidden via capture-mode after resetBattle, frameCamera then renderWhenReady; --noglow kills the GlowLayer to read a swatch's true colour), probe_head, probe_local, and per-unit ones (_halfling, _wheelbarrow, _sarissa, _mino, _hoplite, _shield, _potion).
+- Probes live in `loop/scripts/probes/` (run from the repo root, `--build` after a source change, each starts its own vite preview on its own port): probe_bbox (--unit --pat --frame=torso --ylo --yhi: vertex bboxes), probe_mat <unit> <name regex>, probe_near, probe_zeus_shot, probe_close (--aim=head|torso|y:<root y> --dist --yaw, UI hidden via capture-mode after resetBattle; --noglow reads a swatch's true colour), probe_head, probe_local, and per-unit ones.
 - A flat plate on a dress ribbon needs 7+ cm of stand-off, not 3: the ribbon's chords dip inside the rim sampled for its surface, so a bolt 3.5 cm proud read as a ghost (398/399 zeus).
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
 - A ParticleSystem shares one texture: dispose(false), or later particles never render.
@@ -33,6 +33,7 @@ drop a lesson once it is a comment at the code it describes.
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - One gap, one commit: a bundled sha cannot be reverted singly, so a REJECT takes the approved gaps with it (394).
 - The critic judges the named shot: an element hidden behind another mesh is not there (392).
+- Hiding the thrower at a transition reads as a pop in the take-off shot: the frame must still show who threw it (401 longship, CONFIRM).
 
 ## Rig and dress
 - aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
@@ -48,4 +49,5 @@ drop a lesson once it is a comment at the code it describes.
 - A foot mesh is a merged cuff + toe box: its bbox middle is the ankle cuff's middle, so a tuft rooted at c.y is buried; the instep's top is lo.y + ~.42 of its height (399 halfling).
 - A critic's "the X's kit" ask is often cheapest as a call to the other unit's dress function, which adapts to the receiver's own limb boxes (399 berserker/brawlerLegs).
 - A pelvis (hip-joint) pitch carries the legs with it: +1.2 rad lays the body flat - head forward, face down, legs trailing - so a whole-body dive pose comes from the hip joint alone (400 headbutter).
+- A piece hung in the head's frame cannot run on down the torso: at the chest's z it sits inside the chest box - build the torso run as its own torso-parented piece (401 jarl).
 - A beast hood's ellipsoid skull reads as a flat cap unless its features stand proud of the ellipsoid's own front at their height: sample the skull's front z at the eye's y, not one z for all (400 jarl).

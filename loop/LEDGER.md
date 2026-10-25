@@ -12,19 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-395 | three Long-Boaters standing at their oars, each oar hung off a fist (ffa5a93) | viking.longship.b | approved
-395 | team shields: dark half, thin brown rim, bronze boss, four a side (512a007) | viking.longship.a | approved
-395 | big dark beard + moustache, plaited braid and ties (ad8f6cf) | viking.berserker.a | approved
-395 | dark beard from under the mask (d4bac61, reverted 0922c08) | viking.brawler.a | rejected
-395 | belt, fur-cuffed bracers, cream fur boot cuffs over brown boots (607fd74) | viking.headbutter.a | approved
-395 | ice crust: 4 pale-blue shards on trunk/head/arms/thighs while frozen (9400138) | viking.ice_archer.c | approved
-396 | boots over the feet + warm puffy fur rolls (cb83fbe) | viking.headbutter.a | approved
-396 | cream fur belt + big navy Landfall buckle (180a267 + 97c6946) | viking.berserker.a | approved
-396 | round team cap, pale fur brim, snow pom (d84c723) | viking.ice_archer.a | approved
-396 | beard hung under the mask, jaw wider than the cheek guards (3c8562d + 0ae74ce) | viking.brawler.a | approved
-396 | own chop: lands .42 m under the crown, trunk over the man (6b98556) | viking.jarl.c | approved
-396 | hurl + AoE crush + oarsmen disembark (1946694) | viking.longship.c | approved
-396 | [R] 1.92 build, flat girdle inlays, front pauldron scroll (a76c891, reverted 32577c2) | ancient.minotaur.a | rejected
 397 | [R] thrower's thigh stretched to a knee point, shins hanging (2e73091 + 2c2cc8b, reverted 8f53efc) | farmer.wheelbarrow.a | rejected
 397 | shinLength 1.5 lower leg + hip offset .34 (4fe6fd1) | farmer.halfling.a | approved
 397 | one faceted oval paddle blade per oar (4d811b7) | viking.longship.b | approved
@@ -50,6 +37,13 @@ for 25 iterations.
 400 | her own helm: dark team dome, bronze brow band, crest, temple mounts (715aff5) | viking.valkyrie.a | approved
 400 | deep hull: 4 strakes, deck .4, deep timber, bow stem, rolled scroll stern (c0da83d) | viking.longship.a | approved
 400 | [R] bear-head hood rebuilt: rounded skull, proud eyes, centred snout, teeth, curtains (f80dd04) | viking.jarl.a | approved
+401 | the boat under `ship` at 1.8x, two carriers under the keel, dropped at the hurl (e0fbb2c) | viking.longship.a | approved
+401 | pelt curtains to the hips: small head curtains + two torso chest strips + a rounded mantle (fd578de + 9c1b402) | viking.jarl.a | approved
+401 | cream feather fans, eye-line bronze band, tall flat crest on her own helm (c0c74ea + cbecbca) | viking.valkyrie.a | approved
+401 | the bead flakes out, nine icicles as a comb under the shaft (5509051) | viking.ice_archer.c | approved
+401 | ram: reach .75 m, the sprawl .14 s after the blow, both arms swept back (41852fd + fde5dd6) | viking.headbutter.c | approved
+401 | bracer fur onto the bracer's top, belt down to the waist (7f8b218) | viking.headbutter.a | approved
+401 | a second wider bib over the chest (05ccbb8 + 6f22d10, reverted a1edda8/3d01ac1) | viking.brawler.a | rejected
 
 ## Spent (never retry as [P])
 
@@ -78,16 +72,17 @@ vehicleBuilder.ts:LONGSHIP_CREW (at z, across x, feet, raise, spread, elbow, but
 propBuilder.ts:ICE_BOW (long, thick, taper, shards, shard, crown, fringe, fringeLen) | 1, .062, .45, 4, .16, 2.6, 6, .15 | 393 | pending | 3, .085, 1.9, no fringe (392)
 ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare) on the hip joint | -.3, .03, 1.1, 1.22, 1.12 | 389 | approved | 386 band round the trunk base (MINO_SCROLL tall .24 at .04)
 vikingDress.ts:BERSERKER_ARMPITS (in, across, drop, arc, front, tufts, len, wide, lean, splay, glow) | .95, .16, .02, .12, .95, 6, .52, .26, .3, .5, .24 | 398 | approved | .82, -.16, .99 on the trunk's front face (397)
-vikingDress.ts:VIKING_BEARD (burnTop, burn, jaw, jawY, jawZ, locks, lockLong, braidLong, band, tuft; per cut jaw/jawY/jawZ, stacheLow/stacheZ, burns) | .2, .22, 1.2/.6/.62, .66, .6, 5, .26, .3, .09, .16; brawler 1.5/.95/.8 at 1.0 z .55, stache .62/1.25, no burns | 398 | approved | brawler 1.38/.74/.82 at 1.06 z .78 (396); berserker cut .9 wide 1.12 tip .48 braid
+vikingDress.ts:VIKING_BEARD (burnTop, burn, jaw, jawY, jawZ, locks, lockLong, braidLong, band, tuft; per cut jaw/jawY/jawZ, stacheLow/stacheZ, burns; bib2/bib2Wide/bib2Lean) | .2, .22, 1.2/.6/.62, .66, .6, 5, .26, .3, .09, .16; brawler 1.5/.95/.8 at 1.0 z .55, stache .62/1.25, no burns; bib2 unused | 401 | approved | brawler 1.38/.74/.82 at 1.06 z .78 (396); the brawler's bib2 0.9/1.7/lean .55 rejected and reverted at 401; berserker cut .9 wide 1.12 tip .48 braid
 vikingDress.ts:BRAWLER_HELM (domeWide, domeTall, domeRise, domeSlice, band, bandProud, eyeTop, maskTop, maskBottom, maskWide, maskDepth, cheek, cheekTop, cheekDeep, nasal, nasalLow, nasalProud, cheekBottom, glow) | 1.14, .7, .5, .6, .14, 1.08, .42, -.18, -.52, 1.03, 1.04, .16, .3, .92, .24, -.2, .11, -1.02, .1 | 398 | approved | maskBottom -1.02 (394)
-projectileSystem.ts:ICE_ARROW (head, wide, spikes, spike, spikeOut, barbs, barb, frost, frostSize, frostLong, frostOpen, frostShrink; icles, icleFrom, icleSpan, icleLong, icleVary, icleWide, icleOut, icleRake, icleDrop) | .34, .2, 4, .66, .42, 3, .5, 10, .05, .52, 2.4, .6; 4, .3, .6, .17, .6, .062, .3, .28, .02 | 400 | approved | 399 trail 3/trailLong .3/trailWide .1/flat .42 as a ribbon (rejected, reverted 084f002); .34, .18, 4 balls on the shaft (397); no icicles (398)
+projectileSystem.ts:ICE_ARROW (head, wide, spikes, spike, spikeOut, barbs, barb; icles, icleFrom, icleSpan, icleLong, icleVary, icleWide, icleOut, icleRake, icleDrop) | .34, .2, 4, .66, .42, 3, .5; 9, .16, .62, .21, .62, .075, .55, .24, .02 | 401 | approved | .34, .18, 4 balls on the shaft (397); 4 icles at .3/.6/.17/.062 (400); frost 10 flakes (retired 401); trail ribbon (399 rejected, reverted 084f002)
 ancientDress.ts:ZEUS_TOGA (boltTop, boltTr, boltX, boltOut, boltWide, boltStand; boltGold unlit emissive = colour; rings, ring, beltAt, ringProud; gold) | .98, .3, .66, .98, .15, .075; (.62,.26,.03); 3, .075, .06, 1.14, (.88,.58,.1) .85 | 400 | approved | 399 boltTop .72, (1,.55,.1) at .55 lit, links .075 proud (rejected, reverted aa36ed2/9849d90); 398 .9/.34/.62/.95/.11, (.95,.22,.03) self-lit .55; 389-391 unlit 1.25/.72/.2 bolt, rings .045 at 1.12 (391)
 ancientDress.ts:ZEUS_BEARD (jaw, jawY, jawZ, bib, bibY, bibZ, rows, perRow, top, foot) | 1.22/.7/.72, .62, .5, .95/.78/.55, 1.42, .62, 6, 7, -.25, -1.95 | 398 | approved | foot -2.65, bib .95 at 1.75 (387)
 unitFactory.ts:zeusSkirt (material) | unlit white, out of the glow | 398 | approved | ZEUS_TUNIC_COLOR cloth (385)
-proceduralAnimation.ts:DIVE (tip, trunk, head, arms, elbow, knee, in, out) | 1.22, .16, .62, .45, .5, .18, 18, 26 | 400 | approved | new (400); the ram was the BULL_CHARGE lean until then
-simulationSystem.ts:HEADBUTT (within, windup, recover, ahead, radius, damage, fling, lift, edge, lunge, dive) | .55, .28, .5, .5, 1.15, 18, 5, 4.5, .5, .5, 3.0 | 400 | approved | lunge .5 with no dive (394)
+proceduralAnimation.ts:DIVE (tip, trunk, head, arms, elbow, knee, in, out) | 1.22, .16, .62, 2.3, .35, .18, 18, 26 | 401 | approved | 1.22,.16,.62,.45,.5,.18,18,26 (400); new (400, the ram was the BULL_CHARGE lean until then)
+simulationSystem.ts:HEADBUTT (within, windup, recover, ahead, radius, damage, fling, lift, edge, lunge, dive, reach) + HEADBUTT_SPRAWL.delay | .55, .28, .5, .5, 1.15, 18, 5, 4.5, .5, .5, 3.0, .75; .14 s | 401 | approved | .5 reach with the sprawl at the blow (400); lunge .5 with no dive (394)
 runtimeUnit.ts:headbuttSprawl (flat s, downed s, recovering s) | .36, .22, .5 | 400 | approved | the light profile's topple+down+recover ~2.6 s (before 400)
-vikingDress.ts:HEADBUTTER_KIT (fur unlit colour, buckle w share, buckleProud) | (0.78,0.58,0.34) emissive = colour, .5, 1.35 | 400 | approved | lit cloth (0.9,0.7,0.42) glow .14, buckle .22 at 1.24 (396)
-vikingDress.ts:VALKYRIE_HELM (domeWide, domeTall, domeRise, slice; band, bandProud, eyeTop; crestTall, crestWide, crestRise; mountWide, mountTall, mountOut, mountUp, mountBack, mountCant) | 1.16, .72, .46, .55; .13, 1.07, .42; .58, .15, 1.12; .1, .5, 1.04, .36, .12, .3 | 400 | approved | shared plume_helmet (before 400)
+vikingDress.ts:HEADBUTTER_KIT (fur unlit colour, buckle w share, buckleProud; beltTall, beltAt, beltOut; furFrom/furOut/furThick) | (0.78,0.58,0.34) emissive = colour, .5, 1.35; .3, -.42, 1.3; .16, 1.62, .26 | 401 | approved | furFrom -.06 furOut 1.54 thick .22, belt .26 tall at .1 out 1.24 (400); lit cloth fur, buckle .22 at 1.24 (396)
+vikingDress.ts:VALKYRIE_HELM (domeWide, domeTall, domeRise, slice; band, bandProud, eyeTop; crestTall, crestWide, crestRise, crestFlat; mountWide, mountTall, mountOut, mountUp, mountBack, mountCant; feathers, featherLen, featherWide, featherFlat, featherSpread, featherFan, featherBack, featherSweep, featherUp) | 1.16, .72, .46, .55; .14, 1.07, .56; .95, .2, 1.12, .55; .16, .6, 1.04, .36, .12, .3; 5, 2.1, .3, .34, .24, .78, .08, .42, .5 | 401 | approved | crest .58/.15 no feathers, band eyeTop .42, mounts .1/.5 (400); shared plume_helmet (before 400)
 vehicleBuilder.ts:LONGSHIP_HULL (rows, rowStep, strake, keelY, deck, wall, stem; wood, dark, self-light) | 4, .13, .15, .2, .4, .705, .9; (.2,.11,.055), (.13,.07,.035), .35 | 400 | approved | 3 strakes .18 at .29/.44/.59, deck .6, rail .66, wood (.62,.42,.25) (392)
-vikingDress.ts:JARL_PELT (skullW/H/D, skullY/Z; eye, eyeOut, eyeY, eyeProud; muzzle*, nose*, teeth*; ear*; curtain*, tufts; drape*) | 1.3/.95/1.3 at .58/-.1; .24, .48, .6, 1.2; .44/.32/.34 at .12 z 1.24 tipped .34; .26/.13 z 1.24; 3 at -.2 z 1.16; .3W x .8D at 1.12 W z -.16, 3; drapeDrop 1.0 | 400 | approved | 393/394 crate skull and side panels (394 rejected, reverted 1ec0c3a)
+vehicleBuilder.ts:LONGSHIP_SHIP (`ship` scale, carrier z, carrier scale, carrier raise/spread/elbow) | 1.8, +-.98, .98, -2.62/.2/-.1 | 401 | approved | the hull and crew were root children at scale 1 (400); no carriers
+vikingDress.ts:JARL_PELT (skullW/H/D, skullY/Z; eye, eyeOut, eyeY, eyeProud; muzzle*, nose*, teeth*; ear*; curtain*, tufts; drape*; mantle*; chest*) | 1.3/.95/1.3 at .58/-.1; .24, .48, .6, 1.2; .44/.32/.34 at .12 z 1.24 tipped .34; .26/.13 z 1.24; 3 at -.2 z 1.16; .42W x .8D at 1.12 W z -.06, 4; drapeDrop .88; mantle .86/.24/.68 at .94; chest .2W at .23 out, .12 deep, .54 proud, .98 drop, 3 tufts | 401 | approved | curtainW .3 z -.16 foot -1.1, drapeDrop 1.0, no mantle or chest strips (400); 393/394 crate skull and side panels (394 rejected, reverted 1ec0c3a)
