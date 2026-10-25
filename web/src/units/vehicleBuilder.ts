@@ -1981,10 +1981,12 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   const teamPrimary = makeMat(scene, color);
   // 392: the hull's timber is a warm mid-brown, two steps up from the old .46/.30/.16, and self-lit a little: under the deck's shadow the plain wood
   // read near black (LESSONS: lit timber under an overhang loses its colour; give it a small emissive)
-  const woodColor = new Color3(0.62, 0.42, 0.25);
-  const darkColor = new Color3(0.44, 0.29, 0.17);
-  const wood = getMaterialFactory().get("wood", woodColor, { emissive: woodColor.scale(0.18) });
-  const darkWood = getMaterialFactory().get("wood", darkColor, { emissive: darkColor.scale(0.12) });
+  // 400: two steps DOWN again - .62/.42/.25 in sun read pale grey-taupe against the reference's rich brown hull (critic 399: "a pale flat raft"); the
+  // sky's IBL lifts a mid albedo to beige, so the hull takes a deep code value (.2/.11/.055) and a stronger self-light to keep its hue in the deck's shade
+  const woodColor = new Color3(0.2, 0.11, 0.055);
+  const darkColor = new Color3(0.13, 0.07, 0.035);
+  const wood = getMaterialFactory().get("wood", woodColor, { emissive: woodColor.scale(0.35) });
+  const darkWood = getMaterialFactory().get("wood", darkColor, { emissive: darkColor.scale(0.3) });
   const shieldMat = makeMat(scene, brighten(color, 0.08));
 
   /*
@@ -1993,16 +1995,22 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * than the one below, so the side is a stepped brown wall with the light in the laps; a flat three-sided stem closes each end to a point. The hull is
    * its own timber material (not the vehicle body material, which is the team colour): the team reads on the gunwale rails, the shields and the
    * operator. Brown .46/.30/.16 in linear space, dark keel .30/.18/.10 (LESSONS: timber keeps its own material).
+   * [S] 400 the deep hull (critic 399: "a pale flat raft of stacked beams, the deck at gunwale height, the stern a bent stick"): four strakes now rise
+   * .strakes rows above the keel, the deck dropped to .deck so the side stands .wall above it (the oarsmen are cut at the chest by a hull wall, not by a
+   * flat deck at the gunwale), the timber darkened two steps (.42/.26/.14 with a .18 self-light - the old .62/.42/.25 read pale grey-taupe in sun), a
+   * .stem post curving from the keel up into the dragon's neck, and a rolled scroll at the stern: two cylinders lying across the stern's head, the
+   * smaller one turned inside the bigger like a mat rolled up.
    */
+  const HULL = { rows: 4, rowStep: 0.13, strake: 0.15, keelY: 0.2, deck: 0.4, wall: 0.705, stem: 0.9, scroll: 0.13 };
   const keel = MeshBuilder.CreateBox("longshipKeel", { width: 0.18, height: 0.16, depth: 2.62 }, scene);
-  keel.position.set(0, 0.2, 0);
+  keel.position.set(0, HULL.keelY, 0);
   keel.parent = root;
   keel.material = darkWood;
   allMeshes.push(keel);
   for (const side of [-1, 1]) {
-    for (let row = 0; row < 3; row++) {
-      const strake = MeshBuilder.CreateBox("longshipStrake", { width: 0.09, height: 0.18, depth: 2.56 - row * 0.2 }, scene);
-      strake.position.set(side * (0.32 + row * 0.095), 0.29 + row * 0.15, 0);
+    for (let row = 0; row < HULL.rows; row++) {
+      const strake = MeshBuilder.CreateBox("longshipStrake", { width: 0.09, height: HULL.strake, depth: 2.56 - row * 0.16 }, scene);
+      strake.position.set(side * (0.32 + row * 0.08), 0.24 + row * HULL.rowStep, 0);
       strake.rotation.z = -side * 0.18;
       strake.parent = root;
       strake.material = wood;
@@ -2022,15 +2030,15 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   let gunwale: Mesh | null = null;
   for (const side of [-1, 1]) {
     const rail = MeshBuilder.CreateBox("longshipGunwale", { width: 0.12, height: 0.08, depth: 2.42 }, scene);
-    rail.position.set(side * 0.55, 0.66, 0);
+    rail.position.set(side * 0.6, HULL.wall + 0.03, 0);
     rail.parent = root;
     rail.material = teamPrimary;
     allMeshes.push(rail);
     gunwale ??= rail;
   }
 
-  const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.94, height: 0.05, depth: 2.34 }, scene);
-  deck.position.set(0, 0.6, 0);
+  const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.82, height: 0.05, depth: 2.34 }, scene);
+  deck.position.set(0, HULL.deck, 0);
   deck.parent = root;
   deck.material = darkWood;
   allMeshes.push(deck);
@@ -2204,14 +2212,37 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   }
   root.metadata = { ...(root.metadata ?? {}), longshipCrew: crewBodies };
 
-  for (const zOff of [-1.32, 1.34]) {
-    const post = MeshBuilder.CreateCylinder("longshipPost", { height: 0.7, diameter: 0.1, tessellation: 8 }, scene);
-    post.position.set(0, 0.78, zOff);
-    post.rotation.x = zOff > 0 ? -0.45 : 0.32;
-    post.parent = root;
-    post.material = darkWood;
-    allMeshes.push(post);
-  }
+  // [S] 400 the bow stem rises out of the keel into the dragon's neck (the old bow post was a bare stick beside the hull), and the stern carries a rolled
+  // scroll: a fat cylinder lying across the ship with a smaller one turned inside it, the end of a mat rolled up (critic 399: "the stern a bent stick")
+  const bowStem = MeshBuilder.CreateCylinder("longshipBowStem", { height: 1.02, diameterBottom: 0.26, diameterTop: 0.12, tessellation: 5 }, scene);
+  bowStem.position.set(0, 0.58, 1.28);
+  bowStem.rotation.x = -0.26;
+  bowStem.parent = root;
+  bowStem.material = wood;
+  allMeshes.push(bowStem);
+  const bowKnee = MeshBuilder.CreateBox("longshipBowKnee", { width: 0.2, height: 0.22, depth: 0.5 }, scene);
+  bowKnee.position.set(0, 0.24, 1.12);
+  bowKnee.parent = root;
+  bowKnee.material = darkWood;
+  allMeshes.push(bowKnee);
+  const sternPost = MeshBuilder.CreateCylinder("longshipSternPost", { height: 0.82, diameterBottom: 0.22, diameterTop: 0.14, tessellation: 5 }, scene);
+  sternPost.position.set(0, 0.56, -1.28);
+  sternPost.rotation.x = 0.3;
+  sternPost.parent = root;
+  sternPost.material = wood;
+  allMeshes.push(sternPost);
+  const scrollOuter = MeshBuilder.CreateCylinder("longshipScroll", { height: 0.36, diameter: 0.3, tessellation: 10 }, scene);
+  scrollOuter.rotation.z = Math.PI / 2;
+  scrollOuter.position.set(0, 1.0, -1.4);
+  scrollOuter.parent = root;
+  scrollOuter.material = wood;
+  allMeshes.push(scrollOuter);
+  const scrollInner = MeshBuilder.CreateCylinder("longshipScrollTurn", { height: 0.38, diameter: 0.17, tessellation: 10 }, scene);
+  scrollInner.rotation.z = Math.PI / 2;
+  scrollInner.position.set(0, 1.0, -1.47);
+  scrollInner.parent = root;
+  scrollInner.material = darkWood;
+  allMeshes.push(scrollInner);
 
   /*
    * [S] the carved dragon head over the bow and the curled stern (392; viking.longship.red.png: a tall brown head on the stem, a white eye on each side
@@ -2219,7 +2250,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * tapered snout over a dropped lower jaw with four teeth, two bead eyes, two horns; three short segments bent back make the curl.
    */
   const boneWhite = makeMat(scene, new Color3(0.93, 0.92, 0.86));
-  const neck = MeshBuilder.CreateBox("longshipDragonNeck", { width: 0.22, height: 0.66, depth: 0.16 }, scene);
+  const neck = MeshBuilder.CreateBox("longshipDragonNeck", { width: 0.18, height: 0.66, depth: 0.14 }, scene);
   neck.position.set(0, 0.9, 1.3);
   neck.rotation.x = -0.22;
   neck.parent = root;
@@ -2265,14 +2296,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     horn.material = darkWood;
     allMeshes.push(horn);
   }
-  for (let i = 0; i < 3; i++) {
-    const curl = MeshBuilder.CreateCylinder("longshipSternCurl", { height: 0.26, diameter: 0.1, tessellation: 6 }, scene);
-    curl.position.set(0, 0.74 + i * 0.2, -1.34 - i * 0.08);
-    curl.rotation.x = -(0.45 + i * 0.42);
-    curl.parent = root;
-    curl.material = darkWood;
-    allMeshes.push(curl);
-  }
+  // 400: the bent stick is gone - the stern post and its rolled scroll are built with the bow stem above
 
   const operator = crew[1];
 
