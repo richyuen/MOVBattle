@@ -53,6 +53,8 @@ const MINO_SCROLL = {
 const MINO_GIRDLE = { lo: -0.3, hi: 0.03, proudX: 1.03, proudZ: 1.1, flare: 1.04, sides: 12, rimGrow: 1.02, light: 0.72, sunk: 0.5 };
 const MINO_PAULDRON = { wide: 0.42, tall: 0.55 };
 const MINO_SASH = { sash: 0.3, thick: 0.03, buckle: 0.17, tuft: 0.22 };
+/** [S] 405 the sash as a proud slab (spec at its build in dressMinotaur). */
+const MINO_STRAP = { wide: 0.44, proud: 0.32, footX: 0.95, footY: 0.06, buckleAt: 0.3 };
 /*
  * [S] the minotaur's gear redone (383; ancient.minotaur.red.png: a patterned team pauldron on his left shoulder, a broad tan sash with a chunky grey
  * square buckle, a scrolled team belt; critic 382: a plain light-blue dome on the wrong shoulder, a thin fur-toned sash, a tiny white diamond buckle, a
@@ -234,21 +236,29 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   add(MeshBuilder.CreateTube("minoPauldronScroll", { path: swirlPath, radius: swirlR * 0.16, tessellation: 4, cap: 2 }, scene), plateNode, light);
 
   // the sash, from that shoulder across the chest down to the other hip, laid on the chest's front
+  // [S] 405 rebuilt as a wide slab standing proud of the chest (CONFIRM 403 a.2: "diagonal chest sash missing in _idle"; probe_bbox 405 in the torso
+  // frame: the dropped bull face and neck cover the chest from x -.5 to +.17 and y .24 up, z out to .79; the chest's front is at z .26). Spec, in the
+  // chest's half width hx: the strap .wide of the chest's width across, a solid slab from the chest's front out .proud of hx, running from the plate's
+  // root over his left shoulder to his right hip (.footX of hx out, .footY of the trunk up), so its lower run - under and beside the muzzle - reads in
+  // the front three-quarter; the grey square buckle rides that lower run at .buckleAt of the strap from its foot, in front of the slab's face.
+  const W = MINO_STRAP;
   const top = { x: chest.midX + side * chest.halfX * 0.75, y: chest.trunk * 0.95 };
-  const foot = { x: chest.midX - side * chest.halfX * 0.85, y: chest.trunk * 0.12 };
+  const foot = { x: chest.midX - side * chest.halfX * W.footX, y: chest.trunk * W.footY };
   const len = Math.hypot(top.x - foot.x, top.y - foot.y);
-  const sash = MeshBuilder.CreateBox("minoSash", { width: chest.halfX * 2 * S.sash, height: len, depth: S.thick * chest.halfX }, scene);
-  sash.position.set((top.x + foot.x) / 2, (top.y + foot.y) / 2, front + S.thick * chest.halfX * 0.5);
+  const slabD = S.thick * chest.halfX + W.proud * chest.halfX;
+  const sash = MeshBuilder.CreateBox("minoSash", { width: chest.halfX * 2 * W.wide, height: len, depth: slabD }, scene);
+  sash.position.set((top.x + foot.x) / 2, (top.y + foot.y) / 2, front + slabD * 0.5);
   sash.rotation.z = Math.atan2(top.x - foot.x, top.y - foot.y) * -1;
+  sash.convertToFlatShadedMesh();
   add(sash, body.torso, leather);
-  // [S] 383 (MINO_GEAR): a chunky grey square frame buckle, four bars round an open middle the sash shows through, and a prong, high on the sash
-  // toward the pauldron
+  // [S] 383 (MINO_GEAR): a chunky grey square frame buckle, four bars round an open middle the sash shows through, and a prong
+  // [S] 405 on the strap's lower run (.buckleAt), in front of the slab's face
   const bw = chest.halfX * 2 * G.buckle, bar = bw * G.bar, bd = S.thick * chest.halfX * 3;
-  const bu = 0.68;
+  const bu = W.buckleAt;
   const bx = foot.x + (top.x - foot.x) * bu, by = foot.y + (top.y - foot.y) * bu;
   const holder = new TransformNode("minoBuckle", scene);
   holder.parent = body.torso;
-  holder.position.set(bx, by, front + S.thick * chest.halfX + bd / 2);
+  holder.position.set(bx, by, front + slabD + bd / 2);
   holder.rotation.z = sash.rotation.z;
   for (const [w, h, x, y] of [[bw, bar, 0, (bw - bar) / 2], [bw, bar, 0, -(bw - bar) / 2], [bar, bw, (bw - bar) / 2, 0], [bar, bw, -(bw - bar) / 2, 0]]) {
     const b = MeshBuilder.CreateBox("minoBuckle", { width: w, height: h, depth: bd }, scene);
