@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexBuffer, Quaternion, type Material } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexBuffer, Quaternion, type Material, type Node } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { trunkBand, jitterVertices } from "./tribalDress";
@@ -322,12 +322,30 @@ function shareOf(seed: number, i: number): number {
  */
 const ZEUS_TOGA = {
   proud: 1.07, round: 4, foot: 0.0, edgeHigh: 1.45, edgeLow: 0.24, top: 1.04, segs: 28,
-  bolt: 4, boltTop: 0.98, boltTr: 0.3, boltX: 0.66, boltOut: 0.98, boltWide: 0.15, boltStand: 0.075,
+  bolt: 4, boltTop: 0.98, boltTr: 0.3, boltX: 0.66, boltOut: 0.98, boltWide: 0.15, boltStand: 0.075, boltGap: 0.08,
   rings: 3, ring: 0.075, beltAt: 0.06, ringProud: 1.14,
   whiteGlow: 1,
   white: new Color3(0.94, 0.94, 0.92), gold: new Color3(0.88, 0.58, 0.1), glow: 0.14,
   boltGold: new Color3(0.62, 0.26, 0.03),
 };
+
+/** [S] 406 the lowest point of Zeus's beard (every zeusBeard* mesh's world box corners) in the torso's frame, or null when he has none. */
+function zeusBeardFootInTorso(body: ArticulatedBody): number | null {
+  const chain: Node[] = [];
+  for (let n: Node | null = body.headMesh; n; n = n.parent) chain.unshift(n);
+  for (const n of chain) (n as TransformNode).computeWorldMatrix?.(true);
+  const toTorso = body.torso.computeWorldMatrix(true).clone().invert();
+  let foot: number | null = null;
+  for (const m of body.headMesh.getChildMeshes(false)) {
+    if (!/^zeusBeard/.test(m.name)) continue;
+    m.computeWorldMatrix(true);
+    for (const c of m.getBoundingInfo().boundingBox.vectorsWorld) {
+      const y = Vector3.TransformCoordinates(c, toTorso).y;
+      foot = foot === null ? y : Math.min(foot, y);
+    }
+  }
+  return foot;
+}
 
 /** Zeus's white toga over the left shoulder, gold bolt emblem and triple gold belt (spec at ZEUS_TOGA), on the torso. */
 export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -391,7 +409,11 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
   // the chest by .boltStand (7.5 cm: the ribbon's chords dip inside the rim the plate is sampled from, so a bolt a few cm proud still read as a ghost at
   // 398/399), and the whole zig-zag held high on the open shoulder line (.boltTop .98 down .boltTr .30), above the lowered hand's bolt at his hip whose
   // bloom washed the bottom of the old .72-cut emblem. Links are thicker across and in depth so the cut reads as a plate, not a decal.
-  const top = tr * T.boltTop, tall = tr * T.boltTr;
+  // [S] 406 the emblem seated off the beard's measured foot (critic 405 a.3: "its top touches the beard's foot"; ancient.zeus.red.png: the bolt clear of
+  // the beard): the lowest corner of every beard mesh (zeusBeard*, hung on the head by dressZeus before this runs) read into the torso's frame, and the
+  // zig-zag's top held .boltGap of the trunk under it (never above .boltTop), as eyeTopInHead seats a cap off the eyes
+  const beardFoot = zeusBeardFootInTorso(body);
+  const top = Math.min(tr * T.boltTop, beardFoot === null ? Infinity : beardFoot - tr * T.boltGap), tall = tr * T.boltTr;
   const surfaceZ = (x: number): number => {
     let best = midZ + halfZ * T.proud, bestDx = Infinity;
     for (let s = 0; s <= 48; s++) {
