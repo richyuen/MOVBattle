@@ -841,9 +841,21 @@ const BRAWLER_LEGS = {
   cuffFrom: 0.26, cuffTo: 0.5, cuffOut: 1.52, cuffThick: 0.36, cuffLumps: 7,
   bootFrom: 0.46, bootTo: 1.0, bootOut: 1.14, sole: 0.07, soleOut: 1.06, glow: 0.14,
 };
-/** The Brawler's puffy team trousers, cream fur calf cuffs and brown boots (spec at BRAWLER_LEGS). */
-export function brawlerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
-  const B = BRAWLER_LEGS;
+/*
+ * [S] 407 the Headbutter's cut of the leg kit (blocker a.2: "belt-to-sole about 40% of the height, the fur cuffs stacked right under the shorts at knee
+ * level"; 406 critic off viking.headbutter.blue.png: cap 115, belt 490, cuff top 780, sole 1000 px, so the trousers are a third of his height and the
+ * cuffs sit at mid-shin over a short boot). The trousers run on down the shin to .hemTo of it, baggy (.hemOut), gathered into the cuff at mid-shin
+ * (.cuffFrom-.cuffTo), and the boot starts under it (.bootFrom); with unitVisuals' longer shin (shinLength) and shorter trunk (torsoLength) the leg
+ * under the belt is the longer half of him, as in the render.
+ */
+const HEADBUTTER_LEGS: Partial<typeof BRAWLER_LEGS> = { thighOut: 1.36, hemTo: 0.62, hemOut: 1.44, cuffFrom: 0.58, cuffTo: 0.76, bootFrom: 0.74 };
+/** The Headbutter's long trousers into mid-shin fur cuffs over short boots (spec at HEADBUTTER_LEGS). */
+export function headbutterLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  return brawlerLegs(scene, body, teamColor, HEADBUTTER_LEGS);
+}
+/** The Brawler's puffy team trousers, cream fur calf cuffs and brown boots (spec at BRAWLER_LEGS); `cut` overrides the cut per unit. */
+export function brawlerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3, cut: Partial<typeof BRAWLER_LEGS> = {}): Mesh[] {
+  const B = { ...BRAWLER_LEGS, ...cut };
   const mf = getMaterialFactory();
   const pants = mf.get("cloth", teamColor.scale(0.84), { emissiveIntensity: B.glow * 0.5 });
   const boot = mf.get("cloth", new Color3(0.36, 0.21, 0.12), { emissiveIntensity: B.glow * 0.5 });

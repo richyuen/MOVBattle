@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -587,8 +587,8 @@ export class UnitFactory {
       // [S] ...and his belt, fur-cuffed bracers and cream fur boot cuffs over brown boots (395; vikingDress HEADBUTTER_KIT)
       propMeshes.push(...headbutterKit(this._scene, body));
       // [S] 405 ...and the Brawler's leg kit in place of the kit's knee cuffs: puffy team trousers to fur cuffs at mid-shin over brown boots
-      // (critic 403 a.2; viking.headbutter.blue.png). The shared BRAWLER_LEGS cut.
-      propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
+      // (critic 403 a.2; viking.headbutter.blue.png). 407: his own cut of it, the trousers on down to cuffs at mid-shin (vikingDress HEADBUTTER_LEGS).
+      propMeshes.push(...headbutterLegs(this._scene, body, teamColor));
     }
     // [S] the Valkyrie's own winged helm: dark team dome, bronze brow band and wing mounts, tall team-dark crest, in place of the shared plume_helmet
     // (400; vikingDress VALKYRIE_HELM)
