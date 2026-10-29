@@ -1,25 +1,20 @@
 # viking.jarl
-Status: open   Audited: 391, 396, 400, 401, 402, 403 (re-audit a), 406 (CONFIRM)   Done: -
+Status: done   Audited: 391, 396, 400, 401, 402, 403 (re-audit a), 406 (CONFIRM), 410 (CONFIRM)   Done: 410
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (3 since 406; the CONFIRM's list, struck 1 at 407, 2 at 408)
- 3. beard in unit_viking.jarl_idle: a short brown chin beard - TABS: a long braided beard hanging to mid-chest, tied with a band (ref: viking.jarl.red.png)
- 4. knee trim in unit_viking.jarl_idle: thick white fur rolls at the knees - TABS: tan cloth wraps on the shins above brown leather boots (ref: viking.jarl.red.png, card Appearance)
-  (struck 1 at 407: long fur flaps down the front; struck 2 at 408: a bear head on top with eyes, snout and fangs)
-b PASS (408; struck 1 at 407, 2 at 408)
-c PASS (396; CONFIRM 406)
+a PASS (410; CONFIRM 410)
+b PASS (408; CONFIRM 410)
+c PASS (396; CONFIRM 406, 410)
 d PASS (cost 1500, hp 13.81x, dmg 2.50x, cd 1.24x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a knee trim - blocker 4: tan cloth shin wraps over brown boots in place of the cream fur rolls - ref: viking.jarl.red.png - ours: unit_viking.jarl_idle.png
-2. [S] a beard - blocker 3: a narrow beard under a visible face (top no wider than the chin), ending in a lobed braid like headbutterBraids with a tie, greyer than the pelt (jarlBeardRun) - ref: viking.jarl.red.png - ours: unit_viking.jarl_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 392-396 | Jarl Axe (b PASS); bear hood + drape; pelt retry (394 rejected); his own chop (c PASS) | a,b,c | approved
 400-406 | [R] bear-head hood; curtains + strips; JARL_BEARD + _RUN; JARL_WRAPS; brawlerLegs; JARL_BELT | a | approved; CONFIRM 406 failed a, b
-407 | JARL_CRESCENT (f6b95a5) b; JARL_FLAPS (4859953 + 22d7ed7) a | a,b | approved (struck 1, 1)
-408 | bear head raised and enlarged (1bc6d8d) a; JARL_REST diagonal rest (e6d2ba3 + f25a459) b | a,b | approved (struck 2, 2; b PASS)
-409 | beard run one grey-brown tube from the jaw into a tied plait (b620406) | a | approved (struck none: too wide, no lobes)
+407-408 | JARL_CRESCENT; JARL_FLAPS; bear head raised; JARL_REST diagonal rest (b PASS 408) | a,b | approved
+409 | beard run one tube from the jaw into a tied plait (b620406) | a | approved (none struck)
+410 | LEG_WRAPS tan shin wraps (e1e9397); beard narrowed + lobed plait (99f4edd) | a | approved (struck 4, 3; a PASS); CONFIRM passed - done
 ## Rejected (last 4)
 - bear pelt retry [S] [2] - 394: a rounded fur skull with googly eyes on its front, curtains, a rounded shoulder mass - the near curtain stood in front of his face and hid the eyes
 ## Notes (max 3 lines)
-- 409 critic: the beard top is as wide as the head and swallows the lower face, a club off the chin; its brown reads like the pelt flaps.
-- 408: the axe rests through _restHalberd (JARL_REST), not the carry attitude; the blade crosses the upper chest in _idle.
-- 406: the red-team bare chest renders tan-brown in lineup_viking (viking_fur trunk tint).
+- 410 CONFIRM (minor): the forearm wraps are maroon where the blue render has dark team wraps; the buckle a pale ring, not a dark badge; flaps flat planks.
+- 410 critic (minor): the bib starts under the eyes hiding the mouth line; the plait runs to the buckle, not mid-chest.
+- 408: the axe rests through _restHalberd (JARL_REST), not the carry attitude.
