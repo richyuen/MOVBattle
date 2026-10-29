@@ -332,3 +332,30 @@ export function samuraiKabuto(scene: Scene, body: ArticulatedBody, teamColor: Co
   crest.position.set(0, foot + (top - foot) * 0.45, e.z * (K.bowlFoot + K.bowlTop) / 4 * (e.z / e.x) * 1.05);
   return out;
 }
+
+/*
+ * [S] 414 the Monk's robe trousers and greaves (audit 411 a.4: "slim legs - TABS: wide team-coloured robe trousers over gold-banded greaves";
+ * dynasty.monk.red.png: team trousers falling wide and straight from the hip to the knee, then team greaves down the shin banded across in gold, over
+ * sandals). Team cloth: the thigh shell .thigh over the upper leg and on over the lower leg's top .kneeTo; the greave .greave over the rest of the
+ * shin, with .bands gold rings .band of its length, .bandOut proud.
+ */
+const MONK_TROUSERS = { thigh: 2.0, kneeTo: 0.22, greave: 1.35, bands: 3, band: 0.07, bandOut: 1.45, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/** The Monk's wide team trousers to the knee over gold-banded team greaves (spec at MONK_TROUSERS). */
+export function monkTrousers(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const T = MONK_TROUSERS;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(T.glow) });
+  const gold = mf.get("cloth", T.gold, { emissive: T.gold.scale(T.glow) });
+  const out: Mesh[] = [];
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "monkTrouser", leg, 0, 1, T.thigh, cloth));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "monkTrouserKnee", shin, 0, T.kneeTo, T.thigh * 0.95, cloth));
+    out.push(limbShell(scene, "monkGreave", shin, T.kneeTo, 1, T.greave, cloth));
+    const step = (1 - T.kneeTo) / T.bands;
+    for (let i = 0; i < T.bands; i++) {
+      const at = T.kneeTo + step * (i + 0.5);
+      out.push(limbShell(scene, "monkGreaveBand", shin, at - T.band * 0.5, at + T.band * 0.5, T.bandOut, gold));
+    }
+  }
+  return out;
+}
