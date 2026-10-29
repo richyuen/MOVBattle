@@ -5358,9 +5358,11 @@ export class ProceduralAnimator {
     const N = this._iceNock;
     if (!N) return;
     const st = this._state;
-    if (st !== AnimState.Idle && st !== AnimState.Walking) return;
-    const w = 1 - Math.min(1, this._limp);
-    if (w <= 0.01) return;
+    const w = st === AnimState.Idle || st === AnimState.Walking ? 1 - Math.min(1, this._limp) : 0;
+    if (w <= 0.01) {
+      if (this._iceRestAt) N.stave.position.copyFrom(this._iceRestAt);
+      return;
+    }
     const b = this._body;
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
@@ -5383,8 +5385,21 @@ export class ProceduralAnimator {
     parentRot.toRotationMatrix(parent);
     const local = Quaternion.FromRotationMatrix(world.multiply(parent.transpose()));
     const rest = Quaternion.FromEulerAngles(N.stave.rotation.x, N.stave.rotation.y, N.stave.rotation.z);
-    N.stave.rotationQuaternion = Quaternion.Slerp(rest, local, w);
+    const q = Quaternion.Slerp(rest, local, w);
+    N.stave.rotationQuaternion = q;
+    // [S] 412 the grip in her fist (CONFIRM 411 b.1: "bow not gripped - both hands float forward empty while the ice bow stands leaning on its own"):
+    // the stave turns about its own origin, which is off the wrapped grip (the arc's belly, bowGrip), so the grip swung away from the fist; the stave
+    // is slid in the fist's frame so its grip lands where the stave's origin sat at rest (the fist), whatever the pose
+    this._iceRestAt ??= N.stave.position.clone();
+    const grip = N.stave.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === "bowGrip");
+    if (grip) {
+      const off = grip.position.multiply(N.stave.scaling);
+      const turned = Vector3.Zero();
+      off.rotateByQuaternionToRef(q, turned);
+      N.stave.position.copyFrom(this._iceRestAt.subtract(turned.scale(w)));
+    }
   }
+  private _iceRestAt: Vector3 | undefined;
   private _poseIceNock(w: number): void {
     if (this._iceNock === undefined) {
       const stave = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "bow" && n.getChildren().some((c) => c.name === "iceBowCarry"));
