@@ -208,6 +208,16 @@ const SNAKE_UPRIGHT = {
   yaw: 0.12, stagger: 0.06, give: 0.02, lean: 0.04, tilt: 0.03,
   raise: -0.75, out: -0.22, elbow: -1.35, tip: [-0.75, 0.7, 0.2] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
 };
+/*
+ * [S] 407 the ice archer carries her bow upright across her front (CONFIRM 405 b.2: "held low, tip angled down and forward to the ground like a lance";
+ * viking.ice_archer.red.png: the bow stood near upright and diagonal in the bow fist at the belly, the upper tip over the far shoulder above the hat,
+ * the lower one at the near foot). Found by the ice bow's carry mark (propBuilder buildIceBow "iceBowCarry"). The snake archer's upright ready stance
+ * (SNAKE_UPRIGHT) with her own stave line: .tip is steeper, about .4 rad off vertical, so the bow reads as a tall arc beside her, not a lance.
+ */
+const ICE_UPRIGHT = {
+  yaw: 0.12, stagger: 0.06, give: 0.02,
+  raise: -0.7, out: -0.2, elbow: -1.4, tip: [-0.42, 1, 0.12] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
+};
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
 const CLUB_LAND = 1.8;
@@ -2340,6 +2350,8 @@ export class ProceduralAnimator {
       weapon: held ? { ...attitude, prop } : null,
       ready: armed && this._snakeNocked()
         ? { raise: SNAKE_UPRIGHT.raise, out: SNAKE_UPRIGHT.out, elbow: SNAKE_UPRIGHT.elbow, tip: lean(...SNAKE_UPRIGHT.tip), left: { ...SNAKE_UPRIGHT.left }, prop: stave, yaw: SNAKE_UPRIGHT.yaw, stagger: SNAKE_UPRIGHT.stagger, give: SNAKE_UPRIGHT.give }
+        : armed && bow?.getChildren().some((c) => c.name === "iceBowCarry")
+        ? { raise: ICE_UPRIGHT.raise, out: ICE_UPRIGHT.out, elbow: ICE_UPRIGHT.elbow, tip: lean(...ICE_UPRIGHT.tip), left: { ...ICE_UPRIGHT.left }, prop: stave, yaw: ICE_UPRIGHT.yaw, stagger: ICE_UPRIGHT.stagger, give: ICE_UPRIGHT.give }
         : armed ? { ...hold, prop: stave, yaw: 0.6 + h(89) * 0.35, stagger: 0.4 + h(90) * 0.2, give: 0.1 + h(91) * 0.16 }
         : rodHold ? { ...rodHold, prop: rodProp, yaw: 0.1 + h(89) * 0.25, stagger: 0, give: 0, cast: true, overhead: rod?.id === "boneStaff" } : null,
       board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,

@@ -5330,6 +5330,8 @@ function buildIceBow(scene: Scene, s: number, stand: number): Mesh {
   string.material = mat(scene, B.string, 0.2, "cloth");
   stave.rotation.z = Math.PI / 2 - B.hold;
   stave.position.y = 0.1 * s;
+  // the carry mark: the upright diagonal carry across her front (proceduralAnimation ICE_UPRIGHT; a marker only, no geometry)
+  new TransformNode("iceBowCarry", scene).parent = stave;
   return stave;
 }
 /** The medieval archer's longbow colours (352; medieval.archer.red.png): brown wood, a pale leather wrap at the grip */
