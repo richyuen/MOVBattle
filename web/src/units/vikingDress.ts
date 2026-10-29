@@ -352,13 +352,6 @@ interface VikingBeardCut {
   burns?: boolean;
   /** The plaited length under the bib in head heights, when the cut's braid is longer than VIKING_BEARD.braidLong (the Jarl's, 402). */
   braidLong?: number;
-  /**
-   * [S] 402 the Brawler's jaw locks splayed wide of his board (critic 401 a.4: the beard's centre line ends at the shield's top rim, so length on the
-   * chest cannot show; the beard must read beside the shield). `.locks` tapered locks off each side of the jaw mass, fanned from .up rad above level
-   * down to .down rad below it, each .long head widths long and .root head widths thick at the root, so they stand out past the board's outer edge in
-   * the idle's three-quarter view.
-   */
-  splay?: { locks: number; long: number; up: number; down: number; root: number };
 }
 const VIKING_BEARD = {
   burnTop: 0.2, burn: 0.22, jaw: 1.2, jawY: 0.66, jawZ: 0.6,
@@ -416,20 +409,6 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
     const low = cut.stacheLow ?? 0.2, ahead = cut.stacheZ ?? 1.08;
     for (const side of [-1, 1]) {
       column("vikingBeardStache", new Vector3(0, -halfY * low, halfZ * ahead), new Vector3(side * W * 0.38, -halfY * (low + 0.26), halfZ * (ahead - 0.12)), W * 0.14, W * 0.07);
-    }
-  }
-  if (cut.splay) {
-    // the side locks off the jaw mass, fanned out and down past the face's silhouette (spec at VikingBeardCut.splay)
-    const S = cut.splay;
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < S.locks; i++) {
-        const t = S.locks > 1 ? i / (S.locks - 1) : 0.5;
-        const pitch = S.up - (S.up + S.down) * t;
-        const long = W * S.long * (1 - 0.18 * Math.abs(t - 0.5));
-        const from = new Vector3(side * halfX * jawScale[0] * 0.8, -halfY * jawDrop + halfY * jawTall * (0.35 - 0.7 * t), halfZ * (cut.jawZ ?? B.jawZ) * (1 + 0.3 * (1 - t)));
-        const dir = new Vector3(side * Math.cos(pitch), Math.sin(pitch), 0.12).normalize();
-        column("vikingBeardSplay", from, from.add(dir.scale(long)), W * S.root, W * S.root * 0.2);
-      }
     }
   }
   if (cut.braid) {
@@ -492,8 +471,6 @@ export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, {
     color: new Color3(0.32, 0.15, 0.11), glow: 0.22, down: 0.95, wide: 1.4, tip: 0.55, braid: true, stache: true,
     jaw: [1.5, 0.95, 0.8], jawY: 1.0, jawZ: 0.55, stacheLow: 0.62, stacheZ: 1.25, burns: false,
-    // [S] 402 the jaw locks splayed wide of the board (spec at VikingBeardCut.splay)
-    splay: { locks: 3, long: 1.0, up: 0.15, down: 0.75, root: 0.22 },
   });
 }
 
