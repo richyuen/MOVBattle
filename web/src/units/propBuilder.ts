@@ -48,6 +48,8 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  *   of the head high on the seat (.bandShade of the colour); on it the lumpy tam of BERET_TAM (373, spec there).
  *   Cone: a brim ring CONE_BRIM_HEADS heads across on the seat, under a cone CONE_HEADS heads across at its foot and CONE_TALL of the head high.
  */
+/** [S] 413 the kasa's gold rim and knob (dynasty.monk.red.png). */
+const KASA_GOLD = new Color3(0.86, 0.62, 0.18);
 const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "hoplite_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
@@ -1644,12 +1646,14 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     // The band is the rim; the cone stands on it, both faceted and open underneath so the dark underside shows from below
     const band = MeshBuilder.CreateCylinder("kasaBand", { height: u(KASA_BAND * H), diameter: u(KASA_HEADS * W), tessellation: 16 }, scene);
     band.position.y = u(seat + KASA_BAND * H * 0.5);
-    band.material = mat(scene, accent.scale(0.55));
+    // [S] 413 the monk's kasa in the team colour with a gold rim and knob (audit 411 a.2: "a mustard straw cone - TABS: a team-coloured conical hat
+    // with a gold rim"; dynasty.monk.red.png): the cone takes the team colour (accent without one), the band and knob KASA_GOLD
+    band.material = mat(scene, KASA_GOLD, 0.12);
     const cone = MeshBuilder.CreateCylinder("kasa", {
       height: u(KASA_TALL * H), diameterTop: u(KASA_TIP * W), diameterBottom: u(KASA_HEADS * W * 0.98), tessellation: 16, sideOrientation: Mesh.DOUBLESIDE,
     }, scene);
     cone.position.y = u(KASA_BAND * H * 0.5 + KASA_TALL * H * 0.5);
-    cone.material = mat(scene, accent);
+    cone.material = mat(scene, teamColor ?? accent, 0.08);
     cone.parent = band;
     const knob = MeshBuilder.CreateSphere("kasaKnob", { diameter: u(KASA_TIP * W * 1.3), segments: 4 }, scene);
     knob.position.y = u(KASA_TALL * H * 0.5);
