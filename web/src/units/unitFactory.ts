@@ -1,3 +1,4 @@
+import { monkStaff } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -583,6 +584,10 @@ export class UnitFactory {
       propMeshes.push(...iceArcherCoat(this._scene, body, teamColor));
       // [S] 410 ...and her broad leather quiver slab at the off hip, in place of the back tube (vikingDress ICE_ARCHER_QUIVER)
       propMeshes.push(...iceArcherQuiver(this._scene, body));
+    }
+    // [S] 411 the Monk's bo staff held level across his chest in both fists (dynastyDress MONK_STAFF; proceduralAnimation _restMonkBo)
+    if (definition.id === "dynasty.monk" && !shouldUseVehicleBody) {
+      propMeshes.push(...monkStaff(this._scene, body));
     }
     // [S] the Headbutter's own spiked team cap in place of the shared horned viking helmet (392; vikingDress HEADBUTTER_CAP)
     if (definition.id === "viking.headbutter" && !shouldUseVehicleBody) {

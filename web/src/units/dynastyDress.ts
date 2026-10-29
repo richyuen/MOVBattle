@@ -1,0 +1,75 @@
+import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
+import type { ArticulatedBody } from "./bodyBuilder";
+import { getMaterialFactory } from "./materialFactory";
+
+/*
+ * Dynasty dress (units/dynasty.*): cloth, hair, masks and held pieces built per unit id by unitFactory, sized off the body's own metrics and joints.
+ * Pieces worn on the head are parented to the head mesh (+z his front, +y up, its origin its middle); pieces on the trunk to the torso joint.
+ */
+
+/** The bead eyes' bottom and top in the head block's own frame (null when the body has no eyes); the eyes hang off the neck, not the head block. */
+function eyeSpanInHead(body: ArticulatedBody): [number, number] | null {
+  const eyes = [body.leftEye, body.rightEye].filter((m): m is Mesh => !!m);
+  if (!eyes.length) return null;
+  const chain: Node[] = [];
+  for (let n: Node | null = eyes[0]; n; n = n.parent) chain.unshift(n);
+  for (const n of chain) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+  body.headMesh.computeWorldMatrix(true);
+  const toHead = body.headMesh.getWorldMatrix().clone().invert();
+  let lo = Infinity, hi = -Infinity;
+  for (const eye of eyes) {
+    eye.computeWorldMatrix(true);
+    const bb = eye.getBoundingInfo().boundingBox;
+    lo = Math.min(lo, Vector3.TransformCoordinates(new Vector3(bb.centerWorld.x, bb.minimumWorld.y, bb.centerWorld.z), toHead).y);
+    hi = Math.max(hi, Vector3.TransformCoordinates(new Vector3(bb.centerWorld.x, bb.maximumWorld.y, bb.centerWorld.z), toHead).y);
+  }
+  return [lo, hi];
+}
+
+/*
+ * [S] 411 the Monk's bo (audit 411 b.1: "missing: Monk Staff - TABS: a long bo, wider than his arm span, with grey capped ends, held two-handed across
+ * the body"; dynasty.monk.red.png: a plain orange-brown pole about 1.2 of his height, a grey cap and a dark band at each end, held level across his
+ * chest in both fists). In the weapon fist: a holder at the fist (proceduralAnimation _restMonkBo lays it level across his front) carrying the shaft
+ * .long of his height, .thick of it across, its middle .offset of its length off the fist toward his off side, so both fists sit on it either side of
+ * his middle; a grey cap .cap of the length at each end, .capWide of the shaft, a dark band .band of the length inside each cap. The off hand rides the
+ * shaft (POLE_GRIP boGrip).
+ */
+const MONK_STAFF = {
+  long: 1.2, thick: 0.022, offset: 0.2, cap: 0.08, capWide: 1.45, band: 0.025,
+  wood: new Color3(0.62, 0.34, 0.16), steel: new Color3(0.5, 0.5, 0.5), dark: new Color3(0.2, 0.14, 0.1), glow: 0.14,
+};
+/** The Monk's bo staff in his weapon fist (spec at MONK_STAFF). */
+export function monkStaff(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = MONK_STAFF;
+  const mf = getMaterialFactory();
+  const wood = mf.get("cloth", S.wood, { emissive: S.wood.scale(S.glow) });
+  const steel = mf.get("cloth", S.steel, { emissive: S.steel.scale(S.glow) });
+  const dark = mf.get("cloth", S.dark, { emissive: S.dark.scale(S.glow) });
+  // his height in the hand's frame: the world height over the hand's world scale
+  body.rightHand.computeWorldMatrix(true);
+  const scale = Math.max(0.001, body.rightHand.absoluteScaling.y);
+  const height = (body.metrics.overallHeight * body.root.scaling.y) / scale;
+  const L = height * S.long, r = height * S.thick;
+  const holder = new TransformNode("monkBoHolder", scene);
+  holder.parent = body.rightHand;
+  const shaft = MeshBuilder.CreateCylinder("monkBo", { height: L, diameter: r * 2, tessellation: 7 }, scene);
+  shaft.parent = holder;
+  shaft.position.y = L * S.offset;
+  shaft.material = wood;
+  shaft.convertToFlatShadedMesh();
+  new TransformNode("boGrip", scene).parent = shaft;
+  const out: Mesh[] = [shaft];
+  for (const end of [-1, 1]) {
+    const cap = MeshBuilder.CreateCylinder("monkBoCap", { height: L * S.cap, diameterTop: r * 2 * S.capWide * (end > 0 ? 0.8 : 1), diameterBottom: r * 2 * S.capWide * (end > 0 ? 1 : 0.8), tessellation: 7 }, scene);
+    cap.parent = shaft;
+    cap.position.y = end * (L * 0.5 - L * S.cap * 0.5);
+    cap.material = steel;
+    cap.convertToFlatShadedMesh();
+    const band = MeshBuilder.CreateCylinder("monkBoBand", { height: L * S.band, diameter: r * 2 * 1.25, tessellation: 7 }, scene);
+    band.parent = shaft;
+    band.position.y = end * (L * 0.5 - L * S.cap - L * S.band);
+    band.material = dark;
+    out.push(cap, band);
+  }
+  return out;
+}

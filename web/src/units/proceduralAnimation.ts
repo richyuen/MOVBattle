@@ -224,6 +224,8 @@ const SNAKE_UPRIGHT = {
  */
 /** [S] 411 the ice bow at rest, posed in the world (_restIceBow): its length leant .across rad toward her off side and .forward toward her front. */
 const ICE_REST = { across: 0.42, forward: 0.12 };
+/** [S] 411 the Monk's bo at rest (_restMonkBo): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt up at its off end. */
+const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
 const ICE_UPRIGHT = {
   yaw: 0.12, stagger: 0.06, give: 0.02,
   raise: -0.85, out: -0.2, elbow: -1.3, tip: [0.16, 1, 0.06] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
@@ -286,6 +288,7 @@ const POLE_GRIP = {
   forkBar: [0.2, 0.5], // the pitchfork: the off hand up the shaft toward the head (farmer.farmer.red.png)
   snathPeg: [0.28, 0.32], // the harvester's scythe: the off hand on the upper peg (SCYTHE_LOW)
   banjoNeck: [0.6, 0.95], // the bard's banjo: the off hand fretting up the neck (medieval.bard.red.png)
+  boGrip: [0.3, 0.62], // the monk's bo: the off hand across his chest toward the off end (dynasty.monk.red.png, MONK_REST)
 } as const;
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the
@@ -2107,6 +2110,7 @@ export class ProceduralAnimator {
     this._aimMusket(dt);
     this._restHalberd();
     this._restIceBow();
+    this._restMonkBo();
     this._twoHandPole();
     this._levelPike();
     this._carryDory();
@@ -5299,6 +5303,49 @@ export class ProceduralAnimator {
    * hand by w, and the ice arrow (propBuilder ICE_NOCK) laid from the nock through the grip; all put back at the loose. Only the ice bow carries them.
    */
   private _iceNock: { stave: Mesh; string: Mesh; top: Mesh; low: Mesh; arrow: Mesh } | null | undefined = undefined;
+
+  /**
+   * [S] 411 the Monk's bo held level across his chest (audit 411 b.1; dynasty.monk.red.png: the staff level across his front at chest height, a fist on
+   * it either side of his middle). Standing or walking, the weapon fist is solved (_armTo) onto a point MONK_REST.ahead of his height before the weapon
+   * shoulder, .inward toward his middle and .drop below the shoulder, and the bo's holder (dynastyDress monkStaff) is turned so the shaft runs level
+   * toward his off side, tipped .tilt up at its off end; the off hand then rides it (_twoHandPole, boGrip). Eased off as he goes limp.
+   */
+  private _monkBo: TransformNode | null | undefined = undefined;
+  private _restMonkBo(): void {
+    this._monkBo ??= this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "monkBoHolder") ?? null;
+    const holder = this._monkBo;
+    if (!holder) return;
+    const st = this._state;
+    if (st !== AnimState.Idle && st !== AnimState.Walking) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const R = MONK_REST;
+    const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(R.ahead * height))
+      .addInPlace(outward.scale(-R.inward * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const axis = outward.scale(-1).addInPlace(new Vector3(0, R.tilt, 0)).normalize();
+    const z = fwd.clone();
+    z.subtractInPlace(axis.scale(Vector3.Dot(z, axis))).normalize();
+    const x = Vector3.Cross(axis, z).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, axis, z, world);
+    const parentRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, parentRot);
+    const parent = Matrix.Identity();
+    parentRot.toRotationMatrix(parent);
+    const local = Quaternion.FromRotationMatrix(world.multiply(parent.transpose()));
+    holder.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), local, w);
+  }
 
   /**
    * [S] 411 the ice bow stood at rest (CONFIRM 405 b.2: "held low, tip angled down and forward to the ground like a lance - TABS: upright and diagonal
