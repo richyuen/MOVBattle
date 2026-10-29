@@ -165,28 +165,38 @@ const HEADBUTTER_BRAID = {
 const HEADBUTTER_HAIR = new Color3(0.6, 0.38, 0.2);
 const HEADBUTTER_TIE = new Color3(0.34, 0.1, 0.08);
 
+/**
+ * A plait's own look (402: the Valkyrie wears the Headbutter's plaits in cream): hair and tie colours, the hair's self-light, or `unlit` for a pale plait
+ * that must hold its cream in the chest's shade (emissive = colour, out of the glow), and its own thickness, drop and spread in the head's units.
+ */
+interface BraidStyle { hair: Color3; tie: Color3; glow: number; unlit?: boolean; thick?: number; footDrop?: number; footOut?: number }
+const HEADBUTTER_BRAID_STYLE: BraidStyle = { hair: HEADBUTTER_HAIR, tie: HEADBUTTER_TIE, glow: HEADBUTTER_BRAID.glow };
+
 /** The Headbutter's two tan braids from under the ear flaps down onto the chest, a dark tie and tuft at each end (spec at HEADBUTTER_BRAID). */
-export function headbutterBraids(scene: Scene, body: ArticulatedBody): Mesh[] {
+export function headbutterBraids(scene: Scene, body: ArticulatedBody, style: BraidStyle = HEADBUTTER_BRAID_STYLE): Mesh[] {
   const B = HEADBUTTER_BRAID;
   const mf = getMaterialFactory();
-  const hair = mf.get("cloth", HEADBUTTER_HAIR, { emissiveIntensity: B.glow });
-  const tieMat = mf.get("cloth", HEADBUTTER_TIE, { emissiveIntensity: 0.1 });
+  const hair = style.unlit ? mf.get("unlit", style.hair, { emissive: style.hair }) : mf.get("cloth", style.hair, { emissiveIntensity: style.glow });
+  const tieMat = mf.get("cloth", style.tie, { emissiveIntensity: 0.1 });
   const head = headInTorso(body);
   const H = head.tall, W = head.wide;
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;
   const front = chest.position.z + ext.z * chest.scaling.z;
-  const thick = B.thick * W;
+  const thick = (style.thick ?? B.thick) * W;
+  const footDrop = style.footDrop ?? B.footDrop, footOut = style.footOut ?? B.footOut;
   const added: Mesh[] = [];
+  const glow = scene.getGlowLayerByName("glow");
   const put = (m: Mesh, material: typeof hair): Mesh => {
     m.material = material;
     m.parent = body.torso;
+    if (style.unlit && material === hair) glow?.addExcludedMesh(m);
     added.push(m);
     return m;
   };
   for (const side of [-1, 1]) {
     const root = new Vector3(side * B.apart * W, head.chin + B.rootUp * H, head.midZ + head.deep * B.rootAhead);
-    const foot = new Vector3(side * B.footOut * W, head.chin - B.footDrop * H, front + B.standOff * W + thick * 0.5);
+    const foot = new Vector3(side * footOut * W, head.chin - footDrop * H, front + B.standOff * W + thick * 0.5);
     // a quadratic from the root to the foot, bowed forward over the shoulder line so it lies on the collar and chest, not through them
     const mid = Vector3.Lerp(root, foot, 0.5);
     mid.z = Math.max(mid.z, foot.z) + B.bow * W;
@@ -218,6 +228,51 @@ export function headbutterBraids(scene: Scene, body: ArticulatedBody): Mesh[] {
     tuft.rotation.x = lean(1);
   }
   return added;
+}
+
+/*
+ * [S] 402 the Valkyrie's fur collar and braids (viking.valkyrie.red.png, viking.valkyrie.png; critic 391-401 a.3: "a bare blue chest"): a pale fur
+ * ruff round the neck over both shoulders, and two thick pale plaits from under the helm down over the chest to the belt line, each tied dark at its end.
+ *   collar: a faceted fur ring .wide of the shoulder width across, round the neck's foot, its tube .thick of its radius, with .lumps rounded clumps stood
+ *   round it so it reads as fur, .lift of the chest's height over the collar line and .ahead of the chest's depth forward;
+ *   braids: the Headbutter's plait (HEADBUTTER_BRAID) in cream, .braidThick head widths thick, dropped .footDrop head heights to the belt, .footOut apart.
+ * Cream unlit with emissive = colour, out of the glow (LESSONS: pale lit cloth under an overhang reads grey).
+ */
+const VALKYRIE_COLLAR = { wide: 0.62, thick: 0.32, lumps: 9, lift: 0.02, ahead: 0.08, braidThick: 0.42, footDrop: 1.5, footOut: 0.6 };
+const VALKYRIE_CREAM = new Color3(0.86, 0.74, 0.5);
+const VALKYRIE_TIE = new Color3(0.3, 0.16, 0.1);
+
+/** The Valkyrie's pale fur collar and two cream plaits over the chest (spec at VALKYRIE_COLLAR). */
+export function valkyrieCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = VALKYRIE_COLLAR;
+  const mf = getMaterialFactory();
+  const fur = mf.get("unlit", VALKYRIE_CREAM, { emissive: VALKYRIE_CREAM });
+  const out: Mesh[] = [];
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const shoulderW = body.metrics.shoulderWidth ?? W * 1.3;
+  const r = shoulderW * C.wide * 0.5;
+  const y = body.neck.position.y + H * C.lift;
+  const z = chest.position.z + D * C.ahead;
+  const put = (m: Mesh): Mesh => {
+    m.material = fur;
+    m.parent = body.torso;
+    out.push(m);
+    return m;
+  };
+  const ring = put(MeshBuilder.CreateTorus("valkyrieCollar", { diameter: r * 2, thickness: r * 2 * C.thick, tessellation: 9 }, scene));
+  ring.convertToFlatShadedMesh();
+  ring.position.set(0, y, z);
+  for (let i = 0; i < C.lumps; i++) {
+    const a = (i / C.lumps) * Math.PI * 2 + 0.3;
+    const lump = put(MeshBuilder.CreateIcoSphere("valkyrieCollarLump", { radius: r * C.thick * 0.95, subdivisions: 1, flat: true }, scene));
+    lump.position.set(Math.cos(a) * r, y + (i % 2 ? r * C.thick * 0.4 : -r * C.thick * 0.15), z + Math.sin(a) * r);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const m of out) glow?.addExcludedMesh(m);
+  out.push(...headbutterBraids(scene, body, { hair: VALKYRIE_CREAM, tie: VALKYRIE_TIE, glow: 0, unlit: true, thick: C.braidThick, footDrop: C.footDrop, footOut: C.footOut }));
+  return out;
 }
 
 /*
