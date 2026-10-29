@@ -272,13 +272,13 @@ const viking = makeFaction(FactionId.Viking, "viking", [
 ]);
 
 const dynasty = makeFaction(FactionId.Dynasty, "dynasty", [
-  ["samurai", "Samurai", 140, "heavy_melee", { abilities: ["parry"], weaponHint: "katana", hatHint: "samurai_helmet" }],
-  ["firework_archer", "Firework Archer", 180, "archer", { projectileHint: "firework", weaponHint: "bow", hatHint: "conical_hat", abilities: ["fire_dot"] }],
-  ["monk", "Monk", 220, "light_melee", { moveSpeedOverride: 4.7, specialHint: "monk" }],
-  ["ninja", "Ninja", 160, "rapid_ranged", { abilities: ["teleport", "rapid_fire"], projectileHint: "shuriken", hatHint: "ninja_mask" }],
-  ["dragon", "Dragon", 1000, "special_magic", { abilities: ["fire_dot"], projectileHint: "fireball", specialHint: "dragon" }],
-  ["hwacha", "Hwacha", 900, "artillery", { abilities: ["volley_fire"], projectileHint: "rocket_arrow", specialHint: "hwacha", size: "large", visualPreset: "iconic_hwacha", behaviorPreset: "iconic_hwacha", volleyCount: 14, cooldownMultiplier: 0.9, compositionParts: [{ relation: "crew", label: "rocketeer" }, { relation: "crew", label: "loader" }] }],
-  ["monkey_king", "Monkey King", 2000, "boss_melee", { abilities: ["clone"], weaponHint: "bo_staff", visualPreset: "iconic_monkey_king", behaviorPreset: "iconic_monkey_king", summonCount: 2, maxActiveSummons: 4, summonLifetimeSeconds: 6.5, cooldownMultiplier: 0.8 }],
+  ["samurai", "Samurai", 140, "heavy_melee", { damageMultiplier: 0.8, healthMultiplier: 0.59, abilities: ["parry"], weaponHint: "katana", hatHint: "samurai_helmet" }],
+  ["firework_archer", "Firework Archer", 180, "archer", { cooldownMultiplier: 3.64, damageMultiplier: 0.25, healthMultiplier: 0.41, projectileHint: "firework", weaponHint: "bow", hatHint: "conical_hat", abilities: ["fire_dot"] }],
+  ["monk", "Monk", 250, "light_melee", { cooldownMultiplier: 0.6, damageMultiplier: 0.3, healthMultiplier: 3.26, moveSpeedOverride: 4.7, specialHint: "monk" }],
+  ["ninja", "Ninja", 500, "rapid_ranged", { cooldownMultiplier: 0.36, damageMultiplier: 0.41, healthMultiplier: 0.54, abilities: ["teleport", "rapid_fire"], projectileHint: "shuriken", hatHint: "ninja_mask" }],
+  ["dragon", "Dragon", 1000, "special_magic", { healthMultiplier: 1.59, abilities: ["fire_dot"], projectileHint: "fireball", specialHint: "dragon" }],
+  ["hwacha", "Hwacha", 1500, "artillery", { damageMultiplier: 0.58, healthMultiplier: 0.37, abilities: ["volley_fire"], projectileHint: "rocket_arrow", specialHint: "hwacha", size: "large", visualPreset: "iconic_hwacha", behaviorPreset: "iconic_hwacha", volleyCount: 14, cooldownMultiplier: 1.17, compositionParts: [{ relation: "crew", label: "rocketeer" }, { relation: "crew", label: "loader" }] }],
+  ["monkey_king", "Monkey King", 2000, "boss_melee", { damageMultiplier: 0.17, healthMultiplier: 0.18, abilities: ["clone"], weaponHint: "bo_staff", visualPreset: "iconic_monkey_king", behaviorPreset: "iconic_monkey_king", summonCount: 2, maxActiveSummons: 4, summonLifetimeSeconds: 6.5, cooldownMultiplier: 0.18 }],
 ]);
 
 const renaissance = makeFaction(FactionId.Renaissance, "renaissance", [
