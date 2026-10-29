@@ -2309,7 +2309,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * Everything built so far - hull, shields, oars, crew, prow - goes under one `ship` node, scaled SHIP.scale and stood at the carriers' hands, so the
    * whole boat grows together and its crew grow with it. Two full-size carriers stand under the keel (one fore, one aft), both arms straight up, hands at
    * the hull's underside: the ship's own height is read off a carrier's fist after the pose, so the hands always meet the keel. At the hurl the carriers
-   * let go (heaveLongshipCrew drops the hull to the root's floor and hides them), so the boat, not the men, is what flies and crashes.
+   * let go from overhead and stay behind (heaveLongshipCrew, flyLongshipHull, 402), so the boat, not the men, is what flies and crashes.
    */
   const SHIP = { scale: 1.8, at: [-0.98, 0.98], carrier: 0.98, raise: -2.62, spread: 0.2, elbow: -0.1 };
   const ship = new TransformNode("longship_ship", scene);
@@ -2335,7 +2335,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   settleWorld(carriers[0].rightHand);
   const keelFoot = (HULL.keelY - 0.08) * SHIP.scale;
   ship.position.y = Math.max(1.2, carriers[0].rightHand.getAbsolutePosition().y - keelFoot + 0.03);
-  root.metadata = { ...(root.metadata ?? {}), longshipRig: { ship, carriers } };
+  root.metadata = { ...(root.metadata ?? {}), longshipRig: { ship, carriers, shipY: ship.position.y } };
 
   const operator = crew[1];
   const shipTop = ship.position.y + 2.05 * SHIP.scale;
@@ -2356,22 +2356,29 @@ type LongshipCrew = Array<{ body: ArticulatedBody; oar: TransformNode; landed: b
 function longshipCrewOf(body: ArticulatedBody): LongshipCrew | null {
   return (body.root.metadata as { longshipCrew?: LongshipCrew } | null)?.longshipCrew ?? null;
 }
-/** The carried ship and the two carriers under it (spec at SHIP in buildLongship). */
-type LongshipRig = { ship: TransformNode; carriers: ArticulatedBody[] };
+/**
+ * The carried ship and the two carriers under it (spec at SHIP in buildLongship). `shipY` is the hull's carried height on the root; `stood` holds the
+ * carriers' world spots from the hurl's take-off until the crash (flyLongshipHull keeps them there while the root flies on).
+ */
+type LongshipRig = { ship: TransformNode; carriers: ArticulatedBody[]; shipY: number; stood?: Vector3[] };
 function longshipRigOf(body: ArticulatedBody): LongshipRig | null {
   return (body.root.metadata as { longshipRig?: LongshipRig } | null)?.longshipRig ?? null;
 }
 
 /**
- * The oarsmen heave the hull up over their heads at the hurl's take-off (both arms overhead, elbows a little bent), and the two carriers let go: the
- * hull drops to the root's own floor so the boat itself is what leaps and crashes, and the carriers stand off (they stay behind in TABS, card
- * Characteristics "the carriers will throw the Longship on them").
+ * The oarsmen heave the hull up over their heads at the hurl's take-off (both arms overhead, elbows a little bent), and the two carriers let go.
+ * [S] 402 the hull leaves the carriers' fists from overhead (CONFIRM 401 c.1: "no carrier in the frame at the hurl and the hull sits on the grass ...
+ * 150 ms later it floats up from ground level with nobody throwing it"; viking.longship.blue.png: both carriers under the keel, arms straight up). The
+ * carriers are no longer hidden nor the hull dropped here: the hull keeps its carried height (rig.shipY) on the root as the root leaps, and the carriers'
+ * world spots are pinned (rig.stood) so flyLongshipHull holds them standing where they threw from, arms still up, while the root flies on; the hull
+ * then sinks from their hands to the keel line over the flight and the carriers go at the crash (they stay behind in TABS, card Characteristics "the
+ * carriers will throw the Longship on them").
  */
 export function heaveLongshipCrew(body: ArticulatedBody): void {
   const rig = longshipRigOf(body);
   if (rig) {
-    rig.ship.position.y = 0;
-    for (const carrier of rig.carriers) carrier.root.setEnabled(false);
+    body.root.computeWorldMatrix(true);
+    rig.stood = rig.carriers.map((carrier) => { carrier.root.computeWorldMatrix(true); return carrier.root.getAbsolutePosition().clone(); });
   }
   for (const man of longshipCrewOf(body) ?? []) {
     if (man.landed) continue;
@@ -2387,9 +2394,29 @@ export function heaveLongshipCrew(body: ArticulatedBody): void {
  * (the oar node hangs off his fist) and steps off the deck onto the ground either side of the hull, fore and aft, arms down at his sides. One call lands
  * them all; a second call on an already landed crew does nothing.
  */
+/**
+ * One step of the hurled hull's flight (spec at heaveLongshipCrew): the carriers kept at their take-off spots in the flying root's own frame, and the
+ * hull sunk from the carried height toward the keel line by `k` (0 at the take-off, 1 fully down), so it leaves their hands overhead and lands on its keel.
+ */
+export function flyLongshipHull(body: ArticulatedBody, k: number): void {
+  const rig = longshipRigOf(body);
+  if (!rig?.stood) return;
+  body.root.computeWorldMatrix(true);
+  const toRoot = body.root.getWorldMatrix().clone().invert();
+  rig.carriers.forEach((carrier, i) => carrier.root.position.copyFrom(Vector3.TransformCoordinates(rig.stood![i], toRoot)));
+  rig.ship.position.y = rig.shipY * (1 - Math.min(1, Math.max(0, k)));
+}
+
 export function landLongshipCrew(body: ArticulatedBody): boolean {
   const crew = longshipCrewOf(body);
   if (!crew) return false;
+  // the hull is down on its keel; the carriers, left behind at the take-off, are done (spec at heaveLongshipCrew)
+  const rig = longshipRigOf(body);
+  if (rig) {
+    rig.ship.position.y = 0;
+    if (rig.stood) for (const carrier of rig.carriers) carrier.root.setEnabled(false);
+    rig.stood = undefined;
+  }
   let moved = false;
   crew.forEach((man, i) => {
     if (man.landed) return;

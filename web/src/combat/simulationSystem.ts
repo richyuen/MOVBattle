@@ -1,5 +1,5 @@
 import { Color3, Mesh, Node, TransformNode, Vector3 } from "@babylonjs/core";
-import { CREW_FIGHT, heaveLongshipCrew, landLongshipCrew, poseWheelbarrowCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
+import { CREW_FIGHT, flyLongshipHull, heaveLongshipCrew, landLongshipCrew, poseWheelbarrowCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import { AnimState } from "../units/proceduralAnimation";
 import {
@@ -312,9 +312,11 @@ const JUMP_CHARGE = { rise: 8, swoopRise: 4.5 };
  * it lands: every enemy in the ring takes the melee blow's damage at .crush of it, flung out at .fling and up at .lift, the first of them logged as the hit.
  * The crash logs "ship_crash"; the take-off logs "hurl" (the shot's ability pair). The crew step off the deck at the crash (vehicleBuilder landLongshipCrew).
  * .cooldown s before the next hurl. Dust: .dust.
+ * [S] 402 the hull leaves the carriers' hands overhead (vehicleBuilder heaveLongshipCrew/flyLongshipHull): each flight step the carriers are held at
+ * their take-off spots and the hull sinks from its carried height to the keel line over the first .sink of the flight's airtime (2 .rise / 22 s).
  */
 const LONGSHIP_HURL = {
-  reach: 5.5, short: 0.9, rise: 7.5, radius: 3.1, crush: 1.35, fling: 6.5, lift: 5, edge: 0.55, cooldown: 6,
+  reach: 5.5, short: 0.9, rise: 7.5, radius: 3.1, crush: 1.35, fling: 6.5, lift: 5, edge: 0.55, cooldown: 6, sink: 0.85,
   dust: new Color3(0.44, 0.33, 0.2),
 };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
@@ -463,7 +465,7 @@ export class SimulationSystem {
   private _landedAt = new Map<RuntimeUnit, number>();
   private _hopReadyAt = new Map<RuntimeUnit, number>();
   // [S] the Longship's hurl (LONGSHIP_HURL): each ship in flight, the ground landings it had at take-off, and the blow it carries
-  private _hurled = new Map<RuntimeUnit, { landed: number; damage: number }>();
+  private _hurled = new Map<RuntimeUnit, { landed: number; damage: number; t0: number }>();
   // Fencer recover (FENCER_RECOVER): each sliding man, his flat way back, when it started and the man he faces
   private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit; dist: number; seconds: number }>();
   // Fencer Dodge (FENCER_DODGE): when each fencer may dodge again, and which side he goes next
@@ -3053,7 +3055,7 @@ export class SimulationSystem {
     unit.faceTarget(target.position);
     const dist = Math.max(1.6, distance - LONGSHIP_HURL.short);
     if (!unit.leap(dir, dist, LONGSHIP_HURL.rise)) return false;
-    this._hurled.set(unit, { landed: unit.landings, damage: damage * LONGSHIP_HURL.crush });
+    this._hurled.set(unit, { landed: unit.landings, damage: damage * LONGSHIP_HURL.crush, t0: now });
     unit.setAttackCooldown(now, LONGSHIP_HURL.cooldown);
     unit.stopMoving();
     heaveLongshipCrew(unit.body);
@@ -3066,7 +3068,11 @@ export class SimulationSystem {
   private _landHurledShips(now: number): void {
     for (const [unit, hurl] of this._hurled) {
       if (unit.isDead) { this._hurled.delete(unit); continue; }
-      if (unit.landings <= hurl.landed) continue;
+      if (unit.landings <= hurl.landed) {
+        // in flight: the carriers stay where they threw from, the hull sinks from their hands to the keel line (spec at LONGSHIP_HURL.sink)
+        flyLongshipHull(unit.body, (now - hurl.t0) / (LONGSHIP_HURL.sink * 2 * LONGSHIP_HURL.rise / 22));
+        continue;
+      }
       this._hurled.delete(unit);
       const center = unit.position.clone();
       center.y = 0;
