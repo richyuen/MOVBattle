@@ -418,6 +418,10 @@ export function dressZeusToga(scene: Scene, body: ArticulatedBody): Mesh[] {
     link.rotation.z = -Math.atan2(d.x, -d.y);
     link.material = boltMat;
     scene.getGlowLayerByName("glow")?.addExcludedMesh(link);
+    // [S] 405 the emblem drawn over the bloom (critic 400 a.3: "the bolt reads red-pink rather than orange-gold"; probe_close 405: orange with the glow
+    // off, salmon-pink with it on - the raised hand's blue-white bolt bloom laid additively over the orange). Group 1 is drawn after the glow merge
+    // (main.ts glowLayer.renderingGroupId 0) and shares the depth buffer, so the raised forearm still hides it where it is in front.
+    link.renderingGroupId = 1;
     link.parent = body.torso;
     out.push(link);
   }

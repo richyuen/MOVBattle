@@ -328,6 +328,9 @@ const glowLayer = new GlowLayer("glow", scene, {
   blurKernelSize: 32,
 });
 glowLayer.intensity = 0.6;
+// The bloom is merged after rendering group 0 (not at the camera's end), so a mesh drawn in group 1 sits over the bloom of things beside it while still
+// depth-tested against the scene (group 1 keeps the depth buffer, above): flung bodies, and small flat emblems that a nearby glow would veil (zeus 405)
+glowLayer.renderingGroupId = 0;
 
 // Sky dome: the sandbox backdrop grades from a light pastel teal overhead to a pale horizon, the fog's colour, so the far
 // trees fade into what is behind them. Unlit, fog-free and out of the glow layer; campaign themes switch it off.
