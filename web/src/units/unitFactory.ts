@@ -603,6 +603,9 @@ export class UnitFactory {
       propMeshes.push(...jarlBeard(this._scene, body));
       // [S] 404 ...and maroon forearm wraps with a tan fur roll at each elbow (vikingDress JARL_WRAPS)
       propMeshes.push(...jarlArmWraps(this._scene, body));
+      // [S] 405 ...and the Brawler's leg kit: puffy team trousers, big cream fur calf cuffs over brown boots (re-audit 403 a.4: "slim blue legs
+      // straight to plain blue boots"; viking.jarl.red.png: the faction's cut). The shared BRAWLER_LEGS cut, as the ice archer took it in 404.
+      propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
     }
     // [S] the Brawler's full-face Norse helm, no horns (394; vikingDress BRAWLER_HELM), and the dark beard spilling out under its mask (396; VIKING_BEARD)
     if (definition.id === "viking.brawler" && !shouldUseVehicleBody) {
