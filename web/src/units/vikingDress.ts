@@ -142,6 +142,8 @@ export function headbutterCap(scene: Scene, body: ArticulatedBody, teamColor: Co
  */
 const ICE_ARCHER_CAP = { dome: 1.26, tall: 1.12, rise: 0.12, slice: 0.58, brim: 0.26, brimOut: 1.3, pom: 0.62, pomLump: 0.36, glow: 0.1 };
 const ICE_ARCHER_FUR = new Color3(0.9, 0.74, 0.5);
+/** [S] 405 the cap's dark leather band and its rivet studs (spec in iceArcherCap). */
+const ICE_ARCHER_BAND = { leather: new Color3(0.26, 0.12, 0.06), rivet: new Color3(0.5, 0.48, 0.44), glow: 0.14, rivets: 8, rivetSize: 0.42, rivetProud: 0.8 };
 /** [S] 403 head heights left between the eye beads' top and the brim's foot (spec in iceArcherCap). */
 const ICE_ARCHER_EYE_CLEAR = 0.03;
 /** The Ice Archer's round team cap with its pale fur brim and snow pom (spec at ICE_ARCHER_CAP). */
@@ -173,11 +175,22 @@ export function iceArcherCap(scene: Scene, body: ArticulatedBody, teamColor: Col
     diameterX: 2 * e.x * C.dome, diameterY: 2 * e.y * C.tall, diameterZ: 2 * e.z * C.dome, segments: 10, slice: C.slice,
   }, scene), cap);
   dome.position.y = rise;
-  // the fur brim: a roll round the dome's rim, its own depth matched to the head's
+  // [S] 405 the brim a dark brown leather band studded with rivets (403 re-audit a.4: "a thin pale grey band"; viking.ice_archer.red.png: a dark brown
+  // band round the cap's foot with small studs along it). The band keeps the roll's place and depth; ICE_ARCHER_BAND.rivets faceted studs stand
+  // .rivetProud of its tube off its outer face, every other one a little higher so the row reads as studs and not as a second ring.
+  const B = ICE_ARCHER_BAND;
+  const leather = mf.get("cloth", B.leather, { emissiveIntensity: B.glow });
+  const stud = mf.get("cloth", B.rivet, { emissiveIntensity: B.glow * 1.6 });
   const rimY = rise - (2 * C.slice - 1) * e.y * C.tall;
-  const brim = put(MeshBuilder.CreateTorus("iceArcherCapBrim", { diameter: 2 * e.x * C.brimOut, thickness: e.y * C.brim, tessellation: 9 }, scene), fur);
+  const brim = put(MeshBuilder.CreateTorus("iceArcherCapBrim", { diameter: 2 * e.x * C.brimOut, thickness: e.y * C.brim, tessellation: 12 }, scene), leather);
   brim.position.y = rimY;
   brim.scaling.z = e.z / e.x;
+  const ringR = e.x * C.brimOut + e.y * C.brim * 0.5 * B.rivetProud;
+  for (let i = 0; i < B.rivets; i++) {
+    const a = (i / B.rivets) * Math.PI * 2 + Math.PI / B.rivets;
+    const r = put(MeshBuilder.CreateIcoSphere("iceArcherCapRivet", { radius: e.y * C.brim * B.rivetSize, subdivisions: 1, flat: true }, scene), stud);
+    r.position.set(Math.cos(a) * ringR, rimY, Math.sin(a) * ringR * (e.z / e.x));
+  }
   // the snow pom on the crown, two clumps at its foot
   const crown = rise + e.y * C.tall - e.y * 0.06;
   const pom = put(MeshBuilder.CreateIcoSphere("iceArcherCapPom", { radius: e.x * C.pom, subdivisions: 1, flat: true }, scene), fur);
