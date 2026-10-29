@@ -1,5 +1,6 @@
 import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
+import { limbShell } from "./medievalDress";
 import { getMaterialFactory } from "./materialFactory";
 
 /*
@@ -160,5 +161,55 @@ export function tenguMask(scene: Scene, body: ArticulatedBody, teamColor: Color3
   nose.position.set(0, eyeMid - e.y * T.nose * 0.55, front + e.z * T.noseOut * 0.4);
   const mouth = put(MeshBuilder.CreateBox("tenguMouth", { width: e.x * T.mouth, height: e.y * 0.12, depth: e.z * 0.1 }, scene), dark);
   mouth.position.set(0, e.y * T.mouthY, front + e.z * 0.04);
+  return out;
+}
+
+/*
+ * [S] 412 the Ninja's gi (audit 411 a.3: "a plain blue trunk - TABS: a loose team-coloured gi with crossed lapels and a knotted belt sash";
+ * dynasty.ninja.red.png: a loose boxy team jacket wider than the trunk to the hips, a lighter V of undershirt at the throat between two lapels that
+ * cross to the opposite hip, wide short sleeves to the elbow, and a darker sash round the waist tied in a knot at the front with two ends hanging).
+ * In the trunk box (W, H, D): the shell .out wide, .deep deep, from .hem of H under the trunk's foot to its top; the undershirt V a lighter (.light)
+ * slab .vWide of W at the throat, .vLong of H down; each lapel a slab .lapel of W wide, .lapelLong of H long, running from the shoulder to the opposite
+ * side at .cross rad, darker (.lapelShade); the sash .sash of H tall at .sashAt of H above the trunk's foot, .sashOut proud, darker (.sashShade), a
+ * knot .knot of W at its front and two ends .tail of H long hanging from it; sleeves .sleeveOut over the upper arm, to .sleeveTo of the forearm.
+ */
+const NINJA_GI = {
+  out: 1.2, deep: 1.25, hem: 0.08, light: 1.3, vWide: 0.32, vLong: 0.32, lapel: 0.14, lapelLong: 0.7, cross: 0.5, lapelShade: 0.82,
+  sash: 0.12, sashAt: 0.16, sashOut: 1.06, sashShade: 0.7, knot: 0.14, tail: 0.24, sleeveOut: 1.5, sleeveTo: 0.25, glow: 0.12,
+};
+/** The Ninja's loose team gi with a light V, crossed lapels, a knotted sash and wide short sleeves (spec at NINJA_GI). */
+export function ninjaGi(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const G = NINJA_GI;
+  const mf = getMaterialFactory();
+  const tone = (k: number) => { const c = new Color3(Math.min(1, teamColor.r * k), Math.min(1, teamColor.g * k), Math.min(1, teamColor.b * k)); return mf.get("cloth", c, { emissive: c.scale(G.glow) }); };
+  const cloth = tone(1), light = tone(G.light), lapelMat = tone(G.lapelShade), sashMat = tone(G.sashShade);
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: ReturnType<typeof tone>, rz = 0): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.copyFrom(tm.rotation);
+    m.rotation.z += rz;
+    m.parent = tm.parent;
+    m.material = mat;
+    out.push(m);
+    return m;
+  };
+  const hemH = H * (1 + G.hem);
+  box("ninjaGi", W * G.out, hemH, D * G.deep, 0, -H * G.hem / 2, 0, cloth);
+  const front = D * G.deep / 2;
+  box("ninjaGiV", W * G.vWide, H * G.vLong, D * 0.04, 0, H / 2 - H * G.vLong / 2, front + D * 0.01, light);
+  for (const side of [-1, 1]) {
+    // from the shoulder on this side, down across the chest toward the other hip
+    box("ninjaGiLapel", W * G.lapel, H * G.lapelLong, D * 0.05, side * W * 0.16, H / 2 - H * G.lapelLong / 2, front + D * 0.03, lapelMat, -side * G.cross * 0.5);
+  }
+  const sashY = -H / 2 + H * G.sashAt;
+  box("ninjaGiSash", W * G.out * G.sashOut, H * G.sash, D * G.deep * G.sashOut, 0, sashY, 0, sashMat);
+  box("ninjaGiKnot", W * G.knot, H * G.sash * 1.4, D * 0.12, 0, sashY, D * G.deep * G.sashOut / 2 + D * 0.04, sashMat);
+  for (const side of [-1, 1]) box("ninjaGiTail", W * G.knot * 0.6, H * G.tail, D * 0.05, side * W * 0.06, sashY - H * G.tail / 2, D * G.deep * G.sashOut / 2 + D * 0.06, sashMat, side * 0.2);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "ninjaGiSleeve", arm, 0, 1, G.sleeveOut, cloth));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) out.push(limbShell(scene, "ninjaGiSleeve", arm, 0, G.sleeveTo, G.sleeveOut, cloth));
   return out;
 }
