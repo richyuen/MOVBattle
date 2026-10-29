@@ -1,4 +1,4 @@
-import { archerHair, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { archerHair, monkArmPlates, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -598,6 +598,7 @@ export class UnitFactory {
       propMeshes.push(...monkStaff(this._scene, body));
       propMeshes.push(...tenguMask(this._scene, body, teamColor)); // [S] 412 his tengu mask (dynastyDress TENGU_MASK)
       propMeshes.push(...monkTrousers(this._scene, body, teamColor)); // [S] 414 wide trousers over gold-banded greaves (dynastyDress MONK_TROUSERS)
+      propMeshes.push(...monkArmPlates(this._scene, body, teamColor)); // [S] 415 team lamellar rows down both arms (dynastyDress MONK_ARM_PLATES)
     }
     // [S] 411 the Ninja's boxy team hood and face mask with an open eye band, in place of the shared ninja_mask ball (dynastyDress NINJA_HOOD)
     if (definition.id === "dynasty.ninja" && !shouldUseVehicleBody) {

@@ -359,3 +359,29 @@ export function monkTrousers(scene: Scene, body: ArticulatedBody, teamColor: Col
   }
   return out;
 }
+
+/*
+ * [S] 415 the Monk's arm plates (audit 411 a.3: "bare blue arms - TABS: team-coloured lamellar plates banded down both arms"; card Appearance
+ * "lamellar armor parts (arms only)"; dynasty.monk.jpg: overlapping team plates in rows down the upper and lower arm). On each arm segment
+ * .rows overlapping team rows, each .out of the limb round and a little wider at its foot than at its head, with a thin gold rim .rim of the
+ * segment long at the foot of each row.
+ */
+const MONK_ARM_PLATES = { rows: 3, out: 1.5, overlap: 0.08, rim: 0.05, rimOut: 1.62, shade: 0.9, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/** The Monk's team lamellar rows down both arms, gold-rimmed (spec at MONK_ARM_PLATES). */
+export function monkArmPlates(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const P = MONK_ARM_PLATES;
+  const mf = getMaterialFactory();
+  const plate = teamColor.scale(P.shade);
+  const team = mf.get("cloth", plate, { emissive: plate.scale(P.glow) });
+  const gold = mf.get("cloth", P.gold, { emissive: P.gold.scale(P.glow) });
+  const out: Mesh[] = [];
+  for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    const step = 1 / P.rows;
+    for (let i = 0; i < P.rows; i++) {
+      const from = Math.max(0, i * step - P.overlap), to = Math.min(1, (i + 1) * step);
+      out.push(limbShell(scene, "monkArmPlate", limb, from, to, P.out, team));
+      out.push(limbShell(scene, "monkArmRim", limb, to - P.rim, to, P.rimOut, gold));
+    }
+  }
+  return out;
+}
