@@ -240,6 +240,8 @@ interface VikingBeardCut {
   stacheLow?: number; stacheZ?: number;
   /** Sideburns from the temple: off under a full-face helm, whose mask covers them. */
   burns?: boolean;
+  /** The plaited length under the bib in head heights, when the cut's braid is longer than VIKING_BEARD.braidLong (the Jarl's, 402). */
+  braidLong?: number;
 }
 const VIKING_BEARD = {
   burnTop: 0.2, burn: 0.22, jaw: 1.2, jawY: 0.66, jawZ: 0.6,
@@ -302,7 +304,7 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
   if (cut.braid) {
     // the braid at the end of the beard: a plaited length, two dark ties, a short tuft
     const end = bibFoot.add(new Vector3(0, H * B.tuft * 0.35, halfZ * 0.12));
-    const foot = end.add(new Vector3(0, -H * B.braidLong, halfZ * 0.16));
+    const foot = end.add(new Vector3(0, -H * (cut.braidLong ?? B.braidLong), halfZ * 0.16));
     const plait = column("vikingBeardBraid", end, foot, W * 0.21, W * 0.16);
     plait.scaling.z = 0.8;
     for (let k = 0; k < 3; k++) {
@@ -328,6 +330,23 @@ function vikingBeard(scene: Scene, body: ArticulatedBody, cut: VikingBeardCut): 
 /** The Berserker's big dark beard and moustache, ending in a tied braid (spec at VIKING_BEARD). */
 export function berserkerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return vikingBeard(scene, body, { color: new Color3(0.3, 0.12, 0.1), glow: 0.2, down: 0.9, wide: 1.12, tip: 0.48, braid: true, stache: true });
+}
+
+/*
+ * [S] 402 the Jarl's braided beard (viking.jarl.red.png, viking.jarl.jpg, card Appearance "a stereotypical Viking beard"; critic 400/401 a.2: "the thin
+ * brown cone nose, no beard"). A mid-brown beard between the hood's fur curtains: a jaw mass narrower than his face (JARL_BEARD.jaw of the head's half
+ * extents, inside the curtains' inner faces at .91 of the half width), a bib .down head heights onto the chest between the pelt's chest strips, a long
+ * moustache, no sideburns (the curtains hang there), and under the bib a long plait .braidLong head heights with three dark ties and a tuft - the beard
+ * tied at its end, as the render shows it. Self-lit .glow so the brown stays warm under the bear's muzzle.
+ */
+const JARL_BEARD = { color: new Color3(0.5, 0.28, 0.14), glow: 0.2, down: 0.72, wide: 0.78, tip: 0.6, jaw: [0.9, 0.78, 0.72] as const, jawY: 0.78, jawZ: 0.62, stacheLow: 0.3, stacheZ: 1.1, braidLong: 0.66 };
+/** The Jarl's brown beard ending in a long tied plait, between the bear hood's curtains (spec at JARL_BEARD). */
+export function jarlBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const J = JARL_BEARD;
+  return vikingBeard(scene, body, {
+    color: J.color, glow: J.glow, down: J.down, wide: J.wide, tip: J.tip, braid: true, stache: true,
+    jaw: J.jaw, jawY: J.jawY, jawZ: J.jawZ, stacheLow: J.stacheLow, stacheZ: J.stacheZ, burns: false, braidLong: J.braidLong,
+  });
 }
 
 /**
