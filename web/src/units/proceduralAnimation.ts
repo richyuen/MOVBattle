@@ -226,8 +226,8 @@ const SNAKE_UPRIGHT = {
 const ICE_REST = { across: 0.42, forward: 0.12 };
 /** [S] 411 the Monk's bo at rest (_restMonkBo): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt up at its off end. */
 const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
-/** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit. */
-const MONK_SWING = { back: 0.9, through: 1.35, cock: 0.4, hit: 0.62, reach: 0.08 };
+/** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit; the far end raised .raise (rise per unit across) when cocked, dipped .dip at the hit. */
+const MONK_SWING = { back: 0.9, through: 1.35, cock: 0.3, hit: 0.5, reach: 0.08, raise: 1.3, dip: 0.35 };
 const ICE_UPRIGHT = {
   yaw: 0.12, stagger: 0.06, give: 0.02,
   raise: -0.85, out: -0.2, elbow: -1.3, tip: [0.16, 1, 0.06] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
@@ -883,11 +883,14 @@ export class ProceduralAnimator {
   private _strikesAtMan(): boolean {
     // a halberd's chop, and the farmer's stab (FORK_STAB): the sim holds the hit for the moment the tines go home
     const chop = this._attackMotion === "thrust" && (this._halberd() !== null || this._stabsFork());
+    // [S] 412 the monk's bo: the sim holds the hit for the moment the swept far end crosses the man (MONK_SWING.hit)
+    if (this._monkBo) return this.walkStyle !== "quadruped";
     return (this._attackMotion === "heavy_swing" || this._attackMotion === "blade_slash" || chop) && this.attackStyle !== "mammoth" && this.walkStyle !== "quadruped";
   }
 
   // The share of the attack at which the blow is fully on the man: BLOW_LAND of the way through the drop after the commit
   private _blowLandFraction(): number {
+    if (this._monkBo) return MONK_SWING.hit;
     if (this._attackMotion === "heavy_swing") {
       const commit = this._resolveReleasePoint(0.45);
       if (this._whacks()) return commit + (1 - commit) * STICK_WHACK.land;
@@ -5327,7 +5330,8 @@ export class ProceduralAnimator {
     // across the target) by .hit, eased back to the rest line after; the fists reach .reach of his height further ahead at the hit.
     let turn = 0, reach = 0;
     if (st === AnimState.Attacking) {
-      const p = Math.min(this._attackTimer / this._attackDuration, 1);
+      const raw = this._attackDuration > 0 ? this._attackTimer / this._attackDuration : 0;
+      const p = Number.isFinite(raw) ? Math.min(Math.max(raw, 0), 1) : 0;
       const ease = (t: number): number => { const c = Math.max(0, Math.min(1, t)); return c * c * (3 - 2 * c); };
       const M = MONK_SWING;
       if (p < M.cock) turn = -M.back * ease(p / M.cock);
@@ -5349,7 +5353,9 @@ export class ProceduralAnimator {
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
-    const axis = outward.scale(-Math.cos(turn)).addInPlace(fwd.scale(Math.sin(turn))).addInPlace(new Vector3(0, R.tilt, 0)).normalize();
+    // the swing plane is tipped: cocked, the far end rides up over his off shoulder (.raise); through, it comes down toward the target (.dip)
+    const lift = turn < 0 ? (-turn / MONK_SWING.back) * MONK_SWING.raise : -(turn / MONK_SWING.through) * MONK_SWING.dip;
+    const axis = outward.scale(-Math.cos(turn)).addInPlace(fwd.scale(Math.sin(turn))).addInPlace(new Vector3(0, R.tilt + lift, 0)).normalize();
     const z = Vector3.Up();
     z.subtractInPlace(axis.scale(Vector3.Dot(z, axis))).normalize();
     const x = Vector3.Cross(axis, z).normalize();
