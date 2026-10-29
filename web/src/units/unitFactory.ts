@@ -577,7 +577,8 @@ export class UnitFactory {
       propMeshes.push(...iceArcherMantle(this._scene, body));
       // [S] 404 ...and the Brawler's leg kit: puffy team trousers, cream fur calf cuffs over brown boots (re-audit 403 a.2/a.3: "slim blue legs straight
       // down to the boots, no fur", "team-blue boots"; viking.ice_archer.red.png: the same cut as the Brawler's). The shared BRAWLER_LEGS cut.
-      propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
+      // [S] 411 with khaki shin wraps in place of the fur cuffs (CONFIRM 405 a.4; .red.png: baggy khaki wraps knee to mid-shin; vikingDress LEG_WRAPS)
+      propMeshes.push(...brawlerLegs(this._scene, body, teamColor, { wrap: 1 }));
       // [S] 409 ...and her long-sleeved belted team coat over the fur-tinted trunk (vikingDress ICE_ARCHER_COAT; its skirt below in the same cloth)
       propMeshes.push(...iceArcherCoat(this._scene, body, teamColor));
       // [S] 410 ...and her broad leather quiver slab at the off hip, in place of the back tube (vikingDress ICE_ARCHER_QUIVER)
