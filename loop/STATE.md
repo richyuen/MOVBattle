@@ -23,26 +23,27 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+402 (BASE d4c9f5c): evidence ice_archer idle camera on the head's facing (5f3f1b8 + f8ff48e) | [S] longship c.1 carriers pinned, hull leaves overhead (4c0305e) approved, 1 struck | [S] jarl a.2 beard + plait (03c2cf1) approved, 0 struck | [S] valkyrie a.3 fur collar + cream plaits (498f78d) approved, 3 struck | [S] ice_archer a.2 snow mantle (911eda0) approved, 2 struck | [S] headbutter a.4 cream cut + broad belt (688ef22) approved, 4 struck, a PASS; CONFIRM then failed a (dome, legs) | [S] brawler a.4 splayed jaw locks (2230052, reverted 77a7b59) REJECTED | [S] halfling a.4 unlit shorts (06049a1 + e4ec07a) approved, 4 + 6 struck | [R] minotaur a.2/a.3 low bull head, one girdle, pauldron scroll (cdc71a4) approved, 2 + 3 struck, 4 added - 7/8, 8 struck
 401 (BASE 0b04353): [S] longship a.4 two carriers + 1.8x ship (e0fbb2c) approved, a struck; CONFIRM then failed c | [S] jarl a.5 pelt curtains to the hips (fd578de + 9c1b402) approved, 5 struck | [S] valkyrie a.2 cream helm feathers, eye-line band, tall crest (c0c74ea + cbecbca) approved, 2 struck | [S] ice_archer c.1 bead flakes out, nine icicles (5509051) approved, c PASS | [S] headbutter c.1 reach .75 + sprawl .14 s + arms trailing (41852fd + fde5dd6) approved, c PASS | [S] headbutter a.4 bracer fur + belt at the waist (7f8b218) approved, 4 narrowed | [S] brawler a.4 second wider bib (05ccbb8 + 6f22d10, reverted a1edda8/3d01ac1) REJECTED - 6/7
-400 (BASE 5a4fea1): [S] farmer.halfling a.5 shorts hem 74d90a4 approved (struck a.5) | [S] ancient.zeus a.3 emblem 6169685+9f043da approved (blocker 3 stands: still pink-grey) | [S] viking.headbutter c.1 dive + prone sprawl 7c3bc11 approved (blocker 1 stands) | [S] viking.headbutter a.4 unlit fur + buckle 4c49b9b approved (blocker 4 stands) | [S] viking.ice_archer c.1 icicles under the shaft 92f8e5b approved (blocker 1 stands) | [S] viking.valkyrie a.2 own helm 715aff5 approved (blocker 2 stands) | [S] viking.longship a.1 deep hull c0da83d approved (struck a.1) | [R] viking.jarl a.1 bear-head hood f80dd04 approved (struck a.1; added a.5) - 8/8
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] viking.longship (e0fbb2c) VERDICT: APPROVE CRITERION: viking.longship.a PASS (previous: FAIL)
-- GAP: [S] viking.jarl (fd578de, 9c1b402) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
-- GAP: [S] viking.valkyrie (c0c74ea, cbecbca) VERDICT: APPROVE CRITERION: viking.valkyrie.a FAIL (previous: FAIL)
-- GAP: [S] viking.ice_archer (5509051) VERDICT: APPROVE CRITERION: viking.ice_archer.c PASS (previous: FAIL)
-- GAP: [S] viking.headbutter (41852fd, fde5dd6) VERDICT: APPROVE CRITERION: viking.headbutter.c PASS (previous: FAIL)
-- GAP: [S] viking.headbutter (7f8b218) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)
-- GAP: [S] viking.brawler (05ccbb8, 6f22d10) VERDICT: REJECT CRITERION: viking.brawler.a FAIL (previous: FAIL)
-- CONFIRM viking.longship a PASS | b PASS | c FAIL | d PASS -> unit stays open, c takes the confirmer's 2 blockers (0 since 401)
+- GAP: [S] viking.longship (4c0305e) VERDICT: APPROVE CRITERION: viking.longship.c FAIL (previous: FAIL)
+- GAP: [S] viking.jarl (03c2cf1) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
+- GAP: [S] viking.valkyrie (498f78d) VERDICT: APPROVE CRITERION: viking.valkyrie.a FAIL (previous: FAIL)
+- GAP: [S] viking.ice_archer (911eda0) VERDICT: APPROVE CRITERION: viking.ice_archer.a FAIL (previous: FAIL)
+- GAP: [S] viking.headbutter (688ef22) VERDICT: APPROVE CRITERION: viking.headbutter.a PASS (previous: FAIL)
+- GAP: [S] viking.brawler (2230052) VERDICT: REJECT CRITERION: viking.brawler.a FAIL (previous: FAIL)
+- GAP: [S] farmer.halfling (06049a1 + e4ec07a) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
+- GAP: [R] ancient.minotaur (cdc71a4) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
+- CONFIRM viking.headbutter a FAIL | b PASS | c PASS | d PASS -> unit stays open, a takes the confirmer's 2 blockers (0 since 402)
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 401: 6/7 approved, 1 rejected (brawler bib) and reverted; no regressions. Done 32 still. Batch unchanged: farmer:re 2 open, ancient 2, viking 6.
-- longship c reopened by the CONFIRM: the carriers vanish at the hurl (the hull snaps from overhead to y=0) and the landed oarsmen hold no oars - those two are its next picks.
-- Next ranked: brawler a the jaw locks splayed wide of the board's rim (not more chest length); jarl a the beard then the chest/arms; valkyrie a the collar then the armour; ice_archer a the front view (evidence commit first); headbutter a warm cream fur on a new material + a broad belt.
-- v4 rules (401 review): ice_archer's back-view evidence commit is 402's first commit (outside the 7); minotaur.a (no attempt since 396) is starving and its [R] takes the [R] slot; wheelbarrow.a starves at 403.
-- No CONFIRM passed; nothing became D.
+- 402: 7/8 approved, the brawler splay rejected and reverted; no regressions. Done 32 still. Batch unchanged: farmer:re 2 open, ancient 2, viking 6.
+- Evidence first at 403 (outside the 7): lineup_viking hides the jarl behind the longship's stern (stand him clear of the hull so his a blockers can be lineup-tested); the ice archer's re-aimed idle still shows a blank head with no eyes (aim it on the eye meshes, eye midpoint minus head centre).
+- [R] slot at 403: wheelbarrow.a is starving (no attempt since 397) and plateau, so its [R] (the front rider's seated split) takes the slot ahead of the brawler's new plateau [R] (a near-black bib proud of the board); the brawler's [R] is the 404 slot.
+- Next ranked [S]: minotaur a.4 (the bull face upright, tilt ~.15); ice_archer a.3 (cream calf cuffs over dark boots); valkyrie a.4 (brown belt + gold ring, arm bands, boots); jarl a.4 (the Brawler's leg kit) then a.2 (jaw-wide beard, plait proud of the pelt strips); longship c.2 (oars kept and swung); halfling a.1 (a planted stance with no stride); headbutter a.1/a.2 (a low skull-cap dome, longer legs).
+- zeus.a (last attempt 400) starves at 405; its blocker 3 stays the emblem held out of the hand-bolt's bloom.
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
