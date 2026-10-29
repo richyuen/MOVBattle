@@ -3165,7 +3165,14 @@ const BEARDED_AXE = {
  * release frame; .78 keeps both heads in shot and the pair read as the reference's hand axes on long hafts.
  */
 const BERSERKER_AXE = { scale: 0.78 };
-function buildBeardedAxe(scene: Scene, s: number): Mesh {
+/*
+ * [S] 414 the Brawler's hatchet (CONFIRM 413 b.1: "axe haft as long as the man, from the ground to above his head, so it reads as a two-handed polearm -
+ * TABS: a short one-handed hatchet, haft about hand-to-shoulder length"; b.2: "a large pale-lavender rounded paddle bigger than his head - TABS: a compact
+ * dark-iron bearded hatchet blade about head-sized"; viking.brawler.red.png, .blue.png): the bearded cut at .scale of its size, so the haft runs from
+ * the fist to about the shoulder and the blade is about a head across, in dark iron (.steel) instead of the pale grey.
+ */
+const BRAWLER_HATCHET = { scale: 0.6, steel: new Color3(0.11, 0.11, 0.12) };
+function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_AXE.steel): Mesh {
   const A = BEARDED_AXE;
   const H = A.long * s;
   const handle = MeshBuilder.CreateCylinder("handle", { height: H, diameter: A.thick * s, tessellation: 7 }, scene);
@@ -3173,7 +3180,7 @@ function buildBeardedAxe(scene: Scene, s: number): Mesh {
   handle.convertToFlatShadedMesh();
   const fistY = -(A.long * 0.5 - A.butt) * s;
   addGripWraps(scene, handle, [fistY - 0.05 * s, fistY, fistY + 0.05 * s], 0.032 * s);
-  const steel = mat(scene, A.steel, A.glow, "cloth");
+  const steel = mat(scene, steelColor, A.glow, "cloth");
   // the blade: an eye at the haft, a bowed cutting edge out front, the beard hanging under it
   const w = A.wide * s, top = 0.12 * s, beard = -A.beard * s;
   const outline: number[][] = [[0, top], [w * 0.3, top * 1.06], [w * 0.62, top * 0.9], [w * 0.86, top * 0.5], [w, -0.02 * s]];
@@ -3625,7 +3632,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "axe": {
-      if (variant === "bearded_axe") return buildBeardedAxe(scene, s);
+      if (variant === "bearded_axe") return buildBeardedAxe(scene, s * BRAWLER_HATCHET.scale, BRAWLER_HATCHET.steel);
       if (variant === "berserker_axe") return buildBeardedAxe(scene, s * BERSERKER_AXE.scale);
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.03 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
