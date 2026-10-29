@@ -512,13 +512,14 @@ async function main() {
             // the snake archer's held snake covered his chest from the weapon side (evidence 387: baldric and belt hidden): his other side
             const swapped = a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling" || a.definition.id === "ancient.snake_archer";
             if (swapped) alpha += 2 * swing;
-            // [evidence 402] a bowman at the ready stands up to .95 rad side-on (proceduralAnimation ready.yaw, hips + chest): the ice archer's chest
-            // turned away from the weapon side, so her idle and lineup showed her back and quiver (critic 396-401 a.4). Her idle's "front" is the
-            // chest's own facing, read off the torso joint's world matrix (its +z row), not the root's yaw; the swing and face flip stay as they are.
+            // [evidence 402] a bowman at the ready stands up to .95 rad side-on (proceduralAnimation ready.yaw, hips + chest) with the head turned
+            // again off the chest: the ice archer's idle and lineup showed her back and quiver (critic 396-401 a.4). Her idle's "front" is the head
+            // block's own facing (fx, fz), read off its world matrix's z row, so the face is what the swing is measured from. The camera sits on the
+            // facing itself: alpha = atan2(fz, fx) (the root rule's yaw - pi/2 is the same thing for the -x facing every idle is shot at).
             if (a.definition.id === "viking.ice_archer") {
-              window.__wp(a.body.torso);
-              const m = a.body.torso.getWorldMatrix().m;
-              alpha = Math.atan2(m[8], m[10]) - Math.PI / 2 - swing;
+              window.__wp(a.body.headMesh);
+              const m = a.body.headMesh.getWorldMatrix().m;
+              alpha = Math.atan2(m[10], m[8]) - swing;
             }
             // [evidence 391] the ballista's idle is the wiki render's front three-quarter, high enough to see over the frame: the loaded bolt's leaf
             // head clears the front and the crewman's head shows beyond the rear rail. The 387 rear three-quarter framed the crewman but hid the
