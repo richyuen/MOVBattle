@@ -73,3 +73,46 @@ export function monkStaff(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 411 the Ninja's hood and mask (audit 411 a.1: "an oversized near-black ball about twice head size with a stub at the back - TABS: a head-sized
+ * team-coloured hood and face mask"; dynasty.ninja.red.png: a boxy team hood over the crown and down the back and sides of the head, a mask over the
+ * face from under the eyes to the chin, an open band at the eyes for the two bead eyes, a short tied tail hanging at the back). In the head's half
+ * extents e, all boxes .out of e proud:
+ *   crown: from .clear over the eyes' top to .top of e.y; back: the full height behind .backFrom of e.z; sides: the full height from .sideFrom of e.x out;
+ *   mask: the full width and depth from .chin of e.y up to .clear under the eyes' bottom, a shade .maskShade of the team;
+ *   tail: a knot .knot of e at the back of the crown with a band .tail of e.y long hanging from it.
+ * Replaces the shared ninja_mask hat (unitVisuals).
+ */
+const NINJA_HOOD = { out: 1.12, clear: 0.05, top: 1.12, backFrom: -0.15, sideFrom: 0.72, chin: -1.08, maskShade: 0.82, knot: 0.22, tail: 0.9, glow: 0.12 };
+/** The Ninja's boxy team hood with an eye band and a face mask (spec at NINJA_HOOD). */
+export function ninjaHood(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const N = NINJA_HOOD;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(N.glow) });
+  const shade = teamColor.scale(N.maskShade);
+  const maskCloth = mf.get("cloth", shade, { emissive: shade.scale(N.glow) });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const span = eyeSpanInHead(body) ?? [-e.y * 0.2, e.y * 0.3];
+  const X = e.x * N.out, Z = e.z * N.out;
+  const out: Mesh[] = [];
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, mat = cloth): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    m.parent = body.headMesh;
+    m.material = mat;
+    out.push(m);
+    return m;
+  };
+  const eyeTop = span[1] + e.y * N.clear, eyeBottom = span[0] - e.y * N.clear;
+  const bottom = e.y * N.chin, top = e.y * N.top;
+  slab("ninjaHoodCrown", -X, X, eyeTop, top, -Z, Z);
+  slab("ninjaHoodBack", -X, X, bottom, eyeTop, -Z, e.z * N.backFrom);
+  for (const side of [-1, 1]) slab("ninjaHoodSide", side > 0 ? e.x * N.sideFrom : -X, side > 0 ? X : -e.x * N.sideFrom, eyeBottom, eyeTop, -Z, Z);
+  slab("ninjaMask", -X, X, bottom, eyeBottom, -Z, Z * 1.02, maskCloth);
+  const k = e.y * N.knot;
+  slab("ninjaHoodKnot", -k, k, eyeTop - k, eyeTop + k, -Z - k * 1.4, -Z);
+  const tail = slab("ninjaHoodTail", -k * 0.6, k * 0.6, eyeTop - e.y * N.tail, eyeTop, -Z - k * 1.1, -Z - k * 0.5);
+  tail.rotation.x = -0.25;
+  return out;
+}
