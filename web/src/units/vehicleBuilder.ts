@@ -2031,16 +2031,17 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     stem.material = darkWood;
     allMeshes.push(stem);
   }
-  // the gunwale rails: the one piece of the ship in the team colour (the vehicle body material is taken from this mesh)
-  let gunwale: Mesh | null = null;
+  // [S] 404 the gunwale rails in the hull's dark timber (CONFIRM 403 a.1: "two long blue bars running the length of the hull over the shield row";
+  // viking.longship.jpg, viking.longship.red.png: the hull is brown wood throughout, team colour only on the hanging shields). The vehicle body
+  // material (the team tint) is now taken from the first shield face instead (LESSONS: a team-trim mesh goes in as the body source).
   for (const side of [-1, 1]) {
     const rail = MeshBuilder.CreateBox("longshipGunwale", { width: 0.12, height: 0.08, depth: 2.42 }, scene);
     rail.position.set(side * 0.6, HULL.wall + 0.03, 0);
     rail.parent = root;
-    rail.material = teamPrimary;
+    rail.material = darkWood;
     allMeshes.push(rail);
-    gunwale ??= rail;
   }
+  let teamTrim: Mesh | null = null;
 
   const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.82, height: 0.05, depth: 2.34 }, scene);
   deck.position.set(0, HULL.deck, 0);
@@ -2076,6 +2077,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
       face.parent = holder;
       face.material = shieldMat;
       allMeshes.push(face);
+      teamTrim ??= face;
       const rim = shieldDisc("longshipShieldRim", SHIELDS.rim, 0.026);
       rim.position.z = -0.008;
       rim.parent = holder;
@@ -2343,7 +2345,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   return wrapAsBody(
     scene,
     root,
-    gunwale!,
+    teamTrim!,
     allMeshes,
     operator.headMesh,
     makeBodyMetrics(shipTop, 1.1 * SHIP.scale, 0.6 * SHIP.scale, ship.position.y + 0.6),
