@@ -8,6 +8,27 @@ import { limbBox, limbShell } from "./medievalDress";
  * Pieces worn on the head are parented to the head mesh (+z his front, +y up, its origin its middle); pieces on the trunk to the torso joint.
  */
 
+/**
+ * The higher bead eye's top, in the head block's own frame (null when the body has no eyes). The eyes hang off the neck, not the head block, so a cap
+ * or band on the head must be seated off this or it covers them (403 ice archer, 404 headbutter).
+ */
+function eyeTopInHead(body: ArticulatedBody): number | null {
+  const eyes = [body.leftEye, body.rightEye].filter((m): m is Mesh => !!m);
+  if (!eyes.length) return null;
+  const chain: Node[] = [];
+  for (let n: Node | null = eyes[0]; n; n = n.parent) chain.unshift(n);
+  for (const n of chain) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+  body.headMesh.computeWorldMatrix(true);
+  const toHead = body.headMesh.getWorldMatrix().clone().invert();
+  let eyeTop = -Infinity;
+  for (const eye of eyes) {
+    eye.computeWorldMatrix(true);
+    const bb = eye.getBoundingInfo().boundingBox;
+    eyeTop = Math.max(eyeTop, Vector3.TransformCoordinates(new Vector3(bb.centerWorld.x, bb.maximumWorld.y, bb.centerWorld.z), toHead).y);
+  }
+  return eyeTop;
+}
+
 /** The head block's half extents in its own frame. */
 function headExtents(body: ArticulatedBody): Vector3 {
   body.headMesh.computeWorldMatrix(true);
@@ -31,7 +52,7 @@ function headExtents(body: ArticulatedBody): Vector3 {
  * to the spike's foot, standing .stripProud of the dome's own surface.
  */
 const HEADBUTTER_CAP = {
-  dome: 1.1, tall: 0.72, rise: 0.16, band: 0.15, bandProud: 1.05, studs: 5, stud: 0.11, strip: 0.2, stripProud: 0.04,
+  dome: 1.1, tall: 0.72, rise: 0.16, eyeClear: 0.03, band: 0.15, bandProud: 1.05, studs: 5, stud: 0.11, strip: 0.2, stripProud: 0.04,
   flapDrop: 0.62, flapWide: 0.2, flapDeep: 0.66, spike: 0.9, spikeBase: 0.2, spikeRise: 0.02, glow: 0.08, darkGlow: 0.06,
 };
 
@@ -51,13 +72,18 @@ export function headbutterCap(scene: Scene, body: ArticulatedBody, teamColor: Co
     out.push(m);
     return m;
   };
-  const top = e.y * C.rise;
+  // [S] 404 the brow band seated above the eyes (critic 403 a.3: "the dark band runs across the eye beads like goggles" once the head shrank to 1.3;
+  // viking.headbutter.red.png: the band above the eyes, the eyes on the face under it). As the Ice Archer's cap (403): the band's foot is put
+  // .eyeClear of H over the higher eye bead's top read into the head's frame, and the dome, studs, strip, flaps and spike all ride up with it.
+  let top = e.y * C.rise;
+  const eyeTop = eyeTopInHead(body);
+  if (eyeTop !== null) top = Math.max(top, eyeTop + e.y * (C.band * 0.5 + C.eyeClear) + e.y * C.band * 0.35);
   const dome = put(MeshBuilder.CreateSphere("headbutterCap", {
     diameterX: 2 * e.x * C.dome, diameterY: 2 * e.y * C.tall, diameterZ: 2 * e.z * C.dome, segments: 10, slice: 0.56,
   }, scene), cap);
   dome.position.y = top;
   // the brow band: a dark ring round the head, its middle a touch under the cap's rim
-  const bandY = e.y * (C.rise - C.band * 0.35);
+  const bandY = top - e.y * C.band * 0.35;
   const band = put(MeshBuilder.CreateBox("headbutterBand", {
     width: 2 * e.x * C.bandProud, height: e.y * C.band, depth: 2 * e.z * C.bandProud,
   }, scene), leather);
@@ -95,7 +121,7 @@ export function headbutterCap(scene: Scene, body: ArticulatedBody, teamColor: Co
     flap.rotation.z = side * 0.07;
   }
   // the single spike: a tall grey cone off the crown, with its stud at the foot
-  const crown = e.y * (C.rise + C.tall) - e.y * 0.03;
+  const crown = top + e.y * C.tall - e.y * 0.03;
   const spike = put(MeshBuilder.CreateCylinder("headbutterSpike", {
     height: e.y * C.spike, diameterTop: 0, diameterBottom: 2 * e.x * C.spikeBase, tessellation: 4,
   }, scene), steel);
@@ -138,19 +164,8 @@ export function iceArcherCap(scene: Scene, body: ArticulatedBody, teamColor: Col
   // The rim is placed off the eye meshes themselves: the higher eye's top, read into the head's frame, plus half the brim's tube and .eyeClear of H, so the
   // fur roll sits just over the eyes and the dome rides above them.
   let rise = e.y * C.rise;
-  const eyes = [body.leftEye, body.rightEye].filter((m): m is Mesh => !!m);
-  if (eyes.length) {
-    const chain: Node[] = [];
-    for (let n: Node | null = eyes[0]; n; n = n.parent) chain.unshift(n);
-    for (const n of chain) if (n instanceof TransformNode) n.computeWorldMatrix(true);
-    body.headMesh.computeWorldMatrix(true);
-    const toHead = body.headMesh.getWorldMatrix().clone().invert();
-    let eyeTop = -Infinity;
-    for (const eye of eyes) {
-      eye.computeWorldMatrix(true);
-      const bb = eye.getBoundingInfo().boundingBox;
-      eyeTop = Math.max(eyeTop, Vector3.TransformCoordinates(new Vector3(bb.centerWorld.x, bb.maximumWorld.y, bb.centerWorld.z), toHead).y);
-    }
+  const eyeTop = eyeTopInHead(body);
+  if (eyeTop !== null) {
     const rimAt = eyeTop + e.y * (C.brim * 0.5 + ICE_ARCHER_EYE_CLEAR);
     rise = Math.max(rise, rimAt + (2 * C.slice - 1) * e.y * C.tall);
   }
