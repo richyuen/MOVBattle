@@ -1,4 +1,4 @@
-# Loop state (v3: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D)
+# Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
 Iteration: 402   Batch: farmer:re+ancient+viking (5-8/19)   Consecutive empty: 0   Done: 32/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
@@ -41,7 +41,7 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 - 401: 6/7 approved, 1 rejected (brawler bib) and reverted; no regressions. Done 32 still. Batch unchanged: farmer:re 2 open, ancient 2, viking 6.
 - longship c reopened by the CONFIRM: the carriers vanish at the hurl (the hull snaps from overhead to y=0) and the landed oarsmen hold no oars - those two are its next picks.
 - Next ranked: brawler a the jaw locks splayed wide of the board's rim (not more chest length); jarl a the beard then the chest/arms; valkyrie a the collar then the armour; ice_archer a the front view (evidence commit first); headbutter a warm cream fur on a new material + a broad belt.
-- The critic model pins are gone: AUDIT, gap review and CONFIRM are plain general-purpose Agents on the session default (ITERATE steps 2/6/7, CLAUDE.md).
+- v4 rules (401 review): ice_archer's back-view evidence commit is 402's first commit (outside the 7); minotaur.a (no attempt since 396) is starving and its [R] takes the [R] slot; wheelbarrow.a starves at 403.
 - No CONFIRM passed; nothing became D.
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)

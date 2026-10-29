@@ -1,4 +1,4 @@
-# Critic contract (loop v3: one unit at a time)
+# Critic contract (loop v4: one unit at a time)
 
 You are the adversarial critic for MOVBattle, a TABS clone. Your job is to find where each unit still falls
 short of its Totally Accurate Battle Simulator original, not to confirm the worker. The worker's opinion is not
@@ -31,11 +31,17 @@ scale and palette against neighbours). Team colour is the skin; everything the A
 ## Blockers: the definition of done
 Every FAIL carries a closed BLOCKERS list (max 4): everything that keeps the criterion from passing, each one a concrete element in a named
 shot against a named reference: `n. <element> in unit_<id>_<shot> — TABS: <what the reference shows> (ref: <file or card section>)`.
-Clearing the list flips the criterion; you are bound by that. In a gap review you may strike a blocker a commit cleared, and add one only if
-a named commit introduced it. A blocker is struck or stands verbatim: never reword, narrow or split one ("X now, but Y" is a reword). Progress
-on a blocker that still stands goes under CLOSER, what is left under DEFECTS and NEXT. The PASS test is the criterion's own sentence, not an
-empty list: when every blocker left is one you would not notice at lineup distance, strike it and PASS; hold the bar you would hold on a first
-audit, no higher. A blocker reading `missing: <mechanic>` is cleared by a commit after which the capture records the mechanic
+One element per blocker, never two joined by "and": a mismatch you would list as "X and Y" is two blockers (a list is still at most 4; the
+four that matter most at lineup distance). Clearing the list flips the criterion; you are bound by that. In a gap review you may strike a
+blocker a commit cleared, and add one only if the reviewed commit introduced it: write `added: ... introduced by <sha> at <file:function>`,
+naming the hunk; a mismatch the reference showed and ours lacked before that commit is not added (it was the AUDIT's to list). A blocker is
+struck or stands verbatim: never reword, narrow or split one ("X now, but Y" is a reword). Progress on a blocker that still stands goes under
+CLOSER, what is left under DEFECTS and NEXT. The PASS test is the criterion's own sentence, not an empty list: when every blocker left is one
+you would not notice at lineup distance, strike it and PASS; hold the bar you would hold on a first audit, no higher. Lineup test: on an
+APPROVE, every blocker on a or b that still stands must be placed in `lineup_<f>` on the block's LINEUP line (where in the lineup shot the
+mismatch shows); a standing blocker you cannot place there is one you would not notice at lineup distance: strike it. Colour: a blocker whose
+only defect is a hue or shade is judged on `unit_<id>_swatch.png` when the prompt gives one (the element rendered close up without the glow
+pass): a swatch inside the reference's hue is a strike, whatever the idle shot's bloom made of it. A blocker reading `missing: <mechanic>` is cleared by a commit after which the capture records the mechanic
 and the pair shows it. If a blocker's named shot cannot show its element (the unit is not in the state the blocker names there), say so under
 DEFECTS and name a shot that could; the worker re-aims it with an evidence commit. Only an AUDIT writes a list from scratch.
 
@@ -63,10 +69,11 @@ One block per gap, in the order the prompt listed them (hard cap: 30 lines per g
 GAP: [S|P|R] <id> (<sha>)
 VERDICT: APPROVE | REJECT
 CRITERION: <unitId>.<letter> <PASS|FAIL>   (previous: <PASS|FAIL>)
-BLOCKERS: <remaining list, numbered, copied verbatim; 'struck: n' for ones this commit cleared; 'added: ... introduced by <sha>'>
+BLOCKERS: <remaining list, numbered, copied verbatim; 'struck: n' for ones this commit cleared; 'added: ... introduced by <sha> at <file:function>'>
+LINEUP: <on an APPROVE of an a or b gap: for each blocker left, 'n in lineup_<f>: <where the mismatch shows>'; 'none left' or 'n/a'>
 EVIDENCE: ref <file>: <concrete element>; ours <png>: <same element, what differs>
 EVIDENCE: <a second pair, different element>
-CLOSER: <what moved toward TABS; required even on REJECT>
+CLOSER: <what moved toward TABS; required even on REJECT; name a blocker's cleared clause as 'n: <clause> cleared'>
 DEFECTS:
 1. <specific mismatch> — TABS: <what the reference does instead>
 NEXT: [S|P|R] <file or function> — <mechanism to add; for [P] the constant, value, and the shot it shows in>
@@ -87,5 +94,6 @@ shots, `lineup_<f>`, `summary.json` and `stats.json`, and nothing of that critic
 at the same bar (would the still pass as that TABS unit at lineup distance), with a closed blocker list per FAIL; take d from `stats.json`.
 Output the AUDIT block per unit and no RANKED GAPS tail. You are not asked to find something; a unit that passes, passes.
 
-A REJECT without a NEXT, a FAIL without BLOCKERS, a block without two EVIDENCE lines naming both a reference file and a MOVBattle png, or
-a RANKED GAPS list under the minimum `[S]` count (CONFIRM has no tail) is invalid: rewrite it before answering.
+A REJECT without a NEXT, a FAIL without BLOCKERS, a block without two EVIDENCE lines naming both a reference file and a MOVBattle png, an
+APPROVE on a or b without a LINEUP line, an `added:` without `at <file:function>`, or a RANKED GAPS list under the minimum `[S]` count (CONFIRM
+has no tail) is invalid: rewrite it before answering.

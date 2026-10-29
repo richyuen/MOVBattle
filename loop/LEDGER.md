@@ -1,4 +1,4 @@
-# Loop ledger (v2): every value the loop has tuned
+# Loop ledger (v4): every value the loop has tuned
 
 Rows: `file:identifier | current value | last iter | verdict | earlier values (newest first)`. The identifier carries the unit
 (`rosterManifest.ts:tribal.clubber damageMultiplier`, `unitVisuals.ts:tribal.clubber proportions.scale`, `propBuilder.ts:club CLUB_LEN`).
