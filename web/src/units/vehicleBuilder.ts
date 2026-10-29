@@ -2012,12 +2012,37 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   keel.parent = root;
   keel.material = darkWood;
   allMeshes.push(keel);
+  /*
+   * [S] 406 the curved hull (CONFIRM 403 a.3: "a straight-sided rectangular box with a flat top"; viking.longship.jpg, .red.png: a boat whose sides
+   * belly out amidships and draw in to the posts, the sheer sweeping up fore and aft into the tall bow and the curled stern). Each strake, the gunwale
+   * rail and the deck run along a curve instead of a straight box: at t in [-1, 1] along the hull (stern to bow, half length .half), a row's half
+   * width is its midships width times 1 - .pinch |t|^.pow (the sides close in to the posts), and its height rises .rise t^2 times the row's share of
+   * the side (the top row sweeps up most), .bow more toward the bow. Built of .segs boxes laid end to end along the curve and merged, each keeping the
+   * lapstrake roll. The keel, the deck's height and the carriers' grip under the keel do not move.
+   */
+  const SHEER = { half: 1.3, pinch: 0.8, pow: 3, rise: 0.34, bow: 1.25, segs: 12 };
+  const widthAt = (mid: number, t: number): number => mid * (1 - SHEER.pinch * Math.abs(t) ** SHEER.pow);
+  const riseAt = (share: number, t: number): number => SHEER.rise * share * t * t * (t > 0 ? SHEER.bow : 1);
+  const curvedPlank = (name: string, side: number, mid: number, y0: number, share: number, w: number, h: number, roll: number, half = SHEER.half): Mesh => {
+    const parts: Mesh[] = [];
+    for (let k = 0; k < SHEER.segs; k++) {
+      const ta = (k / SHEER.segs) * 2 - 1, tb = ((k + 1) / SHEER.segs) * 2 - 1;
+      const a = new Vector3(side * widthAt(mid, ta), y0 + riseAt(share, ta), ta * half);
+      const b = new Vector3(side * widthAt(mid, tb), y0 + riseAt(share, tb), tb * half);
+      const d = b.subtract(a);
+      const seg = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d.length() * 1.06 }, scene);
+      seg.position.copyFrom(a.add(b).scale(0.5));
+      seg.rotation.set(-Math.atan2(d.y, Math.hypot(d.x, d.z)), Math.atan2(d.x, d.z), roll);
+      parts.push(seg);
+    }
+    const merged = Mesh.MergeMeshes(parts, true)!;
+    merged.name = name;
+    merged.parent = root;
+    return merged;
+  };
   for (const side of [-1, 1]) {
     for (let row = 0; row < HULL.rows; row++) {
-      const strake = MeshBuilder.CreateBox("longshipStrake", { width: 0.09, height: HULL.strake, depth: 2.56 - row * 0.16 }, scene);
-      strake.position.set(side * (0.32 + row * 0.08), 0.24 + row * HULL.rowStep, 0);
-      strake.rotation.z = -side * 0.18;
-      strake.parent = root;
+      const strake = curvedPlank("longshipStrake", side, 0.32 + row * 0.08, 0.24 + row * HULL.rowStep, (row + 1) / HULL.rows, 0.09, HULL.strake, -side * 0.18);
       strake.material = wood;
       allMeshes.push(strake);
     }
@@ -2034,17 +2059,25 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   // [S] 404 the gunwale rails in the hull's dark timber (CONFIRM 403 a.1: "two long blue bars running the length of the hull over the shield row";
   // viking.longship.jpg, viking.longship.red.png: the hull is brown wood throughout, team colour only on the hanging shields). The vehicle body
   // material (the team tint) is now taken from the first shield face instead (LESSONS: a team-trim mesh goes in as the body source).
+  // [S] 406 the rails ride the top strake's sweep (SHEER)
   for (const side of [-1, 1]) {
-    const rail = MeshBuilder.CreateBox("longshipGunwale", { width: 0.12, height: 0.08, depth: 2.42 }, scene);
-    rail.position.set(side * 0.6, HULL.wall + 0.03, 0);
-    rail.parent = root;
+    const rail = curvedPlank("longshipGunwale", side, 0.6, HULL.wall + 0.03, 1, 0.12, 0.08, 0, SHEER.half * 0.97);
     rail.material = darkWood;
     allMeshes.push(rail);
   }
   let teamTrim: Mesh | null = null;
 
-  const deck = MeshBuilder.CreateBox("longshipDeck", { width: 0.82, height: 0.05, depth: 2.34 }, scene);
-  deck.position.set(0, HULL.deck, 0);
+  // [S] 406 the deck narrows with the hull toward the posts: .segs slabs, each as wide as the second strake there, merged
+  const deckParts: Mesh[] = [];
+  const deckHalf = 1.17;
+  for (let k = 0; k < SHEER.segs; k++) {
+    const tm = ((k + 0.5) / SHEER.segs) * 2 - 1;
+    const slab = MeshBuilder.CreateBox("longshipDeck", { width: Math.max(0.1, 2 * widthAt(0.41, tm * deckHalf / SHEER.half)), height: 0.05, depth: (2 * deckHalf) / SHEER.segs }, scene);
+    slab.position.set(0, HULL.deck, tm * deckHalf);
+    deckParts.push(slab);
+  }
+  const deck = Mesh.MergeMeshes(deckParts, true)!;
+  deck.name = "longshipDeck";
   deck.parent = root;
   deck.material = darkWood;
   allMeshes.push(deck);
@@ -2072,8 +2105,10 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
     for (let i = 0; i < SHIELDS.count; i++) {
       const holder = new TransformNode("longshipShieldMount", scene);
       holder.parent = root;
-      holder.position.set(side * SHIELDS.across, SHIELDS.y, SHIELDS.first + i * SHIELDS.spread);
-      holder.rotation.y = side * Math.PI / 2;
+      // [S] 406 each board hangs on the curved rail where it is: in by the hull's pinch there, up by its sweep, turned with the side's run
+      const zAt = SHIELDS.first + i * SHIELDS.spread, tAt = zAt / SHEER.half;
+      holder.position.set(side * (widthAt(SHIELDS.across, tAt) + 0.02), SHIELDS.y + riseAt(0.8, tAt), zAt);
+      holder.rotation.y = side * Math.PI / 2 - side * Math.atan(SHIELDS.across * SHEER.pinch * SHEER.pow * Math.abs(tAt) ** (SHEER.pow - 1) * Math.sign(tAt) / SHEER.half);
       holder.rotation.z = (i % 2 ? 1 : -1) * 0.06;
       const face = shieldDisc("longshipShield", SHIELDS.face, 0.035);
       face.parent = holder;
