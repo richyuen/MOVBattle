@@ -88,6 +88,8 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   body.headMesh.isVisible = false;
   // [S] 409 the barrel chest (spec at MINO_BARREL), built before any gear so every piece sized off the trunk (trunkBand) takes its new width and depth
   out.push(...minoBarrel(scene, body, fur));
+  // [S] 410 ...and the arms to go with it (spec at MINO_ARMS)
+  out.push(...minoArms(scene, body, fur));
   const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.12) });
   const lightTeam = Color3.Lerp(teamColor, new Color3(1, 1, 1), MINO_BELT.lighter);
   const light = mf.get("cloth", lightTeam, { emissive: lightTeam.scale(0.15) });
@@ -313,6 +315,24 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
     const hock = MeshBuilder.CreateIcoSphere("minoHock", { radius: S.x * Lg.hock, subdivisions: 1, flat: true }, scene);
     hock.position.copyFrom(hockAt);
     add(hock, knee, fur);
+  }
+  return out;
+}
+
+/*
+ * [S] 410 the minotaur's heavy arms (CONFIRM 408 a.2: "thin stick arms with small hands - TABS: thick muscular forearms and upper arms ending in big
+ * mitt fists held in front of the belly"; ancient.minotaur.red.png: upper arms as thick as the neck, forearms thicker still toward the wrist, fists
+ * as big as the bull's muzzle). In each limb's own frame (limbShell): a faceted fur sleeve the whole length of the upper arm, .upper of the limb's
+ * radius, and of the forearm, .fore of it; each mitt (the *HandM mesh) scaled up .fist.
+ */
+const MINO_ARMS = { upper: 1.6, fore: 1.85, fist: 1.75 };
+function minoArms(scene: Scene, body: ArticulatedBody, fur: Material): Mesh[] {
+  const A = MINO_ARMS;
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "minoUpperArm", arm, 0, 1, A.upper, fur));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) out.push(limbShell(scene, "minoForearm", arm, 0, 1, A.fore, fur));
+  for (const hand of [body.leftHand, body.rightHand]) {
+    for (const m of hand.getChildMeshes(true)) if (/HandM$/.test(m.name)) m.scaling.scaleInPlace(A.fist);
   }
   return out;
 }
