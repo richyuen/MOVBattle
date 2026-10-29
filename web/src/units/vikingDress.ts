@@ -291,6 +291,45 @@ export function iceArcherCoat(scene: Scene, body: ArticulatedBody, teamColor: Co
   return out;
 }
 
+/*
+ * [S] 410 the Ice Archer's hip quiver (CONFIRM 405 a.3: "small black tube quiver on the back - TABS: a large brown leather quiver slab hanging at the
+ * hip"; viking.ice_archer.red.png, .blue.png: a broad flat brown leather case hanging from the belt down her off side to the knee, a darker rim at its
+ * mouth, two pale ice arrow tips standing out of it). On the hip joint, on the off side (away from the bow hand): a slab .wide x .long x .deep of the
+ * trunk's width, its top .top of the trunk height over the hip, .side of the half width out, .back behind, leant .tilt out at its foot; a rim .rim
+ * tall round its mouth; .tips ice cones standing .tipProud out of the mouth. Replaces the generic quiver_back (unitVisuals).
+ */
+const ICE_ARCHER_QUIVER = {
+  wide: 0.36, long: 1.15, deep: 0.16, top: 0.32, side: 1.12, back: 0.05, tilt: 0.12, rim: 0.07, tips: 2, tipProud: 0.16,
+  leather: new Color3(0.32, 0.17, 0.09), dark: new Color3(0.17, 0.09, 0.05), ice: new Color3(0.62, 0.84, 1.0), glow: 0.2,
+};
+/** The Ice Archer's broad brown leather quiver slab at her off hip (spec at ICE_ARCHER_QUIVER). */
+export function iceArcherQuiver(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const Q = ICE_ARCHER_QUIVER;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", Q.leather, { emissive: Q.leather.scale(Q.glow) });
+  const dark = mf.get("cloth", Q.dark, { emissive: Q.dark.scale(Q.glow) });
+  const ice = mf.get("cloth", Q.ice, { emissive: Q.ice.scale(0.35) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y;
+  const side = -(Math.sign(body.rightShoulder.position.x) || 1);
+  const holder = new TransformNode("iceArcherQuiverHolder", scene);
+  holder.parent = body.hip;
+  holder.position.set(side * W * 0.5 * Q.side, H * Q.top, -W * Q.back);
+  holder.rotation.z = -side * Q.tilt;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof leather): Mesh => { m.parent = holder; m.material = mat; m.convertToFlatShadedMesh(); out.push(m); return m; };
+  const L = H * Q.long, w = W * Q.wide, d = W * Q.deep;
+  const slab = put(MeshBuilder.CreateBox("iceArcherQuiver", { width: d, height: L, depth: w }, scene), leather);
+  slab.position.y = -L / 2;
+  const rim = put(MeshBuilder.CreateBox("iceArcherQuiverRim", { width: d * 1.2, height: H * Q.rim, depth: w * 1.08 }, scene), dark);
+  rim.position.y = -H * Q.rim * 0.5;
+  for (let k = 0; k < Q.tips; k++) {
+    const tip = put(MeshBuilder.CreateCylinder("iceArcherQuiverTip", { height: H * Q.tipProud, diameterTop: 0, diameterBottom: d * 0.8, tessellation: 4 }, scene), ice);
+    tip.position.set(0, H * Q.tipProud * 0.5, (k - (Q.tips - 1) / 2) * w * 0.4);
+  }
+  return out;
+}
+
 /** The head's box in the torso joint's frame: its lowest point, its middle's height and depth, its width, height and depth. */
 function headInTorso(body: ArticulatedBody): { chin: number; midY: number; midZ: number; wide: number; tall: number; deep: number } {
   for (let n: Node | null = body.headMesh; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);

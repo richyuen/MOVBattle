@@ -396,7 +396,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "viking.ice_archer": vis(
     // [S] 396 her own round cap with a pale fur brim and snow pom is vikingDress iceArcherCap; the shared hood cone is off
-    { scale: 0.95, armLength: 1.05 }, "bow", "none", "none", "quiver_back", "#ADD8E6",
+    { scale: 0.95, armLength: 1.05 }, "bow", "none", "none", "none", "#ADD8E6", // 410: her quiver is vikingDress ICE_ARCHER_QUIVER
     undefined,
     {
       // [S] 392 the Ice Bow: a body-height pale-ice stave with jagged icicle tips and a snowball at the upper nock (propBuilder ICE_BOW)

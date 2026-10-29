@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -580,6 +580,8 @@ export class UnitFactory {
       propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
       // [S] 409 ...and her long-sleeved belted team coat over the fur-tinted trunk (vikingDress ICE_ARCHER_COAT; its skirt below in the same cloth)
       propMeshes.push(...iceArcherCoat(this._scene, body, teamColor));
+      // [S] 410 ...and her broad leather quiver slab at the off hip, in place of the back tube (vikingDress ICE_ARCHER_QUIVER)
+      propMeshes.push(...iceArcherQuiver(this._scene, body));
     }
     // [S] the Headbutter's own spiked team cap in place of the shared horned viking helmet (392; vikingDress HEADBUTTER_CAP)
     if (definition.id === "viking.headbutter" && !shouldUseVehicleBody) {
