@@ -1583,7 +1583,8 @@ const BUNCHED_CREW = { recline: -0.5, nod: 0.3 };
  */
 // (380 follow-up: at front .11, back -.07, splay .55 the tray's rear quarter stayed empty and the Thrower's knees hid behind the Farmer)
 const LOW_RIM = { tall: 0.06, front: 0.06 };
-const CREW_SEAT = { lipUp: 0.03, frontThigh: -1.15, frontSplay: 0.62, frontKnee: 0.45, astrideUp: 0.04 };
+// (frontThigh -1.15, frontSplay .62, frontKnee .45 retired 403 by FRONT_SPLIT)
+const CREW_SEAT = { lipUp: 0.03, astrideUp: 0.04 };
 /*
  * [S] the Thrower's legs round the Farmer (381; farmer.wheelbarrow.red.png: the Apple Thrower sits at the tray's back end and his thighs run forward
  * either side of the Farmer, knees out past the Farmer's hips, shins hanging outside the tray; critic 380: his knees hid behind the Farmer and one shin
@@ -1609,6 +1610,29 @@ const THROWER_PERCH = { seat: -0.15, up: 0.09, tuftDeep: 0.13, lumps: 0.18, wide
  * (height and fore-aft), .out rig units outside that shoulder; the shin then hangs down and out from the knee (.shinOut, .shinDown, .shinAhead).
  */
 const THROWER_KNEES = { chest: 0.55, out: 0.2, shinOut: 0.6, shinDown: 1, shinAhead: 0.15 };
+/*
+ * [R] 403 the Farmer's seated split (farmer.wheelbarrow.red.png: the front rider sits on the tray's front end with his thighs out to the sides near
+ * level, both knees at his waist's height well outside the side boards, the white-socked shins dropping down outside the boards, feet below the
+ * rim; critic 397: his knees stayed close in front of him, the thrower's knees no substitute). Spec, read off the render: thigh about 70 degrees out
+ * from straight ahead, a little forward and barely down, so the knee lands about one thigh length out to the side, past the board by ~.6 of a thigh;
+ * shin nearly plumb, a little out and forward. Replaces CREW_SEAT.frontThigh/.frontSplay/.frontKnee (Euler angles that, under the hip's own frame,
+ * crossed the knees inward to |x| .09 root inside the .22 board). Solved in the rig's frame with aimLimb, as the Thrower's legs are: each thigh
+ * along (side * .out, -.down, .ahead), each shin along (side * .shinOut, -1, .shinAhead).
+ */
+const FRONT_SPLIT = { out: 0.88, down: 0.12, ahead: 0.42, shinOut: 0.22, shinAhead: 0.12 };
+/** The Farmer's thighs out to the sides near level, knees outside the boards, shins down outside them (spec at FRONT_SPLIT). */
+function seatFarmerSplit(rig: TransformNode, farmer: ArticulatedBody): void {
+  const S = FRONT_SPLIT;
+  settleWorld(rig);
+  const toRig = rig.getWorldMatrix().clone().invert();
+  const fromRig = rig.getWorldMatrix();
+  for (const [hip, knee] of [[farmer.leftHip, farmer.leftKnee], [farmer.rightHip, farmer.rightKnee]] as [TransformNode, TransformNode][]) {
+    settleWorld(hip);
+    const side = Math.sign(Vector3.TransformCoordinates(hip.getAbsolutePosition(), toRig).x) || 1;
+    aimLimb(hip, Vector3.TransformNormal(new Vector3(side * S.out, -S.down, S.ahead), fromRig));
+    aimLimb(knee, Vector3.TransformNormal(new Vector3(side * S.shinOut, -1, S.shinAhead), fromRig));
+  }
+}
 /** World matrices of a node and every ancestor, root first, so a read made at build time is fresh. */
 function settleWorld(node: TransformNode): void {
   const chain: TransformNode[] = [];
@@ -1887,13 +1911,11 @@ function buildWheelbarrow(scene: Scene, color: Color3): ArticulatedBody {
   addOperator(scene, rig, allMeshes, 0, 0, W.trayZ + LOW_RIM.front, color, (man) => {
     crew.farmer = man;
     man.root.position.y = W.trayY + sideTall + S.lipUp - man.hip.position.y;
-    man.leftHip.rotation.set(S.frontThigh, 0, S.frontSplay);
-    man.rightHip.rotation.set(S.frontThigh, 0, -S.frontSplay);
-    man.leftKnee.rotation.x = S.frontKnee;
-    man.rightKnee.rotation.x = S.frontKnee;
     // reclined back into the Apple Thrower's chest, head brought forward to look ahead (BUNCHED_CREW)
     man.torso.rotation.x = BUNCHED_CREW.recline;
     man.neck.rotation.x = BUNCHED_CREW.nod;
+    // thighs out to the sides, knees outside the boards, shins down outside them (spec at FRONT_SPLIT)
+    seatFarmerSplit(rig, man);
     man.leftShoulder.rotation.x = -0.7;
     man.rightShoulder.rotation.x = -0.7;
     man.leftElbow.rotation.x = -0.6;
