@@ -331,6 +331,74 @@ export function valkyrieCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 403 the Valkyrie's armour (viking.valkyrie.red.png, viking.valkyrie.png; critic 391-402 a.4: "a plain blue tunic and skirt, no belt, trim or
+ * boots"): over the team tunic, a wide brown belt round the waist with a big gold ring on its front, a gold band round each upper arm, dark team
+ * bracers on the forearms, and brown boots over the feet and lower shins.
+ *   belt: a band .beltTall of the trunk tall at .beltAt of its half height, .beltOut of the trunk's half width out, brown (the Headbutter's belt brown,
+ *     HEADBUTTER_BELT) with a dark rim at top and foot; ring: a gold torus .ring of the trunk's width across standing on the belt's front, .ringProud of
+ *     the belt's radius out so it clears the plaits' feet;
+ *   arm bands: a gold sleeve from .bandFrom to .bandTo of each upper arm, .bandOut of its radius;
+ *   bracers: a team-dark (x .bracerDark) sleeve from .bracerFrom to .bracerTo of each forearm, .bracerOut;
+ *   boots: a brown sleeve from .bootFrom of the shin to its foot, .bootOut, and the foot mesh itself in the boot's leather.
+ * Gold as cloth with its own light (LESSONS: "metal" renders near black under swiftshader), off the palette's gold (ZEUS_TOGA's (.88,.58,.1)).
+ */
+const VALKYRIE_ARMOUR = {
+  beltTall: 0.3, beltAt: -0.42, beltOut: 1.3, rim: 0.18, ring: 0.3, ringThick: 0.3, ringProud: 1.42,
+  bandFrom: 0.3, bandTo: 0.5, bandOut: 1.3, bracerFrom: 0.12, bracerTo: 0.9, bracerOut: 1.22, bracerDark: 0.32,
+  bootFrom: 0.5, bootOut: 1.2, gold: new Color3(0.88, 0.58, 0.1), goldGlow: 0.5, boot: new Color3(0.36, 0.21, 0.12), glow: 0.2,
+};
+/** The Valkyrie's brown belt and gold ring, gold arm bands, dark bracers and brown boots (spec at VALKYRIE_ARMOUR). */
+export function valkyrieArmour(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const A = VALKYRIE_ARMOUR;
+  const mf = getMaterialFactory();
+  const beltMat = mf.get("cloth", HEADBUTTER_BELT.color, { emissive: HEADBUTTER_BELT.color.scale(HEADBUTTER_BELT.glow) });
+  const rimMat = mf.get("cloth", HEADBUTTER_BELT.rim, { emissive: HEADBUTTER_BELT.rim.scale(HEADBUTTER_BELT.glow) });
+  const gold = mf.get("cloth", A.gold, { emissive: A.gold.scale(A.goldGlow) });
+  const dark = teamColor.scale(A.bracerDark);
+  const bracerMat = mf.get("cloth", dark, { emissive: dark.scale(A.glow) });
+  const boot = mf.get("cloth", A.boot, { emissive: A.boot.scale(A.glow) });
+  const out: Mesh[] = [];
+  // the belt and its rims, round the waist
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const beltH = chest.y * 2 * A.beltTall;
+  const beltD = Math.max(chest.x, chest.z) * 2 * A.beltOut;
+  const zScale = body.torsoMesh.scaling.z * 0.98;
+  const band = MeshBuilder.CreateCylinder("valkyrieBelt", { height: beltH, diameter: beltD, tessellation: 8 }, scene);
+  band.position.y = chest.y * A.beltAt;
+  band.scaling.z = zScale;
+  band.parent = body.torso;
+  band.material = beltMat;
+  band.convertToFlatShadedMesh();
+  out.push(band);
+  for (const edge of [-1, 1]) {
+    const rim = MeshBuilder.CreateCylinder("valkyrieBeltRim", { height: beltH * A.rim, diameter: beltD * 1.03, tessellation: 8 }, scene);
+    rim.position.y = chest.y * A.beltAt + edge * beltH * (0.5 - A.rim * 0.5);
+    rim.scaling.z = zScale;
+    rim.parent = body.torso;
+    rim.material = rimMat;
+    rim.convertToFlatShadedMesh();
+    out.push(rim);
+  }
+  // the gold ring standing on the belt's front, facing ahead
+  const ringD = chest.x * 2 * A.ring;
+  const ring = MeshBuilder.CreateTorus("valkyrieBeltRing", { diameter: ringD, thickness: ringD * A.ringThick, tessellation: 10 }, scene);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(0, chest.y * A.beltAt, beltD * 0.5 * zScale * A.ringProud);
+  ring.parent = body.torso;
+  ring.material = gold;
+  ring.convertToFlatShadedMesh();
+  out.push(ring);
+  // gold arm bands, dark bracers, brown boots
+  for (const [upper, fore, shin] of [[body.leftUpperArm, body.leftLowerArm, body.leftLowerLeg], [body.rightUpperArm, body.rightLowerArm, body.rightLowerLeg]] as const) {
+    out.push(limbShell(scene, "valkyrieArmBand", upper, A.bandFrom, A.bandTo, A.bandOut, gold));
+    out.push(limbShell(scene, "valkyrieBracer", fore, A.bracerFrom, A.bracerTo, A.bracerOut, bracerMat));
+    out.push(limbShell(scene, "valkyrieBoot", shin, A.bootFrom, 1.0, A.bootOut, boot));
+  }
+  for (const foot of body.root.getChildMeshes(false)) if (/_[lr]FootM$/.test(foot.name)) foot.material = boot;
+  return out;
+}
+
+/*
  * [S] the vikings' own beard (395; viking.berserker.red.png, viking.brawler.red.png, card berserker "It has a beard", brawler "the stereotypical Viking
  * beard"; critic 394/391: no beard on either, only the thin dark cone the shared helm used to carry). A full faceted beard hung off the jaw and chin, in
  * the head's own half extents (W across, H high, D deep; +z his front):

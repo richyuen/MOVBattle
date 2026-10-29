@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -590,6 +590,8 @@ export class UnitFactory {
       propMeshes.push(...valkyrieHelm(this._scene, body, teamColor));
       // [S] ...and her pale fur collar and two cream plaits over the chest (402; vikingDress VALKYRIE_COLLAR)
       propMeshes.push(...valkyrieCollar(this._scene, body));
+      // [S] ...and her brown belt and gold ring, gold arm bands, dark bracers and brown boots (403; vikingDress VALKYRIE_ARMOUR)
+      propMeshes.push(...valkyrieArmour(this._scene, body, teamColor));
     }
     // [S] the Jarl's bear-head hood and the pelt draping to his hips, in place of the horned helm (393; vikingDress JARL_PELT)
     if (definition.id === "viking.jarl" && !shouldUseVehicleBody) {
