@@ -1441,10 +1441,15 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
  */
 // 383 [S]: the cuff a step proud and lighter, team x .cuffShade, and the foot fur sits low on the foot (HALFLING_FEET clumpTall, rise), so the bare
 // shin shows between them (critic 379: shins barely visible above the hairy feet)
+// [S] 402 the shorts cloth is its own UNLIT cut (critic 400/401 a.4: "still light team blue, near the jacket's"; farmer.halfling.blue.png: dark slate
+// team shorts, clearly darker than the jacket): HALFLING_SHORTS_CLOTH.dark of the team colour as an unlit plate with emissive = colour, out of the
+// glow (LESSONS: ACES lifts a lit mid value toward pale, an unlit plate keeps a deep value - the palette's right wall, blue x .3). The turned cuff keeps
+// its lit lighter cloth.
 const HALFLING_SHORTS = {
   seat: 1.04, seatTall: 0.3, leg: 1.3, flare: 1.12, long: 0.99, dark: 0.45, glow: 0.14,
   hemLift: 0.03, hemLong: 0.22, hemWide: 0.98, hemFlare: 1.05, cuff: 0.06, cuffOut: 1.1, cuffShade: 0.62,
 };
+const HALFLING_SHORTS_CLOTH = { dark: 0.3 };
 /*
  * [S] potionseller's hosen and boots (345; farmer.potion_seller.red.png, card Appearance "a pair of dark team-colored hosen along with a pair of brown
  * boots"): both legs in dark team hosen from the hip to the ankle; over the lower shin a brown boot shaft standing a little off the leg, its top turned
@@ -1603,7 +1608,9 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
   // the jacket, vest, shirt V and buckled belt are farmerDress halflingJacket since 376 (HALFLING_COAT)
   // [S] dark team knee shorts (342; spec at HALFLING_SHORTS)
   const S = HALFLING_SHORTS;
-  const shortsCloth = mf.get("cloth", teamColor.scale(S.dark), { emissiveIntensity: S.glow });
+  // [S] 402 dark team shorts as an unlit plate (spec at HALFLING_SHORTS_CLOTH); the 342-401 lit cloth (team x .dark, .glow) read near the jacket
+  const shortsDark = teamColor.scale(HALFLING_SHORTS_CLOTH.dark);
+  const shortsCloth = mf.get("unlit", shortsDark, { emissive: shortsDark });
   const cuffCloth = mf.get("cloth", teamColor.scale(S.cuffShade), { emissiveIntensity: S.glow });
   const waist = chest.position.y - H * 0.5;
   // the seat of the shorts under the jacket's hem, from the waist down over the hips
@@ -1647,6 +1654,9 @@ function dressHalfling(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
   }
   // [S] 389 his hairy feet: a compact dark tuft on top of each foot (farmerDress HALFLING_TUFT; the 343 splayed clump HALFLING_FEET retired)
   added.push(...halflingFootFur(scene, body));
+  // the unlit shorts sit out of the glow layer, so the bloom does not lift their dark team value (402)
+  const glow = scene.getGlowLayerByName("glow");
+  for (const m of [...added, body.leftUpperLeg, body.rightUpperLeg]) if (m.material === shortsCloth) glow?.addExcludedMesh(m);
   return added;
 }
 
