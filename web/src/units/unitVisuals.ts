@@ -449,7 +449,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { materialPreset: "dynasty_lacquer" },
   ),
   "dynasty.firework_archer": vis(
-    { scale: 0.95, armLength: 1.05 }, "bow", "conical_hat", "none", "none", "#FF4500",
+    { scale: 0.95, armLength: 1.05 }, "bow", "none", "none", "none", "#FF4500", // 412: no hat, her hair is dynastyDress ARCHER_HAIR
     undefined,
     {
       posePreset: "archer",

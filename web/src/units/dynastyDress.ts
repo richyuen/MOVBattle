@@ -213,3 +213,43 @@ export function ninjaGi(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   for (const arm of [body.leftLowerArm, body.rightLowerArm]) out.push(limbShell(scene, "ninjaGiSleeve", arm, 0, G.sleeveTo, G.sleeveOut, cloth));
   return out;
 }
+
+/*
+ * [S] 412 the Firework Archer's long hair (audit 411 a.1: "a brown conical straw hat - TABS: no hat; black long hair with a bun over a team-coloured
+ * head"; dynasty.firework_archer.red.png: dark grey-brown hair over the crown and down the back to the shoulders, falling at both sides of the face
+ * behind its front, a small knot at the back of the crown). In the head's half extents e: a cap from .clear over the eyes' top to .top of e.y, the
+ * whole head across and .capDeep of e.z deep from the back; a back fall .fall of e.y long from the crown down past the jaw, .fallOut of e.z behind
+ * the head; side locks .side of e.x thick from the cap down to .sideDrop of e.y, behind .sideFrom of e.z; a bun .bun of e.y across at the back of the
+ * crown. Replaces the shared conical_hat (unitVisuals).
+ */
+const ARCHER_HAIR = { clear: 0.08, top: 1.14, out: 1.1, capDeep: 2.1, fall: 2.6, fallOut: 0.22, side: 0.2, sideDrop: -0.85, sideFrom: 0.35, bun: 0.42, color: new Color3(0.24, 0.21, 0.2), glow: 0.1 };
+/** The Firework Archer's dark long hair with side locks and a knot (spec at ARCHER_HAIR). */
+export function archerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const A = ARCHER_HAIR;
+  const hairMat = getMaterialFactory().get("cloth", A.color, { emissive: A.color.scale(A.glow) });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const span = eyeSpanInHead(body) ?? [-e.y * 0.2, e.y * 0.3];
+  const X = e.x * A.out, Z = e.z * A.out;
+  const out: Mesh[] = [];
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    m.parent = body.headMesh;
+    m.material = hairMat;
+    out.push(m);
+    return m;
+  };
+  const capFoot = span[1] + e.y * A.clear, top = e.y * A.top;
+  slab("archerHairCap", -X, X, capFoot, top, -Z, -Z + e.z * A.capDeep);
+  slab("archerHairFall", -X * 0.92, X * 0.92, top - e.y * A.fall, top, -Z - e.z * A.fallOut, -Z + e.z * 0.3);
+  for (const side of [-1, 1]) {
+    const x0 = side > 0 ? X - e.x * A.side : -X, x1 = side > 0 ? X : -X + e.x * A.side;
+    slab("archerHairLock", x0, x1, e.y * A.sideDrop, capFoot, -Z, e.z * A.sideFrom);
+  }
+  const bun = MeshBuilder.CreateIcoSphere("archerHairBun", { radius: e.y * A.bun, subdivisions: 1 }, scene);
+  bun.position.set(0, top - e.y * 0.15, -Z - e.z * A.fallOut - e.y * A.bun * 0.5);
+  bun.parent = body.headMesh;
+  bun.material = hairMat;
+  out.push(bun);
+  return out;
+}
