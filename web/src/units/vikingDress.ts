@@ -1169,6 +1169,7 @@ const JARL_PELT = {
   mantleDeep: 0.68,
   chestW: 0.2, chestOut: 0.23, chestDeep: 0.12, chestProud: 0.54, chestDrop: 0.98, chestTufts: 3,
 };
+const JARL_FLAPS = { out: 0.3, capWide: 0.3, capTall: 0.16, capBack: 0.3, capRise: 0.02, wide: 0.32, tip: 0.8, deep: 0.16, proud: 0.03, lean: 0.06, past: 0.04, tufts: 3 };
 const JARL_FUR = new Color3(0.42, 0.21, 0.14);
 const JARL_FUR_DARK = new Color3(0.29, 0.14, 0.09);
 
@@ -1250,37 +1251,42 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   // curtains): the rounded jarlPeltMantle is gone; the curtains and the side panels carry the pelt (jarlBelt for the waist)
   // [S] 401b the fur curtains down the chest front (the hood's own curtains hang at the head's z, so run on down the torso): a strip either side of the
   // chest from under the mantle to the belt, stood proud of the chest's front face, ending in jagged tufts
-  const chestH = H * P.chestDrop;
+  // [S] 407 the pelt's two long front flaps (CONFIRM 406 a.1: "two flat rectangular brown slabs standing on the shoulders like a backpack";
+  // viking.jarl.red.png, viking.jarl.jpg: the pelt hangs from the bear head over both shoulders as long fur flaps down the front to the belt, framing
+  // the chest). The shoulder side panels (jarlPeltSide) and the thin chest strips are gone; JARL_FLAPS, in the trunk's size (W wide, H tall, D deep) and
+  // the shoulder span S: each flap is
+  //   cap: a rounded fur pad over the shoulder top at .out of S from the middle, .capWide of S across, from .capBack of D behind the chest's middle to
+  //     the chest's front, so the hood's curtain runs on over the shoulder instead of standing behind it;
+  //   flap: a tapered fur slab from the cap down the chest front to the belt (JARL_BELT.at) and .past it, .wide of S across at the shoulder narrowing
+  //     to .tip of that, .deep of D thick, its back .proud of D off the chest's front face, leaning .lean in toward the middle at its foot;
+  //   tufts: .tufts jagged dark points at its foot, the pelt's ragged edge.
+  const F = JARL_FLAPS;
+  const S = shoulderW;
+  const frontZ = chest.position.z + D * 0.5;
+  const beltY = chest.position.y + (H * 0.5) * JARL_BELT.at;
+  const flapTop = top + H * F.capRise, flapFoot = beltY - H * F.past;
+  const flapH = flapTop - flapFoot;
   for (const side of [-1, 1]) {
-    const strip = put(MeshBuilder.CreateBox("jarlPeltChest", {
-      width: W * P.chestW, height: chestH, depth: D * P.chestDeep,
+    const cap = put(MeshBuilder.CreateIcoSphere("jarlPeltCap", { radius: 1, subdivisions: 1, flat: true }, scene), fur, body.torso);
+    const capDeep = frontZ - (chest.position.z - D * F.capBack);
+    cap.scaling.set(S * F.capWide * 0.5, H * F.capTall * 0.5, capDeep * 0.5);
+    cap.position.set(side * S * F.out, top, frontZ - capDeep * 0.5);
+    const flap = put(MeshBuilder.CreateCylinder("jarlPeltFlap", {
+      height: flapH, diameterTop: S * F.wide, diameterBottom: S * F.wide * F.tip, tessellation: 4,
     }, scene), fur, body.torso);
-    strip.position.set(side * W * P.chestOut, top - H * 0.1 - chestH * 0.5, chest.position.z + D * P.chestProud);
-    for (let k = 0; k < P.chestTufts; k++) {
-      const tuft = put(MeshBuilder.CreateCylinder("jarlPeltChestTuft", {
-        height: H * P.tuft, diameterTop: W * P.chestW * 0.6, diameterBottom: 0, tessellation: 4,
+    flap.rotation.y = Math.PI / 4;
+    flap.scaling.set(1, 1, (D * F.deep) / (S * F.wide));
+    flap.bakeCurrentTransformIntoVertices();
+    flap.rotation.z = -side * F.lean;
+    flap.position.set(side * (S * F.out - Math.sin(F.lean) * flapH * 0.5), flapFoot + flapH * 0.5, frontZ + D * F.proud + D * F.deep * 0.5);
+    for (let k = 0; k < F.tufts; k++) {
+      const tuft = put(MeshBuilder.CreateCylinder("jarlPeltFlapTuft", {
+        height: H * P.tuft, diameterTop: S * F.wide * F.tip * 0.45, diameterBottom: 0, tessellation: 4,
       }, scene), darkFur, body.torso);
       tuft.position.set(
-        side * W * P.chestOut + (k - (P.chestTufts - 1) / 2) * W * P.chestW * 0.5,
-        top - H * 0.1 - chestH - H * P.tuft * 0.4,
-        chest.position.z + D * P.chestProud,
-      );
-      tuft.rotation.z = Math.PI;
-    }
-  }
-  for (const side of [-1, 1]) {
-    const panel = put(MeshBuilder.CreateBox("jarlPeltSide", {
-      width: shoulderW * P.drape, height: drapeH, depth: D * P.drapeDeep,
-    }, scene), fur, body.torso);
-    panel.position.set(side * shoulderW * P.drapeOut, top - drapeH * 0.5 - H * 0.02, chest.position.z - D * 0.22);
-    for (let k = 0; k < P.tufts; k++) {
-      const tuft = put(MeshBuilder.CreateCylinder("jarlPeltTuft", {
-        height: H * P.tuft, diameterTop: shoulderW * P.drape * 0.6, diameterBottom: 0, tessellation: 4,
-      }, scene), darkFur, body.torso);
-      tuft.position.set(
-        side * shoulderW * P.drapeOut + (k - (P.tufts - 1) / 2) * shoulderW * P.drape * 0.4,
-        top - drapeH - H * 0.02 - H * P.tuft * 0.4,
-        chest.position.z - D * 0.22,
+        side * (S * F.out - Math.sin(F.lean) * flapH) + (k - (F.tufts - 1) / 2) * S * F.wide * F.tip * 0.4,
+        flapFoot - H * P.tuft * 0.4,
+        frontZ + D * F.proud + D * F.deep * 0.5,
       );
       tuft.rotation.z = Math.PI;
     }
