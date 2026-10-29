@@ -2057,9 +2057,11 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * .y up, spaced .spread apart from .first), facing outboard, so the hull's side is a row of boards.
    */
   const SHIELDS = { face: 0.46, rim: 0.51, boss: 0.17, across: 0.62, y: 0.58, first: -0.9, spread: 0.6, count: 4 };
-  const shieldDark = makeMat(scene, new Color3(0.1, 0.11, 0.16));
+  // [S] 405 plank seams in a dark brown and a dark iron-brown boss (spec at the seams below)
+  const PLANKS = { count: 3, wide: 0.035 };
+  const shieldDark = makeMat(scene, new Color3(0.14, 0.08, 0.05));
   const shieldWood = makeMat(scene, new Color3(0.34, 0.2, 0.12));
-  const shieldBoss = makeMat(scene, new Color3(0.56, 0.36, 0.15));
+  const shieldBoss = makeMat(scene, new Color3(0.2, 0.13, 0.08));
   const shieldDisc = (name: string, diameter: number, depth: number, arc = 1): Mesh => {
     const m = MeshBuilder.CreateCylinder(name, { height: depth, diameter, tessellation: 12, arc, enclose: arc < 1 }, scene);
     m.rotation.x = Math.PI / 2;
@@ -2083,13 +2085,18 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
       rim.parent = holder;
       rim.material = shieldWood;
       allMeshes.push(rim);
-      // the dark half of the face, its split down the middle
-      const dark = shieldDisc("longshipShieldDark", SHIELDS.face * 0.985, 0.01, 0.5);
-      dark.rotation.z = -Math.PI / 2;
-      dark.position.z = 0.021;
-      dark.parent = holder;
-      dark.material = shieldDark;
-      allMeshes.push(dark);
+      // [S] 405 the whole face in the team paint, crossed by thin dark plank seams (CONFIRM 403 a.2: "a dark disc with only a team-coloured crescent";
+      // viking.longship.blue.png: the face all team colour with brown plank lines, a wooden rim and a dark boss). The dark half is gone: PLANKS.count
+      // seams .wide of the face across, running top to bottom, each clipped to the disc's chord at its x so none overhangs the rim.
+      for (let p = 0; p < PLANKS.count; p++) {
+        const x = ((p + 1) / (PLANKS.count + 1) - 0.5) * SHIELDS.face;
+        const chord = 2 * Math.sqrt(Math.max(0, (SHIELDS.face / 2) ** 2 - x * x)) * 0.97;
+        const seam = MeshBuilder.CreateBox("longshipShieldPlank", { width: SHIELDS.face * PLANKS.wide, height: chord, depth: 0.008 }, scene);
+        seam.position.set(x, 0, 0.021);
+        seam.parent = holder;
+        seam.material = shieldDark;
+        allMeshes.push(seam);
+      }
       const boss = MeshBuilder.CreateCylinder("longshipShieldBoss", { height: 0.07, diameter: SHIELDS.boss, tessellation: 8 }, scene);
       boss.rotation.x = Math.PI / 2;
       boss.rotation.z = Math.PI / 8;
