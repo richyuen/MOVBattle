@@ -575,6 +575,9 @@ export class UnitFactory {
       propMeshes.push(...iceArcherCap(this._scene, body, teamColor));
       // [S] ...and her pale jagged snow mantle over both shoulders (402; vikingDress ICE_ARCHER_MANTLE)
       propMeshes.push(...iceArcherMantle(this._scene, body));
+      // [S] 404 ...and the Brawler's leg kit: puffy team trousers, cream fur calf cuffs over brown boots (re-audit 403 a.2/a.3: "slim blue legs straight
+      // down to the boots, no fur", "team-blue boots"; viking.ice_archer.red.png: the same cut as the Brawler's). The shared BRAWLER_LEGS cut.
+      propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
     }
     // [S] the Headbutter's own spiked team cap in place of the shared horned viking helmet (392; vikingDress HEADBUTTER_CAP)
     if (definition.id === "viking.headbutter" && !shouldUseVehicleBody) {
