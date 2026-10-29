@@ -1,23 +1,24 @@
 # viking.valkyrie
-Status: open   Audited: 391, 400, 401, 402   Done: -
+Status: open   Audited: 391, 400, 401, 402, 404 (CONFIRM)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (5 since 391; struck 2 at 401, 3 at 402; 4 split at 403)
- 4. armour in _idle - TABS: a team tunic with a wide brown belt and gold ring (ref: .red.png, .png); ours: a plain blue tunic and skirt, no belt
-  (struck 1 at 394: the wings; struck 2 at 401: cream feather fans, bronze eye-line band, tall crest; struck 3 at 402: the pale fur collar and two cream plaits; struck at 403 by the split rule: gold arm bands, dark bracers and brown boots)
-b PASS (391)
-c PASS (393)
+a PASS (404; CONFIRM 404)
+  (struck 4 at 404: the belt and ring at the waist; struck 1 at 394, 2 at 401, 3 at 402, the armour split at 403)
+b FAIL (0 since 404; the CONFIRM's list)
+ 1. sword blade length in unit_viking.valkyrie_idle - TABS: each Valkyrie Sword is a long thin blade about as long as the unit is tall or longer (blue render: the blade runs from the hip to well above the head); ours: about 1/3 to 1/2 of body height (ref: viking.valkyrie.blue.png, viking.valkyrie.red.png)
+ 2. crossguard colour in unit_viking.valkyrie_windup - TABS: a gold, wing-shaped crossguard and hilt on both swords; ours: a short dark/black bar guard (ref: viking.valkyrie.red.png, viking.valkyrie.png)
+c PASS (393; CONFIRM 404)
 d PASS (cost 500, hp 1.86x, dmg 1.68x, cd 0.50x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a belt - blocker 4: re-seat the belt band and ring off body.torsoMesh's position and scaled extents (as limbShell reads its limb), so the band wraps her waist above the skirt flare and the ring sits on its front - ref: viking.valkyrie.red.png - ours: unit_viking.valkyrie_idle.png
+1. [S] b sword - blocker 1: a longer blade (at least the rig height) on her own sword cut in the prop builder - ref: .blue.png - ours: unit_viking.valkyrie_idle.png
+2. [S] b crossguard - blocker 2: a gold winged crossguard and hilt on both swords - ref: .red.png - ours: unit_viking.valkyrie_windup.png
 ## Attempts (iter | gap | criterion | verdict)
 391-394 | off-hand sword (b PASS); flight FLY (392 rejected, 393 approved, c PASS); layered feather wings (struck a.1) [S] | a,b,c | approved
-400 | her own helm: dark team dome, bronze brow band, crest spike, mounts (715aff5) | a | approved (blocker 2 stands)
-401 | cream feathers, eye-line band, tall flat crest (c0c74ea + cbecbca) | a | approved (struck 2)
-402 | VALKYRIE_COLLAR: cream fur ring + 9 clumps, the Headbutter's plaits in cream to the belt (498f78d) | a | approved (struck 3)
-403 | VALKYRIE_ARMOUR: brown belt + rims, gold ring, gold arm bands, dark bracers, brown boots (0ec42c6) | a | approved (bands, bracers, boots struck; belt + ring stand)
+400-402 | her own helm; cream feathers, eye-line band, tall crest (struck 2); VALKYRIE_COLLAR (struck 3) | a | approved
+403 | VALKYRIE_ARMOUR: belt + rims, gold ring, arm bands, bracers, boots (0ec42c6) | a | approved (bands, bracers, boots struck)
+404 | belt and ring seated off torsoMesh's own middle and scale (670efeb) | a | approved (struck 4, a PASS); CONFIRM agreed a, failed b
 ## Rejected (last 4)
 - flight [S] [1] - 392: swoop keyed to every flying_hover unit (would throw the done balloon_archer) and the hover did not hold in her standing state
 ## Notes (max 3 lines)
-- 403 critic: the belt is seated at chest.y * beltAt in the torso node's frame, ignoring torsoMesh's own offset/scale - it sits low inside the skirt (a brown box off her left hip) and the ring floats below the hem.
+- 404 critic (minor): the ring is small and a little off-centre toward her weapon side. CONFIRM: helmet wings smaller and fur cream not tan (not at lineup distance).
 - 402: VALKYRIE_COLLAR ring .62 of the shoulder width, 9 lumps; braids via headbutterBraids (unlit cream). 401: VALKYRIE_HELM feathers 5 x 2.1 H.
-- 394: unitVisuals wingStyle "layered"; `fly: true` keeps her valkyrieFly marker so FLY still finds her.
+- 394: unitVisuals wingStyle "layered"; `fly: true` keeps her valkyrieFly marker so FLY still finds her. Blocker b.2 is colour-only: give the critic a --noglow swatch.

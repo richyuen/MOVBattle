@@ -37,6 +37,7 @@ drop a lesson once it is a comment at the code it describes.
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
 - `capture.mjs --units` takes a comma-separated list; space-separated ids capture the first unit only. Every iter-N capture also clears the probe swatches: render them after the final capture (402).
+- For a small piece in a look shot, a crop of the PNG (python PIL crop + NEAREST resize) is a faster close-up than probe_close, whose --aim can frame another mesh entirely (404 headbutter, minotaur).
 
 ## Rig and dress
 - aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
