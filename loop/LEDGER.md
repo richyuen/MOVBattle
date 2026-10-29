@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-410 | MINO_ARMS: fur arm sleeves + big mitts (cfb6510) | ancient.minotaur.a | approved
-410 | MINO_LEGS thigh/calf fur sleeves (bd87426) | ancient.minotaur.a | approved
-410 | LEG_WRAPS: tan shin wraps on the jarl via brawlerLegs wrap (e1e9397) | viking.jarl.a | approved
-410 | ICE_ARCHER_QUIVER: leather slab at the off hip, back tube off (d6fdbba) | viking.ice_archer.a | approved
-410 | ICE_NOCK + _poseIceNock: drawn string halves, nocked ice arrow (742df8a) | viking.ice_archer.b | approved
-410 | jarl beard narrowed + lobed plait, greyer (99f4edd) | viking.jarl.a | approved
 411 | LEG_WRAPS on the ice archer: khaki shin wraps in place of the fur cuffs (4b4db5f) | viking.ice_archer.a | approved
 411 | ICE_REST + _restIceBow: the bow stood upright, leant across her front (e1dc03c) | viking.ice_archer.b | approved
 411 | BULL_MUZZLE: compact muzzle under the eyes, level horns (0469073) | ancient.minotaur.a | approved
@@ -36,6 +30,10 @@ for 25 iterations.
 413 | FIREWORK_ROCKET: fat team tube, bands, head, flame; flatter arc (191f1a5) | dynasty.firework_archer.c | approved
 413 | KABUTO: team bowl, gold peak, 3 gold-rimmed lames, crest (e140c38) | dynasty.samurai.a | approved
 413 | evidence: brawler idle camera level with the chest (922ff0f); re-audit struck a.4 | viking.brawler.a | evidence
+414 | [P] KABUTO lames opening to the front, arc .55 (981199b; evidence 0434511) | dynasty.samurai.a | approved
+414 | KATANA_REST + _restKatana: katana upright in both fists (1b007b1) | dynasty.samurai.b | approved
+414 | MONK_TROUSERS: wide trousers, gold-banded greaves (a6bbc47) | dynasty.monk.a | approved
+414 | BRAWLER_HATCHET: bearded axe cut to .6, dark iron (cf3af41) | viking.brawler.b | approved
 
 ## Spent (never retry as [P])
 
@@ -96,4 +94,7 @@ dynastyDress.ts:NINJA_TROUSERS (thigh, knee, kneeTo, wrap, bands, band, bandOut,
 propBuilder.ts:KASA_GOLD + kasa cone team colour | (.86,.62,.18) | 413 | approved | accent cone, accent x.55 band (before 413)
 propBuilder.ts:FIREWORK_BOW (long, cap, capColor) | 1.15, .12, (.92,.5,.12) | 413 | approved | plain bow (before 413)
 projectileSystem.ts:FIREWORK_ROCKET (long, wide, bands, head, flame, arc) | .5, .13, 3, .14, .32, .1 | 413 | approved | .3x.04 stick, arc .25 (before 413)
-dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, lame, step, flareTop, flareFoot, arc, rim, crest) | .04, 1.3, 2.3, 1.4, .42, 3, .32, .3, 2.3, 2.75, .64, .07, .42 | 413 | approved | samurai_helmet (before 413)
+dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, lame, step, flareTop, flareFoot, arc, rim, crest) | .04, 1.3, 2.3, 1.4, .42, 3, .32, .3, 2.3, 2.75, .55, .07, .42; turn pi(.5-arc) | 414 | approved | arc .64 turn pi(.5+arc) (413); samurai_helmet (before 413)
+proceduralAnimation.ts:KATANA_REST (ahead, drop, lean, under) | .16, .24, .12, .9 | 414 | approved | one-hand shoulder carry (before 414)
+dynastyDress.ts:MONK_TROUSERS (thigh, kneeTo, greave, bands, band, bandOut) | 2.0, .22, 1.35, 3, .07, 1.45 | 414 | approved | bare legs (before 414)
+propBuilder.ts:BRAWLER_HATCHET (scale, steel) | .6, (.11,.11,.12) | 414 | approved | bearded_axe at 1, steel (.46,.47,.52) (392-413)

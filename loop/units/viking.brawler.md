@@ -2,21 +2,22 @@
 Status: open   Audited: 391, 395-398, 401, 402, 413 (re-audit a, CONFIRM)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
 a PASS (413 re-audit: struck 4; CONFIRM 413)
-b FAIL (0 since 413; the CONFIRM's list)
+b FAIL (1 since 413; the CONFIRM's list)
  1. axe haft in unit_viking.brawler_idle - as long as the man, from the ground to above his head, so it reads as a two-handed polearm - TABS: a short one-handed hatchet, haft about hand-to-shoulder length (ref: viking.brawler.red.png, card Weapon Type One-handed)
- 2. axe head in unit_viking.brawler_idle - a large pale-lavender rounded paddle bigger than his head - TABS: a compact dark-iron bearded hatchet blade about head-sized (ref: viking.brawler.blue.png)
+  (struck 2 at 414: compact dark-iron head)
  3. shield in unit_viking.brawler_idle - tilted back nearly flat like a dish, face seen at a grazing angle - TABS: the round shield held upright in front of the body, covering chin to knees (ref: viking.brawler.red.png, viking.brawler.jpg)
 c FAIL (0 since 413; the CONFIRM's list)
  1. missing: lunge on first contact - summary.json records only "melee hit at 1283 ms", no leap or lunge event; unit_viking.brawler_windup shows an ordinary stride - TABS: "They also lunge on first contact" (ref: card Characteristics)
 d PASS (cost 220, hp 2.39x, dmg 1.08x, cd 0.60x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] b hatchet - blockers 1, 2: the brawler's bearded axe cut to a one-handed hatchet, haft hand-to-shoulder, a compact dark-iron head about head-sized - ref: viking.brawler.blue.png - ours: unit_viking.brawler_idle.png
-2. [S] b shield upright - blocker 3: the round board carried upright in front of him, chin to knees, not a tray - ref: viking.brawler.red.png - ours: unit_viking.brawler_idle.png
+1. [S] b shield upright - blocker 3: the round board stood plumb before him, chin to knees, face to the front - ref: viking.brawler.red.png - ours: unit_viking.brawler_idle.png
+2. [P] b haft, fallout of 414.4: BRAWLER_HATCHET a separate haft factor (.6 -> .4 of BEARDED_AXE.long, butt kept) so the head drops to chin height - shows in unit_viking.brawler_idle
 3. [S] c lunge - blocker 1: evidence first (start the brawler scene farther out, log the lunge in abilityLog), then a first-contact lunge - ref: card Characteristics - ours: unit_viking.brawler_windup.png
 ## Attempts (iter | gap | criterion | verdict)
 392-393 | bearded axe with a crescent head; own round board [S] | b | approved (b PASS)
 394-408 | helm; beard cuts (395, 401, 402 rejected; [R] 407 BRAWLER_BEARD approved; 408 tail dropped: tray board hides it) | a | mixed
 413 | evidence 922ff0f: idle camera level with the chest; re-audit struck a.4 (a PASS) | a | evidence; CONFIRM 413 failed b, c
+414 | BRAWLER_HATCHET: bearded axe at .6, dark iron (cf3af41) | b | approved (struck 2; haft still 1.5x)
 ## Rejected (last 4)
 - beard [S] [3] - 395/401/402: under the mask, a second bib, a sideways splay - all read wrong; the chest under the tray board never showed
 ## Notes (max 3 lines)
