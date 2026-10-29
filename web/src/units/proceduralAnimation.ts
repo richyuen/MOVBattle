@@ -157,6 +157,13 @@ const SCYTHE_SWEEP = { roll: Math.PI / 2, twist: 0.75, cock: 2.0, end: -1.1, low
  * weapon side, y up, z forward), level and across. Like the scythe he stands in it from the first frame, not eased round from the fist's strapped angle.
  */
 const HAY_CARRY = { raise: -0.6, out: 0.1, elbow: -0.85, tip: new Vector3(-0.95, 0.02, 0.32) };
+/*
+ * [S] 408 the Jarl's diagonal two-handed carry (CONFIRM 406 b.2: "the haft stands vertical in front of the face"; viking.jarl.red.png, .jpg: the haft
+ * held in both fists low across his body, the butt down at his weapon side, the head up and out past his off shoulder). Found by his bear pelt
+ * (jarlBearSkull) and taken in place of the upright pole carry: the weapon fist at the hip (.raise, .out, .elbow), the haft's line .tip in his own frame
+ * (x toward the weapon side, y up, z forward), across and rising; the off fist still goes onto the haft by _twoHandPole (POLE_GRIP.hpoint).
+ */
+const JARL_CARRY = { raise: -0.45, out: 0.12, elbow: -0.95, tip: new Vector3(-0.85, 0.48, 0.22) };
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -2285,6 +2292,8 @@ export class ProceduralAnimator {
     const potion = this._body.rightHand.getChildren().some((n) => n.name === "potionBall");
     this._potionHang = potion;
     const pick = fork ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
+    // the Jarl stands in his diagonal carry from the first frame (JARL_CARRY; the idle shot is ~100 ms after spawn)
+    if (this._jarlPelted() && pick === 0.4) this._carryTurn = 1;
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";
@@ -2298,6 +2307,8 @@ export class ProceduralAnimator {
       ? { raise: ARMING_OUT.raise, out: ARMING_OUT.out, elbow: ARMING_OUT.elbow, tip: new Vector3(ARMING_OUT.tip[0] * side, ARMING_OUT.tip[1], ARMING_OUT.tip[2]).normalize() }
       : sideAxe
       ? { raise: BEARDED_AXE_CARRY.raise, out: BEARDED_AXE_CARRY.out, elbow: BEARDED_AXE_CARRY.elbow, tip: new Vector3(BEARDED_AXE_CARRY.tip[0] * side, BEARDED_AXE_CARRY.tip[1], BEARDED_AXE_CARRY.tip[2]).normalize() }
+      : this._jarlPelted() && pick === 0.4
+      ? { raise: JARL_CARRY.raise, out: JARL_CARRY.out, elbow: JARL_CARRY.elbow, tip: new Vector3(JARL_CARRY.tip.x * side, JARL_CARRY.tip.y, JARL_CARRY.tip.z).normalize() }
       : hayStick
       ? { raise: HAY_CARRY.raise, out: HAY_CARRY.out, elbow: HAY_CARRY.elbow, tip: new Vector3(HAY_CARRY.tip.x * side, HAY_CARRY.tip.y, HAY_CARRY.tip.z).normalize() }
       : lowScythe
