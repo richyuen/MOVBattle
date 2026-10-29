@@ -225,6 +225,8 @@ const SNAKE_UPRIGHT = {
 /** [S] 411 the ice bow at rest, posed in the world (_restIceBow): its length leant .across rad toward her off side and .forward toward her front. */
 const ICE_REST = { across: 0.42, forward: 0.12 };
 /** [S] 411 the Monk's bo at rest (_restMonkBo): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt up at its off end. */
+/** [S] 414 the katana at rest (_restKatana): the weapon fist .ahead of his height before his middle, .drop under the shoulders; the blade .lean rad off plumb toward his front; the off fist .under grip-lengths below. */
+const KATANA_REST = { ahead: 0.16, drop: 0.24, lean: 0.12, under: 0.9 };
 const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
 /** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit; the far end raised .raise (rise per unit across) when cocked, dipped .dip at the hit. */
 const MONK_SWING = { back: 0.9, through: 1.35, cock: 0.3, hit: 0.5, reach: 0.08, raise: 1.3, dip: 0.35 };
@@ -2116,6 +2118,7 @@ export class ProceduralAnimator {
     this._restHalberd();
     this._restIceBow();
     this._restMonkBo();
+    this._restKatana();
     this._twoHandPole();
     this._levelPike();
     this._carryDory();
@@ -5424,6 +5427,66 @@ export class ProceduralAnimator {
     }
   }
   private _iceRestAt: Vector3 | undefined;
+  /**
+   * [S] 414 the katana held upright in both fists before the chest (audit 411 b.1: "gripped in one hand at the shoulder, with the blade hidden behind
+   * the body - TABS: held upright in both hands in front of the chest"; dynasty.samurai.red.png: the fists one over the other at the belly-chest line
+   * on his middle, the blade standing straight up before his face). Standing or walking: the weapon fist is solved (_armTo) onto a point
+   * KATANA_REST.ahead of his height before his middle at .drop under the weapon shoulder; the blade (the "katana" box in that fist, grip "kgrip") is
+   * stood in the world .lean rad off plumb toward his front, and slid so its grip's middle lands on the fist; the off fist is solved onto the grip
+   * .under of the grip's length below it. Eased off as he goes limp; outside the rest the blade's own position comes back.
+   */
+  private _katana: { blade: Mesh; grip: Mesh; at: Vector3 } | null | undefined = undefined;
+  private _restKatana(): void {
+    if (this._katana === undefined) {
+      const blade = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "katana");
+      const grip = blade?.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === "kgrip");
+      this._katana = blade && grip ? { blade, grip, at: blade.position.clone() } : null;
+    }
+    const K = this._katana;
+    if (!K) return;
+    const st = this._state;
+    const w = st === AnimState.Idle || st === AnimState.Walking ? 1 - Math.min(1, this._limp) : 0;
+    if (w <= 0.01) {
+      K.blade.position.copyFrom(K.at);
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const R = KATANA_REST;
+    const mid = Vector3.Center(b.rightShoulder.getAbsolutePosition(), b.leftShoulder.getAbsolutePosition());
+    const fist = mid.add(fwd.scale(R.ahead * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    // the blade's +y straight up, leant .lean toward his front; its flat (+z) facing him
+    const axis = Vector3.Up().scale(Math.cos(R.lean)).addInPlace(fwd.scale(Math.sin(R.lean))).normalize();
+    const z = fwd.scale(-1);
+    z.subtractInPlace(axis.scale(Vector3.Dot(z, axis))).normalize();
+    const x = Vector3.Cross(axis, z).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, axis, z, world);
+    const parentRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, parentRot);
+    const parent = Matrix.Identity();
+    parentRot.toRotationMatrix(parent);
+    const local = Quaternion.FromRotationMatrix(world.multiply(parent.transpose()));
+    const rest = Quaternion.FromEulerAngles(K.blade.rotation.x, K.blade.rotation.y, K.blade.rotation.z);
+    K.blade.rotationQuaternion = Quaternion.Slerp(rest, local, w);
+    K.blade.position.copyFrom(K.at);
+    K.blade.computeWorldMatrix(true);
+    K.grip.computeWorldMatrix(true);
+    const gripAt = K.grip.getAbsolutePosition();
+    const miss = b.rightHand.getAbsolutePosition().subtract(gripAt).scale(w);
+    K.blade.position.addInPlace(Vector3.TransformNormal(miss, b.rightHand.getWorldMatrix().clone().invert()));
+    // the off fist on the grip under the weapon fist
+    const gripLong = K.grip.getBoundingInfo().boundingBox.extendSize.y * 2 * K.grip.absoluteScaling.y;
+    this._offArmTo(b.rightHand.getAbsolutePosition().subtract(axis.scale(gripLong * R.under)), w, 2);
+  }
   private _poseIceNock(w: number): void {
     if (this._iceNock === undefined) {
       const stave = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "bow" && n.getChildren().some((c) => c.name === "iceBowCarry"));
