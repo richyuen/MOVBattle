@@ -190,7 +190,7 @@ const DRAGON_SCALLOPS = 7;
  *   (.neck H) from the cranium to the shoulders. Nothing else on the head changes. The body scale (unitVisuals) is untouched.
  */
 const BULL_HEAD = {
-  skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, drop: 0.72, forward: 0.28, browY: 0.12, browZ: 0.32, face: 1.0, tilt: 0.72, brow: 0.95, snout: 1.0, faceFlat: 0.75,
+  skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, drop: 0.72, forward: 0.28, browY: 0.12, browZ: 0.32, face: 1.0, tilt: 0.15, brow: 0.95, snout: 1.0, faceFlat: 0.75,
   pad: 0.2, eye: 0.34, eyeX: 0.36, eyeY: 0.2, hornGirth: 0.3, horn1: 0.9, hornTaper: 0.72, hornY: 0.32,
   hornBends: [[1, 0.05, 0.1, 0.42], [1, 0.3, 0.18, 0.33], [0.45, 0.8, 0.3, 0.25]] as [number, number, number, number][],
   ear: 0.36, earY: 0.06, earDroop: 0.4, neck: 0.42, neckTop: 1.0, neckBottom: 1.6, neckLean: 0.3,
@@ -1105,6 +1105,9 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       return m;
     };
     // the face: a tapered eight-sided block from the brow down and forward to a broad muzzle pad with two nostrils
+    // [S] 403 the face upright under the eyes (critic 402 a.4: at tilt .72 the muzzle pointed at the ground ahead of the feet; ancient.minotaur.red.png:
+    // the long face hangs near plumb from the brow, the muzzle level under the eyes, looking ahead): the face block hangs .tilt .15 off plumb, the
+    // muzzle pad's front and its nostrils face straight ahead (level), set on the pad's front half-way down it, not pointing down along the face
     const faceLong = u(B.face * H);
     const faceDir = new Vector3(0, -Math.cos(B.tilt), Math.sin(B.tilt));
     const browAt = new Vector3(0, u(B.browY * H), u(B.browZ * W));
@@ -1114,9 +1117,12 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     const tip = browAt.add(faceDir.scale(faceLong));
     const pad = put(MeshBuilder.CreateIcoSphere("bullMuzzle", { radiusX: u(B.snout * W * 0.55), radiusY: u(B.pad * H), radiusZ: u(B.snout * W * 0.4), subdivisions: 1 }, scene), pale);
     pad.position.copyFrom(tip);
+    // the muzzle's flat front plate, standing upright and facing ahead (spec above the face), the nostrils set in it
+    const plate = put(MeshBuilder.CreateBox("bullNosePlate", { width: u(B.snout * W * 0.82), height: u(B.pad * H * 1.3), depth: u(0.08 * W) }, scene), pale);
+    plate.position.copyFrom(tip.add(new Vector3(0, u(-0.02 * H), u(B.snout * W * 0.32))));
     for (const side of [-1, 1]) {
       const nostril = put(MeshBuilder.CreateCylinder("bullNostril", { height: u(0.05 * W), diameter: u(0.15 * W), tessellation: 6 }, scene), dark);
-      along(nostril, tip.add(new Vector3(side * u(0.17 * W), u(-0.02 * H), u(B.snout * W * 0.36))), new Vector3(0, -0.3, 1), u(0.05 * W));
+      along(nostril, tip.add(new Vector3(side * u(0.17 * W), u(-0.04 * H), u(B.snout * W * 0.38))), new Vector3(0, 0, 1), u(0.05 * W));
       // big round eyes on the cranium's upper front corners, turned a little outward
       const eye = put(MeshBuilder.CreateCylinder("bullEye", { height: u(0.05 * W), diameter: u(B.eye * W), tessellation: 12 }, scene), mat(scene, new Color3(0.95, 0.95, 0.92), 0.3));
       eye.rotation.set(Math.PI / 2, side * 0.45, 0);
