@@ -268,8 +268,57 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   const prong = MeshBuilder.CreateBox("minoBuckleProng", { width: bw * 0.55, height: bar * 0.6, depth: bd * 0.7 }, scene);
   prong.position.set(bw * 0.15, 0, bd * 0.1);
   add(prong, holder, iron);
+
+  // [S] 407 slim bull legs on split hooves (MINO_LEGS)
+  const Lg = MINO_LEGS;
+  for (const [thigh, shin, knee] of [[body.leftUpperLeg, body.leftLowerLeg, body.leftKnee], [body.rightUpperLeg, body.rightLowerLeg, body.rightKnee]] as const) {
+    thigh.scaling.x *= Lg.thigh; thigh.scaling.z *= Lg.thigh;
+    shin.scaling.x *= Lg.shin; shin.scaling.z *= Lg.shin;
+    const foot = knee.getChildMeshes(true).find((m): m is Mesh => m instanceof Mesh && /_[lr]FootM$/.test(m.name));
+    if (!foot) continue;
+    foot.isVisible = false;
+    const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize, c = fb.center;
+    const at = (x: number, y: number, z: number): Vector3 => new Vector3(foot.position.x + x * foot.scaling.x, foot.position.y + y * foot.scaling.y, foot.position.z + z * foot.scaling.z);
+    const S = new Vector3(ex.x * foot.scaling.x, ex.y * foot.scaling.y, ex.z * foot.scaling.z);
+    // the hoof: two toes either side of a cleft, their fronts sloped back
+    for (const side of [-1, 1]) {
+      const toe = MeshBuilder.CreateBox("minoHoofToe", { width: S.x * Lg.toeWide, height: S.y * Lg.toeTall, depth: S.z * Lg.toeDeep }, scene);
+      toe.position.copyFrom(at(c.x + side * ex.x * Lg.cleft, fb.minimum.y + ex.y * Lg.toeTall * 0.5, c.z + ex.z * Lg.toeAhead));
+      toe.rotation.x = Lg.toeSlope;
+      add(toe, knee, darkFur);
+      toe.convertToFlatShadedMesh();
+    }
+    // the raised heel: a slim pastern slanting from the hock behind the ankle down and forward onto the hoof, a knob of hock at its top
+    const hockAt = at(c.x, fb.maximum.y + ex.y * Lg.hockUp, fb.minimum.z + ex.z * Lg.hockBack);
+    const hoofTop = at(c.x, fb.minimum.y + ex.y * Lg.toeTall, c.z + ex.z * (Lg.toeAhead - 0.2));
+    const run = hoofTop.subtract(hockAt);
+    const pastern = MeshBuilder.CreateCylinder("minoPastern", { height: run.length(), diameterTop: S.x * Lg.pastern, diameterBottom: S.x * Lg.pastern * 0.8, tessellation: 6 }, scene);
+    pastern.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), run.normalize(), pastern.rotationQuaternion);
+    pastern.position = Vector3.Center(hockAt, hoofTop);
+    add(pastern, knee, fur);
+    pastern.convertToFlatShadedMesh();
+    const hock = MeshBuilder.CreateIcoSphere("minoHock", { radius: S.x * Lg.hock, subdivisions: 1, flat: true }, scene);
+    hock.position.copyFrom(hockAt);
+    add(hock, knee, fur);
+  }
   return out;
 }
+
+/*
+ * [S] 407 the minotaur's slim legs on split hooves (CONFIRM 405 a.4: "thick pillar legs with large block feet"; ancient.minotaur.red.png, .blue.png: slim
+ * furred legs, the heel raised off the ground, each ending in a small cloven hoof). His bulk makes the leg blocks a man's pillars, so the thigh and shin
+ * meshes are thinned (.thigh, .shin of their width and depth); the foot block is hidden and, in its own box (S its half extents), replaced by
+ *   hoof: two dark toes .toeWide of the foot across either side of a cleft (.cleft of the half width out), .toeTall high, .toeDeep deep, set .toeAhead
+ *     forward, their fronts sloped .toeSlope rad;
+ *   pastern: a slim fur column .pastern of the foot across from the hock - .hockUp over the foot's top and .hockBack toward its heel - down and forward
+ *     onto the toes, so the heel stands off the ground as a bull's does, with a fur knob .hock across at the hock.
+ */
+const MINO_LEGS = {
+  thigh: 0.7, shin: 0.58,
+  toeWide: 0.62, toeTall: 0.55, toeDeep: 0.85, cleft: 0.36, toeAhead: 0.35, toeSlope: -0.3,
+  pastern: 0.75, hockUp: 0.5, hockBack: 0.25, hock: 0.5,
+};
 
 /*
  * [S] Zeus's beard and locks (379; ancient.zeus.red.png, card Appearance "luscious locks of dirty blond hair and grand beard with hairs that resemble
