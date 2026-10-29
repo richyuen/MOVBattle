@@ -3196,6 +3196,10 @@ const JARL_AXE = {
   long: 0.95, thick: 0.022, grip: 0.3, wide: 0.24, tall: 0.21, plate: 0.028, collar: 0.07, knob: 0.05, glow: 0.1,
   wood: new Color3(0.3, 0.19, 0.12), steel: new Color3(0.4, 0.41, 0.45), bronze: new Color3(0.55, 0.36, 0.16),
 };
+const JARL_CRESCENT = {
+  neck: 0.07, hornUp: 0.15, beardDown: 0.2, hornX: 0.98, beardX: 0.82, bulge: 0.12, arcSteps: 6, edge: 0.13,
+  steel: new Color3(0.16, 0.165, 0.19), glow: 0.08,
+};
 function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
   const A = JARL_AXE;
   const L = fit.stand * A.long;
@@ -3212,19 +3216,41 @@ function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
   collar.material = bronze;
   collar.convertToFlatShadedMesh();
   collar.parent = shaft;
-  // the blade: a broad bearded crescent, its top horn level with the collar, the beard hooking down under the eye
-  const w = A.wide * L, beard = -0.12 * L;
-  const outline: number[][] = [[0.02 * L, 0.09 * L], [w * 0.55, 0.09 * L], [w * 0.84, 0.05 * L], [w, 0]];
-  for (let k = 1; k <= 4; k++) {
-    const u = k / 4;
-    outline.push([w * (0.99 - 0.34 * u * u), -0.03 * L - (Math.abs(beard) - 0.03 * L) * u * 0.86]);
+  // [S] 407 the blade a dark steel crescent (CONFIRM 406 b.1: "a rounded oval blue-grey paddle"; viking.jarl.jpg: a crescent bearded blade, dark steel).
+  // JARL_CRESCENT, in haft lengths (x out from the haft, y up): a narrow neck .neck tall at the haft, the top edge sweeping up to a horn .hornUp above the
+  // eye, the cutting edge a long arc bulging .bulge past the blade's width down to the beard's horn .beardDown below it, the beard's back edge curving
+  // concave back to the neck, so the plate reads as two hooked horns either side of a hollow back, not a paddle. Dark steel, with a lighter honed band
+  // .edge of the width inside the cutting arc so the crescent's line reads at lineup distance.
+  const C = JARL_CRESCENT;
+  const w = A.wide * L, neck = C.neck * L, hornUp = C.hornUp * L, beardDown = -C.beardDown * L;
+  const arc: number[][] = [];
+  for (let k = 0; k <= C.arcSteps; k++) {
+    // from the top horn round the bulge to the beard's horn
+    const u = k / C.arcSteps;
+    const y = hornUp + (beardDown - hornUp) * u;
+    const x = w * (C.hornX + (1 + C.bulge - C.hornX) * Math.sin(Math.PI * u) - (C.hornX - C.beardX) * u);
+    arc.push([x, y]);
   }
-  outline.push([w * 0.4, beard], [w * 0.22, beard + 0.035 * L], [w * 0.1, -0.03 * L], [0.03 * L, 0.0], [0.015 * L, 0.04 * L]);
+  const topEdge: number[][] = [[0.015 * L, neck * 0.5], [w * 0.32, neck * 0.5 + (hornUp - neck * 0.5) * 0.22], [w * 0.62, neck * 0.5 + (hornUp - neck * 0.5) * 0.55]];
+  const backEdge: number[][] = [[w * C.beardX * 0.72, beardDown * 0.72], [w * 0.4, beardDown * 0.42], [w * 0.18, -neck * 0.5 - (Math.abs(beardDown) - neck * 0.5) * 0.08], [0.015 * L, -neck * 0.5]];
+  const outline = [...topEdge, ...arc, ...backEdge];
+  const darkSteel = mat(scene, C.steel, C.glow, "cloth");
   const blade = flatPlate(scene, "haxe", outline, A.plate * L);
   blade.position.y = top - 0.07 * L;
   blade.rotation.y = Math.PI / 2;
-  blade.material = steel;
+  blade.material = darkSteel;
   blade.parent = shaft;
+  // the honed band: one quad per arc step, from the arc inward by .edge of the width (toward the blade's middle)
+  const mid = [w * 0.55, (hornUp + beardDown) * 0.5];
+  for (let k = 0; k < arc.length - 1; k++) {
+    const inset = (p: number[]): number[] => {
+      const dx = mid[0] - p[0], dy = mid[1] - p[1], d = Math.hypot(dx, dy) || 1;
+      return [p[0] + (dx / d) * w * C.edge, p[1] + (dy / d) * w * C.edge];
+    };
+    const band = flatPlate(scene, "haxeEdge", [arc[k], arc[k + 1], inset(arc[k + 1]), inset(arc[k])], A.plate * L * 1.3);
+    band.material = steel;
+    band.parent = blade;
+  }
   // the knob at the top: the off-fist mark (hpoint)
   const knob = MeshBuilder.CreateCylinder("hpoint", { height: A.knob * L, diameterTop: A.thick * L * 1.4, diameterBottom: A.thick * L * 2.2, tessellation: 6 }, scene);
   knob.position.y = top + A.knob * L * 0.4;
