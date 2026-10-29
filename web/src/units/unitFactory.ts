@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -589,6 +589,8 @@ export class UnitFactory {
       // [S] 405 ...and the Brawler's leg kit in place of the kit's knee cuffs: puffy team trousers to fur cuffs at mid-shin over brown boots
       // (critic 403 a.2; viking.headbutter.blue.png). 407: his own cut of it, the trousers on down to cuffs at mid-shin (vikingDress HEADBUTTER_LEGS).
       propMeshes.push(...headbutterLegs(this._scene, body, teamColor));
+      // [S] 408 ...and his short-sleeved team tunic over the fur-tinted trunk (vikingDress HEADBUTTER_TUNIC; its skirt below takes the same cloth)
+      propMeshes.push(...headbutterTunic(this._scene, body, teamColor));
     }
     // [S] the Valkyrie's own winged helm: dark team dome, bronze brow band and wing mounts, tall team-dark crest, in place of the shared plume_helmet
     // (400; vikingDress VALKYRIE_HELM)
@@ -805,7 +807,7 @@ export class UnitFactory {
             // the painter's sweater ends at the hip in a snug ribbed band, not a flared tunic to mid-thigh (374, renaissanceDress PAINTER_SWEATER)
             : definition.id === "renaissance.painter"
               ? hangSkirt(this._scene, body, "painterSweaterHem", PAINTER_SWEATER.long, PAINTER_SWEATER.flare, body.bodyMaterial)
-              : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, body.bodyMaterial);
+              : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, definition.id === "viking.headbutter" ? headbutterTunicCloth(teamColor) : body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
       if (definition.id === "renaissance.painter" && skirt) propMeshes.push(...painterSweaterRib(this._scene, skirt, teamColor));
       if (knight && skirt) propMeshes.push(...knightCuirass(this._scene, body, skirt));

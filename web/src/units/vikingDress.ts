@@ -1090,6 +1090,34 @@ const HEADBUTTER_CREAM = { color: new Color3(0.8, 0.6, 0.35), creamGlow: 0.42 };
  * .beltRim of its height along its top and foot edges, the buckle on its front as before.
  */
 const HEADBUTTER_BELT = { color: new Color3(0.5, 0.3, 0.15), rim: new Color3(0.26, 0.15, 0.08), glow: 0.2 };
+/*
+ * [S] 408 the Headbutter's team tunic (CONFIRM 407 a.1: "a grey-brown leather vest/plate over the chest with a hanging flap ... not the team skin";
+ * viking.headbutter.red.png: a plain team-coloured short-sleeved tunic, broken only by the brown belt). The viking_fur preset tints the trunk half way to
+ * tan, so the trunk reads as a brown vest; his tunic is its own team cloth over it: a shell round the trunk box .out of its half width and .deep of its
+ * half depth from the neck to its foot, a short sleeve round each upper arm from the shoulder to .sleeve of its length (.sleeveOut of its radius), and
+ * the tunic skirt under the belt in the same cloth (unitFactory, headbutterTunicCloth). Team cloth self-lit .glow so the shaded side stays team.
+ */
+const HEADBUTTER_TUNIC = { out: 1.05, deep: 1.08, sleeve: 0.42, sleeveOut: 1.2, glow: 0.12 };
+/** The Headbutter's team tunic cloth (spec at HEADBUTTER_TUNIC), shared by the trunk shell, the sleeves and the tunic skirt. */
+export function headbutterTunicCloth(teamColor: Color3) {
+  return getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(HEADBUTTER_TUNIC.glow) });
+}
+/** The Headbutter's short-sleeved team tunic over the trunk (spec at HEADBUTTER_TUNIC). */
+export function headbutterTunic(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const T = HEADBUTTER_TUNIC;
+  const cloth = headbutterTunicCloth(teamColor);
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const shell = MeshBuilder.CreateBox("headbutterTunic", {
+    width: tb.extendSize.x * 2 * ts.x * T.out, height: tb.extendSize.y * 2 * ts.y, depth: tb.extendSize.z * 2 * ts.z * T.deep,
+  }, scene);
+  shell.position.set(tm.position.x + tb.center.x * ts.x, tm.position.y + tb.center.y * ts.y, tm.position.z + tb.center.z * ts.z);
+  shell.rotation.copyFrom(tm.rotation);
+  shell.parent = tm.parent;
+  shell.material = cloth;
+  const out: Mesh[] = [shell];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "headbutterSleeve", arm, 0, T.sleeve, T.sleeveOut, cloth));
+  return out;
+}
 /** The Headbutter's brown belt and buckle, dark fur-cuffed bracers, and cream fur boot cuffs over brown boots (spec at HEADBUTTER_KIT). */
 export function headbutterKit(scene: Scene, body: ArticulatedBody, legs = false): Mesh[] {
   const K = HEADBUTTER_KIT;
