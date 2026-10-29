@@ -252,6 +252,45 @@ export function iceArcherMantle(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 409 the Ice Archer's team coat (CONFIRM 405 a.2: "dull brown-mauve vest over the torso in lineup_viking - TABS: the whole coat team red down to
+ * mid-thigh, belted"; viking.ice_archer.red.png: a long-sleeved team coat over the whole trunk and arms, a brown belt at the waist, its skirt to
+ * mid-thigh). The viking_fur preset tints the trunk toward tan, which read as a vest (the Headbutter's 408 fault); her coat is its own team cloth:
+ *   body: a shell round the trunk box, .out of its half width and .deep of its half depth, from the neck to the trunk's foot;
+ *   sleeves: the whole upper arm and the forearm to .cuffTo of its length, .sleeveOut of the limb's radius;
+ *   belt: a dark leather band .belt of the trunk tall at .beltAt of it over the foot, .beltOut of the shell;
+ *   skirt: the tunic skirt in the same cloth, .skirt of the hip-to-knee drop and .flare at its hem (unitFactory, iceArcherCoatCloth).
+ */
+export const ICE_ARCHER_COAT = { out: 1.06, deep: 1.1, sleeveOut: 1.15, cuffTo: 0.88, belt: 0.11, beltAt: 0.08, beltOut: 1.08, skirt: 0.8, flare: 1.4, glow: 0.12, leather: new Color3(0.26, 0.12, 0.06) };
+/** The Ice Archer's team coat cloth (spec at ICE_ARCHER_COAT), shared by the shell, the sleeves and the coat skirt. */
+export function iceArcherCoatCloth(teamColor: Color3) {
+  return getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(ICE_ARCHER_COAT.glow) });
+}
+/** The Ice Archer's long-sleeved belted team coat over the trunk (spec at ICE_ARCHER_COAT). */
+export function iceArcherCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = ICE_ARCHER_COAT;
+  const cloth = iceArcherCoatCloth(teamColor);
+  const leather = getMaterialFactory().get("cloth", C.leather, { emissive: C.leather.scale(0.2) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const shell = MeshBuilder.CreateBox("iceArcherCoat", { width: W * C.out, height: H, depth: D * C.deep }, scene);
+  shell.position.set(cx, cy, cz);
+  shell.rotation.copyFrom(tm.rotation);
+  shell.parent = tm.parent;
+  shell.material = cloth;
+  const out: Mesh[] = [shell];
+  const belt = MeshBuilder.CreateBox("iceArcherCoatBelt", { width: W * C.out * C.beltOut, height: H * C.belt, depth: D * C.deep * C.beltOut }, scene);
+  belt.position.set(cx, cy - H / 2 + H * C.beltAt, cz);
+  belt.rotation.copyFrom(tm.rotation);
+  belt.parent = tm.parent;
+  belt.material = leather;
+  out.push(belt);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "iceArcherSleeve", arm, 0, 1, C.sleeveOut, cloth));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) out.push(limbShell(scene, "iceArcherSleeve", arm, 0, C.cuffTo, C.sleeveOut, cloth));
+  return out;
+}
+
 /** The head's box in the torso joint's frame: its lowest point, its middle's height and depth, its width, height and depth. */
 function headInTorso(body: ArticulatedBody): { chin: number; midY: number; midZ: number; wide: number; tall: number; deep: number } {
   for (let n: Node | null = body.headMesh; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);

@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -578,6 +578,8 @@ export class UnitFactory {
       // [S] 404 ...and the Brawler's leg kit: puffy team trousers, cream fur calf cuffs over brown boots (re-audit 403 a.2/a.3: "slim blue legs straight
       // down to the boots, no fur", "team-blue boots"; viking.ice_archer.red.png: the same cut as the Brawler's). The shared BRAWLER_LEGS cut.
       propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
+      // [S] 409 ...and her long-sleeved belted team coat over the fur-tinted trunk (vikingDress ICE_ARCHER_COAT; its skirt below in the same cloth)
+      propMeshes.push(...iceArcherCoat(this._scene, body, teamColor));
     }
     // [S] the Headbutter's own spiked team cap in place of the shared horned viking helmet (392; vikingDress HEADBUTTER_CAP)
     if (definition.id === "viking.headbutter" && !shouldUseVehicleBody) {
@@ -807,7 +809,10 @@ export class UnitFactory {
             // the painter's sweater ends at the hip in a snug ribbed band, not a flared tunic to mid-thigh (374, renaissanceDress PAINTER_SWEATER)
             : definition.id === "renaissance.painter"
               ? hangSkirt(this._scene, body, "painterSweaterHem", PAINTER_SWEATER.long, PAINTER_SWEATER.flare, body.bodyMaterial)
-              : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, definition.id === "viking.headbutter" ? headbutterTunicCloth(teamColor) : body.bodyMaterial);
+              // [S] 409 the Ice Archer's coat skirt to mid-thigh in her coat cloth (vikingDress ICE_ARCHER_COAT)
+              : definition.id === "viking.ice_archer"
+                ? hangSkirt(this._scene, body, "tunicSkirt", ICE_ARCHER_COAT.skirt, ICE_ARCHER_COAT.flare, iceArcherCoatCloth(teamColor))
+                : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, definition.id === "viking.headbutter" ? headbutterTunicCloth(teamColor) : body.bodyMaterial);
       if (skirt) propMeshes.push(skirt);
       if (definition.id === "renaissance.painter" && skirt) propMeshes.push(...painterSweaterRib(this._scene, skirt, teamColor));
       if (knight && skirt) propMeshes.push(...knightCuirass(this._scene, body, skirt));
