@@ -795,13 +795,15 @@ export function longshipCarrierDress(scene: Scene, body: ArticulatedBody): Mesh[
  *   bib (torso): a broad tapered block from under the chin (.bibTop of the trunk height under the neck joint) down .bibDrop of the trunk height, .bibWide
  *     of the trunk width across narrowing to .bibTip of that, .bibDeep deep, its back on the chest's front face and leaning out .bibLean toward its foot,
  *     where it meets the board's face;
- *   tail (torso, 408; it replaced 407's spill glued on the board's face): see the tail block below.
+ *   spill (board): a tapered slab lying on the board's upper face, .spillFrom to .spillTo in the board's own frame (local y runs toward him, the boss at
+ *     its middle), .spillWide across at its root narrowing to .spillTip, .spillThick thick, with .locks pointed locks at its end beside the boss;
+ *     the board is found by name ("nshield", attached before the dress); without it the spill is skipped.
  * Near-black brown cloth (palette brown x .2) with a small self-light, nothing sideways or upward: hair hangs down and lies on what is under it.
  */
 const BRAWLER_BEARD = {
   jaw: [1.5, 0.95, 0.8] as const, jawY: 1.0, jawZ: 0.55, stacheLow: 0.62, stacheZ: 1.25,
   bibTop: 0.0, bibDrop: 0.28, bibWide: 0.6, bibTip: 0.72, bibDeep: 0.2, bibLean: 0.08,
-  tailFoot: 0.14, tailWide: 1.0, tailTip: 0.55, locks: 3, lock: 0.08,
+  spillFrom: [0.085, 0.15] as const, spillTo: [0.12, -0.05] as const, spillWide: 0.11, spillTip: 0.55, spillThick: 0.012, locks: 3, lock: 0.035,
   color: new Color3(0.13, 0.065, 0.045), glow: 0.12,
 };
 /** The Brawler's near-black beard: a jaw mass under the mask, a bib down the chest and its spill over the board's face (spec at BRAWLER_BEARD). */
@@ -839,22 +841,27 @@ export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   bib.scaling.z = bibD / (W * B.bibWide);
   bib.rotation.x = -B.bibLean * 2;
   bib.position.set(chest.position.x, topY - bibH * 0.5, front + bibD * 0.5 + bibH * B.bibLean);
-  // [S] 408 the tail down the chest to the belt (critic 407 a.4: "the spill on the board reads as a dark stripe painted on the shield ... his chest
-  // between the board and the belt shows only the brown tunic"; viking.brawler.jpg: the beard hangs off the chin down the chest in front of the body):
-  // the board-glued spill is gone; from the bib's foot a torso-hung tapered tail runs on down the chest's front to .tailFoot of the trunk height (the
-  // belt line), .tailWide of the bib's foot across narrowing to .tailTip, its back on the chest's front face, ending in .locks pointed locks.
-  const footY = topY - bibH;
-  const tailTop = footY + bibH * 0.15, tailBot = chest.position.y - H * 0.5 + H * B.tailFoot;
-  const tailH = tailTop - tailBot;
-  const tailW = W * B.bibWide * B.bibTip * B.tailWide;
-  const tail = put(MeshBuilder.CreateCylinder("brawlerBeardTail", { height: tailH, diameterTop: tailW, diameterBottom: tailW * B.tailTip, tessellation: 6 }, scene), body.torso);
-  tail.scaling.z = bibD * 0.8 / tailW;
-  tail.position.set(chest.position.x, tailBot + tailH * 0.5, front + bibD * 0.4);
-  for (let i = 0; i < B.locks; i++) {
-    const u = (i + 0.5) / B.locks - 0.5;
-    const root = new Vector3(chest.position.x + u * tailW * B.tailTip * 0.8, tailBot + H * 0.01, front + bibD * 0.4);
-    const lock = column("brawlerBeardLock", root, root.add(new Vector3(u * W * 0.03, -H * B.lock * (1 - Math.abs(u)), 0)), tailW * B.tailTip * 0.4, 0.002, body.torso);
-    lock.scaling.z = 0.6;
+  // the spill over the board's upper face, in the board's own frame
+  const board = body.root.getChildMeshes(false).find((m) => m.name === "nshield");
+  if (board) {
+    const bb = board.getBoundingInfo().boundingBox;
+    const faceZ = bb.maximum.z + B.spillThick * 0.5;
+    const from = new Vector3(B.spillFrom[0], B.spillFrom[1], faceZ), to = new Vector3(B.spillTo[0], B.spillTo[1], faceZ);
+    const run = to.subtract(from), long = run.length();
+    const spill = MeshBuilder.CreateCylinder("brawlerBeardSpill", { height: long, diameterTop: B.spillWide, diameterBottom: B.spillWide * B.spillTip, tessellation: 6 }, scene);
+    spill.scaling.z = B.spillThick / B.spillWide;
+    spill.rotation.z = Math.atan2(run.x, -run.y);
+    spill.position = Vector3.Center(from, to);
+    put(spill, board);
+    for (let i = 0; i < B.locks; i++) {
+      const u = (i + 0.5) / B.locks - 0.5;
+      const dir = run.normalize();
+      const across = new Vector3(-dir.y, dir.x, 0);
+      const root = to.add(across.scale(u * B.spillWide * B.spillTip * 0.9));
+      const tip = root.add(dir.scale(B.lock * (1 - Math.abs(u)))).add(across.scale(u * B.lock * 0.4));
+      const lock = column("brawlerBeardLock", root, tip, B.spillWide * 0.22, 0.002, board);
+      lock.scaling.z = 0.5;
+    }
   }
   return out;
 }
