@@ -226,6 +226,8 @@ const SNAKE_UPRIGHT = {
 const ICE_REST = { across: 0.42, forward: 0.12 };
 /** [S] 411 the Monk's bo at rest (_restMonkBo): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt up at its off end. */
 const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
+/** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit. */
+const MONK_SWING = { back: 0.9, through: 1.35, cock: 0.4, hit: 0.62, reach: 0.08 };
 const ICE_UPRIGHT = {
   yaw: 0.12, stagger: 0.06, give: 0.02,
   raise: -0.85, out: -0.2, elbow: -1.3, tip: [0.16, 1, 0.06] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
@@ -5316,9 +5318,23 @@ export class ProceduralAnimator {
     const holder = this._monkBo;
     if (!holder) return;
     const st = this._state;
-    if (st !== AnimState.Idle && st !== AnimState.Walking) return;
+    if (st !== AnimState.Idle && st !== AnimState.Walking && st !== AnimState.Attacking) return;
     const w = 1 - Math.min(1, this._limp);
     if (w <= 0.01) return;
+    // [S] 412 the bo swung two-handed (audit 411 c.1: "a bare-hand shove - TABS: the bo swung two-handed into the target"; dynasty.monk.jpg: the
+    // staff swept round level at chest height, the far end leading into the enemy). Attacking, the shaft's line is turned about the vertical by
+    // MONK_SWING: cocked .back rad (the far end behind his off shoulder) by .cock of the attack, swept round to .through rad (the far end out in front,
+    // across the target) by .hit, eased back to the rest line after; the fists reach .reach of his height further ahead at the hit.
+    let turn = 0, reach = 0;
+    if (st === AnimState.Attacking) {
+      const p = Math.min(this._attackTimer / this._attackDuration, 1);
+      const ease = (t: number): number => { const c = Math.max(0, Math.min(1, t)); return c * c * (3 - 2 * c); };
+      const M = MONK_SWING;
+      if (p < M.cock) turn = -M.back * ease(p / M.cock);
+      else if (p < M.hit) turn = -M.back + (M.back + M.through) * ease((p - M.cock) / (M.hit - M.cock));
+      else turn = M.through * (1 - ease((p - M.hit) / (1 - M.hit)));
+      reach = M.reach * Math.max(0, turn) / M.through;
+    }
     const b = this._body;
     for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
     const rootM = b.root.getWorldMatrix();
@@ -5327,14 +5343,14 @@ export class ProceduralAnimator {
     const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
     const height = b.metrics.overallHeight * b.root.scaling.y;
     const R = MONK_REST;
-    const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(R.ahead * height))
+    const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale((R.ahead + reach) * height))
       .addInPlace(outward.scale(-R.inward * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
-    const axis = outward.scale(-1).addInPlace(new Vector3(0, R.tilt, 0)).normalize();
-    const z = fwd.clone();
+    const axis = outward.scale(-Math.cos(turn)).addInPlace(fwd.scale(Math.sin(turn))).addInPlace(new Vector3(0, R.tilt, 0)).normalize();
+    const z = Vector3.Up();
     z.subtractInPlace(axis.scale(Vector3.Dot(z, axis))).normalize();
     const x = Vector3.Cross(axis, z).normalize();
     const world = Matrix.Identity();
