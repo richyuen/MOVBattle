@@ -917,7 +917,7 @@ const HEADBUTTER_CREAM = { color: new Color3(0.8, 0.6, 0.35), creamGlow: 0.42 };
  */
 const HEADBUTTER_BELT = { color: new Color3(0.5, 0.3, 0.15), rim: new Color3(0.26, 0.15, 0.08), glow: 0.2 };
 /** The Headbutter's brown belt and buckle, dark fur-cuffed bracers, and cream fur boot cuffs over brown boots (spec at HEADBUTTER_KIT). */
-export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
+export function headbutterKit(scene: Scene, body: ArticulatedBody, legs = false): Mesh[] {
   const K = HEADBUTTER_KIT;
   const mf = getMaterialFactory();
   const leather = mf.get("cloth", new Color3(0.3, 0.17, 0.09), { emissiveIntensity: K.glow * 0.5 });
@@ -985,16 +985,20 @@ export function headbutterKit(scene: Scene, body: ArticulatedBody): Mesh[] {
       out.push(lump);
     }
   };
+  // [S] 405 the legs leave this kit for the Brawler's cut (critic 403 a.2: "the fur cuffs stacked right under the shorts at knee level", legs about 40%
+  // of the height; viking.headbutter.blue.png: puffy trousers running down to fur cuffs at mid-shin over the boot). unitFactory hangs brawlerLegs on
+  // him, so the kit keeps the belt and bracers only; `legs: true` keeps the old knee cuffs for a caller that wants them.
   for (const [fore, shin] of [[body.leftLowerArm, body.leftLowerLeg], [body.rightLowerArm, body.rightLowerLeg]] as const) {
     out.push(limbShell(scene, "headbutterBracer", fore, K.bracerFrom, K.bracerTo, K.bracerOut, leather));
     furRoll(fore, K.furFrom, K.furOut, K.furThick, K.furLumps);
+    if (!legs) continue;
     out.push(limbShell(scene, "headbutterBoot", shin, K.bootFrom, K.bootTo, K.bootOut, boot));
     out.push(limbShell(scene, "headbutterCuff", shin, K.cuffFrom, K.cuffTo, K.cuffOut, fur));
     furRoll(shin, K.cuffFrom, K.cuffOut, K.cuffThick, K.cuffLumps);
   }
   // [S] the boots over the feet (395 a.4: the boot stopped at the ankle and the feet stayed team blue): the foot mesh itself in the boot's leather,
   // with a dark sole slab under it standing a hair proud all round, so the boot runs on over the toe (viking.headbutter.red.png: brown boots to the toes).
-  for (const foot of body.root.getChildMeshes(false)) {
+  for (const foot of legs ? body.root.getChildMeshes(false) : []) {
     if (!/_[lr]FootM$/.test(foot.name)) continue;
     foot.material = boot;
     const bb = foot.getBoundingInfo().boundingBox;

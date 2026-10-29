@@ -586,6 +586,9 @@ export class UnitFactory {
       propMeshes.push(...headbutterBraids(this._scene, body));
       // [S] ...and his belt, fur-cuffed bracers and cream fur boot cuffs over brown boots (395; vikingDress HEADBUTTER_KIT)
       propMeshes.push(...headbutterKit(this._scene, body));
+      // [S] 405 ...and the Brawler's leg kit in place of the kit's knee cuffs: puffy team trousers to fur cuffs at mid-shin over brown boots
+      // (critic 403 a.2; viking.headbutter.blue.png). The shared BRAWLER_LEGS cut.
+      propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
     }
     // [S] the Valkyrie's own winged helm: dark team dome, bronze brow band and wing mounts, tall team-dark crest, in place of the shared plume_helmet
     // (400; vikingDress VALKYRIE_HELM)
