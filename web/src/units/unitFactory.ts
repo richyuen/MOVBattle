@@ -1,4 +1,4 @@
-import { archerHair, monkStaff, ninjaGi, ninjaHood, tenguMask } from "./dynastyDress";
+import { archerHair, monkStaff, ninjaGi, ninjaHood, ninjaTrousers, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -598,6 +598,7 @@ export class UnitFactory {
     if (definition.id === "dynasty.ninja" && !shouldUseVehicleBody) {
       propMeshes.push(...ninjaHood(this._scene, body, teamColor));
       propMeshes.push(...ninjaGi(this._scene, body, teamColor)); // [S] 412 his loose gi (dynastyDress NINJA_GI)
+      propMeshes.push(...ninjaTrousers(this._scene, body, teamColor)); // [S] 413 wide trousers over wrapped shins (dynastyDress NINJA_TROUSERS)
     }
     // [S] the Headbutter's own spiked team cap in place of the shared horned viking helmet (392; vikingDress HEADBUTTER_CAP)
     if (definition.id === "viking.headbutter" && !shouldUseVehicleBody) {

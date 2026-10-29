@@ -253,3 +253,32 @@ export function archerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   out.push(bun);
   return out;
 }
+
+/*
+ * [S] 413 the Ninja's wide trousers over wrapped shins (audit 411 a.4: "thin legs - TABS: wide trousers to the knee over wrapped shins";
+ * dynasty.ninja.red.png: baggy team trousers from the hip, widest over the knee and ending a little below it, then the shins wrapped tight in team
+ * cloth in ridged bands to the ankle, over the feet). Team cloth as the gi's (NINJA_GI.glow): the thigh shell .thigh over the upper leg, the
+ * trouser leg .knee over the lower leg's top .kneeTo of its length; the wraps .wrap over the rest of the shin, with .bands raised rings .band of the
+ * wrap's length, .bandOut proud, a shade .bandShade of the team.
+ */
+const NINJA_TROUSERS = { thigh: 1.9, knee: 1.75, kneeTo: 0.3, wrap: 1.3, bands: 4, band: 0.09, bandOut: 1.42, bandShade: 0.82 };
+/** The Ninja's wide team trousers to below the knee and banded shin wraps (spec at NINJA_TROUSERS). */
+export function ninjaTrousers(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const T = NINJA_TROUSERS;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(NINJA_GI.glow) });
+  const dark = teamColor.scale(T.bandShade);
+  const bandMat = mf.get("cloth", dark, { emissive: dark.scale(NINJA_GI.glow) });
+  const out: Mesh[] = [];
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "ninjaTrouser", leg, 0, 1, T.thigh, cloth));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "ninjaTrouserKnee", shin, 0, T.kneeTo, T.knee, cloth));
+    out.push(limbShell(scene, "ninjaShinWrap", shin, T.kneeTo, 1, T.wrap, cloth));
+    const step = (1 - T.kneeTo) / T.bands;
+    for (let i = 0; i < T.bands; i++) {
+      const at = T.kneeTo + step * (i + 0.5);
+      out.push(limbShell(scene, "ninjaShinBand", shin, at - T.band * 0.5, at + T.band * 0.5, T.bandOut, bandMat));
+    }
+  }
+  return out;
+}
