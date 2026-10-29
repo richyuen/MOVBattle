@@ -116,3 +116,49 @@ export function ninjaHood(scene: Scene, body: ArticulatedBody, teamColor: Color3
   tail.rotation.x = -0.25;
   return out;
 }
+
+/*
+ * [S] 412 the Monk's tengu mask (audit 411 a.1: "a plain head with bead eyes - TABS: a tengu mask (a scowling face with brows and a nose) under the hat";
+ * dynasty.monk.red.png, .jpg: a team mask over the whole face, a deeper shade than the skin, heavy orange brows slanting down to the nose in a scowl
+ * over the bead eyes, a broad orange nose ridge, a dark grimacing mouth with two small white fangs at its corners). On the head's front, in its half
+ * extents e: the plate .plate of e.z proud of the face, from .chin of e.y up to the eyes' bottom, a shade .shade of the team; each brow a slab .brow of
+ * e.x long, .browTall of e.y tall, over the eye's top, its inner end turned down .scowl rad; the nose a wedge .nose of e.y long under the eyes, .noseOut
+ * of e.z proud; the mouth a dark bar .mouth of e.x wide at .mouthY of e.y with a fang .fang of e.y long under each end.
+ */
+const TENGU_MASK = {
+  plate: 1.04, chin: -0.92, shade: 0.72, brow: 0.62, browTall: 0.16, scowl: 0.38, nose: 0.42, noseOut: 0.3, noseWide: 0.3, mouth: 0.9, mouthY: -0.6, fang: 0.2,
+  orange: new Color3(0.86, 0.38, 0.12), dark: new Color3(0.12, 0.07, 0.06), fangColor: new Color3(0.92, 0.9, 0.84), glow: 0.12,
+};
+/** The Monk's team tengu mask with orange scowling brows, nose ridge and a fanged grimace (spec at TENGU_MASK). */
+export function tenguMask(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const T = TENGU_MASK;
+  const mf = getMaterialFactory();
+  const shade = teamColor.scale(T.shade);
+  const plateMat = mf.get("cloth", shade, { emissive: shade.scale(T.glow) });
+  const orange = mf.get("cloth", T.orange, { emissive: T.orange.scale(T.glow) });
+  const dark = mf.get("cloth", T.dark);
+  const fangMat = mf.get("cloth", T.fangColor, { emissive: T.fangColor.scale(T.glow) });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const span = eyeSpanInHead(body) ?? [-e.y * 0.2, e.y * 0.3];
+  const front = e.z * T.plate;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof plateMat): Mesh => { m.parent = body.headMesh; m.material = mat; out.push(m); return m; };
+  const plateTop = span[0]; // under the bead eyes, so they stay in front
+  const plate = put(MeshBuilder.CreateBox("tenguPlate", { width: e.x * 2.04, height: plateTop - e.y * T.chin, depth: e.z * 0.08 }, scene), plateMat);
+  plate.position.set(0, (plateTop + e.y * T.chin) / 2, front);
+  const eyeMid = (span[0] + span[1]) / 2;
+  for (const side of [-1, 1]) {
+    const brow = put(MeshBuilder.CreateBox("tenguBrow", { width: e.x * T.brow, height: e.y * T.browTall, depth: e.z * 0.14 }, scene), orange);
+    brow.position.set(side * e.x * 0.42, span[1] + e.y * T.browTall * 0.3, front + e.z * 0.06);
+    brow.rotation.z = side * T.scowl;
+    const fang = put(MeshBuilder.CreateCylinder("tenguFang", { height: e.y * T.fang, diameterTop: 0, diameterBottom: e.x * 0.12, tessellation: 4 }, scene), fangMat);
+    fang.rotation.x = Math.PI;
+    fang.position.set(side * e.x * T.mouth * 0.42, e.y * T.mouthY - e.y * T.fang * 0.5, front + e.z * 0.08);
+  }
+  const nose = put(MeshBuilder.CreateCylinder("tenguNose", { height: e.y * T.nose, diameterTop: e.x * 0.12, diameterBottom: e.x * T.noseWide, tessellation: 4 }, scene), orange);
+  nose.scaling.z = (e.z * T.noseOut) / (e.x * T.noseWide);
+  nose.position.set(0, eyeMid - e.y * T.nose * 0.55, front + e.z * T.noseOut * 0.4);
+  const mouth = put(MeshBuilder.CreateBox("tenguMouth", { width: e.x * T.mouth, height: e.y * 0.12, depth: e.z * 0.1 }, scene), dark);
+  mouth.position.set(0, e.y * T.mouthY, front + e.z * 0.04);
+  return out;
+}

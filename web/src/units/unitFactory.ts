@@ -1,4 +1,4 @@
-import { monkStaff, ninjaHood } from "./dynastyDress";
+import { monkStaff, ninjaHood, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -588,6 +588,7 @@ export class UnitFactory {
     // [S] 411 the Monk's bo staff held level across his chest in both fists (dynastyDress MONK_STAFF; proceduralAnimation _restMonkBo)
     if (definition.id === "dynasty.monk" && !shouldUseVehicleBody) {
       propMeshes.push(...monkStaff(this._scene, body));
+      propMeshes.push(...tenguMask(this._scene, body, teamColor)); // [S] 412 his tengu mask (dynastyDress TENGU_MASK)
     }
     // [S] 411 the Ninja's boxy team hood and face mask with an open eye band, in place of the shared ninja_mask ball (dynastyDress NINJA_HOOD)
     if (definition.id === "dynasty.ninja" && !shouldUseVehicleBody) {
