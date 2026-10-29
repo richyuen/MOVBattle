@@ -130,6 +130,61 @@ export function iceArcherCap(scene: Scene, body: ArticulatedBody, teamColor: Col
   return out;
 }
 
+/*
+ * [S] 402 the Ice Archer's snow mantle (viking.ice_archer.jpg, viking.ice_archer.blue.png: a pale grey jagged fur/snow mantle over both shoulders, its
+ * points hanging onto the chest and upper arms; critic 396-401 a.2: "a flat smooth blue disc ring at the neck"). In the chest's size (H high, D deep)
+ * and the shoulder width S:
+ *   ring: a faceted pale ring .wide S across round the neck's foot, its tube .thick of its radius, sunk .sink H under the collar line, .ahead D forward;
+ *   points: .points jagged four-sided points off its outer edge, .point H long, leaning .lean rad out from plumb as they hang over the shoulders and
+ *     chest, the ones over the shoulders .shoulderLong longer;
+ *   lumps: .lumps rounded clumps along its top so it reads as snow-dusted fur.
+ * Pale grey unlit with emissive = colour, out of the glow (LESSONS: pale lit cloth under an overhang reads grey; snow must stay pale).
+ */
+const ICE_ARCHER_MANTLE = { wide: 0.8, thick: 0.3, sink: 0.05, ahead: 0.04, flat: 0.82, points: 10, point: 0.32, shoulderLong: 0.5, lean: 0.6, lumps: 8, lump: 0.52 };
+const ICE_ARCHER_SNOW = new Color3(0.74, 0.76, 0.8);
+/** The Ice Archer's pale jagged snow mantle over both shoulders (spec at ICE_ARCHER_MANTLE). */
+export function iceArcherMantle(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const M = ICE_ARCHER_MANTLE;
+  const mf = getMaterialFactory();
+  const snow = mf.get("unlit", ICE_ARCHER_SNOW, { emissive: ICE_ARCHER_SNOW });
+  const glow = scene.getGlowLayerByName("glow");
+  const out: Mesh[] = [];
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const shoulderW = body.metrics.shoulderWidth ?? W * 1.3;
+  const r = shoulderW * M.wide * 0.5;
+  const y = body.neck.position.y - H * M.sink;
+  const z = chest.position.z + D * M.ahead;
+  const put = (m: Mesh): Mesh => {
+    m.material = snow;
+    m.convertToFlatShadedMesh();
+    m.parent = body.torso;
+    glow?.addExcludedMesh(m);
+    out.push(m);
+    return m;
+  };
+  const ring = put(MeshBuilder.CreateTorus("iceArcherMantle", { diameter: r * 2, thickness: r * 2 * M.thick, tessellation: 10 }, scene));
+  ring.position.set(0, y, z);
+  ring.scaling.z = M.flat;
+  for (let i = 0; i < M.points; i++) {
+    const a = (i / M.points) * Math.PI * 2 + 0.15;
+    const over = Math.abs(Math.cos(a));
+    const long = H * M.point * (1 + M.shoulderLong * over);
+    const dir = new Vector3(Math.cos(a) * Math.sin(M.lean), -Math.cos(M.lean), Math.sin(a) * M.flat * Math.sin(M.lean)).normalize();
+    const point = put(MeshBuilder.CreateCylinder("iceArcherMantlePoint", { height: long, diameterTop: 0, diameterBottom: r * M.thick * 1.3, tessellation: 4 }, scene));
+    point.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+    const base = new Vector3(Math.cos(a) * r, y - r * M.thick * 0.4, z + Math.sin(a) * r * M.flat);
+    point.position.copyFrom(base.add(dir.scale(long * 0.5)));
+  }
+  for (let i = 0; i < M.lumps; i++) {
+    const a = (i / M.lumps) * Math.PI * 2 + 0.5;
+    const lump = put(MeshBuilder.CreateIcoSphere("iceArcherMantleLump", { radius: r * M.thick * M.lump, subdivisions: 1, flat: true }, scene));
+    lump.position.set(Math.cos(a) * r, y + r * M.thick * (i % 2 ? 0.45 : 0.2), z + Math.sin(a) * r * M.flat);
+  }
+  return out;
+}
+
 /** The head's box in the torso joint's frame: its lowest point, its middle's height and depth, its width, height and depth. */
 function headInTorso(body: ArticulatedBody): { chin: number; midY: number; midZ: number; wide: number; tall: number; deep: number } {
   for (let n: Node | null = body.headMesh; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);
