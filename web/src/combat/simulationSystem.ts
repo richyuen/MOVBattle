@@ -75,7 +75,9 @@ const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
  * does not loose at the decision with the bow at his hip: the draw (proceduralAnimation bow_draw_release) runs first and the arrow leaves the bow at its
  * release point (bowReleasesIn), from where the bow is then. Logged "throw" at the loose, as a held throw is.
  */
-const DRAWS_BEFORE_LOOSE = new Set(["medieval.archer"]);
+// [S] 409 ...and the ice archer (CONFIRM 405 b.3: "no bow visible and no draw in unit_viking.ice_archer_windup - TABS: bow vertical at arm's length, the
+// ice arrow drawn to the chest"; viking.ice_archer.jpg): she loosed at the decision from her carry, so the shot showed her mid-stride with the bow low
+const DRAWS_BEFORE_LOOSE = new Set(["medieval.archer", "viking.ice_archer"]);
 // [S] the potionseller's potions splash men drunk instead of blowing up (342; ProjectileSystem DRUNK_SPLASH): drunk men stagger about, not fighting (DRUNK_WANDER)
 const DRUNK_POTIONS = new Set(["farmer.potion_seller"]);
 // A drunk man's wander: he reels off DRUNK_WANDER.reach m toward a heading that swings round at .swing rad/s from his own hashed start
