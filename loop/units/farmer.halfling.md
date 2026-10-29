@@ -21,6 +21,6 @@ d PASS (cost 50, hp 1.50x, dmg 0.17x, cd 1.50x)
 - foot fur [P] [1] - 390: tuft inX 0, clump .8 - still rooted at the ankle off to the side
 - stance [P] [2] - spent (HALFLING_STANCE row, ledger)
 ## Notes (max 3 lines)
-- 402: the shorts are an unlit plate (team x .14, emissive = colour, out of the glow): at x .3 the idle's bloom still lifted them to the jacket's blue; the critic reads them a little bluer and deeper than the reference's grey-slate (not a blocker).
-- 400: HALFLING_SHORTS long .99 to the knee, a hem tube .22 of the shin flaring 1.05, cuff .06 of the shin; 399: HALFLING_TUFT pad on the toe's top face; probe_close --aim=y:0.08.
+- 403 evidence (94a7f14): probe_local at idle puts his feet .015 m apart fore-aft and .4 m across - no stride; the "walk stride" was the .6 rad idle swing. His idle now swings .2 rad (near front-on); RE-AUDIT a.1 (only) at 404's step 2 before any pick on it.
+- 402: the shorts are an unlit plate (team x .14, emissive = colour, out of the glow). 400: HALFLING_SHORTS long .99; 399: HALFLING_TUFT; probe_close --aim=y:0.08.
 - 398: shinLength 1.95 (bodyBuilder), HALFLING_STANCE spread .52 with .34 of the splay turned back at the knee so the soles lie flat; the [S] on blocker 1 must remove the stride itself.

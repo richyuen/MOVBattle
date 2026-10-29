@@ -1,14 +1,14 @@
 # Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
-Iteration: 402   Batch: farmer:re+ancient+viking (5-8/19)   Consecutive empty: 0   Done: 32/139   Parked: 0
+Iteration: 403   Batch: farmer:re+ancient+viking (5-8/19)   Consecutive empty: 0   Done: 32/139   Parked: 1
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 tribal: clubber ++++ D | protector ++++ D | spear_thrower ++++ D | stoner ++++ D | bone_mage ++++ D | chieftain ++++ D | mammoth ++++ D
 renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer ++++ D | halberd ++++ D | jouster ++++ D | da_vinci_tank ++++ D
-farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ o | scarecrow ++++ D
+farmer: halfling -+++ o | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ p | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur -+++ o | zeus -+++ o
-viking: headbutter -+++ o | ice_archer -+++ o | brawler -+++ o | berserker ++++ D | valkyrie -+++ o | longship ++-+ o | jarl -+++ o
+viking: headbutter -+++ o | ice_archer -+++ o | brawler -+++ o | berserker ++++ D | valkyrie -+++ o | longship -+++ o | jarl -+++ o
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
@@ -23,27 +23,26 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-402 (BASE d4c9f5c): evidence ice_archer idle camera on the head's facing (5f3f1b8 + f8ff48e) | [S] longship c.1 carriers pinned, hull leaves overhead (4c0305e) approved, 1 struck | [S] jarl a.2 beard + plait (03c2cf1) approved, 0 struck | [S] valkyrie a.3 fur collar + cream plaits (498f78d) approved, 3 struck | [S] ice_archer a.2 snow mantle (911eda0) approved, 2 struck | [S] headbutter a.4 cream cut + broad belt (688ef22) approved, 4 struck, a PASS; CONFIRM then failed a (dome, legs) | [S] brawler a.4 splayed jaw locks (2230052, reverted 77a7b59) REJECTED | [S] halfling a.4 unlit shorts (06049a1 + e4ec07a) approved, 4 + 6 struck | [R] minotaur a.2/a.3 low bull head, one girdle, pauldron scroll (cdc71a4) approved, 2 + 3 struck, 4 added - 7/8, 8 struck
-401 (BASE 0b04353): [S] longship a.4 two carriers + 1.8x ship (e0fbb2c) approved, a struck; CONFIRM then failed c | [S] jarl a.5 pelt curtains to the hips (fd578de + 9c1b402) approved, 5 struck | [S] valkyrie a.2 cream helm feathers, eye-line band, tall crest (c0c74ea + cbecbca) approved, 2 struck | [S] ice_archer c.1 bead flakes out, nine icicles (5509051) approved, c PASS | [S] headbutter c.1 reach .75 + sprawl .14 s + arms trailing (41852fd + fde5dd6) approved, c PASS | [S] headbutter a.4 bracer fur + belt at the waist (7f8b218) approved, 4 narrowed | [S] brawler a.4 second wider bib (05ccbb8 + 6f22d10, reverted a1edda8/3d01ac1) REJECTED - 6/7
+403 (BASE 73e45c7): evidence jarl clear of the hull in lineup_viking + ice archer idle on her eye meshes (88e3f00), RE-AUDIT of jarl.a + ice_archer.a (both lists rewritten) | evidence halfling idle swing .2 (94a7f14), re-audit due 404 | [R] wheelbarrow a.1 FRONT_SPLIT (06ea4d4, reverted a5b8099) REJECTED -> a parked | [S] longship c.2 oars kept + two-handed chop (0d30de1) approved, c PASS | [S] minotaur a.4 face upright + nose plate (a92a9f9) approved, a PASS; CONFIRM then failed a (pauldron, sash) | [S] valkyrie a.4 armour (0ec42c6) approved, bands/bracers/boots struck, belt + ring stand | [S] jarl a.1 beard run + red-tied plait (76b6c7d) approved, 1 struck | [S] ice_archer a.1 cap seated off the eyes (7029273) approved, 1 struck | [S] headbutter a.1 headSize 1.3 + low cap + strip (bcd3eb5) approved, 1 struck, 3 added; CONFIRM longship failed a (rails, shields, hull, carriers) - 6/7, 8 struck
+402 (BASE d4c9f5c): evidence ice_archer idle (5f3f1b8 + f8ff48e) | [S] longship c.1 (4c0305e) approved | [S] jarl a.2 (03c2cf1) approved | [S] valkyrie a.3 (498f78d) approved | [S] ice_archer a.2 (911eda0) approved | [S] headbutter a.4 (688ef22) approved, CONFIRM failed a | [S] brawler a.4 splay (2230052, reverted 77a7b59) REJECTED | [S] halfling a.4 (06049a1 + e4ec07a) approved | [R] minotaur a.2/a.3 (cdc71a4) approved - 7/8, 8 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] viking.longship (4c0305e) VERDICT: APPROVE CRITERION: viking.longship.c FAIL (previous: FAIL)
-- GAP: [S] viking.jarl (03c2cf1) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
-- GAP: [S] viking.valkyrie (498f78d) VERDICT: APPROVE CRITERION: viking.valkyrie.a FAIL (previous: FAIL)
-- GAP: [S] viking.ice_archer (911eda0) VERDICT: APPROVE CRITERION: viking.ice_archer.a FAIL (previous: FAIL)
-- GAP: [S] viking.headbutter (688ef22) VERDICT: APPROVE CRITERION: viking.headbutter.a PASS (previous: FAIL)
-- GAP: [S] viking.brawler (2230052) VERDICT: REJECT CRITERION: viking.brawler.a FAIL (previous: FAIL)
-- GAP: [S] farmer.halfling (06049a1 + e4ec07a) VERDICT: APPROVE CRITERION: farmer.halfling.a FAIL (previous: FAIL)
-- GAP: [R] ancient.minotaur (cdc71a4) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
-- CONFIRM viking.headbutter a FAIL | b PASS | c PASS | d PASS -> unit stays open, a takes the confirmer's 2 blockers (0 since 402)
+- GAP: [R] farmer.wheelbarrow (06ea4d4) VERDICT: REJECT CRITERION: farmer.wheelbarrow.a FAIL (previous: FAIL)
+- GAP: [S] viking.longship (0d30de1) VERDICT: APPROVE CRITERION: viking.longship.c PASS (previous: FAIL)
+- GAP: [S] ancient.minotaur (a92a9f9) VERDICT: APPROVE CRITERION: ancient.minotaur.a PASS (previous: FAIL)
+- GAP: [S] viking.valkyrie (0ec42c6) VERDICT: APPROVE CRITERION: viking.valkyrie.a FAIL (previous: FAIL)
+- GAP: [S] viking.jarl (76b6c7d) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
+- GAP: [S] viking.ice_archer (7029273) VERDICT: APPROVE CRITERION: viking.ice_archer.a FAIL (previous: FAIL)
+- GAP: [S] viking.headbutter (bcd3eb5) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)
+- CONFIRM viking.longship a FAIL | b PASS | c PASS | d PASS; ancient.minotaur a FAIL | b PASS | c PASS | d PASS -> both stay open, a takes the confirmer's lists (0 since 403)
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 402: 7/8 approved, the brawler splay rejected and reverted; no regressions. Done 32 still. Batch unchanged: farmer:re 2 open, ancient 2, viking 6.
-- Evidence first at 403 (outside the 7): lineup_viking hides the jarl behind the longship's stern (stand him clear of the hull so his a blockers can be lineup-tested); the ice archer's re-aimed idle still shows a blank head with no eyes (aim it on the eye meshes, eye midpoint minus head centre).
-- [R] slot at 403: wheelbarrow.a is starving (no attempt since 397) and plateau, so its [R] (the front rider's seated split) takes the slot ahead of the brawler's new plateau [R] (a near-black bib proud of the board); the brawler's [R] is the 404 slot.
-- Next ranked [S]: minotaur a.4 (the bull face upright, tilt ~.15); ice_archer a.3 (cream calf cuffs over dark boots); valkyrie a.4 (brown belt + gold ring, arm bands, boots); jarl a.4 (the Brawler's leg kit) then a.2 (jaw-wide beard, plait proud of the pelt strips); longship c.2 (oars kept and swung); halfling a.1 (a planted stance with no stride); headbutter a.1/a.2 (a low skull-cap dome, longer legs).
-- zeus.a (last attempt 400) starves at 405; its blocker 3 stays the emblem held out of the hand-bolt's bloom.
+- 403: 6/7 approved; the wheelbarrow's second [R] rejected -> a parked, unit p. Done 32 still. farmer:re has only the halfling open.
+- Step 2 first at 404: RE-AUDIT farmer.halfling a.1 only (evidence 94a7f14 re-aimed his idle to .2 rad; probe: his feet are side by side, the "stride" was the camera).
+- [R] slot at 404: the brawler's plateau [R] (a near-black bib proud of the board). zeus.a (last attempt 400) starves at 405: its blocker 3 (the emblem held out of the hand-bolt's bloom).
+- Next ranked [S]: headbutter a.3 (band off the eye beads' tops); valkyrie a.4 (belt seated off torsoMesh); ice_archer a.2 (cuffs) / a.3 (boots); jarl a.3 (forearm wraps) / a.4 (cuffs); minotaur a.1 (flat wedge pauldron) / a.2 (sash); longship a.1 (timber rails) / a.2 (full team shield faces).
+- The CONFIRM failed both proposed-done units on a in 402 and 403: the gap critic's a PASS on a unit is not a done.
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```

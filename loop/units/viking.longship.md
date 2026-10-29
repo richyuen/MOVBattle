@@ -1,23 +1,26 @@
 # viking.longship
-Status: open   Audited: 391 (re), 395-402   Done: -
+Status: open   Audited: 391 (re), 395-402, 403 (CONFIRM)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (401)
-b PASS (399)
-c FAIL (1 since 401; CONFIRM 401; struck 1 at 402)
- 2. the oarsmen's oars in _struck/_release/_flight: the crew stand beside the landed hull empty-handed, no oar in hand or on the ground - TABS: the oarsmen disembark and attack enemy units with their oars (ref: .jpg, card Characteristics)
+a FAIL (0 since 403; the CONFIRM's list - the gap critic had a PASS since 401)
+ 1. team-coloured gunwale rails (two long blue bars running the length of the hull over the shield row) in unit_viking.longship_idle - TABS: the hull is brown wood throughout, team colour only on the hanging shields (ref: .red.png, .jpg)
+ 2. shield faces in unit_viking.longship_idle: a dark disc with only a team-coloured crescent - TABS: the whole shield face team colour with brown plank lines, a wooden rim and a dark boss (ref: .blue.png, .jpg; card Appearance "Brawler shields")
+ 3. hull silhouette in unit_viking.longship_idle: a straight-sided rectangular box with a flat top - TABS: a curved boat hull whose sheer sweeps up into a tall bow and a curled stern (ref: .jpg, .red.png)
+ 4. carriers in unit_viking.longship_idle: plain team mannequins - TABS: bearded vikings with a brown braided beard, a horned headband and a belt with a round buckle (ref: .red.png, .blue.png)
+b PASS (399; CONFIRM 403)
+c PASS (403; CONFIRM 403)
 d PASS (cost 1000, hp 17.46x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c oars after the crash - blocker 2: each oarsman keeps his oar in his fist at the disembark and the landed crew swing it two-handed as their blow (vehicleBuilder landLongshipCrew + simulationSystem crew melee) - ref: .jpg - ours: unit_viking.longship_struck.png
+1. [S] a rails - blocker 1: the gunwale rails in the hull timber, not the team body material (vehicleBuilder hull rails) - ref: .jpg - ours: unit_viking.longship_idle.png
+2. [S] a shields - blocker 2: full team-colour shield faces with plank lines, a wooden rim and a dark boss (the Brawler board's cut) - ref: .blue.png - ours: unit_viking.longship_idle.png
 ## Attempts (iter | gap | criterion | verdict: approved, rejected, rejected-kept, dropped)
-392-395 | clinker hull; rig (393 rejected, reverted); mast out + three oars; three Long-Boaters with oars; team shields [S] | a,b | approved
-396 | hurl + AoE crush + oarsmen disembark [S] (1946694) | c | approved (c PASS)
-397-399 | one oval paddle blade; brown timber, stout crew; paddle head on a neck, crew feet .3 [S] | b | approved (b PASS 399)
+392-399 | clinker hull; rig (393 rejected); oars + crew; team shields; hurl + crush + disembark (c PASS 396); paddle blades, timber, stout crew (b PASS 399) [S] | a,b,c | approved
 400 | deep hull: 4 strakes, deck .4, stem, scroll stern (c0da83d) | a | approved (struck 1)
-401 | two carriers + the ship at 1.8x held overhead (e0fbb2c) | a | approved (struck a.4; c reopened by CONFIRM)
-402 | hull keeps its carried height at the hurl, carriers pinned at the take-off, hull sunk to the keel over .85 of the airtime (4c0305e) | c | approved (struck c.1)
+401 | two carriers + the ship at 1.8x held overhead (e0fbb2c) | a | approved (a PASS; c reopened by CONFIRM)
+402 | hull keeps its carried height at the hurl, carriers pinned, hull sunk over .85 of the airtime (4c0305e) | c | approved (struck c.1)
+403 | the landed oarsmen keep their oars and chop two-handed; each downstroke lands LONGSHIP_OARS on the nearest foe (0d30de1) | c | approved (c PASS); CONFIRM failed a
 ## Rejected (last 4)
 - rig [S] [1] - 393: a short mast, yard and two sheets - the rig is not in the reference at all; the T-frame reads as a gallows
 ## Notes (max 3 lines)
-- 402: heaveLongshipCrew pins rig.stood (world spots); flyLongshipHull each flight step keeps the carriers there in the root's frame and sinks ship.y = shipY (1 - k); landLongshipCrew drops the hull to 0 and hides the carriers. Critic: the arc reads flat in _ability_after (TABS pitches and tumbles) - not a blocker.
-- landLongshipCrew disables each oar node and drops the man at root-local ground positions: c.2 wants the oar kept in the fist and swung.
-- 400: HULL rows 4, rowStep .13, deck .4, wall .705; timber (.2,.11,.055) + .35 self-light; LONGSHIP_CREW feet .3, top 1.19.
+- 403: OAR_CHOP (vehicleBuilder swingLongshipCrew) poses the landed crew; simulationSystem _chopOars lands the blows, not hit-logged (the crash is the logged hit).
+- 402: heaveLongshipCrew pins rig.stood; flyLongshipHull sinks ship.y over the flight; landLongshipCrew drops the hull and hides the carriers.
+- 400: HULL rows 4, deck .4, wall .705; timber (.2,.11,.055) + .35 self-light; values in LEDGER's compacted viking row.
