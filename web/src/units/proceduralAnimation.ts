@@ -212,11 +212,11 @@ const SNAKE_UPRIGHT = {
  * [S] 407 the ice archer carries her bow upright across her front (CONFIRM 405 b.2: "held low, tip angled down and forward to the ground like a lance";
  * viking.ice_archer.red.png: the bow stood near upright and diagonal in the bow fist at the belly, the upper tip over the far shoulder above the hat,
  * the lower one at the near foot). Found by the ice bow's carry mark (propBuilder buildIceBow "iceBowCarry"). The snake archer's upright ready stance
- * (SNAKE_UPRIGHT) with her own stave line: .tip is steeper, about .4 rad off vertical, so the bow reads as a tall arc beside her, not a lance.
+ * (SNAKE_UPRIGHT) with her own stave line: .tip is steeper, about .25 rad off vertical in the root frame (probe_axes), so the bow reads as a tall arc beside her, not a lance.
  */
 const ICE_UPRIGHT = {
   yaw: 0.12, stagger: 0.06, give: 0.02,
-  raise: -0.7, out: -0.2, elbow: -1.4, tip: [-0.42, 1, 0.12] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
+  raise: -0.85, out: -0.2, elbow: -1.3, tip: [0.16, 1, 0.06] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
 };
 /** A heavy weapon's arc in the fist, radians from straight up: cocked up and back over the shoulder, landed forward and down on the mark. */
 const CLUB_COCK = -0.4;
