@@ -1,4 +1,4 @@
-import { archerHair, monkStaff, ninjaGi, ninjaHood, ninjaTrousers, tenguMask } from "./dynastyDress";
+import { archerHair, monkStaff, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -584,6 +584,10 @@ export class UnitFactory {
       propMeshes.push(...iceArcherCoat(this._scene, body, teamColor));
       // [S] 410 ...and her broad leather quiver slab at the off hip, in place of the back tube (vikingDress ICE_ARCHER_QUIVER)
       propMeshes.push(...iceArcherQuiver(this._scene, body));
+    }
+    // [S] 413 the Samurai's team kabuto with a flared gold-trimmed neck guard and a crest (dynastyDress KABUTO)
+    if (definition.id === "dynasty.samurai" && !shouldUseVehicleBody) {
+      propMeshes.push(...samuraiKabuto(this._scene, body, teamColor));
     }
     // [S] 412 the Firework Archer's dark long hair with side locks and a knot, no hat (dynastyDress ARCHER_HAIR)
     if (definition.id === "dynasty.firework_archer" && !shouldUseVehicleBody) {

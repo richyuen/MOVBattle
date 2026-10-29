@@ -282,3 +282,51 @@ export function ninjaTrousers(scene: Scene, body: ArticulatedBody, teamColor: Co
   }
   return out;
 }
+
+/*
+ * [S] 413 the Samurai's kabuto (audit 411 a.1: "a dark maroon bowl with a yellow fringe hiding the face - TABS: a team-coloured kabuto with a flared,
+ * gold-trimmed neck guard and a front crest, with two bead eyes under the brim"; dynasty.samurai.red.png: a team bowl over the crown, a short peak over
+ * the eyes, the neck guard falling in .tiers stepped lames round the back and sides of the head and flaring out, each lame edged in gold, open at the
+ * face; a small gold crest at the front of the bowl). In the head's half extents e: the bowl a frustum from .clear over the eyes' top up to .top of e.y,
+ * .bowlFoot of e.x across at its foot, .bowlTop at its top; the peak a slab .peak of e.z out over the face; each lame an open ring (.arc of a turn,
+ * the gap at the face) .lame of e.y tall, flaring from .flareTop to .flareFoot of e.x, the first hung from the bowl's foot and each next .step of e.y
+ * lower; a gold rim .rim of e.y under each lame; the crest a gold disc .crest of e.y across stood at the bowl's front. Replaces samurai_helmet.
+ */
+const KABUTO = {
+  clear: 0.04, top: 1.3, bowlFoot: 2.3, bowlTop: 1.4, peak: 0.42, tiers: 3, lame: 0.32, step: 0.3, flareTop: 2.3, flareFoot: 2.75, arc: 0.64, rim: 0.07,
+  crest: 0.42, shade: 0.9, gold: new Color3(0.9, 0.66, 0.2), glow: 0.12,
+};
+/** The Samurai's team kabuto with a gold-trimmed flared neck guard and a front crest (spec at KABUTO). */
+export function samuraiKabuto(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const K = KABUTO;
+  const mf = getMaterialFactory();
+  const team = teamColor.scale(K.shade);
+  const cloth = mf.get("cloth", team, { emissive: team.scale(K.glow) });
+  const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(K.glow) });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const span = eyeSpanInHead(body) ?? [-e.y * 0.2, e.y * 0.3];
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof cloth): Mesh => { m.parent = body.headMesh; m.material = mat; m.convertToFlatShadedMesh(); out.push(m); return m; };
+  const foot = span[1] + e.y * K.clear, top = e.y * K.top;
+  const bowl = put(MeshBuilder.CreateCylinder("kabutoBowl", { height: top - foot, diameterTop: e.x * K.bowlTop, diameterBottom: e.x * K.bowlFoot, tessellation: 8 }, scene), cloth);
+  bowl.position.y = (top + foot) / 2;
+  bowl.scaling.z = e.z / e.x;
+  const peak = put(MeshBuilder.CreateBox("kabutoPeak", { width: e.x * K.bowlFoot * 0.8, height: e.y * 0.08, depth: e.z * K.peak }, scene), gold);
+  peak.position.set(0, foot, e.z * (K.bowlFoot / 2) * (e.z / e.x) + e.z * K.peak * 0.3);
+  peak.rotation.x = 0.25;
+  const turn = Math.PI * (0.5 + K.arc);
+  for (let i = 0; i < K.tiers; i++) {
+    const y = foot - e.y * K.step * i - e.y * K.lame / 2;
+    const k = 1 + i * 0.12;
+    const lame = put(MeshBuilder.CreateCylinder("kabutoLame", { height: e.y * K.lame, diameterTop: e.x * K.flareTop * k, diameterBottom: e.x * K.flareFoot * k, tessellation: 12, arc: K.arc, sideOrientation: Mesh.DOUBLESIDE }, scene), cloth);
+    lame.position.y = y;
+    lame.rotation.y = turn;
+    const rim = put(MeshBuilder.CreateCylinder("kabutoRim", { height: e.y * K.rim, diameter: e.x * K.flareFoot * k * 1.02, tessellation: 12, arc: K.arc, sideOrientation: Mesh.DOUBLESIDE }, scene), gold);
+    rim.position.y = y - e.y * K.lame / 2;
+    rim.rotation.y = turn;
+  }
+  const crest = put(MeshBuilder.CreateCylinder("kabutoCrest", { height: e.z * 0.08, diameter: e.y * K.crest, tessellation: 10 }, scene), gold);
+  crest.rotation.x = Math.PI / 2 - 0.2;
+  crest.position.set(0, foot + (top - foot) * 0.45, e.z * (K.bowlFoot + K.bowlTop) / 4 * (e.z / e.x) * 1.05);
+  return out;
+}

@@ -444,7 +444,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ DYNASTY ═══════════════════════
   "dynasty.samurai": vis(
-    { scale: 1.1, bulk: 1.1 }, "katana", "samurai_helmet", "none", "none", "#C41E3A",
+    { scale: 1.1, bulk: 1.1 }, "katana", "none", "none", "none", "#C41E3A", // 413: his kabuto is dynastyDress KABUTO
     undefined,
     { materialPreset: "dynasty_lacquer" },
   ),
