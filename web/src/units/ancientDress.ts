@@ -86,6 +86,8 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   // [R] 402 the bull head is carried low on the shoulders (propBuilder BULL_HEAD .drop): the man's own head block would poke out above its cranium,
   // so it is hidden (its box still sizes the hat and the dress)
   body.headMesh.isVisible = false;
+  // [S] 409 the barrel chest (spec at MINO_BARREL), built before any gear so every piece sized off the trunk (trunkBand) takes its new width and depth
+  out.push(...minoBarrel(scene, body, fur));
   const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.12) });
   const lightTeam = Color3.Lerp(teamColor, new Color3(1, 1, 1), MINO_BELT.lighter);
   const light = mf.get("cloth", lightTeam, { emissive: lightTeam.scale(0.15) });
@@ -312,6 +314,62 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
     hock.position.copyFrom(hockAt);
     add(hock, knee, fur);
   }
+  return out;
+}
+
+/*
+ * [S] 409 the minotaur's barrel chest (CONFIRM 408 a.1: "a narrow upright rectangular box, barely wider than the hips - TABS: a hulking barrel chest
+ * with massive hunched shoulder masses and a thick neck merging into the head"; ancient.minotaur.blue.png: the upper body far wider than the hips,
+ * deep in front, sloping straight up into a thick neck). On the torso joint:
+ *   trunk: the body's trunk box and yoke widened .wide and deepened .deep (so the pauldron, sash and chest hair, all sized off them by trunkBand, sit on
+ *     the new chest) and hidden; the shoulder joints moved out .wide with them so the arms hang off the barrel's sides;
+ *   barrel: a lathe round the trunk, its radius .profile ([share of the trunk height, share of the widened half width]) - narrow at the waist, widest
+ *     across the chest, rounding in over the shoulders - squashed to the widened depth, its front pushed .ahead of the trunk depth for the pecs;
+ *   hump: a flattened mass .hump ([x, y, z] of the half extents) over the back of the shoulders at .humpY of the trunk, the hunched trapezius;
+ *   neck: a frustum from .neckFrom to .neckTo of the trunk height, .neckBottom to .neckTop of the half width across, leant .neckLean forward, merging
+ *     the barrel's top into the bull head's own neck.
+ */
+const MINO_BARREL = {
+  wide: 1.35, deep: 1.8, ahead: 0.08,
+  profile: [[0.0, 0.8], [0.25, 0.9], [0.5, 1.0], [0.78, 1.02], [0.95, 0.9], [1.06, 0.62], [1.12, 0.3]] as [number, number][],
+  hump: [0.95, 0.24, 0.7] as const, humpY: 0.98, neckFrom: 0.92, neckTo: 1.3, neckBottom: 0.95, neckTop: 0.62, neckLean: 0.25,
+};
+function minoBarrel(scene: Scene, body: ArticulatedBody, fur: Material): Mesh[] {
+  const R = MINO_BARREL;
+  const out: Mesh[] = [];
+  const trunkParts = body.torso.getChildMeshes(true).filter((m) => m === body.torsoMesh || /_yoke$/.test(m.name));
+  for (const m of trunkParts) {
+    m.scaling.x *= R.wide;
+    m.scaling.z *= R.deep;
+    m.isVisible = false;
+  }
+  for (const sh of [body.leftShoulder, body.rightShoulder]) sh.position.x *= R.wide;
+  const band = trunkBand(body, 0.2, 0.9);
+  const trunk = band.trunk;
+  const hx = band.halfX, hz = (band.maxZ - band.minZ) / 2, mz = (band.minZ + band.maxZ) / 2;
+  const shape = R.profile.map(([y, r]) => new Vector3(r * hx, y * trunk, 0));
+  const barrel = MeshBuilder.CreateLathe("minoBarrel", { shape, tessellation: 10, cap: Mesh.CAP_ALL }, scene);
+  barrel.convertToFlatShadedMesh();
+  barrel.scaling.z = hz / hx;
+  barrel.position.set(band.midX, 0, mz + hz * R.ahead);
+  barrel.parent = body.torso;
+  barrel.material = fur;
+  out.push(barrel);
+  const hump = MeshBuilder.CreateIcoSphere("minoHump", { radius: 1, subdivisions: 1, flat: true }, scene);
+  hump.scaling.set(hx * R.hump[0], trunk * R.hump[1], hz * R.hump[2]);
+  hump.position.set(band.midX, trunk * R.humpY, mz - hz * 0.15);
+  hump.parent = body.torso;
+  hump.material = fur;
+  out.push(hump);
+  const neckH = trunk * (R.neckTo - R.neckFrom);
+  const neck = MeshBuilder.CreateCylinder("minoNeck", { height: neckH, diameterBottom: 2 * hx * R.neckBottom, diameterTop: 2 * hx * R.neckTop, tessellation: 8 }, scene);
+  neck.convertToFlatShadedMesh();
+  neck.scaling.z = (hz / hx) * 0.9;
+  neck.rotation.x = R.neckLean;
+  neck.position.set(band.midX, trunk * R.neckFrom + neckH / 2, mz + Math.sin(R.neckLean) * neckH / 2);
+  neck.parent = body.torso;
+  neck.material = fur;
+  out.push(neck);
   return out;
 }
 
