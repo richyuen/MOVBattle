@@ -746,6 +746,48 @@ export function jarlBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 407 the Longship Carrier's dress (CONFIRM 403 a.4: "plain team mannequins"; viking.longship.red.png, .blue.png: each carrier a bearded viking with a
+ * brown beard braided down the chest, a dark headband round the brow with two cream horns, and a belt with a round buckle). Three pieces, each sized
+ * off the carrier's own head and trunk:
+ *   beard: the shared viking cut (VIKING_BEARD) in mid brown with its tied braid (LONGSHIP_CARRIER.beard*);
+ *   headband: a dark leather ring .band of the head tall round the brow at .bandY of the half height, .bandOut of the head's width round, with a cream
+ *     horn off each side of it, .horn of the head tall, its foot .hornBase across, splayed .hornSplay rad out and up;
+ *   belt: the Jarl's round-buckle belt (JARL_BELT).
+ */
+const LONGSHIP_CARRIER = {
+  beard: new Color3(0.42, 0.22, 0.11), beardGlow: 0.2, down: 0.75, wide: 1.0, tip: 0.5,
+  band: 0.22, bandY: 0.32, bandOut: 1.08, horn: 0.85, hornBase: 0.32, hornSplay: 0.55,
+  leather: new Color3(0.2, 0.11, 0.06), horn_: new Color3(0.86, 0.82, 0.7),
+};
+/** A Longship Carrier's braided brown beard, horned headband and round-buckle belt (spec at LONGSHIP_CARRIER). */
+export function longshipCarrierDress(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = LONGSHIP_CARRIER;
+  const out: Mesh[] = vikingBeard(scene, body, { color: C.beard, glow: C.beardGlow, down: C.down, wide: C.wide, tip: C.tip, braid: true, stache: true });
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", C.leather, { emissive: C.leather.scale(0.2) });
+  const hornMat = mf.get("cloth", C.horn_, { emissive: C.horn_.scale(0.25) });
+  const e = headExtents(body);
+  const band = MeshBuilder.CreateCylinder("carrierHeadband", { height: e.y * 2 * C.band, diameter: e.x * 2 * C.bandOut, tessellation: 10 }, scene);
+  band.scaling.z = (e.z / e.x) * 1.0;
+  band.position.y = e.y * C.bandY;
+  band.parent = body.headMesh;
+  band.material = leather;
+  band.convertToFlatShadedMesh();
+  out.push(band);
+  for (const side of [-1, 1]) {
+    const horn = MeshBuilder.CreateCylinder("carrierHorn", { height: e.y * 2 * C.horn, diameterTop: 0, diameterBottom: e.y * 2 * C.hornBase, tessellation: 5 }, scene);
+    horn.rotation.z = -side * C.hornSplay;
+    horn.position.set(side * (e.x * C.bandOut + Math.sin(C.hornSplay) * e.y * C.horn), e.y * C.bandY + Math.cos(C.hornSplay) * e.y * C.horn * 0.8, 0);
+    horn.parent = body.headMesh;
+    horn.material = hornMat;
+    horn.convertToFlatShadedMesh();
+    out.push(horn);
+  }
+  out.push(...jarlBelt(scene, body));
+  return out;
+}
+
+/*
  * [R] 407 the Brawler's beard, rebuilt (blockers a.2 "a short dark mass under the mask, not a jaw-wide beard onto the chest", a.4 "it stops at the top of
  * the chest under the shield rim", a.5 "a lighter brown than the reference's near-black brown"; viking.brawler.red.png, viking.brawler.jpg: a dark beard
  * filling the jaw under the helm's mask and pouring down the chest over the round board). Read off the renders and the 407 probes:

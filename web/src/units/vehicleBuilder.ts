@@ -7,6 +7,7 @@ import type { ArticulatedBody, BodyMetrics, BodyProportions, VehicleSocketSet } 
 import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
 import { dressBallistaCrew } from "./ancientDress";
+import { longshipCarrierDress } from "./vikingDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -2368,7 +2369,8 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   const carriers: ArticulatedBody[] = [];
   for (const z of SHIP.at) {
     const carrier = addOperator(scene, root, allMeshes, 0, 0, z, color, (man) => {
-      dressBoatSman(man);
+      // [S] 407 the carriers' own dress: braided brown beard, horned headband, round-buckle belt (vikingDress LONGSHIP_CARRIER), not the oarsmen's cap
+      allMeshes.push(...longshipCarrierDress(scene, man));
       man.leftShoulder.rotation.set(SHIP.raise, 0, -SHIP.spread);
       man.rightShoulder.rotation.set(SHIP.raise, 0, SHIP.spread);
       man.leftElbow.rotation.set(SHIP.elbow, 0, 0);
