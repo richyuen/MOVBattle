@@ -49,6 +49,8 @@ const ICE_ARROW = {
   shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98),
 };
 
+/** [S] 412 the thrown shuriken (projectile "shuriken"): span, waist, thickness, hub across (m), tilt of its face off level toward the side camera. */
+const SHURIKEN_FLIGHT = { span: 0.36, waist: 0.1, thick: 0.02, hub: 0.07, tilt: 0.7, steel: new Color3(0.2, 0.21, 0.24), hub_color: new Color3(0.5, 0.5, 0.54) };
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
 interface ActiveProjectile {
@@ -554,7 +556,9 @@ export class ProjectileSystem {
 
       // Shuriken spin
       if (p.shape === "shuriken") {
-        p.mesh.rotation.z += dt * 25;
+        const spin = p.mesh.getChildren().find((c): c is TransformNode => c.name === "shurikenSpin");
+        if (spin) spin.rotation.y += dt * 25;
+        else p.mesh.rotation.z += dt * 25;
       }
       // Leaf whirl: the knot turns about its line of flight and every leaf tumbles on its own
       if (p.shape === "leaves") {
@@ -1100,19 +1104,24 @@ export class ProjectileSystem {
         break;
       }
       case "shuriken": {
-        // Flat 4-pointed star that spins
-        const mat = this._getMat(`shuriken_body_${attackerTeam}`, palette.primary, 0.2);
-        for (let i = 0; i < 4; i++) {
-          const blade = MeshBuilder.CreateBox("blade", { width: 0.18, height: 0.015, depth: 0.04 }, this._scene);
-          blade.rotation.y = (Math.PI / 4) * i;
-          blade.material = mat;
-          blade.parent = root;
+        // [S] 412 a large dark-grey four-point star (audit 411 c.1: "small pale-blue six-petal discs - TABS: large dark-grey four-point stars";
+        // dynasty.ninja.png): two flat rhombi SHURIKEN_FLIGHT.span long and .waist wide crossed square, dark steel with a pale hub, lying flat and
+        // spinning in its own plane on a child node (shurikenSpin), so a side-on camera sees the star's face tilted .tilt toward it
+        const S = SHURIKEN_FLIGHT;
+        const steel = this._getMat("shuriken_steel", S.steel, 0.08);
+        const spin = new TransformNode("shurikenSpin", this._scene);
+        spin.parent = root;
+        spin.rotation.x = S.tilt;
+        for (const turn of [0, Math.PI / 2]) {
+          const point = MeshBuilder.CreateCylinder("blade", { height: S.thick, diameter: S.span, tessellation: 4 }, this._scene);
+          point.scaling.z = S.waist / S.span;
+          point.rotation.y = turn;
+          point.material = steel;
+          point.parent = spin;
         }
-        // Center hub
-        const hub = MeshBuilder.CreateCylinder("hub", { height: 0.02, diameter: 0.06, tessellation: 8 }, this._scene);
-        hub.rotation.x = Math.PI / 2;
-        hub.material = mat;
-        hub.parent = root;
+        const hub = MeshBuilder.CreateCylinder("hub", { height: S.thick * 1.6, diameter: S.hub, tessellation: 8 }, this._scene);
+        hub.material = this._getMat("shuriken_hub", S.hub_color, 0.1);
+        hub.parent = spin;
         break;
       }
       case "rocket_arrow": {
