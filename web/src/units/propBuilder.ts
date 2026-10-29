@@ -188,12 +188,20 @@ const DRAGON_SCALLOPS = 7;
  *   ancientDress dressMinotaur) is replaced by a bull head sat on the shoulders; the face tipped .tilt rad forward of plumb (was .5) so the muzzle juts;
  *   horns: three pieces, the first two level out to the side (.hornBends y .05 / .3), the tip turned up and forward; the neck a short wide stump
  *   (.neck H) from the cranium to the shoulders. Nothing else on the head changes. The body scale (unitVisuals) is untouched.
+ * [S] 406 the head carried up on a tall thick neck (CONFIRM 405 a.1: "head hung forward below the shoulder line, muzzle pointing at the ground over
+ * the chest"; a.2: the fists, solved to belly height, met the hung muzzle and read as a hand clamped on the head; ancient.minotaur.red.png: the
+ * cranium a head above the shoulders, the face hanging plumb in front of the throat with the muzzle just over the collar line, a thick neck visible
+ * from under the jaw down into the shoulders). Spec in his head units: the cranium middle .drop H ABOVE the man's crown joint's -.skullY (negative
+ * .drop lifts), .forward W ahead (over the neck, not jutting); the face .face H long so the muzzle pad's foot sits just over the trunk top; the neck
+ * a tall tapered pillar .neck H from inside the cranium down and back into the shoulders (.neckTop W at the jaw, .neckBottom W where it meets the
+ * trunk), with a dewlap .dewlap of W proud under the jaw so the throat reads in front. The charge still drops the head (BULL_CHARGE pitches the
+ * trunk and neck); the 402 low cranium is gone.
  */
 const BULL_HEAD = {
-  skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, drop: 0.72, forward: 0.28, browY: 0.12, browZ: 0.32, face: 1.0, tilt: 0.15, brow: 0.95, snout: 1.0, faceFlat: 0.75,
+  skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, drop: -0.4, forward: 0.12, browY: 0.12, browZ: 0.32, face: 0.86, tilt: 0.12, brow: 0.95, snout: 1.0, faceFlat: 0.75,
   pad: 0.2, eye: 0.34, eyeX: 0.36, eyeY: 0.2, hornGirth: 0.3, horn1: 0.9, hornTaper: 0.72, hornY: 0.32,
   hornBends: [[1, 0.05, 0.1, 0.42], [1, 0.3, 0.18, 0.33], [0.45, 0.8, 0.3, 0.25]] as [number, number, number, number][],
-  ear: 0.36, earY: 0.06, earDroop: 0.4, neck: 0.42, neckTop: 1.0, neckBottom: 1.6, neckLean: 0.3,
+  ear: 0.36, earY: 0.06, earDroop: 0.4, neck: 1.0, neckTop: 1.0, neckBottom: 1.55, neckLean: 0.22, dewlap: 0.22,
   fur: new Color3(0.42, 0.24, 0.17), muzzle: new Color3(0.5, 0.31, 0.23), horn: new Color3(0.86, 0.7, 0.52), inner: new Color3(0.78, 0.52, 0.42), glow: 0.16,
 };
 /*
@@ -1160,6 +1168,10 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     const neckDown = new Vector3(0, -1, -B.neckLean).normalize();
     neck.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), neckDown.scale(-1), new Quaternion());
     neck.position.copyFrom(new Vector3(0, u(-B.skullTall * H * 0.3), u(-0.05 * W)).add(neckDown.scale(neckLong / 2)));
+    // [S] 406 the throat: a dewlap under the jaw, proud of the neck's front, running down it toward the chest (spec at BULL_HEAD .dewlap)
+    const dewlap = put(MeshBuilder.CreateIcoSphere("bullDewlap", { radiusX: u(B.neckTop * W * 0.38), radiusY: u(neckLong * 0.42), radiusZ: u(B.dewlap * W), subdivisions: 1 }, scene), hide);
+    dewlap.position.copyFrom(new Vector3(0, u(-B.skullTall * H * 0.3), u(-0.05 * W)).add(neckDown.scale(neckLong * 0.5)).add(new Vector3(0, 0, u(B.neckTop * W * 0.36))));
+    dewlap.rotationQuaternion = neck.rotationQuaternion.clone();
     return shell;
   }
   if (type === "dragon_head") {
