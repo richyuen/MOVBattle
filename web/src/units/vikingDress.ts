@@ -323,15 +323,29 @@ const HEADBUTTER_BRAID = {
   apart: 0.52, rootUp: 0.1, rootAhead: 0.3, footOut: 0.64, footDrop: 1.02, standOff: 0.16, bow: 0.16,
   plaits: 5, thick: 0.34, core: 0.6, overlap: 1.55, band: 0.13, bandWide: 1.35, tuft: 0.22, glow: 0.22,
 };
-const HEADBUTTER_HAIR = new Color3(0.6, 0.38, 0.2);
-const HEADBUTTER_TIE = new Color3(0.34, 0.1, 0.08);
+/*
+ * [S] 409 copper braids (CONFIRM 407 a.2: "pale tan/beige rope segments - TABS: copper/ginger-brown braids"; viking.headbutter.red.png: copper plaits,
+ * their lobes alternating a lighter and a darker copper, a dark brown tie and below it a loose tail flaring wider than the plait). HEADBUTTER_HAIR is a
+ * copper code value read off palette.png (the old (.6,.38,.2) displayed beige); every other lobe .shade of it; the tie dark brown; the tuft under the
+ * tie opens from .tailTop to .tailFoot of the plait's thickness over .tail head heights (BraidStyle.tail; the Valkyrie's cream plaits keep the cone).
+ */
+const HEADBUTTER_HAIR = new Color3(0.6, 0.27, 0.12);
+const HEADBUTTER_TIE = new Color3(0.2, 0.1, 0.06);
+const HEADBUTTER_COPPER = { glow: 0.14, shade: 0.72, tail: 0.3, tailTop: 0.75, tailFoot: 1.25 };
 
 /**
  * A plait's own look (402: the Valkyrie wears the Headbutter's plaits in cream): hair and tie colours, the hair's self-light, or `unlit` for a pale plait
  * that must hold its cream in the chest's shade (emissive = colour, out of the glow), and its own thickness, drop and spread in the head's units.
  */
-interface BraidStyle { hair: Color3; tie: Color3; glow: number; unlit?: boolean; thick?: number; footDrop?: number; footOut?: number }
-const HEADBUTTER_BRAID_STYLE: BraidStyle = { hair: HEADBUTTER_HAIR, tie: HEADBUTTER_TIE, glow: HEADBUTTER_BRAID.glow };
+interface BraidStyle {
+  hair: Color3; tie: Color3; glow: number; unlit?: boolean; thick?: number; footDrop?: number; footOut?: number;
+  // two-tone lobes and a flared tail under the tie (HEADBUTTER_COPPER)
+  shade?: number; tail?: { long: number; top: number; foot: number };
+}
+const HEADBUTTER_BRAID_STYLE: BraidStyle = {
+  hair: HEADBUTTER_HAIR, tie: HEADBUTTER_TIE, glow: HEADBUTTER_COPPER.glow, shade: HEADBUTTER_COPPER.shade,
+  tail: { long: HEADBUTTER_COPPER.tail, top: HEADBUTTER_COPPER.tailTop, foot: HEADBUTTER_COPPER.tailFoot },
+};
 
 /** The Headbutter's two tan braids from under the ear flaps down onto the chest, a dark tie and tuft at each end (spec at HEADBUTTER_BRAID). */
 export function headbutterBraids(scene: Scene, body: ArticulatedBody, style: BraidStyle = HEADBUTTER_BRAID_STYLE): Mesh[] {
@@ -339,6 +353,7 @@ export function headbutterBraids(scene: Scene, body: ArticulatedBody, style: Bra
   const mf = getMaterialFactory();
   const hair = style.unlit ? mf.get("unlit", style.hair, { emissive: style.hair }) : mf.get("cloth", style.hair, { emissiveIntensity: style.glow });
   const tieMat = mf.get("cloth", style.tie, { emissiveIntensity: 0.1 });
+  const darkHair = style.shade ? mf.get("cloth", style.hair.scale(style.shade), { emissiveIntensity: style.glow }) : hair;
   const head = headInTorso(body);
   const H = head.tall, W = head.wide;
   const chest = body.torsoMesh;
@@ -373,7 +388,7 @@ export function headbutterBraids(scene: Scene, body: ArticulatedBody, style: Bra
       const t = (k + 0.5) * step * 0.92;
       const lobe = put(MeshBuilder.CreateIcoSphere("headbutterBraid", {
         radiusX: thick * 0.5, radiusY: len * step * 0.5 * B.overlap, radiusZ: thick * 0.42, subdivisions: 1, flat: true,
-      }, scene), hair);
+      }, scene), k % 2 ? darkHair : hair);
       lobe.position.copyFrom(along(t));
       lobe.position.x += (k % 2 ? 1 : -1) * thick * 0.08;
       lobe.rotation.set(lean(t), 0, (k % 2 ? 1 : -1) * 0.35);
@@ -381,11 +396,13 @@ export function headbutterBraids(scene: Scene, body: ArticulatedBody, style: Bra
     const tie = put(MeshBuilder.CreateCylinder("headbutterBraidTie", { height: B.band * H, diameter: thick * B.bandWide, tessellation: 7 }, scene), tieMat);
     tie.position.copyFrom(foot);
     tie.rotation.x = lean(1);
+    const tail = style.tail;
+    const tuftLong = tail ? tail.long : B.tuft;
     const tuft = put(MeshBuilder.CreateCylinder("headbutterBraidTuft", {
-      height: B.tuft * H, diameterTop: thick * 0.7, diameterBottom: thick * 0.25, tessellation: 5,
+      height: tuftLong * H, diameterTop: thick * (tail ? tail.top : 0.7), diameterBottom: thick * (tail ? tail.foot : 0.25), tessellation: tail ? 7 : 5,
     }, scene), hair);
     tuft.convertToFlatShadedMesh();
-    tuft.position.copyFrom(foot.add(tangent(1).scale((B.band + B.tuft) * H * 0.5)));
+    tuft.position.copyFrom(foot.add(tangent(1).scale((B.band + tuftLong) * H * 0.5)));
     tuft.rotation.x = lean(1);
   }
   return added;
