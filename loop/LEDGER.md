@@ -12,14 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-400 | shorts hem to just below the knee: thigh tube .99 + a hem tube on each shin (74d90a4) | farmer.halfling.a | approved
-400 | emblem at the belt's gold, .boltStand .075, high on the shoulder, unlit code value (6169685 + 9f043da) | ancient.zeus.a | approved
-400 | head-first ram: DIVE hip pitch + a 3 m/s leap + a prone sprawl (7c3bc11) | viking.headbutter.c | approved
-400 | unlit cream fur + buckle .5 at 1.35 proud, in front of the braids (4c49b9b) | viking.headbutter.a | approved
-400 | icicles hanging under the shaft, raked back, spread .6 along it (92f8e5b) | viking.ice_archer.c | approved
-400 | her own helm: dark team dome, bronze brow band, crest, temple mounts (715aff5) | viking.valkyrie.a | approved
-400 | deep hull: 4 strakes, deck .4, deep timber, bow stem, rolled scroll stern (c0da83d) | viking.longship.a | approved
-400 | [R] bear-head hood rebuilt: rounded skull, proud eyes, centred snout, teeth, curtains (f80dd04) | viking.jarl.a | approved
 401 | the boat under `ship` at 1.8x, two carriers under the keel, dropped at the hurl (e0fbb2c) | viking.longship.a | approved
 401 | pelt curtains to the hips: small head curtains + two torso chest strips + a rounded mantle (fd578de + 9c1b402) | viking.jarl.a | approved
 401 | cream feather fans, eye-line bronze band, tall flat crest on her own helm (c0c74ea + cbecbca) | viking.valkyrie.a | approved
@@ -48,17 +40,22 @@ for 25 iterations.
 404 | gunwale rails in darkWood, body tint from a shield face (e3fd388) | viking.longship.a | approved
 404 | brawlerLegs on the ice archer (db12da9) | viking.ice_archer.a | approved
 404 | MINO_SHELL a flat wedge plate with a bent lip, rim bar, swirl (3c3a808 + 53b63d0) | ancient.minotaur.a | approved
+405 | brawlerLegs on the jarl (a3fb035) | viking.jarl.a | approved
+405 | ICE_ARCHER_BAND: the brim a dark leather band with 8 rivet studs (99ac4de) | viking.ice_archer.a | approved
+405 | brawlerLegs on the headbutter, the kit's knee cuffs/boots off (db2616f) | viking.headbutter.a | approved
+405 | VALKYRIE_SWORD slab cut: blade .98 of her height in both fists (2e4602e) | viking.valkyrie.b | approved
+405 | longship shields: whole team face, 3 dark plank seams, dark boss; the dark half gone (1bd1f2d) | viking.longship.a | approved
+405 | MINO_STRAP: the sash a wide proud slab to the right hip, buckle on its lower run (946334f) | ancient.minotaur.a | approved
+405 | zeus emblem in render group 1, glowLayer.renderingGroupId 0: drawn over the bloom (7738aea) | ancient.zeus.a | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
 ancient done units (SARISSA_CAPE/MANTLE, SNAKE_CAP/WRAP/UPRIGHT, BALLISTA_WOOD/PLATES/BOLT/FRAME/STOCK, LOADED_BOLTS) | compacted 397 | 397 | approved | values: git show 8f53efc:loop/LEDGER.md
 tribal.* (7 units' rows: JAVELIN, CHIEF, CLUB, HIDE, DEER, SLAB/SKULL, mammoth body; units done) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
-renaissance.* (painter, fencer, jouster, musketeer, balloon_archer, halberd rows; units done) | compacted 378 | 377 | approved | values: git show edb1692:loop/LEDGER.md
 farmer.* done (hay_baler, scarecrow, harvester, farmer, potion_seller rows) | compacted 383 | 381 | approved | values: git show 6496b2e:loop/LEDGER.md
 farmer.halfling done (HALFLING_STANCE, HALFLING_SHORTS + _CLOTH, shinLength 1.95, HALFLING_TUFT, VEST_CUT, COAT, SHAGGY) | compacted 404 | 402 | approved | values: git show 244af97:loop/LEDGER.md
 farmer.wheelbarrow (CREW_SEAT, LOW_RIM, THROWER_LEGS seat -.08, WHEELBARROW, LOG_WHEEL, HAY_BED, BUNCHED_CREW) | compacted 382 | 381 | approved | values: git show b359959:loop/LEDGER.md
-ancient.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 378 | stats | values: git show 5715b05
 viking.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 391 | stats | values: git show e5a0cb5
 ancient.* 379-386 rows (MINO_*, BULL_*, PIKE_LEVEL, CORINTH_*, SNAKE_*, SARISSA_KEEP/KIT, ZEUS_REARM/TOGA/SANDAL/CHAIN, BOLT_SPARK, BALLISTA_*, SB_SANDAL, HOPLITE_CREST, MINO_SHELL/SCROLL) | compacted 387 | 386 | approved | values: git show fad9e5c:loop/LEDGER.md
 ancient.shield_bearer + hoplite done (SCUTUM*, LEGION_HELM, LORICA, ASPIS*, DORY_*, HOPLITE_LEGS) | compacted 385 | 384 | approved | values: git show 522cb46:loop/LEDGER.md
@@ -92,3 +89,8 @@ simulationSystem.ts:LONGSHIP_HURL.sink (share of the airtime over which the hull
 
 vikingDress.ts:JARL_WRAPS (from, to, out, bands, band, bandOut, furAt, furOut, furThick, lumps; maroon, dark) | .1, .94, 1.24, 3, .05, 1.3, .1, 1.42, .34, 7; (.3,.06,.07), (.16,.03,.04) glow .25 | 404 | approved | bare forearms (before 404)
 vehicleBuilder.ts:LONGSHIP gunwale material + wrapAsBody source | darkWood; first longshipShield face | 404 | approved | teamPrimary rails as the body source (392-403)
+vikingDress.ts:ICE_ARCHER_BAND (leather, rivet, glow, rivets, rivetSize, rivetProud) | (.26,.12,.06), (.5,.48,.44), .14, 8, .42, .8 | 405 | approved | the brim a pale fur roll ICE_ARCHER_FUR (396-404)
+ancientDress.ts:MINO_STRAP (wide, proud, footX, footY, buckleAt) | .44, .32, .95, .06, .3 | 405 | approved | MINO_SASH .3 wide .03 thick flat on the chest, foot .85/.12, buckle at .68 (383-404)
+propBuilder.ts:VALKYRIE_SWORD (long, wide, grip, point) | .98, .04, 1.9, .12 | 405 | approved | the plain slab sword .46 of her height (391-404)
+vehicleBuilder.ts:longship PLANKS (count, wide) + shieldDark/shieldBoss | 3, .035; (.14,.08,.05)/(.2,.13,.08) | 405 | approved | a dark half disc (.1,.11,.16), boss (.56,.36,.15) (395-404)
+main.ts:glowLayer.renderingGroupId + zeusTogaBolt renderingGroupId | 0; 1 | 405 | approved | -1 (merged at the camera's end); 0
