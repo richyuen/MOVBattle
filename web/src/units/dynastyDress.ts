@@ -293,7 +293,7 @@ export function ninjaTrousers(scene: Scene, body: ArticulatedBody, teamColor: Co
  * lower; a gold rim .rim of e.y under each lame; the crest a gold disc .crest of e.y across stood at the bowl's front. Replaces samurai_helmet.
  */
 const KABUTO = {
-  clear: 0.04, top: 1.3, bowlFoot: 2.3, bowlTop: 1.4, peak: 0.42, tiers: 3, lame: 0.32, step: 0.3, flareTop: 2.3, flareFoot: 2.75, arc: 0.64, rim: 0.07,
+  clear: 0.04, top: 1.3, bowlFoot: 2.3, bowlTop: 1.4, peak: 0.42, tiers: 3, lame: 0.32, step: 0.3, flareTop: 2.3, flareFoot: 2.75, arc: 0.55, rim: 0.07,
   crest: 0.42, shade: 0.9, gold: new Color3(0.9, 0.66, 0.2), glow: 0.12,
 };
 /** The Samurai's team kabuto with a gold-trimmed flared neck guard and a front crest (spec at KABUTO). */
@@ -314,7 +314,9 @@ export function samuraiKabuto(scene: Scene, body: ArticulatedBody, teamColor: Co
   const peak = put(MeshBuilder.CreateBox("kabutoPeak", { width: e.x * K.bowlFoot * 0.8, height: e.y * 0.08, depth: e.z * K.peak }, scene), gold);
   peak.position.set(0, foot, e.z * (K.bowlFoot / 2) * (e.z / e.x) + e.z * K.peak * 0.3);
   peak.rotation.x = 0.25;
-  const turn = Math.PI * (0.5 + K.arc);
+  // Babylon lays a cylinder's arc from angle 0 through -2pi*arc (x = cos(-a), z = sin(-a)), so the gap's middle sits at pi*(1-arc); rotation.y
+  // takes angle a to a - turn, and the gap is wanted at +z (pi/2): [P] 414 the face opening (critic 413: the lames crossed the face)
+  const turn = Math.PI * (0.5 - K.arc);
   for (let i = 0; i < K.tiers; i++) {
     const y = foot - e.y * K.step * i - e.y * K.lame / 2;
     const k = 1 + i * 0.12;
