@@ -590,7 +590,7 @@ export function berserkerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * moustache, no sideburns (the curtains hang there), and under the bib a long plait .braidLong head heights with three dark ties and a tuft - the beard
  * tied at its end, as the render shows it. Self-lit .glow so the brown stays warm under the bear's muzzle.
  */
-const JARL_BEARD = { color: new Color3(0.5, 0.28, 0.14), glow: 0.2, down: 0.72, wide: 0.78, tip: 0.6, jaw: [0.9, 0.78, 0.72] as const, jawY: 0.78, jawZ: 0.62, stacheLow: 0.3, stacheZ: 1.1, braidLong: 0.66 };
+const JARL_BEARD = { color: new Color3(0.34, 0.22, 0.16), glow: 0.14, down: 0.72, wide: 0.78, tip: 0.6, jaw: [0.9, 0.78, 0.72] as const, jawY: 0.78, jawZ: 0.62, stacheLow: 0.3, stacheZ: 1.1, braidLong: 0.66 };
 /** The Jarl's brown beard ending in a long tied plait, between the bear hood's curtains (spec at JARL_BEARD). */
 export function jarlBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   const J = JARL_BEARD;
@@ -611,7 +611,18 @@ export function jarlBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  *   plait: from the bib's foot down .plaitLong of the chest height, .plait of the chest width thick, with .ties red ties and a short tuft at its end.
  * The head cut keeps the jaw mass and moustache; its own short bib and braid are dropped so only this run hangs below the chin.
  */
-const JARL_BEARD_RUN = { ahead: 0.82, top: 0.04, bibDrop: 0.36, bibWide: 0.5, bibTip: 0.55, bibDeep: 0.14, plaitLong: 0.36, plait: 0.13, ties: 2, tie: new Color3(0.55, 0.1, 0.08) };
+/*
+ * [S] 409 one continuous beard (CONFIRM 406 a.3: "a short brown chin beard - TABS: a long braided beard hanging to mid-chest, tied with a band";
+ * critic 408: "only a short brown chin block shows at his jaw, no plait hangs down his chest"). The 403 bib floated .14 of the chest depth in front of
+ * the jaw mass and its thin plait, tan like the bear, read as the haft's grip. Now one flat-shaded tube in the torso frame runs from inside the jaw
+ * mass (.jawIn of the chest depth, .jawUp of the chest height over the bib top) forward onto the chest at .ahead, down the bib (.bibDrop of the chest
+ * height, .bibWide of the chest width across, tapering to .bibTip of that) and on into the plait (.plaitLong, .plait of the chest width), flattened
+ * to .flat of its width in depth; .ties red ties round the plait and a tuft at its end. JARL_BEARD.color is the render's grey-brown, darker than the pelt.
+ */
+const JARL_BEARD_RUN = {
+  ahead: 0.82, jawIn: 0.45, jawUp: 0.1, top: 0.04, bibDrop: 0.4, bibWide: 0.62, bibTip: 0.4, plaitLong: 0.4, plait: 0.18, flat: 0.4, ties: 2,
+  tie: new Color3(0.55, 0.1, 0.08),
+};
 function jarlBeardRun(scene: Scene, body: ArticulatedBody): Mesh[] {
   const R = JARL_BEARD_RUN, J = JARL_BEARD;
   const mf = getMaterialFactory();
@@ -625,19 +636,30 @@ function jarlBeardRun(scene: Scene, body: ArticulatedBody): Mesh[] {
   const put = (m: Mesh, mat = hair): Mesh => { m.material = mat; m.parent = body.torso; m.convertToFlatShadedMesh(); out.push(m); return m; };
   const topY = body.neck.position.y + H * R.top;
   const bibH = H * R.bibDrop;
-  const bib = put(MeshBuilder.CreateCylinder("jarlBeardBib", { height: bibH, diameterTop: W * R.bibWide, diameterBottom: W * R.bibWide * R.bibTip, tessellation: 6 }, scene));
-  bib.scaling.z = (D * R.bibDeep) / (W * R.bibWide);
-  bib.position.set(0, topY - bibH * 0.5, z);
-  const plaitH = H * R.plaitLong;
   const footY = topY - bibH;
-  const plait = put(MeshBuilder.CreateCylinder("jarlBeardPlait", { height: plaitH, diameterTop: W * R.plait, diameterBottom: W * R.plait * 0.8, tessellation: 5 }, scene));
-  plait.position.set(0, footY - plaitH * 0.5, z + D * 0.02);
+  const plaitH = H * R.plaitLong;
+  const rTop = (W * R.bibWide) / 2, rFoot = rTop * R.bibTip, rPlait = (W * R.plait) / 2;
+  // [y, z, radius]; z is divided by .flat because the mesh is squashed by it in depth
+  const pts: [number, number, number][] = [
+    [topY + H * R.jawUp, chest.position.z + D * R.jawIn, rTop * 0.8],
+    [topY, z, rTop],
+    [topY - bibH * 0.55, z + D * 0.03, (rTop + rFoot) / 2],
+    [footY, z + D * 0.02, rFoot],
+    [footY - plaitH * 0.5, z + D * 0.02, rPlait],
+    [footY - plaitH, z + D * 0.01, rPlait * 0.8],
+  ];
+  const beard = put(MeshBuilder.CreateTube("jarlBeardRun", {
+    path: pts.map(([y, pz]) => new Vector3(0, y, pz / R.flat)), radiusFunction: (i) => pts[i][2], tessellation: 6, cap: Mesh.CAP_ALL,
+  }, scene));
+  beard.scaling.z = R.flat;
   for (let k = 0; k < R.ties; k++) {
-    const tie = put(MeshBuilder.CreateCylinder("jarlBeardTie", { height: H * 0.035, diameter: W * R.plait * 1.25, tessellation: 6 }, scene), tieMat);
-    tie.position.set(0, footY - plaitH * (0.45 + 0.4 * k), z + D * 0.02);
+    const tie = put(MeshBuilder.CreateCylinder("jarlBeardTie", { height: H * 0.04, diameter: rPlait * 2.5, tessellation: 6 }, scene), tieMat);
+    tie.scaling.z = 0.7;
+    tie.position.set(0, footY - plaitH * (0.35 + 0.4 * k), z + D * 0.02);
   }
-  const tuft = put(MeshBuilder.CreateCylinder("jarlBeardTuft", { height: H * 0.08, diameterTop: W * R.plait * 1.1, diameterBottom: 0, tessellation: 5 }, scene));
-  tuft.position.set(0, footY - plaitH - H * 0.04, z + D * 0.02);
+  const tuft = put(MeshBuilder.CreateCylinder("jarlBeardTuft", { height: H * 0.08, diameterTop: rPlait * 2.2, diameterBottom: 0, tessellation: 5 }, scene));
+  tuft.scaling.z = 0.7;
+  tuft.position.set(0, footY - plaitH - H * 0.04, z + D * 0.01);
   return out;
 }
 
