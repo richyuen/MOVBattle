@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -609,6 +609,8 @@ export class UnitFactory {
       // [S] 405 ...and the Brawler's leg kit: puffy team trousers, big cream fur calf cuffs over brown boots (re-audit 403 a.4: "slim blue legs
       // straight to plain blue boots"; viking.jarl.red.png: the faction's cut). The shared BRAWLER_LEGS cut, as the ice archer took it in 404.
       propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
+      // [S] 406 ...and a dark leather belt with a round buckle at the waist over his bare chest, no tunic hem under it (vikingDress JARL_BELT)
+      propMeshes.push(...jarlBelt(this._scene, body));
     }
     // [S] the Brawler's full-face Norse helm, no horns (394; vikingDress BRAWLER_HELM), and the dark beard spilling out under its mask (396; VIKING_BEARD)
     if (definition.id === "viking.brawler" && !shouldUseVehicleBody) {
@@ -786,7 +788,8 @@ export class UnitFactory {
     // (not the scarecrow: his shirt is tucked into the trousers his suspenders hold up, SCARECROW_DRESS)
     // (nor the king: his short blouse ends at the belt over puffy breeches to the knee, medievalDress kingDress)
     // (nor the minotaur: bare fur under his scrolled team girdle, 386 ancientDress MINO_SCROLL; the tunic skirt hid the girdle as a plain flared band)
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur") {
+    // (nor the jarl: a bare chest down to his belt over straight trousers, 406 vikingDress JARL_BELT)
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur" && definition.id !== "viking.jarl") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const knight = definition.id === "medieval.knight";
       const skirt = knight

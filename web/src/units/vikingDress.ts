@@ -694,6 +694,57 @@ export function jarlArmWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 406 the Jarl's belt (re-audit 403 a.2: "a flat brown mantle box over the chest and a blue tunic whose hem flares as a skirt"; viking.jarl.red.png:
+ * a bare team chest between the pelt curtains down to a dark leather belt at the waist, a round metal buckle on its front, the trousers straight under
+ * it). Seated off the trunk mesh as VALKYRIE_ARMOUR's belt is: a band .tall of the trunk tall at .at of its half height under the middle, .out of its
+ * half width round, dark rims top and foot; the buckle a round ring .ring of the trunk's width across, .ringThick of that thick, standing .proud of the
+ * band's radius out on its front, with a tongue bar across it. The generic tunicSkirt is off for him (unitFactory skirt condition).
+ */
+const JARL_BELT = {
+  tall: 0.24, at: -0.74, out: 1.2, rim: 0.2, ring: 0.24, ringThick: 0.3, proud: 1.08,
+  leather: new Color3(0.24, 0.13, 0.07), rimDark: new Color3(0.13, 0.07, 0.04), metal: new Color3(0.55, 0.52, 0.48), glow: 0.2,
+};
+/** The Jarl's dark leather belt with a round buckle (spec at JARL_BELT). */
+export function jarlBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = JARL_BELT;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", B.leather, { emissive: B.leather.scale(B.glow) });
+  const rimMat = mf.get("cloth", B.rimDark, { emissive: B.rimDark.scale(B.glow) });
+  const metal = mf.get("cloth", B.metal, { emissive: B.metal.scale(0.3) });
+  const tb = body.torsoMesh.getBoundingInfo().boundingBox, ts = body.torsoMesh.scaling, tp = body.torsoMesh.position;
+  const half = new Vector3(tb.extendSize.x * ts.x, tb.extendSize.y * ts.y, tb.extendSize.z * ts.z);
+  const mid = new Vector3(tp.x + tb.center.x * ts.x, tp.y + tb.center.y * ts.y, tp.z + tb.center.z * ts.z);
+  const h = half.y * 2 * B.tall, d = half.x * 2 * B.out, zScale = (half.z / half.x) * 0.98, y = mid.y + half.y * B.at;
+  const out: Mesh[] = [];
+  const ringOf = (name: string, tall: number, wide: number, material: typeof leather, at: number): void => {
+    const m = MeshBuilder.CreateCylinder(name, { height: tall, diameter: wide, tessellation: 8 }, scene);
+    m.position.set(mid.x, at, mid.z);
+    m.scaling.z = zScale;
+    m.parent = body.torso;
+    m.material = material;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  ringOf("jarlBelt", h, d, leather, y);
+  for (const edge of [-1, 1]) ringOf("jarlBeltRim", h * B.rim, d * 1.03, rimMat, y + edge * h * (0.5 - B.rim * 0.5));
+  const front = mid.z + d * 0.5 * zScale * B.proud;
+  const ringD = half.x * 2 * B.ring;
+  const buckle = MeshBuilder.CreateTorus("jarlBeltBuckle", { diameter: ringD, thickness: ringD * B.ringThick, tessellation: 12 }, scene);
+  buckle.rotation.x = Math.PI / 2;
+  buckle.position.set(mid.x, y, front);
+  buckle.parent = body.torso;
+  buckle.material = metal;
+  buckle.convertToFlatShadedMesh();
+  out.push(buckle);
+  const tongue = MeshBuilder.CreateBox("jarlBeltTongue", { width: ringD * 0.95, height: ringD * 0.14, depth: ringD * 0.16 }, scene);
+  tongue.position.set(mid.x, y, front + ringD * 0.05);
+  tongue.parent = body.torso;
+  tongue.material = metal;
+  out.push(tongue);
+  return out;
+}
+
 /**
  * The Brawler's dark beard, hung from under his full-face helm's mask: the jaw mass starts BELOW the mask's bottom edge (-1.02 H) and stands proud of the
  * mask's face (1.04 D), so it spills out under the helmet instead of sitting inside it (critic 395: nearly all of it was buried in the mask), with the
@@ -1046,7 +1097,7 @@ const JARL_PELT = {
   ear: 0.2, earOut: 0.85, earY: 1.3, earZ: -0.2,
   curtainW: 0.42, curtainD: 0.8, curtainOut: 1.12, curtainZ: -0.06, curtainTop: 0.52, curtainFoot: -1.1,
   drape: 0.18, drapeOut: 0.58, drapeDrop: 0.88, drapeDeep: 0.6, back: 0.85, backDeep: 0.14, tufts: 4, tuft: 0.2, glow: 0.2,
-  mantleWide: 0.86, mantleTall: 0.24, mantleDeep: 0.68, mantleY: 0.94,
+  mantleDeep: 0.68,
   chestW: 0.2, chestOut: 0.23, chestDeep: 0.12, chestProud: 0.54, chestDrop: 0.98, chestTufts: 3,
 };
 const JARL_FUR = new Color3(0.42, 0.21, 0.14);
@@ -1126,9 +1177,8 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const top = chest.position.y + H * 0.5;
   const shoulderW = body.metrics.shoulderWidth ?? W * 1.3;
   const drapeH = H * P.drapeDrop;
-  const mantle = put(MeshBuilder.CreateIcoSphere("jarlPeltMantle", { radius: 1, subdivisions: 1, flat: true }, scene), fur, body.torso);
-  mantle.scaling.set(shoulderW * P.mantleWide, H * P.mantleTall, D * P.mantleDeep);
-  mantle.position.set(0, top - H * (1 - P.mantleY), chest.position.z);
+  // [S] 406 no mantle over the chest (re-audit 403 a.2: "a flat brown mantle box over the chest"; viking.jarl.red.png: a bare chest between the two
+  // curtains): the rounded jarlPeltMantle is gone; the curtains and the side panels carry the pelt (jarlBelt for the waist)
   // [S] 401b the fur curtains down the chest front (the hood's own curtains hang at the head's z, so run on down the torso): a strip either side of the
   // chest from under the mantle to the belt, stood proud of the chest's front face, ending in jagged tufts
   const chestH = H * P.chestDrop;
