@@ -2,7 +2,7 @@ import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexBuffer,
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { trunkBand, jitterVertices } from "./tribalDress";
-import { limbShell } from "./medievalDress";
+import { limbBox, limbShell } from "./medievalDress";
 
 /*
  * Ancient dress (units/ancient.*): fur, cloth and ornaments built per unit id by unitFactory, sized off the body's own metrics and joints. Pieces worn on
@@ -291,8 +291,10 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
     // [S] 410 solid tapered legs over the slim bones (CONFIRM 408 a.3: "spindly stick legs that read as a gangly cow - TABS: solid tapered thighs and
     // shins under the belt"; ancient.minotaur.blue.png: a thick thigh tapering to the knee, a muscled calf tapering into the slim pastern): a faceted fur
     // sleeve the whole thigh, .thighShell of its thinned radius, and one over the calf from the knee to .calfTo of the shin, .calfShell of it
-    out.push(limbShell(scene, "minoThigh", thigh, 0, 1, Lg.thighShell, fur));
-    out.push(limbShell(scene, "minoCalf", shin, 0, Lg.calfTo, Lg.calfShell, fur));
+    // [S] 415 the sleeves lathed as one tapered leg (MINO_LATHE; critic 411: "thighs boxy over thin stick shins", 410: "baggy shorts" with a hem step)
+    const r0 = Math.max(limbBox(thigh).wide, limbBox(thigh).deep) * MINO_LATHE.radius;
+    out.push(minoLathe(scene, "minoThigh", thigh, MINO_LATHE.thigh, r0, fur));
+    out.push(minoLathe(scene, "minoCalf", shin, MINO_LATHE.shin, r0, fur));
     const foot = knee.getChildMeshes(true).find((m): m is Mesh => m instanceof Mesh && /_[lr]FootM$/.test(m.name));
     if (!foot) continue;
     foot.isVisible = false;
@@ -407,6 +409,29 @@ function minoBarrel(scene: Scene, body: ArticulatedBody, fur: Material): Mesh[] 
  *   pastern: a slim fur column .pastern of the foot across from the hock - .hockUp over the foot's top and .hockBack toward its heel - down and forward
  *     onto the toes, so the heel stands off the ground as a bull's does, with a fur knob .hock across at the hock.
  */
+/*
+ * [S] 415 the minotaur's legs lathed (ancient.minotaur.blue.png: a thick thigh from the hip tapering to the knee, a muscled calf bulge, then a taper into
+ * the slim pastern; TABS shin about .7 of the thigh's girth). Each profile is [t, r]: t down the limb (0 its top, 1 its foot), r of the thigh's
+ * radius (its max half extent x .radius), the shin starting where the thigh ends so no hem step shows; .facets round, flat shaded.
+ */
+const MINO_LATHE = {
+  thigh: [[-0.06, 0.92], [0.12, 1.04], [0.45, 0.96], [0.8, 0.8], [1.04, 0.66]] as [number, number][],
+  shin: [[-0.08, 0.74], [0.25, 0.8], [0.5, 0.64], [0.8, 0.46], [1.02, 0.38]] as [number, number][],
+  radius: 1.4,
+  facets: 7,
+};
+/** A closed faceted lathe round a limb in its joint's frame, its radius r0 x the profile's r at t of the way down it (MINO_LATHE). */
+function minoLathe(scene: Scene, name: string, limb: Mesh, profile: [number, number][], r0: number, mat: Material): Mesh {
+  const L = limbBox(limb);
+  const top = L.mid + L.half;
+  const shape = profile.map(([t, r]) => new Vector3(r * r0, top - t * L.half * 2, 0)).reverse();
+  const m = MeshBuilder.CreateLathe(name, { shape, tessellation: MINO_LATHE.facets, cap: Mesh.CAP_ALL }, scene);
+  m.convertToFlatShadedMesh();
+  m.scaling.z = L.deep / Math.max(L.wide, L.deep) * 1.08;
+  m.parent = limb.parent;
+  m.material = mat;
+  return m;
+}
 const MINO_LEGS = {
   thigh: 0.7, shin: 0.58, thighShell: 1.95, calfShell: 2.0, calfTo: 0.6,
   toeWide: 0.62, toeTall: 0.55, toeDeep: 0.85, cleft: 0.36, toeAhead: 0.35, toeSlope: -0.3,
