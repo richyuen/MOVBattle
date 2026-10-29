@@ -38,8 +38,9 @@ naming the hunk; a mismatch the reference showed and ours lacked before that com
 struck or stands verbatim: never reword, narrow or split one ("X now, but Y" is a reword). Progress on a blocker that still stands goes under
 CLOSER, what is left under DEFECTS and NEXT. The PASS test is the criterion's own sentence, not an empty list: when every blocker left is one
 you would not notice at lineup distance, strike it and PASS; hold the bar you would hold on a first audit, no higher. Lineup test: on an
-APPROVE, every blocker on a or b that still stands must be placed in `lineup_<f>` on the block's LINEUP line (where in the lineup shot the
-mismatch shows); a standing blocker you cannot place there is one you would not notice at lineup distance: strike it. Colour: a blocker whose
+APPROVE of an a gap, every blocker on a that still stands must be placed in `lineup_<f>` on the block's LINEUP line (where in the lineup shot
+the mismatch shows); a standing blocker you cannot place there is one you would not notice at lineup distance: strike it (b is judged in
+`_windup` too, so b blockers are exempt). Colour: a blocker whose
 only defect is a hue or shade is judged on `unit_<id>_swatch.png` when the prompt gives one (the element rendered close up without the glow
 pass): a swatch inside the reference's hue is a strike, whatever the idle shot's bloom made of it. A blocker reading `missing: <mechanic>` is cleared by a commit after which the capture records the mechanic
 and the pair shows it. If a blocker's named shot cannot show its element (the unit is not in the state the blocker names there), say so under
@@ -70,7 +71,7 @@ GAP: [S|P|R] <id> (<sha>)
 VERDICT: APPROVE | REJECT
 CRITERION: <unitId>.<letter> <PASS|FAIL>   (previous: <PASS|FAIL>)
 BLOCKERS: <remaining list, numbered, copied verbatim; 'struck: n' for ones this commit cleared; 'added: ... introduced by <sha> at <file:function>'>
-LINEUP: <on an APPROVE of an a or b gap: for each blocker left, 'n in lineup_<f>: <where the mismatch shows>'; 'none left' or 'n/a'>
+LINEUP: <on an APPROVE of an a gap: for each blocker left, 'n in lineup_<f>: <where the mismatch shows>', or 'none left'; 'n/a' only on a REJECT or a b/c gap>
 EVIDENCE: ref <file>: <concrete element>; ours <png>: <same element, what differs>
 EVIDENCE: <a second pair, different element>
 CLOSER: <what moved toward TABS; required even on REJECT; name a blocker's cleared clause as 'n: <clause> cleared'>
@@ -95,5 +96,5 @@ at the same bar (would the still pass as that TABS unit at lineup distance), wit
 Output the AUDIT block per unit and no RANKED GAPS tail. You are not asked to find something; a unit that passes, passes.
 
 A REJECT without a NEXT, a FAIL without BLOCKERS, a block without two EVIDENCE lines naming both a reference file and a MOVBattle png, an
-APPROVE on a or b without a LINEUP line, an `added:` without `at <file:function>`, or a RANKED GAPS list under the minimum `[S]` count (CONFIRM
+APPROVE on a without a LINEUP line that places or strikes each blocker left, an `added:` without `at <file:function>`, or a RANKED GAPS list under the minimum `[S]` count (CONFIRM
 has no tail) is invalid: rewrite it before answering.
