@@ -12,19 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-408 | HEADBUTTER_TUNIC: team trunk shell + short sleeves, skirt in the same cloth (51b3972) | viking.headbutter.a | approved
-408 | ICE_ARCHER_SNOWCAP: ruff gone, snow lumps on each shoulder (ea60323) | viking.ice_archer.a | approved
-408 | bear head raised onto his head: eyes, snout, nose, fangs (1bc6d8d) | viking.jarl.a | approved
-408 | MINO_STRAP foot seated on the girdle's measured top (f27b023) | ancient.minotaur.a | approved
-408 | brawler torso beard tail to the belt (8489039, reverted 1d9a84a) | viking.brawler.a | dropped (hidden by the tray board)
-408 | JARL_REST: diagonal rest through _restHalberd, blade broadside (e6d2ba3 + f25a459) | viking.jarl.b | approved
-408 | LONGSHIP_PROW: S-curved neck, head lifted, disc eyes (0b5a856) | viking.longship.a | approved
-409 | LONGSHIP_STERN: tall stern post curling into a spiral scroll (5c28a14) | viking.longship.a | approved
-409 | jarl beard run one grey-brown tube from the jaw into a tied plait (b620406) | viking.jarl.a | approved
-409 | MINO_BARREL: trunk widened/deepened, shoulders out, lathe barrel, hump, thick neck (506c4c3) | ancient.minotaur.a | approved
-409 | ICE_ARCHER_COAT: team shell, full sleeves, belt, coat skirt (75774b2) | viking.ice_archer.a | approved
-409 | HEADBUTTER_COPPER: copper two-tone braids, dark tie, flared tail (ef2e8e9) | viking.headbutter.a | approved
-409 | DRAWS_BEFORE_LOOSE + viking.ice_archer: looses from a full draw (8b44250) | viking.ice_archer.b | approved
 410 | MINO_ARMS: fur arm sleeves + big mitts (cfb6510) | ancient.minotaur.a | approved
 410 | MINO_LEGS thigh/calf fur sleeves (bd87426) | ancient.minotaur.a | approved
 410 | LEG_WRAPS: tan shin wraps on the jarl via brawlerLegs wrap (e1e9397) | viking.jarl.a | approved
@@ -43,6 +30,12 @@ for 25 iterations.
 412 | SHURIKEN_FLIGHT: dark four-point star spinning flat (0245af2) | dynasty.ninja.c | approved
 412 | MONK_SWING: bo cocked over the shoulder, swept across; blowLandsIn hold (3b45ede + 52ae020) | dynasty.monk.c | approved
 412 | ARCHER_HAIR: dark hair cap, fall, locks, knot; hat off (772d55d) | dynasty.firework_archer.a | approved
+413 | NINJA_TROUSERS: wide trousers to the knee, banded shin wraps (5f70ce2) | dynasty.ninja.a | approved
+413 | KASA_GOLD: team kasa, gold rim + knob (75c0cb4; evidence b9005cd + c00e8e5) | dynasty.monk.a | approved
+413 | firework_bow: tall brown stave, orange caps, iceBowCarry carry (bb471b5) | dynasty.firework_archer.b | approved
+413 | FIREWORK_ROCKET: fat team tube, bands, head, flame; flatter arc (191f1a5) | dynasty.firework_archer.c | approved
+413 | KABUTO: team bowl, gold peak, 3 gold-rimmed lames, crest (e140c38) | dynasty.samurai.a | approved
+413 | evidence: brawler idle camera level with the chest (922ff0f); re-audit struck a.4 | viking.brawler.a | evidence
 
 ## Spent (never retry as [P])
 
@@ -88,10 +81,7 @@ vehicleBuilder.ts:LONGSHIP_STERN (post, r0, r1, turns, root, mid, tip) | [y,z] (
 ancientDress.ts:MINO_BARREL (wide, deep, ahead, profile, hump, humpY, neckFrom/To, neckBottom/Top, neckLean) | 1.35, 1.8, .08, 7 pts .8-1.02-.3, [.95,.24,.7], .98, .92/1.3, .95/.62, .25 | 409 | approved | the body's trunk box (before 409)
 vikingDress.ts:ICE_ARCHER_COAT (out, deep, sleeveOut, cuffTo, belt, beltAt, beltOut, skirt, flare, glow; leather) | 1.06, 1.1, 1.15, .88, .11, .08, 1.08, .8, 1.4, .12; (.26,.12,.06) | 409 | approved | the viking_fur trunk + body tunicSkirt .45/1.5 (before 409)
 ancientDress.ts:MINO_ARMS (upper, fore, fist) | 1.6, 1.85, 1.75 | 410 | approved | bare limb boxes (before 410)
-vikingDress.ts:LEG_WRAPS (color, dark, out, bands, band, bandOut, glow) via BRAWLER_LEGS.wrap | (.55,.45,.28), (.32,.24,.14), 1.42, 2, .12, 1.5, .2 | 410 | approved | the fur cuff + roll (405-409)
-vikingDress.ts:ICE_ARCHER_QUIVER (wide, long, deep, top, side, back, tilt, rim, tips, tipProud; leather) | .36, 1.15, .16, .32, 1.12, .05, .12, .07, 2, .16; (.32,.17,.09) | 410 | approved | quiver_back tube (before 410)
-propBuilder.ts:ICE_NOCK (long, shaft, head, headWide) + _poseIceNock (on over w .2) | .5, .016, .09, .05 | 410 | approved | a straight string, no arrow (before 410)
-proceduralAnimation.ts:ICE_REST (across, forward) via _restIceBow | .42, .12 | 411 | approved | ICE_UPRIGHT carry alone (407-410)
+viking done 410-412 rows (LEG_WRAPS, ICE_ARCHER_QUIVER, ICE_NOCK, ICE_REST + grip seat) | compacted 413 | 412 | approved | values: git show e702238:loop/LEDGER.md
 propBuilder.ts:BULL_MUZZLE (wide, tall, deep, drop, ahead, tilt; horns) | .95, .42, .62, .36, .3, .25 | 411 | approved | BULL_HEAD face .86 tilt .12 + hornBends (406-410)
 dynastyDress.ts:MONK_STAFF (long, thick, offset, cap, capWide, band) + MONK_REST (ahead, inward, drop, tilt) | 1.2, .022, .2, .08, 1.45, .025; .14, .08, .16, .06 | 411 | approved | no staff (before 411)
 dynastyDress.ts:NINJA_HOOD (out, clear, top, backFrom, sideFrom, chin, maskShade, knot, tail) | 1.12, .05, 1.12, -.15, .72, -1.08, .82, .22, .9 | 411 | approved | ninja_mask ball (before 411)
@@ -102,3 +92,8 @@ dynastyDress.ts:NINJA_GI (out, deep, hem, light, vWide, vLong, lapel, lapelLong,
 projectileSystem.ts:SHURIKEN_FLIGHT (span, waist, thick, hub, tilt) | .36, .1, .02, .07, .7 | 412 | approved | 8-point pale team disc (before 412)
 proceduralAnimation.ts:MONK_SWING (back, through, cock, hit, reach, raise, dip) | .9, 1.35, .3, .5, .08, 1.3, .35 | 412 | approved | unarmed shove (before 412)
 dynastyDress.ts:ARCHER_HAIR (clear, top, out, capDeep, fall, fallOut, side, sideDrop, sideFrom, bun) | .08, 1.14, 1.1, 2.1, 2.6, .22, .2, -.85, .35, .42 | 412 | approved | conical_hat (before 412)
+dynastyDress.ts:NINJA_TROUSERS (thigh, knee, kneeTo, wrap, bands, band, bandOut, bandShade) | 1.9, 1.75, .3, 1.3, 4, .09, 1.42, .82 | 413 | approved | bare legs (before 413)
+propBuilder.ts:KASA_GOLD + kasa cone team colour | (.86,.62,.18) | 413 | approved | accent cone, accent x.55 band (before 413)
+propBuilder.ts:FIREWORK_BOW (long, cap, capColor) | 1.15, .12, (.92,.5,.12) | 413 | approved | plain bow (before 413)
+projectileSystem.ts:FIREWORK_ROCKET (long, wide, bands, head, flame, arc) | .5, .13, 3, .14, .32, .1 | 413 | approved | .3x.04 stick, arc .25 (before 413)
+dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, lame, step, flareTop, flareFoot, arc, rim, crest) | .04, 1.3, 2.3, 1.4, .42, 3, .32, .3, 2.3, 2.75, .64, .07, .42 | 413 | approved | samurai_helmet (before 413)

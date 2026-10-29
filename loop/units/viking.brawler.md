@@ -1,26 +1,25 @@
 # viking.brawler
-Status: open   Audited: 391, 395-398, 401, 402   Done: -
+Status: open   Audited: 391, 395-398, 401, 402, 413 (re-audit a, CONFIRM)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (1 since 407; the [R] struck 2 and 5 at 407, plateau cleared)
- 4. beard length in _idle: it stops at the top of the chest under the shield rim - TABS: the beard covers the chest down to the belt (ref: .red.png) (added 398)
- (struck 1 at 394: the helmet; struck 3 at 397: puffy trousers, cream fur calf cuffs over brown boots; struck 2 at 407: jaw-wide beard onto the chest; struck 5 at 407: near-black brown)
-b PASS (393)
-c PASS (391)
+a PASS (413 re-audit: struck 4; CONFIRM 413)
+b FAIL (0 since 413; the CONFIRM's list)
+ 1. axe haft in unit_viking.brawler_idle - as long as the man, from the ground to above his head, so it reads as a two-handed polearm - TABS: a short one-handed hatchet, haft about hand-to-shoulder length (ref: viking.brawler.red.png, card Weapon Type One-handed)
+ 2. axe head in unit_viking.brawler_idle - a large pale-lavender rounded paddle bigger than his head - TABS: a compact dark-iron bearded hatchet blade about head-sized (ref: viking.brawler.blue.png)
+ 3. shield in unit_viking.brawler_idle - tilted back nearly flat like a dish, face seen at a grazing angle - TABS: the round shield held upright in front of the body, covering chin to knees (ref: viking.brawler.red.png, viking.brawler.jpg)
+c FAIL (0 since 413; the CONFIRM's list)
+ 1. missing: lunge on first contact - summary.json records only "melee hit at 1283 ms", no leap or lunge event; unit_viking.brawler_windup shows an ordinary stride - TABS: "They also lunge on first contact" (ref: card Characteristics)
 d PASS (cost 220, hp 2.39x, dmg 1.08x, cd 0.60x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a beard length - blocker 4: evidence first (408): the idle board lies as a tray over the whole trunk, so nothing on the chest under it shows in _idle; re-aim blocker 4 at lineup_viking or a lower camera before another beard gap - ref: viking.brawler.jpg - ours: unit_viking.brawler_idle.png
+1. [S] b hatchet - blockers 1, 2: the brawler's bearded axe cut to a one-handed hatchet, haft hand-to-shoulder, a compact dark-iron head about head-sized - ref: viking.brawler.blue.png - ours: unit_viking.brawler_idle.png
+2. [S] b shield upright - blocker 3: the round board carried upright in front of him, chin to knees, not a tray - ref: viking.brawler.red.png - ours: unit_viking.brawler_idle.png
+3. [S] c lunge - blocker 1: evidence first (start the brawler scene farther out, log the lunge in abilityLog), then a first-contact lunge - ref: card Characteristics - ours: unit_viking.brawler_windup.png
 ## Attempts (iter | gap | criterion | verdict)
-392-393 | bearded axe with a crescent head; own round board: two-tone face, boss, brown rim [S] | b | approved (b PASS)
-394-398 | full-face Norse helm; beard under the mask (395 rejected); 1.38 W jaw; brawlerLegs; mask to the cheek line [S] | a | approved
-401 | second, wider bib down the chest (05ccbb8 + 6f22d10, reverted) | a | rejected
-402 | beard splay: 3 locks a side off the jaw (2230052, reverted 77a7b59) | a | rejected
-407 | [R] BRAWLER_BEARD: near-black jaw mass, torso bib, spill lying on the board's face toward the boss (9ece9b8) | a | approved (struck 2, 5)
-408 | torso-hung beard tail down the chest to the belt, spill removed (8489039, reverted 1d9a84a) | a | dropped (the tray board hides the whole trunk in _idle)
+392-393 | bearded axe with a crescent head; own round board [S] | b | approved (b PASS)
+394-408 | helm; beard cuts (395, 401, 402 rejected; [R] 407 BRAWLER_BEARD approved; 408 tail dropped: tray board hides it) | a | mixed
+413 | evidence 922ff0f: idle camera level with the chest; re-audit struck a.4 (a PASS) | a | evidence; CONFIRM 413 failed b, c
 ## Rejected (last 4)
-- beard [S] [2] - 395: hung from under the mask - buried inside it, what showed read as a flat chinstrap
-- beard [S] [2] - 401: a second wider bib over the board's face - the centre line still ends at the shield's rim; the length read as a patch on the board
-- beard [S] [3] - 402: six locks radiating sideways and up from the jaw - a spiked ruff TABS never shows; blocker 4 untouched
+- beard [S] [3] - 395/401/402: under the mask, a second bib, a sideways splay - all read wrong; the chest under the tray board never showed
 ## Notes (max 3 lines)
-- 407 critic: the spill reads as a dark stripe painted on the board; in lineup_viking the chest between board and belt shows no beard. Hair hangs from the chin in front of the body.
+- 413: a 408-style beard tail was retried after the evidence commit and dropped uncommitted: the tray board still hides the belly.
 - 407 probe_axes: in the idle the board lies as a tray, face normal (0,.97,.23) in the torso frame, centre .1 under the chin; the torso front is at z .11.
-- 398: BRAWLER_HELM.maskBottom -.52, cheek guards long.
+- 413 CONFIRM: the axe is the shared bearded_axe at man length; b.3 is the same tray board that hid the beard.
