@@ -288,6 +288,11 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   for (const [thigh, shin, knee] of [[body.leftUpperLeg, body.leftLowerLeg, body.leftKnee], [body.rightUpperLeg, body.rightLowerLeg, body.rightKnee]] as const) {
     thigh.scaling.x *= Lg.thigh; thigh.scaling.z *= Lg.thigh;
     shin.scaling.x *= Lg.shin; shin.scaling.z *= Lg.shin;
+    // [S] 410 solid tapered legs over the slim bones (CONFIRM 408 a.3: "spindly stick legs that read as a gangly cow - TABS: solid tapered thighs and
+    // shins under the belt"; ancient.minotaur.blue.png: a thick thigh tapering to the knee, a muscled calf tapering into the slim pastern): a faceted fur
+    // sleeve the whole thigh, .thighShell of its thinned radius, and one over the calf from the knee to .calfTo of the shin, .calfShell of it
+    out.push(limbShell(scene, "minoThigh", thigh, 0, 1, Lg.thighShell, fur));
+    out.push(limbShell(scene, "minoCalf", shin, 0, Lg.calfTo, Lg.calfShell, fur));
     const foot = knee.getChildMeshes(true).find((m): m is Mesh => m instanceof Mesh && /_[lr]FootM$/.test(m.name));
     if (!foot) continue;
     foot.isVisible = false;
@@ -403,7 +408,7 @@ function minoBarrel(scene: Scene, body: ArticulatedBody, fur: Material): Mesh[] 
  *     onto the toes, so the heel stands off the ground as a bull's does, with a fur knob .hock across at the hock.
  */
 const MINO_LEGS = {
-  thigh: 0.7, shin: 0.58,
+  thigh: 0.7, shin: 0.58, thighShell: 1.95, calfShell: 2.0, calfTo: 0.6,
   toeWide: 0.62, toeTall: 0.55, toeDeep: 0.85, cleft: 0.36, toeAhead: 0.35, toeSlope: -0.3,
   pastern: 0.75, hockUp: 0.5, hockBack: 0.25, hock: 0.5,
 };
