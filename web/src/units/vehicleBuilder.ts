@@ -2007,6 +2007,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * .stem post curving from the keel up into the dragon's neck, and a rolled scroll at the stern: two cylinders lying across the stern's head, the
    * smaller one turned inside the bigger like a mat rolled up.
    */
+  const LONGSHIP_STERN = { post: [[0.45, -1.26], [0.9, -1.4], [1.3, -1.5], [1.5, -1.52]] as [number, number][], r0: 0.2, r1: 0.05, turns: 1.25, root: 0.12, mid: 0.08, tip: 0.04 };
   const LONGSHIP_PROW = { lift: 0.75, root: 0.11, tip: 0.085, eye: 0.2, path: [[0.95, 1.3], [1.2, 1.42], [1.45, 1.42], [1.68, 1.3], [1.9, 1.3], [2.0, 1.38]] as [number, number][] };
   const HULL = { rows: 4, rowStep: 0.13, strake: 0.15, keelY: 0.2, deck: 0.4, wall: 0.705, stem: 0.9, scroll: 0.13 };
   const keel = MeshBuilder.CreateBox("longshipKeel", { width: 0.18, height: 0.16, depth: 2.62 }, scene);
@@ -2276,24 +2277,32 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   bowKnee.parent = root;
   bowKnee.material = darkWood;
   allMeshes.push(bowKnee);
-  const sternPost = MeshBuilder.CreateCylinder("longshipSternPost", { height: 0.82, diameterBottom: 0.22, diameterTop: 0.14, tessellation: 5 }, scene);
-  sternPost.position.set(0, 0.56, -1.28);
-  sternPost.rotation.x = 0.3;
+  /*
+   * [S] 409 the stern scroll (CONFIRM 407 a.3: "a blunt log end barely above the gunwale"; viking.longship.jpg: the stern post rises tall off the keel
+   * end and curls over into a rolled spiral, about three quarters of the prow's height). LONGSHIP_STERN: one tube off the keel end, up and leaning
+   * back along .post ([y, z], ship units), then wound round a centre .turn ahead of its top: starting behind the centre at radius .r0, it climbs over
+   * the top, comes down in front and winds in to .r1 over .turns turns; the tube's radius tapers from .root through .mid (at the scroll) to .tip.
+   */
+  const ST = LONGSHIP_STERN;
+  const sternPath = ST.post.map(([y, z]) => new Vector3(0, y, z));
+  const top = sternPath[sternPath.length - 1];
+  const centre = new Vector3(0, top.y, top.z + ST.r0);
+  const sternSteps = 18;
+  for (let i = 1; i <= sternSteps; i++) {
+    const f = i / sternSteps;
+    const phi = f * ST.turns * Math.PI * 2;
+    const r = ST.r0 + (ST.r1 - ST.r0) * f;
+    sternPath.push(new Vector3(0, centre.y + r * Math.sin(phi), centre.z - r * Math.cos(phi)));
+  }
+  const postN = ST.post.length - 1;
+  const sternPost = MeshBuilder.CreateTube("longshipSternPost", {
+    path: sternPath, tessellation: 6, cap: Mesh.CAP_ALL,
+    radiusFunction: (i) => i <= postN ? ST.root + (ST.mid - ST.root) * (i / postN) : ST.mid + (ST.tip - ST.mid) * ((i - postN) / sternSteps),
+  }, scene);
+  sternPost.convertToFlatShadedMesh();
   sternPost.parent = root;
-  sternPost.material = wood;
+  sternPost.material = darkWood;
   allMeshes.push(sternPost);
-  const scrollOuter = MeshBuilder.CreateCylinder("longshipScroll", { height: 0.36, diameter: 0.3, tessellation: 10 }, scene);
-  scrollOuter.rotation.z = Math.PI / 2;
-  scrollOuter.position.set(0, 1.0, -1.4);
-  scrollOuter.parent = root;
-  scrollOuter.material = wood;
-  allMeshes.push(scrollOuter);
-  const scrollInner = MeshBuilder.CreateCylinder("longshipScrollTurn", { height: 0.38, diameter: 0.17, tessellation: 10 }, scene);
-  scrollInner.rotation.z = Math.PI / 2;
-  scrollInner.position.set(0, 1.0, -1.47);
-  scrollInner.parent = root;
-  scrollInner.material = darkWood;
-  allMeshes.push(scrollInner);
 
   /*
    * [S] the carved dragon head over the bow and the curled stern (392; viking.longship.red.png: a tall brown head on the stem, a white eye on each side
