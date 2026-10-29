@@ -38,6 +38,7 @@ drop a lesson once it is a comment at the code it describes.
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
 - `capture.mjs --units` takes a comma-separated list; space-separated ids capture the first unit only. Every iter-N capture also clears the probe swatches: render them after the final capture (402).
 - For a small piece in a look shot, a crop of the PNG (python PIL crop + NEAREST resize) is a faster close-up than probe_close, whose --aim can frame another mesh entirely (404 headbutter, minotaur).
+- Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each stays revertable alone (406).
 - The glow layer merges after rendering group 0 (main.ts renderingGroupId 0, 405): a mesh in group 1 is drawn over every nearby bloom yet still depth-hidden; a small emblem a glow halo tints (orange + blue-white = pink) goes in group 1. runtimeUnit resets a flung body's meshes to group 0 on landing.
 
 ## Rig and dress
@@ -57,3 +58,4 @@ drop a lesson once it is a comment at the code it describes.
 - A piece hung in the head's frame cannot run on down the torso: at the chest's z it sits inside the chest box - build the torso run as its own torso-parented piece (401 jarl).
 - The bead eyes hang off the neck joint, not the head block: a head-hung cap or band must be seated off the eyes' world tops read into the head's frame, or it covers them (403 ice archer); shrinking headSize leaves the eyes where they were (403 headbutter band across the eyes).
 - A beast hood's ellipsoid skull reads as a flat cap unless its features stand proud of the ellipsoid's own front at their height: sample the skull's front z at the eye's y, not one z for all (400 jarl).
+- A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.

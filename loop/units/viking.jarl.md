@@ -1,25 +1,27 @@
 # viking.jarl
-Status: open   Audited: 391, 396, 400, 401, 402, 403 (re-audit a)   Done: -
+Status: open   Audited: 391, 396, 400, 401, 402, 403 (re-audit a), 406 (CONFIRM)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (3 since 403; list rewritten by the 403 re-audit, struck 1 at 403, 3 at 404, 4 at 405)
- 2. chest in unit_viking.jarl_idle - TABS: a shirtless team-skin chest between the two pelt curtains, a leather belt at the waist (ref: .red.png, .jpg); ours: a flat brown mantle box over the chest and a blue tunic whose hem flares as a skirt below it
-  (struck 1 at 403: the beard, now a bib down the chest into a red-tied plait; struck 3 at 404: maroon forearm wraps with fur at the elbow; struck 4 at 405: the Brawler's trousers, cream cuffs, brown boots)
-b PASS (392)
-c PASS (396)
+a FAIL (0 since 406; the CONFIRM's list)
+ 1. bear pelt in unit_viking.jarl_idle: two flat rectangular brown slabs standing on the shoulders like a backpack - TABS: the pelt hangs from the bear head over both shoulders as long fur flaps down the front to the belt, framing the chest (ref: viking.jarl.red.png)
+ 2. bear head in unit_viking.jarl_idle: a small brown cap with stub ears, no snout, googly eyes or fangs above the face - TABS: a large bear head sits on top of the head, with googly eyes and fangs overhanging the face (ref: viking.jarl.red.png, card Appearance)
+ 3. beard in unit_viking.jarl_idle: a short brown chin beard - TABS: a long braided beard hanging to mid-chest, tied with a band (ref: viking.jarl.red.png)
+ 4. knee trim in unit_viking.jarl_idle: thick white fur rolls at the knees - TABS: tan cloth wraps on the shins above brown leather boots (ref: viking.jarl.red.png, card Appearance)
+b FAIL (0 since 406; the CONFIRM's list)
+ 1. Jarl Axe head in unit_viking.jarl_idle: a rounded oval blue-grey paddle - TABS: a crescent bearded axe blade, dark steel (ref: viking.jarl.jpg)
+ 2. carry pose in unit_viking.jarl_idle: the haft stands vertical in front of the face - TABS: the haft is held two-handed diagonally across the body, head out to the side (ref: viking.jarl.red.png)
+c PASS (396; CONFIRM 406)
 d PASS (cost 1500, hp 13.81x, dmg 2.50x, cd 1.24x)
-## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a chest - blocker 2: drop the chest mantle box and the flared tunic hem; a bare team torso between the JARL_PELT curtains with a brown leather belt and round buckle at the waist - ref: .red.png - ours: unit_viking.jarl_idle.png
+## Ranked gaps (the CONFIRM gave none: each criterion's first blocker)
+1. [S] a pelt - blocker 1: the side slabs (jarlPeltSide) replaced by long fur flaps from the bear head down the chest front to the belt - ref: .red.png - ours: unit_viking.jarl_idle.png
+2. [S] b axe head - blocker 1: a dark steel crescent bearded blade on the Jarl Axe (propBuilder JARL_AXE) - ref: .jpg - ours: unit_viking.jarl_windup.png
 ## Attempts (iter | gap | criterion | verdict)
 392-396 | Jarl Axe (b PASS); bear hood + drape (393); bear pelt retry (394 rejected); his own chop (c PASS) | a,b,c | approved
-400 | [R] bear-head hood rebuilt from the skull down (f80dd04) | a | approved (struck 1; added 5)
-401 | [R/S] pelt curtains to the hips + rounded mantle + chest strips (fd578de + 9c1b402) | a | approved (struck 5)
-402 | JARL_BEARD: narrow jaw between the curtains, bib, moustache, .66 H plait with three ties (03c2cf1) | a | approved (blocker 2 stands)
-403 | JARL_BEARD_RUN: torso-hung bib in front of the mantle into a plait with two red ties (76b6c7d) | a | approved (struck 1)
-404 | JARL_WRAPS: maroon limbShell wraps with 3 dark bands on each forearm, a lit tan fur roll at the elbow (9e3df06) | a | approved (struck 3)
-405 | brawlerLegs on the jarl branch (a3fb035) | a | approved (struck 4)
+400-403 | [R] bear-head hood (f80dd04); pelt curtains + mantle + chest strips (fd578de); JARL_BEARD (03c2cf1); JARL_BEARD_RUN (76b6c7d) | a | approved
+404-405 | JARL_WRAPS maroon forearm wraps + elbow fur (9e3df06); brawlerLegs (a3fb035) | a | approved
+406 | JARL_BELT: belt + round buckle; mantle and tunicSkirt off (293835c) | a | approved (struck 2, a PASS); CONFIRM failed a, b (new lists)
 ## Rejected (last 4)
 - bear pelt retry [S] [2] - 394: a rounded fur skull with googly eyes on its front, curtains, a rounded shoulder mass - the near curtain stood in front of his face and hid the eyes
 ## Notes (max 3 lines)
-- 405 critic (no blocker): the cuffs sit low at the ankle with a short boot; TABS has them mid-calf over a tall boot. 404: the elbow fur reads near-white, TABS tan.
-- 403 evidence (88e3f00): lineup_viking stands him clear of the longship's hull; 403 critic: the bib is a lighter tan than the jaw chunk (shade only).
-- 401: JARL_PELT curtainFoot -1.1 + two torso `jarlPeltChest` strips and a rounded `jarlPeltMantle`. 396: CHOP_JARL. Probe: probe_local.mjs.
+- 406 gap critic: the red-team bare chest renders dull tan-brown in lineup_viking, unlike the pink arms (the ice archer's a.2 torso tint under viking_fur); the buckle is half hidden by the shaft fist in the idle.
+- 403 evidence (88e3f00): lineup_viking stands him clear of the longship's hull.
+- 401: JARL_PELT curtainFoot -1.1, torso jarlPeltChest strips. 396: CHOP_JARL.
