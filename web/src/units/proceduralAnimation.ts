@@ -5388,15 +5388,17 @@ export class ProceduralAnimator {
     const q = Quaternion.Slerp(rest, local, w);
     N.stave.rotationQuaternion = q;
     // [S] 412 the grip in her fist (CONFIRM 411 b.1: "bow not gripped - both hands float forward empty while the ice bow stands leaning on its own"):
-    // the stave turns about its own origin, which is off the wrapped grip (the arc's belly, bowGrip), so the grip swung away from the fist; the stave
-    // is slid in the fist's frame so its grip lands where the stave's origin sat at rest (the fist), whatever the pose
+    // the stave turns about its own origin, which sits off the wrapped grip (bowGrip, the arc's belly) and off the fist, so the grip swung away; the
+    // stave is slid in the world so its grip's middle lands on the weapon fist, by w
     this._iceRestAt ??= N.stave.position.clone();
+    N.stave.position.copyFrom(this._iceRestAt);
     const grip = N.stave.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === "bowGrip");
     if (grip) {
-      const off = grip.position.multiply(N.stave.scaling);
-      const turned = Vector3.Zero();
-      off.rotateByQuaternionToRef(q, turned);
-      N.stave.position.copyFrom(this._iceRestAt.subtract(turned.scale(w)));
+      N.stave.computeWorldMatrix(true);
+      grip.computeWorldMatrix(true);
+      const miss = b.rightHand.getAbsolutePosition().subtract(grip.getAbsolutePosition()).scale(w);
+      const toParent = (N.stave.parent as TransformNode).getWorldMatrix().clone().invert();
+      N.stave.position.addInPlace(Vector3.TransformNormal(miss, toParent));
     }
   }
   private _iceRestAt: Vector3 | undefined;
