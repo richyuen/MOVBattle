@@ -402,13 +402,19 @@ export function valkyrieArmour(scene: Scene, body: ArticulatedBody, teamColor: C
   const bracerMat = mf.get("cloth", dark, { emissive: dark.scale(A.glow) });
   const boot = mf.get("cloth", A.boot, { emissive: A.boot.scale(A.glow) });
   const out: Mesh[] = [];
-  // the belt and its rims, round the waist
-  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
-  const beltH = chest.y * 2 * A.beltTall;
-  const beltD = Math.max(chest.x, chest.z) * 2 * A.beltOut;
-  const zScale = body.torsoMesh.scaling.z * 0.98;
+  // [S] 404 the belt seated off the trunk mesh itself (critic 403 a.4: seated at extendSize.y * beltAt in the torso node's frame, ignoring torsoMesh's own
+  // offset and scale, it sat low inside the skirt as a brown box off her left hip and the ring floated under the hem). The trunk box is read as limbBox
+  // reads a limb: its middle = torsoMesh.position + its bbox centre x scaling, its half extents = extendSize x scaling, so the band wraps the waist
+  // .beltAt of the half height under the middle, centred on the trunk in x and z, and the ring stands on the band's front face.
+  const tb = body.torsoMesh.getBoundingInfo().boundingBox, ts = body.torsoMesh.scaling, tp = body.torsoMesh.position;
+  const half = new Vector3(tb.extendSize.x * ts.x, tb.extendSize.y * ts.y, tb.extendSize.z * ts.z);
+  const mid = new Vector3(tp.x + tb.center.x * ts.x, tp.y + tb.center.y * ts.y, tp.z + tb.center.z * ts.z);
+  const beltH = half.y * 2 * A.beltTall;
+  const beltD = half.x * 2 * A.beltOut;
+  const zScale = (half.z / half.x) * 0.98;
+  const beltY = mid.y + half.y * A.beltAt;
   const band = MeshBuilder.CreateCylinder("valkyrieBelt", { height: beltH, diameter: beltD, tessellation: 8 }, scene);
-  band.position.y = chest.y * A.beltAt;
+  band.position.set(mid.x, beltY, mid.z);
   band.scaling.z = zScale;
   band.parent = body.torso;
   band.material = beltMat;
@@ -416,7 +422,7 @@ export function valkyrieArmour(scene: Scene, body: ArticulatedBody, teamColor: C
   out.push(band);
   for (const edge of [-1, 1]) {
     const rim = MeshBuilder.CreateCylinder("valkyrieBeltRim", { height: beltH * A.rim, diameter: beltD * 1.03, tessellation: 8 }, scene);
-    rim.position.y = chest.y * A.beltAt + edge * beltH * (0.5 - A.rim * 0.5);
+    rim.position.set(mid.x, beltY + edge * beltH * (0.5 - A.rim * 0.5), mid.z);
     rim.scaling.z = zScale;
     rim.parent = body.torso;
     rim.material = rimMat;
@@ -424,10 +430,10 @@ export function valkyrieArmour(scene: Scene, body: ArticulatedBody, teamColor: C
     out.push(rim);
   }
   // the gold ring standing on the belt's front, facing ahead
-  const ringD = chest.x * 2 * A.ring;
+  const ringD = half.x * 2 * A.ring;
   const ring = MeshBuilder.CreateTorus("valkyrieBeltRing", { diameter: ringD, thickness: ringD * A.ringThick, tessellation: 10 }, scene);
   ring.rotation.x = Math.PI / 2;
-  ring.position.set(0, chest.y * A.beltAt, beltD * 0.5 * zScale * A.ringProud);
+  ring.position.set(mid.x, beltY, mid.z + beltD * 0.5 * zScale * A.ringProud);
   ring.parent = body.torso;
   ring.material = gold;
   ring.convertToFlatShadedMesh();
