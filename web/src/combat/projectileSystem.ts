@@ -49,6 +49,8 @@ const ICE_ARROW = {
   shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98),
 };
 
+/** [S] 413 the Firework Arrow in flight: tube long/wide (m), green bands, head and flame cones, the arc as a share of the distance (was .25: it flew over the frame). */
+const FIREWORK_ROCKET = { long: 0.5, wide: 0.13, bands: 3, head: 0.14, flame: 0.32, arc: 0.1, band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14), fire: new Color3(1, 0.62, 0.15) };
 /** [S] 412 the thrown shuriken (projectile "shuriken"): span, waist, thickness, hub across (m), tilt of its face off level toward the side camera. */
 const SHURIKEN_FLIGHT = { span: 0.36, waist: 0.1, thick: 0.02, hub: 0.07, tilt: 0.7, steel: new Color3(0.2, 0.21, 0.24), hub_color: new Color3(0.5, 0.5, 0.54) };
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
@@ -317,7 +319,7 @@ export class ProjectileSystem {
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
       case "cannonball": speed = 10; arcHeight = dist * 0.4; break;
       case "davinci_ball": speed = 30; arcHeight = dist * 0.06; break;
-      case "firework": speed = 22; arcHeight = dist * 0.25; break;
+      case "firework": speed = 22; arcHeight = dist * FIREWORK_ROCKET.arc; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
       case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
       case "crow": speed = 18; arcHeight = dist * 0.15; break;
@@ -1092,15 +1094,32 @@ export class ProjectileSystem {
         break;
       }
       case "firework": {
-        const body = MeshBuilder.CreateCylinder("rocket", { height: 0.3, diameter: 0.04, tessellation: 6 }, this._scene);
-        body.rotation.x = Math.PI / 2;
-        body.material = this._getMat(`rocket_body_${attackerTeam}`, palette.primary);
-        body.parent = root;
-        // Trail spark
-        const trail = MeshBuilder.CreateSphere("trail", { diameter: 0.08, segments: 4 }, this._scene);
-        trail.position.z = -0.18;
-        trail.material = this._getMat(`trail_${attackerTeam}`, palette.bright, 0.6);
-        trail.parent = root;
+        // [S] 413 the Firework Arrow (audit 411 c.1: "nothing in the air - TABS: a rocket tube flying with a spark/smoke trail";
+        // dynasty.firework_archer.red.png: a fat team-coloured tube with green bands round it, a dark arrowhead out of its front): FIREWORK_ROCKET.long
+        // and .wide, .bands green rings, a dark head cone .head long, and a flame cone .flame long out of its tail, along +z (its line of flight)
+        const F = FIREWORK_ROCKET;
+        const tube = MeshBuilder.CreateCylinder("rocket", { height: F.long, diameter: F.wide, tessellation: 8 }, this._scene);
+        tube.rotation.x = Math.PI / 2;
+        tube.material = this._getMat(`rocket_body_${attackerTeam}`, palette.primary, 0.15);
+        tube.parent = root;
+        const green = this._getMat("rocket_band", F.band, 0.12);
+        for (let i = 0; i < F.bands; i++) {
+          const ring = MeshBuilder.CreateCylinder("rocketBand", { height: F.long * 0.07, diameter: F.wide * 1.15, tessellation: 8 }, this._scene);
+          ring.rotation.x = Math.PI / 2;
+          ring.position.z = -F.long * 0.4 + (F.long * 0.8 * i) / Math.max(1, F.bands - 1);
+          ring.material = green;
+          ring.parent = root;
+        }
+        const head = MeshBuilder.CreateCylinder("rocketHead", { height: F.head, diameterTop: 0, diameterBottom: F.wide * 0.7, tessellation: 4 }, this._scene);
+        head.rotation.x = Math.PI / 2;
+        head.position.z = F.long * 0.5 + F.head * 0.5;
+        head.material = this._getMat("rocket_head", F.dark, 0.05);
+        head.parent = root;
+        const flame = MeshBuilder.CreateCylinder("trail", { height: F.flame, diameterTop: F.wide * 0.9, diameterBottom: 0, tessellation: 6 }, this._scene);
+        flame.rotation.x = Math.PI / 2;
+        flame.position.z = -F.long * 0.5 - F.flame * 0.5;
+        flame.material = this._getMat("rocket_flame", F.fire, 0.9);
+        flame.parent = root;
         break;
       }
       case "shuriken": {
