@@ -1,5 +1,5 @@
 # Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
-Iteration: 408   Batch: ancient+viking (6-7/19)   Consecutive empty: 0   Done: 35/139   Parked: 1
+Iteration: 409   Batch: ancient+viking (6-7/19)   Consecutive empty: 0   Done: 37/139   Parked: 1
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -8,7 +8,7 @@ renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer 
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ p | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur -+++ o | zeus ++++ D
-viking: headbutter -+++ o | ice_archer --++ o | brawler -+++ o | berserker ++++ D | valkyrie ++++ D | longship -+++ o | jarl -+++ o
+viking: headbutter ++++ D | ice_archer --++ o | brawler -+++ o | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl -+++ o
 dynasty: samurai ???? q | firework_archer ???? q | monk ???? q | ninja ???? q | dragon ???? q | hwacha ???? q | monkey_king ???? q
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
@@ -23,24 +23,24 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-408 (BASE afa4fbc): [S] headbutter a.1 team tunic (51b3972) approved, struck 1 | [S] ice_archer a.1 shoulder snow lumps (ea60323) approved, struck 1 | [S] jarl a.2 bear head on top (1bc6d8d) approved, struck 2 | [S] minotaur a.3 strap foot over the girdle (f27b023) approved, a PASS; CONFIRM failed a (bulk list) | [S] brawler a.4 torso beard tail (8489039) dropped, reverted 1d9a84a (hidden by the tray board) | [S] jarl b.2 diagonal rest (e6d2ba3 + f25a459) approved, b PASS | [S] longship a.1 S prow neck (0b5a856) approved, struck 1+2 - 6/7, 7 struck
-407 (BASE 978f707): jarl b.1 crescent, [R] brawler beard, jarl a.1 flaps, headbutter a.2 legs, ice_archer b.2 carry, longship a.4 carriers, minotaur a.4 legs - all approved; CONFIRM failed headbutter, longship - 7/7, 7 struck
+409 (BASE 2ccd9f2): [S] longship a.3 stern scroll (5c28a14) approved, a PASS, CONFIRM passed - D | [S] jarl a.3 continuous beard tube (b620406) approved, none struck | [S] minotaur a.1 barrel chest (506c4c3) approved, struck 1 | [S] ice_archer a.2 team coat (75774b2) approved, struck 2 | [S] headbutter a.2 copper braids (ef2e8e9) approved, a PASS, CONFIRM passed - D | [S] ice_archer b.3 full draw before the loose (8b44250) approved, split 3 - 6/6, 4 struck
+408 (BASE afa4fbc): headbutter tunic, ice_archer snow lumps, jarl bear head, minotaur strap, jarl diagonal rest, longship prow approved; brawler tail dropped - 6/7, 7 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] viking.headbutter (51b3972) VERDICT: APPROVE CRITERION: viking.headbutter.a FAIL (previous: FAIL)
-- GAP: [S] viking.ice_archer (ea60323) VERDICT: APPROVE CRITERION: viking.ice_archer.a FAIL (previous: FAIL)
-- GAP: [S] viking.jarl (1bc6d8d) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
-- GAP: [S] ancient.minotaur (f27b023) VERDICT: APPROVE CRITERION: ancient.minotaur.a PASS (previous: FAIL)
-- GAP: [S] viking.jarl (e6d2ba3 + f25a459) VERDICT: APPROVE CRITERION: viking.jarl.b PASS (previous: FAIL)
-- GAP: [S] viking.longship (0b5a856) VERDICT: APPROVE CRITERION: viking.longship.a FAIL (previous: FAIL)
-- CONFIRM ancient.minotaur a FAIL | b PASS | c PASS | d PASS -> open
+- GAP: [S] viking.longship (5c28a14) VERDICT: APPROVE CRITERION: viking.longship.a PASS (previous: FAIL)
+- GAP: [S] viking.jarl (b620406) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
+- GAP: [S] ancient.minotaur (506c4c3) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
+- GAP: [S] viking.ice_archer (75774b2) VERDICT: APPROVE CRITERION: viking.ice_archer.a FAIL (previous: FAIL)
+- GAP: [S] viking.headbutter (ef2e8e9) VERDICT: APPROVE CRITERION: viking.headbutter.a PASS (previous: FAIL)
+- GAP: [S] viking.ice_archer (8b44250) VERDICT: APPROVE CRITERION: viking.ice_archer.b FAIL (previous: FAIL)
+- CONFIRM viking.longship a PASS | b PASS | c PASS | d PASS -> D; viking.headbutter a PASS | b PASS | c PASS | d PASS -> D
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Next ranked [S]: longship a.3 stern scroll; jarl a.3 long braided beard / a.4 shin wraps; ice_archer a.2 team coat (the headbutter's 408 tunic cut) / a.3 hip quiver / b.3 windup draw; headbutter a.2 copper braids (swatch); minotaur a.1 barrel chest (CONFIRM 408 bulk list). [P] jarl b JARL_REST.across 1.15 is fallout of 408's approved [S].
-- brawler a.4 needs an evidence commit first: the idle board lies as a tray over his whole trunk, so a chest beard under it never shows in _idle (408.5 dropped).
-- The CONFIRM failed every proposed-done unit in 402-408 except valkyrie and zeus: the gap critic's PASS is not a done.
+- Next ranked [S]: minotaur a.2 arm shells + mitt fists / a.3 leg shells; ice_archer a.3 hip quiver / b.3 nocked arrow on a bent string; jarl a.4 shin wraps / a.3 narrow lobed beard (jarl a is 3 approved [S] since 406 with strikes - not plateau).
+- brawler a.4: the beard gap is out of attempts (395, 401, 402 rejected; 408 dropped); the idle board lies as a tray over his whole trunk - an evidence commit (re-aim at lineup_viking or a lower camera) comes first.
+- The CONFIRM passed longship and headbutter at 409 after failing every proposed-done unit in 402-408 except valkyrie and zeus.
 - Zeus (D) owes a small guard at runtimeUnit.ts:1053 (a flung body keeps a mesh's own render group) - outside the loop's picks; note only.
-- probe_axes gives a prop's local axes in the torso/root frame; the Jarl's axe rests via _restHalberd (JARL_REST), not the carry attitudes.
+- JARL_REST was approved at 408: re-nudging it as [P] is a ledger reversal until 428.
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```

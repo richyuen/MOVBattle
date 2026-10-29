@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-404 | VALKYRIE_ARMOUR belt and ring seated off torsoMesh position/scale (670efeb) | viking.valkyrie.a | approved
-404 | HEADBUTTER_CAP band seated off the eye beads tops (eyeTopInHead) (47ca693) | viking.headbutter.a | approved
-404 | JARL_WRAPS: maroon forearm wraps, 3 dark bands, tan fur roll at the elbow (9e3df06) | viking.jarl.a | approved
-404 | gunwale rails in darkWood, body tint from a shield face (e3fd388) | viking.longship.a | approved
-404 | brawlerLegs on the ice archer (db12da9) | viking.ice_archer.a | approved
-404 | MINO_SHELL a flat wedge plate with a bent lip, rim bar, swirl (3c3a808 + 53b63d0) | ancient.minotaur.a | approved
 405 | brawlerLegs on the jarl (a3fb035) | viking.jarl.a | approved
 405 | ICE_ARCHER_BAND: the brim a dark leather band with 8 rivet studs (99ac4de) | viking.ice_archer.a | approved
 405 | brawlerLegs on the headbutter, the kit's knee cuffs/boots off (db2616f) | viking.headbutter.a | approved
@@ -46,10 +40,17 @@ for 25 iterations.
 408 | brawler torso beard tail to the belt (8489039, reverted 1d9a84a) | viking.brawler.a | dropped (hidden by the tray board)
 408 | JARL_REST: diagonal rest through _restHalberd, blade broadside (e6d2ba3 + f25a459) | viking.jarl.b | approved
 408 | LONGSHIP_PROW: S-curved neck, head lifted, disc eyes (0b5a856) | viking.longship.a | approved
+409 | LONGSHIP_STERN: tall stern post curling into a spiral scroll (5c28a14) | viking.longship.a | approved
+409 | jarl beard run one grey-brown tube from the jaw into a tied plait (b620406) | viking.jarl.a | approved
+409 | MINO_BARREL: trunk widened/deepened, shoulders out, lathe barrel, hump, thick neck (506c4c3) | ancient.minotaur.a | approved
+409 | ICE_ARCHER_COAT: team shell, full sleeves, belt, coat skirt (75774b2) | viking.ice_archer.a | approved
+409 | HEADBUTTER_COPPER: copper two-tone braids, dark tie, flared tail (ef2e8e9) | viking.headbutter.a | approved
+409 | DRAWS_BEFORE_LOOSE + viking.ice_archer: looses from a full draw (8b44250) | viking.ice_archer.b | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
+viking 401-403 rows (ICE_ARCHER_MANTLE, ICE_ARCHER_EYE_CLEAR, VIKING_BEARD, JARL_BEARD, HEADBUTTER_KIT, LONGSHIP_SHIP, LONGSHIP_HURL.sink) | compacted 409 | 403 | approved | values: git show 2ccd9f2:loop/LEDGER.md
 ancient done units (SARISSA_CAPE/MANTLE, SNAKE_CAP/WRAP/UPRIGHT, BALLISTA_WOOD/PLATES/BOLT/FRAME/STOCK, LOADED_BOLTS) | compacted 397 | 397 | approved | values: git show 8f53efc:loop/LEDGER.md
 farmer.halfling done (HALFLING_STANCE, HALFLING_SHORTS + _CLOTH, shinLength 1.95, HALFLING_TUFT, VEST_CUT, COAT, SHAGGY) | compacted 404 | 402 | approved | values: git show 244af97:loop/LEDGER.md
 viking.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 391 | stats | values: git show e5a0cb5
@@ -63,16 +64,9 @@ ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare, sides, rimGrow, ligh
 ancientDress.ts:MINO_SHELL wedge plate (inX, atY, long, lip, lipBend, thick, rootDeep, tipDeep, faceUp, droop, swirl) | .85, .86, .85, .3, .45, .14, .7, .95, .3, .18, .3 | 404 | approved | .78/.84/.5/.22/.12/.62/.82/.22 (404.6); curved shell + scrolls .3 at 1.3, .24 at .95 (385-403)
 propBuilder.ts:BULL_HEAD (drop, forward, face, tilt, neck/neckTop/neckBottom/neckLean, dewlap) | -.4, .12, .86, .12, 1.0/1.0/1.55/.22, .22 | 406 | approved | .72, .28, 1.0, .15, .42/1.0/1.6/.3 (403); tilt .72 (402, muzzle at the ground); no drop/forward, tilt .5, neck .9/.9/1.5/.35 (382)
 simulationSystem.ts:LONGSHIP_OARS (reach, damage, push) + vehicleBuilder OAR_CHOP (period, strike, up, down, elbow, spread) | 1.5, 12, 1.2; 1.1, .3, -2.75, -.55, -.3, .14 | 403 | approved | the oars dropped at the crash (396-402)
-vikingDress.ts:JARL_BEARD_RUN (ahead, top, bibDrop, bibWide, bibTip, bibDeep, plaitLong, plait, ties) | .82, .04, .36, .5, .55, .14, .36, .13, 2 | 403 | approved | the head cut's bib + .66 braid (402)
-vikingDress.ts:ICE_ARCHER_EYE_CLEAR (rim over the eye beads' top, head heights) | .03 | 403 | approved | cap rise .12 fixed (396-402)
+vikingDress.ts:JARL_BEARD_RUN (ahead, jawIn, jawUp, top, bibDrop, bibWide, bibTip, plaitLong, plait, flat, ties) + JARL_BEARD.color | .82, .45, .1, .04, .4, .62, .4, .4, .18, .4, 2; (.34,.22,.16) glow .14 | 409 | approved | bib cylinder .36/.5/.55 + plait .36/.13, colour (.5,.28,.14) glow .2 (402-408)
 vikingDress.ts:HEADBUTTER_CAP (dome, tall, strip, stripProud, eyeClear) + unitVisuals headSize | 1.1, .72, .2, .04, .03 off eyeTopInHead; 1.3 | 404 | approved | rise .16 fixed (403); 1.16, 1.04, no strip; headSize 1.8 (392-402)
 viking c/done rows (BERSERKER_ARMPITS, BRAWLER_HELM, DIVE, HEADBUTT + SPRAWL.delay, headbuttSprawl) | compacted 406 | 401 | approved | values: git show 9c743e0:loop/LEDGER.md
-vikingDress.ts:VIKING_BEARD (burnTop, burn, jaw, jawY, jawZ, locks, lockLong, braidLong, band, tuft; per cut jaw/jawY/jawZ, stacheLow/stacheZ, burns, braidLong) | .2, .22, 1.2/.6/.62, .66, .6, 5, .26, .3, .09, .16; brawler 1.5/.95/.8 at 1.0 z .55, stache .62/1.25, no burns | 402 | approved | the brawler's splay 3 locks/1.0 W/.15 up/.75 down rejected and reverted at 402 (a spiked ruff); his bib2 rejected and reverted at 401; brawler 1.38/.74/.82 at 1.06 z .78 (396); berserker cut .9 wide 1.12 tip .48 braid
-vikingDress.ts:JARL_BEARD (color, glow, down, wide, tip, jaw, jawY, jawZ, stacheLow, stacheZ, braidLong) | (.5,.28,.14), .2, .72, .78, .6, .9/.78/.72, .78, .62, .3, 1.1, .66 | 402 | approved | no beard (393-401); critic 402: a short chin mass, the plait hidden by the hands
-vikingDress.ts:ICE_ARCHER_MANTLE (wide, thick, sink, ahead, flat, points, point, shoulderLong, lean, lumps, lump; snow) | .8, .3, .05, .04, .82, 10, .32, .5, .6, 8, .52; (.74,.76,.8) unlit | 402 | approved | none (396-401)
-vikingDress.ts:HEADBUTTER_KIT (fur cut; buckle w share, buckleProud; beltTall, beltAt, beltOut, beltRim; belt colour/rim; furFrom/furOut/furThick) | HEADBUTTER_CREAM lit (0.8,0.6,0.35) self-lit .42, .5, 1.35; .44, -.4, 1.3, .16; (.5,.3,.15)/(.26,.15,.08) glow .2; .16, 1.62, .26 | 402 | approved | unlit fur (0.78,0.58,0.34) emissive = colour, belt .3 tall at -.42 in leather (.3,.17,.09) (400-401); furFrom -.06 furOut 1.54 thick .22 (400); lit cloth fur, buckle .22 at 1.24 (396)
-vehicleBuilder.ts:LONGSHIP_SHIP (`ship` scale, carrier z, carrier scale, carrier raise/spread/elbow) | 1.8, +-.98, .98, -2.62/.2/-.1 | 401 | approved | the hull and crew were root children at scale 1 (400); no carriers
-simulationSystem.ts:LONGSHIP_HURL.sink (share of the airtime over which the hull sinks from the carriers' hands to the keel; carriers pinned at the take-off, hidden at the crash) | .85 | 402 | approved | hull dropped to y 0 and the carriers hidden at the hurl tick (401)
 
 vikingDress.ts:JARL_WRAPS (from, to, out, bands, band, bandOut, furAt, furOut, furThick, lumps; maroon, dark) | .1, .94, 1.24, 3, .05, 1.3, .1, 1.42, .34, 7; (.3,.06,.07), (.16,.03,.04) glow .25 | 404 | approved | bare forearms (before 404)
 vehicleBuilder.ts:LONGSHIP gunwale material + wrapAsBody source | darkWood; first longshipShield face | 404 | approved | teamPrimary rails as the body source (392-403)
@@ -97,3 +91,7 @@ vikingDress.ts:JARL_PELT bear head (skullW/H/D/Y/Z, eye/eyeOut/eyeY/eyeProud, mu
 ancientDress.ts:MINO_STRAP.clear (foot over the girdle's measured top, trunk heights) | .03 | 408 | approved | footY .06 fixed (405-407)
 proceduralAnimation.ts:JARL_REST (ahead, inward, drop, across, forward) | .12, .02, .36, .95, .2 | 408 | approved | HALBERD_REST upright .05 tilt (392-407)
 vehicleBuilder.ts:LONGSHIP_PROW (lift, root, tip, eye, path) | .75, .11, .085, .2, S from (.95,1.3) to (2.0,1.38) | 408 | approved | neck box .18x.66 at y .9, bead eyes .1 (392-407)
+vehicleBuilder.ts:LONGSHIP_STERN (post, r0, r1, turns, root, mid, tip) | [y,z] (.45,-1.26)..(1.5,-1.52), .2, .05, 1.25, .12, .08, .04 | 409 | approved | stern post cylinder .82 + two scroll cylinders at y 1.0 (400-408)
+ancientDress.ts:MINO_BARREL (wide, deep, ahead, profile, hump, humpY, neckFrom/To, neckBottom/Top, neckLean) | 1.35, 1.8, .08, 7 pts .8-1.02-.3, [.95,.24,.7], .98, .92/1.3, .95/.62, .25 | 409 | approved | the body's trunk box (before 409)
+vikingDress.ts:ICE_ARCHER_COAT (out, deep, sleeveOut, cuffTo, belt, beltAt, beltOut, skirt, flare, glow; leather) | 1.06, 1.1, 1.15, .88, .11, .08, 1.08, .8, 1.4, .12; (.26,.12,.06) | 409 | approved | the viking_fur trunk + body tunicSkirt .45/1.5 (before 409)
+vikingDress.ts:HEADBUTTER_HAIR/TIE + HEADBUTTER_COPPER (glow, shade, tail, tailTop, tailFoot) | (.6,.27,.12)/(.2,.1,.06); .14, .72, .3, .75, 1.25 | 409 | approved | (.6,.38,.2)/(.34,.1,.08) glow .22, cone tuft .22 (393-408)
