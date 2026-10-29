@@ -1271,12 +1271,15 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
     const capDeep = frontZ - (chest.position.z - D * F.capBack);
     cap.scaling.set(S * F.capWide * 0.5, H * F.capTall * 0.5, capDeep * 0.5);
     cap.position.set(side * S * F.out, top, frontZ - capDeep * 0.5);
-    const flap = put(MeshBuilder.CreateCylinder("jarlPeltFlap", {
+    // a square-section taper turned flat to the chest, then thinned (both baked before parenting, or the parent's transform is baked in too)
+    const slab = MeshBuilder.CreateCylinder("jarlPeltFlap", {
       height: flapH, diameterTop: S * F.wide, diameterBottom: S * F.wide * F.tip, tessellation: 4,
-    }, scene), fur, body.torso);
-    flap.rotation.y = Math.PI / 4;
-    flap.scaling.set(1, 1, (D * F.deep) / (S * F.wide));
-    flap.bakeCurrentTransformIntoVertices();
+    }, scene);
+    slab.rotation.y = Math.PI / 4;
+    slab.bakeCurrentTransformIntoVertices();
+    slab.scaling.set(1, 1, (D * F.deep) / (S * F.wide));
+    slab.bakeCurrentTransformIntoVertices();
+    const flap = put(slab, fur, body.torso);
     flap.rotation.z = -side * F.lean;
     flap.position.set(side * (S * F.out - Math.sin(F.lean) * flapH * 0.5), flapFoot + flapH * 0.5, frontZ + D * F.proud + D * F.deep * 0.5);
     for (let k = 0; k < F.tufts; k++) {
