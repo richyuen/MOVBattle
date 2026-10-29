@@ -516,10 +516,14 @@ async function main() {
             // again off the chest: the ice archer's idle and lineup showed her back and quiver (critic 396-401 a.4). Her idle's "front" is the head
             // block's own facing (fx, fz), read off its world matrix's z row, so the face is what the swing is measured from. The camera sits on the
             // facing itself: alpha = atan2(fz, fx) (the root rule's yaw - pi/2 is the same thing for the -x facing every idle is shot at).
-            if (a.definition.id === "viking.ice_archer") {
-              window.__wp(a.body.headMesh);
-              const m = a.body.headMesh.getWorldMatrix().m;
-              alpha = Math.atan2(m[10], m[8]) - swing;
+            // [evidence 403] the head block's z row still left a blank head (critic 402): her camera sits on the eye meshes themselves (eye
+            // midpoint minus the head mesh centre), and the flip below is skipped for her
+            const iceArcher = a.definition.id === "viking.ice_archer";
+            if (iceArcher && a.body.leftEye && a.body.rightEye && a.body.headMesh) {
+              const le = window.__wp(a.body.leftEye), re = window.__wp(a.body.rightEye);
+              a.body.headMesh.computeWorldMatrix(true);
+              const hc = a.body.headMesh.getBoundingInfo().boundingBox.centerWorld;
+              alpha = Math.atan2((le.z + re.z) / 2 - hc.z, (le.x + re.x) / 2 - hc.x) - swing;
             }
             // [evidence 391] the ballista's idle is the wiki render's front three-quarter, high enough to see over the frame: the loaded bolt's leaf
             // head clears the front and the crewman's head shows beyond the rear rail. The 387 rear three-quarter framed the crewman but hid the
@@ -527,7 +531,7 @@ async function main() {
             const ballista = a.definition.id === "ancient.ballista";
             if (ballista) alpha = a.body.root.rotation.y - Math.PI / 2 - 1.55;
             const b = a.body;
-            if (a.definition.id !== "tribal.protector" && b.leftEye && b.rightEye && b.headMesh) {
+            if (a.definition.id !== "tribal.protector" && !iceArcher && b.leftEye && b.rightEye && b.headMesh) {
               const le = window.__wp(b.leftEye), re = window.__wp(b.rightEye);
               b.headMesh.computeWorldMatrix(true);
               const hc = b.headMesh.getBoundingInfo().boundingBox.centerWorld;
@@ -664,6 +668,12 @@ async function main() {
             window.game.runScenarioGalleryValidation(n);
             // the rank runs along z and the camera sits nearly on +x (alpha -.25), so the men turn .35 rad toward -z to put it .6 rad off their front
             for (const u of window.game.listLiveUnits()) if (!u.linkedParent) u.holdHeading(Math.PI / 2 - 0.35);
+            // [evidence 403] the viking rank ends longship then jarl: the 1.8x hull hid the jarl behind its stern (critic 402, jarl a.2 held). He
+            // stands 2.8 m nearer the camera (+x) and 2.6 m back along the rank (-z), in front of the hull inside the frame; nobody else moves
+            if (n === "gallery_faction_viking") {
+              const jarl = window.game.listLiveUnits().find((u) => u.definition.id === "viking.jarl");
+              if (jarl) { const p = jarl.body.root.position.clone(); p.x += 2.8; p.z -= 2.6; jarl.teleportTo(p); }
+            }
             window.advanceTime(50); // riders and crews follow their parent's new yaw on the next tick
             const cam = window.game.getGalleryCamera(n);
             // the tribal rank ends in the mammoth, which the centred camera cropped at the frame's edge (evidence 378): aim at the rank's
