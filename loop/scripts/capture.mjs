@@ -512,7 +512,8 @@ async function main() {
             let alpha = a.body.root.rotation.y - Math.PI / 2 - swing;
             // the halberdier's idle swings to his other side: from the weapon side a navy backdrop boulder sat right beside his helm (evidence 374); the halfling's too: from the weapon side the boulder sat on his head like a beret (evidence 378)
             // the snake archer's held snake covered his chest from the weapon side (evidence 387: baldric and belt hidden): his other side
-            const swapped = a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling" || a.definition.id === "ancient.snake_archer";
+            // [evidence 413] the monk's too: from the weapon side a navy backdrop boulder sat right behind his kasa and read as a lump on the hat (audit 411 a.2)
+            const swapped = a.definition.id === "renaissance.halberd" || a.definition.id === "farmer.halfling" || a.definition.id === "ancient.snake_archer" || a.definition.id === "dynasty.monk";
             if (swapped) alpha += 2 * swing;
             // [evidence 402] a bowman at the ready stands up to .95 rad side-on (proceduralAnimation ready.yaw, hips + chest) with the head turned
             // again off the chest: the ice archer's idle and lineup showed her back and quiver (critic 396-401 a.4). Her idle's "front" is the head
