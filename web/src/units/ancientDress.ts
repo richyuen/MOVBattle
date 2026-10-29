@@ -67,7 +67,7 @@ const MINO_GEAR = { padWide: 1.25, padThick: 0.18, padDeep: 1.15, padTilt: 0.32,
  * standing off behind it). Spec at the build (dressMinotaur): radius, deep, low, over, thick, inX, atY, rim, scroll, scrollAt.
  */
 /* [S] 404 the shell gave way to a flat wedge plate (spec at its build in dressMinotaur). */
-const MINO_SHELL = { inX: 0.78, atY: 0.84, long: 0.5, lip: 0.22, lipBend: 0.45, thick: 0.12, rootDeep: 0.62, tipDeep: 0.82, faceUp: 0.3, droop: 0.22, swirl: 0.3 };
+const MINO_SHELL = { inX: 0.85, atY: 0.86, long: 0.85, lip: 0.3, lipBend: 0.45, thick: 0.14, rootDeep: 0.7, tipDeep: 0.95, faceUp: 0.3, droop: 0.18, swirl: 0.3 };
 const MINO_LEATHER = new Color3(0.66, 0.46, 0.3);
 const MINO_IRON = new Color3(0.42, 0.44, 0.47);
 
