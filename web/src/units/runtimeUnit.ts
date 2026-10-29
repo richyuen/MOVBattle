@@ -379,7 +379,6 @@ export class RuntimeUnit {
     this.animator.locomotionBias = this._resolveLocomotionBias();
     // [S] the minotaur fights bare-fisted: fists carried before the belly, grab then punch (379; proceduralAnimation BULL_FISTS)
     this.animator.bullFists = definition.id === "ancient.minotaur";
-    this.animator.standSquare = definition.id === "viking.headbutter";
     // [S] the sarissa levels his pike in both fists (379; proceduralAnimation PIKE_LEVEL)
     this.animator.levelsPike = definition.id === "ancient.sarissa";
     // [S] the hoplite carries his dory low at the weapon hip, point forward and down (380; proceduralAnimation DORY_CARRY)

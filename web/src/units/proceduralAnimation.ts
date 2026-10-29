@@ -1217,8 +1217,6 @@ export class ProceduralAnimator {
   }
   /** Bare-fisted (BULL_FISTS): carries his fists before the belly and grabs then punches; set by the runtime for the minotaur. */
   bullFists = false;
-  /** [S] 406 stands square on straight legs at rest (the halberdier's HALBERD_SQUARE stance); set by the runtime for the Headbutter. */
-  standSquare = false;
 
   /** The fists carry (BULL_FISTS), stood or marching, eased out under the charge run. */
   private _applyBullFists(): void {
@@ -3608,9 +3606,7 @@ export class ProceduralAnimator {
     if (upright) stance.crouch = Math.min(stance.crouch, JAVELIN_UPRIGHT.crouch);
     // the halberdier stands square, not hip-shot: both legs straight, hips level, a short stride, chest over the hips (HALBERD_SQUARE)
     const wide = this._halflingLegs();
-    // [S] 406 the Headbutter stands square too (standSquare; viking.headbutter.blue.png: upright on straight legs, belt at mid-height; critic 405 a.2:
-    // "belt-to-sole ~43% in a bent crouch")
-    const square = this._salletHalberd() || wide || this.standSquare; // (his halberd's pole is a "shaft" too, so _javelin() finds it: the sallet tells him apart)
+    const square = this._salletHalberd() || wide; // (his halberd's pole is a "shaft" too, so _javelin() finds it: the sallet tells him apart)
     if (square) Object.assign(stance, { tilt: HALBERD_SQUARE.tilt, stride: HALBERD_SQUARE.stride, crouch: 0 });
     // the halfling's own square: wide feet, arms hung (HALFLING_STANCE)
     if (wide) Object.assign(stance, { tilt: HALFLING_STANCE.tilt, stride: HALFLING_STANCE.stride, off: { raise: HALFLING_STANCE.raise, out: HALFLING_STANCE.out, elbow: HALFLING_STANCE.elbow } });
