@@ -2705,7 +2705,9 @@ interface BladeFit { fist: number; stand: number }
  * the fist: a bar guard twice the blade across, a grip the fist closes round, and a pommel block. Returns the blade and how far under its middle the guard sits.
  */
 /** A unit's own cut of the slab sword (weaponVariant): blade .long of his height, .wide of it across, grip .grip fists, the last .point drawn in */
-interface SlabCut { long: number; wide: number; grip: number; point: number; lug?: number; lugAt?: number; fists?: string; seat?: number }
+interface SlabCut { long: number; wide: number; grip: number; point: number; lug?: number; lugAt?: number; fists?: string; seat?: number; wings?: boolean }
+/** [S] 406 the Valkyrie Sword's winged gold hilt (spec at buildSlabSword's wings) */
+const SWORD_WINGS = { wingFeathers: 3, wingLong: 3.4, wingSweep: 0.32, gold: new Color3(0.88, 0.58, 0.1), glow: 0.5 };
 /*
  * [S] the squire's longsword (352; medieval.squire.red.png, card Appearance "a Longsword"): a long thin blade that runs from his hands to above his head, not a
  * short broad arming sword. LONGSWORD: blade .long of his height and .wide of it across, a hand-and-a-half grip .grip fists, drawn to a point over its last .point.
@@ -2718,7 +2720,7 @@ const LONGSWORD: SlabCut = { long: 0.62, wide: 0.045, grip: 2.6, point: 0.14, fi
  * hip to well above her head, about as long as she is tall). VALKYRIE_SWORD: blade .long of her standing height, .wide of it across, a one-hand grip .grip
  * fists, drawn to a point over its last .point. One in each fist (unitVisuals weaponVariant/offhandVariant), on the plain sword's mount and guard.
  */
-const VALKYRIE_SWORD: SlabCut = { long: 0.98, wide: 0.04, grip: 1.9, point: 0.12 };
+const VALKYRIE_SWORD: SlabCut = { long: 0.98, wide: 0.04, grip: 1.9, point: 0.12, wings: true };
 /*
  * [S] the King's Zweihander, retried (352; medieval.king.red.png, card "a towering Great Sword", Appearance "German Zweihander"): sword and grip together
  * longer than he is tall. ZWEI: blade .long of his height, .wide of it across (twice 351's hair-thin .024), drawn in over its last .point; parrying lugs .lug
@@ -2767,6 +2769,31 @@ function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color
   pommel.parent = blade;
   pommel.material = mat(scene, accent, 0, "metal");
   if (cut?.fists) new TransformNode(cut.fists, scene).parent = blade;
+  // [S] 406 the winged gold hilt (CONFIRM 404 b.2: "a short dark/black bar guard"; viking.valkyrie.red.png, .png: a gold crossguard swept up into a wing
+  // either side of the blade, a gold grip and pommel). Spec in fists: each wing .wingFeathers flat gold slabs fanned from the guard's end, the longest
+  // .wingLong fists out along the guard's line, each next one shorter and swept .wingSweep rad more up toward the point; the bar, grip and pommel all in
+  // the same gold (cloth, self-lit: "metal" renders near black under swiftshader, LESSONS), the grip a shade darker.
+  if (cut?.wings) {
+    const W = SWORD_WINGS;
+    const gold = mat(scene, W.gold, W.glow, "cloth");
+    guard.material = gold;
+    pommel.material = gold;
+    grip.material = mat(scene, W.gold.scale(0.7), W.glow, "cloth");
+    const barHalf = Math.max(width * 2, fit.fist * 5) * 0.5;
+    for (const side of [1, -1]) {
+      for (let k = 0; k < W.wingFeathers; k++) {
+        const long = fit.fist * W.wingLong * (1 - k * 0.22);
+        const feather = MeshBuilder.CreateCylinder(`${name}Wing`, { height: long, diameterBottom: guardHeight * 1.5, diameterTop: guardHeight * 0.35, tessellation: 4 }, scene);
+        feather.scaling.z = 0.45;
+        const tilt = Math.PI / 2 - W.wingSweep * (k + 1);
+        feather.rotation.z = -side * tilt;
+        feather.position.set(side * (barHalf * 0.55 + Math.sin(tilt) * long * 0.5), -hilt + Math.cos(tilt) * long * 0.5 + guardHeight * 0.2, 0);
+        feather.material = gold;
+        feather.convertToFlatShadedMesh();
+        feather.parent = blade;
+      }
+    }
+  }
   if (cut?.lug && cut.lugAt) {
     for (const side of [1, -1]) {
       const lug = MeshBuilder.CreateCylinder(`${name}Lug`, { height: cut.lug * fit.stand, diameterBottom: width * 0.7, diameterTop: width * 0.12, tessellation: 4 }, scene);
