@@ -521,10 +521,51 @@ const JARL_BEARD = { color: new Color3(0.5, 0.28, 0.14), glow: 0.2, down: 0.72, 
 /** The Jarl's brown beard ending in a long tied plait, between the bear hood's curtains (spec at JARL_BEARD). */
 export function jarlBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   const J = JARL_BEARD;
-  return vikingBeard(scene, body, {
-    color: J.color, glow: J.glow, down: J.down, wide: J.wide, tip: J.tip, braid: true, stache: true,
-    jaw: J.jaw, jawY: J.jawY, jawZ: J.jawZ, stacheLow: J.stacheLow, stacheZ: J.stacheZ, burns: false, braidLong: J.braidLong,
+  const head = vikingBeard(scene, body, {
+    color: J.color, glow: J.glow, down: J.down, wide: J.wide, tip: J.tip, braid: false, stache: true,
+    jaw: J.jaw, jawY: J.jawY, jawZ: J.jawZ, stacheLow: J.stacheLow, stacheZ: J.stacheZ, burns: false,
   });
+  return [...head, ...jarlBeardRun(scene, body)];
+}
+
+/*
+ * [S] 403 the Jarl's beard runs on down his chest (re-audit 403 a.1: "a short tan jaw chunk under the nose, cut off by the mantle's front edge, no
+ * plait"; viking.jarl.red.png: a broad brown beard from the chin over the chest, narrowing into a long braid tied red at mid-chest). The head-hung bib
+ * cannot run down the torso (LESSONS: at the chest's z it sits inside the chest box, and the pelt's mantle covers it), so the run is torso-parented,
+ * stood in front of the mantle's front plane (JARL_PELT.mantleDeep of the chest depth) at .ahead of the depth:
+ *   bib: a tapered faceted block from under the chin (.top of the chest height over the neck joint) down .bibDrop of the chest height, .bibWide of the
+ *     chest width across at its top narrowing to .bibTip of that, .bibDeep deep;
+ *   plait: from the bib's foot down .plaitLong of the chest height, .plait of the chest width thick, with .ties red ties and a short tuft at its end.
+ * The head cut keeps the jaw mass and moustache; its own short bib and braid are dropped so only this run hangs below the chin.
+ */
+const JARL_BEARD_RUN = { ahead: 0.82, top: 0.04, bibDrop: 0.36, bibWide: 0.5, bibTip: 0.55, bibDeep: 0.14, plaitLong: 0.36, plait: 0.13, ties: 2, tie: new Color3(0.55, 0.1, 0.08) };
+function jarlBeardRun(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const R = JARL_BEARD_RUN, J = JARL_BEARD;
+  const mf = getMaterialFactory();
+  const hair = mf.get("cloth", J.color, { emissive: J.color.scale(J.glow) });
+  const tieMat = mf.get("cloth", R.tie, { emissive: R.tie.scale(0.25) });
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const z = chest.position.z + D * Math.max(R.ahead, JARL_PELT.mantleDeep + 0.1);
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat = hair): Mesh => { m.material = mat; m.parent = body.torso; m.convertToFlatShadedMesh(); out.push(m); return m; };
+  const topY = body.neck.position.y + H * R.top;
+  const bibH = H * R.bibDrop;
+  const bib = put(MeshBuilder.CreateCylinder("jarlBeardBib", { height: bibH, diameterTop: W * R.bibWide, diameterBottom: W * R.bibWide * R.bibTip, tessellation: 6 }, scene));
+  bib.scaling.z = (D * R.bibDeep) / (W * R.bibWide);
+  bib.position.set(0, topY - bibH * 0.5, z);
+  const plaitH = H * R.plaitLong;
+  const footY = topY - bibH;
+  const plait = put(MeshBuilder.CreateCylinder("jarlBeardPlait", { height: plaitH, diameterTop: W * R.plait, diameterBottom: W * R.plait * 0.8, tessellation: 5 }, scene));
+  plait.position.set(0, footY - plaitH * 0.5, z + D * 0.02);
+  for (let k = 0; k < R.ties; k++) {
+    const tie = put(MeshBuilder.CreateCylinder("jarlBeardTie", { height: H * 0.035, diameter: W * R.plait * 1.25, tessellation: 6 }, scene), tieMat);
+    tie.position.set(0, footY - plaitH * (0.45 + 0.4 * k), z + D * 0.02);
+  }
+  const tuft = put(MeshBuilder.CreateCylinder("jarlBeardTuft", { height: H * 0.08, diameterTop: W * R.plait * 1.1, diameterBottom: 0, tessellation: 5 }, scene));
+  tuft.position.set(0, footY - plaitH - H * 0.04, z + D * 0.02);
+  return out;
 }
 
 /**
