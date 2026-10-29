@@ -54,7 +54,7 @@ const MINO_GIRDLE = { lo: -0.3, hi: 0.03, proudX: 1.03, proudZ: 1.1, flare: 1.04
 const MINO_PAULDRON = { wide: 0.42, tall: 0.55 };
 const MINO_SASH = { sash: 0.3, thick: 0.03, buckle: 0.17, tuft: 0.22 };
 /** [S] 405 the sash as a proud slab (spec at its build in dressMinotaur). */
-const MINO_STRAP = { wide: 0.44, proud: 0.32, footX: 0.95, footY: 0.06, buckleAt: 0.3 };
+const MINO_STRAP = { wide: 0.44, proud: 0.32, footX: 0.95, footY: 0.06, buckleAt: 0.3, clear: 0.03 };
 /*
  * [S] the minotaur's gear redone (383; ancient.minotaur.red.png: a patterned team pauldron on his left shoulder, a broad tan sash with a chunky grey
  * square buckle, a scrolled team belt; critic 382: a plain light-blue dome on the wrong shoulder, a thin fur-toned sash, a tiny white diamond buckle, a
@@ -243,7 +243,17 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   // the front three-quarter; the grey square buckle rides that lower run at .buckleAt of the strap from its foot, in front of the slab's face.
   const W = MINO_STRAP;
   const top = { x: chest.midX + side * chest.halfX * 0.75, y: chest.trunk * 0.95 };
-  const foot = { x: chest.midX - side * chest.halfX * W.footX, y: chest.trunk * W.footY };
+  // [S] 408 the strap's foot seated on the girdle's measured top (CONFIRM 405 a.3: the girdle "not readable"; probe_bbox 408: the slab's lower run
+  // and buckle, y 1.15-1.83, lay over the band, y 1.05-1.53; ancient.minotaur.red.png: the strap ends at the right flank above the swirl belt): the
+  // band's top front point is carried from the hip joint's frame into the torso's, and the foot stands .clear of the trunk over it plus the slab's own
+  // half width, so the slab's lowest corner clears the band and the whole belt reads under it.
+  for (let n: Node | null = hipNode; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+  for (let n: Node | null = body.torso; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+  const bandTop = Vector3.TransformCoordinates(
+    Vector3.TransformCoordinates(new Vector3(waist.midX, y1, waist.midZ + waist.halfZ), hipNode.getWorldMatrix()),
+    body.torso.getWorldMatrix().clone().invert(),
+  ).y;
+  const foot = { x: chest.midX - side * chest.halfX * W.footX, y: Math.max(chest.trunk * W.footY, bandTop + chest.trunk * W.clear + chest.halfX * W.wide) };
   const len = Math.hypot(top.x - foot.x, top.y - foot.y);
   const slabD = S.thick * chest.halfX + W.proud * chest.halfX;
   const sash = MeshBuilder.CreateBox("minoSash", { width: chest.halfX * 2 * W.wide, height: len, depth: slabD }, scene);
