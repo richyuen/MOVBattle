@@ -24,8 +24,14 @@ function headExtents(body: ArticulatedBody): Vector3 {
  *   flaps: dark boxes .flapDrop of the head down from the band at each side, .flapWide across and .flapDeep deep (the head's own depth);
  *   spike: a four-sided grey cone .spike of the head tall off the crown, its foot .spikeBase of the head across, with a stud at its foot.
  */
+/*
+ * [S] 403 a low skull cap (CONFIRM 402 a.1: "a full sphere as wide as the shoulders"; viking.headbutter.red.png: a low dome over the brow band, no wider
+ * than the head, a dark strip running up its front from the band to the spike): the head itself is smaller (unitVisuals headSize 1.3), the dome
+ * .dome 1.1 across and .tall .72 high so it hugs the crown, and a dark leather strip .strip of the head across runs over the dome's front from the band
+ * to the spike's foot, standing .stripProud of the dome's own surface.
+ */
 const HEADBUTTER_CAP = {
-  dome: 1.16, tall: 1.04, rise: 0.16, band: 0.15, bandProud: 1.05, studs: 5, stud: 0.11,
+  dome: 1.1, tall: 0.72, rise: 0.16, band: 0.15, bandProud: 1.05, studs: 5, stud: 0.11, strip: 0.2, stripProud: 0.04,
   flapDrop: 0.62, flapWide: 0.2, flapDeep: 0.66, spike: 0.9, spikeBase: 0.2, spikeRise: 0.02, glow: 0.08, darkGlow: 0.06,
 };
 
@@ -63,6 +69,22 @@ export function headbutterCap(scene: Scene, body: ArticulatedBody, teamColor: Co
       radius: e.x * C.stud * 0.5, subdivisions: 1, flat: true,
     }, scene), steel);
     stud.position.set(t * 2 * e.x * C.bandProud * 0.82, bandY, e.z * C.bandProud + e.x * C.stud * 0.18);
+  }
+  // [S] 403 the strip over the dome's front, from the band up to the crown (spec at HEADBUTTER_CAP): short flat slabs laid along the dome's front
+  // quarter arc, each stood .stripProud off the ellipse there
+  const rimY = top - (2 * 0.56 - 1) * e.y * C.tall;
+  const domeRY = e.y * C.tall, domeRZ = e.z * C.dome;
+  const pieces = 5;
+  for (let i = 0; i < pieces; i++) {
+    const a0 = Math.asin(Math.max(-1, Math.min(1, (rimY - top) / domeRY))), a1 = Math.PI / 2;
+    const a = a0 + ((i + 0.5) / pieces) * (a1 - a0);
+    const da = (a1 - a0) / pieces;
+    const y = top + Math.sin(a) * domeRY, z = Math.cos(a) * domeRZ;
+    const len = Math.hypot(Math.cos(a) * domeRY, Math.sin(a) * domeRZ) * da * 1.15;
+    const slab = put(MeshBuilder.CreateBox("headbutterCapStrip", { width: 2 * e.x * C.strip, height: len, depth: e.z * 0.08 }, scene), leather);
+    const nz = Math.cos(a) / domeRZ, ny = Math.sin(a) / domeRY, nl = Math.hypot(nz, ny);
+    slab.position.set(0, y + (ny / nl) * e.z * C.stripProud, z + (nz / nl) * e.z * C.stripProud);
+    slab.rotation.x = -Math.atan2(ny, nz);
   }
   // the ear flaps: a dark panel down each side of the face, from the band to under the jaw
   for (const side of [-1, 1]) {

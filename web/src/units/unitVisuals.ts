@@ -388,7 +388,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ VIKING ═══════════════════════
   // [S] 392 the Headbutter's own spiked team cap is vikingDress headbutterCap; the shared viking_helmet's horns, nasal and beard are the Brawler's
   "viking.headbutter": vis(
-    { scale: 1.0, headSize: 1.8, bulk: 1.1 }, "none", "none", "none", "none", "#808080",
+    // [S] 403 headSize 1.8 -> 1.3 (CONFIRM 402 a.1: a ball head 28% of his height; viking.headbutter.red.png: the capped head about a fifth of it)
+    { scale: 1.0, headSize: 1.3, bulk: 1.1 }, "none", "none", "none", "none", "#808080",
     undefined,
     { posePreset: "brute", materialPreset: "viking_fur" },
   ),
