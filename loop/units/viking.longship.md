@@ -1,25 +1,23 @@
 # viking.longship
-Status: open   Audited: 391 (re), 395-402, 403 (CONFIRM)   Done: -
+Status: open   Audited: 391 (re), 395-402, 403 (CONFIRM), 407 (CONFIRM)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (3 since 403; the CONFIRM's list, struck 1 at 404, 2 at 405, 3 at 406)
- 4. carriers in unit_viking.longship_idle: plain team mannequins - TABS: bearded vikings with a brown braided beard, a horned headband and a belt with a round buckle (ref: .red.png, .blue.png)
-  (struck 1 at 404: the gunwale rails now timber; struck 2 at 405: team shield faces with plank seams and a dark boss; struck 3 at 406: a curved hull swept up fore and aft)
-b PASS (399; CONFIRM 403)
-c PASS (403; CONFIRM 403)
+a FAIL (0 since 407; the CONFIRM's list)
+ 1. prow neck in unit_viking.longship_idle - a squat box head sits just above the gunwale at the bow - TABS: a tall S-curved dragon/seahorse prow neck rising about a hull-depth above the hull, dominating the silhouette (ref: viking.longship.red.png, .blue.png, .jpg)
+ 2. prow eye in lineup_viking - a small white bead - TABS: a large white disc eye with a black pupil on the side of the head, readable at distance (ref: viking.longship.jpg, .blue.png)
+ 3. stern post in unit_viking.longship_idle - a blunt log end barely above the gunwale - TABS: a tall stern curling into a spiral scroll (ref: viking.longship.jpg)
+b PASS (399; CONFIRM 403, 407)
+c PASS (403; CONFIRM 403, 407)
 d PASS (cost 1000, hp 17.46x)
-## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a carriers - blocker 4: dress the carriers (vehicleBuilder buildLongship) with a braided brown beard (brawlerBeard), a horned headband and jarlBelt's round-buckle belt - ref: .red.png - ours: unit_viking.longship_idle.png
+## Ranked gaps (the CONFIRM gave none: each criterion's first blocker)
+1. [S] a prow - blocker 1: a tall S-curved prow neck about a hull-depth over the gunwale, the head on top (vehicleBuilder buildLongship prow) - ref: .jpg - ours: unit_viking.longship_idle.png
 ## Attempts (iter | gap | criterion | verdict: approved, rejected, rejected-kept, dropped)
 392-399 | clinker hull; rig (393 rejected); oars + crew; team shields; hurl + crush + disembark (c PASS 396); paddle blades, timber, stout crew (b PASS 399) [S] | a,b,c | approved
-400 | deep hull: 4 strakes, deck .4, stem, scroll stern (c0da83d) | a | approved (struck 1)
-401 | two carriers + the ship at 1.8x held overhead (e0fbb2c) | a | approved (a PASS; c reopened by CONFIRM)
-402-403 | hull keeps its height at the hurl, sinks over .85 (4c0305e); landed oarsmen chop with their oars (0d30de1) | c | approved (c PASS); CONFIRM failed a
-404 | gunwale rails in darkWood; the vehicle body (team tint) source is the first shield face (e3fd388) | a | approved (struck 1)
-405 | shields: whole team face, 3 dark plank seams, dark boss, the dark half gone (1bd1f2d) | a | approved (struck 2)
-406 | SHEER: strakes, rails and deck curved, bellied amidships, swept up fore and aft; shields on the curve (b38c4d7) | a | approved (struck 3)
+400-403 | deep hull (c0da83d); carriers + 1.8x ship (e0fbb2c); hull keeps height at the hurl (4c0305e); oarsmen chop (0d30de1) | a,c | approved; CONFIRM 403 failed a
+404-406 | timber rails (e3fd388); shields with seams + boss (1bd1f2d); SHEER curved hull (b38c4d7) | a | approved (struck 1, 2, 3)
+407 | LONGSHIP_CARRIER: braided brown beard, horned headband, round-buckle belt (562d7f1) | a | approved (struck 4, a PASS); CONFIRM failed a (new list)
 ## Rejected (last 4)
 - rig [S] [1] - 393: a short mast, yard and two sheets - the rig is not in the reference at all; the T-frame reads as a gallows
 ## Notes (max 3 lines)
-- 406 critic (minor): the strake ends splay and overlap raggedly at bow and stern; the bow post is not tall and the stern does not curl (first-audit miss, not a blocker).
-- 405 critic (minor): the seams read as bold black stripes; TABS has thinner brown plank lines. 404: wrapAsBody's team tint comes from the first longshipShield face.
-- 403: OAR_CHOP (vehicleBuilder swingLongshipCrew) poses the landed crew; simulationSystem _chopOars lands the blows, not hit-logged.
+- 407 gap critic (minor): the carriers' headband reads pale grey, not dark leather.
+- 406 critic (minor): the strake ends splay and overlap raggedly at bow and stern.
+- 403: OAR_CHOP poses the landed crew; simulationSystem _chopOars lands the blows, not hit-logged.

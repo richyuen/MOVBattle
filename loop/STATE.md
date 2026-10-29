@@ -1,5 +1,5 @@
 # Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
-Iteration: 406   Batch: ancient+viking (6-7/19)   Consecutive empty: 0   Done: 35/139   Parked: 1
+Iteration: 407   Batch: ancient+viking (6-7/19)   Consecutive empty: 0   Done: 35/139   Parked: 1
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,25 +23,25 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-406 (BASE 9c743e0): [S] minotaur a.1 head up on a tall neck (73bf52a) approved, struck 1+2 | [S] jarl a.2 belt, no mantle/hem (293835c) approved, a PASS; CONFIRM failed a, b (new lists) | [S] headbutter a.2 standSquare + legLength 1.22 (e25bd21) REJECTED, reverted | [S] valkyrie b.2 gold winged hilt (4d48164) approved, b PASS; CONFIRM agreed -> D | [S] ice_archer b.1 slender recurve bow (8dbee1a) approved, struck 1 | [S] longship a.3 curved hull (b38c4d7) approved, struck 3 | [S] zeus a.3 emblem off the beard foot (31197fe) approved, a PASS; CONFIRM agreed -> D | [R] brawler skipped - 6/7, 8 struck
-405 (BASE 2477188): [S] jarl a.4 brawlerLegs (a3fb035) approved, struck 4 | [S] ice_archer a.4 riveted band (99ac4de) approved, a PASS; CONFIRM failed a, b (new lists) | [S] headbutter a.2 brawlerLegs (db2616f) approved, 2 stands | [S] valkyrie b.1 VALKYRIE_SWORD (2e4602e) approved, struck 1 | [S] longship a.2 shields (1bd1f2d) approved, struck 2 | [S] minotaur a.2 sash slab (946334f) approved, a PASS; CONFIRM failed a (new list) | [S] zeus a.3 emblem over the bloom (7738aea) approved, colour clause struck | [R] brawler skipped - 7/7, 6 struck
+407 (BASE 978f707): [S] jarl b.1 crescent axe (f6b95a5) approved, struck 1 | [R] brawler a beard rebuild (9ece9b8) approved, struck 2+5, plateau cleared | [S] jarl a.1 pelt flaps (4859953 + 22d7ed7) approved, struck 1 | [S] headbutter a.2 leg cut (ff93093) approved, a PASS; CONFIRM failed a (new list) | [S] ice_archer b.2 upright carry (1936db1 + a65dfd2) approved, 2 stands | [S] longship a.4 carrier dress (562d7f1) approved, a PASS; CONFIRM failed a (new list) | [S] minotaur a.4 slim legs on hooves (8f84140) approved, struck 4 - 7/7, 7 struck
+406 (BASE 9c743e0): [S] minotaur a.1 tall neck (73bf52a) approved | [S] jarl a.2 belt (293835c) approved; CONFIRM failed a, b | [S] headbutter a.2 standSquare (e25bd21) REJECTED | [S] valkyrie b.2 winged hilt -> D | [S] ice_archer b.1 recurve (8dbee1a) approved | [S] longship a.3 curved hull (b38c4d7) approved | [S] zeus a.3 emblem -> D - 6/7, 8 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] ancient.minotaur (73bf52a) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
-- GAP: [S] viking.jarl (293835c) VERDICT: APPROVE CRITERION: viking.jarl.a PASS (previous: FAIL)
-- GAP: [S] viking.headbutter (e25bd21) VERDICT: REJECT CRITERION: viking.headbutter.a FAIL (previous: FAIL)
-- GAP: [S] viking.valkyrie (4d48164) VERDICT: APPROVE CRITERION: viking.valkyrie.b PASS (previous: FAIL)
-- GAP: [S] viking.ice_archer (8dbee1a) VERDICT: APPROVE CRITERION: viking.ice_archer.b FAIL (previous: FAIL)
-- GAP: [S] viking.longship (b38c4d7) VERDICT: APPROVE CRITERION: viking.longship.a FAIL (previous: FAIL)
-- GAP: [S] ancient.zeus (31197fe) VERDICT: APPROVE CRITERION: ancient.zeus.a PASS (previous: FAIL)
-- CONFIRM viking.jarl a FAIL | b FAIL | c PASS | d PASS -> open; CONFIRM viking.valkyrie 4/4 -> D; CONFIRM ancient.zeus 4/4 -> D
+- GAP: [S] viking.jarl (f6b95a5) VERDICT: APPROVE CRITERION: viking.jarl.b FAIL (previous: FAIL)
+- GAP: [R] viking.brawler (9ece9b8) VERDICT: APPROVE CRITERION: viking.brawler.a FAIL (previous: FAIL, plateau)
+- GAP: [S] viking.jarl (4859953 + 22d7ed7) VERDICT: APPROVE CRITERION: viking.jarl.a FAIL (previous: FAIL)
+- GAP: [S] viking.headbutter (ff93093) VERDICT: APPROVE CRITERION: viking.headbutter.a PASS (previous: FAIL)
+- GAP: [S] viking.ice_archer (1936db1 + a65dfd2) VERDICT: APPROVE CRITERION: viking.ice_archer.b FAIL (previous: FAIL)
+- GAP: [S] viking.longship (562d7f1) VERDICT: APPROVE CRITERION: viking.longship.a PASS (previous: FAIL)
+- GAP: [S] ancient.minotaur (8f84140) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
+- CONFIRM viking.headbutter a FAIL | b PASS | c PASS | d PASS -> open; CONFIRM viking.longship a FAIL | b PASS | c PASS | d PASS -> open
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 407: brawler.a [R] STARVES (last attempt 402): probe_bbox puts his board flat at belly height in the torso frame (y .24-.41, z -.14..+.73); the bib must hang in front of z .73 or lift - decide before writing.
-- Zeus (now D) owes a small guard at runtimeUnit.ts:1053 (a flung body keeps a mesh's own render group) - outside the loop's picks; note only.
-- Next ranked [S]: headbutter a.2 leg kit cut (trousers to mid-shin, not legLength); longship a.4 carrier dress; ice_archer b.2 upright carry / a.1 snow lumps; minotaur a.4 digitigrade legs / a.3 belt clear of the slab; jarl a.1 pelt flaps / b.1 crescent axe head.
-- The red-team trunk under materialPreset viking_fur renders brown-mauve (ice_archer a.2, jarl chest): one fix may serve both.
-- The CONFIRM failed a proposed-done unit in 402-406 (jarl 406 with new a+b lists): the gap critic's PASS is not a done.
+- Next ranked [S]: jarl b.2 diagonal two-handed carry / a.2 big bear head; ice_archer a.1 snow lumps (no attempt on a since 405) / b.3 windup draw; minotaur a.3 belt clear of the muzzle; brawler a.4 torso beard tail in front of the board to the belt (plateau cleared 407); headbutter a.1 plain team tunic (CONFIRM 407); longship a.1 tall S prow neck (CONFIRM 407).
+- The red-team trunk under materialPreset viking_fur renders brown-mauve (ice_archer a.2, jarl chest, likely the headbutter's 'vest' a.1): one fix may serve all three.
+- The CONFIRM failed every proposed-done unit in 402-407 except valkyrie and zeus: the gap critic's PASS is not a done.
+- Zeus (D) owes a small guard at runtimeUnit.ts:1053 (a flung body keeps a mesh's own render group) - outside the loop's picks; note only.
+- probe_axes (407) gives a prop's local axes in the torso/root frame: use it before hanging dress off a held prop.
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
