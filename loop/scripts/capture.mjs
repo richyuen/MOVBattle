@@ -506,8 +506,8 @@ async function main() {
           // [evidence 403] the halfling's wide side-by-side stance read as a walk stride from .6 rad off his front (critic 397-402 a.1; probe: his
           // feet .015 m apart fore-aft, .4 m apart across): his idle swings .2 rad only, near the front-on angle of farmer.halfling.blue.png
           // [evidence 413] the monk's: a navy backdrop boulder sat right behind his kasa from .6 rad and read as a lump on the hat (audit 411 a.2); the
-          // other side flipped back onto it (face check), so his idle swings .3 rad only
-          const swing = a.definition.id === "tribal.protector" ? 1.35 : a.definition.id === "farmer.halfling" ? 0.2 : a.definition.id === "dynasty.monk" ? 0.3 : 0.6;
+          // other side flipped back onto it (face check), so his idle swings .3 rad only; [evidence 414] the samurai's too (the boulder behind his kabuto)
+          const swing = a.definition.id === "tribal.protector" ? 1.35 : a.definition.id === "farmer.halfling" ? 0.2 : a.definition.id === "dynasty.monk" || a.definition.id === "dynasty.samurai" ? 0.3 : 0.6;
           if (on === 1) {
             // the idle look-around can turn the face to the far side (the painter, the spear thrower): when the face points more than .9 rad off
             // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
