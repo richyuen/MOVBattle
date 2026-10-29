@@ -94,6 +94,8 @@ export function headbutterCap(scene: Scene, body: ArticulatedBody, teamColor: Co
  */
 const ICE_ARCHER_CAP = { dome: 1.26, tall: 1.12, rise: 0.12, slice: 0.58, brim: 0.26, brimOut: 1.3, pom: 0.62, pomLump: 0.36, glow: 0.1 };
 const ICE_ARCHER_FUR = new Color3(0.9, 0.74, 0.5);
+/** [S] 403 head heights left between the eye beads' top and the brim's foot (spec in iceArcherCap). */
+const ICE_ARCHER_EYE_CLEAR = 0.03;
 /** The Ice Archer's round team cap with its pale fur brim and snow pom (spec at ICE_ARCHER_CAP). */
 export function iceArcherCap(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const C = ICE_ARCHER_CAP;
@@ -109,7 +111,27 @@ export function iceArcherCap(scene: Scene, body: ArticulatedBody, teamColor: Col
     out.push(m);
     return m;
   };
-  const rise = e.y * C.rise;
+  // [S] 403 the cap seated on the eye line (re-audit 403 a.1: with the idle aimed on her eyes the face under the brim was blank blue - the .rise .12 dome
+  // came down over the eye beads, which hang off the neck in front of the head block; viking.ice_archer.red.png: two big bead eyes right under the brim).
+  // The rim is placed off the eye meshes themselves: the higher eye's top, read into the head's frame, plus half the brim's tube and .eyeClear of H, so the
+  // fur roll sits just over the eyes and the dome rides above them.
+  let rise = e.y * C.rise;
+  const eyes = [body.leftEye, body.rightEye].filter((m): m is Mesh => !!m);
+  if (eyes.length) {
+    const chain: Node[] = [];
+    for (let n: Node | null = eyes[0]; n; n = n.parent) chain.unshift(n);
+    for (const n of chain) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+    body.headMesh.computeWorldMatrix(true);
+    const toHead = body.headMesh.getWorldMatrix().clone().invert();
+    let eyeTop = -Infinity;
+    for (const eye of eyes) {
+      eye.computeWorldMatrix(true);
+      const bb = eye.getBoundingInfo().boundingBox;
+      eyeTop = Math.max(eyeTop, Vector3.TransformCoordinates(new Vector3(bb.centerWorld.x, bb.maximumWorld.y, bb.centerWorld.z), toHead).y);
+    }
+    const rimAt = eyeTop + e.y * (C.brim * 0.5 + ICE_ARCHER_EYE_CLEAR);
+    rise = Math.max(rise, rimAt + (2 * C.slice - 1) * e.y * C.tall);
+  }
   const dome = put(MeshBuilder.CreateSphere("iceArcherCap", {
     diameterX: 2 * e.x * C.dome, diameterY: 2 * e.y * C.tall, diameterZ: 2 * e.z * C.dome, segments: 10, slice: C.slice,
   }, scene), cap);
