@@ -1783,6 +1783,8 @@ export class ProceduralAnimator {
     this._castLift = 0;
     this._castReach = 0;
     this._castLevel = 0;
+    // the ice bow's drawn string and nocked arrow are put back unless a draw is running (it re-poses them, _poseIceNock)
+    if (this._iceNock !== null && (this._state !== AnimState.Attacking || this._attackMotion !== "bow_draw_release")) this._poseIceNock(0);
     switch (this._state) {
       case AnimState.Idle:
         this._animateIdle(dt);
@@ -5284,7 +5286,60 @@ export class ProceduralAnimator {
     set(b.rightKnee, "x", 0.34);
     set(b.leftHip, "x", 0.36);
     set(b.leftKnee, "x", 0.1);
+    this._poseIceNock(draw * (1 - loose) * k);
     if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  /**
+   * [S] 410 the ice bow drawn (CONFIRM 405 b.3: "no ice arrow nocked, the string straight"; viking.ice_archer.jpg): through the draw (weight w over
+   * .2) the straight string is swapped for two halves running from each bow tip to the nock, the nock drawn from the string's middle to the draw
+   * hand by w, and the ice arrow (propBuilder ICE_NOCK) laid from the nock through the grip; all put back at the loose. Only the ice bow carries them.
+   */
+  private _iceNock: { stave: Mesh; string: Mesh; top: Mesh; low: Mesh; arrow: Mesh } | null | undefined = undefined;
+  private _poseIceNock(w: number): void {
+    if (this._iceNock === undefined) {
+      const stave = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "bow" && n.getChildren().some((c) => c.name === "iceBowCarry"));
+      const kid = (name: string): Mesh | undefined => stave?.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === name);
+      const string = kid("string"), top = kid("iceStringTop"), low = kid("iceStringLow"), arrow = kid("iceNockArrow");
+      this._iceNock = stave && string && top && low && arrow ? { stave, string, top, low, arrow } : null;
+    }
+    const N = this._iceNock;
+    if (!N) return;
+    const on = w > 0.2;
+    N.string.setEnabled(!on);
+    N.top.setEnabled(on);
+    N.low.setEnabled(on);
+    N.arrow.setEnabled(on);
+    if (!on) return;
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.leftHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const inv = N.stave.computeWorldMatrix(true).clone().invert();
+    const hand = Vector3.TransformCoordinates(b.leftHand.getAbsolutePosition(), inv);
+    const half = N.string.getBoundingInfo().boundingBox.extendSize.y * N.string.scaling.y;
+    const mid = N.string.position.clone();
+    const nock = Vector3.Lerp(mid, hand, Math.min(1, w));
+    const span = (m: Mesh, from: Vector3, to: Vector3): void => {
+      const d = to.subtract(from);
+      const len = d.length();
+      if (len < 1e-5) return;
+      m.position.copyFrom(from.add(to).scale(0.5));
+      m.scaling.set(1, len, 1);
+      m.rotationQuaternion ??= new Quaternion();
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.scale(1 / len), m.rotationQuaternion);
+    };
+    span(N.top, new Vector3(mid.x, mid.y + half, mid.z), nock);
+    span(N.low, new Vector3(mid.x, mid.y - half, mid.z), nock);
+    // the arrow from the nock through the grip (the stave's middle)
+    const along = new Vector3(0, 0, 0).subtract(nock);
+    along.y = 0;
+    if (along.lengthSquared() < 1e-8) return;
+    along.normalize();
+    const len = N.arrow.getBoundingInfo().boundingBox.extendSize.y * 2;
+    N.arrow.position.copyFrom(nock.add(along.scale(len * 0.5)));
+    N.arrow.rotationQuaternion ??= new Quaternion();
+    Quaternion.FromUnitVectorsToRef(Vector3.Up(), along, N.arrow.rotationQuaternion);
   }
 
   private _animateCrossbowSnap(dt: number): void {

@@ -5283,6 +5283,7 @@ const ICE_BOW = {
   long: 1.0, thick: 0.04, taper: 0.5, bow: 0.1, recurve: 0.035, grip: 0.1, hold: 1.02, crust: 4, flake: 0.07, flakeLift: 0.22, tip: 0.06, glow: 0.16,
   ice: new Color3(0.3, 0.72, 0.95), pale: new Color3(0.72, 0.9, 1.0), wrap: new Color3(0.3, 0.24, 0.2), string: new Color3(0.82, 0.94, 1.0),
 };
+export const ICE_NOCK = { long: 0.5, shaft: 0.016, head: 0.09, headWide: 0.05 };
 function buildIceBow(scene: Scene, s: number, stand: number): Mesh {
   const B = ICE_BOW;
   const L = stand * B.long;
@@ -5328,6 +5329,24 @@ function buildIceBow(scene: Scene, s: number, stand: number): Mesh {
   string.position.z = zs;
   string.parent = stave;
   string.material = mat(scene, B.string, 0.2, "cloth");
+  // [S] 410 the drawn string and the nocked ice arrow (CONFIRM 405 b.3; viking.ice_archer.jpg: the string pulled back in a V to the draw hand, the ice
+  // arrow lying on it from the hand to the grip). Two unit-length string halves and an arrow (a shaft ICE_NOCK.long of the bow with a crystal head),
+  // hidden here; proceduralAnimation _poseIceNock shows them through the draw and stretches the halves from each tip to the nock.
+  for (const name of ["iceStringTop", "iceStringLow"]) {
+    const half = MeshBuilder.CreateCylinder(name, { height: 1, diameter: 0.005 * L, tessellation: 4 }, scene);
+    half.material = string.material;
+    half.parent = stave;
+    half.setEnabled(false);
+  }
+  const nock = MeshBuilder.CreateCylinder("iceNockArrow", { height: ICE_NOCK.long * L, diameter: ICE_NOCK.shaft * L, tessellation: 5 }, scene);
+  nock.material = pale;
+  nock.parent = stave;
+  const head = MeshBuilder.CreateCylinder("iceNockHead", { height: ICE_NOCK.head * L, diameterTop: 0, diameterBottom: ICE_NOCK.headWide * L, tessellation: 4 }, scene);
+  head.position.y = (ICE_NOCK.long + ICE_NOCK.head) * L * 0.5;
+  head.material = stave.material;
+  head.convertToFlatShadedMesh();
+  head.parent = nock;
+  nock.setEnabled(false);
   stave.rotation.z = Math.PI / 2 - B.hold;
   stave.position.y = 0.1 * s;
   // the carry mark: the upright diagonal carry across her front (proceduralAnimation ICE_UPRIGHT; a marker only, no geometry)
