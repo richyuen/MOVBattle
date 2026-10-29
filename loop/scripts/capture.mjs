@@ -542,7 +542,9 @@ async function main() {
               if ((ex * Math.cos(alpha) + ez * Math.sin(alpha)) / el < Math.cos(0.9)) alpha += (swapped ? -2 : 2) * swing;
             }
             // the fencer's wide brim hides his face from above: his idle camera sits level with the head, so the brow shows under the brim (evidence 372)
-            const fencer = a.definition.id === "renaissance.fencer";
+            // [evidence 413] the brawler's idle board lies as a tray over his trunk and hid the chest from above (408: a beard tail to the belt was
+            // invisible, dropped): his idle camera sits level with the chest, as the fencer's, so the tray reads edge-on and the chest shows to the belt
+            const fencer = a.definition.id === "renaissance.fencer" || a.definition.id === "viking.brawler";
             // the mammoth's idle sat on his legs (evidence 378): pulled back 2x and aimed at .75 of the rig, as his motion shots are
             const big = a.definition.id === "tribal.mammoth" ? 2 : 1;
             // a rig under 1.2 m (the halfling, .69 m) gets an idle scale below 1, target and radius both, so his waist reads (evidence 378)
