@@ -197,6 +197,11 @@ const DRAGON_SCALLOPS = 7;
  * trunk), with a dewlap .dewlap of W proud under the jaw so the throat reads in front. The charge still drops the head (BULL_CHARGE pitches the
  * trunk and neck); the 402 low cranium is gone.
  */
+/** [S] 411 the compact muzzle under the eyes and the level horns (spec at the bull_head build); horns [x out, y up, z ahead, share of BULL_HEAD.horn1]. */
+const BULL_MUZZLE = {
+  wide: 0.95, tall: 0.42, deep: 0.62, drop: 0.36, ahead: 0.3, tilt: 0.25,
+  horns: [[1, 0.0, 0.06, 0.5], [1, 0.12, 0.1, 0.3], [0.55, 0.75, 0.2, 0.2]] as [number, number, number, number][],
+};
 const BULL_HEAD = {
   skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, drop: -0.4, forward: 0.12, browY: 0.12, browZ: 0.32, face: 0.86, tilt: 0.12, brow: 0.95, snout: 1.0, faceFlat: 0.75,
   pad: 0.2, eye: 0.34, eyeX: 0.36, eyeY: 0.2, hornGirth: 0.3, horn1: 0.9, hornTaper: 0.72, hornY: 0.32,
@@ -1116,21 +1121,26 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     // [S] 403 the face upright under the eyes (critic 402 a.4: at tilt .72 the muzzle pointed at the ground ahead of the feet; ancient.minotaur.red.png:
     // the long face hangs near plumb from the brow, the muzzle level under the eyes, looking ahead): the face block hangs .tilt .15 off plumb, the
     // muzzle pad's front and its nostrils face straight ahead (level), set on the pad's front half-way down it, not pointing down along the face
-    const faceLong = u(B.face * H);
-    const faceDir = new Vector3(0, -Math.cos(B.tilt), Math.sin(B.tilt));
+    // [S] 411 a compact bull head (CONFIRM 408 a.4: "a long box face whose beige snout block hangs down over the chest, horns lopsided - TABS: a compact
+    // bull head on the thick neck, short broad muzzle just under the eyes, horns spreading level to both sides"; ancient.minotaur.red.png, .blue.png):
+    // the long hanging face block and its pad are gone; under the eyes a short broad muzzle (BULL_MUZZLE) juts forward - a faceted block .wide of W across,
+    // .tall of H, .deep of W, its top .drop H under the brow and .ahead W in front of it, tipped .tilt rad nose-down - with a fur bridge from the brow
+    // into it, and the nostrils on a flat front plate; the horns leave the crown level and turn up only at the tips (BULL_MUZZLE.horns)
+    const M = BULL_MUZZLE;
     const browAt = new Vector3(0, u(B.browY * H), u(B.browZ * W));
-    const face = put(MeshBuilder.CreateCylinder("bullFace", { height: faceLong, diameterTop: u(B.snout * W), diameterBottom: u(B.brow * W), tessellation: 8 }, scene), hide);
-    face.scaling.z = B.faceFlat;
-    along(face, browAt, faceDir, faceLong);
-    const tip = browAt.add(faceDir.scale(faceLong));
-    const pad = put(MeshBuilder.CreateIcoSphere("bullMuzzle", { radiusX: u(B.snout * W * 0.55), radiusY: u(B.pad * H), radiusZ: u(B.snout * W * 0.4), subdivisions: 1 }, scene), pale);
-    pad.position.copyFrom(tip);
-    // the muzzle's flat front plate, standing upright and facing ahead (spec above the face), the nostrils set in it
-    const plate = put(MeshBuilder.CreateBox("bullNosePlate", { width: u(B.snout * W * 0.82), height: u(B.pad * H * 1.3), depth: u(0.08 * W) }, scene), pale);
-    plate.position.copyFrom(tip.add(new Vector3(0, u(-0.02 * H), u(B.snout * W * 0.32))));
+    const tip = browAt.add(new Vector3(0, u(-M.drop * H), u(M.ahead * W)));
+    const snoutBlock = put(MeshBuilder.CreateBox("bullFace", { width: u(M.wide * W), height: u(M.tall * H), depth: u(M.deep * W) }, scene), hide);
+    snoutBlock.position.copyFrom(tip);
+    snoutBlock.rotation.x = M.tilt;
+    const bridge = put(MeshBuilder.CreateBox("bullBridge", { width: u(M.wide * W * 0.7), height: u(M.drop * H * 1.2), depth: u(M.deep * W * 0.6) }, scene), hide);
+    bridge.position.copyFrom(Vector3.Lerp(browAt, tip, 0.5).add(new Vector3(0, 0, u(-0.05 * W))));
+    bridge.rotation.x = 0.35;
+    const plate = put(MeshBuilder.CreateBox("bullNosePlate", { width: u(M.wide * W * 0.9), height: u(M.tall * H * 0.8), depth: u(0.06 * W) }, scene), pale);
+    plate.position.copyFrom(tip.add(new Vector3(0, u(-0.02 * H), u(M.deep * W * 0.5))));
+    plate.rotation.x = M.tilt;
     for (const side of [-1, 1]) {
       const nostril = put(MeshBuilder.CreateCylinder("bullNostril", { height: u(0.05 * W), diameter: u(0.15 * W), tessellation: 6 }, scene), dark);
-      along(nostril, tip.add(new Vector3(side * u(0.17 * W), u(-0.04 * H), u(B.snout * W * 0.38))), new Vector3(0, 0, 1), u(0.05 * W));
+      along(nostril, tip.add(new Vector3(side * u(M.wide * W * 0.22), u(-0.04 * H), u(M.deep * W * 0.5 + 0.03 * W))), new Vector3(0, 0, 1), u(0.05 * W));
       // big round eyes on the cranium's upper front corners, turned a little outward
       const eye = put(MeshBuilder.CreateCylinder("bullEye", { height: u(0.05 * W), diameter: u(B.eye * W), tessellation: 12 }, scene), mat(scene, new Color3(0.95, 0.95, 0.92), 0.3));
       eye.rotation.set(Math.PI / 2, side * 0.45, 0);
@@ -1143,7 +1153,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       // horns: three tapering pieces from the crown's side, out level, then curving up, the tip turned up and a little forward
       let at = new Vector3(side * u(B.skull * W * 0.75), u(B.hornY * H), u(0.05 * W));
       let girth = u(B.hornGirth * W);
-      for (const [dx, dy, dz, share] of B.hornBends) {
+      for (const [dx, dy, dz, share] of M.horns) {
         const long = u(B.horn1 * W) * share;
         const dir = new Vector3(side * dx, dy, dz).normalize();
         const end = girth * B.hornTaper;
