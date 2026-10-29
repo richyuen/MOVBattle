@@ -222,6 +222,8 @@ const SNAKE_UPRIGHT = {
  * the lower one at the near foot). Found by the ice bow's carry mark (propBuilder buildIceBow "iceBowCarry"). The snake archer's upright ready stance
  * (SNAKE_UPRIGHT) with her own stave line: .tip is steeper, about .25 rad off vertical in the root frame (probe_axes), so the bow reads as a tall arc beside her, not a lance.
  */
+/** [S] 411 the ice bow at rest, posed in the world (_restIceBow): its length leant .across rad toward her off side and .forward toward her front. */
+const ICE_REST = { across: 0.42, forward: 0.12 };
 const ICE_UPRIGHT = {
   yaw: 0.12, stagger: 0.06, give: 0.02,
   raise: -0.85, out: -0.2, elbow: -1.3, tip: [0.16, 1, 0.06] as [number, number, number], left: { raise: -0.7, out: -0.38, elbow: -1.4 },
@@ -2104,6 +2106,7 @@ export class ProceduralAnimator {
     this._holdChopDown(dt);
     this._aimMusket(dt);
     this._restHalberd();
+    this._restIceBow();
     this._twoHandPole();
     this._levelPike();
     this._carryDory();
@@ -5296,6 +5299,45 @@ export class ProceduralAnimator {
    * hand by w, and the ice arrow (propBuilder ICE_NOCK) laid from the nock through the grip; all put back at the loose. Only the ice bow carries them.
    */
   private _iceNock: { stave: Mesh; string: Mesh; top: Mesh; low: Mesh; arrow: Mesh } | null | undefined = undefined;
+
+  /**
+   * [S] 411 the ice bow stood at rest (CONFIRM 405 b.2: "held low, tip angled down and forward to the ground like a lance - TABS: upright and diagonal
+   * across the body, upper tip above the hat"; viking.ice_archer.red.png). The 407 carry aimed the stave through the carry attitude, and the bow's own
+   * mount turn (buildIceBow hold) laid it forward; now, standing or walking (not drawing), the stave is posed in the world about its grip: its length
+   * up, leant ICE_REST.across rad toward her off side and .forward toward her front, the string toward her, the arc away. Eased off as she goes limp.
+   */
+  private _restIceBow(): void {
+    if (this._iceNock === undefined) this._poseIceNock(0);
+    const N = this._iceNock;
+    if (!N) return;
+    const st = this._state;
+    if (st !== AnimState.Idle && st !== AnimState.Walking) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const R = ICE_REST;
+    const axis = Vector3.Up().scale(Math.cos(R.across)).addInPlace(outward.scale(-Math.sin(R.across))).addInPlace(fwd.scale(R.forward)).normalize();
+    // the string (the stave's +z) toward her: -fwd, made square to the shaft
+    const z = fwd.scale(-1);
+    z.subtractInPlace(axis.scale(Vector3.Dot(z, axis))).normalize();
+    const x = Vector3.Cross(axis, z).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, axis, z, world);
+    const parentRot = new Quaternion();
+    (N.stave.parent as TransformNode).getWorldMatrix().decompose(undefined, parentRot);
+    const parent = Matrix.Identity();
+    parentRot.toRotationMatrix(parent);
+    const local = Quaternion.FromRotationMatrix(world.multiply(parent.transpose()));
+    const rest = Quaternion.FromEulerAngles(N.stave.rotation.x, N.stave.rotation.y, N.stave.rotation.z);
+    N.stave.rotationQuaternion = Quaternion.Slerp(rest, local, w);
+  }
   private _poseIceNock(w: number): void {
     if (this._iceNock === undefined) {
       const stave = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "bow" && n.getChildren().some((c) => c.name === "iceBowCarry"));
