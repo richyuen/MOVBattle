@@ -4133,10 +4133,26 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "dagger":
     case "shuriken_hand": {
-      const blade = MeshBuilder.CreateBox("dagger", { width: 0.02 * s, height: 0.18 * s, depth: 0.005 * s }, scene);
-      blade.material = mat(scene, new Color3(0.8, 0.8, 0.85));
-      blade.position.y = 0.05 * s;
-      return blade;
+      // [S] 411 a dark steel four-point shuriken (audit 411 b.1: "a thin grey blade - TABS: a dark steel four-point shuriken"; dynasty.ninja.red.png: a
+      // flat dark star about a hand and a half across in each fist, one point down past the fingers): two flat rhombi SHURIKEN.span of the hand scale
+      // long and .waist wide crossed square, .thick deep, a hub ring at the middle, held .drop below the fist, its flat facing out to the side
+      const SHURIKEN = { span: 0.2, waist: 0.055, thick: 0.012, hub: 0.035, drop: 0.07 };
+      const steel = mat(scene, new Color3(0.2, 0.21, 0.24), 0.06);
+      const star = new Mesh("shuriken", scene);
+      star.position.y = -SHURIKEN.drop * s;
+      star.rotation.z = Math.PI / 2;
+      for (const turn of [0, Math.PI / 2]) {
+        const point = MeshBuilder.CreateCylinder("shurikenPoint", { height: SHURIKEN.thick * s, diameter: SHURIKEN.span * s, tessellation: 4 }, scene);
+        point.scaling.z = SHURIKEN.waist / SHURIKEN.span;
+        point.rotation.y = turn;
+        point.parent = star;
+        point.material = steel;
+        point.convertToFlatShadedMesh();
+      }
+      const hub = MeshBuilder.CreateCylinder("shurikenHub", { height: SHURIKEN.thick * s * 1.6, diameter: SHURIKEN.hub * s, tessellation: 8 }, scene);
+      hub.parent = star;
+      hub.material = mat(scene, new Color3(0.45, 0.46, 0.5), 0.08);
+      return star;
     }
     case "blowgun": {
       const tube = MeshBuilder.CreateCylinder("blowgun", { height: 0.38 * s, diameter: 0.026 * s, tessellation: 8 }, scene);

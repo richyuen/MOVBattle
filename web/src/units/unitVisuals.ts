@@ -466,7 +466,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { materialPreset: "dynasty_lacquer" },
   ),
   "dynasty.ninja": vis(
-    { scale: 0.85, bulk: 0.85, armLength: 1.05 }, "shuriken_hand", "none", "none", "none", "#1A1A1A", // 411: his hood is dynastyDress NINJA_HOOD
+    { scale: 0.85, bulk: 0.85, armLength: 1.05 }, "shuriken_hand", "none", "none", "none", "#1A1A1A", "shuriken_hand", // 411 a shuriken in each fist; 411: his hood is dynastyDress NINJA_HOOD
   ),
   "dynasty.dragon": vis(
     { scale: 1.6, bulk: 1.3, headSize: 1.5 }, "none", "dragon_head", "none", "none", "#1A1A1A",
