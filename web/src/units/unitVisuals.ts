@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe";
+  | "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -427,7 +427,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "viking.valkyrie": vis(
     { scale: 1.2, bulk: 1.0, armLength: 1.05 }, "sword", "none", "none", "wings", "#E6E6FA", "sword",
     // [S] 394 her own layered feather wings (propBuilder VALKYRIE_WINGS_LAYERED), not the shared shard fan
-    { wingStyle: "layered" },
+    // [S] 405 ...and her own long Valkyrie Sword in each fist, a blade about her height (propBuilder VALKYRIE_SWORD)
+    { wingStyle: "layered", weaponVariant: "valkyrie_sword", offhandVariant: "valkyrie_sword" },
   ),
   "viking.longship": vis(
     { scale: 1.8, bulk: 2.0, legLength: 0.6 }, "axe", "viking_helmet", "round", "longship_body", "#8B7355",

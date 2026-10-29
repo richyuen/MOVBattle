@@ -2702,6 +2702,12 @@ interface SlabCut { long: number; wide: number; grip: number; point: number; lug
 // .fists: the two-fisted grip marker (proceduralAnimation TWO_FIST_SWORD), the off fist stacked under the weapon fist on the long grip (353)
 const LONGSWORD: SlabCut = { long: 0.62, wide: 0.045, grip: 2.6, point: 0.14, fists: "longswordFists" };
 /*
+ * [S] 405 the Valkyrie Sword (CONFIRM 404 b.1: "about 1/3 to 1/2 of body height"; viking.valkyrie.blue.png: each blade a long thin sword running from her
+ * hip to well above her head, about as long as she is tall). VALKYRIE_SWORD: blade .long of her standing height, .wide of it across, a one-hand grip .grip
+ * fists, drawn to a point over its last .point. One in each fist (unitVisuals weaponVariant/offhandVariant), on the plain sword's mount and guard.
+ */
+const VALKYRIE_SWORD: SlabCut = { long: 0.98, wide: 0.04, grip: 1.9, point: 0.12 };
+/*
  * [S] the King's Zweihander, retried (352; medieval.king.red.png, card "a towering Great Sword", Appearance "German Zweihander"): sword and grip together
  * longer than he is tall. ZWEI: blade .long of his height, .wide of it across (twice 351's hair-thin .024), drawn in over its last .point; parrying lugs .lug
  * long off each side .lugAt above the guard; a long grip .grip fists. It is the greatsword case's slab on the greatsword case's mount, so the blade runs out of
@@ -3342,7 +3348,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "sword":
     case "cutlass": {
-      const { blade, hilt } = buildSlabSword(scene, "blade", fit, accent, false, type === "sword" && variant === "longsword" ? LONGSWORD : undefined);
+      const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;
+      const { blade, hilt } = buildSlabSword(scene, "blade", fit, accent, false, cut);
       // The guard stays where the old one sat on the fist, whatever the blade above it is cut to
       blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
       // The Knight's arming sword (355): grey steel guard, grip and pommel (the metal accent rendered black at the hip), held out by its marker
