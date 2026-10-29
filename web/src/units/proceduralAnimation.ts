@@ -158,12 +158,13 @@ const SCYTHE_SWEEP = { roll: Math.PI / 2, twist: 0.75, cock: 2.0, end: -1.1, low
  */
 const HAY_CARRY = { raise: -0.6, out: 0.1, elbow: -0.85, tip: new Vector3(-0.95, 0.02, 0.32) };
 /*
- * [S] 408 the Jarl's diagonal two-handed carry (CONFIRM 406 b.2: "the haft stands vertical in front of the face"; viking.jarl.red.png, .jpg: the haft
- * held in both fists low across his body, the butt down at his weapon side, the head up and out past his off shoulder). Found by his bear pelt
- * (jarlBearSkull) and taken in place of the upright pole carry: the weapon fist at the hip (.raise, .out, .elbow), the haft's line .tip in his own frame
- * (x toward the weapon side, y up, z forward), across and rising; the off fist still goes onto the haft by _twoHandPole (POLE_GRIP.hpoint).
+ * [S] 408 the Jarl's diagonal two-handed rest (CONFIRM 406 b.2: "the haft stands vertical in front of the face"; viking.jarl.red.png, .jpg: the haft
+ * held in both fists low across his body, the butt down at his weapon side, the head up and out past his off shoulder, the blade broadside). He rests
+ * his poleaxe through the halberd's rest (_restHalberd), which stands the shaft upright; found by his bear pelt (jarlBearSkull) he takes JARL_REST in
+ * its place: the weapon fist .ahead/.inward/.drop of his height from the weapon shoulder (at the hip), the shaft leant .across rad from straight up
+ * toward his off side and .forward rad toward his front, its blade's flat face turned to his front; the off fist rides the shaft (_twoHandPole).
  */
-const JARL_CARRY = { raise: -0.45, out: 0.12, elbow: -0.95, tip: new Vector3(-0.85, 0.48, 0.22) };
+const JARL_REST = { ahead: 0.12, inward: 0.02, drop: 0.36, across: 0.95, forward: 0.2 };
 // A wall man's trunk is carried no further over than this (radians), and his head is brought back up by this share of it, face level over the rim.
 const WALL_TRUNK_MAX = 0.3;
 const WALL_HEAD_LEVEL = 0.9;
@@ -2292,8 +2293,6 @@ export class ProceduralAnimator {
     const potion = this._body.rightHand.getChildren().some((n) => n.name === "potionBall");
     this._potionHang = potion;
     const pick = fork ? 0.9 : this._body.rightHand.getChildren().some((n) => n.getChildren().some((c) => c.name in POLE_GRIP)) ? 0.4 : h(92);
-    // the Jarl stands in his diagonal carry from the first frame (JARL_CARRY; the idle shot is ~100 ms after spawn)
-    if (this._jarlPelted() && pick === 0.4) this._carryTurn = 1;
     // An uprooted tree has one carry, not four (units/secret.tree_giant): the fist at the hip ahead of the thigh, the trunk run out near level to his own side and a
     // little forward, the crown hip-high at his flank, not shouldered or stood up over the line beside him
     const tree = node?.name === "treeClubCarry";
@@ -2307,8 +2306,6 @@ export class ProceduralAnimator {
       ? { raise: ARMING_OUT.raise, out: ARMING_OUT.out, elbow: ARMING_OUT.elbow, tip: new Vector3(ARMING_OUT.tip[0] * side, ARMING_OUT.tip[1], ARMING_OUT.tip[2]).normalize() }
       : sideAxe
       ? { raise: BEARDED_AXE_CARRY.raise, out: BEARDED_AXE_CARRY.out, elbow: BEARDED_AXE_CARRY.elbow, tip: new Vector3(BEARDED_AXE_CARRY.tip[0] * side, BEARDED_AXE_CARRY.tip[1], BEARDED_AXE_CARRY.tip[2]).normalize() }
-      : this._jarlPelted() && pick === 0.4
-      ? { raise: JARL_CARRY.raise, out: JARL_CARRY.out, elbow: JARL_CARRY.elbow, tip: new Vector3(JARL_CARRY.tip.x * side, JARL_CARRY.tip.y, JARL_CARRY.tip.z).normalize() }
       : hayStick
       ? { raise: HAY_CARRY.raise, out: HAY_CARRY.out, elbow: HAY_CARRY.elbow, tip: new Vector3(HAY_CARRY.tip.x * side, HAY_CARRY.tip.y, HAY_CARRY.tip.z).normalize() }
       : lowScythe
@@ -3218,11 +3215,17 @@ export class ProceduralAnimator {
     const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
     const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
     const height = b.metrics.overallHeight * b.root.scaling.y;
-    const R = HALBERD_REST;
+    const jarl = this._jarlPelted();
+    const R = jarl ? JARL_REST : HALBERD_REST;
     const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(R.ahead * height))
       .addInPlace(outward.scale(-R.inward * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
-    this._poseHalberd(R.tilt, w);
+    if (jarl) {
+      // the shaft across him: up, leant toward the off side (-outward) and a little forward (JARL_REST)
+      const J = JARL_REST;
+      const axis = Vector3.Up().scale(Math.cos(J.across)).addInPlace(outward.scale(-Math.sin(J.across))).addInPlace(fwd.scale(Math.sin(J.forward))).normalize();
+      this._poseHalberd(0, w, axis);
+    } else this._poseHalberd(HALBERD_REST.tilt, w);
   }
 
   // A pole or a long gun in the weapon fist (see POLE_GRIP), its span along the shaft from the fist, looked up once
@@ -4918,7 +4921,7 @@ export class ProceduralAnimator {
 
   // The halberd stood in the world at `theta` from straight up toward his front (in the plane through his front and up), the axe's edge leading the way it
   // swings, blended from its rest in the fist by w
-  private _poseHalberd(theta: number, w: number): void {
+  private _poseHalberd(theta: number, w: number, along?: Vector3): void {
     const h = this._halberd();
     if (!h) return;
     if (w <= 0.001) {
@@ -4934,9 +4937,10 @@ export class ProceduralAnimator {
     if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
     fwd.normalize();
     const up = Vector3.Up();
-    const axis = up.scale(Math.cos(theta)).addInPlace(fwd.scale(Math.sin(theta)));
-    // the edge (the plate's -z) along the swing; its +z, the back spike, behind
-    const z = up.scale(Math.sin(theta)).subtractInPlace(fwd.scale(Math.cos(theta)));
+    const axis = along ? along.clone() : up.scale(Math.cos(theta)).addInPlace(fwd.scale(Math.sin(theta)));
+    // the edge (the plate's -z) along the swing; its +z, the back spike, behind; with a given shaft line (`along`, JARL_REST) the plate's flat face
+    // (its x) is turned to his front instead
+    const z = along ? Vector3.Cross(fwd, axis).normalize() : up.scale(Math.sin(theta)).subtractInPlace(fwd.scale(Math.cos(theta)));
     const x = Vector3.Cross(axis, z).normalize();
     const world = Matrix.Identity();
     Matrix.FromXYZAxesToRef(x, axis, z, world);
