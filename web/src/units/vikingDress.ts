@@ -633,6 +633,54 @@ function jarlBeardRun(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 404 the Jarl's forearm wraps (re-audit 403 a.3: "bare team-skin arms from shoulder to mitt"; viking.jarl.red.png, viking.jarl.jpg: dark maroon
+ * wraps from the elbow to the wrist on both forearms, a tan fur roll round the elbow end of each). In each forearm's own frame (limbShell):
+ *   wrap: a maroon sleeve from .from to .to of the forearm, .out of its radius, with .bands darker rings across it so it reads as bound cloth;
+ *   fur: a faceted roll round the wrap's top, .furOut of the radius, its tube .furThick of that, .lumps rounded clumps on it (the Headbutter's roll),
+ *     in the Headbutter's lit tan (HEADBUTTER_CREAM).
+ */
+const JARL_WRAPS = {
+  from: 0.1, to: 0.94, out: 1.24, bands: 3, band: 0.05, bandOut: 1.3, furAt: 0.1, furOut: 1.42, furThick: 0.34, lumps: 7,
+  maroon: new Color3(0.3, 0.06, 0.07), dark: new Color3(0.16, 0.03, 0.04), glow: 0.25,
+};
+/** The Jarl's maroon forearm wraps with a tan fur roll at each elbow (spec at JARL_WRAPS). */
+export function jarlArmWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const J = JARL_WRAPS;
+  const mf = getMaterialFactory();
+  const wrapMat = mf.get("cloth", J.maroon, { emissive: J.maroon.scale(J.glow) });
+  const bandMat = mf.get("cloth", J.dark, { emissive: J.dark.scale(J.glow) });
+  const fur = mf.get("cloth", HEADBUTTER_CREAM.color, { emissive: HEADBUTTER_CREAM.color.scale(HEADBUTTER_CREAM.creamGlow) });
+  const out: Mesh[] = [];
+  for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "jarlWrap", fore, J.from, J.to, J.out, wrapMat));
+    for (let k = 0; k < J.bands; k++) {
+      const at = J.from + ((J.to - J.from) * (k + 1)) / (J.bands + 1);
+      out.push(limbShell(scene, "jarlWrapBand", fore, at - J.band * 0.5, at + J.band * 0.5, J.bandOut, bandMat));
+    }
+    const L = limbBox(fore);
+    const r = Math.max(L.wide, L.deep) * J.furOut;
+    const y = L.mid + L.half - J.furAt * L.half * 2;
+    const flat = L.deep / Math.max(L.wide, L.deep);
+    const ring = MeshBuilder.CreateTorus("jarlWrapFur", { diameter: r * 2, thickness: r * 2 * J.furThick, tessellation: 8 }, scene);
+    ring.parent = fore.parent;
+    ring.position.set(0, y, 0);
+    ring.scaling.z = flat;
+    ring.material = fur;
+    ring.convertToFlatShadedMesh();
+    out.push(ring);
+    for (let i = 0; i < J.lumps; i++) {
+      const a = (i / J.lumps) * Math.PI * 2 + (i % 2 ? 0.22 : 0);
+      const lump = MeshBuilder.CreateIcoSphere("jarlWrapFurLump", { radius: r * J.furThick * 0.92, subdivisions: 1, flat: true }, scene);
+      lump.parent = fore.parent;
+      lump.position.set(Math.cos(a) * r * 0.99, y + (i % 2 ? r * J.furThick * 0.36 : -r * J.furThick * 0.2), Math.sin(a) * r * flat * 0.99);
+      lump.material = fur;
+      out.push(lump);
+    }
+  }
+  return out;
+}
+
 /**
  * The Brawler's dark beard, hung from under his full-face helm's mask: the jaw mass starts BELOW the mask's bottom edge (-1.02 H) and stands proud of the
  * mask's face (1.04 D), so it spills out under the helmet instead of sitting inside it (critic 395: nearly all of it was buried in the mask), with the

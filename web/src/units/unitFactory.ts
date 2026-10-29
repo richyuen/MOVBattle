@@ -17,7 +17,7 @@ import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTr
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
-import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
+import { headbutterBraids, headbutterCap, headbutterKit, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -598,6 +598,8 @@ export class UnitFactory {
       propMeshes.push(...jarlPelt(this._scene, body));
       // [S] ...and his brown beard ending in a long tied plait, between the hood's curtains (402; vikingDress JARL_BEARD)
       propMeshes.push(...jarlBeard(this._scene, body));
+      // [S] 404 ...and maroon forearm wraps with a tan fur roll at each elbow (vikingDress JARL_WRAPS)
+      propMeshes.push(...jarlArmWraps(this._scene, body));
     }
     // [S] the Brawler's full-face Norse helm, no horns (394; vikingDress BRAWLER_HELM), and the dark beard spilling out under its mask (396; VIKING_BEARD)
     if (definition.id === "viking.brawler" && !shouldUseVehicleBody) {
