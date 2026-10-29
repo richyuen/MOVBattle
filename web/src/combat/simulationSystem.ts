@@ -1,5 +1,5 @@
 import { Color3, Mesh, Node, TransformNode, Vector3 } from "@babylonjs/core";
-import { CREW_FIGHT, flyLongshipHull, heaveLongshipCrew, landLongshipCrew, poseWheelbarrowCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
+import { CREW_FIGHT, flyLongshipHull, heaveLongshipCrew, landedOarsmenAt, landLongshipCrew, poseWheelbarrowCrew, swingLongshipCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import { AnimState } from "../units/proceduralAnimation";
 import {
@@ -319,6 +319,8 @@ const LONGSHIP_HURL = {
   reach: 5.5, short: 0.9, rise: 7.5, radius: 3.1, crush: 1.35, fling: 6.5, lift: 5, edge: 0.55, cooldown: 6, sink: 0.85,
   dust: new Color3(0.44, 0.33, 0.2),
 };
+/** [S] 403 the landed oarsmen's oar blows (spec at _chopOars). */
+const LONGSHIP_OARS = { reach: 1.5, damage: 12, push: 1.2 };
 type ChargeSpec = typeof MAMMOTH_CHARGE;
 /*
  * [S] The wheelbarrow's riders fight (349; card Characteristics "the Apple Thrower throws apples and the Farmer stabs any enemy units up close ... combining
@@ -466,6 +468,8 @@ export class SimulationSystem {
   private _hopReadyAt = new Map<RuntimeUnit, number>();
   // [S] the Longship's hurl (LONGSHIP_HURL): each ship in flight, the ground landings it had at take-off, and the blow it carries
   private _hurled = new Map<RuntimeUnit, { landed: number; damage: number; t0: number }>();
+  // [S] 403 each crashed longship and when its oarsmen landed (LONGSHIP_OARS)
+  private _oarsmen = new Map<RuntimeUnit, number>();
   // Fencer recover (FENCER_RECOVER): each sliding man, his flat way back, when it started and the man he faces
   private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit; dist: number; seconds: number }>();
   // Fencer Dodge (FENCER_DODGE): when each fencer may dodge again, and which side he goes next
@@ -604,6 +608,7 @@ export class SimulationSystem {
     this._landedAt.clear();
     this._hopReadyAt.clear();
     this._hurled.clear();
+    this._oarsmen.clear();
     this._recovers.clear();
     this._dodgeReadyAt.clear();
     this._dodgeSide.clear();
@@ -673,6 +678,7 @@ export class SimulationSystem {
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
     if (this._hurled.size > 0) this._landHurledShips(now);
+    if (this._oarsmen.size > 0) this._chopOars(dt, now);
     for (const [held, back] of this._arrowsAway) {
       if (now < back) continue;
       if (!held.isDisposed()) held.setEnabled(true);
@@ -3099,10 +3105,31 @@ export class SimulationSystem {
         }
       }
       landLongshipCrew(unit.body);
+      this._oarsmen.set(unit, now);
       this._logAbility(unit, "ship_crash", now, center);
       this.visualEffects?.spawnTrampleRing(center, LONGSHIP_HURL.radius * 0.62);
       this.visualEffects?.spawnKickDust(center, 3);
       this.visualEffects?.spawnSmokePuff(center, LONGSHIP_HURL.dust);
+    }
+  }
+
+  /**
+   * [S] 403 the landed oarsmen chop with their oars (spec at vehicleBuilder OAR_CHOP; card "the oarsmen disembark and attack enemy units with their
+   * oars"): each step poses the crew's two-handed chop; at the end of each downstroke every oarsman's blow lands on the nearest enemy within
+   * LONGSHIP_OARS.reach m of his feet for .damage, pushed off at .push. Not hit-logged (the crash is the longship's logged hit).
+   */
+  private _chopOars(dt: number, now: number): void {
+    for (const [unit, t0] of this._oarsmen) {
+      if (unit.isDead) { this._oarsmen.delete(unit); continue; }
+      if (!swingLongshipCrew(unit.body, now - t0, dt)) continue;
+      for (const at of landedOarsmenAt(unit.body)) {
+        const foe = this._nearestFoe(at, unit.team);
+        if (!foe) continue;
+        const off = foe.position.subtract(at);
+        off.y = 0;
+        if (off.length() > LONGSHIP_OARS.reach) continue;
+        foe.applyDamage(LONGSHIP_OARS.damage, off.normalize().scale(LONGSHIP_OARS.push));
+      }
     }
   }
 

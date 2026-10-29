@@ -2412,8 +2412,8 @@ export function heaveLongshipCrew(body: ArticulatedBody): void {
 }
 
 /**
- * [S] the oarsmen disembark (396; card Characteristics: the thrown ship's oarsmen get off). At the crash each man still aboard drops the oar he holds
- * (the oar node hangs off his fist) and steps off the deck onto the ground either side of the hull, fore and aft, arms down at his sides. One call lands
+ * [S] the oarsmen disembark (396; card Characteristics: the thrown ship's oarsmen get off). At the crash each man still aboard keeps the oar he holds
+ * (403; it dropped them until then) and steps off the deck onto the ground either side of the hull, fore and aft, the oar raised to chop. One call lands
  * them all; a second call on an already landed crew does nothing.
  */
 /**
@@ -2444,15 +2444,45 @@ export function landLongshipCrew(body: ArticulatedBody): boolean {
     if (man.landed) return;
     man.landed = true;
     moved = true;
-    man.oar.setEnabled(false);
     const side = i % 2 === 0 ? -1 : 1;
     man.body.root.position.set(side * (0.86 + (i === 2 ? 0.16 : 0)), 0, -0.34 + i * 0.52);
-    man.body.leftShoulder.rotation.set(0.1, 0, -0.16);
-    man.body.rightShoulder.rotation.set(0.1, 0, 0.16);
-    man.body.leftElbow.rotation.set(0, 0, 0);
-    man.body.rightElbow.rotation.set(0, 0, 0);
   });
+  // the oars stay in their fists, raised for the first chop (spec at OAR_CHOP)
+  swingLongshipCrew(body, 0);
   return moved;
+}
+
+/*
+ * [S] 403 the landed oarsmen fight with their oars (viking.longship.jpg, card Characteristics "the oarsmen disembark and attack enemy units with their
+ * oars"; critic 402 c.2: the crew stood beside the landed hull empty-handed). The oar stays in the fist it was carried in (the node hangs off the
+ * hand, so it follows the arm); both arms swing it together as a two-handed chop: from .up (shoulder pitch, the oar back over the head) down to .down
+ * (out in front, the blade at a man's chest) over .strike of each .period s, then raised again over the rest; elbows .elbow. The sim
+ * (simulationSystem LONGSHIP_OARS) lands each chop's blow at the end of the downstroke.
+ */
+export const OAR_CHOP = { period: 1.1, strike: 0.3, up: -2.75, down: -0.55, elbow: -0.3, spread: 0.14 };
+/** The landed crew's two-handed oar chop `t` s after the landing (spec at OAR_CHOP). Returns true when this step is a chop's blow (end of a downstroke). */
+export function swingLongshipCrew(body: ArticulatedBody, t: number, dt = 0): boolean {
+  const C = OAR_CHOP;
+  const crew = longshipCrewOf(body);
+  if (!crew) return false;
+  const phase = (t % C.period) / C.period;
+  // 0 -> strike: the downstroke, eased in; strike -> 1: raised back up
+  const down = phase < C.strike ? Math.sin((phase / C.strike) * Math.PI / 2) : 1 - (phase - C.strike) / (1 - C.strike);
+  const pitch = C.up + (C.down - C.up) * down;
+  for (const man of crew) {
+    if (!man.landed) continue;
+    man.body.leftShoulder.rotation.set(pitch, 0, -C.spread);
+    man.body.rightShoulder.rotation.set(pitch, 0, C.spread);
+    man.body.leftElbow.rotation.set(C.elbow, 0, 0);
+    man.body.rightElbow.rotation.set(C.elbow, 0, 0);
+  }
+  const before = ((t - dt) % C.period) / C.period;
+  return dt > 0 && t - dt >= 0 && before < C.strike && phase >= C.strike;
+}
+
+/** The landed oarsmen's world feet, for the sim's oar blows (empty while they are aboard). */
+export function landedOarsmenAt(body: ArticulatedBody): Vector3[] {
+  return (longshipCrewOf(body) ?? []).filter((m) => m.landed).map((m) => { m.body.root.computeWorldMatrix(true); return m.body.root.getAbsolutePosition().clone(); });
 }
 
 /*
