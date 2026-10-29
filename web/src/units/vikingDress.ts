@@ -955,7 +955,16 @@ const BRAWLER_LEGS = {
   thighFrom: 0.06, thighTo: 0.98, thighOut: 1.3, hemFrom: 0.0, hemTo: 0.34, hemOut: 1.36,
   cuffFrom: 0.26, cuffTo: 0.5, cuffOut: 1.52, cuffThick: 0.36, cuffLumps: 7,
   bootFrom: 0.46, bootTo: 1.0, bootOut: 1.14, sole: 0.07, soleOut: 1.06, glow: 0.14,
+  // [S] 410 cloth shin wraps in place of the fur cuff when 1 (LEG_WRAPS)
+  wrap: 0,
 };
+/*
+ * [S] 410 tan cloth shin wraps (CONFIRM 406 a.4 on the Jarl: "thick white fur rolls at the knees - TABS: tan cloth wraps on the shins above brown leather
+ * boots"; viking.jarl.red.png: a baggy khaki wrap round each shin from under the trouser hem to the boot top, bound by darker bands, no fur). With
+ * BRAWLER_LEGS.wrap the fur cuff and its roll give way to a faceted tan sleeve over the cuff's span, .out of the shin's radius, with .bands darker
+ * bindings .band of the span tall, .bandOut of it.
+ */
+const LEG_WRAPS = { color: new Color3(0.55, 0.45, 0.28), dark: new Color3(0.32, 0.24, 0.14), out: 1.42, bands: 2, band: 0.12, bandOut: 1.5, glow: 0.2 };
 /*
  * [S] 407 the Headbutter's cut of the leg kit (blocker a.2: "belt-to-sole about 40% of the height, the fur cuffs stacked right under the shorts at knee
  * level"; 406 critic off viking.headbutter.blue.png: cap 115, belt 490, cuff top 780, sole 1000 px, so the trousers are a third of his height and the
@@ -978,6 +987,8 @@ export function brawlerLegs(scene: Scene, body: ArticulatedBody, teamColor: Colo
   // cream fur that has to read cream and not grey in the shade (LESSONS: a lit fur under the tunic reads grey): flat, out of the glow layer
   const furColor = new Color3(0.9, 0.7, 0.42);
   const fur = mf.get("unlit", furColor, { emissive: furColor });
+  const wrapMat = mf.get("cloth", LEG_WRAPS.color, { emissive: LEG_WRAPS.color.scale(LEG_WRAPS.glow) });
+  const wrapDark = mf.get("cloth", LEG_WRAPS.dark, { emissive: LEG_WRAPS.dark.scale(LEG_WRAPS.glow) });
   const out: Mesh[] = [];
   /** A puffy roll of fur round a limb at `at` of the way down it (a faceted torus plus `lumps` rounded clumps on its face). */
   const furRoll = (limb: Mesh, at: number, outOf: number, thick: number, lumps: number): void => {
@@ -1004,8 +1015,17 @@ export function brawlerLegs(scene: Scene, body: ArticulatedBody, teamColor: Colo
   for (const [thigh, shin] of [[body.leftUpperLeg, body.leftLowerLeg], [body.rightUpperLeg, body.rightLowerLeg]] as const) {
     out.push(limbShell(scene, "brawlerPants", thigh, B.thighFrom, B.thighTo, B.thighOut, pants));
     out.push(limbShell(scene, "brawlerPantsHem", shin, B.hemFrom, B.hemTo, B.hemOut, pants));
-    out.push(limbShell(scene, "brawlerFurCuff", shin, B.cuffFrom, B.cuffTo, B.cuffOut, fur));
-    furRoll(shin, B.cuffFrom, B.cuffOut, B.cuffThick, B.cuffLumps);
+    if (B.wrap) {
+      const span = B.cuffTo - B.cuffFrom;
+      out.push(limbShell(scene, "legWrap", shin, B.cuffFrom - span * 0.15, B.cuffTo + span * 0.1, LEG_WRAPS.out, wrapMat));
+      for (let k = 0; k < LEG_WRAPS.bands; k++) {
+        const at = B.cuffFrom + span * ((k + 0.5) / LEG_WRAPS.bands);
+        out.push(limbShell(scene, "legWrapBand", shin, at - span * LEG_WRAPS.band * 0.5, at + span * LEG_WRAPS.band * 0.5, LEG_WRAPS.bandOut, wrapDark));
+      }
+    } else {
+      out.push(limbShell(scene, "brawlerFurCuff", shin, B.cuffFrom, B.cuffTo, B.cuffOut, fur));
+      furRoll(shin, B.cuffFrom, B.cuffOut, B.cuffThick, B.cuffLumps);
+    }
     out.push(limbShell(scene, "brawlerBoot", shin, B.bootFrom, B.bootTo, B.bootOut, boot));
   }
   for (const foot of body.root.getChildMeshes(false)) {

@@ -612,7 +612,8 @@ export class UnitFactory {
       propMeshes.push(...jarlArmWraps(this._scene, body));
       // [S] 405 ...and the Brawler's leg kit: puffy team trousers, big cream fur calf cuffs over brown boots (re-audit 403 a.4: "slim blue legs
       // straight to plain blue boots"; viking.jarl.red.png: the faction's cut). The shared BRAWLER_LEGS cut, as the ice archer took it in 404.
-      propMeshes.push(...brawlerLegs(this._scene, body, teamColor));
+      // 410: his cut has tan cloth shin wraps in place of the fur cuffs (vikingDress LEG_WRAPS)
+      propMeshes.push(...brawlerLegs(this._scene, body, teamColor, { wrap: 1 }));
       // [S] 406 ...and a dark leather belt with a round buckle at the waist over his bare chest, no tunic hem under it (vikingDress JARL_BELT)
       propMeshes.push(...jarlBelt(this._scene, body));
     }
