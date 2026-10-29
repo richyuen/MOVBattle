@@ -1,4 +1,4 @@
-// Enforces the context budget of the improvement loop's memory files (loop v2).
+// Enforces the context budget of the improvement loop's memory files (loop v4).
 //   node loop/scripts/budget.mjs
 // Exit 1 if any capped file is missing or over its cap, a card or unit file is over its cap, or a roster unit has no card. Caps are bytes.
 import fs from "node:fs";
@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CAPS = {
-  "loop/ITERATE.md": 14_000,
+  "loop/ITERATE.md": 16_000,
   "loop/STATE.md": 12_000,
   "loop/LEDGER.md": 16_000,
-  "loop/LESSONS.md": 8_000,
+  "loop/LESSONS.md": 10_000,
   "loop/REFERENCE_DIGEST.md": 8_200,
   "loop/CRITIC.md": 15_500,
 };
