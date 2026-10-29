@@ -1,5 +1,5 @@
 # Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
-Iteration: 411   Batch: ancient+viking+dynasty (6-8/19)   Consecutive empty: 0   Done: 38/139   Parked: 1
+Iteration: 412   Batch: ancient+viking+dynasty (6-8/19)   Consecutive empty: 0   Done: 39/139   Parked: 1
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -8,8 +8,8 @@ renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer 
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ p | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur -+++ o | zeus ++++ D
-viking: headbutter ++++ D | ice_archer +-++ o | brawler -+++ o | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
-dynasty: samurai ---+ o | firework_archer ---+ o | monk -+-+ o | ninja -+-+ o | dragon ---+ o | hwacha ---+ o | monkey_king ---+ o
+viking: headbutter ++++ D | ice_archer ++++ D | brawler -+++ o | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
+dynasty: samurai ---+ o | firework_archer ---+ o | monk -+-+ o | ninja -+++ o | dragon ---+ o | hwacha ---+ o | monkey_king ---+ o
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
 wild_west: dynamite_thrower ???? q | miner ???? q | cactus ???? q | gunslinger ???? q | lasso ???? q | deadeye ???? q | quick_draw ???? q
@@ -23,24 +23,24 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-411 (BASE 186849d; dynasty audited, stats cc4f7de): [S] ice_archer a.4 shin wraps (4b4db5f) approved, struck 4 (+3 by lineup), a PASS | [S] ice_archer b.2 bow rest (e1dc03c) approved, struck 2, CONFIRM failed b (hands empty) | [S] minotaur a.4 compact head (0469073) approved, struck 4 | [S] monk b.1 bo staff (0f878ea) approved, b PASS | [S] ninja a.1 hood (e572534) approved, struck 1, 2 | [S] ninja b.1 shuriken (d5ebed9) approved, struck 1, 2, b PASS - 6/6, 9 struck
-410 (BASE 27329a5): minotaur arms + leg sleeves, jarl wraps + beard (D), ice_archer quiver + nock - 6/6, 4 struck
+412 (BASE 7d1d920): [S] ice_archer b.1 bow grip in the fist (6ae7e0f + c508944) approved, b PASS, CONFIRM passed - D | [S] monk a.1 tengu mask (2070597) approved, none struck | [S] ninja a.3 gi (b2d03e9) approved, struck 3 | [S] ninja c.1 star in flight (0245af2) approved, c PASS | [S] monk c.1 bo swing (3b45ede + 52ae020) approved, struck 1 | [S] firework_archer a.1 hair (772d55d) approved, struck 1 - 6/6, 5 struck
+411 (BASE 186849d; dynasty audited): ice_archer wraps + bow rest (CONFIRM failed b), minotaur compact head, monk bo, ninja hood + shuriken - 6/6, 9 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] viking.ice_archer (4b4db5f) VERDICT: APPROVE CRITERION: viking.ice_archer.a PASS (previous: FAIL)
-- GAP: [S] viking.ice_archer (e1dc03c) VERDICT: APPROVE CRITERION: viking.ice_archer.b PASS (previous: FAIL)
-- GAP: [S] ancient.minotaur (0469073) VERDICT: APPROVE CRITERION: ancient.minotaur.a FAIL (previous: FAIL)
-- GAP: [S] dynasty.monk (0f878ea) VERDICT: APPROVE CRITERION: dynasty.monk.b PASS (previous: FAIL)
-- GAP: [S] dynasty.ninja (e572534) VERDICT: APPROVE CRITERION: dynasty.ninja.a FAIL (previous: FAIL)
-- GAP: [S] dynasty.ninja (d5ebed9) VERDICT: APPROVE CRITERION: dynasty.ninja.b PASS (previous: FAIL)
-- CONFIRM viking.ice_archer a PASS | b FAIL | c PASS | d PASS -> open
+- GAP: [S] viking.ice_archer (6ae7e0f + c508944) VERDICT: APPROVE CRITERION: viking.ice_archer.b PASS (previous: FAIL)
+- GAP: [S] dynasty.monk (2070597) VERDICT: APPROVE CRITERION: dynasty.monk.a FAIL (previous: FAIL)
+- GAP: [S] dynasty.ninja (b2d03e9) VERDICT: APPROVE CRITERION: dynasty.ninja.a FAIL (previous: FAIL)
+- GAP: [S] dynasty.ninja (0245af2) VERDICT: APPROVE CRITERION: dynasty.ninja.c PASS (previous: FAIL)
+- GAP: [S] dynasty.monk (3b45ede + 52ae020) VERDICT: APPROVE CRITERION: dynasty.monk.c FAIL (previous: FAIL)
+- GAP: [S] dynasty.firework_archer (772d55d) VERDICT: APPROVE CRITERION: dynasty.firework_archer.a FAIL (previous: FAIL)
+- CONFIRM viking.ice_archer a PASS | b PASS | c PASS | d PASS -> D
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Open: ice_archer b (bow in her fist, CONFIRM 411), minotaur a.3 legs, brawler a.4 beard; dynasty all open (audit 411). Next ranked [S]: monk c.1 bo swing / a.1 tengu mask; ninja c.1 star projectile / a.3 gi; ice_archer b bow gripped; minotaur a.3 tapered legs; firework_archer a.1 hair / b.2 rocket; samurai a.1 kabuto / b.1 two-hand hold.
-- brawler a.4: out of attempts; the idle board lies as a tray over his trunk - an evidence commit (re-aim at lineup_viking or a lower camera) comes first. Brawler a is starving at 413.
+- Open: minotaur a.3 legs, brawler a.4 beard; dynasty all open. Next ranked [S]: ninja a.4 trousers; firework_archer b.1 big recurve / c.1 rocket in flight / a.2 robe; monk c.2 knockback / a.2 team hat ([P] tengu brows is 412.2 fallout); samurai a.1 kabuto / b.1 two-hand hold; minotaur a.3 lathed legs; dragon c.1 flame; hwacha a.1 rack; monkey_king b.1 staff.
+- brawler a.4: out of attempts; the idle board lies as a tray over his trunk - an evidence commit (re-aim at lineup_viking or a lower camera) comes first. Brawler a is starving at 413: pick it next iteration.
 - samurai c.1 (Projectile Block) needs a ranged attacker in its capture scene: evidence commit first. firework_archer _release/_flight frame the target out of shot (reframe).
-- Zeus (D) owes a small guard at runtimeUnit.ts:1053 (a flung body keeps a mesh's own render group) - outside the loop's picks; note only.
-- ICE_REST (411) and JARL_REST (408) are approved rows: re-nudging them as [P] is a ledger reversal; the ice archer fix must change the mechanism (grip in fist).
+- Melee release shots are taken at the hit log; a swing that should show must hold its blow (blowLandsIn), as MONK_SWING does via _strikesAtMan.
+- ICE_REST (411), JARL_REST (408) are approved rows: re-nudging them as [P] is a ledger reversal.
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```

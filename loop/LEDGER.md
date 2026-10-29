@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-407 | JARL_CRESCENT: dark steel crescent blade, hooked horns round a hollow back, honed band (f6b95a5) | viking.jarl.b | approved
-407 | [R] BRAWLER_BEARD: near-black jaw mass, torso bib, spill on the board's face (9ece9b8) | viking.brawler.a | approved
-407 | JARL_FLAPS: shoulder caps + long front flaps to the belt, side slabs gone (4859953 + 22d7ed7) | viking.jarl.a | approved
-407 | HEADBUTTER_LEGS cut: trousers to mid-shin cuffs, short boots; shinLength 1.75, torsoLength .82 (ff93093) | viking.headbutter.a | approved
-407 | ICE_UPRIGHT: upright bow carry across her front, iceBowCarry mark (1936db1 + a65dfd2) | viking.ice_archer.b | approved
-407 | LONGSHIP_CARRIER: braided brown beard, horned headband, jarlBelt on the carriers (562d7f1) | viking.longship.a | approved
-407 | MINO_LEGS: thinned thighs/shins, pastern, hock knob, cloven toes (8f84140) | ancient.minotaur.a | approved
 408 | HEADBUTTER_TUNIC: team trunk shell + short sleeves, skirt in the same cloth (51b3972) | viking.headbutter.a | approved
 408 | ICE_ARCHER_SNOWCAP: ruff gone, snow lumps on each shoulder (ea60323) | viking.ice_archer.a | approved
 408 | bear head raised onto his head: eyes, snout, nose, fangs (1bc6d8d) | viking.jarl.a | approved
@@ -44,17 +37,20 @@ for 25 iterations.
 411 | MONK_STAFF bo + _restMonkBo level across the chest, boGrip (0f878ea) | dynasty.monk.b | approved
 411 | NINJA_HOOD: boxy team hood + mask, open eye band (e572534) | dynasty.ninja.a | approved
 411 | SHURIKEN: four-point dark star in each fist (d5ebed9) | dynasty.ninja.b | approved
+412 | _restIceBow grip seat: the stave slid so its grip lands on the fist in the world (6ae7e0f + c508944) | viking.ice_archer.b | approved
+412 | TENGU_MASK: mask plate, orange nose, fanged grimace (2070597) | dynasty.monk.a | approved
+412 | NINJA_GI: loose gi, light V, lapels, knotted sash, sleeves (b2d03e9) | dynasty.ninja.a | approved
+412 | SHURIKEN_FLIGHT: dark four-point star spinning flat (0245af2) | dynasty.ninja.c | approved
+412 | MONK_SWING: bo cocked over the shoulder, swept across; blowLandsIn hold (3b45ede + 52ae020) | dynasty.monk.c | approved
+412 | ARCHER_HAIR: dark hair cap, fall, locks, knot; hat off (772d55d) | dynasty.firework_archer.a | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
 viking 401-403 rows (ICE_ARCHER_MANTLE, ICE_ARCHER_EYE_CLEAR, VIKING_BEARD, JARL_BEARD, HEADBUTTER_KIT, LONGSHIP_SHIP, LONGSHIP_HURL.sink) | compacted 409 | 403 | approved | values: git show 2ccd9f2:loop/LEDGER.md
-ancient done units (SARISSA_CAPE/MANTLE, SNAKE_CAP/WRAP/UPRIGHT, BALLISTA_WOOD/PLATES/BOLT/FRAME/STOCK, LOADED_BOLTS) | compacted 397 | 397 | approved | values: git show 8f53efc:loop/LEDGER.md
+ancient 379-397 rows (MINO_*, BULL_*, SARISSA_*, SNAKE_*, BALLISTA_*, ZEUS_*, SCUTUM/LORICA/ASPIS/DORY, HOPLITE_*, CORINTH_*, BIG_HEADBUTT) | compacted 412 | 397 | approved | values: git show 8f53efc / fad9e5c / 522cb46 / f31835b :loop/LEDGER.md
 farmer.halfling done (HALFLING_STANCE, HALFLING_SHORTS + _CLOTH, shinLength 1.95, HALFLING_TUFT, VEST_CUT, COAT, SHAGGY) | compacted 404 | 402 | approved | values: git show 244af97:loop/LEDGER.md
 viking.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 391 | stats | values: git show e5a0cb5
-ancient.* 379-386 rows (MINO_*, BULL_*, PIKE_LEVEL, CORINTH_*, SNAKE_*, SARISSA_KEEP/KIT, ZEUS_REARM/TOGA/SANDAL/CHAIN, BOLT_SPARK, BALLISTA_*, SB_SANDAL, HOPLITE_CREST, MINO_SHELL/SCROLL) | compacted 387 | 386 | approved | values: git show fad9e5c:loop/LEDGER.md
-ancient.shield_bearer + hoplite done (SCUTUM*, LEGION_HELM, LORICA, ASPIS*, DORY_*, HOPLITE_LEGS) | compacted 385 | 384 | approved | values: git show 522cb46:loop/LEDGER.md
-ancient.* 387-388 rows (ZEUS_BEARD/LOCKS/HAIR, SNAKE_LIVE, BIG_HEADBUTT, SARISSA_FOLD, BALLISTA_CREW/HELM, GROUND_SNAKE, SNAKE_QUIVER, MINO_SASH_FOOT rej) | compacted 389 | 388 | approved | values: git show f31835b:loop/LEDGER.md
 viking 392-409 rows (BEARDED_AXE, JARL_AXE, LEAP_AIR, HEADBUTT, LONGSHIP_*, HEADBUTTER_KIT/BRAID/HAIR/COPPER, ICE_BOW, FROST, BRAWLER_*, JUMP_CHARGE, FLY, VALKYRIE_WINGS) | compacted 411 | 409 | approved | values: git show 186849d:loop/LEDGER.md, 4778c43, cdc71a4
 viking a/b/c rows (LONGSHIP_OARS, LONGSHIP_CREW, LONGSHIP_HULL, ICE_ARROW, JARL_PELT) | compacted 403 | 401 | approved | values: git show 73e45c7:loop/LEDGER.md
 ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare, sides, rimGrow, light, sunk) on the hip joint | -.3, .03, 1.03, 1.1, 1.04, 12, 1.02, .72, .5 | 402 | approved | 1.1, 1.22, 1.12, 8 sides, rims 1.05, outlined scrolls .55 light proud 1.4 (389); 386 band round the trunk base (MINO_SCROLL tall .24 at .04)
@@ -101,3 +97,8 @@ dynastyDress.ts:MONK_STAFF (long, thick, offset, cap, capWide, band) + MONK_REST
 dynastyDress.ts:NINJA_HOOD (out, clear, top, backFrom, sideFrom, chin, maskShade, knot, tail) | 1.12, .05, 1.12, -.15, .72, -1.08, .82, .22, .9 | 411 | approved | ninja_mask ball (before 411)
 propBuilder.ts:SHURIKEN (span, waist, thick, hub, drop) | .2, .055, .012, .035, .07 | 411 | approved | a thin grey blade (before 411)
 dynasty.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 411 | stats | values: git show cc4f7de
+dynastyDress.ts:TENGU_MASK (plate, chin, shade, brow, browTall, scowl, nose, noseOut, noseWide, mouth, mouthY, fang) | 1.04, -.92, .72, .62, .16, .38, .42, .3, .3, .9, -.6, .2 | 412 | approved | bare face (before 412)
+dynastyDress.ts:NINJA_GI (out, deep, hem, light, vWide, vLong, lapel, lapelLong, cross, sash, sashAt, knot, tail, sleeveOut, sleeveTo) | 1.2, 1.25, .08, 1.3, .32, .32, .14, .7, .5, .12, .16, .14, .24, 1.5, .25 | 412 | approved | plain trunk (before 412)
+projectileSystem.ts:SHURIKEN_FLIGHT (span, waist, thick, hub, tilt) | .36, .1, .02, .07, .7 | 412 | approved | 8-point pale team disc (before 412)
+proceduralAnimation.ts:MONK_SWING (back, through, cock, hit, reach, raise, dip) | .9, 1.35, .3, .5, .08, 1.3, .35 | 412 | approved | unarmed shove (before 412)
+dynastyDress.ts:ARCHER_HAIR (clear, top, out, capDeep, fall, fallOut, side, sideDrop, sideFrom, bun) | .08, 1.14, 1.1, 2.1, 2.6, .22, .2, -.85, .35, .42 | 412 | approved | conical_hat (before 412)
