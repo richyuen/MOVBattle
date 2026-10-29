@@ -1236,11 +1236,11 @@ export function headbutterKit(scene: Scene, body: ArticulatedBody, legs = false)
  * the spine, each ending in jagged fur tufts. Fur self-lit .glow so the hood does not read grey under its own overhang.
  */
 const JARL_PELT = {
-  skullW: 1.3, skullH: 0.95, skullD: 1.3, skullY: 0.58, skullZ: -0.1,
-  eye: 0.24, eyeOut: 0.48, eyeY: 0.6, eyeProud: 1.2, pupil: 0.45,
-  muzzle: 0.44, muzzleTall: 0.32, muzzleLong: 0.34, muzzleY: 0.12, muzzleZ: 1.24, muzzleDrop: 0.34,
-  nose: 0.26, noseTall: 0.13, noseZ: 1.24, teeth: 3, tooth: 0.1, toothY: -0.2, toothZ: 1.16,
-  ear: 0.2, earOut: 0.85, earY: 1.3, earZ: -0.2,
+  skullW: 1.45, skullH: 1.0, skullD: 1.35, skullY: 1.25, skullZ: -0.05,
+  eye: 0.3, eyeOut: 0.44, eyeY: 1.5, eyeProud: 1.32, pupil: 0.45,
+  muzzle: 0.66, muzzleTall: 0.42, muzzleLong: 0.72, muzzleZ: 1.3, muzzleDrop: 0.1,
+  nose: 0.34, noseTall: 0.16, fangs: 2, fang: 0.3, fangOut: 0.17, fangClear: 0.05,
+  ear: 0.3, earOut: 0.9, earY: 2.0, earZ: -0.15,
   curtainW: 0.42, curtainD: 0.8, curtainOut: 1.12, curtainZ: -0.06, curtainTop: 0.52, curtainFoot: -1.1,
   drape: 0.18, drapeOut: 0.58, drapeDrop: 0.88, drapeDeep: 0.6, back: 0.85, backDeep: 0.14, tufts: 4, tuft: 0.2, glow: 0.2,
   mantleDeep: 0.68,
@@ -1272,22 +1272,30 @@ export function jarlPelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const skull = put(MeshBuilder.CreateIcoSphere("jarlBearSkull", { radius: 1, subdivisions: 1, flat: true }, scene), fur, body.headMesh);
   skull.scaling.set(e.x * P.skullW, e.y * P.skullH, e.z * P.skullD);
   skull.position.set(0, e.y * P.skullY, e.z * P.skullZ);
-  // the muzzle: a short centred wedge out of the skull's front below the eyes, nose on its tip, teeth under it
+  // [S] 408 the bear head sits ON his head, its face over his brow (CONFIRM 406 a.2: "a small brown cap with stub ears, no snout, googly eyes or fangs
+  // above the face"; viking.jarl.red.png: a large bear head on top of the head, googly eyes, fangs overhanging the face): the skull is raised to
+  // .skullY (its foot just over his eyes) and enlarged, the googly eyes high on its front (.eyeY), and a broad snout .muzzleLong out of its front whose
+  // underside sits .fang + .fangClear head half-heights over his own eye beads (eyeTopInHead), with a dark nose on its tip and two white fangs .fang
+  // long hanging from its front corners down over his brow, clear of his eyes.
+  const eyeTop = eyeTopInHead(body) ?? e.y * 0.4;
+  const muzzleY = eyeTop + e.y * (P.fang + P.fangClear + P.muzzleTall * 0.5);
   const muzzle = put(MeshBuilder.CreateBox("jarlBearMuzzle", {
     width: e.x * P.muzzle, height: e.y * P.muzzleTall, depth: e.z * P.muzzleLong,
   }, scene), muzzleMat, body.headMesh);
-  muzzle.position.set(0, e.y * P.muzzleY, e.z * P.muzzleZ);
+  muzzle.position.set(0, muzzleY, e.z * P.muzzleZ);
   muzzle.rotation.x = P.muzzleDrop;
+  const tipZ = e.z * (P.muzzleZ + P.muzzleLong * 0.5);
   const nose = put(MeshBuilder.CreateBox("jarlBearNose", {
-    width: e.x * P.nose, height: e.y * P.noseTall, depth: e.z * 0.1,
+    width: e.x * P.nose, height: e.y * P.noseTall, depth: e.z * 0.14,
   }, scene), pupilMat, body.headMesh);
-  nose.position.set(0, e.y * (P.muzzleY - P.muzzleTall * 0.55), e.z * P.noseZ);
-  for (let i = 0; i < P.teeth; i++) {
-    const tooth = put(MeshBuilder.CreateCylinder("jarlBearTooth", {
-      height: e.y * P.tooth, diameterTop: 0, diameterBottom: e.x * 0.05, tessellation: 4,
+  nose.position.set(0, muzzleY + e.y * P.muzzleTall * 0.3, tipZ);
+  for (let i = 0; i < P.fangs; i++) {
+    const side = i === 0 ? -1 : 1;
+    const fang = put(MeshBuilder.CreateCylinder("jarlBearTooth", {
+      height: e.y * P.fang, diameterTop: 0, diameterBottom: e.x * 0.12, tessellation: 4,
     }, scene), bone, body.headMesh);
-    tooth.position.set((i - (P.teeth - 1) / 2) * e.x * 0.09, e.y * P.toothY, e.z * P.toothZ);
-    tooth.rotation.z = Math.PI;
+    fang.position.set(side * e.x * P.fangOut, muzzleY - e.y * (P.muzzleTall * 0.5 + P.fang * 0.5), tipZ - e.z * 0.08);
+    fang.rotation.z = Math.PI;
   }
   for (const side of [-1, 1]) {
     // the googly eyes on the skull's front, proud of the fur so nothing can stand in front of them
