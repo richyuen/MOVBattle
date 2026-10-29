@@ -1443,13 +1443,13 @@ function dressMusketeer(scene: Scene, body: ArticulatedBody, teamColor: Color3):
 // shin shows between them (critic 379: shins barely visible above the hairy feet)
 // [S] 402 the shorts cloth is its own UNLIT cut (critic 400/401 a.4: "still light team blue, near the jacket's"; farmer.halfling.blue.png: dark slate
 // team shorts, clearly darker than the jacket): HALFLING_SHORTS_CLOTH.dark of the team colour as an unlit plate with emissive = colour, out of the
-// glow (LESSONS: ACES lifts a lit mid value toward pale, an unlit plate keeps a deep value - the palette's right wall, blue x .3). The turned cuff keeps
-// its lit lighter cloth.
+// glow (LESSONS: ACES lifts a lit mid value toward pale, an unlit plate keeps a deep value - the palette's right wall, blue x .14: at x .3 the idle's
+// bloom still lifted them to the jacket's blue, 402.7). The turned cuff keeps its lit lighter cloth.
 const HALFLING_SHORTS = {
   seat: 1.04, seatTall: 0.3, leg: 1.3, flare: 1.12, long: 0.99, dark: 0.45, glow: 0.14,
   hemLift: 0.03, hemLong: 0.22, hemWide: 0.98, hemFlare: 1.05, cuff: 0.06, cuffOut: 1.1, cuffShade: 0.62,
 };
-const HALFLING_SHORTS_CLOTH = { dark: 0.3 };
+const HALFLING_SHORTS_CLOTH = { dark: 0.14 };
 /*
  * [S] potionseller's hosen and boots (345; farmer.potion_seller.red.png, card Appearance "a pair of dark team-colored hosen along with a pair of brown
  * boots"): both legs in dark team hosen from the hip to the ankle; over the lower shin a brown boot shaft standing a little off the leg, its top turned
