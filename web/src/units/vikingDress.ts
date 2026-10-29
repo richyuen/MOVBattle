@@ -685,7 +685,7 @@ export function berserkerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * moustache, no sideburns (the curtains hang there), and under the bib a long plait .braidLong head heights with three dark ties and a tuft - the beard
  * tied at its end, as the render shows it. Self-lit .glow so the brown stays warm under the bear's muzzle.
  */
-const JARL_BEARD = { color: new Color3(0.34, 0.22, 0.16), glow: 0.14, down: 0.72, wide: 0.78, tip: 0.6, jaw: [0.9, 0.78, 0.72] as const, jawY: 0.78, jawZ: 0.62, stacheLow: 0.3, stacheZ: 1.1, braidLong: 0.66 };
+const JARL_BEARD = { color: new Color3(0.32, 0.25, 0.22), glow: 0.14, down: 0.72, wide: 0.78, tip: 0.6, jaw: [0.62, 0.6, 0.72] as const, jawY: 0.78, jawZ: 0.62, stacheLow: 0.3, stacheZ: 1.1, braidLong: 0.66 };
 /** The Jarl's brown beard ending in a long tied plait, between the bear hood's curtains (spec at JARL_BEARD). */
 export function jarlBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   const J = JARL_BEARD;
@@ -714,9 +714,17 @@ export function jarlBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * height, .bibWide of the chest width across, tapering to .bibTip of that) and on into the plait (.plaitLong, .plait of the chest width), flattened
  * to .flat of its width in depth; .ties red ties round the plait and a tuft at its end. JARL_BEARD.color is the render's grey-brown, darker than the pelt.
  */
+/*
+ * [S] 410 narrowed and braided (critic 409: "the beard's top wider than the face swallows the lower face, a club off the chin; a smooth tube with no
+ * plait lobes; the same brown as the pelt"; viking.jarl.red.png: a grey-brown beard narrower than the face under a visible mouth line, thinning into a
+ * braid of stacked lobes tied red at mid-chest). The jaw mass is cut to JARL_BEARD.jaw .62 of the head's half width; the run starts at the chin
+ * (.jawUp 0), its bib .bibWide of the chest width (about the chin's); below the bib the plait is .lobes faceted lobes, alternately .shade darker,
+ * each .plait of the chest width across, overlapping .overlap of a step, tipped alternately, with the ties and the tuft under them. JARL_BEARD.color
+ * a grey-brown, off the pelt's red-brown.
+ */
 const JARL_BEARD_RUN = {
-  ahead: 0.82, jawIn: 0.45, jawUp: 0.1, top: 0.04, bibDrop: 0.4, bibWide: 0.62, bibTip: 0.4, plaitLong: 0.4, plait: 0.18, flat: 0.4, ties: 2,
-  tie: new Color3(0.55, 0.1, 0.08),
+  ahead: 0.82, jawIn: 0.45, jawUp: 0, top: 0.04, bibDrop: 0.3, bibWide: 0.34, bibTip: 0.55, plaitLong: 0.46, plait: 0.15, flat: 0.5, ties: 1,
+  lobes: 4, overlap: 1.4, shade: 0.75, tie: new Color3(0.55, 0.1, 0.08),
 };
 function jarlBeardRun(scene: Scene, body: ArticulatedBody): Mesh[] {
   const R = JARL_BEARD_RUN, J = JARL_BEARD;
@@ -740,13 +748,20 @@ function jarlBeardRun(scene: Scene, body: ArticulatedBody): Mesh[] {
     [topY, z, rTop],
     [topY - bibH * 0.55, z + D * 0.03, (rTop + rFoot) / 2],
     [footY, z + D * 0.02, rFoot],
-    [footY - plaitH * 0.5, z + D * 0.02, rPlait],
-    [footY - plaitH, z + D * 0.01, rPlait * 0.8],
   ];
   const beard = put(MeshBuilder.CreateTube("jarlBeardRun", {
     path: pts.map(([y, pz]) => new Vector3(0, y, pz / R.flat)), radiusFunction: (i) => pts[i][2], tessellation: 6, cap: Mesh.CAP_ALL,
   }, scene));
   beard.scaling.z = R.flat;
+  const darkHair = mf.get("cloth", J.color.scale(R.shade), { emissive: J.color.scale(R.shade * J.glow) });
+  const step = plaitH / R.lobes;
+  for (let k = 0; k < R.lobes; k++) {
+    const lobe = put(MeshBuilder.CreateIcoSphere("jarlBeardLobe", {
+      radiusX: rPlait, radiusY: step * 0.5 * R.overlap, radiusZ: rPlait * 0.8, subdivisions: 1, flat: true,
+    }, scene), k % 2 ? darkHair : hair);
+    lobe.position.set((k % 2 ? 1 : -1) * rPlait * 0.12, footY - step * (k + 0.5), z + D * 0.02);
+    lobe.rotation.z = (k % 2 ? 1 : -1) * 0.35;
+  }
   for (let k = 0; k < R.ties; k++) {
     const tie = put(MeshBuilder.CreateCylinder("jarlBeardTie", { height: H * 0.04, diameter: rPlait * 2.5, tessellation: 6 }, scene), tieMat);
     tie.scaling.z = 0.7;
