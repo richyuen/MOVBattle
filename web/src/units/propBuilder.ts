@@ -50,6 +50,8 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
  */
 /** [S] 413 the kasa's gold rim and knob (dynasty.monk.red.png). */
 const KASA_GOLD = new Color3(0.86, 0.62, 0.18);
+/** [S] 413 the Firework Archer's bow (variant firework_bow): the stave .long of her height, orange tip caps .cap of its length. */
+const FIREWORK_BOW = { long: 1.15, cap: 0.12, capColor: new Color3(0.92, 0.5, 0.12) };
 const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "hoplite_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
@@ -3898,13 +3900,17 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "crossbow": {
       if (type === "bow" && variant === "snake_bow") return buildSnakeBow(scene, s, fit.stand);
       if (type === "bow" && variant === "ice_bow") return buildIceBow(scene, s, fit.stand);
-      if (type === "bow" && (variant === "longbow" || variant === "brown_longbow")) {
+      if (type === "bow" && (variant === "longbow" || variant === "brown_longbow" || variant === "firework_bow")) {
         // The medieval archer's (352; medieval.archer.red.png: a plain brown longbow as tall as he is, a pale wrap at the grip) is the same stave in
         // BROWN_LONGBOW's colours: brown wood, no tip wraps, the grip wrapped pale and not in the team colour
-        const brown = variant === "brown_longbow";
+        // [S] 413 the Firework Archer's (audit 411 b.1: "a small dark curved stick held low and horizontal - TABS: a large upright brown recurve with
+        // orange tip caps, taller than the torso"; dynasty.firework_archer.jpg, .red.png): the brown longbow's stave FIREWORK_BOW.long of her height,
+        // its grip wrapped dark, each tip capped by an orange cone .cap of the stave long
+        const firework = variant === "firework_bow";
+        const brown = variant === "brown_longbow" || firework;
         // The balloon archer's longbow, built to the spec at LONGBOW: one faceted light-grey stave along +y, thick at the grip and tapering to the tips, bowed a
         // little off its string; tan wraps near each tip and the team colour round the grip. Laid and seated as the plain bow (named "bow", string child).
-        const Lb = fit.stand * (brown ? BROWN_LONGBOW.long : LONGBOW.long);
+        const Lb = fit.stand * (firework ? FIREWORK_BOW.long : brown ? BROWN_LONGBOW.long : LONGBOW.long);
         const r0 = LONGBOW.thick * Lb * 0.5;
         const zs = 0.04 * s;
         const radius = (t: number): number => r0 * (1 - (1 - LONGBOW.taper) * Math.abs(t));
@@ -3924,6 +3930,19 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         const tan = mat(scene, LONGBOW_WRAP, 0.12, "cloth");
         if (!brown) for (const t of LONGBOW.wrapAt) for (const side of [1, -1]) band("bowWrap", t * side, LONGBOW.wrap, 1.3, tan);
         band("bowGrip", 0, LONGBOW.grip, 1.25, brown ? mat(scene, BROWN_LONGBOW.wrap, 0.12, "cloth") : mat(scene, teamColor ?? accent, 0.12, "cloth"));
+        if (firework) {
+          const capMat = mat(scene, FIREWORK_BOW.capColor, 0.14, "cloth");
+          for (const side of [1, -1]) {
+            const t = side * (1 - FIREWORK_BOW.cap);
+            const cap = MeshBuilder.CreateCylinder("bowTipCap", { height: FIREWORK_BOW.cap * Lb, diameterTop: side > 0 ? 0 : radius(t) * 2.4, diameterBottom: side > 0 ? radius(t) * 2.4 : 0, tessellation: 5 }, scene);
+            cap.position.set(0, (t + side * FIREWORK_BOW.cap * 0.5) * Lb * 0.5, zs - LONGBOW.bow * Lb * (1 - t * t));
+            cap.material = capMat;
+            cap.convertToFlatShadedMesh();
+            cap.parent = stave;
+          }
+          // carried upright across her front at rest, as the ice bow (proceduralAnimation ICE_UPRIGHT, found by this mark)
+          new TransformNode("iceBowCarry", scene).parent = stave;
+        }
         const string = MeshBuilder.CreateCylinder("string", { height: Lb * 0.97, diameter: 0.005 * Lb, tessellation: 4 }, scene);
         string.position.z = zs;
         string.parent = stave;

@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -453,6 +453,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     undefined,
     {
       posePreset: "archer",
+      weaponVariant: "firework_bow", // 413: a tall brown bow with orange tip caps (propBuilder FIREWORK_BOW)
       materialPreset: "dynasty_lacquer",
       attachmentPreset: "bow_ready",
       locomotionBiasPreset: "aimed",
