@@ -745,19 +745,88 @@ export function jarlBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
-/**
- * The Brawler's dark beard, hung from under his full-face helm's mask: the jaw mass starts BELOW the mask's bottom edge (-1.02 H) and stands proud of the
- * mask's face (1.04 D), so it spills out under the helmet instead of sitting inside it (critic 395: nearly all of it was buried in the mask), with the
- * moustache hung at the mask's foot and the bib .9 head heights down onto the chest.
- * [S] 398 the critic read 396's cut as a short dark mass, not a jaw-wide beard. The mask now ends at the cheek line (maskBottom -0.52, the cheek guards
- * kept long) so the lower face is open, and the beard fills it: a jaw mass 1.5 H across and .95 H tall hung at 1.0 H, wider than the face it sits on,
- * with a bigger moustache under the mask's foot and the bib wider down onto the chest.
+/*
+ * [R] 407 the Brawler's beard, rebuilt (blockers a.2 "a short dark mass under the mask, not a jaw-wide beard onto the chest", a.4 "it stops at the top of
+ * the chest under the shield rim", a.5 "a lighter brown than the reference's near-black brown"; viking.brawler.red.png, viking.brawler.jpg: a dark beard
+ * filling the jaw under the helm's mask and pouring down the chest over the round board). Read off the renders and the 407 probes:
+ *   - the board in his idle lies as a tray across his belly: its face normal is the board's local +z, (0, .97, .23) in the torso frame, centre .1 under
+ *     the chin; seen from the front three-quarter its upper face shows, so "down the shield's face toward the boss" is along that face, away from him;
+ *   - the head cut's bib, hung from the head, ran down inside the chest and under the board (401 bib2 behind the board; 402 splay sideways), so the
+ *     beard is three pieces, each in the frame it must follow:
+ *   jaw (head): a faceted mass .jaw (x, y, z) of the head's half extents at .jawY down and .jawZ ahead, wider than the face, filling the open lower face
+ *     under the mask; a drooping moustache under the mask's foot (.stacheLow, .stacheZ);
+ *   bib (torso): a broad tapered block from under the chin (.bibTop of the trunk height under the neck joint) down .bibDrop of the trunk height, .bibWide
+ *     of the trunk width across narrowing to .bibTip of that, .bibDeep deep, its back on the chest's front face and leaning out .bibLean toward its foot,
+ *     where it meets the board's face;
+ *   spill (board): a tapered slab lying on the board's upper face, .spillFrom to .spillTo in the board's own frame (local y runs toward him, the boss at
+ *     its middle), .spillWide across at its root narrowing to .spillTip, .spillThick thick, with .locks pointed locks at its end beside the boss;
+ *     the board is found by name ("nshield", attached before the dress); without it the spill is skipped.
+ * Near-black brown cloth (palette brown x .2) with a small self-light, nothing sideways or upward: hair hangs down and lies on what is under it.
  */
+const BRAWLER_BEARD = {
+  jaw: [1.5, 0.95, 0.8] as const, jawY: 1.0, jawZ: 0.55, stacheLow: 0.62, stacheZ: 1.25,
+  bibTop: 0.0, bibDrop: 0.28, bibWide: 0.6, bibTip: 0.72, bibDeep: 0.2, bibLean: 0.08,
+  spillFrom: [0.085, 0.15] as const, spillTo: [0.12, -0.05] as const, spillWide: 0.11, spillTip: 0.55, spillThick: 0.012, locks: 3, lock: 0.035,
+  color: new Color3(0.13, 0.065, 0.045), glow: 0.12,
+};
+/** The Brawler's near-black beard: a jaw mass under the mask, a bib down the chest and its spill over the board's face (spec at BRAWLER_BEARD). */
 export function brawlerBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
-  return vikingBeard(scene, body, {
-    color: new Color3(0.32, 0.15, 0.11), glow: 0.22, down: 0.95, wide: 1.4, tip: 0.55, braid: true, stache: true,
-    jaw: [1.5, 0.95, 0.8], jawY: 1.0, jawZ: 0.55, stacheLow: 0.62, stacheZ: 1.25, burns: false,
-  });
+  const B = BRAWLER_BEARD;
+  const mf = getMaterialFactory();
+  const hair = mf.get("cloth", B.color, { emissiveIntensity: B.glow });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: Node): Mesh => { m.material = hair; m.parent = parent; m.convertToFlatShadedMesh(); out.push(m); return m; };
+  // jaw and moustache, in the head's half extents
+  const e = headExtents(body);
+  const jaw = put(MeshBuilder.CreateIcoSphere("brawlerBeardJaw", { radius: 1, subdivisions: 1, flat: true }, scene), body.headMesh);
+  jaw.scaling.set(e.x * B.jaw[0], e.y * B.jaw[1], e.z * B.jaw[2]);
+  jaw.position.set(0, -e.y * B.jawY, e.z * B.jawZ);
+  const column = (name: string, from: Vector3, to: Vector3, root: number, tip: number, parent: Node): Mesh => {
+    const d = to.subtract(from);
+    const m = MeshBuilder.CreateCylinder(name, { height: d.length(), diameterTop: root, diameterBottom: tip, tessellation: 5 }, scene);
+    m.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(new Vector3(0, -1, 0), d.normalize(), m.rotationQuaternion);
+    m.position = Vector3.Center(from, to);
+    return put(m, parent);
+  };
+  for (const side of [-1, 1]) {
+    column("brawlerBeardStache", new Vector3(0, -e.y * B.stacheLow, e.z * B.stacheZ),
+      new Vector3(side * e.x * 0.76, -e.y * (B.stacheLow + 0.26), e.z * (B.stacheZ - 0.12)), e.x * 0.28, e.x * 0.14, body.headMesh);
+  }
+  // the bib down the chest, its back on the chest's front face
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const front = chest.position.z + D * 0.5;
+  const bibH = H * B.bibDrop, bibD = D * B.bibDeep;
+  const topY = body.neck.position.y - H * B.bibTop;
+  const bib = put(MeshBuilder.CreateCylinder("brawlerBeardBib", { height: bibH, diameterTop: W * B.bibWide, diameterBottom: W * B.bibWide * B.bibTip, tessellation: 6 }, scene), body.torso);
+  bib.scaling.z = bibD / (W * B.bibWide);
+  bib.rotation.x = -B.bibLean * 2;
+  bib.position.set(chest.position.x, topY - bibH * 0.5, front + bibD * 0.5 + bibH * B.bibLean);
+  // the spill over the board's upper face, in the board's own frame
+  const board = body.root.getChildMeshes(false).find((m) => m.name === "nshield");
+  if (board) {
+    const bb = board.getBoundingInfo().boundingBox;
+    const faceZ = bb.maximum.z + B.spillThick * 0.5;
+    const from = new Vector3(B.spillFrom[0], B.spillFrom[1], faceZ), to = new Vector3(B.spillTo[0], B.spillTo[1], faceZ);
+    const run = to.subtract(from), long = run.length();
+    const spill = MeshBuilder.CreateCylinder("brawlerBeardSpill", { height: long, diameterTop: B.spillWide, diameterBottom: B.spillWide * B.spillTip, tessellation: 6 }, scene);
+    spill.scaling.z = B.spillThick / B.spillWide;
+    spill.rotation.z = Math.atan2(run.x, -run.y);
+    spill.position = Vector3.Center(from, to);
+    put(spill, board);
+    for (let i = 0; i < B.locks; i++) {
+      const u = (i + 0.5) / B.locks - 0.5;
+      const dir = run.normalize();
+      const across = new Vector3(-dir.y, dir.x, 0);
+      const root = to.add(across.scale(u * B.spillWide * B.spillTip * 0.9));
+      const tip = root.add(dir.scale(B.lock * (1 - Math.abs(u)))).add(across.scale(u * B.lock * 0.4));
+      const lock = column("brawlerBeardLock", root, tip, B.spillWide * 0.22, 0.002, board);
+      lock.scaling.z = 0.5;
+    }
+  }
+  return out;
 }
 
 /*
