@@ -503,7 +503,9 @@ async function main() {
           const pa = a.body.root.position, pt = t.body.root.position;
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
           // the protector's slab hides his head from the front: his idle swings round to his side, where the head shows beside the slab (evidence 366)
-          const swing = a.definition.id === "tribal.protector" ? 1.35 : 0.6;
+          // [evidence 403] the halfling's wide side-by-side stance read as a walk stride from .6 rad off his front (critic 397-402 a.1; probe: his
+          // feet .015 m apart fore-aft, .4 m apart across): his idle swings .2 rad only, near the front-on angle of farmer.halfling.blue.png
+          const swing = a.definition.id === "tribal.protector" ? 1.35 : a.definition.id === "farmer.halfling" ? 0.2 : 0.6;
           if (on === 1) {
             // the idle look-around can turn the face to the far side (the painter, the spear thrower): when the face points more than .9 rad off
             // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
