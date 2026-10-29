@@ -181,12 +181,19 @@ const DRAGON_SCALLOPS = 7;
  * flattened .faceFlat; the muzzle pad .pad of H tall; eyes .eye of W across at .eyeX, .eyeY; horns .hornGirth of W thick, .horn1 of W long in all,
  * bent through .hornBends (x out, y up, z ahead, share of the length), each piece tapering .hornTaper; ears .ear of W long at .earY, drooping .earDroop;
  * the neck .neck of H long, .neckTop to .neckBottom of W across, leaning back .neckLean. Fur as the body's (ancientDress MINO_FUR), horns tan.
+ * [R] 402 the head carried low and forward (critic 396/400 a.3: "towers over Zeus ... the head and horns, not the body scale, make the height";
+ * ancient.minotaur.red.png: the cranium sits just over the shoulder line, no neck above the shoulders, the face jutting forward, the horns leaving the
+ * crown's sides LEVEL and curling up only at the tips, the eyes about one head above the shoulders). Spec, read off the render in his own head units:
+ *   cranium middle .drop H lower than before (.skullY + .drop under the crown joint) and .forward W ahead, so the man's head block (hidden by
+ *   ancientDress dressMinotaur) is replaced by a bull head sat on the shoulders; the face tipped .tilt rad forward of plumb (was .5) so the muzzle juts;
+ *   horns: three pieces, the first two level out to the side (.hornBends y .05 / .3), the tip turned up and forward; the neck a short wide stump
+ *   (.neck H) from the cranium to the shoulders. Nothing else on the head changes. The body scale (unitVisuals) is untouched.
  */
 const BULL_HEAD = {
-  skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, browY: 0.12, browZ: 0.32, face: 1.0, tilt: 0.5, brow: 0.95, snout: 1.0, faceFlat: 0.75,
+  skull: 0.62, skullTall: 0.5, skullDeep: 0.6, skullY: 0.45, drop: 0.72, forward: 0.28, browY: 0.12, browZ: 0.32, face: 1.0, tilt: 0.72, brow: 0.95, snout: 1.0, faceFlat: 0.75,
   pad: 0.2, eye: 0.34, eyeX: 0.36, eyeY: 0.2, hornGirth: 0.3, horn1: 0.9, hornTaper: 0.72, hornY: 0.32,
-  hornBends: [[1, 0.1, 0.1, 0.4], [1, 0.7, 0.15, 0.32], [0.35, 1, 0.25, 0.28]] as [number, number, number, number][],
-  ear: 0.36, earY: 0.06, earDroop: 0.4, neck: 0.9, neckTop: 0.9, neckBottom: 1.5, neckLean: 0.35,
+  hornBends: [[1, 0.05, 0.1, 0.42], [1, 0.3, 0.18, 0.33], [0.45, 0.8, 0.3, 0.25]] as [number, number, number, number][],
+  ear: 0.36, earY: 0.06, earDroop: 0.4, neck: 0.42, neckTop: 1.0, neckBottom: 1.6, neckLean: 0.3,
   fur: new Color3(0.42, 0.24, 0.17), muzzle: new Color3(0.5, 0.31, 0.23), horn: new Color3(0.86, 0.7, 0.52), inner: new Color3(0.78, 0.52, 0.42), glow: 0.16,
 };
 /*
@@ -1085,7 +1092,8 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     const earIn = mat(scene, B.inner, 0.15, "cloth");
     const dark = mat(scene, new Color3(0.1, 0.07, 0.06));
     const shell = MeshBuilder.CreateIcoSphere("bullShell", { radiusX: u(B.skull * W), radiusY: u(B.skullTall * H), radiusZ: u(B.skullDeep * W), subdivisions: 1 }, scene);
-    shell.position.y = u(-B.skullY * H);
+    // [R] 402 the cranium carried low and forward, on the shoulders (spec at BULL_HEAD .drop/.forward)
+    shell.position.set(0, u(-(B.skullY + B.drop) * H), u(B.forward * W));
     shell.material = hide;
     shell.convertToFlatShadedMesh();
     const put = (m: Mesh, material: PBRMetallicRoughnessMaterial): Mesh => { m.material = material; m.convertToFlatShadedMesh(); m.parent = shell; return m; };
