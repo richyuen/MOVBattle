@@ -29,7 +29,7 @@ drop a lesson once it is a comment at the code it describes.
 - A two-stage mechanic that logs its special at the take-off and a plain hit at the impact gets its ability pair shot on the first half and its release pair on the second: use that to show both halves of one throw (396 longship: `hurl` at 2117 ms, `ship_crash` + the hit at 2967 ms).
 - `RuntimeUnit.landings` counts ground touchdowns: read the counter before a leap and compare each step instead of testing a per-frame grounded flag to time a landing (396 longship).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
-- One gap, one commit: a bundled sha cannot be reverted singly, so a REJECT takes the approved gaps with it (394).
+- A "haxe" weapon (halberd, Jarl Axe) rests via _restHalberd, posing the shaft in the world: carry attitudes do nothing.
 - The critic judges the named shot: an element hidden behind another mesh is not there (392).
 - Hiding the thrower at a transition reads as a pop in the take-off shot: the frame must still show who threw it (401 longship, CONFIRM).
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).

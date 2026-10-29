@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-403 | [R] FRONT_SPLIT: the Farmer's thighs aimed out in the rig frame, knees outside the boards (06ea4d4, reverted a5b8099) | farmer.wheelbarrow.a | rejected
-403 | the landed oarsmen keep their oars and chop two-handed (OAR_CHOP + LONGSHIP_OARS blows) (0d30de1) | viking.longship.c | approved
-403 | the bull face upright (tilt .15) with a flat nose plate and level nostrils (a92a9f9) | ancient.minotaur.a | approved
-403 | VALKYRIE_ARMOUR: brown belt + gold ring, gold arm bands, dark bracers, brown boots (0ec42c6) | viking.valkyrie.a | approved
-403 | JARL_BEARD_RUN: torso-hung bib in front of the mantle into a red-tied plait (76b6c7d) | viking.jarl.a | approved
-403 | the ice archer's cap seated off the eye beads' top (7029273) | viking.ice_archer.a | approved
-403 | headSize 1.3 + a low HEADBUTTER_CAP dome with a front strip (bcd3eb5) | viking.headbutter.a | approved
 404 | VALKYRIE_ARMOUR belt and ring seated off torsoMesh position/scale (670efeb) | viking.valkyrie.a | approved
 404 | HEADBUTTER_CAP band seated off the eye beads tops (eyeTopInHead) (47ca693) | viking.headbutter.a | approved
 404 | JARL_WRAPS: maroon forearm wraps, 3 dark bands, tan fur roll at the elbow (9e3df06) | viking.jarl.a | approved
@@ -46,6 +39,13 @@ for 25 iterations.
 407 | ICE_UPRIGHT: upright bow carry across her front, iceBowCarry mark (1936db1 + a65dfd2) | viking.ice_archer.b | approved
 407 | LONGSHIP_CARRIER: braided brown beard, horned headband, jarlBelt on the carriers (562d7f1) | viking.longship.a | approved
 407 | MINO_LEGS: thinned thighs/shins, pastern, hock knob, cloven toes (8f84140) | ancient.minotaur.a | approved
+408 | HEADBUTTER_TUNIC: team trunk shell + short sleeves, skirt in the same cloth (51b3972) | viking.headbutter.a | approved
+408 | ICE_ARCHER_SNOWCAP: ruff gone, snow lumps on each shoulder (ea60323) | viking.ice_archer.a | approved
+408 | bear head raised onto his head: eyes, snout, nose, fangs (1bc6d8d) | viking.jarl.a | approved
+408 | MINO_STRAP foot seated on the girdle's measured top (f27b023) | ancient.minotaur.a | approved
+408 | brawler torso beard tail to the belt (8489039, reverted 1d9a84a) | viking.brawler.a | dropped (hidden by the tray board)
+408 | JARL_REST: diagonal rest through _restHalberd, blade broadside (e6d2ba3 + f25a459) | viking.jarl.b | approved
+408 | LONGSHIP_PROW: S-curved neck, head lifted, disc eyes (0b5a856) | viking.longship.a | approved
 
 ## Spent (never retry as [P])
 
@@ -91,3 +91,9 @@ proceduralAnimation.ts:ICE_UPRIGHT (raise, out, elbow, tip, yaw, stagger, give) 
 vikingDress.ts:LONGSHIP_CARRIER (beard, down, wide, tip; band, bandY, bandOut, horn, hornBase, hornSplay) | (.42,.22,.11), .75, 1.0, .5; .22, .32, 1.08, .85, .32, .55 | 407 | approved | the oarsmen's horned team cap + plain belt (401-406)
 ancientDress.ts:MINO_LEGS (thigh, shin, toeWide, toeTall, toeDeep, cleft, toeAhead, toeSlope, pastern, hockUp, hockBack, hock) | .7, .58, .62, .55, .85, .36, .35, -.3, .75, .5, .25, .5 | 407 | approved | bulk 1.5 pillar legs on block feet (before 407)
 viking.valkyrie + ancient.zeus done (VALKYRIE_ARMOUR/COLLAR/HELM/SWORD, SWORD_WINGS, ZEUS_TOGA + .boltGap, ZEUS_BEARD, glowLayer group 0 / bolt group 1) | compacted 407 | 406 | approved | values: git show 978f707:loop/LEDGER.md
+vikingDress.ts:HEADBUTTER_TUNIC (out, deep, sleeve, sleeveOut, glow) | 1.05, 1.08, .42, 1.2, .12 | 408 | approved | the viking_fur-tinted trunk + body-material tunicSkirt (before 408)
+vikingDress.ts:ICE_ARCHER_SNOWCAP (lumps, out, big, small, spread, sit, squash) | 4, .4, .2, [.7,.6,.55], .09, .05, .75 | 408 | approved | ICE_ARCHER_MANTLE ring + 10 points + 8 lumps (402-407)
+vikingDress.ts:JARL_PELT bear head (skullW/H/D/Y/Z, eye/eyeOut/eyeY/eyeProud, muzzle/Tall/Long/Z, fangs/fang/fangOut/fangClear, ear/earY) | 1.45/1/1.35/1.25/-.05, .3/.44/1.5/1.32, .66/.42/.72/1.3, 2/.3/.17/.05, .3/2.0 | 408 | approved | 1.3/.95/1.3/.58/-.1, eye .24 at .6, muzzle .44 at .12, 3 teeth .1 (400-407)
+ancientDress.ts:MINO_STRAP.clear (foot over the girdle's measured top, trunk heights) | .03 | 408 | approved | footY .06 fixed (405-407)
+proceduralAnimation.ts:JARL_REST (ahead, inward, drop, across, forward) | .12, .02, .36, .95, .2 | 408 | approved | HALBERD_REST upright .05 tilt (392-407)
+vehicleBuilder.ts:LONGSHIP_PROW (lift, root, tip, eye, path) | .75, .11, .085, .2, S from (.95,1.3) to (2.0,1.38) | 408 | approved | neck box .18x.66 at y .9, bead eyes .1 (392-407)
