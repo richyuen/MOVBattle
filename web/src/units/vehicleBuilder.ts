@@ -2007,6 +2007,7 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * .stem post curving from the keel up into the dragon's neck, and a rolled scroll at the stern: two cylinders lying across the stern's head, the
    * smaller one turned inside the bigger like a mat rolled up.
    */
+  const LONGSHIP_PROW = { lift: 0.75, root: 0.11, tip: 0.085, eye: 0.2, path: [[0.95, 1.3], [1.2, 1.42], [1.45, 1.42], [1.68, 1.3], [1.9, 1.3], [2.0, 1.38]] as [number, number][] };
   const HULL = { rows: 4, rowStep: 0.13, strake: 0.15, keelY: 0.2, deck: 0.4, wall: 0.705, stem: 0.9, scroll: 0.13 };
   const keel = MeshBuilder.CreateBox("longshipKeel", { width: 0.18, height: 0.16, depth: 2.62 }, scene);
   keel.position.set(0, HULL.keelY, 0);
@@ -2299,27 +2300,39 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
    * of it, an open jaw with a row of white teeth; the stern post curls back over the deck). A neck block off the stem, the skull box tipped forward, a
    * tapered snout over a dropped lower jaw with four teeth, two bead eyes, two horns; three short segments bent back make the curl.
    */
+  /*
+   * [S] 408 the tall S-curved prow neck (CONFIRM 407 a.1: "a squat box head sits just above the gunwale at the bow"; viking.longship.jpg, .red.png:
+   * an S-curved dragon neck rising about a hull-depth above the hull, dominating the silhouette). LONGSHIP_PROW: the neck a tube off the stem's top
+   * along an S in the y-z plane (.path, ship units: out over the bow, back, then out again under the head), its radius tapering from .root to .tip;
+   * the head (skull, snout, jaw, teeth, eyes, horns) is the 392 head lifted .lift on top of it; each eye a big flat white disc .eye across with a black
+   * pupil on its outer face (blocker 2: "a small white bead").
+   */
+  const P = LONGSHIP_PROW;
   const boneWhite = makeMat(scene, new Color3(0.93, 0.92, 0.86));
-  const neck = MeshBuilder.CreateBox("longshipDragonNeck", { width: 0.18, height: 0.66, depth: 0.14 }, scene);
-  neck.position.set(0, 0.9, 1.3);
-  neck.rotation.x = -0.22;
+  const pupilMat = makeMat(scene, new Color3(0.05, 0.05, 0.06));
+  const neckPath = P.path.map(([y, z]) => new Vector3(0, y, z));
+  const neck = MeshBuilder.CreateTube("longshipDragonNeck", {
+    path: neckPath, radiusFunction: (i) => P.root + (P.tip - P.root) * (i / (neckPath.length - 1)), tessellation: 6, cap: Mesh.CAP_ALL,
+  }, scene);
   neck.parent = root;
   neck.material = darkWood;
+  neck.convertToFlatShadedMesh();
   allMeshes.push(neck);
+  const L = P.lift;
   const skull = MeshBuilder.CreateBox("longshipDragonHead", { width: 0.32, height: 0.28, depth: 0.36 }, scene);
-  skull.position.set(0, 1.22, 1.42);
+  skull.position.set(0, 1.22 + L, 1.42);
   skull.rotation.x = -0.12;
   skull.parent = root;
   skull.material = wood;
   allMeshes.push(skull);
   const snout = MeshBuilder.CreateCylinder("longshipDragonSnout", { height: 0.32, diameterBottom: 0.26, diameterTop: 0.1, tessellation: 4 }, scene);
   snout.rotation.x = Math.PI / 2 - 0.12;
-  snout.position.set(0, 1.2, 1.66);
+  snout.position.set(0, 1.2 + L, 1.66);
   snout.parent = root;
   snout.material = wood;
   allMeshes.push(snout);
   const jaw = MeshBuilder.CreateBox("longshipDragonJaw", { width: 0.2, height: 0.06, depth: 0.3 }, scene);
-  jaw.position.set(0, 1.06, 1.64);
+  jaw.position.set(0, 1.06 + L, 1.64);
   jaw.rotation.x = 0.14;
   jaw.parent = root;
   jaw.material = darkWood;
@@ -2327,19 +2340,26 @@ function buildLongship(scene: Scene, color: Color3): ArticulatedBody {
   for (let i = 0; i < 4; i++) {
     const tooth = MeshBuilder.CreateCylinder("longshipDragonTooth", { height: 0.07, diameterTop: 0, diameterBottom: 0.035, tessellation: 4 }, scene);
     tooth.rotation.x = Math.PI;
-    tooth.position.set(-0.06 + i * 0.04, 1.09, 1.72 - (i % 2) * 0.05);
+    tooth.position.set(-0.06 + i * 0.04, 1.09 + L, 1.72 - (i % 2) * 0.05);
     tooth.parent = root;
     tooth.material = boneWhite;
     allMeshes.push(tooth);
   }
   for (const side of [-1, 1]) {
-    const eye = MeshBuilder.CreateSphere("longshipDragonEye", { diameter: 0.1, segments: 6 }, scene);
-    eye.position.set(side * 0.16, 1.27, 1.5);
+    const eye = MeshBuilder.CreateCylinder("longshipDragonEye", { height: 0.04, diameter: P.eye, tessellation: 12 }, scene);
+    eye.rotation.z = Math.PI / 2;
+    eye.position.set(side * 0.17, 1.28 + L, 1.48);
     eye.parent = root;
     eye.material = boneWhite;
     allMeshes.push(eye);
+    const pupil = MeshBuilder.CreateCylinder("longshipDragonPupil", { height: 0.02, diameter: P.eye * 0.45, tessellation: 10 }, scene);
+    pupil.rotation.z = Math.PI / 2;
+    pupil.position.set(side * 0.2, 1.28 + L, 1.5);
+    pupil.parent = root;
+    pupil.material = pupilMat;
+    allMeshes.push(pupil);
     const horn = MeshBuilder.CreateCylinder("longshipDragonHorn", { height: 0.16, diameterTop: 0, diameterBottom: 0.05, tessellation: 4 }, scene);
-    horn.position.set(side * 0.11, 1.4, 1.34);
+    horn.position.set(side * 0.11, 1.4 + L, 1.34);
     horn.rotation.x = 0.5;
     horn.rotation.z = -side * 0.25;
     horn.parent = root;
