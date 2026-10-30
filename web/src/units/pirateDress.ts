@@ -731,8 +731,14 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * trapezoid .flapWide of W across at the waist narrowing to .flapFoot of it, from the waist at .flapX of W/2 on her left down .flapLong of the
  * skirt's length, .flapProud off the skirt's front, leaning .flapLean rad; the trousers .pale .18 so they read as the team's light shade, not white.
  */
+/*
+ * [S] 433 the front hem and slim trousers (critic 432 on a.1: "trouser shells bulge into pale knee lumps; beaded front hem still at mid-thigh"): in the
+ * idle crouch the thighs swing forward and up under a skirt hung from the trunk, so the front of the hem rides up the thigh and the thigh shells
+ * (.pantsOut 1.14 of the leg) poke out through it. The hem now drops .frontDrop of the skirt's length toward its front (none at the sides and back),
+ * the beads riding it, and the trousers are the leg meshes themselves in the pale team shade, no shells, so nothing bulges at the knee.
+ */
 const QUEEN_SKIRT = {
-  top: 0.14, knee: 1.08, out: 1.06, flare: 1.45, deep: 1.25, slant: 0.6, sides: 8, beads: 7, bead: 0.11, pantsOut: 1.14, shin: 0.6, pale: 0.18,
+  top: 0.14, knee: 1.08, out: 1.06, flare: 1.45, deep: 1.25, slant: 0.6, frontDrop: 0.4, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
   flapWide: 0.6, flapFoot: 0.22, flapX: -0.25, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
@@ -762,7 +768,9 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   const skirt = MeshBuilder.CreateCylinder("queenSkirt", { height: long, diameterTop: rTop * 2, diameterBottom: rHem * 2, tessellation: Q.sides }, scene);
   // the hem slants down toward her left (-x)
   const pos = skirt.getVerticesData(VertexBuffer.PositionKind)!;
-  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += Q.slant * long * 0.5 * (pos[i] / rHem);
+  // ...and drops toward its front (+z) so it still reaches the knee when the thighs come forward in the crouch
+  const drop = (z: number): number => Q.frontDrop * long * Math.max(0, z / rHem);
+  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += Q.slant * long * 0.5 * (pos[i] / rHem) - drop(pos[i + 2]);
   skirt.setVerticesData(VertexBuffer.PositionKind, pos);
   skirt.refreshBoundingInfo();
   skirt.convertToFlatShadedMesh();
@@ -789,15 +797,12 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
     const x = Math.cos(a) * rHem, z = Math.sin(a) * rHem * zs;
     const bead = MeshBuilder.CreateIcoSphere("queenSkirtBead", { radius: W * Q.bead / 2, subdivisions: 1, flat: true }, scene);
     bead.parent = frame;
-    bead.position.set(cx + x, hem + Q.slant * long * 0.5 * (x / rHem) + W * Q.bead * 0.2, cz + z + W * Q.bead * 0.3);
+    bead.position.set(cx + x, hem + Q.slant * long * 0.5 * (x / rHem) - drop(Math.sin(a) * rHem) + W * Q.bead * 0.2, cz + z + W * Q.bead * 0.3);
     bead.material = green;
     out.push(bead);
   }
-  // the pale trousers under it
-  for (const [thigh, shin] of [[body.leftUpperLeg, body.leftLowerLeg], [body.rightUpperLeg, body.rightLowerLeg]]) {
-    out.push(limbShell(scene, "queenPants", thigh, 0, 1, Q.pantsOut, pants));
-    out.push(limbShell(scene, "queenPants", shin, 0, Q.shin, Q.pantsOut, pants));
-  }
+  // the pale trousers under it: the leg meshes themselves, slim, no shells
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (leg) leg.material = pants;
   return out;
 }
 
