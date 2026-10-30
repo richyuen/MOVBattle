@@ -169,6 +169,82 @@ export function openCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3)
 }
 
 /*
+ * [S] 428 the Captain's long coat (audit 422 a.3: "a dark closed tunic ending at the hips - TABS: a long team coat with tan trim hanging open to the knees
+ * over a tan shirt and white cravat"; pirate.captain.red.png, card Appearance "a long, team-colored coat with a shirt under it and a cloth around the
+ * shirt": the coat from the shoulders to just below the knee, open down the whole front, a broad tan shirt between its fronts, a white cravat bunched
+ * at the collar, tan edging down each front and round the hem). CAPTAIN_COAT: on the trunk (torso frame) a team shell .out of the trunk wide and .deep
+ * of it deep over the shoulders to its foot; the tan shirt a slab .shirt of the trunk across standing .proud off the shell's front; the cravat a white
+ * block .cravat across and .cravatLong of the trunk's height under the collar, .cravatProud proud; tan edges .edge across down each side of the shirt.
+ * Below the waist (hip frame, off the pelvis's box p) the skirts: a back panel .back of the pelvis across, a side panel each side, and a front panel each
+ * side .front of the pelvis across leaving the shirt's width open between them, all from the pelvis's top to .long of the knee's drop below it, flaring
+ * .flare rad out, .thick of the pelvis deep; a tan hem .hem tall round every panel's foot and a tan edge down each front panel's inner side. Self-lit .glow.
+ */
+const CAPTAIN_COAT = {
+  out: 1.12, deep: 1.22, shirt: 0.36, proud: 0.04, cravat: 0.24, cravatLong: 0.26, cravatProud: 0.1, edge: 0.07,
+  back: 1.2, front: 0.42, long: 1.35, flare: 0.1, thick: 0.12, hem: 0.07,
+  tan: new Color3(0.8, 0.6, 0.35), shirtTan: new Color3(0.86, 0.68, 0.45), white: new Color3(0.9, 0.88, 0.84), glow: 0.12,
+};
+
+export function captainCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = CAPTAIN_COAT;
+  const mf = getMaterialFactory();
+  const coat = mf.get("cloth", teamColor, { emissive: teamColor.scale(C.glow) });
+  const tan = mf.get("cloth", C.tan, { emissive: C.tan.scale(C.glow) });
+  const shirt = mf.get("cloth", C.shirtTan, { emissive: C.shirtTan.scale(C.glow) });
+  const white = mf.get("cloth", C.white, { emissive: C.white.scale(C.glow * 1.5) });
+  const out: Mesh[] = [];
+  const slab = (name: string, w: number, h: number, d: number, parent: Node | null, x: number, y: number, z: number, mat: typeof coat): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.parent = parent;
+    m.position.set(x, y, z);
+    if (parent === tm.parent) m.rotation.copyFrom(tm.rotation);
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  // the trunk: shell, shirt, cravat and the tan edges of the open front (torso frame, as the open coat)
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const front = cz + D * C.deep / 2;
+  slab("captainCoat", W * C.out, H * 1.02, D * C.deep, tm.parent, cx, cy, cz, coat);
+  slab("captainCoatShirt", W * C.shirt, H * 0.98, D * C.proud, tm.parent, cx, cy, front + D * C.proud / 2, shirt);
+  slab("captainCoatCravat", W * C.cravat, H * C.cravatLong, D * C.cravatProud, tm.parent, cx, cy + H / 2 - H * C.cravatLong / 2, front + D * C.cravatProud / 2, white);
+  for (const side of [-1, 1]) {
+    slab("captainCoatEdge", W * C.edge, H * 1.0, D * C.proud * 1.6, tm.parent, cx + side * W * (C.shirt + C.edge) / 2, cy, front + D * C.proud * 0.8, tan);
+  }
+  // the skirts below the waist (hip frame)
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  if (!pelvis) return out;
+  const pb = pelvis.getBoundingInfo().boundingBox, ps = pelvis.scaling;
+  const PW = pb.extendSize.x * 2 * ps.x, PD = pb.extendSize.z * 2 * ps.z;
+  const px = pelvis.position.x + pb.center.x * ps.x, pz = pelvis.position.z + pb.center.z * ps.z;
+  const top = pelvis.position.y + pb.center.y * ps.y + pb.extendSize.y * ps.y;
+  const long = Math.abs(body.leftKnee.position.y) * C.long;
+  const thick = PD * C.thick, wide = PW * C.back, halfX = wide / 2, halfZ = PD * 0.5 + thick * 1.5;
+  // each panel hangs from its top edge (local +z its outer face), tipped out at the hem; a tan strip at its foot and, on a front, down its inner side
+  const panel = (w: number, x: number, z: number, ry: number, inner = 0): void => {
+    const hang = MeshBuilder.CreateBox("captainCoatHang", { size: 0.001 }, scene);
+    hang.isVisible = false;
+    hang.parent = body.hip;
+    hang.position.set(x, top, z);
+    hang.rotation.set(-C.flare, ry, 0);
+    slab("captainCoatSkirt", w, long, thick, hang, 0, -long / 2, 0, coat);
+    slab("captainCoatHem", w * 1.02, long * C.hem, thick * 1.5, hang, 0, -long + long * C.hem / 2, thick * 0.3, tan);
+    if (inner) slab("captainCoatEdge", PW * C.edge, long, thick * 1.5, hang, inner * (w / 2 - PW * C.edge / 2), -long / 2, thick * 0.3, tan);
+  };
+  // back (its face out to his back: turned half round), sides, and the two fronts either side of the shirt's opening
+  panel(wide, px, pz - halfZ, Math.PI);
+  for (const side of [-1, 1]) {
+    panel(PD + thick * 3, px + side * halfX, pz, side * Math.PI / 2);
+    const fw = PW * C.front, fx = px + side * (W * C.shirt / 2 + fw / 2);
+    panel(fw, fx, pz + halfZ, 0, -side);
+  }
+  return out;
+}
+
+/*
  * [S] 424 the rolled-up pants (audit 422 a.2: "bare team legs - TABS: brown rolled-up pants ending mid-shin"; pirate.flintlock.red.png, card Appearance
  * "rolled-up brown pants": loose brown trousers from the belt over the knee to halfway down the shin, finished in a thick turned-up cuff a shade lighter).
  * PIRATE_PANTS: over each thigh a six-sided brown shell .thigh of the limb across, top to knee; over each shin a shell .shin across from the knee to .to

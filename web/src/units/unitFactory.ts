@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, openCoat, piratePants, pirateShorts, pirateVest, plankHat, queenBandana } from "./pirateDress";
+import { barrelArmour, captainCoat, openCoat, piratePants, pirateShorts, pirateVest, plankHat, queenBandana } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -610,6 +610,8 @@ export class UnitFactory {
     if (definition.id === "pirate.harpooner" && !shouldUseVehicleBody) propMeshes.push(...openCoat(this._scene, body, teamColor));
     // [S] 427 the Pirate Queen's team bandana, its flap down over her left eye (pirateDress QUEEN_BANDANA)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenBandana(this._scene, body, teamColor));
+    // [S] 428 the Captain's long team coat open to the knees over a tan shirt and white cravat (pirateDress CAPTAIN_COAT; no tunic skirt under it)
+    if (definition.id === "pirate.captain" && !shouldUseVehicleBody) propMeshes.push(...captainCoat(this._scene, body, teamColor));
     // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
     if (definition.id === "dynasty.dragon" && !shouldUseVehicleBody) propMeshes.push(...dragonForm(this._scene, body, teamColor));
     // [S] 413 the Samurai's team kabuto with a flared gold-trimmed neck guard and a crest (dynastyDress KABUTO)
@@ -850,7 +852,8 @@ export class UnitFactory {
     // (nor the king: his short blouse ends at the belt over puffy breeches to the knee, medievalDress kingDress)
     // (nor the minotaur: bare fur under his scrolled team girdle, 386 ancientDress MINO_SCROLL; the tunic skirt hid the girdle as a plain flared band)
     // (nor the jarl: a bare chest down to his belt over straight trousers, 406 vikingDress JARL_BELT)
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur" && definition.id !== "viking.jarl") {
+    // (nor the captain: his coat's own skirts hang open to the knee, 428 pirateDress CAPTAIN_COAT)
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur" && definition.id !== "viking.jarl" && definition.id !== "pirate.captain") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const knight = definition.id === "medieval.knight";
       const skirt = knight
