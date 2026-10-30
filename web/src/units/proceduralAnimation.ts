@@ -1,6 +1,6 @@
 import { Matrix, Mesh, Quaternion, Vector3, type Node, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
-import { HARPOON_OFF_GRIP, SWORD_RING_BOB } from "./propBuilder";
+import { BLUNDERBUSS_OFF_GRIP, HARPOON_OFF_GRIP, SWORD_RING_BOB } from "./propBuilder";
 
 export enum AnimState {
   Idle,
@@ -305,6 +305,9 @@ const POLE_GRIP = {
  * per s after a fall), and the muzzle kicks up .kick (rad) at the shot, settling at .settle per s.
  */
 const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25, settle: 6 };
+// [S] 425 the blunderbuss held low in both hands (see _aimBlunderbuss): the weapon fist's seat in shares of his height from the hip joint (ahead, out to
+// the weapon side, down), the barrel's droop below level and its turn in across his front (rad), the muzzle's kick up at the shot (rad)
+const BLUNDERBUSS_AIM = { ahead: 0.13, out: 0.07, drop: 0.0, droop: 0.22, across: 0.3, kick: 0.45 };
 // The flintlock pistol held out (see _aimPistol): the weapon fist's seat in shares of his height from the weapon shoulder (out to his side, ahead, down)
 const PISTOL_AIM = { out: 0.24, ahead: 0.14, drop: 0.03, kick: 0.35 };
 // The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
@@ -2122,6 +2125,7 @@ export class ProceduralAnimator {
     this._holdChopDown(dt);
     this._aimMusket(dt);
     this._aimPistol(dt);
+    this._aimBlunderbuss(dt);
     this._gripHarpoon();
     this._restHalberd();
     this._restIceBow();
@@ -3217,6 +3221,67 @@ export class ProceduralAnimator {
     gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     // Committed on his aim: a blow on him snaps only his head back
     this._aimWeight = Math.max(this._aimWeight, w);
+  }
+
+  private _blunderbuss: { node: Mesh; rest: Quaternion; grip: TransformNode | null } | null | undefined = undefined;
+  private _blunderbussAim = 1;
+  /**
+   * [S] 425 the blunderbuss held low across the belly in both hands (pirate.blunderbuss b.2; pirate.blunderbuss.red.png: the weapon fist on the stock's
+   * wrist before the hip, the barrel pointing ahead and down across his front, the off fist under the fore stock). The weapon fist is solved onto
+   * BLUNDERBUSS_AIM's seat off the hip joint, the barrel (+y) laid ahead with its droop and turn across, the wood (+z) down; the muzzle kicks up at the
+   * shot; then the off arm is solved onto the gun's BLUNDERBUSS_OFF_GRIP mark. Held in every living state, eased off as he goes limp.
+   */
+  private _aimBlunderbuss(dt: number): void {
+    if (this._blunderbuss === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "blunderbuss");
+      if (node) node.position.setAll(0);
+      this._blunderbuss = node
+        ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), grip: (node.getChildren().find((n) => n.name === BLUNDERBUSS_OFF_GRIP) as TransformNode | undefined) ?? null }
+        : null;
+    }
+    const gun = this._blunderbuss;
+    if (!gun) return;
+    const A = BLUNDERBUSS_AIM;
+    const firing = this._state === AnimState.Attacking && this._attackMotion === "firearm_recoil";
+    const up = this._state !== AnimState.Dead && this.walkStyle !== "quadruped";
+    this._blunderbussAim += ((up ? 1 : 0) - this._blunderbussAim) * Math.min(1, dt * MUSKET_AIM.rate);
+    const w = this._blunderbussAim * (1 - Math.min(1, this._limp));
+    if (w <= 0.001) {
+      gun.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const fist = b.hip.getAbsolutePosition().add(fwd.scale(A.ahead * height)).addInPlace(outward.scale(A.out * height))
+      .addInPlace(new Vector3(0, -A.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    const kick = firing ? A.kick * Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * MUSKET_AIM.settle) : 0;
+    const pitch = A.droop - kick;
+    const level = fwd.scale(Math.cos(A.across)).addInPlace(outward.scale(-Math.sin(A.across)));
+    const y = level.scale(Math.cos(pitch)).addInPlace(new Vector3(0, -Math.sin(pitch), 0)).normalize();
+    const side = Vector3.Cross(Vector3.Up(), y).normalize();
+    const z = Vector3.Cross(y, side).normalize();
+    const zDown = z.y > 0 ? z.scale(-1) : z;
+    const x = Vector3.Cross(y, zDown).normalize();
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, zDown, world);
+    const handRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    this._aimWeight = Math.max(this._aimWeight, w);
+    if (!gun.grip) return;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = gun.grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    this._offArmTo(gun.grip.getAbsolutePosition().clone(), w);
   }
 
   // The off fist's mark on a harpoon gun in the weapon fist, looked up once

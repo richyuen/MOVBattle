@@ -3159,6 +3159,15 @@ const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
 const PISTOL = {
   long: 0.28, bore: 0.13, over: 0.17, tail: 0.14, bell: 0.16, mouth: 2.4, stock: 0.9, fore: 0.8, grip: 0.36, gripRake: 0.45, gripWide: 0.11,
 };
+/*
+ * [S] 425 the Blunderbuss (pirate.blunderbuss.red.png: a short heavy gun held low across the belly in both hands, a deep tan-brown stock, a pale grey
+ * octagonal barrel and a wide flared bell with a dark mouth; card Main Hand Blunderbuss, Two-handed). In the man's standing heights (fit.stand): .long
+ * from butt to muzzle, the fist .grip of it from the butt; barrel .bore of the gun across; the bell the front .bell of it flaring to .mouth of the bore;
+ * the fore stock .stock of the bore deep, .fore of the way to the muzzle; the butt deepening to .heel of the gun. The off fist cups the fore stock
+ * .offAt of the way out (BLUNDERBUSS_OFF_GRIP). Steel and wood the matchlock's.
+ */
+const BLUNDERBUSS = { long: 0.62, grip: 0.24, bore: 0.075, bell: 0.2, mouth: 3.3, stock: 1.2, fore: 0.62, heel: 0.16, offAt: 0.5 };
+export const BLUNDERBUSS_OFF_GRIP = "blunderbussOffGrip";
 const MATCHLOCK = {
   long: 1.3, grip: 0.26, bore: 0.042, fore: 0.86, stock: 0.9, butt: 0.11, glow: 0.18,
   bands: [[0.955, 0.09, 1.3], [0.62, 0.012, 1.18], [0.04, 0.02, 1.18]] as [number, number, number][],
@@ -4112,24 +4121,74 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return bowMesh;
     }
     case "blunderbuss": {
-      // Short barrel with flared bell muzzle
-      const barrel = MeshBuilder.CreateCylinder("barrel", { height: 0.35 * s, diameter: 0.04 * s, tessellation: 8 }, scene);
-      barrel.material = mat(scene, new Color3(0.3, 0.3, 0.35));
-      // Flared muzzle bell
-      const bell = MeshBuilder.CreateCylinder("bell", {
-        height: 0.1 * s, diameterTop: 0.12 * s, diameterBottom: 0.04 * s, tessellation: 10,
-      }, scene);
-      bell.position.y = 0.22 * s;
-      bell.parent = barrel;
-      bell.material = mat(scene, new Color3(0.35, 0.35, 0.4));
-      // Wood stock
-      const stock = MeshBuilder.CreateBox("stock", { width: 0.05 * s, height: 0.18 * s, depth: 0.035 * s }, scene);
-      stock.position.y = -0.2 * s;
-      stock.parent = barrel;
-      stock.material = mat(scene, new Color3(0.45, 0.3, 0.15));
-      barrel.rotation.x = -0.2;
-      barrel.position.y = 0.12 * s;
-      return barrel;
+      // [S] 425 the blunderbuss, built to the spec at BLUNDERBUSS: the fist at the origin on the stock's wrist, the barrel along +y, the wood on +z
+      const B = BLUNDERBUSS, M = MATCHLOCK;
+      const L = fit.stand * B.long;
+      const back = B.grip * L, front = L - back;
+      const bore = B.bore * L, bellLong = B.bell * L;
+      const steel = mat(scene, M.steel, M.glow, "cloth");
+      const wood = mat(scene, M.wood, M.glow * 0.6, "cloth");
+      const dark = mat(scene, M.band, 0.04, "cloth");
+      // The root: an empty at the fist; the barrel an octagon from the lock to the bell's foot
+      const gun = new Mesh("blunderbuss", scene);
+      const barrelLong = front - bellLong + 0.04 * L;
+      const barrel = MeshBuilder.CreateCylinder("blunderbussBarrel", { height: barrelLong, diameter: bore, tessellation: 8 }, scene);
+      barrel.position.y = barrelLong * 0.5 - 0.04 * L;
+      barrel.material = steel;
+      barrel.convertToFlatShadedMesh();
+      barrel.parent = gun;
+      // The bell: flaring from the barrel to B.mouth of the bore at the muzzle, a dark mouth inside it, a band at its foot
+      const bell = MeshBuilder.CreateCylinder("blunderbussBell", { height: bellLong, diameterBottom: bore * 1.05, diameterTop: bore * B.mouth, tessellation: 8 }, scene);
+      bell.position.y = front - bellLong * 0.5;
+      bell.material = steel;
+      bell.convertToFlatShadedMesh();
+      bell.parent = gun;
+      const mouth = MeshBuilder.CreateCylinder("blunderbussMouth", { height: 0.012 * L, diameter: bore * B.mouth * 0.78, tessellation: 8 }, scene);
+      mouth.position.y = front - 0.004 * L;
+      mouth.material = dark;
+      mouth.parent = gun;
+      for (const at of [front - bellLong, 0.02 * L]) {
+        const ring = MeshBuilder.CreateCylinder("blunderbussBand", { height: 0.025 * L, diameter: bore * 1.3, tessellation: 8 }, scene);
+        ring.position.y = at;
+        ring.material = dark;
+        ring.convertToFlatShadedMesh();
+        ring.parent = gun;
+      }
+      // The fore stock under the barrel, B.fore of the way out, B.stock of the bore deep
+      const deep = bore * B.stock;
+      const foreLong = front * B.fore + 0.04 * L;
+      const fore = MeshBuilder.CreateBox("blunderbussFore", { width: bore * 0.95, height: foreLong, depth: deep }, scene);
+      fore.position.set(0, foreLong * 0.5 - 0.04 * L, bore * 0.35 + deep * 0.5);
+      fore.material = wood;
+      fore.convertToFlatShadedMesh();
+      fore.parent = gun;
+      // The butt behind the fist: a wedge deepening from the stock's depth at the wrist to B.heel of the gun at the plate
+      const heel = B.heel * L;
+      const butt = MeshBuilder.CreateBox("blunderbussButt", { width: bore * 1.05, height: back, depth: 1 }, scene);
+      const bp = butt.getVerticesData(VertexBuffer.PositionKind)!;
+      for (let i = 0; i < bp.length; i += 3) {
+        const k = 0.5 - bp[i + 1] / back;
+        bp[i + 2] = bp[i + 2] > 0 ? bore * 0.35 + deep + (heel - deep) * k : bore * 0.1;
+      }
+      butt.setVerticesData(VertexBuffer.PositionKind, bp);
+      butt.refreshBoundingInfo();
+      butt.position.y = -back * 0.5;
+      butt.material = wood;
+      butt.convertToFlatShadedMesh();
+      butt.parent = gun;
+      // The lock plate beside the barrel at the hand
+      const lock = MeshBuilder.CreateBox("blunderbussLock", { width: bore * 0.45, height: 0.08 * L, depth: deep * 0.8 }, scene);
+      lock.position.set(bore * 0.6, 0.03 * L, bore * 0.4);
+      lock.material = steel;
+      lock.parent = gun;
+      // The off fist's mark under the fore stock (proceduralAnimation _aimBlunderbuss), and the muzzle the shot smokes from
+      const offGrip = new TransformNode(BLUNDERBUSS_OFF_GRIP, scene);
+      offGrip.position.set(0, front * B.offAt, bore * 0.35 + deep * 0.9);
+      offGrip.parent = gun;
+      const muzzle = new TransformNode("musketMuzzle", scene);
+      muzzle.position.y = front + 0.02 * L;
+      muzzle.parent = gun;
+      return gun;
     }
     case "musket": {
       // [S] 369 the matchlock, built to the spec at MATCHLOCK: barrel, stock and butt along +y from the fist; the wood lies on the barrel's +z side
