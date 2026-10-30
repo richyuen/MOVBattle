@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Matrix, Vector3, TransformNode, type Node } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Matrix, Vector3, TransformNode, VertexBuffer, type Node } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox, limbShell } from "./medievalDress";
@@ -652,6 +652,70 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
       c.x + side * e.x * 0.25, foot + e.y * 0.3 - e.y * Q.tail, back - e.z * 0.1);
     tail.setPivotPoint(new Vector3(0, e.y * Q.tail, 0));
     tail.rotation.z = side * Q.splay;
+  }
+  return out;
+}
+
+/*
+ * [S] 431 the Pirate Queen's wrap skirt (audit 422 queen a.4: "the hips - bare team legs from the tunic hem - TABS: a team wrap skirt with green beads at
+ * its hem over pink pants"; pirate.pirate_queen.red.png, card "red skirt with green beads": a faceted team skirt from the waist flaring to the knees, its
+ * hem slanting lower on her left, a row of small green beads round its front at the waist band's foot and hem; pale-pink trousers under it to the boots).
+ * QUEEN_SKIRT, in the torso joint's frame (W, H, D the trunk's box): an eight-sided frustum from .top of H above the trunk's foot down .knee of the way
+ * to the knees, .out of W across at the top and .flare times that at the hem, .deep of D deep for each W; its hem slants .slant of its length from her
+ * right (high) to her left (low); .beads green beads .bead of W across round the front of the hem; trousers: a shell .pantsOut of each leg over the
+ * whole thigh and the shin to .shin, in the team colour .pale of the way to white. Self-lit .glow.
+ */
+const QUEEN_SKIRT = { top: 0.14, knee: 0.92, out: 1.06, flare: 1.45, deep: 1.25, slant: 0.32, sides: 8, beads: 7, bead: 0.11, pantsOut: 1.14, shin: 0.6, pale: 0.4, green: new Color3(0.12, 0.55, 0.3), glow: 0.12 };
+
+/** The Pirate Queen's team wrap skirt to the knees, a slanted hem with green beads, and pale trousers under it (spec at QUEEN_SKIRT). */
+export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const Q = QUEEN_SKIRT;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(Q.glow) });
+  const pale = Color3.Lerp(teamColor, Color3.White(), Q.pale);
+  const pants = mf.get("cloth", pale, { emissive: pale.scale(Q.glow) });
+  const green = mf.get("cloth", Q.green, { emissive: Q.green.scale(Q.glow * 2) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const frame = tm.parent as TransformNode;
+  // the knees read into the torso joint's frame
+  const inFrame = (n: TransformNode): Vector3 => {
+    const chain: Node[] = [];
+    for (let k: Node | null = n; k; k = k.parent) chain.unshift(k);
+    for (const k of chain) if (k instanceof TransformNode) k.computeWorldMatrix(true);
+    return Vector3.TransformCoordinates(n.getAbsolutePosition(), frame.getWorldMatrix().clone().invert());
+  };
+  const kneeY = (inFrame(body.leftKnee).y + inFrame(body.rightKnee).y) / 2;
+  const top = cy - H / 2 + H * Q.top, hem = top - (top - kneeY) * Q.knee, long = top - hem;
+  const rTop = W * Q.out / 2, rHem = rTop * Q.flare, zs = D * Q.deep / W;
+  const out: Mesh[] = [];
+  const skirt = MeshBuilder.CreateCylinder("queenSkirt", { height: long, diameterTop: rTop * 2, diameterBottom: rHem * 2, tessellation: Q.sides }, scene);
+  // the hem slants down toward her left (-x)
+  const pos = skirt.getVerticesData(VertexBuffer.PositionKind)!;
+  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += Q.slant * long * 0.5 * (pos[i] / rHem);
+  skirt.setVerticesData(VertexBuffer.PositionKind, pos);
+  skirt.refreshBoundingInfo();
+  skirt.convertToFlatShadedMesh();
+  skirt.scaling.z = zs;
+  skirt.parent = frame;
+  skirt.position.set(cx, (top + hem) / 2, cz);
+  skirt.material = cloth;
+  out.push(skirt);
+  // the green beads round the front of the hem
+  for (let k = 0; k < Q.beads; k++) {
+    const a = Math.PI * (0.12 + 0.76 * k / (Q.beads - 1));
+    const x = Math.cos(a) * rHem, z = Math.sin(a) * rHem * zs;
+    const bead = MeshBuilder.CreateIcoSphere("queenSkirtBead", { radius: W * Q.bead / 2, subdivisions: 1, flat: true }, scene);
+    bead.parent = frame;
+    bead.position.set(cx + x, hem + Q.slant * long * 0.5 * (x / rHem) + W * Q.bead * 0.2, cz + z + W * Q.bead * 0.3);
+    bead.material = green;
+    out.push(bead);
+  }
+  // the pale trousers under it
+  for (const [thigh, shin] of [[body.leftUpperLeg, body.leftLowerLeg], [body.rightUpperLeg, body.rightLowerLeg]]) {
+    out.push(limbShell(scene, "queenPants", thigh, 0, 1, Q.pantsOut, pants));
+    out.push(limbShell(scene, "queenPants", shin, 0, Q.shin, Q.pantsOut, pants));
   }
   return out;
 }
