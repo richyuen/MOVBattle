@@ -1,4 +1,4 @@
-import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, captainCoat, openCoat, piratePants, pirateShorts, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
@@ -588,6 +588,7 @@ export class UnitFactory {
     }
     // [S] 416 the Monkey King's long team staff with gold banded ends and his tail over his head (dynastyDress MONKEY_STAFF, MONKEY_TAIL)
     if (definition.id === "dynasty.monkey_king" && !shouldUseVehicleBody) {
+      propMeshes.push(...monkeyTrunk(this._scene, body, teamColor)); // [S] 428 slim trunk and shoulders, team waist wrap; first, so his dress is cut on it (dynastyDress MONKEY_TRUNK)
       propMeshes.push(...monkeyStaff(this._scene, body, teamColor), ...monkeyTail(this._scene, body, teamColor));
       propMeshes.push(...monkeyCrown(this._scene, body, teamColor)); // [S] 420 gold swirl circlet with two team feather antennae (dynastyDress MONKEY_CROWN)
       propMeshes.push(...monkeyFace(this._scene, body)); // [S] 421 dark baboon face, tan muzzle, blond tufts (dynastyDress MONKEY_FACE)

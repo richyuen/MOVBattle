@@ -1041,6 +1041,46 @@ export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
 }
 
 /*
+ * [S] 428 the Monkey King's slim trunk (CONFIRM 422 a.3: "trunk ... TABS: a slim trunk under the half robe, shoulders about a quarter of the figure's
+ * height across and narrower than the puffy shorts"; dynasty.monkey_king.red.png: a narrow waisted trunk, the shoulders hardly wider than the head's
+ * ruff, the puffy shorts standing out past it either side; card Appearance "They wear a wrapping around their waist": a thick team wrap bound round
+ * the waist under the robe). MONKEY_TRUNK, run before every other piece of his dress so the robe, scarf and sleeve are cut on the slim trunk: the
+ * trunk mesh and the hero shoulder yoke squeezed to .narrow of their width, the shoulder joints drawn in by the width taken off so the arms stay
+ * on; round the trunk's foot the wrap, .wraps stacked 8-sided team rings .wrap of the trunk's height tall, .wrapOut of its new width across and .deep
+ * of its depth, each a little narrower than the one under it (.step), the top one .tilt rad askew as a tucked end. Team self-lit .glow.
+ */
+const MONKEY_TRUNK = { narrow: 0.7, wraps: 2, wrap: 0.11, wrapOut: 1.18, deep: 1.25, step: 0.94, tilt: 0.08, glow: 0.12 };
+export function monkeyTrunk(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const T = MONKEY_TRUNK;
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox;
+  const half = tb.extendSize.x * tm.scaling.x;
+  tm.scaling.x *= T.narrow;
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  if (yoke) yoke.scaling.x *= T.narrow;
+  const take = half * (1 - T.narrow);
+  for (const shoulder of [body.leftShoulder, body.rightShoulder]) shoulder.position.x -= Math.sign(shoulder.position.x) * take;
+  // the waist wrap round the trunk's foot
+  const cloth = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(T.glow) });
+  const W = tb.extendSize.x * 2 * tm.scaling.x, H = tb.extendSize.y * 2 * tm.scaling.y, D = tb.extendSize.z * 2 * tm.scaling.z;
+  const cx = tm.position.x + tb.center.x * tm.scaling.x, cz = tm.position.z + tb.center.z * tm.scaling.z;
+  const foot = tm.position.y + (tb.center.y - tb.extendSize.y) * tm.scaling.y;
+  const out: Mesh[] = [];
+  for (let i = 0; i < T.wraps; i++) {
+    const across = W * T.wrapOut * Math.pow(T.step, i);
+    const ring = MeshBuilder.CreateCylinder("monkeyWaistWrap", { height: H * T.wrap, diameter: across, tessellation: 8 }, scene);
+    ring.convertToFlatShadedMesh();
+    ring.scaling.z = (D * T.deep) / across;
+    ring.parent = tm.parent;
+    ring.position.set(cx, foot + H * T.wrap * (i + 0.5), cz);
+    ring.rotation.copyFrom(tm.rotation);
+    if (i === T.wraps - 1) ring.rotation.z += T.tilt;
+    ring.material = cloth;
+    out.push(ring);
+  }
+  return out;
+}
+
+/*
  * [S] 422 the Monkey King's half robe and scarf (RE-AUDIT 420 a.4: "a tan box tunic over the whole trunk - TABS: a team-coloured robe draped over the left
  * side only, with golden strips and a scarf at the neck"; card Appearance "wears a scarf ... a robe with golden strips that covers only their left side of
  * their upper body"; dynasty.monkey_king.red.png: a team robe hanging over the left shoulder and down the left side of the chest to the waist, its edge
