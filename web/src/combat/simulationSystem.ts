@@ -76,6 +76,9 @@ const HARPOON_REEL = { lift: 3, top: 14, stop: 1.4, rope: 0.7 };
 // [S] 425 guns thrown away after the shot (_tossGuns): who does it, the throw (out to the side, back, up: m/s; spin rad/s), where they lie (m up),
 // how long they lie (s), and when the first punch is due after the shot (s)
 const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up: 3.4, spin: 9, rest: 0.05, lie: 8, ready: 0.9 };
+// [S] 426 Blunderbuss Recoil (card Characteristics "ridiculous recoil that will blow them into the ground"): at each shot the shooter is thrown
+// back along the shot's line, .back m/s off his feet with .lift m/s up, and tumbles (applyBlastLaunch's topple) to lie on his back before he rises
+const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
@@ -2905,6 +2908,12 @@ export class SimulationSystem {
       if (distSq > 2.2 * 2.2) continue;
       const pelletHits = unit === target ? pellets : Math.max(1, Math.floor(pellets / 3));
       this._applyDirectOrSplash(unit, perPellet * pelletHits, 0, attacker.team, knockback.scale(0.5));
+    }
+    // ...and the gun throws him back off his feet (BLUNDERBUSS_RECOIL)
+    if (BLUNDERBUSS_RECOIL.units.has(attacker.definition.id)) {
+      const back = attacker.position.subtract(target.position);
+      back.y = 0;
+      if (back.lengthSquared() > 1e-6) attacker.applyBlastLaunch(back.normalize(), BLUNDERBUSS_RECOIL.back, BLUNDERBUSS_RECOIL.lift);
     }
   }
 
