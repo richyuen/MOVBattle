@@ -127,6 +127,34 @@ export function barrelArmour(scene: Scene, body: ArticulatedBody): Mesh[] {
 const BARREL_BRACERS = { staves: 8, out: 1.5, from: 0.12, to: 0.92, upFrom: 0.2, upTo: 0.8, wide: 1.12, thick: 0.22, strap: 0.13, strapAt: [0.2, 0.8], strapOut: 0.12 };
 
 export function barrelBracers(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BARREL_BRACERS;
+  const out: Mesh[] = [];
+  const limbs: [Mesh, number, number][] = [
+    [body.leftLowerArm, B.from, B.to], [body.rightLowerArm, B.from, B.to], [body.leftUpperArm, B.upFrom, B.upTo], [body.rightUpperArm, B.upFrom, B.upTo],
+  ];
+  for (const [limb, from, to] of limbs) if (limb) out.push(...braceLimb(scene, limb, from, to, B.out));
+  return out;
+}
+
+/*
+ * [S] 432 the barrel greaves (CONFIRM 431 a.1: "thighs and shins bare team blue - TABS: banded wooden barrel staves around both thighs and both shins";
+ * pirate.blunderbuss.blue.png, card Appearance "large straps around their arms, legs": a short stave barrel round each thigh from under the chest barrel's
+ * foot to above the knee, another round each shin from below the knee to above the ankle, the bare knee showing between, each held by two black straps).
+ * BARREL_GREAVES, per leg limb: the bracer's staves and straps (braceLimb) .out of the limb's half-size, from .thighFrom to .thighTo of the thigh and
+ * .shinFrom to .shinTo of the shin.
+ */
+const BARREL_GREAVES = { out: 1.38, thighFrom: 0.3, thighTo: 0.9, shinFrom: 0.1, shinTo: 0.8 };
+
+export function barrelGreaves(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const G = BARREL_GREAVES;
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) if (thigh) out.push(...braceLimb(scene, thigh, G.thighFrom, G.thighTo, G.out));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) if (shin) out.push(...braceLimb(scene, shin, G.shinFrom, G.shinTo, G.out));
+  return out;
+}
+
+/** One short stave barrel round a limb (its joint's frame) from `from` to `to` of the way down it, .out of its half-size, two black straps (BARREL_BRACERS). */
+function braceLimb(scene: Scene, limb: Mesh, from: number, to: number, outScale: number): Mesh[] {
   const B = BARREL_BRACERS, A = BARREL_ARMOUR;
   const mf = getMaterialFactory();
   const brown = mf.get("cloth", A.brown, { emissive: A.brown.scale(A.glow) });
@@ -134,35 +162,29 @@ export function barrelBracers(scene: Scene, body: ArticulatedBody): Mesh[] {
   const brown2 = mf.get("cloth", brownAlt, { emissive: brownAlt.scale(A.glow) });
   const dark = mf.get("cloth", A.dark, { emissive: A.dark.scale(A.glow) });
   const out: Mesh[] = [];
-  const limbs: [Mesh, number, number][] = [
-    [body.leftLowerArm, B.from, B.to], [body.rightLowerArm, B.from, B.to], [body.leftUpperArm, B.upFrom, B.upTo], [body.rightUpperArm, B.upFrom, B.upTo],
-  ];
-  for (const [limb, from, to] of limbs) {
-    if (!limb) continue;
-    const L = limbBox(limb);
-    const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2, tall = yTop - yBot, mid = (yTop + yBot) / 2;
-    const rx = L.wide * B.out, rz = L.deep * B.out, thick = L.wide * 2 * B.thick;
-    for (let i = 0; i < B.staves; i++) {
-      const a = (i / B.staves) * Math.PI * 2;
-      const r = Math.hypot(Math.cos(a) * rx, Math.sin(a) * rz);
-      const stave = MeshBuilder.CreateBox("barrelBracerStave", { width: r * (Math.PI * 2 / B.staves) * B.wide, height: tall, depth: thick }, scene);
-      stave.parent = limb.parent;
-      stave.position.set(limb.position.x + Math.sin(a) * rx, mid, limb.position.z + Math.cos(a) * rz);
-      stave.rotation.y = Math.atan2(Math.sin(a) * rz, Math.cos(a) * rx);
-      stave.material = i % 2 ? brown2 : brown;
-      stave.convertToFlatShadedMesh();
-      out.push(stave);
-    }
-    for (const at of B.strapAt) {
-      const strap = MeshBuilder.CreateCylinder("barrelBracerStrap", { height: tall * B.strap, diameter: 2, tessellation: B.staves }, scene);
-      strap.parent = limb.parent;
-      strap.scaling.set(rx + thick / 2 + L.wide * B.strapOut, 1, rz + thick / 2 + L.wide * B.strapOut);
-      strap.position.set(limb.position.x, yTop - tall * at, limb.position.z);
-      strap.rotation.y = Math.PI / B.staves;
-      strap.material = dark;
-      strap.convertToFlatShadedMesh();
-      out.push(strap);
-    }
+  const L = limbBox(limb);
+  const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2, tall = yTop - yBot, mid = (yTop + yBot) / 2;
+  const rx = L.wide * outScale, rz = L.deep * outScale, thick = L.wide * 2 * B.thick;
+  for (let i = 0; i < B.staves; i++) {
+    const a = (i / B.staves) * Math.PI * 2;
+    const r = Math.hypot(Math.cos(a) * rx, Math.sin(a) * rz);
+    const stave = MeshBuilder.CreateBox("barrelBracerStave", { width: r * (Math.PI * 2 / B.staves) * B.wide, height: tall, depth: thick }, scene);
+    stave.parent = limb.parent;
+    stave.position.set(limb.position.x + Math.sin(a) * rx, mid, limb.position.z + Math.cos(a) * rz);
+    stave.rotation.y = Math.atan2(Math.sin(a) * rz, Math.cos(a) * rx);
+    stave.material = i % 2 ? brown2 : brown;
+    stave.convertToFlatShadedMesh();
+    out.push(stave);
+  }
+  for (const at of B.strapAt) {
+    const strap = MeshBuilder.CreateCylinder("barrelBracerStrap", { height: tall * B.strap, diameter: 2, tessellation: B.staves }, scene);
+    strap.parent = limb.parent;
+    strap.scaling.set(rx + thick / 2 + L.wide * B.strapOut, 1, rz + thick / 2 + L.wide * B.strapOut);
+    strap.position.set(limb.position.x, yTop - tall * at, limb.position.z);
+    strap.rotation.y = Math.PI / B.staves;
+    strap.material = dark;
+    strap.convertToFlatShadedMesh();
+    out.push(strap);
   }
   return out;
 }
