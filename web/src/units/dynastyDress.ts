@@ -622,19 +622,29 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
  * [S] 416 the Monkey King's staff (audit 411 b.1: "a dark brown pole about 1 m long - TABS: a staff longer than his arm span"; b.2: "plain brown -
  * TABS: a team-coloured shaft with gold banded ends"; dynasty.monkey_king.red.png: a team staff held level across his chest in both fists, reaching
  * well past both hands, each end sheathed in gold with green bands). Carried on the Monk's holder ("monkBoHolder"), so _restMonkBo lays it level
- * across his chest and swings it two-handed: MONKEY_STAFF.long of his height, .thick across, team-coloured; each end a gold sleeve .end of it long,
- * a shade wider, with .bands green bands.
+ * across his chest and swings it two-handed. (416: MONKEY_STAFF 1.35 of his height with like gold banded ends; rebuilt 427 as MONKEY_RUYI.)
  */
-const MONKEY_STAFF = {
-  long: 1.35, thick: 0.024, offset: 0.12, end: 0.2, endWide: 1.25, bands: 2, band: 0.018,
-  gold: new Color3(0.9, 0.6, 0.2), green: new Color3(0.25, 0.55, 0.3), glow: 0.14,
+/*
+ * [S] 427 rebuilt to the render (CONFIRM 422 b.1: "the staff runs about 1.7x the figure's height, each end reaching a full arm's length past the
+ * hand, wider than the whole arm span by half again"; card Appearance "golden and emerald designs on the ends"; dynasty.monkey_king.red.png, measured:
+ * the staff 1030 px against his 600 px crown-to-sole, level across his chest, its middle on his middle between the fists; the shaft team red, about a
+ * thirtieth of his height across; on his right-hand end a long orange-gold sleeve a quarter of the staff long, ringed by green bands at its tip and
+ * its foot and carrying small dark square engravings; on his left-hand end only a short gold cap with one green band). MONKEY_RUYI, in his heights:
+ * the shaft .long long and .thick across (radius), team; its middle .centre of his height off the weapon fist toward his off side (+y), so the fists
+ * sit either side of his middle; the long sleeve on the -y end (his right) .sleeve of the staff long, .sleeveWide of the shaft across, with .bands
+ * green rings .band of the staff long at [.bandAt] of the sleeve from its tip and .plaques dark square plaques .plaque of the staff wide, set proud
+ * round it; the +y end a gold cap .cap of the staff long with one green ring. Self-lit .glow.
+ */
+const MONKEY_RUYI = {
+  long: 1.7, thick: 0.017, centre: 0.16, sleeve: 0.25, sleeveWide: 1.3, bands: [0.03, 0.55, 0.97], band: 0.016, plaques: 2, plaque: 0.03, plaqueAt: [0.3, 0.75],
+  cap: 0.05, gold: new Color3(0.95, 0.5, 0.12), green: new Color3(0.15, 0.5, 0.22), engrave: new Color3(0.35, 0.12, 0.04), glow: 0.14,
 };
-/** The Monkey King's long team staff with gold banded ends, on the Monk's level carry (spec at MONKEY_STAFF). */
+/** The Monkey King's long team staff, a long gold sleeve on one end and a gold cap on the other, on the Monk's level carry (spec at MONKEY_RUYI). */
 export function monkeyStaff(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
-  const S = MONKEY_STAFF;
+  const S = MONKEY_RUYI;
   const mf = getMaterialFactory();
   const lit = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(S.glow) });
-  const team = lit(teamColor), gold = lit(S.gold), green = lit(S.green);
+  const team = lit(teamColor), gold = lit(S.gold), green = lit(S.green), engrave = lit(S.engrave);
   body.rightHand.computeWorldMatrix(true);
   const scale = Math.max(0.001, body.rightHand.absoluteScaling.y);
   const height = (body.metrics.overallHeight * body.root.scaling.y) / scale;
@@ -643,26 +653,39 @@ export function monkeyStaff(scene: Scene, body: ArticulatedBody, teamColor: Colo
   holder.parent = body.rightHand;
   const shaft = MeshBuilder.CreateCylinder("monkBo", { height: L, diameter: r * 2, tessellation: 7 }, scene);
   shaft.parent = holder;
-  shaft.position.y = L * S.offset;
+  shaft.position.y = height * S.centre;
   shaft.material = team;
   shaft.convertToFlatShadedMesh();
   new TransformNode("boGrip", scene).parent = shaft;
   const out: Mesh[] = [shaft];
-  for (const end of [-1, 1]) {
-    const sleeve = MeshBuilder.CreateCylinder("monkeyStaffEnd", { height: L * S.end, diameter: r * 2 * S.endWide, tessellation: 7 }, scene);
-    sleeve.parent = shaft;
-    sleeve.position.y = end * (L * 0.5 - L * S.end * 0.5);
-    sleeve.material = gold;
-    sleeve.convertToFlatShadedMesh();
-    out.push(sleeve);
-    for (let i = 0; i < S.bands; i++) {
-      const band = MeshBuilder.CreateCylinder("monkeyStaffBand", { height: L * S.band, diameter: r * 2 * S.endWide * 1.15, tessellation: 7 }, scene);
-      band.parent = shaft;
-      band.position.y = end * (L * 0.5 - L * S.end * (0.2 + i * 0.6));
-      band.material = green;
-      out.push(band);
+  const ring = (name: string, y: number, long: number, wide: number, mat: typeof gold): Mesh => {
+    const m = MeshBuilder.CreateCylinder(name, { height: long, diameter: wide, tessellation: 7 }, scene);
+    m.parent = shaft;
+    m.position.y = y;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  // the long gold sleeve on his right-hand end (-y), green-ringed, with dark engraved plaques
+  const sleeveLong = L * S.sleeve, sleeveWide = r * 2 * S.sleeveWide, tip = -L / 2;
+  ring("monkeyStaffSleeve", tip + sleeveLong / 2, sleeveLong, sleeveWide, gold);
+  for (const at of S.bands) ring("monkeyStaffBand", tip + sleeveLong * at, L * S.band, sleeveWide * 1.15, green);
+  for (const at of S.plaqueAt) {
+    for (let k = 0; k < S.plaques; k++) {
+      const a = (k / S.plaques) * Math.PI * 2 + Math.PI / 4;
+      const p = MeshBuilder.CreateBox("monkeyStaffEngraving", { width: L * S.plaque * 0.7, height: L * S.plaque, depth: r * 0.25 }, scene);
+      p.parent = shaft;
+      p.position.set(Math.sin(a) * sleeveWide * 0.5, tip + sleeveLong * at, Math.cos(a) * sleeveWide * 0.5);
+      p.rotation.y = a;
+      p.material = engrave;
+      out.push(p);
     }
   }
+  // the short gold cap on his left-hand end (+y), one green ring
+  const capLong = L * S.cap;
+  ring("monkeyStaffCap", L / 2 - capLong / 2, capLong, r * 2 * S.sleeveWide, gold);
+  ring("monkeyStaffBand", L / 2 - capLong - L * S.band * 0.5, L * S.band, r * 2 * S.sleeveWide * 1.15, green);
   return out;
 }
 
