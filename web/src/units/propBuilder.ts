@@ -54,7 +54,7 @@ const KASA_GOLD = new Color3(0.86, 0.62, 0.18);
 const FIREWORK_BOW = { long: 1.15, cap: 0.12, capColor: new Color3(0.92, 0.5, 0.12) };
 /** [S] 418 the Firework Arrow nocked across the firework bow's grip: in stave lengths, the tube .long, .wide, set .side off the stave and reaching .back
  * behind the string; .bands green rings, a dark head .head long. */
-const FIREWORK_NOCK = { long: 0.22, wide: 0.045, side: 0.03, back: 0.03, bands: 3, head: 0.09, band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14) };
+const FIREWORK_NOCK = { long: 0.3, wide: 0.08, side: 0.05, back: 0.02, bands: 3, ring: 1.3, head: 0.1, shaft: 0.012, nock: 0.12, wood: new Color3(0.45, 0.3, 0.16), band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14) };
 const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "hoplite_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
@@ -3958,31 +3958,41 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
           }
           // carried upright across her front at rest, as the ice bow (proceduralAnimation ICE_UPRIGHT, found by this mark)
           new TransformNode("iceBowCarry", scene).parent = stave;
-          // [S] 418 her Firework Arrow nocked across the grip (audit 411 b.2: "no rocket - TABS: a firework rocket lying across the bow";
-          // dynasty.firework_archer.red.png: a fat team tube with green bands, a dark arrowhead out past the belly): FIREWORK_NOCK.long of the stave,
-          // .wide across, from the string through the grip and out past the belly (-z), .bands green rings, a dark four-sided head
+          // [S] 419 her Firework Arrow on the bow (audit b.2: "a fat team-coloured rocket tube with green bands and a dark head nocked across the bow";
+          // dynasty.firework_archer.red.png: a fat team tube lashed to an arrow, three proud green rings, a dark four-sided head out past the belly, the
+          // arrow's brown shaft running back to the string): in stave lengths, the tube FIREWORK_NOCK.long by .wide, set .side off the stave, its tail .back
+          // past the grip toward the string; rings .ring times its girth; the head .head long; the shaft .shaft thick from the tube to .nock behind the string
           const N = FIREWORK_NOCK;
-          const tubeLong = N.long * Lb, wide = N.wide * Lb;
-          const zMid = zs - tubeLong * 0.5 + N.back * Lb;
+          const tubeLong = N.long * Lb, wide = N.wide * Lb, x = N.side * Lb;
+          const zGrip = zs - LONGBOW.bow * Lb;
+          const zTail = zGrip + N.back * Lb, zMid = zTail - tubeLong * 0.5;
+          const team = mat(scene, teamColor ?? accent, 0.15, "cloth");
           const tube = MeshBuilder.CreateCylinder("bowRocket", { height: tubeLong, diameter: wide, tessellation: 8 }, scene);
           tube.rotation.x = Math.PI / 2;
-          tube.position.set(N.side * Lb, 0, zMid);
-          tube.material = mat(scene, teamColor ?? accent, 0.15, "cloth");
+          tube.position.set(x, 0, zMid);
+          tube.material = team;
           tube.convertToFlatShadedMesh();
           tube.parent = stave;
           const green = mat(scene, N.band, 0.12, "cloth");
           for (let i = 0; i < N.bands; i++) {
-            const ring = MeshBuilder.CreateCylinder("bowRocketBand", { height: tubeLong * 0.08, diameter: wide * 1.18, tessellation: 8 }, scene);
+            const ring = MeshBuilder.CreateCylinder("bowRocketBand", { height: tubeLong * 0.09, diameter: wide * N.ring, tessellation: 8 }, scene);
             ring.rotation.x = Math.PI / 2;
-            ring.position.set(N.side * Lb, 0, zMid + tubeLong * (0.35 - (0.7 * i) / Math.max(1, N.bands - 1)));
+            ring.position.set(x, 0, zMid + tubeLong * (0.36 - (0.72 * i) / Math.max(1, N.bands - 1)));
             ring.material = green;
+            ring.convertToFlatShadedMesh();
             ring.parent = stave;
           }
-          const head = MeshBuilder.CreateCylinder("bowRocketHead", { height: N.head * Lb, diameterTop: 0, diameterBottom: wide * 0.8, tessellation: 4 }, scene);
+          const head = MeshBuilder.CreateCylinder("bowRocketHead", { height: N.head * Lb, diameterTop: 0, diameterBottom: wide * 0.85, tessellation: 4 }, scene);
           head.rotation.x = -Math.PI / 2;
-          head.position.set(N.side * Lb, 0, zMid - tubeLong * 0.5 - N.head * Lb * 0.5);
+          head.position.set(x, 0, zMid - tubeLong * 0.5 - N.head * Lb * 0.5);
           head.material = mat(scene, N.dark, 0.08);
           head.parent = stave;
+          const shaftLong = zs + N.nock * Lb - zTail;
+          const shaft = MeshBuilder.CreateCylinder("bowRocketShaft", { height: shaftLong, diameter: N.shaft * Lb, tessellation: 5 }, scene);
+          shaft.rotation.x = Math.PI / 2;
+          shaft.position.set(x, 0, zTail + shaftLong * 0.5);
+          shaft.material = mat(scene, N.wood, 0.1);
+          shaft.parent = stave;
         }
         const string = MeshBuilder.CreateCylinder("string", { height: Lb * 0.97, diameter: 0.005 * Lb, tessellation: 4 }, scene);
         string.position.z = zs;
