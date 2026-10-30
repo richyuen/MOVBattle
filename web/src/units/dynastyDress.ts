@@ -973,3 +973,50 @@ export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
   }
   return out;
 }
+
+/*
+ * [S] 422 the Monkey King's half robe and scarf (RE-AUDIT 420 a.4: "a tan box tunic over the whole trunk - TABS: a team-coloured robe draped over the left
+ * side only, with golden strips and a scarf at the neck"; card Appearance "wears a scarf ... a robe with golden strips that covers only their left side of
+ * their upper body"; dynasty.monkey_king.red.png: a team robe hanging over the left shoulder and down the left side of the chest to the waist, its edge
+ * running from the right collarbone down to the left hip, two thin gold strips down its front, the right side of the trunk bare in the tan undershirt, a
+ * team scarf knotted round the neck with a point hanging on the chest). In the trunk box (W, H, D), on the trunk's parent like ARCHER_ROBE: the robe a
+ * box over the trunk's left (-x) from -.out of W/2 to .edge of W/2 on the right, .deep deep, H tall, so the tan trunk shows only on the right; a sleeve
+ * shell .sleeveOut over the left upper arm; .strips gold strips .strip of W wide and .stripLong of H long standing .proud off the robe's front at
+ * .stripAt of W/2; the scarf a team torus .scarf of W round the neck at the trunk's top, .scarfThick of H thick, with a flat team point .bib of W wide,
+ * .bibLong of H long hanging from it on the chest.
+ */
+const MONKEY_ROBE = { out: 1.14, edge: 0.12, deep: 1.18, sleeveOut: 1.55, sleeveTo: 0.95, strips: 2, strip: 0.06, stripLong: 0.92, stripAt: [-0.62, -0.26] as const, proud: 0.06, scarf: 0.72, scarfThick: 0.12, bib: 0.42, bibLong: 0.34, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/** The Monkey King's team robe over the left side of his trunk with two gold strips, a sleeve on the left arm and a team scarf at the neck (spec at MONKEY_ROBE). */
+export function monkeyRobe(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const R = MONKEY_ROBE;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(R.glow) });
+  const gold = mf.get("cloth", R.gold, { emissive: R.gold.scale(R.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const place = (m: Mesh, x: number, y: number, z: number, mat: typeof cloth): Mesh => {
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.copyFrom(tm.rotation);
+    m.parent = tm.parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: typeof cloth): Mesh =>
+    place(MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene), x, y, z, mat);
+  // the robe over the left half of the trunk; the left is -x
+  const x0 = -W * 0.5 * R.out, x1 = W * 0.5 * R.edge;
+  const deep = D * R.deep;
+  box("monkeyRobe", x1 - x0, H * 1.02, deep, (x0 + x1) / 2, 0, 0, cloth);
+  for (const at of R.stripAt) box("monkeyRobeStrip", W * R.strip, H * R.stripLong, D * R.proud, W * 0.5 * at, 0, deep / 2 + D * R.proud * 0.3, gold);
+  out.push(limbShell(scene, "monkeyRobeSleeve", body.leftUpperArm, 0, R.sleeveTo, R.sleeveOut, cloth));
+  // the scarf: a team ring round the neck on the trunk's top with a point hanging on the chest
+  const scarf = place(MeshBuilder.CreateTorus("monkeyScarf", { diameter: W * R.scarf, thickness: H * R.scarfThick, tessellation: 8 }, scene), 0, H / 2, 0, cloth);
+  scarf.scaling.z = (D * R.deep) / (W * R.out);
+  const bib = place(MeshBuilder.CreateCylinder("monkeyScarfBib", { height: H * R.bibLong, diameterTop: W * R.bib, diameterBottom: 0, tessellation: 3 }, scene), 0, H / 2 - H * R.bibLong * 0.5, deep / 2 + D * 0.04, cloth);
+  bib.scaling.z = 0.25;
+  return out;
+}
