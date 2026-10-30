@@ -1114,12 +1114,13 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
       const a = k * Math.PI / 4 + Math.PI / 8;
       const block = MeshBuilder.CreateBox("wheel", { width: W.wide, height: W.rim, depth: chord }, scene);
       block.position.set(x, W.axle + rimR * Math.sin(a), rimR * Math.cos(a));
-      block.rotation.x = a + Math.PI / 2;
+      // its length (+z) along the rim's tangent (0, cos a, -sin a) at its place (0, sin a, cos a)
+      block.rotation.x = -(a + Math.PI / 2);
       block.parent = root; block.material = wheelIron; allMeshes.push(block);
       if (k % 2 === 0) {
         const clamp = MeshBuilder.CreateBox("wheelClamp", { width: W.wide * W.clampWide, height: W.rim * W.clampTall, depth: chord * W.clampLong }, scene);
         clamp.position.set(x, W.axle + (rimR + W.rim * 0.1) * Math.sin(a), (rimR + W.rim * 0.1) * Math.cos(a));
-        clamp.rotation.x = a + Math.PI / 2;
+        clamp.rotation.x = -(a + Math.PI / 2);
         clamp.parent = root; clamp.material = wheelIron; allMeshes.push(clamp);
       }
     }
