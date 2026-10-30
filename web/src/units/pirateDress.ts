@@ -116,6 +116,57 @@ export function barrelArmour(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 428 the barrel bracers (audit 422 a.3: "the forearms - bare team - TABS: brown stave bracers with black straps on each arm"; pirate.blunderbuss.red.png,
+ * card Appearance "large straps around their arms": short barrels of upright brown staves round each forearm from below the elbow to the wrist and round
+ * each upper arm under the shoulder, each held by two black straps). BARREL_BRACERS, per arm limb (its joint's frame): .staves upright boards round an
+ * oval .out of the limb's half-size from .from to .to of the way down it (.upFrom/.upTo on the upper arm), each .wide of its share of the girth and
+ * .thick of the limb's width thick, alternating BARREL_ARMOUR's brown and its .alt shade; two black straps .strap of the run tall at .strapAt of it,
+ * .strapOut proud of the staves. Self-lit as the barrel.
+ */
+const BARREL_BRACERS = { staves: 8, out: 1.5, from: 0.12, to: 0.92, upFrom: 0.2, upTo: 0.8, wide: 1.12, thick: 0.22, strap: 0.13, strapAt: [0.2, 0.8], strapOut: 0.12 };
+
+export function barrelBracers(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BARREL_BRACERS, A = BARREL_ARMOUR;
+  const mf = getMaterialFactory();
+  const brown = mf.get("cloth", A.brown, { emissive: A.brown.scale(A.glow) });
+  const brownAlt = A.brown.scale(A.alt);
+  const brown2 = mf.get("cloth", brownAlt, { emissive: brownAlt.scale(A.glow) });
+  const dark = mf.get("cloth", A.dark, { emissive: A.dark.scale(A.glow) });
+  const out: Mesh[] = [];
+  const limbs: [Mesh, number, number][] = [
+    [body.leftLowerArm, B.from, B.to], [body.rightLowerArm, B.from, B.to], [body.leftUpperArm, B.upFrom, B.upTo], [body.rightUpperArm, B.upFrom, B.upTo],
+  ];
+  for (const [limb, from, to] of limbs) {
+    if (!limb) continue;
+    const L = limbBox(limb);
+    const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2, tall = yTop - yBot, mid = (yTop + yBot) / 2;
+    const rx = L.wide * B.out, rz = L.deep * B.out, thick = L.wide * 2 * B.thick;
+    for (let i = 0; i < B.staves; i++) {
+      const a = (i / B.staves) * Math.PI * 2;
+      const r = Math.hypot(Math.cos(a) * rx, Math.sin(a) * rz);
+      const stave = MeshBuilder.CreateBox("barrelBracerStave", { width: r * (Math.PI * 2 / B.staves) * B.wide, height: tall, depth: thick }, scene);
+      stave.parent = limb.parent;
+      stave.position.set(limb.position.x + Math.sin(a) * rx, mid, limb.position.z + Math.cos(a) * rz);
+      stave.rotation.y = Math.atan2(Math.sin(a) * rz, Math.cos(a) * rx);
+      stave.material = i % 2 ? brown2 : brown;
+      stave.convertToFlatShadedMesh();
+      out.push(stave);
+    }
+    for (const at of B.strapAt) {
+      const strap = MeshBuilder.CreateCylinder("barrelBracerStrap", { height: tall * B.strap, diameter: 2, tessellation: B.staves }, scene);
+      strap.parent = limb.parent;
+      strap.scaling.set(rx + thick / 2 + L.wide * B.strapOut, 1, rz + thick / 2 + L.wide * B.strapOut);
+      strap.position.set(limb.position.x, yTop - tall * at, limb.position.z);
+      strap.rotation.y = Math.PI / B.staves;
+      strap.material = dark;
+      strap.convertToFlatShadedMesh();
+      out.push(strap);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 426 the open coat (audit 422 a.3: "a dark closed tunic - TABS: an open team coat with tan lapels over a white V undershirt"; pirate.harpooner.red.png,
  * card Appearance "open coat, undershirt": a team coat from the shoulders to the top of the thighs, open down the front over a white undershirt cut in a
  * deep V, its two fronts edged with broad tan lapels turned back from the collar). OPEN_COAT: the coat a shell .out of the trunk wide and .deep of it deep,
