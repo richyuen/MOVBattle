@@ -531,7 +531,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ PIRATE ═══════════════════════
   "pirate.flintlock": vis(
-    { scale: 0.95, bulk: 0.95 }, "flintlock", "bandana", "none", "none", "#b3302a",
+    // [S] 431 no accent bandana hat: his bandana is the team dome (pirateDress CANNON_BANDANNA)
+    { scale: 0.95, bulk: 0.95 }, "flintlock", "none", "none", "none", "#b3302a",
     "flintlock", // [S] 424 a second pistol in the off hand (card Off Hand Flintlock), held out mirrored by _aimPistol
     { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
@@ -542,7 +543,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
   "pirate.bomb_thrower": vis(
-    { scale: 1.0, bulk: 1.0 }, "bomb", "bandana", "none", "none", "#2F4F4F",
+    // [S] 431 no accent bandana hat: his bandana is the team dome (pirateDress CANNON_BANDANNA)
+    { scale: 1.0, bulk: 1.0 }, "bomb", "none", "none", "none", "#2F4F4F",
     // A bomb in each hand (units/pirate.bomb_thrower): the right one is thrown, the left one is kept
     "bomb",
     {
