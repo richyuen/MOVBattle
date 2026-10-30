@@ -794,6 +794,9 @@ const HWACHA_WHEEL = { across: 0.74, rim: 0.07, wide: 0.08, sides: 8, spokes: 8,
 /** [S] 419 the hwacha's shafts (dynasty.hwacha.red.png: two long brown beams from under the rack, past the wheels' inside, sloping down behind to team-coloured
  * end blocks): each .wide x .deep, from .frontY/.frontZ to .rearY/.rearZ at .x either side; a team cap .cap tall, .capLong long at the rear end. */
 const HWACHA_SHAFT = { x: 0.45, wide: 0.1, deep: 0.09, frontY: 0.5, frontZ: 0.55, rearY: 0.18, rearZ: -1.45, cap: 0.2, capLong: 0.1, wood: new Color3(0.5, 0.28, 0.14) };
+/** [P] 420 one self-lit timber for the rack, bed, shafts and wheels (audit 411 a.2: "timber colour near-black - TABS: light orange-brown wood"; the wood
+ * preset displayed grey-taupe): orange x .6 off output/loop/palette.png, cloth with a .12 self-light, as the dress modules' timber. */
+const HWACHA_TIMBER = new Color3(0.6, 0.27, 0.08);
 // TABS-style hwacha: wide wooden cart with large, steeply-tilted rack of tube holes
 // filled with rocket arrows pointing upward. Big spoked wheels, cart handles behind.
 function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
@@ -808,7 +811,8 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // ─── Cart base ───
   const base = MeshBuilder.CreateBox("base", { width: 1.3, height: 0.1, depth: 1.2 }, scene);
-  base.position.y = 0.4; base.parent = root; base.material = makeMat(scene, HWACHA_RACK.wood); allMeshes.push(base); // [S] 419 a timber bed, not a team tray
+  const timber = getMaterialFactory().get("cloth", HWACHA_TIMBER, { emissive: HWACHA_TIMBER.scale(0.12) }); // [P] 420
+  base.position.y = 0.4; base.parent = root; base.material = timber; allMeshes.push(base); // [S] 419 a timber bed, not a team tray
   // the body's own material is tinted to the team (wrapAsBody, applyMaterialPreset), so the body mesh is a team core hidden inside the bed, and the bed's
   // timber material (shared with the rack and wheels) stays wood
   const core = MeshBuilder.CreateBox("hwachaCore", { width: 1.2, height: 0.08, depth: 1.1 }, scene);
@@ -823,7 +827,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // ─── [S] 418 two spoked octagonal wheels (spec at HWACHA_WHEEL; audit a.3: "solid dark discs - TABS: spoked octagonal wooden wheels") ───
   const Wh = HWACHA_WHEEL;
-  const wheelWood = makeMat(scene, HWACHA_RACK.wood);
+  const wheelWood = timber;
   for (const xOff of [-0.6, 0.6]) {
     const at = new Vector3(xOff + Math.sign(xOff) * Wh.out, Wh.across / 2, Wh.z);
     const rim = MeshBuilder.CreateTorus("wheel", { diameter: Wh.across - Wh.rim, thickness: Wh.rim, tessellation: Wh.sides }, scene);
@@ -846,7 +850,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // ─── [S] 419 two long brown shafts (spec at HWACHA_SHAFT; audit a.4: "a flat team-blue tray - TABS: two long brown shafts with team end caps") ───
   const Sh = HWACHA_SHAFT;
-  const shaftWood = makeMat(scene, Sh.wood);
+  const shaftWood = timber;
   for (const side of [-1, 1]) {
     const from = new Vector3(side * Sh.x, Sh.frontY, Sh.frontZ), to = new Vector3(side * Sh.x, Sh.rearY, Sh.rearZ);
     const run = to.subtract(from);
@@ -865,7 +869,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
   // a light orange-brown frame of posts and rails round a grid of laths, every cell holding a dark pyramid point on a tube, the frame leant back a
   // little on a plank shelf over the cart) ───
   const R = HWACHA_RACK;
-  const lightWood = makeMat(scene, R.wood);
+  const lightWood = timber;
   const headMat = makeMat(scene, R.head);
   const rackPivot = new TransformNode("rackPivot", scene);
   rackPivot.position.set(0, R.seatY, R.seatZ);
