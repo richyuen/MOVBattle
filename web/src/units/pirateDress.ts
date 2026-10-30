@@ -770,6 +770,79 @@ export function queenHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 430 the Captain's two parrots (audit 422 captain a.2: "the hat's crown - bare - TABS: two parrots, one blue and one red, perched on it";
+ * pirate.captain.red.png, card Appearance "two parrots": on the black tricorn's two front corners, either side of the skull plate, a blue parrot over
+ * his right eye and a red one over his left, each about as tall as the hat's crown is wide: an upright egg body, a round head with a pale hooked beak
+ * and white bead eyes, a long tail sloping down behind, an orange-yellow chest on the blue bird and a pale face on the red). CAPTAIN_PARROTS, in the hat's
+ * crown frame (the "tricornCrown" mesh, +z his front, its half width h): each bird stands at (.x h either side, .y h up, .z h ahead) scaled .size h,
+ * turned .turn rad out; body (.body), head (.head) at .headY, beak .beak, eyes, tail .tail long leaning .tailLean. Cloth self-lit .glow.
+ */
+const CAPTAIN_PARROTS = {
+  x: 1.15, y: 0.55, z: 0.35, size: 1.0, turn: 0.35, body: [0.32, 0.5, 0.34] as const, head: 0.27, headY: 1.05, beak: 0.16, tail: 0.75, tailLean: 0.45, glow: 0.2,
+  blue: new Color3(0.08, 0.2, 0.9), chest: new Color3(1, 0.55, 0.08), red: new Color3(0.9, 0.06, 0.04), face: new Color3(0.85, 0.83, 0.8),
+  beakColor: new Color3(0.2, 0.19, 0.2), white: new Color3(0.95, 0.94, 0.9), black: new Color3(0.03, 0.03, 0.035),
+};
+
+/** Two parrots, blue and red, perched on the front corners of the Captain's tricorn (spec at CAPTAIN_PARROTS). */
+export function captainParrots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = CAPTAIN_PARROTS;
+  const crown = body.root.getChildMeshes(false).find((m) => m.name === "tricornCrown") as Mesh | undefined;
+  if (!crown) return [];
+  const mf = getMaterialFactory();
+  const m = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(P.glow) });
+  const h = crown.getBoundingInfo().boundingBox.extendSize.x;
+  const out: Mesh[] = [];
+  const birds = [
+    { side: 1, color: P.blue, patch: P.chest, patchFace: false },
+    { side: -1, color: P.red, patch: P.face, patchFace: true },
+  ];
+  for (const b of birds) {
+    const s = h * P.size;
+    const pivot = new TransformNode("captainParrot", scene);
+    pivot.parent = crown;
+    pivot.position.set(b.side * h * P.x, h * P.y, h * P.z);
+    pivot.rotation.y = b.side * P.turn;
+    const put = (mesh: Mesh, mat: ReturnType<typeof m>): Mesh => {
+      mesh.parent = pivot;
+      mesh.material = mat;
+      mesh.convertToFlatShadedMesh();
+      out.push(mesh);
+      return mesh;
+    };
+    const feathers = m(b.color);
+    const bodyM = put(MeshBuilder.CreateIcoSphere("captainParrotBody", { radius: 1, subdivisions: 1, flat: true }, scene), feathers);
+    bodyM.scaling.set(s * P.body[0], s * P.body[1], s * P.body[2]);
+    bodyM.position.y = s * P.body[1];
+    bodyM.rotation.x = -0.15;
+    const headM = put(MeshBuilder.CreateIcoSphere("captainParrotHead", { radius: s * P.head, subdivisions: 1, flat: true }, scene), feathers);
+    headM.position.set(0, s * P.headY, s * 0.04);
+    // the chest (blue bird) or the face (red bird) in the second colour
+    const patch = put(MeshBuilder.CreateIcoSphere("captainParrotPatch", { radius: 1, subdivisions: 1, flat: true }, scene), m(b.patch));
+    if (b.patchFace) {
+      patch.scaling.set(s * P.head * 0.8, s * P.head * 0.7, s * P.head * 0.5);
+      patch.position.set(0, s * P.headY, s * (0.04 + P.head * 0.6));
+    } else {
+      patch.scaling.set(s * P.body[0] * 0.75, s * P.body[1] * 0.7, s * P.body[2] * 0.5);
+      patch.position.set(0, s * P.body[1] * 1.05, s * P.body[2] * 0.62);
+    }
+    const beak = put(MeshBuilder.CreateCylinder("captainParrotBeak", { height: s * P.beak * 2, diameterTop: s * P.beak * 1.3, diameterBottom: 0, tessellation: 4 }, scene), m(P.beakColor));
+    beak.position.set(0, s * (P.headY - 0.08), s * (0.04 + P.head * 1.05));
+    beak.rotation.x = 2.4;
+    for (const ex of [-1, 1]) {
+      const eye = put(MeshBuilder.CreateIcoSphere("captainParrotEye", { radius: s * 0.085, subdivisions: 1, flat: true }, scene), m(P.white));
+      eye.position.set(ex * s * P.head * 0.75, s * (P.headY + 0.06), s * (0.04 + P.head * 0.55));
+      const pupil = put(MeshBuilder.CreateIcoSphere("captainParrotPupil", { radius: s * 0.04, subdivisions: 1, flat: true }, scene), m(P.black));
+      pupil.position.set(ex * s * P.head * 0.86, s * (P.headY + 0.06), s * (0.04 + P.head * 0.66));
+    }
+    const tail = put(MeshBuilder.CreateBox("captainParrotTail", { width: s * 0.22, height: s * P.tail, depth: s * 0.06 }, scene), feathers);
+    tail.setPivotPoint(new Vector3(0, s * P.tail / 2, 0));
+    tail.position.set(0, s * (P.body[1] * 0.6 - P.tail / 2), -s * P.body[2] * 0.8);
+    tail.rotation.x = -P.tailLean;
+  }
+  return out;
+}
+
+/*
  * [S] 429 the striped socks (audit 422 bomb_thrower a.3: "the shins - bare - TABS: team-and-grey ringed socks from the knee down to brown shoes";
  * pirate.bomb_thrower.red.png: below a bare knee a grey turned-down top, then the sock ringed in even team and grey bands down into the shoe, a little
  * proud of the shin). PIRATE_SOCKS, on each lower leg (share of its length from the knee): the turned top a grey ring from .from to .top, .topOut of the
