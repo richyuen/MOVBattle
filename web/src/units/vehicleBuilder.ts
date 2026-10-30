@@ -1082,6 +1082,20 @@ const CANNON_WHEEL = {
  */
 const CANNON_SIGHT = { at: 0.42, seat: 0.12, post: 0.03, ring: 0.12, inner: 0.04, bar: 0.022, thick: 0.03, spokeOut: 1.3 };
 
+/**
+ * [S] 428 the cannon's breech handles and the rider on them (audit 422 b.2: "the rider's hands pushing on the wheel rim from behind - TABS: on the two
+ * handles either side of the breech"; pirate.cannon.red.png: the crewman stands square behind the gun, leaning in, a fist closed on each of two dark iron
+ * handles that stand up off the back of the wooden blocks either side of the breech, the barrel at his waist). The rider .rider of a man (a gun
+ * crewman's .46 left his head under the breech's top). In m: each handle wanted at .x either side, .y up and .z along
+ * the bore (the blocks' back); the rider's torso leans .lean rad, his legs braced (.hipBack/.hipFwd, .knee); his straight arms are aimed from the
+ * shoulder at the handles and he is set back along the bore until they just reach (arm length read off the rig); each handle is then built where his
+ * fist is: an upright grip .grip tall and .gripWide thick through the fist, a knob on top, a post down to the block's top .blockTop, iron self-lit.
+ */
+const CANNON_HANDLES = {
+  rider: 0.66, x: 0.2, y: 0.57, z: -0.36, lean: 0.2, hipBack: 0.25, hipFwd: -0.3, knee: 0.3, grip: 0.1, gripWide: 0.035, knob: 0.05, blockTop: 0.5,
+  color: new Color3(0.1, 0.1, 0.11), glow: 0.12,
+};
+
 function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
@@ -1195,26 +1209,50 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   post.position.set(0, B.axis + S.seat * 0.8 + S.post / 2, B.breech + S.at);
   post.parent = root; post.material = metal; allMeshes.push(post);
 
-  // Operator stands on the ground beside the wheel, turned in to it, and shoves it: both hands flat on the wheel's
-  // outer face, back straight in one line with the braced rear leg, lead knee bent. Sunk 0.03 so both feet are on the ground
+  // [S] 428 the operator stands square behind the breech, leaning in, a fist on each breech handle (spec at CANNON_HANDLES), in place of shoving
+  // the wheel's rim from beside it. Sunk 0.03 so both feet are on the ground
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
-    operator = addOperator(scene, root, allMeshes, 0.6, -0.03, -0.2, color, (body) => {
-      body.root.rotation.y = -1.2;
-      body.torso.rotation.x = 0.5;
-      body.neck.rotation.x = -0.3;
-      body.leftShoulder.rotation.x = -1.9;
-      body.leftElbow.rotation.x = -0.1;
-      body.rightShoulder.rotation.x = -1.9;
-      body.rightElbow.rotation.x = -0.1;
-      body.leftHip.rotation.x = -0.75;
-      body.leftHip.rotation.z = -0.16;
-      body.leftKnee.rotation.x = 0.9;
-      body.rightHip.rotation.x = 0.5;
-      body.rightHip.rotation.z = 0.16;
-      body.rightKnee.rotation.x = 0;
+    const H = CANNON_HANDLES;
+    const handleIron = getMaterialFactory().get("cloth", H.color, { emissiveIntensity: H.glow });
+    operator = addOperator(scene, root, allMeshes, 0, -0.03, H.z - 0.5, color, (body) => {
+      body.torso.rotation.x = H.lean;
+      body.neck.rotation.x = -H.lean * 0.8;
+      body.leftHip.rotation.x = H.hipFwd;
+      body.leftKnee.rotation.x = H.knee;
+      body.rightHip.rotation.x = H.hipBack;
+      body.rightKnee.rotation.x = 0.1;
+      for (const elbow of [body.leftElbow, body.rightElbow]) elbow.rotation.setAll(0);
+      // his arm's length, shoulder joint to fist, hanging straight
+      settleWorld(body.leftHand);
+      const armLong = Vector3.Distance(body.leftShoulder.getAbsolutePosition(), body.leftHand.getAbsolutePosition());
+      // set him back along the bore until a straight arm just reaches the handles
+      settleWorld(body.leftShoulder);
+      const s = body.leftShoulder.getAbsolutePosition();
+      const dx = Math.abs(s.x) - H.x, dy = H.y - s.y;
+      const reach = Math.sqrt(Math.max(0.01, armLong * armLong - dx * dx - dy * dy));
+      body.root.position.z += (H.z - reach) - s.z;
+      for (const [shoulder, hand] of [[body.leftShoulder, body.leftHand], [body.rightShoulder, body.rightHand]] as [TransformNode, TransformNode][]) {
+        settleWorld(shoulder);
+        const at = shoulder.getAbsolutePosition();
+        const side = Math.sign(at.x) || 1;
+        aimLimb(shoulder, new Vector3(side * H.x, H.y, H.z).subtract(at));
+        settleWorld(hand);
+        // the handle where the fist closed: the grip through it, a knob over it, a post down to the block
+        const fist = hand.getAbsolutePosition();
+        const grip = MeshBuilder.CreateCylinder("cannonHandle", { height: H.grip, diameter: H.gripWide, tessellation: 6 }, scene);
+        grip.position.set(fist.x, fist.y, fist.z);
+        const knob = MeshBuilder.CreateSphere("cannonHandle", { diameter: H.knob, segments: 4 }, scene);
+        knob.position.set(fist.x, fist.y + H.grip / 2 + H.knob * 0.3, fist.z);
+        const postLong = Math.max(0.02, fist.y - H.grip / 2 - H.blockTop);
+        const post = MeshBuilder.CreateBox("cannonHandle", { width: H.gripWide * 1.6, height: postLong, depth: H.gripWide * 1.6 }, scene);
+        post.position.set(fist.x, H.blockTop + postLong / 2, fist.z);
+        const foot = MeshBuilder.CreateBox("cannonHandle", { width: 0.09, height: 0.025, depth: 0.09 }, scene);
+        foot.position.set(fist.x, H.blockTop + 0.012, fist.z);
+        for (const m of [grip, knob, post, foot]) { m.convertToFlatShadedMesh(); m.parent = root; m.material = handleIron; allMeshes.push(m); }
+      }
       dressCannonCrew(scene, body, color);
-    });
+    }, { ...OPERATOR_PROPORTIONS, scale: H.rider });
   }
 
   const vehicleSockets: VehicleSocketSet = {
