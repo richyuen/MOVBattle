@@ -657,6 +657,55 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
 }
 
 /*
+ * [S] 430 the Harpooner's beard (audit 422 harpooner a.2: "the chin - bare - TABS: a thick dark-brown beard under the eyes"; pirate.harpooner.red.png,
+ * card Appearance "a fairly thick beard": a short full dark-brown beard from just under the bead eyes round the jaw and chin, wider than the face and
+ * standing out of it, joined to sideburns up the cheeks under the hat, the open mouth a dark notch in its front). PIRATE_BEARD, in the head's own box
+ * (e its half sizes): a faceted jaw mass .jaw[0] of e.x across and .jaw[2] of e.z deep, from .under of e.y below the eyes' bottom down to .foot of e.y
+ * under the head's middle, sat .ahead of e.z forward; up each cheek a sideburn .burn of e.x thick from the eyes' top to the jaw's middle, from .burnBack
+ * to .burnFront of e.z; on its front a mouth notch .mouth of e.x across, .mouthTall of e.y, in .mouthColor. Dark brown self-lit .glow.
+ */
+const PIRATE_BEARD = {
+  jaw: [1.14, 0, 0.72] as const, under: 0.06, foot: -1.38, ahead: 0.46, burn: 0.22, burnBack: -0.35, burnFront: 0.62, mouth: 0.42, mouthTall: 0.16,
+  color: new Color3(0.18, 0.09, 0.06), mouthColor: new Color3(0.45, 0.08, 0.06), glow: 0.14,
+};
+
+/** A short full dark-brown beard round the jaw under the eyes, with sideburns and a mouth notch (spec at PIRATE_BEARD). */
+export function pirateBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = PIRATE_BEARD;
+  const mf = getMaterialFactory();
+  const hair = mf.get("cloth", B.color, { emissive: B.color.scale(B.glow) });
+  const mouthMat = mf.get("cloth", B.mouthColor, { emissive: B.mouthColor.scale(B.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat = hair): Mesh => {
+    m.parent = head;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const top = span[0] - e.y * B.under, foot = c.y + e.y * B.foot;
+  const jawZ = c.z + e.z * B.ahead, jawD = e.z * 2 * B.jaw[2];
+  const jaw = put(MeshBuilder.CreateIcoSphere("pirateBeard", { radius: 1, subdivisions: 1, flat: true }, scene));
+  jaw.scaling.set(e.x * B.jaw[0], (top - foot) / 2, jawD / 2);
+  jaw.position.set(c.x, (top + foot) / 2, jawZ);
+  for (const side of [-1, 1]) {
+    const y1 = span[1], y0 = (top + foot) / 2;
+    const z0 = c.z + e.z * B.burnBack, z1 = c.z + e.z * B.burnFront;
+    const burn = put(MeshBuilder.CreateBox("pirateBeardBurn", { width: e.x * B.burn, height: y1 - y0, depth: z1 - z0 }, scene));
+    burn.position.set(c.x + side * (e.x + e.x * B.burn * 0.3), (y0 + y1) / 2, (z0 + z1) / 2);
+  }
+  // the mouth: a dark notch in the beard's front, just under the eyes
+  const mouthY = top - e.y * B.mouthTall * 1.3;
+  const mouth = put(MeshBuilder.CreateBox("pirateBeardMouth", { width: e.x * B.mouth, height: e.y * B.mouthTall, depth: e.z * 0.1 }, scene), mouthMat);
+  mouth.position.set(c.x, mouthY, jawZ + jawD / 2 * 0.93);
+  return out;
+}
+
+/*
  * [S] 429 the striped socks (audit 422 bomb_thrower a.3: "the shins - bare - TABS: team-and-grey ringed socks from the knee down to brown shoes";
  * pirate.bomb_thrower.red.png: below a bare knee a grey turned-down top, then the sock ringed in even team and grey bands down into the shoe, a little
  * proud of the shin). PIRATE_SOCKS, on each lower leg (share of its length from the knee): the turned top a grey ring from .from to .top, .topOut of the
