@@ -2792,8 +2792,15 @@ const ZWEI: SlabCut = { long: 0.85, wide: 0.05, grip: 4.5, point: 0.12, lug: 0.0
 const CUTLASS = { long: 0.5, wide: 0.05, taper: 0.55, thick: 0.22, curve: 0.13, segs: 6, cup: 3.4, cupDeep: 0.9, grip: 1.7, bow: 0.35, jewel: 0.7 };
 const CUTLASS_TAN = new Color3(0.8, 0.58, 0.33);
 const CUTLASS_JEWEL = new Color3(1.2, 0.08, 0.06);
-function buildCutlass(scene: Scene, name: string, fit: BladeFit): { blade: Mesh; hilt: number } {
-  const C = CUTLASS;
+/*
+ * [S] 430 the Pirate Queen's big cutlass (audit 422 queen b.2: "a straight broad double-edged sword with a cross guard - TABS: an unusually big curved
+ * cutlass with a tan guard"; pirate.pirate_queen.red.png: her main-hand blade reaches from the fist past her far shoulder, about .6 of her height, a hand
+ * broad at the guard and sweeping back in a clear curve to the point, on the tan cup hilt). QUEEN_CUTLASS: CUTLASS's cut .long of her standing height,
+ * .wide across, its back .curve off straight by the tip, a larger .cup guard (weaponVariant "queen_cutlass").
+ */
+const QUEEN_CUTLASS = { ...CUTLASS, long: 0.66, wide: 0.1, taper: 0.5, curve: 0.24, segs: 7, cup: 4.2 };
+function buildCutlass(scene: Scene, name: string, fit: BladeFit, cut: typeof CUTLASS = CUTLASS): { blade: Mesh; hilt: number } {
+  const C = cut;
   const L = fit.stand * C.long, w0 = fit.stand * C.wide, F = fit.fist;
   const steel = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
   const tan = mat(scene, CUTLASS_TAN, 0.12, "cloth");
@@ -3585,7 +3592,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "cutlass": {
       const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;
       // [S] 425 the pirates' cutlass and sabre are slim curved blades on tan hilts (CUTLASS), not the straight broad slab
-      const { blade, hilt } = type === "cutlass" ? buildCutlass(scene, "blade", fit) : buildSlabSword(scene, "blade", fit, accent, false, cut);
+      const { blade, hilt } = type === "cutlass" ? buildCutlass(scene, "blade", fit, variant === "queen_cutlass" ? QUEEN_CUTLASS : CUTLASS) : buildSlabSword(scene, "blade", fit, accent, false, cut);
       // The guard stays where the old one sat on the fist, whatever the blade above it is cut to
       blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
       // The Knight's arming sword (355): grey steel guard, grip and pommel (the metal accent rendered black at the hip), held out by its marker

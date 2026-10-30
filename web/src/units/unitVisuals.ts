@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "queen_cutlass";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -954,6 +954,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // [S] 427 no hat: her head is the team bandana over one eye (pirateDress QUEEN_BANDANA)
       return vis({ scale: 1.72, bulk: 1.24, headSize: 1.08, armLength: 1.08 }, "cutlass", "none", "none", "cape", "#ff4f8a", "cutlass", {
         posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
+        weaponVariant: "queen_cutlass", // [S] 430 her main-hand cutlass is the big broad curved one (propBuilder QUEEN_CUTLASS)
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });
