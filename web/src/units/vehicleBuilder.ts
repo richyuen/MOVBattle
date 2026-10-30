@@ -1093,7 +1093,7 @@ const CANNON_SIGHT = { at: 0.42, seat: 0.12, post: 0.03, ring: 0.12, inner: 0.04
  * fist is: an upright grip .grip tall and .gripWide thick through the fist, a knob on top, a post down to the block's top .blockTop, iron self-lit.
  */
 const CANNON_HANDLES = {
-  rider: 0.66, x: 0.2, y: 0.57, z: -0.36, lean: 0.2, hipBack: 0.25, hipFwd: -0.3, knee: 0.3, grip: 0.1, gripWide: 0.035, knob: 0.05, blockTop: 0.5,
+  rider: 0.66, x: 0.24, y: 0.72, z: -0.36, lean: 0.2, hipBack: 0.25, hipFwd: -0.3, knee: 0.3, grip: 0.1, gripWide: 0.035, knob: 0.05, blockTop: 0.5,
   color: new Color3(0.1, 0.1, 0.11), glow: 0.12,
 };
 
