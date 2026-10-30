@@ -78,7 +78,12 @@ const HARPOON_REEL = { lift: 3, top: 14, stop: 1.4, rope: 0.7 };
 const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up: 3.4, spin: 9, rest: 0.05, lie: 8, ready: 0.9 };
 // [S] 426 Blunderbuss Recoil (card Characteristics "ridiculous recoil that will blow them into the ground"): at each shot the shooter is thrown
 // back along the shot's line, .back m/s off his feet with .lift m/s up, and tumbles (applyBlastLaunch's topple) to lie on his back before he rises
-const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
+// [S] 426 Pirate Kick (card pirate.harpooner Characteristics "The Harpooner will then reel in the enemy unit, and kicking them once in melee range"):
+// a man within .within m past body contact, with a kick ready (.cooldown s apart), is front-kicked: the harpooner stops, his foot chambers and drives
+// out over .windup s (proceduralAnimation PIRATE_KICK_POSE), and at the blow the man (still within .slack more) takes .damage of a shot's harm and is
+// booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
+const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
+const BLUNDERBUSS_RECOIL ={ units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
@@ -488,6 +493,9 @@ export class SimulationSystem {
   // Big Headbutt (BIG_HEADBUTT): each minotaur's butt under way (blow and end times) and when the next is ready
   private _butts = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; spec: typeof BIG_HEADBUTT; sprawlAt?: number }>();
   private _buttReadyAt = new Map<RuntimeUnit, number>();
+  // Pirate Kick (PIRATE_KICK): each kick under way and when the next is ready
+  private _kicks = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; damage: number }>();
+  private _kickReadyAt = new Map<RuntimeUnit, number>();
   // The wheelbarrow's riders (WHEELBARROW_CREW): each move's start and its man, and when the next may start
   private _crewFights = new Map<RuntimeUnit, { throwAt: number; thrown: boolean; appleAt: RuntimeUnit | null; stabAt: number; stabbed: boolean; stabOn: RuntimeUnit | null }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
@@ -648,6 +656,8 @@ export class SimulationSystem {
     this._clearSnakes();
     this._butts.clear();
     this._buttReadyAt.clear();
+    this._kicks.clear();
+    this._kickReadyAt.clear();
     this._banjoWalks.clear();
     this._banjoNotes.clear();
     this._banjoNoteCount = 0;
@@ -712,6 +722,7 @@ export class SimulationSystem {
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
+    if (this._kicks.size > 0) this._landKicks(now);
     if (this._hurled.size > 0) this._landHurledShips(now);
     if (this._oarsmen.size > 0) this._chopOars(dt, now);
     for (const [held, back] of this._arrowsAway) {
@@ -1133,6 +1144,28 @@ export class SimulationSystem {
       unit.setAttackCooldown(now, attackProfile.cooldown * (preset === "iconic_super_peasant" ? 0.18 : 0.32));
       this._logAbility(unit, "blink", now);
       return;
+    }
+
+    // Pirate Kick (PIRATE_KICK): a man kicking stands over it; a man in reach of his foot with it ready gets one
+    if (PIRATE_KICK.units.has(unit.definition.id)) {
+      const kick = this._kicks.get(unit);
+      if (kick) {
+        unit.stopMoving();
+        this._clearPathState(unit);
+        unit.faceTarget(kick.target.position);
+        return;
+      }
+      const reach = unit.collisionBodyRadius + enemy.collisionBodyRadius + PIRATE_KICK.within;
+      if (distance <= reach && now >= (this._kickReadyAt.get(unit) ?? 0)) {
+        const damage = attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * PIRATE_KICK.damage;
+        this._kicks.set(unit, { target: enemy, blowAt: now + PIRATE_KICK.windup, endAt: now + PIRATE_KICK.windup + PIRATE_KICK.recover, done: false, damage });
+        this._kickReadyAt.set(unit, now + PIRATE_KICK.cooldown);
+        unit.animator.setKick(true, PIRATE_KICK.windup);
+        unit.stopMoving();
+        this._clearPathState(unit);
+        unit.faceTarget(enemy.position);
+        return;
+      }
     }
 
     // Big Headbutt (BIG_HEADBUTT): a minotaur butting stands over it; one in reach with it ready starts one. ...and the Headbutter's own (HEADBUTT)
@@ -3119,6 +3152,33 @@ export class SimulationSystem {
       next.applyDamage(damage * C.share, Vector3.Zero());
       reached.add(next);
       from = next;
+    }
+  }
+
+  /** Each kick under way (spec at PIRATE_KICK): the man booted off his feet at its blow, the foot back down at its end. */
+  private _landKicks(now: number): void {
+    const K = PIRATE_KICK;
+    for (const [unit, kick] of this._kicks) {
+      if (unit.isDead || unit.isToppled || unit.isDowned) { unit.animator.setKick(false); this._kicks.delete(unit); continue; }
+      if (!kick.done && now >= kick.blowAt) {
+        kick.done = true;
+        const man = kick.target;
+        const off = man.position.subtract(unit.position);
+        off.y = 0;
+        const reach = unit.collisionBodyRadius + man.collisionBodyRadius + K.within + K.slack;
+        if (!man.isDead && off.length() <= reach) {
+          const out = off.lengthSquared() > 1e-6 ? off.normalize() : new Vector3(Math.sin(unit.body.root.rotation.y), 0, Math.cos(unit.body.root.rotation.y));
+          man.applyDamage(kick.damage, out.scale(K.fling));
+          man.applyBlastLaunch(out, K.fling, K.lift);
+          const at = unit.position.add(out.scale(unit.collisionBodyRadius + K.within * 0.5));
+          this._logAbility(unit, "kick", now, at);
+          this.visualEffects?.spawnKickDust(at, 1.5);
+        }
+      }
+      if (now >= kick.endAt) {
+        unit.animator.setKick(false);
+        this._kicks.delete(unit);
+      }
     }
   }
 

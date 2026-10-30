@@ -443,6 +443,13 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
  */
 const DIVE = { tip: 1.22, trunk: 0.16, head: 0.62, arms: 2.3, elbow: 0.35, knee: 0.18, in: 18, out: 26 };
 /*
+ * [S] 426 the Pirate Kick (card pirate.harpooner Characteristics "kicking them once in melee range"; Abilities Pirate Kick): a front kick with the gun kept
+ * in both hands. The right thigh swung up .raise rad, first .chamberRaise of it with the knee folded .chamber, then the knee driven out straight to the
+ * blow (setKick's windup); the standing knee bent .plant (the hip half that); the trunk leant back .lean with .headLevel of it given back at the neck.
+ * Eased in at .in and out at .out per second.
+ */
+const PIRATE_KICK_POSE = { raise: 1.45, chamberRaise: 0.7, chamber: 1.5, plant: 0.25, lean: 0.3, headLevel: 0.6, in: 20, out: 9 };
+/*
  * [S] bare fists (379, the minotaur's; card Main Hand / Off Hand "Minotaur Grab", Unarmed; ancient.minotaur.red.png: no weapon, both fists balled before the
  * belly, elbows bent near square and out from the flanks; ancient.minotaur.png: one arm grabs a man while the other punches).
  * - Carry (stood or marching): each fist solved (_armTo) onto a point .carryAhead before his hip and .carryUp above it in u, and out to its side .carryOut
@@ -1273,6 +1280,35 @@ export class ProceduralAnimator {
     b.leftKnee.rotation.x += DIVE.knee * d;
     b.rightKnee.rotation.x += DIVE.knee * d;
   }
+  /** The Pirate Kick (spec at PIRATE_KICK_POSE), set by the sim for the length of a kick (simulationSystem PIRATE_KICK); `windup` s to the blow. */
+  private _kick = 0;
+  private _kickTarget = 0;
+  private _kickClock = 0;
+  private _kickWindup = 0.25;
+  setKick(on: boolean, windup = 0.25): void {
+    this._kickTarget = on ? 1 : 0;
+    if (on) {
+      this._kickClock = 0;
+      this._kickWindup = Math.max(0.05, windup);
+    }
+  }
+  private _applyKick(dt: number): void {
+    const K = PIRATE_KICK_POSE;
+    this._kickClock += dt;
+    this._kick += (this._kickTarget - this._kick) * Math.min(1, dt * (this._kickTarget > this._kick ? K.in : K.out));
+    const k = this._kick * (this._state === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp));
+    if (k < 0.01 || this.walkStyle === "quadruped") return;
+    const b = this._body;
+    // the knee chambered up, then driven out straight to the blow
+    const u = Math.min(1, this._kickClock / this._kickWindup);
+    const ext = u * u * (3 - 2 * u);
+    b.rightHip.rotation.x -= K.raise * (K.chamberRaise + (1 - K.chamberRaise) * ext) * k;
+    b.rightKnee.rotation.x += K.chamber * (1 - ext) * k;
+    b.leftHip.rotation.x += K.plant * 0.5 * k;
+    b.leftKnee.rotation.x += K.plant * k;
+    b.torso.rotation.x -= K.lean * k;
+    b.neck.rotation.x += K.lean * K.headLevel * k;
+  }
   /** Bare-fisted (BULL_FISTS): carries his fists before the belly and grabs then punches; set by the runtime for the minotaur. */
   bullFists = false;
 
@@ -1841,6 +1877,7 @@ export class ProceduralAnimator {
     }
     this._applyChargePose(dt);
     this._applyDive(dt);
+    this._applyKick(dt);
     this._applyHorseGait(dt);
 
     // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving;
