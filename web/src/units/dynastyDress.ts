@@ -976,54 +976,71 @@ export function archerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color
 }
 
 /*
- * [S] 421 the Monkey King's baboon face (RE-AUDIT 420 a.2: "a plain team head with two bead eyes - TABS: a baboon face, dark with a tan muzzle and
- * blond hair tufts round it"; card Appearance "a baboon-like head. It has blonde hair and a dark colored face"; dynasty.monkey_king.red.png: the
- * whole front of the head a dark plate, the bead eyes white in it, a pale tan muzzle standing out over the mouth with a dark nose bar on its top, and
- * blond tufts of hair ringing the face at the cheeks, jaw and brow under the circlet). In the head's half extents e, like NINJA_HOOD's split round the
- * bead eyes (eyeSpanInHead): a dark plate MONKEY_FACE.plate of e.z thick on the face from .chin of e.y up to under the eyes, two dark side slabs
- * beside the eyes from .sideFrom of e.x out, a dark brow slab over them up to .brow of e.y (under MONKEY_CROWN.at); the muzzle a tan box .muzzle of
- * e.x wide from .chin up to .muzzleTop of e.y, standing .muzzleOut of e.z off the plate, a dark nose bar .nose of e.x across its top; .tufts blond
- * faceted lumps .tuft of e.y across at the given [x, y, z] of e round the face.
+ * [R] 430 the Monkey King's baboon mask, rebuilt (replaces the 421 dark plate). Spec from both CONFIRM lists: 422 (hair, crown: MONKEY_HAIR and
+ * MONKEY_CROWN own those) and 429 a.1 ("a flat dark-brown rectangular plate that reads as a visor - TABS: a light tan/orange baboon mask with a
+ * protruding muzzle and a team-coloured nose strip"). Read off dynasty.monkey_king.red.png and .blue.png (head about one head wide):
+ *   - the whole face is light peach-orange, not dark; it is not flat: round cheek pads swell either side under and beside the eyes, a heavy orange brow
+ *     ridge juts over the eyes across the face, and a cream muzzle about .55 of the face across stands well out (a third of the head's depth) over the
+ *     mouth, from the cheeks' foot to the chin;
+ *   - a team-coloured strip runs down the middle: up the forehead from the brow to under the circlet, and from between the eyes down the nose bridge
+ *     onto the muzzle's top, ending in a small dark nose tip;
+ *   - the bead eyes stay open between the brow and the cheeks; the orange-blonde curl ring (MONKEY_HAIR) frames the mask.
+ * MONKEY_FACE, in the head's half extents e (head centred on its origin), round the bead eyes (eyeSpanInHead): a peach backing plate .plate of e.z
+ * thick on the face from .chin to .brow of e.y (behind the eyes' front, so they show through the gap left for them); two cheek pads, faceted
+ * balls .cheek (x, y, z) of e at .cheekAt; a brow ridge, a faceted bar .browTall of e.y tall and .browOut of e.z proud over the eyes' top; the muzzle a
+ * faceted ball .muzzle (x, y, z) of e at (0, .muzzleY, .muzzleZ); the team strip .strip of e.x across on the forehead (brow to .brow) and down the
+ * nose bridge from the eyes' foot onto the muzzle's top, the nose tip a dark box at its end. Peach, orange brow, cream muzzle; self-lit .glow.
  */
 const MONKEY_FACE = {
-  plate: 0.1, chin: -1.02, sideFrom: 0.7, brow: 0.58, muzzle: 1.1, muzzleTop: -0.3, muzzleOut: 0.32, nose: 0.5, tuft: 0.26,
-  tufts: [[-1.02, -0.3, 0.6], [1.02, -0.3, 0.6], [-0.9, -0.88, 0.5], [0.9, -0.88, 0.5], [-0.98, 0.42, 0.55], [0.98, 0.42, 0.55], [-0.45, 0.6, 0.9], [0.45, 0.6, 0.9]] as [number, number, number][],
-  dark: new Color3(0.1, 0.06, 0.05), tan: new Color3(0.72, 0.54, 0.32), blond: new Color3(0.78, 0.56, 0.2), glow: 0.14,
+  plate: 0.08, chin: -1.0, brow: 0.6, cheek: [0.5, 0.42, 0.3] as const, cheekAt: [0.58, -0.52, 1.0] as const, browTall: 0.22, browOut: 0.22,
+  muzzle: [0.5, 0.42, 0.42] as const, muzzleY: -0.66, muzzleZ: 1.2, strip: 0.26,
+  peach: new Color3(0.95, 0.52, 0.24), orange: new Color3(0.95, 0.4, 0.1), cream: new Color3(0.92, 0.72, 0.46), dark: new Color3(0.1, 0.06, 0.05), glow: 0.14,
 };
-/** The Monkey King's dark baboon face with a tan muzzle and blond tufts round it, the bead eyes left open (spec at MONKEY_FACE). */
-export function monkeyFace(scene: Scene, body: ArticulatedBody): Mesh[] {
+/** The Monkey King's light peach baboon mask: cheek pads, brow ridge, a jutting cream muzzle and a team nose strip, the bead eyes open (spec at MONKEY_FACE). */
+export function monkeyFace(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const F = MONKEY_FACE;
   const mf = getMaterialFactory();
-  const dark = mf.get("cloth", F.dark, { emissive: F.dark.scale(F.glow) });
-  const tan = mf.get("cloth", F.tan, { emissive: F.tan.scale(F.glow) });
-  const blond = mf.get("cloth", F.blond, { emissive: F.blond.scale(F.glow) });
+  const m = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(F.glow) });
+  const peach = m(F.peach), orange = m(F.orange), cream = m(F.cream), dark = m(F.dark), team = m(teamColor);
   const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
   const span = eyeSpanInHead(body) ?? [-e.y * 0.2, e.y * 0.3];
   const out: Mesh[] = [];
-  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, mat = dark): Mesh => {
-    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
-    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-    m.parent = body.headMesh;
-    m.material = mat;
-    out.push(m);
-    return m;
+  const put = (mesh: Mesh, mat: typeof peach): Mesh => {
+    mesh.parent = body.headMesh;
+    mesh.material = mat;
+    mesh.convertToFlatShadedMesh();
+    out.push(mesh);
+    return mesh;
   };
-  const front = e.z * 1.01, back = front + e.z * F.plate;
-  const eyeBottom = span[0] - e.y * 0.04, eyeTop = span[1] + e.y * 0.04;
-  const X = e.x * 1.04, chin = e.y * F.chin;
-  slab("monkeyFacePlate", -X, X, chin, eyeBottom, front, back);
-  for (const side of [-1, 1]) slab("monkeyFaceSide", side > 0 ? e.x * F.sideFrom : -X, side > 0 ? X : -e.x * F.sideFrom, eyeBottom, eyeTop, front, back);
-  slab("monkeyFaceBrow", -X, X, eyeTop, e.y * F.brow, front, back);
-  const muzzleFront = back + e.z * F.muzzleOut;
-  slab("monkeyMuzzle", -e.x * F.muzzle * 0.5, e.x * F.muzzle * 0.5, chin, e.y * F.muzzleTop, back - e.z * 0.02, muzzleFront, tan);
-  slab("monkeyNose", -e.x * F.nose * 0.5, e.x * F.nose * 0.5, e.y * F.muzzleTop - e.y * 0.1, e.y * F.muzzleTop + e.y * 0.03, muzzleFront - e.z * 0.14, muzzleFront + e.z * 0.02);
-  for (const [x, y, z] of F.tufts) {
-    const tuft = MeshBuilder.CreateIcoSphere("monkeyTuft", { radius: e.y * F.tuft, subdivisions: 1, flat: true }, scene);
-    tuft.position.set(x * e.x, y * e.y, z * e.z);
-    tuft.parent = body.headMesh;
-    tuft.material = blond;
-    out.push(tuft);
-  }
+  const box = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, mat: typeof peach): Mesh => {
+    const b = put(MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene), mat);
+    b.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    return b;
+  };
+  const ball = (name: string, s: readonly [number, number, number], x: number, y: number, z: number, mat: typeof peach): Mesh => {
+    const b = put(MeshBuilder.CreateIcoSphere(name, { radius: 1, subdivisions: 1, flat: true }, scene), mat);
+    b.scaling.set(e.x * s[0], e.y * s[1], e.z * s[2]);
+    b.position.set(x, y, z);
+    return b;
+  };
+  const front = e.z * 1.0, X = e.x * 1.04;
+  const eyeBottom = span[0] - e.y * 0.03, eyeTop = span[1] + e.y * 0.03;
+  // the backing plate: the whole face peach, chin to forehead (the eyes stand proud of it)
+  box("monkeyFacePlate", -X, X, e.y * F.chin, e.y * F.brow, front - e.z * 0.02, front + e.z * F.plate, peach);
+  // the cheek pads under and beside the eyes
+  for (const side of [-1, 1]) ball("monkeyCheek", F.cheek, side * e.x * F.cheekAt[0], e.y * F.cheekAt[1], e.z * F.cheekAt[2], peach);
+  // the brow ridge jutting over the eyes
+  box("monkeyBrow", -X, X, eyeTop, eyeTop + e.y * F.browTall, front, front + e.z * F.browOut, orange);
+  // the muzzle standing well out over the mouth
+  const muzzle = ball("monkeyMuzzle", F.muzzle, 0, e.y * F.muzzleY, e.z * F.muzzleZ, cream);
+  const muzzleTop = muzzle.position.y + e.y * F.muzzle[1] * 0.75;
+  // the team strip: up the forehead from the brow, and down the nose bridge from the eyes' foot onto the muzzle's top
+  const sw = e.x * F.strip / 2;
+  box("monkeyStrip", -sw, sw, eyeTop + e.y * F.browTall * 0.5, e.y * F.brow, front + e.z * F.plate, front + e.z * (F.plate + 0.06), team);
+  box("monkeyStrip", -sw, sw, eyeTop, eyeTop + e.y * F.browTall, front + e.z * F.browOut, front + e.z * (F.browOut + 0.05), team);
+  const bridgeZ = e.z * F.muzzleZ + e.z * F.muzzle[2] * 0.55;
+  box("monkeyStrip", -sw, sw, muzzleTop, eyeBottom, front + e.z * 0.05, bridgeZ, team);
+  box("monkeyNose", -sw * 1.3, sw * 1.3, muzzleTop - e.y * 0.12, muzzleTop + e.y * 0.02, bridgeZ - e.z * 0.08, bridgeZ + e.z * 0.08, dark);
   return out;
 }
 
@@ -1166,13 +1183,28 @@ export function monkeyTrunk(scene: Scene, body: ArticulatedBody, teamColor: Colo
  * .stripAt of W/2; the scarf a team torus .scarf of W round the neck at the trunk's top, .scarfThick of H thick, with a flat team point .bib of W wide,
  * .bibLong of H long hanging from it on the chest.
  */
-const MONKEY_ROBE = { out: 1.14, edge: 0.12, deep: 1.18, sleeveOut: 1.55, sleeveTo: 0.95, strips: 2, strip: 0.06, stripLong: 0.92, stripAt: [-0.62, -0.26] as const, proud: 0.06, scarf: 0.72, scarfThick: 0.12, bib: 0.42, bibLong: 0.34, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
-/** The Monkey King's team robe over the left side of his trunk with two gold strips, a sleeve on the left arm and a team scarf at the neck (spec at MONKEY_ROBE). */
+/*
+ * [R] 430 the robe's front rebuilt (CONFIRM 429 a.2: "a khaki/maroon panel covers the chest and back ... reads as an armour plate - TABS: the robe is
+ * team-coloured with one thin orange diagonal band from the shoulder"; dynasty.monkey_king.blue.png, .red.png: the whole trunk in team cloth, front and
+ * back, one thin orange band from under the scarf's point on his left of centre down across the chest to his right hip, nothing else on it). The khaki
+ * and maroon were the body's own trunk, yoke and pelvis (the secret_royal material) showing right of the robe's edge, and the "cape" special on his back.
+ * So: the trunk, yoke and pelvis take the team cloth a shade under the robe (.under), the robe box runs the trunk's full width, the two upright gold
+ * strips go, and one orange band .band of W wide runs from (.bandFrom) to (.bandTo) of (W/2, H/2) on the robe's front, .proud off it. No cape.
+ */
+const MONKEY_ROBE = {
+  out: 1.14, deep: 1.18, sleeveOut: 1.55, sleeveTo: 0.95, proud: 0.06, scarf: 0.72, scarfThick: 0.12, bib: 0.42, bibLong: 0.34, under: 0.85,
+  band: 0.08, bandFrom: [-0.3, 0.7] as const, bandTo: [0.95, -0.85] as const, orange: new Color3(1, 0.42, 0.1), glow: 0.12,
+};
+/** The Monkey King's team robe over the whole trunk with one orange diagonal band, a sleeve on the left arm and a team scarf at the neck (spec at MONKEY_ROBE). */
 export function monkeyRobe(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const R = MONKEY_ROBE;
   const mf = getMaterialFactory();
   const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(R.glow) });
-  const gold = mf.get("cloth", R.gold, { emissive: R.gold.scale(R.glow) });
+  const orange = mf.get("cloth", R.orange, { emissive: R.orange.scale(R.glow) });
+  const shade = teamColor.scale(R.under);
+  const under = mf.get("cloth", shade, { emissive: shade.scale(R.glow) });
+  // the body's own trunk, yoke and pelvis in team cloth, not the royal maroon
+  for (const mesh of body.allMeshes) if (mesh === body.torsoMesh || /_(yoke|pelvis)$/.test(mesh.name)) mesh.material = under;
   const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
   const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
   const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
@@ -1188,11 +1220,12 @@ export function monkeyRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
   };
   const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: typeof cloth): Mesh =>
     place(MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene), x, y, z, mat);
-  // the robe over the left half of the trunk; the left is -x
-  const x0 = -W * 0.5 * R.out, x1 = W * 0.5 * R.edge;
+  // the robe over the whole trunk, and the one orange band slanting from left of the scarf's point down to his right hip (-x is his left)
   const deep = D * R.deep;
-  box("monkeyRobe", x1 - x0, H * 1.02, deep, (x0 + x1) / 2, 0, 0, cloth);
-  for (const at of R.stripAt) box("monkeyRobeStrip", W * R.strip, H * R.stripLong, D * R.proud, W * 0.5 * at, 0, deep / 2 + D * R.proud * 0.3, gold);
+  box("monkeyRobe", W * R.out, H * 1.02, deep, 0, 0, 0, cloth);
+  const bx0 = W / 2 * R.bandFrom[0], by0 = H / 2 * R.bandFrom[1], bx1 = W / 2 * R.bandTo[0], by1 = H / 2 * R.bandTo[1];
+  const band = box("monkeyRobeBand", Math.hypot(bx1 - bx0, by1 - by0), W * R.band, D * R.proud, (bx0 + bx1) / 2, (by0 + by1) / 2, deep / 2 + D * R.proud * 0.3, orange);
+  band.rotation.z += Math.atan2(by1 - by0, bx1 - bx0);
   out.push(limbShell(scene, "monkeyRobeSleeve", body.leftUpperArm, 0, R.sleeveTo, R.sleeveOut, cloth));
   // the scarf: a team ring round the neck on the trunk's top with a point hanging on the chest
   const scarf = place(MeshBuilder.CreateTorus("monkeyScarf", { diameter: W * R.scarf, thickness: H * R.scarfThick, tessellation: 8 }, scene), 0, H / 2, 0, cloth);

@@ -591,7 +591,7 @@ export class UnitFactory {
       propMeshes.push(...monkeyTrunk(this._scene, body, teamColor)); // [S] 428 slim trunk and shoulders, team waist wrap; first, so his dress is cut on it (dynastyDress MONKEY_TRUNK)
       propMeshes.push(...monkeyStaff(this._scene, body, teamColor), ...monkeyTail(this._scene, body, teamColor));
       propMeshes.push(...monkeyCrown(this._scene, body, teamColor)); // [S] 420 gold swirl circlet with two team feather antennae (dynastyDress MONKEY_CROWN)
-      propMeshes.push(...monkeyFace(this._scene, body)); // [S] 421 dark baboon face, tan muzzle, blond tufts (dynastyDress MONKEY_FACE)
+      propMeshes.push(...monkeyFace(this._scene, body, teamColor)); // [R] 430 light peach baboon mask, jutting muzzle, team nose strip (dynastyDress MONKEY_FACE)
       propMeshes.push(...monkeyHair(this._scene, body)); // [S] 429 orange-blonde ring of curls round the face, hair over the crown (dynastyDress MONKEY_HAIR)
       propMeshes.push(...monkeyShorts(this._scene, body, teamColor)); // [S] 422 puffy team shorts to gold knee cuffs, pointy shoes (dynastyDress MONKEY_SHORTS)
       propMeshes.push(...monkeyRobe(this._scene, body, teamColor)); // [S] 422 team robe over the left side only, gold strips, scarf (dynastyDress MONKEY_ROBE)
@@ -881,6 +881,9 @@ export class UnitFactory {
       const skirt = knight
         ? hangSkirt(this._scene, body, "knightFauld", KNIGHT_FAULD.long, KNIGHT_FAULD.flare, getMaterialFactory().get("stone", KNIGHT_FAULD.steel, { emissiveIntensity: 0.05 }))
         : bareSkinned && (wearsHideDress(definition.id) || definition.id === "tribal.spear_thrower")
+        ? null
+        // [R] 430 no tunic skirt on the Monkey King: his waist wrap sits straight on the puffy shorts, and the skirt was the maroon panel (MONKEY_ROBE)
+        : definition.id === "dynasty.monkey_king"
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
