@@ -730,6 +730,46 @@ export function pirateBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 430 the Pirate Queen's beaded locks (audit 422 queen a.2: "the sides of the head - bare - TABS: long black curly locks with beads hanging to the
+ * shoulders"; pirate.pirate_queen.red.png, card Appearance "curly long hair with hair beads": thick black locks from under the bandana either side of
+ * the face down past the jaw onto the shoulders, a few tan beads strung in them). QUEEN_HAIR: pirateHair's locks and back fall in near-black, the locks
+ * .side of e.x thick and dropping to .drop; on each lock's outer face .curls faceted lumps .curl of e.x across stepping down it, alternately in and out
+ * (the curls), and .beads tan beads .bead of e.x across at the lumps' joins. Black and tan self-lit PIRATE_HAIR.glow.
+ */
+const QUEEN_HAIR = { side: 0.36, drop: -2.0, splay: 0.16, curls: 4, curl: 0.42, beads: 3, bead: 0.18, black: new Color3(0.03, 0.03, 0.035), tan: new Color3(0.8, 0.6, 0.35) };
+
+/** The Pirate Queen's long black curly locks with tan beads (spec at QUEEN_HAIR). */
+export function queenHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const Q = QUEEN_HAIR;
+  const out = pirateHair(scene, body, Q.black, { side: Q.side, drop: Q.drop, splay: Q.splay });
+  const mf = getMaterialFactory();
+  const black = mf.get("cloth", Q.black, { emissive: Q.black.scale(PIRATE_HAIR.glow) });
+  const tan = mf.get("cloth", Q.tan, { emissive: Q.tan.scale(PIRATE_HAIR.glow) });
+  const locks = out.filter((m) => m.name === "pirateHairLock");
+  for (const lock of locks) {
+    const lb = lock.getBoundingInfo().boundingBox, le = lb.extendSize;
+    const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+    const sideSign = Math.sign(lock.position.x - body.headMesh.getBoundingInfo().boundingBox.center.x) || 1;
+    for (let i = 0; i < Q.curls; i++) {
+      const y = le.y - (le.y * 2) * ((i + 0.5) / Q.curls);
+      const lump = MeshBuilder.CreateIcoSphere("queenHairCurl", { radius: e.x * Q.curl / 2, subdivisions: 1, flat: true }, scene);
+      lump.parent = lock;
+      lump.position.set(sideSign * (le.x * (i % 2 ? 0.7 : 1.0)), y, (i % 2 ? -0.3 : 0.2) * le.z);
+      lump.material = black;
+      out.push(lump);
+      if (i > 0 && i <= Q.beads) {
+        const bead = MeshBuilder.CreateIcoSphere("queenHairBead", { radius: e.x * Q.bead / 2, subdivisions: 1, flat: true }, scene);
+        bead.parent = lock;
+        bead.position.set(sideSign * (le.x + e.x * Q.curl * 0.3), y + (le.y * 2) / Q.curls * 0.5, le.z * 0.4);
+        bead.material = tan;
+        out.push(bead);
+      }
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 429 the striped socks (audit 422 bomb_thrower a.3: "the shins - bare - TABS: team-and-grey ringed socks from the knee down to brown shoes";
  * pirate.bomb_thrower.red.png: below a bare knee a grey turned-down top, then the sock ringed in even team and grey bands down into the shoe, a little
  * proud of the shin). PIRATE_SOCKS, on each lower leg (share of its length from the knee): the turned top a grey ring from .from to .top, .topOut of the

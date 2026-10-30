@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, barrelBracers, blunderbussHair, bombSash, captainCoat, flintlockSocks, openCoat, pirateBeard, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
+import { barrelArmour, barrelBracers, blunderbussHair, bombSash, captainCoat, queenHair, flintlockSocks, openCoat, pirateBeard, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -628,6 +628,8 @@ export class UnitFactory {
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenBandana(this._scene, body, teamColor));
     // [S] 428 the Pirate Queen's brown bomb sash from her right shoulder to her left hip, four black bombs on it (pirateDress QUEEN_SASH)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenSash(this._scene, body));
+    // [S] 430 the Pirate Queen's long black curly locks with tan beads from under the bandana to her shoulders (pirateDress QUEEN_HAIR)
+    if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenHair(this._scene, body));
     // [S] 428 the Captain's long team coat open to the knees over a tan shirt and white cravat (pirateDress CAPTAIN_COAT; no tunic skirt under it)
     if (definition.id === "pirate.captain" && !shouldUseVehicleBody) propMeshes.push(...captainCoat(this._scene, body, teamColor));
     // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
