@@ -1063,13 +1063,23 @@ const CANNON_BARREL = {
   ] as [number, number][],
 };
 
+/**
+ * [S] 425 the cannon's wheels (critic 422 a.1: small black spoked wheels whose rims stop at the carriage top; pirate.cannon.red.png: two black wheels
+ * as tall as the whole gun standing either side of it, each an octagon of thick blocky rim segments with square iron clamps proud of it at four points,
+ * spokes inside). In m: .across tall, axle .axle up (on the ground), .out to each side; the rim .rim deep and .wide across the tread; clamps
+ * .clampWide x .clampTall x .clampLong of a rim block, on every other block; spokes .spoke square; hub .hub across. Charcoal, a little self-lit.
+ */
+const CANNON_WHEEL = {
+  across: 0.84, axle: 0.42, out: 0.34, rim: 0.085, wide: 0.12, clampWide: 1.3, clampTall: 1.45, clampLong: 0.45, spoke: 0.05, hub: 0.15,
+  color: new Color3(0.1, 0.1, 0.11), glow: 0.12,
+};
+
 function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
   const teamPrimary = makeMat(scene, color);
   const wood = getMaterialFactory().get("wood", new Color3(0.36, 0.13, 0.09), { emissive: new Color3(0.08, 0.04, 0.035) }); // dark red-brown wood, a little self-lit so the shaded side stays wood and not black
   const metal = makeMat(scene, new Color3(0.55, 0.50, 0.46)); // iron grey, a little warm against the blue sky light, under which a cool dark grey went navy
-  const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09));
 
   // Carriage (longer along Z)
   const carriage = MeshBuilder.CreateBox("carriage", { width: 0.5, height: 0.12, depth: 0.9 }, scene);
@@ -1086,31 +1096,44 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   }
 
   // Axle under the bed: the body mesh that takes the team tint, so the iron barrel and the wooden carriage keep their own colours
-  const axle = MeshBuilder.CreateCylinder("axle", { height: 0.56, diameter: 0.06, tessellation: 6 }, scene);
-  axle.position.y = 0.24;
+  // [S] 425 through the cheeks to the tall wheels' hubs (CANNON_WHEEL)
+  const axle = MeshBuilder.CreateCylinder("axle", { height: CANNON_WHEEL.out * 2, diameter: 0.06, tessellation: 6 }, scene);
+  axle.position.y = CANNON_WHEEL.axle;
   axle.rotation.z = Math.PI / 2;
   axle.parent = root; axle.material = teamPrimary; allMeshes.push(axle);
 
-  // Wheels (on sides, X axis): dark, and 0.44 across, so the rims come to the crew's waist and the barrel rides over them: at 0.58 a rim stood to a crewman's shoulder and the gun dwarfed the men serving it.
-  // An open rim on eight thick spokes, with daylight between them, not a solid slab
-  for (const xOff of [-0.3, 0.3]) {
-    const wheel = MeshBuilder.CreateTorus("wheel", { diameter: 0.44, thickness: 0.1, tessellation: 14 }, scene);
-    wheel.position.set(xOff, 0.24, 0);
-    wheel.rotation.z = Math.PI / 2;
-    wheel.parent = root; wheel.material = wheelWood; allMeshes.push(wheel);
-
+  // [S] 425 the wheels to the spec at CANNON_WHEEL: tall dark wheels standing to the barrel's top, each an octagon of thick rim blocks with four proud
+  // iron clamps, eight spokes and a hub, on its own stub axle level with the cheeks
+  const W = CANNON_WHEEL;
+  const wheelIron = getMaterialFactory().get("cloth", W.color, { emissiveIntensity: W.glow });
+  const rimR = W.across / 2 - W.rim / 2;
+  const chord = 2 * rimR * Math.tan(Math.PI / 8) * 1.04;
+  for (const side of [-1, 1]) {
+    const x = side * W.out;
+    for (let k = 0; k < 8; k++) {
+      const a = k * Math.PI / 4 + Math.PI / 8;
+      const block = MeshBuilder.CreateBox("wheel", { width: W.wide, height: W.rim, depth: chord }, scene);
+      block.position.set(x, W.axle + rimR * Math.sin(a), rimR * Math.cos(a));
+      block.rotation.x = a + Math.PI / 2;
+      block.parent = root; block.material = wheelIron; allMeshes.push(block);
+      if (k % 2 === 0) {
+        const clamp = MeshBuilder.CreateBox("wheelClamp", { width: W.wide * W.clampWide, height: W.rim * W.clampTall, depth: chord * W.clampLong }, scene);
+        clamp.position.set(x, W.axle + (rimR + W.rim * 0.1) * Math.sin(a), (rimR + W.rim * 0.1) * Math.cos(a));
+        clamp.rotation.x = a + Math.PI / 2;
+        clamp.parent = root; clamp.material = wheelIron; allMeshes.push(clamp);
+      }
+    }
     // Hub: a fat block on the axle where the spokes meet
-    const wheelHub = MeshBuilder.CreateCylinder("wheelHub", { height: 0.1, diameter: 0.12, tessellation: 8 }, scene);
-    wheelHub.position.set(xOff, 0.24, 0);
+    const wheelHub = MeshBuilder.CreateCylinder("wheelHub", { height: W.wide * 1.3, diameter: W.hub, tessellation: 8 }, scene);
+    wheelHub.position.set(x, W.axle, 0);
     wheelHub.rotation.z = Math.PI / 2;
-    wheelHub.parent = root; wheelHub.material = wheelWood; allMeshes.push(wheelHub);
-
-    // Spokes: four bars across the full rim, turned about the axle
+    wheelHub.parent = root; wheelHub.material = wheelIron; allMeshes.push(wheelHub);
+    // Spokes: four bars across the rim's inside, turned about the axle
     for (let i = 0; i < 4; i++) {
-      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.05, height: 0.4, depth: 0.05 }, scene);
-      spoke.position.set(xOff, 0.24, 0);
+      const spoke = MeshBuilder.CreateBox("spoke", { width: W.spoke, height: (rimR - W.rim * 0.4) * 2, depth: W.spoke }, scene);
+      spoke.position.set(x, W.axle, 0);
       spoke.rotation.set(i * Math.PI / 4, 0, 0);
-      spoke.parent = root; spoke.material = wheelWood; allMeshes.push(spoke);
+      spoke.parent = root; spoke.material = wheelIron; allMeshes.push(spoke);
     }
   }
 
