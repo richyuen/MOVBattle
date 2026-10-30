@@ -449,7 +449,8 @@ async function main() {
           window.advanceTime(50);
           const a = game.spawnUnit(id, 1, { x: d, z: 0 });
           // the painter dodges missiles (Painter Dodge): he spars with an archer, whose arrows are what he sidesteps (evidence 373)
-          const t = game.spawnUnit(id === "renaissance.painter" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
+          // the samurai deflects missiles (Projectile Block): he spars with an archer too (evidence 417)
+          const t = game.spawnUnit(id === "renaissance.painter" || id === "dynasty.samurai" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
           // Zeus's bolt conducts to nearby men (card Characteristics, a lightning chain): he spars with a squire and two mates clustered beside it (evidence 386)
           if (id === "ancient.zeus") for (const dz of [-0.9, 0.9]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.4, z: dz });
           let ally = null;
