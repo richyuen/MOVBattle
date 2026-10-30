@@ -456,6 +456,13 @@ const DRAGON_MUZZLE = { bevel: 0.22, tan: new Color3(0.72, 0.54, 0.32), rim: 0.0
  * stacked on its dark grip): the pole's foot at .fistAt of h (chest height) just in front of the trunk (.poleAhead of h past its face); each arm two
  * boxes .arm thick in the trouser shade, the upper arm from the shoulder down and forward to an elbow .elbowOut of h beside the ribs, the forearm in
  * to a dark fist .fist on the pole, the two fists stacked .fist apart; the dark grip .grip of h round the pole between them. */
+/* [S] 429 the trim (audit 420 a.3: "carrier clothing: plain team boxes, no trim - TABS: a Chinese tunic and trousers edged orange at collar, cuffs and
+ * hem"; dynasty.dragon.blue.png: dark tunics with an orange-red band round the stand collar, the tunic's hem, each sleeve's cuff and each trouser leg's
+ * foot). DRAGON_TRIM in DRAGON_CARRIER.poleColor: on a box carrier the collar a ring .collar of h tall round the trunk's top, .out of it across; the hem
+ * .hem of h tall round its foot; a cuff .cuff of h long, .sleeve of the arm across, at each forearm's hand end; a trouser cuff .cuff of h tall,
+ * .sleeve of the leg across, at each leg's foot. On the front carrier (the real humanoid, dragonTrim) the same bands as shells: collar and hem round
+ * the trunk box .bodyCollar and .bodyHem of its height, cuffs over the forearm's last .limbCuff and the shin's last .limbCuff. */
+const DRAGON_TRIM = { collar: 0.04, hem: 0.045, out: 1.14, cuff: 0.05, sleeve: 1.5, bodyCollar: 0.1, bodyHem: 0.1, limbCuff: 0.16, limbOut: 1.5 };
 const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.075, grip: 0.16, trouserShade: 0.7, skinShade: 1.1, eye: 0.28, hairTall: 0.22, bun: 0.2, poleSide: 0.17, fist: 0.09, fistAt: 0.56, poleAhead: 0.07, elbowOut: 0.05 };
 /** The Dragon's giant paper head on its pole and its long team body ribbon (spec at DRAGON_FORM). */
 export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -538,12 +545,19 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
   // [S] 417 a Dragon Carrier under every .every-th body segment (audit 411 a.2 "carriers: none - TABS: four Dragon Carriers in team clothes with Chinese
   // hair beneath the body"; b.1 "carrier poles: none - TABS: red poles with dark grips linking each carrier to the body"; dynasty.dragon.jpg): a
   // standing man in team clothes (darker trousers), a dark topknot, both arms up on a team pole with a dark grip running from his fists into the segment
-  const C = DRAGON_CARRIER;
-  const trousers = lit(teamColor.scale(C.trouserShade)), skin = lit(teamColor.scale(C.skinShade));
+  const C = DRAGON_CARRIER, T = DRAGON_TRIM;
+  const trousers = lit(teamColor.scale(C.trouserShade)), skin = lit(teamColor.scale(C.skinShade)), trim = lit(C.poleColor);
   const carrier = (at: Vector3, underside: number): void => {
     const x = at.x, z = at.z;
-    for (const side of [-1, 1]) put(MeshBuilder.CreateBox("dragonCarrierLeg", { width: C.leg * h, height: C.legLong * h, depth: C.leg * h }, scene), new Vector3(x + side * C.leg * h * 0.7, C.legLong * h * 0.5, z), trousers);
+    for (const side of [-1, 1]) {
+      put(MeshBuilder.CreateBox("dragonCarrierLeg", { width: C.leg * h, height: C.legLong * h, depth: C.leg * h }, scene), new Vector3(x + side * C.leg * h * 0.7, C.legLong * h * 0.5, z), trousers);
+      // [S] 429 the trouser cuff at the leg's foot
+      put(MeshBuilder.CreateBox("dragonCarrierTrim", { width: C.leg * h * T.sleeve, height: T.cuff * h, depth: C.leg * h * T.sleeve }, scene), new Vector3(x + side * C.leg * h * 0.7, T.cuff * h * 0.5, z), trim);
+    }
     put(MeshBuilder.CreateBox("dragonCarrierBody", { width: C.trunk[0] * h, height: C.trunk[1] * h, depth: C.trunk[2] * h }, scene), new Vector3(x, (C.legLong + C.trunk[1] * 0.5) * h, z));
+    // [S] 429 the collar round the trunk's top and the hem round its foot
+    put(MeshBuilder.CreateBox("dragonCarrierTrim", { width: C.trunk[0] * h * T.out, height: T.collar * h, depth: C.trunk[2] * h * T.out * 1.1 }, scene), new Vector3(x, (C.legLong + C.trunk[1]) * h - T.collar * h * 0.5, z), trim);
+    put(MeshBuilder.CreateBox("dragonCarrierTrim", { width: C.trunk[0] * h * T.out, height: T.hem * h, depth: C.trunk[2] * h * T.out * 1.1 }, scene), new Vector3(x, C.legLong * h + T.hem * h * 0.5, z), trim);
     const headY = (C.legLong + C.trunk[1] + C.head * 0.55) * h;
     const hd = C.head * h;
     put(MeshBuilder.CreateBox("dragonCarrierHead", { width: hd, height: hd, depth: hd }, scene), new Vector3(x, headY, z), skin);
@@ -561,17 +575,23 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     const px = x, pz = z + (C.trunk[2] * 0.5 + C.poleAhead) * h;
     const fist = C.fistAt * h;
     const shoulderY = (C.legLong + C.trunk[1] * 0.92) * h;
-    const limb = (name: string, from: Vector3, to: Vector3): void => {
+    const limb = (name: string, from: Vector3, to: Vector3, cuff = false): void => {
       const run = to.subtract(from);
-      const box = put(MeshBuilder.CreateBox(name, { width: C.arm * h, height: run.length(), depth: C.arm * h }, scene), Vector3.Center(from, to), trousers);
-      box.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), run.normalize(), new Quaternion());
+      const long = run.length(), dir = run.normalizeToNew();
+      const turn = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+      const box = put(MeshBuilder.CreateBox(name, { width: C.arm * h, height: long, depth: C.arm * h }, scene), Vector3.Center(from, to), trousers);
+      box.rotationQuaternion = turn;
+      if (!cuff) return;
+      // [S] 429 the sleeve's cuff at the hand end
+      const band = put(MeshBuilder.CreateBox("dragonCarrierTrim", { width: C.arm * h * T.sleeve, height: T.cuff * h, depth: C.arm * h * T.sleeve }, scene), to.subtract(dir.scale(T.cuff * h * 0.5 + C.fist * h * 0.5)), trim);
+      band.rotationQuaternion = turn.clone();
     };
     for (const side of [-1, 1]) {
       const shoulder = new Vector3(x + side * (C.trunk[0] * 0.5 + C.arm * 0.5) * h, shoulderY, z);
       const elbow = new Vector3(shoulder.x + side * C.elbowOut * h, fist - C.fist * h * 0.3, z + C.trunk[2] * h * 0.3);
       const hand = new Vector3(px, fist + side * C.fist * h * 0.55, pz);
       limb("dragonCarrierUpperArm", shoulder, elbow);
-      limb("dragonCarrierForearm", elbow, hand);
+      limb("dragonCarrierForearm", elbow, hand, true);
       put(MeshBuilder.CreateBox("dragonCarrierFist", { width: C.fist * h, height: C.fist * h, depth: C.fist * h }, scene), hand, dark);
     }
     const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(px, (fist + underside) / 2, pz), lit(C.poleColor)); // [P] 418 red-orange on both teams
@@ -615,6 +635,27 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
   const mouth = new TransformNode("dragonMouth", scene);
   mouth.parent = holder;
   mouth.position.copyFrom(Vector3.Center(snoutAt, jawAt).add(new Vector3(0, 0, D.jaw[2] * h * 0.55)));
+  return out;
+}
+
+/** [S] 429 the front carrier's orange collar, hem and cuffs (spec at DRAGON_TRIM). */
+export function dragonTrim(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = DRAGON_TRIM, color = DRAGON_CARRIER.poleColor;
+  const trim = getMaterialFactory().get("cloth", color, { emissive: color.scale(DRAGON_FORM.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  for (const [tall, y] of [[T.bodyCollar, H / 2 - (H * T.bodyCollar) / 2], [T.bodyHem, -H / 2 + (H * T.bodyHem) / 2]]) {
+    const band = MeshBuilder.CreateBox("dragonTrim", { width: W * T.out, height: H * tall, depth: D * T.out * 1.1 }, scene);
+    band.position.set(cx, cy + y, cz);
+    band.rotation.copyFrom(tm.rotation);
+    band.parent = tm.parent;
+    band.material = trim;
+    band.convertToFlatShadedMesh();
+    out.push(band);
+  }
+  for (const limb of [body.leftLowerArm, body.rightLowerArm, body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "dragonTrimCuff", limb, 1 - T.limbCuff, 1, T.limbOut, trim));
   return out;
 }
 
