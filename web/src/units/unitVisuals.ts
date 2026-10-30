@@ -532,7 +532,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ PIRATE ═══════════════════════
   "pirate.flintlock": vis(
     { scale: 0.95, bulk: 0.95 }, "flintlock", "bandana", "none", "none", "#b3302a",
-    undefined,
+    "flintlock", // [S] 424 a second pistol in the off hand (card Off Hand Flintlock), held out mirrored by _aimPistol
     { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
   "pirate.blunderbuss": vis(

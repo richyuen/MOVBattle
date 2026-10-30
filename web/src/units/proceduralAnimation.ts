@@ -3219,6 +3219,7 @@ export class ProceduralAnimator {
   }
 
   private _pistol: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
+  private _offPistol: { node: Mesh; rest: Quaternion } | null = null;
   private _pistolAim = 1;
   /**
    * [S] 423 the flintlock pistol held out (pirate.flintlock.red.png: the arm out to his side and a little ahead at shoulder height, the pistol level,
@@ -3227,10 +3228,16 @@ export class ProceduralAnimator {
    */
   private _aimPistol(dt: number): void {
     if (this._pistol === undefined) {
-      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "pistolBell"));
+      const find = (hand: TransformNode) => hand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "pistolBell"));
+      const node = find(this._body.rightHand);
       // The grip sits in the fist: the firearm grip preset's offset (cut for a long gun's stock) had it back on the forearm
       if (node) node.position.setAll(0);
       this._pistol = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+      // [S] 424 a second pistol in the off hand is held out the other way, mirrored (pirate.flintlock b.2; pirate.flintlock.red.png: both arms out to
+      // the sides at shoulder height, a pistol level in each fist). Only when both hands carry one: a single off-hand pistol (the queen's) stays as built.
+      const off = node ? find(this._body.leftHand) : undefined;
+      if (off) off.position.setAll(0);
+      this._offPistol = off ? { node: off, rest: Quaternion.FromEulerAngles(off.rotation.x, off.rotation.y, off.rotation.z) } : null;
     }
     const gun = this._pistol;
     if (!gun) return;
@@ -3240,6 +3247,7 @@ export class ProceduralAnimator {
     const w = this._pistolAim * (1 - Math.min(1, this._limp));
     if (w <= 0.001) {
       gun.node.rotationQuaternion = null;
+      if (this._offPistol) this._offPistol.node.rotationQuaternion = null;
       return;
     }
     const b = this._body;
@@ -3247,24 +3255,30 @@ export class ProceduralAnimator {
     const rootM = b.root.getWorldMatrix();
     const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
     const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
-    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
     const height = b.metrics.overallHeight * b.root.scaling.y;
-    const fist = b.rightShoulder.getAbsolutePosition().add(outward.scale(PISTOL_AIM.out * height))
-      .addInPlace(fwd.scale(PISTOL_AIM.ahead * height)).addInPlace(new Vector3(0, -PISTOL_AIM.drop * height, 0));
-    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
     const kick = firing ? PISTOL_AIM.kick * Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * MUSKET_AIM.settle) : 0;
-    const y = fwd.scale(Math.cos(kick)).addInPlace(new Vector3(0, Math.sin(kick), 0)).normalize();
-    const z = Vector3.Cross(y, outward).normalize();
-    const zDown = z.y > 0 ? z.scale(-1) : z;
-    const x = Vector3.Cross(y, zDown).normalize();
-    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
-    const world = Matrix.Identity();
-    Matrix.FromXYZAxesToRef(x, y, zDown, world);
-    const handRot = new Quaternion();
-    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
-    const hand = Matrix.Identity();
-    handRot.toRotationMatrix(hand);
-    gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    // one arm: the fist solved onto the seat off its shoulder, the pistol's barrel (+y) along his front and its grip (+z) down
+    const hold = (shoulderJ: TransformNode, elbowJ: TransformNode, handJ: TransformNode, g: { node: Mesh; rest: Quaternion }, kicked: number): void => {
+      shoulderJ.computeWorldMatrix(true);
+      const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(shoulderJ.position.x) || 1, 0, 0), rootM));
+      const fist = shoulderJ.getAbsolutePosition().add(outward.scale(PISTOL_AIM.out * height))
+        .addInPlace(fwd.scale(PISTOL_AIM.ahead * height)).addInPlace(new Vector3(0, -PISTOL_AIM.drop * height, 0));
+      this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
+      const y = fwd.scale(Math.cos(kicked)).addInPlace(new Vector3(0, Math.sin(kicked), 0)).normalize();
+      const z = Vector3.Cross(y, outward).normalize();
+      const zDown = z.y > 0 ? z.scale(-1) : z;
+      const x = Vector3.Cross(y, zDown).normalize();
+      for (const n of [shoulderJ, elbowJ, handJ]) n.computeWorldMatrix(true);
+      const world = Matrix.Identity();
+      Matrix.FromXYZAxesToRef(x, y, zDown, world);
+      const handRot = new Quaternion();
+      handJ.getWorldMatrix().decompose(undefined, handRot);
+      const hand = Matrix.Identity();
+      handRot.toRotationMatrix(hand);
+      g.node.rotationQuaternion = Quaternion.Slerp(g.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    };
+    hold(b.rightShoulder, b.rightElbow, b.rightHand, gun, kick);
+    if (this._offPistol) hold(b.leftShoulder, b.leftElbow, b.leftHand, this._offPistol, 0);
     this._aimWeight = Math.max(this._aimWeight, w);
   }
 
