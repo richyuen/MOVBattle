@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-411 | LEG_WRAPS on the ice archer: khaki shin wraps in place of the fur cuffs (4b4db5f) | viking.ice_archer.a | approved
-411 | ICE_REST + _restIceBow: the bow stood upright, leant across her front (e1dc03c) | viking.ice_archer.b | approved
-411 | BULL_MUZZLE: compact muzzle under the eyes, level horns (0469073) | ancient.minotaur.a | approved
-411 | MONK_STAFF bo + _restMonkBo level across the chest, boGrip (0f878ea) | dynasty.monk.b | approved
-411 | NINJA_HOOD: boxy team hood + mask, open eye band (e572534) | dynasty.ninja.a | approved
-411 | SHURIKEN: four-point dark star in each fist (d5ebed9) | dynasty.ninja.b | approved
 412 | _restIceBow grip seat: the stave slid so its grip lands on the fist in the world (6ae7e0f + c508944) | viking.ice_archer.b | approved
 412 | TENGU_MASK: mask plate, orange nose, fanged grimace (2070597) | dynasty.monk.a | approved
 412 | NINJA_GI: loose gi, light V, lapels, knotted sash, sleeves (b2d03e9) | dynasty.ninja.a | approved
@@ -34,6 +28,11 @@ for 25 iterations.
 414 | KATANA_REST + _restKatana: katana upright in both fists (1b007b1) | dynasty.samurai.b | approved
 414 | MONK_TROUSERS: wide trousers, gold-banded greaves (a6bbc47) | dynasty.monk.a | approved
 414 | BRAWLER_HATCHET: bearded axe cut to .6, dark iron (cf3af41) | viking.brawler.b | approved
+415 | MINO_LATHE: lathed tapered legs, no hem step (57ec2652) | ancient.minotaur.a | approved
+415 | katana along the forearm in the swing; rest settle .8 s, edge-forward (44749436) | dynasty.samurai.b | approved
+415 | MONK_ARM_PLATES: team lamellar rows, gold rims (4db0bf1d) | dynasty.monk.a | approved
+415 | NORSE_BOARD + _restNorseBoard: board plumb before him (b8bdfcee) | viking.brawler.b | approved
+415 | [P] BRAWLER_HATCHET.haft .67 (2d2156d4) | viking.brawler.b | approved
 
 ## Spent (never retry as [P])
 
@@ -82,19 +81,18 @@ ancientDress.ts:MINO_ARMS (upper, fore, fist) | 1.6, 1.85, 1.75 | 410 | approved
 viking done 410-412 rows (LEG_WRAPS, ICE_ARCHER_QUIVER, ICE_NOCK, ICE_REST + grip seat) | compacted 413 | 412 | approved | values: git show e702238:loop/LEDGER.md
 propBuilder.ts:BULL_MUZZLE (wide, tall, deep, drop, ahead, tilt; horns) | .95, .42, .62, .36, .3, .25 | 411 | approved | BULL_HEAD face .86 tilt .12 + hornBends (406-410)
 dynastyDress.ts:MONK_STAFF (long, thick, offset, cap, capWide, band) + MONK_REST (ahead, inward, drop, tilt) | 1.2, .022, .2, .08, 1.45, .025; .14, .08, .16, .06 | 411 | approved | no staff (before 411)
-dynastyDress.ts:NINJA_HOOD (out, clear, top, backFrom, sideFrom, chin, maskShade, knot, tail) | 1.12, .05, 1.12, -.15, .72, -1.08, .82, .22, .9 | 411 | approved | ninja_mask ball (before 411)
-propBuilder.ts:SHURIKEN (span, waist, thick, hub, drop) | .2, .055, .012, .035, .07 | 411 | approved | a thin grey blade (before 411)
+dynasty.ninja done 411-413 rows (NINJA_HOOD, SHURIKEN, NINJA_GI, SHURIKEN_FLIGHT, NINJA_TROUSERS) | compacted 415 | 413 | approved | values: git show 46161b8:loop/LEDGER.md
 dynasty.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 411 | stats | values: git show cc4f7de
 dynastyDress.ts:TENGU_MASK (plate, chin, shade, brow, browTall, scowl, nose, noseOut, noseWide, mouth, mouthY, fang) | 1.04, -.92, .72, .62, .16, .38, .42, .3, .3, .9, -.6, .2 | 412 | approved | bare face (before 412)
-dynastyDress.ts:NINJA_GI (out, deep, hem, light, vWide, vLong, lapel, lapelLong, cross, sash, sashAt, knot, tail, sleeveOut, sleeveTo) | 1.2, 1.25, .08, 1.3, .32, .32, .14, .7, .5, .12, .16, .14, .24, 1.5, .25 | 412 | approved | plain trunk (before 412)
-projectileSystem.ts:SHURIKEN_FLIGHT (span, waist, thick, hub, tilt) | .36, .1, .02, .07, .7 | 412 | approved | 8-point pale team disc (before 412)
 proceduralAnimation.ts:MONK_SWING (back, through, cock, hit, reach, raise, dip) | .9, 1.35, .3, .5, .08, 1.3, .35 | 412 | approved | unarmed shove (before 412)
 dynastyDress.ts:ARCHER_HAIR (clear, top, out, capDeep, fall, fallOut, side, sideDrop, sideFrom, bun) | .08, 1.14, 1.1, 2.1, 2.6, .22, .2, -.85, .35, .42 | 412 | approved | conical_hat (before 412)
-dynastyDress.ts:NINJA_TROUSERS (thigh, knee, kneeTo, wrap, bands, band, bandOut, bandShade) | 1.9, 1.75, .3, 1.3, 4, .09, 1.42, .82 | 413 | approved | bare legs (before 413)
 propBuilder.ts:KASA_GOLD + kasa cone team colour | (.86,.62,.18) | 413 | approved | accent cone, accent x.55 band (before 413)
 propBuilder.ts:FIREWORK_BOW (long, cap, capColor) | 1.15, .12, (.92,.5,.12) | 413 | approved | plain bow (before 413)
 projectileSystem.ts:FIREWORK_ROCKET (long, wide, bands, head, flame, arc) | .5, .13, 3, .14, .32, .1 | 413 | approved | .3x.04 stick, arc .25 (before 413)
 dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, lame, step, flareTop, flareFoot, arc, rim, crest) | .04, 1.3, 2.3, 1.4, .42, 3, .32, .3, 2.3, 2.75, .55, .07, .42; turn pi(.5-arc) | 414 | approved | arc .64 turn pi(.5+arc) (413); samurai_helmet (before 413)
-proceduralAnimation.ts:KATANA_REST (ahead, drop, lean, under) | .16, .24, .12, .9 | 414 | approved | one-hand shoulder carry (before 414)
+proceduralAnimation.ts:KATANA_REST (ahead, drop, lean, under, settle) | .16, .24, .12, .9, .8; flat to his side, swing along the forearm | 415 | approved | flat facing him, no settle (414); one-hand shoulder carry (before 414)
 dynastyDress.ts:MONK_TROUSERS (thigh, kneeTo, greave, bands, band, bandOut) | 2.0, .22, 1.35, 3, .07, 1.45 | 414 | approved | bare legs (before 414)
-propBuilder.ts:BRAWLER_HATCHET (scale, steel) | .6, (.11,.11,.12) | 414 | approved | bearded_axe at 1, steel (.46,.47,.52) (392-413)
+propBuilder.ts:BRAWLER_HATCHET (scale, steel, haft) | .6, (.11,.11,.12), .67 | 415 | approved | haft 1 (414); bearded_axe at 1, steel (.46,.47,.52) (392-413)
+ancientDress.ts:MINO_LATHE (thigh, shin profiles; radius, facets) | thigh .92/1.04/.96/.8/.66, shin .74/.8/.64/.46/.38; 1.4, 7 | 415 | approved | limbShell sleeves thigh 1.95, calf 2.0 to .6 (410)
+dynastyDress.ts:MONK_ARM_PLATES (rows, out, overlap, rim, rimOut, shade) | 3, 1.5, .08, .05, 1.62, .9 | 415 | approved | bare arms (before 415)
+proceduralAnimation.ts:NORSE_BOARD (ahead, drop, inward) | .06, .05, .6 | 415 | approved | the hand-carried tray board (before 415)

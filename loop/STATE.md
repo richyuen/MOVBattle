@@ -1,5 +1,5 @@
 # Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
-Iteration: 414   Batch: ancient+viking+dynasty (6-8/19)   Consecutive empty: 0   Done: 40/139   Parked: 1
+Iteration: 415   Batch: ancient+viking+dynasty (6-8/19)   Consecutive empty: 0   Done: 40/139   Parked: 1
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -8,8 +8,8 @@ renaissance: painter ++++ D | fencer ++++ D | balloon_archer ++++ D | musketeer 
 farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ D | harvester ++++ D | wheelbarrow -+++ p | scarecrow ++++ D
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur -+++ o | zeus ++++ D
-viking: headbutter ++++ D | ice_archer ++++ D | brawler +--+ o | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
-dynasty: samurai ---+ o | firework_archer ---+ o | monk -+-+ o | ninja ++++ D | dragon ---+ o | hwacha ---+ o | monkey_king ---+ o
+viking: headbutter ++++ D | ice_archer ++++ D | brawler ++-+ o | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
+dynasty: samurai ---+ o | firework_archer ---+ o | monk ++-+ o | ninja ++++ D | dragon ---+ o | hwacha ---+ o | monkey_king ---+ o
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
 wild_west: dynamite_thrower ???? q | miner ???? q | cactus ???? q | gunslinger ???? q | lasso ???? q | deadeye ???? q | quick_draw ???? q
@@ -23,21 +23,23 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-414 (BASE 46161b8): [P] samurai a.1 kabuto opening (981199b; evidence 0434511) approved, none struck | [S] samurai b.1 katana two-hand hold (1b007b1) approved, struck 1, added 3 | [S] monk a.4 trousers + greaves (a6bbc47) approved, struck 4 | [S] brawler b.2 hatchet (cf3af41) approved, struck 2 - 4/4, 3 struck
-413 (BASE e702238): ninja trousers (D), monk kasa, firework bow + rocket, samurai kabuto; brawler re-audit a PASS, CONFIRM failed b, c - 5/5, 5 struck
+415 (BASE 01a65ea2): [S] minotaur a.3 lathed legs (57ec2652) approved, a PASS, CONFIRM failed a (4 new: sash slab, hidden belt, plank pauldron, scale 2.10) | [S] samurai b.3 katana swing (44749436) approved, struck 3 | [S] monk a.3 arm plates (4db0bf1d) approved, a PASS | [S] brawler b.3 board upright (b8bdfcee) approved, struck 3 | [P] brawler haft (2d2156d4) approved, b PASS - 5/5, 5 struck
+414 (BASE 46161b8): samurai kabuto opening + katana rest, monk trousers, brawler hatchet - 4/4, 3 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [P] dynasty.samurai (981199b; evidence 0434511) VERDICT: APPROVE CRITERION: dynasty.samurai.a FAIL (previous: FAIL)
-- GAP: [S] dynasty.samurai (1b007b1) VERDICT: APPROVE CRITERION: dynasty.samurai.b FAIL (previous: FAIL)
-- GAP: [S] dynasty.monk (a6bbc47) VERDICT: APPROVE CRITERION: dynasty.monk.a FAIL (previous: FAIL)
-- GAP: [S] viking.brawler (cf3af41) VERDICT: APPROVE CRITERION: viking.brawler.b FAIL (previous: FAIL)
+- GAP: [S] ancient.minotaur (57ec2652) VERDICT: APPROVE CRITERION: ancient.minotaur.a PASS (previous: FAIL)
+- GAP: [S] dynasty.samurai (44749436) VERDICT: APPROVE CRITERION: dynasty.samurai.b FAIL (previous: FAIL)
+- GAP: [S] dynasty.monk (4db0bf1d) VERDICT: APPROVE CRITERION: dynasty.monk.a PASS (previous: FAIL)
+- GAP: [S] viking.brawler (b8bdfcee) VERDICT: APPROVE CRITERION: viking.brawler.b FAIL (previous: FAIL)
+- GAP: [P] viking.brawler (2d2156d4) VERDICT: APPROVE CRITERION: viking.brawler.b PASS (previous: FAIL)
+- CONFIRM ancient.minotaur a FAIL | b PASS | c PASS | d PASS -> open (4 new a blockers)
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Open: minotaur a.3 legs (criterion a last attempted 411: starving at 416; take it at 415); brawler b (upright shield, [P] haft) + c (lunge: evidence first); dynasty all but ninja. Next ranked: minotaur a.3 lathed tapered legs; samurai b.3 katana rotation reset in the swing; monk a.3 arm plates / c.2 knockback; firework_archer c.2 impact burst / b.2 rocket nocked; dragon c.1 flame; hwacha a.1 rack; monkey_king b.1 staff.
+- Open: minotaur a (CONFIRM 415 list: scale, sash, belt, pauldron); brawler c (lunge: evidence first); monk c (knockback); dynasty samurai, firework_archer, dragon, hwacha, monkey_king. Next ranked: samurai [P] light katana steel (415.2 fallout) / [P] kabuto lames team (413 fallout) / a hakama, cuirass; monk c.2 knockback; minotaur a scale + sash; firework_archer c.2 impact burst / b.2 rocket nocked; dragon c.1 flame; hwacha a.1 rack; monkey_king b.1 staff.
 - samurai c.1 (Projectile Block) and brawler c.1 (lunge) need capture-scene evidence commits first (a ranged attacker; a farther start with the lunge logged).
 - Melee release shots are taken at the hit log; a swing that should show must hold its blow (blowLandsIn), as MONK_SWING does via _strikesAtMan.
-- A world-posed rest (_restIceBow, _restKatana) must clear rotationQuaternion outside the rest, or the attack inherits it (414 samurai b.3).
-- Idle camera fixes per unit live in capture.mjs __unitFrame (swing .3 for monk + samurai, swapped, fencer-level for the brawler).
+- A world-posed rest (_restIceBow, _restKatana, _restNorseBoard) must clear rotationQuaternion outside the rest; the katana's rest eases back over .settle so the hit shows the swing.
+- Minotaur: 4 CONFIRM fails on a (403-415), each new gear blockers; his scale 2.10 vs card 1.2x is now a blocker (396 [R] 1.92 was rejected with other changes bundled).
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```

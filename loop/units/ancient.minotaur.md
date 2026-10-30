@@ -1,26 +1,26 @@
 # ancient.minotaur
-Status: open   Audited: 378, 396, 402, 403 (CONFIRM), 405 (CONFIRM), 408 (CONFIRM)   Done: -
+Status: open   Audited: 378, 396, 402, CONFIRM 403, 405, 408, 415   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (4 since 408; the CONFIRM's list, struck 1 at 409, 2 at 410, 4 at 411)
- 3. legs in lineup_ancient - TABS: solid tapered thighs and shins under the belt; ours spindly stick legs that read as a gangly cow at lineup distance (ref: ancient.minotaur.blue.png)
-  (struck 1 at 409: the barrel chest; struck 2 at 410: thick arms and big fists; struck 4 at 411: the compact bull head)
-b PASS (379; CONFIRM 403, 405, 408)
-c PASS (387; CONFIRM 403, 405, 408)
+a FAIL (0 since 415; the CONFIRM's list; 408 list all struck by 415.1)
+ 1. chest sash in unit_ancient.minotaur_idle is a deep tan box, about a forearm thick, sitting across the chest like a held crate - TABS: a thin flat brown strap running diagonally from the left shoulder down to the right hip, lying flat on the chest (ref: ancient.minotaur.red.png / .blue.png)
+ 2. waist belt in unit_ancient.minotaur_idle: only a small team-blue patch shows at the crotch - TABS: a wide team-coloured band with a lighter scroll pattern and dark rims all round the waist, the brightest element of the figure (ref: ancient.minotaur.blue.png, card Appearance "patterned iron belt")
+ 3. shoulder pad in unit_ancient.minotaur_idle runs as a long blue plank from the shoulder forward over the chest, and in _windup/_ability a big slab over the shoulder and back - TABS: a compact curved pad capping one shoulder only, about the width of the upper arm (ref: ancient.minotaur.blue.png)
+ 4. scale in lineup_ancient: about 1.75x the Zeus beside him, 2x the hoplites (rig 3.12 m; size 2.10 vs wiki 1.2x) - TABS: about 1.2x his neighbours, hunched (ref: reference/factions/ancient.jpg, card Infobox Size 1.20x)
+b PASS (379; CONFIRM 403, 405, 408, 415)
+c PASS (387; CONFIRM 403, 405, 408, 415)
 d PASS (cost 1600, hp 20.73x, dmg 2.16x, cd 0.99x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a legs - blocker 3: lathed tapered fur legs (wide at the hip, narrow at the knee, a calf bulge into the slim pastern, no hem step) replacing the 410 straight limbShell sleeves - ref: .blue.png - ours: lineup_ancient.png
+1. [S] a scale - blocker 4: size 2.10 toward the card's 1.2x (unitVisuals scale; mind the bundled 396 rejection) - ref: reference/factions/ancient.jpg - ours: lineup_ancient.png
+2. [S] a sash - blocker 1: the MINO_STRAP slab rebuilt as a thin flat diagonal strap on the chest, grey iron buckle - ref: ancient.minotaur.blue.png - ours: unit_ancient.minotaur_idle.png
+3. [S] a belt - blocker 2: a wide team scrolled girdle all round the hips, dark rims, showing below the hunch - ref: ancient.minotaur.blue.png - ours: unit_ancient.minotaur_idle.png
+4. [S] a pauldron - blocker 3: a compact curved cap on one shoulder, arm-wide (MINO_SHELL) - ref: ancient.minotaur.blue.png - ours: unit_ancient.minotaur_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-378-389 | fur body, gear, sash; Charge; bare fists; bull head; pauldron shell; scrolled girdle; Big Headbutt (c PASS 387); sash foot (388 rejected); girdle on the hip joint [S] | a,b,c | approved
-396 | [R] 1.92 build, flat ribbon inlays, flush rims, front pauldron scroll (a76c891, reverted 32577c2) | a | rejected
-402-408 | [R] head low; face upright; MINO_SHELL; MINO_STRAP slab; tall neck; MINO_LEGS (407); strap foot (408) | a | approved; CONFIRM 403, 405, 408 failed a
-409 | MINO_BARREL: trunk 1.35 wide 1.8 deep, shoulders out, lathe barrel, hump, thick neck (506c4c3) | a | approved (struck 1)
-410 | MINO_ARMS: fur sleeves 1.6/1.85, mitts x1.75 (cfb6510) | a | approved (struck 2)
-410 | leg sleeves: thigh 1.95, calf 2.0 to .6 (bd87426) | a | approved (none struck: straight boxes, a hem step)
-411 | BULL_MUZZLE: compact muzzle under the eyes, level horns (0469073) | a | approved (struck 4)
+378-389 | fur body, gear, sash, Charge, bull head, pauldron, girdle, Big Headbutt (c PASS 387) [S] | a,b,c | approved (388 rejected)
+396-408 | [R] 1.92 build (396 rejected); head, MINO_SHELL, MINO_STRAP, MINO_LEGS | a | approved; CONFIRM 403, 405, 408 failed a
+409-411 | MINO_BARREL, MINO_ARMS, leg sleeves, BULL_MUZZLE | a | approved (struck 1, 2, 4)
+415 | MINO_LATHE lathed legs (57ec2652) | a | approved (a PASS); CONFIRM 415 failed a (4 new)
 ## Rejected (last 4)
-- girdle face [S] [1] - 388: sash ended on the flank with a side wrap - the girdle itself stayed a thin strip with dangling curls
-- height and girdle [R] [1] - 396: 1.92 with flat inlays and a front pauldron scroll - he still towered, a box still stuck off the left flank
+- [R] 396: 1.92 with flat inlays and a front pauldron scroll - still towered, a box off the left flank
 ## Notes (max 3 lines)
-- 411 critic: thighs boxy over thin stick shins; TABS shins about 0.7 of thigh girth to the hooves.
-- 410 critic: the free fist rests akimbo on the hip in the idle, not forward at the belly; the leg sleeves read as baggy shorts.
-- 409: MINO_BARREL runs first in dressMinotaur, scaling the trunk box + yoke (hidden) so trunkBand-sized gear follows.
+- 415 CONFIRM: 4th fail on a; legs, chest, arms, head read. Buckle team-blue vs grey iron (colour only).
+- 409: MINO_BARREL runs first in dressMinotaur, scaling the trunk box + yoke so trunkBand-sized gear follows.
