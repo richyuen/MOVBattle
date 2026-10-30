@@ -3238,7 +3238,7 @@ const PISTOL = {
  * the fore stock .stock of the bore deep, .fore of the way to the muzzle; the butt deepening to .heel of the gun. The off fist cups the fore stock
  * .offAt of the way out (BLUNDERBUSS_OFF_GRIP). Steel and wood the matchlock's.
  */
-const BLUNDERBUSS = { long: 0.9, grip: 0.24, bore: 0.075, bell: 0.2, mouth: 3.3, stock: 1.2, fore: 0.62, heel: 0.16, offAt: 0.5 };
+const BLUNDERBUSS = { long: 0.62, grip: 0.24, bore: 0.075, bell: 0.2, mouth: 3.3, stock: 1.2, fore: 0.62, heel: 0.16, offAt: 0.5 };
 export const BLUNDERBUSS_OFF_GRIP = "blunderbussOffGrip";
 const MATCHLOCK = {
   long: 1.3, grip: 0.26, bore: 0.042, fore: 0.86, stock: 0.9, butt: 0.11, glow: 0.18,
