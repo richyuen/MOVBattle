@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Node, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { limbBox, limbShell } from "./medievalDress";
 import { strapSandals } from "./ancientDress";
@@ -447,7 +447,12 @@ const DRAGON_FORM = {
  * full men under the poles, each with a head, two bead eyes and a dark hair bun"; dynasty.dragon.jpg): the head carries two bead eyes (.eye of the head
  * across, white with a dark pupil) on its front and a dark hair cap .hairTall of it tall with the bun .bun behind, in place of the wide slab; the pole
  * stands .poleSide of h beside the head, not through it, held by both arms .arm thick reaching up to a dark fist each at the grip. */
-const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.075, grip: 0.16, trouserShade: 0.7, skinShade: 1.1, eye: 0.28, hairTall: 0.22, bun: 0.2, poleSide: 0.17, fist: 0.09 };
+/* [S] 422 the grip (RE-AUDIT 420 b.1: "rear poles end in black stumps on the headless torsos, no hands on them - TABS: each carrier grips his pole
+ * with both hands at chest height"; dynasty.dragon.jpg: the pole stands in front of the man's chest, both sleeved arms bent at the elbow to two fists
+ * stacked on its dark grip): the pole's foot at .fistAt of h (chest height) just in front of the trunk (.poleAhead of h past its face); each arm two
+ * boxes .arm thick in the trouser shade, the upper arm from the shoulder down and forward to an elbow .elbowOut of h beside the ribs, the forearm in
+ * to a dark fist .fist on the pole, the two fists stacked .fist apart; the dark grip .grip of h round the pole between them. */
+const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.075, grip: 0.16, trouserShade: 0.7, skinShade: 1.1, eye: 0.28, hairTall: 0.22, bun: 0.2, poleSide: 0.17, fist: 0.09, fistAt: 0.56, poleAhead: 0.07, elbowOut: 0.05 };
 /** The Dragon's giant paper head on its pole and its long team body ribbon (spec at DRAGON_FORM). */
 export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const D = DRAGON_FORM;
@@ -516,21 +521,28 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     }
     put(MeshBuilder.CreateBox("dragonCarrierHair", { width: hd * 1.04, height: hd * C.hairTall, depth: hd * 1.04 }, scene), new Vector3(x, headY + hd * (0.5 - C.hairTall * 0.3), z), dark);
     put(MeshBuilder.CreateIcoSphere("dragonCarrierKnot", { radius: hd * C.bun, subdivisions: 1 }, scene), new Vector3(x, headY + hd * (0.5 + C.hairTall * 0.4), z - hd * 0.25), dark);
-    // [S] 420 the pole stands beside the head on his pole side; both arms reach up and across to a dark fist each on its grip
-    const px = x + C.poleSide * h;
-    const fist = (C.legLong + C.trunk[1] + C.head * 1.15) * h;
+    // [S] 422 the pole stands in front of his chest and both hands hold it there: each arm an upper arm box from the shoulder down and forward to an
+    // elbow beside the ribs, a forearm box in to a dark fist on the pole's grip, the fists stacked (the 420 pole beside the head and straight arms up to it
+    // read as stumps, b.1)
+    const px = x, pz = z + (C.trunk[2] * 0.5 + C.poleAhead) * h;
+    const fist = C.fistAt * h;
     const shoulderY = (C.legLong + C.trunk[1] * 0.92) * h;
-    for (const side of [-1, 1]) {
-      const from = new Vector3(x + side * C.trunk[0] * h * 0.5, shoulderY, z);
-      const to = new Vector3(px, fist - side * C.fist * h * 0.55, z);
+    const limb = (name: string, from: Vector3, to: Vector3): void => {
       const run = to.subtract(from);
-      const arm = put(MeshBuilder.CreateBox("dragonCarrierArm", { width: C.arm * h, height: run.length(), depth: C.arm * h }, scene), Vector3.Center(from, to), skin);
-      arm.rotation.z = -Math.atan2(run.x, run.y);
-      put(MeshBuilder.CreateBox("dragonCarrierFist", { width: C.fist * h, height: C.fist * h, depth: C.fist * h }, scene), to, dark);
+      const box = put(MeshBuilder.CreateBox(name, { width: C.arm * h, height: run.length(), depth: C.arm * h }, scene), Vector3.Center(from, to), trousers);
+      box.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), run.normalize(), new Quaternion());
+    };
+    for (const side of [-1, 1]) {
+      const shoulder = new Vector3(x + side * (C.trunk[0] * 0.5 + C.arm * 0.5) * h, shoulderY, z);
+      const elbow = new Vector3(shoulder.x + side * C.elbowOut * h, fist - C.fist * h * 0.3, z + C.trunk[2] * h * 0.3);
+      const hand = new Vector3(px, fist + side * C.fist * h * 0.55, pz);
+      limb("dragonCarrierUpperArm", shoulder, elbow);
+      limb("dragonCarrierForearm", elbow, hand);
+      put(MeshBuilder.CreateBox("dragonCarrierFist", { width: C.fist * h, height: C.fist * h, depth: C.fist * h }, scene), hand, dark);
     }
-    const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(px, (fist + underside) / 2, z), lit(C.poleColor)); // [P] 418 red-orange on both teams
+    const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(px, (fist + underside) / 2, pz), lit(C.poleColor)); // [P] 418 red-orange on both teams
     pole.position.y -= C.grip * h * 0.5;
-    put(MeshBuilder.CreateCylinder("dragonCarrierGrip", { height: C.grip * h * 1.5, diameter: D.pole * h * 1.35, tessellation: 6 }, scene), new Vector3(px, fist, z), dark);
+    put(MeshBuilder.CreateCylinder("dragonCarrierGrip", { height: C.grip * h * 1.5, diameter: D.pole * h * 1.35, tessellation: 6 }, scene), new Vector3(px, fist, pz), dark);
   };
   // [S] 421 the body: one flat closed paper band through the stations, pale scallops along both edges and pale fins up the spine
   const frill = Color3.Lerp(teamColor, Color3.White(), D.frillMix);
