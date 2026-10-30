@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-428 | DRAGON_BLAST pistol shot from the bell, spawnPistolShot blast (29111559) | pirate.captain.c | approved
-428 | CAPTAIN_COAT open knee coat, shirt, cravat; no tunic skirt (9fb9986c) | pirate.captain.a | approved
-428 | QUEEN_SASH strap + four bombs (72765079, cfa8f57b) | pirate.pirate_queen.a | approved
-428 | BARREL_BRACERS stave arm cuffs (d6d8e60a) | pirate.blunderbuss.a | approved
-428 | CANNON_HANDLES rider behind the breech on two handles (8009017b, 0a24e9b0) | pirate.cannon.b | approved
-428 | CANNON_SHIRT white shell, team bands, striped sleeves (a478d4ce) | pirate.cannon.a | approved
-428 | MONKEY_TRUNK slim trunk + shoulders, waist wrap (eea59cc5) | dynasty.monkey_king.a | approved
 429 | PIRATE_HAIR locks from under the cap to the shoulders (a216eda0, 70fa9c2c) | pirate.flintlock.a | approved
 429 | PIRATE_SOCKS team/grey ringed socks (784eeeca) | pirate.bomb_thrower.a | approved
 429 | CANNON_BANDANNA brimless dome, crew cap off (1f3e8df6) | pirate.cannon.a | approved
@@ -49,6 +42,12 @@ for 25 iterations.
 432 | CAPTAIN_LEGS tan pants, black knee boots, buckles (209964c9, 8a9e1309) | pirate.captain.a | approved
 432 | QUEEN_SKIRT wrap flap, longer steeper skirt (4d8b3736) | pirate.pirate_queen.a | approved
 432 | FLINTLOCK_LOCKS ginger strands in place of PIRATE_HAIR (0ddfd8fa, 6d30b7c6) | pirate.flintlock.a | approved
+433 | [R] MONKEY_SHORTS leg cut off the knee joint, team shin + boot, orange knee band + anklet on a low shoe (d21e71e8, 890391e8) | dynasty.monkey_king.a | approved
+433 | CAPTAIN_TRICORN peaked walls + raised crown (1543b25e) | pirate.captain.a | approved
+433 | CAPTAIN_FRONT white laced shirt, tan V vest, team sash (5033a559) | pirate.captain.a | approved
+433 | HARPOONER_SHOES brown foot, grey sock, skin strip, tongue + buckle (ad0be350, 17ca01c7) | pirate.harpooner.a | approved
+433 | QUEEN_SKIRT frontDrop, trousers as pale leg meshes (c521e5f2) | pirate.pirate_queen.a | approved
+433 | QUEEN_SHIRT team trunk + yoke, puffy sleeves, laced V (c9dcb0cd, c4ad8740) | pirate.pirate_queen.a | approved
 
 ## Spent (never retry as [P])
 
@@ -71,7 +70,7 @@ ancient.minotaur 402-415 rows (MINO_GIRDLE, MINO_SHELL, BULL_HEAD, MINO_STRAP + 
 ancientDress.ts:MINO_STRAP (wide, proud) + MINO_GIRDLE (lo, hi, proudX, proudZ; off MINO_BARREL.profile) + MINO_CAP (inX, atY, radius, squash, droop, rim, swirl) + unitVisuals minotaur scale | .2, .04; -.08, .3, 1.07, 1.09; .98, .94, .72, .55, .4, .14, .6; 1.4 | 420 | approved | strap .44/.32, girdle -.3/.03/1.03/1.1 off the pelvis, MINO_SHELL plank, scale 2.1 (402-419)
 dynastyDress.ts:MONKEY_CROWN (feather, featherWide, belly, stem, flat, spine, spineProud, lean) | 2.3, .55, .4, .3, .18, .14, .6, .32 | 424 | approved | rod feathers 2.6 x .2, lean .3 (420-423); torus crown hat (before 420)
 dynastyDress.ts:MONKEY_FACE [R] (plate, chin, brow, cheek, cheekAt, browTall, browOut, muzzle, muzzleY, muzzleZ, strip) | .08, -1, .6, [.5,.42,.3], [.58,-.52,1], .22, .22, [.5,.42,.42], -.66, 1.2, .26 | 430 | approved | dark plate .1, muzzle box 1.1, 8 blond tufts (421-429); bare team head (before 421)
-dynastyDress.ts:MONKEY_SHORTS [R] (hipOut, puffAt, puff, kneeOut, hem, band, cuffOut, shoeTall, anklet; orange) | 1.35, .55, 1.9, 1.12, .72, .08, 1.22, .45, .24; (1,.42,.1) | 432 | approved | hip 1.7 puff 2.3 knee 1.45 to the thigh foot, gold cuff on the shin, shoeTall .78 (422-431)
+dynastyDress.ts:MONKEY_SHORTS [R] 433 (puffAt, puff, kneeOut, below, band, cuffOut, shoeTall, anklet, ankletOut, ankletDeep) | .5, 1.9, 1.12, 0 (hem at the knee joint), .12, 1.12 over the taper, .32, .15, 1.35, 1.45 | 433 | approved | hem .72 of the thigh mesh, band .08, shoeTall .45, anklet .24 at the boot top (432); hip 1.7 puff 2.3 knee 1.45 (422-431)
 dynastyDress.ts:MONKEY_ROBE [R] (out, deep, under, band, bandFrom, bandTo; full width, no skirt, no cape) | 1.14, 1.18, .85, .08, [-.3,.7], [.95,-.85] | 430 | approved | left half edge .12, 2 gold strips .06 x .92 at [-.62,-.26] (422-429); tan trunk (before 422)
 vehicleBuilder.ts:FRONT_SPLIT (hipOut, out, down, ahead, shinOut, shinAhead) + THROWER_SPLIT (out, down, ahead, shinOut, shinAhead) | .05, 1, .1, .12, .45, .1; 1, .3, .35, .6, .15 | 422 | approved | [R] reset: CREW_SEAT frontThigh -1.15/frontSplay .62/frontKnee .45 (Euler, crossed the knees) and THROWER_KNEES chest .55/out .2 targets (unreachable) (380-421); FRONT_SPLIT out .88/down .12/ahead .42 without the hip slide (403, rejected)
 pirate 425-426 rows (TRICORN_BROWN, HARPOON_REEL, GUN_TOSS, BLUNDERBUSS + _AIM, CANNON_WHEEL, CUTLASS, CUTLASS_SLASH, PIRATE_KICK, BLUNDERBUSS_RECOIL, PISTOL_SHOT, BARREL_ARMOUR, OPEN_COAT, CANNON_SIGHT) | compacted 428 | 426 | approved | values: git show 0445ba6b:loop/LEDGER.md
@@ -90,7 +89,7 @@ pirateDress.ts:QUEEN_HAIR (side, drop, splay, curls, curl, beads, bead) | .36, -
 pirateDress.ts:CAPTAIN_PARROTS (x, y, z, size, turn, body, head, headY, beak, tail, tailLean) | 1.15, .55, .35, 1, .35, [.32,.5,.34], .27, 1.05, .16, .75, .45 | 430 | approved | none (before 430)
 propBuilder.ts:QUEEN_CUTLASS (long, wide, taper, curve, segs, cup) | .66, .1, .5, .24, 7, 4.2 | 430 | approved | CUTLASS .5, .05, .55, .13, 6, 3.4 (425-429); CUTLASS bowl .38, rim .32 (431, bowl guard replaces the frustum cup)
 pirateDress.ts:CAPTAIN_BEARD (tash, tashTall, tashAhead, droop, run, proud; color) | 1.15, .2, .1, .22, [.46,.42,.34], .3; (.4,.2,.12) | 431 | approved | run [.44,.34,.3] proud .42 lower (431.4, floated); none (before 431)
-pirateDress.ts:QUEEN_SKIRT (top, knee, out, flare, deep, slant, beads, bead, pantsOut, shin, pale; flapWide, flapFoot, flapX, flapLong, flapProud, flapLean) | .14, 1.08, 1.06, 1.45, 1.25, .6, 7, .11, 1.14, .6, .18; .6, .22, -.25, 1.3, .06, .12 | 432 | approved | knee .92 slant .32 pale .4, no flap (431)
+pirateDress.ts:QUEEN_SKIRT (top, knee, out, flare, deep, slant, frontDrop, beads, bead, pale; flapWide, flapFoot, flapX, flapLong, flapProud, flapLean) | .14, 1.08, 1.06, 1.45, 1.25, .6, .4, 7, .11, .18; .6, .22, -.25, 1.3, .06, .12 | 433 | approved | pantsOut 1.14 thigh+shin shells, no frontDrop (431-432); knee .92 slant .32 pale .4, no flap (431)
 proceduralAnimation.ts:QUEEN_GUARD (out, ahead, drop, cross, lean, stagger) | .05, .14, .3, .6, .2, .04 | 431 | approved | blades held point-first, end-on (before 431)
 propBuilder.ts:BLUNDERBUSS [S] (long, grip, bore, flare, mouth, stock, fore, ramrod, wrist, heel, drop, offAt) | .92, .3, .05, .42, 2.8, 1.3, .84, .24, .75, .15, .28, .42 | 431 | approved | .62, .24, .075, bell .2, 3.3, 1.2, .62, heel .16, offAt .5 (425-430)
 unitVisuals.ts:pirate.harpooner scale | 1.3 | 431 | approved | 1.05 (before 431)
@@ -98,3 +97,7 @@ pirateDress.ts:BARREL_GREAVES (out, thighFrom, thighTo, shinFrom, shinTo) | 1.38
 pirateDress.ts:HARPOONER_PANTS (beige, cuff; legs take the head skin) | (.78,.66,.5), .82 | 432 | approved | (.5,.43,.33) (432.3, taupe); team legs (before 432)
 pirateDress.ts:CAPTAIN_LEGS (thigh, pantsTo, shin, bootFrom, boot, cuff, cuffOut, buckle; tan, black) | 1.45, .3, 1.38, .2, 1.5, .2, 1.85, .45; (.85,.55,.3), (.05,.05,.06) | 432 | approved | tan (.62,.42,.24) (432.4); team legs (before 432)
 pirateDress.ts:FLINTLOCK_LOCKS (locks, thick, wide, out, front, step, clear, drop, longer, splay; ginger) | 3, .2, .34, 1.06, .42, .42, .04, -1.15, .18, .14; (.95,.32,.12) | 432 | approved | ginger (.75,.3,.15) (432.6); PIRATE_HAIR panels (429-431)
+propBuilder.ts:CAPTAIN_TRICORN (peak, curve, flare, crown, cols) | 1.75, 2, .06, 1.35, 8 | 433 | approved | box walls, dome to TRICORN_CROWN (before 433)
+pirateDress.ts:CAPTAIN_FRONT (open, shirtTo, vee, veeTilt, flapWide, laces, sashFrom, sash, sashShade, whiteGlow) | .5, .52, .2, .42, .34, 2, .8, .18, .75, .4 | 433 | approved | tan shirt .36 + white cravat block (428-432)
+pirateDress.ts:HARPOONER_SHOES (sockFrom, sockTo, sockOut, skinOut, tongue, tongueTall, buckle; brown, grey) | .34, .82, 1.22, 1.1, .55, .3, .6; (.4,.2,.13), (.45,.4,.34) | 433 | approved | sockTo .66 (433.4); team foot (before 433)
+pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong, laces) | 1.45, 1.95, .3, .62, 1.25, .28, .34, 2 | 433 | approved | dark body-shade trunk, bare arms (before 433)
