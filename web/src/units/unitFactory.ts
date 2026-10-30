@@ -1,4 +1,4 @@
-import { archerHair, dragonForm, monkArmPlates, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { archerHair, archerRobe, dragonForm, monkArmPlates, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -596,6 +596,7 @@ export class UnitFactory {
     // [S] 412 the Firework Archer's dark long hair with side locks and a knot, no hat (dynastyDress ARCHER_HAIR)
     if (definition.id === "dynasty.firework_archer" && !shouldUseVehicleBody) {
       propMeshes.push(...archerHair(this._scene, body));
+      propMeshes.push(...archerRobe(this._scene, body, teamColor)); // [S] 417 her crossed-lapel robe to the knee, orange-brown sash (dynastyDress ARCHER_ROBE)
     }
     // [S] 411 the Monk's bo staff held level across his chest in both fists (dynastyDress MONK_STAFF; proceduralAnimation _restMonkBo)
     if (definition.id === "dynasty.monk" && !shouldUseVehicleBody) {

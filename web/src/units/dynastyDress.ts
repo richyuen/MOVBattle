@@ -540,3 +540,52 @@ export function monkeyTail(scene: Scene, body: ArticulatedBody, teamColor: Color
   tail.convertToFlatShadedMesh();
   return [tail];
 }
+
+/*
+ * [S] 417 the Firework Archer's robe (audit 411 a.2: "a short purple tunic box - TABS: a crossed-lapel team-coloured robe to the knee"; a.3: "none -
+ * TABS: an orange-brown waist sash"; dynasty.firework_archer.jpg, .red.png: a team robe over the trunk with a lighter V at the throat between two lapels
+ * crossing to the opposite hip, an orange-brown sash round the waist, the skirt falling flared to the knee). In the trunk box (W, H, D), on the trunk's
+ * parent like NINJA_GI: the bodice ARCHER_ROBE.out wide, .deep deep over the trunk; the V .vWide of W, .vLong of H, lighter .light; lapels .lapel of W
+ * wide, .lapelLong of H long at .cross rad, darker .lapelShade; the sash .sash of H tall at .sashAt of H above the trunk's foot, .sashOut proud,
+ * orange-brown; the skirt a six-sided frustum from the trunk's foot .skirt of H long, .skirtTop of W across at the waist flaring to .skirtFoot.
+ */
+const ARCHER_ROBE = {
+  out: 1.14, deep: 1.2, light: 1.3, vWide: 0.3, vLong: 0.3, lapel: 0.13, lapelLong: 0.75, cross: 0.5, lapelShade: 0.82,
+  sash: 0.14, sashAt: 0.1, sashOut: 1.08, sashColor: new Color3(0.72, 0.4, 0.16), skirt: 0.95, skirtTop: 1.4, skirtFoot: 1.65, glow: 0.12,
+};
+/** The Firework Archer's crossed-lapel team robe to the knee with an orange-brown sash (spec at ARCHER_ROBE). */
+export function archerRobe(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const G = ARCHER_ROBE;
+  const mf = getMaterialFactory();
+  const tone = (k: number) => { const c = new Color3(Math.min(1, teamColor.r * k), Math.min(1, teamColor.g * k), Math.min(1, teamColor.b * k)); return mf.get("cloth", c, { emissive: c.scale(G.glow) }); };
+  const cloth = tone(1), light = tone(G.light), lapelMat = tone(G.lapelShade);
+  const sashMat = mf.get("cloth", G.sashColor, { emissive: G.sashColor.scale(G.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const place = (m: Mesh, x: number, y: number, z: number, mat: ReturnType<typeof tone>, rz = 0): Mesh => {
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.copyFrom(tm.rotation);
+    m.rotation.z += rz;
+    m.parent = tm.parent;
+    m.material = mat;
+    out.push(m);
+    return m;
+  };
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: ReturnType<typeof tone>, rz = 0): Mesh =>
+    place(MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene), x, y, z, mat, rz);
+  box("archerRobe", W * G.out, H, D * G.deep, 0, 0, 0, cloth);
+  const front = D * G.deep / 2;
+  box("archerRobeV", W * G.vWide, H * G.vLong, D * 0.04, 0, H / 2 - H * G.vLong / 2, front + D * 0.01, light);
+  for (const side of [-1, 1]) {
+    box("archerRobeLapel", W * G.lapel, H * G.lapelLong, D * 0.05, side * W * 0.15, H / 2 - H * G.lapelLong / 2, front + D * 0.03, lapelMat, -side * G.cross * 0.5);
+  }
+  const sashY = -H / 2 + H * G.sashAt;
+  box("archerRobeSash", W * G.out * G.sashOut, H * G.sash, D * G.deep * G.sashOut, 0, sashY, 0, sashMat);
+  const skirt = MeshBuilder.CreateCylinder("archerRobeSkirt", { height: H * G.skirt, diameterTop: W * G.skirtTop, diameterBottom: W * G.skirtFoot, tessellation: 6 }, scene);
+  skirt.convertToFlatShadedMesh();
+  skirt.scaling.z = (D * G.deep) / (W * G.out);
+  place(skirt, 0, -H / 2 - H * G.skirt / 2 + H * 0.02, 0, cloth);
+  return out;
+}
