@@ -1,4 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { pirateVest } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -593,6 +594,8 @@ export class UnitFactory {
       propMeshes.push(...monkeyShorts(this._scene, body, teamColor)); // [S] 422 puffy team shorts to gold knee cuffs, pointy shoes (dynastyDress MONKEY_SHORTS)
       propMeshes.push(...monkeyRobe(this._scene, body, teamColor)); // [S] 422 team robe over the left side only, gold strips, scarf (dynastyDress MONKEY_ROBE)
     }
+    // [S] 423 the Flintlock's open team vest over a bare team chest (pirateDress PIRATE_VEST)
+    if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
     // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
     if (definition.id === "dynasty.dragon" && !shouldUseVehicleBody) propMeshes.push(...dragonForm(this._scene, body, teamColor));
     // [S] 413 the Samurai's team kabuto with a flared gold-trimmed neck guard and a crest (dynastyDress KABUTO)
