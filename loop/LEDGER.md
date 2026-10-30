@@ -12,14 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-430 | PLAIN_SOCKS grey sock cuff to shoe (4fd14183) | pirate.flintlock.a | approved
-430 | BOMB_SASH band, pouch, bomb at the right hip (9c97ba97, 4ce95061) | pirate.bomb_thrower.a | approved
-430 | PIRATE_BEARD jaw mass, sideburns, mouth (a2de9843) | pirate.harpooner.a | approved
-430 | BLUNDERBUSS_HAIR pirateHair bob + crown cap (ed8b9edd) | pirate.blunderbuss.a | approved
-430 | QUEEN_HAIR black locks, curls, tan beads (7899b9c6) | pirate.pirate_queen.a | approved
-430 | CAPTAIN_PARROTS blue + red on the tricorn (674c7165) | pirate.captain.a | approved
-430 | QUEEN_CUTLASS big curved main-hand blade (83f4e760) | pirate.pirate_queen.b | approved
-430 | [R] MONKEY_FACE peach mask + MONKEY_ROBE team, orange band, no skirt/cape (80235174) | dynasty.monkey_king.a | approved
 431 | [R] DRAGON_FORM lion-dog head (cheeks, beak, cream brow, horns, hanging tongue) + tube body, crest, frills (3e94ecfa, 48329bf4) | dynasty.dragon.a | approved
 431 | team CANNON_BANDANNA on flintlock + bomb thrower, accent bandana hat off (6561ba6f) | pirate.flintlock.a | approved
 431 | PIRATE_BELT leather band + square tan buckle (8d798815, 67e6d6eb) | pirate.bomb_thrower.a | approved
@@ -48,6 +40,14 @@ for 25 iterations.
 434 | PUMPKIN_SHOT jack-o-lantern projectile (008ebd5c) | spooky.pumpkin_catapult.c | approved
 434 | FIRE_ARROW flame tongues round the arrow head (9c6221b2) | spooky.skeleton_archer.c | approved
 434 | SPIRIT_FIRE cyan spirit-fire ball (7ae6e9c8) | spooky.candlehead.c | approved
+435 | BURN status: flames on trunk/head/arms, tick + spread (d50527c4) | spooky.skeleton_archer.c | approved
+435 | SPIRIT_LIFT knock-up on a spirit_fire hit (a575da38) | spooky.candlehead.c | approved
+435 | STIFFY_FEAR purple skull + flee (c989b05a) | spooky.skeleton_warrior.c | approved
+435 | PUMPKIN_BURST rind + bouncing lanterns (a7717979) | spooky.pumpkin_catapult.c | approved
+435 | HARPOON_BAYONET round spike of gun length (1026d70e) | pirate.harpooner.b | approved
+435 | SWORDCASTER_BOWL black bowl cut, hood off (0e2c1030) | spooky.swordcaster.a | approved
+435 | REAPER_TENDRILS six dark tubes off the upper back (ae92e8fa) | spooky.reaper.a | approved
+435 | [R] QUEEN_BOOTS build: scale/bulk, slimmer shirt+skirt, boots, broad sash (ae0de203) | pirate.pirate_queen.a | approved
 
 ## Spent (never retry as [P])
 
@@ -73,30 +73,19 @@ pirate 425-426 rows (TRICORN_BROWN, HARPOON_REEL, GUN_TOSS, BLUNDERBUSS + _AIM, 
 pirate 423-424 rows (PISTOL + PISTOL_AIM, HARPOON_BREECH, CANNON_BARREL, TRICORN_PLATE, PIRATE_VEST, PIRATE_PANTS + PIRATE_SHORTS) | compacted 427 | 424 | approved | values: git show 613ba5b9:loop/LEDGER.md
 pirate 427-428 rows (BOMB_SPIN + _POSE, BLUNDERBUSS_BLAST, PLANK_HAT, LAUNCH.cannonball, DRAGON_PISTOL, QUEEN_BANDANA, DRAGON_BLAST, CAPTAIN_COAT, QUEEN_SASH, BARREL_BRACERS, CANNON_HANDLES, CANNON_SHIRT) | compacted 430 | 428 | approved | values: git show 28adb4e4:loop/LEDGER.md
 dynastyDress.ts:MONKEY_TRUNK (narrow, wraps, wrap, wrapOut, deep, step, tilt, wrapShade) + unitVisuals monkey_king (scale, bulk) | .7, 2, .11, 1.18, 1.25, .94, .08, .62; 1.25, .85 | 432 | approved | wrap team x1, scale 1.72 bulk 1.18 (before 432)
-pirateDress.ts:PIRATE_HAIR (out, clear, top, side, drop, front, splay, back) | 1.08, .06, .62, .28, -1.7, .25, .12, .2 | 429 | approved | flintlock team x.42 (429-431; replaced by FLINTLOCK_LOCKS 432); none (before 429)
 pirate.bomb_thrower done 429-431 rows (PIRATE_SOCKS, BOMB_SASH, PIRATE_BELT) | compacted 432 | 431 | approved | values: git show 67890443:loop/LEDGER.md
-pirateDress.ts:CANNON_BANDANNA (out, clear, rise, back, knot, segments, shade) | 1.22, .05, .12, .04, .32, 6, .8 | 429 | approved | dressCannonCrew crewCap + peak (before 429)
+pirate.flintlock + blunderbuss + captain done 429-433 rows (PIRATE_HAIR, FLINTLOCK_LOCKS, PLAIN_SOCKS, CANNON_BANDANNA, BLUNDERBUSS_HAIR, BLUNDERBUSS, BARREL_GREAVES, CAPTAIN_PARROTS/BEARD/LEGS/TRICORN/FRONT) | compacted 435 | 433 | approved | values: git show b90a44ee:loop/LEDGER.md
 dynastyDress.ts:MONKEY_HAIR (curls, curl, swell, midY, rx, ry, sweep, z, capOut, capFoot, capTop; color) | 11, .34, .25, -.15, 1.12, 1.05, 2.2, .72, 1.06, .55, 1.1; (.95,.52,.14) | 429 | approved | MONKEY_FACE tufts only (before 429)
-propBuilder.ts:HARPOON_BAYONET (long, wide, thin, point, at, lug, below; steel) | .5, .04, .012, .18, .5, .03, .01; (.36,.37,.4) | 429 | approved | none (before 429)
-pirateDress.ts:PLAIN_SOCKS (from, out; grey) | .46, 1.24; (.45,.4,.34) | 430 | approved | bare shins (before 430)
+propBuilder.ts:HARPOON_BAYONET [S] 435 (long of gun, thick, point, at, lug, below; steel) | 1, .014, .3, .85, .03, .01; (.2,.21,.23) | 435 | approved | flat blade .5 long, .04 wide, .012 thin, at .5; (.36,.37,.4) (429-434)
 pirateDress.ts:PIRATE_BEARD (jaw, under, foot, ahead, burn, burnBack, burnFront, mouth, mouthTall; brown) | [1.14,_,.72], .06, -1.38, .46, .22, -.35, .62, .42, .16; (.18,.09,.06) | 430 | approved | none (before 430)
-pirateDress.ts:BLUNDERBUSS_HAIR (top, drop, side, cap; color) | .95, -1.55, .3, 1.1; (.28,.135,.09) | 430 | approved | none (before 430)
 pirateDress.ts:QUEEN_DREADS (wrap, rootY, spray, thick, rise, lean, tip, droop, falls, drop, splay, bead) | .42, 1, 7, .2, 1.05, .8, .75, 1, 3, -1.9, .12, .26 | 434 | approved | QUEEN_HAIR pirateHair slabs + curl lumps side .36 drop -2 (430-433)
-pirateDress.ts:CAPTAIN_PARROTS (x, y, z, size, turn, body, head, headY, beak, tail, tailLean) | 1.15, .55, .35, 1, .35, [.32,.5,.34], .27, 1.05, .16, .75, .45 | 430 | approved | none (before 430)
 propBuilder.ts:QUEEN_CUTLASS (long, wide, taper, curve, segs, cup) | .66, .1, .5, .24, 7, 4.2 | 430 | approved | CUTLASS .5, .05, .55, .13, 6, 3.4 (425-429); CUTLASS bowl .38, rim .32 (431, bowl guard replaces the frustum cup)
-pirateDress.ts:CAPTAIN_BEARD (tash, tashTall, tashAhead, droop, run, proud; color) | 1.15, .2, .1, .22, [.46,.42,.34], .3; (.4,.2,.12) | 431 | approved | run [.44,.34,.3] proud .42 lower (431.4, floated); none (before 431)
-pirateDress.ts:QUEEN_SKIRT (top, knee, out, flare, deep, slant, frontDrop, beads, bead, pale; flapWide, flapFoot, flapX, flapLong, flapProud, flapLean) | .14, 1.08, 1.06, 1.45, 1.25, .6, .4, 7, .11, .18; .6, .22, -.25, 1.3, .06, .12 | 433 | approved | pantsOut 1.14 thigh+shin shells, no frontDrop (431-432); knee .92 slant .32 pale .4, no flap (431)
+pirateDress.ts:QUEEN_SKIRT (top, knee, out, flare, deep, slant, frontDrop, beads, bead, pale; flapWide, flapFoot, flapX, flapLong, flapProud, flapLean) | .14, 1.08, 1.04, 1.22, 1.1, .6, .4, 7, .11, .18; .6, .22, -.25, 1.3, .06, .12 | 435 | approved | out 1.06 flare 1.45 deep 1.25 (433-434); no frontDrop (431-432)
 proceduralAnimation.ts:QUEEN_GUARD (out, ahead, drop, cross, lean, stagger) | .05, .14, .3, .6, .2, .04 | 431 | approved | blades held point-first, end-on (before 431)
-propBuilder.ts:BLUNDERBUSS [S] (long, grip, bore, flare, mouth, stock, fore, ramrod, wrist, heel, drop, offAt) | .92, .3, .05, .42, 2.8, 1.3, .84, .24, .75, .15, .28, .42 | 431 | approved | .62, .24, .075, bell .2, 3.3, 1.2, .62, heel .16, offAt .5 (425-430)
 unitVisuals.ts:pirate.harpooner scale | 1.3 | 431 | approved | 1.05 (before 431)
-pirateDress.ts:BARREL_GREAVES (out, thighFrom, thighTo, shinFrom, shinTo) | 1.38, .3, .9, .1, .8 | 432 | approved | bare legs (before 432)
 pirateDress.ts:HARPOONER_PANTS (beige, cuff; legs take the head skin) | (.78,.66,.5), .82 | 432 | approved | (.5,.43,.33) (432.3, taupe); team legs (before 432)
-pirateDress.ts:CAPTAIN_LEGS (thigh, pantsTo, shin, bootFrom, boot, cuff, cuffOut, buckle; tan, black) | 1.45, .3, 1.38, .2, 1.5, .2, 1.85, .45; (.85,.55,.3), (.05,.05,.06) | 432 | approved | tan (.62,.42,.24) (432.4); team legs (before 432)
-pirateDress.ts:FLINTLOCK_LOCKS (locks, thick, wide, out, front, step, clear, drop, longer, splay; ginger) | 3, .2, .34, 1.06, .42, .42, .04, -1.15, .18, .14; (.95,.32,.12) | 432 | approved | ginger (.75,.3,.15) (432.6); PIRATE_HAIR panels (429-431)
-propBuilder.ts:CAPTAIN_TRICORN (peak, curve, flare, crown, cols) | 1.75, 2, .06, 1.35, 8 | 433 | approved | box walls, dome to TRICORN_CROWN (before 433)
-pirateDress.ts:CAPTAIN_FRONT (open, shirtTo, vee, veeTilt, flapWide, laces, sashFrom, sash, sashShade, whiteGlow) | .5, .52, .2, .42, .34, 2, .8, .18, .75, .4 | 433 | approved | tan shirt .36 + white cravat block (428-432)
 pirateDress.ts:HARPOONER_SHOES (shellTo, shellOut, shellLong, sockFrom, sockTo, tongue, buckle; brown, grey) | .62, 1.25, 1.12, .62, 1 (no skin ring), .55, .6; (.4,.2,.13), (.55,.48,.38) | 434 | approved | shell .45 (434.1); no shell, sock .34-.82, grey (.45,.4,.34) (433)
-pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong, laces) | 1.45, 1.95, .3, .62, 1.25, .28, .34, 2 | 433 | approved | dark body-shade trunk, bare arms (before 433)
+pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong, laces) | 1.2, 1.6, .3, .62, 1.1, .28, .34, 2 | 435 | approved | 1.45, 1.95, cuff 1.25 (433-434); bare arms (before 433)
 
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spookyDress.ts:VAMPIRE_CLAWS (grow, fingers, thick, knuckle, tip, curl, nail) + unitVisuals vampire weapon none | 1.3, 4, .2, .5, .45, 1.1, .35 | 434 | approved | "dagger" in both hands (before 434)
@@ -104,3 +93,11 @@ propBuilder.ts:STIFFY_SHIELD (board, rim, stud, studs, inner; x2.0 on the arm) |
 projectileSystem.ts:PUMPKIN_SHOT (size, squash, lobes; orange) + projectileHint pumpkin | .55, .8, 8; (.9,.38,.08) | 434 | approved | bomb (before 434)
 projectileSystem.ts:FIRE_ARROW (tongues, long, wide, splay, glow) | 4, .38, .11, .28, .9 | 434 | approved | plain arrow (before 434)
 projectileSystem.ts:SPIRIT_FIRE (heart, shell, size) + candlehead projectileHint spirit_fire | (.85,1,1), (.1,.85,1), 1.15 | 434 | approved | javelins (before 434)
+
+runtimeUnit.ts:BURN (tongues, long, wide; flame, core) + simulationSystem BURN_STATUS (tick, damage, spread, keep) + FIRE_ARROW.burn | 6, 2.6, .55; (1,.42,.06), (1,.85,.3); .5, 3, 1.4, 2; 5 s | 435 | approved | no burn (before 435)
+projectileSystem.ts:SPIRIT_LIFT (up, along) | 8, 1.2 | 435 | approved | none (before 435)
+runtimeUnit.ts:FEAR_SKULL (skull, over, purple, glow) + simulationSystem STIFFY_FEAR (every, seconds, reach) | 1.1, .9, (.62,.12,1), .95; 2, 3.5, 4 | 435 | approved | smoke puff only (before 435)
+visualEffects.ts:PUMPKIN_BURST (shards, rind, lanterns, lantern, out, up, keep, last) | 8, .2, 4, .32, 3.4, 5.5, .62, 2.4 | 435 | approved | fireball + rock (before 435)
+spookyDress.ts:SWORDCASTER_BOWL (out, clear, crown, side, sideTo, front, back, nape) | 1.14, .05, .16, .16, .15, .45, .16, -.75 | 435 | approved | hood (before 435)
+spookyDress.ts:REAPER_TENDRILS (rootX, rootY, long, out, back, rise, wave, waves, thick, tip) | .3, .55, 4.6, .88, .45, [.24,.04,-.16], .22, 1.6, .1, .18 | 435 | approved | none (before 435)
+pirateDress.ts:QUEEN_BOOTS [R] (from, shaft, top, topTall, band, bandTall, bandAt; leather) + unitVisuals queen (scale, bulk) + QUEEN_SASH (wide, thick, proud, bomb, seat) | .12, 1.35, 1.7, .14, 1.42, .1, .34; (.45,.16,.1); 1.45, .85; .27, .1, .12, .25, .95 | 435 | approved | pale shins; 1.6, 1.2; sash .17, .08, .03, .2, .75 (428-434)
