@@ -1207,32 +1207,83 @@ export function captainBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const QUEEN_HAIR = { side: 0.36, drop: -2.0, splay: 0.16, curls: 4, curl: 0.42, beads: 3, bead: 0.18, black: new Color3(0.03, 0.03, 0.035), tan: new Color3(0.8, 0.6, 0.35) };
 
-/** The Pirate Queen's long black curly locks with tan beads (spec at QUEEN_HAIR). */
+/*
+ * [S] 434 the Pirate Queen's dreadlocks (CONFIRM 431 a.3: "hair is flat black hanging at the sides of the bandana - TABS: beaded dreadlocks sprouting
+ * up above the bandana"; pirate.pirate_queen.red.png, pirate.pirate_queen.png: a spray of six or seven thin black dreads standing up out of a tan wrap
+ * at the top-back of the bandana, fanning out round the back and sides like a palm, each bending over and drooping at its tip, a tan band near the
+ * bend; under the bandana thin black locks hang either side of the face behind its front, past the jaw onto the shoulders, bead-tipped). QUEEN_DREADS,
+ * in the head's own box (e its half sizes, +z her front): the wrap .wrap of e.x across at (.rootY of e.y up, .rootZ of e.z back); .spray dreads
+ * .thick of e.x thick, round the back half from .from to .to rad off her front, each rising .rise of e.y leaning .lean rad out, then a drooping
+ * tip .tip of e.y bent a further .droop rad, a tan band .band of e.y at the bend; per side .falls locks from .clear over the eyes' top down to .drop
+ * of e.y, .out of e.x off the middle, stepping back .step of e.z from .front, splayed .splay rad out and .back rad back, a tan bead .bead of e.x
+ * at each foot. Black and tan self-lit PIRATE_HAIR.glow. Replaces QUEEN_HAIR's pirateHair slabs and curl lumps (430-433).
+ */
+const QUEEN_DREADS = {
+  wrap: 0.42, rootY: 1.0, rootZ: 0.5, spray: 7, thick: 0.2, from: 1.1, to: 5.2, rise: 1.05, lean: 0.8, tip: 0.75, droop: 1.0, band: 0.16,
+  falls: 3, clear: 0.12, drop: -1.9, out: 1.12, step: 0.42, front: 0.15, splay: 0.12, back: 0.18, bead: 0.26,
+};
+
+/** The Pirate Queen's beaded dreadlocks: a spray up out of the bandana and locks down her sides (spec at QUEEN_DREADS). */
 export function queenHair(scene: Scene, body: ArticulatedBody): Mesh[] {
-  const Q = QUEEN_HAIR;
-  const out = pirateHair(scene, body, Q.black, { side: Q.side, drop: Q.drop, splay: Q.splay });
+  const Q = QUEEN_HAIR, D = QUEEN_DREADS;
   const mf = getMaterialFactory();
   const black = mf.get("cloth", Q.black, { emissive: Q.black.scale(PIRATE_HAIR.glow) });
   const tan = mf.get("cloth", Q.tan, { emissive: Q.tan.scale(PIRATE_HAIR.glow) });
-  const locks = out.filter((m) => m.name === "pirateHairLock");
-  for (const lock of locks) {
-    const lb = lock.getBoundingInfo().boundingBox, le = lb.extendSize;
-    const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
-    const sideSign = Math.sign(lock.position.x - body.headMesh.getBoundingInfo().boundingBox.center.x) || 1;
-    for (let i = 0; i < Q.curls; i++) {
-      const y = le.y - (le.y * 2) * ((i + 0.5) / Q.curls);
-      const lump = MeshBuilder.CreateIcoSphere("queenHairCurl", { radius: e.x * Q.curl / 2, subdivisions: 1, flat: true }, scene);
-      lump.parent = lock;
-      lump.position.set(sideSign * (le.x * (i % 2 ? 0.7 : 1.0)), y, (i % 2 ? -0.3 : 0.2) * le.z);
-      lump.material = black;
-      out.push(lump);
-      if (i > 0 && i <= Q.beads) {
-        const bead = MeshBuilder.CreateIcoSphere("queenHairBead", { radius: e.x * Q.bead / 2, subdivisions: 1, flat: true }, scene);
-        bead.parent = lock;
-        bead.position.set(sideSign * (le.x + e.x * Q.curl * 0.3), y + (le.y * 2) / Q.curls * 0.5, le.z * 0.4);
-        bead.material = tan;
-        out.push(bead);
-      }
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const t = e.x * D.thick;
+  const out: Mesh[] = [];
+  const pivot = (parent: Node, x: number, y: number, z: number): TransformNode => {
+    const p = new TransformNode("queenDreadPivot", scene);
+    p.parent = parent;
+    p.position.set(x, y, z);
+    return p;
+  };
+  // a box along its pivot's +y (up) or -y (down), from the pivot out to len
+  const rod = (name: string, p: TransformNode, len: number, wide: number, m: typeof black, down = false): Mesh => {
+    const r = MeshBuilder.CreateBox(name, { width: wide, height: len, depth: wide }, scene);
+    r.parent = p;
+    r.position.set(0, down ? -len / 2 : len / 2, 0);
+    r.material = m;
+    r.convertToFlatShadedMesh();
+    out.push(r);
+    return r;
+  };
+  // the tan wrap gathering the spray at the top-back of the bandana
+  const rootY = c.y + e.y * D.rootY, rootZ = c.z - e.z * D.rootZ;
+  const wrap = MeshBuilder.CreateCylinder("queenDreadWrap", { height: e.y * 0.3, diameter: e.x * D.wrap * 2, tessellation: 6 }, scene);
+  wrap.parent = head;
+  wrap.position.set(c.x, rootY, rootZ);
+  wrap.material = tan;
+  wrap.convertToFlatShadedMesh();
+  out.push(wrap);
+  // the spray: each dread rises leaning out, then droops at the tip, a tan band at the bend
+  for (let i = 0; i < D.spray; i++) {
+    const az = D.from + ((D.to - D.from) * i) / (D.spray - 1);
+    const p = pivot(head, c.x, rootY, rootZ);
+    p.rotation.set(D.lean, az, 0);
+    const rise = e.y * D.rise * (i % 2 ? 0.88 : 1);
+    rod("queenDread", p, rise, t, black);
+    const bend = pivot(p, 0, rise, 0);
+    bend.rotation.x = D.droop;
+    rod("queenDreadBand", bend, e.y * D.band, t * 1.5, tan).position.y = 0;
+    rod("queenDreadTip", bend, e.y * D.tip, t * 0.85, black);
+  }
+  // the locks down her sides from under the bandana, bead-tipped
+  const top = span[1] + e.y * D.clear, len = top - (c.y + e.y * D.drop);
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < D.falls; k++) {
+      const p = pivot(head, c.x + side * e.x * D.out, top, c.z + e.z * (D.front - D.step * k));
+      p.rotation.set(D.back, 0, side * (D.splay + 0.05 * k));
+      const l = len * (1 - 0.08 * k);
+      rod("queenDreadFall", p, l, t * 1.15, black, true);
+      const bead = MeshBuilder.CreateIcoSphere("queenHairBead", { radius: e.x * D.bead / 2, subdivisions: 1, flat: true }, scene);
+      bead.parent = p;
+      bead.position.set(0, -l, 0);
+      bead.material = tan;
+      out.push(bead);
     }
   }
   return out;
