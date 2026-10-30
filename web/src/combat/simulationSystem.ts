@@ -40,6 +40,7 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "arrow": return "arrow";
     case "bolt": return "bolt";
     case "bomb": return "bomb";
+    case "pumpkin": return "pumpkin";
     case "stone": return unit.definition.specialHint === "cannon" ? "cannonball" : "stone"; // a cannon fires an iron ball, not the catapult's rock
     case "spear": return "spear";
     case "firework": return "firework";
@@ -202,7 +203,7 @@ function originLiftForSource(source: "vehicle-socket" | "linked-role" | "parent"
 function muzzleScaleForProjectile(shape: ProjectileShape): number {
   switch (shape) {
     case "shell": return 1.8;
-    case "bomb": return 1.4;
+    case "bomb": case "pumpkin": return 1.4;
     case "rocket_arrow": return 0.65;
     case "bolt": return 0.7;
     case "davinci_ball": return 0.8;
@@ -211,7 +212,7 @@ function muzzleScaleForProjectile(shape: ProjectileShape): number {
 }
 
 function shouldSpawnProjectileMuzzleFx(shape: ProjectileShape): boolean {
-  return shape === "shell" || shape === "bomb" || shape === "rocket_arrow" || shape === "bolt" || shape === "davinci_ball";
+  return shape === "shell" || shape === "bomb" || shape === "pumpkin" || shape === "rocket_arrow" || shape === "bolt" || shape === "davinci_ball";
 }
 
 function countAliveSpawnedChildren(attacker: RuntimeUnit): number {
@@ -3053,7 +3054,7 @@ export class SimulationSystem {
         target,
         perProjectile,
         knockback.scale(0.35),
-        projectileShape === "bomb" || projectileShape === "fireball" ? 0.8 : 0,
+        projectileShape === "bomb" || projectileShape === "pumpkin" || projectileShape === "fireball" ? 0.8 : 0,
         attacker.team,
         this._units,
         spread,

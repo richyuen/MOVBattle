@@ -62,7 +62,9 @@ const HWACHA_ROCKET = {
   wood: new Color3(0.55, 0.38, 0.2), paper: new Color3(0.8, 0.62, 0.4), green: new Color3(0.2, 0.55, 0.25), dark: new Color3(0.12, 0.12, 0.14),
   fire: new Color3(1, 0.55, 0.12), core: new Color3(1, 0.92, 0.6),
 };
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
+/** The Pumpkin Catapult's jack-o'-lantern ("pumpkin" case): diameter (m), height of the width, ribbed lobes, skin, stem, carved-face glow */
+const PUMPKIN_SHOT = { size: 0.55, squash: 0.8, lobes: 8, orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2) };
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -360,6 +362,7 @@ export class ProjectileSystem {
       case "bolt":    speed = 30; arcHeight = dist * 0.06; break;
       case "spear":   speed = 18; arcHeight = dist * 0.15; break;
       case "bomb":    speed = 12; arcHeight = dist * 0.35; break;
+      case "pumpkin": speed = 12; arcHeight = dist * 0.35; break;
       case "shell":   speed = 46; arcHeight = dist * 0.015; break;
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
       case "cannonball": speed = 45; arcHeight = dist * 0.02; break; // fallback past the reach of LAUNCH.cannonball
@@ -1191,6 +1194,46 @@ export class ProjectileSystem {
         spark.position.y = 0.18;
         spark.material = this._getMat("spark", new Color3(1, 0.8, 0.2), 0.7);
         spark.parent = root;
+        break;
+      }
+      case "pumpkin": {
+        // [S] 434 the Pumpkin Catapult's payload (audit 434 pumpkin_catapult c.1: "a black bomb with a fuse - TABS: big orange jack-o'-lantern
+        // pumpkin"; spooky.pumpkin_catapult.jpg): a squat orange pumpkin of PUMPKIN_SHOT.lobes ribbed lobes round a core, a green-brown stem on top,
+        // and a carved face (two triangle eyes and a jagged mouth, glowing yellow) on each side so a side-on camera sees one.
+        const P = PUMPKIN_SHOT;
+        const orange = this._getMat("pumpkin_skin", P.orange, 0.12);
+        const core = MeshBuilder.CreateSphere("pumpkin", { diameter: P.size, segments: 6 }, this._scene);
+        core.scaling.y = P.squash;
+        core.material = orange;
+        core.parent = root;
+        for (let i = 0; i < P.lobes; i++) {
+          const a = (i / P.lobes) * Math.PI * 2;
+          const lobe = MeshBuilder.CreateSphere("pumpkinLobe", { diameter: P.size * 0.5, segments: 4 }, this._scene);
+          lobe.scaling.set(1, P.squash * 1.9, 1);
+          lobe.position.set(Math.cos(a) * P.size * 0.27, 0, Math.sin(a) * P.size * 0.27);
+          lobe.material = orange;
+          lobe.parent = root;
+        }
+        const stem = MeshBuilder.CreateCylinder("pumpkinStem", { height: P.size * 0.22, diameterTop: P.size * 0.07, diameterBottom: P.size * 0.12, tessellation: 5 }, this._scene);
+        stem.position.y = P.size * P.squash * 0.5 + P.size * 0.06;
+        stem.rotation.z = 0.25;
+        stem.material = this._getMat("pumpkin_stem", P.stem, 0.1);
+        stem.parent = root;
+        const glow = this._getMat("pumpkin_face", P.face, 0.9);
+        for (const side of [-1, 1]) {
+          const x = side * (P.size * 0.5 + P.size * 0.01);
+          for (const ez of [-1, 1]) {
+            const eye = MeshBuilder.CreateCylinder("pumpkinEye", { height: P.size * 0.03, diameter: P.size * 0.17, tessellation: 3 }, this._scene);
+            eye.rotation.z = Math.PI / 2;
+            eye.position.set(x, P.size * 0.08, ez * P.size * 0.13);
+            eye.material = glow;
+            eye.parent = root;
+          }
+          const mouth = MeshBuilder.CreateBox("pumpkinMouth", { width: P.size * 0.03, height: P.size * 0.07, depth: P.size * 0.36 }, this._scene);
+          mouth.position.set(x, -P.size * 0.1, 0);
+          mouth.material = glow;
+          mouth.parent = root;
+        }
         break;
       }
       case "shell": {
