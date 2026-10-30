@@ -64,6 +64,8 @@ const SMOKE_LIFE = 2.4;
  * core cone .core across at the mouth widening to .coreFar at the far end, inside an orange shell .shell -> .shellFar, half see-through, both
  * flickering .flicker of their width; .puffs faceted orange flame lumps tumbling out along it; all fading over the last .fade s.
  */
+/** [S] 417 the Samurai's block slash (spawnSlashArc). */
+const SLASH_ARC = { arc: 2.2, radius: 0.75, band: 0.16, steps: 12, tilt: 0.6, sweep: 0.7, seconds: 0.3, white: new Color3(1, 1, 0.92) };
 const FLAME_JET = {
   core: 0.12, coreFar: 0.7, shell: 0.25, shellFar: 1.3, shellAlpha: 0.7, flicker: 0.18, puffs: 5, puff: 0.35, fade: 0.2,
   white: new Color3(1, 0.95, 0.7), orange: new Color3(1, 0.48, 0.1),
@@ -137,6 +139,46 @@ export class VisualEffects {
         this._effects.splice(i, 1);
       }
     }
+  }
+
+  /**
+   * [S] 417 the Samurai's block slash (SLASH_ARC): a bright white crescent .arc rad round, .radius across, .band wide, lying along the missile's line
+   * at `at` (`dir`), unlit and out of the glow, swept a little and fading over its .seconds.
+   */
+  spawnSlashArc(at: Vector3, dir: Vector3): void {
+    const S = SLASH_ARC;
+    const root = new TransformNode("slashArc", this._scene);
+    root.position.copyFrom(at);
+    root.rotation.y = Math.atan2(dir.x, dir.z) + Math.PI / 2; // the crescent lies along the line of flight, a cut across it seen broadside
+    root.rotation.z = S.tilt;
+    const inner: Vector3[] = [], outer: Vector3[] = [];
+    for (let i = 0; i <= S.steps; i++) {
+      const a = -S.arc / 2 + (S.arc * i) / S.steps;
+      const w = Math.sin((i / S.steps) * Math.PI); // thin at the tips, full in the middle
+      inner.push(new Vector3(Math.sin(a) * (S.radius - S.band * w), Math.cos(a) * (S.radius - S.band * w), 0));
+      outer.push(new Vector3(Math.sin(a) * S.radius, Math.cos(a) * S.radius, 0));
+    }
+    const ribbon = MeshBuilder.CreateRibbon("slashArcBlade", { pathArray: [inner, outer], sideOrientation: Mesh.DOUBLESIDE }, this._scene);
+    ribbon.position.y = -S.radius * 0.6;
+    ribbon.parent = root;
+    ribbon.isPickable = false;
+    const matl = new StandardMaterial("slashArcMat", this._scene);
+    matl.disableLighting = true;
+    matl.emissiveColor = S.white;
+    matl.diffuseColor = S.white;
+    matl.backFaceCulling = false;
+    ribbon.material = matl;
+    this._scene.getGlowLayerByName("glow")?.addExcludedMesh(ribbon);
+    this._effects.push({
+      root,
+      remaining: S.seconds,
+      update: (_dt, remaining) => {
+        const k = Math.max(0, Math.min(1, remaining / S.seconds));
+        root.rotation.z = S.tilt + (1 - k) * S.sweep;
+        matl.alpha = k;
+      },
+      dispose: () => matl.dispose(),
+    });
   }
 
   /** The Dragon's flame jet (FLAME_JET) from `from()` (the mouth) to `to()` (the man), both read every frame, for `seconds`. */

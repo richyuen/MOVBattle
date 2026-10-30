@@ -280,6 +280,27 @@ export class ProjectileSystem {
     return null;
   }
 
+  /**
+   * [S] 417 Projectile Block (simulationSystem SAMURAI_BLOCK): the first missile in flight at `unit` (past its delay) that will reach him within
+   * `within` s is cut out of the air: gone without striking. Returns where it was and its line of flight, or null when none.
+   */
+  deflectAt(unit: RuntimeUnit, within: number): { at: Vector3; dir: Vector3 } | null {
+    for (let i = 0; i < this._active.length; i++) {
+      const p = this._active[i];
+      if (p.target !== unit || p.loose || p.elapsed < 0 || p.drunk || p.snake) continue;
+      if (p.flightTime - p.elapsed > within) continue;
+      const at = p.mesh.getAbsolutePosition().clone();
+      const dir = new Vector3(p.targetPos.x - p.origin.x, 0, p.targetPos.z - p.origin.z);
+      if (dir.lengthSquared() < 1e-6) dir.set(0, 0, 1);
+      if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
+      p.rope?.dispose();
+      p.mesh.dispose();
+      this._active.splice(i, 1);
+      return { at, dir: dir.normalize() };
+    }
+    return null;
+  }
+
   /** Every missile flying at `unit` stops following him: each comes down where he stood (Painter Dodge). */
   loseTarget(unit: RuntimeUnit): void {
     for (const p of this._active) if (p.target === unit) p.loose = true;

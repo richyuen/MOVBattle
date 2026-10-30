@@ -383,6 +383,12 @@ const FENCER_DODGE = { dist: 2.2, back: 1.0, seconds: 0.22, cooldown: 2.5, kind:
  * easing), facing his nearest foe; his sides alternate; .cooldown s between dodges. The missile stops following him and comes down where he stood
  * (ProjectileSystem.loseTarget). Logged .kind.
  */
+/**
+ * [S] 417 Projectile Block (dynasty.samurai card: "deflect projectiles away from them with a bright slash using any weapon"; audit 411 c.1): a missile
+ * flying at a samurai is cut out of the air SAMURAI_BLOCK.warn s before it would reach him (ProjectileSystem.deflectAt) with a white crescent slash
+ * (visualEffects SLASH_ARC), at most once every .cooldown s; logged "block".
+ */
+const SAMURAI_BLOCK = { warn: 0.12, cooldown: 0.5, kind: "block" };
 const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
 /*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
@@ -678,6 +684,7 @@ export class SimulationSystem {
     this._assignShieldSlots();
     this._resolveLivingCollisions();
     this._painterDodges(now);
+    this._samuraiBlocks(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
@@ -2489,6 +2496,24 @@ export class SimulationSystem {
     this._pendingBlows = this._pendingBlows.filter((b) => !(b.attacker === foe && b.target === unit));
     this._logAbility(unit, D.kind, now, foe.position);
   }
+
+  /** Projectile Block (SAMURAI_BLOCK): each ready samurai with a missile about to reach him cuts it out of the air with a bright slash. */
+  private _samuraiBlocks(now: number): void {
+    const B = SAMURAI_BLOCK;
+    const missiles = this.projectileSystem;
+    if (!missiles) return;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "dynasty.samurai" || unit.isDead || unit.isToppled || unit.isDowned) continue;
+      if (now < (this._blockReadyAt.get(unit) ?? 0)) continue;
+      const cut = missiles.deflectAt(unit, B.warn);
+      if (!cut) continue;
+      this._blockReadyAt.set(unit, now + B.cooldown);
+      this.visualEffects?.spawnSlashArc(cut.at, cut.dir);
+      unit.faceTarget(cut.at.subtract(cut.dir));
+      this._logAbility(unit, B.kind, now, cut.at);
+    }
+  }
+  private _blockReadyAt = new Map<RuntimeUnit, number>();
 
   /** Painter Dodge (PAINTER_DODGE): each ready painter with a missile about to reach him sidesteps off its line, and it comes down on air. */
   private _painterDodges(now: number): void {
