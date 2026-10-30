@@ -229,3 +229,49 @@ export function pirateShorts(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 427 the plank hat (audit 422 a.1: "a small round tan cap - TABS: a flat wooden plank hat as wide as the shoulders, a barrel lid worn level";
+ * pirate.blunderbuss.red.png: a flat brown board lying on the crown, about two and a half heads across and a head and a half deep, a finger thick, its
+ * edge showing as a dark line). PLANK_HAT, in the head's own box (e its half sizes): .boards boards side by side along his front-back, together .wide of
+ * the head across and .deep of it deep, each .thick of the head's height thick and parted by a .gap groove, lying .sit into the crown and tipped .tilt rad
+ * to his left as the render's; under it a dark batten .batten of the head's width across holding the boards, the lid's cleat. Brown wood self-lit .glow.
+ */
+const PLANK_HAT = { boards: 3, wide: 2.5, deep: 1.6, thick: 0.17, gap: 0.03, sit: 0.06, tilt: 0.1, batten: 1.1, brown: new Color3(0.4, 0.22, 0.12), dark: new Color3(0.12, 0.06, 0.03), glow: 0.14 };
+
+export function plankHat(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = PLANK_HAT;
+  const mf = getMaterialFactory();
+  const wood = mf.get("cloth", P.brown, { emissive: P.brown.scale(P.glow) });
+  const woodAlt = P.brown.scale(0.82);
+  const wood2 = mf.get("cloth", woodAlt, { emissive: woodAlt.scale(P.glow) });
+  const dark = mf.get("cloth", P.dark, { emissive: P.dark.scale(P.glow) });
+  const bb = body.headMesh.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const W = e.x * 2 * P.wide, D = e.z * 2 * P.deep, T = e.y * 2 * P.thick;
+  const top = bb.maximum.y - e.y * 2 * P.sit;
+  const out: Mesh[] = [];
+  // a pivot on the crown carries the tilt, so the boards and batten tip as one lid
+  const lid = MeshBuilder.CreateBox("plankHatPivot", { size: 0.001 }, scene);
+  lid.isVisible = false;
+  lid.parent = body.headMesh;
+  lid.position.set(c.x, top, c.z);
+  lid.rotation.z = P.tilt;
+  const boardDeep = (D - P.gap * D * (P.boards - 1)) / P.boards;
+  for (let i = 0; i < P.boards; i++) {
+    const board = MeshBuilder.CreateBox("plankHatBoard", { width: W * (i === 1 ? 1 : 0.94), height: T, depth: boardDeep }, scene);
+    board.parent = lid;
+    board.position.set(0, T * 0.5 + T * 0.35, -D / 2 + boardDeep / 2 + i * (boardDeep + P.gap * D));
+    board.material = i % 2 ? wood2 : wood;
+    board.convertToFlatShadedMesh();
+    out.push(board);
+  }
+  // the batten under the boards, across them, sitting on the crown
+  const batten = MeshBuilder.CreateBox("plankHatBatten", { width: e.x * 2 * P.batten * 0.35, height: T * 0.7, depth: D * 0.92 }, scene);
+  batten.parent = lid;
+  batten.position.set(0, T * 0.35, 0);
+  batten.material = dark;
+  batten.convertToFlatShadedMesh();
+  out.push(batten);
+  return out;
+}

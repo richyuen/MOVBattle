@@ -536,7 +536,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
   "pirate.blunderbuss": vis(
-    { scale: 1.05, bulk: 1.1 }, "blunderbuss", "bandana", "none", "none", "#d8722a",
+    // [S] 427 no bandana cap: his hat is the plank lid (pirateDress PLANK_HAT)
+    { scale: 1.05, bulk: 1.1 }, "blunderbuss", "none", "none", "none", "#d8722a",
     undefined,
     { posePreset: "gunner", materialPreset: "pirate_tar" },
   ),
