@@ -292,7 +292,7 @@ export class ProjectileSystem {
       const p = this._active[i];
       if (p.target !== unit || p.loose || p.elapsed < 0 || p.drunk || p.snake) continue;
       if (p.flightTime - p.elapsed > within) continue;
-      const at = p.mesh.getAbsolutePosition().clone();
+      const at = p.mesh.position.clone(); // the root is unparented: its live position, not the world matrix of the last render
       if (Math.hypot(at.x - unit.position.x, at.z - unit.position.z) > reach) continue;
       const dir = new Vector3(p.targetPos.x - p.origin.x, 0, p.targetPos.z - p.origin.z);
       if (dir.lengthSquared() < 1e-6) dir.set(0, 0, 1);
