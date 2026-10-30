@@ -226,6 +226,8 @@ const SNAKE_UPRIGHT = {
 const ICE_REST = { across: 0.42, forward: 0.12 };
 /** [S] 411 the Monk's bo at rest (_restMonkBo): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt up at its off end. */
 /** [S] 414 the katana at rest (_restKatana): the weapon fist .ahead of his height before his middle, .drop under the shoulders; the blade .lean rad off plumb toward his front; the off fist .under grip-lengths below. */
+/** [S] 415 the Brawler's board at rest (_restNorseBoard): slid .ahead of his height forward of where the fist carries it and .drop down. */
+const NORSE_BOARD = { ahead: 0.06, drop: 0.05, inward: 0.6 };
 const KATANA_REST = { ahead: 0.16, drop: 0.24, lean: 0.12, under: 0.9, settle: 0.8 };
 const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
 /** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit; the far end raised .raise (rise per unit across) when cocked, dipped .dip at the hit. */
@@ -2119,6 +2121,7 @@ export class ProceduralAnimator {
     this._restIceBow();
     this._restMonkBo();
     this._restKatana(dt);
+    this._restNorseBoard();
     this._twoHandPole();
     this._levelPike();
     this._carryDory();
@@ -5436,6 +5439,57 @@ export class ProceduralAnimator {
    * .under of the grip's length below it. Eased off as he goes limp; outside the rest the blade's own position comes back.
    */
   private _katana: { blade: Mesh; grip: Mesh; at: Vector3 } | null | undefined = undefined;
+  /**
+   * [S] 415 the Brawler's round board stood plumb before him at rest (CONFIRM 413 b.3: "tilted back nearly flat like a dish, face seen at a grazing
+   * angle - TABS: the round shield held upright in front of the body, covering chin to knees"; viking.brawler.red.png). Standing or walking, the
+   * board (the "nshield" disc in the off fist, its face +z) is turned in the world so its face looks his way ahead and its up is the world's, slid
+   * NORSE_BOARD.ahead of his height out in front of the off fist, .drop down and .inward toward his middle; outside the rest its authored attitude comes back.
+   */
+  private _norseBoard: { board: Mesh; at: Vector3 } | null | undefined = undefined;
+  private _restNorseBoard(): void {
+    if (this._norseBoard === undefined) {
+      const board = this._body.leftHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "nshield");
+      this._norseBoard = board ? { board, at: board.position.clone() } : null;
+    }
+    const B = this._norseBoard;
+    if (!B) return;
+    const st = this._state;
+    const w = st === AnimState.Idle || st === AnimState.Walking ? 1 - Math.min(1, this._limp) : 0;
+    B.board.position.copyFrom(B.at);
+    if (w <= 0.01) {
+      B.board.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.leftHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const up = Vector3.Up();
+    const x = Vector3.Cross(up, fwd).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, up, fwd, world);
+    const handRot = new Quaternion();
+    b.leftHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    const local = Quaternion.FromRotationMatrix(world.multiply(hand.transpose()));
+    const rest = Quaternion.FromEulerAngles(B.board.rotation.x, B.board.rotation.y, B.board.rotation.z);
+    B.board.rotationQuaternion = Quaternion.Slerp(rest, local, w);
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const shift = fwd.scale(NORSE_BOARD.ahead * height).addInPlace(new Vector3(0, -NORSE_BOARD.drop * height, 0));
+    // .inward of the board's sideways offset from his trunk taken back, so it covers his front and not only his off flank
+    B.board.computeWorldMatrix(true);
+    const side = b.torso.getAbsolutePosition().subtract(B.board.getAbsolutePosition());
+    side.y = 0;
+    side.subtractInPlace(fwd.scale(Vector3.Dot(side, fwd)));
+    shift.addInPlace(side.scale(NORSE_BOARD.inward)).scaleInPlace(w);
+    const inv = b.leftHand.getWorldMatrix().clone().invert();
+    B.board.position.addInPlace(Vector3.TransformNormal(shift, inv));
+  }
   private _katanaW = 1;
   private _restKatana(dt: number): void {
     if (this._katana === undefined) {
