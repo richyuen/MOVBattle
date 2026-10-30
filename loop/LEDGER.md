@@ -12,15 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-414 | [P] KABUTO lames opening to the front, arc .55 (981199b; evidence 0434511) | dynasty.samurai.a | approved
-414 | KATANA_REST + _restKatana: katana upright in both fists (1b007b1) | dynasty.samurai.b | approved
-414 | MONK_TROUSERS: wide trousers, gold-banded greaves (a6bbc47) | dynasty.monk.a | approved
-414 | BRAWLER_HATCHET: bearded axe cut to .6, dark iron (cf3af41) | viking.brawler.b | approved
-415 | MINO_LATHE: lathed tapered legs, no hem step (57ec2652) | ancient.minotaur.a | approved
-415 | katana along the forearm in the swing; rest settle .8 s, edge-forward (44749436) | dynasty.samurai.b | approved
-415 | MONK_ARM_PLATES: team lamellar rows, gold rims (4db0bf1d) | dynasty.monk.a | approved
-415 | NORSE_BOARD + _restNorseBoard: board plumb before him (b8bdfcee) | viking.brawler.b | approved
-415 | [P] BRAWLER_HATCHET.haft .67 (2d2156d4) | viking.brawler.b | approved
 416 | FLAME_JET + DRAGON_BREATH: held flame jet from the mouth (799cefaa) | dynasty.dragon.c | approved
 416 | DRAGON_FORM: paper head on a pole, body ribbon (3ac0c32c) | dynasty.dragon.a | approved
 416 | HWACHA_RACK: upright 10x6 lattice (50d2eac3) | dynasty.hwacha.a | approved
@@ -34,6 +25,13 @@ for 25 iterations.
 417 | [P] DRAGON_FORM.size 2 (eaed1d92) | dynasty.dragon.a | approved
 417 | DRAGON_CARRIER (1f9d50d6) | dynasty.dragon.b | approved
 417 | SAMURAI_BLOCK + SLASH_ARC (e7f66440; evidence 101e6c62) | dynasty.samurai.c | approved
+418 | FIREWORK_BURST + blast (ceb67f2b, 20d32730) | dynasty.firework_archer.c | approved
+418 | FIREWORK_NOCK (e9d4c966, 88c49c12) | dynasty.firework_archer.b | approved
+418 | [P] carrier poles (e5fcbad5) | dynasty.dragon.b | approved
+418 | block at his blade (073a4c36, 33baf14d) | dynasty.samurai.c | approved
+418 | BO_SHOVE monkey_king (0c817d95) | dynasty.monkey_king.c | approved
+418 | FIRST_LUNGE (3c3337d0; evidence ff56094b) | viking.brawler.c | approved
+418 | HWACHA_WHEEL (914ede94) | dynasty.hwacha.a | approved
 
 ## Spent (never retry as [P])
 
@@ -96,7 +94,12 @@ vehicleBuilder.ts:HWACHA_RACK (cols, rows, cell, post, lath, depth, seatY, seatZ
 projectileSystem.ts:HWACHA_ROCKET (long, shaft, tube, wide, bands, head, flame) | .7, .025, .24, .07, 3, .09, .42 | 416 | approved | .4 shaft, flame ball (before 416)
 dynastyDress.ts:MONKEY_STAFF (long, thick, offset, end, endWide, bands) + MONKEY_TAIL (root, tip, path to 1.08 up) | 1.35, .024, .12, .2, 1.25, 2; .045, .035 | 416 | approved | bo_staff .85 (before 416); no tail
 propBuilder.ts:KATANA_STEEL | (.62,.64,.68) glow .12 | 416 | approved | (.9,.9,.95) metal preset (rendered near-black)
-simulationSystem.ts:BO_SHOVE dynasty.monk (speed, lift) | 4.2, 2.4 | 417 | approved | no throw (before 417)
+simulationSystem.ts:BO_SHOVE monk; monkey_king (speed, lift) | 4.2, 2.4; 8.5, 5.5 (418) | 417-418 | approved | no throw (before 417)
 dynastyDress.ts:ARCHER_ROBE (out, deep, lapel, cross, sash, sashAt, skirt, skirtTop, skirtFoot, sashColor) | 1.14, 1.2, .13, .5, .14, .1, .95, 1.4, 1.65, (.72,.4,.16) | 417 | approved | tunic box (before 417)
-dynastyDress.ts:DRAGON_CARRIER (every, leg, legLong, trunk, head, arm, grip) | 3, .09, .45, [.26,.32,.16], .17, .06, .16 | 417 | approved | no carriers (before 417)
-simulationSystem.ts:SAMURAI_BLOCK (warn, cooldown) + visualEffects SLASH_ARC (arc, radius, band, tilt, sweep, seconds) | .12, .5; 2.2, .75, .16, .6, .7, .3 | 417 | approved | no block (before 417)
+dynastyDress.ts:DRAGON_CARRIER (every, leg, legLong, trunk, head, arm, grip) | 3, .09, .35 (418; .45 at 417), [.26,.32,.16], .17, .06, .16 | 417 | approved | no carriers (before 417)
+simulationSystem.ts:SAMURAI_BLOCK (warn, reach, ahead, chest, flick, cooldown) + visualEffects SLASH_ARC (arc, radius, band, tilt, sweep, seconds) | .5, 1.3, .6, 1.0, .3, .5 (418; warn .12 at 417); 2.2, .75, .16, .6, .7, .3 | 418 | approved | no block (before 417)
+dynastyDress.ts:DRAGON_FORM (bodyY, bodyTail) + DRAGON_CARRIER.poleColor | 1.45, 1.35; (.85,.24,.12) | 418 | approved | 1.3, .85; team (417)
+visualEffects.ts:FIREWORK_BURST (sparks, radius, grow, seconds, lift) + projectileSystem FIREWORK_BLAST (radius, share) | 26, 1.25, .45, .65, .9; 2.5, 1 | 418 | approved | no burst (before 418)
+propBuilder.ts:FIREWORK_NOCK (long, wide, side, back, bands, head) | .22, .045, .03, .03, 3, .09 | 418 | approved (blocker stands: too thin) | .36, .075 (418.2)
+simulationSystem.ts:FIRST_LUNGE (within, closest, dist, stopShort, seconds, swing) | 3.2, 1.2, 2.4, .8, .28, .35 | 418 | approved | no lunge (before 418)
+vehicleBuilder.ts:HWACHA_WHEEL (across, rim, wide, sides, spokes, spoke, hub, out) | .74, .07, .08, 8, 8, .035, .14, .05 | 418 | approved | solid disc (before 418)

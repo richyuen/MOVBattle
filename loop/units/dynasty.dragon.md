@@ -4,21 +4,20 @@ Status: open   Audited: 411   Done: -
 a FAIL (2 since 411)
  5. tongue in lineup_dynasty: a tall team slab hanging from the jaw to the ground like a post in front of the bearer - TABS: a short tongue inside the open mouth (ref: dynasty.dragon.jpg) (added 417, by eaed1d92)
   (struck 3, 4 at 416: head over the roster, body ribbon; 1, 2 at 417: paper head at 2x, carriers)
-b FAIL (1 since 411)
- 1. carrier poles in unit_dynasty.dragon_idle: none - TABS: red poles with dark grips linking each carrier to the body (ref: dynasty.dragon.jpg)
+b PASS (418: red poles with dark grips into the body, e5fcbad5)
 c FAIL (1 since 411)
  2. burning target in unit_dynasty.dragon_struck: the knight shows no fire - TABS: the target catches fire (ref: card Characteristics)
   (struck 1 at 416: a held flame jet from the paper mouth)
 d PASS (cost 1000, hp 18.78x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [P] b carrier poles - blocker 1: carriers shorter (legLong ~.35) or the body higher so a ~0.4 h pole shows between fist and belly (fallout of 1f9d50d6) - shows in lineup_dynasty
-2. [P] a tongue - blocker 5: dragonTongue sized by h, not hk, inside the maw (fallout of eaed1d92) - shows in lineup_dynasty
-3. [S] c burning target - blocker 2: flame tongues and a smoke wisp on a status:fire unit's torso for the burn - ref: card Characteristics - ours: unit_dynasty.dragon_struck.png
+1. [S] c burning target - blocker 2: flame tongues and a smoke wisp on a status:fire unit's torso for the burn - ref: card Characteristics - ours: unit_dynasty.dragon_struck.png
+2. [S] a tongue - blocker 5: a short tongue inside the open mouth in place of the slab (dragonTongue by h, not hk) - ref: dynasty.dragon.jpg - ours: lineup_dynasty.png
 ## Attempts (iter | gap | criterion | verdict)
 416 | FLAME_JET + DRAGON_BREATH: held flame jet from the mouth (799cefaa) | c | approved (struck 1)
 416 | DRAGON_FORM: paper head on a pole, body ribbon, fin, mask off (3ac0c32c) | a | approved (struck 3, 4; head 0.75x man)
 417 | [P] DRAGON_FORM.size 2, headY 1.95 (eaed1d92) | a | approved (struck 1; added 5 tongue)
 417 | DRAGON_CARRIER: three carriers under the body on gripped poles (1f9d50d6) | b | approved (a.2 struck; no pole shaft shows)
+418 | [P] carriers .35 legs, body 1.45-1.35 h, red poles (e5fcbad5) | b | approved (b PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
 - 417 critic: carriers faceless box pillars (TABS bead-eyed wobblers); poles should be red-orange on both teams; the idle frames only the bearer.
