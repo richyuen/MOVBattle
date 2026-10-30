@@ -246,6 +246,8 @@ const FIREWORK_REST = { across: 0.16, forward: 0.1 };
 /** [S] 415 the Brawler's board at rest (_restNorseBoard): slid .ahead of his height forward of where the fist carries it and .drop down. */
 const NORSE_BOARD = { ahead: 0.06, drop: 0.05, inward: 0.6 };
 const KATANA_REST = { ahead: 0.16, drop: 0.24, lean: 0.12, under: 0.9, settle: 0.8 };
+// [S] 431 the Pirate Queen's crossed blades at rest (see _restQueenBlades)
+const QUEEN_GUARD = { out: 0.05, ahead: 0.14, drop: 0.3, cross: 0.6, lean: 0.2, stagger: 0.04, settle: 0.8 };
 const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
 /** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit; the far end raised .raise (rise per unit across) when cocked, dipped .dip at the hit. */
 const MONK_SWING = { back: 0.9, through: 1.35, cock: 0.3, hit: 0.5, reach: 0.08, raise: 1.3, dip: 0.35 };
@@ -2221,6 +2223,7 @@ export class ProceduralAnimator {
     this._restIceBow();
     this._restMonkBo();
     this._restKatana(dt);
+    this._restQueenBlades(dt);
     this._restNorseBoard();
     this._twoHandPole();
     this._levelPike();
@@ -5828,6 +5831,69 @@ export class ProceduralAnimator {
     shift.addInPlace(side.scale(NORSE_BOARD.inward)).scaleInPlace(w);
     const inv = b.leftHand.getWorldMatrix().clone().invert();
     B.board.position.addInPlace(Vector3.TransformNormal(shift, inv));
+  }
+  /**
+   * [S] 431 the Pirate Queen's crossed blades at rest (audit 422 queen b.1: "the off hand - a long dark rod held low - TABS: a jewelled sabre, a slim
+   * curved blade on a tan hilt"; pirate.pirate_queen.red.png: both fists low at the hips either side, each blade raised and leaning across her front so
+   * the two cross in an X before her chest, their flats to the front). Standing or walking (not in a slash, eased back in over QUEEN_GUARD.settle s),
+   * each fist is solved onto a seat .out of her height outside its shoulder, .ahead in front and .drop below it; its blade (+y) leans .cross rad off
+   * upright toward her other side and .lean toward her front, its flat (+z) facing forward; the grip is put back in the fist. The off fist sits .stagger
+   * further ahead so the blades pass and do not meet. Only when both fists hold a cutlass (the queen).
+   */
+  private _queenBlades: { side: number; blade: Mesh; grip: Mesh; at: Vector3 }[] | null | undefined = undefined;
+  private _queenW = 1;
+  private _restQueenBlades(dt: number): void {
+    const b = this._body;
+    if (this._queenBlades === undefined) {
+      const find = (hand: TransformNode, side: number) => {
+        const blade = hand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "cutlassJewel"));
+        const grip = blade?.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === "grip");
+        return blade && grip ? { side, blade, grip, at: blade.position.clone() } : null;
+      };
+      const right = find(b.rightHand, 1), left = find(b.leftHand, -1);
+      this._queenBlades = right && left ? [right, left] : null;
+    }
+    const Q = this._queenBlades;
+    if (!Q) return;
+    const st = this._state;
+    this._queenW = st === AnimState.Idle || st === AnimState.Walking ? Math.min(1, this._queenW + dt / QUEEN_GUARD.settle) : 0;
+    const w = this._queenW * (1 - Math.min(1, this._limp));
+    if (w <= 0.01) {
+      for (const q of Q) { q.blade.rotationQuaternion = null; q.blade.position.copyFrom(q.at); }
+      return;
+    }
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const G = QUEEN_GUARD;
+    for (const q of Q) {
+      const [shoulderJ, elbowJ, handJ] = q.side > 0 ? [b.rightShoulder, b.rightElbow, b.rightHand] : [b.leftShoulder, b.leftElbow, b.leftHand];
+      const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(shoulderJ.position.x) || q.side, 0, 0), rootM));
+      const fist = shoulderJ.getAbsolutePosition().add(outward.scale(G.out * height))
+        .addInPlace(fwd.scale((G.ahead + (q.side < 0 ? G.stagger : 0)) * height)).addInPlace(new Vector3(0, -G.drop * height, 0));
+      this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = handJ; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const axis = Vector3.Up().scale(Math.cos(G.cross)).addInPlace(outward.scale(-Math.sin(G.cross))).addInPlace(fwd.scale(Math.sin(G.lean))).normalize();
+      const z = fwd.subtract(axis.scale(Vector3.Dot(fwd, axis))).normalize();
+      const x = Vector3.Cross(axis, z).normalize();
+      const world = Matrix.Identity();
+      Matrix.FromXYZAxesToRef(x, axis, z, world);
+      const handRot = new Quaternion();
+      handJ.getWorldMatrix().decompose(undefined, handRot);
+      const hand = Matrix.Identity();
+      handRot.toRotationMatrix(hand);
+      const rest = Quaternion.FromEulerAngles(q.blade.rotation.x, q.blade.rotation.y, q.blade.rotation.z);
+      q.blade.rotationQuaternion = Quaternion.Slerp(rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+      q.blade.position.copyFrom(q.at);
+      q.blade.computeWorldMatrix(true);
+      q.grip.computeWorldMatrix(true);
+      const miss = handJ.getAbsolutePosition().subtract(q.grip.getAbsolutePosition()).scale(w);
+      q.blade.position.addInPlace(Vector3.TransformNormal(miss, handJ.getWorldMatrix().clone().invert()));
+    }
   }
   private _katanaW = 1;
   private _restKatana(dt: number): void {
