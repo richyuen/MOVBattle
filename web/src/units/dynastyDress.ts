@@ -400,7 +400,7 @@ export function monkArmPlates(scene: Scene, body: ArticulatedBody, teamColor: Co
  */
 const DRAGON_FORM = {
   skull: 0.62, size: 2.0, headY: 1.95, headZ: 0.5, snout: [0.6, 0.28, 0.4] as const, jaw: [0.5, 0.1, 0.38] as const, gape: 0.2, fangs: 4,
-  tongue: [0.17, 0.55] as const, eye: 0.17, pole: 0.05, poleFoot: 0.55,
+  tongue: [0.2, 0.36] as const, eye: 0.17, pole: 0.05, poleFoot: 0.55,
   segs: 9, seg: [0.36, 0.32, 0.36] as const, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, fin: 0.14,
   gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), tongueTint: 0.85, glow: 0.12,
 };
@@ -440,8 +440,10 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     const x = (i / (D.fangs - 1) - 0.5) * D.jaw[0] * hk * 0.8;
     put(MeshBuilder.CreateCylinder("dragonFang", { height: D.gape * hk * 0.5, diameterTop: 0.05 * hk, diameterBottom: 0, tessellation: 4 }, scene), snoutAt.add(new Vector3(x, -D.snout[1] * hk * 0.5 - D.gape * hk * 0.2, D.snout[2] * hk * 0.25)), dark);
   }
-  const tongue = put(MeshBuilder.CreateBox("dragonTongue", { width: D.tongue[0] * hk, height: D.tongue[1] * hk, depth: 0.06 * hk }, scene), jawAt.add(new Vector3(0, -D.tongue[1] * hk * 0.45, D.jaw[2] * hk * 0.5)), tongueMat);
-  tongue.rotation.x = 0.15;
+  // [S] 419 the tongue lies in the open mouth on the jaw, its tip curling up out past the teeth (audit a.5: "a tall slab hanging to the ground"): .tongue
+  // [wide, long] of the head, a thin slab
+  const tongue = put(MeshBuilder.CreateBox("dragonTongue", { width: D.tongue[0] * hk, height: 0.035 * hk, depth: D.tongue[1] * hk }, scene), jawAt.add(new Vector3(0, D.jaw[1] * hk * 0.5 + 0.02 * hk, D.jaw[2] * hk * 0.2)), tongueMat);
+  tongue.rotation.x = -0.2; // the tip lifts
   for (const side of [-1, 1]) {
     const eyeAt = head.add(new Vector3(side * skullR * 0.48, skullR * 0.32, skullR * 0.78));
     put(MeshBuilder.CreateCylinder("dragonEye", { height: 0.03 * hk, diameter: D.eye * hk, tessellation: 10 }, scene), eyeAt, white).rotation.x = Math.PI / 2;
