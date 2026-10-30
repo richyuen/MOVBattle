@@ -83,7 +83,7 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // out over .windup s (proceduralAnimation PIRATE_KICK_POSE), and at the blow the man (still within .slack more) takes .damage of a shot's harm and is
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
 const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
-const BLUNDERBUSS_RECOIL ={ units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
+const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
