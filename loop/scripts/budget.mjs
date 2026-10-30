@@ -70,8 +70,22 @@ else {
 perIteration += Math.min(units.max, UNIT_CAP) * BATCH_UNITS + Math.min(cards.max, CARD_CAP) * PICKED_CARDS;
 const warn = perIteration > PER_ITERATION_WARN ? ` (WARN: over ${PER_ITERATION_WARN})` : "";
 console.log(`per-iteration read set (memory + ${BATCH_UNITS} unit files + ${PICKED_CARDS} cards): ${perIteration} bytes${warn}`);
+// [v5] A batch named on STATE's Batch line must still have an open (o) or queued (q) unit: when none is left, ITERATE step 8 owes its
+// checkpoint and the name must go (the viking checkpoint was skipped at 418 because nothing checked).
+try {
+  const state = fs.readFileSync(path.join(root, "loop", "STATE.md"), "utf8");
+  const batchLine = state.match(/^Iteration:.*?\bBatch:\s*([^\n(]+)/m);
+  const named = batchLine ? batchLine[1].split("+").map((s) => s.trim()).filter((s) => s && !s.includes(":")) : [];
+  for (const name of named) {
+    const row = state.match(new RegExp(`^${name.replace(/[^a-z0-9_]/gi, "")}:\\s*(.+)$`, "m"));
+    if (!row) { console.log(`BATCH  ${name}: not in the Scoreboard`); failed = true; continue; }
+    const open = row[1].split("|").filter((cell) => /\s[oq]\s*$/.test(cell)).length;
+    if (open === 0) { console.log(`BATCH  ${name}: no open or queued unit left - run the checkpoint (ITERATE step 8) and drop it from Batch`); failed = true; }
+    else console.log(`ok    batch ${name.padEnd(20)} ${open} open/queued`);
+  }
+} catch (e) { console.log(`BATCH  STATE.md unreadable: ${e.message}`); failed = true; }
 if (failed) {
-  console.log("BUDGET FAILED: compact the files marked OVER or create the MISSING ones before continuing.");
+  console.log("BUDGET FAILED: compact the files marked OVER, create the MISSING ones, or settle the BATCH lines before continuing.");
   process.exit(1);
 }
 console.log("budget ok");

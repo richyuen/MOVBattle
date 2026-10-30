@@ -1,5 +1,5 @@
-# Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
-Iteration: 419   Batch: ancient+viking+dynasty (6-8/19)   Consecutive empty: 0   Done: 42/139   Parked: 1
+# Loop state (v5: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
+Iteration: 419   Batch: ancient+dynasty (6,8/19)   Consecutive empty: 0   Done: 42/139   Parked: 1
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -36,7 +36,8 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Starving at 420+: minotaur a (last 415: starving at 420), monkey_king a (last 416: starving at 421). Next ranked: dragon evidence (frame idle/motion on head+mouth) then carriers with arms/heads, breath plume, ribbon; samurai a hakama / kabuto; firework b upright bow / c full draw / a legs; hwacha a timber (palette, --noglow); monkey_king a face / headgear; minotaur a scale + sash.
+- 420 first: RE-AUDIT dragon a, b, c (the 419 review's capture tool frames a unit by its mesh top: the dragon's idle and motion shots now show the head and mouth, rig 5.70 m). The [R] slot is minotaur a (plateau: CONFIRM failed 403, 405, 408, 415; starving), specified from those four lists: size toward 1.2x, a thin flat strap, a wide team girdle, one arm-wide shoulder cap. Viking's checkpoint ran at the review (12/12 green) and viking left Batch.
+- Starving at 421: monkey_king a (last 416). Next ranked: dragon carriers with arms/heads, breath plume, ribbon; samurai a hakama / kabuto; firework b upright bow / c full draw / a legs; hwacha a timber (palette, --noglow); monkey_king a face / headgear.
 - The samurai spars with an archer (evidence 417); the monkey king starts at 8 m (jump_charge makes him a charger).
 - A world-posed rest (_restIceBow, _restKatana, _restNorseBoard) must clear rotationQuaternion outside the rest; the monkey king rides _restMonkBo via the "monkBoHolder" holder.
 - Shared props changed for batch units carry to later batches: katana (light steel 416) is also on Secret teacher, samurai_giant, shogun.

@@ -481,18 +481,22 @@ async function main() {
           return true;
         };
         // Rig height, root to head top, for the camera's distance (a giant needs a wider frame)
-        // A war machine (vehicle sockets) by the top of its meshes too, not its crewman's head: a catapult's arm stands twice his height when thrown upright
+        // A war machine (vehicle sockets) by the top of its meshes too, not its crewman's head: a catapult's arm stands twice his height when thrown upright.
+        // [tools 420] Any unit by its mesh top when a prop stands well over the head (the dragon's paper head at twice the bearer's height was out of
+        // every frame from 417, and three gaps were approved on shots without it): over by more than .3 of the head height counts; over 3x is a stray mesh.
         window.__rig = (u) => {
           try {
             const base = window.__wp(u.body.root).y;
-            let top = window.__wp(u.body.headTop).y;
-            if (u.body.vehicleSockets) {
-              for (const m of u.body.root.getChildMeshes(false)) {
-                if (!m.isEnabled() || !m.isVisible) continue;
-                window.__wp(m);
-                top = Math.max(top, m.getBoundingInfo().boundingBox.maximumWorld.y);
-              }
+            const head = window.__wp(u.body.headTop).y;
+            let top = head;
+            let meshTop = head;
+            for (const m of u.body.root.getChildMeshes(false)) {
+              if (!m.isEnabled() || !m.isVisible) continue;
+              window.__wp(m);
+              const y = m.getBoundingInfo().boundingBox.maximumWorld.y;
+              if (y - base < 3 * (head - base)) meshTop = Math.max(meshTop, y);
             }
+            if (u.body.vehicleSockets || meshTop - head > 0.3 * (head - base)) top = meshTop;
             return Math.max(0.6, top - base);
           } catch { return 1.8; }
         };
