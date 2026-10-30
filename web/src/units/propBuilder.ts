@@ -2781,6 +2781,78 @@ const VALKYRIE_SWORD: SlabCut = { long: 0.98, wide: 0.04, grip: 1.9, point: 0.12
 // [R] 354 (proceduralAnimation FISTS_ON_GRIP): .fists marks it two-fisted; .seat fists the blade is slid up through the fist, so the fist closes on the grip
 // right under the cross and not on the blade above it (the greatsword mount had the fist over the guard)
 const ZWEI: SlabCut = { long: 0.85, wide: 0.05, grip: 4.5, point: 0.12, lug: 0.045, lugAt: 0.07, fists: "zweiFists", seat: 2.5 };
+/*
+ * [S] 425 the pirates' cutlass and sabre (pirate.pirate_queen.red.png: a slim pale blade in each fist, curving back along its length to a point, on a tan
+ * hilt with a cup guard and a knuckle bow; card "an unusually big Cutlass and a jewel-embedded custom Sabre"; pirate.captain.red.png: a curved slim
+ * cutlass with a tan cup guard). In the man's standing heights (fit.stand): blade .long, .wide across at the guard narrowing by .taper to the point,
+ * .thick of its width deep, its back curving .curve of its length off straight by the tip, in .segs straight runs; the hilt in fists (fit.fist): a tan
+ * cup .cup across and .cupDeep high, a grip .grip long, a knuckle bow from the cup's edge to the pommel, a pommel, and a red jewel on the cup's face.
+ * Same mount as the plain sword (the guard on the fist), so the carry and the blows that move the sword move this one.
+ */
+const CUTLASS = { long: 0.5, wide: 0.05, taper: 0.55, thick: 0.22, curve: 0.13, segs: 6, cup: 3.4, cupDeep: 0.9, grip: 1.7, bow: 0.35, jewel: 0.7 };
+const CUTLASS_TAN = new Color3(0.8, 0.58, 0.33);
+const CUTLASS_JEWEL = new Color3(1.2, 0.08, 0.06);
+function buildCutlass(scene: Scene, name: string, fit: BladeFit): { blade: Mesh; hilt: number } {
+  const C = CUTLASS;
+  const L = fit.stand * C.long, w0 = fit.stand * C.wide, F = fit.fist;
+  const steel = mat(scene, new Color3(0.8, 0.8, 0.85), 0, "stone");
+  const tan = mat(scene, CUTLASS_TAN, 0.12, "cloth");
+  // The root: an empty at the blade's middle, as the slab sword's box is, so the mount puts the guard where it puts the slab's
+  const blade = new Mesh(name, scene);
+  const at = (t: number): Vector3 => new Vector3(C.curve * L * t * t, -L / 2 + L * t, 0);
+  for (let k = 0; k < C.segs; k++) {
+    const t0 = k / C.segs, t1 = (k + 1) / C.segs, tm = (t0 + t1) / 2;
+    const a = at(t0), b = at(t1);
+    const seg = b.subtract(a);
+    const wide = w0 * (1 - C.taper * tm);
+    const last = k === C.segs - 1;
+    const piece = last
+      ? MeshBuilder.CreateCylinder(`${name}Point`, { height: seg.length() * 1.04, diameterBottom: wide * Math.SQRT2, diameterTop: wide * 0.2 * Math.SQRT2, tessellation: 4 }, scene)
+      : MeshBuilder.CreateBox(`${name}Run`, { width: wide, height: seg.length() * 1.06, depth: wide * C.thick }, scene);
+    if (last) {
+      piece.rotation.y = Math.PI / 4;
+      piece.bakeCurrentTransformIntoVertices();
+      piece.scaling.z = C.thick;
+    }
+    piece.position.copyFrom(a.add(b).scale(0.5));
+    piece.rotation.z = -Math.atan2(seg.x, seg.y);
+    piece.material = steel;
+    piece.convertToFlatShadedMesh();
+    piece.parent = blade;
+  }
+  // The hilt below the blade: a cup guard (mouth toward the blade), the grip, the pommel, a knuckle bow down the grip's front, a red jewel on the cup
+  const cupDeep = F * C.cupDeep;
+  const hilt = L / 2 + cupDeep / 2;
+  const cup = MeshBuilder.CreateCylinder("guard", { height: cupDeep, diameterTop: F * C.cup, diameterBottom: F * C.cup * 0.55, tessellation: 8 }, scene);
+  cup.position.y = -hilt;
+  cup.scaling.z = 0.7;
+  cup.material = tan;
+  cup.convertToFlatShadedMesh();
+  cup.parent = blade;
+  const gripLong = F * C.grip;
+  const grip = MeshBuilder.CreateCylinder("grip", { height: gripLong, diameter: F * 0.6, tessellation: 6 }, scene);
+  grip.position.y = -hilt - cupDeep * 0.5 - gripLong * 0.5;
+  grip.material = mat(scene, CUTLASS_TAN.scale(0.6), 0.1, "cloth");
+  grip.parent = blade;
+  const pommel = MeshBuilder.CreateBox("pommel", { size: F * 0.9 }, scene);
+  pommel.rotation.y = Math.PI / 4;
+  pommel.position.y = grip.position.y - gripLong * 0.5 - F * 0.35;
+  pommel.material = tan;
+  pommel.parent = blade;
+  const bowLong = gripLong + cupDeep * 0.5 + F * 0.35;
+  const bow = MeshBuilder.CreateBox("cutlassBow", { width: F * C.bow, height: bowLong, depth: F * C.bow }, scene);
+  bow.position.set(-F * C.cup * 0.42, -hilt - bowLong * 0.5, 0);
+  bow.rotation.z = -0.12;
+  bow.material = tan;
+  bow.parent = blade;
+  const jewel = MeshBuilder.CreateBox("cutlassJewel", { size: F * C.jewel }, scene);
+  jewel.rotation.set(Math.PI / 4, 0, Math.PI / 4);
+  jewel.position.set(0, -hilt, F * C.cup * 0.36);
+  jewel.material = getMaterialFactory().get("unlit", CUTLASS_JEWEL, { emissive: CUTLASS_JEWEL });
+  jewel.parent = blade;
+  return { blade, hilt };
+}
+
 function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color3, great: boolean, cut?: SlabCut): { blade: Mesh; hilt: number } {
   const length = fit.stand * (cut ? cut.long : great ? 0.68 : 0.46);
   const width = cut ? fit.stand * cut.wide : Math.min(length / (great ? 5 : 4), Math.max(length / (great ? 6.5 : 5), fit.fist * 2.8));
@@ -3503,7 +3575,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "sword":
     case "cutlass": {
       const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;
-      const { blade, hilt } = buildSlabSword(scene, "blade", fit, accent, false, cut);
+      // [S] 425 the pirates' cutlass and sabre are slim curved blades on tan hilts (CUTLASS), not the straight broad slab
+      const { blade, hilt } = type === "cutlass" ? buildCutlass(scene, "blade", fit) : buildSlabSword(scene, "blade", fit, accent, false, cut);
       // The guard stays where the old one sat on the fist, whatever the blade above it is cut to
       blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
       // The Knight's arming sword (355): grey steel guard, grip and pommel (the metal accent rendered black at the hip), held out by its marker

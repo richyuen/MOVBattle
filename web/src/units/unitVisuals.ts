@@ -948,7 +948,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { moving: ["halo_flare"], attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
       });
     case "iconic_pirate_queen":
-      return vis({ scale: 1.72, bulk: 1.24, headSize: 1.08, armLength: 1.08 }, "cutlass", "pirate_hat", "none", "cape", "#ff4f8a", "flintlock", {
+      // [S] 425 a sabre in the off hand (card Off Hand / Appearance "a jewel-embedded custom Sabre"), the curved CUTLASS build, in place of the pistol rod
+      return vis({ scale: 1.72, bulk: 1.24, headSize: 1.08, armLength: 1.08 }, "cutlass", "pirate_hat", "none", "cape", "#ff4f8a", "cutlass", {
         posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["quickdraw_smoke"] },
