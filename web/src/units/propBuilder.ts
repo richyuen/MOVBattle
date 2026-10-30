@@ -3124,7 +3124,7 @@ const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
  * (RuntimeUnit.getSmokeOrigin smokes the shot at the bell).
  */
 const PISTOL = {
-  long: 0.2, bore: 0.12, over: 0.17, tail: 0.14, bell: 0.16, mouth: 2.3, stock: 0.9, fore: 0.8, grip: 0.36, gripRake: 0.45, gripWide: 0.11,
+  long: 0.28, bore: 0.13, over: 0.17, tail: 0.14, bell: 0.16, mouth: 2.4, stock: 0.9, fore: 0.8, grip: 0.36, gripRake: 0.45, gripWide: 0.11,
 };
 const MATCHLOCK = {
   long: 1.3, grip: 0.26, bore: 0.042, fore: 0.86, stock: 0.9, butt: 0.11, glow: 0.18,

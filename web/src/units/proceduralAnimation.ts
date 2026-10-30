@@ -3228,6 +3228,8 @@ export class ProceduralAnimator {
   private _aimPistol(dt: number): void {
     if (this._pistol === undefined) {
       const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "pistolBell"));
+      // The grip sits in the fist: the firearm grip preset's offset (cut for a long gun's stock) had it back on the forearm
+      if (node) node.position.setAll(0);
       this._pistol = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
     }
     const gun = this._pistol;
