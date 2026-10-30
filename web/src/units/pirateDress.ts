@@ -736,10 +736,10 @@ const PIRATE_BEARD = {
 };
 
 /** A short full dark-brown beard round the jaw under the eyes, with sideburns and a mouth notch (spec at PIRATE_BEARD). */
-export function pirateBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+export function pirateBeard(scene: Scene, body: ArticulatedBody, color: Color3 = PIRATE_BEARD.color): Mesh[] {
   const B = PIRATE_BEARD;
   const mf = getMaterialFactory();
-  const hair = mf.get("cloth", B.color, { emissive: B.color.scale(B.glow) });
+  const hair = mf.get("cloth", color, { emissive: color.scale(B.glow) });
   const mouthMat = mf.get("cloth", B.mouthColor, { emissive: B.mouthColor.scale(B.glow) });
   const head = body.headMesh;
   const bb = head.getBoundingInfo().boundingBox;
@@ -768,6 +768,48 @@ export function pirateBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   const mouthY = top - e.y * B.mouthTall * 1.3;
   const mouth = put(MeshBuilder.CreateBox("pirateBeardMouth", { width: e.x * B.mouth, height: e.y * B.mouthTall, depth: e.z * 0.1 }, scene), mouthMat);
   mouth.position.set(c.x, mouthY, jawZ + jawD / 2 * 0.93);
+  return out;
+}
+
+/*
+ * [S] 431 the Captain's long beard (audit 422 captain a.4: "the chin - dark hair hangs beside the face but the chin is bare - TABS: a long brown beard
+ * with a moustache under the eyes"; pirate.captain.red.png, card "long, brown beard": a mid-brown beard from under the eyes round the jaw, hanging past
+ * the chin over the collar onto the top of the chest, a broad moustache bar across the face just under the eyes). CAPTAIN_BEARD: PIRATE_BEARD's jaw,
+ * sideburns and mouth in .color; across the face over the mouth a moustache slab .tash of e.x across and .tashTall of e.y tall, .tashAhead of e.z
+ * proud of the jaw's front, drooping .droop rad at each end; the run onto the chest a faceted torso-parented lump (a head-hung piece sinks into the
+ * chest box) .run[0] of the trunk's width across, .run[1] of its height down from its top, .run[2] of its depth deep, standing .proud of the depth off
+ * its front.
+ */
+const CAPTAIN_BEARD = { tash: 1.15, tashTall: 0.2, tashAhead: 0.1, droop: 0.22, run: [0.44, 0.34, 0.3] as const, proud: 0.42, color: new Color3(0.4, 0.2, 0.12) };
+
+/** The Captain's long brown beard with a moustache, run down onto his chest (spec at CAPTAIN_BEARD). */
+export function captainBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CAPTAIN_BEARD, B = PIRATE_BEARD;
+  const out = pirateBeard(scene, body, C.color);
+  const hair = out[0].material;
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const front = c.z + e.z * B.ahead + e.z * B.jaw[2];
+  for (const side of [-1, 1]) {
+    const half = MeshBuilder.CreateBox("captainTash", { width: e.x * C.tash * 0.5, height: e.y * C.tashTall, depth: e.z * 0.22 }, scene);
+    half.parent = head;
+    half.position.set(c.x + side * e.x * C.tash * 0.25, span[0] - e.y * (B.under + C.tashTall * 0.55), front + e.z * C.tashAhead);
+    half.rotation.z = -side * C.droop;
+    half.material = hair;
+    half.convertToFlatShadedMesh();
+    out.push(half);
+  }
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const run = MeshBuilder.CreateIcoSphere("captainBeardRun", { radius: 1, subdivisions: 1, flat: true }, scene);
+  run.parent = tm.parent;
+  run.scaling.set(W * C.run[0] / 2, H * C.run[1] / 2, D * C.run[2] / 2);
+  run.position.set(cx, cy + H / 2 - H * C.run[1] * 0.3, cz + D / 2 + D * C.proud);
+  run.material = hair;
+  out.push(run);
   return out;
 }
 
