@@ -294,13 +294,13 @@ const renaissance = makeFaction(FactionId.Renaissance, "renaissance", [
 ]);
 
 const pirate = makeFaction(FactionId.Pirate, "pirate", [
-  ["flintlock", "Flintlock", 120, "gunner", { weaponHint: "flintlock", hatHint: "tricorn" }],
-  ["blunderbuss", "Blunderbuss", 160, "shotgunner", { abilities: ["shotgun_blast"], weaponHint: "blunderbuss", hatHint: "tricorn" }],
-  ["bomb_thrower", "Bomb Thrower", 220, "thrower", { weaponHint: "bomb", projectileHint: "bomb" }],
-  ["harpooner", "Harpooner", 140, "gunner", { abilities: ["pull_hook"], projectileHint: "spear", weaponHint: "harpoon" }],
-  ["cannon", "Cannon", 1000, "artillery", { specialHint: "cannon", size: "large", projectileHint: "stone" }],
-  ["captain", "Captain", 500, "heavy_melee", { weaponHint: "cutlass", hatHint: "captain_hat" }],
-  ["pirate_queen", "Pirate Queen", 2500, "boss_melee", { weaponHint: "cutlass", hatHint: "pirate_hat", visualPreset: "iconic_pirate_queen", behaviorPreset: "iconic_pirate_queen", controlStrength: 1.38, cooldownMultiplier: 0.78 }],
+  ["flintlock", "Flintlock", 100, "gunner", { healthMultiplier: 0.53, damageMultiplier: 0.3, cooldownMultiplier: 1.39, weaponHint: "flintlock", hatHint: "tricorn" }],
+  ["blunderbuss", "Blunderbuss", 160, "shotgunner", { healthMultiplier: 1.53, damageMultiplier: 0.22, cooldownMultiplier: 2.22, abilities: ["shotgun_blast"], weaponHint: "blunderbuss", hatHint: "tricorn" }],
+  ["bomb_thrower", "Bomb Thrower", 250, "thrower", { healthMultiplier: 0.81, damageMultiplier: 0.1, cooldownMultiplier: 2.27, weaponHint: "bomb", projectileHint: "bomb" }],
+  ["harpooner", "Harpooner", 300, "gunner", { healthMultiplier: 1.4, damageMultiplier: 0.14, abilities: ["pull_hook"], projectileHint: "spear", weaponHint: "harpoon" }],
+  ["cannon", "Cannon", 1000, "artillery", { healthMultiplier: 1.31, damageMultiplier: 0.54, specialHint: "cannon", size: "large", projectileHint: "stone" }],
+  ["captain", "Captain", 1500, "heavy_melee", { healthMultiplier: 0.67, damageMultiplier: 0.53, cooldownMultiplier: 0.28, weaponHint: "cutlass", hatHint: "captain_hat" }],
+  ["pirate_queen", "Pirate Queen", 2500, "boss_melee", { healthMultiplier: 0.79, damageMultiplier: 0.62, weaponHint: "cutlass", hatHint: "pirate_hat", visualPreset: "iconic_pirate_queen", behaviorPreset: "iconic_pirate_queen", controlStrength: 1.38, cooldownMultiplier: 0.33 }],
 ]);
 
 const spooky = makeFaction(FactionId.Spooky, "spooky", [
