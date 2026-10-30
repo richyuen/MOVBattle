@@ -873,7 +873,7 @@ export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const CAPTAIN_LEGS = {
   thigh: 1.45, pantsTo: 0.3, shin: 1.38, bootFrom: 0.2, boot: 1.5, cuff: 0.2, cuffOut: 1.85, buckle: 0.45,
-  tan: new Color3(0.62, 0.42, 0.24), black: new Color3(0.05, 0.05, 0.06), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
+  tan: new Color3(0.85, 0.55, 0.3), black: new Color3(0.05, 0.05, 0.06), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
 };
 
 export function captainLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
