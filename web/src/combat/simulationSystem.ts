@@ -124,6 +124,8 @@ const BROADHEAD_ARROWS = new Set(["medieval.archer"]);
 const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
 // [S] 397 the Ice Archer's arrow: a pale ice shaft with a jagged ice head and a trail of frost (ProjectileSystem _dressIceArrow)
 const ICE_ARROWS = new Set(["viking.ice_archer"]);
+/** [S] 434 archers whose arrows fly burning (projectileSystem FIRE_ARROW) */
+const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
 // [S] 390 engines that fly the bolt they have loaded: a copy of the named node leaves the muzzle and the loaded one is gone until half the reload is past (vehicleBuilder ballistaLoadedBolt)
 const LOADED_BOLTS: Record<string, string> = { "ancient.ballista": "ballistaLoadedBolt" };
 /*
@@ -2559,7 +2561,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
+            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
           );
           if (loadedBolt?.isEnabled()) {
             loadedBolt.setEnabled(false);

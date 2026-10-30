@@ -62,6 +62,8 @@ const HWACHA_ROCKET = {
   wood: new Color3(0.55, 0.38, 0.2), paper: new Color3(0.8, 0.62, 0.4), green: new Color3(0.2, 0.55, 0.25), dark: new Color3(0.12, 0.12, 0.14),
   fire: new Color3(1, 0.55, 0.12), core: new Color3(1, 0.92, 0.6),
 };
+/** The Skeleton Archer's burning arrow head (_dressFireArrow): flame tongues, longest (m), across (m), splay off the shaft, colours, glow */
+const FIRE_ARROW = { tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), dark: new Color3(0.1, 0.08, 0.07), glow: 0.9 };
 /** The Pumpkin Catapult's jack-o'-lantern ("pumpkin" case): diameter (m), height of the width, ribbed lobes, skin, stem, carved-face glow */
 const PUMPKIN_SHOT = { size: 0.55, squash: 0.8, lobes: 8, orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2) };
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin";
@@ -203,6 +205,8 @@ interface ProjectileSpawnOptions {
   snake?: boolean;
   /** An arrow flown as the Ice Archer's: a pale ice shaft, a jagged ice head and a trail of frost behind it (_dressIceArrow). */
   iceArrow?: boolean;
+  /** A burning arrow: flames round its head and a fire trail (FIRE_ARROW). */
+  fireArrow?: boolean;
   /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
   drunk?: string;
   /** [S] 427 A ground point the missile comes down on instead of the man (the Pirate Queen's Bomb Spin bombs, lobbed out all round her): it does not follow him. */
@@ -404,6 +408,7 @@ export class ProjectileSystem {
     if (options.broadhead && shape === "arrow" && !held) this._dressBroadhead(mesh);
     if (options.snake && shape === "arrow" && !held) this._dressSnake(mesh);
     if (options.iceArrow && shape === "arrow" && !held) this._dressIceArrow(mesh);
+    if (options.fireArrow && shape === "arrow" && !held) this._dressFireArrow(mesh);
     if (held) {
       // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
       const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
@@ -1026,6 +1031,34 @@ export class ProjectileSystem {
    * off the shaft's underside behind the crown, perpendicular to it (raked .icleRake back), spread .icleSpan along the shaft with uneven lengths, each
    * .icleWide at its root and .icleLong long, so the fringe breaks the arrow's silhouette below the line.
    */
+  /*
+   * [S] 434 the Skeleton Archer's Fire Arrow (audit 434 skeleton_archer c.1: "a plain dark shaft with a blue tip, no flame - TABS: flaming Fire
+   * Arrow"; card Weapons projectile Fire Arrow, Characteristics "a bow with flaming arrows"): the head wrapped in fire - FIRE_ARROW.tongues orange
+   * flame cones from just behind the tip streaming back along the shaft, .long of a metre the longest, .wide across, splayed .splay round it, a
+   * yellow core cone inside them, and a dark tip. Glowing, so it reads at field distance in flight.
+   */
+  private _dressFireArrow(root: TransformNode): void {
+    const F = FIRE_ARROW;
+    for (const child of root.getChildMeshes(true)) if (child.name === "tip") child.material = this._getMat("fireArrow_tip", F.dark);
+    const outer = this._getMat("fireArrow_flame", F.flame, F.glow);
+    const inner = this._getMat("fireArrow_core", F.core, F.glow);
+    const head = 0.36; // just behind the tip, in the arrow's own frame (head first along +z)
+    const cone = (name: string, len: number, wide: number, dir: Vector3, m: typeof outer): void => {
+      const c = MeshBuilder.CreateCylinder(name, { height: len, diameterTop: 0, diameterBottom: wide, tessellation: 5 }, this._scene);
+      c.convertToFlatShadedMesh();
+      c.rotationQuaternion = Quaternion.Identity();
+      Quaternion.FromUnitVectorsToRef(new Vector3(0, 1, 0), dir.normalize(), c.rotationQuaternion);
+      c.position.set(0, 0, head).addInPlace(dir.normalize().scale(len * 0.5));
+      c.material = m;
+      c.parent = root;
+    };
+    for (let k = 0; k < F.tongues; k++) {
+      const a = (k / F.tongues) * Math.PI * 2 + 0.3;
+      cone("fireArrowFlame", F.long * (k % 2 ? 0.7 : 1), F.wide, new Vector3(Math.cos(a) * F.splay, Math.sin(a) * F.splay, -1), outer);
+    }
+    cone("fireArrowCore", F.long * 0.55, F.wide * 0.8, new Vector3(0, 0, -1), inner);
+  }
+
   private _dressIceArrow(root: TransformNode): void {
     const I = ICE_ARROW;
     for (const child of root.getChildMeshes(true)) {
