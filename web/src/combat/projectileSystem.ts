@@ -532,8 +532,13 @@ export class ProjectileSystem {
       const chain: TransformNode[] = [];
       for (let n: Node | null = w.tether; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
       for (const n of chain) n.computeWorldMatrix(true);
-      const from = w.tether.getAbsolutePosition();
-      const to = w.target.position.add(new Vector3(0, TOW_CHEST * w.target.body.root.scaling.y, 0));
+      const from = w.tether.getAbsolutePosition().clone();
+      // his chest mesh where his body is drawn (it tumbles off his root as he flies), not a point over his root
+      const chest = w.target.body.torsoMesh;
+      const at: Node[] = [];
+      for (let n: Node | null = chest; n; n = n.parent) at.unshift(n);
+      for (const n of at) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+      const to = chest && !chest.isDisposed() ? chest.getAbsolutePosition().clone() : w.target.position.add(new Vector3(0, TOW_CHEST, 0));
       const len = Vector3.Distance(from, to);
       w.rope.setEnabled(len > 0.01);
       if (len <= 0.01) continue;
