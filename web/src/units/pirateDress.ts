@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Matrix } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Matrix, Vector3, TransformNode, type Node } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox, limbShell } from "./medievalDress";
@@ -273,5 +273,64 @@ export function plankHat(scene: Scene, body: ArticulatedBody): Mesh[] {
   batten.material = dark;
   batten.convertToFlatShadedMesh();
   out.push(batten);
+  return out;
+}
+
+/*
+ * [S] 427 the Pirate Queen's bandana (audit 422 a.1: "a flat black angular hat - TABS: a team bandana with a white eyepatch over one eye";
+ * pirate.pirate_queen.red.png, card Appearance "a cloth covering one of their eyes": a team cloth tied tight over the crown and brow, its front edge
+ * slanting down across the face to cover her left eye, the right eye bare and big below it, the knot at the back). QUEEN_BANDANA, in the head's own
+ * box (e its half sizes): a cloth shell .out of the head wide and deep from .brow above the eyes' top to .top over the crown, sitting .sink back; the
+ * flap over the left eye a slab .flap of the head across from the cap's foot to .below the eye's bottom, .proud off the face and slanting .slant rad
+ * (down toward her left), the eye and pupil under it hidden; at the back a knot .knot across with two tails .tail long splayed .splay rad. Team cloth
+ * self-lit .glow.
+ */
+const QUEEN_BANDANA = { out: 1.1, brow: 0.06, top: 1.14, sink: 0.04, flap: 0.95, below: 0.12, proud: 0.1, slant: 0.32, knot: 0.36, tail: 0.75, splay: 0.35, glow: 0.12 };
+
+export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const Q = QUEEN_BANDANA;
+  const cloth = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(Q.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  // the bead eyes hang off the neck: read them into the head's frame
+  const toHead = (n: Mesh): Vector3 => {
+    const chain: Node[] = [];
+    for (let k: Node | null = n; k; k = k.parent) chain.unshift(k);
+    for (const k of chain) if (k instanceof TransformNode) k.computeWorldMatrix(true);
+    head.computeWorldMatrix(true);
+    return Vector3.TransformCoordinates(n.getBoundingInfo().boundingBox.centerWorld, head.getWorldMatrix().clone().invert());
+  };
+  const eyeR = body.leftEye ? body.leftEye.getBoundingInfo().boundingBox.extendSize.y * body.leftEye.scaling.y : e.y * 0.2;
+  const eye = body.leftEye ? toHead(body.leftEye) : new Vector3(-e.x * 0.4, c.y + e.y * 0.1, c.z + e.z);
+  const eyeTop = eye.y + eyeR;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number): Mesh => {
+    m.parent = head;
+    m.position.set(x, y, z);
+    m.material = cloth;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  // the cap over the crown and brow
+  const foot = eyeTop + e.y * 2 * Q.brow, top = c.y + e.y * Q.top;
+  put(MeshBuilder.CreateBox("queenBandana", { width: e.x * 2 * Q.out, height: top - foot, depth: e.z * 2 * Q.out }, scene), c.x, (top + foot) / 2, c.z - e.z * Q.sink);
+  // the flap slanting down over her left eye
+  const flapTop = foot + e.y * 0.1, flapFoot = eye.y - eyeR - e.y * 2 * Q.below;
+  const flap = put(MeshBuilder.CreateBox("queenBandanaFlap", { width: e.x * 2 * Q.flap * 0.5, height: flapTop - flapFoot, depth: e.z * 2 * Q.proud }, scene),
+    eye.x, (flapTop + flapFoot) / 2, Math.max(eye.z, c.z + e.z) + e.z * Q.proud * 0.6);
+  flap.rotation.z = -Q.slant * Math.sign(eye.x || -1);
+  body.leftEye?.setEnabled(false);
+  body.leftPupil?.setEnabled(false);
+  // the knot at the back and its two tails
+  const back = c.z - e.z * Q.out - e.z * Q.knot * 0.4;
+  put(MeshBuilder.CreateBox("queenBandanaKnot", { width: e.x * 2 * Q.knot, height: e.y * 2 * Q.knot * 0.8, depth: e.z * 2 * Q.knot * 0.6 }, scene), c.x, foot + e.y * 0.3, back);
+  for (const side of [-1, 1]) {
+    const tail = put(MeshBuilder.CreateBox("queenBandanaTail", { width: e.x * 0.5, height: e.y * 2 * Q.tail, depth: e.z * 0.12 }, scene),
+      c.x + side * e.x * 0.25, foot + e.y * 0.3 - e.y * Q.tail, back - e.z * 0.1);
+    tail.setPivotPoint(new Vector3(0, e.y * Q.tail, 0));
+    tail.rotation.z = side * Q.splay;
+  }
   return out;
 }

@@ -951,7 +951,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "iconic_pirate_queen":
       // [S] 425 a sabre in the off hand (card Off Hand / Appearance "a jewel-embedded custom Sabre"), the curved CUTLASS build, in place of the pistol rod
-      return vis({ scale: 1.72, bulk: 1.24, headSize: 1.08, armLength: 1.08 }, "cutlass", "pirate_hat", "none", "cape", "#ff4f8a", "cutlass", {
+      // [S] 427 no hat: her head is the team bandana over one eye (pirateDress QUEEN_BANDANA)
+      return vis({ scale: 1.72, bulk: 1.24, headSize: 1.08, armLength: 1.08 }, "cutlass", "none", "none", "cape", "#ff4f8a", "cutlass", {
         posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["quickdraw_smoke"] },

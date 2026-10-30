@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, openCoat, piratePants, pirateShorts, pirateVest, plankHat } from "./pirateDress";
+import { barrelArmour, openCoat, piratePants, pirateShorts, pirateVest, plankHat, queenBandana } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -608,6 +608,8 @@ export class UnitFactory {
     if (definition.id === "pirate.blunderbuss" && !shouldUseVehicleBody) propMeshes.push(...plankHat(this._scene, body));
     // [S] 426 the Harpooner's open team coat with tan lapels over a white V undershirt (pirateDress OPEN_COAT)
     if (definition.id === "pirate.harpooner" && !shouldUseVehicleBody) propMeshes.push(...openCoat(this._scene, body, teamColor));
+    // [S] 427 the Pirate Queen's team bandana, its flap down over her left eye (pirateDress QUEEN_BANDANA)
+    if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenBandana(this._scene, body, teamColor));
     // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
     if (definition.id === "dynasty.dragon" && !shouldUseVehicleBody) propMeshes.push(...dragonForm(this._scene, body, teamColor));
     // [S] 413 the Samurai's team kabuto with a flared gold-trimmed neck guard and a crest (dynastyDress KABUTO)
