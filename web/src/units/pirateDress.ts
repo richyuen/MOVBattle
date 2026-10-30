@@ -259,6 +259,22 @@ const CAPTAIN_COAT = {
   tan: new Color3(0.8, 0.6, 0.35), shirtTan: new Color3(0.86, 0.68, 0.45), white: new Color3(0.9, 0.88, 0.84), glow: 0.12,
 };
 
+/*
+ * [S] 433 CAPTAIN_FRONT, the chest between the coat's lapels (critic 431 a.3: "coat-coloured with a beard block - TABS: white laced shirt over a tan
+ * vest with a team sash at the waist"; pirate.captain.blue.png, card Appearance "shirt under it and a cloth around the shirt": a white shirt open at
+ * the neck with criss-cross laces, a light tan vest from the chest to the waist whose fronts close in a V under the laces, a broad team sash round
+ * the waist, the coat's tan edges either side). In the trunk's frame, heights down from its top in trunk heights: the opening .open of the trunk
+ * across (the old tan shirt was .36); a white shirt slab to .shirtTo, .shirtProud proud; the tan vest from there to .sashFrom; two vest fronts
+ * .flapWide of the opening wide and .vee tall, tipped .veeTilt rad so they close in a V over the shirt's foot; .laces crossed pairs of dark strokes
+ * .laceLong of the opening long from .laceFrom every .laceStep; the sash .sash tall from .sashFrom, .sashOut of the opening wide over the coat's
+ * edges, the team colour x .sashShade, standing .sashProud proud. The cravat block is gone (the shirt's top is the white at the neck).
+ */
+const CAPTAIN_FRONT = {
+  open: 0.5, shirtTo: 0.52, shirtProud: 0.05, vestProud: 0.08, flapWide: 0.34, vee: 0.2, veeTilt: 0.42,
+  laces: 2, laceLong: 0.3, laceWide: 0.025, laceProud: 0.07, laceFrom: 0.28, laceStep: 0.09,
+  sashFrom: 0.8, sash: 0.18, sashOut: 1.12, sashProud: 0.11, sashShade: 0.75, lace: new Color3(0.2, 0.11, 0.06), whiteGlow: 0.4,
+};
+
 export function captainCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const C = CAPTAIN_COAT;
   const mf = getMaterialFactory();
@@ -283,10 +299,30 @@ export function captainCoat(scene: Scene, body: ArticulatedBody, teamColor: Colo
   const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
   const front = cz + D * C.deep / 2;
   slab("captainCoat", W * C.out, H * 1.02, D * C.deep, tm.parent, cx, cy, cz, coat);
-  slab("captainCoatShirt", W * C.shirt, H * 0.98, D * C.proud, tm.parent, cx, cy, front + D * C.proud / 2, shirt);
-  slab("captainCoatCravat", W * C.cravat, H * C.cravatLong, D * C.cravatProud, tm.parent, cx, cy + H / 2 - H * C.cravatLong / 2, front + D * C.cravatProud / 2, white);
+  // [S] 433 the front between the lapels (CAPTAIN_FRONT): white laced shirt, tan V-necked vest, team sash at the waist
+  const F = CAPTAIN_FRONT;
+  const sash = teamColor.scale(F.sashShade);
+  const sashMat = mf.get("cloth", sash, { emissive: sash.scale(C.glow) });
+  const lace = mf.get("cloth", F.lace, { emissive: F.lace.scale(C.glow) });
+  const open = W * F.open, topY = cy + H / 2;
+  const at = (from: number, to: number): number => topY - H * (from + to) / 2;
+  // self-lit white: it sits in the beard's shade (LESSONS: lit cloth in shadow reads grey)
+  const linen = mf.get("cloth", C.white, { emissive: C.white.scale(F.whiteGlow) });
+  slab("captainShirt", open, H * F.shirtTo, D * F.shirtProud, tm.parent, cx, at(0, F.shirtTo), front + D * F.shirtProud / 2, linen);
+  slab("captainVest", open, H * (F.sashFrom - F.shirtTo + 0.02), D * F.vestProud, tm.parent, cx, at(F.shirtTo - 0.02, F.sashFrom), front + D * F.vestProud / 2, shirt);
   for (const side of [-1, 1]) {
-    slab("captainCoatEdge", W * C.edge, H * 1.0, D * C.proud * 1.6, tm.parent, cx + side * W * (C.shirt + C.edge) / 2, cy, front + D * C.proud * 0.8, tan);
+    // the vest's two fronts close up over the shirt in a V down to the shirt's foot
+    const flap = slab("captainVestFlap", open * F.flapWide, H * F.vee, D * F.vestProud, tm.parent, cx + side * open * (0.5 - F.flapWide / 2), at(F.shirtTo - F.vee, F.shirtTo), front + D * F.vestProud / 2, shirt);
+    flap.rotation.z += side * F.veeTilt;
+    // crossed laces on the shirt's opening
+    for (let i = 0; i < F.laces; i++) {
+      const s = slab("captainShirtLace", open * F.laceLong, H * F.laceWide, D * F.laceProud, tm.parent, cx, at(F.laceFrom + i * F.laceStep, F.laceFrom + i * F.laceStep), front + D * F.laceProud / 2, lace);
+      s.rotation.z += side * 0.5;
+    }
+  }
+  slab("captainSash", open * F.sashOut, H * F.sash, D * F.sashProud, tm.parent, cx, at(F.sashFrom, F.sashFrom + F.sash), front + D * F.sashProud / 2, sashMat);
+  for (const side of [-1, 1]) {
+    slab("captainCoatEdge", W * C.edge, H * 1.0, D * C.proud * 1.6, tm.parent, cx + side * (open + W * C.edge) / 2, cy, front + D * C.proud * 0.8, tan);
   }
   // the skirts below the waist (hip frame)
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
