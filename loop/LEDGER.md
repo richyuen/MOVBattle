@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-423 | PISTOL prop + _aimPistol held out (5b56edc3, caf27b2a) | pirate.flintlock.b | approved
-423 | HARPOON_BREECH team block under a carry handle (3f4bf980, 18f56ed9) | pirate.harpooner.b | approved
-423 | CANNON_BARREL long lathe barrel proud of the carriage (b1f1f4aa) | pirate.cannon.b | approved
-423 | TRICORN_PLATE skull + crossbones on the front wall (f22c1648) | pirate.captain.a | approved
-423 | PIRATE_VEST open vest over a bare chest (e6ed0749) | pirate.flintlock.a | approved
-423 | PIRATE_VEST on the bomb thrower (9bb121db) | pirate.bomb_thrower.a | approved
 424 | MONKEY_CROWN leaf feathers, gold spine (87217f77) | dynasty.monkey_king.a | approved
 424 | DRAGON_MUZZLE squared snout, lip rim, diamonds (576ac9b3) | dynasty.dragon.a | approved
 424 | FRONT_GRIP orange-red head pole, wrapped grip (8ceb87bb) | dynasty.dragon.b | approved
@@ -47,6 +41,13 @@ for 25 iterations.
 427 | DRAGON_PISTOL + lone off-hand hold (e5f2be6b, d63a4705) | pirate.captain.b | approved
 427 | QUEEN_BANDANA (2a45e931) | pirate.pirate_queen.a | approved
 427 | MONKEY_RUYI staff replaces MONKEY_STAFF (13e19096) | dynasty.monkey_king.b | approved
+428 | DRAGON_BLAST pistol shot from the bell, spawnPistolShot blast (29111559) | pirate.captain.c | approved
+428 | CAPTAIN_COAT open knee coat, shirt, cravat; no tunic skirt (9fb9986c) | pirate.captain.a | approved
+428 | QUEEN_SASH strap + four bombs (72765079, cfa8f57b) | pirate.pirate_queen.a | approved
+428 | BARREL_BRACERS stave arm cuffs (d6d8e60a) | pirate.blunderbuss.a | approved
+428 | CANNON_HANDLES rider behind the breech on two handles (8009017b, 0a24e9b0) | pirate.cannon.b | approved
+428 | CANNON_SHIRT white shell, team bands, striped sleeves (a478d4ce) | pirate.cannon.a | approved
+428 | MONKEY_TRUNK slim trunk + shoulders, waist wrap (eea59cc5) | dynasty.monkey_king.a | approved
 
 ## Spent (never retry as [P])
 
@@ -80,19 +81,7 @@ dynastyDress.ts:MONKEY_FACE (plate, chin, sideFrom, brow, muzzle, muzzleTop, muz
 dynastyDress.ts:MONKEY_SHORTS (hipOut, puffAt, puff, kneeOut, kneeTo, cuffOut, shoeOut, shoeTall, toe, toeWide, toeLift, anklet, ankletOut) | 1.7, .5, 2.3, 1.45, .14, 1.6, 1.15, .78, 1.2, 1.5, .55, .4, 1.25 | 422 | approved | puff 2.7, hip 1.8, knee 1.5 (422.3, ballooned); slim trouser legs, plain boots (before 422)
 dynastyDress.ts:MONKEY_ROBE (out, edge, deep, sleeveOut, sleeveTo, strip, stripLong, stripAt, proud, scarf, scarfThick, bib, bibLong) | 1.14, .12, 1.18, 1.55, .95, .06, .92, [-.62,-.26], .06, .72, .12, .42, .34 | 422 | approved | the tan accent trunk bare all round (before 422)
 vehicleBuilder.ts:FRONT_SPLIT (hipOut, out, down, ahead, shinOut, shinAhead) + THROWER_SPLIT (out, down, ahead, shinOut, shinAhead) | .05, 1, .1, .12, .45, .1; 1, .3, .35, .6, .15 | 422 | approved | [R] reset: CREW_SEAT frontThigh -1.15/frontSplay .62/frontKnee .45 (Euler, crossed the knees) and THROWER_KNEES chest .55/out .2 targets (unreachable) (380-421); FRONT_SPLIT out .88/down .12/ahead .42 without the hip slide (403, rejected)
-propBuilder.ts:TRICORN_BROWN (cloth .12) | (.43,.2,.13) | 425 | approved | black felt on every tricorn (before 425)
-simulationSystem.ts:HARPOON_REEL (lift, top, stop, rope) + projectileSystem TOW_CHEST | 3, 14, 1.4, .7; .9 | 425 | approved | knockback x -.8 only (before 425)
-simulationSystem.ts:GUN_TOSS (out, back, up, spin, rest, lie, ready) | 2.6, 1.6, 3.4, 9, .05, 8, .9 | 425 | approved | pistols kept (before 425)
-propBuilder.ts:BLUNDERBUSS (long, grip, bore, bell, mouth, stock, fore, heel, offAt) + BLUNDERBUSS_AIM (ahead, out, drop, droop, across, kick) | .62, .24, .075, .2, 3.3, 1.2, .62, .16, .5; .13, .07, 0, .22, .3, .45 | 426 | approved | [P] .long .9 rejected 426 (ledger reversal); stick + ball barrel .35 s (before 425)
-vehicleBuilder.ts:CANNON_WHEEL (across, axle, out, rim, wide, clampWide, clampTall, clampLong, spoke, hub, glow) | .84, .42, .34, .085, .12, 1.3, 1.45, .45, .05, .15, .12 | 425 | approved | torus .44 at y .24, x .3 (before 425)
-propBuilder.ts:CUTLASS (long, wide, taper, thick, curve, segs, cup, cupDeep, grip, bow, jewel) | .5, .05, .55, .22, .13, 6, 3.4, .9, 1.7, .35, .7 | 425 | approved | the plain slab sword .46 (before 425)
-proceduralAnimation.ts:CUTLASS_SLASH (commit, twist, cock, end, low, arm, outCock, outEnd, elbow, offArm, step, pitch, through, hitAt, hold) | .4, .7, 1.9, -1, .08, -1.35, -.6, .45, -.35, .35, .3, .15, .45, .66, .75 | 425 | approved | the plain blade_slash + aimBlow onto the head (before 425)
-simulationSystem.ts:PIRATE_KICK (within, slack, windup, recover, cooldown, damage, fling, lift) + proceduralAnimation PIRATE_KICK_POSE (raise, chamberRaise, chamber, plant, lean, headLevel) | .6, .4, .25, .35, 2.5, .8, 5, 3; 1.45, .7, 1.5, .25, .3, .6 | 426 | approved | no kick (before 426)
-simulationSystem.ts:BLUNDERBUSS_RECOIL (back, lift) | 4.5, 3.2 | 426 | approved | no recoil (before 426)
-projectileSystem.ts:PISTOL_SHOT (flash, flashLife, puff, puffLife, streak, thick, speed) | .16, .12, .32, 1.4, .3, .035, 65 | 426 | approved | the long gun's cloud ahead of the chest (before 426)
-pirateDress.ts:BARREL_ARMOUR (staves, out, deep, top, below, wide, thick, alt, hoopAt, hoop, hoopOut, strap, strapAt; brown) | 14, 1.3, 1.45, .28, .22, 1.08, .06, .78, [.18,.78], .07, .025, .08, .55; (.26,.13,.06) | 426 | approved | dark tunic (before 426)
-pirateDress.ts:OPEN_COAT (out, deep, long, vee, veeLong, proud, front, lapel, lapelLong, lapelProud, lean) | 1.12, 1.14, 1.32, .42, .62, .03, .34, .11, .5, .07, .3 | 426 | approved | dark tunic (before 426)
-vehicleBuilder.ts:CANNON_SIGHT (at, seat, post, ring, inner, bar, thick, spokeOut) | .42, .12, .03, .12, .04, .022, .03, 1.3 | 426 | approved | plain barrel top (before 426)
+pirate 425-426 rows (TRICORN_BROWN, HARPOON_REEL, GUN_TOSS, BLUNDERBUSS + _AIM, CANNON_WHEEL, CUTLASS, CUTLASS_SLASH, PIRATE_KICK, BLUNDERBUSS_RECOIL, PISTOL_SHOT, BARREL_ARMOUR, OPEN_COAT, CANNON_SIGHT) | compacted 428 | 426 | approved | values: git show 0445ba6b:loop/LEDGER.md
 pirate 423-424 rows (PISTOL + PISTOL_AIM, HARPOON_BREECH, CANNON_BARREL, TRICORN_PLATE, PIRATE_VEST, PIRATE_PANTS + PIRATE_SHORTS) | compacted 427 | 424 | approved | values: git show 613ba5b9:loop/LEDGER.md
 simulationSystem.ts:BOMB_SPIN (within, crowd, cooldown, rate, drop, after, count, out, flight, splash, damage, rise) + BOMB_SPIN_POSE (out, head, tuck) | 3, 3, 8, 16, .3, .7, 7, 2.6, .55, 3.5, .67, 9; 1.45, .25, .35 | 427 | approved | no spin (before 427)
 simulationSystem.ts:BLUNDERBUSS_BLAST (fling, lift) | 6, 7 | 427 | approved | pellets only (before 427)
@@ -100,3 +89,10 @@ pirateDress.ts:PLANK_HAT (boards, wide, deep, thick, gap, sit, tilt, batten; bro
 projectileSystem.ts:LAUNCH.cannonball (speed, gravity) | 45, 9.8 | 427 | approved | fixed lob speed 10, arc .4 of range (before 427)
 propBuilder.ts:DRAGON_PISTOL (long, bore, bell, mouth; rest PISTOL) | .36, .12, .26, 4.2 | 427 | approved | no off-hand gun (before 427)
 pirateDress.ts:QUEEN_BANDANA (out, brow, top, sink, flap, below, proud, slant, knot, tail, splay) | 1.1, .06, 1.14, .04, .95, .12, .1, .32, .36, .75, .35 | 427 | approved | black pirate_hat (before 427)
+simulationSystem.ts:DRAGON_BLAST (range, cooldown, warmup, damage, fling, lift, flash) + projectileSystem spawnPistolShot blast | 3, 2, .4, .42, 7, 3.5, 2.4 | 428 | approved | no shot (before 428)
+pirateDress.ts:CAPTAIN_COAT (out, deep, shirt, proud, cravat, cravatLong, cravatProud, edge, back, front, long, flare, thick, hem) | 1.12, 1.22, .36, .04, .24, .26, .1, .07, 1.2, .42, 1.35, .1, .12, .07 | 428 | approved | pirate_tar tunic + tunicSkirt (before 428)
+pirateDress.ts:QUEEN_SASH (wide, thick, fromX, over, toX, toY, proud, bomb, at, seat; brown, black) | .17, .08, .72, .04, -.86, -.92, .03, .2, [.14,.36,.58,.8], .75; (.24,.13,.065), (.035,.035,.04) | 428 | approved | none (before 428)
+pirateDress.ts:BARREL_BRACERS (staves, out, from, to, upFrom, upTo, wide, thick, strap, strapAt, strapOut) | 8, 1.5, .12, .92, .2, .8, 1.12, .22, .13, [.2,.8], .12 | 428 | approved | bare arms (before 428)
+vehicleBuilder.ts:CANNON_HANDLES (rider, x, y, z, lean, hipBack, hipFwd, knee, grip, gripWide, knob, blockTop) | .66, .24, .72, -.36, .2, .25, -.3, .3, .1, .035, .05, .5 | 428 | approved | y .57 x .2 (428.5); rider .46 shoving the wheel rim (before 428)
+pirateDress.ts:CANNON_SHIRT (top, under, out, sleeve, sleeveTo, band, bandAt; white) | .9, 1, 1.06, 1.4, .55, .22, .28; (.9,.88,.84) | 428 | approved | tan crewHoop bands on team (before 428)
+dynastyDress.ts:MONKEY_TRUNK (narrow, wraps, wrap, wrapOut, deep, step, tilt) | .7, 2, .11, 1.18, 1.25, .94, .08 | 428 | approved | full-width trunk (before 428)

@@ -33,12 +33,10 @@ drop a lesson once it is a comment at the code it describes.
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - A blow resolved at the decision (a preset's instant "slam") logs at the swing start: release shows the cock; use the pending blow (426).
 - A missile that leaves with a special just logged is that mechanic's, not the release (427 queen Bomb Spin bombs read as her attack).
+- A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it in the same iteration (428 cannon, .25). A 5-unit --iter capture with the monkey king runs past 10 min: run step 5 in the background.
 
 ## Rig and dress
 - aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
-- The generic tunicSkirt covers waist gear: exclude the unit in unitFactory's skirt condition.
-- A preset look (iconic_zeus) comes from getPresetVisual, not the faction map entry in unitVisuals.
-- Body -x is a humanoid's left in the dress modules; a unit faces -x in the probes, so compare world bboxes along x.
 - Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
 - An engine's projectile can be a copy of a named node on the build (LOADED_BOLTS + heldProp/_buildHeldMissile): the flying shape then matches the loaded one for free.
 - A hood or cap over the block head needs a superellipsoid profile (exponent about 3, 1.2 of the head) to clear the chamfered corners.
