@@ -1,5 +1,5 @@
 # Loop state (v4: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D, evidence commits outside the 7)
-Iteration: 416   Batch: ancient+viking+dynasty (6-8/19)   Consecutive empty: 0   Done: 40/139   Parked: 1
+Iteration: 417   Batch: ancient+viking+dynasty (6-8/19)   Consecutive empty: 0   Done: 41/139   Parked: 1
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -9,7 +9,7 @@ farmer: halfling ++++ D | farmer ++++ D | hay_baler ++++ D | potion_seller ++++ 
 medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight ++++ D | catapult ++++ D | king ++++ D
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur -+++ o | zeus ++++ D
 viking: headbutter ++++ D | ice_archer ++++ D | brawler ++-+ o | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
-dynasty: samurai -+-+ o | firework_archer ---+ o | monk ++-+ o | ninja ++++ D | dragon ---+ o | hwacha -+-+ o | monkey_king -+-+ o
+dynasty: samurai -+-+ o | firework_archer ---+ o | monk ++++ D | ninja ++++ D | dragon ---+ o | hwacha -+-+ o | monkey_king -+-+ o
 pirate: flintlock ???? q | blunderbuss ???? q | bomb_thrower ???? q | harpooner ???? q | cannon ???? q | captain ???? q | pirate_queen ???? q
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
 wild_west: dynamite_thrower ???? q | miner ???? q | cactus ???? q | gunslinger ???? q | lasso ???? q | deadeye ???? q | quick_draw ???? q
@@ -23,21 +23,21 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-416 (BASE a312f052; starvation: dragon, hwacha, monkey_king untouched since 411): [S] dragon c.1 flame jet (799cefaa) struck 1 | [S] dragon a.1 paper head + ribbon (3ac0c32c) struck 3, 4 | [S] hwacha a.1 lattice rack (50d2eac3) struck a.1, b PASS | [S] hwacha c.1 rockets (65915a61) struck 1 | [S] monkey_king b.1 staff (10e4da35) b PASS | [S] monkey_king a.3 tail (f97d38f2) struck 3 | [P] samurai katana steel (52fa1771) b PASS - 7/7, 10 struck
-415 (BASE 01a65ea2): minotaur legs (CONFIRM failed a, 4 new), samurai swing, monk plates (a PASS), brawler board + haft (b PASS) - 5/5
+417 (BASE e57c589c; starvation: monk c, monkey_king c, firework_archer a, dragon b, samurai c): [S] monk c.2 knockback (be4cf01d) c PASS, CONFIRM passed - D | [S] monkey_king c.1 jump (adc7786a) struck 1 | [S] firework_archer a.2+3 robe, sash (55118a80) struck 2, 3 | [P] dragon a.1 head scale (eaed1d92) struck 1, added 5 tongue | [S] dragon b.1 carriers (1f9d50d6) a.2 struck, no pole shaft | [S] samurai c.1 block (e7f66440; evidence 101e6c62) struck 1, added 2 - 6/6, 7 struck
+416 (BASE a312f052): dragon jet + paper head, hwacha rack (b PASS) + rockets, monkey_king staff (b PASS) + tail, samurai steel (b PASS) - 7/7
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] dynasty.dragon (799cefaa) VERDICT: APPROVE CRITERION: dynasty.dragon.c FAIL (previous: FAIL)
-- GAP: [S] dynasty.dragon (3ac0c32c) VERDICT: APPROVE CRITERION: dynasty.dragon.a FAIL (previous: FAIL)
-- GAP: [S] dynasty.hwacha (50d2eac3) VERDICT: APPROVE CRITERION: dynasty.hwacha.a FAIL (previous: FAIL); hwacha.b PASS
-- GAP: [S] dynasty.hwacha (65915a61) VERDICT: APPROVE CRITERION: dynasty.hwacha.c FAIL (previous: FAIL)
-- GAP: [S] dynasty.monkey_king (10e4da35) VERDICT: APPROVE CRITERION: dynasty.monkey_king.b PASS (previous: FAIL)
-- GAP: [S] dynasty.monkey_king (f97d38f2) VERDICT: APPROVE CRITERION: dynasty.monkey_king.a FAIL (previous: FAIL)
-- GAP: [P] dynasty.samurai (52fa1771) VERDICT: APPROVE CRITERION: dynasty.samurai.b PASS (previous: FAIL)
+- GAP: [S] dynasty.monk (be4cf01d) VERDICT: APPROVE CRITERION: dynasty.monk.c PASS (previous: FAIL)
+- GAP: [S] dynasty.monkey_king (adc7786a) VERDICT: APPROVE CRITERION: dynasty.monkey_king.c FAIL (previous: FAIL)
+- GAP: [S] dynasty.firework_archer (55118a80) VERDICT: APPROVE CRITERION: dynasty.firework_archer.a FAIL (previous: FAIL)
+- GAP: [P] dynasty.dragon (eaed1d92) VERDICT: APPROVE CRITERION: dynasty.dragon.a FAIL (previous: FAIL)
+- GAP: [S] dynasty.dragon (1f9d50d6) VERDICT: APPROVE CRITERION: dynasty.dragon.b FAIL (previous: FAIL)
+- GAP: [S] dynasty.samurai (e7f66440, evidence 101e6c62) VERDICT: APPROVE CRITERION: dynasty.samurai.c FAIL (previous: FAIL)
+- CONFIRM dynasty.monk a PASS | b PASS | c PASS | d PASS -> D
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Starving at 417 (no attempt since 411): dragon b (carrier poles: take via a.2 carriers), hwacha b is PASS, monkey_king c (jump); firework_archer a (last 412) starves at 417 too. Next ranked: [P] dragon head scale + idle framing evidence; dragon a.2 carriers; monkey_king c.1 jump / a.1 headgear; firework_archer a.2 robe; hwacha [P] timber / a.3 wheels / c.2 smoke; dragon c.2 burning; monk c.2 knockback; brawler c lunge (evidence first); minotaur a scale + sash; samurai a hakama/cuirass, c block (evidence first).
-- samurai c.1 (Projectile Block) and brawler c.1 (lunge) need capture-scene evidence commits first (a ranged attacker; a farther start with the lunge logged).
+- Starving at 418+: hwacha a/c (last 416), firework_archer b/c (last 413: starving at 418), minotaur a (last 415), brawler c (CONFIRM list 413, no attempt: starving at 418; evidence first). Next ranked: firework_archer b.2 rocket nocked / c.2 impact burst; brawler c lunge (evidence: farther start, logged lunge); [P] dragon poles + tongue; samurai c.2 block at his blade / a.2 cuirass; monkey_king c.2 knockback (evidence re-aim to _struck) / a.1 headgear; hwacha [P] timber / a.3 wheels / c.2 smoke; minotaur a scale + sash.
+- The samurai spars with an archer (evidence 417); the monkey king starts at 8 m (jump_charge makes him a charger).
 - A world-posed rest (_restIceBow, _restKatana, _restNorseBoard) must clear rotationQuaternion outside the rest; the monkey king rides _restMonkBo via the "monkBoHolder" holder.
 - Shared props changed for batch units carry to later batches: katana (light steel 416) is also on Secret teacher, samurai_giant, shogun.
 

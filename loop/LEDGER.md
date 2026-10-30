@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-413 | NINJA_TROUSERS: wide trousers to the knee, banded shin wraps (5f70ce2) | dynasty.ninja.a | approved
-413 | KASA_GOLD: team kasa, gold rim + knob (75c0cb4; evidence b9005cd + c00e8e5) | dynasty.monk.a | approved
-413 | firework_bow: tall brown stave, orange caps, iceBowCarry carry (bb471b5) | dynasty.firework_archer.b | approved
-413 | FIREWORK_ROCKET: fat team tube, bands, head, flame; flatter arc (191f1a5) | dynasty.firework_archer.c | approved
-413 | KABUTO: team bowl, gold peak, 3 gold-rimmed lames, crest (e140c38) | dynasty.samurai.a | approved
-413 | evidence: brawler idle camera level with the chest (922ff0f); re-audit struck a.4 | viking.brawler.a | evidence
 414 | [P] KABUTO lames opening to the front, arc .55 (981199b; evidence 0434511) | dynasty.samurai.a | approved
 414 | KATANA_REST + _restKatana: katana upright in both fists (1b007b1) | dynasty.samurai.b | approved
 414 | MONK_TROUSERS: wide trousers, gold-banded greaves (a6bbc47) | dynasty.monk.a | approved
@@ -34,6 +28,12 @@ for 25 iterations.
 416 | MONKEY_STAFF: long team staff, gold ends (10e4da35) | dynasty.monkey_king.b | approved
 416 | MONKEY_TAIL: tail over the head (f97d38f2) | dynasty.monkey_king.a | approved
 416 | [P] KATANA_STEEL light blade (52fa1771) | dynasty.samurai.b | approved
+417 | BO_SHOVE: bo throws the man back (be4cf01d) | dynasty.monk.c | approved
+417 | jump_charge leap (adc7786a) | dynasty.monkey_king.c | approved
+417 | ARCHER_ROBE: lapel robe, sash (55118a80) | dynasty.firework_archer.a | approved
+417 | [P] DRAGON_FORM.size 2 (eaed1d92) | dynasty.dragon.a | approved
+417 | DRAGON_CARRIER (1f9d50d6) | dynasty.dragon.b | approved
+417 | SAMURAI_BLOCK + SLASH_ARC (e7f66440; evidence 101e6c62) | dynasty.samurai.c | approved
 
 ## Spent (never retry as [P])
 
@@ -91,8 +91,12 @@ ancientDress.ts:MINO_LATHE (thigh, shin profiles; radius, facets) | thigh .92/1.
 dynastyDress.ts:MONK_ARM_PLATES (rows, out, overlap, rim, rimOut, shade) | 3, 1.5, .08, .05, 1.62, .9 | 415 | approved | bare arms (before 415)
 proceduralAnimation.ts:NORSE_BOARD (ahead, drop, inward) | .06, .05, .6 | 415 | approved | the hand-carried tray board (before 415)
 visualEffects.ts:FLAME_JET (core, coreFar, shell, shellFar, shellAlpha, flicker, puffs, puff) + simulationSystem DRAGON_BREATH (seconds, ahead, down, chest) | .12, .7, .25, 1.3, .7, .18, 5, .35; .7, .4, .3, .9 | 416 | approved | a lobbed fireball (before 416)
-dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, seg, bodyY, bodyTail, sway, fin) | .62, 1.45, .45, .2, [.17,.55], 9, [.36,.32,.36], 1.3, .85, .18, .14 | 416 | approved | dragon_head mask hat (before 416)
+dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, seg, bodyY, bodyTail, sway, fin) | .62 (size 2 at 417), 1.95, .5, .2, [.17,.55], 9, [.36,.32,.36], 1.3, .85, .18, .14 | 417 | approved | size 1, headY 1.45, headZ .45 (416); dragon_head mask hat (before 416)
 vehicleBuilder.ts:HWACHA_RACK (cols, rows, cell, post, lath, depth, seatY, seatZ, lean, headSize, headLong, wood) | 10, 6, .11, .06, .018, .22, .5, .12, .22, .36, 1.3, (.72,.45,.24) | 416 | approved | team box, 6x5 tubes, tilt 1.15 (before 416)
 projectileSystem.ts:HWACHA_ROCKET (long, shaft, tube, wide, bands, head, flame) | .7, .025, .24, .07, 3, .09, .42 | 416 | approved | .4 shaft, flame ball (before 416)
 dynastyDress.ts:MONKEY_STAFF (long, thick, offset, end, endWide, bands) + MONKEY_TAIL (root, tip, path to 1.08 up) | 1.35, .024, .12, .2, 1.25, 2; .045, .035 | 416 | approved | bo_staff .85 (before 416); no tail
 propBuilder.ts:KATANA_STEEL | (.62,.64,.68) glow .12 | 416 | approved | (.9,.9,.95) metal preset (rendered near-black)
+simulationSystem.ts:BO_SHOVE dynasty.monk (speed, lift) | 4.2, 2.4 | 417 | approved | no throw (before 417)
+dynastyDress.ts:ARCHER_ROBE (out, deep, lapel, cross, sash, sashAt, skirt, skirtTop, skirtFoot, sashColor) | 1.14, 1.2, .13, .5, .14, .1, .95, 1.4, 1.65, (.72,.4,.16) | 417 | approved | tunic box (before 417)
+dynastyDress.ts:DRAGON_CARRIER (every, leg, legLong, trunk, head, arm, grip) | 3, .09, .45, [.26,.32,.16], .17, .06, .16 | 417 | approved | no carriers (before 417)
+simulationSystem.ts:SAMURAI_BLOCK (warn, cooldown) + visualEffects SLASH_ARC (arc, radius, band, tilt, sweep, seconds) | .12, .5; 2.2, .75, .16, .6, .7, .3 | 417 | approved | no block (before 417)

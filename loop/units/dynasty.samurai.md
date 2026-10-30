@@ -7,20 +7,22 @@ a FAIL (1 since 411)
  3. trousers in unit_dynasty.samurai_idle: slim blue legs - TABS: wide flared team-coloured hakama to the knee (ref: dynasty.samurai.red.png)
  4. shin armour in unit_dynasty.samurai_idle: dark plain boots - TABS: gold-banded team-coloured greaves over geta sandals (ref: dynasty.samurai.red.png, card Appearance)
 b PASS (416: light steel blade, 52fa1771)
-c FAIL (0 since 411)
- 1. missing: Projectile Block (a bright deflecting slash against incoming projectiles) - nothing in the sim; summary records only the melee hit at 1300 ms (ref: card Weapons ability)
+c FAIL (1 since 411)
+ 2. block slash in unit_dynasty.samurai_ability: the white crescent hangs at the archer's bow, a body length from the samurai, whose katana stays raised over his head - TABS: the samurai cuts the missile away with a bright slash of his own blade before him (ref: card Weapons ability) (added 417, by e7f66440)
+  (struck 1 at 417: the block exists)
 d PASS (cost 140, hp 1.51x, dmg 2.00x, cd 1.80x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. 2. [P] a kabuto lames team-coloured, gold only on the rims, crest .6 raised over the peak (fallout of e140c38) - blocker 1 - shows in unit_dynasty.samurai_idle
-2. [S] a hakama - blocker 3: flared team hakama to the knee (as MONK_TROUSERS) - ref: dynasty.samurai.red.png - ours: unit_dynasty.samurai_idle.png
-3. [S] a cuirass - blocker 2: a team lamellar cuirass with gold trim lines and sode shoulder plates (dynastyDress) - ref: dynasty.samurai.red.png - ours: unit_dynasty.samurai_idle.png
-4. [S] c Projectile Block - blocker 1: evidence first (a ranged attacker in his scene), then a deflect slash logged in abilityLog - ref: card Weapons - ours: unit_dynasty.samurai_release.png
+1. [S] c block slash - blocker 2: intercept within ~1.2 m of him, crescent at his blade's reach before his chest, a katana flick, the arrow turned aside - ref: card Weapons ability, dynasty.samurai.jpg - ours: unit_dynasty.samurai_ability.png
+2. 2. [P] a kabuto lames team-coloured, gold only on the rims, crest .6 raised over the peak (fallout of e140c38) - blocker 1 - shows in unit_dynasty.samurai_idle
+3. [S] a hakama - blocker 3: flared team hakama to the knee (as MONK_TROUSERS) - ref: dynasty.samurai.red.png - ours: unit_dynasty.samurai_idle.png
+4. [S] a cuirass - blocker 2: a team lamellar cuirass with gold trim lines and sode shoulder plates (dynastyDress) - ref: dynasty.samurai.red.png - ours: unit_dynasty.samurai_idle.png
 ## Attempts (iter | gap | criterion | verdict)
 413 | KABUTO: team bowl, gold peak, 3 flared gold-rimmed lames, gold crest (e140c38) | a | approved (none struck)
 414 | [P] kabuto opening to the front, arc .55 (981199b; evidence 0434511 idle swing .3) | a | approved (none struck; lames read gold)
 414 | KATANA_REST + _restKatana: upright in both fists (1b007b1) | b | approved (struck 1; added 3)
 415 | katana along the forearm in the swing, rest eases back .8 s, rest edge-forward (44749436) | b | approved (struck 3)
 416 | [P] KATANA_STEEL light grey blade (52fa1771) | b | approved (struck 2; b PASS)
+417 | SAMURAI_BLOCK + deflectAt + SLASH_ARC (e7f66440; evidence 101e6c62 archer foe) | c | approved (struck 1; added 2)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
 - 413: head facets poke through the bowl.
