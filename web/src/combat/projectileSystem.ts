@@ -63,7 +63,7 @@ const HWACHA_ROCKET = {
   fire: new Color3(1, 0.55, 0.12), core: new Color3(1, 0.92, 0.6),
 };
 /** The Skeleton Archer's burning arrow head (_dressFireArrow): flame tongues, longest (m), across (m), splay off the shaft, colours, glow */
-const FIRE_ARROW = { tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), dark: new Color3(0.1, 0.08, 0.07), glow: 0.9 };
+const FIRE_ARROW = { burn: 5, tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), dark: new Color3(0.1, 0.08, 0.07), glow: 0.9 };
 /** The Pumpkin Catapult's jack-o'-lantern ("pumpkin" case): diameter (m), height of the width, ribbed lobes, skin, stem, carved-face glow */
 const PUMPKIN_SHOT = { size: 0.55, squash: 0.8, lobes: 8, orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2) };
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire";
@@ -72,6 +72,8 @@ interface ActiveProjectile {
   mesh: TransformNode;
   /** A balloon arrow: its shooter's unit id (ProjectileSpawnOptions.balloons). */
   balloons?: string;
+  /** A Fire Arrow: the man it strikes is set alight (RuntimeUnit.applyBurn). */
+  fireArrow?: boolean;
   origin: Vector3;
   target: RuntimeUnit;
   targetPos: Vector3;       // snapshot in case target dies mid-flight
@@ -456,7 +458,7 @@ export class ProjectileSystem {
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
-      balloons: options.balloons, drunk: options.drunk, snake: options.snake && shape === "arrow" && !held,
+      balloons: options.balloons, fireArrow: options.fireArrow && shape === "arrow", drunk: options.drunk, snake: options.snake && shape === "arrow" && !held,
       trailSystem, trailStarted,
       half: held?.half,
       rope: options.tether ? this._buildRope() : undefined,
@@ -917,6 +919,11 @@ export class ProjectileSystem {
         if (p.balloons && !p.target.isDead) {
           p.target.floatOnBalloons(this._getTeamProjectilePalette(p.attackerTeam).primary);
           this.abilityHook?.(p.balloons, "float", p.target.position);
+        }
+        // [S] 435 a Fire Arrow sets the man it strikes alight (RuntimeUnit.applyBurn; SimulationSystem._stepBurning ticks and spreads it)
+        if (p.fireArrow && !p.target.isDead) {
+          p.target.applyBurn(FIRE_ARROW.burn);
+          this.abilityHook?.("spooky.skeleton_archer", "status:fire", p.target.position); // the only Fire Arrow shooter (SimulationSystem FIRE_ARROWS)
         }
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (p.shape === "firework") this._fireworkBurst(p);

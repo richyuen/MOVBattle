@@ -37,6 +37,7 @@ const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45, coat: new 
  * [S] the ice crust a freeze leaves on its target (395, see _applyFrostCrust): shards of pale ice on the trunk, head, arms and thighs.
  */
 const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 0.28 };
+const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
 /*
  * [S] full gild (352; card Appearance: "turning them gold for a moment"). While gilded every opaque mesh of him (skin, clothes, armour, helm, the props in
  * his hands) wears one shared gold material, GILD.coat lit .coatGlow of it (saturated: GILD.gold lit .glow washed out to cream), the mesh's own material kept and put back when the beam lets go. Prop materials
@@ -1698,6 +1699,7 @@ export class RuntimeUnit {
     this._applyPoseOverlay(isAttacking);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
     this._applyFrostCrust(now);
+    this._applyBurnFlames(now);
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {
@@ -1917,6 +1919,61 @@ export class RuntimeUnit {
         shard.isPickable = false;
         this._frostCrust.push(shard);
       }
+    }
+  }
+
+  /*
+   * [S] 435 burning (audit 434 spooky.skeleton_archer c.2: "missing: burn on hit (target set alight, spreading)"; card Characteristics: Fire Arrows set
+   * the target on fire and the fire spreads). A burning man wears BURN.tongues orange flame cones standing up off the trunk, the head and both upper
+   * arms round a yellow core, self-lit so they read at field distance, flickering in height, until `_burnUntil`. SimulationSystem._stepBurning ticks
+   * the damage and spreads it to the men touching him.
+   */
+  private _burnUntil = 0;
+  private _burnFlames: Mesh[] = [];
+  applyBurn(seconds: number, now = RuntimeUnit.timeNowSeconds()): void {
+    this._burnUntil = Math.max(this._burnUntil, now + Math.max(0.1, seconds));
+  }
+  isBurning(now: number): boolean { return !this._isDead && now < this._burnUntil; }
+  get burnUntil(): number { return this._burnUntil; }
+  private _applyBurnFlames(now: number): void {
+    const on = this.isBurning(now);
+    if (!on) {
+      if (this._burnFlames.length > 0) {
+        for (const m of this._burnFlames) m.dispose(false, false);
+        this._burnFlames = [];
+      }
+      return;
+    }
+    if (this._burnFlames.length === 0) {
+      const factory = getMaterialFactory();
+      const flame = factory.get("cloth", BURN.flame, { emissive: BURN.flame.scale(BURN.glow) });
+      const core = factory.get("cloth", BURN.core, { emissive: BURN.core.scale(BURN.glow) });
+      const parts: Mesh[] = [this.body.torsoMesh, this.body.headMesh, this.body.leftUpperArm, this.body.rightUpperArm];
+      for (let pi = 0; pi < parts.length; pi++) {
+        const parent = parts[pi];
+        if (!parent || parent.isDisposed()) continue;
+        const e = parent.getBoundingInfo().boundingBox.extendSize;
+        const size = Math.max(0.08, (e.x + e.z));
+        const n = pi === 0 ? BURN.tongues : Math.max(2, BURN.tongues - 2);
+        for (let i = 0; i <= n; i++) {
+          const inner = i === n;
+          const a = (i / n) * Math.PI * 2 + pi * 0.9;
+          const long = size * BURN.long * (inner ? 0.7 : (i % 2 ? 0.8 : 1.1));
+          const c = MeshBuilder.CreateCylinder(inner ? "burnCore" : "burnFlame", { height: long, diameterTop: 0, diameterBottom: size * BURN.wide * (inner ? 1.2 : 1), tessellation: 5 }, parent.getScene());
+          c.convertToFlatShadedMesh();
+          c.parent = parent;
+          const r = inner ? 0 : 0.9;
+          c.position.set(e.x * Math.cos(a) * r, e.y * (pi === 0 ? 0.2 : 0.6) + long * 0.5, e.z * Math.sin(a) * r);
+          c.material = inner ? core : flame;
+          c.isPickable = false;
+          c.metadata = { burnPhase: i * 1.7 + pi };
+          this._burnFlames.push(c);
+        }
+      }
+    }
+    for (const c of this._burnFlames) {
+      const ph = (c.metadata?.burnPhase as number) ?? 0;
+      c.scaling.y = 0.75 + 0.35 * (0.5 + 0.5 * Math.sin(now * 13 + ph));
     }
   }
 
