@@ -3172,6 +3172,8 @@ const BERSERKER_AXE = { scale: 0.78 };
  * the fist to about the shoulder and the blade is about a head across, in dark iron (.steel) instead of the pale grey.
  */
 // [P] 415 .haft of the cut haft kept (critic 414: still 1.5x hand-to-shoulder, a forearm of butt under the fist and the head at the brow)
+/** [P] 416 the katana's blade colour: a light steel grey. */
+const KATANA_STEEL = new Color3(0.62, 0.64, 0.68);
 const BRAWLER_HATCHET = { scale: 0.6, steel: new Color3(0.11, 0.11, 0.12), haft: 0.67 };
 function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_AXE.steel, haft = 1): Mesh {
   const A = BEARDED_AXE;
@@ -3495,7 +3497,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "katana": {
       const blade = MeshBuilder.CreateBox("katana", { width: 0.025 * s, height: 0.6 * s, depth: 0.006 * s }, scene);
-      blade.material = mat(scene, new Color3(0.9, 0.9, 0.95), 0, "metal");
+      // [P] 416 light steel, not the "metal" preset (it rendered near-black; critic 415 on 44749436: TABS a pale grey blade, dynasty.samurai.red.png)
+      blade.material = mat(scene, KATANA_STEEL, 0.12);
       // Tsuba (circular hand guard)
       const tsuba = MeshBuilder.CreateDisc("tsuba", { radius: 0.04 * s, tessellation: 12 }, scene);
       tsuba.position.y = -0.15 * s;
