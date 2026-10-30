@@ -11,10 +11,9 @@ drop a lesson once it is a comment at the code it describes.
 - ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
 - "metal" renders near black under swiftshader: use "cloth" with a small emissive instead.
 - Lit cloth in shadow (under a beard, brim, cuff or belt) reads grey however white or warm it is: self-light it or go unlit; fur that must read cream wants the unlit cut (399/400 headbutter).
-- wrapAsBody team-tints the main mesh's material on every mesh sharing it: timber, iron and leather need their own materials.
-- A vehicle's body material IS the team colour (unitFactory tints `bodyMaterial`): a timber hull needs its own material, and a team-trim mesh goes in as the body source (392 longship).
+- wrapAsBody team-tints the main mesh's material on every mesh sharing it, and a vehicle's `bodyMaterial` IS the team colour: timber, iron and leather need their own materials, and a team-trim mesh goes in as the body source (392 longship).
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
-- Ice or fur spikes sized off a part's smallest half-extent come out a few cm and vanish at lineup distance: key them on the mean half-extent times ~2.4 (395 frost).
+- Spikes sized off a part's smallest half-extent vanish at lineup distance: key them on the mean half-extent times ~2.4 (395 frost).
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
@@ -28,15 +27,14 @@ drop a lesson once it is a comment at the code it describes.
 - A two-stage mechanic that logs its special at the take-off and a plain hit at the impact gets its ability pair shot on the first half and its release pair on the second: use that to show both halves of one throw (396 longship: `hurl` at 2117 ms, `ship_crash` + the hit at 2967 ms).
 - `RuntimeUnit.landings` counts ground touchdowns: read the counter before a leap and compare each step instead of testing a per-frame grounded flag to time a landing (396 longship).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
-- A "haxe" weapon rests via _restHalberd and a bow with the carry mark via _restIceBow: world poses, so carry attitudes do nothing. Until 420 _restIceBow also wanted the ice bow's split string (the firework bow carried diagonal for 7 iterations); a bare marked stave now rides it.
+- A "haxe" weapon rests via _restHalberd and a bow with the carry mark via _restIceBow (a bare marked stave rides it since 420): world poses, so carry attitudes do nothing.
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420: the dragon's head was out of frame from 417; the monkey king's tail pulls his frame back): a new tall prop re-frames every shot, so a RE-AUDIT follows.
-- Hiding the thrower at a transition reads as a pop in the take-off shot: the frame must still show who threw it (401 longship, CONFIRM).
+- Hiding the thrower at a transition reads as a pop in the take-off shot: the frame must still show who threw it (401 longship).
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
 - `capture.mjs --units` takes a comma-separated list; space-separated ids capture the first unit only. Every iter-N capture also clears the probe swatches: render them after the final capture (402).
 - For a small piece in a look shot, a crop of the PNG (python PIL crop + NEAREST resize) is a faster close-up than probe_close, whose --aim can frame another mesh entirely (404 headbutter, minotaur).
-- Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each stays revertable alone (406).
-- A small emblem a glow halo tints goes in rendering group 1 (drawn over the bloom, still depth-hidden; the rule is a comment at main.ts renderingGroupId, 405).
+- Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 
 ## Rig and dress
 - aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
@@ -57,3 +55,5 @@ drop a lesson once it is a comment at the code it describes.
 - A beast hood's ellipsoid skull reads as a flat cap unless its features stand proud of the ellipsoid's own front at their height: sample the skull's front z at the eye's y, not one z for all (400 jarl).
 - bakeCurrentTransformIntoVertices on a parented mesh bakes the parent's world transform in too: bake, then parent (407 jarl flaps stood over his head).
 - A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.
+- A closed trapezoid plate is a 4-tessellation frustum cylinder squashed in z (KABUTO plate): facet skirts, blades and crests come from it; arc cylinders are one-sided ribbons SSAO greys, their opening an angle to get wrong (421).
+- A frill disc lying in a horizontal band's plane vanishes edge-on from the lineup's eye-level camera: stand edge ornaments square to the band (421 dragon scallops).

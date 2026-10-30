@@ -38,6 +38,12 @@ for 25 iterations.
 420 | MONKEY_CROWN (6c4aff46) | dynasty.monkey_king.a | approved
 420 | DRAGON_CARRIER heads + poles beside (0f7dd79c) | dynasty.dragon.a | approved
 420 | [P] HWACHA_TIMBER (3d24020e) | dynasty.hwacha.a | approved
+421 | FLAME_JET plume of white balls with yellow lobes (ba799e89, 8027d61c) | dynasty.dragon.c | approved
+421 | DRAGON_FORM flat band, scallops, pale fins (0a4f9754, 87e08299) | dynasty.dragon.a | approved
+421 | [P] DRAGON_CARRIER fists skin .12, arm .1 (91a86b90, reverted) | dynasty.dragon.b | rejected (ledger reversal)
+421 | KABUTO hexagon-plate shikoro + maedate (a810cff1) | dynasty.samurai.a | approved
+421 | ARCHER_LEGS shin wraps + strapSandals (1801625a) | dynasty.firework_archer.a | approved
+421 | MONKEY_FACE baboon face (2dc865d6) | dynasty.monkey_king.a | approved
 
 ## Spent (never retry as [P])
 
@@ -76,24 +82,20 @@ dynastyDress.ts:ARCHER_HAIR (clear, top, out, capDeep, fall, fallOut, side, side
 propBuilder.ts:KASA_GOLD + kasa cone team colour | (.86,.62,.18) | 413 | approved | accent cone, accent x.55 band (before 413)
 propBuilder.ts:FIREWORK_BOW (long, cap, capColor) | 1.15, .12, (.92,.5,.12) | 413 | approved | plain bow (before 413)
 projectileSystem.ts:FIREWORK_ROCKET (long, wide, bands, head, flame, arc) | .5, .13, 3, .14, .32, .1 | 413 | approved | .3x.04 stick, arc .25 (before 413)
-dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, lame, step, flareTop, flareFoot, arc, rim, crest) | .04, 1.3, 2.3, 1.4, .42, 3, .32, .3, 2.3, 2.75, .55, .07, .42; turn pi(.5-arc) | 414 | approved | arc .64 turn pi(.5+arc) (413); samurai_helmet (before 413)
+dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, facets, lame, step, flareTop, shoulder, rim, maedate, maedateFoot, maedateTop, maedateLean) | .04, 1.3, 2.3, 1.4, .42, 4, 4, .42, .36, 2.4, 1.0, .09, 1.0, .3, .95, .18 | 421 | approved | 3 arc lames .32/.3, flare 2.3->2.75, arc .55 turn pi(.5-arc), disc crest .42 (414-420); arc .64 (413); samurai_helmet (before 413)
 proceduralAnimation.ts:KATANA_REST (ahead, drop, lean, under, settle) | .16, .24, .12, .9, .8; flat to his side, swing along the forearm | 415 | approved | flat facing him, no settle (414); one-hand shoulder carry (before 414)
-visualEffects.ts:FLAME_JET (core, coreFar, shell, shellFar, shellAlpha, flicker, puffs, puff) + simulationSystem DRAGON_BREATH (seconds, ahead, down, chest) | .12, .7, .25, 1.3, .7, .18, 5, .35; .7, .4, .3, .9 | 416 | approved | a lobbed fireball (before 416)
-dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, seg, bodyY, bodyTail, sway, fin) | .62 (size 2 at 417), 1.95, .5, .2, [.17,.55], 9, [.36,.32,.36], 1.3, .85, .18, .14 | 417 | approved | size 1, headY 1.45, headZ .45 (416); dragon_head mask hat (before 416)
-vehicleBuilder.ts:HWACHA_RACK (cols, rows, cell, post, lath, depth, seatY, seatZ, lean, headSize, headLong, wood) | 10, 6, .11, .06, .018, .22, .5, .12, .22, .36, 1.3, (.72,.45,.24) | 416 | approved | team box, 6x5 tubes, tilt 1.15 (before 416)
-projectileSystem.ts:HWACHA_ROCKET (long, shaft, tube, wide, bands, head, flame) | .7, .025, .24, .07, 3, .09, .42 | 416 | approved | .4 shaft, flame ball (before 416)
+visualEffects.ts:FLAME_JET (blobs, near, far, farPer, swell, lobes, lobe, lobeOff, flicker, fade; white, yellow) + simulationSystem DRAGON_BREATH (seconds, ahead, down, chest) | 12, .4, 1.4, .19, .35, 3, .5, .68, .14, .2; (1,.97,.85), (1,.78,.04); .7, .4, .3, .9 | 421 | approved | cones core .12->.7, shell .25->1.3 alpha .7, 5 puffs .35 (416-420); a lobbed fireball (before 416)
+dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, step, bodyY, bodyTail, sway, wide, taper, thick, scallop, scallopOut, fin, finWide, frillMix) | .62 (size 2 at 417), 1.95, .5, .2, [.2,.36], 9, .33, 1.45, 1.35, .18, .75, .44, .05, .16, .05, .13, .14, .4 | 421 | approved | boxes seg [.36,.32,.36], dark cone fin .14, gold belly (416-420); dragon_head mask hat (before 416)
+dynasty.hwacha done (HWACHA_RACK, HWACHA_ROCKET, HWACHA_WHEEL, LAUNCH_SMOKE, HWACHA_SHAFT, HWACHA_TIMBER) | compacted 421 | 420 | approved | values: git show 7f580c19:loop/LEDGER.md
 dynastyDress.ts:MONKEY_STAFF (long, thick, offset, end, endWide, bands) + MONKEY_TAIL (root, tip, path to 1.08 up) | 1.35, .024, .12, .2, 1.25, 2; .045, .035 | 416 | approved | bo_staff .85 (before 416); no tail
 propBuilder.ts:KATANA_STEEL | (.62,.64,.68) glow .12 | 416 | approved | (.9,.9,.95) metal preset (rendered near-black)
 simulationSystem.ts:BO_SHOVE monk; monkey_king (speed, lift) | 4.2, 2.4; 8.5, 5.5 (418) | 417-418 | approved | no throw (before 417)
 dynastyDress.ts:ARCHER_ROBE (out, deep, lapel, cross, sash, sashAt, skirt, skirtTop, skirtFoot, sashColor) | 1.14, 1.2, .13, .5, .14, .1, .95, 1.4, 1.65, (.72,.4,.16) | 417 | approved | tunic box (before 417)
 dynastyDress.ts:DRAGON_CARRIER (every, leg, legLong, trunk, head, arm, grip) | 3, .09, .35 (418; .45 at 417), [.26,.32,.16], .17, .06, .16 | 417 | approved | no carriers (before 417)
 simulationSystem.ts:SAMURAI_BLOCK (warn, reach, ahead, chest, flick, cooldown) + visualEffects SLASH_ARC (arc, radius, band, tilt, sweep, seconds) | .5, 1.3, .6, 1.0, .3, .5 (418; warn .12 at 417); 2.2, .75, .16, .6, .7, .3 | 418 | approved | no block (before 417)
-dynastyDress.ts:DRAGON_FORM (bodyY, bodyTail) + DRAGON_CARRIER.poleColor | 1.45, 1.35; (.85,.24,.12) | 418 | approved | 1.3, .85; team (417)
+dynastyDress.ts:DRAGON_CARRIER.poleColor | (.85,.24,.12) | 418 | approved | team (417)
 visualEffects.ts:FIREWORK_BURST (sparks, radius, grow, seconds, lift) + projectileSystem FIREWORK_BLAST (radius, share) | 26, 1.25, .45, .65, .9; 2.5, 1 | 418 | approved | no burst (before 418)
 propBuilder.ts:FIREWORK_NOCK (long, wide, side, back, ring, head, shaft, nock) | .3, .08, .05, .02, 1.3, .1, .012, .12 | 419 | approved | .22, .045 (418.2b); .36, .075 (418.2)
-vehicleBuilder.ts:HWACHA_WHEEL (across, rim, wide, sides, spokes, spoke, hub, out) | .74, .07, .08, 8, 8, .035, .14, .05 | 418 | approved | solid disc (before 418)
-visualEffects.ts:LAUNCH_SMOKE (puffs, wide, tall, from, to, drift, rise, seconds) | 14, 1.2, .6, .15, .6, .9, .4, 1.6 | 419 | approved | none (before 419)
-vehicleBuilder.ts:HWACHA_SHAFT (x, wide, deep, frontY, frontZ, rearY, rearZ, cap) | .45, .1, .09, .5, .55, .18, -1.45, .2 | 419 | approved | team tray + handles (before 419)
 visualEffects.ts:BODY_FLAMES (tongues, spread, low, high, tall, wide, flicker) + DRAGON_BREATH.burn | 9, .2, .55, 1.35, .42, .17, 13; 3 | 419 | approved | none (before 419)
 dynastyDress.ts:DRAGON_FORM.tongue [wide, long] (lies in the mouth) | .2, .36 | 419 | approved | .17, .55 hanging (416)
 dynastyDress.ts:SAMURAI_CUIRASS (out, deep, rows, row, rowsFrom, rowsTo, rim, sode, sodeOut) | 1.12, 1.18, 4, .035, .3, .85, .09, .5, 1.75 | 419 | approved | tunic box (before 419)
@@ -102,5 +104,6 @@ ancientDress.ts:MINO_STRAP (wide, proud) + MINO_GIRDLE (lo, hi, proudX, proudZ; 
 dynastyDress.ts:SAMURAI_HAKAMA (hipOut, kneeOut, kneeTo, greave, rim, bands, band, bandOut) | 1.9, 2.6, .28, 1.4, .08, 2, .06, 1.5 | 420 | approved | bare legs (before 420)
 proceduralAnimation.ts:FIREWORK_REST (across, forward) | .16, .1 | 420 | approved | ICE_REST .42/.12 never applied to her (no split string) (413-419)
 dynastyDress.ts:MONKEY_CROWN (band, at, thick, swirl, side, feather, featherWide, lean, back, bead) | 1.1, .72, .1, .32, .78, 2.6, .2, .3, .12, .14 | 420 | approved | torus crown hat (before 420)
-dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, poleSide, fist) | .075, .28, .22, .2, .17, .09 | 420 | approved | arm .06, hair slab 1.05 x .4, pole through the head (417-419)
-vehicleBuilder.ts:HWACHA_TIMBER (cloth, self-light .12) | (.6,.27,.08) | 420 | approved | HWACHA_RACK.wood (.72,.45,.24) + HWACHA_SHAFT.wood (.5,.28,.14) on the wood preset (416-419)
+dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, poleSide, fist, fist material) | .075, .28, .22, .2, .17, .09, dark | 421 | rejected | [P] 421 arm .1, fist .12 skin rejected as a ledger reversal (the row was approved at 420); arm .06, hair slab 1.05 x .4, pole through the head (417-419)
+dynastyDress.ts:ARCHER_LEGS (from, wrap, bands, band, bandOut, shade, bandShade, sandal) | .04, 1.28, 5, .09, 1.44, .8, .66, (.62,.3,.1) | 421 | approved | plain legs and boots (before 421)
+dynastyDress.ts:MONKEY_FACE (plate, chin, sideFrom, brow, muzzle, muzzleTop, muzzleOut, nose, tuft, 8 tufts; dark, tan, blond) | .1, -1.02, .7, .58, 1.1, -.3, .32, .5, .26; (.1,.06,.05), (.72,.54,.32), (.78,.56,.2) | 421 | approved | bare team head (before 421)
