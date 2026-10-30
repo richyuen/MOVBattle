@@ -394,14 +394,19 @@ export function monkArmPlates(scene: Scene, body: ArticulatedBody, teamColor: Co
  *   head: the skull .skull of h across at .headY up, .headZ ahead; the snout .snout [w, h, d] in front of it; the lower jaw .jaw dropped .gape under
  *     the snout; .fangs dark fangs; the tongue .tongue [w, long] hanging from the jaw; two white eyes .eye across with dark pupils under a gold brow;
  *   pole: a dark-gripped team pole .pole across from his hands (.poleFoot of h) up into the skull;
- *   body: .segs team boxes .seg [w, h, long] trailing back from behind the skull, falling from .bodyY to .bodyTail of h and swaying .sway of h side to
- *     side, each with a dark spine fin .fin of h tall on top and a gold belly strip;
+ *   body ([S] 421, RE-AUDIT 420 a.2: "a straight rectangular slab of nine box segments with black cone spikes along its top - TABS: a flat paper ribbon
+ *     with a scalloped frill edge and team-coloured fins running the spine"; dynasty.dragon.jpg: a broad flat team band lying level behind the head,
+ *     narrowing to the tail, a row of small pale frills along each edge and a serrated crest of pale team fins standing along its spine): .segs stations
+ *     .step of h apart trailing back from behind the skull, falling from .bodyY to .bodyTail of h and swaying .sway of h side to side; through them one
+ *     flat closed team band .wide of h across at the neck narrowing by .taper to the tail, .thick of h thick (a four-walled ribbon); at every half
+ *     station a pale (.frillMix toward white) flat disc .scallop of h across on each edge, .scallopOut of h past it, and a flat pale fin .fin of h tall,
+ *     .finWide long, standing on the spine;
  *   a "dragonMouth" node at the jaw's front: the flame jet leaves from it (simulationSystem DRAGON_BREATH).
  */
 const DRAGON_FORM = {
   skull: 0.62, size: 2.0, headY: 1.95, headZ: 0.5, snout: [0.6, 0.28, 0.4] as const, jaw: [0.5, 0.1, 0.38] as const, gape: 0.2, fangs: 4,
   tongue: [0.2, 0.36] as const, eye: 0.17, pole: 0.05, poleFoot: 0.55,
-  segs: 9, seg: [0.36, 0.32, 0.36] as const, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, fin: 0.14,
+  segs: 9, step: 0.33, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, wide: 0.75, taper: 0.44, thick: 0.05, scallop: 0.16, scallopOut: 0.05, fin: 0.13, finWide: 0.14, frillMix: 0.4,
   gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), tongueTint: 0.85, glow: 0.12,
 };
 /** [S] 417 the Dragon Carriers (dragonForm): one under every .every-th segment, legs .legLong of h, trunk .trunk, head .head, arms .arm thick up to the
@@ -495,16 +500,39 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     pole.position.y -= C.grip * h * 0.5;
     put(MeshBuilder.CreateCylinder("dragonCarrierGrip", { height: C.grip * h * 1.5, diameter: D.pole * h * 1.35, tessellation: 6 }, scene), new Vector3(px, fist, z), dark);
   };
-  // the body ribbon trailing back
+  // [S] 421 the body: one flat closed paper band through the stations, pale scallops along both edges and pale fins up the spine
+  const frill = Color3.Lerp(teamColor, Color3.White(), D.frillMix);
+  const pale = lit(frill);
+  const station = (t: number): { at: Vector3; k: number; turn: number } => ({
+    at: new Vector3(Math.sin(t * Math.PI * 1.6) * D.sway * h, (D.bodyY + (D.bodyTail - D.bodyY) * t) * h, head.z - skullR * 0.8 - (t * (D.segs - 1) + 0.5) * D.step * h),
+    k: 1 - t * D.taper,
+    turn: Math.cos(t * Math.PI * 1.6) * 0.35,
+  });
+  const halves = (D.segs - 1) * 2;
+  const edges: Vector3[][] = [[], [], [], []]; // top-left, top-right, bottom-right, bottom-left
+  const thick = D.thick * h;
+  for (let j = 0; j <= halves; j++) {
+    const { at, k, turn } = station(j / halves);
+    const right = new Vector3(Math.cos(turn), 0, Math.sin(turn)).scale(D.wide * h * k * 0.5); // across the band, square to the path's tangent (sin turn, 0, -cos turn)
+    const up = new Vector3(0, thick * 0.5, 0);
+    edges[0].push(at.subtract(right).add(up));
+    edges[1].push(at.add(right).add(up));
+    edges[2].push(at.add(right).subtract(up));
+    edges[3].push(at.subtract(right).subtract(up));
+    // a pale scallop on each edge and a fin on the spine at every half station
+    for (const side of [-1, 1]) {
+      const scallop = put(MeshBuilder.CreateCylinder("dragonScallop", { height: thick * 0.6, diameter: D.scallop * h * k, tessellation: 7 }, scene), at.add(right.scale(side)).add(right.normalizeToNew().scale(side * D.scallopOut * h)), pale);
+      scallop.rotation.y = -turn;
+    }
+    const fin = put(MeshBuilder.CreateCylinder("dragonFin", { height: D.fin * h * k, diameterTop: 0, diameterBottom: D.finWide * h, tessellation: 4 }, scene), at.add(new Vector3(0, thick * 0.5 + D.fin * h * k * 0.45, 0)), pale);
+    fin.rotation.y = -turn;
+    fin.scaling.x = 0.22;
+  }
+  put(MeshBuilder.CreateRibbon("dragonBody", { pathArray: edges, closeArray: true, sideOrientation: Mesh.DOUBLESIDE }, scene), Vector3.Zero());
   for (let i = 0; i < D.segs; i++) {
-    const t = i / (D.segs - 1);
-    const at = new Vector3(Math.sin(t * Math.PI * 1.6) * D.sway * h, (D.bodyY + (D.bodyTail - D.bodyY) * t) * h, head.z - skullR * 0.8 - (i + 0.5) * D.seg[2] * h * 0.92);
-    const k = 1 - t * 0.35;
-    const turn = Math.cos(t * Math.PI * 1.6) * 0.35;
-    put(MeshBuilder.CreateBox("dragonBody", { width: D.seg[0] * h * k, height: D.seg[1] * h * k, depth: D.seg[2] * h }, scene), at).rotation.y = turn;
-    put(MeshBuilder.CreateCylinder("dragonFin", { height: D.fin * h * k, diameterTop: 0, diameterBottom: D.seg[2] * h * 0.6, tessellation: 4 }, scene), at.add(new Vector3(0, D.seg[1] * h * k * 0.5 + D.fin * h * k * 0.4, 0)), dark).rotation.y = turn;
-    put(MeshBuilder.CreateBox("dragonBelly", { width: D.seg[0] * h * k * 1.04, height: 0.04 * h, depth: D.seg[2] * h * 0.96 }, scene), at.add(new Vector3(0, -D.seg[1] * h * k * 0.5, 0)), gold).rotation.y = turn;
-    if (i % DRAGON_CARRIER.every === DRAGON_CARRIER.every - 1) carrier(at, at.y - D.seg[1] * h * k * 0.5);
+    if (i % DRAGON_CARRIER.every !== DRAGON_CARRIER.every - 1) continue;
+    const { at } = station(i / (D.segs - 1));
+    carrier(at, at.y - thick * 0.5);
   }
   const mouth = new TransformNode("dragonMouth", scene);
   mouth.parent = holder;
