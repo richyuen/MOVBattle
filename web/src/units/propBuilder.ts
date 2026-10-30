@@ -3004,8 +3004,9 @@ const JAVELIN_ROPE = new Color3(0.74, 0.6, 0.42);
  * In prop units (s): the block .long along the barrel (+y) and .wide across, squashed .flat across x; it hangs .hang below the fist on -z (in his
  * shoulder carry +z is up); nozzle .nozzle long, .bore of the block across, ringed .rings; the harpoon leaves from the node named HARPOON_MUZZLE.
  */
-const HARPOON_BREECH = { long: 0.2, wide: 0.19, flat: 0.86, hang: 0.9, nozzle: 0.17, bore: 0.52, rings: [0.25, 0.55, 0.85], handle: 0.07 };
+const HARPOON_BREECH = { long: 0.2, wide: 0.19, flat: 0.86, hang: 0.9, nozzle: 0.17, bore: 0.52, rings: [0.25, 0.55, 0.85], handle: 0.07, offGrip: 0.42 };
 export const HARPOON_MUZZLE = "harpoonMuzzle";
+export const HARPOON_OFF_GRIP = "harpoonOffGrip";
 /*
  * The halberd (327; renaissance.halberd.jpg: a long red-brown shaft taller than the man, at its top a dark steel head: a broad axe blade out to one side, its
  * edge bowed in an arc and its lower horn hanging below the upper, a short back spike opposite it, and a long spear point standing off the top). Not a pole:
@@ -3637,6 +3638,11 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const muzzle = new TransformNode(HARPOON_MUZZLE, scene);
       muzzle.position.set(0, front + H.nozzle * s + 0.03 * s, hang);
       muzzle.parent = body;
+      // [S] 424 where the off fist holds it (pirate.harpooner.jpg: the second hand on the block's top toward its front, both hands low at the hip):
+      // a mark .offGrip of the block's length forward of the carry bar, on the block's top face; ProceduralAnimator._gripHarpoon solves the off arm to it
+      const offGrip = new TransformNode(HARPOON_OFF_GRIP, scene);
+      offGrip.position.set(0, H.long * H.offGrip * s, topZ);
+      offGrip.parent = body;
       return body;
     }
     case "javelin": {

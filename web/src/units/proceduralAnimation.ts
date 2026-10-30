@@ -1,6 +1,6 @@
 import { Matrix, Mesh, Quaternion, Vector3, type Node, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
-import { SWORD_RING_BOB } from "./propBuilder";
+import { HARPOON_OFF_GRIP, SWORD_RING_BOB } from "./propBuilder";
 
 export enum AnimState {
   Idle,
@@ -2122,6 +2122,7 @@ export class ProceduralAnimator {
     this._holdChopDown(dt);
     this._aimMusket(dt);
     this._aimPistol(dt);
+    this._gripHarpoon();
     this._restHalberd();
     this._restIceBow();
     this._restMonkBo();
@@ -3216,6 +3217,29 @@ export class ProceduralAnimator {
     gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     // Committed on his aim: a blow on him snaps only his head back
     this._aimWeight = Math.max(this._aimWeight, w);
+  }
+
+  // The off fist's mark on a harpoon gun in the weapon fist, looked up once
+  private _harpoonGrip: TransformNode | null | undefined = undefined;
+  /**
+   * [S] 424 the harpoon gun held in both hands at the hip (pirate.harpooner b.2: "one hand holding it up at the shoulder, the other arm hanging - TABS:
+   * both hands on it, held low at the hip"; pirate.harpooner.jpg: the weapon fist on the carry handle, the off fist on the block's top toward its front).
+   * After the weapon arm is posed in any living state (the idle carry, the hip shot), the off arm is solved onto the gun's HARPOON_OFF_GRIP mark;
+   * eased off as he goes limp.
+   */
+  private _gripHarpoon(): void {
+    if (this._harpoonGrip === undefined) {
+      const gun = this._body.rightHand.getChildren().find((n) => n.name === "harpoonGun");
+      this._harpoonGrip = (gun?.getChildren().find((n) => n.name === HARPOON_OFF_GRIP) as TransformNode | undefined) ?? null;
+    }
+    const grip = this._harpoonGrip;
+    if (!grip || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    this._offArmTo(grip.getAbsolutePosition().clone(), w);
   }
 
   private _pistol: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
