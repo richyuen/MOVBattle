@@ -107,6 +107,64 @@ export function swordcasterBowl(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
+ * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":
+ * each forearm swallowed from the elbow down by a fat lumpy cream wax column, about three arms thick, running on past the fist to mid-thigh, melted
+ * into uneven bulges, a short wick at its foot and a round cyan flame hanging under it). CANDLE_ARMS, in the elbow joint's frame (the forearm running
+ * down -y to the hand, F its length): the column from .top of F over the elbow down .long of F, .lumps stacked bulges each .wide of F across, every
+ * other one nudged .wobble of F off the line and squashed or swollen by .swell; a wick .wick of F long under it; the flame a ball .flame of F across.
+ * The torch stick in the weapon fist is hidden (the spirit fire still leaves from that hand). Wax self-lit .glow so it reads cream, not grey, in shade.
+ */
+const CANDLE_ARMS = {
+  top: 0.12, long: 2.2, lumps: 6, wide: 0.78, wobble: 0.08, swell: 0.18, wick: 0.12, flame: 0.48, glow: 0.2,
+  wax: new Color3(1.0, 0.84, 0.58), wickDark: new Color3(0.1, 0.08, 0.06), fire: new Color3(0.35, 1.1, 1.3),
+};
+
+/** Both forearms sheathed in lumpy cream candles, a cyan flame under each (spec at CANDLE_ARMS). */
+export function candleArms(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CANDLE_ARMS;
+  const wax = getMaterialFactory().get("cloth", C.wax, { emissive: C.wax.scale(C.glow) });
+  const wickMat = getMaterialFactory().get("cloth", C.wickDark, { emissive: C.wickDark.scale(0.1) });
+  const fire = getMaterialFactory().get("unlit", C.fire, { emissive: C.fire });
+  const out: Mesh[] = [];
+  for (const [side, elbow, hand] of [[-1, body.leftElbow, body.leftHand], [1, body.rightElbow, body.rightHand]] as const) {
+    const F = Math.abs(hand.position.y) || 0.2;
+    const y0 = F * C.top, y1 = -F * C.long;
+    const step = (y0 - y1) / C.lumps;
+    for (let i = 0; i < C.lumps; i++) {
+      const k = i % 2 ? 1 : -1;
+      const swell = 1 + C.swell * (((i * 7 + (side > 0 ? 3 : 0)) % 5) / 2 - 1);
+      const lump = MeshBuilder.CreateSphere("candleArmWax", { diameterX: F * C.wide * swell, diameterY: step * 1.7, diameterZ: F * C.wide * (2 - swell) * 0.95, segments: 4 }, scene);
+      lump.position.set(k * F * C.wobble * side, y0 - step * (i + 0.5), (i % 3 - 1) * F * C.wobble * 0.7);
+      lump.rotation.y = i * 0.7;
+      lump.parent = elbow;
+      lump.material = wax;
+      lump.convertToFlatShadedMesh();
+      lump.isPickable = false;
+      out.push(lump);
+    }
+    const wick = MeshBuilder.CreateCylinder("candleArmWick", { height: F * C.wick, diameter: F * 0.06, tessellation: 5 }, scene);
+    wick.position.y = y1 - F * C.wick * 0.3;
+    wick.parent = elbow;
+    wick.material = wickMat;
+    out.push(wick);
+    const flame = MeshBuilder.CreateSphere("candleArmFlame", { diameter: F * C.flame, segments: 4 }, scene);
+    flame.position.y = y1 - F * C.wick * 0.7 - F * C.flame * 0.45;
+    flame.parent = elbow;
+    flame.material = fire;
+    flame.convertToFlatShadedMesh();
+    flame.isPickable = false;
+    out.push(flame);
+  }
+  for (const n of body.rightHand.getChildMeshes(false)) {
+    if (n.name !== "torch" && n.name !== "flame") continue;
+    n.isVisible = false;
+    n.setEnabled(false);
+  }
+  return out;
+}
+
+/*
  * [S] 435 the Reaper Wings (audit 434 reaper a.1: "tendrils in unit_spooky.reaper_idle absent - TABS: six long dark tendrils fanning behind the
  * shoulders, three each side"; spooky.reaper.red.png, card Abilities "a pair of six dark tendrils that looms behind their host; three on the left, three
  * on their right": thin near-black navy tentacles out of the upper back, each running out sideways and a little back for several of his own widths,
