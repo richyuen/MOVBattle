@@ -53,6 +53,13 @@ const ICE_ARROW = {
 const FIREWORK_ROCKET = { long: 0.5, wide: 0.13, bands: 3, head: 0.14, flame: 0.32, arc: 0.1, band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14), fire: new Color3(1, 0.62, 0.15) };
 /** [S] 412 the thrown shuriken (projectile "shuriken"): span, waist, thickness, hub across (m), tilt of its face off level toward the side camera. */
 const SHURIKEN_FLIGHT = { span: 0.36, waist: 0.1, thick: 0.02, hub: 0.07, tilt: 0.7, steel: new Color3(0.2, 0.21, 0.24), hub_color: new Color3(0.5, 0.5, 0.54) };
+/** [S] 416 the hwacha's rocket arrow ("rocket_arrow" shape): .long shaft .shaft across, a .tube x .wide paper tube with .bands green bands behind a dark
+ * .head-long point, a .flame-long unlit flame (orange .fire round a pale .core) out of the tube's back, a smoke puff behind that. */
+const HWACHA_ROCKET = {
+  long: 0.7, shaft: 0.025, tube: 0.24, wide: 0.07, bands: 3, head: 0.09, flame: 0.42,
+  wood: new Color3(0.55, 0.38, 0.2), paper: new Color3(0.8, 0.62, 0.4), green: new Color3(0.2, 0.55, 0.25), dark: new Color3(0.12, 0.12, 0.14),
+  fire: new Color3(1, 0.55, 0.12), core: new Color3(1, 0.92, 0.6),
+};
 export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball";
 
 interface ActiveProjectile {
@@ -1144,27 +1151,49 @@ export class ProjectileSystem {
         break;
       }
       case "rocket_arrow": {
-        // Arrow shaft with rocket flame trail
-        const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.4, diameter: 0.025, tessellation: 4 }, this._scene);
-        shaft.rotation.x = Math.PI / 2;
-        shaft.material = this._getMat(`rocket_shaft_${attackerTeam}`, palette.dark);
-        shaft.parent = root;
-        const tip = MeshBuilder.CreateCylinder("tip", { height: 0.08, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, this._scene);
+        // [S] 416 the hwacha's singijeon (audit 411 c.1: "thin blue shafts with a white glow ball - TABS: orange-yellow flame jets with green-banded
+        // rocket tubes"; dynasty.hwacha.jpg): a long thin shaft with a fat light-brown rocket tube lashed behind a dark pointed head, HWACHA_ROCKET.bands
+        // green bands round the tube, and out of the tube's back an unlit orange-yellow flame cone with a white core and a grey smoke puff behind it
+        const K = HWACHA_ROCKET;
+        const mf = getMaterialFactory();
+        const shaftMesh = MeshBuilder.CreateCylinder("shaft", { height: K.long, diameter: K.shaft, tessellation: 5 }, this._scene);
+        shaftMesh.rotation.x = Math.PI / 2;
+        shaftMesh.material = this._getMat("hwacha_shaft", K.wood);
+        shaftMesh.parent = root;
+        const tube = MeshBuilder.CreateCylinder("rocketTube", { height: K.tube, diameter: K.wide, tessellation: 7 }, this._scene);
+        tube.rotation.x = Math.PI / 2;
+        tube.position.z = K.long * 0.5 - K.head - K.tube * 0.5;
+        tube.material = this._getMat("hwacha_tube", K.paper);
+        tube.parent = root;
+        for (let i = 0; i < K.bands; i++) {
+          const band = MeshBuilder.CreateCylinder("rocketBand", { height: K.tube * 0.12, diameter: K.wide * 1.12, tessellation: 7 }, this._scene);
+          band.rotation.x = Math.PI / 2;
+          band.position.z = tube.position.z + (i / Math.max(1, K.bands - 1) - 0.5) * K.tube * 0.7;
+          band.material = this._getMat("hwacha_band", K.green);
+          band.parent = root;
+        }
+        const tip = MeshBuilder.CreateCylinder("tip", { height: K.head, diameterTop: 0, diameterBottom: K.wide * 0.9, tessellation: 4 }, this._scene);
         tip.rotation.x = Math.PI / 2;
-        tip.position.z = 0.22;
-        tip.material = this._getMat(`rocket_tip_${attackerTeam}`, palette.primary);
+        tip.position.z = K.long * 0.5 - K.head * 0.5;
+        tip.material = this._getMat("hwacha_head", K.dark);
         tip.parent = root;
-        // Rocket flame at tail
-        const flame = MeshBuilder.CreateSphere("flame", { diameter: 0.1, segments: 4 }, this._scene);
-        flame.position.z = -0.22;
-        flame.material = this._getMat(`rocket_flame_${attackerTeam}`, palette.bright, 0.7);
+        const tail = tube.position.z - K.tube * 0.5;
+        const flame = MeshBuilder.CreateCylinder("trail", { height: K.flame, diameterTop: K.wide * 1.4, diameterBottom: 0, tessellation: 6 }, this._scene);
+        flame.rotation.x = Math.PI / 2;
+        flame.position.z = tail - K.flame * 0.5;
+        flame.material = mf.get("unlit", K.fire, { emissive: K.fire, alpha: 0.85 });
         flame.parent = root;
-        // Smoke trail
-        const smoke = MeshBuilder.CreateSphere("smoke", { diameter: 0.07, segments: 4 }, this._scene);
-        smoke.position.z = -0.3;
-        const smokeMat = getMaterialFactory().get("unlit", new Color3(0.6, 0.6, 0.6), { alpha: 0.4 });
-        smoke.material = smokeMat;
+        const core = MeshBuilder.CreateCylinder("trailCore", { height: K.flame * 0.6, diameterTop: K.wide * 0.7, diameterBottom: 0, tessellation: 6 }, this._scene);
+        core.rotation.x = Math.PI / 2;
+        core.position.z = tail - K.flame * 0.3;
+        core.material = mf.get("unlit", K.core, { emissive: K.core });
+        core.parent = root;
+        const smoke = MeshBuilder.CreateIcoSphere("smoke", { radius: K.wide * 1.3, subdivisions: 1, flat: true }, this._scene);
+        smoke.position.z = tail - K.flame - K.wide;
+        smoke.material = mf.get("unlit", new Color3(0.82, 0.82, 0.8), { alpha: 0.5 });
         smoke.parent = root;
+        const glowLayer = this._scene.getGlowLayerByName("glow");
+        for (const m of [flame, core, smoke]) glowLayer?.addExcludedMesh(m);
         break;
       }
       case "crow": {
