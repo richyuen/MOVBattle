@@ -64,6 +64,11 @@ const SMOKE_LIFE = 2.4;
  * core cone .core across at the mouth widening to .coreFar at the far end, inside an orange shell .shell -> .shellFar, half see-through, both
  * flickering .flicker of their width; .puffs faceted orange flame lumps tumbling out along it; all fading over the last .fade s.
  */
+/** [S] 418 the Firework Arrow's burst (spawnFireworkBurst): spark ball .radius m (half the card's 2.5 m blast each way), .lift up off the ground. */
+const FIREWORK_BURST = {
+  sparks: 26, radius: 1.25, long: 0.34, thick: 0.05, grow: 0.45, fall: 0.35, lift: 0.9, coreSize: 0.45, seconds: 0.65,
+  core: new Color3(1, 0.95, 0.75), colors: [new Color3(1, 0.55, 0.12), new Color3(1, 0.88, 0.25), new Color3(0.45, 1, 0.35), new Color3(1, 0.3, 0.2)],
+};
 /** [S] 417 the Samurai's block slash (spawnSlashArc). */
 const SLASH_ARC = { arc: 2.2, radius: 0.75, band: 0.16, steps: 12, tilt: 0.6, sweep: 0.7, seconds: 0.3, white: new Color3(1, 1, 0.92) };
 const FLAME_JET = {
@@ -139,6 +144,62 @@ export class VisualEffects {
         this._effects.splice(i, 1);
       }
     }
+  }
+
+  /**
+   * [S] 418 the Firework Arrow's burst (FIREWORK_BURST; card: explosion radius 2.5): a bright core flash and .sparks spark streaks flung out from `at`
+   * in a ball, each a thin unlit bar in one of .colors, flying to .radius over .grow of the burst and fading over its .seconds, out of the glow.
+   */
+  spawnFireworkBurst(at: Vector3): void {
+    const B = FIREWORK_BURST;
+    const root = new TransformNode("fireworkBurst", this._scene);
+    root.position.copyFrom(at);
+    root.position.y += B.lift;
+    const glow = this._scene.getGlowLayerByName("glow");
+    const mats: StandardMaterial[] = [];
+    const unlit = (c: Color3): StandardMaterial => {
+      const m = new StandardMaterial("fireworkBurstMat", this._scene);
+      m.disableLighting = true;
+      m.emissiveColor = c;
+      m.diffuseColor = c;
+      mats.push(m);
+      return m;
+    };
+    const core = MeshBuilder.CreateIcoSphere("fireworkBurstCore", { radius: 1, subdivisions: 1 }, this._scene);
+    core.parent = root;
+    core.material = unlit(B.core);
+    core.isPickable = false;
+    glow?.addExcludedMesh(core);
+    const sparks: { m: Mesh; dir: Vector3 }[] = [];
+    const golden = Math.PI * (3 - Math.sqrt(5));
+    const colorMats = B.colors.map((c) => unlit(c));
+    for (let i = 0; i < B.sparks; i++) {
+      const y = 1 - (2 * (i + 0.5)) / B.sparks, r = Math.sqrt(1 - y * y), a = golden * i;
+      const dir = new Vector3(Math.cos(a) * r, Math.abs(y) * 0.8 + 0.2 * y, Math.sin(a) * r).normalize();
+      const m = MeshBuilder.CreateBox("fireworkSpark", { width: B.thick, height: B.thick, depth: B.long }, this._scene);
+      m.parent = root;
+      m.material = colorMats[i % colorMats.length];
+      m.isPickable = false;
+      m.lookAt(m.position.add(dir));
+      glow?.addExcludedMesh(m);
+      sparks.push({ m, dir });
+    }
+    this._effects.push({
+      root,
+      remaining: B.seconds,
+      update: (_dt, remaining) => {
+        const t = 1 - Math.max(0, Math.min(1, remaining / B.seconds));
+        const out = Math.min(1, t / B.grow);
+        const reach = B.radius * (1 - (1 - out) * (1 - out));
+        for (const s of sparks) {
+          s.m.position.copyFrom(s.dir.scale(reach));
+          s.m.position.y -= B.fall * t * t;
+        }
+        core.scaling.setAll(Math.max(0.01, B.coreSize * (1 - t * 1.6)));
+        for (const m of mats) m.alpha = Math.max(0, 1 - t * t);
+      },
+      dispose: () => { for (const m of mats) m.dispose(); },
+    });
   }
 
   /**

@@ -50,6 +50,8 @@ const ICE_ARROW = {
 };
 
 /** [S] 413 the Firework Arrow in flight: tube long/wide (m), green bands, head and flame cones, the arc as a share of the distance (was .25: it flew over the frame). */
+/** [S] 418 the Firework Arrow's blast round the man it strikes (_fireworkBurst). */
+const FIREWORK_BLAST = { radius: 2.5, share: 1 };
 const FIREWORK_ROCKET = { long: 0.5, wide: 0.13, bands: 3, head: 0.14, flame: 0.32, arc: 0.1, band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14), fire: new Color3(1, 0.62, 0.15) };
 /** [S] 412 the thrown shuriken (projectile "shuriken"): span, waist, thickness, hub across (m), tilt of its face off level toward the side camera. */
 const SHURIKEN_FLIGHT = { span: 0.36, waist: 0.1, thick: 0.02, hub: 0.07, tilt: 0.7, steel: new Color3(0.2, 0.21, 0.24), hub_color: new Color3(0.5, 0.5, 0.54) };
@@ -810,6 +812,7 @@ export class ProjectileSystem {
           this.abilityHook?.(p.balloons, "float", p.target.position);
         }
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
+        if (p.shape === "firework") this._fireworkBurst(p);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
             source: "projectile",
@@ -826,6 +829,20 @@ export class ProjectileSystem {
           this.visualEffects?.spawnHitDebris(p.targetPos);
         }
       }
+    }
+  }
+
+  /**
+   * [S] 418 the Firework Arrow bursts where it strikes (card Weapons: explosion radius 2.5, force 50): a spark ball (visualEffects FIREWORK_BURST), and
+   * every other enemy within FIREWORK_BLAST.radius takes the arrow's damage scaled by .share and the blow's push.
+   */
+  private _fireworkBurst(p: ActiveProjectile): void {
+    this.visualEffects?.spawnFireworkBurst(p.target.position.clone());
+    const r2 = FIREWORK_BLAST.radius * FIREWORK_BLAST.radius;
+    for (const unit of p.allUnits) {
+      if (unit === p.target || unit.isDead || unit.team === p.attackerTeam) continue;
+      if (Vector3.DistanceSquared(unit.position, p.target.position) > r2) continue;
+      unit.applyDamage(p.damage * FIREWORK_BLAST.share, p.knockback);
     }
   }
 
