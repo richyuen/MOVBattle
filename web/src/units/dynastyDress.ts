@@ -437,14 +437,37 @@ export function monkArmPlates(scene: Scene, body: ArticulatedBody, teamColor: Co
  *     .finWide long, standing on the top edge;
  *   a "dragonMouth" node at the jaw's front: the flame jet leaves from it (simulationSystem DRAGON_BREATH).
  */
+/*
+ * [R] 431 the head and body rebuilt (CONFIRM 419 + 429 a: "a rectangular box snout on a sphere skull - TABS: a bulbous lion-dog head with round puffed
+ * cheeks, a beaked nose and a heavy cream-patterned brow"; "a flat rectangular slab with a sawtooth top edge - TABS: a long curving tubular body with a
+ * scalloped dorsal fin and frilled underside, tapering back"; "no tongue - TABS: a long team tongue hangs from the lower jaw down to the front carrier's
+ * chest"; "no horns - TABS: two cream curved horns rise behind the brow"). Spec read off dynasty.dragon.red.png (front) and dynasty.dragon.jpg (side),
+ * every head length in skull radii R (the skull .skull of hk across, an ellipsoid 1.12 wide, .92 tall):
+ *   cheeks: two faceted balls .cheek R round at .cheekAt [out, down, ahead] R, together wider than the eyes - the round upper half of the face;
+ *   lip: a smaller ball .lip R between them under the nose, and under all three a tan rim disc .rim R across at .rimY R, a flat ledge proud of them;
+ *   nose: a dark-team four-sided beak .nose [wide, long] R between the eyes, its tip pointing down and forward onto the lip;
+ *   eyes: big white discs .eye of hk on the skull's face at .eyeAt [out, up] R, dark pupils;
+ *   brow: a heavy cream bar .brow [long, tall, deep] R over each eye at .browY R, inner ends dipping to the nose (an angry V), three cream marks
+ *     above it on the forehead;
+ *   horns: two cream tubes .horn R thick at the root from the skull's top sides, rising and curving back, tapering to a point;
+ *   jaw: an open mouth - a dark maw under the rim, a lower jaw a squashed ball .jaw R round at .jawY R with its own tan rim, two dark-brown fangs
+ *     down from the upper rim and two up from the lower;
+ *   tongue: a flat team tube .tongue R thick, .tongueWide times as wide, out over the lower jaw's lip and hanging down in front, its tip at .tongueTo of
+ *     h (the front carrier's chest);
+ *   body: one round tube .bodyR of h through the stations (they stay as 416-422 had them), tapering by .taper to the tail; along its top a crest of
+ *     dark-team discs .crest of h across standing square to the path half above the tube (the scalloped dorsal fin), along its bottom pale discs
+ *     .frill of h across half below it (the frilled underside); the carriers' poles run up into the tube's underside.
+ */
 const DRAGON_FORM = {
-  skull: 0.62, size: 2.0, headY: 1.95, headZ: 0.5, snout: [0.6, 0.28, 0.4] as const, jaw: [0.5, 0.1, 0.38] as const, gape: 0.2, fangs: 4,
-  tongue: [0.2, 0.36] as const, eye: 0.17, pole: 0.05, poleFoot: 0.55,
-  segs: 9, step: 0.33, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, tall: 0.6, taper: 0.44, thick: 0.05, scallop: 0.16, fin: 0.13, finWide: 0.14, frillMix: 0.4,
-  gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), tongueTint: 0.85, glow: 0.12,
+  skull: 0.62, size: 2.0, headY: 1.95, headZ: 0.5,
+  cheek: 0.5, cheekAt: [0.5, -0.3, 0.72] as const, lip: 0.38, rim: 1.85, rimY: -0.74, nose: [0.42, 0.55] as const, eye: 0.17, eyeAt: [0.46, 0.3] as const,
+  brow: [0.72, 0.17, 0.24] as const, browY: 0.66, horn: 0.15, jaw: 0.58, jawY: -1.32, tongue: 0.11, tongueWide: 2.4, tongueTo: 0.72,
+  pole: 0.05, poleFoot: 0.55,
+  segs: 9, step: 0.33, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, bodyR: 0.24, taper: 0.5, crest: 0.24, frill: 0.13, crestShade: 0.6, frillMix: 0.4,
+  gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), cream: new Color3(0.8, 0.6, 0.35),
+  fang: new Color3(0.22, 0.1, 0.06), tongueTint: 0.85, glow: 0.12,
 };
 const FRONT_GRIP = { long: 0.24, wraps: 5, band: 0.022, out: 1.75, twist: 0.25, ahead: 0.22 };
-const DRAGON_MUZZLE = { bevel: 0.22, tan: new Color3(0.72, 0.54, 0.32), rim: 0.05, rimDeep: 0.06, diamonds: 2, diamond: 0.11, diamondAt: 0.45, diamondStep: 0.25, diamondUp: 0.25, proud: 0.012 };
 /** [S] 417 the Dragon Carriers (dragonForm): one under every .every-th segment, legs .legLong of h, trunk .trunk, head .head, arms .arm thick up to the
  * pole's dark .grip; trousers .trouserShade and skin .skinShade of the team colour. */
 /* [S] 420 the carriers read as men (RE-AUDIT 420 a.1: "three headless, armless team box torsos, each pole socketed into a black neck block - TABS: four
@@ -487,46 +510,65 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
   const skullR = D.skull * hk * 0.5;
   const skull = put(MeshBuilder.CreateIcoSphere("dragonSkull", { radius: skullR, subdivisions: 2 }, scene), head);
   skull.scaling.set(1.12, 0.92, 1);
-  const snoutAt = head.add(new Vector3(0, -skullR * 0.25, skullR * 0.85));
-  // [S] 424 a squared snout (RE-AUDIT 420 a.4: "a smooth team ball sitting on a flat box jaw, plain pink from brow to lip - TABS: a squared snout with a
-  // tan rim along the upper lip and gold diamond markings on the cheeks"; dynasty.dragon.red.png): DRAGON_MUZZLE a box .snout of the head, its front
-  // edges bevelled by a narrower front plate .bevel of it deep; a tan rim .rim of the head tall, .rimDeep deep, round the lip's front and both sides;
-  // on the front face either side of the middle .diamonds gold diamond plates .diamond of the head across, standing .proud off it, at .diamondAt of
-  // the snout's half-width out and .diamondUp of its half-height up. snoutAt is unchanged, so the jaw, fangs and the flame's "dragonMouth" stay put.
-  const M = DRAGON_MUZZLE;
-  const sW = D.snout[0] * hk, sH = D.snout[1] * hk, sD = D.snout[2] * hk;
-  put(MeshBuilder.CreateBox("dragonSnout", { width: sW, height: sH, depth: sD * (1 - M.bevel) }, scene), snoutAt.add(new Vector3(0, 0, -sD * M.bevel / 2)));
-  put(MeshBuilder.CreateBox("dragonSnoutFront", { width: sW * (1 - M.bevel), height: sH * (1 - M.bevel), depth: sD * M.bevel }, scene), snoutAt.add(new Vector3(0, 0, sD * (0.5 - M.bevel / 2))));
-  const tan = lit(M.tan);
-  const rimY = -sH / 2 + M.rim * hk / 2;
-  put(MeshBuilder.CreateBox("dragonLipRim", { width: sW * 1.04, height: M.rim * hk, depth: M.rimDeep * hk }, scene), snoutAt.add(new Vector3(0, rimY, sD * (0.5 - M.bevel) + M.rimDeep * hk * 0.3)), tan);
+  // [R] 431 the lion-dog face (spec above): R-unit offsets off the skull's centre
+  const R = (x: number, y: number, z: number): Vector3 => head.add(new Vector3(x * skullR, y * skullR, z * skullR));
+  const glowLayer = scene.getGlowLayerByName("glow");
+  const creamMat = mf.get("unlit", D.cream, { emissive: D.cream });
+  const cream = (m: Mesh): Mesh => { m.material = creamMat; glowLayer?.addExcludedMesh(m); return m; };
+  const tan = lit(D.gold), fang = lit(D.fang), beak = lit(teamColor.scale(D.crestShade));
+  const ball = (name: string, r: number, at: Vector3, sx: number, sy: number, sz: number, m = team): Mesh => {
+    const b = put(MeshBuilder.CreateIcoSphere(name, { radius: r * skullR, subdivisions: 2 }, scene), at, m);
+    b.scaling.set(sx, sy, sz);
+    return b;
+  };
+  for (const side of [-1, 1]) ball("dragonCheek", D.cheek, R(side * D.cheekAt[0], D.cheekAt[1], D.cheekAt[2]), 1, 0.85, 0.9);
+  ball("dragonLip", D.lip, R(0, -0.36, 0.95), 1.1, 0.75, 0.8);
+  const rimDisc = (name: string, across: number, at: Vector3): Mesh => {
+    const d = put(MeshBuilder.CreateCylinder(name, { height: 0.08 * skullR, diameter: across * skullR, tessellation: 12 }, scene), at, tan);
+    d.scaling.z = 0.72;
+    return d;
+  };
+  rimDisc("dragonLipRim", D.rim, R(0, D.rimY, 0.66));
+  // the beak: a four-sided point from between the eyes down and forward onto the lip
+  const nose = put(MeshBuilder.CreateCylinder("dragonNose", { height: D.nose[1] * skullR, diameterTop: 0, diameterBottom: D.nose[0] * skullR, tessellation: 4 }, scene), R(0, 0.02, 1.02), beak);
+  nose.rotation.set(Math.PI - 0.55, Math.PI / 4, 0);
+  nose.scaling.z = 0.85;
   for (const side of [-1, 1]) {
-    put(MeshBuilder.CreateBox("dragonLipRimSide", { width: M.rimDeep * hk, height: M.rim * hk, depth: sD * (1 - M.bevel) }, scene), snoutAt.add(new Vector3(side * (sW / 2 + M.rimDeep * hk * 0.2), rimY, -sD * M.bevel / 2)), tan);
-    for (let i = 0; i < M.diamonds; i++) {
-      const at = snoutAt.add(new Vector3(side * sW / 2 * (M.diamondAt + i * M.diamondStep), sH / 2 * M.diamondUp, sD * 0.5 + M.proud * hk));
-      const dia = put(MeshBuilder.CreateCylinder("dragonCheekDiamond", { height: M.proud * hk * 2, diameter: M.diamond * hk * (1 - i * 0.25), tessellation: 4 }, scene), at, gold);
-      dia.rotation.x = Math.PI / 2;
-      dia.scaling.x = 0.7;
-    }
+    const eyeAt = R(side * D.eyeAt[0], D.eyeAt[1], 0.86);
+    const eye = put(MeshBuilder.CreateCylinder("dragonEye", { height: 0.03 * hk, diameter: D.eye * hk, tessellation: 12 }, scene), eyeAt, white);
+    eye.rotation.set(Math.PI / 2, 0, 0);
+    eye.rotation.y = side * 0.4;
+    const pupil = put(MeshBuilder.CreateCylinder("dragonPupil", { height: 0.035 * hk, diameter: D.eye * hk * 0.5, tessellation: 10 }, scene), eyeAt.add(new Vector3(side * 0.006 * hk, 0, 0.015 * hk)), dark);
+    pupil.rotation.set(Math.PI / 2, 0, 0);
+    pupil.rotation.y = side * 0.4;
+    // the heavy cream brow bar over the eye, its inner end dipping to the nose
+    const brow = cream(put(MeshBuilder.CreateBox("dragonBrow", { width: D.brow[0] * skullR, height: D.brow[1] * skullR, depth: D.brow[2] * skullR }, scene), R(side * 0.4, D.browY, 0.7)));
+    brow.rotation.set(0, side * 0.5, side * 0.32);
+    // the horn: a cream tube from the skull's top side, rising and curving back to a point
+    const horn = [R(side * 0.42, 0.55, 0.2), R(side * 0.5, 0.95, 0.12), R(side * 0.58, 1.25, -0.12), R(side * 0.62, 1.42, -0.48)];
+    cream(put(MeshBuilder.CreateTube("dragonHorn", { path: horn, radiusFunction: (i: number) => D.horn * skullR * (1 - i / (horn.length - 1) * 0.85), tessellation: 7, cap: Mesh.CAP_ALL }, scene), Vector3.Zero()));
   }
-  const jawAt = snoutAt.add(new Vector3(0, -D.gape * hk, -D.jaw[2] * hk * 0.1));
-  put(MeshBuilder.CreateBox("dragonJaw", { width: D.jaw[0] * hk, height: D.jaw[1] * hk, depth: D.jaw[2] * hk }, scene), jawAt);
-  // the mouth's dark inside between snout and jaw
-  put(MeshBuilder.CreateBox("dragonMaw", { width: D.jaw[0] * hk * 0.85, height: D.gape * hk * 0.9, depth: D.jaw[2] * hk * 0.6 }, scene), Vector3.Center(snoutAt, jawAt).add(new Vector3(0, 0, -D.jaw[2] * hk * 0.15)), dark);
-  for (let i = 0; i < D.fangs; i++) {
-    const x = (i / (D.fangs - 1) - 0.5) * D.jaw[0] * hk * 0.8;
-    put(MeshBuilder.CreateCylinder("dragonFang", { height: D.gape * hk * 0.5, diameterTop: 0.05 * hk, diameterBottom: 0, tessellation: 4 }, scene), snoutAt.add(new Vector3(x, -D.snout[1] * hk * 0.5 - D.gape * hk * 0.2, D.snout[2] * hk * 0.25)), dark);
+  // three cream marks on the forehead above the brow
+  for (const x of [-0.26, 0, 0.26]) {
+    const mark = cream(put(MeshBuilder.CreateCylinder("dragonBrowMark", { height: 0.05 * skullR, diameter: 0.18 * skullR, tessellation: 4 }, scene), R(x, 0.84 - Math.abs(x) * 0.3, 0.52 + Math.abs(x) * 0.1)));
+    mark.rotation.set(0.6, 0, 0);
+    mark.scaling.z = 0.6;
   }
-  // [S] 419 the tongue lies in the open mouth on the jaw, its tip curling up out past the teeth (audit a.5: "a tall slab hanging to the ground"): .tongue
-  // [wide, long] of the head, a thin slab
-  const tongue = put(MeshBuilder.CreateBox("dragonTongue", { width: D.tongue[0] * hk, height: 0.035 * hk, depth: D.tongue[1] * hk }, scene), jawAt.add(new Vector3(0, D.jaw[1] * hk * 0.5 + 0.02 * hk, D.jaw[2] * hk * 0.2)), tongueMat);
-  tongue.rotation.x = -0.2; // the tip lifts
+  // the open mouth: dark maw under the rim, the lower jaw with its own tan rim, two fangs down and two up
+  put(MeshBuilder.CreateBox("dragonMaw", { width: 1.15 * skullR, height: 0.6 * skullR, depth: 0.7 * skullR }, scene), R(0, -1.02, 0.55), dark);
+  ball("dragonJaw", D.jaw, R(0, D.jawY, 0.55), 1.15, 0.5, 0.95);
+  rimDisc("dragonJawRim", D.jaw * 2.1, R(0, D.jawY + D.jaw * 0.42, 0.6));
   for (const side of [-1, 1]) {
-    const eyeAt = head.add(new Vector3(side * skullR * 0.48, skullR * 0.32, skullR * 0.78));
-    put(MeshBuilder.CreateCylinder("dragonEye", { height: 0.03 * hk, diameter: D.eye * hk, tessellation: 10 }, scene), eyeAt, white).rotation.x = Math.PI / 2;
-    put(MeshBuilder.CreateCylinder("dragonPupil", { height: 0.035 * hk, diameter: D.eye * hk * 0.5, tessellation: 8 }, scene), eyeAt.add(new Vector3(0, 0, 0.015 * hk)), dark).rotation.x = Math.PI / 2;
-    put(MeshBuilder.CreateBox("dragonBrow", { width: D.eye * hk * 1.3, height: 0.05 * hk, depth: 0.08 * hk }, scene), eyeAt.add(new Vector3(side * 0.01 * hk, D.eye * hk * 0.62, 0)), gold).rotation.z = -side * 0.25;
+    const up = put(MeshBuilder.CreateCylinder("dragonFang", { height: 0.32 * skullR, diameterTop: 0, diameterBottom: 0.14 * skullR, tessellation: 4 }, scene), R(side * 0.42, D.rimY - 0.18, 1.0), fang);
+    up.rotation.x = Math.PI;
+    put(MeshBuilder.CreateCylinder("dragonFang", { height: 0.3 * skullR, diameterTop: 0, diameterBottom: 0.15 * skullR, tessellation: 4 }, scene), R(side * 0.52, D.jawY + D.jaw * 0.42 + 0.17, 0.95), fang);
   }
+  // the tongue: out over the lower jaw's lip and hanging down in front to the front carrier's chest
+  const tipY = (D.tongueTo * h - head.y) / skullR;
+  const lick = [R(0, -1.08, 0.5), R(0, -1.1, 0.98), R(0, -1.25, 1.22), R(0, (-1.25 + tipY) / 2 - 0.1, 1.3), R(0, tipY + 0.2, 1.22), R(0, tipY, 1.1)];
+  const tongue = put(MeshBuilder.CreateTube("dragonTongue", { path: lick, radiusFunction: (i: number) => D.tongue * skullR * (i === lick.length - 1 ? 0.7 : 1), tessellation: 8, cap: Mesh.CAP_ALL }, scene), Vector3.Zero(), tongueMat);
+  tongue.scaling.x = D.tongueWide;
+  const snoutAt = R(0, -0.36, 0.95), jawAt = R(0, D.jawY, 0.55);
   // the pole up from his hands into the skull
   const foot = new Vector3(0, D.poleFoot * h, FRONT_GRIP.ahead * h); // [S] 429 in at his chest, in reach of both fists (was D.headZ * .8, .4 of h)
   const top = new Vector3(0, head.y - skullR * 0.6, foot.z); // straight up into the skull's underside, behind its middle
@@ -607,34 +649,36 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     k: 1 - t * D.taper,
     turn: Math.cos(t * Math.PI * 1.6) * 0.35,
   });
+  // [R] 431 the body: one round team tube through the stations, from inside the skull back to the tail, a dark-team disc crest along its top and pale
+  // frill discs along its bottom, each standing square to the path (seen face-on from the side)
   const halves = (D.segs - 1) * 2;
-  const edges: Vector3[][] = [[], [], [], []]; // top-left, top-right, bottom-right, bottom-left
-  const thick = D.thick * h;
+  const crest = lit(teamColor.scale(D.crestShade));
+  const path: Vector3[] = [head.add(new Vector3(0, -skullR * 0.2, 0))];
+  const radii: number[] = [D.bodyR * h];
   for (let j = 0; j <= halves; j++) {
     const { at, k, turn } = station(j / halves);
-    const across = new Vector3(Math.cos(turn), 0, Math.sin(turn)).scale(thick * 0.5); // the band's thickness, square to the path's tangent (sin turn, 0, -cos turn)
-    const up = new Vector3(0, D.tall * h * k * 0.5, 0);
-    edges[0].push(at.subtract(across).add(up));
-    edges[1].push(at.add(across).add(up));
-    edges[2].push(at.add(across).subtract(up));
-    edges[3].push(at.subtract(across).subtract(up));
-    // a pale scallop lying in the band's plane on its lower edge, half of it below the edge (a round fringe from the side), and a fin on the top edge at
-    // every half station
-    const scallop = put(MeshBuilder.CreateCylinder("dragonScallop", { height: thick * 1.4, diameter: D.scallop * h * k, tessellation: 7 }, scene), at.subtract(up), pale);
-    scallop.rotation.set(0, -turn, Math.PI / 2);
-    const fin = put(MeshBuilder.CreateCylinder("dragonFin", { height: D.fin * h * k, diameterTop: 0, diameterBottom: D.finWide * h, tessellation: 4 }, scene), at.add(up).add(new Vector3(0, D.fin * h * k * 0.45, 0)), pale);
-    fin.rotation.y = -turn;
-    fin.scaling.x = 0.22;
+    path.push(at);
+    const r = D.bodyR * h * k;
+    radii.push(r);
+    const disc = (name: string, across: number, y: number, m: typeof team): void => {
+      const d = put(MeshBuilder.CreateCylinder(name, { height: 0.04 * h, diameter: across, tessellation: 9 }, scene), at.add(new Vector3(0, y, 0)), m);
+      d.rotation.set(0, -turn, Math.PI / 2);
+    };
+    disc("dragonCrest", D.crest * h * k, r * 0.88, crest);
+    disc("dragonFrill", D.frill * h * k, -r * 0.92, pale);
   }
-  put(MeshBuilder.CreateRibbon("dragonBody", { pathArray: edges, closeArray: true, sideOrientation: Mesh.DOUBLESIDE }, scene), Vector3.Zero());
+  const tail = path[path.length - 1].add(path[path.length - 1].subtract(path[path.length - 2]).normalize().scale(D.bodyR * h * 0.6));
+  path.push(tail);
+  radii.push(D.bodyR * h * (1 - D.taper) * 0.3);
+  put(MeshBuilder.CreateTube("dragonBody", { path, radiusFunction: (i: number) => radii[i], tessellation: 10, cap: Mesh.CAP_ALL }, scene), Vector3.Zero());
   for (let i = 0; i < D.segs; i++) {
     if (i % DRAGON_CARRIER.every !== DRAGON_CARRIER.every - 1) continue;
     const { at, k } = station(i / (D.segs - 1));
-    carrier(at, at.y - D.tall * h * k * 0.5);
+    carrier(at, at.y - D.bodyR * h * k * 0.7);
   }
   const mouth = new TransformNode("dragonMouth", scene);
   mouth.parent = holder;
-  mouth.position.copyFrom(Vector3.Center(snoutAt, jawAt).add(new Vector3(0, 0, D.jaw[2] * h * 0.55)));
+  mouth.position.copyFrom(Vector3.Center(snoutAt, jawAt).add(new Vector3(0, 0, skullR * 0.6)));
   return out;
 }
 
