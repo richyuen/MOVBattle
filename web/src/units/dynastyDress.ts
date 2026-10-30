@@ -520,10 +520,11 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     edges[1].push(at.add(right).add(up));
     edges[2].push(at.add(right).subtract(up));
     edges[3].push(at.subtract(right).subtract(up));
-    // a pale scallop on each edge and a fin on the spine at every half station
+    // a pale scallop on each edge (a disc standing square to the band, its axis across it, so the frill shows edge-on from the ground) and a fin on the
+    // spine at every half station
     for (const side of [-1, 1]) {
       const scallop = put(MeshBuilder.CreateCylinder("dragonScallop", { height: thick * 0.6, diameter: D.scallop * h * k, tessellation: 7 }, scene), at.add(right.scale(side)).add(right.normalizeToNew().scale(side * D.scallopOut * h)), pale);
-      scallop.rotation.y = -turn;
+      scallop.rotation.set(0, -turn, Math.PI / 2);
     }
     const fin = put(MeshBuilder.CreateCylinder("dragonFin", { height: D.fin * h * k, diameterTop: 0, diameterBottom: D.finWide * h, tessellation: 4 }, scene), at.add(new Vector3(0, thick * 0.5 + D.fin * h * k * 0.45, 0)), pale);
     fin.rotation.y = -turn;
