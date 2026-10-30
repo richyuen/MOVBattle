@@ -414,8 +414,9 @@ const DRAGON_FORM = {
 /* [S] 420 the carriers read as men (RE-AUDIT 420 a.1: "three headless, armless team box torsos, each pole socketed into a black neck block - TABS: four
  * full men under the poles, each with a head, two bead eyes and a dark hair bun"; dynasty.dragon.jpg): the head carries two bead eyes (.eye of the head
  * across, white with a dark pupil) on its front and a dark hair cap .hairTall of it tall with the bun .bun behind, in place of the wide slab; the pole
- * stands .poleSide of h beside the head, not through it, held by both arms .arm thick reaching up to a dark fist each at the grip. */
-const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.075, grip: 0.16, trouserShade: 0.7, skinShade: 1.1, eye: 0.28, hairTall: 0.22, bun: 0.2, poleSide: 0.17, fist: 0.09 };
+ * stands .poleSide of h beside the head, not through it, held by both arms .arm thick reaching up to a fist each at the grip ([P] 421: the fists in the
+ * skin, .fist .12 and .arm .1, fallout of 0f7dd79c: fists and grip read as one dark mass, the arms vanished against the trunk). */
+const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.1, grip: 0.16, trouserShade: 0.7, skinShade: 1.1, eye: 0.28, hairTall: 0.22, bun: 0.2, poleSide: 0.17, fist: 0.12 };
 /** The Dragon's giant paper head on its pole and its long team body ribbon (spec at DRAGON_FORM). */
 export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const D = DRAGON_FORM;
@@ -494,7 +495,7 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
       const run = to.subtract(from);
       const arm = put(MeshBuilder.CreateBox("dragonCarrierArm", { width: C.arm * h, height: run.length(), depth: C.arm * h }, scene), Vector3.Center(from, to), skin);
       arm.rotation.z = -Math.atan2(run.x, run.y);
-      put(MeshBuilder.CreateBox("dragonCarrierFist", { width: C.fist * h, height: C.fist * h, depth: C.fist * h }, scene), to, dark);
+      put(MeshBuilder.CreateBox("dragonCarrierFist", { width: C.fist * h, height: C.fist * h, depth: C.fist * h }, scene), to, skin);
     }
     const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(px, (fist + underside) / 2, z), lit(C.poleColor)); // [P] 418 red-orange on both teams
     pole.position.y -= C.grip * h * 0.5;
