@@ -670,6 +670,13 @@ const HARPOON_HIP = { raise: 0.25, out: 0.1, elbow: -0.3, offRaise: -0.55, offIn
 // [S] 436 the harpoon gun carried at rest (see _restHarpoon): the weapon fist .drop of his height under its shoulder, .ahead and .out of it, the barrel
 // .dip rad below level toward his front
 const HARPOON_REST = { drop: 0.27, ahead: 0.05, out: 0.07, dip: 0.95 };
+/*
+ * [S] 436 the Pirate Queen's upright rest stance (critic 435 queen a.1: "torso and skirt a wide hunched block ... clearly taller and broader than the
+ * captain - TABS: slim long-limbed build, about the captain's height"; pirate.pirate_queen.red.png: she stands tall and square on long straight legs, the
+ * chest straight over the hips, the head up, one hip a touch dropped). In place of the hashed stance (whose sunk branch bowed her over bent knees): hip
+ * tilt .tilt, a short .stride, no crouch, chest lean .lean, chin .chin (_buildIdlePose).
+ */
+const QUEEN_UPRIGHT = { tilt: 0.07, stride: 0.08, lean: 0.02, chin: 0 };
 const THROW_LET_GO = 0.5;
 /*
  * Two-hand boulder (vfx.k; units/tribal.stoner). Spec read off the reference: the boulder, about .38 of his height across, is held in front of the belly in both
@@ -3993,10 +4000,13 @@ export class ProceduralAnimator {
     // the snake archer upright, never sunk (SNAKE_UPRIGHT)
     const snake = this._snakeNocked();
     if (snake) Object.assign(stance, { tilt: SNAKE_UPRIGHT.tilt, crouch: 0, chin: 0 });
+    // [S] 436 the Pirate Queen stands tall (QUEEN_UPRIGHT)
+    const queen = this._queenArmed();
+    if (queen) Object.assign(stance, { tilt: QUEEN_UPRIGHT.tilt, stride: QUEEN_UPRIGHT.stride, crouch: 0, chin: QUEEN_UPRIGHT.chin, cock: 0 });
     return {
       square,
       wide,
-      lean: snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
+      lean: queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,
@@ -5889,6 +5899,11 @@ export class ProceduralAnimator {
    * further ahead so the blades pass and do not meet. Only when both fists hold a cutlass (the queen).
    */
   private _queenBlades: { side: number; blade: Mesh; grip: Mesh; at: Vector3 }[] | null | undefined = undefined;
+  /** A cutlass with its jewel in each fist: the Pirate Queen (the captain's off hand holds a pistol) */
+  private _queenArmed(): boolean {
+    const jewelled = (hand: TransformNode): boolean => hand.getChildren().some((n) => n.getChildren().some((c) => c.name === "cutlassJewel"));
+    return jewelled(this._body.rightHand) && jewelled(this._body.leftHand);
+  }
   private _queenW = 1;
   private _restQueenBlades(dt: number): void {
     const b = this._body;
