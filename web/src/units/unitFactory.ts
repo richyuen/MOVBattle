@@ -596,6 +596,8 @@ export class UnitFactory {
     }
     // [S] 423 the Flintlock's open team vest over a bare team chest (pirateDress PIRATE_VEST)
     if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
+    // [S] 423 the Bomb Thrower's open vest over his bare team chest, the same cut (pirate.bomb_thrower.red.png; pirateDress PIRATE_VEST)
+    if (definition.id === "pirate.bomb_thrower" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
     // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
     if (definition.id === "dynasty.dragon" && !shouldUseVehicleBody) propMeshes.push(...dragonForm(this._scene, body, teamColor));
     // [S] 413 the Samurai's team kabuto with a flared gold-trimmed neck guard and a crest (dynastyDress KABUTO)
