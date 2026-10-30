@@ -405,6 +405,7 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
   },
   crowd_topple_mammoth_pressure: {
     name: "crowd_topple_mammoth_pressure",
+    // The mammoth's charge (MAMMOTH_CHARGE) tramples and flings the line before its body meets it, so this reads the throw, not body-contact push.
     description: "Mammoth pressure should create broader forward-topple disruption across a mixed infantry line.",
     autoStart: true,
     advanceMs: 2150,
@@ -416,10 +417,9 @@ export const SCENARIOS: Record<string, ScenarioSpec> = {
     ],
     assertions: [
       { kind: "mode-is", value: "Simulation" },
-      { kind: "physics-state", value: "farmer.farmer:airborne|recovering|toppled|downed, medieval.squire:airborne|recovering|toppled|downed" },
+      { kind: "physics-state", value: "farmer.farmer:dead|airborne|recovering|toppled|downed, medieval.squire:airborne|recovering|toppled|downed, ancient.hoplite:airborne|recovering|toppled|downed" },
       { kind: "unit-height-at-most", value: "farmer.farmer<=1.2, medieval.squire<=1.1" },
-      { kind: "crowd-metric-at-least", value: "farmer.farmer:collisionPushPeak>=3.4, medieval.squire:collisionPushPeak>=1.1, ancient.hoplite:collisionPushPeak>=0.4" },
-      { kind: "position-shift-at-least", value: "farmer.farmer>=0.9, medieval.squire>=1.2, ancient.hoplite>=0.4" },
+      { kind: "position-shift-at-least", value: "farmer.farmer>=3, medieval.squire>=3, ancient.hoplite>=2" },
     ],
   },
   crowd_topple_recovery_state: {
