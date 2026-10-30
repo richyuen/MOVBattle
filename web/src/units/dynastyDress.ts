@@ -406,7 +406,11 @@ const DRAGON_FORM = {
 };
 /** [S] 417 the Dragon Carriers (dragonForm): one under every .every-th segment, legs .legLong of h, trunk .trunk, head .head, arms .arm thick up to the
  * pole's dark .grip; trousers .trouserShade and skin .skinShade of the team colour. */
-const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.06, grip: 0.16, trouserShade: 0.7, skinShade: 1.1 };
+/* [S] 420 the carriers read as men (RE-AUDIT 420 a.1: "three headless, armless team box torsos, each pole socketed into a black neck block - TABS: four
+ * full men under the poles, each with a head, two bead eyes and a dark hair bun"; dynasty.dragon.jpg): the head carries two bead eyes (.eye of the head
+ * across, white with a dark pupil) on its front and a dark hair cap .hairTall of it tall with the bun .bun behind, in place of the wide slab; the pole
+ * stands .poleSide of h beside the head, not through it, held by both arms .arm thick reaching up to a dark fist each at the grip. */
+const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.075, grip: 0.16, trouserShade: 0.7, skinShade: 1.1, eye: 0.28, hairTall: 0.22, bun: 0.2, poleSide: 0.17, fist: 0.09 };
 /** The Dragon's giant paper head on its pole and its long team body ribbon (spec at DRAGON_FORM). */
 export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const D = DRAGON_FORM;
@@ -465,17 +469,31 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     for (const side of [-1, 1]) put(MeshBuilder.CreateBox("dragonCarrierLeg", { width: C.leg * h, height: C.legLong * h, depth: C.leg * h }, scene), new Vector3(x + side * C.leg * h * 0.7, C.legLong * h * 0.5, z), trousers);
     put(MeshBuilder.CreateBox("dragonCarrierBody", { width: C.trunk[0] * h, height: C.trunk[1] * h, depth: C.trunk[2] * h }, scene), new Vector3(x, (C.legLong + C.trunk[1] * 0.5) * h, z));
     const headY = (C.legLong + C.trunk[1] + C.head * 0.55) * h;
-    put(MeshBuilder.CreateBox("dragonCarrierHead", { width: C.head * h, height: C.head * h, depth: C.head * h }, scene), new Vector3(x, headY, z), skin);
-    put(MeshBuilder.CreateBox("dragonCarrierHair", { width: C.head * h * 1.05, height: C.head * h * 0.4, depth: C.head * h * 1.05 }, scene), new Vector3(x, headY + C.head * h * 0.35, z), dark);
-    put(MeshBuilder.CreateIcoSphere("dragonCarrierKnot", { radius: C.head * h * 0.22, subdivisions: 1 }, scene), new Vector3(x, headY + C.head * h * 0.62, z), dark);
-    const fist = (C.legLong + C.trunk[1] + C.head * 1.3) * h;
+    const hd = C.head * h;
+    put(MeshBuilder.CreateBox("dragonCarrierHead", { width: hd, height: hd, depth: hd }, scene), new Vector3(x, headY, z), skin);
+    // [S] 420 two bead eyes on the face (+z), a hair cap with the bun behind
     for (const side of [-1, 1]) {
-      const arm = put(MeshBuilder.CreateBox("dragonCarrierArm", { width: C.arm * h, height: (fist - (C.legLong + C.trunk[1] * 0.9) * h), depth: C.arm * h }, scene), new Vector3(x + side * C.trunk[0] * h * 0.5, ((C.legLong + C.trunk[1] * 0.9) * h + fist) / 2, z), skin);
-      arm.rotation.z = side * 0.35;
+      const eyeAt = new Vector3(x + side * hd * 0.24, headY + hd * 0.08, z + hd * 0.5);
+      put(MeshBuilder.CreateCylinder("dragonCarrierEye", { height: hd * 0.06, diameter: hd * C.eye, tessellation: 8 }, scene), eyeAt, white).rotation.x = Math.PI / 2;
+      put(MeshBuilder.CreateCylinder("dragonCarrierPupil", { height: hd * 0.07, diameter: hd * C.eye * 0.45, tessellation: 6 }, scene), eyeAt.add(new Vector3(0, 0, hd * 0.02)), dark).rotation.x = Math.PI / 2;
     }
-    const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(x, (fist + underside) / 2, z), lit(C.poleColor)); // [P] 418 red-orange on both teams
+    put(MeshBuilder.CreateBox("dragonCarrierHair", { width: hd * 1.04, height: hd * C.hairTall, depth: hd * 1.04 }, scene), new Vector3(x, headY + hd * (0.5 - C.hairTall * 0.3), z), dark);
+    put(MeshBuilder.CreateIcoSphere("dragonCarrierKnot", { radius: hd * C.bun, subdivisions: 1 }, scene), new Vector3(x, headY + hd * (0.5 + C.hairTall * 0.4), z - hd * 0.25), dark);
+    // [S] 420 the pole stands beside the head on his pole side; both arms reach up and across to a dark fist each on its grip
+    const px = x + C.poleSide * h;
+    const fist = (C.legLong + C.trunk[1] + C.head * 1.15) * h;
+    const shoulderY = (C.legLong + C.trunk[1] * 0.92) * h;
+    for (const side of [-1, 1]) {
+      const from = new Vector3(x + side * C.trunk[0] * h * 0.5, shoulderY, z);
+      const to = new Vector3(px, fist - side * C.fist * h * 0.55, z);
+      const run = to.subtract(from);
+      const arm = put(MeshBuilder.CreateBox("dragonCarrierArm", { width: C.arm * h, height: run.length(), depth: C.arm * h }, scene), Vector3.Center(from, to), skin);
+      arm.rotation.z = -Math.atan2(run.x, run.y);
+      put(MeshBuilder.CreateBox("dragonCarrierFist", { width: C.fist * h, height: C.fist * h, depth: C.fist * h }, scene), to, dark);
+    }
+    const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(px, (fist + underside) / 2, z), lit(C.poleColor)); // [P] 418 red-orange on both teams
     pole.position.y -= C.grip * h * 0.5;
-    put(MeshBuilder.CreateCylinder("dragonCarrierGrip", { height: C.grip * h, diameter: D.pole * h * 1.35, tessellation: 6 }, scene), new Vector3(x, fist, z), dark);
+    put(MeshBuilder.CreateCylinder("dragonCarrierGrip", { height: C.grip * h * 1.5, diameter: D.pole * h * 1.35, tessellation: 6 }, scene), new Vector3(px, fist, z), dark);
   };
   // the body ribbon trailing back
   for (let i = 0; i < D.segs; i++) {
