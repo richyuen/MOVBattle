@@ -64,6 +64,8 @@ const SMOKE_LIFE = 2.4;
  * core cone .core across at the mouth widening to .coreFar at the far end, inside an orange shell .shell -> .shellFar, half see-through, both
  * flickering .flicker of their width; .puffs faceted orange flame lumps tumbling out along it; all fading over the last .fade s.
  */
+/** [S] 419 the hwacha's launch smoke (spawnLaunchSmoke). */
+const LAUNCH_SMOKE = { puffs: 14, wide: 1.2, tall: 0.6, from: 0.15, to: 0.6, drift: 0.9, rise: 0.4, stagger: 0.45, seconds: 1.6, fade: 0.4, alpha: 0.9, glow: 0.35, white: new Color3(0.93, 0.93, 0.9) };
 /** [S] 418 the Firework Arrow's burst (spawnFireworkBurst): spark ball .radius m (half the card's 2.5 m blast each way), .lift up off the ground. */
 const FIREWORK_BURST = {
   sparks: 26, radius: 1.25, long: 0.34, thick: 0.05, grow: 0.45, fall: 0.35, lift: 0.9, coreSize: 0.45, seconds: 0.65,
@@ -144,6 +146,53 @@ export class VisualEffects {
         this._effects.splice(i, 1);
       }
     }
+  }
+
+  /**
+   * [S] 419 the hwacha's launch smoke (LAUNCH_SMOKE; dynasty.hwacha.jpg: a white faceted cloud billowing from the rack as the volley leaves): .puffs flat-shaded
+   * pale balls spread .wide across and .tall up the rack face at `at`, each swelling from .from to .to m across over the cloud's .seconds while drifting
+   * .drift m along `dir` and .rise m up, fading out over its last .fade.
+   */
+  spawnLaunchSmoke(at: Vector3, dir: Vector3): void {
+    const S = LAUNCH_SMOKE;
+    const root = new TransformNode("launchSmoke", this._scene);
+    root.position.copyFrom(at);
+    const flat = new Vector3(dir.x, 0, dir.z);
+    if (flat.lengthSquared() < 1e-6) flat.set(0, 0, 1);
+    flat.normalize();
+    const across = new Vector3(flat.z, 0, -flat.x);
+    const matl = new StandardMaterial("launchSmokeMat", this._scene);
+    matl.diffuseColor = S.white;
+    matl.emissiveColor = S.white.scale(S.glow);
+    matl.specularColor = new Color3(0, 0, 0);
+    const puffs: { m: Mesh; base: Vector3; out: Vector3; delay: number }[] = [];
+    for (let i = 0; i < S.puffs; i++) {
+      const u = ((i * 0.618034) % 1) - 0.5, v = ((i * 0.381966 + 0.2) % 1) - 0.5;
+      const m = MeshBuilder.CreateIcoSphere("launchSmokePuff", { radius: 0.5, subdivisions: 1 }, this._scene);
+      m.convertToFlatShadedMesh();
+      m.parent = root;
+      m.material = matl;
+      m.isPickable = false;
+      const base = across.scale(u * S.wide).add(new Vector3(0, v * S.tall, 0));
+      m.position.copyFrom(base);
+      m.scaling.setAll(0.001);
+      puffs.push({ m, base, out: flat.scale(S.drift * (0.6 + 0.8 * ((i * 0.37) % 1))).add(new Vector3(0, S.rise, 0)), delay: (i / S.puffs) * S.stagger });
+    }
+    this._effects.push({
+      root,
+      remaining: S.seconds,
+      update: (_dt, remaining) => {
+        const t = 1 - Math.max(0, Math.min(1, remaining / S.seconds));
+        for (const p of puffs) {
+          const k = Math.max(0, Math.min(1, (t * S.seconds - p.delay) / (S.seconds - p.delay)));
+          const grow = 1 - (1 - k) * (1 - k);
+          p.m.scaling.setAll(Math.max(0.001, k > 0 ? S.from + (S.to - S.from) * grow : 0.001));
+          p.m.position.copyFrom(p.base.add(p.out.scale(grow)));
+        }
+        matl.alpha = t < 1 - S.fade ? S.alpha : S.alpha * Math.max(0, (1 - t) / S.fade);
+      },
+      dispose: () => matl.dispose(),
+    });
   }
 
   /**

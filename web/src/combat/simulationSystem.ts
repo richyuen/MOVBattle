@@ -2224,6 +2224,9 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_hwacha") {
+      // [S] 419 a white faceted smoke cloud billows off the rack face as the volley leaves (visualEffects LAUNCH_SMOKE)
+      const rack = attacker.getAttackOrigin().position;
+      this.visualEffects?.spawnLaunchSmoke(rack, target.position.subtract(rack));
       this._fireCustomVolley(attacker, target, damage, knockback, Math.max(10, attacker.definition.volleyCount ?? 14), {
         projectileShape: "rocket_arrow",
         splashRadius: 0.4,
