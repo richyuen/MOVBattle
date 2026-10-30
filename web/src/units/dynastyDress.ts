@@ -670,7 +670,13 @@ export function monkeyTail(scene: Scene, body: ArticulatedBody, teamColor: Color
  * band's front face; each feather a thin team blade .featherWide of e.x across, .feather of e.y tall, rooted on the band at .side of e.x out, leaning
  * .lean rad outward and .back rad behind, a gold bead at its root.
  */
-const MONKEY_CROWN = { band: 1.1, at: 0.72, thick: 0.1, swirl: 0.32, side: 0.78, feather: 2.6, featherWide: 0.2, lean: 0.3, back: 0.12, bead: 0.14, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/*
+ * [S] 424 the feathers as leaves (CONFIRM 422 a.1: "two broad leaf-shaped team-coloured feathers with a gold spine, each as tall as the head and a quarter
+ * as wide, leaning outward in a V"; dynasty.monkey_king.blue.png): each feather a closed leaf blade .feather of e.y tall, widest (.featherWide of e.x)
+ * at .belly of the way up, narrowing to .stem of that at the root and to a point at the tip (two four-sided frusta base to base, squashed .flat in
+ * depth), with a gold spine .spine of the width across standing .spineProud of the blade's depth off its front, from root to near the tip.
+ */
+const MONKEY_CROWN = { band: 1.1, at: 0.72, thick: 0.1, swirl: 0.32, side: 0.78, feather: 2.3, featherWide: 0.55, belly: 0.4, stem: 0.3, flat: 0.18, spine: 0.14, spineProud: 0.6, lean: 0.32, back: 0.12, bead: 0.14, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
 /** The Monkey King's gold swirl circlet with two long team feather antennae (spec at MONKEY_CROWN). */
 export function monkeyCrown(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const K = MONKEY_CROWN;
@@ -692,15 +698,20 @@ export function monkeyCrown(scene: Scene, body: ArticulatedBody, teamColor: Colo
     path.push(new Vector3(Math.cos(phi) * rho, y + e.y * 0.1 + Math.sin(phi) * rho, e.z * K.band + e.y * K.thick * 0.4));
   }
   put(MeshBuilder.CreateTube("monkeyCircletSwirl", { path, radius: e.y * K.thick * 0.35, tessellation: 4, cap: 2 }, scene), gold);
+  // [S] 424 each feather a leaf blade on a pivot at its root (the 420 .2 e.x rods read as antennae, a.1)
+  const L = e.y * K.feather, W = e.x * K.featherWide, low = L * K.belly;
   for (const side of [-1, 1]) {
     const root = new Vector3(side * e.x * K.side, y + e.y * K.thick * 0.5, 0);
-    const feather = put(MeshBuilder.CreateBox("monkeyFeather", { width: e.x * K.featherWide, height: e.y * K.feather, depth: e.x * K.featherWide * 0.25 }, scene), team);
-    feather.position.copyFrom(root);
-    feather.rotation.z = -side * K.lean;
-    feather.rotation.x = -K.back;
-    // the blade stands on its root: slide its middle up its own axis by half its height
-    const up = new Vector3(Math.sin(side * K.lean), Math.cos(K.lean), -Math.sin(K.back)).normalize();
-    feather.position.addInPlace(up.scale(e.y * K.feather * 0.5));
+    const pivot = new TransformNode("monkeyFeatherPivot", scene);
+    pivot.parent = body.headMesh;
+    pivot.position.copyFrom(root);
+    pivot.rotation.set(-K.back, 0, -side * K.lean);
+    const leaf = (m: Mesh, at: number, mat: typeof gold): Mesh => { m.parent = pivot; m.position.y = at; m.material = mat; m.convertToFlatShadedMesh(); out.push(m); return m; };
+    // the blade: a four-sided frustum from the narrow stem to the belly, another from the belly to the point, both squashed flat front to back
+    leaf(MeshBuilder.CreateCylinder("monkeyFeather", { height: low, diameterBottom: W * K.stem, diameterTop: W, tessellation: 4 }, scene), low / 2, team).scaling.z = K.flat;
+    leaf(MeshBuilder.CreateCylinder("monkeyFeatherTip", { height: L - low, diameterBottom: W, diameterTop: 0, tessellation: 4 }, scene), low + (L - low) / 2, team).scaling.z = K.flat;
+    // the gold spine down its middle, proud of the blade's ridge front and back
+    leaf(MeshBuilder.CreateBox("monkeyFeatherSpine", { width: W * K.spine, height: L * 0.86, depth: W * K.flat * (1 + K.spineProud) }, scene), L * 0.43, gold);
     const bead = put(MeshBuilder.CreateIcoSphere("monkeyFeatherBead", { radius: e.y * K.bead, subdivisions: 1 }, scene), gold);
     bead.position.copyFrom(root);
   }
