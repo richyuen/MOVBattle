@@ -565,11 +565,11 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * [S] 429 the pirate's long hair (audit 422 flintlock a.4: "the sides of the head - bare under the cap - TABS: long dark-team hair falling to the
  * shoulders either side of the face"; pirate.flintlock.red.png: two thick locks a shade darker than the skin from under the cap at the eyes' top,
  * down past the jaw to the shoulders either side, behind the face's front, joined by a fall down the back of the head). PIRATE_HAIR, in the head's
- * own box (e its half sizes): a cap shell .out of the head wide and deep from .clear over the eyes' top to .top of e.y; two side locks .side of e.x
- * thick each from the cap down to .drop of e.y, from the back to .front of e.z (the face's front is e.z), splayed .splay rad out at the foot; a back
- * fall .out wide from the crown to .drop, .back of e.z behind the head. The colour is the caller's (the team times .dark by default), self-lit .glow.
+ * own box (e its half sizes): two side locks .side of e.x thick each, .out of the head apart, from .top of e.y (up under the hat) down to .drop,
+ * from the back to .front of e.z (the face's front is e.z), hinged .clear over the eyes' top and splayed .splay rad out at the foot; a back
+ * fall .out wide from .top to .drop, .back of e.z behind the head. No crown of hair: the hat covers it. The caller's colour, self-lit .glow.
  */
-const PIRATE_HAIR = { out: 1.1, clear: 0.06, top: 1.0, side: 0.34, drop: -1.75, front: 0.45, splay: 0.12, back: 0.22, dark: 0.55, glow: 0.12 };
+const PIRATE_HAIR = { out: 1.08, clear: 0.06, top: 0.62, side: 0.28, drop: -1.7, front: 0.25, splay: 0.12, back: 0.2, glow: 0.12 };
 
 /** Long hair from under the cap to the shoulders either side of the face (spec at PIRATE_HAIR). */
 export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, opts: Partial<typeof PIRATE_HAIR> = {}): Mesh[] {
@@ -591,13 +591,12 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
     out.push(m);
     return m;
   };
-  // the cap of hair under the hat, so the locks hang from something
-  slab("pirateHairCap", -X, X, capFoot, top, -Z, e.z * P.front);
-  // the locks either side of the face, hinged at the cap's foot and splayed out over the shoulders
+  // the locks either side of the face, from under the hat's rim, hinged at the eyes' top and splayed out over the shoulders (no cap of hair over
+  // the crown: the hat covers it, and a hair crown stood over the hat as a hood box, 429)
   for (const side of [-1, 1]) {
     const x0 = side > 0 ? X - e.x * P.side : -X, x1 = side > 0 ? X : -X + e.x * P.side;
-    const lock = slab("pirateHairLock", x0, x1, foot, capFoot, -Z, e.z * P.front);
-    lock.setPivotPoint(new Vector3(0, (capFoot - foot) / 2, 0));
+    const lock = slab("pirateHairLock", x0, x1, foot, top, -Z, e.z * P.front);
+    lock.setPivotPoint(new Vector3(0, capFoot - (top + foot) / 2, 0));
     lock.rotation.z = side * P.splay;
   }
   // the fall down the back of the head
