@@ -54,6 +54,68 @@ export function pirateVest(scene: Scene, body: ArticulatedBody, teamColor: Color
 }
 
 /*
+ * [S] 426 the barrel armour (audit 422 a.2: "a dark closed tunic - TABS: a brown barrel of vertical staves with two black straps round the chest";
+ * pirate.blunderbuss.red.png, card Appearance "barrel armor": a wooden barrel worn from under the arms to below the hips, wider than the trunk, its
+ * staves upright, two dark hoops round it, hung from two dark straps over the shoulders). BARREL_ARMOUR: .staves upright boards round an oval .out of
+ * the trunk wide and .deep of it deep, from .top of the trunk's height below its top to .below of it under its foot, each .wide of its share of the
+ * girth across and .thick deep, alternating brown and brown times .alt; .hoops dark bands at .hoopAt (share of the barrel's height up) .hoop tall and
+ * .hoopOut proud of the staves; two straps .strap of the trunk across at .strapAt of its half-width either side, up the front and the back from the
+ * barrel to the shoulders. Self-lit .glow.
+ */
+const BARREL_ARMOUR = {
+  staves: 14, out: 1.3, deep: 1.45, top: 0.28, below: 0.22, wide: 1.08, thick: 0.06, alt: 0.78, hoopAt: [0.18, 0.78], hoop: 0.07, hoopOut: 0.025,
+  strap: 0.08, strapAt: 0.55, brown: new Color3(0.26, 0.13, 0.06), dark: new Color3(0.03, 0.03, 0.035), glow: 0.12,
+};
+
+export function barrelArmour(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BARREL_ARMOUR;
+  const mf = getMaterialFactory();
+  const brown = mf.get("cloth", B.brown, { emissive: B.brown.scale(B.glow) });
+  const brownAlt = B.brown.scale(B.alt);
+  const brown2 = mf.get("cloth", brownAlt, { emissive: brownAlt.scale(B.glow) });
+  const dark = mf.get("cloth", B.dark, { emissive: B.dark.scale(B.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const place = (m: Mesh, x: number, y: number, z: number, ry: number, mat: typeof brown): Mesh => {
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.copyFrom(tm.rotation);
+    m.rotation.y += ry;
+    m.parent = tm.parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const rx = W * B.out / 2, rz = D * B.deep / 2;
+  const top = H / 2 - H * B.top, bottom = -H / 2 - H * B.below, tall = top - bottom, mid = (top + bottom) / 2;
+  // the staves: upright boards round the oval, each facing out from the middle
+  for (let i = 0; i < B.staves; i++) {
+    const a = (i / B.staves) * Math.PI * 2;
+    const x = Math.sin(a) * rx, z = Math.cos(a) * rz;
+    // the girth share this stave covers on the oval (its local radius times the step)
+    const r = Math.hypot(Math.cos(a) * rx, Math.sin(a) * rz);
+    const w = r * (Math.PI * 2 / B.staves) * B.wide;
+    const stave = MeshBuilder.CreateBox("barrelStave", { width: w, height: tall, depth: D * B.thick }, scene);
+    place(stave, x, mid, z, Math.atan2(Math.sin(a) * rz, Math.cos(a) * rx), i % 2 ? brown2 : brown);
+  }
+  // the hoops: dark bands round the staves
+  for (const at of B.hoopAt) {
+    const hoop = MeshBuilder.CreateCylinder("barrelHoop", { height: H * B.hoop, diameter: 2, tessellation: B.staves }, scene);
+    hoop.scaling.set(rx + D * (B.thick / 2 + B.hoopOut), 1, rz + D * (B.thick / 2 + B.hoopOut));
+    place(hoop, 0, bottom + tall * at, 0, Math.PI / B.staves, dark);
+  }
+  // the straps: up the front and the back from the barrel's rim over each shoulder
+  const strapTall = H / 2 - top + H * 0.04;
+  for (const side of [-1, 1]) for (const face of [-1, 1]) {
+    const strap = MeshBuilder.CreateBox("barrelStrap", { width: W * B.strap, height: strapTall, depth: D * 0.05 }, scene);
+    place(strap, side * W * B.strapAt / 2, top + strapTall / 2, face * (D / 2 + D * 0.03), 0, dark);
+  }
+  return out;
+}
+
+/*
  * [S] 424 the rolled-up pants (audit 422 a.2: "bare team legs - TABS: brown rolled-up pants ending mid-shin"; pirate.flintlock.red.png, card Appearance
  * "rolled-up brown pants": loose brown trousers from the belt over the knee to halfway down the shin, finished in a thick turned-up cuff a shade lighter).
  * PIRATE_PANTS: over each thigh a six-sided brown shell .thigh of the limb across, top to knee; over each shin a shell .shin across from the knee to .to
