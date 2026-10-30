@@ -71,6 +71,8 @@ const SPEAR_WALL_UP = 1.48;
 const SPEAR_OVERHAND_UP = 0.18;
 const SPEAR_FRONT_GRIP_MIN = 0.2;
 const SPEAR_FRONT_GRIP_MAX = 0.28;
+/** [S] 429 the Dragon's front carrier: his fists on the head pole's grip, the weapon fist .top of its length over its middle, the off fist .low under it. */
+const DRAGON_HOLD = { top: 0.28, low: 0.22 };
 // The front rank's boards in a wall in contact (see _lapBoard): how far ahead of the rank's line their plane stands, and the one turn off square every board in it takes.
 const BOARD_PLANE_REACH = 0.42;
 // How far a pressed board's top is tipped forward into the foe (radians), at full shove (see _lapBoard).
@@ -2214,6 +2216,7 @@ export class ProceduralAnimator {
     this._aimPistol(dt);
     this._aimBlunderbuss(dt);
     this._gripHarpoon();
+    this._holdDragonPole();
     this._restHalberd();
     this._restIceBow();
     this._restMonkBo();
@@ -3392,6 +3395,34 @@ export class ProceduralAnimator {
     for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
     this._offArmTo(grip.getAbsolutePosition().clone(), w);
+  }
+
+  // The Dragon's head-pole grip (dynastyDress "dragonPoleGrip" under the "dragonForm" holder on the root), looked up once
+  private _dragonGrip: Mesh | null | undefined = undefined;
+  /**
+   * [S] 429 the front carrier keeps both hands on the head pole (dynasty.dragon b.2: "the front pole hangs beside the running carrier, both his arms
+   * swinging free of it - TABS: he keeps a two-handed hold on it as he walks"; dynasty.dragon.jpg: the fists stacked on the dark grip at his chest).
+   * After every other pose, in any living state, the weapon fist is solved onto the grip's upper part (DRAGON_HOLD.top of its length up from its
+   * middle) and the off fist below it (.low down); eased off as he goes limp.
+   */
+  private _holdDragonPole(): void {
+    if (this._dragonGrip === undefined) {
+      const form = this._body.root.getChildren().find((n) => n.name === "dragonForm");
+      this._dragonGrip = (form?.getChildren().find((n) => n.name === "dragonPoleGrip") as Mesh | undefined) ?? null;
+    }
+    const grip = this._dragonGrip;
+    if (!grip || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const world = grip.getWorldMatrix();
+    const long = grip.getBoundingInfo().boundingBox.extendSize.y * 2;
+    const at = (k: number): Vector3 => Vector3.TransformCoordinates(new Vector3(0, long * k, 0), world);
+    const b = this._body;
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, at(DRAGON_HOLD.top), w);
+    this._armTo(b.leftShoulder, b.leftElbow, b.leftHand, at(-DRAGON_HOLD.low), w);
   }
 
   /** [S] 425 the pistols have left his hands (thrown away after the shot, simulationSystem _tossGuns): the arms are no longer held out on them. */
