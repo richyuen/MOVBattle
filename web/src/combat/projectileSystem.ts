@@ -246,6 +246,7 @@ const LEAF_COUNT = 11;
 // every man the row's hit catches is thrown up off his feet, `up` m/s, and `along` m/s on down the row's line, as a blast flings a body (RuntimeUnit.applyBlastLaunch,
 // past the living-hit lift cap that keeps a plain missile's knock shallow)
 const SPIKE_LOFT = { up: 10, along: 2.5 };
+const SPIRIT_LIFT = { up: 8, along: 1.2 };
 const LEAF_LONG = 0.5;
 const LEAF_WIDE = 0.19;
 const LEAF_WHIRL = 0.55; // radius of the knot round its line of flight
@@ -881,6 +882,7 @@ export class ProjectileSystem {
         const falloff = p.splashRadius > 0 ? Math.max(0, 1 - distance / p.splashRadius) : 1;
         const delta = unit.applyDamage(p.damage, p.knockback);
         if (p.shape === "leaves") this._loftFromSpikes(p, unit);
+        if (p.shape === "spirit_fire") this._knockUpFromSpiritFire(p, unit);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
             source: "projectile",
@@ -926,6 +928,7 @@ export class ProjectileSystem {
           this.abilityHook?.("spooky.skeleton_archer", "status:fire", p.target.position); // the only Fire Arrow shooter (SimulationSystem FIRE_ARROWS)
         }
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
+        if (p.shape === "spirit_fire") this._knockUpFromSpiritFire(p, p.target);
         if (p.shape === "firework") this._fireworkBurst(p);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
@@ -967,6 +970,21 @@ export class ProjectileSystem {
     if (along.lengthSquared() < 0.0001) along.set(1, 0, 0);
     along.normalize();
     unit.applyBlastLaunch(along, SPIKE_LOFT.along, SPIKE_LOFT.up);
+  }
+
+  /*
+   * [S] 435 the Candlehead's spirit fire knocks the man it strikes up (audit 434 spooky.candlehead c.2: "missing: knock-up on hit (target pushed into the
+   * air)"; card Characteristics: Candle Fire launches enemies upward): thrown SPIRIT_LIFT.up m/s straight up and .along m/s on along the shot, off a
+   * cyan flare at his feet. Logged as the shooter's "knockup".
+   */
+  private _knockUpFromSpiritFire(p: ActiveProjectile, unit: RuntimeUnit): void {
+    if (unit.isDead) return;
+    const along = new Vector3(p.targetPos.x - p.origin.x, 0, p.targetPos.z - p.origin.z);
+    if (along.lengthSquared() < 0.0001) along.set(1, 0, 0);
+    along.normalize();
+    unit.applyBlastLaunch(along, SPIRIT_LIFT.along, SPIRIT_LIFT.up);
+    this.visualEffects?.spawnSmokePuff(unit.position.add(new Vector3(0, 0.15, 0)), SPIRIT_FIRE.shell);
+    this.abilityHook?.("spooky.candlehead", "knockup", unit.position); // the only spirit_fire shooter (rosterManifest projectileHint)
   }
 
   /** Throw every enemy body near the blast up and away from its centre, the dead ones included. */
