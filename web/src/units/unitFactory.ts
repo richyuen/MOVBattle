@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, barrelBracers, captainCoat, openCoat, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
+import { barrelArmour, barrelBracers, captainCoat, flintlockSocks, openCoat, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -602,6 +602,8 @@ export class UnitFactory {
     if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...piratePants(this._scene, body));
     // [S] 429 the Flintlock's long dark-team hair from under the cap to his shoulders either side of the face (pirateDress PIRATE_HAIR)
     if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...pirateHair(this._scene, body, teamColor.scale(0.42)));
+    // [S] 430 the Flintlock's plain grey socks from the pant cuff into the shoe (pirateDress PLAIN_SOCKS)
+    if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...flintlockSocks(this._scene, body, teamColor));
     // [S] 423 the Bomb Thrower's open vest over his bare team chest, the same cut (pirate.bomb_thrower.red.png; pirateDress PIRATE_VEST)
     if (definition.id === "pirate.bomb_thrower" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
     // [S] 424 the Bomb Thrower's ripped tan shorts to above the knee, their hem torn into points (pirateDress PIRATE_SHORTS)

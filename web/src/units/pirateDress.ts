@@ -612,15 +612,27 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
  */
 const PIRATE_SOCKS = { from: 0.22, top: 0.34, topOut: 1.5, bands: 6, to: 0.98, out: 1.3, shade: 0.8, grey: new Color3(0.5, 0.49, 0.47), glow: 0.12 };
 
-/** Ringed team-and-grey socks from below the knee into the shoe (spec at PIRATE_SOCKS). */
-export function pirateSocks(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+/*
+ * [S] 430 the Flintlock's plain socks (audit 422 flintlock a.3: "the shins - bare - TABS: grey socks between the pant cuff and brown shoes";
+ * pirate.flintlock.blue.png: under the turned pant cuff a plain warm-grey sock down into the shoe, no rings). PLAIN_SOCKS: one shell from .from of the
+ * shin (up inside the pant cuff, which ends at PIRATE_PANTS.to) to PIRATE_SOCKS.to, .out of the shin across, in .grey self-lit PIRATE_SOCKS.glow.
+ */
+const PLAIN_SOCKS = { from: 0.46, out: 1.24, grey: new Color3(0.45, 0.4, 0.34) };
+
+/** Ringed team-and-grey socks from below the knee into the shoe (spec at PIRATE_SOCKS); `plain` gives the Flintlock's one grey sock (PLAIN_SOCKS). */
+export function pirateSocks(scene: Scene, body: ArticulatedBody, teamColor: Color3, plain?: typeof PLAIN_SOCKS): Mesh[] {
   const S = PIRATE_SOCKS;
   const mf = getMaterialFactory();
+  const plainGrey = plain ? mf.get("cloth", plain.grey, { emissive: plain.grey.scale(S.glow) }) : undefined;
   const grey = mf.get("cloth", S.grey, { emissive: S.grey.scale(S.glow) });
   const stripe = teamColor.scale(S.shade);
   const team = mf.get("cloth", stripe, { emissive: stripe.scale(S.glow) });
   const out: Mesh[] = [];
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    if (plain) {
+      out.push(limbShell(scene, "pirateSock", shin, plain.from, S.to, plain.out, plainGrey!));
+      continue;
+    }
     out.push(limbShell(scene, "pirateSockTop", shin, S.from, S.top, S.topOut, grey));
     const step = (S.to - S.top) / S.bands;
     for (let i = 0; i < S.bands; i++) {
@@ -628,6 +640,11 @@ export function pirateSocks(scene: Scene, body: ArticulatedBody, teamColor: Colo
     }
   }
   return out;
+}
+
+/** The Flintlock's plain warm-grey socks from inside the pant cuff into the shoe (spec at PLAIN_SOCKS). */
+export function flintlockSocks(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  return pirateSocks(scene, body, teamColor, PLAIN_SOCKS);
 }
 
 /*
