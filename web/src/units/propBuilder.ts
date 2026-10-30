@@ -2970,9 +2970,13 @@ const JAVELIN_HEAD_WIDE = 0.15;
 const JAVELIN_LEAF = { shoulder: 0.28, flank: 0.62, flankWide: 0.55, ridge: 0.13, jitter: 0.08, glow: 0.14, wraps: 4 };
 const JAVELIN_STONE = new Color3(0.2, 0.2, 0.22);
 const JAVELIN_ROPE = new Color3(0.74, 0.6, 0.42);
-// The harpoon gun (units/pirate.harpooner): a canister about a forearm long and half as wide again as the forearm is thick; the harpoon leaves from the node named HARPOON_MUZZLE
-const HARPOON_GUN_LONG = 0.24;
-const HARPOON_GUN_WIDE = 0.11;
+/**
+ * [S] 423 the harpoon gun's breech (critic 422: a plain dark cylinder; pirate.harpooner.red.png: a boxy team-coloured octagonal block as deep as his
+ * torso hung under a grey A-frame carry handle in his fist, a fat grey nozzle half the block across with three raised rings and a lipped mouth).
+ * In prop units (s): the block .long along the barrel (+y) and .wide across, squashed .flat across x; it hangs .hang below the fist on +z (the
+ * handle's -z side is up); nozzle .nozzle long, .bore of the block across, ringed .rings; the harpoon leaves from the node named HARPOON_MUZZLE.
+ */
+const HARPOON_BREECH = { long: 0.2, wide: 0.19, flat: 0.86, hang: 0.9, nozzle: 0.17, bore: 0.52, rings: [0.25, 0.55, 0.85], handle: 0.07 };
 export const HARPOON_MUZZLE = "harpoonMuzzle";
 /*
  * The halberd (327; renaissance.halberd.jpg: a long red-brown shaft taller than the man, at its top a dark steel head: a broad axe blade out to one side, its
@@ -3541,37 +3545,70 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // the harpoon leaves from HARPOON_MUZZLE on its rope (simulationSystem harpoonMuzzleOf).
       // Self-lit, not metal: as metal in the field's shade the canister read as one black drill. Dark navy, not pale steel (the reference canister is a
       // deep slate blue under its grey nozzle)
-      const steel = mat(scene, new Color3(0.17, 0.21, 0.34), 0.12, "cloth");
+      // [S] 423 rebuilt to the spec at HARPOON_BREECH: the root "harpoonGun" sits at the fist on the carry handle; the team block hangs under it
+      const H = HARPOON_BREECH;
+      const team = mat(scene, teamColor ?? accent, 0.1, "cloth");
       const grey = mat(scene, new Color3(0.55, 0.56, 0.58), 0.2, "cloth");
-      const dark = mat(scene, new Color3(0.14, 0.14, 0.16), 0, "cloth");
-      const body = MeshBuilder.CreateCylinder("harpoonGun", { height: HARPOON_GUN_LONG * s, diameter: HARPOON_GUN_WIDE * s, tessellation: 8 }, scene);
-      body.material = steel;
-      const cap = MeshBuilder.CreateCylinder("harpoonCap", { height: 0.03 * s, diameter: HARPOON_GUN_WIDE * 1.12 * s, tessellation: 8 }, scene);
-      cap.position.y = -HARPOON_GUN_LONG * 0.5 * s;
+      const dark = mat(scene, new Color3(0.2, 0.2, 0.22), 0.04, "cloth");
+      const body = new Mesh("harpoonGun", scene);
+      const hang = H.wide * H.hang * s;
+      // The breech block: a fat octagon along the barrel, a little flattened across, flat-faced
+      const block = MeshBuilder.CreateCylinder("harpoonBreech", { height: H.long * s, diameter: H.wide * s, tessellation: 8 }, scene);
+      block.scaling.x = H.flat;
+      block.rotation.y = Math.PI / 8;
+      block.position.z = hang;
+      block.material = team;
+      block.convertToFlatShadedMesh();
+      block.parent = body;
+      // A dark plate across its back end
+      const cap = MeshBuilder.CreateCylinder("harpoonCap", { height: 0.02 * s, diameter: H.wide * 0.8 * s, tessellation: 8 }, scene);
+      cap.position.set(0, -H.long * 0.5 * s, hang);
       cap.material = dark;
       cap.parent = body;
-      const barrel = MeshBuilder.CreateCylinder("harpoonBarrel", { height: 0.16 * s, diameterTop: HARPOON_GUN_WIDE * 0.42 * s, diameterBottom: HARPOON_GUN_WIDE * 0.6 * s, tessellation: 8 }, scene);
-      barrel.position.y = (HARPOON_GUN_LONG * 0.5 + 0.08) * s;
+      // The A-frame carry handle: two grey legs from the block's top up to a bar in the fist
+      const topZ = hang - H.wide * 0.5 * s;
+      for (const k of [-1, 1]) {
+        const leg = MeshBuilder.CreateBox("harpoonHandle", { width: 0.022 * s, height: 0.022 * s, depth: Math.abs(topZ) * 1.15 + 0.01 * s }, scene);
+        leg.position.set(0, k * H.handle * 0.5 * s, topZ * 0.5);
+        leg.rotation.x = -k * 0.45;
+        leg.material = grey;
+        leg.parent = body;
+      }
+      const bar = MeshBuilder.CreateBox("harpoonHandleBar", { width: 0.03 * s, height: H.handle * 0.9 * s, depth: 0.03 * s }, scene);
+      bar.material = grey;
+      bar.parent = body;
+      // The fat grey nozzle out of the block's front, three raised rings and a lipped mouth
+      const front = H.long * 0.5 * s;
+      const bore = H.wide * H.bore * s;
+      const barrel = MeshBuilder.CreateCylinder("harpoonBarrel", { height: H.nozzle * s, diameter: bore, tessellation: 8 }, scene);
+      barrel.position.set(0, front + H.nozzle * 0.5 * s, hang);
       barrel.material = grey;
+      barrel.convertToFlatShadedMesh();
       barrel.parent = body;
-      for (const y of [0.03, 0.12]) {
-        const ring = MeshBuilder.CreateCylinder("harpoonRing", { height: 0.025 * s, diameter: HARPOON_GUN_WIDE * 0.62 * s, tessellation: 8 }, scene);
-        ring.position.y = (HARPOON_GUN_LONG * 0.5 + y) * s;
-        ring.material = dark;
+      for (const at of H.rings) {
+        const ring = MeshBuilder.CreateCylinder("harpoonRing", { height: 0.018 * s, diameter: bore * 1.16, tessellation: 8 }, scene);
+        ring.position.set(0, front + at * H.nozzle * s, hang);
+        ring.material = grey;
+        ring.convertToFlatShadedMesh();
         ring.parent = body;
       }
-      const head = MeshBuilder.CreateCylinder("harpoonHead", { height: 0.09 * s, diameterTop: 0, diameterBottom: HARPOON_GUN_WIDE * 0.38 * s, tessellation: 4 }, scene);
-      head.position.y = (HARPOON_GUN_LONG * 0.5 + 0.2) * s;
+      const lip = MeshBuilder.CreateCylinder("harpoonLip", { height: 0.03 * s, diameterBottom: bore * 1.05, diameterTop: bore * 1.3, tessellation: 8 }, scene);
+      lip.position.set(0, front + H.nozzle * s + 0.012 * s, hang);
+      lip.material = grey;
+      lip.convertToFlatShadedMesh();
+      lip.parent = body;
+      const hole = MeshBuilder.CreateCylinder("harpoonBore", { height: 0.005 * s, diameter: bore * 0.8, tessellation: 8 }, scene);
+      hole.position.set(0, front + H.nozzle * s + 0.03 * s, hang);
+      hole.material = dark;
+      hole.parent = body;
+      // The harpoon's dark head sat in the mouth
+      const head = MeshBuilder.CreateCylinder("harpoonHead", { height: 0.08 * s, diameterTop: 0, diameterBottom: bore * 0.5, tessellation: 4 }, scene);
+      head.position.set(0, front + H.nozzle * s + 0.05 * s, hang);
       head.material = dark;
       head.parent = body;
-      const handle = MeshBuilder.CreateBox("harpoonHandle", { width: 0.025 * s, height: HARPOON_GUN_LONG * 0.5 * s, depth: 0.025 * s }, scene);
-      handle.position.z = -(HARPOON_GUN_WIDE * 0.5 + 0.03) * s;
-      handle.material = dark;
-      handle.parent = body;
       const muzzle = new TransformNode(HARPOON_MUZZLE, scene);
-      muzzle.position.y = (HARPOON_GUN_LONG * 0.5 + 0.16) * s;
+      muzzle.position.set(0, front + H.nozzle * s + 0.03 * s, hang);
       muzzle.parent = body;
-      body.position.y = 0.06 * s; // gripped below the middle, the barrel ahead of the fist
       return body;
     }
     case "javelin": {
