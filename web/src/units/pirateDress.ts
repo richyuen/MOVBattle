@@ -983,7 +983,7 @@ export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
  * a brass buckle .buckle of the tongue across on its face. Self-lit .glow.
  */
 const HARPOONER_SHOES = {
-  shellTo: 0.45, shellOut: 1.25, shellLong: 1.12, sockFrom: 0.45, sockTo: 0.82, sockOut: 1.22, skinOut: 1.1, cuffAt: 0.55, tongue: 0.55, tongueTall: 0.3, tongueLean: 0.25, buckle: 0.6,
+  shellTo: 0.62, shellOut: 1.25, shellLong: 1.12, sockFrom: 0.62, sockTo: 1.0, sockOut: 1.22, skinOut: 1.1, cuffAt: 0.55, tongue: 0.55, tongueTall: 0.3, tongueLean: 0.25, buckle: 0.6,
   brown: new Color3(0.4, 0.2, 0.13), grey: new Color3(0.55, 0.48, 0.38), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
 };
 
@@ -1022,7 +1022,8 @@ export function harpoonerShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
       shell.convertToFlatShadedMesh();
       out.push(shell);
       ring("harpoonerSock", S.sockFrom, S.sockTo, S.sockOut, grey);
-      ring("harpoonerShin", S.sockTo, 1, S.skinOut, skin);
+      // the shin above the sock is the lower-leg mesh in the skin (434: the cuff's skin ring glowed team blue over the foot)
+      if (S.sockTo < 1) ring("harpoonerShin", S.sockTo, 1, S.skinOut, skin);
       // the tongue up the front of the ankle, and its buckle
       const tall = ex.y * 2 * S.tongueTall, wide = ex.x * 2 * S.tongue;
       const pivot = new TransformNode("harpoonerTongue", scene);
