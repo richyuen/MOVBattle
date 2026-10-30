@@ -401,12 +401,12 @@ export function monkArmPlates(scene: Scene, body: ArticulatedBody, teamColor: Co
 const DRAGON_FORM = {
   skull: 0.62, size: 2.0, headY: 1.95, headZ: 0.5, snout: [0.6, 0.28, 0.4] as const, jaw: [0.5, 0.1, 0.38] as const, gape: 0.2, fangs: 4,
   tongue: [0.17, 0.55] as const, eye: 0.17, pole: 0.05, poleFoot: 0.55,
-  segs: 9, seg: [0.36, 0.32, 0.36] as const, bodyY: 1.3, bodyTail: 0.85, sway: 0.18, fin: 0.14,
+  segs: 9, seg: [0.36, 0.32, 0.36] as const, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, fin: 0.14,
   gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), tongueTint: 0.85, glow: 0.12,
 };
 /** [S] 417 the Dragon Carriers (dragonForm): one under every .every-th segment, legs .legLong of h, trunk .trunk, head .head, arms .arm thick up to the
  * pole's dark .grip; trousers .trouserShade and skin .skinShade of the team colour. */
-const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.45, trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.06, grip: 0.16, trouserShade: 0.7, skinShade: 1.1 };
+const DRAGON_CARRIER = { every: 3, leg: 0.09, legLong: 0.35, poleColor: new Color3(0.85, 0.24, 0.12), trunk: [0.26, 0.32, 0.16] as const, head: 0.17, arm: 0.06, grip: 0.16, trouserShade: 0.7, skinShade: 1.1 };
 /** The Dragon's giant paper head on its pole and its long team body ribbon (spec at DRAGON_FORM). */
 export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const D = DRAGON_FORM;
@@ -471,7 +471,7 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
       const arm = put(MeshBuilder.CreateBox("dragonCarrierArm", { width: C.arm * h, height: (fist - (C.legLong + C.trunk[1] * 0.9) * h), depth: C.arm * h }, scene), new Vector3(x + side * C.trunk[0] * h * 0.5, ((C.legLong + C.trunk[1] * 0.9) * h + fist) / 2, z), skin);
       arm.rotation.z = side * 0.35;
     }
-    const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(x, (fist + underside) / 2, z));
+    const pole = put(MeshBuilder.CreateCylinder("dragonCarrierPole", { height: underside - fist + C.grip * h, diameter: D.pole * h, tessellation: 6 }, scene), new Vector3(x, (fist + underside) / 2, z), lit(C.poleColor)); // [P] 418 red-orange on both teams
     pole.position.y -= C.grip * h * 0.5;
     put(MeshBuilder.CreateCylinder("dragonCarrierGrip", { height: C.grip * h, diameter: D.pole * h * 1.35, tessellation: 6 }, scene), new Vector3(x, fist, z), dark);
   };
