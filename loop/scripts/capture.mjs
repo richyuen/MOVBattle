@@ -455,6 +455,9 @@ async function main() {
           const t = game.spawnUnit(id === "renaissance.painter" || id === "dynasty.samurai" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
           // Zeus's bolt conducts to nearby men (card Characteristics, a lightning chain): he spars with a squire and two mates clustered beside it (evidence 386)
           if (id === "ancient.zeus") for (const dz of [-0.9, 0.9]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.4, z: dz });
+          // [evidence 425] the Pirate Queen's Bomb Spin fires when she is outnumbered (card Abilities): she faces her squire and four mates
+          // in a file beside it (five to one), so the mechanic can show once it exists (audit 422 c.2)
+          if (id === "pirate.pirate_queen") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.3, z: dz });
           let ally = null;
           if (support) {
             ally = game.spawnUnit("medieval.squire", 1, { x: d + 2, z: 1.2 });
@@ -648,7 +651,9 @@ async function main() {
           else summary.notes.push(`${name}: spawn failed`);
         };
         // A support unit's enemy stands far off: frame the unit and the ally beside it; a ranged unit: the unit and its missile's first metres
-        const far = support ? 1 : d >= 6 ? 3 : 0;
+        // [evidence 425] the blunderbuss stands 4.5 m off (engageRange 7.5): the midpoint frame (radius 5.5) put both men past its edges and his
+        // windup/release/flight showed an empty field (audit 422 c.1, c.3): he is framed as a ranged unit, the man and his shot's first metres
+        const far = support ? 1 : d >= 6 || id === "pirate.blunderbuss" ? 3 : 0;
         await take(`unit_${id}_idle`, null, 1);
         if (release) {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
