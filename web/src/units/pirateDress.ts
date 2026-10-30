@@ -854,7 +854,7 @@ export function flintlockLocks(scene: Scene, body: ArticulatedBody): Mesh[] {
  * halfway down the calf, a turned cuff a shade darker, the bare shin below in the face's team skin). HARPOONER_PANTS: the Flintlock's PIRATE_PANTS
  * cut in .beige, its cuff the beige times .cuff; the shin and thigh meshes take the head's team-skin material so the calf shows bare under the cuff.
  */
-const HARPOONER_PANTS = { beige: new Color3(0.5, 0.43, 0.33), cuff: 0.82 };
+const HARPOONER_PANTS = { beige: new Color3(0.78, 0.66, 0.5), cuff: 0.82 };
 
 export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
   const P = HARPOONER_PANTS;
