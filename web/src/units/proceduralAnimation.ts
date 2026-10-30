@@ -149,6 +149,19 @@ const POTION_HANG = { raise: 0.04, out: 0.16, elbow: -0.14, tip: new Vector3(0, 
  *   side), slow off the cock and fastest across the front; the blow is on the man where the snath crosses his front (.hitAt of the cut);
  *   hold to .hold of the rest, then eased back to the carry. Through the cut the crescent is turned .roll about the snath, so it lies flat, not hanging. The sim throws a man the sweep leaves alive up and away (simulationSystem SCYTHE_FLING).
  */
+/*
+ * [S] 425 the cutlass slash (pirate.captain c.1: "the long rod held across the chest in both hands, the sword not swinging - TABS: the cutlass slashing
+ * through the man"; pirate.captain.jpg). Not brought down on his head (aimBlowAt skips a cutlass) but cut level across his front one-handed:
+ *   cock (0 -> .commit): the trunk wound .twist (rad) onto the weapon side, the weapon arm up ahead at shoulder height (.arm) and out (.outCock), elbow
+ *   bent .elbow, the blade's tip swung back to .cock (yaw from his front toward the weapon side, rad), .low below level;
+ *   slash (commit -> .through of the rest): the trunk unwinds .twist the other way, the arm straightens and swings across (.outEnd), the tip sweeps
+ *   through his front to .end on the off side, the weapon-side foot stepping in .step and the trunk pitching .pitch into it; the blow is on the man
+ *   where the tip crosses his front (.hitAt of the slash, blowLandsIn); held to .hold of the rest, then eased back to the carry.
+ */
+const CUTLASS_SLASH = {
+  commit: 0.4, twist: 0.7, cock: 1.9, end: -1.0, low: 0.08, arm: -1.35, outCock: -0.6, outEnd: 0.45, elbow: -0.35, offArm: 0.35,
+  step: 0.3, pitch: 0.15, through: 0.45, hitAt: 0.66, hold: 0.75,
+};
 const SCYTHE_SWEEP = { roll: Math.PI / 2, twist: 0.75, cock: 2.0, end: -1.1, low: 0.12, arm: -0.55, crouch: 0.25, through: 0.55, hitAt: 0.55, hold: 0.75 };
 /*
  * [S] the hay baler's level stick carry (344; farmer.hay_baler.blue.png: the stick held in the one weapon fist at hip height before the bale, run level
@@ -848,7 +861,8 @@ export class ProceduralAnimator {
   /** The man a blow is being struck at (his head mark), set by the sim when the swing starts; null for none. See the [R] target-aimed blow spec. */
   aimBlowAt(mark: TransformNode | null, landsIn = 0): void {
     // A rapier is thrust at him on its own line (see LUNGE), not brought down on his head
-    this._blowMark = this._rapier() || this._stabsFork() ? null : mark;
+    // ...nor a cutlass, which is slashed level across him (CUTLASS_SLASH)
+    this._blowMark = this._rapier() || this._stabsFork() || this._cutlass() ? null : mark;
     this._blowLandsAt = landsIn;
     // nor is a halberd's chop: it comes down in his own plane (see CHOP)
     if (this._halberd()) {
@@ -916,6 +930,10 @@ export class ProceduralAnimator {
     if (this._attackMotion === "blade_slash" && this._sweeps()) {
       const cocked = this._resolveReleasePoint(0.45);
       return cocked + (1 - cocked) * SCYTHE_SWEEP.through * SCYTHE_SWEEP.hitAt;
+    }
+    if (this._attackMotion === "blade_slash" && this._cutlass()) {
+      const cocked = this._resolveReleasePoint(CUTLASS_SLASH.commit);
+      return cocked + (1 - cocked) * CUTLASS_SLASH.through * CUTLASS_SLASH.hitAt;
     }
     const commit = this._resolveReleasePoint(0.4);
     return commit + (1 - commit) * BLOW_LAND * 0.6;
@@ -4628,6 +4646,55 @@ export class ProceduralAnimator {
     b.hip.position.addInPlace(this._lungeStep);
   }
 
+  /** A cutlass in the weapon fist (propBuilder buildCutlass, found by its jewel), looked up once. */
+  private _cutlassFound: boolean | undefined = undefined;
+  private _cutlass(): boolean {
+    this._cutlassFound ??= this._body.rightHand.getChildMeshes(false).some((m) => m.name === "cutlassJewel");
+    return this._cutlassFound;
+  }
+
+  /** The cutlass slash (spec at CUTLASS_SLASH). */
+  private _animateCutlassSlash(dt: number): void {
+    this._attackTimer += dt;
+    const b = this._body;
+    const S = CUTLASS_SLASH;
+    const progress = Math.min(this._attackTimer / this._attackDuration, 1);
+    const commit = this._resolveReleasePoint(S.commit);
+    const through = commit + (1 - commit) * S.through;
+    const hold = commit + (1 - commit) * S.hold;
+    const side = Math.sign(b.rightShoulder.position.x) || 1;
+    // c: 0 at rest, 1 cocked; h: 0 cocked, 1 slashed through
+    let c = 0, h = 0;
+    if (progress < commit) {
+      const u = progress / Math.max(commit, 0.001);
+      c = u * (2 - u);
+    } else {
+      const u = Math.min(1, (progress - commit) / Math.max(through - commit, 0.001));
+      c = 1;
+      h = u * u * (3 - 2 * u);
+    }
+    const r = progress > hold ? (progress - hold) / Math.max(1 - hold, 0.001) : 0;
+    const k = 1 - r * (2 - r);
+    const yaw = S.cock + (S.end - S.cock) * h;
+    this._sweepTip = new Vector3(Math.sin(yaw) * side, -S.low, Math.cos(yaw)).normalize();
+    b.torso.rotation.y = S.twist * (1 - 2 * h) * side * c * k;
+    b.torso.rotation.x = S.pitch * h * k;
+    b.rightShoulder.rotation.x = S.arm * c * k;
+    b.rightShoulder.rotation.z = (S.outCock + (S.outEnd - S.outCock) * h) * c * k;
+    b.rightElbow.rotation.x = (S.elbow * (1 - h)) * c * k;
+    b.leftShoulder.rotation.x = S.offArm * c * k;
+    b.leftShoulder.rotation.z = -0.35 * c * k;
+    b.leftElbow.rotation.x = -0.5 * c * k;
+    b.rightHip.rotation.x = -S.step * h * k;
+    b.rightKnee.rotation.x = S.step * h * k;
+    b.leftHip.rotation.x = S.step * 0.5 * h * k;
+    this._clubHold = c * k;
+    if (progress >= 1) {
+      this._state = AnimState.Idle;
+      this._sweepTip = null;
+    }
+  }
+
   /** The harvester's sweep (spec at SCYTHE_SWEEP). */
   private _animateSweep(dt: number): void {
     this._attackTimer += dt;
@@ -5032,6 +5099,10 @@ export class ProceduralAnimator {
     }
     if (this._sweeps()) {
       this._animateSweep(dt);
+      return;
+    }
+    if (this._cutlass()) {
+      this._animateCutlassSlash(dt);
       return;
     }
     this._attackTimer += dt;
