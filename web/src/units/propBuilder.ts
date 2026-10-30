@@ -3083,6 +3083,8 @@ const JAVELIN_ROPE = new Color3(0.74, 0.6, 0.42);
 const HARPOON_BREECH = { long: 0.2, wide: 0.19, flat: 0.86, hang: 0.9, nozzle: 0.17, bore: 0.52, rings: [0.25, 0.55, 0.85], handle: 0.07, offGrip: 0.42 };
 export const HARPOON_MUZZLE = "harpoonMuzzle";
 export const HARPOON_OFF_GRIP = "harpoonOffGrip";
+/** [S] 429 the harpoon gun's sword-bayonet (spec at the "harpoon" case). */
+const HARPOON_BAYONET = { long: 0.5, wide: 0.04, thin: 0.012, point: 0.18, at: 0.5, lug: 0.03, below: 0.01, steel: new Color3(0.36, 0.37, 0.4) };
 /*
  * The halberd (327; renaissance.halberd.jpg: a long red-brown shaft taller than the man, at its top a dark steel head: a broad axe blade out to one side, its
  * edge bowed in an arc and its lower horn hanging below the upper, a short back spike opposite it, and a long spear point standing off the top). Not a pole:
@@ -3736,6 +3738,32 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const offGrip = new TransformNode(HARPOON_OFF_GRIP, scene);
       offGrip.position.set(0, H.long * H.offGrip * s, topZ);
       offGrip.parent = body;
+      // [S] 429 the sword-bayonet under the barrel (audit 422 b.3: "a hand-long stub under the barrel - TABS: a thin sword-bayonet under the barrel
+      // reaching down past the knee"; pirate.harpooner.red.png: a thin dark-grey blade from a lug under the nozzle on along the barrel, longer than the
+      // whole gun, tapering to a point). HARPOON_BAYONET: a lug .lug across under the nozzle .at of its length; the blade .long (prop units) on from it,
+      // .wide across the barrel's plane and .thin through it, its point the last .point of it, hung .below the nozzle's underside.
+      const B = HARPOON_BAYONET;
+      const steel = mat(scene, B.steel, 0.12, "cloth");
+      const under = hang - bore * 0.5 - B.below * s;
+      const lugY = front + H.nozzle * B.at * s;
+      const lug = MeshBuilder.CreateBox("harpoonBayonetLug", { width: B.lug * s, height: B.lug * 1.6 * s, depth: (hang - bore * 0.5 - under) + B.lug * s }, scene);
+      lug.position.set(0, lugY, (hang - bore * 0.5 + under) / 2);
+      lug.material = grey;
+      lug.parent = body;
+      const flat = B.long * (1 - B.point) * s;
+      const blade = MeshBuilder.CreateBox("harpoonBayonet", { width: B.thin * s, height: flat, depth: B.wide * s }, scene);
+      blade.position.set(0, lugY + flat / 2, under);
+      blade.material = steel;
+      blade.parent = body;
+      const tip = MeshBuilder.CreateCylinder("harpoonBayonetTip", { height: B.long * B.point * s, diameterTop: 0, diameterBottom: B.wide * s * 1.41, tessellation: 4 }, scene);
+      tip.rotation.y = Math.PI / 4; // the square section axis-aligned, then squashed thin across x
+      tip.bakeCurrentTransformIntoVertices();
+      tip.scaling.x = B.thin / B.wide;
+      tip.bakeCurrentTransformIntoVertices();
+      tip.position.set(0, lugY + flat + B.long * B.point * 0.5 * s, under);
+      tip.material = steel;
+      tip.parent = body;
+      for (const m of [lug, blade, tip]) m.convertToFlatShadedMesh();
       return body;
     }
     case "javelin": {
