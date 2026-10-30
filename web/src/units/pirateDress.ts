@@ -844,7 +844,7 @@ export function pirateBeard(scene: Scene, body: ArticulatedBody, color: Color3 =
  * chest box) .run[0] of the trunk's width across, .run[1] of its height down from its top, .run[2] of its depth deep, standing .proud of the depth off
  * its front.
  */
-const CAPTAIN_BEARD = { tash: 1.15, tashTall: 0.2, tashAhead: 0.1, droop: 0.22, run: [0.44, 0.34, 0.3] as const, proud: 0.42, color: new Color3(0.4, 0.2, 0.12) };
+const CAPTAIN_BEARD = { tash: 1.15, tashTall: 0.2, tashAhead: 0.1, droop: 0.22, run: [0.46, 0.42, 0.34] as const, proud: 0.3, color: new Color3(0.4, 0.2, 0.12) };
 
 /** The Captain's long brown beard with a moustache, run down onto his chest (spec at CAPTAIN_BEARD). */
 export function captainBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -871,7 +871,8 @@ export function captainBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   const run = MeshBuilder.CreateIcoSphere("captainBeardRun", { radius: 1, subdivisions: 1, flat: true }, scene);
   run.parent = tm.parent;
   run.scaling.set(W * C.run[0] / 2, H * C.run[1] / 2, D * C.run[2] / 2);
-  run.position.set(cx, cy + H / 2 - H * C.run[1] * 0.3, cz + D / 2 + D * C.proud);
+  // centred on the trunk's top edge so it runs up into the chin's beard (one lower on the chest floated apart from it, 431 look)
+  run.position.set(cx, cy + H / 2 - H * C.run[1] * 0.05, cz + D / 2 + D * C.proud);
   run.material = hair;
   out.push(run);
   return out;
