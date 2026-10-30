@@ -604,3 +604,29 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
   slab("pirateHairFall", -X * 0.94, X * 0.94, foot, top, -Z - e.z * P.back, -Z + e.z * 0.3);
   return out;
 }
+
+/*
+ * [S] 429 the striped socks (audit 422 bomb_thrower a.3: "the shins - bare - TABS: team-and-grey ringed socks from the knee down to brown shoes";
+ * pirate.bomb_thrower.red.png: below a bare knee a grey turned-down top, then the sock ringed in even team and grey bands down into the shoe, a little
+ * proud of the shin). PIRATE_SOCKS, on each lower leg (share of its length from the knee): the turned top a grey ring from .from to .top, .topOut of the
+ * shin across; under it .bands rings to .to, .out across, alternating the team times .shade and grey from the top. Self-lit .glow.
+ */
+const PIRATE_SOCKS = { from: 0.22, top: 0.34, topOut: 1.5, bands: 6, to: 0.98, out: 1.3, shade: 0.8, grey: new Color3(0.5, 0.49, 0.47), glow: 0.12 };
+
+/** Ringed team-and-grey socks from below the knee into the shoe (spec at PIRATE_SOCKS). */
+export function pirateSocks(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = PIRATE_SOCKS;
+  const mf = getMaterialFactory();
+  const grey = mf.get("cloth", S.grey, { emissive: S.grey.scale(S.glow) });
+  const stripe = teamColor.scale(S.shade);
+  const team = mf.get("cloth", stripe, { emissive: stripe.scale(S.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "pirateSockTop", shin, S.from, S.top, S.topOut, grey));
+    const step = (S.to - S.top) / S.bands;
+    for (let i = 0; i < S.bands; i++) {
+      out.push(limbShell(scene, "pirateSockBand", shin, S.top + step * i, S.top + step * (i + 1), S.out, i % 2 ? grey : team));
+    }
+  }
+  return out;
+}

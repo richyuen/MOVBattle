@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, barrelBracers, captainCoat, openCoat, pirateHair, piratePants, pirateShorts, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
+import { barrelArmour, barrelBracers, captainCoat, openCoat, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -605,6 +605,8 @@ export class UnitFactory {
     if (definition.id === "pirate.bomb_thrower" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
     // [S] 424 the Bomb Thrower's ripped tan shorts to above the knee, their hem torn into points (pirateDress PIRATE_SHORTS)
     if (definition.id === "pirate.bomb_thrower" && !shouldUseVehicleBody) propMeshes.push(...pirateShorts(this._scene, body));
+    // [S] 429 the Bomb Thrower's team-and-grey ringed socks from below the knee into the shoe (pirateDress PIRATE_SOCKS)
+    if (definition.id === "pirate.bomb_thrower" && !shouldUseVehicleBody) propMeshes.push(...pirateSocks(this._scene, body, teamColor));
     // [S] 426 the Blunderbuss's barrel armour: upright brown staves, two dark hoops, straps over the shoulders (pirateDress BARREL_ARMOUR)
     if (definition.id === "pirate.blunderbuss" && !shouldUseVehicleBody) propMeshes.push(...barrelArmour(this._scene, body));
     // [S] 427 the Blunderbuss's flat plank hat, a barrel lid worn on the crown (pirateDress PLANK_HAT)
