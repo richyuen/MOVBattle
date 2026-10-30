@@ -84,6 +84,9 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
 const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
 const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
+// [S] 427 the Blunderbuss's shot (card Weapons: force 650, range 5): the man it is fired at is thrown off his feet along the shot's line, .fling m/s
+// out and .lift m/s up (applyBlastLaunch's topple: he tumbles and lies before he rises)
+const BLUNDERBUSS_BLAST = { units: new Set(["pirate.blunderbuss"]), fling: 6, lift: 7 };
 // [S] 427 Bomb Spin (card pirate.pirate_queen Abilities: 7 bombs, explosion radius 3.5, cooldown 8; Characteristics "If outnumbered ... spin and release
 // several bombs, then proceed to helicopter upwards, with the bombs blowing up the units below"): with .crowd or more men within .within m and the spin
 // ready (.cooldown s apart, ready from the start), she stops and whirls at .rate rad/s, arms out level (proceduralAnimation BOMB_SPIN_POSE); .drop s in,
@@ -2983,6 +2986,12 @@ export class SimulationSystem {
       if (distSq > 2.2 * 2.2) continue;
       const pelletHits = unit === target ? pellets : Math.max(1, Math.floor(pellets / 3));
       this._applyDirectOrSplash(unit, perPellet * pelletHits, 0, attacker.team, knockback.scale(0.5));
+    }
+    // [S] 427 ...the man the shot is at is blown off his feet along its line (BLUNDERBUSS_BLAST), not left standing under the pellets
+    if (BLUNDERBUSS_BLAST.units.has(attacker.definition.id)) {
+      const along = target.position.subtract(attacker.position);
+      along.y = 0;
+      if (along.lengthSquared() > 1e-6) target.applyBlastLaunch(along.normalize(), BLUNDERBUSS_BLAST.fling, BLUNDERBUSS_BLAST.lift);
     }
     // ...and the gun throws him back off his feet (BLUNDERBUSS_RECOIL)
     if (BLUNDERBUSS_RECOIL.units.has(attacker.definition.id)) {
