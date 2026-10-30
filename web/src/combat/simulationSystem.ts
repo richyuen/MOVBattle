@@ -80,7 +80,9 @@ const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
  */
 // [S] 409 ...and the ice archer (CONFIRM 405 b.3: "no bow visible and no draw in unit_viking.ice_archer_windup - TABS: bow vertical at arm's length, the
 // ice arrow drawn to the chest"; viking.ice_archer.jpg): she loosed at the decision from her carry, so the shot showed her mid-stride with the bow low
-const DRAWS_BEFORE_LOOSE = new Set(["medieval.archer", "viking.ice_archer"]);
+// [S] 420 ...and the firework archer (audit 411 c.3: "the bow slung on her back while she runs - TABS: looses from a full draw with the rocket nocked";
+// dynasty.firework_archer.jpg): she fired at the decision from her carry, so _release caught her mid-stride with the bow away
+const DRAWS_BEFORE_LOOSE = new Set(["medieval.archer", "viking.ice_archer", "dynasty.firework_archer"]);
 // [S] the potionseller's potions splash men drunk instead of blowing up (342; ProjectileSystem DRUNK_SPLASH): drunk men stagger about, not fighting (DRUNK_WANDER)
 const DRUNK_POTIONS = new Set(["farmer.potion_seller"]);
 // A drunk man's wander: he reels off DRUNK_WANDER.reach m toward a heading that swings round at .swing rad/s from his own hashed start
