@@ -84,7 +84,7 @@ const FIREWORK_BURST = {
 /** [S] 417 the Samurai's block slash (spawnSlashArc). */
 const SLASH_ARC = { arc: 2.2, radius: 0.75, band: 0.16, steps: 12, tilt: 0.6, sweep: 0.7, seconds: 0.3, white: new Color3(1, 1, 0.92) };
 const FLAME_JET = {
-  blobs: 12, near: 0.35, far: 1.3, farPer: 0.18, swell: 0.35, lobes: 3, lobe: 0.7, lobeOff: 0.55, flicker: 0.14, fade: 0.2,
+  blobs: 12, near: 0.4, far: 1.4, farPer: 0.19, swell: 0.35, lobes: 3, lobe: 0.5, lobeOff: 0.68, flicker: 0.14, fade: 0.2,
   white: new Color3(1, 0.97, 0.85), yellow: new Color3(1, 0.78, 0.04),
 };
 const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
