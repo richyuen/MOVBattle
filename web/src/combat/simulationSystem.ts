@@ -48,6 +48,7 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "rocket_arrow": return "rocket_arrow";
     case "crow": return "crow";
     case "fireball": return "fireball";
+    case "spirit_fire": return "spirit_fire";
     case "leaves": return "leaves";
     case "sword": return "sword";
     default:

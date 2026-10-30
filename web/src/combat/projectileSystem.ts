@@ -66,7 +66,7 @@ const HWACHA_ROCKET = {
 const FIRE_ARROW = { tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), dark: new Color3(0.1, 0.08, 0.07), glow: 0.9 };
 /** The Pumpkin Catapult's jack-o'-lantern ("pumpkin" case): diameter (m), height of the width, ribbed lobes, skin, stem, carved-face glow */
 const PUMPKIN_SHOT = { size: 0.55, squash: 0.8, lobes: 8, orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2) };
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -236,6 +236,8 @@ const FIREBALL_WIDE = 0.55;
 const FIREBALL_TAIL = 0.8;
 const FIREBALL_HEART = new Color3(1, 0.92, 0.55);
 const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
+/** The Candlehead's spirit fire ("spirit_fire"): pale-cyan heart, cyan shell, size of the fireball */
+const SPIRIT_FIRE = { heart: new Color3(0.85, 1, 1), shell: new Color3(0.1, 0.85, 1), size: 1.15 };
 // A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
 const LEAF_COUNT = 11;
 // ...and the loft of his spike row (card Characteristics: "sending fragile units who were caught in the attack into the air", force 800; tribal.bone_mage.png):
@@ -376,6 +378,7 @@ export class ProjectileSystem {
       case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
       case "crow": speed = 18; arcHeight = dist * 0.15; break;
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
+      case "spirit_fire": speed = 20; arcHeight = dist * 0.1; break;
       case "leaves": speed = 12; arcHeight = dist * 0.12; break;
       case "sword": speed = 16; arcHeight = dist * 0.04; break;
       case "harpoon": speed = 18; arcHeight = dist * 0.1; break;
@@ -424,6 +427,9 @@ export class ProjectileSystem {
       switch (shape) {
         case "fireball":
           trailSystem = createTrail(this._scene, trailMesh, FIREBALL_SHELL, 10);
+          break;
+        case "spirit_fire":
+          trailSystem = createTrail(this._scene, trailMesh, SPIRIT_FIRE.shell, 10);
           break;
         case "rocket_arrow":
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 15);
@@ -1409,21 +1415,26 @@ export class ProjectileSystem {
         this._buildFlyingCrow(root);
         break;
       }
+      case "spirit_fire":
       case "fireball": {
+        // [S] 434 "spirit_fire": the Candlehead's Candle Fire (audit 434 candlehead c.1: "two dark javelin shafts with blue points - TABS: cyan
+        // spirit-fire ball thrown from the hand candle"; spooky.candlehead.jpg): the fireball's build in SPIRIT_FIRE's pale-cyan heart and cyan shell
+        const spirit = shape === "spirit_fire";
+        const HEART = spirit ? SPIRIT_FIRE.heart : FIREBALL_HEART, SHELL = spirit ? SPIRIT_FIRE.shell : FIREBALL_SHELL, WIDE = FIREBALL_WIDE * (spirit ? SPIRIT_FIRE.size : 1);
         // A wizard's fireball (units/legacy.wizard): fire in no team's colour, a self-lit faceted ball, a white-yellow heart inside an orange shell, with a
         // short tapering flame behind it on the line of flight, big enough (FIREBALL_WIDE) to read as a glowing thing at the throw_casters distance
         const mf = getMaterialFactory();
-        const heart = MeshBuilder.CreateIcoSphere("fireball", { radius: FIREBALL_WIDE * 0.3, subdivisions: 1, flat: true }, this._scene);
-        heart.material = mf.get("unlit", FIREBALL_HEART, { emissive: FIREBALL_HEART });
+        const heart = MeshBuilder.CreateIcoSphere("fireball", { radius: WIDE * 0.3, subdivisions: 1, flat: true }, this._scene);
+        heart.material = mf.get("unlit", HEART, { emissive: HEART });
         heart.parent = root;
-        const shell = MeshBuilder.CreateIcoSphere("fireball_shell", { radius: FIREBALL_WIDE * 0.5, subdivisions: 1, flat: true }, this._scene);
+        const shell = MeshBuilder.CreateIcoSphere("fireball_shell", { radius: WIDE * 0.5, subdivisions: 1, flat: true }, this._scene);
         shell.rotation.set(0.6, 0.9, 0.3); // its facets turned off the heart's
-        shell.material = mf.get("unlit", FIREBALL_SHELL, { emissive: FIREBALL_SHELL });
+        shell.material = mf.get("unlit", SHELL, { emissive: SHELL });
         shell.parent = root;
-        const tail = MeshBuilder.CreateCylinder("fireball_tail", { height: FIREBALL_TAIL, diameterTop: FIREBALL_WIDE * 0.8, diameterBottom: 0, tessellation: 6 }, this._scene);
+        const tail = MeshBuilder.CreateCylinder("fireball_tail", { height: FIREBALL_TAIL, diameterTop: WIDE * 0.8, diameterBottom: 0, tessellation: 6 }, this._scene);
         tail.rotation.x = Math.PI / 2;
         tail.position.z = -FIREBALL_TAIL / 2;
-        tail.material = mf.get("unlit", FIREBALL_SHELL, { emissive: FIREBALL_SHELL, alpha: 0.45 });
+        tail.material = mf.get("unlit", SHELL, { emissive: SHELL, alpha: 0.45 });
         tail.parent = root;
         // No part blooms: lit through the glow layer the ball washed out into a pale yellow disc with no orange shell and no facets
         const glowLayer = this._scene.getGlowLayerByName("glow");
