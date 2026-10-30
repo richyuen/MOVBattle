@@ -119,7 +119,8 @@ const GUN_FLING: Record<string, { speed: number; lift: number }> = { musket: { s
  * speed, lift: m/s.
  */
 /** [S] 417 a staff blow that throws the man back off it: .speed m/s away from the striker and .lift up (dynasty.monk card: force 250). */
-const BO_SHOVE: Record<string, { speed: number; lift: number }> = { "dynasty.monk": { speed: 4.2, lift: 2.4 } };
+// [S] 418 the Monkey King's staff (card Weapons force 1500, six times the monk's 250) sends the man flying several metres
+const BO_SHOVE: Record<string, { speed: number; lift: number }> = { "dynasty.monk": { speed: 4.2, lift: 2.4 }, "dynasty.monkey_king": { speed: 8.5, lift: 5.5 } };
 const SCYTHE_FLING: Record<string, { across: number; speed: number; lift: number }> = { "farmer.harvester": { across: 0.6, speed: 3.2, lift: 5 } };
 // The bone mage's leaf whirl (units/tribal.bone_mage, tribal.bone_mage.png: leaves swirling low among the spikes at the man, none over the caster's head): it rises
 // at the row's near end this high off the turf, runs at the man this high up him, on an arc this high per metre (near flat, under the spike tips)
