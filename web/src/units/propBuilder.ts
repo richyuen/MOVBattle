@@ -74,6 +74,52 @@ const TRICORN_LEAN = 0.3;
 const TRICORN_BROWN = new Color3(0.43, 0.2, 0.13);
 const TRICORN_PLATE = { skull: 0.5, at: 0.08, bone: 0.95, boneWide: 0.1, proud: 0.12, thick: 0.06, white: new Color3(0.95, 0.94, 0.9) };
 /*
+ * [S] 433 CAPTAIN_TRICORN (critic: "hat in unit_pirate.captain_idle is a flat-topped black box with a skull - TABS: a black tricorn with an upturned
+ * peaked brim"; pirate.captain.red.png: the black crown rounds up behind the front brim; the front brim is a band dipping in the middle where the skull
+ * sits and sweeping up into a point at each front corner, the corners standing out past the head either side). The captain's three walls are peaked
+ * slabs, not boxes: each wall's top edge is its plain height at the middle and rises on a .curve power to .peak of it at both ends, so every corner
+ * of the hat stands up in a point; the ends .flare of the wall long further out along the wall so the points jut past the brim. The crown dome
+ * rises to .crown of the wall's height so its round top shows over the front band.
+ */
+const CAPTAIN_TRICORN = { peak: 1.75, curve: 2, flare: 0.06, crown: 1.35, cols: 8 };
+/** A closed slab in its own frame centred like a box `wide` x `tall` x `thick`, whose top edge rises from `tall` at the middle to `peak` x `tall` at both ends. */
+function peakedWall(scene: Scene, wide: number, tall: number, thick: number): Mesh {
+  const T = CAPTAIN_TRICORN;
+  const pos: number[] = [];
+  const idx: number[] = [];
+  const half = (wide * (1 + T.flare * 2)) / 2;
+  const col: [number, number][] = [];
+  for (let i = 0; i <= T.cols; i++) {
+    const x = -half + (2 * half * i) / T.cols;
+    const k = Math.pow(Math.abs(x / half), T.curve);
+    col.push([x, -tall / 2 + tall * (1 + (T.peak - 1) * k)]);
+  }
+  // per column: bottom-front, top-front, bottom-back, top-back
+  for (const [x, top] of col) pos.push(x, -tall / 2, thick / 2, x, top, thick / 2, x, -tall / 2, -thick / 2, x, top, -thick / 2);
+  // both windings on every quad: the culled one never shows, so the slab is closed from any side
+  const quad = (a: number, b: number, c: number, d: number): void => { idx.push(a, b, c, a, c, d, a, c, b, a, d, c); };
+  for (let i = 0; i < T.cols; i++) {
+    const p = i * 4, q = p + 4;
+    quad(p, q, q + 1, p + 1); // front
+    quad(p + 2, p + 3, q + 3, q + 2); // back
+    quad(p + 1, q + 1, q + 3, p + 3); // top edge
+    quad(p, p + 2, q + 2, q); // bottom
+  }
+  const last = T.cols * 4;
+  quad(0, 1, 3, 2);
+  quad(last, last + 2, last + 3, last + 1);
+  const mesh = new Mesh("tricornWall", scene);
+  const data = new VertexData();
+  data.positions = pos;
+  data.indices = idx;
+  const normals: number[] = [];
+  VertexData.ComputeNormals(pos, idx, normals);
+  data.normals = normals;
+  data.applyToMesh(mesh);
+  mesh.convertToFlatShadedMesh();
+  return mesh;
+}
+/*
  * A bandana tied over the skull (249; units/secret.taekwondo, factions/secret: cloth pulled down over the whole crown to the brow, the face and bead eyes clear
  * under its edge, knotted at the nape with two short tails hanging and flaring behind). Not a halo: the old bandana was a thin ring floating at the crown, and
  * six secret bodies wore it.
@@ -863,7 +909,9 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     // captain's and the queen's pirate_hat stay black
     const felt = type === "tricorn" ? mat(scene, TRICORN_BROWN, 0.12, "cloth") : mat(scene, new Color3(0.11, 0.1, 0.12));
     // Crown: a low dome pulled down over the skull to the seat
-    const domeTall = eyeTop - HAT_EYE_CLEAR * H + TRICORN_CROWN * H;
+    const domeBase = eyeTop - HAT_EYE_CLEAR * H + TRICORN_CROWN * H;
+    // [S] 433 the captain's crown rounds up over his front band (CAPTAIN_TRICORN)
+    const domeTall = type === "pirate_hat" ? Math.max(domeBase, CAPTAIN_TRICORN.crown * TRICORN_WALL * H) : domeBase;
     const crown = MeshBuilder.CreateSphere("tricornCrown", { diameterX: u(TRICORN_DOME * W), diameterY: u(domeTall * 2), diameterZ: u(TRICORN_DOME * W * 1.05), segments: 6, slice: 0.5 }, scene);
     crown.position.y = u(seat);
     crown.material = felt;
@@ -890,7 +938,10 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       const ax = R * Math.cos(a), az = R * Math.sin(a), bx = R * Math.cos(b), bz = R * Math.sin(b);
       const mx = (ax + bx) / 2, mz = (az + bz) / 2;
       const side = Math.hypot(bx - ax, bz - az);
-      const wall = MeshBuilder.CreateBox("tricornWall", { width: u(side * 1.04), height: wallTall, depth: u(0.06 * W) }, scene);
+      // [S] 433 the captain's walls peak up at every corner (CAPTAIN_TRICORN)
+      const wall = type === "pirate_hat"
+        ? peakedWall(scene, u(side * 1.04), wallTall, u(0.06 * W))
+        : MeshBuilder.CreateBox("tricornWall", { width: u(side * 1.04), height: wallTall, depth: u(0.06 * W) }, scene);
       wall.setPivotPoint(new Vector3(0, -wallTall / 2, 0));
       wall.position.set(u(mx), wallTall / 2, u(mz));
       wall.rotation.y = Math.atan2(mx, mz);
