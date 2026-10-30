@@ -60,7 +60,7 @@ const MINO_SCROLL = {
  *     thigh tops so it shows all round, lighter scrolls on its front, dark rims;
  *   shoulder cap (MINO_CAP): one compact half dome on the left shoulder, about the sleeved upper arm's width, a lighter swirl on its top, a dark rim.
  */
-const MINO_GIRDLE = { lo: -0.08, hi: 0.3, proudX: 1.3, proudZ: 1.34, flare: 1.04, sides: 12, rimGrow: 1.02, light: 0.72, sunk: 0.5 };
+const MINO_GIRDLE = { lo: -0.08, hi: 0.3, proudX: 1.07, proudZ: 1.09, flare: 1.04, sides: 12, rimGrow: 1.02, light: 0.72, sunk: 0.5 };
 const MINO_SASH = { sash: 0.3, thick: 0.03, buckle: 0.17, tuft: 0.22 };
 /** [R] 420 the strap a thin flat band (405-419: a slab .44 wide, .32 proud, which the CONFIRMs read as a held crate). */
 const MINO_STRAP = { wide: 0.2, proud: 0.04, footX: 0.95, footY: 0.06, buckleAt: 0.3, clear: 0.03 };
@@ -120,17 +120,23 @@ export function dressMinotaur(scene: Scene, body: ArticulatedBody, teamColor: Co
   const y0 = trunk * Gd.lo, y1 = trunk * Gd.hi;
   const pelvis = body.root.getChildMeshes(false).find((m) => /_pelvis$/.test(m.name));
   const hipNode = (pelvis?.parent as TransformNode | null) ?? body.torso;
-  let gx0 = -0.5, gx1 = 0.5, gz0 = -0.3, gz1 = 0.3;
-  if (pelvis) {
-    const bb = pelvis.getBoundingInfo().boundingBox;
-    gx0 = pelvis.position.x + bb.minimum.x * pelvis.scaling.x; gx1 = pelvis.position.x + bb.maximum.x * pelvis.scaling.x;
-    gz0 = pelvis.position.z + bb.minimum.z * pelvis.scaling.z; gz1 = pelvis.position.z + bb.maximum.z * pelvis.scaling.z;
-  }
-  const waist = { midX: (gx0 + gx1) / 2, halfX: ((gx1 - gx0) / 2) * Gd.proudX, midZ: (gz0 + gz1) / 2, halfZ: ((gz1 - gz0) / 2) * Gd.proudZ };
+  // [R] 420 the band sized off the barrel chest (MINO_BARREL.profile at its own heights), not the pelvis block: since 409 the barrel's foot (.8 of its
+  // scaled half width at the hip line) stood outside a pelvis-sized ring, which showed only as a patch at the crotch (CONFIRM 415 a.2). The ring's
+  // half extents follow the barrel's radius at each height, .proudX / .proudZ of it out.
+  const Bb = MINO_BARREL;
+  const bandB = trunkBand(body, 0.2, 0.9);
+  const bhx = bandB.halfX, bhz = (bandB.maxZ - bandB.minZ) / 2, bmz = (bandB.minZ + bandB.maxZ) / 2;
+  const rAt = (y: number): number => {
+    const t = y / trunk, P = Bb.profile;
+    if (t <= P[0][0]) return P[0][1];
+    for (let i = 1; i < P.length; i++) if (t <= P[i][0]) return P[i - 1][1] + (P[i][1] - P[i - 1][1]) * (t - P[i - 1][0]) / (P[i][0] - P[i - 1][0]);
+    return P[P.length - 1][1];
+  };
+  const waist = { midX: bandB.midX, halfX: rAt(y1) * bhx * Gd.proudX, midZ: bmz + bhz * Bb.ahead, halfZ: rAt(y1) * bhz * Gd.proudZ };
   const tall = y1 - y0;
   const beltY = (y0 + y1) / 2;
-  // the half extents at height y: the top's at y1, .flare of them at y0
-  const widen = (y: number) => 1 + (Gd.flare - 1) * Math.min(1, Math.max(0, (y1 - y) / tall));
+  // the half extents at height y, as a share of the top's: the barrel's own taper
+  const widen = (y: number) => rAt(y) / rAt(y1);
   // [R] 402 one smooth band: 12 sides, hugging the hips, the rims flush (spec at MINO_GIRDLE)
   const girdleRing = (name: string, top: number, bottom: number, grow: number, material: typeof team) => {
     const m = MeshBuilder.CreateCylinder(name, { height: top - bottom, diameterTop: 2 * widen(top) * grow, diameterBottom: 2 * widen(bottom) * grow, tessellation: Gd.sides }, scene);
