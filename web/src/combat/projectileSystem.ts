@@ -838,6 +838,7 @@ export class ProjectileSystem {
    */
   private _fireworkBurst(p: ActiveProjectile): void {
     this.visualEffects?.spawnFireworkBurst(p.target.position.clone());
+    this.abilityHook?.("dynasty.firework_archer", "burst", p.target.position); // the only unit that shoots a Firework Arrow (rosterManifest projectileHint)
     const r2 = FIREWORK_BLAST.radius * FIREWORK_BLAST.radius;
     for (const unit of p.allUnits) {
       if (unit === p.target || unit.isDead || unit.team === p.attackerTeam) continue;
