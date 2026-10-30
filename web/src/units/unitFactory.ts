@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, barrelBracers, bombSash, captainCoat, flintlockSocks, openCoat, pirateBeard, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
+import { barrelArmour, barrelBracers, blunderbussHair, bombSash, captainCoat, flintlockSocks, openCoat, pirateBeard, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -618,6 +618,8 @@ export class UnitFactory {
     if (definition.id === "pirate.blunderbuss" && !shouldUseVehicleBody) propMeshes.push(...plankHat(this._scene, body));
     // [S] 428 ...and his barrel bracers, brown staves with black straps round each forearm and upper arm (pirateDress BARREL_BRACERS)
     if (definition.id === "pirate.blunderbuss" && !shouldUseVehicleBody) propMeshes.push(...barrelBracers(this._scene, body));
+    // [S] 430 the Blunderbuss's dark-brown hair from under the plank hat to his shoulders either side of the face (pirateDress PIRATE_HAIR, BLUNDERBUSS_HAIR)
+    if (definition.id === "pirate.blunderbuss" && !shouldUseVehicleBody) propMeshes.push(...blunderbussHair(this._scene, body));
     // [S] 426 the Harpooner's open team coat with tan lapels over a white V undershirt (pirateDress OPEN_COAT)
     if (definition.id === "pirate.harpooner" && !shouldUseVehicleBody) propMeshes.push(...openCoat(this._scene, body, teamColor));
     // [S] 430 the Harpooner's short full dark-brown beard round the jaw under the eyes (pirateDress PIRATE_BEARD)

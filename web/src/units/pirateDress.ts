@@ -658,6 +658,29 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
 }
 
 /*
+ * [S] 430 the Blunderbuss's hair (audit 422 blunderbuss a.4: "the sides of the head - bare - TABS: dark-brown hair falling to the shoulders either side
+ * of the face"; pirate.blunderbuss.blue.png: a mid-dark brown bob from under the plank hat down past the jaw either side of the face, over the crown under
+ * the plank). BLUNDERBUSS_HAIR: pirateHair's locks and fall in .color reaching .top of e.y up under the plank, dropping to .drop; over the crown a cap
+ * .cap of the head across from the locks' top to the plank's underside (PLANK_HAT.sit under the head's top), so the plank sits on hair.
+ */
+const BLUNDERBUSS_HAIR = { top: 0.95, drop: -1.55, side: 0.3, cap: 1.1, color: new Color3(0.28, 0.135, 0.09) };
+
+/** The Blunderbuss's dark-brown bob under the plank hat (spec at BLUNDERBUSS_HAIR). */
+export function blunderbussHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BLUNDERBUSS_HAIR;
+  const out = pirateHair(scene, body, B.color, { top: B.top, drop: B.drop, side: B.side });
+  const bb = body.headMesh.getBoundingInfo().boundingBox, e = bb.extendSize, c = bb.center;
+  const from = c.y + e.y * B.top - e.y * 0.3, to = bb.maximum.y - e.y * 2 * PLANK_HAT.sit + e.y * 0.06;
+  const cap = MeshBuilder.CreateBox("blunderbussHairCap", { width: e.x * 2 * B.cap, height: to - from, depth: e.z * 2 * B.cap }, scene);
+  cap.parent = body.headMesh;
+  cap.position.set(c.x, (from + to) / 2, c.z - e.z * 0.04);
+  cap.material = out[0].material;
+  cap.convertToFlatShadedMesh();
+  out.push(cap);
+  return out;
+}
+
+/*
  * [S] 430 the Harpooner's beard (audit 422 harpooner a.2: "the chin - bare - TABS: a thick dark-brown beard under the eyes"; pirate.harpooner.red.png,
  * card Appearance "a fairly thick beard": a short full dark-brown beard from just under the bead eyes round the jaw and chin, wider than the face and
  * standing out of it, joined to sideburns up the cheeks under the hat, the open mouth a dark notch in its front). PIRATE_BEARD, in the head's own box
