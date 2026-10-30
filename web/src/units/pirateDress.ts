@@ -630,3 +630,39 @@ export function pirateSocks(scene: Scene, body: ArticulatedBody, teamColor: Colo
   }
   return out;
 }
+
+/*
+ * [S] 429 the cannon rider's bandanna (CONFIRM 428 cannon a.1: "a flat-topped peaked cap with a jutting front brim, like a kepi - TABS: a brimless,
+ * rounded, team-coloured bandanna skullcap snug on the head"; pirate.cannon.blue.png: a dark-team cloth dome over the crown from just above the bead
+ * eyes, no brim, a small knot at the back). CANNON_BANDANNA, in the head's own box (e its half sizes): a faceted half dome .out of the head across and
+ * deep, its rim .clear over the eyes' top and its crown .rise of e.y over the head's top, sat .back of e.z behind the middle; a knot .knot of e.y
+ * across at the back of the rim. Team times .shade, self-lit .glow. Replaces dressCannonCrew's cap and peak on the pirate cannon.
+ */
+const CANNON_BANDANNA = { out: 1.22, clear: 0.05, rise: 0.12, back: 0.04, knot: 0.32, segments: 6, shade: 0.8, glow: 0.12 };
+
+/** A brimless team cloth dome over the crown with a knot at the back (spec at CANNON_BANDANNA). */
+export function cannonBandanna(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = CANNON_BANDANNA;
+  const shade = teamColor.scale(B.shade);
+  const cloth = getMaterialFactory().get("cloth", shade, { emissive: shade.scale(B.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const rim = span[1] + e.y * B.clear, crown = c.y + e.y * (1 + B.rise);
+  const out: Mesh[] = [];
+  // the upper half of a squashed sphere, its equator on the rim
+  const dome = MeshBuilder.CreateSphere("cannonBandanna", { diameterX: e.x * 2 * B.out, diameterY: (crown - rim) * 2, diameterZ: e.z * 2 * B.out, segments: B.segments, slice: 0.5 }, scene);
+  dome.parent = head;
+  dome.position.set(c.x, rim, c.z - e.z * B.back);
+  dome.material = cloth;
+  dome.convertToFlatShadedMesh();
+  out.push(dome);
+  const knot = MeshBuilder.CreateBox("cannonBandannaKnot", { width: e.y * B.knot * 1.3, height: e.y * B.knot, depth: e.y * B.knot * 0.8 }, scene);
+  knot.parent = head;
+  knot.position.set(c.x, rim + e.y * B.knot * 0.3, c.z - e.z * B.out - e.z * B.back - e.y * B.knot * 0.2);
+  knot.material = cloth;
+  knot.convertToFlatShadedMesh();
+  out.push(knot);
+  return out;
+}

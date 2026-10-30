@@ -8,7 +8,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
 import { dressBallistaCrew } from "./ancientDress";
 import { longshipCarrierDress } from "./vikingDress";
-import { cannonShirt } from "./pirateDress";
+import { cannonBandanna, cannonShirt } from "./pirateDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -1252,9 +1252,11 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
         foot.position.set(fist.x, H.blockTop + 0.012, fist.z);
         for (const m of [grip, knob, post, foot]) { m.convertToFlatShadedMesh(); m.parent = root; m.material = handleIron; allMeshes.push(m); }
       }
-      dressCannonCrew(scene, body, color);
+      dressCannonCrew(scene, body, color, false);
       // [S] 428 ...in a white shirt with team stripes (pirateDress CANNON_SHIRT)
       body.allMeshes.push(...cannonShirt(scene, body, color));
+      // [S] 429 ...and a brimless team bandanna dome in place of the peaked crew cap (pirateDress CANNON_BANDANNA)
+      body.allMeshes.push(...cannonBandanna(scene, body, color));
     }, { ...OPERATOR_PROPORTIONS, scale: H.rider });
   }
 
