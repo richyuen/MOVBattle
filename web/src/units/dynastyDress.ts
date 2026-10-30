@@ -460,7 +460,7 @@ export function monkArmPlates(scene: Scene, body: ArticulatedBody, teamColor: Co
  */
 const DRAGON_FORM = {
   skull: 0.62, size: 2.0, headY: 1.95, headZ: 0.5,
-  cheek: 0.5, cheekAt: [0.5, -0.3, 0.72] as const, lip: 0.38, rim: 1.85, rimY: -0.74, nose: [0.42, 0.55] as const, eye: 0.17, eyeAt: [0.46, 0.3] as const,
+  cheek: 0.5, cheekAt: [0.5, -0.3, 0.72] as const, lip: 0.38, rim: 1.85, rimY: -0.74, nose: [0.55, 0.7] as const, eye: 0.17, eyeAt: [0.46, 0.3] as const,
   brow: [0.72, 0.17, 0.24] as const, browY: 0.66, horn: 0.15, jaw: 0.58, jawY: -1.32, tongue: 0.11, tongueWide: 2.4, tongueTo: 0.72,
   pole: 0.05, poleFoot: 0.55,
   segs: 9, step: 0.33, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, bodyR: 0.24, taper: 0.5, crest: 0.24, frill: 0.13, crestShade: 0.6, frillMix: 0.4,
@@ -530,7 +530,7 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
   };
   rimDisc("dragonLipRim", D.rim, R(0, D.rimY, 0.66));
   // the beak: a four-sided point from between the eyes down and forward onto the lip
-  const nose = put(MeshBuilder.CreateCylinder("dragonNose", { height: D.nose[1] * skullR, diameterTop: 0, diameterBottom: D.nose[0] * skullR, tessellation: 4 }, scene), R(0, 0.02, 1.02), beak);
+  const nose = put(MeshBuilder.CreateCylinder("dragonNose", { height: D.nose[1] * skullR, diameterTop: 0, diameterBottom: D.nose[0] * skullR, tessellation: 4 }, scene), R(0, 0.0, 1.16), beak);
   nose.rotation.set(Math.PI - 0.55, Math.PI / 4, 0);
   nose.scaling.z = 0.85;
   for (const side of [-1, 1]) {
@@ -555,8 +555,10 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
     mark.scaling.z = 0.6;
   }
   // the open mouth: dark maw under the rim, the lower jaw with its own tan rim, two fangs down and two up
-  put(MeshBuilder.CreateBox("dragonMaw", { width: 1.15 * skullR, height: 0.6 * skullR, depth: 0.7 * skullR }, scene), R(0, -1.02, 0.55), dark);
-  ball("dragonJaw", D.jaw, R(0, D.jawY, 0.55), 1.15, 0.5, 0.95);
+  // the maw sits back inside the jaw's bowl (a box proud of the lips read as a black crate, 431 look), only its front face showing between the rims
+  const maw = put(MeshBuilder.CreateIcoSphere("dragonMaw", { radius: 0.62 * skullR, subdivisions: 1 }, scene), R(0, -1.0, 0.42), dark);
+  maw.scaling.set(1.45, 0.55, 0.85);
+  ball("dragonJaw", D.jaw, R(0, D.jawY, 0.55), 1.15, 0.62, 0.95);
   rimDisc("dragonJawRim", D.jaw * 2.1, R(0, D.jawY + D.jaw * 0.42, 0.6));
   for (const side of [-1, 1]) {
     const up = put(MeshBuilder.CreateCylinder("dragonFang", { height: 0.32 * skullR, diameterTop: 0, diameterBottom: 0.14 * skullR, tessellation: 4 }, scene), R(side * 0.42, D.rimY - 0.18, 1.0), fang);
