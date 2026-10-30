@@ -304,13 +304,13 @@ const pirate = makeFaction(FactionId.Pirate, "pirate", [
 ]);
 
 const spooky = makeFaction(FactionId.Spooky, "spooky", [
-  ["skeleton_warrior", "Skeleton Warrior", 80, "light_melee", { weaponHint: "sword" }],
-  ["skeleton_archer", "Skeleton Archer", 150, "archer", { weaponHint: "bow" }],
-  ["candlehead", "Candlehead", 180, "special_magic", { abilities: ["fire_dot"], weaponHint: "torch" }],
-  ["vampire", "Vampire", 200, "flying_melee", { abilities: ["flying_hover", "leap_attack"], weaponHint: "dagger" }],
-  ["pumpkin_catapult", "Pumpkin Catapult", 1000, "artillery", { specialHint: "catapult", projectileHint: "bomb", size: "large" }],
-  ["swordcaster", "Swordcaster", 300, "special_magic", { weaponHint: "sword", projectileHint: "sword" }],
-  ["reaper", "Reaper", 2500, "boss_melee", { abilities: ["push_force", "fear"], weaponHint: "scythe", size: "giant", visualPreset: "iconic_reaper", behaviorPreset: "iconic_reaper", controlStrength: 1.75, cooldownMultiplier: 0.86 }],
+  ["skeleton_warrior", "Skeleton Warrior", 80, "light_melee", { weaponHint: "sword", healthMultiplier: 0.57 }],
+  ["skeleton_archer", "Skeleton Archer", 180, "archer", { weaponHint: "bow", healthMultiplier: 0.43, damageMultiplier: 0.1, cooldownMultiplier: 2.27 }],
+  ["candlehead", "Candlehead", 200, "special_magic", { abilities: ["fire_dot"], weaponHint: "torch", healthMultiplier: 0.24, damageMultiplier: 0.19, cooldownMultiplier: 0.61 }],
+  ["vampire", "Vampire", 200, "flying_melee", { abilities: ["flying_hover", "leap_attack"], weaponHint: "dagger", healthMultiplier: 1.31, cooldownMultiplier: 1.39 }],
+  ["pumpkin_catapult", "Pumpkin Catapult", 1000, "artillery", { specialHint: "catapult", projectileHint: "bomb", size: "large", healthMultiplier: 0.79, damageMultiplier: 0.22, cooldownMultiplier: 1.67 }],
+  ["swordcaster", "Swordcaster", 1000, "special_magic", { weaponHint: "sword", projectileHint: "sword", healthMultiplier: 0.21, damageMultiplier: 0.12 }],
+  ["reaper", "Reaper", 2500, "boss_melee", { abilities: ["push_force", "fear"], weaponHint: "scythe", size: "giant", visualPreset: "iconic_reaper", behaviorPreset: "iconic_reaper", controlStrength: 1.75, healthMultiplier: 0.19, damageMultiplier: 0.77, cooldownMultiplier: 0.54 }],
 ]);
 
 const wildWest = makeFaction(FactionId.WildWest, "wild_west", [
