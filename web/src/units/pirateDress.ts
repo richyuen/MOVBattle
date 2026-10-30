@@ -817,7 +817,7 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
  * stepping back .step of e.z from .front of e.z, from .clear over the eyes' top down to .drop of e.y (the back ones .longer of that lower), splayed
  * .splay rad; fixed .ginger, self-lit .glow. No hood: nothing over the crown or down the back, the bandana covers it.
  */
-const FLINTLOCK_LOCKS = { locks: 3, thick: 0.2, wide: 0.34, out: 1.06, front: 0.42, step: 0.42, clear: 0.04, drop: -1.15, longer: 0.18, splay: 0.14, ginger: new Color3(0.75, 0.3, 0.15), glow: 0.16 };
+const FLINTLOCK_LOCKS = { locks: 3, thick: 0.2, wide: 0.34, out: 1.06, front: 0.42, step: 0.42, clear: 0.04, drop: -1.15, longer: 0.18, splay: 0.14, ginger: new Color3(0.95, 0.32, 0.12), glow: 0.16 };
 
 export function flintlockLocks(scene: Scene, body: ArticulatedBody): Mesh[] {
   const F = FLINTLOCK_LOCKS;
