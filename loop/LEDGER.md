@@ -12,15 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-431 | [R] DRAGON_FORM lion-dog head (cheeks, beak, cream brow, horns, hanging tongue) + tube body, crest, frills (3e94ecfa, 48329bf4) | dynasty.dragon.a | approved
-431 | team CANNON_BANDANNA on flintlock + bomb thrower, accent bandana hat off (6561ba6f) | pirate.flintlock.a | approved
-431 | PIRATE_BELT leather band + square tan buckle (8d798815, 67e6d6eb) | pirate.bomb_thrower.a | approved
-431 | CAPTAIN_BEARD pirateBeard brown + moustache + chest run (927e8a7a, ee1ab3a9) | pirate.captain.a | approved
-431 | CUTLASS bowl guard + rolled rim (3021427b) | pirate.captain.b | approved
-431 | QUEEN_GUARD _restQueenBlades crossed blades at rest (fe03e273) | pirate.pirate_queen.b | approved
-431 | QUEEN_SKIRT wrap skirt, slanted hem, green beads, pale pants (d06b4abd) | pirate.pirate_queen.a | approved
-431 | BLUNDERBUSS rebuilt full length (8addafc1) | pirate.blunderbuss.b | approved
-431 | [P] unitVisuals harpooner scale 1.05 -> 1.3 (ec00c268) | pirate.harpooner.a | approved
 432 | [R] MONKEY_BUILD scale 1.25 bulk .85, MONKEY_SHORTS to the knee, orange bands, dark wrap (82d77ccb) | dynasty.monkey_king.a | approved
 432 | BARREL_GREAVES stave barrels on thighs and shins, braceLimb (11be8ee6) | pirate.blunderbuss.a | approved
 432 | HARPOONER_PANTS beige rolled pants, skin shins (02534ee3, 6df6805c) | pirate.harpooner.a | approved
@@ -48,6 +39,13 @@ for 25 iterations.
 435 | SWORDCASTER_BOWL black bowl cut, hood off (0e2c1030) | spooky.swordcaster.a | approved
 435 | REAPER_TENDRILS six dark tubes off the upper back (ae92e8fa) | spooky.reaper.a | approved
 435 | [R] QUEEN_BOOTS build: scale/bulk, slimmer shirt+skirt, boots, broad sash (ae0de203) | pirate.pirate_queen.a | approved
+436 | HARPOON_REST gun hung at the hip by its handle, muzzle down-forward, off hand free (b4465c82) | pirate.harpooner.b | approved
+436 | STIFFY_SWORD short grey leaf blade, dark bar guard (63a08a9f) | spooky.skeleton_warrior.b | approved
+436 | BONE_BOW cream femur, knob ends, team wraps, upright carry (b5fd9a36) | spooky.skeleton_archer.b | approved
+436 | CANDLE_ARMS lumpy wax forearm candles + cyan flames, torch hidden (4202591b) | spooky.candlehead.b | approved
+436 | SWORDCASTER_CUIRASS charcoal shell, ridge, team studs, chained padlock (89b8eb03) | spooky.swordcaster.a | approved
+436 | REAPER_BURST violet ring + dark dome + shards at the scythe hit (30c492bd) | spooky.reaper.c | approved
+436 | QUEEN_UPRIGHT rest stance, no crouch (bdf2f44d) | pirate.pirate_queen.a | approved
 
 ## Spent (never retry as [P])
 
@@ -90,14 +88,15 @@ pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spookyDress.ts:VAMPIRE_CLAWS (grow, fingers, thick, knuckle, tip, curl, nail) + unitVisuals vampire weapon none | 1.3, 4, .2, .5, .45, 1.1, .35 | 434 | approved | "dagger" in both hands (before 434)
 propBuilder.ts:STIFFY_SHIELD (board, rim, stud, studs, inner; x2.0 on the arm) | .3, 1.1, .016, 12, 4 | 434 | approved | buckler .18 grey (before 434)
-projectileSystem.ts:PUMPKIN_SHOT (size, squash, lobes; orange) + projectileHint pumpkin | .55, .8, 8; (.9,.38,.08) | 434 | approved | bomb (before 434)
-projectileSystem.ts:FIRE_ARROW (tongues, long, wide, splay, glow) | 4, .38, .11, .28, .9 | 434 | approved | plain arrow (before 434)
-projectileSystem.ts:SPIRIT_FIRE (heart, shell, size) + candlehead projectileHint spirit_fire | (.85,1,1), (.1,.85,1), 1.15 | 434 | approved | javelins (before 434)
+spooky c mechanics 434-435 rows (PUMPKIN_SHOT, FIRE_ARROW, SPIRIT_FIRE, BURN + BURN_STATUS, SPIRIT_LIFT, FEAR_SKULL + STIFFY_FEAR, PUMPKIN_BURST) | compacted 436 | 435 | approved | values: git show e1126012:loop/LEDGER.md
 
-runtimeUnit.ts:BURN (tongues, long, wide; flame, core) + simulationSystem BURN_STATUS (tick, damage, spread, keep) + FIRE_ARROW.burn | 6, 2.6, .55; (1,.42,.06), (1,.85,.3); .5, 3, 1.4, 2; 5 s | 435 | approved | no burn (before 435)
-projectileSystem.ts:SPIRIT_LIFT (up, along) | 8, 1.2 | 435 | approved | none (before 435)
-runtimeUnit.ts:FEAR_SKULL (skull, over, purple, glow) + simulationSystem STIFFY_FEAR (every, seconds, reach) | 1.1, .9, (.62,.12,1), .95; 2, 3.5, 4 | 435 | approved | smoke puff only (before 435)
-visualEffects.ts:PUMPKIN_BURST (shards, rind, lanterns, lantern, out, up, keep, last) | 8, .2, 4, .32, 3.4, 5.5, .62, 2.4 | 435 | approved | fireball + rock (before 435)
 spookyDress.ts:SWORDCASTER_BOWL (out, clear, crown, side, sideTo, front, back, nape) | 1.14, .05, .16, .16, .15, .45, .16, -.75 | 435 | approved | hood (before 435)
 spookyDress.ts:REAPER_TENDRILS (rootX, rootY, long, out, back, rise, wave, waves, thick, tip) | .3, .55, 4.6, .88, .45, [.24,.04,-.16], .22, 1.6, .1, .18 | 435 | approved | none (before 435)
 pirateDress.ts:QUEEN_BOOTS [R] (from, shaft, top, topTall, band, bandTall, bandAt; leather) + unitVisuals queen (scale, bulk) + QUEEN_SASH (wide, thick, proud, bomb, seat) | .12, 1.35, 1.7, .14, 1.42, .1, .34; (.45,.16,.1); 1.45, .85; .27, .1, .12, .25, .95 | 435 | approved | pale shins; 1.6, 1.2; sash .17, .08, .03, .2, .75 (428-434)
+proceduralAnimation.ts:HARPOON_REST (drop, ahead, out, dip) | .27, .05, .07, .95 | 436 | approved | idle carry across the chest, off hand on the block (before 436)
+propBuilder.ts:STIFFY_SWORD (long, base, belly, bellyAt, thick, point, guard, grip; steel) | .26, .03, .05, .55, .25, .22, 3.2, 1.6; (.42,.43,.45) | 436 | approved | slab sword .46 (before 436)
+propBuilder.ts:BONE_BOW (long, thick, bow, knob, knobOut, wrapAt, wrap, grip; bone) | 1.15, .05, .025, .065, .026, .66, .06, .09; (1,.8,.48) | 436 | approved | plain brown bow .4 (before 436)
+spookyDress.ts:CANDLE_ARMS (top, long, lumps, wide, wobble, swell, wick, flame; wax, fire) | .12, 2.2, 6, .78, .08, .18, .12, .48; (1,.84,.58), (.35,1.1,1.3) | 436 | approved | torch stick (before 436)
+spookyDress.ts:SWORDCASTER_CUIRASS (out, deep, top, foot, ridge, proud, studs, stud, lock, lockY) | 1.16, 1.22, .04, -.75, .5, .12, 4, .16, .42, .3 | 436 | approved | none (before 436)
+visualEffects.ts:REAPER_BURST (ring0, thick, dome0, dome, domeAlpha, shards, shard, out, up, life, fade) | 1.6, .22, 1.2, 4.2, .7, 8, .55, 3, 4.5, .9, .4 | 436 | approved | spark only (before 436)
+proceduralAnimation.ts:QUEEN_UPRIGHT (tilt, stride, lean, chin) | .07, .08, .02, 0 | 436 | approved | hashed stance (before 436)

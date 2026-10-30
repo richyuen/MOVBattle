@@ -27,13 +27,13 @@ drop a lesson once it is a comment at the code it describes.
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420: the dragon's head was out of frame from 417; the monkey king's tail pulls his frame back): a new tall prop re-frames every shot, so a RE-AUDIT follows.
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
-- `capture.mjs --units` takes a comma list (spaces: first unit only); an iter-N capture clears probe swatches, so render them after it (402).
-- No python (429). probe_close --build --aim=head checks a head piece in a minute; --aim can frame another mesh (404).
+- `capture.mjs --units` takes a comma list (no spaces); an iter-N capture clears probe swatches; render them after it (402). No python (429).
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
 - A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it in the same iteration (428 cannon, .25). An --iter capture of 4+ units runs past 10 min: background it.
 
 ## Rig and dress
+- A hunched idle can be _buildIdlePose's hashed sunk stance: a per-unit stance override fixed what scale/bulk did not (436 QUEEN_UPRIGHT).
 - aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
 - Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
 - An engine's projectile can be a copy of a named node on the build (LOADED_BOLTS + heldProp/_buildHeldMissile): the flying shape then matches the loaded one for free.

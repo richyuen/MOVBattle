@@ -1,21 +1,23 @@
 # pirate.harpooner
-Status: open   Audited: 422, 431 (CONFIRM: failed a), 434 (CONFIRM: failed b)   Done: -
+Status: open   Audited: 422, 431 (CONFIRM: failed a), 434 (CONFIRM: failed b), 436 (CONFIRM: failed a, b)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a PASS (434; CONFIRM 434 passed a)
-b FAIL (1 since 434; the CONFIRM 434 list)
-  (struck 1 at 435)
- 2. harpoon gun carry in unit_pirate.harpooner_idle — gun shouldered high across the chest, muzzle up and out (stood upright with the blade pointing at the sky in lineup_pirate) — TABS: gun hangs low at hip height, held by its top handle, muzzle down and forward (ref: pirate.harpooner.red.png, pirate.harpooner.jpg, factions/pirate.jpg)
-c PASS (426: shoot, reel, kick all fire and show; CONFIRM 431, 434)
-d PASS (cost 300, hp 3.38x, dmg 0.29x, cd 1.80x; 435 stats; size 1.30 vs wiki 1.3)
+a FAIL (0 since 436; CONFIRM 436 list) plateau (CONFIRM failed 431, 436)
+ 1. torso in unit_pirate.harpooner_idle: pitched hard to one side in a hunch, a wide square box over hidden legs — TABS: stands upright and slim, the open coat hanging straight over the beige legs (ref: reference/units/pirate.harpooner.blue.png)
+ 2. coat trim in unit_pirate.harpooner_idle: the lapels are plain cream strips, with no orange/tan edging on the lapels, front edges or cuffs — TABS: a bold orange/tan band runs down both lapels and front edges and round the cuffs (ref: reference/units/pirate.harpooner.blue.png; reference/factions/pirate.jpg)
+ 3. hat in unit_pirate.harpooner_idle: reads as one flat brown plank tilted over the head — TABS: a tall brown tricorn with three upturned brim points (ref: reference/units/pirate.harpooner.red.png)
+ 4. trousers in lineup_pirate: pale grey-white — TABS: beige/tan rolled-up pants (ref: card Appearance; reference/units/pirate.harpooner.red.png)
+b FAIL (0 since 436; CONFIRM 436 list) plateau (CONFIRM failed 434, 436)
+ 1. off hand in unit_pirate.harpooner_idle: hangs free at the side, away from the gun (same in lineup_pirate, where the free arm sticks out to the side) — TABS: Weapon Type Two-handed, both hands on the gun, one on the top handle and one on the body (ref: reference/units/pirate.harpooner.blue.png; card Infobox)
+ 2. harpoon gun in unit_pirate.harpooner_idle: a long pale ribbed cylinder runs from the hip to the ground and dominates, with only a small dark team box at the belt — TABS: a big team-coloured octagonal drum body is the main mass, with a short, fat grey ribbed muzzle at its end (ref: reference/units/pirate.harpooner.blue.png)
+c PASS (426: shoot, reel, kick; CONFIRM 431, 434, 436)
+d PASS (cost 300, hp 3.38x, dmg 0.29x, cd 1.80x; 436 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] b hip carry - blocker 2: a rest pose hanging the gun from the right hand at hip height by its top handle, muzzle down and forward - ref: pirate.harpooner.red.png, pirate.harpooner.jpg - ours: unit_pirate.harpooner_idle (critic 435)
+1. [R] b gun carry - every CONFIRM b list: team drum body as the main mass held at the waist angled down, short fat grey muzzle; off hand per both renders - ref: pirate.harpooner.blue.png, .red.png - ours: unit_pirate.harpooner_idle
+2. [R] a stance + coat - every CONFIRM a list: upright slim stance, orange/tan trim on lapels, fronts, cuffs, three-point tricorn, beige pants - ref: pirate.harpooner.blue.png - ours: unit_pirate.harpooner_idle
 ## Attempts (iter | gap | criterion | verdict)
-423-426 | HARPOON_BREECH, HARPOON_OFF_GRIP; TRICORN_BROWN; reel-in; OPEN_COAT; PIRATE_KICK | a,b,c | approved (c PASS)
-429 | HARPOON_BAYONET lug + thin blade (37ea2e85) | b | approved (struck 3; b PASS)
-430-433 | PIRATE_BEARD; [P] scale 1.3; HARPOONER_PANTS; HARPOONER_SHOES | a | approved (struck 2, 4, 1)
-434 | HARPOONER_SHOES shell to .62 over the grass, sock to the top (10346a0f, 8c62322b) | a | approved (struck 3; a PASS; CONFIRM passed a, failed b)
-435 | HARPOON_BAYONET round dark spike, gun length, from a collar under the mouth (1026d70e) | b | approved (struck 1)
+423-434 | HARPOON_BREECH, OFF_GRIP, TRICORN_BROWN, reel, OPEN_COAT, KICK, BAYONET, BEARD, scale, PANTS, SHOES | a,b,c | approved (c PASS)
+435-436 | HARPOON_BAYONET spike (1026d70e); HARPOON_REST hip carry (b4465c82) | b | approved (struck 1, 2; CONFIRM 436 failed a, b)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Gun: propBuilder case "harpoon" (HARPOON_BAYONET); reel simulationSystem _reelIn; kick _landKicks; off grip ProceduralAnimator._gripHarpoon. Evidence 426: the ability pair shoots the kick.
-- 434 critic left on a: sock a tall bulky block (a thin cuff in TABS), tongue/buckle unreadable. Legs take the head skin since 432.
+- 436: gap critic wanted the off hand free (red.png), CONFIRM wants both on the gun (blue.png, Two-handed); the weapon arm hooks round the gun.
+- Gun: propBuilder case harpoon; anim _restHarpoon, _gripHarpoon; sim _reelIn, _landKicks.
