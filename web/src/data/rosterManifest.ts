@@ -278,7 +278,8 @@ const dynasty = makeFaction(FactionId.Dynasty, "dynasty", [
   ["ninja", "Ninja", 500, "rapid_ranged", { cooldownMultiplier: 0.36, damageMultiplier: 0.41, healthMultiplier: 0.54, abilities: ["teleport", "rapid_fire"], projectileHint: "shuriken", hatHint: "ninja_mask" }],
   ["dragon", "Dragon", 1000, "special_magic", { healthMultiplier: 1.59, abilities: ["fire_dot"], projectileHint: "fireball", specialHint: "dragon" }],
   ["hwacha", "Hwacha", 1500, "artillery", { damageMultiplier: 0.58, healthMultiplier: 0.37, abilities: ["volley_fire"], projectileHint: "rocket_arrow", specialHint: "hwacha", size: "large", visualPreset: "iconic_hwacha", behaviorPreset: "iconic_hwacha", volleyCount: 14, cooldownMultiplier: 1.17, compositionParts: [{ relation: "crew", label: "rocketeer" }, { relation: "crew", label: "loader" }] }],
-  ["monkey_king", "Monkey King", 2000, "boss_melee", { damageMultiplier: 0.17, healthMultiplier: 0.18, abilities: ["clone"], weaponHint: "bo_staff", visualPreset: "iconic_monkey_king", behaviorPreset: "iconic_monkey_king", summonCount: 2, maxActiveSummons: 4, summonLifetimeSeconds: 6.5, cooldownMultiplier: 0.18 }],
+  // [S] 417 Monkey King Jump (card: "jump up a certain height when a Unit is in a reasonable distance"; audit 411 c.1): the Super Jump leap onto the man
+  ["monkey_king", "Monkey King", 2000, "boss_melee", { damageMultiplier: 0.17, healthMultiplier: 0.18, abilities: ["clone", "jump_charge"], weaponHint: "bo_staff", visualPreset: "iconic_monkey_king", behaviorPreset: "iconic_monkey_king", summonCount: 2, maxActiveSummons: 4, summonLifetimeSeconds: 6.5, cooldownMultiplier: 0.18 }],
 ]);
 
 const renaissance = makeFaction(FactionId.Renaissance, "renaissance", [
