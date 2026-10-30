@@ -1,6 +1,6 @@
 import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
-import { limbShell } from "./medievalDress";
+import { limbBox, limbShell } from "./medievalDress";
 import { getMaterialFactory } from "./materialFactory";
 
 /*
@@ -656,6 +656,50 @@ export function samuraiCuirass(scene: Scene, body: ArticulatedBody, teamColor: C
   for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
     out.push(limbShell(scene, "samuraiSode", arm, 0, C.sode, C.sodeOut, plate));
     out.push(limbShell(scene, "samuraiSodeRim", arm, C.sode - C.sodeRim * C.sode, C.sode, C.sodeOut * 1.06, gold));
+  }
+  return out;
+}
+
+/*
+ * [S] 420 the Samurai's hakama and greaves (audit 411 a.3: "slim blue legs - TABS: wide flared team-coloured hakama to the knee"; a.4: "dark plain boots
+ * - TABS: gold-banded team-coloured greaves over geta sandals"; dynasty.samurai.red.png: wide team trousers falling from the cuirass rim and flaring to
+ * below the knee, then team shin guards rimmed in gold down to the sandals). Team cloth: a six-sided shell over the upper leg widening from .hipOut of
+ * the limb at the hip to .kneeOut at the knee, carried on over the shin's top .kneeTo at that width; the greave .greave over the rest of the shin, a
+ * gold rim .rim of the shin at its top and .bands gold rings .band of it below, .bandOut proud.
+ */
+const SAMURAI_HAKAMA = { hipOut: 1.9, kneeOut: 2.6, kneeTo: 0.28, greave: 1.4, rim: 0.08, bands: 2, band: 0.06, bandOut: 1.5, shade: 0.95, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/** The Samurai's wide flared team hakama to below the knee over gold-rimmed team greaves (spec at SAMURAI_HAKAMA). */
+export function samuraiHakama(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const T = SAMURAI_HAKAMA;
+  const mf = getMaterialFactory();
+  const team = teamColor.scale(T.shade);
+  const cloth = mf.get("cloth", team, { emissive: team.scale(T.glow) });
+  const gold = mf.get("cloth", T.gold, { emissive: T.gold.scale(T.glow) });
+  const out: Mesh[] = [];
+  // a flared shell: a six-sided frustum over a limb from `from` to `to` of the way down it, outTop of the limb wide at its head, outBottom at its foot
+  const flare = (name: string, limb: Mesh, from: number, to: number, outTop: number, outBottom: number): Mesh => {
+    const L = limbBox(limb);
+    const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2;
+    const r = Math.max(L.wide, L.deep);
+    const shell = MeshBuilder.CreateCylinder(name, { height: yTop - yBot, diameterTop: r * 2 * outTop, diameterBottom: r * 2 * outBottom, tessellation: 6 }, scene);
+    shell.convertToFlatShadedMesh();
+    shell.scaling.z = L.deep / r * 1.08;
+    shell.parent = limb.parent;
+    shell.position.y = (yTop + yBot) / 2;
+    shell.material = cloth;
+    out.push(shell);
+    return shell;
+  };
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) flare("samuraiHakama", leg, 0, 1, T.hipOut, T.kneeOut);
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    flare("samuraiHakamaKnee", shin, 0, T.kneeTo, T.kneeOut * 0.98, T.kneeOut * 1.02);
+    out.push(limbShell(scene, "samuraiGreave", shin, T.kneeTo, 1, T.greave, cloth));
+    out.push(limbShell(scene, "samuraiGreaveRim", shin, T.kneeTo, T.kneeTo + T.rim, T.bandOut, gold));
+    const step = (1 - T.kneeTo - T.rim) / (T.bands + 1);
+    for (let i = 1; i <= T.bands; i++) {
+      const at = T.kneeTo + T.rim + step * i;
+      out.push(limbShell(scene, "samuraiGreaveBand", shin, at - T.band * 0.5, at + T.band * 0.5, T.bandOut, gold));
+    }
   }
   return out;
 }
