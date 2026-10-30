@@ -470,7 +470,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.85, bulk: 0.85, armLength: 1.05 }, "shuriken_hand", "none", "none", "none", "#1A1A1A", "shuriken_hand", // 411 a shuriken in each fist; 411: his hood is dynastyDress NINJA_HOOD
   ),
   "dynasty.dragon": vis(
-    { scale: 1.6, bulk: 1.3, headSize: 1.5 }, "none", "dragon_head", "none", "none", "#1A1A1A",
+    // [S] 416 the mask off: the giant paper head is held up over him on its pole (dynastyDress DRAGON_FORM); he is its front carrier
+    { scale: 1.6, bulk: 1.3 }, "none", "none", "none", "none", "#1A1A1A",
   ),
   "dynasty.hwacha": vis(
     { scale: 1.5, bulk: 1.6, legLength: 0.7 }, "none", "conical_hat", "none", "hwacha_rack", "#8B4513",

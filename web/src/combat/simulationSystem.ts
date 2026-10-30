@@ -2377,6 +2377,9 @@ export class SimulationSystem {
           const body = attacker.body;
           const mouth = (): Vector3 | null => {
             if (attacker.isDead) return null;
+            // the paper head's mouth (dynastyDress DRAGON_FORM "dragonMouth"); without it, in front of his own head
+            const jaws = body.root.getChildren((n) => n.name === "dragonMouth", false)[0] as TransformNode | undefined;
+            if (jaws) { body.root.computeWorldMatrix(true); (jaws.parent as TransformNode).computeWorldMatrix(true); jaws.computeWorldMatrix(true); return jaws.getAbsolutePosition().clone(); }
             body.headMesh.computeWorldMatrix(true);
             const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), body.root.getWorldMatrix());
             fwd.y = 0;

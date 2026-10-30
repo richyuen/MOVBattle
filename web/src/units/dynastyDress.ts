@@ -385,3 +385,82 @@ export function monkArmPlates(scene: Scene, body: ArticulatedBody, teamColor: Co
   }
   return out;
 }
+
+/*
+ * [S] 416 the Dragon's paper dragon (audit 411 a.1: "one humanoid wearing a dragon mask - TABS: a giant paper dragon head about twice man height on a
+ * long serpentine body"; dynasty.dragon.red.png: a huge round red head held up on a pole over the front carrier, big white eyes under a gold brow,
+ * a broad snout, an open jaw with dark fangs and a long tongue hanging down past the carrier's chest; dynasty.dragon.jpg: the body a long scalloped
+ * team ribbon behind it with a dark spine fringe). Built on the body's root, in h (his standing height, metrics.headTopY):
+ *   head: the skull .skull of h across at .headY up, .headZ ahead; the snout .snout [w, h, d] in front of it; the lower jaw .jaw dropped .gape under
+ *     the snout; .fangs dark fangs; the tongue .tongue [w, long] hanging from the jaw; two white eyes .eye across with dark pupils under a gold brow;
+ *   pole: a dark-gripped team pole .pole across from his hands (.poleFoot of h) up into the skull;
+ *   body: .segs team boxes .seg [w, h, long] trailing back from behind the skull, falling from .bodyY to .bodyTail of h and swaying .sway of h side to
+ *     side, each with a dark spine fin .fin of h tall on top and a gold belly strip;
+ *   a "dragonMouth" node at the jaw's front: the flame jet leaves from it (simulationSystem DRAGON_BREATH).
+ */
+const DRAGON_FORM = {
+  skull: 0.62, headY: 1.45, headZ: 0.45, snout: [0.6, 0.28, 0.4] as const, jaw: [0.5, 0.1, 0.38] as const, gape: 0.2, fangs: 4,
+  tongue: [0.17, 0.55] as const, eye: 0.17, pole: 0.05, poleFoot: 0.55,
+  segs: 9, seg: [0.36, 0.32, 0.36] as const, bodyY: 1.3, bodyTail: 0.85, sway: 0.18, fin: 0.14,
+  gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), tongueTint: 0.85, glow: 0.12,
+};
+/** The Dragon's giant paper head on its pole and its long team body ribbon (spec at DRAGON_FORM). */
+export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const D = DRAGON_FORM;
+  const mf = getMaterialFactory();
+  const lit = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(D.glow) });
+  const team = lit(teamColor), gold = lit(D.gold), dark = lit(D.dark), white = lit(D.white), tongueMat = lit(teamColor.scale(D.tongueTint));
+  const h = body.metrics.headTopY;
+  const out: Mesh[] = [];
+  const holder = new TransformNode("dragonForm", scene);
+  holder.parent = body.root;
+  const put = (m: Mesh, at: Vector3, material = team): Mesh => {
+    m.position.copyFrom(at);
+    m.parent = holder;
+    m.material = material;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const head = new Vector3(0, D.headY * h, D.headZ * h);
+  const skullR = D.skull * h * 0.5;
+  const skull = put(MeshBuilder.CreateIcoSphere("dragonSkull", { radius: skullR, subdivisions: 2 }, scene), head);
+  skull.scaling.set(1.12, 0.92, 1);
+  const snoutAt = head.add(new Vector3(0, -skullR * 0.25, skullR * 0.85));
+  put(MeshBuilder.CreateIcoSphere("dragonSnout", { radiusX: D.snout[0] * h * 0.5, radiusY: D.snout[1] * h * 0.5, radiusZ: D.snout[2] * h * 0.5, subdivisions: 1 }, scene), snoutAt);
+  const jawAt = snoutAt.add(new Vector3(0, -D.gape * h, -D.jaw[2] * h * 0.1));
+  put(MeshBuilder.CreateBox("dragonJaw", { width: D.jaw[0] * h, height: D.jaw[1] * h, depth: D.jaw[2] * h }, scene), jawAt);
+  // the mouth's dark inside between snout and jaw
+  put(MeshBuilder.CreateBox("dragonMaw", { width: D.jaw[0] * h * 0.85, height: D.gape * h * 0.9, depth: D.jaw[2] * h * 0.6 }, scene), Vector3.Center(snoutAt, jawAt).add(new Vector3(0, 0, -D.jaw[2] * h * 0.15)), dark);
+  for (let i = 0; i < D.fangs; i++) {
+    const x = (i / (D.fangs - 1) - 0.5) * D.jaw[0] * h * 0.8;
+    put(MeshBuilder.CreateCylinder("dragonFang", { height: D.gape * h * 0.5, diameterTop: 0.05 * h, diameterBottom: 0, tessellation: 4 }, scene), snoutAt.add(new Vector3(x, -D.snout[1] * h * 0.5 - D.gape * h * 0.2, D.snout[2] * h * 0.25)), dark);
+  }
+  const tongue = put(MeshBuilder.CreateBox("dragonTongue", { width: D.tongue[0] * h, height: D.tongue[1] * h, depth: 0.06 * h }, scene), jawAt.add(new Vector3(0, -D.tongue[1] * h * 0.45, D.jaw[2] * h * 0.5)), tongueMat);
+  tongue.rotation.x = 0.15;
+  for (const side of [-1, 1]) {
+    const eyeAt = head.add(new Vector3(side * skullR * 0.48, skullR * 0.32, skullR * 0.78));
+    put(MeshBuilder.CreateCylinder("dragonEye", { height: 0.03 * h, diameter: D.eye * h, tessellation: 10 }, scene), eyeAt, white).rotation.x = Math.PI / 2;
+    put(MeshBuilder.CreateCylinder("dragonPupil", { height: 0.035 * h, diameter: D.eye * h * 0.5, tessellation: 8 }, scene), eyeAt.add(new Vector3(0, 0, 0.015 * h)), dark).rotation.x = Math.PI / 2;
+    put(MeshBuilder.CreateBox("dragonBrow", { width: D.eye * h * 1.3, height: 0.05 * h, depth: 0.08 * h }, scene), eyeAt.add(new Vector3(side * 0.01 * h, D.eye * h * 0.62, 0)), gold).rotation.z = -side * 0.25;
+  }
+  // the pole up from his hands into the skull
+  const foot = new Vector3(0, D.poleFoot * h, D.headZ * h * 0.8);
+  const top = head.add(new Vector3(0, -skullR * 0.6, 0));
+  put(MeshBuilder.CreateCylinder("dragonPole", { height: top.y - foot.y, diameter: D.pole * h, tessellation: 6 }, scene), Vector3.Center(foot, top));
+  put(MeshBuilder.CreateCylinder("dragonPoleGrip", { height: 0.18 * h, diameter: D.pole * h * 1.3, tessellation: 6 }, scene), foot.add(new Vector3(0, 0.05 * h, 0)), dark);
+  // the body ribbon trailing back
+  for (let i = 0; i < D.segs; i++) {
+    const t = i / (D.segs - 1);
+    const at = new Vector3(Math.sin(t * Math.PI * 1.6) * D.sway * h, (D.bodyY + (D.bodyTail - D.bodyY) * t) * h, head.z - skullR * 0.8 - (i + 0.5) * D.seg[2] * h * 0.92);
+    const k = 1 - t * 0.35;
+    const turn = Math.cos(t * Math.PI * 1.6) * 0.35;
+    put(MeshBuilder.CreateBox("dragonBody", { width: D.seg[0] * h * k, height: D.seg[1] * h * k, depth: D.seg[2] * h }, scene), at).rotation.y = turn;
+    put(MeshBuilder.CreateCylinder("dragonFin", { height: D.fin * h * k, diameterTop: 0, diameterBottom: D.seg[2] * h * 0.6, tessellation: 4 }, scene), at.add(new Vector3(0, D.seg[1] * h * k * 0.5 + D.fin * h * k * 0.4, 0)), dark).rotation.y = turn;
+    put(MeshBuilder.CreateBox("dragonBelly", { width: D.seg[0] * h * k * 1.04, height: 0.04 * h, depth: D.seg[2] * h * 0.96 }, scene), at.add(new Vector3(0, -D.seg[1] * h * k * 0.5, 0)), gold).rotation.y = turn;
+  }
+  const mouth = new TransformNode("dragonMouth", scene);
+  mouth.parent = holder;
+  mouth.position.copyFrom(Vector3.Center(snoutAt, jawAt).add(new Vector3(0, 0, D.jaw[2] * h * 0.55)));
+  return out;
+}

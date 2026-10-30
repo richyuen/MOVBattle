@@ -1,4 +1,4 @@
-import { archerHair, monkArmPlates, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { archerHair, dragonForm, monkArmPlates, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -585,6 +585,8 @@ export class UnitFactory {
       // [S] 410 ...and her broad leather quiver slab at the off hip, in place of the back tube (vikingDress ICE_ARCHER_QUIVER)
       propMeshes.push(...iceArcherQuiver(this._scene, body));
     }
+    // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
+    if (definition.id === "dynasty.dragon" && !shouldUseVehicleBody) propMeshes.push(...dragonForm(this._scene, body, teamColor));
     // [S] 413 the Samurai's team kabuto with a flared gold-trimmed neck guard and a crest (dynastyDress KABUTO)
     if (definition.id === "dynasty.samurai" && !shouldUseVehicleBody) {
       propMeshes.push(...samuraiKabuto(this._scene, body, teamColor));
