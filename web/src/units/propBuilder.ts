@@ -2973,8 +2973,8 @@ const JAVELIN_ROPE = new Color3(0.74, 0.6, 0.42);
 /**
  * [S] 423 the harpoon gun's breech (critic 422: a plain dark cylinder; pirate.harpooner.red.png: a boxy team-coloured octagonal block as deep as his
  * torso hung under a grey A-frame carry handle in his fist, a fat grey nozzle half the block across with three raised rings and a lipped mouth).
- * In prop units (s): the block .long along the barrel (+y) and .wide across, squashed .flat across x; it hangs .hang below the fist on +z (the
- * handle's -z side is up); nozzle .nozzle long, .bore of the block across, ringed .rings; the harpoon leaves from the node named HARPOON_MUZZLE.
+ * In prop units (s): the block .long along the barrel (+y) and .wide across, squashed .flat across x; it hangs .hang below the fist on -z (in his
+ * shoulder carry +z is up); nozzle .nozzle long, .bore of the block across, ringed .rings; the harpoon leaves from the node named HARPOON_MUZZLE.
  */
 const HARPOON_BREECH = { long: 0.2, wide: 0.19, flat: 0.86, hang: 0.9, nozzle: 0.17, bore: 0.52, rings: [0.25, 0.55, 0.85], handle: 0.07 };
 export const HARPOON_MUZZLE = "harpoonMuzzle";
@@ -3551,7 +3551,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const grey = mat(scene, new Color3(0.55, 0.56, 0.58), 0.2, "cloth");
       const dark = mat(scene, new Color3(0.2, 0.2, 0.22), 0.04, "cloth");
       const body = new Mesh("harpoonGun", scene);
-      const hang = H.wide * H.hang * s;
+      const hang = -H.wide * H.hang * s;
       // The breech block: a fat octagon along the barrel, a little flattened across, flat-faced
       const block = MeshBuilder.CreateCylinder("harpoonBreech", { height: H.long * s, diameter: H.wide * s, tessellation: 8 }, scene);
       block.scaling.x = H.flat;
@@ -3566,7 +3566,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       cap.material = dark;
       cap.parent = body;
       // The A-frame carry handle: two grey legs from the block's top up to a bar in the fist
-      const topZ = hang - H.wide * 0.5 * s;
+      const topZ = hang + H.wide * 0.5 * s;
       for (const k of [-1, 1]) {
         const leg = MeshBuilder.CreateBox("harpoonHandle", { width: 0.022 * s, height: 0.022 * s, depth: Math.abs(topZ) * 1.15 + 0.01 * s }, scene);
         leg.position.set(0, k * H.handle * 0.5 * s, topZ * 0.5);
