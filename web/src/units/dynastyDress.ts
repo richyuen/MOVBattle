@@ -919,3 +919,57 @@ export function monkeyFace(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 422 the Monkey King's shorts and shoes (RE-AUDIT 420 a.3: "slim straight legs down to plain boots - TABS: puffy team-coloured shorts gathered at
+ * the knee over pointy shoes"; card Appearance "puffy shorts with golden folds. They also wear little pointy wooden shoes"; dynasty.monkey_king.red.png:
+ * team shorts ballooning out from the hip to their widest at mid thigh and gathered in to a gold cuff at the knee, bare team shins, team shoes with a
+ * pointed upturned toe and a gold anklet). Over each upper leg two six-sided frusta: from the hip to .puffAt of the leg widening from MONKEY_SHORTS.hipOut
+ * of the limb to .puff, then narrowing to .kneeOut at the knee; a gold cuff ring .cuffOut round the shin's top .kneeTo. On each foot a team shoe shell
+ * .shoeOut of the foot's box up to .shoeTall of it, a pointed toe .toe of the foot long standing from its front tilted .toeLift rad up, a gold anklet
+ * .anklet of the foot tall round the cuff.
+ */
+const MONKEY_SHORTS = { hipOut: 1.8, puffAt: 0.5, puff: 2.7, kneeOut: 1.5, kneeTo: 0.14, cuffOut: 1.6, shoeOut: 1.15, shoeTall: 0.78, toe: 1.2, toeWide: 1.5, toeLift: 0.55, anklet: 0.4, ankletOut: 1.25, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/** The Monkey King's puffy team shorts gathered to gold knee cuffs, over pointy team shoes with gold anklets (spec at MONKEY_SHORTS). */
+export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = MONKEY_SHORTS;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(S.glow) });
+  const gold = mf.get("cloth", S.gold, { emissive: S.gold.scale(S.glow) });
+  const out: Mesh[] = [];
+  // a flared shell: a six-sided frustum over a limb from `from` to `to` of the way down it, outTop of the limb wide at its head, outBottom at its foot
+  const flare = (name: string, limb: Mesh, from: number, to: number, outTop: number, outBottom: number): void => {
+    const L = limbBox(limb);
+    const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2;
+    const r = Math.max(L.wide, L.deep);
+    const shell = MeshBuilder.CreateCylinder(name, { height: yTop - yBot, diameterTop: r * 2 * outTop, diameterBottom: r * 2 * outBottom, tessellation: 6 }, scene);
+    shell.convertToFlatShadedMesh();
+    shell.scaling.z = L.deep / r * 1.08;
+    shell.parent = limb.parent;
+    shell.position.y = (yTop + yBot) / 2;
+    shell.material = cloth;
+    out.push(shell);
+  };
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
+    flare("monkeyShortsHip", leg, 0, S.puffAt, S.hipOut, S.puff);
+    flare("monkeyShortsKnee", leg, S.puffAt, 1, S.puff, S.kneeOut);
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "monkeyShortsCuff", shin, 0, S.kneeTo, S.cuffOut, gold));
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize;
+      const put = (m: Mesh, x: number, y: number, z: number, mat = cloth): Mesh => { m.parent = foot; m.position.set(x, y, z); m.material = mat; m.convertToFlatShadedMesh(); out.push(m); return m; };
+      put(MeshBuilder.CreateBox("monkeyShoe", { width: ex.x * 2 * S.shoeOut, height: ex.y * 2 * S.shoeTall, depth: ex.z * 2 * S.shoeOut }, scene), fb.center.x, fb.minimum.y + ex.y * S.shoeTall, fb.center.z);
+      // the pointed toe: a four-sided spike from the shoe's front, tilted up (the foot's +z is its toe)
+      const long = ex.z * 2 * S.toe * 0.5;
+      const toe = put(MeshBuilder.CreateCylinder("monkeyShoeToe", { height: long, diameterTop: 0, diameterBottom: ex.x * S.toeWide, tessellation: 4 }, scene), 0, 0, 0);
+      toe.rotation.x = Math.PI / 2 - S.toeLift;
+      const axis = new Vector3(0, Math.sin(S.toeLift), Math.cos(S.toeLift));
+      toe.position.set(fb.center.x, fb.minimum.y + ex.y * S.shoeTall * 0.5, fb.maximum.z * S.shoeOut - ex.z * 0.1).addInPlace(axis.scale(long * 0.5));
+      const anklet = put(MeshBuilder.CreateCylinder("monkeyAnklet", { height: ex.y * 2 * S.anklet, diameter: ex.x * 2 * S.ankletOut, tessellation: 6 }, scene), fb.center.x, fb.maximum.y - ex.y * S.anklet * 0.9, fb.minimum.z + ex.z * 0.55, gold);
+      anklet.scaling.z = (ex.z * 1.15) / (ex.x * S.ankletOut);
+    }
+  }
+  return out;
+}
