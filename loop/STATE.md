@@ -1,5 +1,5 @@
 # Loop state (v5: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 429   Batch: dynasty+pirate (8-9/19)   Consecutive empty: 0   Done: 48/139   Parked: 0
+Iteration: 430   Batch: dynasty+pirate (8-9/19)   Consecutive empty: 0   Done: 48/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -10,7 +10,7 @@ medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight +
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur ++++ D | zeus ++++ D
 viking: headbutter ++++ D | ice_archer ++++ D | brawler ++++ D | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
 dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | dragon -+++ o | hwacha ++++ D | monkey_king -+++ o
-pirate: flintlock -+++ o | blunderbuss --++ o | bomb_thrower -+++ o | harpooner -+++ o | cannon ++++ D | captain --++ o | pirate_queen --++ o
+pirate: flintlock -+++ o | blunderbuss +-++ o | bomb_thrower -+++ o | harpooner -+++ o | cannon ++++ D | captain --++ o | pirate_queen --++ o
 spooky: skeleton_warrior ???? q | skeleton_archer ???? q | candlehead ???? q | vampire ???? q | pumpkin_catapult ???? q | swordcaster ???? q | reaper ???? q
 wild_west: dynamite_thrower ???? q | miner ???? q | cactus ???? q | gunslinger ???? q | lasso ???? q | deadeye ???? q | quick_draw ???? q
 legacy_1: peasant ???? q | banner_bearer ???? q | poacher ???? q | blowdarter ???? q | pike ???? q | barrel_roller ???? q | boxer ???? q | flag_bearer ???? q
@@ -23,24 +23,26 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-429 (BASE 6555ee29; starving flintlock a, bomb_thrower a, dragon a/b, harpooner b): [S] flintlock a.4 hair (a216eda0, 70fa9c2c) struck 4 | [S] bomb_thrower a.3 socks (784eeeca) struck 3 | [S] cannon a.1 bandanna (1f3e8df6) struck 1, 2, a PASS; CONFIRM passed, D | [S] monkey_king a.2 hair ring (e6fad918) struck 2, a PASS; CONFIRM failed a (2nd: plateau) | [S] dragon a.3 trim (3b24b339) struck 3, a PASS; CONFIRM failed a (2nd: plateau) | [S] dragon b.2 front hold (df5dd028) struck 2, b PASS | [S] harpooner b.3 bayonet (37ea2e85) struck 3, b PASS - 7/7, 8 struck
-428 (BASE 0445ba6b; evidence c6ac0351 cannon idle swing .25): [S] captain c.2 dragon pistol blast (29111559) struck 2, c PASS | [S] captain a.3 long coat (9fb9986c) struck 3 | [S] queen a.3 bomb sash (72765079, cfa8f57b) struck 3 | [S] blunderbuss a.3 bracers (d6d8e60a) struck 3 | [S] cannon b.2 handles (8009017b, 0a24e9b0) struck 2, b PASS | [S] cannon a.3 striped shirt (a478d4ce) struck 3, a PASS; CONFIRM failed a (bandanna, eyes) | [S] monkey_king a.3 slim trunk (eea59cc5) struck 3 - 7/7, 7 struck
+430 (BASE 28adb4e4; starving queen b): [S] flintlock a.3 socks (4fd14183) struck 3, a PASS; CONFIRM failed a | [S] bomb_thrower a.4 sash (9c97ba97, 4ce95061) struck 4, a PASS; CONFIRM failed a | [S] harpooner a.2 beard (a2de9843) struck 2 | [S] blunderbuss a.4 hair (ed8b9edd) struck 4, a PASS | [S] queen a.2 locks (7899b9c6) struck 2 | [S] captain a.2 parrots (674c7165) struck 2 | [S] queen b.2 big cutlass (83f4e760) approved, none struck (idle end-on) | [R] monkey_king a face + robe (80235174) struck 1, 2, a PASS; CONFIRM failed a (3rd: plateau) - 8/8, 8 struck
+429 (BASE 6555ee29): [S] flintlock a.4 hair (a216eda0, 70fa9c2c) struck 4 | [S] bomb_thrower a.3 socks (784eeeca) struck 3 | [S] cannon a.1 bandanna (1f3e8df6) a PASS; CONFIRM passed, D | [S] monkey_king a.2 hair ring (e6fad918) | [S] dragon a.3 trim (3b24b339) | [S] dragon b.2 front hold (df5dd028) b PASS | [S] harpooner b.3 bayonet (37ea2e85) b PASS - 7/7, 8 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] pirate.flintlock (a216eda0, 70fa9c2c) VERDICT: APPROVE CRITERION: pirate.flintlock.a FAIL (previous: FAIL)
-- GAP: [S] pirate.bomb_thrower (784eeeca) VERDICT: APPROVE CRITERION: pirate.bomb_thrower.a FAIL (previous: FAIL)
-- GAP: [S] pirate.cannon (1f3e8df6) VERDICT: APPROVE CRITERION: pirate.cannon.a PASS (previous: FAIL)
-- GAP: [S] dynasty.monkey_king (e6fad918) VERDICT: APPROVE CRITERION: dynasty.monkey_king.a PASS (previous: FAIL)
-- GAP: [S] dynasty.dragon (3b24b339) VERDICT: APPROVE CRITERION: dynasty.dragon.a PASS (previous: FAIL)
-- GAP: [S] dynasty.dragon (df5dd028) VERDICT: APPROVE CRITERION: dynasty.dragon.b PASS (previous: FAIL)
-- GAP: [S] pirate.harpooner (37ea2e85) VERDICT: APPROVE CRITERION: pirate.harpooner.b PASS (previous: FAIL)
+- GAP: [S] pirate.flintlock (4fd14183) VERDICT: APPROVE CRITERION: pirate.flintlock.a PASS (previous: FAIL)
+- GAP: [S] pirate.bomb_thrower (9c97ba97, follow-up 4ce95061) VERDICT: APPROVE CRITERION: pirate.bomb_thrower.a PASS (previous: FAIL)
+- GAP: [S] pirate.harpooner (a2de9843) VERDICT: APPROVE CRITERION: pirate.harpooner.a FAIL (previous: FAIL)
+- GAP: [S] pirate.blunderbuss (ed8b9edd) VERDICT: APPROVE CRITERION: pirate.blunderbuss.a PASS (previous: FAIL)
+- GAP: [S] pirate.pirate_queen (7899b9c6) VERDICT: APPROVE CRITERION: pirate.pirate_queen.a FAIL (previous: FAIL)
+- GAP: [S] pirate.captain (674c7165) VERDICT: APPROVE CRITERION: pirate.captain.a FAIL (previous: FAIL)
+- GAP: [S] pirate.pirate_queen (83f4e760) VERDICT: APPROVE CRITERION: pirate.pirate_queen.b FAIL (previous: FAIL)
+- GAP: [R] dynasty.monkey_king (80235174) VERDICT: APPROVE CRITERION: dynasty.monkey_king.a PASS (previous: FAIL, plateau)
 - REGRESSIONS: none
-- CONFIRM: UNIT pirate.cannon: a PASS b PASS c PASS d PASS (4/4) | UNIT dynasty.monkey_king: a FAIL b PASS c PASS d PASS (3/4) | UNIT dynasty.dragon: a FAIL b PASS c PASS d PASS (3/4)
+- CONFIRM: UNIT pirate.flintlock: a FAIL b PASS c PASS d PASS (3/4) | UNIT pirate.bomb_thrower: a FAIL b PASS c PASS d PASS (3/4) | UNIT dynasty.monkey_king: a FAIL b PASS c PASS d PASS (3/4)
 
 ## Notes for next iteration (max 5 lines)
-- [R] slot 430: dragon a and monkey_king a are both plateau (2nd CONFIRM fail 429); one [R] per iteration, specs in their unit files. Starving: queen b at 430; blunderbuss b, harpooner a at 431.
-- Pickable [S] (429 NEXT): flintlock a.3 grey socks, bomb_thrower a.4 bomb sash, harpooner a.2 beard / a.4 1.30x size; earlier: captain a.2 parrots, queen a.2 locks (pirateHair can serve), blunderbuss a.4 hair (pirateHair), queen b.2 big cutlass, captain b.2 cutlass, blunderbuss b.1 rebuild. [P] flintlock hair ginger.
-- Shared 429: pirateDress PIRATE_HAIR (pirateHair, any colour/opts), PIRATE_SOCKS, CANNON_BANDANNA (dressCannonCrew cap=false on the pirate cannon); dynastyDress eyeSpanInHead now exported, MONKEY_HAIR, DRAGON_TRIM + dragonTrim; proceduralAnimation _holdDragonPole; propBuilder HARPOON_BAYONET.
-- Shared earlier: buildCutlass + CUTLASS_SLASH (captain, queen, blackbeard); PIRATE_KICK harpooner; GUN_TOSS + spawnPistolShot flintlock; DRAGON_BLAST captain; CAPTAIN_COAT; CANNON_HANDLES; MONKEY_TRUNK first in his dress.
+- [R] slot 431: dragon a (plateau since 429, waited 430) before monkey_king a (plateau again, CONFIRM 430: slim build at size 1.15, knee shorts). Starving at 431: blunderbuss b (gun rebuild, last 426).
+- Evidence commit first at 431: queen b.2's idle shows the big cutlass end-on; it reads in unit_pirate.pirate_queen_release (critic 430). Re-aim before any queen b pick.
+- Pickable [S]: flintlock a.1/bomb_thrower a.1 team bandana (one "bandana" hat change serves both), flintlock a.2 ginger locks, bomb_thrower a.2 belt, captain a.4 beard (pirateBeard can serve), queen a.4 skirt, queen b.1 off-hand sabre, captain b.2 cup guard. [P] harpooner size 1.05 -> 1.30 (fallout of PIRATE_BEARD).
+- Shared 430: pirateDress PLAIN_SOCKS (flintlockSocks), BOMB_SASH, PIRATE_BEARD (pirateBeard), BLUNDERBUSS_HAIR, QUEEN_HAIR, CAPTAIN_PARROTS (finds "tricornCrown"); propBuilder QUEEN_CUTLASS (weaponVariant queen_cutlass); dynastyDress MONKEY_FACE takes teamColor; no tunic skirt for monkey_king.
+- Shared earlier: pirateHair (any colour/opts), PIRATE_SOCKS, CANNON_BANDANNA, buildCutlass + CUTLASS_SLASH, PIRATE_KICK, GUN_TOSS + spawnPistolShot, DRAGON_BLAST, CAPTAIN_COAT, dynastyDress DRAGON_TRIM, _holdDragonPole, HARPOON_BAYONET.
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```

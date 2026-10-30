@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-425 | TRICORN_BROWN fitted tricorn (75a4ea7d) | pirate.harpooner.a | approved
-425 | HARPOON_REEL reel-in, taut rope (3f3fd30b, 443edc44) | pirate.harpooner.c | approved
-425 | GUN_TOSS + disarmToFists (36eb9aaa) | pirate.flintlock.c | approved
-425 | BLUNDERBUSS prop + BLUNDERBUSS_AIM (28779788) | pirate.blunderbuss.b | approved
-425 | CANNON_WHEEL (5b429ac7, 396cefd1) | pirate.cannon.a | approved
-425 | CUTLASS curved blade, queen off hand (e5226412) | pirate.pirate_queen.b | approved
-425 | CUTLASS_SLASH (8b450772) | pirate.captain.c | approved
 426 | CUTLASS_SLASH for the queen's blow, carried through a step (45024151) | pirate.pirate_queen.c | approved
 426 | BLUNDERBUSS_RECOIL shooter thrown off his feet (fb6f0227) | pirate.blunderbuss.c | approved
 426 | PISTOL_SHOT bell flash + ball streak (7e83d5a4) | pirate.flintlock.c | approved
@@ -48,6 +41,14 @@ for 25 iterations.
 429 | DRAGON_TRIM orange collar, hem, cuffs on every carrier (3b24b339) | dynasty.dragon.a | approved
 429 | DRAGON_HOLD _holdDragonPole, pole in at the chest (df5dd028) | dynasty.dragon.b | approved
 429 | HARPOON_BAYONET lug + blade under the nozzle (37ea2e85) | pirate.harpooner.b | approved
+430 | PLAIN_SOCKS grey sock cuff to shoe (4fd14183) | pirate.flintlock.a | approved
+430 | BOMB_SASH band, pouch, bomb at the right hip (9c97ba97, 4ce95061) | pirate.bomb_thrower.a | approved
+430 | PIRATE_BEARD jaw mass, sideburns, mouth (a2de9843) | pirate.harpooner.a | approved
+430 | BLUNDERBUSS_HAIR pirateHair bob + crown cap (ed8b9edd) | pirate.blunderbuss.a | approved
+430 | QUEEN_HAIR black locks, curls, tan beads (7899b9c6) | pirate.pirate_queen.a | approved
+430 | CAPTAIN_PARROTS blue + red on the tricorn (674c7165) | pirate.captain.a | approved
+430 | QUEEN_CUTLASS big curved main-hand blade (83f4e760) | pirate.pirate_queen.b | approved
+430 | [R] MONKEY_FACE peach mask + MONKEY_ROBE team, orange band, no skirt/cape (80235174) | dynasty.monkey_king.a | approved
 
 ## Spent (never retry as [P])
 
@@ -76,24 +77,13 @@ ancientDress.ts:MINO_STRAP (wide, proud) + MINO_GIRDLE (lo, hi, proudX, proudZ; 
 dynastyDress.ts:MONKEY_CROWN (feather, featherWide, belly, stem, flat, spine, spineProud, lean) | 2.3, .55, .4, .3, .18, .14, .6, .32 | 424 | approved | rod feathers 2.6 x .2, lean .3 (420-423); torus crown hat (before 420)
 dynastyDress.ts:DRAGON_MUZZLE (bevel, tan, rim, rimDeep, diamonds, diamond, diamondAt, diamondStep, diamondUp) + FRONT_GRIP (long, wraps, band, out, twist) | .22, (.72,.54,.32), .05, .06, 2, .11, .45, .25, .25; .24, 5, .022, 1.75, .25 | 424 | approved | icosphere snout; team head pole, grip .18 (before 424)
 dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, fist, fistAt, poleAhead, elbowOut; arm material, fist material) | .075, .28, .22, .2, .09, .56, .07, .05; trousers, dark | 422 | approved | pole beside the head poleSide .17, fists at .99 h on one straight skin arm each (420-421; [P] 421 arm .1, fist .12 skin rejected as a ledger reversal); arm .06, pole through the head (417-419)
-dynastyDress.ts:MONKEY_FACE (plate, chin, sideFrom, brow, muzzle, muzzleTop, muzzleOut, nose, tuft, 8 tufts; dark, tan, blond) | .1, -1.02, .7, .58, 1.1, -.3, .32, .5, .26; (.1,.06,.05), (.72,.54,.32), (.78,.56,.2) | 421 | approved | bare team head (before 421)
+dynastyDress.ts:MONKEY_FACE [R] (plate, chin, brow, cheek, cheekAt, browTall, browOut, muzzle, muzzleY, muzzleZ, strip) | .08, -1, .6, [.5,.42,.3], [.58,-.52,1], .22, .22, [.5,.42,.42], -.66, 1.2, .26 | 430 | approved | dark plate .1, muzzle box 1.1, 8 blond tufts (421-429); bare team head (before 421)
 dynastyDress.ts:MONKEY_SHORTS (hipOut, puffAt, puff, kneeOut, kneeTo, cuffOut, shoeOut, shoeTall, toe, toeWide, toeLift, anklet, ankletOut) | 1.7, .5, 2.3, 1.45, .14, 1.6, 1.15, .78, 1.2, 1.5, .55, .4, 1.25 | 422 | approved | puff 2.7, hip 1.8, knee 1.5 (422.3, ballooned); slim trouser legs, plain boots (before 422)
-dynastyDress.ts:MONKEY_ROBE (out, edge, deep, sleeveOut, sleeveTo, strip, stripLong, stripAt, proud, scarf, scarfThick, bib, bibLong) | 1.14, .12, 1.18, 1.55, .95, .06, .92, [-.62,-.26], .06, .72, .12, .42, .34 | 422 | approved | the tan accent trunk bare all round (before 422)
+dynastyDress.ts:MONKEY_ROBE [R] (out, deep, under, band, bandFrom, bandTo; full width, no skirt, no cape) | 1.14, 1.18, .85, .08, [-.3,.7], [.95,-.85] | 430 | approved | left half edge .12, 2 gold strips .06 x .92 at [-.62,-.26] (422-429); tan trunk (before 422)
 vehicleBuilder.ts:FRONT_SPLIT (hipOut, out, down, ahead, shinOut, shinAhead) + THROWER_SPLIT (out, down, ahead, shinOut, shinAhead) | .05, 1, .1, .12, .45, .1; 1, .3, .35, .6, .15 | 422 | approved | [R] reset: CREW_SEAT frontThigh -1.15/frontSplay .62/frontKnee .45 (Euler, crossed the knees) and THROWER_KNEES chest .55/out .2 targets (unreachable) (380-421); FRONT_SPLIT out .88/down .12/ahead .42 without the hip slide (403, rejected)
 pirate 425-426 rows (TRICORN_BROWN, HARPOON_REEL, GUN_TOSS, BLUNDERBUSS + _AIM, CANNON_WHEEL, CUTLASS, CUTLASS_SLASH, PIRATE_KICK, BLUNDERBUSS_RECOIL, PISTOL_SHOT, BARREL_ARMOUR, OPEN_COAT, CANNON_SIGHT) | compacted 428 | 426 | approved | values: git show 0445ba6b:loop/LEDGER.md
 pirate 423-424 rows (PISTOL + PISTOL_AIM, HARPOON_BREECH, CANNON_BARREL, TRICORN_PLATE, PIRATE_VEST, PIRATE_PANTS + PIRATE_SHORTS) | compacted 427 | 424 | approved | values: git show 613ba5b9:loop/LEDGER.md
-simulationSystem.ts:BOMB_SPIN (within, crowd, cooldown, rate, drop, after, count, out, flight, splash, damage, rise) + BOMB_SPIN_POSE (out, head, tuck) | 3, 3, 8, 16, .3, .7, 7, 2.6, .55, 3.5, .67, 9; 1.45, .25, .35 | 427 | approved | no spin (before 427)
-simulationSystem.ts:BLUNDERBUSS_BLAST (fling, lift) | 6, 7 | 427 | approved | pellets only (before 427)
-pirateDress.ts:PLANK_HAT (boards, wide, deep, thick, gap, sit, tilt, batten; brown) | 3, 2.5, 1.6, .17, .03, .06, .1, 1.1; (.4,.22,.12) | 427 | approved | bandana cap (before 427)
-projectileSystem.ts:LAUNCH.cannonball (speed, gravity) | 45, 9.8 | 427 | approved | fixed lob speed 10, arc .4 of range (before 427)
-propBuilder.ts:DRAGON_PISTOL (long, bore, bell, mouth; rest PISTOL) | .36, .12, .26, 4.2 | 427 | approved | no off-hand gun (before 427)
-pirateDress.ts:QUEEN_BANDANA (out, brow, top, sink, flap, below, proud, slant, knot, tail, splay) | 1.1, .06, 1.14, .04, .95, .12, .1, .32, .36, .75, .35 | 427 | approved | black pirate_hat (before 427)
-simulationSystem.ts:DRAGON_BLAST (range, cooldown, warmup, damage, fling, lift, flash) + projectileSystem spawnPistolShot blast | 3, 2, .4, .42, 7, 3.5, 2.4 | 428 | approved | no shot (before 428)
-pirateDress.ts:CAPTAIN_COAT (out, deep, shirt, proud, cravat, cravatLong, cravatProud, edge, back, front, long, flare, thick, hem) | 1.12, 1.22, .36, .04, .24, .26, .1, .07, 1.2, .42, 1.35, .1, .12, .07 | 428 | approved | pirate_tar tunic + tunicSkirt (before 428)
-pirateDress.ts:QUEEN_SASH (wide, thick, fromX, over, toX, toY, proud, bomb, at, seat; brown, black) | .17, .08, .72, .04, -.86, -.92, .03, .2, [.14,.36,.58,.8], .75; (.24,.13,.065), (.035,.035,.04) | 428 | approved | none (before 428)
-pirateDress.ts:BARREL_BRACERS (staves, out, from, to, upFrom, upTo, wide, thick, strap, strapAt, strapOut) | 8, 1.5, .12, .92, .2, .8, 1.12, .22, .13, [.2,.8], .12 | 428 | approved | bare arms (before 428)
-vehicleBuilder.ts:CANNON_HANDLES (rider, x, y, z, lean, hipBack, hipFwd, knee, grip, gripWide, knob, blockTop) | .66, .24, .72, -.36, .2, .25, -.3, .3, .1, .035, .05, .5 | 428 | approved | y .57 x .2 (428.5); rider .46 shoving the wheel rim (before 428)
-pirateDress.ts:CANNON_SHIRT (top, under, out, sleeve, sleeveTo, band, bandAt; white) | .9, 1, 1.06, 1.4, .55, .22, .28; (.9,.88,.84) | 428 | approved | tan crewHoop bands on team (before 428)
+pirate 427-428 rows (BOMB_SPIN + _POSE, BLUNDERBUSS_BLAST, PLANK_HAT, LAUNCH.cannonball, DRAGON_PISTOL, QUEEN_BANDANA, DRAGON_BLAST, CAPTAIN_COAT, QUEEN_SASH, BARREL_BRACERS, CANNON_HANDLES, CANNON_SHIRT) | compacted 430 | 428 | approved | values: git show 28adb4e4:loop/LEDGER.md
 dynastyDress.ts:MONKEY_TRUNK (narrow, wraps, wrap, wrapOut, deep, step, tilt) | .7, 2, .11, 1.18, 1.25, .94, .08 | 428 | approved | full-width trunk (before 428)
 pirateDress.ts:PIRATE_HAIR (out, clear, top, side, drop, front, splay, back; flintlock colour team x) | 1.08, .06, .62, .28, -1.7, .25, .12, .2; .42 | 429 | approved | crown cap slab, team x.55 (429.1); none (before 429)
 pirateDress.ts:PIRATE_SOCKS (from, top, topOut, bands, to, out, shade; grey) | .22, .34, 1.5, 6, .98, 1.3, .8; (.5,.49,.47) | 429 | approved | bare shins (before 429)
@@ -102,3 +92,10 @@ dynastyDress.ts:MONKEY_HAIR (curls, curl, swell, midY, rx, ry, sweep, z, capOut,
 dynastyDress.ts:DRAGON_TRIM (collar, hem, out, cuff, sleeve, bodyCollar, bodyHem, limbCuff, limbOut) | .04, .045, 1.14, .05, 1.5, .1, .1, .16, 1.5 | 429 | approved | none (before 429)
 proceduralAnimation.ts:DRAGON_HOLD (top, low) + dynastyDress FRONT_GRIP.ahead | .28, .22; .22 | 429 | approved | pole foot at D.headZ*.8 (.4 h), no hold (before 429)
 propBuilder.ts:HARPOON_BAYONET (long, wide, thin, point, at, lug, below; steel) | .5, .04, .012, .18, .5, .03, .01; (.36,.37,.4) | 429 | approved | none (before 429)
+pirateDress.ts:PLAIN_SOCKS (from, out; grey) | .46, 1.24; (.45,.4,.34) | 430 | approved | bare shins (before 430)
+pirateDress.ts:BOMB_SASH (wide, thick, fromX, fromY, toX, toY, proud, pouch, bomb, seat, shade) | .16, .1, -.75, -.92, 1.2, -1.25, .4, .3, .3, .55, .85 | 430 | approved | toX 1.02 toY -1.42 proud .06 (430.2, buried); none (before 430)
+pirateDress.ts:PIRATE_BEARD (jaw, under, foot, ahead, burn, burnBack, burnFront, mouth, mouthTall; brown) | [1.14,_,.72], .06, -1.38, .46, .22, -.35, .62, .42, .16; (.18,.09,.06) | 430 | approved | none (before 430)
+pirateDress.ts:BLUNDERBUSS_HAIR (top, drop, side, cap; color) | .95, -1.55, .3, 1.1; (.28,.135,.09) | 430 | approved | none (before 430)
+pirateDress.ts:QUEEN_HAIR (side, drop, splay, curls, curl, beads, bead) | .36, -2, .16, 4, .42, 3, .18 | 430 | approved | none (before 430)
+pirateDress.ts:CAPTAIN_PARROTS (x, y, z, size, turn, body, head, headY, beak, tail, tailLean) | 1.15, .55, .35, 1, .35, [.32,.5,.34], .27, 1.05, .16, .75, .45 | 430 | approved | none (before 430)
+propBuilder.ts:QUEEN_CUTLASS (long, wide, taper, curve, segs, cup) | .66, .1, .5, .24, 7, 4.2 | 430 | approved | CUTLASS .5, .05, .55, .13, 6, 3.4 (425-429)
