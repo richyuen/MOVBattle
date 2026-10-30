@@ -3171,14 +3171,17 @@ const BERSERKER_AXE = { scale: 0.78 };
  * dark-iron bearded hatchet blade about head-sized"; viking.brawler.red.png, .blue.png): the bearded cut at .scale of its size, so the haft runs from
  * the fist to about the shoulder and the blade is about a head across, in dark iron (.steel) instead of the pale grey.
  */
-const BRAWLER_HATCHET = { scale: 0.6, steel: new Color3(0.11, 0.11, 0.12) };
-function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_AXE.steel): Mesh {
+// [P] 415 .haft of the cut haft kept (critic 414: still 1.5x hand-to-shoulder, a forearm of butt under the fist and the head at the brow)
+const BRAWLER_HATCHET = { scale: 0.6, steel: new Color3(0.11, 0.11, 0.12), haft: 0.67 };
+function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_AXE.steel, haft = 1): Mesh {
   const A = BEARDED_AXE;
-  const H = A.long * s;
+  // haft: the haft's share of its own length kept (the head stays at the top, the fist the same .butt up from the end)
+  const long = A.long * haft, headY = A.head - (A.long - long) * 0.5;
+  const H = long * s;
   const handle = MeshBuilder.CreateCylinder("handle", { height: H, diameter: A.thick * s, tessellation: 7 }, scene);
   handle.material = mat(scene, A.wood, 0.1, "cloth");
   handle.convertToFlatShadedMesh();
-  const fistY = -(A.long * 0.5 - A.butt) * s;
+  const fistY = -(long * 0.5 - A.butt) * s;
   addGripWraps(scene, handle, [fistY - 0.05 * s, fistY, fistY + 0.05 * s], 0.032 * s);
   const steel = mat(scene, steelColor, A.glow, "cloth");
   // the blade: an eye at the haft, a bowed cutting edge out front, the beard hanging under it
@@ -3190,12 +3193,12 @@ function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_A
   }
   outline.push([w * 0.34, beard * 1.04], [w * 0.16, beard * 0.72], [0.02 * s, -0.04 * s], [0, 0.03 * s]);
   const blade = flatPlate(scene, "axehead", outline, A.plate * s);
-  blade.position.y = A.head * s;
+  blade.position.y = headY * s;
   blade.material = steel;
   blade.parent = handle;
   // the poll: a short grey block behind the eye
   const poll = MeshBuilder.CreateBox("axePoll", { width: A.poll * s, height: 0.075 * s, depth: A.plate * 1.6 * s }, scene);
-  poll.position.set(-A.poll * s * 0.55, A.head * s, 0);
+  poll.position.set(-A.poll * s * 0.55, headY * s, 0);
   poll.material = steel;
   poll.convertToFlatShadedMesh();
   poll.parent = handle;
@@ -3203,7 +3206,7 @@ function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_A
   // BEARDED_AXE_CARRY; a marker only, no geometry)
   const carryMark = new TransformNode("beardedAxeCarry", scene);
   carryMark.parent = handle;
-  handle.position.y = (A.long * 0.5 - A.butt) * s;
+  handle.position.y = (long * 0.5 - A.butt) * s;
   return handle;
 }
 /*
@@ -3632,7 +3635,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "axe": {
-      if (variant === "bearded_axe") return buildBeardedAxe(scene, s * BRAWLER_HATCHET.scale, BRAWLER_HATCHET.steel);
+      if (variant === "bearded_axe") return buildBeardedAxe(scene, s * BRAWLER_HATCHET.scale, BRAWLER_HATCHET.steel, BRAWLER_HATCHET.haft);
       if (variant === "berserker_axe") return buildBeardedAxe(scene, s * BERSERKER_AXE.scale);
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.03 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
