@@ -118,6 +118,8 @@ const GUN_FLING: Record<string, { speed: number; lift: number }> = { musket: { s
  * across the cut toward the harvester's off side and away from him, as from a blast (RuntimeUnit.applyBlastLaunch). across: share of the throw sideways;
  * speed, lift: m/s.
  */
+/** [S] 417 a staff blow that throws the man back off it: .speed m/s away from the striker and .lift up (dynasty.monk card: force 250). */
+const BO_SHOVE: Record<string, { speed: number; lift: number }> = { "dynasty.monk": { speed: 4.2, lift: 2.4 } };
 const SCYTHE_FLING: Record<string, { across: number; speed: number; lift: number }> = { "farmer.harvester": { across: 0.6, speed: 3.2, lift: 5 } };
 // The bone mage's leaf whirl (units/tribal.bone_mage, tribal.bone_mage.png: leaves swirling low among the spikes at the man, none over the caster's head): it rises
 // at the row's near end this high off the turf, runs at the man this high up him, on an arc this high per metre (near flat, under the spike tips)
@@ -2566,6 +2568,15 @@ export class SimulationSystem {
       const offSide = new Vector3(-away.z, 0, away.x).scale(-(Math.sign(attacker.body.rightShoulder.position.x) || 1));
       target.applyBlastLaunch(away.scale(1 - sweep.across).add(offSide.scale(sweep.across)).normalize(), sweep.speed, sweep.lift);
       this._logAbility(attacker, "sweep", now);
+    }
+    // [S] 417 the Monk's bo throws the man it leaves standing back (BO_SHOVE; audit 411 c.2: "the knight stays upright in place - TABS: force 250
+    // sends the target staggering back", card Weapons)
+    const shove = BO_SHOVE[attacker.definition.id];
+    if (shove && !target.isDead) {
+      const away = new Vector3(target.position.x - attacker.position.x, 0, target.position.z - attacker.position.z);
+      if (away.lengthSquared() < 1e-6) away.set(0, 0, 1);
+      target.applyBlastLaunch(away.normalize(), shove.speed, shove.lift);
+      this._logAbility(attacker, "knockback", now, target.position);
     }
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     target.reposeNow();
