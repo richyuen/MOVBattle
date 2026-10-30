@@ -449,6 +449,10 @@ const DIVE = { tip: 1.22, trunk: 0.16, head: 0.62, arms: 2.3, elbow: 0.35, knee:
  * Eased in at .in and out at .out per second.
  */
 const PIRATE_KICK_POSE = { raise: 1.45, chamberRaise: 0.7, chamber: 1.5, plant: 0.25, lean: 0.3, headLevel: 0.6, in: 20, out: 9 };
+// [S] 427 the Bomb Spin's whirl (simulationSystem BOMB_SPIN; card pirate.pirate_queen "spin and release several bombs, then ... helicopter upwards"): both
+// arms thrown out level to the sides (.out rad off the hang), elbows straight, so the two blades sweep round her like rotor blades; the head tipped
+// back .head, the legs drawn up a little (.tuck at hip and knee) as she lifts. Eased in at .in, out at .out_.
+const BOMB_SPIN_POSE = { out: 1.45, head: 0.25, tuck: 0.35, in: 25, out_: 8 };
 /*
  * [S] bare fists (379, the minotaur's; card Main Hand / Off Hand "Minotaur Grab", Unarmed; ancient.minotaur.red.png: no weapon, both fists balled before the
  * belly, elbows bent near square and out from the flanks; ancient.minotaur.png: one arm grabs a man while the other punches).
@@ -1309,6 +1313,32 @@ export class ProceduralAnimator {
     b.torso.rotation.x -= K.lean * k;
     b.neck.rotation.x += K.lean * K.headLevel * k;
   }
+  /** The Bomb Spin's whirl (spec at BOMB_SPIN_POSE), set by the sim for the length of a spin (simulationSystem BOMB_SPIN). */
+  private _bombSpin = 0;
+  private _bombSpinTarget = 0;
+  setBombSpin(on: boolean): void {
+    this._bombSpinTarget = on ? 1 : 0;
+  }
+  private _applyBombSpin(dt: number): void {
+    const P = BOMB_SPIN_POSE;
+    this._bombSpin += (this._bombSpinTarget - this._bombSpin) * Math.min(1, dt * (this._bombSpinTarget > this._bombSpin ? P.in : P.out_));
+    const k = this._bombSpin * (this._state === AnimState.Dead ? 0 : 1);
+    if (k < 0.01 || this.walkStyle === "quadruped") return;
+    const b = this._body;
+    b.leftShoulder.rotation.x += (0 - b.leftShoulder.rotation.x) * k;
+    b.rightShoulder.rotation.x += (0 - b.rightShoulder.rotation.x) * k;
+    b.leftShoulder.rotation.y += (0 - b.leftShoulder.rotation.y) * k;
+    b.rightShoulder.rotation.y += (0 - b.rightShoulder.rotation.y) * k;
+    b.leftShoulder.rotation.z += (-P.out - b.leftShoulder.rotation.z) * k;
+    b.rightShoulder.rotation.z += (P.out - b.rightShoulder.rotation.z) * k;
+    b.leftElbow.rotation.x += (0 - b.leftElbow.rotation.x) * k;
+    b.rightElbow.rotation.x += (0 - b.rightElbow.rotation.x) * k;
+    b.neck.rotation.x -= P.head * k;
+    b.leftHip.rotation.x -= P.tuck * k;
+    b.rightHip.rotation.x -= P.tuck * k;
+    b.leftKnee.rotation.x += P.tuck * 1.6 * k;
+    b.rightKnee.rotation.x += P.tuck * 1.6 * k;
+  }
   /** Bare-fisted (BULL_FISTS): carries his fists before the belly and grabs then punches; set by the runtime for the minotaur. */
   bullFists = false;
 
@@ -1878,6 +1908,7 @@ export class ProceduralAnimator {
     this._applyChargePose(dt);
     this._applyDive(dt);
     this._applyKick(dt);
+    this._applyBombSpin(dt);
     this._applyHorseGait(dt);
 
     // Shove overlay (additive): torso pitched into the enemy, legs split and bent, heaving;

@@ -84,6 +84,12 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
 const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
 const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
+// [S] 427 Bomb Spin (card pirate.pirate_queen Abilities: 7 bombs, explosion radius 3.5, cooldown 8; Characteristics "If outnumbered ... spin and release
+// several bombs, then proceed to helicopter upwards, with the bombs blowing up the units below"): with .crowd or more men within .within m and the spin
+// ready (.cooldown s apart, ready from the start), she stops and whirls at .rate rad/s, arms out level (proceduralAnimation BOMB_SPIN_POSE); .drop s in,
+// .count bombs leave her at even headings, each lobbed .out m out to the ground in .flight s, and she is thrown .rise m/s straight up, still whirling,
+// for .after s more. Each bomb bursts .splash m wide for .damage of a blow. Logged "bombspin" at the drop.
+const BOMB_SPIN = { units: new Set(["pirate.pirate_queen"]), within: 3, crowd: 3, cooldown: 8, rate: 16, drop: 0.3, after: 0.7, count: 7, out: 2.6, flight: 0.55, splash: 3.5, damage: 0.67, rise: 9 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
@@ -496,6 +502,9 @@ export class SimulationSystem {
   // Pirate Kick (PIRATE_KICK): each kick under way and when the next is ready
   private _kicks = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; damage: number }>();
   private _kickReadyAt = new Map<RuntimeUnit, number>();
+  // Bomb Spin (BOMB_SPIN): each spin under way and when the next is ready
+  private _bombSpins = new Map<RuntimeUnit, { dropAt: number; endAt: number; dropped: boolean; damage: number }>();
+  private _bombSpinReadyAt = new Map<RuntimeUnit, number>();
   // The wheelbarrow's riders (WHEELBARROW_CREW): each move's start and its man, and when the next may start
   private _crewFights = new Map<RuntimeUnit, { throwAt: number; thrown: boolean; appleAt: RuntimeUnit | null; stabAt: number; stabbed: boolean; stabOn: RuntimeUnit | null }>();
   private _chargeReadyAt = new Map<RuntimeUnit, number>();
@@ -658,6 +667,8 @@ export class SimulationSystem {
     this._buttReadyAt.clear();
     this._kicks.clear();
     this._kickReadyAt.clear();
+    this._bombSpins.clear();
+    this._bombSpinReadyAt.clear();
     this._banjoWalks.clear();
     this._banjoNotes.clear();
     this._banjoNoteCount = 0;
@@ -723,6 +734,7 @@ export class SimulationSystem {
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
     if (this._kicks.size > 0) this._landKicks(now);
+    if (this._bombSpins.size > 0) this._whirlBombSpins(dt, now);
     if (this._hurled.size > 0) this._landHurledShips(now);
     if (this._oarsmen.size > 0) this._chopOars(dt, now);
     for (const [held, back] of this._arrowsAway) {
@@ -1144,6 +1156,32 @@ export class SimulationSystem {
       unit.setAttackCooldown(now, attackProfile.cooldown * (preset === "iconic_super_peasant" ? 0.18 : 0.32));
       this._logAbility(unit, "blink", now);
       return;
+    }
+
+    // Bomb Spin (BOMB_SPIN): a spin under way holds her where she whirls; outnumbered close in with it ready, she starts one
+    if (BOMB_SPIN.units.has(unit.definition.id)) {
+      if (this._bombSpins.has(unit)) {
+        unit.stopMoving();
+        this._clearPathState(unit);
+        return;
+      }
+      if (now >= (this._bombSpinReadyAt.get(unit) ?? 0)) {
+        let near = 0;
+        for (const other of this._units) {
+          if (other.isDead || other.team === unit.team) continue;
+          const dx = other.position.x - unit.position.x, dz = other.position.z - unit.position.z;
+          if (dx * dx + dz * dz <= BOMB_SPIN.within * BOMB_SPIN.within) near++;
+        }
+        if (near >= BOMB_SPIN.crowd) {
+          const damage = attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * BOMB_SPIN.damage;
+          this._bombSpins.set(unit, { dropAt: now + BOMB_SPIN.drop, endAt: now + BOMB_SPIN.drop + BOMB_SPIN.after, dropped: false, damage });
+          this._bombSpinReadyAt.set(unit, now + BOMB_SPIN.cooldown);
+          unit.animator.setBombSpin(true);
+          unit.stopMoving();
+          this._clearPathState(unit);
+          return;
+        }
+      }
     }
 
     // Pirate Kick (PIRATE_KICK): a man kicking stands over it; a man in reach of his foot with it ready gets one
@@ -3178,6 +3216,38 @@ export class SimulationSystem {
       if (now >= kick.endAt) {
         unit.animator.setKick(false);
         this._kicks.delete(unit);
+      }
+    }
+  }
+
+  /** Each Bomb Spin under way (spec at BOMB_SPIN): she whirls; at the drop the bombs go out all round her and she is thrown up; the arms down at its end. */
+  private _whirlBombSpins(dt: number, now: number): void {
+    const S = BOMB_SPIN;
+    for (const [unit, spin] of this._bombSpins) {
+      if (unit.isDead) { unit.animator.setBombSpin(false); this._bombSpins.delete(unit); continue; }
+      unit.body.root.rotation.y += S.rate * dt;
+      if (!spin.dropped && now >= spin.dropAt) {
+        spin.dropped = true;
+        this._logAbility(unit, "bombspin", now);
+        const foe = this._units.find((u) => !u.isDead && u.team !== unit.team);
+        if (this.projectileSystem && foe) {
+          const yaw = unit.body.root.rotation.y;
+          for (let i = 0; i < S.count; i++) {
+            const a = yaw + (i / S.count) * Math.PI * 2;
+            const dir = new Vector3(Math.sin(a), 0, Math.cos(a));
+            const at = unit.position.add(dir.scale(S.out));
+            at.y = 0;
+            this.projectileSystem.spawnProjectile(
+              "bomb", unit.position.add(dir.scale(0.45)), foe, spin.damage, dir.scale(1.5), S.splash, unit.team, this._units,
+              undefined, 0, { originLift: 1.1, at, flight: S.flight, targetLift: 0 },
+            );
+          }
+        }
+        unit.leap(new Vector3(0, 0, 1), 0, S.rise);
+      }
+      if (now >= spin.endAt) {
+        unit.animator.setBombSpin(false);
+        this._bombSpins.delete(unit);
       }
     }
   }

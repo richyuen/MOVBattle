@@ -198,6 +198,10 @@ interface ProjectileSpawnOptions {
   iceArrow?: boolean;
   /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
   drunk?: string;
+  /** [S] 427 A ground point the missile comes down on instead of the man (the Pirate Queen's Bomb Spin bombs, lobbed out all round her): it does not follow him. */
+  at?: Vector3;
+  /** Seconds of flight in place of the shape's own speed (a slow lob). */
+  flight?: number;
 }
 
 interface MuzzleFlashOptions {
@@ -339,7 +343,7 @@ export class ProjectileSystem {
     delay = 0,
     options: ProjectileSpawnOptions = {},
   ): void {
-    const targetPos = target.position.clone();
+    const targetPos = (options.at ?? target.position).clone();
     const launchOrigin = originOffset ? origin.add(originOffset) : origin;
     const dist = Vector3.Distance(launchOrigin, targetPos);
 
@@ -366,7 +370,8 @@ export class ProjectileSystem {
     }
     if (options.arc !== undefined) arcHeight = dist * options.arc;
 
-    let flightTime = Math.max(0.1, dist / speed);
+    let flightTime = Math.max(0.1, options.flight ?? dist / speed);
+    if (options.flight) speed = dist / flightTime;
     // A launched missile (LAUNCH): its arc is the gravity parabola of a throw at its own speed, solved for the low angle that reaches the man
     const launch = LAUNCH[shape];
     if (launch && (!launch.held || options.heldProp)) {
@@ -441,6 +446,7 @@ export class ProjectileSystem {
       hoverFor: options.hover ? delay : undefined,
       riseFrom: options.hover && options.riseTo !== undefined ? mesh.position.y : undefined,
       riseTo: options.hover ? options.riseTo : undefined,
+      loose: options.at ? true : undefined,
     });
     const spawned = this._active[this._active.length - 1];
     if (spawned.rope) this._layRope(spawned);
