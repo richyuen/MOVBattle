@@ -32,7 +32,7 @@ drop a lesson once it is a comment at the code it describes.
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - A blow resolved at the decision (a preset's instant "slam") logs at the swing start: release shows the cock; use the pending blow (426).
 - A missile that leaves with a special just logged is that mechanic's, not the release (427 queen Bomb Spin bombs read as her attack).
-- A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it in the same iteration (428 cannon, .25). A 5-unit --iter capture with the monkey king runs past 10 min: run step 5 in the background.
+- A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it in the same iteration (428 cannon, .25). An --iter capture of 4+ units runs past 10 min: background it.
 
 ## Rig and dress
 - aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
@@ -43,7 +43,7 @@ drop a lesson once it is a comment at the code it describes.
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
 - A pose keyed off `_air` reaches every airborne humanoid (hop-backs, the halfling's jump): gate it on a runtime flag set by the one mechanic it belongs to (392 leap pose).
 - A hook on a shared ability name (`flying_hover`) hits every unit that lists it, including done units outside the batch (392 valkyrie).
-- A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433).
+- A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).
 - A hem or band cut at a share of limbBox(thigh) misses the knee: the thigh runs ~.08 past the joint; anchor to knee.position.y in the hip frame. Shin, foot, trunk and _yoke meshes in the dark body shade read as boots or a vest: recolour them to the dress cloth (433).
 - A critic's "the X's kit" ask is often cheapest as a call to the other unit's dress function, which adapts to the receiver's own limb boxes (399 berserker/brawlerLegs).
 - A pelvis (hip-joint) pitch carries the legs with it: +1.2 rad lays the body flat - head forward, face down, legs trailing - so a whole-body dive pose comes from the hip joint alone (400 headbutter).

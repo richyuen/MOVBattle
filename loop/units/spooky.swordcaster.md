@@ -1,0 +1,16 @@
+# spooky.swordcaster
+Status: open   Audited: 434   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+a FAIL (0 since 434)
+ 1. head in unit_spooky.swordcaster_idle is a closed purple dome with a spike, no face — TABS: team face with two bead eyes under a black bowl haircut (ref: spooky.swordcaster.red.png)
+ 2. torso in unit_spooky.swordcaster_idle grey-team, no cuirass — TABS: black locked cuirass with a padlock on the chest and team studs (ref: spooky.swordcaster.red.png, card Appearance "locked, heavy cuirass")
+ 3. hips in unit_spooky.swordcaster_idle bare — TABS: team tunic skirt with dark stripes to mid-thigh (ref: spooky.swordcaster.blue.png)
+ 4. neck in unit_spooky.swordcaster_idle carries a flat blue ruff disc — TABS: black high scarf collar up to the chin (ref: spooky.swordcaster.red.png)
+b PASS (434)
+c PASS (434)
+d PASS (434 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] spooky.swordcaster.a open face — blocker 1: black bowl haircut shell leaving the team face and bead eyes showing, in place of the closed dome — ref: spooky.swordcaster.red.png — ours: unit_spooky.swordcaster_idle.png (audit 434)
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
