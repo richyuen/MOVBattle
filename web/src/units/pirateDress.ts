@@ -809,6 +809,40 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
 }
 
 /*
+ * [S] 432 the Flintlock's ginger locks (CONFIRM 430 a.2: "the hair is a pair of team-dark panels down both sides of the head to the shoulders - TABS:
+ * ginger/orange-brown locks hang either side of the face from under the bandana, the brightest accent on the unit"; pirate.flintlock.blue.png: on
+ * each side of the face three thin ginger strands from under the bandana's rim at the eyes' top down to about the jaw, the front one beside the
+ * eyes, the others stepping back along the head's side, each splayed a little out at its foot; the same ginger on both teams). FLINTLOCK_LOCKS, in
+ * the head's own box (e its half sizes): per side .locks upright slabs .thick of e.x thick and .wide of e.z across, set .out of e.x off the middle,
+ * stepping back .step of e.z from .front of e.z, from .clear over the eyes' top down to .drop of e.y (the back ones .longer of that lower), splayed
+ * .splay rad; fixed .ginger, self-lit .glow. No hood: nothing over the crown or down the back, the bandana covers it.
+ */
+const FLINTLOCK_LOCKS = { locks: 3, thick: 0.2, wide: 0.34, out: 1.06, front: 0.42, step: 0.42, clear: 0.04, drop: -1.15, longer: 0.18, splay: 0.14, ginger: new Color3(0.75, 0.3, 0.15), glow: 0.16 };
+
+export function flintlockLocks(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const F = FLINTLOCK_LOCKS;
+  const hair = getMaterialFactory().get("cloth", F.ginger, { emissive: F.ginger.scale(F.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const top = span[1] + e.y * F.clear;
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) for (let k = 0; k < F.locks; k++) {
+    const foot = c.y + e.y * (F.drop - F.longer * k);
+    const m = MeshBuilder.CreateBox("flintlockLock", { width: e.x * F.thick, height: top - foot, depth: e.z * F.wide }, scene);
+    m.parent = head;
+    m.position.set(c.x + side * e.x * (F.out + F.thick / 2), (top + foot) / 2, c.z + e.z * (F.front - F.step * k));
+    m.setPivotPoint(new Vector3(0, (top - foot) / 2, 0));
+    m.rotation.z = side * F.splay * (1 + 0.3 * k);
+    m.material = hair;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  }
+  return out;
+}
+
+/*
  * [S] 430 the Blunderbuss's hair (audit 422 blunderbuss a.4: "the sides of the head - bare - TABS: dark-brown hair falling to the shoulders either side
  * of the face"; pirate.blunderbuss.blue.png: a mid-dark brown bob from under the plank hat down past the jaw either side of the face, over the crown under
  * the plank). BLUNDERBUSS_HAIR: pirateHair's locks and fall in .color reaching .top of e.y up under the plank, dropping to .drop; over the crown a cap

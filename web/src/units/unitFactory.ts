@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, harpoonerPants, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenSkirt, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
+import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenSkirt, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -600,8 +600,9 @@ export class UnitFactory {
     if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
     // [S] 424 the Flintlock's brown rolled-up pants to mid-shin with a turned cuff (pirateDress PIRATE_PANTS)
     if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...piratePants(this._scene, body));
-    // [S] 429 the Flintlock's long dark-team hair from under the cap to his shoulders either side of the face (pirateDress PIRATE_HAIR)
-    if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...pirateHair(this._scene, body, teamColor.scale(0.42)));
+    // [S] 432 the Flintlock's ginger locks, three thin strands either side of the face from under the bandana to the jaw (pirateDress FLINTLOCK_LOCKS;
+    // in place of the 429 PIRATE_HAIR team-dark panels, CONFIRM 430 a.2)
+    if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...flintlockLocks(this._scene, body));
     // [S] 430 the Flintlock's plain grey socks from the pant cuff into the shoe (pirateDress PLAIN_SOCKS)
     if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...flintlockSocks(this._scene, body, teamColor));
     // [S] 431 the Flintlock's and the Bomb Thrower's bandana is the team colour, a cloth dome down to the brow with a knot behind, in place of the fixed
