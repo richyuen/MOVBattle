@@ -4251,6 +4251,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "crossbow": {
       if (type === "bow" && variant === "snake_bow") return buildSnakeBow(scene, s, fit.stand);
       if (type === "bow" && variant === "ice_bow") return buildIceBow(scene, s, fit.stand);
+      if (type === "bow" && variant === "bone_bow") return buildBoneBow(scene, s, fit.stand, teamColor ?? accent);
       if (type === "bow" && (variant === "longbow" || variant === "brown_longbow" || variant === "firework_bow")) {
         // The medieval archer's (352; medieval.archer.red.png: a plain brown longbow as tall as he is, a pale wrap at the grip) is the same stave in
         // BROWN_LONGBOW's colours: brown wood, no tip wraps, the grip wrapped pale and not in the team colour
@@ -5896,6 +5897,59 @@ function buildIceBow(scene: Scene, s: number, stand: number): Mesh {
   stave.rotation.z = Math.PI / 2 - B.hold;
   stave.position.y = 0.1 * s;
   // the carry mark: the upright diagonal carry across her front (proceduralAnimation ICE_UPRIGHT; a marker only, no geometry)
+  new TransformNode("iceBowCarry", scene).parent = stave;
+  return stave;
+}
+/*
+ * [S] 436 the Skeleton Archer's bone bow (audit 434 b.1: "a thin brown curved stick - TABS: a big straight femur-shaped bone bow with knob ends and team
+ * wraps, as long as the torso and legs"; spooky.skeleton_archer.red.png: one long near-straight cream bone held upright at his side, from over his head
+ * to his shin, a rounded double knob at each end, a team wrap a little in from each end and one at the grip; card "a bow made out of bones").
+ * BONE_BOW in the man's standing heights (fit.stand): the shaft .long, a round tube .thick of its length, bowed only .bow off the string; each end a pair
+ * of knobs (.knob of the length across, set .knobOut either side of the line and pushed .knobBack toward the string side); team wraps .wrap long at
+ * +-.wrapAt of the half-length and one at the grip. Names "bow" and "string" kept (the bow seat finds them); carried upright like the ice bow (the
+ * iceBowCarry mark, _restIceBow).
+ */
+const BONE_BOW = { long: 1.15, thick: 0.05, bow: 0.025, knob: 0.065, knobOut: 0.026, knobBack: 0.01, wrapAt: 0.66, wrap: 0.06, grip: 0.09, bone: new Color3(1.0, 0.8, 0.48) };
+function buildBoneBow(scene: Scene, s: number, stand: number, team: Color3): Mesh {
+  const B = BONE_BOW;
+  const L = stand * B.long;
+  const r = B.thick * L * 0.5;
+  const zs = 0.04 * s;
+  const zAt = (t: number): number => zs - B.bow * L * (1 - t * t) - r * 1.2;
+  const ts: number[] = [];
+  for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
+  // a bone shaft: a touch thinner at its middle than at its ends
+  const path = ts.map((t) => new Vector3(0, t * L * 0.5, zAt(t)));
+  const stave = MeshBuilder.CreateTube("bow", { path, radiusFunction: (i) => r * (0.82 + 0.18 * Math.abs(ts[i])), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+  const bone = mat(scene, B.bone, 0.22, "cloth");
+  stave.material = bone;
+  stave.convertToFlatShadedMesh();
+  // the knobbed ends: two round heads side by side across the bone's end, like a femur's condyles
+  for (const side of [1, -1]) {
+    for (const k of [1, -1]) {
+      const knob = MeshBuilder.CreateSphere("boneBowKnob", { diameter: B.knob * L, segments: 4 }, scene);
+      knob.position.set(k * B.knobOut * L, side * (L * 0.5 + B.knob * L * 0.15), zAt(1) - B.knobBack * L * k * 0.5);
+      knob.material = bone;
+      knob.convertToFlatShadedMesh();
+      knob.parent = stave;
+    }
+  }
+  const wrapMat = mat(scene, team, 0.14, "cloth");
+  const wrap = (t: number, long: number): void => {
+    const m = MeshBuilder.CreateCylinder("bowWrap", { height: long * L, diameter: r * 2.5, tessellation: 6 }, scene);
+    m.position.set(0, t * L * 0.5, zAt(t));
+    m.material = wrapMat;
+    m.convertToFlatShadedMesh();
+    m.parent = stave;
+  };
+  for (const side of [1, -1]) wrap(side * B.wrapAt, B.wrap);
+  wrap(0, B.grip);
+  const string = MeshBuilder.CreateCylinder("string", { height: L * 0.97, diameter: 0.005 * L, tessellation: 4 }, scene);
+  string.position.z = zs;
+  string.parent = stave;
+  string.material = mat(scene, new Color3(0.85, 0.8, 0.7), 0.12, "cloth");
+  stave.rotation.z = Math.PI / 2;
+  stave.position.y = 0.1 * s;
   new TransformNode("iceBowCarry", scene).parent = stave;
   return stave;
 }

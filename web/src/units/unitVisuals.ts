@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "queen_cutlass" | "stiffy_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "queen_cutlass" | "stiffy_sword" | "bone_bow";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -591,6 +591,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.96, bulk: 0.78, headSize: 1.1, armLength: 1.12, limbTaper: 1.08 }, "bow", "none", "none", "quiver_back", "#D8CCB0", undefined, {
       posePreset: "archer",
       materialPreset: "secret_bone",
+      // [S] 436 a long cream bone bow with knob ends and team wraps (propBuilder BONE_BOW)
+      weaponVariant: "bone_bow",
       attachmentPreset: "bow_ready",
       fxPreset: "spectral",
       stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
