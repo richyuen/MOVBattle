@@ -443,6 +443,7 @@ const DRAGON_FORM = {
   segs: 9, step: 0.33, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, tall: 0.6, taper: 0.44, thick: 0.05, scallop: 0.16, fin: 0.13, finWide: 0.14, frillMix: 0.4,
   gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), tongueTint: 0.85, glow: 0.12,
 };
+const DRAGON_MUZZLE = { bevel: 0.22, tan: new Color3(0.72, 0.54, 0.32), rim: 0.05, rimDeep: 0.06, diamonds: 2, diamond: 0.11, diamondAt: 0.45, diamondStep: 0.25, diamondUp: 0.25, proud: 0.012 };
 /** [S] 417 the Dragon Carriers (dragonForm): one under every .every-th segment, legs .legLong of h, trunk .trunk, head .head, arms .arm thick up to the
  * pole's dark .grip; trousers .trouserShade and skin .skinShade of the team colour. */
 /* [S] 420 the carriers read as men (RE-AUDIT 420 a.1: "three headless, armless team box torsos, each pole socketed into a black neck block - TABS: four
@@ -479,7 +480,27 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
   const skull = put(MeshBuilder.CreateIcoSphere("dragonSkull", { radius: skullR, subdivisions: 2 }, scene), head);
   skull.scaling.set(1.12, 0.92, 1);
   const snoutAt = head.add(new Vector3(0, -skullR * 0.25, skullR * 0.85));
-  put(MeshBuilder.CreateIcoSphere("dragonSnout", { radiusX: D.snout[0] * hk * 0.5, radiusY: D.snout[1] * hk * 0.5, radiusZ: D.snout[2] * hk * 0.5, subdivisions: 1 }, scene), snoutAt);
+  // [S] 424 a squared snout (RE-AUDIT 420 a.4: "a smooth team ball sitting on a flat box jaw, plain pink from brow to lip - TABS: a squared snout with a
+  // tan rim along the upper lip and gold diamond markings on the cheeks"; dynasty.dragon.red.png): DRAGON_MUZZLE a box .snout of the head, its front
+  // edges bevelled by a narrower front plate .bevel of it deep; a tan rim .rim of the head tall, .rimDeep deep, round the lip's front and both sides;
+  // on the front face either side of the middle .diamonds gold diamond plates .diamond of the head across, standing .proud off it, at .diamondAt of
+  // the snout's half-width out and .diamondUp of its half-height up. snoutAt is unchanged, so the jaw, fangs and the flame's "dragonMouth" stay put.
+  const M = DRAGON_MUZZLE;
+  const sW = D.snout[0] * hk, sH = D.snout[1] * hk, sD = D.snout[2] * hk;
+  put(MeshBuilder.CreateBox("dragonSnout", { width: sW, height: sH, depth: sD * (1 - M.bevel) }, scene), snoutAt.add(new Vector3(0, 0, -sD * M.bevel / 2)));
+  put(MeshBuilder.CreateBox("dragonSnoutFront", { width: sW * (1 - M.bevel), height: sH * (1 - M.bevel), depth: sD * M.bevel }, scene), snoutAt.add(new Vector3(0, 0, sD * (0.5 - M.bevel / 2))));
+  const tan = lit(M.tan);
+  const rimY = -sH / 2 + M.rim * hk / 2;
+  put(MeshBuilder.CreateBox("dragonLipRim", { width: sW * 1.04, height: M.rim * hk, depth: M.rimDeep * hk }, scene), snoutAt.add(new Vector3(0, rimY, sD * (0.5 - M.bevel) + M.rimDeep * hk * 0.3)), tan);
+  for (const side of [-1, 1]) {
+    put(MeshBuilder.CreateBox("dragonLipRimSide", { width: M.rimDeep * hk, height: M.rim * hk, depth: sD * (1 - M.bevel) }, scene), snoutAt.add(new Vector3(side * (sW / 2 + M.rimDeep * hk * 0.2), rimY, -sD * M.bevel / 2)), tan);
+    for (let i = 0; i < M.diamonds; i++) {
+      const at = snoutAt.add(new Vector3(side * sW / 2 * (M.diamondAt + i * M.diamondStep), sH / 2 * M.diamondUp, sD * 0.5 + M.proud * hk));
+      const dia = put(MeshBuilder.CreateCylinder("dragonCheekDiamond", { height: M.proud * hk * 2, diameter: M.diamond * hk * (1 - i * 0.25), tessellation: 4 }, scene), at, gold);
+      dia.rotation.x = Math.PI / 2;
+      dia.scaling.x = 0.7;
+    }
+  }
   const jawAt = snoutAt.add(new Vector3(0, -D.gape * hk, -D.jaw[2] * hk * 0.1));
   put(MeshBuilder.CreateBox("dragonJaw", { width: D.jaw[0] * hk, height: D.jaw[1] * hk, depth: D.jaw[2] * hk }, scene), jawAt);
   // the mouth's dark inside between snout and jaw
