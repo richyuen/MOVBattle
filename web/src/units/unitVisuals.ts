@@ -601,7 +601,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "spooky.vampire": vis(
-    { scale: 1.08, bulk: 0.92, headSize: 1.04, armLength: 1.1 }, "dagger", "none", "none", "vampire_collar", "#7A2131", "dagger", {
+    // [S] 434 Hungry Hands, unarmed: no weapon in either hand, clawed fists (spookyDress VAMPIRE_CLAWS)
+    { scale: 1.08, bulk: 0.92, headSize: 1.04, armLength: 1.1 }, "none", "none", "none", "vampire_collar", "#7A2131", undefined, {
       posePreset: "duelist",
       materialPreset: "secret_ghost",
       attachmentPreset: "ghost_trail",
