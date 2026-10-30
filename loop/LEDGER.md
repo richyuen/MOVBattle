@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-421 | FLAME_JET plume of white balls with yellow lobes (ba799e89, 8027d61c) | dynasty.dragon.c | approved
-421 | DRAGON_FORM flat band, scallops, pale fins (0a4f9754, 87e08299) | dynasty.dragon.a | approved
-421 | [P] DRAGON_CARRIER fists skin .12, arm .1 (91a86b90, reverted) | dynasty.dragon.b | rejected (ledger reversal)
-421 | KABUTO hexagon-plate shikoro + maedate (a810cff1) | dynasty.samurai.a | approved
-421 | ARCHER_LEGS shin wraps + strapSandals (1801625a) | dynasty.firework_archer.a | approved
-421 | MONKEY_FACE baboon face (2dc865d6) | dynasty.monkey_king.a | approved
 422 | DRAGON_CARRIER two-box arms to fists on the pole at the chest (bf9ce7a9) | dynasty.dragon.b | approved
 422 | DRAGON_FORM band on edge, scallop fringe below, fins on top (e7926245) | dynasty.dragon.a | approved
 422 | MONKEY_SHORTS puffy shorts, gold cuffs, pointy shoes (8db34616, b9adb0a3) | dynasty.monkey_king.a | approved
@@ -43,6 +37,14 @@ for 25 iterations.
 425 | CANNON_WHEEL (5b429ac7, 396cefd1) | pirate.cannon.a | approved
 425 | CUTLASS curved blade, queen off hand (e5226412) | pirate.pirate_queen.b | approved
 425 | CUTLASS_SLASH (8b450772) | pirate.captain.c | approved
+426 | CUTLASS_SLASH for the queen's blow, carried through a step (45024151) | pirate.pirate_queen.c | approved
+426 | BLUNDERBUSS_RECOIL shooter thrown off his feet (fb6f0227) | pirate.blunderbuss.c | approved
+426 | PISTOL_SHOT bell flash + ball streak (7e83d5a4) | pirate.flintlock.c | approved
+426 | CANNON_SIGHT ring crosshair (bd059354) | pirate.cannon.a | approved
+426 | BARREL_ARMOUR staves, hoops, straps (c311013a) | pirate.blunderbuss.a | approved
+426 | OPEN_COAT team coat, tan lapels, white V (04163e67) | pirate.harpooner.a | approved
+426 | [P] BLUNDERBUSS.long .62 -> .9 (d0bc1b09, reverted) | pirate.blunderbuss.b | rejected (ledger reversal)
+426 | PIRATE_KICK + PIRATE_KICK_POSE (1ae5476f, 9476aac6) | pirate.harpooner.c | approved
 
 ## Spent (never retry as [P])
 
@@ -50,10 +52,8 @@ for 25 iterations.
 viking 401-403 rows (ICE_ARCHER_MANTLE, ICE_ARCHER_EYE_CLEAR, VIKING_BEARD, JARL_BEARD, HEADBUTTER_KIT, LONGSHIP_SHIP, LONGSHIP_HURL.sink) | compacted 409 | 403 | approved | values: git show 2ccd9f2:loop/LEDGER.md
 farmer.halfling done (HALFLING_STANCE, HALFLING_SHORTS + _CLOTH, shinLength 1.95, HALFLING_TUFT, VEST_CUT, COAT, SHAGGY) | compacted 404 | 402 | approved | values: git show 244af97:loop/LEDGER.md
 viking 392-409 rows (BEARDED_AXE, JARL_AXE, LEAP_AIR, HEADBUTT, LONGSHIP_*, HEADBUTTER_KIT/BRAID/HAIR/COPPER, ICE_BOW, FROST, BRAWLER_*, JUMP_CHARGE, FLY, VALKYRIE_WINGS) | compacted 411 | 409 | approved | values: git show 186849d:loop/LEDGER.md, 4778c43, cdc71a4
-viking a/b/c rows (LONGSHIP_OARS, LONGSHIP_CREW, LONGSHIP_HULL, ICE_ARROW, JARL_PELT) | compacted 403 | 401 | approved | values: git show 73e45c7:loop/LEDGER.md
 viking done 403-409 rows (LONGSHIP_OARS/gunwale/SHEER/PLANKS/PROW/STERN, ICE_ARCHER_BAND/SNOWCAP/COAT, ICE_BOW, ICE_UPRIGHT, HEADBUTTER_LEGS/TUNIC, headbutter legLength, JARL_REST) | compacted 424 | 409 | approved | values: git show 3f068837:loop/LEDGER.md
 viking done rows (JARL_PELT, JARL_BEARD_RUN, JARL_BELT, JARL_WRAPS, JARL_FLAPS, JARL_CRESCENT, HEADBUTTER_CAP, LONGSHIP_CARRIER) | compacted 416 | 409 | approved | values: git show a312f052:loop/LEDGER.md
-viking c/done rows (BERSERKER_ARMPITS, BRAWLER_HELM, DIVE, HEADBUTT + SPRAWL.delay, headbuttSprawl) | compacted 406 | 401 | approved | values: git show 9c743e0:loop/LEDGER.md
 
 dynasty.monk + viking.brawler done (MONK_STAFF + MONK_REST, MONK_SWING, MONK_TROUSERS, MONK_ARM_PLATES, BRAWLER_BEARD, BRAWLER_HATCHET, NORSE_BOARD, FIRST_LUNGE) | compacted 419 | 418 | approved | values: git show f1bce224:loop/LEDGER.md
 viking.valkyrie + ancient.zeus done (VALKYRIE_ARMOUR/COLLAR/HELM/SWORD, SWORD_WINGS, ZEUS_TOGA + .boltGap, ZEUS_BEARD, glowLayer group 0 / bolt group 1) | compacted 407 | 406 | approved | values: git show 978f707:loop/LEDGER.md
@@ -88,7 +88,13 @@ vehicleBuilder.ts:FRONT_SPLIT (hipOut, out, down, ahead, shinOut, shinAhead) + T
 propBuilder.ts:TRICORN_BROWN (cloth .12) | (.43,.2,.13) | 425 | approved | black felt on every tricorn (before 425)
 simulationSystem.ts:HARPOON_REEL (lift, top, stop, rope) + projectileSystem TOW_CHEST | 3, 14, 1.4, .7; .9 | 425 | approved | knockback x -.8 only (before 425)
 simulationSystem.ts:GUN_TOSS (out, back, up, spin, rest, lie, ready) | 2.6, 1.6, 3.4, 9, .05, 8, .9 | 425 | approved | pistols kept (before 425)
-propBuilder.ts:BLUNDERBUSS (long, grip, bore, bell, mouth, stock, fore, heel, offAt) + BLUNDERBUSS_AIM (ahead, out, drop, droop, across, kick) | .62, .24, .075, .2, 3.3, 1.2, .62, .16, .5; .13, .07, 0, .22, .3, .45 | 425 | approved | stick + ball barrel .35 s (before 425)
+propBuilder.ts:BLUNDERBUSS (long, grip, bore, bell, mouth, stock, fore, heel, offAt) + BLUNDERBUSS_AIM (ahead, out, drop, droop, across, kick) | .62, .24, .075, .2, 3.3, 1.2, .62, .16, .5; .13, .07, 0, .22, .3, .45 | 426 | approved | [P] .long .9 rejected 426 (ledger reversal); stick + ball barrel .35 s (before 425)
 vehicleBuilder.ts:CANNON_WHEEL (across, axle, out, rim, wide, clampWide, clampTall, clampLong, spoke, hub, glow) | .84, .42, .34, .085, .12, 1.3, 1.45, .45, .05, .15, .12 | 425 | approved | torus .44 at y .24, x .3 (before 425)
 propBuilder.ts:CUTLASS (long, wide, taper, thick, curve, segs, cup, cupDeep, grip, bow, jewel) | .5, .05, .55, .22, .13, 6, 3.4, .9, 1.7, .35, .7 | 425 | approved | the plain slab sword .46 (before 425)
 proceduralAnimation.ts:CUTLASS_SLASH (commit, twist, cock, end, low, arm, outCock, outEnd, elbow, offArm, step, pitch, through, hitAt, hold) | .4, .7, 1.9, -1, .08, -1.35, -.6, .45, -.35, .35, .3, .15, .45, .66, .75 | 425 | approved | the plain blade_slash + aimBlow onto the head (before 425)
+simulationSystem.ts:PIRATE_KICK (within, slack, windup, recover, cooldown, damage, fling, lift) + proceduralAnimation PIRATE_KICK_POSE (raise, chamberRaise, chamber, plant, lean, headLevel) | .6, .4, .25, .35, 2.5, .8, 5, 3; 1.45, .7, 1.5, .25, .3, .6 | 426 | approved | no kick (before 426)
+simulationSystem.ts:BLUNDERBUSS_RECOIL (back, lift) | 4.5, 3.2 | 426 | approved | no recoil (before 426)
+projectileSystem.ts:PISTOL_SHOT (flash, flashLife, puff, puffLife, streak, thick, speed) | .16, .12, .32, 1.4, .3, .035, 65 | 426 | approved | the long gun's cloud ahead of the chest (before 426)
+pirateDress.ts:BARREL_ARMOUR (staves, out, deep, top, below, wide, thick, alt, hoopAt, hoop, hoopOut, strap, strapAt; brown) | 14, 1.3, 1.45, .28, .22, 1.08, .06, .78, [.18,.78], .07, .025, .08, .55; (.26,.13,.06) | 426 | approved | dark tunic (before 426)
+pirateDress.ts:OPEN_COAT (out, deep, long, vee, veeLong, proud, front, lapel, lapelLong, lapelProud, lean) | 1.12, 1.14, 1.32, .42, .62, .03, .34, .11, .5, .07, .3 | 426 | approved | dark tunic (before 426)
+vehicleBuilder.ts:CANNON_SIGHT (at, seat, post, ring, inner, bar, thick, spokeOut) | .42, .12, .03, .12, .04, .022, .03, 1.3 | 426 | approved | plain barrel top (before 426)
