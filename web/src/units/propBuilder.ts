@@ -3235,7 +3235,7 @@ const PISTOL = {
  * [S] 427 the Captain's dragon pistol (audit 422 b.1: "the off hand empty - TABS: a dragon pistol, a forearm-long flintlock with a wide bell muzzle, held
  * out in the off hand"; pirate.captain.red.png: a pistol as long as his forearm, the grey barrel flaring into a bell nearly as wide as his fist is long).
  * The pistol's cut (weaponVariant "dragon_pistol") with its own sizes: .long of his height, the bell .bell of it flaring to .mouth of the bore. Held out
- * level in the off fist on its own by _aimPistol (the holder's metadata.heldOut).
+ * level in the off fist on its own by _aimPistol (the holder's "pistolHeldOut" child).
  */
 const DRAGON_PISTOL = { ...PISTOL, long: 0.36, bore: 0.12, bell: 0.26, mouth: 4.2 };
 /*
@@ -4358,7 +4358,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       grip.rotation.x = P.gripRake;
       grip.material = wood;
       const holder = new Mesh("flintlock", scene);
-      if (dragon) holder.metadata = { ...(holder.metadata ?? {}), heldOut: true };
+      // the held-out mark _aimPistol looks for (a node: mesh metadata is replaced by the factory)
+      if (dragon) new TransformNode("pistolHeldOut", scene).parent = holder;
       grip.parent = holder;
       // The butt cap at the grip's foot
       const cap = MeshBuilder.CreateBox("pistolButt", { width: P.gripWide * 1.3 * L, height: P.gripWide * 1.5 * L, depth: P.gripWide * 0.8 * L }, scene);

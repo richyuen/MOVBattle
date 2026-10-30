@@ -3418,7 +3418,7 @@ export class ProceduralAnimator {
       // the sides at shoulder height, a pistol level in each fist). Only when both hands carry one: a single off-hand pistol (the queen's) stays as built.
       // [S] 427 ...and a lone off-hand pistol marked held out (the Captain's dragon pistol, propBuilder DRAGON_PISTOL) is held out on its own, beside the blade
       const leftGun = find(this._body.leftHand);
-      const off = node || leftGun?.metadata?.heldOut ? leftGun : undefined;
+      const off = node || leftGun?.getChildren().some((c) => c.name === "pistolHeldOut") ? leftGun : undefined;
       if (off) off.position.setAll(0);
       this._offPistol = off ? { node: off, rest: Quaternion.FromEulerAngles(off.rotation.x, off.rotation.y, off.rotation.z) } : null;
     }
