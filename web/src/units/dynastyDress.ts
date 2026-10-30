@@ -291,10 +291,17 @@ export function ninjaTrousers(scene: Scene, body: ArticulatedBody, teamColor: Co
  * .bowlFoot of e.x across at its foot, .bowlTop at its top; the peak a slab .peak of e.z out over the face; each lame an open ring (.arc of a turn,
  * the gap at the face) .lame of e.y tall, flaring from .flareTop to .flareFoot of e.x, the first hung from the bowl's foot and each next .step of e.y
  * lower; a gold rim .rim of e.y under each lame; the crest a gold disc .crest of e.y across stood at the bowl's front. Replaces samurai_helmet.
+ * [S] 421 the shikoro and maedate (critic 420 a.1: the lames bunched at one side of the bowl - TABS a skirt flaring all round the back to near
+ * shoulder width, a tall crest; dynasty.samurai.red.png: the neck guard a wide hexagonal skirt of stepped plates round the back and sides of the head,
+ * coming forward to the cheeks and flaring out to the shoulders' width at the chin, each plate edged gold; a tall flat gold crest standing up from the
+ * brow over the bowl). The lames are now .tiers closed trapezoid plates per tier: the .facets back facets of a hexagon (the front two, at the face, left
+ * off), each tier .lame of e.y tall hung .step of e.y under the last, the hexagon widening from .flareTop of e.x across at the bowl's foot to the trunk's
+ * own width (read off the torso box, .shoulder of it) at the lowest plate's foot; a gold plate .rim of e.y tall along each plate's foot. The maedate a
+ * flat gold blade .maedate of e.y tall, .maedateFoot of e.x wide at its root on the bowl's front widening to .maedateTop at its tip, leaning back .maedateLean.
  */
 const KABUTO = {
-  clear: 0.04, top: 1.3, bowlFoot: 2.3, bowlTop: 1.4, peak: 0.42, tiers: 3, lame: 0.32, step: 0.3, flareTop: 2.3, flareFoot: 2.75, arc: 0.55, rim: 0.07,
-  crest: 0.42, shade: 0.9, gold: new Color3(0.9, 0.66, 0.2), glow: 0.12,
+  clear: 0.04, top: 1.3, bowlFoot: 2.3, bowlTop: 1.4, peak: 0.42, tiers: 4, facets: 4, lame: 0.42, step: 0.36, flareTop: 2.4, shoulder: 1.0, rim: 0.09,
+  maedate: 1.0, maedateFoot: 0.3, maedateTop: 0.95, maedateLean: 0.18, shade: 0.9, gold: new Color3(0.9, 0.66, 0.2), glow: 0.12,
 };
 /** The Samurai's team kabuto with a gold-trimmed flared neck guard and a front crest (spec at KABUTO). */
 export function samuraiKabuto(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -314,22 +321,46 @@ export function samuraiKabuto(scene: Scene, body: ArticulatedBody, teamColor: Co
   const peak = put(MeshBuilder.CreateBox("kabutoPeak", { width: e.x * K.bowlFoot * 0.8, height: e.y * 0.08, depth: e.z * K.peak }, scene), gold);
   peak.position.set(0, foot, e.z * (K.bowlFoot / 2) * (e.z / e.x) + e.z * K.peak * 0.3);
   peak.rotation.x = 0.25;
-  // Babylon lays a cylinder's arc from angle 0 through -2pi*arc (x = cos(-a), z = sin(-a)), so the gap's middle sits at pi*(1-arc); rotation.y
-  // takes angle a to a - turn, and the gap is wanted at +z (pi/2): [P] 414 the face opening (critic 413: the lames crossed the face)
-  const turn = Math.PI * (0.5 - K.arc);
+  // [S] 421 the shikoro: closed trapezoid plates on the back facets of a hexagon, widening tier by tier to the trunk's width (the arc cylinders of
+  // 413/414 were one-sided ribbons that bunched to one side of the bowl)
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox;
+  body.headMesh.computeWorldMatrix(true);
+  const headScale = Math.max(0.001, body.headMesh.absoluteScaling.x);
+  const trunkParent = tm.parent instanceof TransformNode ? tm.parent : null;
+  if (trunkParent) trunkParent.computeWorldMatrix(true);
+  const trunkWide = tb.extendSize.x * 2 * tm.scaling.x * (trunkParent?.absoluteScaling.x ?? 1) / headScale; // the trunk's width in the head's frame
+  const flareFoot = Math.max(e.x * K.flareTop * 1.3, trunkWide * K.shoulder);
+  // a flat trapezoid plate: a four-sided frustum squashed in z, its top .wTop across and its foot .wFoot, .tall high, .thick of e.z through
+  const plate = (name: string, wTop: number, wFoot: number, tall: number, thick: number, mat: typeof cloth): Mesh => {
+    const m = put(MeshBuilder.CreateCylinder(name, { height: tall, diameterTop: wTop, diameterBottom: wFoot, tessellation: 4 }, scene), mat);
+    m.scaling.z = thick / Math.max(wTop, wFoot);
+    return m;
+  };
+  // facet f of a hexagon turned so two facets meet at the face (+z): centres at 30 + 60 f degrees off +z, the back .facets of them kept
+  const skip = (6 - K.facets) / 2;
   for (let i = 0; i < K.tiers; i++) {
-    const y = foot - e.y * K.step * i - e.y * K.lame / 2;
-    const k = 1 + i * 0.12;
-    const lame = put(MeshBuilder.CreateCylinder("kabutoLame", { height: e.y * K.lame, diameterTop: e.x * K.flareTop * k, diameterBottom: e.x * K.flareFoot * k, tessellation: 12, arc: K.arc, sideOrientation: Mesh.DOUBLESIDE }, scene), cloth);
-    lame.position.y = y;
-    lame.rotation.y = turn;
-    const rim = put(MeshBuilder.CreateCylinder("kabutoRim", { height: e.y * K.rim, diameter: e.x * K.flareFoot * k * 1.02, tessellation: 12, arc: K.arc, sideOrientation: Mesh.DOUBLESIDE }, scene), gold);
-    rim.position.y = y - e.y * K.lame / 2;
-    rim.rotation.y = turn;
+    const yTop = foot - e.y * K.step * i, yFoot = yTop - e.y * K.lame;
+    const rTop = (e.x * K.flareTop + (flareFoot - e.x * K.flareTop) * (i / K.tiers)) / 2;
+    const rFoot = (e.x * K.flareTop + (flareFoot - e.x * K.flareTop) * ((i + 1) / K.tiers)) / 2;
+    const tilt = Math.atan2((rFoot - rTop) * Math.cos(Math.PI / 6), yTop - yFoot); // the plate leans out at its foot
+    for (let f = skip; f < 6 - skip; f++) {
+      const a = Math.PI / 6 + (Math.PI / 3) * f; // off +z, toward +x
+      const dir = new Vector3(Math.sin(a), 0, Math.cos(a));
+      const ap = ((rTop + rFoot) / 2) * Math.cos(Math.PI / 6);
+      const lame = plate("kabutoLame", rTop, rFoot, yTop - yFoot, e.z * 0.07, cloth);
+      lame.position.copyFrom(dir.scale(ap)).y = (yTop + yFoot) / 2;
+      lame.rotation.set(-tilt, a, 0);
+      const rim = plate("kabutoRim", rFoot * 0.98, rFoot * 1.02, e.y * K.rim, e.z * 0.09, gold);
+      rim.position.copyFrom(dir.scale(rFoot * Math.cos(Math.PI / 6) + e.x * 0.02)).y = yFoot + e.y * K.rim * 0.4;
+      rim.rotation.set(-tilt, a, 0);
+    }
   }
-  const crest = put(MeshBuilder.CreateCylinder("kabutoCrest", { height: e.z * 0.08, diameter: e.y * K.crest, tessellation: 10 }, scene), gold);
-  crest.rotation.x = Math.PI / 2 - 0.2;
-  crest.position.set(0, foot + (top - foot) * 0.45, e.z * (K.bowlFoot + K.bowlTop) / 4 * (e.z / e.x) * 1.05);
+  // the maedate: a tall flat gold blade on the bowl's front, widening to its tip, leaning back
+  const rootY = foot + (top - foot) * 0.5;
+  const bowlR = ((K.bowlFoot + K.bowlTop) / 4) * e.x * (e.z / e.x);
+  const maedate = plate("kabutoMaedate", e.x * K.maedateTop, e.x * K.maedateFoot, e.y * K.maedate, e.z * 0.1, gold);
+  maedate.rotation.x = -K.maedateLean;
+  maedate.position.set(0, rootY + Math.cos(K.maedateLean) * e.y * K.maedate * 0.5, bowlR * 0.92 - Math.sin(K.maedateLean) * e.y * K.maedate * 0.5);
   return out;
 }
 
