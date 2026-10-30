@@ -618,3 +618,44 @@ export function archerRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
   place(skirt, 0, -H / 2 - H * G.skirt / 2 + H * 0.02, 0, cloth);
   return out;
 }
+
+/*
+ * [S] 419 the Samurai's cuirass (audit 411 a.2: "a plain purple tunic box - TABS: a team-coloured lamellar cuirass with gold trim lines and shoulder sode
+ * plates"; dynasty.samurai.red.png: a team breastplate over the trunk crossed by thin gold rows, a gold rim round the waist, square sode plates hanging
+ * off each shoulder edged in gold). In the trunk box (W, H, D), on the trunk's parent like ARCHER_ROBE: the plate SAMURAI_CUIRASS.out wide, .deep deep;
+ * .rows gold rows .row of H tall standing .proud off the front from .rowsFrom to .rowsTo of H (from the foot); the waist rim .rim of H tall; on each
+ * upper arm a sode shell from its top to .sode of its length, .sodeOut times its girth, gold-rimmed at the foot.
+ */
+const SAMURAI_CUIRASS = { out: 1.12, deep: 1.18, shade: 0.95, rows: 4, row: 0.035, proud: 0.03, rowsFrom: 0.3, rowsTo: 0.85, rim: 0.09, sode: 0.5, sodeOut: 1.75, sodeRim: 0.12, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/** The Samurai's team lamellar cuirass with gold rows, waist rim and sode shoulder plates (spec at SAMURAI_CUIRASS). */
+export function samuraiCuirass(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = SAMURAI_CUIRASS;
+  const mf = getMaterialFactory();
+  const plateColor = teamColor.scale(C.shade);
+  const plate = mf.get("cloth", plateColor, { emissive: plateColor.scale(C.glow) });
+  const gold = mf.get("cloth", C.gold, { emissive: C.gold.scale(C.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: typeof plate): void => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.copyFrom(tm.rotation);
+    m.parent = tm.parent;
+    m.material = mat;
+    out.push(m);
+  };
+  const w = W * C.out, d = D * C.deep;
+  box("samuraiCuirass", w, H, d, 0, 0, 0, plate);
+  for (let i = 0; i < C.rows; i++) {
+    const y = -H / 2 + H * (C.rowsFrom + ((C.rowsTo - C.rowsFrom) * i) / Math.max(1, C.rows - 1));
+    box("samuraiCuirassRow", w * 0.94, H * C.row, D * C.proud, 0, y, d / 2 + D * C.proud * 0.3, gold);
+  }
+  box("samuraiCuirassRim", w * 1.04, H * C.rim, d * 1.04, 0, -H / 2 + H * C.rim * 0.5, 0, gold);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    out.push(limbShell(scene, "samuraiSode", arm, 0, C.sode, C.sodeOut, plate));
+    out.push(limbShell(scene, "samuraiSodeRim", arm, C.sode - C.sodeRim * C.sode, C.sode, C.sodeOut * 1.06, gold));
+  }
+  return out;
+}

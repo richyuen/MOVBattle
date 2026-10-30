@@ -1,4 +1,4 @@
-import { archerHair, archerRobe, dragonForm, monkArmPlates, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { archerHair, archerRobe, dragonForm, samuraiCuirass, monkArmPlates, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -592,6 +592,7 @@ export class UnitFactory {
     // [S] 413 the Samurai's team kabuto with a flared gold-trimmed neck guard and a crest (dynastyDress KABUTO)
     if (definition.id === "dynasty.samurai" && !shouldUseVehicleBody) {
       propMeshes.push(...samuraiKabuto(this._scene, body, teamColor));
+      propMeshes.push(...samuraiCuirass(this._scene, body, teamColor)); // [S] 419 lamellar cuirass, gold rows, sode plates (dynastyDress SAMURAI_CUIRASS)
     }
     // [S] 412 the Firework Archer's dark long hair with side locks and a knot, no hat (dynastyDress ARCHER_HAIR)
     if (definition.id === "dynasty.firework_archer" && !shouldUseVehicleBody) {
