@@ -262,7 +262,7 @@ export function queenSash(scene: Scene, body: ArticulatedBody): Mesh[] {
   const S = QUEEN_SASH;
   const mf = getMaterialFactory();
   const brown = mf.get("cloth", S.brown, { emissive: S.brown.scale(S.glow) });
-  const black = mf.get("cloth", S.black, { emissive: new Color3(0.06, 0.06, 0.07).scale(S.bombGlow * 5) });
+  const black = mf.get("cloth", S.black, { emissive: S.black.scale(S.bombGlow) });
   const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
   const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
   const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
