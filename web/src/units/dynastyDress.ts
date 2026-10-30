@@ -513,3 +513,30 @@ export function monkeyStaff(scene: Scene, body: ArticulatedBody, teamColor: Colo
   return out;
 }
 
+/*
+ * [S] 416 the Monkey King's tail (audit 411 a.3: "none - TABS: a long curved team tail rising above his head"; dynasty.monkey_king.red.png and .jpg:
+ * a thick team tail from the small of his back, out behind and up, standing over his head with a rounded tip). A faceted tube on the hip through
+ * MONKEY_TAIL.path ([y, z] of his height: up, and back as -z), .root thick at the hip tapering to .tip.
+ */
+const MONKEY_TAIL = {
+  path: [[0.0, -0.08], [-0.04, -0.2], [0.08, -0.3], [0.35, -0.32], [0.65, -0.28], [0.92, -0.24], [1.08, -0.2]] as [number, number][],
+  root: 0.045, tip: 0.035, glow: 0.12,
+};
+/** The Monkey King's long team tail rising behind him over his head (spec at MONKEY_TAIL). */
+export function monkeyTail(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const T = MONKEY_TAIL;
+  const team = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(T.glow) });
+  body.hip.computeWorldMatrix(true);
+  const scale = Math.max(0.001, body.hip.absoluteScaling.y);
+  const h = (body.metrics.overallHeight * body.root.scaling.y) / scale;
+  const path = T.path.map(([y, z]) => new Vector3(0, y * h, z * h));
+  const n = path.length - 1;
+  const tail = MeshBuilder.CreateTube("monkeyTail", {
+    path, tessellation: 6, cap: Mesh.CAP_ALL,
+    radiusFunction: (i: number) => (T.root + (T.tip - T.root) * (i / n)) * h,
+  }, scene);
+  tail.parent = body.hip;
+  tail.material = team;
+  tail.convertToFlatShadedMesh();
+  return [tail];
+}
