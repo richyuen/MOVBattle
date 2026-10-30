@@ -589,6 +589,51 @@ export function monkeyTail(scene: Scene, body: ArticulatedBody, teamColor: Color
 }
 
 /*
+ * [S] 420 the Monkey King's circlet (RE-AUDIT 420 a.1: "a yellow torus crown with spikes tipped by red balls - TABS: a gold swirl circlet with two long
+ * team-coloured feather antennae rising above the head"; dynasty.monkey_king.red.png: a thin gold band round the brow with a curled gold swirl at its
+ * front, and from each side a long slim team feather standing up and leaning out, about twice the head tall). In the head block's frame (e its half
+ * extents): the band a torus .band of e.x round the head at .at of e.y up, .thick of e.y thick; the swirl a gold tube .swirl of e.x round, wound in the
+ * band's front face; each feather a thin team blade .featherWide of e.x across, .feather of e.y tall, rooted on the band at .side of e.x out, leaning
+ * .lean rad outward and .back rad behind, a gold bead at its root.
+ */
+const MONKEY_CROWN = { band: 1.1, at: 0.72, thick: 0.1, swirl: 0.32, side: 0.78, feather: 2.6, featherWide: 0.2, lean: 0.3, back: 0.12, bead: 0.14, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/** The Monkey King's gold swirl circlet with two long team feather antennae (spec at MONKEY_CROWN). */
+export function monkeyCrown(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const K = MONKEY_CROWN;
+  const mf = getMaterialFactory();
+  const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(K.glow) });
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(K.glow) });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof gold): Mesh => { m.parent = body.headMesh; m.material = mat; m.convertToFlatShadedMesh(); out.push(m); return m; };
+  const y = e.y * K.at;
+  const band = put(MeshBuilder.CreateTorus("monkeyCirclet", { diameter: e.x * 2 * K.band, thickness: e.y * K.thick, tessellation: 12 }, scene), gold);
+  band.position.y = y;
+  band.scaling.z = e.z / e.x;
+  // the swirl on the band's front, wound in the xy plane
+  const r0 = e.x * K.swirl;
+  const path: Vector3[] = [];
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16, rho = r0 * (1 - 0.7 * t), phi = Math.PI * 2 * 1.2 * t;
+    path.push(new Vector3(Math.cos(phi) * rho, y + e.y * 0.1 + Math.sin(phi) * rho, e.z * K.band + e.y * K.thick * 0.4));
+  }
+  put(MeshBuilder.CreateTube("monkeyCircletSwirl", { path, radius: e.y * K.thick * 0.35, tessellation: 4, cap: 2 }, scene), gold);
+  for (const side of [-1, 1]) {
+    const root = new Vector3(side * e.x * K.side, y + e.y * K.thick * 0.5, 0);
+    const feather = put(MeshBuilder.CreateBox("monkeyFeather", { width: e.x * K.featherWide, height: e.y * K.feather, depth: e.x * K.featherWide * 0.25 }, scene), team);
+    feather.position.copyFrom(root);
+    feather.rotation.z = -side * K.lean;
+    feather.rotation.x = -K.back;
+    // the blade stands on its root: slide its middle up its own axis by half its height
+    const up = new Vector3(Math.sin(side * K.lean), Math.cos(K.lean), -Math.sin(K.back)).normalize();
+    feather.position.addInPlace(up.scale(e.y * K.feather * 0.5));
+    const bead = put(MeshBuilder.CreateIcoSphere("monkeyFeatherBead", { radius: e.y * K.bead, subdivisions: 1 }, scene), gold);
+    bead.position.copyFrom(root);
+  }
+  return out;
+}
+
+/*
  * [S] 417 the Firework Archer's robe (audit 411 a.2: "a short purple tunic box - TABS: a crossed-lapel team-coloured robe to the knee"; a.3: "none -
  * TABS: an orange-brown waist sash"; dynasty.firework_archer.jpg, .red.png: a team robe over the trunk with a lighter V at the throat between two lapels
  * crossing to the opposite hip, an orange-brown sash round the waist, the skirt falling flared to the knee). In the trunk box (W, H, D), on the trunk's

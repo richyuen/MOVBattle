@@ -478,7 +478,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.5, bulk: 1.6, legLength: 0.7 }, "none", "conical_hat", "none", "hwacha_rack", "#8B4513",
   ),
   "dynasty.monkey_king": vis(
-    { scale: 1.6, bulk: 1.2, headSize: 1.4, armLength: 1.3 }, "bo_staff", "crown", "none", "cape", "#8B5A2B",
+    { scale: 1.6, bulk: 1.2, headSize: 1.4, armLength: 1.3 }, "bo_staff", "none", "none", "cape", "#8B5A2B",
   ),
 
   // ═══════════════════════ RENAISSANCE ═══════════════════════
@@ -940,7 +940,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "iconic_monkey_king":
       // [S] 416 his staff is dynastyDress MONKEY_STAFF on the Monk's level carry, not the shared bo_staff
-      return vis({ scale: 1.72, bulk: 1.18, headSize: 1.14, armLength: 1.28 }, "none", "crown", "none", "cape", "#9a6a2d", undefined, {
+      // [S] 420 the torus crown is off: his gold circlet with two feather antennae is dynastyDress MONKEY_CROWN
+      return vis({ scale: 1.72, bulk: 1.18, headSize: 1.14, armLength: 1.28 }, "none", "none", "none", "cape", "#9a6a2d", undefined, {
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "hero_halo", fxPreset: "royal",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["halo_flare"], attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
