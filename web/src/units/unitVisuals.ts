@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "queen_cutlass";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "queen_cutlass" | "stiffy_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -583,6 +583,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 0.98, bulk: 0.82, headSize: 1.12, armLength: 1.05, limbTaper: 1.08 }, "sword", "none", "stiffy", "none", "#D8CCB0", undefined, {
       posePreset: "duelist",
       materialPreset: "secret_bone",
+      // [S] 436 the Stiffy Sword: a short grey leaf blade (propBuilder STIFFY_SWORD)
+      weaponVariant: "stiffy_sword",
     },
   ),
   "spooky.skeleton_archer": vis(
