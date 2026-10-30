@@ -1,6 +1,7 @@
 import { Scene, Color3, Mesh, MeshBuilder } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
+import { limbShell } from "./medievalDress";
 
 /*
  * Pirate dress (units/pirate.*): the cloth each sailor wears over the dark tar trunk, built per unit id by unitFactory. Sized off the trunk mesh's own
@@ -48,6 +49,29 @@ export function pirateVest(scene: Scene, body: ArticulatedBody, teamColor: Color
   for (const side of [-1, 1]) {
     const x = side * W * (V.chest + V.front) / 2;
     box("pirateVestFront", W * V.front, long, D * V.lapel, x, drop, shellFront + D * V.lapel / 2, vest, side * V.flare);
+  }
+  return out;
+}
+
+/*
+ * [S] 424 the rolled-up pants (audit 422 a.2: "bare team legs - TABS: brown rolled-up pants ending mid-shin"; pirate.flintlock.red.png, card Appearance
+ * "rolled-up brown pants": loose brown trousers from the belt over the knee to halfway down the shin, finished in a thick turned-up cuff a shade lighter).
+ * PIRATE_PANTS: over each thigh a six-sided brown shell .thigh of the limb across, top to knee; over each shin a shell .shin across from the knee to .to
+ * of the shin; at its foot the turned cuff, a ring .cuff of the shin tall and .cuffOut across, in the brown lifted by .cuffLight. Self-lit .glow.
+ */
+const PIRATE_PANTS = { thigh: 1.6, shin: 1.5, to: 0.5, cuff: 0.14, cuffOut: 1.78, cuffLight: 1.3, brown: new Color3(0.45, 0.19, 0.045), glow: 0.12 };
+
+export function piratePants(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = PIRATE_PANTS;
+  const mf = getMaterialFactory();
+  const brown = mf.get("cloth", P.brown, { emissive: P.brown.scale(P.glow) });
+  const cuffColor = P.brown.scale(P.cuffLight);
+  const cuff = mf.get("cloth", cuffColor, { emissive: cuffColor.scale(P.glow) });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "piratePantsThigh", thigh, 0, 1, P.thigh, brown));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "piratePantsShin", shin, 0, P.to, P.shin, brown));
+    out.push(limbShell(scene, "piratePantsCuff", shin, P.to - P.cuff, P.to, P.cuffOut, cuff));
   }
   return out;
 }

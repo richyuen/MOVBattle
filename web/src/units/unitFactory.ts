@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { pirateVest } from "./pirateDress";
+import { piratePants, pirateVest } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -596,6 +596,8 @@ export class UnitFactory {
     }
     // [S] 423 the Flintlock's open team vest over a bare team chest (pirateDress PIRATE_VEST)
     if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
+    // [S] 424 the Flintlock's brown rolled-up pants to mid-shin with a turned cuff (pirateDress PIRATE_PANTS)
+    if (definition.id === "pirate.flintlock" && !shouldUseVehicleBody) propMeshes.push(...piratePants(this._scene, body));
     // [S] 423 the Bomb Thrower's open vest over his bare team chest, the same cut (pirate.bomb_thrower.red.png; pirateDress PIRATE_VEST)
     if (definition.id === "pirate.bomb_thrower" && !shouldUseVehicleBody) propMeshes.push(...pirateVest(this._scene, body, teamColor));
     // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
