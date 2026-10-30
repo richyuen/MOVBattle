@@ -305,6 +305,8 @@ const POLE_GRIP = {
  * per s after a fall), and the muzzle kicks up .kick (rad) at the shot, settling at .settle per s.
  */
 const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25, settle: 6 };
+// The flintlock pistol held out (see _aimPistol): the weapon fist's seat in shares of his height from the weapon shoulder (out to his side, ahead, down)
+const PISTOL_AIM = { out: 0.24, ahead: 0.14, drop: 0.03, kick: 0.35 };
 // The halberd's vertical chop (see _animateHalberdChop): the shaft's tilt from straight up toward his front, raised and landed (rad), the weapon arm's
 // swing and elbow at each, the trunk's pitch and the off foot's step at the land, and the share of the attack it is held on the man
 // The halberd at rest (see _restHalberd): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt toward his front (rad)
@@ -2119,6 +2121,7 @@ export class ProceduralAnimator {
     this._offhandToGrip();
     this._holdChopDown(dt);
     this._aimMusket(dt);
+    this._aimPistol(dt);
     this._restHalberd();
     this._restIceBow();
     this._restMonkBo();
@@ -3212,6 +3215,54 @@ export class ProceduralAnimator {
     handRot.toRotationMatrix(hand);
     gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     // Committed on his aim: a blow on him snaps only his head back
+    this._aimWeight = Math.max(this._aimWeight, w);
+  }
+
+  private _pistol: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
+  private _pistolAim = 1;
+  /**
+   * [S] 423 the flintlock pistol held out (pirate.flintlock.red.png: the arm out to his side and a little ahead at shoulder height, the pistol level,
+   * its bell toward the front). The weapon fist is solved onto PISTOL_AIM's seat off the weapon shoulder and the pistol's barrel (+y) laid along his
+   * front, the grip (+z) down; the bell kicks up at the shot. Held in every living state, eased off as he goes limp.
+   */
+  private _aimPistol(dt: number): void {
+    if (this._pistol === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "pistolBell"));
+      this._pistol = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+    }
+    const gun = this._pistol;
+    if (!gun) return;
+    const firing = this._state === AnimState.Attacking && this._attackMotion === "firearm_recoil";
+    const up = this._state !== AnimState.Dead && this.walkStyle !== "quadruped";
+    this._pistolAim += ((up ? 1 : 0) - this._pistolAim) * Math.min(1, dt * MUSKET_AIM.rate);
+    const w = this._pistolAim * (1 - Math.min(1, this._limp));
+    if (w <= 0.001) {
+      gun.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const fist = b.rightShoulder.getAbsolutePosition().add(outward.scale(PISTOL_AIM.out * height))
+      .addInPlace(fwd.scale(PISTOL_AIM.ahead * height)).addInPlace(new Vector3(0, -PISTOL_AIM.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    const kick = firing ? PISTOL_AIM.kick * Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * MUSKET_AIM.settle) : 0;
+    const y = fwd.scale(Math.cos(kick)).addInPlace(new Vector3(0, Math.sin(kick), 0)).normalize();
+    const z = Vector3.Cross(y, outward).normalize();
+    const zDown = z.y > 0 ? z.scale(-1) : z;
+    const x = Vector3.Cross(y, zDown).normalize();
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, zDown, world);
+    const handRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     this._aimWeight = Math.max(this._aimWeight, w);
   }
 

@@ -3110,6 +3110,18 @@ const MUSKET_WOOD = new Color3(0.66, 0.33, 0.15);
  * of the barrel ahead of the fist, share of the length, times the bore); the stock .stock of the bore deep under the barrel to .fore of the barrel, its
  * butt .butt of the length deep at the heel, both matte .wood.
  */
+/**
+ * [S] 423 the flintlock pistol (critic 422: a musket-long rod slung past the shoulder; pirate.flintlock.red.png: a pistol a little longer than his
+ * forearm, a grey octagonal barrel ending in a wide flared octagonal bell, an orange-brown stock under the barrel nearly to the bell, a grip curving
+ * down and back into the fist, a dark lock and cock at the rear). In the man's heights (fit.stand): PISTOL.long long; +y the barrel's way from the fist,
+ * +z down (the grip's way), as the musket's +z wood side, so ProceduralAnimator._aimPistol can level it. Barrel .bore of the length across sitting
+ * .over above the fist, from .tail behind it; bell .bell long flaring to .mouth of the bore; stock .stock of the bore deep to .fore of the barrel; grip
+ * .grip long, .gripRake rad back off straight down. Steel and wood the matchlock's, self-lit so they stay pale; the muzzle node is "musketMuzzle"
+ * (RuntimeUnit.getSmokeOrigin smokes the shot at the bell).
+ */
+const PISTOL = {
+  long: 0.2, bore: 0.12, over: 0.17, tail: 0.14, bell: 0.16, mouth: 2.3, stock: 0.9, fore: 0.8, grip: 0.36, gripRake: 0.45, gripWide: 0.11,
+};
 const MATCHLOCK = {
   long: 1.3, grip: 0.26, bore: 0.042, fore: 0.86, stock: 0.9, butt: 0.11, glow: 0.18,
   bands: [[0.955, 0.09, 1.3], [0.62, 0.012, 1.18], [0.04, 0.02, 1.18]] as [number, number, number][],
@@ -4114,7 +4126,66 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       barrel.rotation.x = -0.2;
       return barrel;
     }
-    case "flintlock":
+    case "flintlock": {
+      // [S] 423 the flintlock pistol, built to the spec at PISTOL: the fist at the origin on the grip, the barrel above it along +y
+      const P = PISTOL, M = MATCHLOCK;
+      const L = fit.stand * P.long;
+      const steel = mat(scene, M.steel, M.glow, "cloth");
+      const wood = mat(scene, M.wood, M.glow * 0.6, "cloth");
+      const dark = mat(scene, M.band, 0.04, "cloth");
+      const bore = P.bore * L, up = -P.over * L;
+      const barrelLong = L * (1 - P.tail - P.bell);
+      // The grip is the root: a slab from the fist down and back, the hand closed round it
+      const grip = MeshBuilder.CreateBox("pistolGrip", { width: P.gripWide * L, height: P.gripWide * 1.25 * L, depth: P.grip * L }, scene);
+      grip.setPivotPoint(new Vector3(0, 0, -P.grip * L * 0.5));
+      grip.position.set(0, -P.tail * L * 0.6, up + P.grip * L * 0.5);
+      grip.rotation.x = P.gripRake;
+      grip.material = wood;
+      const holder = new Mesh("flintlock", scene);
+      grip.parent = holder;
+      // The butt cap at the grip's foot
+      const cap = MeshBuilder.CreateBox("pistolButt", { width: P.gripWide * 1.3 * L, height: P.gripWide * 1.5 * L, depth: P.gripWide * 0.8 * L }, scene);
+      cap.position.set(0, 0, P.grip * L * 0.5);
+      cap.material = wood;
+      cap.parent = grip;
+      // The octagonal barrel from behind the fist to the bell
+      const barrel = MeshBuilder.CreateCylinder("pistolBarrel", { height: barrelLong, diameter: bore, tessellation: 8 }, scene);
+      barrel.position.set(0, -P.tail * L + barrelLong * 0.5, up);
+      barrel.material = steel;
+      barrel.convertToFlatShadedMesh();
+      barrel.parent = holder;
+      // The wide flared bell at the mouth
+      const bell = MeshBuilder.CreateCylinder("pistolBell", { height: P.bell * L, diameterBottom: bore * 1.05, diameterTop: bore * P.mouth, tessellation: 8 }, scene);
+      bell.position.set(0, -P.tail * L + barrelLong + P.bell * L * 0.5, up);
+      bell.material = steel;
+      bell.convertToFlatShadedMesh();
+      bell.parent = holder;
+      const hole = MeshBuilder.CreateCylinder("pistolBore", { height: 0.01 * L, diameter: bore * P.mouth * 0.62, tessellation: 8 }, scene);
+      hole.position.set(0, -P.tail * L + barrelLong + P.bell * L, up);
+      hole.material = dark;
+      hole.parent = holder;
+      // The stock under the barrel, from the grip nearly to the bell
+      const foreLong = barrelLong * P.fore;
+      const fore = MeshBuilder.CreateBox("pistolStock", { width: bore * 0.85, height: foreLong, depth: bore * P.stock }, scene);
+      fore.position.set(0, -P.tail * L + foreLong * 0.5, up + bore * (0.35 + P.stock * 0.5));
+      fore.material = wood;
+      fore.parent = holder;
+      // The lock plate on the side and the cock standing up behind it
+      const lock = MeshBuilder.CreateBox("pistolLock", { width: bore * 0.4, height: 0.16 * L, depth: bore * 0.9 }, scene);
+      lock.position.set(bore * 0.55, -P.tail * L + 0.12 * L, up + bore * 0.3);
+      lock.material = dark;
+      lock.parent = holder;
+      const cock = MeshBuilder.CreateBox("pistolCock", { width: bore * 0.3, height: 0.05 * L, depth: bore * 1.1 }, scene);
+      cock.position.set(bore * 0.45, -P.tail * L + 0.06 * L, up - bore * 0.7);
+      cock.rotation.x = -0.5;
+      cock.material = dark;
+      cock.parent = holder;
+      // The mouth of the bell, where the shot's smoke leaves (RuntimeUnit.getSmokeOrigin)
+      const muzzle = new TransformNode("musketMuzzle", scene);
+      muzzle.position.set(0, -P.tail * L + barrelLong + P.bell * L + 0.02 * L, up);
+      muzzle.parent = holder;
+      return holder;
+    }
     case "cannon_hand": {
       const len = type === "cannon_hand" ? 0.7 : 0.35;
       const diam = type === "cannon_hand" ? 0.08 : 0.03;
