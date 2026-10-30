@@ -806,6 +806,49 @@ export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
   return piratePants(scene, body, P.beige, P.cuff);
 }
 
+/*
+ * [S] 432 the Captain's pants and boots (CONFIRM 431 a.1: "legs dark team blue from coat hem to feet - TABS: beige pants between the coat tails, ending in
+ * black knee boots"; pirate.captain.blue.png, card Appearance "beige pants, black boots": straight tan trousers from the waist down between the coat's
+ * skirts to just below the knee, tucked into tall black boots whose wide turned top stands out round the shin under the knee, the boot running down
+ * into a black shoe with a small brass buckle at the instep). CAPTAIN_LEGS: over each thigh a six-sided tan shell .thigh of the limb, top to knee, and on
+ * the shin down to .pantsTo; the boot a black shell .boot of the shin from .bootFrom to its foot, its top a wider ring .cuffOut, .cuff of the shin tall;
+ * the foot mesh black, a brass buckle .buckle of the foot's width on its front. Self-lit .glow.
+ */
+const CAPTAIN_LEGS = {
+  thigh: 1.45, pantsTo: 0.3, shin: 1.38, bootFrom: 0.2, boot: 1.5, cuff: 0.2, cuffOut: 1.85, buckle: 0.45,
+  tan: new Color3(0.62, 0.42, 0.24), black: new Color3(0.05, 0.05, 0.06), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
+};
+
+export function captainLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CAPTAIN_LEGS;
+  const mf = getMaterialFactory();
+  const tan = mf.get("cloth", C.tan, { emissive: C.tan.scale(C.glow) });
+  const black = mf.get("cloth", C.black, { emissive: C.black.scale(C.glow) });
+  const brass = mf.get("cloth", C.brass, { emissive: C.brass.scale(C.glow) });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) if (thigh) out.push(limbShell(scene, "captainPantsThigh", thigh, 0, 1, C.thigh, tan));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    if (!shin) continue;
+    out.push(limbShell(scene, "captainPantsShin", shin, 0, C.pantsTo, C.shin, tan));
+    out.push(limbShell(scene, "captainBoot", shin, C.bootFrom, 1, C.boot, black));
+    out.push(limbShell(scene, "captainBootTop", shin, C.bootFrom, C.bootFrom + C.cuff, C.cuffOut, black));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      foot.material = black;
+      const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize;
+      const buckle = MeshBuilder.CreateBox("captainBootBuckle", { width: ex.x * 2 * C.buckle, height: ex.y * 2 * 0.22, depth: ex.z * 0.12 }, scene);
+      buckle.parent = foot;
+      buckle.position.set(fb.center.x, fb.minimum.y + ex.y * 2 * 0.42, fb.maximum.z + ex.z * 0.02);
+      buckle.material = brass;
+      buckle.convertToFlatShadedMesh();
+      out.push(buckle);
+    }
+  }
+  return out;
+}
+
 const BLUNDERBUSS_HAIR = { top: 0.95, drop: -1.55, side: 0.3, cap: 1.1, color: new Color3(0.28, 0.135, 0.09) };
 
 /** The Blunderbuss's dark-brown bob under the plank hat (spec at BLUNDERBUSS_HAIR). */
