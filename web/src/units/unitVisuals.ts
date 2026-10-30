@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "hoplite_helm" | "legion_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
-export type ShieldType = "none" | "round" | "norse" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis";
+export type ShieldType = "none" | "round" | "norse" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis" | "stiffy";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -579,7 +579,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ SPOOKY ═══════════════════════
   "spooky.skeleton_warrior": vis(
-    { scale: 0.98, bulk: 0.82, headSize: 1.12, armLength: 1.05, limbTaper: 1.08 }, "sword", "none", "buckler", "none", "#D8CCB0", undefined, {
+    { scale: 0.98, bulk: 0.82, headSize: 1.12, armLength: 1.05, limbTaper: 1.08 }, "sword", "none", "stiffy", "none", "#D8CCB0", undefined, {
       posePreset: "duelist",
       materialPreset: "secret_bone",
     },

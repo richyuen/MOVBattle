@@ -2207,7 +2207,7 @@ export function attachProps(
       shield.rotation.set(PALETTE_TIP, PALETTE_TURN, 0);
       shield.position.set(0.06 * scale, -0.02 * scale, 0.12 * scale);
     } else if (config.shield !== "buckler") {
-      const round = config.shield === "round" || config.shield === "norse";
+      const round = config.shield === "round" || config.shield === "norse" || config.shield === "stiffy";
       // A rider's heater is torso-sized (334: at 1.9 it stood taller than his trunk)
       shield.scaling.scaleInPlace(round ? 2.0 : config.shield === "heater" ? HEATER_GRIP_SIZE : 1.9);
       // A kite is shoulder-wide at the top, not a plank
@@ -5565,6 +5565,8 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
  */
 const ROUND_FACES = 3;
 const ROUND_SHADE = 0.12;
+/** The Skeleton Warrior's Stiffy Shield ("stiffy" case): board diameter (x2.0 on the arm), rim of the board, stud radius, studs in all and on the inner ring */
+const STIFFY_SHIELD = { board: 0.3, rim: 1.1, stud: 0.016, studs: 12, inner: 4, dark: new Color3(0.2, 0.09, 0.09) };
 const ROUND_PAINT = 1.45;
 let roundBoardSerial = 0;
 // The protector's plank shield (units/tribal.protector), in the shield's own units before the 1.9 carry scale: width and height (the render: about half as wide as
@@ -6330,6 +6332,35 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         daub.position.set(x * rx, y * ry, face * (PALETTE.thick * 0.5 + PALETTE.proud * 0.5) * s);
         daub.material = mat(scene, Color3.Lerp(teamColor, Color3.White(), 0.15).scale(k + 0.2), 0.12);
         daub.parent = shield;
+      }
+      return shield;
+    }
+    case "stiffy": {
+      // [S] 434 the Stiffy Shield (audit 434 skeleton_warrior b.1: "a small grey disc at the hip - TABS: shoulder-wide round team shield with a dark
+      // rim and dark studs, held up on the off arm"; spooky.skeleton_warrior.red.png): a faceted team board, a dark rim proud round its edge, and
+      // STIFFY_SHIELD.studs dark studs scattered over its face in two rings and a middle one. Carried like a round shield (the attach's round branch).
+      const S = STIFFY_SHIELD;
+      const disc = (name: string, diameter: number, depth: number): Mesh => {
+        const m = MeshBuilder.CreateCylinder(name, { height: depth * s, diameter: diameter * s, tessellation: 12 }, scene);
+        m.rotation.x = Math.PI / 2;
+        m.bakeCurrentTransformIntoVertices();
+        return m;
+      };
+      const shield = disc("stiffyShield", S.board, 0.03);
+      shield.material = mat(scene, teamColor);
+      const rim = disc("stiffyShieldRim", S.board * S.rim, 0.024);
+      rim.parent = shield;
+      rim.position.z = -0.004 * s;
+      rim.material = mat(scene, S.dark);
+      const studMat = mat(scene, S.dark);
+      const studAt: [number, number][] = [[0, 0]];
+      for (let i = 0; i < S.inner; i++) studAt.push([S.board * 0.2, (i / S.inner) * Math.PI * 2 + 0.4]);
+      for (let i = 0; i < S.studs - S.inner - 1; i++) studAt.push([S.board * 0.38, (i / (S.studs - S.inner - 1)) * Math.PI * 2]);
+      for (const [rad, ang] of studAt) {
+        const stud = MeshBuilder.CreateIcoSphere("stiffyShieldStud", { radius: S.stud * s, subdivisions: 1, flat: true }, scene);
+        stud.parent = shield;
+        stud.position.set(Math.cos(ang) * rad * s, Math.sin(ang) * rad * s, 0.018 * s);
+        stud.material = studMat;
       }
       return shield;
     }
