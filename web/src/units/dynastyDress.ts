@@ -929,7 +929,7 @@ export function monkeyFace(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .shoeOut of the foot's box up to .shoeTall of it, a pointed toe .toe of the foot long standing from its front tilted .toeLift rad up, a gold anklet
  * .anklet of the foot tall round the cuff.
  */
-const MONKEY_SHORTS = { hipOut: 1.8, puffAt: 0.5, puff: 2.7, kneeOut: 1.5, kneeTo: 0.14, cuffOut: 1.6, shoeOut: 1.15, shoeTall: 0.78, toe: 1.2, toeWide: 1.5, toeLift: 0.55, anklet: 0.4, ankletOut: 1.25, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+const MONKEY_SHORTS = { hipOut: 1.7, puffAt: 0.5, puff: 2.3, kneeOut: 1.45, kneeTo: 0.14, cuffOut: 1.6, shoeOut: 1.15, shoeTall: 0.78, toe: 1.2, toeWide: 1.5, toeLift: 0.55, anklet: 0.4, ankletOut: 1.25, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
 /** The Monkey King's puffy team shorts gathered to gold knee cuffs, over pointy team shoes with gold anklets (spec at MONKEY_SHORTS). */
 export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = MONKEY_SHORTS;
