@@ -667,6 +667,9 @@ const THROW_SWING = 0.55;
 // Harpoon gun at the hip (units/pirate.harpooner): gun arm a little behind the hang (raise > 0 tips the nozzle down), off hand across onto the canister,
 // trunk rocked back `kick` rad at the release
 const HARPOON_HIP = { raise: 0.25, out: 0.1, elbow: -0.3, offRaise: -0.55, offIn: 0.4, offElbow: -1.0, kick: 0.12 };
+// [S] 436 the harpoon gun carried at rest (see _restHarpoon): the weapon fist .drop of his height under its shoulder, .ahead and .out of it, the barrel
+// .dip rad below level toward his front
+const HARPOON_REST = { drop: 0.27, ahead: 0.05, out: 0.07, dip: 0.95 };
 const THROW_LET_GO = 0.5;
 /*
  * Two-hand boulder (vfx.k; units/tribal.stoner). Spec read off the reference: the boulder, about .38 of his height across, is held in front of the belly in both
@@ -3393,11 +3396,56 @@ export class ProceduralAnimator {
     const grip = this._harpoonGrip;
     if (!grip || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
     const w = 1 - Math.min(1, this._limp);
-    if (w <= 0.01) return;
+    const gun = grip.parent as TransformNode;
+    if (w <= 0.01) {
+      gun.rotationQuaternion = null;
+      return;
+    }
+    if (this._restHarpoon(gun, w)) return;
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
     this._offArmTo(grip.getAbsolutePosition().clone(), w);
+  }
+
+  /**
+   * [S] 436 the harpoon gun carried low at rest (pirate.harpooner b.2: "gun shouldered high across the chest, muzzle up and out - TABS: gun hangs low
+   * at hip height, held by its top handle, muzzle down and forward"; pirate.harpooner.red.png: the weapon arm hangs near straight, the fist on the
+   * A-frame handle at the hip, the block under it and the nozzle pointing down and ahead toward the ground, the off arm free at his side).
+   * Standing or walking, the weapon fist is solved onto HARPOON_REST's seat under the weapon shoulder and the gun's barrel (+y) laid .dip rad below
+   * his front, its handle side (+z) up; the off hand lets go. In a shot (or dead) the gun takes back its built attitude. Returns true while resting.
+   */
+  private _restHarpoon(gun: TransformNode, w: number): boolean {
+    const s = this._state;
+    if (s !== AnimState.Idle && s !== AnimState.Walking) {
+      gun.rotationQuaternion = null;
+      return false;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const R = HARPOON_REST;
+    const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(R.ahead * height))
+      .addInPlace(outward.scale(R.out * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    const up = Vector3.Up();
+    const y = fwd.scale(Math.cos(R.dip)).addInPlace(up.scale(-Math.sin(R.dip))).normalize();
+    const z = fwd.scale(Math.sin(R.dip)).addInPlace(up.scale(Math.cos(R.dip))).normalize();
+    const x = Vector3.Cross(y, z).normalize();
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, z, world);
+    const handRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    const rest = Quaternion.FromEulerAngles(gun.rotation.x, gun.rotation.y, gun.rotation.z);
+    gun.rotationQuaternion = Quaternion.Slerp(rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    return true;
   }
 
   // The Dragon's head-pole grip (dynastyDress "dragonPoleGrip" under the "dragonForm" holder on the root), looked up once
