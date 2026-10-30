@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -564,8 +564,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "pirate.captain": vis(
     { scale: 1.35, bulk: 1.3 }, "cutlass", "pirate_hat", "none", "cape", "#DAA520",
-    undefined,
-    { posePreset: "monarch", materialPreset: "pirate_tar", bodyDetailLevel: "hero" },
+    // [S] 427 the dragon pistol held out in the off hand (card Off Hand Flintlock Blunderbuss; propBuilder DRAGON_PISTOL, _aimPistol)
+    "flintlock",
+    { posePreset: "monarch", materialPreset: "pirate_tar", bodyDetailLevel: "hero", offhandVariant: "dragon_pistol" },
   ),
   "pirate.cannon": vis(
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "bandana", "none", "cannon_base", "#8f2a24",

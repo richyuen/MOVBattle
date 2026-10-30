@@ -3416,18 +3416,20 @@ export class ProceduralAnimator {
       this._pistol = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
       // [S] 424 a second pistol in the off hand is held out the other way, mirrored (pirate.flintlock b.2; pirate.flintlock.red.png: both arms out to
       // the sides at shoulder height, a pistol level in each fist). Only when both hands carry one: a single off-hand pistol (the queen's) stays as built.
-      const off = node ? find(this._body.leftHand) : undefined;
+      // [S] 427 ...and a lone off-hand pistol marked held out (the Captain's dragon pistol, propBuilder DRAGON_PISTOL) is held out on its own, beside the blade
+      const leftGun = find(this._body.leftHand);
+      const off = node || leftGun?.metadata?.heldOut ? leftGun : undefined;
       if (off) off.position.setAll(0);
       this._offPistol = off ? { node: off, rest: Quaternion.FromEulerAngles(off.rotation.x, off.rotation.y, off.rotation.z) } : null;
     }
     const gun = this._pistol;
-    if (!gun) return;
+    if (!gun && !this._offPistol) return;
     const firing = this._state === AnimState.Attacking && this._attackMotion === "firearm_recoil";
     const up = this._state !== AnimState.Dead && this.walkStyle !== "quadruped";
     this._pistolAim += ((up ? 1 : 0) - this._pistolAim) * Math.min(1, dt * MUSKET_AIM.rate);
     const w = this._pistolAim * (1 - Math.min(1, this._limp));
     if (w <= 0.001) {
-      gun.node.rotationQuaternion = null;
+      if (gun) gun.node.rotationQuaternion = null;
       if (this._offPistol) this._offPistol.node.rotationQuaternion = null;
       return;
     }
@@ -3458,9 +3460,9 @@ export class ProceduralAnimator {
       handRot.toRotationMatrix(hand);
       g.node.rotationQuaternion = Quaternion.Slerp(g.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     };
-    hold(b.rightShoulder, b.rightElbow, b.rightHand, gun, kick);
-    if (this._offPistol) hold(b.leftShoulder, b.leftElbow, b.leftHand, this._offPistol, 0);
-    this._aimWeight = Math.max(this._aimWeight, w);
+    if (gun) hold(b.rightShoulder, b.rightElbow, b.rightHand, gun, kick);
+    if (this._offPistol) hold(b.leftShoulder, b.leftElbow, b.leftHand, this._offPistol, gun ? 0 : kick);
+    if (gun) this._aimWeight = Math.max(this._aimWeight, w);
   }
 
   /**

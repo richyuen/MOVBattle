@@ -3232,6 +3232,13 @@ const PISTOL = {
   long: 0.28, bore: 0.13, over: 0.17, tail: 0.14, bell: 0.16, mouth: 2.4, stock: 0.9, fore: 0.8, grip: 0.36, gripRake: 0.45, gripWide: 0.11,
 };
 /*
+ * [S] 427 the Captain's dragon pistol (audit 422 b.1: "the off hand empty - TABS: a dragon pistol, a forearm-long flintlock with a wide bell muzzle, held
+ * out in the off hand"; pirate.captain.red.png: a pistol as long as his forearm, the grey barrel flaring into a bell nearly as wide as his fist is long).
+ * The pistol's cut (weaponVariant "dragon_pistol") with its own sizes: .long of his height, the bell .bell of it flaring to .mouth of the bore. Held out
+ * level in the off fist on its own by _aimPistol (the holder's metadata.heldOut).
+ */
+const DRAGON_PISTOL = { ...PISTOL, long: 0.36, bore: 0.12, bell: 0.26, mouth: 4.2 };
+/*
  * [S] 425 the Blunderbuss (pirate.blunderbuss.red.png: a short heavy gun held low across the belly in both hands, a deep tan-brown stock, a pale grey
  * octagonal barrel and a wide flared bell with a dark mouth; card Main Hand Blunderbuss, Two-handed). In the man's standing heights (fit.stand): .long
  * from butt to muzzle, the fist .grip of it from the butt; barrel .bore of the gun across; the bell the front .bell of it flaring to .mouth of the bore;
@@ -4335,7 +4342,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "flintlock": {
       // [S] 423 the flintlock pistol, built to the spec at PISTOL: the fist at the origin on the grip, the barrel above it along +y
-      const P = PISTOL, M = MATCHLOCK;
+      // [S] 427 ...or the Captain's dragon pistol (DRAGON_PISTOL)
+      const dragon = variant === "dragon_pistol";
+      const P = dragon ? DRAGON_PISTOL : PISTOL, M = MATCHLOCK;
       const L = fit.stand * P.long;
       const steel = mat(scene, M.steel, M.glow, "cloth");
       const wood = mat(scene, M.wood, M.glow * 0.6, "cloth");
@@ -4349,6 +4358,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       grip.rotation.x = P.gripRake;
       grip.material = wood;
       const holder = new Mesh("flintlock", scene);
+      if (dragon) holder.metadata = { ...(holder.metadata ?? {}), heldOut: true };
       grip.parent = holder;
       // The butt cap at the grip's foot
       const cap = MeshBuilder.CreateBox("pistolButt", { width: P.gripWide * 1.3 * L, height: P.gripWide * 1.5 * L, depth: P.gripWide * 0.8 * L }, scene);
