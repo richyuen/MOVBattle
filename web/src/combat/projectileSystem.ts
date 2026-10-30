@@ -234,6 +234,8 @@ const LEAF_COLORS = [new Color3(0.74, 0.22, 0.13), new Color3(0.86, 0.43, 0.16),
 // A harpoon's rope (units/pirate.harpooner): dark, thin as a finger, muzzle to harpoon
 const HARPOON_ROPE_WIDE = 0.035;
 const HARPOON_ROPE_COLOR = new Color3(0.13, 0.11, 0.1);
+// A reeled man's end of the rope, m up off his root (where the harpoon stands in his chest)
+const TOW_CHEST = 0.9;
 // The harpoon itself: a short thick dark shaft (HARPOON_SHAFT_LONG, about twice a forearm) under a heavy dark iron head (HARPOON_HEAD_LONG x _WIDE, three
 // shaft widths across), with HARPOON_BARBS barbs swept back off its root, a ring at the tail where the rope is tied; no team tint
 const HARPOON_SHAFT_LONG = 0.5;
@@ -479,6 +481,11 @@ export class ProjectileSystem {
   abilityHook: ((unitId: string, kind: string, at: Vector3) => void) | null = null;
   /** Set by the simulation: a snake archer's snake has come down at `at` (on its man or the ground), flown from `from`; it goes on as a live snake there. */
   snakeLand: ((at: Vector3, from: Vector3, team: number) => void) | null = null;
+  /** Set by the simulation: a harpoon on its rope has struck `target`; the shooter (the gun whose muzzle is `tether`) reels him in. Returns how long the
+   *  rope stays taut from the muzzle to him, seconds (0: no reel). */
+  reelIn: ((target: RuntimeUnit, tether: TransformNode) => number) | null = null;
+  /** [S] 425 Ropes of harpoons that struck: muzzle to the man being reeled in, laid afresh every step until `left` runs out (units/pirate.harpooner). */
+  private _tows: { rope: Mesh; tether: TransformNode; target: RuntimeUnit; left: number }[] = [];
 
   spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1, options: MuzzleFlashOptions = {}): void {
     const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4 * scale, segments: 6 }, this._scene);
@@ -513,6 +520,27 @@ export class ProjectileSystem {
   }
 
   update(dt: number): void {
+    // A reeled man's rope: from the muzzle where the gun is now to his chest where he is now (TOW_CHEST up off his feet)
+    for (let i = this._tows.length - 1; i >= 0; i--) {
+      const w = this._tows[i];
+      w.left -= dt;
+      if (w.left <= 0 || w.tether.isDisposed() || (w.target.isDead && !w.target.body.root.isEnabled())) {
+        w.rope.dispose();
+        this._tows.splice(i, 1);
+        continue;
+      }
+      const chain: TransformNode[] = [];
+      for (let n: Node | null = w.tether; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const from = w.tether.getAbsolutePosition();
+      const to = w.target.position.add(new Vector3(0, TOW_CHEST * w.target.body.root.scaling.y, 0));
+      const len = Vector3.Distance(from, to);
+      w.rope.setEnabled(len > 0.01);
+      if (len <= 0.01) continue;
+      w.rope.position.copyFrom(from).addInPlace(to).scaleInPlace(0.5);
+      w.rope.lookAt(to);
+      w.rope.scaling.set(1, 1, len);
+    }
     // Update projectiles
     for (let i = this._active.length - 1; i >= 0; i--) {
       const p = this._active[i];
@@ -640,7 +668,10 @@ export class ProjectileSystem {
         if (missed) this.visualEffects?.spawnImpactDust(p.targetPos);
         else this._onImpact(p);
         if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
-        p.rope?.dispose();
+        // [S] 425 a harpoon in a man: its rope stays on him, taut from the muzzle, while the shooter reels him in (card Characteristics "reel in the enemy unit")
+        const towFor = p.rope && p.tether && struck && !p.target.isDead && this.reelIn ? this.reelIn(p.target, p.tether) : 0;
+        if (towFor > 0 && p.rope && p.tether) this._tows.push({ rope: p.rope, tether: p.tether, target: p.target, left: towFor });
+        else p.rope?.dispose();
         p.mesh.getChildMeshes().find((m) => m.name === "streak")?.dispose(); // the streak is of the flight: a shaft left standing has none
         // [S] 387 a snake is not left lodged like a shaft: it drops at its man's feet and slithers on (SimulationSystem SNAKE_LIVE)
         if (p.snake && this.snakeLand) {
@@ -1482,6 +1513,8 @@ export class ProjectileSystem {
       p.mesh.dispose();
     }
     for (const f of this._flashes) f.mesh.dispose();
+    for (const w of this._tows) w.rope.dispose();
+    this._tows.length = 0;
     for (const l of this._litter) l.mesh.dispose();
     for (const q of this._puffs) q.mesh.dispose();
     this._puffs.length = 0;

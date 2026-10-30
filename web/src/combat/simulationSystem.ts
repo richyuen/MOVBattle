@@ -71,6 +71,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 // [S] ...and the potionseller's bottle (341; card Weapons: Potion Throw, a lobbed potion): the glass ball in her right hand is what flies, on the bomb's high lob
 /** [S] 416 the Dragon's breath: the jet lasts .seconds, from .ahead of his scale in front of his head and .down under it, onto the man's chest (.chest m up). */
 // .burn: how long the man it reaches burns (visualEffects BODY_FLAMES), s
+// [S] 425 the harpooner's reel-in (_reelIn): the struck man's launch lift (m/s up), top haul speed, where he lands short of the shooter (m), rope taut (s)
+const HARPOON_REEL = { lift: 3, top: 14, stop: 1.4, rope: 0.7 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
@@ -670,6 +672,7 @@ export class SimulationSystem {
     this._now = now;
     if (this.projectileSystem) this.projectileSystem.abilityHook ??= this._logMissileAbility;
     if (this.projectileSystem) this.projectileSystem.snakeLand ??= this._landSnake;
+    if (this.projectileSystem) this.projectileSystem.reelIn ??= this._reelIn;
 
     for (const unit of this._units) {
       unit.update(dt, now);
@@ -3253,8 +3256,28 @@ export class SimulationSystem {
     return best;
   }
 
+  /**
+   * [S] 425 Reel-in (ProjectileSystem.reelIn; card Characteristics: "The Harpooner will then reel in the enemy unit"): the harpoon has struck a man, so
+   * the gun whose muzzle the rope is tied to hauls him off his feet along the line toward the shooter, to land HARPOON_REEL.stop m short of him, the
+   * rope taut from muzzle to chest for HARPOON_REEL.rope s. Logged as "reel".
+   */
+  private _reelIn = (target: RuntimeUnit, tether: TransformNode): number => {
+    const shooter = this._units.find((u) => !u.isDead && harpoonMuzzleOf(u) === tether);
+    if (!shooter || target.isDead) return 0;
+    const R = HARPOON_REEL;
+    const along = shooter.position.subtract(target.position);
+    along.y = 0;
+    const dist = along.length();
+    if (dist < R.stop + 0.3) return 0;
+    // Airborne for 2 lift / g; the launch keeps .85 of its speed on average (its per-body spread), so the haul covers dist - stop in that time
+    const air = (2 * R.lift) / 9.81;
+    target.applyBlastLaunch(along.normalize(), Math.min(R.top, (dist - R.stop) / air / 0.85), R.lift);
+    this._logAbility(shooter, "reel", this._now, target.position);
+    return R.rope;
+  };
+
   /** A flying snake has landed (ProjectileSystem.snakeLand): it goes on as a live snake on the turf there (spec at SNAKE_LIVE). */
-  private _landSnake = (at: Vector3, from: Vector3, team: number): void => {
+  private _landSnake =(at: Vector3, from: Vector3, team: number): void => {
     const scene = this._units[0]?.body.root.getScene();
     if (!scene) return;
     const L = SNAKE_LIVE;
