@@ -782,6 +782,12 @@ function buildBallista(scene: Scene, color: Color3): ArticulatedBody {
 }
 
 // ═══════════════════════ HWACHA ═══════════════════════
+/** [S] 416 the hwacha's launch rack (buildHwacha): .cols x .rows cells .cell across, .post posts and rails, .lath laths, .depth deep, seated .seatY up
+ * and .seatZ ahead on the cart, leant back .lean rad; light .wood, dark .head diamond heads .headSize of a cell, drawn out .headLong toward the front. */
+const HWACHA_RACK = {
+  cols: 10, rows: 6, cell: 0.11, post: 0.06, lath: 0.018, depth: 0.22, seatY: 0.5, seatZ: 0.12, lean: 0.22, headSize: 0.36, headLong: 1.3,
+  wood: new Color3(0.72, 0.45, 0.24), head: new Color3(0.16, 0.16, 0.2),
+};
 // TABS-style hwacha: wide wooden cart with large, steeply-tilted rack of tube holes
 // filled with rocket arrows pointing upward. Big spoked wheels, cart handles behind.
 function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
@@ -832,59 +838,68 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
     handle.parent = root; handle.material = darkWood; allMeshes.push(handle);
   }
 
-  // ─── Arrow rack - steeply tilted (~65° from horizontal) ───
+  // ─── [S] 416 the launch rack: an upright light-wood lattice, HWACHA_RACK.cols x .rows square slots facing forward, a dark diamond rocket head in each
+  // (audit 411 a.1: "a dark sloped box with a flat top plate - TABS: an upright lattice frame of 6x10 slots facing forward"; dynasty.hwacha.red.png:
+  // a light orange-brown frame of posts and rails round a grid of laths, every cell holding a dark pyramid point on a tube, the frame leant back a
+  // little on a plank shelf over the cart) ───
+  const R = HWACHA_RACK;
+  const lightWood = makeMat(scene, R.wood);
+  const headMat = makeMat(scene, R.head);
   const rackPivot = new TransformNode("rackPivot", scene);
-  rackPivot.position.set(0, 0.45, 0.15);
-  rackPivot.rotation.x = -1.15; // ~65° tilt — arrows point upward and forward
+  rackPivot.position.set(0, R.seatY, R.seatZ);
+  rackPivot.rotation.x = -R.lean;
   rackPivot.parent = root;
-
-  // Main rack box (wide, tall front face with depth for tubes)
-  const rackBody = MeshBuilder.CreateBox("rackBody", { width: 1.1, height: 0.9, depth: 0.45 }, scene);
-  rackBody.position.set(0, 0.45, 0);
-  rackBody.parent = rackPivot; rackBody.material = teamPrimary; allMeshes.push(rackBody);
-
-  // Frame edges around the rack face
-  for (const xOff of [-0.55, 0.55]) {
-    const vFrame = MeshBuilder.CreateBox("vf", { width: 0.06, height: 0.95, depth: 0.5 }, scene);
-    vFrame.position.set(xOff, 0.45, 0);
-    vFrame.parent = rackPivot; vFrame.material = darkWood; allMeshes.push(vFrame);
+  const W = R.cols * R.cell, H = R.rows * R.cell;
+  // the shelf under it
+  const shelf = MeshBuilder.CreateBox("rackShelf", { width: W + R.post * 3, height: R.post * 0.8, depth: R.depth * 1.6 }, scene);
+  shelf.position.set(0, -R.post * 0.4, 0);
+  shelf.parent = rackPivot; shelf.material = lightWood; allMeshes.push(shelf);
+  // the back board the tubes sit in
+  const back = MeshBuilder.CreateBox("rackBack", { width: W, height: H, depth: R.post * 0.5 }, scene);
+  back.position.set(0, H / 2 + R.post, -R.depth * 0.5);
+  back.parent = rackPivot; back.material = darkWood; allMeshes.push(back);
+  // the posts and the top and bottom rails
+  for (const x of [-1, 1]) {
+    const post = MeshBuilder.CreateBox("rackPost", { width: R.post, height: H + R.post * 2.6, depth: R.depth }, scene);
+    post.position.set(x * (W / 2 + R.post / 2), H / 2 + R.post, 0);
+    post.parent = rackPivot; post.material = lightWood; allMeshes.push(post);
   }
-  for (const yOff of [0.0, 0.9]) {
-    const hFrame = MeshBuilder.CreateBox("hf", { width: 1.16, height: 0.06, depth: 0.5 }, scene);
-    hFrame.position.set(0, yOff, 0);
-    hFrame.parent = rackPivot; hFrame.material = darkWood; allMeshes.push(hFrame);
+  for (const y of [R.post / 2, H + R.post * 1.5]) {
+    const rail = MeshBuilder.CreateBox("rackRail", { width: W + R.post * 2, height: R.post, depth: R.depth }, scene);
+    rail.position.set(0, y, 0);
+    rail.parent = rackPivot; rail.material = lightWood; allMeshes.push(rail);
   }
-
-  // ─── Tube holes + arrows (6 cols × 5 rows = 30) ───
-  const cols = 6, rows = 5;
-  const spacingX = 0.15, spacingY = 0.14;
-  const startX = -(cols - 1) * spacingX / 2;
-  const startY = 0.12;
+  // the lattice: thin laths between the cells
+  for (let c = 1; c < R.cols; c++) {
+    const lath = MeshBuilder.CreateBox("rackLath", { width: R.lath, height: H, depth: R.depth * 0.7 }, scene);
+    lath.position.set(-W / 2 + c * R.cell, H / 2 + R.post, 0);
+    lath.parent = rackPivot; lath.material = lightWood; allMeshes.push(lath);
+  }
+  for (let r = 1; r < R.rows; r++) {
+    const lath = MeshBuilder.CreateBox("rackLath", { width: W, height: R.lath, depth: R.depth * 0.7 }, scene);
+    lath.position.set(0, R.post + r * R.cell, 0);
+    lath.parent = rackPivot; lath.material = lightWood; allMeshes.push(lath);
+  }
+  // a rocket in each cell: a tube back into the board, a dark diamond head standing out of the face
   const muzzleSequence: TransformNode[] = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const cx = startX + col * spacingX;
-      const cy = startY + row * spacingY;
-      // Tube hole (dark cylinder recessed into rack face)
-      const tube = MeshBuilder.CreateCylinder("tube", { height: 0.46, diameter: 0.07, tessellation: 8 }, scene);
-      tube.position.set(cx, cy, 0);
+  for (let row = 0; row < R.rows; row++) {
+    for (let col = 0; col < R.cols; col++) {
+      const cx = -W / 2 + (col + 0.5) * R.cell;
+      const cy = R.post + (R.rows - row - 0.5) * R.cell;
+      const tube = MeshBuilder.CreateCylinder("tube", { height: R.depth, diameter: R.cell * 0.32, tessellation: 6 }, scene);
+      tube.position.set(cx, cy, -R.depth * 0.1);
       tube.rotation.x = Math.PI / 2;
       tube.parent = rackPivot; tube.material = tubeMat; allMeshes.push(tube);
-      // Arrow shaft poking out
-      const arr = MeshBuilder.CreateCylinder("arr", { height: 0.5, diameter: 0.02, tessellation: 4 }, scene);
-      arr.position.set(cx, cy, 0.35);
-      arr.rotation.x = Math.PI / 2;
-      arr.parent = rackPivot; arr.material = shaft; allMeshes.push(arr);
-      // Red arrowhead
-      const tip = MeshBuilder.CreateCylinder("tip", { height: 0.07, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, scene);
-      tip.position.set(cx, cy, 0.62);
-      tip.rotation.x = Math.PI / 2;
-      tip.parent = rackPivot; tip.material = red; allMeshes.push(tip);
-      if (muzzleSequence.length < 14) {
-        muzzleSequence.push(makeSocket(scene, rackPivot, `hwacha_muzzle_${row}_${col}`, new Vector3(cx, cy, 0.72)));
+      const tip = MeshBuilder.CreatePolyhedron("tip", { type: 1, size: R.cell * R.headSize }, scene);
+      tip.scaling.z = R.headLong;
+      tip.position.set(cx, cy, R.depth * 0.5 + R.cell * R.headSize * 0.4);
+      tip.parent = rackPivot; tip.material = headMat; allMeshes.push(tip);
+      if (muzzleSequence.length < 14 && row % 2 === 0 && col % 2 === 0) {
+        muzzleSequence.push(makeSocket(scene, rackPivot, `hwacha_muzzle_${row}_${col}`, new Vector3(cx, cy, R.depth * 0.5 + R.cell)));
       }
     }
   }
+  void red; void shaft;
 
   // ─── Rear support struts (angled braces from base to rack back) ───
   for (const xOff of [-0.35, 0.35]) {
@@ -902,7 +917,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
   const vehicleSockets: VehicleSocketSet = {
     primaryMuzzle: muzzleSequence[0],
     muzzleSequence,
-    impactOrigin: makeSocket(scene, rackPivot, "hwacha_impact_socket", new Vector3(0, 0.42, 0.68)),
+    impactOrigin: makeSocket(scene, rackPivot, "hwacha_impact_socket", new Vector3(0, HWACHA_RACK.rows * HWACHA_RACK.cell * 0.5, HWACHA_RACK.depth)),
   };
 
   return wrapAsBody(
