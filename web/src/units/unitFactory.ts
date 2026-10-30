@@ -14,7 +14,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { vampireClaws, swordcasterBowl, reaperTendrils, candleArms } from "./spookyDress";
+import { vampireClaws, swordcasterBowl, reaperTendrils, candleArms, swordcasterCuirass } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -645,6 +645,8 @@ export class UnitFactory {
     if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleArms(this._scene, body));
     // [S] 435 the Swordcaster's black bowl cut round his bare face in place of the closed hood (spookyDress SWORDCASTER_BOWL)
     if (definition.id === "spooky.swordcaster" && !shouldUseVehicleBody) propMeshes.push(...swordcasterBowl(this._scene, body));
+    // [S] 436 the Swordcaster's charcoal locked cuirass, team studs and a chained grey padlock on the chest (spookyDress SWORDCASTER_CUIRASS)
+    if (definition.id === "spooky.swordcaster" && !shouldUseVehicleBody) propMeshes.push(...swordcasterCuirass(this._scene, body, teamColor));
     // [S] 427 the Pirate Queen's team bandana, its flap down over her left eye (pirateDress QUEEN_BANDANA)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenBandana(this._scene, body, teamColor));
     // [S] 428 the Pirate Queen's brown bomb sash from her right shoulder to her left hip, four black bombs on it (pirateDress QUEEN_SASH)

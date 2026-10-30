@@ -107,6 +107,79 @@ export function swordcasterBowl(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 436 the Swordcaster's locked cuirass (audit 434 swordcaster a.2: "torso grey-team, no cuirass - TABS: black locked cuirass with a padlock on the
+ * chest and team studs"; spooky.swordcaster.red.png, card Appearance "a locked, heavy cuirass": a charcoal plate vest from the collar to the waist,
+ * broader than the trunk, its front ridged down the middle, a ring of round team studs over the shoulders and down the front edges, a grey chain from
+ * either side of the collar meeting at a big grey padlock on the upper chest, a dark keyhole in it). SWORDCASTER_CUIRASS, in the torso mesh's box (e its
+ * half sizes): the shell .out of the trunk wide, .deep of it deep, from .top over the trunk's top to .foot of e.y under its middle; a front ridge, a
+ * four-sided prism .ridge of e.x across standing .proud off the shell; .studs studs each side .stud of e.x across; the padlock .lock of e.x wide at .lockY
+ * of e.y, its shackle a torus above it; the chain two bars from the collar's sides to the shackle. Charcoal self-lit .glow so it reads black, not a hole.
+ */
+const SWORDCASTER_CUIRASS = {
+  out: 1.16, deep: 1.22, top: 0.04, foot: -0.75, ridge: 0.5, proud: 0.12, studs: 4, stud: 0.16, lock: 0.42, lockY: 0.3, glow: 0.12,
+  plate: new Color3(0.05, 0.05, 0.06), grey: new Color3(0.42, 0.4, 0.37), hole: new Color3(0.04, 0.03, 0.03),
+};
+
+/** A charcoal plate cuirass with team studs and a chained grey padlock on the chest (spec at SWORDCASTER_CUIRASS). */
+export function swordcasterCuirass(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = SWORDCASTER_CUIRASS;
+  const f = getMaterialFactory();
+  const plate = f.get("cloth", C.plate, { emissive: C.plate.scale(C.glow) });
+  const grey = f.get("cloth", C.grey, { emissive: C.grey.scale(0.15) });
+  const hole = f.get("cloth", C.hole, { emissive: C.hole.scale(0.1) });
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(0.15) });
+  const torso = body.torsoMesh;
+  const bb = torso.getBoundingInfo().boundingBox, e = bb.extendSize, c = bb.center;
+  const out: Mesh[] = [];
+  const add = (m: Mesh, material: typeof plate): Mesh => {
+    m.parent = torso;
+    m.material = material;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const yTop = bb.maximum.y + e.y * C.top, yFoot = c.y + e.y * C.foot;
+  const X = e.x * C.out, Z = e.z * C.deep;
+  const shell = add(MeshBuilder.CreateBox("swordcasterCuirass", { width: X * 2, height: yTop - yFoot, depth: Z * 2 }, scene), plate);
+  shell.position.set(c.x, (yTop + yFoot) / 2, c.z);
+  // the ridged front: a four-sided prism lying up the chest, its edge toward the viewer
+  const ridge = add(MeshBuilder.CreateCylinder("swordcasterCuirassRidge", { height: (yTop - yFoot) * 0.92, diameter: e.x * C.ridge * 2, tessellation: 4 }, scene), plate);
+  ridge.scaling.z = C.proud * 2 / C.ridge;
+  ridge.position.set(c.x, (yTop + yFoot) / 2, c.z + Z);
+  // team studs: over each shoulder and down each front edge
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < C.studs; i++) {
+      const stud = add(MeshBuilder.CreateSphere("swordcasterStud", { diameter: e.x * C.stud, segments: 3 }, scene), team);
+      const t = i / (C.studs - 1);
+      // the first two on the shoulder top, then down the front edge
+      if (i < 2) stud.position.set(c.x + side * X * (0.45 + 0.35 * i), yTop + e.x * C.stud * 0.2, c.z + Z * (0.2 - 0.3 * i));
+      else stud.position.set(c.x + side * X * 0.82, yTop - (yTop - yFoot) * (0.15 + 0.5 * t), c.z + Z + e.x * C.stud * 0.25);
+    }
+  }
+  // the padlock on the upper chest, proud of the ridge, and its shackle over it
+  const lockW = e.x * C.lock, lockY = c.y + e.y * C.lockY, lockZ = c.z + Z + e.z * C.proud * 1.6;
+  const lock = add(MeshBuilder.CreateBox("swordcasterPadlock", { width: lockW, height: lockW * 1.05, depth: lockW * 0.45 }, scene), grey);
+  lock.position.set(c.x, lockY, lockZ);
+  const keyhole = add(MeshBuilder.CreateBox("swordcasterKeyhole", { width: lockW * 0.18, height: lockW * 0.45, depth: lockW * 0.1 }, scene), hole);
+  keyhole.position.set(c.x, lockY - lockW * 0.05, lockZ + lockW * 0.24);
+  const shackle = add(MeshBuilder.CreateTorus("swordcasterShackle", { diameter: lockW * 0.7, thickness: lockW * 0.14, tessellation: 10 }, scene), grey);
+  shackle.rotation.x = Math.PI / 2;
+  shackle.position.set(c.x, lockY + lockW * 0.6, lockZ);
+  // the chain from either side of the collar down to the shackle
+  for (const side of [-1, 1]) {
+    const from = new Vector3(c.x + side * X * 0.42, yTop, c.z + Z * 0.8);
+    const to = new Vector3(c.x + side * lockW * 0.2, lockY + lockW * 0.85, lockZ);
+    const d = to.subtract(from);
+    const bar = add(MeshBuilder.CreateBox("swordcasterChain", { width: lockW * 0.12, height: d.length(), depth: lockW * 0.12 }, scene), grey);
+    bar.position.copyFrom(from.add(to).scale(0.5));
+    bar.rotation.z = -Math.atan2(d.x, d.y);
+    bar.rotation.x = Math.atan2(d.z, Math.hypot(d.x, d.y));
+  }
+  return out;
+}
+
+/*
  * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
  * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":
  * each forearm swallowed from the elbow down by a fat lumpy cream wax column, about three arms thick, running on past the fist to mid-thigh, melted
