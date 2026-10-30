@@ -121,9 +121,14 @@ const SWORD_RISE_IN = 0.45;
  * The stoner's boulder (units/tribal.stoner, tribal.stoner.jpg: a forward toss to range 12, the card's projectile speed 18) is launched the same way, but only
  * when it is the rock out of his hands (`held`: the throw's heldProp): a catapult's stone is the same shape and keeps its high lob.
  */
+// [S] 427 ...and the pirate Cannon's ball (audit 422 c.1: "a steep lob, the ball already above the treeline with the smoke trail climbing at near 45
+// degrees - TABS: a fast flat shot from a level muzzle"; card Weapons projectile speed 45, range 25; pirate.cannon.jpg): fired off the level barrel at the
+// card's 45 m/s it is a near-flat line that sags only by gravity over its short flight (at 9 m, under 4 cm of rise), its smoke trail level behind it, in
+// place of the old fixed lob at 10 m/s and .4 of the range high.
 const LAUNCH: Partial<Record<ProjectileShape, { speed: number; gravity: number; throw?: number; held?: boolean }>> = {
   spear: { speed: 20, gravity: 9.8, throw: 220 },
   stone: { speed: 18, gravity: 9.8, held: true },
+  cannonball: { speed: 45, gravity: 9.8 },
 };
 
 /** The low-angle ballistic solution from `from` to `to` at launch speed v under gravity g: flight time and the arc's peak above the straight line, or null when out of reach. */
@@ -357,7 +362,7 @@ export class ProjectileSystem {
       case "bomb":    speed = 12; arcHeight = dist * 0.35; break;
       case "shell":   speed = 46; arcHeight = dist * 0.015; break;
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
-      case "cannonball": speed = 10; arcHeight = dist * 0.4; break;
+      case "cannonball": speed = 45; arcHeight = dist * 0.02; break; // fallback past the reach of LAUNCH.cannonball
       case "davinci_ball": speed = 30; arcHeight = dist * 0.06; break;
       case "firework": speed = 22; arcHeight = dist * FIREWORK_ROCKET.arc; break;
       case "shuriken": speed = 28; arcHeight = dist * 0.05; break;
