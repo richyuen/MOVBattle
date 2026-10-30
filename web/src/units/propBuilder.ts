@@ -2789,7 +2789,7 @@ const ZWEI: SlabCut = { long: 0.85, wide: 0.05, grip: 4.5, point: 0.12, lug: 0.0
  * cup .cup across and .cupDeep high, a grip .grip long, a knuckle bow from the cup's edge to the pommel, a pommel, and a red jewel on the cup's face.
  * Same mount as the plain sword (the guard on the fist), so the carry and the blows that move the sword move this one.
  */
-const CUTLASS = { long: 0.5, wide: 0.05, taper: 0.55, thick: 0.22, curve: 0.13, segs: 6, cup: 3.4, cupDeep: 0.9, grip: 1.7, bow: 0.35, jewel: 0.7 };
+const CUTLASS = { long: 0.5, wide: 0.05, taper: 0.55, thick: 0.22, curve: 0.13, segs: 6, cup: 3.4, cupDeep: 0.9, bowl: 0.38, rim: 0.32, grip: 1.7, bow: 0.35, jewel: 0.7 };
 const CUTLASS_TAN = new Color3(0.8, 0.58, 0.33);
 const CUTLASS_JEWEL = new Color3(1.2, 0.08, 0.06);
 /*
@@ -2830,12 +2830,22 @@ function buildCutlass(scene: Scene, name: string, fit: BladeFit, cut: typeof CUT
   // The hilt below the blade: a cup guard (mouth toward the blade), the grip, the pommel, a knuckle bow down the grip's front, a red jewel on the cup
   const cupDeep = F * C.cupDeep;
   const hilt = L / 2 + cupDeep / 2;
-  const cup = MeshBuilder.CreateCylinder("guard", { height: cupDeep, diameterTop: F * C.cup, diameterBottom: F * C.cup * 0.55, tessellation: 8 }, scene);
-  cup.position.y = -hilt;
-  cup.scaling.z = 0.7;
+  // [S] 431 the cup is a deep tan bowl over the fist, its mouth toward the grip and a rolled rim round it (audit 422 captain b.2: "a straight broad
+  // double-edged sword with a cross guard"; pirate.captain.red.png: a deep rounded tan shell guard as big as the fist; the 425 frustum read as a flat
+  // plate edge-on): a half shell .cup fists across and .bowl of it deep from the blade's foot down, the rim a torus .rim of a fist thick
+  const bowlDeep = F * C.cup * C.bowl;
+  const cup = MeshBuilder.CreateSphere("guard", { diameterX: F * C.cup, diameterY: bowlDeep * 2, diameterZ: F * C.cup, segments: 6, slice: 0.5, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  cup.position.y = -L / 2 - bowlDeep;
+  cup.scaling.z = 0.8;
   cup.material = tan;
   cup.convertToFlatShadedMesh();
   cup.parent = blade;
+  const rim = MeshBuilder.CreateTorus("guardRim", { diameter: F * C.cup, thickness: F * C.rim, tessellation: 12 }, scene);
+  rim.position.y = cup.position.y;
+  rim.scaling.z = 0.8;
+  rim.material = tan;
+  rim.convertToFlatShadedMesh();
+  rim.parent = blade;
   const gripLong = F * C.grip;
   const grip = MeshBuilder.CreateCylinder("grip", { height: gripLong, diameter: F * 0.6, tessellation: 6 }, scene);
   grip.position.y = -hilt - cupDeep * 0.5 - gripLong * 0.5;
