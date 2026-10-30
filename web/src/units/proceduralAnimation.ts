@@ -3242,6 +3242,11 @@ export class ProceduralAnimator {
     this._offArmTo(grip.getAbsolutePosition().clone(), w);
   }
 
+  /** [S] 425 the pistols have left his hands (thrown away after the shot, simulationSystem _tossGuns): the arms are no longer held out on them. */
+  dropPistols(): void {
+    this._pistol = null;
+    this._offPistol = null;
+  }
   private _pistol: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
   private _offPistol: { node: Mesh; rest: Quaternion } | null = null;
   private _pistolAim = 1;

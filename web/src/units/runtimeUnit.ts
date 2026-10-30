@@ -503,6 +503,20 @@ export class RuntimeUnit {
     }
   }
 
+  /**
+   * [S] 425 a gunman who has thrown his guns away fights on bare-fisted (card pirate.flintlock: "They throw away the pistols as soon as a shot is
+   * fired, and will proceed by punching enemy units"): from now on a light melee man at fist reach who rushes in, his blows plain strikes, and his
+   * next blow due `ready` s from `now` instead of after the gun's reload.
+   */
+  disarmToFists(now: number, ready: number): void {
+    (this as { definition: UnitDefinition }).definition = {
+      ...this.definition, attackProfileId: "melee.light", aiProfileId: "ai.rush", engageRange: 1.4, weaponHint: undefined, projectileHint: undefined,
+    };
+    this._fists = true;
+    this._nextAttackAt = Math.min(this._nextAttackAt, now + ready);
+  }
+  private _fists = false;
+
   setAttackCooldown(now: number, cooldown: number): void {
     this._nextAttackAt = now + Math.max(0.05, cooldown);
     // Trigger attack animation
@@ -2273,6 +2287,7 @@ export class RuntimeUnit {
   }
 
   private _resolvePrimaryAttackMotion(): AttackMotion {
+    if (this._fists) return "strike";
     switch (this._resolvePresentationFamily()) {
       case "heavy_swing":
         return "heavy_swing";

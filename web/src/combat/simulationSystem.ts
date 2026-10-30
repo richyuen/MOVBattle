@@ -73,6 +73,9 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 // .burn: how long the man it reaches burns (visualEffects BODY_FLAMES), s
 // [S] 425 the harpooner's reel-in (_reelIn): the struck man's launch lift (m/s up), top haul speed, where he lands short of the shooter (m), rope taut (s)
 const HARPOON_REEL = { lift: 3, top: 14, stop: 1.4, rope: 0.7 };
+// [S] 425 guns thrown away after the shot (_tossGuns): who does it, the throw (out to the side, back, up: m/s; spin rad/s), where they lie (m up),
+// how long they lie (s), and when the first punch is due after the shot (s)
+const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up: 3.4, spin: 9, rest: 0.05, lie: 8, ready: 0.9 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
@@ -673,6 +676,7 @@ export class SimulationSystem {
     if (this.projectileSystem) this.projectileSystem.abilityHook ??= this._logMissileAbility;
     if (this.projectileSystem) this.projectileSystem.snakeLand ??= this._landSnake;
     if (this.projectileSystem) this.projectileSystem.reelIn ??= this._reelIn;
+    if (this._tossed.length > 0) this._stepTossedGuns(dt);
 
     for (const unit of this._units) {
       unit.update(dt, now);
@@ -2348,6 +2352,7 @@ export class SimulationSystem {
             const along = new Vector3(impulseDir.x, 0, impulseDir.z);
             if (along.lengthSquared() > 1e-6) target.applyBlastLaunch(along.normalize(), fling.speed, fling.lift);
           }
+          if (GUN_TOSS.units.has(attacker.definition.id)) this._tossGuns(attacker, now);
         } else if (THROWS_HELD_PROP.has(attacker.definition.weaponHint ?? "") && attacker.animator.throwReleasesIn() > 0) {
           // The windup has only started: what he holds leaves his hand at the let-go
           this._pendingThrows.push({
@@ -3355,6 +3360,71 @@ export class SimulationSystem {
   private _clearSnakes(): void {
     for (const { s } of this._snakes) if (!s.root.isDisposed()) s.root.dispose();
     this._snakes = [];
+    for (const g of this._tossed) if (!g.node.isDisposed()) g.node.dispose();
+    this._tossed = [];
+  }
+
+  /** [S] 425 Guns thrown away after the shot (GUN_TOSS), tumbling to the turf where they lie until GUN_TOSS.lie runs out. */
+  private _tossed: { node: TransformNode; vel: Vector3; spin: Vector3; left: number }[] = [];
+
+  /**
+   * [S] 425 The Flintlock throws his pistols away as soon as the shot is fired (card Characteristics), then closes bare-fisted: each pistol leaves its
+   * fist where it is, flung out to its own side, back over his shoulder and up (GUN_TOSS out, back, up m/s) and turning end over end, and he becomes a
+   * light melee man (RuntimeUnit.disarmToFists), his first punch due GUN_TOSS.ready s on. Logged as "toss".
+   */
+  private _tossGuns(unit: RuntimeUnit, now: number): void {
+    const G = GUN_TOSS;
+    const b = unit.body;
+    b.root.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), rootM);
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    let k = 0;
+    for (const hand of [b.rightHand, b.leftHand]) {
+      if (!hand) continue;
+      const gun = hand.getChildren().find((n): n is TransformNode => n instanceof TransformNode && n.getChildren().some((c) => c.name === "pistolBell"));
+      if (!gun) continue;
+      const chain: TransformNode[] = [];
+      for (let n: Node | null = gun; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      gun.setParent(null);
+      const side = Math.sign(Vector3.Dot(Vector3.TransformNormal(new Vector3(1, 0, 0), rootM), gun.position.subtract(unit.position))) || (k === 0 ? 1 : -1);
+      const out = Vector3.Cross(Vector3.Up(), fwd).scale(-side);
+      const vel = out.scale(G.out).addInPlace(fwd.scale(-G.back)).addInPlace(new Vector3(0, G.up, 0));
+      const euler = gun.rotationQuaternion ? gun.rotationQuaternion.toEulerAngles() : gun.rotation.clone();
+      gun.rotationQuaternion = null;
+      gun.rotation.copyFrom(euler);
+      this._tossed.push({ node: gun, vel, spin: new Vector3(G.spin * (k === 0 ? 1 : -1), G.spin * 0.4, 0), left: G.lie });
+      k++;
+    }
+    if (k === 0) return;
+    unit.animator.dropPistols();
+    unit.disarmToFists(now, G.ready);
+    this._logAbility(unit, "toss", now);
+  }
+
+  private _stepTossedGuns(dt: number): void {
+    for (let i = this._tossed.length - 1; i >= 0; i--) {
+      const g = this._tossed[i];
+      g.left -= dt;
+      if (g.left <= 0 || g.node.isDisposed()) {
+        if (!g.node.isDisposed()) g.node.dispose();
+        this._tossed.splice(i, 1);
+        continue;
+      }
+      if (g.vel.lengthSquared() === 0) continue;
+      g.vel.y -= 9.81 * dt;
+      g.node.position.addInPlace(g.vel.scale(dt));
+      g.node.rotation.addInPlace(g.spin.scale(dt));
+      // Lying on the turf: flat on its side, still
+      if (g.node.position.y <= GUN_TOSS.rest) {
+        g.node.position.y = GUN_TOSS.rest;
+        g.vel.setAll(0);
+        g.node.rotation.x = Math.PI / 2;
+      }
+    }
   }
 
   private _logAbility(unit: RuntimeUnit, kind: string, t: number, at: Vector3 = unit.position): void {
