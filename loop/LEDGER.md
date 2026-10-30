@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-420 | [R] MINO_STRAP flat, MINO_GIRDLE off the barrel, MINO_CAP, scale 1.4 (637255a6, 4eb34cd7) | ancient.minotaur.a | approved
-420 | SAMURAI_HAKAMA (69c590af) | dynasty.samurai.a | approved
-420 | DRAWS_BEFORE_LOOSE firework (1cb514fd) | dynasty.firework_archer.c | approved
-420 | FIREWORK_REST upright bow (59a5baca) | dynasty.firework_archer.b | approved
-420 | MONKEY_CROWN (6c4aff46) | dynasty.monkey_king.a | approved
-420 | DRAGON_CARRIER heads + poles beside (0f7dd79c) | dynasty.dragon.a | approved
-420 | [P] HWACHA_TIMBER (3d24020e) | dynasty.hwacha.a | approved
 421 | FLAME_JET plume of white balls with yellow lobes (ba799e89, 8027d61c) | dynasty.dragon.c | approved
 421 | DRAGON_FORM flat band, scallops, pale fins (0a4f9754, 87e08299) | dynasty.dragon.a | approved
 421 | [P] DRAGON_CARRIER fists skin .12, arm .1 (91a86b90, reverted) | dynasty.dragon.b | rejected (ledger reversal)
@@ -43,6 +36,13 @@ for 25 iterations.
 424 | PIRATE_PANTS brown pants, turned cuff (87042b0e) | pirate.flintlock.a | approved
 424 | PIRATE_SHORTS ripped tan shorts (d95ec795) | pirate.bomb_thrower.a | approved
 424 | HARPOON_OFF_GRIP + _gripHarpoon (3f068837) | pirate.harpooner.b | approved
+425 | TRICORN_BROWN fitted tricorn (75a4ea7d) | pirate.harpooner.a | approved
+425 | HARPOON_REEL reel-in, taut rope (3f3fd30b, 443edc44) | pirate.harpooner.c | approved
+425 | GUN_TOSS + disarmToFists (36eb9aaa) | pirate.flintlock.c | approved
+425 | BLUNDERBUSS prop + BLUNDERBUSS_AIM (28779788) | pirate.blunderbuss.b | approved
+425 | CANNON_WHEEL (5b429ac7, 396cefd1) | pirate.cannon.a | approved
+425 | CUTLASS curved blade, queen off hand (e5226412) | pirate.pirate_queen.b | approved
+425 | CUTLASS_SLASH (8b450772) | pirate.captain.c | approved
 
 ## Spent (never retry as [P])
 
@@ -85,3 +85,10 @@ vehicleBuilder.ts:CANNON_BARREL (axis, breech, sides, bore, boreAt, profile) | .
 propBuilder.ts:TRICORN_PLATE (skull, at, bone, boneWide, proud, thick, white) + pirate_hat corners [30,150,270] | .5, .08, .95, .1, .12, .06, (.95,.94,.9) unlit | 423 | approved | a .26 W bone sphere + bars inside the front corner's V (before 423)
 pirateDress.ts:PIRATE_VEST (out, deep, long, dark, chest, proud, front, lapel, flare, glow) | 1.08, 1.1, 1.08, .4, .36, .03, .3, .06, .08, .12 | 423 | approved | the closed pirate_tar trunk (before 423)
 vehicleBuilder.ts:FRONT_SPLIT (hipOut, out, down, ahead, shinOut, shinAhead) + THROWER_SPLIT (out, down, ahead, shinOut, shinAhead) | .05, 1, .1, .12, .45, .1; 1, .3, .35, .6, .15 | 422 | approved | [R] reset: CREW_SEAT frontThigh -1.15/frontSplay .62/frontKnee .45 (Euler, crossed the knees) and THROWER_KNEES chest .55/out .2 targets (unreachable) (380-421); FRONT_SPLIT out .88/down .12/ahead .42 without the hip slide (403, rejected)
+propBuilder.ts:TRICORN_BROWN (cloth .12) | (.43,.2,.13) | 425 | approved | black felt on every tricorn (before 425)
+simulationSystem.ts:HARPOON_REEL (lift, top, stop, rope) + projectileSystem TOW_CHEST | 3, 14, 1.4, .7; .9 | 425 | approved | knockback x -.8 only (before 425)
+simulationSystem.ts:GUN_TOSS (out, back, up, spin, rest, lie, ready) | 2.6, 1.6, 3.4, 9, .05, 8, .9 | 425 | approved | pistols kept (before 425)
+propBuilder.ts:BLUNDERBUSS (long, grip, bore, bell, mouth, stock, fore, heel, offAt) + BLUNDERBUSS_AIM (ahead, out, drop, droop, across, kick) | .62, .24, .075, .2, 3.3, 1.2, .62, .16, .5; .13, .07, 0, .22, .3, .45 | 425 | approved | stick + ball barrel .35 s (before 425)
+vehicleBuilder.ts:CANNON_WHEEL (across, axle, out, rim, wide, clampWide, clampTall, clampLong, spoke, hub, glow) | .84, .42, .34, .085, .12, 1.3, 1.45, .45, .05, .15, .12 | 425 | approved | torus .44 at y .24, x .3 (before 425)
+propBuilder.ts:CUTLASS (long, wide, taper, thick, curve, segs, cup, cupDeep, grip, bow, jewel) | .5, .05, .55, .22, .13, 6, 3.4, .9, 1.7, .35, .7 | 425 | approved | the plain slab sword .46 (before 425)
+proceduralAnimation.ts:CUTLASS_SLASH (commit, twist, cock, end, low, arm, outCock, outEnd, elbow, offArm, step, pitch, through, hitAt, hold) | .4, .7, 1.9, -1, .08, -1.35, -.6, .45, -.35, .35, .3, .15, .45, .66, .75 | 425 | approved | the plain blade_slash + aimBlow onto the head (before 425)
