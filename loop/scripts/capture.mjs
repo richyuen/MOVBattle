@@ -675,7 +675,8 @@ async function main() {
           // a landed snake lies at the struck man's feet, 7 m off: framed on him, its after shot 30 ticks (.5 s) on, at its first lunge (evidence 387)
           const snake = ability.kind === "snake_land";
           // a firework's burst is on the struck man, 7 m off: framed on him (evidence 418)
-          const onMan = snake || ability.kind === "burst";
+          // [evidence 425] a harpoon's reel-in hauls the struck man in from 7.5 m off: framed on him as he comes along the line
+          const onMan = snake || ability.kind === "burst" || ability.kind === "reel";
           await take(`unit_${id}_ability`, ability.tick, slow ? 4 : onMan ? 2 : far);
           await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), slow ? 4 : onMan ? 2 : far);
         }
