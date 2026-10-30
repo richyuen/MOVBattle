@@ -1,7 +1,7 @@
 import { Scene, Color3, Mesh, MeshBuilder } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
-import { limbShell } from "./medievalDress";
+import { limbBox, limbShell } from "./medievalDress";
 
 /*
  * Pirate dress (units/pirate.*): the cloth each sailor wears over the dark tar trunk, built per unit id by unitFactory. Sized off the trunk mesh's own
@@ -72,6 +72,45 @@ export function piratePants(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     out.push(limbShell(scene, "piratePantsShin", shin, 0, P.to, P.shin, brown));
     out.push(limbShell(scene, "piratePantsCuff", shin, P.to - P.cuff, P.to, P.cuffOut, cuff));
+  }
+  return out;
+}
+
+/*
+ * [S] 424 the ripped shorts (audit 422 a.2: "bare team - TABS: ripped tan shorts ending above the knee"; pirate.bomb_thrower.red.png, card Appearance
+ * "ripped shorts": loose tan shorts from the belt to just above the knee, their hem torn into ragged points). PIRATE_SHORTS: over each thigh a six-sided
+ * tan shell .out of the limb across from its top to .to of it; round the hem .rags flat torn points, each .rag of the limb's length long and .ragWide of
+ * the hem's girth across, hanging from the hem and splayed .splay rad out, alternating long and .short. Self-lit .glow.
+ */
+const PIRATE_SHORTS = { out: 1.65, to: 0.72, rags: 7, rag: 0.2, ragWide: 0.16, short: 0.6, splay: 0.12, tan: new Color3(0.8, 0.6, 0.35), glow: 0.12 };
+
+export function pirateShorts(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = PIRATE_SHORTS;
+  const mf = getMaterialFactory();
+  const tan = mf.get("cloth", S.tan, { emissive: S.tan.scale(S.glow) });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    const shell = limbShell(scene, "pirateShorts", thigh, 0, S.to, S.out, tan);
+    out.push(shell);
+    // the torn hem: flat points hanging round the shell's foot (limbShell tapers to .86 at its foot)
+    const L = limbBox(thigh);
+    const r = Math.max(L.wide, L.deep) * S.out * 0.86, deep = shell.scaling.z;
+    const hemY = L.mid + L.half - S.to * L.half * 2;
+    const girth = 2 * Math.PI * r;
+    for (let i = 0; i < S.rags; i++) {
+      const a = (i / S.rags) * Math.PI * 2;
+      const long = L.half * 2 * S.rag * (i % 2 ? S.short : 1);
+      const rag = MeshBuilder.CreateCylinder("pirateShortsRag", { height: long, diameterTop: girth * S.ragWide, diameterBottom: 0, tessellation: 4 }, scene);
+      rag.scaling.z = 0.15;
+      rag.convertToFlatShadedMesh();
+      rag.parent = thigh.parent;
+      const x = Math.sin(a) * r, z = Math.cos(a) * r * deep;
+      rag.position.set(x, hemY - long / 2 + long * 0.1, z);
+      // the flat face looks out from the leg, the point tips out a little
+      rag.rotation.set(-S.splay, a, 0);
+      rag.material = tan;
+      out.push(rag);
+    }
   }
   return out;
 }
