@@ -1048,6 +1048,21 @@ export function dressCannonCrew(scene: Scene, body: ArticulatedBody, color: Colo
   add(peak, body.headTop, capMat);
 }
 
+/**
+ * [S] 423 the cannon's barrel (critic 422: a short blue-grey cylinder sunk flush in the carriage box; pirate.cannon.red.png: a long grey faceted barrel
+ * standing proud of the carriage and longer than it, a knob and a ring at the breech, the chase tapering to a neck, then swelling into a thick flared
+ * muzzle ring with a dark bore). Profile as [radius, distance from the breech end] (m) turned about the axis in .sides facets; the axis .axis up, so
+ * the barrel's belly rests on the cheek tops (.56) and its back stands over them; the breech end at z .breech; the dark bore disc .boreAt along.
+ */
+const CANNON_BARREL = {
+  axis: 0.6, breech: -0.16, sides: 10, bore: 0.085, boreAt: 1.12,
+  profile: [
+    [0, -0.1], [0.045, -0.1], [0.055, -0.06], [0.035, -0.02], [0.14, 0], [0.155, 0.04], [0.155, 0.1], [0.14, 0.12],
+    [0.13, 0.5], [0.14, 0.53], [0.14, 0.57], [0.12, 0.6], [0.105, 0.86], [0.12, 0.92], [0.17, 1.0], [0.195, 1.07],
+    [0.19, 1.14], [0.1, 1.14], [0.09, 1.1],
+  ] as [number, number][],
+};
+
 function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
@@ -1104,28 +1119,20 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   trail.position.set(0, 0.22, -0.7);
   trail.parent = root; trail.material = wood; allMeshes.push(trail);
 
-  // Barrel (along +Z)
-  // A short stout tube, 0.8 long with the muzzle where it was, tapering a little from breech to muzzle, faceted, with
-  // two raised bands and a knob on the back end. Its axis is 0.44 up, under the top of the rims, so it lies down between the wheels in the bed: at 0.52 it rode perched above the rims
-  const barrel = MeshBuilder.CreateCylinder("barrel", { height: 0.8, diameterTop: 0.22, diameterBottom: 0.28, tessellation: 8 }, scene);
-  barrel.position.set(0, 0.44, 0.35);
-  barrel.rotation.x = Math.PI / 2; // along Z
+  // [S] 423 the barrel, one faceted lathe to the spec at CANNON_BARREL, along +Z: it lies on the cheeks' tops, proud of the carriage, and runs on past
+  // the bed's front. Named "barrel" so the bomb cannon still strips it
+  const B = CANNON_BARREL;
+  const barrel = MeshBuilder.CreateLathe("barrel", {
+    shape: B.profile.map(([r, y]) => new Vector3(r, y, 0)), tessellation: B.sides, cap: Mesh.NO_CAP,
+  }, scene);
+  barrel.convertToFlatShadedMesh();
+  barrel.position.set(0, B.axis, B.breech);
+  barrel.rotation.x = Math.PI / 2; // +y of the profile runs to the muzzle along +Z
   barrel.parent = root; barrel.material = metal; allMeshes.push(barrel);
-  for (const [z, d] of [[0.08, 0.33], [0.45, 0.29]]) {
-    const band = MeshBuilder.CreateCylinder("barrelBand", { height: 0.07, diameter: d, tessellation: 8 }, scene);
-    band.position.set(0, 0.44, z);
-    band.rotation.x = Math.PI / 2;
-    band.parent = root; band.material = metal; allMeshes.push(band);
-  }
-  const knob = MeshBuilder.CreateSphere("breechKnob", { diameter: 0.14, segments: 3 }, scene);
-  knob.position.set(0, 0.44, -0.1);
-  knob.parent = root; knob.material = metal; allMeshes.push(knob);
-
-  // Muzzle flare at front (+Z end)
-  const muzzle = MeshBuilder.CreateCylinder("muzzle", { height: 0.08, diameterTop: 0.3, diameterBottom: 0.22, tessellation: 8 }, scene);
-  muzzle.position.set(0, 0.44, 0.75);
-  muzzle.rotation.x = Math.PI / 2;
-  muzzle.parent = root; muzzle.material = metal; allMeshes.push(muzzle);
+  const bore = MeshBuilder.CreateDisc("muzzle", { radius: B.bore, tessellation: B.sides, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  bore.position.set(0, B.axis, B.breech + B.boreAt);
+  bore.parent = root; bore.material = makeMat(scene, new Color3(0.08, 0.08, 0.09)); allMeshes.push(bore);
+  const muzzleZ = B.breech + B.profile[B.profile.length - 1][1];
 
   // Operator stands on the ground beside the wheel, turned in to it, and shoves it: both hands flat on the wheel's
   // outer face, back straight in one line with the braced rear leg, lead knee bent. Sunk 0.03 so both feet are on the ground
@@ -1150,9 +1157,9 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   }
 
   const vehicleSockets: VehicleSocketSet = {
-    primaryMuzzle: makeSocket(scene, root, "cannon_muzzle_socket", new Vector3(0, 0.44, 0.86)),
-    smokeSocket: makeSocket(scene, root, "cannon_smoke_socket", new Vector3(0, 0.44, 0.78)),
-    impactOrigin: makeSocket(scene, root, "cannon_impact_socket", new Vector3(0, 0.44, 0.7)),
+    primaryMuzzle: makeSocket(scene, root, "cannon_muzzle_socket", new Vector3(0, B.axis, muzzleZ + 0.1)),
+    smokeSocket: makeSocket(scene, root, "cannon_smoke_socket", new Vector3(0, B.axis, muzzleZ + 0.02)),
+    impactOrigin: makeSocket(scene, root, "cannon_impact_socket", new Vector3(0, B.axis, muzzleZ - 0.06)),
   };
 
   return wrapAsBody(
