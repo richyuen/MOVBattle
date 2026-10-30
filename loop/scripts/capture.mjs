@@ -181,7 +181,8 @@ const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // A unit whose card ability comes after its first logged special (the minotaur's charge at 17 ms): detection runs on until this kind is seen
 // and its _ability pair is taken on it (evidence 387)
 // the firework archer: her burn is logged as she shoots, so her rocket's burst where it lands is the ability shot (evidence 418)
-const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst" };
+// [evidence 426] the harpooner's ability pair is his Pirate Kick on the reeled man (audit 422 c.2), not the reel (struck at 425; its haul shows in _struck)
+const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick" };
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
@@ -676,7 +677,8 @@ async function main() {
           const snake = ability.kind === "snake_land";
           // a firework's burst is on the struck man, 7 m off: framed on him (evidence 418)
           // [evidence 425] a harpoon's reel-in hauls the struck man in from 7.5 m off: framed on him as he comes along the line
-          const onMan = snake || ability.kind === "burst" || ability.kind === "reel";
+          // [evidence 426] ...and his kick lands on that man at his feet: framed on him too
+          const onMan = snake || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick";
           await take(`unit_${id}_ability`, ability.tick, slow ? 4 : onMan ? 2 : far);
           await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), slow ? 4 : onMan ? 2 : far);
         }
