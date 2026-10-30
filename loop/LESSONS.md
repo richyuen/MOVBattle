@@ -29,7 +29,7 @@ drop a lesson once it is a comment at the code it describes.
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
 - `capture.mjs --units` takes a comma-separated list; space-separated ids capture the first unit only. Every iter-N capture also clears the probe swatches: render them after the final capture (402).
-- No python on this machine (429): a head piece is checked with probe_close --build --aim=head (about a minute); its --aim can frame another mesh (404).
+- No python (429). probe_close --build --aim=head checks a head piece in a minute; --aim can frame another mesh (404).
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - A blow resolved at the decision (a preset's instant "slam") logs at the swing start: release shows the cock; use the pending blow (426).
 - A missile that leaves with a special just logged is that mechanic's, not the release (427 queen Bomb Spin bombs read as her attack).
@@ -54,3 +54,4 @@ drop a lesson once it is a comment at the code it describes.
 - A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.
 - A closed trapezoid plate is a 4-tessellation frustum cylinder squashed in z (KABUTO plate): facet skirts, blades and crests come from it; arc cylinders are one-sided ribbons SSAO greys, their opening an angle to get wrong (421).
 - A frill disc lying in a horizontal band's plane vanishes edge-on from the lineup's eye-level camera: stand edge ornaments square to the band (421 dragon scallops).
+- A blade held point-first reads end-on in the idle: a rest pose turning it flat-on cleared it with no camera change, so no RE-AUDIT (431 queen).

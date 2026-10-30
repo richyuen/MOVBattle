@@ -1,27 +1,24 @@
 # pirate.pirate_queen
-Status: open   Audited: 422, 426 (RE-AUDIT c)   Done: -
+Status: open   Audited: 422, 426 (RE-AUDIT c), 431 (CONFIRM: failed a)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (3 since 422)
- 4. the hips in unit_pirate.pirate_queen_idle - bare team legs from the tunic hem - TABS: a team wrap skirt with green beads at its hem over pink pants (ref: pirate.pirate_queen.red.png; card "red skirt with green beads")
-  (struck 1 at 427; 3 at 428; 2 at 430)
-b FAIL (2 since 422)
- 1. the off hand in unit_pirate.pirate_queen_idle - a long dark rod held low - TABS: a jewelled sabre, a slim curved blade on a tan hilt (ref: pirate.pirate_queen.red.png; card Main Hand Piratequeen's Sabre / Appearance "jewel-embedded custom Sabre")
- 2. the main-hand blade in unit_pirate.pirate_queen_idle - a straight broad double-edged sword with a cross guard - TABS: an unusually big curved cutlass with a tan guard (ref: pirate.pirate_queen.red.png; card "unusually big Cutlass")
-c PASS (427: Bomb Spin - arms out, seven bombs out round her, she rises)
-d PASS (cost 2500, hp 36.57x, dmg 2.68x, cd 0.76x; 430 stats)
+a FAIL (0 since 431; the CONFIRM 431 list)
+ 1. front of the lower body in unit_pirate.pirate_queen_idle reads as pale baggy trousers from hip to knee — TABS: a team-colour skirt hanging over the front to the knees with a slanted hem (ref: pirate.pirate_queen.red.png, card Appearance "a red skirt with green beads around it")
+ 2. arms in unit_pirate.pirate_queen_idle are bare from the shoulder below a sleeveless dark block vest — TABS: puffy short team sleeves over a laced shirt (ref: pirate.pirate_queen.red.png, card Appearance "red short-sleeved shirt")
+ 3. hair in unit_pirate.pirate_queen_idle is flat black hanging at the sides of the bandana — TABS: beaded dreadlocks sprouting up above the bandana (ref: pirate.pirate_queen.red.png, pirate.pirate_queen.png, card Appearance "curly long hair with hair beads")
+b PASS (431: both blades crossed in an X at rest, the big cutlass and the jewelled sabre; CONFIRM 431)
+c PASS (427: Bomb Spin - arms out, seven bombs out round her, she rises; CONFIRM 431)
+d PASS (cost 2500, hp 36.57x, dmg 2.68x, cd 0.76x; 431 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-0. evidence commit first on b.2: the idle shows the blade end-on (critic 430); the big cutlass shows in unit_pirate.pirate_queen_release - re-aim the blocker's shot (capture.mjs) before any b pick
-1. [S] a skirt - blocker 4: queenSkirt, a faceted team wrap skirt from waist to knee, a slanted hem, a row of green bead balls along it (pirateDress) - ref: pirate.pirate_queen.red.png - ours: unit_pirate.pirate_queen_idle (430 rank 2)
-2. [S] b off-hand sabre - blocker 1: the slim CUTLASS (tan hilt, red jewel) in the off hand blade up, crossed over the main blade as in the render - ref: pirate.pirate_queen.red.png - ours: unit_pirate.pirate_queen_idle (430 rank 3)
+1. [S] a skirt front - blocker 1: QUEEN_SKIRT's front reads as pale trousers: the team skirt covering the front to the knee, the slant steeper, pants hidden above the knee - ref: pirate.pirate_queen.red.png - ours: unit_pirate.pirate_queen_idle (CONFIRM 431)
+2. [S] a sleeves + shirt - blocker 2: puffy short team sleeves over each upper arm, a laced team shirt over the dark trunk - ref: pirate.pirate_queen.red.png - ours: unit_pirate.pirate_queen_idle (CONFIRM 431)
+3. [S] a dreads - blocker 3: beaded dreadlocks sprouting up and out above the bandana (pirateDress queenHair) - ref: pirate.pirate_queen.png - ours: unit_pirate.pirate_queen_ability (CONFIRM 431)
 ## Attempts (iter | gap | criterion | verdict)
-425 | CUTLASS curved blade, tan cup hilt, both fists (e5226412) | b | approved (none struck)
-426-427 | CUTLASS_SLASH blow; BOMB_SPIN + _POSE whirl, 7 bombs (45024151, 4e116860) | c | approved (c PASS)
-427 | QUEEN_BANDANA team cap, flap over her left eye, knot and tails (2a45e931) | a | approved (struck 1)
-428 | QUEEN_SASH brown strap right shoulder to left hip, four black bombs (72765079, cfa8f57b) | a | approved (struck 3)
-430 | QUEEN_HAIR black pirateHair locks, curl lumps, tan beads (7899b9c6) | a | approved (struck 2)
-430 | QUEEN_CUTLASS big curved main blade, weaponVariant queen_cutlass (83f4e760) | b | approved (none struck: idle shows it end-on)
+425-427 | CUTLASS both fists; CUTLASS_SLASH; BOMB_SPIN; QUEEN_BANDANA | a,b,c | approved (c PASS; struck a.1)
+428-430 | QUEEN_SASH; QUEEN_HAIR; QUEEN_CUTLASS (72765079, 7899b9c6, 83f4e760) | a, b | approved (struck a.3, a.2)
+431 | QUEEN_GUARD _restQueenBlades crossed blades (fe03e273) | b | approved (struck 1, 2; b PASS; CONFIRM passed b)
+431 | QUEEN_SKIRT wrap skirt, green beads, pale pants (d06b4abd) | a | approved (struck 4; a PASS; CONFIRM failed a)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 427 defects: bandana cap a stiff box wider than the head (TABS tied tight); the 7 bombs leave in one frame at one height (TABS flung out through the whirl).
-- Evidence 427: capture no longer counts the spin's bombs as her release (missile within 12 ticks of a special); release = melee hit ~2.5 s, ability = bombspin.
-- 426 defect: release a level thrust at shoulder height (TABS sweeping low). Her blow is CUTLASS_SLASH (no "slam").
+- 431 critic: blades cross high near the face (TABS mid-chest); skirt ends above the knee, slant shallow.
+- 427 defects: bandana cap a stiff box wider than the head; the 7 bombs leave in one frame at one height.
+- Evidence 427: release = melee hit ~2.5 s, ability = bombspin. Her blow is CUTLASS_SLASH (no "slam").

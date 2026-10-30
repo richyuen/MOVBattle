@@ -12,14 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-426 | CUTLASS_SLASH for the queen's blow, carried through a step (45024151) | pirate.pirate_queen.c | approved
-426 | BLUNDERBUSS_RECOIL shooter thrown off his feet (fb6f0227) | pirate.blunderbuss.c | approved
-426 | PISTOL_SHOT bell flash + ball streak (7e83d5a4) | pirate.flintlock.c | approved
-426 | CANNON_SIGHT ring crosshair (bd059354) | pirate.cannon.a | approved
-426 | BARREL_ARMOUR staves, hoops, straps (c311013a) | pirate.blunderbuss.a | approved
-426 | OPEN_COAT team coat, tan lapels, white V (04163e67) | pirate.harpooner.a | approved
-426 | [P] BLUNDERBUSS.long .62 -> .9 (d0bc1b09, reverted) | pirate.blunderbuss.b | rejected (ledger reversal)
-426 | PIRATE_KICK + PIRATE_KICK_POSE (1ae5476f, 9476aac6) | pirate.harpooner.c | approved
 427 | BOMB_SPIN + BOMB_SPIN_POSE, projectile at/flight (4e116860) | pirate.pirate_queen.c | approved
 427 | BLUNDERBUSS_BLAST target launch (9afd1177) | pirate.blunderbuss.c | approved
 427 | PLANK_HAT (01fa4757) | pirate.blunderbuss.a | approved
@@ -49,6 +41,15 @@ for 25 iterations.
 430 | CAPTAIN_PARROTS blue + red on the tricorn (674c7165) | pirate.captain.a | approved
 430 | QUEEN_CUTLASS big curved main-hand blade (83f4e760) | pirate.pirate_queen.b | approved
 430 | [R] MONKEY_FACE peach mask + MONKEY_ROBE team, orange band, no skirt/cape (80235174) | dynasty.monkey_king.a | approved
+431 | [R] DRAGON_FORM lion-dog head (cheeks, beak, cream brow, horns, hanging tongue) + tube body, crest, frills (3e94ecfa, 48329bf4) | dynasty.dragon.a | approved
+431 | team CANNON_BANDANNA on flintlock + bomb thrower, accent bandana hat off (6561ba6f) | pirate.flintlock.a | approved
+431 | PIRATE_BELT leather band + square tan buckle (8d798815, 67e6d6eb) | pirate.bomb_thrower.a | approved
+431 | CAPTAIN_BEARD pirateBeard brown + moustache + chest run (927e8a7a, ee1ab3a9) | pirate.captain.a | approved
+431 | CUTLASS bowl guard + rolled rim (3021427b) | pirate.captain.b | approved
+431 | QUEEN_GUARD _restQueenBlades crossed blades at rest (fe03e273) | pirate.pirate_queen.b | approved
+431 | QUEEN_SKIRT wrap skirt, slanted hem, green beads, pale pants (d06b4abd) | pirate.pirate_queen.a | approved
+431 | BLUNDERBUSS rebuilt full length (8addafc1) | pirate.blunderbuss.b | approved
+431 | [P] unitVisuals harpooner scale 1.05 -> 1.3 (ec00c268) | pirate.harpooner.a | approved
 
 ## Spent (never retry as [P])
 
@@ -64,18 +65,16 @@ dynasty.ninja done 411-413 rows (NINJA_HOOD, SHURIKEN, NINJA_GI, SHURIKEN_FLIGHT
 dynasty.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 411 | stats | values: git show cc4f7de
 dynasty.samurai + firework_archer + monk done (KABUTO, KATANA_REST, KATANA_STEEL, SAMURAI_BLOCK + SLASH_ARC, SAMURAI_CUIRASS, SAMURAI_HAKAMA, ARCHER_HAIR, ARCHER_ROBE, ARCHER_LEGS, KASA_GOLD, FIREWORK_BOW/ROCKET/NOCK/BURST/REST, TENGU_MASK) | compacted 422 | 421 | approved | values: git show 268e1355:loop/LEDGER.md
 visualEffects.ts:FLAME_JET (blobs, near, far, farPer, swell, lobes, lobe, lobeOff, flicker, fade; white, yellow) + simulationSystem DRAGON_BREATH (seconds, ahead, down, chest) | 12, .4, 1.4, .19, .35, 3, .5, .68, .14, .2; (1,.97,.85), (1,.78,.04); .7, .4, .3, .9 | 421 | approved | cones core .12->.7, shell .25->1.3 alpha .7, 5 puffs .35 (416-420); a lobbed fireball (before 416)
-dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, step, bodyY, bodyTail, sway, tall, taper, thick, scallop, fin, finWide, frillMix) | .62 (size 2 at 417), 1.95, .5, .2, [.2,.36], 9, .33, 1.45, 1.35, .18, .6 (on edge), .44, .05, .16, .13, .14, .4 | 422 | approved | band level wide .75, scallops .05 out on both edges (421); boxes seg [.36,.32,.36], dark cone fin .14, gold belly (416-420); dragon_head mask hat (before 416)
+dynastyDress.ts:DRAGON_FORM [R] (cheek, cheekAt, lip, rim, rimY, nose, eye, eyeAt, brow, browY, horn, jaw, jawY, tongue, tongueWide, tongueTo; bodyR, taper, crest, frill) | .5, [.5,-.3,.72], .38, 1.85, -.74, [.55,.7], .17, [.46,.3], [.72,.17,.24], .66, .15, .58, -1.32, .11, 2.4, .72; .24, .5, .24, .13 | 431 | approved | box snout + DRAGON_MUZZLE, band on edge tall .6 + scallops/fins (416-430): git show 3d4a557c:loop/LEDGER.md
 dynasty.hwacha done (HWACHA_RACK, HWACHA_ROCKET, HWACHA_WHEEL, LAUNCH_SMOKE, HWACHA_SHAFT, HWACHA_TIMBER) | compacted 421 | 420 | approved | values: git show 7f580c19:loop/LEDGER.md
 dynastyDress.ts:MONKEY_RUYI (long, thick, centre, sleeve, sleeveWide, cap) + MONKEY_TAIL (root, tip) | 1.7, .017, .16, .25, 1.3, .05; .045, .035 | 427 | approved | MONKEY_STAFF 1.35, .024, offset .12 L, ends .2 (416-426); bo_staff .85 (before 416)
 simulationSystem.ts:BO_SHOVE monk; monkey_king (speed, lift) | 4.2, 2.4; 8.5, 5.5 (418) | 417-418 | approved | no throw (before 417)
 dynastyDress.ts:DRAGON_CARRIER (every, leg, legLong, trunk, head, arm, grip) | 3, .09, .35 (418; .45 at 417), [.26,.32,.16], .17, .06, .16 | 417 | approved | no carriers (before 417)
 dynastyDress.ts:DRAGON_CARRIER.poleColor | (.85,.24,.12) | 418 | approved | team (417)
 visualEffects.ts:BODY_FLAMES (tongues, spread, low, high, tall, wide, flicker) + DRAGON_BREATH.burn | 9, .2, .55, 1.35, .42, .17, 13; 3 | 419 | approved | none (before 419)
-dynastyDress.ts:DRAGON_FORM.tongue [wide, long] (lies in the mouth) | .2, .36 | 419 | approved | .17, .55 hanging (416)
 ancient.minotaur 402-415 rows (MINO_GIRDLE, MINO_SHELL, BULL_HEAD, MINO_STRAP + .clear, MINO_LEGS, MINO_BARREL, MINO_ARMS, BULL_MUZZLE, MINO_LATHE) | compacted 420 | 415 | approved | values: git show a1460c56:loop/LEDGER.md
 ancientDress.ts:MINO_STRAP (wide, proud) + MINO_GIRDLE (lo, hi, proudX, proudZ; off MINO_BARREL.profile) + MINO_CAP (inX, atY, radius, squash, droop, rim, swirl) + unitVisuals minotaur scale | .2, .04; -.08, .3, 1.07, 1.09; .98, .94, .72, .55, .4, .14, .6; 1.4 | 420 | approved | strap .44/.32, girdle -.3/.03/1.03/1.1 off the pelvis, MINO_SHELL plank, scale 2.1 (402-419)
 dynastyDress.ts:MONKEY_CROWN (feather, featherWide, belly, stem, flat, spine, spineProud, lean) | 2.3, .55, .4, .3, .18, .14, .6, .32 | 424 | approved | rod feathers 2.6 x .2, lean .3 (420-423); torus crown hat (before 420)
-dynastyDress.ts:DRAGON_MUZZLE (bevel, tan, rim, rimDeep, diamonds, diamond, diamondAt, diamondStep, diamondUp) + FRONT_GRIP (long, wraps, band, out, twist) | .22, (.72,.54,.32), .05, .06, 2, .11, .45, .25, .25; .24, 5, .022, 1.75, .25 | 424 | approved | icosphere snout; team head pole, grip .18 (before 424)
 dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, fist, fistAt, poleAhead, elbowOut; arm material, fist material) | .075, .28, .22, .2, .09, .56, .07, .05; trousers, dark | 422 | approved | pole beside the head poleSide .17, fists at .99 h on one straight skin arm each (420-421; [P] 421 arm .1, fist .12 skin rejected as a ledger reversal); arm .06, pole through the head (417-419)
 dynastyDress.ts:MONKEY_FACE [R] (plate, chin, brow, cheek, cheekAt, browTall, browOut, muzzle, muzzleY, muzzleZ, strip) | .08, -1, .6, [.5,.42,.3], [.58,-.52,1], .22, .22, [.5,.42,.42], -.66, 1.2, .26 | 430 | approved | dark plate .1, muzzle box 1.1, 8 blond tufts (421-429); bare team head (before 421)
 dynastyDress.ts:MONKEY_SHORTS (hipOut, puffAt, puff, kneeOut, kneeTo, cuffOut, shoeOut, shoeTall, toe, toeWide, toeLift, anklet, ankletOut) | 1.7, .5, 2.3, 1.45, .14, 1.6, 1.15, .78, 1.2, 1.5, .55, .4, 1.25 | 422 | approved | puff 2.7, hip 1.8, knee 1.5 (422.3, ballooned); slim trouser legs, plain boots (before 422)
@@ -98,4 +97,10 @@ pirateDress.ts:PIRATE_BEARD (jaw, under, foot, ahead, burn, burnBack, burnFront,
 pirateDress.ts:BLUNDERBUSS_HAIR (top, drop, side, cap; color) | .95, -1.55, .3, 1.1; (.28,.135,.09) | 430 | approved | none (before 430)
 pirateDress.ts:QUEEN_HAIR (side, drop, splay, curls, curl, beads, bead) | .36, -2, .16, 4, .42, 3, .18 | 430 | approved | none (before 430)
 pirateDress.ts:CAPTAIN_PARROTS (x, y, z, size, turn, body, head, headY, beak, tail, tailLean) | 1.15, .55, .35, 1, .35, [.32,.5,.34], .27, 1.05, .16, .75, .45 | 430 | approved | none (before 430)
-propBuilder.ts:QUEEN_CUTLASS (long, wide, taper, curve, segs, cup) | .66, .1, .5, .24, 7, 4.2 | 430 | approved | CUTLASS .5, .05, .55, .13, 6, 3.4 (425-429)
+propBuilder.ts:QUEEN_CUTLASS (long, wide, taper, curve, segs, cup) | .66, .1, .5, .24, 7, 4.2 | 430 | approved | CUTLASS .5, .05, .55, .13, 6, 3.4 (425-429); CUTLASS bowl .38, rim .32 (431, bowl guard replaces the frustum cup)
+pirateDress.ts:PIRATE_BELT (tall, at, out, deep, buckle, bar, proud; leather, tan) | .18, -.6, 1.18, 1.4, .34, .2, .06; (.62,.22,.1), (.8,.6,.35) | 431 | approved | at -.84 tall .13 (431.3, hid behind the sash); none (before 431)
+pirateDress.ts:CAPTAIN_BEARD (tash, tashTall, tashAhead, droop, run, proud; color) | 1.15, .2, .1, .22, [.46,.42,.34], .3; (.4,.2,.12) | 431 | approved | run [.44,.34,.3] proud .42 lower (431.4, floated); none (before 431)
+pirateDress.ts:QUEEN_SKIRT (top, knee, out, flare, deep, slant, beads, bead, pantsOut, shin, pale; green) | .14, .92, 1.06, 1.45, 1.25, .32, 7, .11, 1.14, .6, .4; (.12,.55,.3) | 431 | approved | none (before 431)
+proceduralAnimation.ts:QUEEN_GUARD (out, ahead, drop, cross, lean, stagger) | .05, .14, .3, .6, .2, .04 | 431 | approved | blades held point-first, end-on (before 431)
+propBuilder.ts:BLUNDERBUSS [S] (long, grip, bore, flare, mouth, stock, fore, ramrod, wrist, heel, drop, offAt) | .92, .3, .05, .42, 2.8, 1.3, .84, .24, .75, .15, .28, .42 | 431 | approved | .62, .24, .075, bell .2, 3.3, 1.2, .62, heel .16, offAt .5 (425-430)
+unitVisuals.ts:pirate.harpooner scale | 1.3 | 431 | approved | 1.05 (before 431)
