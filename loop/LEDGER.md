@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-412 | _restIceBow grip seat: the stave slid so its grip lands on the fist in the world (6ae7e0f + c508944) | viking.ice_archer.b | approved
-412 | TENGU_MASK: mask plate, orange nose, fanged grimace (2070597) | dynasty.monk.a | approved
-412 | NINJA_GI: loose gi, light V, lapels, knotted sash, sleeves (b2d03e9) | dynasty.ninja.a | approved
-412 | SHURIKEN_FLIGHT: dark four-point star spinning flat (0245af2) | dynasty.ninja.c | approved
-412 | MONK_SWING: bo cocked over the shoulder, swept across; blowLandsIn hold (3b45ede + 52ae020) | dynasty.monk.c | approved
-412 | ARCHER_HAIR: dark hair cap, fall, locks, knot; hat off (772d55d) | dynasty.firework_archer.a | approved
 413 | NINJA_TROUSERS: wide trousers to the knee, banded shin wraps (5f70ce2) | dynasty.ninja.a | approved
 413 | KASA_GOLD: team kasa, gold rim + knob (75c0cb4; evidence b9005cd + c00e8e5) | dynasty.monk.a | approved
 413 | firework_bow: tall brown stave, orange caps, iceBowCarry carry (bb471b5) | dynasty.firework_archer.b | approved
@@ -33,6 +27,13 @@ for 25 iterations.
 415 | MONK_ARM_PLATES: team lamellar rows, gold rims (4db0bf1d) | dynasty.monk.a | approved
 415 | NORSE_BOARD + _restNorseBoard: board plumb before him (b8bdfcee) | viking.brawler.b | approved
 415 | [P] BRAWLER_HATCHET.haft .67 (2d2156d4) | viking.brawler.b | approved
+416 | FLAME_JET + DRAGON_BREATH: held flame jet from the mouth (799cefaa) | dynasty.dragon.c | approved
+416 | DRAGON_FORM: paper head on a pole, body ribbon (3ac0c32c) | dynasty.dragon.a | approved
+416 | HWACHA_RACK: upright 10x6 lattice (50d2eac3) | dynasty.hwacha.a | approved
+416 | HWACHA_ROCKET: banded tube, flame trail (65915a61) | dynasty.hwacha.c | approved
+416 | MONKEY_STAFF: long team staff, gold ends (10e4da35) | dynasty.monkey_king.b | approved
+416 | MONKEY_TAIL: tail over the head (f97d38f2) | dynasty.monkey_king.a | approved
+416 | [P] KATANA_STEEL light blade (52fa1771) | dynasty.samurai.b | approved
 
 ## Spent (never retry as [P])
 
@@ -47,30 +48,23 @@ ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare, sides, rimGrow, ligh
 ancientDress.ts:MINO_SHELL wedge plate (inX, atY, long, lip, lipBend, thick, rootDeep, tipDeep, faceUp, droop, swirl) | .85, .86, .85, .3, .45, .14, .7, .95, .3, .18, .3 | 404 | approved | .78/.84/.5/.22/.12/.62/.82/.22 (404.6); curved shell + scrolls .3 at 1.3, .24 at .95 (385-403)
 propBuilder.ts:BULL_HEAD (drop, forward, face, tilt, neck/neckTop/neckBottom/neckLean, dewlap) | -.4, .12, .86, .12, 1.0/1.0/1.55/.22, .22 | 406 | approved | .72, .28, 1.0, .15, .42/1.0/1.6/.3 (403); tilt .72 (402, muzzle at the ground); no drop/forward, tilt .5, neck .9/.9/1.5/.35 (382)
 simulationSystem.ts:LONGSHIP_OARS (reach, damage, push) + vehicleBuilder OAR_CHOP (period, strike, up, down, elbow, spread) | 1.5, 12, 1.2; 1.1, .3, -2.75, -.55, -.3, .14 | 403 | approved | the oars dropped at the crash (396-402)
-vikingDress.ts:JARL_BEARD_RUN (bibDrop, bibWide, bibTip, plaitLong, plait, flat, ties, lobes, overlap, shade) + JARL_BEARD color/jaw | .3, .34, .55, .46, .15, .5, 1, 4, 1.4, .75; (.32,.25,.22), jaw .62 | 410 | approved | tube to the plait .4/.62/.4/.4/.18 (.34,.22,.16) jaw .9 (409); bib cylinder (402-408)
-vikingDress.ts:HEADBUTTER_CAP (dome, tall, strip, stripProud, eyeClear) + unitVisuals headSize | 1.1, .72, .2, .04, .03 off eyeTopInHead; 1.3 | 404 | approved | rise .16 fixed (403); 1.16, 1.04, no strip; headSize 1.8 (392-402)
+viking done rows (JARL_PELT, JARL_BEARD_RUN, JARL_BELT, JARL_WRAPS, JARL_FLAPS, JARL_CRESCENT, HEADBUTTER_CAP, LONGSHIP_CARRIER) | compacted 416 | 409 | approved | values: git show a312f052:loop/LEDGER.md
 viking c/done rows (BERSERKER_ARMPITS, BRAWLER_HELM, DIVE, HEADBUTT + SPRAWL.delay, headbuttSprawl) | compacted 406 | 401 | approved | values: git show 9c743e0:loop/LEDGER.md
 
-vikingDress.ts:JARL_WRAPS (from, to, out, bands, band, bandOut, furAt, furOut, furThick, lumps; maroon, dark) | .1, .94, 1.24, 3, .05, 1.3, .1, 1.42, .34, 7; (.3,.06,.07), (.16,.03,.04) glow .25 | 404 | approved | bare forearms (before 404)
 vehicleBuilder.ts:LONGSHIP gunwale material + wrapAsBody source | darkWood; first longshipShield face | 404 | approved | teamPrimary rails as the body source (392-403)
 vikingDress.ts:ICE_ARCHER_BAND (leather, rivet, glow, rivets, rivetSize, rivetProud) | (.26,.12,.06), (.5,.48,.44), .14, 8, .42, .8 | 405 | approved | the brim a pale fur roll ICE_ARCHER_FUR (396-404)
 ancientDress.ts:MINO_STRAP (wide, proud, footX, footY, buckleAt) | .44, .32, .95, .06, .3 | 405 | approved | MINO_SASH .3 wide .03 thick flat on the chest, foot .85/.12, buckle at .68 (383-404)
 propBuilder.ts:ICE_BOW (thick, taper, bow, recurve, crust, flake, flakeLift, tip) | .04, .5, .1, .035, 4, .07, .22, .06 | 406 | approved | thick .062 taper .45 bow .06, fringe 6 x .15, crowns 4 x .16, snow .105 (392-405)
 vehicleBuilder.ts:longship SHEER (half, pinch, pow, rise, bow, segs) | 1.3, .8, 3, .34, 1.25, 12 | 406 | approved | straight strakes 2.56-.16r, straight rails 2.42, flat deck .82 x 2.34 (392-405)
-vikingDress.ts:JARL_BELT (tall, at, out, rim, ring, ringThick, proud; leather, rimDark, metal) | .24, -.74, 1.2, .2, .24, .3, 1.08; (.24,.13,.07), (.13,.07,.04), (.55,.52,.48) | 406 | approved | jarlPeltMantle .86/.24/.68/.94 over the chest + tunicSkirt (401-405)
 unitVisuals.ts:viking.headbutter legLength + proceduralAnimation standSquare | .92 default, hip-shot idle (reverted) | 406 | rejected | 1.22 + HALBERD_SQUARE stance rejected 406: upright but belt-to-sole unmoved (41%)
 vehicleBuilder.ts:longship PLANKS (count, wide) + shieldDark/shieldBoss | 3, .035; (.14,.08,.05)/(.2,.13,.08) | 405 | approved | a dark half disc (.1,.11,.16), boss (.56,.36,.15) (395-404)
-propBuilder.ts:JARL_CRESCENT (neck, hornUp, beardDown, hornX, beardX, bulge, edge; steel) | .07, .15, .2, .98, .82, .12, .13; (.16,.165,.19) glow .08 | 407 | approved | the rounded paddle outline in JARL_AXE.steel (392-406)
 vikingDress.ts:BRAWLER_BEARD (jaw, jawY, jawZ; bibDrop, bibWide, bibTip, bibLean; spillFrom/To, spillWide; colour) | [1.5,.95,.8], 1.0, .55; .28, .6, .72, .08; (.085,.15)/(.12,-.05), .11; (.13,.065,.045) | 407 | approved | the VIKING_BEARD brawler cut (0.32,.15,.11) glow .22 (396-406)
-vikingDress.ts:JARL_FLAPS (out, capWide, capTall, capBack, wide, tip, deep, proud, lean, past, tufts) | .3, .3, .16, .3, .32, .8, .16, .03, .06, .04, 3 | 407 | approved | jarlPeltSide panels .18/.58 + chest strips .2/.23 (401-406)
 vikingDress.ts:HEADBUTTER_LEGS + unitVisuals headbutter shinLength/torsoLength | hemTo .62, hemOut 1.44, cuff .58-.76, bootFrom .74; 1.75, .82 | 407 | approved | the BRAWLER_LEGS cut, shin 1, torso 1 (405-406)
 proceduralAnimation.ts:ICE_UPRIGHT (raise, out, elbow, tip, yaw, stagger, give) | -.85, -.2, -1.3, [.16,1,.06], .12, .06, .02 | 407 | approved | the hashed bowman hold (before 407); tip [-.42,1,.12] raise -.7 (407.5)
-vikingDress.ts:LONGSHIP_CARRIER (beard, down, wide, tip; band, bandY, bandOut, horn, hornBase, hornSplay) | (.42,.22,.11), .75, 1.0, .5; .22, .32, 1.08, .85, .32, .55 | 407 | approved | the oarsmen's horned team cap + plain belt (401-406)
 ancientDress.ts:MINO_LEGS (thigh, shin, toeWide, toeTall, toeDeep, cleft, toeAhead, toeSlope, pastern, hockUp, hockBack, hock) + thighShell/calfShell/calfTo | .7, .58, ... (407 values); 1.95, 2.0, .6 | 410 | approved | no sleeves (407-409)
 viking.valkyrie + ancient.zeus done (VALKYRIE_ARMOUR/COLLAR/HELM/SWORD, SWORD_WINGS, ZEUS_TOGA + .boltGap, ZEUS_BEARD, glowLayer group 0 / bolt group 1) | compacted 407 | 406 | approved | values: git show 978f707:loop/LEDGER.md
 vikingDress.ts:HEADBUTTER_TUNIC (out, deep, sleeve, sleeveOut, glow) | 1.05, 1.08, .42, 1.2, .12 | 408 | approved | the viking_fur-tinted trunk + body-material tunicSkirt (before 408)
 vikingDress.ts:ICE_ARCHER_SNOWCAP (lumps, out, big, small, spread, sit, squash) | 4, .4, .2, [.7,.6,.55], .09, .05, .75 | 408 | approved | ICE_ARCHER_MANTLE ring + 10 points + 8 lumps (402-407)
-vikingDress.ts:JARL_PELT bear head (skullW/H/D/Y/Z, eye/eyeOut/eyeY/eyeProud, muzzle/Tall/Long/Z, fangs/fang/fangOut/fangClear, ear/earY) | 1.45/1/1.35/1.25/-.05, .3/.44/1.5/1.32, .66/.42/.72/1.3, 2/.3/.17/.05, .3/2.0 | 408 | approved | 1.3/.95/1.3/.58/-.1, eye .24 at .6, muzzle .44 at .12, 3 teeth .1 (400-407)
 ancientDress.ts:MINO_STRAP.clear (foot over the girdle's measured top, trunk heights) | .03 | 408 | approved | footY .06 fixed (405-407)
 proceduralAnimation.ts:JARL_REST (ahead, inward, drop, across, forward) | .12, .02, .36, .95, .2 | 408 | approved | HALBERD_REST upright .05 tilt (392-407)
 vehicleBuilder.ts:LONGSHIP_PROW (lift, root, tip, eye, path) | .75, .11, .085, .2, S from (.95,1.3) to (2.0,1.38) | 408 | approved | neck box .18x.66 at y .9, bead eyes .1 (392-407)
@@ -96,3 +90,9 @@ propBuilder.ts:BRAWLER_HATCHET (scale, steel, haft) | .6, (.11,.11,.12), .67 | 4
 ancientDress.ts:MINO_LATHE (thigh, shin profiles; radius, facets) | thigh .92/1.04/.96/.8/.66, shin .74/.8/.64/.46/.38; 1.4, 7 | 415 | approved | limbShell sleeves thigh 1.95, calf 2.0 to .6 (410)
 dynastyDress.ts:MONK_ARM_PLATES (rows, out, overlap, rim, rimOut, shade) | 3, 1.5, .08, .05, 1.62, .9 | 415 | approved | bare arms (before 415)
 proceduralAnimation.ts:NORSE_BOARD (ahead, drop, inward) | .06, .05, .6 | 415 | approved | the hand-carried tray board (before 415)
+visualEffects.ts:FLAME_JET (core, coreFar, shell, shellFar, shellAlpha, flicker, puffs, puff) + simulationSystem DRAGON_BREATH (seconds, ahead, down, chest) | .12, .7, .25, 1.3, .7, .18, 5, .35; .7, .4, .3, .9 | 416 | approved | a lobbed fireball (before 416)
+dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, seg, bodyY, bodyTail, sway, fin) | .62, 1.45, .45, .2, [.17,.55], 9, [.36,.32,.36], 1.3, .85, .18, .14 | 416 | approved | dragon_head mask hat (before 416)
+vehicleBuilder.ts:HWACHA_RACK (cols, rows, cell, post, lath, depth, seatY, seatZ, lean, headSize, headLong, wood) | 10, 6, .11, .06, .018, .22, .5, .12, .22, .36, 1.3, (.72,.45,.24) | 416 | approved | team box, 6x5 tubes, tilt 1.15 (before 416)
+projectileSystem.ts:HWACHA_ROCKET (long, shaft, tube, wide, bands, head, flame) | .7, .025, .24, .07, 3, .09, .42 | 416 | approved | .4 shaft, flame ball (before 416)
+dynastyDress.ts:MONKEY_STAFF (long, thick, offset, end, endWide, bands) + MONKEY_TAIL (root, tip, path to 1.08 up) | 1.35, .024, .12, .2, 1.25, 2; .045, .035 | 416 | approved | bo_staff .85 (before 416); no tail
+propBuilder.ts:KATANA_STEEL | (.62,.64,.68) glow .12 | 416 | approved | (.9,.9,.95) metal preset (rendered near-black)
