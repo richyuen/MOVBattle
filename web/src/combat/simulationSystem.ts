@@ -127,6 +127,7 @@ const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
 const ICE_ARROWS = new Set(["viking.ice_archer"]);
 /** [S] 434 archers whose arrows fly burning (projectileSystem FIRE_ARROW) */
 const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
+const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
 const BURN_STATUS = { tick: 0.5, damage: 3, spread: 1.4, keep: 2 };
 // [S] 390 engines that fly the bolt they have loaded: a copy of the named node leaves the muzzle and the loaded one is gone until half the reload is past (vehicleBuilder ballistaLoadedBolt)
 const LOADED_BOLTS: Record<string, string> = { "ancient.ballista": "ballistaLoadedBolt" };
@@ -660,6 +661,7 @@ export class SimulationSystem {
 
   beginSimulation(now: number): void {
     this._burnTickAt = 0;
+    this._fearHits.clear();
     this._pendingBlows = [];
     this._clings.clear();
     this._pendingThrows = [];
@@ -1102,6 +1104,16 @@ export class SimulationSystem {
       const seed = this._units.indexOf(unit) * 2.4;
       const a = seed + now * DRUNK_WANDER.swing + Math.sin(now * 2.3 + seed) * 1.2;
       unit.moveTo(unit.position.add(new Vector3(Math.sin(a), 0, Math.cos(a)).scale(DRUNK_WANDER.reach)));
+      this._clearPathState(unit);
+      return;
+    }
+
+    // Frightened (RuntimeUnit.applyFear, Stiffy Fear): he does not fight, he runs straight away from the man who scared him
+    if (unit.isAfraid(now)) {
+      const away = unit.position.subtract(unit.fearFrom);
+      away.y = 0;
+      if (away.lengthSquared() < 1e-4) away.set(1, 0, 0);
+      unit.moveTo(unit.position.add(away.normalize().scale(STIFFY_FEAR.reach)));
       this._clearPathState(unit);
       return;
     }
@@ -3180,6 +3192,15 @@ export class SimulationSystem {
       if (this.visualEffects) this.visualEffects.spawnFireBurst(target.position);
       this._logAbility(attacker, "status:fire", now, target.position);
     }
+    // [S] 435 Stiffy Fear (RuntimeUnit.applyFear): every STIFFY_FEAR.every-th blow of a skeleton warrior's, the first included, frightens the man it lands on
+    if (STIFFY_FEAR.units.has(attacker.definition.id) && !target.isDead) {
+      const n = this._fearHits.get(attacker) ?? 0;
+      this._fearHits.set(attacker, n + 1);
+      if (n % STIFFY_FEAR.every === 0) {
+        target.applyFear(STIFFY_FEAR.seconds, attacker.position, now);
+        this._logAbility(attacker, "status:fear", now, target.position);
+      }
+    }
     if (abilities.has("poison")) {
       target.applyDamage(6, Vector3.Zero());
       this._logAbility(attacker, "status:poison", now, target.position);
@@ -3195,6 +3216,7 @@ export class SimulationSystem {
    * takes .damage, and while more than .keep of his burn is left a man of his own side within .spread m who is not burning catches it.
    */
   private _burnTickAt = 0;
+  private _fearHits = new Map<RuntimeUnit, number>();
   private _stepBurning(now: number): void {
     if (now < this._burnTickAt) return;
     this._burnTickAt = now + BURN_STATUS.tick;

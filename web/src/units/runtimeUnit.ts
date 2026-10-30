@@ -37,6 +37,7 @@ const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45, coat: new 
  * [S] the ice crust a freeze leaves on its target (395, see _applyFrostCrust): shards of pale ice on the trunk, head, arms and thighs.
  */
 const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 0.28 };
+const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
 const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
 /*
  * [S] full gild (352; card Appearance: "turning them gold for a moment"). While gilded every opaque mesh of him (skin, clothes, armour, helm, the props in
@@ -1700,6 +1701,7 @@ export class RuntimeUnit {
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
     this._applyFrostCrust(now);
     this._applyBurnFlames(now);
+    this._applyFearSkull(now);
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {
@@ -1977,6 +1979,65 @@ export class RuntimeUnit {
     }
   }
 
+  /*
+   * [S] 435 Stiffy Fear (audit 434 spooky.skeleton_warrior c.1: "missing: Stiffy Fear (purple skull over a struck enemy, enemy flees)"; card Abilities
+   * "a bright purple skull to appear over enemy units' heads which makes them run away from the battle in fear"). While `_fearUntil` a frightened man
+   * wears a self-lit purple skull FEAR_SKULL.over head-heights above his head: a cranium ball .skull of a head wide, a jaw box under it, two dark eye
+   * sockets and a nose notch on its front, bobbing; SimulationSystem._processUnitDecision runs him away from `_fearFrom` and he does not fight.
+   */
+  private _fearUntil = 0;
+  private _fearFrom = Vector3.Zero();
+  private _fearSkull: TransformNode | null = null;
+  applyFear(seconds: number, from: Vector3, now: number): void {
+    this._fearUntil = Math.max(this._fearUntil, now + Math.max(0.1, seconds));
+    this._fearFrom = from.clone();
+  }
+  isAfraid(now: number): boolean { return !this._isDead && now < this._fearUntil; }
+  get fearFrom(): Vector3 { return this._fearFrom; }
+  private _applyFearSkull(now: number): void {
+    const on = this.isAfraid(now);
+    if (!on) {
+      if (this._fearSkull) { this._fearSkull.dispose(false, false); this._fearSkull = null; }
+      return;
+    }
+    const head = this.body.headMesh;
+    if (!head || head.isDisposed()) return;
+    if (!this._fearSkull) {
+      const F = FEAR_SKULL;
+      const scene = head.getScene();
+      const e = head.getBoundingInfo().boundingBox.extendSize;
+      const w = Math.max(0.12, Math.max(e.x, e.z) * 2) * F.skull;
+      const factory = getMaterialFactory();
+      const bone = factory.get("cloth", F.purple, { emissive: F.purple.scale(F.glow) });
+      const dark = factory.get("cloth", F.dark, { emissive: F.dark.scale(0.2) });
+      const root = new TransformNode("fearSkull", scene);
+      const cranium = MeshBuilder.CreateSphere("fearSkullCranium", { diameter: w, segments: 8 }, scene);
+      cranium.scaling.set(1, 0.92, 1);
+      const jaw = MeshBuilder.CreateBox("fearSkullJaw", { width: w * 0.62, height: w * 0.32, depth: w * 0.6 }, scene);
+      jaw.position.set(0, -w * 0.45, w * 0.1);
+      const eyes: Mesh[] = [];
+      for (const side of [-1, 1]) {
+        const eye = MeshBuilder.CreateSphere("fearSkullEye", { diameter: w * 0.26, segments: 6 }, scene);
+        eye.position.set(side * w * 0.2, -w * 0.05, w * 0.41);
+        eye.scaling.set(1, 1.1, 0.5);
+        eyes.push(eye);
+      }
+      const nose = MeshBuilder.CreateBox("fearSkullNose", { width: w * 0.1, height: w * 0.14, depth: w * 0.1 }, scene);
+      nose.position.set(0, -w * 0.24, w * 0.44);
+      for (const m of [cranium, jaw]) { m.material = bone; m.parent = root; m.isPickable = false; }
+      for (const m of [...eyes, nose]) { m.material = dark; m.parent = root; m.isPickable = false; }
+      root.metadata = { w, headTop: e.y };
+      this._fearSkull = root;
+    }
+    const w = this._fearSkull.metadata.w as number;
+    head.computeWorldMatrix(true);
+    const top = head.getAbsolutePosition();
+    this._fearSkull.position.set(top.x, top.y + (this._fearSkull.metadata.headTop as number) * head.absoluteScaling.y + w * FEAR_SKULL.over + Math.sin(now * 6) * w * 0.08, top.z);
+    // face the way he faces, so the sockets read from the front three-quarter
+    const f = this._getFacingVector();
+    this._fearSkull.rotation.y = Math.atan2(f.x, f.z);
+  }
+
   private _applyFxPreset(fxPreset: FxPreset, isAttacking: boolean, now: number): void {
     if (this._applyDrunk(now)) return;
     const pulse = 0.08 + (isAttacking ? 0.14 : 0.04) * (0.5 + 0.5 * Math.sin(now * 8));
@@ -2117,6 +2178,7 @@ export class RuntimeUnit {
   }
 
   dispose(): void {
+    if (this._fearSkull) { this._fearSkull.dispose(false, false); this._fearSkull = null; }
     if (this._fxParticleSystem) {
       this._fxParticleSystem.stop();
       this._fxParticleSystem.dispose(false);
