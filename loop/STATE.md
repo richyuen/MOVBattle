@@ -1,5 +1,5 @@
 # Loop state (v5: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 422   Batch: dynasty+pirate (8-9/19)   Consecutive empty: 0   Done: 47/139   Parked: 0
+Iteration: 423   Batch: dynasty+pirate (8-9/19)   Consecutive empty: 0   Done: 47/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,24 +23,23 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+423 (BASE a8b91158): [S] flintlock b.1 pistol held out (5b56edc3, caf27b2a) struck 1, 3 | [S] harpooner b.1 breech block (3f4bf980, 18f56ed9) struck 1 | [S] cannon b.1 long barrel (b1f1f4aa) struck 1 | [S] captain a.1 skull plate (f22c1648) struck 1 | [S] flintlock a.1 open vest (e6ed0749) struck 1 | [S] bomb_thrower a.1 vest (9bb121db) struck 1 - 6/6, 7 struck
 422 (BASE dcac7be0; 422.0 pirate stats d PASS 7/7; pirate AUDIT, tail overlap): [S] dragon b.1 carrier grip (bf9ce7a9) struck 1 | [S] dragon a.5 band on edge (e7926245) struck 5 | [S] monkey_king a.3 shorts + shoes (8db34616, b9adb0a3) struck 3 | [S] monkey_king a.4 half robe (6ff201bb) struck 4, a PASS, CONFIRM failed a (3 new) and b (1 new) | [R] farmer.wheelbarrow a.1 riders' split, unparked by hand (4c36f7da) struck 1, a PASS, CONFIRM passed - D - 5/5, 5 struck
-421 (BASE 7f580c19): [S] dragon c.1 breath plume (ba799e89, 8027d61c) struck 1, c PASS | [S] dragon a.2 ribbon body (0a4f9754, 87e08299) struck 2, added 5 | [P] dragon b.1 fists in skin (91a86b90) REJECTED ledger reversal, reverted bf5051cd | [S] samurai a.1 shikoro + maedate (a810cff1) struck 1, a PASS, CONFIRM passed - D | [S] firework_archer a.4 shin wraps + sandals (1801625a) struck 4, a PASS, CONFIRM passed - D | [S] monkey_king a.2 baboon face (2dc865d6) struck 2 - 5/6, 6 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] dynasty.dragon (bf9ce7a9) VERDICT: APPROVE CRITERION: dynasty.dragon.b FAIL (previous: FAIL)
-- GAP: [S] dynasty.dragon (e7926245) VERDICT: APPROVE CRITERION: dynasty.dragon.a FAIL (previous: FAIL)
-- GAP: [S] dynasty.monkey_king (8db34616, follow-up b9adb0a3) VERDICT: APPROVE CRITERION: dynasty.monkey_king.a FAIL (previous: FAIL)
-- GAP: [S] dynasty.monkey_king (6ff201bb) VERDICT: APPROVE CRITERION: dynasty.monkey_king.a PASS (previous: FAIL)
-- CONFIRM dynasty.monkey_king a FAIL b FAIL c PASS d PASS (stays open with the confirmer's lists)
-- GAP: [R] farmer.wheelbarrow (4c36f7da) VERDICT: APPROVE CRITERION: farmer.wheelbarrow.a PASS (previous: FAIL)
-- CONFIRM farmer.wheelbarrow a PASS b PASS c PASS d PASS -> D (unparked by hand at the user's request; shots in output/loop/iter-422-wheelbarrow)
-- REGRESSIONS: none
+- GAP: [S] pirate.flintlock (5b56edc3, caf27b2a) VERDICT: APPROVE CRITERION: pirate.flintlock.b FAIL (previous: FAIL)
+- GAP: [S] pirate.harpooner (3f4bf980, 18f56ed9) VERDICT: APPROVE CRITERION: pirate.harpooner.b FAIL (previous: FAIL)
+- GAP: [S] pirate.cannon (b1f1f4aa) VERDICT: APPROVE CRITERION: pirate.cannon.b FAIL (previous: FAIL)
+- GAP: [S] pirate.captain (f22c1648) VERDICT: APPROVE CRITERION: pirate.captain.a FAIL (previous: FAIL)
+- GAP: [S] pirate.flintlock (e6ed0749) VERDICT: APPROVE CRITERION: pirate.flintlock.a FAIL (previous: FAIL)
+- GAP: [S] pirate.bomb_thrower (9bb121db) VERDICT: APPROVE CRITERION: pirate.bomb_thrower.a FAIL (previous: FAIL)
+- REGRESSIONS: none (bomb_thrower b and c still read)
 
 ## Notes for next iteration (max 5 lines)
-- Pickable [S]: dragon b.2 front carrier grip, a.4 muzzle, a.3 carrier trim, b.3 front pole colour (critic ranked 4 on the one open unit); monkey_king a.1 leaf feathers, b.1 staff 1.7x, a.3 blond hair ring (CONFIRM lists); pirate audit ranks: captain.c cutlass slash (find where his slung rod and two-handed rod carry come from first), flintlock.b pistol (shared prop), harpooner.b gun body, cannon.b barrel, captain.a skull plate, flintlock/bomb_thrower.a vest, harpooner.a tricorn. No [P] on offer.
-- Evidence commits first (outside the 7) before any pick on: pirate.blunderbuss (the shooter is out of the side-on frame at his 200 ms shot: windup/release/flight empty) and pirate.pirate_queen (her scene must outnumber her for Bomb Spin). Step 2 is done for pirate; no re-audit pending.
-- Step-5 captures wipe iter-N: copy a tail-overlap audit.md out first (done at 422, LESSONS). The 422 critic listed dragon defects (fists merge into one column, pole across the face, band edges level, fins even) and monkey defects (puff barrel-wide, toe a spike, tan right half, thin scarf) that are not blockers.
-- Shared props changed for batch units carry to later batches: katana (light steel 416) is also on Secret teacher, samurai_giant, shogun; the hwacha timber is its own material (HWACHA_TIMBER); strapSandals (ancientDress) dresses the firework archer too; the pirate flintlock musket prop is on gunslinger, quick_draw, bank_robbers and the pirate queen's off hand.
-- Starving: dragon a.3/a.4 never attempted (a's starvation clock runs from 422); monkey_king b at 427 (last attempt 416).
+- Pickable [S]: dragon b.2 front carrier grip, a.4 muzzle, a.3 carrier trim, b.3 front pole colour; monkey_king a.1 leaf feathers, b.1 staff (rebuild only: MONKEY_STAFF.long is an approved row), a.2 blond hair ring; pirate 423 ranks: flintlock b.2 off-hand pistol, flintlock a.2 pants, harpooner b.2 two-hand hip grip, harpooner a.1 tricorn, cannon b.2 breech handles, cannon a.1 tall wheels, captain a.3 coat, captain b.1 dragon pistol, bomb_thrower a.2 shorts / a.3 socks; captain c.1 cutlass slash (audit rank 1, see his Notes). No [P] on offer.
+- Evidence commits first (outside the 7) before any pick on: pirate.blunderbuss (the shooter is out of the side-on frame at his 200 ms shot: windup/release/flight empty) and pirate.pirate_queen (her scene must outnumber her for Bomb Spin). No re-audit pending.
+- The pirate_hat tricorn (captain, queen) now has a wall at the front (423); the shared "flintlock" prop is now a pistol held out by _aimPistol (gunslinger, quick_draw, bank_robbers get it; the queen's off-hand copy is not aimed); new pirate dress goes in web/src/units/pirateDress.ts (PIRATE_VEST).
+- Shared props changed for batch units carry to later batches: katana (light steel 416) is also on Secret teacher, samurai_giant, shogun; strapSandals (ancientDress) dresses the firework archer too.
+- Starving: dragon a.3/a.4 never attempted (a's starvation clock runs from 422: picked by 427); monkey_king b at 427 (last attempt 416).
 
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```

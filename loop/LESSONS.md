@@ -22,7 +22,7 @@ drop a lesson once it is a comment at the code it describes.
 - A flat plate on a dress ribbon needs 7+ cm of stand-off, not 3: the ribbon's chords dip inside the rim sampled for its surface, so a bolt 3.5 cm proud read as a ghost (398/399 zeus).
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
-- A unit that logs a spawn-time mechanic first (spins, swoops at tick 1) needs its own ABILITY_PREF entry, or the ability pair is shot on the spawn event (392 berserker).
+- applyWeaponGripPreset's "firearm" offset is cut for a long gun's stock: a short gun aimed by a solve (_aimPistol) zeroes the prop's position or it sits back on the forearm (423 pistol).
 - A two-stage mechanic that logs its special at the take-off and a plain hit at the impact gets its ability pair shot on the first half and its release pair on the second: use that to show both halves of one throw (396 longship: `hurl` at 2117 ms, `ship_crash` + the hit at 2967 ms).
 - `RuntimeUnit.landings` counts ground touchdowns: read the counter before a leap and compare each step instead of testing a per-frame grounded flag to time a landing (396 longship).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).

@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-418 | FIREWORK_BURST + blast (ceb67f2b, 20d32730) | dynasty.firework_archer.c | approved
-418 | FIREWORK_NOCK (e9d4c966, 88c49c12) | dynasty.firework_archer.b | approved
-418 | [P] carrier poles (e5fcbad5) | dynasty.dragon.b | approved
-418 | block at his blade (073a4c36, 33baf14d) | dynasty.samurai.c | approved
-418 | BO_SHOVE monkey_king (0c817d95) | dynasty.monkey_king.c | approved
-418 | FIRST_LUNGE (3c3337d0; evidence ff56094b) | viking.brawler.c | approved
-418 | HWACHA_WHEEL (914ede94) | dynasty.hwacha.a | approved
 419 | LAUNCH_SMOKE (eab9d337) | dynasty.hwacha.c | approved
 419 | HWACHA_SHAFT + timber bed (3d8cd05d) | dynasty.hwacha.a | approved
 419 | BODY_FLAMES (70c80e29) | dynasty.dragon.c | approved
@@ -43,12 +36,17 @@ for 25 iterations.
 422 | MONKEY_SHORTS puffy shorts, gold cuffs, pointy shoes (8db34616, b9adb0a3) | dynasty.monkey_king.a | approved
 422 | MONKEY_ROBE half robe, gold strips, scarf (6ff201bb) | dynasty.monkey_king.a | approved
 422 | [R] FRONT_SPLIT + THROWER_SPLIT riders' split, unparked by hand (4c36f7da) | farmer.wheelbarrow.a | approved
+423 | PISTOL prop + _aimPistol held out (5b56edc3, caf27b2a) | pirate.flintlock.b | approved
+423 | HARPOON_BREECH team block under a carry handle (3f4bf980, 18f56ed9) | pirate.harpooner.b | approved
+423 | CANNON_BARREL long lathe barrel proud of the carriage (b1f1f4aa) | pirate.cannon.b | approved
+423 | TRICORN_PLATE skull + crossbones on the front wall (f22c1648) | pirate.captain.a | approved
+423 | PIRATE_VEST open vest over a bare chest (e6ed0749) | pirate.flintlock.a | approved
+423 | PIRATE_VEST on the bomb thrower (9bb121db) | pirate.bomb_thrower.a | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
 viking 401-403 rows (ICE_ARCHER_MANTLE, ICE_ARCHER_EYE_CLEAR, VIKING_BEARD, JARL_BEARD, HEADBUTTER_KIT, LONGSHIP_SHIP, LONGSHIP_HURL.sink) | compacted 409 | 403 | approved | values: git show 2ccd9f2:loop/LEDGER.md
-ancient 379-397 rows (MINO_*, BULL_*, SARISSA_*, SNAKE_*, BALLISTA_*, ZEUS_*, SCUTUM/LORICA/ASPIS/DORY, HOPLITE_*, CORINTH_*, BIG_HEADBUTT) | compacted 412 | 397 | approved | values: git show 8f53efc / fad9e5c / 522cb46 / f31835b :loop/LEDGER.md
 farmer.halfling done (HALFLING_STANCE, HALFLING_SHORTS + _CLOTH, shinLength 1.95, HALFLING_TUFT, VEST_CUT, COAT, SHAGGY) | compacted 404 | 402 | approved | values: git show 244af97:loop/LEDGER.md
 viking.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 391 | stats | values: git show e5a0cb5
 viking 392-409 rows (BEARDED_AXE, JARL_AXE, LEAP_AIR, HEADBUTT, LONGSHIP_*, HEADBUTTER_KIT/BRAID/HAIR/COPPER, ICE_BOW, FROST, BRAWLER_*, JUMP_CHARGE, FLY, VALKYRIE_WINGS) | compacted 411 | 409 | approved | values: git show 186849d:loop/LEDGER.md, 4778c43, cdc71a4
@@ -93,4 +91,9 @@ dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, fist, fistAt, poleAhead
 dynastyDress.ts:MONKEY_FACE (plate, chin, sideFrom, brow, muzzle, muzzleTop, muzzleOut, nose, tuft, 8 tufts; dark, tan, blond) | .1, -1.02, .7, .58, 1.1, -.3, .32, .5, .26; (.1,.06,.05), (.72,.54,.32), (.78,.56,.2) | 421 | approved | bare team head (before 421)
 dynastyDress.ts:MONKEY_SHORTS (hipOut, puffAt, puff, kneeOut, kneeTo, cuffOut, shoeOut, shoeTall, toe, toeWide, toeLift, anklet, ankletOut) | 1.7, .5, 2.3, 1.45, .14, 1.6, 1.15, .78, 1.2, 1.5, .55, .4, 1.25 | 422 | approved | puff 2.7, hip 1.8, knee 1.5 (422.3, ballooned); slim trouser legs, plain boots (before 422)
 dynastyDress.ts:MONKEY_ROBE (out, edge, deep, sleeveOut, sleeveTo, strip, stripLong, stripAt, proud, scarf, scarfThick, bib, bibLong) | 1.14, .12, 1.18, 1.55, .95, .06, .92, [-.62,-.26], .06, .72, .12, .42, .34 | 422 | approved | the tan accent trunk bare all round (before 422)
+propBuilder.ts:PISTOL (long, bore, over, tail, bell, mouth, stock, fore, grip, gripRake) + proceduralAnimation PISTOL_AIM (out, ahead, drop, kick) | .28, .13, .17, .14, .16, 2.4, .9, .8, .36, .45; .24, .14, .03, .35 | 423 | approved | a .35 s grey rod with a stock box, the long-gun firearm grip (before 423); long .2 bore .12 mouth 2.3 (423.1)
+propBuilder.ts:HARPOON_BREECH (long, wide, flat, hang, nozzle, bore, rings, handle) | .2, .19, .86, .9 (on -z), .17, .52, [.25,.55,.85], .07 | 423 | approved | navy canister .24 x .11 with a dark top handle (before 423); hang on +z (423.2)
+vehicleBuilder.ts:CANNON_BARREL (axis, breech, sides, bore, boreAt, profile) | .6, -.16, 10, .085, 1.12, breech knob .155 to neck .105 to lip .195 over 1.24 | 423 | approved | cylinder .8 x .22-.28 at y .44 sunk in the cheeks, two bands, knob, muzzle .3 (before 423)
+propBuilder.ts:TRICORN_PLATE (skull, at, bone, boneWide, proud, thick, white) + pirate_hat corners [30,150,270] | .5, .08, .95, .1, .12, .06, (.95,.94,.9) unlit | 423 | approved | a .26 W bone sphere + bars inside the front corner's V (before 423)
+pirateDress.ts:PIRATE_VEST (out, deep, long, dark, chest, proud, front, lapel, flare, glow) | 1.08, 1.1, 1.08, .4, .36, .03, .3, .06, .08, .12 | 423 | approved | the closed pirate_tar trunk (before 423)
 vehicleBuilder.ts:FRONT_SPLIT (hipOut, out, down, ahead, shinOut, shinAhead) + THROWER_SPLIT (out, down, ahead, shinOut, shinAhead) | .05, 1, .1, .12, .45, .1; 1, .3, .35, .6, .15 | 422 | approved | [R] reset: CREW_SEAT frontThigh -1.15/frontSplay .62/frontKnee .45 (Euler, crossed the knees) and THROWER_KNEES chest .55/out .2 targets (unreachable) (380-421); FRONT_SPLIT out .88/down .12/ahead .42 without the hip slide (403, rejected)
