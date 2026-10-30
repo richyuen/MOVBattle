@@ -245,6 +245,62 @@ export function captainCoat(scene: Scene, body: ArticulatedBody, teamColor: Colo
 }
 
 /*
+ * [S] 428 the Pirate Queen's bomb sash (audit 422 a.3: "a plain dark tunic - TABS: a brown sash slung from the shoulder across the chest carrying four
+ * black bombs"; pirate.pirate_queen.red.png, card Appearance "a brown bomb sash": a broad brown strap from over her right shoulder down across the
+ * chest to her left hip, four round black bombs strung along it, each about a fifth of the chest across, standing well out of it). QUEEN_SASH, on the
+ * trunk (torso frame, -x her left): a strap .wide of the trunk's width across and .thick of its depth thick, from .fromX of the half-width at the
+ * shoulder's top (.over above it, so it runs over onto the back) to .toX at .toY of the half-height below the middle (her left hip), standing .proud
+ * off the trunk's front, with its twin down the back; .bombs black faceted balls .bomb of the trunk's width across at even steps .at along the
+ * strap, each sat .seat of its radius out of the strap's face, a short fuse stub on top. Brown self-lit .glow, the bombs .bombGlow.
+ */
+const QUEEN_SASH = {
+  wide: 0.17, thick: 0.08, fromX: 0.72, over: 0.04, toX: -0.86, toY: -0.92, proud: 0.03, bombs: 4, bomb: 0.2, at: [0.14, 0.36, 0.58, 0.8], seat: 0.75,
+  brown: new Color3(0.24, 0.13, 0.065), black: new Color3(0.035, 0.035, 0.04), glow: 0.14, bombGlow: 0.2,
+};
+
+export function queenSash(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = QUEEN_SASH;
+  const mf = getMaterialFactory();
+  const brown = mf.get("cloth", S.brown, { emissive: S.brown.scale(S.glow) });
+  const black = mf.get("cloth", S.black, { emissive: new Color3(0.06, 0.06, 0.07).scale(S.bombGlow * 5) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  // the line of the strap on the chest: from the right shoulder's top to the left hip
+  const x0 = W / 2 * S.fromX, y0 = H / 2 + H * S.over, x1 = W / 2 * S.toX, y1 = H / 2 * S.toY;
+  const len = Math.hypot(x0 - x1, y0 - y1), ang = Math.atan2(y0 - y1, x0 - x1);
+  const thick = D * S.thick;
+  for (const face of [1, -1]) {
+    const strap = MeshBuilder.CreateBox("queenSash", { width: len, height: W * S.wide, depth: thick }, scene);
+    strap.parent = tm.parent;
+    strap.position.set(cx + (x0 + x1) / 2, cy + (y0 + y1) / 2, cz + face * (D / 2 + D * S.proud + thick / 2));
+    strap.rotation.copyFrom(tm.rotation);
+    // the back run comes down from the same shoulder to the same hip
+    strap.rotation.z += ang;
+    strap.material = brown;
+    strap.convertToFlatShadedMesh();
+    out.push(strap);
+  }
+  // the bombs strung down the front run of the strap
+  const r = W * S.bomb / 2, face = cz + D / 2 + D * S.proud + thick;
+  for (let i = 0; i < S.bombs; i++) {
+    const t = S.at[i] ?? (i + 0.5) / S.bombs;
+    const ball = MeshBuilder.CreateIcoSphere("queenSashBomb", { radius: r, subdivisions: 1, flat: true }, scene);
+    ball.parent = tm.parent;
+    ball.position.set(cx + x0 + (x1 - x0) * t, cy + y0 + (y1 - y0) * t, face + r * S.seat);
+    ball.material = black;
+    out.push(ball);
+    const fuse = MeshBuilder.CreateCylinder("queenSashFuse", { height: r * 0.6, diameter: r * 0.3, tessellation: 5 }, scene);
+    fuse.parent = ball;
+    fuse.position.y = r * 1.1;
+    fuse.material = brown;
+    out.push(fuse);
+  }
+  return out;
+}
+
+/*
  * [S] 424 the rolled-up pants (audit 422 a.2: "bare team legs - TABS: brown rolled-up pants ending mid-shin"; pirate.flintlock.red.png, card Appearance
  * "rolled-up brown pants": loose brown trousers from the belt over the knee to halfway down the shin, finished in a thick turned-up cuff a shade lighter).
  * PIRATE_PANTS: over each thigh a six-sided brown shell .thigh of the limb across, top to knee; over each shin a shell .shin across from the knee to .to
