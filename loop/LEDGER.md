@@ -31,6 +31,13 @@ for 25 iterations.
 419 | tongue in the mouth (aff1befb) | dynasty.dragon.a | approved
 419 | SAMURAI_CUIRASS (95700a8c) | dynasty.samurai.a | approved
 419 | FIREWORK_NOCK rebuilt (efc224ec) | dynasty.firework_archer.b | approved
+420 | [R] MINO_STRAP flat, MINO_GIRDLE off the barrel, MINO_CAP, scale 1.4 (637255a6, 4eb34cd7) | ancient.minotaur.a | approved
+420 | SAMURAI_HAKAMA (69c590af) | dynasty.samurai.a | approved
+420 | DRAWS_BEFORE_LOOSE firework (1cb514fd) | dynasty.firework_archer.c | approved
+420 | FIREWORK_REST upright bow (59a5baca) | dynasty.firework_archer.b | approved
+420 | MONKEY_CROWN (6c4aff46) | dynasty.monkey_king.a | approved
+420 | DRAGON_CARRIER heads + poles beside (0f7dd79c) | dynasty.dragon.a | approved
+420 | [P] HWACHA_TIMBER (3d24020e) | dynasty.hwacha.a | approved
 
 ## Spent (never retry as [P])
 
@@ -41,16 +48,12 @@ farmer.halfling done (HALFLING_STANCE, HALFLING_SHORTS + _CLOTH, shinLength 1.95
 viking.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 391 | stats | values: git show e5a0cb5
 viking 392-409 rows (BEARDED_AXE, JARL_AXE, LEAP_AIR, HEADBUTT, LONGSHIP_*, HEADBUTTER_KIT/BRAID/HAIR/COPPER, ICE_BOW, FROST, BRAWLER_*, JUMP_CHARGE, FLY, VALKYRIE_WINGS) | compacted 411 | 409 | approved | values: git show 186849d:loop/LEDGER.md, 4778c43, cdc71a4
 viking a/b/c rows (LONGSHIP_OARS, LONGSHIP_CREW, LONGSHIP_HULL, ICE_ARROW, JARL_PELT) | compacted 403 | 401 | approved | values: git show 73e45c7:loop/LEDGER.md
-ancientDress.ts:MINO_GIRDLE (lo, hi, proudX, proudZ, flare, sides, rimGrow, light, sunk) on the hip joint | -.3, .03, 1.03, 1.1, 1.04, 12, 1.02, .72, .5 | 402 | approved | 1.1, 1.22, 1.12, 8 sides, rims 1.05, outlined scrolls .55 light proud 1.4 (389); 386 band round the trunk base (MINO_SCROLL tall .24 at .04)
-ancientDress.ts:MINO_SHELL wedge plate (inX, atY, long, lip, lipBend, thick, rootDeep, tipDeep, faceUp, droop, swirl) | .85, .86, .85, .3, .45, .14, .7, .95, .3, .18, .3 | 404 | approved | .78/.84/.5/.22/.12/.62/.82/.22 (404.6); curved shell + scrolls .3 at 1.3, .24 at .95 (385-403)
-propBuilder.ts:BULL_HEAD (drop, forward, face, tilt, neck/neckTop/neckBottom/neckLean, dewlap) | -.4, .12, .86, .12, 1.0/1.0/1.55/.22, .22 | 406 | approved | .72, .28, 1.0, .15, .42/1.0/1.6/.3 (403); tilt .72 (402, muzzle at the ground); no drop/forward, tilt .5, neck .9/.9/1.5/.35 (382)
 simulationSystem.ts:LONGSHIP_OARS (reach, damage, push) + vehicleBuilder OAR_CHOP (period, strike, up, down, elbow, spread) | 1.5, 12, 1.2; 1.1, .3, -2.75, -.55, -.3, .14 | 403 | approved | the oars dropped at the crash (396-402)
 viking done rows (JARL_PELT, JARL_BEARD_RUN, JARL_BELT, JARL_WRAPS, JARL_FLAPS, JARL_CRESCENT, HEADBUTTER_CAP, LONGSHIP_CARRIER) | compacted 416 | 409 | approved | values: git show a312f052:loop/LEDGER.md
 viking c/done rows (BERSERKER_ARMPITS, BRAWLER_HELM, DIVE, HEADBUTT + SPRAWL.delay, headbuttSprawl) | compacted 406 | 401 | approved | values: git show 9c743e0:loop/LEDGER.md
 
 vehicleBuilder.ts:LONGSHIP gunwale material + wrapAsBody source | darkWood; first longshipShield face | 404 | approved | teamPrimary rails as the body source (392-403)
 vikingDress.ts:ICE_ARCHER_BAND (leather, rivet, glow, rivets, rivetSize, rivetProud) | (.26,.12,.06), (.5,.48,.44), .14, 8, .42, .8 | 405 | approved | the brim a pale fur roll ICE_ARCHER_FUR (396-404)
-ancientDress.ts:MINO_STRAP (wide, proud, footX, footY, buckleAt) | .44, .32, .95, .06, .3 | 405 | approved | MINO_SASH .3 wide .03 thick flat on the chest, foot .85/.12, buckle at .68 (383-404)
 propBuilder.ts:ICE_BOW (thick, taper, bow, recurve, crust, flake, flakeLift, tip) | .04, .5, .1, .035, 4, .07, .22, .06 | 406 | approved | thick .062 taper .45 bow .06, fringe 6 x .15, crowns 4 x .16, snow .105 (392-405)
 vehicleBuilder.ts:longship SHEER (half, pinch, pow, rise, bow, segs) | 1.3, .8, 3, .34, 1.25, 12 | 406 | approved | straight strakes 2.56-.16r, straight rails 2.42, flat deck .82 x 2.34 (392-405)
 unitVisuals.ts:viking.headbutter legLength + proceduralAnimation standSquare | .92 default, hip-shot idle (reverted) | 406 | rejected | 1.22 + HALBERD_SQUARE stance rejected 406: upright but belt-to-sole unmoved (41%)
@@ -58,19 +61,14 @@ vehicleBuilder.ts:longship PLANKS (count, wide) + shieldDark/shieldBoss | 3, .03
 dynasty.monk + viking.brawler done (MONK_STAFF + MONK_REST, MONK_SWING, MONK_TROUSERS, MONK_ARM_PLATES, BRAWLER_BEARD, BRAWLER_HATCHET, NORSE_BOARD, FIRST_LUNGE) | compacted 419 | 418 | approved | values: git show f1bce224:loop/LEDGER.md
 vikingDress.ts:HEADBUTTER_LEGS + unitVisuals headbutter shinLength/torsoLength | hemTo .62, hemOut 1.44, cuff .58-.76, bootFrom .74; 1.75, .82 | 407 | approved | the BRAWLER_LEGS cut, shin 1, torso 1 (405-406)
 proceduralAnimation.ts:ICE_UPRIGHT (raise, out, elbow, tip, yaw, stagger, give) | -.85, -.2, -1.3, [.16,1,.06], .12, .06, .02 | 407 | approved | the hashed bowman hold (before 407); tip [-.42,1,.12] raise -.7 (407.5)
-ancientDress.ts:MINO_LEGS (thigh, shin, toeWide, toeTall, toeDeep, cleft, toeAhead, toeSlope, pastern, hockUp, hockBack, hock) + thighShell/calfShell/calfTo | .7, .58, ... (407 values); 1.95, 2.0, .6 | 410 | approved | no sleeves (407-409)
 viking.valkyrie + ancient.zeus done (VALKYRIE_ARMOUR/COLLAR/HELM/SWORD, SWORD_WINGS, ZEUS_TOGA + .boltGap, ZEUS_BEARD, glowLayer group 0 / bolt group 1) | compacted 407 | 406 | approved | values: git show 978f707:loop/LEDGER.md
 vikingDress.ts:HEADBUTTER_TUNIC (out, deep, sleeve, sleeveOut, glow) | 1.05, 1.08, .42, 1.2, .12 | 408 | approved | the viking_fur-tinted trunk + body-material tunicSkirt (before 408)
 vikingDress.ts:ICE_ARCHER_SNOWCAP (lumps, out, big, small, spread, sit, squash) | 4, .4, .2, [.7,.6,.55], .09, .05, .75 | 408 | approved | ICE_ARCHER_MANTLE ring + 10 points + 8 lumps (402-407)
-ancientDress.ts:MINO_STRAP.clear (foot over the girdle's measured top, trunk heights) | .03 | 408 | approved | footY .06 fixed (405-407)
 proceduralAnimation.ts:JARL_REST (ahead, inward, drop, across, forward) | .12, .02, .36, .95, .2 | 408 | approved | HALBERD_REST upright .05 tilt (392-407)
 vehicleBuilder.ts:LONGSHIP_PROW (lift, root, tip, eye, path) | .75, .11, .085, .2, S from (.95,1.3) to (2.0,1.38) | 408 | approved | neck box .18x.66 at y .9, bead eyes .1 (392-407)
 vehicleBuilder.ts:LONGSHIP_STERN (post, r0, r1, turns, root, mid, tip) | [y,z] (.45,-1.26)..(1.5,-1.52), .2, .05, 1.25, .12, .08, .04 | 409 | approved | stern post cylinder .82 + two scroll cylinders at y 1.0 (400-408)
-ancientDress.ts:MINO_BARREL (wide, deep, ahead, profile, hump, humpY, neckFrom/To, neckBottom/Top, neckLean) | 1.35, 1.8, .08, 7 pts .8-1.02-.3, [.95,.24,.7], .98, .92/1.3, .95/.62, .25 | 409 | approved | the body's trunk box (before 409)
 vikingDress.ts:ICE_ARCHER_COAT (out, deep, sleeveOut, cuffTo, belt, beltAt, beltOut, skirt, flare, glow; leather) | 1.06, 1.1, 1.15, .88, .11, .08, 1.08, .8, 1.4, .12; (.26,.12,.06) | 409 | approved | the viking_fur trunk + body tunicSkirt .45/1.5 (before 409)
-ancientDress.ts:MINO_ARMS (upper, fore, fist) | 1.6, 1.85, 1.75 | 410 | approved | bare limb boxes (before 410)
 viking done 410-412 rows (LEG_WRAPS, ICE_ARCHER_QUIVER, ICE_NOCK, ICE_REST + grip seat) | compacted 413 | 412 | approved | values: git show e702238:loop/LEDGER.md
-propBuilder.ts:BULL_MUZZLE (wide, tall, deep, drop, ahead, tilt; horns) | .95, .42, .62, .36, .3, .25 | 411 | approved | BULL_HEAD face .86 tilt .12 + hornBends (406-410)
 dynasty.ninja done 411-413 rows (NINJA_HOOD, SHURIKEN, NINJA_GI, SHURIKEN_FLIGHT, NINJA_TROUSERS) | compacted 415 | 413 | approved | values: git show 46161b8:loop/LEDGER.md
 dynasty.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 411 | stats | values: git show cc4f7de
 dynastyDress.ts:TENGU_MASK (plate, chin, shade, brow, browTall, scowl, nose, noseOut, noseWide, mouth, mouthY, fang) | 1.04, -.92, .72, .62, .16, .38, .42, .3, .3, .9, -.6, .2 | 412 | approved | bare face (before 412)
@@ -80,7 +78,6 @@ propBuilder.ts:FIREWORK_BOW (long, cap, capColor) | 1.15, .12, (.92,.5,.12) | 41
 projectileSystem.ts:FIREWORK_ROCKET (long, wide, bands, head, flame, arc) | .5, .13, 3, .14, .32, .1 | 413 | approved | .3x.04 stick, arc .25 (before 413)
 dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, lame, step, flareTop, flareFoot, arc, rim, crest) | .04, 1.3, 2.3, 1.4, .42, 3, .32, .3, 2.3, 2.75, .55, .07, .42; turn pi(.5-arc) | 414 | approved | arc .64 turn pi(.5+arc) (413); samurai_helmet (before 413)
 proceduralAnimation.ts:KATANA_REST (ahead, drop, lean, under, settle) | .16, .24, .12, .9, .8; flat to his side, swing along the forearm | 415 | approved | flat facing him, no settle (414); one-hand shoulder carry (before 414)
-ancientDress.ts:MINO_LATHE (thigh, shin profiles; radius, facets) | thigh .92/1.04/.96/.8/.66, shin .74/.8/.64/.46/.38; 1.4, 7 | 415 | approved | limbShell sleeves thigh 1.95, calf 2.0 to .6 (410)
 visualEffects.ts:FLAME_JET (core, coreFar, shell, shellFar, shellAlpha, flicker, puffs, puff) + simulationSystem DRAGON_BREATH (seconds, ahead, down, chest) | .12, .7, .25, 1.3, .7, .18, 5, .35; .7, .4, .3, .9 | 416 | approved | a lobbed fireball (before 416)
 dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, seg, bodyY, bodyTail, sway, fin) | .62 (size 2 at 417), 1.95, .5, .2, [.17,.55], 9, [.36,.32,.36], 1.3, .85, .18, .14 | 417 | approved | size 1, headY 1.45, headZ .45 (416); dragon_head mask hat (before 416)
 vehicleBuilder.ts:HWACHA_RACK (cols, rows, cell, post, lath, depth, seatY, seatZ, lean, headSize, headLong, wood) | 10, 6, .11, .06, .018, .22, .5, .12, .22, .36, 1.3, (.72,.45,.24) | 416 | approved | team box, 6x5 tubes, tilt 1.15 (before 416)
@@ -100,3 +97,10 @@ vehicleBuilder.ts:HWACHA_SHAFT (x, wide, deep, frontY, frontZ, rearY, rearZ, cap
 visualEffects.ts:BODY_FLAMES (tongues, spread, low, high, tall, wide, flicker) + DRAGON_BREATH.burn | 9, .2, .55, 1.35, .42, .17, 13; 3 | 419 | approved | none (before 419)
 dynastyDress.ts:DRAGON_FORM.tongue [wide, long] (lies in the mouth) | .2, .36 | 419 | approved | .17, .55 hanging (416)
 dynastyDress.ts:SAMURAI_CUIRASS (out, deep, rows, row, rowsFrom, rowsTo, rim, sode, sodeOut) | 1.12, 1.18, 4, .035, .3, .85, .09, .5, 1.75 | 419 | approved | tunic box (before 419)
+ancient.minotaur 402-415 rows (MINO_GIRDLE, MINO_SHELL, BULL_HEAD, MINO_STRAP + .clear, MINO_LEGS, MINO_BARREL, MINO_ARMS, BULL_MUZZLE, MINO_LATHE) | compacted 420 | 415 | approved | values: git show a1460c56:loop/LEDGER.md
+ancientDress.ts:MINO_STRAP (wide, proud) + MINO_GIRDLE (lo, hi, proudX, proudZ; off MINO_BARREL.profile) + MINO_CAP (inX, atY, radius, squash, droop, rim, swirl) + unitVisuals minotaur scale | .2, .04; -.08, .3, 1.07, 1.09; .98, .94, .72, .55, .4, .14, .6; 1.4 | 420 | approved | strap .44/.32, girdle -.3/.03/1.03/1.1 off the pelvis, MINO_SHELL plank, scale 2.1 (402-419)
+dynastyDress.ts:SAMURAI_HAKAMA (hipOut, kneeOut, kneeTo, greave, rim, bands, band, bandOut) | 1.9, 2.6, .28, 1.4, .08, 2, .06, 1.5 | 420 | approved | bare legs (before 420)
+proceduralAnimation.ts:FIREWORK_REST (across, forward) | .16, .1 | 420 | approved | ICE_REST .42/.12 never applied to her (no split string) (413-419)
+dynastyDress.ts:MONKEY_CROWN (band, at, thick, swirl, side, feather, featherWide, lean, back, bead) | 1.1, .72, .1, .32, .78, 2.6, .2, .3, .12, .14 | 420 | approved | torus crown hat (before 420)
+dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, poleSide, fist) | .075, .28, .22, .2, .17, .09 | 420 | approved | arm .06, hair slab 1.05 x .4, pole through the head (417-419)
+vehicleBuilder.ts:HWACHA_TIMBER (cloth, self-light .12) | (.6,.27,.08) | 420 | approved | HWACHA_RACK.wood (.72,.45,.24) + HWACHA_SHAFT.wood (.5,.28,.14) on the wood preset (416-419)

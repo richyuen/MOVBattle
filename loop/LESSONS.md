@@ -24,20 +24,19 @@ drop a lesson once it is a comment at the code it describes.
 - A flat plate on a dress ribbon needs 7+ cm of stand-off, not 3: the ribbon's chords dip inside the rim sampled for its surface, so a bolt 3.5 cm proud read as a ghost (398/399 zeus).
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
-- The idle look-around can flip the idle camera to the other side between builds (zeus 391): it follows the face at that phase, so a one-sided chest ornament must read from both sides.
 - A unit that logs a spawn-time mechanic first (spins, swoops at tick 1) needs its own ABILITY_PREF entry, or the ability pair is shot on the spawn event (392 berserker).
 - A two-stage mechanic that logs its special at the take-off and a plain hit at the impact gets its ability pair shot on the first half and its release pair on the second: use that to show both halves of one throw (396 longship: `hurl` at 2117 ms, `ship_crash` + the hit at 2967 ms).
 - `RuntimeUnit.landings` counts ground touchdowns: read the counter before a leap and compare each step instead of testing a per-frame grounded flag to time a landing (396 longship).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
-- A "haxe" weapon (halberd, Jarl Axe) rests via _restHalberd, posing the shaft in the world: carry attitudes do nothing.
-- The critic judges the named shot: an element hidden behind another mesh is not there (392).
+- A "haxe" weapon rests via _restHalberd and a bow with the carry mark via _restIceBow: world poses, so carry attitudes do nothing. Until 420 _restIceBow also wanted the ice bow's split string (the firework bow carried diagonal for 7 iterations); a bare marked stave now rides it.
+- The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420: the dragon's head was out of frame from 417; the monkey king's tail pulls his frame back): a new tall prop re-frames every shot, so a RE-AUDIT follows.
 - Hiding the thrower at a transition reads as a pop in the take-off shot: the frame must still show who threw it (401 longship, CONFIRM).
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
 - `capture.mjs --units` takes a comma-separated list; space-separated ids capture the first unit only. Every iter-N capture also clears the probe swatches: render them after the final capture (402).
 - For a small piece in a look shot, a crop of the PNG (python PIL crop + NEAREST resize) is a faster close-up than probe_close, whose --aim can frame another mesh entirely (404 headbutter, minotaur).
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each stays revertable alone (406).
-- The glow layer merges after rendering group 0 (main.ts renderingGroupId 0, 405): a mesh in group 1 is drawn over every nearby bloom yet still depth-hidden; a small emblem a glow halo tints (orange + blue-white = pink) goes in group 1. runtimeUnit resets a flung body's meshes to group 0 on landing.
+- A small emblem a glow halo tints goes in rendering group 1 (drawn over the bloom, still depth-hidden; the rule is a comment at main.ts renderingGroupId, 405).
 
 ## Rig and dress
 - aimLimb only aims a fixed-length bone: a knee target further than one bone is never reached, so a wide splay needs the bone stretched (which reads as a rod) or the seat moved (397 wheelbarrow [R], rejected).
