@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-417 | BO_SHOVE: bo throws the man back (be4cf01d) | dynasty.monk.c | approved
-417 | jump_charge leap (adc7786a) | dynasty.monkey_king.c | approved
-417 | ARCHER_ROBE: lapel robe, sash (55118a80) | dynasty.firework_archer.a | approved
-417 | [P] DRAGON_FORM.size 2 (eaed1d92) | dynasty.dragon.a | approved
-417 | DRAGON_CARRIER (1f9d50d6) | dynasty.dragon.b | approved
-417 | SAMURAI_BLOCK + SLASH_ARC (e7f66440; evidence 101e6c62) | dynasty.samurai.c | approved
 418 | FIREWORK_BURST + blast (ceb67f2b, 20d32730) | dynasty.firework_archer.c | approved
 418 | FIREWORK_NOCK (e9d4c966, 88c49c12) | dynasty.firework_archer.b | approved
 418 | [P] carrier poles (e5fcbad5) | dynasty.dragon.b | approved
@@ -44,6 +38,10 @@ for 25 iterations.
 421 | KABUTO hexagon-plate shikoro + maedate (a810cff1) | dynasty.samurai.a | approved
 421 | ARCHER_LEGS shin wraps + strapSandals (1801625a) | dynasty.firework_archer.a | approved
 421 | MONKEY_FACE baboon face (2dc865d6) | dynasty.monkey_king.a | approved
+422 | DRAGON_CARRIER two-box arms to fists on the pole at the chest (bf9ce7a9) | dynasty.dragon.b | pending
+422 | DRAGON_FORM band on edge, scallop fringe below, fins on top (e7926245) | dynasty.dragon.a | pending
+422 | MONKEY_SHORTS puffy shorts, gold cuffs, pointy shoes (8db34616, b9adb0a3) | dynasty.monkey_king.a | pending
+422 | MONKEY_ROBE half robe, gold strips, scarf (6ff201bb) | dynasty.monkey_king.a | pending
 
 ## Spent (never retry as [P])
 
@@ -85,7 +83,7 @@ projectileSystem.ts:FIREWORK_ROCKET (long, wide, bands, head, flame, arc) | .5, 
 dynastyDress.ts:KABUTO (clear, top, bowlFoot, bowlTop, peak, tiers, facets, lame, step, flareTop, shoulder, rim, maedate, maedateFoot, maedateTop, maedateLean) | .04, 1.3, 2.3, 1.4, .42, 4, 4, .42, .36, 2.4, 1.0, .09, 1.0, .3, .95, .18 | 421 | approved | 3 arc lames .32/.3, flare 2.3->2.75, arc .55 turn pi(.5-arc), disc crest .42 (414-420); arc .64 (413); samurai_helmet (before 413)
 proceduralAnimation.ts:KATANA_REST (ahead, drop, lean, under, settle) | .16, .24, .12, .9, .8; flat to his side, swing along the forearm | 415 | approved | flat facing him, no settle (414); one-hand shoulder carry (before 414)
 visualEffects.ts:FLAME_JET (blobs, near, far, farPer, swell, lobes, lobe, lobeOff, flicker, fade; white, yellow) + simulationSystem DRAGON_BREATH (seconds, ahead, down, chest) | 12, .4, 1.4, .19, .35, 3, .5, .68, .14, .2; (1,.97,.85), (1,.78,.04); .7, .4, .3, .9 | 421 | approved | cones core .12->.7, shell .25->1.3 alpha .7, 5 puffs .35 (416-420); a lobbed fireball (before 416)
-dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, step, bodyY, bodyTail, sway, wide, taper, thick, scallop, scallopOut, fin, finWide, frillMix) | .62 (size 2 at 417), 1.95, .5, .2, [.2,.36], 9, .33, 1.45, 1.35, .18, .75, .44, .05, .16, .05, .13, .14, .4 | 421 | approved | boxes seg [.36,.32,.36], dark cone fin .14, gold belly (416-420); dragon_head mask hat (before 416)
+dynastyDress.ts:DRAGON_FORM (skull, headY, headZ, gape, tongue, segs, step, bodyY, bodyTail, sway, tall, taper, thick, scallop, fin, finWide, frillMix) | .62 (size 2 at 417), 1.95, .5, .2, [.2,.36], 9, .33, 1.45, 1.35, .18, .6 (on edge), .44, .05, .16, .13, .14, .4 | 422 | pending | band level wide .75, scallops .05 out on both edges (421); boxes seg [.36,.32,.36], dark cone fin .14, gold belly (416-420); dragon_head mask hat (before 416)
 dynasty.hwacha done (HWACHA_RACK, HWACHA_ROCKET, HWACHA_WHEEL, LAUNCH_SMOKE, HWACHA_SHAFT, HWACHA_TIMBER) | compacted 421 | 420 | approved | values: git show 7f580c19:loop/LEDGER.md
 dynastyDress.ts:MONKEY_STAFF (long, thick, offset, end, endWide, bands) + MONKEY_TAIL (root, tip, path to 1.08 up) | 1.35, .024, .12, .2, 1.25, 2; .045, .035 | 416 | approved | bo_staff .85 (before 416); no tail
 propBuilder.ts:KATANA_STEEL | (.62,.64,.68) glow .12 | 416 | approved | (.9,.9,.95) metal preset (rendered near-black)
@@ -104,6 +102,8 @@ ancientDress.ts:MINO_STRAP (wide, proud) + MINO_GIRDLE (lo, hi, proudX, proudZ; 
 dynastyDress.ts:SAMURAI_HAKAMA (hipOut, kneeOut, kneeTo, greave, rim, bands, band, bandOut) | 1.9, 2.6, .28, 1.4, .08, 2, .06, 1.5 | 420 | approved | bare legs (before 420)
 proceduralAnimation.ts:FIREWORK_REST (across, forward) | .16, .1 | 420 | approved | ICE_REST .42/.12 never applied to her (no split string) (413-419)
 dynastyDress.ts:MONKEY_CROWN (band, at, thick, swirl, side, feather, featherWide, lean, back, bead) | 1.1, .72, .1, .32, .78, 2.6, .2, .3, .12, .14 | 420 | approved | torus crown hat (before 420)
-dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, poleSide, fist, fist material) | .075, .28, .22, .2, .17, .09, dark | 421 | rejected | [P] 421 arm .1, fist .12 skin rejected as a ledger reversal (the row was approved at 420); arm .06, hair slab 1.05 x .4, pole through the head (417-419)
+dynastyDress.ts:DRAGON_CARRIER (arm, eye, hairTall, bun, fist, fistAt, poleAhead, elbowOut; arm material, fist material) | .075, .28, .22, .2, .09, .56, .07, .05; trousers, dark | 422 | pending | pole beside the head poleSide .17, fists at .99 h on one straight skin arm each (420-421; [P] 421 arm .1, fist .12 skin rejected as a ledger reversal); arm .06, pole through the head (417-419)
 dynastyDress.ts:ARCHER_LEGS (from, wrap, bands, band, bandOut, shade, bandShade, sandal) | .04, 1.28, 5, .09, 1.44, .8, .66, (.62,.3,.1) | 421 | approved | plain legs and boots (before 421)
 dynastyDress.ts:MONKEY_FACE (plate, chin, sideFrom, brow, muzzle, muzzleTop, muzzleOut, nose, tuft, 8 tufts; dark, tan, blond) | .1, -1.02, .7, .58, 1.1, -.3, .32, .5, .26; (.1,.06,.05), (.72,.54,.32), (.78,.56,.2) | 421 | approved | bare team head (before 421)
+dynastyDress.ts:MONKEY_SHORTS (hipOut, puffAt, puff, kneeOut, kneeTo, cuffOut, shoeOut, shoeTall, toe, toeWide, toeLift, anklet, ankletOut) | 1.7, .5, 2.3, 1.45, .14, 1.6, 1.15, .78, 1.2, 1.5, .55, .4, 1.25 | 422 | pending | puff 2.7, hip 1.8, knee 1.5 (422.3, ballooned); slim trouser legs, plain boots (before 422)
+dynastyDress.ts:MONKEY_ROBE (out, edge, deep, sleeveOut, sleeveTo, strip, stripLong, stripAt, proud, scarf, scarfThick, bib, bibLong) | 1.14, .12, 1.18, 1.55, .95, .06, .92, [-.62,-.26], .06, .72, .12, .42, .34 | 422 | pending | the tan accent trunk bare all round (before 422)
