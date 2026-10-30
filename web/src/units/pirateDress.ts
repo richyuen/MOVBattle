@@ -361,7 +361,7 @@ export function queenSash(scene: Scene, body: ArticulatedBody): Mesh[] {
  * faceted bomb .bomb of W across sat .seat of its radius up, a brown fuse stub on top. Team times .shade self-lit .glow, the bomb .bombGlow.
  */
 const BOMB_SASH = {
-  wide: 0.16, thick: 0.1, fromX: -0.75, fromY: -0.92, toX: 1.02, toY: -1.42, proud: 0.06, pouch: 0.26, bomb: 0.26, seat: 0.55, shade: 0.85,
+  wide: 0.16, thick: 0.1, fromX: -0.75, fromY: -0.92, toX: 1.2, toY: -1.25, proud: 0.4, pouch: 0.3, bomb: 0.3, seat: 0.55, shade: 0.85,
   black: new Color3(0.035, 0.035, 0.04), fuse: new Color3(0.24, 0.13, 0.065), glow: 0.12, bombGlow: 0.2,
 };
 
@@ -392,7 +392,8 @@ export function bombSash(scene: Scene, body: ArticulatedBody, teamColor: Color3)
   band.rotation.z = ang;
   // the pouch at the foot of the band, the bomb sat in it at the side of the thigh
   const pr = W * S.pouch / 2, br = W * S.bomb / 2;
-  const px = cx + x1, py = cy + y1, pz = faceZ - D * 0.15;
+  // the pouch stands out of the shorts' front (their shell is .65 of the thigh proud of it), not in them
+  const px = cx + x1, py = cy + y1, pz = faceZ + thick;
   const pouch = put(MeshBuilder.CreateSphere("bombSashPouch", { diameter: pr * 2, segments: 4, slice: 0.5 }, scene));
   pouch.rotation.x = Math.PI;
   pouch.position.set(px, py, pz);
