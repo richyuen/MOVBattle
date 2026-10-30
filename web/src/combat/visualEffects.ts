@@ -60,9 +60,14 @@ const SMOKE_LIFE = 2.4;
  */
 /*
  * [S] 416 the Dragon's flame jet (audit 411 c.1: "a single pale yellow hex puff detached about 4 m ahead of the mouth - TABS: a continuous
- * white-yellow flame jet from the mouth"; dynasty.dragon.jpg): from the mouth to the man, read every frame, for the breath's seconds: a white-yellow
- * core cone .core across at the mouth widening to .coreFar at the far end, inside an orange shell .shell -> .shellFar, half see-through, both
- * flickering .flicker of their width; .puffs faceted orange flame lumps tumbling out along it; all fading over the last .fade s.
+ * white-yellow flame jet from the mouth"; dynasty.dragon.jpg): from the mouth to the man, read every frame, for the breath's seconds.
+ * [S] 421 a billowing plume (RE-AUDIT 420 c.1: "a straight-edged translucent orange tube running level from the mouth to the man, the grass visible
+ * through it - TABS: a billowing opaque flame plume, near-white core with a yellow rim, swelling wider than the head as it leaves the mouth";
+ * dynasty.dragon.jpg, factions/dynasty.jpg: one huge opaque white ball with a yellow edge the size of the head, pouring from the mouth). In place of
+ * the cones: .blobs opaque flat-shaded white balls strung from the mouth to the man, .near m across at the mouth swelling to .far m (never more than
+ * .farPer of the jet's length over .near) within the first .swell of the way; round each core .lobes yellow balls .lobe of its radius, standing .lobeOff
+ * of it off the axis and turning with time, so the plume's edge is a yellow rim all round; every ball breathes .flicker of its size; alpha 1 until the
+ * last .fade s.
  */
 /** [S] 419 a man on fire (spawnBodyFlames): heights over his feet, m. */
 const BODY_FLAMES = {
@@ -79,8 +84,8 @@ const FIREWORK_BURST = {
 /** [S] 417 the Samurai's block slash (spawnSlashArc). */
 const SLASH_ARC = { arc: 2.2, radius: 0.75, band: 0.16, steps: 12, tilt: 0.6, sweep: 0.7, seconds: 0.3, white: new Color3(1, 1, 0.92) };
 const FLAME_JET = {
-  core: 0.12, coreFar: 0.7, shell: 0.25, shellFar: 1.3, shellAlpha: 0.7, flicker: 0.18, puffs: 5, puff: 0.35, fade: 0.2,
-  white: new Color3(1, 0.95, 0.7), orange: new Color3(1, 0.48, 0.1),
+  blobs: 12, near: 0.35, far: 1.3, farPer: 0.18, swell: 0.35, lobes: 3, lobe: 0.7, lobeOff: 0.55, flicker: 0.14, fade: 0.2,
+  white: new Color3(1, 0.97, 0.85), yellow: new Color3(1, 0.78, 0.04),
 };
 const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
 /*
@@ -364,33 +369,35 @@ export class VisualEffects {
   spawnFlameJet(from: () => Vector3 | null, to: () => Vector3 | null, seconds: number): void {
     const F = FLAME_JET;
     const root = new TransformNode("flameJet", this._scene);
-    // the cones' +y runs from the mouth (y -.5) to the far end (y +.5)
-    const core = MeshBuilder.CreateCylinder("flameJetCore", { height: 1, diameterBottom: F.core, diameterTop: F.coreFar, tessellation: 7 }, this._scene);
-    const shell = MeshBuilder.CreateCylinder("flameJetShell", { height: 1, diameterBottom: F.shell, diameterTop: F.shellFar, tessellation: 8 }, this._scene);
+    // the root's +y runs from the mouth (y -len/2) to the man (y +len/2)
     // unlit, self-lit flame colours (the lit fx material read pale tan against the grass)
-    const flat = (c: Color3, alpha: number): StandardMaterial => {
+    const flat = (c: Color3): StandardMaterial => {
       const m = new StandardMaterial("flameJetMat", this._scene);
       m.disableLighting = true;
       m.emissiveColor = c;
       m.diffuseColor = c;
-      m.alpha = alpha;
       m.backFaceCulling = false;
       return m;
     };
-    const coreMat = flat(F.white, 1);
-    const shellMat = flat(F.orange, F.shellAlpha);
-    core.material = coreMat;
-    shell.material = shellMat;
-    const puffs: Mesh[] = [];
-    for (let i = 0; i < F.puffs; i++) {
-      const p = MeshBuilder.CreateIcoSphere("flameJetPuff", { radius: F.puff, subdivisions: 1, flat: true }, this._scene);
-      p.material = shellMat;
-      p.parent = root;
-      puffs.push(p);
+    const coreMat = flat(F.white);
+    const rimMat = flat(F.yellow);
+    const cores: Mesh[] = [];
+    const lobes: Mesh[][] = [];
+    for (let i = 0; i < F.blobs; i++) {
+      const core = MeshBuilder.CreateIcoSphere("flameJetCore", { radius: 1, subdivisions: 1, flat: true }, this._scene);
+      core.material = coreMat;
+      cores.push(core);
+      const ring: Mesh[] = [];
+      for (let k = 0; k < F.lobes; k++) {
+        const lobe = MeshBuilder.CreateIcoSphere("flameJetRim", { radius: 1, subdivisions: 1, flat: true }, this._scene);
+        lobe.material = rimMat;
+        ring.push(lobe);
+      }
+      lobes.push(ring);
     }
-    // kept out of the glow layer: bloomed, the jet washed out to a flat white bar with no orange shell
+    // kept out of the glow layer: bloomed, the jet washed out to a flat white bar with no rim
     const glowLayer = this._scene.getGlowLayerByName("glow");
-    for (const m of [core, shell, ...puffs]) { m.isPickable = false; m.parent = root; glowLayer?.addExcludedMesh(m); }
+    for (const m of [...cores, ...lobes.flat()]) { m.isPickable = false; m.parent = root; glowLayer?.addExcludedMesh(m); }
     root.rotationQuaternion = new Quaternion();
     let t = 0;
     const aim = (): void => {
@@ -407,14 +414,20 @@ export class VisualEffects {
       const angle = Math.acos(Math.max(-1, Math.min(1, Vector3.Dot(up, d))));
       if (axis.lengthSquared() < 1e-8) root.rotationQuaternion!.copyFrom(angle > 1 ? Quaternion.RotationAxis(Vector3.Right(), Math.PI) : Quaternion.Identity());
       else Quaternion.RotationAxisToRef(axis.normalize(), angle, root.rotationQuaternion!);
-      const flick = (k: number): number => 1 + F.flicker * Math.sin(t * 37 + k * 2.3);
-      core.scaling.set(flick(0), len, flick(1));
-      shell.scaling.set(flick(2), len, flick(3));
-      puffs.forEach((p, i) => {
-        const along = ((i / F.puffs + t * 1.7) % 1);
-        p.position.set(Math.sin(i * 2.1 + t * 9) * 0.15 * along, (along - 0.5) * len, Math.cos(i * 1.7 + t * 8) * 0.15 * along);
-        p.scaling.setAll(0.4 + along * 1.4);
-        p.rotation.set(t * 5 + i, t * 3 + i * 2, 0);
+      const far = Math.min(F.far, F.near + len * F.farPer);
+      cores.forEach((core, i) => {
+        const along = (i + 0.5) / F.blobs;
+        const r = (F.near + (far - F.near) * Math.pow(Math.min(1, along / F.swell), 0.6)) * (1 + F.flicker * Math.sin(t * 31 + i * 2.1));
+        const y = (along - 0.5) * len;
+        core.position.set(0, y, 0);
+        core.scaling.setAll(r);
+        core.rotation.set(i * 0.7, t * 2 + i, 0);
+        lobes[i].forEach((lobe, k) => {
+          const phi = i * 2.1 + (k * Math.PI * 2) / F.lobes + t * 4;
+          lobe.position.set(Math.cos(phi) * r * F.lobeOff, y + Math.sin(t * 23 + k * 1.3 + i) * r * 0.1, Math.sin(phi) * r * F.lobeOff);
+          lobe.scaling.setAll(r * F.lobe * (1 + F.flicker * Math.sin(t * 29 + k * 1.7 + i * 0.9)));
+          lobe.rotation.set(t * 3 + k, i + k * 2, t * 2);
+        });
       });
     };
     aim();
@@ -425,11 +438,14 @@ export class VisualEffects {
         t += dt;
         aim();
         const k = Math.max(0, Math.min(1, remaining / F.fade));
-        coreMat.alpha = k;
-        if (k < 1) coreMat.transparencyMode = 2;
-        shellMat.alpha = F.shellAlpha * k;
+        if (k < 1) {
+          coreMat.transparencyMode = 2;
+          rimMat.transparencyMode = 2;
+          coreMat.alpha = k;
+          rimMat.alpha = k;
+        }
       },
-      dispose: () => { coreMat.dispose(); shellMat.dispose(); },
+      dispose: () => { coreMat.dispose(); rimMat.dispose(); },
     });
   }
 
