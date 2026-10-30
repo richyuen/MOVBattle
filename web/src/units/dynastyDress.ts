@@ -443,6 +443,7 @@ const DRAGON_FORM = {
   segs: 9, step: 0.33, bodyY: 1.45, bodyTail: 1.35, sway: 0.18, tall: 0.6, taper: 0.44, thick: 0.05, scallop: 0.16, fin: 0.13, finWide: 0.14, frillMix: 0.4,
   gold: new Color3(0.86, 0.62, 0.3), dark: new Color3(0.12, 0.08, 0.08), white: new Color3(0.95, 0.93, 0.88), tongueTint: 0.85, glow: 0.12,
 };
+const FRONT_GRIP = { long: 0.24, wraps: 5, band: 0.022, out: 1.75, twist: 0.25 };
 const DRAGON_MUZZLE = { bevel: 0.22, tan: new Color3(0.72, 0.54, 0.32), rim: 0.05, rimDeep: 0.06, diamonds: 2, diamond: 0.11, diamondAt: 0.45, diamondStep: 0.25, diamondUp: 0.25, proud: 0.012 };
 /** [S] 417 the Dragon Carriers (dragonForm): one under every .every-th segment, legs .legLong of h, trunk .trunk, head .head, arms .arm thick up to the
  * pole's dark .grip; trousers .trouserShade and skin .skinShade of the team colour. */
@@ -522,8 +523,18 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
   // the pole up from his hands into the skull
   const foot = new Vector3(0, D.poleFoot * h, D.headZ * h * 0.8);
   const top = head.add(new Vector3(0, -skullR * 0.6, 0));
-  put(MeshBuilder.CreateCylinder("dragonPole", { height: top.y - foot.y, diameter: D.pole * h, tessellation: 6 }, scene), Vector3.Center(foot, top));
-  put(MeshBuilder.CreateCylinder("dragonPoleGrip", { height: 0.18 * h, diameter: D.pole * h * 1.3, tessellation: 6 }, scene), foot.add(new Vector3(0, 0.05 * h, 0)), dark);
+  // [S] 424 the head pole is the carriers' orange-red with a dark wrapped grip (RE-AUDIT 420 b.3: "team blue - TABS: orange-red with a dark wrapped grip
+  // like the three behind it"; dynasty.dragon.jpg): the shaft in DRAGON_CARRIER.poleColor; the grip a dark sleeve FRONT_GRIP.long of h over the foot
+  // with .wraps raised dark bands .band of h tall, .out of the pole across, spiralling up it (each turned .twist rad)
+  const G = FRONT_GRIP;
+  put(MeshBuilder.CreateCylinder("dragonPole", { height: top.y - foot.y, diameter: D.pole * h, tessellation: 6 }, scene), Vector3.Center(foot, top), lit(DRAGON_CARRIER.poleColor));
+  const gripAt = foot.add(new Vector3(0, G.long * h * 0.5, 0));
+  put(MeshBuilder.CreateCylinder("dragonPoleGrip", { height: G.long * h, diameter: D.pole * h * 1.3, tessellation: 6 }, scene), gripAt, dark);
+  for (let i = 0; i < G.wraps; i++) {
+    const at = gripAt.add(new Vector3(0, ((i + 0.5) / G.wraps - 0.5) * G.long * h, 0));
+    const wrap = put(MeshBuilder.CreateCylinder("dragonPoleWrap", { height: G.band * h, diameter: D.pole * h * G.out, tessellation: 6 }, scene), at, dark);
+    wrap.rotation.set(G.twist, i * 0.5, 0);
+  }
   // [S] 417 a Dragon Carrier under every .every-th body segment (audit 411 a.2 "carriers: none - TABS: four Dragon Carriers in team clothes with Chinese
   // hair beneath the body"; b.1 "carrier poles: none - TABS: red poles with dark grips linking each carrier to the body"; dynasty.dragon.jpg): a
   // standing man in team clothes (darker trousers), a dark topknot, both arms up on a team pole with a dark grip running from his fists into the segment
