@@ -406,6 +406,48 @@ export function bombSash(scene: Scene, body: ArticulatedBody, teamColor: Color3)
 }
 
 /*
+ * [S] 431 the Bomb Thrower's belt (CONFIRM 430 bomb_thrower a.2: "no belt is visible at the waist, between the vest hem and the shorts - TABS: a wide
+ * orange-brown leather belt with a big buckle at the waist, the unit's largest accent colour"; pirate.bomb_thrower.blue.png: a broad reddish-brown band
+ * round the waist over the vest's foot, its front a little taller, a big square tan buckle frame in the middle with its tongue). PIRATE_BELT, on the trunk
+ * (W, H, D the trunk's box, torso frame): a band .tall of H tall at .at of H/2 under the middle, .out of W wide and .deep of D deep (clear of the open
+ * vest's fronts); on its front a square buckle frame .buckle of W across, four bars .bar of it thick, .proud of D off the band, and the tongue across its
+ * middle. Leather self-lit .glow, the buckle tan .buckleGlow. The sash (BOMB_SASH) still runs from under it.
+ */
+const PIRATE_BELT = { tall: 0.13, at: -0.84, out: 1.16, deep: 1.36, buckle: 0.3, bar: 0.2, proud: 0.06, leather: new Color3(0.62, 0.22, 0.1), tan: new Color3(0.8, 0.6, 0.35), glow: 0.14, buckleGlow: 0.3 };
+
+/** A wide leather belt round the waist over the vest's foot with a big square tan buckle (spec at PIRATE_BELT). */
+export function pirateBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = PIRATE_BELT;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", B.leather, { emissive: B.leather.scale(B.glow) });
+  const tan = mf.get("cloth", B.tan, { emissive: B.tan.scale(B.buckleGlow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat = leather): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.copyFrom(tm.rotation);
+    m.parent = tm.parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const y = H / 2 * B.at, tall = H * B.tall, front = D * B.deep / 2;
+  box("pirateBelt", W * B.out, tall, D * B.deep, 0, y, 0);
+  // the buckle: a square frame on the band's front, a tongue across it
+  const s = W * B.buckle, bar = s * B.bar, z = front + D * B.proud / 2;
+  for (const side of [-1, 1]) {
+    box("pirateBeltBuckle", bar, s, D * B.proud, side * (s - bar) / 2, y, z, tan);
+    box("pirateBeltBuckle", s, bar, D * B.proud, 0, y + side * (s - bar) / 2, z, tan);
+  }
+  box("pirateBeltTongue", s * 0.55, bar * 0.6, D * B.proud * 0.6, -s * 0.12, y, z + D * B.proud * 0.3, tan);
+  return out;
+}
+
+/*
  * [S] 428 the cannon rider's striped shirt (audit 422 a.3: "the rider's shirt - plain team - TABS: a white shirt with team stripes"; pirate.cannon.red.png,
  * card Appearance "a white, striped shirt": a white short-sleeved shirt over the trunk with broad team bands round it, the sleeves striped too).
  * CANNON_SHIRT, on the crewman (dressCannonCrew's five "crewHoop" bands round his trunk, torso frame): under the bands a white faceted shell following
