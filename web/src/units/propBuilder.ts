@@ -54,7 +54,7 @@ const KASA_GOLD = new Color3(0.86, 0.62, 0.18);
 const FIREWORK_BOW = { long: 1.15, cap: 0.12, capColor: new Color3(0.92, 0.5, 0.12) };
 /** [S] 418 the Firework Arrow nocked across the firework bow's grip: in stave lengths, the tube .long, .wide, set .side off the stave and reaching .back
  * behind the string; .bands green rings, a dark head .head long. */
-const FIREWORK_NOCK = { long: 0.36, wide: 0.075, side: 0.045, back: 0.03, bands: 3, head: 0.09, band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14) };
+const FIREWORK_NOCK = { long: 0.22, wide: 0.045, side: 0.03, back: 0.03, bands: 3, head: 0.09, band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14) };
 const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "hoplite_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
