@@ -20,6 +20,12 @@ interface TimedEffect {
 // Shed gear (see VisualEffects.spawnGearLitter): how far off it lands, how far a board leans back off upright, and how far a weapon's grip end stands off the ground.
 // A da Vinci ball's break-up (see spawnShatter): shards, size (m), outward and upward speed (m/s), seconds
 const SHATTER = { count: 7, size: 0.11, speed: 3.2, up: 3.0, last: 0.9 };
+// The Reaper's scythe shockwave (see spawnReaperBurst): ring start across and band (m), dome start and end across (m) and opacity, shards, their length,
+// out and up speed (m/s), seconds, share of it faded out; violet ring, dark dome
+const REAPER_BURST = {
+  ring0: 1.6, thick: 0.22, dome0: 1.2, dome: 4.2, domeAlpha: 0.7, shards: 8, shard: 0.55, out: 3, up: 4.5, life: 0.9, fade: 0.4,
+  ring: new Color3(0.55, 0.12, 0.95), dark: new Color3(0.1, 0.02, 0.16),
+};
 // The pumpkin landing (see spawnPumpkinBurst): rind shards and their size, bouncing lanterns and their size (m), out and up speed (m/s), bounce keep, seconds
 const PUMPKIN_BURST = { shards: 8, rind: 0.2, lanterns: 4, lantern: 0.32, out: 3.4, up: 5.5, keep: 0.62, last: 2.4, orange: new Color3(0.9, 0.38, 0.08), face: new Color3(1, 0.8, 0.2), stem: new Color3(0.25, 0.3, 0.1) };
 // Paint flung off the painter's brush (see spawnPaintSplotches): blobs, size (m), speed along the swing, spread across it and up (m/s), seconds
@@ -1411,6 +1417,83 @@ export class VisualEffects {
             if (b.keep < 0.5) b.spin.scaleInPlace(0.3);
           }
         }
+      },
+    });
+  }
+  /*
+   * [S] 436 the Reaper's dark magic shockwave (audit 434 spooky.reaper c.1: "missing: dark magic shockwave burst where the scythe lands"; card
+   * Characteristics "Their scythe will burst a dark magic shockwave when swung", Reaper's Scythe "explosion radius 4"): where the blade lands, a dark
+   * violet dome swells out of the ground and thins away while a glowing violet ring runs out over the ground to the blast's reach, and dark shards are
+   * flung up and out of it. REAPER_BURST: the ring from .ring0 m across out to the splash reach (radius), the dome from .dome0 to .dome m across, .shards shards .shard m
+   * long thrown out .out m/s and up .up, all over .life s, faded over its last .fade.
+   */
+  spawnReaperBurst(position: Vector3, reach = 4): void {
+    const B = REAPER_BURST;
+    const root = new TransformNode("reaperBurst", this._scene);
+    root.position = position.clone();
+    const factory = getMaterialFactory();
+    const ringMat = factory.createUnique("cloth", B.ring);
+    ringMat.emissiveColor = B.ring.clone();
+    ringMat.disableLighting = true;
+    const domeMat = factory.createUnique("cloth", B.dark);
+    domeMat.emissiveColor = B.dark.scale(1.6);
+    domeMat.alpha = B.domeAlpha;
+    domeMat.transparencyMode = 2;
+    domeMat.backFaceCulling = false;
+    const shardMat = factory.createUnique("cloth", B.dark);
+    shardMat.emissiveColor = B.dark.scale(1.2);
+    const ring = MeshBuilder.CreateTorus("reaperBurstRing", { diameter: 1, thickness: B.thick, tessellation: 24 }, this._scene);
+    ring.scaling.y = 0.25;
+    ring.position.y = 0.06;
+    ring.material = ringMat;
+    ring.parent = root;
+    const dome = MeshBuilder.CreateSphere("reaperBurstDome", { diameter: 1, segments: 8, slice: 0.5 }, this._scene);
+    dome.material = domeMat;
+    dome.parent = root;
+    const shards: { mesh: Mesh; velocity: Vector3 }[] = [];
+    for (let i = 0; i < B.shards; i++) {
+      const a = (i / B.shards) * Math.PI * 2;
+      const m = MeshBuilder.CreateCylinder("reaperBurstShard", { height: B.shard, diameterTop: 0, diameterBottom: B.shard * 0.3, tessellation: 4 }, this._scene);
+      m.material = shardMat;
+      m.parent = root;
+      m.position.set(Math.cos(a) * 0.5, B.shard * 0.4, Math.sin(a) * 0.5);
+      // leaning out from the middle
+      m.rotation.set(0, -a, 0);
+      m.rotation.z = -0.6;
+      m.rotationQuaternion = null;
+      const v = B.out * (0.8 + ((i * 37) % 10) / 25);
+      shards.push({ mesh: m, velocity: new Vector3(Math.cos(a) * v, B.up * (0.7 + ((i * 13) % 10) / 30), Math.sin(a) * v) });
+    }
+    const glow = this._scene.getGlowLayerByName("glow");
+    glow?.addExcludedMesh(dome);
+    const pose = (u: number): void => {
+      const ease = 1 - (1 - u) * (1 - u);
+      const r = B.ring0 + (reach * 2 - B.ring0) * ease;
+      ring.scaling.x = r;
+      ring.scaling.z = r;
+      dome.scaling.setAll(B.dome0 + (B.dome - B.dome0) * ease);
+      const fade = u < 1 - B.fade ? 1 : Math.max(0, (1 - u) / B.fade);
+      domeMat.alpha = B.domeAlpha * fade;
+      ringMat.alpha = fade;
+      if (fade < 1) ringMat.transparencyMode = 2;
+    };
+    pose(0);
+    this._effects.push({
+      root,
+      remaining: B.life,
+      update: (dt, remaining) => {
+        pose(Math.min(1, 1 - remaining / B.life));
+        for (const s of shards) {
+          s.velocity.y -= 12 * dt;
+          s.mesh.position.addInPlace(s.velocity.scale(dt));
+          if (s.mesh.position.y < 0) { s.mesh.position.y = 0; s.velocity.setAll(0); }
+        }
+      },
+      dispose: () => {
+        glow?.removeExcludedMesh(dome);
+        ringMat.dispose();
+        domeMat.dispose();
+        shardMat.dispose();
       },
     });
   }

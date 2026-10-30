@@ -2801,6 +2801,10 @@ export class SimulationSystem {
     if (this.visualEffects && attacker.definition.id === "tribal.mammoth") {
       this.visualEffects.spawnTrampleRing(new Vector3(target.position.x, attacker.position.y, target.position.z), Math.max(2, splashRadius));
     }
+    // [S] 436 the Reaper's scythe bursts a dark magic shockwave where it lands (card Characteristics; visualEffects REAPER_BURST), out to its splash
+    if (this.visualEffects && attacker.definition.id === "spooky.reaper") {
+      this.visualEffects.spawnReaperBurst(new Vector3(target.position.x, target.position.y, target.position.z), Math.max(2, splashRadius));
+    }
     // A painter's brush throws its paint as it lands (card Appearance): blobs of the tuft's own paint leave its point, on along the swing
     const tuft = attacker.body.rightHand?.getDescendants(false, (n) => n.name === "brushPoint")[0];
     if (this.visualEffects && tuft instanceof Mesh && tuft.material && tuft.isEnabled()) {
