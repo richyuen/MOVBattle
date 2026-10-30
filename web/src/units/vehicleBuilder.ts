@@ -788,6 +788,9 @@ const HWACHA_RACK = {
   cols: 10, rows: 6, cell: 0.11, post: 0.06, lath: 0.018, depth: 0.22, seatY: 0.5, seatZ: 0.12, lean: 0.22, headSize: 0.36, headLong: 1.3,
   wood: new Color3(0.72, 0.45, 0.24), head: new Color3(0.16, 0.16, 0.2),
 };
+/** [S] 418 the hwacha's wheels (dynasty.hwacha.jpg: two big open wheels of light timber, an eight-sided rim on eight spokes round a dark hub): .across
+ * tall, the rim .rim thick and .wide across the tread, .sides facets, .spokes spokes .spoke thick, the hub .hub across; set .out outside the cart's rails at .z. */
+const HWACHA_WHEEL = { across: 0.74, rim: 0.07, wide: 0.08, sides: 8, spokes: 8, spoke: 0.035, hub: 0.14, out: 0.05, z: -0.1 };
 // TABS-style hwacha: wide wooden cart with large, steeply-tilted rack of tube holes
 // filled with rocket arrows pointing upward. Big spoked wheels, cart handles behind.
 function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
@@ -811,23 +814,26 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
     sideRail.parent = root; sideRail.material = darkWood; allMeshes.push(sideRail);
   }
 
-  // ─── Large spoked wheels ───
+  // ─── [S] 418 two spoked octagonal wheels (spec at HWACHA_WHEEL; audit a.3: "solid dark discs - TABS: spoked octagonal wooden wheels") ───
+  const Wh = HWACHA_WHEEL;
+  const wheelWood = makeMat(scene, HWACHA_RACK.wood);
   for (const xOff of [-0.6, 0.6]) {
-    const wheel = MeshBuilder.CreateCylinder("wheel", { height: 0.08, diameter: 0.7, tessellation: 16 }, scene);
-    wheel.position.set(xOff, 0.35, -0.1);
-    wheel.rotation.z = Math.PI / 2;
-    wheel.parent = root; wheel.material = darkWood; allMeshes.push(wheel);
-    // Hub
-    const hub = MeshBuilder.CreateCylinder("hub", { height: 0.1, diameter: 0.12, tessellation: 8 }, scene);
-    hub.position.set(xOff, 0.35, -0.1);
+    const at = new Vector3(xOff + Math.sign(xOff) * Wh.out, Wh.across / 2, Wh.z);
+    const rim = MeshBuilder.CreateTorus("wheel", { diameter: Wh.across - Wh.rim, thickness: Wh.rim, tessellation: Wh.sides }, scene);
+    rim.convertToFlatShadedMesh();
+    rim.rotation.z = Math.PI / 2;
+    rim.scaling.y = Wh.wide / Wh.rim;
+    rim.position.copyFrom(at);
+    rim.parent = root; rim.material = wheelWood; allMeshes.push(rim);
+    const hub = MeshBuilder.CreateCylinder("hub", { height: Wh.wide * 1.6, diameter: Wh.hub, tessellation: 8 }, scene);
     hub.rotation.z = Math.PI / 2;
-    hub.parent = root; hub.material = wood; allMeshes.push(hub);
-    // Spokes
-    for (let s = 0; s < 8; s++) {
-      const spoke = MeshBuilder.CreateBox("spoke", { width: 0.025, height: 0.3, depth: 0.025 }, scene);
-      spoke.position.set(xOff, 0.35, -0.1);
-      spoke.rotation.set(0, 0, s * Math.PI / 8);
-      spoke.parent = root; spoke.material = wood; allMeshes.push(spoke);
+    hub.position.copyFrom(at);
+    hub.parent = root; hub.material = darkWood; allMeshes.push(hub);
+    for (let k = 0; k < Wh.spokes / 2; k++) {
+      const spoke = MeshBuilder.CreateBox("spoke", { width: Wh.spoke, height: Wh.across - Wh.rim, depth: Wh.spoke }, scene);
+      spoke.position.copyFrom(at);
+      spoke.rotation.x = (k * Math.PI * 2) / Wh.spokes + Math.PI / Wh.spokes;
+      spoke.parent = root; spoke.material = wheelWood; allMeshes.push(spoke);
     }
   }
 
