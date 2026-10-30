@@ -385,6 +385,12 @@ const FENCER_DODGE = { dist: 2.2, back: 1.0, seconds: 0.22, cooldown: 2.5, kind:
  * (ProjectileSystem.loseTarget). Logged .kind.
  */
 /**
+ * [S] 418 First-contact lunge (viking.brawler card Characteristics: "They also lunge on first contact, in an attempt to get the first hit"; audit c.1):
+ * once per life, when his nearest foe is within FIRST_LUNGE.within m (and past .closest), he springs at him: a slide of up to .dist m (stopping
+ * .stopShort m off the man) over .seconds, the axe swinging (.swing s); logged "lunge".
+ */
+const FIRST_LUNGE = { within: 3.2, closest: 1.2, dist: 2.4, stopShort: 0.8, seconds: 0.28, swing: 0.35, kind: "lunge" };
+/**
  * [S] 417 Projectile Block (dynasty.samurai card: "deflect projectiles away from them with a bright slash using any weapon"; audit 411 c.1): a missile
  * flying at a samurai is cut out of the air once within SAMURAI_BLOCK.reach m of him (and .warn s of reaching him; ProjectileSystem.deflectAt): he turns
  * on it and swings (.flick s), and a white crescent slash (visualEffects SLASH_ARC) stands .ahead m before him at .chest m up; at most once every
@@ -687,6 +693,7 @@ export class SimulationSystem {
     this._resolveLivingCollisions();
     this._painterDodges(now);
     this._samuraiBlocks(now);
+    this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
     if (this._charges.size > 0) this._trampleCharges(now);
@@ -2498,6 +2505,30 @@ export class SimulationSystem {
     this._pendingBlows = this._pendingBlows.filter((b) => !(b.attacker === foe && b.target === unit));
     this._logAbility(unit, D.kind, now, foe.position);
   }
+
+  /** First-contact lunge (FIRST_LUNGE): a lunging unit closing on his first foe springs the last metres in with his blow already swinging, once. */
+  private _firstLunges(now: number): void {
+    const L = FIRST_LUNGE;
+    for (const unit of this._units) {
+      if (unit.isDead || unit.isToppled || unit.isDowned || this._lunged.has(unit) || this._recovers.has(unit)) continue;
+      if (!(unit.definition.abilities ?? []).includes("lunge")) continue;
+      let foe: RuntimeUnit | null = null, best = Infinity;
+      for (const u of this._units) {
+        if (u.isDead || u.team === unit.team) continue;
+        const d = Vector3.Distance(u.position, unit.position);
+        if (d < best) { best = d; foe = u; }
+      }
+      if (!foe || best > L.within || best < L.closest) continue;
+      const dir = new Vector3(foe.position.x - unit.position.x, 0, foe.position.z - unit.position.z).normalize();
+      this._lunged.add(unit);
+      unit.stopMoving();
+      this._clearPathState(unit);
+      this._recovers.set(unit, { dir, from: now, foe, dist: Math.min(L.dist, best - L.stopShort), seconds: L.seconds });
+      unit.triggerAttackVisual(L.swing);
+      this._logAbility(unit, L.kind, now, unit.position);
+    }
+  }
+  private _lunged = new Set<RuntimeUnit>();
 
   /** Projectile Block (SAMURAI_BLOCK): each ready samurai with a missile about to reach him cuts it out of the air with a bright slash. */
   private _samuraiBlocks(now: number): void {

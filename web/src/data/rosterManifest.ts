@@ -25,6 +25,7 @@ export type UnitArchetype =
 export type UnitSize = "tiny" | "small" | "medium" | "large" | "giant" | "colossal";
 
 export type AbilityKind =
+  | "lunge"
   | "teleport"
   | "spin_move"
   | "jump_charge"
@@ -264,7 +265,7 @@ const ancient = makeFaction(FactionId.Ancient, "ancient", [
 const viking = makeFaction(FactionId.Viking, "viking", [
   ["headbutter", "Headbutter", 90, "charge_melee", { abilities: ["charge_impact"], hatHint: "viking_helmet", healthMultiplier: 0.41, damageMultiplier: 0.1, cooldownMultiplier: 0.42 }],
   ["ice_archer", "Ice Archer", 160, "archer", { weaponHint: "bow", abilities: ["freeze"], healthMultiplier: 0.45, cooldownMultiplier: 1.36 }],
-  ["brawler", "Brawler", 220, "shield_melee", { weaponHint: "axe", shieldHint: "round", hatHint: "viking_helmet", healthMultiplier: 0.75, damageMultiplier: 0.68, cooldownMultiplier: 0.46 }],
+  ["brawler", "Brawler", 220, "shield_melee", { weaponHint: "axe", shieldHint: "round", hatHint: "viking_helmet", healthMultiplier: 0.75, damageMultiplier: 0.68, cooldownMultiplier: 0.46, abilities: ["lunge"] }], // [S] 418 lunges on first contact (simulationSystem FIRST_LUNGE)
   ["berserker", "Berserker", 250, "charge_melee", { abilities: ["jump_charge", "spin_move"], weaponHint: "axe", hatHint: "horned_helmet", healthMultiplier: 0.42, damageMultiplier: 0.43, cooldownMultiplier: 0.42 }],
   ["valkyrie", "Valkyrie", 500, "flying_melee", { abilities: ["flying_hover"], weaponHint: "sword", shieldHint: "round", specialHint: "wings", healthMultiplier: 0.36, damageMultiplier: 0.67, cooldownMultiplier: 0.28 }],
   ["longship", "Longship", 1000, "charge_melee", { size: "large", weaponHint: "axe", specialHint: "longship", healthMultiplier: 0.99 }],
