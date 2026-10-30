@@ -1149,7 +1149,9 @@ export function monkeyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * instep, LESSONS 47: the toe box tops out at about .42), the toe spike from it, the orange anklet from the shoe's top up .anklet of the box, so the
  * boot's team cuff and the shin read as one bare team shin from the anklet to the hem.
  */
-const MONKEY_SHORTS = { hipOut: 1.35, puffAt: 0.5, puff: 1.9, kneeOut: 1.12, below: 0, band: 0.12, cuffOut: 1.2, shoeOut: 1.08, shoeTall: 0.32, toe: 1.2, toeWide: 1.4, toeLift: 0.55, anklet: 0.13, ankletOut: 1.18, gold: new Color3(1, 0.42, 0.1), glow: 0.12 };
+// 433.1b: the shin and the boot mesh rendered in the dark body shade read as tall navy boots up to the shorts: they take the shorts' team cloth, so the
+// shin reads bare; the band stands .cuffOut over the knee frustum's width at its top (it was buried in the taper); the anklet .ankletOut, .ankletDeep.
+const MONKEY_SHORTS = { hipOut: 1.35, puffAt: 0.5, puff: 1.9, kneeOut: 1.12, below: 0, band: 0.12, cuffOut: 1.12, shoeOut: 1.08, shoeTall: 0.32, toe: 1.2, toeWide: 1.4, toeLift: 0.55, anklet: 0.15, ankletOut: 1.35, ankletDeep: 1.45, gold: new Color3(1, 0.42, 0.1), glow: 0.12 };
 /** The Monkey King's puffy team shorts gathered to orange bands at the knee joint, bare shins, low pointy shoes with orange anklets (spec at MONKEY_SHORTS). */
 export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = MONKEY_SHORTS;
@@ -1175,8 +1177,12 @@ export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
     const puffY = top - run * S.puffAt, hemY = kneeY - run * S.below;
     flare("monkeyShortsHip", leg, top, puffY, S.hipOut, S.puff);
     flare("monkeyShortsKnee", leg, puffY, hemY, S.puff, S.kneeOut);
-    flare("monkeyShortsCuff", leg, hemY + run * S.band, hemY, S.cuffOut, S.cuffOut * 0.94, gold);
+    // the band's width over the knee frustum's own width at the band's top, so it stands proud all round
+    const tUp = (run * S.band) / (puffY - hemY), wideAtTop = S.kneeOut + (S.puff - S.kneeOut) * tUp;
+    flare("monkeyShortsCuff", leg, hemY + run * S.band, hemY - run * 0.02, wideAtTop * S.cuffOut, S.kneeOut * S.cuffOut, gold);
   }
+  // the bare shin and the boot's cuff in the shorts' team cloth (the body shade read as a tall dark boot)
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(true)) if (m instanceof Mesh && /_[lr](LowerLeg|FootM)$/.test(m.name)) m.material = cloth;
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const foot of knee.getChildMeshes(true)) {
       if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
@@ -1193,7 +1199,7 @@ export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
       // the orange anklet sits on the shoe's top round the boot's cuff (the back of the foot box)
       const ankH = ex.y * 2 * S.anklet;
       const anklet = put(MeshBuilder.CreateCylinder("monkeyAnklet", { height: ankH, diameter: ex.x * 2 * S.ankletOut, tessellation: 6 }, scene), fb.center.x, fb.minimum.y + shoeH + ankH / 2, fb.minimum.z + ex.z * 0.55, gold);
-      anklet.scaling.z = (ex.z * 1.15) / (ex.x * S.ankletOut);
+      anklet.scaling.z = (ex.z * S.ankletDeep) / (ex.x * S.ankletOut);
     }
   }
   return out;
