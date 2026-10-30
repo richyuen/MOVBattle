@@ -1,24 +1,26 @@
 # dynasty.dragon
-Status: open   Audited: 411   Done: -
+Status: open   Audited: 411, 419 (CONFIRM)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (2 since 411)
- 5. tongue in lineup_dynasty: a tall team slab hanging from the jaw to the ground like a post in front of the bearer - TABS: a short tongue inside the open mouth (ref: dynasty.dragon.jpg) (added 417, by eaed1d92)
-  (struck 3, 4 at 416: head over the roster, body ribbon; 1, 2 at 417: paper head at 2x, carriers)
-b PASS (418: red poles with dark grips into the body, e5fcbad5)
-c FAIL (1 since 411)
- 2. burning target in unit_dynasty.dragon_struck: the knight shows no fire - TABS: the target catches fire (ref: card Characteristics)
-  (struck 1 at 416: a held flame jet from the paper mouth)
+a FAIL (0 since 419; the CONFIRM's list)
+ 1. carriers in unit_dynasty.dragon_idle: the three rear carriers are headless, armless box torsos with the pole socketed into a black neck block - TABS: each a full man with a head, hair bun and two bead eyes under his pole (ref: dynasty.dragon.jpg)
+ 2. carrier clothing in unit_dynasty.dragon_idle: plain team boxes - TABS: Chinese tunic and trousers edged orange at collar, cuffs, hem (ref: dynasty.dragon.blue.png)
+ 3. head markings in lineup_dynasty: flat team pink - TABS: a tan band rims the upper lip, gold diamond markings on brow and cheeks (ref: dynasty.dragon.red.png)
+ 4. body in lineup_dynasty: a straight rectangular slab with black cone spikes - TABS: a flat paper ribbon, scalloped frill edge, team fins along the spine (ref: dynasty.dragon.jpg)
+b FAIL (0 since 419; the CONFIRM's list)
+ 1. rear poles in unit_dynasty.dragon_idle: end in neck stumps, no hand on them - TABS: each carrier grips his pole in both hands at chest height (ref: dynasty.dragon.jpg)
+ 2. front carrier's hand in unit_dynasty.dragon_windup: hangs off the pole, the grip floating beside him - TABS: he keeps hold walking (ref: dynasty.dragon.jpg)
+ 3. front pole in unit_dynasty.dragon_idle: team-tinted - TABS: orange-red with a dark wrapped grip near the bottom (ref: dynasty.dragon.jpg)
+c FAIL (0 since 419; the CONFIRM's list)
+ 1. breath in unit_dynasty.dragon_struck: a straight-edged translucent orange box beam - TABS: a billowing bright white-yellow flame plume swelling out of the mouth (ref: dynasty.dragon.jpg, factions/dynasty.jpg)
 d PASS (cost 1000, hp 18.78x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] c burning target - blocker 2: flame tongues and a smoke wisp on a status:fire unit's torso for the burn - ref: card Characteristics - ours: unit_dynasty.dragon_struck.png
-2. [S] a tongue - blocker 5: a short tongue inside the open mouth in place of the slab (dragonTongue by h, not hk) - ref: dynasty.dragon.jpg - ours: lineup_dynasty.png
+1. evidence first (CONFIRM 419): idle, release and ability shots are framed on a carrier and never show the head or mouth; the pairs are identical frames - re-aim the dragon's idle and motion pairs at the head/mouth
+2. [S] a carriers - blocker 1 (clears b.1): full carriers with a head, bun, bead eyes and two arms gripping the pole at chest height - ref: dynasty.dragon.jpg - ours: unit_dynasty.dragon_idle.png
+3. [S] c breath plume - blocker 1: FLAME_JET rebuilt as a billowing white-yellow plume swelling from the mouth - ref: dynasty.dragon.jpg - ours: unit_dynasty.dragon_struck.png
+4. [S] a body ribbon - blocker 4: flat paper ribbon, scalloped frill edge, team fins in place of the slab and black cones - ref: dynasty.dragon.jpg - ours: lineup_dynasty.png
 ## Attempts (iter | gap | criterion | verdict)
-416 | FLAME_JET + DRAGON_BREATH: held flame jet from the mouth (799cefaa) | c | approved (struck 1)
-416 | DRAGON_FORM: paper head on a pole, body ribbon, fin, mask off (3ac0c32c) | a | approved (struck 3, 4; head 0.75x man)
-417 | [P] DRAGON_FORM.size 2, headY 1.95 (eaed1d92) | a | approved (struck 1; added 5 tongue)
-417 | DRAGON_CARRIER: three carriers under the body on gripped poles (1f9d50d6) | b | approved (a.2 struck; no pole shaft shows)
-418 | [P] carriers .35 legs, body 1.45-1.35 h, red poles (e5fcbad5) | b | approved (b PASS)
+416-417 | FLAME_JET, DRAGON_FORM head/ribbon, size 2, DRAGON_CARRIER (799cefaa, 3ac0c32c, eaed1d92, 1f9d50d6) | a,b,c | approved
+418-419 | [P] poles (e5fcbad5), BODY_FLAMES (70c80e29), tongue (aff1befb) | a,b,c | approved; CONFIRM 419 failed a, b, c
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 417 critic: carriers faceless box pillars (TABS bead-eyed wobblers); poles should be red-orange on both teams; the idle frames only the bearer.
-- 416 critic: jet mostly orange and thin at the mouth (TABS fat white-yellow); jaw a flat shelf; the idle frames the man only.
+- 416-417 critics: jet thin and orange at the mouth (TABS fat white-yellow); jaw a flat shelf; carriers faceless pillars.
