@@ -900,6 +900,70 @@ export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 433 the Harpooner's shoes (CONFIRM 431 a.3: "feet are team-blue blocks - TABS: brown buckled shoes under grey socks"; pirate.harpooner.red.png,
+ * card Appearance "brown shoes": low dark-brown shoes, a square tongue standing up the front of the ankle with a buckle on it, a short grey sock
+ * turned down over the shoe's top, the bare shin above). HARPOONER_SHOES, in each foot mesh's frame (its box fb; the toe box tops out at about .42
+ * of it, the rest is the boot's cuff round the ankle, LESSONS 47): the foot mesh .brown; round the cuff from .sockFrom to .sockTo of the box a
+ * six-sided grey sock .sockOut of the cuff across, and above it to the box's top a shell in the leg's skin .skinOut across so the cuff reads as bare
+ * shin; on the front a brown tongue .tongue of the foot wide from the toe box's top up .tongueTall of the box, tipped .tongueLean rad forward, with
+ * a brass buckle .buckle of the tongue across on its face. Self-lit .glow.
+ */
+const HARPOONER_SHOES = {
+  sockFrom: 0.38, sockTo: 0.66, sockOut: 1.22, skinOut: 1.1, cuffAt: 0.55, tongue: 0.55, tongueTall: 0.3, tongueLean: 0.25, buckle: 0.6,
+  brown: new Color3(0.4, 0.2, 0.13), grey: new Color3(0.45, 0.4, 0.34), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
+};
+
+/** Brown buckled shoes under short grey socks, bare shin above (spec at HARPOONER_SHOES). */
+export function harpoonerShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = HARPOONER_SHOES;
+  const mf = getMaterialFactory();
+  const brown = mf.get("cloth", S.brown, { emissive: S.brown.scale(S.glow) });
+  const grey = mf.get("cloth", S.grey, { emissive: S.grey.scale(S.glow) });
+  const brass = mf.get("cloth", S.brass, { emissive: S.brass.scale(S.glow) });
+  const skin = body.headMesh.material ?? brown;
+  const out: Mesh[] = [];
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      foot.material = brown;
+      const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize;
+      const cuffZ = fb.minimum.z + ex.z * 2 * S.cuffAt * 0.5;
+      const ring = (name: string, from: number, to: number, outX: number, m: typeof skin): void => {
+        const y0 = fb.minimum.y + ex.y * 2 * from, y1 = fb.minimum.y + ex.y * 2 * to;
+        const r = MeshBuilder.CreateCylinder(name, { height: y1 - y0, diameter: ex.x * 2 * outX, tessellation: 6 }, scene);
+        r.scaling.z = (ex.z * 1.15) / (ex.x * outX);
+        r.parent = foot;
+        r.position.set(fb.center.x, (y0 + y1) / 2, cuffZ);
+        r.material = m;
+        r.convertToFlatShadedMesh();
+        out.push(r);
+      };
+      ring("harpoonerSock", S.sockFrom, S.sockTo, S.sockOut, grey);
+      ring("harpoonerShin", S.sockTo, 1, S.skinOut, skin);
+      // the tongue up the front of the ankle, and its buckle
+      const tall = ex.y * 2 * S.tongueTall, wide = ex.x * 2 * S.tongue;
+      const pivot = new TransformNode("harpoonerTongue", scene);
+      pivot.parent = foot;
+      pivot.position.set(fb.center.x, fb.minimum.y + ex.y * 2 * 0.4, cuffZ + ex.z * 1.15 * 0.5);
+      pivot.rotation.x = S.tongueLean;
+      const tongue = MeshBuilder.CreateBox("harpoonerShoeTongue", { width: wide, height: tall, depth: ex.z * 0.12 }, scene);
+      tongue.parent = pivot;
+      tongue.position.set(0, tall / 2, ex.z * 0.06);
+      tongue.material = brown;
+      tongue.convertToFlatShadedMesh();
+      out.push(tongue);
+      const buckle = MeshBuilder.CreateBox("harpoonerShoeBuckle", { width: wide * S.buckle, height: tall * 0.45, depth: ex.z * 0.08 }, scene);
+      buckle.parent = pivot;
+      buckle.position.set(0, tall * 0.45, ex.z * 0.15);
+      buckle.material = brass;
+      buckle.convertToFlatShadedMesh();
+      out.push(buckle);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 432 the Captain's pants and boots (CONFIRM 431 a.1: "legs dark team blue from coat hem to feet - TABS: beige pants between the coat tails, ending in
  * black knee boots"; pirate.captain.blue.png, card Appearance "beige pants, black boots": straight tan trousers from the waist down between the coat's
  * skirts to just below the knee, tucked into tall black boots whose wide turned top stands out round the shin under the knee, the boot running down
