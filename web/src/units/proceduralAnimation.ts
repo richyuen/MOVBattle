@@ -224,6 +224,8 @@ const SNAKE_UPRIGHT = {
  */
 /** [S] 411 the ice bow at rest, posed in the world (_restIceBow): its length leant .across rad toward her off side and .forward toward her front. */
 const ICE_REST = { across: 0.42, forward: 0.12 };
+/** [S] 420 the Firework Archer's bow at rest (audit 411 b.1: "a small dark curved stick held low and horizontal - TABS: a large upright brown recurve ... taller than the torso"; dynasty.firework_archer.jpg): the same world pose, stood nearer plumb, its ends over her head and below her hip. */
+const FIREWORK_REST = { across: 0.16, forward: 0.1 };
 /** [S] 411 the Monk's bo at rest (_restMonkBo): the weapon fist's seat in shares of his height from the weapon shoulder, the shaft's tilt up at its off end. */
 /** [S] 414 the katana at rest (_restKatana): the weapon fist .ahead of his height before his middle, .drop under the shoulders; the blade .lean rad off plumb toward his front; the off fist .under grip-lengths below. */
 /** [S] 415 the Brawler's board at rest (_restNorseBoard): slid .ahead of his height forward of where the fist carries it and .drop down. */
@@ -5313,7 +5315,8 @@ export class ProceduralAnimator {
    * .2) the straight string is swapped for two halves running from each bow tip to the nock, the nock drawn from the string's middle to the draw
    * hand by w, and the ice arrow (propBuilder ICE_NOCK) laid from the nock through the grip; all put back at the loose. Only the ice bow carries them.
    */
-  private _iceNock: { stave: Mesh; string: Mesh; top: Mesh; low: Mesh; arrow: Mesh } | null | undefined = undefined;
+  /** [S] 420 a stave with the carry mark but no split string (the firework bow) still rides _restIceBow; its nock pieces are absent and _poseIceNock leaves it alone. */
+  private _iceNock: { stave: Mesh; string?: Mesh; top?: Mesh; low?: Mesh; arrow?: Mesh } | null | undefined = undefined;
 
   /**
    * [S] 411 the Monk's bo held level across his chest (audit 411 b.1; dynasty.monk.red.png: the staff level across his front at chest height, a fist on
@@ -5399,7 +5402,8 @@ export class ProceduralAnimator {
     const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
     const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
     const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
-    const R = ICE_REST;
+    // [S] 420 the firework bow (its nocked rocket marks it) stands nearer upright: its carry read as a lance across her hip (audit 411 b.1)
+    const R = N.stave.getChildren().some((c) => c.name === "bowRocket") ? FIREWORK_REST : ICE_REST;
     const axis = Vector3.Up().scale(Math.cos(R.across)).addInPlace(outward.scale(-Math.sin(R.across))).addInPlace(fwd.scale(R.forward)).normalize();
     // the string (the stave's +z) toward her: -fwd, made square to the shaft
     const z = fwd.scale(-1);
@@ -5568,10 +5572,10 @@ export class ProceduralAnimator {
       const stave = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "bow" && n.getChildren().some((c) => c.name === "iceBowCarry"));
       const kid = (name: string): Mesh | undefined => stave?.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === name);
       const string = kid("string"), top = kid("iceStringTop"), low = kid("iceStringLow"), arrow = kid("iceNockArrow");
-      this._iceNock = stave && string && top && low && arrow ? { stave, string, top, low, arrow } : null;
+      this._iceNock = stave ? { stave, string, top, low, arrow } : null;
     }
     const N = this._iceNock;
-    if (!N) return;
+    if (!N || !N.string || !N.top || !N.low || !N.arrow) return;
     const on = w > 0.2;
     N.string.setEnabled(!on);
     N.top.setEnabled(on);
