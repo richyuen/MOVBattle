@@ -507,20 +507,21 @@ export class ProjectileSystem {
    * [S] 426 A pistol's shot (card pirate.flintlock Weapons: projectile Flintlock Bullet, speed 65; re-audit 422 c.1: "a white sphere the size of his
    * torso floating ahead of the chest"): at the mouth of each pistol's bell (`muzzles`, world), a small yellow flash PISTOL_SHOT.flash m across for
    * .flashLife s, a small puff .puff m that hangs .puffLife s, and a pale streak .streak m long flying from the bell to the man's chest (`to`) at
-   * .speed m/s. The shot's harm is dealt by the sim at the trigger; the streak is what the eye follows.
+   * .speed m/s. The shot's harm is dealt by the sim at the trigger; the streak is what the eye follows. [S] 428 `blast` scales the flash and puff
+   * (the Captain's dragon pistol, DRAGON_BLAST.flash), the flash then living twice as long.
    */
-  spawnPistolShot(muzzles: Vector3[], to: Vector3): void {
+  spawnPistolShot(muzzles: Vector3[], to: Vector3, blast = 1): void {
     const S = PISTOL_SHOT;
     for (const at of muzzles) {
       const dir = to.subtract(at);
       const dist = dir.length();
       if (dist < 0.01) continue;
       dir.scaleInPlace(1 / dist);
-      const flash = MeshBuilder.CreateSphere("pistolFlash", { diameter: S.flash, segments: 6 }, this._scene);
-      flash.position = at.add(dir.scale(S.flash * 0.4));
+      const flash = MeshBuilder.CreateSphere("pistolFlash", { diameter: S.flash * blast, segments: 6 }, this._scene);
+      flash.position = at.add(dir.scale(S.flash * blast * 0.4));
       flash.material = this._getMat("flash", new Color3(1, 0.85, 0.3), 0.8);
-      this._flashes.push({ mesh: flash, remaining: S.flashLife });
-      this._leavePuff(at.add(dir.scale(S.puff * 0.6)), { size: S.puff, life: S.puffLife, rise: 0.1, drift: dir.scale(0.25) });
+      this._flashes.push({ mesh: flash, remaining: S.flashLife * (blast > 1 ? 2 : 1) });
+      this._leavePuff(at.add(dir.scale(S.puff * blast * 0.6)), { size: S.puff * blast, life: S.puffLife, rise: 0.1, drift: dir.scale(0.25) });
       const streak = MeshBuilder.CreateBox("pistolBullet", { width: S.thick, height: S.thick, depth: S.streak }, this._scene);
       streak.material = this._getMat("pistolBullet", new Color3(1, 0.95, 0.75), 1);
       streak.position = at.clone();

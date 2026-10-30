@@ -84,6 +84,12 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
 const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
 const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
+// [S] 428 the Captain's dragon pistol (card pirate.captain Weapons off Flintlock Blunderbuss: damage 50, cooldown 2 s, range 3, force 3000; Characteristics
+// "will charge in, blasting enemy units with their Pistol"): a man within .range m (centre to centre) with the pistol ready (.cooldown s apart, first
+// ready .warmup s after he is first in range) is shot point-blank from the held-out bell while the cutlass keeps on: a flash .flash times a pistol's
+// at the bell and a ball to his chest (spawnPistolShot), .damage of a cutlass blow, and he is hurled .fling m/s along the line with .lift m/s up.
+// Logged "dragon_pistol" at the shot, as an ability (no plain hit), so the slash stays the release.
+const DRAGON_BLAST = { units: new Set(["pirate.captain"]), range: 3, cooldown: 2, warmup: 0.4, damage: 0.42, fling: 7, lift: 3.5, flash: 2.4 };
 // [S] 427 the Blunderbuss's shot (card Weapons: force 650, range 5): the man it is fired at is thrown off his feet along the shot's line, .fling m/s
 // out and .lift m/s up (applyBlastLaunch's topple: he tumbles and lies before he rises)
 const BLUNDERBUSS_BLAST = { units: new Set(["pirate.blunderbuss"]), fling: 6, lift: 7 };
@@ -505,6 +511,8 @@ export class SimulationSystem {
   // Pirate Kick (PIRATE_KICK): each kick under way and when the next is ready
   private _kicks = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; damage: number }>();
   private _kickReadyAt = new Map<RuntimeUnit, number>();
+  // The Captain's dragon pistol (DRAGON_BLAST): when each captain's next shot is ready
+  private _blastReadyAt = new Map<RuntimeUnit, number>();
   // Bomb Spin (BOMB_SPIN): each spin under way and when the next is ready
   private _bombSpins = new Map<RuntimeUnit, { dropAt: number; endAt: number; dropped: boolean; damage: number }>();
   private _bombSpinReadyAt = new Map<RuntimeUnit, number>();
@@ -670,6 +678,7 @@ export class SimulationSystem {
     this._buttReadyAt.clear();
     this._kicks.clear();
     this._kickReadyAt.clear();
+    this._blastReadyAt.clear();
     this._bombSpins.clear();
     this._bombSpinReadyAt.clear();
     this._banjoWalks.clear();
@@ -1184,6 +1193,19 @@ export class SimulationSystem {
           this._clearPathState(unit);
           return;
         }
+      }
+    }
+
+    // The Captain's dragon pistol (DRAGON_BLAST): a man in its range with it ready is shot from the bell; the captain keeps on at him
+    if (DRAGON_BLAST.units.has(unit.definition.id) && !enemy.isDead) {
+      const B = DRAGON_BLAST;
+      if (distance > B.range) {
+        if (this._blastReadyAt.has(unit) && now >= this._blastReadyAt.get(unit)!) this._blastReadyAt.delete(unit);
+      } else if (!this._blastReadyAt.has(unit)) {
+        this._blastReadyAt.set(unit, now + B.warmup);
+      } else if (now >= this._blastReadyAt.get(unit)!) {
+        this._blastReadyAt.set(unit, now + B.cooldown);
+        this._fireDragonPistol(unit, enemy, attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * B.damage, now);
       }
     }
 
@@ -3227,6 +3249,21 @@ export class SimulationSystem {
         this._kicks.delete(unit);
       }
     }
+  }
+
+  /** The Captain's dragon pistol shot (spec at DRAGON_BLAST): the flash and ball from the held-out bell, the man hurt and hurled along the line. */
+  private _fireDragonPistol(unit: RuntimeUnit, man: RuntimeUnit, damage: number, now: number): void {
+    const B = DRAGON_BLAST;
+    const chest = this._chestOf(man);
+    const bells = this._pistolBells(unit);
+    this.projectileSystem?.spawnPistolShot(bells, chest, B.flash);
+    const from = bells[0] ?? unit.position;
+    const along = new Vector3(man.position.x - from.x, 0, man.position.z - from.z);
+    if (along.lengthSquared() < 1e-6) along.set(Math.sin(unit.body.root.rotation.y), 0, Math.cos(unit.body.root.rotation.y));
+    along.normalize();
+    man.applyDamage(damage, along.scale(B.fling));
+    if (!man.isDead) man.applyBlastLaunch(along, B.fling, B.lift);
+    this._logAbility(unit, "dragon_pistol", now, man.position);
   }
 
   /** Each Bomb Spin under way (spec at BOMB_SPIN): she whirls; at the drop the bombs go out all round her and she is thrown up; the arms down at its end. */
