@@ -284,14 +284,16 @@ export class ProjectileSystem {
 
   /**
    * [S] 417 Projectile Block (simulationSystem SAMURAI_BLOCK): the first missile in flight at `unit` (past its delay) that will reach him within
-   * `within` s is cut out of the air: gone without striking. Returns where it was and its line of flight, or null when none.
+   * `within` s and is within `reach` m of him on the ground ([S] 418: at his blade's reach, not at the bow) is cut out of the air: gone without
+   * striking. Returns where it was and its line of flight, or null when none.
    */
-  deflectAt(unit: RuntimeUnit, within: number): { at: Vector3; dir: Vector3 } | null {
+  deflectAt(unit: RuntimeUnit, within: number, reach = Infinity): { at: Vector3; dir: Vector3 } | null {
     for (let i = 0; i < this._active.length; i++) {
       const p = this._active[i];
       if (p.target !== unit || p.loose || p.elapsed < 0 || p.drunk || p.snake) continue;
       if (p.flightTime - p.elapsed > within) continue;
       const at = p.mesh.getAbsolutePosition().clone();
+      if (Math.hypot(at.x - unit.position.x, at.z - unit.position.z) > reach) continue;
       const dir = new Vector3(p.targetPos.x - p.origin.x, 0, p.targetPos.z - p.origin.z);
       if (dir.lengthSquared() < 1e-6) dir.set(0, 0, 1);
       if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }

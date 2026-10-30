@@ -385,10 +385,11 @@ const FENCER_DODGE = { dist: 2.2, back: 1.0, seconds: 0.22, cooldown: 2.5, kind:
  */
 /**
  * [S] 417 Projectile Block (dynasty.samurai card: "deflect projectiles away from them with a bright slash using any weapon"; audit 411 c.1): a missile
- * flying at a samurai is cut out of the air SAMURAI_BLOCK.warn s before it would reach him (ProjectileSystem.deflectAt) with a white crescent slash
- * (visualEffects SLASH_ARC), at most once every .cooldown s; logged "block".
+ * flying at a samurai is cut out of the air once within SAMURAI_BLOCK.reach m of him (and .warn s of reaching him; ProjectileSystem.deflectAt): he turns
+ * on it and swings (.flick s), and a white crescent slash (visualEffects SLASH_ARC) stands .ahead m before him at .chest m up; at most once every
+ * .cooldown s; logged "block".
  */
-const SAMURAI_BLOCK = { warn: 0.12, cooldown: 0.5, kind: "block" };
+const SAMURAI_BLOCK = { warn: 0.5, reach: 1.3, ahead: 0.6, chest: 1.0, flick: 0.3, cooldown: 0.5, kind: "block" };
 const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
 /*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
@@ -2505,12 +2506,19 @@ export class SimulationSystem {
     for (const unit of this._units) {
       if (unit.definition.id !== "dynasty.samurai" || unit.isDead || unit.isToppled || unit.isDowned) continue;
       if (now < (this._blockReadyAt.get(unit) ?? 0)) continue;
-      const cut = missiles.deflectAt(unit, B.warn);
+      const cut = missiles.deflectAt(unit, B.warn, B.reach);
       if (!cut) continue;
       this._blockReadyAt.set(unit, now + B.cooldown);
-      this.visualEffects?.spawnSlashArc(cut.at, cut.dir);
-      unit.faceTarget(cut.at.subtract(cut.dir));
-      this._logAbility(unit, B.kind, now, cut.at);
+      // [S] 418 the cut is his: he turns on the missile and flicks the katana through it, and the crescent stands before his chest at his blade's reach
+      const toward = new Vector3(cut.at.x - unit.position.x, 0, cut.at.z - unit.position.z);
+      if (toward.lengthSquared() < 1e-6) toward.copyFrom(cut.dir.scale(-1));
+      toward.normalize();
+      unit.faceTarget(unit.position.add(toward));
+      unit.triggerAttackVisual(B.flick);
+      const slashAt = unit.position.add(toward.scale(B.ahead));
+      slashAt.y = unit.position.y + B.chest;
+      this.visualEffects?.spawnSlashArc(slashAt, cut.dir);
+      this._logAbility(unit, B.kind, now, slashAt);
     }
   }
   private _blockReadyAt = new Map<RuntimeUnit, number>();
