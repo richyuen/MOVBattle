@@ -613,6 +613,7 @@ export class RuntimeUnit {
 
   /** A heavy blow from `from` with `knockback` m/s of push has just landed on him: he is thrown back off his feet (BLOW_THROW), shown on this very frame. */
   staggerFromBlow(from: Vector3, knockback: number): void {
+    if (isVehicleUnit(this.definition.id)) return;
     if (this._isDead || this.isToppled || this.isDowned || (this._linkedParent && this._isAnchoredActor)) return;
     const away = this.position.subtract(from);
     away.y = 0;
@@ -802,6 +803,13 @@ export class RuntimeUnit {
     const dirZ = outward.x * sin + outward.z * cos;
     // Never faster sideways than the base throw: rapid shells have to keep finding the body.
     const throwSpeed = speed * (0.7 + 0.3 * spread(3)) * scale;
+    if (isVehicleUnit(this.definition.id)) {
+      // A vehicle is rocked back along the ground by a blast, not flung end over end.
+      this._velocity.x += dirX * throwSpeed * 0.35;
+      this._velocity.z += dirZ * throwSpeed * 0.35;
+      if (this._isDead) this._physicsActive = true;
+      return;
+    }
     if (!this._isDead) {
       this._enterTopple(RuntimeUnit.timeNowSeconds(), this._crowdPhysicsProfile.launchThreshold, outward, true);
     }
@@ -1309,7 +1317,7 @@ export class RuntimeUnit {
     // row of the dead is a litter of bodies and not a rank of planks.
     const fall = Math.random();
     const turn = Math.random();
-    this._deathSpinX = (fall < 0.5 ? -1 : 1) * (1.5 + (fall * 2 % 1) * 3) * massInv;
+    this._deathSpinX = isVehicleUnit(this.definition.id) ? 0 : (fall < 0.5 ? -1 : 1) * (1.5 + (fall * 2 % 1) * 3) * massInv;
     this._deathSpinY = (turn - 0.5) * 4 * massInv;
     this._corpseYaw = this.body.root.rotation.y + (turn - 0.5) * Math.PI * 2;
 
@@ -1423,6 +1431,15 @@ export class RuntimeUnit {
   private _blastSpinZ = 0;
 
   private _applyCrowdLean(dt: number): void {
+    if (isVehicleUnit(this.definition.id)) {
+      // Vehicles stay level on their wheels/feet: settle out any pitch or roll.
+      const rot = this.body.root.rotation;
+      const settle = Math.min(1, dt * 10);
+      rot.x -= rot.x * settle;
+      rot.z -= rot.z * settle;
+      this._blastTumbling = false;
+      return;
+    }
     if (this._blastTumbling) {
       const rot = this.body.root.rotation;
       if (!this._grounded && (this._velocity.y > 0 || this.position.y > 0.02)) {
@@ -1569,6 +1586,8 @@ export class RuntimeUnit {
   }
 
   private _enterTopple(now: number, pressure: number, direction: Vector3, launched: boolean): void {
+    // A vehicle has no balance to lose: a blow shoves it, it never pitches over onto its nose.
+    if (isVehicleUnit(this.definition.id)) return;
     const toppleDirection = direction.lengthSquared() > 0.0001
       ? direction
       : this._getFacingVector();
