@@ -141,6 +141,8 @@ function solveLowArc(from: Vector3, to: Vector3, v: number, g: number): { flight
 /** A soft smoke puff left hanging in a cannonball's wake. */
 // A gun's muzzle smoke (see spawnMuzzleFlash): how many soft puffs make the cloud.
 const MUZZLE_PUFFS = 7;
+// [S] 426 a pistol's shot (spawnPistolShot): flash across (m) and life (s), puff size (m) and life (s), the ball's streak long and thick (m), speed (m/s)
+const PISTOL_SHOT = { flash: 0.16, flashLife: 0.12, puff: 0.32, puffLife: 1.4, streak: 0.3, thick: 0.035, speed: 65 };
 
 interface TrailPuff {
   mesh: Mesh;
@@ -487,6 +489,35 @@ export class ProjectileSystem {
   /** [S] 425 Ropes of harpoons that struck: muzzle to the man being reeled in, laid afresh every step until `left` runs out (units/pirate.harpooner). */
   private _tows: { rope: Mesh; tether: TransformNode; target: RuntimeUnit; left: number }[] = [];
 
+  /** [S] 426 Pistol balls in flight (spawnPistolShot): the streak, where it set off, where it is going, seconds flown and to fly. */
+  private _bullets: { mesh: Mesh; from: Vector3; to: Vector3; t: number; flight: number }[] = [];
+
+  /**
+   * [S] 426 A pistol's shot (card pirate.flintlock Weapons: projectile Flintlock Bullet, speed 65; re-audit 422 c.1: "a white sphere the size of his
+   * torso floating ahead of the chest"): at the mouth of each pistol's bell (`muzzles`, world), a small yellow flash PISTOL_SHOT.flash m across for
+   * .flashLife s, a small puff .puff m that hangs .puffLife s, and a pale streak .streak m long flying from the bell to the man's chest (`to`) at
+   * .speed m/s. The shot's harm is dealt by the sim at the trigger; the streak is what the eye follows.
+   */
+  spawnPistolShot(muzzles: Vector3[], to: Vector3): void {
+    const S = PISTOL_SHOT;
+    for (const at of muzzles) {
+      const dir = to.subtract(at);
+      const dist = dir.length();
+      if (dist < 0.01) continue;
+      dir.scaleInPlace(1 / dist);
+      const flash = MeshBuilder.CreateSphere("pistolFlash", { diameter: S.flash, segments: 6 }, this._scene);
+      flash.position = at.add(dir.scale(S.flash * 0.4));
+      flash.material = this._getMat("flash", new Color3(1, 0.85, 0.3), 0.8);
+      this._flashes.push({ mesh: flash, remaining: S.flashLife });
+      this._leavePuff(at.add(dir.scale(S.puff * 0.6)), { size: S.puff, life: S.puffLife, rise: 0.1, drift: dir.scale(0.25) });
+      const streak = MeshBuilder.CreateBox("pistolBullet", { width: S.thick, height: S.thick, depth: S.streak }, this._scene);
+      streak.material = this._getMat("pistolBullet", new Color3(1, 0.95, 0.75), 1);
+      streak.position = at.clone();
+      streak.lookAt(to);
+      this._bullets.push({ mesh: streak, from: at.clone(), to: to.clone(), t: 0, flight: dist / S.speed });
+    }
+  }
+
   spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1, options: MuzzleFlashOptions = {}): void {
     const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4 * scale, segments: 6 }, this._scene);
     flash.position = origin.clone();
@@ -710,6 +741,18 @@ export class ProjectileSystem {
       q.mesh.position.y += q.rise * dt;
       if (q.drift) q.mesh.position.addInPlace(q.drift.scale(dt * (1 - u)));
       q.mesh.visibility = u < 0.2 ? 0.85 : 0.85 * (1 - (u - 0.2) / 0.8) * (1 - (u - 0.2) / 0.8);
+    }
+
+    // Pistol balls (spawnPistolShot): on along the line from the bell, gone at the man
+    for (let i = this._bullets.length - 1; i >= 0; i--) {
+      const b = this._bullets[i];
+      b.t += dt;
+      if (b.t >= b.flight) {
+        b.mesh.dispose();
+        this._bullets.splice(i, 1);
+        continue;
+      }
+      Vector3.LerpToRef(b.from, b.to, b.t / b.flight, b.mesh.position);
     }
 
     // Update flashes
@@ -1518,6 +1561,8 @@ export class ProjectileSystem {
       p.mesh.dispose();
     }
     for (const f of this._flashes) f.mesh.dispose();
+    for (const b of this._bullets) b.mesh.dispose();
+    this._bullets.length = 0;
     for (const w of this._tows) w.rope.dispose();
     this._tows.length = 0;
     for (const l of this._litter) l.mesh.dispose();

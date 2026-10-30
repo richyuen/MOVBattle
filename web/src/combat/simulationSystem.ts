@@ -2342,8 +2342,12 @@ export class SimulationSystem {
     if (attackProfile.type === AttackType.Ranged || attackProfile.type === AttackType.Siege) {
       this._logAbility(attacker, "fire", now);
       if (this.projectileSystem) {
+        // [S] 426 the Flintlock's pistols each fire from their own bell: a small flash there and a ball streaking at the man's chest (spawnPistolShot),
+        // in place of the long gun's cloud hung ahead of his chest
+        const bells = GUN_TOSS.units.has(attacker.definition.id) ? this._pistolBells(attacker) : [];
         if (isFirearmUnit(attacker)) {
-          this.projectileSystem.spawnMuzzleFlash(
+          if (bells.length > 0) this.projectileSystem.spawnPistolShot(bells, this._chestOf(target));
+          else this.projectileSystem.spawnMuzzleFlash(
             smokeOriginInfo.position,
             impulseDir,
             1,
@@ -3371,6 +3375,32 @@ export class SimulationSystem {
     this._snakes = [];
     for (const g of this._tossed) if (!g.node.isDisposed()) g.node.dispose();
     this._tossed = [];
+  }
+
+  /** [S] 426 The world mouths of the pistols in a man's fists (propBuilder "flintlock": its "musketMuzzle" node at the bell), world matrices settled. */
+  private _pistolBells(unit: RuntimeUnit): Vector3[] {
+    const out: Vector3[] = [];
+    for (const hand of [unit.body.rightHand, unit.body.leftHand]) {
+      if (!hand) continue;
+      for (const node of hand.getDescendants(false, (n) => n.name === "musketMuzzle")) {
+        if (!(node instanceof TransformNode) || !node.isEnabled()) continue;
+        const chain: TransformNode[] = [];
+        for (let n: Node | null = node; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+        for (const n of chain) n.computeWorldMatrix(true);
+        out.push(node.getAbsolutePosition().clone());
+      }
+    }
+    return out;
+  }
+
+  /** [S] 426 A man's chest, where his torso mesh is drawn (a point over his root when it is gone). */
+  private _chestOf(unit: RuntimeUnit): Vector3 {
+    const chest = unit.body.torsoMesh;
+    if (!chest || chest.isDisposed()) return unit.position.add(new Vector3(0, 1, 0));
+    const chain: TransformNode[] = [];
+    for (let n: Node | null = chest; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    return chest.getAbsolutePosition().clone();
   }
 
   /** [S] 425 Guns thrown away after the shot (GUN_TOSS), tumbling to the turf where they lie until GUN_TOSS.lie runs out. */
