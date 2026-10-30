@@ -683,7 +683,9 @@ async function main() {
           // a firework's burst is on the struck man, 7 m off: framed on him (evidence 418)
           // [evidence 425] a harpoon's reel-in hauls the struck man in from 7.5 m off: framed on him as he comes along the line
           // [evidence 426] ...and his kick lands on that man at his feet: framed on him too
-          const onMan = snake || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup";
+          // [evidence 436] the skeleton archer's fire arrow sets the struck man alight 7 m off (critic 435): his burn is framed on him
+          const burnOnMan = id === "spooky.skeleton_archer" && ability.kind === "status:fire";
+          const onMan = snake || burnOnMan || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup";
           await take(`unit_${id}_ability`, ability.tick, slow ? 4 : onMan ? 2 : far);
           await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), slow ? 4 : onMan ? 2 : far);
         }
