@@ -374,7 +374,8 @@ async function main() {
   if (iter === 0 && !gitClean()) {
     summary.notes.push("working tree was dirty during iter 0 capture");
   }
-  fs.rmSync(outDir, { recursive: true, force: true });
+  // [tools 420] a --regression-only run (the batch checkpoint) keeps the iteration folder: its shots and the saved critic transcripts stay beside the summary
+  if (!flag("--regression-only")) fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(outDir, { recursive: true });
 
   build();
