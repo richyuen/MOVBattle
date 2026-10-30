@@ -352,6 +352,48 @@ export function queenSash(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 428 the cannon rider's striped shirt (audit 422 a.3: "the rider's shirt - plain team - TABS: a white shirt with team stripes"; pirate.cannon.red.png,
+ * card Appearance "a white, striped shirt": a white short-sleeved shirt over the trunk with broad team bands round it, the sleeves striped too).
+ * CANNON_SHIRT, on the crewman (dressCannonCrew's five "crewHoop" bands round his trunk, torso frame): under the bands a white faceted shell following
+ * their taper from the waist to .top of the trunk's height, .under of their girth; the bands become team cloth, set .out of their girth; over each
+ * upper arm a white short sleeve .sleeve of the limb's half-size from the shoulder to .sleeveTo of it, a team band .band of its length at .bandAt.
+ * White self-lit .glow (lit white in his own shade reads grey), team .teamGlow.
+ */
+const CANNON_SHIRT = { top: 0.9, under: 1.0, out: 1.06, sleeve: 1.4, sleeveTo: 0.55, band: 0.22, bandAt: 0.28, white: new Color3(0.9, 0.88, 0.84), glow: 0.2, teamGlow: 0.12 };
+
+export function cannonShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = CANNON_SHIRT;
+  const mf = getMaterialFactory();
+  const white = mf.get("cloth", S.white, { emissive: S.white.scale(S.glow) });
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(S.teamGlow) });
+  const out: Mesh[] = [];
+  // the bands: dressCannonCrew's hoops, turned team and set out over the shell
+  const hoops = body.allMeshes.filter((m) => m.name === "crewHoop");
+  for (const hoop of hoops) {
+    hoop.material = team;
+    hoop.scaling.x *= S.out;
+    hoop.scaling.z *= S.out;
+  }
+  // the white shell under them, the hoops' own taper (dressCannonCrew: girth(t) = max half-size * 2 * (.76 + .26 t) * 1.03)
+  const chest = body.torsoMesh.getBoundingInfo().boundingBox.extendSize;
+  const girth = (t: number): number => Math.max(chest.x, chest.z) * 2 * (0.76 + 0.26 * t) * 1.03 * S.under;
+  const shell = MeshBuilder.CreateCylinder("cannonShirt", { height: chest.y * 2 * S.top, diameterTop: girth(S.top), diameterBottom: girth(0), tessellation: 6 }, scene);
+  shell.convertToFlatShadedMesh();
+  shell.parent = body.torso;
+  shell.position.y = chest.y * S.top;
+  shell.scaling.z = body.torsoMesh.scaling.z;
+  shell.material = white;
+  out.push(shell);
+  // the short striped sleeves
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    if (!arm) continue;
+    out.push(limbShell(scene, "cannonShirtSleeve", arm, 0, S.sleeveTo, S.sleeve, white));
+    out.push(limbShell(scene, "cannonShirtSleeve", arm, S.bandAt, S.bandAt + S.band, S.sleeve * 1.08, team));
+  }
+  return out;
+}
+
+/*
  * [S] 424 the rolled-up pants (audit 422 a.2: "bare team legs - TABS: brown rolled-up pants ending mid-shin"; pirate.flintlock.red.png, card Appearance
  * "rolled-up brown pants": loose brown trousers from the belt over the knee to halfway down the shin, finished in a thick turned-up cuff a shade lighter).
  * PIRATE_PANTS: over each thigh a six-sided brown shell .thigh of the limb across, top to knee; over each shin a shell .shin across from the knee to .to

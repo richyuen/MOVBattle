@@ -8,6 +8,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
 import { dressBallistaCrew } from "./ancientDress";
 import { longshipCarrierDress } from "./vikingDress";
+import { cannonShirt } from "./pirateDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -1252,6 +1253,8 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
         for (const m of [grip, knob, post, foot]) { m.convertToFlatShadedMesh(); m.parent = root; m.material = handleIron; allMeshes.push(m); }
       }
       dressCannonCrew(scene, body, color);
+      // [S] 428 ...in a white shirt with team stripes (pirateDress CANNON_SHIRT)
+      body.allMeshes.push(...cannonShirt(scene, body, color));
     }, { ...OPERATOR_PROPORTIONS, scale: H.rider });
   }
 
