@@ -1,6 +1,7 @@
 import { Scene, Color3, Mesh, MeshBuilder, Node, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { limbBox, limbShell } from "./medievalDress";
+import { strapSandals } from "./ancientDress";
 import { getMaterialFactory } from "./materialFactory";
 
 /*
@@ -825,5 +826,32 @@ export function samuraiHakama(scene: Scene, body: ArticulatedBody, teamColor: Co
       out.push(limbShell(scene, "samuraiGreaveBand", shin, at - T.band * 0.5, at + T.band * 0.5, T.bandOut, gold));
     }
   }
+  return out;
+}
+
+/*
+ * [S] 421 the Firework Archer's shin wraps and sandals (audit 411 a.4: "plain legs and boots - TABS: wrapped shins with sandals";
+ * dynasty.firework_archer.red.png: from under the robe's hem each shin is bound in darker team cloth in close ridged turns down to the ankle, the
+ * feet bare in orange-tan strap sandals). A darker (.shade of the team) shell ARCHER_LEGS.wrap of the shin round it from .from of its length to its
+ * foot, with .bands raised rings .band of its length, .bandOut proud, darker again (.bandShade); the feet the hoplite's strapSandals in .sandal.
+ */
+const ARCHER_LEGS = { from: 0.04, wrap: 1.28, bands: 5, band: 0.09, bandOut: 1.44, shade: 0.8, bandShade: 0.66, sandal: new Color3(0.62, 0.3, 0.1), glow: 0.12 };
+/** The Firework Archer's banded darker team shin wraps over bare feet in orange-tan strap sandals (spec at ARCHER_LEGS). */
+export function archerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const L = ARCHER_LEGS;
+  const mf = getMaterialFactory();
+  const wrapColor = teamColor.scale(L.shade), bandColor = teamColor.scale(L.bandShade);
+  const wrap = mf.get("cloth", wrapColor, { emissive: wrapColor.scale(L.glow) });
+  const band = mf.get("cloth", bandColor, { emissive: bandColor.scale(L.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "archerShinWrap", shin, L.from, 1, L.wrap, wrap));
+    const step = (1 - L.from) / L.bands;
+    for (let i = 0; i < L.bands; i++) {
+      const at = L.from + step * (i + 0.5);
+      out.push(limbShell(scene, "archerShinBand", shin, at - L.band * 0.5, at + L.band * 0.5, L.bandOut, band));
+    }
+  }
+  out.push(...strapSandals(scene, body, L.sandal, L.glow, "archer"));
   return out;
 }
