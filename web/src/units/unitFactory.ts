@@ -1,4 +1,4 @@
-import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, captainCoat, openCoat, pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
@@ -592,6 +592,7 @@ export class UnitFactory {
       propMeshes.push(...monkeyStaff(this._scene, body, teamColor), ...monkeyTail(this._scene, body, teamColor));
       propMeshes.push(...monkeyCrown(this._scene, body, teamColor)); // [S] 420 gold swirl circlet with two team feather antennae (dynastyDress MONKEY_CROWN)
       propMeshes.push(...monkeyFace(this._scene, body)); // [S] 421 dark baboon face, tan muzzle, blond tufts (dynastyDress MONKEY_FACE)
+      propMeshes.push(...monkeyHair(this._scene, body)); // [S] 429 orange-blonde ring of curls round the face, hair over the crown (dynastyDress MONKEY_HAIR)
       propMeshes.push(...monkeyShorts(this._scene, body, teamColor)); // [S] 422 puffy team shorts to gold knee cuffs, pointy shoes (dynastyDress MONKEY_SHORTS)
       propMeshes.push(...monkeyRobe(this._scene, body, teamColor)); // [S] 422 team robe over the left side only, gold strips, scarf (dynastyDress MONKEY_ROBE)
     }

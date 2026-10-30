@@ -987,6 +987,40 @@ export function monkeyFace(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 429 the Monkey King's hair ring (CONFIRM 422 a.2: "blonde hair - TABS: an orange-blonde ring of hair curling over the crown and down both cheeks,
+ * framing the dark face"; dynasty.monkey_king.red.png: a thick ring of faceted orange-blonde curls round the face from jaw to jaw over the brow, under
+ * the gold circlet, and the crown itself hair). MONKEY_HAIR, in the head's half extents e: .curls flat icosphere curls .curl of e.y across on an arc
+ * round the face, its middle .midY of e.y, .rx of e.x and .ry of e.y out, from -.sweep to .sweep rad (0 straight up), .z of e.z forward, each a
+ * little bigger toward the jaw (.swell); a hair cap over the crown .capOut of the head across and deep from .capFoot of e.y to .capTop. MONKEY_FACE's
+ * self-light; .color orange-blonde (the palette's orange row, a shade toward gold: MONKEY_FACE.blond displayed pale yellow).
+ */
+const MONKEY_HAIR = { curls: 11, curl: 0.34, swell: 0.25, midY: -0.15, rx: 1.12, ry: 1.05, sweep: 2.2, z: 0.72, capOut: 1.06, capFoot: 0.55, capTop: 1.1, color: new Color3(0.95, 0.52, 0.14) };
+/** The Monkey King's orange-blonde ring of curls round his face and the hair over his crown (spec at MONKEY_HAIR). */
+export function monkeyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const H = MONKEY_HAIR, F = MONKEY_FACE;
+  const blond = getMaterialFactory().get("cloth", H.color, { emissive: H.color.scale(F.glow) });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const out: Mesh[] = [];
+  for (let i = 0; i < H.curls; i++) {
+    const t = -H.sweep + (2 * H.sweep * i) / (H.curls - 1);
+    const r = e.y * H.curl * (1 + H.swell * Math.abs(t) / H.sweep);
+    const curl = MeshBuilder.CreateIcoSphere("monkeyHairCurl", { radius: r, subdivisions: 1, flat: true }, scene);
+    curl.position.set(Math.sin(t) * e.x * H.rx, e.y * H.midY + Math.cos(t) * e.y * H.ry, e.z * H.z);
+    curl.rotation.set(t * 0.7, t, i * 0.9);
+    curl.parent = body.headMesh;
+    curl.material = blond;
+    out.push(curl);
+  }
+  const cap = MeshBuilder.CreateBox("monkeyHairCap", { width: e.x * 2 * H.capOut, height: e.y * (H.capTop - H.capFoot), depth: e.z * 2 * H.capOut }, scene);
+  cap.position.set(0, e.y * (H.capTop + H.capFoot) / 2, 0);
+  cap.parent = body.headMesh;
+  cap.material = blond;
+  cap.convertToFlatShadedMesh();
+  out.push(cap);
+  return out;
+}
+
+/*
  * [S] 422 the Monkey King's shorts and shoes (RE-AUDIT 420 a.3: "slim straight legs down to plain boots - TABS: puffy team-coloured shorts gathered at
  * the knee over pointy shoes"; card Appearance "puffy shorts with golden folds. They also wear little pointy wooden shoes"; dynasty.monkey_king.red.png:
  * team shorts ballooning out from the hip to their widest at mid thigh and gathered in to a gold cuff at the knee, bare team shins, team shoes with a
