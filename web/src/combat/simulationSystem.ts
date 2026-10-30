@@ -2298,13 +2298,13 @@ export class SimulationSystem {
       return;
     }
 
+    // [S] 426 the Pirate Queen slashes (pirate.pirate_queen.png: one cutlass swung low through the men; re-audit 426 c.1): her blow is no longer an
+    // instant "slam" logged as the swing starts, but the cutlass slash (CUTLASS_SLASH) whose blow lands on the man, and the men round him, as the blade
+    // crosses her front (the pending-blow path below), with the slam's weight
     if (preset === "iconic_pirate_queen") {
-      this._logAbility(attacker, "slam", now, target.position);
-      if (this.visualEffects) {
-        this.visualEffects.spawnSmokePuff(target.position, new Color3(0.92, 0.56, 0.38));
-      }
-      this._applyDirectOrSplash(target, damage * 1.2, Math.max(2.6, splashRadius + 0.5), attacker.team, knockback.scale(1.2));
-      return;
+      damage *= 1.2;
+      splashRadius = Math.max(2.6, splashRadius + 0.5);
+      knockback = knockback.scale(1.2);
     }
 
     if (preset === "secret_artemis" || preset === "secret_ullr" || preset === "secret_flying_archer") {

@@ -783,7 +783,8 @@ export class ProceduralAnimator {
     if (this._state === state) return;
     // The harvester's sweep is carried through to its end (SCYTHE_SWEEP.through): a step he takes in the press, mid-cut, waits for it (375; the sim's
     // moveTo had cut the sweep off just past the cock while its blow still landed, so the hit frame showed him in the press with the scythe stood up)
-    if (this._state === AnimState.Attacking && this._lowScythe && this._attackMotion === "blade_slash" && state !== AnimState.Dead) {
+    // [S] 426 ...and so is a cutlass slash (the queen's step in the press had cut it off at the cock: both blades hoisted at her head)
+    if (this._state === AnimState.Attacking && (this._lowScythe || this._cutlass()) && this._attackMotion === "blade_slash" && state !== AnimState.Dead) {
       this._afterSweep = state;
       return;
     }
@@ -4690,7 +4691,8 @@ export class ProceduralAnimator {
     b.leftHip.rotation.x = S.step * 0.5 * h * k;
     this._clubHold = c * k;
     if (progress >= 1) {
-      this._state = AnimState.Idle;
+      this._state = this._afterSweep ?? AnimState.Idle;
+      this._afterSweep = null;
       this._sweepTip = null;
     }
   }
