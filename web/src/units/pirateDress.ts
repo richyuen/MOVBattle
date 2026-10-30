@@ -687,7 +687,18 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * right (high) to her left (low); .beads green beads .bead of W across round the front of the hem; trousers: a shell .pantsOut of each leg over the
  * whole thigh and the shin to .shin, in the team colour .pale of the way to white. Self-lit .glow.
  */
-const QUEEN_SKIRT = { top: 0.14, knee: 0.92, out: 1.06, flare: 1.45, deep: 1.25, slant: 0.32, sides: 8, beads: 7, bead: 0.11, pantsOut: 1.14, shin: 0.6, pale: 0.4, green: new Color3(0.12, 0.55, 0.3), glow: 0.12 };
+/*
+ * [S] 432 the skirt's front (CONFIRM 431 a.1: "the front of the lower body reads as pale baggy trousers from hip to knee - TABS: a team-colour skirt
+ * hanging over the front to the knees with a slanted hem"; pirate.pirate_queen.red.png: the skirt reaches the knee on her right and a hand below it
+ * on her left, and over its front hangs the wrap's loose end, a team flap from the waist band on her left front down to a point below the knee, so
+ * the trousers show only from the knee down). The skirt now .knee 1.08 of the way to the knees and slants .slant .6; the wrap flap a thin team
+ * trapezoid .flapWide of W across at the waist narrowing to .flapFoot of it, from the waist at .flapX of W/2 on her left down .flapLong of the
+ * skirt's length, .flapProud off the skirt's front, leaning .flapLean rad; the trousers .pale .18 so they read as the team's light shade, not white.
+ */
+const QUEEN_SKIRT = {
+  top: 0.14, knee: 1.08, out: 1.06, flare: 1.45, deep: 1.25, slant: 0.6, sides: 8, beads: 7, bead: 0.11, pantsOut: 1.14, shin: 0.6, pale: 0.18,
+  flapWide: 0.6, flapFoot: 0.22, flapX: -0.25, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
+};
 
 /** The Pirate Queen's team wrap skirt to the knees, a slanted hem with green beads, and pale trousers under it (spec at QUEEN_SKIRT). */
 export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -724,6 +735,18 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   skirt.position.set(cx, (top + hem) / 2, cz);
   skirt.material = cloth;
   out.push(skirt);
+  // the wrap's loose end hanging over the front from the waist on her left to a point below the knee
+  const flapLong = long * Q.flapLong, flapZ = cz + (rTop + (rHem - rTop) * 0.5) * zs + W * Q.flapProud;
+  const flap = MeshBuilder.CreateCylinder("queenSkirtFlap", { height: flapLong, diameterTop: W * Q.flapWide, diameterBottom: W * Q.flapFoot, tessellation: 4 }, scene);
+  flap.rotation.y = Math.PI / 4;
+  flap.bakeCurrentTransformIntoVertices();
+  flap.scaling.z = 0.12;
+  flap.convertToFlatShadedMesh();
+  flap.parent = frame;
+  flap.position.set(cx + W / 2 * Q.flapX, top - flapLong / 2, flapZ);
+  flap.rotation.set(-0.08, 0, -Q.flapLean);
+  flap.material = cloth;
+  out.push(flap);
   // the green beads round the front of the hem
   for (let k = 0; k < Q.beads; k++) {
     const a = Math.PI * (0.12 + 0.76 * k / (Q.beads - 1));
