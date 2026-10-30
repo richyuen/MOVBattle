@@ -576,7 +576,8 @@ async function main() {
         const abilities = new Set(def.abilities);
         const charger = def.archetype === "charge_melee" || abilities.has("charge_impact") || abilities.has("jump_charge") || abilities.has("leap_attack");
         const support = def.archetype === "support_heal" || def.archetype === "support_buff";
-        const d = def.archetype === "artillery" ? 9 : charger ? 8 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
+        // a unit that lunges on first contact (the brawler) starts 5.5 m off, so the lunge has ground to cover (evidence 418)
+        const d = def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
         // Detection steps 6 ticks (one render) at a time; a logged event's frame comes from its world-time stamp, exact to the tick. Only the
         // projectile-count fallback (a missile with no fire log) is 6 ticks coarse.
         const det = await page.evaluate(({ id, d, support, want }) => {
